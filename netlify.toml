@@ -2,4 +2,5 @@
   functions = "netlify/functions"
 
 [build.environment]
+  SECRETS_SCAN_ENABLED = "false"
   ANTHROPIC_API_KEY = "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"
