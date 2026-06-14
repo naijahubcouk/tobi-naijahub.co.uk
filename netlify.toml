@@ -1,52 +1,7 @@
-{
-  "name": "Tobi by NaijaHub",
-  "short_name": "Tobi",
-  "description": "Ask Tobi anything about Nigerian life in the UK — businesses, events, settling in, money transfers and more. Powered by NaijaHub.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#057A44",
-  "theme_color": "#057A44",
-  "orientation": "portrait",
-  "categories": ["lifestyle", "social", "utilities"],
-  "lang": "en-GB",
-  "icons": [
-    { "src": "/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ],
-  "shortcuts": [
-    {
-      "name": "Find a Business",
-      "short_name": "Businesses",
-      "description": "Find Nigerian businesses in the UK",
-      "url": "/?q=find+a+Nigerian+business",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Upcoming Events",
-      "short_name": "Events",
-      "description": "Discover Nigerian UK events",
-      "url": "/?q=upcoming+events",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Japa Guide",
-      "short_name": "Settle in UK",
-      "description": "Help settling in the UK",
-      "url": "/?q=I+just+arrived+in+the+UK+help+me+settle",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Send Money to Nigeria",
-      "short_name": "Send Money",
-      "description": "Best ways to send money to Nigeria",
-      "url": "/?q=how+do+I+send+money+to+Nigeria+cheaply",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
-    }
-  ]
-}
+[build]
+  functions = "netlify/functions"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
