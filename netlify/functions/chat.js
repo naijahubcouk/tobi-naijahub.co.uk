@@ -12,7 +12,7 @@ exports.handler = async function(event) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5',
         max_tokens: 1000,
         system: 'You are Tobi, the NaijaHub AI assistant for the Nigerian diaspora in the UK. Be warm and friendly. Use expressions like No wahala and Omo. End every response with: Powered by naijahub.co.uk and add [SUGGESTIONS: option one | option two]',
         messages: body.messages
