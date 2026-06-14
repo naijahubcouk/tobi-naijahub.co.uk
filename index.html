@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tobi by NaijaHub</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#057A44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NaijaHub">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="description" content="Your Nigerian UK Community Guide — find businesses, events, and everyday UK life help.">
+<meta property="og:title" content="Tobi by NaijaHub 🇳🇬🇬🇧">
+<meta property="og:description" content="Find Nigerian businesses, events & get UK life help — all in one place.">
+<meta property="og:image" content="/icons/icon-512.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap');
+
+  /* Install Banner */
+  #install-banner {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--navy);
+    border-top: 2px solid var(--gold);
+    padding: 14px 20px;
+    z-index: 999999;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  #install-banner.show { display: flex; animation: slideUp 0.3s ease; }
+  #install-banner .banner-icon {
+    width: 44px; height: 44px;
+    background: var(--gold);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--green); flex-shrink: 0;
+  }
+  #install-banner .banner-text { flex: 1; }
+  #install-banner .banner-text strong {
+    display: block; color: white;
+    font-size: 13px; font-weight: 700;
+  }
+  #install-banner .banner-text span {
+    color: var(--gold-light); font-size: 11px;
+  }
+  #install-banner .banner-btn {
+    background: var(--gold);
+    color: var(--green);
+    border: none; border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; flex-shrink: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  #install-banner .banner-close {
+    color: var(--gray); background: none;
+    border: none; cursor: pointer;
+    font-size: 18px; padding: 4px;
+    flex-shrink: 0;
+  }
+
+  :root {
+    --green: #057A44;
+    --navy: #0F1E36;
+    --gold: #FFB81C;
+    --gold-light: #FFD76B;
+    --cream: #F8F9FA;
+    --white: #ffffff;
+    --gray: #6B7280;
+    --light-gray: #F3F4F6;
+    --border: #E2E8F0;
+    --user-bubble: #057A44;
+    --bot-bubble: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--navy);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 480px;
+    height: 92vh;
+    max-height: 780px;
+    background: var(--cream);
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  }
+
+  /* Header */
+  .header {
+    background: var(--green);
+    padding: 18px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .header-text h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    color: var(--white);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .header-text p {
+    font-size: 12px;
+    color: var(--gold-light);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ADE80;
+    border-radius: 50%;
+    margin-left: auto;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px #4ADE80;
+  }
+
+  /* Pills */
+  .pills {
+    background: var(--green);
+    padding: 0 20px 14px;
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pills::-webkit-scrollbar { display: none; }
+
+  .pill {
+    background: rgba(201,168,76,0.18);
+    border: 1px solid rgba(201,168,76,0.35);
+    color: var(--gold-light);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .pill:hover { background: rgba(201,168,76,0.35); }
+
+  /* Messages */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+  }
+
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    max-width: 88%;
+  }
+
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg.bot { align-self: flex-start; }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid var(--gold);
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  .bubble {
+    padding: 12px 15px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 100%;
+  }
+
+  .msg.bot .bubble {
+    background: var(--white);
+    color: var(--navy);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+
+  .msg.user .bubble {
+    background: var(--green);
+    color: var(--white);
+    border-bottom-right-radius: 4px;
+  }
+
+  /* Cards inside bot bubble */
+  .result-card {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+
+  .result-card + .result-card { margin-top: 6px; }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 5px;
+  }
+
+  .tag-directory { background: #D1FAE5; color: #065F46; }
+  .tag-event { background: #FEF3C7; color: #92400E; }
+  .tag-blog { background: #E0E7FF; color: #3730A3; }
+  .tag-guide { background: #FCE7F3; color: #9D174D; }
+  .tag-money { background: #ECFDF5; color: #065F46; }
+  .tag-church { background: #FDF4FF; color: #6B21A8; }
+
+  .affiliate-card {
+    border: 1.5px solid #FFB81C33;
+    background: linear-gradient(135deg, #F8F9FA, #FEF9EC);
+  }
+
+  .affiliate-btn {
+    display: inline-block;
+    margin-top: 8px;
+    background: #057A44;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background 0.2s;
+    width: 100%;
+    text-align: center;
+  }
+
+  .affiliate-btn:hover { background: #058a4e; }
+
+  .card-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--navy);
+    margin-bottom: 2px;
+  }
+
+  .card-detail {
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+  }
+
+  .card-link {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    text-decoration: none;
+    border-bottom: 1px solid var(--gold);
+    padding-bottom: 1px;
+  }
+
+  /* Suggestions */
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .suggestion {
+    background: var(--light-gray);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .suggestion:hover { background: var(--gold-light); border-color: var(--gold); }
+
+  /* Typing indicator */
+  .typing { display: flex; align-items: center; gap: 4px; padding: 14px 15px; }
+  .typing span {
+    width: 7px; height: 7px;
+    background: var(--gray);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* Input */
+  .input-area {
+    padding: 12px 16px 16px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+
+  textarea {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 11px 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    color: var(--navy);
+    background: var(--cream);
+    resize: none;
+    outline: none;
+    max-height: 100px;
+    line-height: 1.4;
+    transition: border-color 0.2s;
+    rows: 1;
+  }
+
+  textarea:focus { border-color: var(--green); }
+  textarea::placeholder { color: #9CA3AF; }
+
+  .send-btn {
+    width: 42px;
+    height: 42px;
+    background: var(--green);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .send-btn:hover { background: #058a4e; }
+  .send-btn:active { transform: scale(0.95); }
+  .send-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+  .send-btn svg { width: 18px; height: 18px; fill: white; }
+
+  .powered {
+    text-align: center;
+    font-size: 10px;
+    color: #9CA3AF;
+    padding: 6px 0 0;
+    letter-spacing: 0.03em;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="logo"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
+    <div class="header-text">
+      <h1>Tobi by <a href="https://naijahub.co.uk" target="_blank" style="color:#FFB81C;text-decoration:none;">naijahub.co.uk</a></h1>
+      <p>Your Nigerian UK guide 🇳🇬🇬🇧</p>
+    </div>
+    <div class="status-dot"></div>
+    <button id="notify-bell" onclick="toggleNotifications()" title="Get NaijaHub notifications" style="
+      background:none; border:none; cursor:pointer;
+      font-size:18px; padding:4px; margin-left:6px;
+      opacity:0.7; transition:opacity 0.2s;
+    ">🔕</button>
+  </div>
+
+  <div class="pills">
+    <div class="pill" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses</div>
+    <div class="pill" onclick="quickAsk('What events are coming up?')">🎉 Events</div>
+    <div class="pill" onclick="quickAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
+    <div class="pill" onclick="quickAsk('Show me helpful articles')">📰 Blog</div>
+    <div class="pill" onclick="quickAsk('How do I send money to Nigeria cheaply?')">💸 Money</div>
+    <div class="pill" onclick="quickAsk('Help me find a Nigerian church in the UK')">🙏 Churches</div>
+  </div>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="input-area">
+    <textarea id="input" placeholder="Ask Tobi anything — businesses, events, UK life help..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// TOBI AFFILIATE LINK SYSTEM
+// Replace YOUR_REF_CODE with your actual
+// affiliate codes from each platform
+// ============================================
+const AFFILIATES = {
+  wise: {
+    name: 'Wise',
+    url: 'https://wise.com/invite/YOUR_WISE_REF',
+    commission: '£10–£15 per signup',
+    tag: 'money',
+    badge: '⭐ NaijaHub Partner',
+    description: 'Best exchange rates — send money to Nigeria in hours',
+    cta: 'Sign up & get fee-free first transfer'
+  },
+  lemfi: {
+    name: 'Lemfi',
+    url: 'https://referral.lemfi.com/W18MpJ1zR3b',
+    commission: 'Up to £20 per referral',
+    tag: 'money',
+    badge: '🔥 Top Naija Pick',
+    description: 'Built for Africans — best naira rates in the UK',
+    cta: 'Sign up & send your first £200 fee-free'
+  },
+  remitly: {
+    name: 'Remitly',
+    url: 'https://remitly.com/gb/en/?ref=YOUR_REMITLY_REF',
+    commission: '£10–£20 per signup',
+    tag: 'money',
+    badge: '✅ Trusted',
+    description: 'Fast, reliable transfers — great for large amounts',
+    cta: 'Get your first transfer fee-free'
+  },
+  worldremit: {
+    name: 'WorldRemit',
+    url: 'https://www.worldremit.com/?ref=YOUR_WORLDREMIT_REF',
+    commission: '£8–£12 per signup',
+    tag: 'money',
+    badge: '🌍 Popular',
+    description: 'Many Nigeria pickup options — cash, bank, mobile money',
+    cta: 'Send your first transfer fee-free'
+  },
+  monzo: {
+    name: 'Monzo',
+    url: 'https://join.monzo.com/c/sr82ns5k',
+    commission: '£5 per account',
+    tag: 'money',
+    badge: '🏦 Easy to Open',
+    description: 'Open a UK bank account in minutes — no credit history needed',
+    cta: 'Open free account — get card in 2 days'
+  },
+  giffgaff: {
+    name: 'Giffgaff SIM',
+    url: 'https://www.giffgaff.com/orders/affiliate/YOUR_GIFFGAFF_REF',
+    commission: '£5 per activation',
+    tag: 'guide',
+    badge: '📱 Free SIM',
+    description: 'Best SIM for calling Nigeria — free to order, great rates',
+    cta: 'Order your free SIM card'
+  }
+};
+
+// Track affiliate clicks (logs to console — connect to analytics later)
+function trackAffiliate(name, url) {
+  console.log(`[NaijaHub Affiliate Click] ${name} — ${new Date().toISOString()}`);
+  // Future: send to your analytics endpoint
+  // fetch('https://naijahub.co.uk/api/track', { method: 'POST', body: JSON.stringify({ partner: name, timestamp: Date.now() }) });
+  window.open(url, '_blank');
+}
+
+// Render affiliate cards
+function renderAffiliateCards(keys) {
+  return keys.map(key => {
+    const a = AFFILIATES[key];
+    if (!a) return '';
+    return `
+    <div class="result-card affiliate-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <span class="card-tag tag-${a.tag}">${a.tag === 'money' ? '💸' : '📱'} ${a.name}</span>
+        <span style="font-size:10px;font-weight:700;color:#FFB81C">${a.badge}</span>
+      </div>
+      <div class="card-name">${a.name}</div>
+      <div class="card-detail">${a.description}</div>
+      <button onclick="trackAffiliate('${a.name}', '${a.url}')" class="affiliate-btn">${a.cta} →</button>
+    </div>`;
+  }).join('');
+}
+
+const NAIJAHUB_DATA = `
+You are Tobi, the NaijaHub AI assistant — a friendly, knowledgeable assistant for the Nigerian diaspora community in the UK. You are the go-to everyday tool for Nigerians living in the UK.
+
+You help with:
+- Finding Nigerian businesses, events, and blog articles on NaijaHub
+- Answering everyday UK life questions for Nigerians (immigration, NHS, driving, money transfers, schools, housing, jobs, churches)
+- Guiding new arrivals (Japa community) on how to settle in the UK
+- Recommending money transfer services, Nigerian churches, community resources
+
+Always respond in a warm, community-focused tone. Use occasional Nigerian expressions naturally (e.g. "No wahala!", "Omo, great choice!", "E go be!", "Abeg", "Naija people"). Keep responses concise, practical and useful. Always add the footer: "— 🇳🇬🇬🇧 Powered by naijahub.co.uk"
+
+Always end responses with 1-2 short follow-up suggestions the user can tap, formatted like:
+[SUGGESTIONS: suggestion one | suggestion two]
+
+PLATFORM DATA:
+
+=== UK LIFE KNOWLEDGE BASE FOR NIGERIANS ===
+
+--- JAPA / NEW ARRIVALS GUIDE ---
+Q: How do I settle in the UK as a Nigerian?
+A: Welcome to the UK! 🇬🇧 Here are your first steps:
+
+1) Get your BRP (Biometric Residence Permit) — collect from your Post Office within 10 days of arrival
+2) Open a bank account — Monzo or Starling are easiest, no credit history needed
+3) Register with a GP on nhs.uk — completely free
+4) Apply for your National Insurance Number (NIN) at gov.uk or call 0800 141 2075
+5) Get a SIM card with good Nigeria calling rates:
+
+[AFFILIATES: giffgaff]
+
+6) Register your address with your local council for council tax
+
+Q: What documents do I need when I arrive in the UK?
+A: Keep these safe: Passport + visa/BRP, National Insurance Number (NIN), NHS number (given when you register with a GP), proof of address (utility bill or bank statement), and your employer's reference if working.
+
+--- NATIONAL INSURANCE NUMBER (NIN) ---
+Q: How do I get a National Insurance Number in the UK?
+A: Your NIN is essential for working and paying tax in the UK. Apply online at gov.uk/apply-national-insurance-number or call 0800 141 2075. You'll need your BRP, passport, and proof of address. Processing takes 4–8 weeks. You can start work before receiving it — just tell your employer you've applied.
+
+--- NHS & HEALTH ---
+Q: How does the NHS work for Nigerians in the UK?
+A: The NHS is the UK's free national health service. Register with a local GP practice on nhs.uk — it's completely free. For emergencies call 999. For urgent non-emergency care call 111. You can also walk into an A&E. Prescription medicines cost £9.90 per item (free if you're pregnant, under 16, over 60, or on certain benefits). Dental and eye care are separate — check NHS dentists on nhs.uk.
+
+Q: How do I find an NHS GP near me?
+A: Go to nhs.uk/service-search/find-a-gp — enter your postcode, find a nearby practice and register online or by walking in. Most practices accept new patients. Bring your passport/BRP and proof of address.
+
+--- DRIVING ---
+Q: Can I use my Nigerian driving licence in the UK?
+A: Yes — but only for the first 12 months after arriving in the UK. After that, you must get a UK driving licence. You need to pass the UK theory test (£23) and practical test (£62–£75). Book both at gov.uk/book-driving-test. Your Nigerian licence counts as driving experience which can help reduce insurance costs.
+
+Q: How do I convert my Nigerian licence to a UK licence?
+A: Nigeria is not on the UK's approved country list, so you cannot directly exchange it. You must take the UK theory and practical tests. However, your driving experience means you may need fewer lessons. Average UK learner takes 45 hours of lessons. Book your theory test at gov.uk/book-theory-test.
+
+--- MONEY TRANSFERS TO NIGERIA ---
+Q: How do I send money to Nigeria cheaply from the UK?
+A: No wahala! Here are the best services in 2026 — all with NaijaHub partner links so you get the best deals:
+
+[AFFILIATES: wise,lemfi,remitly,worldremit]
+
+Avoid bureau de change on the street — rates are poor. Always compare on Monito.com before large transfers.
+
+Q: What is the best app to send money to Nigeria?
+A: Lemfi and Wise are the top two for Nigerians in the UK. Lemfi is built specifically for the African diaspora with excellent naira rates. Wise gives mid-market exchange rates with transparent fees. For large amounts over £1,000, also check Remitly.
+
+[AFFILIATES: lemfi,wise,remitly]
+
+Q: What is the best bank to open as a Nigerian in the UK?
+A: These banks are easiest to open with no UK credit history — and two have NaijaHub partner links with bonuses:
+
+[AFFILIATES: monzo]
+
+Also consider: Starling Bank (starlingbank.com) and Revolut (revolut.com) — both great, no credit history needed. Avoid applying to Barclays or Lloyds first — they often decline new arrivals.
+
+--- HOUSING ---
+Q: How do I find accommodation as a Nigerian in the UK?
+A: For renting: Rightmove.co.uk and Zoopla.co.uk are the main sites. SpareRoom.co.uk is great for room shares which are cheaper. Join local Nigerian Facebook groups and WhatsApp groups — Nigerians often share rooms within community. Average London room: £800–£1,200/month. Outside London (Manchester, Birmingham, Leeds): £500–£800/month. You'll need first month + deposit (usually 5 weeks rent).
+
+Q: What are the best cities for Nigerians to live in the UK outside London?
+A: 1) Manchester — large Nigerian community, lower cost of living, good jobs market. 2) Birmingham — Handsworth and Erdington areas have strong Nigerian presence. 3) Leeds — growing Nigerian community, affordable housing. 4) Leicester — diverse, affordable. 5) Nottingham — university city, growing diaspora community.
+
+--- SCHOOLS & CHILDREN ---
+Q: How do I register my child for school in the UK?
+A: Contact your local council (find at gov.uk/find-local-council) and apply through their admissions portal. For primary school (ages 4–11): apply by January 15th for September entry. For secondary school (ages 11–16): apply by October 31st. Bring your child's birth certificate, proof of address, and immunisation records. School is free in the UK.
+
+Q: What is the 11+ exam and should my Nigerian child take it?
+A: The 11+ is an entrance exam for grammar schools (selective state schools) taken at age 10–11. Grammar schools are academically strong and free. If you live near a grammar school area (Kent, Buckinghamshire, parts of Birmingham, Essex), it's worth preparing your child. NaijaHub has tutors who specialise in 11+ prep — ask me to find one!
+
+--- JOBS ---
+Q: How do I find a job as a Nigerian in the UK?
+A: Top job sites: Indeed.co.uk, Reed.co.uk, LinkedIn, Totaljobs.com. For NHS jobs: jobs.nhs.uk. For government jobs: civilservicejobs.service.gov.uk. Tips: Get your CV in UK format (2 pages max, no photo, no date of birth). Register with agencies like Adecco, Hays, and Manpower. Join Nigerian professional networks on LinkedIn. Common Nigerian-dominated sectors in UK: healthcare, IT, finance, education, logistics.
+
+--- CHURCHES ---
+Q: How do I find a Nigerian church in the UK?
+A: Major Nigerian church networks in the UK: 1) RCCG (Redeemed Christian Church of God) — rccguk.church — hundreds of branches UK-wide. 2) Winners Chapel (Living Faith Church) — winnerschapeluk.org. 3) Mountain of Fire and Miracles (MFM) — mfmuk.org. 4) KICC (Kingsway International Christian Centre) — kicc.org.uk — based in London. 5) Deeper Life Bible Church — deeperlifeonline.org. Search "[your city] Nigerian church" on Google to find local branches.
+
+--- IMMIGRATION & VISAS ---
+Q: How do I apply to extend my UK visa?
+A: Apply on gov.uk/browse/visas-immigration at least 3 months before your visa expires. You can stay in the UK while your application is processed (called "Section 3C leave"). Use a registered immigration solicitor for complex cases — ask NaijaHub to find one near you. Common visas for Nigerians: Skilled Worker, Student, Family, BNO (not applicable), Graduate visa.
+
+Q: How do I apply for Indefinite Leave to Remain (ILR) in the UK?
+A: ILR (permanent residency) is usually available after 5 years on most visas. Requirements: continuous residence in the UK, pass the Life in the UK test (£50, book at gov.uk), English language proof, and no criminal record. Application fee: £2,885 (2026). Apply on gov.uk/indefinite-leave-to-remain.
+
+--- BENEFITS & SUPPORT ---
+Q: What UK benefits can Nigerians claim?
+A: Eligibility depends on your visa type and National Insurance contributions. Common benefits: Universal Credit (for low-income workers/unemployed), Child Benefit (£25.60/week per child, 2026), Working Tax Credit, Housing Benefit, Council Tax Reduction. Most recent arrivals on skilled worker or student visas have "No Recourse to Public Funds" (NRPF) and cannot claim most benefits. Check your visa conditions carefully at gov.uk.
+
+--- FOOD & LIFESTYLE ---
+Q: Where can I buy Nigerian food in the UK?
+A: Major Nigerian/African food shops are in: Peckham (London) — most Nigerian food shops in the UK. Dalston, Hackney, Brixton, Tottenham (all London). Handsworth (Birmingham), Moss Side (Manchester), Harehills (Leeds). Online: AfriBerry.com, Afrobasket.co.uk deliver Nigerian foodstuff nationwide. NaijaHub directory has Nigerian grocery stores near you — ask me!
+
+Q: What are the best Nigerian restaurants in London?
+A: Top picks: Ikoyi (Michelin-starred Nigerian-inspired, St James's), Chuku's (Tottenham — Nigerian tapas),805 Restaurant (Peckham), Eko Kitchen (Brixton), Yellow Chilli (Stratford). For everyday jollof and swallow, Peckham High Street has many options. Check NaijaHub's blog for the full top 10 list!
+
+--- BUSINESS IN THE UK ---
+Q: How do I start a business in the UK as a Nigerian?
+A: 1) Choose your structure: Sole Trader (simple) or Limited Company (more professional). 2) Register at companieshouse.gov.uk — costs £12 online, done in 24 hours. 3) Register for Self Assessment with HMRC at gov.uk/register-for-self-assessment. 4) Open a business bank account (Tide, Monzo Business, or Starling Business are easiest). 5) Get relevant licences for your sector. 6) List your business on NaijaHub directory to reach the Nigerian community! Read our full guide at naijahub.co.uk/blog/start-business-uk-nigerian.
+
+Q: Do I need to pay tax on my UK income as a Nigerian?
+A: Yes. If you earn over £12,570/year (personal allowance 2026), you pay income tax. Rate: 20% basic rate (£12,571–£50,270), 40% higher rate (£50,271–£125,140). Self-employed Nigerians must file a Self Assessment tax return by 31 January each year. Use an accountant — NaijaHub has Nigerian accountants listed in our directory!
+
+=== BUSINESS DIRECTORY (16 listings) ===
+
+1. Mama's Kitchen | Nigerian Restaurant | 📍 Peckham, London | Jollof rice, egusi soup, pounded yam, suya | ☎ 07700 900123 | naijahub.co.uk/directory/mamas-kitchen
+2. Adeleke & Co Solicitors | Legal Services | 📍 Brixton, London | Immigration, family law, business setup | ☎ 07700 900456 | naijahub.co.uk/directory/adeleke-solicitors
+3. Naija Groceries | African Food Store | 📍 Dalston, London | Imported Nigerian foodstuff, spices, palm oil | ☎ 07700 900789 | naijahub.co.uk/directory/naija-groceries
+4. TechNaija Solutions | IT & Tech | 📍 Canary Wharf, London | Web design, software dev, IT support | ☎ 07700 900321 | naijahub.co.uk/directory/technaija
+5. Afro Crown Hair Studio | Hair & Beauty | 📍 Tottenham, London | Braids, weaves, locs, natural hair | ☎ 07700 900654 | naijahub.co.uk/directory/afro-crown
+6. Ade Obi Accounting | Finance & Tax | 📍 Manchester | Self-assessment, HMRC, business accounts | ☎ 07700 900987 | naijahub.co.uk/directory/ade-obi
+7. Niger Delta Couriers | Shipping | 📍 Birmingham | UK to Nigeria parcels, door-to-door delivery | ☎ 07700 900147 | naijahub.co.uk/directory/niger-delta-couriers
+8. Covenant Medical Centre | Healthcare | 📍 Lewisham, London | GP services, private consultations, health checks | ☎ 07700 900258 | naijahub.co.uk/directory/covenant-medical
+9. Naija Fabric & Fashion | Clothing | 📍 Brixton, London | Ankara, Aso-oke, bespoke tailoring | ☎ 07700 900369 | naijahub.co.uk/directory/naija-fabric
+10. Obinna Properties | Real Estate | 📍 Leeds | Property management, buy-to-let advice, lettings | ☎ 07700 900741 | naijahub.co.uk/directory/obinna-properties
+11. Lagos Bites | Fast Food | 📍 Hackney, London | Pepper soup, moi moi, chin chin, small chops | ☎ 07700 900852 | naijahub.co.uk/directory/lagos-bites
+12. PharmaNaija | Pharmacy | 📍 Woolwich, London | Prescription services, African herbal supplements | ☎ 07700 900963 | naijahub.co.uk/directory/pharmanaija
+13. Chukwu Motors | Car Services | 📍 Wolverhampton | MOT, car repairs, used car sales | ☎ 07700 900174 | naijahub.co.uk/directory/chukwu-motors
+14. Silverbird Event Hall | Venue Hire | 📍 Stratford, London | Private events, weddings, birthday parties | ☎ 07700 900285 | naijahub.co.uk/directory/silverbird-hall
+15. Naija Tutors | Education | 📍 Online (UK-wide) | 11+, GCSE, A-Level tutoring by Nigerian tutors | naijahub.co.uk/directory/naija-tutors
+16. Eko Insurance Brokers | Insurance | 📍 Croydon, London | Car, home, business, travel insurance | ☎ 07700 900396 | naijahub.co.uk/directory/eko-insurance
+
+=== BUSINESS DIRECTORY (16 listings) ===
+
+1. Mama's Kitchen | Nigerian Restaurant | 📍 Peckham, London | Jollof rice, egusi soup, pounded yam, suya | ☎ 07700 900123 | naijahub.co.uk/directory/mamas-kitchen
+2. Adeleke & Co Solicitors | Legal Services | 📍 Brixton, London | Immigration, family law, business setup | ☎ 07700 900456 | naijahub.co.uk/directory/adeleke-solicitors
+3. Naija Groceries | African Food Store | 📍 Dalston, London | Imported Nigerian foodstuff, spices, palm oil | ☎ 07700 900789 | naijahub.co.uk/directory/naija-groceries
+4. TechNaija Solutions | IT & Tech | 📍 Canary Wharf, London | Web design, software dev, IT support | ☎ 07700 900321 | naijahub.co.uk/directory/technaija
+5. Afro Crown Hair Studio | Hair & Beauty | 📍 Tottenham, London | Braids, weaves, locs, natural hair | ☎ 07700 900654 | naijahub.co.uk/directory/afro-crown
+6. Ade Obi Accounting | Finance & Tax | 📍 Manchester | Self-assessment, HMRC, business accounts | ☎ 07700 900987 | naijahub.co.uk/directory/ade-obi
+7. Niger Delta Couriers | Shipping | 📍 Birmingham | UK to Nigeria parcels, door-to-door delivery | ☎ 07700 900147 | naijahub.co.uk/directory/niger-delta-couriers
+8. Covenant Medical Centre | Healthcare | 📍 Lewisham, London | GP services, private consultations, health checks | ☎ 07700 900258 | naijahub.co.uk/directory/covenant-medical
+9. Naija Fabric & Fashion | Clothing | 📍 Brixton, London | Ankara, Aso-oke, bespoke tailoring | ☎ 07700 900369 | naijahub.co.uk/directory/naija-fabric
+10. Obinna Properties | Real Estate | 📍 Leeds | Property management, buy-to-let advice, lettings | ☎ 07700 900741 | naijahub.co.uk/directory/obinna-properties
+11. Lagos Bites | Fast Food | 📍 Hackney, London | Pepper soup, moi moi, chin chin, small chops | ☎ 07700 900852 | naijahub.co.uk/directory/lagos-bites
+12. PharmaNaija | Pharmacy | 📍 Woolwich, London | Prescription services, African herbal supplements | ☎ 07700 900963 | naijahub.co.uk/directory/pharmanaija
+13. Chukwu Motors | Car Services | 📍 Wolverhampton | MOT, car repairs, used car sales | ☎ 07700 900174 | naijahub.co.uk/directory/chukwu-motors
+14. Silverbird Event Hall | Venue Hire | 📍 Stratford, London | Private events, weddings, birthday parties | ☎ 07700 900285 | naijahub.co.uk/directory/silverbird-hall
+15. Naija Tutors | Education | 📍 Online (UK-wide) | 11+, GCSE, A-Level tutoring by Nigerian tutors | naijahub.co.uk/directory/naija-tutors
+16. Eko Insurance Brokers | Insurance | 📍 Croydon, London | Car, home, business, travel insurance | ☎ 07700 900396 | naijahub.co.uk/directory/eko-insurance
+
+=== EVENTS (June–July 2026) ===
+
+1. Naija Food Festival London | 21 June 2026 | Alexandra Palace, London | Annual celebration of Nigerian cuisine, music & culture | Tickets: £15 | naijahub.co.uk/events/naija-food-fest-2026
+2. UK–Nigeria Business Networking Night | 28 June 2026 | Canary Wharf Conference Centre | Connect Nigerian entrepreneurs across sectors | Free entry | naijahub.co.uk/events/biz-network-june
+3. Afrobeats Summer Rave | 5 July 2026 | O2 Brixton Academy | Live DJs, afrobeats, amapiano | Tickets: £25 | naijahub.co.uk/events/afrobeats-summer
+4. Nigerian Independence Day Gala | 1 October 2026 | Grosvenor House, Mayfair | Black-tie dinner, cultural performances | Tickets: £75 | naijahub.co.uk/events/independence-gala
+5. Naija Parents UK Webinar | 19 June 2026 | Online (Zoom) | School admissions, 11+ prep, parenting in the UK | Free | naijahub.co.uk/events/parents-webinar-june
+
+=== BLOG ARTICLES ===
+
+1. "How to Send Money to Nigeria Cheaply in 2026" | Finance | naijahub.co.uk/blog/send-money-nigeria-2026
+2. "Top 10 Nigerian Restaurants in London You Must Try" | Food & Lifestyle | naijahub.co.uk/blog/nigerian-restaurants-london
+3. "Getting Your UK Driving Licence as a Nigerian Immigrant" | Education | naijahub.co.uk/blog/uk-driving-licence-guide
+4. "Starting a Business in the UK as a Nigerian: Step-by-Step" | Business | naijahub.co.uk/blog/start-business-uk-nigerian
+5. "Nigerian Students: How to Apply for UK University Grants" | Education | naijahub.co.uk/blog/uk-grants-nigerian-students
+6. "The Best Areas to Live in London for Nigerians" | Lifestyle | naijahub.co.uk/blog/best-areas-london-nigerians
+7. "Understanding the NHS as a Nigerian in the UK" | Health | naijahub.co.uk/blog/understanding-nhs-nigerians
+8. "How to Register Your Child for School in the UK" | Education | naijahub.co.uk/blog/register-child-uk-school
+`;
+
+let messages = [];
+let isLoading = false;
+// ============================================
+// TOBI GAP TRACKER
+// Logs unanswered/partial queries to your
+// NaijaHub Google Sheet for weekly review
+// ============================================
+const GAP_TRACKER_URL = 'https://script.google.com/macros/s/AKfycbxznVr_Tc5IuXPYQC7TVxQPQDD5LyxsK7FQl_DUkaS2_U3xNj4SD43EF_FOe4IZVQiu/exec';
+
+const GAP_SIGNALS = [
+  "i don't have", "i couldn't find", "not currently listed",
+  "no listings", "isn't listed", "aren't any", "can't find",
+  "not in the directory", "don't have that", "no results",
+  "not available", "i'm not sure", "i don't know",
+  "you may want to check", "google", "search online"
+];
+
+const CATEGORIES = {
+  business: ['business','accountant','solicitor','lawyer','doctor','dentist','barber','hair','restaurant','food','shop','store','courier','shipping','insurance','mechanic','car','plumber','builder','cleaner'],
+  events: ['event','party','concert','festival','wedding','networking','conference','seminar'],
+  money: ['send money','transfer','bank','wise','lemfi','remitly','exchange'],
+  japa: ['arrived','settle','nin','visa','immigration','driving','licence','nhs','gp','school','housing','rent','job'],
+  church: ['church','rccg','winners','mfm','kicc','prayer','pastor'],
+  blog: ['article','blog','guide','how to','tips','advice']
+};
+
+function detectCategory(question) {
+  const q = question.toLowerCase();
+  for (const [cat, keywords] of Object.entries(CATEGORIES)) {
+    if (keywords.some(k => q.includes(k))) return cat;
+  }
+  return 'general';
+}
+
+function detectCity(question) {
+  const cities = ['london','manchester','birmingham','leeds','liverpool','bristol','sheffield','nottingham','leicester','coventry','wolverhampton','bradford','edinburgh','glasgow','cardiff','reading','oxford','cambridge','brighton','southampton'];
+  const q = question.toLowerCase();
+  return cities.find(c => q.includes(c)) || '';
+}
+
+function isGapResponse(reply) {
+  const r = reply.toLowerCase();
+  return GAP_SIGNALS.some(signal => r.includes(signal));
+}
+
+async function logGap(question, reply) {
+  const category = detectCategory(question);
+  const city = detectCity(question);
+  const gapType = category === 'business' ? 'Missing Directory Listing' :
+                  category === 'events'   ? 'Missing Event' :
+                  category === 'blog'     ? 'Missing Blog Content' :
+                                            'Unanswered Question';
+  try {
+    await fetch(GAP_TRACKER_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, category, gapType, city })
+    });
+    console.log(`[Tobi Gap Logged] ${gapType} | ${category} | "${question}"`);
+  } catch (err) {
+    console.log('[Tobi Gap Tracker] Could not log:', err);
+  }
+}
+
+
+
+function formatResponse(text) {
+  // Extract suggestions
+  let suggestions = [];
+  const sugMatch = text.match(/\[SUGGESTIONS:(.*?)\]/s);
+  if (sugMatch) {
+    suggestions = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean);
+    text = text.replace(/\[SUGGESTIONS:.*?\]/s, '').trim();
+  }
+
+  // Convert **bold** to strong
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Convert [text](url) markdown links to clickable anchors
+  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" style="color:#057A44;font-weight:600;text-decoration:underline;">$1</a>');
+
+  // Parse affiliate cards
+  text = text.replace(/\[AFFILIATES:\s*(.*?)\]/g, (match, keys) => {
+    const keyList = keys.split(',').map(k => k.trim());
+    return renderAffiliateCards(keyList);
+  });
+
+  // Parse result cards
+  text = text.replace(/\[CARD:(.*?)\]/gs, (match, content) => {
+    const lines = content.trim().split('\n').map(l => l.trim());
+    let cardHTML = '<div class="result-card">';
+    lines.forEach(line => {
+      if (line.startsWith('TAG:')) {
+        const tag = line.replace('TAG:', '').trim().toLowerCase();
+        const tagClass = tag === 'directory' ? 'tag-directory' : tag === 'event' ? 'tag-event' : tag === 'guide' ? 'tag-guide' : tag === 'money' ? 'tag-money' : tag === 'church' ? 'tag-church' : 'tag-blog';
+        const emoji = tag === 'directory' ? '🏢' : tag === 'event' ? '🎉' : tag === 'guide' ? '🇬🇧' : tag === 'money' ? '💸' : tag === 'church' ? '🙏' : '📰';
+        cardHTML += `<span class="card-tag ${tagClass}">${emoji} ${tag}</span>`;
+      } else if (line.startsWith('NAME:')) {
+        cardHTML += `<div class="card-name">${line.replace('NAME:', '').trim()}</div>`;
+      } else if (line.startsWith('DETAIL:')) {
+        cardHTML += `<div class="card-detail">${line.replace('DETAIL:', '').trim()}</div>`;
+      } else if (line.startsWith('LINK:')) {
+        const url = line.replace('LINK:', '').trim();
+        cardHTML += `<a class="card-link" href="https://${url}" target="_blank">View on NaijaHub →</a>`;
+      }
+    });
+    cardHTML += '</div>';
+    return cardHTML;
+  });
+
+  let html = `<div>${text.replace(/\n\n/g, '</div><div style="margin-top:8px">').replace(/\n/g, '<br>')}</div>`;
+
+  if (suggestions.length > 0) {
+    html += '<div class="suggestions">';
+    suggestions.forEach(s => {
+      html += `<span class="suggestion" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</span>`;
+    });
+    html += '</div>';
+  }
+
+  return html;
+}
+
+function addMessage(role, content, isHTML = false) {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  if (role === 'bot') {
+    div.innerHTML = `
+      <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
+      <div class="bubble">${isHTML ? content : escapeHTML(content)}</div>
+    `;
+  } else {
+    div.innerHTML = `<div class="bubble">${escapeHTML(content)}</div>`;
+  }
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showTyping() {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.id = 'typing';
+  div.innerHTML = `
+    <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
+    <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function sendMessage(text) {
+  const input = document.getElementById('input');
+  const userText = text || input.value.trim();
+  if (!userText || isLoading) return;
+
+  input.value = '';
+  autoResize(input);
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  addMessage('user', userText);
+  messages.push({ role: 'user', content: userText });
+
+  showTyping();
+
+  try {
+    const systemPrompt = NAIJAHUB_DATA + `\n\nWhen showing business listings, events, articles, churches, or money services, format each result as a card using this exact format:
+[CARD:
+TAG: directory (or event or blog or guide or money or church)
+NAME: Business/Event/Article/Service name
+DETAIL: Key details in one line
+LINK: naijahub.co.uk/path (or external URL for churches/money services)
+]
+
+AFFILIATE RULES — IMPORTANT:
+When users ask about sending money to Nigeria, bank accounts, or SIM cards, include this tag in your response to trigger partner cards:
+[AFFILIATES: wise,lemfi,remitly,worldremit] — for money transfer questions
+[AFFILIATES: monzo] — for bank account questions  
+[AFFILIATES: giffgaff] — for SIM card questions
+[AFFILIATES: lemfi,wise] — for quick money app recommendations
+
+These are NaijaHub partner links that help the community get the best deals. Always mention they are "NaijaHub partner links" naturally.
+
+Show up to 3 directory/event/blog cards per response. For knowledge questions answer directly and warmly, suggest related NaijaHub directory listings if relevant. Always end with the NaijaHub footer and suggestions. Always be warm, practical and community-focused.
+
+GAP REPORTING — IMPORTANT:
+When you cannot find a business, event, or answer in the NaijaHub data, always include this phrase naturally in your response: "I don't have that listed on NaijaHub yet" — this helps us track what to add next. For example: "I don't have a Nigerian funeral director in Birmingham listed on NaijaHub yet — but this is something we're working to add! In the meantime, try searching Google for 'Nigerian funeral director Birmingham'."`;
+
+    const response = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: messages
+      })
+    });
+
+    const data = await response.json();
+    console.log('Response data:', JSON.stringify(data).substring(0, 200));
+    const reply = data.content?.[0]?.text || "Sorry, I couldn't get a response. Please try again!";
+
+    messages.push({ role: 'assistant', content: reply });
+    removeTyping();
+    addMessage('bot', formatResponse(reply), true);
+
+    // 🔍 Gap detection — log to NaijaHub Google Sheet
+    if (isGapResponse(reply)) {
+      logGap(userText, reply);
+    }
+
+  } catch (err) {
+    removeTyping();
+    addMessage('bot', formatResponse("No wahala — something went wrong on my end. Please try again! 🙏\n\n[SUGGESTIONS: Find a business | Upcoming events | Helpful articles]"), true);
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function quickAsk(text) {
+  sendMessage(text);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+// Welcome message
+window.onload = () => {
+  const welcome = `Ẹ káàbọ̀! • Nnọọ! • Sannu! 👋🏾 I'm **Tobi** — your Nigerian UK guide, powered by naijahub.co.uk.
+
+Whether you just japa'd or you've been here for years, I've got you! Ask me anything:
+
+🏢 Find Nigerian businesses near you
+🎉 Discover upcoming events
+🇬🇧 Settle in the UK — NIN, NHS, driving, housing
+💸 Send money to Nigeria cheaply
+🙏 Find a Nigerian church near you
+📋 Start a business in the UK
+🎓 Schools, jobs & immigration help
+
+**Wetin you need today?** 😄
+
+👉 Visit [www.naijahub.co.uk](https://www.naijahub.co.uk)
+
+[SUGGESTIONS: I just arrived in the UK, help me settle | Find a Nigerian business near me | How do I get my NIN?]`;
+
+  addMessage('bot', formatResponse(welcome), true);
+};
+</script>
+<!-- Install Banner -->
+<div id="install-banner">
+  <div class="banner-icon" style="background:white;padding:2px;"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
+  <div class="banner-text">
+    <strong>Add Tobi to your phone 📲</strong>
+    <span>Free from NaijaHub — no App Store needed!</span>
+  </div>
+  <button class="banner-btn" id="install-btn">Install</button>
+  <button class="banner-close" id="banner-close">✕</button>
+</div>
+
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+// ============================================
+// TOBI PUSH NOTIFICATIONS — OneSignal
+// Replace YOUR_ONESIGNAL_APP_ID below with
+// your App ID from onesignal.com
+// ============================================
+const ONESIGNAL_APP_ID = 'YOUR_ONESIGNAL_APP_ID';
+
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+function initOneSignal() {
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: ONESIGNAL_APP_ID,
+      safari_web_id: '',
+      notifyButton: { enable: false }, // We use our own custom bell button
+      promptOptions: {
+        slidedown: {
+          prompts: [{
+            type: 'push',
+            autoPrompt: false, // We control when to ask
+            text: {
+              actionMessage: "Get notified about new Nigerian businesses, events & deals on NaijaHub! 🇳🇬🇬🇧",
+              acceptButton: "Yes, notify me!",
+              cancelButton: "Maybe later"
+            }
+          }]
+        }
+      }
+    });
+
+    // Update bell button state based on subscription
+    const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
+    updateBellButton(isSubscribed);
+
+    // Listen for subscription changes
+    OneSignal.User.PushSubscription.addEventListener('change', (event) => {
+      updateBellButton(event.current.optedIn);
+    });
+  });
+}
+
+function updateBellButton(isSubscribed) {
+  const bell = document.getElementById('notify-bell');
+  if (!bell) return;
+  if (isSubscribed) {
+    bell.innerHTML = '🔔';
+    bell.title = 'Notifications ON';
+    bell.style.opacity = '1';
+  } else {
+    bell.innerHTML = '🔕';
+    bell.title = 'Get NaijaHub notifications';
+    bell.style.opacity = '0.7';
+  }
+}
+
+async function toggleNotifications() {
+  OneSignalDeferred.push(async function(OneSignal) {
+    const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
+    if (isSubscribed) {
+      await OneSignal.User.PushSubscription.optOut();
+      updateBellButton(false);
+      showNotifToast('Notifications turned off');
+    } else {
+      await OneSignal.Slidedown.promptPush();
+    }
+  });
+}
+
+function showNotifToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:#0F1E36; color:white; padding:10px 20px; border-radius:20px;
+    font-size:13px; font-weight:600; z-index:999999; white-space:nowrap;
+    box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  `;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Init when page loads
+if (ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID') {
+  initOneSignal();
+}
+
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+
+// PWA Install Prompt
+let deferredPrompt;
+const banner = document.getElementById('install-banner');
+const installBtn = document.getElementById('install-btn');
+const closeBtn = document.getElementById('banner-close');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show banner after 5 seconds
+  setTimeout(() => banner.classList.add('show'), 5000);
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    banner.classList.remove('show');
+  }
+  deferredPrompt = null;
+});
+
+closeBtn.addEventListener('click', () => {
+  banner.classList.remove('show');
+});
+
+// Hide banner if already installed
+window.addEventListener('appinstalled', () => {
+  banner.classList.remove('show');
+});
+
+// Handle URL query params for shortcuts
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  if (q) {
+    setTimeout(() => sendMessage(decodeURIComponent(q)), 1000);
+  }
+});
+</script>
+</body>
+</html>
