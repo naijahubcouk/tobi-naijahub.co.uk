@@ -1,46 +1,17 @@
-exports.handler = async function(event) {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
+Secret scanning found a Anthropic API Key secret on line 13. 
+Allowing this secret risks exposure. Instead, consider removing the secret from your commit and commit history.
+Exposing this secret can allow someone to:
+Verify the identity of this Anthropic API Key secret
+Know which resources this secret can access
+Act on behalf of the secret's owner
+Push this secret to this repository without being blocked
+Bypass reason
 
-  try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    console.log('API Key exists:', !!apiKey);
-    console.log('API Key length:', apiKey ? apiKey.length : 0);
+It's used in tests
+The secret poses no risk. If anyone finds it, they cannot do any damage or gain access to sensitive information.
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 100,
-        system: 'You are Tobi, a helpful Nigerian UK community assistant.',
-        messages: [{ role: 'user', content: 'Say hello in one sentence.' }]
-      })
-    });
+It's a false positive
+The detected string is not a secret.
 
-    const data = await response.json();
-    console.log('FULL RESPONSE:', JSON.stringify(data));
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    };
-
-  } catch (err) {
-    console.log('Error:', err.message);
-    return {
-      statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: err.message })
-    };
-  }
-};
+I'll fix it later
+The secret is real, I understand the risk, and I will need to revoke it. This will open a security alert and notify admins of this repository.
