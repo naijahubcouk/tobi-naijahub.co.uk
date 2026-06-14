@@ -78,7 +78,7 @@ exports.handler = async function(event) {
 
     console.log('Anthropic status:', response.status);
     const data = await response.json();
-    console.log('Response:', JSON.stringify(data).substring(0, 200));
+    console.log('Response:', JSON.stringify(data).substring(0, 500));
 
     return {
       statusCode: 200,
