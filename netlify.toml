@@ -3,4 +3,3 @@
 
 [build.environment]
   SECRETS_SCAN_ENABLED = "false"
-  ANTHROPIC_API_KEY = "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"
