@@ -8,8 +8,7 @@ exports.handler = async function(event) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': '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',
-        'anthropic-version': '2023-06-01'
+'x-api-key': 'sk-ant-api03-bJh...',        'anthropic-version': '2023-06-01'
       'x-api-key': process.env.ANTHROPIC_API_KEY,
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
