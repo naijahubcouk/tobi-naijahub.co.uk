@@ -1439,11 +1439,56 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP4etmzEKByoODaqXCw80gRiI2wkVRK6QYb_-v8wwdkTZ8834vDLoZbDN41/exec';
 
 function resetToWelcome() {
-  // Clear chat and reload welcome message
+  // Clear chat messages
   const chatBox = document.getElementById('chat-box');
   if (chatBox) chatBox.innerHTML = '';
   messages = [];
-  window.onload();
+
+  // Scroll to top
+  if (chatBox) chatBox.scrollTop = 0;
+
+  // Show fresh welcome message
+  const examProgress = getExamProgress();
+  if (examProgress && examProgress.name && examProgress.testType) {
+    const daysSince = examProgress.lastSeen ?
+      Math.floor((new Date() - new Date(examProgress.lastSeen)) / (1000 * 60 * 60 * 24)) : 0;
+    const returningWelcome = `Welcome back **${examProgress.name}**! 😄 Auntie Tobi remembers you!\n\n${daysSince > 0 ? `It has been **${daysSince} day${daysSince > 1 ? 's' : ''}** since your last session! 💪🏾` : `Great to see you again! 😊`}\n\n📊 **Your progress:**\n🎯 Test: ${examProgress.testType}\n📅 Test date: ${examProgress.testDate || 'Preparing ahead'}\n📈 Last score: ${examProgress.lastScore || 'Not recorded yet'}\n\nReady to continue? 🚀\n\n[SUGGESTIONS: Continue my ${examProgress.testType} practice | Take a mock test | Find a Nigerian business]`;
+    addMessage('bot', formatResponse(returningWelcome), true);
+  } else {
+    const allSuggestions = [
+      ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
+      ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'Find a Nigerian church near me'],
+      ['How do I register my child for school in the UK?', 'What events are coming up?', 'How do I open a UK bank account?'],
+      ['Find a makeup artist near me', 'How do I start a business in the UK?', 'What is the best SIM card for calling Nigeria?'],
+      ['Find a Nigerian hair stylist near me', 'How do I get my UK driving licence?', 'What are the best cities for Nigerians in the UK?'],
+      ['How do I register with a GP in the UK?', 'Find a Nigerian event this month', 'How do I apply for ILR?'],
+      ['Find African food near me', 'How do I find a job in the UK?', 'What Nigerian churches are near me?'],
+      ['Find a Nigerian accountant near me', 'How do I convert my Nigerian licence to UK?', 'Find a Nigerian fashion designer near me']
+    ];
+    const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
+    const suggestionStr = randomSet.join(' | ');
+    const welcome = `Ẹ káàbọ̀! • Nnọọ! • Sannu! 👋🏾 I'm **Auntie Tobi** — The Oversabi AI Auntie who actually helps! 😄
+
+Whether you just japa'd or you've been here for years, Auntie Tobi has got you covered! Ask me anything:
+
+🏢 Find Nigerian businesses near you
+🎉 Discover upcoming events
+🇬🇧 Settle in the UK — NIN, NHS, driving, housing
+🚗 Prepare for your UK Driving Theory Test
+📋 Prepare for your Life in UK Test
+🔍 Can't find a business? Request one!
+
+**Wetin you need today?** 😄
+
+👉 Visit [www.naijahub.co.uk](https://www.naijahub.co.uk)
+
+---
+🌸 **AD** — Preparing for your daughter's first period? Get the **First Period Guide + Digital Bundle** — practical advice and age-appropriate resources for Nigerian parents.
+👉 [Learn More](https://www.helloperiodz.com/bloomly-bundle)
+
+[SUGGESTIONS: ${suggestionStr}]`;
+    addMessage('bot', formatResponse(welcome), true);
+  }
 }
 
 let currentRating = 0;
@@ -1492,22 +1537,36 @@ async function submitFeedback() {
   status.textContent = 'Sending your feedback... ⏳';
 
   try {
-    await fetch('https://script.google.com/macros/s/AKfycbxznVr_Tc5IuXPYQC7TVxQPQDD5LyxsK7FQl_DUkaS2_U3xNj4SD43EF_FOe4IZVQiu/exec', {
+    // Send to Gap Tracker sheet with feedback type
+    await fetch(GAP_TRACKER_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type: 'feedback',
-        rating: currentRating,
-        love,
-        improve,
-        recommend: currentRecommend,
-        email,
+        query: `⭐ ${currentRating}/5 | Love: ${love || 'N/A'} | Improve: ${improve || 'N/A'} | Recommend: ${currentRecommend || 'N/A'} | Email: ${email || 'N/A'}`,
+        response: 'User Feedback',
         date: new Date().toISOString()
       })
     });
 
     status.textContent = 'Thank you! Your feedback means everything to us! 🙏🏾🇳🇬🇬🇧';
+
+    // Reset form
+    document.getElementById('fb-love').value = '';
+    document.getElementById('fb-improve').value = '';
+    document.getElementById('fb-email').value = '';
+    currentRating = 0;
+    currentRecommend = '';
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.getElementById(`star-${i}`);
+      if (btn) btn.classList.remove('active');
+    }
+    ['yes', 'maybe', 'no'].forEach(v => {
+      const btn = document.getElementById(`rec-${v}`);
+      if (btn) btn.classList.remove('active');
+    });
+
     setTimeout(hideFeedbackForm, 3000);
 
   } catch(err) {
