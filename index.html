@@ -550,11 +550,6 @@
       font-size:18px; padding:4px; margin-left:4px;
       opacity:0.9; transition:opacity 0.2s;
     ">📤</button>
-    <button id="notify-bell" onclick="toggleNotifications()" title="Get NaijaHub notifications" style="
-      background:none; border:none; cursor:pointer;
-      font-size:18px; padding:4px; margin-left:4px;
-      opacity:0.7; transition:opacity 0.2s;
-    ">🔕</button>
   </div>
 
   <div class="pills">
@@ -1369,12 +1364,13 @@ function shareAuntieTobi() {
   if (navigator.share) {
     navigator.share(shareData).catch(() => {});
   } else {
-    // Fallback — copy to clipboard
     navigator.clipboard.writeText(shareData.text + '\n' + shareData.url).then(() => {
       alert('Link copied! Share Auntie Tobi with your friends 🇳🇬🇬🇧');
     });
   }
 }
+
+function showRequestForm() {
   document.getElementById('request-modal').classList.add('show');
 }
 
