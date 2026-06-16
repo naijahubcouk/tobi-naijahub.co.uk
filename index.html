@@ -302,7 +302,30 @@
 
   .affiliate-btn:hover { background: #058a4e; }
 
-  /* Exam Question Styles */
+  /* Feedback Form */
+  .star-btn {
+    background: #F8F9FA;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .star-btn.active { background: #FFB81C; border-color: #FFB81C; }
+  .rec-btn {
+    background: #F8F9FA;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.2s;
+    color: #0F1E36;
+  }
+  .rec-btn.active { background: #057A44; color: white; border-color: #057A44; }
   .exam-question {
     background: #F8F9FA;
     border: 1.5px solid #E2E8F0;
@@ -567,12 +590,14 @@
   </div>
 
   <div class="pills">
+    <div class="pill" onclick="resetToWelcome()">💬 Ask Anything</div>
     <div class="pill" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses</div>
     <div class="pill" onclick="quickAsk('What events are coming up on NaijaHub?')">🎉 Events</div>
-    <div class="pill" onclick="quickAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my UK driving theory test')">🚗 Driving Theory Test</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my Life in UK test')">📋 Life in UK Test</div>
+    <div class="pill" onclick="quickAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
     <div class="pill" onclick="showRequestForm()">🔍 Request a Business</div>
+    <div class="pill" onclick="showFeedbackForm()">📝 Feedback</div>
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
   </div>
 
@@ -1358,7 +1383,44 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
   }
 };
 </script>
+<!-- Feedback Form Modal -->
+<div id="feedback-modal" style="display:none;position:fixed;inset:0;background:rgba(15,30,54,0.85);z-index:999999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:20px;padding:24px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,0.3);">
+    <button onclick="hideFeedbackForm()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#6B7280;margin-top:-4px;">✕</button>
+    <h3 style="font-family:'Fraunces',serif;color:#057A44;font-size:18px;margin-bottom:4px;">📝 Share Your Feedback</h3>
+    <p style="font-size:13px;color:#6B7280;margin-bottom:16px;">Help us make Auntie Tobi better for every Nigerian in the UK! 🇳🇬🇬🇧</p>
+
+    <!-- Star Rating -->
+    <p style="font-size:13px;font-weight:600;color:#0F1E36;margin-bottom:8px;">⭐ How would you rate Auntie Tobi?</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button onclick="setRating(1)" id="star-1" class="star-btn">⭐</button>
+      <button onclick="setRating(2)" id="star-2" class="star-btn">⭐</button>
+      <button onclick="setRating(3)" id="star-3" class="star-btn">⭐</button>
+      <button onclick="setRating(4)" id="star-4" class="star-btn">⭐</button>
+      <button onclick="setRating(5)" id="star-5" class="star-btn">⭐</button>
+    </div>
+
+    <textarea id="fb-love" placeholder="💚 What do you love about Auntie Tobi?" style="width:100%;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:#0F1E36;background:#F8F9FA;margin-bottom:10px;outline:none;box-sizing:border-box;height:70px;resize:none;"></textarea>
+
+    <textarea id="fb-improve" placeholder="💡 How can we improve Auntie Tobi?" style="width:100%;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:#0F1E36;background:#F8F9FA;margin-bottom:10px;outline:none;box-sizing:border-box;height:70px;resize:none;"></textarea>
+
+    <!-- Recommend -->
+    <p style="font-size:13px;font-weight:600;color:#0F1E36;margin-bottom:8px;">👍 Would you recommend Auntie Tobi?</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button onclick="setRecommend('Yes')" id="rec-yes" class="rec-btn">👍 Yes!</button>
+      <button onclick="setRecommend('Maybe')" id="rec-maybe" class="rec-btn">🤔 Maybe</button>
+      <button onclick="setRecommend('No')" id="rec-no" class="rec-btn">👎 Not yet</button>
+    </div>
+
+    <input type="email" id="fb-email" placeholder="📧 Your email (optional)" style="width:100%;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:#0F1E36;background:#F8F9FA;margin-bottom:12px;outline:none;box-sizing:border-box;">
+
+    <button onclick="submitFeedback()" style="width:100%;background:#057A44;color:white;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Send Feedback 🙏🏾</button>
+    <p id="fb-status" style="text-align:center;margin-top:10px;font-size:13px;color:#057A44;"></p>
+  </div>
+</div>
+
 <!-- Business Request Modal -->
+
 <div id="request-modal">
   <div class="request-box">
     <button class="request-close" onclick="hideRequestForm()">✕</button>
@@ -1375,6 +1437,84 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 
 <script>
 const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP4etmzEKByoODaqXCw80gRiI2wkVRK6QYb_-v8wwdkTZ8834vDLoZbDN41/exec';
+
+function resetToWelcome() {
+  // Clear chat and reload welcome message
+  const chatBox = document.getElementById('chat-box');
+  if (chatBox) chatBox.innerHTML = '';
+  messages = [];
+  window.onload();
+}
+
+let currentRating = 0;
+let currentRecommend = '';
+
+function setRating(n) {
+  currentRating = n;
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.getElementById(`star-${i}`);
+    if (btn) btn.classList.toggle('active', i <= n);
+  }
+}
+
+function setRecommend(val) {
+  currentRecommend = val;
+  ['Yes', 'Maybe', 'No'].forEach(v => {
+    const btn = document.getElementById(`rec-${v.toLowerCase()}`);
+    if (btn) btn.classList.toggle('active', v === val);
+  });
+}
+
+function showFeedbackForm() {
+  const modal = document.getElementById('feedback-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function hideFeedbackForm() {
+  const modal = document.getElementById('feedback-modal');
+  if (modal) modal.style.display = 'none';
+  document.getElementById('fb-status').textContent = '';
+}
+
+async function submitFeedback() {
+  const love = document.getElementById('fb-love').value.trim();
+  const improve = document.getElementById('fb-improve').value.trim();
+  const email = document.getElementById('fb-email').value.trim();
+  const status = document.getElementById('fb-status');
+
+  if (!currentRating) {
+    status.style.color = '#EF4444';
+    status.textContent = 'Please give a star rating! ⭐';
+    return;
+  }
+
+  status.style.color = '#057A44';
+  status.textContent = 'Sending your feedback... ⏳';
+
+  try {
+    await fetch('https://script.google.com/macros/s/AKfycbxznVr_Tc5IuXPYQC7TVxQPQDD5LyxsK7FQl_DUkaS2_U3xNj4SD43EF_FOe4IZVQiu/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'feedback',
+        rating: currentRating,
+        love,
+        improve,
+        recommend: currentRecommend,
+        email,
+        date: new Date().toISOString()
+      })
+    });
+
+    status.textContent = 'Thank you! Your feedback means everything to us! 🙏🏾🇳🇬🇬🇧';
+    setTimeout(hideFeedbackForm, 3000);
+
+  } catch(err) {
+    status.style.color = '#EF4444';
+    status.textContent = 'Something went wrong — please try again! 🙏🏾';
+  }
+}
 
 function shareAuntieTobi() {
   const shareData = {
