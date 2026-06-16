@@ -1,15 +1,82 @@
 {
-  "name": "Tobi by NaijaHub",
-  "short_name": "Tobi",
-  "description": "Ask Tobi anything about Nigerian life in the UK.",
+  "name": "Auntie Tobi \u2014 The Oversabi AI Auntie who actually helps!",
+  "short_name": "Auntie Tobi",
+  "description": "Auntie Tobi \u2014 The Oversabi AI Auntie who actually helps! Ask anything about Nigerian life in the UK. Powered by NaijaHub.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#057A44",
   "theme_color": "#057A44",
   "orientation": "portrait",
+  "categories": [
+    "lifestyle",
+    "social",
+    "utilities"
+  ],
+  "lang": "en-GB",
   "icons": [
-    { "src": "/tobi-face-128.png", "sizes": "128x128", "type": "image/png" },
-    { "src": "/tobi-face-256.png", "sizes": "256x256", "type": "image/png" },
-    { "src": "/tobi-face-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/tobi-face-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/tobi-face-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/tobi-face-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find a Business",
+      "short_name": "Businesses",
+      "url": "/?q=find+a+Nigerian+business",
+      "icons": [
+        {
+          "src": "/tobi-face-128.png",
+          "sizes": "128x128"
+        }
+      ]
+    },
+    {
+      "name": "Upcoming Events",
+      "short_name": "Events",
+      "url": "/?q=upcoming+events+on+NaijaHub",
+      "icons": [
+        {
+          "src": "/tobi-face-128.png",
+          "sizes": "128x128"
+        }
+      ]
+    },
+    {
+      "name": "Japa Guide",
+      "short_name": "Settle in UK",
+      "url": "/?q=I+just+arrived+in+the+UK+help+me+settle",
+      "icons": [
+        {
+          "src": "/tobi-face-128.png",
+          "sizes": "128x128"
+        }
+      ]
+    },
+    {
+      "name": "Send Money",
+      "short_name": "Send Money",
+      "url": "/?q=how+do+I+send+money+to+Nigeria+cheaply",
+      "icons": [
+        {
+          "src": "/tobi-face-128.png",
+          "sizes": "128x128"
+        }
+      ]
+    }
   ]
 }
