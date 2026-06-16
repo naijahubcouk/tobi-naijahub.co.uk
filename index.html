@@ -289,7 +289,60 @@
 
   .affiliate-btn:hover { background: #058a4e; }
 
-  /* Business Request Form */
+  /* Exam Question Styles */
+  .exam-question {
+    background: #F8F9FA;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 16px;
+    margin: 8px 0;
+  }
+  .exam-q-text {
+    font-weight: 700;
+    color: #0F1E36;
+    font-size: 15px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .exam-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .exam-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    color: #0F1E36;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .exam-option:hover {
+    border-color: #057A44;
+    background: #F0FBF5;
+    color: #057A44;
+  }
+  .exam-option-label {
+    background: #057A44;
+    color: white;
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
   #request-modal {
     display: none;
     position: fixed;
@@ -488,13 +541,18 @@
   <div class="header">
     <div class="logo"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
     <div class="header-text">
-      <h1>Auntie Tobi 😄 <a href="https://naijahub.co.uk" target="_blank" style="color:#FFB81C;text-decoration:none;">naijahub.co.uk</a></h1>
-      <p>The Oversabi AI Auntie who actually helps! 🇳🇬🇬🇧</p>
+      <h1>Auntie Tobi 😄 Powered by <a href="https://naijahub.co.uk" target="_blank" style="color:#FFB81C;text-decoration:none;">naijahub.co.uk</a></h1>
+      <p>The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"></p>
     </div>
     <div class="status-dot"></div>
+    <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="
+      background:none; border:none; cursor:pointer;
+      font-size:18px; padding:4px; margin-left:4px;
+      opacity:0.9; transition:opacity 0.2s;
+    ">📤</button>
     <button id="notify-bell" onclick="toggleNotifications()" title="Get NaijaHub notifications" style="
       background:none; border:none; cursor:pointer;
-      font-size:18px; padding:4px; margin-left:6px;
+      font-size:18px; padding:4px; margin-left:4px;
       opacity:0.7; transition:opacity 0.2s;
     ">🔕</button>
   </div>
@@ -621,7 +679,7 @@ You help with:
 
 PERSONALITY: Warm, wise and confident — like a trusted Nigerian Auntie. Use Nigerian expressions naturally: "No wahala my dear!", "Omo!", "E go be!", "Chai!", "Na so!", "Abeg". Always address users as "my dear" occasionally.
 
-Always respond warmly and concisely. Always add the footer: "— 🇳🇬🇬🇧 Auntie Tobi | The Oversabi AI Auntie who actually helps! | naijahub.co.uk"
+Always respond warmly and concisely. Add the signature "— 🇳🇬🇬🇧 Auntie Tobi | The Oversabi AI Auntie | Powered by naijahub.co.uk" occasionally and naturally — not every message. Use it after particularly helpful responses or when it feels right. Most responses end warmly with just "Your Oversabi Auntie 😄" or "Auntie Tobi 🇳🇬🇬🇧".
 
 Always end responses with 1-2 short follow-up suggestions:
 [SUGGESTIONS: suggestion one | suggestion two]
@@ -1004,6 +1062,41 @@ function formatResponse(text) {
     text = text.replace(/\[SUGGESTIONS:.*?\]/s, '').trim();
   }
 
+  // Parse exam question with clickable answer buttons
+  const questionMatch = text.match(/\[QUESTION:(.*?)\]\s*\[OPTION_A:(.*?)\]\s*\[OPTION_B:(.*?)\]\s*\[OPTION_C:(.*?)\]\s*\[OPTION_D:(.*?)\]/s);
+  if (questionMatch) {
+    const question = questionMatch[1].trim();
+    const optA = questionMatch[2].trim();
+    const optB = questionMatch[3].trim();
+    const optC = questionMatch[4].trim();
+    const optD = questionMatch[5].trim();
+
+    // Remove the question block from text
+    text = text.replace(/\[QUESTION:.*?\]\s*\[OPTION_A:.*?\]\s*\[OPTION_B:.*?\]\s*\[OPTION_C:.*?\]\s*\[OPTION_D:.*?\]/s, '');
+
+    // Build question HTML with clickable buttons
+    const questionHTML = `
+      <div class="exam-question">
+        <div class="exam-q-text">${question}</div>
+        <div class="exam-options">
+          <button class="exam-option" onclick="quickAsk('A) ${optA.replace(/'/g, "\\'")}')">
+            <span class="exam-option-label">A</span> ${optA}
+          </button>
+          <button class="exam-option" onclick="quickAsk('B) ${optB.replace(/'/g, "\\'")}')">
+            <span class="exam-option-label">B</span> ${optB}
+          </button>
+          <button class="exam-option" onclick="quickAsk('C) ${optC.replace(/'/g, "\\'")}')">
+            <span class="exam-option-label">C</span> ${optC}
+          </button>
+          <button class="exam-option" onclick="quickAsk('D) ${optD.replace(/'/g, "\\'")}')">
+            <span class="exam-option-label">D</span> ${optD}
+          </button>
+        </div>
+      </div>`;
+
+    text = text.trim() + questionHTML;
+  }
+
   // Convert **bold** to strong
   text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
@@ -1267,7 +1360,21 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 <script>
 const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP4etmzEKByoODaqXCw80gRiI2wkVRK6QYb_-v8wwdkTZ8834vDLoZbDN41/exec';
 
-function showRequestForm() {
+function shareAuntieTobi() {
+  const shareData = {
+    title: 'Auntie Tobi — The Oversabi AI Auntie who actually helps!',
+    text: 'Meet Auntie Tobi — The Oversabi AI Auntie who actually helps! 🇳🇬🇬🇧\nThe FREE AI assistant made specifically for Nigerians in the UK!\nAsk her anything — find Nigerian businesses, events, driving theory test, Life in UK test and more!\nTry her FREE 👉 auntietobi.com',
+    url: 'https://auntietobi.com'
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else {
+    // Fallback — copy to clipboard
+    navigator.clipboard.writeText(shareData.text + '\n' + shareData.url).then(() => {
+      alert('Link copied! Share Auntie Tobi with your friends 🇳🇬🇬🇧');
+    });
+  }
+}
   document.getElementById('request-modal').classList.add('show');
 }
 
@@ -1331,7 +1438,7 @@ async function submitRequest() {
 // Replace YOUR_ONESIGNAL_APP_ID below with
 // your App ID from onesignal.com
 // ============================================
-const ONESIGNAL_APP_ID = 'YOUR_ONESIGNAL_APP_ID';
+const ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
 
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
