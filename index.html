@@ -123,17 +123,30 @@
 
   .header-text h1 {
     font-family: 'Fraunces', serif;
-    font-size: 17px;
+    font-size: 22px;
     color: var(--white);
-    font-weight: 700;
-    line-height: 1.2;
+    font-weight: 800;
+    line-height: 1.1;
   }
 
-  .header-text p {
+  .header-text .tagline {
     font-size: 12px;
     color: var(--gold-light);
     margin-top: 2px;
     font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .header-text .powered-by {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 1px;
+    font-weight: 400;
+  }
+
+  .header-text .powered-by a {
+    color: #FFB81C;
+    text-decoration: none;
   }
 
   .status-dot {
@@ -541,8 +554,9 @@
   <div class="header">
     <div class="logo"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
     <div class="header-text">
-      <h1>Auntie Tobi 😄 Powered by <a href="https://naijahub.co.uk" target="_blank" style="color:#FFB81C;text-decoration:none;">naijahub.co.uk</a></h1>
-      <p>The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"></p>
+      <h1>Auntie Tobi 😄</h1>
+      <p class="tagline">The Oversabi AI Auntie for Nigerians in the UK <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"></p>
+      <p class="powered-by">(Powered by <a href="https://naijahub.co.uk" target="_blank">naijahub.co.uk</a>)</p>
     </div>
     <div class="status-dot"></div>
     <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="
@@ -586,7 +600,7 @@ const AFFILIATES = {
     tag: 'money',
     badge: '⭐ NaijaHub Partner',
     description: 'Best exchange rates — send money to Nigeria in hours',
-    cta: 'Sign up & get fee-free first transfer'
+    cta: 'Sign up & get may offer introductory promotions'
   },
   lemfi: {
     name: 'Lemfi',
@@ -719,9 +733,9 @@ PLATFORM DATA:
 Q: How do I settle in the UK as a Nigerian?
 A: Welcome to the UK! 🇬🇧 Here are your first steps:
 
-1) Get your BRP (Biometric Residence Permit) — collect from your Post Office within 10 days of arrival
+1) If you were issued a BRP collect it as instructed in your visa letter. The UK is moving to eVisas — check your UKVI account for your digital immigration status
 2) Open a bank account — Monzo or Starling are easiest, no credit history needed
-3) Register with a GP on nhs.uk — completely free
+3) Register with a local GP surgery — completely free. Find one at nhs.uk. You may need ID (passport) and proof of address
 4) Apply for your National Insurance Number (NIN) at gov.uk or call 0800 141 2075
 5) Get a SIM card with good Nigeria calling rates:
 
@@ -734,14 +748,15 @@ A: Keep these safe: Passport + visa/BRP, National Insurance Number (NIN), NHS nu
 
 --- NATIONAL INSURANCE NUMBER (NIN) ---
 Q: How do I get a National Insurance Number in the UK?
-A: Your NIN is essential for working and paying tax in the UK. Apply online at gov.uk/apply-national-insurance-number or call 0800 141 2075. You'll need your BRP, passport, and proof of address. Processing takes 4–8 weeks. You can start work before receiving it — just tell your employer you've applied.
+A: Your NIN is essential for working and paying tax in the UK. Apply online at gov.uk/apply-national-insurance-number — your employer may also help you apply. You can usually start work before it arrives.
 
 --- NHS & HEALTH ---
 Q: How does the NHS work for Nigerians in the UK?
-A: The NHS is the UK's free national health service. Register with a local GP practice on nhs.uk — it's completely free. For emergencies call 999. For urgent non-emergency care call 111. You can also walk into an A&E. Prescription medicines cost £9.90 per item (free if you're pregnant, under 16, over 60, or on certain benefits). Dental and eye care are separate — check NHS dentists on nhs.uk.
+A: Most essential healthcare is free at the point of use through the NHS. Register with a local GP surgery — it is free. You may need ID (passport) and proof of address. BRP is not always required and with the UK moving to eVisas requirements vary by GP. For emergencies call 999. For urgent non-emergency care call 111. Note: NOT everything is free — prescriptions in England cost £9.90 per item (free if pregnant, under 16, over 60 or on certain benefits), dental treatment is partly charged and eye tests are usually charged. Many visa holders also pay an Immigration Health Surcharge (IHS) upfront when applying for their visa.
+⚠️ NHS rules change — always verify at nhs.uk
 
 Q: How do I find an NHS GP near me?
-A: Go to nhs.uk/service-search/find-a-gp — enter your postcode, find a nearby practice and register online or by walking in. Most practices accept new patients. Bring your passport/BRP and proof of address.
+A: Go to nhs.uk/service-search/find-a-gp — enter your postcode, find a nearby practice and register online or by walking in. Most practices accept new patients. Bring your passport and proof of address. You do not always need a BRP — a passport is usually enough.
 
 --- DRIVING ---
 Q: Can I use my Nigerian driving licence in the UK?
@@ -793,11 +808,17 @@ Q: How do I find a Nigerian church in the UK?
 A: Major Nigerian church networks in the UK: 1) RCCG (Redeemed Christian Church of God) — rccguk.church — hundreds of branches UK-wide. 2) Winners Chapel (Living Faith Church) — winnerschapeluk.org. 3) Mountain of Fire and Miracles (MFM) — mfmuk.org. 4) KICC (Kingsway International Christian Centre) — kicc.org.uk — based in London. 5) Deeper Life Bible Church — deeperlifeonline.org. Search "[your city] Nigerian church" on Google to find local branches.
 
 --- IMMIGRATION & VISAS ---
+
+SENSITIVE TOPICS RULE: For ALL immigration legal medical and financial questions always add:
+"⚠️ Important: This is general guidance only. Always check gov.uk or speak with a qualified professional — rules change frequently! 🙏🏾"
+NEVER state specific deadlines or rules from memory — only use what is written here.
+
 Q: How do I apply to extend my UK visa?
 A: Apply on gov.uk/browse/visas-immigration at least 3 months before your visa expires. You can stay in the UK while your application is processed (called "Section 3C leave"). Use a registered immigration solicitor for complex cases — ask NaijaHub to find one near you. Common visas for Nigerians: Skilled Worker, Student, Family, BNO (not applicable), Graduate visa.
 
 Q: How do I apply for Indefinite Leave to Remain (ILR) in the UK?
-A: ILR (permanent residency) is usually available after 5 years on most visas. Requirements: continuous residence in the UK, pass the Life in the UK test (£50, book at gov.uk), English language proof, and no criminal record. Application fee: £2,885 (2026). Apply on gov.uk/indefinite-leave-to-remain.
+A: ILR (permanent residency) is usually available after 5 years on most visas. Requirements: continuous residence in the UK, pass the Life in the UK test (£50, book at gov.uk — your pass certificate is valid for LIFE with NO expiry and NO time limit to apply after passing), English language proof, and no criminal record. Application fee: £2,885 (2026). Apply on gov.uk/indefinite-leave-to-remain.
+⚠️ Always verify the latest requirements at gov.uk or with a qualified immigration solicitor as rules change frequently!
 
 --- BENEFITS & SUPPORT ---
 Q: What UK benefits can Nigerians claim?
@@ -1318,14 +1339,14 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 
 🏢 Find Nigerian businesses near you
 🎉 Discover upcoming events
-🇬🇧 Settle in the UK — NIN, NHS, driving, housing
-🚗 Prepare for your UK Driving Theory Test
+🇬🇧 Navigate life in the UK — NHS, housing and more
+🚗 Prepare for your Driving Theory Test
 📋 Prepare for your Life in UK Test
 🔍 Can't find a business? Request one!
 
 **Wetin you need today?** 😄
 
-👉 Visit [www.naijahub.co.uk](https://www.naijahub.co.uk)
+📢 Own a business? Add your listing on 👉 [www.naijahub.co.uk](https://www.naijahub.co.uk)
 
 ---
 🌸 **AD** — Preparing for your daughter's first period? Get the **First Period Guide + Digital Bundle** — practical advice and age-appropriate resources for Nigerian parents.
@@ -1420,7 +1441,7 @@ async function submitRequest() {
   <div class="banner-icon" style="background:white;padding:2px;"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
   <div class="banner-text">
     <strong>Add Auntie Tobi to your phone 📲</strong>
-    <span>The Oversabi AI Auntie who actually helps! — FREE!</span>
+    <span>Auntie Tobi — The Oversabi AI Auntie for Nigerians in the UK! FREE!</span>
   </div>
   <button class="banner-btn" id="install-btn">Install</button>
   <button class="banner-close" id="banner-close">✕</button>
