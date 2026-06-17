@@ -1585,7 +1585,19 @@ When you cannot find a business, event, or answer in the NaijaHub data, always i
 function quickAsk(text) {
   // Handle request options
   if (text === '🏢 Request a Business listing') {
-    showRequestForm();
+    showRequestForm('business');
+    return;
+  }
+  if (text === '🙋🏾 Request personal help or support to post in the community') {
+    showRequestForm('help');
+    return;
+  }
+  if (text === '💡 Suggest something for NaijaHub') {
+    showRequestForm('suggest');
+    return;
+  }
+  if (text === '✉️ Other') {
+    showRequestForm('other');
     return;
   }
 
@@ -1787,13 +1799,14 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 <div id="request-modal">
   <div class="request-box">
     <button class="request-close" onclick="hideRequestForm()">✕</button>
-    <h3>📋 Request a Business</h3>
-    <p>Can't find what you need? Tell Auntie Tobi and our team will find it for you! 😊</p>
+    <h3 id="req-title">📋 Request</h3>
+    <p id="req-subtitle">Tell us what you need and our team will get back to you! 😊</p>
     <input type="text" id="req-name" placeholder="Your name *" required>
     <input type="tel" id="req-phone" placeholder="Your phone number *" required>
     <input type="email" id="req-email" placeholder="Your email address *" required>
-    <textarea id="req-request" placeholder="What business or service are you looking for? (e.g. Nigerian solicitor in Leeds) *" required></textarea>
-    <button class="request-submit" onclick="submitRequest()">Send Request to Auntie Tobi 🙏🏾</button>
+    <textarea id="req-request" placeholder="Tell us more... *" required></textarea>
+    <input type="hidden" id="req-type" value="business">
+    <button class="request-submit" onclick="submitRequest()">Send Request 🙏🏾</button>
     <p id="req-status" style="text-align:center;margin-top:10px;font-size:13px;color:#057A44;"></p>
   </div>
 </div>
@@ -1963,17 +1976,52 @@ function shareAuntieTobi() {
 }
 
 function showRequestOptions() {
-  const msg = `What would you like to request? 😊
-
-[OPTION_A: 🏢 Request a Business listing]
-[OPTION_B: 🙋🏾 Request personal help or support to post in the community]
-[OPTION_C: 💡 Suggest something for NaijaHub]
-[OPTION_D: ✉️ Other]`;
-  addMessage('bot', formatResponse(msg), true);
+  const msg = `What would you like to request? 😊`;
+  const html = formatResponse(msg) + `
+    <div class="exam-options" style="margin-top:10px;">
+      <button class="exam-option" onclick="showRequestForm('business')" style="justify-content:flex-start;">🏢 Request a Business listing</button>
+      <button class="exam-option" onclick="showRequestForm('help')" style="justify-content:flex-start;">🙋🏾 Request personal help or support to post in the community</button>
+      <button class="exam-option" onclick="showRequestForm('suggest')" style="justify-content:flex-start;">💡 Suggest something for NaijaHub</button>
+      <button class="exam-option" onclick="showRequestForm('other')" style="justify-content:flex-start;">✉️ Other</button>
+    </div>`;
+  addMessage('bot', html, true);
   messages.push({ role: 'assistant', content: msg });
 }
 
-function showRequestForm() {
+function showRequestForm(type = 'business') {
+  const configs = {
+    business: {
+      title: '🏢 Request a Business listing',
+      subtitle: "Can't find a Nigerian business? Tell us and we'll add it to NaijaHub! 😊",
+      placeholder: "What business or service are you looking for? (e.g. Nigerian solicitor in Leeds) *"
+    },
+    help: {
+      title: '🙋🏾 Request Community Help',
+      subtitle: "Need help or support? Tell us and we'll post in the community for you! 😊",
+      placeholder: "What help or support do you need? Tell us as much as you can... *"
+    },
+    suggest: {
+      title: '💡 Suggest something for NaijaHub',
+      subtitle: "Got an idea? We love suggestions from the community! 😊",
+      placeholder: "What would you like to see on NaijaHub? (e.g. new feature, business category, content idea) *"
+    },
+    other: {
+      title: '✉️ Other Request',
+      subtitle: "Tell us anything — we are here to help! 😊",
+      placeholder: "What would you like to tell us or request? *"
+    }
+  };
+
+  const config = configs[type] || configs.business;
+  document.getElementById('req-title').textContent = config.title;
+  document.getElementById('req-subtitle').textContent = config.subtitle;
+  document.getElementById('req-request').placeholder = config.placeholder;
+  document.getElementById('req-type').value = type;
+  document.getElementById('req-status').textContent = '';
+  document.getElementById('req-name').value = '';
+  document.getElementById('req-phone').value = '';
+  document.getElementById('req-email').value = '';
+  document.getElementById('req-request').value = '';
   document.getElementById('request-modal').classList.add('show');
 }
 
@@ -1987,6 +2035,7 @@ async function submitRequest() {
   const phone = document.getElementById('req-phone').value.trim();
   const email = document.getElementById('req-email').value.trim();
   const request = document.getElementById('req-request').value.trim();
+  const type = document.getElementById('req-type').value || 'business';
   const status = document.getElementById('req-status');
 
   if (!name || !phone || !email || !request) {
@@ -2003,10 +2052,10 @@ async function submitRequest() {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, email, request })
+      body: JSON.stringify({ name, phone, email, request, type })
     });
 
-    status.textContent = 'Request sent! Auntie Tobi\'s team will get back to you within 24 hours! 🎉';
+    status.textContent = 'Request sent! Our team will get back to you within 24 hours! 🎉';
     document.getElementById('req-name').value = '';
     document.getElementById('req-phone').value = '';
     document.getElementById('req-email').value = '';
