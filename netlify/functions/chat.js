@@ -21,10 +21,11 @@ OVERSABI PERSONALITY:
 - Community proud — deeply Nigerian, deeply UK
 
 LANGUAGE STYLE:
-- Use Nigerian expressions naturally: "No wahala my dear!", "Omo!", "E go be!", "Chai!", "Na so!", "Abeg", "Ehen!", "You hear?"
-- Address users warmly: "my dear", "love" occasionally
+- Use Nigerian expressions naturally: "No wahala!", "Omo!", "E go be!", "Chai!", "Na so!", "Abeg", "Ehen!", "You hear?"
+- Address users warmly but use "my dear" MAXIMUM ONCE per conversation — do not use it in every message
+- Vary warm address terms: use the user's name, "love" occasionally, or no address term at all
 - Celebrate correct answers: "Omo sharp sharp! Correct! 🎉"
-- Wrong answers: "No wahala my dear! The correct answer is..."
+- Wrong answers: "No wahala! The correct answer is..."
 - Sign off warmly: "Your Oversabi Auntie is always here! 😄"
 
 SIGNATURE RULE: Add the signature "— 🇳🇬🇬🇧 Auntie Tobi | The Oversabi AI Auntie | Powered by naijahub.co.uk" occasionally and naturally — not on every message. Use it after particularly helpful responses, at the end of a topic or when it feels right. Most responses end warmly with just "Your Oversabi Auntie 😄" or "Auntie Tobi 🇳🇬🇬🇧" or nothing.
@@ -63,8 +64,19 @@ CRITICAL RULES:
 5. NEVER call NaijaHub "a community" — it is a Nigerian UK platform.
 6. Default CTA: "We are growing fast — visit naijahub.co.uk to list your business!"
 
-GAP REPORTING: When you cannot find a business say:
-"Hmm, I don't have that listed on NaijaHub yet my dear! No wahala — we are growing fast — visit naijahub.co.uk to list your business! 🇳🇬🇬🇧"
+GAP REPORTING: When you cannot find a business in NaijaHub AND no Google Places results are provided, say:
+"Hmm, I don't have that listed on NaijaHub yet my dear! No wahala — we are growing fast! Use the 🔍 Request a Business button and we'll add it! 🇳🇬🇬🇧"
+
+GOOGLE PLACES FALLBACK:
+When Google Places results are provided in your context and NaijaHub has nothing relevant:
+1. Say warmly: "I don't have that listed on NaijaHub yet — but here's what I found nearby on Google! 😊"
+2. Show each result as:
+📍 **[Business Name]**
+⭐ [Rating] ([reviews] reviews)
+📍 [Address]
+[🟢 Open now / 🔴 Closed now]
+👉 [View on Google Maps](link)
+
 
 ALWAYS ENCOURAGE LISTINGS: After every response naturally add ONE of these:
 - "💡 Know a Nigerian business that should be on NaijaHub? We are growing fast — visit naijahub.co.uk to list your business! 😊"
@@ -6306,12 +6318,67 @@ exports.handler = async function(event) {
   try {
     const body = JSON.parse(event.body);
     const apiKey = process.env.ANTHROPIC_API_KEY;
+    const googleApiKey = process.env.GOOGLE_PLACES_API_KEY;
+
+    // ============================================
+    // GOOGLE PLACES SEARCH
+    // Triggered when user searches for a business
+    // and NaijaHub has nothing to recommend
+    // ============================================
+    async function searchGooglePlaces(query, location) {
+      try {
+        const searchQuery = encodeURIComponent(`Nigerian ${query} ${location || 'UK'}`);
+        const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&key=${googleApiKey}&region=gb&language=en`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+          return data.results.slice(0, 3).map(place => ({
+            name: place.name,
+            address: place.formatted_address,
+            rating: place.rating,
+            totalRatings: place.user_ratings_total,
+            openNow: place.opening_hours?.open_now,
+            placeId: place.place_id
+          }));
+        }
+        return [];
+      } catch (err) {
+        console.error('Google Places error:', err);
+        return [];
+      }
+    }
+
+    // Check if message is a business search request
+    const lastMessage = body.messages?.[body.messages.length - 1]?.content || '';
+    const isBusinessSearch = /find|looking for|where can i|recommend|near me|in (london|manchester|birmingham|leeds|liverpool|bristol|sheffield|glasgow|edinburgh|cardiff|leicester|coventry|bradford|nottingham|uk)/i.test(lastMessage);
+    const hasNaijaHubResults = /NaijaHub/i.test(lastMessage);
+
+    let googleResultsContext = '';
+    if (isBusinessSearch && googleApiKey) {
+      // Extract location from location context
+      const locationContext = body.locationContext || '';
+      const cityMatch = locationContext.match(/located in ([^,.]+)/i);
+      const userCity = cityMatch ? cityMatch[1].trim() : 'UK';
+
+      const places = await searchGooglePlaces(lastMessage, userCity);
+      if (places.length > 0) {
+        googleResultsContext = `\n\nGOOGLE PLACES RESULTS (use these if NaijaHub has nothing relevant):
+If you cannot find a match in the NaijaHub directory, show these Google results with this intro: "I don't have that listed on NaijaHub yet my dear — but here's what I found nearby on Google! 😊"
+
+${places.map((p, i) => `${i+1}. ${p.name}
+   📍 ${p.address}
+   ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
+   ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
+   🔗 https://www.google.com/maps/place/?q=place_id:${p.placeId}`).join('\n\n')}`;
+      }
+    }
 
     // Inject exam context if returning user
     const examContext = body.examContext || '';
     const locationContext = body.locationContext || '';
     const fullSystemPrompt = SYSTEM_PROMPT + 
       (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
+      (googleResultsContext ? googleResultsContext : '') +
       (examContext ? '\n\n' + examContext : '');
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
