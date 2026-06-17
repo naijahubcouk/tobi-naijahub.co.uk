@@ -577,8 +577,8 @@
   <div class="header">
     <div class="logo"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
     <div class="header-text">
-      <h1 style="font-size:22px;font-weight:800;margin:0 0 2px 0;color:#FFB81C;">Auntie Tobi</h1>
-      <p style="margin:0;font-size:12px;opacity:0.9;color:white;">The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> <span style="font-size:10px;opacity:0.75;">(Powered by <a href="https://naijahub.co.uk" target="_blank" style="color:#FFB81C;text-decoration:none;">naijahub.co.uk</a>)</span></p>
+      <h1 style="font-size:22px;font-weight:800;margin:0 0 2px 0;color:white;">Auntie Tobi</h1>
+      <p style="margin:0;font-size:12px;color:#FFB81C;">The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> <span style="font-size:10px;opacity:0.75;color:white;">(Powered by <a href="https://naijahub.co.uk" target="_blank" style="color:#FFB81C;text-decoration:none;">naijahub.co.uk</a>)</span></p>
     </div>
     <div class="status-dot"></div>
     <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="
@@ -1241,14 +1241,14 @@ function formatResponse(text) {
   }
 
   // Parse onboarding options (2-3 options without a question prefix)
-  const onboardingMatch2 = text.match(/\[OPTION_A:(.*?)\]\s*\[OPTION_B:(.*?)\](?!\s*\[OPTION_C)/s);
-  const onboardingMatch3 = text.match(/\[OPTION_A:(.*?)\]\s*\[OPTION_B:(.*?)\]\s*\[OPTION_C:(.*?)\](?!\s*\[OPTION_D)/s);
+  const onboardingMatch3 = text.match(/\[OPTION_A:([\s\S]*?)\]\s*\[OPTION_B:([\s\S]*?)\]\s*\[OPTION_C:([\s\S]*?)\](?!\s*\[OPTION_D)/);
+  const onboardingMatch2 = !onboardingMatch3 && text.match(/\[OPTION_A:([\s\S]*?)\]\s*\[OPTION_B:([\s\S]*?)\](?!\s*\[OPTION_C)/);
 
   if (onboardingMatch3) {
     const optA = onboardingMatch3[1].trim();
     const optB = onboardingMatch3[2].trim();
     const optC = onboardingMatch3[3].trim();
-    text = text.replace(/\[OPTION_A:.*?\]\s*\[OPTION_B:.*?\]\s*\[OPTION_C:.*?\](?!\s*\[OPTION_D)/s, '');
+    text = text.replace(/\[OPTION_A:[\s\S]*?\]\s*\[OPTION_B:[\s\S]*?\]\s*\[OPTION_C:[\s\S]*?\](?!\s*\[OPTION_D)/, '');
     const optHTML = `
       <div class="exam-options" style="margin-top:10px;">
         <button class="exam-option" onclick="quickAsk('${optA.replace(/'/g, "\\'")}')">${optA}</button>
@@ -1259,7 +1259,7 @@ function formatResponse(text) {
   } else if (onboardingMatch2) {
     const optA = onboardingMatch2[1].trim();
     const optB = onboardingMatch2[2].trim();
-    text = text.replace(/\[OPTION_A:.*?\]\s*\[OPTION_B:.*?\](?!\s*\[OPTION_C)/s, '');
+    text = text.replace(/\[OPTION_A:[\s\S]*?\]\s*\[OPTION_B:[\s\S]*?\](?!\s*\[OPTION_C)/, '');
     const optHTML = `
       <div class="exam-options" style="margin-top:10px;">
         <button class="exam-option" onclick="quickAsk('${optA.replace(/'/g, "\\'")}')">${optA}</button>
@@ -1269,7 +1269,7 @@ function formatResponse(text) {
   }
 
   // Parse exam question with 4 clickable answer buttons
-  const questionMatch = text.match(/\[QUESTION:(.*?)\]\s*\[OPTION_A:(.*?)\]\s*\[OPTION_B:(.*?)\]\s*\[OPTION_C:(.*?)\]\s*\[OPTION_D:(.*?)\]/s);
+  const questionMatch = text.match(/\[QUESTION:([\s\S]*?)\]\s*\[OPTION_A:([\s\S]*?)\]\s*\[OPTION_B:([\s\S]*?)\]\s*\[OPTION_C:([\s\S]*?)\]\s*\[OPTION_D:([\s\S]*?)\]/);
   if (questionMatch) {
     const question = questionMatch[1].trim();
     const optA = questionMatch[2].trim();
@@ -1278,7 +1278,7 @@ function formatResponse(text) {
     const optD = questionMatch[5].trim();
 
     // Remove the question block from text
-    text = text.replace(/\[QUESTION:.*?\]\s*\[OPTION_A:.*?\]\s*\[OPTION_B:.*?\]\s*\[OPTION_C:.*?\]\s*\[OPTION_D:.*?\]/s, '');
+    text = text.replace(/\[QUESTION:[\s\S]*?\]\s*\[OPTION_A:[\s\S]*?\]\s*\[OPTION_B:[\s\S]*?\]\s*\[OPTION_C:[\s\S]*?\]\s*\[OPTION_D:[\s\S]*?\]/, '');
 
     // Build question HTML with clickable buttons
     const questionHTML = `
@@ -1421,13 +1421,27 @@ async function sendMessage(text) {
 
       if (examState.plan === 'free' && todayCount > examState.freeLimit) {
         removeTyping();
-        const upgradeMsg = `Omo my dear! You've used your ${examState.freeLimit} free questions for today! 😄
+        const upgradeMsg = `Omo [Name]! You've used your ${examState.freeLimit} free questions for today! 😄
 
-To continue practising subscribe for just:
-📚 **£2.99/month** — 30 questions/day + mock tests + weak area tracking
-🏆 **£4.99/month** — 100 questions/day + pass prediction + hazard perception + weekly reports + badges
+To continue practising choose your plan:
 
-👉 naijahub.co.uk/subscribe
+📚 **£2.99/month — Standard Pass**
+✅ 30 questions/day
+✅ Mock tests (1 per week)
+✅ Weak area tracking
+✅ Push notifications
+✅ Personal study plan
+
+🏆 **£4.99/month — Premium Pass**
+✅ 100 questions/day
+✅ Everything in Standard PLUS:
+✅ Pass prediction score
+✅ Hazard perception prep
+✅ Weekly progress reports
+✅ Achievement badges
+✅ Ask Auntie Tobi anything
+
+👉 **Subscribe now → naijahub.co.uk/subscribe**
 
 Come back tomorrow for ${examState.freeLimit} more free questions! 😊
 
