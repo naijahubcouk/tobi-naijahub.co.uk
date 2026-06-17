@@ -6309,7 +6309,10 @@ exports.handler = async function(event) {
 
     // Inject exam context if returning user
     const examContext = body.examContext || '';
-    const fullSystemPrompt = SYSTEM_PROMPT + (examContext ? '\n\n' + examContext : '');
+    const locationContext = body.locationContext || '';
+    const fullSystemPrompt = SYSTEM_PROMPT + 
+      (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
+      (examContext ? '\n\n' + examContext : '');
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
