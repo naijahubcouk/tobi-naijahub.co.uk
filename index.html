@@ -1240,68 +1240,54 @@ function formatResponse(text) {
     text = text.replace(/\[SUGGESTIONS:.*?\]/s, '').trim();
   }
 
-  // Parse onboarding options (2-3 options without a question prefix)
-  const onboardingMatch3 = text.match(/\[OPTION_A:([\s\S]*?)\]\s*\[OPTION_B:([\s\S]*?)\]\s*\[OPTION_C:([\s\S]*?)\](?!\s*\[OPTION_D)/);
-  const onboardingMatch2 = !onboardingMatch3 && text.match(/\[OPTION_A:([\s\S]*?)\]\s*\[OPTION_B:([\s\S]*?)\](?!\s*\[OPTION_C)/);
+  // Parse ALL clickable options (handles A through E, any combination)
+  const hasOptions = text.includes('[OPTION_A:');
+  if (hasOptions) {
+    const optionRegex = /\[OPTION_([A-E]):([\s\S]*?)\]/g;
+    const options = [];
+    let match;
+    while ((match = optionRegex.exec(text)) !== null) {
+      options.push({ label: match[1], text: match[2].trim() });
+    }
 
-  if (onboardingMatch3) {
-    const optA = onboardingMatch3[1].trim();
-    const optB = onboardingMatch3[2].trim();
-    const optC = onboardingMatch3[3].trim();
-    text = text.replace(/\[OPTION_A:[\s\S]*?\]\s*\[OPTION_B:[\s\S]*?\]\s*\[OPTION_C:[\s\S]*?\](?!\s*\[OPTION_D)/, '');
-    const optHTML = `
-      <div class="exam-options" style="margin-top:10px;">
-        <button class="exam-option" onclick="quickAsk('${optA.replace(/'/g, "\\'")}')">${optA}</button>
-        <button class="exam-option" onclick="quickAsk('${optB.replace(/'/g, "\\'")}')">${optB}</button>
-        <button class="exam-option" onclick="quickAsk('${optC.replace(/'/g, "\\'")}')">${optC}</button>
-      </div>`;
-    text = text.trim() + optHTML;
-  } else if (onboardingMatch2) {
-    const optA = onboardingMatch2[1].trim();
-    const optB = onboardingMatch2[2].trim();
-    text = text.replace(/\[OPTION_A:[\s\S]*?\]\s*\[OPTION_B:[\s\S]*?\](?!\s*\[OPTION_C)/, '');
-    const optHTML = `
-      <div class="exam-options" style="margin-top:10px;">
-        <button class="exam-option" onclick="quickAsk('${optA.replace(/'/g, "\\'")}')">${optA}</button>
-        <button class="exam-option" onclick="quickAsk('${optB.replace(/'/g, "\\'")}')">${optB}</button>
-      </div>`;
-    text = text.trim() + optHTML;
+    // Remove all option tags from text
+    text = text.replace(/\[OPTION_[A-E]:[\s\S]*?\]/g, '').trim();
+
+    if (options.length > 0) {
+      // Check if this is a 4-option exam question (preceded by [QUESTION:])
+      const isExamQuestion = text.includes('[QUESTION:') || options.length === 4;
+
+      if (isExamQuestion && options.length === 4) {
+        // Extract question text
+        const qMatch = text.match(/\[QUESTION:([\s\S]*?)\]/);
+        const questionText = qMatch ? qMatch[1].trim() : '';
+        text = text.replace(/\[QUESTION:[\s\S]*?\]/, '').trim();
+
+        const questionHTML = `
+          <div class="exam-question">
+            <div class="exam-q-text">${questionText}</div>
+            <div class="exam-options">
+              ${options.map(opt => `
+                <button class="exam-option" onclick="quickAsk('${opt.label}) ${opt.text.replace(/'/g, "\\'")}')">
+                  <span class="exam-option-label">${opt.label}</span> ${opt.text}
+                </button>`).join('')}
+            </div>
+          </div>`;
+        text = text.trim() + questionHTML;
+      } else {
+        // Onboarding options — no label needed
+        const optHTML = `
+          <div class="exam-options" style="margin-top:10px;">
+            ${options.map(opt => `
+              <button class="exam-option" onclick="quickAsk('${opt.text.replace(/'/g, "\\'")}')">${opt.text}</button>`).join('')}
+          </div>`;
+        text = text.trim() + optHTML;
+      }
+    }
   }
 
-  // Parse exam question with 4 clickable answer buttons
-  const questionMatch = text.match(/\[QUESTION:([\s\S]*?)\]\s*\[OPTION_A:([\s\S]*?)\]\s*\[OPTION_B:([\s\S]*?)\]\s*\[OPTION_C:([\s\S]*?)\]\s*\[OPTION_D:([\s\S]*?)\]/);
-  if (questionMatch) {
-    const question = questionMatch[1].trim();
-    const optA = questionMatch[2].trim();
-    const optB = questionMatch[3].trim();
-    const optC = questionMatch[4].trim();
-    const optD = questionMatch[5].trim();
-
-    // Remove the question block from text
-    text = text.replace(/\[QUESTION:[\s\S]*?\]\s*\[OPTION_A:[\s\S]*?\]\s*\[OPTION_B:[\s\S]*?\]\s*\[OPTION_C:[\s\S]*?\]\s*\[OPTION_D:[\s\S]*?\]/, '');
-
-    // Build question HTML with clickable buttons
-    const questionHTML = `
-      <div class="exam-question">
-        <div class="exam-q-text">${question}</div>
-        <div class="exam-options">
-          <button class="exam-option" onclick="quickAsk('A) ${optA.replace(/'/g, "\\'")}')">
-            <span class="exam-option-label">A</span> ${optA}
-          </button>
-          <button class="exam-option" onclick="quickAsk('B) ${optB.replace(/'/g, "\\'")}')">
-            <span class="exam-option-label">B</span> ${optB}
-          </button>
-          <button class="exam-option" onclick="quickAsk('C) ${optC.replace(/'/g, "\\'")}')">
-            <span class="exam-option-label">C</span> ${optC}
-          </button>
-          <button class="exam-option" onclick="quickAsk('D) ${optD.replace(/'/g, "\\'")}')">
-            <span class="exam-option-label">D</span> ${optD}
-          </button>
-        </div>
-      </div>`;
-
-    text = text.trim() + questionHTML;
-  }
+  // Remove any leftover QUESTION tags
+  text = text.replace(/\[QUESTION:[\s\S]*?\]/g, '').trim();
 
   // Convert **bold** to strong
   text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -1681,6 +1667,10 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP4etmzEKByoODaqXCw80gRiI2wkVRK6QYb_-v8wwdkTZ8834vDLoZbDN41/exec';
 
 function resetToWelcome() {
+  // Force stop everything
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+
   // Reset exam state completely
   examState.active = false;
   examState.testType = null;
@@ -1689,22 +1679,17 @@ function resetToWelcome() {
   examState.correctAnswers = 0;
   examState.weakAreas = {};
 
-  // Clear chat messages
+  // Clear ALL chat and conversation history
   const chatBox = document.getElementById('chat-box');
   if (chatBox) chatBox.innerHTML = '';
   messages = [];
 
-  // Scroll to top
-  if (chatBox) chatBox.scrollTop = 0;
+  // Remove any typing indicators
+  const typing = document.getElementById('typing');
+  if (typing) typing.remove();
 
-  // Show fresh welcome message
-  const examProgress = getExamProgress();
-  if (examProgress && examProgress.name && examProgress.testType) {
-    const daysSince = examProgress.lastSeen ?
-      Math.floor((new Date() - new Date(examProgress.lastSeen)) / (1000 * 60 * 60 * 24)) : 0;
-    const returningWelcome = `Welcome back **${examProgress.name}**! 😄 Auntie Tobi remembers you!\n\n${daysSince > 0 ? `It has been **${daysSince} day${daysSince > 1 ? 's' : ''}** since your last session! 💪🏾` : `Great to see you again! 😊`}\n\n📊 **Your progress:**\n🎯 Test: ${examProgress.testType}\n📅 Test date: ${examProgress.testDate || 'Preparing ahead'}\n📈 Last score: ${examProgress.lastScore || 'Not recorded yet'}\n\nReady to continue? 🚀\n\n[SUGGESTIONS: Continue my ${examProgress.testType} practice | Take a mock test | Find a Nigerian business]`;
-    addMessage('bot', formatResponse(returningWelcome), true);
-  } else {
+  // Small delay to ensure DOM is cleared before adding welcome
+  setTimeout(() => {
     const allSuggestions = [
       ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
       ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'Find a Nigerian church near me'],
@@ -1717,6 +1702,7 @@ function resetToWelcome() {
     ];
     const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
     const suggestionStr = randomSet.join(' | ');
+
     const welcome = `Ẹ káàbọ̀! • Nnọọ! • Sannu! 👋🏾 I'm **Auntie Tobi** — The Oversabi AI Auntie who actually helps! 😄
 
 Whether you just japa'd or you've been here for years, Auntie Tobi has got you covered! Ask me anything:
@@ -1737,8 +1723,9 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 👉 [Learn More](https://www.helloperiodz.com/bloomly-bundle)
 
 [SUGGESTIONS: ${suggestionStr}]`;
+
     addMessage('bot', formatResponse(welcome), true);
-  }
+  }, 100);
 }
 
 let currentRating = 0;
