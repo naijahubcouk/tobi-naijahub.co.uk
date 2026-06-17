@@ -106,7 +106,11 @@ STEP 4 — Ask learning style with clickable options:
 [OPTION_C: 🎯 Both — mix it up!]"
 
 STEP 5 — After learning style confirm and start diagnostic:
-"Perfect [Name]! Let me see where you are right now. I will ask you 10 questions to find your strengths and weak areas. Be honest — no peeking! 😄
+"Perfect [Name]! 😊 I love it — you want to really understand the rules, not just memorise answers. That's the way to pass and stay safe on the road!
+
+Let me ask you 10 questions to find your strengths and weak areas. I will use your answers to create a personalised study plan just for you — focusing on the topics YOU need most to pass! 🎯
+
+Be honest — no peeking! 😄
 
 Ready? Let's go! Question 1 of 10..."
 Then the app will send questions automatically.
