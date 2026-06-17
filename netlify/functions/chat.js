@@ -168,49 +168,66 @@ When users ask about pricing always mention both plans clearly and direct them t
 
 === UPCOMING EVENTS ON NAIJAHUB.CO.UK ===
 
-When users ask about events say "Check out these upcoming events on NaijaHub! 🎉" and list them with their individual links.
+When users ask about events say "Check out these upcoming events on NaijaHub! 🎉" then show each event as a card using this EXACT format:
 
-1. 🎤 AfroMic Night — Afrobeats Karaoke
-   Date: Friday 26 June 2026, 7pm - 11pm
-   Location: Demi's Nigerian Restaurant, Streatham, London
-   Details: A fun night of Afrobeats karaoke — sing your favourite Afrobeats hits!
-   Link: https://naijahub.co.uk/blog/AfroMic-Night-Afrobeats-Karaoke
+[EVENT_CARD:
+EMOJI: 🎤
+NAME: AfroMic Night — Afrobeats Karaoke
+DATE: Friday 26 June 2026 • 7pm - 11pm
+LOCATION: Demi's Nigerian Restaurant, Streatham, London
+LINK: https://naijahub.co.uk/blog/AfroMic-Night-Afrobeats-Karaoke
+]
 
-2. 🛍️ Deshapeables UK Tradefair London
-   Date: Saturday 25 July 2026, 10am - 6pm
-   Location: Yeomanry House, London (5 mins from Euston Station)
-   Details: The UK's biggest Black-owned tradefair — fashion, food, beauty, art, music, prizes and family-friendly vibes. Free to register!
-   Link: https://naijahub.co.uk/blog/Deshapeables-UK-Tradefair-London
+[EVENT_CARD:
+EMOJI: 🛍️
+NAME: Deshapeables UK Tradefair London
+DATE: Saturday 25 July 2026 • 10am - 6pm
+LOCATION: Yeomanry House, London (5 mins from Euston)
+LINK: https://naijahub.co.uk/blog/Deshapeables-UK-Tradefair-London
+]
 
-3. 🎉 Owambe FEST 4 — All White Party with Bigjohny & Friends
-   Date: Saturday 18 July 2026, 4pm - 9:30pm
-   Location: Delta Hotels, Milton Keynes, Kents Hill
-   Details: A proper Owambe All White Party — dress to impress!
-   Link: https://naijahub.co.uk/blog/Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends
+[EVENT_CARD:
+EMOJI: 🎉
+NAME: Owambe FEST 4 — All White Party
+DATE: Saturday 18 July 2026 • 4pm - 9:30pm
+LOCATION: Delta Hotels, Milton Keynes
+LINK: https://naijahub.co.uk/blog/Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends
+]
 
-4. 🍛 My Tasty Naija Food Festival UK 2026
-   Date: 5 July 2026 (London) | 11 July 2026 (Manchester)
-   Location: London & Manchester
-   Details: Celebrate Nigerian food culture with amazing food, music and community!
-   Link: https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026
+[EVENT_CARD:
+EMOJI: 🍛
+NAME: My Tasty Naija Food Festival UK 2026
+DATE: 5 July (London) | 11 July (Manchester)
+LOCATION: London & Manchester
+LINK: https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026
+]
 
-5. ⚽ NSF (UK) Sports & Family Fun Day 2026
-   Date: Saturday 29 August 2026, from 12pm
-   Location: Newham Leisure Centre, London
-   Details: A fun-filled sports and family day for the Nigerian community in the UK!
-   Link: https://naijahub.co.uk/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026
+[EVENT_CARD:
+EMOJI: ⚽
+NAME: NSF (UK) Sports & Family Fun Day 2026
+DATE: Saturday 29 August 2026 • from 12pm
+LOCATION: Newham Leisure Centre, London
+LINK: https://naijahub.co.uk/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026
+]
 
-6. 🍛 The Igbo Table: Food, Culture & Conversation
-   Date: Sunday 30 August 2026, 3:30pm - 9pm
-   Location: Church Hall by St Edmund's Church, Croyland Road, N9 7EN, London
-   Details: A vibrant indoor gathering celebrating Igbo culture through music, food, games and conversation. Primarily for ages 19-29. Tickets on Eventbrite.
-   Link: https://naijahub.co.uk/blog/The-Igbo-Table:-Food-Culture-and-Conversation
+[EVENT_CARD:
+EMOJI: 🍽️
+NAME: The Igbo Table: Food, Culture & Conversation
+DATE: Sunday 30 August 2026 • 3:30pm - 9pm
+LOCATION: Croyland Road, N9 7EN, London
+LINK: https://naijahub.co.uk/blog/The-Igbo-Table:-Food-Culture-and-Conversation
+]
 
-7. 👘 Ankara Festival UK 2026
-   Date: Saturday 10 October 2026, 5pm - 11:30pm
-   Location: Porchester Hall, London
-   Details: A stunning celebration of Ankara fashion, culture and style!
-   Link: https://naijahub.co.uk/blog/Ankara-Festival-UK-2026
+[EVENT_CARD:
+EMOJI: 👘
+NAME: Ankara Festival UK 2026
+DATE: Saturday 10 October 2026 • 5pm - 11:30pm
+LOCATION: Porchester Hall, London
+LINK: https://naijahub.co.uk/blog/Ankara-Festival-UK-2026
+]
+
+Always show ALL events as cards when asked. Always end with:
+[SUGGESTIONS: See all events on NaijaHub | Find a Nigerian business | Ask me anything]
 
 === NAIJAHUB BLOG POSTS ===
 
