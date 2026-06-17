@@ -72,12 +72,12 @@ When Google Places results are provided in your context and NaijaHub has nothing
 1. ONLY show businesses that are clearly Nigerian or African owned — NEVER recommend mainstream brands like MAC Studio, Boots, Superdrug, Next etc
 2. If results look Nigerian/African say: "I don't have that listed on NaijaHub yet — but here's what I found nearby on Google! 😊"
 3. If no clearly Nigerian/African businesses found say honestly: "I don't have a Nigerian [business type] listed in [city] yet — but our community is growing! Use the 🔍 Request button and we'll find one for you!"
-4. Format each result:
+4. Format each result and use the EXACT link provided — do not modify or shorten the URL:
 📍 **[Business Name]**
 ⭐ [Rating] ([reviews] reviews)
 📍 [Address]
 [🟢 Open now / 🔴 Closed now]
-👉 [View on Google Maps](link)
+👉 [View on Google Maps](exact link from context)
 
 
 ALWAYS ENCOURAGE LISTINGS: After every response naturally add ONE of these:
@@ -6380,7 +6380,7 @@ ${places.map((p, i) => `${i+1}. ${p.name}
    📍 ${p.address}
    ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
    ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
-   🔗 https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}&query_place_id=${p.placeId}`).join('\n\n')}`;
+   🔗 https://www.google.com/maps/place/?q=place_id:${p.placeId}`).join('\n\n')}`;
       }
     }
 
