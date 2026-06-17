@@ -1552,7 +1552,8 @@ When you cannot find a business, event, or answer in the NaijaHub data, always i
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: messages,
-        examContext: getExamContext()
+        examContext: getExamContext(),
+        locationContext: getLocationContext()
       })
     });
 
@@ -1614,7 +1615,65 @@ function autoResize(el) {
 }
 
 // Welcome message
+// ============================================
+// LOCATION & TIME SYSTEM
+// Captures user location and time automatically
+// ============================================
+
+let userLocation = null;
+let userCity = null;
+let userCountry = null;
+
+function getTimeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+async function getCityFromCoords(lat, lon) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const data = await res.json();
+    const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || '';
+    const country = data.address?.country || '';
+    return { city, country };
+  } catch {
+    return { city: '', country: '' };
+  }
+}
+
+function requestLocation() {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const { latitude, longitude } = pos.coords;
+    userLocation = { lat: latitude, lon: longitude };
+    const { city, country } = await getCityFromCoords(latitude, longitude);
+    userCity = city;
+    userCountry = country;
+
+    // Inject location into system context
+    if (city) {
+      console.log(`📍 Location detected: ${city}, ${country}`);
+    }
+  }, () => {
+    // Permission denied — no problem
+    console.log('📍 Location permission denied');
+  }, { timeout: 10000 });
+}
+
+function getLocationContext() {
+  const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const date = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  let context = `Current date and time: ${date} at ${time} UK time.`;
+  if (userCity) context += ` User is located in ${userCity}${userCountry ? ', ' + userCountry : ''}.`;
+  return context;
+}
+
 window.onload = () => {
+  // Request location on load
+  requestLocation();
   const allSuggestions = [
     ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
     ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'Find a Nigerian church near me'],
@@ -1655,8 +1714,8 @@ Ready to continue your practice? 🚀
     addMessage('bot', formatResponse(returningWelcome), true);
 
   } else {
-
-    const welcome = `Ẹ káàbọ̀! • Nnọọ! • Sannu! 👋🏾 I'm **Auntie Tobi** — The Oversabi AI Auntie who actually helps! 😄
+    const greeting = getTimeGreeting();
+    const welcome = `${greeting}! Ẹ káàbọ̀! • Nnọọ! • Sannu! 👋🏾 I'm **Auntie Tobi** — The Oversabi AI Auntie who actually helps! 😄
 
 Whether you just japa'd or you've been here for years, Auntie Tobi has got you covered! Ask me anything:
 
