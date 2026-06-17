@@ -1344,19 +1344,20 @@ function formatResponse(text) {
     const lines = content.trim().split('\n').map(l => l.trim()).filter(Boolean);
     let emoji = '🎉', name = '', date = '', location = '', link = '';
     lines.forEach(line => {
-      if (line.startsWith('EMOJI:')) emoji = line.replace('EMOJI:', '').trim();
-      else if (line.startsWith('NAME:')) name = line.replace('NAME:', '').trim();
-      else if (line.startsWith('DATE:')) date = line.replace('DATE:', '').trim();
-      else if (line.startsWith('LOCATION:')) location = line.replace('LOCATION:', '').trim();
-      else if (line.startsWith('LINK:')) link = line.replace('LINK:', '').trim();
+      if (line.startsWith('EMOJI:')) emoji = line.substring(6).trim();
+      else if (line.startsWith('NAME:')) name = line.substring(5).trim();
+      else if (line.startsWith('DATE:')) date = line.substring(5).trim();
+      else if (line.startsWith('LOCATION:')) location = line.substring(9).trim();
+      else if (line.startsWith('LINK:')) link = line.substring(5).trim();
     });
+    if (!name) return match; // Skip if parsing failed
     return `
       <div class="event-card">
         <span class="event-card-emoji">${emoji}</span>
         <div class="event-card-name">${name}</div>
         <div class="event-card-date">📅 ${date}</div>
         <div class="event-card-location">📍 ${location}</div>
-        <a href="${link}" target="_blank" class="event-card-btn">View Event on NaijaHub →</a>
+        ${link ? `<a href="${link}" target="_blank" class="event-card-btn">View Event on NaijaHub →</a>` : ''}
       </div>`;
   });
 
