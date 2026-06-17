@@ -1588,7 +1588,7 @@ function quickAsk(text) {
     showRequestForm('business');
     return;
   }
-  if (text === '🙋🏾 Request personal help or support to post in the community') {
+  if (text === '🙋🏾 Request Community Help') {
     showRequestForm('help');
     return;
   }
@@ -1980,7 +1980,7 @@ function showRequestOptions() {
   const html = formatResponse(msg) + `
     <div class="exam-options" style="margin-top:10px;">
       <button class="exam-option" onclick="showRequestForm('business')" style="justify-content:flex-start;">🏢 Request a Business listing</button>
-      <button class="exam-option" onclick="showRequestForm('help')" style="justify-content:flex-start;">🙋🏾 Request personal help or support to post in the community</button>
+      <button class="exam-option" onclick="showRequestForm('help')" style="justify-content:flex-start;">🙋🏾 Request Community Help</button>
       <button class="exam-option" onclick="showRequestForm('suggest')" style="justify-content:flex-start;">💡 Suggest something for NaijaHub</button>
       <button class="exam-option" onclick="showRequestForm('other')" style="justify-content:flex-start;">✉️ Other</button>
     </div>`;
