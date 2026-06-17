@@ -302,7 +302,51 @@
 
   .affiliate-btn:hover { background: #058a4e; }
 
-  /* Feedback Form */
+  /* Event Cards */
+  .event-card {
+    background: white;
+    border: 1.5px solid #FFB81C;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 8px 0;
+    box-shadow: 0 2px 8px rgba(255,184,28,0.15);
+  }
+  .event-card-emoji {
+    font-size: 22px;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .event-card-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F1E36;
+    margin-bottom: 6px;
+  }
+  .event-card-date {
+    font-size: 13px;
+    color: #057A44;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .event-card-location {
+    font-size: 12px;
+    color: #6B7280;
+    margin-bottom: 10px;
+  }
+  .event-card-btn {
+    display: inline-block;
+    background: #057A44;
+    color: white !important;
+    text-decoration: none !important;
+    padding: 7px 16px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .event-card-btn:hover {
+    background: #045c33;
+  }
   .star-btn {
     background: #F8F9FA;
     border: 1.5px solid #E2E8F0;
@@ -1294,6 +1338,27 @@ function formatResponse(text) {
 
   // Convert [text](url) markdown links to clickable anchors
   text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" style="color:#057A44;font-weight:600;text-decoration:underline;">$1</a>');
+
+  // Parse event cards
+  text = text.replace(/\[EVENT_CARD:\s*([\s\S]*?)\]/g, (match, content) => {
+    const lines = content.trim().split('\n').map(l => l.trim()).filter(Boolean);
+    let emoji = '🎉', name = '', date = '', location = '', link = '';
+    lines.forEach(line => {
+      if (line.startsWith('EMOJI:')) emoji = line.replace('EMOJI:', '').trim();
+      else if (line.startsWith('NAME:')) name = line.replace('NAME:', '').trim();
+      else if (line.startsWith('DATE:')) date = line.replace('DATE:', '').trim();
+      else if (line.startsWith('LOCATION:')) location = line.replace('LOCATION:', '').trim();
+      else if (line.startsWith('LINK:')) link = line.replace('LINK:', '').trim();
+    });
+    return `
+      <div class="event-card">
+        <span class="event-card-emoji">${emoji}</span>
+        <div class="event-card-name">${name}</div>
+        <div class="event-card-date">📅 ${date}</div>
+        <div class="event-card-location">📍 ${location}</div>
+        <a href="${link}" target="_blank" class="event-card-btn">View Event on NaijaHub →</a>
+      </div>`;
+  });
 
   // Parse affiliate cards
   text = text.replace(/\[AFFILIATES:\s*(.*?)\]/g, (match, keys) => {
