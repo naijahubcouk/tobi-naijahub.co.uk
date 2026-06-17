@@ -643,7 +643,7 @@
     <div class="pill" onclick="quickAsk('Help me prepare for my UK driving theory test')">🚗 Driving Theory Test</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my Life in UK test')">📋 Life in UK Test</div>
     <div class="pill" onclick="quickAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
-    <div class="pill" onclick="showRequestForm()">🔍 Request a Business</div>
+    <div class="pill" onclick="showRequestOptions()">🔍 Request</div>
     <div class="pill" onclick="showFeedbackForm()">📝 Feedback</div>
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
   </div>
@@ -1583,6 +1583,12 @@ When you cannot find a business, event, or answer in the NaijaHub data, always i
 }
 
 function quickAsk(text) {
+  // Handle request options
+  if (text === '🏢 Request a Business listing') {
+    showRequestForm();
+    return;
+  }
+
   // Check if this is an exam prep request from pill
   if (text === 'Help me prepare for my UK driving theory test') {
     examState.active = true;
@@ -1954,6 +1960,17 @@ function shareAuntieTobi() {
       alert('Link copied! Share Auntie Tobi with your friends 🇳🇬🇬🇧');
     });
   }
+}
+
+function showRequestOptions() {
+  const msg = `What would you like to request? 😊
+
+[OPTION_A: 🏢 Request a Business listing]
+[OPTION_B: 🙋🏾 Request personal help or support to post in the community]
+[OPTION_C: 💡 Suggest something for NaijaHub]
+[OPTION_D: ✉️ Other]`;
+  addMessage('bot', formatResponse(msg), true);
+  messages.push({ role: 'assistant', content: msg });
 }
 
 function showRequestForm() {
