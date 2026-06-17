@@ -1240,7 +1240,35 @@ function formatResponse(text) {
     text = text.replace(/\[SUGGESTIONS:.*?\]/s, '').trim();
   }
 
-  // Parse exam question with clickable answer buttons
+  // Parse onboarding options (2-3 options without a question prefix)
+  const onboardingMatch2 = text.match(/\[OPTION_A:(.*?)\]\s*\[OPTION_B:(.*?)\](?!\s*\[OPTION_C)/s);
+  const onboardingMatch3 = text.match(/\[OPTION_A:(.*?)\]\s*\[OPTION_B:(.*?)\]\s*\[OPTION_C:(.*?)\](?!\s*\[OPTION_D)/s);
+
+  if (onboardingMatch3) {
+    const optA = onboardingMatch3[1].trim();
+    const optB = onboardingMatch3[2].trim();
+    const optC = onboardingMatch3[3].trim();
+    text = text.replace(/\[OPTION_A:.*?\]\s*\[OPTION_B:.*?\]\s*\[OPTION_C:.*?\](?!\s*\[OPTION_D)/s, '');
+    const optHTML = `
+      <div class="exam-options" style="margin-top:10px;">
+        <button class="exam-option" onclick="quickAsk('${optA.replace(/'/g, "\\'")}')">${optA}</button>
+        <button class="exam-option" onclick="quickAsk('${optB.replace(/'/g, "\\'")}')">${optB}</button>
+        <button class="exam-option" onclick="quickAsk('${optC.replace(/'/g, "\\'")}')">${optC}</button>
+      </div>`;
+    text = text.trim() + optHTML;
+  } else if (onboardingMatch2) {
+    const optA = onboardingMatch2[1].trim();
+    const optB = onboardingMatch2[2].trim();
+    text = text.replace(/\[OPTION_A:.*?\]\s*\[OPTION_B:.*?\](?!\s*\[OPTION_C)/s, '');
+    const optHTML = `
+      <div class="exam-options" style="margin-top:10px;">
+        <button class="exam-option" onclick="quickAsk('${optA.replace(/'/g, "\\'")}')">${optA}</button>
+        <button class="exam-option" onclick="quickAsk('${optB.replace(/'/g, "\\'")}')">${optB}</button>
+      </div>`;
+    text = text.trim() + optHTML;
+  }
+
+  // Parse exam question with 4 clickable answer buttons
   const questionMatch = text.match(/\[QUESTION:(.*?)\]\s*\[OPTION_A:(.*?)\]\s*\[OPTION_B:(.*?)\]\s*\[OPTION_C:(.*?)\]\s*\[OPTION_D:(.*?)\]/s);
   if (questionMatch) {
     const question = questionMatch[1].trim();
