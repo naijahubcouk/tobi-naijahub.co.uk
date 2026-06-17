@@ -1681,6 +1681,14 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP4etmzEKByoODaqXCw80gRiI2wkVRK6QYb_-v8wwdkTZ8834vDLoZbDN41/exec';
 
 function resetToWelcome() {
+  // Reset exam state completely
+  examState.active = false;
+  examState.testType = null;
+  examState.currentQuestion = null;
+  examState.questionsAnswered = 0;
+  examState.correctAnswers = 0;
+  examState.weakAreas = {};
+
   // Clear chat messages
   const chatBox = document.getElementById('chat-box');
   if (chatBox) chatBox.innerHTML = '';
