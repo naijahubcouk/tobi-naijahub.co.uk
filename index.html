@@ -1911,6 +1911,15 @@ window.shareTipOfDay = function() {
   }
 };
 
+// Force ALL links in chat to open in new tab
+document.addEventListener('click', function(e) {
+  const link = e.target.closest('a[href]');
+  if (link && !link.href.startsWith('javascript') && !link.href.startsWith('#')) {
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+  }
+});
+
 window.onload = () => {
   // Request location on load
   requestLocation();
