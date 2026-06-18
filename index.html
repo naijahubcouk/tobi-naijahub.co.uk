@@ -784,19 +784,25 @@
     margin-top: 10px;
   }
 
-  .suggestion {
-    background: var(--light-gray);
-    border: 1px solid var(--border);
+  .suggestion, .suggestion-btn {
+    background: white;
+    border: 1.5px solid #e5e7eb;
     border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 8px 14px;
+    font-size: 13px;
     font-weight: 500;
-    color: var(--navy);
+    color: #0F1E36;
     cursor: pointer;
     transition: all 0.15s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
 
-  .suggestion:hover { background: var(--gold-light); border-color: var(--gold); }
+  .suggestion:hover, .suggestion-btn:hover {
+    background: #EAF3DE;
+    border-color: #057A44;
+    color: #057A44;
+  }
 
   /* Typing indicator */
   .typing { display: flex; align-items: center; gap: 4px; padding: 14px 15px; }
@@ -1691,6 +1697,9 @@ function addMessage(role, content, isHTML = false, showFeedback = false) {
   const msgId = 'msg_' + Date.now();
 
   if (role === 'bot') {
+    // If content has cards — render flush without bubble wrapper
+    const hasCards = content.includes('event-card') || content.includes('biz-card') || content.includes('news-card');
+
     const feedbackHtml = showFeedback ? `
       <div class="msg-feedback" id="${msgId}">
         <button class="feedback-btn" onclick="msgFeedback('${msgId}', 'up', this)" title="Helpful">👍</button>
@@ -1698,15 +1707,26 @@ function addMessage(role, content, isHTML = false, showFeedback = false) {
         <button class="feedback-btn" onclick="showFeedbackOptions('${msgId}', 'flag')" title="Report">🚩</button>
       </div>` : '';
 
-    div.innerHTML = `
-      <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
-      <div class="bubble">
-        <div class="bubble-inner">
-          ${isHTML ? content : escapeHTML(content)}
+    if (hasCards && isHTML) {
+      div.style.alignItems = 'flex-start';
+      div.innerHTML = `
+        <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
+        <div style="flex:1;min-width:0;">
+          ${content}
           ${feedbackHtml}
         </div>
-      </div>
-    `;
+      `;
+    } else {
+      div.innerHTML = `
+        <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
+        <div class="bubble">
+          <div class="bubble-inner">
+            ${isHTML ? content : escapeHTML(content)}
+            ${feedbackHtml}
+          </div>
+        </div>
+      `;
+    }
   } else {
     div.innerHTML = `<div class="bubble" style="padding:10px 12px;">${escapeHTML(content)}</div>`;
   }
@@ -1716,16 +1736,28 @@ function addMessage(role, content, isHTML = false, showFeedback = false) {
   return div;
 }
 
-// Special tip message — no white bubble wrapper, card renders flush
+// Special tip/card message — no white bubble wrapper, renders flush
 function addTipMessage(html) {
   const container = document.getElementById('messages');
   const div = document.createElement('div');
   div.className = 'msg bot';
   div.style.alignItems = 'flex-start';
+
+  // Extract and render [SUGGESTIONS:] tags
+  let content = html;
+  const sugMatch = content.match(/\[SUGGESTIONS:(.*?)\]/s);
+  let suggestionsHtml = '';
+  if (sugMatch) {
+    const suggestions = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean);
+    suggestionsHtml = `<div class="suggestions" style="margin-top:8px;">${suggestions.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`;
+    content = content.replace(/\[SUGGESTIONS:.*?\]/s, '');
+  }
+
   div.innerHTML = `
     <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
     <div style="flex:1;min-width:0;">
-      ${html}
+      ${content}
+      ${suggestionsHtml}
     </div>
   `;
   container.appendChild(div);
@@ -2216,7 +2248,7 @@ function showBusinesses(startIndex = -1) {
   const container = document.getElementById('messages');
   if (container) container.innerHTML = '';
   messages = [];
-  addMessage('bot', formatResponse(html), true);
+  addTipMessage(formatResponse(html));
   messages.push({ role: 'assistant', content: `Here are Nigerian businesses on NaijaUKHub: ${page.map(b => b.name).join(', ')}` });
 }
 
