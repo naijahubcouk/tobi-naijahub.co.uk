@@ -480,9 +480,10 @@
   .msg-feedback {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 6px;
-    padding-left: 44px;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
   }
   .feedback-btn {
     background: none;
@@ -498,7 +499,7 @@
   .feedback-btn.active-up { border-color: #057A44; color: #057A44; background: #EAF3DE; }
   .feedback-btn.active-down { border-color: #EF4444; color: #EF4444; background: #FEE2E2; }
   .feedback-btn.active-flag { border-color: #F59E0B; color: #F59E0B; background: #FEF3C7; }
-  .feedback-msg { font-size: 12px; color: #057A44; padding-left: 44px; margin-top: 4px; }
+  .feedback-msg { font-size: 12px; color: #057A44; margin-top: 4px; }
 
   /* Feedback quick modal */
   .fq-overlay {
@@ -1625,29 +1626,27 @@ function formatResponse(text) {
   return html;
 }
 
-function addMessage(role, content, isHTML = false) {
+function addMessage(role, content, isHTML = false, showFeedback = false) {
   const container = document.getElementById('messages');
   const div = document.createElement('div');
   div.className = `msg ${role}`;
   const msgId = 'msg_' + Date.now();
 
   if (role === 'bot') {
-    div.innerHTML = `
-      <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
-      <div class="bubble">${isHTML ? content : escapeHTML(content)}</div>
-    `;
-    // Add feedback buttons after a short delay
-    setTimeout(() => {
-      const feedback = document.createElement('div');
-      feedback.className = 'msg-feedback';
-      feedback.id = msgId;
-      feedback.innerHTML = `
+    const feedbackHtml = showFeedback ? `
+      <div class="msg-feedback" id="${msgId}">
         <button class="feedback-btn" onclick="msgFeedback('${msgId}', 'up', this)" title="Helpful">👍</button>
         <button class="feedback-btn" onclick="showFeedbackOptions('${msgId}', 'down')" title="Not helpful">👎</button>
         <button class="feedback-btn" onclick="showFeedbackOptions('${msgId}', 'flag')" title="Report">🚩</button>
-      `;
-      div.appendChild(feedback);
-    }, 300);
+      </div>` : '';
+
+    div.innerHTML = `
+      <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
+      <div class="bubble">
+        ${isHTML ? content : escapeHTML(content)}
+        ${feedbackHtml}
+      </div>
+    `;
   } else {
     div.innerHTML = `<div class="bubble">${escapeHTML(content)}</div>`;
   }
@@ -1794,7 +1793,7 @@ When you cannot find a business, event, or answer in the NaijaUKHub data, always
 
     messages.push({ role: 'assistant', content: reply });
     removeTyping();
-    addMessage('bot', formatResponse(reply), true);
+    addMessage('bot', formatResponse(reply), true, true);
 
     // 💾 Save exam progress automatically
     extractAndSaveExamData(userText, reply);
@@ -2200,12 +2199,12 @@ async function msgFeedback(msgId, type, btn) {
   container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active-up','active-down','active-flag'));
   if (type === 'up') {
     btn.classList.add('active-up');
-    // Show thank you message
-    let thanks = container.nextElementSibling;
-    if (!thanks || !thanks.classList.contains('feedback-msg')) {
+    // Show thank you inside the bubble after feedback row
+    let thanks = container.querySelector('.feedback-msg');
+    if (!thanks) {
       thanks = document.createElement('div');
       thanks.className = 'feedback-msg';
-      container.after(thanks);
+      container.appendChild(thanks);
     }
     thanks.textContent = '✅ Thanks for the feedback!';
     setTimeout(() => { if (thanks) thanks.remove(); }, 3000);
@@ -2259,11 +2258,11 @@ async function submitFeedbackOption(reason) {
     container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active-up','active-down','active-flag'));
     const btn = container.querySelector(currentFeedbackType === 'down' ? '.feedback-btn:nth-child(2)' : '.feedback-btn:nth-child(3)');
     if (btn) btn.classList.add(currentFeedbackType === 'down' ? 'active-down' : 'active-flag');
-    let thanks = container.nextElementSibling;
-    if (!thanks || !thanks.classList.contains('feedback-msg')) {
+    let thanks = container.querySelector('.feedback-msg');
+    if (!thanks) {
       thanks = document.createElement('div');
       thanks.className = 'feedback-msg';
-      container.after(thanks);
+      container.appendChild(thanks);
     }
     thanks.textContent = currentFeedbackType === 'flag' ? '🚩 Reported — thank you!' : '👎 Thanks — we will improve!';
     setTimeout(() => { if (thanks) thanks.remove(); }, 3000);
