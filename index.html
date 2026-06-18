@@ -391,13 +391,10 @@
     background: #FBEAF0;
     border: 1px solid #F4C0D1;
     border-radius: 14px;
-    padding: 14px;
+    padding: 12px 14px;
     margin-top: 12px;
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
   }
-  .tip-ad-block .ad-emoji { font-size: 30px; line-height: 1; flex-shrink: 0; }
+  .tip-ad-block .ad-emoji { display: none; }
   .tip-ad-block .ad-content { flex: 1; }
   .tip-ad-block .ad-label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; color: #993556; text-transform: uppercase; margin: 0 0 4px; display: block; }
   .tip-ad-block .ad-title { font-size: 13px; font-weight: 700; color: #4B1528; margin: 0 0 4px; line-height: 1.4; display: block; }
@@ -711,25 +708,25 @@
     font-size: 15px;
     font-weight: 700;
     color: #0F1E36;
-    margin: 0 0 1px 0;
-    line-height: 1.2;
+    margin: 0 0 2px 0;
+    line-height: 1.3;
     word-break: break-word;
   }
   .card-category-badge {
-    font-size: 12px;
+    font-size: 13px;
     color: #057A44;
     font-weight: 700;
-    margin: 0 0 1px;
+    margin: 0 0 2px;
     display: block;
     word-break: break-word;
-    line-height: 1.2;
+    line-height: 1.3;
   }
   .card-desc {
     font-size: 13px;
     color: #444;
-    font-weight: 600;
-    line-height: 1.3;
-    margin: 1px 0 3px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 2px 0 4px;
     display: block;
     word-break: break-word;
   }
@@ -739,12 +736,12 @@
     background: #FFB81C;
     color: #0F1E36 !important;
     text-decoration: none !important;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    padding: 5px 8px;
+    padding: 6px 8px;
     border-radius: 6px;
     text-align: center;
-    margin-top: 3px;
+    margin-top: 4px;
   }
   .card-link:hover { background: #e6a619; }
   .biz-card {
@@ -2036,19 +2033,18 @@ function buildTipCard(tip, suggestionStr) {
         <span style="font-size:16px;">💡</span>
         <span style="color:white;font-weight:700;font-size:13px;letter-spacing:0.5px;">TIP OF THE DAY</span>
       </div>
-      <div style="padding:16px;">
-        <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;margin-bottom:12px;letter-spacing:0.5px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
-        <p style="font-size:15px;color:#0F1E36;line-height:1.6;margin:0 0 14px;">${tip.tip}</p>
-        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f0f0f0;padding-top:12px;">
-          <a href="${tip.sourceUrl}" target="_blank" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:600;">🔗 Learn More</a>
-          <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;">📤 Share Tip</button>
+      <div style="padding:14px;">
+        <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:12px;font-weight:700;padding:3px 10px;border-radius:50px;margin-bottom:10px;letter-spacing:0.5px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
+        <p style="font-size:15px;color:#0F1E36;line-height:1.6;margin:0 0 12px;font-weight:500;">${tip.tip}</p>
+        <div style="border-top:1px solid #f0f0f0;padding-top:10px;display:flex;flex-direction:column;gap:8px;">
+          <a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Learn More</a>
+          <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;">📤 Share Tip</button>
         </div>
       </div>
     </div>
     <div class="tip-ad-block">
-      <div class="ad-emoji">🩷</div>
       <div class="ad-content">
-        <span class="ad-label">🌸 Sponsored</span>
+        <span class="ad-label">🩷 Sponsored</span>
         <span class="ad-title">Preparing for your daughter's first period?</span>
         <span class="ad-desc">First Period Guide + Digital Bundle — practical advice and age-appropriate resources for Nigerian parents.</span>
         <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" class="ad-btn">Learn More →</a>
@@ -2162,7 +2158,7 @@ function showBusinesses(startIndex = -1) {
       <div class="biz-card">
         <div class="card-name">${b.name}</div>
         <span class="card-category-badge">${emoji} ${b.category}</span>
-        <span style="font-size:12px;color:#6B7280;font-weight:600;display:block;margin:1px 0 2px;">📍 ${b.location}</span>
+        <span style="font-size:13px;color:#6B7280;font-weight:600;display:block;margin:2px 0 3px;">📍 ${b.location}</span>
         <div class="card-desc">${b.desc}</div>
         <a href="${b.url}" target="_blank" class="card-link">View on naijahub.co.uk →</a>
       </div>`;
