@@ -100,12 +100,12 @@ When Google Places results are provided in your context and NaijaUKHub has nothi
 2. If results look Nigerian/African say: "I don't have that listed on NaijaUKHub yet — but here's what I found nearby on Google! 😊"
 3. Show maximum 3 results then end with: "Want to see more? 😊 [SUGGESTIONS: Show me more | No thanks!]"
 4. If no clearly Nigerian/African businesses found say honestly: "I don't have a Nigerian [business type] listed in [city] yet — but our community is growing! Use the 🔍 Request button and we'll find one for you!"
-5. Format each result and use the EXACT link provided — do not modify or shorten the URL:
+5. Format each Google result like this — use the EXACT mapsUrl provided as the link, do not modify or encode it:
 📍 **[Business Name]**
 ⭐ [Rating] ([reviews] reviews)
 📍 [Address]
 [🟢 Open now / 🔴 Closed now]
-👉 [View on Google Maps](exact link from context)
+👉 [View on Google Maps]([mapsUrl])
 
 
 ALWAYS ENCOURAGE LISTINGS: After every response naturally add ONE of these:
@@ -6410,19 +6410,16 @@ exports.handler = async function(event) {
     // ============================================
     async function searchGooglePlaces(query, location) {
       try {
-        // Only search for Nigerian/African businesses
         const searchQuery = encodeURIComponent(`Nigerian African ${query} ${location || 'UK'}`);
         const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&key=${googleApiKey}&region=gb&language=en`;
         const res = await fetch(url);
         const data = await res.json();
         if (data.results && data.results.length > 0) {
-          // Filter to only include businesses that appear Nigerian/African
-          const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'lagos', 'abuja', 'ghana', 'ghana', 'jollof', 'egusi', 'puff puff', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa'];
+          const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'lagos', 'abuja', 'ghana', 'jollof', 'egusi', 'puff puff', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa'];
           const filtered = data.results.filter(place => {
             const name = place.name.toLowerCase();
             return nigerianKeywords.some(k => name.includes(k));
           });
-          // Use filtered results if any found, otherwise return empty
           const results = filtered.length > 0 ? filtered : [];
           return results.slice(0, 3).map(place => ({
             name: place.name,
@@ -6430,7 +6427,8 @@ exports.handler = async function(event) {
             rating: place.rating,
             totalRatings: place.user_ratings_total,
             openNow: place.opening_hours?.open_now,
-            placeId: place.place_id
+            placeId: place.place_id,
+            mapsUrl: `https://www.google.com/maps/search/?api=1&query=${place.name.replace(/\s+/g, '+')}+${(place.formatted_address || '').split(',')[0].replace(/\s+/g, '+')}`
           }));
         }
         return [];
@@ -6459,13 +6457,27 @@ exports.handler = async function(event) {
 
       const places = await searchGooglePlaces(lastMessage, userCity);
       if (places.length > 0) {
+        const first2 = places.slice(0, 2);
+        const hasMore = places.length > 2;
         googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use these if you cannot find anything in the NaijaUKHub directory above. If NaijaUKHub has relevant businesses, show those instead and IGNORE these Google results):
 
-${places.map((p, i) => `${i+1}. ${p.name}
+Show ONLY the first 2 results below. If there are more, end with:
+"Want to see more nearby? 😊
+[SUGGESTIONS: Show me more Google results | Search NaijaHub businesses | Ask me anything]"
+
+${first2.map((p, i) => `${i+1}. ${p.name}
    📍 ${p.address}
    ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
    ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
-   🔗 https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.address)}`).join('\n\n')}`;
+   👉 View on Google Maps: ${p.mapsUrl}`).join('\n\n')}
+
+${hasMore ? `EXTRA RESULT (only show if user asks for more):
+${places.slice(2).map((p, i) => `${i+1}. ${p.name}
+   📍 ${p.address}
+   ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
+   ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
+   👉 View on Google Maps: ${p.mapsUrl}`).join('\n\n')}` : ''}`;
+      }
       }
     }
 
