@@ -490,26 +490,28 @@ exports.handler = async function(event) {
     const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business/i.test(lastMessage);
     const naijahubAlreadyShown = /naijahub\.co\.uk\/listing/i.test(conversationHistory);
 
-    // Run Google Places search with a 3 second timeout
-    let googleResultsContext = '';
-    if (isBusinessSearch && !naijahubAlreadyShown && googleApiKey) {
-      const locationContext = body.locationContext || '';
-      const cityMatch = locationContext.match(/located in ([^,.]+)/i);
-      const userCity = cityMatch ? cityMatch[1].trim() : 'UK';
+    // Build location context
+    const examContext = body.examContext || '';
+    const locationContext = body.locationContext || '';
+    const cityMatch = locationContext.match(/located in ([^,.]+)/i);
+    const userCity = cityMatch ? cityMatch[1].trim() : 'UK';
 
-      try {
-        const placesPromise = searchGooglePlaces(lastMessage, userCity);
-        const timeoutPromise = new Promise(resolve => setTimeout(() => resolve([]), 3000));
-        const places = await Promise.race([placesPromise, timeoutPromise]);
-        
-        console.log('Places returned:', places.length);
-        
-        if (places.length > 0) {
-          const first2 = places.slice(0, 2);
-          const hasMore = places.length > 2;
-          googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use these if you cannot find anything in the NaijaUKHub directory above):
+    // Run Google Places AND Claude API simultaneously — zero extra wait!
+    const placesPromise = (isBusinessSearch && !naijahubAlreadyShown && googleApiKey)
+      ? Promise.race([
+          searchGooglePlaces(lastMessage, userCity),
+          new Promise(resolve => setTimeout(() => resolve([]), 4000))
+        ])
+      : Promise.resolve([]);
 
-Show ONLY the first 2 results. If there are more end with:
+    const claudePromise = placesPromise.then(places => {
+      let googleResultsContext = '';
+      if (places && places.length > 0) {
+        const first2 = places.slice(0, 2);
+        const hasMore = places.length > 2;
+        googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use if NaijaUKHub directory has nothing relevant):
+
+Show ONLY first 2 results. If more exist end with:
 "Want to see more nearby? 😊
 [SUGGESTIONS: Show me more Google results | Search NaijaHub businesses | Ask me anything]"
 
@@ -518,37 +520,32 @@ ${first2.map((p, i) => `${i+1}. ${p.name}
    ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
    ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
    👉 View on Google Maps: ${p.mapsUrl}`).join('\n\n')}
-
-${hasMore ? `EXTRA (show only if user asks for more):
-${places[2].name} — ${places[2].address} — 👉 ${places[2].mapsUrl}` : ''}`;
-        }
-      } catch(err) {
-        console.error('Google Places failed:', err.message);
+${hasMore ? `\nEXTRA (only if user asks): ${places[2].name} — ${places[2].mapsUrl}` : ''}`;
+        console.log('Google Places found:', places.length, 'results for', userCity);
       }
-    }
 
-    // Inject exam context if returning user
-    const examContext = body.examContext || '';
-    const locationContext = body.locationContext || '';
-    const fullSystemPrompt = SYSTEM_PROMPT + 
-      (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
-      (googleResultsContext ? googleResultsContext : '') +
-      (examContext ? '\n\n' + examContext : '');
+      const fullSystemPrompt = SYSTEM_PROMPT +
+        (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
+        (googleResultsContext || '') +
+        (examContext ? '\n\n' + examContext : '');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 600,
-        system: fullSystemPrompt,
-        messages: body.messages
-      })
+      return fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 600,
+          system: fullSystemPrompt,
+          messages: body.messages
+        })
+      });
     });
+
+    const response = await claudePromise;
 
     const data = await response.json();
     console.log('Status:', response.status);
