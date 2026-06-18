@@ -1898,28 +1898,25 @@ window.onload = () => {
   }
 
   function buildTipCard(tip, suggestionStr) {
-    return `
-      <div class="tip-card-widget">
-        <div class="tip-card-header">
-          <span class="tip-card-badge">💡 Tip of the Day</span>
+    const cardHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:16px;overflow:hidden;margin-bottom:12px;">
+        <div style="background:#057A44;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:16px;">💡</span>
+          <span style="color:white;font-weight:700;font-size:13px;letter-spacing:0.5px;">TIP OF THE DAY</span>
         </div>
-        <div class="tip-card-category">
-          <span class="tip-card-emoji">${tip.emoji}</span>
-          <span class="tip-card-cat">${tip.category}</span>
+        <div style="padding:16px;">
+          <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;margin-bottom:12px;letter-spacing:0.5px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
+          <p style="font-size:15px;color:#0F1E36;line-height:1.6;margin:0 0 14px;">${tip.tip}</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f0f0f0;padding-top:12px;">
+            <a href="${tip.sourceUrl}" target="_blank" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:600;">🔗 Learn More</a>
+            <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;">📤 Share Tip</button>
+          </div>
         </div>
-        <p class="tip-card-text">${tip.tip}</p>
-        <div class="tip-card-source">
-          <span class="tip-source-label">✅ Source:</span>
-          <a href="${tip.sourceUrl}" target="_blank" class="tip-source-link">${tip.source} →</a>
-        </div>
-        <button class="tip-share-btn" onclick="shareTipOfDay()">📤 Share this tip</button>
-        <p class="tip-disclaimer">Always verify important information at gov.uk or seek professional advice</p>
       </div>
       <div class="tip-ad-block">
         🌸 <strong>AD</strong> — Preparing for your daughter's first period? Get the <strong>First Period Guide + Digital Bundle</strong> — practical advice and age-appropriate resources for Nigerian parents.
         <br><a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank">👉 Learn More</a>
-      </div>
-      [SUGGESTIONS: ${suggestionStr}]`;
+      </div>`;
+    return cardHtml + `\n[SUGGESTIONS: ${suggestionStr}]`;
   }
 
   window.shareTipOfDay = function() {
@@ -1933,8 +1930,12 @@ window.onload = () => {
   };
 
   // Check if returning visitor
+  // Check today's date for tip rotation
+  const todayStr = new Date().toISOString().split('T')[0];
+  const lastVisitDate = localStorage.getItem('tobi_last_visit');
   const isReturning = localStorage.getItem('tobi_visited');
   localStorage.setItem('tobi_visited', 'true');
+  localStorage.setItem('tobi_last_visit', todayStr);
 
   // Check if returning exam user
   const examProgress = getExamProgress();
@@ -1945,7 +1946,7 @@ window.onload = () => {
 
     const returningWelcome = `Welcome back **${examProgress.name}**! 😄 Auntie Tobi remembers you!
 
-${daysSince > 0 ? `It has been **${daysSince} day${daysSince > 1 ? 's' : ''}** since your last session — no wahala, let us pick up where you stopped! 💪🏾` : `Great to see you again my dear! 😊`}
+${daysSince > 0 ? `It has been **${daysSince} day${daysSince > 1 ? 's' : ''}** since your last session — no wahala, let us pick up where you stopped! 💪🏾` : `Great to see you again! 😊`}
 
 📊 **Your progress:**
 🎯 Test: ${examProgress.testType}
@@ -1962,12 +1963,13 @@ Ready to continue your practice? 🚀
     addMessage('bot', formatResponse(returningWelcome), true);
 
   } else if (isReturning) {
-    // Return visit — show Tip of the Day instead of welcome
+    // Return visit — show Tip of the Day
     const tip = getTodaysTip();
     const tipHtml = buildTipCard(tip, suggestionStr);
     addMessage('bot', formatResponse(tipHtml), true);
 
   } else {
+    // First ever visit — show welcome message
     const greeting = getTimeGreeting();
     const welcome = `${greeting}! Ẹ káàbọ̀! • Nnọọ! • Sannu! 👋🏾 I'm **Auntie Tobi** — The Oversabi AI Auntie who actually helps! 😄
 
