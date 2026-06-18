@@ -1836,28 +1836,10 @@ function getLocationContext() {
   return context;
 }
 
-window.onload = () => {
-  // Request location on load
-  requestLocation();
-  const allSuggestions = [
-    ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
-    ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'Find a Nigerian church near me'],
-    ['How do I register my child for school in the UK?', 'What events are coming up?', 'How do I open a UK bank account?'],
-    ['Find a makeup artist near me', 'How do I start a business in the UK?', 'What is the best SIM card for calling Nigeria?'],
-    ['Find a Nigerian hair stylist near me', 'How do I get my UK driving licence?', 'What are the best cities for Nigerians in the UK?'],
-    ['How do I register with a GP in the UK?', 'Find a Nigerian event this month', 'How do I apply for ILR?'],
-    ['Find African food near me', 'How do I find a job in the UK?', 'What Nigerian churches are near me?'],
-    ['Find a Nigerian accountant near me', 'How do I convert my Nigerian licence to UK?', 'Find a Nigerian fashion designer near me']
-  ];
-
-  const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
-  const suggestionStr = randomSet.join(' | ');
-
-  // ============================================
-  // TIP OF THE DAY
-  // Shows on return visits instead of welcome
-  // ============================================
-  const TIPS = [
+// ============================================
+// TIP OF THE DAY — Global scope
+// ============================================
+const TIPS = [
     { category: "Money", emoji: "💷", tip: "Always check the yellow sticker section in supermarkets after 7pm. Marks & Spencer, Sainsbury's, Tesco — they reduce food by up to 75% at closing time. Families are saving £40–£60 a month just from this.", source: "Which.co.uk", sourceUrl: "https://www.which.co.uk/reviews/supermarkets/article/how-to-save-money-on-your-supermarket-shop-aXCBN7r08PtR" },
     { category: "Housing", emoji: "🏠", tip: "Your landlord is legally required to give you a Gas Safety Certificate every year. If they haven't — they are breaking the law. Ask for it today.", source: "Learn more", sourceUrl: "https://www.gov.uk/gas-safety-records" },
     { category: "Work Rights", emoji: "💼", tip: "In the UK your employer must pay you Statutory Sick Pay from day one of employment if you are too ill to work. You do not need to suffer without pay. Know your rights.", source: "Learn more", sourceUrl: "https://www.gov.uk/statutory-sick-pay" },
@@ -1888,49 +1870,50 @@ window.onload = () => {
     { category: "NHS", emoji: "🏥", tip: "You are entitled to a free annual flu vaccine if you are pregnant, aged 65 or over, or have certain long-term health conditions. It is the best way to protect your family during winter.", source: "Learn more", sourceUrl: "https://www.nhs.uk/vaccinations/flu-vaccine/" },
     { category: "Money", emoji: "💷", tip: "If you have a lost pension from a previous job use the government's Pension Tracing Service to find it. Billions in pension funds are unclaimed across the UK — make sure yours is not one of them.", source: "Learn more", sourceUrl: "https://www.gov.uk/find-pension-contact-details" },
     { category: "Immigration", emoji: "🛂", tip: "If you are applying for a visa or settlement ensure you use the official GOV.UK portal. Never pay for expedited services through third-party websites that are not endorsed by the Home Office.", source: "Learn more", sourceUrl: "https://www.gov.uk/government/organisations/uk-visas-and-immigration/about/about-our-services" }
-  ];
+];
 
-  function getTodaysTip() {
-    const start = new Date(2026, 0, 1);
-    const today = new Date();
-    const dayOfYear = Math.floor((today - start) / (1000 * 60 * 60 * 24));
-    return TIPS[dayOfYear % TIPS.length];
-  }
+function getTodaysTip() {
+  const start = new Date(2026, 0, 1);
+  const today = new Date();
+  const dayOfYear = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+  return TIPS[dayOfYear % TIPS.length];
+}
 
-  function buildTipCard(tip, suggestionStr) {
-    const cardHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:16px;overflow:hidden;margin-bottom:12px;">
-        <div style="background:#057A44;padding:10px 16px;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:16px;">💡</span>
-          <span style="color:white;font-weight:700;font-size:13px;letter-spacing:0.5px;">TIP OF THE DAY</span>
-        </div>
-        <div style="padding:16px;">
-          <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;margin-bottom:12px;letter-spacing:0.5px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
-          <p style="font-size:15px;color:#0F1E36;line-height:1.6;margin:0 0 14px;">${tip.tip}</p>
-          <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f0f0f0;padding-top:12px;">
-            <a href="${tip.sourceUrl}" target="_blank" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:600;">🔗 Learn More</a>
-            <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;">📤 Share Tip</button>
-          </div>
+function buildTipCard(tip, suggestionStr) {
+  const cardHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:16px;overflow:hidden;margin-bottom:12px;">
+      <div style="background:#057A44;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">💡</span>
+        <span style="color:white;font-weight:700;font-size:13px;letter-spacing:0.5px;">TIP OF THE DAY</span>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px;margin-bottom:12px;letter-spacing:0.5px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
+        <p style="font-size:15px;color:#0F1E36;line-height:1.6;margin:0 0 14px;">${tip.tip}</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f0f0f0;padding-top:12px;">
+          <a href="${tip.sourceUrl}" target="_blank" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:600;">🔗 Learn More</a>
+          <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;">📤 Share Tip</button>
         </div>
       </div>
-      <div class="tip-ad-block">
-        🌸 <strong>AD</strong> — Preparing for your daughter's first period? Get the <strong>First Period Guide + Digital Bundle</strong> — practical advice and age-appropriate resources for Nigerian parents.
-        <br><a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank">👉 Learn More</a>
-      </div>`;
-    return cardHtml + `\n[SUGGESTIONS: ${suggestionStr}]`;
+    </div>
+    <div class="tip-ad-block">
+      🌸 <strong>AD</strong> — Preparing for your daughter's first period? Get the <strong>First Period Guide + Digital Bundle</strong> — practical advice and age-appropriate resources for Nigerian parents.
+      <br><a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank">👉 Learn More</a>
+    </div>`;
+  return cardHtml + `\n[SUGGESTIONS: ${suggestionStr}]`;
+}
+
+window.shareTipOfDay = function() {
+  const tip = getTodaysTip();
+  const text = `💡 Auntie Tobi's Tip of the Day 🇳🇬🇬🇧\n\n${tip.emoji} ${tip.category}:\n${tip.tip}\n\nMore tips for Nigerians in the UK 👉 auntietobi.com`;
+  if (navigator.share) {
+    navigator.share({ title: "Auntie Tobi's Tip of the Day", text, url: 'https://auntietobi.com' });
+  } else {
+    navigator.clipboard.writeText(text).then(() => alert('Tip copied! Share with your friends 🇳🇬🇬🇧'));
   }
+};
 
-  window.shareTipOfDay = function() {
-    const tip = getTodaysTip();
-    const text = `💡 Auntie Tobi's Tip of the Day 🇳🇬🇬🇧\n\n${tip.emoji} ${tip.category}:\n${tip.tip}\n\n✅ Source: ${tip.source}\n\nMore tips for Nigerians in the UK 👉 auntietobi.com`;
-    if (navigator.share) {
-      navigator.share({ title: "Auntie Tobi's Tip of the Day", text, url: 'https://auntietobi.com' });
-    } else {
-      navigator.clipboard.writeText(text).then(() => alert('Tip copied! Share with your friends 🇳🇬🇬🇧'));
-    }
-  };
-
-  // Check if returning visitor
-  // Check today's date for tip rotation
+window.onload = () => {
+  // Request location on load
+  requestLocation();
   const todayStr = new Date().toISOString().split('T')[0];
   const lastVisitDate = localStorage.getItem('tobi_last_visit');
   const isReturning = localStorage.getItem('tobi_visited');
