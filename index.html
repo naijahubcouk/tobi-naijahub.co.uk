@@ -247,7 +247,8 @@
     color: var(--navy);
     border-bottom-left-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-    width: calc(100% - 44px);
+    max-width: calc(100% - 48px);
+    overflow: hidden;
   }
 
   .msg.user .bubble {
@@ -706,9 +707,11 @@
 
   .card-name {
     font-weight: 700;
-    font-size: 16px;
+    font-size: 15px;
     color: #0F1E36;
     margin-bottom: 4px;
+    word-break: break-word;
+    min-width: 0;
   }
 
   .card-category-badge {
@@ -717,16 +720,18 @@
     color: white;
     font-size: 10px;
     font-weight: 700;
-    padding: 3px 10px;
+    padding: 3px 8px;
     border-radius: 50px;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
   }
 
   .card-desc {
-    font-size: 13px;
+    font-size: 12px;
     color: #6B7280;
     line-height: 1.5;
-    margin: 8px 0 10px;
+    margin: 6px 0 8px;
+    word-break: break-word;
   }
 
   .card-detail {
@@ -740,11 +745,13 @@
     background: #FFB81C;
     color: #0F1E36 !important;
     text-decoration: none !important;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    padding: 7px 16px;
+    padding: 6px 12px;
     border-radius: 50px;
     font-family: 'Plus Jakarta Sans', sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .card-link:hover { background: #e6a619; }
 
@@ -755,26 +762,30 @@
     overflow: hidden;
     margin-bottom: 10px;
     display: flex;
+    width: 100%;
+    box-sizing: border-box;
   }
   .biz-card-accent {
     background: #057A44;
-    width: 6px;
+    width: 5px;
     flex-shrink: 0;
   }
   .biz-card-body {
-    padding: 14px 16px;
+    padding: 12px 12px;
     flex: 1;
     min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
   }
   .biz-card-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 6px;
   }
   .biz-card-emoji {
-    font-size: 26px;
+    font-size: 22px;
     flex-shrink: 0;
     line-height: 1;
   }
@@ -783,12 +794,16 @@
     align-items: center;
     justify-content: space-between;
     border-top: 1px solid #f0f0f0;
-    padding-top: 10px;
-    margin-top: 2px;
+    padding-top: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   .biz-card-location {
-    font-size: 12px;
+    font-size: 11px;
     color: #6B7280;
+    flex: 1;
+    min-width: 0;
   }
 
   /* Suggestions */
