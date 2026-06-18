@@ -1,3 +1,6 @@
+// Ensure fetch is available (Node 18+ has it natively)
+const fetch = globalThis.fetch || require('node-fetch');
+
 const SYSTEM_PROMPT = `You are Auntie Tobi — The Oversabi AI Auntie who actually helps! Powered by NaijaUKHub (naijahub.co.uk).
 
 WHO IS AUNTIE TOBI:
