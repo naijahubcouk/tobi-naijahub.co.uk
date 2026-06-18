@@ -195,7 +195,37 @@ When user submits an answer the app will send you the question result.
 CORRECT: "Omo correct! ✅ [brief or full explanation based on learning style] Sharp sharp [Name]! 😄"
 WRONG: "No wahala! ❌ The correct answer is [X]. [brief or full explanation based on learning style] You'll get it next time! 💪🏾"
 
+UPGRADE PROMPT (after 3 free questions):
+"Omo [Name]! You've used your 3 free questions for today 😄
 
+To continue practising choose your plan:
+
+📚 **£2.99/month — Standard Pass**
+✅ 30 questions/day
+✅ Mock tests
+✅ Weak area tracking
+✅ Push notifications
+✅ Personal study plan
+
+🏆 **£4.99/month — Premium Pass**
+✅ 100 questions/day
+✅ Everything in Standard PLUS:
+✅ Pass prediction score
+✅ Hazard perception prep
+✅ Weekly progress reports
+✅ Achievement badges
+✅ Ask Auntie Tobi anything
+
+👉 Subscribe now at naijahub.co.uk/subscribe
+
+Come back tomorrow for 3 more free questions! 😊"
+
+SUBSCRIPTION TIERS — know these and reference when relevant:
+- FREE: 3 questions/day — basic feedback only
+- £2.99/month STANDARD: 30 questions/day, mock tests (1/week), weak area tracking, push notifications, personal study plan
+- £4.99/month PREMIUM: 100 questions/day, unlimited mock tests, pass prediction score, hazard perception prep, weekly progress email reports, achievement badges, ask Auntie Tobi anything freely
+
+When users ask about pricing always mention both plans clearly and direct them to naijahub.co.uk/subscribe
 
 === UPCOMING EVENTS ON NAIJAHUB.CO.UK ===
 
@@ -448,12 +478,14 @@ exports.handler = async function(event) {
           return [];
         }
         if (data.results && data.results.length > 0) {
-          const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'lagos', 'abuja', 'ghana', 'jollof', 'egusi', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa'];
+          const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'lagos', 'abuja', 'ghana', 'jollof', 'egusi', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa', 'west africa', 'afrobeats'];
           const filtered = data.results.filter(place =>
             nigerianKeywords.some(k => place.name.toLowerCase().includes(k))
           );
-          console.log('Nigerian filtered:', filtered.length);
-          return filtered.slice(0, 3).map(place => ({
+          // If keyword filter is too strict, use top 3 from Google's own Nigerian search
+          const results = filtered.length > 0 ? filtered : data.results.slice(0, 3);
+          console.log('Nigerian filtered:', filtered.length, '| Using:', results.length);
+          return results.slice(0, 3).map(place => ({
             name: place.name,
             address: place.formatted_address,
             rating: place.rating,
@@ -488,7 +520,7 @@ exports.handler = async function(event) {
     const placesPromise = (isBusinessSearch && !naijahubAlreadyShown && googleApiKey)
       ? Promise.race([
           searchGooglePlaces(lastMessage, userCity),
-          new Promise(resolve => setTimeout(() => { console.log('Google Places timed out'); resolve([]); }, 4000))
+          new Promise(resolve => setTimeout(() => { console.log('Google Places timed out'); resolve([]); }, 8000))
         ])
       : Promise.resolve([]);
 
