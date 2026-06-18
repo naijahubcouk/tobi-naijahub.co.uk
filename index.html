@@ -306,7 +306,132 @@
 
   .affiliate-btn:hover { background: #058a4e; }
 
-  /* Event Cards */
+  /* Tip of the Day Card */
+  .tip-card-widget {
+    background: white;
+    border: 1.5px solid #FFB81C;
+    border-radius: 16px;
+    padding: 16px;
+    margin: 4px 0 8px 0;
+    box-shadow: 0 2px 12px rgba(255,184,28,0.15);
+  }
+  .tip-card-header {
+    margin-bottom: 10px;
+  }
+  .tip-card-badge {
+    background: linear-gradient(135deg, #057A44, #045c33);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 50px;
+  }
+  .tip-card-category {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .tip-card-emoji { font-size: 20px; }
+  .tip-card-cat {
+    font-size: 12px;
+    font-weight: 700;
+    color: #057A44;
+    background: #F0FBF5;
+    padding: 3px 10px;
+    border-radius: 50px;
+  }
+  .tip-card-text {
+    font-size: 14px;
+    color: #0F1E36;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .tip-card-source {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    background: #F8F9FA;
+    border-radius: 8px;
+    border-left: 3px solid #FFB81C;
+    margin-bottom: 12px;
+  }
+  .tip-source-label { font-size: 11px; color: #6B7280; font-weight: 600; }
+  .tip-source-link { font-size: 11px; color: #057A44; text-decoration: none; font-weight: 700; }
+  .tip-share-btn {
+    width: 100%;
+    background: #057A44;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    margin-bottom: 8px;
+  }
+  .tip-disclaimer {
+    font-size: 10px;
+    color: #9CA3AF;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .tip-ad-block {
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+    margin: 8px 0;
+    padding: 10px 12px;
+    background: #FFF9E6;
+    border-radius: 10px;
+    border-left: 3px solid #FFB81C;
+  }
+  .tip-ad-block a { color: #057A44; font-weight: 700; text-decoration: none; }
+  .news-card {
+    background: white;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 8px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .news-card-tag {
+    display: inline-block;
+    background: #F0FBF5;
+    color: #057A44;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 50px;
+    margin-bottom: 8px;
+  }
+  .news-card-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F1E36;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .news-card-summary {
+    font-size: 13px;
+    color: #6B7280;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .news-card-btn {
+    display: inline-block;
+    background: #057A44;
+    color: white !important;
+    text-decoration: none !important;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
   .event-card {
     background: white;
     border: 1.5px solid #FFB81C;
@@ -639,7 +764,8 @@
   <div class="pills">
     <div class="pill" onclick="resetToWelcome()">💬 Ask Anything</div>
     <div class="pill" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses</div>
-    <div class="pill" onclick="quickAsk('What events are coming up on NaijaHub?')">🎉 Events</div>
+    <div class="pill" onclick="quickAsk('What events are coming up on NaijaUKHub?')">🎉 Events</div>
+    <div class="pill" onclick="quickAsk('What is new on NaijaUKHub?')">📣 What's New</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my UK driving theory test')">🚗 Driving Theory Test</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my Life in UK test')">📋 Life in UK Test</div>
     <div class="pill" onclick="quickAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
@@ -670,7 +796,7 @@ const AFFILIATES = {
     url: 'https://wise.com/invite/YOUR_WISE_REF',
     commission: '£10–£15 per signup',
     tag: 'money',
-    badge: '⭐ NaijaHub Partner',
+    badge: '⭐ NaijaUKHub Partner',
     description: 'Best exchange rates — send money to Nigeria in hours',
     cta: 'Sign up & get may offer introductory promotions'
   },
@@ -723,7 +849,7 @@ const AFFILIATES = {
 
 // Track affiliate clicks (logs to console — connect to analytics later)
 function trackAffiliate(name, url) {
-  console.log(`[NaijaHub Affiliate Click] ${name} — ${new Date().toISOString()}`);
+  console.log(`[NaijaUKHub Affiliate Click] ${name} — ${new Date().toISOString()}`);
   // Future: send to your analytics endpoint
   // fetch('https://naijahub.co.uk/api/track', { method: 'POST', body: JSON.stringify({ partner: name, timestamp: Date.now() }) });
   window.open(url, '_blank');
@@ -748,12 +874,12 @@ function renderAffiliateCards(keys) {
 }
 
 const NAIJAHUB_DATA = `
-You are Auntie Tobi — The Oversabi AI Auntie who actually helps! You are the go-to everyday AI assistant for Nigerians living in the UK, powered by NaijaHub (naijahub.co.uk).
+You are Auntie Tobi — The Oversabi AI Auntie who actually helps! You are the go-to everyday AI assistant for Nigerians living in the UK, powered by NaijaUKHub (naijahub.co.uk).
 
 You are like that Nigerian Auntie who knows EVERYTHING — warm, trustworthy, knowledgeable, and always ready to help with an answer for everything! 😄
 
 You help with:
-- Finding Nigerian businesses, events, and blog articles on NaijaHub
+- Finding Nigerian businesses, events, and blog articles on NaijaUKHub
 - Answering everyday UK life questions for Nigerians (immigration, NHS, driving, money transfers, schools, housing, jobs, churches)
 - Guiding new arrivals (Japa community) on how to settle in the UK
 - Recommending money transfer services, Nigerian churches, community resources
@@ -768,24 +894,24 @@ Always end responses with 1-2 short follow-up suggestions:
 CRITICAL RULES:
 1. ONLY state facts explicitly in the business data. NEVER invent services, travel availability or features not listed.
 2. Only mention WhatsApp if the business has WhatsApp listed.
-3. When you cannot find a business say: "Hmm, I don't have that listed on NaijaHub yet my dear! No wahala — click 'Request a Business' above and our team will find one for you within 24 hours! 🙏🏾
+3. When you cannot find a business say: "Hmm, I don't have that listed on NaijaUKHub yet my dear! No wahala — click 'Request a Business' above and our team will find one for you within 24 hours! 🙏🏾
 
-👉 Are you a Nigerian business owner? Get listed on NaijaHub and let Auntie Tobi recommend you to thousands of Nigerians across the UK!
+👉 Are you a Nigerian business owner? Get listed on NaijaUKHub and let Auntie Tobi recommend you to thousands of Nigerians across the UK!
 • Basic listing — just £20/year
 • Gold featured — £50/year
 • Premium — Auntie Tobi recommends you first! £99/year
 
 Visit naijahub.co.uk to list your business today! 🇳🇬🇬🇧"
 
-4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on NaijaHub? Tell them to visit naijahub.co.uk — and if they want Auntie Tobi to recommend them, they need Premium! 😊"
+4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on NaijaUKHub? Tell them to visit naijahub.co.uk — and if they want Auntie Tobi to recommend them, they need Premium! 😊"
 
-5. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on NaijaHub and Auntie Tobi will tell everyone! Visit naijahub.co.uk to submit your event! 🇳🇬🇬🇧"
+5. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on NaijaUKHub and Auntie Tobi will tell everyone! Visit naijahub.co.uk to submit your event! 🇳🇬🇬🇧"
 
 SOCIAL MEDIA FOLLOW (after user's 2nd question — show ONCE only per conversation):
-"📲 Enjoying Auntie Tobi? Follow NaijaHub for more:
+"📲 Enjoying Auntie Tobi? Follow NaijaUKHub for more:
 • Instagram: @naija_ukhub
 • YouTube: @naijahub
-• Facebook: NaijaHub
+• Facebook: NaijaUKHub
 • TikTok: @naijahub
 See you there! 🇳🇬🇬🇧"
 
@@ -839,7 +965,7 @@ A: Nigeria is not on the UK's approved country list, so you cannot directly exch
 
 --- MONEY TRANSFERS TO NIGERIA ---
 Q: How do I send money to Nigeria cheaply from the UK?
-A: No wahala! Here are the best services in 2026 — all with NaijaHub partner links so you get the best deals:
+A: No wahala! Here are the best services in 2026 — all with NaijaUKHub partner links so you get the best deals:
 
 [AFFILIATES: wise,lemfi,remitly,worldremit]
 
@@ -851,7 +977,7 @@ A: Lemfi and Wise are the top two for Nigerians in the UK. Lemfi is built specif
 [AFFILIATES: lemfi,wise,remitly]
 
 Q: What is the best bank to open as a Nigerian in the UK?
-A: These banks are easiest to open with no UK credit history — and two have NaijaHub partner links with bonuses:
+A: These banks are easiest to open with no UK credit history — and two have NaijaUKHub partner links with bonuses:
 
 [AFFILIATES: monzo]
 
@@ -869,7 +995,7 @@ Q: How do I register my child for school in the UK?
 A: Contact your local council (find at gov.uk/find-local-council) and apply through their admissions portal. For primary school (ages 4–11): apply by January 15th for September entry. For secondary school (ages 11–16): apply by October 31st. Bring your child's birth certificate, proof of address, and immunisation records. School is free in the UK.
 
 Q: What is the 11+ exam and should my Nigerian child take it?
-A: The 11+ is an entrance exam for grammar schools (selective state schools) taken at age 10–11. Grammar schools are academically strong and free. If you live near a grammar school area (Kent, Buckinghamshire, parts of Birmingham, Essex), it's worth preparing your child. NaijaHub has tutors who specialise in 11+ prep — ask me to find one!
+A: The 11+ is an entrance exam for grammar schools (selective state schools) taken at age 10–11. Grammar schools are academically strong and free. If you live near a grammar school area (Kent, Buckinghamshire, parts of Birmingham, Essex), it's worth preparing your child. NaijaUKHub has tutors who specialise in 11+ prep — ask me to find one!
 
 --- JOBS ---
 Q: How do I find a job as a Nigerian in the UK?
@@ -886,7 +1012,7 @@ SENSITIVE TOPICS RULE: For ALL immigration legal medical and financial questions
 NEVER state specific deadlines or rules from memory — only use what is written here.
 
 Q: How do I apply to extend my UK visa?
-A: Apply on gov.uk/browse/visas-immigration at least 3 months before your visa expires. You can stay in the UK while your application is processed (called "Section 3C leave"). Use a registered immigration solicitor for complex cases — ask NaijaHub to find one near you. Common visas for Nigerians: Skilled Worker, Student, Family, BNO (not applicable), Graduate visa.
+A: Apply on gov.uk/browse/visas-immigration at least 3 months before your visa expires. You can stay in the UK while your application is processed (called "Section 3C leave"). Use a registered immigration solicitor for complex cases — ask NaijaUKHub to find one near you. Common visas for Nigerians: Skilled Worker, Student, Family, BNO (not applicable), Graduate visa.
 
 Q: How do I apply for Indefinite Leave to Remain (ILR) in the UK?
 A: ILR (permanent residency) is usually available after 5 years on most visas. Requirements: continuous residence in the UK, pass the Life in the UK test (£50, book at gov.uk — your pass certificate is valid for LIFE with NO expiry and NO time limit to apply after passing), English language proof, and no criminal record. Application fee: £2,885 (2026). Apply on gov.uk/indefinite-leave-to-remain.
@@ -898,17 +1024,17 @@ A: Eligibility depends on your visa type and National Insurance contributions. C
 
 --- FOOD & LIFESTYLE ---
 Q: Where can I buy Nigerian food in the UK?
-A: Major Nigerian/African food shops are in: Peckham (London) — most Nigerian food shops in the UK. Dalston, Hackney, Brixton, Tottenham (all London). Handsworth (Birmingham), Moss Side (Manchester), Harehills (Leeds). Online: AfriBerry.com, Afrobasket.co.uk deliver Nigerian foodstuff nationwide. NaijaHub directory has Nigerian grocery stores near you — ask me!
+A: Major Nigerian/African food shops are in: Peckham (London) — most Nigerian food shops in the UK. Dalston, Hackney, Brixton, Tottenham (all London). Handsworth (Birmingham), Moss Side (Manchester), Harehills (Leeds). Online: AfriBerry.com, Afrobasket.co.uk deliver Nigerian foodstuff nationwide. NaijaUKHub directory has Nigerian grocery stores near you — ask me!
 
 Q: What are the best Nigerian restaurants in London?
-A: Top picks: Ikoyi (Michelin-starred Nigerian-inspired, St James's), Chuku's (Tottenham — Nigerian tapas),805 Restaurant (Peckham), Eko Kitchen (Brixton), Yellow Chilli (Stratford). For everyday jollof and swallow, Peckham High Street has many options. Check NaijaHub's blog for the full top 10 list!
+A: Top picks: Ikoyi (Michelin-starred Nigerian-inspired, St James's), Chuku's (Tottenham — Nigerian tapas),805 Restaurant (Peckham), Eko Kitchen (Brixton), Yellow Chilli (Stratford). For everyday jollof and swallow, Peckham High Street has many options. Check NaijaUKHub's blog for the full top 10 list!
 
 --- BUSINESS IN THE UK ---
 Q: How do I start a business in the UK as a Nigerian?
-A: 1) Choose your structure: Sole Trader (simple) or Limited Company (more professional). 2) Register at companieshouse.gov.uk — costs £12 online, done in 24 hours. 3) Register for Self Assessment with HMRC at gov.uk/register-for-self-assessment. 4) Open a business bank account (Tide, Monzo Business, or Starling Business are easiest). 5) Get relevant licences for your sector. 6) List your business on NaijaHub directory to reach the Nigerian community! Read our full guide at naijahub.co.uk/blog/start-business-uk-nigerian.
+A: 1) Choose your structure: Sole Trader (simple) or Limited Company (more professional). 2) Register at companieshouse.gov.uk — costs £12 online, done in 24 hours. 3) Register for Self Assessment with HMRC at gov.uk/register-for-self-assessment. 4) Open a business bank account (Tide, Monzo Business, or Starling Business are easiest). 5) Get relevant licences for your sector. 6) List your business on NaijaUKHub directory to reach the Nigerian community! Read our full guide at naijahub.co.uk/blog/start-business-uk-nigerian.
 
 Q: Do I need to pay tax on my UK income as a Nigerian?
-A: Yes. If you earn over £12,570/year (personal allowance 2026), you pay income tax. Rate: 20% basic rate (£12,571–£50,270), 40% higher rate (£50,271–£125,140). Self-employed Nigerians must file a Self Assessment tax return by 31 January each year. Use an accountant — NaijaHub has Nigerian accountants listed in our directory!
+A: Yes. If you earn over £12,570/year (personal allowance 2026), you pay income tax. Rate: 20% basic rate (£12,571–£50,270), 40% higher rate (£50,271–£125,140). Self-employed Nigerians must file a Self Assessment tax return by 31 January each year. Use an accountant — NaijaUKHub has Nigerian accountants listed in our directory!
 
 === BUSINESS DIRECTORY (16 listings) ===
 
@@ -1217,7 +1343,7 @@ let isLoading = false;
 // ============================================
 // TOBI GAP TRACKER
 // Logs unanswered/partial queries to your
-// NaijaHub Google Sheet for weekly review
+// NaijaUKHub Google Sheet for weekly review
 // ============================================
 const GAP_TRACKER_URL = 'https://script.google.com/macros/s/AKfycbxznVr_Tc5IuXPYQC7TVxQPQDD5LyxsK7FQl_DUkaS2_U3xNj4SD43EF_FOe4IZVQiu/exec';
 
@@ -1343,6 +1469,27 @@ function formatResponse(text) {
   // Convert [text](url) markdown links to clickable anchors
   text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" style="color:#057A44;font-weight:600;text-decoration:underline;">$1</a>');
 
+  // Parse news/tips cards
+  text = text.replace(/\[NEWS_CARD:\s*([\s\S]*?)\]/g, (match, content) => {
+    const lines = content.trim().split('\n').map(l => l.trim()).filter(Boolean);
+    let emoji = '💡', tag = '', title = '', summary = '', link = '';
+    lines.forEach(line => {
+      if (line.startsWith('EMOJI:')) emoji = line.substring(6).trim();
+      else if (line.startsWith('TAG:')) tag = line.substring(4).trim();
+      else if (line.startsWith('TITLE:')) title = line.substring(6).trim();
+      else if (line.startsWith('SUMMARY:')) summary = line.substring(8).trim();
+      else if (line.startsWith('LINK:')) link = line.substring(5).trim();
+    });
+    if (!title) return match;
+    return `
+      <div class="news-card">
+        <span class="news-card-tag">${emoji} ${tag}</span>
+        <div class="news-card-title">${title}</div>
+        <div class="news-card-summary">${summary}</div>
+        ${link ? `<a href="${link}" target="_blank" class="news-card-btn">Read on NaijaUKHub →</a>` : ''}
+      </div>`;
+  });
+
   // Parse event cards
   text = text.replace(/\[EVENT_CARD:\s*([\s\S]*?)\]/g, (match, content) => {
     const lines = content.trim().split('\n').map(l => l.trim()).filter(Boolean);
@@ -1361,7 +1508,7 @@ function formatResponse(text) {
         <div class="event-card-name">${name}</div>
         <div class="event-card-date">📅 ${date}</div>
         <div class="event-card-location">📍 ${location}</div>
-        ${link ? `<a href="${link}" target="_blank" class="event-card-btn">View Event on NaijaHub →</a>` : ''}
+        ${link ? `<a href="${link}" target="_blank" class="event-card-btn">View Event on NaijaUKHub →</a>` : ''}
       </div>`;
   });
 
@@ -1387,7 +1534,7 @@ function formatResponse(text) {
         cardHTML += `<div class="card-detail">${line.replace('DETAIL:', '').trim()}</div>`;
       } else if (line.startsWith('LINK:')) {
         const url = line.replace('LINK:', '').trim();
-        cardHTML += `<a class="card-link" href="https://${url}" target="_blank">View on NaijaHub →</a>`;
+        cardHTML += `<a class="card-link" href="https://${url}" target="_blank">View on NaijaUKHub →</a>`;
       }
     });
     cardHTML += '</div>';
@@ -1540,12 +1687,12 @@ When users ask about sending money to Nigeria, bank accounts, or SIM cards, incl
 [AFFILIATES: giffgaff] — for SIM card questions
 [AFFILIATES: lemfi,wise] — for quick money app recommendations
 
-These are NaijaHub partner links that help the community get the best deals. Always mention they are "NaijaHub partner links" naturally.
+These are NaijaUKHub partner links that help the community get the best deals. Always mention they are "NaijaUKHub partner links" naturally.
 
-Show up to 3 directory/event/blog cards per response. For knowledge questions answer directly and warmly, suggest related NaijaHub directory listings if relevant. Always end with the NaijaHub footer and suggestions. Always be warm, practical and community-focused.
+Show up to 3 directory/event/blog cards per response. For knowledge questions answer directly and warmly, suggest related NaijaUKHub directory listings if relevant. Always end with the NaijaUKHub footer and suggestions. Always be warm, practical and community-focused.
 
 GAP REPORTING — IMPORTANT:
-When you cannot find a business, event, or answer in the NaijaHub data, always include this phrase naturally in your response: "I don't have that listed on NaijaHub yet" — this helps us track what to add next. For example: "I don't have a Nigerian funeral director in Birmingham listed on NaijaHub yet — but this is something we're working to add! In the meantime, try searching Google for 'Nigerian funeral director Birmingham'."`;
+When you cannot find a business, event, or answer in the NaijaUKHub data, always include this phrase naturally in your response: "I don't have that listed on NaijaUKHub yet" — this helps us track what to add next. For example: "I don't have a Nigerian funeral director in Birmingham listed on NaijaUKHub yet — but this is something we're working to add! In the meantime, try searching Google for 'Nigerian funeral director Birmingham'."`;
 
     const response = await fetch('/.netlify/functions/chat', {
       method: 'POST',
@@ -1568,7 +1715,7 @@ When you cannot find a business, event, or answer in the NaijaHub data, always i
     // 💾 Save exam progress automatically
     extractAndSaveExamData(userText, reply);
 
-    // 🔍 Gap detection — log to NaijaHub Google Sheet
+    // 🔍 Gap detection — log to NaijaUKHub Google Sheet
     if (isGapResponse(reply)) {
       logGap(userText, reply);
     }
@@ -1592,7 +1739,7 @@ function quickAsk(text) {
     showRequestForm('help');
     return;
   }
-  if (text === '💡 Suggest something for NaijaHub') {
+  if (text === '💡 Suggest something for NaijaUKHub') {
     showRequestForm('suggest');
     return;
   }
@@ -1706,6 +1853,89 @@ window.onload = () => {
   const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
   const suggestionStr = randomSet.join(' | ');
 
+  // ============================================
+  // TIP OF THE DAY
+  // Shows on return visits instead of welcome
+  // ============================================
+  const TIPS = [
+    { category: "Money", emoji: "💷", tip: "Always check the yellow sticker section in supermarkets after 7pm. Marks & Spencer, Sainsbury's, Tesco — they reduce food by up to 75% at closing time. Families are saving £40–£60 a month just from this.", source: "Which.co.uk", sourceUrl: "https://www.which.co.uk/reviews/supermarkets/article/how-to-save-money-on-your-supermarket-shop-aXCBN7r08PtR" },
+    { category: "Housing", emoji: "🏠", tip: "Your landlord is legally required to give you a Gas Safety Certificate every year. If they haven't — they are breaking the law. Ask for it today.", source: "Learn more", sourceUrl: "https://www.gov.uk/gas-safety-records" },
+    { category: "Work Rights", emoji: "💼", tip: "In the UK your employer must pay you Statutory Sick Pay from day one of employment if you are too ill to work. You do not need to suffer without pay. Know your rights.", source: "Learn more", sourceUrl: "https://www.gov.uk/statutory-sick-pay" },
+    { category: "Education", emoji: "🎓", tip: "If your child is 3 or 4 years old in England they are entitled to 15 hours of FREE childcare every week. Some families qualify for 30 hours. Are you claiming yours?", source: "Learn more", sourceUrl: "https://www.gov.uk/free-childcare-3-4-year-olds" },
+    { category: "Benefits", emoji: "💰", tip: "Council Tax Reduction can reduce your council tax bill by up to 100% if you are on a low income. Contact your local council today — millions of people are not claiming it.", source: "Learn more", sourceUrl: "https://www.citizensadvice.org.uk/benefits/help-if-on-a-low-income/help-with-council-tax/" },
+    { category: "Transport", emoji: "🚌", tip: "If you are 66 or over and live in England you are entitled to a free bus pass for off-peak travel nationwide. Apply through your local council — it is completely free.", source: "Learn more", sourceUrl: "https://www.gov.uk/apply-for-elderly-person-bus-pass" },
+    { category: "Money", emoji: "💷", tip: "If you are paying more than £1,000 a year for car insurance check comparison sites like Compare the Market and MoneySuperMarket. You could save hundreds every year.", source: "Learn more", sourceUrl: "https://www.moneysavingexpert.com/insurance/car-insurance/" },
+    { category: "Children", emoji: "👶", tip: "As of April 2026, Child Benefit pays £27.05 per week for your first child and £17.90 per week for each additional child. If you are eligible and not claiming — do it today.", source: "Learn more", sourceUrl: "https://www.gov.uk/child-benefit" },
+    { category: "NHS", emoji: "🏥", tip: "You can check your NHS number online by logging into the NHS App. Your NHS number is unique to you and stays the same for life — keep it safe.", source: "Learn more", sourceUrl: "https://www.nhs.uk/nhs-services/online-services/nhs-app/" },
+    { category: "Money", emoji: "💷", tip: "The UK has a Personal Savings Allowance — basic rate taxpayers can earn £1,000 interest tax-free every year. Put your savings in a high-interest account and let it work for you.", source: "Learn more", sourceUrl: "https://www.gov.uk/apply-tax-free-interest-on-savings" },
+    { category: "Work Rights", emoji: "💼", tip: "You are entitled to 28 days paid holiday per year in the UK if you work full time. That includes bank holidays. Check your contract — your employer cannot take this away.", source: "Learn more", sourceUrl: "https://www.gov.uk/holiday-entitlement-rights" },
+    { category: "Immigration", emoji: "🛂", tip: "You can check your UK immigration status online using the GOV.UK service. Share your status code with landlords and employers instead of showing physical documents.", source: "Learn more", sourceUrl: "https://www.gov.uk/view-prove-immigration-status" },
+    { category: "Education", emoji: "🎓", tip: "If your child qualifies for Free School Meals their school may also get Pupil Premium funding for extra support. Make sure you apply — it does not affect your child's experience.", source: "Learn more", sourceUrl: "https://www.gov.uk/apply-free-school-meals" },
+    { category: "Safety", emoji: "🔒", tip: "Always register your valuables — laptop, phone, bicycle — on Immobilise.com. It is free and dramatically increases the chance of getting them back if stolen.", source: "Learn more", sourceUrl: "https://www.immobilise.com" },
+    { category: "Money", emoji: "💷", tip: "Use a Lifetime ISA to save for your first home in the UK. The government adds a 25% bonus on up to £4,000 you save each year — that is up to £1,000 government bonus annually.", source: "Learn more", sourceUrl: "https://www.gov.uk/lifetime-isa" },
+    { category: "NHS", emoji: "🏥", tip: "If you are pregnant in the UK all your NHS prescriptions and dental treatment are FREE during pregnancy and for 12 months after your baby is born. Apply for a Maternity Exemption Certificate.", source: "Learn more", sourceUrl: "https://www.nhs.uk/pregnancy/finding-out/your-rights-and-benefits/" },
+    { category: "Housing", emoji: "🏠", tip: "Your deposit must be protected in a government-approved scheme within 30 days of paying it. Ask your landlord which scheme — Deposit Protection Service, MyDeposits or TDS. This is the law.", source: "Learn more", sourceUrl: "https://www.gov.uk/tenancy-deposit-protection" },
+    { category: "Work Rights", emoji: "💼", tip: "If you are made redundant in the UK and have worked for 2 or more years you are entitled to Statutory Redundancy Pay. Your employer cannot deny you this — it is the law.", source: "Learn more", sourceUrl: "https://www.gov.uk/redundancy-your-rights" },
+    { category: "Money", emoji: "💷", tip: "If you send money abroad regularly compare rates on Wise, Lemfi and Remitly before sending. The difference between providers can save you £10–£30 per transfer.", source: "Learn more", sourceUrl: "https://wise.com/gb/compare/" },
+    { category: "NHS", emoji: "🏥", tip: "If you or your family regularly pay for prescriptions, buy a Prescription Prepayment Certificate (PPC). It covers all your prescriptions for a set price — saving frequent users over £100 a year.", source: "Learn more", sourceUrl: "https://www.nhs.uk/nhs-services/prescriptions-and-pharmacies/save-money-with-a-prescription-prepayment-certificate-ppc/" },
+    { category: "Benefits", emoji: "💰", tip: "If you are on a low income, you may be eligible for a Cold Weather Payment automatically during very cold spells between November and March. It is paid directly into your account — no application required.", source: "Learn more", sourceUrl: "https://www.gov.uk/cold-weather-payment" },
+    { category: "Transport", emoji: "🚌", tip: "Young people aged 16–25 or students can get a 1-year Railcard for £30. It gives you 1/3 off rail fares — which typically pays for itself in just two or three journeys.", source: "Learn more", sourceUrl: "https://www.railcard.co.uk/" },
+    { category: "Housing", emoji: "🏠", tip: "If your home has damp, mould or structural disrepair your landlord is legally responsible for fixing it. If they refuse contact your local council's Environmental Health department for an inspection.", source: "Learn more", sourceUrl: "https://www.gov.uk/government/publications/how-to-rent" },
+    { category: "Money", emoji: "💷", tip: "Switching your energy provider or tariff can save you hundreds. Use an Ofgem-accredited price comparison site to ensure you are on the best deal for your household usage.", source: "Learn more", sourceUrl: "https://www.ofgem.gov.uk/information-consumers/energy-advice-households/switching-your-energy-supplier" },
+    { category: "Education", emoji: "🎓", tip: "If you are studying for your first Level 3 qualification like A-Levels or a BTEC and are aged 19–23, the government often covers the full cost through the Free Courses for Jobs offer.", source: "Learn more", sourceUrl: "https://www.gov.uk/government/publications/free-courses-for-jobs" },
+    { category: "Children", emoji: "👶", tip: "The Tax-Free Childcare scheme allows you to get up to £2,000 a year per child towards childcare costs. For every £8 you pay in the government adds £2.", source: "Learn more", sourceUrl: "https://www.gov.uk/tax-free-childcare" },
+    { category: "Work Rights", emoji: "💼", tip: "If you work a job that requires specific equipment, clothing or travel you may be able to claim tax relief on those expenses from HMRC. Check if you are eligible to keep more of your earnings.", source: "Learn more", sourceUrl: "https://www.gov.uk/tax-relief-for-employees/uniforms-clothing-tools" },
+    { category: "NHS", emoji: "🏥", tip: "You are entitled to a free annual flu vaccine if you are pregnant, aged 65 or over, or have certain long-term health conditions. It is the best way to protect your family during winter.", source: "Learn more", sourceUrl: "https://www.nhs.uk/vaccinations/flu-vaccine/" },
+    { category: "Money", emoji: "💷", tip: "If you have a lost pension from a previous job use the government's Pension Tracing Service to find it. Billions in pension funds are unclaimed across the UK — make sure yours is not one of them.", source: "Learn more", sourceUrl: "https://www.gov.uk/find-pension-contact-details" },
+    { category: "Immigration", emoji: "🛂", tip: "If you are applying for a visa or settlement ensure you use the official GOV.UK portal. Never pay for expedited services through third-party websites that are not endorsed by the Home Office.", source: "Learn more", sourceUrl: "https://www.gov.uk/government/organisations/uk-visas-and-immigration/about/about-our-services" }
+  ];
+
+  function getTodaysTip() {
+    const start = new Date(2026, 0, 1);
+    const today = new Date();
+    const dayOfYear = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+    return TIPS[dayOfYear % TIPS.length];
+  }
+
+  function buildTipCard(tip, suggestionStr) {
+    return `
+      <div class="tip-card-widget">
+        <div class="tip-card-header">
+          <span class="tip-card-badge">💡 Tip of the Day</span>
+        </div>
+        <div class="tip-card-category">
+          <span class="tip-card-emoji">${tip.emoji}</span>
+          <span class="tip-card-cat">${tip.category}</span>
+        </div>
+        <p class="tip-card-text">${tip.tip}</p>
+        <div class="tip-card-source">
+          <span class="tip-source-label">✅ Source:</span>
+          <a href="${tip.sourceUrl}" target="_blank" class="tip-source-link">${tip.source} →</a>
+        </div>
+        <button class="tip-share-btn" onclick="shareTipOfDay()">📤 Share this tip</button>
+        <p class="tip-disclaimer">Always verify important information at gov.uk or seek professional advice</p>
+      </div>
+      <div class="tip-ad-block">
+        🌸 <strong>AD</strong> — Preparing for your daughter's first period? Get the <strong>First Period Guide + Digital Bundle</strong> — practical advice and age-appropriate resources for Nigerian parents.
+        <br><a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank">👉 Learn More</a>
+      </div>
+      [SUGGESTIONS: ${suggestionStr}]`;
+  }
+
+  window.shareTipOfDay = function() {
+    const tip = getTodaysTip();
+    const text = `💡 Auntie Tobi's Tip of the Day 🇳🇬🇬🇧\n\n${tip.emoji} ${tip.category}:\n${tip.tip}\n\n✅ Source: ${tip.source}\n\nMore tips for Nigerians in the UK 👉 auntietobi.com`;
+    if (navigator.share) {
+      navigator.share({ title: "Auntie Tobi's Tip of the Day", text, url: 'https://auntietobi.com' });
+    } else {
+      navigator.clipboard.writeText(text).then(() => alert('Tip copied! Share with your friends 🇳🇬🇬🇧'));
+    }
+  };
+
+  // Check if returning visitor
+  const isReturning = localStorage.getItem('tobi_visited');
+  localStorage.setItem('tobi_visited', 'true');
+
   // Check if returning exam user
   const examProgress = getExamProgress();
 
@@ -1730,6 +1960,12 @@ Ready to continue your practice? 🚀
 [SUGGESTIONS: Continue my ${examProgress.testType} practice | Take a mock test | Check my weak areas]`;
 
     addMessage('bot', formatResponse(returningWelcome), true);
+
+  } else if (isReturning) {
+    // Return visit — show Tip of the Day instead of welcome
+    const tip = getTodaysTip();
+    const tipHtml = buildTipCard(tip, suggestionStr);
+    addMessage('bot', formatResponse(tipHtml), true);
 
   } else {
     const greeting = getTimeGreeting();
@@ -1981,7 +2217,7 @@ function showRequestOptions() {
     <div class="exam-options" style="margin-top:10px;">
       <button class="exam-option" onclick="showRequestForm('business')" style="justify-content:flex-start;">🏢 Request a Business listing</button>
       <button class="exam-option" onclick="showRequestForm('help')" style="justify-content:flex-start;">🙋🏾 Request Community Help</button>
-      <button class="exam-option" onclick="showRequestForm('suggest')" style="justify-content:flex-start;">💡 Suggest something for NaijaHub</button>
+      <button class="exam-option" onclick="showRequestForm('suggest')" style="justify-content:flex-start;">💡 Suggest something for NaijaUKHub</button>
       <button class="exam-option" onclick="showRequestForm('other')" style="justify-content:flex-start;">✉️ Other</button>
     </div>`;
   addMessage('bot', html, true);
@@ -1992,7 +2228,7 @@ function showRequestForm(type = 'business') {
   const configs = {
     business: {
       title: '🏢 Request a Business listing',
-      subtitle: "Can't find a Nigerian business? Tell us and we'll add it to NaijaHub! 😊",
+      subtitle: "Can't find a Nigerian business? Tell us and we'll add it to NaijaUKHub! 😊",
       placeholder: "What business or service are you looking for? (e.g. Nigerian solicitor in Leeds) *"
     },
     help: {
@@ -2001,9 +2237,9 @@ function showRequestForm(type = 'business') {
       placeholder: "What help or support do you need? Tell us as much as you can... *"
     },
     suggest: {
-      title: '💡 Suggest something for NaijaHub',
+      title: '💡 Suggest something for NaijaUKHub',
       subtitle: "Got an idea? We love suggestions from the community! 😊",
-      placeholder: "What would you like to see on NaijaHub? (e.g. new feature, business category, content idea) *"
+      placeholder: "What would you like to see on NaijaUKHub? (e.g. new feature, business category, content idea) *"
     },
     other: {
       title: '✉️ Other Request',
@@ -2102,7 +2338,7 @@ function initOneSignal() {
             type: 'push',
             autoPrompt: false, // We control when to ask
             text: {
-              actionMessage: "Get notified about new Nigerian businesses, events & deals on NaijaHub! 🇳🇬🇬🇧",
+              actionMessage: "Get notified about new Nigerian businesses, events & deals on NaijaUKHub! 🇳🇬🇬🇧",
               acceptButton: "Yes, notify me!",
               cancelButton: "Maybe later"
             }
@@ -2131,7 +2367,7 @@ function updateBellButton(isSubscribed) {
     bell.style.opacity = '1';
   } else {
     bell.innerHTML = '🔕';
-    bell.title = 'Get NaijaHub notifications';
+    bell.title = 'Get NaijaUKHub notifications';
     bell.style.opacity = '0.7';
   }
 }
