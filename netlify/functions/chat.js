@@ -486,30 +486,33 @@ exports.handler = async function(event) {
 
     const lastMessage = body.messages?.[body.messages.length - 1]?.content || '';
     const conversationHistory = body.messages?.map(m => m.content).join(' ') || '';
-    
-    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business/i.test(lastMessage);
-    const naijahubAlreadyShown = /naijahub\.co\.uk\/listing/i.test(conversationHistory);
-
-    // Build location context
     const examContext = body.examContext || '';
     const locationContext = body.locationContext || '';
     const cityMatch = locationContext.match(/located in ([^,.]+)/i);
     const userCity = cityMatch ? cityMatch[1].trim() : 'UK';
 
-    // Run Google Places AND Claude API simultaneously — zero extra wait!
+    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business/i.test(lastMessage);
+    const naijahubAlreadyShown = /naijahub\.co\.uk\/listing/i.test(conversationHistory);
+
+    console.log('isBusinessSearch:', isBusinessSearch, '| naijahubAlreadyShown:', naijahubAlreadyShown, '| googleApiKey exists:', !!googleApiKey);
+
+    // Start Google Places immediately (non-blocking)
     const placesPromise = (isBusinessSearch && !naijahubAlreadyShown && googleApiKey)
       ? Promise.race([
           searchGooglePlaces(lastMessage, userCity),
-          new Promise(resolve => setTimeout(() => resolve([]), 4000))
+          new Promise(resolve => setTimeout(() => { console.log('Google Places timed out'); resolve([]); }, 4000))
         ])
       : Promise.resolve([]);
 
-    const claudePromise = placesPromise.then(places => {
-      let googleResultsContext = '';
-      if (places && places.length > 0) {
-        const first2 = places.slice(0, 2);
-        const hasMore = places.length > 2;
-        googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use if NaijaUKHub directory has nothing relevant):
+    // Wait for Google Places then call Claude
+    const places = await placesPromise;
+    console.log('Final places count:', places.length);
+
+    let googleResultsContext = '';
+    if (places && places.length > 0) {
+      const first2 = places.slice(0, 2);
+      const hasMore = places.length > 2;
+      googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use if NaijaUKHub directory has nothing relevant. If NaijaUKHub has matching businesses show those instead):
 
 Show ONLY first 2 results. If more exist end with:
 "Want to see more nearby? 😊
@@ -521,31 +524,27 @@ ${first2.map((p, i) => `${i+1}. ${p.name}
    ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
    👉 View on Google Maps: ${p.mapsUrl}`).join('\n\n')}
 ${hasMore ? `\nEXTRA (only if user asks): ${places[2].name} — ${places[2].mapsUrl}` : ''}`;
-        console.log('Google Places found:', places.length, 'results for', userCity);
-      }
+    }
 
-      const fullSystemPrompt = SYSTEM_PROMPT +
-        (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
-        (googleResultsContext || '') +
-        (examContext ? '\n\n' + examContext : '');
+    const fullSystemPrompt = SYSTEM_PROMPT +
+      (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
+      (googleResultsContext || '') +
+      (examContext ? '\n\n' + examContext : '');
 
-      return fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5',
-          max_tokens: 600,
-          system: fullSystemPrompt,
-          messages: body.messages
-        })
-      });
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 600,
+        system: fullSystemPrompt,
+        messages: body.messages
+      })
     });
-
-    const response = await claudePromise;
 
     const data = await response.json();
     console.log('Status:', response.status);
