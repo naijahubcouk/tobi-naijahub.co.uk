@@ -899,12 +899,12 @@
 
   <div class="pills">
     <div class="pill" onclick="resetToWelcome()">💬 Ask Anything</div>
-    <div class="pill" onclick="showBusinesses()">🏢 Businesses</div>
-    <div class="pill" onclick="quickAsk('What events are coming up on NaijaUKHub?')">🎉 Events</div>
-    <div class="pill" onclick="quickAsk('What is new on NaijaUKHub?')">📣 What's New</div>
+    <div class="pill" onclick="resetAndShow(showBusinesses)">🏢 Businesses</div>
+    <div class="pill" onclick="resetAndAsk('What events are coming up on NaijaUKHub?')">🎉 Events</div>
+    <div class="pill" onclick="resetAndAsk('What is new on NaijaUKHub?')">📣 What's New</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my UK driving theory test')">🚗 Driving Theory Test</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my Life in UK test')">📋 Life in UK Test</div>
-    <div class="pill" onclick="quickAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
+    <div class="pill" onclick="resetAndAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
     <div class="pill" onclick="showRequestOptions()">🔍 Request</div>
     <div class="pill" onclick="showFeedbackForm()">📝 Feedback</div>
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
@@ -2389,29 +2389,34 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 <script>
 const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP4etmzEKByoODaqXCw80gRiI2wkVRK6QYb_-v8wwdkTZ8834vDLoZbDN41/exec';
 
-function resetToWelcome() {
-  console.log('resetToWelcome called');
-  // Force stop everything
-  isLoading = false;
-  document.getElementById('sendBtn').disabled = false;
-
-  // Reset exam state completely
+function clearExamState() {
   examState.active = false;
   examState.testType = null;
   examState.currentQuestion = null;
   examState.questionsAnswered = 0;
   examState.correctAnswers = 0;
   examState.weakAreas = {};
-
-  // Clear ALL chat and conversation history
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
   const chatBox = document.getElementById('messages');
-  console.log('chatBox found:', chatBox);
   if (chatBox) chatBox.innerHTML = '';
   messages = [];
-
-  // Remove any typing indicators
   const typing = document.getElementById('typing');
   if (typing) typing.remove();
+}
+
+function resetAndAsk(text) {
+  clearExamState();
+  setTimeout(() => sendMessage(text), 100);
+}
+
+function resetAndShow(fn) {
+  clearExamState();
+  setTimeout(() => fn(), 100);
+}
+
+function resetToWelcome() {
+  clearExamState();
 
   // Small delay to ensure DOM is cleared before adding content
   setTimeout(() => {
