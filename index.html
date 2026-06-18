@@ -250,7 +250,7 @@
     width: calc(100% - 38px);
     overflow: hidden;
     box-sizing: border-box;
-    padding: 6px 8px;
+    padding: 3px 4px;
   }
 
   .msg.user .bubble {
@@ -2028,17 +2028,17 @@ function getTodaysTip() {
 }
 
 function buildTipCard(tip, suggestionStr) {
-  const cardHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:16px;overflow:hidden;margin-bottom:12px;">
-      <div style="background:#057A44;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+  const cardHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;margin-bottom:4px;">
+      <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:16px;">💡</span>
-        <span style="color:white;font-weight:700;font-size:13px;letter-spacing:0.5px;">TIP OF THE DAY</span>
+        <span style="color:white;font-weight:700;font-size:15px;">TIP OF THE DAY</span>
       </div>
       <div style="padding:5px;">
-        <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:12px;font-weight:700;padding:2px 8px;border-radius:50px;margin-bottom:3px;letter-spacing:0.5px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
-        <p style="font-size:15px;color:#0F1E36;line-height:1.5;margin:0 0 4px;font-weight:500;">${tip.tip}</p>
-        <div style="border-top:1px solid #f0f0f0;padding-top:4px;display:flex;flex-direction:column;gap:3px;">
-          <a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Learn More</a>
-          <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;">📤 Share Tip</button>
+        <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:13px;font-weight:700;padding:1px 6px;border-radius:50px;margin-bottom:3px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
+        <p style="font-size:15px;color:#0F1E36;line-height:1.5;margin:0 0 4px;font-weight:500;padding:0;">${tip.tip}</p>
+        <div style="border-top:1px solid #f0f0f0;padding-top:1px;display:flex;flex-direction:column;gap:1px;margin:0;">
+          <a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;padding:2px 0;">🔗 Learn More</a>
+          <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;width:100%;">📤 Share Tip</button>
         </div>
       </div>
     </div>
