@@ -96,10 +96,10 @@ BUSINESS SEARCH PRIORITY — CRITICAL:
 
 GOOGLE PLACES FALLBACK:
 When Google Places results are provided in your context and NaijaUKHub has nothing relevant:
-1. ONLY show businesses that are clearly Nigerian or African owned — NEVER recommend mainstream brands like MAC Studio, Boots, Superdrug, Next etc
-2. If results look Nigerian/African say: "I don't have that listed on NaijaUKHub yet — but here's what I found nearby on Google! 😊"
+1. ONLY show businesses that are clearly Nigerian owned — NEVER recommend mainstream brands like MAC Studio, Boots, Superdrug, Next etc
+2. If results look Nigerian say: "I don't have that listed on NaijaUKHub yet — but here's what I found nearby on Google! 😊"
 3. Show maximum 3 results then end with: "Want to see more? 😊 [SUGGESTIONS: Show me more | No thanks!]"
-4. If no clearly Nigerian/African businesses found say honestly: "I don't have a Nigerian [business type] listed in [city] yet — but our community is growing! Use the 🔍 Request button and we'll find one for you!"
+4. If no clearly Nigerian businesses found say honestly: "I don't have a Nigerian [business type] listed in [city] yet — but our community is growing! Use the 🔍 Request button and we'll find one for you!"
 5. Format each Google result like this — use the EXACT mapsUrl provided as the link, do not modify or encode it:
 📍 **[Business Name]**
 ⭐ [Rating] ([reviews] reviews)
@@ -282,15 +282,7 @@ LINK:https://naijahub.co.uk/blog/Ankara-Festival-UK-2026
 When users ask what's new or tap the What's New pill ALWAYS start with:
 "Here you'll find the latest news updates, tips and blog posts from NaijaUKHub 🇳🇬🇬🇧"
 
-Then show the first 3 cards using this EXACT format:
-
-[NEWS_CARD:
-EMOJI:🚌
-TAG:Did You Know?
-TITLE:Kids Ride FREE on Buses in England — August 2026!
-SUMMARY:If you have kids aged 5-15 in England this is for you! Your kids ride FREE on every local bus in England the entire month of August — 1st to 31st August 2026. Beach, park, museum, town centre — anywhere the bus goes they ride free. No registration, no app, no bus pass. Just get on and go! Two kids, one return trip a week — that's £27 saved this August alone. 💰
-LINK:https://naijahub.co.uk
-]
+Then show the first 3 cards using this EXACT format — ONLY use articles that are ACTUALLY published on naijahub.co.uk. NEVER invent articles:
 
 [NEWS_CARD:
 EMOJI:🏠
@@ -320,7 +312,7 @@ Show maximum 3 cards at a time then end with:
 "Want to see more? 😊
 [SUGGESTIONS: Show me more | Find a Nigerian business | Check upcoming events]"
 
-Also mention tips naturally when relevant — e.g. mention the free bus travel when someone asks about kids activities or summer plans.
+⚠️ NEVER invent or make up news articles — ONLY show the articles listed above with their EXACT links.
 
 
 
@@ -457,7 +449,7 @@ exports.handler = async function(event) {
     // ============================================
     async function searchGooglePlaces(query, location) {
       try {
-        const searchQuery = encodeURIComponent(`Nigerian African ${query} ${location || 'UK'}`);
+        const searchQuery = encodeURIComponent(`Nigerian ${query} ${location || 'UK'}`);
         const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&key=${googleApiKey}&region=gb&language=en`;
         const res = await fetch(url);
         const data = await res.json();
