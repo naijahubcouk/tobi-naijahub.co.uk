@@ -1911,14 +1911,33 @@ window.shareTipOfDay = function() {
   }
 };
 
-// Force ALL links in chat to open in new tab
+// Force ALL external links to open in device browser
 document.addEventListener('click', function(e) {
   const link = e.target.closest('a[href]');
-  if (link && !link.href.startsWith('javascript') && !link.href.startsWith('#')) {
-    link.setAttribute('target', '_blank');
-    link.setAttribute('rel', 'noopener noreferrer');
+  if (link) {
+    const href = link.getAttribute('href');
+    if (href && href.startsWith('http') && !href.includes('auntietobi.com')) {
+      e.preventDefault();
+      window.open(href, '_blank', 'noopener,noreferrer');
+    }
   }
 });
+
+// Global suggestions generator
+function getRandomSuggestionStr() {
+  const allSuggestions = [
+    ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
+    ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'Find a Nigerian church near me'],
+    ['How do I register my child for school in the UK?', 'What events are coming up?', 'How do I open a UK bank account?'],
+    ['Find a makeup artist near me', 'How do I start a business in the UK?', 'What is the best SIM card for calling Nigeria?'],
+    ['Find a Nigerian hair stylist near me', 'How do I get my UK driving licence?', 'What are the best cities for Nigerians in the UK?'],
+    ['How do I register with a GP in the UK?', 'Find a Nigerian event this month', 'How do I apply for ILR?'],
+    ['Find African food near me', 'How do I find a job in the UK?', 'What Nigerian churches are near me?'],
+    ['Find a Nigerian accountant near me', 'How do I convert my Nigerian licence to UK?', 'Find a Nigerian fashion designer near me']
+  ];
+  const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
+  return randomSet.join(' | ');
+}
 
 window.onload = () => {
   // Request location on load
@@ -1957,7 +1976,7 @@ Ready to continue your practice? 🚀
   } else if (isReturning) {
     // Return visit — show Tip of the Day
     const tip = getTodaysTip();
-    const tipHtml = buildTipCard(tip, suggestionStr);
+    const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
     addMessage('bot', formatResponse(tipHtml), true);
 
   } else {
@@ -1982,7 +2001,7 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 🌸 **AD** — Preparing for your daughter's first period? Get the **First Period Guide + Digital Bundle** — practical advice and age-appropriate resources for Nigerian parents.
 👉 [Learn More](https://www.helloperiodz.com/bloomly-bundle)
 
-[SUGGESTIONS: ${suggestionStr}]`;
+[SUGGESTIONS: ${getRandomSuggestionStr()}]`;
 
     addMessage('bot', formatResponse(welcome), true);
   }
@@ -2068,22 +2087,9 @@ function resetToWelcome() {
 
   // Small delay to ensure DOM is cleared before adding content
   setTimeout(() => {
-    const allSuggestions = [
-      ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
-      ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'Find a Nigerian church near me'],
-      ['How do I register my child for school in the UK?', 'What events are coming up?', 'How do I open a UK bank account?'],
-      ['Find a makeup artist near me', 'How do I start a business in the UK?', 'What is the best SIM card for calling Nigeria?'],
-      ['Find a Nigerian hair stylist near me', 'How do I get my UK driving licence?', 'What are the best cities for Nigerians in the UK?'],
-      ['How do I register with a GP in the UK?', 'Find a Nigerian event this month', 'How do I apply for ILR?'],
-      ['Find African food near me', 'How do I find a job in the UK?', 'What Nigerian churches are near me?'],
-      ['Find a Nigerian accountant near me', 'How do I convert my Nigerian licence to UK?', 'Find a Nigerian fashion designer near me']
-    ];
-    const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
-    const suggestionStr = randomSet.join(' | ');
-
     // Always show Tip of the Day when Ask Anything is clicked (user is returning)
     const tip = getTodaysTip();
-    const tipHtml = buildTipCard(tip, suggestionStr);
+    const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
     addMessage('bot', formatResponse(tipHtml), true);
   }, 100);
 }
