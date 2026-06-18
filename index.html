@@ -233,11 +233,13 @@
   }
 
   .bubble {
-    padding: 12px 15px;
+    padding: 14px 16px;
     border-radius: 18px;
-    font-size: 14px;
-    line-height: 1.55;
+    font-size: 15px;
+    line-height: 1.6;
     max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .msg.bot .bubble {
@@ -245,12 +247,15 @@
     color: var(--navy);
     border-bottom-left-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    width: calc(100% - 44px);
   }
 
   .msg.user .bubble {
     background: var(--green);
     color: var(--white);
     border-bottom-right-radius: 4px;
+    max-width: 85%;
+    margin-left: auto;
   }
 
   /* Cards inside bot bubble */
@@ -701,26 +706,89 @@
 
   .card-name {
     font-weight: 700;
-    font-size: 14px;
-    color: var(--navy);
-    margin-bottom: 2px;
+    font-size: 16px;
+    color: #0F1E36;
+    margin-bottom: 4px;
+  }
+
+  .card-category-badge {
+    display: inline-block;
+    background: #057A44;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 50px;
+    letter-spacing: 0.5px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.5;
+    margin: 8px 0 10px;
   }
 
   .card-detail {
     font-size: 12px;
-    color: var(--gray);
+    color: #6B7280;
     line-height: 1.5;
   }
 
   .card-link {
     display: inline-block;
-    margin-top: 6px;
+    background: #FFB81C;
+    color: #0F1E36 !important;
+    text-decoration: none !important;
     font-size: 12px;
-    font-weight: 600;
-    color: var(--green);
-    text-decoration: none;
-    border-bottom: 1px solid var(--gold);
-    padding-bottom: 1px;
+    font-weight: 700;
+    padding: 7px 16px;
+    border-radius: 50px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .card-link:hover { background: #e6a619; }
+
+  .biz-card {
+    background: white;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    display: flex;
+  }
+  .biz-card-accent {
+    background: #057A44;
+    width: 6px;
+    flex-shrink: 0;
+  }
+  .biz-card-body {
+    padding: 14px 16px;
+    flex: 1;
+    min-width: 0;
+  }
+  .biz-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .biz-card-emoji {
+    font-size: 26px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .biz-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 10px;
+    margin-top: 2px;
+  }
+  .biz-card-location {
+    font-size: 12px;
+    color: #6B7280;
   }
 
   /* Suggestions */
@@ -828,7 +896,7 @@
     <div class="logo"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
     <div class="header-text">
       <h1 style="font-size:22px;font-weight:800;margin:0 0 2px 0;color:white;">Auntie Tobi</h1>
-      <p style="margin:0;font-size:12px;color:#FFB81C;">The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> <span style="font-size:10px;opacity:0.75;color:white;">(Powered by <a href="https://naijahub.co.uk" target="_blank" style="color:#FFB81C;text-decoration:none;">naijahub.co.uk</a>)</span></p>
+      <p style="margin:0;font-size:12px;color:#FFB81C;">The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> <span style="font-size:10px;opacity:0.75;color:white;">(Powered by <a href="https://naijahub.co.uk" target="_blank" style="color:white;text-decoration:none;font-weight:600;">naijahub.co.uk</a>)</span></p>
     </div>
     <div class="status-dot"></div>
     <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="
@@ -1828,6 +1896,17 @@ function quickAsk(text) {
     sendMessage(`Find a Nigerian business in ${city}`);
     return;
   }
+  if (text === 'List your business on NaijaHub →' || text === 'List your business on NaijaHub') {
+    const a = document.createElement('a');
+    a.href = 'https://naijahub.co.uk';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    addMessage('bot', formatResponse("Opening NaijaHub for you! 😊 List your business and reach thousands of Nigerians across the UK. Our team will be in touch once your listing is live! 🇳🇬🇬🇧\n\n[SUGGESTIONS: Find a Nigerian business | Ask me anything]"), true);
+    return;
+  }
   if (text === '🏢 Request a Business listing') {
     showRequestForm('business');
     return;
@@ -2103,13 +2182,24 @@ function showBusinesses(startIndex = -1) {
   let html = `<p style="margin:0 0 12px;font-size:15px;color:#0F1E36;font-weight:600;">Check out Nigerian businesses listed on NaijaUKHub! 🏢🇳🇬🇬🇧</p>`;
 
   page.forEach(b => {
+    const emoji = getCategoryEmoji(b.category);
     html += `
-      <div class="card" style="margin-bottom:10px;">
-        <div class="card-category">${getCategoryEmoji(b.category)} ${b.category.toUpperCase()}</div>
-        <div class="card-name">${b.name}</div>
-        <div class="card-desc">${b.desc}</div>
-        <div style="font-size:11px;color:#6B7280;margin-bottom:8px;">📍 ${b.location}</div>
-        <a href="${b.url}" target="_blank" class="card-link">View on NaijaHub →</a>
+      <div class="biz-card">
+        <div class="biz-card-accent"></div>
+        <div class="biz-card-body">
+          <div class="biz-card-header">
+            <div>
+              <div class="card-name">${b.name}</div>
+              <span class="card-category-badge">${emoji} ${b.category.toUpperCase()}</span>
+            </div>
+            <span class="biz-card-emoji">${emoji}</span>
+          </div>
+          <div class="card-desc">${b.desc}</div>
+          <div class="biz-card-footer">
+            <span class="biz-card-location">📍 ${b.location}</span>
+            <a href="${b.url}" target="_blank" class="card-link">View on NaijaHub →</a>
+          </div>
+        </div>
       </div>`;
   });
 
