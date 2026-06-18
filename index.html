@@ -2131,7 +2131,7 @@ function buildTipCard(tip, suggestionStr) {
 
 window.shareTipOfDay = function() {
   const tip = getTodaysTip();
-  const text = `💡 Auntie Tobi's Tip of the Day 🇳🇬🇬🇧\n\n${tip.emoji} ${tip.category}:\n${tip.tip}\n\nMore tips for Nigerians in the UK 👉 auntietobi.com`;
+  const text = `💡 Auntie Tobi's Tip of the Day 🇳🇬🇬🇧\n\n${tip.emoji} ${tip.category}:\n${tip.tip}\n\n🔗 Learn more: ${tip.sourceUrl}\n\nMore tips for Nigerians in the UK 👉 auntietobi.com`;
   if (navigator.share) {
     navigator.share({ title: "Auntie Tobi's Tip of the Day", text, url: 'https://auntietobi.com' });
   } else {
