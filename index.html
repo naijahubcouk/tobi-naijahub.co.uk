@@ -1868,7 +1868,7 @@ function quickAsk(text) {
     sendMessage(`Find a Nigerian business in ${city}`);
     return;
   }
-  if (text === 'List your business on NaijaHub →' || text === 'List your business on NaijaHub') {
+  if (text === 'List your business on NaijaUKHub →' || text === 'List your business on NaijaUKHub →' || text === 'List your business on NaijaUKHub') {
     const a = document.createElement('a');
     a.href = 'https://naijahub.co.uk';
     a.target = '_blank';
@@ -1876,7 +1876,7 @@ function quickAsk(text) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    addMessage('bot', formatResponse("Opening NaijaHub for you! 😊 List your business and reach thousands of Nigerians across the UK. Our team will be in touch once your listing is live! 🇳🇬🇬🇧\n\n[SUGGESTIONS: Find a Nigerian business | Ask me anything]"), true);
+    addMessage('bot', formatResponse("Opening NaijaUKHub for you! 😊 List your business and reach thousands of Nigerians across the UK. Our team will be in touch once your listing is live! 🇳🇬🇬🇧\n\n[SUGGESTIONS: Find a Nigerian business | Ask me anything]"), true);
     return;
   }
   if (text === '🏢 Request a Business listing') {
@@ -2398,7 +2398,7 @@ function showFeedbackOptions(msgId, type) {
     optionsDiv.innerHTML = `
       <button class="fq-option" onclick="submitFeedbackOption('Wrong information')">❌ Wrong information</button>
       <button class="fq-option" onclick="submitFeedbackOption('Not helpful')">😕 Not helpful</button>
-      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist')">🏢 Business doesn't exist on NaijaHub</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist')">🏢 Business doesn't exist on NaijaUKHub</button>
       <button class="fq-option" onclick="submitFeedbackOption('Inappropriate')">⚠️ Inappropriate</button>
       <button class="fq-option" onclick="submitFeedbackOption('Other')">✉️ Other</button>
     `;
@@ -2406,7 +2406,7 @@ function showFeedbackOptions(msgId, type) {
     title.textContent = '🚩 Report this message';
     optionsDiv.innerHTML = `
       <button class="fq-option" onclick="submitFeedbackOption('Wrong business info')">🏢 Wrong business info</button>
-      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist on NaijaHub')">❌ Business doesn't exist on NaijaHub</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist on NaijaUKHub')">❌ Business doesn't exist on NaijaUKHub</button>
       <button class="fq-option" onclick="submitFeedbackOption('Incorrect advice')">📋 Incorrect advice</button>
       <button class="fq-option" onclick="submitFeedbackOption('Inappropriate response')">⚠️ Inappropriate response</button>
       <button class="fq-option" onclick="submitFeedbackOption('Other')">✉️ Other</button>
