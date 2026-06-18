@@ -6461,7 +6461,7 @@ ${places.map((p, i) => `${i+1}. ${p.name}
    📍 ${p.address}
    ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
    ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
-   🔗 https://www.google.com/maps/place/?q=place_id:${p.placeId}`).join('\n\n')}`;
+   🔗 https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.address)}`).join('\n\n')}`;
       }
     }
 
