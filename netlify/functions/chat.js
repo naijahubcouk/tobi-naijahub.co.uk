@@ -451,14 +451,21 @@ exports.handler = async function(event) {
       try {
         const searchQuery = encodeURIComponent(`Nigerian ${query} ${location || 'UK'}`);
         const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&key=${googleApiKey}&region=gb&language=en`;
+        console.log('Google Places search:', searchQuery, 'Location:', location);
         const res = await fetch(url);
         const data = await res.json();
+        console.log('Google Places status:', data.status, '| Results:', data.results?.length || 0, '| Error:', data.error_message || 'none');
+        if (data.status === 'REQUEST_DENIED' || data.status === 'INVALID_REQUEST') {
+          console.error('Google Places denied:', data.error_message);
+          return [];
+        }
         if (data.results && data.results.length > 0) {
           const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'lagos', 'abuja', 'ghana', 'jollof', 'egusi', 'puff puff', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa'];
           const filtered = data.results.filter(place => {
             const name = place.name.toLowerCase();
             return nigerianKeywords.some(k => name.includes(k));
           });
+          console.log('Nigerian filtered results:', filtered.length);
           const results = filtered.length > 0 ? filtered : [];
           return results.slice(0, 3).map(place => ({
             name: place.name,
@@ -472,35 +479,37 @@ exports.handler = async function(event) {
         }
         return [];
       } catch (err) {
-        console.error('Google Places error:', err);
+        console.error('Google Places exception:', err.message);
         return [];
       }
     }
 
-    // Check if message is a business search request
     const lastMessage = body.messages?.[body.messages.length - 1]?.content || '';
     const conversationHistory = body.messages?.map(m => m.content).join(' ') || '';
     
-    // Only trigger Google Places if:
-    // 1. User is searching for a business
-    // 2. No NaijaHub business cards have been shown yet in conversation
-    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor/i.test(lastMessage);
+    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business/i.test(lastMessage);
     const naijahubAlreadyShown = /naijahub\.co\.uk\/listing/i.test(conversationHistory);
 
+    // Run Google Places search with a 3 second timeout
     let googleResultsContext = '';
     if (isBusinessSearch && !naijahubAlreadyShown && googleApiKey) {
-      // Extract location from location context
       const locationContext = body.locationContext || '';
       const cityMatch = locationContext.match(/located in ([^,.]+)/i);
       const userCity = cityMatch ? cityMatch[1].trim() : 'UK';
 
-      const places = await searchGooglePlaces(lastMessage, userCity);
-      if (places.length > 0) {
-        const first2 = places.slice(0, 2);
-        const hasMore = places.length > 2;
-        googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use these if you cannot find anything in the NaijaUKHub directory above. If NaijaUKHub has relevant businesses, show those instead and IGNORE these Google results):
+      try {
+        const placesPromise = searchGooglePlaces(lastMessage, userCity);
+        const timeoutPromise = new Promise(resolve => setTimeout(() => resolve([]), 3000));
+        const places = await Promise.race([placesPromise, timeoutPromise]);
+        
+        console.log('Places returned:', places.length);
+        
+        if (places.length > 0) {
+          const first2 = places.slice(0, 2);
+          const hasMore = places.length > 2;
+          googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use these if you cannot find anything in the NaijaUKHub directory above):
 
-Show ONLY the first 2 results below. If there are more, end with:
+Show ONLY the first 2 results. If there are more end with:
 "Want to see more nearby? 😊
 [SUGGESTIONS: Show me more Google results | Search NaijaHub businesses | Ask me anything]"
 
@@ -510,12 +519,11 @@ ${first2.map((p, i) => `${i+1}. ${p.name}
    ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
    👉 View on Google Maps: ${p.mapsUrl}`).join('\n\n')}
 
-${hasMore ? `EXTRA RESULT (only show if user asks for more):
-${places.slice(2).map((p, i) => `${i+1}. ${p.name}
-   📍 ${p.address}
-   ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
-   ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
-   👉 View on Google Maps: ${p.mapsUrl}`).join('\n\n')}` : ''}`;
+${hasMore ? `EXTRA (show only if user asks for more):
+${places[2].name} — ${places[2].address} — 👉 ${places[2].mapsUrl}` : ''}`;
+        }
+      } catch(err) {
+        console.error('Google Places failed:', err.message);
       }
     }
 
