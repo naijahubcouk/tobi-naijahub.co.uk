@@ -840,7 +840,7 @@
 
   <div class="pills">
     <div class="pill" onclick="resetToWelcome()">💬 Ask Anything</div>
-    <div class="pill" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses</div>
+    <div class="pill" onclick="showBusinesses()">🏢 Businesses</div>
     <div class="pill" onclick="quickAsk('What events are coming up on NaijaUKHub?')">🎉 Events</div>
     <div class="pill" onclick="quickAsk('What is new on NaijaUKHub?')">📣 What's New</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my UK driving theory test')">🚗 Driving Theory Test</div>
@@ -1818,7 +1818,16 @@ When you cannot find a business, event, or answer in the NaijaUKHub data, always
 }
 
 function quickAsk(text) {
-  // Handle request options
+  // Handle businesses rotation
+  if (text === 'Show me more businesses' || text === 'Start again from the top') {
+    showBusinesses();
+    return;
+  }
+  if (text === 'Find a Nigerian business near me') {
+    const city = userCity || 'near you';
+    sendMessage(`Find a Nigerian business in ${city}`);
+    return;
+  }
   if (text === '🏢 Request a Business listing') {
     showRequestForm('business');
     return;
@@ -2038,6 +2047,92 @@ function getRandomSuggestionStr() {
   ];
   const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
   return randomSet.join(' | ');
+}
+
+// ============================================
+// NAIJAHUB BUSINESSES DIRECTORY
+// ============================================
+const NAIJAHUB_BUSINESSES = [
+  { name: 'Flourish Paradise', category: 'Events & Entertainment', location: 'Rotherham, South Yorkshire', desc: 'Professional Alaga services for weddings and events', url: 'https://naijahub.co.uk/listing/flourish-paradise' },
+  { name: 'Autogelebysunshine UK', category: 'Beauty & Fashion', location: 'Liverpool', desc: 'Beautifully crafted Auto Gele, men\'s caps and elegant turbans for all occasions', url: 'https://naijahub.co.uk/listing/autogelebysunshine-uk' },
+  { name: 'Photomasterstudios', category: 'Events & Entertainment', location: 'Nottingham', desc: 'Professional photography — portraits, weddings, events', url: 'https://naijahub.co.uk/listing/photomasterstudios' },
+  { name: 'Orionbloomuk', category: 'Beauty & Fashion', location: 'UK-wide', desc: 'Expert makeup for deeper skin tones and melanin-focused artistry', url: 'https://naijahub.co.uk/listing/orionbloomuk' },
+  { name: 'Bumexcouture', category: 'Beauty & Fashion', location: 'UK-wide', desc: 'Stylish women\'s clothing and accessories featuring vibrant African print textiles', url: 'https://naijahub.co.uk/listing/bumexcouture' },
+  { name: 'Nidakprint', category: 'Professional Services', location: 'London, Birmingham, Manchester', desc: 'Custom printing and packaging for Nigerian entrepreneurs and businesses', url: 'https://naijahub.co.uk/listing/nidakprint' },
+  { name: 'Gandkstyles', category: 'Beauty & Fashion', location: 'Leven, Scotland', desc: 'Ready-to-wear women\'s clothing, Ankara prints and casual wear', url: 'https://naijahub.co.uk/listing/gandkstyles' },
+  { name: 'Glamwtjade', category: 'Beauty & Fashion', location: 'Middlesbrough', desc: 'Professional makeup artist specialising in bridal and special occasion makeup', url: 'https://naijahub.co.uk/listing/glamwtjade' },
+  { name: 'Purplelips', category: 'Beauty & Fashion', location: 'Colchester, Essex', desc: 'Professional makeup artist services', url: 'https://naijahub.co.uk/listing/purplelips' },
+  { name: 'Funmis Treasure', category: 'Food & Groceries', location: 'Basildon, Essex', desc: 'Nigerian groceries, food products and drinks', url: 'https://naijahub.co.uk/listing/funmis-treasure' },
+  { name: 'Jollofmama', category: 'Food & Dining', location: 'London', desc: 'Authentic Nigerian restaurant — jollof rice and traditional Nigerian cuisine', url: 'https://naijahub.co.uk/listing/jollofmama' },
+  { name: 'Kelz J Bukka & Grills', category: 'Food & Dining', location: 'Brighton', desc: 'Nigerian restaurant and grill — authentic West African dishes', url: 'https://naijahub.co.uk/listing/kelz-j-bukka-and-grills' },
+  { name: 'Funkesglam', category: 'Beauty & Fashion', location: 'Rainham, Essex', desc: 'Professional makeup artist for weddings, events and special occasions', url: 'https://naijahub.co.uk/listing/funkesglam' },
+  { name: '280degrees', category: 'Food & Dining', location: 'Kilburn, London NW6', desc: 'Nigerian restaurant on Kilburn High Road', url: 'https://naijahub.co.uk/listing/280degrees' },
+  { name: 'Justpalmoil', category: 'Food & Groceries', location: 'Streatham, London SW16', desc: 'Palm oil and Nigerian groceries', url: 'https://naijahub.co.uk/listing/justpalmoil' },
+  { name: 'Tombell Education Consultancy', category: 'Professional Services', location: 'Sittingbourne, Kent', desc: 'Education consultancy services for Nigerian families in the UK', url: 'https://naijahub.co.uk/listing/tombell-education-consultancy-ltd' },
+  { name: 'Home of Multi-Nutrient', category: 'Food & Groceries', location: 'Wakefield, West Yorkshire', desc: 'West African frozen food and groceries', url: 'https://naijahub.co.uk/listing/home-of-multi-nutrient-ventures-limited' },
+  { name: 'Xstarhaircollectionz', category: 'Beauty & Fashion', location: 'Glasgow, Scotland', desc: 'Premium wigs and hair products — Boho Braids, Knotless Braids, human hair wigs', url: 'https://naijahub.co.uk/listing/xstarhaircollectionz' },
+  { name: 'OlorioBeauty', category: 'Beauty & Fashion', location: 'UK-wide', desc: 'Natural beauty products for melanin-rich skin', url: 'https://naijahub.co.uk/listing/olorio-beauty' },
+  { name: 'Auntie Tobi Recommended', category: 'All Categories', location: 'UK-wide', desc: 'View all Nigerian businesses listed on NaijaUKHub', url: 'https://naijahub.co.uk' }
+];
+
+// Track shown businesses to avoid repeats
+let shownBusinessIndexes = [];
+
+function showBusinesses(startIndex = -1) {
+  // Get real businesses only (exclude the last placeholder entry)
+  const realBusinesses = NAIJAHUB_BUSINESSES.filter(b => b.category !== 'All Categories');
+
+  // If startIndex is -1 (new session) or we've shown all, reset
+  if (startIndex === -1 || shownBusinessIndexes.length >= realBusinesses.length) {
+    shownBusinessIndexes = [];
+  }
+
+  // Pick 3 random businesses not yet shown
+  const available = realBusinesses
+    .map((b, i) => i)
+    .filter(i => !shownBusinessIndexes.includes(i));
+
+  // Shuffle available
+  const shuffled = available.sort(() => Math.random() - 0.5);
+  const pick = shuffled.slice(0, 3);
+  pick.forEach(i => shownBusinessIndexes.push(i));
+
+  const page = pick.map(i => realBusinesses[i]);
+  const hasMore = shownBusinessIndexes.length < realBusinesses.length;
+
+  let html = `<p style="margin:0 0 12px;font-size:15px;color:#0F1E36;font-weight:600;">Check out Nigerian businesses listed on NaijaUKHub! 🏢🇳🇬🇬🇧</p>`;
+
+  page.forEach(b => {
+    html += `
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-category">${getCategoryEmoji(b.category)} ${b.category.toUpperCase()}</div>
+        <div class="card-name">${b.name}</div>
+        <div class="card-desc">${b.desc}</div>
+        <div style="font-size:11px;color:#6B7280;margin-bottom:8px;">📍 ${b.location}</div>
+        <a href="${b.url}" target="_blank" class="card-link">View on NaijaHub →</a>
+      </div>`;
+  });
+
+  const moreLabel = hasMore ? 'Show me more businesses' : 'Start again from the top';
+  html += `\n[SUGGESTIONS: ${moreLabel} | Find a Nigerian business near me | Ask me anything]`;
+
+  const container = document.getElementById('messages');
+  if (container) container.innerHTML = '';
+  messages = [];
+  addMessage('bot', formatResponse(html), true);
+  messages.push({ role: 'assistant', content: `Here are Nigerian businesses on NaijaUKHub: ${page.map(b => b.name).join(', ')}` });
+}
+
+function getCategoryEmoji(cat) {
+  const emojis = {
+    'Beauty & Fashion': '💄',
+    'Food & Dining': '🍛',
+    'Food & Groceries': '🛒',
+    'Events & Entertainment': '🎉',
+    'Professional Services': '💼',
+    'All Categories': '🏢'
+  };
+  return emojis[cat] || '🏢';
 }
 
 window.onload = () => {
