@@ -476,6 +476,77 @@
   .event-card-btn:hover {
     background: #045c33;
   }
+  /* Message feedback buttons */
+  .msg-feedback {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding-left: 44px;
+  }
+  .feedback-btn {
+    background: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 50px;
+    padding: 3px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #6B7280;
+    transition: all 0.2s;
+  }
+  .feedback-btn:hover { background: #f3f4f6; }
+  .feedback-btn.active-up { border-color: #057A44; color: #057A44; background: #EAF3DE; }
+  .feedback-btn.active-down { border-color: #EF4444; color: #EF4444; background: #FEE2E2; }
+  .feedback-btn.active-flag { border-color: #F59E0B; color: #F59E0B; background: #FEF3C7; }
+  .feedback-msg { font-size: 12px; color: #057A44; padding-left: 44px; margin-top: 4px; }
+
+  /* Feedback quick modal */
+  .fq-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,30,54,0.6);
+    z-index: 999999;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .fq-overlay.show { display: flex; }
+  .fq-box {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    width: 100%;
+    max-width: 480px;
+  }
+  .fq-title { font-weight: 700; font-size: 16px; color: #0F1E36; margin-bottom: 14px; }
+  .fq-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #0F1E36;
+    cursor: pointer;
+    margin-bottom: 8px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .fq-option:hover { background: #EAF3DE; border-color: #057A44; color: #057A44; }
+  .fq-cancel {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: none;
+    border: none;
+    padding: 12px;
+    font-size: 14px;
+    color: #6B7280;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
   .star-btn {
     background: #F8F9FA;
     border: 1.5px solid #E2E8F0;
@@ -1558,12 +1629,25 @@ function addMessage(role, content, isHTML = false) {
   const container = document.getElementById('messages');
   const div = document.createElement('div');
   div.className = `msg ${role}`;
+  const msgId = 'msg_' + Date.now();
 
   if (role === 'bot') {
     div.innerHTML = `
       <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
       <div class="bubble">${isHTML ? content : escapeHTML(content)}</div>
     `;
+    // Add feedback buttons after a short delay
+    setTimeout(() => {
+      const feedback = document.createElement('div');
+      feedback.className = 'msg-feedback';
+      feedback.id = msgId;
+      feedback.innerHTML = `
+        <button class="feedback-btn" onclick="msgFeedback('${msgId}', 'up', this)" title="Helpful">👍</button>
+        <button class="feedback-btn" onclick="showFeedbackOptions('${msgId}', 'down')" title="Not helpful">👎</button>
+        <button class="feedback-btn" onclick="showFeedbackOptions('${msgId}', 'flag')" title="Report">🚩</button>
+      `;
+      div.appendChild(feedback);
+    }, 300);
   } else {
     div.innerHTML = `<div class="bubble">${escapeHTML(content)}</div>`;
   }
@@ -2064,6 +2148,7 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP4etmzEKByoODaqXCw80gRiI2wkVRK6QYb_-v8wwdkTZ8834vDLoZbDN41/exec';
 
 function resetToWelcome() {
+  console.log('resetToWelcome called');
   // Force stop everything
   isLoading = false;
   document.getElementById('sendBtn').disabled = false;
@@ -2078,6 +2163,7 @@ function resetToWelcome() {
 
   // Clear ALL chat and conversation history
   const chatBox = document.getElementById('messages');
+  console.log('chatBox found:', chatBox);
   if (chatBox) chatBox.innerHTML = '';
   messages = [];
 
@@ -2087,11 +2173,110 @@ function resetToWelcome() {
 
   // Small delay to ensure DOM is cleared before adding content
   setTimeout(() => {
-    // Always show Tip of the Day when Ask Anything is clicked (user is returning)
-    const tip = getTodaysTip();
-    const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
-    addMessage('bot', formatResponse(tipHtml), true);
+    console.log('setTimeout fired - building tip card');
+    try {
+      const tip = getTodaysTip();
+      console.log('tip:', tip);
+      const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
+      console.log('tipHtml built');
+      addMessage('bot', formatResponse(tipHtml), true);
+      console.log('message added');
+    } catch(err) {
+      console.error('Error in resetToWelcome setTimeout:', err);
+    }
   }, 100);
+}
+
+// ============================================
+// MESSAGE FEEDBACK — thumbs up/down/flag
+// ============================================
+let currentFeedbackMsgId = '';
+let currentFeedbackType = '';
+
+async function msgFeedback(msgId, type, btn) {
+  // Mark button active
+  const container = document.getElementById(msgId);
+  if (!container) return;
+  container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active-up','active-down','active-flag'));
+  if (type === 'up') {
+    btn.classList.add('active-up');
+    // Show thank you message
+    let thanks = container.nextElementSibling;
+    if (!thanks || !thanks.classList.contains('feedback-msg')) {
+      thanks = document.createElement('div');
+      thanks.className = 'feedback-msg';
+      container.after(thanks);
+    }
+    thanks.textContent = '✅ Thanks for the feedback!';
+    setTimeout(() => { if (thanks) thanks.remove(); }, 3000);
+    // Save to sheet
+    try {
+      await fetch(GAP_TRACKER_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'message_feedback', rating: 'positive', city: userCity || '', timestamp: new Date().toISOString() })
+      });
+    } catch(e) {}
+  }
+}
+
+function showFeedbackOptions(msgId, type) {
+  currentFeedbackMsgId = msgId;
+  currentFeedbackType = type;
+  const overlay = document.getElementById('fq-overlay');
+  const title = document.getElementById('fq-title');
+  const optionsDiv = document.getElementById('fq-options');
+
+  if (type === 'down') {
+    title.textContent = '👎 What went wrong?';
+    optionsDiv.innerHTML = `
+      <button class="fq-option" onclick="submitFeedbackOption('Wrong information')">❌ Wrong information</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Not helpful')">😕 Not helpful</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist')">🏢 Business doesn't exist on NaijaHub</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Inappropriate')">⚠️ Inappropriate</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Other')">✉️ Other</button>
+    `;
+  } else {
+    title.textContent = '🚩 Report this message';
+    optionsDiv.innerHTML = `
+      <button class="fq-option" onclick="submitFeedbackOption('Wrong business info')">🏢 Wrong business info</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist on NaijaHub')">❌ Business doesn't exist on NaijaHub</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Incorrect advice')">📋 Incorrect advice</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Inappropriate response')">⚠️ Inappropriate response</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Other')">✉️ Other</button>
+    `;
+  }
+  overlay.classList.add('show');
+}
+
+async function submitFeedbackOption(reason) {
+  const overlay = document.getElementById('fq-overlay');
+  overlay.classList.remove('show');
+
+  // Mark button active
+  const container = document.getElementById(currentFeedbackMsgId);
+  if (container) {
+    container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active-up','active-down','active-flag'));
+    const btn = container.querySelector(currentFeedbackType === 'down' ? '.feedback-btn:nth-child(2)' : '.feedback-btn:nth-child(3)');
+    if (btn) btn.classList.add(currentFeedbackType === 'down' ? 'active-down' : 'active-flag');
+    let thanks = container.nextElementSibling;
+    if (!thanks || !thanks.classList.contains('feedback-msg')) {
+      thanks = document.createElement('div');
+      thanks.className = 'feedback-msg';
+      container.after(thanks);
+    }
+    thanks.textContent = currentFeedbackType === 'flag' ? '🚩 Reported — thank you!' : '👎 Thanks — we will improve!';
+    setTimeout(() => { if (thanks) thanks.remove(); }, 3000);
+  }
+
+  // Save to sheet
+  try {
+    await fetch(GAP_TRACKER_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: currentFeedbackType === 'flag' ? 'report' : 'negative_feedback', reason, city: userCity || '', timestamp: new Date().toISOString() })
+    });
+  } catch(e) {}
 }
 
 let currentRating = 0;
@@ -2435,5 +2620,14 @@ window.addEventListener('load', () => {
   }
 });
 </script>
+<!-- Message Feedback Quick Modal -->
+<div id="fq-overlay" class="fq-overlay">
+  <div class="fq-box">
+    <p id="fq-title" class="fq-title">👎 What went wrong?</p>
+    <div id="fq-options"></div>
+    <button class="fq-cancel" onclick="document.getElementById('fq-overlay').classList.remove('show')">Cancel</button>
+  </div>
+</div>
+
 </body>
 </html>
