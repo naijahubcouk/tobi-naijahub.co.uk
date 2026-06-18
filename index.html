@@ -2074,7 +2074,7 @@ function resetToWelcome() {
   const typing = document.getElementById('typing');
   if (typing) typing.remove();
 
-  // Small delay to ensure DOM is cleared before adding welcome
+  // Small delay to ensure DOM is cleared before adding content
   setTimeout(() => {
     const allSuggestions = [
       ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
@@ -2089,28 +2089,10 @@ function resetToWelcome() {
     const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
     const suggestionStr = randomSet.join(' | ');
 
-    const welcome = `Ẹ káàbọ̀! • Nnọọ! • Sannu! 👋🏾 I'm **Auntie Tobi** — The Oversabi AI Auntie who actually helps! 😄
-
-Whether you just japa'd or you've been here for years, Auntie Tobi has got you covered! Ask me anything:
-
-🏢 Find Nigerian businesses near you
-🎉 Discover upcoming events
-🇬🇧 Navigate life in the UK — NHS, housing and more
-🚗 Prepare for your Driving Theory Test
-📋 Prepare for your Life in UK Test
-🔍 Can't find a business? Request one!
-
-**Wetin you need today?** 😄
-
-📢 Own a business? Add your listing on 👉 [www.naijahub.co.uk](https://www.naijahub.co.uk)
-
----
-🌸 **AD** — Preparing for your daughter's first period? Get the **First Period Guide + Digital Bundle** — practical advice and age-appropriate resources for Nigerian parents.
-👉 [Learn More](https://www.helloperiodz.com/bloomly-bundle)
-
-[SUGGESTIONS: ${suggestionStr}]`;
-
-    addMessage('bot', formatResponse(welcome), true);
+    // Always show Tip of the Day when Ask Anything is clicked (user is returning)
+    const tip = getTodaysTip();
+    const tipHtml = buildTipCard(tip, suggestionStr);
+    addMessage('bot', formatResponse(tipHtml), true);
   }, 100);
 }
 
