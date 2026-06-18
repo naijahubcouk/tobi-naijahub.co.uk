@@ -1708,9 +1708,26 @@ function addMessage(role, content, isHTML = false, showFeedback = false) {
       </div>
     `;
   } else {
-    div.innerHTML = `<div class="bubble">${escapeHTML(content)}</div>`;
+    div.innerHTML = `<div class="bubble" style="padding:10px 12px;">${escapeHTML(content)}</div>`;
   }
 
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+// Special tip message — no white bubble wrapper, card renders flush
+function addTipMessage(html) {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.style.alignItems = 'flex-start';
+  div.innerHTML = `
+    <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
+    <div style="flex:1;min-width:0;">
+      ${html}
+    </div>
+  `;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
   return div;
@@ -2043,7 +2060,7 @@ function getTodaysTip() {
 }
 
 function buildTipCard(tip, suggestionStr) {
-  const cardHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;margin:-3px -4px;">
+  const tipHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
       <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:16px;">💡</span>
         <span style="color:white;font-weight:700;font-size:15px;">TIP OF THE DAY</span>
@@ -2068,7 +2085,15 @@ function buildTipCard(tip, suggestionStr) {
       </div>
       <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" style="display:block;background:#D4537E;color:white;text-decoration:none;font-size:14px;font-weight:700;padding:10px 16px;border-radius:50px;text-align:center;">👉 Get It Now →</a>
     </div>`;
-  return cardHtml + `\n[SUGGESTIONS: ${suggestionStr}]`;
+
+  // Build suggestions HTML separately
+  const suggestions = suggestionStr.split('|').map(s => s.trim()).filter(Boolean);
+  const suggestionsHtml = suggestions.length ? `
+    <div class="suggestions" style="margin-top:8px;">
+      ${suggestions.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}
+    </div>` : '';
+
+  return tipHtml + suggestionsHtml;
 }
 
 window.shareTipOfDay = function() {
@@ -2245,7 +2270,7 @@ Ready to continue your practice? 🚀
     // Return visit — show Tip of the Day
     const tip = getTodaysTip();
     const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
-    addMessage('bot', formatResponse(tipHtml), true);
+    addTipMessage(tipHtml);
 
   } else {
     // First ever visit — show welcome message
@@ -2363,7 +2388,7 @@ function resetToWelcome() {
       console.log('tip:', tip);
       const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
       console.log('tipHtml built');
-      addMessage('bot', formatResponse(tipHtml), true);
+      addTipMessage(tipHtml);
       console.log('message added');
     } catch(err) {
       console.error('Error in resetToWelcome setTimeout:', err);
