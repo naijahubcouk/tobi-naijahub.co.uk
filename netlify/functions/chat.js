@@ -83,6 +83,13 @@ If no location is provided (user denied permission) then ask naturally just once
 
 "Hmm, I don't have that listed on NaijaUKHub yet ! No wahala — we are growing fast! Use the 🔍 Request a Business button and we'll add it! 🇳🇬🇬🇧"
 
+BUSINESS SEARCH PRIORITY — CRITICAL:
+1. ALWAYS search the NaijaHub directory FIRST before anything else
+2. If you find relevant businesses in the directory → show them as CARD format
+3. ONLY use Google Places results if NOTHING relevant exists in the NaijaHub directory
+4. NEVER show Google results if NaijaHub has a matching business — even if it's in a different city
+5. When showing NaijaHub businesses always end with: "Want to see more? 😊 [SUGGESTIONS: Show me more | No thanks, that's great!]"
+
 GOOGLE PLACES FALLBACK:
 When Google Places results are provided in your context and NaijaUKHub has nothing relevant:
 1. ONLY show businesses that are clearly Nigerian or African owned — NEVER recommend mainstream brands like MAC Studio, Boots, Superdrug, Next etc
@@ -6431,11 +6438,16 @@ exports.handler = async function(event) {
 
     // Check if message is a business search request
     const lastMessage = body.messages?.[body.messages.length - 1]?.content || '';
-    const isBusinessSearch = /find|looking for|where can i|recommend|near me|in (london|manchester|birmingham|leeds|liverpool|bristol|sheffield|glasgow|edinburgh|cardiff|leicester|coventry|bradford|nottingham|uk)/i.test(lastMessage);
-    const hasNaijaUKHubResults = /NaijaUKHub/i.test(lastMessage);
+    const conversationHistory = body.messages?.map(m => m.content).join(' ') || '';
+    
+    // Only trigger Google Places if:
+    // 1. User is searching for a business
+    // 2. No NaijaHub business cards have been shown yet in conversation
+    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor/i.test(lastMessage);
+    const naijahubAlreadyShown = /naijahub\.co\.uk\/listing/i.test(conversationHistory);
 
     let googleResultsContext = '';
-    if (isBusinessSearch && googleApiKey) {
+    if (isBusinessSearch && !naijahubAlreadyShown && googleApiKey) {
       // Extract location from location context
       const locationContext = body.locationContext || '';
       const cityMatch = locationContext.match(/located in ([^,.]+)/i);
@@ -6443,8 +6455,7 @@ exports.handler = async function(event) {
 
       const places = await searchGooglePlaces(lastMessage, userCity);
       if (places.length > 0) {
-        googleResultsContext = `\n\nGOOGLE PLACES RESULTS (use these if NaijaUKHub has nothing relevant):
-If you cannot find a match in the NaijaUKHub directory, show these Google results with this intro: "I don't have that listed on NaijaUKHub yet — but here's what I found nearby on Google! 😊"
+        googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use these if you cannot find anything in the NaijaUKHub directory above. If NaijaUKHub has relevant businesses, show those instead and IGNORE these Google results):
 
 ${places.map((p, i) => `${i+1}. ${p.name}
    📍 ${p.address}
