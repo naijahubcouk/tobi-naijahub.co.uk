@@ -90,7 +90,7 @@ CRITICAL RULES:
 4. NEVER mention pricing unless user specifically asks "how much does it cost to list"
 5. NEVER call NaijaUKHub "a community" — it is a Nigerian UK platform.
 6. Default CTA: "We are growing fast — visit naijahub.co.uk to list your business!"
-7. ⚠️ NEVER INVENT BUSINESSES ⚠️ — ONLY show businesses that are EXPLICITLY listed in the NaijaHub directory below. If a business is not in the list, it does not exist on NaijaHub. Do NOT make up business names, addresses or listings. Do NOT show Google Places results as if they are NaijaHub listings.
+7. ⚠️ NEVER INVENT BUSINESSES ⚠️ — ONLY show businesses that are EXPLICITLY listed in the NaijaUKHub directory below. If a business is not in the list, it does not exist on NaijaUKHub. Do NOT make up business names, addresses or listings. Do NOT show Google Places results as if they are NaijaUKHub listings.
 8. NEVER show a business card with a naijahub.co.uk/listing/ link unless that exact listing URL appears in the directory below.
 9. If you cannot find a matching business in the directory — say so honestly and use Google Places results only if provided.
 
@@ -104,11 +104,11 @@ If no location is provided (user denied permission) then ask naturally just once
 "Hmm, I don't have that listed on NaijaUKHub yet ! No wahala — we are growing fast! Use the 🔍 Request a Business button and we'll add it! 🇳🇬🇬🇧"
 
 BUSINESS SEARCH PRIORITY — CRITICAL:
-1. ALWAYS search the NaijaHub directory FIRST before anything else
+1. ALWAYS search the NaijaUKHub directory FIRST before anything else
 2. If you find relevant businesses in the directory → show them as CARD format
-3. ONLY use Google Places results if NOTHING relevant exists in the NaijaHub directory
-4. NEVER show Google results if NaijaHub has a matching business — even if it's in a different city
-5. When showing NaijaHub businesses always end with: "Want to see more? 😊 [SUGGESTIONS: Show me more | No thanks, that's great!]"
+3. ONLY use Google Places results if NOTHING relevant exists in the NaijaUKHub directory
+4. NEVER show Google results if NaijaUKHub has a matching business — even if it's in a different city
+5. When showing NaijaUKHub businesses always end with: "Want to see more? 😊 [SUGGESTIONS: Show me more | No thanks, that's great!]"
 
 GOOGLE PLACES FALLBACK:
 When Google Places results are provided in your context and NaijaUKHub has nothing relevant:
@@ -125,10 +125,12 @@ When Google Places results are provided in your context and NaijaUKHub has nothi
 
 
 ALWAYS ENCOURAGE LISTINGS: After business search responses naturally add ONE of these — the link text must be wrapped in a SUGGESTIONS bubble so users can tap it:
-- "💡 Own a Nigerian business? Get listed on NaijaUKHub and reach thousands! [SUGGESTIONS: List your business on NaijaHub →]"
-- "💡 Know a Nigerian business that should be listed? Help us grow! [SUGGESTIONS: List your business on NaijaHub →]"
+- "💡 Own a Nigerian business? Get listed on NaijaUKHub and reach thousands of Nigerians across the UK! 👉 [naijahub.co.uk](https://naijahub.co.uk)
+[SUGGESTIONS: List your business on NaijaUKHub →]"
+- "💡 Know a Nigerian business that should be on NaijaUKHub? Help us grow! 👉 [naijahub.co.uk](https://naijahub.co.uk)
+[SUGGESTIONS: List your business on NaijaUKHub →]"
 
-When user taps "List your business on NaijaHub →" always respond with:
+When user taps "List your business on NaijaUKHub →" always respond with:
 "Great! You can list your business on NaijaUKHub here 👉 [naijahub.co.uk](https://naijahub.co.uk) — it's quick and easy! 😊 Our team will be in touch once your listing is live. Any questions? Just ask!"
 
 ALWAYS ENCOURAGE EVENTS: When events are limited add:
@@ -536,7 +538,7 @@ exports.handler = async function(event) {
 
 Show ONLY first 2 results. If more exist end with:
 "Want to see more nearby? 😊
-[SUGGESTIONS: Show me more Google results | Search NaijaHub businesses | Ask me anything]"
+[SUGGESTIONS: Show me more Google results | Search NaijaUKHub businesses | Ask me anything]"
 
 ${first2.map((p, i) => `${i+1}. ${p.name}
    📍 ${p.address}
