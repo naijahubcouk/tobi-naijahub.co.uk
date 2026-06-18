@@ -380,16 +380,21 @@
     line-height: 1.4;
   }
   .tip-ad-block {
-    font-size: 13px;
-    color: #6B7280;
-    line-height: 1.6;
-    margin: 8px 0;
-    padding: 10px 12px;
-    background: #FFF9E6;
-    border-radius: 10px;
-    border-left: 3px solid #FFB81C;
+    background: #FBEAF0;
+    border: 1px solid #F4C0D1;
+    border-radius: 14px;
+    padding: 14px;
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
   }
-  .tip-ad-block a { color: #057A44; font-weight: 700; text-decoration: none; }
+  .tip-ad-block .ad-emoji { font-size: 30px; line-height: 1; flex-shrink: 0; }
+  .tip-ad-block .ad-content { flex: 1; }
+  .tip-ad-block .ad-label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; color: #993556; text-transform: uppercase; margin: 0 0 4px; display: block; }
+  .tip-ad-block .ad-title { font-size: 13px; font-weight: 700; color: #4B1528; margin: 0 0 4px; line-height: 1.4; display: block; }
+  .tip-ad-block .ad-desc { font-size: 12px; color: #993556; margin: 0 0 10px; line-height: 1.5; display: block; }
+  .tip-ad-block a.ad-btn { display: inline-block; background: #D4537E; color: white !important; text-decoration: none !important; font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 50px; font-family: 'Plus Jakarta Sans', sans-serif; }
   .news-card {
     background: white;
     border: 1.5px solid #E2E8F0;
@@ -1978,8 +1983,13 @@ function buildTipCard(tip, suggestionStr) {
       </div>
     </div>
     <div class="tip-ad-block">
-      🌸 <strong>AD</strong> — Preparing for your daughter's first period? Get the <strong>First Period Guide + Digital Bundle</strong> — practical advice and age-appropriate resources for Nigerian parents.
-      <br><a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank">👉 Learn More</a>
+      <div class="ad-emoji">🩷</div>
+      <div class="ad-content">
+        <span class="ad-label">🌸 Sponsored</span>
+        <span class="ad-title">Preparing for your daughter's first period?</span>
+        <span class="ad-desc">First Period Guide + Digital Bundle — practical advice and age-appropriate resources for Nigerian parents.</span>
+        <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" class="ad-btn">Learn More →</a>
+      </div>
     </div>`;
   return cardHtml + `\n[SUGGESTIONS: ${suggestionStr}]`;
 }
@@ -2081,8 +2091,8 @@ Whether you just japa'd or you've been here for years, Auntie Tobi has got you c
 📢 Own a business? Add your listing on 👉 [www.naijahub.co.uk](https://www.naijahub.co.uk)
 
 ---
-🌸 **AD** — Preparing for your daughter's first period? Get the **First Period Guide + Digital Bundle** — practical advice and age-appropriate resources for Nigerian parents.
-👉 [Learn More](https://www.helloperiodz.com/bloomly-bundle)
+🌸 **Sponsored** — Preparing for your daughter's first period? Get the **First Period Guide + Digital Bundle** — practical advice for Nigerian parents.
+👉 [Learn More →](https://www.helloperiodz.com/bloomly-bundle)
 
 [SUGGESTIONS: ${getRandomSuggestionStr()}]`;
 
