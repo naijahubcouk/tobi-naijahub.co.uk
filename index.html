@@ -707,22 +707,22 @@
   }
 
   .card-name {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: #0F1E36;
-    margin: 0 0 1px 0;
+    margin: 0 0 2px 0;
     line-height: 1.3;
     word-break: break-word;
   }
   .card-category-badge {
-    font-size: 10px;
+    font-size: 11px;
     color: #057A44;
     font-weight: 700;
-    margin: 0;
+    margin: 0 0 3px;
     display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
   }
   .card-desc { display: none; }
   .card-detail { font-size: 11px; color: #6B7280; line-height: 1.3; }
@@ -742,9 +742,10 @@
   .card-link:hover { background: #e6a619; }
   .biz-card {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    gap: 8px;
-    padding: 7px 8px;
+    gap: 10px;
+    padding: 8px 10px;
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
@@ -753,22 +754,8 @@
     box-sizing: border-box;
   }
   .biz-card-accent { display: none; }
-  .biz-card-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    background: #EAF3DE;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .biz-card-body {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-  }
+  .biz-card-icon { display: none; }
+  .biz-card-body { flex: 1; min-width: 0; }
   .biz-card-top { display: none; }
   .biz-card-emoji { display: none; }
   .biz-card-footer { display: none; }
@@ -2149,14 +2136,14 @@ function showBusinesses(startIndex = -1) {
     shownBusinessIndexes = [];
   }
 
-  // Pick 3 random businesses not yet shown
+  // Pick 6 random businesses not yet shown
   const available = realBusinesses
     .map((b, i) => i)
     .filter(i => !shownBusinessIndexes.includes(i));
 
   // Shuffle available
   const shuffled = available.sort(() => Math.random() - 0.5);
-  const pick = shuffled.slice(0, 3);
+  const pick = shuffled.slice(0, 6);
   pick.forEach(i => shownBusinessIndexes.push(i));
 
   const page = pick.map(i => realBusinesses[i]);
@@ -2172,10 +2159,13 @@ function showBusinesses(startIndex = -1) {
         <div class="biz-card-body">
           <div class="card-name">${b.name}</div>
           <span class="card-category-badge">${emoji} ${b.category} · 📍 ${b.location}</span>
-          <a href="${b.url}" target="_blank" class="card-link">View on NaijaHub →</a>
+          <a href="${b.url}" target="_blank" class="card-link">View on naijahub.co.uk →</a>
         </div>
       </div>`;
   });
+
+  // Listing CTA
+  html += `<div style="margin-top:10px;padding:10px 12px;background:#EAF3DE;border-radius:10px;font-size:12px;color:#0F1E36;line-height:1.5;">💡 <strong>Want Auntie Tobi to recommend YOUR business?</strong> Get listed on NaijaUKHub and reach thousands of Nigerians across the UK!<br><a href="https://naijahub.co.uk" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">👉 Add your business on naijahub.co.uk</a></div>`;
 
   const moreLabel = hasMore ? 'Show me more businesses' : 'Start again from the top';
   html += `\n[SUGGESTIONS: ${moreLabel} | Find a Nigerian business near me | Ask me anything]`;
