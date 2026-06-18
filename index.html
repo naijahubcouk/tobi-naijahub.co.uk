@@ -2033,10 +2033,10 @@ function buildTipCard(tip, suggestionStr) {
         <span style="font-size:16px;">💡</span>
         <span style="color:white;font-weight:700;font-size:13px;letter-spacing:0.5px;">TIP OF THE DAY</span>
       </div>
-      <div style="padding:14px;">
-        <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:12px;font-weight:700;padding:3px 10px;border-radius:50px;margin-bottom:10px;letter-spacing:0.5px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
-        <p style="font-size:15px;color:#0F1E36;line-height:1.6;margin:0 0 12px;font-weight:500;">${tip.tip}</p>
-        <div style="border-top:1px solid #f0f0f0;padding-top:10px;display:flex;flex-direction:column;gap:8px;">
+      <div style="padding:10px 14px;">
+        <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:12px;font-weight:700;padding:2px 8px;border-radius:50px;margin-bottom:6px;letter-spacing:0.5px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
+        <p style="font-size:15px;color:#0F1E36;line-height:1.5;margin:0 0 8px;font-weight:500;">${tip.tip}</p>
+        <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;flex-direction:column;gap:6px;">
           <a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Learn More</a>
           <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;">📤 Share Tip</button>
         </div>
