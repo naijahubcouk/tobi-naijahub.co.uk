@@ -1,5 +1,18 @@
-// Ensure fetch is available (Node 18+ has it natively)
-const fetch = globalThis.fetch || require('node-fetch');
+// Use built-in https module - works on ALL Node versions on Netlify
+const https = require('https');
+
+function httpsGet(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); }
+        catch(e) { reject(e); }
+      });
+    }).on('error', reject);
+  });
+}
 
 const SYSTEM_PROMPT = `You are Auntie Tobi — The Oversabi AI Auntie who actually helps! Powered by NaijaUKHub (naijahub.co.uk).
 
@@ -454,29 +467,25 @@ exports.handler = async function(event) {
       try {
         const searchQuery = encodeURIComponent(`Nigerian ${query} ${location || 'UK'}`);
         const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&key=${googleApiKey}&region=gb&language=en`;
-        console.log('Google Places search:', searchQuery, 'Location:', location);
-        const res = await fetch(url);
-        const data = await res.json();
-        console.log('Google Places status:', data.status, '| Results:', data.results?.length || 0, '| Error:', data.error_message || 'none');
+        console.log('Google Places search:', decodeURIComponent(searchQuery));
+        const data = await httpsGet(url);
+        console.log('Google Places status:', data.status, '| Results:', data.results?.length || 0);
         if (data.status === 'REQUEST_DENIED' || data.status === 'INVALID_REQUEST') {
           console.error('Google Places denied:', data.error_message);
           return [];
         }
         if (data.results && data.results.length > 0) {
-          const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'lagos', 'abuja', 'ghana', 'jollof', 'egusi', 'puff puff', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa'];
-          const filtered = data.results.filter(place => {
-            const name = place.name.toLowerCase();
-            return nigerianKeywords.some(k => name.includes(k));
-          });
-          console.log('Nigerian filtered results:', filtered.length);
-          const results = filtered.length > 0 ? filtered : [];
-          return results.slice(0, 3).map(place => ({
+          const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'lagos', 'abuja', 'ghana', 'jollof', 'egusi', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa'];
+          const filtered = data.results.filter(place =>
+            nigerianKeywords.some(k => place.name.toLowerCase().includes(k))
+          );
+          console.log('Nigerian filtered:', filtered.length);
+          return filtered.slice(0, 3).map(place => ({
             name: place.name,
             address: place.formatted_address,
             rating: place.rating,
             totalRatings: place.user_ratings_total,
             openNow: place.opening_hours?.open_now,
-            placeId: place.place_id,
             mapsUrl: `https://www.google.com/maps/search/?api=1&query=${place.name.replace(/\s+/g, '+')}+${(place.formatted_address || '').split(',')[0].replace(/\s+/g, '+')}`
           }));
         }
@@ -495,9 +504,12 @@ exports.handler = async function(event) {
     const userCity = cityMatch ? cityMatch[1].trim() : 'UK';
 
     const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business/i.test(lastMessage);
-    const naijahubAlreadyShown = /naijahub\.co\.uk\/listing/i.test(conversationHistory);
+    
+    // Only check the LAST assistant message, not full history
+    const lastAssistantMsg = body.messages?.filter(m => m.role === 'assistant').slice(-1)[0]?.content || '';
+    const naijahubAlreadyShown = /naijahub\.co\.uk\/listing/i.test(lastAssistantMsg);
 
-    console.log('isBusinessSearch:', isBusinessSearch, '| naijahubAlreadyShown:', naijahubAlreadyShown, '| googleApiKey exists:', !!googleApiKey);
+    console.log('isBusinessSearch:', isBusinessSearch, '| naijahubAlreadyShown:', naijahubAlreadyShown, '| googleApiKey:', !!googleApiKey, '| city:', userCity);
 
     // Start Google Places immediately (non-blocking)
     const placesPromise = (isBusinessSearch && !naijahubAlreadyShown && googleApiKey)
@@ -534,22 +546,39 @@ ${hasMore ? `\nEXTRA (only if user asks): ${places[2].name} — ${places[2].maps
       (googleResultsContext || '') +
       (examContext ? '\n\n' + examContext : '');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 600,
-        system: fullSystemPrompt,
-        messages: body.messages
-      })
+    const requestBody = JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 600,
+      system: fullSystemPrompt,
+      messages: body.messages
     });
 
-    const data = await response.json();
+    const response = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.anthropic.com',
+        path: '/v1/messages',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Length': Buffer.byteLength(requestBody)
+        }
+      };
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try { resolve({ status: res.statusCode, json: () => JSON.parse(data) }); }
+          catch(e) { reject(e); }
+        });
+      });
+      req.on('error', reject);
+      req.write(requestBody);
+      req.end();
+    });
+
+    const data = response.json();
     console.log('Status:', response.status);
 
     return {
