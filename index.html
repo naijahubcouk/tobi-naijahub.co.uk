@@ -721,7 +721,7 @@
     font-size: 15px;
     font-weight: 700;
     color: #0F1E36;
-    margin: 0 0 2px 0;
+    margin: 0 0 1px 0;
     line-height: 1.3;
     word-break: break-word;
   }
@@ -729,7 +729,7 @@
     font-size: 13px;
     color: #057A44;
     font-weight: 700;
-    margin: 0 0 2px;
+    margin: 0 0 1px;
     display: block;
     word-break: break-word;
     line-height: 1.3;
@@ -739,7 +739,7 @@
     color: #444;
     font-weight: 500;
     line-height: 1.4;
-    margin: 2px 0 4px;
+    margin: 1px 0 3px;
     display: block;
     word-break: break-word;
   }
@@ -751,22 +751,35 @@
     text-decoration: none !important;
     font-size: 13px;
     font-weight: 700;
-    padding: 6px 8px;
+    padding: 5px 8px;
     border-radius: 6px;
     text-align: center;
-    margin-top: 4px;
+    margin-top: 3px;
   }
   .card-link:hover { background: #e6a619; }
   .biz-card {
-    display: block;
-    padding: 6px 10px;
     background: white;
-    border: 1px solid #e5e7eb;
-    border-left: 4px solid #057A44;
-    border-radius: 8px;
-    margin-bottom: 4px;
+    border: 1.5px solid #FFB81C;
+    border-radius: 4px;
+    margin-bottom: 6px;
     width: 100%;
     box-sizing: border-box;
+    overflow: hidden;
+  }
+  .biz-card-header-bar {
+    background: #057A44;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .biz-card-header-bar span {
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .biz-card-content {
+    padding: 5px;
   }
   .biz-card-accent { display: none; }
   .biz-card-icon { display: none; }
@@ -2115,9 +2128,9 @@ function buildTipCard(tip, suggestionStr) {
       <div style="padding:5px;">
         <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:13px;font-weight:700;padding:1px 6px;border-radius:50px;margin-bottom:3px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
         <p style="font-size:15px;color:#0F1E36;line-height:1.5;margin:0 0 4px;font-weight:500;padding:0;">${tip.tip}</p>
-        <div style="border-top:1px solid #f0f0f0;padding-top:1px;display:flex;flex-direction:column;gap:1px;margin:0;">
-          <a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;padding:2px 0;">🔗 Learn More</a>
-          <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;width:100%;">📤 Share Tip</button>
+        <div style="border-top:1px solid #f0f0f0;padding-top:4px;display:flex;align-items:center;gap:8px;margin:0;">
+          <a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>
+          <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">📤 Share Tip</button>
         </div>
       </div>
     </div>
@@ -2233,40 +2246,62 @@ function showBusinesses(startIndex = -1) {
     .map((b, i) => i)
     .filter(i => !shownBusinessIndexes.includes(i));
 
-  // Shuffle available
-  const shuffled = available.sort(() => Math.random() - 0.5);
+  // Separate featured and non-featured, shuffle each group, featured always first
+  const featured = available.filter(i => realBusinesses[i].featured);
+  const nonFeatured = available.filter(i => !realBusinesses[i].featured).sort(() => Math.random() - 0.5);
+  const shuffled = [...featured, ...nonFeatured];
   const pick = shuffled.slice(0, 6);
   pick.forEach(i => shownBusinessIndexes.push(i));
 
   const page = pick.map(i => realBusinesses[i]);
   const hasMore = shownBusinessIndexes.length < realBusinesses.length;
 
-  let html = `<p style="margin:0 0 12px;font-size:15px;color:#0F1E36;font-weight:600;">Check out Nigerian businesses listed on NaijaUKHub! 🏢🇳🇬🇬🇧</p>`;
+  let html = `<div style="font-size:15px;color:#0F1E36;font-weight:600;margin:0 0 4px;">Check out Nigerian businesses listed on NaijaUKHub! 🏢🇳🇬🇬🇧</div>
+  <div style="font-size:12px;color:#6B7280;margin:0 0 8px;">💡 Tap the green category bar on each card to see all businesses in that category</div>`;
 
   page.forEach(b => {
     const emoji = getCategoryEmoji(b.category);
+    const catUrl = getCategoryUrl(b.category);
     const featuredBadge = b.featured ? `<span style="display:inline-flex;align-items:center;gap:2px;background:linear-gradient(135deg,#FFB81C,#f59e0b);color:#0F1E36;font-size:9px;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:5px;vertical-align:middle;white-space:nowrap;">⭐ Featured</span>` : '';
-    html += `
-      <div class="biz-card">
-        <div class="card-name">${b.name}${featuredBadge}</div>
-        <span class="card-category-badge">${emoji} ${b.category}</span>
-        <span style="font-size:13px;color:#6B7280;font-weight:600;display:block;margin:2px 0 3px;">📍 ${b.location}</span>
-        <div class="card-desc">${b.desc}</div>
-        <a href="${b.url}" target="_blank" class="card-link">View on naijahub.co.uk →</a>
+    html += `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;margin-bottom:6px;">
+        <a href="${catUrl}" target="_blank" style="background:#057A44;padding:2px 4px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;">
+          <span style="color:white;font-weight:700;font-size:12px;">${emoji} ${b.category.toUpperCase()}</span>
+          <span style="color:#FFB81C;font-size:10px;font-weight:600;">See all →</span>
+        </a>
+        <div style="padding:5px;">
+          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin:0 0 1px;line-height:1.3;">${b.name}${featuredBadge}</div>
+          <div style="font-size:12px;color:#6B7280;font-weight:600;margin:0 0 1px;line-height:1.3;">📍 ${b.location}</div>
+          <div style="font-size:13px;color:#444;font-weight:500;line-height:1.4;margin:0 0 4px;">${b.desc}</div>
+          <a href="${b.url}" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;">View on naijahub.co.uk →</a>
+        </div>
       </div>`;
   });
 
   // Listing CTA
   html += `<div style="margin-top:10px;padding:10px 12px;background:#EAF3DE;border-radius:10px;font-size:12px;color:#0F1E36;line-height:1.5;">💡 <strong>Want Auntie Tobi to recommend YOUR business?</strong> Get listed on NaijaUKHub and reach thousands of Nigerians across the UK!<br><a href="https://naijahub.co.uk" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">👉 Add your business on naijahub.co.uk</a></div>`;
 
+  // Build suggestions HTML directly (bypass formatResponse to avoid extra margins)
   const moreLabel = hasMore ? 'Show me more businesses' : 'Start again from the top';
-  html += `\n[SUGGESTIONS: ${moreLabel} | Find a Nigerian business near me | Ask me anything]`;
+  const suggestions = [moreLabel, 'Find a Nigerian business near me', 'Ask me anything'];
+  const suggestionsHtml = `<div class="suggestions" style="margin-top:8px;">${suggestions.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`;
 
   const container = document.getElementById('messages');
   if (container) container.innerHTML = '';
   messages = [];
-  addTipMessage(formatResponse(html));
+  addTipMessage(html + suggestionsHtml);
   messages.push({ role: 'assistant', content: `Here are Nigerian businesses on NaijaUKHub: ${page.map(b => b.name).join(', ')}` });
+}
+
+function getCategoryUrl(cat) {
+  const slugs = {
+    'Beauty & Fashion': 'beauty-fashion',
+    'Food & Dining': 'food-dining',
+    'Food & Groceries': 'food-groceries',
+    'Events & Entertainment': 'events-entertainment',
+    'Professional Services': 'professional-services',
+  };
+  const slug = slugs[cat];
+  return slug ? `https://naijahub.co.uk/category/${slug}` : 'https://naijahub.co.uk';
 }
 
 function getCategoryEmoji(cat) {
