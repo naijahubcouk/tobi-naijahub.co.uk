@@ -570,22 +570,23 @@ exports.handler = async function(event) {
       const isNigerian = placesType === 'nigerian';
 
       googleResultsContext = `\n\nGOOGLE PLACES RESULTS:
-${places.slice(0, 2).map((p, i) => `${i+1}. ${p.name}
+${places.slice(0, 2).map((p, i) => `${i+1}. **${p.name}**
    📍 ${p.address}
    ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
    ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
-   👉 ${p.mapsUrl}`).join('\n\n')}
+   👉 <a href="${p.mapsUrl}" target="_blank" style="color:#057A44;font-weight:700;">View on Google Maps</a>`).join('\n\n')}
 ${places.length > 2 ? `\nEXTRA (only if user asks for more): ${places[2].name} — ${places[2].mapsUrl}` : ''}
 
 INSTRUCTIONS FOR PRESENTING THESE RESULTS:
 - Before showing results ALWAYS say: "I don't have a [business type] listed on NaijaUKHub yet — but we are growing fast! Here's what I found nearby for you 😊"
 - Show the 2 results naturally — do NOT label them as Nigerian or non-Nigerian
 - Never mention whether a Nigerian/African business was found or not — just show results cleanly
-- After showing results ALWAYS end with this message:
+- After showing results ALWAYS end with this EXACT HTML box (do not paraphrase it):
 
-"🏪 Do you own or know someone with a ${lastMessage.replace(/find|looking for|where can i|recommend|near me|is there|any/gi, '').trim()} business in this area? Get listed on NaijaUKHub and reach thousands of Nigerians across the UK! 🇳🇬🇬🇧
-
-👉 List your business here: https://naijahub.co.uk/new-listing"
+<div style="background:#f0f9f4;border:1.5px solid #057A44;border-radius:10px;padding:12px 14px;margin-top:10px;">
+<p style="margin:0 0 6px;font-size:14px;color:#0F1E36;line-height:1.5;">🏪 Do you own or know someone with a [business type] business in this area? Get listed on NaijaUKHub and reach thousands of Nigerians across the UK! 🇳🇬🇬🇧</p>
+<a href="https://naijahub.co.uk/new-listing" style="display:inline-block;margin-top:4px;font-size:14px;color:#057A44;font-weight:700;text-decoration:none;">👉 List your business here: naijahub.co.uk/new-listing</a>
+</div>
 
 [SUGGESTIONS: Search for something else | Ask Auntie Tobi anything | List my business]`;
     } else {
@@ -593,11 +594,12 @@ INSTRUCTIONS FOR PRESENTING THESE RESULTS:
       if (isBusinessSearch && !naijahubAlreadyShown) {
         googleResultsContext = `\n\nNO GOOGLE RESULTS FOUND for this business search.
 Tell the user honestly that you could not find this business nearby right now.
-Then ALWAYS end with:
+Then ALWAYS end with this EXACT HTML box:
 
-"🏪 Do you own or know someone with this type of business? Get them listed on NaijaUKHub — reach thousands of Nigerians across the UK! 🇳🇬🇬🇧
-
-👉 List your business here: https://naijahub.co.uk/new-listing"
+<div style="background:#f0f9f4;border:1.5px solid #057A44;border-radius:10px;padding:12px 14px;margin-top:10px;">
+<p style="margin:0 0 6px;font-size:14px;color:#0F1E36;line-height:1.5;">🏪 Do you own or know someone with this type of business? Get listed on NaijaUKHub and reach thousands of Nigerians across the UK! 🇳🇬🇬🇧</p>
+<a href="https://naijahub.co.uk/new-listing" style="display:inline-block;margin-top:4px;font-size:14px;color:#057A44;font-weight:700;text-decoration:none;">👉 List your business here: naijahub.co.uk/new-listing</a>
+</div>
 
 [SUGGESTIONS: Try a different search | Ask Auntie Tobi anything | List my business]`;
       }
