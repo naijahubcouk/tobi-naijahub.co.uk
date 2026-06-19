@@ -1,4 +1,4 @@
-const CACHE_NAME = 'naijahub-tobi-v3';
+const CACHE_NAME = 'naijahub-tobi-v4';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -16,9 +16,25 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.url.includes('api.anthropic.com')) return;
   if (e.request.url.includes('script.google.com')) return;
+  if (e.request.url.includes('netlify/functions')) return;
   if (e.request.method !== 'GET') return;
 
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    fetch(e.request)
+      .then(response => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        }
+        return response;
+      })
+      .catch(() => {
+        return caches.match(e.request).then(cached => {
+          return cached || new Response('Offline — please check your connection', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain' }
+          });
+        });
+      })
   );
 });
