@@ -1354,7 +1354,7 @@ let examState = {
   questionsAnswered: 0,
   correctAnswers: 0,
   weakAreas: {},
-  freeLimit: 3,
+  freeLimit: 9999, // No limit until paid version launches
   plan: 'free'
 };
 
@@ -1434,10 +1434,7 @@ function sendExamQuestion(testType) {
     saveExamProgress({ todayCount: 0, todayDate: today });
   }
   
-  if (examState.plan === 'free' && todayCount >= examState.freeLimit) {
-    // Show upgrade prompt via Claude
-    return null; // Let upgrade prompt show
-  }
+  // No question limit until paid version launches
   
   // Pick question
   const question = getRandomQuestion(testType, examState.weakAreas);
@@ -1459,6 +1456,23 @@ function handleExamAnswer(userMessage) {
   
   // Build explanation message to send to Claude
   const status = result.correct ? '✅ CORRECT' : '❌ WRONG';
+
+  // Build category performance summary for milestones
+  const totalQ = result.questionsAnswered;
+  const isMilestone = totalQ === 10 || totalQ === 25 || totalQ === 50 || totalQ === 100;
+  const categoryData = isMilestone
+    ? `\nCATEGORY PERFORMANCE (use for milestone feedback only):\n${
+        Object.entries(
+          messages
+            .filter(m => m.role === 'user')
+            .reduce((acc, m) => {
+              // category data is tracked in examState.weakAreas
+              return acc;
+            }, {})
+        ).length > 0 ? '' : Object.entries(examState.weakAreas).map(([cat, wrong]) => `${cat}: ${wrong} wrong`).join(', ') || 'Not enough data yet'
+      }`
+    : '';
+
   const prompt = `The user answered ${result.userAnswer} to this ${examState.testType === 'driving' ? 'UK Driving Theory' : 'Life in UK'} question.
 
 Question: ${examState.currentQuestion.q}
@@ -1466,9 +1480,10 @@ Correct answer: ${result.correctAnswer}) ${examState.currentQuestion[result.corr
 User answered: ${result.userAnswer}) ${examState.currentQuestion[result.userAnswer.toLowerCase()]}
 Result: ${status}
 Explanation: ${result.explanation}
-Score so far: ${result.questionsAnswered} questions, ${result.score}% correct
+APP SCORE (use EXACT — never calculate your own): ${totalQ} questions answered, ${result.score}% correct (${examState.correctAnswers} correct out of ${totalQ})
+${isMilestone ? `\n🎯 MILESTONE: This is question ${totalQ} — give the appropriate milestone feedback now.\nWeak categories so far: ${Object.keys(examState.weakAreas).length > 0 ? Object.entries(examState.weakAreas).sort((a,b) => b[1]-a[1]).slice(0,3).map(([cat,n]) => `${cat} (${n} wrong)`).join(', ') : 'none yet'}\nStrong areas: categories NOT in the weak list` : ''}
 
-Respond as Auntie Tobi — mark their answer warmly, give the explanation clearly, then ask if they want the next question.`;
+Respond as Auntie Tobi — mark their answer warmly, give the explanation clearly.${isMilestone ? ' Then give the milestone feedback.' : ' Then ask if they want the next question.'} DO NOT invent scores or analyse performance before milestone points.`;
 
   return prompt;
 }
