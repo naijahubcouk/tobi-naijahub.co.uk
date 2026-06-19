@@ -274,32 +274,35 @@
 
   /* Cards inside bot bubble */
   .result-card {
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 8px;
+    background: white;
+    border: 1.5px solid #FFB81C;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 12px;
   }
 
-  .result-card + .result-card { margin-top: 6px; }
+  .result-card + .result-card { margin-top: 12px; }
 
   .card-tag {
-    display: inline-block;
-    font-size: 10px;
+    display: flex;
+    align-items: center;
+    background: #057A44;
+    padding: 2px 4px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    color: white;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 20px;
-    margin-bottom: 5px;
+    margin-bottom: 0;
+    border-radius: 0;
   }
 
-  .tag-directory { background: #D1FAE5; color: #065F46; }
-  .tag-event { background: #FEF3C7; color: #92400E; }
-  .tag-blog { background: #E0E7FF; color: #3730A3; }
-  .tag-guide { background: #FCE7F3; color: #9D174D; }
-  .tag-money { background: #ECFDF5; color: #065F46; }
-  .tag-church { background: #FDF4FF; color: #6B21A8; }
+  .tag-directory { background: #057A44; color: white; }
+  .tag-event { background: #057A44; color: white; }
+  .tag-blog { background: #057A44; color: white; }
+  .tag-guide { background: #057A44; color: white; }
+  .tag-money { background: #057A44; color: white; }
+  .tag-church { background: #057A44; color: white; }
 
   .affiliate-card {
     border: 1.5px solid #FFB81C33;
@@ -1701,24 +1704,25 @@ function formatResponse(text) {
   // Parse result cards
   text = text.replace(/\[CARD:(.*?)\]/gs, (match, content) => {
     const lines = content.trim().split('\n').map(l => l.trim());
-    let cardHTML = '<div class="result-card">';
+    let tagHTML = '';
+    let bodyHTML = '<div style="padding:5px;">';
     lines.forEach(line => {
       if (line.startsWith('TAG:')) {
         const tag = line.replace('TAG:', '').trim().toLowerCase();
         const tagClass = tag === 'directory' ? 'tag-directory' : tag === 'event' ? 'tag-event' : tag === 'guide' ? 'tag-guide' : tag === 'money' ? 'tag-money' : tag === 'church' ? 'tag-church' : 'tag-blog';
         const emoji = tag === 'directory' ? '🏢' : tag === 'event' ? '🎉' : tag === 'guide' ? '🇬🇧' : tag === 'money' ? '💸' : tag === 'church' ? '🙏' : '📰';
-        cardHTML += `<span class="card-tag ${tagClass}">${emoji} ${tag}</span>`;
+        tagHTML = `<span class="card-tag ${tagClass}">${emoji} ${tag.toUpperCase()}</span>`;
       } else if (line.startsWith('NAME:')) {
-        cardHTML += `<div class="card-name">${line.replace('NAME:', '').trim()}</div>`;
+        bodyHTML += `<div class="card-name">${line.replace('NAME:', '').trim()}</div>`;
       } else if (line.startsWith('DETAIL:')) {
-        cardHTML += `<div class="card-detail">${line.replace('DETAIL:', '').trim()}</div>`;
+        bodyHTML += `<div class="card-desc">${line.replace('DETAIL:', '').trim()}</div>`;
       } else if (line.startsWith('LINK:')) {
         const url = line.replace('LINK:', '').trim();
-        cardHTML += `<a class="card-link" href="https://${url}" target="_blank">View on NaijaUKHub →</a>`;
+        bodyHTML += `<a class="card-link" href="https://${url}" target="_blank">View on NaijaUKHub</a>`;
       }
     });
-    cardHTML += '</div>';
-    return cardHTML;
+    bodyHTML += '</div>';
+    return `<div class="result-card">${tagHTML}${bodyHTML}</div>`;
   });
 
   let html = `<div>${text.replace(/\n\n/g, '</div><div style="margin-top:8px">').replace(/\n/g, '<br>')}</div>`;
@@ -2079,14 +2083,47 @@ function requestLocation() {
     userCity = city;
     userCountry = country;
 
-    // Inject location into system context
     if (city) {
       console.log(`📍 Location detected: ${city}, ${country}`);
+      // Show event card for London and Manchester users
+      const cityLower = city.toLowerCase();
+      if (cityLower.includes('london') || cityLower.includes('manchester')) {
+        showNaijaFoodFestivalCard(city);
+      }
     }
   }, () => {
-    // Permission denied — no problem
     console.log('📍 Location permission denied');
   }, { timeout: 10000 });
+}
+
+function showNaijaFoodFestivalCard(city) {
+  // Don't show if user dismissed it
+  if (localStorage.getItem('tobi_food_fest_dismissed') === 'true') return;
+
+  // Track how many times shown
+  const shownCount = parseInt(localStorage.getItem('tobi_food_fest_count') || '0') + 1;
+  localStorage.setItem('tobi_food_fest_count', shownCount);
+
+  // Only show once per day
+  const todayStr = new Date().toISOString().split('T')[0];
+  const lastShown = localStorage.getItem('tobi_food_fest_shown');
+  if (lastShown === todayStr) return;
+  localStorage.setItem('tobi_food_fest_shown', todayStr);
+
+  const showDismiss = shownCount > 2;
+
+  const eventHtml = `<div id="naija-food-fest-card" style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-top:8px;">
+    <img src="https://naijabiz.b-cdn.net/download%20(2).jpg" alt="My Tasty Naija Food Festival UK 2026" style="width:100%;display:block;max-height:200px;object-fit:cover;">
+    <div style="padding:10px;">
+      <div style="font-size:13px;font-weight:800;color:#057A44;margin-bottom:6px;">🎉 Event Coming To ${city} — Your City!</div>
+      <div style="font-size:15px;font-weight:700;color:#0F1E36;margin:0 0 6px;line-height:1.3;">My Tasty Naija Food Festival UK 2026</div>
+      <div style="font-size:13px;color:#444;margin:0 0 10px;line-height:1.5;">Will you be attending? Jollof rice, suya, puff puff and all your favourite Nigerian food — right in your city! 🇳🇬🍽️</div>
+      <a href="https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:8px;border-radius:6px;text-align:center;margin-bottom:8px;">👉 View Event Details</a>
+      ${showDismiss ? `<button onclick="localStorage.setItem('tobi_food_fest_dismissed','true');document.getElementById('naija-food-fest-card').style.display='none';" style="display:block;width:100%;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:6px;font-size:12px;color:#9CA3AF;cursor:pointer;font-family:inherit;">✕ Don't show again</button>` : ''}
+    </div>
+  </div>`;
+
+  addTipMessage(eventHtml);
 }
 
 function getLocationContext() {
