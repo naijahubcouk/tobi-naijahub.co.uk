@@ -1335,9 +1335,10 @@ function extractAndSaveExamData(userMessage, botReply) {
   const qMatch = botReply.match(/question (\d+) of/i);
   if (qMatch) saveExamProgress({ questionsCompleted: parseInt(qMatch[1]) });
 
-  // Save scores
-  const scoreMatch = botReply.match(/scored? (\d+)\/(\d+)|(\d+)%/);
-  if (scoreMatch) saveExamProgress({ lastScore: scoreMatch[0] });
+  // Save scores — use app's own calculation, never parse from Claude's reply
+  if (examState.questionsAnswered > 0) {
+    saveExamProgress({ lastScore: Math.round((examState.correctAnswers / examState.questionsAnswered) * 100) + '%' });
+  }
 
   // Save weak areas
   if (combined.includes('weak area') || combined.includes('focus on')) {
@@ -1436,7 +1437,7 @@ function checkExamAnswer(userMessage) {
     explanation: q.exp,
     category: q.cat,
     questionsAnswered: examState.questionsAnswered,
-    score: Math.round((examState.correctAnswers / examState.questionsAnswered) * 100)
+    score: Math.min(100, Math.round((examState.correctAnswers / examState.questionsAnswered) * 100))
   };
 }
 
