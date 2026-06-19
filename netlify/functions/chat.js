@@ -578,8 +578,9 @@ ${places.slice(0, 2).map((p, i) => `${i+1}. ${p.name}
 ${places.length > 2 ? `\nEXTRA (only if user asks for more): ${places[2].name} — ${places[2].mapsUrl}` : ''}
 
 INSTRUCTIONS FOR PRESENTING THESE RESULTS:
-- Show the 2 results above naturally — do NOT label them as Nigerian or non-Nigerian
-- Do NOT mention whether or not a Nigerian/African business was found — just show the results
+- Before showing results ALWAYS say: "I don't have a [business type] listed on NaijaUKHub yet — but we are growing fast! Here's what I found nearby for you 😊"
+- Show the 2 results naturally — do NOT label them as Nigerian or non-Nigerian
+- Never mention whether a Nigerian/African business was found or not — just show results cleanly
 - After showing results ALWAYS end with this message:
 
 "🏪 Do you own or know someone with a ${lastMessage.replace(/find|looking for|where can i|recommend|near me|is there|any/gi, '').trim()} business in this area? Get listed on NaijaUKHub and reach thousands of Nigerians across the UK! 🇳🇬🇬🇧
