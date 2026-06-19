@@ -112,24 +112,17 @@ When a user's message is clearly from tapping a pill, respond ONLY about that to
 NEVER mix exam content with other pill responses. If user was in exam mode and taps a different pill, forget the exam and focus on what they asked.
 
 BUSINESS SEARCH PRIORITY — CRITICAL:
-1. ALWAYS search the NaijaUKHub directory FIRST before anything else
-2. If you find relevant businesses in the directory → show them as CARD format
-3. ONLY use Google Places results if NOTHING relevant exists in the NaijaUKHub directory
-4. NEVER show Google results if NaijaUKHub has a matching business — even if it's in a different city
-5. When showing NaijaUKHub businesses always end with: "Want to see more? 😊 [SUGGESTIONS: Show me more | No thanks, that's great!]"
+1. ALWAYS search the NaijaUKHub directory FIRST
+2. If found → show as card format with naijahub.co.uk listing links
+3. If NOT found in NaijaUKHub → Google Places results will be provided in context — use them
+4. NEVER mix NaijaUKHub listings with Google results in the same response
 
 GOOGLE PLACES FALLBACK:
-When Google Places results are provided in your context and NaijaUKHub has nothing relevant:
-1. ONLY show businesses that are clearly Nigerian owned — NEVER recommend mainstream brands like MAC Studio, Boots, Superdrug, Next etc
-2. If results look Nigerian say: "I don't have that listed on NaijaUKHub yet — but here's what I found nearby on Google! 😊"
-3. Show maximum 3 results then end with: "Want to see more? 😊 [SUGGESTIONS: Show me more | No thanks!]"
-4. If no clearly Nigerian businesses found say honestly: "I don't have a Nigerian [business type] listed in [city] yet — but our community is growing! Use the 🔍 Request button and we'll find one for you!"
-5. Format each Google result like this — use the EXACT mapsUrl provided as the link, do not modify or encode it:
-📍 **[Business Name]**
-⭐ [Rating] ([reviews] reviews)
-📍 [Address]
-[🟢 Open now / 🔴 Closed now]
-👉 [View on Google Maps]([mapsUrl])
+When Google Places results are provided in your context:
+1. Show the 2 results provided — list them naturally, do NOT label them as Nigerian or non-Nigerian
+2. Never mention whether a Nigerian/African business was found or not — just show results cleanly
+3. Format each result clearly with name, address, rating and Google Maps link using the EXACT mapsUrl provided — do not modify it
+4. After showing results ALWAYS end with the listing CTA from context — include the https://naijahub.co.uk/new-listing link exactly as given
 
 
 ALWAYS ENCOURAGE LISTINGS: After business search responses naturally add ONE of these — the link text must be wrapped in a SUGGESTIONS bubble so users can tap it:
@@ -486,37 +479,61 @@ exports.handler = async function(event) {
     // ============================================
     async function searchGooglePlaces(query, location) {
       try {
-        const searchQuery = encodeURIComponent(`Nigerian ${query} ${location || 'UK'}`);
-        const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchQuery}&key=${googleApiKey}&region=gb&language=en`;
-        console.log('Google Places search:', decodeURIComponent(searchQuery));
-        const data = await httpsGet(url);
-        console.log('Google Places status:', data.status, '| Results:', data.results?.length || 0);
-        if (data.status === 'REQUEST_DENIED' || data.status === 'INVALID_REQUEST') {
-          console.error('Google Places denied:', data.error_message);
-          return [];
-        }
-        if (data.results && data.results.length > 0) {
-          const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'lagos', 'abuja', 'ghana', 'jollof', 'egusi', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa', 'west africa', 'afrobeats'];
-          const filtered = data.results.filter(place =>
-            nigerianKeywords.some(k => place.name.toLowerCase().includes(k))
+        // Extract the core business type from the user's message
+        const businessType = query
+          .replace(/find|looking for|where can i|recommend|near me|is there|any|a |an |the /gi, '')
+          .trim()
+          .split(/\s+/).slice(0, 3).join(' ');
+
+        // STAGE 1: Search Nigerian/African specifically
+        const nigerianQuery = encodeURIComponent(`Nigerian African ${businessType} ${location || 'UK'}`);
+        const nigerianUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${nigerianQuery}&key=${googleApiKey}&region=gb&language=en`;
+        console.log('Stage 1 — Nigerian search:', decodeURIComponent(nigerianQuery));
+
+        const data1 = await httpsGet(nigerianUrl);
+        console.log('Stage 1 status:', data1.status, '| Results:', data1.results?.length || 0);
+
+        const nigerianKeywords = ['nigerian', 'african', 'naija', 'afro', 'afrobeats', 'lagos', 'abuja', 'ghana', 'jollof', 'egusi', 'suya', 'ankara', 'yoruba', 'igbo', 'hausa', 'west africa', 'caribbean', 'peckham', 'brixton'];
+
+        if (data1.status === 'OK' && data1.results?.length > 0) {
+          // Filter for Nigerian/African results first
+          const filtered = data1.results.filter(p =>
+            nigerianKeywords.some(k => (p.name + ' ' + (p.formatted_address || '')).toLowerCase().includes(k))
           );
-          // If keyword filter is too strict, use top 3 from Google's own Nigerian search
-          const results = filtered.length > 0 ? filtered : data.results.slice(0, 3);
-          console.log('Nigerian filtered:', filtered.length, '| Using:', results.length);
-          return results.slice(0, 3).map(place => ({
-            name: place.name,
-            address: place.formatted_address,
-            rating: place.rating,
-            totalRatings: place.user_ratings_total,
-            openNow: place.opening_hours?.open_now,
-            mapsUrl: `https://www.google.com/maps/search/?api=1&query=${place.name.replace(/\s+/g, '+')}+${(place.formatted_address || '').split(',')[0].replace(/\s+/g, '+')}`
-          }));
+          const nigerianResults = filtered.length > 0 ? filtered.slice(0, 3) : data1.results.slice(0, 3);
+          console.log('Stage 1 Nigerian filtered:', filtered.length, '| Returning:', nigerianResults.length);
+          return { results: formatPlaces(nigerianResults), type: 'nigerian' };
         }
-        return [];
+
+        // STAGE 2: Fallback — search general nearby businesses
+        console.log('Stage 1 found nothing — trying Stage 2 nearby fallback');
+        const nearbyQuery = encodeURIComponent(`${businessType} near ${location || 'London'}`);
+        const nearbyUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${nearbyQuery}&key=${googleApiKey}&region=gb&language=en`;
+        console.log('Stage 2 — Nearby search:', decodeURIComponent(nearbyQuery));
+
+        const data2 = await httpsGet(nearbyUrl);
+        console.log('Stage 2 status:', data2.status, '| Results:', data2.results?.length || 0);
+
+        if (data2.status === 'OK' && data2.results?.length > 0) {
+          return { results: formatPlaces(data2.results.slice(0, 3)), type: 'nearby' };
+        }
+
+        return { results: [], type: 'none' };
       } catch (err) {
         console.error('Google Places exception:', err.message);
-        return [];
+        return { results: [], type: 'error' };
       }
+    }
+
+    function formatPlaces(places) {
+      return places.map(place => ({
+        name: place.name,
+        address: place.formatted_address,
+        rating: place.rating,
+        totalRatings: place.user_ratings_total,
+        openNow: place.opening_hours?.open_now,
+        mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + (place.formatted_address || '').split(',')[0])}`
+      }));
     }
 
     const lastMessage = body.messages?.[body.messages.length - 1]?.content || '';
@@ -538,30 +555,51 @@ exports.handler = async function(event) {
     const placesPromise = (isBusinessSearch && !naijahubAlreadyShown && googleApiKey)
       ? Promise.race([
           searchGooglePlaces(lastMessage, userCity),
-          new Promise(resolve => setTimeout(() => { console.log('Google Places timed out'); resolve([]); }, 8000))
+          new Promise(resolve => setTimeout(() => { console.log('Google Places timed out'); resolve({ results: [], type: 'timeout' }); }, 8000))
         ])
-      : Promise.resolve([]);
+      : Promise.resolve({ results: [], type: 'skip' });
 
     // Wait for Google Places then call Claude
-    const places = await placesPromise;
-    console.log('Final places count:', places.length);
+    const placesData = await placesPromise;
+    const places = placesData.results || [];
+    const placesType = placesData.type || 'none';
+    console.log('Final places count:', places.length, '| Type:', placesType);
 
     let googleResultsContext = '';
-    if (places && places.length > 0) {
-      const first2 = places.slice(0, 2);
-      const hasMore = places.length > 2;
-      googleResultsContext = `\n\nGOOGLE PLACES RESULTS (ONLY use if NaijaUKHub directory has nothing relevant. If NaijaUKHub has matching businesses show those instead):
+    if (places.length > 0) {
+      const isNigerian = placesType === 'nigerian';
 
-Show ONLY first 2 results. If more exist end with:
-"Want to see more nearby? 😊
-[SUGGESTIONS: Show me more Google results | Search NaijaUKHub businesses | Ask me anything]"
-
-${first2.map((p, i) => `${i+1}. ${p.name}
+      googleResultsContext = `\n\nGOOGLE PLACES RESULTS:
+${places.slice(0, 2).map((p, i) => `${i+1}. ${p.name}
    📍 ${p.address}
    ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
    ${p.openNow !== undefined ? (p.openNow ? '🟢 Open now' : '🔴 Closed now') : ''}
-   👉 View on Google Maps: ${p.mapsUrl}`).join('\n\n')}
-${hasMore ? `\nEXTRA (only if user asks): ${places[2].name} — ${places[2].mapsUrl}` : ''}`;
+   👉 ${p.mapsUrl}`).join('\n\n')}
+${places.length > 2 ? `\nEXTRA (only if user asks for more): ${places[2].name} — ${places[2].mapsUrl}` : ''}
+
+INSTRUCTIONS FOR PRESENTING THESE RESULTS:
+- Show the 2 results above naturally — do NOT label them as Nigerian or non-Nigerian
+- Do NOT mention whether or not a Nigerian/African business was found — just show the results
+- After showing results ALWAYS end with this message:
+
+"🏪 Do you own or know someone with a ${lastMessage.replace(/find|looking for|where can i|recommend|near me|is there|any/gi, '').trim()} business in this area? Get listed on NaijaUKHub and reach thousands of Nigerians across the UK! 🇳🇬🇬🇧
+
+👉 List your business here: https://naijahub.co.uk/new-listing"
+
+[SUGGESTIONS: Search for something else | Ask Auntie Tobi anything | List my business]`;
+    } else {
+      // No results at all from Google
+      if (isBusinessSearch && !naijahubAlreadyShown) {
+        googleResultsContext = `\n\nNO GOOGLE RESULTS FOUND for this business search.
+Tell the user honestly that you could not find this business nearby right now.
+Then ALWAYS end with:
+
+"🏪 Do you own or know someone with this type of business? Get them listed on NaijaUKHub — reach thousands of Nigerians across the UK! 🇳🇬🇬🇧
+
+👉 List your business here: https://naijahub.co.uk/new-listing"
+
+[SUGGESTIONS: Try a different search | Ask Auntie Tobi anything | List my business]`;
+      }
     }
 
     const fullSystemPrompt = SYSTEM_PROMPT +
