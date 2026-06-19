@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Auntie Tobi — The Oversabi AI Auntie who actually helps!</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-W04NZL044S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-W04NZL044S');
+</script>
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -1435,6 +1443,7 @@ function checkExamAnswer(userMessage) {
 function sendExamQuestion(testType) {
   examState.active = true;
   examState.testType = testType;
+  if (typeof gtag !== 'undefined') gtag('event', 'exam_question', { event_category: 'exam', event_label: testType });
   
   // Check free limit
   const progress = getExamProgress();
@@ -1819,6 +1828,11 @@ async function sendMessage(text) {
   const input = document.getElementById('input');
   const userText = text || input.value.trim();
   if (!userText || isLoading) return;
+
+  // GA4: track message sent
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'message_sent', { event_category: 'chat', event_label: examState.active ? 'exam' : 'general' });
+  }
 
   input.value = '';
   autoResize(input);
@@ -2233,6 +2247,7 @@ const NAIJAHUB_BUSINESSES = [
 let shownBusinessIndexes = [];
 
 function showBusinesses(startIndex = -1) {
+  if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
   // Get real businesses only (exclude the last placeholder entry)
   const realBusinesses = NAIJAHUB_BUSINESSES.filter(b => b.category !== 'All Categories');
 
@@ -2457,6 +2472,7 @@ function clearExamState() {
 }
 
 function resetAndAsk(text) {
+  if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: text.substring(0, 30) });
   clearExamState();
   setTimeout(() => sendMessage(text), 100);
 }
