@@ -2284,8 +2284,8 @@ function showBusinesses(startIndex = -1) {
   page.forEach(b => {
     const emoji = getCategoryEmoji(b.category);
     const featuredBadge = b.featured ? `<span style="display:inline-flex;align-items:center;gap:2px;background:linear-gradient(135deg,#FFB81C,#f59e0b);color:#0F1E36;font-size:9px;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:5px;vertical-align:middle;white-space:nowrap;">⭐ Featured</span>` : '';
-    const viewBtn = `<a href="${b.url}" target="_blank" style="flex:1;display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;">View on naijahub.co.uk →</a>`;
-    const waBtn = b.whatsapp ? `<a href="${b.whatsapp}" target="_blank" style="display:block;background:#25D366;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;white-space:nowrap;">💬 WhatsApp</a>` : '';
+    const viewBtn = `<a href="${b.url}" target="_blank" style="flex:1;display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;">View on naijahub.co.uk</a>`;
+    const waBtn = b.whatsapp ? `<a href="${b.whatsapp}" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;white-space:nowrap;">💬 WhatsApp</a>` : '';
     const btnRow = `<div style="display:flex;gap:6px;margin-top:4px;">${viewBtn}${waBtn}</div>`;
     html += `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;margin-bottom:12px;">
         <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;justify-content:space-between;">
