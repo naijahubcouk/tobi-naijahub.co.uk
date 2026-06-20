@@ -2195,6 +2195,22 @@ function buildJobCards(jobs, label, isVisa) {
     ? `<div style="text-align:center;margin-top:4px;font-size:10px;color:#9CA3AF;">✅ Employers verified against Home Office sponsor register</div>`
     : `<div style="font-size:10px;color:#9CA3AF;text-align:center;margin-top:4px;">Powered by Adzuna · Jobs updated daily</div>`;
   html += sourceNote + '</div></div>';
+
+  // Add follow-up suggestion bubbles
+  const suggestions = isVisa ? [
+    { label: '🌟 More Visa Jobs', action: "fetchVisaJobs()" },
+    { label: '📄 CV Tips', action: "sendMessage('Give me UK CV tips to stand out to employers')" },
+    { label: '🎤 Interview Prep', action: "sendMessage('Help me prepare for a UK job interview')" },
+    { label: '💼 All Job Categories', action: "showJobsHubCard()" }
+  ] : [
+    { label: '🔄 Search Again', action: `fetchJobs('${label.toLowerCase().replace(/[^a-z]/g,'').substring(0,20)}','${label}')` },
+    { label: '📄 CV Tips', action: "sendMessage('Give me UK CV tips to stand out to employers')" },
+    { label: '🎤 Interview Prep', action: "sendMessage('Help me prepare for a UK job interview')" },
+    { label: '🌟 Visa Sponsored Jobs', action: "fetchVisaJobs()" },
+    { label: '💼 All Job Categories', action: "showJobsHubCard()" }
+  ];
+
+  html += `<div class="suggestions" style="margin-top:8px;">${suggestions.map(s => `<button class="suggestion-btn" onclick="${s.action}">${s.label}</button>`).join('')}</div>`;
   return html;
 }
 
