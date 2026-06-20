@@ -15,10 +15,11 @@ function httpsGet(url) {
   });
 }
 
+// Must exactly match the normalise() function in visa-jobs.js
 function normalise(name) {
   return (name || '').toLowerCase()
-    .replace(/\b(ltd|limited|plc|llp|inc|group|uk|the|and)\b/g, '')
-    .replace(/[^a-z0-9]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -56,6 +57,10 @@ async function run() {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, JSON.stringify(output));
   console.log(`✅ Done — ${sponsors.size} sponsors saved to sponsors.json`);
+
+  // Show a few examples
+  const sample = output.sponsors.slice(0, 5);
+  console.log('Sample entries:', sample);
 }
 
 run().catch(err => {
