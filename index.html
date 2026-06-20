@@ -2267,28 +2267,13 @@ function buildJobCards(jobs, label, isVisa) {
 }
 
 async function fetchJobs(category, label) {
-  // If location not yet detected, request it and wait briefly
+  // If location not yet detected, request it and wait
   if (!window.userCity) {
     requestLocation();
-    await new Promise(r => setTimeout(r, 2500));
+    await new Promise(r => setTimeout(r, 4000));
   }
 
-  // If still no city, ask user for their location
-  if (!window.userCity) {
-    addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;margin-top:8px;">
-      <div style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:6px;">📍 Where are you based?</div>
-      <div style="font-size:13px;color:#555;margin-bottom:10px;">To find ${label} jobs near you, please share your location or enter your city.</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <button onclick="requestLocation();setTimeout(()=>fetchJobs('${category}','${label}'),2500);" style="flex:1;background:#057A44;color:white;border:none;border-radius:6px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📍 Share My Location</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <input id="manual-city-input" type="text" placeholder="Or type your city e.g. London" style="flex:1;padding:8px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
-        <button onclick="var c=document.getElementById('manual-city-input').value.trim();if(c){window.userCity=c;userCity=c;fetchJobs('${category}','${label}');}" style="background:#0F1E36;color:white;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Go</button>
-      </div>
-    </div>`);
-    return;
-  }
-
+  // If still no city after waiting, search UK-wide but offer location option
   const city = (window.userCity || '').toLowerCase();
   const locationLabel = window.userCity ? 'near ' + window.userCity : 'across the UK';
   addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">🔍 Finding live ' + label + ' jobs ' + locationLabel + '...</div>');
@@ -2303,7 +2288,14 @@ async function fetchJobs(category, label) {
       addTipMessage(buildJobCards(data.jobs, label, false));
     } else {
       const fallbackTerm = (data && data.fallback) ? data.fallback : 'jobs';
-      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found near ${window.userCity || 'your area'} right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(fallbackTerm)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search all UK jobs on Adzuna →</a></div>`);
+      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found ${window.userCity ? 'near ' + window.userCity : 'right now'}. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(fallbackTerm)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>
+      <div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:10px;margin-top:6px;">
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:6px;">📍 Search jobs in a specific city?</div>
+        <div style="display:flex;gap:8px;">
+          <input id="manual-city-input" type="text" placeholder="Enter your city e.g. Birmingham" style="flex:1;padding:8px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
+          <button onclick="var c=document.getElementById('manual-city-input').value.trim();if(c){window.userCity=c;userCity=c;fetchJobs('${category}','${label}');}" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Go</button>
+        </div>
+      </div>`);
     }
   } catch(e) {
     if (loadingDiv) loadingDiv.remove();
