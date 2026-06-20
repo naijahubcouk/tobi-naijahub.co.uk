@@ -39,7 +39,16 @@ const CANNOT_SPONSOR = [
   'valid right to work in the uk without restrictions',
   'possess valid right to work',
   'must possess valid right to work',
-  'right to work in the uk without'
+  'right to work in the uk without',
+  'unable to offer visa sponsorship',
+  'we are unable to offer visa',
+  'please note we are unable',
+  'full rights to work in the uk without',
+  'without the need for visa sponsorship',
+  'without the need for sponsorship',
+  'all applicants must have full rights',
+  'no visa sponsorship available',
+  'no sponsorship available'
 ];
 
 exports.handler = async (event) => {
