@@ -2148,17 +2148,17 @@ function showJobsHubCard() {
     </div>
     <div style="padding:12px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button onclick="sendJobQuery('Find NHS jobs in the UK — what roles are available and how do I apply?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🏥 NHS Jobs</button>
-        <button onclick="sendJobQuery('Find care jobs in the UK — what roles are available, what qualifications do I need and where do I apply?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🤝 Care Jobs</button>
-        <button onclick="sendJobQuery('Find IT and Tech jobs in the UK — what roles are available and where do I apply?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">💻 IT & Tech</button>
-        <button onclick="sendJobQuery('Find Project Management jobs in the UK — what roles are available, what certifications help and where do I apply?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">📊 Project Management</button>
-        <button onclick="sendJobQuery('Find graduate jobs and schemes in the UK — what opportunities are available for recent graduates?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🎓 Graduate</button>
-        <button onclick="sendJobQuery('Find apprenticeships in the UK — what opportunities are available and how do I apply?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">📋 Apprenticeships</button>
-        <button onclick="sendJobQuery('Find Finance and Accounting jobs in the UK — what roles are available and what qualifications do I need?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🏦 Finance</button>
-        <button onclick="sendJobQuery('Find Teaching jobs in the UK — what roles are available, do I need QTS and where do I apply?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🏫 Teaching</button>
-        <button onclick="sendJobQuery('Find Driving and Logistics jobs in the UK — what licences do I need and where do I apply?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🚗 Driving</button>
-        <button onclick="sendJobQuery('Find Legal and HR jobs in the UK — what roles are available and where do I apply?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">⚖️ Legal & HR</button>
-        <button onclick="sendJobQuery('Find visa sponsored jobs in the UK — which employers offer sponsorship and where do I search?')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🌟 Visa Sponsored</button>
+        <button onclick="fetchJobs('nhs','🏥 NHS Jobs')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🏥 NHS Jobs</button>
+        <button onclick="fetchJobs('care','🤝 Care Jobs')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🤝 Care Jobs</button>
+        <button onclick="fetchJobs('it','💻 IT & Tech')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">💻 IT & Tech</button>
+        <button onclick="fetchJobs('project-management','📊 Project Management')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">📊 Project Management</button>
+        <button onclick="fetchJobs('graduate','🎓 Graduate')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🎓 Graduate</button>
+        <button onclick="fetchJobs('apprenticeship','📋 Apprenticeships')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">📋 Apprenticeships</button>
+        <button onclick="fetchJobs('finance','🏦 Finance')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🏦 Finance</button>
+        <button onclick="fetchJobs('teaching','🏫 Teaching')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🏫 Teaching</button>
+        <button onclick="fetchJobs('driving','🚗 Driving')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🚗 Driving</button>
+        <button onclick="fetchJobs('legal','⚖️ Legal & HR')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">⚖️ Legal & HR</button>
+        <button onclick="fetchVisaJobs()" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">🌟 Visa Sponsored</button>
         <button onclick="sendJobQuery('Give me UK CV tips — format, layout and how to make my CV stand out to UK employers')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;">📄 CV Tips</button>
         <button onclick="sendJobQuery('Help me prepare for a UK job interview — tips, STAR method and common questions')" style="background:#f3f4f6;border:0.5px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;color:#0F1E36;cursor:pointer;font-family:inherit;text-align:center;grid-column:span 2;">🎤 Interview Prep</button>
       </div>
@@ -2167,8 +2167,74 @@ function showJobsHubCard() {
   addTipMessage(jobsHtml);
 }
 
+function buildJobCards(jobs, label, isVisa) {
+  const badge = isVisa
+    ? '<span style="background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">VISA SPONSORED</span>'
+    : '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">LIVE</span>';
+  let html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-top:8px;">
+    <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;">
+      <span style="font-size:14px;font-weight:700;color:white;">${label}</span>${badge}
+    </div>
+    <div style="padding:10px;">`;
+  jobs.forEach(job => {
+    html += `<div style="border:0.5px solid #e5e7eb;border-radius:6px;padding:10px;margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">${job.title}</div>
+      <div style="font-size:12px;color:#555;margin-bottom:3px;">🏢 ${job.company} &nbsp;|&nbsp; 📍 ${job.location}</div>
+      <div style="font-size:12px;color:#057A44;font-weight:600;margin-bottom:6px;">💷 ${job.salary}</div>
+      <a href="${job.url}" target="_blank" style="display:inline-block;background:#057A44;color:white;text-decoration:none;font-size:11px;font-weight:700;padding:5px 12px;border-radius:5px;">Apply Now →</a>
+    </div>`;
+  });
+  const sourceNote = isVisa
+    ? `<div style="text-align:center;margin-top:4px;"><a href="https://www.jobvisa.co.uk" target="_blank" style="font-size:11px;color:#057A44;font-weight:600;">View all visa sponsored jobs on jobvisa.co.uk →</a></div>`
+    : `<div style="font-size:10px;color:#9CA3AF;text-align:center;margin-top:4px;">Powered by Adzuna · Jobs updated daily</div>`;
+  html += sourceNote + '</div></div>';
+  return html;
+}
+
+async function fetchJobs(category, label) {
+  const city = (window.userCity || 'london').toLowerCase();
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message-bubble assistant-message';
+  msgDiv.innerHTML = '<div style="color:#057A44;font-size:13px;padding:8px;">🔍 Finding live ' + label + ' jobs near ' + (window.userCity || 'UK') + '...</div>';
+  document.getElementById('chat-messages').appendChild(msgDiv);
+  document.getElementById('chat-messages').scrollTop = 99999;
+  try {
+    const res = await fetch(`/.netlify/functions/jobs?category=${category}&location=${encodeURIComponent(city)}`);
+    const data = await res.json();
+    if (data.jobs && data.jobs.length > 0) {
+      msgDiv.innerHTML = buildJobCards(data.jobs, label, false);
+    } else {
+      msgDiv.innerHTML = `<div style="padding:10px;font-size:13px;color:#555;">No live ${label} jobs found near ${window.userCity || 'your area'} right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(label)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search all UK jobs on Adzuna →</a></div>`;
+    }
+  } catch(e) {
+    msgDiv.innerHTML = `<div style="padding:10px;font-size:13px;color:#555;">Could not load live jobs right now. <a href="https://www.adzuna.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`;
+  }
+  document.getElementById('chat-messages').scrollTop = 99999;
+}
+
+async function fetchVisaJobs() {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message-bubble assistant-message';
+  msgDiv.innerHTML = '<div style="color:#057A44;font-size:13px;padding:8px;">🔍 Finding live visa sponsored jobs...</div>';
+  document.getElementById('chat-messages').appendChild(msgDiv);
+  document.getElementById('chat-messages').scrollTop = 99999;
+  try {
+    const res = await fetch('/.netlify/functions/visa-jobs');
+    const data = await res.json();
+    if (data.jobs && data.jobs.length > 0) {
+      msgDiv.innerHTML = buildJobCards(data.jobs, '🌟 Visa Sponsored Jobs', true);
+    } else {
+      msgDiv.innerHTML = `<div style="padding:10px;font-size:13px;color:#555;">${data.message || 'No visa sponsored jobs found right now.'} <a href="https://www.jobvisa.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Visit jobvisa.co.uk →</a></div>`;
+    }
+  } catch(e) {
+    msgDiv.innerHTML = `<div style="padding:10px;font-size:13px;color:#555;">Could not load visa jobs right now. <a href="https://www.jobvisa.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Visit jobvisa.co.uk →</a></div>`;
+  }
+  document.getElementById('chat-messages').scrollTop = 99999;
+}
+
 function sendJobQuery(query) {
-  document.getElementById('jobs-hub-card') && (document.getElementById('jobs-hub-card').closest('.message-bubble') || document.getElementById('jobs-hub-card').parentElement).remove();
+  const card = document.getElementById('jobs-hub-card');
+  if (card) { const parent = card.closest('.message-bubble') || card.parentElement; if(parent) parent.remove(); }
   sendMessage(query);
 }
 
