@@ -1,13 +1,8 @@
-// v3
+// v4
 const https = require('https');
 
 const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || 'e9267d1e';
 const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || 'bcca8a8ff7d2a97044c4793a004d43f5';
-const SITE_URL = process.env.URL || 'https://auntietobi.co.uk';
-
-let sponsorCache = null;
-let sponsorCacheTime = 0;
-const CACHE_TTL = 6 * 60 * 60 * 1000;
 
 function httpsGet(url) {
   return new Promise((resolve, reject) => {
@@ -19,31 +14,15 @@ function httpsGet(url) {
   });
 }
 
-function normalise(name) {
-  return (name || '').toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function strip(name) {
-  return normalise(name)
-    .replace(/\b(ltd|limited|plc|llp|inc|group|uk|the|and|nhs|trust|foundation|council|university|college)\b/g, '')
-    .replace(/\s+/g, '')
-    .trim();
-}
-
-async function getSponsorSet() {
-  const now = Date.now();
-  if (sponsorCache && (now - sponsorCacheTime) < CACHE_TTL) return sponsorCache;
-
-  const res = await httpsGet(`${SITE_URL}/sponsors.json`);
-  const data = JSON.parse(res.body);
-  sponsorCache = new Set(data.sponsors);
-  sponsorCacheTime = now;
-  console.log(`Loaded ${sponsorCache.size} sponsors from ${SITE_URL}/sponsors.json`);
-  return sponsorCache;
-}
+const POSITIVE_SPONSOR = [
+  'visa sponsorship', 'sponsorship provided', 'we will sponsor',
+  'certificate of sponsorship', 'skilled worker visa',
+  'sponsorship available', 'able to sponsor', 'can sponsor',
+  'offer sponsorship', 'provide sponsorship', 'happy to sponsor',
+  'sponsor the successful', 'sponsorship will be', 'cos will be',
+  'tier 2 visa', 'skilled worker route', 'visa support',
+  'work visa', 'sponsorship package', 'immigration sponsorship'
+];
 
 const CANNOT_SPONSOR = [
   'unable to offer certificate', 'cannot offer certificate',
@@ -52,15 +31,14 @@ const CANNOT_SPONSOR = [
   'no sponsorship', 'without sponsorship', 'do not offer sponsorship',
   'does not offer sponsorship', 'not provide sponsorship',
   'must have right to work', 'must already have the right to work',
-  'you must have the right to work', 'applicants must have the right'
+  'you must have the right to work', 'applicants must have the right',
+  'no visa', 'sponsorship is not'
 ];
 
-// Job titles that are gig/self-employed and never sponsor visas
 const EXCLUDED_TITLES = [
   'deliver with uber', 'uber eats', 'delivery opportunities',
-  'part-time opportunities', 'sign up and start', 'earn with',
-  'become a driver', 'freelance', 'self-employed', 'gig',
-  'zero hours', 'delivery driver - sign'
+  'sign up and start', 'earn with', 'become a courier',
+  'freelance', 'self-employed', 'zero hours'
 ];
 
 exports.handler = async (event) => {
@@ -72,50 +50,29 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
   try {
-    const sponsors = await getSponsorSet();
-    const strippedSponsors = new Set(Array.from(sponsors).map(s => strip(s)));
-    console.log(`Sponsor set: ${sponsors.size}, stripped: ${strippedSponsors.size}`);
-
+    // Search Adzuna specifically for visa sponsorship jobs
     const adzunaRes = await httpsGet(
-      `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&content-type=application/json&sort_by=date&max_days_old=7`
+      `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=visa+sponsorship&content-type=application/json&sort_by=date&max_days_old=30`
     );
 
     const results = JSON.parse(adzunaRes.body).results || [];
-    console.log(`Adzuna returned ${results.length} jobs`);
-
-    results.slice(0, 3).forEach(j => {
-      const c = j.company?.display_name || '';
-      console.log(`"${c}" norm:"${normalise(c)}" strip:"${strip(c)}" match:${sponsors.has(normalise(c)) || strippedSponsors.has(strip(c))}`);
-    });
-
-    // Phrases that confirm this specific role actively offers sponsorship
-    const POSITIVE_SPONSOR = [
-      'visa sponsorship', 'sponsorship provided', 'we will sponsor',
-      'certificate of sponsorship', 'skilled worker visa',
-      'sponsorship available', 'able to sponsor', 'can sponsor',
-      'offer sponsorship', 'provide sponsorship', 'happy to sponsor',
-      'sponsor the successful', 'sponsorship will be', 'cos will be',
-      'tier 2', 'skilled worker route'
-    ];
+    console.log(`Adzuna returned ${results.length} jobs for "visa sponsorship"`);
 
     const sponsored = results.filter(job => {
-      const company = job.company?.display_name || '';
-      if (!company) return false;
-      // Must be a licensed sponsor
-      const matched = sponsors.has(normalise(company)) || strippedSponsors.has(strip(company));
-      if (!matched) return false;
-      // Exclude gig economy / self-employed titles
       const title = (job.title || '').toLowerCase();
-      if (EXCLUDED_TITLES.some(t => title.includes(t))) return false;
       const desc = (job.description || '').toLowerCase();
-      const titleAndDesc = title + ' ' + desc;
-      // Must explicitly mention sponsorship positively
-      if (!POSITIVE_SPONSOR.some(phrase => titleAndDesc.includes(phrase))) return false;
-      // Must not say they cannot sponsor
-      return !CANNOT_SPONSOR.some(phrase => titleAndDesc.includes(phrase));
+      const full = title + ' ' + desc;
+
+      // Exclude gig titles
+      if (EXCLUDED_TITLES.some(t => title.includes(t))) return false;
+      // Must mention sponsorship positively
+      if (!POSITIVE_SPONSOR.some(p => full.includes(p))) return false;
+      // Must not deny sponsorship
+      if (CANNOT_SPONSOR.some(p => full.includes(p))) return false;
+      return true;
     }).slice(0, 6);
 
-    console.log(`${sponsored.length} jobs matched`);
+    console.log(`${sponsored.length} jobs passed all filters`);
 
     const jobs = sponsored.map(job => ({
       title: job.title,
