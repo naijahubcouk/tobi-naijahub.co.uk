@@ -54,7 +54,9 @@ const CANNOT_SPONSOR = [
   'permanent, unrestricted uk working rights',
   'unrestricted uk working rights',
   'permanent unrestricted right to work',
-  'no visa sponsorship'
+  'no visa sponsorship',
+  'visa sponsorships: not available',
+  'sponsorships: not available'
 ];
 
 exports.handler = async (event) => {
