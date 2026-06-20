@@ -4,35 +4,27 @@ const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || 'e9267d1e';
 const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || 'bcca8a8ff7d2a97044c4793a004d43f5';
 
 const CATEGORY_MAP = {
-  'nhs':                { what: 'NHS',               category: 'healthcare-nursing-jobs',  visa: false },
-  'care':               { what: 'care assistant',     category: 'social-work-jobs',         visa: false },
-  'it':                 { what: 'IT',                 category: 'it-jobs',                  visa: false },
-  'project-management': { what: 'project manager',    category: 'it-jobs',                  visa: false },
-  'graduate':           { what: 'graduate',           category: null,                       visa: false },
-  'apprenticeship':     { what: 'apprenticeship',     category: null,                       visa: false },
-  'finance':            { what: 'finance accountant', category: 'accounting-finance-jobs',  visa: false },
-  'teaching':           { what: 'teacher',            category: 'teaching-jobs',            visa: false },
-  'driving':            { what: 'driver',             category: 'logistics-warehouse-jobs', visa: false },
-  'legal':              { what: 'legal HR',           category: 'hr-jobs',                  visa: false },
-  'visa-sponsored':     { what: 'skilled worker visa sponsor licence',   category: null,    visa: true  },
+  'nhs':                { what: 'NHS',                        category: 'healthcare-nursing-jobs',  visa: false, fallback: 'NHS+jobs' },
+  'care':               { what: 'care assistant',             category: 'social-work-jobs',         visa: false, fallback: 'care+assistant' },
+  'it':                 { what: 'IT',                         category: 'it-jobs',                  visa: false, fallback: 'IT+jobs' },
+  'project-management': { what: 'project manager',            category: 'it-jobs',                  visa: false, fallback: 'project+manager' },
+  'graduate':           { what: 'graduate',                   category: null,                       visa: false, fallback: 'graduate+jobs' },
+  'apprenticeship':     { what: 'apprenticeship',             category: null,                       visa: false, fallback: 'apprenticeship' },
+  'finance':            { what: 'finance accountant',         category: 'accounting-finance-jobs',  visa: false, fallback: 'finance+accountant' },
+  'teaching':           { what: 'teacher',                    category: 'teaching-jobs',            visa: false, fallback: 'teacher+jobs' },
+  'driving':            { what: 'driver',                     category: 'logistics-warehouse-jobs', visa: false, fallback: 'driver+jobs' },
+  'legal':              { what: 'legal HR',                   category: 'hr-jobs',                  visa: false, fallback: 'legal+HR+jobs' },
+  'visa-sponsored':     { what: 'visa sponsorship available', category: null,                       visa: true,  fallback: 'visa+sponsorship+available' },
 };
 
-// Phrases that confirm sponsorship is available
-const SPONSOR_POSITIVE = [
-  'visa sponsor', 'sponsorship available', 'we will sponsor', 'offer sponsorship',
-  'skilled worker visa', 'sponsor licence', 'sponsor license', 'certificate of sponsorship',
-  'cos provided', 'happy to sponsor', 'able to sponsor', 'can sponsor',
-  'provide sponsorship', 'sponsorship provided', 'tier 2', 'skilled worker sponsor'
-];
-
-// Phrases that confirm sponsorship is NOT available
+// Phrases that confirm sponsorship is NOT available — filter these out
 const CANNOT_SPONSOR_KEYWORDS = [
   'cannot sponsor', 'unable to sponsor', 'no sponsorship', 'not able to sponsor',
   'do not offer sponsorship', 'does not offer sponsorship', 'sponsorship is not available',
   'must have right to work', 'must already have the right to work',
   'without sponsorship', 'not provide sponsorship', 'not offering sponsorship',
-  'unfortunately we cannot', 'we are unable to provide', 'no visa sponsorship',
-  'applicants must have', 'you must have the right to work'
+  'no visa sponsorship', 'you must have the right to work',
+  'applicants must already', 'we are not able to offer'
 ];
 
 function httpsGet(url) {
@@ -71,12 +63,9 @@ function checkUrl(url) {
   });
 }
 
-function isGoodVisaJob(job) {
+function cannotSponsor(job) {
   const text = ((job.description || '') + ' ' + (job.title || '')).toLowerCase();
-  const hasPositive = SPONSOR_POSITIVE.some(kw => text.includes(kw));
-  const hasNegative = CANNOT_SPONSOR_KEYWORDS.some(kw => text.includes(kw));
-  // Must have a positive signal AND no negative signal
-  return hasPositive && !hasNegative;
+  return CANNOT_SPONSOR_KEYWORDS.some(kw => text.includes(kw));
 }
 
 exports.handler = async (event) => {
@@ -95,8 +84,7 @@ exports.handler = async (event) => {
     const location = params.location || 'london';
     const config = CATEGORY_MAP[category] || CATEGORY_MAP['care'];
 
-    // Fetch more for visa so we have enough after filtering
-    const resultsToFetch = config.visa ? 50 : 10;
+    const resultsToFetch = config.visa ? 30 : 10;
 
     let url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=${resultsToFetch}&what=${encodeURIComponent(config.what)}&where=${encodeURIComponent(location)}&content-type=application/json&sort_by=date&max_days_old=30`;
 
@@ -107,12 +95,12 @@ exports.handler = async (event) => {
     const data = await httpsGet(url);
     let results = data.results || [];
 
-    // Filter visa sponsored jobs — must have positive signal, no negative signal
+    // For visa sponsored — remove jobs that explicitly say they cannot sponsor
     if (config.visa) {
-      results = results.filter(isGoodVisaJob);
+      results = results.filter(job => !cannotSponsor(job));
     }
 
-    // Map and check URLs — skip any with dead apply links
+    // Map jobs
     const mapped = results.map(job => ({
       title: job.title,
       company: job.company?.display_name || 'Employer',
@@ -122,24 +110,25 @@ exports.handler = async (event) => {
         : 'Salary not specified',
       url: job.redirect_url,
       posted: job.created ? new Date(job.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '',
-      visa: config.visa
+      visa: config.visa,
+      fallback: config.fallback
     })).filter(job => job.url);
 
-    // Check URLs in parallel, only keep working ones, limit to 6
-    const urlChecks = await Promise.all(mapped.slice(0, 18).map(job => checkUrl(job.url)));
-    const jobs = mapped.slice(0, 18).filter((_, i) => urlChecks[i]).slice(0, 6);
+    // Check URLs in parallel — skip dead links
+    const urlChecks = await Promise.all(mapped.slice(0, 15).map(job => checkUrl(job.url)));
+    const jobs = mapped.slice(0, 15).filter((_, i) => urlChecks[i]).slice(0, 6);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ jobs, total: data.count || 0, isVisa: config.visa })
+      body: JSON.stringify({ jobs, total: data.count || 0, isVisa: config.visa, fallback: config.fallback })
     };
 
   } catch (err) {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: err.message, jobs: [] })
+      body: JSON.stringify({ error: err.message, jobs: [], fallback: 'jobs' })
     };
   }
 };
