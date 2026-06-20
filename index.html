@@ -2222,18 +2222,17 @@ async function fetchJobs(category, label) {
 }
 
 async function fetchVisaJobs() {
-  const city = (window.userCity || 'london').toLowerCase();
-  addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">🔍 Checking Home Office sponsor register &amp; finding live visa sponsored jobs near ' + (window.userCity || 'UK') + '...</div>');
+  addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">🔍 Checking Home Office sponsor register &amp; finding live visa sponsored jobs across the UK...</div>');
   const chatBox = document.getElementById('messages');
   const loadingDiv = chatBox.lastElementChild;
   try {
-    const res = await fetch(`/.netlify/functions/visa-jobs?location=${encodeURIComponent(city)}`);
+    const res = await fetch('/.netlify/functions/visa-jobs');
     const data = await res.json();
     if (loadingDiv) loadingDiv.remove();
     if (data.jobs && data.jobs.length > 0) {
       addTipMessage(buildJobCards(data.jobs, '🌟 Visa Sponsored Jobs', true));
     } else {
-      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">${data.message || 'No verified visa sponsored jobs found near ' + (window.userCity || 'your area') + ' right now.'} <a href="https://www.adzuna.co.uk/search?q=skilled+worker+visa+sponsorship&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`);
+      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">${data.message || 'No verified visa sponsored jobs found across the UK right now — please try again shortly.'} <a href="https://www.adzuna.co.uk/search?q=skilled+worker+visa+sponsorship&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`);
     }
   } catch(e) {
     if (loadingDiv) loadingDiv.remove();
