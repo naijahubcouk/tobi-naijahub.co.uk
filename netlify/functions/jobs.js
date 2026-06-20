@@ -81,12 +81,13 @@ exports.handler = async (event) => {
   try {
     const params = event.queryStringParameters || {};
     const category = (params.category || 'care').toLowerCase();
-    const location = params.location || 'london';
+    const location = params.location || '';
     const config = CATEGORY_MAP[category] || CATEGORY_MAP['care'];
 
     const resultsToFetch = config.visa ? 30 : 10;
 
-    let url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=${resultsToFetch}&what=${encodeURIComponent(config.what)}&where=${encodeURIComponent(location)}&content-type=application/json&sort_by=date&max_days_old=30`;
+    let url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=${resultsToFetch}&what=${encodeURIComponent(config.what)}&content-type=application/json&sort_by=date&max_days_old=30`;
+    if (location) url += `&where=${encodeURIComponent(location)}`;
 
     if (config.category) {
       url += `&category=${config.category}`;
