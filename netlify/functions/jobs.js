@@ -1,7 +1,7 @@
 const https = require('https');
 
-const ADZUNA_APP_ID = 'e9267d1e';
-const ADZUNA_APP_KEY = 'bcca8a8ff7d2a97044c4793a004d43f5';
+const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || 'e9267d1e';
+const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || 'bcca8a8ff7d2a97044c4793a004d43f5';
 
 const CATEGORY_MAP = {
   'nhs':                { what: 'NHS',                category: 'healthcare-nursing-jobs' },
