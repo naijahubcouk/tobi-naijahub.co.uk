@@ -101,12 +101,12 @@ exports.handler = async (event) => {
 
   try {
     const params = event.queryStringParameters || {};
-    const location = params.location || 'london';
+    const location = params.location || '';
 
     // Fetch sponsor list and Adzuna results in parallel
     const [sponsorSet, adzunaRes] = await Promise.all([
       getSponsorSet(),
-      httpsGet(`https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=skilled+worker&where=${encodeURIComponent(location)}&content-type=application/json&sort_by=date&max_days_old=14`)
+      httpsGet(`https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=skilled+worker&content-type=application/json&sort_by=date&max_days_old=14`)
     ]);
 
     const adzunaData = JSON.parse(adzunaRes.body);
