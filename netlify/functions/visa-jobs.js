@@ -35,13 +35,24 @@ exports.handler = async (event) => {
   try {
     // Use Adzuna's sponsored_jobs flag to get visa sponsored jobs
     const adzunaRes = await httpsGet(
-      `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=visa+sponsorship&content-type=application/json&sort_by=date&max_days_old=30&company_filter=visa_sponsorship`
+      `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=visa+sponsorship&content-type=application/json&sort_by=date&max_days_old=30`
     );
 
     const data = JSON.parse(adzunaRes.body);
-    const results = data.results || [];
+    let results = data.results || [];
     console.log(`Adzuna returned ${results.length} jobs`);
-    if (results.length > 0) console.log('Sample visa_sponsorship field:', JSON.stringify(results[0].visa_sponsorship));
+
+    // If less than 20 results, fetch page 2 as well
+    if (results.length < 20) {
+      try {
+        const page2Res = await httpsGet(
+          `https://api.adzuna.com/v1/api/jobs/gb/search/2?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=visa+sponsorship&content-type=application/json&sort_by=date&max_days_old=30`
+        );
+        const page2Data = JSON.parse(page2Res.body);
+        results = results.concat(page2Data.results || []);
+        console.log(`After page 2: ${results.length} total jobs`);
+      } catch(e) { console.log('Page 2 fetch failed:', e.message); }
+    }
 
     const sponsored = results.filter(job => {
       // Use Adzuna's own visa_sponsorship field — only include if true/available
