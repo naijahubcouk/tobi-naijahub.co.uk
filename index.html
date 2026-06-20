@@ -475,18 +475,19 @@
   }
   .event-card-header {
     background: #057A44;
-    padding: 2px 4px;
+    padding: 6px 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
   .event-card-header-label {
     color: white;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 13px;
+    line-height: 1.3;
   }
   .event-card-body {
-    padding: 5px;
+    padding: 6px 8px 4px;
   }
   .event-card-emoji {
     font-size: 16px;
@@ -1775,14 +1776,13 @@ function formatResponse(text) {
       <div class="event-card">
         <div class="event-card-header">
           <span class="event-card-emoji">${emoji}</span>
-          <span class="event-card-header-label">EVENT</span>
+          <span class="event-card-header-label">${name}</span>
         </div>
         <div class="event-card-body">
-          <div class="event-card-name">${name}</div>
           ${date ? `<div class="event-card-date">📅 ${date}</div>` : ''}
           ${location ? `<div class="event-card-location">📍 ${location}</div>` : ''}
           <div class="event-card-footer">
-            ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 View Event Details</a>` : '<span style="flex:1"></span>'}
+            ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 Details</a>` : '<span style="flex:1"></span>'}
             <button class="event-card-share-btn" onclick="(function(){var u='${link}',t='${name}';if(navigator.share){navigator.share({title:t,url:u}).catch(function(){});}else{navigator.clipboard.writeText(u);alert('Link copied!');}})()">📤 Share</button>
           </div>
         </div>
@@ -2265,12 +2265,19 @@ function buildJobCards(jobs, label, isVisa) {
 }
 
 async function fetchJobs(category, label) {
-  const city = (window.userCity || 'london').toLowerCase();
-  addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">🔍 Finding live ' + label + ' jobs near ' + (window.userCity || 'UK') + '...</div>');
+  // If location not yet detected, request it and wait briefly
+  if (!window.userCity) {
+    requestLocation();
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  const city = (window.userCity || '').toLowerCase();
+  const locationLabel = window.userCity ? 'near ' + window.userCity : 'across the UK';
+  addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">🔍 Finding live ' + label + ' jobs ' + locationLabel + '...</div>');
   const chatBox = document.getElementById('messages');
   const loadingDiv = chatBox.lastElementChild;
   try {
-    const res = await fetch(`/.netlify/functions/jobs?category=${category}&location=${encodeURIComponent(city)}`);
+    const locationParam = city ? `&location=${encodeURIComponent(city)}` : '';
+    const res = await fetch(`/.netlify/functions/jobs?category=${category}${locationParam}`);
     const data = await res.json();
     if (loadingDiv) loadingDiv.remove();
     if (data.jobs && data.jobs.length > 0) {
