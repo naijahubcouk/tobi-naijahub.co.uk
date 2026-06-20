@@ -2367,8 +2367,6 @@ function getCategoryEmoji(cat) {
 window.onload = () => {
   // Request location on load
   requestLocation();
-  // Show food festival card for all users regardless of location permission
-  showNaijaFoodFestivalCard();
   const todayStr = new Date().toISOString().split('T')[0];
   const lastVisitDate = localStorage.getItem('tobi_last_visit');
   const isReturning = localStorage.getItem('tobi_visited');
@@ -2524,13 +2522,13 @@ function resetToWelcome() {
   setTimeout(() => {
     console.log('setTimeout fired - building tip card');
     try {
+      showNaijaFoodFestivalCard();
       const tip = getTodaysTip();
       console.log('tip:', tip);
       const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
       console.log('tipHtml built');
       addTipMessage(tipHtml);
       console.log('message added');
-      showNaijaFoodFestivalCard();
     } catch(err) {
       console.error('Error in resetToWelcome setTimeout:', err);
     }
