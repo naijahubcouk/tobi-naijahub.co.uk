@@ -30,6 +30,6 @@ jobs:
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
-          git add netlify/functions/sponsors.json
+          git add sponsors.json
           git diff --staged --quiet || git commit -m "chore: update sponsor register $(date +%Y-%m-%d)"
           git push
