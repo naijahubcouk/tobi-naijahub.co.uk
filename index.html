@@ -925,7 +925,7 @@
     <div class="pill" onclick="resetToWelcome()">💬 Ask Anything</div>
     <div class="pill" onclick="resetAndShow(showBusinesses)">🏢 Businesses</div>
     <div class="pill" onclick="resetAndAsk('Check Out Upcoming Events')">🎉 Events</div>
-    <div class="pill" onclick="showJobsHubCard()">💼 Jobs</div>
+    <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
     <div class="pill" onclick="resetAndAsk('What is new on NaijaUKHub?')">📣 What's New</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my UK driving theory test')">🚗 Driving Theory Test</div>
     <div class="pill" onclick="quickAsk('Help me prepare for my Life in UK test')">📋 Life in UK Test</div>
@@ -2140,6 +2140,13 @@ function requestLocation() {
 }
 
 
+function resetAndShowJobs() {
+  clearExamState();
+  setTimeout(() => {
+    showJobsHubCard();
+  }, 100);
+}
+
 function showJobsHubCard() {
   const jobsHtml = `<div id="jobs-hub-card" style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-top:8px;">
     <div style="background:#0F1E36;padding:12px 14px;">
@@ -2193,43 +2200,43 @@ function buildJobCards(jobs, label, isVisa) {
 
 async function fetchJobs(category, label) {
   const city = (window.userCity || 'london').toLowerCase();
-  const msgDiv = document.createElement('div');
-  msgDiv.className = 'message-bubble assistant-message';
-  msgDiv.innerHTML = '<div style="color:#057A44;font-size:13px;padding:8px;">🔍 Finding live ' + label + ' jobs near ' + (window.userCity || 'UK') + '...</div>';
-  document.getElementById('chat-messages').appendChild(msgDiv);
-  document.getElementById('chat-messages').scrollTop = 99999;
+  addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">🔍 Finding live ' + label + ' jobs near ' + (window.userCity || 'UK') + '...</div>');
+  const chatBox = document.getElementById('messages');
+  const loadingDiv = chatBox.lastElementChild;
   try {
     const res = await fetch(`/.netlify/functions/jobs?category=${category}&location=${encodeURIComponent(city)}`);
     const data = await res.json();
+    if (loadingDiv) loadingDiv.remove();
     if (data.jobs && data.jobs.length > 0) {
-      msgDiv.innerHTML = buildJobCards(data.jobs, label, false);
+      addTipMessage(buildJobCards(data.jobs, label, false));
     } else {
-      msgDiv.innerHTML = `<div style="padding:10px;font-size:13px;color:#555;">No live ${label} jobs found near ${window.userCity || 'your area'} right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(label)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search all UK jobs on Adzuna →</a></div>`;
+      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found near ${window.userCity || 'your area'} right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(label)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search all UK jobs on Adzuna →</a></div>`);
     }
   } catch(e) {
-    msgDiv.innerHTML = `<div style="padding:10px;font-size:13px;color:#555;">Could not load live jobs right now. <a href="https://www.adzuna.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`;
+    if (loadingDiv) loadingDiv.remove();
+    addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">Could not load live jobs right now. <a href="https://www.adzuna.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`);
   }
-  document.getElementById('chat-messages').scrollTop = 99999;
+  chatBox.scrollTop = 99999;
 }
 
 async function fetchVisaJobs() {
-  const msgDiv = document.createElement('div');
-  msgDiv.className = 'message-bubble assistant-message';
-  msgDiv.innerHTML = '<div style="color:#057A44;font-size:13px;padding:8px;">🔍 Finding live visa sponsored jobs...</div>';
-  document.getElementById('chat-messages').appendChild(msgDiv);
-  document.getElementById('chat-messages').scrollTop = 99999;
+  addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">🔍 Finding live visa sponsored jobs...</div>');
+  const chatBox = document.getElementById('messages');
+  const loadingDiv = chatBox.lastElementChild;
   try {
     const res = await fetch('/.netlify/functions/visa-jobs');
     const data = await res.json();
+    if (loadingDiv) loadingDiv.remove();
     if (data.jobs && data.jobs.length > 0) {
-      msgDiv.innerHTML = buildJobCards(data.jobs, '🌟 Visa Sponsored Jobs', true);
+      addTipMessage(buildJobCards(data.jobs, '🌟 Visa Sponsored Jobs', true));
     } else {
-      msgDiv.innerHTML = `<div style="padding:10px;font-size:13px;color:#555;">${data.message || 'No visa sponsored jobs found right now.'} <a href="https://www.jobvisa.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Visit jobvisa.co.uk →</a></div>`;
+      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">${data.message || 'No visa sponsored jobs found right now.'} <a href="https://www.jobvisa.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Visit jobvisa.co.uk →</a></div>`);
     }
   } catch(e) {
-    msgDiv.innerHTML = `<div style="padding:10px;font-size:13px;color:#555;">Could not load visa jobs right now. <a href="https://www.jobvisa.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Visit jobvisa.co.uk →</a></div>`;
+    if (loadingDiv) loadingDiv.remove();
+    addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">Could not load visa jobs right now. <a href="https://www.jobvisa.co.uk" target="_blank" style="color:#057A44;font-weight:700;">Visit jobvisa.co.uk →</a></div>`);
   }
-  document.getElementById('chat-messages').scrollTop = 99999;
+  chatBox.scrollTop = 99999;
 }
 
 function sendJobQuery(query) {
