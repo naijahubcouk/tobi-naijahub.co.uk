@@ -29,7 +29,17 @@ const CANNOT_SPONSOR = [
   'unfortunately we cannot sponsor', 'sponsorship cannot be offered',
   'skilled worker visa sponsorship is not available',
   'sponsorship is not available for this post',
-  'visa sponsorship is not available for this'
+  'visa sponsorship is not available for this',
+  'not able to provide new work authorisation',
+  'not able to provide work authorisation',
+  'must already be authorised to work',
+  'already be authorised to work in the united kingdom',
+  'already have the right to work in the uk',
+  'new work authorisation',
+  'valid right to work in the uk without restrictions',
+  'possess valid right to work',
+  'must possess valid right to work',
+  'right to work in the uk without'
 ];
 
 exports.handler = async (event) => {
@@ -62,13 +72,28 @@ exports.handler = async (event) => {
       } catch(e) { console.log('Page 2 fetch failed:', e.message); }
     }
 
+    const POSITIVE_SPONSOR = [
+      'visa sponsorship', 'sponsorship provided', 'we will sponsor',
+      'certificate of sponsorship', 'skilled worker visa',
+      'sponsorship available', 'able to sponsor', 'can sponsor',
+      'offer sponsorship', 'provide sponsorship', 'happy to sponsor',
+      'sponsor the successful', 'sponsorship will be', 'cos will be',
+      'tier 2', 'skilled worker route', 'work visa', 'sponsorship package',
+      'immigration sponsorship', 'visa support', 'sponsor your visa',
+      'sponsorship for', 'visa will be', 'relocation and visa'
+    ];
+
     const sponsored = results.filter(job => {
       // Use Adzuna's own visa_sponsorship field — only include if true/available
       const visaField = job.visa_sponsorship;
       if (visaField === false || visaField === 'Not available' || visaField === 'not available') return false;
-      // Also filter description for negative phrases
+      const title = (job.title || '').toLowerCase();
       const desc = (job.description || '').toLowerCase();
-      return !CANNOT_SPONSOR.some(p => desc.includes(p));
+      const full = title + ' ' + desc;
+      // Must explicitly mention sponsorship positively somewhere
+      if (!POSITIVE_SPONSOR.some(p => full.includes(p))) return false;
+      // Must not deny sponsorship
+      return !CANNOT_SPONSOR.some(p => full.includes(p));
     }).slice(0, 6);
 
     console.log(`${sponsored.length} jobs passed filters`);
