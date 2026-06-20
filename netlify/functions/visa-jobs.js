@@ -71,10 +71,23 @@ exports.handler = async (event) => {
 
     console.log(`Adzuna returned ${results.length} jobs`);
 
-    // Filter jobs where company is a licensed sponsor — O(1) lookup
+    // Phrases that confirm this specific role cannot be sponsored
+    const CANNOT_SPONSOR = [
+      'unable to offer certificate', 'cannot offer certificate',
+      'unable to offer sponsorship', 'cannot offer sponsorship',
+      'cannot sponsor', 'unable to sponsor', 'not able to sponsor',
+      'no sponsorship', 'without sponsorship', 'do not offer sponsorship',
+      'does not offer sponsorship', 'not provide sponsorship',
+      'must have right to work', 'must already have the right to work',
+      'you must have the right', 'applicants must have the right'
+    ];
+
+    // Filter jobs where company is a licensed sponsor AND description doesn't deny sponsorship
     const sponsored = results.filter(job => {
       const norm = normalise(job.company?.display_name || '');
-      return norm.length > 2 && sponsors.has(norm);
+      if (!norm || norm.length < 3 || !sponsors.has(norm)) return false;
+      const desc = (job.description || '').toLowerCase();
+      return !CANNOT_SPONSOR.some(phrase => desc.includes(phrase));
     }).slice(0, 6);
 
     console.log(`${sponsored.length} jobs matched sponsor register`);
