@@ -2211,7 +2211,8 @@ async function fetchJobs(category, label) {
     if (data.jobs && data.jobs.length > 0) {
       addTipMessage(buildJobCards(data.jobs, label, false));
     } else {
-      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found near ${window.userCity || 'your area'} right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(label)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search all UK jobs on Adzuna →</a></div>`);
+      const fallbackTerm = (data && data.fallback) ? data.fallback : 'jobs';
+      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found near ${window.userCity || 'your area'} right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(fallbackTerm)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search all UK jobs on Adzuna →</a></div>`);
     }
   } catch(e) {
     if (loadingDiv) loadingDiv.remove();
