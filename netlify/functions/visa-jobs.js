@@ -48,7 +48,13 @@ const CANNOT_SPONSOR = [
   'without the need for sponsorship',
   'all applicants must have full rights',
   'no visa sponsorship available',
-  'no sponsorship available'
+  'no sponsorship available',
+  'visa sponsorship is not offered',
+  'sponsorship is not offered',
+  'permanent, unrestricted uk working rights',
+  'unrestricted uk working rights',
+  'permanent unrestricted right to work',
+  'no visa sponsorship'
 ];
 
 exports.handler = async (event) => {
@@ -62,7 +68,7 @@ exports.handler = async (event) => {
   try {
     // Use Adzuna's sponsored_jobs flag to get visa sponsored jobs
     const adzunaRes = await httpsGet(
-      `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=visa+sponsorship&content-type=application/json&sort_by=date&max_days_old=30`
+      `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=%22Sponsorship+Available%22&content-type=application/json&sort_by=date&max_days_old=30`
     );
 
     const data = JSON.parse(adzunaRes.body);
@@ -73,7 +79,7 @@ exports.handler = async (event) => {
     if (results.length < 20) {
       try {
         const page2Res = await httpsGet(
-          `https://api.adzuna.com/v1/api/jobs/gb/search/2?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=visa+sponsorship&content-type=application/json&sort_by=date&max_days_old=30`
+          `https://api.adzuna.com/v1/api/jobs/gb/search/2?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=%22Sponsorship+Available%22&content-type=application/json&sort_by=date&max_days_old=30`
         );
         const page2Data = JSON.parse(page2Res.body);
         results = results.concat(page2Data.results || []);
