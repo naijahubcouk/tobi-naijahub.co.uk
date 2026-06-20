@@ -2,8 +2,11 @@ name: Update Sponsor Register
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Runs daily at 6am UTC
-  workflow_dispatch:       # Allow manual trigger from GitHub Actions tab
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   update-sponsors:
@@ -12,11 +15,13 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Run sponsor extractor
         run: node scripts/extract-sponsors.js
