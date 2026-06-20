@@ -2099,7 +2099,10 @@ function showNaijaFoodFestivalCard() {
       <div style="font-size:12px;color:#555;margin-bottom:6px;">📅 London — 5th July 2026 &nbsp;|&nbsp; Manchester — 11th July 2026</div>
       <div style="font-size:15px;font-weight:700;color:#0F1E36;margin:0 0 6px;line-height:1.3;">My Tasty Naija Food Festival UK 2026</div>
       <div style="font-size:13px;color:#444;margin:0 0 10px;line-height:1.5;">Will you be attending? Jollof rice, suya, puff puff and all your favourite Nigerian food — right in your city! 🇳🇬🍽️</div>
-      <a href="https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:8px;border-radius:6px;text-align:center;margin-bottom:8px;">👉 View Event Details</a>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <a href="https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026" target="_blank" style="flex:1;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:8px;border-radius:6px;text-align:center;">👉 View Event</a>
+        <button onclick="if(navigator.share){navigator.share({title:'My Tasty Naija Food Festival UK 2026',text:'🎉 Nigerian Food Festival coming to London (5th July) & Manchester (11th July) 2026! Jollof rice, suya, puff puff and more 🇳🇬🍽️',url:'https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026'}).catch(()=>{})}else{navigator.clipboard.writeText('https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026');alert('Link copied!');}" style="flex:1;background:#FFB81C;color:#0F1E36;border:none;font-size:13px;font-weight:700;padding:8px;border-radius:6px;text-align:center;cursor:pointer;font-family:inherit;">📤 Share</button>
+      </div>
     </div>
   </div>
   <div id="tobi-fest-lightbox" onclick="this.style.display='none';" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;">
