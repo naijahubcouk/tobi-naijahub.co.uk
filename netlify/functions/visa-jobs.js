@@ -55,6 +55,14 @@ const CANNOT_SPONSOR = [
   'you must have the right to work', 'applicants must have the right'
 ];
 
+// Job titles that are gig/self-employed and never sponsor visas
+const EXCLUDED_TITLES = [
+  'deliver with uber', 'uber eats', 'delivery opportunities',
+  'part-time opportunities', 'sign up and start', 'earn with',
+  'become a driver', 'freelance', 'self-employed', 'gig',
+  'zero hours', 'delivery driver - sign'
+];
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -85,6 +93,10 @@ exports.handler = async (event) => {
       if (!company) return false;
       const matched = sponsors.has(normalise(company)) || strippedSponsors.has(strip(company));
       if (!matched) return false;
+      // Exclude gig economy / self-employed titles
+      const title = (job.title || '').toLowerCase();
+      if (EXCLUDED_TITLES.some(t => title.includes(t))) return false;
+      // Exclude jobs that explicitly say they can't sponsor
       const desc = (job.description || '').toLowerCase();
       return !CANNOT_SPONSOR.some(phrase => desc.includes(phrase));
     }).slice(0, 6);
