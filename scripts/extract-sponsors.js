@@ -15,7 +15,6 @@ function httpsGet(url) {
   });
 }
 
-// Must exactly match the normalise() function in visa-jobs.js
 function normalise(name) {
   return (name || '').toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
@@ -27,13 +26,11 @@ async function run() {
   console.log('Fetching latest CSV URL from GOV.UK...');
   const page = await httpsGet('https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers');
   const match = page.body.match(/https:\/\/assets\.publishing\.service\.gov\.uk\/media\/[^"]+\.csv/);
-  if (!match) throw new Error('Could not find CSV URL on GOV.UK page');
+  if (!match) throw new Error('Could not find CSV URL');
 
-  const csvUrl = match[0];
-  console.log('Downloading CSV:', csvUrl);
-  const csv = await httpsGet(csvUrl);
+  console.log('Downloading CSV:', match[0]);
+  const csv = await httpsGet(match[0]);
 
-  console.log('Parsing CSV...');
   const lines = csv.body.split('\n');
   const sponsors = new Set();
 
@@ -53,14 +50,11 @@ async function run() {
     sponsors: Array.from(sponsors)
   };
 
-  const outputPath = path.join(__dirname, '..', 'netlify', 'functions', 'sponsors.json');
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  // Save to public root so it's accessible as /sponsors.json
+  const outputPath = path.join(__dirname, '..', 'sponsors.json');
   fs.writeFileSync(outputPath, JSON.stringify(output));
-  console.log(`✅ Done — ${sponsors.size} sponsors saved to sponsors.json`);
-
-  // Show a few examples
-  const sample = output.sponsors.slice(0, 5);
-  console.log('Sample entries:', sample);
+  console.log(`✅ Done — ${sponsors.size} sponsors saved to public sponsors.json`);
+  console.log('Sample:', output.sponsors.slice(0, 3));
 }
 
 run().catch(err => {
