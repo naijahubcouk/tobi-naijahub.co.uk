@@ -1,4 +1,4 @@
-const CACHE_NAME = 'naijahub-tobi-v4';
+const CACHE_NAME = 'naijahub-tobi-v5';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
