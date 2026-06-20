@@ -88,17 +88,31 @@ exports.handler = async (event) => {
       console.log(`"${c}" norm:"${normalise(c)}" strip:"${strip(c)}" match:${sponsors.has(normalise(c)) || strippedSponsors.has(strip(c))}`);
     });
 
+    // Phrases that confirm this specific role actively offers sponsorship
+    const POSITIVE_SPONSOR = [
+      'visa sponsorship', 'sponsorship provided', 'we will sponsor',
+      'certificate of sponsorship', 'skilled worker visa',
+      'sponsorship available', 'able to sponsor', 'can sponsor',
+      'offer sponsorship', 'provide sponsorship', 'happy to sponsor',
+      'sponsor the successful', 'sponsorship will be', 'cos will be',
+      'tier 2', 'skilled worker route'
+    ];
+
     const sponsored = results.filter(job => {
       const company = job.company?.display_name || '';
       if (!company) return false;
+      // Must be a licensed sponsor
       const matched = sponsors.has(normalise(company)) || strippedSponsors.has(strip(company));
       if (!matched) return false;
       // Exclude gig economy / self-employed titles
       const title = (job.title || '').toLowerCase();
       if (EXCLUDED_TITLES.some(t => title.includes(t))) return false;
-      // Exclude jobs that explicitly say they can't sponsor
       const desc = (job.description || '').toLowerCase();
-      return !CANNOT_SPONSOR.some(phrase => desc.includes(phrase));
+      const titleAndDesc = title + ' ' + desc;
+      // Must explicitly mention sponsorship positively
+      if (!POSITIVE_SPONSOR.some(phrase => titleAndDesc.includes(phrase))) return false;
+      // Must not say they cannot sponsor
+      return !CANNOT_SPONSOR.some(phrase => titleAndDesc.includes(phrase));
     }).slice(0, 6);
 
     console.log(`${sponsored.length} jobs matched`);
