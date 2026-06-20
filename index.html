@@ -2146,6 +2146,7 @@ function autoResize(el) {
 
 let userLocation = null;
 let userCity = null;
+window.userCity = null;
 let userCountry = null;
 
 function getTimeGreeting() {
@@ -2175,6 +2176,7 @@ function requestLocation() {
     userLocation = { lat: latitude, lon: longitude };
     const { city, country } = await getCityFromCoords(latitude, longitude);
     userCity = city;
+    window.userCity = city;
     userCountry = country;
 
     if (city) {
@@ -2268,8 +2270,25 @@ async function fetchJobs(category, label) {
   // If location not yet detected, request it and wait briefly
   if (!window.userCity) {
     requestLocation();
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 2500));
   }
+
+  // If still no city, ask user for their location
+  if (!window.userCity) {
+    addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;margin-top:8px;">
+      <div style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:6px;">📍 Where are you based?</div>
+      <div style="font-size:13px;color:#555;margin-bottom:10px;">To find ${label} jobs near you, please share your location or enter your city.</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button onclick="requestLocation();setTimeout(()=>fetchJobs('${category}','${label}'),2500);" style="flex:1;background:#057A44;color:white;border:none;border-radius:6px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📍 Share My Location</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input id="manual-city-input" type="text" placeholder="Or type your city e.g. London" style="flex:1;padding:8px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
+        <button onclick="var c=document.getElementById('manual-city-input').value.trim();if(c){window.userCity=c;userCity=c;fetchJobs('${category}','${label}');}" style="background:#0F1E36;color:white;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Go</button>
+      </div>
+    </div>`);
+    return;
+  }
+
   const city = (window.userCity || '').toLowerCase();
   const locationLabel = window.userCity ? 'near ' + window.userCity : 'across the UK';
   addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">🔍 Finding live ' + label + ' jobs ' + locationLabel + '...</div>');
