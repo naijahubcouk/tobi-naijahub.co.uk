@@ -89,26 +89,10 @@ exports.handler = async (event) => {
       } catch(e) { console.log('Page 2 fetch failed:', e.message); }
     }
 
-    const POSITIVE_SPONSOR = [
-      'visa sponsorship', 'sponsorship provided', 'we will sponsor',
-      'certificate of sponsorship', 'skilled worker visa',
-      'sponsorship available', 'able to sponsor', 'can sponsor',
-      'offer sponsorship', 'provide sponsorship', 'happy to sponsor',
-      'sponsor the successful', 'sponsorship will be', 'cos will be',
-      'tier 2', 'skilled worker route', 'work visa', 'sponsorship package',
-      'immigration sponsorship', 'visa support', 'sponsor your visa',
-      'sponsorship for', 'visa will be', 'relocation and visa'
-    ];
-
     const sponsored = results.filter(job => {
-      // Use Adzuna's own visa_sponsorship field — only include if true/available
-      const visaField = job.visa_sponsorship;
-      if (visaField === false || visaField === 'Not available' || visaField === 'not available') return false;
       const title = (job.title || '').toLowerCase();
       const desc = (job.description || '').toLowerCase();
       const full = title + ' ' + desc;
-      // Must explicitly mention sponsorship positively somewhere
-      if (!POSITIVE_SPONSOR.some(p => full.includes(p))) return false;
       // Must not deny sponsorship
       return !CANNOT_SPONSOR.some(p => full.includes(p));
     }).slice(0, 6);
