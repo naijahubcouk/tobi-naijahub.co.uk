@@ -21,7 +21,15 @@ const CANNOT_SPONSOR = [
   'no sponsorship', 'without sponsorship', 'do not offer sponsorship',
   'does not offer sponsorship', 'not provide sponsorship',
   'must have right to work', 'must already have the right to work',
-  'you must have the right to work', 'applicants must have the right'
+  'you must have the right to work', 'applicants must have the right',
+  'visa sponsorship is not available', 'sponsorship is not available',
+  'not available for this position', 'existing right to work',
+  'must have existing right', 'right to work in the uk is required',
+  'we do not sponsor', 'not in a position to sponsor',
+  'unfortunately we cannot sponsor', 'sponsorship cannot be offered',
+  'skilled worker visa sponsorship is not available',
+  'sponsorship is not available for this post',
+  'visa sponsorship is not available for this'
 ];
 
 exports.handler = async (event) => {
