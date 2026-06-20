@@ -14,7 +14,7 @@ const CATEGORY_MAP = {
   'teaching':           { what: 'teacher',                    category: 'teaching-jobs',            visa: false, fallback: 'teacher+jobs' },
   'driving':            { what: 'driver',                     category: 'logistics-warehouse-jobs', visa: false, fallback: 'driver+jobs' },
   'legal':              { what: 'legal HR',                   category: 'hr-jobs',                  visa: false, fallback: 'legal+HR+jobs' },
-  'visa-sponsored':     { what: 'visa sponsorship available', category: null,                       visa: true,  fallback: 'visa+sponsorship+available' },
+  'visa-sponsored':     { what: 'certificate of sponsorship', category: null,                       visa: true,  fallback: 'certificate+of+sponsorship' },
 };
 
 // Phrases that confirm sponsorship is NOT available — filter these out
