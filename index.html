@@ -2188,7 +2188,10 @@ function buildJobCards(jobs, label, isVisa) {
       <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">${job.title}</div>
       <div style="font-size:12px;color:#555;margin-bottom:3px;">🏢 ${job.company} &nbsp;|&nbsp; 📍 ${job.location}</div>
       <div style="font-size:12px;color:#057A44;font-weight:600;margin-bottom:6px;">💷 ${job.salary}</div>
-      <a href="${job.url}" target="_blank" style="display:inline-block;background:#057A44;color:white;text-decoration:none;font-size:11px;font-weight:700;padding:5px 12px;border-radius:5px;">Apply Now →</a>
+      <div style="display:flex;gap:6px;">
+        <a href="${job.url}" target="_blank" style="flex:1;display:block;background:#057A44;color:white;text-decoration:none;font-size:11px;font-weight:700;padding:5px 12px;border-radius:5px;text-align:center;">Apply Now →</a>
+        <button onclick="(function(){var u='${job.url}',t='${job.title} at ${job.company}';if(navigator.share){navigator.share({title:t,url:u}).catch(function(){});}else{navigator.clipboard.writeText(u);alert('Link copied!');}})()" style="background:#FFB81C;color:#0F1E36;border:none;font-size:11px;font-weight:700;padding:5px 10px;border-radius:5px;cursor:pointer;">📤 Share</button>
+      </div>
     </div>`;
   });
   const sourceNote = isVisa
