@@ -17,6 +17,14 @@ const CATEGORY_MAP = {
   'visa-sponsored':     { what: 'visa sponsorship',   category: null,                       visa: true  },
 };
 
+// Keywords that indicate an employer CANNOT sponsor
+const CANNOT_SPONSOR_KEYWORDS = [
+  'cannot sponsor', 'unable to sponsor', 'no sponsorship', 'not able to sponsor',
+  'do not offer sponsorship', 'does not offer sponsorship', 'sponsorship is not available',
+  'right to work in the uk', 'must have right to work', 'must already have',
+  'no visa', 'without sponsorship', 'not provide sponsorship'
+];
+
 function httpsGet(url) {
   return new Promise((resolve, reject) => {
     https.get(url, (res) => {
@@ -28,6 +36,11 @@ function httpsGet(url) {
       });
     }).on('error', reject);
   });
+}
+
+function canSponsor(job) {
+  const text = ((job.description || '') + ' ' + (job.title || '')).toLowerCase();
+  return !CANNOT_SPONSOR_KEYWORDS.some(kw => text.includes(kw));
 }
 
 exports.handler = async (event) => {
@@ -46,14 +59,26 @@ exports.handler = async (event) => {
     const location = params.location || 'london';
     const config = CATEGORY_MAP[category] || CATEGORY_MAP['care'];
 
-    let url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=6&what=${encodeURIComponent(config.what)}&where=${encodeURIComponent(location)}&content-type=application/json&sort_by=date&max_days_old=30`;
+    // For visa sponsored, fetch more results so we have enough after filtering
+    const resultsToFetch = config.visa ? 20 : 6;
+
+    let url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=${resultsToFetch}&what=${encodeURIComponent(config.what)}&where=${encodeURIComponent(location)}&content-type=application/json&sort_by=date&max_days_old=30`;
 
     if (config.category) {
       url += `&category=${config.category}`;
     }
 
     const data = await httpsGet(url);
-    const jobs = (data.results || []).map(job => ({
+    let results = data.results || [];
+
+    // For visa sponsored — filter out jobs that say they cannot sponsor
+    if (config.visa) {
+      results = results.filter(canSponsor).slice(0, 6);
+    } else {
+      results = results.slice(0, 6);
+    }
+
+    const jobs = results.map(job => ({
       title: job.title,
       company: job.company?.display_name || 'Employer',
       location: job.location?.display_name || location,
