@@ -4,16 +4,17 @@ const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || 'e9267d1e';
 const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || 'bcca8a8ff7d2a97044c4793a004d43f5';
 
 const CATEGORY_MAP = {
-  'nhs':                { what: 'NHS',                category: 'healthcare-nursing-jobs' },
-  'care':               { what: 'care assistant',      category: 'social-work-jobs' },
-  'it':                 { what: 'IT',                  category: 'it-jobs' },
-  'project-management': { what: 'project manager',     category: 'it-jobs' },
-  'graduate':           { what: 'graduate',            category: null },
-  'apprenticeship':     { what: 'apprenticeship',      category: null },
-  'finance':            { what: 'finance accountant',  category: 'accounting-finance-jobs' },
-  'teaching':           { what: 'teacher',             category: 'teaching-jobs' },
-  'driving':            { what: 'driver',              category: 'logistics-warehouse-jobs' },
-  'legal':              { what: 'legal HR',            category: 'hr-jobs' },
+  'nhs':                { what: 'NHS',               category: 'healthcare-nursing-jobs',  visa: false },
+  'care':               { what: 'care assistant',     category: 'social-work-jobs',         visa: false },
+  'it':                 { what: 'IT',                 category: 'it-jobs',                  visa: false },
+  'project-management': { what: 'project manager',    category: 'it-jobs',                  visa: false },
+  'graduate':           { what: 'graduate',           category: null,                       visa: false },
+  'apprenticeship':     { what: 'apprenticeship',     category: null,                       visa: false },
+  'finance':            { what: 'finance accountant', category: 'accounting-finance-jobs',  visa: false },
+  'teaching':           { what: 'teacher',            category: 'teaching-jobs',            visa: false },
+  'driving':            { what: 'driver',             category: 'logistics-warehouse-jobs', visa: false },
+  'legal':              { what: 'legal HR',           category: 'hr-jobs',                  visa: false },
+  'visa-sponsored':     { what: 'visa sponsorship',   category: null,                       visa: true  },
 };
 
 function httpsGet(url) {
@@ -59,15 +60,15 @@ exports.handler = async (event) => {
       salary: job.salary_min
         ? `£${Math.round(job.salary_min / 1000)}k${job.salary_max ? '–£' + Math.round(job.salary_max / 1000) + 'k' : '+'}`
         : 'Salary not specified',
-      description: (job.description || '').substring(0, 120) + '...',
       url: job.redirect_url,
-      posted: job.created ? new Date(job.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''
+      posted: job.created ? new Date(job.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '',
+      visa: config.visa
     }));
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ jobs, total: data.count || 0 })
+      body: JSON.stringify({ jobs, total: data.count || 0, isVisa: config.visa })
     };
 
   } catch (err) {
