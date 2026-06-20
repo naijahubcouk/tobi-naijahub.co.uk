@@ -1,25 +1,13 @@
+// v3
 const https = require('https');
-const fs = require('fs');
-const path = require('path');
 
 const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || 'e9267d1e';
 const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || 'bcca8a8ff7d2a97044c4793a004d43f5';
+const SITE_URL = process.env.URL || 'https://auntietobi.co.uk';
 
-let sponsorSet = null;
-
-function getSponsorSet() {
-  if (sponsorSet) return sponsorSet;
-  try {
-    const filePath = path.join(__dirname, 'sponsors.json');
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    sponsorSet = new Set(data.sponsors);
-    console.log(`Loaded ${sponsorSet.size} sponsors (updated: ${data.updated})`);
-  } catch(e) {
-    console.error('Could not load sponsors.json:', e.message);
-    sponsorSet = new Set();
-  }
-  return sponsorSet;
-}
+let sponsorCache = null;
+let sponsorCacheTime = 0;
+const CACHE_TTL = 6 * 60 * 60 * 1000;
 
 function httpsGet(url) {
   return new Promise((resolve, reject) => {
@@ -31,7 +19,6 @@ function httpsGet(url) {
   });
 }
 
-// Normalise for matching — keep more characters than before
 function normalise(name) {
   return (name || '').toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
@@ -39,12 +26,23 @@ function normalise(name) {
     .trim();
 }
 
-// Stripped version — removes common suffixes for fuzzy matching
 function strip(name) {
   return normalise(name)
     .replace(/\b(ltd|limited|plc|llp|inc|group|uk|the|and|nhs|trust|foundation|council|university|college)\b/g, '')
     .replace(/\s+/g, '')
     .trim();
+}
+
+async function getSponsorSet() {
+  const now = Date.now();
+  if (sponsorCache && (now - sponsorCacheTime) < CACHE_TTL) return sponsorCache;
+
+  const res = await httpsGet(`${SITE_URL}/sponsors.json`);
+  const data = JSON.parse(res.body);
+  sponsorCache = new Set(data.sponsors);
+  sponsorCacheTime = now;
+  console.log(`Loaded ${sponsorCache.size} sponsors from ${SITE_URL}/sponsors.json`);
+  return sponsorCache;
 }
 
 const CANNOT_SPONSOR = [
@@ -66,43 +64,27 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
   try {
-    const sponsors = getSponsorSet();
-    console.log(`Sponsor set size: ${sponsors.size}`);
-
-    if (sponsors.size === 0) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ jobs: [], message: 'Sponsor register is loading — please try again in a moment.' })
-      };
-    }
-
-    // Build stripped version of sponsor set for fuzzy matching
+    const sponsors = await getSponsorSet();
     const strippedSponsors = new Set(Array.from(sponsors).map(s => strip(s)));
+    console.log(`Sponsor set: ${sponsors.size}, stripped: ${strippedSponsors.size}`);
 
     const adzunaRes = await httpsGet(
       `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&content-type=application/json&sort_by=date&max_days_old=7`
     );
 
-    const adzunaData = JSON.parse(adzunaRes.body);
-    const results = adzunaData.results || [];
+    const results = JSON.parse(adzunaRes.body).results || [];
     console.log(`Adzuna returned ${results.length} jobs`);
 
-    // Log first few company names to debug matching
-    results.slice(0, 5).forEach(j => {
-      const company = j.company?.display_name || '';
-      console.log(`Company: "${company}" | norm: "${normalise(company)}" | strip: "${strip(company)}" | match: ${sponsors.has(normalise(company)) || strippedSponsors.has(strip(company))}`);
+    results.slice(0, 3).forEach(j => {
+      const c = j.company?.display_name || '';
+      console.log(`"${c}" norm:"${normalise(c)}" strip:"${strip(c)}" match:${sponsors.has(normalise(c)) || strippedSponsors.has(strip(c))}`);
     });
 
     const sponsored = results.filter(job => {
       const company = job.company?.display_name || '';
       if (!company) return false;
-
-      // Try both exact normalised match and stripped fuzzy match
       const matched = sponsors.has(normalise(company)) || strippedSponsors.has(strip(company));
       if (!matched) return false;
-
-      // Filter out jobs that explicitly say they can't sponsor
       const desc = (job.description || '').toLowerCase();
       return !CANNOT_SPONSOR.some(phrase => desc.includes(phrase));
     }).slice(0, 6);
