@@ -467,85 +467,80 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
   .event-card {
-    background: white;
-    border: 1.5px solid #FFB81C;
-    border-radius: 4px;
+    background: #057A44;
+    border-radius: 8px;
     overflow: hidden;
     margin: 8px 0;
   }
   .event-card-header {
-    background: #057A44;
-    padding: 10px 12px;
+    padding: 5px 14px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    border-bottom: 0.5px solid rgba(255,255,255,0.15);
   }
   .event-card-header-label {
-    color: white;
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
     font-weight: 700;
-    font-size: 15px;
+  }
+  .event-card-emoji {
+    font-size: 0;
+  }
+  .event-card-category {
+    display: none;
+  }
+  .event-card-name {
+    font-weight: 700;
+    font-size: 19px;
+    color: white;
+    margin: 0 0 12px;
+    padding: 0;
     line-height: 1.3;
   }
   .event-card-body {
-    padding: 10px 12px 8px;
-  }
-  .event-card-emoji {
-    font-size: 18px;
-  }
-  .event-card-category {
-    display: inline-block;
-    background: #EAF3DE;
-    color: #3B6D11;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 50px;
-    margin-bottom: 4px;
-  }
-  .event-card-name {
-    font-weight: 500;
-    font-size: 15px;
-    color: #0F1E36;
-    margin: 0 0 2px;
-    padding: 0;
-    line-height: 1.5;
+    padding: 14px;
   }
   .event-card-date {
-    font-size: 14px;
-    color: #555;
-    margin: 0 0 4px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    margin: 0;
     padding: 0;
   }
   .event-card-location {
-    font-size: 14px;
-    color: #444;
-    margin: 0 0 8px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    margin: 0;
     padding: 0;
     line-height: 1.4;
   }
   .event-card-footer {
-    border-top: 1px solid #f0f0f0;
-    padding-top: 8px;
+    padding-top: 14px;
     display: flex;
     align-items: center;
     gap: 8px;
     margin: 0;
   }
   .event-card-btn {
-    display: inline-block;
-    font-size: 14px;
+    flex: 1;
+    display: block;
+    background: white;
     color: #057A44 !important;
     text-decoration: none !important;
+    font-size: 13px;
     font-weight: 700;
-    flex: 1;
+    padding: 9px;
+    border-radius: 6px;
+    text-align: center;
   }
   .event-card-share-btn {
-    background: #057A44;
-    color: white;
+    background: #FFB81C;
+    color: #0F1E36;
     border: none;
-    border-radius: 50px;
-    padding: 8px 16px;
-    font-size: 14px;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     font-family: inherit;
@@ -1825,17 +1820,31 @@ function formatResponse(text) {
       else if (line.startsWith('LINK:')) link = line.substring(5).trim();
     });
     if (!name) return match; // Skip if parsing failed
+
+    // Build date and location info boxes
+    const infoBoxes = (date || location) ? `
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        ${date ? `<div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px 12px;flex:1;text-align:center;">
+          <div style="font-size:10px;color:#FFB81C;font-weight:700;margin-bottom:3px;">📅 DATE</div>
+          <div style="font-size:12px;font-weight:700;color:white;">${date}</div>
+        </div>` : ''}
+        ${location ? `<div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px 12px;flex:1;text-align:center;">
+          <div style="font-size:10px;color:#FFB81C;font-weight:700;margin-bottom:3px;">📍 VENUE</div>
+          <div style="font-size:12px;font-weight:700;color:white;">${location}</div>
+        </div>` : ''}
+      </div>` : '';
+
     return `
       <div class="event-card">
         <div class="event-card-header">
-          <span class="event-card-emoji">${emoji}</span>
-          <span class="event-card-header-label">${name}</span>
+          <span class="event-card-header-label">🎟️ UPCOMING EVENT</span>
+          <span style="font-size:18px;">${emoji}</span>
         </div>
         <div class="event-card-body">
-          ${date ? `<div class="event-card-date">📅 ${date}</div>` : ''}
-          ${location ? `<div class="event-card-location">📍 ${location}</div>` : ''}
+          <div class="event-card-name">${name}</div>
+          ${infoBoxes}
           <div class="event-card-footer">
-            ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 Details</a>` : '<span style="flex:1"></span>'}
+            ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 View Details</a>` : '<span style="flex:1"></span>'}
             <button class="event-card-share-btn" onclick="tobiShare('${name}','${name}','${link}')">📤 Share</button>
           </div>
         </div>
