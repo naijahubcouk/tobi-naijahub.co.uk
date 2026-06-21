@@ -2569,43 +2569,36 @@ function showDailyMotivation() {
 function showSponsoredAd() {
   const ads = [
     {
-      style: 'navy',
       html: `<div style="background:#0F1E36;border-radius:8px;overflow:hidden;">
         <div style="padding:5px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid rgba(255,255,255,0.1);">
           <span style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.5px;">SPONSORED</span>
           <span style="font-size:10px;color:rgba(255,255,255,0.4);">📚 Book Recommendation</span>
         </div>
-        <div style="display:flex;gap:14px;padding:14px;">
-          <img src="https://naijabiz.b-cdn.net/service-the-vehicle-to-gr-selar.co-67350afac3b99.jpg" alt="Service: The Vehicle To Greatness" style="flex-shrink:0;width:80px;height:110px;object-fit:cover;border-radius:4px;">
-          <div style="flex:1;">
-            <div style="font-size:14px;font-weight:700;color:white;line-height:1.3;margin-bottom:4px;">Service: The Vehicle To Greatness</div>
-            <div style="font-size:11px;color:#C9A227;margin-bottom:8px;font-weight:600;">Rebuilding the Family System</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:12px;">🏡 Build a stronger family God's way. Service, faith & family habits that shape children into Kingdom builders.</div>
-            <a href="https://selar.com/7w755i" target="_blank" style="display:inline-block;background:#C9A227;color:#0F1E36;text-decoration:none;font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px;">📖 Get the Book →</a>
-          </div>
+        <div style="padding:14px;text-align:center;">
+          <img src="https://naijabiz.b-cdn.net/service-the-vehicle-to-gr-selar.co-67350afac3b99.jpg" alt="Service: The Vehicle To Greatness" style="width:100px;height:140px;object-fit:cover;border-radius:6px;margin:0 auto 12px;display:block;">
+          <div style="font-size:15px;font-weight:700;color:white;line-height:1.3;margin-bottom:4px;">Service: The Vehicle To Greatness</div>
+          <div style="font-size:12px;color:#C9A227;margin-bottom:8px;font-weight:600;">Rebuilding the Family System</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:14px;">🏡 Build a stronger family God's way. Service, faith & family habits that shape children into Kingdom builders.</div>
+          <a href="https://selar.com/7w755i" target="_blank" style="display:inline-block;background:#C9A227;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">📖 Get the Book →</a>
         </div>
       </div>`
     },
     {
-      style: 'pink',
       html: `<div style="background:#FFF0F3;border:1.5px solid #F4A0B0;border-radius:8px;overflow:hidden;">
         <div style="padding:4px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid #F4A0B0;">
           <span style="font-size:10px;color:#C06080;font-weight:500;letter-spacing:0.5px;">SPONSORED</span>
           <span style="background:#F4A0B0;color:#7A2040;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">📚 Book Recommendation</span>
         </div>
-        <div style="display:flex;gap:12px;padding:12px;">
-          <img src="https://naijabiz.b-cdn.net/Untitled%20design%20(3)%20(1).png" alt="Bloomly - First Period Guide" style="flex-shrink:0;width:80px;height:110px;object-fit:cover;border-radius:6px;">
-          <div style="flex:1;">
-            <div style="font-size:14px;font-weight:700;color:#7A2040;line-height:1.3;margin-bottom:5px;">Do you have a daughter aged 8–13? 👧🏾</div>
-            <div style="font-size:12px;color:#444;line-height:1.6;margin-bottom:8px;">Her first period may be closer than you think. Help her feel <strong>ready and confident</strong> with age-appropriate guidance for Nigerian parents. 🩷</div>
-            <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" style="display:inline-block;background:#D4506A;color:white;text-decoration:none;font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px;">🩷 Get the Bundle →</a>
-          </div>
+        <div style="padding:14px;text-align:center;">
+          <img src="https://naijabiz.b-cdn.net/Untitled%20design%20(3)%20(1).png" alt="Bloomly First Period Guide" style="width:100px;height:140px;object-fit:cover;border-radius:6px;margin:0 auto 12px;display:block;">
+          <div style="font-size:15px;font-weight:700;color:#7A2040;line-height:1.3;margin-bottom:6px;">Do you have a daughter aged 8–13? 👧🏾</div>
+          <div style="font-size:12px;color:#444;line-height:1.6;margin-bottom:14px;">Her first period may be closer than you think. Help her feel <strong>ready and confident</strong> with age-appropriate guidance for Nigerian parents. 🩷</div>
+          <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" style="display:inline-block;background:#D4506A;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">🩷 Get the Bundle →</a>
         </div>
       </div>`
     }
   ];
 
-  // Rotate randomly on every refresh
   const ad = ads[Math.floor(Math.random() * ads.length)];
   addTipMessage(ad.html);
 }
@@ -2701,18 +2694,7 @@ function buildTipCard(tip, suggestionStr) {
         </div>
       </div>
     </div>
-    <div style="background:#FBEAF0;border:1.5px solid #F4C0D1;border-radius:14px;padding:14px;margin-top:8px;overflow:hidden;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#993556;text-transform:uppercase;margin-bottom:8px;">🩷 Sponsored</div>
-      <div style="font-size:17px;font-weight:800;color:#4B1528;line-height:1.3;margin-bottom:6px;">Do you have a daughter aged 8–13? 👧🏾</div>
-      <div style="font-size:13px;font-weight:600;color:#993556;margin-bottom:10px;">Her first period may be closer than you think… Help her feel ready and confident.</div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;">
-        <div style="font-size:12px;color:#4B1528;font-weight:500;">✨ First Period Guide + Instant Digital Bundle</div>
-        <div style="font-size:12px;color:#4B1528;font-weight:500;">✨ Simple guidance for Nigerian parents</div>
-        <div style="font-size:12px;color:#4B1528;font-weight:500;">✨ Age-appropriate support for girls</div>
-      </div>
-      <div style="font-size:12px;font-style:italic;color:#993556;margin-bottom:10px;">Start the conversation the right way.</div>
-      <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" style="display:block;background:#D4537E;color:white;text-decoration:none;font-size:14px;font-weight:700;padding:10px 16px;border-radius:50px;text-align:center;">👉 Get It Now →</a>
-    </div>`;
+`;
 
   // Build suggestions HTML separately
   const suggestions = suggestionStr.split('|').map(s => s.trim()).filter(Boolean);
