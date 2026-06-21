@@ -86,8 +86,12 @@ exports.handler = async (event) => {
 
     const resultsToFetch = config.visa ? 30 : 10;
 
+    const distance = params.distance || '';
     let url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=${resultsToFetch}&what=${encodeURIComponent(config.what)}&content-type=application/json&sort_by=date&max_days_old=30`;
-    if (location) url += `&where=${encodeURIComponent(location)}`;
+    if (location) {
+      url += `&where=${encodeURIComponent(location)}`;
+      if (distance) url += `&distance_from_location=${distance}`;
+    }
 
     if (config.category) {
       url += `&category=${config.category}`;
