@@ -2285,30 +2285,31 @@ async function fetchJobs(category, label) {
   const chatBox = document.getElementById('messages');
   const loadingDiv = chatBox.lastElementChild;
   try {
-    // Try with increasing radius until jobs found
-    const radii = city ? [10, 30, 100, 0] : [0]; // 0 = UK-wide
-    let jobs = null;
-    let usedRadius = 0;
-
-    for (const radius of radii) {
-      const locationParam = city ? `&location=${encodeURIComponent(city)}&distance=${radius}` : '';
-      const r = await fetch(`/.netlify/functions/jobs?category=${category}${locationParam}`);
-      const d = await r.json();
-      if (d.jobs && d.jobs.length > 0) {
-        jobs = d.jobs;
-        usedRadius = radius;
-        break;
-      }
-    }
+    // Search with city (50 mile radius) — fall back to UK-wide if empty
+    const locationParam = city ? `&location=${encodeURIComponent(city)}&distance=50` : '';
+    const res = await fetch(`/.netlify/functions/jobs?category=${category}${locationParam}`);
+    const data = await res.json();
 
     if (loadingDiv) loadingDiv.remove();
 
-    if (jobs && jobs.length > 0) {
-      const radiusLabel = !city ? ' (UK Wide)' : usedRadius <= 10 ? '' : usedRadius <= 30 ? ' (within 30 miles)' : usedRadius <= 100 ? ' (within 100 miles)' : ' (UK Wide)';
-      addTipMessage(buildJobCards(jobs, label + radiusLabel, false));
+    if (data.jobs && data.jobs.length > 0) {
+      const lbl = city ? label + ' near ' + window.userCity : label + ' (UK Wide)';
+      addTipMessage(buildJobCards(data.jobs, lbl, false));
+    } else if (city) {
+      // No results near city — try UK-wide
+      addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">Expanding search across the UK...</div>');
+      const chatBox2 = document.getElementById('messages');
+      const ld2 = chatBox2.lastElementChild;
+      const res2 = await fetch(`/.netlify/functions/jobs?category=${category}`);
+      const data2 = await res2.json();
+      if (ld2) ld2.remove();
+      if (data2.jobs && data2.jobs.length > 0) {
+        addTipMessage(buildJobCards(data2.jobs, label + ' (UK Wide)', false));
+      } else {
+        addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(category)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`);
+      }
     } else {
-      const fallbackTerm = category || 'jobs';
-      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(fallbackTerm)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`);
+      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(category)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`);
     }
   } catch(e) {
     if (loadingDiv) loadingDiv.remove();
