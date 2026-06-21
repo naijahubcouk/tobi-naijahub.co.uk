@@ -2177,8 +2177,13 @@ function requestLocation() {
     const { latitude, longitude } = pos.coords;
     userLocation = { lat: latitude, lon: longitude };
     const { city, country } = await getCityFromCoords(latitude, longitude);
-    userCity = city;
-    window.userCity = city;
+    // Clean city name for better Adzuna matching
+    const cleanCity = city
+      .replace(/^(London Borough of|Royal Borough of|City of|Metropolitan Borough of|County of)\s+/i, '')
+      .replace(/\s+(Borough|District|County|City|Council)$/i, '')
+      .trim();
+    userCity = cleanCity;
+    window.userCity = cleanCity;
     userCountry = country;
 
     if (city) {
@@ -2280,22 +2285,30 @@ async function fetchJobs(category, label) {
   const chatBox = document.getElementById('messages');
   const loadingDiv = chatBox.lastElementChild;
   try {
-    const locationParam = city ? `&location=${encodeURIComponent(city)}` : '';
-    const res = await fetch(`/.netlify/functions/jobs?category=${category}${locationParam}`);
-    const data = await res.json();
+    // Try with increasing radius until jobs found
+    const radii = city ? [10, 30, 100, 0] : [0]; // 0 = UK-wide
+    let jobs = null;
+    let usedRadius = 0;
+
+    for (const radius of radii) {
+      const locationParam = city ? `&location=${encodeURIComponent(city)}&distance=${radius}` : '';
+      const r = await fetch(`/.netlify/functions/jobs?category=${category}${locationParam}`);
+      const d = await r.json();
+      if (d.jobs && d.jobs.length > 0) {
+        jobs = d.jobs;
+        usedRadius = radius;
+        break;
+      }
+    }
+
     if (loadingDiv) loadingDiv.remove();
-    if (data.jobs && data.jobs.length > 0) {
-      addTipMessage(buildJobCards(data.jobs, label, false));
+
+    if (jobs && jobs.length > 0) {
+      const radiusLabel = !city ? ' (UK Wide)' : usedRadius <= 10 ? '' : usedRadius <= 30 ? ' (within 30 miles)' : usedRadius <= 100 ? ' (within 100 miles)' : ' (UK Wide)';
+      addTipMessage(buildJobCards(jobs, label + radiusLabel, false));
     } else {
-      const fallbackTerm = (data && data.fallback) ? data.fallback : 'jobs';
-      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found ${window.userCity ? 'near ' + window.userCity : 'right now'}. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(fallbackTerm)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>
-      <div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:10px;margin-top:6px;">
-        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:6px;">📍 Search jobs in a specific city?</div>
-        <div style="display:flex;gap:8px;">
-          <input id="manual-city-input" type="text" placeholder="Enter your city e.g. Birmingham" style="flex:1;padding:8px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
-          <button onclick="var c=document.getElementById('manual-city-input').value.trim();if(c){window.userCity=c;userCity=c;fetchJobs('${category}','${label}');}" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Go</button>
-        </div>
-      </div>`);
+      const fallbackTerm = category || 'jobs';
+      addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(fallbackTerm)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`);
     }
   } catch(e) {
     if (loadingDiv) loadingDiv.remove();
