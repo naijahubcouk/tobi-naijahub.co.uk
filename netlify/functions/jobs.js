@@ -18,12 +18,15 @@ const CATEGORY_MAP = {
 
 function httpsGet(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
+    const options = {
+      headers: { 'Accept': 'application/json' }
+    };
+    https.get(url, options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('Invalid JSON from Adzuna')); }
+        catch(e) { reject(new Error(`Invalid JSON from Adzuna: ${data.substring(0, 100)}`)); }
       });
     }).on('error', reject);
   });
@@ -46,13 +49,28 @@ exports.handler = async (event) => {
     const distance = params.distance || '20';
     const config = CATEGORY_MAP[category] || CATEGORY_MAP['care'];
 
-    let url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=6&what=${encodeURIComponent(config.what)}&content-type=application/json&sort_by=date&max_days_old=30`;
+    // Build URL using URLSearchParams to avoid encoding issues
+    const qs = new URLSearchParams({
+      app_id: ADZUNA_APP_ID,
+      app_key: ADZUNA_APP_KEY,
+      results_per_page: '6',
+      what: config.what,
+      sort_by: 'date',
+      max_days_old: '30'
+    });
 
-    if (location) url += `&where=${encodeURIComponent(location)}&radius=${distance}`;
-    if (config.category) url += `&category=${config.category}`;
+    if (location) {
+      qs.set('where', location);
+      qs.set('radius', distance);
+    }
+    if (config.category) qs.set('category', config.category);
+
+    const url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?${qs.toString()}`;
+    console.log('Adzuna URL:', url);
 
     const data = await httpsGet(url);
     const results = data.results || [];
+    console.log(`Adzuna returned ${results.length} jobs, count: ${data.count}`);
 
     const jobs = results.map(job => ({
       title: job.title,
@@ -72,6 +90,7 @@ exports.handler = async (event) => {
     };
 
   } catch (err) {
+    console.error('jobs error:', err.message);
     return {
       statusCode: 500,
       headers,
