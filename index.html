@@ -983,6 +983,9 @@
       <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
   </div>
+  <div style="text-align:center;padding:6px 0 2px;">
+    <button onclick="showAboutTobi()" style="background:none;border:0.5px solid #057A44;border-radius:20px;padding:5px 14px;font-size:12px;color:#057A44;cursor:pointer;font-family:inherit;">👋 About Auntie Tobi</button>
+  </div>
 </div>
 
 <script>
@@ -2437,6 +2440,48 @@ function showNewsCard() {
 
   addTipMessage(newsHtml);
 }
+function showAboutTobi() {
+  const greeting = (() => {
+    const h = new Date().getHours();
+    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  })();
+
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="padding:12px 14px;border-bottom:0.5px solid #f0f0f0;">
+      <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:2px;">${greeting}! Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾</div>
+      <div style="font-size:13px;color:#555;">I'm <strong>Auntie Tobi</strong> 🤖✨ — your Oversabi AI Auntie for Nigerians in the UK 🇳🇬🇬🇧</div>
+      <div style="font-size:12px;color:#888;margin-top:4px;font-style:italic;">Information is power… just ask me anything.</div>
+    </div>
+    <div style="padding:10px 14px;">
+      <div style="background:#f8faf5;border-radius:6px;padding:10px;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#057A44;margin-bottom:5px;">💡 What I can help you with:</div>
+        <div style="font-size:12px;color:#333;line-height:2;">
+          🏢 Find trusted Nigerian businesses near you<br>
+          🎉 Discover events & community activities<br>
+          🇬🇧 Understand UK life (NHS, housing, schools)<br>
+          💼 Jobs, CV writing & interview tips<br>
+          🚗 Driving Theory Test preparation<br>
+          📋 Life in the UK Test help<br>
+          🛂 Visa & immigration guidance<br>
+          🔍 Find services or anything you need
+        </div>
+      </div>
+      <div style="background:#fff8f0;border-radius:6px;padding:10px;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#854F0B;margin-bottom:4px;">✨ Why I exist:</div>
+        <div style="font-size:12px;color:#333;line-height:1.6;">UK life can feel confusing — nobody should figure it out alone. I'm here to guide you, support you, and point you in the right direction 🤝</div>
+      </div>
+      <div style="background:#f0f4ff;border-radius:6px;padding:10px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:#0C447C;margin-bottom:4px;">📱 Best way to use me:</div>
+        <div style="font-size:12px;color:#333;line-height:1.9;">📱 Android — open in Chrome<br>🍏 iPhone — open in Safari<br>Add/Install me to your home screen. No App Store. No stress. 📲</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:#057A44;text-align:center;margin-bottom:8px;">So… wetin you need today? 😄</div>
+      <div style="border-top:0.5px solid #f0f0f0;padding-top:8px;font-size:11px;color:#9CA3AF;text-align:center;">📢 Own a business? <a href="https://naijahub.co.uk/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Add your listing on naijahub.co.uk/new-listing</a></div>
+    </div>
+  </div>`;
+
+  addTipMessage(html);
+}
+
 function showNaijaFoodFestivalCard() {
   const eventHtml = `<div id="naija-food-fest-card" style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
     <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
@@ -2755,20 +2800,33 @@ Ready to continue your practice? 🚀
   } else {
     // First ever visit — show welcome message
     const greeting = getTimeGreeting();
-    const welcome = `${greeting}! Ẹ káàbọ̀! • Nnọọ! • Sannu! 👋🏾 
-I'm **Auntie Tobi** — The Oversabi AI Auntie who actually helps! 😄
+    const welcome = `${greeting}! Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾
+I'm **Auntie Tobi** 🤖✨ — your Oversabi AI Auntie built for Nigerians living in the UK 🇳🇬🇬🇧
 
-Whether you just japa'd or you've been here for years, Auntie Tobi has got you covered! Ask me anything:
+I'm here to make UK life simpler, faster, and less stressful — whether you just arrived or you've been here for years.
 
-🏢 Find Nigerian businesses near you
-🎉 Discover upcoming events
-🇬🇧 Navigate life in the UK — NHS, housing and more
-💼 Find jobs, improve your CV, and get interview tips
-🚗 Prepare for your Driving Theory Test
-📋 Prepare for your Life in UK Test
-🔍 Can't find a business? Request one!
+*Information is power… just ask me anything.*
 
-**Wetin you need today?** 😄
+💡 **What I can help you with:**
+🏢 Find trusted Nigerian businesses near you
+🎉 Discover events & community activities
+🇬🇧 Understand UK life (NHS, housing, schools, settling in)
+💼 Jobs, CV writing & interview tips
+🚗 Driving Theory Test preparation
+📋 Life in the UK Test help
+🛂 Visa & immigration guidance (simple explanations)
+🔍 Find services, answers, or anything you're looking for
+
+✨ **Why I exist:**
+UK life can feel confusing sometimes — and nobody should have to figure it out alone.
+I'm here to guide you, support you, and point you in the right direction whenever you need help 🤝
+
+📱 **Best way to use me:**
+📱 Android users — open in Chrome
+🍏 iPhone users — open in Safari
+Add/Install me to your home screen. No App Store. No stress. 📲
+
+**So… wetin you need today?** 😄
 
 📢 Own a business? Add your listing on 👉 [naijahub.co.uk/new-listing](https://naijahub.co.uk/new-listing)
 
