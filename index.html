@@ -2178,10 +2178,17 @@ function requestLocation() {
     userLocation = { lat: latitude, lon: longitude };
     const { city, country } = await getCityFromCoords(latitude, longitude);
     // Clean city name for better Adzuna matching
-    const cleanCity = city
+    // Extract just the first word(s) before " and " for council names like "Basingstoke and Deane"
+    let cleanCity = city
       .replace(/^(London Borough of|Royal Borough of|City of|Metropolitan Borough of|County of)\s+/i, '')
-      .replace(/\s+(Borough|District|County|City|Council)$/i, '')
+      .replace(/\s+and\s+(Deane|Dean|District|Borough|Vale|Shire|Moors|Wolds|Forest|Villages|Villages|Downs)\s*$/i, '')
+      .replace(/\s+(Borough|District|County|Council|Metropolitan|Unitary)\s*$/i, '')
       .trim();
+    // If still contains " and " it's likely a council name — take the first part
+    if (cleanCity.toLowerCase().includes(' and ')) {
+      cleanCity = cleanCity.split(/\s+and\s+/i)[0].trim();
+    }
+    console.log('Raw city:', city, '→ Clean:', cleanCity);
     userCity = cleanCity;
     window.userCity = cleanCity;
     userCountry = country;
