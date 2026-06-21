@@ -2509,6 +2509,31 @@ function tobiShare(title, text, url) {
   }
 }
 
+
+function showFathersVideo() {
+  // Only show on first visit today (21 June 2026) — never shows after midnight
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // Only show on Father's Day (21 June 2026)
+  if (todayStr !== '2026-06-21') return;
+
+  // Only show once per session/first visit
+  if (localStorage.getItem('tobi_fathers_video_shown') === '1') return;
+  localStorage.setItem('tobi_fathers_video_shown', '1');
+
+  const html = `<div style="border-radius:8px;overflow:hidden;margin:4px 0;">
+    <video
+      src="https://naijabiz.b-cdn.net/lv_0_20260621170339.mp4"
+      controls
+      preload="none"
+      playsinline
+      style="width:100%;display:block;border-radius:8px;background:#000;"
+    ></video>
+  </div>`;
+
+  addTipMessage(html);
+}
 function showDailyMotivation() {
   // Store today's message so same message shows all day
   const todayStr = new Date().toISOString().split('T')[0];
@@ -3048,6 +3073,7 @@ function resetToWelcome() {
   setTimeout(() => {
     console.log('setTimeout fired - building tip card');
     try {
+      showFathersVideo();
       showDailyMotivation();
       showNaijaFoodFestivalCard();
       showNewsCard();
