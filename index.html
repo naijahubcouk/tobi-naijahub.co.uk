@@ -2500,7 +2500,7 @@ function showAboutTobi() {
 function tobiShare(title, text, url) {
   const shareText = text + '\n' + url + '\n\nvia Auntie Tobi | auntietobi.co.uk';
   if (navigator.share) {
-    navigator.share({ title: title, text: shareText, url: url }).catch(function() {
+    navigator.share({ title: title, text: shareText }).catch(function() {
       navigator.clipboard.writeText(shareText).then(function() { alert('Link copied!'); });
     });
   } else {
