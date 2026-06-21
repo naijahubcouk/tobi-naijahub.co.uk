@@ -984,7 +984,7 @@
     </button>
   </div>
   <div style="text-align:center;padding:6px 0 2px;">
-    <button onclick="showAboutTobi()" style="background:none;border:0.5px solid #057A44;border-radius:20px;padding:5px 14px;font-size:12px;color:#057A44;cursor:pointer;font-family:inherit;">👋 About Auntie Tobi</button>
+    <button onclick="clearExamState();setTimeout(showAboutTobi,100);" style="background:none;border:0.5px solid #057A44;border-radius:20px;padding:5px 14px;font-size:12px;color:#057A44;cursor:pointer;font-family:inherit;">👋 About Auntie Tobi</button>
   </div>
 </div>
 
@@ -2446,40 +2446,52 @@ function showAboutTobi() {
     return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   })();
 
+  const suggStr = getRandomSuggestionStr();
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-    <div style="padding:12px 14px;border-bottom:0.5px solid #f0f0f0;">
-      <div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:3px;">${greeting}! Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾</div>
-      <div style="font-size:14px;color:#333;margin-bottom:6px;">I'm <strong>Auntie Tobi</strong> 🤖✨ your Oversabi AI Auntie for Nigerians living in the UK 🇳🇬🇬🇧</div>
-      <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:5px;">Think of me as that smart, no-nonsense, always-available auntie who already knows the answers to "how UK works" and explains it in a way that actually makes sense 😄</div>
-      <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:6px;">Whether you've just arrived (japa'd) or you've been here for years, I'm here to help you settle, survive, and thrive in the UK with less stress and more clarity.</div>
-      <div style="font-size:13px;color:#057A44;font-weight:600;">💡 Information is power… just ask me anything.</div>
+    <div style="padding:16px;border-bottom:1px solid #f0f0f0;">
+      <div style="font-size:18px;font-weight:700;color:#0F1E36;margin-bottom:6px;">${greeting}! Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾</div>
+      <div style="font-size:15px;font-weight:700;color:#057A44;margin-bottom:10px;">I'm Auntie Tobi 🤖✨ your Oversabi AI Auntie for Nigerians living in the UK 🇳🇬🇬🇧</div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:8px;">Think of me as that smart, no-nonsense, always-available auntie who already knows the answers to <strong>"how UK works"</strong> and explains it in a way that actually makes sense 😄</div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">Whether you've just arrived <strong>(japa'd)</strong> or you've been here for years, I'm here to help you <strong>settle, survive, and thrive</strong> in the UK with less stress and more clarity.</div>
+      <div style="font-size:14px;font-weight:700;color:#057A44;">💡 Information is power… just ask me anything.</div>
     </div>
-    <div style="padding:10px 14px;">
-      <div style="background:#f8faf5;border-radius:6px;padding:10px;margin-bottom:8px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:6px;">💡 What I can help you with:</div>
-        <div style="font-size:13px;color:#333;line-height:2.1;">
-          🏢 Find trusted Nigerian businesses near you — food spots, salons, services & more<br>
-          🎉 Discover events, parties, cultural meetups & community activities<br>
-          🇬🇧 Understand UK life — NHS, GP visits, housing, bills, schools & council systems<br>
-          💼 Jobs & career support — CV writing, job search, interview prep & UK workplace guidance<br>
-          🚗 Driving support — Driving Theory Test practice & UK driving rules<br>
-          📋 Life in the UK Test — simplified explanations to help you pass confidently<br>
-          🛂 Visa & immigration basics — clear guidance to understand your options<br>
-          🔍 Find anything you're looking for — services, info, or local help in your area
+    <div style="padding:14px 16px;">
+      <div style="background:#f8faf5;border-radius:8px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:700;color:#057A44;margin-bottom:8px;">💡 What I can help you with:</div>
+        <div style="font-size:13px;color:#333;line-height:2.2;">
+          🏢 <strong>Nigerian businesses</strong> — food spots, salons, services & more<br>
+          🎉 <strong>Events</strong> — parties, cultural meetups & community activities<br>
+          🇬🇧 <strong>UK life</strong> — NHS, GP visits, housing, bills, schools & council<br>
+          💼 <strong>Jobs & career</strong> — CV writing, job search & interview prep<br>
+          🚗 <strong>Driving</strong> — Theory Test practice & UK driving rules<br>
+          📋 <strong>Life in the UK Test</strong> — simplified to help you pass<br>
+          🛂 <strong>Visa & immigration</strong> — clear guidance on your options<br>
+          🔍 <strong>Anything</strong> — services, info, or local help in your area
         </div>
       </div>
-      <div style="background:#fff8f0;border-radius:6px;padding:10px;margin-bottom:8px;">
-        <div style="font-size:13px;font-weight:700;color:#854F0B;margin-bottom:5px;">✨ Why I exist:</div>
-        <div style="font-size:13px;color:#333;line-height:1.7;">UK life can feel overwhelming at first — different systems, rules, language, and expectations. You shouldn't have to figure it out alone or feel confused about where to start.<br><br>I'm here to:<br>✔ Break things down simply<br>✔ Point you in the right direction<br>✔ Save you time and stress<br>✔ Help you make confident decisions in everyday UK life 🤝</div>
+      <div style="background:#fff8f0;border-radius:8px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:700;color:#854F0B;margin-bottom:6px;">✨ Why I exist:</div>
+        <div style="font-size:13px;color:#333;line-height:1.9;">UK life can feel overwhelming at first — different systems, rules, language, and expectations. You shouldn't have to figure it out alone.<br><br>
+        I'm here to:<br>
+        ✔ <strong>Break things down</strong> simply<br>
+        ✔ <strong>Point you</strong> in the right direction<br>
+        ✔ <strong>Save you</strong> time and stress<br>
+        ✔ Help you make <strong>confident decisions</strong> in everyday UK life 🤝</div>
       </div>
-      <div style="background:#f0f4ff;border-radius:6px;padding:10px;margin-bottom:10px;">
-        <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:5px;">📱 Best way to use me:</div>
-        <div style="font-size:13px;color:#333;line-height:2;">📱 Android users — open in Chrome<br>🍏 iPhone users — open in Safari<br>Then <strong>Add / Install to Home Screen</strong> for quick, app-like access anytime 📲<br><em>No App Store. No Google Play. No stress. Just open and go.</em></div>
+      <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:700;color:#0C447C;margin-bottom:6px;">📱 Best way to use me:</div>
+        <div style="font-size:13px;color:#333;line-height:2.1;">
+          📱 <strong>Android</strong> — open in Chrome<br>
+          🍏 <strong>iPhone</strong> — open in Safari<br>
+          Then <strong>Add / Install to Home Screen</strong> 📲<br>
+          <em style="color:#888;">No App Store. No Google Play. No stress. Just open and go.</em>
+        </div>
       </div>
-      <div style="font-size:15px;font-weight:700;color:#057A44;text-align:center;margin-bottom:8px;">So… wetin you need today? 😄</div>
-      <div style="border-top:0.5px solid #f0f0f0;padding-top:8px;font-size:12px;color:#9CA3AF;text-align:center;">📢 Own a business? <a href="https://naijahub.co.uk/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Add your listing 👉 naijahub.co.uk/new-listing</a></div>
+      <div style="font-size:16px;font-weight:700;color:#057A44;text-align:center;margin-bottom:10px;">So… wetin you need today? 😄</div>
+      <div style="border-top:1px solid #f0f0f0;padding-top:10px;font-size:12px;color:#9CA3AF;text-align:center;margin-bottom:8px;">📢 Own a business? <a href="https://naijahub.co.uk/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Add your listing 👉 naijahub.co.uk/new-listing</a></div>
     </div>
-  </div>`;
+  </div>
+  [SUGGESTIONS: ${suggStr}]`;
 
   addTipMessage(html);
 }
