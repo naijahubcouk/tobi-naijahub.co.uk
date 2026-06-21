@@ -467,56 +467,59 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
   .event-card {
-    background: #057A44;
+    background: #0F1E36;
     border-radius: 8px;
     overflow: hidden;
     margin: 8px 0;
   }
   .event-card-header {
-    padding: 5px 14px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 0.5px solid rgba(255,255,255,0.15);
+  }
+  .event-card-gold-stripe {
+    background: #FFB81C;
+    width: 6px;
+    flex-shrink: 0;
   }
   .event-card-header-label {
     font-size: 10px;
-    color: rgba(255,255,255,0.5);
+    color: #FFB81C;
     letter-spacing: 1px;
     font-weight: 700;
+    margin-bottom: 6px;
+    display: block;
   }
   .event-card-emoji {
-    font-size: 0;
+    display: none;
   }
   .event-card-category {
     display: none;
   }
   .event-card-name {
     font-weight: 700;
-    font-size: 19px;
+    font-size: 18px;
     color: white;
-    margin: 0 0 12px;
+    margin: 0 0 10px;
     padding: 0;
     line-height: 1.3;
   }
   .event-card-body {
     padding: 14px;
+    flex: 1;
   }
   .event-card-date {
     font-size: 13px;
-    color: rgba(255,255,255,0.75);
-    margin: 0;
+    color: rgba(255,255,255,0.7);
+    margin: 0 0 3px;
     padding: 0;
   }
   .event-card-location {
     font-size: 13px;
-    color: rgba(255,255,255,0.75);
-    margin: 0;
+    color: rgba(255,255,255,0.7);
+    margin: 0 0 14px;
     padding: 0;
     line-height: 1.4;
   }
   .event-card-footer {
-    padding-top: 14px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -525,8 +528,8 @@
   .event-card-btn {
     flex: 1;
     display: block;
-    background: white;
-    color: #057A44 !important;
+    background: #FFB81C;
+    color: #0F1E36 !important;
     text-decoration: none !important;
     font-size: 13px;
     font-weight: 700;
@@ -535,9 +538,9 @@
     text-align: center;
   }
   .event-card-share-btn {
-    background: #FFB81C;
-    color: #0F1E36;
-    border: none;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 0.5px solid rgba(255,255,255,0.3);
     border-radius: 6px;
     padding: 9px 16px;
     font-size: 13px;
@@ -1820,32 +1823,19 @@ function formatResponse(text) {
       else if (line.startsWith('LINK:')) link = line.substring(5).trim();
     });
     if (!name) return match; // Skip if parsing failed
-
-    // Build date and location info boxes
-    const infoBoxes = (date || location) ? `
-      <div style="display:flex;gap:10px;margin-bottom:14px;">
-        ${date ? `<div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px 12px;flex:1;text-align:center;">
-          <div style="font-size:10px;color:#FFB81C;font-weight:700;margin-bottom:3px;">📅 DATE</div>
-          <div style="font-size:12px;font-weight:700;color:white;">${date}</div>
-        </div>` : ''}
-        ${location ? `<div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px 12px;flex:1;text-align:center;">
-          <div style="font-size:10px;color:#FFB81C;font-weight:700;margin-bottom:3px;">📍 VENUE</div>
-          <div style="font-size:12px;font-weight:700;color:white;">${location}</div>
-        </div>` : ''}
-      </div>` : '';
-
     return `
       <div class="event-card">
         <div class="event-card-header">
-          <span class="event-card-header-label">🎟️ UPCOMING EVENT</span>
-          <span style="font-size:18px;">${emoji}</span>
-        </div>
-        <div class="event-card-body">
-          <div class="event-card-name">${name}</div>
-          ${infoBoxes}
-          <div class="event-card-footer">
-            ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 View Details</a>` : '<span style="flex:1"></span>'}
-            <button class="event-card-share-btn" onclick="tobiShare('${name}','${name}','${link}')">📤 Share</button>
+          <div class="event-card-gold-stripe"></div>
+          <div class="event-card-body">
+            <span class="event-card-header-label">🎟️ UPCOMING EVENT</span>
+            <div class="event-card-name">${name}</div>
+            ${date ? `<div class="event-card-date">📅 ${date}</div>` : ''}
+            ${location ? `<div class="event-card-location">📍 ${location}</div>` : ''}
+            <div class="event-card-footer">
+              ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 View Details</a>` : '<span style="flex:1"></span>'}
+              <button class="event-card-share-btn" onclick="tobiShare('${name}','${name}','${link}')">📤 Share</button>
+            </div>
           </div>
         </div>
       </div>`;
