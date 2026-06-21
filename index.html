@@ -2579,21 +2579,25 @@ function showSponsoredAd() {
           <div style="font-size:15px;font-weight:700;color:white;line-height:1.3;margin-bottom:4px;">Service: The Vehicle To Greatness</div>
           <div style="font-size:12px;color:#C9A227;margin-bottom:8px;font-weight:600;">Rebuilding the Family System</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:14px;">🏡 Build a stronger family God's way. Service, faith & family habits that shape children into Kingdom builders.</div>
-          <a href="https://selar.com/7w755i" target="_blank" style="display:inline-block;background:#C9A227;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">📖 Get the Book →</a>
+          <a href="https://selar.com/7w755i" target="_blank" style="display:inline-block;background:#C9A227;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">📖 Get the Book (£2.84) →</a>
         </div>
       </div>`
     },
     {
-      html: `<div style="background:#FFF0F3;border:1.5px solid #F4A0B0;border-radius:8px;overflow:hidden;">
-        <div style="padding:4px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid #F4A0B0;">
-          <span style="font-size:10px;color:#C06080;font-weight:500;letter-spacing:0.5px;">SPONSORED</span>
-          <span style="background:#F4A0B0;color:#7A2040;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">📚 Book Recommendation</span>
+      html: `<div style="background:#F5F5F5;border:2px solid #7A0F3A;border-radius:8px;overflow:hidden;">
+        <div style="padding:5px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #C77A7F;">
+          <span style="font-size:10px;color:#B65F66;font-weight:600;letter-spacing:0.5px;">SPONSORED</span>
+          <span style="font-size:10px;color:#7A0F3A;font-weight:700;">📚 Book Recommendation</span>
         </div>
-        <div style="padding:14px;text-align:center;">
-          <img src="https://naijabiz.b-cdn.net/Untitled%20design%20(3)%20(1).png" alt="Bloomly First Period Guide" style="width:100px;height:140px;object-fit:cover;border-radius:6px;margin:0 auto 12px;display:block;">
-          <div style="font-size:15px;font-weight:700;color:#7A2040;line-height:1.3;margin-bottom:6px;">Do you have a daughter aged 8–13? 👧🏾</div>
-          <div style="font-size:12px;color:#444;line-height:1.6;margin-bottom:14px;">Her first period may be closer than you think. Help her feel <strong>ready and confident</strong> with age-appropriate guidance for Nigerian parents. 🩷</div>
-          <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" style="display:inline-block;background:#D4506A;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">🩷 Get the Bundle →</a>
+        <div style="display:flex;gap:0;">
+          <div style="background:#7A0F3A;width:8px;flex-shrink:0;"></div>
+          <div style="padding:14px;text-align:center;flex:1;">
+            <img src="https://naijabiz.b-cdn.net/Untitled%20design%20(3)%20(1).png" alt="Bloomly First Period Guide" style="width:100px;height:140px;object-fit:cover;border-radius:6px;margin:0 auto 12px;display:block;">
+            <div style="font-size:15px;font-weight:700;color:#7A0F3A;line-height:1.3;margin-bottom:6px;">Do you have a daughter aged 8–13? 👧🏾</div>
+            <div style="font-size:12px;color:#B65F66;font-weight:600;margin-bottom:8px;">Her first period may be closer than you think.</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;margin-bottom:14px;">Get the <strong>BLOOMLY Book + Digital Bundle</strong> — age-appropriate guidance to help your daughter feel ready and confident. 🩷</div>
+            <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" style="display:inline-block;background:#B65F66;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">🩷 Get the Book + Bundle (£10.00) →</a>
+          </div>
         </div>
       </div>`
     }
@@ -2703,7 +2707,7 @@ function buildTipCard(tip, suggestionStr) {
       ${suggestions.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}
     </div>` : '';
 
-  return tipHtml + suggestionsHtml;
+  return tipHtml; // suggestions added separately after sponsored ad
 }
 
 window.shareTipOfDay = function() {
@@ -3055,6 +3059,13 @@ function resetToWelcome() {
       addTipMessage(tipHtml);
       console.log('message added');
       showSponsoredAd();
+      // Show suggestion bubbles after sponsored ad
+      const suggStr = getRandomSuggestionStr();
+      const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
+      if (suggList.length) {
+        const suggHtml = `<div class="suggestions" style="margin-top:8px;">${suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`;
+        addTipMessage(suggHtml);
+      }
     } catch(err) {
       console.error('Error in resetToWelcome setTimeout:', err);
     }
