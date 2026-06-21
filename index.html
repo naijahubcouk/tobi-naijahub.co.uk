@@ -2509,6 +2509,63 @@ function tobiShare(title, text, url) {
     });
   }
 }
+
+function showDailyMotivation() {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const lastShown = localStorage.getItem('tobi_motivation_date');
+  if (lastShown === todayStr) return;
+  localStorage.setItem('tobi_motivation_date', todayStr);
+
+  const messages = [
+    { emoji: '🌅', text: "Your journey is unique. Don't compare your chapter 2 to someone else's chapter 20." },
+    { emoji: '💪', text: "Every small step counts. One application, one course, one connection can change everything." },
+    { emoji: '➡️', text: "You didn't come this far to stop now. Keep pushing." },
+    { emoji: '🌱', text: "Growth feels uncomfortable. That's often a sign you're moving forward." },
+    { emoji: '💷', text: "Build patiently. Most success stories are years in the making, not overnight." },
+    { emoji: '🙏', text: "Celebrate small wins today. Paid a bill? Sent a CV? Attended an interview? That's progress." },
+    { emoji: '🚪', text: "Opportunities often hide behind rejection. Keep knocking." },
+    { emoji: '📚', text: "Invest in yourself. Skills are one of the few things nobody can take from you." },
+    { emoji: '🤝', text: "Community matters. Don't be afraid to ask for help or support." },
+    { emoji: '☀️', text: "Your current situation is not your final destination." },
+    { emoji: '💼', text: "One good opportunity can change your entire year. Stay ready." },
+    { emoji: '❤️', text: "Remember why you started this journey. Let that purpose drive you." },
+    { emoji: '🏡', text: "You're building a future, not just paying today's bills." },
+    { emoji: '🌍', text: "Being an immigrant is not easy, but your resilience is your superpower." },
+    { emoji: '🚶🏾', text: "Move at your own pace. Progress is progress." },
+    { emoji: '💡', text: "The information you learn today can save you money, time, and stress tomorrow." },
+    { emoji: '🎯', text: "Focus on what you can control. Let go of what you can't." },
+    { emoji: '🌟', text: "Your background is part of your strength, not a limitation." },
+    { emoji: '🙌', text: "Give yourself credit. Living and thriving in a new country takes courage." },
+    { emoji: '🚀', text: "Keep showing up. Consistency beats motivation every time." },
+    { emoji: '🌅', text: "Don't underestimate today's effort. What feels small now could become a breakthrough later." },
+    { emoji: '💪', text: "You're stronger than you think. You've already overcome challenges many people never face." },
+    { emoji: '💷', text: "Financial progress takes time. Stay disciplined, stay focused, and trust the process." },
+    { emoji: '🎓', text: "Keep learning. Every new skill increases your opportunities and confidence." },
+    { emoji: '🌱', text: "Be patient with yourself. You're adapting to a different system, culture, and way of life." },
+    { emoji: '🚀', text: "Your future self will thank you for the sacrifices and hard work you're putting in today." },
+    { emoji: '🤝', text: "Success is not only about hard work. Build relationships, network, and stay connected to your community." },
+    { emoji: '🌟', text: "Don't let setbacks define you. They are lessons, not life sentences." },
+    { emoji: '❤️', text: "Take care of yourself too. Rest is productive when it helps you come back stronger." },
+    { emoji: '➡️', text: "You carry the dreams of yesterday and the possibilities of tomorrow. Keep showing up, keep believing, and keep moving forward. Your story is still being written." }
+  ];
+
+  // Pick message based on day of year so it rotates daily
+  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  const msg = messages[dayOfYear % messages.length];
+
+  const html = `<div style="background:var(--bg,white);border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="background:#0F1E36;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="color:white;font-weight:700;font-size:13px;">🌟 Daily Motivation</span>
+      <span style="background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">TODAY</span>
+    </div>
+    <div style="margin:12px 16px;padding:12px 14px;border-left:4px solid #FFB81C;border-radius:2px;">
+      <p style="font-size:16px;font-weight:700;color:#0F1E36;line-height:1.7;margin:0;font-style:italic;">"${msg.emoji} ${msg.text}"</p>
+    </div>
+    <p style="font-size:13px;color:#666;text-align:right;padding:0 16px 12px;margin:0;">— Auntie Tobi 🤖✨</p>
+  </div>`;
+
+  addTipMessage(html);
+}
 function showNaijaFoodFestivalCard() {
   const eventHtml = `<div id="naija-food-fest-card" style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
     <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
@@ -2963,6 +3020,7 @@ function resetToWelcome() {
   setTimeout(() => {
     console.log('setTimeout fired - building tip card');
     try {
+      showDailyMotivation();
       showNaijaFoodFestivalCard();
       showNewsCard();
       const tip = getTodaysTip();
