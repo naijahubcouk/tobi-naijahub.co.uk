@@ -1382,12 +1382,13 @@ Only reference these real NaijaUKHub events. Do not make up or reference any oth
 6. The Igbo Table: Food, Culture & Conversation | Sunday 30 August 2026 | Church Hall, Croyland Rd, London N9 7EN | 3:30PM - 9PM | naijahub.co.uk/blog/The-Igbo-Table:-Food-Culture-and-Conversation
 7. Ankara Festival UK 2026 | Saturday 10 October 2026 | Porchester Hall, London | 5PM - 11:30PM | naijahub.co.uk/blog/Ankara-Festival-UK-2026
 
-=== BLOG ARTICLES ON NAIJAHUB ===
+=== BLOG ARTICLES ON NAIJAUKHUB ===
 
 Only reference these real NaijaUKHub blog posts. Do not make up or reference other articles.
 
 1. "Best Nigerian Restaurants in London (Ranked 2026 Guide)" | Food & Lifestyle | naijahub.co.uk/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)
 2. "Did You Know? UK Landlords Must Protect Tenant Deposits or Risk Legal Action" | Housing & Legal | naijahub.co.uk/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action
+3. "FREE BUS TRAVEL FOR CHILDREN IN AUGUST 2026" | News | naijahub.co.uk/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026
 `;
 
 // ============================================
@@ -2400,6 +2401,42 @@ function sendJobQuery(query) {
   sendMessage(query);
 }
 
+
+function showNewsCard() {
+  const news = [
+    {
+      emoji: '🚌',
+      category: 'NEWS',
+      title: 'FREE Bus Travel for Children in August 2026',
+      summary: 'Good news for families! The UK Government has announced that children aged 5–15 can travel for FREE on buses across England throughout August 2026.',
+      url: 'https://naijahub.co.uk/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026',
+      label: 'News'
+    }
+  ];
+
+  // Pick a random news item on every refresh
+  const item = news[Math.floor(Math.random() * news.length)];
+
+  const newsHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
+    <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:16px;">📰</span>
+        <span style="color:white;font-weight:700;font-size:13px;">NEWS</span>
+      </div>
+      <a href="https://naijahub.co.uk/blog?category=News" target="_blank" style="color:#FFB81C;font-size:12px;font-weight:700;text-decoration:none;">See All →</a>
+    </div>
+    <div style="padding:10px 12px 8px;">
+      <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${item.emoji} ${item.title}</div>
+      <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
+      <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
+        <a href="${item.url}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+        <button onclick="(function(){if(navigator.share){navigator.share({title:'${item.title}',url:'${item.url}'}).catch(function(){});}else{navigator.clipboard.writeText('${item.url}');alert('Link copied!');}})();" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+      </div>
+    </div>
+  </div>`;
+
+  addTipMessage(newsHtml);
+}
 function showNaijaFoodFestivalCard() {
   const eventHtml = `<div id="naija-food-fest-card" style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
     <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
@@ -2832,6 +2869,7 @@ function resetToWelcome() {
     console.log('setTimeout fired - building tip card');
     try {
       showNaijaFoodFestivalCard();
+      showNewsCard();
       const tip = getTodaysTip();
       console.log('tip:', tip);
       const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
