@@ -1836,7 +1836,7 @@ function formatResponse(text) {
           ${location ? `<div class="event-card-location">📍 ${location}</div>` : ''}
           <div class="event-card-footer">
             ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 Details</a>` : '<span style="flex:1"></span>'}
-            <button class="event-card-share-btn" onclick="(function(){var u='${link}',t='${name}';if(navigator.share){navigator.share({title:t,text:t+'\n\nvia Auntie Tobi | auntietobi.co.uk',url:u}).catch(function(){});}else{navigator.clipboard.writeText(u);alert('Link copied!');}})()">📤 Share</button>
+            <button class="event-card-share-btn" onclick="tobiShare('${name}','${name}','${link}')">📤 Share</button>
           </div>
         </div>
       </div>`;
@@ -2306,7 +2306,7 @@ function buildJobCards(jobs, label, isVisa) {
       <div style="font-size:12px;color:#057A44;font-weight:600;margin-bottom:6px;">💷 ${job.salary}</div>
       <div style="display:flex;gap:6px;">
         <a href="${job.url}" target="_blank" style="flex:1;display:block;background:#057A44;color:white;text-decoration:none;font-size:11px;font-weight:700;padding:5px 12px;border-radius:5px;text-align:center;">Apply Now →</a>
-        <button onclick="(function(){var u='${job.url}',t='${job.title} at ${job.company}';if(navigator.share){navigator.share({title:t,text:t+'\n\nvia Auntie Tobi | auntietobi.co.uk',url:u}).catch(function(){});}else{navigator.clipboard.writeText(u);alert('Link copied!');}})()" style="background:#FFB81C;color:#0F1E36;border:none;font-size:11px;font-weight:700;padding:5px 10px;border-radius:5px;cursor:pointer;">📤 Share</button>
+        <button onclick="tobiShare('${job.title} at ${job.company}','${job.title} at ${job.company} — ${job.salary}','${job.url}')" style="background:#FFB81C;color:#0F1E36;border:none;font-size:11px;font-weight:700;padding:5px 10px;border-radius:5px;cursor:pointer;">📤 Share</button>
       </div>
     </div>`;
   });
@@ -2433,7 +2433,7 @@ function showNewsCard() {
       <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
         <a href="${item.url}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-        <button onclick="(function(){if(navigator.share){navigator.share({title:'${item.title}',text:'${item.title}'+'\n\nvia Auntie Tobi | auntietobi.co.uk',url:'${item.url}'}).catch(function(){});}else{navigator.clipboard.writeText('${item.url}');alert('Link copied!');}})();" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        <button onclick="tobiShare('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
     </div>
   </div>`;
@@ -2496,6 +2496,19 @@ function showAboutTobi() {
   addTipMessage(html);
 }
 
+
+function tobiShare(title, text, url) {
+  const shareText = text + '\n' + url + '\n\nvia Auntie Tobi | auntietobi.co.uk';
+  if (navigator.share) {
+    navigator.share({ title: title, text: shareText, url: url }).catch(function() {
+      navigator.clipboard.writeText(shareText).then(function() { alert('Link copied!'); });
+    });
+  } else {
+    navigator.clipboard.writeText(shareText).then(function() { alert('Link copied!'); }).catch(function() {
+      prompt('Copy this link:', url);
+    });
+  }
+}
 function showNaijaFoodFestivalCard() {
   const eventHtml = `<div id="naija-food-fest-card" style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
     <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
@@ -2510,7 +2523,7 @@ function showNaijaFoodFestivalCard() {
       <p style="font-size:13px;color:#444;margin:0 0 6px;line-height:1.4;padding:0;">Jollof rice, suya, puff puff and all your favourite Nigerian food! 🇳🇬🍽️</p>
       <div style="border-top:1px solid #f0f0f0;padding-top:4px;display:flex;align-items:center;gap:8px;margin:0;">
         <a href="https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 View Event Details</a>
-        <button onclick="if(navigator.share){navigator.share({title:'My Tasty Naija Food Festival UK 2026',text:'🎉 Nigerian Food Festival coming to London (5th July) & Manchester (11th July) 2026! Jollof rice, suya, puff puff and more 🇳🇬🍽️\n\nvia Auntie Tobi | auntietobi.co.uk',url:'https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026'}).catch(()=>{})}else{navigator.clipboard.writeText('https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026');alert('Link copied!');}" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">📤 Share</button>
+        <button onclick="tobiShare('My Tasty Naija Food Festival UK 2026','🎉 Nigerian Food Festival coming to London (5th July) & Manchester (11th July) 2026! Jollof rice, suya, puff puff and more 🇳🇬🍽️','https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">📤 Share</button>
       </div>
     </div>
   </div>
@@ -2614,8 +2627,8 @@ function buildTipCard(tip, suggestionStr) {
 window.shareTipOfDay = function() {
   const tip = getTodaysTip();
   const text = `💡 Auntie Tobi's Tip of the Day 🇳🇬🇬🇧\n\n${tip.emoji} ${tip.category}:\n${tip.tip}\n\nvia Auntie Tobi | auntietobi.co.uk`;
-  if (navigator.share) {
-    navigator.share({ title: "Auntie Tobi's Tip of the Day 🇳🇬", text: text + '\n\nvia Auntie Tobi | auntietobi.co.uk', url: 'https://auntietobi.co.uk' });
+  tobiShare("Auntie Tobi's Tip of the Day 🇳🇬", text, 'https://auntietobi.co.uk');
+  if (false) {
   } else {
     navigator.clipboard.writeText(text).then(() => alert('Tip copied! Share with your friends 🇳🇬🇬🇧'));
   }
