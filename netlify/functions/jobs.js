@@ -52,7 +52,8 @@ exports.handler = async (event) => {
     url += `&app_key=${ADZUNA_APP_KEY}`;
     url += `&results_per_page=6`;
     url += `&what=${encodeURIComponent(config.what)}`;
-    url += `&sort_by=date`;
+    // Sort by distance when location set, by date for UK-wide
+    url += location ? `&sort_by=distance` : `&sort_by=date`;
     url += `&max_days_old=30`;
 
     if (location) {
