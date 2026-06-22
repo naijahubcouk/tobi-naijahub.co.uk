@@ -2596,8 +2596,10 @@ function handleBellClick() {
     return;
   }
   OneSignalDeferred.push(async function(OneSignal) {
-    const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
-    if (isSubscribed) {
+    const permission = OneSignal.Notifications.permission; // true = browser granted
+    const optedIn = OneSignal.User.PushSubscription.optedIn; // true = subscribed
+    const isActive = permission && optedIn;
+    if (isActive) {
       const bellMsg = `<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You are receiving daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>`;
       addTipMessage(bellMsg);
     } else {
@@ -3521,8 +3523,9 @@ function initOneSignal() {
     });
 
     // Update bell button state based on subscription
-    const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
-    updateBellButton(isSubscribed);
+    const permission = OneSignal.Notifications.permission;
+    const optedIn = OneSignal.User.PushSubscription.optedIn;
+    updateBellButton(permission && optedIn);
 
     // Listen for subscription changes
     OneSignal.User.PushSubscription.addEventListener('change', (event) => {
