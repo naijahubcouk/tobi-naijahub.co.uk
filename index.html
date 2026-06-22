@@ -997,8 +997,8 @@
     <div class="pill" onclick="resetAndAsk('Check Out Upcoming Events')">🎉 Events</div>
     <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
     <div class="pill" onclick="showAllNews()">📰 News/Updates</div>
-    <div class="pill" onclick="quickAsk('Help me prepare for my UK driving theory test')">🚗 Driving Theory Test</div>
-    <div class="pill" onclick="quickAsk('Help me prepare for my Life in UK test')">📋 Life in UK Test</div>
+    <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my UK driving theory test'))">🚗 Driving Theory Test</div>
+    <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my Life in UK test'))">📋 Life in UK Test</div>
     <div class="pill" onclick="resetAndAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
     <div class="pill" onclick="showRequestOptions()">🔍 Request</div>
     <div class="pill" onclick="showFeedbackForm()">📝 Feedback</div>
@@ -2562,7 +2562,14 @@ function showNewsCard() {
     ? breaking
     : news[Math.floor(Math.random() * news.length)];
 
-  const newsHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
+  // Category badge colours
+  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8' };
+  const badgeColor = categoryColors[item.label] || '#057A44';
+  const categoryBadge = item.label === 'Breaking'
+    ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
+    : `<span style="background:${badgeColor};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${item.label}</span>`;
+
+  const newsHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
     <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
       <div style="display:flex;align-items:center;gap:6px;">
         <span style="font-size:16px;">📰</span>
@@ -2571,7 +2578,10 @@ function showNewsCard() {
       <button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button>
     </div>
     <div style="padding:10px 12px 8px;">
-      ${item.label === 'Breaking' ? '<div style="display:inline-block;background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:6px;">🔴 BREAKING</div><br>' : ''}
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        ${categoryBadge}
+        ${item.date ? `<span style="font-size:10px;color:#9CA3AF;">${item.date}</span>` : ''}
+      </div>
       <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${item.emoji} ${item.title}</div>
       <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
@@ -2827,6 +2837,53 @@ function handleDeepLink() {
 
 // Run deep link handler on page load
 document.addEventListener('DOMContentLoaded', handleDeepLink);
+
+function exitTestMode() {
+  // Set a flag to pause test mode without clearing progress
+  localStorage.setItem('tobi_exam_paused', '1');
+  resetToWelcome();
+  setTimeout(() => {
+    addTipMessage(`<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:22px;">✅</span>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Test mode paused</div>
+        <div style="font-size:12px;color:#555;">Your progress is saved. Tap 📋 Test to return anytime.</div>
+      </div>
+    </div>`);
+  }, 300);
+}
+
+function resumeTestMode() {
+  localStorage.removeItem('tobi_exam_paused');
+  clearExamState();
+  setTimeout(() => { sendMessage('Start my exam practice'); }, 100);
+}
+
+function showResumeTestPrompt() {
+  const progress = getExamProgress();
+  if (!progress || !progress.name) {
+    // No progress — just start fresh
+    clearExamState();
+    setTimeout(() => { sendMessage('I want to practice for my test'); }, 100);
+    return;
+  }
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:14px;">
+    <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:10px;">Welcome back ${progress.name}! 👋🏾</div>
+    <div style="background:#f8faf5;border-radius:6px;padding:10px;margin-bottom:12px;font-size:13px;color:#333;line-height:1.9;">
+      🎯 Test: ${progress.testType || 'Not set'}<br>
+      📈 Last score: ${progress.lastScore || 'Not recorded yet'}<br>
+      ✅ Questions completed: ${progress.questionsCompleted || 0}<br>
+      🏅 Badges: ${progress.badges && progress.badges.length > 0 ? progress.badges.join(' ') : 'None yet'}
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">Do you want to continue test mode?</div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="resumeTestMode()" style="flex:1;background:#057A44;color:white;border:none;border-radius:6px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✅ Continue Test Mode</button>
+      <button onclick="resetToWelcome()" style="flex:1;background:white;color:#555;border:1px solid #e5e7eb;border-radius:6px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Not Now</button>
+    </div>
+  </div>`);
+}
 function showFathersVideo() {
   // Only show on first visit today (21 June 2026) — never shows after midnight
   const today = new Date();
@@ -3251,6 +3308,12 @@ Ready to continue your practice? 🚀
 [SUGGESTIONS: Continue my ${examProgress.testType} practice | Take a mock test | Check my weak areas]`;
 
     addMessage('bot', formatResponse(returningWelcome), true);
+
+    // Add exit test mode button
+    addTipMessage(`<div style="background:white;border:1.5px solid #e5e7eb;border-radius:8px;padding:12px;margin-top:8px;">
+      <div style="font-size:13px;color:#555;margin-bottom:10px;">Want to browse without exam mode? You can exit and return anytime.</div>
+      <button onclick="exitTestMode()" style="background:none;border:1.5px solid #057A44;color:#057A44;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✅ Exit Test Mode</button>
+    </div>`);
 
   } else if (isReturning) {
     // Return visit — same as Ask Anything (food festival + tip of the day)
