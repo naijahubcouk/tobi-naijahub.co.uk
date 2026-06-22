@@ -1013,9 +1013,6 @@
       <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
   </div>
-  <div style="text-align:center;padding:6px 0 2px;">
-    <button onclick="clearExamState();setTimeout(showAboutTobi,100);" style="background:none;border:0.5px solid #057A44;border-radius:20px;padding:5px 14px;font-size:12px;color:#057A44;cursor:pointer;font-family:inherit;">👋 About Auntie Tobi</button>
-  </div>
 </div>
 
 <script>
@@ -2138,6 +2135,7 @@ When you cannot find a business, event, or answer in the NaijaUKHub data, always
     messages.push({ role: 'assistant', content: reply });
     removeTyping();
     addMessage('bot', formatResponse(reply), true, true);
+    if (nhsMode) setTimeout(showNHSSuggestions, 300);
 
     // 💾 Save exam progress automatically
     extractAndSaveExamData(userText, reply);
@@ -2803,6 +2801,14 @@ function handleDeepLink() {
       // Clean URL without reloading
       window.history.replaceState({}, document.title, window.location.pathname);
     }, 500);
+  } else if (action === 'nhs') {
+    setTimeout(() => {
+      nhsMode = true;
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      quickAsk('Do you know your NHS rights as a Nigerian in the UK? Tell me everything I need to know');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 500);
   } else if (action === 'motivation') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
@@ -2935,6 +2941,36 @@ function showResumeTestPrompt() {
       <button onclick="resetToWelcome()" style="flex:1;background:white;color:#555;border:1px solid #e5e7eb;border-radius:6px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Not Now</button>
     </div>
   </div>`);
+}
+
+function getNHSSuggestions() {
+  const nhsSuggestions = [
+    'Can I use the NHS immediately after arriving in the UK?',
+    'What should I do if I can\'t get a GP appointment?',
+    'Am I entitled to free NHS treatment?',
+    'How do I register with a GP in the UK?',
+    'What is the difference between a GP and A&E?',
+    'How do I get a prescription in the UK?',
+    'What is NHS 111 and when should I call it?',
+    'Can I see a specialist on the NHS without a GP referral?',
+    'What dental treatment is free on the NHS?',
+    'How do I get mental health support on the NHS?',
+    'What maternity care is available on the NHS?',
+    'Are NHS prescriptions free in the UK?',
+    'How do I register my child with a GP?',
+    'What happens if I need emergency treatment in the UK?',
+    'How long are NHS waiting times in the UK?'
+  ];
+  // Pick 3 random suggestions
+  const shuffled = nhsSuggestions.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
+}
+
+function showNHSSuggestions() {
+  if (!nhsMode) return;
+  const suggestions = getNHSSuggestions();
+  const html = `<div class="suggestions" style="margin-top:8px;">${suggestions.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`;
+  addTipMessage(html);
 }
 function showFathersVideo() {
   // Only show on first visit today (21 June 2026) — never shows after midnight
@@ -3477,6 +3513,7 @@ No App Store. No stress.
 const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP4etmzEKByoODaqXCw80gRiI2wkVRK6QYb_-v8wwdkTZ8834vDLoZbDN41/exec';
 
 function clearExamState() {
+  nhsMode = false;
   examState.active = false;
   examState.testType = null;
   examState.currentQuestion = null;
@@ -3504,6 +3541,7 @@ function resetAndShow(fn) {
 }
 
 function resetToWelcome() {
+  nhsMode = false;
   clearExamState();
 
   // Small delay to ensure DOM is cleared before adding content
@@ -3942,6 +3980,7 @@ window.addEventListener('beforeinstallprompt', e => {
 
 // Track message count and show install prompt after 3 messages
 let installPromptShown = false;
+let nhsMode = false; // NHS mode — shows related bubbles after each answer
 let messageCount = 0;
 
 function checkInstallPrompt() {
