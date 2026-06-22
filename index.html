@@ -2600,15 +2600,17 @@ function handleBellClick() {
     const optedIn = OneSignal.User.PushSubscription.optedIn;
 
     if (permission && optedIn) {
-      // Fully subscribed
-      const bellMsg = `<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications are ON!</div><div style="font-size:12px;color:#555;">You are receiving daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>`;
+      // Already subscribed — unsubscribe
+      await OneSignal.User.PushSubscription.optOut();
+      updateBellButton(false);
+      const bellMsg = `<div style="background:white;border:1.5px solid #e5e7eb;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔕</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications turned off</div><div style="font-size:12px;color:#555;">Tap the bell anytime to turn them back on 🇳🇬</div></div></div>`;
       addTipMessage(bellMsg);
     } else if (permission && !optedIn) {
-      // Browser allowed but not opted in — re-subscribe
+      // Browser allowed but opted out — re-subscribe
       await OneSignal.User.PushSubscription.optIn();
-      const bellMsg = `<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications enabled!</div><div style="font-size:12px;color:#555;">You will now receive daily tips from Auntie Tobi 🇳🇬✨</div></div></div>`;
-      addTipMessage(bellMsg);
       updateBellButton(true);
+      const bellMsg = `<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications are ON!</div><div style="font-size:12px;color:#555;">You will now receive daily tips from Auntie Tobi 🇳🇬✨</div></div></div>`;
+      addTipMessage(bellMsg);
     } else {
       // Browser permission denied — show instructions
       const bellMsg = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔕</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications are blocked</div><div style="font-size:12px;color:#555;">To enable: tap the 🔒 lock icon in your browser address bar → Notifications → Allow</div></div></div>`;
