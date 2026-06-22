@@ -992,7 +992,7 @@
   </div>
 
   <div class="pills">
-    <div class="pill" onclick="resetToWelcome()">💬 Ask Anything</div>
+    <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="resetAndShow(showBusinesses)">🏢 Businesses</div>
     <div class="pill" onclick="resetAndAsk('Check Out Upcoming Events')">🎉 Events</div>
     <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
@@ -3406,15 +3406,12 @@ function resetToWelcome() {
       addTipMessage(tipHtml);
       console.log('message added');
       showSponsoredAd();
-      // Show suggestion bubbles after sponsored ad
-      const suggStr = getRandomSuggestionStr();
-      const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-      if (suggList.length) {
-        const suggHtml = `<div class="suggestions" style="margin-top:8px;">${suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`;
-        addTipMessage(suggHtml);
-      }
-      // Add homepage fixed quick action bubbles on top
-      addTipMessage('<div class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest News</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button></div>');
+      // Combined fixed + rotating bubbles (shown below)
+      const homeSuggStr = getRandomSuggestionStr();
+      const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
+      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button>';
+      const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
+      addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeFixed}${homeRotating}</div>`);
     } catch(err) {
       console.error('Error in resetToWelcome setTimeout:', err);
     }
