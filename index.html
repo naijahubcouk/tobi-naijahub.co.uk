@@ -2296,6 +2296,7 @@ function resetAndShowJobs() {
 }
 
 function showJobsHubCard() {
+  jobSearchPage = 1;
   const jobsHtml = `<div id="jobs-hub-card" style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-top:8px;">
     <div style="background:#0F1E36;padding:12px 14px;">
       <div style="font-size:15px;font-weight:700;color:white;">💼 Jobs & Career Hub</div>
@@ -2353,7 +2354,7 @@ function buildJobCards(jobs, label, isVisa, category) {
     { label: '🎤 Interview Prep', action: "sendMessage('Help me prepare for a UK job interview')" },
     { label: '💼 All Job Categories', action: "showJobsHubCard()" }
   ] : [
-    { label: '🔄 Search Again', action: `document.getElementById('messages').innerHTML='';fetchJobs('${category}','${label}')` },
+    { label: '🔄 Search Again', action: `document.getElementById('messages').innerHTML='';jobSearchPage++;fetchJobs('${category}','${label}')` },
     { label: '📄 CV Tips', action: "sendMessage('Give me UK CV tips to stand out to employers')" },
     { label: '🎤 Interview Prep', action: "sendMessage('Help me prepare for a UK job interview')" },
     { label: '💼 All Job Categories', action: "showJobsHubCard()" }
@@ -2379,7 +2380,7 @@ async function fetchJobs(category, label) {
   try {
     // Search with city (50 mile radius) — fall back to UK-wide if empty
     const locationParam = city ? `&location=${encodeURIComponent(city)}&distance=50` : '';
-    const res = await fetch(`/.netlify/functions/jobs?category=${category}${locationParam}`);
+    const res = await fetch(`/.netlify/functions/jobs?category=${category}${locationParam}&page=${jobSearchPage}`);
     const data = await res.json();
 
     if (loadingDiv) loadingDiv.remove();
@@ -3991,6 +3992,7 @@ window.addEventListener('beforeinstallprompt', e => {
 // Track message count and show install prompt after 3 messages
 let installPromptShown = false;
 let nhsMode = false; // NHS mode — shows related bubbles after each answer
+let jobSearchPage = 1; // Track job search page for pagination
 let messageCount = 0;
 
 function checkInstallPrompt() {
