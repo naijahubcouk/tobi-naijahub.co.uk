@@ -1,4 +1,7 @@
-const CACHE_NAME = 'naijahub-tobi-v5';
+// Import OneSignal service worker
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+
+const CACHE_NAME = 'naijahub-tobi-v6';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -17,6 +20,7 @@ self.addEventListener('fetch', e => {
   if (e.request.url.includes('api.anthropic.com')) return;
   if (e.request.url.includes('script.google.com')) return;
   if (e.request.url.includes('netlify/functions')) return;
+  if (e.request.url.includes('onesignal.com')) return;
   if (e.request.method !== 'GET') return;
 
   e.respondWith(
