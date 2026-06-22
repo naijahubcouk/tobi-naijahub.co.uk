@@ -2516,6 +2516,10 @@ function showAllNews() {
     </div>`;
     addTipMessage(html);
   });
+  // Add rotating home pool bubbles after all news cards
+  const newsSuggStr = getRandomSuggestionStr();
+  const newsSuggList = newsSuggStr.split('|').map(s => s.trim()).filter(Boolean);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">${newsSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
 }
 function showNewsCard() {
   const news = [
