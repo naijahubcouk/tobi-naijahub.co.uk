@@ -2353,7 +2353,7 @@ function buildJobCards(jobs, label, isVisa) {
     { label: '🎤 Interview Prep', action: "sendMessage('Help me prepare for a UK job interview')" },
     { label: '💼 All Job Categories', action: "showJobsHubCard()" }
   ] : [
-    { label: '🔄 Search Again', action: `fetchJobs('${label.toLowerCase().replace(/[^a-z]/g,'').substring(0,20)}','${label}')` },
+    { label: '🔄 Search Again', action: `document.getElementById('messages').innerHTML='';fetchJobs('${label.toLowerCase().replace(/[^a-z]/g,'').substring(0,20)}','${label}')` },
     { label: '📄 CV Tips', action: "sendMessage('Give me UK CV tips to stand out to employers')" },
     { label: '🎤 Interview Prep', action: "sendMessage('Help me prepare for a UK job interview')" },
     { label: '💼 All Job Categories', action: "showJobsHubCard()" }
