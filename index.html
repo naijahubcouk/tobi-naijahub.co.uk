@@ -2680,6 +2680,13 @@ function handleDeepLink() {
       // Clean URL without reloading
       window.history.replaceState({}, document.title, window.location.pathname);
     }, 500);
+  } else if (action === 'motivation') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      showDailyMotivation();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 500);
   } else if (action === 'jobs') {
     setTimeout(() => { showJobsHubCard(); }, 500);
   } else if (action === 'events') {
