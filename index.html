@@ -952,7 +952,7 @@
         notifyButton: { enable: false }, // We use our own prompt
         welcomeNotification: {
           title: "Auntie Tobi 🤖✨",
-          message: "Ẹ káàbọ̀! You'll now get daily tips and updates from Auntie Tobi 🇳🇬"
+          message: "Welcome! You'll now get daily tips and updates from Auntie Tobi 🇳🇬✨"
         }
       });
     });
@@ -3529,14 +3529,14 @@ function checkInstallPrompt() {
 
   messageCount++;
 
-  // Show notification opt-in after 5 messages
-  if (messageCount === 5 && typeof OneSignal !== 'undefined') {
+  // Show notification opt-in after 3 messages
+  if (messageCount === 3 && typeof OneSignal !== 'undefined') {
     setTimeout(() => {
       addTipMessage(`<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;margin-top:8px;display:flex;align-items:center;gap:10px;">
         <span style="font-size:28px;">🔔</span>
         <div style="flex:1;">
-          <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Get daily tips from Auntie Tobi!</div>
-          <div style="font-size:12px;color:#555;">Allow notifications and I'll check in on you every day 🇳🇬✨</div>
+          <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Your Auntie Tobi is here! 🇳🇬</div>
+          <div style="font-size:12px;color:#555;line-height:1.5;">Let me check in on you daily — tips and updates ✨<br><em>I no go disturb you, I promise! 😄</em></div>
         </div>
         <button onclick="OneSignalDeferred.push(function(OneSignal){OneSignal.Slidedown.promptPush();})" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;">Allow 🔔</button>
       </div>`);
