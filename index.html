@@ -968,6 +968,11 @@
       <p style="margin:0;font-size:12px;color:#FFB81C;">The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> <span style="font-size:10px;opacity:0.75;color:white;">(Powered by <a href="https://naijahub.co.uk" target="_blank" style="color:white;text-decoration:none;font-weight:600;">naijahub.co.uk</a>)</span></p>
     </div>
     <div class="status-dot"></div>
+    <button id="notify-bell" onclick="handleBellClick()" title="Get NaijaUKHub notifications" style="
+      background:none; border:none; cursor:pointer;
+      font-size:20px; padding:4px; margin-left:4px;
+      opacity:0.7; transition:opacity 0.2s;
+    ">🔕</button>
     <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="
       background:none; border:none; cursor:pointer;
       font-size:18px; padding:4px; margin-left:4px;
@@ -2577,6 +2582,22 @@ function tobiShare(title, text, url) {
   }
 }
 
+
+function handleBellClick() {
+  if (typeof OneSignalDeferred === 'undefined') {
+    addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;font-size:13px;color:#555;">🔔 Notifications are not available on this browser. Try opening Auntie Tobi in Chrome (Android) or Safari (iPhone).</div>');
+    return;
+  }
+  OneSignalDeferred.push(async function(OneSignal) {
+    const permission = await OneSignal.Notifications.permission;
+    if (permission) {
+      const bellMsg = `<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You are receiving daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>`;
+      addTipMessage(bellMsg);
+    } else {
+      OneSignal.Slidedown.promptPush();
+    }
+  });
+}
 
 function showFathersVideo() {
   // Only show on first visit today (21 June 2026) — never shows after midnight
