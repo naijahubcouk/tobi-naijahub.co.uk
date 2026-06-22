@@ -2322,7 +2322,7 @@ function showJobsHubCard() {
   addTipMessage(jobsHtml);
 }
 
-function buildJobCards(jobs, label, isVisa) {
+function buildJobCards(jobs, label, isVisa, category) {
   const badge = isVisa
     ? '<span style="background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">VISA SPONSORED</span>'
     : '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">LIVE</span>';
@@ -2353,7 +2353,7 @@ function buildJobCards(jobs, label, isVisa) {
     { label: '🎤 Interview Prep', action: "sendMessage('Help me prepare for a UK job interview')" },
     { label: '💼 All Job Categories', action: "showJobsHubCard()" }
   ] : [
-    { label: '🔄 Search Again', action: `document.getElementById('messages').innerHTML='';fetchJobs('${label.toLowerCase().replace(/[^a-z]/g,'').substring(0,20)}','${label}')` },
+    { label: '🔄 Search Again', action: `document.getElementById('messages').innerHTML='';fetchJobs('${category}','${label}')` },
     { label: '📄 CV Tips', action: "sendMessage('Give me UK CV tips to stand out to employers')" },
     { label: '🎤 Interview Prep', action: "sendMessage('Help me prepare for a UK job interview')" },
     { label: '💼 All Job Categories', action: "showJobsHubCard()" }
@@ -2385,8 +2385,10 @@ async function fetchJobs(category, label) {
     if (loadingDiv) loadingDiv.remove();
 
     if (data.jobs && data.jobs.length > 0) {
-      const lbl = city ? label + ' near ' + window.userCity : label + ' (UK Wide)';
-      addTipMessage(buildJobCards(data.jobs, lbl, false));
+      // Strip any existing location suffix from label before adding new one
+      const baseLabel = label.replace(/ near .*$/, '').replace(/ \(UK Wide\)$/, '').trim();
+      const lbl = city ? baseLabel + ' near ' + window.userCity : baseLabel + ' (UK Wide)';
+      addTipMessage(buildJobCards(data.jobs, lbl, false, category));
     } else if (city) {
       // No results near city — try UK-wide
       addTipMessage('<div style="color:#057A44;font-size:13px;padding:4px;">Expanding search across the UK...</div>');
@@ -2396,7 +2398,7 @@ async function fetchJobs(category, label) {
       const data2 = await res2.json();
       if (ld2) ld2.remove();
       if (data2.jobs && data2.jobs.length > 0) {
-        addTipMessage(buildJobCards(data2.jobs, label + ' (UK Wide)', false));
+        addTipMessage(buildJobCards(data2.jobs, label + ' (UK Wide)', false, category));
       } else {
         addTipMessage(`<div style="padding:4px;font-size:13px;color:#555;">No live ${label} jobs found right now. <a href="https://www.adzuna.co.uk/search?q=${encodeURIComponent(category)}&loc=UK" target="_blank" style="color:#057A44;font-weight:700;">Search on Adzuna →</a></div>`);
       }
