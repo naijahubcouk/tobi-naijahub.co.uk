@@ -3535,23 +3535,13 @@ function initOneSignal() {
       }
     });
 
-    // Check localStorage first for instant bell state on load
+    // Restore bell state from localStorage immediately — no async delay
     const storedSub = localStorage.getItem('tobi_notifications');
-    if (storedSub === '1') updateBellButton(true);
+    updateBellButton(storedSub === '1');
 
-    // Then verify with OneSignal after it fully loads
-    setTimeout(async () => {
-      const permission = OneSignal.Notifications.permission;
-      const optedIn = OneSignal.User.PushSubscription.optedIn;
-      const isActive = permission && optedIn;
-      updateBellButton(isActive);
-      localStorage.setItem('tobi_notifications', isActive ? '1' : '0');
-    }, 2500);
-
-    // Listen for subscription changes
+    // Listen for future subscription changes
     OneSignal.User.PushSubscription.addEventListener('change', (event) => {
-      const permission = OneSignal.Notifications.permission;
-      const isActive = permission && event.current.optedIn;
+      const isActive = event.current.optedIn;
       updateBellButton(isActive);
       localStorage.setItem('tobi_notifications', isActive ? '1' : '0');
     });
