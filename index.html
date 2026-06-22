@@ -2603,13 +2603,13 @@ function handleBellClick() {
       // Already subscribed — unsubscribe
       await OneSignal.User.PushSubscription.optOut();
       updateBellButton(false);
-      const bellMsg = `<div style="background:white;border:1.5px solid #e5e7eb;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔕</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications turned off</div><div style="font-size:12px;color:#555;">Tap the bell anytime to turn them back on 🇳🇬</div></div></div>`;
+      const bellMsg = `<div style="background:white;border:1.5px solid #e5e7eb;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔕</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications turned off</div><div style="font-size:12px;color:#555;line-height:1.6;">Tap the bell anytime to turn them back on and stay in touch with the community — Breaking News in the UK that affects Nigerians and daily updates 🇳🇬</div></div></div>`;
       addTipMessage(bellMsg);
     } else if (permission && !optedIn) {
       // Browser allowed but opted out — re-subscribe
       await OneSignal.User.PushSubscription.optIn();
       updateBellButton(true);
-      const bellMsg = `<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications are ON!</div><div style="font-size:12px;color:#555;">You will now receive daily tips from Auntie Tobi 🇳🇬✨</div></div></div>`;
+      const bellMsg = `<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;line-height:1.6;">You will now receive daily tips, news and updates from Auntie Tobi ✨🇳🇬</div></div></div>`;
       addTipMessage(bellMsg);
     } else {
       // Browser permission denied — show instructions
@@ -3533,14 +3533,17 @@ function initOneSignal() {
       }
     });
 
-    // Update bell button state based on subscription
-    const permission = OneSignal.Notifications.permission;
-    const optedIn = OneSignal.User.PushSubscription.optedIn;
-    updateBellButton(permission && optedIn);
+    // Wait a moment for OneSignal to fully load subscription state then update bell
+    setTimeout(async () => {
+      const permission = OneSignal.Notifications.permission;
+      const optedIn = OneSignal.User.PushSubscription.optedIn;
+      updateBellButton(permission && optedIn);
+    }, 1500);
 
     // Listen for subscription changes
     OneSignal.User.PushSubscription.addEventListener('change', (event) => {
-      updateBellButton(event.current.optedIn);
+      const permission = OneSignal.Notifications.permission;
+      updateBellButton(permission && event.current.optedIn);
     });
   });
 }
