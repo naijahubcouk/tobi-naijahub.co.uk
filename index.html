@@ -2677,6 +2677,12 @@ function handleDeepLink() {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
       addTipMessage(html);
+      // Add follow-up bubbles for breaking news
+      const breakingSuggStr = getRandomSuggestionStr();
+      const breakingSuggList = breakingSuggStr.split('|').map(s => s.trim()).filter(Boolean);
+      const breakingFixed = '<button class="suggestion-btn" onclick="showAllNews()">📰 See All News</button><button class="suggestion-btn" onclick="quickAsk(\'How does this affect me as a Nigerian in the UK?\')">🇳🇬 How does this affect me?</button>';
+      const breakingRotating = breakingSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${breakingFixed}${breakingRotating}</div>`);
       // Clean URL without reloading
       window.history.replaceState({}, document.title, window.location.pathname);
     }, 500);
@@ -2685,12 +2691,53 @@ function handleDeepLink() {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
       showDailyMotivation();
+      // Add follow-up bubbles for motivation — rotating home page suggestions
+      const motivSuggStr = getRandomSuggestionStr();
+      const motivSuggList = motivSuggStr.split('|').map(s => s.trim()).filter(Boolean);
+      const motivHtml = motivSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${motivHtml}</div>`);
       window.history.replaceState({}, document.title, window.location.pathname);
     }, 500);
   } else if (action === 'jobs') {
-    setTimeout(() => { showJobsHubCard(); }, 500);
+    setTimeout(() => {
+      showJobsHubCard();
+      // Add follow-up bubbles for jobs — fixed + rotating
+      const jobsSuggStr = getRandomSuggestionStr();
+      const jobsSuggList = jobsSuggStr.split('|').map(s => s.trim()).filter(Boolean);
+      const jobsFixed = '<button class="suggestion-btn" onclick="quickAsk(\'Give me UK CV tips\')">📄 CV Tips</button><button class="suggestion-btn" onclick="quickAsk(\'Help me prepare for a UK job interview\')">🎤 Interview Prep</button>';
+      const jobsRotating = jobsSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${jobsFixed}${jobsRotating}</div>`);
+    }, 500);
   } else if (action === 'events') {
-    setTimeout(() => { resetAndAsk('Show me upcoming Nigerian events in the UK'); }, 500);
+    setTimeout(() => {
+      resetAndAsk('Show me upcoming Nigerian events in the UK');
+    }, 500);
+  } else if (action === 'tip') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      const tip = getTodaysTip();
+      const tipHtml = buildTipCard(tip, '');
+      addTipMessage(tipHtml);
+      // Rotating home bubbles
+      const tipSuggStr = getRandomSuggestionStr();
+      const tipSuggList = tipSuggStr.split('|').map(s => s.trim()).filter(Boolean);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${tipSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 500);
+  } else if (action === 'featured') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      showNaijaFoodFestivalCard();
+      // Fixed See All Events + rotating home bubbles
+      const featSuggStr = getRandomSuggestionStr();
+      const featSuggList = featSuggStr.split('|').map(s => s.trim()).filter(Boolean);
+      const featFixed = '<button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 See All Events</button>';
+      const featRotating = featSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${featFixed}${featRotating}</div>`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 500);
   }
 }
 
@@ -2954,13 +3001,18 @@ document.addEventListener('click', function(e) {
 function getRandomSuggestionStr() {
   const allSuggestions = [
     ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
-    ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'Find a Nigerian church near me'],
+    ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'How do I get my Nigerian qualifications recognised in the UK?'],
     ['How do I register my child for school in the UK?', 'What events are coming up?', 'How do I open a UK bank account?'],
-    ['Find a makeup artist near me', 'How do I start a business in the UK?', 'What is the best SIM card for calling Nigeria?'],
+    ['Find a makeup artist near me', 'How do I start a business in the UK?', 'How do I improve my credit score in the UK?'],
     ['Find a Nigerian hair stylist near me', 'How do I get my UK driving licence?', 'What are the best cities for Nigerians in the UK?'],
     ['How do I register with a GP in the UK?', 'Find a Nigerian event this month', 'How do I apply for ILR?'],
-    ['Find Nigerian food near me', 'How do I find a job in the UK?', 'What Nigerian churches are near me?'],
-    ['Find a Nigerian accountant near me', 'How do I convert my Nigerian licence to UK?', 'Find a Nigerian fashion designer near me']
+    ['Find Nigerian food near me', 'How do I find a job in the UK?', 'How do I find affordable housing in the UK?'],
+    ['How long can I use my Nigerian license in the UK?', 'Find a makeup artist near me', 'What is the cost of living in the UK?'],
+    ['What benefits am I entitled to in the UK?', 'What do I need to know about UK schools for my children?', 'What is the NHS and how does it work?'],
+    ['How do I prepare for the Life in the UK test?', 'Find a Nigerian event near me', 'How do I get a National Insurance number?'],
+    ['How do I rent a house in the UK?', 'What is council tax and how do I pay it?', 'Find a Nigerian photographer near me'],
+    ['How do I prepare for my driving theory test?', 'What Nigerian food shops are near me?', 'How do I bring my family to the UK?'],
+    ['How do I set up a UK bank account?', 'Find a Nigerian event this weekend', 'How do I get a skilled worker visa?']
   ];
   const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
   return randomSet.join(' | ');
@@ -3277,6 +3329,8 @@ function resetToWelcome() {
         const suggHtml = `<div class="suggestions" style="margin-top:8px;">${suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`;
         addTipMessage(suggHtml);
       }
+      // Add homepage fixed quick action bubbles on top
+      addTipMessage('<div class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest News</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button></div>');
     } catch(err) {
       console.error('Error in resetToWelcome setTimeout:', err);
     }
