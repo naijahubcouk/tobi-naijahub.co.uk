@@ -44,10 +44,11 @@ exports.handler = async (event) => {
     const category = (params.category || 'care').toLowerCase();
     const location = params.location || '';
     const distance = params.distance || '50';
+    const page = params.page || '1';
     const config = CATEGORY_MAP[category] || CATEGORY_MAP['care'];
 
     // Build URL manually to avoid encoding issues with URLSearchParams
-    let url = `https://api.adzuna.com/v1/api/jobs/gb/search/1`;
+    let url = `https://api.adzuna.com/v1/api/jobs/gb/search/${page}`;
     url += `?app_id=${ADZUNA_APP_ID}`;
     url += `&app_key=${ADZUNA_APP_KEY}`;
     url += `&results_per_page=6`;
