@@ -2275,6 +2275,7 @@ function requestLocation() {
     console.log('Raw city:', city, '→ Clean:', cleanCity);
     userCity = cleanCity;
     window.userCity = cleanCity;
+    localStorage.setItem('tobi_user_city', cleanCity);
     userCountry = country;
 
     if (city) {
@@ -3364,7 +3365,14 @@ function getCategoryEmoji(cat) {
 }
 
 window.onload = () => {
-  // Request location on load
+  // Restore city from localStorage first for instant access
+  const savedCity = localStorage.getItem('tobi_user_city');
+  if (savedCity) {
+    userCity = savedCity;
+    window.userCity = savedCity;
+    console.log('City restored from localStorage:', savedCity);
+  }
+  // Request location on load to update city
   requestLocation();
   const todayStr = new Date().toISOString().split('T')[0];
   const lastVisitDate = localStorage.getItem('tobi_last_visit');
