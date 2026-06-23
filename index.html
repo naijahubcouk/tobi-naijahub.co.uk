@@ -2978,6 +2978,14 @@ function handleDeepLink() {
 
 // Run deep link handler on page load
 document.addEventListener('DOMContentLoaded', handleDeepLink);
+window.addEventListener('load', handleDeepLink);
+
+// Handle PWA notification tap when app is already open
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && window.location.search) {
+    handleDeepLink();
+  }
+});
 
 function exitTestMode() {
   // Set a flag to pause test mode without clearing progress
@@ -3667,51 +3675,13 @@ Ready to continue your practice? 🚀
     resetToWelcome();
 
   } else {
-    // First ever visit — show welcome message
-    const greeting = getTimeGreeting();
-    const welcome = `${greeting}! Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾
-
-I'm **Auntie Tobi 🤖✨** — your AI Auntie for Nigerians in the UK 🇳🇬🇬🇧
-
-I'm here to make UK life easier, clearer, and less stressful for you, whether you just arrived or you've been here a while.
-
-💡 Just ask me anything.
-
----
-
-💡 **I can help you with:**
-🏢 Nigerian businesses near you
-🎉 Events & community activities
-🇬🇧 UK life help (NHS, housing, schools & settling in)
-💼 Jobs, CVs & interview tips
-🚗 Driving Theory Test prep
-📋 Life in the UK Test help
-🛂 Simple visa & immigration guidance
-🔍 Finding services or answers you need
-
----
-
-✨ **Why I'm here:**
-So you don't have to figure UK life out alone. I guide you, support you, and point you in the right direction 🤝
-
----
-
-📱 **How to use me:**
-Open on your phone:
-📱 Android — Chrome
-🍏 iPhone — Safari
-Then add me to your home screen for quick access 📲
-No App Store. No stress.
-
----
-
-**So… wetin you need today?** 😄
-
-📢 Own a business? Add your listing on 👉 [naijahub.co.uk/new-listing](https://naijahub.co.uk/new-listing)
-
-[SUGGESTIONS: ${getRandomSuggestionStr()}]`;
-
-    addMessage('bot', formatResponse(welcome), true);
+    // First ever visit — show About Tobi card + bubbles only
+    showAboutTobi();
+    const suggStr = getRandomSuggestionStr();
+    const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
+    const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button>';
+    const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
+    addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fixedBtns}${rotatingBtns}</div>`);
   }
 };
 </script>
@@ -4154,6 +4124,14 @@ function initOneSignal() {
             }
           }]
         }
+      }
+    });
+
+    // Handle notification click — navigate to deep link URL
+    OneSignal.Notifications.addEventListener('click', function(event) {
+      const url = event.notification.launchURL;
+      if (url) {
+        window.location.href = url;
       }
     });
 
