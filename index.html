@@ -3060,6 +3060,13 @@ function fuzzyMatchCity(input) {
   return { exact: null, suggestions };
 }
 
+function setCityAndConfirm(city) {
+  window.userCity = city;
+  userCity = city;
+  localStorage.setItem('tobi_user_city', city);
+  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:10px 12px;font-size:13px;color:#057A44;font-weight:700;">✅ City set to <strong>' + city + '</strong> — now tap a job category above!</div>');
+}
+
 function validateAndSearchCity(inputVal) {
   const input = (inputVal || '').trim();
   if (!input) return;
@@ -3067,16 +3074,10 @@ function validateAndSearchCity(inputVal) {
   const { exact, suggestions } = fuzzyMatchCity(input);
 
   if (exact) {
-    window.userCity = exact;
-    userCity = exact;
-    localStorage.setItem('tobi_user_city', exact);
-    // Update header in existing card without rebuilding it
-    const header = document.querySelector('#jobs-hub-card .city-label');
-    if (header) header.textContent = '📍 Searching near ' + exact;
-    addTipMessage(`<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:10px 12px;font-size:13px;color:#057A44;font-weight:700;">✅ City set to <strong>${exact}</strong> — now tap a job category above!</div>`);
+    setCityAndConfirm(exact);
   } else if (suggestions.length > 0) {
     const suggestBtns = suggestions.map(c =>
-      `<button onclick="window.userCity='${c}';userCity='${c}';localStorage.setItem('tobi_user_city','${c}');addTipMessage('<div style=\\"background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:10px 12px;font-size:13px;color:#057A44;font-weight:700;\\">✅ City set to <strong>${c}</strong> — now tap a job category!</div>');" style="background:#057A44;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${c}</button>`
+      `<button onclick="setCityAndConfirm('${c}')" style="background:#057A44;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${c}</button>`
     ).join('');
     addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;">
       <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:8px;">🤔 We couldn't find "<strong>${input}</strong>" — did you mean:</div>
