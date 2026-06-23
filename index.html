@@ -1280,10 +1280,11 @@ A: The 11+ is an entrance exam for grammar schools (selective state schools) tak
 --- JOBS & CAREER HUB ---
 
 JOBS RULES:
-- Never mention a specific job listing by title/company/salary — always link to live search result pages so users see current openings
-- Always add: "Jobs update daily — check the link for the latest live roles"
-- Use userLocation city to personalise job links where possible
-- Only reference jobs posted within the last 30 days — never surface expired listings
+- When ANYONE asks about finding a job, searching for jobs, or jobs in a specific location/category — ALWAYS redirect them to use the Jobs Hub category buttons and city search. Do NOT list external job websites.
+- Always say something like: "Use the 💼 Jobs Hub buttons below to search live jobs near you — tap the category and use the city search box to find jobs in any UK city!"
+- For CV tips, interview prep, qualifications, DBS checks etc — answer fully with helpful advice
+- Never mention Indeed, Reed, Totaljobs, LinkedIn or any external job site — we have live job search built in
+- Always end job-related answers with: "Tap 💼 Jobs Hub to search live listings near you!"
 
 Q: How do I find a job as a Nigerian in the UK?
 A: Top job sites: Indeed.co.uk, Reed.co.uk, LinkedIn, Totaljobs.com, Totaljobs.com. For NHS: jobs.nhs.uk. For government: civilservicejobs.service.gov.uk. Get your CV in UK format (2 pages max, no photo, no date of birth). Register with agencies: Adecco, Hays, Manpower. Join Nigerian professional networks on LinkedIn.
@@ -2136,6 +2137,14 @@ When you cannot find a business, event, or answer in the NaijaUKHub data, always
     removeTyping();
     addMessage('bot', formatResponse(reply), true, true);
     if (nhsMode) setTimeout(showNHSSuggestions, 300);
+    // Show Jobs Hub bubbles if reply contains job-related content
+    const replyLower = reply.toLowerCase();
+    const isJobReply = replyLower.includes('job') || replyLower.includes('career') || replyLower.includes('cv') || replyLower.includes('interview') || replyLower.includes('employ') || replyLower.includes('work');
+    if (isJobReply && !nhsMode) {
+      setTimeout(() => {
+        addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Jobs Hub</button><button class="suggestion-btn" onclick="fetchJobs(\'care\',\'🤝 Care Jobs\')">❤️ Care Jobs</button><button class="suggestion-btn" onclick="fetchJobs(\'nhs\',\'🏥 NHS Jobs\')">🏥 NHS Jobs</button><button class="suggestion-btn" onclick="fetchJobs(\'it\',\'💻 IT & Tech\')">💻 IT Jobs</button><button class="suggestion-btn" onclick="quickAsk(\'Give me UK CV tips\')">📄 CV Tips</button></div>');
+      }, 300);
+    }
 
     // 💾 Save exam progress automatically
     extractAndSaveExamData(userText, reply);
