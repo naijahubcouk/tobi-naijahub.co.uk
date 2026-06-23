@@ -1421,7 +1421,8 @@ Only reference these real NaijaUKHub blog posts. Do not make up or reference oth
 2. "Did You Know? UK Landlords Must Protect Tenant Deposits or Risk Legal Action" | Housing | naijahub.co.uk/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action
 3. "FREE BUS TRAVEL FOR CHILDREN IN AUGUST 2026" | News | naijahub.co.uk/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026
 4. "BREAKING: Prime Minister Keir Starmer Announces Resignation" | News | naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation
-5. "No Huge Savings? How to Buy Your First UK Home with Just a £5,000 Deposit!" | Housing | naijahub.co.uk/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!
+5. "No Huge Savings? How to Buy Your First UK Home with Just a £5,000 Deposit!" | Housing | naijahub.co.uk/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21
+6. "UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C" | News | naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We
 `;
 
 // ============================================
@@ -2384,6 +2385,7 @@ async function fetchJobs(category, label) {
   // If location not yet detected, request it and wait
   if (!window.userCity) {
     requestLocation();
+  showWeeklyNotificationPrompt();
     await new Promise(r => setTimeout(r, 4000));
   }
 
@@ -2468,6 +2470,14 @@ function showAllNews() {
       date: '22 Jun 2026'
     },
     {
+      emoji: '🌡️',
+      title: 'UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C',
+      summary: 'The UK Met Office has issued a rare Red Heat Warning as temperatures could reach 40°C this week. Stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours.',
+      url: 'https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We',
+      label: 'News',
+      date: '23 Jun 2026'
+    },
+    {
       emoji: '🚌',
       title: 'FREE Bus Travel for Children in August 2026',
       summary: 'Good news for families! The UK Government has announced that children aged 5–15 can travel for FREE on buses across England throughout August 2026.',
@@ -2549,6 +2559,15 @@ function showNewsCard() {
       url: 'https://naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
       label: 'Breaking',
       date: '22 Jun 2026'
+    },
+    {
+      emoji: '🌡️',
+      category: 'NEWS',
+      title: 'UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C',
+      summary: 'The UK Met Office has issued a rare Red Heat Warning — the highest level alert — as temperatures could reach 40°C this week. Nigerians in the UK should stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours and family members.',
+      url: 'https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We',
+      label: 'News',
+      date: '23 Jun 2026'
     },
     {
       emoji: '🚌',
@@ -2638,7 +2657,7 @@ function showAboutTobi() {
     <div style="padding:16px;border-bottom:1px solid #f0f0f0;">
       <div style="font-size:18px;font-weight:700;color:#0F1E36;margin-bottom:6px;">${greeting}! Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾</div>
       <div style="font-size:15px;font-weight:700;color:#057A44;margin-bottom:10px;">I'm Auntie Tobi 🤖✨ your Oversabi AI Auntie for Nigerians living in the UK 🇳🇬🇬🇧</div>
-      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:8px;">Think of me as that smart, no-nonsense, always-available auntie who already knows the answers to <strong>"how UK works"</strong> and explains it in a way that actually makes sense 😄</div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:8px;">Think of me as that smart, friendly, always-available auntie who already knows the answers to <strong>"how UK works"</strong> and explains it in a way that actually makes sense 😄</div>
       <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">Whether you've just arrived <strong>(japa'd)</strong> or you've been here for years, I'm here to help you <strong>settle, survive, and thrive</strong> in the UK with less stress and more clarity.</div>
       <div style="font-size:14px;font-weight:700;color:#057A44;">💡 Information is power… just ask me anything.</div>
     </div>
@@ -2666,13 +2685,24 @@ function showAboutTobi() {
         ✔ Help you make <strong>confident decisions</strong> in everyday UK life 🤝</div>
       </div>
       <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:14px;font-weight:700;color:#0C447C;margin-bottom:6px;">📱 Best way to use me:</div>
+        <div style="font-size:14px;font-weight:700;color:#0C447C;margin-bottom:6px;">📱 Best Way to Use Auntie Tobi</div>
         <div style="font-size:13px;color:#333;line-height:2.1;">
           📱 <strong>Android</strong> — open in Chrome<br>
           🍏 <strong>iPhone</strong> — open in Safari<br>
-          Then <strong>Add / Install to Home Screen</strong> 📲<br>
+          Then tap <strong>"Add to Home Screen"</strong> 📲<br>
           <em style="color:#888;">No App Store. No Google Play. No stress. Just open and go.</em>
         </div>
+      </div>
+      <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:700;color:#0C447C;margin-bottom:6px;">🔔 Don't forget to tap the notification bell!</div>
+        <div style="font-size:13px;color:#333;line-height:2.1;margin-bottom:6px;">
+          ✅ Breaking news affecting Nigerians in the UK<br>
+          ✅ Important UK updates and policy changes<br>
+          ✅ Immigration, jobs, benefits & NHS news<br>
+          ✅ Community events and opportunities<br>
+          ✅ Daily news and practical updates that matter to you
+        </div>
+        <div style="font-size:13px;color:#0C447C;font-weight:600;">Stay informed. Stay connected. Let Auntie Tobi keep you updated.</div>
       </div>
       <div style="font-size:16px;font-weight:700;color:#057A44;text-align:center;margin-bottom:10px;">So… wetin you need today? 😄</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:10px;font-size:12px;color:#9CA3AF;text-align:center;margin-bottom:8px;">📢 Own a business? <a href="https://naijahub.co.uk/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Add your listing 👉 naijahub.co.uk/new-listing</a></div>
@@ -2740,7 +2770,38 @@ function handleDeepLink() {
   const news = params.get('news');
   const action = params.get('action');
 
-  if (news === 'freebus') {
+  if (news === 'heatwarning') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      const heatHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div>
+          <button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button>
+        </div>
+        <div style="padding:10px 12px 8px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span>
+            <span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🌡️ UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C</div>
+          <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">The UK Met Office has issued a rare Red Heat Warning as temperatures could reach 40°C this week. Stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours.</div>
+          <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
+            <a href="https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+            <button onclick="tobiShare('UK Red Heat Warning','UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C','https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+          </div>
+        </div>
+      </div>`;
+      addTipMessage(heatHtml);
+      // Fixed heatwave bubbles
+      addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk(\'How do I stay hydrated during the UK heatwave?\')">🚰 How do I stay hydrated in the heatwave?</button><button class="suggestion-btn" onclick="quickAsk(\'What should I do if someone has heat stroke in the UK?\')">🏥 What to do if someone has heat stroke?</button></div>');
+      // Rotating home pool bubbles
+      const heatSuggStr = getRandomSuggestionStr();
+      const heatSuggList = heatSuggStr.split('|').map(s => s.trim()).filter(Boolean);
+      addTipMessage(`<div class="suggestions" style="margin-top:4px;">${heatSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 500);
+  } else if (news === 'freebus') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
@@ -3105,6 +3166,61 @@ function validateAndSearchCity(inputVal) {
       <div style="font-size:12px;color:#555;">Please check the spelling and try again — e.g. Manchester, Birmingham, Leeds, London.</div>
     </div>`);
   }
+}
+
+function showWeeklyNotificationPrompt() {
+  if (typeof OneSignalDeferred === 'undefined') return;
+
+  OneSignalDeferred.push(async function(OneSignal) {
+    const permission = OneSignal.Notifications.permission;
+    const optedIn = OneSignal.User.PushSubscription.optedIn;
+    if (permission && optedIn) return; // Already subscribed
+
+    // Check if we showed this prompt in the last 7 days
+    const lastPrompt = localStorage.getItem('tobi_notif_prompt_date');
+    const now = new Date();
+    if (lastPrompt) {
+      const daysSince = (now - new Date(lastPrompt)) / (1000 * 60 * 60 * 24);
+      if (daysSince < 7) return;
+    }
+
+    // Check user has visited before (not first visit)
+    const isReturning = localStorage.getItem('tobi_visited');
+    if (!isReturning) return;
+
+    localStorage.setItem('tobi_notif_prompt_date', now.toISOString());
+
+    // Show popup after 5 seconds
+    setTimeout(() => {
+      const popup = document.createElement('div');
+      popup.id = 'notif-weekly-popup';
+      popup.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+      popup.innerHTML = `<div style="background:white;border-radius:12px;overflow:hidden;max-width:360px;width:100%;">
+        <div style="background:#0F1E36;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:28px;">🔔</span>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:white;">Stay in the loop!</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.7);">Auntie Tobi has updates for you 🇳🇬</div>
+          </div>
+        </div>
+        <div style="padding:14px 16px;">
+          <div style="font-size:13px;color:#333;line-height:2.1;margin-bottom:12px;">
+            ✅ Breaking news affecting Nigerians in the UK<br>
+            ✅ Important UK updates and policy changes<br>
+            ✅ Immigration, jobs, benefits & NHS news<br>
+            ✅ Community events and opportunities<br>
+            ✅ Daily news and practical updates that matter to you
+          </div>
+          <div style="font-size:12px;color:#888;margin-bottom:14px;font-style:italic;">I no go disturb you, I promise! 😄</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="document.getElementById('notif-weekly-popup').remove();OneSignalDeferred.push(function(OneSignal){OneSignal.Slidedown.promptPush();})" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow Notifications</button>
+            <button onclick="document.getElementById('notif-weekly-popup').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;">Later</button>
+          </div>
+        </div>
+      </div>`;
+      document.body.appendChild(popup);
+    }, 5000);
+  });
 }
 function showFathersVideo() {
   // Only show on first visit today (21 June 2026) — never shows after midnight
