@@ -2388,6 +2388,7 @@ async function fetchJobs(category, label) {
   if (!window.userCity) {
     requestLocation();
   showWeeklyNotificationPrompt();
+  setTimeout(showPendingNotifBanner, 1000);
     await new Promise(r => setTimeout(r, 4000));
   }
 
@@ -2468,7 +2469,7 @@ function showAllNews() {
       title: 'UK Prime Minister Keir Starmer Has Resigned',
       summary: 'Prime Minister Keir Starmer has resigned on 22 June 2026. The Labour Party will now choose a new leader, who will become the next Prime Minister. No immediate changes affect visas, jobs, NHS services, or daily life today, but future government policies could change depending on the new leadership.',
       url: 'https://naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
-      label: 'Breaking',
+      label: 'News',
       date: '22 Jun 2026'
     },
     {
@@ -2559,7 +2560,7 @@ function showNewsCard() {
       title: 'UK Prime Minister Keir Starmer Has Resigned',
       summary: 'Prime Minister Keir Starmer has resigned on 22 June 2026. The Labour Party will now choose a new leader, who will become the next Prime Minister. No immediate changes affect visas, jobs, NHS services, or daily life today, but future government policies could change depending on the new leadership.',
       url: 'https://naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
-      label: 'Breaking',
+      label: 'News',
       date: '22 Jun 2026'
     },
     {
@@ -2610,12 +2611,8 @@ function showNewsCard() {
   ];
 
   // If there's a breaking news item, always show it today
-  const today = new Date().toISOString().split('T')[0];
-  const breaking = news.find(n => n.label === 'Breaking');
-  const breakingDate = '2026-06-22'; // Date breaking news was added
-  const item = (breaking && today === breakingDate)
-    ? breaking
-    : news[Math.floor(Math.random() * news.length)];
+  // Rotate randomly — no more breaking news pinning
+  const item = news[Math.floor(Math.random() * news.length)];
 
   // Category badge colours
   const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8' };
@@ -2658,9 +2655,14 @@ function showAboutTobi() {
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
     <div style="padding:16px;border-bottom:1px solid #f0f0f0;">
       <div style="font-size:18px;font-weight:700;color:#0F1E36;margin-bottom:6px;">${greeting}! Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾</div>
-      <div style="font-size:15px;font-weight:700;color:#057A44;margin-bottom:10px;">I'm Auntie Tobi 🤖✨ your Oversabi AI Auntie for Nigerians living in the UK 🇳🇬🇬🇧</div>
-      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:8px;">Think of me as that smart, friendly, always-available auntie who already knows the answers to <strong>"how UK works"</strong> and explains it in a way that actually makes sense 😄</div>
-      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">Whether you've just arrived <strong>(japa'd)</strong> or you've been here for years, I'm here to help you <strong>settle, survive, and thrive</strong> in the UK with less stress and more clarity.</div>
+      <div style="font-size:15px;font-weight:700;color:#057A44;margin-bottom:8px;">I'm Auntie Tobi 🤖✨ your friendly, always-available AI Auntie for Nigerians living in the UK 🇳🇬🇬🇧</div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:8px;">Think of me as that knowledgeable Nigerian auntie who's always ready to help — giving you clear, practical answers about life in the UK whenever you need them.</div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">Whether you've just arrived <strong>(japa'd)</strong> or you've been here for years, I'm here to help you <strong>settle and thrive</strong> in the UK with less stress and more clarity.</div>
+      <div style="background:#f8faf5;border-radius:6px;padding:10px;margin-bottom:10px;border-left:3px solid #057A44;">
+        <div style="font-size:13px;color:#0F1E36;line-height:1.7;margin-bottom:4px;"><strong>Auntie Tobi is more than an AI Assistant.</strong> She's your Oversabi Digital Aunty — helping Nigerians in the UK find answers, stay informed, discover trusted services, and navigate life with confidence.</div>
+        <div style="font-size:13px;color:#057A44;font-weight:600;margin-bottom:4px;">Built for Nigerians in the UK.</div>
+        <div style="font-size:13px;color:#555;">Ask questions, find trusted services, discover opportunities, and stay informed — all in one place.</div>
+      </div>
       <div style="font-size:14px;font-weight:700;color:#057A44;">💡 Information is power… just ask me anything.</div>
     </div>
     <div style="padding:14px 16px;">
@@ -3231,6 +3233,36 @@ function showWeeklyNotificationPrompt() {
       document.body.appendChild(popup);
     }, 5000);
   });
+}
+
+function showPendingNotifBanner() {
+  const pending = localStorage.getItem('tobi_pending_notif');
+  if (!pending) return;
+
+  try {
+    const notif = JSON.parse(pending);
+    if (!notif.url) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'notif-update-banner';
+    banner.style.cssText = 'background:#0F1E36;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin:8px 0;';
+    banner.innerHTML = `
+      <span style="font-size:20px;">🔔</span>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:700;color:white;margin-bottom:2px;">You have a new update!</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.7);">${notif.body || notif.title}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();window.location.href='${notif.url}';" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View</button>
+        <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();" style="background:none;border:0.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">✕</button>
+      </div>`;
+
+    // Insert banner at top of messages
+    const messages = document.getElementById('messages');
+    if (messages) messages.insertBefore(banner, messages.firstChild);
+  } catch(e) {
+    localStorage.removeItem('tobi_pending_notif');
+  }
 }
 function showFathersVideo() {
   // Only show on first visit today (21 June 2026) — never shows after midnight
@@ -4131,7 +4163,21 @@ function initOneSignal() {
     OneSignal.Notifications.addEventListener('click', function(event) {
       const url = event.notification.launchURL;
       if (url) {
+        // Clear pending banner since user tapped notification directly
+        localStorage.removeItem('tobi_pending_notif');
         window.location.href = url;
+      }
+    });
+
+    // Save incoming notification to localStorage for banner display
+    OneSignal.Notifications.addEventListener('foregroundWillDisplay', function(event) {
+      const notif = event.notification;
+      if (notif) {
+        localStorage.setItem('tobi_pending_notif', JSON.stringify({
+          title: notif.title || 'You have a new update!',
+          body: notif.body || '',
+          url: notif.launchURL || ''
+        }));
       }
     });
 
