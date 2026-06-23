@@ -2331,7 +2331,7 @@ function showJobsHubCard() {
         <div style="font-size:12px;color:#555;margin-bottom:6px;">🔍 Search in a different city?</div>
         <div style="display:flex;gap:8px;">
           <input id="jobs-city-input" type="text" placeholder="e.g. Manchester, Birmingham..." style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
-          <button onclick="validateAndSearchCity(document.getElementById(&quot;jobs-city-input&quot;).value)" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Go</button>
+          <button onclick="validateAndSearchCity(document.getElementById('jobs-city-input')?document.getElementById('jobs-city-input').value:'')" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Go</button>
         </div>
       </div>
     </div>
@@ -3070,10 +3070,13 @@ function validateAndSearchCity(inputVal) {
     window.userCity = exact;
     userCity = exact;
     localStorage.setItem('tobi_user_city', exact);
-    showJobsHubCard();
+    // Update header in existing card without rebuilding it
+    const header = document.querySelector('#jobs-hub-card .city-label');
+    if (header) header.textContent = '📍 Searching near ' + exact;
+    addTipMessage(`<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:10px 12px;font-size:13px;color:#057A44;font-weight:700;">✅ City set to <strong>${exact}</strong> — now tap a job category above!</div>`);
   } else if (suggestions.length > 0) {
     const suggestBtns = suggestions.map(c =>
-      `<button onclick="window.userCity='${c}';userCity='${c}';localStorage.setItem('tobi_user_city','${c}');showJobsHubCard();" style="background:#057A44;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${c}</button>`
+      `<button onclick="window.userCity='${c}';userCity='${c}';localStorage.setItem('tobi_user_city','${c}');addTipMessage('<div style=\\"background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:10px 12px;font-size:13px;color:#057A44;font-weight:700;\\">✅ City set to <strong>${c}</strong> — now tap a job category!</div>');" style="background:#057A44;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${c}</button>`
     ).join('');
     addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;">
       <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:8px;">🤔 We couldn't find "<strong>${input}</strong>" — did you mean:</div>
