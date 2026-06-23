@@ -2331,7 +2331,7 @@ function showJobsHubCard() {
         <div style="font-size:12px;color:#555;margin-bottom:6px;">🔍 Search in a different city?</div>
         <div style="display:flex;gap:8px;">
           <input id="jobs-city-input" type="text" placeholder="e.g. Manchester, Birmingham..." style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
-          <button onclick="var c=document.getElementById('jobs-city-input').value.trim();if(c){window.userCity=c;userCity=c;localStorage.setItem('tobi_user_city',c);showJobsHubCard();}" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Go</button>
+          <button onclick="validateAndSearchCity()" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Go</button>
         </div>
       </div>
     </div>
@@ -2991,6 +2991,92 @@ function showNHSSuggestions() {
   const suggestions = getNHSSuggestions();
   const html = `<div class="suggestions" style="margin-top:8px;">${suggestions.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`;
   addTipMessage(html);
+}
+
+// UK Cities list for validation
+const UK_CITIES = [
+  'London','Manchester','Birmingham','Leeds','Glasgow','Sheffield','Bradford','Edinburgh','Liverpool','Bristol',
+  'Cardiff','Coventry','Nottingham','Leicester','Sunderland','Belfast','Brighton','Hull','Plymouth','Stoke-on-Trent',
+  'Wolverhampton','Derby','Swansea','Southampton','Salford','Aberdeen','Westminster','Portsmouth','York','Peterborough',
+  'Dundee','Lancaster','Oxford','Newport','Preston','St Albans','Norwich','Chester','Cambridge','Salisbury',
+  'Exeter','Gloucester','Lincoln','Hereford','Truro','Ely','Bath','Wells','Ripon','Wakefield','Durham',
+  'Carlisle','Chichester','Worcester','Lichfield','Chelmsford','Colchester','Ipswich','Northampton','Milton Keynes',
+  'Reading','Slough','Luton','Watford','Guildford','Bournemouth','Swindon','Basingstoke','Woking','Crawley',
+  'Maidstone','Rochester','Canterbury','Chatham','Tunbridge Wells','Eastbourne','Worthing','Hastings',
+  'Newcastle','Middlesbrough','Sunderland','Gateshead','Stockton','Darlington','Hartlepool',
+  'Blackpool','Blackburn','Burnley','Bolton','Rochdale','Oldham','Wigan','Warrington','St Helens',
+  'Huddersfield','Halifax','Barnsley','Rotherham','Doncaster','Scunthorpe','Grimsby',
+  'Stoke','Stafford','Shrewsbury','Telford','Walsall','West Bromwich','Solihull',
+  'Coventry','Rugby','Nuneaton','Tamworth','Burton','Derby','Chesterfield','Mansfield',
+  'Nottingham','Newark','Lincoln','Grimsby','Boston','Grantham',
+  'Leicester','Loughborough','Kettering','Corby','Wellingborough',
+  'Milton Keynes','Bedford','Luton','Stevenage','Watford','Hemel Hempstead',
+  'Chelmsford','Southend','Colchester','Ipswich','Norwich','Peterborough',
+  'Swansea','Cardiff','Newport','Wrexham','Bridgend','Merthyr Tydfil',
+  'Edinburgh','Glasgow','Aberdeen','Dundee','Inverness','Perth','Stirling',
+  'Belfast','Derry','Lisburn','Newry','Armagh'
+];
+
+function fuzzyMatchCity(input) {
+  const inp = input.trim().toLowerCase();
+  if (!inp) return { exact: null, suggestions: [] };
+
+  // Exact match (case insensitive)
+  const exact = UK_CITIES.find(c => c.toLowerCase() === inp);
+  if (exact) return { exact, suggestions: [] };
+
+  // Fuzzy match — find cities that start with input or contain it
+  const starts = UK_CITIES.filter(c => c.toLowerCase().startsWith(inp));
+  const contains = UK_CITIES.filter(c => c.toLowerCase().includes(inp) && !starts.includes(c));
+
+  // Levenshtein distance for typos
+  function levenshtein(a, b) {
+    const m = a.length, n = b.length;
+    const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => j === 0 ? i : j === 0 ? j : 0));
+    for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    return dp[m][n];
+  }
+
+  const typos = UK_CITIES
+    .filter(c => !starts.includes(c) && !contains.includes(c))
+    .map(c => ({ city: c, dist: levenshtein(inp, c.toLowerCase()) }))
+    .filter(x => x.dist <= 3)
+    .sort((a, b) => a.dist - b.dist)
+    .map(x => x.city);
+
+  const suggestions = [...starts, ...contains, ...typos].slice(0, 3);
+  return { exact: null, suggestions };
+}
+
+function validateAndSearchCity(category, label) {
+  const input = document.getElementById('jobs-city-input').value.trim();
+  if (!input) return;
+
+  const { exact, suggestions } = fuzzyMatchCity(input);
+
+  if (exact) {
+    // Perfect match — search directly
+    window.userCity = exact;
+    userCity = exact;
+    localStorage.setItem('tobi_user_city', exact);
+    showJobsHubCard();
+  } else if (suggestions.length > 0) {
+    // Show suggestions
+    const suggestBtns = suggestions.map(c =>
+      `<button onclick="window.userCity='${c}';userCity='${c}';localStorage.setItem('tobi_user_city','${c}');showJobsHubCard();" style="background:#057A44;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${c}</button>`
+    ).join('');
+    addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;">
+      <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:8px;">🤔 We couldn't find "<strong>${input}</strong>" — did you mean:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">${suggestBtns}</div>
+    </div>`);
+  } else {
+    // No match at all
+    addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;">
+      <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;">❌ We couldn't find "<strong>${input}</strong>"</div>
+      <div style="font-size:12px;color:#555;">Please check the spelling and try again — e.g. Manchester, Birmingham, Leeds, London.</div>
+    </div>`);
+  }
 }
 function showFathersVideo() {
   // Only show on first visit today (21 June 2026) — never shows after midnight
