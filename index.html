@@ -3025,11 +3025,15 @@ function fuzzyMatchCity(input) {
   const exact = UK_CITIES.find(c => c.toLowerCase() === inp);
   if (exact) return { exact, suggestions: [] };
 
-  // Fuzzy match — find cities that start with input or contain it
+  // Starts with input
   const starts = UK_CITIES.filter(c => c.toLowerCase().startsWith(inp));
-  const contains = UK_CITIES.filter(c => c.toLowerCase().includes(inp) && !starts.includes(c));
+  if (starts.length > 0) return { exact: null, suggestions: starts.slice(0, 3) };
 
-  // Levenshtein distance for typos
+  // Contains input
+  const contains = UK_CITIES.filter(c => c.toLowerCase().includes(inp));
+  if (contains.length > 0) return { exact: null, suggestions: contains.slice(0, 3) };
+
+  // Levenshtein distance for typos — only match if distance is small relative to word length
   function levenshtein(a, b) {
     const m = a.length, n = b.length;
     const dp = [];
@@ -3049,15 +3053,15 @@ function fuzzyMatchCity(input) {
     return dp[m][n];
   }
 
+  const maxDist = Math.max(1, Math.floor(inp.length / 4)); // Allow 1 error per 4 chars
   const typos = UK_CITIES
-    .filter(c => !starts.includes(c) && !contains.includes(c))
     .map(c => ({ city: c, dist: levenshtein(inp, c.toLowerCase()) }))
-    .filter(x => x.dist <= 3)
+    .filter(x => x.dist <= maxDist)
     .sort((a, b) => a.dist - b.dist)
+    .slice(0, 3)
     .map(x => x.city);
 
-  const suggestions = [...starts, ...contains, ...typos].slice(0, 3);
-  return { exact: null, suggestions };
+  return { exact: null, suggestions: typos };
 }
 
 function setCityAndConfirm(city) {
@@ -3071,6 +3075,10 @@ function validateAndSearchCity(inputVal) {
   const input = (inputVal || '').trim();
   if (!input) return;
 
+  // Remove any previous city suggestion card
+  const existing = document.getElementById('city-suggest-card');
+  if (existing) existing.remove();
+
   const { exact, suggestions } = fuzzyMatchCity(input);
 
   if (exact) {
@@ -3079,7 +3087,7 @@ function validateAndSearchCity(inputVal) {
     const suggestBtns = suggestions.map(c =>
       `<button onclick="setCityAndConfirm('${c}')" style="background:#057A44;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${c}</button>`
     ).join('');
-    addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;">
+    addTipMessage(`<div id="city-suggest-card" style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;">
       <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:8px;">🤔 We couldn't find "<strong>${input}</strong>" — did you mean:</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">${suggestBtns}</div>
     </div>`);
