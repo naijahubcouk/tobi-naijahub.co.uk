@@ -2431,8 +2431,6 @@ async function fetchJobs(category, label) {
   // If location not yet detected, request it and wait
   if (!window.userCity) {
     requestLocation();
-  showWeeklyNotificationPrompt();
-  setTimeout(showPendingNotifBanner, 1000);
     await new Promise(r => setTimeout(r, 4000));
   }
 
@@ -3324,19 +3322,21 @@ function showWeeklyNotificationPrompt() {
   const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
   if (isSubscribed) return;
 
-  // Check if already shown today
+  // Check if already shown today (for returning users)
   const lastPrompt = localStorage.getItem('tobi_notif_prompt_date');
   const todayStr = new Date().toISOString().split('T')[0];
-  if (lastPrompt === todayStr) return;
-
-  // Only show to returning users
   const isReturning = localStorage.getItem('tobi_visited');
-  if (!isReturning) return;
 
+  // Returning users — show once per day after 5 seconds
+  // First time visitors — show after 20 seconds
+  if (isReturning && lastPrompt === todayStr) return;
+
+  const delay = isReturning ? 5000 : 20000;
   localStorage.setItem('tobi_notif_prompt_date', todayStr);
 
-  // Show popup after 5 seconds
   setTimeout(() => {
+    // Don't show if already subscribed by now
+    if (localStorage.getItem('tobi_notifications') === '1') return;
     const popup = document.createElement('div');
     popup.id = 'notif-weekly-popup';
     popup.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
@@ -3364,7 +3364,7 @@ function showWeeklyNotificationPrompt() {
       </div>
     </div>`;
     document.body.appendChild(popup);
-  }, 5000);
+  }, delay);
 }
 
 function showPendingNotifBanner() {
@@ -3954,6 +3954,8 @@ window.onload = () => {
   }
   // Request location on load to update city
   requestLocation();
+  showWeeklyNotificationPrompt();
+  setTimeout(showPendingNotifBanner, 1000);
   const todayStr = new Date().toISOString().split('T')[0];
   const lastVisitDate = localStorage.getItem('tobi_last_visit');
   const isReturning = localStorage.getItem('tobi_visited');
