@@ -1,7 +1,5 @@
-// Auntie Tobi Service Worker v6
-// OneSignal handles its own SW separately via OneSignalSDK.sw.js
-
-const CACHE_NAME = 'naijahub-tobi-v6';
+// Auntie Tobi Service Worker v7
+const CACHE_NAME = 'naijahub-tobi-v7';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -40,7 +38,29 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// Handle messages from OneSignal
+// Save notification data when received so banner shows if user opens app directly
+self.addEventListener('push', e => {
+  try {
+    const data = e.data ? e.data.json() : {};
+    const title = (data.headings && data.headings.en) || 'Auntie Tobi 🤖✨';
+    const body = (data.contents && data.contents.en) || 'You have a new update!';
+    const url = data.url || data.launch_url || 'https://auntietobi.co.uk';
+
+    // Send to all open clients to save in localStorage
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'SAVE_PENDING_NOTIF',
+          title,
+          body,
+          url
+        });
+      });
+    });
+  } catch(e) {}
+});
+
+// Handle messages
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
