@@ -3327,7 +3327,37 @@ if ('serviceWorker' in navigator) {
         url: event.data.url
       }));
     }
+    // Handle notification click URL — save and navigate
+    if (event.data && event.data.type === 'NOTIF_CLICK_URL') {
+      const url = event.data.url;
+      if (url) {
+        localStorage.setItem('tobi_notif_click_url', url);
+      }
+    }
   });
+}
+
+// Check for pending notification click URL on page load
+function checkNotifClickUrl() {
+  const url = localStorage.getItem('tobi_notif_click_url');
+  if (url) {
+    localStorage.removeItem('tobi_notif_click_url');
+    // Extract just the query string and trigger deep link
+    try {
+      const urlObj = new URL(url);
+      const search = urlObj.search;
+      if (search) {
+        // Temporarily set location search and run deep link handler
+        const params = new URLSearchParams(search);
+        const news = params.get('news');
+        const action = params.get('action');
+        if (news || action) {
+          history.replaceState({}, '', search);
+          setTimeout(handleDeepLink, 500);
+        }
+      }
+    } catch(e) {}
+  }
 }
 
 window._notifPopupAllow = function() {
@@ -3403,33 +3433,63 @@ function showWeeklyNotificationPrompt() {
 }
 
 function showPendingNotifBanner() {
+  // Check localStorage first (set by foregroundWillDisplay)
   const pending = localStorage.getItem('tobi_pending_notif');
-  if (!pending) return;
-
-  try {
-    const notif = JSON.parse(pending);
-    if (!notif.url) return;
-
-    const banner = document.createElement('div');
-    banner.id = 'notif-update-banner';
-    banner.style.cssText = 'background:#0F1E36;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin:8px 0;';
-    banner.innerHTML = `
-      <span style="font-size:20px;">🔔</span>
-      <div style="flex:1;">
-        <div style="font-size:13px;font-weight:700;color:white;margin-bottom:2px;">You have a new update!</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.7);">${notif.body || notif.title}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();window.location.href='${notif.url}';" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View</button>
-        <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();" style="background:none;border:0.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">✕</button>
-      </div>`;
-
-    // Insert banner at top of messages
-    const messages = document.getElementById('messages');
-    if (messages) messages.insertBefore(banner, messages.firstChild);
-  } catch(e) {
-    localStorage.removeItem('tobi_pending_notif');
+  if (pending) {
+    try {
+      const notif = JSON.parse(pending);
+      if (!notif.url) return;
+      _renderNotifBanner(notif);
+      return;
+    } catch(e) {
+      localStorage.removeItem('tobi_pending_notif');
+    }
   }
+
+  // Also check via OneSignal for last notification received
+  if (typeof OneSignalDeferred !== 'undefined') {
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        // Get last notification from OneSignal
+        const lastNotif = await OneSignal.Notifications.getLastNotification();
+        if (lastNotif && lastNotif.launchURL) {
+          const notifData = {
+            title: lastNotif.title || 'You have a new update!',
+            body: lastNotif.body || '',
+            url: lastNotif.launchURL
+          };
+          // Only show if it hasn't been seen
+          const lastSeen = localStorage.getItem('tobi_last_notif_seen');
+          const notifId = lastNotif.notificationId || lastNotif.id || '';
+          if (lastSeen !== notifId) {
+            localStorage.setItem('tobi_pending_notif', JSON.stringify(notifData));
+            _renderNotifBanner(notifData);
+          }
+        }
+      } catch(e) {
+        // getLastNotification not available — ignore
+      }
+    });
+  }
+}
+
+function _renderNotifBanner(notif) {
+  if (document.getElementById('notif-update-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'notif-update-banner';
+  banner.style.cssText = 'background:#0F1E36;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin:8px 0;';
+  banner.innerHTML = `
+    <span style="font-size:20px;">🔔</span>
+    <div style="flex:1;">
+      <div style="font-size:13px;font-weight:700;color:white;margin-bottom:2px;">You have a new update!</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);">${notif.body || notif.title}</div>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();window.location.href='${notif.url}';" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View</button>
+      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();" style="background:none;border:0.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">✕</button>
+    </div>`;
+  const messages = document.getElementById('messages');
+  if (messages) messages.insertBefore(banner, messages.firstChild);
 }
 
 function showJapaGuide() {
@@ -3989,7 +4049,15 @@ window.onload = () => {
   }
   // Request location on load to update city
   requestLocation();
+  checkNotifClickUrl();
   showWeeklyNotificationPrompt();
+
+  // Clear notification badge when app is opened
+  if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
+  if ('setAppBadge' in navigator) navigator.setAppBadge(0).catch(() => {});
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' });
+  }
   setTimeout(showPendingNotifBanner, 1000);
   const todayStr = new Date().toISOString().split('T')[0];
   const lastVisitDate = localStorage.getItem('tobi_last_visit');

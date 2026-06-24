@@ -64,3 +64,10 @@ self.addEventListener('push', e => {
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
+
+// Clear badge when app is opened
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'CLEAR_BADGE') {
+    self.registration.clearAppBadge && self.registration.clearAppBadge().catch(() => {});
+  }
+});
