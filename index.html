@@ -999,7 +999,7 @@
     <div class="pill" onclick="showAllNews()">📰 News/Updates</div>
     <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my UK driving theory test'))">🚗 Driving Theory Test</div>
     <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my Life in UK test'))">📋 Life in UK Test</div>
-    <div class="pill" onclick="resetAndAsk('How do I settle in the UK as a Nigerian?')">🇬🇧 Japa Guide</div>
+    <div class="pill" onclick="showJapaGuide()">🇬🇧 Japa Guide</div>
     <div class="pill" onclick="showRequestOptions()">🔍 Request</div>
     <div class="pill" onclick="showFeedbackForm()">📝 Feedback</div>
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
@@ -1146,6 +1146,9 @@ Always respond warmly and concisely. Add the signature "— 🇳🇬🇬🇧 Aun
 
 Always end responses with 1-2 short follow-up suggestions:
 [SUGGESTIONS: suggestion one | suggestion two]
+
+DISCLAIMER RULE:
+For any question involving NHS, visa, immigration, legal rights, benefits or Home Office matters — always end your response with a reminder that information changes frequently and users should verify at gov.uk. Say something like: "Please note that policies and rules can change — always check the latest information at gov.uk to be sure."
 
 CRITICAL RULES:
 1. ONLY recommend businesses that are explicitly in the NaijaUKHub business data provided. NEVER invent, make up or hallucinate any business name, address, phone number or service. If a business is not in the data, do NOT mention it.
@@ -2167,8 +2170,22 @@ When you cannot find a business, event, or answer in the NaijaUKHub data, always
     removeTyping();
     addMessage('bot', formatResponse(reply), true, true);
     if (nhsMode) setTimeout(showNHSSuggestions, 300);
-    // Show Jobs Hub bubbles if reply contains job-related content
+
+    // Show disclaimer for NHS/visa/immigration/legal topics
     const replyLower = reply.toLowerCase();
+    const isSensitiveTopic = replyLower.includes('visa') || replyLower.includes('immigration') ||
+      replyLower.includes('nhs') || replyLower.includes('gp') || replyLower.includes('legal') ||
+      replyLower.includes('solicitor') || replyLower.includes('ilr') || replyLower.includes('brp') ||
+      replyLower.includes('evisa') || replyLower.includes('settlement') || replyLower.includes('prescription') ||
+      replyLower.includes('benefits') || replyLower.includes('universal credit') || replyLower.includes('asylum') ||
+      replyLower.includes('deportation') || replyLower.includes('right to remain') || replyLower.includes('home office');
+    if (isSensitiveTopic) {
+      setTimeout(() => {
+        addTipMessage('<div style="background:#FFF8E7;border:1px solid #FFB81C;border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;margin-top:4px;"><span style="font-size:18px;flex-shrink:0;">⚠️</span><div><div style="font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Information changes fast</div><div style="font-size:12px;color:#555;line-height:1.6;">Auntie Tobi provides general guidance only. Always verify important decisions — especially visa, NHS and legal matters — on official UK government websites.</div><a href="https://www.gov.uk" target="_blank" style="font-size:11px;color:#057A44;font-weight:700;text-decoration:none;margin-top:4px;display:inline-block;">👉 Check gov.uk for the latest information</a></div></div>');
+      }, 400);
+    }
+
+    // Show Jobs Hub bubbles if reply contains job-related content
     const isJobReply = replyLower.includes('job') || replyLower.includes('career') || replyLower.includes('cv') || replyLower.includes('interview') || replyLower.includes('employ') || replyLower.includes('work');
     if (isJobReply && !nhsMode) {
       setTimeout(() => {
@@ -3011,6 +3028,11 @@ function handleDeepLink() {
       quickAsk('Do you know your NHS rights as a Nigerian in the UK? Tell me everything I need to know');
       window.history.replaceState({}, document.title, window.location.pathname);
     }, 500);
+  } else if (action === 'japa') {
+    setTimeout(() => {
+      showJapaGuide();
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
   } else if (action === 'motivation') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
@@ -3381,6 +3403,163 @@ function showPendingNotifBanner() {
     localStorage.removeItem('tobi_pending_notif');
   }
 }
+
+function showJapaGuide() {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#057A44,#0F1E36);padding:14px 16px;">
+      <div style="font-size:11px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">🇳🇬🇬🇧 NAIJAUKHUB</div>
+      <div style="font-size:18px;font-weight:700;color:white;margin-bottom:4px;">Your Japa Starter Guide</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.8);">Everything you need to settle in the UK 💪🏾</div>
+    </div>
+    <div style="padding:14px 16px;">
+
+      <div style="border-left:3px solid #057A44;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#057A44;margin-bottom:6px;">1️⃣ Set Up Your UKVI eVisa</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Your immigration status is now <strong>digital</strong> — no more physical BRP card. You prove your status using a <strong>share code</strong> from your UKVI account.</div>
+        <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          You will need it for:<br>
+          🏠 Renting a home &nbsp;|&nbsp; 🏦 Opening a bank account<br>
+          💼 Getting a job &nbsp;|&nbsp; 🏥 Accessing NHS services
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:#057A44;font-weight:600;">👉 Manage it via your UKVI account at gov.uk</div>
+      </div>
+
+      <div style="border-left:3px solid #FFB81C;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:6px;">2️⃣ Get a UK SIM Card 📱</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Pick up a pay-as-you-go SIM — no contract needed. Top options: <strong>Giffgaff, Lebara, Lycamobile, Three UK</strong> or <strong>EE</strong>.</div>
+        <div style="background:#fffbf0;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          📞 <strong>Lebara and Lycamobile</strong> — affordable calls to Nigeria<br>
+          📶 <strong>Giffgaff, Three and EE</strong> — great coverage and data plans
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:#555;">You will need a UK number to open a bank account, apply for jobs and receive OTP codes.</div>
+      </div>
+
+      <div style="border-left:3px solid #057A44;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#057A44;margin-bottom:6px;">3️⃣ Open a UK Bank Account 🏦</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Start with <strong>Monzo</strong> or <strong>Starling Bank</strong> — easier for new arrivals with no long UK credit history.</div>
+        <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          You will typically need:<br>
+          🛂 Passport &nbsp;|&nbsp; 📲 UKVI eVisa / share code<br>
+          🏠 UK address &nbsp;|&nbsp; 📱 UK phone number
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:#555;">Traditional banks like Barclays or Lloyds are good long-term options but may take longer initially.</div>
+        <div style="margin-top:6px;font-size:12px;color:#057A44;font-weight:600;">💸 To send money to Nigeria: try <strong>LemFi</strong> or <strong>Wise</strong> — low fees, fast transfers.</div>
+      </div>
+
+      <div style="border-left:3px solid #FFB81C;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:6px;">4️⃣ Apply for Your National Insurance Number 🧾</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Apply online at <strong>gov.uk</strong> as soon as you arrive. It can take a few weeks but you can often start working while waiting — your employer may use a temporary process.</div>
+        <div style="background:#fffbf0;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          You need it for:<br>
+          💼 Working and paying tax &nbsp;|&nbsp; 📋 Payroll records<br>
+          📈 Building your UK tax history
+        </div>
+      </div>
+
+      <div style="border-left:3px solid #057A44;padding-left:12px;margin-bottom:4px;">
+        <div style="font-size:14px;font-weight:700;color:#057A44;margin-bottom:6px;">5️⃣ Register with a GP 🏥</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Find your nearest GP at <strong>nhs.uk/service-search/find-a-gp</strong>. Registration is <strong>free</strong> — do this early, do not wait until you are sick!</div>
+        <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          What you need:<br>
+          🏠 UK address &nbsp;|&nbsp; 🛂 Passport (usually enough)<br>
+          ✅ No BRP needed &nbsp;|&nbsp; ✅ eVisa not usually required
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:#555;">Gives you access to: free doctor appointments, prescriptions and referrals to specialists.</div>
+      </div>
+
+    </div>
+  </div>`;
+
+  addTipMessage(html);
+
+  const html2 = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="padding:14px 16px;">
+
+      <div style="border-left:3px solid #FFB81C;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:6px;">6️⃣ Sort Your Housing 🏠</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Search on <strong>Rightmove, Zoopla</strong> or <strong>SpareRoom</strong>. SpareRoom is often fastest for newcomers — great for shared houses. Rightmove and Zoopla are better for full flats.</div>
+        <div style="background:#fffbf0;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          ⚠️ Your rights as a tenant:<br>
+          🔒 Deposit must be protected within 30 days<br>
+          📄 Always get a written tenancy agreement<br>
+          🚨 Be cautious of large upfront payments without documentation
+        </div>
+      </div>
+
+      <div style="border-left:3px solid #057A44;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#057A44;margin-bottom:6px;">7️⃣ Start Job Hunting 💼</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Use Auntie Tobi's <strong>💼 Jobs Hub</strong> to search live jobs near you.</div>
+        <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          Top sectors for Nigerians:<br>
+          🏥 Care and Support &nbsp;|&nbsp; 🩺 NHS and Healthcare<br>
+          💻 IT and Tech &nbsp;|&nbsp; 🍎 Teaching &nbsp;|&nbsp; 📊 Finance and Admin
+        </div>
+        <div style="background:#fffbf0;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          UK CV tips:<br>
+          📄 1–2 pages max &nbsp;|&nbsp; No photo needed<br>
+          📅 Use month/year dates &nbsp;|&nbsp; Focus on skills and results
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:#057A44;font-weight:600;">💡 You can start working before your NI number arrives — show your eVisa share code as proof of right to work.</div>
+      </div>
+
+      <div style="border-left:3px solid #FFB81C;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:6px;">8️⃣ Get a UK Driving Licence 🚗</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">You can drive on your Nigerian licence for <strong>up to 12 months</strong> from arrival. After that, you must take the <strong>full UK driving test</strong> (theory + practical).</div>
+        <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          📋 Book theory test at gov.uk/book-theory-test<br>
+          🪪 Get a provisional licence before starting lessons<br>
+          ⏳ Book early — waiting times can be very long!
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:#057A44;font-weight:600;">💡 Auntie Tobi can help you prepare — tap 🚗 Driving Theory Test above!</div>
+      </div>
+
+      <div style="border-left:3px solid #057A44;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#057A44;margin-bottom:6px;">9️⃣ Register Your Children for School 🎒</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Contact your <strong>local council</strong> as soon as possible. School is <strong>free and compulsory for ages 5–16</strong>.</div>
+        <div style="background:#fffbf0;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          You will usually need:<br>
+          👶 Child's name and date of birth<br>
+          🏠 Proof of UK address<br>
+          🛂 eVisa share code (may be requested)<br>
+          📚 Previous school records (if available)
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:#555;">Apply quickly — popular schools fill up fast. Your council controls placement, not the school. Search: "[your council] school admissions"</div>
+      </div>
+
+      <div style="border-left:3px solid #FFB81C;padding-left:12px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:6px;">🔟 Start Building Your UK Credit History 💳</div>
+        <div style="font-size:13px;color:#333;line-height:1.8;">Your first few months = creating a <strong>financial footprint</strong>. Consistent payments + stable address + responsible credit = strong history over time.</div>
+        <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;color:#555;line-height:1.9;">
+          Ways to build your credit profile:<br>
+          🏦 Open and actively use a UK bank account<br>
+          ⏰ Pay all bills on time every month<br>
+          🗳️ Register on the Electoral Register (if eligible)<br>
+          💳 Consider a credit-builder card (Aqua or Capital One) — pay in full each month
+        </div>
+      </div>
+
+      <div style="background:#f8faf5;border-radius:8px;padding:12px 14px;margin-top:4px;border-left:3px solid #057A44;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">💡 Auntie Tobi says:</div>
+        <div style="font-size:13px;color:#333;line-height:1.7;font-style:italic;">"UK life can feel overwhelming at first — but take it one step at a time. You do not have to figure it all out in one day. Ask me anything you are not sure about. No question is too small! 😊"</div>
+      </div>
+
+      <div style="border-top:1px solid #f0f0f0;margin-top:12px;padding-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
+        📢 Found this helpful? Share with a Nigerian friend who just japa'd!
+        <button onclick="tobiShare('Japa Starter Guide','Your complete guide to settling in the UK as a Nigerian','https://auntietobi.co.uk?action=japa')" style="background:none;border:none;color:#057A44;font-weight:700;cursor:pointer;font-family:inherit;font-size:12px;">📤 Share Guide</button>
+      </div>
+    </div>
+  </div>`;
+
+  addTipMessage(html2);
+
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk(\'What documents do I need when I first arrive in the UK as a Nigerian?\')">📄 What documents do I need on arrival?</button><button class="suggestion-btn" onclick="quickAsk(\'How do I send money from the UK to Nigeria cheaply?\')">💸 How to send money to Nigeria cheaply?</button></div>');
+  const japaSuggs = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+  addTipMessage(`<div class="suggestions" style="margin-top:4px;">${japaSuggs.map(s=>`<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\'")}')"> ${s}</button>`).join('')}</div>`);
+}
+
 function showFathersVideo() {
   // Only show on first visit today (21 June 2026) — never shows after midnight
   const today = new Date();
