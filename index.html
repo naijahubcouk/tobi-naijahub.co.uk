@@ -3320,55 +3320,51 @@ function validateAndSearchCity(inputVal) {
 }
 
 function showWeeklyNotificationPrompt() {
-  if (typeof OneSignalDeferred === 'undefined') return;
+  // Check if already subscribed via localStorage (instant, no need to wait for OneSignal)
+  const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
+  if (isSubscribed) return;
 
-  OneSignalDeferred.push(async function(OneSignal) {
-    const permission = OneSignal.Notifications.permission;
-    const optedIn = OneSignal.User.PushSubscription.optedIn;
-    if (permission && optedIn) return; // Already subscribed
+  // Check if already shown today
+  const lastPrompt = localStorage.getItem('tobi_notif_prompt_date');
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (lastPrompt === todayStr) return;
 
-    // Check if we showed this prompt today already
-    const lastPrompt = localStorage.getItem('tobi_notif_prompt_date');
-    const todayStr = new Date().toISOString().split('T')[0];
-    if (lastPrompt === todayStr) return; // Already shown today
+  // Only show to returning users
+  const isReturning = localStorage.getItem('tobi_visited');
+  if (!isReturning) return;
 
-    // Check user has visited before (not first visit)
-    const isReturning = localStorage.getItem('tobi_visited');
-    if (!isReturning) return;
+  localStorage.setItem('tobi_notif_prompt_date', todayStr);
 
-    localStorage.setItem('tobi_notif_prompt_date', todayStr);
-
-    // Show popup after 5 seconds
-    setTimeout(() => {
-      const popup = document.createElement('div');
-      popup.id = 'notif-weekly-popup';
-      popup.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-      popup.innerHTML = `<div style="background:white;border-radius:12px;overflow:hidden;max-width:360px;width:100%;">
-        <div style="background:#0F1E36;padding:14px 16px;display:flex;align-items:center;gap:10px;">
-          <span style="font-size:28px;">🔔</span>
-          <div>
-            <div style="font-size:15px;font-weight:700;color:white;">Stay in the loop!</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.7);">Auntie Tobi has updates for you 🇳🇬</div>
-          </div>
+  // Show popup after 5 seconds
+  setTimeout(() => {
+    const popup = document.createElement('div');
+    popup.id = 'notif-weekly-popup';
+    popup.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    popup.innerHTML = `<div style="background:white;border-radius:12px;overflow:hidden;max-width:360px;width:100%;">
+      <div style="background:#0F1E36;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:28px;">🔔</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:white;">Stay in the loop!</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.7);">Auntie Tobi has updates for you 🇳🇬</div>
         </div>
-        <div style="padding:14px 16px;">
-          <div style="font-size:13px;color:#333;line-height:2.1;margin-bottom:12px;">
-            ✅ Breaking news affecting Nigerians in the UK<br>
-            ✅ Important UK updates and policy changes<br>
-            ✅ Immigration, jobs, benefits & NHS news<br>
-            ✅ Community events and opportunities<br>
-            ✅ Daily news and practical updates that matter to you
-          </div>
-          <div style="font-size:12px;color:#888;margin-bottom:14px;font-style:italic;">I no go disturb you, I promise! 😄</div>
-          <div style="display:flex;gap:8px;">
-            <button onclick="document.getElementById('notif-weekly-popup').remove();OneSignalDeferred.push(function(OneSignal){OneSignal.Slidedown.promptPush();})" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow Notifications</button>
-            <button onclick="document.getElementById('notif-weekly-popup').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;">Later</button>
-          </div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="font-size:13px;color:#333;line-height:2.1;margin-bottom:12px;">
+          ✅ Breaking news affecting Nigerians in the UK<br>
+          ✅ Important UK updates and policy changes<br>
+          ✅ Immigration, jobs, benefits & NHS news<br>
+          ✅ Community events and opportunities<br>
+          ✅ Daily news and practical updates that matter to you
         </div>
-      </div>`;
-      document.body.appendChild(popup);
-    }, 5000);
-  });
+        <div style="font-size:12px;color:#888;margin-bottom:14px;font-style:italic;">I no go disturb you, I promise! 😄</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="document.getElementById('notif-weekly-popup').remove();OneSignalDeferred.push(function(OneSignal){OneSignal.Slidedown.promptPush();})" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow Notifications</button>
+          <button onclick="document.getElementById('notif-weekly-popup').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;">Later</button>
+        </div>
+      </div>
+    </div>`;
+    document.body.appendChild(popup);
+  }, 5000);
 }
 
 function showPendingNotifBanner() {
