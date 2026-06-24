@@ -3327,19 +3327,16 @@ function showWeeklyNotificationPrompt() {
     const optedIn = OneSignal.User.PushSubscription.optedIn;
     if (permission && optedIn) return; // Already subscribed
 
-    // Check if we showed this prompt in the last 7 days
+    // Check if we showed this prompt today already
     const lastPrompt = localStorage.getItem('tobi_notif_prompt_date');
-    const now = new Date();
-    if (lastPrompt) {
-      const daysSince = (now - new Date(lastPrompt)) / (1000 * 60 * 60 * 24);
-      if (daysSince < 7) return;
-    }
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (lastPrompt === todayStr) return; // Already shown today
 
     // Check user has visited before (not first visit)
     const isReturning = localStorage.getItem('tobi_visited');
     if (!isReturning) return;
 
-    localStorage.setItem('tobi_notif_prompt_date', now.toISOString());
+    localStorage.setItem('tobi_notif_prompt_date', todayStr);
 
     // Show popup after 5 seconds
     setTimeout(() => {
