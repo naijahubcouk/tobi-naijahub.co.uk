@@ -3358,7 +3358,7 @@ function showWeeklyNotificationPrompt() {
         </div>
         <div style="font-size:12px;color:#888;margin-bottom:14px;font-style:italic;">I no go disturb you, I promise! 😄</div>
         <div style="display:flex;gap:8px;">
-          <button onclick="document.getElementById('notif-weekly-popup').remove();OneSignalDeferred.push(function(OneSignal){OneSignal.Slidedown.promptPush();})" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow Notifications</button>
+          <button onclick="document.getElementById('notif-weekly-popup').remove();OneSignalDeferred.push(async function(OneSignal){try{await OneSignal.Notifications.requestPermission();await OneSignal.User.PushSubscription.optIn();localStorage.setItem('tobi_notifications','1');updateBellButton(true);}catch(e){console.log('Notif error:',e);}})" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow Notifications</button>
           <button onclick="document.getElementById('notif-weekly-popup').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;">Later</button>
         </div>
       </div>
