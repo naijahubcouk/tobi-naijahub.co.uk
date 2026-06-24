@@ -301,7 +301,7 @@
   .tag-event { background: #057A44; color: white; }
   .tag-blog { background: #057A44; color: white; }
   .tag-guide { background: #057A44; color: white; }
-  .tag-money { background: #057A44; color: white; }
+  .tag-money { background: #B45309; color: white; }
   .tag-church { background: #057A44; color: white; }
 
   .affiliate-card {
@@ -943,20 +943,6 @@
 </style>
   <!-- OneSignal Push Notifications -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
-        appId: "34d14bd0-a5fe-40c4-9b8e-56c1f178cebe",
-        safari_web_id: "web.onesignal.auto.5694d1e9-fcaa-415d-b1f1-1ef52daca700",
-        notifyButton: { enable: false }, // We use our own prompt
-        welcomeNotification: {
-          title: "Auntie Tobi 🤖✨",
-          message: "Welcome! You'll now get daily tips and updates from Auntie Tobi 🇳🇬✨"
-        }
-      });
-    });
-  </script>
 </head>
 <body>
 
@@ -2578,7 +2564,7 @@ function showAllNews() {
 
   addTipMessage('<div style="background:#057A44;padding:8px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:14px;">All News</span><span style="color:rgba(255,255,255,0.7);font-size:12px;margin-left:auto;">Latest first</span></div>');
 
-  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8' };
+  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
 
   news.forEach(item => {
     const badgeColor = categoryColors[item.label] || '#057A44';
@@ -2691,7 +2677,7 @@ function showNewsCard() {
   const item = news[Math.floor(Math.random() * news.length)];
 
   // Category badge colours
-  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8' };
+  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
   const badgeColor = categoryColors[item.label] || '#057A44';
   const categoryBadge = item.label === 'Breaking'
     ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
@@ -2861,7 +2847,7 @@ function handleDeepLink() {
         </div>
         <div style="padding:10px 12px 8px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="background:#1A6B3A;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span>
+            <span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span>
             <span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span>
           </div>
           <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🍼 Aldi Freezes Baby Formula Price Until End of 2026</div>
@@ -2889,7 +2875,7 @@ function handleDeepLink() {
         </div>
         <div style="padding:10px 12px 8px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="background:#1A6B3A;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span>
+            <span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span>
             <span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span>
           </div>
           <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">💷 What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money</div>
@@ -4058,6 +4044,22 @@ window.onload = () => {
   if (navigator.serviceWorker && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' });
   }
+
+  // Also clear badge when app comes to foreground
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
+      if ('setAppBadge' in navigator) navigator.setAppBadge(0).catch(() => {});
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' });
+      }
+    }
+  });
+
+  window.addEventListener('focus', function() {
+    if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
+    if ('setAppBadge' in navigator) navigator.setAppBadge(0).catch(() => {});
+  });
   setTimeout(showPendingNotifBanner, 1000);
   const todayStr = new Date().toISOString().split('T')[0];
   const lastVisitDate = localStorage.getItem('tobi_last_visit');

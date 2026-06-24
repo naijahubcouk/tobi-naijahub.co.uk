@@ -71,3 +71,11 @@ self.addEventListener('message', e => {
     self.registration.clearAppBadge && self.registration.clearAppBadge().catch(() => {});
   }
 });
+
+// Clear badge when notification is clicked
+self.addEventListener('notificationclick', function(e) {
+  e.notification.close();
+  if (self.registration.clearAppBadge) {
+    self.registration.clearAppBadge().catch(() => {});
+  }
+});
