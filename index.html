@@ -4450,14 +4450,14 @@ async function submitFeedback() {
 
 function shareAuntieTobi() {
   const shareData = {
-    title: 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians',
-    text: 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians\nGet answers to your questions, discover Nigerian businesses and events near you, find jobs and opportunities, and stay updated with UK news, immigration changes, and everyday guidance that matters to you. Try her FREE 👉 auntietobi.co.uk',
+    title: 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians 🇳🇬🇬🇧',
+    text: 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians 🇳🇬🇬🇧\n\nGet answers to your questions, discover Nigerian businesses and events near you, find jobs and opportunities, and stay updated with UK news, immigration changes, and everyday guidance that matters to you.\n\n👉 Try her FREE: auntietobi.co.uk',
     url: 'https://auntietobi.co.uk'
   };
   if (navigator.share) {
     navigator.share(shareData).catch(() => {});
   } else {
-    navigator.clipboard.writeText(shareData.title + '\n' + shareData.text).then(() => {
+    navigator.clipboard.writeText(shareData.title + '\n\n' + shareData.text).then(() => {
       alert('Link copied! Share Auntie Tobi with your friends 🇳🇬🇬🇧');
     });
   }
