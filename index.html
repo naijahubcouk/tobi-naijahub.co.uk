@@ -4709,7 +4709,12 @@ window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
   if (typeof gtag !== 'undefined') gtag('event', 'pwa_install_prompt_shown', { event_category: 'pwa', event_label: 'prompt_shown' });
-  // Don't show banner immediately — show after 3 messages instead
+  // Show install banner immediately
+  const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (!isInstalled) {
+    const banner = document.getElementById('install-banner');
+    if (banner) banner.classList.add('show');
+  }
 });
 
 // Track message count and show install prompt after 3 messages
