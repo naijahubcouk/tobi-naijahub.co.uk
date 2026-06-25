@@ -3922,7 +3922,7 @@ const NAIJAHUB_BUSINESSES = [
   { name: 'Gandkstyles', category: 'Beauty & Fashion', location: 'Leven, Scotland', desc: 'Ready-to-wear women\'s clothing, Ankara prints and casual wear', url: 'https://naijahub.co.uk/listing/gandkstyles' },
   { name: 'Glamwtjade', category: 'Beauty & Fashion', location: 'Middlesbrough', desc: 'Professional makeup artist specialising in bridal and special occasion makeup', url: 'https://naijahub.co.uk/listing/glamwtjade' },
   { name: 'Purplelips', category: 'Beauty & Fashion', location: 'Colchester, Essex', desc: 'Professional makeup artist services', url: 'https://naijahub.co.uk/listing/purplelips' },
-  { name: 'Funmis Treasure', category: 'Food & Groceries', location: 'Basildon, Essex', desc: 'Nigerian groceries, food products and drinks', url: 'https://naijahub.co.uk/listing/funmis-treasure', featured: true, whatsapp: 'https://api.whatsapp.com/send?phone=447435844799' },
+  { name: 'Funmis Treasure', category: 'Food & Groceries', location: 'Basildon, Essex', desc: 'Nigerian groceries, food products and drinks', url: 'https://naijahub.co.uk/listing/funmis-treasure', featured: true, verified: true, whatsapp: 'https://api.whatsapp.com/send?phone=447435844799' },
   { name: 'Jollofmama', category: 'Food & Dining', location: 'London', desc: 'Authentic Nigerian restaurant — jollof rice and traditional Nigerian cuisine', url: 'https://naijahub.co.uk/listing/jollofmama' },
   { name: 'Kelz J Bukka & Grills', category: 'Food & Dining', location: 'Brighton', desc: 'Nigerian restaurant and grill — authentic West African dishes', url: 'https://naijahub.co.uk/listing/kelz-j-bukka-and-grills' },
   { name: 'Funkesglam', category: 'Beauty & Fashion', location: 'Rainham, Essex', desc: 'Professional makeup artist for weddings, events and special occasions', url: 'https://naijahub.co.uk/listing/funkesglam' },
@@ -3969,6 +3969,7 @@ function showBusinesses(startIndex = -1) {
   page.forEach(b => {
     const emoji = getCategoryEmoji(b.category);
     const featuredBadge = b.featured ? `<span style="display:inline-flex;align-items:center;gap:2px;background:linear-gradient(135deg,#FFB81C,#f59e0b);color:#0F1E36;font-size:9px;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:5px;vertical-align:middle;white-space:nowrap;">⭐ Featured</span>` : '';
+    const verifiedBadge = b.verified ? `<span style="display:inline-flex;align-items:center;gap:3px;background:white;color:#1D9BF0;font-size:9px;font-weight:800;padding:2px 8px;border-radius:50px;margin-left:5px;vertical-align:middle;border:1.5px solid #1D9BF0;"><span style="color:#1D9BF0;font-size:11px;font-weight:900;">✓</span> Verified</span>` : '';
     const viewBtn = `<a href="${b.url}" target="_blank" style="flex:1;display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;">View on naijahub.co.uk</a>`;
     const waBtn = b.whatsapp ? `<a href="${b.whatsapp}" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;white-space:nowrap;">💬 WhatsApp</a>` : '';
     const btnRow = `<div style="display:flex;gap:6px;margin-top:4px;">${viewBtn}${waBtn}</div>`;
@@ -3978,7 +3979,7 @@ function showBusinesses(startIndex = -1) {
           <span onclick="quickAsk('Show me more ${b.category} businesses')" style="color:#FFB81C;font-size:10px;font-weight:600;cursor:pointer;">See more →</span>
         </div>
         <div style="padding:5px;">
-          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin:0 0 1px;line-height:1.3;">${b.name}${featuredBadge}</div>
+          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin:0 0 1px;line-height:1.3;">${b.name}${verifiedBadge}${featuredBadge}</div>
           <div style="font-size:12px;color:#6B7280;font-weight:600;margin:0 0 1px;line-height:1.3;">📍 ${b.location}</div>
           <div style="font-size:13px;color:#444;font-weight:500;line-height:1.4;margin:0 0 4px;">${b.desc}</div>
           ${btnRow}
@@ -4216,12 +4217,12 @@ function resetToWelcome() {
       addTipMessage(tipHtml);
       console.log('message added');
       showSponsoredAd();
-      // Combined fixed + rotating bubbles (shown below)
+      // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button>';
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
-      addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeFixed}${homeRotating}</div>`);
+      addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
     } catch(err) {
       console.error('Error in resetToWelcome setTimeout:', err);
     }
