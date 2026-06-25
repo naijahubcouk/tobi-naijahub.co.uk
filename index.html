@@ -4450,14 +4450,14 @@ async function submitFeedback() {
 
 function shareAuntieTobi() {
   const shareData = {
-    title: 'Auntie Tobi — The Oversabi AI Auntie who actually helps!',
-    text: 'Meet Auntie Tobi — The Oversabi AI Auntie who actually helps! 🇳🇬🇬🇧\nThe FREE AI assistant made specifically for Nigerians in the UK!\nAsk her anything — find Nigerian businesses, events, driving theory test, Life in UK test and more!\nTry her FREE 👉 auntietobi.com',
-    url: 'https://auntietobi.com'
+    title: 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians',
+    text: 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians\nGet answers to your questions, discover Nigerian businesses and events near you, find jobs and opportunities, and stay updated with UK news, immigration changes, and everyday guidance that matters to you. Try her FREE 👉 auntietobi.co.uk',
+    url: 'https://auntietobi.co.uk'
   };
   if (navigator.share) {
     navigator.share(shareData).catch(() => {});
   } else {
-    navigator.clipboard.writeText(shareData.text + '\n' + shareData.url).then(() => {
+    navigator.clipboard.writeText(shareData.title + '\n' + shareData.text).then(() => {
       alert('Link copied! Share Auntie Tobi with your friends 🇳🇬🇬🇧');
     });
   }
