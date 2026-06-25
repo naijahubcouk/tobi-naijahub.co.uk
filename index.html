@@ -3873,20 +3873,13 @@ document.addEventListener('click', function(e) {
   const link = e.target.closest('a[href]');
   if (link) {
     const href = link.getAttribute('href');
-    if (href && href.startsWith('http')) {
+    if (href && href.startsWith('http') && link.target === '_blank') {
       e.preventDefault();
-      e.stopPropagation();
-      // Force open in external browser — bypasses PWA interception
-      const a = document.createElement('a');
-      a.href = href;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      e.stopImmediatePropagation();
+      window.open(href, '_blank', 'noopener,noreferrer');
     }
   }
-}, true); // true = capture phase, fires before PWA intercepts
+});
 
 // Global suggestions generator
 function getRandomSuggestionStr() {
