@@ -3610,6 +3610,76 @@ function showJapaGuide() {
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">${japaSuggs.map(s=>`<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\'")}')"> ${s}</button>`).join('')}</div>`);
 }
 
+
+function showWelcomeCard() {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#057A44,#0F1E36);padding:16px;">
+      <div style="font-size:11px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:6px;">🇳🇬🇬🇧 NAIJAUKHUB</div>
+      <div style="font-size:19px;font-weight:700;color:white;margin-bottom:4px;">👋🏾 Welcome to Auntie Tobi 🤖✨</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.85);">Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾</div>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:14px;">
+        I'm <strong>Auntie Tobi</strong> — your friendly AI Auntie for Nigerians living in the UK 🇳🇬🇬🇧<br><br>
+        Your go-to digital auntie for life in the UK, helping Nigerians find answers, opportunities, trusted services, and peace of mind.
+      </div>
+
+      <div style="background:#f8faf5;border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:8px;">🇬🇧 What I help you with:</div>
+        <div style="font-size:13px;color:#333;line-height:2.1;">
+          🏠 Housing, bills & UK life<br>
+          🏥 NHS, GP & healthcare<br>
+          💼 Jobs, CV & career support<br>
+          🛂 Visa & immigration guidance<br>
+          🚗 Driving & Life in UK test preparation<br>
+          🎉 Events & Nigerian businesses<br>
+          🔍 Anything you need help with in the UK
+        </div>
+      </div>
+
+      <div style="background:#fff8f0;border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#854F0B;margin-bottom:4px;">💡 Why I exist</div>
+        <div style="font-size:13px;color:#333;line-height:1.7;">UK life can be confusing at first — I'm here to make it simple, clear, and easier for you to navigate.</div>
+      </div>
+
+      <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:6px;">📲 How to use</div>
+        <div style="font-size:13px;color:#333;line-height:2.0;">
+          • Open in <strong>Chrome</strong> (Android) or <strong>Safari</strong> (iPhone)<br>
+          • Tap <strong>"Add to Home Screen"</strong><br>
+          • No app download needed
+        </div>
+      </div>
+
+      <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:6px;">🔔 Stay updated — Turn on Notifications</div>
+        <div style="font-size:13px;color:#333;line-height:2.0;">
+          • UK news affecting Nigerians 🇬🇧<br>
+          • Immigration & policy updates<br>
+          • Jobs, benefits & opportunities<br>
+          • Nigerian community events
+        </div>
+      </div>
+
+      <div style="font-size:16px;font-weight:700;color:#057A44;text-align:center;margin-bottom:10px;">So… wetin you need today? 😄</div>
+      <div style="border-top:1px solid #f0f0f0;padding-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
+        📢 Own a business? <a href="https://naijahub.co.uk/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List it here 👉 naijahub.co.uk/new-listing</a>
+      </div>
+    </div>
+  </div>`;
+
+  addTipMessage(html);
+
+  // Add suggestion bubbles
+  const suggStr = getRandomSuggestionStr();
+  const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
+  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button>';
+  const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
+  addTipMessage(`<div class="suggestions" style="margin-top:4px;">${rotatingBtns}${fixedBtns}</div>`);
+}
 function showFathersVideo() {
   // Only show on first visit today (21 June 2026) — never shows after midnight
   const today = new Date();
@@ -4006,7 +4076,9 @@ window.onload = () => {
   // Request location on load to update city
   requestLocation();
   checkNotifClickUrl();
-  showWeeklyNotificationPrompt();
+  setTimeout(showPendingNotifBanner, 1000);
+  // Delay notification prompt to 30 seconds
+  setTimeout(showWeeklyNotificationPrompt, 30000);
 
   // Clear notification badge when app is opened
   if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
@@ -4073,8 +4145,8 @@ Ready to continue your practice? 🚀
     resetToWelcome();
 
   } else {
-    // First ever visit — show About Tobi card + bubbles only
-    showAboutTobi();
+    // First ever visit — show Welcome card then About Tobi
+    showWelcomeCard();
     const suggStr = getRandomSuggestionStr();
     const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
     const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button>';
@@ -4189,7 +4261,9 @@ function resetToWelcome() {
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button>';
+      const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
+      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
     } catch(err) {
@@ -4665,17 +4739,34 @@ function checkInstallPrompt() {
     }, 500);
   }
 
-  if (messageCount >= 3) {
+  if (messageCount >= 3 && !installPromptShown) {
     installPromptShown = true;
-    // Show in-chat install nudge
-    addTipMessage(`<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;margin-top:8px;display:flex;align-items:center;gap:10px;">
-      <img src="/tobi-face-128.png" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-      <div style="flex:1;">
-        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Enjoying Auntie Tobi? 📱</div>
-        <div style="font-size:12px;color:#555;">Add me to your home screen for faster access — no app store needed!</div>
-      </div>
-      <button onclick="if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{if(r.outcome==='accepted'&&typeof gtag!=='undefined')gtag('event','pwa_install_accepted',{event_category:'pwa'});deferredPrompt=null;});}" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;">Install ✓</button>
-    </div>`);
+    // Show install popup after 10 seconds
+    setTimeout(() => {
+      if (!deferredPrompt) return;
+      const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (isInstalled) return;
+      const popup = document.createElement('div');
+      popup.id = 'install-popup';
+      popup.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+      popup.innerHTML = `<div style="background:white;border-radius:12px;overflow:hidden;max-width:360px;width:100%;">
+        <div style="background:#057A44;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:28px;">📲</span>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:white;">Install Auntie Tobi!</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);">Add to your home screen 🇳🇬</div>
+          </div>
+        </div>
+        <div style="padding:14px 16px;">
+          <div style="font-size:13px;color:#333;line-height:1.8;margin-bottom:14px;">Get faster access to Auntie Tobi — no app store needed! Just tap Install and add her to your home screen 😄</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="document.getElementById('install-popup').remove();if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{deferredPrompt=null;});}" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">📲 Install Now</button>
+            <button onclick="document.getElementById('install-popup').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;">Later</button>
+          </div>
+        </div>
+      </div>`;
+      document.body.appendChild(popup);
+    }, 10000);
   }
 }
 
