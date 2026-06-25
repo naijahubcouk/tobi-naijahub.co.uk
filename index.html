@@ -2706,60 +2706,66 @@ function showFAQCard() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
-  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-    <div style="background:#057A44;padding:14px 16px;">
-      <div style="font-size:11px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">🇳🇬🇬🇧 NAIJAUKHUB</div>
+  const html = `<div style="background:var(--color-background-primary,white);border:0.5px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+
+    <div style="background:#0F1E36;padding:14px 16px;">
+      <div style="font-size:10px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">NAIJAUKHUB</div>
       <div style="font-size:17px;font-weight:700;color:white;margin-bottom:2px;">❓ FAQ About Auntie Tobi</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.75);">Everything you need to know</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);">Everything you need to know</div>
     </div>
-    <div style="padding:14px 16px;">
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">Who is Auntie Tobi?</div>
-        <div style="font-size:13px;color:#555;line-height:1.7;">Auntie Tobi is your friendly AI Digital Auntie, built specifically for Nigerians living in the UK. Think of her as your Oversabi Auntie — always available to answer questions, explain things clearly, and help you navigate life in the UK with confidence.</div>
+    <div style="padding:0 16px;">
+
+      <div style="padding:14px 0;border-bottom:0.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Who is Auntie Tobi?</div>
+          <div style="font-size:12px;color:#555;line-height:1.7;">Your friendly AI Digital Auntie, built specifically for Nigerians living in the UK 🇳🇬🇬🇧. Think of her as your Oversabi Auntie — always available to answer questions, explain things clearly, and help you navigate UK life with confidence.</div>
+        </div>
       </div>
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">Who is Auntie Tobi for?</div>
-        <div style="font-size:13px;color:#555;line-height:1.7;">Auntie Tobi is for Nigerians living in the UK. Whether you've just arrived (japa'd) or you've been here for years, she's here to help you settle, succeed, and thrive.</div>
+      <div style="padding:14px 0;border-bottom:0.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Who is Auntie Tobi for?</div>
+          <div style="font-size:12px;color:#555;line-height:1.7;">Auntie Tobi is for Nigerians living in the UK. Whether you've just arrived (japa'd) or you've been here for years, she's here to help you settle, succeed, and thrive.</div>
+        </div>
       </div>
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:8px;">What can Auntie Tobi help me with?</div>
+      <div style="padding:14px 0;border-bottom:0.5px solid #f0f0f0;">
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:8px;">What can Auntie Tobi help me with?</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;">
+          <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
             <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🇬🇧 Life in the UK</div>
             <div style="font-size:11px;color:#555;line-height:1.8;">NHS & GP registration<br>Housing & renting<br>Bills & council services<br>Schools & education</div>
           </div>
-          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;">
+          <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
             <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">💼 Jobs & Careers</div>
             <div style="font-size:11px;color:#555;line-height:1.8;">Job search support<br>CV writing<br>Interview preparation<br>Career advice</div>
           </div>
-          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;">
+          <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
             <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🛂 Visas & Immigration</div>
             <div style="font-size:11px;color:#555;line-height:1.8;">Visa information<br>Immigration guidance<br>eVisa & UKVI updates</div>
           </div>
-          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;">
+          <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
             <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🚗 Driving & UK Test</div>
             <div style="font-size:11px;color:#555;line-height:1.8;">Theory Test practice<br>UK driving rules<br>Life in UK Test prep</div>
           </div>
-          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;grid-column:span 2;">
+          <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;grid-column:span 2;">
             <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🏢 Businesses & 🎉 Events</div>
-            <div style="font-size:11px;color:#555;line-height:1.8;">Restaurants, salons & services | Local businesses near you | Nigerian events & meetups</div>
+            <div style="font-size:11px;color:#555;line-height:1.8;">Restaurants, salons & services &nbsp;|&nbsp; Local businesses near you &nbsp;|&nbsp; Nigerian events & meetups</div>
           </div>
         </div>
       </div>
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">Why was Auntie Tobi created?</div>
-        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:6px;">Moving to or living in the UK can be overwhelming. Auntie Tobi exists to:</div>
-        <div style="font-size:13px;color:#333;line-height:2.1;">✔ Explain things simply<br>✔ Point you in the right direction<br>✔ Save you time and stress<br>✔ Help you make informed decisions</div>
+      <div style="padding:14px 0;border-bottom:0.5px solid #f0f0f0;">
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;">Why was Auntie Tobi created?</div>
+        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:6px;">Moving to or living in the UK can be overwhelming — different systems, rules, and expectations. Auntie Tobi exists to:</div>
+        <div style="font-size:12px;color:#333;line-height:2.1;">✔ Explain things simply<br>✔ Point you in the right direction<br>✔ Save you time and stress<br>✔ Help you make informed decisions</div>
       </div>
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">How do I use Auntie Tobi?</div>
-        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:6px;">Simply type your question — just like chatting with a trusted auntie:</div>
-        <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;font-size:12px;color:#555;line-height:2.1;">
+      <div style="padding:14px 0;border-bottom:0.5px solid #f0f0f0;">
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;">How do I use Auntie Tobi?</div>
+        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:6px;">Simply type your question — just like chatting with a trusted auntie. Examples:</div>
+        <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;font-size:11px;color:#555;line-height:2.1;">
           "How do I register with a GP?"<br>
           "Find Nigerian restaurants near me."<br>
           "Can I drive in the UK with a Nigerian licence?"<br>
@@ -2767,43 +2773,45 @@ function showFAQCard() {
         </div>
       </div>
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:6px;">How do I install Auntie Tobi?</div>
-        <div style="background:#f0f4ff;border-radius:6px;padding:8px 10px;font-size:13px;color:#333;line-height:1.9;margin-bottom:4px;">
+      <div style="padding:14px 0;border-bottom:0.5px solid #f0f0f0;">
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:6px;">How do I install Auntie Tobi?</div>
+        <div style="background:#f0f4ff;border-radius:6px;padding:8px 10px;font-size:12px;color:#333;line-height:1.9;margin-bottom:4px;">
           📱 <strong>Android</strong> — Open in Chrome → tap Add to Home Screen<br>
           🍏 <strong>iPhone</strong> — Open in Safari → tap Add to Home Screen
         </div>
-        <div style="font-size:12px;color:#888;font-style:italic;">No App Store. No Google Play. No downloads. Just open and go.</div>
+        <div style="font-size:11px;color:#888;font-style:italic;">No App Store. No Google Play. No downloads. Just open and go.</div>
       </div>
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:6px;">🔔 Why should I enable notifications?</div>
-        <div style="font-size:13px;color:#555;line-height:2.1;margin-bottom:4px;">
+      <div style="padding:14px 0;border-bottom:0.5px solid #f0f0f0;">
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:6px;">🔔 Why should I enable notifications?</div>
+        <div style="font-size:12px;color:#555;line-height:2.1;margin-bottom:4px;">
           ✅ UK news affecting Nigerians<br>
           ✅ Immigration and visa updates<br>
           ✅ Jobs and opportunities<br>
           ✅ NHS and benefits news<br>
           ✅ Community events & policy changes
         </div>
-        <div style="font-size:12px;color:#057A44;font-weight:600;">Auntie Tobi helps you stay one step ahead.</div>
+        <div style="font-size:11px;color:#057A44;font-weight:600;">Auntie Tobi helps you stay one step ahead.</div>
       </div>
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">Is Auntie Tobi free?</div>
-        <div style="font-size:13px;color:#555;line-height:1.7;">Yes! 🎉 Auntie Tobi is completely free to use and available whenever you need help.</div>
+      <div style="padding:14px 0;border-bottom:0.5px solid #f0f0f0;">
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;">Is Auntie Tobi free?</div>
+        <div style="font-size:12px;color:#555;line-height:1.7;">Yes! 🎉 Auntie Tobi is completely free to use and available whenever you need help. No subscriptions, no hidden costs.</div>
       </div>
 
-      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">I own a business. Can I list it?</div>
-        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:8px;">Absolutely! Add your listing and connect with Nigerians across the UK.</div>
+      <div style="padding:14px 0;">
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;">I own a business. Can I list it?</div>
+        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:8px;">Absolutely! Add your listing and connect with Nigerians across the UK.</div>
         <a href="https://naijahub.co.uk/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:6px;text-align:center;">📢 List your business — naijahub.co.uk/new-listing</a>
       </div>
 
-      <div style="background:#f8faf5;border-radius:8px;padding:12px;text-align:center;border-left:3px solid #057A44;">
-        <div style="font-size:13px;color:#555;margin-bottom:2px;">💡 Information is power.</div>
-        <div style="font-size:15px;font-weight:700;color:#057A44;">So... wetin you need today? 😄</div>
-      </div>
     </div>
+
+    <div style="background:#0F1E36;padding:12px 16px;text-align:center;">
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:2px;">💡 Information is power.</div>
+      <div style="font-size:14px;font-weight:700;color:#FFB81C;">So... wetin you need today? 😄</div>
+    </div>
+
   </div>`;
 
   addTipMessage(html);
