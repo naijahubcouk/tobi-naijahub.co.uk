@@ -1139,14 +1139,9 @@ For any question involving NHS, visa, immigration, legal rights, benefits or Hom
 CRITICAL RULES:
 1. ONLY recommend businesses that are explicitly in the NaijaUKHub business data provided. NEVER invent, make up or hallucinate any business name, address, phone number or service. If a business is not in the data, do NOT mention it.
 2. Only mention WhatsApp if the business has WhatsApp listed.
-3. When you cannot find a business in the data say: "Hmm, I don't have that listed on NaijaUKHub yet my dear! No wahala — you can search Google for Nigerian businesses near you, or click 'Request a Business' and our team will find one for you within 24 hours! 🙏🏾
+3. When you cannot find a business in the data say: "Hmm, I don't have that listed on NaijaUKHub yet! No wahala — you can search Google for Nigerian businesses near you, or visit naijahub.co.uk to find or list a business! 🙏🏾
 
-👉 Are you a Nigerian business owner? Get listed on NaijaUKHub and let Auntie Tobi recommend you to thousands of Nigerians across the UK!
-• Basic listing — just £20/year
-• Gold featured — £50/year
-• Premium — Auntie Tobi recommends you first! £99/year
-
-Visit naijahub.co.uk to list your business today! 🇳🇬🇬🇧"
+👉 Are you a Nigerian business owner? Get listed on NaijaUKHub and let Auntie Tobi recommend you to thousands of Nigerians across the UK! Visit naijahub.co.uk to list your business today! 🇳🇬🇬🇧"
 
 4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on NaijaUKHub? Tell them to visit naijahub.co.uk — and if they want Auntie Tobi to recommend them, they need Premium! 😊"
 
@@ -2707,753 +2702,115 @@ function showNewsCard() {
 
   addTipMessage(newsHtml);
 }
-function showAboutTobi() {
-  const greeting = (() => {
-    const h = new Date().getHours();
-    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  })();
-
-  const suggStr = getRandomSuggestionStr();
-  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-    <div style="padding:16px;border-bottom:1px solid #f0f0f0;">
-      <div style="font-size:18px;font-weight:700;color:#0F1E36;margin-bottom:6px;">${greeting}! Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾</div>
-      <div style="font-size:15px;font-weight:700;color:#057A44;margin-bottom:8px;">I'm Auntie Tobi 🤖✨ your friendly, always-available AI Auntie for Nigerians living in the UK 🇳🇬🇬🇧</div>
-      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:8px;">Think of me as that knowledgeable Nigerian auntie who's always ready to help — giving you clear, practical answers about life in the UK whenever you need them.</div>
-      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">Whether you've just arrived <strong>(japa'd)</strong> or you've been here for years, I'm here to help you <strong>settle and thrive</strong> in the UK with less stress and more clarity.</div>
-      <div style="background:#f8faf5;border-radius:6px;padding:10px;margin-bottom:10px;border-left:3px solid #057A44;">
-        <div style="font-size:13px;color:#0F1E36;line-height:1.7;margin-bottom:4px;"><strong>Auntie Tobi is more than an AI Assistant.</strong> She's your Oversabi Digital Aunty — helping Nigerians in the UK find answers, stay informed, discover trusted services, and navigate life with confidence.</div>
-        <div style="font-size:13px;color:#057A44;font-weight:600;margin-bottom:4px;">Built for Nigerians in the UK.</div>
-        <div style="font-size:13px;color:#555;">Ask questions, find trusted services, discover opportunities, and stay informed — all in one place.</div>
-      </div>
-      <div style="font-size:14px;font-weight:700;color:#057A44;">💡 Information is power… just ask me anything.</div>
-    </div>
-    <div style="padding:14px 16px;">
-      <div style="background:#f8faf5;border-radius:8px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:14px;font-weight:700;color:#057A44;margin-bottom:8px;">💡 What I can help you with:</div>
-        <div style="font-size:13px;color:#333;line-height:2.2;">
-          🏢 <strong>Nigerian businesses</strong> — food spots, salons, services & more<br>
-          🎉 <strong>Events</strong> — parties, cultural meetups & community activities<br>
-          🇬🇧 <strong>UK life</strong> — NHS, GP visits, housing, bills, schools & council<br>
-          💼 <strong>Jobs & career</strong> — CV writing, job search & interview prep<br>
-          🚗 <strong>Driving</strong> — Theory Test practice & UK driving rules<br>
-          📋 <strong>Life in the UK Test</strong> — simplified to help you pass<br>
-          🛂 <strong>Visa & immigration</strong> — clear guidance on your options<br>
-          🔍 <strong>Anything</strong> — services, info, or local help in your area
-        </div>
-      </div>
-      <div style="background:#fff8f0;border-radius:8px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:14px;font-weight:700;color:#854F0B;margin-bottom:6px;">✨ Why I exist:</div>
-        <div style="font-size:13px;color:#333;line-height:1.9;">UK life can feel overwhelming at first — different systems, rules, language, and expectations. You shouldn't have to figure it out alone.<br><br>
-        I'm here to:<br>
-        ✔ <strong>Break things down</strong> simply<br>
-        ✔ <strong>Point you</strong> in the right direction<br>
-        ✔ <strong>Save you</strong> time and stress<br>
-        ✔ Help you make <strong>confident decisions</strong> in everyday UK life 🤝</div>
-      </div>
-      <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:14px;font-weight:700;color:#0C447C;margin-bottom:6px;">📱 Best Way to Use Auntie Tobi</div>
-        <div style="font-size:13px;color:#333;line-height:2.1;">
-          📱 <strong>Android</strong> — open in Chrome<br>
-          🍏 <strong>iPhone</strong> — open in Safari<br>
-          Then tap <strong>"Add to Home Screen"</strong> 📲<br>
-          <em style="color:#888;">No App Store. No Google Play. No stress. Just open and go.</em>
-        </div>
-      </div>
-      <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:14px;font-weight:700;color:#0C447C;margin-bottom:6px;">🔔 Don't forget to tap the notification bell!</div>
-        <div style="font-size:13px;color:#333;line-height:2.1;margin-bottom:6px;">
-          ✅ Breaking news affecting Nigerians in the UK<br>
-          ✅ Important UK updates and policy changes<br>
-          ✅ Immigration, jobs, benefits & NHS news<br>
-          ✅ Community events and opportunities<br>
-          ✅ Daily news and practical updates that matter to you
-        </div>
-        <div style="font-size:13px;color:#0C447C;font-weight:600;">Stay informed. Stay connected. Let Auntie Tobi keep you updated.</div>
-      </div>
-      <div style="font-size:16px;font-weight:700;color:#057A44;text-align:center;margin-bottom:10px;">So… wetin you need today? 😄</div>
-      <div style="border-top:1px solid #f0f0f0;padding-top:10px;font-size:12px;color:#9CA3AF;text-align:center;margin-bottom:8px;">📢 Own a business? <a href="https://naijahub.co.uk/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Add your listing 👉 naijahub.co.uk/new-listing</a></div>
-    </div>
-  </div>
-  [SUGGESTIONS: ${suggStr}]`;
-
-  addTipMessage(html);
-}
-
-
-function tobiShare(title, text, url) {
-  const shareText = text + '\n' + url + '\n\nvia Auntie Tobi | auntietobi.co.uk';
-  if (navigator.share) {
-    navigator.share({ title: title, text: shareText }).catch(function() {
-      navigator.clipboard.writeText(shareText).then(function() { alert('Link copied!'); });
-    });
-  } else {
-    navigator.clipboard.writeText(shareText).then(function() { alert('Link copied!'); }).catch(function() {
-      prompt('Copy this link:', url);
-    });
-  }
-}
-
-
-function handleBellClick() {
-  if (typeof OneSignalDeferred === 'undefined') {
-    addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;font-size:13px;color:#555;">🔔 Notifications are not available on this browser. Try opening Auntie Tobi in Chrome (Android) or Safari (iPhone).</div>');
-    return;
-  }
-  OneSignalDeferred.push(async function(OneSignal) {
-    const permission = OneSignal.Notifications.permission;
-    const optedIn = OneSignal.User.PushSubscription.optedIn;
-
-    if (permission && optedIn) {
-      // Already subscribed — unsubscribe
-      await OneSignal.User.PushSubscription.optOut();
-      updateBellButton(false);
-      localStorage.setItem('tobi_notifications', '0');
-      const bellMsg = `<div style="background:white;border:1.5px solid #e5e7eb;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔕</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications turned off</div><div style="font-size:12px;color:#555;line-height:1.6;">Tap the bell anytime to turn them back on and stay in touch with the community — Breaking News in the UK that affects Nigerians and daily updates 🇳🇬</div></div></div>`;
-      addTipMessage(bellMsg);
-    } else if (permission && !optedIn) {
-      // Browser allowed but opted out — re-subscribe
-      await OneSignal.User.PushSubscription.optIn();
-      updateBellButton(true);
-      localStorage.setItem('tobi_notifications', '1');
-      const bellMsg = `<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;line-height:1.6;">You will now receive daily tips, news and updates from Auntie Tobi ✨🇳🇬</div></div></div>`;
-      addTipMessage(bellMsg);
-    } else {
-      // Browser permission denied — show instructions
-      const bellMsg = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔕</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Notifications are blocked</div><div style="font-size:12px;color:#555;">To enable: tap the 🔒 lock icon in your browser address bar → Notifications → Allow</div></div></div>`;
-      addTipMessage(bellMsg);
-    }
-  });
-}
-
-
-// ============================================
-// DEEP LINK HANDLER
-// Reads URL params and shows relevant content
-// e.g. auntietobi.co.uk?news=breaking
-// ============================================
-function handleDeepLink() {
-  const params = new URLSearchParams(window.location.search);
-  const news = params.get('news');
-  const action = params.get('action');
-
-  if (news === 'aldibabyformula') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div>
-          <button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button>
-        </div>
-        <div style="padding:10px 12px 8px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span>
-            <span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span>
-          </div>
-          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🍼 Aldi Freezes Baby Formula Price Until End of 2026</div>
-          <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Great news for families! Aldi has frozen the price of baby formula until the end of 2026, helping parents save money on one of their biggest essentials.</div>
-          <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="https://naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-            <button onclick="tobiShare('Aldi Baby Formula','Aldi Freezes Baby Formula Price Until End of 2026','https://naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-          </div>
-        </div>
-      </div>`;
-      addTipMessage(html);
-      addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk(\'What baby products are cheapest in the UK?\')">🍼 What baby products are cheapest in the UK?</button><button class="suggestion-btn" onclick="quickAsk(\'How can I save money on baby essentials in the UK?\')">💰 How to save money on baby essentials?</button></div>');
-      const aldis = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
-      addTipMessage(`<div class="suggestions" style="margin-top:4px;">${aldis.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
-      window.history.replaceState({},'',window.location.pathname);
-    }, 500);
-  } else if (news === 'andyburnham') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div>
-          <button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button>
-        </div>
-        <div style="padding:10px 12px 8px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span>
-            <span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span>
-          </div>
-          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">💷 What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money</div>
-          <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">With Andy Burnham tipped as the next UK Prime Minister, find out what his policies could mean for your taxes, energy bills, and finances as a Nigerian living in the UK.</div>
-          <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="https://naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-            <button onclick="tobiShare('Andy Burnham PM','What Andy Burnham as UK PM Could Mean for Your Money','https://naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-          </div>
-        </div>
-      </div>`;
-      addTipMessage(html);
-      addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk(\'How will a new UK Prime Minister affect my taxes?\')">💷 How will this affect my taxes?</button><button class="suggestion-btn" onclick="quickAsk(\'What could change for Nigerians in the UK under Andy Burnham?\')">🇬🇧 What changes for Nigerians in the UK?</button></div>');
-      const burns = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
-      addTipMessage(`<div class="suggestions" style="margin-top:4px;">${burns.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
-      window.history.replaceState({},'',window.location.pathname);
-    }, 500);
-  } else if (news === 'heatwarning') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      const heatHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div>
-          <button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button>
-        </div>
-        <div style="padding:10px 12px 8px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span>
-            <span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span>
-          </div>
-          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🌡️ UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C</div>
-          <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">The UK Met Office has issued a rare Red Heat Warning as temperatures could reach 40°C this week. Stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours.</div>
-          <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-            <button onclick="tobiShare('UK Red Heat Warning','UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C','https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-          </div>
-        </div>
-      </div>`;
-      addTipMessage(heatHtml);
-      // Fixed heatwave bubbles
-      addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk(\'How do I stay hydrated during the UK heatwave?\')">🚰 How do I stay hydrated in the heatwave?</button><button class="suggestion-btn" onclick="quickAsk(\'What should I do if someone has heat stroke in the UK?\')">🏥 What to do if someone has heat stroke?</button></div>');
-      // Rotating home pool bubbles
-      const heatSuggStr = getRandomSuggestionStr();
-      const heatSuggList = heatSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      addTipMessage(`<div class="suggestions" style="margin-top:4px;">${heatSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 500);
-  } else if (news === 'freebus') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      const item = {
-        emoji: '🚌',
-        title: 'FREE Bus Travel for Children in August 2026',
-        summary: 'Good news for families! The UK Government has announced that children aged 5–15 can travel for FREE on buses across England throughout August 2026.',
-        url: 'https://naijahub.co.uk/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026',
-        label: 'News',
-        date: '20 Jun 2026'
-      };
-      const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div>
-          <button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button>
-        </div>
-        <div style="padding:10px 12px 8px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span>
-            <span style="font-size:10px;color:#9CA3AF;">20 Jun 2026</span>
-          </div>
-          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${item.emoji} ${item.title}</div>
-          <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
-          <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="${item.url}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-            <button onclick="tobiShare('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-          </div>
-        </div>
-      </div>`;
-      addTipMessage(html);
-      const freeSuggStr = getRandomSuggestionStr();
-      const freeSuggList = freeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${freeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 500);
-  } else if (news === 'breaking') {
-    // Show breaking news card
-    setTimeout(() => {
-      const breaking = [
-        {
-          emoji: '🔴',
-          title: 'UK Prime Minister Keir Starmer Has Resigned',
-          summary: 'Prime Minister Keir Starmer has resigned on 22 June 2026. The Labour Party will now choose a new leader, who will become the next Prime Minister. No immediate changes affect visas, jobs, NHS services, or daily life today, but future government policies could change depending on the new leadership.',
-          url: 'https://naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
-          label: 'Breaking',
-          date: '22 Jun 2026'
-        }
-      ];
-      const item = breaking[0];
-      const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
-        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:16px;">📰</span>
-            <span style="color:white;font-weight:700;font-size:13px;">NEWS</span>
-          </div>
-        </div>
-        <div style="padding:10px 12px 8px;">
-          <div style="display:inline-block;background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:6px;">🔴 BREAKING</div><br>
-          <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px;">📅 ${item.date}</div>
-          <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
-          <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
-          <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="${item.url}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-            <button onclick="tobiShare('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-          </div>
-        </div>
-      </div>`;
-      // Clear chat and show breaking news prominently
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      addTipMessage(html);
-      // Add follow-up bubbles for breaking news
-      const breakingSuggStr = getRandomSuggestionStr();
-      const breakingSuggList = breakingSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      const breakingFixed = '<button class="suggestion-btn" onclick="showAllNews()">📰 See All News</button><button class="suggestion-btn" onclick="quickAsk(\'How does this affect me as a Nigerian in the UK?\')">🇳🇬 How does this affect me?</button>';
-      const breakingRotating = breakingSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${breakingFixed}${breakingRotating}</div>`);
-      // Clean URL without reloading
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 500);
-  } else if (action === 'nhs') {
-    setTimeout(() => {
-      nhsMode = true;
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      quickAsk('Do you know your NHS rights as a Nigerian in the UK? Tell me everything I need to know');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 500);
-  } else if (action === 'japa') {
-    setTimeout(() => {
-      showJapaGuide();
-      window.history.replaceState({},'',window.location.pathname);
-    }, 500);
-  } else if (action === 'motivation') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      showDailyMotivation();
-      // Add follow-up bubbles for motivation — rotating home page suggestions
-      const motivSuggStr = getRandomSuggestionStr();
-      const motivSuggList = motivSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      const motivHtml = motivSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${motivHtml}</div>`);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 500);
-  } else if (action === 'jobs') {
-    setTimeout(() => {
-      showJobsHubCard();
-      // Add follow-up bubbles for jobs — fixed + rotating
-      const jobsSuggStr = getRandomSuggestionStr();
-      const jobsSuggList = jobsSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      const jobsFixed = '<button class="suggestion-btn" onclick="quickAsk(\'Give me UK CV tips\')">📄 CV Tips</button><button class="suggestion-btn" onclick="quickAsk(\'Help me prepare for a UK job interview\')">🎤 Interview Prep</button>';
-      const jobsRotating = jobsSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${jobsFixed}${jobsRotating}</div>`);
-    }, 500);
-  } else if (action === 'events') {
-    setTimeout(() => {
-      resetAndAsk('Show me upcoming Nigerian events in the UK');
-    }, 500);
-  } else if (action === 'housing') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      const housingNews = [
-        { emoji: '🏠', title: 'No Huge Savings? Buy Your First UK Home with Just a £5,000 Deposit!', summary: 'Did you know you could get on the UK property ladder with just £5,000? Find out how first-time buyers can take advantage of government schemes.', url: 'https://naijahub.co.uk/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21', label: 'Housing', date: '22 Jun 2026' },
-        { emoji: '🏠', title: 'UK Landlords Must Protect Tenant Deposits or Risk Legal Action', summary: 'UK landlords are legally required to protect your deposit in a government-approved scheme within 30 days — or risk legal action and penalties.', url: 'https://naijahub.co.uk/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action', label: 'Housing', date: '18 Jun 2026' }
-      ];
-      addTipMessage('<div style="background:#057A44;padding:8px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:16px;">🏠</span><span style="color:white;font-weight:700;font-size:14px;">Housing</span><span style="color:rgba(255,255,255,0.7);font-size:12px;margin-left:auto;">Latest first</span></div>');
-      housingNews.forEach(item => {
-        const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;margin-bottom:8px;">
-          <div style="padding:10px 12px 8px;">
-            <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px;">📅 ${item.date}</div>
-            <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
-            <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
-            <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-              <a href="${item.url}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-              <button onclick="tobiShare('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-            </div>
-          </div>
-        </div>`;
-        addTipMessage(html);
-      });
-      // Rotating home bubbles
-      const housingSuggStr = getRandomSuggestionStr();
-      const housingSuggList = housingSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${housingSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 600);
-  } else if (action === 'tip') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      const tip = getTodaysTip();
-      const tipHtml = buildTipCard(tip, '');
-      addTipMessage(tipHtml);
-      // Rotating home bubbles
-      const tipSuggStr = getRandomSuggestionStr();
-      const tipSuggList = tipSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${tipSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 500);
-  } else if (action === 'featured') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-      showNaijaFoodFestivalCard();
-      // Fixed See All Events + rotating home bubbles
-      const featSuggStr = getRandomSuggestionStr();
-      const featSuggList = featSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      const featFixed = '<button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 See All Events</button>';
-      const featRotating = featSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${featFixed}${featRotating}</div>`);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 500);
-  }
-}
-
-// Run deep link handler on page load
-document.addEventListener('DOMContentLoaded', handleDeepLink);
-window.addEventListener('load', handleDeepLink);
-
-// Handle PWA notification tap when app is already open
-document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'visible' && window.location.search) {
-    handleDeepLink();
-  }
-});
-
-function exitTestMode() {
-  // Set a flag to pause test mode without clearing progress
-  localStorage.setItem('tobi_exam_paused', '1');
-  resetToWelcome();
-  setTimeout(() => {
-    addTipMessage(`<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:22px;">✅</span>
-      <div>
-        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Test mode paused</div>
-        <div style="font-size:12px;color:#555;">Your progress is saved. Tap 📋 Test to return anytime.</div>
-      </div>
-    </div>`);
-  }, 300);
-}
-
-function resumeTestMode() {
-  localStorage.removeItem('tobi_exam_paused');
-  clearExamState();
-  setTimeout(() => { sendMessage('Start my exam practice'); }, 100);
-}
-
-function showResumeTestPrompt() {
-  const progress = getExamProgress();
-  if (!progress || !progress.name) {
-    // No progress — just start fresh
-    clearExamState();
-    setTimeout(() => { sendMessage('I want to practice for my test'); }, 100);
-    return;
-  }
+function showFAQCard() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
-  addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:14px;">
-    <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:10px;">Welcome back ${progress.name}! 👋🏾</div>
-    <div style="background:#f8faf5;border-radius:6px;padding:10px;margin-bottom:12px;font-size:13px;color:#333;line-height:1.9;">
-      🎯 Test: ${progress.testType || 'Not set'}<br>
-      📈 Last score: ${progress.lastScore || 'Not recorded yet'}<br>
-      ✅ Questions completed: ${progress.questionsCompleted || 0}<br>
-      🏅 Badges: ${progress.badges && progress.badges.length > 0 ? progress.badges.join(' ') : 'None yet'}
-    </div>
-    <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">Do you want to continue test mode?</div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="resumeTestMode()" style="flex:1;background:#057A44;color:white;border:none;border-radius:6px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✅ Continue Test Mode</button>
-      <button onclick="resetToWelcome()" style="flex:1;background:white;color:#555;border:1px solid #e5e7eb;border-radius:6px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Not Now</button>
-    </div>
-  </div>`);
-}
 
-function getNHSSuggestions() {
-  const nhsSuggestions = [
-    'Can I use the NHS immediately after arriving in the UK?',
-    'What should I do if I can\'t get a GP appointment?',
-    'Am I entitled to free NHS treatment?',
-    'How do I register with a GP in the UK?',
-    'What is the difference between a GP and A&E?',
-    'How do I get a prescription in the UK?',
-    'What is NHS 111 and when should I call it?',
-    'Can I see a specialist on the NHS without a GP referral?',
-    'What dental treatment is free on the NHS?',
-    'How do I get mental health support on the NHS?',
-    'What maternity care is available on the NHS?',
-    'Are NHS prescriptions free in the UK?',
-    'How do I register my child with a GP?',
-    'What happens if I need emergency treatment in the UK?',
-    'How long are NHS waiting times in the UK?'
-  ];
-  // Pick 3 random suggestions
-  const shuffled = nhsSuggestions.sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 3);
-}
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="background:#057A44;padding:14px 16px;">
+      <div style="font-size:11px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">🇳🇬🇬🇧 NAIJAUKHUB</div>
+      <div style="font-size:17px;font-weight:700;color:white;margin-bottom:2px;">❓ FAQ About Auntie Tobi</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.75);">Everything you need to know</div>
+    </div>
+    <div style="padding:14px 16px;">
 
-function showNHSSuggestions() {
-  if (!nhsMode) return;
-  const suggestions = getNHSSuggestions();
-  const html = `<div class="suggestions" style="margin-top:8px;">${suggestions.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`;
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">Who is Auntie Tobi?</div>
+        <div style="font-size:13px;color:#555;line-height:1.7;">Auntie Tobi is your friendly AI Digital Auntie, built specifically for Nigerians living in the UK. Think of her as your Oversabi Auntie — always available to answer questions, explain things clearly, and help you navigate life in the UK with confidence.</div>
+      </div>
+
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">Who is Auntie Tobi for?</div>
+        <div style="font-size:13px;color:#555;line-height:1.7;">Auntie Tobi is for Nigerians living in the UK. Whether you've just arrived (japa'd) or you've been here for years, she's here to help you settle, succeed, and thrive.</div>
+      </div>
+
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:8px;">What can Auntie Tobi help me with?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;">
+            <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🇬🇧 Life in the UK</div>
+            <div style="font-size:11px;color:#555;line-height:1.8;">NHS & GP registration<br>Housing & renting<br>Bills & council services<br>Schools & education</div>
+          </div>
+          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;">
+            <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">💼 Jobs & Careers</div>
+            <div style="font-size:11px;color:#555;line-height:1.8;">Job search support<br>CV writing<br>Interview preparation<br>Career advice</div>
+          </div>
+          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;">
+            <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🛂 Visas & Immigration</div>
+            <div style="font-size:11px;color:#555;line-height:1.8;">Visa information<br>Immigration guidance<br>eVisa & UKVI updates</div>
+          </div>
+          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;">
+            <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🚗 Driving & UK Test</div>
+            <div style="font-size:11px;color:#555;line-height:1.8;">Theory Test practice<br>UK driving rules<br>Life in UK Test prep</div>
+          </div>
+          <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;grid-column:span 2;">
+            <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🏢 Businesses & 🎉 Events</div>
+            <div style="font-size:11px;color:#555;line-height:1.8;">Restaurants, salons & services | Local businesses near you | Nigerian events & meetups</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">Why was Auntie Tobi created?</div>
+        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:6px;">Moving to or living in the UK can be overwhelming. Auntie Tobi exists to:</div>
+        <div style="font-size:13px;color:#333;line-height:2.1;">✔ Explain things simply<br>✔ Point you in the right direction<br>✔ Save you time and stress<br>✔ Help you make informed decisions</div>
+      </div>
+
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">How do I use Auntie Tobi?</div>
+        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:6px;">Simply type your question — just like chatting with a trusted auntie:</div>
+        <div style="background:#f8faf5;border-radius:6px;padding:8px 10px;font-size:12px;color:#555;line-height:2.1;">
+          "How do I register with a GP?"<br>
+          "Find Nigerian restaurants near me."<br>
+          "Can I drive in the UK with a Nigerian licence?"<br>
+          "Help me write a UK CV."
+        </div>
+      </div>
+
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:6px;">How do I install Auntie Tobi?</div>
+        <div style="background:#f0f4ff;border-radius:6px;padding:8px 10px;font-size:13px;color:#333;line-height:1.9;margin-bottom:4px;">
+          📱 <strong>Android</strong> — Open in Chrome → tap Add to Home Screen<br>
+          🍏 <strong>iPhone</strong> — Open in Safari → tap Add to Home Screen
+        </div>
+        <div style="font-size:12px;color:#888;font-style:italic;">No App Store. No Google Play. No downloads. Just open and go.</div>
+      </div>
+
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:6px;">🔔 Why should I enable notifications?</div>
+        <div style="font-size:13px;color:#555;line-height:2.1;margin-bottom:4px;">
+          ✅ UK news affecting Nigerians<br>
+          ✅ Immigration and visa updates<br>
+          ✅ Jobs and opportunities<br>
+          ✅ NHS and benefits news<br>
+          ✅ Community events & policy changes
+        </div>
+        <div style="font-size:12px;color:#057A44;font-weight:600;">Auntie Tobi helps you stay one step ahead.</div>
+      </div>
+
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">Is Auntie Tobi free?</div>
+        <div style="font-size:13px;color:#555;line-height:1.7;">Yes! 🎉 Auntie Tobi is completely free to use and available whenever you need help.</div>
+      </div>
+
+      <div style="padding-bottom:12px;border-bottom:0.5px solid #f0f0f0;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">I own a business. Can I list it?</div>
+        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:8px;">Absolutely! Add your listing and connect with Nigerians across the UK.</div>
+        <a href="https://naijahub.co.uk/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:6px;text-align:center;">📢 List your business — naijahub.co.uk/new-listing</a>
+      </div>
+
+      <div style="background:#f8faf5;border-radius:8px;padding:12px;text-align:center;border-left:3px solid #057A44;">
+        <div style="font-size:13px;color:#555;margin-bottom:2px;">💡 Information is power.</div>
+        <div style="font-size:15px;font-weight:700;color:#057A44;">So... wetin you need today? 😄</div>
+      </div>
+    </div>
+  </div>`;
+
   addTipMessage(html);
+  const suggStr = getRandomSuggestionStr();
+  const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">${suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('')}</div>`);
 }
-
-// UK Cities list for validation
-const UK_CITIES = [
-  'London','Manchester','Birmingham','Leeds','Glasgow','Sheffield','Bradford','Edinburgh','Liverpool','Bristol',
-  'Cardiff','Coventry','Nottingham','Leicester','Sunderland','Belfast','Brighton','Hull','Plymouth','Stoke-on-Trent',
-  'Wolverhampton','Derby','Swansea','Southampton','Salford','Aberdeen','Westminster','Portsmouth','York','Peterborough',
-  'Dundee','Lancaster','Oxford','Newport','Preston','St Albans','Norwich','Chester','Cambridge','Salisbury',
-  'Exeter','Gloucester','Lincoln','Hereford','Truro','Ely','Bath','Wells','Ripon','Wakefield','Durham',
-  'Carlisle','Chichester','Worcester','Lichfield','Chelmsford','Colchester','Ipswich','Northampton','Milton Keynes',
-  'Reading','Slough','Luton','Watford','Guildford','Bournemouth','Swindon','Basingstoke','Woking','Crawley',
-  'Maidstone','Rochester','Canterbury','Chatham','Tunbridge Wells','Eastbourne','Worthing','Hastings',
-  'Newcastle','Middlesbrough','Sunderland','Gateshead','Stockton','Darlington','Hartlepool',
-  'Blackpool','Blackburn','Burnley','Bolton','Rochdale','Oldham','Wigan','Warrington','St Helens',
-  'Huddersfield','Halifax','Barnsley','Rotherham','Doncaster','Scunthorpe','Grimsby',
-  'Stoke','Stafford','Shrewsbury','Telford','Walsall','West Bromwich','Solihull',
-  'Coventry','Rugby','Nuneaton','Tamworth','Burton','Derby','Chesterfield','Mansfield',
-  'Nottingham','Newark','Lincoln','Grimsby','Boston','Grantham',
-  'Leicester','Loughborough','Kettering','Corby','Wellingborough',
-  'Milton Keynes','Bedford','Luton','Stevenage','Watford','Hemel Hempstead',
-  'Chelmsford','Southend','Colchester','Ipswich','Norwich','Peterborough',
-  'Swansea','Cardiff','Newport','Wrexham','Bridgend','Merthyr Tydfil',
-  'Edinburgh','Glasgow','Aberdeen','Dundee','Inverness','Perth','Stirling',
-  'Belfast','Derry','Lisburn','Newry','Armagh'
-];
-
-function fuzzyMatchCity(input) {
-  const inp = input.trim().toLowerCase();
-  if (!inp) return { exact: null, suggestions: [] };
-
-  // Exact match (case insensitive)
-  const exact = UK_CITIES.find(c => c.toLowerCase() === inp);
-  if (exact) return { exact, suggestions: [] };
-
-  // Starts with input
-  const starts = UK_CITIES.filter(c => c.toLowerCase().startsWith(inp));
-  if (starts.length > 0) return { exact: null, suggestions: starts.slice(0, 3) };
-
-  // Contains input
-  const contains = UK_CITIES.filter(c => c.toLowerCase().includes(inp));
-  if (contains.length > 0) return { exact: null, suggestions: contains.slice(0, 3) };
-
-  // Levenshtein distance for typos — only match if distance is small relative to word length
-  function levenshtein(a, b) {
-    const m = a.length, n = b.length;
-    const dp = [];
-    for (let i = 0; i <= m; i++) {
-      dp[i] = [];
-      for (let j = 0; j <= n; j++) {
-        if (i === 0) dp[i][j] = j;
-        else if (j === 0) dp[i][j] = i;
-        else dp[i][j] = 0;
-      }
-    }
-    for (let i = 1; i <= m; i++) {
-      for (let j = 1; j <= n; j++) {
-        dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
-      }
-    }
-    return dp[m][n];
-  }
-
-  const maxDist = Math.max(1, Math.floor(inp.length / 4)); // Allow 1 error per 4 chars
-  const typos = UK_CITIES
-    .map(c => ({ city: c, dist: levenshtein(inp, c.toLowerCase()) }))
-    .filter(x => x.dist <= maxDist)
-    .sort((a, b) => a.dist - b.dist)
-    .slice(0, 3)
-    .map(x => x.city);
-
-  return { exact: null, suggestions: typos };
-}
-
-// Event delegation for Jobs Hub city Go button
-document.addEventListener('click', function(e) {
-  if (e.target && e.target.id === 'jobs-city-go-btn') {
-    const input = document.getElementById('jobs-city-input');
-    if (input) validateAndSearchCity(input.value);
-  }
-});
-
-function setCityAndConfirm(city) {
-  window.userCity = city;
-  userCity = city;
-  localStorage.setItem('tobi_user_city', city);
-  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:10px 12px;font-size:13px;color:#057A44;font-weight:700;">✅ City set to <strong>' + city + '</strong> — now tap a job category above!</div>');
-}
-
-function validateAndSearchCity(inputVal) {
-  const input = (inputVal || '').trim();
-  if (!input) return;
-
-  // Remove any previous city suggestion card
-  const existing = document.getElementById('city-suggest-card');
-  if (existing) existing.remove();
-
-  const { exact, suggestions } = fuzzyMatchCity(input);
-
-  if (exact) {
-    setCityAndConfirm(exact);
-  } else if (suggestions.length > 0) {
-    const suggestBtns = suggestions.map(c =>
-      `<button onclick="setCityAndConfirm('${c}')" style="background:#057A44;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${c}</button>`
-    ).join('');
-    addTipMessage(`<div id="city-suggest-card" style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;">
-      <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:8px;">🤔 We couldn't find "<strong>${input}</strong>" — did you mean:</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;">${suggestBtns}</div>
-    </div>`);
-  } else {
-    addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:12px;">
-      <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;">❌ We couldn't find "<strong>${input}</strong>"</div>
-      <div style="font-size:12px;color:#555;">Please check the spelling and try again — e.g. Manchester, Birmingham, Leeds, London.</div>
-    </div>`);
-  }
-}
-
-// Listen for push notification data from service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'SAVE_PENDING_NOTIF') {
-      localStorage.setItem('tobi_pending_notif', JSON.stringify({
-        title: event.data.title,
-        body: event.data.body,
-        url: event.data.url
-      }));
-    }
-    // Handle notification click URL — save and navigate
-    if (event.data && event.data.type === 'NOTIF_CLICK_URL') {
-      const url = event.data.url;
-      if (url) {
-        localStorage.setItem('tobi_notif_click_url', url);
-      }
-    }
-  });
-}
-
-// Check for pending notification click URL on page load
-function checkNotifClickUrl() {
-  const url = localStorage.getItem('tobi_notif_click_url');
-  if (url) {
-    localStorage.removeItem('tobi_notif_click_url');
-    // Extract just the query string and trigger deep link
-    try {
-      const urlObj = new URL(url);
-      const search = urlObj.search;
-      if (search) {
-        // Temporarily set location search and run deep link handler
-        const params = new URLSearchParams(search);
-        const news = params.get('news');
-        const action = params.get('action');
-        if (news || action) {
-          history.replaceState({}, '', search);
-          setTimeout(handleDeepLink, 500);
-        }
-      }
-    } catch(e) {}
-  }
-}
-
-window._notifPopupAllow = function() {
-  const popup = document.getElementById('notif-weekly-popup');
-  if (popup) popup.remove();
-  // Use Notification.requestPermission directly — works on all browsers
-  if ('Notification' in window) {
-    Notification.requestPermission().then(function(permission) {
-      if (permission === 'granted') {
-        OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.User.PushSubscription.optIn();
-          localStorage.setItem('tobi_notifications', '1');
-          updateBellButton(true);
-          addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You will now receive daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>');
-        });
-      }
-    });
-  } else {
-    OneSignalDeferred.push(function(OneSignal) {
-      OneSignal.Slidedown.promptPush();
-    });
-  }
-};
-
-function showWeeklyNotificationPrompt() {
-  // Check if already subscribed via localStorage (instant, no need to wait for OneSignal)
-  const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
-  if (isSubscribed) return;
-
-  // Check if already shown today (for returning users)
-  const lastPrompt = localStorage.getItem('tobi_notif_prompt_date');
-  const todayStr = new Date().toISOString().split('T')[0];
-  const isReturning = localStorage.getItem('tobi_visited');
-
-  // Returning users — show once per day after 5 seconds
-  // First time visitors — show after 20 seconds
-  if (isReturning && lastPrompt === todayStr) return;
-
-  const delay = isReturning ? 5000 : 20000;
-  localStorage.setItem('tobi_notif_prompt_date', todayStr);
-
-  setTimeout(() => {
-    // Don't show if already subscribed by now
-    if (localStorage.getItem('tobi_notifications') === '1') return;
-    const popup = document.createElement('div');
-    popup.id = 'notif-weekly-popup';
-    popup.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-    popup.innerHTML = `<div style="background:white;border-radius:12px;overflow:hidden;max-width:360px;width:100%;">
-      <div style="background:#0F1E36;padding:14px 16px;display:flex;align-items:center;gap:10px;">
-        <span style="font-size:28px;">🔔</span>
-        <div>
-          <div style="font-size:15px;font-weight:700;color:white;">Stay in the loop!</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.7);">Auntie Tobi has updates for you 🇳🇬</div>
-        </div>
-      </div>
-      <div style="padding:14px 16px;">
-        <div style="font-size:13px;color:#333;line-height:2.1;margin-bottom:12px;">
-          ✅ Breaking news affecting Nigerians in the UK<br>
-          ✅ Important UK updates and policy changes<br>
-          ✅ Immigration, jobs, benefits & NHS news<br>
-          ✅ Community events and opportunities<br>
-          ✅ Daily news and practical updates that matter to you
-        </div>
-        <div style="font-size:12px;color:#888;margin-bottom:14px;font-style:italic;">I no go disturb you, I promise! 😄</div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="window._notifPopupAllow()" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow Notifications</button>
-          <button onclick="document.getElementById('notif-weekly-popup').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;">Later</button>
-        </div>
-      </div>
-    </div>`;
-    document.body.appendChild(popup);
-  }, delay);
-}
-
-function showPendingNotifBanner() {
-  // Check localStorage for pending notification
-  const pending = localStorage.getItem('tobi_pending_notif');
-  if (!pending) return;
-
-  try {
-    const notif = JSON.parse(pending);
-    if (!notif.url && !notif.title) {
-      localStorage.removeItem('tobi_pending_notif');
-      return;
-    }
-    _renderNotifBanner(notif);
-  } catch(e) {
-    localStorage.removeItem('tobi_pending_notif');
-  }
-}
-
-function _renderNotifBanner(notif) {
-  if (document.getElementById('notif-update-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'notif-update-banner';
-  banner.style.cssText = 'background:#0F1E36;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin:8px 0;';
-  banner.innerHTML = `
-    <span style="font-size:20px;">🔔</span>
-    <div style="flex:1;">
-      <div style="font-size:13px;font-weight:700;color:white;margin-bottom:2px;">You have a new update!</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.7);">${notif.body || notif.title}</div>
-    </div>
-    <div style="display:flex;gap:6px;">
-      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();window.location.href='${notif.url}';" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View</button>
-      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();" style="background:none;border:0.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">✕</button>
-    </div>`;
-  const messages = document.getElementById('messages');
-  if (messages) messages.insertBefore(banner, messages.firstChild);
-}
-
 function showJapaGuide() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
@@ -3676,7 +3033,7 @@ function showWelcomeCard() {
   // Add suggestion bubbles
   const suggStr = getRandomSuggestionStr();
   const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button>';
+  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
   const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">${rotatingBtns}${fixedBtns}</div>`);
 }
@@ -3906,7 +3263,7 @@ function buildTipCard(tip, suggestionStr) {
 
 window.shareTipOfDay = function() {
   const tip = getTodaysTip();
-  const text = `💡 Auntie Tobi's Tip of the Day 🇳🇬🇬🇧\n\n${tip.emoji} ${tip.category}:\n${tip.tip}\n\nvia Auntie Tobi | auntietobi.co.uk`;
+  const text = `💡 Auntie Tobi's Tip of the Day 🇳🇬🇬🇧\n\n${tip.emoji} ${tip.category}:\n${tip.tip}\n\n`;
   tobiShare("Auntie Tobi's Tip of the Day 🇳🇬", text, 'https://auntietobi.co.uk');
   if (false) {
   } else {
@@ -3952,26 +3309,41 @@ function getRandomSuggestionStr() {
 // NAIJAHUB BUSINESSES DIRECTORY
 // ============================================
 const NAIJAHUB_BUSINESSES = [
-  { name: 'Flourish Paradise', category: 'Events & Entertainment', location: 'Rotherham, South Yorkshire', desc: 'Professional Alaga services for weddings and events', url: 'https://naijahub.co.uk/listing/flourish-paradise' },
-  { name: 'Autogelebysunshine UK', category: 'Beauty & Fashion', location: 'Liverpool', desc: 'Beautifully crafted Auto Gele, men\'s caps and elegant turbans for all occasions', url: 'https://naijahub.co.uk/listing/autogelebysunshine-uk' },
-  { name: 'Photomasterstudios', category: 'Events & Entertainment', location: 'Nottingham', desc: 'Professional photography — portraits, weddings, events', url: 'https://naijahub.co.uk/listing/photomasterstudios' },
-  { name: 'Orionbloomuk', category: 'Beauty & Fashion', location: 'UK-wide', desc: 'Expert makeup for deeper skin tones and melanin-focused artistry', url: 'https://naijahub.co.uk/listing/orionbloomuk' },
-  { name: 'Bumexcouture', category: 'Beauty & Fashion', location: 'UK-wide', desc: 'Stylish women\'s clothing and accessories featuring vibrant African print textiles', url: 'https://naijahub.co.uk/listing/bumexcouture' },
-  { name: 'Nidakprint', category: 'Professional Services', location: 'London, Birmingham, Manchester', desc: 'Custom printing and packaging for Nigerian entrepreneurs and businesses', url: 'https://naijahub.co.uk/listing/nidakprint' },
-  { name: 'Gandkstyles', category: 'Beauty & Fashion', location: 'Leven, Scotland', desc: 'Ready-to-wear women\'s clothing, Ankara prints and casual wear', url: 'https://naijahub.co.uk/listing/gandkstyles' },
-  { name: 'Glamwtjade', category: 'Beauty & Fashion', location: 'Middlesbrough', desc: 'Professional makeup artist specialising in bridal and special occasion makeup', url: 'https://naijahub.co.uk/listing/glamwtjade' },
-  { name: 'Purplelips', category: 'Beauty & Fashion', location: 'Colchester, Essex', desc: 'Professional makeup artist services', url: 'https://naijahub.co.uk/listing/purplelips' },
-  { name: 'Funmis Treasure', category: 'Food & Groceries', location: 'Basildon, Essex', desc: 'Nigerian groceries, food products and drinks', url: 'https://naijahub.co.uk/listing/funmis-treasure', featured: true, verified: true, whatsapp: 'https://api.whatsapp.com/send?phone=447435844799' },
-  { name: 'Jollofmama', category: 'Food & Dining', location: 'London', desc: 'Authentic Nigerian restaurant — jollof rice and traditional Nigerian cuisine', url: 'https://naijahub.co.uk/listing/jollofmama' },
-  { name: 'Kelz J Bukka & Grills', category: 'Food & Dining', location: 'Brighton', desc: 'Nigerian restaurant and grill — authentic West African dishes', url: 'https://naijahub.co.uk/listing/kelz-j-bukka-and-grills' },
-  { name: 'Funkesglam', category: 'Beauty & Fashion', location: 'Rainham, Essex', desc: 'Professional makeup artist for weddings, events and special occasions', url: 'https://naijahub.co.uk/listing/funkesglam' },
-  { name: '280degrees', category: 'Food & Dining', location: 'Kilburn, London NW6', desc: 'Nigerian restaurant on Kilburn High Road', url: 'https://naijahub.co.uk/listing/280degrees' },
-  { name: 'Justpalmoil', category: 'Food & Groceries', location: 'Streatham, London SW16', desc: 'Palm oil and Nigerian groceries', url: 'https://naijahub.co.uk/listing/justpalmoil' },
-  { name: 'Tombell Education Consultancy', category: 'Professional Services', location: 'Sittingbourne, Kent', desc: 'Education consultancy services for Nigerian families in the UK', url: 'https://naijahub.co.uk/listing/tombell-education-consultancy-ltd' },
-  { name: 'Home of Multi-Nutrient', category: 'Food & Groceries', location: 'Wakefield, West Yorkshire', desc: 'West African frozen food and groceries', url: 'https://naijahub.co.uk/listing/home-of-multi-nutrient-ventures-limited' },
-  { name: 'Xstarhaircollectionz', category: 'Beauty & Fashion', location: 'Glasgow, Scotland', desc: 'Premium wigs and hair products — Boho Braids, Knotless Braids, human hair wigs', url: 'https://naijahub.co.uk/listing/xstarhaircollectionz' },
-  { name: 'OlorioBeauty', category: 'Beauty & Fashion', location: 'UK-wide', desc: 'Natural beauty products for melanin-rich skin', url: 'https://naijahub.co.uk/listing/olorio-beauty' },
-  { name: 'Auntie Tobi Recommended', category: 'All Categories', location: 'UK-wide', desc: 'View all Nigerian businesses listed on NaijaUKHub', url: 'https://naijahub.co.uk' }
+  { name: 'Eventsbykklargesse', category: 'Event Planners', location: 'Suffolk, UK', desc: 'Tailored Moments, Timeless Memories. Beautiful celebrations through curated gifting and thoughtful touches.', url: 'https://naijahub.co.uk/listing/eventsbykklargesse' },
+  { name: 'Beauty Glowingskins', category: 'Skincare', location: 'East London, UK', desc: 'Skincare for glowing skin.', url: 'https://naijahub.co.uk/listing/beauty-glowingskins' },
+  { name: 'GFL Beauty Home', category: 'Wig Vendors', location: 'UK-wide', desc: 'Uncompromising quality. Seamless blending. Flawless installations. Premium virgin and raw hair.', url: 'https://naijahub.co.uk/listing/gfl-beauty-home' },
+  { name: 'Orionbloomuk', category: 'Makeup Artists', location: 'UK-wide', desc: 'Professional makeup services, tailored beauty insight, and premium products.', url: 'https://naijahub.co.uk/listing/orionbloomuk', whatsapp: 'https://api.whatsapp.com/send?phone=4407732785019' },
+  { name: 'Autogelebysunshine UK', category: 'Gele Stylists', location: 'Liverpool, UK', desc: 'Beautifully crafted Auto Gele, stylish men\'s caps, and elegant turbans.', url: 'https://naijahub.co.uk/listing/autogelebysunshine-uk', whatsapp: 'https://api.whatsapp.com/send/?phone=447760694051' },
+  { name: 'Apparelby22', category: 'Fashion Designers', location: 'Birmingham, UK', desc: 'Premium, structurally beautiful garments crafted to make a sophisticated statement.', url: 'https://naijahub.co.uk/listing/apparelby22' },
+  { name: 'Wendy Beauty Artistry', category: 'Makeup Artists', location: 'Ballymena, UK', desc: 'Radiant makeup, elegant hair styling, and flawless beauty treatments.', url: 'https://naijahub.co.uk/listing/wendy-beauty-artistry' },
+  { name: 'Bimfem Beauty Hub', category: 'Skincare', location: 'London, UK', desc: 'Authentic African hair and skincare products. Your go-to destination in the UK.', url: 'https://naijahub.co.uk/listing/bimfem-beauty-hub' },
+  { name: 'Persola Beauty', category: 'Makeup Artists', location: 'Aylesbury, UK', desc: 'High-end, editorial touch. Specializing in flawless, radiant skin.', url: 'https://naijahub.co.uk/listing/persola-beauty' },
+  { name: 'Zionnzarahgele', category: 'Gele Stylists', location: 'Norwich, UK', desc: 'The art of modern royalty. Flawless, structurally stunning Gele designs.', url: 'https://naijahub.co.uk/listing/zionnzarahgele' },
+  { name: 'Shoppayhairs', category: 'Wig Vendors', location: 'Doncaster, UK', desc: 'Premium raw and virgin wigs crafted for seamless blending and effortless glamour.', url: 'https://naijahub.co.uk/listing/shoppayhairs' },
+  { name: 'Tecnis Academy', category: 'Tutors', location: 'Sittingbourne, UK', desc: 'Engaging online and face-to-face tuition in Maths, English, Physics, Chemistry, and Biology.', url: 'https://naijahub.co.uk/listing/tecnis-academy', whatsapp: 'https://wa.me/447792834542' },
+  { name: 'Lushnaturalsuk', category: 'Skincare', location: 'London, UK', desc: 'Natural body care products — pure skincare, body enhancers, and plant-based products.', url: 'https://naijahub.co.uk/listing/lushnaturalsuk' },
+  { name: 'Elgloreenaturals', category: 'Hair Care', location: 'UK-wide', desc: 'Premium natural hair care products. God made everything beautiful.', url: 'https://naijahub.co.uk/listing/elgloreenaturals' },
+  { name: 'Peroevents', category: 'Events & MC', location: 'UK-wide', desc: 'Events should be fun and memories, not stressful. Professional Alaga and MC services.', url: 'https://naijahub.co.uk/listing/peroevents' },
+  { name: 'Goke Photography', category: 'Photography', location: 'Tilbury, UK', desc: 'Wedding photography, engagement shoots, portraits and more.', url: 'https://naijahub.co.uk/listing/goke-photography' },
+  { name: 'Flourish Paradise', category: 'Event Decorators', location: 'Rotherham, UK', desc: 'Stunning cakes and breathtaking event decorations for weddings, birthdays and more.', url: 'https://naijahub.co.uk/listing/flourish-paradise' },
+  { name: 'Photomasterstudios', category: 'Photography', location: 'Nottingham, UK', desc: 'Creating timeless art through the lens of passion and precision.', url: 'https://naijahub.co.uk/listing/photomasterstudios' },
+  { name: 'Bumexcouture', category: 'Ankara & Traditional Wears', location: 'UK-wide', desc: 'African culture and fashion. Beautiful African-inspired garments.', url: 'https://naijahub.co.uk/listing/bumexcouture' },
+  { name: 'Nidakprint', category: 'Printing Services', location: 'UK-wide', desc: 'Packaging and custom printing solutions.', url: 'https://naijahub.co.uk/listing/nidakprint', whatsapp: 'https://api.whatsapp.com/send?phone=447592283188' },
+  { name: 'Gandkstyles', category: 'Ankara & Traditional Wears', location: 'Scotland, UK', desc: 'African fashion brand offering stylish ready-to-wear women\'s clothing.', url: 'https://naijahub.co.uk/listing/gandkstyles', whatsapp: 'https://api.whatsapp.com/send/?phone=447887661383' },
+  { name: 'Glamwtjade', category: 'Makeup Artists', location: 'Middlesbrough, UK', desc: 'Flawless, radiant complexions that look effortlessly sophisticated.', url: 'https://naijahub.co.uk/listing/glamwtjade' },
+  { name: 'Purplelips', category: 'Makeup Artists', location: 'Colchester, UK', desc: 'Premier luxury beauty service specializing in high-end bridal and soft glam makeup.', url: 'https://naijahub.co.uk/listing/purplelips', whatsapp: 'https://api.whatsapp.com/send/?phone=%2B447414129863' },
+  { name: 'Funmis Treasure', category: 'African Foodstores & Groceries', location: 'Basildon, Essex', desc: 'Authentic African products and foods delivered throughout the UK.', url: 'https://naijahub.co.uk/listing/funmis-treasure', whatsapp: 'https://api.whatsapp.com/send?phone=447435844799', featured: true, verified: true },
+  { name: 'Jollofmama', category: 'Restaurants', location: 'London, UK', desc: 'London\'s finest destination for authentic Nigerian cuisine and vibrant flavors.', url: 'https://naijahub.co.uk/listing/jollofmama' },
+  { name: 'Kelz J Bukka & Grills', category: 'Restaurants', location: 'Brighton & Hove, UK', desc: 'Rich flavors of Nigerian cuisine blending tradition with modern dining.', url: 'https://naijahub.co.uk/listing/kelz-j-bukka-and-grills' },
+  { name: 'Funkesglam', category: 'Makeup Artists', location: 'Essex, UK', desc: 'Professional makeup services across London and Essex, specialising in bridal looks.', url: 'https://naijahub.co.uk/listing/funkesglam' },
+  { name: '280degrees', category: 'Restaurants', location: 'London NW6, UK', desc: 'Vibrant colours, rich flavours, and warm African hospitality.', url: 'https://naijahub.co.uk/listing/280degrees' },
+  { name: 'Justpalmoil', category: 'African Foodstores & Groceries', location: 'London, UK', desc: 'Authentic undiluted palm oil sourced directly from Calabar, Nigeria.', url: 'https://naijahub.co.uk/listing/justpalmoil', whatsapp: 'https://api.whatsapp.com/message/H7HRSIZWD6KUO1' },
+  { name: 'Tombell Education Consultancy', category: 'Education Consultancy', location: 'Sittingbourne, Kent', desc: 'British Council Certified education consultancy helping students achieve their study abroad goals.', url: 'https://naijahub.co.uk/listing/tombell-education-consultancy-ltd', whatsapp: 'https://api.whatsapp.com/send/?phone=2349066674956', featured: true, verified: true },
+  { name: 'Home of Multi-Nutrient Ventures', category: 'African Foodstores & Groceries', location: 'Wakefield, UK', desc: 'Authentic African Flavours to Your Doorstep — Fresh, High-Quality Frozen Foods and African groceries.', url: 'https://naijahub.co.uk/listing/home-of-multi-nutrient-ventures-limited' },
+  { name: 'Xstarhaircollectionz', category: 'Wig Vendors', location: 'Glasgow, UK', desc: 'Premium quality wigs and hair products designed for all hair types.', url: 'https://naijahub.co.uk/listing/xstarhaircollectionz', whatsapp: 'https://api.whatsapp.com/send/?phone=447342572629' },
+  { name: 'HairMistress', category: 'Beauty Services', location: 'Erith, London', desc: 'Exceptional beauty treatments where convenience meets professionalism.', url: 'https://naijahub.co.uk/listing/hairmistress', whatsapp: 'https://api.whatsapp.com/send/?phone=447762137315' },
+  { name: 'Uwagboe\'s Kitchen & Grill', category: 'Restaurants', location: 'Edinburgh, UK', desc: 'Vibrant flavors of Nigeria in the heart of Edinburgh.', url: 'https://naijahub.co.uk/listing/uwagboes-kitchen-and-grill-leith-walk' },
+  { name: 'Craving Delight', category: 'Restaurants', location: 'Hull, UK', desc: 'Authentic African cuisine in the heart of Hull.', url: 'https://naijahub.co.uk/listing/craving-delighthull' },
 ];
 
 // Track shown businesses to avoid repeats
@@ -4010,7 +3382,7 @@ function showBusinesses(startIndex = -1) {
     const featuredBadge = b.featured ? `<span style="display:inline-flex;align-items:center;gap:2px;background:linear-gradient(135deg,#FFB81C,#f59e0b);color:#0F1E36;font-size:9px;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:5px;vertical-align:middle;white-space:nowrap;">⭐ Featured</span>` : '';
     const verifiedBadge = b.verified ? `<span style="display:inline-flex;align-items:center;gap:3px;background:white;color:#1D9BF0;font-size:9px;font-weight:800;padding:2px 8px;border-radius:50px;margin-left:5px;vertical-align:middle;border:1.5px solid #1D9BF0;"><span style="color:#1D9BF0;font-size:11px;font-weight:900;">✓</span> Verified</span>` : '';
     const viewBtn = `<a href="${b.url}" target="_blank" style="flex:1;display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;">View on naijahub.co.uk</a>`;
-    const waBtn = b.whatsapp ? `<a href="${b.whatsapp}" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;white-space:nowrap;">💬 WhatsApp</a>` : '';
+    const waBtn = (b.featured && b.whatsapp) ? `<a href="${b.whatsapp}" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;white-space:nowrap;">💬 WhatsApp</a>` : '';
     const btnRow = `<div style="display:flex;gap:6px;margin-top:4px;">${viewBtn}${waBtn}</div>`;
     html += `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;margin-bottom:12px;">
         <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;justify-content:space-between;">
@@ -4263,7 +3635,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showAboutTobi()">👋 About Auntie Tobi</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
     } catch(err) {
@@ -4449,7 +3821,7 @@ async function submitFeedback() {
 }
 
 function shareAuntieTobi() {
-  const shareText = 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians 🇳🇬🇬🇧\n\nGet answers to your questions, discover Nigerian businesses and events near you, find jobs and opportunities, and stay updated with UK news, immigration changes, and everyday guidance that matters to you.\n\n👉 Try her FREE: auntietobi.co.uk\n\nvia Auntie Tobi | auntietobi.co.uk';
+  const shareText = 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians 🇳🇬🇬🇧\n\nGet answers to your questions, discover Nigerian businesses and events near you, find jobs and opportunities, and stay updated with UK news, immigration changes, and everyday guidance that matters to you.\n\n👉 Try her FREE: auntietobi.co.uk\n\n';
   if (navigator.share) {
     navigator.share({
       title: 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians 🇳🇬🇬🇧',
