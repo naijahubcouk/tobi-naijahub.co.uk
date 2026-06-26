@@ -3684,6 +3684,13 @@ function resetToWelcome() {
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
+      // Scroll to top so Daily Motivation shows first
+      const m2 = document.getElementById('messages');
+      if (m2) {
+        m2.scrollTop = 0;
+        setTimeout(() => { m2.scrollTop = 0; }, 300);
+      }
+
       // Safety check — if messages div is still empty after all this, show fallback
       setTimeout(() => {
         const m = document.getElementById('messages');
