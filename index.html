@@ -1435,6 +1435,7 @@ Only reference these real NaijaUKHub blog posts. Do not make up or reference oth
 5. "No Huge Savings? How to Buy Your First UK Home with Just a £5,000 Deposit!" | Housing | naijahub.co.uk/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21
 6. "UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C" | News | naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We
 7. "Aldi Freezes Baby Formula Price Until End of 2026" | Money | naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026
+9. "UK Immigration Update: House of Lords Challenges Proposed ILR Changes" | News | naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes
 8. "What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money" | Money | naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money
 `;
 
@@ -2496,6 +2497,14 @@ function showAllNews() {
       date: '22 Jun 2026'
     },
     {
+      emoji: '🏛️',
+      title: 'UK Immigration Update: House of Lords Challenges Proposed ILR Changes',
+      summary: 'The House of Lords has challenged proposed changes to Indefinite Leave to Remain (ILR) rules. Find out what this means for Nigerians in the UK applying for settlement.',
+      url: 'https://naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes',
+      label: 'News',
+      date: '26 Jun 2026'
+    },
+    {
       emoji: '🍼',
       title: 'Aldi Freezes Baby Formula Price Until End of 2026',
       summary: 'Great news for families! Aldi has frozen the price of baby formula until the end of 2026, helping parents save money on one of their biggest essentials.',
@@ -2601,6 +2610,15 @@ function showNewsCard() {
       url: 'https://naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
       label: 'News',
       date: '22 Jun 2026'
+    },
+    {
+      emoji: '🏛️',
+      category: 'NEWS',
+      title: 'UK Immigration Update: House of Lords Challenges Proposed ILR Changes',
+      summary: 'The House of Lords has challenged proposed changes to Indefinite Leave to Remain (ILR) rules. Find out what this means for Nigerians in the UK applying for settlement.',
+      url: 'https://naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes',
+      label: 'News',
+      date: '26 Jun 2026'
     },
     {
       emoji: '🍼',
@@ -3522,6 +3540,110 @@ function handleBellClick() {
   }
 }
 
+// ============================================
+// MISSING FUNCTIONS — restored
+// ============================================
+
+function showAboutTobi() { showFAQCard(); }
+
+function tobiShare(title, text, url) {
+  if (navigator.share) {
+    navigator.share({ title, text: text + '\n\n👉 ' + url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(title + '\n\n' + text + '\n\n👉 ' + url).then(() => {
+      alert('Copied! Share with your friends 🇳🇬🇬🇧');
+    });
+  }
+}
+
+function exitTestMode() {
+  localStorage.setItem('tobi_exam_paused', '1');
+  clearExamState();
+  addTipMessage('<div style="background:#f8faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;font-size:13px;color:#555;">✅ Test mode paused. Tap the 🚗 Driving Theory Test or 📋 Life in UK Test pill to resume anytime.</div>');
+}
+
+function showResumeTestPrompt() {
+  const progress = getExamProgress();
+  if (!progress) { clearExamState(); return; }
+  addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:14px;">
+    <div style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:8px;">📋 Continue your test?</div>
+    <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:10px;">
+      Test: <strong>${progress.testType || 'Unknown'}</strong><br>
+      Questions completed: <strong>${progress.questionsCompleted || 0}</strong><br>
+      Last score: <strong>${progress.lastScore || 'Not recorded'}</strong>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="quickAsk('Continue my ${progress.testType || 'test'} practice')" style="flex:1;background:#057A44;color:white;border:none;border-radius:6px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">▶️ Continue</button>
+      <button onclick="clearExamState();resetToWelcome();" style="background:none;border:1px solid #e5e7eb;border-radius:6px;padding:10px 14px;font-size:13px;color:#555;cursor:pointer;font-family:inherit;">Start Fresh</button>
+    </div>
+  </div>`);
+}
+
+// Deep link handler
+function handleDeepLink() {
+  const params = new URLSearchParams(window.location.search);
+  const action = params.get('action');
+  const news = params.get('news');
+
+  if (!action && !news) return;
+
+  if (action === 'japa') {
+    setTimeout(() => { showJapaGuide(); window.history.replaceState({}, '', window.location.pathname); }, 500);
+  } else if (action === 'nhs') {
+    nhsMode = true;
+    setTimeout(() => { quickAsk('What NHS services can I access as a Nigerian in the UK?'); window.history.replaceState({}, '', window.location.pathname); }, 500);
+  } else if (action === 'motivation') {
+    setTimeout(() => { showDailyMotivation(); window.history.replaceState({}, '', window.location.pathname); }, 500);
+  } else if (action === 'tip') {
+    setTimeout(() => {
+      const tip = getTodaysTip();
+      addTipMessage(buildTipCard(tip, getRandomSuggestionStr()));
+      window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  } else if (news === 'aldibabyformula') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🍼 Aldi Freezes Baby Formula Price Until End of 2026</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Great news for families! Aldi has frozen the price of baby formula until the end of 2026.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Aldi Baby Formula\',\'Aldi Freezes Baby Formula Price Until End of 2026\',\'https://naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      const s = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('What baby products are cheapest in the UK?')">🍼 Cheapest baby products?</button><button class="suggestion-btn" onclick="quickAsk('How to save money on baby essentials?')">💰 Save on baby essentials</button>${s.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  } else if (news === 'andyburnham') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">💷 What Andy Burnham as UK PM Could Mean for Your Money</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Find out what his policies could mean for your taxes, energy bills, and finances as a Nigerian in the UK.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Andy Burnham PM\',\'What Andy Burnham as UK PM Could Mean for Your Money\',\'https://naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      const s = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How will a new UK Prime Minister affect my taxes?')">💷 How will this affect my taxes?</button><button class="suggestion-btn" onclick="quickAsk('What could change for Nigerians in the UK under Andy Burnham?')">🇬🇧 What changes for Nigerians?</button>${s.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  } else if (news === 'ilrupdate') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span><span style="font-size:10px;color:#9CA3AF;">26 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🏛️ UK Immigration Update: House of Lords Challenges Proposed ILR Changes</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">The House of Lords has challenged proposed changes to Indefinite Leave to Remain (ILR) rules. Find out what this means for Nigerians in the UK applying for settlement.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'ILR Update\',\'UK Immigration Update: House of Lords Challenges Proposed ILR Changes\',\'https://naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      const ilrs = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('What are the proposed ILR changes in the UK?')">🛂 What are the proposed ILR changes?</button><button class="suggestion-btn" onclick="quickAsk('How do the proposed ILR changes affect Nigerians in the UK?')">🏛️ How does this affect Nigerians?</button>${ilrs.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  } else if (news === 'heatwarning') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/UPDATES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🌡️ UK Red Heat Warning — Temperatures Could Reach 40°C</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours.</div><a href="https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a></div></div>');
+      window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  } else if (news === 'freebus') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/UPDATES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🚌 Free Bus Travel Update</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Latest update on free bus travel for Nigerians in the UK.</div><a href="https://naijahub.co.uk" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More on NaijaUKHub</a></div></div>');
+      window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  }
+}
+
 function showWeeklyNotificationPrompt() {
   const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
   if (isSubscribed) return;
@@ -3604,6 +3726,7 @@ window.onload = () => {
   }
   // Request location on load to update city
   requestLocation();
+  handleDeepLink();
   setTimeout(() => {
     if (typeof showPendingNotifBanner === 'function') showPendingNotifBanner();
   }, 1000);
