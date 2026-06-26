@@ -3472,6 +3472,66 @@ function getCategoryEmoji(cat) {
   return emojis[cat] || '🏢';
 }
 
+window._notifPopupAllow = function() {
+  const popup = document.getElementById('notif-weekly-popup');
+  if (popup) popup.remove();
+  if ('Notification' in window) {
+    Notification.requestPermission().then(function(permission) {
+      if (permission === 'granted') {
+        OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.User.PushSubscription.optIn();
+          localStorage.setItem('tobi_notifications', '1');
+          updateBellButton(true);
+          addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You will now receive daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>');
+        });
+      }
+    });
+  } else {
+    OneSignalDeferred.push(function(OneSignal) { OneSignal.Slidedown.promptPush(); });
+  }
+};
+
+function showWeeklyNotificationPrompt() {
+  const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
+  if (isSubscribed) return;
+  const lastPrompt = localStorage.getItem('tobi_notif_prompt_date');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isReturning = localStorage.getItem('tobi_visited');
+  if (isReturning && lastPrompt === todayStr) return;
+  const delay = isReturning ? 5000 : 20000;
+  localStorage.setItem('tobi_notif_prompt_date', todayStr);
+  setTimeout(() => {
+    if (localStorage.getItem('tobi_notifications') === '1') return;
+    if (document.getElementById('notif-weekly-popup')) return;
+    const popup = document.createElement('div');
+    popup.id = 'notif-weekly-popup';
+    popup.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    popup.innerHTML = `<div style="background:white;border-radius:12px;overflow:hidden;max-width:360px;width:100%;">
+      <div style="background:#0F1E36;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:28px;">🔔</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:white;">Stay in the loop!</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.7);">Auntie Tobi has updates for you 🇳🇬</div>
+        </div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="font-size:13px;color:#333;line-height:2.1;margin-bottom:12px;">
+          ✅ Breaking news affecting Nigerians in the UK<br>
+          ✅ Important UK updates and policy changes<br>
+          ✅ Immigration, jobs, benefits & NHS news<br>
+          ✅ Community events and opportunities
+        </div>
+        <div style="font-size:12px;color:#888;margin-bottom:14px;font-style:italic;">I no go disturb you, I promise! 😄</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="window._notifPopupAllow()" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow Notifications</button>
+          <button onclick="document.getElementById('notif-weekly-popup').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;">Later</button>
+        </div>
+      </div>
+    </div>`;
+    document.body.appendChild(popup);
+  }, delay);
+}
+
 function showPendingNotifBanner() {
   const pending = localStorage.getItem('tobi_pending_notif');
   if (!pending) return;
@@ -3517,7 +3577,7 @@ window.onload = () => {
     if (typeof showPendingNotifBanner === 'function') showPendingNotifBanner();
   }, 1000);
   // Delay notification prompt to 30 seconds
-  setTimeout(showWeeklyNotificationPrompt, 30000);
+  setTimeout(() => { if (typeof showWeeklyNotificationPrompt === 'function') showWeeklyNotificationPrompt(); }, 30000);
 
   // Clear notification badge when app is opened
   if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
