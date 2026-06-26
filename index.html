@@ -3472,6 +3472,37 @@ function getCategoryEmoji(cat) {
   return emojis[cat] || '🏢';
 }
 
+function showPendingNotifBanner() {
+  const pending = localStorage.getItem('tobi_pending_notif');
+  if (!pending) return;
+  try {
+    const notif = JSON.parse(pending);
+    if (!notif.url && !notif.title) { localStorage.removeItem('tobi_pending_notif'); return; }
+    _renderNotifBanner(notif);
+  } catch(e) {
+    localStorage.removeItem('tobi_pending_notif');
+  }
+}
+
+function _renderNotifBanner(notif) {
+  if (document.getElementById('notif-update-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'notif-update-banner';
+  banner.style.cssText = 'background:#0F1E36;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin:8px 0;';
+  banner.innerHTML = `
+    <span style="font-size:20px;">🔔</span>
+    <div style="flex:1;">
+      <div style="font-size:13px;font-weight:700;color:white;margin-bottom:2px;">You have a new update!</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);">${notif.body || notif.title || ''}</div>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();${notif.url ? `window.location.href='${notif.url}';` : ''}" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View</button>
+      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();" style="background:none;border:0.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">✕</button>
+    </div>`;
+  const messages = document.getElementById('messages');
+  if (messages) messages.insertBefore(banner, messages.firstChild);
+}
+
 window.onload = () => {
   // Restore city from localStorage first for instant access
   const savedCity = localStorage.getItem('tobi_user_city');
@@ -3482,7 +3513,9 @@ window.onload = () => {
   }
   // Request location on load to update city
   requestLocation();
-  setTimeout(showPendingNotifBanner, 1000);
+  setTimeout(() => {
+    if (typeof showPendingNotifBanner === 'function') showPendingNotifBanner();
+  }, 1000);
   // Delay notification prompt to 30 seconds
   setTimeout(showWeeklyNotificationPrompt, 30000);
 
@@ -3508,7 +3541,7 @@ window.onload = () => {
     if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
     if ('setAppBadge' in navigator) navigator.setAppBadge(0).catch(() => {});
   });
-  setTimeout(showPendingNotifBanner, 1000);
+  setTimeout(() => { if (typeof showPendingNotifBanner === 'function') showPendingNotifBanner(); }, 1000);
   const todayStr = new Date().toISOString().split('T')[0];
   const lastVisitDate = localStorage.getItem('tobi_last_visit');
   const isReturning = localStorage.getItem('tobi_visited');
