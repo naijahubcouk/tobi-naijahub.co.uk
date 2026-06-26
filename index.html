@@ -3491,6 +3491,37 @@ window._notifPopupAllow = function() {
   }
 };
 
+function handleBellClick() {
+  const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
+  if (isSubscribed) {
+    // Already subscribed — offer to unsubscribe
+    if (confirm('You are already subscribed to Auntie Tobi notifications. Do you want to turn them off?')) {
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.User.PushSubscription.optOut();
+        localStorage.setItem('tobi_notifications', '0');
+        updateBellButton(false);
+        addTipMessage('<div style="font-size:13px;color:#555;padding:8px;">🔕 Notifications turned off. Tap the bell anytime to turn them back on.</div>');
+      });
+    }
+  } else {
+    // Not subscribed — request permission
+    if ('Notification' in window) {
+      Notification.requestPermission().then(function(permission) {
+        if (permission === 'granted') {
+          OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.User.PushSubscription.optIn();
+            localStorage.setItem('tobi_notifications', '1');
+            updateBellButton(true);
+            addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You will now receive daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>');
+          });
+        } else {
+          addTipMessage('<div style="font-size:13px;color:#555;padding:8px;">To enable notifications, please allow them in your browser settings.</div>');
+        }
+      });
+    }
+  }
+}
+
 function showWeeklyNotificationPrompt() {
   const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
   if (isSubscribed) return;
