@@ -951,9 +951,9 @@
     <div class="logo"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
     <div class="header-text">
       <h1 style="font-size:22px;font-weight:800;margin:0 0 2px 0;color:white;">Auntie Tobi</h1>
-      <p style="margin:0;font-size:12px;color:#FFB81C;">The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> <span style="font-size:10px;opacity:0.75;color:white;">(Powered by <a href="https://naijahub.co.uk" target="_blank" style="color:white;text-decoration:none;font-weight:600;">naijahub.co.uk</a>)</span></p>
+      <p style="margin:0;font-size:12px;color:#FFB81C;">The Oversabi AI Auntie who actually helps! <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> </p>
     </div>
-    <div class="status-dot"></div>
+    
     <div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-left:4px;">
       <button id="notify-bell" onclick="handleBellClick()" title="Get NaijaUKHub notifications" style="
         background:none; border:none; cursor:pointer;
@@ -991,7 +991,7 @@
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
   </div>
 
-  <div class="messages" id="messages"></div>
+  
 
   <div class="input-area">
     <textarea id="input" placeholder="Ask Auntie Tobi anything... 😄" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
@@ -1068,7 +1068,7 @@ const AFFILIATES = {
 function trackAffiliate(name, url) {
   console.log(`[NaijaUKHub Affiliate Click] ${name} — ${new Date().toISOString()}`);
   // Future: send to your analytics endpoint
-  // fetch('https://naijahub.co.uk/api/track', { method: 'POST', body: JSON.stringify({ partner: name, timestamp: Date.now() }) });
+  // fetch('https://auntietobi.com/api/track', { method: 'POST', body: JSON.stringify({ partner: name, timestamp: Date.now() }) });
   window.open(url, '_blank');
 }
 
@@ -1091,7 +1091,7 @@ function renderAffiliateCards(keys) {
 }
 
 const NAIJAHUB_DATA = `
-You are Auntie Tobi — The Oversabi AI Auntie who actually helps! You are the go-to everyday AI assistant for Nigerians living in the UK, powered by NaijaUKHub (naijahub.co.uk).
+You are Auntie Tobi — The Oversabi AI Auntie who actually helps! You are the go-to everyday AI assistant for Nigerians living in the UK, powered by NaijaUKHub (auntietobi.com).
 
 You are like that Nigerian Auntie who knows EVERYTHING — warm, trustworthy, knowledgeable, and always ready to help with an answer for everything! 😄
 
@@ -1128,7 +1128,7 @@ BRAND PILLARS (frame every response around one of these):
 🚀 Empower — Help people thrive (better jobs, financial literacy, business, home ownership)
 📰 Inform — Share news and updates that matter (immigration changes, cost of living, NHS updates)
 
-Always respond warmly and concisely. Add the signature "— 🇳🇬🇬🇧 Auntie Tobi | The Oversabi AI Auntie | Powered by naijahub.co.uk" occasionally and naturally — not every message. Use it after particularly helpful responses or when it feels right. Most responses end warmly with just "Auntie Tobi 🇳🇬🇬🇧".
+Always respond warmly and concisely. Add the signature "— 🇳🇬🇬🇧 Auntie Tobi | The Oversabi AI Auntie " occasionally and naturally — not every message. Use it after particularly helpful responses or when it feels right. Most responses end warmly with just "Auntie Tobi 🇳🇬🇬🇧".
 
 Always end responses with 1-2 short follow-up suggestions:
 [SUGGESTIONS: suggestion one | suggestion two]
@@ -1139,13 +1139,13 @@ For any question involving NHS, visa, immigration, legal rights, benefits or Hom
 CRITICAL RULES:
 1. ONLY recommend businesses that are explicitly in the NaijaUKHub business data provided. NEVER invent, make up or hallucinate any business name, address, phone number or service. If a business is not in the data, do NOT mention it.
 2. Only mention WhatsApp if the business has WhatsApp listed.
-3. When you cannot find a business in the data say: "Hmm, I don't have that listed on NaijaUKHub yet! No wahala — you can search Google for Nigerian businesses near you, or visit naijahub.co.uk to find or list a business! 🙏🏾
+3. When you cannot find a business in the data say: "Hmm, I don't have that listed on NaijaUKHub yet! No wahala — you can search Google for Nigerian businesses near you, or visit auntietobi.com to find or list a business! 🙏🏾
 
-👉 Are you a Nigerian business owner? Get listed on NaijaUKHub and let Auntie Tobi recommend you to thousands of Nigerians across the UK! Visit naijahub.co.uk to list your business today! 🇳🇬🇬🇧"
+👉 Are you a Nigerian business owner? Get listed on NaijaUKHub and let Auntie Tobi recommend you to thousands of Nigerians across the UK! Visit auntietobi.com to list your business today! 🇳🇬🇬🇧"
 
-4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on NaijaUKHub? Tell them to visit naijahub.co.uk — and if they want Auntie Tobi to recommend them, they need Premium! 😊"
+4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on NaijaUKHub? Tell them to visit auntietobi.com — and if they want Auntie Tobi to recommend them, they need Premium! 😊"
 
-5. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on NaijaUKHub and Auntie Tobi will tell everyone! Visit naijahub.co.uk to submit your event! 🇳🇬🇬🇧"
+5. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on NaijaUKHub and Auntie Tobi will tell everyone! Visit auntietobi.com to submit your event! 🇳🇬🇬🇧"
 
 6. NEVER mention specific business names, phone numbers or addresses that are not in the NaijaUKHub business data. If asked for a specific type of business not in the data, redirect to Google search or NaijaUKHub listing.
 
@@ -1180,7 +1180,7 @@ WHAT CAN YOU DO ON NAIJAUKHUB?
 
 ✅ List Your Own Business
 - Own a Nigerian business? Get listed and reach thousands of Nigerians across the UK
-- Quick, easy setup at naijahub.co.uk/new-listing
+- Quick, easy setup at auntietobi.com/new-listing
 - PREMIUM members get featured by Auntie Tobi and reach even more customers!
 
 ✅ Check Upcoming Events
@@ -1208,8 +1208,8 @@ WHY NAIJAUKHUB?
 - 📱 Easy to Use — simple, fast and reliable
 
 GET STARTED NOW:
-👉 Visit naijahub.co.uk to explore businesses, events and guides
-👉 Own a business? List it at naijahub.co.uk/new-listing
+👉 Visit auntietobi.com to explore businesses, events and guides
+👉 Own a business? List it at auntietobi.com/new-listing
 👉 Have questions? Just ask me — Auntie Tobi! 😊
 
 Any other questions about NaijaUKHub or anything else? I'm here!""
@@ -1369,74 +1369,74 @@ A: Top picks: Ikoyi (Michelin-starred Nigerian-inspired, St James's), Chuku's (T
 
 --- BUSINESS IN THE UK ---
 Q: How do I start a business in the UK as a Nigerian?
-A: 1) Choose your structure: Sole Trader (simple) or Limited Company (more professional). 2) Register at companieshouse.gov.uk — costs £12 online, done in 24 hours. 3) Register for Self Assessment with HMRC at gov.uk/register-for-self-assessment. 4) Open a business bank account (Tide, Monzo Business, or Starling Business are easiest). 5) Get relevant licences for your sector. 6) List your business on NaijaUKHub directory to reach the Nigerian community! Read our full guide at naijahub.co.uk/blog/start-business-uk-nigerian.
+A: 1) Choose your structure: Sole Trader (simple) or Limited Company (more professional). 2) Register at companieshouse.gov.uk — costs £12 online, done in 24 hours. 3) Register for Self Assessment with HMRC at gov.uk/register-for-self-assessment. 4) Open a business bank account (Tide, Monzo Business, or Starling Business are easiest). 5) Get relevant licences for your sector. 6) List your business on NaijaUKHub directory to reach the Nigerian community! Read our full guide at auntietobi.com/blog/start-business-uk-nigerian.
 
 Q: Do I need to pay tax on my UK income as a Nigerian?
 A: Yes. If you earn over £12,570/year (personal allowance 2026), you pay income tax. Rate: 20% basic rate (£12,571–£50,270), 40% higher rate (£50,271–£125,140). Self-employed Nigerians must file a Self Assessment tax return by 31 January each year. Use an accountant — NaijaUKHub has Nigerian accountants listed in our directory!
 
 === BUSINESS DIRECTORY (16 listings) ===
 
-1. Mama's Kitchen | Nigerian Restaurant | 📍 Peckham, London | Jollof rice, egusi soup, pounded yam, suya | ☎ 07700 900123 | naijahub.co.uk/directory/mamas-kitchen
-2. Adeleke & Co Solicitors | Legal Services | 📍 Brixton, London | Immigration, family law, business setup | ☎ 07700 900456 | naijahub.co.uk/directory/adeleke-solicitors
-3. Naija Groceries | African Food Store | 📍 Dalston, London | Imported Nigerian foodstuff, spices, palm oil | ☎ 07700 900789 | naijahub.co.uk/directory/naija-groceries
-4. TechNaija Solutions | IT & Tech | 📍 Canary Wharf, London | Web design, software dev, IT support | ☎ 07700 900321 | naijahub.co.uk/directory/technaija
-5. Afro Crown Hair Studio | Hair & Beauty | 📍 Tottenham, London | Braids, weaves, locs, natural hair | ☎ 07700 900654 | naijahub.co.uk/directory/afro-crown
-6. Ade Obi Accounting | Finance & Tax | 📍 Manchester | Self-assessment, HMRC, business accounts | ☎ 07700 900987 | naijahub.co.uk/directory/ade-obi
-7. Niger Delta Couriers | Shipping | 📍 Birmingham | UK to Nigeria parcels, door-to-door delivery | ☎ 07700 900147 | naijahub.co.uk/directory/niger-delta-couriers
-8. Covenant Medical Centre | Healthcare | 📍 Lewisham, London | GP services, private consultations, health checks | ☎ 07700 900258 | naijahub.co.uk/directory/covenant-medical
-9. Naija Fabric & Fashion | Clothing | 📍 Brixton, London | Ankara, Aso-oke, bespoke tailoring | ☎ 07700 900369 | naijahub.co.uk/directory/naija-fabric
-10. Obinna Properties | Real Estate | 📍 Leeds | Property management, buy-to-let advice, lettings | ☎ 07700 900741 | naijahub.co.uk/directory/obinna-properties
-11. Lagos Bites | Fast Food | 📍 Hackney, London | Pepper soup, moi moi, chin chin, small chops | ☎ 07700 900852 | naijahub.co.uk/directory/lagos-bites
-12. PharmaNaija | Pharmacy | 📍 Woolwich, London | Prescription services, African herbal supplements | ☎ 07700 900963 | naijahub.co.uk/directory/pharmanaija
-13. Chukwu Motors | Car Services | 📍 Wolverhampton | MOT, car repairs, used car sales | ☎ 07700 900174 | naijahub.co.uk/directory/chukwu-motors
-14. Silverbird Event Hall | Venue Hire | 📍 Stratford, London | Private events, weddings, birthday parties | ☎ 07700 900285 | naijahub.co.uk/directory/silverbird-hall
-15. Naija Tutors | Education | 📍 Online (UK-wide) | 11+, GCSE, A-Level tutoring by Nigerian tutors | naijahub.co.uk/directory/naija-tutors
-16. Eko Insurance Brokers | Insurance | 📍 Croydon, London | Car, home, business, travel insurance | ☎ 07700 900396 | naijahub.co.uk/directory/eko-insurance
+1. Mama's Kitchen | Nigerian Restaurant | 📍 Peckham, London | Jollof rice, egusi soup, pounded yam, suya | ☎ 07700 900123 | auntietobi.com/directory/mamas-kitchen
+2. Adeleke & Co Solicitors | Legal Services | 📍 Brixton, London | Immigration, family law, business setup | ☎ 07700 900456 | auntietobi.com/directory/adeleke-solicitors
+3. Naija Groceries | African Food Store | 📍 Dalston, London | Imported Nigerian foodstuff, spices, palm oil | ☎ 07700 900789 | auntietobi.com/directory/naija-groceries
+4. TechNaija Solutions | IT & Tech | 📍 Canary Wharf, London | Web design, software dev, IT support | ☎ 07700 900321 | auntietobi.com/directory/technaija
+5. Afro Crown Hair Studio | Hair & Beauty | 📍 Tottenham, London | Braids, weaves, locs, natural hair | ☎ 07700 900654 | auntietobi.com/directory/afro-crown
+6. Ade Obi Accounting | Finance & Tax | 📍 Manchester | Self-assessment, HMRC, business accounts | ☎ 07700 900987 | auntietobi.com/directory/ade-obi
+7. Niger Delta Couriers | Shipping | 📍 Birmingham | UK to Nigeria parcels, door-to-door delivery | ☎ 07700 900147 | auntietobi.com/directory/niger-delta-couriers
+8. Covenant Medical Centre | Healthcare | 📍 Lewisham, London | GP services, private consultations, health checks | ☎ 07700 900258 | auntietobi.com/directory/covenant-medical
+9. Naija Fabric & Fashion | Clothing | 📍 Brixton, London | Ankara, Aso-oke, bespoke tailoring | ☎ 07700 900369 | auntietobi.com/directory/naija-fabric
+10. Obinna Properties | Real Estate | 📍 Leeds | Property management, buy-to-let advice, lettings | ☎ 07700 900741 | auntietobi.com/directory/obinna-properties
+11. Lagos Bites | Fast Food | 📍 Hackney, London | Pepper soup, moi moi, chin chin, small chops | ☎ 07700 900852 | auntietobi.com/directory/lagos-bites
+12. PharmaNaija | Pharmacy | 📍 Woolwich, London | Prescription services, African herbal supplements | ☎ 07700 900963 | auntietobi.com/directory/pharmanaija
+13. Chukwu Motors | Car Services | 📍 Wolverhampton | MOT, car repairs, used car sales | ☎ 07700 900174 | auntietobi.com/directory/chukwu-motors
+14. Silverbird Event Hall | Venue Hire | 📍 Stratford, London | Private events, weddings, birthday parties | ☎ 07700 900285 | auntietobi.com/directory/silverbird-hall
+15. Naija Tutors | Education | 📍 Online (UK-wide) | 11+, GCSE, A-Level tutoring by Nigerian tutors | auntietobi.com/directory/naija-tutors
+16. Eko Insurance Brokers | Insurance | 📍 Croydon, London | Car, home, business, travel insurance | ☎ 07700 900396 | auntietobi.com/directory/eko-insurance
 
 === BUSINESS DIRECTORY (16 listings) ===
 
-1. Mama's Kitchen | Nigerian Restaurant | 📍 Peckham, London | Jollof rice, egusi soup, pounded yam, suya | ☎ 07700 900123 | naijahub.co.uk/directory/mamas-kitchen
-2. Adeleke & Co Solicitors | Legal Services | 📍 Brixton, London | Immigration, family law, business setup | ☎ 07700 900456 | naijahub.co.uk/directory/adeleke-solicitors
-3. Naija Groceries | African Food Store | 📍 Dalston, London | Imported Nigerian foodstuff, spices, palm oil | ☎ 07700 900789 | naijahub.co.uk/directory/naija-groceries
-4. TechNaija Solutions | IT & Tech | 📍 Canary Wharf, London | Web design, software dev, IT support | ☎ 07700 900321 | naijahub.co.uk/directory/technaija
-5. Afro Crown Hair Studio | Hair & Beauty | 📍 Tottenham, London | Braids, weaves, locs, natural hair | ☎ 07700 900654 | naijahub.co.uk/directory/afro-crown
-6. Ade Obi Accounting | Finance & Tax | 📍 Manchester | Self-assessment, HMRC, business accounts | ☎ 07700 900987 | naijahub.co.uk/directory/ade-obi
-7. Niger Delta Couriers | Shipping | 📍 Birmingham | UK to Nigeria parcels, door-to-door delivery | ☎ 07700 900147 | naijahub.co.uk/directory/niger-delta-couriers
-8. Covenant Medical Centre | Healthcare | 📍 Lewisham, London | GP services, private consultations, health checks | ☎ 07700 900258 | naijahub.co.uk/directory/covenant-medical
-9. Naija Fabric & Fashion | Clothing | 📍 Brixton, London | Ankara, Aso-oke, bespoke tailoring | ☎ 07700 900369 | naijahub.co.uk/directory/naija-fabric
-10. Obinna Properties | Real Estate | 📍 Leeds | Property management, buy-to-let advice, lettings | ☎ 07700 900741 | naijahub.co.uk/directory/obinna-properties
-11. Lagos Bites | Fast Food | 📍 Hackney, London | Pepper soup, moi moi, chin chin, small chops | ☎ 07700 900852 | naijahub.co.uk/directory/lagos-bites
-12. PharmaNaija | Pharmacy | 📍 Woolwich, London | Prescription services, African herbal supplements | ☎ 07700 900963 | naijahub.co.uk/directory/pharmanaija
-13. Chukwu Motors | Car Services | 📍 Wolverhampton | MOT, car repairs, used car sales | ☎ 07700 900174 | naijahub.co.uk/directory/chukwu-motors
-14. Silverbird Event Hall | Venue Hire | 📍 Stratford, London | Private events, weddings, birthday parties | ☎ 07700 900285 | naijahub.co.uk/directory/silverbird-hall
-15. Naija Tutors | Education | 📍 Online (UK-wide) | 11+, GCSE, A-Level tutoring by Nigerian tutors | naijahub.co.uk/directory/naija-tutors
-16. Eko Insurance Brokers | Insurance | 📍 Croydon, London | Car, home, business, travel insurance | ☎ 07700 900396 | naijahub.co.uk/directory/eko-insurance
+1. Mama's Kitchen | Nigerian Restaurant | 📍 Peckham, London | Jollof rice, egusi soup, pounded yam, suya | ☎ 07700 900123 | auntietobi.com/directory/mamas-kitchen
+2. Adeleke & Co Solicitors | Legal Services | 📍 Brixton, London | Immigration, family law, business setup | ☎ 07700 900456 | auntietobi.com/directory/adeleke-solicitors
+3. Naija Groceries | African Food Store | 📍 Dalston, London | Imported Nigerian foodstuff, spices, palm oil | ☎ 07700 900789 | auntietobi.com/directory/naija-groceries
+4. TechNaija Solutions | IT & Tech | 📍 Canary Wharf, London | Web design, software dev, IT support | ☎ 07700 900321 | auntietobi.com/directory/technaija
+5. Afro Crown Hair Studio | Hair & Beauty | 📍 Tottenham, London | Braids, weaves, locs, natural hair | ☎ 07700 900654 | auntietobi.com/directory/afro-crown
+6. Ade Obi Accounting | Finance & Tax | 📍 Manchester | Self-assessment, HMRC, business accounts | ☎ 07700 900987 | auntietobi.com/directory/ade-obi
+7. Niger Delta Couriers | Shipping | 📍 Birmingham | UK to Nigeria parcels, door-to-door delivery | ☎ 07700 900147 | auntietobi.com/directory/niger-delta-couriers
+8. Covenant Medical Centre | Healthcare | 📍 Lewisham, London | GP services, private consultations, health checks | ☎ 07700 900258 | auntietobi.com/directory/covenant-medical
+9. Naija Fabric & Fashion | Clothing | 📍 Brixton, London | Ankara, Aso-oke, bespoke tailoring | ☎ 07700 900369 | auntietobi.com/directory/naija-fabric
+10. Obinna Properties | Real Estate | 📍 Leeds | Property management, buy-to-let advice, lettings | ☎ 07700 900741 | auntietobi.com/directory/obinna-properties
+11. Lagos Bites | Fast Food | 📍 Hackney, London | Pepper soup, moi moi, chin chin, small chops | ☎ 07700 900852 | auntietobi.com/directory/lagos-bites
+12. PharmaNaija | Pharmacy | 📍 Woolwich, London | Prescription services, African herbal supplements | ☎ 07700 900963 | auntietobi.com/directory/pharmanaija
+13. Chukwu Motors | Car Services | 📍 Wolverhampton | MOT, car repairs, used car sales | ☎ 07700 900174 | auntietobi.com/directory/chukwu-motors
+14. Silverbird Event Hall | Venue Hire | 📍 Stratford, London | Private events, weddings, birthday parties | ☎ 07700 900285 | auntietobi.com/directory/silverbird-hall
+15. Naija Tutors | Education | 📍 Online (UK-wide) | 11+, GCSE, A-Level tutoring by Nigerian tutors | auntietobi.com/directory/naija-tutors
+16. Eko Insurance Brokers | Insurance | 📍 Croydon, London | Car, home, business, travel insurance | ☎ 07700 900396 | auntietobi.com/directory/eko-insurance
 
 === EVENTS ON NAIJAHUB (2026) ===
 
 Only reference these real NaijaUKHub events. Do not make up or reference any other events.
 
-1. AfroMic Night - Afrobeats Karaoke | Friday 26 June 2026 | Demi's Nigerian Restaurant, Streatham, London | 7PM - 11PM | naijahub.co.uk/blog/AfroMic-Night-Afrobeats-Karaoke
-2. MY TASTY NAIJA FOOD FESTIVAL UK 2026 | London: Sunday 5 July 2026 (Eutopia Warehouse, Barking IG11 0DW) | Manchester: Saturday 11 July 2026 (Nigerian House, M14 5NE) | 1PM - 8PM | Adults £10, Children £5, Family £25 | Tickets: mytastynaija.com | naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026
-3. Owambe FEST 4 - All White Party | Saturday 18 July 2026 | Delta Hotels, Milton Keynes, Kents Hill | 4PM - 9:30PM | naijahub.co.uk/blog/Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends
-4. Deshapeables UK Tradefair London | Saturday 25 July 2026 | Yeomanry House, London (5 mins from Euston Station) | 10AM - 6PM | Free entry | naijahub.co.uk/blog/Deshapeables-UK-Tradefair-London
-5. NSF (UK) Sports and Family Fun Day 2026 | Saturday 29 August 2026 | Newham Leisure Centre, London | Starts 12PM | naijahub.co.uk/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026
-6. The Igbo Table: Food, Culture & Conversation | Sunday 30 August 2026 | Church Hall, Croyland Rd, London N9 7EN | 3:30PM - 9PM | naijahub.co.uk/blog/The-Igbo-Table:-Food-Culture-and-Conversation
-7. Ankara Festival UK 2026 | Saturday 10 October 2026 | Porchester Hall, London | 5PM - 11:30PM | naijahub.co.uk/blog/Ankara-Festival-UK-2026
+1. AfroMic Night - Afrobeats Karaoke | Friday 26 June 2026 | Demi's Nigerian Restaurant, Streatham, London | 7PM - 11PM | auntietobi.com/blog/AfroMic-Night-Afrobeats-Karaoke
+2. MY TASTY NAIJA FOOD FESTIVAL UK 2026 | London: Sunday 5 July 2026 (Eutopia Warehouse, Barking IG11 0DW) | Manchester: Saturday 11 July 2026 (Nigerian House, M14 5NE) | 1PM - 8PM | Adults £10, Children £5, Family £25 | Tickets: mytastynaija.com | auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026
+3. Owambe FEST 4 - All White Party | Saturday 18 July 2026 | Delta Hotels, Milton Keynes, Kents Hill | 4PM - 9:30PM | auntietobi.com/blog/Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends
+4. Deshapeables UK Tradefair London | Saturday 25 July 2026 | Yeomanry House, London (5 mins from Euston Station) | 10AM - 6PM | Free entry | auntietobi.com/blog/Deshapeables-UK-Tradefair-London
+5. NSF (UK) Sports and Family Fun Day 2026 | Saturday 29 August 2026 | Newham Leisure Centre, London | Starts 12PM | auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026
+6. The Igbo Table: Food, Culture & Conversation | Sunday 30 August 2026 | Church Hall, Croyland Rd, London N9 7EN | 3:30PM - 9PM | auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation
+7. Ankara Festival UK 2026 | Saturday 10 October 2026 | Porchester Hall, London | 5PM - 11:30PM | auntietobi.com/blog/Ankara-Festival-UK-2026
 
 === BLOG ARTICLES ON NAIJAUKHUB ===
 
 Only reference these real NaijaUKHub blog posts. Do not make up or reference other articles.
 
-1. "Best Nigerian Restaurants in London (Ranked 2026 Guide)" | Food & Lifestyle | naijahub.co.uk/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)
-2. "Did You Know? UK Landlords Must Protect Tenant Deposits or Risk Legal Action" | Housing | naijahub.co.uk/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action
-3. "FREE BUS TRAVEL FOR CHILDREN IN AUGUST 2026" | News | naijahub.co.uk/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026
-4. "BREAKING: Prime Minister Keir Starmer Announces Resignation" | News | naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation
-5. "No Huge Savings? How to Buy Your First UK Home with Just a £5,000 Deposit!" | Housing | naijahub.co.uk/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21
-6. "UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C" | News | naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We
-7. "Aldi Freezes Baby Formula Price Until End of 2026" | Money | naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026
-9. "UK Immigration Update: House of Lords Challenges Proposed ILR Changes" | News | naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes
-8. "What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money" | Money | naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money
+1. "Best Nigerian Restaurants in London (Ranked 2026 Guide)" | Food & Lifestyle | auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)
+2. "Did You Know? UK Landlords Must Protect Tenant Deposits or Risk Legal Action" | Housing | auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action
+3. "FREE BUS TRAVEL FOR CHILDREN IN AUGUST 2026" | News | auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026
+4. "BREAKING: Prime Minister Keir Starmer Announces Resignation" | News | auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation
+5. "No Huge Savings? How to Buy Your First UK Home with Just a £5,000 Deposit!" | Housing | auntietobi.com/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21
+6. "UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C" | News | auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We
+7. "Aldi Freezes Baby Formula Price Until End of 2026" | Money | auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026
+9. "UK Immigration Update: House of Lords Challenges Proposed ILR Changes" | News | auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes
+8. "What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money" | Money | auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money
 `;
 
 // ============================================
@@ -1873,14 +1873,14 @@ function formatResponse(text) {
     return `
       <div class="event-card">
         <div class="event-card-header">
-          <div class="event-card-gold-stripe"></div>
+          
           <div class="event-card-body">
             <span class="event-card-header-label">🎟️ EVENT</span>
             <div class="event-card-name">${name}</div>
             ${date ? `<div class="event-card-date">📅 ${date}</div>` : ''}
             ${location ? `<div class="event-card-location">📍 ${location}</div>` : ''}
             <div class="event-card-footer">
-              ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 View Details</a>` : '<span style="flex:1"></span>'}
+              ${link ? `<a href="${link}" target="_blank" class="event-card-btn">🔗 View Details</a>` : ''}
               <button class="event-card-share-btn" onclick="tobiShare('${name}','${name}','${link}')">📤 Share</button>
             </div>
           </div>
@@ -2017,7 +2017,7 @@ function showTyping() {
   div.id = 'typing';
   div.innerHTML = `
     <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
-    <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+    <div class="bubble"></div>
   `;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
@@ -2084,7 +2084,7 @@ To continue practising choose your plan:
 ✅ Achievement badges
 ✅ Ask Auntie Tobi anything
 
-👉 **Subscribe now → naijahub.co.uk/subscribe**
+👉 **Subscribe now → auntietobi.com/subscribe**
 
 Come back tomorrow for ${examState.freeLimit} more free questions! 😊
 
@@ -2117,7 +2117,7 @@ Come back tomorrow for ${examState.freeLimit} more free questions! 😊
 TAG: directory (or event or blog or guide or money or church)
 NAME: Business/Event/Article/Service name
 DETAIL: Key details in one line
-LINK: naijahub.co.uk/path (or external URL for churches/money services)
+LINK: auntietobi.com/path (or external URL for churches/money services)
 ]
 
 AFFILIATE RULES — IMPORTANT:
@@ -2205,7 +2205,7 @@ function quickAsk(text) {
   }
   if (text === 'List your business on NaijaUKHub →' || text === 'List your business on NaijaUKHub →' || text === 'List your business on NaijaUKHub') {
     const a = document.createElement('a');
-    a.href = 'https://naijahub.co.uk';
+    a.href = 'https://auntietobi.com';
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     document.body.appendChild(a);
@@ -2492,7 +2492,7 @@ function showAllNews() {
       emoji: '🔴',
       title: 'UK Prime Minister Keir Starmer Has Resigned',
       summary: 'Prime Minister Keir Starmer has resigned on 22 June 2026. The Labour Party will now choose a new leader, who will become the next Prime Minister. No immediate changes affect visas, jobs, NHS services, or daily life today, but future government policies could change depending on the new leadership.',
-      url: 'https://naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
+      url: 'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
       label: 'News',
       date: '22 Jun 2026'
     },
@@ -2500,7 +2500,7 @@ function showAllNews() {
       emoji: '🏛️',
       title: 'UK Immigration Update: House of Lords Challenges Proposed ILR Changes',
       summary: 'The House of Lords has challenged proposed changes to Indefinite Leave to Remain (ILR) rules. Find out what this means for Nigerians in the UK applying for settlement.',
-      url: 'https://naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes',
+      url: 'https://auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes',
       label: 'News',
       date: '26 Jun 2026'
     },
@@ -2508,7 +2508,7 @@ function showAllNews() {
       emoji: '🍼',
       title: 'Aldi Freezes Baby Formula Price Until End of 2026',
       summary: 'Great news for families! Aldi has frozen the price of baby formula until the end of 2026, helping parents save money on one of their biggest essentials.',
-      url: 'https://naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026',
+      url: 'https://auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026',
       label: 'Money',
       date: '23 Jun 2026'
     },
@@ -2516,7 +2516,7 @@ function showAllNews() {
       emoji: '💷',
       title: 'What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money',
       summary: 'With Andy Burnham tipped as the next UK Prime Minister, find out what his policies could mean for your taxes, energy bills, and finances as a Nigerian living in the UK.',
-      url: 'https://naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money',
+      url: 'https://auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money',
       label: 'Money',
       date: '23 Jun 2026'
     },
@@ -2524,7 +2524,7 @@ function showAllNews() {
       emoji: '🌡️',
       title: 'UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C',
       summary: 'The UK Met Office has issued a rare Red Heat Warning as temperatures could reach 40°C this week. Stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours.',
-      url: 'https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We',
+      url: 'https://auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We',
       label: 'News',
       date: '23 Jun 2026'
     },
@@ -2532,7 +2532,7 @@ function showAllNews() {
       emoji: '🚌',
       title: 'FREE Bus Travel for Children in August 2026',
       summary: 'Good news for families! The UK Government has announced that children aged 5–15 can travel for FREE on buses across England throughout August 2026.',
-      url: 'https://naijahub.co.uk/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026',
+      url: 'https://auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026',
       label: 'News',
       date: '20 Jun 2026'
     },
@@ -2540,7 +2540,7 @@ function showAllNews() {
       emoji: '🏠',
       title: 'No Huge Savings? Buy Your First UK Home with Just a £5,000 Deposit!',
       summary: 'Did you know you could get on the UK property ladder with just £5,000? Find out how first-time buyers in the UK can take advantage of government schemes to buy their first home.',
-      url: 'https://naijahub.co.uk/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21',
+      url: 'https://auntietobi.com/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21',
       label: 'Housing',
       date: '22 Jun 2026'
     },
@@ -2548,7 +2548,7 @@ function showAllNews() {
       emoji: '🏠',
       title: 'UK Landlords Must Protect Tenant Deposits or Risk Legal Action',
       summary: 'Did you know? UK landlords are legally required to protect your deposit in a government-approved scheme within 30 days — or risk legal action and penalties.',
-      url: 'https://naijahub.co.uk/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action',
+      url: 'https://auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action',
       label: 'Housing',
       date: '18 Jun 2026'
     },
@@ -2556,7 +2556,7 @@ function showAllNews() {
       emoji: '🍽️',
       title: 'Best Nigerian Restaurants in London (Ranked 2026 Guide)',
       summary: 'Discover the best Nigerian restaurants in London, ranked by quality, authenticity, and dining experience — your ultimate 2026 guide!',
-      url: 'https://naijahub.co.uk/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)',
+      url: 'https://auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)',
       label: 'Food & Lifestyle',
       date: '15 Jun 2026'
     }
@@ -2607,7 +2607,7 @@ function showNewsCard() {
       category: 'NEWS',
       title: 'UK Prime Minister Keir Starmer Has Resigned',
       summary: 'Prime Minister Keir Starmer has resigned on 22 June 2026. The Labour Party will now choose a new leader, who will become the next Prime Minister. No immediate changes affect visas, jobs, NHS services, or daily life today, but future government policies could change depending on the new leadership.',
-      url: 'https://naijahub.co.uk/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
+      url: 'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
       label: 'News',
       date: '22 Jun 2026'
     },
@@ -2616,7 +2616,7 @@ function showNewsCard() {
       category: 'NEWS',
       title: 'UK Immigration Update: House of Lords Challenges Proposed ILR Changes',
       summary: 'The House of Lords has challenged proposed changes to Indefinite Leave to Remain (ILR) rules. Find out what this means for Nigerians in the UK applying for settlement.',
-      url: 'https://naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes',
+      url: 'https://auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes',
       label: 'News',
       date: '26 Jun 2026'
     },
@@ -2625,7 +2625,7 @@ function showNewsCard() {
       category: 'MONEY',
       title: 'Aldi Freezes Baby Formula Price Until End of 2026',
       summary: 'Great news for families! Aldi has frozen the price of baby formula until the end of 2026, helping parents save money on one of their biggest essentials. A win for Nigerian families in the UK!',
-      url: 'https://naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026',
+      url: 'https://auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026',
       label: 'Money',
       date: '23 Jun 2026'
     },
@@ -2634,7 +2634,7 @@ function showNewsCard() {
       category: 'MONEY',
       title: 'What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money',
       summary: 'With Andy Burnham tipped as the next UK Prime Minister, find out what his policies could mean for your taxes, energy bills, and finances as a Nigerian living in the UK.',
-      url: 'https://naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money',
+      url: 'https://auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money',
       label: 'Money',
       date: '23 Jun 2026'
     },
@@ -2643,7 +2643,7 @@ function showNewsCard() {
       category: 'NEWS',
       title: 'UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C',
       summary: 'The UK Met Office has issued a rare Red Heat Warning — the highest level alert — as temperatures could reach 40°C this week. Nigerians in the UK should stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours and family members.',
-      url: 'https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We',
+      url: 'https://auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We',
       label: 'News',
       date: '23 Jun 2026'
     },
@@ -2652,7 +2652,7 @@ function showNewsCard() {
       category: 'NEWS',
       title: 'FREE Bus Travel for Children in August 2026',
       summary: 'Good news for families! The UK Government has announced that children aged 5–15 can travel for FREE on buses across England throughout August 2026.',
-      url: 'https://naijahub.co.uk/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026',
+      url: 'https://auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026',
       label: 'News',
       date: '20 Jun 2026'
     },
@@ -2661,7 +2661,7 @@ function showNewsCard() {
       category: 'HOUSING',
       title: 'No Huge Savings? Buy Your First UK Home with Just a £5,000 Deposit!',
       summary: 'Did you know you could get on the UK property ladder with just £5,000? Find out how first-time buyers in the UK can take advantage of government schemes to buy their first home.',
-      url: 'https://naijahub.co.uk/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21',
+      url: 'https://auntietobi.com/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21',
       label: 'Housing',
       date: '22 Jun 2026'
     },
@@ -2670,7 +2670,7 @@ function showNewsCard() {
       category: 'HOUSING',
       title: 'UK Landlords Must Protect Tenant Deposits or Risk Legal Action',
       summary: 'Did you know? UK landlords are legally required to protect your deposit in a government-approved scheme within 30 days — or risk legal action and penalties.',
-      url: 'https://naijahub.co.uk/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action',
+      url: 'https://auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action',
       label: 'Housing',
       date: '18 Jun 2026'
     },
@@ -2679,7 +2679,7 @@ function showNewsCard() {
       category: 'FOOD',
       title: 'Best Nigerian Restaurants in London (Ranked 2026 Guide)',
       summary: 'Discover the best Nigerian restaurants in London, ranked by quality, authenticity, and dining experience — your ultimate 2026 guide!',
-      url: 'https://naijahub.co.uk/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)',
+      url: 'https://auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)',
       label: 'Food & Lifestyle',
       date: '15 Jun 2026'
     }
@@ -2836,7 +2836,7 @@ function showFAQCard() {
         </button>
         <div class="faq-answer" style="display:none;padding-bottom:12px;">
           <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:8px;">Absolutely! Add your listing and connect with Nigerians across the UK.</div>
-          <a href="https://naijahub.co.uk/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:6px;text-align:center;">📢 List your business — naijahub.co.uk/new-listing</a>
+          <a href="https://auntietobi.com/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:6px;text-align:center;">📢 List your business — auntietobi.com/new-listing</a>
         </div>
       </div>
 
@@ -3076,7 +3076,7 @@ function showWelcomeCard() {
 
       <div style="font-size:16px;font-weight:700;color:#057A44;text-align:center;margin-bottom:10px;">So… wetin you need today? 😄</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
-        📢 Own a business? <a href="https://naijahub.co.uk/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List it here 👉 naijahub.co.uk/new-listing</a>
+        📢 Own a business? <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List it here 👉 auntietobi.com/new-listing</a>
       </div>
     </div>
   </div>`;
@@ -3224,7 +3224,7 @@ function showSponsoredAd() {
           <span style="font-size:10px;color:#7A0F3A;font-weight:700;">📚 Book Recommendation</span>
         </div>
         <div style="display:flex;gap:0;">
-          <div style="background:#7A0F3A;width:8px;flex-shrink:0;"></div>
+          
           <div style="padding:14px;text-align:center;flex:1;">
             <img src="https://naijabiz.b-cdn.net/Untitled%20design%20(3)%20(1).png" alt="Bloomly First Period Guide" style="width:100px;height:140px;object-fit:cover;border-radius:6px;margin:0 auto 12px;display:block;">
             <div style="font-size:15px;font-weight:700;color:#7A0F3A;line-height:1.3;margin-bottom:6px;">Do you have a daughter aged 8–13? 👧🏾</div>
@@ -3253,8 +3253,8 @@ function showNaijaFoodFestivalCard() {
       <p style="font-size:13px;color:#555;margin:0 0 4px;padding:0;">📅 London — 5th July &nbsp;|&nbsp; Manchester — 11th July</p>
       <p style="font-size:13px;color:#444;margin:0 0 6px;line-height:1.4;padding:0;">Jollof rice, suya, puff puff and all your favourite Nigerian food! 🇳🇬🍽️</p>
       <div style="border-top:1px solid #f0f0f0;padding-top:4px;display:flex;align-items:center;gap:8px;margin:0;">
-        <a href="https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 View Event Details</a>
-        <button onclick="tobiShare('My Tasty Naija Food Festival UK 2026','🎉 Nigerian Food Festival coming to London (5th July) & Manchester (11th July) 2026! Jollof rice, suya, puff puff and more 🇳🇬🍽️','https://naijahub.co.uk/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">📤 Share</button>
+        <a href="https://auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 View Event Details</a>
+        <button onclick="tobiShare('My Tasty Naija Food Festival UK 2026','🎉 Nigerian Food Festival coming to London (5th July) & Manchester (11th July) 2026! Jollof rice, suya, puff puff and more 🇳🇬🍽️','https://auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">📤 Share</button>
       </div>
     </div>
   </div>
@@ -3392,63 +3392,63 @@ function getRandomSuggestionStr() {
 // NAIJAHUB BUSINESSES DIRECTORY
 // ============================================
 const NAIJAHUB_BUSINESSES = [
-  { name: 'Eventsbykklargesse', category: 'Event Planners', location: 'Suffolk, UK', desc: 'Tailored Moments, Timeless Memories. Beautiful celebrations through curated gifting and thoughtful touches.', url: 'https://naijahub.co.uk/listing/eventsbykklargesse' },
-  { name: 'Beauty Glowingskins', category: 'Skincare', location: 'East London, UK', desc: 'Skincare for glowing skin.', url: 'https://naijahub.co.uk/listing/beauty-glowingskins' },
-  { name: 'GFL Beauty Home', category: 'Wig Vendors', location: 'UK-wide', desc: 'Uncompromising quality. Seamless blending. Flawless installations. Premium virgin and raw hair.', url: 'https://naijahub.co.uk/listing/gfl-beauty-home' },
-  { name: 'Orionbloomuk', category: 'Makeup Artists', location: 'UK-wide', desc: 'Professional makeup services, tailored beauty insight, and premium products.', url: 'https://naijahub.co.uk/listing/orionbloomuk', whatsapp: 'https://api.whatsapp.com/send?phone=4407732785019' },
-  { name: 'Autogelebysunshine UK', category: 'Gele Stylists', location: 'Liverpool, UK', desc: 'Beautifully crafted Auto Gele, stylish men\'s caps, and elegant turbans.', url: 'https://naijahub.co.uk/listing/autogelebysunshine-uk', whatsapp: 'https://api.whatsapp.com/send/?phone=447760694051' },
-  { name: 'Apparelby22', category: 'Fashion Designers', location: 'Birmingham, UK', desc: 'Premium, structurally beautiful garments crafted to make a sophisticated statement.', url: 'https://naijahub.co.uk/listing/apparelby22' },
-  { name: 'Wendy Beauty Artistry', category: 'Makeup Artists', location: 'Ballymena, UK', desc: 'Radiant makeup, elegant hair styling, and flawless beauty treatments.', url: 'https://naijahub.co.uk/listing/wendy-beauty-artistry' },
-  { name: 'Bimfem Beauty Hub', category: 'Skincare', location: 'London, UK', desc: 'Authentic African hair and skincare products. Your go-to destination in the UK.', url: 'https://naijahub.co.uk/listing/bimfem-beauty-hub' },
-  { name: 'Persola Beauty', category: 'Makeup Artists', location: 'Aylesbury, UK', desc: 'High-end, editorial touch. Specializing in flawless, radiant skin.', url: 'https://naijahub.co.uk/listing/persola-beauty' },
-  { name: 'Zionnzarahgele', category: 'Gele Stylists', location: 'Norwich, UK', desc: 'The art of modern royalty. Flawless, structurally stunning Gele designs.', url: 'https://naijahub.co.uk/listing/zionnzarahgele' },
-  { name: 'Shoppayhairs', category: 'Wig Vendors', location: 'Doncaster, UK', desc: 'Premium raw and virgin wigs crafted for seamless blending and effortless glamour.', url: 'https://naijahub.co.uk/listing/shoppayhairs' },
-  { name: 'Tecnis Academy', category: 'Tutors', location: 'Sittingbourne, UK', desc: 'Engaging online and face-to-face tuition in Maths, English, Physics, Chemistry, and Biology.', url: 'https://naijahub.co.uk/listing/tecnis-academy', whatsapp: 'https://wa.me/447792834542' },
-  { name: 'Lushnaturalsuk', category: 'Skincare', location: 'London, UK', desc: 'Natural body care products — pure skincare, body enhancers, and plant-based products.', url: 'https://naijahub.co.uk/listing/lushnaturalsuk' },
-  { name: 'Elgloreenaturals', category: 'Hair Care', location: 'UK-wide', desc: 'Premium natural hair care products. God made everything beautiful.', url: 'https://naijahub.co.uk/listing/elgloreenaturals' },
-  { name: 'Peroevents', category: 'Events & MC', location: 'UK-wide', desc: 'Events should be fun and memories, not stressful. Professional Alaga and MC services.', url: 'https://naijahub.co.uk/listing/peroevents' },
-  { name: 'Goke Photography', category: 'Photography', location: 'Tilbury, UK', desc: 'Wedding photography, engagement shoots, portraits and more.', url: 'https://naijahub.co.uk/listing/goke-photography' },
-  { name: 'Flourish Paradise', category: 'Event Decorators', location: 'Rotherham, UK', desc: 'Stunning cakes and breathtaking event decorations for weddings, birthdays and more.', url: 'https://naijahub.co.uk/listing/flourish-paradise' },
-  { name: 'Photomasterstudios', category: 'Photography', location: 'Nottingham, UK', desc: 'Creating timeless art through the lens of passion and precision.', url: 'https://naijahub.co.uk/listing/photomasterstudios' },
-  { name: 'Bumexcouture', category: 'Ankara & Traditional Wears', location: 'UK-wide', desc: 'African culture and fashion. Beautiful African-inspired garments.', url: 'https://naijahub.co.uk/listing/bumexcouture' },
-  { name: 'Nidakprint', category: 'Printing Services', location: 'UK-wide', desc: 'Packaging and custom printing solutions.', url: 'https://naijahub.co.uk/listing/nidakprint', whatsapp: 'https://api.whatsapp.com/send?phone=447592283188' },
-  { name: 'Gandkstyles', category: 'Ankara & Traditional Wears', location: 'Scotland, UK', desc: 'African fashion brand offering stylish ready-to-wear women\'s clothing.', url: 'https://naijahub.co.uk/listing/gandkstyles', whatsapp: 'https://api.whatsapp.com/send/?phone=447887661383' },
-  { name: 'Glamwtjade', category: 'Makeup Artists', location: 'Middlesbrough, UK', desc: 'Flawless, radiant complexions that look effortlessly sophisticated.', url: 'https://naijahub.co.uk/listing/glamwtjade' },
-  { name: 'Purplelips', category: 'Makeup Artists', location: 'Colchester, UK', desc: 'Premier luxury beauty service specializing in high-end bridal and soft glam makeup.', url: 'https://naijahub.co.uk/listing/purplelips', whatsapp: 'https://api.whatsapp.com/send/?phone=%2B447414129863' },
-  { name: 'Funmis Treasure', category: 'African Foodstores & Groceries', location: 'Basildon, Essex', desc: 'Authentic African products and foods delivered throughout the UK.', url: 'https://naijahub.co.uk/listing/funmis-treasure', whatsapp: 'https://api.whatsapp.com/send?phone=447435844799', featured: true, verified: true },
-  { name: 'Jollofmama', category: 'Restaurants', location: 'London, UK', desc: 'London\'s finest destination for authentic Nigerian cuisine and vibrant flavors.', url: 'https://naijahub.co.uk/listing/jollofmama' },
-  { name: 'Kelz J Bukka & Grills', category: 'Restaurants', location: 'Brighton & Hove, UK', desc: 'Rich flavors of Nigerian cuisine blending tradition with modern dining.', url: 'https://naijahub.co.uk/listing/kelz-j-bukka-and-grills' },
-  { name: 'Funkesglam', category: 'Makeup Artists', location: 'Essex, UK', desc: 'Professional makeup services across London and Essex, specialising in bridal looks.', url: 'https://naijahub.co.uk/listing/funkesglam' },
-  { name: '280degrees', category: 'Restaurants', location: 'London NW6, UK', desc: 'Vibrant colours, rich flavours, and warm African hospitality.', url: 'https://naijahub.co.uk/listing/280degrees' },
-  { name: 'Justpalmoil', category: 'African Foodstores & Groceries', location: 'London, UK', desc: 'Authentic undiluted palm oil sourced directly from Calabar, Nigeria.', url: 'https://naijahub.co.uk/listing/justpalmoil', whatsapp: 'https://api.whatsapp.com/message/H7HRSIZWD6KUO1' },
-  { name: 'Tombell Education Consultancy', category: 'Education Consultancy', location: 'Sittingbourne, Kent', desc: 'British Council Certified education consultancy helping students achieve their study abroad goals.', url: 'https://naijahub.co.uk/listing/tombell-education-consultancy-ltd', whatsapp: 'https://api.whatsapp.com/send/?phone=2349066674956', featured: true, verified: true },
-  { name: 'Home of Multi-Nutrient Ventures', category: 'African Foodstores & Groceries', location: 'Wakefield, UK', desc: 'Authentic African Flavours to Your Doorstep — Fresh, High-Quality Frozen Foods and African groceries.', url: 'https://naijahub.co.uk/listing/home-of-multi-nutrient-ventures-limited' },
-  { name: 'Xstarhaircollectionz', category: 'Wig Vendors', location: 'Glasgow, UK', desc: 'Premium quality wigs and hair products designed for all hair types.', url: 'https://naijahub.co.uk/listing/xstarhaircollectionz', whatsapp: 'https://api.whatsapp.com/send/?phone=447342572629' },
-  { name: 'HairMistress', category: 'Beauty Services', location: 'Erith, London', desc: 'Exceptional beauty treatments where convenience meets professionalism.', url: 'https://naijahub.co.uk/listing/hairmistress', whatsapp: 'https://api.whatsapp.com/send/?phone=447762137315' },
-  { name: 'Uwagboe\'s Kitchen & Grill', category: 'Restaurants', location: 'Edinburgh, UK', desc: 'Vibrant flavors of Nigeria in the heart of Edinburgh.', url: 'https://naijahub.co.uk/listing/uwagboes-kitchen-and-grill-leith-walk' },
-  { name: 'Craving Delight', category: 'Restaurants', location: 'Hull, UK', desc: 'Authentic African cuisine in the heart of Hull.', url: 'https://naijahub.co.uk/listing/craving-delighthull' },
-  { name: 'Diamond Concept Photography', category: 'Photography', location: 'Colchester, UK', desc: 'Professional photography services capturing your most precious moments.', url: 'https://naijahub.co.uk/listing/diamond-concept-photography' },
-  { name: 'Mamahzxtensions', category: 'Wig Vendors', location: 'London SW2, UK', desc: 'Premium hair extensions and wigs for every occasion.', url: 'https://naijahub.co.uk/listing/mamahzxtensions' },
-  { name: 'Beauty by Derin Dominiquee', category: 'Beauty Services', location: 'Birmingham, UK', desc: 'Microblading and premium beauty treatments for a flawless look.', url: 'https://naijahub.co.uk/listing/beauty-by-derin-dominiquee', whatsapp: 'https://api.whatsapp.com/send/?phone=447784877084' },
-  { name: 'Demis Restaurant', category: 'Restaurants', location: 'Cricklewood, London', desc: 'Authentic African cuisine in the heart of North London.', url: 'https://naijahub.co.uk/listing/demis-restaurant', whatsapp: 'https://api.whatsapp.com/send/?phone=447908458479' },
-  { name: 'LayersbyMo', category: 'Cakes & Desserts', location: 'Sheffield, UK', desc: 'Beautiful custom cakes and desserts for every celebration.', url: 'https://naijahub.co.uk/listing/layersbymo', whatsapp: 'https://api.whatsapp.com/send/?phone=447442655583' },
-  { name: 'Chop Suya London', category: 'Suya Spots', location: 'Barking, London', desc: 'Authentic Nigerian suya in London. Fire-grilled to perfection.', url: 'https://naijahub.co.uk/listing/chop-suya-london', whatsapp: 'https://api.whatsapp.com/send/?phone=447858799958' },
-  { name: 'Treats by Jemie', category: 'Small Chops', location: 'Glasgow, UK', desc: 'Delicious small chops and Nigerian party snacks made fresh.', url: 'https://naijahub.co.uk/listing/treats-by-jemie', whatsapp: 'https://api.whatsapp.com/send/?phone=447350166897' },
-  { name: 'Reniksmakeover', category: 'Gele Stylists', location: 'England, UK', desc: 'Professional gele tying and beauty makeover services across England.', url: 'https://naijahub.co.uk/listing/reniksmakeover' },
-  { name: 'Abenigele', category: 'Gele Stylists', location: 'England, UK', desc: 'Flawless gele tying for weddings, parties and all occasions.', url: 'https://naijahub.co.uk/listing/abenigele' },
-  { name: 'Hormaposhbeautyempire', category: 'Makeup Artists', location: 'England, UK', desc: 'Premium makeup and beauty services for every occasion.', url: 'https://naijahub.co.uk/listing/hormaposhbeautyempire' },
-  { name: 'Lady in Charge', category: 'Ankara & Traditional Wears', location: 'UK-wide', desc: 'Stylish African traditional wear and Ankara designs for every occasion.', url: 'https://naijahub.co.uk/listing/lady-in-charge', whatsapp: 'https://api.whatsapp.com/send/?phone=447957999312' },
-  { name: 'Winifred Lux Hair', category: 'Hair Stylists', location: 'Birmingham, UK', desc: 'Luxury hair styling and braiding services in Birmingham.', url: 'https://naijahub.co.uk/listing/winifred-lux-hair' },
-  { name: 'Ruqiey Glitz', category: 'Makeup Artists', location: 'Bradford, UK', desc: 'Glam makeup for weddings, parties and photoshoots in Bradford.', url: 'https://naijahub.co.uk/listing/ruqiey-glitz' },
-  { name: 'Makeupbyenesmemoire', category: 'Makeup Artists', location: 'Colchester, UK', desc: 'Timeless and elegant makeup artistry for every beauty occasion.', url: 'https://naijahub.co.uk/listing/makeupbyenesmemoire' },
-  { name: 'Freshmindvisuals', category: 'Photography', location: 'Manchester, UK', desc: 'Creative photography and videography capturing life\'s best moments.', url: 'https://naijahub.co.uk/listing/freshmindvisuals' },
-  { name: 'Dele Photography', category: 'Photography', location: 'London, UK', desc: 'Professional photography for weddings, events and portraits in London.', url: 'https://naijahub.co.uk/listing/dele-photography' },
-  { name: 'Twinklesluxe MUA', category: 'Makeup Artists', location: 'Southampton, UK', desc: 'Luxury makeup artistry for brides and special occasions in Southampton.', url: 'https://naijahub.co.uk/listing/twinklesluxe-mua' },
-  { name: 'The Yideh Glam', category: 'Makeup Artists', location: 'Kent, UK', desc: 'Glamorous makeup and beauty services across Kent.', url: 'https://naijahub.co.uk/listing/the-yideh-glam' },
-  { name: 'RukkyzKitchen', category: 'Caterers', location: 'London WC2, UK', desc: 'Authentic Nigerian catering for events, parties and private dining.', url: 'https://naijahub.co.uk/listing/rukkyz-kitchen' },
-  { name: '1212AfroCaribbean', category: 'African Foodstores & Groceries', location: 'Nottingham, UK', desc: 'Your go-to Afro-Caribbean food store in Nottingham.', url: 'https://naijahub.co.uk/listing/1212afrocaribbean', whatsapp: 'https://www.whatsapp.com/catalog/447450914311/' },
-  { name: 'Loaf & Ladle Co.', category: 'Cakes & Desserts', location: 'Nottingham, UK', desc: 'Artisan cakes, breads and desserts baked fresh in Nottingham.', url: 'https://naijahub.co.uk/listing/loaf-and-ladle-co' },
-  { name: 'AC CHOW', category: 'Private Chef', location: 'Stevenage, UK', desc: 'Private chef services bringing authentic Nigerian flavours to your home.', url: 'https://naijahub.co.uk/listing/ac-chow' },
+  { name: 'Eventsbykklargesse', category: 'Event Planners', location: 'Suffolk, UK', desc: 'Tailored Moments, Timeless Memories. Beautiful celebrations through curated gifting and thoughtful touches.', url: 'https://auntietobi.com/listing/eventsbykklargesse' },
+  { name: 'Beauty Glowingskins', category: 'Skincare', location: 'East London, UK', desc: 'Skincare for glowing skin.', url: 'https://auntietobi.com/listing/beauty-glowingskins' },
+  { name: 'GFL Beauty Home', category: 'Wig Vendors', location: 'UK-wide', desc: 'Uncompromising quality. Seamless blending. Flawless installations. Premium virgin and raw hair.', url: 'https://auntietobi.com/listing/gfl-beauty-home' },
+  { name: 'Orionbloomuk', category: 'Makeup Artists', location: 'UK-wide', desc: 'Professional makeup services, tailored beauty insight, and premium products.', url: 'https://auntietobi.com/listing/orionbloomuk', whatsapp: 'https://api.whatsapp.com/send?phone=4407732785019' },
+  { name: 'Autogelebysunshine UK', category: 'Gele Stylists', location: 'Liverpool, UK', desc: 'Beautifully crafted Auto Gele, stylish men\'s caps, and elegant turbans.', url: 'https://auntietobi.com/listing/autogelebysunshine-uk', whatsapp: 'https://api.whatsapp.com/send/?phone=447760694051' },
+  { name: 'Apparelby22', category: 'Fashion Designers', location: 'Birmingham, UK', desc: 'Premium, structurally beautiful garments crafted to make a sophisticated statement.', url: 'https://auntietobi.com/listing/apparelby22' },
+  { name: 'Wendy Beauty Artistry', category: 'Makeup Artists', location: 'Ballymena, UK', desc: 'Radiant makeup, elegant hair styling, and flawless beauty treatments.', url: 'https://auntietobi.com/listing/wendy-beauty-artistry' },
+  { name: 'Bimfem Beauty Hub', category: 'Skincare', location: 'London, UK', desc: 'Authentic African hair and skincare products. Your go-to destination in the UK.', url: 'https://auntietobi.com/listing/bimfem-beauty-hub' },
+  { name: 'Persola Beauty', category: 'Makeup Artists', location: 'Aylesbury, UK', desc: 'High-end, editorial touch. Specializing in flawless, radiant skin.', url: 'https://auntietobi.com/listing/persola-beauty' },
+  { name: 'Zionnzarahgele', category: 'Gele Stylists', location: 'Norwich, UK', desc: 'The art of modern royalty. Flawless, structurally stunning Gele designs.', url: 'https://auntietobi.com/listing/zionnzarahgele' },
+  { name: 'Shoppayhairs', category: 'Wig Vendors', location: 'Doncaster, UK', desc: 'Premium raw and virgin wigs crafted for seamless blending and effortless glamour.', url: 'https://auntietobi.com/listing/shoppayhairs' },
+  { name: 'Tecnis Academy', category: 'Tutors', location: 'Sittingbourne, UK', desc: 'Engaging online and face-to-face tuition in Maths, English, Physics, Chemistry, and Biology.', url: 'https://auntietobi.com/listing/tecnis-academy', whatsapp: 'https://wa.me/447792834542' },
+  { name: 'Lushnaturalsuk', category: 'Skincare', location: 'London, UK', desc: 'Natural body care products — pure skincare, body enhancers, and plant-based products.', url: 'https://auntietobi.com/listing/lushnaturalsuk' },
+  { name: 'Elgloreenaturals', category: 'Hair Care', location: 'UK-wide', desc: 'Premium natural hair care products. God made everything beautiful.', url: 'https://auntietobi.com/listing/elgloreenaturals' },
+  { name: 'Peroevents', category: 'Events & MC', location: 'UK-wide', desc: 'Events should be fun and memories, not stressful. Professional Alaga and MC services.', url: 'https://auntietobi.com/listing/peroevents' },
+  { name: 'Goke Photography', category: 'Photography', location: 'Tilbury, UK', desc: 'Wedding photography, engagement shoots, portraits and more.', url: 'https://auntietobi.com/listing/goke-photography' },
+  { name: 'Flourish Paradise', category: 'Event Decorators', location: 'Rotherham, UK', desc: 'Stunning cakes and breathtaking event decorations for weddings, birthdays and more.', url: 'https://auntietobi.com/listing/flourish-paradise' },
+  { name: 'Photomasterstudios', category: 'Photography', location: 'Nottingham, UK', desc: 'Creating timeless art through the lens of passion and precision.', url: 'https://auntietobi.com/listing/photomasterstudios' },
+  { name: 'Bumexcouture', category: 'Ankara & Traditional Wears', location: 'UK-wide', desc: 'African culture and fashion. Beautiful African-inspired garments.', url: 'https://auntietobi.com/listing/bumexcouture' },
+  { name: 'Nidakprint', category: 'Printing Services', location: 'UK-wide', desc: 'Packaging and custom printing solutions.', url: 'https://auntietobi.com/listing/nidakprint', whatsapp: 'https://api.whatsapp.com/send?phone=447592283188' },
+  { name: 'Gandkstyles', category: 'Ankara & Traditional Wears', location: 'Scotland, UK', desc: 'African fashion brand offering stylish ready-to-wear women\'s clothing.', url: 'https://auntietobi.com/listing/gandkstyles', whatsapp: 'https://api.whatsapp.com/send/?phone=447887661383' },
+  { name: 'Glamwtjade', category: 'Makeup Artists', location: 'Middlesbrough, UK', desc: 'Flawless, radiant complexions that look effortlessly sophisticated.', url: 'https://auntietobi.com/listing/glamwtjade' },
+  { name: 'Purplelips', category: 'Makeup Artists', location: 'Colchester, UK', desc: 'Premier luxury beauty service specializing in high-end bridal and soft glam makeup.', url: 'https://auntietobi.com/listing/purplelips', whatsapp: 'https://api.whatsapp.com/send/?phone=%2B447414129863' },
+  { name: 'Funmis Treasure', category: 'African Foodstores & Groceries', location: 'Basildon, Essex', desc: 'Authentic African products and foods delivered throughout the UK.', url: 'https://auntietobi.com/listing/funmis-treasure', whatsapp: 'https://api.whatsapp.com/send?phone=447435844799', featured: true, verified: true },
+  { name: 'Jollofmama', category: 'Restaurants', location: 'London, UK', desc: 'London\'s finest destination for authentic Nigerian cuisine and vibrant flavors.', url: 'https://auntietobi.com/listing/jollofmama' },
+  { name: 'Kelz J Bukka & Grills', category: 'Restaurants', location: 'Brighton & Hove, UK', desc: 'Rich flavors of Nigerian cuisine blending tradition with modern dining.', url: 'https://auntietobi.com/listing/kelz-j-bukka-and-grills' },
+  { name: 'Funkesglam', category: 'Makeup Artists', location: 'Essex, UK', desc: 'Professional makeup services across London and Essex, specialising in bridal looks.', url: 'https://auntietobi.com/listing/funkesglam' },
+  { name: '280degrees', category: 'Restaurants', location: 'London NW6, UK', desc: 'Vibrant colours, rich flavours, and warm African hospitality.', url: 'https://auntietobi.com/listing/280degrees' },
+  { name: 'Justpalmoil', category: 'African Foodstores & Groceries', location: 'London, UK', desc: 'Authentic undiluted palm oil sourced directly from Calabar, Nigeria.', url: 'https://auntietobi.com/listing/justpalmoil', whatsapp: 'https://api.whatsapp.com/message/H7HRSIZWD6KUO1' },
+  { name: 'Tombell Education Consultancy', category: 'Education Consultancy', location: 'Sittingbourne, Kent', desc: 'British Council Certified education consultancy helping students achieve their study abroad goals.', url: 'https://auntietobi.com/listing/tombell-education-consultancy-ltd', whatsapp: 'https://api.whatsapp.com/send/?phone=2349066674956', featured: true, verified: true },
+  { name: 'Home of Multi-Nutrient Ventures', category: 'African Foodstores & Groceries', location: 'Wakefield, UK', desc: 'Authentic African Flavours to Your Doorstep — Fresh, High-Quality Frozen Foods and African groceries.', url: 'https://auntietobi.com/listing/home-of-multi-nutrient-ventures-limited' },
+  { name: 'Xstarhaircollectionz', category: 'Wig Vendors', location: 'Glasgow, UK', desc: 'Premium quality wigs and hair products designed for all hair types.', url: 'https://auntietobi.com/listing/xstarhaircollectionz', whatsapp: 'https://api.whatsapp.com/send/?phone=447342572629' },
+  { name: 'HairMistress', category: 'Beauty Services', location: 'Erith, London', desc: 'Exceptional beauty treatments where convenience meets professionalism.', url: 'https://auntietobi.com/listing/hairmistress', whatsapp: 'https://api.whatsapp.com/send/?phone=447762137315' },
+  { name: 'Uwagboe\'s Kitchen & Grill', category: 'Restaurants', location: 'Edinburgh, UK', desc: 'Vibrant flavors of Nigeria in the heart of Edinburgh.', url: 'https://auntietobi.com/listing/uwagboes-kitchen-and-grill-leith-walk' },
+  { name: 'Craving Delight', category: 'Restaurants', location: 'Hull, UK', desc: 'Authentic African cuisine in the heart of Hull.', url: 'https://auntietobi.com/listing/craving-delighthull' },
+  { name: 'Diamond Concept Photography', category: 'Photography', location: 'Colchester, UK', desc: 'Professional photography services capturing your most precious moments.', url: 'https://auntietobi.com/listing/diamond-concept-photography' },
+  { name: 'Mamahzxtensions', category: 'Wig Vendors', location: 'London SW2, UK', desc: 'Premium hair extensions and wigs for every occasion.', url: 'https://auntietobi.com/listing/mamahzxtensions' },
+  { name: 'Beauty by Derin Dominiquee', category: 'Beauty Services', location: 'Birmingham, UK', desc: 'Microblading and premium beauty treatments for a flawless look.', url: 'https://auntietobi.com/listing/beauty-by-derin-dominiquee', whatsapp: 'https://api.whatsapp.com/send/?phone=447784877084' },
+  { name: 'Demis Restaurant', category: 'Restaurants', location: 'Cricklewood, London', desc: 'Authentic African cuisine in the heart of North London.', url: 'https://auntietobi.com/listing/demis-restaurant', whatsapp: 'https://api.whatsapp.com/send/?phone=447908458479' },
+  { name: 'LayersbyMo', category: 'Cakes & Desserts', location: 'Sheffield, UK', desc: 'Beautiful custom cakes and desserts for every celebration.', url: 'https://auntietobi.com/listing/layersbymo', whatsapp: 'https://api.whatsapp.com/send/?phone=447442655583' },
+  { name: 'Chop Suya London', category: 'Suya Spots', location: 'Barking, London', desc: 'Authentic Nigerian suya in London. Fire-grilled to perfection.', url: 'https://auntietobi.com/listing/chop-suya-london', whatsapp: 'https://api.whatsapp.com/send/?phone=447858799958' },
+  { name: 'Treats by Jemie', category: 'Small Chops', location: 'Glasgow, UK', desc: 'Delicious small chops and Nigerian party snacks made fresh.', url: 'https://auntietobi.com/listing/treats-by-jemie', whatsapp: 'https://api.whatsapp.com/send/?phone=447350166897' },
+  { name: 'Reniksmakeover', category: 'Gele Stylists', location: 'England, UK', desc: 'Professional gele tying and beauty makeover services across England.', url: 'https://auntietobi.com/listing/reniksmakeover' },
+  { name: 'Abenigele', category: 'Gele Stylists', location: 'England, UK', desc: 'Flawless gele tying for weddings, parties and all occasions.', url: 'https://auntietobi.com/listing/abenigele' },
+  { name: 'Hormaposhbeautyempire', category: 'Makeup Artists', location: 'England, UK', desc: 'Premium makeup and beauty services for every occasion.', url: 'https://auntietobi.com/listing/hormaposhbeautyempire' },
+  { name: 'Lady in Charge', category: 'Ankara & Traditional Wears', location: 'UK-wide', desc: 'Stylish African traditional wear and Ankara designs for every occasion.', url: 'https://auntietobi.com/listing/lady-in-charge', whatsapp: 'https://api.whatsapp.com/send/?phone=447957999312' },
+  { name: 'Winifred Lux Hair', category: 'Hair Stylists', location: 'Birmingham, UK', desc: 'Luxury hair styling and braiding services in Birmingham.', url: 'https://auntietobi.com/listing/winifred-lux-hair' },
+  { name: 'Ruqiey Glitz', category: 'Makeup Artists', location: 'Bradford, UK', desc: 'Glam makeup for weddings, parties and photoshoots in Bradford.', url: 'https://auntietobi.com/listing/ruqiey-glitz' },
+  { name: 'Makeupbyenesmemoire', category: 'Makeup Artists', location: 'Colchester, UK', desc: 'Timeless and elegant makeup artistry for every beauty occasion.', url: 'https://auntietobi.com/listing/makeupbyenesmemoire' },
+  { name: 'Freshmindvisuals', category: 'Photography', location: 'Manchester, UK', desc: 'Creative photography and videography capturing life\'s best moments.', url: 'https://auntietobi.com/listing/freshmindvisuals' },
+  { name: 'Dele Photography', category: 'Photography', location: 'London, UK', desc: 'Professional photography for weddings, events and portraits in London.', url: 'https://auntietobi.com/listing/dele-photography' },
+  { name: 'Twinklesluxe MUA', category: 'Makeup Artists', location: 'Southampton, UK', desc: 'Luxury makeup artistry for brides and special occasions in Southampton.', url: 'https://auntietobi.com/listing/twinklesluxe-mua' },
+  { name: 'The Yideh Glam', category: 'Makeup Artists', location: 'Kent, UK', desc: 'Glamorous makeup and beauty services across Kent.', url: 'https://auntietobi.com/listing/the-yideh-glam' },
+  { name: 'RukkyzKitchen', category: 'Caterers', location: 'London WC2, UK', desc: 'Authentic Nigerian catering for events, parties and private dining.', url: 'https://auntietobi.com/listing/rukkyz-kitchen' },
+  { name: '1212AfroCaribbean', category: 'African Foodstores & Groceries', location: 'Nottingham, UK', desc: 'Your go-to Afro-Caribbean food store in Nottingham.', url: 'https://auntietobi.com/listing/1212afrocaribbean', whatsapp: 'https://www.whatsapp.com/catalog/447450914311/' },
+  { name: 'Loaf & Ladle Co.', category: 'Cakes & Desserts', location: 'Nottingham, UK', desc: 'Artisan cakes, breads and desserts baked fresh in Nottingham.', url: 'https://auntietobi.com/listing/loaf-and-ladle-co' },
+  { name: 'AC CHOW', category: 'Private Chef', location: 'Stevenage, UK', desc: 'Private chef services bringing authentic Nigerian flavours to your home.', url: 'https://auntietobi.com/listing/ac-chow' },
 ];
 
 // Track shown businesses to avoid repeats
@@ -3486,7 +3486,7 @@ function showBusinesses(startIndex = -1) {
     const emoji = getCategoryEmoji(b.category);
     const featuredBadge = b.featured ? `<span style="display:inline-flex;align-items:center;gap:2px;background:linear-gradient(135deg,#FFB81C,#f59e0b);color:#0F1E36;font-size:9px;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:5px;vertical-align:middle;white-space:nowrap;">⭐ Featured</span>` : '';
     const verifiedBadge = b.verified ? `<span style="display:inline-flex;align-items:center;gap:3px;background:white;color:#1D9BF0;font-size:9px;font-weight:800;padding:2px 8px;border-radius:50px;margin-left:5px;vertical-align:middle;border:1.5px solid #1D9BF0;"><span style="color:#1D9BF0;font-size:11px;font-weight:900;">✓</span> Verified</span>` : '';
-    const viewBtn = `<a href="${b.url}" target="_blank" style="flex:1;display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;">View on naijahub.co.uk</a>`;
+    const viewBtn = `<a href="${b.url}" target="_blank" style="flex:1;display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;">View on auntietobi.com</a>`;
     const waBtn = (b.featured && b.whatsapp) ? `<a href="${b.whatsapp}" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:5px 8px;border-radius:6px;text-align:center;white-space:nowrap;">💬 WhatsApp</a>` : '';
     const btnRow = `<div style="display:flex;gap:6px;margin-top:4px;">${viewBtn}${waBtn}</div>`;
     html += `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;margin-bottom:12px;">
@@ -3504,7 +3504,7 @@ function showBusinesses(startIndex = -1) {
   });
 
   // Listing CTA
-  html += `<div style="margin-top:10px;padding:10px 12px;background:#EAF3DE;border-radius:10px;font-size:12px;color:#0F1E36;line-height:1.5;">💡 <strong>Want Auntie Tobi to recommend YOUR business?</strong> Get listed on NaijaUKHub and reach thousands of Nigerians across the UK!<br><a href="https://naijahub.co.uk" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">👉 Add your business on naijahub.co.uk</a></div>`;
+  html += `<div style="margin-top:10px;padding:10px 12px;background:#EAF3DE;border-radius:10px;font-size:12px;color:#0F1E36;line-height:1.5;">💡 <strong>Want Auntie Tobi to recommend YOUR business?</strong> Get listed on NaijaUKHub and reach thousands of Nigerians across the UK!<br><a href="https://auntietobi.com" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">👉 Add your business on auntietobi.com</a></div>`;
 
   // Build suggestions HTML directly (bypass formatResponse to avoid extra margins)
   const moreLabel = hasMore ? 'Show me more businesses' : 'Start again from the top';
@@ -3527,7 +3527,7 @@ function getCategoryUrl(cat) {
     'Professional Services': 'professional-services',
   };
   const slug = slugs[cat];
-  return slug ? `https://naijahub.co.uk/category/${slug}` : 'https://naijahub.co.uk';
+  return slug ? `https://auntietobi.com/category/${slug}` : 'https://auntietobi.com';
 }
 
 function getCategoryEmoji(cat) {
@@ -3656,7 +3656,7 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🍼 Aldi Freezes Baby Formula Price Until End of 2026</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Great news for families! Aldi has frozen the price of baby formula until the end of 2026.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Aldi Baby Formula\',\'Aldi Freezes Baby Formula Price Until End of 2026\',\'https://naijahub.co.uk/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🍼 Aldi Freezes Baby Formula Price Until End of 2026</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Great news for families! Aldi has frozen the price of baby formula until the end of 2026.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Aldi Baby Formula\',\'Aldi Freezes Baby Formula Price Until End of 2026\',\'https://auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
       const s = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('What baby products are cheapest in the UK?')">🍼 Cheapest baby products?</button><button class="suggestion-btn" onclick="quickAsk('How to save money on baby essentials?')">💰 Save on baby essentials</button>${s.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
@@ -3665,7 +3665,7 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">💷 What Andy Burnham as UK PM Could Mean for Your Money</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Find out what his policies could mean for your taxes, energy bills, and finances as a Nigerian in the UK.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Andy Burnham PM\',\'What Andy Burnham as UK PM Could Mean for Your Money\',\'https://naijahub.co.uk/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">23 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">💷 What Andy Burnham as UK PM Could Mean for Your Money</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Find out what his policies could mean for your taxes, energy bills, and finances as a Nigerian in the UK.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Andy Burnham PM\',\'What Andy Burnham as UK PM Could Mean for Your Money\',\'https://auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
       const s = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How will a new UK Prime Minister affect my taxes?')">💷 How will this affect my taxes?</button><button class="suggestion-btn" onclick="quickAsk('What could change for Nigerians in the UK under Andy Burnham?')">🇬🇧 What changes for Nigerians?</button>${s.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
@@ -3674,7 +3674,7 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span><span style="font-size:10px;color:#9CA3AF;">26 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🏛️ UK Immigration Update: House of Lords Challenges Proposed ILR Changes</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">The House of Lords has challenged proposed changes to Indefinite Leave to Remain (ILR) rules. Find out what this means for Nigerians in the UK applying for settlement.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'ILR Update\',\'UK Immigration Update: House of Lords Challenges Proposed ILR Changes\',\'https://naijahub.co.uk/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span><span style="font-size:10px;color:#9CA3AF;">26 Jun 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🏛️ UK Immigration Update: House of Lords Challenges Proposed ILR Changes</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">The House of Lords has challenged proposed changes to Indefinite Leave to Remain (ILR) rules. Find out what this means for Nigerians in the UK applying for settlement.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'ILR Update\',\'UK Immigration Update: House of Lords Challenges Proposed ILR Changes\',\'https://auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
       const ilrs = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('What are the proposed ILR changes in the UK?')">🛂 What are the proposed ILR changes?</button><button class="suggestion-btn" onclick="quickAsk('How do the proposed ILR changes affect Nigerians in the UK?')">🏛️ How does this affect Nigerians?</button>${ilrs.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
@@ -3683,14 +3683,14 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/UPDATES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🌡️ UK Red Heat Warning — Temperatures Could Reach 40°C</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours.</div><a href="https://naijahub.co.uk/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a></div></div>');
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/UPDATES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🌡️ UK Red Heat Warning — Temperatures Could Reach 40°C</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours.</div><a href="https://auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a></div></div>');
       window.history.replaceState({}, '', window.location.pathname);
     }, 500);
   } else if (news === 'freebus') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/UPDATES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🚌 Free Bus Travel Update</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Latest update on free bus travel for Nigerians in the UK.</div><a href="https://naijahub.co.uk" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More on NaijaUKHub</a></div></div>');
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/UPDATES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🚌 Free Bus Travel Update</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Latest update on free bus travel for Nigerians in the UK.</div><a href="https://auntietobi.com" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More on NaijaUKHub</a></div></div>');
       window.history.replaceState({}, '', window.location.pathname);
     }, 500);
   }
@@ -4552,7 +4552,7 @@ window.addEventListener('load', () => {
 <div id="fq-overlay" class="fq-overlay">
   <div class="fq-box">
     <p id="fq-title" class="fq-title">👎 What went wrong?</p>
-    <div id="fq-options"></div>
+    
     <button class="fq-cancel" onclick="document.getElementById('fq-overlay').classList.remove('show')">Cancel</button>
   </div>
 </div>
