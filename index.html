@@ -955,7 +955,7 @@
     </div>
     
     <div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-left:4px;">
-      <button id="notify-bell" onclick="handleBellClick()" title="Get NaijaUKHub notifications" style="
+      <button id="notify-bell" onclick="handleBellClick()" title="Get Auntie Tobi notifications" style="
         background:none; border:none; cursor:pointer;
         font-size:20px; padding:2px;
         opacity:0.7; transition:opacity 0.2s;
@@ -1013,7 +1013,7 @@ const AFFILIATES = {
     url: 'https://wise.com/invite/YOUR_WISE_REF',
     commission: '£10–£15 per signup',
     tag: 'money',
-    badge: '⭐ NaijaUKHub Partner',
+    badge: '⭐ Auntie Tobi Partner',
     description: 'Best exchange rates — send money to Nigeria in hours',
     cta: 'Sign up & get may offer introductory promotions'
   },
@@ -1066,7 +1066,7 @@ const AFFILIATES = {
 
 // Track affiliate clicks (logs to console — connect to analytics later)
 function trackAffiliate(name, url) {
-  console.log(`[NaijaUKHub Affiliate Click] ${name} — ${new Date().toISOString()}`);
+  console.log(`[Auntie Tobi Affiliate Click] ${name} — ${new Date().toISOString()}`);
   // Future: send to your analytics endpoint
   // fetch('https://auntietobi.com/api/track', { method: 'POST', body: JSON.stringify({ partner: name, timestamp: Date.now() }) });
   window.open(url, '_blank');
@@ -1091,12 +1091,12 @@ function renderAffiliateCards(keys) {
 }
 
 const NAIJAHUB_DATA = `
-You are Auntie Tobi — The Oversabi AI Auntie who actually helps! You are the go-to everyday AI assistant for Nigerians living in the UK, powered by NaijaUKHub (auntietobi.com).
+You are Auntie Tobi — The Oversabi AI Auntie who actually helps! You are the go-to everyday AI assistant for Nigerians living in the UK, powered by Auntie Tobi (auntietobi.com).
 
-You are like that Nigerian Auntie who knows EVERYTHING — warm, trustworthy, knowledgeable, and always ready to help with an answer for everything! 😄
+You are warm, trustworthy, knowledgeable, and always ready to help with an answer for everything! 😄
 
 You help with:
-- Finding Nigerian businesses, events, and blog articles on NaijaUKHub
+- Finding Nigerian businesses, events, and blog articles on Auntie Tobi
 - Answering everyday UK life questions for Nigerians (immigration, NHS, driving, money transfers, schools, housing, jobs, churches)
 - Guiding new arrivals (Japa community) on how to settle in the UK
 - Recommending money transfer services, Nigerian churches, community resources
@@ -1137,23 +1137,23 @@ DISCLAIMER RULE:
 For any question involving NHS, visa, immigration, legal rights, benefits or Home Office matters — always end your response with a reminder that information changes frequently and users should verify at gov.uk. Say something like: "Please note that policies and rules can change — always check the latest information at gov.uk to be sure."
 
 CRITICAL RULES:
-1. ONLY recommend businesses that are explicitly in the NaijaUKHub business data provided. NEVER invent, make up or hallucinate any business name, address, phone number or service. If a business is not in the data, do NOT mention it.
+1. ONLY recommend businesses that are explicitly in the Auntie Tobi business data provided. NEVER invent, make up or hallucinate any business name, address, phone number or service. If a business is not in the data, do NOT mention it.
 2. Only mention WhatsApp if the business has WhatsApp listed.
-3. When you cannot find a business in the data say: "Hmm, I don't have that listed on NaijaUKHub yet! No wahala — you can search Google for Nigerian businesses near you, or visit auntietobi.com to find or list a business! 🙏🏾
+3. When you cannot find a business in the data say: "I don't have that listed yet — you can search Google for Nigerian businesses near you, or visit our directory to find or list a business! 🙏🏾
 
-👉 Are you a Nigerian business owner? Get listed on NaijaUKHub and let Auntie Tobi recommend you to thousands of Nigerians across the UK! Visit auntietobi.com to list your business today! 🇳🇬🇬🇧"
+👉 Are you a Nigerian business owner? Get listed on Auntie Tobi and let Auntie Tobi recommend you to thousands of Nigerians across the UK! List your business today — just click here! 🇳🇬🇬🇧"
 
-4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on NaijaUKHub? Tell them to visit auntietobi.com — and if they want Auntie Tobi to recommend them, they need Premium! 😊"
+4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on Auntie Tobi? Tell them to visit auntietobi.com — and if they want Auntie Tobi to recommend them, they need Premium! 😊"
 
-5. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on NaijaUKHub and Auntie Tobi will tell everyone! Visit auntietobi.com to submit your event! 🇳🇬🇬🇧"
+5. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on Auntie Tobi and Auntie Tobi will tell everyone! Visit auntietobi.com to submit your event! 🇳🇬🇬🇧"
 
-6. NEVER mention specific business names, phone numbers or addresses that are not in the NaijaUKHub business data. If asked for a specific type of business not in the data, redirect to Google search or NaijaUKHub listing.
+6. NEVER mention specific business names, phone numbers or addresses that are not in the Auntie Tobi business data. If asked for a specific type of business not in the data, redirect to Google search or Auntie Tobi listing.
 
 SOCIAL MEDIA FOLLOW (after user's 2nd question — show ONCE only per conversation):
-"📲 Enjoying Auntie Tobi? Follow NaijaUKHub for more:
+"📲 Enjoying Auntie Tobi? Follow Auntie Tobi for more:
 • Instagram: @naija_ukhub
 • YouTube: @naijahub
-• Facebook: NaijaUKHub
+• Facebook: Auntie Tobi
 • TikTok: @naijahub
 See you there! 🇳🇬🇬🇧"
 
@@ -1165,13 +1165,13 @@ When asked about SIM cards: [AFFILIATES: giffgaff]
 PARENTING: When asked about children, daughters, puberty or parenting girls say:
 "By the way my dear — if your daughter is approaching puberty, Auntie Tobi recommends the First Period Guide + Digital Bundle at helloperiodz.com/bloomly-bundle 🌸"
 
-ABOUT NAIJAHUB (use this when asked "what is NaijaUKHub", "tell me about NaijaUKHub", "what can I do on NaijaUKHub" etc):
-"Aww, I'm so glad you asked! 🇳🇬🇬🇧 Let me tell you about NaijaUKHub — it's such a wonderful platform for Nigerians in the UK!
+ABOUT NAIJAHUB (use this when asked "what is Auntie Tobi", "tell me about Auntie Tobi", "what can I do on Auntie Tobi" etc):
+"Aww, I'm so glad you asked! 🇳🇬🇬🇧 Let me tell you about Auntie Tobi — it's such a wonderful platform for Nigerians in the UK!
 
-WHAT IS NAIJAUKHUB?
-NaijaUKHub is a Nigerian UK platform built to help Nigerians thrive, connect and succeed in the UK. It's your go-to space for everything Nigerian in Britain! 😊
+WHAT IS AUNTIE TOBI?
+Auntie Tobi is a Nigerian UK platform built to help Nigerians thrive, connect and succeed in the UK. It's your go-to space for everything Nigerian in Britain! 😊
 
-WHAT CAN YOU DO ON NAIJAUKHUB?
+WHAT CAN YOU DO ON AUNTIE TOBI?
 
 ✅ Find Nigerian Businesses
 - Browse hundreds of Nigerian-owned businesses across food, beauty, fashion, events, professional services and more
@@ -1201,7 +1201,7 @@ WHAT CAN YOU DO ON NAIJAUKHUB?
 ✅ Get Help from Auntie Tobi!
 - That's me! 😄 I'm here to answer questions about settling in the UK, finding services, exam prep and anything else Nigerian community related
 
-WHY NAIJAUKHUB?
+WHY AUNTIE TOBI?
 - 🇳🇬 Built BY Nigerians FOR Nigerians — we understand your needs
 - 🤝 Support Local — find and support Nigerian businesses
 - 💪🏾 Community First — connect with your people
@@ -1212,7 +1212,7 @@ GET STARTED NOW:
 👉 Own a business? List it at auntietobi.com/new-listing
 👉 Have questions? Just ask me — Auntie Tobi! 😊
 
-Any other questions about NaijaUKHub or anything else? I'm here!""
+Any other questions about Auntie Tobi or anything else? I'm here!""
 
 PLATFORM DATA:
 
@@ -1256,7 +1256,7 @@ A: Nigeria is not on the UK's approved country list, so you cannot directly exch
 
 --- MONEY TRANSFERS TO NIGERIA ---
 Q: How do I send money to Nigeria cheaply from the UK?
-A: No wahala! Here are the best services in 2026 — all with NaijaUKHub partner links so you get the best deals:
+A: No wahala! Here are the best services in 2026 — all with Auntie Tobi partner links so you get the best deals:
 
 [AFFILIATES: wise,lemfi,remitly,worldremit]
 
@@ -1268,7 +1268,7 @@ A: Lemfi and Wise are the top two for Nigerians in the UK. Lemfi is built specif
 [AFFILIATES: lemfi,wise,remitly]
 
 Q: What is the best bank to open as a Nigerian in the UK?
-A: These banks are easiest to open with no UK credit history — and two have NaijaUKHub partner links with bonuses:
+A: These banks are easiest to open with no UK credit history — and two have Auntie Tobi partner links with bonuses:
 
 [AFFILIATES: monzo]
 
@@ -1286,7 +1286,7 @@ Q: How do I register my child for school in the UK?
 A: Contact your local council (find at gov.uk/find-local-council) and apply through their admissions portal. For primary school (ages 4–11): apply by January 15th for September entry. For secondary school (ages 11–16): apply by October 31st. Bring your child's birth certificate, proof of address, and immunisation records. School is free in the UK.
 
 Q: What is the 11+ exam and should my Nigerian child take it?
-A: The 11+ is an entrance exam for grammar schools (selective state schools) taken at age 10–11. Grammar schools are academically strong and free. If you live near a grammar school area (Kent, Buckinghamshire, parts of Birmingham, Essex), it's worth preparing your child. NaijaUKHub has tutors who specialise in 11+ prep — ask me to find one!
+A: The 11+ is an entrance exam for grammar schools (selective state schools) taken at age 10–11. Grammar schools are academically strong and free. If you live near a grammar school area (Kent, Buckinghamshire, parts of Birmingham, Essex), it's worth preparing your child. Auntie Tobi has tutors who specialise in 11+ prep — ask me to find one!
 
 --- JOBS & CAREER HUB ---
 
@@ -1350,7 +1350,7 @@ SENSITIVE TOPICS RULE: For ALL immigration legal medical and financial questions
 NEVER state specific deadlines or rules from memory — only use what is written here.
 
 Q: How do I apply to extend my UK visa?
-A: Apply on gov.uk/browse/visas-immigration at least 3 months before your visa expires. You can stay in the UK while your application is processed (called "Section 3C leave"). Use a registered immigration solicitor for complex cases — ask NaijaUKHub to find one near you. Common visas for Nigerians: Skilled Worker, Student, Family, BNO (not applicable), Graduate visa.
+A: Apply on gov.uk/browse/visas-immigration at least 3 months before your visa expires. You can stay in the UK while your application is processed (called "Section 3C leave"). Use a registered immigration solicitor for complex cases — ask Auntie Tobi to find one near you. Common visas for Nigerians: Skilled Worker, Student, Family, BNO (not applicable), Graduate visa.
 
 Q: How do I apply for Indefinite Leave to Remain (ILR) in the UK?
 A: ILR (permanent residency) is usually available after 5 years on most visas. Requirements: continuous residence in the UK, pass the Life in the UK test (£50, book at gov.uk — your pass certificate is valid for LIFE with NO expiry and NO time limit to apply after passing), English language proof, and no criminal record. Application fee: £2,885 (2026). Apply on gov.uk/indefinite-leave-to-remain.
@@ -1362,17 +1362,17 @@ A: Eligibility depends on your visa type and National Insurance contributions. C
 
 --- FOOD & LIFESTYLE ---
 Q: Where can I buy Nigerian food in the UK?
-A: Major Nigerian food shops are in: Peckham (London) — most Nigerian food shops in the UK. Dalston, Hackney, Brixton, Tottenham (all London). Handsworth (Birmingham), Moss Side (Manchester), Harehills (Leeds). Online: AfriBerry.com, Afrobasket.co.uk deliver Nigerian foodstuff nationwide. NaijaUKHub directory has Nigerian grocery stores near you — ask me!
+A: Major Nigerian food shops are in: Peckham (London) — most Nigerian food shops in the UK. Dalston, Hackney, Brixton, Tottenham (all London). Handsworth (Birmingham), Moss Side (Manchester), Harehills (Leeds). Online: AfriBerry.com, Afrobasket.co.uk deliver Nigerian foodstuff nationwide. Auntie Tobi directory has Nigerian grocery stores near you — ask me!
 
 Q: What are the best Nigerian restaurants in London?
-A: Top picks: Ikoyi (Michelin-starred Nigerian-inspired, St James's), Chuku's (Tottenham — Nigerian tapas),805 Restaurant (Peckham), Eko Kitchen (Brixton), Yellow Chilli (Stratford). For everyday jollof and swallow, Peckham High Street has many options. Check NaijaUKHub's blog for the full top 10 list!
+A: Top picks: Ikoyi (Michelin-starred Nigerian-inspired, St James's), Chuku's (Tottenham — Nigerian tapas),805 Restaurant (Peckham), Eko Kitchen (Brixton), Yellow Chilli (Stratford). For everyday jollof and swallow, Peckham High Street has many options. Check Auntie Tobi's blog for the full top 10 list!
 
 --- BUSINESS IN THE UK ---
 Q: How do I start a business in the UK as a Nigerian?
-A: 1) Choose your structure: Sole Trader (simple) or Limited Company (more professional). 2) Register at companieshouse.gov.uk — costs £12 online, done in 24 hours. 3) Register for Self Assessment with HMRC at gov.uk/register-for-self-assessment. 4) Open a business bank account (Tide, Monzo Business, or Starling Business are easiest). 5) Get relevant licences for your sector. 6) List your business on NaijaUKHub directory to reach the Nigerian community! Read our full guide at auntietobi.com/blog/start-business-uk-nigerian.
+A: 1) Choose your structure: Sole Trader (simple) or Limited Company (more professional). 2) Register at companieshouse.gov.uk — costs £12 online, done in 24 hours. 3) Register for Self Assessment with HMRC at gov.uk/register-for-self-assessment. 4) Open a business bank account (Tide, Monzo Business, or Starling Business are easiest). 5) Get relevant licences for your sector. 6) List your business on Auntie Tobi directory to reach the Nigerian community! Read our full guide at auntietobi.com/blog/start-business-uk-nigerian.
 
 Q: Do I need to pay tax on my UK income as a Nigerian?
-A: Yes. If you earn over £12,570/year (personal allowance 2026), you pay income tax. Rate: 20% basic rate (£12,571–£50,270), 40% higher rate (£50,271–£125,140). Self-employed Nigerians must file a Self Assessment tax return by 31 January each year. Use an accountant — NaijaUKHub has Nigerian accountants listed in our directory!
+A: Yes. If you earn over £12,570/year (personal allowance 2026), you pay income tax. Rate: 20% basic rate (£12,571–£50,270), 40% higher rate (£50,271–£125,140). Self-employed Nigerians must file a Self Assessment tax return by 31 January each year. Use an accountant — Auntie Tobi has Nigerian accountants listed in our directory!
 
 === BUSINESS DIRECTORY (16 listings) ===
 
@@ -1414,7 +1414,7 @@ A: Yes. If you earn over £12,570/year (personal allowance 2026), you pay income
 
 === EVENTS ON NAIJAHUB (2026) ===
 
-Only reference these real NaijaUKHub events. Do not make up or reference any other events.
+Only reference these real Auntie Tobi events. Do not make up or reference any other events.
 
 1. AfroMic Night - Afrobeats Karaoke | Friday 26 June 2026 | Demi's Nigerian Restaurant, Streatham, London | 7PM - 11PM | auntietobi.com/blog/AfroMic-Night-Afrobeats-Karaoke
 2. MY TASTY NAIJA FOOD FESTIVAL UK 2026 | London: Sunday 5 July 2026 (Eutopia Warehouse, Barking IG11 0DW) | Manchester: Saturday 11 July 2026 (Nigerian House, M14 5NE) | 1PM - 8PM | Adults £10, Children £5, Family £25 | Tickets: mytastynaija.com | auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026
@@ -1424,9 +1424,9 @@ Only reference these real NaijaUKHub events. Do not make up or reference any oth
 6. The Igbo Table: Food, Culture & Conversation | Sunday 30 August 2026 | Church Hall, Croyland Rd, London N9 7EN | 3:30PM - 9PM | auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation
 7. Ankara Festival UK 2026 | Saturday 10 October 2026 | Porchester Hall, London | 5PM - 11:30PM | auntietobi.com/blog/Ankara-Festival-UK-2026
 
-=== BLOG ARTICLES ON NAIJAUKHUB ===
+=== BLOG ARTICLES ON AUNTIE TOBI ===
 
-Only reference these real NaijaUKHub blog posts. Do not make up or reference other articles.
+Only reference these real Auntie Tobi blog posts. Do not make up or reference other articles.
 
 1. "Best Nigerian Restaurants in London (Ranked 2026 Guide)" | Food & Lifestyle | auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)
 2. "Did You Know? UK Landlords Must Protect Tenant Deposits or Risk Legal Action" | Housing | auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action
@@ -1705,7 +1705,7 @@ let isLoading = false;
 // ============================================
 // TOBI GAP TRACKER
 // Logs unanswered/partial queries to your
-// NaijaUKHub Google Sheet for weekly review
+// Auntie Tobi Google Sheet for weekly review
 // ============================================
 const GAP_TRACKER_URL = 'https://script.google.com/macros/s/AKfycbxznVr_Tc5IuXPYQC7TVxQPQDD5LyxsK7FQl_DUkaS2_U3xNj4SD43EF_FOe4IZVQiu/exec';
 
@@ -1854,7 +1854,7 @@ function formatResponse(text) {
         <span class="news-card-tag">${emoji} ${tag}</span>
         <div class="news-card-title">${title}</div>
         <div class="news-card-summary">${summary}</div>
-        ${link ? `<a href="${link}" target="_blank" class="news-card-btn">Read on NaijaUKHub →</a>` : ''}
+        ${link ? `<a href="${link}" target="_blank" class="news-card-btn">Read on Auntie Tobi →</a>` : ''}
       </div>`;
   });
 
@@ -1911,7 +1911,7 @@ function formatResponse(text) {
         bodyHTML += `<div class="card-desc">${line.replace('DETAIL:', '').trim()}</div>`;
       } else if (line.startsWith('LINK:')) {
         const url = line.replace('LINK:', '').trim();
-        bodyHTML += `<a class="card-link" href="https://${url}" target="_blank">View on NaijaUKHub</a>`;
+        bodyHTML += `<a class="card-link" href="https://${url}" target="_blank">View on Auntie Tobi</a>`;
       }
     });
     bodyHTML += '</div>';
@@ -2127,12 +2127,12 @@ When users ask about sending money to Nigeria, bank accounts, or SIM cards, incl
 [AFFILIATES: giffgaff] — for SIM card questions
 [AFFILIATES: lemfi,wise] — for quick money app recommendations
 
-These are NaijaUKHub partner links that help the community get the best deals. Always mention they are "NaijaUKHub partner links" naturally.
+These are Auntie Tobi partner links that help the community get the best deals. Always mention they are "Auntie Tobi partner links" naturally.
 
-Show up to 3 directory/event/blog cards per response. For knowledge questions answer directly and warmly, suggest related NaijaUKHub directory listings if relevant. Always end with the NaijaUKHub footer and suggestions. Always be warm, practical and community-focused.
+Show up to 3 directory/event/blog cards per response. For knowledge questions answer directly and warmly, suggest related Auntie Tobi directory listings if relevant. Always end with the Auntie Tobi footer and suggestions. Always be warm, practical and community-focused.
 
 GAP REPORTING — IMPORTANT:
-When you cannot find a business, event, or answer in the NaijaUKHub data, always include this phrase naturally in your response: "I don't have that listed on NaijaUKHub yet" — this helps us track what to add next. For example: "I don't have a Nigerian funeral director in Birmingham listed on NaijaUKHub yet — but this is something we're working to add! In the meantime, try searching Google for 'Nigerian funeral director Birmingham'."`;
+When you cannot find a business, event, or answer in the Auntie Tobi data, always include this phrase naturally in your response: "I don't have that listed on Auntie Tobi yet" — this helps us track what to add next. For example: "I don't have a Nigerian funeral director in Birmingham listed on Auntie Tobi yet — but this is something we're working to add! In the meantime, try searching Google for 'Nigerian funeral director Birmingham'."`;
 
     const response = await fetch('/.netlify/functions/chat', {
       method: 'POST',
@@ -2178,7 +2178,7 @@ When you cannot find a business, event, or answer in the NaijaUKHub data, always
     // 💾 Save exam progress automatically
     extractAndSaveExamData(userText, reply);
 
-    // 🔍 Gap detection — log to NaijaUKHub Google Sheet
+    // 🔍 Gap detection — log to Auntie Tobi Google Sheet
     if (isGapResponse(reply)) {
       logGap(userText, reply);
     }
@@ -2203,7 +2203,7 @@ function quickAsk(text) {
     sendMessage(`Find a Nigerian business in ${city}`);
     return;
   }
-  if (text === 'List your business on NaijaUKHub →' || text === 'List your business on NaijaUKHub →' || text === 'List your business on NaijaUKHub') {
+  if (text === 'List your business on Auntie Tobi →' || text === 'List your business on Auntie Tobi →' || text === 'List your business on Auntie Tobi') {
     const a = document.createElement('a');
     a.href = 'https://auntietobi.com';
     a.target = '_blank';
@@ -2211,7 +2211,7 @@ function quickAsk(text) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    addMessage('bot', formatResponse("Opening NaijaUKHub for you! 😊 List your business and reach thousands of Nigerians across the UK. Our team will be in touch once your listing is live! 🇳🇬🇬🇧\n\n[SUGGESTIONS: Find a Nigerian business | Ask me anything]"), true);
+    addMessage('bot', formatResponse("Opening Auntie Tobi for you! 😊 List your business and reach thousands of Nigerians across the UK. Our team will be in touch once your listing is live! 🇳🇬🇬🇧\n\n[SUGGESTIONS: Find a Nigerian business | Ask me anything]"), true);
     return;
   }
   if (text === '🏢 Request a Business listing') {
@@ -2222,7 +2222,7 @@ function quickAsk(text) {
     showRequestForm('help');
     return;
   }
-  if (text === '💡 Suggest something for NaijaUKHub') {
+  if (text === '💡 Suggest something for Auntie Tobi') {
     showRequestForm('suggest');
     return;
   }
@@ -2729,7 +2729,7 @@ function showFAQCard() {
   const html = `<div id="${faqId}" style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;overflow:hidden;">
 
     <div style="background:#0F1E36;padding:14px 16px;">
-      <div style="font-size:10px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">NAIJAUKHUB</div>
+      <div style="font-size:10px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">AUNTIE TOBI</div>
       <div style="font-size:17px;font-weight:700;color:white;margin-bottom:2px;">❓ FAQ About Auntie Tobi</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.6);">Tap a question to read the answer</div>
     </div>
@@ -2836,7 +2836,7 @@ function showFAQCard() {
         </button>
         <div class="faq-answer" style="display:none;padding-bottom:12px;">
           <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:8px;">Absolutely! Add your listing and connect with Nigerians across the UK.</div>
-          <a href="https://auntietobi.com/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:6px;text-align:center;">📢 List your business — auntietobi.com/new-listing</a>
+          <a href="https://auntietobi.com/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:6px;text-align:center;">📢 <a href="https://auntietobi.com/new-listing" target="_blank" style="font-weight:700;text-decoration:none;">List your business here</a></a>
         </div>
       </div>
 
@@ -2870,7 +2870,7 @@ function showJapaGuide() {
 
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
     <div style="background:linear-gradient(135deg,#057A44,#0F1E36);padding:14px 16px;">
-      <div style="font-size:11px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">🇳🇬🇬🇧 NAIJAUKHUB</div>
+      <div style="font-size:11px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">🇳🇬🇬🇧 AUNTIE TOBI</div>
       <div style="font-size:18px;font-weight:700;color:white;margin-bottom:4px;">Your Japa Starter Guide</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.8);">Everything you need to settle in the UK 💪🏾</div>
     </div>
@@ -3027,7 +3027,7 @@ function showWelcomeCard() {
 
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
     <div style="background:linear-gradient(135deg,#057A44,#0F1E36);padding:16px;">
-      <div style="font-size:11px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:6px;">🇳🇬🇬🇧 NAIJAUKHUB</div>
+      <div style="font-size:11px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:6px;">🇳🇬🇬🇧 AUNTIE TOBI</div>
       <div style="font-size:19px;font-weight:700;color:white;margin-bottom:4px;">👋🏾 Welcome to Auntie Tobi 🤖✨</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.85);">Ẹ káàbọ̀ • Nnọọ • Sannu 👋🏾</div>
     </div>
@@ -3076,7 +3076,7 @@ function showWelcomeCard() {
 
       <div style="font-size:16px;font-weight:700;color:#057A44;text-align:center;margin-bottom:10px;">So… wetin you need today? 😄</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
-        📢 Own a business? <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List it here 👉 auntietobi.com/new-listing</a>
+        📢 Own a business? <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List it here 👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here</a></a>
       </div>
     </div>
   </div>`;
@@ -3479,7 +3479,7 @@ function showBusinesses(startIndex = -1) {
   const page = pick.map(i => realBusinesses[i]);
   const hasMore = shownBusinessIndexes.length < realBusinesses.length;
 
-  let html = `<div style="font-size:15px;color:#0F1E36;font-weight:600;margin:0 0 4px;">Check out Nigerian businesses listed on NaijaUKHub! 🏢🇳🇬🇬🇧</div>
+  let html = `<div style="font-size:15px;color:#0F1E36;font-weight:600;margin:0 0 4px;">Check out Nigerian businesses listed on Auntie Tobi! 🏢🇳🇬🇬🇧</div>
   <div style="font-size:12px;color:#6B7280;margin:0 0 8px;">💡 Tap the green category bar on each card to see all businesses in that category</div>`;
 
   page.forEach(b => {
@@ -3504,7 +3504,7 @@ function showBusinesses(startIndex = -1) {
   });
 
   // Listing CTA
-  html += `<div style="margin-top:10px;padding:10px 12px;background:#EAF3DE;border-radius:10px;font-size:12px;color:#0F1E36;line-height:1.5;">💡 <strong>Want Auntie Tobi to recommend YOUR business?</strong> Get listed on NaijaUKHub and reach thousands of Nigerians across the UK!<br><a href="https://auntietobi.com" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">👉 Add your business on auntietobi.com</a></div>`;
+  html += `<div style="margin-top:10px;padding:10px 12px;background:#EAF3DE;border-radius:10px;font-size:12px;color:#0F1E36;line-height:1.5;">💡 <strong>Want Auntie Tobi to recommend YOUR business?</strong> Get listed on Auntie Tobi and reach thousands of Nigerians across the UK!<br><a href="https://auntietobi.com" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Add your business here</a></a></div>`;
 
   // Build suggestions HTML directly (bypass formatResponse to avoid extra margins)
   const moreLabel = hasMore ? 'Show me more businesses' : 'Start again from the top';
@@ -3515,7 +3515,7 @@ function showBusinesses(startIndex = -1) {
   if (container) container.innerHTML = '';
   messages = [];
   addTipMessage(html + suggestionsHtml);
-  messages.push({ role: 'assistant', content: `Here are Nigerian businesses on NaijaUKHub: ${page.map(b => b.name).join(', ')}` });
+  messages.push({ role: 'assistant', content: `Here are Nigerian businesses on Auntie Tobi: ${page.map(b => b.name).join(', ')}` });
 }
 
 function getCategoryUrl(cat) {
@@ -3690,7 +3690,7 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/UPDATES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🚌 Free Bus Travel Update</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Latest update on free bus travel for Nigerians in the UK.</div><a href="https://auntietobi.com" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More on NaijaUKHub</a></div></div>');
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/UPDATES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🚌 Free Bus Travel Update</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Latest update on free bus travel for Nigerians in the UK.</div><a href="https://auntietobi.com" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More on Auntie Tobi</a></div></div>');
       window.history.replaceState({}, '', window.location.pathname);
     }, 500);
   }
@@ -4058,7 +4058,7 @@ function showFeedbackOptions(msgId, type) {
     optionsDiv.innerHTML = `
       <button class="fq-option" onclick="submitFeedbackOption('Wrong information')">❌ Wrong information</button>
       <button class="fq-option" onclick="submitFeedbackOption('Not helpful')">😕 Not helpful</button>
-      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist')">🏢 Business doesn't exist on NaijaUKHub</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist')">🏢 Business doesn't exist on Auntie Tobi</button>
       <button class="fq-option" onclick="submitFeedbackOption('Inappropriate')">⚠️ Inappropriate</button>
       <button class="fq-option" onclick="submitFeedbackOption('Other')">✉️ Other</button>
     `;
@@ -4066,7 +4066,7 @@ function showFeedbackOptions(msgId, type) {
     title.textContent = '🚩 Report this message';
     optionsDiv.innerHTML = `
       <button class="fq-option" onclick="submitFeedbackOption('Wrong business info')">🏢 Wrong business info</button>
-      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist on NaijaUKHub')">❌ Business doesn't exist on NaijaUKHub</button>
+      <button class="fq-option" onclick="submitFeedbackOption('Business does not exist on Auntie Tobi')">❌ Business doesn't exist on Auntie Tobi</button>
       <button class="fq-option" onclick="submitFeedbackOption('Incorrect advice')">📋 Incorrect advice</button>
       <button class="fq-option" onclick="submitFeedbackOption('Inappropriate response')">⚠️ Inappropriate response</button>
       <button class="fq-option" onclick="submitFeedbackOption('Other')">✉️ Other</button>
@@ -4209,7 +4209,7 @@ function showRequestOptions() {
     <div class="exam-options" style="margin-top:10px;">
       <button class="exam-option" onclick="showRequestForm('business')" style="justify-content:flex-start;">🏢 Request a Business listing</button>
       <button class="exam-option" onclick="showRequestForm('help')" style="justify-content:flex-start;">🙋🏾 Request Community Help</button>
-      <button class="exam-option" onclick="showRequestForm('suggest')" style="justify-content:flex-start;">💡 Suggest something for NaijaUKHub</button>
+      <button class="exam-option" onclick="showRequestForm('suggest')" style="justify-content:flex-start;">💡 Suggest something for Auntie Tobi</button>
       <button class="exam-option" onclick="showRequestForm('other')" style="justify-content:flex-start;">✉️ Other</button>
     </div>`;
   addMessage('bot', html, true);
@@ -4220,7 +4220,7 @@ function showRequestForm(type = 'business') {
   const configs = {
     business: {
       title: '🏢 Request a Business listing',
-      subtitle: "Can't find a Nigerian business? Tell us and we'll add it to NaijaUKHub! 😊",
+      subtitle: "Can't find a Nigerian business? Tell us and we'll add it to Auntie Tobi! 😊",
       placeholder: "What business or service are you looking for? (e.g. Nigerian solicitor in Leeds) *"
     },
     help: {
@@ -4229,9 +4229,9 @@ function showRequestForm(type = 'business') {
       placeholder: "What help or support do you need? Tell us as much as you can... *"
     },
     suggest: {
-      title: '💡 Suggest something for NaijaUKHub',
+      title: '💡 Suggest something for Auntie Tobi',
       subtitle: "Got an idea? We love suggestions from the community! 😊",
-      placeholder: "What would you like to see on NaijaUKHub? (e.g. new feature, business category, content idea) *"
+      placeholder: "What would you like to see on Auntie Tobi? (e.g. new feature, business category, content idea) *"
     },
     other: {
       title: '✉️ Other Request',
@@ -4330,7 +4330,7 @@ function initOneSignal() {
             type: 'push',
             autoPrompt: false, // We control when to ask
             text: {
-              actionMessage: "Get notified about new Nigerian businesses, events & deals on NaijaUKHub! 🇳🇬🇬🇧",
+              actionMessage: "Get notified about new Nigerian businesses, events & deals on Auntie Tobi! 🇳🇬🇬🇧",
               acceptButton: "Yes, notify me!",
               cancelButton: "Maybe later"
             }
@@ -4394,7 +4394,7 @@ function updateBellButton(isSubscribed) {
     bell.style.opacity = '1';
   } else {
     bell.innerHTML = '🔕';
-    bell.title = 'Get NaijaUKHub notifications';
+    bell.title = 'Get Auntie Tobi notifications';
     bell.style.opacity = '0.7';
   }
 }
@@ -4477,7 +4477,7 @@ function checkInstallPrompt() {
         <span style="font-size:28px;">🔔</span>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Your Auntie Tobi is here! 🇳🇬</div>
-          <div style="font-size:12px;color:#555;line-height:1.5;">Let me check in on you daily — tips and updates ✨<br><em>I no go disturb you, I promise! 😄</em></div>
+          <div style="font-size:12px;color:#555;line-height:1.5;">Get daily tips and updates — tips and updates ✨<br><em>I no go disturb you, I promise! 😄</em></div>
         </div>
         <button onclick="OneSignalDeferred.push(function(OneSignal){OneSignal.Slidedown.promptPush();})" style="background:#057A44;color:white;border:none;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;">Allow 🔔</button>
       </div>`);
