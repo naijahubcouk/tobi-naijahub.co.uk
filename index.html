@@ -980,7 +980,7 @@
   <div class="pills">
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="resetAndShow(showBusinesses)">🏢 Businesses</div>
-    <div class="pill" onclick="resetAndAsk('Check Out Upcoming Events')">🎉 Events</div>
+    <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
     <div class="pill" onclick="showAllNews()">📰 News/Updates</div>
     <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my UK driving theory test'))">🚗 Driving Theory Test</div>
@@ -3084,7 +3084,7 @@ function showWelcomeCard() {
   // Add suggestion bubbles
   const suggStr = getRandomSuggestionStr();
   const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
   const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">${rotatingBtns}${fixedBtns}</div>`);
 }
@@ -3766,6 +3766,42 @@ function _renderNotifBanner(notif) {
   if (messages) messages.insertBefore(banner, messages.firstChild);
 }
 
+function showEventsCard() {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+
+  const events = [
+    { title: 'AfroMic Night - Afrobeats Karaoke', date: 'Fri 26 June 2026', loc: "Demi's Nigerian Restaurant, Streatham, London", time: '7PM - 11PM', url: 'https://auntietobi.com/blog/AfroMic-Night-Afrobeats-Karaoke' },
+    { title: 'MY TASTY NAIJA FOOD FESTIVAL UK 2026', date: 'Sun 5 Jul (London) / Sat 11 Jul (Manchester)', loc: 'Eutopia Warehouse, Barking / Nigerian House, Manchester', time: '1PM - 8PM | Adults £10', url: 'https://auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026' },
+    { title: 'Owambe FEST 4 - All White Party', date: 'Sat 18 Jul 2026', loc: 'Delta Hotels, Milton Keynes', time: '4PM - 9:30PM', url: 'https://auntietobi.com/blog/Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends' },
+    { title: 'Deshapeables UK Tradefair London', date: 'Sat 25 Jul 2026', loc: 'Yeomanry House, London', time: '10AM - 6PM | Free entry', url: 'https://auntietobi.com/blog/Deshapeables-UK-Tradefair-London' },
+    { title: 'NSF (UK) Sports and Family Fun Day', date: 'Sat 29 Aug 2026', loc: 'Newham Leisure Centre, London', time: 'Starts 12PM', url: 'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026' },
+    { title: 'The Igbo Table: Food, Culture & Conversation', date: 'Sun 30 Aug 2026', loc: 'Church Hall, Croyland Rd, London N9', time: '3:30PM - 9PM', url: 'https://auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation' },
+    { title: 'Ankara Festival UK 2026', date: 'Sat 10 Oct 2026', loc: 'Porchester Hall, London', time: '5PM - 11:30PM', url: 'https://auntietobi.com/blog/Ankara-Festival-UK-2026' },
+  ];
+
+  const eventsHtml = events.map(e => `
+    <div style="border-bottom:1px solid #f0f0f0;padding:10px 0;">
+      <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">${e.title}</div>
+      <div style="font-size:11px;color:#057A44;font-weight:600;margin-bottom:2px;">📅 ${e.date}</div>
+      <div style="font-size:11px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
+      <div style="font-size:11px;color:#555;margin-bottom:4px;">🕐 ${e.time}</div>
+      <a href="${e.url}" target="_blank" style="font-size:11px;color:#057A44;font-weight:700;text-decoration:none;">🔗 More info</a>
+    </div>`).join('');
+
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="background:#057A44;padding:6px 10px;">
+      <span style="font-size:13px;font-weight:700;color:white;">🎉 UPCOMING EVENTS</span>
+    </div>
+    <div style="padding:10px 12px;">${eventsHtml}</div>
+  </div>`;
+
+  addTipMessage(html);
+  const suggStr = getRandomSuggestionStr();
+  const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">${suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+}
+
 window.onload = () => {
   // Restore city from localStorage first for instant access
   const savedCity = localStorage.getItem('tobi_user_city');
@@ -3852,7 +3888,7 @@ Ready to continue your practice? 🚀
     showWelcomeCard();
     const suggStr = getRandomSuggestionStr();
     const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-    const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button>';
+    const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button>';
     const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
     addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fixedBtns}${rotatingBtns}</div>`);
   }
@@ -3976,7 +4012,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="resetAndAsk(\'Show me upcoming Nigerian events in the UK\')">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
