@@ -3912,11 +3912,6 @@ Ready to continue your practice? 🚀
   } else {
     // First ever visit — show Welcome card then About Tobi
     showWelcomeCard();
-    const suggStr = getRandomSuggestionStr();
-    const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-    const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Updates</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button>';
-    const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
-    addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fixedBtns}${rotatingBtns}</div>`);
   }
 };
 </script>
