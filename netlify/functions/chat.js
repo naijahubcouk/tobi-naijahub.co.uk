@@ -480,7 +480,7 @@ exports.handler = async function(event) {
 
         // Stage 1: Search African/Nigerian businesses specifically near user's location
         const africanQuery = encodeURIComponent(`African Nigerian ${businessType} in ${location || 'UK'}`);
-        const africanUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${africanQuery}&key=${googleApiKey}&region=gb&language=en`;
+        const africanUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${africanQuery}&key=${googleApiKey}&region=gb&language=en&location_bias=circle:10000@${location || 'London'}`;
         console.log('Stage 1 — African search:', decodeURIComponent(africanQuery));
 
         const data1 = await httpsGet(africanUrl);
@@ -557,7 +557,7 @@ exports.handler = async function(event) {
 
     let googleResultsContext = '';
     if (places.length > 0) {
-      googleResultsContext = `\n\nGOOGLE PLACES RESULTS:
+      googleResultsContext = `\n\nGOOGLE PLACES RESULTS (show ALL — closest to user first):
 ${places.slice(0, 6).map((p, i) => `${i+1}. **${p.name}**
    📍 ${p.address}
    ⭐ ${p.rating || 'No rating'} ${p.totalRatings ? `(${p.totalRatings} reviews)` : ''}
@@ -566,7 +566,8 @@ ${places.slice(0, 6).map((p, i) => `${i+1}. **${p.name}**
 
 INSTRUCTIONS FOR PRESENTING THESE RESULTS:
 - Before showing results ALWAYS say: "I don't have a [business type] listed yet — but we are growing fast! Here's what I found nearby for you 😊"
-- Show the 2 results naturally — do NOT label them as Nigerian or non-Nigerian
+- Show ALL results provided (up to 6) — list them naturally, do NOT label them as Nigerian or non-Nigerian
+- Order results by proximity — closest to the user's location first
 - Never mention whether a Nigerian/African business was found or not — just show results cleanly
 - ⚠️ CRITICAL: NEVER mention NaijaUKHub, naijahub.co.uk or any old branding. We are now Auntie Tobi (auntietobi.com). Always use auntietobi.com/new-listing.
 - ⚠️ CRITICAL: Do NOT write your own listing CTA box. Copy and paste the EXACT HTML box below — do not modify it, do not paraphrase it, do not add NaijaUKHub or any other text:
