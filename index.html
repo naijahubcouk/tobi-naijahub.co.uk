@@ -2291,20 +2291,26 @@ async function getCityFromCoords(lat, lon) {
 }
 
 function requestLocation() {
-  if (!navigator.geolocation) return;
+  if (!navigator.geolocation) {
+    // No geolocation support — restore from localStorage
+    const saved = localStorage.getItem('tobi_user_city');
+    if (saved) { userCity = saved; window.userCity = saved; }
+    return;
+  }
+
+  // Restore saved city immediately while we wait for geolocation
+  const saved = localStorage.getItem('tobi_user_city');
+  if (saved) { userCity = saved; window.userCity = saved; }
 
   navigator.geolocation.getCurrentPosition(async (pos) => {
     const { latitude, longitude } = pos.coords;
     userLocation = { lat: latitude, lon: longitude };
     const { city, country } = await getCityFromCoords(latitude, longitude);
-    // Clean city name for better Adzuna matching
-    // Extract just the first word(s) before " and " for council names like "Basingstoke and Deane"
     let cleanCity = city
       .replace(/^(London Borough of|Royal Borough of|City of|Metropolitan Borough of|County of)\s+/i, '')
       .replace(/\s+and\s+(Deane|Dean|District|Borough|Vale|Shire|Moors|Wolds|Forest|Villages|Villages|Downs)\s*$/i, '')
       .replace(/\s+(Borough|District|County|Council|Metropolitan|Unitary)\s*$/i, '')
       .trim();
-    // If still contains " and " it's likely a council name — take the first part
     if (cleanCity.toLowerCase().includes(' and ')) {
       cleanCity = cleanCity.split(/\s+and\s+/i)[0].trim();
     }
@@ -2313,13 +2319,13 @@ function requestLocation() {
     window.userCity = cleanCity;
     localStorage.setItem('tobi_user_city', cleanCity);
     userCountry = country;
-
-    if (city) {
-      console.log(`📍 Location detected: ${city}, ${country}`);
-    }
-  }, () => {
-    console.log('📍 Location permission denied');
-  }, { timeout: 10000 });
+    if (city) { console.log(`📍 Location detected: ${city}, ${country}`); }
+  }, (err) => {
+    console.log('📍 Location permission denied or unavailable:', err.code);
+    // Silently use saved city if available — no annoying popup
+    const savedCity = localStorage.getItem('tobi_user_city');
+    if (savedCity) { userCity = savedCity; window.userCity = savedCity; }
+  }, { timeout: 10000, maximumAge: 300000 });
 }
 
 
@@ -3071,11 +3077,11 @@ function showWelcomeCard() {
       </div>
 
       <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:6px;">📲 How to use</div>
-        <div style="font-size:13px;color:#333;line-height:2.0;">
-          • Open in <strong>Chrome</strong> (Android) or <strong>Safari</strong> (iPhone)<br>
-          • Tap <strong>"Add to Home Screen"</strong><br>
-          • No app download needed
+        <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:6px;">📲 Install Auntie Tobi</div>
+        <div id="welcome-install-section" style="font-size:13px;color:#333;line-height:2.0;">
+          • <strong>Android:</strong> Open in Chrome → tap ⋮ → Add to Home Screen<br>
+          • <strong>iPhone:</strong> Open in Safari → tap <span style="font-size:15px;">⎋</span> Share → Add to Home Screen<br>
+          • No app download needed — works like an app!
         </div>
       </div>
 
@@ -3560,27 +3566,25 @@ function getCategoryEmoji(cat) {
 window._notifPopupAllow = function() {
   const popup = document.getElementById('notif-weekly-popup');
   if (popup) popup.remove();
-  if ('Notification' in window) {
-    Notification.requestPermission().then(function(permission) {
-      if (permission === 'granted') {
-        OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.User.PushSubscription.optIn();
-          localStorage.setItem('tobi_notifications', '1');
-          updateBellButton(true);
-          addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You will now receive daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>');
-        });
+  OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.User.PushSubscription.optIn();
+      const isNowSubscribed = await OneSignal.User.PushSubscription.optedIn;
+      if (isNowSubscribed) {
+        localStorage.setItem('tobi_notifications', '1');
+        updateBellButton(true);
+        addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You will now receive daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>');
       }
-    });
-  } else {
-    OneSignalDeferred.push(function(OneSignal) { OneSignal.Slidedown.promptPush(); });
-  }
+    } catch(e) {
+      console.log('Notification opt-in error:', e);
+    }
+  });
 };
 
 function handleBellClick() {
   const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
   if (isSubscribed) {
-    // Already subscribed — offer to unsubscribe
-    if (confirm('You are already subscribed to Auntie Tobi notifications. Do you want to turn them off?')) {
+    if (confirm('You are subscribed to Auntie Tobi notifications. Do you want to turn them off?')) {
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.User.PushSubscription.optOut();
         localStorage.setItem('tobi_notifications', '0');
@@ -3589,21 +3593,24 @@ function handleBellClick() {
       });
     }
   } else {
-    // Not subscribed — request permission
-    if ('Notification' in window) {
-      Notification.requestPermission().then(function(permission) {
-        if (permission === 'granted') {
-          OneSignalDeferred.push(async function(OneSignal) {
-            await OneSignal.User.PushSubscription.optIn();
-            localStorage.setItem('tobi_notifications', '1');
-            updateBellButton(true);
-            addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You will now receive daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>');
-          });
+    // Let OneSignal handle the full permission + subscription flow
+    // This ensures the subscription is properly registered with OneSignal's servers
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        await OneSignal.User.PushSubscription.optIn();
+        const isNowSubscribed = await OneSignal.User.PushSubscription.optedIn;
+        if (isNowSubscribed) {
+          localStorage.setItem('tobi_notifications', '1');
+          updateBellButton(true);
+          addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">🔔</span><div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">You are all set!</div><div style="font-size:12px;color:#555;">You will now receive daily tips and updates from Auntie Tobi 🇳🇬✨</div></div></div>');
         } else {
-          addTipMessage('<div style="font-size:13px;color:#555;padding:8px;">To enable notifications, please allow them in your browser settings.</div>');
+          addTipMessage('<div style="font-size:13px;color:#555;padding:8px;">To enable notifications, please allow them when prompted or check your browser settings.</div>');
         }
-      });
-    }
+      } catch(e) {
+        console.log('Notification opt-in error:', e);
+        addTipMessage('<div style="font-size:13px;color:#555;padding:8px;">To enable notifications, please allow them in your browser settings.</div>');
+      }
+    });
   }
 }
 
@@ -3761,6 +3768,47 @@ function showWeeklyNotificationPrompt() {
   }, delay);
 }
 
+function showSafariInstallBanner() {
+  const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/i.test(navigator.userAgent);
+  const isChromeIOS = /CriOS/i.test(navigator.userAgent);
+  const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isInstalled) return;
+
+  // Chrome on iPhone — tell them to open in Safari
+  if (isChromeIOS) {
+    if (localStorage.getItem('tobi_chrome_ios_banner_shown') === '1') return;
+    const banner = document.createElement('div');
+    banner.id = 'safari-install-banner';
+    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#0F1E36;padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:9999;box-shadow:0 -4px 20px rgba(0,0,0,0.3);';
+    banner.innerHTML = `
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:700;color:white;margin-bottom:2px;">📲 Install Auntie Tobi on your iPhone</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.75);">Open this page in <strong style="color:#FFB81C;">Safari</strong> then tap <strong style="color:#FFB81C;">⎋ Share → Add to Home Screen</strong></div>
+      </div>
+      <button onclick="document.getElementById('safari-install-banner').remove();localStorage.setItem('tobi_chrome_ios_banner_shown','1');" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;padding:0;line-height:1;">✕</button>`;
+    document.body.appendChild(banner);
+    localStorage.setItem('tobi_chrome_ios_banner_shown', '1');
+    setTimeout(() => { const b = document.getElementById('safari-install-banner'); if (b) b.remove(); }, 10000);
+    return;
+  }
+
+  // Safari on iPhone — show Add to Home Screen prompt
+  if (!isSafari) return;
+  if (localStorage.getItem('tobi_safari_banner_shown') === '1') return;
+  const banner = document.createElement('div');
+  banner.id = 'safari-install-banner';
+  banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#0F1E36;padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:9999;box-shadow:0 -4px 20px rgba(0,0,0,0.3);';
+  banner.innerHTML = `
+    <div style="flex:1;">
+      <div style="font-size:13px;font-weight:700;color:white;margin-bottom:2px;">📲 Install Auntie Tobi</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.7);">Tap <strong style="color:#FFB81C;">⎋ Share</strong> then <strong style="color:#FFB81C;">Add to Home Screen</strong></div>
+    </div>
+    <button onclick="document.getElementById('safari-install-banner').remove();localStorage.setItem('tobi_safari_banner_shown','1');" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;padding:0;line-height:1;">✕</button>`;
+  document.body.appendChild(banner);
+  localStorage.setItem('tobi_safari_banner_shown', '1');
+  setTimeout(() => { const b = document.getElementById('safari-install-banner'); if (b) b.remove(); }, 10000);
+}
+
 function showPendingNotifBanner() {
   const pending = localStorage.getItem('tobi_pending_notif');
   if (!pending) return;
@@ -3839,6 +3887,7 @@ window.onload = () => {
   // Request location on load to update city
   requestLocation();
   handleDeepLink();
+  showSafariInstallBanner();
   setTimeout(() => {
     if (typeof showPendingNotifBanner === 'function') showPendingNotifBanner();
   }, 1000);
@@ -4396,40 +4445,29 @@ function initOneSignal() {
 
     // Handle notification click — navigate to deep link URL
     OneSignal.Notifications.addEventListener('click', function(event) {
-      const url = event.notification.launchURL;
-      if (url) {
-        // Clear pending banner since user tapped notification directly
+      const notif = event.notification;
+      if (notif && notif.launchURL) {
         localStorage.removeItem('tobi_pending_notif');
-        window.location.href = url;
+        window.location.href = notif.launchURL;
       }
     });
 
     // Save notification data when received in foreground
     OneSignal.Notifications.addEventListener('foregroundWillDisplay', function(event) {
       const notif = event.notification;
-      if (notif && notif.launchURL) {
+      if (notif) {
         localStorage.setItem('tobi_pending_notif', JSON.stringify({
           title: notif.title || 'New update from Auntie Tobi!',
           body: notif.body || 'Tap View to see the latest update 🇳🇬',
-          url: notif.launchURL
+          url: notif.launchURL || ''
         }));
       }
     });
 
-    // Save notification URL when tapped — then navigate
-    OneSignal.Notifications.addEventListener('click', function(event) {
-      const notif = event.notification;
-      if (notif && notif.launchURL) {
-        // Clear pending since user tapped directly
-        localStorage.removeItem('tobi_pending_notif');
-        // Navigate to deep link
-        window.location.href = notif.launchURL;
-      }
-    });
-
-    // Restore bell state from localStorage immediately — no async delay
-    const storedSub = localStorage.getItem('tobi_notifications');
-    updateBellButton(storedSub === '1');
+    // Sync bell button with actual OneSignal subscription state
+    const isOptedIn = await OneSignal.User.PushSubscription.optedIn;
+    updateBellButton(isOptedIn);
+    if (isOptedIn) localStorage.setItem('tobi_notifications', '1');
 
     // Listen for future subscription changes
     OneSignal.User.PushSubscription.addEventListener('change', (event) => {
@@ -4485,6 +4523,22 @@ if (ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID') {
   initOneSignal();
 }
 
+
+// Handle messages from service worker
+navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e => {
+  if (!e.data) return;
+  if (e.data.type === 'NOTIF_CLICK' && e.data.url) {
+    localStorage.removeItem('tobi_pending_notif');
+    window.location.href = e.data.url;
+  }
+  if (e.data.type === 'SAVE_PENDING_NOTIF') {
+    localStorage.setItem('tobi_pending_notif', JSON.stringify({
+      title: e.data.title,
+      body: e.data.body,
+      url: e.data.url
+    }));
+  }
+});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
