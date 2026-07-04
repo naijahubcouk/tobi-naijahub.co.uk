@@ -4542,9 +4542,14 @@ navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Main service worker — caching
     navigator.serviceWorker.register('/sw.js')
       .then(reg => console.log('SW registered:', reg.scope))
       .catch(err => console.log('SW error:', err));
+    // OneSignal service worker — push notifications
+    navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' })
+      .then(reg => console.log('OneSignal SW registered:', reg.scope))
+      .catch(err => console.log('OneSignal SW error:', err));
   });
 }
 
