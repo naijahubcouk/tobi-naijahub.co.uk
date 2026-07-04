@@ -1,2 +1,2 @@
-// OneSignal SDK — handles all push notification display
-importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+// OneSignal Worker — delegates to sw.js which imports the OneSignal SDK
+importScripts('/sw.js');

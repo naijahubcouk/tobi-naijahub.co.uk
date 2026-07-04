@@ -1,5 +1,8 @@
-// Auntie Tobi Service Worker v10
-const CACHE_NAME = 'auntietobi-v10';
+// Auntie Tobi Service Worker v11
+// OneSignal SDK imported first — handles all push notification display
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+
+const CACHE_NAME = 'auntietobi-v11';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -37,8 +40,7 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// Single message handler — no push handler here
-// OneSignalSDKWorker.js handles ALL push notifications
+// Message handler
 self.addEventListener('message', e => {
   if (!e.data) return;
   if (e.data.type === 'SKIP_WAITING') self.skipWaiting();
