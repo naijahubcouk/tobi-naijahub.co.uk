@@ -4453,6 +4453,8 @@ function initOneSignal() {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
       safari_web_id: '',
+      serviceWorkerParam: { scope: '/' },
+      serviceWorkerPath: 'OneSignalSDKWorker.js',
       notifyButton: { enable: false }, // We use our own custom bell button
       promptOptions: {
         slidedown: {
