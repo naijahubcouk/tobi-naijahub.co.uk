@@ -1,8 +1,5 @@
-// Auntie Tobi Service Worker v9
-// Imports OneSignal worker so push notifications display correctly
-importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-
-const CACHE_NAME = 'auntietobi-v9';
+// Auntie Tobi Service Worker v10
+const CACHE_NAME = 'auntietobi-v10';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -40,32 +37,12 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// Single message handler
+// Single message handler — no push handler here
+// OneSignalSDKWorker.js handles ALL push notifications
 self.addEventListener('message', e => {
   if (!e.data) return;
   if (e.data.type === 'SKIP_WAITING') self.skipWaiting();
   if (e.data.type === 'CLEAR_BADGE') {
     self.registration.clearAppBadge && self.registration.clearAppBadge().catch(() => {});
   }
-});
-
-// Notification click — open or focus app
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  if (self.registration.clearAppBadge) {
-    self.registration.clearAppBadge().catch(() => {});
-  }
-  const url = (e.notification.data && e.notification.data.url) || 'https://auntietobi.co.uk';
-  e.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-      for (const client of clients) {
-        if (client.url.includes('auntietobi.co.uk')) {
-          client.focus();
-          client.postMessage({ type: 'NOTIF_CLICK', url });
-          return;
-        }
-      }
-      return self.clients.openWindow(url);
-    })
-  );
 });
