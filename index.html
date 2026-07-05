@@ -3902,8 +3902,8 @@ function _renderNotifBanner(notif) {
       <div style="font-size:12px;color:rgba(255,255,255,0.7);">${notif.body || notif.title || ''}</div>
     </div>
     <div style="display:flex;gap:6px;">
-      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();${notif.url ? `window.location.href='${notif.url}';` : ''}" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View</button>
-      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();" style="background:none;border:0.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">✕</button>
+      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();if('clearAppBadge' in navigator)navigator.clearAppBadge().catch(()=>{});${notif.url ? `window.location.href='${notif.url}';` : ''}" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View</button>
+      <button onclick="localStorage.removeItem('tobi_pending_notif');document.getElementById('notif-update-banner').remove();if('clearAppBadge' in navigator)navigator.clearAppBadge().catch(()=>{});" style="background:none;border:0.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;">✕</button>
     </div>`;
   const messages = document.getElementById('messages');
   if (messages) messages.insertBefore(banner, messages.firstChild);
@@ -3953,31 +3953,55 @@ window.onload = () => {
     window.userCity = savedCity;
     console.log('City restored from localStorage:', savedCity);
   }
-  // Request location on load to update city
-  requestLocation();
-  handleDeepLink();
-  showSafariInstallBanner();
-  setTimeout(() => {
-    if (typeof showPendingNotifBanner === 'function') showPendingNotifBanner();
-  }, 1000);
-  // Delay notification prompt to 30 seconds
-  setTimeout(() => { if (typeof showWeeklyNotificationPrompt === 'function') showWeeklyNotificationPrompt(); }, 30000);
 
-  // Clear notification badge when app is opened
+  // Clear notification badge immediately on every app open (Android + iOS)
   if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
   if ('setAppBadge' in navigator) navigator.setAppBadge(0).catch(() => {});
   if (navigator.serviceWorker && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' });
   }
 
-  // Also clear badge when app comes to foreground
+  // Check if app was opened by tapping a notification
+  // OneSignal opens the app with the launch URL directly — handleDeepLink reads URL params
+  // Also clear any stuck pending notification banner
+  const pendingNotif = localStorage.getItem('tobi_pending_notif');
+  if (pendingNotif) {
+    try {
+      const notif = JSON.parse(pendingNotif);
+      // If notification has a URL with a deep link param — navigate to it
+      if (notif.url && notif.url !== 'https://auntietobi.co.uk' && notif.url !== window.location.href) {
+        // Only auto-navigate if URL has deep link params
+        if (notif.url.includes('?')) {
+          localStorage.removeItem('tobi_pending_notif');
+          window.location.href = notif.url;
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+
+  // Request location on load to update city
+  requestLocation();
+  handleDeepLink();
+  showSafariInstallBanner();
+
+  // Show pending notif banner after short delay (only if not navigating)
+  setTimeout(() => {
+    if (typeof showPendingNotifBanner === 'function') showPendingNotifBanner();
+  }, 1000);
+
+  // Delay notification prompt to 30 seconds
+  setTimeout(() => { if (typeof showWeeklyNotificationPrompt === 'function') showWeeklyNotificationPrompt(); }, 30000);
+
+  // Clear badge when app comes to foreground (e.g. switching back from another app)
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
       if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
       if ('setAppBadge' in navigator) navigator.setAppBadge(0).catch(() => {});
-      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' });
-      }
+      // Also clear any stuck banner
+      const stuck = document.getElementById('notif-update-banner');
+      if (stuck) stuck.remove();
+      localStorage.removeItem('tobi_pending_notif');
     }
   });
 
@@ -3985,7 +4009,6 @@ window.onload = () => {
     if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
     if ('setAppBadge' in navigator) navigator.setAppBadge(0).catch(() => {});
   });
-  setTimeout(() => { if (typeof showPendingNotifBanner === 'function') showPendingNotifBanner(); }, 1000);
   const todayStr = new Date().toISOString().split('T')[0];
   const lastVisitDate = localStorage.getItem('tobi_last_visit');
   const isReturning = localStorage.getItem('tobi_visited');
@@ -4514,24 +4537,35 @@ function initOneSignal() {
       }
     });
 
-    // Handle notification click — navigate to deep link URL
+    // Handle notification click when app is open (foreground)
     OneSignal.Notifications.addEventListener('click', function(event) {
       const notif = event.notification;
-      if (notif && notif.launchURL) {
-        localStorage.removeItem('tobi_pending_notif');
-        window.location.href = notif.launchURL;
+      const url = notif && notif.launchURL ? notif.launchURL : '';
+      // Clear pending banner and badge
+      localStorage.removeItem('tobi_pending_notif');
+      const banner = document.getElementById('notif-update-banner');
+      if (banner) banner.remove();
+      if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
+      // Navigate to deep link if set
+      if (url && url !== 'https://auntietobi.co.uk') {
+        window.location.href = url;
       }
     });
 
-    // Save notification data when received in foreground
+    // When notification arrives while app is open — show banner instead of OS notification
     OneSignal.Notifications.addEventListener('foregroundWillDisplay', function(event) {
       const notif = event.notification;
       if (notif) {
+        // Prevent the OS notification from showing (we show our own banner)
+        event.preventDefault();
+        // Save for banner display
         localStorage.setItem('tobi_pending_notif', JSON.stringify({
           title: notif.title || 'New update from Auntie Tobi!',
-          body: notif.body || 'Tap View to see the latest update 🇳🇬',
+          body: notif.body || 'You have a new update 🇳🇬',
           url: notif.launchURL || ''
         }));
+        // Show in-app banner immediately
+        showPendingNotifBanner();
       }
     });
 
@@ -4598,8 +4632,25 @@ if (ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID') {
 // Handle messages from service worker
 navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e => {
   if (!e.data) return;
+
+  // Notification was clicked — navigate to deep link
+  if (e.data.type === 'NOTIF_CLICKED' && e.data.url) {
+    localStorage.removeItem('tobi_pending_notif');
+    // Remove any pending banner
+    const banner = document.getElementById('notif-update-banner');
+    if (banner) banner.remove();
+    // Navigate to the URL
+    if (e.data.url && e.data.url !== 'https://auntietobi.co.uk' && e.data.url !== window.location.href) {
+      window.location.href = e.data.url;
+    }
+    return;
+  }
+
+  // Legacy handlers
   if (e.data.type === 'NOTIF_CLICK' && e.data.url) {
     localStorage.removeItem('tobi_pending_notif');
+    const banner = document.getElementById('notif-update-banner');
+    if (banner) banner.remove();
     window.location.href = e.data.url;
   }
   if (e.data.type === 'SAVE_PENDING_NOTIF') {
