@@ -2501,6 +2501,14 @@ function showAllNews() {
       date: '22 Jun 2026'
     },
     {
+      emoji: '🏡',
+      title: '10 Smart Ways to Reduce Your Household Bills This Summer in the UK',
+      summary: 'Struggling with high household bills this summer? Here are 10 smart and practical ways Nigerians in the UK can cut costs on energy, water, food and more.',
+      url: 'https://auntietobi.com/blog/10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK',
+      label: 'Money',
+      date: '5 Jul 2026'
+    },
+    {
       emoji: '🌡️',
       title: 'UK Weather Update: Another Heatwave Could Push Temperatures Above 30°C',
       summary: 'The UK is bracing for another heatwave with temperatures potentially exceeding 30°C this week. Stay safe, stay hydrated and know your rights at work during extreme heat.',
@@ -2632,6 +2640,15 @@ function showNewsCard() {
       date: '22 Jun 2026'
     },
     {
+      emoji: '🏡',
+      category: 'MONEY',
+      title: '10 Smart Ways to Reduce Your Household Bills This Summer in the UK',
+      summary: 'Struggling with high household bills this summer? Here are 10 smart and practical ways Nigerians in the UK can cut costs on energy, water, food and more.',
+      url: 'https://auntietobi.com/blog/10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK',
+      label: 'Money',
+      date: '5 Jul 2026'
+    },
+    {
       emoji: '🌡️',
       category: 'NEWS',
       title: 'UK Weather Update: Another Heatwave Could Push Temperatures Above 30°C',
@@ -2723,9 +2740,26 @@ function showNewsCard() {
     }
   ];
 
-  // If there's a breaking news item, always show it today
-  // Rotate randomly — no more breaking news pinning
-  const item = news[Math.floor(Math.random() * news.length)];
+  // Filter to last 7 days — if none, fall back to 3 most recent
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  function parseDate(str) {
+    if (!str) return new Date(0);
+    const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+    const parts = str.trim().split(' ');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0]);
+      const month = months[parts[1]];
+      const year = parseInt(parts[2]);
+      return new Date(year, month, day);
+    }
+    return new Date(0);
+  }
+
+  const recent = news.filter(n => parseDate(n.date) >= sevenDaysAgo);
+  const pool = recent.length > 0 ? recent : news.slice(0, 3);
+  const item = pool[Math.floor(Math.random() * pool.length)];
 
   // Category badge colours
   const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
@@ -3251,7 +3285,7 @@ function showSponsoredAd() {
           <div style="font-size:15px;font-weight:700;color:white;line-height:1.3;margin-bottom:4px;">Service: The Vehicle To Greatness</div>
           <div style="font-size:12px;color:#C9A227;margin-bottom:8px;font-weight:600;">Rebuilding the Family System</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:14px;">🏡 Build a stronger family God's way. Service, faith & family habits that shape children into Kingdom builders.</div>
-          <a href="https://selar.com/7w755i" target="_blank" style="display:inline-block;background:#C9A227;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">📖 Get the Book (£2.84) →</a>
+          <a href="https://selar.com/7w755i" target="_blank" style="display:inline-block;background:#C9A227;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">📖 Get the Book (£3.00) →</a>
         </div>
       </div>`
     },
@@ -3708,6 +3742,15 @@ function handleDeepLink() {
       const s = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How will a new UK Prime Minister affect my taxes?')">💷 How will this affect my taxes?</button><button class="suggestion-btn" onclick="quickAsk('What could change for Nigerians in the UK under Andy Burnham?')">🇬🇧 What changes for Nigerians?</button>${s.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  } else if (news === 'householdbills') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">5 Jul 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🏡 10 Smart Ways to Reduce Your Household Bills This Summer in the UK</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Struggling with high household bills this summer? Here are 10 smart and practical ways Nigerians in the UK can cut costs on energy, water, food and more.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://auntietobi.com/blog/10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Household Bills\',\'10 Smart Ways to Reduce Your Household Bills This Summer in the UK\',\'https://auntietobi.com/blog/10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      const hb = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('What are the best ways to reduce household bills in the UK?')">💡 Best ways to reduce bills?</button><button class="suggestion-btn" onclick="quickAsk('How can I save money on energy bills this summer in the UK?')">💷 Save on energy bills?</button>${hb.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
     }, 500);
   } else if (news === 'heatwave2') {
     setTimeout(() => {
