@@ -2628,6 +2628,98 @@ function showAllNews() {
   const newsSuggList = newsSuggStr.split('|').map(s => s.trim()).filter(Boolean);
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">${newsSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
 }
+function buildLiveNewsHTML(articles, showAll) {
+  const displayArticles = showAll ? articles : articles.slice(0, 3);
+  const seeAllBtn = !showAll && articles.length > 3
+    ? `<button onclick="showAllLiveNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button>`
+    : '';
+
+  const cards = displayArticles.map(a => {
+    const date = a.date ? new Date(a.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    return `<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="background:#0F1E36;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${a.section}</span>
+        <span style="font-size:10px;color:#9CA3AF;">${date}</span>
+        <span style="font-size:10px;color:#9CA3AF;">• The Guardian</span>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
+      ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a href="${a.url}" target="_blank" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+        <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:16px;">📰</span>
+        <span style="color:white;font-weight:700;font-size:13px;">LIVE NEWS</span>
+      </div>
+      ${seeAllBtn}
+    </div>
+    <div style="padding:4px 12px 8px;">
+      ${cards}
+      <div style="padding-top:6px;font-size:10px;color:#9CA3AF;text-align:right;">Powered by The Guardian</div>
+    </div>
+  </div>`;
+}
+
+// Cache live news in memory for 1 hour
+let liveNewsCache = { articles: null, timestamp: 0 };
+
+async function fetchLiveNews(limit) {
+  const CACHE_DURATION = 60 * 60 * 1000;
+  if (liveNewsCache.articles && (Date.now() - liveNewsCache.timestamp) < CACHE_DURATION) {
+    return liveNewsCache.articles;
+  }
+  const res = await fetch(`/.netlify/functions/news?limit=8`);
+  const data = await res.json();
+  const articles = data.articles || [];
+  liveNewsCache = { articles, timestamp: Date.now() };
+  return articles;
+}
+
+function showLiveNewsCard() {
+  const container = document.getElementById('messages');
+  if (!container) return;
+
+  // Add loading placeholder
+  const placeholder = document.createElement('div');
+  placeholder.id = 'live-news-placeholder';
+  placeholder.innerHTML = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:14px;text-align:center;">
+    <div style="font-size:13px;color:#9CA3AF;">📰 Loading live news...</div>
+  </div>`;
+  container.appendChild(placeholder);
+
+  fetchLiveNews(8).then(articles => {
+    const ph = document.getElementById('live-news-placeholder');
+    if (!ph) return;
+    if (!articles || articles.length === 0) {
+      ph.remove();
+      return;
+    }
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.style.cssText = 'align-items:flex-start;';
+    div.innerHTML = `<div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div><div style="flex:1;min-width:0;">${buildLiveNewsHTML(articles, false)}</div>`;
+    ph.replaceWith(div);
+  }).catch(() => {
+    const ph = document.getElementById('live-news-placeholder');
+    if (ph) ph.remove();
+  });
+}
+
+function showAllLiveNews() {
+  fetchLiveNews(8).then(articles => {
+    if (!articles || articles.length === 0) return;
+    addTipMessage(buildLiveNewsHTML(articles, true));
+    const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+    addTipMessage(`<div class="suggestions" style="margin-top:8px;">${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+  });
+}
+
 function showNewsCard() {
   const news = [
     {
@@ -4160,6 +4252,7 @@ function resetToWelcome() {
       if (msgs) msgs.innerHTML = '';
       showFathersVideo();
       showDailyMotivation();
+      showLiveNewsCard();
       showNewsCard();
       const tip = getTodaysTip();
       console.log('tip:', tip);
