@@ -122,11 +122,11 @@ exports.handler = async function(event) {
       return true;
     });
 
-    // Strict filter + sort newest first
+    // Strict filter + sort newest first — up to 10
     const filtered = unique
       .filter(passesFilter)
       .sort((a, b) => new Date(b.webPublicationDate) - new Date(a.webPublicationDate))
-      .slice(0, 8)
+      .slice(0, 10)
       .map(formatArticle);
 
     console.log(`Total: ${unique.length}, Passed strict filter: ${filtered.length}`);
