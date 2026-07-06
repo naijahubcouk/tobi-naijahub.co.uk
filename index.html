@@ -3821,6 +3821,73 @@ function handleDeepLink() {
     setTimeout(() => { quickAsk('What NHS services can I access as a Nigerian in the UK?'); window.history.replaceState({}, '', window.location.pathname); }, 500);
   } else if (action === 'motivation') {
     setTimeout(() => { showDailyMotivation(); window.history.replaceState({}, '', window.location.pathname); }, 500);
+  } else if (action === 'guardianews') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+
+      // Show loading state
+      const loadingHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:16px;">📰</span>
+          <span style="color:white;font-weight:700;font-size:13px;">LIVE NEWS — Latest Updates</span>
+        </div>
+        <div style="padding:14px;text-align:center;color:#9CA3AF;font-size:13px;">Loading latest news...</div>
+      </div>`;
+      addTipMessage(loadingHtml);
+
+      // Fetch 10 articles
+      fetch('/.netlify/functions/news')
+        .then(r => r.json())
+        .then(data => {
+          const articles = (data.articles || []).slice(0, 10);
+          const msgs = document.getElementById('messages');
+          if (msgs) msgs.innerHTML = '';
+
+          if (!articles.length) {
+            addTipMessage('<div style="padding:14px;text-align:center;font-size:13px;color:#555;">No news found right now. Check back soon! 🇳🇬</div>');
+            return;
+          }
+
+          const cards = articles.map(a => {
+            const date = a.date ? new Date(a.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+            return `<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                <span style="background:#0F1E36;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${a.section}</span>
+                <span style="font-size:10px;color:#9CA3AF;">${date}</span>
+              </div>
+              <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
+              ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
+              <div style="display:flex;align-items:center;gap:10px;">
+                <a href="${a.url}" target="_blank" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+                <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
+              </div>
+            </div>`;
+          }).join('');
+
+          const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+            <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:16px;">📰</span>
+                <span style="color:white;font-weight:700;font-size:13px;">LIVE NEWS — 10 Latest Updates</span>
+              </div>
+              <button onclick="resetToWelcome()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">🏠 Home</button>
+            </div>
+            <div style="padding:4px 12px 8px;">
+              ${cards}
+              <div style="padding-top:8px;font-size:10px;color:#9CA3AF;text-align:right;">Powered by The Guardian</div>
+            </div>
+          </div>`;
+
+          addTipMessage(html);
+          const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+          addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('')}</div>`);
+          window.history.replaceState({}, '', window.location.pathname);
+        })
+        .catch(() => {
+          addTipMessage('<div style="padding:14px;text-align:center;font-size:13px;color:#555;">Could not load news right now. Please try again later.</div>');
+        });
+    }, 300);
   } else if (action === 'tip') {
     setTimeout(() => {
       const tip = getTodaysTip();
