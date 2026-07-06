@@ -2629,7 +2629,7 @@ function showAllNews() {
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">${newsSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
 }
 function buildLiveNewsHTML(articles, showAll) {
-  const displayArticles = showAll ? articles : articles.slice(0, 3);
+  const displayArticles = showAll ? articles : articles.slice(0, 2);
   const seeAllBtn = !showAll && articles.length > 3
     ? `<button onclick="showAllLiveNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button>`
     : '';
@@ -4252,7 +4252,6 @@ function resetToWelcome() {
       if (msgs) msgs.innerHTML = '';
       showFathersVideo();
       showDailyMotivation();
-      showLiveNewsCard();
       showNewsCard();
       const tip = getTodaysTip();
       console.log('tip:', tip);
@@ -4261,6 +4260,7 @@ function resetToWelcome() {
       addTipMessage(tipHtml);
       console.log('message added');
       showSponsoredAd();
+      showLiveNewsCard();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
