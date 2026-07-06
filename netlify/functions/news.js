@@ -15,42 +15,40 @@ function httpsGet(url) {
   });
 }
 
-// Cache results for 1 hour
 let cache = { data: null, timestamp: 0 };
 const CACHE_DURATION = 60 * 60 * 1000;
 
-// OPTION 2 — Allowlist: article must contain at least one of these to show
+// STRICT allowlist — article MUST contain at least one of these
 const ALLOWLIST = [
-  'nigeria', 'nigerian', 'african', 'immigration', 'immigrant', 'visa',
-  'ukvi', 'home office', 'asylum', 'ilr', 'settlement', 'deportation',
-  'windrush', 'black british', 'diaspora', 'nhs', 'cost of living',
-  'housing', 'rent', 'benefit', 'universal credit', 'minimum wage',
-  'energy bill', 'council tax', 'job', 'employment', 'workplace',
-  'discrimination', 'race', 'ethnic', 'passport', 'border control',
-  'uk visa', 'skilled worker', 'work permit'
+  'nigerian', 'nigeria',
+  'african immigrant', 'african community', 'black british',
+  'uk visa', 'visa application', 'immigration uk', 'home office visa',
+  'skilled worker visa', 'work permit uk', 'settlement visa',
+  'indefinite leave', 'ilr', 'ukvi', 'windrush',
+  'asylum seeker uk', 'refugee uk', 'deportation uk',
+  'black community uk', 'afro-caribbean', 'african diaspora'
 ];
 
-// OPTION 1 — Blocklist: article is excluded if it contains any of these
+// Blocklist — excluded even if allowlist matches
 const BLOCKLIST = [
-  'murder', 'stabbing', 'shooting', 'rape', 'sexual assault', 'terror',
+  'murder', 'stabbing', 'shooting', 'rape', 'sexual assault',
   'terrorist', 'bomb', 'explosion', 'drug dealing', 'drug trafficking',
-  'fraud nigerian', 'nigerian scam', 'money laundering', 'gang',
-  'criminal', 'convicted', 'arrested', 'jail', 'prison sentence',
-  'child abuse', 'domestic abuse', 'corruption', 'bribery',
-  'cocaine', 'heroin', 'cannabis dealer', 'knife crime'
+  'nigerian scam', 'nigerian fraud', 'nigerian prince',
+  'money laundering', 'gang', 'convicted', 'jail', 'prison sentence',
+  'child abuse', 'domestic abuse', 'bribery', 'cocaine', 'heroin',
+  'knife crime', 'county lines'
 ];
 
 function passesFilter(article) {
   const text = (
     (article.webTitle || '') + ' ' +
-    (article.fields?.trailText || '') + ' ' +
-    (article.sectionName || '')
+    (article.fields?.trailText || '')
   ).toLowerCase();
 
-  // Must pass blocklist first
+  // Block first
   if (BLOCKLIST.some(k => text.includes(k))) return false;
 
-  // Must match at least one allowlist keyword
+  // Must match allowlist strictly
   return ALLOWLIST.some(k => text.includes(k));
 }
 
@@ -65,6 +63,15 @@ function formatArticle(article) {
   };
 }
 
+// Shuffle array
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 exports.handler = async function(event) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -72,22 +79,25 @@ exports.handler = async function(event) {
   };
 
   try {
-    // Return cached data if fresh
-    if (cache.data && (Date.now() - cache.timestamp) < CACHE_DURATION) {
-      console.log('Returning cached news:', cache.data.length, 'articles');
+    // Return shuffled cached data if fresh
+    if (cache.data && cache.data.length > 0 && (Date.now() - cache.timestamp) < CACHE_DURATION) {
+      console.log('Returning shuffled cached news:', cache.data.length, 'articles');
+      const shuffled = shuffle([...cache.data]);
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ articles: cache.data, cached: true })
+        body: JSON.stringify({ articles: shuffled, cached: true })
       };
     }
 
-    // Fetch from Guardian — multiple queries for best coverage
+    // Strict Nigerian/African UK focused queries only
     const queries = [
       'Nigerian+UK',
       'Nigeria+Britain',
-      'immigration+UK+visa',
-      'Black+British+community'
+      'Nigerian+immigrant',
+      'Black+British+community',
+      'African+UK+community',
+      'UK+visa+Nigeria'
     ];
 
     let allArticles = [];
@@ -104,7 +114,7 @@ exports.handler = async function(event) {
       }
     }
 
-    // Deduplicate by URL
+    // Deduplicate
     const seen = new Set();
     const unique = allArticles.filter(a => {
       if (seen.has(a.webUrl)) return false;
@@ -112,22 +122,24 @@ exports.handler = async function(event) {
       return true;
     });
 
-    // Apply Option 1 + Option 2 filtering, sort newest first
+    // Strict filter + sort newest first
     const filtered = unique
       .filter(passesFilter)
       .sort((a, b) => new Date(b.webPublicationDate) - new Date(a.webPublicationDate))
       .slice(0, 8)
       .map(formatArticle);
 
-    console.log(`Fetched ${unique.length} articles, ${filtered.length} passed filters`);
+    console.log(`Total: ${unique.length}, Passed strict filter: ${filtered.length}`);
 
-    // Cache results
     cache = { data: filtered, timestamp: Date.now() };
+
+    // Shuffle for rotation
+    const shuffled = shuffle([...filtered]);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ articles: filtered, cached: false })
+      body: JSON.stringify({ articles: shuffled, cached: false })
     };
 
   } catch(err) {
