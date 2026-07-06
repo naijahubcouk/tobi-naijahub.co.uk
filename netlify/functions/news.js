@@ -18,15 +18,32 @@ function httpsGet(url) {
 let cache = { data: null, timestamp: 0 };
 const CACHE_DURATION = 60 * 60 * 1000;
 
-// STRICT allowlist — article MUST contain at least one of these
+// OPTION 2 — Allowlist: article MUST contain at least one of these
 const ALLOWLIST = [
+  // Nigerian specific
   'nigerian', 'nigeria',
-  'african immigrant', 'african community', 'black british',
-  'uk visa', 'visa application', 'immigration uk', 'home office visa',
-  'skilled worker visa', 'work permit uk', 'settlement visa',
-  'indefinite leave', 'ilr', 'ukvi', 'windrush',
-  'asylum seeker uk', 'refugee uk', 'deportation uk',
-  'black community uk', 'afro-caribbean', 'african diaspora'
+  // African/diaspora
+  'african community', 'black british', 'afro-caribbean', 'african diaspora',
+  'windrush', 'black community',
+  // Immigration & visas
+  'immigration', 'visa', 'ukvi', 'home office', 'asylum',
+  'indefinite leave', 'ilr', 'settlement', 'deportation',
+  'skilled worker', 'work permit', 'right to remain',
+  'migration', 'immigrant', 'refugee',
+  // Money & cost of living
+  'cost of living', 'energy bill', 'council tax', 'universal credit',
+  'minimum wage', 'national living wage', 'benefit', 'child benefit',
+  'rent increase', 'housing crisis', 'mortgage rate',
+  // NHS & health
+  'nhs', 'gp shortage', 'nhs waiting', 'healthcare uk',
+  // Jobs
+  'uk jobs', 'employment uk', 'workplace rights', 'redundancy',
+  // Education
+  'school uk', 'university fees', 'student visa',
+  // Race & discrimination
+  'racial discrimination', 'racism uk', 'ethnic minority',
+  // Passport & travel
+  'passport uk', 'border control', 'travel document'
 ];
 
 // Blocklist — excluded even if allowlist matches
@@ -97,7 +114,11 @@ exports.handler = async function(event) {
       'Nigerian+immigrant',
       'Black+British+community',
       'African+UK+community',
-      'UK+visa+Nigeria'
+      'UK+visa+Nigeria',
+      'immigration+UK',
+      'cost+of+living+UK',
+      'NHS+UK',
+      'UK+housing+rent'
     ];
 
     let allArticles = [];
