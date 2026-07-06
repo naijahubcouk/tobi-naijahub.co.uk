@@ -2669,16 +2669,26 @@ function buildLiveNewsHTML(articles, showAll) {
 // Cache live news in memory for 1 hour
 let liveNewsCache = { articles: null, timestamp: 0 };
 
-async function fetchLiveNews(limit) {
-  const CACHE_DURATION = 60 * 60 * 1000;
-  if (liveNewsCache.articles && (Date.now() - liveNewsCache.timestamp) < CACHE_DURATION) {
-    return liveNewsCache.articles;
+function shuffleArr(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  const res = await fetch(`/.netlify/functions/news?limit=8`);
+  return a;
+}
+
+async function fetchLiveNews() {
+  const CACHE_DURATION = 60 * 60 * 1000;
+  if (liveNewsCache.articles && liveNewsCache.articles.length > 0 && (Date.now() - liveNewsCache.timestamp) < CACHE_DURATION) {
+    // Shuffle cached articles so rotation happens on every refresh
+    return shuffleArr(liveNewsCache.articles);
+  }
+  const res = await fetch('/.netlify/functions/news');
   const data = await res.json();
   const articles = data.articles || [];
   liveNewsCache = { articles, timestamp: Date.now() };
-  return articles;
+  return shuffleArr(articles);
 }
 
 function showLiveNewsCard() {
@@ -2693,7 +2703,7 @@ function showLiveNewsCard() {
   </div>`;
   container.appendChild(placeholder);
 
-  fetchLiveNews(8).then(articles => {
+  fetchLiveNews().then(articles => {
     const ph = document.getElementById('live-news-placeholder');
     if (!ph) return;
     if (!articles || articles.length === 0) {
@@ -2712,7 +2722,7 @@ function showLiveNewsCard() {
 }
 
 function showAllLiveNews() {
-  fetchLiveNews(8).then(articles => {
+  fetchLiveNews().then(articles => {
     if (!articles || articles.length === 0) return;
     addTipMessage(buildLiveNewsHTML(articles, true));
     const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
