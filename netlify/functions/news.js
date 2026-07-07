@@ -117,7 +117,12 @@ exports.handler = async function(event) {
       'immigration+UK',
       'cost+of+living+UK',
       'NHS+UK',
-      'UK+housing+rent'
+      'UK+housing+rent',
+      'Black+community+Britain',
+      'African+diaspora+UK',
+      'UK+benefits+2026',
+      'UK+employment+rights',
+      'Nigeria+diaspora'
     ];
 
     let allArticles = [];
@@ -142,14 +147,14 @@ exports.handler = async function(event) {
       return true;
     });
 
-    // Filter: max 3 days old + strict keyword filter + newest first
-    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    // Filter: max 7 days old + strict keyword filter + newest first
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const filtered = unique
       .filter(a => {
         if (!passesFilter(a)) return false;
         const pubDate = new Date(a.webPublicationDate);
-        return pubDate >= threeDaysAgo;
+        return pubDate >= sevenDaysAgo;
       })
       .sort((a, b) => new Date(b.webPublicationDate) - new Date(a.webPublicationDate))
       .slice(0, 20)
