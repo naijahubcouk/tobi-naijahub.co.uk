@@ -4467,9 +4467,46 @@ function resetToWelcome() {
       const msgs = document.getElementById('messages');
       if (msgs) msgs.innerHTML = '';
       showFathersVideo();
+      // Personalised welcome back message
+      (function() {
+        const h = new Date().getHours();
+        const day = new Date().getDay(); // 0=Sun, 1=Mon, 5=Fri, 6=Sat
+        const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+        let heading, subtitle;
+
+        if (day === 1) {
+          heading = '💪🏾 ' + pick(['Happy Monday! Let\'s make this week count', 'New week, new opportunities!', 'Monday energy! Let\'s get things done 🚀']);
+          subtitle = pick(['How can Auntie Tobi help you today? 😊', 'Let Auntie Tobi set you up right this week!', 'Week is just starting — what do you need? 😄']);
+        } else if (day === 5) {
+          heading = '🎉 ' + pick(['It\'s Friday! You made it through the week', 'Friday vibes! Almost the weekend', 'Last push of the week — you\'ve got this!']);
+          subtitle = pick(['What can Auntie Tobi help you sort before the weekend? 😄', 'Almost weekend! Anything to sort before you relax? 🎉', 'Last push of the week — how can I help? 💪🏾']);
+        } else if (day === 0 || day === 6) {
+          heading = '🌟 ' + pick(['Happy weekend! Enjoy your rest', 'Weekend mode! Auntie Tobi never rests 😄', 'Hope you\'re having a lovely weekend!']);
+          subtitle = pick(['Auntie Tobi is here whenever you need her 😊', 'Relaxing? Good! Just here if you need anything 🌟', 'Weekend mode! But Auntie Tobi never rests 😄🇳🇬']);
+        } else if (h < 12) {
+          heading = '☀️ ' + pick(['Good morning! Welcome back to Auntie Tobi', 'Rise and shine! Great to see you', 'Good morning! New day, new wins 🇳🇬🇬🇧']);
+          subtitle = pick(['Ready to tackle today? Auntie Tobi has got you! 😊', 'What can Auntie Tobi help with today? ☀️', 'How can I help you start the day right? 😊']);
+        } else if (h < 17) {
+          heading = '👋🏾 ' + pick(['Good afternoon! Great to see you back', 'Afternoon! Welcome back', 'Good afternoon! Hope your day is going well']);
+          subtitle = pick(['What can Auntie Tobi help you with today? 😊', 'Hope your day is going well! How can I help? 🙌🏾', 'Good to see you! What do you need today? 😄']);
+        } else {
+          heading = '🌙 ' + pick(['Good evening! Auntie Tobi is here for you', 'Evening! Welcome back', 'Good evening! Great to see you']);
+          subtitle = pick(['How can I help you tonight? 🇳🇬🇬🇧', 'Winding down? Let Auntie Tobi help before the day ends 😊', 'Evening! What\'s on your mind? I\'m here 🌙']);
+        }
+
+        addTipMessage(`<div style="background:linear-gradient(135deg,#057A44,#0F1E36);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+          <img src="/tobi-face-256.png" alt="Tobi" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:white;margin-bottom:2px;">${heading}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.75);">${subtitle}</div>
+          </div>
+        </div>`);
+      })();
       showDailyMotivation();
       showNewsCard();
       liveNewsShownCount = 2;
+      const tip = getTodaysTip();
       console.log('tip:', tip);
       const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
       console.log('tipHtml built');
