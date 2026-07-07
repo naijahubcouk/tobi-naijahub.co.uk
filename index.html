@@ -1141,13 +1141,24 @@ CRITICAL RULES:
 2. Only mention WhatsApp if the business has WhatsApp listed.
 3. When you cannot find a business in the data say: "I don't have that listed yet — you can search Google for Nigerian businesses near you, or visit the Auntie Tobi Website to find or list a business! 🙏🏾
 
-👉 Are you a Nigerian business owner? Get listed on Auntie Tobi and let Auntie Tobi recommend you to thousands of Nigerians across the UK! List your business on the Auntie Tobi Website — just click here! 🇳🇬🇬🇧"
+👉 Are you a Nigerian business owner? Get listed on Auntie Tobi and let Auntie Tobi recommend you to thousands of Nigerians across the UK! List your business on the Auntie Tobi Website — <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">click here to list your business</a> 🇳🇬🇬🇧"
 
-4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on Auntie Tobi? Tell them to visit auntietobi.com — and if they want Auntie Tobi to recommend them, they need Premium! 😊"
+4. After EVERY business recommendation naturally add: "💡 Know a Nigerian business that should be on Auntie Tobi? Tell them to <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">list their business here</a> — and if they want Auntie Tobi to actively recommend them, they need the Business Growth Membership! 😊"
 
-5. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on Auntie Tobi and Auntie Tobi will tell everyone! Visit auntietobi.com to submit your event! 🇳🇬🇬🇧"
+5. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on Auntie Tobi and Auntie Tobi will tell everyone! <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Submit your event here</a> 🇳🇬🇬🇧"
 
 6. NEVER mention specific business names, phone numbers or addresses that are not in the Auntie Tobi business data. If asked for a specific type of business not in the data, redirect to Google search or Auntie Tobi listing.
+
+7. VERIFIED BADGE & PAID PLAN RULE: When users ask about the verified badge, how to get verified, how to get featured, or how to get Auntie Tobi to recommend their business — explain that this is part of the Business Growth Membership (£49.99/yr) and show the full plan benefits:
+- 📌 Verified Member Badge
+- 🌟 Featured on Auntie Tobi (website + app)
+- 🔍 Better search visibility
+- 🤖 Active AI recommendations by Auntie Tobi
+- 💬 Instant WhatsApp/website button
+- 📣 Community Spotlight Post on Instagram & Telegram
+Then always end with: "Ready to get started? 👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">List your business here</a> or <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">message the team on WhatsApp</a> 💬"
+
+8. WHATSAPP TEAM RULE: After EVERY answer about how Auntie Tobi works, what it does, FAQ questions, or any question about listing/features — always end with: "Any questions? <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">Message our team on WhatsApp</a> — we are always happy to help! 💬🇳🇬"
 
 SOCIAL MEDIA FOLLOW (after user's 2nd question — show ONCE only per conversation):
 "📲 Enjoying Auntie Tobi? Follow Auntie Tobi for more:
@@ -3422,6 +3433,50 @@ function showDailyMotivation() {
   </div>`;
 
   addTipMessage(html);
+}
+
+function showPaidPlanCard() {
+  const html = `<div style="background:white;border:2px solid #057A44;border-radius:12px;overflow:hidden;">
+    <div style="background:#057A44;padding:14px 16px;text-align:center;">
+      <div style="display:inline-block;background:#FFB81C;color:#412402;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;margin-bottom:8px;">⭐ Most Popular</div>
+      <div style="font-size:17px;font-weight:700;color:white;margin-bottom:4px;">Business Growth Membership</div>
+      <div style="font-size:26px;font-weight:700;color:#FFB81C;">£49.99<span style="font-size:13px;color:rgba(255,255,255,0.75);font-weight:400;">/yr</span></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:4px;">Get your business seen by Nigerians in the UK</div>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
+          <span style="font-size:16px;flex-shrink:0;">📌</span>
+          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Verified Member Badge</div><div style="font-size:12px;color:#555;line-height:1.5;">Display a trusted verified badge and your complete business profile including services, contact details and business information.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
+          <span style="font-size:16px;flex-shrink:0;">🌟</span>
+          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Featured on Auntie Tobi</div><div style="font-size:12px;color:#555;line-height:1.5;">Your business is featured for increased visibility across both the website and app.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
+          <span style="font-size:16px;flex-shrink:0;">🔍</span>
+          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Better Search Visibility</div><div style="font-size:12px;color:#555;line-height:1.5;">Your business appears higher when users search for services like yours.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
+          <span style="font-size:16px;flex-shrink:0;">🤖</span>
+          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Active AI Recommendations</div><div style="font-size:12px;color:#555;line-height:1.5;">Auntie Tobi actively suggests your business to users looking for your services.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
+          <span style="font-size:16px;flex-shrink:0;">💬</span>
+          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Instant WhatsApp / Website Button</div><div style="font-size:12px;color:#555;line-height:1.5;">Customers can message you directly in one click from Auntie Tobi.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <span style="font-size:16px;flex-shrink:0;">📣</span>
+          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Community Spotlight Post</div><div style="font-size:12px;color:#555;line-height:1.5;">Get featured on Auntie Tobi's Instagram page and Telegram group to increase awareness.</div></div>
+        </div>
+      </div>
+      <a href="https://auntietobi.com/new-listing" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:14px;font-weight:700;padding:12px;border-radius:8px;text-align:center;margin-bottom:8px;">🚀 Get Started — £49.99/yr</a>
+      <a href="https://wa.me/447594674940" target="_blank" style="display:block;background:#f0faf5;color:#057A44;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-align:center;">💬 Message the team on WhatsApp</a>
+    </div>
+  </div>`;
+  addTipMessage(html);
+  const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 How do I list my business?</button><button class="suggestion-btn" onclick="quickAsk('What is the difference between free and paid listing?')">💷 Free vs paid listing?</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
 }
 
 function showSponsoredAd() {
