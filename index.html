@@ -1149,14 +1149,22 @@ CRITICAL RULES:
 
 6. NEVER mention specific business names, phone numbers or addresses that are not in the Auntie Tobi business data. If asked for a specific type of business not in the data, redirect to Google search or Auntie Tobi listing.
 
-7. VERIFIED BADGE & PAID PLAN RULE: When users ask about the verified badge, how to get verified, how to get featured, or how to get Auntie Tobi to recommend their business — explain that this is part of the Business Growth Membership (£49.99/yr) and show the full plan benefits:
-- 📌 Verified Member Badge
-- 🌟 Featured on Auntie Tobi (website + app)
-- 🔍 Better search visibility
-- 🤖 Active AI recommendations by Auntie Tobi
-- 💬 Instant WhatsApp/website button
-- 📣 Community Spotlight Post on Instagram & Telegram
-Then always end with: "Ready to get started? 👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">List your business here</a> or <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">message the team on WhatsApp</a> 💬"
+7. VERIFIED BADGE & PAID PLAN RULE: When users ask about the verified badge, how to get verified, how to get featured, or how to get Auntie Tobi to recommend their business — say EXACTLY this and NOTHING else (do not add, invent or change any details):
+
+"Great question! 😊 The Verified Member Badge is part of our Business Growth Membership plan:
+
+⭐ Business Growth Membership — £49.99/yr
+
+📌 Verified Member Badge — Display a trusted Verified Member badge and showcase your complete business profile, including your services, contact details and business information.
+🌟 Featured on Auntie Tobi — Your business is featured for increased visibility across both platforms (website and app).
+🔍 Better Search Visibility — Your business appears higher when users search for services like yours.
+🤖 Active AI Recommendations — Auntie Tobi actively suggests your business to users looking for your services.
+💬 Instant WhatsApp / Website Button — Customers can message you directly in one click from Auntie Tobi.
+📣 Community Spotlight Post — Get featured on Auntie Tobi's Instagram page and Telegram group.
+
+Ready to get started? 👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">List your business here</a> or <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">message our team on WhatsApp</a> 💬"
+
+⚠️ NEVER invent pricing tiers, features, or links not listed above. NEVER mention auntietobi.com/subscribe or any other URL not explicitly given to you.
 
 8. WHATSAPP TEAM RULE: After EVERY answer about how Auntie Tobi works, what it does, FAQ questions, or any question about listing/features — always end with: "Any questions? <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">Message our team on WhatsApp</a> — we are always happy to help! 💬🇳🇬"
 
@@ -2093,7 +2101,7 @@ To continue practising choose your plan:
 ✅ Achievement badges
 ✅ Ask Auntie Tobi anything
 
-👉 **Subscribe now → auntietobi.com/subscribe**
+👉 <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">Message our team on WhatsApp to upgrade</a> 💬
 
 Come back tomorrow for ${examState.freeLimit} more free questions! 😊
 
@@ -2512,6 +2520,14 @@ function showAllNews() {
       date: '22 Jun 2026'
     },
     {
+      emoji: '🏛️',
+      title: 'Nigel Farage Resigns as MP, Triggering a By-Election – What It Means for the UK',
+      summary: 'Nigel Farage has resigned as MP, triggering a by-election. Find out what this political development means for the UK and for Nigerians living in Britain.',
+      url: 'https://auntietobi.com/blog/Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK',
+      label: 'News',
+      date: '7 Jul 2026'
+    },
+    {
       emoji: '🏡',
       title: '10 Smart Ways to Reduce Your Household Bills This Summer in the UK',
       summary: 'Struggling with high household bills this summer? Here are 10 smart and practical ways Nigerians in the UK can cut costs on energy, water, food and more.',
@@ -2801,6 +2817,15 @@ function showNewsCard() {
       url: 'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
       label: 'News',
       date: '22 Jun 2026'
+    },
+    {
+      emoji: '🏛️',
+      category: 'NEWS',
+      title: 'Nigel Farage Resigns as MP, Triggering a By-Election – What It Means for the UK',
+      summary: 'Nigel Farage has resigned as MP, triggering a by-election. Find out what this political development means for the UK and for Nigerians living in Britain.',
+      url: 'https://auntietobi.com/blog/Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK',
+      label: 'News',
+      date: '7 Jul 2026'
     },
     {
       emoji: '🏡',
@@ -4017,6 +4042,15 @@ function handleDeepLink() {
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How will a new UK Prime Minister affect my taxes?')">💷 How will this affect my taxes?</button><button class="suggestion-btn" onclick="quickAsk('What could change for Nigerians in the UK under Andy Burnham?')">🇬🇧 What changes for Nigerians?</button>${s.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
     }, 500);
+  } else if (news === 'faragereigns') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span><span style="font-size:10px;color:#9CA3AF;">7 Jul 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🏛️ Nigel Farage Resigns as MP, Triggering a By-Election – What It Means for the UK</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Nigel Farage has resigned as MP, triggering a by-election. Find out what this political development means for the UK and for Nigerians living in Britain.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://auntietobi.com/blog/Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Nigel Farage Resigns\',\'Nigel Farage Resigns as MP, Triggering a By-Election\',\'https://auntietobi.com/blog/Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      const fs = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('What does Nigel Farage resigning mean for Nigerians in the UK?')">🏛️ What does this mean for Nigerians?</button><button class="suggestion-btn" onclick="quickAsk('What is a UK by-election?')">🗳️ What is a by-election?</button>${fs.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
   } else if (news === 'householdbills') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
@@ -4436,14 +4470,12 @@ function resetToWelcome() {
       showDailyMotivation();
       showNewsCard();
       liveNewsShownCount = 2;
-      const tip = getTodaysTip();
       console.log('tip:', tip);
       const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
       console.log('tipHtml built');
       addTipMessage(tipHtml);
       console.log('message added');
       showSponsoredAd();
-      showLiveNewsCard();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
