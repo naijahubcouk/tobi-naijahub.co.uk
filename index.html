@@ -2677,16 +2677,16 @@ function shuffleArr(arr) {
   return a;
 }
 
-async function fetchLiveNews() {
+async function fetchLiveNews(shuffle = false) {
   const CACHE_DURATION = 60 * 60 * 1000;
   if (liveNewsCache.articles && liveNewsCache.articles.length > 0 && (Date.now() - liveNewsCache.timestamp) < CACHE_DURATION) {
-    return liveNewsCache.articles; // Already sorted newest first, no shuffle
+    return shuffle ? shuffleArr(liveNewsCache.articles) : liveNewsCache.articles;
   }
   const res = await fetch('/.netlify/functions/news');
   const data = await res.json();
   const articles = data.articles || [];
   liveNewsCache = { articles, timestamp: Date.now() };
-  return articles;
+  return shuffle ? shuffleArr(articles) : articles;
 }
 
 function showLiveNewsCard() {
@@ -2701,7 +2701,7 @@ function showLiveNewsCard() {
   </div>`;
   container.appendChild(placeholder);
 
-  fetchLiveNews().then(articles => {
+  fetchLiveNews(true).then(articles => {
     const ph = document.getElementById('live-news-placeholder');
     if (!ph) return;
     if (!articles || articles.length === 0) {
@@ -2723,7 +2723,7 @@ function showLiveNewsCard() {
 let liveNewsShownCount = 2;
 
 function showMoreLiveNews() {
-  fetchLiveNews().then(articles => {
+  fetchLiveNews(false).then(articles => {
     if (!articles || articles.length === 0) return;
 
     const nextBatch = articles.slice(liveNewsShownCount, liveNewsShownCount + 3);
@@ -2767,9 +2767,12 @@ function showMoreLiveNews() {
     addTipMessage(html);
 
     // Add More button again if there are still articles left
-    if (hasMore) {
-      addTipMessage(`<div id="live-news-more-btn" class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="showMoreLiveNews()">📰 More Live News</button></div>`);
-    }
+    const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+    const suggBtns = sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
+    const moreBtnHtml = hasMore
+      ? `<button class="suggestion-btn" onclick="showMoreLiveNews()">📰 More Live News</button>`
+      : '';
+    addTipMessage(`<div id="live-news-more-btn" class="suggestions" style="margin-top:4px;">${moreBtnHtml}<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button>${suggBtns}</div>`);
   });
 }
 
