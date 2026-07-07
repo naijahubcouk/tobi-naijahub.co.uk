@@ -2736,29 +2736,35 @@ function showMoreLiveNews() {
     const existingBtn = document.getElementById('live-news-more-btn');
     if (existingBtn) existingBtn.remove();
 
-    // Add next 3 articles
-    nextBatch.forEach(a => {
+    // Build all 3 articles into ONE card
+    const cards = nextBatch.map(a => {
       const date = a.date ? new Date(a.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-      const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-        <div style="background:#057A44;padding:4px 10px;display:flex;align-items:center;gap:6px;">
-          <span style="font-size:14px;">📰</span>
-          <span style="color:white;font-weight:700;font-size:12px;">LIVE NEWS</span>
+      return `<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="background:#0F1E36;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${a.section}</span>
+          <span style="font-size:10px;color:#9CA3AF;">${date} • The Guardian</span>
         </div>
-        <div style="padding:8px 12px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-            <span style="background:#0F1E36;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${a.section}</span>
-            <span style="font-size:10px;color:#9CA3AF;">${date} • The Guardian</span>
-          </div>
-          <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
-          ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
-          <div style="display:flex;align-items:center;gap:8px;">
-            <a href="${a.url}" target="_blank" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
-            <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
-          </div>
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
+        ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;">
+          <a href="${a.url}" target="_blank" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+          <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
         </div>
       </div>`;
-      addTipMessage(html);
-    });
+    }).join('');
+
+    const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+      <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:16px;">📰</span>
+        <span style="color:white;font-weight:700;font-size:13px;">LIVE NEWS</span>
+      </div>
+      <div style="padding:4px 12px 8px;">
+        ${cards}
+        <div style="padding-top:6px;font-size:10px;color:#9CA3AF;text-align:right;">Powered by The Guardian</div>
+      </div>
+    </div>`;
+
+    addTipMessage(html);
 
     // Add More button again if there are still articles left
     if (hasMore) {
