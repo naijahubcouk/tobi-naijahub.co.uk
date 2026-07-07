@@ -123,7 +123,7 @@ exports.handler = async function(event) {
     let allArticles = [];
 
     for (const q of queries) {
-      const url = `https://content.guardianapis.com/search?q=${q}&show-fields=trailText&page-size=10&order-by=newest&api-key=${GUARDIAN_API_KEY}`;
+      const url = `https://content.guardianapis.com/search?q=${q}&show-fields=trailText&page-size=20&order-by=newest&api-key=${GUARDIAN_API_KEY}`;
       try {
         const data = await httpsGet(url);
         if (data.response && data.response.results) {
@@ -152,7 +152,7 @@ exports.handler = async function(event) {
         return pubDate >= threeDaysAgo;
       })
       .sort((a, b) => new Date(b.webPublicationDate) - new Date(a.webPublicationDate))
-      .slice(0, 10)
+      .slice(0, 20)
       .map(formatArticle);
 
     console.log(`Total: ${unique.length}, Passed 3-day filter: ${filtered.length}`);
