@@ -98,12 +98,11 @@ exports.handler = async function(event) {
   try {
     // Return shuffled cached data if fresh
     if (cache.data && cache.data.length > 0 && (Date.now() - cache.timestamp) < CACHE_DURATION) {
-      console.log('Returning shuffled cached news:', cache.data.length, 'articles');
-      const shuffled = shuffle([...cache.data]);
+      console.log('Returning cached news:', cache.data.length, 'articles');
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ articles: shuffled, cached: true })
+        body: JSON.stringify({ articles: cache.data, cached: true })
       };
     }
 
@@ -143,24 +142,27 @@ exports.handler = async function(event) {
       return true;
     });
 
-    // Strict filter + sort newest first — up to 10
+    // Filter: max 3 days old + strict keyword filter + newest first
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+
     const filtered = unique
-      .filter(passesFilter)
+      .filter(a => {
+        if (!passesFilter(a)) return false;
+        const pubDate = new Date(a.webPublicationDate);
+        return pubDate >= threeDaysAgo;
+      })
       .sort((a, b) => new Date(b.webPublicationDate) - new Date(a.webPublicationDate))
       .slice(0, 10)
       .map(formatArticle);
 
-    console.log(`Total: ${unique.length}, Passed strict filter: ${filtered.length}`);
+    console.log(`Total: ${unique.length}, Passed 3-day filter: ${filtered.length}`);
 
     cache = { data: filtered, timestamp: Date.now() };
-
-    // Shuffle for rotation
-    const shuffled = shuffle([...filtered]);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ articles: shuffled, cached: false })
+      body: JSON.stringify({ articles: filtered, cached: false })
     };
 
   } catch(err) {
