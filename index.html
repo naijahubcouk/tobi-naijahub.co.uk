@@ -1228,7 +1228,12 @@ Disclaimer:
 Contact: info@auntietobi.com | +447594674940
 Terms page: https://auntietobi.com/page/Terms%20and%20Conditions
 
-VERIFIED MEMBER BADGE POLICY — use this when users ask about what the verified badge means, how verification works, or what it guarantees:
+VERIFIED BUSINESSES — When recommending or mentioning any of these businesses in your response, ALWAYS show the ✅ Verified Member badge next to their name:
+- Funmis Treasure (African Foodstores & Groceries, Basildon Essex) — ✅ Verified | ⭐ Featured
+- Tombell Education Consultancy (Education Consultancy, Sittingbourne Kent) — ✅ Verified | ⭐ Featured
+
+Format: "**[Business Name]** ✅ Verified Member" — always include the badge when mentioning these businesses.
+NEVER invent details about any business not in the Auntie Tobi business data provided to you.
 
 The Auntie Tobi Verified Member Badge shows that a business has completed Auntie Tobi's verification process and provided information confirming their business details, contact information, UK presence, and online presence.
 
@@ -2001,7 +2006,11 @@ function formatResponse(text) {
         const emoji = tag === 'directory' ? '🏢' : tag === 'event' ? '🎉' : tag === 'guide' ? '🇬🇧' : tag === 'money' ? '💸' : tag === 'church' ? '🙏' : '📰';
         tagHTML = `<span class="card-tag ${tagClass}">${emoji} ${tag.toUpperCase()}</span>`;
       } else if (line.startsWith('NAME:')) {
-        bodyHTML += `<div class="card-name">${line.replace('NAME:', '').trim()}</div>`;
+        const bizName = line.replace('NAME:', '').trim();
+        const verifiedBizNames = ['Funmis Treasure', 'Tombell Education Consultancy'];
+        const isVerified = verifiedBizNames.some(v => bizName.toLowerCase().includes(v.toLowerCase()));
+        const vBadge = isVerified ? `<span style="display:inline-flex;align-items:center;gap:3px;background:white;color:#1D9BF0;font-size:9px;font-weight:800;padding:2px 8px;border-radius:50px;margin-left:5px;vertical-align:middle;border:1.5px solid #1D9BF0;"><span style="color:#1D9BF0;font-size:11px;">✓</span> Verified</span>` : '';
+        bodyHTML += `<div class="card-name">${bizName}${vBadge}</div>`;
       } else if (line.startsWith('DETAIL:')) {
         bodyHTML += `<div class="card-desc">${line.replace('DETAIL:', '').trim()}</div>`;
       } else if (line.startsWith('LINK:')) {
@@ -2153,44 +2162,6 @@ async function sendMessage(text) {
   if (examState.active && examState.currentQuestion) {
     const examResult = handleExamAnswer(userText);
     if (examResult) {
-      // Check daily free limit
-      const progress = getExamProgress();
-      const todayCount = progress?.todayCount || 0;
-
-      if (examState.plan === 'free' && todayCount > examState.freeLimit) {
-        removeTyping();
-        const upgradeMsg = `Omo [Name]! You've used your ${examState.freeLimit} free questions for today! 😄
-
-To continue practising choose your plan:
-
-📚 **£2.99/month — Standard Pass**
-✅ 30 questions/day
-✅ Mock tests (1 per week)
-✅ Weak area tracking
-✅ Push notifications
-✅ Personal study plan
-
-🏆 **£4.99/month — Premium Pass**
-✅ 100 questions/day
-✅ Everything in Standard PLUS:
-✅ Pass prediction score
-✅ Hazard perception prep
-✅ Weekly progress reports
-✅ Achievement badges
-✅ Ask Auntie Tobi anything
-
-👉 <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">Message our team on WhatsApp to upgrade</a> 💬
-
-Come back tomorrow for ${examState.freeLimit} more free questions! 😊
-
-[SUGGESTIONS: Subscribe now | Ask Auntie Tobi something else | Find a Nigerian business]`;
-        messages.push({ role: 'assistant', content: upgradeMsg });
-        addMessage('bot', formatResponse(upgradeMsg), true);
-        isLoading = false;
-        document.getElementById('sendBtn').disabled = false;
-        return;
-      }
-
       // Replace user message with exam context for Claude
       messages[messages.length - 1] = { role: 'user', content: examResult };
     }
@@ -2204,6 +2175,24 @@ Come back tomorrow for ${examState.freeLimit} more free questions! 😊
   } else if (lowerText.includes('life in uk') || lowerText.includes('life in the uk')) {
     examState.active = true;
     examState.testType = 'life';
+  } else if (
+    lowerText.includes('premium membership') ||
+    lowerText.includes('premium plan') ||
+    lowerText.includes('paid plan') ||
+    lowerText.includes('upgrade my listing') ||
+    lowerText.includes('upgrade my business') ||
+    lowerText.includes('how do i get verified') ||
+    lowerText.includes('how to get verified') ||
+    lowerText.includes('get verified') ||
+    lowerText.includes('verified badge') ||
+    lowerText.includes('verified member') ||
+    (lowerText.includes('premium') && (lowerText.includes('listing') || lowerText.includes('join') || lowerText.includes('cost') || lowerText.includes('price') || lowerText.includes('how much') || lowerText.includes('membership')))
+  ) {
+    removeTyping();
+    showPaidPlanCard();
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+    return;
   }
 
   try {
@@ -2587,6 +2576,50 @@ function sendJobQuery(query) {
 
 
 
+const _allNewsCategoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
+
+window._renderAllNewsBatch = function(from) {
+  const news = window._allNewsData || [];
+  const batch = news.slice(from, from + 6);
+  batch.forEach(item => {
+    const badgeColor = _allNewsCategoryColors[item.label] || '#057A44';
+    const categoryBadge = item.label === 'Breaking'
+      ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
+      : `<span style="background:${badgeColor};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${item.label}</span>`;
+    const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+      <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;">
+        <span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;margin-left:6px;">NEWS/UPDATES</span>
+      </div>
+      <div style="padding:10px 12px 8px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          ${categoryBadge}
+          ${item.date ? `<span style="font-size:10px;color:#9CA3AF;">${item.date}</span>` : ''}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
+        <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
+        <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
+          <a href="${item.url}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+          <button onclick="tobiShare('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        </div>
+      </div>
+    </div>`;
+    addTipMessage(html);
+  });
+
+  window._allNewsShownCount = from + batch.length;
+  const hasMore = window._allNewsShownCount < news.length;
+  const existingBtn = document.getElementById('all-news-more-btn');
+  if (existingBtn) existingBtn.remove();
+
+  if (hasMore) {
+    const nextFrom = window._allNewsShownCount;
+    addTipMessage(`<div id="all-news-more-btn" class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="window._renderAllNewsBatch(${nextFrom})">📰 More News</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button></div>`);
+  } else {
+    const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean);
+    addTipMessage(`<div class="suggestions" style="margin-top:8px;">${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('')}</div>`);
+  }
+};
+
 function showAllNews() {
   const news = [
     {
@@ -2714,56 +2747,9 @@ function showAllNews() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
-  let allNewsShownCount = 0;
-
-  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
-
-  function renderNewsBatch(from, count) {
-    const batch = news.slice(from, from + count);
-    batch.forEach(item => {
-      const badgeColor = categoryColors[item.label] || '#057A44';
-      const categoryBadge = item.label === 'Breaking'
-        ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
-        : `<span style="background:${badgeColor};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${item.label}</span>`;
-
-      const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-bottom:8px;">
-        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div>
-        </div>
-        <div style="padding:10px 12px 8px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            ${categoryBadge}
-            ${item.date ? `<span style="font-size:10px;color:#9CA3AF;">${item.date}</span>` : ''}
-          </div>
-          <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
-          <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
-          <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="${item.url}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-            <button onclick="tobiShare('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-          </div>
-        </div>
-      </div>`;
-      addTipMessage(html);
-    });
-
-    allNewsShownCount += batch.length;
-    const hasMore = allNewsShownCount < news.length;
-
-    // Remove existing more button
-    const existingBtn = document.getElementById('all-news-more-btn');
-    if (existingBtn) existingBtn.remove();
-
-    if (hasMore) {
-      const nextFrom = allNewsShownCount;
-      addTipMessage(`<div id="all-news-more-btn" class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="(${renderNewsBatch.toString()})(${nextFrom}, 6)">📰 More News</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button></div>`);
-    } else {
-      const newsSuggStr = getRandomSuggestionStr();
-      const newsSuggList = newsSuggStr.split('|').map(s => s.trim()).filter(Boolean);
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">${newsSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
-    }
-  }
-
-  renderNewsBatch(0, 6);
+  window._allNewsData = news;
+  window._allNewsShownCount = 0;
+  window._renderAllNewsBatch(0);
 }
 function buildLiveNewsHTML(articles, showAll) {
   const displayArticles = showAll ? articles : articles.slice(0, 2);
