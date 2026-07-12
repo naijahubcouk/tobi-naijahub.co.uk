@@ -532,7 +532,54 @@ IMPORTANT — HOW TO SHOW BUSINESSES:
 
 === UK LIFE KNOWLEDGE BASE ===
 
-JAPA GUIDE:
+NIGERIAN PASSPORT RENEWAL IN THE UK — full accurate guide:
+
+Walk-in applications are NO LONGER permitted at the Nigerian High Commission in London. All renewals must be done online via the contactless process.
+
+STEP BY STEP — CONTACTLESS RENEWAL:
+1. Visit the official NIS Passport portal: passportintl.immigration.gov.ng
+2. Select "Continue" from pop-up, then click "Apply for Renewal/Re-issue"
+3. Create an account and verify identity using your NIN (National Identification Number) and date of birth
+4. Complete the application form and choose your processing embassy/high commission (London for UK residents)
+5. Upload required documents (see below)
+6. Pay the passport fee for your selected booklet size
+7. Get your Application ID and Reference Number
+8. Under "Application Status/Book Appointment" — select the Contactless option
+9. Review contactless instructions and click "I Understand and Opt In"
+10. Download the NIS Mobile App (Android recommended — supports biometric capture better)
+11. Log in on the app, select "Passport Application Services" → "Passport Biometrics Enrolment"
+12. Enter your Application ID and Reference Number and check eligibility
+13. Capture facial image and fingerprints — ensure fingers have 60-70% exposure for best results
+14. Complete the liveness verification
+15. Pay the contactless service fee
+16. Submit biometrics
+17. Print out: Application form, passport booklet payment receipt, biometric payment receipt
+18. Include your CURRENT passport and a self-addressed Royal Mail Special Delivery return envelope
+19. Send the complete package via Royal Mail Special Delivery to: Nigeria High Commission, 9 Northumberland Avenue, London WC2N 5BX
+20. Track your application at track.immigration.gov.ng or on the NIS Mobile App (two weeks after submission)
+
+REQUIRED DOCUMENTS:
+- Current/expired Nigerian passport (original + photocopy of data page)
+- Birth certificate or Declaration of Age
+- 2 recent passport photos (white background, Nigerian passport specifications)
+- NIN
+- Proof of UK legal residency
+- Proof of payment (NIS Remita receipt)
+- Self-addressed Royal Mail C4 Special Delivery return envelope
+- £20 administrative fee via postal order payable to "Nigeria High Commission, London" (write your name and phone number on the back)
+
+IMPORTANT NOTES:
+- Contactless process NOT available for under 18s or first-time applicants — they must book an in-person appointment
+- If response is "INELIGIBLE" on the app, return to portal to book a physical appointment at the High Commission
+- Nigeria High Commission address: 9 Northumberland Avenue, London WC2N 5BX
+- Processing: typically within 24 hours after submission; passport dispatched next working day via Royal Mail Special Delivery
+- Cost in UK: approximately £80-£120 (fees reviewed periodically — always confirm at nigeriahc.org.uk)
+- Always send via Royal Mail Special Delivery — never ordinary post
+- Blog: auntietobi.com/blog/Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Heres-How
+
+⚠️ NIS rules and fees change — always verify at passportintl.immigration.gov.ng or nigeriahc.org.uk before applying
+
+
 - First steps: If you were issued a BRP collect it as instructed in your visa letter — the UK is moving to eVisas so check your UKVI account for your digital immigration status. Find your local GP surgery and register (free). Open Monzo or Starling bank account. Apply for NIN online at gov.uk. Get a UK SIM card — compare deals and find one that suits your needs.
 
 NIN: Apply online at gov.uk/apply-national-insurance-number. Your employer may also help you apply. You can usually start work before it arrives.
