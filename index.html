@@ -2176,17 +2176,22 @@ async function sendMessage(text) {
     examState.active = true;
     examState.testType = 'life';
   } else if (
-    lowerText.includes('premium membership') ||
-    lowerText.includes('premium plan') ||
-    lowerText.includes('paid plan') ||
-    lowerText.includes('upgrade my listing') ||
-    lowerText.includes('upgrade my business') ||
-    lowerText.includes('how do i get verified') ||
-    lowerText.includes('how to get verified') ||
-    lowerText.includes('get verified') ||
-    lowerText.includes('verified badge') ||
-    lowerText.includes('verified member') ||
-    (lowerText.includes('premium') && (lowerText.includes('listing') || lowerText.includes('join') || lowerText.includes('cost') || lowerText.includes('price') || lowerText.includes('how much') || lowerText.includes('membership')))
+    !lowerText.includes('why join') &&
+    !lowerText.includes('why should i join') &&
+    !lowerText.includes('benefits of') &&
+    (
+      lowerText.includes('premium membership') ||
+      lowerText.includes('premium plan') ||
+      lowerText.includes('paid plan') ||
+      lowerText.includes('upgrade my listing') ||
+      lowerText.includes('upgrade my business') ||
+      lowerText.includes('how do i get verified') ||
+      lowerText.includes('how to get verified') ||
+      lowerText.includes('get verified') ||
+      lowerText.includes('verified badge') ||
+      lowerText.includes('verified member') ||
+      (lowerText.includes('premium') && (lowerText.includes('listing') || lowerText.includes('join') || lowerText.includes('cost') || lowerText.includes('price') || lowerText.includes('how much') || lowerText.includes('membership')))
+    )
   ) {
     removeTyping();
     showPaidPlanCard();
