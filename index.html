@@ -2636,6 +2636,14 @@ function showAllNews() {
       date: '22 Jun 2026'
     },
     {
+      emoji: '🏡',
+      title: "Metro Banks New 100% Mortgage: Should You Jump at It?",
+      summary: "Metro Bank has launched a 100% mortgage allowing first-time buyers to purchase a home with no deposit — as long as a parent or immediate family member acts as joint borrower. Here's what Nigerians in the UK need to know.",
+      url: 'https://auntietobi.com/blog/Metro-Banks-New-100percent-Mortgage:-Should-You-Jump-at-It',
+      label: 'Housing',
+      date: '13 Jul 2026'
+    },
+    {
       emoji: '🎭',
       title: 'Worship in Chaos: A Powerful Musical Theatre & Worship Experience Coming to London',
       summary: 'A powerful musical theatre and worship experience coming to London. Sunday 19 July 2026, 4:00 PM (Doors open 3:00 PM).',
@@ -2974,6 +2982,15 @@ function showNewsCard() {
       url: 'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
       label: 'News',
       date: '22 Jun 2026'
+    },
+    {
+      emoji: '🏡',
+      category: 'HOUSING',
+      title: "Metro Banks New 100% Mortgage: Should You Jump at It?",
+      summary: "Metro Bank has launched a 100% mortgage allowing first-time buyers to purchase a home with no deposit — as long as a parent or immediate family member acts as joint borrower. Here's what Nigerians in the UK need to know.",
+      url: 'https://auntietobi.com/blog/Metro-Banks-New-100percent-Mortgage:-Should-You-Jump-at-It',
+      label: 'Housing',
+      date: '13 Jul 2026'
     },
     {
       emoji: '🎭',
@@ -4329,6 +4346,15 @@ function handleDeepLink() {
       const s = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How will a new UK Prime Minister affect my taxes?')">💷 How will this affect my taxes?</button><button class="suggestion-btn" onclick="quickAsk('What could change for Nigerians in the UK under Andy Burnham?')">🇬🇧 What changes for Nigerians?</button>${s.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  } else if (news === 'metromortgage') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#0C447C;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Housing</span><span style="font-size:10px;color:#9CA3AF;">13 Jul 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🏡 Metro Banks New 100% Mortgage: Should You Jump at It?</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Metro Bank has launched a 100% mortgage allowing first-time buyers to purchase a home with no deposit — as long as a parent or immediate family member acts as joint borrower. Fixed for 5 years at 6.99%. No product or valuation fees.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://auntietobi.com/blog/Metro-Banks-New-100percent-Mortgage:-Should-You-Jump-at-It" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Metro Bank 100% Mortgage\',\'Metro Bank launches 100% mortgage for first-time buyers with no deposit needed\',\'https://auntietobi.com/blog/Metro-Banks-New-100percent-Mortgage:-Should-You-Jump-at-It\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      const mm = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How does the Metro Bank 100% mortgage work?')">🏡 How does the 100% mortgage work?</button><button class="suggestion-btn" onclick="quickAsk('What other 100% mortgages are available in the UK?')">💷 Other 100% mortgage options?</button>${mm.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
     }, 500);
   } else if (news === 'worshipchaos') {
     setTimeout(() => {
