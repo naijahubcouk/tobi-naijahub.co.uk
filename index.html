@@ -4181,7 +4181,19 @@ function handleDeepLink() {
 
   if (!action && !news) return;
 
-  if (action === 'japa') {
+  if (action === 'faq') {
+    setTimeout(() => {
+      showFAQCard();
+      const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+        <button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>
+        <button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button>
+        <button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>
+        ${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}
+      </div>`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }, 300);
+  } else if (action === 'japa') {
     setTimeout(() => { showJapaGuide(); window.history.replaceState({}, '', window.location.pathname); }, 500);
   } else if (action === 'nhs') {
     nhsMode = true;
