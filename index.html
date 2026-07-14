@@ -3158,7 +3158,7 @@ function showNewsCard() {
 
   addTipMessage(newsHtml);
 }
-function showFAQCard() {
+function showFAQCard(suppressBubbles = false) {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
@@ -3341,9 +3341,11 @@ function showFAQCard() {
 
   addTipMessage(html);
 
-  const suggStr = getRandomSuggestionStr();
-  const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;">${suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+  if (!suppressBubbles) {
+    const suggStr = getRandomSuggestionStr();
+    const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+    addTipMessage(`<div class="suggestions" style="margin-top:8px;">${suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+  }
 }
 
 function toggleFaq(btn) {
@@ -4183,14 +4185,9 @@ function handleDeepLink() {
 
   if (action === 'faq') {
     setTimeout(() => {
-      showFAQCard();
+      showFAQCard(true);
       const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-        <button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>
-        <button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button>
-        <button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>
-        ${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}
-      </div>`);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button><button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
     }, 300);
   } else if (action === 'japa') {
