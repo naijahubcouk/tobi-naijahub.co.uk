@@ -3158,6 +3158,40 @@ function showNewsCard() {
 
   addTipMessage(newsHtml);
 }
+function showHowToBecomePremium() {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="background:#057A44;padding:10px 14px;">
+      <span style="color:white;font-weight:700;font-size:14px;">💳 How do I become a Premium Member?</span>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:14px;">It's simple! Here's how to upgrade to Premium Membership:</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+          <div style="font-size:13px;color:#0F1E36;line-height:1.6;"><strong>New business?</strong> <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List your business here</a> — it's free to get started.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+          <div style="font-size:13px;color:#0F1E36;line-height:1.6;"><strong>Already listed?</strong> Claim your listing on <a href="https://auntietobi.com" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">auntietobi.com</a> to access your dashboard.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
+          <div style="font-size:13px;color:#0F1E36;line-height:1.6;"><strong>In your dashboard</strong> — you'll see the option to upgrade to Premium Membership and complete your payment.</div>
+        </div>
+      </div>
+      <div style="background:#FFF8E7;border:1px solid #FFB81C;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+        <div style="font-size:13px;color:#412402;line-height:1.6;">💡 <strong>Having issues?</strong> No problem — our team is happy to help you get set up!</div>
+      </div>
+      <a href="https://wa.me/447594674940" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:11px;border-radius:8px;text-align:center;">💬 Message the team on WhatsApp</a>
+    </div>
+  </div>`;
+  addTipMessage(html);
+  const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ View Premium Membership</button><button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+}
+
 function showFAQCard(suppressBubbles = false) {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
@@ -3733,6 +3767,7 @@ function showPaidPlanCard() {
   </div>`;
   addTipMessage(html);
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+    <button class="suggestion-btn" onclick="showHowToBecomePremium()">💳 How do I become a Premium Member?</button>
     <button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">📋 How do I list my business?</button>
     <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>
   </div>`);
