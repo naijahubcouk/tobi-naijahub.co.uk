@@ -4184,6 +4184,8 @@ function handleDeepLink() {
 
   if (action === 'premium') {
     setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
       showPaidPlanCard();
       window.history.replaceState({}, '', window.location.pathname);
     }, 300);
