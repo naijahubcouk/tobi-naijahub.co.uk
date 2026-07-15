@@ -981,8 +981,8 @@
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="resetAndShow(showBusinesses)">🏢 Businesses</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
-    <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
     <div class="pill" onclick="showAllNews()">📰 News/Updates</div>
+    <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
     <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my UK driving theory test'))">🚗 Driving Theory Test</div>
     <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my Life in UK test'))">📋 Life in UK Test</div>
     <div class="pill" onclick="showJapaGuide()">🇬🇧 Japa Guide</div>
@@ -2581,7 +2581,7 @@ function sendJobQuery(query) {
 
 
 
-const _allNewsCategoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
+const _allNewsCategoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
 
 window._renderAllNewsBatch = function(from) {
   const news = window._allNewsData || [];
@@ -2634,6 +2634,22 @@ function showAllNews() {
       url: 'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
       label: 'News',
       date: '22 Jun 2026'
+    },
+    {
+      emoji: '📺',
+      title: 'Do You Really Need a TV Licence in the UK? Here is the Simple Rule Every Nigerian Should Know',
+      summary: 'Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you own a TV but do not watch live television or BBC iPlayer.',
+      url: 'https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know',
+      label: 'Money',
+      date: '15 Jul 2026'
+    },
+    {
+      emoji: '🎓',
+      title: 'Free Government-Funded Courses in England: Boost Your Career Without Paying Tuition',
+      summary: 'Discover how eligible adults in England, including many Nigerians, can access free government-funded courses. Learn who qualifies, what you can study, and how to apply.',
+      url: 'https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition',
+      label: 'Money',
+      date: '13 Jul 2026'
     },
     {
       emoji: '🏡',
@@ -2952,6 +2968,24 @@ function showNewsCard() {
       date: '22 Jun 2026'
     },
     {
+      emoji: '📺',
+      category: 'MONEY',
+      title: 'Do You Really Need a TV Licence in the UK? Here is the Simple Rule Every Nigerian Should Know',
+      summary: 'Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you own a TV but do not watch live television or BBC iPlayer.',
+      url: 'https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know',
+      label: 'Money',
+      date: '15 Jul 2026'
+    },
+    {
+      emoji: '🎓',
+      category: 'EDUCATION',
+      title: 'Free Government-Funded Courses in England: Boost Your Career Without Paying Tuition',
+      summary: 'Discover how eligible adults in England, including many Nigerians, can access free government-funded courses. Learn who qualifies, what you can study, and how to apply.',
+      url: 'https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition',
+      label: 'Money',
+      date: '13 Jul 2026'
+    },
+    {
       emoji: '🏡',
       category: 'HOUSING',
       title: "Metro Banks New 100% Mortgage: Should You Jump at It?",
@@ -3128,7 +3162,7 @@ function showNewsCard() {
   const item = pool[Math.floor(Math.random() * pool.length)];
 
   // Category badge colours
-  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#854F0B', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
+  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
   const badgeColor = categoryColors[item.label] || '#057A44';
   const categoryBadge = item.label === 'Breaking'
     ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
@@ -4329,6 +4363,53 @@ function handleDeepLink() {
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How will a new UK Prime Minister affect my taxes?')">💷 How will this affect my taxes?</button><button class="suggestion-btn" onclick="quickAsk('What could change for Nigerians in the UK under Andy Burnham?')">🇬🇧 What changes for Nigerians?</button>${s.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
     }, 500);
+    } else if (news === 'suyafest') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      const suyaHtml = [
+        '<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">',
+        '<div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">',
+        '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">&#127881;</span>',
+        '<span style="color:white;font-weight:700;font-size:13px;">UPCOMING EVENT</span></div>',
+        '<button onclick="showEventsCard()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">All Events &#8594;</button>',
+        '</div>',
+        '<div style="padding:10px 12px 8px;">',
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">',
+        '<span style="background:#6B21A8;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Events</span>',
+        '<span style="font-size:10px;color:#9CA3AF;">Sat 1 Aug 2026</span></div>',
+        '<div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">&#127798;&#65039; Suya Fest Birmingham 2026</div>',
+        '<div style="font-size:12px;color:#555;margin-bottom:2px;">&#128205; Birmingham</div>',
+        '<div style="font-size:12px;color:#555;margin-bottom:8px;">3:00 PM &#8211; 9:00 PM</div>',
+        '<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">',
+        '<a href="https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">&#128279; Read More</a>',
+        '<button onclick="tobiShare(\'Suya Fest Birmingham 2026\',\'3:00PM-9:00PM Birmingham 1 Aug 2026\',\'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">&#128228; Share</button>',
+        '</div></div></div>'
+      ].join('');
+      addTipMessage(suyaHtml);
+      const sf = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      const sfBtns = sf.map(x => '<button class="suggestion-btn" onclick="quickAsk(\'' + x.replace(/'/g,"\\'") + '\')">' + x + '</button>').join('');
+      addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showEventsCard()">&#127881; See All Events</button><button class="suggestion-btn" onclick="window.open(\'https://wa.me/447594674940\',\'_blank\')">&#128226; Post Your Event</button>' + sfBtns + '</div>');
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
+  } else if (news === 'tvlicence') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">15 Jul 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">📺 Do You Really Need a TV Licence in the UK?</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you own a TV but do not watch live television or BBC iPlayer.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'TV Licence UK\',\'Do You Really Need a TV Licence in the UK?\',\'https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Heres-the-Simple-Rule-Every-Nigerian-Should-Know\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      const tl = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('Do I need a TV licence in the UK if I only use Netflix?')">📺 Need licence for Netflix only?</button><button class="suggestion-btn" onclick="quickAsk('What happens if I do not pay my TV licence in the UK?')">💷 What if I do not pay?</button>${tl.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
+  } else if (news === 'freecourses') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/UPDATES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#6B21A8;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Education</span><span style="font-size:10px;color:#9CA3AF;">13 Jul 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🎓 Free Government-Funded Courses in England: Boost Your Career Without Paying Tuition</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Discover how eligible adults in England, including many Nigerians, can access free government-funded courses. Learn who qualifies, what you can study, and how to apply.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href="https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="tobiShare(\'Free Courses England\',\'Free Government-Funded Courses in England\',\'https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      const fc = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('What free courses are available for Nigerians in England?')">🎓 What free courses are available?</button><button class="suggestion-btn" onclick="quickAsk('How do I apply for a free government-funded course in the UK?')">📋 How do I apply?</button>${fc.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
   } else if (news === 'metromortgage') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
@@ -4635,6 +4716,17 @@ function showUpcomingEventCard() {
       deeplink: '9jafayre'
     },
     {
+      emoji: '🌶️',
+      title: 'Suya Fest Birmingham 2026',
+      summary: 'The ultimate outdoor suya experience returns to Birmingham! Live music, suya and more.',
+      date: 'Sat 1 Aug 2026',
+      dateObj: new Date(2026, 7, 1),
+      location: 'Birmingham',
+      time: 'Sat 1 Aug, 3:00 PM – 9:00 PM',
+      url: 'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns',
+      deeplink: 'suyafest'
+    },
+    {
       emoji: '🍽️',
       title: 'Festival of African Cuisine',
       summary: 'Celebrate African food culture. Sunday 19 July 2026, 2:00 PM, London.',
@@ -4706,7 +4798,7 @@ function showEventsCard() {
     { emoji: '🇳🇬', title: '9ja Fayre 2026 — Leicester', date: 'Sat 18 Jul 2026', dateObj: new Date(2026,6,18), loc: 'Leicester', time: 'All day', url: 'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!' },
     { emoji: '🇳🇬', title: '9ja Fayre 2026 — Edinburgh', date: 'Sat 25 Jul 2026', dateObj: new Date(2026,6,25), loc: 'Edinburgh', time: 'All day', url: 'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!' },
     { emoji: '🛍️', title: 'Deshapeables UK Tradefair London', date: 'Sat 25 Jul 2026', dateObj: new Date(2026,6,25), loc: 'Yeomanry House, London', time: '10AM – 6PM | Free entry', url: 'https://auntietobi.com/blog/Deshapeables-UK-Tradefair-London' },
-    { emoji: '🇳🇬', title: '9ja Fayre 2026 — Manchester', date: 'Sat 1 Aug 2026', dateObj: new Date(2026,7,1), loc: 'Manchester', time: 'All day', url: 'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!' },
+    { emoji: '🌶️', title: 'Suya Fest Birmingham 2026', date: 'Sat 1 Aug 2026', dateObj: new Date(2026,7,1), loc: 'Birmingham', time: '3:00 PM – 9:00 PM', url: 'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns' },
     { emoji: '⚽', title: 'NSF (UK) Sports and Family Fun Day', date: 'Sat 29 Aug 2026', dateObj: new Date(2026,7,29), loc: 'Newham Leisure Centre, London', time: 'Starts 12PM', url: 'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026' },
     { emoji: '🫕', title: 'The Igbo Table: Food, Culture & Conversation', date: 'Sun 30 Aug 2026', dateObj: new Date(2026,7,30), loc: 'Church Hall, Croyland Rd, London N9', time: '3:30PM – 9PM', url: 'https://auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation' },
     { emoji: '💼', title: 'Midlands Business Festival', date: 'Sun 30 Aug 2026', dateObj: new Date(2026,7,30), loc: 'Centre AT7, CV6 7GP, Coventry', time: '9AM – 8PM', url: 'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry' },
