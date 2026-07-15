@@ -4270,6 +4270,10 @@ function handleDeepLink() {
   } else if (action === 'nhs') {
     nhsMode = true;
     setTimeout(() => { quickAsk('What NHS services can I access as a Nigerian in the UK?'); window.history.replaceState({}, '', window.location.pathname); }, 500);
+  } else if (action === 'premium') {
+    setTimeout(() => { showPaidPlanCard(); }, 300);
+  } else if (action === 'businesses') {
+    setTimeout(() => { resetAndShow(showBusinesses); }, 300);
   } else if (action === 'motivation') {
     setTimeout(() => { showDailyMotivation(); window.history.replaceState({}, '', window.location.pathname); }, 500);
   } else if (action === 'guardianews') {

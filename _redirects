@@ -1,0 +1,13 @@
+# Auntie Tobi — Clean URL redirects
+# These redirect clean URLs to the existing deep link params
+
+/faq            /?action=faq            301
+/events         /?action=events         301
+/japa           /?action=japa           301
+/nhs            /?action=nhs            301
+/news           /?action=guardianews    301
+/jobs           /?action=jobs           301
+/motivation     /?action=motivation     301
+/tip            /?action=tip            301
+/businesses     /?action=businesses     301
+/premium        /?action=premium        301
