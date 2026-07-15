@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What is Auntie Tobi?</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #f5f5f0;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .hero {
+    background: #0F1E36;
+    padding: 36px 20px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,184,28,0.07);
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: rgba(5,122,68,0.1);
+  }
+
+  .avatar {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: transparent;
+    margin: 0 auto 14px;
+    border: 3px solid #FFB81C;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  .avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    color: #FFB81C;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card {
+    background: white;
+    margin: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1.5px solid #e5e7eb;
+  }
+
+  .card-header {
+    background: #057A44;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-header span {
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .intro-text {
+    padding: 16px;
+    font-size: 14px;
+    color: #444;
+    line-height: 1.75;
+  }
+
+  .intro-text strong {
+    color: #0F1E36;
+  }
+
+  .section-title {
+    padding: 0 16px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #057A44;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .feature-list {
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 0.5px solid #f0f0f0;
+  }
+
+  .feature-item:last-child { border-bottom: none; }
+
+  .feature-icon {
+    width: 36px;
+    height: 36px;
+    background: #f0faf5;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .feature-text {
+    flex: 1;
+  }
+
+  .feature-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0F1E36;
+    margin-bottom: 2px;
+  }
+
+  .feature-text span {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  .stats-card {
+    background: #0F1E36;
+    margin: 0 16px 16px;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+  }
+
+  .stats-card p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.7;
+  }
+
+  .stats-card p strong {
+    color: #FFB81C;
+  }
+
+  .cta-section {
+    padding: 0 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .cta-primary {
+    background: #057A44;
+    color: white;
+  }
+
+  .cta-secondary {
+    background: #FFB81C;
+    color: #0F1E36;
+  }
+
+  .cta-ghost {
+    background: #f0faf5;
+    color: #057A44;
+    border: 1.5px solid #057A44;
+  }
+
+  .divider {
+    height: 0.5px;
+    background: #f0f0f0;
+    margin: 0 16px;
+  }
+
+  .footer-links {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .footer-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #444;
+    text-decoration: none;
+  }
+
+  .footer-link .icon-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f0faf5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .footer-link span.label {
+    font-weight: 600;
+    color: #0F1E36;
+  }
+
+  .footer-link span.sub {
+    font-size: 11px;
+    color: #9CA3AF;
+    display: block;
+  }
+
+  .gold-bar {
+    height: 4px;
+    background: linear-gradient(90deg, #057A44, #FFB81C);
+  }
+
+  .ask-box {
+    margin: 0 16px 24px;
+    background: #f8f8f8;
+    border: 1.5px dashed #e5e7eb;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .ask-box p {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 10px;
+  }
+
+  .ask-box strong {
+    color: #0F1E36;
+    display: block;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="gold-bar"></div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="avatar"><img src="https://naijabiz.b-cdn.net/Auntie_Tobi.png" alt="Auntie Tobi"></div>
+  <div class="hero-title">What is Auntie Tobi?</div>
+  <div class="hero-sub">Your trusted AI guide for Nigerians in the UK 🇳🇬 🇬🇧</div>
+</div>
+
+<!-- Intro card -->
+<div class="card">
+  <div class="card-header">
+    <span style="font-size:16px;">ℹ️</span>
+    <span>About Auntie Tobi</span>
+  </div>
+  <div class="intro-text">
+    <strong>Auntie Tobi is your trusted AI-powered guide for Nigerians living in the UK.</strong><br><br>
+    Whether you've just arrived or you've been here for years, Auntie Tobi helps you navigate life in the UK with trusted information, practical tools, and answers to your everyday questions.
+  </div>
+</div>
+
+<!-- What she helps with -->
+<div class="card">
+  <div class="card-header">
+    <span style="font-size:16px;">✨</span>
+    <span>Here's what Auntie Tobi can help you with 👇🏾</span>
+  </div>
+  <div class="feature-list">
+
+    <div class="feature-item">
+      <div class="feature-icon">🏢</div>
+      <div class="feature-text">
+        <strong>Find Nigerian businesses near you</strong>
+        <span>Restaurants, groceries, hair &amp; beauty, legal services, education, healthcare, and more.</span>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">📰</div>
+      <div class="feature-text">
+        <strong>Stay updated with UK news that matters</strong>
+        <span>Immigration updates, cost of living, benefits, policies, and community news.</span>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">🎉</div>
+      <div class="feature-text">
+        <strong>Discover Nigerian events across the UK</strong>
+        <span>Festivals, networking events, business expos, concerts, and community gatherings.</span>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">💼</div>
+      <div class="feature-text">
+        <strong>Find UK job opportunities</strong>
+        <span>Practical CV, interview, and career advice tailored for Nigerians in the UK.</span>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">🚗</div>
+      <div class="feature-text">
+        <strong>Practice the UK Driving Theory Test</strong>
+        <span>Unlimited FREE practice questions — anytime, anywhere.</span>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">📋</div>
+      <div class="feature-text">
+        <strong>Prepare for the Life in the UK Test</strong>
+        <span>Free practice questions for ILR and British citizenship.</span>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">🏥</div>
+      <div class="feature-text">
+        <strong>Learn how the NHS works</strong>
+        <span>Simple, clear healthcare guidance for Nigerians in the UK.</span>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">💷</div>
+      <div class="feature-text">
+        <strong>Save money and manage your finances</strong>
+        <span>Budgeting tips, benefits guidance, and practical money advice.</span>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">🤖</div>
+      <div class="feature-text">
+        <strong>Ask Auntie Tobi anything</strong>
+        <span>Quick, easy-to-understand answers about living in the UK.</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-card">
+  <p>Thousands of Nigerians across the UK use Auntie Tobi every week to <strong>stay informed, discover trusted businesses, find opportunities,</strong> and make life in the UK easier.</p>
+</div>
+
+<!-- CTAs -->
+<div class="cta-section">
+  <a href="https://auntietobi.co.uk" class="cta-btn cta-primary">🌐 Install Auntie Tobi &amp; Turn On Notifications</a>
+  <a href="https://auntietobi.com/new-listing" class="cta-btn cta-secondary">🏢 List Your Nigerian Business — Free</a>
+  <a href="https://wa.me/447594674940" class="cta-btn cta-ghost">💬 Message Our Team on WhatsApp</a>
+</div>
+
+<div class="divider"></div>
+
+<!-- Footer links -->
+<div class="footer-links">
+  <a href="https://instagram.com/auntietobi_uk" class="footer-link">
+    <div class="icon-circle">📸</div>
+    <div>
+      <span class="label">@auntietobi_uk</span>
+      <span class="sub">Follow us on Instagram</span>
+    </div>
+  </a>
+</div>
+
+<!-- Ask box -->
+<div class="ask-box">
+  <strong>💬 Have a question? Just ask 👇</strong>
+  <p>Open Auntie Tobi and type your question — she's available 24/7 to help you.</p>
+  <a href="https://auntietobi.co.uk" class="cta-btn cta-primary" style="font-size:13px;padding:11px;">Open Auntie Tobi 👉</a>
+</div>
+
+</body>
+</html>
