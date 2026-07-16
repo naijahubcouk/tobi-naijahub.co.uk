@@ -253,6 +253,30 @@
     padding: 10px 12px;
   }
 
+  /* Typing indicator dots */
+  .typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 14px;
+  }
+  .typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: #057A44;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typingBounce 1.2s infinite ease-in-out;
+    opacity: 0.6;
+  }
+  .typing-dots span:nth-child(1) { animation-delay: 0s; }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
   .msg.bot .bubble {
     background: var(--white);
     color: var(--navy);
@@ -2121,7 +2145,7 @@ function showTyping() {
   div.id = 'typing';
   div.innerHTML = `
     <div class="avatar"><img src="/tobi-face-256.png" alt="Tobi"></div>
-    <div class="bubble"></div>
+    <div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>
   `;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
@@ -4258,6 +4282,103 @@ function showAboutTobi() {
   </div>`);
 }
 
+function showInstallGuide() {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+
+    <div style="background:#0F1E36;padding:16px;text-align:center;position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#FFB81C;"></div>
+      <img src="https://naijabiz.b-cdn.net/013d6cf6-3a2b-4a14-a3d3-5bcb0e378424-1783702300556.png" alt="Auntie Tobi" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid #FFB81C;margin:0 auto 10px;display:block;">
+      <div style="font-size:16px;font-weight:700;color:white;margin-bottom:2px;">Install Auntie Tobi</div>
+      <div style="font-size:12px;color:#FFB81C;">Add to your home screen in seconds</div>
+    </div>
+
+    <div style="padding:10px 14px;background:#f8f8f8;text-align:center;border-bottom:0.5px solid #f0f0f0;">
+      <div style="font-size:12px;color:#555;line-height:1.7;">Auntie Tobi is a free app — no App Store needed! Just follow the steps below for your device.</div>
+    </div>
+
+    <div style="padding:0 14px;">
+
+      <div style="padding:12px 0;border-bottom:1px solid #f0f0f0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:16px;">&#129312;</span>
+          <span style="font-size:13px;font-weight:700;color:#057A44;">Android — Chrome browser</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#057A44;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Open <strong>Chrome</strong> and go to <span style="color:#057A44;font-weight:700;">auntietobi.co.uk</span></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#057A44;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Tap the <strong>three dots &#8942;</strong> in the top right corner</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#057A44;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Tap <strong>"Add to Home screen"</strong></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#057A44;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">4</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Tap <strong>"Install"</strong> or <strong>"Add"</strong> — done!</div>
+          </div>
+          <div style="background:#f0faf5;border-radius:6px;padding:8px 10px;margin-top:2px;">
+            <div style="font-size:11px;color:#555;line-height:1.6;">&#128161; A banner may also appear at the bottom of the screen — just tap <strong>"Install"</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:12px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:16px;">&#63743;</span>
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">iPhone — Safari browser</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#0F1E36;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Open <strong>Safari</strong> on your iPhone</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#0F1E36;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Go to <span style="color:#057A44;font-weight:700;">auntietobi.co.uk</span></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#0F1E36;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Tap the <strong>Share button &#9014;</strong> at the bottom</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#0F1E36;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">4</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="background:#0F1E36;color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">5</div>
+            <div style="font-size:12px;color:#333;line-height:1.6;">Tap <strong>"Add"</strong> — Auntie Tobi is now on your home screen!</div>
+          </div>
+          <div style="background:#fff8e7;border:1px solid #FFB81C;border-radius:6px;padding:8px 10px;margin-top:2px;">
+            <div style="font-size:11px;color:#412402;line-height:1.6;">&#9888;&#65039; Must use <strong>Safari</strong> — Chrome on iPhone does not support install</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="background:#057A44;padding:14px;text-align:center;">
+      <div style="font-size:13px;font-weight:700;color:white;margin-bottom:2px;">It's completely free!</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.75);">No App Store. No sign up. Just install and go.</div>
+    </div>
+
+  </div>`;
+
+  addTipMessage(html);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+    <button class="suggestion-btn" onclick="shareAuntieTobi()">&#128279; Share Auntie Tobi</button>
+    <button class="suggestion-btn" onclick="showAboutTobi()">&#8505;&#65039; About Auntie Tobi</button>
+    <button class="suggestion-btn" onclick="showFAQCard()">&#10067; FAQ</button>
+    <button class="suggestion-btn" onclick="resetToWelcome()">&#127968; Home</button>
+  </div>`);
+}
+
 function tobiShare(title, text, url) {
   if (navigator.share) {
     navigator.share({ title, text: text + '\n\n👉 ' + url }).catch(() => {});
@@ -4308,6 +4429,8 @@ function handleDeepLink() {
     }, 300);
   } else if (action === 'about') {
     setTimeout(() => { showAboutTobi(); }, 300);
+  } else if (action === 'install') {
+    setTimeout(() => { showInstallGuide(); }, 300);
   } else if (action === 'faq') {
     setTimeout(() => {
       showFAQCard(true);
