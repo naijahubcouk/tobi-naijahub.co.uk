@@ -2,6 +2,7 @@
 # These redirect clean URLs to the existing deep link params
 
 /faq            /?action=faq            301
+/about          /?action=about          301
 /events         /?action=events         301
 /japa           /?action=japa           301
 /nhs            /?action=nhs            301

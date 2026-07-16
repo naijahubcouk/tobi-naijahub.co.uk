@@ -4208,7 +4208,55 @@ function handleBellClick() {
 // MISSING FUNCTIONS — restored
 // ============================================
 
-function showAboutTobi() { showFAQCard(); }
+function showAboutTobi() {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+
+  const features = [
+    ['&#x1F3E2;', 'Find Nigerian businesses near you', 'Restaurants, groceries, hair and beauty, legal, education, healthcare and more.'],
+    ['&#x1F4F0;', 'Stay updated with UK news', 'Immigration, cost of living, benefits, policies and community news.'],
+    ['&#x1F389;', 'Discover Nigerian events', 'Festivals, networking events, concerts and community gatherings.'],
+    ['&#x1F697;', 'Driving theory test practice', 'Unlimited FREE practice questions — anytime.'],
+    ['&#x1F4CB;', 'Life in the UK test', 'Free practice for ILR and British citizenship.'],
+    ['&#x1F3E5;', 'NHS and healthcare guidance', 'Simple, clear healthcare guidance for Nigerians in the UK.'],
+    ['&#x1F4B7;', 'Money tips and financial advice', 'Budgeting, benefits guidance and practical money advice.'],
+    ['&#x1F916;', 'Ask Auntie Tobi anything', 'Quick, easy-to-understand answers about living in the UK.']
+  ];
+
+  const featuresHtml = features.map(([icon, title, desc]) => `
+    <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid #f0f0f0;">
+      <span style="width:28px;height:28px;background:#f0faf5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">${icon}</span>
+      <div><div style="font-size:12px;font-weight:700;color:#0F1E36;">${title}</div><div style="font-size:11px;color:#666;line-height:1.5;">${desc}</div></div>
+    </div>`).join('');
+
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+    <div style="background:#057A44;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+      <img src="https://naijabiz.b-cdn.net/013d6cf6-3a2b-4a14-a3d3-5bcb0e378424-1783702300556.png" alt="Auntie Tobi" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #FFB81C;flex-shrink:0;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:white;">About Auntie Tobi</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.75);">Your trusted AI guide for Nigerians in the UK</div>
+      </div>
+    </div>
+    <div style="padding:12px 14px 8px;">
+      <div style="font-size:13px;color:#444;line-height:1.7;margin-bottom:12px;">Auntie Tobi is your trusted AI-powered guide for Nigerians living in the UK. Whether you've just arrived or you've been here for years, Auntie Tobi helps you navigate life in the UK with trusted information, practical tools, and answers to your everyday questions.</div>
+      <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">What Auntie Tobi helps with</div>
+      <div style="display:flex;flex-direction:column;">${featuresHtml}</div>
+      <div style="background:#0F1E36;border-radius:8px;padding:12px;margin:12px 0;text-align:center;">
+        <div style="font-size:12px;color:rgba(255,255,255,0.8);line-height:1.7;">Thousands of Nigerians across the UK use Auntie Tobi every week to stay informed, discover trusted businesses, find opportunities, and make life in the UK easier.</div>
+      </div>
+      <a href="https://auntietobi.com/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-align:center;margin-bottom:6px;">&#x1F3E2; List your Nigerian business — it's free</a>
+      <a href="https://wa.me/447594674940" target="_blank" style="display:block;background:#f0faf5;color:#057A44;text-decoration:none;font-size:12px;font-weight:700;padding:8px;border-radius:8px;text-align:center;">&#x1F4AC; Message the team on WhatsApp</a>
+    </div>
+  </div>`;
+
+  addTipMessage(html);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+    <button class="suggestion-btn" onclick="showFAQCard()">&#x2753; FAQ</button>
+    <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">&#x1F3E2; Find a Business</button>
+    <button class="suggestion-btn" onclick="showPaidPlanCard()">&#x2B50; Premium Membership</button>
+    <button class="suggestion-btn" onclick="quickAsk('Ask me anything about living in the UK')">&#x1F916; Ask Me Anything</button>
+  </div>`);
+}
 
 function tobiShare(title, text, url) {
   if (navigator.share) {
@@ -4258,6 +4306,8 @@ function handleDeepLink() {
       showPaidPlanCard();
       window.history.replaceState({}, '', window.location.pathname);
     }, 300);
+  } else if (action === 'about') {
+    setTimeout(() => { showAboutTobi(); }, 300);
   } else if (action === 'faq') {
     setTimeout(() => {
       showFAQCard(true);
