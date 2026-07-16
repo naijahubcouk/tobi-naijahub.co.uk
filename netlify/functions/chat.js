@@ -634,21 +634,12 @@ Tell the user honestly that you could not find this business nearby right now.
       });
     }
 
-    const requestBody = JSON.stringify({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1500,
-      tools: [
-        {
-          type: 'web_search_20250305',
-          name: 'web_search',
-          max_uses: 3
-        }
-      ],
-      system: systemBlocks,
-      messages: body.messages
-    });
+    // Only enable web search for official/policy topics — not general questions
+    const needsWebSearch = /visa|ilr|immigration|home office|indefinite leave|settlement|asylum|refugee|deportation|ukvi|skilled worker|work permit|student visa|family visa|passport|nhs|gp|doctor|healthcare|benefit|universal credit|council tax|tax|hmrc|national insurance|minimum wage|driving licen|dvla|dvsa|theory test|life in uk|citizenship|naturalisation|right to abode|biometric|brp|evisa|share code/i.test(lastMessage);
 
-    const response = await new Promise((resolve, reject) => {
+    // Helper to make API call
+    const callClaude = (reqBody) => new Promise((resolve, reject) => {
+      const bodyStr = JSON.stringify(reqBody);
       const options = {
         hostname: 'api.anthropic.com',
         path: '/v1/messages',
@@ -657,27 +648,92 @@ Tell the user honestly that you could not find this business nearby right now.
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
-          'anthropic-beta': 'prompt-caching-2024-07-31,web-search-2025-03-05',
-          'Content-Length': Buffer.byteLength(requestBody)
+          'anthropic-beta': needsWebSearch ? 'prompt-caching-2024-07-31,web-search-2025-03-05' : 'prompt-caching-2024-07-31',
+          'Content-Length': Buffer.byteLength(bodyStr)
         }
       };
       const req = https.request(options, (res) => {
         let data = '';
         res.on('data', chunk => data += chunk);
         res.on('end', () => {
-          try { resolve({ status: res.statusCode, json: () => JSON.parse(data) }); }
+          try { resolve({ status: res.statusCode, data: JSON.parse(data) }); }
           catch(e) { reject(e); }
         });
       });
       req.on('error', reject);
-      req.write(requestBody);
+      req.write(bodyStr);
       req.end();
     });
 
-    const data = response.json();
-    console.log('Status:', response.status);
-    if (data.usage) {
-      console.log('Usage — input:', data.usage.input_tokens, '| cache_creation:', data.usage.cache_creation_input_tokens, '| cache_read:', data.usage.cache_read_input_tokens, '| output:', data.usage.output_tokens);
+    // Initial request
+    let currentMessages = [...body.messages];
+    let finalData = null;
+    let iterations = 0;
+    const MAX_ITERATIONS = 5;
+
+    let baseRequest = {
+      model: 'claude-haiku-4-5',
+      max_tokens: 1500,
+      system: systemBlocks,
+      messages: currentMessages
+    };
+
+    if (needsWebSearch) {
+      baseRequest.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }];
+    }
+
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      const result = await callClaude(baseRequest);
+      const data = result.data;
+
+      if (data.usage) {
+        console.log('Usage — input:', data.usage.input_tokens, '| output:', data.usage.output_tokens);
+      }
+
+      // If stop_reason is end_turn or not tool_use, we have the final answer
+      if (data.stop_reason !== 'tool_use') {
+        finalData = data;
+        break;
+      }
+
+      // Handle tool_use — add assistant message and tool results
+      const assistantContent = data.content || [];
+      currentMessages = [...currentMessages, { role: 'assistant', content: assistantContent }];
+
+      // Build tool results
+      const toolResults = [];
+      for (const block of assistantContent) {
+        if (block.type === 'tool_use') {
+          // Web search result is already in the response from Anthropic's web search tool
+          // The tool result content comes back as server-side tool execution
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content: block.type === 'web_search_20250305' ? '' : 'Search completed.'
+          });
+        }
+      }
+
+      if (toolResults.length === 0) {
+        finalData = data;
+        break;
+      }
+
+      currentMessages = [...currentMessages, { role: 'user', content: toolResults }];
+      baseRequest = { ...baseRequest, messages: currentMessages };
+    }
+
+    if (!finalData) finalData = { content: [{ type: 'text', text: 'I had trouble searching for that information. Please try again or check gov.uk directly.' }] };
+
+    // Extract text from response — handle mixed content blocks
+    const textContent = (finalData.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n');
+
+    if (textContent) {
+      finalData.content = [{ type: 'text', text: textContent }];
     }
 
     return {
@@ -686,7 +742,7 @@ Tell the user honestly that you could not find this business nearby right now.
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(finalData)
     };
 
   } catch (err) {
