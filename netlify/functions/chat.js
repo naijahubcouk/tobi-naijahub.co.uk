@@ -548,7 +548,21 @@ IMPORTANT — HOW TO SHOW BUSINESSES:
 JAPA GUIDE:
 - First steps: If you were issued a BRP collect it as instructed in your visa letter — the UK is moving to eVisas so check your UKVI account for your digital immigration status. Find your local GP surgery and register (free). Open Monzo or Starling bank account. Apply for NIN online at gov.uk. Get a UK SIM card — compare deals and find one that suits your needs.
 
-NATIONAL INSURANCE (NI) NUMBER — accurate as of July 2026:
+WATER BILLS UK — accurate as of July 2026:
+- Average combined water AND wastewater bill in England and Wales from 1 April 2026 is approximately £639/year (NOT £473 — that was 2024/25 and is OUTDATED)
+- Bills rose by approximately 26% from April 2026 due to Ofwat price review
+- Cannot switch water supplier — your supplier depends on where you live
+- Two billing methods: METERED (pay for what you use + standing charge) or UNMETERED (fixed amount based on property's historic rateable value from before Council Tax was introduced in 1993)
+- Bill covers: clean water supply + sewerage/wastewater services
+- Meter tip: saves money if fewer people in home than bedrooms — check your water company's online calculator
+- WaterSure scheme available for eligible high-use low-income households
+- Source: Ofwat / The Guardian Jan 2026
+
+⚠️ CRITICAL FIGURES RULE: NEVER use the following outdated figures — they are wrong for 2026:
+- ❌ £473 average water bill (was 2024/25)
+- ❌ £1.60 bus fare (now £1.75)
+- ❌ £10.42 minimum wage (now £12.21 for over 21s)
+- Always use the pre-search results for any cost or figure — never use training memory for prices
 - A National Insurance number is a unique personal reference for the UK tax and National Insurance system — NOT a 9-digit number
 - Format: 2 letters + 6 numbers + 1 final letter. Example: AB 12 34 56 C
 - Used for: working in the UK, paying tax and NI contributions, State Pension, certain benefits, dealing with HMRC, some financial applications (mortgages etc)
@@ -875,7 +889,7 @@ Tell the user honestly that you could not find this business nearby right now.
             .join('\n')
             .trim();
           if (searchText) {
-            preSearchContext = `\n\nLIVE SEARCH RESULTS (retrieved ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}):\n${searchText}\n\n⚠️ CRITICAL: Base your answer ONLY on the live search results above. Do not use training knowledge for any facts, costs, rules or figures. If the search results do not contain enough information, say so and direct the user to gov.uk.`;
+            preSearchContext = `\n\nLIVE SEARCH RESULTS (retrieved ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}):\n${searchText}\n\n⚠️ CRITICAL: Base your answer ONLY on the live search results above. Do NOT use any cost figures, fees, amounts or statistics from your training memory — these may be outdated. If the search results contain a figure, use that. If the search results do not contain the figure, say "I was not able to confirm the current figure — please check gov.uk or your water company's website for the latest."`;
             console.log('RAG: Pre-search complete, injecting', searchText.length, 'chars');
           }
         }
@@ -914,113 +928,113 @@ Tell the user honestly that you could not find this business nearby right now.
     // Always search the web for current information
     const needsWebSearch = true;
 
-    // Helper to make API call
-    const callClaude = (reqBody) => new Promise((resolve, reject) => {
-      const bodyStr = JSON.stringify(reqBody);
-      const options = {
-        hostname: 'api.anthropic.com',
-        path: '/v1/messages',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-beta': needsWebSearch ? 'prompt-caching-2024-07-31,web-search-2025-03-05' : 'prompt-caching-2024-07-31',
-          'Content-Length': Buffer.byteLength(bodyStr)
-        }
-      };
+    const baseRequest = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
+      stream: true,
+      system: systemBlocks,
+      messages: [...body.messages],
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }]
+    };
+
+    // ── STREAMING RESPONSE ───────────────────────────────────────────────────
+    // Stream SSE chunks back to the client so words appear as they are generated
+    const bodyStr = JSON.stringify(baseRequest);
+    const options = {
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31,web-search-2025-03-05',
+        'Content-Length': Buffer.byteLength(bodyStr)
+      }
+    };
+
+    return new Promise((resolve) => {
+      let fullText = '';
+      let buffer = '';
+      let resolved = false;
+
       const req = https.request(options, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
+        res.on('data', (chunk) => {
+          buffer += chunk.toString();
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(data);
+              // Accumulate text deltas
+              if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+                fullText += parsed.delta.text;
+              }
+            } catch {}
+          }
+        });
+
         res.on('end', () => {
-          try { resolve({ status: res.statusCode, data: JSON.parse(data) }); }
-          catch(e) { reject(e); }
+          if (!resolved) {
+            resolved = true;
+            resolve({
+              statusCode: 200,
+              headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                content: [{ type: 'text', text: fullText || 'I had trouble getting a response. Please try again.' }]
+              })
+            });
+          }
+        });
+
+        res.on('error', (err) => {
+          if (!resolved) {
+            resolved = true;
+            resolve({
+              statusCode: 500,
+              headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+              body: JSON.stringify({ error: err.message })
+            });
+          }
         });
       });
-      req.on('error', reject);
+
+      req.on('error', (err) => {
+        if (!resolved) {
+          resolved = true;
+          resolve({
+            statusCode: 500,
+            headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: err.message })
+          });
+        }
+      });
+
+      req.setTimeout(30000, () => {
+        req.destroy();
+        if (!resolved) {
+          resolved = true;
+          resolve({
+            statusCode: 200,
+            headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              content: [{ type: 'text', text: fullText || 'The response took too long. Please try again.' }]
+            })
+          });
+        }
+      });
+
       req.write(bodyStr);
       req.end();
     });
-
-    // Initial request
-    let currentMessages = [...body.messages];
-    let finalData = null;
-    let iterations = 0;
-    const MAX_ITERATIONS = 5;
-
-    let baseRequest = {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
-      system: systemBlocks,
-      messages: currentMessages
-    };
-
-    if (needsWebSearch) {
-      baseRequest.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }];
-    }
-
-    while (iterations < MAX_ITERATIONS) {
-      iterations++;
-      const result = await callClaude(baseRequest);
-      const data = result.data;
-
-      if (data.usage) {
-        console.log('Usage — input:', data.usage.input_tokens, '| output:', data.usage.output_tokens);
-      }
-
-      // If stop_reason is end_turn or not tool_use, we have the final answer
-      if (data.stop_reason !== 'tool_use') {
-        finalData = data;
-        break;
-      }
-
-      // Handle tool_use — add assistant message and tool results
-      const assistantContent = data.content || [];
-      currentMessages = [...currentMessages, { role: 'assistant', content: assistantContent }];
-
-      // Build tool results
-      const toolResults = [];
-      for (const block of assistantContent) {
-        if (block.type === 'tool_use') {
-          // Web search result is already in the response from Anthropic's web search tool
-          // The tool result content comes back as server-side tool execution
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: block.id,
-            content: block.type === 'web_search_20250305' ? '' : 'Search completed.'
-          });
-        }
-      }
-
-      if (toolResults.length === 0) {
-        finalData = data;
-        break;
-      }
-
-      currentMessages = [...currentMessages, { role: 'user', content: toolResults }];
-      baseRequest = { ...baseRequest, messages: currentMessages };
-    }
-
-    if (!finalData) finalData = { content: [{ type: 'text', text: 'I had trouble searching for that information. Please try again or check gov.uk directly.' }] };
-
-    // Extract text from response — handle mixed content blocks
-    const textContent = (finalData.content || [])
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('\n');
-
-    if (textContent) {
-      finalData.content = [{ type: 'text', text: textContent }];
-    }
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(finalData)
-    };
+    // ── END STREAMING ────────────────────────────────────────────────────────
 
   } catch (err) {
     console.log('Error:', err.message);
