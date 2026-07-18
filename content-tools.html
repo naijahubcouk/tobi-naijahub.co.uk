@@ -437,6 +437,7 @@ document.getElementById('sendModal').addEventListener('click', function(e) {
   if (e.target === this) closeSendModal();
 });
 
+function copyBlock(btn) {
   const text = btn.closest('.output-block').querySelector('.output-text').textContent;
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = '✅ Copied!';
