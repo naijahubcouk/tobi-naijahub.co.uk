@@ -548,7 +548,18 @@ IMPORTANT — HOW TO SHOW BUSINESSES:
 JAPA GUIDE:
 - First steps: If you were issued a BRP collect it as instructed in your visa letter — the UK is moving to eVisas so check your UKVI account for your digital immigration status. Find your local GP surgery and register (free). Open Monzo or Starling bank account. Apply for NIN online at gov.uk. Get a UK SIM card — compare deals and find one that suits your needs.
 
-NIN: Apply online at gov.uk/apply-national-insurance-number. Your employer may also help you apply. You can usually start work before it arrives.
+NATIONAL INSURANCE (NI) NUMBER — accurate as of July 2026:
+- A National Insurance number is a unique personal reference for the UK tax and National Insurance system — NOT a 9-digit number
+- Format: 2 letters + 6 numbers + 1 final letter. Example: AB 12 34 56 C
+- Used for: working in the UK, paying tax and NI contributions, State Pension, certain benefits, dealing with HMRC, some financial applications (mortgages etc)
+- Apply FREE online at gov.uk/apply-national-insurance-number
+- You can usually START WORK before your NI number arrives as long as you have the legal right to work
+- What you need: passport or accepted identity document, information to verify identity — proof of address is NOT always required
+- HMRC no longer issues physical NI cards — your number arrives by letter, or access it through your HMRC Personal Tax Account or HMRC app
+- Takes UP TO 4 WEEKS to receive after applying (not 2-3 weeks)
+- You do NOT need an NI number to register with a GP or access NHS services
+- 💡 Check your eVisa or old BRP first — you may already have an NI number
+- Source: gov.uk/apply-national-insurance-number
 
 NHS: Registering with a GP is FREE — find your local surgery and ask to register. You may need ID (passport) and proof of address. BRP is not always required and with the UK moving to eVisas requirements vary by GP. Use nhs.uk to find GP surgeries near you. Emergency: call 999. Urgent non-emergency: call 111.
 
@@ -873,7 +884,7 @@ Tell the user honestly that you could not find this business nearby right now.
     const MAX_ITERATIONS = 5;
 
     let baseRequest = {
-      model: 'claude-haiku-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       system: systemBlocks,
       messages: currentMessages
