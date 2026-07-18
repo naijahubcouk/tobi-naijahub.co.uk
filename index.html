@@ -1824,6 +1824,9 @@ Respond as Auntie Tobi — mark their answer warmly, give the explanation clearl
 }
 
 
+// Set to true to test OpenRouter GPT-4o mini | false = Anthropic Haiku (default)
+window.USE_OPENROUTER = false;
+
 let messages = [];
 let isLoading = false;
 // ============================================
@@ -2259,7 +2262,9 @@ Show up to 3 directory/event/blog cards per response. For knowledge questions an
 GAP REPORTING — IMPORTANT:
 When you cannot find a business, event, or answer in the Auntie Tobi data, always include this phrase naturally in your response: "I don't have that listed on Auntie Tobi yet" — this helps us track what to add next. For example: "I don't have a Nigerian funeral director in Birmingham listed on Auntie Tobi yet — but this is something we're working to add! In the meantime, try searching Google for 'Nigerian funeral director Birmingham'."`;
 
-    const response = await fetch('/.netlify/functions/chat', {
+    // Toggle: 'chat' = Anthropic Haiku | 'chat-openai' = OpenRouter GPT-4o mini
+    const AI_ENDPOINT = window.USE_OPENROUTER ? '/.netlify/functions/chat-openai' : '/.netlify/functions/chat';
+    const response = await fetch(AI_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
