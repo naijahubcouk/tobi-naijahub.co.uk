@@ -60,7 +60,26 @@
   .panel { display:none; }
   .panel.active { display:block; }
 
-  /* Push notification preview */
+  /* Push send modal */
+  .send-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .send-modal.open { display:flex; }
+  .send-box { background:white; border-radius:12px; width:100%; max-width:420px; overflow:hidden; }
+  .send-box-header { background:#0F1E36; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .send-box-header span { color:white; font-weight:700; font-size:14px; }
+  .send-box-close { background:none; border:none; color:rgba(255,255,255,0.6); font-size:20px; cursor:pointer; }
+  .send-box-body { padding:16px; }
+  .send-preview { background:#0F1E36; border-radius:8px; padding:12px; margin-bottom:14px; }
+  .send-preview-title { font-size:13px; font-weight:700; color:white; margin-bottom:4px; }
+  .send-preview-body { font-size:12px; color:rgba(255,255,255,0.7); }
+  .send-options { display:flex; flex-direction:column; gap:10px; }
+  .send-label { font-size:12px; font-weight:700; color:#0F1E36; margin-bottom:4px; display:block; }
+  .send-input { width:100%; border:1.5px solid #e5e7eb; border-radius:8px; padding:9px 12px; font-size:13px; font-family:'Nunito',sans-serif; outline:none; }
+  .send-input:focus { border-color:#057A44; }
+  .send-footer { display:flex; gap:8px; padding:12px 16px; border-top:1px solid #e5e7eb; }
+  .btn-send-now { flex:1; background:#057A44; color:white; border:none; border-radius:8px; padding:11px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; }
+  .btn-schedule { flex:1; background:#FFB81C; color:#0F1E36; border:none; border-radius:8px; padding:11px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; }
+  .btn-cancel-send { background:#f5f5f0; color:#555; border:none; border-radius:8px; padding:11px 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; }
+  .success-msg { background:#f0faf5; border:1.5px solid #057A44; border-radius:8px; padding:12px; text-align:center; font-size:13px; color:#057A44; font-weight:700; display:none; margin-top:10px; }
   .notif-preview { background:#0F1E36; border-radius:10px; padding:14px; margin-bottom:8px; }
   .notif-preview .notif-title { font-size:13px; font-weight:700; color:white; margin-bottom:4px; }
   .notif-preview .notif-body { font-size:12px; color:rgba(255,255,255,0.7); line-height:1.5; }
@@ -135,6 +154,38 @@
     <div class="output-section" id="output-push"></div>
   </div>
 
+</div>
+
+<!-- Send/Schedule Modal -->
+<div class="send-modal" id="sendModal">
+  <div class="send-box">
+    <div class="send-box-header">
+      <span>🔔 Send Push Notification</span>
+      <button class="send-box-close" onclick="closeSendModal()">×</button>
+    </div>
+    <div class="send-box-body">
+      <div class="send-preview">
+        <div class="send-preview-title" id="modalTitle">Title here</div>
+        <div class="send-preview-body" id="modalBody">Body here</div>
+      </div>
+      <div class="send-options">
+        <div>
+          <label class="send-label">Link (optional)</label>
+          <input type="url" class="send-input" id="modalUrl" placeholder="https://auntietobi.com/blog/..." value="https://auntietobi.co.uk">
+        </div>
+        <div>
+          <label class="send-label">Schedule for later (leave blank to send now)</label>
+          <input type="datetime-local" class="send-input" id="modalSchedule">
+        </div>
+      </div>
+      <div class="success-msg" id="successMsg"></div>
+    </div>
+    <div class="send-footer">
+      <button class="btn-cancel-send" onclick="closeSendModal()">Cancel</button>
+      <button class="btn-schedule" onclick="sendNotification(true)">📅 Schedule</button>
+      <button class="btn-send-now" onclick="sendNotification(false)">📤 Send Now</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -261,16 +312,19 @@ async function generate(tab) {
         const titleMatch = section.match(/TITLE:\s*(.+)/i);
         const bodyMatch = section.match(/BODY:\s*(.+)/i);
         if (titleMatch && bodyMatch) {
+          const t = titleMatch[1].trim();
+          const b = bodyMatch[1].trim();
           const div = document.createElement('div');
           div.innerHTML = `
             <div class="notif-preview">
               <div class="notif-num">Notification ${i+1} of ${sections.length}</div>
-              <div class="notif-title">${titleMatch[1].trim()}</div>
-              <div class="notif-body">${bodyMatch[1].trim()}</div>
+              <div class="notif-title">${t}</div>
+              <div class="notif-body">${b}</div>
             </div>
-            <div style="display:flex;gap:6px;margin-bottom:10px;">
-              <button class="copy-btn" style="position:static;padding:6px 12px;" onclick="copyText('${titleMatch[1].trim().replace(/'/g,"\\'")}', this)">📋 Copy Title</button>
-              <button class="copy-btn" style="position:static;padding:6px 12px;" onclick="copyText('${bodyMatch[1].trim().replace(/'/g,"\\'")}', this)">📋 Copy Body</button>
+            <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+              <button class="copy-btn" style="position:static;padding:6px 12px;" onclick="copyText('${t.replace(/'/g,"\\'")}', this)">📋 Copy Title</button>
+              <button class="copy-btn" style="position:static;padding:6px 12px;" onclick="copyText('${b.replace(/'/g,"\\'")}', this)">📋 Copy Body</button>
+              <button class="copy-btn" style="position:static;padding:6px 12px;background:#FFB81C;color:#0F1E36;" onclick="openSendModal('${t.replace(/'/g,"\\'")}', '${b.replace(/'/g,"\\'")}')">🔔 Send / Schedule</button>
             </div>`;
           output.appendChild(div);
         }
@@ -313,7 +367,76 @@ function renderOutput(container, text) {
   }
 }
 
-function copyBlock(btn) {
+let currentNotif = { title: '', body: '' };
+
+function openSendModal(title, body) {
+  currentNotif = { title, body };
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent = body;
+  document.getElementById('modalUrl').value = 'https://auntietobi.co.uk';
+  document.getElementById('modalSchedule').value = '';
+  document.getElementById('successMsg').style.display = 'none';
+  document.getElementById('sendModal').classList.add('open');
+}
+
+function closeSendModal() {
+  document.getElementById('sendModal').classList.remove('open');
+}
+
+async function sendNotification(schedule) {
+  const title = currentNotif.title;
+  const body = currentNotif.body;
+  const url = document.getElementById('modalUrl').value || 'https://auntietobi.co.uk';
+  const scheduledTime = schedule ? document.getElementById('modalSchedule').value : null;
+
+  if (schedule && !scheduledTime) {
+    alert('Please pick a date and time to schedule.');
+    return;
+  }
+
+  const btnNow = document.querySelector('.btn-send-now');
+  const btnSched = document.querySelector('.btn-schedule');
+  btnNow.disabled = true;
+  btnSched.disabled = true;
+  btnNow.textContent = '⏳ Sending...';
+
+  try {
+    const payload = { title, body, url };
+    if (schedule && scheduledTime) {
+      payload.scheduledTime = new Date(scheduledTime).toISOString();
+    }
+
+    const response = await fetch('/.netlify/functions/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    const successMsg = document.getElementById('successMsg');
+
+    if (data.success) {
+      successMsg.style.display = 'block';
+      successMsg.textContent = schedule
+        ? `✅ Scheduled successfully! Notification ID: ${data.id}`
+        : `✅ Sent to ${data.recipients || 'all'} subscribers! ID: ${data.id}`;
+      setTimeout(() => closeSendModal(), 3000);
+    } else {
+      alert('Error: ' + (data.error || 'Something went wrong. Check your OneSignal API key.'));
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+
+  btnNow.disabled = false;
+  btnSched.disabled = false;
+  btnNow.textContent = '📤 Send Now';
+}
+
+document.getElementById('sendModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSendModal();
+});
+
   const text = btn.closest('.output-block').querySelector('.output-text').textContent;
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = '✅ Copied!';
