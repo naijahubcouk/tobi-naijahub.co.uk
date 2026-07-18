@@ -99,6 +99,25 @@ Always:
 - Never state specific fees, rules or eligibility from memory — always rely on what the search returns
 - Today's date is available to you — always give context of when information was retrieved
 
+GLOBAL ACCURACY RULES — apply to ALL factual answers, not just specific topics:
+
+1. COSTS AND FIGURES: NEVER state any price, fee, amount or figure from training memory. Always use the live search results. If the search did not return a figure, say "I was not able to confirm the current figure — please check gov.uk or the relevant official website."
+
+2. RULES AND ELIGIBILITY: NEVER state eligibility criteria, requirements or rules from memory. UK rules change frequently. Always use search results and cite the source.
+
+3. WORDING PRECISION:
+   - NEVER say "forecast to be £X" if it is a confirmed figure — say "from [date], the figure is £X"
+   - NEVER say "property's value" for water bills — say "historic rateable value"
+   - NEVER say "smart water meter" — say "water meter"
+   - NEVER say "payment holidays" for water bills — say "payment plans and support schemes"
+   - NEVER end responses with location-specific questions unless the user mentioned that location — always say "Any other questions about life in the UK? 😊"
+   - NEVER say "9-digit" for National Insurance numbers — format is 2 letters + 6 numbers + 1 letter (e.g. AB 12 34 56 C)
+   - NEVER say NI cards are sent — HMRC no longer issues physical cards
+
+4. UNCERTAINTY: If you are not sure about a fact, say so clearly and direct to the official source. Never guess or approximate.
+
+5. DATES: Always mention when information was retrieved or when a rule came into effect. e.g. "From 1 April 2026..." or "As of July 2026..."
+
 CRITICAL RULES:
 1. ONLY state facts explicitly listed in the business data. NEVER invent services, travel or features not listed.
 2. Only mention WhatsApp if the business has WhatsApp listed.
@@ -549,14 +568,21 @@ JAPA GUIDE:
 - First steps: If you were issued a BRP collect it as instructed in your visa letter — the UK is moving to eVisas so check your UKVI account for your digital immigration status. Find your local GP surgery and register (free). Open Monzo or Starling bank account. Apply for NIN online at gov.uk. Get a UK SIM card — compare deals and find one that suits your needs.
 
 WATER BILLS UK — accurate as of July 2026:
-- Average combined water AND wastewater bill in England and Wales from 1 April 2026 is approximately £639/year (NOT £473 — that was 2024/25 and is OUTDATED)
+- Average combined water AND wastewater bill in England and Wales from 1 April 2026 is approximately £639/year (NOT £473 — that was 2024/25 and is OUTDATED). Say: "From 1 April 2026, the average combined household water and wastewater bill in England and Wales is around £639 per year"
+- NEVER say "forecast to be £639" — it is confirmed, not a forecast
 - Bills rose by approximately 26% from April 2026 due to Ofwat price review
 - Cannot switch water supplier — your supplier depends on where you live
-- Two billing methods: METERED (pay for what you use + standing charge) or UNMETERED (fixed amount based on property's historic rateable value from before Council Tax was introduced in 1993)
+- Two billing methods:
+  * METERED: pay standing charge + charge based on how much water you use (measured in cubic metres)
+  * UNMETERED: fixed annual amount based on property's HISTORIC RATEABLE VALUE (NOT current market value or property value) — or another charging method used by your water company
+- NEVER say "based on property's value" or "based on your home's value" — always say "historic rateable value"
 - Bill covers: clean water supply + sewerage/wastewater services
+- Water meters: say "water meter" NOT "smart water meter" — most are not smart meters
+- Meter installation: say "if your property is suitable, your water company will usually install a water meter free of charge" — NOT all properties can have a meter fitted
+- Payment support: say "payment plans, social tariffs and other support schemes" — NOT "payment holidays" as not all companies offer these
 - Meter tip: saves money if fewer people in home than bedrooms — check your water company's online calculator
-- WaterSure scheme available for eligible high-use low-income households
-- Source: Ofwat / The Guardian Jan 2026
+- NEVER end responses with location-specific questions like "Any other questions about Basingstoke?" — always say "Any other questions about life in the UK? 😊"
+- Source: Ofwat / gov.uk / water company websites
 
 ⚠️ CRITICAL FIGURES RULE: NEVER use the following outdated figures — they are wrong for 2026:
 - ❌ £473 average water bill (was 2024/25)
@@ -791,10 +817,57 @@ exports.handler = async function(event) {
         ])
       : Promise.resolve({ results: [], type: 'skip' });
 
-    const placesData = await placesPromise;
+    // ── PRE-SEARCH RAG ────────────────────────────────────────────────────────
+    // Run pre-search IN PARALLEL with building system blocks to save time
+    const isFactualQuestion = /water bill|water supplier|water meter|council tax|tv licen|national insurance|ni number|oyster|tfl|tube fare|bus fare|minimum wage|universal credit|child benefit|housing benefit|pip|nhs|gp register|driving licen|dvla|mot|stamp duty|mortgage|interest rate|rent|landlord|deposit|visa|ilr|settlement|immigration|passport|biometric|evisa|brp|right to work|student loan|cost of living|energy bill|gas bill|electricity|ofgem|broadband|pension|state pension|hmrc|tax return|paye|income tax|sick pay|maternity|paternity|redundancy|employment law|holiday pay|how much|how long|when can i|am i eligible|do i need|what is the fee|what is the cost|what are the rules/i.test(lastMessage);
+
+    // Start pre-search immediately — don't await yet
+    const preSearchPromise = isFactualQuestion ? (async () => {
+      try {
+        const preSearchBody = JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 600,
+          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
+          system: `You are a search assistant. Search for current UK information and return ONLY key facts, figures, dates and source URLs. Be very brief. Today is ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}.`,
+          messages: [{ role: 'user', content: `Find current UK facts about: ${lastMessage.substring(0, 150)}` }]
+        });
+        const result = await new Promise((resolve) => {
+          const opts = {
+            hostname: 'api.anthropic.com',
+            path: '/v1/messages',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01',
+              'anthropic-beta': 'web-search-2025-03-05',
+              'Content-Length': Buffer.byteLength(preSearchBody)
+            }
+          };
+          const req = https.request(opts, (res) => {
+            let d = '';
+            res.on('data', c => d += c);
+            res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve(null); } });
+          });
+          req.on('error', () => resolve(null));
+          req.setTimeout(6000, () => { req.destroy(); resolve(null); });
+          req.write(preSearchBody);
+          req.end();
+        });
+        if (result?.content) {
+          const text = result.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+          if (text) return `\n\nLIVE SEARCH RESULTS (${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}):\n${text}\n\n⚠️ CRITICAL: Use ONLY these search results for any facts, costs, rules or figures. Do NOT use training memory for anything that could have changed.`;
+        }
+      } catch(e) { console.log('Pre-search error:', e.message); }
+      return '';
+    })() : Promise.resolve('');
+    // ── END PRE-SEARCH RAG ───────────────────────────────────────────────────
+
+    // Await both in parallel
+    const [placesData, preSearchContext] = await Promise.all([placesPromise, preSearchPromise]);
     const places = placesData.results || [];
     const placesType = placesData.type || 'none';
-    console.log('Final places count:', places.length, '| Type:', placesType);
+    console.log('Final places count:', places.length, '| Type:', placesType, '| PreSearch chars:', preSearchContext.length);
 
     let googleResultsContext = '';
     if (places.length > 0) {
@@ -814,7 +887,7 @@ INSTRUCTIONS FOR PRESENTING THESE RESULTS:
 - ⚠️ CRITICAL: Do NOT write your own listing CTA box. Copy and paste the EXACT HTML box below — do not modify it, do not paraphrase it, do not add NaijaUKHub or any other text:
 
 <div style="background:#f0f9f4;border:1.5px solid #057A44;border-radius:10px;padding:12px 14px;margin-top:10px;">
-<p style="margin:0 0 6px;font-size:14px;color:#0F1E36;line-height:1.5;">🏪 Do you own or know someone with a [business type] business in this area? Get listed with us and reach thousands of Nigerians across the UK! 🇳🇬🇬🇧</p>
+<p style="margin:0 0 6px;font-size:14px;color:#0F1E36;line-height:1.5;">🏪 Do you own or know someone with a [business type] business in this area? Get listed with us and reach thousands of Nigerians across the UK! 🇳🇬 🇬🇧</p>
 <a href="https://auntietobi.com/new-listing" style="display:inline-block;margin-top:4px;font-size:14px;color:#057A44;font-weight:700;text-decoration:none;">👉 List your business here</a>
 </div>
 
@@ -827,7 +900,7 @@ Tell the user honestly that you could not find this business nearby right now.
 - ⚠️ CRITICAL: Do NOT write your own listing box. Use this EXACT HTML box:
 
 <div style="background:#f0f9f4;border:1.5px solid #057A44;border-radius:10px;padding:12px 14px;margin-top:10px;">
-<p style="margin:0 0 6px;font-size:14px;color:#0F1E36;line-height:1.5;">🏪 Do you own or know someone with this type of business? Get listed with us and reach thousands of Nigerians across the UK! 🇳🇬🇬🇧</p>
+<p style="margin:0 0 6px;font-size:14px;color:#0F1E36;line-height:1.5;">🏪 Do you own or know someone with this type of business? Get listed with us and reach thousands of Nigerians across the UK! 🇳🇬 🇬🇧</p>
 <a href="https://auntietobi.com/new-listing" style="display:inline-block;margin-top:4px;font-size:14px;color:#057A44;font-weight:700;text-decoration:none;">👉 List your business here</a>
 </div>
 
@@ -835,72 +908,6 @@ Tell the user honestly that you could not find this business nearby right now.
       }
     }
 
-    // ── PRE-SEARCH RAG ────────────────────────────────────────────────────────
-    // For factual questions, search the web FIRST and inject results into the
-    // prompt so Claude answers from fresh data, not training memory.
-    const isFactualQuestion = /water bill|water supplier|water meter|council tax|tv licen|national insurance|ni number|oyster|tfl|tube fare|bus fare|minimum wage|universal credit|child benefit|housing benefit|pip|universal credit|nhs|gp register|driving licen|dvla|mot|stamp duty|mortgage|interest rate|rent|landlord|deposit|visa|ilr|settlement|immigration|passport|biometric|evisa|brp|right to work|apprenticeship|student loan|cost of living|energy bill|gas bill|electricity|ofgem|broadband|phone contract|council tax|car insurance|home insurance|life insurance|pension|state pension|hmrc|self assessment|tax return|paye|income tax|capital gains|inheritance tax|sick pay|maternity|paternity|redundancy|employment law|workers rights|holiday pay|notice period/i.test(lastMessage);
-
-    let preSearchContext = '';
-    if (isFactualQuestion) {
-      try {
-        console.log('RAG: Running pre-search for factual question...');
-        const searchQuery = encodeURIComponent(lastMessage.substring(0, 150) + ' UK 2026 site:gov.uk OR site:nhs.uk OR site:tfl.gov.uk');
-        const searchUrl = `https://api.anthropic.com/v1/messages`;
-
-        // Use web search to get fresh results
-        const preSearchBody = JSON.stringify({
-          model: 'claude-haiku-4-5',
-          max_tokens: 800,
-          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
-          system: 'You are a search assistant. Search the web for the answer to the user\'s question. Focus on gov.uk, nhs.uk and official UK sources. Return ONLY the key facts you find — date of information, source URL, and the specific facts. Be brief and factual. Today is ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) + '.',
-          messages: [{ role: 'user', content: `Search for current UK information about: ${lastMessage.substring(0, 200)}` }]
-        });
-
-        const preSearchResult = await new Promise((resolve) => {
-          const opts = {
-            hostname: 'api.anthropic.com',
-            path: '/v1/messages',
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01',
-              'anthropic-beta': 'web-search-2025-03-05',
-              'Content-Length': Buffer.byteLength(preSearchBody)
-            }
-          };
-          const req = https.request(opts, (res) => {
-            let d = '';
-            res.on('data', chunk => d += chunk);
-            res.on('end', () => {
-              try { resolve(JSON.parse(d)); } catch { resolve(null); }
-            });
-          });
-          req.on('error', () => resolve(null));
-          req.setTimeout(8000, () => { req.destroy(); resolve(null); });
-          req.write(preSearchBody);
-          req.end();
-        });
-
-        if (preSearchResult?.content) {
-          const searchText = preSearchResult.content
-            .filter(b => b.type === 'text')
-            .map(b => b.text)
-            .join('\n')
-            .trim();
-          if (searchText) {
-            preSearchContext = `\n\nLIVE SEARCH RESULTS (retrieved ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}):\n${searchText}\n\n⚠️ CRITICAL: Base your answer ONLY on the live search results above. Do NOT use any cost figures, fees, amounts or statistics from your training memory — these may be outdated. If the search results contain a figure, use that. If the search results do not contain the figure, say "I was not able to confirm the current figure — please check gov.uk or your water company's website for the latest."`;
-            console.log('RAG: Pre-search complete, injecting', searchText.length, 'chars');
-          }
-        }
-      } catch (err) {
-        console.log('RAG pre-search failed:', err.message);
-      }
-    }
-    // ── END PRE-SEARCH RAG ───────────────────────────────────────────────────
-
-    // Dynamic context (location, search results, exam state) stays OUTSIDE the cached block
-    // so it can change every request without invalidating the cache.
     const dynamicContext =
       (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
       (googleResultsContext || '') +
