@@ -2275,7 +2275,44 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
 
     messages.push({ role: 'assistant', content: reply });
     removeTyping();
-    addMessage('bot', formatResponse(reply), true, true);
+
+    // Typewriter effect — render formatted reply word by word
+    const formatted = formatResponse(reply);
+    const msgDiv = addMessage('bot', '', true, false);
+    const bubble = msgDiv?.querySelector('.bubble') || msgDiv;
+    if (bubble) {
+      bubble.innerHTML = '';
+      // Parse into temp div to get final HTML, then animate
+      const temp = document.createElement('div');
+      temp.innerHTML = formatted;
+      const finalHTML = temp.innerHTML;
+      // For short responses just show instantly
+      if (finalHTML.length < 300) {
+        bubble.innerHTML = finalHTML;
+      } else {
+        // Stream in chunks of ~5 chars for typewriter feel
+        let i = 0;
+        const step = 6;
+        const interval = setInterval(() => {
+          i = Math.min(i + step, finalHTML.length);
+          // Find safe HTML break point to avoid partial tags
+          let safeEnd = i;
+          if (i < finalHTML.length) {
+            const nextClose = finalHTML.indexOf('>', i);
+            const nextOpen = finalHTML.indexOf('<', i);
+            if (nextOpen !== -1 && (nextClose === -1 || nextOpen < nextClose)) {
+              safeEnd = nextOpen;
+            }
+          }
+          bubble.innerHTML = finalHTML.substring(0, safeEnd);
+          const messagesEl = document.getElementById('messages');
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+          if (i >= finalHTML.length) clearInterval(interval);
+        }, 8);
+      }
+    } else {
+      addMessage('bot', formatted, true, true);
+    }
     if (nhsMode) setTimeout(showNHSSuggestions, 300);
 
     // Show disclaimer for NHS/visa/immigration/legal topics
