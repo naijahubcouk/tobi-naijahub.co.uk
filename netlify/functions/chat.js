@@ -89,15 +89,22 @@ LINK: auntietobi.com/listing/slug
 ]
 
 LIVE SEARCH RULE — CRITICAL:
-Auntie Tobi always searches the web before answering ANY factual question. This ensures all information is current and accurate — never outdated.
+You have a web_search tool. You MUST use it before answering ANY question that involves:
+- Costs, fees, prices or amounts (water bills, visa fees, train fares, minimum wage etc.)
+- Rules, eligibility or requirements (immigration, benefits, NHS, driving etc.)
+- Current policies or government guidance
+- Any figure that could have changed since 2024
 
-Always:
-- Search for the latest information before answering factual questions
-- Use gov.uk, nhs.uk, tfl.gov.uk and other official UK sources where relevant
-- State your source when giving factual information (e.g. "According to gov.uk...")
-- If search results are unclear, say "Please check gov.uk for the latest on this" rather than guessing
-- Never state specific fees, rules or eligibility from memory — always rely on what the search returns
-- Today's date is available to you — always give context of when information was retrieved
+Do NOT answer from memory for these topics. Search first, then answer from what you find.
+If the search does not return a clear answer, say so and direct to gov.uk or the relevant official website.
+Always mention the date information was retrieved: "As of [date from search results]..."
+
+AFTER SEARCHING — additional rules:
+- NEVER add extra facts from training memory on top of search results. If the search found the answer, use only that. Do not supplement with memory.
+- NEVER quote percentage increases (e.g. "risen by 5.4%") unless that exact figure appears in the search results — these are often wrong or refer to different periods
+- For water bills: always say "From 1 April 2026, the average combined household water and wastewater bill in England and Wales is around £639 per year" — do not add percentage change context
+- For local suppliers (e.g. water companies by area): always direct the user to the Water UK "Find Your Supplier" tool at wateruk.org.uk/water-industry/find-your-supplier rather than stating a supplier as definitive — postcodes vary
+- For Ofwat: say "Ofwat is the independent regulator for water services in England and Wales. It sets price limits that water companies can charge over each regulatory period, while individual companies determine their own charges within those limits" — not "water companies following Ofwat guidelines"
 
 GLOBAL ACCURACY RULES — apply to ALL factual answers, not just specific topics:
 
@@ -817,57 +824,11 @@ exports.handler = async function(event) {
         ])
       : Promise.resolve({ results: [], type: 'skip' });
 
-    // ── PRE-SEARCH RAG ────────────────────────────────────────────────────────
-    // Run pre-search IN PARALLEL with building system blocks to save time
-    const isFactualQuestion = /water bill|water supplier|water meter|council tax|tv licen|national insurance|ni number|oyster|tfl|tube fare|bus fare|minimum wage|universal credit|child benefit|housing benefit|pip|nhs|gp register|driving licen|dvla|mot|stamp duty|mortgage|interest rate|rent|landlord|deposit|visa|ilr|settlement|immigration|passport|biometric|evisa|brp|right to work|student loan|cost of living|energy bill|gas bill|electricity|ofgem|broadband|pension|state pension|hmrc|tax return|paye|income tax|sick pay|maternity|paternity|redundancy|employment law|holiday pay|how much|how long|when can i|am i eligible|do i need|what is the fee|what is the cost|what are the rules/i.test(lastMessage);
-
-    // Start pre-search immediately — don't await yet
-    const preSearchPromise = isFactualQuestion ? (async () => {
-      try {
-        const preSearchBody = JSON.stringify({
-          model: 'claude-haiku-4-5',
-          max_tokens: 600,
-          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
-          system: `You are a search assistant. Search for current UK information and return ONLY key facts, figures, dates and source URLs. Be very brief. Today is ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}.`,
-          messages: [{ role: 'user', content: `Find current UK facts about: ${lastMessage.substring(0, 150)}` }]
-        });
-        const result = await new Promise((resolve) => {
-          const opts = {
-            hostname: 'api.anthropic.com',
-            path: '/v1/messages',
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01',
-              'anthropic-beta': 'web-search-2025-03-05',
-              'Content-Length': Buffer.byteLength(preSearchBody)
-            }
-          };
-          const req = https.request(opts, (res) => {
-            let d = '';
-            res.on('data', c => d += c);
-            res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve(null); } });
-          });
-          req.on('error', () => resolve(null));
-          req.setTimeout(6000, () => { req.destroy(); resolve(null); });
-          req.write(preSearchBody);
-          req.end();
-        });
-        if (result?.content) {
-          const text = result.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
-          if (text) return `\n\nLIVE SEARCH RESULTS (${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}):\n${text}\n\n⚠️ CRITICAL: Use ONLY these search results for any facts, costs, rules or figures. Do NOT use training memory for anything that could have changed.`;
-        }
-      } catch(e) { console.log('Pre-search error:', e.message); }
-      return '';
-    })() : Promise.resolve('');
-    // ── END PRE-SEARCH RAG ───────────────────────────────────────────────────
-
-    // Await both in parallel
-    const [placesData, preSearchContext] = await Promise.all([placesPromise, preSearchPromise]);
+    // Both promises resolve immediately if not needed
+    const [placesData] = await Promise.all([placesPromise]);
     const places = placesData.results || [];
     const placesType = placesData.type || 'none';
-    console.log('Final places count:', places.length, '| Type:', placesType, '| PreSearch chars:', preSearchContext.length);
+    console.log('Final places count:', places.length, '| Type:', placesType);
 
     let googleResultsContext = '';
     if (places.length > 0) {
@@ -911,7 +872,6 @@ Tell the user honestly that you could not find this business nearby right now.
     const dynamicContext =
       (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
       (googleResultsContext || '') +
-      (preSearchContext || '') +
       (examContext ? '\n\n' + examContext : '');
 
     // PROMPT CACHING: the large, mostly-static SYSTEM_PROMPT is marked as an
@@ -932,20 +892,30 @@ Tell the user honestly that you could not find this business nearby right now.
       });
     }
 
-    // Always search the web for current information
-    const needsWebSearch = true;
+    // ── COST OPTIMISATION ────────────────────────────────────────────────────
+    // 1. Smart model routing — Sonnet only for sensitive/factual topics
+    const needsSonnet = /visa|ilr|immigration|home office|settlement|asylum|passport|nhs|gp|healthcare|benefit|universal credit|council tax|tax|hmrc|national insurance|minimum wage|driving licen|dvla|water bill|energy bill|mortgage|stamp duty|pension|employment law|sick pay|maternity|redundancy|right to work|oyster|tfl|student loan|evisa|brp|biometric/i.test(lastMessage);
+    const selectedModel = needsSonnet ? 'claude-sonnet-4-6' : 'claude-haiku-4-5';
+    const maxTokens = needsSonnet ? 1200 : 800;
+    console.log('Model:', selectedModel, '| needsSonnet:', needsSonnet);
+
+    // 2. Limit conversation history to last 6 messages to reduce input tokens
+    const recentMessages = body.messages.slice(-6);
+
+    // 3. Only use web search on Sonnet (factual questions)
+    const useWebSearch = needsSonnet;
+    // ── END COST OPTIMISATION ────────────────────────────────────────────────
 
     const baseRequest = {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
+      model: selectedModel,
+      max_tokens: maxTokens,
       stream: true,
       system: systemBlocks,
-      messages: [...body.messages],
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }]
+      messages: recentMessages,
+      ...(useWebSearch ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }] } : {})
     };
 
     // ── STREAMING RESPONSE ───────────────────────────────────────────────────
-    // Stream SSE chunks back to the client so words appear as they are generated
     const bodyStr = JSON.stringify(baseRequest);
     const options = {
       hostname: 'api.anthropic.com',
@@ -955,7 +925,7 @@ Tell the user honestly that you could not find this business nearby right now.
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31,web-search-2025-03-05',
+        'anthropic-beta': useWebSearch ? 'prompt-caching-2024-07-31,web-search-2025-03-05' : 'prompt-caching-2024-07-31',
         'Content-Length': Buffer.byteLength(bodyStr)
       }
     };
