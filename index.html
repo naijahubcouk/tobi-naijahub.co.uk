@@ -2666,6 +2666,30 @@ function showAllNews() {
       date: '22 Jun 2026'
     },
     {
+      emoji: '🎉',
+      title: 'Nigerian Cultural Festival 2026 Is Coming to Plymouth',
+      summary: 'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth in the South West of England.',
+      url: 'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know',
+      label: 'Events',
+      date: '18 Jul 2026'
+    },
+    {
+      emoji: '💷',
+      title: 'UK-Based Nigerians Earning £2,600 Worse Off Than ₦60,000 Earners at Home?',
+      summary: 'A presidential adviser sparked debate claiming Nigerians earning £2,600/month in the UK could be worse off than those on ₦60,000 in Nigeria due to high living costs.',
+      url: 'https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said',
+      label: 'News',
+      date: '18 Jul 2026'
+    },
+    {
+      emoji: '🛂',
+      title: 'UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries',
+      summary: 'The UK has confirmed that Nigerians and citizens of 32 other African countries must obtain entry clearance before travelling to or transiting through the UK.',
+      url: 'https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries',
+      label: 'News',
+      date: '18 Jul 2026'
+    },
+    {
       emoji: '📺',
       title: 'Do You Really Need a TV Licence in the UK? Here is the Simple Rule Every Nigerian Should Know',
       summary: 'Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you own a TV but do not watch live television or BBC iPlayer.',
@@ -2996,6 +3020,33 @@ function showNewsCard() {
       url: 'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
       label: 'News',
       date: '22 Jun 2026'
+    },
+    {
+      emoji: '🎉',
+      category: 'EVENTS',
+      title: 'Nigerian Cultural Festival 2026 Is Coming to Plymouth',
+      summary: 'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth in the South West of England.',
+      url: 'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know',
+      label: 'Events',
+      date: '18 Jul 2026'
+    },
+    {
+      emoji: '💷',
+      category: 'NEWS',
+      title: 'UK-Based Nigerians Earning £2,600 Worse Off Than ₦60,000 Earners at Home?',
+      summary: 'A presidential adviser sparked debate claiming Nigerians earning £2,600/month in the UK could be worse off than those on ₦60,000 in Nigeria due to high living costs.',
+      url: 'https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said',
+      label: 'News',
+      date: '18 Jul 2026'
+    },
+    {
+      emoji: '🛂',
+      category: 'NEWS',
+      title: 'UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries',
+      summary: 'The UK has confirmed that Nigerians and citizens of 32 other African countries must obtain entry clearance before travelling to or transiting through the UK.',
+      url: 'https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries',
+      label: 'News',
+      date: '18 Jul 2026'
     },
     {
       emoji: '📺',
@@ -4573,6 +4624,72 @@ function handleDeepLink() {
       const sf = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
       const sfBtns = sf.map(x => '<button class="suggestion-btn" onclick="quickAsk(\'' + x.replace(/'/g,"\\'") + '\')">' + x + '</button>').join('');
       addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showEventsCard()">&#127881; See All Events</button><button class="suggestion-btn" onclick="window.open(\'https://wa.me/447594674940\',\'_blank\')">&#128226; Post Your Event</button>' + sfBtns + '</div>');
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
+  } else if (news === 'nigculturalfest') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      const nch = ['<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">',
+        '<div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">',
+        '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">&#128240;</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/ARTICLES</span></div>',
+        '<button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All &#8594;</button></div>',
+        '<div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">',
+        '<span style="background:#6B21A8;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Events</span>',
+        '<span style="font-size:10px;color:#9CA3AF;">18 Jul 2026</span></div>',
+        '<div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">&#127881; Nigerian Cultural Festival 2026 Is Coming to Plymouth</div>',
+        '<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth in the South West of England.</div>',
+        '<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">',
+        '<a href="https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">&#128279; Read More</a>',
+        '<button onclick="tobiShare(\'Nigerian Cultural Festival\',\'Nigerian Cultural Festival 2026 Is Coming to Plymouth\',\'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Heres-Everything-You-Need-to-Know\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">&#128228; Share</button>',
+        '</div></div></div>'].join('');
+      addTipMessage(nch);
+      const nc = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showEventsCard()">&#127881; See All Events</button><button class="suggestion-btn" onclick="showAllNews()">&#128240; More Articles</button>${nc.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
+  } else if (news === 'nigerianswage') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      const nwh = ['<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">',
+        '<div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">',
+        '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">&#128240;</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/ARTICLES</span></div>',
+        '<button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All &#8594;</button></div>',
+        '<div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">',
+        '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span>',
+        '<span style="font-size:10px;color:#9CA3AF;">18 Jul 2026</span></div>',
+        '<div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">&#128183; UK-Based Nigerians Earning £2,600 Worse Off Than ₦60,000 Earners at Home?</div>',
+        '<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">A presidential adviser sparked debate claiming Nigerians earning £2,600/month in the UK could be worse off than those on ₦60,000 in Nigeria due to high living costs.</div>',
+        '<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">',
+        '<a href="https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">&#128279; Read More</a>',
+        '<button onclick="tobiShare(\'Nigerians Wage Debate\',\'UK Nigerians Earning £2600 Worse Off Than ₦60000 Earners?\',\'https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Heres-What-Was-Said\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">&#128228; Share</button>',
+        '</div></div></div>'].join('');
+      addTipMessage(nwh);
+      const nw = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How can I save money as a Nigerian in the UK?')">&#128183; Save money in the UK?</button><button class="suggestion-btn" onclick="showAllNews()">&#128240; More Articles</button>${nw.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
+  } else if (news === 'ukvisaconfirm') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      const uvh = ['<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">',
+        '<div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">',
+        '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">&#128240;</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/ARTICLES</span></div>',
+        '<button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All &#8594;</button></div>',
+        '<div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">',
+        '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span>',
+        '<span style="font-size:10px;color:#9CA3AF;">18 Jul 2026</span></div>',
+        '<div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">&#128706; UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries</div>',
+        '<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">The UK has confirmed that Nigerians and citizens of 32 other African countries must obtain entry clearance before travelling to or transiting through the UK.</div>',
+        '<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">',
+        '<a href="https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">&#128279; Read More</a>',
+        '<button onclick="tobiShare(\'UK Visa Entry Clearance\',\'UK Confirms Entry Clearance for Nigerians and 32 African Countries\',\'https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">&#128228; Share</button>',
+        '</div></div></div>'].join('');
+      addTipMessage(uvh);
+      const uv = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How do I apply for a UK visitor visa from Nigeria?')">&#128706; Apply for UK visitor visa?</button><button class="suggestion-btn" onclick="showAllNews()">&#128240; More Articles</button>${uv.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({},'',window.location.pathname);
     }, 500);
   } else if (news === 'tvlicence') {
