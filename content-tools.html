@@ -239,19 +239,17 @@ async function generate(tab) {
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/.netlify/functions/content-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 2000,
-        system: 'You are Auntie Tobi — the warm, witty Nigerian auntie who helps Nigerians navigate life in the UK. Your voice is conversational, warm, uses occasional Nigerian expressions naturally (E go be!, No wahala!, Ehen!), and always feels genuine — never corporate or generic. Brand colours: green #057A44, gold #FFB81C. Platform: @auntietobi_uk on Instagram. Website: auntietobi.co.uk',
-        messages: [{ role: 'user', content: prompt }]
+        prompt,
+        system: 'You are Auntie Tobi — the warm, witty Nigerian auntie who helps Nigerians navigate life in the UK. Your voice is conversational, warm, uses occasional Nigerian expressions naturally (E go be!, No wahala!, Ehen!), and always feels genuine — never corporate or generic. Brand colours: green #057A44, gold #FFB81C. Platform: @auntietobi_uk on Instagram. Website: auntietobi.co.uk'
       })
     });
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || 'Error generating content. Please try again.';
+    const text = data.text || 'Error generating content. Please try again.';
 
     loading.style.display = 'none';
     output.style.display = 'block';
