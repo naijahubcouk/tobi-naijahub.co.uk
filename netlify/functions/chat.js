@@ -577,16 +577,18 @@ JAPA GUIDE:
 WATER BILLS UK — accurate as of July 2026:
 - Average combined water AND wastewater bill from 1 April 2026 is approximately £639/year — NEVER use £603 (outdated) or £473 (2024/25)
 - Say EXACTLY: "From 1 April 2026, the average combined household water and wastewater bill in England and Wales is around £639 per year"
-- NEVER say "roughly £50 a month" — not everyone pays by Direct Debit, payment methods vary
+- NEVER add "roughly £53/month" or any monthly breakdown — payment schedules vary
 - NEVER quote percentage increases — just state the current figure
-- Unmetered bills: say "based on your property's historic rateable value, which was used for local taxation before Council Tax was introduced in 1993" — NEVER say "assessment of its rental value from 1990"
-- Meter rule of thumb: say "A useful rule of thumb is..." — NEVER say "the golden rule"
-- Meter tip wording: "If there are fewer people living in your home than bedrooms, a water meter often works out cheaper. If there are more people than bedrooms, staying unmetered may sometimes cost less. Check your water company's calculator before deciding."
-- Trial period: say "Many water companies in England allow you to switch back within 12 months if you decide a meter isn't right for you. Check with your supplier as rules vary." — NEVER say "12-24 months" as a fixed rule
-- Social tariffs: say "Some social tariffs can significantly reduce bills for eligible households, but the level of support varies depending on your water company." — NEVER say "up to 50% discount" as a specific figure
+- Unmetered bills: say "based on your property's historic rateable value, which was used for local taxation before Council Tax was introduced in 1993" — NEVER say "1990 valuation system" or "rental value from 1990"
+- Meter rule of thumb: say "A useful rule of thumb is..." — NEVER say "the golden rule" or "the key rule"
+- Meter tip wording: "If there are fewer people living in your home than bedrooms, a water meter often works out cheaper. If there are more people than bedrooms, staying unmetered may sometimes cost less. Check your water company's online calculator before deciding."
+- Trial period: say "Many water companies in England allow you to switch back within 12 months if you decide a meter isn't right for you. Check with your supplier as rules vary." — NEVER say "refund the difference" or "12-24 months"
+- Social tariffs: say "Some social tariffs can significantly reduce bills for eligible households, but the level of support varies depending on your water company." — NEVER say "up to 50% discount"
 - Cannot switch water supplier — regional monopolies
 - Ofwat: "the independent regulator for water services in England and Wales. It sets price limits that water companies can charge over each regulatory period"
-- For local suppliers: direct to Water UK "Find Your Supplier" tool — never guess supplier by area
+- For local suppliers: direct to Water UK "Find Your Supplier" tool at wateruk.org.uk — never guess supplier by area
+- Meter installation: say "if your property is suitable, your water company will usually install a water meter free of charge"
+- NEVER say "water meter fitted for FREE and if you don't save in the first two years, you can switch back and we'll refund the difference" — this is wrong
 
 NHS CHARGES — accurate as of July 2026 (source: nhs.uk):
 - Most essential healthcare is FREE at the point of use — NEVER say "all healthcare is free"
@@ -945,9 +947,12 @@ Tell the user honestly that you could not find this business nearby right now.
 
     const selectedModel = 'claude-haiku-4-5';
     const maxTokens = 800;
-    const useWebSearch = true;
     const recentMessages = body.messages.slice(-4);
-    console.log('Model: claude-haiku-4-5 | WebSearch: true');
+
+    // Skip web search for topics already in the hardcoded knowledge base — faster + cheaper
+    const coveredByKnowledgeBase = /water bill|water meter|water supplier|water company|ofwat|national insurance|ni number|council tax|gp registr|register.*gp|nhs.*register|driving licen|nigerian.*licen|licen.*nigeria|oyster|tfl|tube fare|bus fare|minimum wage|national living wage|nhs.*charge|prescription.*cost|dental.*nhs/i.test(lastMessage);
+    const useWebSearch = !coveredByKnowledgeBase;
+    console.log('Model: haiku | KnowledgeBase:', coveredByKnowledgeBase, '| WebSearch:', useWebSearch);
 
     const baseRequest = {
       model: selectedModel,
