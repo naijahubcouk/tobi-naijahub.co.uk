@@ -821,11 +821,76 @@ Tell the user honestly that you could not find this business nearby right now.
       }
     }
 
+    // ── PRE-SEARCH RAG ────────────────────────────────────────────────────────
+    // For factual questions, search the web FIRST and inject results into the
+    // prompt so Claude answers from fresh data, not training memory.
+    const isFactualQuestion = /water bill|water supplier|water meter|council tax|tv licen|national insurance|ni number|oyster|tfl|tube fare|bus fare|minimum wage|universal credit|child benefit|housing benefit|pip|universal credit|nhs|gp register|driving licen|dvla|mot|stamp duty|mortgage|interest rate|rent|landlord|deposit|visa|ilr|settlement|immigration|passport|biometric|evisa|brp|right to work|apprenticeship|student loan|cost of living|energy bill|gas bill|electricity|ofgem|broadband|phone contract|council tax|car insurance|home insurance|life insurance|pension|state pension|hmrc|self assessment|tax return|paye|income tax|capital gains|inheritance tax|sick pay|maternity|paternity|redundancy|employment law|workers rights|holiday pay|notice period/i.test(lastMessage);
+
+    let preSearchContext = '';
+    if (isFactualQuestion) {
+      try {
+        console.log('RAG: Running pre-search for factual question...');
+        const searchQuery = encodeURIComponent(lastMessage.substring(0, 150) + ' UK 2026 site:gov.uk OR site:nhs.uk OR site:tfl.gov.uk');
+        const searchUrl = `https://api.anthropic.com/v1/messages`;
+
+        // Use web search to get fresh results
+        const preSearchBody = JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 800,
+          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
+          system: 'You are a search assistant. Search the web for the answer to the user\'s question. Focus on gov.uk, nhs.uk and official UK sources. Return ONLY the key facts you find — date of information, source URL, and the specific facts. Be brief and factual. Today is ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) + '.',
+          messages: [{ role: 'user', content: `Search for current UK information about: ${lastMessage.substring(0, 200)}` }]
+        });
+
+        const preSearchResult = await new Promise((resolve) => {
+          const opts = {
+            hostname: 'api.anthropic.com',
+            path: '/v1/messages',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01',
+              'anthropic-beta': 'web-search-2025-03-05',
+              'Content-Length': Buffer.byteLength(preSearchBody)
+            }
+          };
+          const req = https.request(opts, (res) => {
+            let d = '';
+            res.on('data', chunk => d += chunk);
+            res.on('end', () => {
+              try { resolve(JSON.parse(d)); } catch { resolve(null); }
+            });
+          });
+          req.on('error', () => resolve(null));
+          req.setTimeout(8000, () => { req.destroy(); resolve(null); });
+          req.write(preSearchBody);
+          req.end();
+        });
+
+        if (preSearchResult?.content) {
+          const searchText = preSearchResult.content
+            .filter(b => b.type === 'text')
+            .map(b => b.text)
+            .join('\n')
+            .trim();
+          if (searchText) {
+            preSearchContext = `\n\nLIVE SEARCH RESULTS (retrieved ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}):\n${searchText}\n\n⚠️ CRITICAL: Base your answer ONLY on the live search results above. Do not use training knowledge for any facts, costs, rules or figures. If the search results do not contain enough information, say so and direct the user to gov.uk.`;
+            console.log('RAG: Pre-search complete, injecting', searchText.length, 'chars');
+          }
+        }
+      } catch (err) {
+        console.log('RAG pre-search failed:', err.message);
+      }
+    }
+    // ── END PRE-SEARCH RAG ───────────────────────────────────────────────────
+
     // Dynamic context (location, search results, exam state) stays OUTSIDE the cached block
     // so it can change every request without invalidating the cache.
     const dynamicContext =
       (locationContext ? '\n\nUSER CONTEXT:\n' + locationContext : '') +
       (googleResultsContext || '') +
+      (preSearchContext || '') +
       (examContext ? '\n\n' + examContext : '');
 
     // PROMPT CACHING: the large, mostly-static SYSTEM_PROMPT is marked as an
