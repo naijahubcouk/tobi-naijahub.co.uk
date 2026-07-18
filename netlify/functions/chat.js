@@ -575,49 +575,93 @@ JAPA GUIDE:
 - First steps: If you were issued a BRP collect it as instructed in your visa letter — the UK is moving to eVisas so check your UKVI account for your digital immigration status. Find your local GP surgery and register (free). Open Monzo or Starling bank account. Apply for NIN online at gov.uk. Get a UK SIM card — compare deals and find one that suits your needs.
 
 WATER BILLS UK — accurate as of July 2026:
-- Average combined water AND wastewater bill in England and Wales from 1 April 2026 is approximately £639/year (NOT £473 — that was 2024/25 and is OUTDATED). Say: "From 1 April 2026, the average combined household water and wastewater bill in England and Wales is around £639 per year"
-- NEVER say "forecast to be £639" — it is confirmed, not a forecast
-- Bills rose by approximately 26% from April 2026 due to Ofwat price review
-- Cannot switch water supplier — your supplier depends on where you live
-- Two billing methods:
-  * METERED: pay standing charge + charge based on how much water you use (measured in cubic metres)
-  * UNMETERED: fixed annual amount based on property's HISTORIC RATEABLE VALUE (NOT current market value or property value) — or another charging method used by your water company
-- NEVER say "based on property's value" or "based on your home's value" — always say "historic rateable value"
-- Bill covers: clean water supply + sewerage/wastewater services
-- Water meters: say "water meter" NOT "smart water meter" — most are not smart meters
-- Meter installation: say "if your property is suitable, your water company will usually install a water meter free of charge" — NOT all properties can have a meter fitted
-- Payment support: say "payment plans, social tariffs and other support schemes" — NOT "payment holidays" as not all companies offer these
-- Meter tip: saves money if fewer people in home than bedrooms — check your water company's online calculator
-- NEVER end responses with location-specific questions like "Any other questions about Basingstoke?" — always say "Any other questions about life in the UK? 😊"
-- Source: Ofwat / gov.uk / water company websites
+- Average combined water AND wastewater bill from 1 April 2026 is approximately £639/year — NEVER use £603 (outdated) or £473 (2024/25)
+- Say EXACTLY: "From 1 April 2026, the average combined household water and wastewater bill in England and Wales is around £639 per year"
+- NEVER say "roughly £50 a month" — not everyone pays by Direct Debit, payment methods vary
+- NEVER quote percentage increases — just state the current figure
+- Unmetered bills: say "based on your property's historic rateable value, which was used for local taxation before Council Tax was introduced in 1993" — NEVER say "assessment of its rental value from 1990"
+- Meter rule of thumb: say "A useful rule of thumb is..." — NEVER say "the golden rule"
+- Meter tip wording: "If there are fewer people living in your home than bedrooms, a water meter often works out cheaper. If there are more people than bedrooms, staying unmetered may sometimes cost less. Check your water company's calculator before deciding."
+- Trial period: say "Many water companies in England allow you to switch back within 12 months if you decide a meter isn't right for you. Check with your supplier as rules vary." — NEVER say "12-24 months" as a fixed rule
+- Social tariffs: say "Some social tariffs can significantly reduce bills for eligible households, but the level of support varies depending on your water company." — NEVER say "up to 50% discount" as a specific figure
+- Cannot switch water supplier — regional monopolies
+- Ofwat: "the independent regulator for water services in England and Wales. It sets price limits that water companies can charge over each regulatory period"
+- For local suppliers: direct to Water UK "Find Your Supplier" tool — never guess supplier by area
 
-⚠️ CRITICAL FIGURES RULE: NEVER use the following outdated figures — they are wrong for 2026:
-- ❌ £473 average water bill (was 2024/25)
-- ❌ £1.60 bus fare (now £1.75)
-- ❌ £10.42 minimum wage (now £12.21 for over 21s)
-- Always use the pre-search results for any cost or figure — never use training memory for prices
+NHS CHARGES — accurate as of July 2026 (source: nhs.uk):
+- Most essential healthcare is FREE at the point of use — NEVER say "all healthcare is free"
+- Prescriptions in England: £9.90 per item (from April 2026) — unless exempt
+- Prescription exemptions: under 16, 16-18 in full-time education, 60+, certain medical conditions, low income (HC2 certificate), pregnant/recently gave birth, receiving certain benefits
+- Dental treatment: charged — NHS Band 1 £26.80, Band 2 £73.50, Band 3 £319.10 (from April 2026)
+- Eye tests: free for children under 16, 60+, diabetics, glaucoma risk and others — otherwise charged
+- A&E and emergency treatment: FREE for everyone regardless of immigration status
+- Immigration Health Surcharge (IHS): most visa applicants pay this upfront — currently £1,035/year per adult — entitles you to most NHS treatment
+- Source: nhs.uk/using-the-nhs/healthcare-abroad/apply-for-a-free-uk-global-health-insurance-card-ghic
+
+MINIMUM WAGE UK — accurate as of April 2026 (source: gov.uk):
+- National Living Wage (age 21+): £12.21 per hour — NEVER use £10.42 (old) or £11.44 (2024)
+- Age 18-20: £10.00 per hour
+- Under 18 (not apprentice): £7.55 per hour
+- Apprentice rate: £7.55 per hour
+- These rates apply from April 2026 — verify latest at gov.uk/national-minimum-wage-rates
+
+NHS GP REGISTRATION — accurate as of July 2026 (source: nhs.uk):
+- Registering with a GP surgery is FREE — anyone in England can register
+- Find a GP surgery at nhs.uk/service-search/find-a-gp or use the NHS App
+- Register online (takes about 15 minutes) or visit the surgery in person
+- You do NOT need a BRP, NI number or proof of immigration status to register — a GP surgery cannot refuse to register you solely because you don't have these
+- You may be asked for: name, date of birth, address, NHS number (if you have one) — but requirements vary by surgery
+- After submitting your form, you should be registered within 5 working days
+- You will be assigned an NHS number if you don't already have one
+- Emergency: call 999. Urgent non-emergency: call 111. Minor ailments: use Pharmacy First scheme at local pharmacies
+- You do NOT need to be registered with a GP to access A&E or 999 emergency services
+- Some GP surgeries have full lists — if refused, contact NHS England at england.nhs.uk/contact-us
+- Source: nhs.uk/nhs-services/gps/how-to-register-with-a-gp-surgery
+
+DRIVING LICENCE — NIGERIANS IN UK — accurate as of July 2026:
+- You can drive in the UK on your valid Nigerian licence for up to 12 MONTHS from when you became a UK resident (not from when you first drove)
+- Nigeria is NOT on the UK's designated country list — you CANNOT exchange your Nigerian licence for a UK one directly
+- After 12 months you MUST get a UK driving licence to continue driving legally
+- To get a UK licence: 1) Apply for a UK provisional licence at gov.uk/apply-provisional-licence (£34 online) 2) Pass the theory test (£23) 3) Pass the practical driving test (£62 weekday / £75 evenings & weekends)
+- You must have lived in the UK for at least 185 days in the last 12 months to apply for a UK licence
+- You can start learning and taking lessons before your 12 months is up — book your theory test early
+- Theory test: multiple choice questions + hazard perception — pass mark is 43/50 and 44/75
+- Practical test fee: £62 on weekdays, £75 evenings and weekends
+- As of March 2026, digital driving licences are available via the GOV.UK app
+- Source: gov.uk/driving-nongb-licence, gov.uk/apply-for-your-first-provisional-driving-licence
+
+COUNCIL TAX — accurate as of July 2026 (source: gov.uk, MHCLG):
+- Council tax is a local tax paid by most UK households to fund local services (bins, roads, libraries, police, fire, social care)
+- The average Band D council tax in England for 2026/27 is £2,392 per year — roughly £199/month over 12 months or £239/month over the standard 10 months
+- Bands run A (lowest) to H (highest) based on property value as of 1 April 1991 in England
+- Band D is the reference band — Band A pays 6/9ths of Band D, Band H pays double
+- Bills vary significantly by area — from around £1,028 in Wandsworth (London) to £2,765 in Dorset
+- London boroughs tend to be cheaper due to higher government grants
+- Check your band and rate at gov.uk/council-tax — enter your postcode
+KEY DISCOUNTS (must be applied for — not automatic):
+- 25% off if only ONE adult lives in the property
+- 50% off if ALL adults are disregarded (e.g. full-time students)
+- 100% off (exempt) if all occupants are full-time students
+- Students: full-time students are disregarded — if all occupants are students, property is fully exempt
+- Council Tax Reduction available for people on low incomes — apply to your local council
+- Severe mental impairment, certain carers, apprentices and others may be disregarded
+- Payment: usually 10 monthly instalments (April–January) — can request 12 months from your council
+- Non-payment is serious — councils can take legal action and enforcement
+- Always apply for discounts you're entitled to — they are NOT applied automatically
+- Source: gov.uk/council-tax, gov.uk/apply-for-council-tax-discount
+
+NATIONAL INSURANCE (NI) NUMBER — accurate as of July 2026 (source: gov.uk):
 - A National Insurance number is a unique personal reference for the UK tax and National Insurance system — NOT a 9-digit number
 - Format: 2 letters + 6 numbers + 1 final letter. Example: AB 12 34 56 C
-- Used for: working in the UK, paying tax and NI contributions, State Pension, certain benefits, dealing with HMRC, some financial applications (mortgages etc)
+- Used for: working in the UK, paying tax and NI contributions, State Pension, certain benefits, dealing with HMRC, some financial applications
 - Apply FREE online at gov.uk/apply-national-insurance-number
-- You can usually START WORK before your NI number arrives as long as you have the legal right to work
-- What you need: passport or accepted identity document, information to verify identity — proof of address is NOT always required
-- HMRC no longer issues physical NI cards — your number arrives by letter, or access it through your HMRC Personal Tax Account or HMRC app
-- Takes UP TO 4 WEEKS to receive after applying (not 2-3 weeks)
+- You can usually START WORK before your NI number arrives as long as you have the legal right to work in the UK
+- What you need: passport or accepted identity document — proof of address is NOT always required
+- HMRC no longer issues physical NI cards — number arrives by letter, or access via HMRC Personal Tax Account or HMRC app
+- Takes UP TO 4 WEEKS to receive after applying
 - You do NOT need an NI number to register with a GP or access NHS services
-- 💡 Check your eVisa or old BRP first — you may already have an NI number
+- Check your eVisa or old BRP first — you may already have an NI number
 - Source: gov.uk/apply-national-insurance-number
-
-NHS: Registering with a GP is FREE — find your local surgery and ask to register. You may need ID (passport) and proof of address. BRP is not always required and with the UK moving to eVisas requirements vary by GP. Use nhs.uk to find GP surgeries near you. Emergency: call 999. Urgent non-emergency: call 111.
-
-IMPORTANT NHS FACTS:
-- Most ESSENTIAL healthcare is free at the point of use through the NHS
-- NOT free: Prescriptions in England £9.90 per item (unless exempt), dental treatment (partly charged), eye tests and glasses (usually charged)
-- Many visa applicants pay Immigration Health Surcharge (IHS) upfront when applying for their visa
-- Always say "most essential healthcare is free at the point of use" — never say "all healthcare is free"
-⚠️ NHS rules and charges change — always verify at nhs.uk
-
-DRIVING: Nigerian licence valid 12 months in UK. Then take theory test (£23) and practical test (£62-£75) at gov.uk/book-driving-test.
 
 LONDON TRANSPORT — OYSTER CARD (accurate as of July 2026):
 - The Oyster card is a reusable smart card for pay-as-you-go travel in London — not other UK cities
@@ -820,7 +864,7 @@ exports.handler = async function(event) {
     const placesPromise = (isBusinessSearch && !directoryAlreadyShown && googleApiKey)
       ? Promise.race([
           searchGooglePlaces(lastMessage, userCity),
-          new Promise(resolve => setTimeout(() => { console.log('Google Places timed out'); resolve({ results: [], type: 'timeout' }); }, 8000))
+          new Promise(resolve => setTimeout(() => { console.log('Google Places timed out'); resolve({ results: [], type: 'timeout' }); }, 4000))
         ])
       : Promise.resolve({ results: [], type: 'skip' });
 
@@ -892,19 +936,11 @@ Tell the user honestly that you could not find this business nearby right now.
       });
     }
 
-    // ── COST OPTIMISATION ────────────────────────────────────────────────────
-    // 1. Smart model routing — Sonnet only for sensitive/factual topics
-    const needsSonnet = /visa|ilr|immigration|home office|settlement|asylum|passport|nhs|gp|healthcare|benefit|universal credit|council tax|tax|hmrc|national insurance|minimum wage|driving licen|dvla|water bill|energy bill|mortgage|stamp duty|pension|employment law|sick pay|maternity|redundancy|right to work|oyster|tfl|student loan|evisa|brp|biometric/i.test(lastMessage);
-    const selectedModel = needsSonnet ? 'claude-sonnet-4-6' : 'claude-haiku-4-5';
-    const maxTokens = needsSonnet ? 1200 : 800;
-    console.log('Model:', selectedModel, '| needsSonnet:', needsSonnet);
-
-    // 2. Limit conversation history to last 6 messages to reduce input tokens
-    const recentMessages = body.messages.slice(-6);
-
-    // 3. Only use web search on Sonnet (factual questions)
-    const useWebSearch = needsSonnet;
-    // ── END COST OPTIMISATION ────────────────────────────────────────────────
+    const selectedModel = 'claude-haiku-4-5';
+    const maxTokens = 800;
+    const useWebSearch = true;
+    const recentMessages = body.messages.slice(-4);
+    console.log('Model: claude-haiku-4-5 | WebSearch: true');
 
     const baseRequest = {
       model: selectedModel,
@@ -912,7 +948,7 @@ Tell the user honestly that you could not find this business nearby right now.
       stream: true,
       system: systemBlocks,
       messages: recentMessages,
-      ...(useWebSearch ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }] } : {})
+      ...(useWebSearch ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }] } : {})
     };
 
     // ── STREAMING RESPONSE ───────────────────────────────────────────────────
@@ -994,7 +1030,7 @@ Tell the user honestly that you could not find this business nearby right now.
         }
       });
 
-      req.setTimeout(30000, () => {
+      req.setTimeout(20000, () => {
         req.destroy();
         if (!resolved) {
           resolved = true;
