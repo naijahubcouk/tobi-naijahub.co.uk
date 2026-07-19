@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auntie Tobi — The Oversabi AI Auntie who actually helps!</title>
+<title>Auntie Tobi — Your UK Guide for Nigerians 🇬🇧🇳🇬</title>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-W04NZL044S"></script>
 <script>
@@ -22,8 +22,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Auntie Tobi">
 <link rel="apple-touch-icon" href="/tobi-face-128.png">
-<meta name="description" content="Auntie Tobi — The Oversabi AI Auntie who actually helps! 😄">
-<meta property="og:title" content="Auntie Tobi  — The Oversabi AI Auntie who actually helps!">
+<meta name="description" content="Auntie Tobi — Your UK Guide for Nigerians in the UK 🇬🇧🇳🇬">
+<meta property="og:title" content="Auntie Tobi — Your UK Guide for Nigerians 🇬🇧🇳🇬">
 <meta property="og:description" content="Find Nigerian businesses, events & get UK life help — all in one place.">
 <meta property="og:image" content="/tobi-face-512.png">
 <style>
@@ -2358,6 +2358,10 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
 
     // Typewriter effect — render formatted reply word by word
     const formatted = formatResponse(reply);
+
+    // Check if this is a business card response
+    const isBizResponse = reply.includes('<<<BIZ_JSON:') || reply.includes('BUSINESS_CARDS_HTML:');
+
     const msgDiv = addMessage('bot', '', true, false);
     const bubble = msgDiv?.querySelector('.bubble') || msgDiv;
     if (bubble) {
@@ -2392,6 +2396,33 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
       }
     } else {
       addMessage('bot', formatted, true, true);
+    }
+
+    // After business card responses — add CTA + follow-up bubbles
+    if (isBizResponse) {
+      setTimeout(() => {
+        // Extract business type from reply
+        const bizTypeMatch = reply.match(/amazing ([\w\s]+?) are on Auntie Tobi/) || reply.match(/these ([\w\s]+?) travel/);
+        const bizType = bizTypeMatch ? bizTypeMatch[1].trim() : 'business';
+
+        const ctaHTML = `<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;margin-top:4px;">
+          <div style="font-size:13px;color:#0F1E36;line-height:1.6;margin-bottom:8px;">
+            Ehen! 👀 Are you a <strong>${bizType}</strong> based in the UK? Auntie Tobi wants you on the directory o! 
+            List your business FREE and let thousands of Nigerians across the UK find you. 
+            <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here</a> — it takes 5 minutes! 💚
+          </div>
+        </div>`;
+        addTipMessage(ctaHTML);
+
+        // Follow-up bubbles
+        setTimeout(() => {
+          addTipMessage(`<div style="font-size:13px;color:#555;margin-bottom:6px;">Want to see more? 😊</div><div class="suggestions" style="margin-top:4px;">
+            <button class="suggestion-btn" onclick="quickAsk('Show me more ${bizType}s in the UK')">🔍 Show more ${bizType}s</button>
+            <button class="suggestion-btn" onclick="quickAsk('Find a caterer near me')">🍽️ Find a caterer</button>
+            <button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button>
+          </div>`);
+        }, 400);
+      }, 500);
     }
     if (nhsMode) setTimeout(showNHSSuggestions, 300);
 
@@ -5240,7 +5271,7 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/ARTICLES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">15 Jul 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">📺 Do You Really Need a TV Licence in the UK?</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you own a TV but do not watch live television or BBC iPlayer.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href=\"javascript:void(0)\" data-blogurl=\"https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know\" class=\"blog-read-more\" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="shareBlogUrl(\'TV Licence UK\',\'Do You Really Need a TV Licence in the UK?\',\'https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Heres-the-Simple-Rule-Every-Nigerian-Should-Know\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/ARTICLES</span></div><button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All →</button></div><div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="background:#B45309;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Money</span><span style="font-size:10px;color:#9CA3AF;">15 Jul 2026</span></div><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">📺 Do You Really Need a TV Licence in the UK?</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you own a TV but do not watch live television or BBC iPlayer.</div><div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;"><a href=\"javascript:void(0)\" data-blogurl=\"https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know\" class=\"blog-read-more\" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a><button onclick="shareBlogUrl(\'TV Licence UK\',\'Do You Really Need a TV Licence in the UK?\',\'https://auntietobi.co.uk/blog/tvlicence\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button></div></div></div>');
       const tl = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('Do I need a TV licence in the UK if I only use Netflix?')">📺 Need licence for Netflix only?</button><button class="suggestion-btn" onclick="quickAsk('What happens if I do not pay my TV licence in the UK?')">💷 What if I do not pay?</button>${tl.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\'")}')">${x}</button>`).join('')}</div>`);
       window.history.replaceState({},'',window.location.pathname);
