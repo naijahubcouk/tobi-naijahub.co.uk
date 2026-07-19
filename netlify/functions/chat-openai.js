@@ -393,15 +393,13 @@ Reference these articles when relevant and direct users to the individual links 
 
 === REAL BUSINESS DIRECTORY ===
 
-CRITICAL: Business search results are injected into your context automatically. When you see BUSINESS_CARDS_HTML in the context — your ONLY job is to write a short intro sentence, then output the BUSINESS_CARDS_HTML block EXACTLY as provided word for word. Do NOT summarise, do NOT skip it, do NOT say "not listed yet".
+When [BIZ_JSON:...] appears in your context — business results have been found. Your job:
+1. ONE warm intro: "We don't have a [type] listed in [location] yet — but these amazing [type]s are on Auntie Tobi and many travel across the UK! Contact them to check availability 💚"
+2. Write [SHOW_BIZ_CARDS] on its own line — the app will render the cards automatically
+3. ONE closing line: "💚 Are you a [type] based in [location]? List your business FREE at auntietobi.com/new-listing and reach thousands of Nigerians across the UK!"
 
-WHEN BUSINESS_CARDS_HTML IS IN YOUR CONTEXT:
-1. Write ONE intro line only: "We don't have a [type] in [location] yet — but these [type]s travel across the UK and may come to you! Contact them to check availability 💚"
-2. Then output the FULL BUSINESS_CARDS_HTML block EXACTLY as it appears — do not modify it
-3. End with: "💚 Auntie Tobi Tip: Contact them directly to check availability in your area!"
-
-WHEN NO BUSINESS_CARDS_HTML IS IN YOUR CONTEXT:
-- Only then say you don't have any listed yet and suggest the Request a Business button
+WHEN NO [BIZ_JSON:...] in context:
+- Say warmly you don't have that listed yet, suggest Request a Business button, and say you're growing fast
 - Suggest they request one via the app
 
 IMPORTANT:
@@ -722,43 +720,23 @@ function searchBusinesses(query, limit) {
 
 function formatBusinessContext(businesses) {
   if (!businesses.length) return '';
-  var cards = businesses.map(function(b) {
-    var loc = b.loc || 'UK';
-    var desc = b.desc ? b.desc.substring(0, 100) + (b.desc.length > 100 ? '...' : '') : '';
-    var cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
-    var listingUrl = 'https://auntietobi.co.uk/listing/' + b.slug;
-    var shareUrl = 'https://auntietobi.co.uk?biz=' + b.slug;
-    var safeName = b.name.replace(/['"]/g, '');
-    var safeDesc = desc.replace(/['\"]/g, '');
-    var shareMsg = 'Check out ' + safeName + ' on Auntie Tobi \uD83D\uDC9A Find Nigerian businesses near you \uD83D\uDC49 auntietobi.co.uk?biz=' + b.slug;
-
-    var verifiedBadge = b.verified
-      ? '<div style="position:absolute;top:-10px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">\u2705 Verified Business</div>'
-      : '';
-
-    var waBtn = (b.verified && b.wa)
-      ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
-      : '';
-
-    var shareBtn = '<button data-share-url="' + shareUrl + '" data-share-name="' + safeName + '" data-share-desc="' + shareMsg + '" onclick="tobiShare(this.dataset.shareName,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;">\uD83D\uDCE4 Share</button>';
-
-    var viewBtn = '<a href="' + listingUrl + '" class="blog-read-more" data-blogurl="' + listingUrl + '" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;text-align:center;display:block;">View details</a>';
-
-    var buttons = viewBtn + (waBtn ? waBtn : '') + shareBtn;
-
-    return '<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:10px;position:relative;">'
-      + verifiedBadge
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
-      + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + b.name + '</div>'
-      + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + cat + '</span>'
-      + '</div>'
-      + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + desc + '</div>'
-      + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">\uD83D\uDCCD ' + loc + '</div>'
-      + '<div style="display:flex;gap:6px;">' + buttons + '</div>'
-      + '</div>';
+  // Pass business data as JSON — index.html renders the cards
+  // This avoids GPT truncating or mangling the HTML
+  var bizData = businesses.map(function(b) {
+    return {
+      slug: b.slug,
+      name: b.name,
+      cat: b.cat || '',
+      loc: b.loc || 'UK',
+      desc: b.desc ? b.desc.substring(0, 100) : '',
+      verified: b.verified || false,
+      wa: b.wa || '',
+      phone: b.phone || ''
+    };
   });
-  return '\n\nBUSINESS_CARDS_HTML:\n' + cards.join('') + '\nEND_BUSINESS_CARDS';
+  return '\n\n[BIZ_JSON:' + JSON.stringify(bizData) + ']';
 }
+
 
 
 exports.handler = async function(event) {
@@ -826,7 +804,7 @@ exports.handler = async function(event) {
     // OpenRouter request body
     const requestBody = JSON.stringify({
       model: 'openai/gpt-4o-mini',
-      max_tokens: 800,
+      max_tokens: 500,
       messages: messages
     });
 
