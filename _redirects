@@ -50,3 +50,6 @@
 /blog/tenantdeposit         /?blog=tenantdeposit         301
 /blog/nigerianrestaurants   /?blog=nigerianrestaurants   301
 /blog/firsthome5k           /?blog=firsthome5k           301
+
+# SPA catch-all — must be last
+/*              /index.html             200
