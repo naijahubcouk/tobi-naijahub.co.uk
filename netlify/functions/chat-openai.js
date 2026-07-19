@@ -734,7 +734,7 @@ function formatBusinessContext(businesses) {
       phone: b.phone || ''
     };
   });
-  return '\n\n[BIZ_JSON:' + JSON.stringify(bizData) + ']';
+  return '\n\n<<<BIZ_JSON:' + JSON.stringify(bizData) + '>>>';
 }
 
 
@@ -839,8 +839,13 @@ exports.handler = async function(event) {
     });
 
     // Extract response text
-    const reply = result.choices?.[0]?.message?.content || "Sorry, I could not get a response. Please try again!";
+    let reply = result.choices?.[0]?.message?.content || "Sorry, I could not get a response. Please try again!";
     console.log('OpenRouter usage:', JSON.stringify(result.usage || {}));
+
+    // Append business JSON to reply so client can render cards
+    if (businessContext && businessContext.includes('<<<BIZ_JSON:')) {
+      reply = reply.replace('[SHOW_BIZ_CARDS]', '') + '\n' + businessContext.trim();
+    }
 
     return {
       statusCode: 200,
