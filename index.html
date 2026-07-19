@@ -3007,8 +3007,11 @@ function showAllNews() {
     }
   ];
 
+  // Filter out Events — they go in the Events section
+  const filtered = news.filter(item => item.label !== 'Events');
+
   // Sort newest first
-  news.sort((a, b) => {
+  filtered.sort((a, b) => {
     const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
     const parseD = s => { const p = s.split(' '); return new Date(p[2], months[p[1]], parseInt(p[0])); };
     return parseD(b.date) - parseD(a.date);
@@ -3018,7 +3021,42 @@ function showAllNews() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
-  window._allNewsData = news;
+  window._allNewsData = filtered;
+  window._allNewsShownCount = 0;
+  window._renderAllNewsBatch(0);
+}
+
+function showEventsFromNews() {
+  const news = window._allNewsData ? [] : [];
+  // Reuse the same articles array by rebuilding it
+  const allNews = [
+    { emoji:'🏛️', title:'UK Immigration Rules Updated (HC 259): What Nigerians Need to Know', summary:'The UK Home Office has published new Immigration Rules under HC 259.', url:'https://auntietobi.com/blog/UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know', label:'News', date:'19 Jul 2026' },
+    { emoji:'🍽️', title:'20 Places Where Kids Eat FREE or for £1 During UK Summer Holidays 2026', summary:'Discover over 20 UK restaurants where kids eat FREE or for just £1 during the 2026 school holidays.', url:'https://auntietobi.com/blog/20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026', label:'Food & Lifestyle', date:'19 Jul 2026' },
+    { emoji:'🎉', title:'Nigerian Cultural Festival 2026 Is Coming to Plymouth', summary:'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth on Saturday 8 August 2026.', url:'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here\'s-Everything-You-Need-to-Know', label:'Events', date:'18 Jul 2026' },
+    { emoji:'🌶️', title:'Suya Fest Birmingham 2026', summary:'The ultimate outdoor suya experience returns to Birmingham on Saturday 1 August 2026, 3PM–9PM.', url:'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns', label:'Events', date:'15 Jul 2026' },
+    { emoji:'💼', title:'Midlands Business Festival — Coventry', summary:'A full-day business festival for Nigerian entrepreneurs in Coventry on Sunday 30 August 2026.', url:'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry', label:'Events', date:'11 Jul 2026' },
+    { emoji:'🛐', title:'Worship in Chaos — Powerful Musical Theatre Experience', summary:'A powerful worship and musical theatre experience coming to London. Do not miss it.', url:'https://auntietobi.com/blog/Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London', label:'Events', date:'8 Jul 2026' },
+    { emoji:'🎪', title:'9ja Fayre 2026 Is Coming to Three UK Cities This Summer', summary:'The biggest Nigerian food and culture fair hits London, Birmingham and Manchester this summer.', url:'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!', label:'Events', date:'5 Jul 2026' },
+    { emoji:'🍛', title:'Festival of African Cuisine', summary:'Celebrate African food culture at this exciting festival. Taste dishes from across the continent.', url:'https://auntietobi.com/blog/Festival-Of-African-Cuisine', label:'Events', date:'3 Jul 2026' },
+    { emoji:'🎶', title:'AfroMic Night — Afrobeats Karaoke in London', summary:'An Afrobeats karaoke night at Demis Nigerian Restaurant, Streatham London.', url:'https://auntietobi.com/blog/AfroMic-Night-Afrobeats-Karaoke', label:'Events', date:'26 Jun 2026' },
+    { emoji:'🍽️', title:'MY TASTY NAIJA FOOD FESTIVAL UK 2026', summary:'Nigerian food festival coming to London and Manchester. Taste the best of Nigerian cuisine.', url:'https://auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026', label:'Events', date:'5 Jul 2026' },
+    { emoji:'🤍', title:'Owambe FEST 4 — All White Party with Bigjohny', summary:'All white owambe party at Delta Hotels, Milton Keynes. Saturday 18 July 2026.', url:'https://auntietobi.com/blog/Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends', label:'Events', date:'18 Jul 2026' },
+    { emoji:'🛍️', title:'Deshapeables UK Tradefair London', summary:'UK Tradefair at Yeomanry House, London. Saturday 25 July 2026, 10AM to 6PM. Free entry.', url:'https://auntietobi.com/blog/Deshapeables-UK-Tradefair-London', label:'Events', date:'25 Jul 2026' },
+    { emoji:'⚽', title:'NSF UK Sports and Family Fun Day 2026', summary:'A fun-filled day of sports and family activities. Newham Leisure Centre, London.', url:'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026', label:'Events', date:'29 Aug 2026' },
+    { emoji:'🫕', title:'The Igbo Table — Food, Culture and Conversation', summary:'Celebrating Igbo food, culture and community. Church Hall, Croyland Rd, London N9.', url:'https://auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation', label:'Events', date:'30 Aug 2026' },
+    { emoji:'👗', title:'Ankara Festival UK 2026', summary:'Ankara and African fashion festival at Porchester Hall, London. Saturday 10 October 2026.', url:'https://auntietobi.com/blog/Ankara-Festival-UK-2026', label:'Events', date:'10 Oct 2026' },
+  ];
+
+  const events = allNews.filter(item => item.label === 'Events');
+  events.sort((a, b) => {
+    const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+    const parseD = s => { const p = s.split(' '); return new Date(p[2], months[p[1]], parseInt(p[0])); };
+    return parseD(b.date) - parseD(a.date);
+  });
+
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  window._allNewsData = events;
   window._allNewsShownCount = 0;
   window._renderAllNewsBatch(0);
 }
@@ -4854,74 +4892,9 @@ function handleDeepLink() {
     setTimeout(() => { resetAndShow(showBusinesses); }, 300);
   } else if (action === 'motivation') {
     setTimeout(() => { showDailyMotivation(); window.history.replaceState({}, '', window.location.pathname); }, 500);
-  } else if (action === 'guardianews') {
-    setTimeout(() => {
-      const messages = document.getElementById('messages');
-      messages.innerHTML = '';
-
-      // Show loading state
-      const loadingHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;gap:6px;">
-          <span style="font-size:16px;">📰</span>
-          <span style="color:white;font-weight:700;font-size:13px;">LIVE NEWS — Latest Updates</span>
-        </div>
-        <div style="padding:14px;text-align:center;color:#9CA3AF;font-size:13px;">Loading latest news...</div>
-      </div>`;
-      addTipMessage(loadingHtml);
-
-      // Fetch 10 articles
-      fetch('/.netlify/functions/news')
-        .then(r => r.json())
-        .then(data => {
-          const articles = (data.articles || []).slice(0, 10);
-          const msgs = document.getElementById('messages');
-          if (msgs) msgs.innerHTML = '';
-
-          if (!articles.length) {
-            addTipMessage('<div style="padding:14px;text-align:center;font-size:13px;color:#555;">No news found right now. Check back soon! 🇳🇬</div>');
-            return;
-          }
-
-          const cards = articles.map(a => {
-            const date = a.date ? new Date(a.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-            return `<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                <span style="background:#0F1E36;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${a.section}</span>
-                <span style="font-size:10px;color:#9CA3AF;">${date}</span>
-              </div>
-              <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
-              ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
-              <div style="display:flex;align-items:center;gap:10px;">
-                <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
-                <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
-              </div>
-            </div>`;
-          }).join('');
-
-          const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-            <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                <span style="font-size:16px;">📰</span>
-                <span style="color:white;font-weight:700;font-size:13px;">LIVE NEWS — 10 Latest Updates</span>
-              </div>
-              <button onclick="resetToWelcome()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">🏠 Home</button>
-            </div>
-            <div style="padding:4px 12px 8px;">
-              ${cards}
-              <div style="padding-top:8px;font-size:10px;color:#9CA3AF;text-align:right;">Powered by The Guardian</div>
-            </div>
-          </div>`;
-
-          addTipMessage(html);
-          const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
-          addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('')}</div>`);
-          window.history.replaceState({}, '', window.location.pathname);
-        })
-        .catch(() => {
-          addTipMessage('<div style="padding:14px;text-align:center;font-size:13px;color:#555;">Could not load news right now. Please try again later.</div>');
-        });
-    }, 300);
-  } else if (action === 'tip') {
+  } else if (action === 'guardianews' || action === 'news') {
+    setTimeout(() => { showAllNews(); window.history.replaceState({}, '', window.location.pathname); }, 300);
+    } else if (action === 'tip') {
     setTimeout(() => {
       const tip = getTodaysTip();
       addTipMessage(buildTipCard(tip, getRandomSuggestionStr()));
