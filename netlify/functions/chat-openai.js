@@ -677,15 +677,27 @@ const AUNTIE_TOBI_DIRECTORY = [{"name": "Eventsbykklargesse", "slug": "eventsbyk
 
 function searchBusinesses(query, limit) {
   limit = limit || 6;
-  var q = query.toLowerCase();
+  var stopWords = ['the','and','for','near','find','looking','where','can','are','any','have','you','what','best','good','in','at','a','an','i','me','my','do','is','it'];
+  var words = query.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(function(w) {
+    return w.length > 2 && stopWords.indexOf(w) === -1;
+  });
+  if (!words.length) words = [query.toLowerCase()];
   var scored = AUNTIE_TOBI_DIRECTORY.map(function(b) {
     var score = 0;
-    if (b.name.toLowerCase().includes(q)) score += 10;
-    if (b.cat.includes(q)) score += 8;
-    if (b.section.includes(q)) score += 6;
-    if (b.loc.toLowerCase().includes(q)) score += 5;
-    if (b.desc.toLowerCase().includes(q)) score += 3;
-    b.keywords.forEach(function(k) { if (k.includes(q) || q.includes(k)) score += 2; });
+    var nameL = b.name.toLowerCase();
+    var catL = b.cat.toLowerCase();
+    var sectionL = b.section.toLowerCase();
+    var locL = b.loc.toLowerCase();
+    var descL = b.desc.toLowerCase();
+    var kwStr = b.keywords.join(' ').toLowerCase();
+    words.forEach(function(w) {
+      if (nameL.indexOf(w) !== -1) score += 10;
+      if (catL.indexOf(w) !== -1) score += 8;
+      if (kwStr.indexOf(w) !== -1) score += 6;
+      if (locL.indexOf(w) !== -1) score += 5;
+      if (sectionL.indexOf(w) !== -1) score += 4;
+      if (descL.indexOf(w) !== -1) score += 3;
+    });
     return Object.assign({}, b, { score: score });
   }).filter(function(b) { return b.score > 0; })
     .sort(function(a, b) { return b.score - a.score; })
@@ -696,8 +708,9 @@ function searchBusinesses(query, limit) {
 function formatBusinessContext(businesses) {
   if (!businesses.length) return '';
   var lines = businesses.map(function(b, i) {
-    var verified = b.verified ? ' ✅ VERIFIED MEMBER' : '';
-    var parts = [(i+1) + '. ' + b.name + verified + ' | ' + b.section + ' > ' + b.cat + ' | ' + b.loc + ' | ' + b.desc];
+    var verified = b.verified ? ' \u2705 VERIFIED MEMBER' : '';
+    var loc = b.loc || 'UK';
+    var parts = [(i+1) + '. ' + b.name + verified + ' | \uD83D\uDCCD ' + loc + ' | ' + b.section + ' > ' + b.cat + ' | ' + b.desc];
     if (b.phone) parts.push('Phone: ' + b.phone);
     if (b.email) parts.push('Email: ' + b.email);
     if (b.website) parts.push('Website: ' + b.website);
@@ -706,7 +719,7 @@ function formatBusinessContext(businesses) {
     parts.push('auntietobi.com/listing/' + b.slug);
     return parts.join(' | ');
   });
-  return '\n\nBUSINESS SEARCH RESULTS:\n' + lines.join('\n\n');
+  return '\n\nBUSINESS SEARCH RESULTS:\nIMPORTANT: Always show location for EVERY business. Many businesses TRAVEL across the UK (makeup artists, photographers, caterers, DJs, gele stylists) so show ALL results and tell the user they travel.\n' + lines.join('\n\n');
 }
 
 
