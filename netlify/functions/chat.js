@@ -159,13 +159,15 @@ BUSINESS SEARCH PRIORITY — CRITICAL:
 2. If found → show as card format with auntietobi.com listing links
 3. If NOT found → Google Places results will be provided in context — use them
 4. NEVER mix Auntie Tobi listings with Google results in the same response
+5. ALWAYS show 📍 location for EVERY business — never omit it
 
 GOOGLE PLACES FALLBACK:
 When Google Places results are provided in your context:
-1. Show the 2 results provided — list them naturally, do NOT label them as Nigerian or non-Nigerian
-2. Never mention whether a Nigerian/African business was found or not — just show results cleanly
-3. Format each result clearly with name, address, rating and Google Maps link using the EXACT mapsUrl provided — do not modify it
-4. After showing results ALWAYS end with the listing CTA from context — include the https://auntietobi.com/new-listing link exactly as given
+1. Show the results provided — list them naturally, do NOT label them as Nigerian or non-Nigerian
+2. ALWAYS show 📍 address/location for every result — this is mandatory
+3. Never mention whether a Nigerian/African business was found or not — just show results cleanly
+4. Format each result clearly with name, 📍 address, rating and Google Maps link using the EXACT mapsUrl provided — do not modify it
+5. After showing results ALWAYS end with the listing CTA from context — include the https://auntietobi.com/new-listing link exactly as given
 
 
 ALWAYS ENCOURAGE LISTINGS: After business search responses naturally add ONE of these — the link text must be wrapped in a SUGGESTIONS bubble so users can tap it:
@@ -706,7 +708,8 @@ function formatBusinessContext(businesses) {
   if (!businesses.length) return '';
   var lines = businesses.map(function(b, i) {
     var verified = b.verified ? ' ✅ VERIFIED MEMBER' : '';
-    var parts = [(i+1) + '. ' + b.name + verified + ' | ' + b.section + ' > ' + b.cat + ' | ' + b.loc + ' | ' + b.desc];
+    var loc = b.loc || 'UK';
+    var parts = [(i+1) + '. ' + b.name + verified + ' | 📍 ' + loc + ' | ' + b.section + ' > ' + b.cat + ' | ' + b.desc];
     if (b.phone) parts.push('Phone: ' + b.phone);
     if (b.email) parts.push('Email: ' + b.email);
     if (b.website) parts.push('Website: ' + b.website);
@@ -715,7 +718,7 @@ function formatBusinessContext(businesses) {
     parts.push('auntietobi.com/listing/' + b.slug);
     return parts.join(' | ');
   });
-  return '\n\nBUSINESS SEARCH RESULTS:\n' + lines.join('\n\n');
+  return '\n\nBUSINESS SEARCH RESULTS:\nIMPORTANT: Always show the 📍 location for EVERY business listed. Never omit location.\n' + lines.join('\n\n');
 }
 
 exports.handler = async function(event) {
@@ -792,7 +795,7 @@ exports.handler = async function(event) {
     const cityMatch = locationContext.match(/located in ([^,.]+)/i);
     const userCity = cityMatch ? cityMatch[1].trim() : 'UK';
 
-    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business/i.test(lastMessage);
+    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business|caterer|catering|nigerian|african|barber|beautician|lash|nail|wig|gele|fabric|suya|jollof|puff puff|egusi|pepper soup|afro|caribbean|tutor|driving school|estate agent|mortgage|insurance|electrician|plumber|builder|cleaner|childminder|nursery|event planner|DJ|makeup artist|travel agent|money transfer|money agent|supermarket|grocery|groceries|foodstore|butcher|fishmonger|market|courier|shipping|freight|pastor|prophet/i.test(lastMessage);
 
     const lastAssistantMsg = body.messages?.filter(m => m.role === 'assistant').slice(-1)[0]?.content || '';
     const directoryAlreadyShown = /auntietobi\.com\/listing/i.test(lastAssistantMsg);
@@ -823,6 +826,7 @@ ${places.slice(0, 6).map((p, i) => `${i+1}. **${p.name}**
 
 INSTRUCTIONS FOR PRESENTING THESE RESULTS:
 - Before showing results ALWAYS say: "I don't have a [business type] listed yet — but we are growing fast! Here's what I found nearby for you 😊"
+- ALWAYS show 📍 address/location for EVERY business — this is mandatory, never omit it
 - Show ALL results provided (up to 6) — list them naturally, do NOT label them as Nigerian or non-Nigerian
 - Order results by proximity — closest to the user's location first
 - Never mention whether a Nigerian/African business was found or not — just show results cleanly
@@ -858,6 +862,13 @@ Tell the user honestly that you could not find this business nearby right now.
       if (bizResults.length > 0) {
         businessContext = formatBusinessContext(bizResults);
         console.log('Business search:', bizResults.length, 'results for:', lastMessage.substring(0, 60));
+      } else {
+        // No exact match — show similar businesses from directory
+        const similarResults = searchBusinesses(lastMessage.split(' ').slice(0,2).join(' '), 4);
+        if (similarResults.length > 0) {
+          businessContext = '\n\nNo exact match found in Auntie Tobi directory for this search. However here are some similar businesses that may help:\n' + formatBusinessContext(similarResults).replace('\n\nBUSINESS SEARCH RESULTS:\nIMPORTANT: Always show the 📍 location for EVERY business listed. Never omit location.\n', '');
+          console.log('Similar business results:', similarResults.length);
+        }
       }
     }
 
