@@ -764,23 +764,27 @@ exports.handler = async function(event) {
     // Business search
     const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|make.up|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business|caterer|cake|gele|wig|stylist|barber|beautician|lash|nail|tutor|cleaner|childminder|DJ|travel agent|money transfer|grocery|groceries|foodstore|butcher|pastor|event planner/i.test(lastMessage);
     let businessContext = '';
+    console.log('DEBUG lastMessage:', lastMessage.substring(0,80));
+    console.log('DEBUG isBusinessSearch:', isBusinessSearch);
+    console.log('DEBUG directory size:', AUNTIE_TOBI_DIRECTORY ? AUNTIE_TOBI_DIRECTORY.length : 'UNDEFINED');
     if (isBusinessSearch) {
       const bizResults = searchBusinesses(lastMessage, 6);
+      console.log('DEBUG bizResults:', bizResults.length);
       if (bizResults.length > 0) {
         businessContext = formatBusinessContext(bizResults);
-        console.log('Directory results:', bizResults.length);
       } else {
-        // No location match — search by service type only and show all
         const serviceWords = lastMessage.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 3 && !['find','near','best','good','looking','where','basingstoke','london','birmingham','manchester','bristol','leeds','sheffield','nottingham'].includes(w));
+        console.log('DEBUG serviceWords:', serviceWords);
         if (serviceWords.length > 0) {
           const allResults = searchBusinesses(serviceWords.join(' '), 6);
+          console.log('DEBUG fallback:', allResults.length);
           if (allResults.length > 0) {
             businessContext = formatBusinessContext(allResults);
-            console.log('Fallback results:', allResults.length);
           }
         }
       }
     }
+    console.log('DEBUG businessContext chars:', businessContext.length);
 
     // Build system message
     const systemContent = SYSTEM_PROMPT + (businessContext || '');
