@@ -2653,7 +2653,7 @@ function sendJobQuery(query) {
 
 
 
-const _allNewsCategoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
+const _allNewsCategoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Events': '#6B21A8', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309', 'Education': '#0C447C' };
 
 window._renderAllNewsBatch = function(from) {
   const news = window._allNewsData || [];
@@ -3285,7 +3285,7 @@ function showNewsCard() {
   const item = pool[Math.floor(Math.random() * pool.length)];
 
   // Category badge colours
-  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309' };
+  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Events': '#6B21A8', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309', 'Education': '#0C447C' };
   const badgeColor = categoryColors[item.label] || '#057A44';
   const categoryBadge = item.label === 'Breaking'
     ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
@@ -6028,15 +6028,15 @@ async function submitFeedback() {
 }
 
 function shareAuntieTobi() {
-  const shareText = 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians \n\nGet answers to your questions, discover Nigerian businesses and events near you, find jobs and opportunities, and stay updated with UK news, immigration changes, and everyday guidance that matters to you.\n\n👉 Try her FREE: auntietobi.co.uk\n\n';
+  const shareText = '🤖 Meet Auntie Tobi – Your UK Guide for Nigerians 🇬🇧🇳🇬\nGet trusted answers, discover Nigerian businesses and events, find jobs, and stay updated with UK news and immigration. Install the app and turn on notifications. 💚\n👉 Try it FREE: auntietobi.co.uk';
   if (navigator.share) {
     navigator.share({
-      title: 'Meet Auntie Tobi 🤖✨ — The UK Guide Built for Nigerians ',
+      title: '🤖 Meet Auntie Tobi – Your UK Guide for Nigerians 🇬🇧🇳🇬',
       text: shareText
     }).catch(() => {});
   } else {
     navigator.clipboard.writeText(shareText).then(() => {
-      alert('Copied! Share Auntie Tobi with your friends ');
+      alert('Copied! Share Auntie Tobi with your friends 💚');
     });
   }
 }
