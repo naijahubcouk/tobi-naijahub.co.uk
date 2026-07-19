@@ -398,9 +398,11 @@ Reference these articles when relevant and direct users to the individual links 
 Business listings are searched dynamically. When BUSINESS SEARCH RESULTS appear in this context — ALWAYS show them. NEVER say "not listed yet" if results are provided. The businesses shown may be in different cities but many TRAVEL across the UK for bookings.
 
 WHEN BUSINESS SEARCH RESULTS ARE PROVIDED:
-- Show ALL businesses listed — always include their 📍 location
-- Say: "Here are some amazing [business type] on Auntie Tobi who may travel to you or work UK-wide! 💚"
-- Always mention they can contact the business to confirm availability
+- If user searched in a specific location and no exact match: start with "We don't have a [business type] listed in [location] yet — but these [business type]s travel across the UK and may come to you! Contact them to check availability 💚"
+- If general search: start with "Here are our listed [business type]s on Auntie Tobi 💚"
+- List businesses ordered by proximity — businesses closest to the user's location first
+- Show each as: Name | 📍 Location | one-line description | contact | View on Auntie Tobi link
+- The auntietobi.co.uk/listing/[slug] link opens inside the app — always include it
 - End with the listing CTA
 
 WHEN NO BUSINESS SEARCH RESULTS ARE PROVIDED:
@@ -688,10 +690,11 @@ const AUNTIE_TOBI_DIRECTORY = [{"name": "Eventsbykklargesse", "slug": "eventsbyk
 function searchBusinesses(query, limit) {
   limit = limit || 6;
   var stopWords = ['the','and','for','near','find','looking','where','can','are','any','have','you','what','best','good','in','at','a','an','i','me','my','do','is','it'];
-  var words = query.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(function(w) {
-    return w.length > 2 && stopWords.indexOf(w) === -1;
-  });
-  if (!words.length) words = [query.toLowerCase()];
+  var allWords = query.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(function(w) { return w.length > 2; });
+  var locationWords = allWords.filter(function(w) { return stopWords.indexOf(w) !== -1 || w.length > 5; });
+  var serviceWords = allWords.filter(function(w) { return stopWords.indexOf(w) === -1 && w.length > 2; });
+  if (!serviceWords.length) serviceWords = allWords;
+
   var scored = AUNTIE_TOBI_DIRECTORY.map(function(b) {
     var score = 0;
     var nameL = b.name.toLowerCase();
@@ -700,14 +703,21 @@ function searchBusinesses(query, limit) {
     var locL = b.loc.toLowerCase();
     var descL = b.desc.toLowerCase();
     var kwStr = b.keywords.join(' ').toLowerCase();
-    words.forEach(function(w) {
+
+    // Score by service match
+    serviceWords.forEach(function(w) {
       if (nameL.indexOf(w) !== -1) score += 10;
       if (catL.indexOf(w) !== -1) score += 8;
       if (kwStr.indexOf(w) !== -1) score += 6;
-      if (locL.indexOf(w) !== -1) score += 5;
       if (sectionL.indexOf(w) !== -1) score += 4;
       if (descL.indexOf(w) !== -1) score += 3;
     });
+
+    // Boost score for proximity — location words in query match business location
+    allWords.forEach(function(w) {
+      if (w.length > 4 && locL.indexOf(w) !== -1) score += 15;
+    });
+
     return Object.assign({}, b, { score: score });
   }).filter(function(b) { return b.score > 0; })
     .sort(function(a, b) { return b.score - a.score; })
@@ -717,19 +727,41 @@ function searchBusinesses(query, limit) {
 
 function formatBusinessContext(businesses) {
   if (!businesses.length) return '';
-  var lines = businesses.map(function(b, i) {
-    var verified = b.verified ? ' \u2705 VERIFIED MEMBER' : '';
+  var cards = businesses.map(function(b) {
     var loc = b.loc || 'UK';
-    var parts = [(i+1) + '. ' + b.name + verified + ' | \uD83D\uDCCD ' + loc + ' | ' + b.section + ' > ' + b.cat + ' | ' + b.desc];
-    if (b.phone) parts.push('Phone: ' + b.phone);
-    if (b.email) parts.push('Email: ' + b.email);
-    if (b.website) parts.push('Website: ' + b.website);
-    if (b.wa) parts.push('WhatsApp: ' + b.wa);
-    if (b.ig) parts.push('Instagram: ' + b.ig);
-    parts.push('auntietobi.com/listing/' + b.slug);
-    return parts.join(' | ');
+    var desc = b.desc ? b.desc.substring(0, 100) + (b.desc.length > 100 ? '...' : '') : '';
+    var cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
+    var listingUrl = 'https://auntietobi.co.uk/listing/' + b.slug;
+    var shareUrl = 'https://auntietobi.co.uk?blog=' + b.slug;
+    var safeName = b.name.replace(/['"]/g, '');
+    var safeDesc = desc.replace(/['"]/g, '');
+
+    var verifiedBadge = b.verified
+      ? '<div style="position:absolute;top:-10px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">\u2705 Verified Business</div>'
+      : '';
+
+    var waBtn = (b.verified && b.wa)
+      ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
+      : '';
+
+    var shareBtn = '<button data-share-url="' + shareUrl + '" data-share-name="' + safeName + '" data-share-desc="' + safeDesc + '" onclick="tobiShare(this.dataset.shareName,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;">\uD83D\uDCE4 Share</button>';
+
+    var viewBtn = '<a href="' + listingUrl + '" class="blog-read-more" data-blogurl="' + listingUrl + '" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;text-align:center;display:block;">View details</a>';
+
+    var buttons = viewBtn + (waBtn ? waBtn : '') + shareBtn;
+
+    return '<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:10px;position:relative;">'
+      + verifiedBadge
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
+      + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + b.name + '</div>'
+      + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + cat + '</span>'
+      + '</div>'
+      + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + desc + '</div>'
+      + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">\uD83D\uDCCD ' + loc + '</div>'
+      + '<div style="display:flex;gap:6px;">' + buttons + '</div>'
+      + '</div>';
   });
-  return '\n\nBUSINESS SEARCH RESULTS:\nIMPORTANT: Always show location for EVERY business. Many businesses TRAVEL across the UK (makeup artists, photographers, caterers, DJs, gele stylists) so show ALL results and tell the user they travel.\n' + lines.join('\n\n');
+  return '\n\nBUSINESS_CARDS_HTML:\n' + cards.join('') + '\nEND_BUSINESS_CARDS';
 }
 
 
