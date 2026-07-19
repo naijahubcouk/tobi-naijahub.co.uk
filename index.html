@@ -4617,7 +4617,7 @@ function handleDeepLink() {
   const action = params.get('action');
   const blog = params.get('blog');
 
-  if (!action && !news) return;
+  if (!action && !blog) return;
 
   if (action === 'premium') {
     setTimeout(() => {
@@ -4721,6 +4721,12 @@ function handleDeepLink() {
       addTipMessage(buildTipCard(tip, getRandomSuggestionStr()));
       window.history.replaceState({}, '', window.location.pathname);
     }, 500);
+  }
+
+  // Blog deep link handler
+  if (blog) {
+    if (false) {
+    // placeholder to start else-if chain
   } else if (blog === 'starmerresigns') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
@@ -5231,10 +5237,11 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/ARTICLES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🚌 Free Bus Travel Update</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Latest update on free bus travel for Nigerians in the UK.</div><a href="https://auntietobi.com" target="_blank" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More on Auntie Tobi</a></div></div>');
+      addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;"><div style="background:#057A44;padding:6px 10px;"><span style="color:white;font-weight:700;font-size:13px;">📰 NEWS/ARTICLES</span></div><div style="padding:10px 12px 8px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;">🚌 Free Bus Travel Update</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Latest update on free bus travel for Nigerians in the UK.</div><a href="javascript:void(0)" data-blogurl="https://auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026" class="blog-read-more" style="display:block;font-size:13px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a></div></div>');
       window.history.replaceState({}, '', window.location.pathname);
     }, 500);
-  }
+  } // end blog if block
+  } // end if(blog)
 }
 
 function showWeeklyNotificationPrompt() {
