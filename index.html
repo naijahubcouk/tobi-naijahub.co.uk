@@ -1896,8 +1896,8 @@ async function logGap(question, reply) {
 
 function formatResponse(text) {
   // Extract and render business cards from JSON
-  if (text.includes('[BIZ_JSON:')) {
-    const bizMatch = text.match(/\[BIZ_JSON:([\s\S]*?)\]/);
+  if (text.includes('<<<BIZ_JSON:')) {
+    const bizMatch = text.match(/<<<BIZ_JSON:([\s\S]*?)>>>/);
     if (bizMatch) {
       try {
         const businesses = JSON.parse(bizMatch[1]);
@@ -1934,9 +1934,9 @@ function formatResponse(text) {
             + '</div>';
         }).join('');
 
-        text = text.replace(/\[BIZ_JSON:[\s\S]*?\]/, '|||BIZ_CARDS|||' + cardsHTML + '|||END_BIZ|||');
+        text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '|||BIZ_CARDS|||' + cardsHTML + '|||END_BIZ|||');
       } catch(e) {
-        text = text.replace(/\[BIZ_JSON:[\s\S]*?\]/, '');
+        text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '');
       }
     }
   }
@@ -2751,7 +2751,7 @@ window._renderAllNewsBatch = function(from) {
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
           <a href="javascript:void(0)" data-blogurl="${item.url}" data-blogtitle="${item.title}" data-blogsummary="${item.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-          <button onclick="tobiShare('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+          <button onclick="shareBlogUrl('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
     </div>`;
@@ -2991,7 +2991,7 @@ function buildLiveNewsHTML(articles, showAll) {
       ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;">
         <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
-        <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
+        <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
       </div>
     </div>`;
   }).join('');
@@ -3095,7 +3095,7 @@ function showMoreLiveNews() {
         ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;">
           <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
-          <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
+          <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
         </div>
       </div>`;
     }).join('');
@@ -3383,7 +3383,7 @@ function showNewsCard() {
       <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
         <a href="javascript:void(0)" data-blogurl="${item.url}" data-blogtitle="${item.title}" data-blogsummary="${item.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-        <button onclick="tobiShare('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        <button onclick="shareBlogUrl('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
     </div>
   </div>`;
@@ -4662,12 +4662,21 @@ function closeBlogSheet() {
   document.body.style.overflow = '';
 }
 
+function shareBlogUrl(title, text, blogComUrl) {
+  // Convert auntietobi.com/blog/slug to auntietobi.co.uk/blog/key
+  const slugMap = {'BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation':'starmerresigns','AfroMic-Night-Afrobeats-Karaoke':'afrominight','MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026':'naijafoodfest','Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends':'owambefest','Deshapeables-UK-Tradefair-London':'deshapeables','NSF-(UK)-Sports-and-Family-Fun-Day-2026':'nsfsportsday','The-Igbo-Table:-Food-Culture-and-Conversation':'igbotable','Ankara-Festival-UK-2026':'ankarafest','Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action':'tenantdeposit','Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)':'nigerianrestaurants','No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!':'firsthome5k','Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Heres-How':'passportrenewal','Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK':'faragereigns','10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK':'householdbills','UK-Weather-Update:-Another-Heatwave-Could-Push-Temperatures-Above-30C-This-Week':'heatwave2','Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005':'visarefusals','UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes':'ilrupdate','Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026':'aldibabyformula','What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money':'andyburnham','UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-W':'heatwarning','FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026':'freebus','Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know':'nigculturalfest','UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said':'nigerianswage','UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries':'ukvisaconfirm','Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know':'tvlicence','Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition':'freecourses','Metro-Bank%27s-New-100percent-Mortgage:-Should-You-Jump-at-It':'metromortgage','10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)':'bizmisc','FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays':'morrisonbreakfast','UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-Exceptional-Contribution':'fastersettlement','Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London':'worshipchaos','9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!':'9jafayre','Festival-Of-African-Cuisine':'africancuisine','Midlands-Business-Festival-Coventry':'midlandsbiz','Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns':'suyafest'};
+  const blogSlug = blogComUrl.split('/blog/')[1] || '';
+  const key = slugMap[blogSlug] || slugMap[decodeURIComponent(blogSlug)];
+  const shareUrl = key ? 'https://auntietobi.co.uk/blog/' + key : 'https://auntietobi.co.uk';
+  tobiShare(title, text, shareUrl);
+}
+
 function shareBlogPost() {
   // Find deep link for this blog URL
   const slug = _blogUrl.split('/blog/')[1] || '';
   const deepLinks = {'auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation': 'starmerresigns', 'auntietobi.com/blog/AfroMic-Night-Afrobeats-Karaoke': 'afrominight', 'auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026': 'naijafoodfest', 'auntietobi.com/blog/Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends': 'owambefest', 'auntietobi.com/blog/Deshapeables-UK-Tradefair-London': 'deshapeables', 'auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026': 'nsfsportsday', 'auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation': 'igbotable', 'auntietobi.com/blog/Ankara-Festival-UK-2026': 'ankarafest', 'auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action': 'tenantdeposit', 'auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)': 'nigerianrestaurants', 'auntietobi.com/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!': 'firsthome5k', 'auntietobi.com/blog/Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Heres-How': 'passportrenewal', 'auntietobi.com/blog/Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK': 'faragereigns', 'auntietobi.com/blog/10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK': 'householdbills', 'auntietobi.com/blog/UK-Weather-Update:-Another-Heatwave-Could-Push-Temperatures-Above-30C-This-Week': 'heatwave2', 'auntietobi.com/blog/Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005': 'visarefusals', 'auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes': 'ilrupdate', 'auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026': 'aldibabyformula', 'auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money': 'andyburnham', 'auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-W': 'heatwarning', 'auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026': 'freebus', 'auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know': 'nigculturalfest', 'auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said': 'nigerianswage', 'auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries': 'ukvisaconfirm', 'auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know': 'tvlicence', 'auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition': 'freecourses', 'auntietobi.com/blog/Metro-Bank%27s-New-100percent-Mortgage:-Should-You-Jump-at-It': 'metromortgage', 'auntietobi.com/blog/10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)': 'bizmisc', 'auntietobi.com/blog/FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays': 'morrisonbreakfast', 'auntietobi.com/blog/UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-Exceptional-Contribution': 'fastersettlement', 'auntietobi.com/blog/Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London': 'worshipchaos', 'auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!': '9jafayre', 'auntietobi.com/blog/Festival-Of-African-Cuisine': 'africancuisine', 'auntietobi.com/blog/Midlands-Business-Festival-Coventry': 'midlandsbiz', 'auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns': 'suyafest'};
   const key = Object.keys(deepLinks).find(k => _blogUrl.includes(k.split('/blog/')[1]));
-  const shareUrl = key ? 'https://auntietobi.co.uk?blog=' + deepLinks[key] : 'https://auntietobi.co.uk';
+  const shareUrl = key ? 'https://auntietobi.co.uk/blog/' + deepLinks[key] : 'https://auntietobi.co.uk';
   tobiShare(_blogTitle, _blogTitle, shareUrl);
 }
 
@@ -4832,7 +4841,7 @@ function handleDeepLink() {
               ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
               <div style="display:flex;align-items:center;gap:10px;">
                 <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
-                <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
+                <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
               </div>
             </div>`;
           }).join('');
