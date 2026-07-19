@@ -732,9 +732,10 @@ function formatBusinessContext(businesses) {
     var desc = b.desc ? b.desc.substring(0, 100) + (b.desc.length > 100 ? '...' : '') : '';
     var cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
     var listingUrl = 'https://auntietobi.co.uk/listing/' + b.slug;
-    var shareUrl = 'https://auntietobi.co.uk?blog=' + b.slug;
+    var shareUrl = 'https://auntietobi.co.uk?biz=' + b.slug;
     var safeName = b.name.replace(/['"]/g, '');
-    var safeDesc = desc.replace(/['"]/g, '');
+    var safeDesc = desc.replace(/['\"]/g, '');
+    var shareMsg = 'Check out ' + safeName + ' on Auntie Tobi \uD83D\uDC9A Find Nigerian businesses near you \uD83D\uDC49 auntietobi.co.uk?biz=' + b.slug;
 
     var verifiedBadge = b.verified
       ? '<div style="position:absolute;top:-10px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">\u2705 Verified Business</div>'
@@ -744,7 +745,7 @@ function formatBusinessContext(businesses) {
       ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
       : '';
 
-    var shareBtn = '<button data-share-url="' + shareUrl + '" data-share-name="' + safeName + '" data-share-desc="' + safeDesc + '" onclick="tobiShare(this.dataset.shareName,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;">\uD83D\uDCE4 Share</button>';
+    var shareBtn = '<button data-share-url="' + shareUrl + '" data-share-name="' + safeName + '" data-share-desc="' + shareMsg + '" onclick="tobiShare(this.dataset.shareName,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;">\uD83D\uDCE4 Share</button>';
 
     var viewBtn = '<a href="' + listingUrl + '" class="blog-read-more" data-blogurl="' + listingUrl + '" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;text-align:center;display:block;">View details</a>';
 
