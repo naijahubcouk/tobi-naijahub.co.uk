@@ -1895,6 +1895,17 @@ async function logGap(question, reply) {
 
 
 function formatResponse(text) {
+  // Extract and render business cards HTML
+  if (text.includes('BUSINESS_CARDS_HTML:')) {
+    const cardsMatch = text.match(/BUSINESS_CARDS_HTML:\n([\s\S]*?)\nEND_BUSINESS_CARDS/);
+    if (cardsMatch) {
+      const cardsHTML = cardsMatch[1];
+      const beforeCards = text.substring(0, text.indexOf('BUSINESS_CARDS_HTML:')).trim();
+      const afterCards = text.substring(text.indexOf('END_BUSINESS_CARDS') + 'END_BUSINESS_CARDS'.length).trim();
+      text = (beforeCards ? beforeCards + '\n\n' : '') + '|||CARDS|||' + cardsHTML + '|||ENDCARDS|||' + (afterCards ? '\n\n' + afterCards : '');
+    }
+  }
+
   // Extract suggestions
   let suggestions = [];
   const sugMatch = text.match(/\[SUGGESTIONS:(.*?)\]/s);
@@ -2049,7 +2060,22 @@ function formatResponse(text) {
     return `<div class="result-card">${tagHTML}${bodyHTML}</div>`;
   });
 
+  // Inject business cards
+  let cardsHTML = '';
+  if (text.includes('|||CARDS|||')) {
+    const cardsMatch = text.match(/\|\|\|CARDS\|\|\|([\s\S]*?)\|\|\|ENDCARDS\|\|\|/);
+    if (cardsMatch) {
+      cardsHTML = cardsMatch[1];
+      text = text.replace(/\|\|\|CARDS\|\|\|[\s\S]*?\|\|\|ENDCARDS\|\|\|/, '|||INJECT_CARDS|||');
+    }
+  }
+
   let html = `<div>${text.replace(/\n\n/g, '</div><div style="margin-top:8px">').replace(/\n/g, '<br>')}</div>`;
+
+  // Replace card placeholder with actual cards
+  if (cardsHTML) {
+    html = html.replace('|||INJECT_CARDS|||', '</div>' + cardsHTML + '<div>');
+  }
 
   if (suggestions.length > 0) {
     html += '<div class="suggestions">';
