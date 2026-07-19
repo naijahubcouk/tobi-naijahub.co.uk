@@ -752,12 +752,23 @@ exports.handler = async function(event) {
     const recentMessages = body.messages.slice(-4);
 
     // Business search
-    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business|caterer|cake|gele|wig|stylist/i.test(lastMessage);
+    const isBusinessSearch = /find|looking for|where can i|recommend|near me|hair|makeup|make.up|restaurant|food|shop|salon|church|accountant|solicitor|lawyer|doctor|dentist|photographer|fashion|clothing|tailor|business|caterer|cake|gele|wig|stylist|barber|beautician|lash|nail|tutor|cleaner|childminder|DJ|travel agent|money transfer|grocery|groceries|foodstore|butcher|pastor|event planner/i.test(lastMessage);
     let businessContext = '';
     if (isBusinessSearch) {
       const bizResults = searchBusinesses(lastMessage, 6);
       if (bizResults.length > 0) {
         businessContext = formatBusinessContext(bizResults);
+        console.log('Directory results:', bizResults.length);
+      } else {
+        // No location match — search by service type only and show all
+        const serviceWords = lastMessage.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 3 && !['find','near','best','good','looking','where','basingstoke','london','birmingham','manchester','bristol','leeds','sheffield','nottingham'].includes(w));
+        if (serviceWords.length > 0) {
+          const allResults = searchBusinesses(serviceWords.join(' '), 6);
+          if (allResults.length > 0) {
+            businessContext = formatBusinessContext(allResults);
+            console.log('Fallback results:', allResults.length);
+          }
+        }
       }
     }
 
