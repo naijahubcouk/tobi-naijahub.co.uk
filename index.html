@@ -2675,7 +2675,7 @@ window._renderAllNewsBatch = function(from) {
         <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${item.url}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+          <a href="javascript:void(0)" data-blogurl="${item.url}" data-blogtitle="${item.title}" data-blogsummary="${item.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
           <button onclick="tobiShare('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
@@ -2915,7 +2915,7 @@ function buildLiveNewsHTML(articles, showAll) {
       <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
       ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;">
-        <a href="javascript:void(0)" data-blogurl="${a.url}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
         <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
       </div>
     </div>`;
@@ -3019,7 +3019,7 @@ function showMoreLiveNews() {
         <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
         ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${a.url}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+          <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
           <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
         </div>
       </div>`;
@@ -3307,7 +3307,7 @@ function showNewsCard() {
       <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${item.emoji} ${item.title}</div>
       <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-        <a href="javascript:void(0)" data-blogurl="${item.url}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${item.url}" data-blogtitle="${item.title}" data-blogsummary="${item.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
         <button onclick="tobiShare('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
     </div>
@@ -4499,32 +4499,50 @@ function openBlogSheet(url, title, summary) {
   _blogSummary = summary || '';
 
   const sheet = document.getElementById('blogSheet');
-  const frame = document.getElementById('blogSheetFrame');
-  const loading = document.getElementById('blogSheetLoading');
-  const fallback = document.getElementById('blogSheetFallback');
-  const footer = document.getElementById('blogSheetFooter');
 
-  // Reset state
-  document.getElementById('blogSheetTitle').textContent = _blogTitle;
-  document.getElementById('blogSheetSummary').textContent = _blogSummary;
+  // Reset to loading state
+  document.getElementById('blogSheetTitle').textContent = _blogTitle || 'Loading...';
+  document.getElementById('blogSheetLoading').style.display = 'flex';
+  document.getElementById('blogSheetFallback').style.display = 'none';
+  document.getElementById('blogSheetContent').style.display = 'none';
+  document.getElementById('blogSheetFooter').style.display = 'flex';
   document.getElementById('blogSheetExternal').href = url;
   document.getElementById('blogSheetOpenBtn').href = url;
-
-  loading.style.display = 'flex';
-  fallback.style.display = 'none';
-  footer.style.display = 'none';
-  frame.style.display = 'none';
-  frame.src = '';
 
   sheet.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  // Set frame src after showing sheet
-  setTimeout(() => {
-    frame.src = url;
-    // Fallback timer — if not loaded in 8 seconds show fallback
-    _blogFrameTimer = setTimeout(() => onBlogFrameError(), 8000);
-  }, 100);
+  // Fetch article content via Netlify function
+  fetch(`/.netlify/functions/fetch-blog?url=${encodeURIComponent(url)}`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('blogSheetLoading').style.display = 'none';
+
+      if (data.error || data.fallback || !data.content) {
+        // Show fallback with summary + debug info
+        const debugMsg = data.error ? ` (${data.error})` : '';
+        document.getElementById('blogSheetSummary').textContent = (_blogSummary || 'Tap below to read the full article.') + debugMsg;
+        document.getElementById('blogSheetFallback').style.display = 'block';
+      } else {
+        // Show full content
+        if (data.title) {
+          document.getElementById('blogSheetTitle').textContent = data.title;
+          _blogTitle = data.title;
+        }
+        if (data.image) {
+          const img = document.getElementById('blogSheetImage');
+          img.src = data.image;
+          img.style.display = 'block';
+        }
+        document.getElementById('blogSheetContentInner').innerHTML = data.content;
+        document.getElementById('blogSheetContent').style.display = 'block';
+      }
+    })
+    .catch(() => {
+      document.getElementById('blogSheetLoading').style.display = 'none';
+      document.getElementById('blogSheetSummary').textContent = _blogSummary || 'Tap below to read the full article.';
+      document.getElementById('blogSheetFallback').style.display = 'block';
+    });
 }
 
 function onBlogFrameLoad() {
@@ -4686,7 +4704,7 @@ function handleDeepLink() {
               <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
               ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
               <div style="display:flex;align-items:center;gap:10px;">
-                <a href="javascript:void(0)" data-blogurl="${a.url}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+                <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
                 <button onclick="tobiShare('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
               </div>
             </div>`;
@@ -5465,7 +5483,7 @@ function showUpcomingEventCard() {
       <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${event.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:12px;color:#9CA3AF;flex:1;">📅 ${event.time}</span>
-        <a href="javascript:void(0)" data-blogurl="${event.url}" class="blog-read-more" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${event.url}" data-blogtitle="${event.title||''}" data-blogsummary="${event.summary||''}" class="blog-read-more" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">🔗 Read More</a>
       </div>
     </div>
   </div>`;
@@ -5520,7 +5538,7 @@ function showEventsCard() {
           <div style="font-size:12px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
           <div style="font-size:12px;color:#555;margin-bottom:8px;">🕐 ${e.time}</div>
           <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="javascript:void(0)" data-blogurl="${e.url}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+            <a href="javascript:void(0)" data-blogurl="${e.url}" data-blogtitle="${e.title||''}" data-blogsummary="${e.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
             <button onclick="tobiShare('${e.title.replace(/'/g,"\\'").substring(0,50)}','${e.date} • ${e.loc.replace(/'/g,"\\'")}','${e.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
           </div>
         </div>
@@ -6415,40 +6433,53 @@ window.addEventListener('load', () => {
 
 <!-- Blog Reader Bottom Sheet -->
 <div id="blogSheet" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;">
-  <!-- Backdrop -->
-  <div onclick="closeBlogSheet()" style="flex:1;background:rgba(0,0,0,0.5);"></div>
-  <!-- Sheet -->
+  <div onclick="closeBlogSheet()" style="flex:1;background:rgba(0,0,0,0.5);min-height:40px;"></div>
   <div style="background:white;border-radius:16px 16px 0 0;display:flex;flex-direction:column;height:88vh;overflow:hidden;">
     <!-- Header -->
     <div style="background:#057A44;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
       <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
         <span style="font-size:14px;">📰</span>
-        <span id="blogSheetTitle" style="color:white;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        <span id="blogSheetTitle" style="color:white;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;"></span>
       </div>
-      <button onclick="closeBlogSheet()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">×</button>
+      <button onclick="closeBlogSheet()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:28px;height:28px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-left:8px;">×</button>
     </div>
-    <!-- Loading indicator -->
-    <div id="blogSheetLoading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;flex-shrink:0;">
-      <div style="width:28px;height:28px;border:3px solid #e5e7eb;border-top-color:#057A44;border-radius:50%;animation:typingBounce2 0.8s linear infinite;margin-bottom:10px;"></div>
-      <div style="font-size:13px;color:#9CA3AF;">Loading article...</div>
+    <!-- Loading -->
+    <div id="blogSheetLoading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;flex:1;">
+      <div style="width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:#057A44;border-radius:50%;animation:typingBounce2 0.8s linear infinite;margin-bottom:12px;"></div>
+      <div style="font-size:13px;color:#9CA3AF;font-family:inherit;">Loading article...</div>
     </div>
-    <!-- Fallback -->
-    <div id="blogSheetFallback" style="display:none;padding:20px;">
-      <div style="background:#FFF8E7;border:1.5px solid #FFB81C;border-radius:8px;padding:14px;text-align:center;">
-        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:6px;">⚠️ Could not load article</div>
-        <div style="font-size:12px;color:#555;margin-bottom:12px;" id="blogSheetSummary"></div>
-        <a id="blogSheetExternal" href="#" target="_blank" style="display:inline-block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:8px 18px;border-radius:8px;">🔗 Open in browser</a>
-      </div>
+    <!-- Fallback (if fetch fails) -->
+    <div id="blogSheetFallback" style="display:none;padding:20px;flex:1;overflow-y:auto;">
+      <p id="blogSheetSummary" style="font-size:14px;color:#444;line-height:1.7;margin-bottom:16px;font-family:inherit;"></p>
+      <a id="blogSheetExternal" href="#" target="_blank" onclick="closeBlogSheet()" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:14px;font-weight:700;padding:12px;border-radius:10px;text-align:center;font-family:inherit;">📖 Read Full Article</a>
     </div>
-    <!-- iFrame -->
-    <iframe id="blogSheetFrame" src="" style="display:none;flex:1;border:none;width:100%;" onload="onBlogFrameLoad()" onerror="onBlogFrameError()"></iframe>
+    <!-- Full Article Content -->
+    <div id="blogSheetContent" style="display:none;flex:1;overflow-y:auto;">
+      <img id="blogSheetImage" src="" alt="" style="display:none;width:100%;max-height:200px;object-fit:cover;">
+      <div id="blogSheetContentInner" style="padding:16px;font-size:14px;line-height:1.8;color:#333;font-family:inherit;"></div>
+    </div>
     <!-- Footer -->
-    <div id="blogSheetFooter" style="display:none;padding:8px 14px;border-top:1px solid #f0f0f0;display:flex;gap:8px;flex-shrink:0;">
-      <button id="blogSheetShareBtn" onclick="shareBlogPost()" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-      <a id="blogSheetOpenBtn" href="#" target="_blank" style="flex:1;background:#f0faf5;color:#057A44;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-align:center;">🔗 Open in browser</a>
+    <div id="blogSheetFooter" style="padding:8px 14px;border-top:1px solid #f0f0f0;display:flex;gap:8px;flex-shrink:0;background:white;">
+      <button onclick="shareBlogPost()" style="flex:1;background:#FFB81C;color:#0F1E36;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+      <a id="blogSheetOpenBtn" href="#" target="_blank" style="flex:1;background:#f0faf5;color:#057A44;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-align:center;font-family:inherit;">🔗 Open in browser</a>
     </div>
   </div>
 </div>
+<style>
+#blogSheetContentInner h1, #blogSheetContentInner h2, #blogSheetContentInner h3 {
+  color:#0F1E36;font-weight:700;margin:16px 0 8px;line-height:1.3;
+}
+#blogSheetContentInner h1 { font-size:20px; }
+#blogSheetContentInner h2 { font-size:17px; }
+#blogSheetContentInner h3 { font-size:15px; }
+#blogSheetContentInner p { margin-bottom:12px; }
+#blogSheetContentInner ul, #blogSheetContentInner ol { padding-left:20px;margin-bottom:12px; }
+#blogSheetContentInner li { margin-bottom:6px; }
+#blogSheetContentInner img { max-width:100%;border-radius:8px;margin:8px 0; }
+#blogSheetContentInner a { color:#057A44;font-weight:600; }
+#blogSheetContentInner strong, #blogSheetContentInner b { color:#0F1E36; }
+#blogSheetContentInner blockquote { border-left:3px solid #FFB81C;padding-left:12px;color:#555;font-style:italic;margin:12px 0; }
+</style>
 <style>
 @keyframes typingBounce2 { to { transform: rotate(360deg); } }
 </style>
