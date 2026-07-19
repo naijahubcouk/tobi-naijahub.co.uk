@@ -1895,7 +1895,55 @@ async function logGap(question, reply) {
 
 
 function formatResponse(text) {
-  // Extract and render business cards HTML
+  // Extract and render business cards from JSON
+  if (text.includes('[BIZ_JSON:')) {
+    const bizMatch = text.match(/\[BIZ_JSON:([\s\S]*?)\]/);
+    if (bizMatch) {
+      try {
+        const businesses = JSON.parse(bizMatch[1]);
+        const cardsHTML = businesses.map(function(b) {
+          const cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
+          const listingUrl = 'https://auntietobi.com/listing/' + b.slug;
+          const shareUrl = 'https://auntietobi.co.uk?biz=' + b.slug;
+          const safeName = b.name.replace(/['"]/g, '');
+          const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi \uD83D\uDC9A Find Nigerian businesses near you \uD83D\uDC49 auntietobi.co.uk?biz=' + b.slug;
+
+          const verifiedBadge = b.verified
+            ? '<div style="position:absolute;top:-10px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">\u2705 Verified Business</div>'
+            : '';
+
+          const waBtn = (b.verified && b.wa)
+            ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
+            : '';
+
+          const shareBtn = '<button data-share-url="' + shareUrl + '" data-share-name="' + safeName + '" data-share-desc="' + shareMsg + '" onclick="tobiShare(this.dataset.shareName,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;">\uD83D\uDCE4 Share</button>';
+
+          const viewBtn = '<a href="' + listingUrl + '" target="_blank" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;text-align:center;display:block;">View details</a>';
+
+          const buttons = viewBtn + (waBtn || '') + shareBtn;
+
+          return '<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:10px;position:relative;">'
+            + verifiedBadge
+            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
+            + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + b.name + '</div>'
+            + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + cat + '</span>'
+            + '</div>'
+            + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + (b.desc || '') + '</div>'
+            + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">\uD83D\uDCCD ' + (b.loc || 'UK') + '</div>'
+            + '<div style="display:flex;gap:6px;">' + buttons + '</div>'
+            + '</div>';
+        }).join('');
+
+        text = text.replace(/\[BIZ_JSON:[\s\S]*?\]/, '|||BIZ_CARDS|||' + cardsHTML + '|||END_BIZ|||');
+      } catch(e) {
+        text = text.replace(/\[BIZ_JSON:[\s\S]*?\]/, '');
+      }
+    }
+  }
+  // Replace [SHOW_BIZ_CARDS] placeholder with injected cards
+  text = text.replace('[SHOW_BIZ_CARDS]', '|||INJECT_BIZ|||');
+
+  // Extract and render business cards HTML (legacy)
   if (text.includes('BUSINESS_CARDS_HTML:')) {
     const cardsMatch = text.match(/BUSINESS_CARDS_HTML:\n([\s\S]*?)\nEND_BUSINESS_CARDS/);
     if (cardsMatch) {
@@ -2062,19 +2110,20 @@ function formatResponse(text) {
 
   // Inject business cards
   let cardsHTML = '';
+  if (text.includes('|||BIZ_CARDS|||')) {
+    const m = text.match(/\|\|\|BIZ_CARDS\|\|\|([\s\S]*?)\|\|\|END_BIZ\|\|\|/);
+    if (m) { cardsHTML = m[1]; text = text.replace(/\|\|\|BIZ_CARDS\|\|\|[\s\S]*?\|\|\|END_BIZ\|\|\|/, '|||INJECT_BIZ|||'); }
+  }
   if (text.includes('|||CARDS|||')) {
-    const cardsMatch = text.match(/\|\|\|CARDS\|\|\|([\s\S]*?)\|\|\|ENDCARDS\|\|\|/);
-    if (cardsMatch) {
-      cardsHTML = cardsMatch[1];
-      text = text.replace(/\|\|\|CARDS\|\|\|[\s\S]*?\|\|\|ENDCARDS\|\|\|/, '|||INJECT_CARDS|||');
-    }
+    const m = text.match(/\|\|\|CARDS\|\|\|([\s\S]*?)\|\|\|ENDCARDS\|\|\|/);
+    if (m) { cardsHTML = m[1]; text = text.replace(/\|\|\|CARDS\|\|\|[\s\S]*?\|\|\|ENDCARDS\|\|\|/, '|||INJECT_BIZ|||'); }
   }
 
   let html = `<div>${text.replace(/\n\n/g, '</div><div style="margin-top:8px">').replace(/\n/g, '<br>')}</div>`;
 
-  // Replace card placeholder with actual cards
   if (cardsHTML) {
-    html = html.replace('|||INJECT_CARDS|||', '</div>' + cardsHTML + '<div>');
+    html = html.replace('|||INJECT_BIZ|||', '</div>' + cardsHTML + '<div>');
+    html = html.replace(/(<div[^>]*>)?\|\|\|INJECT_BIZ\|\|\|(<\/div>)?/g, cardsHTML);
   }
 
   if (suggestions.length > 0) {
