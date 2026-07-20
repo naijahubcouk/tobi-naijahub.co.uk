@@ -1906,7 +1906,7 @@ function formatResponse(text) {
           const listingUrl = 'https://auntietobi.com/listing/' + b.slug; // kept for reference
           const shareUrl = 'https://auntietobi.co.uk?biz=' + b.slug;
           const safeName = b.name.replace(/['"]/g, '');
-          const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi \uD83D\uDC9A Find Nigerian businesses near you \uD83D\uDC49 auntietobi.co.uk?biz=' + b.slug;
+          const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi 💚 Find Nigerian businesses near you';
 
           const verifiedBadge = b.verified
             ? '<div style="position:absolute;top:-10px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">\u2705 Verified Business</div>'
@@ -4373,7 +4373,7 @@ function showBusinesses(startIndex = -1) {
     const listingUrl = 'https://auntietobi.com/listing/' + b.slug; // kept for reference
     const shareUrl = 'https://auntietobi.co.uk?biz=' + b.slug;
     const safeName = b.name.replace(/['"]/g, '');
-    const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi 💚 Find Nigerian businesses near you 👉 ' + shareUrl;
+    const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi 💚 Find Nigerian businesses near you';
 
     const verifiedBadge = b.verified
       ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>'
@@ -4843,6 +4843,8 @@ function handleDeepLink() {
           + '<div style="display:flex;gap:6px;">' + viewBtn + waBtn + shareBtn + '</div>'
           + '</div>';
         addTipMessage(cardHTML);
+        const _bizSugg = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+        addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 More businesses</button>${_bizSugg.map(s=>`<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\'")}')">${s}</button>`).join('')}</div>`);
         window.history.replaceState({}, '', window.location.pathname);
       } else {
         addTipMessage('Business not found.');
