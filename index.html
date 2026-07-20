@@ -2345,7 +2345,8 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
       body: JSON.stringify({
         messages: messages,
         examContext: getExamContext(),
-        locationContext: getLocationContext()
+        locationContext: getLocationContext(),
+        userCity: userCity || window.userCity || ''
       })
     });
 
