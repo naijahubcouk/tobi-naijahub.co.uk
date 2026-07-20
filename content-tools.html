@@ -107,6 +107,7 @@
     <button class="tab active" onclick="switchTab('roundup')">📰 Weekly Roundup</button>
     <button class="tab" onclick="switchTab('social')">📸 Social Content</button>
     <button class="tab" onclick="switchTab('push')">🔔 Push Notifications</button>
+    <button class="tab" onclick="switchTab('htmlpng')">🖼️ HTML → PNG</button>
   </div>
 
   <!-- Panel 1: Weekly Roundup -->
@@ -154,6 +155,54 @@
     <div class="output-section" id="output-push"></div>
   </div>
 
+  <!-- Panel 4: HTML → PNG -->
+  <div class="panel" id="panel-htmlpng">
+    <div class="card">
+      <div class="card-header"><span style="font-size:16px;">🖼️</span><span>HTML to PNG Converter</span></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">Upload your carousel HTML file. Each <code style="background:#f0f0f0;padding:2px 5px;border-radius:3px;">.slide</code> will be exported as a separate PNG at 1080px wide.</p>
+        <div id="htmlpng-dropzone" onclick="document.getElementById('htmlpng-file').click()" style="border:2px dashed #e5e7eb;border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafafa;">
+          <div style="font-size:32px;margin-bottom:8px;">📂</div>
+          <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;">Click to upload HTML file</div>
+          <div style="font-size:11px;color:#9CA3AF;">or drag and drop your .html file here</div>
+          <div id="htmlpng-filename" style="margin-top:10px;font-size:12px;color:#057A44;font-weight:700;display:none;"></div>
+        </div>
+        <input type="file" id="htmlpng-file" accept=".html,text/html" style="display:none;" onchange="handleHtmlFile(this)">
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:#0F1E36;display:block;margin-bottom:3px;">Width (px)</label>
+            <input type="number" id="htmlpng-width" value="1080" style="width:90px;border:1.5px solid #e5e7eb;border-radius:6px;padding:7px 10px;font-size:13px;font-family:'Nunito',sans-serif;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:#0F1E36;display:block;margin-bottom:3px;">Scale</label>
+            <select id="htmlpng-scale" style="border:1.5px solid #e5e7eb;border-radius:6px;padding:7px 10px;font-size:13px;font-family:'Nunito',sans-serif;outline:none;">
+              <option value="1">1x (preview)</option>
+              <option value="2" selected>2x (recommended)</option>
+              <option value="3">3x (high res)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:#0F1E36;display:block;margin-bottom:3px;">Slide selector</label>
+            <input type="text" id="htmlpng-selector" value=".slide" style="width:110px;border:1.5px solid #e5e7eb;border-radius:6px;padding:7px 10px;font-size:13px;font-family:'Nunito',sans-serif;outline:none;">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:12px;" onclick="convertHtmlToPng()">🖼️ Convert to PNG</button>
+        <div id="htmlpng-loading" style="display:none;text-align:center;padding:20px;">
+          <div class="spinner"></div>
+          <p style="font-size:13px;color:#9CA3AF;">Rendering slides...</p>
+        </div>
+        <div id="htmlpng-output" style="display:none;margin-top:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:12px;font-weight:700;color:#057A44;" id="htmlpng-count"></span>
+            <button onclick="downloadAllPngs()" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">⬇️ Download All</button>
+          </div>
+          <div id="htmlpng-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;"></div>
+        </div>
+        <div id="htmlpng-error" style="display:none;background:#fff0f0;border:1.5px solid #f87171;border-radius:8px;padding:12px;font-size:13px;color:#dc2626;margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Send/Schedule Modal -->
@@ -194,19 +243,30 @@
 
 <script>
 const NEWS = [
-  { emoji:'🛂', title:'UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries', summary:'The UK has confirmed that Nigerians and citizens of 32 other African countries must obtain entry clearance before travelling to or transiting through the UK.', label:'News', date:'18 Jul 2026', url:'https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement' },
-  { emoji:'💷', title:'UK-Based Nigerians Earning £2,600 Worse Off Than ₦60,000 Earners at Home?', summary:'A presidential adviser sparked debate claiming Nigerians earning £2,600/month in the UK could be worse off than those on ₦60,000 in Nigeria due to high living costs.', label:'News', date:'18 Jul 2026', url:'https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600' },
-  { emoji:'🎉', title:'Nigerian Cultural Festival 2026 Is Coming to Plymouth', summary:'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth in the South West of England.', label:'Events', date:'18 Jul 2026', url:'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth' },
-  { emoji:'📺', title:'Do You Really Need a TV Licence in the UK?', summary:'Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you own a TV but do not watch live television or BBC iPlayer.', label:'Money', date:'15 Jul 2026', url:'https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK' },
-  { emoji:'🌶️', title:'Suya Fest Birmingham 2026', summary:'The ultimate outdoor suya experience returns to Birmingham on Saturday 1 August 2026, 3PM-9PM.', label:'Events', date:'15 Jul 2026', url:'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026' },
-  { emoji:'💼', title:'Midlands Business Festival — Coventry', summary:'A full-day business festival in Coventry on Sunday 30 August 2026.', label:'Events', date:'11 Jul 2026', url:'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry' },
-  { emoji:'💼', title:'10 Common Mistakes Nigerians Make When Starting a Business in the UK', summary:'Learn the 10 most common mistakes Nigerians make when starting a business in the UK and how to avoid them.', label:'Business', date:'9 Jul 2026', url:'https://auntietobi.com/blog/10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business' },
-  { emoji:'🎓', title:'Free Government-Funded Courses in England: Boost Your Career Without Paying Tuition', summary:'Discover how eligible adults in England, including many Nigerians, can access free government-funded courses.', label:'Education', date:'13 Jul 2026', url:'https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England' },
-  { emoji:'🏡', title:'Metro Banks New 100% Mortgage: Should You Jump at It?', summary:'Metro Bank has launched a 100% mortgage allowing first-time buyers to purchase a home with no deposit.', label:'Housing', date:'13 Jul 2026', url:'https://auntietobi.com/blog/Metro-Banks-New-100percent-Mortgage' },
-  { emoji:'🏛️', title:'UK Government Considers Faster Settlement for Migrants Who Make an Exceptional Contribution', summary:'UK ministers are considering a faster settlement route for migrants who make an exceptional contribution.', label:'News', date:'8 Jul 2026', url:'https://auntietobi.com/blog/UK-Government-Considers-Faster-Settlement' },
-  { emoji:'🥣', title:'FREE Breakfast at Morrisons This Summer', summary:'Discover how Nigerian families in the UK can enjoy free breakfast at Morrisons this summer through the Kelloggs Breakfast Club offer.', label:'Money', date:'8 Jul 2026', url:'https://auntietobi.com/blog/FREE-Breakfast-at-Morrisons-This-Summer' },
-  { emoji:'🛂', title:'Nigerians in the UK Can Now Renew Their Nigerian Passport Contactlessly', summary:'Nigerians in the UK can now renew their Nigerian passport using the NIS Contactless Passport Application System.', label:'News', date:'8 Jul 2026', url:'https://auntietobi.com/blog/Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly' },
-  { emoji:'🔴', title:'UK Prime Minister Keir Starmer Has Resigned', summary:'Less than two years after his historic landslide victory, Sir Keir Starmer has announced his resignation as UK Prime Minister and Labour leader following intense internal party pressure.', label:'News', date:'22 Jun 2026', url:'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation' },
+  { emoji:'🏛️', title:'UK Immigration Rules Updated (HC 259): What Nigerians in the UK Need to Know', summary:'The UK Home Office has published new Immigration Rules under HC 259. Find out what has changed, who is affected and what action to take.', label:'News', date:'19 Jul 2026', url:'https://auntietobi.com/blog/UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know' },
+  { emoji:'🍽️', title:'20 Places Where Kids Eat FREE or for £1 During UK Summer Holidays 2026', summary:'Looking to save money this summer? Discover over 20 UK restaurants, cafés and supermarkets where kids eat FREE or for just £1 during the 2026 school holidays.', label:'Food & Lifestyle', date:'19 Jul 2026', url:'https://auntietobi.com/blog/20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026' },
+  { emoji:'🛂', title:'UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries', summary:'The UK has confirmed that Nigerians and citizens of 32 other African countries must obtain entry clearance before travelling to or transiting through the UK.', label:'News', date:'18 Jul 2026', url:'https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries' },
+  { emoji:'💷', title:'UK-Based Nigerians Earning £2,600 Worse Off Than ₦60,000 Earners at Home?', summary:'A presidential adviser sparked debate claiming Nigerians earning £2,600/month in the UK could be worse off than those on ₦60,000 in Nigeria due to high living costs.', label:'Money', date:'18 Jul 2026', url:'https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here\'s-What-Was-Said' },
+  { emoji:'🎉', title:'Nigerian Cultural Festival 2026 Is Coming to Plymouth', summary:'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth on Saturday 8 August 2026.', label:'Events', date:'18 Jul 2026', url:'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here\'s-Everything-You-Need-to-Know' },
+  { emoji:'📺', title:'Do You Really Need a TV Licence in the UK?', summary:'Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you only stream online.', label:'Money', date:'15 Jul 2026', url:'https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here\'s-the-Simple-Rule-Every-Nigerian-Should-Know' },
+  { emoji:'🌶️', title:'Suya Fest Birmingham 2026', summary:'The ultimate outdoor suya experience returns to Birmingham on Saturday 1 August 2026, 3PM–9PM.', label:'Events', date:'15 Jul 2026', url:'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns' },
+  { emoji:'🎓', title:'Free Government-Funded Courses in England: Boost Your Career Without Paying Tuition', summary:'Discover how eligible adults in England, including many Nigerians, can access free government-funded courses.', label:'Education', date:'13 Jul 2026', url:'https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition' },
+  { emoji:'🏡', title:"Metro Bank's New 100% Mortgage: Should You Jump at It?", summary:'Metro Bank has launched a 100% mortgage allowing first-time buyers to purchase a home with no deposit. Here is what Nigerian first-time buyers need to know.', label:'Housing', date:'13 Jul 2026', url:"https://auntietobi.com/blog/Metro-Bank's-New-100percent-Mortgage:-Should-You-Jump-at-It" },
+  { emoji:'💼', title:'Midlands Business Festival — Coventry', summary:'A full-day business festival for Nigerian entrepreneurs and professionals in Coventry on Sunday 30 August 2026.', label:'Events', date:'11 Jul 2026', url:'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry' },
+  { emoji:'💼', title:'10 Common Mistakes Nigerians Make When Starting a Business in the UK', summary:'Learn the 10 most common mistakes Nigerians make when starting a business in the UK and how to avoid them.', label:'Business', date:'9 Jul 2026', url:'https://auntietobi.com/blog/10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)' },
+  { emoji:'🏛️', title:'UK Government Considers Faster Settlement for Migrants Who Make an Exceptional Contribution', summary:'UK ministers are considering a faster settlement route for migrants who make an exceptional contribution to British society.', label:'News', date:'8 Jul 2026', url:'https://auntietobi.com/blog/UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-Exceptional-Contribution' },
+  { emoji:'🥣', title:'FREE Breakfast at Morrisons This Summer', summary:'Discover how Nigerian families in the UK can enjoy free breakfast at Morrisons this summer through the Kelloggs Breakfast Club offer.', label:'Money', date:'8 Jul 2026', url:'https://auntietobi.com/blog/FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays' },
+  { emoji:'🛂', title:'Nigerians in the UK Can Now Renew Their Nigerian Passport Contactlessly', summary:'Nigerians in the UK can now renew their Nigerian passport using the NIS Contactless Passport Application System — no more embassy queues!', label:'News', date:'8 Jul 2026', url:'https://auntietobi.com/blog/Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Heres-How' },
+  { emoji:'🏠', title:'UK Landlords Must Protect Tenant Deposits or Face Legal Action', summary:'Did you know UK landlords are legally required to protect your deposit? Here is what every Nigerian tenant needs to know.', label:'Housing', date:'7 Jul 2026', url:'https://auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action' },
+  { emoji:'🍽️', title:'Best Nigerian Restaurants in London — Ranked 2026 Guide', summary:'The ultimate guide to the best Nigerian restaurants in London, ranked for 2026. From jollof rice to pepper soup — where to eat.', label:'Food & Lifestyle', date:'5 Jul 2026', url:'https://auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)' },
+  { emoji:'🏠', title:'How to Buy Your First UK Home with Just a £5,000 Deposit', summary:'No huge savings? Here is how to get on the UK property ladder with just £5,000 using government schemes.', label:'Housing', date:'5 Jul 2026', url:'https://auntietobi.com/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!' },
+  { emoji:'🚌', title:'FREE BUS TRAVEL FOR CHILDREN IN AUGUST 2026', summary:'Children can travel free on buses across the UK this August. Here is how Nigerian families can take advantage of this offer.', label:'News', date:'4 Jul 2026', url:'https://auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026' },
+  { emoji:'🔴', title:'UK Prime Minister Keir Starmer Has Resigned', summary:'Less than two years after his historic landslide victory, Sir Keir Starmer has announced his resignation as UK Prime Minister and Labour leader.', label:'News', date:'22 Jun 2026', url:'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation' },
+  { emoji:'🛂', title:'Over 1.34 Million Nigerian Visa Applications Refused Since 2005', summary:'A breakdown of UK visa refusal data and what Nigerians can do to improve their chances of a successful application.', label:'News', date:'25 Jun 2026', url:'https://auntietobi.com/blog/Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005' },
+  { emoji:'🏛️', title:'UK Immigration Update: House of Lords Challenges Proposed ILR Changes', summary:'The House of Lords is pushing back on proposed Indefinite Leave to Remain rule changes that could affect thousands of Nigerians.', label:'News', date:'22 Jun 2026', url:'https://auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes' },
+  { emoji:'🍼', title:'Aldi Freezes Baby Formula Price Until End of 2026', summary:'Good news for Nigerian parents — Aldi commits to keeping baby formula prices stable through to the end of 2026.', label:'Money', date:'20 Jun 2026', url:'https://auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026' },
+  { emoji:'💰', title:'What Andy Burnham as UK PM Could Mean for Taxes, Bills and Your Money', summary:'How a potential Andy Burnham Labour leadership could affect taxes, household bills and immigration policy for Nigerians in the UK.', label:'Money', date:'18 Jun 2026', url:'https://auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money' },
+  { emoji:'🌡️', title:'UK Issues Rare Red Heat Warning — Temperatures Could Reach 40°C', summary:'A red heat warning has been issued by the Met Office. Here is everything you need to know to stay safe during the UK heatwave.', label:'News', date:'15 Jun 2026', url:'https://auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-W' },
 ];
 
 const SELECTED = { roundup: new Set(), social: new Set(), push: new Set() };
@@ -269,9 +329,154 @@ function switchTab(tab) {
   document.getElementById('panel-' + tab).classList.add('active');
 }
 
+// ===== HTML → PNG =====
+let _pngBlobs = [];
+let _htmlpngContent = '';
+
+function handleHtmlFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _htmlpngContent = e.target.result;
+    const nameEl = document.getElementById('htmlpng-filename');
+    nameEl.textContent = '✅ ' + file.name;
+    nameEl.style.display = 'block';
+    const dz = document.getElementById('htmlpng-dropzone');
+    dz.style.borderColor = '#057A44';
+    dz.style.background = '#f0faf5';
+  };
+  reader.readAsText(file);
+}
+
+// Drag and drop
+document.addEventListener('DOMContentLoaded', () => {
+  const dz = document.getElementById('htmlpng-dropzone');
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor='#057A44'; dz.style.background='#f0faf5'; });
+  dz.addEventListener('dragleave', () => { dz.style.borderColor='#e5e7eb'; dz.style.background='#fafafa'; });
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.name.endsWith('.html')) return;
+    document.getElementById('htmlpng-file').files = e.dataTransfer.files;
+    handleHtmlFile({ files: e.dataTransfer.files });
+  });
+});
+
+async function convertHtmlToPng() {
+  const html = _htmlpngContent;
+  const width = parseInt(document.getElementById('htmlpng-width').value) || 1080;
+  const scale = parseInt(document.getElementById('htmlpng-scale').value) || 2;
+  const selector = document.getElementById('htmlpng-selector').value.trim() || '.slide';
+
+  const loading = document.getElementById('htmlpng-loading');
+  const output = document.getElementById('htmlpng-output');
+  const grid = document.getElementById('htmlpng-grid');
+  const errBox = document.getElementById('htmlpng-error');
+  const countEl = document.getElementById('htmlpng-count');
+
+  if (!html) { showPngError('Please upload an HTML file first.'); return; }
+
+  errBox.style.display = 'none';
+  output.style.display = 'none';
+  loading.style.display = 'block';
+  grid.innerHTML = '';
+  _pngBlobs = [];
+
+  try {
+    if (!window.html2canvas) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${width}px;height:2000px;border:none;visibility:hidden;`;
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <style>body{margin:0;padding:20px;background:#1a1a1a;display:flex;flex-direction:column;gap:16px;align-items:center;}</style>
+    </head><body>${html}</body></html>`);
+    doc.close();
+
+    await new Promise(r => setTimeout(r, 2500));
+
+    const slides = doc.querySelectorAll(selector);
+    if (!slides.length) {
+      document.body.removeChild(iframe);
+      showPngError(`No elements found matching "${selector}". Check your selector.`);
+      loading.style.display = 'none';
+      return;
+    }
+
+    countEl.textContent = `✅ ${slides.length} slide${slides.length > 1 ? 's' : ''} rendered`;
+
+    for (let i = 0; i < slides.length; i++) {
+      const slide = slides[i];
+      const slideH = slide.offsetHeight || 1440;
+      const canvas = await iframe.contentWindow.html2canvas(slide, {
+        scale,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        width,
+        height: slideH,
+        windowWidth: width,
+        logging: false
+      });
+
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      _pngBlobs.push({ blob, name: `auntietobi-slide-${i + 1}.png` });
+
+      const thumbUrl = URL.createObjectURL(blob);
+      const item = document.createElement('div');
+      item.style.cssText = 'position:relative;';
+      item.innerHTML = `
+        <img src="${thumbUrl}" style="width:100%;border-radius:6px;border:1.5px solid #e5e7eb;display:block;">
+        <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.6);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Slide ${i + 1}</div>
+        <a href="${thumbUrl}" download="auntietobi-slide-${i + 1}.png" style="display:block;margin-top:5px;text-align:center;font-size:11px;font-weight:700;color:#057A44;text-decoration:none;">⬇️ Download</a>
+      `;
+      grid.appendChild(item);
+    }
+
+    document.body.removeChild(iframe);
+    loading.style.display = 'none';
+    output.style.display = 'block';
+
+  } catch (err) {
+    loading.style.display = 'none';
+    showPngError('Error rendering: ' + err.message);
+  }
+}
+
+function downloadAllPngs() {
+  _pngBlobs.forEach(({ blob, name }, i) => {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+    }, i * 400);
+  });
+}
+
+function showPngError(msg) {
+  const e = document.getElementById('htmlpng-error');
+  e.textContent = msg;
+  e.style.display = 'block';
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
 async function generate(tab) {
   const selected = Array.from(SELECTED[tab]).map(i => NEWS[i]);
-  if (!selected.length) return;
 
   const btn = document.getElementById('btn-' + tab);
   const loading = document.getElementById('loading-' + tab);
