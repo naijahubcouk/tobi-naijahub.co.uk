@@ -385,68 +385,108 @@ async function convertHtmlToPng() {
   _pngBlobs = [];
 
   try {
-    if (!window.html2canvas) {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    // Fetch html2canvas source text so we can inject it into the iframe
+    const h2cSrc = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    let h2cCode = window._h2cCode;
+    if (!h2cCode) {
+      const r = await fetch(h2cSrc);
+      h2cCode = await r.text();
+      window._h2cCode = h2cCode;
     }
 
+    // Build self-contained iframe HTML with html2canvas injected + capture script
+    const iframeHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0; background: #fff; }
+</style>
+<script>${h2cCode}<\/script>
+</head><body>
+${html}
+<script>
+window.__renderSlides = async function(selector, width, scale) {
+  const slides = document.querySelectorAll(selector);
+  const results = [];
+  for (let i = 0; i < slides.length; i++) {
+    const el = slides[i];
+    el.scrollIntoView();
+    const canvas = await html2canvas(el, {
+      scale: scale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+      logging: false
+    });
+    results.push(canvas.toDataURL('image/png'));
+  }
+  return results;
+};
+window.__ready = true;
+<\/script>
+</body></html>`;
+
+    // Create hidden iframe
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${width}px;height:2000px;border:none;visibility:hidden;`;
+    iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${width}px;height:3000px;border:none;opacity:0;pointer-events:none;`;
     document.body.appendChild(iframe);
 
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-      <style>body{margin:0;padding:20px;background:#1a1a1a;display:flex;flex-direction:column;gap:16px;align-items:center;}</style>
-    </head><body>${html}</body></html>`);
-    doc.close();
+    // Write into iframe
+    const doc = iframe.contentDocument;
+    doc.open(); doc.write(iframeHtml); doc.close();
 
-    await new Promise(r => setTimeout(r, 2500));
+    // Wait for render + fonts
+    await new Promise(r => setTimeout(r, 3000));
 
-    const slides = doc.querySelectorAll(selector);
-    if (!slides.length) {
+    // Check slides exist
+    const slideCount = iframe.contentDocument.querySelectorAll(selector).length;
+    if (!slideCount) {
       document.body.removeChild(iframe);
       showPngError(`No elements found matching "${selector}". Check your selector.`);
       loading.style.display = 'none';
       return;
     }
 
-    countEl.textContent = `✅ ${slides.length} slide${slides.length > 1 ? 's' : ''} rendered`;
+    // Call render function inside iframe
+    const dataUrls = await iframe.contentWindow.__renderSlides(selector, width, scale);
 
-    for (let i = 0; i < slides.length; i++) {
-      const slide = slides[i];
-      const slideH = slide.offsetHeight || 1440;
-      const canvas = await iframe.contentWindow.html2canvas(slide, {
-        scale,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        width,
-        height: slideH,
-        windowWidth: width,
-        logging: false
-      });
+    document.body.removeChild(iframe);
 
-      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    if (!dataUrls.length) {
+      showPngError('Rendering failed — no slides captured.');
+      loading.style.display = 'none';
+      return;
+    }
+
+    countEl.textContent = `✅ ${dataUrls.length} slide${dataUrls.length > 1 ? 's' : ''} ready`;
+
+    dataUrls.forEach((dataUrl, i) => {
+      // Convert dataURL to blob
+      const arr = dataUrl.split(','), mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8 = new Uint8Array(n);
+      while (n--) u8[n] = bstr.charCodeAt(n);
+      const blob = new Blob([u8], { type: mime });
       _pngBlobs.push({ blob, name: `auntietobi-slide-${i + 1}.png` });
 
-      const thumbUrl = URL.createObjectURL(blob);
       const item = document.createElement('div');
       item.style.cssText = 'position:relative;';
       item.innerHTML = `
-        <img src="${thumbUrl}" style="width:100%;border-radius:6px;border:1.5px solid #e5e7eb;display:block;">
+        <img src="${dataUrl}" style="width:100%;border-radius:6px;border:1.5px solid #e5e7eb;display:block;">
         <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.6);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Slide ${i + 1}</div>
-        <a href="${thumbUrl}" download="auntietobi-slide-${i + 1}.png" style="display:block;margin-top:5px;text-align:center;font-size:11px;font-weight:700;color:#057A44;text-decoration:none;">⬇️ Download</a>
+        <a href="${dataUrl}" download="auntietobi-slide-${i + 1}.png" style="display:block;margin-top:5px;text-align:center;font-size:11px;font-weight:700;color:#057A44;text-decoration:none;">⬇️ Download</a>
       `;
       grid.appendChild(item);
-    }
+    });
 
-    document.body.removeChild(iframe);
     loading.style.display = 'none';
     output.style.display = 'block';
 
   } catch (err) {
     loading.style.display = 'none';
-    showPngError('Error rendering: ' + err.message);
+    showPngError('Rendering error: ' + err.message);
   }
 }
 
