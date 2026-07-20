@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Card Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: #f5f5f5; padding: 20px; }
+  h2 { font-size: 13px; font-weight: 700; color: #9CA3AF; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; margin-top: 20px; }
+  .chat-wrap { max-width: 380px; margin: 0 auto; }
+  .bot-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 8px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: #057A44; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .bubble { background: white; border-radius: 16px 16px 16px 2px; padding: 10px 12px; font-size: 13px; color: #0F1E36; max-width: 300px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+</style>
+</head>
+<body>
+
+<div class="chat-wrap">
+
+  <h2>Standard Business Card</h2>
+  <div class="bot-row">
+    <div class="avatar">🤖</div>
+    <div style="flex:1;">
+
+      <!-- STANDARD CARD -->
+      <div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:10px;position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">
+          <div style="font-size:15px;font-weight:700;color:#0F1E36;">Girlush Beauty</div>
+          <span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">Makeup Artists</span>
+        </div>
+        <div style="font-size:13px;color:#555;margin-bottom:6px;">Professional makeup artistry for brides, events and photoshoots.</div>
+        <div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 London, UK</div>
+        <div style="display:flex;gap:6px;">
+          <a href="#" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>
+          <button style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <h2>✅ Verified Business Card (Featured)</h2>
+  <div class="bot-row">
+    <div class="avatar">🤖</div>
+    <div style="flex:1;">
+
+      <!-- VERIFIED CARD -->
+      <div style="background:white;border:2px solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:10px;position:relative;">
+        <div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;margin-top:6px;">
+          <div style="font-size:15px;font-weight:700;color:#0F1E36;">Funmi's Treasure</div>
+          <span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">Catering</span>
+        </div>
+        <div style="font-size:13px;color:#555;margin-bottom:6px;">Authentic Nigerian catering for weddings, parties and corporate events across the UK.</div>
+        <div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 Birmingham, UK</div>
+        <div style="display:flex;gap:6px;">
+          <a href="#" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>
+          <a href="#" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>
+          <button style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <h2>Multiple Results</h2>
+  <div class="bot-row">
+    <div class="avatar">🤖</div>
+    <div style="flex:1;">
+      <div class="bubble" style="border-radius:16px 16px 16px 2px;margin-bottom:8px;">
+        No caterers in London yet — but these amazing caterers are on Auntie Tobi and many travel across the UK! Contact them to check availability 💚
+      </div>
+
+      <!-- CARD 1 — VERIFIED -->
+      <div style="background:white;border:2px solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">
+        <div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;margin-top:6px;">
+          <div style="font-size:15px;font-weight:700;color:#0F1E36;">Funmi's Treasure</div>
+          <span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">Catering</span>
+        </div>
+        <div style="font-size:13px;color:#555;margin-bottom:6px;">Authentic Nigerian catering for weddings, parties and events across the UK.</div>
+        <div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 Birmingham, UK</div>
+        <div style="display:flex;gap:6px;">
+          <a href="#" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>
+          <a href="#" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>
+          <button style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        </div>
+      </div>
+
+      <!-- CARD 2 — STANDARD -->
+      <div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">
+          <div style="font-size:15px;font-weight:700;color:#0F1E36;">AfriFresh Catering</div>
+          <span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">Catering</span>
+        </div>
+        <div style="font-size:13px;color:#555;margin-bottom:6px;">Fresh Afro-Caribbean and Nigerian cuisine for all occasions.</div>
+        <div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 Manchester, UK</div>
+        <div style="display:flex;gap:6px;">
+          <a href="#" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>
+          <button style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        </div>
+      </div>
+
+      <!-- CTA BOX -->
+      <div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;margin-top:4px;">
+        <div style="font-size:13px;color:#0F1E36;line-height:1.6;">
+          Ehen! 👀 Are you a <strong>caterer</strong> based in the UK? Auntie Tobi wants you on the directory o! List your business FREE and let thousands of Nigerians across the UK find you.
+          <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here</a> — it takes 2 minutes! 💚
+        </div>
+      </div>
+
+      <!-- FOLLOW UP -->
+      <div style="margin-top:8px;font-size:13px;color:#555;margin-bottom:6px;">Want to see more? 😊</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <button style="background:#f0faf5;border:1.5px solid #057A44;color:#057A44;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🔍 Show more caterers</button>
+        <button style="background:#f0faf5;border:1.5px solid #057A44;color:#057A44;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🍽️ Find a restaurant</button>
+        <button style="background:#f0faf5;border:1.5px solid #057A44;color:#057A44;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📰 Latest news</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
