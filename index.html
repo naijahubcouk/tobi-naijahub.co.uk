@@ -3084,36 +3084,37 @@ function showAllNews() {
 }
 
 function showEventsFromNews() {
-  const news = window._allNewsData ? [] : [];
-  // Reuse the same articles array by rebuilding it
-  const allNews = [
-    { emoji:'🏛️', title:'UK Immigration Rules Updated (HC 259): What Nigerians Need to Know', summary:'The UK Home Office has published new Immigration Rules under HC 259.', url:'https://auntietobi.com/blog/UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know', label:'News', date:'19 Jul 2026' },
-    { emoji:'🍽️', title:'20 Places Where Kids Eat FREE or for £1 During UK Summer Holidays 2026', summary:'Discover over 20 UK restaurants where kids eat FREE or for just £1 during the 2026 school holidays.', url:'https://auntietobi.com/blog/20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026', label:'Food & Lifestyle', date:'19 Jul 2026' },
-    { emoji:'🎉', title:'Nigerian Cultural Festival 2026 Is Coming to Plymouth', summary:'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth on Saturday 8 August 2026.', url:'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here\'s-Everything-You-Need-to-Know', label:'Events', date:'18 Jul 2026' },
-    { emoji:'🌶️', title:'Suya Fest Birmingham 2026', summary:'The ultimate outdoor suya experience returns to Birmingham on Saturday 1 August 2026, 3PM–9PM.', url:'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns', label:'Events', date:'15 Jul 2026' },
-    { emoji:'💼', title:'Midlands Business Festival — Coventry', summary:'A full-day business festival for Nigerian entrepreneurs in Coventry on Sunday 30 August 2026.', url:'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry', label:'Events', date:'11 Jul 2026' },
-    { emoji:'🛐', title:'Worship in Chaos — Powerful Musical Theatre Experience', summary:'A powerful worship and musical theatre experience coming to London. Do not miss it.', url:'https://auntietobi.com/blog/Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London', label:'Events', date:'8 Jul 2026' },
-    { emoji:'🎪', title:'9ja Fayre 2026 Is Coming to Three UK Cities This Summer', summary:'The biggest Nigerian food and culture fair hits London, Birmingham and Manchester this summer.', url:'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!', label:'Events', date:'5 Jul 2026' },
-    { emoji:'🍛', title:'Festival of African Cuisine', summary:'Celebrate African food culture at this exciting festival. Taste dishes from across the continent.', url:'https://auntietobi.com/blog/Festival-Of-African-Cuisine', label:'Events', date:'3 Jul 2026' },
-    { emoji:'🎶', title:'AfroMic Night — Afrobeats Karaoke in London', summary:'An Afrobeats karaoke night at Demis Nigerian Restaurant, Streatham London.', url:'https://auntietobi.com/blog/AfroMic-Night-Afrobeats-Karaoke', label:'Events', date:'26 Jun 2026' },
-    { emoji:'🍽️', title:'MY TASTY NAIJA FOOD FESTIVAL UK 2026', summary:'Nigerian food festival coming to London and Manchester. Taste the best of Nigerian cuisine.', url:'https://auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026', label:'Events', date:'5 Jul 2026' },
-    { emoji:'🤍', title:'Owambe FEST 4 — All White Party with Bigjohny', summary:'All white owambe party at Delta Hotels, Milton Keynes. Saturday 18 July 2026.', url:'https://auntietobi.com/blog/Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends', label:'Events', date:'18 Jul 2026' },
+  // Helper to parse "25 Jul 2026" → Date
+  const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+  const parseD = s => { const p = (s||'').split(' '); return new Date(parseInt(p[2]), months[p[1]]||0, parseInt(p[0])||1); };
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Events with their ACTUAL EVENT DATE (not publish date)
+  const allEvents = [
     { emoji:'🛍️', title:'Deshapeables UK Tradefair London', summary:'UK Tradefair at Yeomanry House, London. Saturday 25 July 2026, 10AM to 6PM. Free entry.', url:'https://auntietobi.com/blog/Deshapeables-UK-Tradefair-London', label:'Events', date:'25 Jul 2026' },
+    { emoji:'🎉', title:'Nigerian Cultural Festival 2026 — Plymouth', summary:'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth on Saturday 8 August 2026.', url:'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here\'s-Everything-You-Need-to-Know', label:'Events', date:'8 Aug 2026' },
+    { emoji:'🌶️', title:'Suya Fest Birmingham 2026', summary:'The ultimate outdoor suya experience returns to Birmingham on Saturday 1 August 2026, 3PM–9PM.', url:'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns', label:'Events', date:'1 Aug 2026' },
+    { emoji:'💼', title:'Midlands Business Festival — Coventry', summary:'A full-day business festival for Nigerian entrepreneurs in Coventry on Sunday 30 August 2026.', url:'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry', label:'Events', date:'30 Aug 2026' },
     { emoji:'⚽', title:'NSF UK Sports and Family Fun Day 2026', summary:'A fun-filled day of sports and family activities. Newham Leisure Centre, London.', url:'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026', label:'Events', date:'29 Aug 2026' },
     { emoji:'🫕', title:'The Igbo Table — Food, Culture and Conversation', summary:'Celebrating Igbo food, culture and community. Church Hall, Croyland Rd, London N9.', url:'https://auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation', label:'Events', date:'30 Aug 2026' },
     { emoji:'👗', title:'Ankara Festival UK 2026', summary:'Ankara and African fashion festival at Porchester Hall, London. Saturday 10 October 2026.', url:'https://auntietobi.com/blog/Ankara-Festival-UK-2026', label:'Events', date:'10 Oct 2026' },
   ];
 
-  const events = allNews.filter(item => item.label === 'Events');
-  events.sort((a, b) => {
-    const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
-    const parseD = s => { const p = s.split(' '); return new Date(p[2], months[p[1]], parseInt(p[0])); };
-    return parseD(b.date) - parseD(a.date);
-  });
+  // Auto-filter: only show events happening today or in the future
+  const upcomingEvents = allEvents.filter(e => parseD(e.date) >= today);
+
+  // Sort soonest first
+  upcomingEvents.sort((a, b) => parseD(a.date) - parseD(b.date));
 
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
-  window._allNewsData = events;
+
+  if (upcomingEvents.length === 0) {
+    addTipMessage('<div style="font-size:14px;color:#555;padding:10px;">No upcoming events right now — check back soon! 💚 <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">Submit your event →</a></div>');
+    return;
+  }
+
+  window._allNewsData = upcomingEvents;
   window._allNewsShownCount = 0;
   window._renderAllNewsBatch(0);
 }
@@ -3132,7 +3133,7 @@ function buildLiveNewsHTML(articles, showAll) {
       <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
       ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;">
-        <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
         <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
       </div>
     </div>`;
@@ -3214,7 +3215,7 @@ function showMoreLiveNews() {
         <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
         ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+          <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
           <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
         </div>
       </div>`;
@@ -3502,7 +3503,7 @@ function showNewsCard() {
       <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${item.emoji} ${item.title}</div>
       <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-        <a href="javascript:void(0)" data-blogurl="${item.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${item.url}"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
         <button onclick="shareBlogUrl('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
     </div>
