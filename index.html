@@ -2808,7 +2808,7 @@ window._renderAllNewsBatch = function(from) {
         <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${item.url}" data-blogtitle="${item.title}" data-blogsummary="${item.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+          <a href="javascript:void(0)" data-blogurl="${item.url}"/g,'&quot;').replace(/"/g, '&quot;')}"/g,'&quot;').replace(/"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
           <button onclick="shareBlogUrl('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
@@ -3132,7 +3132,7 @@ function buildLiveNewsHTML(articles, showAll) {
       <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
       ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;">
-        <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
         <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
       </div>
     </div>`;
@@ -3214,7 +3214,7 @@ function showMoreLiveNews() {
         <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
         ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${a.url}" data-blogtitle="${a.title}" data-blogsummary="${a.summary||''}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+          <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
           <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
         </div>
       </div>`;
@@ -3502,7 +3502,7 @@ function showNewsCard() {
       <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${item.emoji} ${item.title}</div>
       <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-        <a href="javascript:void(0)" data-blogurl="${item.url}" data-blogtitle="${item.title}" data-blogsummary="${item.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${item.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
         <button onclick="shareBlogUrl('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
     </div>
@@ -5291,7 +5291,7 @@ function showUpcomingEventCard() {
       <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${event.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:12px;color:#9CA3AF;flex:1;">📅 ${event.time}</span>
-        <a href="javascript:void(0)" data-blogurl="${event.url}" data-blogtitle="${event.title||''}" data-blogsummary="${event.summary||''}" class="blog-read-more" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${event.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">🔗 Read More</a>
       </div>
     </div>
   </div>`;
@@ -5346,7 +5346,7 @@ function showEventsCard() {
           <div style="font-size:12px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
           <div style="font-size:12px;color:#555;margin-bottom:8px;">🕐 ${e.time}</div>
           <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="javascript:void(0)" data-blogurl="${e.url}" data-blogtitle="${e.title||''}" data-blogsummary="${e.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+            <a href="javascript:void(0)" data-blogurl="${e.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
             <button onclick="tobiShare('${e.title.replace(/'/g,"\\'").substring(0,50)}','${e.date} • ${e.loc.replace(/'/g,"\\'")}','${e.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
           </div>
         </div>
