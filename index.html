@@ -4281,12 +4281,22 @@ window.shareTipOfDay = function() {
 
 // Force ALL external links to open in device browser
 document.addEventListener('click', function(e) {
+  // Blog read more — must be checked first
+  const blogLink = e.target.closest('.blog-read-more');
+  if (blogLink) {
+    e.preventDefault();
+    const url = blogLink.getAttribute('data-blogurl');
+    const title = blogLink.getAttribute('data-blogtitle') || '';
+    const summary = blogLink.getAttribute('data-blogsummary') || '';
+    openBlogSheet(url, title, summary);
+    return;
+  }
+  // External links — open in new tab
   const link = e.target.closest('a[href]');
   if (link) {
     const href = link.getAttribute('href');
     if (href && href.startsWith('http') && link.target === '_blank') {
       e.preventDefault();
-      e.stopImmediatePropagation();
       window.open(href, '_blank', 'noopener,noreferrer');
     }
   }
@@ -5595,17 +5605,7 @@ function closeBlogSheet() {
   if (_blogFrameTimer) { clearTimeout(_blogFrameTimer); _blogFrameTimer = null; }
 }
 
-// Global delegated handler — blog read more + biz view details
-document.addEventListener('click', function(e) {
-  const link = e.target.closest('.blog-read-more');
-  if (link) {
-    e.preventDefault();
-    const url = link.getAttribute('data-blogurl');
-    const title = link.getAttribute('data-blogtitle') || '';
-    const summary = link.getAttribute('data-blogsummary') || '';
-    openBlogSheet(url, title, summary);
-  }
-});
+// (blog-read-more handler merged into global click handler above)
 
 </script>
 <!-- Feedback Form Modal -->
