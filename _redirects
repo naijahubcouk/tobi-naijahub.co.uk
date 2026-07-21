@@ -160,8 +160,8 @@
 
 /blog/20placeskids    /?blog=20placeskids    301
 
-# SPA catch-all — must be last
-/blog/ukenergybills    /?blog=ukenergybills    301
+/blog/ukenergybillstofalla    /?blog=ukenergybillstofalla    301
 /blog/andyburnhampm    /?blog=andyburnhampm    301
 
+# SPA catch-all — must be last
 /* /index.html 200
