@@ -37,7 +37,9 @@ function fetchUrl(url) {
 function getTag(xml, tag) {
   const m = xml.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>`, 'i'))
     || xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i'));
-  return m ? m[1].trim() : '';
+  if (!m) return '';
+  // Strip any remaining CDATA wrappers
+  return m[1].replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim();
 }
 
 function getAllTags(xml, tag) {
