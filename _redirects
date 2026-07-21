@@ -7,7 +7,7 @@
 /events         /?action=events         301
 /japa           /?action=japa           301
 /nhs            /?action=nhs            301
-/news           /?action=guardianews    301
+/news           /?action=news           301
 /jobs           /?action=jobs           301
 /motivation     /?action=motivation     301
 /tip            /?action=tip            301
@@ -161,4 +161,4 @@
 /blog/20placeskids    /?blog=20placeskids    301
 
 # SPA catch-all — must be last
-/*              /index.html             200
+/* /index.html 200
