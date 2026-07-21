@@ -2830,11 +2830,30 @@ window._renderAllNewsBatch = function(from) {
   }
 };
 
+function getNewsEmoji(label) {
+  const l = (label||'').toLowerCase();
+  if (l.includes('money') || l.includes('food')) return '💷';
+  if (l.includes('housing')) return '🏠';
+  if (l.includes('business')) return '💼';
+  if (l.includes('education')) return '🎓';
+  if (l.includes('event')) return '🎉';
+  return '📰';
+}
+
 function showAllNews() {
   // Use live feed if available, otherwise fall back to hardcoded
   const livePosts = getLiveBlogPosts();
   if (livePosts && livePosts.length > 0) {
-    const filtered = livePosts.filter(item => item.label !== 'Events');
+    const filtered = livePosts
+      .filter(item => {
+        const label = (item.label || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim();
+        return label !== 'Events';
+      })
+      .map(item => ({
+        ...item,
+        label: (item.label || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+        emoji: item.emoji === '📰' ? getNewsEmoji(item.label) : item.emoji,
+      }));
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
     const messages = document.getElementById('messages');
     messages.innerHTML = '';
@@ -3092,12 +3111,12 @@ function showEventsFromNews() {
   // Events with their ACTUAL EVENT DATE (not publish date)
   const allEvents = [
     { emoji:'🛍️', title:'Deshapeables UK Tradefair London', summary:'UK Tradefair at Yeomanry House, London. Saturday 25 July 2026, 10AM to 6PM. Free entry.', url:'https://auntietobi.com/blog/Deshapeables-UK-Tradefair-London', label:'Events', date:'25 Jul 2026' },
-    { emoji:'🎉', title:'Nigerian Cultural Festival 2026 — Plymouth', summary:'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth on Saturday 8 August 2026.', url:'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here\'s-Everything-You-Need-to-Know', label:'Events', date:'8 Aug 2026' },
     { emoji:'🌶️', title:'Suya Fest Birmingham 2026', summary:'The ultimate outdoor suya experience returns to Birmingham on Saturday 1 August 2026, 3PM–9PM.', url:'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns', label:'Events', date:'1 Aug 2026' },
-    { emoji:'💼', title:'Midlands Business Festival — Coventry', summary:'A full-day business festival for Nigerian entrepreneurs in Coventry on Sunday 30 August 2026.', url:'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry', label:'Events', date:'30 Aug 2026' },
-    { emoji:'⚽', title:'NSF UK Sports and Family Fun Day 2026', summary:'A fun-filled day of sports and family activities. Newham Leisure Centre, London.', url:'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026', label:'Events', date:'29 Aug 2026' },
-    { emoji:'🫕', title:'The Igbo Table — Food, Culture and Conversation', summary:'Celebrating Igbo food, culture and community. Church Hall, Croyland Rd, London N9.', url:'https://auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation', label:'Events', date:'30 Aug 2026' },
-    { emoji:'👗', title:'Ankara Festival UK 2026', summary:'Ankara and African fashion festival at Porchester Hall, London. Saturday 10 October 2026.', url:'https://auntietobi.com/blog/Ankara-Festival-UK-2026', label:'Events', date:'10 Oct 2026' },
+    { emoji:'🎉', title:'Nigerian Cultural Festival 2026 — Plymouth', summary:'A vibrant celebration of Nigerian food, music, fashion, culture and community. Saturday 8 August 2026, 11:30AM–9PM.', url:"https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here's-Everything-You-Need-to-Know", label:'Events', date:'8 Aug 2026' },
+    { emoji:'⚽', title:'NSF UK Sports and Family Fun Day 2026', summary:'A fun-filled day of sports and family activities. Newham Leisure Centre, London. Saturday 29 August, from 12PM.', url:'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026', label:'Events', date:'29 Aug 2026' },
+    { emoji:'💼', title:'Midlands Business Festival — Coventry', summary:'A full-day business festival. Centre AT7, Coventry. Sunday 30 August 2026, 9AM–8PM.', url:'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry', label:'Events', date:'30 Aug 2026' },
+    { emoji:'🫕', title:'The Igbo Table — Food, Culture and Conversation', summary:'Celebrating Igbo food, culture and community. Church Hall, Croyland Rd, London N9. Sunday 30 August, 3:30PM–9PM.', url:'https://auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation', label:'Events', date:'30 Aug 2026' },
+    { emoji:'👗', title:'Ankara Festival UK 2026', summary:'Ankara and African fashion festival. Porchester Hall, London. Saturday 10 October 2026, 5PM–11:30PM.', url:'https://auntietobi.com/blog/Ankara-Festival-UK-2026', label:'Events', date:'10 Oct 2026' },
   ];
 
   // Auto-filter: only show events happening today or in the future
