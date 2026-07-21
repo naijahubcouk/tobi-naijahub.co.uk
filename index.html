@@ -5571,28 +5571,40 @@ function openBlogSheet(url, title, summary) {
   _blogSummary = summary || '';
   const sheet = document.getElementById('blogSheet');
   if (!sheet) return;
+
   document.getElementById('blogSheetTitle').textContent = _blogTitle || 'Loading...';
   document.getElementById('blogSheetLoading').style.display = 'flex';
   document.getElementById('blogSheetFallback').style.display = 'none';
-  const frame = document.getElementById('blogSheetFrame');
-  frame.src = '';
+  document.getElementById('blogSheetContent').style.display = 'none';
+  document.getElementById('blogSheetOpenBtn').href = url;
   sheet.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-  if (_blogFrameTimer) clearTimeout(_blogFrameTimer);
-  _blogFrameTimer = setTimeout(() => {
-    frame.src = url;
-    frame.onload = () => { document.getElementById('blogSheetLoading').style.display = 'none'; };
-    frame.onerror = () => {
+
+  // Fetch article via proxy
+  fetch('/.netlify/functions/fetch-blog?url=' + encodeURIComponent(url))
+    .then(r => r.json())
+    .then(data => {
       document.getElementById('blogSheetLoading').style.display = 'none';
-      document.getElementById('blogSheetFallback').style.display = 'flex';
-    };
-    setTimeout(() => {
-      if (document.getElementById('blogSheetLoading').style.display !== 'none') {
-        document.getElementById('blogSheetLoading').style.display = 'none';
+      if (data && (data.content || data.html)) {
+        const inner = document.getElementById('blogSheetContentInner');
+        inner.innerHTML = data.content || data.html || '';
+        const img = document.getElementById('blogSheetImage');
+        if (data.image) { img.src = data.image; img.style.display = 'block'; }
+        document.getElementById('blogSheetTitle').textContent = data.title || _blogTitle;
+        document.getElementById('blogSheetContent').style.display = 'block';
+      } else {
+        // Fallback — show summary + open link
+        const sumEl = document.getElementById('blogSheetSummary');
+        if (sumEl) sumEl.textContent = _blogSummary || 'Tap below to read the full article.';
         document.getElementById('blogSheetFallback').style.display = 'flex';
       }
-    }, 8000);
-  }, 300);
+    })
+    .catch(() => {
+      document.getElementById('blogSheetLoading').style.display = 'none';
+      const sumEl = document.getElementById('blogSheetSummary');
+      if (sumEl) sumEl.textContent = _blogSummary || 'Tap below to read the full article.';
+      document.getElementById('blogSheetFallback').style.display = 'flex';
+    });
 }
 
 function closeBlogSheet() {
