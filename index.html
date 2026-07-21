@@ -2774,6 +2774,22 @@ window._renderAllNewsBatch = function(from) {
 function showAllNews() {
   const news = [
     {
+      emoji: '⚡',
+      title: 'UK Energy Bills to Fall as Government Announces VAT Cut from October 2026',
+      summary: 'The UK government has announced a VAT cut on household electricity bills from October 2026. Find out what it means for Nigerians in the UK and how much you could save.',
+      url: 'https://auntietobi.com/blog/UK-Energy-Bills-to-Fall-as-Government-Announces-VAT-Cut-from-October-2026',
+      label: 'News',
+      date: '21 Jul 2026'
+    },
+    {
+      emoji: '🏛️',
+      title: 'Andy Burnham Becomes UK Prime Minister: What Nigerians in the UK Need to Know',
+      summary: 'Andy Burnham is the new UK Prime Minister. Find out what this means for Nigerians in the UK, including immigration, jobs, and the latest government updates.',
+      url: 'https://auntietobi.com/blog/Andy-Burnham-Becomes-UK-Prime-Minister:-What-Nigerians-in-the-UK-Need-to-Know',
+      label: 'News',
+      date: '21 Jul 2026'
+    },
+    {
       emoji: '🏛️',
       title: 'UK Immigration Rules Updated (HC 259): What Nigerians Need to Know',
       summary: 'The UK Home Office has published new Immigration Rules under HC 259. Find out what has changed, who is affected and what action to take.',
@@ -4851,6 +4867,50 @@ function handleDeepLink() {
       addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showAllNews()">&#128240; More Articles</button>${_20placeskidss.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')"> ${x}</button>`).join('')}</div>`);
       window.history.replaceState({},'',window.location.pathname);
     }, 500);
+  } else if (blog === 'ukenergybills') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      const _ukenergybillsHtml = ['<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">',
+        '<div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">',
+        '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">&#128240;</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/ARTICLES</span></div>',
+        '<button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All &#8594;</button></div>',
+        '<div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">',
+        '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span>',
+        '<span style="font-size:10px;color:#9CA3AF;">21 Jul 2026</span></div>',
+        '<div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">⚡ UK Energy Bills to Fall as Government Announces VAT Cut from October 2026</div>',
+        '<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">The UK government has announced a VAT cut on household electricity bills from October 2026. Find out what it means for Nigerians in the UK and how much you could save.</div>',
+        '<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">',
+        '<a href="javascript:void(0)" data-blogurl="https://auntietobi.com/blog/UK-Energy-Bills-to-Fall-as-Government-Announces-VAT-Cut-from-October-2026" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">&#128279; Read More</a>',
+        '<button onclick="tobiShare(\'UK Energy Bills to Fall as Government Announces VAT Cut from October 2026\',\'The UK government has announced a VAT cut on household electricity bills from October 2026. Find out what it means for Nigerians in the UK and how much you could save.\',\'https://auntietobi.co.uk/blog/ukenergybills\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">&#128228; Share</button>',
+        '</div></div></div>'].join('');
+      addTipMessage(_ukenergybillsHtml);
+      const _ukenergybillss = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showAllNews()">&#128240; More Articles</button>${_ukenergybillss.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
+  } else if (blog === 'andyburnhampm') {
+    setTimeout(() => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      const _andyburnhampmHtml = ['<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">',
+        '<div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">',
+        '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">&#128240;</span><span style="color:white;font-weight:700;font-size:13px;">NEWS/ARTICLES</span></div>',
+        '<button onclick="showAllNews()" style="background:none;border:none;color:#FFB81C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;">See All &#8594;</button></div>',
+        '<div style="padding:10px 12px 8px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">',
+        '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">News</span>',
+        '<span style="font-size:10px;color:#9CA3AF;">21 Jul 2026</span></div>',
+        '<div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">🏛️ Andy Burnham Becomes UK Prime Minister: What Nigerians in the UK Need to Know</div>',
+        '<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">Andy Burnham is the UK's new Prime Minister. Find out what this means for Nigerians in the UK, including immigration, jobs, and the latest government updates.</div>',
+        '<div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">',
+        '<a href="javascript:void(0)" data-blogurl="https://auntietobi.com/blog/Andy-Burnham-Becomes-UK-Prime-Minister:-What-Nigerians-in-the-UK-Need-to-Know" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">&#128279; Read More</a>',
+        '<button onclick="tobiShare(\'Andy Burnham Becomes UK Prime Minister: What Nigerians in the UK Need to Know\',\'Andy Burnham is the UK\'s new Prime Minister. Find out what this means for Nigerians in the UK, including immigration, jobs, and the latest government updates.\',\'https://auntietobi.co.uk/blog/andyburnhampm\')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">&#128228; Share</button>',
+        '</div></div></div>'].join('');
+      addTipMessage(_andyburnhampmHtml);
+      const _andyburnhampms = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showAllNews()">&#128240; More Articles</button>${_andyburnhampms.map(x=>`<button class="suggestion-btn" onclick="quickAsk('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('')}</div>`);
+      window.history.replaceState({},'',window.location.pathname);
+    }, 500);
   } else if (blog === 'hc259immigration') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
@@ -5300,7 +5360,7 @@ function shareBlogUrl(title, text, blogComUrl) {
     tobiShare(title, text, blogComUrl);
     return;
   }
-  const slugMap = {'BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation':'starmerresigns','AfroMic-Night-Afrobeats-Karaoke':'afrominight','MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026':'naijafoodfest','Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends':'owambefest','Deshapeables-UK-Tradefair-London':'deshapeables','NSF-(UK)-Sports-and-Family-Fun-Day-2026':'nsfsportsday','The-Igbo-Table:-Food-Culture-and-Conversation':'igbotable','Ankara-Festival-UK-2026':'ankarafest','Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action':'tenantdeposit','Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)':'nigerianrestaurants','No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!':'firsthome5k','Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Heres-How':'passportrenewal','Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK':'faragereigns','10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK':'householdbills','UK-Weather-Update:-Another-Heatwave-Could-Push-Temperatures-Above-30C-This-Week':'heatwave2','Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005':'visarefusals','UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes':'ilrupdate','Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026':'aldibabyformula','What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money':'andyburnham','UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-W':'heatwarning','FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026':'freebus','Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know':'nigculturalfest','UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said':'nigerianswage','UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries':'ukvisaconfirm','Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know':'tvlicence','Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition':'freecourses','Metro-Bank%27s-New-100percent-Mortgage:-Should-You-Jump-at-It':'metromortgage','10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)':'bizmisc','FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays':'morrisonbreakfast','UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-Exceptional-Contribution':'fastersettlement','Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London':'worshipchaos','9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!':'9jafayre','Festival-Of-African-Cuisine':'africancuisine','Midlands-Business-Festival-Coventry':'midlandsbiz','Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns':'suyafest','UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know':'hc259immigration','20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026':'20placeskids'};
+  const slugMap = {'BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation':'starmerresigns','AfroMic-Night-Afrobeats-Karaoke':'afrominight','MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026':'naijafoodfest','Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends':'owambefest','Deshapeables-UK-Tradefair-London':'deshapeables','NSF-(UK)-Sports-and-Family-Fun-Day-2026':'nsfsportsday','The-Igbo-Table:-Food-Culture-and-Conversation':'igbotable','Ankara-Festival-UK-2026':'ankarafest','Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action':'tenantdeposit','Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)':'nigerianrestaurants','No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!':'firsthome5k','Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Heres-How':'passportrenewal','Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK':'faragereigns','10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK':'householdbills','UK-Weather-Update:-Another-Heatwave-Could-Push-Temperatures-Above-30C-This-Week':'heatwave2','Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005':'visarefusals','UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes':'ilrupdate','Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026':'aldibabyformula','What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money':'andyburnham','UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-W':'heatwarning','FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026':'freebus','Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know':'nigculturalfest','UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said':'nigerianswage','UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries':'ukvisaconfirm','Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know':'tvlicence','Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition':'freecourses','Metro-Bank%27s-New-100percent-Mortgage:-Should-You-Jump-at-It':'metromortgage','10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)':'bizmisc','FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays':'morrisonbreakfast','UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-Exceptional-Contribution':'fastersettlement','Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London':'worshipchaos','9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!':'9jafayre','Festival-Of-African-Cuisine':'africancuisine','Midlands-Business-Festival-Coventry':'midlandsbiz','Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns':'suyafest','Andy-Burnham-Becomes-UK-Prime-Minister:-What-Nigerians-in-the-UK-Need-to-Know':'andyburnhampm','UK-Energy-Bills-to-Fall-as-Government-Announces-VAT-Cut-from-October-2026':'ukenergybills','UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know':'hc259immigration','20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026':'20placeskids'};
   const blogSlug = blogComUrl.split('/blog/')[1] || '';
   const key = slugMap[blogSlug] || slugMap[decodeURIComponent(blogSlug)];
   const shareUrl = key ? 'https://auntietobi.co.uk/blog/' + key : 'https://auntietobi.co.uk';
