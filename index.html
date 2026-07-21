@@ -1790,6 +1790,66 @@ Respond as Auntie Tobi — mark their answer warmly, give the explanation clearl
 // Set to true to test OpenRouter GPT-4o mini | false = Anthropic Haiku (default)
 window.USE_OPENROUTER = true;
 
+// ===== LIVE FEED LOADER =====
+// Fetches blog posts and listings from RSS feeds via Netlify functions
+// Falls back to hardcoded data if feeds fail
+
+window._feedsLoaded = false;
+
+async function loadLiveFeeds() {
+  try {
+    // Load both feeds in parallel
+    const [blogRes, listingsRes] = await Promise.allSettled([
+      fetch('/.netlify/functions/fetch-blog-feed').then(r => r.json()),
+      fetch('/.netlify/functions/fetch-listings-feed').then(r => r.json()),
+    ]);
+
+    // Update blog feed
+    if (blogRes.status === 'fulfilled' && blogRes.value.posts?.length) {
+      window._liveBlogPosts = blogRes.value.posts;
+      console.log(`[Feed] Loaded ${blogRes.value.posts.length} blog posts`);
+    }
+
+    // Update listings directory
+    if (listingsRes.status === 'fulfilled' && listingsRes.value.businesses?.length) {
+      // Merge with verified businesses from hardcoded directory (they have WA/phone data)
+      const verified = AUNTIE_TOBI_DIRECTORY.filter(b => b.verified);
+      const liveBusinesses = listingsRes.value.businesses;
+
+      // Override with verified data where slug matches
+      const merged = liveBusinesses.map(lb => {
+        const existing = verified.find(b => b.slug === lb.slug);
+        return existing ? Object.assign({}, lb, existing) : lb;
+      });
+
+      // Add any verified businesses not in the feed
+      verified.forEach(vb => {
+        if (!merged.find(b => b.slug === vb.slug)) merged.unshift(vb);
+      });
+
+      window._liveDirectory = merged;
+      console.log(`[Feed] Loaded ${merged.length} businesses`);
+    }
+
+    window._feedsLoaded = true;
+  } catch (err) {
+    console.warn('[Feed] Failed to load live feeds, using hardcoded data:', err.message);
+  }
+}
+
+// Helper to get live directory (falls back to hardcoded)
+function getLiveDirectory() {
+  return window._liveDirectory || AUNTIE_TOBI_DIRECTORY;
+}
+
+// Helper to get live blog posts
+function getLiveBlogPosts() {
+  return window._liveBlogPosts || null;
+}
+
+// Load feeds in background on startup
+loadLiveFeeds();
+
 let messages = [];
 let isLoading = false;
 // ============================================
@@ -2772,6 +2832,20 @@ window._renderAllNewsBatch = function(from) {
 };
 
 function showAllNews() {
+  // Use live feed if available, otherwise fall back to hardcoded
+  const livePosts = getLiveBlogPosts();
+  if (livePosts && livePosts.length > 0) {
+    const filtered = livePosts.filter(item => item.label !== 'Events');
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const messages = document.getElementById('messages');
+    messages.innerHTML = '';
+    window._allNewsData = filtered;
+    window._allNewsShownCount = 0;
+    window._renderAllNewsBatch(0);
+    return;
+  }
+
+  // Hardcoded fallback
   const news = [
     {
       emoji: '⚡',
@@ -4257,7 +4331,7 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      const business = AUNTIE_TOBI_DIRECTORY.find(b => b.slug === biz);
+      const business = getLiveDirectory().find(b => b.slug === biz);
       if (business) {
         const cat = business.cat ? business.cat.charAt(0).toUpperCase() + business.cat.slice(1) : '';
         const loc = business.loc || 'UK';
@@ -5379,7 +5453,7 @@ function shareBlogPost() {
 let shownBusinessIndexes = [];
 function showBusinesses(startIndex) {
   if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
-  const allBiz = AUNTIE_TOBI_DIRECTORY;
+  const allBiz = getLiveDirectory();
   if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
     shownBusinessIndexes = [];
   }

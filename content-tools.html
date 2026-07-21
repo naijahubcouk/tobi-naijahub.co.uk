@@ -107,6 +107,7 @@
     <button class="tab active" onclick="switchTab('roundup')">📰 Weekly Roundup</button>
     <button class="tab" onclick="switchTab('social')">📸 Social Content</button>
     <button class="tab" onclick="switchTab('push')">🔔 Push Notifications</button>
+    <button class="tab" onclick="switchTab('deeplinks')">🔗 Deep Links</button>
     <button class="tab" onclick="switchTab('htmlpng')">🖼️ HTML → PNG</button>
   </div>
 
@@ -155,7 +156,26 @@
     <div class="output-section" id="output-push"></div>
   </div>
 
-  <!-- Panel 4: HTML → PNG -->
+  <!-- Panel 4: Deep Links -->
+  <div class="panel" id="panel-deeplinks">
+    <div class="card">
+      <div class="card-header"><span style="font-size:16px;">🔗</span><span>Deep Links — Auto-Generated from Live Feed</span></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">All deep links auto-generated from the live blog feed at auntietobi.com/feed/blog. Share any link directly — it opens the article inside the app.</p>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button class="btn btn-primary" onclick="loadDeepLinks()">🔄 Refresh from Feed</button>
+          <button onclick="copyAllDeepLinks()" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">📋 Copy All</button>
+        </div>
+        <div id="deeplinks-loading" style="display:none;text-align:center;padding:20px;">
+          <div class="spinner"></div>
+          <p style="font-size:13px;color:#9CA3AF;">Loading from feed...</p>
+        </div>
+        <div id="deeplinks-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 5: HTML → PNG -->
   <div class="panel" id="panel-htmlpng">
     <div class="card">
       <div class="card-header"><span style="font-size:16px;">🖼️</span><span>HTML to PNG Converter</span></div>
@@ -242,7 +262,38 @@
 </div>
 
 <script>
-const NEWS = [
+let NEWS = [];
+let NEWS_LOADED = false;
+
+async function loadNewsFromFeed() {
+  try {
+    const res = await fetch('/.netlify/functions/fetch-blog-feed');
+    const data = await res.json();
+    if (data.posts && data.posts.length > 0) {
+      NEWS = data.posts.map((p, i) => ({
+        emoji: p.emoji || '📰',
+        title: p.title,
+        summary: p.summary,
+        label: p.label,
+        date: p.date,
+        url: p.url,
+        key: p.key,
+        appUrl: p.appUrl,
+      }));
+      NEWS_LOADED = true;
+      console.log(`Loaded ${NEWS.length} posts from feed`);
+      return true;
+    }
+  } catch (e) {
+    console.warn('Feed failed, using hardcoded:', e.message);
+  }
+  return false;
+}
+
+// Hardcoded fallback NEWS array
+const NEWS_FALLBACK = [
+  { emoji:'⚡', title:'UK Energy Bills to Fall as Government Announces VAT Cut from October 2026', summary:'The UK government has announced a VAT cut on household electricity bills from October 2026. Find out what it means for Nigerians in the UK and how much you could save.', label:'News', date:'21 Jul 2026', url:'https://auntietobi.com/blog/UK-Energy-Bills-to-Fall-as-Government-Announces-VAT-Cut-from-October-2026' },
+  { emoji:'🏛️', title:'Andy Burnham Becomes UK Prime Minister: What Nigerians in the UK Need to Know', summary:'Andy Burnham is the new UK Prime Minister. Find out what this means for Nigerians in the UK, including immigration, jobs, and the latest government updates.', label:'News', date:'21 Jul 2026', url:'https://auntietobi.com/blog/Andy-Burnham-Becomes-UK-Prime-Minister:-What-Nigerians-in-the-UK-Need-to-Know' },
   { emoji:'🏛️', title:'UK Immigration Rules Updated (HC 259): What Nigerians in the UK Need to Know', summary:'The UK Home Office has published new Immigration Rules under HC 259. Find out what has changed, who is affected and what action to take.', label:'News', date:'19 Jul 2026', url:'https://auntietobi.com/blog/UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know' },
   { emoji:'🍽️', title:'20 Places Where Kids Eat FREE or for £1 During UK Summer Holidays 2026', summary:'Looking to save money this summer? Discover over 20 UK restaurants, cafés and supermarkets where kids eat FREE or for just £1 during the 2026 school holidays.', label:'Food & Lifestyle', date:'19 Jul 2026', url:'https://auntietobi.com/blog/20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026' },
   { emoji:'🛂', title:'UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries', summary:'The UK has confirmed that Nigerians and citizens of 32 other African countries must obtain entry clearance before travelling to or transiting through the UK.', label:'News', date:'18 Jul 2026', url:'https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries' },
@@ -271,31 +322,36 @@ const NEWS = [
 
 const SELECTED = { roundup: new Set(), social: new Set(), push: new Set() };
 
-// Build article lists for all tabs
-['roundup', 'social', 'push'].forEach(tab => {
-  const container = document.getElementById('articles-' + tab);
-  NEWS.forEach((item, i) => {
-    const div = document.createElement('div');
-    div.className = 'article-item';
-    div.innerHTML = `
-      <input type="checkbox" id="${tab}-${i}" onchange="toggleItem('${tab}', ${i}, this)">
-      <span class="article-emoji">${item.emoji}</span>
-      <div class="article-info">
-        <div class="title">${item.title}</div>
-        <div class="meta">${item.label} · ${item.date}</div>
-      </div>`;
-    div.onclick = (e) => {
-      if (e.target.tagName !== 'INPUT') {
-        const cb = document.getElementById(`${tab}-${i}`);
-        cb.checked = !cb.checked;
-        toggleItem(tab, i, cb);
-      }
-    };
-    container.appendChild(div);
+function buildArticleLists() {
+  ['roundup', 'social', 'push'].forEach(tab => {
+    const container = document.getElementById('articles-' + tab);
+    if (!container) return;
+    container.innerHTML = '';
+    SELECTED[tab].clear();
+    NEWS.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'article-item';
+      div.innerHTML = `<input type="checkbox" id="${tab}-${i}" onchange="toggleArticle('${tab}', ${i}, this)">
+        <label for="${tab}-${i}"><span class="article-label" style="background:${getLabelColor(item.label)}">${item.label}</span> <strong>${item.title}</strong> <span style="color:#9CA3AF;font-size:11px;">${item.date}</span></label>`;
+      container.appendChild(div);
+    });
+    updateCounter(tab);
   });
-});
+}
 
-function toggleItem(tab, i, cb) {
+// Init — try live feed first, fall back to hardcoded
+async function initContentTools() {
+  const loaded = await loadNewsFromFeed();
+  if (!loaded) {
+    NEWS = NEWS_FALLBACK;
+  }
+  buildArticleLists();
+  loadDeepLinks();
+}
+
+initContentTools();
+
+function toggleArticle(tab, i, cb) {
   if (cb.checked) {
     SELECTED[tab].add(i);
     cb.closest('.article-item').classList.add('selected');
@@ -304,6 +360,74 @@ function toggleItem(tab, i, cb) {
     cb.closest('.article-item').classList.remove('selected');
   }
   updateCounter(tab);
+}
+
+function toggleItem(tab, i, cb) {
+  toggleArticle(tab, i, cb);
+}
+
+function getLabelColor(label) {
+  const colors = {
+    'News': '#057A44', 'Events': '#6B21A8', 'Money': '#B45309',
+    'Housing': '#0C447C', 'Business': '#1D6A96', 'Education': '#0C447C',
+    'Food & Lifestyle': '#B45309', 'Food and Lifestyle': '#B45309',
+  };
+  return colors[label] || '#057A44';
+}
+
+async function loadDeepLinks() {
+  const list = document.getElementById('deeplinks-list');
+  const loading = document.getElementById('deeplinks-loading');
+  if (!list) return;
+
+  loading.style.display = 'block';
+  list.innerHTML = '';
+
+  // Use already-loaded NEWS or reload
+  const posts = NEWS.length > 0 ? NEWS : NEWS_FALLBACK;
+
+  loading.style.display = 'none';
+
+  posts.forEach(post => {
+    const key = post.key || post.url.split('/blog/')[1]?.replace(/[^a-z0-9]/gi, '').toLowerCase().substring(0, 20);
+    const appUrl = post.appUrl || `https://auntietobi.co.uk/blog/${key}`;
+    const div = document.createElement('div');
+    div.style.cssText = 'background:white;border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 12px;display:flex;align-items:flex-start;gap:10px;';
+    div.innerHTML = `
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="background:${getLabelColor(post.label)};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${post.label}</span>
+          <span style="font-size:11px;color:#9CA3AF;">${post.date}</span>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${post.emoji} ${post.title}</div>
+        <div style="font-size:11px;color:#057A44;font-family:monospace;word-break:break-all;">${appUrl}</div>
+      </div>
+      <button onclick="copyLink('${appUrl}', this)" style="background:#f0faf5;border:1.5px solid #057A44;color:#057A44;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif;">📋 Copy</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function copyLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+
+function copyAllDeepLinks() {
+  const posts = NEWS.length > 0 ? NEWS : NEWS_FALLBACK;
+  const lines = posts.map(p => {
+    const key = p.key || '';
+    const appUrl = p.appUrl || `https://auntietobi.co.uk/blog/${key}`;
+    return `${p.title}\n${appUrl}`;
+  }).join('\n\n');
+  navigator.clipboard.writeText(lines).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ All Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy All', 2000);
+  });
 }
 
 function updateCounter(tab) {
