@@ -4281,21 +4281,20 @@ window.shareTipOfDay = function() {
 
 // Force ALL external links to open in device browser
 document.addEventListener('click', function(e) {
-  // Blog read more — must be checked first
+  // 1. Blog read more — highest priority
   const blogLink = e.target.closest('.blog-read-more');
   if (blogLink) {
     e.preventDefault();
+    e.stopPropagation();
     const url = blogLink.getAttribute('data-blogurl');
-    const title = blogLink.getAttribute('data-blogtitle') || '';
-    const summary = blogLink.getAttribute('data-blogsummary') || '';
-    openBlogSheet(url, title, summary);
+    if (url) openBlogSheet(url, '', '');
     return;
   }
-  // External links — open in new tab
-  const link = e.target.closest('a[href]');
-  if (link) {
-    const href = link.getAttribute('href');
-    if (href && href.startsWith('http') && link.target === '_blank') {
+  // 2. External links in new tab
+  const anchor = e.target.closest('a[href]');
+  if (anchor) {
+    const href = anchor.getAttribute('href');
+    if (href && href.startsWith('http') && anchor.target === '_blank') {
       e.preventDefault();
       window.open(href, '_blank', 'noopener,noreferrer');
     }
