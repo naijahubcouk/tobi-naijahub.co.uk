@@ -1847,8 +1847,7 @@ function getLiveBlogPosts() {
   return window._liveBlogPosts || null;
 }
 
-// Load feeds in background on startup
-loadLiveFeeds();
+// Load feeds in background on startup — called from window.onload after all variables are defined
 
 let messages = [];
 let isLoading = false;
@@ -5342,6 +5341,9 @@ window.onload = () => {
   requestLocation();
   handleDeepLink();
   showSafariInstallBanner();
+
+  // Load live feeds in background after everything else is ready
+  loadLiveFeeds();
 
   // Show pending notif banner after short delay (only if not navigating)
   setTimeout(() => {
