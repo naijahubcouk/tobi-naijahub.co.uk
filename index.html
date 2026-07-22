@@ -2482,12 +2482,52 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
       replyLower.includes('evisa') || replyLower.includes('settlement') || replyLower.includes('prescription') ||
       replyLower.includes('benefits') || replyLower.includes('universal credit') || replyLower.includes('asylum') ||
       replyLower.includes('deportation') || replyLower.includes('right to remain') || replyLower.includes('home office');
+
     // Show Jobs Hub bubbles if reply contains job-related content
     const isJobReply = replyLower.includes('job') || replyLower.includes('career') || replyLower.includes('cv') || replyLower.includes('interview') || replyLower.includes('employ') || replyLower.includes('work');
     if (isJobReply && !nhsMode) {
       setTimeout(() => {
         addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Jobs Hub</button><button class="suggestion-btn" onclick="fetchJobs(\'care\',\'🤝 Care Jobs\')">❤️ Care Jobs</button><button class="suggestion-btn" onclick="fetchJobs(\'nhs\',\'🏥 NHS Jobs\')">🏥 NHS Jobs</button><button class="suggestion-btn" onclick="fetchJobs(\'it\',\'💻 IT & Tech\')">💻 IT Jobs</button><button class="suggestion-btn" onclick="quickAsk(\'Give me UK CV tips\')">📄 CV Tips</button></div>');
       }, 300);
+    }
+
+    // Contextual follow-up suggestions based on reply topic (not biz/job — those handled above)
+    if (!isBizResponse && !isJobReply && !nhsMode) {
+      setTimeout(() => {
+        const currentCity = userCity || window.userCity || '';
+        const cityLabel = currentCity ? ` near ${currentCity}` : '';
+        const userLower = (userText || '').toLowerCase();
+
+        // Build contextual suggestions based on what was asked
+        let ctxBtns = [];
+
+        if (replyLower.includes('bank') || replyLower.includes('account') || replyLower.includes('money') || replyLower.includes('finance')) {
+          ctxBtns = ['How do I improve my credit score in the UK?', 'How do I send money to Nigeria cheaply?', 'What is the best UK bank for Nigerians?'];
+        } else if (replyLower.includes('school') || replyLower.includes('education') || replyLower.includes('university') || replyLower.includes('course')) {
+          ctxBtns = ['How do I get my Nigerian qualifications recognised in the UK?', 'What free courses are available in the UK?', 'How do I apply for a student visa?'];
+        } else if (replyLower.includes('driving') || replyLower.includes('licence') || replyLower.includes('license') || replyLower.includes('car')) {
+          ctxBtns = ['Help me prepare for my UK driving theory test', 'How do I convert my Nigerian licence to a UK licence?', 'What are UK road rules I should know?'];
+        } else if (replyLower.includes('rent') || replyLower.includes('house') || replyLower.includes('flat') || replyLower.includes('accommodation')) {
+          ctxBtns = ['What are my rights as a tenant in the UK?', 'How does council tax work?', `Find a Nigerian business${cityLabel}`];
+        } else if (replyLower.includes('visa') || replyLower.includes('immigration') || replyLower.includes('ilr') || replyLower.includes('brp')) {
+          ctxBtns = ['How do I apply for ILR?', 'What is the Life in UK test?', 'Help me prepare for my Life in UK test'];
+        } else if (replyLower.includes('nhs') || replyLower.includes('doctor') || replyLower.includes('health') || replyLower.includes('gp')) {
+          ctxBtns = ['How do I register with a GP in the UK?', 'What NHS services can I access as a Nigerian?', 'How do I access mental health support in the UK?'];
+        } else if (replyLower.includes('business') || replyLower.includes('self-employed') || replyLower.includes('entrepreneur')) {
+          ctxBtns = [`Find a Nigerian business${cityLabel}`, 'How do I start a business in the UK?', 'How do I register as self-employed?'];
+        } else if (replyLower.includes('event') || replyLower.includes('festival') || replyLower.includes('party')) {
+          ctxBtns = ['What Nigerian events are coming up?', `Find a Nigerian caterer${cityLabel}`, `Find a Nigerian DJ${cityLabel}`];
+        } else {
+          // Generic pool — always random so feels varied
+          const pool = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean);
+          ctxBtns = pool.slice(0, 3);
+        }
+
+        const btns = ctxBtns.slice(0, 3).map(s =>
+          `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`
+        ).join('');
+        addTipMessage(`<div class="suggestions" style="margin-top:8px;">${btns}</div>`);
+      }, 400);
     }
 
     // 💾 Save exam progress automatically
@@ -2866,6 +2906,7 @@ function getNewsEmoji(label) {
 }
 
 function showAllNews() {
+  scrollToTop();
   // Use live feed if available, otherwise fall back to hardcoded
   const livePosts = getLiveBlogPosts();
   if (livePosts && livePosts.length > 0) {
@@ -3128,6 +3169,7 @@ function showAllNews() {
 }
 
 function showEventsFromNews() {
+  scrollToTop();
   // Helper to parse "25 Jul 2026" → Date
   const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
   const parseD = s => { const p = (s||'').split(' '); return new Date(parseInt(p[2]), months[p[1]]||0, parseInt(p[0])||1); };
@@ -3947,6 +3989,7 @@ function showJapaGuide() {
 function showLinksPage() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
+  scrollToTop();
 
   // Rotating info facts — NOT clickable, information only
   const _facts = [
@@ -5658,6 +5701,11 @@ function shareBlogPost() {
 
 // ===== BUSINESS PILL =====
 let shownBusinessIndexes = [];
+function scrollToTop() {
+  const container = document.getElementById('messages');
+  if (container) { container.scrollTop = 0; }
+}
+
 function showBusinesses(startIndex) {
   if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
   const allBiz = getLiveDirectory();
@@ -5675,6 +5723,7 @@ function showBusinesses(startIndex) {
   const container = document.getElementById('messages');
   if (container) container.innerHTML = '';
   messages = [];
+  scrollToTop();
 
   addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>');
 
@@ -5885,6 +5934,7 @@ function resetToWelcome() {
     try {
       const msgs = document.getElementById('messages');
       if (msgs) msgs.innerHTML = '';
+      scrollToTop();
       showFathersVideo();
       // Personalised welcome back message
       (function() {
