@@ -2198,7 +2198,7 @@ function addMessage(role, content, isHTML = false, showFeedback = false) {
   }
 
   container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
+  if (!window._suppressScroll) container.scrollTop = container.scrollHeight;
   return div;
 }
 
@@ -2227,7 +2227,7 @@ function addTipMessage(html) {
     </div>
   `;
   container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
+  if (!window._suppressScroll) container.scrollTop = container.scrollHeight;
   return div;
 }
 
@@ -2390,6 +2390,9 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
     // Check if this is a business card response
     const isBizResponse = reply.includes('<<<BIZ_JSON:');
 
+    // Suppress scroll during business card rendering
+    if (isBizResponse) window._suppressScroll = true;
+
     const msgDiv = addMessage('bot', '', true, false);
     const bubble = msgDiv?.querySelector('.bubble') || msgDiv;
     if (bubble) {
@@ -2399,8 +2402,18 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
       temp.innerHTML = formatted;
       const finalHTML = temp.innerHTML;
       // For short responses just show instantly
-      if (finalHTML.length < 300) {
+      if (finalHTML.length < 300 || isBizResponse) {
         bubble.innerHTML = finalHTML;
+        // For biz responses scroll to user's question after render
+        if (isBizResponse) {
+          setTimeout(() => {
+            window._suppressScroll = false;
+            const container = document.getElementById('messages');
+            const userMsgs = container.querySelectorAll('.msg.user');
+            const lastUserMsg = userMsgs[userMsgs.length - 1];
+            if (lastUserMsg) lastUserMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 200);
+        }
       } else {
         // Stream in chunks of ~5 chars for typewriter feel
         let i = 0;
@@ -2418,7 +2431,7 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
           }
           bubble.innerHTML = finalHTML.substring(0, safeEnd);
           const messagesEl = document.getElementById('messages');
-          messagesEl.scrollTop = messagesEl.scrollHeight;
+          if (!window._suppressScroll) messagesEl.scrollTop = messagesEl.scrollHeight;
           if (i >= finalHTML.length) clearInterval(interval);
         }, 8);
       }
