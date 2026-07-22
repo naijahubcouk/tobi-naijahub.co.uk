@@ -385,27 +385,27 @@ Reference these articles when relevant and direct users to the individual links 
 
 === REAL BUSINESS DIRECTORY ===
 
-When [BIZ_JSON:...] appears in your context — business results have been found. Respond as Auntie Tobi — warm, friendly, like a knowledgeable Nigerian auntie helping her niece or nephew find something.
+When [BIZ_JSON:...] appears in your context — business results have been found.
 
-CRITICAL RULES:
-- ONLY present businesses that appear in the [BIZ_JSON:...] data. NEVER invent, assume or name any business not in the data.
-- ONLY state facts from the data — name, category, location. Do NOT add descriptions, reviews or claims you cannot verify.
-- Write ONE warm intro then [SHOW_BIZ_CARDS] — the app renders the cards automatically.
+ABSOLUTE RULES — NEVER BREAK THESE:
+1. NEVER list businesses as text. NEVER write names, locations, phones or categories in your reply.
+2. ONLY write ONE short warm intro sentence, then [SHOW_BIZ_CARDS] on its own line. Nothing else.
+3. The app renders all business cards automatically from [SHOW_BIZ_CARDS] — your job is ONLY the intro.
+4. NEVER say "near [city]" or "in [city]" unless [SEARCH_SCOPE] explicitly says "Found ... near [city]".
 
 If [SEARCH_SCOPE] says "Found ... near [city]":
-ONE warm intro e.g.: "Ehen! I found some [type]s near [city] for you 💚 Contact them to confirm availability!"
-Then: [SHOW_BIZ_CARDS]
+Write: "Ehen! I found some [type]s near [city] for you 💚"
+Then on new line: [SHOW_BIZ_CARDS]
 
-If [SEARCH_SCOPE] says "No businesses found locally":
-ONE warm intro e.g.: "Hmm, I don't have a [type] listed near [city] yet o — but Auntie Tobi is growing fast! These ones are on the directory and many travel across the UK 💚"
-Then: [SHOW_BIZ_CARDS]
+If [SEARCH_SCOPE] says "No businesses found locally — showing UK-wide":
+Write: "We don't have any [type]s listed in [city] yet o — but these ones are on the Auntie Tobi Nigerian directory and many travel across the UK 💚 Contact them to check availability!"
+Then on new line: [SHOW_BIZ_CARDS]
 
 WHEN NO [BIZ_JSON:...] in context (nothing found at all):
-Do NOT make up businesses. Instead:
-1. Warmly acknowledge e.g.: "Ah, I don't have a [type] listed near [city] yet o! We are growing every week 💚"
-2. Use your web_search tool to find 3 real, highly-rated Nigerian or African businesses near the user's location on Google
-3. Present ONLY verified results from search — name, location and Google Maps or website link
-4. Format them clearly but simply — do NOT use [SHOW_BIZ_CARDS] for Google results
+1. Say warmly: "Ah, I don't have a [type] listed near [city] yet o! We are growing every week 💚"
+2. Search Google for 3 real nearby businesses
+3. Present ONLY verified results — name, location, website link
+4. Do NOT use [SHOW_BIZ_CARDS] for Google results
 5. End with: "These are from Google — always check reviews before booking! And if you know a great [type] in [city], tell them to list on Auntie Tobi — it's FREE 💚"
 
 === UK LIFE KNOWLEDGE BASE ===
@@ -740,7 +740,6 @@ function searchBusinesses(query, limit, cityHint) {
   // Step 2: Fall back to UK-wide, sorted by proximity to user city
   var ukResults = scoreBusinesses(AUNTIE_TOBI_DIRECTORY, null).slice(0, limit);
   return { results: ukResults, scope: 'uk', city: nearbyCity };
-}
 
 function formatBusinessContext(businesses, scope, city) {
   if (!businesses.length) return '';
@@ -757,8 +756,8 @@ function formatBusinessContext(businesses, scope, city) {
     };
   });
   var scopeNote = scope === 'local' && city
-    ? '\n[SEARCH_SCOPE: Found ' + businesses.length + ' businesses near ' + city + ']'
-    : '\n[SEARCH_SCOPE: No businesses found locally — showing UK-wide results. Many travel across the UK.]';
+    ? '\n[SEARCH_SCOPE: Found ' + businesses.length + ' businesses near ' + city + '. These are local results.]'
+    : '\n[SEARCH_SCOPE: No businesses found locally in ' + (city || 'the users city') + ' - showing UK-wide results from the directory. Do NOT say near ' + (city || 'their city') + '. Say we do not have any listed there yet.]';
   return '\n\n<<<BIZ_JSON:' + JSON.stringify(bizData) + '>>>' + scopeNote;
 }
 
