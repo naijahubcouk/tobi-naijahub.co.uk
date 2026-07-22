@@ -5269,12 +5269,17 @@ function handleDeepLink() {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
 
-      // Try live feed first
+      // Try live feed first — match by key, appUrl, or slug
       let found = null;
       try {
         const res = await fetch('/.netlify/functions/fetch-blog-feed');
         const data = await res.json();
-        found = (data.posts || []).find(p => p.key === blog || p.slug.toLowerCase().includes(blog.toLowerCase()));
+        found = (data.posts || []).find(p =>
+          p.key === blog ||
+          (p.appUrl && p.appUrl.includes(blog)) ||
+          p.slug.toLowerCase().replace(/[^a-z0-9]/g,'').includes(blog.toLowerCase()) ||
+          blog.includes(p.key)
+        );
       } catch(e) {}
 
       // Try hardcoded news array

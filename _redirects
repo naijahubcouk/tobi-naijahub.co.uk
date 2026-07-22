@@ -16,41 +16,6 @@
 /premium        /?action=premium        301
 
 # Blog deep links
-/blog/passportrenewal       /?blog=passportrenewal      301
-/blog/faragereigns          /?blog=faragereigns          301
-/blog/householdbills        /?blog=householdbills        301
-/blog/heatwave2             /?blog=heatwave2             301
-/blog/visarefusals          /?blog=visarefusals          301
-/blog/ilrupdate             /?blog=ilrupdate             301
-/blog/aldibabyformula       /?blog=aldibabyformula       301
-/blog/andyburnham           /?blog=andyburnham           301
-/blog/heatwarning           /?blog=heatwarning           301
-/blog/freebus               /?blog=freebus               301
-/blog/bizmisc               /?blog=bizmisc               301
-/blog/morrisonbreakfast     /?blog=morrisonbreakfast     301
-/blog/fastersettlement      /?blog=fastersettlement      301
-/blog/worshipchaos          /?blog=worshipchaos          301
-/blog/9jafayre              /?blog=9jafayre              301
-/blog/africancuisine        /?blog=africancuisine        301
-/blog/midlandsbiz           /?blog=midlandsbiz           301
-/blog/suyafest              /?blog=suyafest              301
-/blog/nigculturalfest       /?blog=nigculturalfest       301
-/blog/nigerianswage         /?blog=nigerianswage         301
-/blog/ukvisaconfirm         /?blog=ukvisaconfirm         301
-/blog/tvlicence             /?blog=tvlicence             301
-/blog/freecourses           /?blog=freecourses           301
-/blog/metromortgage         /?blog=metromortgage         301
-/blog/starmerresigns        /?blog=starmerresigns        301
-/blog/afrominight           /?blog=afrominight           301
-/blog/naijafoodfest         /?blog=naijafoodfest         301
-/blog/owambefest            /?blog=owambefest            301
-/blog/deshapeables          /?blog=deshapeables          301
-/blog/nsfsportsday          /?blog=nsfsportsday          301
-/blog/igbotable             /?blog=igbotable             301
-/blog/ankarafest            /?blog=ankarafest            301
-/blog/tenantdeposit         /?blog=tenantdeposit         301
-/blog/nigerianrestaurants   /?blog=nigerianrestaurants   301
-/blog/firsthome5k           /?blog=firsthome5k           301
 
 
 # Business deep links
@@ -157,50 +122,13 @@
 /biz/skinsential    /?biz=skinsential    301
 /biz/afrifresh-catering    /?biz=afrifresh-catering    301
 
-/blog/hc259immigration    /?blog=hc259immigration    301
 
-/blog/20placeskids    /?blog=20placeskids    301
 
-/blog/ukenergybillstofalla    /?blog=ukenergybillstofalla    301
-/blog/andyburnhampm    /?blog=andyburnhampm    301
 
 # SPA catch-all — must be last
-/blog/energybillsfall    /?blog=energybillsfall    301
-/blog/andyburnhambecomes    /?blog=andyburnhambecomes    301
-/blog/immigrationrulesupdated    /?blog=immigrationrulesupdated    301
-/blog/nigerianculturalfestival    /?blog=nigerianculturalfestival    301
-/blog/ukbasednigeriansearning    /?blog=ukbasednigeriansearning    301
-/blog/confirmsentryclearance    /?blog=confirmsentryclearance    301
-/blog/doyoureally    /?blog=doyoureally    301
-/blog/suyafestbirmingham    /?blog=suyafestbirmingham    301
-/blog/freegovernmentfundedcourses    /?blog=freegovernmentfundedcourses    301
-/blog/metrobanksnew    /?blog=metrobanksnew    301
-/blog/worshipchaospowerful    /?blog=worshipchaospowerful    301
-/blog/9jafayre2026    /?blog=9jafayre2026    301
-/blog/festivalafricancuisine    /?blog=festivalafricancuisine    301
-/blog/midlandsbusinessfestival    /?blog=midlandsbusinessfestival    301
-/blog/10commonmistakes    /?blog=10commonmistakes    301
-/blog/freebreakfastat    /?blog=freebreakfastat    301
-/blog/governmentconsidersfaster    /?blog=governmentconsidersfaster    301
-/blog/nigerianscannow    /?blog=nigerianscannow    301
-/blog/nigelfarageresigns    /?blog=nigelfarageresigns    301
-/blog/10smartways    /?blog=10smartways    301
-/blog/weatherupdateanother    /?blog=weatherupdateanother    301
-/blog/over134million    /?blog=over134million    301
-/blog/immigrationupdatehouse    /?blog=immigrationupdatehouse    301
-/blog/aldifreezesbaby    /?blog=aldifreezesbaby    301
-/blog/andyburnhamas    /?blog=andyburnhamas    301
-/blog/issuesrarered    /?blog=issuesrarered    301
-/blog/nohugesavings    /?blog=nohugesavings    301
-/blog/primeministerkeir    /?blog=primeministerkeir    301
-/blog/busfaresacross    /?blog=busfaresacross    301
-/blog/freebustravel    /?blog=freebustravel    301
-/blog/deshapeablestradefairlondon    /?blog=deshapeablestradefairlondon    301
-/blog/igbotablefood    /?blog=igbotablefood    301
-/blog/nsfsportsfamily    /?blog=nsfsportsfamily    301
-/blog/owambefest4    /?blog=owambefest4    301
-/blog/ankarafestival2026    /?blog=ankarafestival2026    301
-/blog/didyouknow    /?blog=didyouknow    301
-/blog/bestnigerianrestaurants    /?blog=bestnigerianrestaurants    301
+
+
+# Dynamic blog deep links — catches all /blog/KEY automatically
+/blog/:key    /?blog=:key    301
 
 /* /index.html 200
