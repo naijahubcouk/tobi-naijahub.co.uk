@@ -1,5 +1,5 @@
 'use strict';
-const { sendTaggedPush, getLastNotified, setLastNotified, fetchRSS, parseRSSItems } = require('./notify-helper');
+const { sendTaggedPush, fetchRSS, parseRSSItems } = require('./notify-helper');
 
 exports.handler = async function(event) {
   try {
@@ -11,12 +11,14 @@ exports.handler = async function(event) {
     if (!eventItems.length) return { statusCode: 200, body: 'No event posts found' };
 
     const latest = eventItems[0];
-    const lastId = await getLastNotified('events');
 
-    console.log(`[events] Latest: ${latest.uniqueId} | Last sent: ${lastId}`);
+    const pubDate = latest.pubDate ? new Date(latest.pubDate) : null;
+    const ageMinutes = pubDate ? (Date.now() - pubDate.getTime()) / 60000 : 999;
 
-    if (latest.uniqueId === lastId) {
-      return { statusCode: 200, body: `No new events — already sent: ${latest.slug}` };
+    console.log(`[events] Latest: ${latest.slug} | Age: ${Math.round(ageMinutes)} mins`);
+
+    if (ageMinutes > 35) {
+      return { statusCode: 200, body: `Event too old (${Math.round(ageMinutes)} mins): ${latest.slug}` };
     }
 
     const notifUrl = latest.appUrl || `https://auntietobi.co.uk/?blog=${latest.slug.toLowerCase().replace(/[^a-z0-9]/g,'')}`;
@@ -27,8 +29,6 @@ exports.handler = async function(event) {
       latest.description || 'A new Nigerian community event has been added on Auntie Tobi!',
       notifUrl
     );
-
-    await setLastNotified('events', latest.uniqueId);
 
     return { statusCode: 200, body: JSON.stringify({ sent: true, slug: latest.slug, oneSignal: result.data }) };
 
