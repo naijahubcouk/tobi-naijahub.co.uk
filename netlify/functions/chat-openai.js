@@ -1716,7 +1716,8 @@ function searchBusinesses(query, limit, cityHint) {
   }
   if(nearbyCity){
     var nr=scoreBusinesses(AUNTIE_TOBI_DIRECTORY,nearbyCity).slice(0,limit);
-    if(nr.length>0)return{results:nr,scope:'local',city:nearbyCity};
+    var hasLocal=nr.some(function(b){return (b.loc||'').toLowerCase().indexOf(nearbyCity)!==-1;});
+    if(hasLocal)return{results:nr,scope:'local',city:nearbyCity};
   }
   return{results:scoreBusinesses(AUNTIE_TOBI_DIRECTORY,null).slice(0,limit),scope:'uk',city:nearbyCity};
 }
