@@ -5742,26 +5742,26 @@ function tobiShare(title, text, url) {
 }
 
 function shareBlogUrl(title, text, blogComUrl, appUrl) {
-  // If appUrl (auntietobi.co.uk deep link) is provided directly, use it
+  // If appUrl (auntietobi.co.uk deep link) provided, use it directly
   if (appUrl && appUrl.includes('auntietobi.co.uk')) {
     tobiShare(title, text, appUrl);
     return;
   }
-  // If already a .co.uk URL, use directly
+  // If already a .co.uk URL use directly
   if (blogComUrl && blogComUrl.includes('auntietobi.co.uk')) {
     tobiShare(title, text, blogComUrl);
     return;
   }
-  // Extract slug from .com URL and build .co.uk deep link
-  const blogSlug = (blogComUrl || '').split('/blog/')[1] || '';
-  if (blogSlug) {
-    // Convert slug to app key — lowercase, remove special chars
-    const key = blogSlug.toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
-      .substring(0, 30);
-    tobiShare(title, text, 'https://auntietobi.co.uk/blog/' + key);
-    return;
+  // Try to find in live feed by matching URL
+  const livePosts = getLiveBlogPosts();
+  if (livePosts && livePosts.length > 0) {
+    const match = livePosts.find(p => p.url === blogComUrl || (blogComUrl && blogComUrl.includes(p.slug)));
+    if (match && match.appUrl) {
+      tobiShare(title, text, match.appUrl);
+      return;
+    }
   }
+  // Fallback to root
   tobiShare(title, text, 'https://auntietobi.co.uk');
 }
 
