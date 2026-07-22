@@ -1812,23 +1812,20 @@ async function loadLiveFeeds() {
 
     // Update listings directory
     if (listingsRes.status === 'fulfilled' && listingsRes.value.businesses?.length) {
-      // Merge with verified businesses from hardcoded directory (they have WA/phone data)
-      const verified = AUNTIE_TOBI_DIRECTORY.filter(b => b.verified);
       const liveBusinesses = listingsRes.value.businesses;
 
-      // Override with verified data where slug matches
-      const merged = liveBusinesses.map(lb => {
-        const existing = verified.find(b => b.slug === lb.slug);
-        return existing ? Object.assign({}, lb, existing) : lb;
-      });
+      // Start with full hardcoded directory (has proper categories, WA, phone)
+      const merged = [...AUNTIE_TOBI_DIRECTORY];
 
-      // Add any verified businesses not in the feed
-      verified.forEach(vb => {
-        if (!merged.find(b => b.slug === vb.slug)) merged.unshift(vb);
+      // Add live feed businesses that are NOT already in hardcoded directory
+      liveBusinesses.forEach(lb => {
+        if (!merged.find(b => b.slug === lb.slug)) {
+          merged.push(lb);
+        }
       });
 
       window._liveDirectory = merged;
-      console.log(`[Feed] Loaded ${merged.length} businesses`);
+      console.log(`[Feed] Directory: ${AUNTIE_TOBI_DIRECTORY.length} hardcoded + ${merged.length - AUNTIE_TOBI_DIRECTORY.length} new from feed = ${merged.length} total`);
     }
 
     window._feedsLoaded = true;
