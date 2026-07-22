@@ -3986,6 +3986,60 @@ function showJapaGuide() {
 }
 
 
+function showTipLanding(tip) {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  scrollToTop();
+
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
+    <div style="background:#057A44;padding:8px 14px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:18px;">💡</span>
+      <span style="color:white;font-weight:700;font-size:13px;">TIP OF THE DAY</span>
+    </div>
+    <div style="padding:14px;">
+      <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-weight:500;">${tip}</div>
+    </div>
+  </div>`;
+
+  addTipMessage(html);
+
+  setTimeout(() => {
+    const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
+    const btns = sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">` + s + `</button>`).join('');
+    addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+      <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
+      ${btns}
+    </div>`);
+  }, 300);
+}
+
+function showMotivationLanding(quote) {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  scrollToTop();
+
+  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
+    <div style="background:#0F1E36;padding:8px 14px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:18px;">💪</span>
+      <span style="color:white;font-weight:700;font-size:13px;">Motivation</span>
+    </div>
+    <div style="padding:14px;">
+      <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-style:italic;">"${quote}"</div>
+    </div>
+  </div>`;
+
+  addTipMessage(html);
+
+  setTimeout(() => {
+    const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
+    const btns = sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">` + s + `</button>`).join('');
+    addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+      <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
+      ${btns}
+    </div>`);
+  }, 300);
+}
+
 function showLinksPage() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
@@ -4586,6 +4640,12 @@ function handleDeepLink() {
     setTimeout(() => { resetAndShow(showBusinesses); }, 300);
   } else if (action === 'motivation') {
     setTimeout(() => { showDailyMotivation(); window.history.replaceState({}, '', window.location.pathname); }, 500);
+  } else if (action === 'tip') {
+    const content = urlParams.get('content') || '';
+    setTimeout(() => showTipLanding(content), 300);
+  } else if (action === 'motivation') {
+    const content = urlParams.get('content') || '';
+    setTimeout(() => showMotivationLanding(content), 300);
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
   } else if (action === 'guardianews' || action === 'news') {
