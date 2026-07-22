@@ -989,15 +989,10 @@
       (function() {
         if (localStorage.getItem('tobi_notifications') === '1') {
           var b = document.getElementById('notify-bell');
-          if (b) { b.innerHTML = '🔔'; b.title = 'Notifications ON'; b.style.opacity = '1'; }
+          if (b) { b.innerHTML = '🔔'; b.title = 'Manage notification preferences'; b.style.opacity = '1'; }
         }
       })();
     </script>
-      <button onclick="showNotifPrefs()" title="Notification preferences" style="
-        background:none; border:none; cursor:pointer;
-        font-size:14px; padding:2px;
-        opacity:0.7; transition:opacity 0.2s;
-      ">⚙️</button>
       <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="
         background:none; border:none; cursor:pointer;
         font-size:18px; padding:2px;
@@ -6459,16 +6454,17 @@ function saveNotifPrefs() {
 
 async function handleBellClick() {
   const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
-  if (!isSubscribed) {
-    // Subscribe first then show prefs
+  if (isSubscribed) {
+    // Already subscribed — open preferences directly
+    showNotifPrefs();
+  } else {
+    // Not subscribed — prompt to subscribe then show prefs
     if (typeof OneSignalDeferred !== 'undefined') {
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.Slidedown.promptPush();
         setTimeout(() => showNotifPrefs(), 1000);
       });
     }
-  } else {
-    showNotifPrefs();
   }
 }
 
