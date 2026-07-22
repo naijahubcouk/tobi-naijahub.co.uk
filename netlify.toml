@@ -1,10 +1,26 @@
 [build]
-  functions = "netlify/functions"
+  functions = "."
 
-[functions]
-  node_bundler = "esbuild"
+# Include data files alongside chat-openai function
+[functions."chat-openai"]
+  included_files = ["directory.json", "system-prompt.txt"]
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
+# Check for new News posts every 30 minutes
+[functions."auto-notify-news"]
+  schedule = "*/30 * * * *"
+
+# Check for new Articles every 30 minutes
+[functions."auto-notify-articles"]
+  schedule = "*/30 * * * *"
+
+# Check for new Events every 30 minutes
+[functions."auto-notify-events"]
+  schedule = "*/30 * * * *"
+
+# Daily tip at 8am UTC (9am BST / 8am GMT)
+[functions."auto-notify-tips"]
+  schedule = "0 8 * * *"
+
+# Daily motivation at 8am UTC
+[functions."auto-notify-motivation"]
+  schedule = "0 8 * * *"
