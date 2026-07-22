@@ -1,15 +1,15 @@
 [build]
   functions = "netlify/functions"
 
-[functions."auto-notify-news"]
-  schedule = "*/30 * * * *"
+# News/articles/events DISABLED until deduplication is fixed
+# [functions."auto-notify-news"]
+#   schedule = "*/30 * * * *"
+# [functions."auto-notify-articles"]
+#   schedule = "*/30 * * * *"
+# [functions."auto-notify-events"]
+#   schedule = "*/30 * * * *"
 
-[functions."auto-notify-articles"]
-  schedule = "*/30 * * * *"
-
-[functions."auto-notify-events"]
-  schedule = "*/30 * * * *"
-
+# Daily notifications still active
 [functions."auto-notify-motivation"]
   schedule = "0 8 * * *"
 
