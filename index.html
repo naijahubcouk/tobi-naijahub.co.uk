@@ -4043,21 +4043,22 @@ function showMotivationLanding(quote) {
 function showLinksPage() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
+  scrollToTop();
 
   // Rotating info facts — NOT clickable
   const _facts = [
-    '🏢 ' + (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 120) + '+ Nigerian businesses listed across the UK',
-    '💚 Auntie Tobi is completely free to use — no sign up needed',
-    '🤖 Powered by AI to help Nigerians navigate UK life',
-    '📰 Get the latest UK news affecting Nigerians daily',
-    '🎉 Find Nigerian community events near you across the UK',
-    '🔔 Turn on notifications to never miss an update',
-    '🇳🇬🇬🇧 Built for Nigerians living, working and thriving in the UK',
-    '💬 Ask Auntie Tobi anything — from NHS to immigration to housing',
-    '✅ Verified businesses get a badge and WhatsApp button',
-    '📍 List your Nigerian business for FREE on Auntie Tobi',
-    '🚀 Auntie Tobi grows every week — new businesses added regularly',
-    '🛂 Immigration guidance, visa tips and UK life hacks all in one place',
+    '\u{1f3e2} ' + (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 120) + '+ Nigerian businesses listed across the UK',
+    '\u{1f49a} Auntie Tobi is completely free to use — no sign up needed',
+    '\u{1f916} Powered by AI to help Nigerians navigate UK life',
+    '\u{1f4f0} Get the latest UK news affecting Nigerians daily',
+    '\u{1f389} Find Nigerian community events near you across the UK',
+    '\u{1f514} Turn on notifications to never miss an update',
+    '\u{1f1f3}\u{1f1ec}\u{1f1ec}\u{1f1e7} Built for Nigerians living, working and thriving in the UK',
+    '\u{1f4ac} Ask Auntie Tobi anything — from NHS to immigration to housing',
+    '\u{2705} Verified businesses get a badge and WhatsApp button',
+    '\u{1f4cd} List your Nigerian business for FREE on Auntie Tobi',
+    '\u{1f680} Auntie Tobi grows every week — new businesses added regularly',
+    '\u{1f6c2} Immigration guidance, visa tips and UK life hacks all in one place',
   ];
   let _factIdx = 0;
   const _factEl = document.createElement('div');
@@ -4130,25 +4131,16 @@ function showLinksPage() {
 
   addTipMessage(html);
 
-  // 3 rotating pool bubbles
-  const _pool = getRandomSuggestionStr().split('|').map(x => x.trim()).filter(Boolean).slice(0, 3);
-  const _rotEl = document.createElement('div');
-  _rotEl.style.cssText = 'background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:10px 14px;font-size:13px;color:#057A44;font-weight:700;text-align:center;margin-top:8px;transition:opacity 0.4s;cursor:pointer;';
-  _rotEl.textContent = _pool[0] || '';
-  _rotEl.onclick = () => quickAsk(_rotEl.textContent);
-  messages.appendChild(_rotEl);
+  // Pick a random set of 3 from pool on each page load — static until next refresh
+  const _allSugg = getRandomSuggestionStr().split('|').map(x => x.trim()).filter(Boolean);
+  // Shuffle and pick 3
+  const _shuffled = _allSugg.sort(() => Math.random() - 0.5).slice(0, 3);
+  const _btns = _shuffled.map(s =>
+    `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`
+  ).join('');
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">${_btns}</div>`);
 
-  let _rotIdx = 0;
-  setInterval(() => {
-    _rotEl.style.opacity = '0';
-    setTimeout(() => {
-      _rotIdx = (_rotIdx + 1) % _pool.length;
-      _rotEl.textContent = _pool[_rotIdx];
-      _rotEl.style.opacity = '1';
-    }, 400);
-  }, 3000);
-
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+  addTipMessage(`<div class="suggestions" style="margin-top:4px;">
     <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
     <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
     <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
@@ -5670,6 +5662,17 @@ window.onload = () => {
         }
       }
     } catch(e) {}
+  }
+
+  // If deep link detected, show content immediately before anything else
+  const _urlParams = new URLSearchParams(window.location.search);
+  const _hasDeepLink = _urlParams.get('action') || _urlParams.get('blog') || _urlParams.get('biz');
+
+  if (_hasDeepLink) {
+    handleDeepLink();
+    // Load feeds in background after content shown
+    setTimeout(() => { loadLiveFeeds(); }, 2000);
+    return;
   }
 
   // Request location on load to update city
