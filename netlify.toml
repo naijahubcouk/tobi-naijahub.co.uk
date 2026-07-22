@@ -1,17 +1,2 @@
 [build]
   functions = "."
-
-[functions."auto-notify-news"]
-  schedule = "*/30 * * * *"
-
-[functions."auto-notify-articles"]
-  schedule = "*/30 * * * *"
-
-[functions."auto-notify-events"]
-  schedule = "*/30 * * * *"
-
-[functions."auto-notify-tips"]
-  schedule = "0 8 * * *"
-
-[functions."auto-notify-motivation"]
-  schedule = "0 8 * * *"
