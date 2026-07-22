@@ -4040,6 +4040,109 @@ function showMotivationLanding(quote) {
   }, 300);
 }
 
+function showAboutTobi() {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  scrollToTop();
+
+  const bizCount = (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 101) + '+';
+
+  const html = `<div style="display:flex;flex-direction:column;gap:12px;">
+
+    <div style="background:#0F1E36;border-radius:14px;padding:22px;text-align:center;">
+      <img src="https://naijabiz.b-cdn.net/81bbdd6f-9c9e-4b09-b39c-ec75f6472dc2-1782778813115.png" alt="Auntie Tobi" style="width:80px;height:80px;border-radius:50%;border:3px solid #FFB81C;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;">
+      <div style="color:white;font-size:18px;font-weight:800;margin-bottom:8px;">Meet Auntie Tobi 🇳🇬🇬🇧</div>
+      <div style="color:rgba(255,255,255,0.85);font-size:13px;line-height:1.7;margin-bottom:10px;">Your trusted AI companion for life in the UK.</div>
+      <div style="color:rgba(255,255,255,0.7);font-size:12px;line-height:1.8;">Built for Nigerians, Auntie Tobi helps you discover trusted businesses, stay updated with UK news, find community events, get instant answers to your UK questions, prepare for important exams, and access practical guidance whenever you need it.</div>
+      <div style="margin-top:14px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">
+        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">Free</span>
+        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">Smart</span>
+        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">Always here for you 💚</span>
+      </div>
+    </div>
+
+    <div style="background:white;border:1.5px solid #ebebeb;border-radius:12px;padding:16px;">
+      <div style="font-size:11px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;">What Auntie Tobi can help you with</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🏢</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Discover Nigerian Businesses</div>
+            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Find trusted Nigerian-owned restaurants, shops, beauty services, professionals, churches and more across the UK.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">📰</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Stay Updated</div>
+            <div style="font-size:12px;color:#6B7280;line-height:1.5;">UK news that matters to Nigerians — immigration, jobs, housing, money, education and everyday life.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🎉</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Find Events Near You</div>
+            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Nigerian community events, concerts, festivals, networking and family activities across the UK.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🤖</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Ask UK Questions</div>
+            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Instant answers about visas, NHS, driving, benefits, taxes, schools, banking and much more.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🚗</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Prepare for UK Tests</div>
+            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Practice for your UK Driving Theory Test and the Life in the UK Test with easy revision tools.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">💼</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Discover Opportunities</div>
+            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Jobs, guides, money-saving tips and resources to help Nigerians thrive in the UK.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:#f0faf5;border:1.5px solid #b8e0cb;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#057A44;">${bizCount}</div>
+        <div style="font-size:11px;color:#057A44;margin-top:2px;">Nigerian businesses</div>
+      </div>
+      <div style="background:#f0faf5;border:1.5px solid #b8e0cb;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#057A44;">FREE</div>
+        <div style="font-size:11px;color:#057A44;margin-top:2px;">Always free to use</div>
+      </div>
+    </div>
+
+    <div style="background:#057A44;border-radius:12px;padding:16px;text-align:center;">
+      <div style="color:white;font-size:14px;font-weight:800;margin-bottom:4px;">One Place. Everything Nigerians in the UK Need.</div>
+      <div style="color:rgba(255,255,255,0.85);font-size:12px;">Ask. Discover. Learn. Stay Updated. 💚</div>
+    </div>
+
+  </div>`;
+
+  addTipMessage(html);
+
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+    <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
+    <button class="suggestion-btn" onclick="showLinksPage()">🔗 Links</button>
+    <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
+  </div>`);
+}
+
 function showLinksPage() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
