@@ -80,9 +80,31 @@ function parseListingsRSS(xml) {
 
     if (!name || !slug) continue;
 
-    // Parse category
-    const cat = categories[0] || 'general';
+    // Parse category — infer from description/name if RSS returns generic value
+    let cat = categories[0] || '';
     const section = categories[1] || categories[0] || 'business';
+
+    // If category is generic or empty, infer from name+description
+    const genericCats = ['general', 'business', 'listing', ''];
+    if (genericCats.includes(cat.toLowerCase())) {
+      const text = (name + ' ' + description).toLowerCase();
+      if (/makeup|mua|glam|beauty studio|microblad|lash|brow/.test(text)) cat = 'makeup artists';
+      else if (/gele|auto gele/.test(text)) cat = 'gele stylists';
+      else if (/wig|hair extension|braider|braiding|loc specialist|natural hair/.test(text)) cat = 'wig vendors';
+      else if (/caterer|catering|jollof|suya|small chops|puff puff|nigerian food|african food|cook|kitchen/.test(text)) cat = 'caterers';
+      else if (/cake|pastry|bakery|dessert/.test(text)) cat = 'cakes & desserts';
+      else if (/restaurant|bukka|dining|eatery/.test(text)) cat = 'restaurants';
+      else if (/grocery|groceries|foodstore|african store|naija store|palm oil|stockfish/.test(text)) cat = 'foodstores & groceries';
+      else if (/fashion|clothing|outfit|ankara|fabric|lace|dress|wear/.test(text)) cat = 'fashion & accessories';
+      else if (/photographer|photography|videographer/.test(text)) cat = 'photography';
+      else if (/event plan|decorator|decor|wedding plan/.test(text)) cat = 'event planners';
+      else if (/dj|sound hire|music/.test(text)) cat = 'djs';
+      else if (/skincare|skin care|body care/.test(text)) cat = 'skincare';
+      else if (/jewel|accessories|necklace|bracelet/.test(text)) cat = 'fashion & accessories';
+      else if (/tutor|education|academy|school/.test(text)) cat = 'tutors';
+      else if (/snack|kilishi|suya spot/.test(text)) cat = 'nigerian snacks';
+      else cat = 'nigerian business';
+    }
 
     // Try to extract contact info from description
     const phone = extractPhone(description);

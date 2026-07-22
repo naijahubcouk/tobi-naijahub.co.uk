@@ -863,7 +863,11 @@ exports.handler = async function(event) {
     });
 
     // Extract response text
-    let reply = result.choices?.[0]?.message?.content || "Sorry, I could not get a response. Please try again!";
+    let reply = result.choices?.[0]?.message?.content;
+    if (!reply) {
+      console.log('OpenRouter error response:', JSON.stringify(result).substring(0, 500));
+      reply = 'Sorry, I could not get a response. Please try again!';
+    }
     console.log('OpenRouter usage:', JSON.stringify(result.usage || {}));
 
     // Append business JSON to reply so client can render cards
