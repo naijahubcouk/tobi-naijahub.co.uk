@@ -1712,7 +1712,11 @@ function searchBusinesses(query, limit, cityHint) {
       if(b.verified)score+=5;
       if(locFilter&&locL.indexOf(locFilter)!==-1)score+=20;
       return Object.assign({},b,{score:score});
-    }).filter(function(b){return b.score>0;}).sort(function(a,b){return b.score-a.score;});
+    }).filter(function(b){return b.score>0;}).sort(function(a,b){
+      if(a.verified&&!b.verified)return -1;
+      if(!a.verified&&b.verified)return 1;
+      return b.score-a.score;
+    });
   }
   if(nearbyCity){
     var nr=scoreBusinesses(AUNTIE_TOBI_DIRECTORY,nearbyCity).slice(0,limit);
