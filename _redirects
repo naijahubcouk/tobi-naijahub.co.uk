@@ -7,6 +7,7 @@
 /events         /?action=events         301
 /japa           /?action=japa           301
 /nhs            /?action=nhs            301
+/links          /?action=links          301
 /news           /?action=news           301
 /jobs           /?action=jobs           301
 /motivation     /?action=motivation     301
