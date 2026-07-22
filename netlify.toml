@@ -1,11 +1,9 @@
 [build]
   functions = "."
 
-# chat-openai lives in its own subfolder with data files
-[functions."chat-openai"]
-  directory = "functions/chat-openai"
+[functions]
+  node_bundler = "nft"
 
-# Scheduled functions
 [functions."auto-notify-news"]
   schedule = "*/30 * * * *"
 
