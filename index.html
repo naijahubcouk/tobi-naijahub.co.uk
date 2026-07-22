@@ -1948,7 +1948,7 @@ function formatResponse(text) {
             + verifiedBadge
             + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
             + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + b.name + '</div>'
-            + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + cat + '</span>'
+            + '<span onclick="quickAsk(\'Show me all ' + b.cat + ' businesses\')" style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;cursor:pointer;">' + cat + '</span>'
             + '</div>'
             + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + (b.desc || '') + '</div>'
             + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">\uD83D\uDCCD ' + (b.loc || 'UK') + '</div>'
@@ -3923,22 +3923,33 @@ function showLinksPage() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
-  // Rotating info header
-  const _pool = getRandomSuggestionStr().split('|').map(x => x.trim()).filter(Boolean);
-  const _rotate = [..._pool, ..._pool].slice(0, 6);
-  let _rotIdx = 0;
-  const _rotEl = document.createElement('div');
-  _rotEl.style.cssText = 'background:#057A44;border-radius:12px;padding:12px 16px;font-size:13px;color:white;font-weight:700;text-align:center;margin-bottom:10px;transition:opacity 0.4s;cursor:pointer;';
-  _rotEl.textContent = _rotate[0];
-  _rotEl.onclick = () => quickAsk(_rotEl.textContent.replace(/^[\S]+\s/,''));
-  document.getElementById('messages').appendChild(_rotEl);
+  // Rotating info facts — NOT clickable, information only
+  const _facts = [
+    '🏢 ' + (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 101) + '+ Nigerian businesses listed across the UK',
+    '💚 Auntie Tobi is completely free to use — no sign up needed',
+    '🤖 Powered by AI to help Nigerians navigate UK life',
+    '📰 Get the latest UK news affecting Nigerians daily',
+    '🎉 Find Nigerian community events near you across the UK',
+    '🔔 Turn on notifications to never miss an update',
+    '🇳🇬🇬🇧 Built for Nigerians living, working and thriving in the UK',
+    '💬 Ask Auntie Tobi anything — from NHS to immigration to housing',
+    '✅ Verified businesses get a badge and WhatsApp button',
+    '📍 List your Nigerian business for FREE on Auntie Tobi',
+    '🚀 Auntie Tobi grows every week — new businesses added regularly',
+    '🛂 Immigration guidance, visa tips and UK life hacks all in one place',
+  ];
+  let _factIdx = 0;
+  const _factEl = document.createElement('div');
+  _factEl.style.cssText = 'background:#057A44;border-radius:12px;padding:12px 16px;font-size:13px;color:white;font-weight:700;text-align:center;margin-bottom:10px;transition:opacity 0.4s;pointer-events:none;user-select:none;';
+  _factEl.textContent = _facts[0];
+  messages.appendChild(_factEl);
 
   setInterval(() => {
-    _rotEl.style.opacity = '0';
+    _factEl.style.opacity = '0';
     setTimeout(() => {
-      _rotIdx = (_rotIdx + 1) % _rotate.length;
-      _rotEl.textContent = _rotate[_rotIdx];
-      _rotEl.style.opacity = '1';
+      _factIdx = (_factIdx + 1) % _facts.length;
+      _factEl.textContent = _facts[_factIdx];
+      _factEl.style.opacity = '1';
     }, 400);
   }, 3000);
 
@@ -5655,7 +5666,7 @@ function showBusinesses(startIndex) {
       + verifiedBadge
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (b.verified ? 'margin-top:6px;' : '') + '">'
       + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + b.name + '</div>'
-      + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + cat + '</span>'
+      + '<span onclick="quickAsk(\'Show me all ' + b.cat + ' businesses\')" style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;cursor:pointer;">' + cat + '</span>'
       + '</div>'
       + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + (b.desc ? b.desc.substring(0,100) + (b.desc.length>100?'...':'') : '') + '</div>'
       + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'UK') + '</div>'
@@ -6437,6 +6448,21 @@ function saveNotifPrefs() {
     prefs[toggle.getAttribute('data-key')] = toggle.getAttribute('data-state') === 'on';
   });
   localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs));
+
+  // If all categories off, update bell to show 🔕
+  const allOff = Object.values(prefs).every(v => !v);
+  const bell = document.getElementById('notify-bell');
+  if (bell && allOff) {
+    bell.innerHTML = '🔕';
+    bell.title = 'Notifications off — tap to manage';
+    bell.style.opacity = '0.7';
+  } else if (bell) {
+    bell.innerHTML = '🔔';
+    bell.title = 'Manage notification preferences';
+    bell.style.opacity = '1';
+  }
+
+  // Set OneSignal tags to match preferences
   if (typeof OneSignalDeferred !== 'undefined') {
     OneSignalDeferred.push(function(OneSignal) {
       OneSignal.User.addTags(Object.fromEntries(
