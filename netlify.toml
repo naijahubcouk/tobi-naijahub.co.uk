@@ -1,22 +1,17 @@
 [build]
   functions = "."
 
-[[functions]]
-  name = "auto-notify-news"
+[functions."auto-notify-news"]
   schedule = "*/30 * * * *"
 
-[[functions]]
-  name = "auto-notify-articles"
+[functions."auto-notify-articles"]
   schedule = "*/30 * * * *"
 
-[[functions]]
-  name = "auto-notify-events"
+[functions."auto-notify-events"]
   schedule = "*/30 * * * *"
 
-[[functions]]
-  name = "auto-notify-tips"
+[functions."auto-notify-tips"]
   schedule = "0 8 * * *"
 
-[[functions]]
-  name = "auto-notify-motivation"
+[functions."auto-notify-motivation"]
   schedule = "0 8 * * *"
