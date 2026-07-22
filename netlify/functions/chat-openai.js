@@ -776,6 +776,21 @@ exports.handler = async function(event) {
     };
   }
 
+  // GET health check — visit /.netlify/functions/chat-openai to test
+  if (event.httpMethod === 'GET') {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({
+        status: 'ok',
+        hasApiKey: !!apiKey,
+        keyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'NOT SET',
+        directory: AUNTIE_TOBI_DIRECTORY.length + ' businesses'
+      })
+    };
+  }
+
   try {
     const body = JSON.parse(event.body);
     const apiKey = process.env.OPENROUTER_API_KEY;
