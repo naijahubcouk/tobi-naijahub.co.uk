@@ -2873,7 +2873,7 @@ window._renderAllNewsBatch = function(from) {
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
           <a href="javascript:void(0)" data-blogurl="${item.url}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
-          <button onclick="shareBlogUrl('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+          <button onclick="shareBlogUrl('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}','${item.appUrl||""}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
     </div>`;
@@ -3220,7 +3220,7 @@ function buildLiveNewsHTML(articles, showAll) {
       ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;">
         <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
-        <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
+        <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}','${a.appUrl||""}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
       </div>
     </div>`;
   }).join('');
@@ -3590,7 +3590,7 @@ function showNewsCard() {
       <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
         <a href="javascript:void(0)" data-blogurl="${item.url}"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-        <button onclick="shareBlogUrl('${item.title}','${item.title}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        <button onclick="shareBlogUrl('${item.title}','${item.title}','${item.url}','${item.appUrl||""}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
     </div>
   </div>`;
@@ -4003,6 +4003,7 @@ function showTipLanding(tip) {
 
   addTipMessage(html);
 
+  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
   setTimeout(() => {
     const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
     const btns = sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">` + s + `</button>`).join('');
@@ -4030,6 +4031,7 @@ function showMotivationLanding(quote) {
 
   addTipMessage(html);
 
+  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
   setTimeout(() => {
     const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
     const btns = sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">` + s + `</button>`).join('');
@@ -5348,10 +5350,7 @@ function showWeeklyNotificationPrompt() {
           💡 Daily UK life tips every morning<br>
           💪 Daily motivation to keep you going
         </div>
-        <div style="background:#f0faf5;border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid #b8e0cb;">
-          <div style="font-size:12px;color:#057A44;font-weight:700;">💚 You are in control!</div>
-          <div style="font-size:11px;color:#555;margin-top:3px;">After subscribing, tap ⚙️ on the bell to choose exactly what you want — turn off anything anytime.</div>
-        </div>
+        <div style="font-size:12px;color:#888;margin-bottom:14px;">You choose exactly what you want — turn off anything anytime from settings 💚</div>
         <div style="display:flex;gap:8px;">
           <button onclick="window._notifPopupAllow()" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow Notifications</button>
           <button onclick="document.getElementById('notif-weekly-popup').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;font-size:13px;color:#9CA3AF;cursor:pointer;font-family:inherit;">Later</button>
@@ -5742,16 +5741,28 @@ function tobiShare(title, text, url) {
   }
 }
 
-function shareBlogUrl(title, text, blogComUrl) {
-  if (blogComUrl.includes('auntietobi.co.uk')) {
+function shareBlogUrl(title, text, blogComUrl, appUrl) {
+  // If appUrl (auntietobi.co.uk deep link) is provided directly, use it
+  if (appUrl && appUrl.includes('auntietobi.co.uk')) {
+    tobiShare(title, text, appUrl);
+    return;
+  }
+  // If already a .co.uk URL, use directly
+  if (blogComUrl && blogComUrl.includes('auntietobi.co.uk')) {
     tobiShare(title, text, blogComUrl);
     return;
   }
-  const slugMap = {'BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation':'starmerresigns','AfroMic-Night-Afrobeats-Karaoke':'afrominight','MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026':'naijafoodfest','Owambe-FEST-4-(All-White-Party)-With-Bigjohny-and-Friends':'owambefest','Deshapeables-UK-Tradefair-London':'deshapeables','NSF-(UK)-Sports-and-Family-Fun-Day-2026':'nsfsportsday','The-Igbo-Table:-Food-Culture-and-Conversation':'igbotable','Ankara-Festival-UK-2026':'ankarafest','Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action':'tenantdeposit','Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)':'nigerianrestaurants','No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!':'firsthome5k','Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Heres-How':'passportrenewal','Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK':'faragereigns','10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK':'householdbills','UK-Weather-Update:-Another-Heatwave-Could-Push-Temperatures-Above-30C-This-Week':'heatwave2','Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005':'visarefusals','UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes':'ilrupdate','Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026':'aldibabyformula','What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money':'andyburnham','UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-W':'heatwarning','FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026':'freebus','Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know':'nigculturalfest','UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said':'nigerianswage','UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries':'ukvisaconfirm','Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know':'tvlicence','Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition':'freecourses','Metro-Bank%27s-New-100percent-Mortgage:-Should-You-Jump-at-It':'metromortgage','10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)':'bizmisc','FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays':'morrisonbreakfast','UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-Exceptional-Contribution':'fastersettlement','Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London':'worshipchaos','9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!':'9jafayre','Festival-Of-African-Cuisine':'africancuisine','Midlands-Business-Festival-Coventry':'midlandsbiz','Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns':'suyafest','Andy-Burnham-Becomes-UK-Prime-Minister:-What-Nigerians-in-the-UK-Need-to-Know':'andyburnhampm','UK-Energy-Bills-to-Fall-as-Government-Announces-VAT-Cut-from-October-2026':'ukenergybillstofalla','UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know':'hc259immigration','20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026':'20placeskids'};
-  const blogSlug = blogComUrl.split('/blog/')[1] || '';
-  const key = slugMap[blogSlug] || slugMap[decodeURIComponent(blogSlug)];
-  const shareUrl = key ? 'https://auntietobi.co.uk/blog/' + key : 'https://auntietobi.co.uk';
-  tobiShare(title, text, shareUrl);
+  // Extract slug from .com URL and build .co.uk deep link
+  const blogSlug = (blogComUrl || '').split('/blog/')[1] || '';
+  if (blogSlug) {
+    // Convert slug to app key — lowercase, remove special chars
+    const key = blogSlug.toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 30);
+    tobiShare(title, text, 'https://auntietobi.co.uk/blog/' + key);
+    return;
+  }
+  tobiShare(title, text, 'https://auntietobi.co.uk');
 }
 
 function shareBlogPost() {
@@ -5884,7 +5895,9 @@ function closeBlogSheet() {
     localStorage.removeItem('tobi_arrived_via_notif');
     if (!hasSeenPrompt) {
       localStorage.setItem('tobi_notif_prompt_seen', '1');
-      setTimeout(() => showNotifPrompt(), 600);
+      setTimeout(() => {
+        addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
+      }, 600);
     }
   } else if (isSubscribed && !hasSetPrefs && !hasSeenPrompt) {
     localStorage.setItem('tobi_notif_prompt_seen', '1');
