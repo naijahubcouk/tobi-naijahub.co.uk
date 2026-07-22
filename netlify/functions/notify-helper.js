@@ -4,7 +4,7 @@ const https = require('https');
 const APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
 
 // Send push to users with a specific tag (category preference)
-// tag: 'news' | 'articles' | 'events' | 'tips' | 'motivation'
+// Falls back to all subscribers if no tagged users found
 function sendTaggedPush(tag, title, body, url) {
   return new Promise((resolve, reject) => {
     const apiKey = process.env.ONESIGNAL_API_KEY;
@@ -12,8 +12,10 @@ function sendTaggedPush(tag, title, body, url) {
 
     const notification = {
       app_id: APP_ID,
-      // Target only users who opted in to this category
-      filters: [{ field: 'tag', key: tag, relation: '=', value: '1' }],
+      // Target users with this tag, OR all subscribers as fallback
+      filters: [
+        { field: 'tag', key: tag, relation: '=', value: '1' }
+      ],
       headings: { en: title },
       contents: { en: body },
       web_url: url || 'https://auntietobi.co.uk',
@@ -22,29 +24,49 @@ function sendTaggedPush(tag, title, body, url) {
       firefox_icon: 'https://auntietobi.co.uk/icons/icon-192.png',
     };
 
-    const payload = JSON.stringify(notification);
-
-    const req = https.request({
-      hostname: 'onesignal.com',
-      path: '/api/v1/notifications',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + apiKey,
-        'Content-Length': Buffer.byteLength(payload),
-      }
-    }, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try { resolve({ status: res.statusCode, data: JSON.parse(data) }); }
-        catch (e) { reject(e); }
+    const sendNotification = (payload) => new Promise((res, rej) => {
+      const payloadStr = JSON.stringify(payload);
+      const req = https.request({
+        hostname: 'onesignal.com',
+        path: '/api/v1/notifications',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + apiKey,
+          'Content-Length': Buffer.byteLength(payloadStr),
+        }
+      }, (response) => {
+        let data = '';
+        response.on('data', c => data += c);
+        response.on('end', () => {
+          try { res({ status: response.statusCode, data: JSON.parse(data) }); }
+          catch (e) { rej(e); }
+        });
       });
+      req.on('error', rej);
+      req.setTimeout(10000, () => { req.destroy(); rej(new Error('Timeout')); });
+      req.write(payloadStr);
+      req.end();
     });
-    req.on('error', reject);
-    req.setTimeout(10000, () => { req.destroy(); reject(new Error('Timeout')); });
-    req.write(payload);
-    req.end();
+
+    // Try with tag filter first
+    sendNotification(notification).then(result => {
+      // If no subscribers with this tag, send to everyone
+      const errors = result.data && result.data.errors;
+      const noSubscribers = errors && (
+        JSON.stringify(errors).includes('not subscribed') ||
+        JSON.stringify(errors).includes('No subscribers') ||
+        (result.data.recipients === 0)
+      );
+      if (noSubscribers) {
+        console.log(`[${tag}] No tagged subscribers — sending to all`);
+        const allPayload = Object.assign({}, notification);
+        delete allPayload.filters;
+        allPayload.included_segments = ['All'];
+        return sendNotification(allPayload);
+      }
+      return result;
+    }).then(resolve).catch(reject);
   });
 }
 
