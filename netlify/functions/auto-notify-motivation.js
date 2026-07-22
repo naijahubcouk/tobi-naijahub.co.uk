@@ -51,7 +51,7 @@ exports.handler = async function(event) {
       'motivation',
       '💪 Motivation from Auntie Tobi',
       quote,
-      'https://auntietobi.co.uk'
+      'https://auntietobi.co.uk/?action=motivation&content=' + encodeURIComponent(quote)
     );
 
     return {

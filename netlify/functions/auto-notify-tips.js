@@ -63,9 +63,9 @@ exports.handler = async function(event) {
 
     const result = await sendTaggedPush(
       'tips',
-      '💡 Auntie Tobi\'s Tip of the Day',
+      "💡 Auntie Tobi's Tip of the Day",
       tip,
-      'https://auntietobi.co.uk'
+      'https://auntietobi.co.uk/?action=tip&content=' + encodeURIComponent(tip)
     );
 
     return {
