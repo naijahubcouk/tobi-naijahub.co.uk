@@ -1,20 +1,22 @@
 [build]
   functions = "."
 
-[functions]
-  node_bundler = "nft"
-
-[functions."auto-notify-news"]
+[[functions]]
+  name = "auto-notify-news"
   schedule = "*/30 * * * *"
 
-[functions."auto-notify-articles"]
+[[functions]]
+  name = "auto-notify-articles"
   schedule = "*/30 * * * *"
 
-[functions."auto-notify-events"]
+[[functions]]
+  name = "auto-notify-events"
   schedule = "*/30 * * * *"
 
-[functions."auto-notify-tips"]
+[[functions]]
+  name = "auto-notify-tips"
   schedule = "0 8 * * *"
 
-[functions."auto-notify-motivation"]
+[[functions]]
+  name = "auto-notify-motivation"
   schedule = "0 8 * * *"
