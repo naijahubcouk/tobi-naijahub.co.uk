@@ -6445,20 +6445,26 @@ function getNotifPrefs() {
 }
 
 function setDefaultNotifPrefs() {
-  // Set all categories ON by default
+  // Set all categories ON by default if not already set
   const defaults = { news: true, articles: true, events: true, tips: true, motivation: true };
   if (!localStorage.getItem(NOTIF_PREFS_KEY)) {
     localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(defaults));
   }
-  // Set OneSignal tags
-  if (typeof OneSignalDeferred !== 'undefined') {
-    OneSignalDeferred.push(function(OneSignal) {
-      const prefs = getNotifPrefs();
-      OneSignal.User.addTags(Object.fromEntries(
-        Object.entries(prefs).map(([k, v]) => [k, v ? '1' : '0'])
-      ));
-    });
-  }
+  // Set OneSignal tags using v16 API
+  const prefs = getNotifPrefs();
+  const tags = Object.fromEntries(Object.entries(prefs).map(([k, v]) => [k, v ? '1' : '0']));
+  console.log('[Tobi] Setting OneSignal tags:', tags);
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.User.addTags(tags);
+      console.log('[Tobi] OneSignal tags set successfully:', tags);
+    } catch(e) {
+      console.log('[Tobi] OneSignal tags error:', e.message);
+      // Fallback: try sendTags (older API)
+      try { OneSignal.sendTags(tags); } catch(e2) {}
+    }
+  });
 }
 
 function showNotifPrompt() {
@@ -6538,13 +6544,16 @@ function saveNotifPrefs() {
   }
 
   // Set OneSignal tags to match preferences
-  if (typeof OneSignalDeferred !== 'undefined') {
-    OneSignalDeferred.push(function(OneSignal) {
-      OneSignal.User.addTags(Object.fromEntries(
-        Object.entries(prefs).map(([k, v]) => [k, v ? '1' : '0'])
-      ));
-    });
-  }
+  const tags = Object.fromEntries(Object.entries(prefs).map(([k, v]) => [k, v ? '1' : '0']));
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.User.addTags(tags);
+      console.log('[Tobi] Prefs saved to OneSignal:', tags);
+    } catch(e) {
+      try { OneSignal.sendTags(tags); } catch(e2) {}
+    }
+  });
   const msg = document.getElementById('notif-saved-msg');
   if (msg) { msg.style.display = 'block'; }
   setTimeout(() => {
