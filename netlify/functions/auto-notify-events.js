@@ -12,7 +12,7 @@ exports.handler = async function(event) {
     if (!eventItems.length) return { statusCode: 200, body: 'No event posts found' };
 
     const latest = eventItems[0];
-    const lastSlug = getLastNotified('events');
+    const lastSlug = await getLastNotified('events');
 
     if (latest.slug === lastSlug) {
       return { statusCode: 200, body: `No new events (last: ${lastSlug})` };
@@ -22,10 +22,10 @@ exports.handler = async function(event) {
       'events',
       `🎉 New Event: ${latest.title}`,
       latest.description || 'A new Nigerian community event has been added on Auntie Tobi!',
-      `https://auntietobi.co.uk/events`
+      `https://auntietobi.co.uk/?blog=${latest.slug}`
     );
 
-    setLastNotified('events', latest.slug);
+    await setLastNotified('events', latest.slug);
 
     return {
       statusCode: 200,

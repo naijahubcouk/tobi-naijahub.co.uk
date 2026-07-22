@@ -18,7 +18,7 @@ exports.handler = async function(event) {
     if (!articleItems.length) return { statusCode: 200, body: 'No article posts found' };
 
     const latest = articleItems[0];
-    const lastSlug = getLastNotified('articles');
+    const lastSlug = await getLastNotified('articles');
 
     if (latest.slug === lastSlug) {
       return { statusCode: 200, body: `No new articles (last: ${lastSlug})` };
@@ -28,10 +28,10 @@ exports.handler = async function(event) {
       'articles',
       `📖 ${latest.title}`,
       latest.description || 'Tap to read the latest guide on Auntie Tobi',
-      `https://auntietobi.co.uk`
+      `https://auntietobi.co.uk/?blog=${latest.slug}`
     );
 
-    setLastNotified('articles', latest.slug);
+    await setLastNotified('articles', latest.slug);
 
     return {
       statusCode: 200,
