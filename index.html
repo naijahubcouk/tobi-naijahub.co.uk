@@ -3928,35 +3928,46 @@ function showLinksPage() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
+  // Rotating info header
+  const _pool = getRandomSuggestionStr().split('|').map(x => x.trim()).filter(Boolean);
+  const _rotate = [..._pool, ..._pool].slice(0, 6);
+  let _rotIdx = 0;
+  const _rotEl = document.createElement('div');
+  _rotEl.style.cssText = 'background:#057A44;border-radius:12px;padding:12px 16px;font-size:13px;color:white;font-weight:700;text-align:center;margin-bottom:10px;transition:opacity 0.4s;cursor:pointer;';
+  _rotEl.textContent = _rotate[0];
+  _rotEl.onclick = () => quickAsk(_rotEl.textContent.replace(/^[\S]+\s/,''));
+  document.getElementById('messages').appendChild(_rotEl);
+
+  setInterval(() => {
+    _rotEl.style.opacity = '0';
+    setTimeout(() => {
+      _rotIdx = (_rotIdx + 1) % _rotate.length;
+      _rotEl.textContent = _rotate[_rotIdx];
+      _rotEl.style.opacity = '1';
+    }, 400);
+  }, 3000);
+
   const html = `<div style="display:flex;flex-direction:column;gap:10px;">
 
-    <!-- Header -->
-    <div style="background:#0F1E36;border-radius:14px;padding:18px;text-align:center;">
-      <div style="font-size:16px;font-weight:800;color:white;margin-bottom:4px;">Chat with Auntie Tobi</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6;margin-bottom:14px;">Trusted answers, local businesses &amp; everyday UK recommendations — free 💚</div>
-      <a href="https://auntietobi.co.uk" onclick="resetToWelcome();return false;" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#057A44;color:white;text-decoration:none;padding:12px;border-radius:10px;font-weight:800;font-size:14px;">💬 Ask Auntie Tobi</a>
-    </div>
-
-    <!-- Links -->
     <a href="https://auntietobi.com/new-listing" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">📍</span>
       <span style="flex:1;text-align:left;">List Your Business<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Get discovered by thousands of Nigerians in the UK</span></span>
       <span style="color:#ccc;">›</span>
     </a>
 
-    <a href="javascript:void(0)" onclick="showEventsFromNews()" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+    <a href="javascript:void(0)" onclick="showEventsFromNews();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">🎉</span>
       <span style="flex:1;text-align:left;">Upcoming Events<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Nigerian community events across the UK</span></span>
       <span style="color:#ccc;">›</span>
     </a>
 
-    <a href="javascript:void(0)" onclick="showAllNews()" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+    <a href="javascript:void(0)" onclick="showAllNews();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">📰</span>
       <span style="flex:1;text-align:left;">Latest News &amp; Articles<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">UK news and guides for Nigerians</span></span>
       <span style="color:#ccc;">›</span>
     </a>
 
-    <a href="https://auntietobi.com/page/FAQ" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+    <a href="javascript:void(0)" onclick="showFAQCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">❓</span>
       <span style="flex:1;text-align:left;">FAQ<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Common questions about Auntie Tobi</span></span>
       <span style="color:#ccc;">›</span>
@@ -3968,12 +3979,11 @@ function showLinksPage() {
       <span style="color:#ccc;">›</span>
     </a>
 
-    <!-- WhatsApp -->
     <div style="background:#f0f9f4;border:1.5px solid #b8e0cb;border-radius:14px;padding:15px;">
       <div style="display:flex;align-items:center;gap:11px;margin-bottom:11px;">
         <div style="width:40px;height:40px;border-radius:50%;background:#057A44;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-          <span style="position:absolute;bottom:1px;right:1px;width:9px;height:9px;background:#00E676;border:2px solid white;border-radius:50%;"></span>
+          <span style="position:absolute;bottom:1px;right:1px;width:9px;height:9px;background:#00E676;border:2px solid white;border-radius:50%;display:block;"></span>
         </div>
         <div>
           <div style="font-size:13px;font-weight:800;color:#0F1E36;margin-bottom:2px;">Auntie Tobi Support Team</div>
@@ -3986,34 +3996,20 @@ function showLinksPage() {
   </div>`;
 
   addTipMessage(html);
-  const _linksTips = [
-    '💚 Auntie Tobi is FREE — no sign up needed',
-    '🏢 101+ Nigerian businesses listed across the UK',
-    '📰 Get the latest UK news affecting Nigerians daily',
-    '🎉 Find Nigerian community events near you',
-    '💬 Ask Auntie Tobi anything about UK life',
-    '🔔 Turn on notifications to never miss an update',
-  ];
-  let _linksTipIdx = 0;
-  const _linksTipEl = document.createElement('div');
-  _linksTipEl.style.cssText = 'background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:10px 14px;font-size:13px;color:#057A44;font-weight:700;text-align:center;margin-top:8px;transition:opacity 0.4s;';
-  _linksTipEl.textContent = _linksTips[0];
-  document.getElementById('messages').appendChild(_linksTipEl);
-  const _linksTimer = setInterval(() => {
-    _linksTipEl.style.opacity = '0';
-    setTimeout(() => {
-      _linksTipIdx = (_linksTipIdx + 1) % _linksTips.length;
-      _linksTipEl.textContent = _linksTips[_linksTipIdx];
-      _linksTipEl.style.opacity = '1';
-    }, 400);
-  }, 3000);
 
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+    <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
     <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
     <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
     <button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>
   </div>`);
 }
+function addBackToLinksBtn() {
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+    <button class="suggestion-btn" onclick="showLinksPage()">← Back to Links</button>
+  </div>`);
+}
+
 
 function showWelcomeCard() {
   const messages = document.getElementById('messages');
