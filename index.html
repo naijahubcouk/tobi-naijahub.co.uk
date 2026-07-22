@@ -4043,11 +4043,10 @@ function showMotivationLanding(quote) {
 function showLinksPage() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
-  scrollToTop();
 
-  // Rotating info facts — NOT clickable, information only
+  // Rotating info facts — NOT clickable
   const _facts = [
-    '🏢 ' + (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 101) + '+ Nigerian businesses listed across the UK',
+    '🏢 ' + (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 120) + '+ Nigerian businesses listed across the UK',
     '💚 Auntie Tobi is completely free to use — no sign up needed',
     '🤖 Powered by AI to help Nigerians navigate UK life',
     '📰 Get the latest UK news affecting Nigerians daily',
@@ -4095,6 +4094,12 @@ function showLinksPage() {
       <span style="color:#ccc;">›</span>
     </a>
 
+    <a href="javascript:void(0)" onclick="showAboutTobi();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">ℹ️</span>
+      <span style="flex:1;text-align:left;">About Auntie Tobi<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Who is Auntie Tobi and what can she do?</span></span>
+      <span style="color:#ccc;">›</span>
+    </a>
+
     <a href="javascript:void(0)" onclick="showFAQCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">❓</span>
       <span style="flex:1;text-align:left;">FAQ<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Common questions about Auntie Tobi</span></span>
@@ -4125,11 +4130,28 @@ function showLinksPage() {
 
   addTipMessage(html);
 
+  // 3 rotating pool bubbles
+  const _pool = getRandomSuggestionStr().split('|').map(x => x.trim()).filter(Boolean).slice(0, 3);
+  const _rotEl = document.createElement('div');
+  _rotEl.style.cssText = 'background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:10px 14px;font-size:13px;color:#057A44;font-weight:700;text-align:center;margin-top:8px;transition:opacity 0.4s;cursor:pointer;';
+  _rotEl.textContent = _pool[0] || '';
+  _rotEl.onclick = () => quickAsk(_rotEl.textContent);
+  messages.appendChild(_rotEl);
+
+  let _rotIdx = 0;
+  setInterval(() => {
+    _rotEl.style.opacity = '0';
+    setTimeout(() => {
+      _rotIdx = (_rotIdx + 1) % _pool.length;
+      _rotEl.textContent = _pool[_rotIdx];
+      _rotEl.style.opacity = '1';
+    }, 400);
+  }, 3000);
+
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
     <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
     <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
-    <button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>
   </div>`);
 }
 function addBackToLinksBtn() {
