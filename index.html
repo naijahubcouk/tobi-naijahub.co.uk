@@ -2429,17 +2429,21 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
     // After business card responses — add CTA + follow-up bubbles
     if (isBizResponse) {
       setTimeout(() => {
-        // Extract business type from reply
-        const bizTypeMatch = reply.match(/amazing ([\w\s]+?) are on Auntie Tobi/) || reply.match(/these ([\w\s]+?) travel/) || reply.match(/Here are (?:some )?([\w\s]+?) near/i);
-        const bizType = bizTypeMatch ? bizTypeMatch[1].trim() : 'business';
         const currentCity = userCity || window.userCity || '';
-        const isLocalResult = reply.toLowerCase().includes('near') && currentCity;
+        // Extract business type from the user's original message
+        const msgLower = userText ? userText.toLowerCase() : '';
+        const typeMatch = msgLower.match(/(?:find|looking for|need|want|show me)(?:\s+a|\s+an|\s+some)?\s+([\w\s]+?)(?:\s+in\s+|\s+near\s+|\s+around\s+|$)/i);
+        const bizType = typeMatch ? typeMatch[1].trim().replace(/\b\w/g, l => l.toUpperCase()) : 'Business';
 
-        // CTA box
+        // Location-specific CTA
+        const locationLine = currentCity
+          ? `Are you a Nigerian business owner based in or around <strong>${currentCity}</strong>?`
+          : `Are you a Nigerian business owner based in the UK?`;
+
         const ctaHTML = `<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;margin-top:4px;">
           <div style="font-size:13px;color:#0F1E36;line-height:1.6;">
-            Are you a <strong>${bizType}</strong> based in the UK? List your business FREE and reach thousands of Nigerians! 
-            <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here</a> — it takes 2 minutes! 💚
+            ${locationLine} List your business <strong>FREE</strong> and reach thousands of Nigerians! 
+            <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list</a> — it takes 2 minutes! 💚
           </div>
         </div>`;
         addTipMessage(ctaHTML);
@@ -2448,7 +2452,7 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
         setTimeout(() => {
           const nearQuery = currentCity ? `Find more ${bizType}s near ${currentCity}` : `Show me more ${bizType}s in the UK`;
           addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-            <button class="suggestion-btn" onclick="quickAsk('${nearQuery.replace(/'/g,"\\'")}')">🔍 Show more ${bizType}s</button>
+            <button class="suggestion-btn" onclick="quickAsk('${nearQuery.replace(/'/g,"\\'")}')">🔍 More ${bizType}s</button>
             <button class="suggestion-btn" onclick="showBusinesses()">🏢 Browse all businesses</button>
             <button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button>
           </div>`);
