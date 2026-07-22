@@ -2377,6 +2377,8 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
       console.log('API error:', errMsg);
       reply = "Sorry, I couldn't get a response. Please try again! (Error: " + errMsg + ")";
     }
+    // Unescape any unicode escape sequences in reply
+    try { reply = reply.replace(/\\u([0-9a-fA-F]{4})/g, (m,c) => String.fromCharCode(parseInt(c,16))); } catch(e) {}
     reply = reply.replace(/\[SEARCH_SCOPE:[^\]]*\]/g, '').trim();
 
     messages.push({ role: 'assistant', content: reply });
