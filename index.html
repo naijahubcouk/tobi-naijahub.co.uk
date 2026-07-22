@@ -2787,25 +2787,28 @@ const _allNewsCategoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Even
 
 window._renderAllNewsBatch = function(from) {
   const news = window._allNewsData || [];
+  const isEvents = news.length > 0 && news[0].label === 'Events';
   const batch = news.slice(from, from + 6);
   batch.forEach(item => {
     const badgeColor = _allNewsCategoryColors[item.label] || '#057A44';
     const categoryBadge = item.label === 'Breaking'
       ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
       : `<span style="background:${badgeColor};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${item.label}</span>`;
+    const headerLabel = isEvents ? '🎉 UPCOMING EVENTS' : '📰 NEWS/ARTICLES';
+    const headerIcon = isEvents ? '🎉' : '📰';
     const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-bottom:8px;">
       <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;">
-        <span style="font-size:16px;">📰</span><span style="color:white;font-weight:700;font-size:13px;margin-left:6px;">NEWS/ARTICLES</span>
+        <span style="font-size:16px;">${headerIcon}</span><span style="color:white;font-weight:700;font-size:13px;margin-left:6px;">${isEvents ? 'UPCOMING EVENTS' : 'NEWS/ARTICLES'}</span>
       </div>
       <div style="padding:10px 12px 8px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
           ${categoryBadge}
-          ${item.date ? `<span style="font-size:10px;color:#9CA3AF;">${item.date}</span>` : ''}
+          ${item.date ? `<span style="font-size:10px;color:#9CA3AF;">${isEvents ? '📅 ' : ''}${item.date}</span>` : ''}
         </div>
         <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${item.url}"/g,'&quot;').replace(/"/g, '&quot;')}"/g,'&quot;').replace(/"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+          <a href="javascript:void(0)" data-blogurl="${item.url}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
           <button onclick="shareBlogUrl('${item.title.replace(/'/g,"\\'")}','${item.summary.replace(/'/g,"\\'")}','${item.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
@@ -2820,7 +2823,8 @@ window._renderAllNewsBatch = function(from) {
 
   if (hasMore) {
     const nextFrom = window._allNewsShownCount;
-    addTipMessage(`<div id="all-news-more-btn" class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="window._renderAllNewsBatch(${nextFrom})">📰 More News</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button></div>`);
+    const moreLabel = isEvents ? '🎉 More Events' : '📰 More News';
+    addTipMessage(`<div id="all-news-more-btn" class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="window._renderAllNewsBatch(${nextFrom})">${moreLabel}</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button></div>`);
   } else {
     const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean);
     addTipMessage(`<div class="suggestions" style="margin-top:8px;">${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('')}</div>`);
