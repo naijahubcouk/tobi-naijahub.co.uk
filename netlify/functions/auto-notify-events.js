@@ -13,7 +13,7 @@ exports.handler = async function(event) {
     const latest = eventItems[0];
 
     const pubDate = latest.pubDate ? new Date(latest.pubDate) : null;
-    const ageMinutes = pubDate ? (Date.now() - pubDate.getTime()) / 60000 : 999;
+    const ageMinutes = (pubDate && !isNaN(pubDate)) ? (Date.now() - pubDate.getTime()) / 60000 : 999;
 
     console.log(`[events] Latest: ${latest.slug} | Age: ${Math.round(ageMinutes)} mins`);
 

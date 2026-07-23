@@ -20,7 +20,7 @@ exports.handler = async function(event) {
     // DEDUP: Only send if article was published within the last 35 minutes
     // This means even if /tmp resets, old articles will never resend
     const pubDate = latest.pubDate ? new Date(latest.pubDate) : null;
-    const ageMinutes = pubDate ? (Date.now() - pubDate.getTime()) / 60000 : 999;
+    const ageMinutes = (pubDate && !isNaN(pubDate)) ? (Date.now() - pubDate.getTime()) / 60000 : 999;
     
     console.log(`[news] Latest: ${latest.slug} | Age: ${Math.round(ageMinutes)} mins | pubDate: ${latest.pubDate}`);
 
