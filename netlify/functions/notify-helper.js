@@ -133,9 +133,8 @@ function sendTaggedPush(tag, title, body, url) {
 
     sendNotification(notification).then(result => {
       const errors = result.data && result.data.errors;
-      const noSubscribers = errors && (
-        JSON.stringify(errors).includes('not subscribed') ||
-        (result.data.recipients === 0)
+      const noSubscribers = result.data.recipients === 0 || (
+        result.data.errors && JSON.stringify(result.data.errors).includes('not subscribed')
       );
       if (noSubscribers) {
         console.log(`[${tag}] No tagged subscribers — sending to all`);
