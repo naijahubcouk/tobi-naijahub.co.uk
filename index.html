@@ -4138,8 +4138,8 @@ function showAboutTobi() {
 
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
-    <button class="suggestion-btn" onclick="showLinksPage()">🔗 Links</button>
     <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
+    <button class="suggestion-btn" onclick="showAllNews()">📰 News & Articles</button>
   </div>`);
 }
 
@@ -4244,9 +4244,10 @@ function showLinksPage() {
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">${_btns}</div>`);
 
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">
-    <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
     <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
     <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
+    <button class="suggestion-btn" onclick="showAllNews()">📰 News & Articles</button>
+    <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
   </div>`);
 }
 function addBackToLinksBtn() {
