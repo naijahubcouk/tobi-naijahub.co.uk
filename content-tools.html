@@ -110,6 +110,7 @@
     <button class="tab" onclick="switchTab('deeplinks')">🔗 Deep Links</button>
     <button class="tab" onclick="switchTab('htmlpng')">🖼️ HTML → PNG</button>
     <button class="tab" onclick="switchTab('sharepost')">📲 Share as Post</button>
+    <button class="tab" onclick="switchTab('kb');loadKB()">🧠 Knowledge Base</button>
   </div>
 
   <!-- Panel 1: Weekly Roundup -->
@@ -264,6 +265,52 @@
     </div>
     <div class="loading" id="loading-sharepost"><div class="spinner"></div><p id="loading-sharepost-text">Auntie Tobi is thinking... 💚</p></div>
     <div id="output-sharepost" style="display:none;"></div>
+  </div>
+
+  <!-- Panel 7: Knowledge Base -->
+  <div class="panel" id="panel-kb">
+    <div class="card">
+      <div class="card-header"><span style="font-size:16px;">🧠</span><span>Knowledge Base — Auto-captured from user questions</span></div>
+      <div class="card-body" style="padding:0;">
+        <div id="kb-loading" style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px;">Loading questions...</div>
+        <div id="kb-list" style="display:none;"></div>
+        <div id="kb-empty" style="display:none;padding:20px;text-align:center;color:#9CA3AF;font-size:13px;">
+          No questions captured yet. Questions from Auntie Tobi chat will appear here automatically.
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Generator (shown when question selected) -->
+    <div id="kb-generator" style="display:none;">
+      <div class="card">
+        <div class="card-header"><span style="font-size:16px;">✨</span><span id="kb-gen-title">Generating content...</span></div>
+        <div class="card-body">
+          <div id="kb-qa-preview" style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:14px;margin-bottom:16px;">
+            <div style="font-size:11px;font-weight:700;color:#057A44;margin-bottom:6px;">QUESTION</div>
+            <div id="kb-q-text" style="font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:10px;"></div>
+            <div style="font-size:11px;font-weight:700;color:#057A44;margin-bottom:6px;">AUNTIE TOBI'S ANSWER</div>
+            <div id="kb-a-text" style="font-size:13px;color:#0F1E36;line-height:1.7;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;">
+            <button onclick="kbGenerate('seo')" class="kb-gen-btn" style="background:#0F1E36;color:white;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">📄 SEO Article</button>
+            <button onclick="kbGenerate('faq')" class="kb-gen-btn" style="background:#057A44;color:white;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">❓ FAQ</button>
+            <button onclick="kbGenerate('short')" class="kb-gen-btn" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">⚡ Short Answer</button>
+            <button onclick="kbGenerate('long')" class="kb-gen-btn" style="background:#0F1E36;color:white;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">📖 Long Answer</button>
+            <button onclick="kbGenerate('video')" class="kb-gen-btn" style="background:#dc2743;color:white;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">🎥 Video Script</button>
+            <button onclick="kbGenerate('carousel')" class="kb-gen-btn" style="background:#057A44;color:white;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">📱 Carousel</button>
+            <button onclick="kbGenerate('podcast')" class="kb-gen-btn" style="background:#7C3AED;color:white;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">🎙️ Podcast Outline</button>
+            <button onclick="kbGenerate('all')" class="kb-gen-btn" style="background:#FFB81C;color:#0F1E36;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">🚀 Generate All</button>
+          </div>
+        </div>
+      </div>
+      <div class="loading" id="kb-gen-loading" style="display:none;"><div class="spinner"></div><p id="kb-gen-loading-text">Generating...</p></div>
+      <div id="kb-gen-output"></div>
+      <div style="padding:8px 0;display:flex;gap:8px;">
+        <button onclick="kbUpdateStatus('done')" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">✅ Mark as Published</button>
+        <button onclick="kbDelete()" style="background:#f5f5f5;color:#DC2626;border:1px solid #DC2626;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Delete</button>
+        <button onclick="document.getElementById('kb-generator').style.display='none';loadKB();" style="background:#f5f5f5;color:#0F1E36;border:1px solid #e5e7eb;border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">← Back</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1165,6 +1212,188 @@ body { width:1080px; height:1920px; background:${t.bg}; font-family:'Nunito',san
     output.style.display = 'block';
     output.innerHTML = `<div class="output-block"><div class="output-text" style="color:#DC2626;">Error: ${err.message}. Please try again.</div></div>`;
   }
+}
+
+// ===== KNOWLEDGE BASE =====
+let _kbCurrentKey = null;
+let _kbCurrentQ = '';
+let _kbCurrentA = '';
+
+async function loadKB() {
+  const loading = document.getElementById('kb-loading');
+  const list = document.getElementById('kb-list');
+  const empty = document.getElementById('kb-empty');
+  const generator = document.getElementById('kb-generator');
+
+  generator.style.display = 'none';
+  loading.style.display = 'block';
+  list.style.display = 'none';
+  empty.style.display = 'none';
+
+  try {
+    const res = await fetch('/.netlify/functions/kb-manager');
+    const data = await res.json();
+    const items = data.items || [];
+    loading.style.display = 'none';
+
+    if (items.length === 0) { empty.style.display = 'block'; return; }
+
+    const statusColors = { new: '#FFB81C', done: '#057A44', rejected: '#DC2626' };
+    const statusLabels = { new: '🆕 New', done: '✅ Published', rejected: '❌ Rejected' };
+
+    list.innerHTML = items.map(item => `
+      <div style="border-bottom:1px solid #f0f0f0;padding:14px 16px;cursor:pointer;hover:background:#f9f9f9;" onclick="kbSelect('${item.key}','${encodeURIComponent(item.q)}','${encodeURIComponent(item.a)}')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">
+          <div style="font-size:13px;font-weight:700;color:#0F1E36;line-height:1.4;flex:1;">${item.q.substring(0,100)}${item.q.length>100?'...':''}</div>
+          <span style="font-size:10px;font-weight:700;background:${statusColors[item.status]||'#FFB81C'};color:${item.status==='new'?'#0F1E36':'white'};padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">${statusLabels[item.status]||item.status}</span>
+        </div>
+        <div style="font-size:11px;color:#9CA3AF;">${new Date(item.ts).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`).join('');
+    list.style.display = 'block';
+  } catch(e) {
+    loading.textContent = 'Failed to load: ' + e.message;
+  }
+}
+
+function kbSelect(key, qEncoded, aEncoded) {
+  _kbCurrentKey = key;
+  _kbCurrentQ = decodeURIComponent(qEncoded);
+  _kbCurrentA = decodeURIComponent(aEncoded);
+
+  document.getElementById('kb-list').style.display = 'none';
+  document.getElementById('kb-empty').style.display = 'none';
+  document.getElementById('kb-generator').style.display = 'block';
+  document.getElementById('kb-gen-title').textContent = _kbCurrentQ.substring(0, 60) + (_kbCurrentQ.length > 60 ? '...' : '');
+  document.getElementById('kb-q-text').textContent = _kbCurrentQ;
+  document.getElementById('kb-a-text').textContent = _kbCurrentA;
+  document.getElementById('kb-gen-output').innerHTML = '';
+}
+
+const KB_PROMPTS = {
+  seo: (q, a) => `Write a full SEO blog article for Nigerians in the UK about this question: "${q}"
+Use the answer as the basis: ${a}
+Structure: H1 title, intro paragraph, H2 sections (What you need to know, Your rights, What to do, Common mistakes, FAQs), conclusion with CTA to visit auntietobi.co.uk.
+Warm, authoritative tone. Include keyword naturally. ~600-800 words.`,
+
+  faq: (q, a) => `Based on this Q&A, generate 5 related FAQs with answers for Nigerians in the UK.
+Original Q: ${q}
+Original A: ${a}
+Format each as Q: [question] / A: [answer in 2-3 sentences]. Make each FAQ distinct and practical.`,
+
+  short: (q, a) => `Write a SHORT answer (50-80 words max) to this question for Nigerians in the UK: "${q}"
+Based on: ${a}
+Direct, clear, warm Auntie Tobi voice. End with "Ask Auntie Tobi for more help at auntietobi.co.uk"`,
+
+  long: (q, a) => `Write a COMPREHENSIVE long-form answer (400-500 words) to: "${q}"
+Use this as your basis: ${a}
+Include: clear explanation, practical steps, what to do if things go wrong, relevant UK laws or bodies, warm encouraging tone. End with CTA.`,
+
+  video: (q, a) => `Write a 60-second YouTube/TikTok video script about: "${q}"
+Based on: ${a}
+Format: HOOK (5 seconds, punchy question), MAIN POINTS (3 points, 10 sec each), CALL TO ACTION (follow Auntie Tobi, visit auntietobi.co.uk).
+Label each section. Conversational Nigerian-British tone.`,
+
+  carousel: (q, a) => `Create a 6-slide Instagram carousel about: "${q}"
+Based on: ${a}
+Format as JSON array: [{"slide":1,"headline":"...","body":"..."}]. Slide 1=hook, slides 2-5=key points, slide 6=CTA. Max 10 words headline, max 25 words body. Return ONLY valid JSON.`,
+
+  podcast: (q, a) => `Create a podcast episode outline about: "${q}"
+Based on: ${a}
+Include: Episode title, 60-second intro hook, 5 main talking points with sub-points, guest question suggestions, outro with CTA to auntietobi.co.uk. Warm conversational format.`
+};
+
+async function kbGenerate(type) {
+  const output = document.getElementById('kb-gen-output');
+  const loading = document.getElementById('kb-gen-loading');
+  const loadingText = document.getElementById('kb-gen-loading-text');
+
+  const typeLabels = { seo:'SEO Article', faq:'FAQ', short:'Short Answer', long:'Long Answer', video:'Video Script', carousel:'Carousel', podcast:'Podcast Outline', all:'All Formats' };
+
+  if (type === 'all') {
+    output.innerHTML = '';
+    loading.style.display = 'block';
+    loadingText.textContent = 'Generating all 7 formats... this takes ~30 seconds 💚';
+    const types = ['short', 'faq', 'seo', 'long', 'video', 'carousel', 'podcast'];
+    for (const t of types) {
+      loadingText.textContent = `Generating ${typeLabels[t]}...`;
+      await kbGenerateSingle(t, false);
+    }
+    loading.style.display = 'none';
+    return;
+  }
+
+  loading.style.display = 'block';
+  loadingText.textContent = `Generating ${typeLabels[type]}...`;
+  await kbGenerateSingle(type, true);
+  loading.style.display = 'none';
+}
+
+async function kbGenerateSingle(type, clearFirst) {
+  const output = document.getElementById('kb-gen-output');
+  if (clearFirst) output.innerHTML = '';
+
+  const typeLabels = { seo:'📄 SEO Article', faq:'❓ FAQ', short:'⚡ Short Answer', long:'📖 Long Answer', video:'🎥 Video Script', carousel:'📱 Carousel Slides', podcast:'🎙️ Podcast Outline' };
+
+  try {
+    const prompt = KB_PROMPTS[type](_kbCurrentQ, _kbCurrentA);
+    const res = await fetch('/.netlify/functions/chat-openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    let result = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+
+    let displayHTML = '';
+    if (type === 'carousel') {
+      try {
+        const slides = JSON.parse(result);
+        const colors = ['#0F1E36','#057A44','#0F1E36','#057A44','#FFB81C','#0F1E36'];
+        const textColors = ['white','white','white','white','#0F1E36','white'];
+        displayHTML = slides.map((s,i) => `
+          <div style="background:${colors[i]};border-radius:8px;padding:14px;margin-bottom:6px;">
+            <div style="font-size:10px;color:${textColors[i]};opacity:0.6;font-weight:700;margin-bottom:4px;">SLIDE ${s.slide||i+1}</div>
+            <div style="color:${textColors[i]};font-size:14px;font-weight:800;margin-bottom:4px;">${s.headline}</div>
+            <div style="color:${textColors[i]};font-size:12px;opacity:0.85;">${s.body}</div>
+          </div>`).join('');
+      } catch(e) { displayHTML = `<pre style="white-space:pre-wrap;font-size:13px;">${result}</pre>`; }
+    } else {
+      displayHTML = `<pre style="white-space:pre-wrap;font-size:13px;line-height:1.7;color:#0F1E36;">${result}</pre>`;
+    }
+
+    output.innerHTML += `
+      <div class="output-block" style="margin-bottom:12px;">
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.output-block').querySelector('pre,div[data-raw]')?.textContent||'${encodeURIComponent(result)}').then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Copy',2000)})">📋 Copy</button>
+        <div class="output-label">${typeLabels[type]}</div>
+        <div>${displayHTML}</div>
+      </div>`;
+
+  } catch(e) {
+    output.innerHTML += `<div class="output-block" style="color:#DC2626;">Error generating ${type}: ${e.message}</div>`;
+  }
+}
+
+async function kbUpdateStatus(status) {
+  if (!_kbCurrentKey) return;
+  try {
+    await fetch('/.netlify/functions/kb-manager', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: _kbCurrentKey, status })
+    });
+    alert(status === 'done' ? '✅ Marked as published!' : '✅ Status updated');
+    document.getElementById('kb-generator').style.display = 'none';
+    loadKB();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function kbDelete() {
+  if (!_kbCurrentKey || !confirm('Delete this question?')) return;
+  try {
+    await fetch(`/.netlify/functions/kb-manager?key=${encodeURIComponent(_kbCurrentKey)}`, { method: 'DELETE' });
+    document.getElementById('kb-generator').style.display = 'none';
+    loadKB();
+  } catch(e) { alert('Error: ' + e.message); }
 }
 
 </script>
