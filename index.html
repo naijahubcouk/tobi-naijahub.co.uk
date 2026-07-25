@@ -2885,7 +2885,7 @@ window._renderAllNewsBatch = function(from) {
         <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
+          <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" data-title="${item.title||''}" data-summary="${item.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
           <button data-share-title="${(item.title||'').replace(/\"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/\"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl||('https://auntietobi.co.uk/blog/'+(item.slug||item.url.split('/blog/')[1]||''))).replace(/\"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
@@ -4906,7 +4906,9 @@ document.addEventListener('click', function(e) {
     e.preventDefault();
     e.stopPropagation();
     const url = blogLink.getAttribute('data-blogurl');
-    if (url) openBlogSheet(decodeURIComponent(url), '', '');
+    const summary = blogLink.getAttribute('data-summary') || '';
+    const title = blogLink.getAttribute('data-title') || '';
+    if (url) openBlogSheet(decodeURIComponent(url), title, summary);
     return;
   }
   // 2. External links in new tab
@@ -5862,7 +5864,7 @@ function showUpcomingEventCard() {
       <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${event.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:12px;color:#9CA3AF;flex:1;">📅 ${event.time}</span>
-        <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(event.url)}" class="blog-read-more" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(event.url)}" data-title="${event.title}" data-summary="${event.summary}" class="blog-read-more" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">🔗 Event Details</a>
       </div>
     </div>
   </div>`;
@@ -5903,7 +5905,7 @@ function showEventsCard() {
           <div style="font-size:12px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
           <div style="font-size:12px;color:#555;margin-bottom:8px;">🕐 ${e.time}</div>
           <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+            <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" data-title="${e.title}" data-summary="${e.summary}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Event Details</a>
             <button onclick="tobiShare('${e.title.replace(/'/g,"\\'").substring(0,50)}','${e.date} • ${e.loc.replace(/'/g,"\\'")}','${e.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
           </div>
         </div>
@@ -6327,13 +6329,18 @@ function openBlogSheet(url, title, summary) {
   _blogTitle = title || 'Article';
   _blogSummary = summary || '';
   const sheet = document.getElementById('blogSheet');
-  if (!sheet) return;
+  if (!sheet) {
+    // No blog sheet — open in browser
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return;
+  }
 
   document.getElementById('blogSheetTitle').textContent = _blogTitle || 'Loading...';
   document.getElementById('blogSheetLoading').style.display = 'flex';
   document.getElementById('blogSheetFallback').style.display = 'none';
   document.getElementById('blogSheetContent').style.display = 'none';
   document.getElementById('blogSheetOpenBtn').href = url;
+  document.getElementById('blogSheetExternal').href = url;
   sheet.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
@@ -6347,10 +6354,9 @@ function openBlogSheet(url, title, summary) {
         inner.innerHTML = data.content || data.html || '';
         const img = document.getElementById('blogSheetImage');
         if (data.image) { img.src = data.image; img.style.display = 'block'; }
-        document.getElementById('blogSheetTitle').textContent = data.title || _blogTitle;
+        if (data.title) document.getElementById('blogSheetTitle').textContent = data.title;
         document.getElementById('blogSheetContent').style.display = 'block';
       } else {
-        // Fallback — show summary + open link
         const sumEl = document.getElementById('blogSheetSummary');
         if (sumEl) sumEl.textContent = _blogSummary || 'Tap below to read the full article.';
         document.getElementById('blogSheetFallback').style.display = 'flex';
