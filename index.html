@@ -2920,8 +2920,8 @@ function showAllNews() {
   if (livePosts && livePosts.length > 0) {
     const filtered = livePosts
       .filter(item => {
-        const label = (item.label || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim();
-        return label !== 'Events';
+        const label = (item.label || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim().toLowerCase();
+        return label !== 'events' && label !== 'event';
       })
       .map(item => ({
         ...item,
@@ -4085,19 +4085,10 @@ function showLinksPage() {
 
   addTipMessage(html);
 
-  // Pick a random set of 3 from pool on each page load — static until next refresh
-  const _allSugg = getRandomSuggestionStr().split('|').map(x => x.trim()).filter(Boolean);
-  // Shuffle and pick 3
-  const _shuffled = _allSugg.sort(() => Math.random() - 0.5).slice(0, 3);
-  const _btns = _shuffled.map(s =>
-    `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`
-  ).join('');
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;">${_btns}</div>`);
-
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">
     <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
     <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
-    <button class="suggestion-btn" onclick="showAllNews()">📰 News & Articles</button>
+    <button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>
     <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
   </div>`);
 }
