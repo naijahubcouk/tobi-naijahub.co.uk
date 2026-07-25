@@ -2449,6 +2449,18 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
       addMessage('bot', formatted, true, true);
     }
 
+    // Share as Post content engine — appears below every substantive AI response
+    if (!isBizResponse && formatted && formatted.length > 200) {
+      setTimeout(() => {
+        const fullText = (bubble ? bubble.innerText || '' : '').trim();
+        const question = typeof userText !== 'undefined' ? userText : '';
+        const safeQ = question.replace(/'/g,"\\'").replace(/\n/g,' ').substring(0,120);
+        const safeA = fullText.replace(/'/g,"\\'").replace(/\n/g,' ').substring(0,300);
+        const shareSnippet = fullText.substring(0,100).replace(/'/g,"\\'").replace(/\n/g,' ');
+        addTipMessage('<div style="background:white;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px;"><div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">📲</span><span style="font-size:12px;font-weight:700;color:#0F1E36;">Share as post</span><span style="font-size:11px;color:#9CA3AF;margin-left:auto;">Turn this into content</span></div><div style="padding:8px;display:flex;flex-direction:column;gap:6px;"><button onclick="generateStoryCard(decodeURIComponent(this.dataset.q),decodeURIComponent(this.dataset.a))" data-q="'+(encodeURIComponent(question.substring(0,120)))+'" data-a="'+(encodeURIComponent(fullText.substring(0,300)))+'" style="width:100%;display:flex;align-items:center;gap:12px;background:#0F1E36;border:none;border-radius:8px;padding:10px 14px;cursor:pointer;"><span style="font-size:16px;">📲</span><div style="text-align:left;"><div style="color:white;font-size:13px;font-weight:700;">Instagram Story</div><div style="color:rgba(255,255,255,0.7);font-size:11px;">Branded 9:16 story card</div></div><span style="color:rgba(255,255,255,0.5);margin-left:auto;">›</span></button><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;"><button onclick="generateCarousel(decodeURIComponent(this.dataset.q),decodeURIComponent(this.dataset.a))" data-q="'+(encodeURIComponent(question.substring(0,120)))+'" data-a="'+(encodeURIComponent(fullText.substring(0,300)))+'" style="display:flex;align-items:center;gap:8px;background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:10px 12px;cursor:pointer;"><span style="font-size:15px;">📄</span><div style="text-align:left;"><div style="color:#057A44;font-size:12px;font-weight:700;">Carousel</div><div style="color:#6B7280;font-size:10px;">Multi-slide post</div></div></button><button onclick="generateReelScript(decodeURIComponent(this.dataset.q),decodeURIComponent(this.dataset.a))" data-q="'+(encodeURIComponent(question.substring(0,120)))+'" data-a="'+(encodeURIComponent(fullText.substring(0,300)))+'" style="display:flex;align-items:center;gap:8px;background:#fff0f3;border:1.5px solid #dc2743;border-radius:8px;padding:10px 12px;cursor:pointer;"><span style="font-size:15px;">🎥</span><div style="text-align:left;"><div style="color:#dc2743;font-size:12px;font-weight:700;">Reel script</div><div style="color:#6B7280;font-size:10px;">30-sec script</div></div></button></div><button onclick="tobiShare(\'Auntie Tobi answers... 💚\',decodeURIComponent(this.dataset.s),\'https://auntietobi.co.uk\')" data-s="'+(encodeURIComponent(fullText.substring(0,100)))+'" style="width:100%;display:flex;align-items:center;gap:10px;background:var(--surface-1);border:0.5px solid var(--border-strong);border-radius:8px;padding:9px 14px;cursor:pointer;"><span style="font-size:15px;">🔗</span><div style="text-align:left;flex:1;"><div style="color:var(--text-primary);font-size:13px;font-weight:500;">Copy link</div><div style="color:var(--text-secondary);font-size:11px;">auntietobi.co.uk</div></div><span style="color:var(--text-muted);font-size:12px;">Copy</span></button></div></div>');
+      }, 150);
+    }
+
     // After business card responses — add CTA + follow-up bubbles
     if (isBizResponse) {
       setTimeout(() => {
@@ -3816,6 +3828,7 @@ function showTipLanding(tip, b1, b2, b3) {
 
   addTipMessage(html);
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
+  addTipMessage(`<div style="margin-top:6px;"><button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share This Tip</button></div>`);
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="quickAsk('${bb1.replace(/'/g,"\'")}')">💬 ${bb1}</button>
     <button class="suggestion-btn" onclick="quickAsk('${bb2.replace(/'/g,"\'")}')">💬 ${bb2}</button>
@@ -3850,6 +3863,7 @@ function showMotivationLanding(quote, b1, b2, b3) {
 
   addTipMessage(html);
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
+  addTipMessage(`<div style="margin-top:6px;"><button onclick="tobiShare('Daily Motivation from Auntie Tobi 💪',quote.substring(0,120),'https://auntietobi.co.uk')" style="background:#0F1E36;color:white;border:none;border-radius:50px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share This</button></div>`);
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="quickAsk('${bb1.replace(/'/g,"\'")}')">💬 ${bb1}</button>
     <button class="suggestion-btn" onclick="quickAsk('${bb2.replace(/'/g,"\'")}')">💬 ${bb2}</button>
@@ -3883,6 +3897,7 @@ function showPrayerLanding(prayer, b1, b2) {
 
   addTipMessage(html);
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
+  addTipMessage(`<div style="margin-top:6px;"><button onclick="tobiShare('Morning Prayer from Auntie Tobi 🕊️',prayer.substring(0,120),'https://auntietobi.co.uk')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share This Prayer</button></div>`);
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="quickAsk('${bb1.replace(/'/g,"\'")}')">💬 ${bb1}</button>
     <button class="suggestion-btn" onclick="quickAsk('${bb2.replace(/'/g,"\'")}')">💬 ${bb2}</button>
@@ -6027,17 +6042,19 @@ window.onload = () => {
   // Also clear any stuck pending notification banner
   const pendingNotif = localStorage.getItem('tobi_pending_notif');
   if (pendingNotif) {
-    // Mark that user arrived via notification — show pref prompt after they read content
     localStorage.setItem('tobi_arrived_via_notif', '1');
     try {
       const notif = JSON.parse(pendingNotif);
-      if (notif.url && notif.url !== 'https://auntietobi.co.uk' && notif.url !== window.location.href) {
-        if (notif.url.includes('?')) {
-          localStorage.removeItem('tobi_pending_notif');
-          window.location.href = notif.url;
-          return;
-        }
+      const currentAction = new URLSearchParams(window.location.search).get('action');
+      const notifHasAction = notif.url && notif.url.includes('action=');
+      // Only redirect if not already on a deep link URL — prevents redirect loops
+      if (notif.url && !currentAction && notif.url !== 'https://auntietobi.co.uk' && notif.url.includes('?')) {
+        localStorage.removeItem('tobi_pending_notif');
+        window.location.href = notif.url;
+        return;
       }
+      // Already on the right URL — just clear the pending notif and let handleDeepLink run
+      localStorage.removeItem('tobi_pending_notif');
     } catch(e) {}
   }
 
@@ -6155,6 +6172,129 @@ Ready to continue your practice? 🚀
 };
 
 // ===== TOBIARE / SHARE FUNCTIONS =====
+// ===== SHARE AS POST — CONTENT ENGINE =====
+
+function generateStoryCard(question, answer) {
+  const messages = document.getElementById('messages');
+  if (!messages) return;
+  const key = answer.substring(0, 60);
+  const lines = answer.replace(/\*\*/g, '').replace(/\*/g, '').split(/[.!?]/).filter(s => s.trim().length > 20).slice(0, 3);
+  const bullet1 = lines[0] ? lines[0].trim() : answer.substring(0, 80);
+  const bullet2 = lines[1] ? lines[1].trim() : '';
+  const bullet3 = lines[2] ? lines[2].trim() : '';
+  const storyHtml = `<div style="margin-top:8px;">
+  <div style="font-size:12px;color:#9CA3AF;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">📲 Instagram Story — screenshot and post</div>
+  <div style="background:#0F1E36;border-radius:14px;padding:28px 20px;text-align:center;position:relative;min-height:260px;display:flex;flex-direction:column;justify-content:space-between;">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:18px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#057A44;border:2px solid #FFB81C;display:flex;align-items:center;justify-content:center;font-size:14px;">🤖</div>
+        <span style="color:#FFB81C;font-size:11px;font-weight:800;letter-spacing:1px;">AUNTIE TOBI</span>
+      </div>
+      <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-bottom:10px;font-style:italic;">"${question.substring(0,60)}${question.length>60?'...':''}"</div>
+      <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:14px;text-align:left;">
+        ${bullet1 ? `<div style="display:flex;gap:8px;margin-bottom:8px;"><span style="color:#FFB81C;flex-shrink:0;">✓</span><span style="color:white;font-size:13px;line-height:1.5;">${bullet1.substring(0,80)}</span></div>` : ''}
+        ${bullet2 ? `<div style="display:flex;gap:8px;margin-bottom:8px;"><span style="color:#FFB81C;flex-shrink:0;">✓</span><span style="color:white;font-size:13px;line-height:1.5;">${bullet2.substring(0,80)}</span></div>` : ''}
+        ${bullet3 ? `<div style="display:flex;gap:8px;"><span style="color:#FFB81C;flex-shrink:0;">✓</span><span style="color:white;font-size:13px;line-height:1.5;">${bullet3.substring(0,80)}</span></div>` : ''}
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="background:#057A44;border-radius:8px;padding:8px 14px;display:inline-block;">
+        <span style="color:white;font-size:11px;font-weight:800;">auntietobi.co.uk 🇳🇬🇬🇧</span>
+      </div>
+      <div style="color:rgba(255,255,255,0.4);font-size:10px;margin-top:8px;">Ask Auntie Tobi anything about life in the UK</div>
+    </div>
+  </div>
+  <button onclick="tobiShare('Story from Auntie Tobi 💚','${question.substring(0,80).replace(/'/g,"\\'")} — Get more answers at auntietobi.co.uk','https://auntietobi.co.uk')" style="width:100%;margin-top:8px;background:#057A44;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share Story Link</button>
+</div>`;
+  addTipMessage(storyHtml);
+}
+
+async function generateCarousel(question, answer) {
+  addTipMessage('<div id="carousel-loading" style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px;">✨ Creating carousel slides...</div>');
+  try {
+    const response = await fetch('/.netlify/functions/chat-openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{
+          role: 'user',
+          content: `Create an Instagram carousel post (5 slides) based on this Q&A for Nigerians in the UK. Format as JSON array with objects having "slide" (number), "headline" (max 8 words), "body" (max 25 words). Return ONLY valid JSON, no markdown.
+
+Question: ${question}
+Answer: ${answer}
+
+Make slide 1 a hook, slides 2-4 the key points, slide 5 a CTA to visit auntietobi.co.uk`
+        }]
+      })
+    });
+    const data = await response.json();
+    const raw = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+    let slides;
+    try { slides = JSON.parse(raw); } catch(e) {
+      slides = [
+        {slide:1, headline:'Did you know? 🇳🇬', body: question.substring(0,60)},
+        {slide:2, headline:'Here is what you need to know', body: answer.substring(0,80)},
+        {slide:3, headline:'Your rights matter', body: answer.substring(80,160)},
+        {slide:4, headline:'Take action today', body: answer.substring(160,240)},
+        {slide:5, headline:'Ask Auntie Tobi anything 💚', body:'Visit auntietobi.co.uk for more guides for Nigerians in the UK'}
+      ];
+    }
+    const el = document.getElementById('carousel-loading');
+    if (el) el.remove();
+    const colors = ['#0F1E36','#057A44','#0F1E36','#057A44','#FFB81C'];
+    const textColors = ['white','white','white','white','#0F1E36'];
+    let slidesHtml = slides.map((s, i) => `
+      <div style="background:${colors[i]||'#0F1E36'};border-radius:10px;padding:16px;min-height:100px;display:flex;flex-direction:column;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:10px;color:${textColors[i]||'white'};opacity:0.6;font-weight:700;margin-bottom:6px;">SLIDE ${s.slide||i+1}</div>
+        <div style="color:${textColors[i]||'white'};font-size:14px;font-weight:800;line-height:1.3;margin-bottom:6px;">${s.headline||''}</div>
+        <div style="color:${textColors[i]||'white'};font-size:12px;opacity:0.85;line-height:1.5;">${s.body||''}</div>
+        ${i===slides.length-1?'<div style="margin-top:8px;font-size:10px;font-weight:800;color:'+textColors[i]+';">auntietobi.co.uk 🇳🇬🇬🇧</div>':''}
+      </div>`).join('');
+    addTipMessage(`<div style="margin-top:4px;"><div style="font-size:12px;color:#9CA3AF;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">📄 Carousel — copy text into Canva or your design app</div>${slidesHtml}<button onclick="tobiShare('Auntie Tobi answers... 💚','${question.substring(0,80).replace(/'/g,"\\'")} — Full answer at auntietobi.co.uk','https://auntietobi.co.uk')" style="width:100%;background:#057A44;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;">📤 Share Link</button></div>`);
+  } catch(e) {
+    const el = document.getElementById('carousel-loading');
+    if (el) el.textContent = 'Could not generate carousel. Try again.';
+  }
+}
+
+async function generateReelScript(question, answer) {
+  addTipMessage('<div id="reel-loading" style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px;">✨ Writing your reel script...</div>');
+  try {
+    const response = await fetch('/.netlify/functions/chat-openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{
+          role: 'user',
+          content: `Write a 30-second Instagram Reel script for Nigerians in the UK based on this Q&A. Format: HOOK (3-5 words, punchy), POINT 1, POINT 2, POINT 3, CTA. Keep each section to 1-2 short sentences. Conversational, warm Nigerian-British tone. End with "Follow Auntie Tobi at auntietobi.co.uk". Return plain text only, label each section clearly.
+
+Question: ${question}
+Answer: ${answer}`
+        }]
+      })
+    });
+    const data = await response.json();
+    const script = (data.content?.[0]?.text || 'Could not generate script.').replace(/```/g,'').trim();
+    const el = document.getElementById('reel-loading');
+    if (el) el.remove();
+    addTipMessage(`<div style="margin-top:4px;background:white;border:1.5px solid #dc2743;border-radius:12px;overflow:hidden;">
+  <div style="background:#dc2743;padding:8px 14px;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:16px;">🎥</span>
+    <span style="color:white;font-weight:700;font-size:13px;">30-second Reel script</span>
+  </div>
+  <div style="padding:14px;">
+    <pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;color:#0F1E36;line-height:1.7;margin:0;">${script}</pre>
+  </div>
+  <div style="padding:0 14px 12px;">
+    <button onclick="navigator.clipboard.writeText(${JSON.stringify(script)}).then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Copy Script',2000)})" style="width:100%;background:#dc2743;color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Copy Script</button>
+  </div>
+</div>`);
+  } catch(e) {
+    const el = document.getElementById('reel-loading');
+    if (el) el.textContent = 'Could not generate script. Try again.';
+  }
+}
+
 function tobiShare(title, text, url) {
   if (navigator.share) {
     navigator.share({ title, text: text + '\n\n👉 ' + url }).catch(() => {});
