@@ -107,6 +107,7 @@ function parseRSS(xml) {
       summary: cleanDesc,
       label,
       emoji,
+      pubDate,
       date: formatDate(pubDate),
       url: `https://auntietobi.com/blog/${slug}`,
       appUrl: `https://auntietobi.co.uk/blog/${key}`,
