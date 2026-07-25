@@ -131,7 +131,15 @@ exports.handler = async (event) => {
     }
 
     const { body } = await fetchUrl('https://auntietobi.com/feed/blog');
-    const posts = parseRSS(body);
+    const rawPosts = parseRSS(body);
+
+    // Deduplicate by slug — RSS feed sometimes returns duplicates
+    const seen = new Set();
+    const posts = rawPosts.filter(p => {
+      if (seen.has(p.slug)) return false;
+      seen.add(p.slug);
+      return true;
+    });
 
     cache = { data: posts, ts: Date.now() };
 
