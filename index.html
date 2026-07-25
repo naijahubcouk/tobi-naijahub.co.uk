@@ -5990,26 +5990,46 @@ window.onload = () => {
     return;
   }
   if (_urlPathname.startsWith('/blog/')) {
-    const blogSlug = _urlPathname.replace('/blog/', '');
+    const blogSlug = decodeURIComponent(_urlPathname.replace('/blog/', ''));
     const blogUrl = 'https://auntietobi.com/blog/' + blogSlug;
     setTimeout(() => {
       window.history.replaceState({}, '', '/');
       resetToWelcome();
       setTimeout(() => {
-        // Try to match against ALL_EVENTS first
+        // Try to match against ALL_EVENTS
         const matchedEvent = typeof ALL_EVENTS !== 'undefined' && ALL_EVENTS.find(e =>
-          e.url && (e.url.includes(blogSlug) || blogSlug.includes(e.url.split('/blog/')[1] || ''))
+          e.url && e.url.split('/blog/')[1] && blogSlug.includes(e.url.split('/blog/')[1].substring(0, 20))
         );
         if (matchedEvent) {
-          // Show the event card directly — no fetch needed
-          const msgs = document.getElementById('messages');
-          if (msgs) {
-            const existing = msgs.querySelector('[data-news-card]');
-            if (existing) existing.remove();
-          }
-          showEventsCard();
+          const messages = document.getElementById('messages');
+          if (messages) messages.innerHTML = '';
+          // Show the specific event card
+          const e = matchedEvent;
+          const appUrl = 'https://auntietobi.co.uk/blog/' + (e.url.split('/blog/')[1] || '');
+          addTipMessage(`<div style="background:white;border:2px solid #FFB81C;border-radius:12px;overflow:hidden;">
+            <div style="background:#057A44;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">${e.emoji}</span>
+              <span style="color:white;font-weight:700;font-size:13px;">UPCOMING EVENT</span>
+            </div>
+            <div style="padding:14px;">
+              <div style="font-size:16px;font-weight:800;color:#0F1E36;margin-bottom:6px;line-height:1.3;">${e.title}</div>
+              <div style="font-size:13px;color:#555;margin-bottom:4px;">📅 ${e.date}</div>
+              <div style="font-size:13px;color:#555;margin-bottom:4px;">📍 ${e.loc}</div>
+              <div style="font-size:13px;color:#555;margin-bottom:12px;">🕐 ${e.time}</div>
+              <div style="font-size:13px;color:#374151;line-height:1.6;margin-bottom:14px;">${e.summary}</div>
+              <div style="display:flex;gap:8px;">
+                <a href="${e.url}" target="_blank" style="flex:1;background:#057A44;color:white;text-decoration:none;text-align:center;padding:10px;border-radius:8px;font-size:13px;font-weight:700;">📖 Full Details</a>
+                <button onclick="tobiShare('${e.title.replace(/'/g,"\\'")}','${e.summary.replace(/'/g,"\\'").substring(0,100)}','${appUrl}')" style="flex:1;background:#FFB81C;color:#0F1E36;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+              </div>
+            </div>
+          </div>`);
+          addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+            <button class="suggestion-btn" onclick="showEventsCard()">🎉 All Events</button>
+            <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
+            <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
+          </div>`);
         } else {
-          // Try blog sheet — shows summary fallback if fetch fails
+          // News/article — open blog sheet
           const livePosts = typeof getLiveBlogPosts === 'function' ? getLiveBlogPosts() : [];
           const match = livePosts && livePosts.find(p => p.slug && blogSlug.includes(p.slug));
           openBlogSheet(blogUrl, match ? match.title : '', match ? match.summary : '');
