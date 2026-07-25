@@ -5993,8 +5993,28 @@ window.onload = () => {
     const blogSlug = _urlPathname.replace('/blog/', '');
     const blogUrl = 'https://auntietobi.com/blog/' + blogSlug;
     setTimeout(() => {
-      openBlogSheet(blogUrl, '', '');
       window.history.replaceState({}, '', '/');
+      resetToWelcome();
+      setTimeout(() => {
+        // Try to match against ALL_EVENTS first
+        const matchedEvent = typeof ALL_EVENTS !== 'undefined' && ALL_EVENTS.find(e =>
+          e.url && (e.url.includes(blogSlug) || blogSlug.includes(e.url.split('/blog/')[1] || ''))
+        );
+        if (matchedEvent) {
+          // Show the event card directly — no fetch needed
+          const msgs = document.getElementById('messages');
+          if (msgs) {
+            const existing = msgs.querySelector('[data-news-card]');
+            if (existing) existing.remove();
+          }
+          showEventsCard();
+        } else {
+          // Try blog sheet — shows summary fallback if fetch fails
+          const livePosts = typeof getLiveBlogPosts === 'function' ? getLiveBlogPosts() : [];
+          const match = livePosts && livePosts.find(p => p.slug && blogSlug.includes(p.slug));
+          openBlogSheet(blogUrl, match ? match.title : '', match ? match.summary : '');
+        }
+      }, 400);
     }, 300);
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
