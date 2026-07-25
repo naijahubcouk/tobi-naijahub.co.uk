@@ -109,6 +109,7 @@
     <button class="tab" onclick="switchTab('push')">🔔 Push Notifications</button>
     <button class="tab" onclick="switchTab('deeplinks')">🔗 Deep Links</button>
     <button class="tab" onclick="switchTab('htmlpng')">🖼️ HTML → PNG</button>
+    <button class="tab" onclick="switchTab('sharepost')">📲 Share as Post</button>
   </div>
 
   <!-- Panel 1: Weekly Roundup -->
@@ -221,6 +222,48 @@
         <div id="htmlpng-error" style="display:none;background:#fff0f0;border:1.5px solid #f87171;border-radius:8px;padding:12px;font-size:13px;color:#dc2626;margin-top:10px;"></div>
       </div>
     </div>
+  </div>
+
+  <!-- Panel 6: Share as Post -->
+  <div class="panel" id="panel-sharepost">
+    <div class="card">
+      <div class="card-header"><span style="font-size:16px;">📲</span><span>Share as Post — AI-powered content from any question</span></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:#9CA3AF;margin-bottom:14px;">Type any question. Auntie Tobi answers it and instantly turns it into social media content.</p>
+        <div style="margin-bottom:14px;">
+          <label style="font-size:12px;font-weight:700;color:#0F1E36;display:block;margin-bottom:5px;">Ask a question</label>
+          <input type="text" id="sp-question" placeholder="e.g. Can my landlord increase my rent?" style="width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:12px 14px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;" onkeydown="if(event.key==='Enter')spAsk()">
+        </div>
+        <button onclick="spAsk()" style="width:100%;background:#057A44;color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;margin-bottom:16px;">✨ Get Answer + Create Content</button>
+
+        <div id="sp-answer-preview" style="display:none;background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:14px;margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:700;color:#057A44;margin-bottom:6px;">AUNTIE TOBI'S ANSWER</div>
+          <div id="sp-answer-text" style="font-size:13px;color:#0F1E36;line-height:1.7;"></div>
+        </div>
+
+        <div id="sp-format-btns" style="display:none;">
+          <div style="font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:10px;">Now choose your content format</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button onclick="spGenerate('story')" style="display:flex;align-items:center;gap:12px;background:#0F1E36;border:none;border-radius:8px;padding:12px 16px;cursor:pointer;width:100%;text-align:left;">
+              <span style="font-size:20px;">📲</span>
+              <div><div style="color:white;font-size:13px;font-weight:700;">Instagram Story</div><div style="color:rgba(255,255,255,0.6);font-size:11px;">3 branded 9:16 cards — Navy, White, Lemon</div></div>
+            </button>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button onclick="spGenerate('carousel')" style="display:flex;align-items:center;gap:10px;background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;cursor:pointer;">
+                <span style="font-size:18px;">📄</span>
+                <div style="text-align:left;"><div style="color:#057A44;font-size:13px;font-weight:700;">Carousel</div><div style="color:#6B7280;font-size:11px;">5-slide post</div></div>
+              </button>
+              <button onclick="spGenerate('reel')" style="display:flex;align-items:center;gap:10px;background:#fff0f3;border:1.5px solid #dc2743;border-radius:8px;padding:12px;cursor:pointer;">
+                <span style="font-size:18px;">🎥</span>
+                <div style="text-align:left;"><div style="color:#dc2743;font-size:13px;font-weight:700;">Reel Script</div><div style="color:#6B7280;font-size:11px;">30-sec script</div></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="loading" id="loading-sharepost"><div class="spinner"></div><p id="loading-sharepost-text">Auntie Tobi is thinking... 💚</p></div>
+    <div id="output-sharepost" style="display:none;"></div>
   </div>
 
 </div>
@@ -857,6 +900,273 @@ function copyText(text, btn) {
     setTimeout(() => btn.textContent = orig, 2000);
   });
 }
+// ===== SHARE AS POST =====
+let _spAnswer = '';
+
+async function spAsk() {
+  const question = document.getElementById('sp-question').value.trim();
+  if (!question) { alert('Please type a question first!'); return; }
+
+  const loading = document.getElementById('loading-sharepost');
+  const loadingText = document.getElementById('loading-sharepost-text');
+  const output = document.getElementById('output-sharepost');
+  const preview = document.getElementById('sp-answer-preview');
+  const previewText = document.getElementById('sp-answer-text');
+  const formatBtns = document.getElementById('sp-format-btns');
+
+  output.style.display = 'none';
+  output.innerHTML = '';
+  preview.style.display = 'none';
+  formatBtns.style.display = 'none';
+  loading.style.display = 'block';
+  loadingText.textContent = 'Auntie Tobi is answering your question... 💚';
+
+  try {
+    const res = await fetch('/.netlify/functions/chat-openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{
+          role: 'user',
+          content: `You are Auntie Tobi, a warm and knowledgeable guide for Nigerians living in the UK. Answer this question clearly, practically and in a friendly tone. Keep the answer to 3-4 key points. Question: ${question}`
+        }]
+      })
+    });
+    const data = await res.json();
+    _spAnswer = (data.content?.[0]?.text || '').replace(/<<<BIZ_JSON:[\s\S]*?>>>/g, '').replace(/\[SEARCH_SCOPE:[^\]]*\]/g, '').trim();
+    loading.style.display = 'none';
+
+    if (!_spAnswer) throw new Error('No answer received');
+
+    previewText.textContent = _spAnswer;
+    preview.style.display = 'block';
+    formatBtns.style.display = 'block';
+  } catch(e) {
+    loading.style.display = 'none';
+    output.style.display = 'block';
+    output.innerHTML = `<div class="output-block"><div class="output-text" style="color:#DC2626;">Error: ${e.message}. Please try again.</div></div>`;
+  }
+}
+
+async function spGenerate(type) {
+  const question = document.getElementById('sp-question').value.trim();
+  const answer = _spAnswer;
+  if (!answer) { alert('Please ask a question first to get an answer!'); return; }
+
+  const loading = document.getElementById('loading-sharepost');
+  const loadingText = document.getElementById('loading-sharepost-text');
+  const output = document.getElementById('output-sharepost');
+  output.style.display = 'none';
+  output.innerHTML = '';
+  loading.style.display = 'block';
+
+  if (type === 'story') {
+    loadingText.textContent = 'Building your 3 Instagram Story cards... 💚';
+    setTimeout(() => {
+      loading.style.display = 'none';
+      const lines = answer.replace(/\*\*/g,'').replace(/\*/g,'').replace(/\n/g,' ').split(/(?<=[.!?])\s+/).filter(s=>s.trim().length>15).slice(0,3);
+      const b1 = lines[0] ? lines[0].trim().substring(0,100) : answer.substring(0,100);
+      const b2 = lines[1] ? lines[1].trim().substring(0,100) : '';
+      const b3 = lines[2] ? lines[2].trim().substring(0,100) : '';
+      const q = question ? `"${question.substring(0,80)}${question.length>80?'...':''}"` : '';
+      const logo = 'https://naijabiz.b-cdn.net/013d6cf6-3a2b-4a14-a3d3-5bcb0e378424-1783702300556.png';
+
+      function makeStoryHTML(theme) {
+        const themes = {
+          navy: {
+            bg: '#0F1E36',
+            cardBg: 'rgba(255,255,255,0.08)',
+            headerText: '#FFB81C',
+            questionColor: 'rgba(255,255,255,0.6)',
+            checkColor: '#FFB81C',
+            answerColor: 'white',
+            ctaBg: '#057A44',
+            ctaText: 'white',
+            taglineBg: '#FFB81C',
+            taglineColor: '#0F1E36',
+            borderColor: '#FFB81C',
+            footerColor: 'rgba(255,255,255,0.35)',
+            name: 'Navy'
+          },
+          white: {
+            bg: '#FFFFFF',
+            cardBg: '#f8f9fa',
+            headerText: '#0F1E36',
+            questionColor: '#555555',
+            checkColor: '#057A44',
+            answerColor: '#0F1E36',
+            ctaBg: '#057A44',
+            ctaText: 'white',
+            taglineBg: '#FFB81C',
+            taglineColor: '#0F1E36',
+            borderColor: '#e5e7eb',
+            footerColor: '#9CA3AF',
+            name: 'White'
+          },
+          lemon: {
+            bg: '#F5F0C0',
+            cardBg: 'rgba(15,30,54,0.08)',
+            headerText: '#0F1E36',
+            questionColor: '#444444',
+            checkColor: '#057A44',
+            answerColor: '#0F1E36',
+            ctaBg: '#0F1E36',
+            ctaText: '#FFB81C',
+            taglineBg: '#057A44',
+            taglineColor: 'white',
+            borderColor: 'rgba(15,30,54,0.2)',
+            footerColor: '#666666',
+            name: 'Lemon'
+          }
+        };
+        const t = themes[theme];
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>Auntie Tobi Story — ${t.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { width:1080px; height:1920px; background:${t.bg}; font-family:'Nunito',sans-serif; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.slide { width:1080px; height:1920px; background:${t.bg}; display:flex; flex-direction:column; justify-content:space-between; padding:80px 70px; position:relative; }
+.header { display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:0; }
+.logo { width:80px; height:80px; border-radius:50%; border:3px solid ${t.borderColor}; object-fit:cover; }
+.brand { font-size:28px; font-weight:900; color:${t.headerText}; letter-spacing:2px; }
+.middle { flex:1; display:flex; flex-direction:column; justify-content:center; gap:36px; }
+.question { font-size:34px; font-style:italic; color:${t.questionColor}; line-height:1.4; text-align:center; font-weight:600; }
+.card { background:${t.cardBg}; border-radius:24px; padding:50px 55px; border:1.5px solid ${t.borderColor}; }
+.bullet { display:flex; align-items:flex-start; gap:22px; margin-bottom:32px; }
+.bullet:last-child { margin-bottom:0; }
+.check { font-size:36px; color:${t.checkColor}; font-weight:900; flex-shrink:0; line-height:1.2; }
+.bullet-text { font-size:34px; color:${t.answerColor}; line-height:1.5; font-weight:600; }
+.footer { display:flex; flex-direction:column; align-items:center; gap:20px; }
+.cta { background:${t.ctaBg}; color:${t.ctaText}; font-size:32px; font-weight:800; padding:22px 50px; border-radius:14px; text-align:center; }
+.tagline { background:${t.taglineBg}; color:${t.taglineColor}; font-size:22px; font-weight:700; padding:12px 30px; border-radius:10px; }
+.footer-note { font-size:20px; color:${t.footerColor}; text-align:center; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <img class="logo" src="${logo}" alt="Auntie Tobi">
+    <span class="brand">AUNTIE TOBI</span>
+  </div>
+  <div class="middle">
+    ${q ? `<div class="question">${q}</div>` : ''}
+    <div class="card">
+      ${b1 ? `<div class="bullet"><span class="check">✓</span><span class="bullet-text">${b1}</span></div>` : ''}
+      ${b2 ? `<div class="bullet"><span class="check">✓</span><span class="bullet-text">${b2}</span></div>` : ''}
+      ${b3 ? `<div class="bullet"><span class="check">✓</span><span class="bullet-text">${b3}</span></div>` : ''}
+    </div>
+  </div>
+  <div class="footer">
+    <div class="cta">auntietobi.co.uk</div>
+    <div class="tagline">🇳🇬 Your trusted guide in the UK 🇬🇧</div>
+    <div class="footer-note">Ask Auntie Tobi anything about life in the UK</div>
+  </div>
+</div>
+</body>
+</html>`;
+      }
+
+      function downloadStory(theme) {
+        const html = makeStoryHTML(theme);
+        const blob = new Blob([html], {type:'text/html'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `auntie-tobi-story-${theme}.html`;
+        a.click();
+      }
+      window._downloadStory = downloadStory;
+
+      output.style.display = 'block';
+      const themes = [
+        { key:'navy', label:'Navy', bg:'#0F1E36', text:'white', badge:'#FFB81C', badgeText:'#0F1E36' },
+        { key:'white', label:'White', bg:'#FFFFFF', text:'#0F1E36', badge:'#057A44', badgeText:'white' },
+        { key:'lemon', label:'Lemon', bg:'#F5F0C0', text:'#0F1E36', badge:'#057A44', badgeText:'white' }
+      ];
+
+      output.innerHTML = `
+        <div class="output-label" style="padding:0 0 12px;">📲 Instagram Story Cards — 1080×1920px (9:16). Download each HTML then convert to PNG using the HTML→PNG tab.</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;">
+          ${themes.map(t => `
+            <div style="border-radius:10px;overflow:hidden;border:2px solid #e5e7eb;">
+              <div style="background:${t.bg};padding:20px 14px;text-align:center;min-height:140px;display:flex;flex-direction:column;justify-content:space-between;">
+                <div style="font-size:10px;font-weight:800;color:${t.text};letter-spacing:1px;opacity:0.6;">AUNTIE TOBI</div>
+                <div style="display:flex;flex-direction:column;gap:4px;text-align:left;">
+                  ${b1?`<div style="font-size:9px;color:${t.text};line-height:1.3;opacity:0.9;">✓ ${b1.substring(0,40)}...</div>`:''}
+                  ${b2?`<div style="font-size:9px;color:${t.text};line-height:1.3;opacity:0.9;">✓ ${b2.substring(0,40)}...</div>`:''}
+                </div>
+                <div style="background:${t.badge};color:${t.badgeText};font-size:9px;font-weight:800;padding:4px 10px;border-radius:5px;display:inline-block;margin:0 auto;">auntietobi.co.uk</div>
+              </div>
+              <div style="padding:8px;background:white;">
+                <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:6px;text-align:center;">${t.label}</div>
+                <button onclick="window._downloadStory('${t.key}')" style="width:100%;background:#0F1E36;color:white;border:none;border-radius:6px;padding:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">⬇️ Download HTML</button>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:12px;font-size:12px;color:#0F1E36;line-height:1.6;">
+          <strong>How to use:</strong> Download the HTML file → go to the <strong>HTML→PNG</strong> tab → upload the file → set width to <strong>1080</strong> → export PNG → post to Instagram Stories.
+        </div>`;
+
+    }, 400);
+    return;
+  }
+
+  const prompts = {
+    carousel: `Create an Instagram carousel post (5 slides) for Nigerians in the UK based on this Q&A. Format as JSON array, each object has "slide" (number 1-5), "headline" (max 8 words, punchy), "body" (max 25 words). Slide 1 = hook, slides 2-4 = key points, slide 5 = CTA to auntietobi.co.uk. Return ONLY valid JSON, no markdown.\n\nQ: ${question}\nA: ${answer}`,
+    reel: `Write a 30-second Instagram Reel script for Nigerians in the UK. Structure: HOOK (3-5 words, punchy opening line), POINT 1, POINT 2, POINT 3 (each 1-2 short sentences), CTA (end with "Follow Auntie Tobi at auntietobi.co.uk"). Warm Nigerian-British tone. Label each section clearly. Return plain text only.\n\nQ: ${question}\nA: ${answer}`
+  };
+
+  loadingText.textContent = type === 'carousel' ? 'Writing your carousel slides... 💚' : 'Writing your Reel script... 💚';
+
+  try {
+    const res = await fetch('/.netlify/functions/chat-openai', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ messages:[{ role:'user', content: prompts[type] }] })
+    });
+    const data = await res.json();
+    const raw = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    loading.style.display = 'none';
+    output.style.display = 'block';
+
+    if (type === 'carousel') {
+      let slides;
+      try { slides = JSON.parse(raw); } catch(e) {
+        slides = [{slide:1,headline:'Did you know?',body:question.substring(0,60)},
+          {slide:2,headline:'Here is what you need to know',body:answer.substring(0,80)},
+          {slide:3,headline:'Key point',body:answer.substring(80,160)},
+          {slide:4,headline:'Take action today',body:answer.substring(160,240)},
+          {slide:5,headline:'Ask Auntie Tobi anything 💚',body:'Visit auntietobi.co.uk for more guides'}];
+      }
+      const colors = ['#0F1E36','#057A44','#0F1E36','#057A44','#FFB81C'];
+      const textColors = ['white','white','white','white','#0F1E36'];
+      output.innerHTML = `<div class="output-label" style="padding:0 0 10px;">📄 Carousel Slides — Copy text into Canva or your design app</div>` +
+        slides.map((s,i) => `
+          <div class="output-block" style="background:${colors[i]||'#0F1E36'};border:none;border-radius:10px;padding:16px;margin-bottom:8px;">
+            <button class="copy-btn" onclick="copyBlock(this)" style="background:rgba(255,255,255,0.2);color:white;border:none;">📋 Copy</button>
+            <div style="font-size:10px;color:${textColors[i]||'white'};opacity:0.6;font-weight:700;margin-bottom:6px;">SLIDE ${s.slide||i+1}</div>
+            <div style="color:${textColors[i]||'white'};font-size:15px;font-weight:800;line-height:1.3;margin-bottom:6px;">${s.headline||''}</div>
+            <div class="output-text" style="color:${textColors[i]||'white'};opacity:0.85;font-size:13px;">${s.headline||''}\n${s.body||''}</div>
+            ${i===slides.length-1?`<div style="margin-top:10px;font-size:10px;font-weight:800;color:${textColors[i]};">auntietobi.co.uk 🇳🇬🇬🇧</div>`:''}
+          </div>`).join('');
+    } else {
+      output.innerHTML = `<div class="output-block">
+        <button class="copy-btn" onclick="copyBlock(this)">📋 Copy</button>
+        <div class="output-label">🎥 30-Second Reel Script</div>
+        <div class="output-text">${raw}</div>
+      </div>`;
+    }
+  } catch(err) {
+    loading.style.display = 'none';
+    output.style.display = 'block';
+    output.innerHTML = `<div class="output-block"><div class="output-text" style="color:#DC2626;">Error: ${err.message}. Please try again.</div></div>`;
+  }
+}
+
 </script>
 </body>
 </html>
