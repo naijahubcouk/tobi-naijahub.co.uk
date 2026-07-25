@@ -1827,6 +1827,14 @@ async function loadLiveFeeds() {
     }
 
     window._feedsLoaded = true;
+
+    // If home page is showing and news card not yet rendered, inject it now
+    if (window._liveBlogPosts && window._liveBlogPosts.length > 0) {
+      const msgs = document.getElementById('messages');
+      if (msgs && !msgs.querySelector('[data-news-card]')) {
+        showNewsCard();
+      }
+    }
   } catch (err) {
     console.warn('[Feed] Failed to load live feeds, using hardcoded data:', err.message);
   }
@@ -2379,7 +2387,9 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
     try { reply = reply.replace(/\\u([0-9a-fA-F]{4})/g, (m,c) => String.fromCharCode(parseInt(c,16))); } catch(e) {}
     reply = reply.replace(/\[SEARCH_SCOPE:[^\]]*\]/g, '').trim();
 
-    messages.push({ role: 'assistant', content: reply });
+    // Store clean version in history (strip BIZ_JSON block so it doesn't confuse AI on next turn)
+    const replyForHistory = reply.replace(/<<<BIZ_JSON:[\s\S]*?>>>/g, '').trim();
+    messages.push({ role: 'assistant', content: replyForHistory });
     removeTyping();
 
     // Typewriter effect — render formatted reply word by word
@@ -3336,30 +3346,28 @@ function showNewsCard() {
   // Use live feed — filter to last 7 days only
   const livePosts = getLiveBlogPosts();
 
-  // If feed not loaded yet, retry after delay
-  if (!livePosts || livePosts.length === 0) {
-    setTimeout(() => {
-      const retryPosts = getLiveBlogPosts();
-      if (retryPosts && retryPosts.length > 0) showNewsCard();
-    }, 3000);
-    return;
-  }
+  // If feed not loaded yet, loadLiveFeeds() will call showNewsCard() once ready
+  if (!livePosts || livePosts.length === 0) return;
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  // Filter live posts to last 7 days
+  // Filter to last 7 days, sorted newest first
   const recent = livePosts.filter(p => {
     if (!p.pubDate) return false;
     const d = new Date(p.pubDate);
     return !isNaN(d) && d >= sevenDaysAgo;
-  });
+  }).sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
   // If no recent posts in last 7 days, show nothing
   if (recent.length === 0) return;
 
-  // Pick a random recent post
-  const item = recent[Math.floor(Math.random() * recent.length)];
+  // Rotate through all recent articles — different one each visit/refresh
+  const rotateKey = 'tobi_news_rotate_idx';
+  let idx = parseInt(sessionStorage.getItem(rotateKey) || '0');
+  if (idx >= recent.length) idx = 0;
+  sessionStorage.setItem(rotateKey, String((idx + 1) % recent.length));
+  const item = recent[idx];
 
   const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Events': '#6B21A8', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food': '#854F0B', 'Money': '#B45309', 'Education': '#0C447C' };
   const label = item.label || item.category || 'News';
@@ -3368,7 +3376,7 @@ function showNewsCard() {
     ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
     : `<span style="background:${badgeColor};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${label}</span>`;
 
-  const newsHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
+  const newsHtml = `<div data-news-card="1" style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
     <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
       <div style="display:flex;align-items:center;gap:6px;">
         <span style="font-size:16px;">📰</span>
