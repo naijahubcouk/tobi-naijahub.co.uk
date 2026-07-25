@@ -130,7 +130,7 @@
 
 
 # Dynamic blog deep links — catches all /blog/KEY automatically
-/blog/:key    /?blog=:key    301
+/blog/:key    /index.html    200
 
 /kb              /.netlify/functions/kb-index     200
 /kb/sitemap.xml  /.netlify/functions/kb-sitemap   200
