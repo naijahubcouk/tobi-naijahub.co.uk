@@ -6206,12 +6206,19 @@ function tobiShare(title, text, url, imageUrl) {
     shareUrl = 'https://auntietobi.co.uk';
   }
 
-  const shareText = text + '\n\n👉 ' + shareUrl;
+  // Strip any existing URL from text to prevent duplication
+  const cleanText = (text || '')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/👉\s*/g, '')
+    .trim();
+
+  // Format: title on first line (visible in WhatsApp etc), then description, then link
+  const shareText = (title ? title + '\n\n' : '') + (cleanText ? cleanText + '\n\n' : '') + shareUrl;
 
   if (navigator.share) {
-    navigator.share({ title, text: shareText, url: shareUrl }).catch(() => {});
+    navigator.share({ title: title || 'Auntie Tobi', text: shareText }).catch(() => {});
   } else {
-    navigator.clipboard.writeText(title + '\n\n' + shareText).then(() => {
+    navigator.clipboard.writeText(shareText).then(() => {
       const toast = document.createElement('div');
       toast.textContent = '✅ Copied to clipboard!';
       toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#057A44;color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;';
