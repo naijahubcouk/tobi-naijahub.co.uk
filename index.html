@@ -3333,243 +3333,40 @@ function showAllLiveNews() {
 }
 
 function showNewsCard() {
-  const news = [
-    {
-      emoji: '🔴',
-      category: 'NEWS',
-      title: 'UK Prime Minister Keir Starmer Has Resigned',
-      summary: 'Less than two years after his historic landslide victory, Sir Keir Starmer has announced his resignation as UK Prime Minister and Labour leader following intense internal party pressure.',
-      url: 'https://auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation',
-      label: 'News',
-      date: '22 Jun 2026'
-    },
-    {
-      emoji: '🎉',
-      category: 'EVENTS',
-      title: 'Nigerian Cultural Festival 2026 Is Coming to Plymouth',
-      summary: 'A vibrant celebration of Nigerian food, music, fashion, culture and community coming to Plymouth in the South West of England.',
-      url: 'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here%27s-Everything-You-Need-to-Know',
-      label: 'Events',
-      date: '18 Jul 2026'
-    },
-    {
-      emoji: '💷',
-      category: 'NEWS',
-      title: 'UK-Based Nigerians Earning £2,600 Worse Off Than ₦60,000 Earners at Home?',
-      summary: 'A presidential adviser sparked debate claiming Nigerians earning £2,600/month in the UK could be worse off than those on ₦60,000 in Nigeria due to high living costs.',
-      url: 'https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said',
-      label: 'News',
-      date: '18 Jul 2026'
-    },
-    {
-      emoji: '🛂',
-      category: 'NEWS',
-      title: 'UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries',
-      summary: 'The UK has confirmed that Nigerians and citizens of 32 other African countries must obtain entry clearance before travelling to or transiting through the UK.',
-      url: 'https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries',
-      label: 'News',
-      date: '18 Jul 2026'
-    },
-    {
-      emoji: '📺',
-      category: 'MONEY',
-      title: 'Do You Really Need a TV Licence in the UK? Here is the Simple Rule Every Nigerian Should Know',
-      summary: 'Learn who needs a UK TV Licence, who does not, how TV Licensing checks compliance, and what happens if you own a TV but do not watch live television or BBC iPlayer.',
-      url: 'https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know',
-      label: 'Money',
-      date: '15 Jul 2026'
-    },
-    {
-      emoji: '🎓',
-      category: 'EDUCATION',
-      title: 'Free Government-Funded Courses in England: Boost Your Career Without Paying Tuition',
-      summary: 'Discover how eligible adults in England, including many Nigerians, can access free government-funded courses. Learn who qualifies, what you can study, and how to apply.',
-      url: 'https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition',
-      label: 'Money',
-      date: '13 Jul 2026'
-    },
-    {
-      emoji: '🏡',
-      category: 'HOUSING',
-      title: "Metro Banks New 100% Mortgage: Should You Jump at It?",
-      summary: "Metro Bank has launched a 100% mortgage allowing first-time buyers to purchase a home with no deposit — as long as a parent or immediate family member acts as joint borrower. Here's what Nigerians in the UK need to know.",
-      url: 'https://auntietobi.com/blog/Metro-Bank%27s-New-100percent-Mortgage:-Should-You-Jump-at-It',
-      label: 'Housing',
-      date: '13 Jul 2026'
-    },
-    {
-      emoji: '💼',
-      category: 'BUSINESS',
-      title: '10 Common Mistakes Nigerians Make When Starting a Business in the UK',
-      summary: 'Learn the 10 most common mistakes Nigerians make when starting a business in the UK and discover practical tips to avoid them. Build your business with confidence.',
-      url: 'https://auntietobi.com/blog/10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)',
-      label: 'Business',
-      date: '9 Jul 2026'
-    },
-    {
-      emoji: '🥣',
-      category: 'MONEY',
-      title: 'FREE Breakfast at Morrisons This Summer: Families in the UK Can Save Money During School Holidays',
-      summary: 'Discover how Nigerian families in the UK can enjoy free breakfast at Morrisons this summer. Learn about the Kelloggs Breakfast Club offer and save money during school holidays.',
-      url: 'https://auntietobi.com/blog/FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays',
-      label: 'Money',
-      date: '8 Jul 2026'
-    },
-    {
-      emoji: '🏛️',
-      category: 'NEWS',
-      title: 'UK Government Considers Faster Settlement for Migrants Who Make an Exceptional Contribution',
-      summary: 'UK ministers are considering a faster settlement route for migrants who make an exceptional contribution. Find out what the proposed changes could mean for Nigerians living in the UK.',
-      url: 'https://auntietobi.com/blog/UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-Exceptional-Contribution',
-      label: 'News',
-      date: '8 Jul 2026'
-    },
-    {
-      emoji: '🛂',
-      category: 'NEWS',
-      title: 'Nigerians in the UK Can Now Renew Their Nigerian Passport Contactlessly: Heres How',
-      summary: 'Learn how Nigerians in the UK can renew their Nigerian passport using the NIS Contactless Passport Application System — no more queues at the embassy! Complete the process from home with a step-by-step guide.',
-      url: 'https://auntietobi.com/blog/Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Heres-How',
-      label: 'News',
-      date: '8 Jul 2026'
-    },
-    {
-      emoji: '🏛️',
-      category: 'NEWS',
-      title: 'Nigel Farage Resigns as MP, Triggering a By-Election – What It Means for the UK',
-      summary: 'Nigel Farage steps down as Clacton MP, sparking a by-election. Find out what this means for UK politics and for Nigerians living in the UK.',
-      url: 'https://auntietobi.com/blog/Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK',
-      label: 'News',
-      date: '7 Jul 2026'
-    },
-    {
-      emoji: '🏡',
-      category: 'MONEY',
-      title: '10 Smart Ways to Reduce Your Household Bills This Summer in the UK',
-      summary: 'Discover 10 practical ways Nigerians in the UK can reduce electricity, water and household bills this summer while staying comfortable during the warmer months.',
-      url: 'https://auntietobi.com/blog/10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK',
-      label: 'Money',
-      date: '5 Jul 2026'
-    },
-    {
-      emoji: '🌡️',
-      category: 'NEWS',
-      title: 'UK Weather Update: Another Heatwave Could Push Temperatures Above 30°C',
-      summary: 'Another UK heatwave is on the way, with temperatures expected to exceed 30°C in parts of England. Find out how to stay safe and protect your health.',
-      url: 'https://auntietobi.com/blog/UK-Weather-Update:-Another-Heatwave-Could-Push-Temperatures-Above-30C-This-Week',
-      label: 'News',
-      date: '4 Jul 2026'
-    },
-    {
-      emoji: '🛂',
-      category: 'NEWS',
-      title: 'Over 1.34 Million Nigerian Visa Applications Refused Since 2005',
-      summary: 'Over 1.34M Nigerian visa applications refused since 2005. Explore approval trends and key tips to improve your UK visa application success rate.',
-      url: 'https://auntietobi.com/blog/Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005',
-      label: 'News',
-      date: '3 Jul 2026'
-    },
-    {
-      emoji: '🏛️',
-      category: 'NEWS',
-      title: 'UK Immigration Update: House of Lords Challenges Proposed ILR Changes',
-      summary: 'The House of Lords has challenged the UK proposed ILR changes. Find out what this means for Nigerians and migrants living in the UK.',
-      url: 'https://auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes',
-      label: 'News',
-      date: '26 Jun 2026'
-    },
-    {
-      emoji: '🍼',
-      category: 'MONEY',
-      title: 'Aldi Freezes Baby Formula Price Until End of 2026',
-      summary: 'Aldi has frozen the price of its Mamia First Infant Milk at £6.99 until the end of 2026, helping UK families save on baby essentials. Find out what this means for Nigerian parents in the UK.',
-      url: 'https://auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026',
-      label: 'Money',
-      date: '23 Jun 2026'
-    },
-    {
-      emoji: '💷',
-      category: 'MONEY',
-      title: 'What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money',
-      summary: 'With Andy Burnham tipped as the next UK Prime Minister, find out what his policies could mean for your taxes, energy bills, and finances as a Nigerian living in the UK.',
-      url: 'https://auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money',
-      label: 'Money',
-      date: '23 Jun 2026'
-    },
-    {
-      emoji: '🌡️',
-      category: 'NEWS',
-      title: 'UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C',
-      summary: 'The UK Met Office has issued a rare Red Heat Warning — the highest level alert — as temperatures could reach 40°C this week. Nigerians in the UK should stay hydrated, avoid direct sun between 11am–3pm, and check on elderly neighbours and family members.',
-      url: 'https://auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We',
-      label: 'News',
-      date: '23 Jun 2026'
-    },
-    {
-      emoji: '🚌',
-      category: 'NEWS',
-      title: 'FREE Bus Travel for Children in August 2026',
-      summary: 'Good news for families! The UK Government has announced that children aged 5–15 will travel free on buses across England in August 2026.',
-      url: 'https://auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026',
-      label: 'News',
-      date: '20 Jun 2026'
-    },
-    {
-      emoji: '🏠',
-      category: 'HOUSING',
-      title: 'No Huge Savings? Buy Your First UK Home with Just a £5,000 Deposit!',
-      summary: 'Trapped in the rent cycle? Discover how first-time buyers can skip massive deposit goals and secure a home with just £5,000 using the Lloyds Bank £5k Deposit Mortgage scheme.',
-      url: 'https://auntietobi.com/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit%21',
-      label: 'Housing',
-      date: '22 Jun 2026'
-    },
-    {
-      emoji: '🏠',
-      category: 'HOUSING',
-      title: 'UK Landlords Must Protect Tenant Deposits or Risk Legal Action',
-      summary: 'Did you know? UK landlords are legally required to protect your deposit in a government-approved scheme within 30 days — or risk legal action and penalties.',
-      url: 'https://auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action',
-      label: 'Housing',
-      date: '18 Jun 2026'
-    },
-    {
-      emoji: '🍽️',
-      category: 'FOOD',
-      title: 'Best Nigerian Restaurants in London (Ranked 2026 Guide)',
-      summary: 'Discover the best Nigerian restaurants in London, ranked by quality, authenticity, and dining experience — your ultimate 2026 guide!',
-      url: 'https://auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)',
-      label: 'Food & Lifestyle',
-      date: '15 Jun 2026'
-    }
-  ];
+  // Use live feed — filter to last 7 days only
+  const livePosts = getLiveBlogPosts();
 
-  // Filter to last 7 days — if none, fall back to 3 most recent
+  // If feed not loaded yet, retry after delay
+  if (!livePosts || livePosts.length === 0) {
+    setTimeout(() => {
+      const retryPosts = getLiveBlogPosts();
+      if (retryPosts && retryPosts.length > 0) showNewsCard();
+    }, 3000);
+    return;
+  }
+
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  function parseDate(str) {
-    if (!str) return new Date(0);
-    const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
-    const parts = str.trim().split(' ');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0]);
-      const month = months[parts[1]];
-      const year = parseInt(parts[2]);
-      return new Date(year, month, day);
-    }
-    return new Date(0);
-  }
+  // Filter live posts to last 7 days
+  const recent = livePosts.filter(p => {
+    if (!p.pubDate) return false;
+    const d = new Date(p.pubDate);
+    return !isNaN(d) && d >= sevenDaysAgo;
+  });
 
-  const recent = news.filter(n => parseDate(n.date) >= sevenDaysAgo);
-  const pool = recent.length > 0 ? recent : news.slice(0, 3);
-  const item = pool[Math.floor(Math.random() * pool.length)];
+  // If no recent posts in last 7 days, show nothing
+  if (recent.length === 0) return;
 
-  // Category badge colours
-  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Events': '#6B21A8', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food & Lifestyle': '#854F0B', 'Did You Know': '#6B21A8', 'Money': '#B45309', 'Education': '#0C447C' };
-  const badgeColor = categoryColors[item.label] || '#057A44';
-  const categoryBadge = item.label === 'Breaking'
+  // Pick a random recent post
+  const item = recent[Math.floor(Math.random() * recent.length)];
+
+  const categoryColors = { 'Breaking': '#FF3B30', 'News': '#057A44', 'Events': '#6B21A8', 'Housing': '#0C447C', 'Business': '#1D6A96', 'Food': '#854F0B', 'Money': '#B45309', 'Education': '#0C447C' };
+  const label = item.label || item.category || 'News';
+  const badgeColor = categoryColors[label] || '#057A44';
+  const categoryBadge = label === 'Breaking'
     ? `<span style="background:#FF3B30;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">🔴 Breaking</span>`
-    : `<span style="background:${badgeColor};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${item.label}</span>`;
+    : `<span style="background:${badgeColor};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${label}</span>`;
 
   const newsHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
     <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
@@ -3582,19 +3379,20 @@ function showNewsCard() {
     <div style="padding:10px 12px 8px;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
         ${categoryBadge}
-        ${item.date ? `<span style="font-size:10px;color:#9CA3AF;">${item.date}</span>` : ''}
+        ${item.pubDate ? `<span style="font-size:10px;color:#9CA3AF;">${new Date(item.pubDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>` : ''}
       </div>
-      <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${item.emoji} ${item.title}</div>
-      <div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">${item.summary}</div>
+      <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.title}</div>
+      <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${(item.summary||item.description||'').substring(0,120)}...</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-        <a href="javascript:void(0)" data-blogurl="${item.url}"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
-        <button onclick="shareBlogUrl('${item.title}','${item.title}','${item.url}','${item.appUrl||""}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+        <a href="javascript:void(0)" data-blogurl="${item.url}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+        <button onclick="shareBlogUrl('${(item.title||'').replace(/'/g,"\'").substring(0,50)}','${(item.summary||'').replace(/'/g,"\'").substring(0,80)}','${item.url}','${item.appUrl||''}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
     </div>
   </div>`;
 
   addTipMessage(newsHtml);
 }
+
 function showHowToBecomePremium() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
@@ -4990,7 +4788,7 @@ function buildTipCard(tip, suggestionStr) {
         <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:13px;font-weight:700;padding:1px 6px;border-radius:50px;margin-bottom:3px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
         <p style="font-size:15px;color:#0F1E36;line-height:1.5;margin:0 0 4px;font-weight:500;padding:0;">${tip.tip}</p>
         <div style="border-top:1px solid #f0f0f0;padding-top:4px;display:flex;align-items:center;gap:8px;margin:0;">
-          <a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>
+          ${tip.sourceUrl ? `<a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>` : '<span style="flex:1;"></span>'}
           <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">📤 Share Tip</button>
         </div>
       </div>
@@ -5943,26 +5741,103 @@ function showUpcomingEventCard() {
 
   const events = [
     {
-      emoji: '🎭',
-      title: 'Worship in Chaos',
-      summary: 'A powerful musical theatre and worship experience in London. Doors open 3:00 PM.',
-      date: '19 Jul 2026',
-      dateObj: new Date(2026, 6, 19),
+      emoji: '🇳🇬',
+      title: '9ja Fayre 2026 — Edinburgh',
+      summary: 'The biggest Nigerian fair comes to Edinburgh! Celebrate Nigerian food, fashion and culture in Scotland.',
+      date: 'Sat 25 Jul 2026',
+      dateObj: new Date(2026, 6, 25),
+      location: 'Edinburgh',
+      time: 'Sat 25 Jul 2026',
+      url: 'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!',
+      deeplink: '9jafayre'
+    },
+    {
+      emoji: '🛍️',
+      title: 'Deshapeables UK Tradefair London',
+      summary: 'The ultimate Nigerian trade fair experience in London. Shop, network and discover amazing Nigerian-owned businesses.',
+      date: 'Sat 25 Jul 2026',
+      dateObj: new Date(2026, 6, 25),
       location: 'London',
-      time: 'Sun 19 Jul, 4:00 PM',
-      url: 'https://auntietobi.com/blog/Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London',
-      deeplink: 'worshipchaos'
+      time: 'Sat 25 Jul 2026, 10AM – 6PM',
+      url: 'https://auntietobi.com/blog/Deshapeables-UK-Tradefair-London',
+      deeplink: 'tradefair'
     },
     {
       emoji: '🇳🇬',
-      title: '9ja Fayre 2026 — Leicester',
-      summary: 'The biggest Nigerian fair is coming to Leicester! Grab your tickets and come celebrate Nigerian culture.',
-      date: 'Sat 18 Jul 2026',
-      dateObj: new Date(2026, 6, 18),
-      location: 'Leicester',
-      time: 'Sat 18 Jul 2026',
+      title: '9ja Fayre 2026 — Manchester',
+      summary: 'The final stop of the 9ja Fayre UK tour! Celebrate Nigerian food, fashion, music and culture in Manchester.',
+      date: 'Sat 1 Aug 2026',
+      dateObj: new Date(2026, 7, 1),
+      location: 'Manchester',
+      time: 'Sat 1 Aug 2026',
       url: 'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!',
       deeplink: '9jafayre'
+    },
+    {
+      emoji: '🌶️',
+      title: 'Suya Fest Birmingham 2026',
+      summary: 'The ultimate outdoor suya experience returns to Birmingham! Live music, suya and more.',
+      date: 'Sat 1 Aug 2026',
+      dateObj: new Date(2026, 7, 1),
+      location: 'Birmingham',
+      time: 'Sat 1 Aug, 3PM – 9PM',
+      url: 'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns',
+      deeplink: 'suyafest'
+    },
+    {
+      emoji: '⚽',
+      title: 'NSF (UK) Sports and Family Fun Day',
+      summary: 'A fun-filled family day out with sports, food and entertainment for the whole family.',
+      date: 'Sat 29 Aug 2026',
+      dateObj: new Date(2026, 7, 29),
+      location: 'London',
+      time: 'Sat 29 Aug, 12PM onwards',
+      url: 'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026',
+      deeplink: 'nsfuk'
+    },
+    {
+      emoji: '🫕',
+      title: 'The Igbo Table: Food, Culture & Conversation',
+      summary: 'A celebration of Igbo food, culture and conversation. Come hungry, leave inspired.',
+      date: 'Sun 30 Aug 2026',
+      dateObj: new Date(2026, 7, 30),
+      location: 'London',
+      time: 'Sun 30 Aug, 3:30PM – 9PM',
+      url: 'https://auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation',
+      deeplink: 'igbotable'
+    },
+    {
+      emoji: '💼',
+      title: 'Midlands Business Festival',
+      summary: 'The biggest business festival in the Midlands. Network, learn and grow your business.',
+      date: 'Sun 30 Aug 2026',
+      dateObj: new Date(2026, 7, 30),
+      location: 'Coventry',
+      time: 'Sun 30 Aug, 9AM – 8PM',
+      url: 'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry',
+      deeplink: 'midlandsbiz'
+    },
+    {
+      emoji: '👗',
+      title: 'Ankara Festival UK 2026',
+      summary: 'Celebrate African fashion, music and culture at the biggest Ankara festival in the UK.',
+      date: 'Sat 10 Oct 2026',
+      dateObj: new Date(2026, 9, 10),
+      location: 'London',
+      time: 'Sat 10 Oct, 5PM – 11:30PM',
+      url: 'https://auntietobi.com/blog/Ankara-Festival-UK-2026',
+      deeplink: 'ankara'
+    },
+    {
+      emoji: '🎭',
+      title: 'Worship in Chaos',
+      summary: 'A powerful musical theatre and worship experience in London. Doors open 3:00 PM.',
+      date: '25 Jul 2026',
+      dateObj: new Date(2026, 6, 25),
+      location: 'London',
+      time: 'Sat 25 Jul, 4:00 PM',
+      url: 'https://auntietobi.com/blog/Worship-in-Chaos:-A-Powerful-Musical-Theatre-and-Worship-Experience-Coming-to-London',
+      deeplink: 'worshipchaos'
     },
     {
       emoji: '🇳🇬',
