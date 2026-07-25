@@ -1709,55 +1709,29 @@ async function getDirectory() {
     if (raw) {
       const parsed = JSON.parse(raw);
       const liveBusinesses = parsed.businesses || [];
-      // Merge: hardcoded takes priority (has better data), live adds new ones
       const merged = [...HARDCODED_DIRECTORY];
       liveBusinesses.forEach(lb => {
         if (!merged.find(b => b.slug === lb.slug || b.name.toLowerCase() === lb.name.toLowerCase())) {
           merged.push(lb);
         }
       });
-      console.log('[chat] Directory: ' + HARDCODED_DIRECTORY.length + ' hardcoded + ' + (merged.length - HARDCODED_DIRECTORY.length) + ' live = ' + merged.length + ' total');
       return merged;
     }
   } catch(e) {
-    console.log('[chat] Blobs unavailable, using hardcoded directory:', e.message);
+    console.log('[chat] Blobs unavailable:', e.message);
   }
   return HARDCODED_DIRECTORY;
 }
 
-function searchBusinesses(query,limit,directory){limit=limit||6;var stopWords=['the','and','for','near','find','looking','where','can','are','any','have','you','what','best','good','in','at','a','an','i','me','my','do','is','it','uk'];var allWords=query.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(function(w){return w.length>2;});var serviceWords=allWords.filter(function(w){return stopWords.indexOf(w)===-1&&w.length>2;});if(!serviceWords.length)serviceWords=allWords;var ukCities=['london','birmingham','manchester','leeds','bristol','sheffield','liverpool','nottingham','coventry','leicester','edinburgh','glasgow','cardiff','belfast','newcastle','brighton','reading','oxford','cambridge','southampton','portsmouth','wolverhampton','bradford','derby','exeter','hull','luton','peterborough','stoke','sunderland','basildon','laindon','kent','surrey','norwich','colchester','chelmsford','basingstoke','southend','york','worcester','bath','bournemouth','maidstone','northampton'];var queryLoc=null;var queryWords=query.toLowerCase();ukCities.forEach(function(city){if(queryWords.indexOf(city)!==-1)queryLoc=city;});function scoreBusinesses(businesses,locFilter){return businesses.map(function(b){var score=0;var nameL=b.name.toLowerCase(),catL=(b.cat||'').toLowerCase(),locL=(b.loc||'').toLowerCase();var descL=(b.desc||'').toLowerCase(),kwStr=(b.keywords||[]).join(' ').toLowerCase();serviceWords.forEach(function(w){if(nameL.indexOf(w)!==-1)score+=10;if(catL.indexOf(w)!==-1)score+=8;if(kwStr.indexOf(w)!==-1)score+=6;if(descL.indexOf(w)!==-1)score+=3;});if(b.verified)score+=5;if(locFilter&&locL.indexOf(locFilter)!==-1)score+=20;return Object.assign({},b,{score:score});}).filter(function(b){return b.score>0;}).sort(function(a,b){if(b.score!==a.score)return b.score-a.score;if(a.verified&&!b.verified)return -1;if(!a.verified&&b.verified)return 1;return 0;});}var cityHint=null;if(queryLoc)cityHint=queryLoc;if(cityHint){var nr=scoreBusinesses(directory,cityHint).slice(0,limit);var hasLocal=nr.some(function(b){return (b.loc||'').toLowerCase().indexOf(cityHint)!==-1;});if(hasLocal)return{results:nr,scope:'local',city:cityHint};}return{results:scoreBusinesses(directory,null).slice(0,limit),scope:'uk',city:queryLoc};}
+function searchBusinesses(query,limit,directory){limit=limit||6;var stopWords=['the','and','for','near','find','looking','where','can','are','any','have','you','what','best','good','in','at','a','an','i','me','my','do','is','it','uk'];var allWords=query.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(function(w){return w.length>2;});var serviceWords=allWords.filter(function(w){return stopWords.indexOf(w)===-1&&w.length>2;});if(!serviceWords.length)serviceWords=allWords;var ukCities=['london','birmingham','manchester','leeds','bristol','sheffield','liverpool','nottingham','coventry','leicester','edinburgh','glasgow','cardiff','belfast','newcastle','brighton','reading','oxford','cambridge','southampton','portsmouth','wolverhampton','bradford','derby','exeter','hull','luton','peterborough','stoke','sunderland','basildon','laindon','kent','surrey','norwich','colchester','chelmsford','basingstoke','southend','york','worcester','bath','bournemouth','maidstone','northampton'];var queryLoc=null;var queryWords=query.toLowerCase();ukCities.forEach(function(city){if(queryWords.indexOf(city)!==-1)queryLoc=city;});function scoreBusinesses(businesses,locFilter){return businesses.map(function(b){var score=0;var nameL=b.name.toLowerCase(),catL=(b.cat||'').toLowerCase(),locL=(b.loc||'').toLowerCase();var descL=(b.desc||'').toLowerCase(),kwStr=(b.keywords||[]).join(' ').toLowerCase();serviceWords.forEach(function(w){if(nameL.indexOf(w)!==-1)score+=10;if(catL.indexOf(w)!==-1)score+=8;if(kwStr.indexOf(w)!==-1)score+=6;if(descL.indexOf(w)!==-1)score+=3;});if(b.verified)score+=5;if(locFilter&&locL.indexOf(locFilter)!==-1)score+=20;return Object.assign({},b,{score:score});}).filter(function(b){return b.score>0;}).sort(function(a,b){if(b.score!==a.score)return b.score-a.score;if(a.verified&&!b.verified)return -1;if(!a.verified&&b.verified)return 1;return 0;});}if(queryLoc){var nr=scoreBusinesses(directory,queryLoc).slice(0,limit);var hasLocal=nr.some(function(b){return (b.loc||'').toLowerCase().indexOf(queryLoc)!==-1;});if(hasLocal)return{results:nr,scope:'local',city:queryLoc};}return{results:scoreBusinesses(directory,null).slice(0,limit),scope:'uk',city:queryLoc};}
 
 function formatBusinessContext(businesses,scope,city){if(!businesses.length)return'';var bizData=businesses.map(function(b){return{slug:b.slug,name:b.name,cat:b.cat||'',loc:b.loc||'UK',desc:b.desc?b.desc.substring(0,100):'',verified:b.verified||false,wa:b.wa||'',phone:b.phone||''};});var scopeNote=scope==='local'&&city?'\n[SEARCH_SCOPE: Found '+businesses.length+' businesses near '+city+'.]':'\n[SEARCH_SCOPE: No businesses found locally in '+(city||'users city')+' - showing UK-wide. Tell user warmly we do not have any in their city yet but these serve UK wide.]';return'\n\n<<<BIZ_JSON:'+JSON.stringify(bizData)+'>>>'+scopeNote;}
 
-exports.handler=async function(event){
-  if(event.httpMethod==='OPTIONS'){return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'POST, OPTIONS'},body:''};} 
-  if(event.httpMethod==='GET'){var k=process.env.OPENROUTER_API_KEY;return{statusCode:200,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'},body:JSON.stringify({status:'ok',hasApiKey:!!k,keyPrefix:k?k.substring(0,8)+'...':'NOT SET'})};}
-  try{
-    var body=JSON.parse(event.body);
-    var apiKey=process.env.OPENROUTER_API_KEY;
-    if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};
-    var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';
-    var recentMessages=body.messages?body.messages.slice(-4):[];
+exports.handler=async function(event){if(event.httpMethod==='OPTIONS'){return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'POST, OPTIONS'},body:''};} if(event.httpMethod==='GET'){var k=process.env.OPENROUTER_API_KEY;return{statusCode:200,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'},body:JSON.stringify({status:'ok',hasApiKey:!!k})};}
+try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];
     var wordCount=lastMessage.trim().split(/\s+/).length;
-    var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool)$/i.test(lastMessage.trim());
-    var shouldSearch=!isShortGreeting&&wordCount>=2;
-    var businessContext='';
-    if(shouldSearch){
-      var directory=await getDirectory();
-      var userCity=body.userCity||'';
-      var sr=searchBusinesses(lastMessage,6,directory);
-      if(sr.results.length>0)businessContext=formatBusinessContext(sr.results,sr.scope,sr.city);
-    }
-    var systemContent=SYSTEM_PROMPT+(businessContext||'');
-    var messages=[{role:'system',content:systemContent}].concat(recentMessages);
-    var requestBody=JSON.stringify({model:'openai/gpt-4o-mini',max_tokens:500,messages:messages});
-    var result=await new Promise(function(resolve,reject){var req=https.request({hostname:'openrouter.ai',path:'/api/v1/chat/completions',method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://auntietobi.co.uk','X-Title':'Auntie Tobi','Content-Length':Buffer.byteLength(requestBody)}},function(res){var data='';res.on('data',function(c){data+=c;});res.on('end',function(){try{resolve(JSON.parse(data));}catch(e){reject(e);}});});req.on('error',reject);req.setTimeout(20000,function(){req.destroy();reject(new Error('Timeout'));});req.write(requestBody);req.end();});
-    var reply=result.choices&&result.choices[0]&&result.choices[0].message?result.choices[0].message.content:null;
-    if(!reply){console.log('OpenRouter error:',JSON.stringify(result).substring(0,300));reply='Sorry, I could not get a response. Please try again!';}
-    if(businessContext){reply=reply.replace('[SHOW_BIZ_CARDS]','').replace(/\|\|\|INJECT_BIZ\|\|\|/g,'').replace(/\|\|\|BIZ_CARDS\|\|\|/g,'').trim();reply=reply+'\n'+businessContext.trim();}
-    return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({content:[{type:'text',text:reply}]})};
-  } catch(err){
-    console.log('Error:',err.message);
-    return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:err.message})};
-  }
-};
+    var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());
+    var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);
+    var isNounSearch=wordCount<=3&&/^[A-Z]/.test(lastMessage.trim())&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help)/.test(lastMessage.trim());
+    var shouldSearch=!isShortGreeting&&(bizKeywords||isNounSearch);
+    var businessContext='';if(shouldSearch){var directory=await getDirectory();var sr=searchBusinesses(lastMessage,6,directory);if(sr.results.length>0)businessContext=formatBusinessContext(sr.results,sr.scope,sr.city);}var systemContent=SYSTEM_PROMPT+(businessContext||'');var messages=[{role:'system',content:systemContent}].concat(recentMessages);var requestBody=JSON.stringify({model:'openai/gpt-4o-mini',max_tokens:500,messages:messages});var result=await new Promise(function(resolve,reject){var req=https.request({hostname:'openrouter.ai',path:'/api/v1/chat/completions',method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://auntietobi.co.uk','X-Title':'Auntie Tobi','Content-Length':Buffer.byteLength(requestBody)}},function(res){var data='';res.on('data',function(c){data+=c;});res.on('end',function(){try{resolve(JSON.parse(data));}catch(e){reject(e);}});});req.on('error',reject);req.setTimeout(20000,function(){req.destroy();reject(new Error('Timeout'));});req.write(requestBody);req.end();});var reply=result.choices&&result.choices[0]&&result.choices[0].message?result.choices[0].message.content:null;if(!reply){console.log('OpenRouter error:',JSON.stringify(result).substring(0,300));reply='Sorry, I could not get a response. Please try again!';}if(businessContext){reply=reply.replace('[SHOW_BIZ_CARDS]','').replace(/\|\|\|INJECT_BIZ\|\|\|/g,'').replace(/\|\|\|BIZ_CARDS\|\|\|/g,'').trim();reply=reply+'\n'+businessContext.trim();}return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({content:[{type:'text',text:reply}]})};} catch(err){console.log('Error:',err.message);return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:err.message})};}};
