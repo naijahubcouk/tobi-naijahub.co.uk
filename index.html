@@ -6027,9 +6027,32 @@ window.onload = () => {
 
   // If deep link detected, show content immediately before anything else
   const _urlParams = new URLSearchParams(window.location.search);
-  const _hasDeepLink = _urlParams.get('action') || _urlParams.get('blog') || _urlParams.get('biz');
+  const _urlPathname = window.location.pathname.replace(/\/$/, '');
+  const _hasDeepLink = _urlParams.get('action') || _urlParams.get('blog') || _urlParams.get('biz') || _urlPathname !== '';
 
-  if (_hasDeepLink) {
+  // Handle pathname-based routes (e.g. /links, /news, /events, /businesses)
+  if (_urlPathname === '/links') {
+    setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', '/links'); }, 300);
+    setTimeout(() => { loadLiveFeeds(); }, 2000);
+    return;
+  }
+  if (_urlPathname === '/news') {
+    setTimeout(() => { showAllNews(); window.history.replaceState({}, '', '/'); }, 300);
+    setTimeout(() => { loadLiveFeeds(); }, 2000);
+    return;
+  }
+  if (_urlPathname === '/events') {
+    setTimeout(() => { showEventsFromNews(); window.history.replaceState({}, '', '/'); }, 300);
+    setTimeout(() => { loadLiveFeeds(); }, 2000);
+    return;
+  }
+  if (_urlPathname === '/businesses') {
+    setTimeout(() => { showBusinesses(); window.history.replaceState({}, '', '/'); }, 300);
+    setTimeout(() => { loadLiveFeeds(); }, 2000);
+    return;
+  }
+
+  if (_urlParams.get('action') || _urlParams.get('blog') || _urlParams.get('biz')) {
     handleDeepLink();
     // Load feeds in background after content shown
     setTimeout(() => { loadLiveFeeds(); }, 2000);
