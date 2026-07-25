@@ -17,28 +17,28 @@ exports.handler = async function(event) {
 
     const latest = newsItems[0];
 
-    // DEDUP: Only send if article was published within the last 35 minutes
-    // This means even if /tmp resets, old articles will never resend
     const pubDate = latest.pubDate ? new Date(latest.pubDate) : null;
     const ageMinutes = (pubDate && !isNaN(pubDate)) ? (Date.now() - pubDate.getTime()) / 60000 : 999;
-    
-    console.log(`[news] Latest: ${latest.slug} | Age: ${Math.round(ageMinutes)} mins | pubDate: ${latest.pubDate}`);
+
+    console.log(`[news] Latest: ${latest.slug} | Age: ${Math.round(ageMinutes)} mins`);
 
     if (ageMinutes > 35) {
       return { statusCode: 200, body: `Article too old (${Math.round(ageMinutes)} mins): ${latest.slug}` };
     }
 
-    const notifUrl = latest.appUrl || `https://auntietobi.co.uk/?blog=${latest.slug.toLowerCase().replace(/[^a-z0-9]/g,'')}`;
+    // Use /blog/SLUG deep link — opens blog reader directly in the app
+    const blogSlug = latest.slug || '';
+    const notifUrl = `https://auntietobi.co.uk/blog/${blogSlug}`;
 
     const result = await sendTaggedPush(
       'news',
       `📰 ${latest.title}`,
-      latest.description || 'Tap to read the latest UK news on Auntie Tobi',
+      latest.description || 'Tap to read the latest news on Auntie Tobi',
       notifUrl
     );
 
-    console.log(`[news] Sent: ${latest.slug}`);
-    return { statusCode: 200, body: JSON.stringify({ sent: true, slug: latest.slug, age: Math.round(ageMinutes) + ' mins', oneSignal: result.data }) };
+    console.log(`[news] Sent: ${latest.slug} → ${notifUrl}`);
+    return { statusCode: 200, body: JSON.stringify({ sent: true, slug: latest.slug, url: notifUrl }) };
 
   } catch (err) {
     console.error('auto-notify-news error:', err.message);
