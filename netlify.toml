@@ -15,3 +15,6 @@
 
 [functions."auto-notify-tips"]
   schedule = "0 10 * * *"
+
+[functions."auto-notify-prayer"]
+  schedule = "0 7 * * *"
