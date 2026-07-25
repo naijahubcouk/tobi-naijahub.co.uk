@@ -1003,7 +1003,7 @@
 
   <div class="pills">
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
-    <div class="pill" onclick="resetAndShow(showBusinesses)">🏢 Businesses</div>
+    <div class="pill" onclick="showBusinesses();window.history.replaceState({},\'\',\'/business\')">🏢 Businesses</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="showAllNews()">📰 News/Articles</div>
     <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
@@ -3228,7 +3228,7 @@ function buildLiveNewsHTML(articles, showAll) {
       <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
       ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;">
-        <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${a.url}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
         <button data-share-title="${(a.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(a.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(a.appUrl||('https://auntietobi.co.uk/blog/'+(a.slug||a.url.split('/blog/')[1]||''))).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
       </div>
     </div>`;
@@ -3310,7 +3310,7 @@ function showMoreLiveNews() {
         <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;line-height:1.4;">${a.title}</div>
         ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${a.url}"/g, '&quot;')}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
+          <a href="javascript:void(0)" data-blogurl="${a.url}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
           <button onclick="shareBlogUrl('${a.title.replace(/'/g,"\\'").substring(0,50)}','${a.summary.replace(/'/g,"\\'").substring(0,80)}','${a.url}')" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
         </div>
       </div>`;
@@ -5862,7 +5862,7 @@ function showUpcomingEventCard() {
       <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${event.summary}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:12px;color:#9CA3AF;flex:1;">📅 ${event.time}</span>
-        <a href="javascript:void(0)" data-blogurl="${event.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">🔗 Read More</a>
+        <a href="javascript:void(0)" data-blogurl="${event.url}" class="blog-read-more" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;">🔗 Read More</a>
       </div>
     </div>
   </div>`;
@@ -5903,7 +5903,7 @@ function showEventsCard() {
           <div style="font-size:12px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
           <div style="font-size:12px;color:#555;margin-bottom:8px;">🕐 ${e.time}</div>
           <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="javascript:void(0)" data-blogurl="${e.url}"/g, '&quot;')}"/g, '&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
+            <a href="javascript:void(0)" data-blogurl="${e.url}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Read More</a>
             <button onclick="tobiShare('${e.title.replace(/'/g,"\\'").substring(0,50)}','${e.date} • ${e.loc.replace(/'/g,"\\'")}','${e.url}')" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
           </div>
         </div>
@@ -5977,8 +5977,8 @@ window.onload = () => {
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
   }
-  if (_urlPathname === '/businesses') {
-    setTimeout(() => { showBusinesses(); window.history.replaceState({}, '', '/'); }, 300);
+  if (_urlPathname === '/businesses' || _urlPathname === '/business') {
+    setTimeout(() => { showBusinesses(); window.history.replaceState({}, '', '/business'); }, 300);
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
   }
@@ -6267,6 +6267,8 @@ function scrollToTop() {
 }
 
 function showBusinesses(startIndex) {
+  window._currentPage = 'businesses';
+  window.history.replaceState({}, '', '/business');
   if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
   const allBiz = getLiveDirectory();
   if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
