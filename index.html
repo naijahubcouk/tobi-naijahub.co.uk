@@ -1828,11 +1828,13 @@ async function loadLiveFeeds() {
 
     window._feedsLoaded = true;
 
-    // If home page is showing and news card not yet rendered, inject it now
+    // Only inject news card if we are on the home/welcome screen
     if (window._liveBlogPosts && window._liveBlogPosts.length > 0) {
-      const msgs = document.getElementById('messages');
-      if (msgs && !msgs.querySelector('[data-news-card]')) {
-        showNewsCard();
+      if (window._currentPage === 'home' || !window._currentPage) {
+        const msgs = document.getElementById('messages');
+        if (msgs && !msgs.querySelector('[data-news-card]')) {
+          showNewsCard();
+        }
       }
     }
   } catch (err) {
@@ -2914,6 +2916,7 @@ function getNewsEmoji(label) {
 }
 
 function showAllNews() {
+  window._currentPage = 'news';
   scrollToTop();
   // Use live feed if available, otherwise fall back to hardcoded
   const livePosts = getLiveBlogPosts();
@@ -3177,6 +3180,7 @@ function showAllNews() {
 }
 
 function showEventsFromNews() {
+  window._currentPage = 'events';
   scrollToTop();
   // Helper to parse "25 Jul 2026" → Date
   const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
@@ -3995,6 +3999,7 @@ function showAboutTobi() {
 }
 
 function showLinksPage() {
+  window._currentPage = 'links';
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
   scrollToTop();
@@ -4029,7 +4034,7 @@ function showLinksPage() {
     }, 400);
   }, 3000);
 
-  const html = `<div style="display:flex;flex-direction:column;gap:10px;">
+  const html = `<div data-links-page="1" style="display:flex;flex-direction:column;gap:10px;">
 
     <a href="https://auntietobi.com/new-listing" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">📍</span>
@@ -5740,19 +5745,30 @@ function showUpcomingEventCard() {
 
   const events = [
     {
-      emoji: '🇳🇬',
-      title: '9ja Fayre 2026 — Edinburgh',
-      summary: 'The biggest Nigerian fair comes to Edinburgh! Celebrate Nigerian food, fashion and culture in Scotland.',
-      date: 'Sat 25 Jul 2026',
-      dateObj: new Date(2026, 6, 25),
-      location: 'Edinburgh',
-      time: 'Sat 25 Jul 2026',
-      url: 'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!',
-      deeplink: '9jafayre'
+      emoji: '🛍️',
+      title: 'Trade & Taste Trade Fair Kettering 2026',
+      summary: 'Free community shopping and networking event at Corn Market Hall, Kettering. Nigerian and African traders, food, fashion and more.',
+      date: 'Sat 22 Aug 2026',
+      dateObj: new Date(2026, 7, 22),
+      location: 'Kettering',
+      time: 'Sat 22 Aug, 10AM – 5PM',
+      url: 'https://auntietobi.com/blog/Trade-and-Taste-Trade-Fair-Kettering-2026:-Free-Community-Shopping-and-Networking-Event',
+      deeplink: 'tradetaste'
     },
     {
-      emoji: '🛍️',
-      title: 'Deshapeables UK Tradefair London',
+      emoji: '🇳🇬',
+      title: 'Nigerian Cultural Festival 2026 — Plymouth',
+      summary: 'The Nigerian Cultural Festival comes to Plymouth! Celebrate Nigerian food, fashion, music and culture.',
+      date: 'Sat 8 Aug 2026',
+      dateObj: new Date(2026, 7, 8),
+      location: 'Plymouth',
+      time: 'Sat 8 Aug, 11:30AM – 9PM',
+      url: 'https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here\'s-Everything-You-Need-to-Know',
+      deeplink: 'nigerianfestplymouth'
+    },
+    {
+      emoji: '🇳🇬',
+      title: '9ja Fayre 2026 — Edinburgh',
       summary: 'The ultimate Nigerian trade fair experience in London. Shop, network and discover amazing Nigerian-owned businesses.',
       date: 'Sat 25 Jul 2026',
       dateObj: new Date(2026, 6, 25),
@@ -6405,6 +6421,7 @@ function resetAndShow(fn) {
 }
 
 function resetToWelcome() {
+  window._currentPage = 'home';
   nhsMode = false;
   // Reset exam state variables without clearing DOM
   examState.active = false;
