@@ -1828,13 +1828,11 @@ async function loadLiveFeeds() {
 
     window._feedsLoaded = true;
 
-    // Only inject news card if we are on the home/welcome screen
-    if (window._liveBlogPosts && window._liveBlogPosts.length > 0) {
-      if (window._currentPage === 'home' || !window._currentPage) {
-        const msgs = document.getElementById('messages');
-        if (msgs && !msgs.querySelector('[data-news-card]')) {
-          showNewsCard();
-        }
+    // Only inject news card if we are on the home/welcome screen and no card exists yet
+    if (window._liveBlogPosts && window._liveBlogPosts.length > 0 && window._currentPage === 'home') {
+      const msgs = document.getElementById('messages');
+      if (msgs && !msgs.querySelector('[data-news-card]')) {
+        showNewsCard();
       }
     }
   } catch (err) {
@@ -5993,8 +5991,8 @@ window.onload = () => {
     const blogSlug = _urlPathname.replace('/blog/', '');
     const blogUrl = 'https://auntietobi.com/blog/' + blogSlug;
     setTimeout(() => {
-      resetToWelcome();
-      setTimeout(() => { openBlogSheet(blogUrl, '', ''); }, 400);
+      openBlogSheet(blogUrl, '', '');
+      window.history.replaceState({}, '', '/');
     }, 300);
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
