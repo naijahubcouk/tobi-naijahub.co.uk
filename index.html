@@ -1946,7 +1946,7 @@ function formatResponse(text) {
 
           const shareBtn = '<button data-share-url="' + shareUrl + '" data-share-name="' + safeName + '" data-share-desc="' + shareMsg + '" onclick="tobiShare(this.dataset.shareName,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">\uD83D\uDCE4 Share</button>';
 
-          const viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#0F1E36;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View</a>';
+          const viewBtn = '<button onclick="window.open(\'https://auntietobi.com/listing/' + b.slug + '\',\'_blank\',\'noopener,noreferrer\')" style="flex:1;padding:9px 8px;background:#0F1E36;color:white;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View</button>';
 
           const actionBtns = (waBtn || phoneBtn) + viewBtn + shareBtn;
 
@@ -4972,7 +4972,7 @@ function handleDeepLink() {
         const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
         const waBtn = (business.verified && business.wa) ? '<a href="https://wa.me/' + business.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
         const shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-        const viewBtn = '<a href="https://auntietobi.com/listing/' + business.slug + '" target="_blank" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
+        const viewBtn = '<button onclick="window.open(\'https://auntietobi.com/listing/' + business.slug + '\',\'_blank\',\'noopener,noreferrer\')" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View details</button>';
         const cardHTML = '<div style="background:white;border:' + (business.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
           + verifiedBadge
           + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (business.verified ? 'margin-top:6px;' : '') + '">'
@@ -6350,7 +6350,7 @@ function showBusinesses(startIndex) {
     const verifiedBadge = b.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
     const waBtn = (b.verified && b.wa) ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
     const shareBtn = '<button onclick="tobiShare(\'' + safeName.replace(/'/g,"\\'") + '\',\'' + shareMsg + '\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-    const viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
+    const viewBtn = '<button onclick="window.open(\'https://auntietobi.com/listing/' + b.slug + '\',\'_blank\',\'noopener,noreferrer\')" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View details</button>';
     const cardHTML = '<div style="background:white;border:' + (b.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
       + verifiedBadge
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (b.verified ? 'margin-top:6px;' : '') + '">'
@@ -6366,25 +6366,8 @@ function showBusinesses(startIndex) {
 
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
 
-  addTipMessage(`<div style="background:white;border:2px solid #FFB81C;border-radius:12px;padding:14px 16px;cursor:pointer;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-      <span style="font-size:22px;">⭐</span>
-      <div>
-        <div style="font-size:14px;font-weight:800;color:#0F1E36;">Premium Membership — £49.99/yr</div>
-        <div style="font-size:11px;color:#057A44;font-weight:700;">Get your business seen by thousands of Nigerians in the UK</div>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
-      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>✅</span><span><strong>Verified Badge</strong> — builds trust instantly</span></div>
-      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>🔝</span><span><strong>Top of search results</strong> — appear before free listings</span></div>
-      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>🤖</span><span><strong>AI recommends you</strong> — Auntie Tobi actively suggests your business</span></div>
-      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>💬</span><span><strong>WhatsApp button</strong> — customers contact you in one tap</span></div>
-      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>📣</span><span><strong>Instagram spotlight</strong> — featured on Auntie Tobi's social</span></div>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <a href="https://auntietobi.com/new-listing" target="_blank" style="flex:1;display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-align:center;">🚀 Get Started</a>
-      <button onclick="showPaidPlanCard()" style="flex:1;background:#FFB81C;color:#0F1E36;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Full Details</button>
-    </div>
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+    <button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>
   </div>`);
 
   const moreLabel = hasMore ? '🏢 Show more businesses' : '🔄 Start again';
