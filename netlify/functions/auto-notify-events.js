@@ -21,7 +21,7 @@ exports.handler = async function(event) {
       return { statusCode: 200, body: `Event too old (${Math.round(ageMinutes)} mins): ${latest.slug}` };
     }
 
-    const notifUrl = latest.appUrl || `https://auntietobi.co.uk/?blog=${latest.slug.toLowerCase().replace(/[^a-z0-9]/g,'')}`;
+    const notifUrl = `https://auntietobi.co.uk/blog/${latest.slug || ''}`;
 
     const result = await sendTaggedPush(
       'events',
