@@ -5991,7 +5991,7 @@ window.onload = () => {
 
   // Handle pathname-based routes (e.g. /links, /news, /events, /businesses)
   if (_urlPathname === '/links') {
-    setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', '/links'); }, 300);
+    setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', '/'); }, 300);
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
   }
@@ -6011,7 +6011,7 @@ window.onload = () => {
     return;
   }
   if (_urlPathname === '/content-tools') {
-    setTimeout(() => { showContentTools(); window.history.replaceState({}, '', '/content-tools'); }, 300);
+    setTimeout(() => { showContentTools(); window.history.replaceState({}, '', '/'); }, 300);
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
   }
@@ -6339,7 +6339,7 @@ function scrollToTop() {
 
 function showBusinesses(startIndex) {
   window._currentPage = 'businesses';
-  window.history.replaceState({}, '', '/business');
+  window.history.replaceState({}, '', '/');
   if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
   const allBiz = getLiveDirectory();
   if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
@@ -6360,14 +6360,7 @@ function showBusinesses(startIndex) {
 
   addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>');
 
-  addTipMessage(`<div style="background:#0F1E36;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
-    <span style="font-size:24px;flex-shrink:0;">⭐</span>
-    <div style="flex:1;">
-      <div style="color:#FFB81C;font-size:13px;font-weight:800;margin-bottom:3px;">Premium Members get more visibility</div>
-      <div style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.5;">Your business appears at the TOP of search results, gets a ✅ Verified badge and reaches more customers.</div>
-    </div>
-    <a href="https://auntietobi.com/new-listing" target="_blank" style="flex-shrink:0;background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">List FREE →</a>
-  </div>`);
+
 
   page.forEach(b => {
     const cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
