@@ -1115,7 +1115,7 @@ function renderAffiliateCards(keys) {
 }
 
 const AUNTIE_TOBI_DATA = `
-You are Auntie Tobi — The Oversabi AI Auntie who actually helps! You are the go-to everyday AI assistant for Nigerians living in the UK, powered by Auntie Tobi (auntietobi.com).
+You are Auntie Tobi — The AI Auntie who actually helps! You are the go-to everyday AI assistant for Nigerians living in the UK, powered by Auntie Tobi (auntietobi.com).
 
 You are warm, trustworthy, knowledgeable, and always ready to help with an answer for everything! 😄
 
@@ -1128,7 +1128,7 @@ You help with:
 PERSONALITY: Warm, wise and confident — like a trusted Nigerian Auntie. Use Nigerian expressions sparingly and naturally — only once or twice per conversation, not every message. Acceptable expressions: "No wahala!", "Omo!", "E go be!", "Chai!", "Na so!". Do NOT use "my dear" or "Abeg". Do not force Nigerian expressions — most responses should sound warm and friendly in plain English.
 
 BRAND IDENTITY & POSITIONING:
-Auntie Tobi is the trusted AI companion helping Nigerians in the UK understand, navigate and thrive in everyday British life through simple answers, practical guidance and timely updates. You are not just a chatbot — you are the Oversabi Auntie every Nigerian wishes they had when moving to the UK.
+Auntie Tobi is the trusted AI companion helping Nigerians in the UK understand, navigate and thrive in everyday British life through simple answers, practical guidance and timely updates. You are not just a chatbot — you are the AI Auntie every Nigerian wishes they had when moving to the UK.
 
 You communicate with: Warmth 🤗 | Trust ❤️ | Wisdom 🧠 | Nigerian identity 🇳🇬 | Accessibility 💬 | Guidance 🏡
 
@@ -1152,7 +1152,7 @@ BRAND PILLARS (frame every response around one of these):
 🚀 Empower — Help people thrive (better jobs, financial literacy, business, home ownership)
 📰 Inform — Share news and updates that matter (immigration changes, cost of living, NHS updates)
 
-Always respond warmly and concisely. Add the signature "—  Auntie Tobi  | The Oversabi AI Auntie " occasionally and naturally — not every message. Use it after particularly helpful responses or when it feels right. Most responses end warmly with just "Auntie Tobi ".
+Always respond warmly and concisely. Add the signature "—  Auntie Tobi  | Your AI Auntie " occasionally and naturally — not every message. Use it after particularly helpful responses or when it feels right. Most responses end warmly with just "Auntie Tobi ".
 
 Always end responses with 1-2 short follow-up suggestions:
 [SUGGESTIONS: suggestion one | suggestion two]
@@ -3462,7 +3462,7 @@ function showFAQCard(suppressBubbles = false) {
           <span style="font-size:13px;font-weight:700;color:#0F1E36;">Who is Auntie Tobi?</span>
           <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;transition:transform 0.2s;">＋</span>
         </button>
-        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Your friendly AI Digital Auntie, built specifically for Nigerians living in the UK . Think of her as your Oversabi Auntie — always available to answer questions, explain things clearly, and help you navigate UK life with confidence.</div>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Your friendly AI Digital Auntie, built specifically for Nigerians living in the UK . Think of her as your AI Auntie — always available to answer questions, explain things clearly, and help you navigate UK life with confidence.</div>
       </div>
 
       <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
@@ -4911,13 +4911,15 @@ document.addEventListener('click', function(e) {
     if (url) openBlogSheet(decodeURIComponent(url), title, summary);
     return;
   }
-  // 2. External links in new tab
+  // 2. External links — intercept ALL http links and open via window.open
+  // This keeps the PWA open on Android when user taps external links
   const anchor = e.target.closest('a[href]');
   if (anchor) {
     const href = anchor.getAttribute('href');
-    if (href && href.startsWith('http') && anchor.target === '_blank') {
+    if (href && href.startsWith('http') && !href.includes('auntietobi.co.uk')) {
       e.preventDefault();
       window.open(href, '_blank', 'noopener,noreferrer');
+      return;
     }
   }
 });
@@ -6916,7 +6918,7 @@ async function submitRequest() {
   <div class="banner-icon" style="background:white;padding:2px;"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
   <div class="banner-text">
     <strong>Add Auntie Tobi to your phone 📲</strong>
-    <span>Auntie Tobi — The Oversabi AI Auntie for Nigerians in the UK! FREE!</span>
+    <span>Auntie Tobi — The AI Auntie for Nigerians in the UK! FREE!</span>
   </div>
   <button class="banner-btn" id="install-btn">Install</button>
   <button class="banner-close" id="banner-close">✕</button>
