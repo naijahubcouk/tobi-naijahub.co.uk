@@ -12,8 +12,6 @@
 /jobs           /?action=jobs           301
 /motivation     /?action=motivation     301
 /tip            /?action=tip            301
-/businesses     /index.html             200
-/business       /index.html             200
 /premium        /?action=premium        301
 
 # Blog deep links

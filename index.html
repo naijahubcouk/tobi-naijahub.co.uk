@@ -6005,7 +6005,7 @@ window.onload = () => {
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
   }
-  if (_urlPathname === '/businesses' || _urlPathname === '/business') {
+  if ((_urlPathname === '/businesses' || _urlPathname === '/business') && document.referrer && !document.referrer.includes('auntietobi.co.uk')) {
     setTimeout(() => { showBusinesses(); window.history.replaceState({}, '', '/business'); }, 300);
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
