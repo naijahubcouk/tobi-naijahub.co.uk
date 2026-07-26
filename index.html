@@ -6073,6 +6073,9 @@ window.onload = () => {
     return;
   }
 
+  // On fresh load/refresh with no deep link, always go home
+  window._currentPage = 'home';
+
   // Request location on load to update city
   requestLocation();
   handleDeepLink();
@@ -7270,27 +7273,13 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
         console.log('SW registered:', reg.scope);
-        // Check for updates every time the app loads
+        // Check for updates periodically
         reg.update();
-        // When a new SW is waiting, activate it immediately
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          if (!newWorker) return;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version available — skip waiting and reload
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-            }
-          });
-        });
       })
       .catch(err => console.log('SW error:', err));
 
-    // When SW takes control (after SKIP_WAITING), reload once
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) { refreshing = true; window.location.reload(); }
-    });
+    // When SW takes control (after SKIP_WAITING), no auto-reload
+    // Users will get new content on next natural navigation
   });
 }
 
