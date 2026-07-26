@@ -969,6 +969,24 @@
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
 <body>
+<script>
+// Early action detection — runs before window.onload
+// Prevents home page flash on deep link URLs
+(function() {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const action = p.get('action');
+    if (action === 'prayer' || action === 'motivation' || action === 'tip') {
+      // Mark that we have a deep link — window.onload will handle it
+      window._earlyAction = action;
+      window._earlyContent = p.get('content') || '';
+      window._earlyB1 = p.get('b1') || '';
+      window._earlyB2 = p.get('b2') || '';
+      window._earlyB3 = p.get('b3') || '';
+    }
+  } catch(e) {}
+})();
+</script>
 
 <div class="app">
   <div class="header">
@@ -3797,6 +3815,7 @@ function showJapaGuide() {
 
 
 function showTipLanding(tip, b1, b2, b3) {
+  window._currentPage = 'tip';
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
   scrollToTop();
@@ -3833,6 +3852,7 @@ function showTipLanding(tip, b1, b2, b3) {
 }
 
 function showMotivationLanding(quote, b1, b2, b3) {
+  window._currentPage = 'motivation';
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
   scrollToTop();
@@ -3879,6 +3899,7 @@ function showMotivationLanding(quote, b1, b2, b3) {
 }
 
 function showPrayerLanding(prayer, b1, b2) {
+  window._currentPage = 'prayer';
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
   scrollToTop();
@@ -5046,22 +5067,22 @@ function handleDeepLink() {
   } else if (action === 'businesses') {
     setTimeout(() => { resetAndShow(showBusinesses); }, 300);
   } else if (action === 'motivation') {
-    const content = urlParams.get('content') || '';
-    const b1 = urlParams.get('b1') || '';
-    const b2 = urlParams.get('b2') || '';
-    const b3 = urlParams.get('b3') || '';
-    setTimeout(() => showMotivationLanding(content, b1, b2, b3), 300);
+    const content = urlParams.get('content') || window._earlyContent || '';
+    const b1 = urlParams.get('b1') || window._earlyB1 || '';
+    const b2 = urlParams.get('b2') || window._earlyB2 || '';
+    const b3 = urlParams.get('b3') || window._earlyB3 || '';
+    showMotivationLanding(content, b1, b2, b3);
   } else if (action === 'prayer') {
-    const content = urlParams.get('content') || '';
-    const b1 = urlParams.get('b1') || '';
-    const b2 = urlParams.get('b2') || '';
-    setTimeout(() => showPrayerLanding(content, b1, b2), 300);
+    const content = urlParams.get('content') || window._earlyContent || '';
+    const b1 = urlParams.get('b1') || window._earlyB1 || '';
+    const b2 = urlParams.get('b2') || window._earlyB2 || '';
+    showPrayerLanding(content, b1, b2);
   } else if (action === 'tip') {
-    const content = urlParams.get('content') || '';
-    const b1 = urlParams.get('b1') || '';
-    const b2 = urlParams.get('b2') || '';
-    const b3 = urlParams.get('b3') || '';
-    setTimeout(() => showTipLanding(content, b1, b2, b3), 300);
+    const content = urlParams.get('content') || window._earlyContent || '';
+    const b1 = urlParams.get('b1') || window._earlyB1 || '';
+    const b2 = urlParams.get('b2') || window._earlyB2 || '';
+    const b3 = urlParams.get('b3') || window._earlyB3 || '';
+    showTipLanding(content, b1, b2, b3);
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
   } else if (action === 'guardianews' || action === 'news') {
@@ -6067,6 +6088,9 @@ window.onload = () => {
   }
 
   if (_urlParams.get('action') || _urlParams.get('blog') || _urlParams.get('biz')) {
+    // Clear messages immediately so home content doesn't flash
+    const _msgs = document.getElementById('messages');
+    if (_msgs) _msgs.innerHTML = '';
     handleDeepLink();
     // Load feeds in background after content shown
     setTimeout(() => { loadLiveFeeds(); }, 2000);
@@ -6113,6 +6137,11 @@ window.onload = () => {
   const isReturning = localStorage.getItem('tobi_visited');
   localStorage.setItem('tobi_visited', 'true');
   localStorage.setItem('tobi_last_visit', todayStr);
+
+  // If a deep link was already handled above, don't show welcome/returning screens
+  if (_urlParams.get('action') || _urlParams.get('blog') || _urlParams.get('biz') || _urlPathname.startsWith('/blog/')) {
+    return;
+  }
 
   // Check if returning exam user
   const examProgress = getExamProgress();

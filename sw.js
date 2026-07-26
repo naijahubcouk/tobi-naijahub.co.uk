@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'auntie-tobi-v8';
+const CACHE_NAME = 'auntie-tobi-v9';
 
 // Never cache index.html — always fetch fresh
 const NEVER_CACHE = [
