@@ -3837,6 +3837,17 @@ function showMotivationLanding(quote, b1, b2, b3) {
   messages.innerHTML = '';
   scrollToTop();
 
+  // If quote missing, use today's motivation from the array
+  if (!quote || quote.trim() === '') {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    if (typeof MOTIVATIONS !== 'undefined' && MOTIVATIONS.length > 0) {
+      const m = MOTIVATIONS[dayOfYear % MOTIVATIONS.length];
+      quote = m.quote || m.text || m;
+    } else {
+      quote = 'You are stronger than you think. Keep going — your breakthrough is closer than you know. 💚';
+    }
+  }
+
   const bb1 = b1 || 'How do I find a job in the UK?';
   const bb2 = b2 || 'Find a Nigerian business near me';
   const bb3 = b3 || 'How do I improve my UK credit score?';
@@ -3871,6 +3882,19 @@ function showPrayerLanding(prayer, b1, b2) {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
   scrollToTop();
+
+  // If prayer content missing, use today's prayer from the array
+  if (!prayer || prayer.trim() === '') {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    if (typeof PRAYERS !== 'undefined' && PRAYERS.length > 0) {
+      const p = PRAYERS[dayOfYear % PRAYERS.length];
+      prayer = p.prayer;
+      b1 = b1 || p.b1;
+      b2 = b2 || p.b2;
+    } else {
+      prayer = 'Lord, thank You for this new day. Guide my steps, protect my family, and let Your favour go before me today. Amen.';
+    }
+  }
 
   const bb1 = b1 || 'What Nigerian community events are near me?';
   const bb2 = b2 || 'Find a Nigerian business near me';
