@@ -6333,6 +6333,15 @@ function showBusinesses(startIndex) {
 
   addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>');
 
+  addTipMessage(`<div style="background:#0F1E36;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+    <span style="font-size:24px;flex-shrink:0;">⭐</span>
+    <div style="flex:1;">
+      <div style="color:#FFB81C;font-size:13px;font-weight:800;margin-bottom:3px;">Premium Members get more visibility</div>
+      <div style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.5;">Your business appears at the TOP of search results, gets a ✅ Verified badge and reaches more customers.</div>
+    </div>
+    <a href="https://auntietobi.com/new-listing" target="_blank" style="flex-shrink:0;background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;">List FREE →</a>
+  </div>`);
+
   page.forEach(b => {
     const cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
     const shareUrl = 'https://auntietobi.co.uk?biz=' + b.slug;
@@ -6355,7 +6364,28 @@ function showBusinesses(startIndex) {
     addTipMessage(cardHTML);
   });
 
-  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Want Auntie Tobi to shout out YOUR business? List it FREE and reach thousands of Nigerians across the UK! <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here</a> — it takes 2 minutes! 💚</div></div>');
+  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
+
+  addTipMessage(`<div style="background:white;border:2px solid #FFB81C;border-radius:12px;padding:14px 16px;cursor:pointer;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="font-size:22px;">⭐</span>
+      <div>
+        <div style="font-size:14px;font-weight:800;color:#0F1E36;">Premium Membership — £49.99/yr</div>
+        <div style="font-size:11px;color:#057A44;font-weight:700;">Get your business seen by thousands of Nigerians in the UK</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
+      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>✅</span><span><strong>Verified Badge</strong> — builds trust instantly</span></div>
+      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>🔝</span><span><strong>Top of search results</strong> — appear before free listings</span></div>
+      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>🤖</span><span><strong>AI recommends you</strong> — Auntie Tobi actively suggests your business</span></div>
+      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>💬</span><span><strong>WhatsApp button</strong> — customers contact you in one tap</span></div>
+      <div style="font-size:12px;color:#374151;display:flex;gap:8px;align-items:flex-start;"><span>📣</span><span><strong>Instagram spotlight</strong> — featured on Auntie Tobi's social</span></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="https://auntietobi.com/new-listing" target="_blank" style="flex:1;display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-align:center;">🚀 Get Started</a>
+      <button onclick="showPaidPlanCard()" style="flex:1;background:#FFB81C;color:#0F1E36;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Full Details</button>
+    </div>
+  </div>`);
 
   const moreLabel = hasMore ? '🏢 Show more businesses' : '🔄 Start again';
   addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinesses()">' + moreLabel + '</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian caterer near me\')">🍛 Find a caterer</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button></div>');
