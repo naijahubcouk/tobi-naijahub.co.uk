@@ -3823,7 +3823,7 @@ function showJapaGuide() {
 }
 
 
-function showTipLanding(tip, b1, b2, b3) {
+function showTipLanding(tip, b1, b2, b3, sourceUrl) {
   window._currentPage = 'tip';
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
@@ -3834,6 +3834,20 @@ function showTipLanding(tip, b1, b2, b3) {
   const bb2 = b2 || (typeof tip === 'object' ? tip.b2 : null) || 'Find a Nigerian business near me';
   const bb3 = b3 || (typeof tip === 'object' ? tip.b3 : null) || 'What benefits am I entitled to?';
 
+  const tipSourceUrl = sourceUrl || (typeof tip === 'object' && tip.sourceUrl) ? (sourceUrl || tip.sourceUrl) : null;
+  const categorySourceUrls2 = {
+    'Money': 'https://www.moneysavingexpert.com',
+    'Benefits': 'https://www.gov.uk/benefits-calculators',
+    'Housing': 'https://www.gov.uk/council-tax',
+    'NHS': 'https://www.nhs.uk',
+    'Immigration': 'https://www.gov.uk/check-uk-visa',
+    'Work Rights': 'https://www.gov.uk/employment-status',
+    'Education': 'https://www.gov.uk/find-a-job',
+    'Transport': 'https://www.gov.uk/driving-licence-categories',
+    'Safety': 'https://www.gov.uk/report-crime-anonymously',
+  };
+  const tipCategory = typeof tip === 'object' ? tip.category : null;
+  const resolvedSourceUrl = tipSourceUrl || (tipCategory && categorySourceUrls2[tipCategory]) || 'https://www.gov.uk';
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
     <div style="background:#057A44;padding:8px 14px;display:flex;align-items:center;gap:8px;">
       <span style="font-size:18px;">💡</span>
@@ -3841,6 +3855,9 @@ function showTipLanding(tip, b1, b2, b3) {
     </div>
     <div style="padding:14px;">
       <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-weight:500;">${tipText}</div>
+      <div style="border-top:1px solid #f0f0f0;padding-top:10px;margin-top:12px;display:flex;align-items:center;gap:8px;">
+        <a href="${resolvedSourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>
+      </div>
     </div>
   </div>`;
 
@@ -4916,6 +4933,18 @@ function getTodaysTip() {
 }
 
 function buildTipCard(tip, suggestionStr) {
+  const categorySourceUrls = {
+    'Money': 'https://www.moneysavingexpert.com',
+    'Benefits': 'https://www.gov.uk/benefits-calculators',
+    'Housing': 'https://www.gov.uk/council-tax',
+    'NHS': 'https://www.nhs.uk',
+    'Immigration': 'https://www.gov.uk/check-uk-visa',
+    'Work Rights': 'https://www.gov.uk/employment-status',
+    'Education': 'https://www.gov.uk/find-a-job',
+    'Transport': 'https://www.gov.uk/driving-licence-categories',
+    'Safety': 'https://www.gov.uk/report-crime-anonymously',
+  };
+  const sourceUrl = tip.sourceUrl || categorySourceUrls[tip.category] || 'https://www.gov.uk';
   const tipHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
       <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:16px;">💡</span>
@@ -4925,7 +4954,7 @@ function buildTipCard(tip, suggestionStr) {
         <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:13px;font-weight:700;padding:1px 6px;border-radius:50px;margin-bottom:3px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
         <p style="font-size:15px;color:#0F1E36;line-height:1.5;margin:0 0 4px;font-weight:500;padding:0;">${tip.tip}</p>
         <div style="border-top:1px solid #f0f0f0;padding-top:4px;display:flex;align-items:center;gap:8px;margin:0;">
-          ${tip.sourceUrl ? `<a href="${tip.sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>` : '<span style="flex:1;"></span>'}
+          <a href="${sourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>
           <button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">📤 Share Tip</button>
         </div>
       </div>
@@ -5091,7 +5120,8 @@ function handleDeepLink() {
     const b1 = params.get('b1') || window._earlyB1 || '';
     const b2 = params.get('b2') || window._earlyB2 || '';
     const b3 = params.get('b3') || window._earlyB3 || '';
-    showTipLanding(content, b1, b2, b3);
+    const source = params.get('source') || '';
+    showTipLanding(content, b1, b2, b3, source);
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
   } else if (action === 'guardianews' || action === 'news') {
