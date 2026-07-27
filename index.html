@@ -7292,16 +7292,16 @@ navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Clear all caches to ensure fresh content
+    if ('caches' in window) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
         console.log('SW registered:', reg.scope);
-        // Check for updates periodically
         reg.update();
       })
       .catch(err => console.log('SW error:', err));
-
-    // When SW takes control (after SKIP_WAITING), no auto-reload
-    // Users will get new content on next natural navigation
   });
 }
 
