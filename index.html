@@ -7062,14 +7062,15 @@ function initOneSignal() {
     // Handle notification click when app is open (foreground)
     OneSignal.Notifications.addEventListener('click', function(event) {
       const notif = event.notification;
-      const url = notif && notif.launchURL ? notif.launchURL : '';
+      // OneSignal uses different property names across versions
+      const url = (notif && (notif.launchURL || notif.launchUrl || notif.url || notif.launch_url || notif.additionalData && notif.additionalData.url)) || '';
       // Clear pending banner and badge
       localStorage.removeItem('tobi_pending_notif');
       const banner = document.getElementById('notif-update-banner');
       if (banner) banner.remove();
       if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
       // Navigate to deep link if set
-      if (url && url !== 'https://auntietobi.co.uk') {
+      if (url && url !== 'https://auntietobi.co.uk' && url !== window.location.href) {
         window.location.href = url;
       }
     });
@@ -7078,15 +7079,13 @@ function initOneSignal() {
     OneSignal.Notifications.addEventListener('foregroundWillDisplay', function(event) {
       const notif = event.notification;
       if (notif) {
-        // Prevent the OS notification from showing (we show our own banner)
         event.preventDefault();
-        // Save for banner display
+        const notifUrl = notif.launchURL || notif.launchUrl || notif.url || notif.launch_url || '';
         localStorage.setItem('tobi_pending_notif', JSON.stringify({
           title: notif.title || 'New update from Auntie Tobi!',
           body: notif.body || 'You have a new update 🇳🇬',
-          url: notif.launchURL || ''
+          url: notifUrl
         }));
-        // Show in-app banner immediately
         showPendingNotifBanner();
       }
     });
