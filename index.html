@@ -5067,21 +5067,21 @@ function handleDeepLink() {
   } else if (action === 'businesses') {
     setTimeout(() => { resetAndShow(showBusinesses); }, 300);
   } else if (action === 'motivation') {
-    const content = urlParams.get('content') || window._earlyContent || '';
-    const b1 = urlParams.get('b1') || window._earlyB1 || '';
-    const b2 = urlParams.get('b2') || window._earlyB2 || '';
-    const b3 = urlParams.get('b3') || window._earlyB3 || '';
+    const content = params.get('content') || window._earlyContent || '';
+    const b1 = params.get('b1') || window._earlyB1 || '';
+    const b2 = params.get('b2') || window._earlyB2 || '';
+    const b3 = params.get('b3') || window._earlyB3 || '';
     showMotivationLanding(content, b1, b2, b3);
   } else if (action === 'prayer') {
-    const content = urlParams.get('content') || window._earlyContent || '';
-    const b1 = urlParams.get('b1') || window._earlyB1 || '';
-    const b2 = urlParams.get('b2') || window._earlyB2 || '';
+    const content = params.get('content') || window._earlyContent || '';
+    const b1 = params.get('b1') || window._earlyB1 || '';
+    const b2 = params.get('b2') || window._earlyB2 || '';
     showPrayerLanding(content, b1, b2);
   } else if (action === 'tip') {
-    const content = urlParams.get('content') || window._earlyContent || '';
-    const b1 = urlParams.get('b1') || window._earlyB1 || '';
-    const b2 = urlParams.get('b2') || window._earlyB2 || '';
-    const b3 = urlParams.get('b3') || window._earlyB3 || '';
+    const content = params.get('content') || window._earlyContent || '';
+    const b1 = params.get('b1') || window._earlyB1 || '';
+    const b2 = params.get('b2') || window._earlyB2 || '';
+    const b3 = params.get('b3') || window._earlyB3 || '';
     showTipLanding(content, b1, b2, b3);
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
