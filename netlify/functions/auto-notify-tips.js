@@ -375,7 +375,19 @@ exports.handler = async function(event) {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     const tip = TIPS[dayOfYear % TIPS.length];
 
-    const url = `https://auntietobi.co.uk/?action=tip&content=${encodeURIComponent(tip.tip)}&b1=${encodeURIComponent(tip.b1)}&b2=${encodeURIComponent(tip.b2)}&b3=${encodeURIComponent(tip.b3)}`;
+    const categorySourceUrls = {
+      'Money': 'https://www.moneysavingexpert.com',
+      'Benefits': 'https://www.gov.uk/benefits-calculators',
+      'Housing': 'https://www.gov.uk/council-tax',
+      'NHS': 'https://www.nhs.uk',
+      'Immigration': 'https://www.gov.uk/check-uk-visa',
+      'Work Rights': 'https://www.gov.uk/employment-status',
+      'Education': 'https://www.gov.uk/find-a-job',
+      'Transport': 'https://www.gov.uk/driving-licence-categories',
+      'Safety': 'https://www.gov.uk/report-crime-anonymously',
+    };
+    const sourceUrl = tip.sourceUrl || categorySourceUrls[tip.category] || 'https://www.gov.uk';
+    const url = `https://auntietobi.co.uk/?action=tip&content=${encodeURIComponent(tip.tip)}&source=${encodeURIComponent(sourceUrl)}&b1=${encodeURIComponent(tip.b1)}&b2=${encodeURIComponent(tip.b2)}&b3=${encodeURIComponent(tip.b3)}`;
 
     const result = await sendTaggedPush(
       'tips',
