@@ -1314,7 +1314,7 @@ Auntie Tobi is a Nigerian UK platform built to help Nigerians thrive, connect an
 WHAT CAN YOU DO ON AUNTIE TOBI?
 
 ✅ Find Nigerian Businesses
-- Browse 101+ Nigerian-owned businesses across food, beauty, fashion, events, professional services and more
+- Browse 150+ Nigerian-owned businesses across food, beauty, fashion, events, professional services and more
 - Find trusted stylists, restaurants, photographers, accountants, education consultants — you name it!
 - Support Nigerian entrepreneurs in the UK 🇳🇬
 
@@ -4050,7 +4050,7 @@ function showAboutTobi() {
   messages.innerHTML = '';
   scrollToTop();
 
-  const bizCount = (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 112) + '+';
+  const bizCount = (window._liveDirectory ? window._liveDirectory.length : typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 112) + '+';
 
   const html = `<div style="display:flex;flex-direction:column;gap:12px;">
 
@@ -4156,7 +4156,7 @@ function showLinksPage() {
 
   // Rotating info facts — NOT clickable
   const _facts = [
-    '\u{1f3e2} ' + (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 120) + '+ Nigerian-owned businesses listed across the UK',
+    '\u{1f3e2} ' + (window._liveDirectory ? window._liveDirectory.length : typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY.length : 120) + '+ Nigerian-owned businesses listed across the UK',
     '\u{1f49a} Auntie Tobi is completely free to use — no sign up needed',
     '\u{1f916} Powered by AI to help Nigerians navigate UK life',
     '\u{1f4f0} Get the latest UK news affecting Nigerians daily',
