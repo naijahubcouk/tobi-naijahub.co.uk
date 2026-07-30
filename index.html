@@ -7207,9 +7207,16 @@ function showNotifPrefs() {
   const modal = document.getElementById('notifPrefsModal');
   if (!modal) return;
   const prefs = getNotifPrefs();
+  const hasPrefs = localStorage.getItem(NOTIF_PREFS_KEY);
   document.querySelectorAll('.notif-toggle').forEach(toggle => {
     const key = toggle.getAttribute('data-key');
-    const isOn = prefs[key] !== false;
+    // New users with no prefs: default everything ON except prayer
+    let isOn;
+    if (!hasPrefs) {
+      isOn = key !== 'prayer';
+    } else {
+      isOn = prefs[key] !== false;
+    }
     applyToggleState(toggle, isOn);
   });
   modal.style.display = 'flex';
@@ -7240,6 +7247,8 @@ function saveNotifPrefs() {
     prefs[toggle.getAttribute('data-key')] = toggle.getAttribute('data-state') === 'on';
   });
   localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs));
+  // Ensure subscription flag is marked
+  localStorage.setItem('tobi_notifications', '1');
 
   // If all categories off, update bell to show 🔕
   const allOff = Object.values(prefs).every(v => !v);
@@ -7279,11 +7288,24 @@ async function handleBellClick() {
     // Already subscribed — open preferences directly
     showNotifPrefs();
   } else {
-    // Not subscribed — prompt to subscribe then show prefs
+    // Not subscribed — prompt to subscribe, then show prefs AFTER confirmed
     if (typeof OneSignalDeferred !== 'undefined') {
       OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.Slidedown.promptPush();
-        setTimeout(() => showNotifPrefs(), 1000);
+        try {
+          await OneSignal.Slidedown.promptPush();
+        } catch(e) {}
+        // Wait up to 6 seconds for subscription to confirm
+        let waited = 0;
+        const checkSubscribed = setInterval(() => {
+          waited += 300;
+          const nowSubscribed = localStorage.getItem('tobi_notifications') === '1';
+          if (nowSubscribed || waited >= 6000) {
+            clearInterval(checkSubscribed);
+            if (nowSubscribed) {
+              setTimeout(() => showNotifPrefs(), 500);
+            }
+          }
+        }, 300);
       });
     }
   }
