@@ -135,4 +135,6 @@
 /sitemap.xml     /.netlify/functions/kb-sitemap   200
 /kb/:slug        /.netlify/functions/kb-serve/:slug 200
 
+/social-content    /social-manager.html    200
+
 /* /index.html 200
