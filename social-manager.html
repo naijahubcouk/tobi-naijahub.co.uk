@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Social Content — Auntie Tobi Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; color:white; }
+
+/* ── LOGIN SCREEN ── */
+#loginScreen {
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background: radial-gradient(ellipse at 60% 0%, #1a0a00 0%, #0a0a0a 60%);
+}
+.login-logo { font-size:40px; margin-bottom:8px; }
+.login-brand { font-size:13px; font-weight:800; color:#FFB81C; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:32px; }
+.login-card {
+  background:#111;
+  border:1.5px solid #222;
+  border-radius:16px;
+  padding:28px 24px;
+  width:100%;
+  max-width:380px;
+}
+.login-title { font-size:22px; font-weight:900; color:white; margin-bottom:6px; }
+.login-sub { font-size:13px; color:#666; margin-bottom:24px; line-height:1.5; }
+.login-badge {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:#1a1a1a;
+  border:1px solid #FFB81C33;
+  border-radius:20px;
+  padding:4px 12px;
+  font-size:11px;
+  font-weight:700;
+  color:#FFB81C;
+  margin-bottom:20px;
+}
+.form-group { margin-bottom:16px; }
+.form-label { font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px; }
+.form-input {
+  width:100%;
+  background:#1a1a1a;
+  border:1.5px solid #222;
+  border-radius:10px;
+  padding:12px 16px;
+  font-size:14px;
+  font-family:'Nunito',sans-serif;
+  color:white;
+  outline:none;
+  transition:border-color 0.2s;
+}
+.form-input:focus { border-color:#FFB81C; }
+.form-input::placeholder { color:#444; }
+.btn-login {
+  width:100%;
+  background:#FFB81C;
+  color:#0a0a0a;
+  border:none;
+  border-radius:10px;
+  padding:14px;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  letter-spacing:0.02em;
+  transition:all 0.2s;
+  margin-top:4px;
+}
+.btn-login:hover { background:#e6a418; transform:translateY(-1px); }
+.login-error { font-size:12px; color:#ef4444; margin-top:10px; text-align:center; display:none; }
+.login-footer { margin-top:20px; text-align:center; font-size:12px; color:#444; }
+.login-footer a { color:#FFB81C; text-decoration:none; }
+
+/* ── MAIN APP ── */
+#appScreen { display:none; min-height:100vh; }
+
+/* Header */
+.header {
+  background:#0a0a0a;
+  border-bottom:1px solid #1a1a1a;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.header-left { display:flex; align-items:center; gap:10px; }
+.header-logo { width:36px; height:36px; border-radius:50%; border:2px solid #FFB81C; object-fit:cover; }
+.header-title { font-size:15px; font-weight:800; color:white; }
+.header-sub { font-size:10px; color:#FFB81C; font-weight:700; letter-spacing:0.05em; }
+.premium-badge {
+  background:linear-gradient(135deg, #FFB81C, #e6a418);
+  color:#0a0a0a;
+  font-size:10px;
+  font-weight:800;
+  padding:4px 10px;
+  border-radius:20px;
+  letter-spacing:0.05em;
+}
+
+/* Hero section */
+.hero {
+  background: linear-gradient(135deg, #111 0%, #0a0a0a 100%);
+  border-bottom:1px solid #1a1a1a;
+  padding:28px 20px;
+  text-align:center;
+}
+.hero-eyebrow { font-size:11px; font-weight:800; color:#FFB81C; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:10px; }
+.hero-title { font-size:26px; font-weight:900; color:white; line-height:1.2; margin-bottom:10px; }
+.hero-title span { color:#FFB81C; }
+.hero-desc { font-size:13px; color:#888; line-height:1.6; max-width:340px; margin:0 auto; }
+.content-pills {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  justify-content:center;
+  margin-top:16px;
+}
+.pill {
+  background:#1a1a1a;
+  border:1px solid #2a2a2a;
+  border-radius:20px;
+  padding:5px 12px;
+  font-size:11px;
+  font-weight:700;
+  color:#888;
+}
+
+/* Main container */
+.container { max-width:680px; margin:0 auto; padding:20px 16px; }
+
+/* Input card */
+.input-card {
+  background:#111;
+  border:1.5px solid #1a1a1a;
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.input-card-header {
+  background:#1a1a1a;
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border-bottom:1px solid #222;
+}
+.input-card-header .step {
+  width:28px; height:28px;
+  background:#FFB81C;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:900;
+  color:#0a0a0a;
+  flex-shrink:0;
+}
+.input-card-header .label { font-size:13px; font-weight:800; color:white; }
+.input-card-header .sublabel { font-size:11px; color:#666; }
+.input-card-body { padding:18px; }
+
+.url-input-wrap { position:relative; }
+.url-input-wrap .url-icon {
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:16px;
+}
+.url-input {
+  width:100%;
+  background:#1a1a1a;
+  border:1.5px solid #2a2a2a;
+  border-radius:10px;
+  padding:13px 16px 13px 42px;
+  font-size:13px;
+  font-family:'Nunito',sans-serif;
+  color:white;
+  outline:none;
+  transition:border-color 0.2s;
+}
+.url-input:focus { border-color:#FFB81C; }
+.url-input::placeholder { color:#444; }
+.url-hint { font-size:11px; color:#444; margin-top:6px; }
+
+/* Tone selector */
+.tone-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+.tone-btn {
+  background:#1a1a1a;
+  border:1.5px solid #2a2a2a;
+  border-radius:10px;
+  padding:10px 8px;
+  cursor:pointer;
+  text-align:center;
+  transition:all 0.15s;
+  font-family:'Nunito',sans-serif;
+}
+.tone-btn:hover { border-color:#FFB81C44; }
+.tone-btn.selected { border-color:#FFB81C; background:#1a1400; }
+.tone-btn .tone-emoji { font-size:18px; display:block; margin-bottom:4px; }
+.tone-btn .tone-name { font-size:11px; font-weight:700; color:#888; }
+.tone-btn.selected .tone-name { color:#FFB81C; }
+
+/* Content selector */
+.content-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.content-toggle {
+  background:#1a1a1a;
+  border:1.5px solid #2a2a2a;
+  border-radius:10px;
+  padding:12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  transition:all 0.15s;
+}
+.content-toggle:hover { border-color:#FFB81C44; }
+.content-toggle.selected { border-color:#057A44; background:#001a0a; }
+.content-toggle .ct-emoji { font-size:20px; }
+.content-toggle .ct-text .ct-name { font-size:12px; font-weight:700; color:#888; }
+.content-toggle .ct-text .ct-count { font-size:10px; color:#444; }
+.content-toggle.selected .ct-name { color:#4ade80; }
+.content-toggle.selected .ct-count { color:#057A44; }
+.check-icon { margin-left:auto; font-size:14px; display:none; }
+.content-toggle.selected .check-icon { display:block; color:#057A44; }
+
+/* Generate button */
+.btn-generate {
+  width:100%;
+  background:linear-gradient(135deg, #FFB81C, #e6a418);
+  color:#0a0a0a;
+  border:none;
+  border-radius:12px;
+  padding:16px;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  letter-spacing:0.02em;
+  transition:all 0.2s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.btn-generate:hover { transform:translateY(-2px); box-shadow:0 8px 24px #FFB81C44; }
+.btn-generate:disabled { background:#2a2a2a; color:#444; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* Loading */
+.loading-state {
+  display:none;
+  text-align:center;
+  padding:40px 20px;
+  background:#111;
+  border:1.5px solid #1a1a1a;
+  border-radius:16px;
+  margin-bottom:20px;
+}
+.loading-ring {
+  width:48px; height:48px;
+  border:3px solid #1a1a1a;
+  border-top-color:#FFB81C;
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  margin:0 auto 16px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-msg { font-size:14px; font-weight:700; color:#888; margin-bottom:6px; }
+.loading-sub { font-size:12px; color:#444; }
+.loading-steps { display:flex; flex-direction:column; gap:6px; margin-top:16px; }
+.loading-step { font-size:11px; color:#333; transition:color 0.3s; }
+.loading-step.done { color:#4ade80; }
+.loading-step.active { color:#FFB81C; }
+
+/* Results */
+.results-section { display:none; }
+.results-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+.results-title { font-size:18px; font-weight:900; color:white; }
+.results-biz { font-size:12px; color:#FFB81C; font-weight:700; }
+.btn-regen {
+  background:#1a1a1a;
+  border:1.5px solid #2a2a2a;
+  border-radius:8px;
+  padding:8px 14px;
+  font-size:12px;
+  font-weight:700;
+  color:#888;
+  cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  transition:all 0.2s;
+}
+.btn-regen:hover { border-color:#FFB81C; color:#FFB81C; }
+
+/* Content blocks */
+.content-section {
+  background:#111;
+  border:1.5px solid #1a1a1a;
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:16px;
+}
+.cs-header {
+  background:#1a1a1a;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #222;
+}
+.cs-title { font-size:13px; font-weight:800; color:white; display:flex; align-items:center; gap:8px; }
+.cs-count { font-size:11px; color:#FFB81C; font-weight:700; background:#FFB81C1a; padding:2px 8px; border-radius:10px; }
+.cs-body { padding:16px; }
+
+/* Post items */
+.post-item {
+  background:#0a0a0a;
+  border:1px solid #1a1a1a;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:10px;
+  position:relative;
+}
+.post-item:last-child { margin-bottom:0; }
+.post-num { font-size:10px; font-weight:800; color:#FFB81C; letter-spacing:0.1em; margin-bottom:6px; }
+.post-theme { font-size:11px; font-weight:700; color:#057A44; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; }
+.post-caption { font-size:13px; color:#ccc; line-height:1.7; margin-bottom:8px; white-space:pre-wrap; }
+.post-hashtags { font-size:11px; color:#4a9eff; line-height:1.6; }
+.post-cta { font-size:11px; color:#FFB81C; font-weight:700; margin-top:6px; }
+.copy-row { display:flex; gap:6px; margin-top:10px; }
+.copy-btn {
+  background:#1a1a1a;
+  border:1px solid #2a2a2a;
+  color:#888;
+  border-radius:6px;
+  padding:5px 10px;
+  font-size:10px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  transition:all 0.15s;
+}
+.copy-btn:hover { border-color:#FFB81C; color:#FFB81C; }
+.copy-btn.copied { background:#FFB81C1a; border-color:#FFB81C; color:#FFB81C; }
+
+/* Story & Reel items */
+.idea-item {
+  background:#0a0a0a;
+  border:1px solid #1a1a1a;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:10px;
+}
+.idea-item:last-child { margin-bottom:0; }
+.idea-type { font-size:10px; font-weight:800; color:#888; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px; }
+.idea-title { font-size:13px; font-weight:800; color:white; margin-bottom:6px; }
+.idea-desc { font-size:12px; color:#888; line-height:1.6; }
+.idea-hook { font-size:12px; color:#FFB81C; font-weight:700; margin-top:8px; }
+.idea-steps { margin-top:8px; }
+.idea-step { font-size:12px; color:#666; line-height:1.6; display:flex; gap:8px; }
+.idea-step-num { color:#FFB81C; font-weight:800; flex-shrink:0; }
+
+/* Download all button */
+.btn-download-all {
+  width:100%;
+  background:#111;
+  border:1.5px solid #FFB81C;
+  border-radius:12px;
+  padding:14px;
+  font-size:14px;
+  font-weight:800;
+  color:#FFB81C;
+  cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  transition:all 0.2s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:8px;
+}
+.btn-download-all:hover { background:#FFB81C; color:#0a0a0a; }
+
+/* Business preview */
+.biz-preview {
+  background:#111;
+  border:1.5px solid #1a1a1a;
+  border-radius:12px;
+  padding:14px 16px;
+  margin-bottom:20px;
+  display:none;
+  align-items:center;
+  gap:12px;
+}
+.biz-avatar {
+  width:44px; height:44px;
+  border-radius:10px;
+  background:#1a1a1a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  flex-shrink:0;
+  border:1px solid #2a2a2a;
+  overflow:hidden;
+}
+.biz-avatar img { width:100%; height:100%; object-fit:cover; }
+.biz-info .biz-name { font-size:14px; font-weight:800; color:white; }
+.biz-info .biz-cat { font-size:11px; color:#FFB81C; font-weight:700; }
+.biz-info .biz-loc { font-size:11px; color:#555; margin-top:2px; }
+.biz-verified { margin-left:auto; font-size:18px; }
+
+/* Divider */
+.section-divider {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:24px 0 16px;
+}
+.section-divider-line { flex:1; height:1px; background:#1a1a1a; }
+.section-divider-label { font-size:11px; font-weight:800; color:#333; letter-spacing:0.1em; text-transform:uppercase; white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="loginScreen">
+  <div class="login-logo">⭐</div>
+  <div class="login-brand">Auntie Tobi Premium</div>
+  <div class="login-card">
+    <div class="login-badge">🔒 Members Only</div>
+    <div class="login-title">AI Social Content</div>
+    <div class="login-sub">Enter your premium access password to generate a full month of social content for your business.</div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="passwordInput" placeholder="Enter your premium password" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn-login" onclick="login()">Unlock Premium Access →</button>
+    <div class="login-error" id="loginError">❌ Incorrect password. Contact us on WhatsApp for access.</div>
+    <div class="login-footer">Not a premium member? <a href="https://wa.me/447594674940" target="_blank">Join via WhatsApp →</a></div>
+  </div>
+</div>
+
+<!-- ══ APP SCREEN ══ -->
+<div id="appScreen">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <img class="header-logo" src="https://naijabiz.b-cdn.net/013d6cf6-3a2b-4a14-a3d3-5bcb0e378424-1783702300556.png" alt="Auntie Tobi">
+      <div>
+        <div class="header-title">AI Social Content</div>
+        <div class="header-sub">Powered by Auntie Tobi ✨</div>
+      </div>
+    </div>
+    <span class="premium-badge">⭐ PREMIUM</span>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">Your AI Content Team</div>
+    <div class="hero-title">A month of content<br><span>in 60 seconds</span></div>
+    <div class="hero-desc">Paste your Auntie Tobi listing link. AI generates professional Instagram posts, captions, hashtags, story ideas and reel scripts — tailored to your business.</div>
+    <div class="content-pills">
+      <span class="pill">📸 30 Posts</span>
+      <span class="pill">✍️ 30 Captions</span>
+      <span class="pill"># Hashtags</span>
+      <span class="pill">📱 Stories</span>
+      <span class="pill">🎬 Reels</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Business preview (shows after URL validated) -->
+    <div class="biz-preview" id="bizPreview">
+      <div class="biz-avatar" id="bizAvatar">🏢</div>
+      <div class="biz-info">
+        <div class="biz-name" id="bizName">—</div>
+        <div class="biz-cat" id="bizCat">—</div>
+        <div class="biz-loc" id="bizLoc">—</div>
+      </div>
+      <div class="biz-verified">✅</div>
+    </div>
+
+    <!-- Step 1: Listing URL -->
+    <div class="input-card">
+      <div class="input-card-header">
+        <div class="step">1</div>
+        <div>
+          <div class="label">Your Auntie Tobi Listing</div>
+          <div class="sublabel">Paste your business page link below</div>
+        </div>
+      </div>
+      <div class="input-card-body">
+        <div class="url-input-wrap">
+          <span class="url-icon">🔗</span>
+          <input type="url" class="url-input" id="listingUrl" placeholder="https://auntietobi.co.uk/listing/your-business" oninput="onUrlInput(this.value)">
+        </div>
+        <div class="url-hint">Find your listing at auntietobi.co.uk → Businesses → search your name</div>
+      </div>
+    </div>
+
+    <!-- Step 2: Tone -->
+    <div class="input-card">
+      <div class="input-card-header">
+        <div class="step">2</div>
+        <div>
+          <div class="label">Brand Tone</div>
+          <div class="sublabel">How should your content sound?</div>
+        </div>
+      </div>
+      <div class="input-card-body">
+        <div class="tone-grid">
+          <button class="tone-btn selected" onclick="selectTone(this,'professional')" data-tone="professional">
+            <span class="tone-emoji">💼</span><span class="tone-name">Professional</span>
+          </button>
+          <button class="tone-btn" onclick="selectTone(this,'vibrant')" data-tone="vibrant">
+            <span class="tone-emoji">🔥</span><span class="tone-name">Vibrant</span>
+          </button>
+          <button class="tone-btn" onclick="selectTone(this,'luxury')" data-tone="luxury">
+            <span class="tone-emoji">💎</span><span class="tone-name">Luxury</span>
+          </button>
+          <button class="tone-btn" onclick="selectTone(this,'friendly')" data-tone="friendly">
+            <span class="tone-emoji">😊</span><span class="tone-name">Friendly</span>
+          </button>
+          <button class="tone-btn" onclick="selectTone(this,'bold')" data-tone="bold">
+            <span class="tone-emoji">💪🏾</span><span class="tone-name">Bold</span>
+          </button>
+          <button class="tone-btn" onclick="selectTone(this,'cultural')" data-tone="cultural">
+            <span class="tone-emoji">🇳🇬</span><span class="tone-name">Cultural</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Content to generate -->
+    <div class="input-card">
+      <div class="input-card-header">
+        <div class="step">3</div>
+        <div>
+          <div class="label">Content to Generate</div>
+          <div class="sublabel">Select what you want</div>
+        </div>
+      </div>
+      <div class="input-card-body">
+        <div class="content-grid">
+          <div class="content-toggle selected" onclick="toggleContent(this,'posts')" data-type="posts">
+            <span class="ct-emoji">📸</span>
+            <div class="ct-text">
+              <div class="ct-name">Instagram Posts</div>
+              <div class="ct-count">30 posts + captions</div>
+            </div>
+            <span class="check-icon">✓</span>
+          </div>
+          <div class="content-toggle selected" onclick="toggleContent(this,'hashtags')" data-type="hashtags">
+            <span class="ct-emoji">#️⃣</span>
+            <div class="ct-text">
+              <div class="ct-name">Hashtag Sets</div>
+              <div class="ct-count">30 targeted sets</div>
+            </div>
+            <span class="check-icon">✓</span>
+          </div>
+          <div class="content-toggle selected" onclick="toggleContent(this,'stories')" data-type="stories">
+            <span class="ct-emoji">📱</span>
+            <div class="ct-text">
+              <div class="ct-name">Story Ideas</div>
+              <div class="ct-count">15 story concepts</div>
+            </div>
+            <span class="check-icon">✓</span>
+          </div>
+          <div class="content-toggle selected" onclick="toggleContent(this,'reels')" data-type="reels">
+            <span class="ct-emoji">🎬</span>
+            <div class="ct-text">
+              <div class="ct-name">Reel Scripts</div>
+              <div class="ct-count">5 full scripts</div>
+            </div>
+            <span class="check-icon">✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate Button -->
+    <button class="btn-generate" id="generateBtn" onclick="generate()" disabled>
+      <span>⚡</span> Generate My Content Pack
+    </button>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loadingState">
+      <div class="loading-ring"></div>
+      <div class="loading-msg">Building your content pack...</div>
+      <div class="loading-sub">AI is crafting 30 posts, captions, hashtags, story ideas and reel scripts</div>
+      <div class="loading-steps">
+        <div class="loading-step" id="step1">⏳ Reading your business listing...</div>
+        <div class="loading-step" id="step2">⏳ Crafting Instagram posts & captions...</div>
+        <div class="loading-step" id="step3">⏳ Building hashtag strategy...</div>
+        <div class="loading-step" id="step4">⏳ Writing story ideas...</div>
+        <div class="loading-step" id="step5">⏳ Scripting reel content...</div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section" id="resultsSection">
+
+      <div class="results-header">
+        <div>
+          <div class="results-title">Your Content Pack 🎉</div>
+          <div class="results-biz" id="resultsBizName"></div>
+        </div>
+        <button class="btn-regen" onclick="generate()">🔄 Regenerate</button>
+      </div>
+
+      <!-- Posts & Captions -->
+      <div class="content-section" id="postsSection">
+        <div class="cs-header">
+          <div class="cs-title">📸 Instagram Posts <span class="cs-count">30 posts</span></div>
+          <button class="copy-btn" onclick="copySection('postsContent')">Copy All</button>
+        </div>
+        <div class="cs-body" id="postsContent"></div>
+      </div>
+
+      <!-- Story Ideas -->
+      <div class="content-section" id="storiesSection">
+        <div class="cs-header">
+          <div class="cs-title">📱 Story Ideas <span class="cs-count">15 ideas</span></div>
+          <button class="copy-btn" onclick="copySection('storiesContent')">Copy All</button>
+        </div>
+        <div class="cs-body" id="storiesContent"></div>
+      </div>
+
+      <!-- Reel Scripts -->
+      <div class="content-section" id="reelsSection">
+        <div class="cs-header">
+          <div class="cs-title">🎬 Reel Scripts <span class="cs-count">5 scripts</span></div>
+          <button class="copy-btn" onclick="copySection('reelsContent')">Copy All</button>
+        </div>
+        <div class="cs-body" id="reelsContent"></div>
+      </div>
+
+      <button class="btn-download-all" onclick="downloadAll()">
+        ⬇️ Download Full Content Pack
+      </button>
+
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /appScreen -->
+
+<script>
+// ── CONFIG ──
+const PREMIUM_PASSWORD = 'tobi2024premium';
+const API_URL = '/.netlify/functions/chat-openai';
+
+// ── STATE ──
+let selectedTone = 'professional';
+let selectedContent = new Set(['posts','hashtags','stories','reels']);
+let businessData = null;
+let generatedContent = null;
+let urlDebounce = null;
+
+// ── AUTH ──
+function login() {
+  const pw = document.getElementById('passwordInput').value.trim();
+  if (pw === PREMIUM_PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    sessionStorage.setItem('smm_auth', '1');
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('passwordInput').value = '';
+  }
+}
+
+// Auto-login if already authenticated this session
+if (sessionStorage.getItem('smm_auth') === '1') {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+}
+
+// ── TONE ──
+function selectTone(btn, tone) {
+  document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedTone = tone;
+}
+
+// ── CONTENT TOGGLE ──
+function toggleContent(el, type) {
+  el.classList.toggle('selected');
+  if (selectedContent.has(type)) selectedContent.delete(type);
+  else selectedContent.add(type);
+}
+
+// ── URL INPUT ──
+function onUrlInput(val) {
+  clearTimeout(urlDebounce);
+  if (!val.trim()) {
+    hideBizPreview();
+    setGenerateBtn(false);
+    return;
+  }
+  urlDebounce = setTimeout(() => fetchBizData(val.trim()), 800);
+}
+
+async function fetchBizData(url) {
+  // Extract slug from URL
+  const slug = url.split('/').filter(Boolean).pop();
+  if (!slug) return;
+
+  // Try to find in directory
+  try {
+    const res = await fetch(`/.netlify/functions/fetch-listings-feed`);
+    if (!res.ok) throw new Error();
+    const listings = await res.json();
+    const biz = (listings.businesses || listings).find(b =>
+      b.slug === slug || (b.name && b.name.toLowerCase().replace(/[^a-z0-9]/g,'-').includes(slug.substring(0,15)))
+    );
+    if (biz) {
+      businessData = biz;
+      showBizPreview(biz);
+      setGenerateBtn(true);
+    } else {
+      // Accept URL anyway — AI will use the URL
+      businessData = { name: slug.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), url };
+      showBizPreviewMinimal(businessData.name);
+      setGenerateBtn(true);
+    }
+  } catch(e) {
+    businessData = { name: slug.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), url };
+    showBizPreviewMinimal(businessData.name);
+    setGenerateBtn(true);
+  }
+}
+
+function showBizPreview(biz) {
+  document.getElementById('bizName').textContent = biz.name || 'Your Business';
+  document.getElementById('bizCat').textContent = biz.category || biz.type || 'Business';
+  document.getElementById('bizLoc').textContent = '📍 ' + (biz.location || biz.city || biz.area || 'UK');
+  if (biz.logo || biz.image) {
+    document.getElementById('bizAvatar').innerHTML = `<img src="${biz.logo||biz.image}" alt="">`;
+  } else {
+    document.getElementById('bizAvatar').textContent = (biz.emoji || '🏢');
+  }
+  document.getElementById('bizPreview').style.display = 'flex';
+}
+
+function showBizPreviewMinimal(name) {
+  document.getElementById('bizName').textContent = name;
+  document.getElementById('bizCat').textContent = 'Business found ✓';
+  document.getElementById('bizLoc').textContent = '📍 UK';
+  document.getElementById('bizAvatar').textContent = '🏢';
+  document.getElementById('bizPreview').style.display = 'flex';
+}
+
+function hideBizPreview() {
+  document.getElementById('bizPreview').style.display = 'none';
+  businessData = null;
+}
+
+function setGenerateBtn(enabled) {
+  document.getElementById('generateBtn').disabled = !enabled;
+}
+
+// ── GENERATE ──
+async function generate() {
+  if (!businessData) return;
+
+  // Show loading
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('generateBtn').disabled = true;
+
+  // Animate loading steps
+  const steps = ['step1','step2','step3','step4','step5'];
+  steps.forEach(s => {
+    const el = document.getElementById(s);
+    el.className = 'loading-step';
+    el.textContent = el.textContent.replace(/^[✅⏳]/, '⏳');
+  });
+
+  let stepIdx = 0;
+  const stepInterval = setInterval(() => {
+    if (stepIdx > 0) {
+      document.getElementById(steps[stepIdx-1]).className = 'loading-step done';
+      document.getElementById(steps[stepIdx-1]).textContent = document.getElementById(steps[stepIdx-1]).textContent.replace('⏳','✅');
+    }
+    if (stepIdx < steps.length) {
+      document.getElementById(steps[stepIdx]).className = 'loading-step active';
+    }
+    stepIdx++;
+    if (stepIdx > steps.length) clearInterval(stepInterval);
+  }, 1800);
+
+  const tone = selectedTone;
+  const bizName = businessData.name;
+  const bizDesc = businessData.description || businessData.desc || '';
+  const bizCat = businessData.category || businessData.type || 'business';
+  const bizLoc = businessData.location || businessData.city || 'UK';
+  const bizUrl = document.getElementById('listingUrl').value.trim();
+  const whatsapp = businessData.whatsapp || businessData.phone || '';
+
+  const wantPosts = selectedContent.has('posts');
+  const wantHashtags = selectedContent.has('hashtags');
+  const wantStories = selectedContent.has('stories');
+  const wantReels = selectedContent.has('reels');
+
+  const prompt = `You are an expert Nigerian UK social media strategist. Generate a full month of premium Instagram content for this business.
+
+BUSINESS DETAILS:
+- Name: ${bizName}
+- Category: ${bizCat}
+- Location: ${bizLoc}
+- Description: ${bizDesc || 'A Nigerian-owned business in the UK'}
+- Listing: ${bizUrl}
+${whatsapp ? `- WhatsApp: ${whatsapp}` : ''}
+
+BRAND TONE: ${tone}
+
+TARGET AUDIENCE: Nigerian community in the UK — families, professionals, diaspora.
+
+CRITICAL REQUIREMENTS:
+- Authentic Nigerian UK voice — mix English with occasional Yoruba/Pidgin phrases where natural
+- Reference UK life naturally (e.g. "after a long shift", "before your weekend", "busy Londoners")
+- Each post must feel distinct — vary between: behind-the-scenes, customer transformation, tips, cultural moments, seasonal hooks
+- CTAs must be specific: "DM us", "tap the link in bio", "send us a WhatsApp"
+- Captions: 3-5 sentences, punchy opener, emotional middle, strong CTA
+- Never generic — every post is specifically about ${bizName}
+
+${wantPosts ? `
+GENERATE 30 INSTAGRAM POSTS in this exact JSON format:
+{
+  "posts": [
+    {
+      "post_number": 1,
+      "theme": "Theme name e.g. Introduction / Transformation / Behind the Scenes",
+      "caption": "Full caption here with line breaks. Include emojis. Strong opener. Value or story in middle. Clear CTA at end.",
+      "hashtags": "#hashtag1 #hashtag2 ... (25-30 targeted hashtags mixing niche, location, Nigerian community tags)",
+      "image_prompt": "Description of what the image/photo should look like for this post"
+    }
+  ]
+}` : ''}
+
+${wantStories ? `
+GENERATE 15 INSTAGRAM STORY IDEAS:
+{
+  "stories": [
+    {
+      "story_number": 1,
+      "type": "Poll / Q&A / Behind the scenes / Countdown / Tutorial / Testimonial / This or That",
+      "title": "Story title",
+      "content": "What to show/say in the story — detailed description",
+      "interactive_element": "Poll options / Question sticker text / Quiz answer etc"
+    }
+  ]
+}` : ''}
+
+${wantReels ? `
+GENERATE 5 REEL SCRIPTS:
+{
+  "reels": [
+    {
+      "reel_number": 1,
+      "title": "Reel title / hook",
+      "hook": "First 3 seconds on screen text or spoken line — must stop the scroll",
+      "script": "Full spoken script or scene-by-scene description. Include [VISUAL: description] cues. 30-60 seconds when spoken.",
+      "on_screen_text": "Text overlays to add",
+      "music_vibe": "Music style suggestion e.g. Afrobeats, lo-fi, motivational",
+      "cta": "End screen call to action"
+    }
+  ]
+}` : ''}
+
+Return ONLY valid JSON with the requested sections. No preamble, no markdown, just the JSON object.`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        messages: [{ role:'user', content: prompt }],
+        max_tokens: 8000,
+        system: 'You are an expert social media strategist specialising in Nigerian UK businesses. Return only valid JSON as instructed.'
+      })
+    });
+
+    clearInterval(stepInterval);
+    steps.forEach(s => {
+      const el = document.getElementById(s);
+      el.className = 'loading-step done';
+    });
+
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || data.choices?.[0]?.message?.content || '';
+
+    // Parse JSON
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON in response');
+    generatedContent = JSON.parse(jsonMatch[0]);
+
+    setTimeout(() => {
+      renderResults(bizName);
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('resultsSection').style.display = 'block';
+      document.getElementById('generateBtn').disabled = false;
+      document.getElementById('resultsSection').scrollIntoView({ behavior:'smooth' });
+    }, 500);
+
+  } catch(e) {
+    clearInterval(stepInterval);
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('generateBtn').disabled = false;
+    alert('Something went wrong generating your content. Please try again.');
+  }
+}
+
+// ── RENDER ──
+function renderResults(bizName) {
+  document.getElementById('resultsBizName').textContent = '✨ ' + bizName;
+
+  // Posts
+  if (generatedContent.posts && selectedContent.has('posts')) {
+    document.getElementById('postsSection').style.display = 'block';
+    const html = generatedContent.posts.map((p, i) => `
+      <div class="post-item">
+        <div class="post-num">POST ${p.post_number || i+1} OF 30</div>
+        <div class="post-theme">${p.theme || ''}</div>
+        <div class="post-caption">${escHtml(p.caption || '')}</div>
+        ${selectedContent.has('hashtags') && p.hashtags ? `<div class="post-hashtags">${escHtml(p.hashtags)}</div>` : ''}
+        ${p.image_prompt ? `<div class="post-cta">📷 Image: ${escHtml(p.image_prompt)}</div>` : ''}
+        <div class="copy-row">
+          <button class="copy-btn" onclick="copyText(this, ${JSON.stringify(p.caption)})">Copy Caption</button>
+          ${p.hashtags ? `<button class="copy-btn" onclick="copyText(this, ${JSON.stringify(p.hashtags)})">Copy Hashtags</button>` : ''}
+          <button class="copy-btn" onclick="copyText(this, ${JSON.stringify((p.caption||'') + '\n\n' + (p.hashtags||''))})">Copy Both</button>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('postsContent').innerHTML = html;
+  } else {
+    document.getElementById('postsSection').style.display = 'none';
+  }
+
+  // Stories
+  if (generatedContent.stories && selectedContent.has('stories')) {
+    document.getElementById('storiesSection').style.display = 'block';
+    const html = generatedContent.stories.map((s, i) => `
+      <div class="idea-item">
+        <div class="idea-type">STORY ${s.story_number || i+1} · ${s.type || ''}</div>
+        <div class="idea-title">${escHtml(s.title || '')}</div>
+        <div class="idea-desc">${escHtml(s.content || '')}</div>
+        ${s.interactive_element ? `<div class="idea-hook">💬 Interactive: ${escHtml(s.interactive_element)}</div>` : ''}
+        <div class="copy-row">
+          <button class="copy-btn" onclick="copyText(this, ${JSON.stringify(s.title + '\n\n' + s.content + (s.interactive_element ? '\n\nInteractive: ' + s.interactive_element : ''))})">Copy Idea</button>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('storiesContent').innerHTML = html;
+  } else {
+    document.getElementById('storiesSection').style.display = 'none';
+  }
+
+  // Reels
+  if (generatedContent.reels && selectedContent.has('reels')) {
+    document.getElementById('reelsSection').style.display = 'block';
+    const html = generatedContent.reels.map((r, i) => `
+      <div class="idea-item">
+        <div class="idea-type">REEL ${r.reel_number || i+1}</div>
+        <div class="idea-title">🎬 ${escHtml(r.title || '')}</div>
+        <div class="idea-hook">Hook: ${escHtml(r.hook || '')}</div>
+        <div class="idea-desc" style="margin-top:8px;white-space:pre-wrap;">${escHtml(r.script || '')}</div>
+        ${r.on_screen_text ? `<div class="idea-hook">📝 On-screen text: ${escHtml(r.on_screen_text)}</div>` : ''}
+        ${r.music_vibe ? `<div style="font-size:11px;color:#666;margin-top:6px;">🎵 Music: ${escHtml(r.music_vibe)}</div>` : ''}
+        ${r.cta ? `<div class="idea-hook">CTA: ${escHtml(r.cta)}</div>` : ''}
+        <div class="copy-row">
+          <button class="copy-btn" onclick="copyText(this, ${JSON.stringify([r.title, 'HOOK: '+r.hook, r.script, r.cta].filter(Boolean).join('\n\n'))})">Copy Script</button>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('reelsContent').innerHTML = html;
+  } else {
+    document.getElementById('reelsSection').style.display = 'none';
+  }
+}
+
+// ── UTILITIES ──
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = btn.textContent.replace('Copied ✓','Copy Caption').replace('Copied ✓','Copy'); btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copySection(id) {
+  const el = document.getElementById(id);
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => alert('Section copied to clipboard!'));
+}
+
+function downloadAll() {
+  if (!generatedContent) return;
+  const biz = businessData?.name || 'Business';
+  let text = `AI SOCIAL MEDIA CONTENT PACK\n${biz}\nGenerated by Auntie Tobi Premium\n${'='.repeat(50)}\n\n`;
+
+  if (generatedContent.posts) {
+    text += 'INSTAGRAM POSTS & CAPTIONS\n' + '─'.repeat(40) + '\n\n';
+    generatedContent.posts.forEach((p, i) => {
+      text += `POST ${i+1} — ${p.theme || ''}\n\n`;
+      text += `CAPTION:\n${p.caption}\n\n`;
+      if (p.hashtags) text += `HASHTAGS:\n${p.hashtags}\n\n`;
+      if (p.image_prompt) text += `IMAGE GUIDE:\n${p.image_prompt}\n\n`;
+      text += '─'.repeat(30) + '\n\n';
+    });
+  }
+
+  if (generatedContent.stories) {
+    text += '\nSTORY IDEAS\n' + '─'.repeat(40) + '\n\n';
+    generatedContent.stories.forEach((s, i) => {
+      text += `STORY ${i+1} [${s.type}]\n${s.title}\n${s.content}\n`;
+      if (s.interactive_element) text += `Interactive: ${s.interactive_element}\n`;
+      text += '\n';
+    });
+  }
+
+  if (generatedContent.reels) {
+    text += '\nREEL SCRIPTS\n' + '─'.repeat(40) + '\n\n';
+    generatedContent.reels.forEach((r, i) => {
+      text += `REEL ${i+1}: ${r.title}\nHOOK: ${r.hook}\n\n${r.script}\n`;
+      if (r.cta) text += `CTA: ${r.cta}\n`;
+      text += '\n';
+    });
+  }
+
+  const blob = new Blob([text], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${biz.replace(/\s+/g,'-')}-content-pack.txt`;
+  a.click();
+}
+</script>
+
+</body>
+</html>
