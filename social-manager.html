@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; color:white; }
+body { font-family:'Nunito',sans-serif; background:#f5f5f0; min-height:100vh; color:#0F1E36; }
 
 /* ── LOGIN SCREEN ── */
 #loginScreen {
@@ -17,20 +17,20 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   align-items:center;
   justify-content:center;
   padding:24px;
-  background: radial-gradient(ellipse at 60% 0%, #1a0a00 0%, #0a0a0a 60%);
+  background: linear-gradient(135deg, #057A44 0%, #0F1E36 100%);
 }
 .login-logo { font-size:40px; margin-bottom:8px; }
 .login-brand { font-size:13px; font-weight:800; color:#FFB81C; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:32px; }
 .login-card {
-  background:#111;
-  border:1.5px solid #222;
+  background:white;
+  border:1.5px solid #e5e7eb;
   border-radius:16px;
   padding:28px 24px;
   width:100%;
   max-width:380px;
 }
-.login-title { font-size:22px; font-weight:900; color:white; margin-bottom:6px; }
-.login-sub { font-size:13px; color:#666; margin-bottom:24px; line-height:1.5; }
+.login-title { font-size:22px; font-weight:900; color:#0F1E36; margin-bottom:6px; }
+.login-sub { font-size:13px; color:#555; margin-bottom:24px; line-height:1.5; }
 .login-badge {
   display:inline-flex;
   align-items:center;
@@ -48,8 +48,8 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 .form-label { font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px; }
 .form-input {
   width:100%;
-  background:#1a1a1a;
-  border:1.5px solid #222;
+  background:#f9fafb;
+  border:1.5px solid #e5e7eb;
   border-radius:10px;
   padding:12px 16px;
   font-size:14px;
@@ -58,8 +58,8 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   outline:none;
   transition:border-color 0.2s;
 }
-.form-input:focus { border-color:#FFB81C; }
-.form-input::placeholder { color:#444; }
+.form-input:focus { border-color:#057A44; }
+.form-input::placeholder { color:#9CA3AF; }
 .btn-login {
   width:100%;
   background:#FFB81C;
@@ -77,7 +77,7 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 }
 .btn-login:hover { background:#e6a418; transform:translateY(-1px); }
 .login-error { font-size:12px; color:#ef4444; margin-top:10px; text-align:center; display:none; }
-.login-footer { margin-top:20px; text-align:center; font-size:12px; color:#444; }
+.login-footer { margin-top:20px; text-align:center; font-size:12px; color:#9CA3AF; }
 .login-footer a { color:#FFB81C; text-decoration:none; }
 
 /* ── MAIN APP ── */
@@ -85,8 +85,8 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 
 /* Header */
 .header {
-  background:#0a0a0a;
-  border-bottom:1px solid #1a1a1a;
+  background:#0F1E36;
+  border-bottom:1px solid #057A44;
   padding:14px 20px;
   display:flex;
   align-items:center;
@@ -111,15 +111,15 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 
 /* Hero section */
 .hero {
-  background: linear-gradient(135deg, #111 0%, #0a0a0a 100%);
-  border-bottom:1px solid #1a1a1a;
+  background: linear-gradient(135deg, #057A44 0%, #0F1E36 100%);
+  border-bottom:1px solid #e5e7eb;
   padding:28px 20px;
   text-align:center;
 }
 .hero-eyebrow { font-size:11px; font-weight:800; color:#FFB81C; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:10px; }
-.hero-title { font-size:26px; font-weight:900; color:white; line-height:1.2; margin-bottom:10px; }
+.hero-title { font-size:26px; font-weight:900; color:white; /* on green bg */ line-height:1.2; margin-bottom:10px; }
 .hero-title span { color:#FFB81C; }
-.hero-desc { font-size:13px; color:#888; line-height:1.6; max-width:340px; margin:0 auto; }
+.hero-desc { font-size:13px; color:rgba(255,255,255,0.8); line-height:1.6; max-width:340px; margin:0 auto; }
 .content-pills {
   display:flex;
   flex-wrap:wrap;
@@ -128,8 +128,8 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   margin-top:16px;
 }
 .pill {
-  background:#1a1a1a;
-  border:1px solid #2a2a2a;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.3);
   border-radius:20px;
   padding:5px 12px;
   font-size:11px;
@@ -142,14 +142,14 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 
 /* Input card */
 .input-card {
-  background:#111;
-  border:1.5px solid #1a1a1a;
+  background:white;
+  border:1.5px solid #e5e7eb;
   border-radius:16px;
   overflow:hidden;
   margin-bottom:20px;
 }
 .input-card-header {
-  background:#1a1a1a;
+  background:#0F1E36;
   padding:14px 18px;
   display:flex;
   align-items:center;
@@ -168,8 +168,8 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   color:#0a0a0a;
   flex-shrink:0;
 }
-.input-card-header .label { font-size:13px; font-weight:800; color:white; }
-.input-card-header .sublabel { font-size:11px; color:#666; }
+.input-card-header .label { font-size:13px; font-weight:800; color:white; } /* keep white */
+.input-card-header .sublabel { font-size:11px; color:rgba(255,255,255,0.6); }
 .input-card-body { padding:18px; }
 
 .url-input-wrap { position:relative; }
@@ -182,25 +182,25 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 }
 .url-input {
   width:100%;
-  background:#1a1a1a;
-  border:1.5px solid #2a2a2a;
+  background:#f9fafb;
+  border:1.5px solid #e5e7eb;
   border-radius:10px;
   padding:13px 16px 13px 42px;
   font-size:13px;
   font-family:'Nunito',sans-serif;
-  color:white;
+  color:#0F1E36;
   outline:none;
   transition:border-color 0.2s;
 }
-.url-input:focus { border-color:#FFB81C; }
-.url-input::placeholder { color:#444; }
-.url-hint { font-size:11px; color:#444; margin-top:6px; }
+.url-input:focus { border-color:#057A44; }
+.url-input::placeholder { color:#9CA3AF; }
+.url-hint { font-size:11px; color:#9CA3AF; margin-top:6px; }
 
 /* Tone selector */
 .tone-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
 .tone-btn {
-  background:#1a1a1a;
-  border:1.5px solid #2a2a2a;
+  background:#f9fafb;
+  border:1.5px solid #e5e7eb;
   border-radius:10px;
   padding:10px 8px;
   cursor:pointer;
@@ -209,16 +209,16 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   font-family:'Nunito',sans-serif;
 }
 .tone-btn:hover { border-color:#FFB81C44; }
-.tone-btn.selected { border-color:#FFB81C; background:#1a1400; }
+.tone-btn.selected { border-color:#FFB81C; background:#fffbeb; }
 .tone-btn .tone-emoji { font-size:18px; display:block; margin-bottom:4px; }
-.tone-btn .tone-name { font-size:11px; font-weight:700; color:#888; }
+.tone-btn .tone-name { font-size:11px; font-weight:700; color:#555; }
 .tone-btn.selected .tone-name { color:#FFB81C; }
 
 /* Content selector */
 .content-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .content-toggle {
-  background:#1a1a1a;
-  border:1.5px solid #2a2a2a;
+  background:#f9fafb;
+  border:1.5px solid #e5e7eb;
   border-radius:10px;
   padding:12px;
   cursor:pointer;
@@ -228,10 +228,10 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   transition:all 0.15s;
 }
 .content-toggle:hover { border-color:#FFB81C44; }
-.content-toggle.selected { border-color:#057A44; background:#001a0a; }
+.content-toggle.selected { border-color:#057A44; background:#f0faf5; }
 .content-toggle .ct-emoji { font-size:20px; }
-.content-toggle .ct-text .ct-name { font-size:12px; font-weight:700; color:#888; }
-.content-toggle .ct-text .ct-count { font-size:10px; color:#444; }
+.content-toggle .ct-text .ct-name { font-size:12px; font-weight:700; color:#555; }
+.content-toggle .ct-text .ct-count { font-size:10px; color:#9CA3AF; }
 .content-toggle.selected .ct-name { color:#4ade80; }
 .content-toggle.selected .ct-count { color:#057A44; }
 .check-icon { margin-left:auto; font-size:14px; display:none; }
@@ -264,26 +264,26 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   display:none;
   text-align:center;
   padding:40px 20px;
-  background:#111;
-  border:1.5px solid #1a1a1a;
+  background:white;
+  border:1.5px solid #e5e7eb;
   border-radius:16px;
   margin-bottom:20px;
 }
 .loading-ring {
   width:48px; height:48px;
-  border:3px solid #1a1a1a;
+  border:3px solid #e5e7eb;
   border-top-color:#FFB81C;
   border-radius:50%;
   animation:spin 0.8s linear infinite;
   margin:0 auto 16px;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
-.loading-msg { font-size:14px; font-weight:700; color:#888; margin-bottom:6px; }
+.loading-msg { font-size:14px; font-weight:700; color:#0F1E36; margin-bottom:6px; }
 .loading-sub { font-size:12px; color:#444; }
 .loading-steps { display:flex; flex-direction:column; gap:6px; margin-top:16px; }
-.loading-step { font-size:11px; color:#333; transition:color 0.3s; }
-.loading-step.done { color:#4ade80; }
-.loading-step.active { color:#FFB81C; }
+.loading-step { font-size:11px; color:#9CA3AF; transition:color 0.3s; }
+.loading-step.done { color:#057A44; }
+.loading-step.active { color:#057A44; font-weight:700; }
 
 /* Results */
 .results-section { display:none; }
@@ -293,11 +293,11 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   justify-content:space-between;
   margin-bottom:16px;
 }
-.results-title { font-size:18px; font-weight:900; color:white; }
+.results-title { font-size:18px; font-weight:900; color:#0F1E36; }
 .results-biz { font-size:12px; color:#FFB81C; font-weight:700; }
 .btn-regen {
-  background:#1a1a1a;
-  border:1.5px solid #2a2a2a;
+  background:white;
+  border:1.5px solid #e5e7eb;
   border-radius:8px;
   padding:8px 14px;
   font-size:12px;
@@ -307,32 +307,32 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   font-family:'Nunito',sans-serif;
   transition:all 0.2s;
 }
-.btn-regen:hover { border-color:#FFB81C; color:#FFB81C; }
+.btn-regen:hover { border-color:#057A44; color:#057A44; }
 
 /* Content blocks */
 .content-section {
-  background:#111;
-  border:1.5px solid #1a1a1a;
+  background:white;
+  border:1.5px solid #e5e7eb;
   border-radius:16px;
   overflow:hidden;
   margin-bottom:16px;
 }
 .cs-header {
-  background:#1a1a1a;
+  background:#0F1E36;
   padding:12px 16px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   border-bottom:1px solid #222;
 }
-.cs-title { font-size:13px; font-weight:800; color:white; display:flex; align-items:center; gap:8px; }
+.cs-title { font-size:13px; font-weight:800; color:white; /* on dark header */ display:flex; align-items:center; gap:8px; }
 .cs-count { font-size:11px; color:#FFB81C; font-weight:700; background:#FFB81C1a; padding:2px 8px; border-radius:10px; }
 .cs-body { padding:16px; }
 
 /* Post items */
 .post-item {
-  background:#0a0a0a;
-  border:1px solid #1a1a1a;
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
   border-radius:10px;
   padding:14px;
   margin-bottom:10px;
@@ -341,14 +341,14 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 .post-item:last-child { margin-bottom:0; }
 .post-num { font-size:10px; font-weight:800; color:#FFB81C; letter-spacing:0.1em; margin-bottom:6px; }
 .post-theme { font-size:11px; font-weight:700; color:#057A44; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; }
-.post-caption { font-size:13px; color:#ccc; line-height:1.7; margin-bottom:8px; white-space:pre-wrap; }
-.post-hashtags { font-size:11px; color:#4a9eff; line-height:1.6; }
+.post-caption { font-size:13px; color:#374151; line-height:1.7; margin-bottom:8px; white-space:pre-wrap; }
+.post-hashtags { font-size:11px; color:#057A44; line-height:1.6; }
 .post-cta { font-size:11px; color:#FFB81C; font-weight:700; margin-top:6px; }
 .copy-row { display:flex; gap:6px; margin-top:10px; }
 .copy-btn {
-  background:#1a1a1a;
-  border:1px solid #2a2a2a;
-  color:#888;
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  color:#555;
   border-radius:6px;
   padding:5px 10px;
   font-size:10px;
@@ -357,21 +357,21 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   font-family:'Nunito',sans-serif;
   transition:all 0.15s;
 }
-.copy-btn:hover { border-color:#FFB81C; color:#FFB81C; }
+.copy-btn:hover { border-color:#057A44; color:#057A44; }
 .copy-btn.copied { background:#FFB81C1a; border-color:#FFB81C; color:#FFB81C; }
 
 /* Story & Reel items */
 .idea-item {
-  background:#0a0a0a;
-  border:1px solid #1a1a1a;
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
   border-radius:10px;
   padding:14px;
   margin-bottom:10px;
 }
 .idea-item:last-child { margin-bottom:0; }
-.idea-type { font-size:10px; font-weight:800; color:#888; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px; }
-.idea-title { font-size:13px; font-weight:800; color:white; margin-bottom:6px; }
-.idea-desc { font-size:12px; color:#888; line-height:1.6; }
+.idea-type { font-size:10px; font-weight:800; color:#9CA3AF; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px; }
+.idea-title { font-size:13px; font-weight:800; color:#0F1E36; margin-bottom:6px; }
+.idea-desc { font-size:12px; color:#555; line-height:1.6; }
 .idea-hook { font-size:12px; color:#FFB81C; font-weight:700; margin-top:8px; }
 .idea-steps { margin-top:8px; }
 .idea-step { font-size:12px; color:#666; line-height:1.6; display:flex; gap:8px; }
@@ -380,13 +380,13 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 /* Download all button */
 .btn-download-all {
   width:100%;
-  background:#111;
-  border:1.5px solid #FFB81C;
+  background:white;
+  border:1.5px solid #057A44;
   border-radius:12px;
   padding:14px;
   font-size:14px;
   font-weight:800;
-  color:#FFB81C;
+  color:#057A44;
   cursor:pointer;
   font-family:'Nunito',sans-serif;
   transition:all 0.2s;
@@ -396,12 +396,12 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   gap:8px;
   margin-top:8px;
 }
-.btn-download-all:hover { background:#FFB81C; color:#0a0a0a; }
+.btn-download-all:hover { background:#057A44; color:white; }
 
 /* Business preview */
 .biz-preview {
-  background:#111;
-  border:1.5px solid #1a1a1a;
+  background:white;
+  border:1.5px solid #e5e7eb;
   border-radius:12px;
   padding:14px 16px;
   margin-bottom:20px;
@@ -412,19 +412,19 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 .biz-avatar {
   width:44px; height:44px;
   border-radius:10px;
-  background:#1a1a1a;
+  background:#f0faf5;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:22px;
   flex-shrink:0;
-  border:1px solid #2a2a2a;
+  border:1px solid #057A44;
   overflow:hidden;
 }
 .biz-avatar img { width:100%; height:100%; object-fit:cover; }
-.biz-info .biz-name { font-size:14px; font-weight:800; color:white; }
+.biz-info .biz-name { font-size:14px; font-weight:800; color:#0F1E36; }
 .biz-info .biz-cat { font-size:11px; color:#FFB81C; font-weight:700; }
-.biz-info .biz-loc { font-size:11px; color:#555; margin-top:2px; }
+.biz-info .biz-loc { font-size:11px; color:#9CA3AF; margin-top:2px; }
 .biz-verified { margin-left:auto; font-size:18px; }
 
 /* Divider */
@@ -434,8 +434,8 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
   gap:12px;
   margin:24px 0 16px;
 }
-.section-divider-line { flex:1; height:1px; background:#1a1a1a; }
-.section-divider-label { font-size:11px; font-weight:800; color:#333; letter-spacing:0.1em; text-transform:uppercase; white-space:nowrap; }
+.section-divider-line { flex:1; height:1px; background:#e5e7eb; }
+.section-divider-label { font-size:11px; font-weight:800; color:#9CA3AF; letter-spacing:0.1em; text-transform:uppercase; white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -667,7 +667,6 @@ body { font-family:'Nunito',sans-serif; background:#0a0a0a; min-height:100vh; co
 <script>
 // ── CONFIG ──
 const PREMIUM_PASSWORD = 'tobi2024premium';
-const API_URL = '/.netlify/functions/chat-openai';
 
 // ── STATE ──
 let selectedTone = 'professional';
@@ -822,82 +821,21 @@ async function generate() {
   const wantStories = selectedContent.has('stories');
   const wantReels = selectedContent.has('reels');
 
-  const prompt = `You are an expert Nigerian UK social media strategist. Generate a full month of premium Instagram content for this business.
-
-BUSINESS DETAILS:
-- Name: ${bizName}
-- Category: ${bizCat}
-- Location: ${bizLoc}
-- Description: ${bizDesc || 'A Nigerian-owned business in the UK'}
-- Listing: ${bizUrl}
-${whatsapp ? `- WhatsApp: ${whatsapp}` : ''}
-
-BRAND TONE: ${tone}
-
-TARGET AUDIENCE: Nigerian community in the UK — families, professionals, diaspora.
-
-CRITICAL REQUIREMENTS:
-- Authentic Nigerian UK voice — mix English with occasional Yoruba/Pidgin phrases where natural
-- Reference UK life naturally (e.g. "after a long shift", "before your weekend", "busy Londoners")
-- Each post must feel distinct — vary between: behind-the-scenes, customer transformation, tips, cultural moments, seasonal hooks
-- CTAs must be specific: "DM us", "tap the link in bio", "send us a WhatsApp"
-- Captions: 3-5 sentences, punchy opener, emotional middle, strong CTA
-- Never generic — every post is specifically about ${bizName}
-
-${wantPosts ? `
-GENERATE 30 INSTAGRAM POSTS in this exact JSON format:
-{
-  "posts": [
-    {
-      "post_number": 1,
-      "theme": "Theme name e.g. Introduction / Transformation / Behind the Scenes",
-      "caption": "Full caption here with line breaks. Include emojis. Strong opener. Value or story in middle. Clear CTA at end.",
-      "hashtags": "#hashtag1 #hashtag2 ... (25-30 targeted hashtags mixing niche, location, Nigerian community tags)",
-      "image_prompt": "Description of what the image/photo should look like for this post"
-    }
-  ]
-}` : ''}
-
-${wantStories ? `
-GENERATE 15 INSTAGRAM STORY IDEAS:
-{
-  "stories": [
-    {
-      "story_number": 1,
-      "type": "Poll / Q&A / Behind the scenes / Countdown / Tutorial / Testimonial / This or That",
-      "title": "Story title",
-      "content": "What to show/say in the story — detailed description",
-      "interactive_element": "Poll options / Question sticker text / Quiz answer etc"
-    }
-  ]
-}` : ''}
-
-${wantReels ? `
-GENERATE 5 REEL SCRIPTS:
-{
-  "reels": [
-    {
-      "reel_number": 1,
-      "title": "Reel title / hook",
-      "hook": "First 3 seconds on screen text or spoken line — must stop the scroll",
-      "script": "Full spoken script or scene-by-scene description. Include [VISUAL: description] cues. 30-60 seconds when spoken.",
-      "on_screen_text": "Text overlays to add",
-      "music_vibe": "Music style suggestion e.g. Afrobeats, lo-fi, motivational",
-      "cta": "End screen call to action"
-    }
-  ]
-}` : ''}
-
-Return ONLY valid JSON with the requested sections. No preamble, no markdown, just the JSON object.`;
-
   try {
-    const res = await fetch(API_URL, {
+    const res = await fetch('/.netlify/functions/social-content', {
       method: 'POST',
       headers: { 'Content-Type':'application/json' },
       body: JSON.stringify({
-        messages: [{ role:'user', content: prompt }],
-        max_tokens: 8000,
-        system: 'You are an expert social media strategist specialising in Nigerian UK businesses. Return only valid JSON as instructed.'
+        businessName: bizName,
+        businessDesc: bizDesc,
+        businessCat: bizCat,
+        businessLoc: bizLoc,
+        businessUrl: bizUrl,
+        whatsapp,
+        tone,
+        wantPosts,
+        wantStories,
+        wantReels
       })
     });
 
@@ -907,13 +845,14 @@ Return ONLY valid JSON with the requested sections. No preamble, no markdown, ju
       el.className = 'loading-step done';
     });
 
-    const data = await res.json();
-    const raw = data.content?.[0]?.text || data.choices?.[0]?.message?.content || '';
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Server error ' + res.status);
+    }
 
-    // Parse JSON
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON in response');
-    generatedContent = JSON.parse(jsonMatch[0]);
+    const data = await res.json();
+    if (!data.success || !data.content) throw new Error(data.error || 'No content returned');
+    generatedContent = data.content;
 
     setTimeout(() => {
       renderResults(bizName);
