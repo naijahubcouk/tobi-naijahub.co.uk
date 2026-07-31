@@ -2718,6 +2718,7 @@ function requestLocation() {
 
 
 function resetAndShowJobs() {
+  scrollToTop();
   clearExamState();
   messages = [];
   setTimeout(() => {
@@ -3694,6 +3695,7 @@ function toggleFaq(btn) {
   icon.style.color = isOpen ? '#FFB81C' : '#057A44';
 }
 function showJapaGuide() {
+  scrollToTop();
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
@@ -5986,6 +5988,7 @@ function showUpcomingEventCard() {
 
 function showEventsCard() {
   window._currentPage = 'events';
+  scrollToTop();
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
@@ -6168,10 +6171,13 @@ window.onload = () => {
             <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
           </div>`);
         } else {
-          // News/article — open blog sheet
+          // Try matching live feed posts by slug or key
           const livePosts = typeof getLiveBlogPosts === 'function' ? getLiveBlogPosts() : [];
-          const match = livePosts && livePosts.find(p => p.slug && blogSlug.includes(p.slug));
-          openBlogSheet(blogUrl, match ? match.title : '', match ? match.summary : '');
+          const liveMatch = livePosts && livePosts.find(p =>
+            (p.slug && (p.slug === blogSlug || p.slug.includes(blogSlug) || blogSlug.includes(p.slug.substring(0,15)))) ||
+            (p.key && (p.key === blogSlug || blogSlug.startsWith(p.key.substring(0,10))))
+          );
+          openBlogSheet(blogUrl, liveMatch ? liveMatch.title : '', liveMatch ? liveMatch.summary : '');
         }
       }, 400);
     }, 300);
@@ -6460,6 +6466,7 @@ function scrollToTop() {
 
 function showBusinesses(startIndex) {
   window._currentPage = 'businesses';
+  scrollToTop();
   window.history.replaceState({}, '', '/');
   if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
   const allBiz = getLiveDirectory();
@@ -6980,6 +6987,7 @@ function shareAuntieTobi() {
 }
 
 function showRequestOptions() {
+  scrollToTop();
   const msg = `What would you like to request? 😊`;
   const html = formatResponse(msg) + `
     <div class="exam-options" style="margin-top:10px;">
