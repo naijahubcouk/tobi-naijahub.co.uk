@@ -1,7 +1,7 @@
 'use strict';
-const { sendTaggedPush, fetchRSS, parseRSSItems } = require('./notify-helper');
+const { sendTaggedPush, fetchRSS, parseRSSItems, getLastNotified, setLastNotified } = require('./notify-helper');
 
-const ARTICLE_CATEGORIES = ['money', 'housing', 'business', 'education', 'food', 'lifestyle', 'health', 'jobs'];
+const EVENT_WORDS = ['owambe','festival','concert',' party','fest ','fayre','gala','carnival'];
 
 exports.handler = async function(event) {
   try {
@@ -10,7 +10,9 @@ exports.handler = async function(event) {
 
     const articleItems = items.filter(item => {
       const cat = (item.category || '').toLowerCase();
-      return ARTICLE_CATEGORIES.some(c => cat.includes(c));
+      if (cat.includes('event')) return false;
+      const text = (item.title + ' ' + item.description).toLowerCase();
+      return !EVENT_WORDS.some(k => text.includes(k));
     });
 
     if (!articleItems.length) return { statusCode: 200, body: 'No article posts found' };
@@ -26,7 +28,12 @@ exports.handler = async function(event) {
       return { statusCode: 200, body: `Article too old (${Math.round(ageMinutes)} mins): ${latest.slug}` };
     }
 
-    const notifUrl = `https://auntietobi.co.uk/blog/${latest.slug || ''}`;
+    const lastSent = await getLastNotified('articles');
+    if (lastSent === latest.uniqueId) {
+      return { statusCode: 200, body: `Already sent: ${latest.slug}` };
+    }
+
+    const notifUrl = latest.appUrl || `https://auntietobi.co.uk/blog/${latest.slug || ''}`;
 
     const result = await sendTaggedPush(
       'articles',
@@ -35,7 +42,9 @@ exports.handler = async function(event) {
       notifUrl
     );
 
-    return { statusCode: 200, body: JSON.stringify({ sent: true, slug: latest.slug, oneSignal: result.data }) };
+    await setLastNotified('articles', latest.uniqueId);
+
+    return { statusCode: 200, body: JSON.stringify({ sent: true, slug: latest.slug, recipients: result.data?.recipients }) };
 
   } catch (err) {
     console.error('auto-notify-articles error:', err.message);
