@@ -2321,8 +2321,93 @@ async function sendMessage(text) {
     }
   }
 
-  // Check if user is starting exam prep
-  const lowerText = userText.toLowerCase();
+  // ============================================
+  // SMART MULTI-SEARCH LAYER
+  // Before hitting AI, check all local content
+  // and surface grouped results if multiple match
+  // ============================================
+  const searchLower = userText.toLowerCase().trim();
+  const isSearchQuery = searchLower.length > 2 && !searchLower.startsWith('how') && !searchLower.startsWith('what') && !searchLower.startsWith('why') && !searchLower.startsWith('can') && !searchLower.startsWith('is ') && !searchLower.startsWith('do ') && !searchLower.startsWith('tell me') && !searchLower.startsWith('help me') && !examState.active;
+
+  if (isSearchQuery) {
+    const words = searchLower.split(/\s+/).filter(w => w.length > 2);
+
+    // Search businesses
+    const dir = getLiveDirectory();
+    const bizMatches = dir.filter(b => {
+      const txt = ((b.name||'') + ' ' + (b.desc||b.description||'') + ' ' + (b.cat||b.category||'') + ' ' + (b.loc||b.location||'')).toLowerCase();
+      return words.some(w => txt.includes(w));
+    }).slice(0, 3);
+
+    // Search events
+    const eventMatches = (typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : []).filter(e => {
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (e.dateObj < today) return false;
+      const txt = ((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.loc||'')).toLowerCase();
+      return words.some(w => txt.includes(w));
+    }).slice(0, 3);
+
+    // Search articles from live feed
+    const livePosts = getLiveBlogPosts() || [];
+    const articleMatches = livePosts.filter(p => {
+      const txt = ((p.title||'') + ' ' + (p.summary||'')).toLowerCase();
+      return words.some(w => txt.includes(w));
+    }).slice(0, 3);
+
+    const totalMatches = bizMatches.length + eventMatches.length + articleMatches.length;
+
+    // Only intercept if we have matches across multiple types
+    if (totalMatches > 0 && (bizMatches.length + eventMatches.length + articleMatches.length) > 0) {
+      const hasMultipleTypes = [bizMatches.length > 0, eventMatches.length > 0, articleMatches.length > 0].filter(Boolean).length > 1;
+      if (hasMultipleTypes || totalMatches >= 2) {
+        hideTyping();
+        isLoading = false;
+        document.getElementById('sendBtn').disabled = false;
+
+        let html = `<div style="font-size:14px;color:#0F1E36;font-weight:700;margin-bottom:12px;">Here's what I found for <em>"${userText}"</em> on Auntie Tobi:</div>`;
+
+        if (bizMatches.length > 0) {
+          html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">🏢 Businesses</div>`;
+          bizMatches.forEach(b => {
+            const wa = b.wa ? `<a href="https://wa.me/${b.wa.replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-weight:700;text-decoration:none;font-size:11px;">💬 WhatsApp</a>` : '';
+            html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+              <div style="font-size:13px;font-weight:700;color:#0F1E36;">${b.name}</div>
+              <div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${b.cat||b.category||''} · ${b.loc||b.location||''}</div>
+              <div style="display:flex;gap:8px;align-items:center;">${wa}</div>
+            </div>`;
+          });
+          if (bizMatches.length === 3) html += `<button class="suggestion-btn" style="margin-bottom:10px;" onclick="sendMessage('Find a ${userText} business')">See all businesses →</button>`;
+        }
+
+        if (eventMatches.length > 0) {
+          html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;margin-top:4px;">🎉 Events</div>`;
+          eventMatches.forEach(e => {
+            html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+              <div style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji} ${e.title}</div>
+              <div style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</div>
+            </div>`;
+          });
+          if (eventMatches.length === 3) html += `<button class="suggestion-btn" style="margin-bottom:10px;" onclick="showEventsCard()">See all events →</button>`;
+        }
+
+        if (articleMatches.length > 0) {
+          html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;margin-top:4px;">📰 Articles</div>`;
+          articleMatches.forEach(p => {
+            html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+              <div style="font-size:13px;font-weight:700;color:#0F1E36;">${p.title}</div>
+              <div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${p.label||'News'} · ${p.date||''}</div>
+              <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(p.url)}" data-title="${(p.title||'').replace(/"/g,'&quot;')}" data-summary="${(p.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:11px;color:#057A44;font-weight:700;text-decoration:none;">🔗 Read More</a>
+            </div>`;
+          });
+        }
+
+        html += `<div style="font-size:12px;color:#9CA3AF;margin-top:8px;">Not what you were looking for? Try asking Auntie Tobi directly below.</div>`;
+        addMessage('bot', `<div>${html}</div>`, true);
+        return;
+      }
+    }
+  }
+  // End multi-search layer
   if (lowerText.includes('driving theory') || lowerText.includes('theory test')) {
     examState.active = true;
     examState.testType = 'driving';
@@ -2932,6 +3017,7 @@ function getNewsEmoji(label) {
 function showAllNews() {
   window._currentPage = 'news';
   scrollToTop();
+  setTimeout(() => scrollToTop(), 50);
   // Use live feed if available, otherwise fall back to hardcoded
   const livePosts = getLiveBlogPosts();
   if (livePosts && livePosts.length > 0) {
@@ -5981,6 +6067,7 @@ function showUpcomingEventCard() {
 function showEventsCard() {
   window._currentPage = 'events';
   scrollToTop();
+  setTimeout(() => scrollToTop(), 50);
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
@@ -6022,52 +6109,53 @@ function showEventsCard() {
       <div style="font-size:13px;color:#555;">Check back soon — new events are added regularly!</div>
     </div>`);
   } else {
+  window._eventsData = upcoming;
+  window._renderEventsBatch = function(from) {
     const BATCH = 5;
-    const showEvents = (from) => {
-      const batch = upcoming.slice(from, from + BATCH);
-      batch.forEach(e => {
-        const safeTitle = (e.title||'').replace(/"/g,'&quot;');
-        const safeSummary = (e.summary||'').replace(/"/g,'&quot;');
-        const shareUrl = e.appUrl || (e.url && e.url.includes('/blog/') ? 'https://auntietobi.co.uk/blog/' + e.url.split('/blog/')[1] : 'https://auntietobi.co.uk');
-        const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-bottom:4px;">
-          <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:16px;">🎉</span>
-            <span style="color:white;font-weight:700;font-size:13px;">UPCOMING EVENT</span>
+    const batch = window._eventsData.slice(from, from + BATCH);
+    batch.forEach(e => {
+      const safeTitle = (e.title||'').replace(/"/g,'&quot;');
+      const safeSummary = (e.summary||'').replace(/"/g,'&quot;');
+      const shareUrl = e.appUrl || (e.url && e.url.includes('/blog/') ? 'https://auntietobi.co.uk/blog/' + e.url.split('/blog/')[1] : 'https://auntietobi.co.uk');
+      const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-bottom:4px;">
+        <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:16px;">🎉</span>
+          <span style="color:white;font-weight:700;font-size:13px;">UPCOMING EVENT</span>
+        </div>
+        <div style="padding:10px 12px 8px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="background:#6B21A8;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Events</span>
+            <span style="font-size:10px;color:#9CA3AF;">${e.date}</span>
           </div>
-          <div style="padding:10px 12px 8px;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-              <span style="background:#6B21A8;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Events</span>
-              <span style="font-size:10px;color:#9CA3AF;">${e.date}</span>
-            </div>
-            <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${e.emoji} ${e.title}</div>
-            <div style="font-size:12px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
-            <div style="font-size:12px;color:#555;margin-bottom:8px;">🕐 ${e.time}</div>
-            <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-              <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" data-title="${safeTitle}" data-summary="${safeSummary}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Event Details</a>
-              <button data-share-title="${safeTitle.substring(0,60)}" data-share-desc="${e.date}${e.loc ? ' • ' + e.loc : ''}" data-share-url="${shareUrl}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
-            </div>
+          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${e.emoji} ${e.title}</div>
+          <div style="font-size:12px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
+          <div style="font-size:12px;color:#555;margin-bottom:8px;">🕐 ${e.time}</div>
+          <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
+            <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" data-title="${safeTitle}" data-summary="${safeSummary}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Event Details</a>
+            <button data-share-title="${safeTitle.substring(0,60)}" data-share-desc="${e.date}${e.loc ? ' • ' + e.loc : ''}" data-share-url="${shareUrl}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
           </div>
-        </div>`;
-        addTipMessage(html);
-      });
-      const nextFrom = from + BATCH;
-      const moreBtn = document.getElementById('events-more-btn');
-      if (moreBtn) moreBtn.remove();
-      if (nextFrom < upcoming.length) {
-        addTipMessage(`<div id="events-more-btn" class="suggestions" style="margin-top:4px;">
-          <button class="suggestion-btn" onclick="(${showEvents.toString()})(${nextFrom})">🎉 More Events (${upcoming.length - nextFrom} left)</button>
-          <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">📣 Post Your Event</button>
-        </div>`);
-      } else {
-        addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-          <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">📣 Post Your Event</button>
-          <button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button>
-          <button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button>
-        </div>`);
-      }
-    };
-    showEvents(0);
-    return;
+        </div>
+      </div>`;
+      addTipMessage(html);
+    });
+    const nextFrom = from + BATCH;
+    const moreBtn = document.getElementById('events-more-btn');
+    if (moreBtn) moreBtn.remove();
+    if (nextFrom < window._eventsData.length) {
+      addTipMessage(`<div id="events-more-btn" class="suggestions" style="margin-top:4px;">
+        <button class="suggestion-btn" onclick="window._renderEventsBatch(${nextFrom})">🎉 More Events (${window._eventsData.length - nextFrom} left)</button>
+        <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">📣 Post Your Event</button>
+      </div>`);
+    } else {
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+        <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">📣 Post Your Event</button>
+        <button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button>
+        <button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button>
+      </div>`);
+    }
+  };
+  window._renderEventsBatch(0);
+  return;
   }
 }
 
@@ -6468,7 +6556,13 @@ function shareBlogPost() {
 let shownBusinessIndexes = [];
 function scrollToTop() {
   const container = document.getElementById('messages');
-  if (container) { container.scrollTop = 0; }
+  if (container) container.scrollTop = 0;
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  // Also scroll after a tick in case content renders after
+  requestAnimationFrame(() => {
+    if (container) container.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
 }
 
 function showBusinesses(startIndex) {
@@ -6476,6 +6570,7 @@ function showBusinesses(startIndex) {
   scrollToTop();
   window.history.replaceState({}, '', '/');
   if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
+  setTimeout(() => scrollToTop(), 50);
   const allBiz = getLiveDirectory();
   if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
     shownBusinessIndexes = [];
