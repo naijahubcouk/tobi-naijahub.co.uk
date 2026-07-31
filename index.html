@@ -6253,13 +6253,45 @@ window.onload = () => {
             <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
           </div>`);
         } else {
-          // Try matching live feed posts by slug or key
-          const livePosts = typeof getLiveBlogPosts === 'function' ? getLiveBlogPosts() : [];
-          const liveMatch = livePosts && livePosts.find(p =>
-            (p.slug && (p.slug === blogSlug || p.slug.includes(blogSlug) || blogSlug.includes(p.slug.substring(0,15)))) ||
-            (p.key && (p.key === blogSlug || blogSlug.startsWith(p.key.substring(0,10))))
-          );
-          openBlogSheet(blogUrl, liveMatch ? liveMatch.title : '', liveMatch ? liveMatch.summary : '');
+          // Map of known /blog/SLUG → ?blog=KEY for hardcoded articles
+          const SLUG_TO_KEY = {
+            'freebustravel': 'freebus', 'free-bus-travel': 'freebus',
+            'starmerresigns': 'starmerresigns', 'keir-starmer-resigns': 'starmerresigns',
+            'afrominight': 'afrominight', 'afromic-night': 'afrominight',
+            'naijafoodfest': 'naijafoodfest', 'naija-food-festival': 'naijafoodfest',
+            'owambefest': 'owambefest', 'owambe-fest': 'owambefest',
+            'deshapeables': 'deshapeables',
+            'nsfsportsday': 'nsfsportsday', 'nsf-sports-day': 'nsfsportsday',
+            'igbotable': 'igbotable', 'igbo-table': 'igbotable',
+            'ankarafest': 'ankarafest', 'ankara-festival': 'ankarafest',
+            'tenantdeposit': 'tenantdeposit', 'tenant-deposit': 'tenantdeposit',
+            'suyafest': 'suyafest', 'suya-fest': 'suyafest',
+            'nigculturalfest': 'nigculturalfest',
+            'hc259immigration': 'hc259immigration',
+            '20placeskids': '20placeskids',
+            'firsthome5k': 'firsthome5k', 'first-home-5k': 'firsthome5k',
+            'midlandsbiz': 'midlandsbiz',
+          };
+          // Try slug directly or normalised (remove hyphens/lowercase)
+          const normalised = blogSlug.toLowerCase().replace(/-/g,'');
+          const shortKey = SLUG_TO_KEY[blogSlug] || SLUG_TO_KEY[normalised] ||
+            Object.keys(SLUG_TO_KEY).find(k => blogSlug.toLowerCase().startsWith(k)) && SLUG_TO_KEY[Object.keys(SLUG_TO_KEY).find(k => blogSlug.toLowerCase().startsWith(k))];
+
+          if (shortKey) {
+            // Route to the hardcoded handler by temporarily setting the blog param
+            const msgs = document.getElementById('messages');
+            if (msgs) msgs.innerHTML = '';
+            window.history.replaceState({}, '', '/?blog=' + shortKey);
+            handleDeepLink();
+          } else {
+            // Try live feed match
+            const livePosts = typeof getLiveBlogPosts === 'function' ? getLiveBlogPosts() : [];
+            const liveMatch = livePosts && livePosts.find(p =>
+              (p.slug && (p.slug === blogSlug || p.slug.includes(blogSlug) || blogSlug.includes(p.slug.substring(0,15)))) ||
+              (p.key && (p.key === blogSlug || blogSlug.startsWith(p.key.substring(0,10))))
+            );
+            openBlogSheet(blogUrl, liveMatch ? liveMatch.title : '', liveMatch ? liveMatch.summary : '');
+          }
         }
       }, 400);
     }, 300);
