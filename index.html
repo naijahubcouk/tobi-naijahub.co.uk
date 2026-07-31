@@ -1958,15 +1958,7 @@ function formatResponse(text) {
             ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
             : '';
 
-          const phoneBtn = (!b.wa && b.phone)
-            ? '<a href="tel:' + b.phone + '" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCDE Call</a>'
-            : '';
-
-          const shareBtn = '<button data-share-url="' + shareUrl + '" data-share-name="' + safeName + '" data-share-desc="' + shareMsg + '" onclick="tobiShare(this.dataset.shareName,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">\uD83D\uDCE4 Share</button>';
-
-          const viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" rel="noopener" style="flex:1;padding:9px 8px;background:#0F1E36;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View</a>';
-
-          const actionBtns = (waBtn || phoneBtn) + viewBtn + shareBtn;
+          const actionBtns = waBtn + viewBtn + shareBtn;
 
           return '<div style="background:white;border:' + (b.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;overflow:hidden;">'
             + verifiedHeader
