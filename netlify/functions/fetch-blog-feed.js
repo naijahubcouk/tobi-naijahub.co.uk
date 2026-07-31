@@ -110,6 +110,7 @@ function parseRSS(xml) {
     const isEvent = isEventPost(title, categories);
     const label = isEvent ? 'Events' : (categories[0] || 'News');
     const emoji = isEvent ? '🎉' : getCategoryEmoji(categories);
+    const appUrl = 'https://auntietobi.co.uk/blog/' + key;
 
     items.push({
       key,
@@ -122,7 +123,7 @@ function parseRSS(xml) {
       pubDate,
       date: formatDate(pubDate),
       url: `https://auntietobi.com/blog/${slug}`,
-      appUrl: `https://auntietobi.co.uk/blog/${key}`,
+      appUrl,
     });
   }
 
