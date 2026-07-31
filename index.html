@@ -2351,16 +2351,18 @@ async function sendMessage(text) {
       return words.some(w => txt.includes(w));
     }).slice(0, 3);
 
-    // Only search businesses if we have article/event matches too (prevents business-only results stealing the answer)
-    const bizMatches = (articleMatches.length > 0 || eventMatches.length > 0) ? getLiveDirectory().filter(b => {
+    // Search businesses — always run for potential business name searches
+    const bizMatches = getLiveDirectory().filter(b => {
       const txt = ((b.name||'') + ' ' + (b.cat||b.category||'')).toLowerCase();
       return words.some(w => txt.includes(w));
-    }).slice(0, 3) : [];
+    }).slice(0, 3);
 
     const hasMultipleTypes = [bizMatches.length > 0, eventMatches.length > 0, articleMatches.length > 0].filter(Boolean).length > 1;
     const totalMatches = bizMatches.length + eventMatches.length + articleMatches.length;
 
-    if (hasMultipleTypes && totalMatches >= 2) {
+    // Show results if: multiple types match OR if business name search with clear match
+    const isClearBusinessSearch = bizMatches.length > 0 && eventMatches.length === 0 && articleMatches.length === 0 && words.length >= 2;
+    if ((hasMultipleTypes && totalMatches >= 2) || isClearBusinessSearch) {
       hideTyping();
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
