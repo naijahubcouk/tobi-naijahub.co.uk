@@ -2360,9 +2360,9 @@ async function sendMessage(text) {
     const hasMultipleTypes = [bizMatches.length > 0, eventMatches.length > 0, articleMatches.length > 0].filter(Boolean).length > 1;
     const totalMatches = bizMatches.length + eventMatches.length + articleMatches.length;
 
-    // Show results if: multiple types match OR if business name search with clear match
-    const isClearBusinessSearch = bizMatches.length > 0 && eventMatches.length === 0 && articleMatches.length === 0 && words.length >= 2;
-    if ((hasMultipleTypes && totalMatches >= 2) || isClearBusinessSearch) {
+    // Only intercept when results span multiple content types
+    // Business-only searches pass through to AI which renders proper cards
+    if (hasMultipleTypes && totalMatches >= 2) {
       hideTyping();
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
