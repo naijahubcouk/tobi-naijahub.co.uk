@@ -6521,7 +6521,6 @@ Answer: ${answer}`
 }
 
 function tobiShare(title, text, url, imageUrl) {
-  // Always use auntietobi.co.uk deep links so shared links open in the app
   let shareUrl = url || 'https://auntietobi.co.uk';
 
   // Convert .com blog URLs to .co.uk deep links
@@ -6529,11 +6528,8 @@ function tobiShare(title, text, url, imageUrl) {
     const slug = shareUrl.split('/blog/')[1];
     shareUrl = 'https://auntietobi.co.uk/blog/' + slug;
   }
-  // Convert any other external URLs to auntietobi.co.uk homepage
-  if (!shareUrl.includes('auntietobi.co.uk')) {
-    shareUrl = 'https://auntietobi.co.uk';
-  }
-  // Ensure no trailing /blog/ with empty slug
+
+  // Guard against empty /blog/ URLs
   if (shareUrl === 'https://auntietobi.co.uk/blog/' || shareUrl === 'https://auntietobi.co.uk/blog') {
     shareUrl = 'https://auntietobi.co.uk';
   }
@@ -6544,8 +6540,7 @@ function tobiShare(title, text, url, imageUrl) {
     .replace(/👉\s*/g, '')
     .trim();
 
-  // Format: title, description, then the app link
-  const shareText = (title ? title + '\n\n' : '') + (cleanText ? cleanText + '\n\n' : '') + shareUrl + '\n\nVia Auntie Tobi 🇬🇧🇳🇬';
+  const shareText = (title ? title + '\n\n' : '') + (cleanText ? cleanText + '\n\n' : '') + shareUrl;
 
   if (navigator.share) {
     navigator.share({ title: title || 'Auntie Tobi', text: shareText }).catch(() => {});
