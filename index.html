@@ -2903,8 +2903,8 @@ window._renderAllNewsBatch = function(from) {
         <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" data-title="${item.title||''}" data-summary="${item.summary||''}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
-          <button data-share-title="${(item.title||'').replace(/\"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/\"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl||('https://auntietobi.co.uk/blog/'+(item.slug||item.url.split('/blog/')[1]||''))).replace(/\"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+          <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" data-title="${(item.title||'').replace(/"/g,'&quot;')}" data-summary="${(item.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
+          <button data-share-title="${(item.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl||('https://auntietobi.co.uk/blog/'+(item.slug||item.url.split('/blog/')[1]||''))).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
     </div>`;
@@ -3216,6 +3216,32 @@ function showEventsFromNews() {
     appUrl: e.url.includes('auntietobi.com/blog/') ? 'https://auntietobi.co.uk/blog/' + e.url.split('/blog/')[1] : 'https://auntietobi.co.uk'
   }));
 
+  // Also add live feed events not already in ALL_EVENTS
+  const livePosts = getLiveBlogPosts();
+  if (livePosts) {
+    livePosts.filter(p => p.isEvent || (p.label && p.label.toLowerCase() === 'events')).forEach(p => {
+      const alreadyIn = upcomingEvents.find(e => e.title === p.title || e.url === p.url);
+      if (!alreadyIn) {
+        const eventDate = p.pubDate ? new Date(p.pubDate) : new Date();
+        eventDate.setHours(0,0,0,0);
+        if (eventDate >= today) {
+          upcomingEvents.push({
+            emoji: p.emoji || '🎉',
+            title: p.title,
+            summary: p.summary,
+            date: p.date || '',
+            dateObj: eventDate,
+            loc: 'UK',
+            time: p.date || '',
+            url: p.url,
+            label: 'Events',
+            appUrl: p.appUrl || ('https://auntietobi.co.uk/blog/' + (p.slug || ''))
+          });
+        }
+      }
+    });
+  }
+
   // Sort soonest first
   upcomingEvents.sort((a, b) => parseD(a.date) - parseD(b.date));
 
@@ -3371,9 +3397,10 @@ function showNewsCard() {
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  // Filter to last 7 days, sorted newest first
+  // Filter to last 7 days, non-event posts only, sorted newest first
   const recent = livePosts.filter(p => {
     if (!p.pubDate) return false;
+    if (p.isEvent || (p.label && p.label.toLowerCase() === 'events')) return false;
     const d = new Date(p.pubDate);
     return !isNaN(d) && d >= sevenDaysAgo;
   }).sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -5958,16 +5985,41 @@ function showUpcomingEventCard() {
 }
 
 function showEventsCard() {
+  window._currentPage = 'events';
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
 
   const today = new Date();
   today.setHours(0,0,0,0);
 
-
-
-  // Filter past events
+  // Hardcoded events
   const upcoming = ALL_EVENTS.filter(e => e.dateObj >= today).sort((a,b) => a.dateObj - b.dateObj);
+
+  // Also merge live feed events
+  const livePosts = getLiveBlogPosts();
+  if (livePosts) {
+    livePosts.filter(p => p.isEvent || (p.label && p.label.toLowerCase() === 'events')).forEach(p => {
+      const alreadyIn = upcoming.find(e => e.title === p.title || e.url === p.url);
+      if (!alreadyIn) {
+        const eventDate = p.pubDate ? new Date(p.pubDate) : new Date();
+        eventDate.setHours(0,0,0,0);
+        if (eventDate >= today) {
+          upcoming.push({
+            emoji: p.emoji || '🎉',
+            title: p.title,
+            summary: p.summary || '',
+            date: p.date || '',
+            dateObj: eventDate,
+            loc: 'UK',
+            time: p.date || '',
+            url: p.url,
+            appUrl: p.appUrl || ('https://auntietobi.co.uk/blog/' + (p.slug || ''))
+          });
+        }
+      }
+    });
+    upcoming.sort((a,b) => a.dateObj - b.dateObj);
+  }
 
   if (upcoming.length === 0) {
     addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:16px;text-align:center;">
@@ -5976,6 +6028,9 @@ function showEventsCard() {
     </div>`);
   } else {
     upcoming.forEach(e => {
+      const safeTitle = (e.title||'').replace(/"/g,'&quot;');
+      const safeSummary = (e.summary||'').replace(/"/g,'&quot;');
+      const shareUrl = e.appUrl || (e.url && e.url.includes('/blog/') ? 'https://auntietobi.co.uk/blog/' + e.url.split('/blog/')[1] : 'https://auntietobi.co.uk');
       const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;margin-bottom:4px;">
         <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;gap:6px;">
           <span style="font-size:16px;">🎉</span>
@@ -5990,8 +6045,8 @@ function showEventsCard() {
           <div style="font-size:12px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
           <div style="font-size:12px;color:#555;margin-bottom:8px;">🕐 ${e.time}</div>
           <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" data-title="${e.title}" data-summary="${e.summary}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Event Details</a>
-            <button data-share-title="${(e.title||'').substring(0,50).replace(/"/g,'&quot;')}" data-share-desc="${e.date} • ${e.loc}" data-share-url="${e.url}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+            <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" data-title="${safeTitle}" data-summary="${safeSummary}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Event Details</a>
+            <button data-share-title="${safeTitle.substring(0,60)}" data-share-desc="${e.date}${e.loc ? ' • ' + e.loc : ''}" data-share-url="${shareUrl}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
           </div>
         </div>
       </div>`;
@@ -6001,9 +6056,8 @@ function showEventsCard() {
 
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">📣 Post Your Event</button>
-    <button class="suggestion-btn" onclick="quickAsk('What Nigerian events are coming up in the UK?')">📅 See More Events</button>
-    <button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button>
     <button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button>
+    <button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button>
   </div>`);
 }
 
