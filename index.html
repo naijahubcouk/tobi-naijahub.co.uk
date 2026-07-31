@@ -2323,88 +2323,75 @@ async function sendMessage(text) {
 
   // ============================================
   // SMART MULTI-SEARCH LAYER
-  // Before hitting AI, check all local content
-  // and surface grouped results if multiple match
+  // Only fires when user clearly searches for
+  // specific content — passes through to AI otherwise
   // ============================================
   const searchLower = userText.toLowerCase().trim();
-  const isSearchQuery = searchLower.length > 2 && !searchLower.startsWith('how') && !searchLower.startsWith('what') && !searchLower.startsWith('why') && !searchLower.startsWith('can') && !searchLower.startsWith('is ') && !searchLower.startsWith('do ') && !searchLower.startsWith('tell me') && !searchLower.startsWith('help me') && !examState.active;
 
-  if (isSearchQuery) {
+  // Only intercept explicit search-like queries (not questions/commands)
+  const isQuestion = /^(how|what|why|when|where|who|can|is |do |does|are |will|should|tell me|help me|explain|find me|show me)/i.test(userText.trim());
+  const isShortQuery = userText.trim().split(/\s+/).length >= 2 && userText.trim().length >= 4;
+  const shouldSearch = !isQuestion && isShortQuery && !examState.active;
+
+  if (shouldSearch) {
     const words = searchLower.split(/\s+/).filter(w => w.length > 2);
 
-    // Search businesses
-    const dir = getLiveDirectory();
-    const bizMatches = dir.filter(b => {
-      const txt = ((b.name||'') + ' ' + (b.desc||b.description||'') + ' ' + (b.cat||b.category||'') + ' ' + (b.loc||b.location||'')).toLowerCase();
-      return words.some(w => txt.includes(w));
-    }).slice(0, 3);
-
-    // Search events
-    const eventMatches = (typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : []).filter(e => {
-      const today = new Date(); today.setHours(0,0,0,0);
-      if (e.dateObj < today) return false;
-      const txt = ((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.loc||'')).toLowerCase();
-      return words.some(w => txt.includes(w));
-    }).slice(0, 3);
-
-    // Search articles from live feed
+    // Search live articles first (fastest — small array)
     const livePosts = getLiveBlogPosts() || [];
     const articleMatches = livePosts.filter(p => {
       const txt = ((p.title||'') + ' ' + (p.summary||'')).toLowerCase();
       return words.some(w => txt.includes(w));
     }).slice(0, 3);
 
+    // Search events (small array)
+    const today = new Date(); today.setHours(0,0,0,0);
+    const eventMatches = (typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : []).filter(e => {
+      if (e.dateObj < today) return false;
+      const txt = ((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.loc||'')).toLowerCase();
+      return words.some(w => txt.includes(w));
+    }).slice(0, 3);
+
+    // Only search businesses if we have article/event matches too (prevents business-only results stealing the answer)
+    const bizMatches = (articleMatches.length > 0 || eventMatches.length > 0) ? getLiveDirectory().filter(b => {
+      const txt = ((b.name||'') + ' ' + (b.cat||b.category||'')).toLowerCase();
+      return words.some(w => txt.includes(w));
+    }).slice(0, 3) : [];
+
+    const hasMultipleTypes = [bizMatches.length > 0, eventMatches.length > 0, articleMatches.length > 0].filter(Boolean).length > 1;
     const totalMatches = bizMatches.length + eventMatches.length + articleMatches.length;
 
-    // Only intercept if we have matches across multiple types
-    if (totalMatches > 0 && (bizMatches.length + eventMatches.length + articleMatches.length) > 0) {
-      const hasMultipleTypes = [bizMatches.length > 0, eventMatches.length > 0, articleMatches.length > 0].filter(Boolean).length > 1;
-      if (hasMultipleTypes || totalMatches >= 2) {
-        hideTyping();
-        isLoading = false;
-        document.getElementById('sendBtn').disabled = false;
+    if (hasMultipleTypes && totalMatches >= 2) {
+      hideTyping();
+      isLoading = false;
+      document.getElementById('sendBtn').disabled = false;
 
-        let html = `<div style="font-size:14px;color:#0F1E36;font-weight:700;margin-bottom:12px;">Here's what I found for <em>"${userText}"</em> on Auntie Tobi:</div>`;
+      let html = `<div style="font-size:14px;color:#0F1E36;font-weight:700;margin-bottom:12px;">Here's what I found for <em>"${userText}"</em> on Auntie Tobi:</div>`;
 
-        if (bizMatches.length > 0) {
-          html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">🏢 Businesses</div>`;
-          bizMatches.forEach(b => {
-            const wa = b.wa ? `<a href="https://wa.me/${b.wa.replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-weight:700;text-decoration:none;font-size:11px;">💬 WhatsApp</a>` : '';
-            html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
-              <div style="font-size:13px;font-weight:700;color:#0F1E36;">${b.name}</div>
-              <div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${b.cat||b.category||''} · ${b.loc||b.location||''}</div>
-              <div style="display:flex;gap:8px;align-items:center;">${wa}</div>
-            </div>`;
-          });
-          if (bizMatches.length === 3) html += `<button class="suggestion-btn" style="margin-bottom:10px;" onclick="sendMessage('Find a ${userText} business')">See all businesses →</button>`;
-        }
-
-        if (eventMatches.length > 0) {
-          html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;margin-top:4px;">🎉 Events</div>`;
-          eventMatches.forEach(e => {
-            html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
-              <div style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji} ${e.title}</div>
-              <div style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</div>
-            </div>`;
-          });
-          if (eventMatches.length === 3) html += `<button class="suggestion-btn" style="margin-bottom:10px;" onclick="showEventsCard()">See all events →</button>`;
-        }
-
-        if (articleMatches.length > 0) {
-          html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;margin-top:4px;">📰 Articles</div>`;
-          articleMatches.forEach(p => {
-            html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
-              <div style="font-size:13px;font-weight:700;color:#0F1E36;">${p.title}</div>
-              <div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${p.label||'News'} · ${p.date||''}</div>
-              <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(p.url)}" data-title="${(p.title||'').replace(/"/g,'&quot;')}" data-summary="${(p.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:11px;color:#057A44;font-weight:700;text-decoration:none;">🔗 Read More</a>
-            </div>`;
-          });
-        }
-
-        html += `<div style="font-size:12px;color:#9CA3AF;margin-top:8px;">Not what you were looking for? Try asking Auntie Tobi directly below.</div>`;
-        addMessage('bot', `<div>${html}</div>`, true);
-        return;
+      if (bizMatches.length > 0) {
+        html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">🏢 Businesses</div>`;
+        bizMatches.forEach(b => {
+          const wa = b.wa ? `<a href="https://wa.me/${b.wa.replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-weight:700;text-decoration:none;font-size:11px;">💬 WhatsApp</a>` : '';
+          html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${b.name}</div><div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${b.cat||b.category||''} · ${b.loc||b.location||''}</div>${wa}</div>`;
+        });
       }
+
+      if (eventMatches.length > 0) {
+        html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;margin-top:4px;">🎉 Events</div>`;
+        eventMatches.forEach(e => {
+          html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji} ${e.title}</div><div style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</div></div>`;
+        });
+      }
+
+      if (articleMatches.length > 0) {
+        html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;margin-top:4px;">📰 Articles</div>`;
+        articleMatches.forEach(p => {
+          html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${p.title}</div><div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${p.label||'News'} · ${p.date||''}</div><a href="javascript:void(0)" data-blogurl="${encodeURIComponent(p.url)}" data-title="${(p.title||'').replace(/"/g,'&quot;')}" data-summary="${(p.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:11px;color:#057A44;font-weight:700;text-decoration:none;">🔗 Read More</a></div>`;
+        });
+      }
+
+      html += `<div style="font-size:12px;color:#9CA3AF;margin-top:8px;">Not what you were looking for? Ask Auntie Tobi below.</div>`;
+      addMessage('bot', `<div>${html}</div>`, true);
+      return;
     }
   }
   // End multi-search layer
@@ -2982,7 +2969,7 @@ window._renderAllNewsBatch = function(from) {
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
           <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" data-title="${(item.title||'').replace(/"/g,'&quot;')}" data-summary="${(item.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
-          <button data-share-title="${(item.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl||('https://auntietobi.co.uk/blog/'+(item.slug||item.url.split('/blog/')[1]||''))).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+          <button data-share-title="${(item.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl || 'https://auntietobi.co.uk/blog/' + (item.key||item.slug||'')).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
     </div>`;
@@ -3352,7 +3339,7 @@ function buildLiveNewsHTML(articles, showAll) {
       ${a.summary ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:4px;">${a.summary}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;">
         <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(a.url)}" class="blog-read-more" style="font-size:12px;color:#057A44;text-decoration:none;font-weight:700;">🔗 Read More</a>
-        <button data-share-title="${(a.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(a.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(a.appUrl||('https://auntietobi.co.uk/blog/'+(a.slug||a.url.split('/blog/')[1]||''))).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
+        <button data-share-title="${(a.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(a.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(a.appUrl || 'https://auntietobi.co.uk/blog/' + (a.key||a.slug||'')).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:none;border:none;color:#9CA3AF;font-size:11px;cursor:pointer;font-family:inherit;padding:0;">📤 Share</button>
       </div>
     </div>`;
   }).join('');
@@ -3521,7 +3508,7 @@ function showNewsCard() {
         <button
           data-share-title="${(item.title||'').replace(/"/g,'&quot;').substring(0,80)}"
           data-share-desc="${(item.summary||item.description||'').replace(/"/g,'&quot;').substring(0,120)}"
-          data-share-url="${(item.appUrl || ('https://auntietobi.co.uk/blog/' + (item.slug||item.url.split('/blog/')[1]||''))).replace(/"/g,'&quot;')}"
+          data-share-url="${(item.appUrl || 'https://auntietobi.co.uk/blog/' + (item.key||item.slug||'')).replace(/"/g,'&quot;')}"
           onclick="tobiShare(this.dataset.shareTitle, this.dataset.shareDesc, this.dataset.shareUrl)"
           style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
@@ -6502,13 +6489,20 @@ Answer: ${answer}`
 }
 
 function tobiShare(title, text, url, imageUrl) {
-  // Always use auntietobi.co.uk — convert .com blog URLs to .co.uk deep links
+  // Always use auntietobi.co.uk deep links so shared links open in the app
   let shareUrl = url || 'https://auntietobi.co.uk';
+
+  // Convert .com blog URLs to .co.uk deep links
   if (shareUrl.includes('auntietobi.com/blog/')) {
     const slug = shareUrl.split('/blog/')[1];
     shareUrl = 'https://auntietobi.co.uk/blog/' + slug;
   }
+  // Convert any other external URLs to auntietobi.co.uk homepage
   if (!shareUrl.includes('auntietobi.co.uk')) {
+    shareUrl = 'https://auntietobi.co.uk';
+  }
+  // Ensure no trailing /blog/ with empty slug
+  if (shareUrl === 'https://auntietobi.co.uk/blog/' || shareUrl === 'https://auntietobi.co.uk/blog') {
     shareUrl = 'https://auntietobi.co.uk';
   }
 
@@ -6518,8 +6512,8 @@ function tobiShare(title, text, url, imageUrl) {
     .replace(/👉\s*/g, '')
     .trim();
 
-  // Format: title on first line (visible in WhatsApp etc), then description, then link
-  const shareText = (title ? title + '\n\n' : '') + (cleanText ? cleanText + '\n\n' : '') + shareUrl;
+  // Format: title, description, then the app link
+  const shareText = (title ? title + '\n\n' : '') + (cleanText ? cleanText + '\n\n' : '') + shareUrl + '\n\nVia Auntie Tobi 🇬🇧🇳🇬';
 
   if (navigator.share) {
     navigator.share({ title: title || 'Auntie Tobi', text: shareText }).catch(() => {});
