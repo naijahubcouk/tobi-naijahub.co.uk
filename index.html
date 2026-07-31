@@ -2321,8 +2321,27 @@ async function sendMessage(text) {
     }
   }
 
-  // ============================================
-  // SMART MULTI-SEARCH LAYER
+  // ── BUSINESSES PAGE DIRECT SEARCH ──
+  // When user is on the businesses page, search directory immediately
+  // and pass to AI which renders proper business cards
+  if (window._currentPage === 'businesses') {
+    const dir = getLiveDirectory();
+    const qWords = userText.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 1);
+    const bizResults = dir.filter(b => {
+      const txt = ((b.name||'') + ' ' + (b.cat||b.category||'') + ' ' + (b.loc||b.location||'') + ' ' + (b.keywords||[]).join(' ')).toLowerCase();
+      return qWords.some(w => txt.includes(w));
+    }).sort((a,b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0)).slice(0, 6);
+    if (bizResults.length > 0) {
+      // Inject biz context and let AI respond with proper card format
+      const bizContext = '\n\n<<<BIZ_JSON:' + JSON.stringify(bizResults.map(b => ({
+        slug: b.slug, name: b.name, cat: b.cat||'', loc: b.loc||'UK',
+        desc: b.desc ? b.desc.substring(0,100) : '', verified: b.verified||false, wa: b.wa||'', phone: b.phone||''
+      }))) + '>>>\n[SEARCH_SCOPE: Found ' + bizResults.length + ' businesses matching "' + userText + '" on Auntie Tobi.]';
+      messages[messages.length - 1] = { role: 'user', content: userText + bizContext };
+    }
+    // Always fall through to AI on businesses page (no multi-search interception)
+    // Skip all other intercepts below
+  } else {
   // Only fires when user clearly searches for
   // specific content — passes through to AI otherwise
   // ============================================
@@ -2396,6 +2415,7 @@ async function sendMessage(text) {
       return;
     }
   }
+  } // end businesses page / else block
   // End multi-search layer
   const lowerText = userText.toLowerCase();
   if (lowerText.includes('driving theory') || lowerText.includes('theory test')) {
