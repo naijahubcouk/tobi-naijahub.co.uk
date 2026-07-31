@@ -2395,6 +2395,7 @@ async function sendMessage(text) {
     }
   }
   // End multi-search layer
+  const lowerText = userText.toLowerCase();
   if (lowerText.includes('driving theory') || lowerText.includes('theory test')) {
     examState.active = true;
     examState.testType = 'driving';
@@ -2634,7 +2635,10 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
     }
 
   } catch (err) {
+    console.error('sendMessage error:', err.message);
     removeTyping();
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
     addMessage('bot', formatResponse("No wahala — something went wrong on my end. Please try again! 🙏\n\n[SUGGESTIONS: Find a business | Upcoming events | Helpful articles]"), true);
   }
 
