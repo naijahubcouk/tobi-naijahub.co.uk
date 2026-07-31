@@ -6453,6 +6453,11 @@ function showBusinesses(startIndex) {
 
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
 
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
+    <button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>
+    <button class="suggestion-btn" onclick="showAboutTobi()">ℹ️ About Auntie Tobi</button>
+  </div>`);
+
 
 
   const moreLabel = hasMore ? '🏢 Show more businesses' : '🔄 Start again';
