@@ -5,6 +5,20 @@ const http = require('http');
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 let cache = { data: null, ts: 0 };
 
+const EVENT_KEYWORDS = [
+  'owambe', 'festival', 'concert', 'party', 'fest ', 'fayre', 'fête',
+  'event', 'show ', 'gala', 'exhibition', 'carnival', 'celebration',
+  'dinner', 'networking', 'conference', 'seminar', 'workshop', 'fair ',
+  'night out', 'comedy night', 'open mic', 'live music', 'ball ',
+  'fundraiser', 'award', 'launch ', 'meetup', 'gathering',
+];
+
+function isEventPost(title, categories) {
+  const text = (title + ' ' + categories.join(' ')).toLowerCase();
+  if (categories.some(c => c.toLowerCase().includes('event'))) return true;
+  return EVENT_KEYWORDS.some(kw => text.includes(kw));
+}
+
 const CATEGORY_EMOJI = {
   'news': '📰', 'events': '🎉', 'money': '💷', 'housing': '🏠',
   'business': '💼', 'education': '🎓', 'food': '🍽️', 'lifestyle': '🌟',
@@ -93,12 +107,9 @@ function parseRSS(xml) {
 
     if (!title || !slug) continue;
 
-    const label = categories[0] || 'News';
-    const emoji = getCategoryEmoji(categories);
-    const key = slugify(title);
-
-    // Clean description — strip HTML tags
-    const cleanDesc = description.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/g, ' ').trim().substring(0, 200);
+    const isEvent = isEventPost(title, categories);
+    const label = isEvent ? 'Events' : (categories[0] || 'News');
+    const emoji = isEvent ? '🎉' : getCategoryEmoji(categories);
 
     items.push({
       key,
@@ -107,6 +118,7 @@ function parseRSS(xml) {
       summary: cleanDesc,
       label,
       emoji,
+      isEvent,
       pubDate,
       date: formatDate(pubDate),
       url: `https://auntietobi.com/blog/${slug}`,
