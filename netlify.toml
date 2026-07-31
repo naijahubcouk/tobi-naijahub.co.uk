@@ -32,9 +32,6 @@
   [headers.values]
     Cache-Control = "no-cache"
 
-[functions."auto-notify-news"]
-  schedule = "0 7 * * *"
-
 [functions."auto-notify-articles"]
   schedule = "*/30 * * * *"
 
