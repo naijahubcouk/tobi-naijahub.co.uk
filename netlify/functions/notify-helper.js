@@ -96,16 +96,6 @@ function sendTaggedPush(tag, title, body, url) {
     const apiKey = process.env.ONESIGNAL_API_KEY;
     if (!apiKey) return reject(new Error('ONESIGNAL_API_KEY not set'));
 
-    const notification = {
-      app_id: APP_ID,
-      filters: [{ field: 'tag', key: tag, relation: '=', value: '1' }],
-      headings: { en: title },
-      contents: { en: body },
-      web_url: url || 'https://auntietobi.co.uk',
-      app_url: url || 'https://auntietobi.co.uk',
-      chrome_web_icon: 'https://auntietobi.co.uk/icons/icon-192.png',
-    };
-
     const sendNotification = (payload) => new Promise((res, rej) => {
       const payloadStr = JSON.stringify(payload);
       const req = https.request({
@@ -131,20 +121,31 @@ function sendTaggedPush(tag, title, body, url) {
       req.end();
     });
 
-    sendNotification(notification).then(result => {
-      const errors = result.data && result.data.errors;
-      const noSubscribers = result.data.recipients === 0 || (
-        result.data.errors && JSON.stringify(result.data.errors).includes('not subscribed')
-      );
-      if (noSubscribers) {
-        console.log(`[${tag}] No tagged subscribers — sending to all`);
-        const allPayload = Object.assign({}, notification);
-        delete allPayload.filters;
-        allPayload.included_segments = ['All'];
-        return sendNotification(allPayload);
-      }
-      return result;
-    }).then(resolve).catch(reject);
+    const basePayload = {
+      app_id: APP_ID,
+      headings: { en: title },
+      contents: { en: body },
+      web_url: url || 'https://auntietobi.co.uk',
+      app_url: url || 'https://auntietobi.co.uk',
+      chrome_web_icon: 'https://auntietobi.co.uk/icons/icon-192.png',
+    };
+
+    // Always send to All subscribers — tag filtering is handled by user prefs in the app
+    // We tried tag-based filtering but tags are unreliable on first subscription
+    const allPayload = Object.assign({}, basePayload, {
+      included_segments: ['All']
+    });
+
+    sendNotification(allPayload).then(result => {
+      console.log(`[${tag}] OneSignal response status: ${result.status}`);
+      console.log(`[${tag}] Recipients: ${result.data.recipients}, ID: ${result.data.id}`);
+      if (result.data.errors) console.log(`[${tag}] Errors:`, JSON.stringify(result.data.errors));
+      if (result.status !== 200) console.log(`[${tag}] Full response:`, JSON.stringify(result.data));
+      resolve(result);
+    }).catch(err => {
+      console.error(`[${tag}] sendNotification failed:`, err.message);
+      reject(err);
+    });
   });
 }
 
