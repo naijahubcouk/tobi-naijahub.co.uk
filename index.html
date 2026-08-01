@@ -5998,6 +5998,10 @@ function showWeeklyNotificationPrompt() {
         });
       }
     };
+  }, delay);
+}
+
+function showSafariInstallBanner() {
   const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/i.test(navigator.userAgent);
   const isChromeIOS = /CriOS/i.test(navigator.userAgent);
   const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
