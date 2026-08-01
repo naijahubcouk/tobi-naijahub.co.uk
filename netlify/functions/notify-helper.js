@@ -133,14 +133,15 @@ function sendTaggedPush(tag, title, body, url) {
     // Always send to All subscribers — tag filtering is handled by user prefs in the app
     // We tried tag-based filtering but tags are unreliable on first subscription
     const allPayload = Object.assign({}, basePayload, {
-      included_segments: ['All']
+      included_segments: ['Total Subscriptions'],
+      target_channel: 'push',
     });
 
     sendNotification(allPayload).then(result => {
       console.log(`[${tag}] OneSignal response status: ${result.status}`);
+      console.log(`[${tag}] Full response:`, JSON.stringify(result.data));
       console.log(`[${tag}] Recipients: ${result.data.recipients}, ID: ${result.data.id}`);
       if (result.data.errors) console.log(`[${tag}] Errors:`, JSON.stringify(result.data.errors));
-      if (result.status !== 200) console.log(`[${tag}] Full response:`, JSON.stringify(result.data));
       resolve(result);
     }).catch(err => {
       console.error(`[${tag}] sendNotification failed:`, err.message);
