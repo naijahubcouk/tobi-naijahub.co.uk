@@ -5974,10 +5974,30 @@ function showWeeklyNotificationPrompt() {
       </div>
     </div>`;
     document.body.appendChild(popup);
-  }, delay);
-}
 
-function showSafariInstallBanner() {
+    window._notifPopupAllow = function() {
+      const p = document.getElementById('notif-weekly-popup');
+      if (p) p.remove();
+      if (typeof OneSignalDeferred !== 'undefined') {
+        OneSignalDeferred.push(async function(OneSignal) {
+          try {
+            await OneSignal.Slidedown.promptPush();
+            let tries = 0;
+            const check = setInterval(async () => {
+              tries++;
+              const opted = await OneSignal.User.PushSubscription.optedIn;
+              if (opted) {
+                clearInterval(check);
+                localStorage.setItem('tobi_notifications', '1');
+                updateBellButton(true);
+                setDefaultNotifPrefs();
+                setTimeout(() => showNotifPrefs(), 600);
+              } else if (tries > 15) clearInterval(check);
+            }, 400);
+          } catch(e) { console.log('Prompt error:', e.message); }
+        });
+      }
+    };
   const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/i.test(navigator.userAgent);
   const isChromeIOS = /CriOS/i.test(navigator.userAgent);
   const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
