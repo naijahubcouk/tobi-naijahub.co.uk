@@ -4,6 +4,8 @@ const { sendTaggedPush, fetchRSS, parseRSSItems, getLastNotified, setLastNotifie
 const EVENT_WORDS = ['owambe','festival','concert',' party','fest ','fayre','gala','carnival'];
 
 exports.handler = async function(event) {
+  console.log('[auto-notify-articles] Function invoked at', new Date().toISOString());
+  console.log('[auto-notify-articles] ONESIGNAL_API_KEY set:', !!process.env.ONESIGNAL_API_KEY);
   try {
     const xml = await fetchRSS();
     const items = parseRSSItems(xml);

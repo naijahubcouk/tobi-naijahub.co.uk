@@ -371,6 +371,8 @@ const PRAYERS = [
 
 
 exports.handler = async function(event) {
+  console.log('[prayer] Function invoked at', new Date().toISOString());
+  console.log('[prayer] ONESIGNAL_API_KEY set:', !!process.env.ONESIGNAL_API_KEY);
   try {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     const prayer = PRAYERS[dayOfYear % PRAYERS.length];

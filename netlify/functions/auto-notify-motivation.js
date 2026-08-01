@@ -379,6 +379,8 @@ const MOT_BUBBLES = [
 ];
 
 exports.handler = async function(event) {
+  console.log('[auto-notify-motivation] Function invoked at', new Date().toISOString());
+  console.log('[auto-notify-motivation] ONESIGNAL_API_KEY set:', !!process.env.ONESIGNAL_API_KEY);
   try {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     const quote = MOTIVATIONS[dayOfYear % MOTIVATIONS.length];
