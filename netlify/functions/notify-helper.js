@@ -104,7 +104,7 @@ function sendTaggedPush(tag, title, body, url) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + apiKey,
+          'Authorization': `Key ${apiKey}`,
           'Content-Length': Buffer.byteLength(payloadStr),
         }
       }, (response) => {
@@ -134,8 +134,10 @@ function sendTaggedPush(tag, title, body, url) {
     // We tried tag-based filtering but tags are unreliable on first subscription
     const allPayload = Object.assign({}, basePayload, {
       included_segments: ['Total Subscriptions'],
-      target_channel: 'push',
     });
+
+    console.log(`[${tag}] APP_ID: ${APP_ID}`);
+    console.log(`[${tag}] API Key prefix: ${apiKey.substring(0,8)}...`);
 
     sendNotification(allPayload).then(result => {
       console.log(`[${tag}] OneSignal response status: ${result.status}`);
