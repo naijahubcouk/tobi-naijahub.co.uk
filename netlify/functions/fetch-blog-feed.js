@@ -143,7 +143,12 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify({ posts: cache.data, cached: true }) };
     }
 
-    const { body } = await fetchUrl('https://auntietobi.com/feed/blog');
+    const { body, status } = await fetchUrl('https://auntietobi.com/feed/blog');
+    console.log('[fetch-blog-feed] RSS status:', status, 'body length:', body.length);
+    if (status !== 200 || !body.includes('<item>')) {
+      console.log('[fetch-blog-feed] Bad RSS response, body preview:', body.substring(0, 200));
+      return { statusCode: 200, headers, body: JSON.stringify({ posts: [], cached: false, error: 'Bad RSS: ' + status }) };
+    }
     const rawPosts = parseRSS(body);
 
     // Deduplicate by slug — RSS feed sometimes returns duplicates
@@ -158,10 +163,11 @@ exports.handler = async (event) => {
 
     return { statusCode: 200, headers, body: JSON.stringify({ posts, cached: false }) };
   } catch (err) {
+    console.log('[fetch-blog-feed] Error:', err.message);
     return {
-      statusCode: 500,
+      statusCode: 200,
       headers,
-      body: JSON.stringify({ error: err.message, posts: [] })
+      body: JSON.stringify({ error: err.message, posts: [], cached: false })
     };
   }
 };
