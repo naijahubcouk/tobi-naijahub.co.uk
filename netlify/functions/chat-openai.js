@@ -959,39 +959,8 @@ var _dirCache = { data: null, ts: 0 };
 var DIR_CACHE_TTL = 10 * 60 * 1000;
 
 async function getDirectory() {
-  if (_dirCache.data && Date.now() - _dirCache.ts < DIR_CACHE_TTL) {
-    return _dirCache.data;
-  }
-  try {
-    const result = await new Promise((resolve, reject) => {
-      const req = https.request({
-        hostname: 'auntietobi.co.uk',
-        path: '/.netlify/functions/fetch-listings-feed',
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-      }, (res) => {
-        let data = '';
-        res.on('data', c => { data += c; });
-        res.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { reject(e); } });
-      });
-      req.on('error', reject);
-      req.setTimeout(8000, () => { req.destroy(); reject(new Error('Timeout')); });
-      req.end();
-    });
-    if (result.businesses && result.businesses.length > 0) {
-      const merged = [...HARDCODED_DIRECTORY];
-      result.businesses.forEach(lb => {
-        if (!merged.find(b => b.slug === lb.slug || b.name.toLowerCase() === lb.name.toLowerCase())) {
-          merged.push(lb);
-        }
-      });
-      _dirCache = { data: merged, ts: Date.now() };
-      console.log('[chat] Directory: ' + HARDCODED_DIRECTORY.length + ' hardcoded + ' + (merged.length - HARDCODED_DIRECTORY.length) + ' live = ' + merged.length + ' total');
-      return merged;
-    }
-  } catch(e) {
-    console.log('[chat] Live directory fetch failed:', e.message);
-  }
+  // Use hardcoded directory only — avoids self-referencing HTTP call
+  // which causes timeouts when chat-openai calls fetch-listings-feed
   return HARDCODED_DIRECTORY;
 }
 
