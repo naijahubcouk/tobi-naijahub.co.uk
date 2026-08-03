@@ -1980,9 +1980,9 @@ function formatResponse(text) {
 
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '|||BIZ_CARDS|||' + cardsHTML + '|||END_BIZ|||');
 
-        // If not on businesses page, add a bubble pointing there
+        // If not on businesses page, add a listing prompt bubble
         if (window._currentPage !== 'businesses') {
-          text += '\n\n[SUGGESTIONS: 🏢 See all businesses | Find more near me]';
+          text += '\n\n[SUGGESTIONS: 🏢 See all businesses | List your business free | Ask me anything 💚]';
         }
       } catch(e) {
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '');
@@ -2244,6 +2244,8 @@ function addTipMessage(html) {
   let suggestionsHtml = '';
   if (sugMatch) {
     let suggestions = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean);
+    // Remove ALL [SUGGESTIONS:...] blocks from content
+    content = content.replace(/\[SUGGESTIONS:.*?\]/gs, '').trim();
     // Pad to minimum 3 suggestions
     const defaults = ['Find a Nigerian business near me', 'What events are coming up?', 'Ask me anything 💚'];
     while (suggestions.length < 3) suggestions.push(defaults[suggestions.length]);
@@ -2251,9 +2253,11 @@ function addTipMessage(html) {
       if (s.includes('See all businesses') || s.includes('Browse all businesses')) {
         return `<button class="suggestion-btn" onclick="showBusinesses()">${s}</button>`;
       }
+      if (s.includes('List your business')) {
+        return `<button class="suggestion-btn" onclick="window.open('https://auntietobi.com/new-listing','_blank')">${s}</button>`;
+      }
       return `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`;
     }).join('')}</div>`;
-    content = content.replace(/\[SUGGESTIONS:.*?\]/s, '');
   }
 
   div.innerHTML = `
