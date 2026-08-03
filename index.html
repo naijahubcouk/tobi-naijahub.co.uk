@@ -2374,9 +2374,10 @@ async function sendMessage(text) {
   const searchLower = userText.toLowerCase().trim();
 
   // Only intercept explicit search-like queries (not questions/commands)
-  const isQuestion = /^(how|what|why|when|where|who|can|is |do |does|are |will|should|tell me|help me|explain|find me|show me)/i.test(userText.trim());
+  const isQuestion = /^(how|what|why|when|where|who|can|is |do |does|are |will|should|tell me|help me|explain|find me|show me|find a|find an)/i.test(userText.trim());
+  const hasLocationIntent = /find|near|in |around|looking for|recommend/i.test(userText.toLowerCase());
   const isShortQuery = userText.trim().split(/\s+/).length >= 2 && userText.trim().length >= 4;
-  const shouldSearch = !isQuestion && isShortQuery && !examState.active;
+  const shouldSearch = !isQuestion && !hasLocationIntent && isShortQuery && !examState.active;
 
   if (shouldSearch) {
     const words = searchLower.split(/\s+/).filter(w => w.length > 2);
@@ -6417,7 +6418,7 @@ window.onload = () => {
   }, 1000);
 
   // Delay notification prompt to 30 seconds
-  setTimeout(() => { if (typeof showWeeklyNotificationPrompt === 'function') showWeeklyNotificationPrompt(); }, 30000);
+  setTimeout(() => { if (typeof showWeeklyNotificationPrompt === 'function' && !isLoading) showWeeklyNotificationPrompt(); }, 30000);
 
   // Clear badge when app comes to foreground (e.g. switching back from another app)
   document.addEventListener('visibilitychange', function() {
