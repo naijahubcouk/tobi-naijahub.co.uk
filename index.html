@@ -1980,10 +1980,6 @@ function formatResponse(text) {
 
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '|||BIZ_CARDS|||' + cardsHTML + '|||END_BIZ|||');
 
-        // Add listing CTA box after every business result
-        const listingBox = '\n\n|||BIZ_CTA|||';
-        text += listingBox;
-
         // If not on businesses page, add a bubble pointing there
         if (window._currentPage !== 'businesses') {
           text += '\n\n[SUGGESTIONS: 🏢 See all businesses | Find more near me]';
@@ -1992,15 +1988,6 @@ function formatResponse(text) {
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '');
       }
     }
-  }
-  // Render business listing CTA box
-  if (text.includes('|||BIZ_CTA|||')) {
-    const ctaBox = `<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:14px 16px;margin-top:12px;">
-      <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:6px;">💡 Is your Nigerian business not listed?</div>
-      <div style="font-size:12px;color:#555;line-height:1.6;margin-bottom:10px;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.</div>
-      <a href="https://auntietobi.com/new-listing" target="_blank" rel="noopener" style="display:inline-block;background:#057A44;color:white;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none;">👉 List your business FREE — takes 2 mins</a>
-    </div>`;
-    text = text.replace('|||BIZ_CTA|||', ctaBox);
   }
   text = text.replace('[SHOW_BIZ_CARDS]', '|||INJECT_BIZ|||');
 
@@ -2256,7 +2243,10 @@ function addTipMessage(html) {
   const sugMatch = content.match(/\[SUGGESTIONS:(.*?)\]/s);
   let suggestionsHtml = '';
   if (sugMatch) {
-    const suggestions = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean);
+    let suggestions = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean);
+    // Pad to minimum 3 suggestions
+    const defaults = ['Find a Nigerian business near me', 'What events are coming up?', 'Ask me anything 💚'];
+    while (suggestions.length < 3) suggestions.push(defaults[suggestions.length]);
     suggestionsHtml = `<div class="suggestions" style="margin-top:8px;">${suggestions.map(s => {
       if (s.includes('See all businesses') || s.includes('Browse all businesses')) {
         return `<button class="suggestion-btn" onclick="showBusinesses()">${s}</button>`;
