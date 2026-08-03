@@ -7305,7 +7305,6 @@ async function submitRequest() {
 </div>
 
 
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
 // ============================================
 // TOBI PUSH NOTIFICATIONS — OneSignal
@@ -7439,20 +7438,26 @@ function showNotifToast(msg) {
 // ===== NOTIFICATION PREFERENCES =====
 const NOTIF_PREFS_KEY = 'tobi_notif_prefs';
 
-// Migration: clear old prefs that contain events or all-false values
+// Migration: remove events key and reset all-false prefs
 (function() {
   try {
     const raw = localStorage.getItem('tobi_notif_prefs');
     if (raw) {
       const p = JSON.parse(raw);
-      // If prefs contain events key OR all values are false — reset to defaults
       const allOff = Object.values(p).every(v => !v);
       if ('events' in p || allOff) {
-        localStorage.removeItem('tobi_notif_prefs');
-        console.log('[Tobi] Reset bad notif prefs');
+        // Remove events key and fix all-false
+        delete p.events;
+        if (allOff) {
+          // Reset to defaults
+          localStorage.removeItem('tobi_notif_prefs');
+        } else {
+          localStorage.setItem('tobi_notif_prefs', JSON.stringify(p));
+        }
+        console.log('[Tobi] Fixed notif prefs');
       }
     }
-  } catch(e) {}
+  } catch(e) { localStorage.removeItem('tobi_notif_prefs'); }
 })();
 
 function getNotifPrefs() {
