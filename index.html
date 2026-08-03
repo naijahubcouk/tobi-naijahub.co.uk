@@ -1958,6 +1958,10 @@ function formatResponse(text) {
             ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
             : '';
 
+          const viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" rel="noopener" style="flex:1;padding:9px 8px;background:#0F1E36;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View</a>';
+
+          const shareBtn = '<button data-share-title="' + safeName.replace(/"/g,'&quot;') + '" data-share-desc="' + shareMsg.replace(/"/g,'&quot;') + '" data-share-url="' + shareUrl + '" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">\uD83D\uDCE4 Share</button>';
+
           const actionBtns = waBtn + viewBtn + shareBtn;
 
           return '<div style="background:white;border:' + (b.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;overflow:hidden;">'
