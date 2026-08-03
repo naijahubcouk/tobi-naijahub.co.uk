@@ -110,6 +110,8 @@ function parseRSS(xml) {
     const isEvent = isEventPost(title, categories);
     const label = isEvent ? 'Events' : (categories[0] || 'News');
     const emoji = isEvent ? '🎉' : getCategoryEmoji(categories);
+    const key = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 80);
+    const cleanDesc = description.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').trim().substring(0, 200);
     const appUrl = 'https://auntietobi.co.uk/blog/' + key;
 
     items.push({
