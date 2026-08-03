@@ -2348,7 +2348,7 @@ async function sendMessage(text) {
 
     if (bizResults.length > 0) {
       // Render cards directly — no AI needed
-      hideTyping();
+      removeTyping();
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
       const fakeText = '<<<BIZ_JSON:' + JSON.stringify(bizResults.map(b => ({
@@ -2360,7 +2360,7 @@ async function sendMessage(text) {
       return;
     } else {
       // No match — tell user and suggest what to try
-      hideTyping();
+      removeTyping();
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
       addMessage('bot', formatResponse(`No wahala! I don't have any listings matching **"${userText}"** yet 🙏\n\nTry searching for a category like *makeup artist*, *caterer*, *photographer* — or a city like *London* or *Birmingham*.\n\n[SUGGESTIONS: Find a caterer | Find a makeup artist | Find a photographer]`), true);
@@ -2408,7 +2408,7 @@ async function sendMessage(text) {
     // Only intercept when results span multiple content types
     // Business-only searches pass through to AI which renders proper cards
     if (hasMultipleTypes && totalMatches >= 2) {
-      hideTyping();
+      removeTyping();
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
 
