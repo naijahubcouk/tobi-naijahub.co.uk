@@ -7374,11 +7374,10 @@ function initOneSignal() {
     const isOptedIn = await OneSignal.User.PushSubscription.optedIn;
     if (isOptedIn) {
       localStorage.setItem('tobi_notifications', '1');
-      setDefaultNotifPrefs();
       updateBellButton(true);
+      // Only set default prefs if not already set
+      if (!localStorage.getItem(NOTIF_PREFS_KEY)) setDefaultNotifPrefs();
     } else {
-      // Only update bell visually — don't reset localStorage
-      // User may have notifications on from a previous session
       const wasSubscribed = localStorage.getItem('tobi_notifications') === '1';
       updateBellButton(wasSubscribed);
     }
@@ -7387,12 +7386,10 @@ function initOneSignal() {
     OneSignal.User.PushSubscription.addEventListener('change', (event) => {
       const isActive = event.current.optedIn;
       updateBellButton(isActive);
-      // Only write '1' when actively subscribing
-      // Never write '0' here — that only happens via explicit toggleNotifications()
-      // The change event fires on every page load and can briefly report false
       if (isActive) {
         localStorage.setItem('tobi_notifications', '1');
-        setDefaultNotifPrefs();
+        // Only set default prefs on new subscription
+        if (!localStorage.getItem(NOTIF_PREFS_KEY)) setDefaultNotifPrefs();
       }
     });
   });
@@ -7441,6 +7438,22 @@ function showNotifToast(msg) {
 
 // ===== NOTIFICATION PREFERENCES =====
 const NOTIF_PREFS_KEY = 'tobi_notif_prefs';
+
+// Migration: clear old prefs that contain events or all-false values
+(function() {
+  try {
+    const raw = localStorage.getItem('tobi_notif_prefs');
+    if (raw) {
+      const p = JSON.parse(raw);
+      // If prefs contain events key OR all values are false — reset to defaults
+      const allOff = Object.values(p).every(v => !v);
+      if ('events' in p || allOff) {
+        localStorage.removeItem('tobi_notif_prefs');
+        console.log('[Tobi] Reset bad notif prefs');
+      }
+    }
+  } catch(e) {}
+})();
 
 function getNotifPrefs() {
   try { return JSON.parse(localStorage.getItem(NOTIF_PREFS_KEY) || '{}'); }
