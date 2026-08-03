@@ -7448,24 +7448,21 @@ function getNotifPrefs() {
 }
 
 function setDefaultNotifPrefs() {
-  // Set all categories ON by default if not already set
-  const defaults = { news: true, articles: true, events: true, tips: true, motivation: true, prayer: false };
+  // Set default categories ON (events removed from prefs)
+  const defaults = { news: true, articles: true, tips: true, motivation: true, prayer: true };
   if (!localStorage.getItem(NOTIF_PREFS_KEY)) {
     localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(defaults));
   }
-  // Set OneSignal tags using v16 API
+  // Only send tags for active notification categories (not events)
   const prefs = getNotifPrefs();
-  const tags = Object.fromEntries(Object.entries(prefs).map(([k, v]) => [k, v ? '1' : '0']));
-  console.log('[Tobi] Setting OneSignal tags:', tags);
+  const activeTags = { news: prefs.news !== false ? '1' : '0', articles: prefs.articles !== false ? '1' : '0', tips: prefs.tips !== false ? '1' : '0', motivation: prefs.motivation !== false ? '1' : '0', prayer: prefs.prayer !== false ? '1' : '0' };
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   window.OneSignalDeferred.push(async function(OneSignal) {
     try {
-      await OneSignal.User.addTags(tags);
-      console.log('[Tobi] OneSignal tags set successfully:', tags);
+      await OneSignal.User.addTags(activeTags);
+      console.log('[Tobi] OneSignal tags set:', activeTags);
     } catch(e) {
       console.log('[Tobi] OneSignal tags error:', e.message);
-      // Fallback: try sendTags (older API)
-      try { OneSignal.sendTags(tags); } catch(e2) {}
     }
   });
 }
@@ -7555,15 +7552,17 @@ function saveNotifPrefs() {
     bell.style.opacity = '1';
   }
 
-  // Set OneSignal tags to match preferences
-  const tags = Object.fromEntries(Object.entries(prefs).map(([k, v]) => [k, v ? '1' : '0']));
+  // Set OneSignal tags — only send known notification categories, never events
+  const allowedTags = ['news', 'articles', 'tips', 'motivation', 'prayer'];
+  const tags = {};
+  allowedTags.forEach(k => { tags[k] = prefs[k] ? '1' : '0'; });
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   window.OneSignalDeferred.push(async function(OneSignal) {
     try {
       await OneSignal.User.addTags(tags);
       console.log('[Tobi] Prefs saved to OneSignal:', tags);
     } catch(e) {
-      try { OneSignal.sendTags(tags); } catch(e2) {}
+      console.log('[Tobi] Tag save error:', e.message);
     }
   });
   const msg = document.getElementById('notif-saved-msg');
