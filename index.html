@@ -2340,10 +2340,16 @@ async function sendMessage(text) {
   // and pass to AI which renders proper business cards
   if (window._currentPage === 'businesses') {
     const dir = getLiveDirectory();
-    const qWords = userText.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 1);
+    const BSTOP = new Set(['find','the','and','for','near','me','a','an','in','at','is','are','any','some','nigerian','african','uk','please','with','that','this','who','can','you','my','i']);
+    const qWords = userText.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 3 && !BSTOP.has(w));
+    if (qWords.length === 0) {
+      // Fallback to showBusinesses if no meaningful search words
+      removeTyping(); isLoading = false; document.getElementById('sendBtn').disabled = false;
+      showBusinesses(); return;
+    }
     const bizResults = dir.filter(b => {
-      const txt = ((b.name||'') + ' ' + (b.cat||b.category||'') + ' ' + (b.loc||b.location||'') + ' ' + (b.keywords||[]).join(' ')).toLowerCase();
-      return qWords.some(w => txt.includes(w));
+      const nameCat = ((b.name||'') + ' ' + (b.cat||b.category||'')).toLowerCase();
+      return qWords.some(w => nameCat.includes(w));
     }).sort((a,b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0)).slice(0, 6);
 
     if (bizResults.length > 0) {
