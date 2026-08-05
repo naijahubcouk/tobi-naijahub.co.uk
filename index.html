@@ -1966,7 +1966,7 @@ function formatResponse(text) {
             ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
             : '';
 
-          const viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" rel="noopener" style="flex:1;padding:9px 8px;background:#0F1E36;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View</a>';
+          const viewBtn = '<a href="/biz/' + b.slug + '" class="tobi-biz-link" style="flex:1;padding:9px 8px;background:#0F1E36;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View</a>';
 
           const shareBtn = '<button data-share-title="' + safeName.replace(/"/g,'&quot;') + '" data-share-desc="' + shareMsg.replace(/"/g,'&quot;') + '" data-share-url="' + shareUrl + '" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">\uD83D\uDCE4 Share</button>';
 
@@ -5257,7 +5257,7 @@ function handleDeepLink() {
         const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
         const waBtn = (business.verified && business.wa) ? '<a href="https://wa.me/' + business.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
         const shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-        const viewBtn = '<a href="https://auntietobi.com/listing/' + business.slug + '" target="_blank" rel="noopener" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
+        const viewBtn = '<a href="/biz/' + business.slug + '" class="tobi-biz-link" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
         const cardHTML = '<div style="background:white;border:' + (business.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
           + verifiedBadge
           + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (business.verified ? 'margin-top:6px;' : '') + '">'
@@ -6765,7 +6765,7 @@ function showBusinesses(startIndex) {
     const verifiedBadge = b.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
     const waBtn = (b.verified && b.wa) ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
     const shareBtn = '<button onclick="tobiShare(\'' + safeName.replace(/'/g,"\\'") + '\',\'' + shareMsg + '\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-    const viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" rel="noopener" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
+    const viewBtn = '<a href="/biz/' + b.slug + '" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
     const cardHTML = '<div style="background:white;border:' + (b.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
       + verifiedBadge
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (b.verified ? 'margin-top:6px;' : '') + '">'
@@ -8089,7 +8089,7 @@ window.addEventListener('load', () => {
         out+='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;">🏢 BUSINESSES</div>';
         topBiz.forEach(function(b){
           var wa=b.wa?'<a href="https://wa.me/'+b.wa.replace(/[^0-9]/g,'')+'" target="_blank" style="color:#25D366;font-size:11px;font-weight:700;text-decoration:none;margin-right:8px;">💬 WhatsApp</a>':'';
-          out+='<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">'+(b.verified?'<span style="background:#057A44;color:white;font-size:9px;padding:1px 5px;border-radius:6px;">✅ VERIFIED</span> ':'')+'<strong style="font-size:13px;color:#0F1E36;">'+b.name+'</strong><br><span style="font-size:11px;color:#9CA3AF;">'+(b.cat||'')+' · '+(b.loc||'UK')+'</span><br><div style="margin-top:4px;">'+wa+'<a href="https://auntietobi.com/listing/'+b.slug+'" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;text-decoration:none;">View →</a></div></div>';
+          out+='<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">'+(b.verified?'<span style="background:#057A44;color:white;font-size:9px;padding:1px 5px;border-radius:6px;">✅ VERIFIED</span> ':'')+'<strong style="font-size:13px;color:#0F1E36;">'+b.name+'</strong><br><span style="font-size:11px;color:#9CA3AF;">'+(b.cat||'')+' · '+(b.loc||'UK')+'</span><br><div style="margin-top:4px;">'+wa+'<a href="/biz/'+b.slug+'" onclick="event.preventDefault();window._tobiNav('+JSON.stringify(b.slug)+')" style="color:#057A44;font-size:11px;font-weight:700;text-decoration:none;">View →</a></div></div>';
         });
       }
       if(evRes.length){
@@ -8117,6 +8117,20 @@ window.addEventListener('load', () => {
     window.hideTobiSearchResults();
   });
 })();
+</script>
+<script>window._tobiNav=function(s){window.history.pushState({},'','/biz/'+s);if(typeof handleDeepLink==='function')handleDeepLink();};</script>
+<script>
+document.addEventListener('click',function(e){
+  var a=e.target.closest('.tobi-biz-link');
+  if(!a)return;
+  e.preventDefault();
+  var href=a.getAttribute('href');
+  if(href&&href.indexOf('/biz/')===0){
+    window.history.pushState({},'',href);
+    if(typeof handleDeepLink==='function')handleDeepLink();
+  }
+});
+window._tobiNav=function(s){window.history.pushState({},'','/biz/'+s);if(typeof handleDeepLink==='function')handleDeepLink();};
 </script>
 </body>
 </html>
