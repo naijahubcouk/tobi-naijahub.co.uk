@@ -1028,7 +1028,7 @@
   </div>
 
   <!-- SEARCH -->
-  <div id="tobi-search-wrap" style="background:#f8f8f8;border-bottom:1px solid #e8e8e8;padding:8px 14px;">
+  <div id="tobi-search-wrap" style="background:#f8f8f8;border-bottom:1px solid #e8e8e8;padding:8px 14px;position:relative;">
     <div style="display:flex;align-items:center;background:white;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;">
       <span style="font-size:14px;color:#9CA3AF;padding:0 10px;flex-shrink:0;">🔍</span>
       <input id="tobi-search-input" type="text" placeholder="Search businesses, events, articles..."
@@ -1039,7 +1039,7 @@
       <button id="tobi-search-clear" onclick="if(window.clearTobiSearch)window.clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0 8px;line-height:1;">✕</button>
       <button onclick="if(window.runTobiSearch)window.runTobiSearch()" style="background:#057A44;color:white;border:none;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;">Search</button>
     </div>
-    <div id="tobi-search-results" style="display:none;position:fixed;left:0;right:0;background:white;border-top:2px solid #057A44;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:9999;max-height:60vh;overflow-y:auto;"></div>
+    <div id="tobi-search-results" style="display:none;position:absolute;left:0;right:0;top:100%;background:white;border:1.5px solid #e0e0e0;border-top:2px solid #057A44;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:9999;max-height:60vh;overflow-y:auto;border-radius:0 0 10px 10px;"></div>
   </div>
   <div id="messages" class="messages"></div>
 
@@ -8216,6 +8216,7 @@ function tobiOpenBiz(slug){window.open('https://auntietobi.com/listing/'+slug,'_
 
     var total=topBiz.length+evRes.length+artRes.length;
     var out='';
+    var domRows=[];
 
     if(total===0){
       out='<div style="padding:16px;text-align:center;font-size:13px;color:#9CA3AF;">No results for <strong>'+query+'</strong><br><small>Try a business name or category</small></div>';
@@ -8276,10 +8277,7 @@ function tobiOpenBiz(slug){window.open('https://auntietobi.com/listing/'+slug,'_
       out+='<div style="padding:8px 12px;text-align:center;"><button onclick="window.hideTobiSearchResults()" style="background:none;border:none;color:#9CA3AF;font-size:12px;cursor:pointer;font-family:inherit;">✕ Close</button></div>';
     }
 
-    var domRows=[];
     el.innerHTML=out;
-    var r=inp.getBoundingClientRect();
-    el.style.top=(r.bottom+2)+'px';
     domRows.forEach(function(r){el.appendChild(r);});
     el.style.display='block';
   };
