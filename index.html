@@ -1033,11 +1033,11 @@
       <span style="font-size:14px;color:#9CA3AF;padding:0 10px;flex-shrink:0;">🔍</span>
       <input id="tobi-search-input" type="text" placeholder="Search businesses, events, articles..."
         style="flex:1;border:none;background:transparent;padding:10px 0;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;"
-        oninput="handleTobiSearch(this.value)"
-        onkeydown="if(event.key==='Enter'){runTobiSearch();event.preventDefault()}"
+        oninput="if(typeof handleTobiSearch==='function')handleTobiSearch(this.value)"
+        onkeydown="if(event.key==='Enter'&&typeof runTobiSearch==='function'){runTobiSearch();event.preventDefault()}"
       >
       <button id="tobi-search-clear" onclick="clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0 8px;line-height:1;">✕</button>
-      <button onclick="runTobiSearch()" style="background:#057A44;color:white;border:none;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Search</button>
+      <button onclick="if(typeof runTobiSearch==='function')runTobiSearch()" style="background:#057A44;color:white;border:none;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Search</button>
     </div>
     <div id="tobi-search-results" style="display:none;position:fixed;left:0;right:0;top:auto;background:white;border-top:1.5px solid #e0e0e0;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:9999;max-height:60vh;overflow-y:auto;"></div>
   </div>
