@@ -997,7 +997,7 @@
     </div>
     
     <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
-      <button id="notify-bell" onclick="handleBellClick()" title="Get Auntie Tobi notifications" style="background:none;border:none;cursor:pointer;font-size:20px;padding:2px;opacity:0.7;transition:opacity 0.2s;">🔕</button>
+      <button id="notify-bell" onclick="handleBellClick()" title="Get Auntie Tobi notifications" style="background:none;border:none;cursor:pointer;font-size:22px;padding:2px;opacity:0.7;transition:opacity 0.2s;">🔕</button>
     <script>
       (function() {
         if (localStorage.getItem('tobi_notifications') === '1') {
@@ -1006,23 +1006,13 @@
         }
       })();
     </script>
-      <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="background:none;border:none;cursor:pointer;font-size:18px;padding:2px;opacity:0.9;transition:opacity 0.2s;">📤</button>
+      <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="background:none;border:none;cursor:pointer;padding:2px;opacity:0.85;transition:opacity 0.2s;color:white;line-height:1;display:flex;align-items:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      </button>
     </div>
   </div>
 
-  <!-- SEARCH BAR — always visible between header and pills -->
-  <div style="background:#045c38;padding:8px 14px;position:relative;">
-    <div style="display:flex;align-items:center;background:white;border-radius:8px;padding:8px 12px;gap:8px;">
-      <span style="font-size:14px;color:#057A44;flex-shrink:0;">🔍</span>
-      <input id="tobi-search-input" type="text" placeholder="Search businesses, events, articles..."
-        style="flex:1;border:none;background:transparent;padding:0;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;"
-        oninput="handleTobiSearch(this.value)"
-        onkeydown="if(event.key==='Enter'){runTobiSearch();event.preventDefault()}"
-      >
-      <button id="tobi-search-clear" onclick="clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0;line-height:1;">✕</button>
-    </div>
-    <div id="tobi-search-results" style="display:none;position:absolute;left:14px;right:14px;top:calc(100% - 4px);background:white;border:1.5px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999;max-height:380px;overflow-y:auto;margin-top:4px;"></div>
-  </div>
+
   <div class="pills">
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="showBusinesses()">🏢 Businesses</div>
@@ -1037,16 +1027,17 @@
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
   </div>
 
-  <!-- SEARCH BAR — always visible below pills -->
+  <!-- SEARCH BAR — below pills -->
   <div style="background:#f8f8f8;border-bottom:1px solid #e8e8e8;padding:8px 14px;position:relative;">
-    <div style="display:flex;align-items:center;background:white;border:1.5px solid #e0e0e0;border-radius:8px;padding:8px 12px;gap:8px;">
-      <span style="font-size:14px;color:#9CA3AF;flex-shrink:0;">🔍</span>
+    <div style="display:flex;align-items:center;background:white;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+      <span style="font-size:14px;color:#9CA3AF;padding:0 10px;flex-shrink:0;">🔍</span>
       <input id="tobi-search-input" type="text" placeholder="Search businesses, events, articles..."
-        style="flex:1;border:none;background:transparent;padding:0;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;"
+        style="flex:1;border:none;background:transparent;padding:10px 0;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;"
         oninput="handleTobiSearch(this.value)"
         onkeydown="if(event.key==='Enter'){runTobiSearch();event.preventDefault()}"
       >
-      <button id="tobi-search-clear" onclick="clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0;line-height:1;">✕</button>
+      <button id="tobi-search-clear" onclick="clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0 8px;line-height:1;">✕</button>
+      <button onclick="runTobiSearch()" style="background:#057A44;color:white;border:none;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Search</button>
     </div>
     <div id="tobi-search-results" style="display:none;position:absolute;left:14px;right:14px;top:calc(100% - 4px);background:white;border:1.5px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999;max-height:380px;overflow-y:auto;margin-top:4px;"></div>
   </div>
