@@ -1027,20 +1027,7 @@
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
   </div>
 
-  <!-- SEARCH -->
-  <div id="tobi-search-wrap" style="background:#f8f8f8;border-bottom:1px solid #e8e8e8;padding:8px 14px;position:relative;">
-    <div style="display:flex;align-items:center;background:white;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;">
-      <span style="font-size:14px;color:#9CA3AF;padding:0 10px;flex-shrink:0;">🔍</span>
-      <input id="tobi-search-input" type="text" placeholder="Search businesses, events, articles..."
-        style="flex:1;border:none;background:transparent;padding:10px 0;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;"
-        oninput="if(window.handleTobiSearch)window.handleTobiSearch(this.value)"
-        onkeydown="if(event.key==='Enter'&&window.runTobiSearch){window.runTobiSearch();event.preventDefault()}"
-      >
-      <button id="tobi-search-clear" onclick="if(window.clearTobiSearch)window.clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0 8px;line-height:1;">✕</button>
-      <button onclick="if(window.runTobiSearch)window.runTobiSearch()" style="background:#057A44;color:white;border:none;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;">Search</button>
-    </div>
-    <div id="tobi-search-results" style="display:none;position:absolute;left:0;right:0;top:100%;background:white;border:1.5px solid #e0e0e0;border-top:2px solid #057A44;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:9999;max-height:60vh;overflow-y:auto;border-radius:0 0 10px 10px;"></div>
-  </div>
+
   <div id="messages" class="messages"></div>
 
   <div class="input-area">
