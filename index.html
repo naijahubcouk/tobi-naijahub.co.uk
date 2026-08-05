@@ -1834,22 +1834,30 @@ async function loadLiveFeeds() {
       console.log(`[Feed] Loaded ${blogRes.value.posts.length} blog posts`);
     }
 
-    // Update listings directory
+    // Update listings directory — live feed is source of truth
     if (listingsRes.status === 'fulfilled' && listingsRes.value.businesses?.length) {
       const liveBusinesses = listingsRes.value.businesses;
 
-      // Start with full hardcoded directory (has proper categories, WA, phone)
-      const merged = [...AUNTIE_TOBI_DIRECTORY];
-
-      // Add live feed businesses that are NOT already in hardcoded directory
-      liveBusinesses.forEach(lb => {
-        if (!merged.find(b => b.slug === lb.slug)) {
-          merged.push(lb);
+      // Live feed is the master list — deleted businesses are excluded
+      // Enrich with hardcoded data (WA, phone, email, keywords) where live feed is missing fields
+      const merged = liveBusinesses.map(lb => {
+        const hardcoded = AUNTIE_TOBI_DIRECTORY.find(b => b.slug === lb.slug);
+        if (hardcoded) {
+          // Merge: live feed wins on name/cat/loc/desc, hardcoded fills in contact details
+          return Object.assign({}, hardcoded, lb, {
+            wa: lb.wa || hardcoded.wa || '',
+            phone: lb.phone || hardcoded.phone || '',
+            email: lb.email || hardcoded.email || '',
+            ig: lb.ig || hardcoded.ig || '',
+            website: lb.website || hardcoded.website || '',
+            keywords: lb.keywords?.length ? lb.keywords : (hardcoded.keywords || []),
+          });
         }
+        return lb;
       });
 
       window._liveDirectory = merged;
-      console.log(`[Feed] Directory: ${AUNTIE_TOBI_DIRECTORY.length} hardcoded + ${merged.length - AUNTIE_TOBI_DIRECTORY.length} new from feed = ${merged.length} total`);
+      console.log(`[Feed] Directory: ${merged.length} businesses from live feed (${AUNTIE_TOBI_DIRECTORY.length} hardcoded)`);
     }
 
     window._feedsLoaded = true;
