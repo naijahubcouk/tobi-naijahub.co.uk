@@ -8240,34 +8240,47 @@ function tobiOpenBiz(slug){window.open('https://auntietobi.com/listing/'+slug,'_
 
       if(evRes.length){
         evRes.forEach(function(e){
-          out+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:0.5px solid #f0f0f0;">'
-            +'<div style="flex:1;min-width:0;">'
-            +'<span style="display:inline-block;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-bottom:5px;background:#f0f0ff;color:#5555cc;">Event</span>'
+          var row=document.createElement('div');
+          row.style.cssText='display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:0.5px solid #f0f0f0;cursor:pointer;';
+          row.onmouseenter=function(){this.style.background='#f9f9f9';};
+          row.onmouseleave=function(){this.style.background='';};
+          var eUrl=e.appUrl||e.url||'';
+          var eTitle=e.title||'';
+          row.onclick=(function(u,t){return function(){window.hideTobiSearchResults();if(typeof openBlogSheet==='function')openBlogSheet(u,t,'');};})(eUrl,eTitle);
+          row.innerHTML='<div style="flex:1;min-width:0;"><span style="display:inline-block;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-bottom:5px;background:#f0f0ff;color:#5555cc;">Events</span>'
             +'<p style="margin:0;font-size:13px;font-weight:500;color:#0F1E36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(e.emoji||'🎉')+' '+e.title+'</p>'
-            +'<p style="margin:0;font-size:11px;color:#9CA3AF;">📅 '+e.date+' · 📍 '+e.loc+'</p>'
-            +'</div></div>';
+            +'<p style="margin:0;font-size:11px;color:#9CA3AF;">📅 '+e.date+' · 📍 '+e.loc+'</p></div>'
+            +'<span style="color:#5555cc;font-size:11px;font-weight:500;flex-shrink:0;padding-top:18px;">View →</span>';
+          domRows.push(row);
         });
       }
 
       if(artRes.length){
         artRes.forEach(function(p){
-          out+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:0.5px solid #f0f0f0;">'
-            +'<div style="flex:1;min-width:0;">'
-            +'<span style="display:inline-block;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-bottom:5px;background:#fff8f0;color:#cc6600;">Article</span>'
+          var row=document.createElement('div');
+          row.style.cssText='display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:0.5px solid #f0f0f0;cursor:pointer;';
+          row.onmouseenter=function(){this.style.background='#f9f9f9';};
+          row.onmouseleave=function(){this.style.background='';};
+          var pUrl=p.appUrl||p.url||'';
+          var pTitle=p.title||'';
+          var pSum=(p.summary||'').substring(0,100);
+          row.onclick=(function(u,t,s){return function(){window.hideTobiSearchResults();if(typeof openBlogSheet==='function')openBlogSheet(u,t,s);};})(pUrl,pTitle,pSum);
+          row.innerHTML='<div style="flex:1;min-width:0;"><span style="display:inline-block;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-bottom:5px;background:#fff8f0;color:#cc6600;">Articles</span>'
             +'<p style="margin:0;font-size:13px;font-weight:500;color:#0F1E36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.title+'</p>'
-            +'<p style="margin:0;font-size:11px;color:#9CA3AF;">'+(p.label||'News')+' · '+(p.date||'')+'</p>'
-            +'</div>'
-            +'<span style="color:#cc6600;font-size:11px;font-weight:500;flex-shrink:0;padding-top:18px;">Read →</span>'
-            +'</div>';
+            +'<p style="margin:0;font-size:11px;color:#9CA3AF;">Articles · '+(p.date||'')+'</p></div>'
+            +'<span style="color:#cc6600;font-size:11px;font-weight:500;flex-shrink:0;padding-top:18px;">Read →</span>';
+          domRows.push(row);
         });
       }
 
       out+='<div style="padding:8px 12px;text-align:center;"><button onclick="window.hideTobiSearchResults()" style="background:none;border:none;color:#9CA3AF;font-size:12px;cursor:pointer;font-family:inherit;">✕ Close</button></div>';
     }
 
+    var domRows=[];
     el.innerHTML=out;
     var r=inp.getBoundingClientRect();
     el.style.top=(r.bottom+2)+'px';
+    domRows.forEach(function(r){el.appendChild(r);});
     el.style.display='block';
   };
 
