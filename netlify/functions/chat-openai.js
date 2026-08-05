@@ -992,11 +992,179 @@ async function getDirectory() {
   return HARDCODED_DIRECTORY;
 }
 
-function searchBusinesses(query,limit,directory){limit=limit||6;var stopWords=['the','and','for','near','find','looking','where','can','are','any','have','you','what','best','good','in','at','a','an','i','me','my','do','is','it','uk','nigerian','african','home','like','want','need','feel','just','there','that','this','with','from','some','also','they','them','your','their','please','get','can','will'];var allWords=query.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(function(w){return w.length>2;});var serviceWords=allWords.filter(function(w){return stopWords.indexOf(w)===-1&&w.length>2;});if(!serviceWords.length)serviceWords=allWords;var ukCities=['london','birmingham','manchester','leeds','bristol','sheffield','liverpool','nottingham','coventry','leicester','edinburgh','glasgow','cardiff','belfast','newcastle','brighton','reading','oxford','cambridge','southampton','portsmouth','wolverhampton','bradford','derby','exeter','hull','luton','peterborough','stoke','sunderland','basildon','laindon','kent','surrey','norwich','colchester','chelmsford','basingstoke','southend','york','worcester','bath','bournemouth','maidstone','northampton'];var queryLoc=null;var queryWords=query.toLowerCase();ukCities.forEach(function(city){if(queryWords.indexOf(city)!==-1)queryLoc=city;});function scoreBusinesses(businesses,locFilter){return businesses.map(function(b){var score=0;var nameL=b.name.toLowerCase(),catL=(b.cat||'').toLowerCase(),locL=(b.loc||'').toLowerCase();var descL=(b.desc||'').toLowerCase(),kwStr=(b.keywords||[]).join(' ').toLowerCase();var hasPrimaryMatch=false;serviceWords.forEach(function(w){if(catL.indexOf(w)!==-1){score+=25;hasPrimaryMatch=true;}if(nameL.indexOf(w)!==-1){score+=15;hasPrimaryMatch=true;}if(kwStr.indexOf(w)!==-1)score+=5;});// ONLY return if name or category matches — description matches excluded entirely
-if(!hasPrimaryMatch){score=0;}
-      // Direct full-name match bonus
-      var fullQ=query.toLowerCase().replace(/[^a-z0-9\s]/g,'');
-      if(nameL.indexOf(fullQ)!==-1||fullQ.indexOf(nameL)!==-1)score+=30;if(b.verified)score+=5;if(locFilter&&locL.indexOf(locFilter)!==-1)score+=20;return Object.assign({},b,{score:score});}).filter(function(b){return b.score>0;}).sort(function(a,b){if(b.score!==a.score)return b.score-a.score;if(a.verified&&!b.verified)return -1;if(!a.verified&&b.verified)return 1;return 0;});}if(queryLoc){var nr=scoreBusinesses(directory,queryLoc).slice(0,limit);var hasLocal=nr.some(function(b){return (b.loc||'').toLowerCase().indexOf(queryLoc)!==-1;});if(hasLocal)return{results:nr,scope:'local',city:queryLoc};}return{results:scoreBusinesses(directory,null).slice(0,limit),scope:'uk',city:queryLoc};}
+
+// ── INTENT-BASED SEARCH ──────────────────────────────────────────────────
+// Maps what people say → category groups → searches name+cat+keywords only
+const INTENT_GROUPS = {
+  food:         ['caterer','caterers','foodstore','grocery','groceries','restaurant','chef','cook','african food','nigerian food','meal','cuisine','kitchen','frozen food','snacks','food'],
+  beauty:       ['makeup','mua','hair stylist','lash','nail','skincare','beauty','aesthetician','brow','threading','glam','bridal'],
+  fashion:      ['seamstress','tailor','ankara','fashion','clothing','wears','wig','hair vendor','dress'],
+  events:       ['event planner','decorator','photographer','videographer','dj','mc','entertainer','event'],
+  professional: ['solicitor','accountant','financial advisor','consultant','tax','immigration','lawyer','legal','notary'],
+  health:       ['doctor','nurse','therapist','mental health','pharmacy','healthcare','care worker','physio'],
+  education:    ['tutor','education','lesson','coaching','training','course','school'],
+  tech:         ['developer','web design','it support','software','digital marketing','tech','app'],
+  property:     ['estate agent','property','housing','letting','real estate','landlord'],
+  transport:    ['driver','taxi','logistics','courier','delivery','moving','van'],
+  cleaning:     ['cleaner','cleaning','domestic','laundry','ironing','housekeep'],
+  childcare:    ['childminder','nursery','babysitter','nanny','childcare'],
+  church:       ['church','ministry','pastor','gospel','christian','worship'],
+  finance:      ['money transfer','loan','insurance','investment','bank','mortgage','pension'],
+};
+// Extra synonyms for common searches
+const FOOD_SYNONYMS = ['native soup','egusi','jollof','suya','puff puff','pounded yam','fufu','amala','ewedu','stew','pepper soup','small chops','smallchops','meat pie','chin chin','catering','food delivery','african food','nigerian food','frozen food','grocery','groceries','foodstore','supermarket'];
+
+function getIntentGroup(query) {
+  var q = query.toLowerCase();
+  // Check food synonyms first (most common search)
+  for (var i = 0; i < FOOD_SYNONYMS.length; i++) {
+    if (q.indexOf(FOOD_SYNONYMS[i]) !== -1) return 'food';
+  }
+  // Check intent groups
+  var groups = Object.keys(INTENT_GROUPS);
+  for (var g = 0; g < groups.length; g++) {
+    var cats = INTENT_GROUPS[groups[g]];
+    for (var c = 0; c < cats.length; c++) {
+      if (q.indexOf(cats[c]) !== -1) return groups[g];
+    }
+  }
+  return null;
+}
+
+function searchBusinessesByIntent(query, limit, directory) {
+  limit = limit || 6;
+  var intentGroup = getIntentGroup(query);
+  var groupCats = intentGroup ? INTENT_GROUPS[intentGroup] : null;
+
+  // Extract city
+  var ukCities = ['london','birmingham','manchester','leeds','bristol','sheffield','liverpool','nottingham','coventry','leicester','edinburgh','glasgow','cardiff','belfast','newcastle','brighton','reading','oxford','cambridge','southampton','portsmouth','wolverhampton','bradford','derby','exeter','hull','luton','peterborough','stoke','sunderland','basildon','laindon','kent','surrey','norwich','colchester','chelmsford','basingstoke','southend','york','worcester','bath','bournemouth','maidstone','northampton','wakefield','sittingbourne'];
+  var queryLoc = null;
+  var queryL = query.toLowerCase();
+  ukCities.forEach(function(city) { if (queryL.indexOf(city) !== -1) queryLoc = city; });
+
+  function scoreBiz(b) {
+    var nameL = (b.name||'').toLowerCase();
+    var catL = (b.cat||'').toLowerCase();
+    var locL = (b.loc||'').toLowerCase();
+    var kwStr = (b.keywords||[]).join(' ').toLowerCase();
+    var score = 0;
+
+    // Intent group match — business must be in the right category group
+    if (groupCats) {
+      var inGroup = groupCats.some(function(gc) { return catL.indexOf(gc) !== -1 || kwStr.indexOf(gc) !== -1; });
+      if (!inGroup) return 0; // Exclude entirely if not in right category
+      score += 30; // Base score for being in the right group
+    }
+
+    // Location match
+    if (queryLoc && locL.indexOf(queryLoc) !== -1) score += 25;
+
+    // Verified bonus
+    if (b.verified) score += 10;
+
+    return score;
+  }
+
+  var results = directory.map(function(b) {
+    return Object.assign({}, b, { score: scoreBiz(b) });
+  }).filter(function(b) { return b.score > 0; })
+    .sort(function(a, b) { return b.score - a.score; })
+    .slice(0, limit);
+
+  return { results: results, scope: queryLoc ? 'local' : 'uk', city: queryLoc, intentGroup: intentGroup };
+}
+// ── END INTENT SEARCH ────────────────────────────────────────────────────
+
+function searchBusinesses(query,limit,directory){
+  limit=limit||6;
+
+  // ── INTENT GROUPS ──
+  // Map search terms to category groups so "native soup" finds caterers/foodstores
+  var INTENT_GROUPS=[
+    {terms:['food','soup','cook','caterer','catering','meal','rice','jollof','egusi','stew','meat','chicken','fish','eat','eating','native','snack','pastry','cake','chops','puff','suya','pepper','yam','plantain','frozen','dinner','lunch','breakfast','cuisine','delicacy','african food','nigerian food','chin chin','small chops','puff puff','pepper soup','ofe','oha','okra','banga','oxtail'],cats:['caterers','foodstores & groceries','restaurants','food','bakery','catering','food dining & groceries','african food','nigerian snacks']},
+    {terms:['makeup','mua','glam','bridal makeup','soft glam','beat','artistry'],cats:['makeup artists','beauty','mua']},
+    {terms:['hair','wig','lace','braid','loc','natural hair','weave'],cats:['wig vendors','hair stylists','hair','hairdressers','locs']},
+    {terms:['nail','manicure','pedicure','gel nail'],cats:['nail technicians','nails','beauty']},
+    {terms:['skin','skincare','glow','facial','derma'],cats:['skincare','beauty']},
+    {terms:['fashion','dress','cloth','wear','style','ankara','aso ebi','lace','agbada','babariga','kaftan','sew','tailor','seamstress','outfit','attire'],cats:['fashion','ankara & traditional wears','tailors','seamstress','clothing']},
+    {terms:['photography','photo','shoot','videography','video','film','content'],cats:['photographers','videographers','photography']},
+    {terms:['event','party','decor','decoration','planning','coordinator','organiser','owambe','celebration','wedding'],cats:['event planners','event decorators','events','decorators']},
+    {terms:['dj','music','band','performer','entertainment','mc','compere'],cats:['djs','musicians','entertainment','performers']},
+    {terms:['tutor','lesson','teach','education','school','course','learn','training','class'],cats:['tutors','education','training','academy']},
+    {terms:['accountant','accounting','tax','finance','financial','vat','payroll','bookkeeping'],cats:['accountants','finance','tax advisors']},
+    {terms:['solicitor','lawyer','legal','immigration','visa','law','barrister'],cats:['solicitors','legal','immigration lawyers']},
+    {terms:['property','estate','letting','rent','mortgage','house','housing'],cats:['estate agents','property','letting agents']},
+    {terms:['cleaning','cleaner','clean','domestic','laundry','ironing'],cats:['cleaners','cleaning services']},
+    {terms:['transport','taxi','driver','ride','car hire','chauffeur','courier','delivery driver'],cats:['transport','taxi','chauffeur','courier']},
+    {terms:['church','pastor','ministry','gospel','worship','praise'],cats:['churches','ministry','religious']},
+    {terms:['grocery','supermarket','store','shop','african shop','african market'],cats:['foodstores & groceries','african shops','supermarkets']},
+    {terms:['travel','holiday','flight','visa','passport','ticket','tour'],cats:['travel agents','travel']},
+    {terms:['health','nurse','care','carer','care worker','nhs','medical','doctor'],cats:['healthcare','care','medical','nursing']},
+  ];
+
+  var queryLower=query.toLowerCase();
+  var ukCities=['london','birmingham','manchester','leeds','bristol','sheffield','liverpool','nottingham','coventry','leicester','edinburgh','glasgow','cardiff','belfast','newcastle','brighton','reading','oxford','cambridge','southampton','portsmouth','wolverhampton','bradford','derby','exeter','hull','luton','peterborough','stoke','sunderland','basildon','laindon','kent','surrey','norwich','colchester','chelmsford','basingstoke','southend','york','worcester','bath','bournemouth','maidstone','northampton','wakefield','sittingbourne'];
+  var queryLoc=null;
+  ukCities.forEach(function(city){if(queryLower.indexOf(city)!==-1)queryLoc=city;});
+
+  // Detect which intent group matches the query
+  var matchedCats=[];
+  INTENT_GROUPS.forEach(function(g){
+    if(g.terms.some(function(t){return queryLower.indexOf(t)!==-1;})){
+      matchedCats=matchedCats.concat(g.cats);
+    }
+  });
+
+  // Also extract specific business name words (non-stop, non-intent words)
+  var stopWords=['the','and','for','near','find','looking','where','can','are','any','have','you','what','best','good','in','at','a','an','i','me','my','do','is','it','uk','nigerian','african','home','like','want','need','feel','just','there','that','this','with','from','some','also','please','get','will','who','how','when','which'];
+  var nameWords=queryLower.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(function(w){return w.length>2&&stopWords.indexOf(w)===-1;});
+
+  function scoreAndFilter(businesses,locFilter){
+    return businesses.map(function(b){
+      var score=0;
+      var nameL=b.name.toLowerCase();
+      var catL=(b.cat||'').toLowerCase();
+      var kwStr=(b.keywords||[]).join(' ').toLowerCase();
+      var locL=(b.loc||'').toLowerCase();
+
+      // 1. Category group match — most important
+      if(matchedCats.length>0){
+        var catMatch=matchedCats.some(function(c){return catL.indexOf(c)!==-1;});
+        if(catMatch)score+=40;
+      }
+
+      // 2. Name word match
+      nameWords.forEach(function(w){
+        if(nameL.indexOf(w)!==-1)score+=20;
+        if(catL.indexOf(w)!==-1)score+=15;
+        if(kwStr.indexOf(w)!==-1)score+=8;
+      });
+
+      // 3. Location match
+      if(locFilter&&locL.indexOf(locFilter)!==-1)score+=30;
+
+      // 4. Verified bonus
+      if(b.verified)score+=5;
+
+      // Must have at least category group OR name match — not 0
+      return Object.assign({},b,{score:score});
+    }).filter(function(b){return b.score>0;}).sort(function(a,b){return b.score-a.score;});
+  }
+
+  // Try local first
+  if(queryLoc){
+    var localResults=scoreAndFilter(directory,queryLoc);
+    var hasLocal=localResults.some(function(b){return(b.loc||'').toLowerCase().indexOf(queryLoc)!==-1;});
+    if(hasLocal&&localResults.length>0)return{results:localResults.slice(0,limit),scope:'local',city:queryLoc};
+    // No local — return UK-wide with location note
+    if(localResults.length>0)return{results:localResults.slice(0,limit),scope:'uk',city:queryLoc};
+  }
+
+  var ukResults=scoreAndFilter(directory,null);
+  if(ukResults.length>0)return{results:ukResults.slice(0,limit),scope:'uk',city:queryLoc};
+
+  return{results:[],scope:'uk',city:queryLoc};
+}
 
 function formatBusinessContext(businesses,scope,city){if(!businesses.length)return'';var bizData=businesses.map(function(b){return{slug:b.slug,name:b.name,cat:b.cat||'',loc:b.loc||'UK',desc:b.desc?b.desc.substring(0,100):'',verified:b.verified||false,wa:b.wa||'',phone:b.phone||''};});var scopeNote=scope==='local'&&city?'\n[SEARCH_SCOPE: Found '+businesses.length+' businesses near '+city+'.]':'\n[SEARCH_SCOPE: No businesses found locally in '+(city||'users city')+' - showing UK-wide. Tell user warmly we do not have any in their city yet but these serve UK wide.]';return'\n\n<<<BIZ_JSON:'+JSON.stringify(bizData)+'>>>'+scopeNote;}
 
@@ -1004,7 +1172,9 @@ exports.handler=async function(event){if(event.httpMethod==='OPTIONS'){return{st
 try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);var wordCount=lastMessage.trim().split(/\s+/).length;var isNounSearch=wordCount<=6&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help|Hi|Hello|Hey)/i.test(lastMessage.trim())&&!/[?.!]/.test(lastMessage.trim());var isGenericQuestion=/^(can|will|how|what|is|are|do|does|when|where|why|should|would|could|if |please|tell|help)/i.test(lastMessage.trim());
     var shouldSearch=!isShortGreeting&&!isGenericQuestion&&(bizKeywords||isNounSearch||(wordCount>=2&&wordCount<=8));
     // For noun searches, boost score of exact name matches so they always appear
-    var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();var searchLimit=isNounSearch&&wordCount<=2?3:6;var sr=searchBusinesses(lastMessage,searchLimit,directory);// For short noun searches (likely business names), filter to strong matches only
+    var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();var searchLimit=isNounSearch&&wordCount<=2?3:6;var sr=searchBusinessesByIntent(lastMessage,searchLimit,directory);
+// Fall back to keyword search if intent search returns nothing
+if(sr.results.length===0){sr=searchBusinesses(lastMessage,searchLimit,directory);}// For short noun searches (likely business names), filter to strong matches only
 if(isNounSearch&&wordCount<=2&&sr.results.length>0){sr.results=sr.results.filter(function(b){var nameL=b.name.toLowerCase();var q=lastMessage.toLowerCase().replace(/[^a-z0-9]/g,'');var nameClean=nameL.replace(/[^a-z0-9]/g,'');return nameClean.indexOf(q)!==-1||q.indexOf(nameClean)!==-1||nameClean.indexOf(q.substring(0,6))!==-1;});}if(sr.results.length>0)businessContext=formatBusinessContext(sr.results,sr.scope,sr.city);}var systemContent=SYSTEM_PROMPT+(businessContext||'');var messages=[{role:'system',content:systemContent}].concat(recentMessages);var requestBody=JSON.stringify({model:'openai/gpt-4o-mini',max_tokens:500,messages:messages});var result=await new Promise(function(resolve,reject){var req=https.request({hostname:'openrouter.ai',path:'/api/v1/chat/completions',method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://auntietobi.co.uk','X-Title':'Auntie Tobi','Content-Length':Buffer.byteLength(requestBody)}},function(res){var data='';res.on('data',function(c){data+=c;});res.on('end',function(){try{resolve(JSON.parse(data));}catch(e){reject(e);}});});req.on('error',reject);req.setTimeout(20000,function(){req.destroy();reject(new Error('Timeout'));});req.write(requestBody);req.end();});var reply=result.choices&&result.choices[0]&&result.choices[0].message?result.choices[0].message.content:null;if(!reply){console.log('OpenRouter error:',JSON.stringify(result).substring(0,300));reply='Sorry, I could not get a response. Please try again!';}if(businessContext){reply=reply.replace('[SHOW_BIZ_CARDS]','').replace(/\|\|\|INJECT_BIZ\|\|\|/g,'').replace(/\|\|\|BIZ_CARDS\|\|\|/g,'').trim();reply=reply+'\n'+businessContext.trim();}
     // KB save removed
     return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({content:[{type:'text',text:reply}]})};} catch(err){console.log('Error:',err.message);return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:err.message})};}};
