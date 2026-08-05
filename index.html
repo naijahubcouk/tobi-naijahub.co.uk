@@ -1973,7 +1973,7 @@ function formatResponse(text) {
 
         // If not on businesses page, add a listing prompt bubble
         if (window._currentPage !== 'businesses') {
-          text += '\n\n[SUGGESTIONS: 🏢 See all businesses | List your business free | Ask me anything 💚]';
+          // Let AI suggestions handle the follow-up bubbles
         }
       } catch(e) {
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '');
@@ -8284,16 +8284,15 @@ function tobiOpenBiz(slug){window.open('https://auntietobi.com/listing/'+slug,'_
 </script>
 <script>
 document.addEventListener('click',function(e){
+  var vb=e.target.closest('.tobi-view-biz');
+  if(vb){var slug=vb.dataset.slug;if(slug)window.open('https://auntietobi.com/listing/'+slug,'_blank');return;}
   var a=e.target.closest('.tobi-biz-link');
   if(!a)return;
   e.preventDefault();
   var href=a.getAttribute('href');
   if(href&&href.indexOf('/biz/')===0){
     var slug=href.replace('/biz/','').replace(/\/$/,'');
-    if(!slug)return;
-    // Use ?biz= param so handleDeepLink works correctly
-    window.history.pushState({},'','/?biz='+slug);
-    if(typeof handleDeepLink==='function')handleDeepLink();
+    if(slug)window.open('https://auntietobi.com/listing/'+slug,'_blank');
   }
 });
 window._tobiNav=function(s){window.history.pushState({},'','/?biz='+s);if(typeof handleDeepLink==='function')handleDeepLink();};
