@@ -5972,7 +5972,7 @@ function showBusinesses(startIndex) {
   // Filter out businesses with no slug (broken listings)
   const allBiz = getLiveDirectory().filter(b => b.slug && b.slug.trim() !== '' && b.name && b.name.trim() !== '');
 
-  if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
+  if (startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
     shownBusinessIndexes = [];
   }
 
@@ -6041,7 +6041,8 @@ function showBusinesses(startIndex) {
 
 
   const moreLabel = hasMore ? '🏢 Show more businesses' : '🔄 Start again';
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinesses()">' + moreLabel + '</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian caterer near me\')">🍛 Find a caterer</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button></div>');
+  const moreAction = hasMore ? `showBusinesses(${shownBusinessIndexes.length})` : 'showBusinesses(-1)';
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="' + moreAction + '">' + moreLabel + '</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian caterer near me\')">🍛 Find a caterer</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button></div>');
   messages.push({ role: 'assistant', content: 'Here are Nigerian businesses on Auntie Tobi: ' + page.map(b => b.name).join(', ') });
 }
 
