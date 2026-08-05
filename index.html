@@ -19,6 +19,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
 <meta name="theme-color" content="#057A44">
 <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Auntie Tobi">
 <link rel="apple-touch-icon" href="/tobi-face-128.png">
@@ -5239,6 +5240,20 @@ function getRandomSuggestionStr() {
 }
 
 // ============================================
+
+const ALL_EVENTS = [
+  { emoji:'🇳🇬', title:'9ja Fayre 2026 — Edinburgh', summary:'The biggest Nigerian fair in Edinburgh! Nigerian food, fashion and culture in Scotland.', date:'25 Jul 2026', dateObj:new Date(2026,6,25), loc:'Edinburgh', time:'Sat 25 Jul, All day', url:'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!' },
+  { emoji:'🛍️', title:'Deshapeables UK Tradefair London', summary:'Free community shopping event. Yeomanry House, London. 10AM–6PM.', date:'25 Jul 2026', dateObj:new Date(2026,6,25), loc:'Yeomanry House, London', time:'Sat 25 Jul, 10AM–6PM | Free', url:'https://auntietobi.com/blog/Deshapeables-UK-Tradefair-London' },
+  { emoji:'🌶️', title:'Suya Fest Birmingham 2026', summary:'The ultimate outdoor suya experience returns to Birmingham. 3PM–9PM.', date:'1 Aug 2026', dateObj:new Date(2026,7,1), loc:'Birmingham', time:'Sat 1 Aug, 3PM–9PM', url:'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns' },
+  { emoji:'🇳🇬', title:'9ja Fayre 2026 — Manchester', summary:'The final stop of the 9ja Fayre UK tour! Nigerian food, fashion and music in Manchester.', date:'1 Aug 2026', dateObj:new Date(2026,7,1), loc:'Manchester', time:'Sat 1 Aug, All day', url:'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!' },
+  { emoji:'🎉', title:'Nigerian Cultural Festival 2026 — Plymouth', summary:'Celebrating Nigerian food, music, fashion and culture. 11:30AM–9PM.', date:'8 Aug 2026', dateObj:new Date(2026,7,8), loc:'Plymouth', time:'Sat 8 Aug, 11:30AM–9PM', url:"https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here's-Everything-You-Need-to-Know" },
+  { emoji:'🛍️', title:'Trade & Taste Trade Fair Kettering 2026', summary:'Free community shopping and networking event. Corn Market Hall, Kettering NN15 7QA. 10AM–5PM. Free entry.', date:'22 Aug 2026', dateObj:new Date(2026,7,22), loc:'Corn Market Hall, Kettering', time:'Sat 22 Aug, 10AM–5PM | Free', url:'https://auntietobi.com/blog/Trade-and-Taste-Trade-Fair-Kettering-2026:-Free-Community-Shopping-and-Networking-Event' },
+  { emoji:'⚽', title:'NSF UK Sports and Family Fun Day 2026', summary:'Sports and family activities at Newham Leisure Centre, London. From 12PM.', date:'29 Aug 2026', dateObj:new Date(2026,7,29), loc:'Newham Leisure Centre, London', time:'Sat 29 Aug, from 12PM', url:'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026' },
+  { emoji:'💼', title:'Midlands Business Festival — Coventry', summary:'Full-day business festival. Centre AT7, CV6 7GP, Coventry. 9AM–8PM.', date:'30 Aug 2026', dateObj:new Date(2026,7,30), loc:'Centre AT7, Coventry', time:'Sun 30 Aug, 9AM–8PM', url:'https://auntietobi.com/blog/Midlands-Business-Festival-Coventry' },
+  { emoji:'🫕', title:'The Igbo Table — Food, Culture and Conversation', summary:'Igbo food, culture and community. Church Hall, Croyland Rd, London N9. 3:30PM–9PM.', date:'30 Aug 2026', dateObj:new Date(2026,7,30), loc:'Croyland Rd, London N9', time:'Sun 30 Aug, 3:30PM–9PM', url:'https://auntietobi.com/blog/The-Igbo-Table:-Food-Culture-and-Conversation' },
+  { emoji:'👗', title:'Ankara Festival UK 2026', summary:'African fashion festival. Porchester Hall, London. 5PM–11:30PM.', date:'10 Oct 2026', dateObj:new Date(2026,9,10), loc:'Porchester Hall, London', time:'Sat 10 Oct, 5PM–11:30PM', url:'https://auntietobi.com/blog/Ankara-Festival-UK-2026' },
+];
+
 
 const AUNTIE_TOBI_DIRECTORY = [
   {"slug": "eventsbykklargesse", "name": "Eventsbykklargesse", "cat": "event planners", "loc": "Suffolk, UK", "desc": "Tailored Moments, Timeless Memories. We create beautiful celebrations through curated gifting and thoughtfully executed events.", "verified": false, "phone": "+447467587855", "email": "hello@kklargesse.com", "website": "https://tr.ee/MTxV3L2p-A", "keywords": ["eventsbykklargesse"]},
