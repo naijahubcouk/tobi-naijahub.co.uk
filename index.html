@@ -2391,69 +2391,82 @@ function hideTobiSearchResults() {
 
 function runTobiSearch(queryOverride) {
   const inp = document.getElementById('tobi-search-input');
-  const query = queryOverride !== undefined ? queryOverride : (inp ? inp.value.trim() : '');
-  if (!query || query.length < 2) {
-    hideTobiSearchResults();
-    return;
-  }
+  const query = (queryOverride !== undefined ? queryOverride : (inp ? inp.value.trim() : '')).trim();
+  if (!query || query.length < 2) { hideTobiSearchResults(); return; }
 
   const queryL = query.toLowerCase();
   const results = { businesses: [], events: [], articles: [] };
 
-  // Detect intent group
+  // Get directory — try multiple sources
+  let dir = [];
+  try { dir = getLiveDirectory(); } catch(e) {}
+  if (!dir || !dir.length) {
+    try { dir = window.AUNTIE_TOBI_DIRECTORY || []; } catch(e) {}
+  }
+
+  // Build search words — remove stop words
+  const STOP = new Set(['find','the','and','for','near','me','a','an','in','at','is','are','any','some','nigerian','african','uk','who','can','you','my','i','home','like','want','need','feel','just','there','that','this','where','get','will','have','please','about','with','from','they','what','how']);
+  const words = queryL.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 1 && !STOP.has(w));
+
+  console.log('[Search] query:', query, '| words:', words, '| dir size:', dir.length);
+
+  if (words.length === 0) { hideTobiSearchResults(); return; }
+
+  // Detect intent
   let intentCats = null;
   if (FOOD_SYNS_SEARCH.some(s => queryL.includes(s))) intentCats = SEARCH_INTENT.food;
-  else { for (const [g, cats] of Object.entries(SEARCH_INTENT)) { if (cats.some(c => queryL.includes(c))) { intentCats = cats; break; } } }
+  else {
+    for (const [g, cats] of Object.entries(SEARCH_INTENT)) {
+      if (cats.some(c => queryL.includes(c))) { intentCats = cats; break; }
+    }
+  }
 
-  // Search businesses — use live directory if available, else hardcoded
-  const dir = (typeof getLiveDirectory === 'function' ? getLiveDirectory() : null) || AUNTIE_TOBI_DIRECTORY || [];
-  const STOP = new Set(['find','the','and','for','near','me','a','an','in','at','is','are','any','some','nigerian','african','uk','who','can','you','my','i','home','like','want','need','feel','just','there','that','this','where','get','will','have','please']);
-  const words = queryL.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
-
+  // Search businesses
   dir.forEach(b => {
     const nameL = (b.name||'').toLowerCase();
     const catL = (b.cat||b.category||'').toLowerCase();
     const kwL = (b.keywords||[]).join(' ').toLowerCase();
+    const descL = (b.desc||b.description||'').toLowerCase();
     let score = 0;
 
     if (intentCats) {
-      // Intent mode: must match category group
       const inGroup = intentCats.some(c => catL.includes(c) || kwL.includes(c));
       if (!inGroup) return;
       score = 10;
-      // Bonus for name match
       words.forEach(w => { if (nameL.includes(w)) score += 5; });
     } else {
-      // Keyword mode: name or category match
       words.forEach(w => {
         if (nameL.includes(w)) score += 10;
-        if (catL.includes(w)) score += 8;
-        if (kwL.includes(w)) score += 4;
+        else if (catL.includes(w)) score += 8;
+        else if (kwL.includes(w)) score += 4;
+        else if (descL.includes(w)) score += 1;
       });
     }
     if (score > 0) results.businesses.push({ ...b, score });
   });
-  results.businesses.sort((a,b) => (b.verified ? 10 : 0) + b.score - ((a.verified ? 10 : 0) + a.score));
+  results.businesses.sort((a, b) => (b.verified ? 10 : 0) + b.score - ((a.verified ? 10 : 0) + a.score));
   results.businesses = results.businesses.slice(0, 5);
 
   // Search events
-  (typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : []).forEach(e => {
+  const evList = typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  evList.forEach(e => {
+    if (e.dateObj < today) return;
     const txt = ((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.loc||'')).toLowerCase();
-    if (words.some(w => txt.includes(w)) || (intentCats && SEARCH_INTENT.food && intentCats === SEARCH_INTENT.food && txt.includes('food'))) {
-      const today = new Date(); today.setHours(0,0,0,0);
-      if (e.dateObj >= today) results.events.push(e);
-    }
+    if (words.some(w => txt.includes(w))) results.events.push(e);
   });
   results.events = results.events.slice(0, 3);
 
   // Search articles
-  const livePosts = getLiveBlogPosts() || [];
+  let livePosts = [];
+  try { livePosts = getLiveBlogPosts() || []; } catch(e) {}
   livePosts.forEach(p => {
     const txt = ((p.title||'') + ' ' + (p.summary||'')).toLowerCase();
     if (words.some(w => txt.includes(w))) results.articles.push(p);
   });
   results.articles = results.articles.slice(0, 3);
 
+  console.log('[Search] results — biz:', results.businesses.length, 'events:', results.events.length, 'articles:', results.articles.length);
   renderTobiSearchResults(query, results);
 }
 
