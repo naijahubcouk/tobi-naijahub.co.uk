@@ -8142,48 +8142,7 @@ window._tobiNav=function(s){window.history.pushState({},'','/?biz='+s);if(typeof
 </script>
 <script>
 function openBizSheet(slug) {
-  var dir = window._liveDirectory || (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY : []);
-  var biz = dir.find(function(x){ return x.slug === slug; });
-  var name = biz ? biz.name : slug;
-  var url = 'https://auntietobi.com/listing/' + slug;
-
-  // Use blogSheet but with iframe for listing pages
-  var sheet = document.getElementById('blogSheet');
-  if (!sheet) { window.open(url, '_blank'); return; }
-
-  // Set title
-  var titleEl = document.getElementById('blogSheetTitle');
-  if (titleEl) titleEl.textContent = name;
-
-  // Set external link
-  var extEl = document.getElementById('blogSheetExternal');
-  if (extEl) extEl.href = url;
-  var openBtn = document.getElementById('blogSheetOpenBtn');
-  if (openBtn) openBtn.href = url;
-
-  // Hide content areas, show loading
-  document.getElementById('blogSheetLoading').style.display = 'flex';
-  document.getElementById('blogSheetFallback').style.display = 'none';
-  document.getElementById('blogSheetContent').style.display = 'none';
-
-  sheet.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-
-  // Try iframe approach — show listing page directly
-  var inner = document.getElementById('blogSheetContentInner');
-  var content = document.getElementById('blogSheetContent');
-  if (inner && content) {
-    // Remove padding for iframe
-    inner.style.padding = '0';
-    inner.style.height = '100%';
-    inner.innerHTML = '<iframe src="' + url + '" style="width:100%;height:80vh;border:none;display:block;" onload="this.parentElement.parentElement.querySelector(\'#blogSheetLoading\').style.display=\'none\';" onerror="document.getElementById(\'blogSheetLoading\').style.display=\'none\';document.getElementById(\'blogSheetFallback\').style.display=\'flex\';"></iframe>';
-    content.style.display = 'block';
-    // Hide loading after short delay (iframe onload may not fire if blocked)
-    setTimeout(function() {
-      var loading = document.getElementById('blogSheetLoading');
-      if (loading) loading.style.display = 'none';
-    }, 3000);
-  }
+  window.open('https://auntietobi.com/listing/' + slug, '_blank');
 }
 </script>
 </body>
