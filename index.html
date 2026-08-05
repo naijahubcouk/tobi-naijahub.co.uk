@@ -8132,6 +8132,9 @@ window.addEventListener('load', () => {
 </div>
 
 <script>
+function tobiOpenBiz(slug){window.open('https://auntietobi.com/listing/'+slug,'_blank');}
+</script>
+<script>
 (function() {
   var FOOD = ['native soup','egusi','jollof','suya','puff puff','fufu','stew','pepper soup','smallchops','meat pie','catering','caterer','frozen food','african food','nigerian food','grocery','groceries'];
   var CATS = {
@@ -8174,7 +8177,13 @@ window.addEventListener('load', () => {
     var words = q.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(function(w){return w.length>1&&!STOP[w];});
     if (!words.length) { el.style.display='none'; return; }
 
-    var dir = window._liveDirectory || (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY : []);
+    // Merge live and hardcoded so nothing is missed
+    var livDir = window._liveDirectory || [];
+    var hcDir = typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY : [];
+    var slugsSeen = {};
+    var dir = [];
+    livDir.forEach(function(b){ if(b.slug){slugsSeen[b.slug]=1;} dir.push(b); });
+    hcDir.forEach(function(b){ if(b.slug&&!slugsSeen[b.slug]) dir.push(b); });
     var isFood = FOOD.some(function(s){return q.indexOf(s)!==-1;});
     var intentCats = null;
     if (isFood) intentCats = CATS.food;
