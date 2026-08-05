@@ -6744,14 +6744,34 @@ function showBusinesses(startIndex) {
   window.history.replaceState({}, '', '/');
   if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
   setTimeout(() => scrollToTop(), 50);
-  const allBiz = getLiveDirectory();
+
+  // Filter out businesses with no slug (broken listings)
+  const allBiz = getLiveDirectory().filter(b => b.slug && b.slug.trim() !== '' && b.name && b.name.trim() !== '');
+
   if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
     shownBusinessIndexes = [];
   }
+
   const available = allBiz.map((b, i) => i).filter(i => !shownBusinessIndexes.includes(i));
-  const verified = available.filter(i => allBiz[i].verified);
-  const others = available.filter(i => !allBiz[i].verified).sort(() => Math.random() - 0.5);
-  const pick = [...verified, ...others].slice(0, 6);
+
+  // Shuffle all available businesses, but give verified a 2x weight so they appear more often but still rotate
+  const weighted = [];
+  available.forEach(i => {
+    weighted.push(i);
+    if (allBiz[i].verified) weighted.push(i); // verified appears twice in pool
+  });
+  // Shuffle
+  for (let k = weighted.length - 1; k > 0; k--) {
+    const j = Math.floor(Math.random() * (k + 1));
+    [weighted[k], weighted[j]] = [weighted[j], weighted[k]];
+  }
+  // Pick 6 unique
+  const pick = [];
+  const seen = new Set();
+  for (const i of weighted) {
+    if (!seen.has(i)) { seen.add(i); pick.push(i); }
+    if (pick.length >= 6) break;
+  }
   pick.forEach(i => shownBusinessIndexes.push(i));
   const page = pick.map(i => allBiz[i]);
   const hasMore = shownBusinessIndexes.length < allBiz.length;
