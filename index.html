@@ -2353,6 +2353,171 @@ async function sendMessage(text) {
   // ── AUNTIE TOBI SEARCH ──────────────────────────────────────────────────
 const FOOD_SYNS_SEARCH = ['native soup','egusi','jollof','suya','puff puff','pounded yam','fufu','amala','stew','pepper soup','smallchops','meat pie','chin chin','catering','caterer','food delivery','frozen food','african food','nigerian food'];
 const SEARCH_INTENT = {
+  food:         ['caterer','caterers','foodstore','grocery','groceries','restaurant','chef','food','cuisine','snack','kitchen','african food','nigerian food'],
+  beauty:       ['makeup','mua','hair stylist','lash','nail','skincare','beauty','glam','brow'],
+  fashion:      ['seamstress','tailor','ankara','wig','fashion','clothing','wears'],
+  events:       ['event planner','decorator','photographer','videographer','dj','mc','entertainer'],
+  professional: ['solicitor','accountant','consultant','tax','immigration','lawyer','legal'],
+  education:    ['tutor','education','lesson','coaching','training','course'],
+  transport:    ['driver','taxi','courier','delivery','logistics','moving'],
+  cleaning:     ['cleaner','cleaning','laundry','domestic'],
+  health:       ['doctor','nurse','therapist','pharmacy','healthcare','care'],
+  childcare:    ['childminder','nursery','babysitter','nanny','childcare'],
+  church:       ['church','ministry','pastor','gospel'],
+};
+
+function handleTobiSearch(val) {
+  const clearBtn = document.getElementById('tobi-search-clear');
+  if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
+}
+
+function clearTobiSearch() {
+  const inp = document.getElementById('tobi-search-input');
+  if (inp) inp.value = '';
+  const clearBtn = document.getElementById('tobi-search-clear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  const el = document.getElementById('tobi-search-results');
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+}
+
+function hideTobiSearchResults() {
+  const el = document.getElementById('tobi-search-results');
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+}
+
+function runTobiSearch() {
+  const inp = document.getElementById('tobi-search-input');
+  const el = document.getElementById('tobi-search-results');
+  if (!inp || !el) { console.log('[Search] Elements not found'); return; }
+
+  const query = inp.value.trim();
+  if (!query || query.length < 2) { el.style.display = 'none'; return; }
+
+  const q = query.toLowerCase();
+  const STOP = new Set(['find','the','and','for','near','me','a','an','in','at','is','are','any','some','nigerian','african','uk','who','can','you','my','i','home','like','want','need','feel','just','there','that','this','where','get','will','have','please','about','with','from']);
+  const words = q.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 1 && !STOP.has(w));
+
+  if (words.length === 0) { el.style.display = 'none'; return; }
+
+  // Get directory
+  let dir = [];
+  try { dir = window._liveDirectory || AUNTIE_TOBI_DIRECTORY || []; } catch(e) { console.log('[Search] dir error:', e); }
+  console.log('[Search] query:', query, 'words:', words, 'dir:', dir.length);
+
+  // Detect food intent
+  const isFood = FOOD_SYNS_SEARCH.some(s => q.includes(s));
+  let intentCats = isFood ? SEARCH_INTENT.food : null;
+  if (!intentCats) {
+    for (const [g, cats] of Object.entries(SEARCH_INTENT)) {
+      if (cats.some(c => q.includes(c))) { intentCats = cats; break; }
+    }
+  }
+
+  // Search businesses
+  const bizResults = [];
+  dir.forEach(function(b) {
+    const name = (b.name||'').toLowerCase();
+    const cat = (b.cat||b.category||'').toLowerCase();
+    const kw = (b.keywords||[]).join(' ').toLowerCase();
+    let score = 0;
+
+    if (intentCats) {
+      if (!intentCats.some(c => cat.includes(c) || kw.includes(c))) return;
+      score = 10;
+      if (words.some(w => name.includes(w))) score += 5;
+    } else {
+      words.forEach(function(w) {
+        if (name.includes(w)) score += 10;
+        else if (cat.includes(w)) score += 8;
+        else if (kw.includes(w)) score += 4;
+        else if ((b.desc||'').toLowerCase().includes(w)) score += 1;
+      });
+    }
+    if (score > 0) bizResults.push({b, score});
+  });
+  bizResults.sort((a,b) => (b.b.verified?10:0)+b.score - ((a.b.verified?10:0)+a.score));
+  const topBiz = bizResults.slice(0,5).map(x=>x.b);
+
+  // Search events
+  const today = new Date(); today.setHours(0,0,0,0);
+  const evResults = (typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : []).filter(function(e) {
+    if (e.dateObj < today) return false;
+    const txt = ((e.title||'')+(e.summary||'')+(e.loc||'')).toLowerCase();
+    return words.some(w => txt.includes(w));
+  }).slice(0,3);
+
+  // Search articles
+  let artResults = [];
+  try {
+    const posts = window._liveBlogPosts || [];
+    artResults = posts.filter(function(p) {
+      const txt = ((p.title||'')+(p.summary||'')).toLowerCase();
+      return words.some(w => txt.includes(w));
+    }).slice(0,3);
+  } catch(e) {}
+
+  console.log('[Search] biz:', topBiz.length, 'events:', evResults.length, 'articles:', artResults.length);
+
+  // Build results HTML
+  const total = topBiz.length + evResults.length + artResults.length;
+  let html = '';
+
+  if (total === 0) {
+    html = `<div style="padding:16px;text-align:center;font-size:13px;color:#9CA3AF;">No results for <strong>"${query}"</strong><br><small>Try "caterer", "makeup artist" or a business name</small></div>`;
+  } else {
+    if (topBiz.length) {
+      html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;">🏢 BUSINESSES</div>`;
+      topBiz.forEach(function(b) {
+        const wa = b.wa ? `<a href="https://wa.me/${(b.wa).replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-size:11px;font-weight:700;text-decoration:none;margin-right:8px;">💬 WhatsApp</a>` : '';
+        html += `<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">
+          ${b.verified?'<span style="background:#057A44;color:white;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-bottom:3px;display:inline-block;">✅ VERIFIED</span><br>':''}
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">${b.name}</span><br>
+          <span style="font-size:11px;color:#9CA3AF;">${b.cat||''} · ${b.loc||'UK'}</span><br>
+          <div style="margin-top:5px;">${wa}<a href="https://auntietobi.com/listing/${b.slug}" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;text-decoration:none;">View →</a></div>
+        </div>`;
+      });
+    }
+    if (evResults.length) {
+      html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;">🎉 EVENTS</div>`;
+      evResults.forEach(function(e) {
+        html += `<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji||'🎉'} ${e.title}</span><br>
+          <span style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</span>
+        </div>`;
+      });
+    }
+    if (artResults.length) {
+      html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;">📰 ARTICLES</div>`;
+      artResults.forEach(function(p) {
+        html += `<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">${p.title}</span><br>
+          <span style="font-size:11px;color:#9CA3AF;">${p.label||'News'} · ${p.date||''}</span>
+        </div>`;
+      });
+    }
+    html += `<div style="padding:8px 14px;text-align:center;"><button onclick="hideTobiSearchResults()" style="background:none;border:none;color:#9CA3AF;font-size:12px;cursor:pointer;font-family:inherit;">✕ Close</button></div>`;
+  }
+
+  el.innerHTML = html;
+
+  // Position and show
+  const barRect = inp.getBoundingClientRect();
+  el.style.top = (barRect.bottom + window.scrollY + 4) + 'px';
+  el.style.display = 'block';
+}
+
+// Close on outside click
+document.addEventListener('click', function(e) {
+  const inp = document.getElementById('tobi-search-input');
+  const el = document.getElementById('tobi-search-results');
+  const btn = document.querySelector('button[onclick="runTobiSearch()"]');
+  if (!el) return;
+  if (inp && inp.contains(e.target)) return;
+  if (el.contains(e.target)) return;
+  if (btn && btn.contains(e.target)) return;
+  hideTobiSearchResults();
+});
+// ── END SEARCH ────────────────────────────────────────────────────────────
   food:         ['caterer','caterers','foodstore','grocery','groceries','restaurant','chef','food','cuisine','snack','kitchen'],
   beauty:       ['makeup','mua','hair stylist','lash','nail','skincare','beauty','glam','brow'],
   fashion:      ['seamstress','tailor','ankara','wig','fashion','clothing','wears'],
@@ -2368,183 +2533,6 @@ const SEARCH_INTENT = {
 
 let _searchTimer = null;
 
-function handleTobiSearch(val) {
-  const clearBtn = document.getElementById('tobi-search-clear');
-  if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
-  clearTimeout(_searchTimer);
-  if (!val || val.length < 2) { hideTobiSearchResults(); return; }
-  _searchTimer = setTimeout(() => runTobiSearch(val), 300);
-}
-
-function clearTobiSearch() {
-  const inp = document.getElementById('tobi-search-input');
-  if (inp) inp.value = '';
-  const clearBtn = document.getElementById('tobi-search-clear');
-  if (clearBtn) clearBtn.style.display = 'none';
-  hideTobiSearchResults();
-}
-
-function hideTobiSearchResults() {
-  const el = document.getElementById('tobi-search-results');
-  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
-}
-
-function runTobiSearch(queryOverride) {
-  const inp = document.getElementById('tobi-search-input');
-  const query = (queryOverride !== undefined ? queryOverride : (inp ? inp.value.trim() : '')).trim();
-  if (!query || query.length < 2) { hideTobiSearchResults(); return; }
-
-  const queryL = query.toLowerCase();
-  const results = { businesses: [], events: [], articles: [] };
-
-  // Get directory — try multiple sources
-  let dir = [];
-  try { dir = getLiveDirectory(); } catch(e) {}
-  if (!dir || !dir.length) {
-    try { dir = window.AUNTIE_TOBI_DIRECTORY || []; } catch(e) {}
-  }
-
-  // Build search words — remove stop words
-  const STOP = new Set(['find','the','and','for','near','me','a','an','in','at','is','are','any','some','nigerian','african','uk','who','can','you','my','i','home','like','want','need','feel','just','there','that','this','where','get','will','have','please','about','with','from','they','what','how']);
-  const words = queryL.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 1 && !STOP.has(w));
-
-  console.log('[Search] query:', query, '| words:', words, '| dir size:', dir.length);
-
-  if (words.length === 0) { hideTobiSearchResults(); return; }
-
-  // Detect intent
-  let intentCats = null;
-  if (FOOD_SYNS_SEARCH.some(s => queryL.includes(s))) intentCats = SEARCH_INTENT.food;
-  else {
-    for (const [g, cats] of Object.entries(SEARCH_INTENT)) {
-      if (cats.some(c => queryL.includes(c))) { intentCats = cats; break; }
-    }
-  }
-
-  // Search businesses
-  dir.forEach(b => {
-    const nameL = (b.name||'').toLowerCase();
-    const catL = (b.cat||b.category||'').toLowerCase();
-    const kwL = (b.keywords||[]).join(' ').toLowerCase();
-    const descL = (b.desc||b.description||'').toLowerCase();
-    let score = 0;
-
-    if (intentCats) {
-      const inGroup = intentCats.some(c => catL.includes(c) || kwL.includes(c));
-      if (!inGroup) return;
-      score = 10;
-      words.forEach(w => { if (nameL.includes(w)) score += 5; });
-    } else {
-      words.forEach(w => {
-        if (nameL.includes(w)) score += 10;
-        else if (catL.includes(w)) score += 8;
-        else if (kwL.includes(w)) score += 4;
-        else if (descL.includes(w)) score += 1;
-      });
-    }
-    if (score > 0) results.businesses.push({ ...b, score });
-  });
-  results.businesses.sort((a, b) => (b.verified ? 10 : 0) + b.score - ((a.verified ? 10 : 0) + a.score));
-  results.businesses = results.businesses.slice(0, 5);
-
-  // Search events
-  const evList = typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : [];
-  const today = new Date(); today.setHours(0,0,0,0);
-  evList.forEach(e => {
-    if (e.dateObj < today) return;
-    const txt = ((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.loc||'')).toLowerCase();
-    if (words.some(w => txt.includes(w))) results.events.push(e);
-  });
-  results.events = results.events.slice(0, 3);
-
-  // Search articles
-  let livePosts = [];
-  try { livePosts = getLiveBlogPosts() || []; } catch(e) {}
-  livePosts.forEach(p => {
-    const txt = ((p.title||'') + ' ' + (p.summary||'')).toLowerCase();
-    if (words.some(w => txt.includes(w))) results.articles.push(p);
-  });
-  results.articles = results.articles.slice(0, 3);
-
-  console.log('[Search] results — biz:', results.businesses.length, 'events:', results.events.length, 'articles:', results.articles.length);
-  renderTobiSearchResults(query, results);
-}
-
-function renderTobiSearchResults(query, results) {
-  const el = document.getElementById('tobi-search-results');
-  if (!el) return;
-
-  // Position dropdown below the search bar
-  const searchBar = document.getElementById('tobi-search-input');
-  if (searchBar) {
-    const rect = searchBar.closest('div[style]').getBoundingClientRect();
-    el.style.top = (rect.bottom) + 'px';
-  }
-
-  const total = results.businesses.length + results.events.length + results.articles.length;
-
-  if (total === 0) {
-    el.innerHTML = `<div style="padding:16px;text-align:center;font-size:13px;color:#9CA3AF;">No results found for <strong>"${query}"</strong><br><span style="font-size:12px;">Try searching "caterer", "makeup artist" or a business name</span></div>`;
-    el.style.display = 'block';
-    return;
-  }
-
-  let html = '';
-
-  if (results.businesses.length > 0) {
-    html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.12em;text-transform:uppercase;">🏢 Businesses</div>`;
-    results.businesses.forEach(b => {
-      const wa = b.wa ? `<a href="https://wa.me/${(b.wa||'').replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-size:11px;font-weight:700;text-decoration:none;margin-right:10px;">💬 WhatsApp</a>` : '';
-      html += `<div onclick="hideTobiSearchResults()" style="padding:10px 14px;border-bottom:1px solid #f5f5f5;cursor:pointer;" onmouseenter="this.style.background='#f9f9f9'" onmouseleave="this.style.background='white'">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
-          ${b.verified ? '<span style="background:#057A44;color:white;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;">✅ VERIFIED</span>' : ''}
-          <span style="font-size:13px;font-weight:700;color:#0F1E36;">${b.name}</span>
-        </div>
-        <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px;">${b.cat||''} · ${b.loc||'UK'}</div>
-        <div style="display:flex;align-items:center;">${wa}<a href="https://auntietobi.com/listing/${b.slug}" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;text-decoration:none;">View →</a></div>
-      </div>`;
-    });
-  }
-
-  if (results.events.length > 0) {
-    html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.12em;text-transform:uppercase;">🎉 Events</div>`;
-    results.events.forEach(e => {
-      html += `<div onclick="hideTobiSearchResults()" style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">
-        <div style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji||'🎉'} ${e.title}</div>
-        <div style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</div>
-      </div>`;
-    });
-  }
-
-  if (results.articles.length > 0) {
-    html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.12em;text-transform:uppercase;">📰 Articles</div>`;
-    results.articles.forEach(p => {
-      html += `<div onclick="hideTobiSearchResults()" style="padding:10px 14px;border-bottom:1px solid #f5f5f5;cursor:pointer;" onmouseenter="this.style.background='#f9f9f9'" onmouseleave="this.style.background='white'">
-        <div style="font-size:13px;font-weight:700;color:#0F1E36;">${p.title}</div>
-        <div style="font-size:11px;color:#9CA3AF;">${p.label||'News'} · ${p.date||''}</div>
-      </div>`;
-    });
-  }
-
-  html += `<div style="padding:10px 14px;text-align:center;"><button onclick="hideTobiSearchResults()" style="background:none;border:none;color:#9CA3AF;font-size:12px;cursor:pointer;">Close</button></div>`;
-
-  el.innerHTML = html;
-  el.style.display = 'block';
-}
-
-// Close search results on outside click
-document.addEventListener('click', function(e) {
-  const searchInput = document.getElementById('tobi-search-input');
-  const searchResults = document.getElementById('tobi-search-results');
-  const searchClear = document.getElementById('tobi-search-clear');
-  if (!searchResults) return;
-  if (searchInput && searchInput.contains(e.target)) return;
-  if (searchResults.contains(e.target)) return;
-  if (searchClear && searchClear.contains(e.target)) return;
-  // Check if click is on the Search button
-  if (e.target.onclick && e.target.onclick.toString().includes('runTobiSearch')) return;
-  hideTobiSearchResults();
-});
 // ── END AUNTIE TOBI SEARCH ───────────────────────────────────────────────
 
   // When user is on the businesses page, search directory immediately
