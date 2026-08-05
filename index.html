@@ -1039,7 +1039,7 @@
       <button id="tobi-search-clear" onclick="clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0 8px;line-height:1;">✕</button>
       <button onclick="runTobiSearch()" style="background:#057A44;color:white;border:none;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Search</button>
     </div>
-    <div id="tobi-search-results" style="display:none;position:absolute;left:14px;right:14px;top:calc(100% - 4px);background:white;border:1.5px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999;max-height:380px;overflow-y:auto;margin-top:4px;"></div>
+    <div id="tobi-search-results" style="display:none;position:fixed;left:0;right:0;top:auto;background:white;border-top:1.5px solid #e0e0e0;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:9999;max-height:60vh;overflow-y:auto;"></div>
   </div>
 
   <div id="messages" class="messages"></div>
@@ -2474,6 +2474,13 @@ function renderTobiSearchResults(query, results) {
   const el = document.getElementById('tobi-search-results');
   if (!el) return;
 
+  // Position dropdown below the search bar
+  const searchBar = document.getElementById('tobi-search-input');
+  if (searchBar) {
+    const rect = searchBar.closest('div[style]').getBoundingClientRect();
+    el.style.top = (rect.bottom) + 'px';
+  }
+
   const total = results.businesses.length + results.events.length + results.articles.length;
 
   if (total === 0) {
@@ -2525,10 +2532,18 @@ function renderTobiSearchResults(query, results) {
   el.style.display = 'block';
 }
 
-// Close search on outside click
+// Close search results on outside click
 document.addEventListener('click', function(e) {
-  const bar = document.getElementById('tobi-search-bar');
-  if (bar && !bar.contains(e.target)) hideTobiSearchResults();
+  const searchInput = document.getElementById('tobi-search-input');
+  const searchResults = document.getElementById('tobi-search-results');
+  const searchClear = document.getElementById('tobi-search-clear');
+  if (!searchResults) return;
+  if (searchInput && searchInput.contains(e.target)) return;
+  if (searchResults.contains(e.target)) return;
+  if (searchClear && searchClear.contains(e.target)) return;
+  // Check if click is on the Search button
+  if (e.target.onclick && e.target.onclick.toString().includes('runTobiSearch')) return;
+  hideTobiSearchResults();
 });
 // ── END AUNTIE TOBI SEARCH ───────────────────────────────────────────────
 
