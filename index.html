@@ -996,7 +996,7 @@
       <p style="margin:0;font-size:12px;color:white;">Your Trusted UK Guide for Nigerians <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> </p>
     </div>
     
-    <div style="display:flex;align-items:center;gap:6px;margin-left:4px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
       <button id="notify-bell" onclick="handleBellClick()" title="Get Auntie Tobi notifications" style="background:none;border:none;cursor:pointer;font-size:20px;padding:2px;opacity:0.7;transition:opacity 0.2s;">🔕</button>
     <script>
       (function() {
@@ -1007,17 +1007,13 @@
       })();
     </script>
       <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="background:none;border:none;cursor:pointer;font-size:18px;padding:2px;opacity:0.9;transition:opacity 0.2s;">📤</button>
-      <button onclick="toggleTobiSearch()" id="tobi-search-btn" title="Search Auntie Tobi" style="background:rgba(255,255,255,0.15);border:none;border-radius:6px;cursor:pointer;padding:5px 9px;display:flex;align-items:center;gap:5px;transition:background 0.2s;">
-        <span style="font-size:14px;">🔍</span>
-        <span style="color:rgba(255,255,255,0.9);font-size:11px;font-weight:700;font-family:inherit;">Search</span>
-      </button>
     </div>
   </div>
 
-  <!-- SEARCH BAR — hidden by default, expands when Search tapped -->
-  <div id="tobi-search-bar" style="display:none;background:#045c38;padding:8px 14px;position:relative;">
+  <!-- SEARCH BAR — always visible between header and pills -->
+  <div style="background:#045c38;padding:8px 14px;position:relative;">
     <div style="display:flex;align-items:center;background:white;border-radius:8px;padding:8px 12px;gap:8px;">
-      <span style="font-size:15px;color:#057A44;">🔍</span>
+      <span style="font-size:14px;color:#057A44;flex-shrink:0;">🔍</span>
       <input id="tobi-search-input" type="text" placeholder="Search businesses, events, articles..."
         style="flex:1;border:none;background:transparent;padding:0;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;"
         oninput="handleTobiSearch(this.value)"
@@ -2350,25 +2346,7 @@ async function sendMessage(text) {
     }
   }
 
-  function toggleTobiSearch() {
-  const bar = document.getElementById('tobi-search-bar');
-  const inp = document.getElementById('tobi-search-input');
-  const btn = document.getElementById('tobi-search-btn');
-  if (!bar) return;
-  const isOpen = bar.style.display !== 'none';
-  if (isOpen) {
-    bar.style.display = 'none';
-    btn.style.background = 'rgba(255,255,255,0.15)';
-    hideTobiSearchResults();
-    clearTobiSearch();
-  } else {
-    bar.style.display = 'block';
-    btn.style.background = 'rgba(255,255,255,0.3)';
-    setTimeout(() => inp && inp.focus(), 100);
-  }
-}
-
-// ── AUNTIE TOBI SEARCH ──────────────────────────────────────────────────
+  // ── AUNTIE TOBI SEARCH ──────────────────────────────────────────────────
 const FOOD_SYNS_SEARCH = ['native soup','egusi','jollof','suya','puff puff','pounded yam','fufu','amala','stew','pepper soup','smallchops','meat pie','chin chin','catering','caterer','food delivery','frozen food','african food','nigerian food'];
 const SEARCH_INTENT = {
   food:         ['caterer','caterers','foodstore','grocery','groceries','restaurant','chef','food','cuisine','snack','kitchen'],
