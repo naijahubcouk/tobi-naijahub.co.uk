@@ -1023,7 +1023,6 @@
     </div>
     <div id="tobi-search-results" style="display:none;position:absolute;left:14px;right:14px;top:calc(100% - 4px);background:white;border:1.5px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999;max-height:380px;overflow-y:auto;margin-top:4px;"></div>
   </div>
-
   <div class="pills">
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="showBusinesses()">🏢 Businesses</div>
@@ -1036,6 +1035,20 @@
     <div class="pill" onclick="showRequestOptions()">🔍 Request</div>
     <div class="pill" onclick="showFeedbackForm()">📝 Feedback</div>
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
+  </div>
+
+  <!-- SEARCH BAR — always visible below pills -->
+  <div style="background:#f8f8f8;border-bottom:1px solid #e8e8e8;padding:8px 14px;position:relative;">
+    <div style="display:flex;align-items:center;background:white;border:1.5px solid #e0e0e0;border-radius:8px;padding:8px 12px;gap:8px;">
+      <span style="font-size:14px;color:#9CA3AF;flex-shrink:0;">🔍</span>
+      <input id="tobi-search-input" type="text" placeholder="Search businesses, events, articles..."
+        style="flex:1;border:none;background:transparent;padding:0;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;"
+        oninput="handleTobiSearch(this.value)"
+        onkeydown="if(event.key==='Enter'){runTobiSearch();event.preventDefault()}"
+      >
+      <button id="tobi-search-clear" onclick="clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0;line-height:1;">✕</button>
+    </div>
+    <div id="tobi-search-results" style="display:none;position:absolute;left:14px;right:14px;top:calc(100% - 4px);background:white;border:1.5px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:999;max-height:380px;overflow-y:auto;margin-top:4px;"></div>
   </div>
 
   <div id="messages" class="messages"></div>
@@ -2388,7 +2401,10 @@ function hideTobiSearchResults() {
 function runTobiSearch(queryOverride) {
   const inp = document.getElementById('tobi-search-input');
   const query = queryOverride !== undefined ? queryOverride : (inp ? inp.value.trim() : '');
-  if (!query || query.length < 2) return;
+  if (!query || query.length < 2) {
+    hideTobiSearchResults();
+    return;
+  }
 
   const queryL = query.toLowerCase();
   const results = { businesses: [], events: [], articles: [] };
@@ -2398,9 +2414,9 @@ function runTobiSearch(queryOverride) {
   if (FOOD_SYNS_SEARCH.some(s => queryL.includes(s))) intentCats = SEARCH_INTENT.food;
   else { for (const [g, cats] of Object.entries(SEARCH_INTENT)) { if (cats.some(c => queryL.includes(c))) { intentCats = cats; break; } } }
 
-  // Search businesses
-  const dir = getLiveDirectory();
-  const STOP = new Set(['find','the','and','for','near','me','a','an','in','at','is','are','any','some','nigerian','african','uk','who','can','you','my','i','home','like','want','need','feel','just','there','that','this','where','get','will','have','want','please']);
+  // Search businesses — use live directory if available, else hardcoded
+  const dir = (typeof getLiveDirectory === 'function' ? getLiveDirectory() : null) || AUNTIE_TOBI_DIRECTORY || [];
+  const STOP = new Set(['find','the','and','for','near','me','a','an','in','at','is','are','any','some','nigerian','african','uk','who','can','you','my','i','home','like','want','need','feel','just','there','that','this','where','get','will','have','please']);
   const words = queryL.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
 
   dir.forEach(b => {
