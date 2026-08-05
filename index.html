@@ -1027,21 +1027,20 @@
     <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
   </div>
 
-  <!-- SEARCH BAR — below pills -->
-  <div style="background:#f8f8f8;border-bottom:1px solid #e8e8e8;padding:8px 14px;position:relative;">
+  <!-- SEARCH -->
+  <div id="tobi-search-wrap" style="background:#f8f8f8;border-bottom:1px solid #e8e8e8;padding:8px 14px;">
     <div style="display:flex;align-items:center;background:white;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;">
       <span style="font-size:14px;color:#9CA3AF;padding:0 10px;flex-shrink:0;">🔍</span>
       <input id="tobi-search-input" type="text" placeholder="Search businesses, events, articles..."
         style="flex:1;border:none;background:transparent;padding:10px 0;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;"
-        oninput="if(typeof handleTobiSearch==='function')handleTobiSearch(this.value)"
-        onkeydown="if(event.key==='Enter'&&typeof runTobiSearch==='function'){runTobiSearch();event.preventDefault()}"
+        oninput="if(window.handleTobiSearch)window.handleTobiSearch(this.value)"
+        onkeydown="if(event.key==='Enter'&&window.runTobiSearch){window.runTobiSearch();event.preventDefault()}"
       >
-      <button id="tobi-search-clear" onclick="clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0 8px;line-height:1;">✕</button>
-      <button onclick="if(typeof runTobiSearch==='function')runTobiSearch()" style="background:#057A44;color:white;border:none;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Search</button>
+      <button id="tobi-search-clear" onclick="if(window.clearTobiSearch)window.clearTobiSearch()" style="display:none;background:none;border:none;cursor:pointer;font-size:15px;color:#9CA3AF;padding:0 8px;line-height:1;">✕</button>
+      <button onclick="if(window.runTobiSearch)window.runTobiSearch()" style="background:#057A44;color:white;border:none;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;">Search</button>
     </div>
-    <div id="tobi-search-results" style="display:none;position:fixed;left:0;right:0;top:auto;background:white;border-top:1.5px solid #e0e0e0;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:9999;max-height:60vh;overflow-y:auto;"></div>
+    <div id="tobi-search-results" style="display:none;position:fixed;left:0;right:0;background:white;border-top:2px solid #057A44;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:9999;max-height:60vh;overflow-y:auto;"></div>
   </div>
-
   <div id="messages" class="messages"></div>
 
   <div class="input-area">
@@ -2350,186 +2349,6 @@ async function sendMessage(text) {
     }
   }
 
-  // ── AUNTIE TOBI SEARCH ──────────────────────────────────────────────────
-const FOOD_SYNS_SEARCH = ['native soup','egusi','jollof','suya','puff puff','pounded yam','fufu','amala','stew','pepper soup','smallchops','meat pie','chin chin','catering','caterer','food delivery','frozen food','african food','nigerian food'];
-const SEARCH_INTENT = {
-  food:         ['caterer','caterers','foodstore','grocery','groceries','restaurant','chef','food','cuisine','snack','kitchen','african food','nigerian food'],
-  beauty:       ['makeup','mua','hair stylist','lash','nail','skincare','beauty','glam','brow'],
-  fashion:      ['seamstress','tailor','ankara','wig','fashion','clothing','wears'],
-  events:       ['event planner','decorator','photographer','videographer','dj','mc','entertainer'],
-  professional: ['solicitor','accountant','consultant','tax','immigration','lawyer','legal'],
-  education:    ['tutor','education','lesson','coaching','training','course'],
-  transport:    ['driver','taxi','courier','delivery','logistics','moving'],
-  cleaning:     ['cleaner','cleaning','laundry','domestic'],
-  health:       ['doctor','nurse','therapist','pharmacy','healthcare','care'],
-  childcare:    ['childminder','nursery','babysitter','nanny','childcare'],
-  church:       ['church','ministry','pastor','gospel'],
-};
-
-function handleTobiSearch(val) {
-  const clearBtn = document.getElementById('tobi-search-clear');
-  if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
-}
-
-function clearTobiSearch() {
-  const inp = document.getElementById('tobi-search-input');
-  if (inp) inp.value = '';
-  const clearBtn = document.getElementById('tobi-search-clear');
-  if (clearBtn) clearBtn.style.display = 'none';
-  const el = document.getElementById('tobi-search-results');
-  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
-}
-
-function hideTobiSearchResults() {
-  const el = document.getElementById('tobi-search-results');
-  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
-}
-
-function runTobiSearch() {
-  const inp = document.getElementById('tobi-search-input');
-  const el = document.getElementById('tobi-search-results');
-  if (!inp || !el) { console.log('[Search] Elements not found'); return; }
-
-  const query = inp.value.trim();
-  if (!query || query.length < 2) { el.style.display = 'none'; return; }
-
-  const q = query.toLowerCase();
-  const STOP = new Set(['find','the','and','for','near','me','a','an','in','at','is','are','any','some','nigerian','african','uk','who','can','you','my','i','home','like','want','need','feel','just','there','that','this','where','get','will','have','please','about','with','from']);
-  const words = q.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w => w.length > 1 && !STOP.has(w));
-
-  if (words.length === 0) { el.style.display = 'none'; return; }
-
-  // Get directory
-  let dir = [];
-  try { dir = window._liveDirectory || AUNTIE_TOBI_DIRECTORY || []; } catch(e) { console.log('[Search] dir error:', e); }
-  console.log('[Search] query:', query, 'words:', words, 'dir:', dir.length);
-
-  // Detect food intent
-  const isFood = FOOD_SYNS_SEARCH.some(s => q.includes(s));
-  let intentCats = isFood ? SEARCH_INTENT.food : null;
-  if (!intentCats) {
-    for (const [g, cats] of Object.entries(SEARCH_INTENT)) {
-      if (cats.some(c => q.includes(c))) { intentCats = cats; break; }
-    }
-  }
-
-  // Search businesses
-  const bizResults = [];
-  dir.forEach(function(b) {
-    const name = (b.name||'').toLowerCase();
-    const cat = (b.cat||b.category||'').toLowerCase();
-    const kw = (b.keywords||[]).join(' ').toLowerCase();
-    let score = 0;
-
-    if (intentCats) {
-      if (!intentCats.some(c => cat.includes(c) || kw.includes(c))) return;
-      score = 10;
-      if (words.some(w => name.includes(w))) score += 5;
-    } else {
-      words.forEach(function(w) {
-        if (name.includes(w)) score += 10;
-        else if (cat.includes(w)) score += 8;
-        else if (kw.includes(w)) score += 4;
-        else if ((b.desc||'').toLowerCase().includes(w)) score += 1;
-      });
-    }
-    if (score > 0) bizResults.push({b, score});
-  });
-  bizResults.sort((a,b) => (b.b.verified?10:0)+b.score - ((a.b.verified?10:0)+a.score));
-  const topBiz = bizResults.slice(0,5).map(x=>x.b);
-
-  // Search events
-  const today = new Date(); today.setHours(0,0,0,0);
-  const evResults = (typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : []).filter(function(e) {
-    if (e.dateObj < today) return false;
-    const txt = ((e.title||'')+(e.summary||'')+(e.loc||'')).toLowerCase();
-    return words.some(w => txt.includes(w));
-  }).slice(0,3);
-
-  // Search articles
-  let artResults = [];
-  try {
-    const posts = window._liveBlogPosts || [];
-    artResults = posts.filter(function(p) {
-      const txt = ((p.title||'')+(p.summary||'')).toLowerCase();
-      return words.some(w => txt.includes(w));
-    }).slice(0,3);
-  } catch(e) {}
-
-  console.log('[Search] biz:', topBiz.length, 'events:', evResults.length, 'articles:', artResults.length);
-
-  // Build results HTML
-  const total = topBiz.length + evResults.length + artResults.length;
-  let html = '';
-
-  if (total === 0) {
-    html = `<div style="padding:16px;text-align:center;font-size:13px;color:#9CA3AF;">No results for <strong>"${query}"</strong><br><small>Try "caterer", "makeup artist" or a business name</small></div>`;
-  } else {
-    if (topBiz.length) {
-      html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;">🏢 BUSINESSES</div>`;
-      topBiz.forEach(function(b) {
-        const wa = b.wa ? `<a href="https://wa.me/${(b.wa).replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-size:11px;font-weight:700;text-decoration:none;margin-right:8px;">💬 WhatsApp</a>` : '';
-        html += `<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">
-          ${b.verified?'<span style="background:#057A44;color:white;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-bottom:3px;display:inline-block;">✅ VERIFIED</span><br>':''}
-          <span style="font-size:13px;font-weight:700;color:#0F1E36;">${b.name}</span><br>
-          <span style="font-size:11px;color:#9CA3AF;">${b.cat||''} · ${b.loc||'UK'}</span><br>
-          <div style="margin-top:5px;">${wa}<a href="https://auntietobi.com/listing/${b.slug}" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;text-decoration:none;">View →</a></div>
-        </div>`;
-      });
-    }
-    if (evResults.length) {
-      html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;">🎉 EVENTS</div>`;
-      evResults.forEach(function(e) {
-        html += `<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">
-          <span style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji||'🎉'} ${e.title}</span><br>
-          <span style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</span>
-        </div>`;
-      });
-    }
-    if (artResults.length) {
-      html += `<div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;">📰 ARTICLES</div>`;
-      artResults.forEach(function(p) {
-        html += `<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">
-          <span style="font-size:13px;font-weight:700;color:#0F1E36;">${p.title}</span><br>
-          <span style="font-size:11px;color:#9CA3AF;">${p.label||'News'} · ${p.date||''}</span>
-        </div>`;
-      });
-    }
-    html += `<div style="padding:8px 14px;text-align:center;"><button onclick="hideTobiSearchResults()" style="background:none;border:none;color:#9CA3AF;font-size:12px;cursor:pointer;font-family:inherit;">✕ Close</button></div>`;
-  }
-
-  el.innerHTML = html;
-
-  // Position and show
-  const barRect = inp.getBoundingClientRect();
-  el.style.top = (barRect.bottom + window.scrollY + 4) + 'px';
-  el.style.display = 'block';
-}
-
-// Close on outside click
-document.addEventListener('click', function(e) {
-  const inp = document.getElementById('tobi-search-input');
-  const el = document.getElementById('tobi-search-results');
-  const btn = document.querySelector('button[onclick="runTobiSearch()"]');
-  if (!el) return;
-  if (inp && inp.contains(e.target)) return;
-  if (el.contains(e.target)) return;
-  if (btn && btn.contains(e.target)) return;
-  hideTobiSearchResults();
-});
-// ── END SEARCH ────────────────────────────────────────────────────────────
-  food:         ['caterer','caterers','foodstore','grocery','groceries','restaurant','chef','food','cuisine','snack','kitchen'],
-  beauty:       ['makeup','mua','hair stylist','lash','nail','skincare','beauty','glam','brow'],
-  fashion:      ['seamstress','tailor','ankara','wig','fashion','clothing','wears'],
-  events:       ['event planner','decorator','photographer','videographer','dj','mc','entertainer','event'],
-  professional: ['solicitor','accountant','consultant','tax','immigration','lawyer','legal'],
-  education:    ['tutor','education','lesson','coaching','training','course'],
-  transport:    ['driver','taxi','courier','delivery','logistics','moving'],
-  cleaning:     ['cleaner','cleaning','laundry','domestic'],
-  health:       ['doctor','nurse','therapist','pharmacy','healthcare','care'],
-  childcare:    ['childminder','nursery','babysitter','nanny','childcare'],
-  church:       ['church','ministry','pastor','gospel'],
-};
 
 let _searchTimer = null;
 
@@ -8187,5 +8006,117 @@ window.addEventListener('load', () => {
   </div>
 </div>
 
+<script>
+(function() {
+  var FOOD = ['native soup','egusi','jollof','suya','puff puff','fufu','stew','pepper soup','smallchops','meat pie','catering','caterer','frozen food','african food','nigerian food','grocery','groceries'];
+  var CATS = {
+    food:['caterer','caterers','foodstore','grocery','groceries','restaurant','chef','food','cuisine','snack'],
+    beauty:['makeup','mua','hair','lash','nail','skincare','beauty','glam'],
+    fashion:['seamstress','tailor','ankara','wig','fashion','clothing'],
+    events:['event','decorator','photographer','videographer','dj','entertainer'],
+    professional:['solicitor','accountant','consultant','tax','immigration','lawyer'],
+    education:['tutor','education','lesson','coaching','training'],
+    transport:['driver','taxi','courier','delivery','logistics'],
+    cleaning:['cleaner','cleaning','laundry'],
+  };
+
+  window.handleTobiSearch = function(val) {
+    var cb = document.getElementById('tobi-search-clear');
+    if (cb) cb.style.display = val ? 'block' : 'none';
+  };
+
+  window.clearTobiSearch = function() {
+    var inp = document.getElementById('tobi-search-input');
+    if (inp) inp.value = '';
+    var cb = document.getElementById('tobi-search-clear');
+    if (cb) cb.style.display = 'none';
+    window.hideTobiSearchResults();
+  };
+
+  window.hideTobiSearchResults = function() {
+    var el = document.getElementById('tobi-search-results');
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  };
+
+  window.runTobiSearch = function() {
+    var inp = document.getElementById('tobi-search-input');
+    var el = document.getElementById('tobi-search-results');
+    if (!inp || !el) return;
+    var query = inp.value.trim();
+    if (!query || query.length < 2) { el.style.display = 'none'; return; }
+    var q = query.toLowerCase();
+    var STOP = {'find':1,'the':1,'and':1,'for':1,'near':1,'me':1,'a':1,'an':1,'in':1,'at':1,'is':1,'are':1,'any':1,'some':1,'nigerian':1,'african':1,'uk':1,'who':1,'can':1,'you':1,'my':1,'i':1,'home':1,'like':1,'want':1,'need':1,'feel':1,'just':1,'there':1,'that':1,'this':1,'where':1,'get':1,'will':1,'have':1,'please':1};
+    var words = q.replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(function(w){return w.length>1&&!STOP[w];});
+    if (!words.length) { el.style.display='none'; return; }
+
+    var dir = window._liveDirectory || (typeof AUNTIE_TOBI_DIRECTORY !== 'undefined' ? AUNTIE_TOBI_DIRECTORY : []);
+    var isFood = FOOD.some(function(s){return q.indexOf(s)!==-1;});
+    var intentCats = null;
+    if (isFood) intentCats = CATS.food;
+    else Object.keys(CATS).forEach(function(g){if(!intentCats&&CATS[g].some(function(c){return q.indexOf(c)!==-1;}))intentCats=CATS[g];});
+
+    var bizResults = [];
+    dir.forEach(function(b) {
+      var nm=(b.name||'').toLowerCase(), ct=(b.cat||b.category||'').toLowerCase(), kw=(b.keywords||[]).join(' ').toLowerCase();
+      var score=0;
+      if (intentCats) {
+        if(!intentCats.some(function(c){return ct.indexOf(c)!==-1||kw.indexOf(c)!==-1;}))return;
+        score=10; if(words.some(function(w){return nm.indexOf(w)!==-1;}))score+=5;
+      } else {
+        words.forEach(function(w){if(nm.indexOf(w)!==-1)score+=10;else if(ct.indexOf(w)!==-1)score+=8;else if(kw.indexOf(w)!==-1)score+=4;});
+      }
+      if(score>0)bizResults.push({b:b,s:score});
+    });
+    bizResults.sort(function(a,b){return((b.b.verified?10:0)+b.s)-((a.b.verified?10:0)+a.s);});
+    var topBiz=bizResults.slice(0,5).map(function(x){return x.b;});
+
+    var today=new Date();today.setHours(0,0,0,0);
+    var evRes=(typeof ALL_EVENTS!=='undefined'?ALL_EVENTS:[]).filter(function(e){
+      if(e.dateObj<today)return false;
+      var t=((e.title||'')+(e.summary||'')+(e.loc||'')).toLowerCase();
+      return words.some(function(w){return t.indexOf(w)!==-1;});
+    }).slice(0,3);
+
+    var artRes=[];
+    try{artRes=(window._liveBlogPosts||[]).filter(function(p){var t=((p.title||'')+(p.summary||'')).toLowerCase();return words.some(function(w){return t.indexOf(w)!==-1;});}).slice(0,3);}catch(e){}
+
+    var total=topBiz.length+evRes.length+artRes.length;
+    var out='';
+    if(total===0){
+      out='<div style="padding:16px;text-align:center;font-size:13px;color:#9CA3AF;">No results for <strong>'+query+'</strong><br><small>Try a business name, "caterer", "makeup artist"</small></div>';
+    } else {
+      if(topBiz.length){
+        out+='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;">🏢 BUSINESSES</div>';
+        topBiz.forEach(function(b){
+          var wa=b.wa?'<a href="https://wa.me/'+b.wa.replace(/[^0-9]/g,'')+'" target="_blank" style="color:#25D366;font-size:11px;font-weight:700;text-decoration:none;margin-right:8px;">💬 WhatsApp</a>':'';
+          out+='<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">'+(b.verified?'<span style="background:#057A44;color:white;font-size:9px;padding:1px 5px;border-radius:6px;">✅ VERIFIED</span> ':'')+'<strong style="font-size:13px;color:#0F1E36;">'+b.name+'</strong><br><span style="font-size:11px;color:#9CA3AF;">'+(b.cat||'')+' · '+(b.loc||'UK')+'</span><br><div style="margin-top:4px;">'+wa+'<a href="https://auntietobi.com/listing/'+b.slug+'" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;text-decoration:none;">View →</a></div></div>';
+        });
+      }
+      if(evRes.length){
+        out+='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;">🎉 EVENTS</div>';
+        evRes.forEach(function(e){out+='<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;"><strong style="font-size:13px;color:#0F1E36;">'+(e.emoji||'🎉')+' '+e.title+'</strong><br><span style="font-size:11px;color:#9CA3AF;">📅 '+e.date+' · 📍 '+e.loc+'</span></div>';});
+      }
+      if(artRes.length){
+        out+='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;">📰 ARTICLES</div>';
+        artRes.forEach(function(p){out+='<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;"><strong style="font-size:13px;color:#0F1E36;">'+p.title+'</strong><br><span style="font-size:11px;color:#9CA3AF;">'+(p.label||'News')+'</span></div>';});
+      }
+      out+='<div style="padding:8px;text-align:center;"><button onclick="window.hideTobiSearchResults()" style="background:none;border:none;color:#9CA3AF;font-size:12px;cursor:pointer;">✕ Close</button></div>';
+    }
+    el.innerHTML=out;
+    var r=inp.getBoundingClientRect();
+    el.style.top=(r.bottom+2)+'px';
+    el.style.display='block';
+  };
+
+  document.addEventListener('click',function(e){
+    var el=document.getElementById('tobi-search-results');
+    if(!el||el.style.display==='none')return;
+    var wrap=document.getElementById('tobi-search-wrap');
+    if(wrap&&wrap.contains(e.target))return;
+    if(el.contains(e.target))return;
+    window.hideTobiSearchResults();
+  });
+})();
+</script>
 </body>
 </html>
