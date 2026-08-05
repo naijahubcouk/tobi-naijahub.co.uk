@@ -1976,6 +1976,7 @@ function formatResponse(text) {
           // Let AI suggestions handle the follow-up bubbles
         }
       } catch(e) {
+        console.error('BIZ_JSON parse error:', e.message, bizMatch[1].substring(0,100));
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '');
       }
     }
