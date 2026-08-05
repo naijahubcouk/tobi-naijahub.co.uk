@@ -8207,26 +8207,55 @@ window.addEventListener('load', () => {
 
     var total=topBiz.length+evRes.length+artRes.length;
     var out='';
+
     if(total===0){
-      out='<div style="padding:16px;text-align:center;font-size:13px;color:#9CA3AF;">No results for <strong>'+query+'</strong><br><small>Try a business name, "caterer", "makeup artist"</small></div>';
+      out='<div style="padding:16px;text-align:center;font-size:13px;color:#9CA3AF;">No results for <strong>'+query+'</strong><br><small>Try a business name or category</small></div>';
     } else {
+
+      // Design 3 — pill tags inline, all in one list
       if(topBiz.length){
-        out+='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;">🏢 BUSINESSES</div>';
         topBiz.forEach(function(b){
-          var wa=b.wa?'<a href="https://wa.me/'+b.wa.replace(/[^0-9]/g,'')+'" target="_blank" style="color:#25D366;font-size:11px;font-weight:700;text-decoration:none;margin-right:8px;">💬 WhatsApp</a>':'';
-          out+='<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;">'+(b.verified?'<span style="background:#057A44;color:white;font-size:9px;padding:1px 5px;border-radius:6px;">✅ VERIFIED</span> ':'')+'<strong style="font-size:13px;color:#0F1E36;">'+b.name+'</strong><br><span style="font-size:11px;color:#9CA3AF;">'+(b.cat||'')+' · '+(b.loc||'UK')+'</span><br><div style="margin-top:4px;">'+wa+'<a href="/biz/'+b.slug+'" onclick="event.preventDefault();window._tobiNav('+JSON.stringify(b.slug)+')" style="color:#057A44;font-size:11px;font-weight:700;text-decoration:none;">View →</a></div></div>';
+          var badge = b.verified
+            ? '<span style="display:inline-block;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-bottom:5px;background:#f0faf5;color:#057A44;">Business ✅</span>'
+            : '<span style="display:inline-block;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-bottom:5px;background:#f0faf5;color:#057A44;">Business</span>';
+          out+='<div onclick="hideTobiSearchResults();tobiOpenBiz(\''+b.slug+'\')" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:0.5px solid #f0f0f0;cursor:pointer;" onmouseenter="this.style.background=\'#f9f9f9\'" onmouseleave="this.style.background=\'\'">'
+            +'<div style="flex:1;min-width:0;">'
+            +badge
+            +'<p style="margin:0;font-size:13px;font-weight:500;color:#0F1E36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+b.name+'</p>'
+            +'<p style="margin:0;font-size:11px;color:#9CA3AF;">'+(b.cat||'')+' · '+(b.loc||'UK')+'</p>'
+            +'</div>'
+            +'<span style="color:#057A44;font-size:11px;font-weight:500;flex-shrink:0;padding-top:18px;">View →</span>'
+            +'</div>';
         });
       }
+
       if(evRes.length){
-        out+='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;">🎉 EVENTS</div>';
-        evRes.forEach(function(e){out+='<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;"><strong style="font-size:13px;color:#0F1E36;">'+(e.emoji||'🎉')+' '+e.title+'</strong><br><span style="font-size:11px;color:#9CA3AF;">📅 '+e.date+' · 📍 '+e.loc+'</span></div>';});
+        evRes.forEach(function(e){
+          out+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:0.5px solid #f0f0f0;">'
+            +'<div style="flex:1;min-width:0;">'
+            +'<span style="display:inline-block;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-bottom:5px;background:#f0f0ff;color:#5555cc;">Event</span>'
+            +'<p style="margin:0;font-size:13px;font-weight:500;color:#0F1E36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(e.emoji||'🎉')+' '+e.title+'</p>'
+            +'<p style="margin:0;font-size:11px;color:#9CA3AF;">📅 '+e.date+' · 📍 '+e.loc+'</p>'
+            +'</div></div>';
+        });
       }
+
       if(artRes.length){
-        out+='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;">📰 ARTICLES</div>';
-        artRes.forEach(function(p){out+='<div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;"><strong style="font-size:13px;color:#0F1E36;">'+p.title+'</strong><br><span style="font-size:11px;color:#9CA3AF;">'+(p.label||'News')+'</span></div>';});
+        artRes.forEach(function(p){
+          out+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:0.5px solid #f0f0f0;">'
+            +'<div style="flex:1;min-width:0;">'
+            +'<span style="display:inline-block;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-bottom:5px;background:#fff8f0;color:#cc6600;">Article</span>'
+            +'<p style="margin:0;font-size:13px;font-weight:500;color:#0F1E36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.title+'</p>'
+            +'<p style="margin:0;font-size:11px;color:#9CA3AF;">'+(p.label||'News')+' · '+(p.date||'')+'</p>'
+            +'</div>'
+            +'<span style="color:#cc6600;font-size:11px;font-weight:500;flex-shrink:0;padding-top:18px;">Read →</span>'
+            +'</div>';
+        });
       }
-      out+='<div style="padding:8px;text-align:center;"><button onclick="window.hideTobiSearchResults()" style="background:none;border:none;color:#9CA3AF;font-size:12px;cursor:pointer;">✕ Close</button></div>';
+
+      out+='<div style="padding:8px 12px;text-align:center;"><button onclick="window.hideTobiSearchResults()" style="background:none;border:none;color:#9CA3AF;font-size:12px;cursor:pointer;font-family:inherit;">✕ Close</button></div>';
     }
+
     el.innerHTML=out;
     var r=inp.getBoundingClientRect();
     el.style.top=(r.bottom+2)+'px';
@@ -8242,6 +8271,7 @@ window.addEventListener('load', () => {
     window.hideTobiSearchResults();
   });
 })();
+
 </script>
 <script>
 document.addEventListener('click',function(e){
