@@ -6255,10 +6255,6 @@ function _renderNotifBanner(notif) {
 
 // ===== CANONICAL EVENTS LIST — single source of truth =====
 const ALL_EVENTS = [
-  { emoji:'🇳🇬', title:'9ja Fayre 2026 — Edinburgh', summary:'The biggest Nigerian fair in Edinburgh! Nigerian food, fashion and culture in Scotland.', date:'25 Jul 2026', dateObj:new Date(2026,6,25), loc:'Edinburgh', time:'Sat 25 Jul, All day', url:'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!' },
-  { emoji:'🛍️', title:'Deshapeables UK Tradefair London', summary:'Free community shopping event. Yeomanry House, London. 10AM–6PM.', date:'25 Jul 2026', dateObj:new Date(2026,6,25), loc:'Yeomanry House, London', time:'Sat 25 Jul, 10AM–6PM | Free', url:'https://auntietobi.com/blog/Deshapeables-UK-Tradefair-London' },
-  { emoji:'🌶️', title:'Suya Fest Birmingham 2026', summary:'The ultimate outdoor suya experience returns to Birmingham. 3PM–9PM.', date:'1 Aug 2026', dateObj:new Date(2026,7,1), loc:'Birmingham', time:'Sat 1 Aug, 3PM–9PM', url:'https://auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns' },
-  { emoji:'🇳🇬', title:'9ja Fayre 2026 — Manchester', summary:'The final stop of the 9ja Fayre UK tour! Nigerian food, fashion and music in Manchester.', date:'1 Aug 2026', dateObj:new Date(2026,7,1), loc:'Manchester', time:'Sat 1 Aug, All day', url:'https://auntietobi.com/blog/9ja-Fayre-2026-Is-Coming-to-Three-UK-Cities-This-Summer!' },
   { emoji:'🎉', title:'Nigerian Cultural Festival 2026 — Plymouth', summary:'Celebrating Nigerian food, music, fashion and culture. 11:30AM–9PM.', date:'8 Aug 2026', dateObj:new Date(2026,7,8), loc:'Plymouth', time:'Sat 8 Aug, 11:30AM–9PM', url:"https://auntietobi.com/blog/Nigerian-Cultural-Festival-2026-Is-Coming-to-Plymouth-Here's-Everything-You-Need-to-Know" },
   { emoji:'🛍️', title:'Trade & Taste Trade Fair Kettering 2026', summary:'Free community shopping and networking event. Corn Market Hall, Kettering NN15 7QA. 10AM–5PM. Free entry.', date:'22 Aug 2026', dateObj:new Date(2026,7,22), loc:'Corn Market Hall, Kettering', time:'Sat 22 Aug, 10AM–5PM | Free', url:'https://auntietobi.com/blog/Trade-and-Taste-Trade-Fair-Kettering-2026:-Free-Community-Shopping-and-Networking-Event' },
   { emoji:'⚽', title:'NSF UK Sports and Family Fun Day 2026', summary:'Sports and family activities at Newham Leisure Centre, London. From 12PM.', date:'29 Aug 2026', dateObj:new Date(2026,7,29), loc:'Newham Leisure Centre, London', time:'Sat 29 Aug, from 12PM', url:'https://auntietobi.com/blog/NSF-(UK)-Sports-and-Family-Fun-Day-2026' },
@@ -8205,14 +8201,20 @@ function tobiOpenBiz(slug){window.open('https://auntietobi.com/listing/'+slug,'_
     var topBiz=bizResults.slice(0,5).map(function(x){return x.b;});
 
     var today=new Date();today.setHours(0,0,0,0);
+    var liveBlogEvents=(window._liveBlogPosts||[]).filter(function(p){
+      if(p.label!=='Events')return false;
+      var t=((p.title||'')+(p.summary||'')).toLowerCase();
+      return words.some(function(w){return t.indexOf(w)!==-1;});
+    }).map(function(p){return {title:p.title,date:p.date||'',loc:'',emoji:'🎉',appUrl:p.appUrl||p.url||'',dateObj:new Date(p.pubDate||0)};});
     var evRes=(typeof ALL_EVENTS!=='undefined'?ALL_EVENTS:[]).filter(function(e){
       if(e.dateObj<today)return false;
       var t=((e.title||'')+(e.summary||'')+(e.loc||'')).toLowerCase();
       return words.some(function(w){return t.indexOf(w)!==-1;});
     }).slice(0,3);
+    evRes=evRes.concat(liveBlogEvents).slice(0,3);
 
     var artRes=[];
-    try{artRes=(window._liveBlogPosts||[]).filter(function(p){var t=((p.title||'')+(p.summary||'')).toLowerCase();return words.some(function(w){return t.indexOf(w)!==-1;});}).slice(0,3);}catch(e){}
+    try{artRes=(window._liveBlogPosts||[]).filter(function(p){if(p.label==='Events')return false;var t=((p.title||'')+(p.summary||'')).toLowerCase();return words.some(function(w){return t.indexOf(w)!==-1;});}).slice(0,3);}catch(e){}
 
     var total=topBiz.length+evRes.length+artRes.length;
     var out='';
