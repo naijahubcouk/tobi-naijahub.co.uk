@@ -2318,6 +2318,13 @@ async function sendMessage(text) {
   addMessage('user', userText);
   messages.push({ role: 'user', content: userText });
 
+  // Shortcut: event questions → show events card directly (avoids AI timeout)
+  if (/\bevent[s]?\b|what.*happening|what.*on\b|upcoming|coming up/i.test(userText) && !/find.*business|caterer|food|makeup|beauty/i.test(userText)) {
+    removeTyping(); isLoading = false; document.getElementById('sendBtn').disabled = false;
+    showEventsCard();
+    return;
+  }
+
   showTyping();
 
   // ============================================
