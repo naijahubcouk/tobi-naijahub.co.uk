@@ -1,5 +1,6 @@
 [build]
   functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
 
 [functions]
   node_bundler = "esbuild"
@@ -53,3 +54,7 @@
 
 [functions."sync-directory"]
   schedule = "0 */2 * * *"
+
+[[edge_functions]]
+  function = "biz-og"
+  path = "/biz/*"
