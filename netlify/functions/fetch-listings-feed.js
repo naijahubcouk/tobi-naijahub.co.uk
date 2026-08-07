@@ -1,4 +1,4 @@
-// Netlify function — fetches auntietobi.com/feed/listings RSS and returns clean JSON
+// Netlify function — fetches live business listings from auntietobi.com
 const https = require('https');
 const http = require('http');
 
@@ -11,8 +11,7 @@ function fetchUrl(url) {
     const req = lib.get(url, {
       headers: {
         'User-Agent': 'AuntieTobi-App/1.0',
-        'Accept': 'application/rss+xml, application/xml, text/xml',
-        'Accept-Encoding': 'identity',
+        'Accept': 'application/rss+xml, application/xml, text/xml, application/json, */*',
       }
     }, (res) => {
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
@@ -20,11 +19,11 @@ function fetchUrl(url) {
       }
       let data = '';
       res.setEncoding('utf8');
-      res.on('data', chunk => { if (data.length < 1000000) data += chunk; });
-      res.on('end', () => resolve({ status: res.statusCode, body: data }));
+      res.on('data', chunk => { if (data.length < 2000000) data += chunk; });
+      res.on('end', () => resolve({ status: res.statusCode, body: data, contentType: res.headers['content-type'] || '' }));
     });
     req.on('error', reject);
-    req.setTimeout(15000, () => { req.destroy(); reject(new Error('Timeout')); });
+    req.setTimeout(20000, () => { req.destroy(); reject(new Error('Timeout fetching ' + url)); });
   });
 }
 
@@ -32,7 +31,7 @@ function getTag(xml, tag) {
   const m = xml.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>`, 'i'))
     || xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i'));
   if (!m) return '';
-  return m[1].replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim();
+  return m[1].replace(/<!\\[CDATA\\[/g, '').replace(/\\]\\]>/g, '').trim();
 }
 
 function getAllTags(xml, tag) {
@@ -44,27 +43,36 @@ function getAllTags(xml, tag) {
 }
 
 function cleanText(str) {
-  return str.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&[a-z]+;/g, ' ').trim();
+  return str.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&[a-z]+;/gi, ' ').trim();
 }
 
-function extractPhone(str) {
-  const m = str.match(/(\+44|0044|07|01|02)\d{8,10}/);
-  return m ? m[0] : '';
+function inferCat(name, desc) {
+  const text = (name + ' ' + desc).toLowerCase();
+  if (/makeup|mua|glam|beauty studio|microblad|lash|brow/.test(text)) return 'makeup artists';
+  if (/gele|auto gele/.test(text)) return 'gele stylists';
+  if (/wig|hair extension|braider|braiding|natural hair/.test(text)) return 'wig vendors';
+  if (/caterer|catering|jollof|suya|small chops|puff puff|nigerian food|african food|cook|kitchen|chef/.test(text)) return 'caterers';
+  if (/cake|pastry|bakery|dessert|chin chin|meat pie/.test(text)) return 'cakes & desserts';
+  if (/restaurant|bukka|dining|eatery/.test(text)) return 'restaurants';
+  if (/grocery|groceries|foodstore|african store|naija store|palm oil|stockfish|frozen food/.test(text)) return 'foodstores & groceries';
+  if (/fashion|clothing|ankara|fabric|dress|wear|tailor|seamstress/.test(text)) return 'fashion & accessories';
+  if (/photographer|photography|videographer/.test(text)) return 'photography';
+  if (/event plan|decorator|decor|wedding plan/.test(text)) return 'event planners';
+  if (/dj|sound hire/.test(text)) return 'djs';
+  if (/skincare|skin care|body care/.test(text)) return 'skincare';
+  if (/solicitor|lawyer|legal|immigration/.test(text)) return 'solicitors';
+  if (/accountant|tax|financial/.test(text)) return 'accountants';
+  if (/tutor|education|academy|coaching/.test(text)) return 'tutors';
+  if (/transport|courier|delivery|logistics|driver/.test(text)) return 'transport';
+  if (/cleaner|cleaning|domestic/.test(text)) return 'cleaning services';
+  if (/church|ministry|pastor|gospel/.test(text)) return 'churches';
+  return 'nigerian business';
 }
 
-function extractWA(str) {
-  const m = str.match(/wa\.me\/(\d+)|whatsapp.*?(\d{10,13})/i);
-  return m ? (m[1] || m[2]) : '';
-}
-
-function extractIG(str) {
-  const m = str.match(/instagram\.com\/([^/"'\s]+)/i);
-  return m ? `https://instagram.com/${m[1]}` : '';
-}
-
-function parseListingsRSS(xml) {
+function parseRSS(xml) {
   const businesses = [];
   const itemBlocks = xml.split('<item>').slice(1);
+  console.log(`[listings] Parsing ${itemBlocks.length} RSS items`);
 
   for (const block of itemBlocks) {
     const end = block.indexOf('</item>');
@@ -73,71 +81,30 @@ function parseListingsRSS(xml) {
     const name = cleanText(getTag(item, 'title'));
     const link = getTag(item, 'link') || getTag(item, 'guid');
     const description = cleanText(getTag(item, 'description'));
-    const categories = getAllTags(item, 'category').map(cleanText);
+    const categories = getAllTags(item, 'category').map(cleanText).filter(Boolean);
 
-    // Extract slug from URL
-    const slug = link.split('/listing/')[1]?.replace(/\/$/, '') || link.split('/').pop() || '';
-
+    const slug = (link.split('/listing/')[1] || link.split('/').pop() || '').replace(/\/$/, '');
     if (!name || !slug) continue;
 
-    // Parse category — infer from description/name if RSS returns generic value
-    let cat = categories[0] || '';
-    const section = categories[1] || categories[0] || 'business';
-
-    // If category is generic or empty, infer from name+description
-    const genericCats = ['general', 'business', 'listing', ''];
-    if (genericCats.includes(cat.toLowerCase())) {
-      const text = (name + ' ' + description).toLowerCase();
-      if (/makeup|mua|glam|beauty studio|microblad|lash|brow/.test(text)) cat = 'makeup artists';
-      else if (/gele|auto gele/.test(text)) cat = 'gele stylists';
-      else if (/wig|hair extension|braider|braiding|loc specialist|natural hair/.test(text)) cat = 'wig vendors';
-      else if (/caterer|catering|jollof|suya|small chops|puff puff|nigerian food|african food|cook|kitchen/.test(text)) cat = 'caterers';
-      else if (/cake|pastry|bakery|dessert/.test(text)) cat = 'cakes & desserts';
-      else if (/restaurant|bukka|dining|eatery/.test(text)) cat = 'restaurants';
-      else if (/grocery|groceries|foodstore|african store|naija store|palm oil|stockfish/.test(text)) cat = 'foodstores & groceries';
-      else if (/fashion|clothing|outfit|ankara|fabric|lace|dress|wear/.test(text)) cat = 'fashion & accessories';
-      else if (/photographer|photography|videographer/.test(text)) cat = 'photography';
-      else if (/event plan|decorator|decor|wedding plan/.test(text)) cat = 'event planners';
-      else if (/dj|sound hire|music/.test(text)) cat = 'djs';
-      else if (/skincare|skin care|body care/.test(text)) cat = 'skincare';
-      else if (/jewel|accessories|necklace|bracelet/.test(text)) cat = 'fashion & accessories';
-      else if (/tutor|education|academy|school/.test(text)) cat = 'tutors';
-      else if (/snack|kilishi|suya spot/.test(text)) cat = 'nigerian snacks';
-      else cat = 'nigerian business';
+    let cat = categories.length > 0 ? categories[categories.length - 1].toLowerCase() : '';
+    if (!cat || ['general','business','listing','uncategorized'].includes(cat)) {
+      cat = inferCat(name, description);
     }
 
-    // Try to extract contact info from description
-    const phone = extractPhone(description);
-    const wa = extractWA(description);
-    const ig = extractIG(description);
-
-    // Extract location — look for location-related content
-    const locMatch = description.match(/(?:located|based|serving|location)[^.]*?([A-Z][a-zA-Z\s]+(?:UK|London|Birmingham|Manchester|Bristol|Leeds|Sheffield|Liverpool|Nottingham|Coventry|Leicester|Norwich|Reading|Oxford|Cambridge|Southampton|Cardiff|Glasgow|Edinburgh|Belfast))/i);
-    const loc = locMatch ? locMatch[1].trim() : 'UK';
-
-    // Keywords from name and category
-    const keywords = [...new Set([
-      cat.toLowerCase(),
-      section.toLowerCase().split(' ')[0],
-      name.toLowerCase().split(' ')[0],
-    ].filter(Boolean))];
+    // Location from description
+    const locMatch = description.match(/(?:based in|located in|serving|covering)\s+([A-Z][a-zA-Z\s,]+?)(?:\.|,|\s+UK)/i);
+    const loc = locMatch ? locMatch[1].trim() + ', UK' : 'UK';
 
     businesses.push({
       name,
       slug,
-      cat: cat.toLowerCase(),
-      section: section.toLowerCase(),
+      cat,
       loc,
-      desc: description.substring(0, 150),
-      keywords,
-      phone,
-      wa,
-      ig,
-      website: '',
-      verified: false, // RSS doesn't expose verified status — keep false by default
+      desc: description.substring(0, 200),
+      keywords: [cat.split(' ')[0]],
+      verified: false,
     });
   }
-
   return businesses;
 }
 
@@ -149,21 +116,51 @@ exports.handler = async (event) => {
   };
 
   try {
+    // Return cache if fresh
     if (cache.data && Date.now() - cache.ts < CACHE_TTL) {
       return { statusCode: 200, headers, body: JSON.stringify({ businesses: cache.data, cached: true, count: cache.data.length }) };
     }
 
-    const { body } = await fetchUrl('https://auntietobi.com/feed/listings');
-    const businesses = parseListingsRSS(body);
+    // Try multiple feed URLs
+    const feedUrls = [
+      'https://auntietobi.com/feed/listings',
+      'https://www.auntietobi.com/feed/listings',
+      'https://auntietobi.com/api/listings',
+      'https://auntietobi.com/listings?format=rss',
+    ];
+
+    let businesses = [];
+    let successUrl = null;
+
+    for (const url of feedUrls) {
+      try {
+        console.log(`[listings] Trying: ${url}`);
+        const result = await fetchUrl(url);
+        console.log(`[listings] ${url} → status ${result.status}, length ${result.body.length}`);
+
+        if (result.status === 200 && result.body.includes('<item>')) {
+          businesses = parseRSS(result.body);
+          successUrl = url;
+          console.log(`[listings] ✅ Parsed ${businesses.length} businesses from ${url}`);
+          break;
+        } else {
+          console.log(`[listings] ❌ ${url}: status=${result.status}, has items=${result.body.includes('<item>')}, preview=${result.body.substring(0,100)}`);
+        }
+      } catch(e) {
+        console.log(`[listings] ❌ ${url}: ${e.message}`);
+      }
+    }
+
+    if (businesses.length === 0) {
+      console.log('[listings] No businesses found from any feed URL');
+      return { statusCode: 200, headers, body: JSON.stringify({ businesses: [], cached: false, count: 0, error: 'No feed available' }) };
+    }
 
     cache = { data: businesses, ts: Date.now() };
+    return { statusCode: 200, headers, body: JSON.stringify({ businesses, cached: false, count: businesses.length, source: successUrl }) };
 
-    return { statusCode: 200, headers, body: JSON.stringify({ businesses, cached: false, count: businesses.length }) };
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: err.message, businesses: [] })
-    };
+    console.log('[listings] Fatal error:', err.message);
+    return { statusCode: 200, headers, body: JSON.stringify({ error: err.message, businesses: [], cached: false }) };
   }
 };
