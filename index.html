@@ -2659,6 +2659,7 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
         // Follow-up bubbles
         setTimeout(() => {
           const nearQuery = currentCity ? `Find more ${bizType}s near ${currentCity}` : `Show me more ${bizType}s in the UK`;
+          window._lastBizSearch = nearQuery;
           addTipMessage(`<div class="suggestions" style="margin-top:8px;">
             <button class="suggestion-btn" onclick="quickAsk('${nearQuery.replace(/'/g,"\\'")}')">🔍 More ${bizType}s</button>
             <button class="suggestion-btn" onclick="showBusinesses()">🏢 Browse all businesses</button>
