@@ -2318,6 +2318,9 @@ async function sendMessage(text) {
   addMessage('user', userText);
   messages.push({ role: 'user', content: userText });
 
+  // Reset page context so BIZ_JSON cards always render in chat
+  window._currentPage = 'home';
+
   // Shortcut: event questions → show events card directly (avoids AI timeout)
   if (/\bevent[s]?\b|what.*happening|what.*on\b|upcoming|coming up/i.test(userText) && !/find.*business|caterer|food|makeup|beauty/i.test(userText)) {
     removeTyping(); isLoading = false; document.getElementById('sendBtn').disabled = false;
