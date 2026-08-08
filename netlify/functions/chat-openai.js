@@ -700,7 +700,7 @@ var _DIR = "W3sic2x1ZyI6ICJldmVudHNieWtrbGFyZ2Vzc2UiLCAibmFtZSI6ICJFdmVudHNieWtr
 "ZW1hZGUgY29tZm9ydCBmb29kIG1hZGUgd2l0aCBjYXJlLCBmcm9tIGZyZXNobHkgYmFrZWQgYmFu"+
 "YW5hIGJyZWFkIHRvIGhlYXJ0eSB3cmFwcyBhbmQgd2FybSBtZWFscywgY3JhZnRlZCBmb3Igcmlj"+
 "aCBmbGF2b3VyIGFuZCBzYXRpc2ZhY3Rpb24uIiwgInZlcmlmaWVkIjogZmFsc2V9XQ=="
-var SYSTEM_PROMPT = Buffer.from(_SP, 'base64').toString('utf8');;
+var SYSTEM_PROMPT = Buffer.from(_SP, 'base64').toString('utf8');
 var HARDCODED_DIRECTORY = JSON.parse(Buffer.from(_DIR, 'base64').toString('utf8'));
 
 var _dirCache = { data: null, ts: 0 };
