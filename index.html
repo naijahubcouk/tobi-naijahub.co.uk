@@ -1971,10 +1971,15 @@ function formatResponse(text) {
 
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '|||BIZ_CARDS|||' + cardsHTML + '|||END_BIZ|||');
 
-        // If not on businesses page, add a listing prompt bubble
-        if (window._currentPage !== 'businesses') {
-          // Let AI suggestions handle the follow-up bubbles
-        }
+        // Inject hardcoded suggestion buttons after business cards (not AI-generated)
+        const lastQuery = window._lastBizQuery || '';
+        const moreLabel = lastQuery ? `🔍 More results` : '🔍 More businesses';
+        const suggHTML = `<div class="suggestions" style="margin-top:10px;">
+          <button class="suggestion-btn" onclick="quickAsk('${lastQuery.replace(/'/g,"\\'")}')"> ${moreLabel}</button>
+          <button class="suggestion-btn" onclick="showBusinesses()">🏢 Browse directory</button>
+          <button class="suggestion-btn" onclick="quickAsk('List your business free')">➕ List a business</button>
+        </div>`;
+        text = text.replace('|||END_BIZ|||', '|||END_BIZ|||' + suggHTML);
       } catch(e) {
         console.error('BIZ_JSON parse error:', e.message, bizMatch[1].substring(0,100));
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '');
@@ -2320,6 +2325,7 @@ async function sendMessage(text) {
 
   // Reset page context so BIZ_JSON cards always render in chat
   window._currentPage = 'home';
+  window._lastBizQuery = userText; // Store for "More results" button
 
   // Shortcut: event questions → show events card directly (avoids AI timeout)
   if (/\bevent[s]?\b|what.*happening|what.*on\b|upcoming|coming up/i.test(userText) && !/find.*business|caterer|food|makeup|beauty/i.test(userText)) {
@@ -2572,7 +2578,11 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
     }
     // Unescape any unicode escape sequences in reply
     try { reply = reply.replace(/\\u([0-9a-fA-F]{4})/g, (m,c) => String.fromCharCode(parseInt(c,16))); } catch(e) {}
+    // Strip system tags that should never appear in output
     reply = reply.replace(/\[SEARCH_SCOPE:[^\]]*\]/g, '').trim();
+    reply = reply.replace(/\[SUGGESTIONS:[\s\S]*?\]/g, '').trim();
+    reply = reply.replace(/\[OPTION_[A-E]:[\s\S]*?\]/g, '').trim();
+    reply = reply.replace(/BUSINESS_CARDS_HTML:[\s\S]*?END_BUSINESS_CARDS/g, '').trim();
 
     // Store clean version in history (strip BIZ_JSON block so it doesn't confuse AI on next turn)
     const replyForHistory = reply.replace(/<<<BIZ_JSON:[\s\S]*?>>>/g, '').trim();
