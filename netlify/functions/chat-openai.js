@@ -36,33 +36,69 @@ function getIntentGroup(query) {
   return null;
 }
 
-function searchBusinessesByIntent(query, limit, directory) {
+function searchBusinessesByIntent(query, limit, directory, userCity) {
   limit = limit || 6;
   var intentGroup = getIntentGroup(query);
   var groupCats = intentGroup ? INTENT_GROUPS[intentGroup] : null;
 
-  // Extract city
-  var ukCities = ['london','birmingham','manchester','leeds','bristol','sheffield','liverpool','nottingham','coventry','leicester','edinburgh','glasgow','cardiff','belfast','newcastle','brighton','reading','oxford','cambridge','southampton','portsmouth','wolverhampton','bradford','derby','exeter','hull','luton','peterborough','stoke','sunderland','basildon','laindon','kent','surrey','norwich','colchester','chelmsford','basingstoke','southend','york','worcester','bath','bournemouth','maidstone','northampton','wakefield','sittingbourne'];
+  // Extract city from query OR fall back to userCity
+  var ukCities = ['london','birmingham','manchester','leeds','bristol','sheffield','liverpool','nottingham','coventry','leicester','edinburgh','glasgow','cardiff','belfast','newcastle','brighton','reading','oxford','cambridge','southampton','portsmouth','wolverhampton','bradford','derby','exeter','hull','luton','peterborough','stoke','sunderland','basildon','laindon','kent','surrey','norwich','colchester','chelmsford','basingstoke','southend','york','worcester','bath','bournemouth','maidstone','northampton','wakefield','sittingbourne','ipswich','folkestone','tonbridge','swansea'];
   var queryLoc = null;
   var queryL = query.toLowerCase();
   ukCities.forEach(function(city) { if (queryL.indexOf(city) !== -1) queryLoc = city; });
+  // Use userCity if no city in query
+  var proximityCity = queryLoc || userCity || null;
+
+  // UK region proximity groups for sorting when no local match
+  var regionGroups = {
+    london:       ['london','essex','kent','surrey','hertfordshire','middlesex','croydon','romford','ilford','barking','stratford','brixton','peckham','woolwich','enfield','hackney','islington','lewisham','southwark','lambeth','greenwich','newham','walthamstow','tottenham','harrow','uxbridge','slough','watford','luton','basildon','laindon','southend','chelmsford','colchester','maidstone','tonbridge','folkestone'],
+    midlands:     ['birmingham','coventry','leicester','nottingham','derby','wolverhampton','walsall','dudley','solihull','stoke','northampton','worcester','hereford'],
+    northwest:    ['manchester','liverpool','leeds','sheffield','bradford','bolton','oldham','salford','stockport','wigan','blackpool','preston','blackburn','rochdale','wakefield'],
+    northeast:    ['newcastle','sunderland','middlesbrough','hull','york','harrogate','ripon'],
+    southwest:    ['bristol','bath','exeter','plymouth','bournemouth','swindon','gloucester','taunton','torquay'],
+    southeast:    ['brighton','reading','oxford','southampton','portsmouth','guildford','worthing','hastings','eastbourne'],
+    scotland:     ['glasgow','edinburgh','aberdeen','dundee','inverness'],
+    wales:        ['cardiff','swansea','newport','wrexham'],
+  };
+
+  function getUserRegion(city) {
+    if (!city) return null;
+    var c = city.toLowerCase();
+    for (var reg in regionGroups) {
+      if (regionGroups[reg].some(function(r){ return c.indexOf(r)!==-1 || r.indexOf(c)!==-1; })) return reg;
+    }
+    return null;
+  }
+
+  function getBizRegion(b) {
+    var loc = (b.loc||'').toLowerCase();
+    for (var reg in regionGroups) {
+      if (regionGroups[reg].some(function(r){ return loc.indexOf(r)!==-1; })) return reg;
+    }
+    return null;
+  }
+
+  var userRegion = getUserRegion(proximityCity);
 
   function scoreBiz(b) {
-    var nameL = (b.name||'').toLowerCase();
     var catL = (b.cat||'').toLowerCase();
     var locL = (b.loc||'').toLowerCase();
     var kwStr = (b.keywords||[]).join(' ').toLowerCase();
     var score = 0;
 
-    // Intent group match — business must be in the right category group
+    // Must be in right category group
     if (groupCats) {
-      var inGroup = groupCats.some(function(gc) { return catL.indexOf(gc) !== -1 || kwStr.indexOf(gc) !== -1; });
-      if (!inGroup) return 0; // Exclude entirely if not in right category
-      score += 30; // Base score for being in the right group
+      var inGroup = groupCats.some(function(gc){ return catL.indexOf(gc)!==-1||kwStr.indexOf(gc)!==-1; });
+      if (!inGroup) return 0;
+      score += 30;
     }
 
-    // Location match
-    if (queryLoc && locL.indexOf(queryLoc) !== -1) score += 25;
+    // Exact city match in query
+    if (queryLoc && locL.indexOf(queryLoc)!==-1) score += 40;
+    // User's city match
+    else if (proximityCity && locL.indexOf(proximityCity)!==-1) score += 35;
+    // Same region as user
+    else if (userRegion && getBizRegion(b)===userRegion) score += 15;
 
     // Verified bonus
     if (b.verified) score += 10;
@@ -70,13 +106,22 @@ function searchBusinessesByIntent(query, limit, directory) {
     return score;
   }
 
-  var results = directory.map(function(b) {
+  var scored = directory.map(function(b){
     return Object.assign({}, b, { score: scoreBiz(b) });
-  }).filter(function(b) { return b.score > 0; })
-    .sort(function(a, b) { return b.score - a.score; })
-    .slice(0, limit);
+  }).filter(function(b){ return b.score > 0; })
+    .sort(function(a,b){ return b.score - a.score; });
 
-  return { results: results, scope: queryLoc ? 'local' : 'uk', city: queryLoc, intentGroup: intentGroup };
+  // Determine scope
+  var hasLocal = scored.some(function(b){
+    var locL = (b.loc||'').toLowerCase();
+    return proximityCity && locL.indexOf(proximityCity)!==-1;
+  });
+  var hasRegional = scored.some(function(b){ return getBizRegion(b)===userRegion; });
+
+  var scope = hasLocal ? 'local' : (hasRegional ? 'regional' : 'uk');
+  var city = queryLoc || proximityCity || null;
+
+  return { results: scored.slice(0, limit), scope: scope, city: city, intentGroup: intentGroup };
 }
 // ── END INTENT SEARCH ────────────────────────────────────────────────────
 
@@ -171,7 +216,7 @@ function searchBusinesses(query,limit,directory){
   return{results:[],scope:'uk',city:queryLoc};
 }
 
-function formatBusinessContext(businesses,scope,city){if(!businesses.length)return'';var bizData=businesses.map(function(b){return{slug:b.slug,name:b.name,cat:b.cat||'',loc:b.loc||'UK',desc:b.desc?b.desc.substring(0,100):'',verified:b.verified||false,wa:b.wa||'',phone:b.phone||''};});var scopeNote=scope==='local'&&city?'\n[SEARCH_SCOPE: Found '+businesses.length+' businesses near '+city+'.]':'\n[SEARCH_SCOPE: No businesses found locally in '+(city||'users city')+' - showing UK-wide. Tell user warmly we do not have any in their city yet but these serve UK wide.]';return'\n\n<<<BIZ_JSON:'+JSON.stringify(bizData)+'>>>'+scopeNote;}
+function formatBusinessContext(businesses,scope,city){if(!businesses.length)return'';var bizData=businesses.map(function(b){return{slug:b.slug,name:b.name,cat:b.cat||'',loc:b.loc||'UK',desc:b.desc?b.desc.substring(0,100):'',verified:b.verified||false,wa:b.wa||'',phone:b.phone||''};});var scopeNote=scope==='local'&&city?'\n[SEARCH_SCOPE: Found '+businesses.length+' businesses near '+city+'.]':scope==='regional'&&city?'\n[SEARCH_SCOPE: No businesses found in '+city+' — showing nearest ones by region. Tell user warmly we found these nearby.]':'\n[SEARCH_SCOPE: No businesses found locally in '+(city||'users city')+' — showing UK-wide. Tell user warmly we do not have any in their city yet but these serve UK wide.]';return'\n\n<<<BIZ_JSON:'+JSON.stringify(bizData)+'>>>'+scopeNote;}
 
 async function getDirectory() {
   console.log('[chat] Directory: ' + HARDCODED_DIRECTORY.length + ' businesses');
@@ -180,12 +225,11 @@ async function getDirectory() {
 
 
 exports.handler=async function(event){if(event.httpMethod==='OPTIONS'){return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'POST, OPTIONS'},body:''};} if(event.httpMethod==='GET'){var k=process.env.OPENROUTER_API_KEY;return{statusCode:200,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'},body:JSON.stringify({status:'ok',hasApiKey:!!k,hardcoded:HARDCODED_DIRECTORY.length})};}
-try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);var wordCount=lastMessage.trim().split(/\s+/).length;var isNounSearch=wordCount<=6&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help|Hi|Hello|Hey)/i.test(lastMessage.trim())&&!/[?.!]/.test(lastMessage.trim());var isGenericQuestion=/^(can|will|how|what|is|are|do|does|when|where|why|should|would|could|if |please|tell|help)/i.test(lastMessage.trim());
+try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];var userCity=(body.userCity||'').toLowerCase().trim();var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);var wordCount=lastMessage.trim().split(/\s+/).length;var isNounSearch=wordCount<=6&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help|Hi|Hello|Hey)/i.test(lastMessage.trim())&&!/[?.!]/.test(lastMessage.trim());var isGenericQuestion=/^(can|will|how|what|is|are|do|does|when|where|why|should|would|could|if |please|tell|help)/i.test(lastMessage.trim());
     var shouldSearch=!isShortGreeting&&!isGenericQuestion&&(bizKeywords||isNounSearch||(wordCount>=2&&wordCount<=8));
     // For noun searches, boost score of exact name matches so they always appear
-    var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();var searchLimit=6;var sr=searchBusinessesByIntent(lastMessage,searchLimit,directory);
-// Fall back to keyword search if intent search returns nothing
-if(sr.results.length===0){sr=searchBusinesses(lastMessage,searchLimit,directory);}// For short noun searches (likely business names), filter to strong matches only
+    var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();var searchLimit=6;var sr=searchBusinessesByIntent(lastMessage,searchLimit,directory,userCity);// Fall back to keyword search if intent search returns nothing
+if(sr.results.length===0){sr=searchBusinesses(lastMessage,searchLimit,directory,userCity);}// For short noun searches (likely business names), filter to strong matches only
 // For any short noun search, filter to name-matching results only
 if(isNounSearch&&sr.results.length>0){
   const qClean=lastMessage.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim();
