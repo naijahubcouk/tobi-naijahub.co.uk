@@ -6893,40 +6893,13 @@ function showBusinesses(startIndex) {
   messages = [];
   scrollToTop();
 
-  // ── FEATURED BUSINESSES (rotate on each page load) ──
-  // Only show on first load (startIndex === undefined), not on "Show more"
-  if (startIndex === undefined) {
-    // Pick 1 random business to spotlight — rotates on each pill tap
-    const spotlightPool = allBiz.filter(b => b.slug && b.name);
-    if (spotlightPool.length > 0) {
-      const featuredPick = spotlightPool[Math.floor(Math.random() * spotlightPool.length)];
-      const fCat = featuredPick.cat ? featuredPick.cat.charAt(0).toUpperCase() + featuredPick.cat.slice(1) : '';
-      const fShare = 'https://auntietobi.co.uk/biz/' + featuredPick.slug;
-      const fName = featuredPick.name.replace(/['"]/g, '');
-      const fWa = (featuredPick.wa) ? '<a href="https://wa.me/' + featuredPick.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
-      const fView = '<a href="/biz/' + featuredPick.slug + '" class="tobi-biz-link" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
-      const fShare_btn = '<button onclick="tobiShare(\'' + fName.replace(/'/g,"\\'") + '\',\'Check out ' + fName.replace(/'/g,"\\'") + ' on Auntie Tobi!\',\'' + fShare + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-      addTipMessage(
-        '<div style="background:linear-gradient(135deg,#0F1E36 0%,#057A44 100%);border-radius:12px;padding:3px;margin-bottom:8px;">'
-        + '<div style="background:white;border-radius:10px;overflow:hidden;">'
-        + '<div style="background:linear-gradient(135deg,#0F1E36 0%,#057A44 100%);padding:6px 14px;display:flex;align-items:center;gap:6px;">'
-        + '<span style="font-size:13px;">⭐</span>'
-        + '<span style="color:#FFB81C;font-size:11px;font-weight:800;letter-spacing:0.05em;">FEATURED BUSINESS</span>'
-        + '</div>'
-        + '<div style="padding:14px;">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
-        + '<div style="font-size:16px;font-weight:800;color:#0F1E36;">' + featuredPick.name + '</div>'
-        + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + fCat + '</span>'
-        + '</div>'
-        + (featuredPick.desc ? '<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:8px;">' + featuredPick.desc.substring(0,120) + (featuredPick.desc.length>120?'...':'') + '</div>' : '')
-        + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (featuredPick.loc||'UK') + '</div>'
-        + '<div style="display:flex;gap:6px;">' + fView + fWa + fShare_btn + '</div>'
-        + '</div></div></div>'
-      );
-    }
-  }
-
   addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>');
+
+  // Sort: verified first, then rest (only on first load)
+  if (startIndex === undefined) {
+    allBiz.sort((a, b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0));
+    shownBusinessIndexes = [];
+  }
 
   page.forEach(b => {
     const cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
@@ -6961,7 +6934,7 @@ function showBusinesses(startIndex) {
 
   const moreLabel = hasMore ? '🏢 Show more businesses' : '🏠 Back to Home';
   const moreAction = hasMore ? `showBusinesses(${shownBusinessIndexes.length})` : 'resetToWelcome()';
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="' + moreAction + '">' + moreLabel + '</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian caterer near me\')">🍛 Find a caterer</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button></div>');
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="' + moreAction + '">' + moreLabel + '</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian hair stylist near me\')">💇 Find a stylist</button></div>');
   messages.push({ role: 'assistant', content: 'Here are Nigerian businesses on Auntie Tobi: ' + page.map(b => b.name).join(', ') });
 }
 
