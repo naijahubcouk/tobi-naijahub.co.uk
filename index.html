@@ -1988,7 +1988,7 @@ function formatResponse(text) {
         const lastQuery = window._lastBizQuery || '';
         const moreLabel = lastQuery ? `🔍 More results` : '🔍 More businesses';
         const suggHTML = `<div class="suggestions" style="margin-top:10px;">
-          <button class="suggestion-btn" onclick="quickAsk('${lastQuery.replace(/'/g,"\\'")}')"> ${moreLabel}</button>
+          <button class="suggestion-btn" onclick="window._searchPage=(window._searchPage||0)+1;quickAsk('${lastQuery.replace(/'/g,"\\'")}')">🔍 More results</button>
           <button class="suggestion-btn" onclick="showBusinesses()">🏢 Browse directory</button>
           <button class="suggestion-btn" onclick="quickAsk('List your business free')">➕ List a business</button>
         </div>`;
@@ -2338,7 +2338,8 @@ async function sendMessage(text) {
 
   // Reset page context so BIZ_JSON cards always render in chat
   window._currentPage = 'home';
-  window._lastBizQuery = userText; // Store for "More results" button
+  window._lastBizQuery = userText;
+  window._searchPage = 0; // reset page on new query
 
   // Shortcut: event questions → show events card directly (avoids AI timeout)
   if (/\bevent[s]?\b|what.*happening|what.*on\b|upcoming|coming up/i.test(userText) && !/find.*business|caterer|food|makeup|beauty/i.test(userText)) {
@@ -2576,7 +2577,8 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
         messages: messages,
         examContext: getExamContext(),
         locationContext: getLocationContext(),
-        userCity: userCity || window.userCity || ''
+        userCity: userCity || window.userCity || '',
+        searchPage: window._searchPage || 0
       })
     });
     clearTimeout(timeoutId);
@@ -6958,7 +6960,27 @@ function showBusinesses(startIndex) {
 
   const moreLabel = hasMore ? '🏢 Show more businesses' : '🏠 Back to Home';
   const moreAction = hasMore ? `showBusinesses(${shownBusinessIndexes.length})` : 'resetToWelcome()';
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="' + moreAction + '">' + moreLabel + '</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian hair stylist near me\')">💇 Find a stylist</button></div>');
+  const _rotatingQueries = [
+    ['🍛 Find a caterer', 'Find a Nigerian caterer near me'],
+    ['💄 Find a makeup artist', 'Find a Nigerian makeup artist near me'],
+    ['💇 Find a hair stylist', 'Find a Nigerian hair stylist near me'],
+    ['📸 Find a photographer', 'Show me all photography businesses'],
+    ['🎂 Find a cake maker', 'Show me all cakes & desserts businesses'],
+    ['👗 Find a fashion designer', 'Show me all fashion designers'],
+    ['💆 Find a skincare brand', 'Show me all skincare businesses'],
+    ['💃 Find a gele stylist', 'Show me all gele stylists'],
+    ['🍱 Find a food store', 'Show me all foodstores & groceries businesses'],
+    ['🎉 Find an event planner', 'Show me all event planners'],
+    ['🍡 Find small chops', 'Show me all small chops businesses'],
+    ['💍 Find jewelry', 'Show me all jewelry businesses'],
+    ['🎤 Find a DJ', 'Show me all djs'],
+    ['🪡 Find ankara fabric', 'Show me all ankara & traditional wears'],
+    ['💋 Find a wig vendor', 'Show me all wig vendors'],
+  ];
+  const _shuffled = [..._rotatingQueries].sort(() => Math.random() - 0.5);
+  const _pick1 = _shuffled[0];
+  const _pick2 = _shuffled[1];
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="${moreAction.replace(/'/g,"\\'")}">👀 ${moreLabel}</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="quickAsk('${_pick1[1].replace(/'/g,"\\'")}') ">${_pick1[0]}</button><button class="suggestion-btn" onclick="quickAsk('${_pick2[1].replace(/'/g,"\\'")}') ">${_pick2[0]}</button></div>`);
   messages.push({ role: 'assistant', content: 'Here are Nigerian businesses on Auntie Tobi: ' + page.map(b => b.name).join(', ') });
 }
 
