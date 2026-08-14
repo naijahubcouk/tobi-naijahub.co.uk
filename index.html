@@ -1950,7 +1950,11 @@ function formatResponse(text) {
           const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi \uD83D\uDC9A Find Nigerian businesses near you';
 
           const verifiedHeader = b.verified
-            ? '<div style="background:#FFB81C;padding:5px 14px;display:flex;align-items:center;gap:6px;"><span style="font-size:11px;font-weight:800;color:#0F1E36;">\u2705 Verified Business</span></div>'
+            ? '<div style="background:#FFB81C;padding:5px 14px;display:flex;align-items:center;gap:6px;"><span style="font-size:11px;font-weight:800;color:#0F1E36;">⭐ Featured Business</span></div>'
+            : '';
+
+          const verifiedLine = b.verified
+            ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>'
             : '';
 
           const waBtn = (b.verified && b.wa)
@@ -1970,6 +1974,7 @@ function formatResponse(text) {
             + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + '</div>'
             + '<span onclick="quickAsk(\'Show me all ' + (b.cat||'').replace(/'/g,"\\'") + ' businesses\')" style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;cursor:pointer;margin-top:2px;">' + cat + '</span>'
             + '</div>'
+            + verifiedLine
             + (b.desc ? '<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:8px;">' + b.desc + '</div>' : '')
             + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">\uD83D\uDCCD ' + (b.loc || 'UK') + '</div>'
             + '<div style="display:flex;gap:6px;">' + actionBtns + '</div>'
@@ -5398,7 +5403,8 @@ function handleDeepLink() {
         const shareUrl = 'https://auntietobi.co.uk/biz/' + business.slug;
         const listingUrl = 'https://auntietobi.com/listing/' + business.slug;
         const safeName = business.name.replace(/['"]/g,'');
-        const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
+        const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div>' : '';
+        const verifiedLine = business.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d=\\"M22 11.08V12a10 10 0 1 1-5.93-9.14\\"/><polyline points=\\"22 4 12 14.01 9 11.01\\"/></svg><span style=\\"font-size:11px;color:#1d9bf0;font-weight:600;\\">Verified Business</span></div>' : '';
         const waBtn = (business.verified && business.wa) ? '<a href="https://wa.me/' + business.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
         const viewBtn = '<a href="' + listingUrl + '" target="_blank" class="tobi-biz-link" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
         const shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
@@ -5410,6 +5416,7 @@ function handleDeepLink() {
           + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + business.name + '</div>'
           + '<span onclick="quickAsk(\'Show me all ' + cat + ' businesses\')" style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;cursor:pointer;">' + cat + '</span>'
           + '</div>'
+          + verifiedLine
           + (desc ? '<div style="font-size:13px;color:#555;margin-bottom:8px;line-height:1.5;">' + desc + '</div>' : '')
           + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:6px;">📍 ' + loc + '</div>'
           + extraDetails
@@ -6925,7 +6932,8 @@ function showBusinesses(startIndex) {
     const shareUrl = 'https://auntietobi.co.uk/biz/' + b.slug;
     const safeName = b.name.replace(/['"]/g, '');
     const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi 💚 Find Nigerian businesses near you';
-    const verifiedBadge = b.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
+    const verifiedBadge = b.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div>' : '';
+        const verifiedLine = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
     const waBtn = (b.verified && b.wa) ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
     const shareBtn = '<button onclick="tobiShare(\'' + safeName.replace(/'/g,"\\'") + '\',\'' + shareMsg + '\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
     const viewBtn = '<a href="/biz/' + b.slug + '" class="tobi-biz-link" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
@@ -6935,6 +6943,7 @@ function showBusinesses(startIndex) {
       + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + b.name + '</div>'
       + '<span onclick="quickAsk(\'Show me all ' + b.cat + ' businesses\')" style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;cursor:pointer;">' + cat + '</span>'
       + '</div>'
+      + verifiedLine
       + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + (b.desc ? b.desc.substring(0,100) + (b.desc.length>100?'...':'') : '') + '</div>'
       + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'UK') + '</div>'
       + '<div style="display:flex;gap:6px;">' + viewBtn + waBtn + shareBtn + '</div>'
