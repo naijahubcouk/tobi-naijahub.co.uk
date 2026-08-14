@@ -1825,11 +1825,19 @@ async function loadLiveFeeds() {
     if (listingsRes.status === 'fulfilled' && listingsRes.value.businesses?.length) {
       const liveBusinesses = listingsRes.value.businesses;
 
-      // Live feed is source of truth
-      const merged = liveBusinesses.map(lb => {
-        const hc = AUNTIE_TOBI_DIRECTORY.find(b => b.slug === lb.slug);
-        if (hc) return Object.assign({}, hc, lb, { wa: lb.wa||hc.wa||'', phone: lb.phone||hc.phone||'', email: lb.email||hc.email||'', ig: lb.ig||hc.ig||'', website: lb.website||hc.website||'', keywords: lb.keywords?.length?lb.keywords:(hc.keywords||[]) });
-        return lb;
+      // Hardcoded directory is source of truth — live feed only enriches contact details
+      // Businesses not in hardcoded directory are excluded (prevents bad categories, stale data)
+      const merged = AUNTIE_TOBI_DIRECTORY.map(hc => {
+        const lb = liveBusinesses.find(b => b.slug === hc.slug);
+        if (lb) return Object.assign({}, hc, {
+          // Only take contact info from live, never category/name/desc
+          wa: lb.wa || hc.wa || '',
+          phone: lb.phone || hc.phone || '',
+          email: lb.email || hc.email || '',
+          ig: lb.ig || hc.ig || '',
+          website: lb.website || hc.website || '',
+        });
+        return hc;
       });
       window._liveDirectory = merged;
       console.log(`[Feed] Directory: ${merged.length} from live feed`);
@@ -1936,7 +1944,7 @@ function formatResponse(text) {
       try {
         const businesses = JSON.parse(bizMatch[1]);
         const cardsHTML = '<div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">' + businesses.map(function(b) {
-          const cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
+          const cat = (b.cat && b.cat.toLowerCase() !== 'nigerian business') ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
           const shareUrl = 'https://auntietobi.co.uk/biz/' + b.slug;
           const safeName = b.name.replace(/['"]/g, '');
           const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi \uD83D\uDC9A Find Nigerian businesses near you';
@@ -6876,14 +6884,29 @@ function showBusinesses(startIndex) {
     shownBusinessIndexes = [];
   }
   const available = allBiz.map((b, i) => i).filter(i => !shownBusinessIndexes.includes(i));
-  const weighted = [];
-  available.forEach(i => { weighted.push(i); if (allBiz[i].verified) weighted.push(i); });
-  for (let k = weighted.length - 1; k > 0; k--) {
-    const j = Math.floor(Math.random() * (k + 1));
-    [weighted[k], weighted[j]] = [weighted[j], weighted[k]];
+
+  let pick = [];
+  if (startIndex === undefined) {
+    // First page: verified first, then shuffle the rest
+    const verifiedIdxs = available.filter(i => allBiz[i].verified);
+    const restIdxs = available.filter(i => !allBiz[i].verified);
+    // Shuffle rest
+    for (let k = restIdxs.length - 1; k > 0; k--) {
+      const j = Math.floor(Math.random() * (k + 1));
+      [restIdxs[k], restIdxs[j]] = [restIdxs[j], restIdxs[k]];
+    }
+    const ordered = [...verifiedIdxs, ...restIdxs];
+    pick = ordered.slice(0, 10);
+  } else {
+    // Show more: shuffle remaining
+    const shuffled = [...available];
+    for (let k = shuffled.length - 1; k > 0; k--) {
+      const j = Math.floor(Math.random() * (k + 1));
+      [shuffled[k], shuffled[j]] = [shuffled[j], shuffled[k]];
+    }
+    pick = shuffled.slice(0, 10);
   }
-  const pick = [], seen = new Set();
-  for (const i of weighted) { if (!seen.has(i)) { seen.add(i); pick.push(i); } if (pick.length >= 6) break; }
+
   pick.forEach(i => shownBusinessIndexes.push(i));
   const page = pick.map(i => allBiz[i]);
   const hasMore = shownBusinessIndexes.length < allBiz.length;
@@ -6895,14 +6918,10 @@ function showBusinesses(startIndex) {
 
   addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>');
 
-  // Sort: verified first, then rest (only on first load)
-  if (startIndex === undefined) {
-    allBiz.sort((a, b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0));
-    shownBusinessIndexes = [];
-  }
+  // Sort: verified first on first load handled by pick logic above
 
   page.forEach(b => {
-    const cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
+    const cat = (b.cat && b.cat.toLowerCase() !== 'nigerian business') ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
     const shareUrl = 'https://auntietobi.co.uk/biz/' + b.slug;
     const safeName = b.name.replace(/['"]/g, '');
     const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi 💚 Find Nigerian businesses near you';
