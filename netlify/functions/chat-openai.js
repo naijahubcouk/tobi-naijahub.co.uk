@@ -38,7 +38,7 @@ function getIntentGroup(query) {
   return null;
 }
 
-function searchBusinessesByIntent(query, limit, directory, userCity) {
+function searchBusinessesByIntent(query, limit, directory, userCity, page) {
   limit = limit || 6;
   var intentGroup = getIntentGroup(query);
   var groupCats = intentGroup ? INTENT_GROUPS[intentGroup] : null;
@@ -87,29 +87,37 @@ function searchBusinessesByIntent(query, limit, directory, userCity) {
   var exactCat = allCats.find(function(c){ return queryL.indexOf(c) !== -1; });
   if (exactCat) groupCats = [exactCat];
 
+  // Proximity scoring tiers
+  var proximityTiers = {exact:50, region:20, adjacent:10, uk:0};
+  var adjacentRegions = {
+    london:['southeast','midlands'],southeast:['london','southwest'],
+    midlands:['london','northwest','northeast','southwest'],
+    northwest:['midlands','northeast','scotland','wales'],
+    northeast:['midlands','northwest','scotland'],
+    southwest:['midlands','southeast','wales'],
+    wales:['midlands','southwest','northwest'],
+    scotland:['northwest','northeast'],
+  };
+  function getProximityScore(b) {
+    var locL=(b.loc||'').toLowerCase();
+    if (proximityCity&&locL.indexOf(proximityCity)!==-1) return proximityTiers.exact;
+    var br=getBizRegion(b);
+    if (!br) return proximityTiers.uk;
+    if (br===userRegion) return proximityTiers.region;
+    if (userRegion&&adjacentRegions[userRegion]&&adjacentRegions[userRegion].indexOf(br)!==-1) return proximityTiers.adjacent;
+    return proximityTiers.uk;
+  }
   function scoreBiz(b) {
     var catL = (b.cat||'').toLowerCase();
-    var locL = (b.loc||'').toLowerCase();
     var kwStr = (b.keywords||[]).join(' ').toLowerCase();
     var score = 0;
-
-    // Must be in right category group
     if (groupCats) {
       var inGroup = groupCats.some(function(gc){ return catL.indexOf(gc)!==-1||kwStr.indexOf(gc)!==-1; });
       if (!inGroup) return 0;
       score += 30;
     }
-
-    // Exact city match in query
-    if (queryLoc && locL.indexOf(queryLoc)!==-1) score += 40;
-    // User's city match
-    else if (proximityCity && locL.indexOf(proximityCity)!==-1) score += 35;
-    // Same region as user
-    else if (userRegion && getBizRegion(b)===userRegion) score += 15;
-
-    // Verified bonus
-    if (b.verified) score += 10;
-
+    score += getProximityScore(b);
+    if (b.verified) score += 100;
     return score;
   }
 
@@ -127,8 +135,9 @@ function searchBusinessesByIntent(query, limit, directory, userCity) {
 
   var scope = hasLocal ? 'local' : (hasRegional ? 'regional' : 'uk');
   var city = queryLoc || proximityCity || null;
-
-  return { results: scored.slice(0, limit), scope: scope, city: city, intentGroup: intentGroup };
+  // page offset — skip already-shown results (page 0 = first 6, page 1 = next 6, etc.)
+  var pageOffset = (typeof page === 'number' ? page : 0) * limit;
+  return { results: scored.slice(pageOffset, pageOffset + limit), total: scored.length, scope: scope, city: city, intentGroup: intentGroup };
 }
 // ── END INTENT SEARCH ────────────────────────────────────────────────────
 
@@ -232,10 +241,10 @@ async function getDirectory() {
 
 
 exports.handler=async function(event){if(event.httpMethod==='OPTIONS'){return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'POST, OPTIONS'},body:''};} if(event.httpMethod==='GET'){var k=process.env.OPENROUTER_API_KEY;return{statusCode:200,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'},body:JSON.stringify({status:'ok',hasApiKey:!!k,hardcoded:HARDCODED_DIRECTORY.length})};}
-try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];var userCity=(body.userCity||'').toLowerCase().trim();var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|show me|list me|show all|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|bukka|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);var wordCount=lastMessage.trim().split(/\s+/).length;var isNounSearch=wordCount<=6&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help|Hi|Hello|Hey)/i.test(lastMessage.trim())&&!/[?.!]/.test(lastMessage.trim());var isGenericQuestion=/^(can|will|how|what|is|are|do|does|when|where|why|should|would|could|if |please|tell|help)/i.test(lastMessage.trim());
+try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];var userCity=(body.userCity||'').toLowerCase().trim();var searchPage=parseInt(body.searchPage||0,10)||0;var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|show me|list me|show all|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|bukka|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);var wordCount=lastMessage.trim().split(/\s+/).length;var isNounSearch=wordCount<=6&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help|Hi|Hello|Hey)/i.test(lastMessage.trim())&&!/[?.!]/.test(lastMessage.trim());var isGenericQuestion=/^(can|will|how|what|is|are|do|does|when|where|why|should|would|could|if |please|tell|help)/i.test(lastMessage.trim());
     var showMeAll=/^show\s+(me\s+)?(all\s+)?/i.test(lastMessage.trim());var shouldSearch=!isShortGreeting&&(!isGenericQuestion||showMeAll)&&(bizKeywords||isNounSearch||showMeAll||(wordCount>=2&&wordCount<=8));
     // For noun searches, boost score of exact name matches so they always appear
-    var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();var searchLimit=6;var sr=searchBusinessesByIntent(lastMessage,searchLimit,directory,userCity);// Fall back to keyword search if intent search returns nothing
+    var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();var searchLimit=6;var sr=searchBusinessesByIntent(lastMessage,searchLimit,directory,userCity,searchPage);// Fall back to keyword search if intent search returns nothing
 if(sr.results.length===0){sr=searchBusinesses(lastMessage,searchLimit,directory,userCity);}// For short noun searches (likely business names), filter to strong matches only
 // For any short noun search, filter to name-matching results only
 if(isNounSearch&&sr.results.length>0){
