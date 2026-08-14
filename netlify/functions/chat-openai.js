@@ -8,7 +8,8 @@ var HARDCODED_DIRECTORY = JSON.parse(Buffer.from(_DIR, 'base64').toString('utf8'
 
 var INTENT_GROUPS = {
   food:      ['caterers','restaurants','small chops','nigerian snacks','suya spot','cakes & desert','cakes & desserts','foodstores & groceries'],
-  beauty:    ['makeup artists','gele stylists','wig vendors','hair stylists/braiders','microblading','skincare','hair care'],
+  hair:      ['hair stylists/braiders','wig vendors','hair care','gele stylists'],
+  beauty:    ['makeup artists','microblading','skincare'],
   fashion:   ['fashion & accessories','ankara & traditional wears','fashion designers','jewelry'],
   events:    ['event planners','photography','djs','alaga','videography'],
   education: ['tutors','education consultancy'],
@@ -19,7 +20,8 @@ var INTENT_GROUPS = {
 
 var INTENT_KEYWORDS = {
   food:      /caterer|catering|food|cook|meal|jollof|rice|suya|restaurant|bukka|kitchen|small.?chop|puff.?puff|chin.?chin|snack|cake|baker|grocery|groceries|foodstore|african.?store/i,
-  beauty:    /makeup|mua|glam|gele|wig|hair|braid|lash|brow|microblade|skin.?care|beauty|salon/i,
+  hair:      /hair|braid|wig|locs|loc |weave|extension|gele|natural hair|hair stylist|hairdress/i,
+  beauty:    /makeup|mua|glam|lash|brow|microblade|skin.?care|beauty studio|semi.?perm/i,
   fashion:   /fashion|cloth|outfit|dress|ankara|fabric|tailor|wear|jewel|accessory|accessories/i,
   events:    /event|wedding|birthday|party|decor|photograph|dj|mc|entertain|owambe|celebrat/i,
   education: /tutor|school|lesson|educat|study|exam|gcse|a.level|university/i,
@@ -79,6 +81,11 @@ function searchBusinessesByIntent(query, limit, directory, userCity) {
   }
 
   var userRegion = getUserRegion(proximityCity);
+
+  // If query names an exact category, narrow to that category only
+  var allCats = Object.values(INTENT_GROUPS).reduce(function(a,b){return a.concat(b);}, []);
+  var exactCat = allCats.find(function(c){ return queryL.indexOf(c) !== -1; });
+  if (exactCat) groupCats = [exactCat];
 
   function scoreBiz(b) {
     var catL = (b.cat||'').toLowerCase();
@@ -225,8 +232,8 @@ async function getDirectory() {
 
 
 exports.handler=async function(event){if(event.httpMethod==='OPTIONS'){return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'POST, OPTIONS'},body:''};} if(event.httpMethod==='GET'){var k=process.env.OPENROUTER_API_KEY;return{statusCode:200,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'},body:JSON.stringify({status:'ok',hasApiKey:!!k,hardcoded:HARDCODED_DIRECTORY.length})};}
-try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];var userCity=(body.userCity||'').toLowerCase().trim();var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);var wordCount=lastMessage.trim().split(/\s+/).length;var isNounSearch=wordCount<=6&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help|Hi|Hello|Hey)/i.test(lastMessage.trim())&&!/[?.!]/.test(lastMessage.trim());var isGenericQuestion=/^(can|will|how|what|is|are|do|does|when|where|why|should|would|could|if |please|tell|help)/i.test(lastMessage.trim());
-    var shouldSearch=!isShortGreeting&&!isGenericQuestion&&(bizKeywords||isNounSearch||(wordCount>=2&&wordCount<=8));
+try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];var userCity=(body.userCity||'').toLowerCase().trim();var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|show me|list me|show all|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|bukka|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);var wordCount=lastMessage.trim().split(/\s+/).length;var isNounSearch=wordCount<=6&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help|Hi|Hello|Hey)/i.test(lastMessage.trim())&&!/[?.!]/.test(lastMessage.trim());var isGenericQuestion=/^(can|will|how|what|is|are|do|does|when|where|why|should|would|could|if |please|tell|help)/i.test(lastMessage.trim());
+    var showMeAll=/^show\s+(me\s+)?(all\s+)?/i.test(lastMessage.trim());shouldSearch=!isShortGreeting&&(!isGenericQuestion||showMeAll)&&(bizKeywords||isNounSearch||showMeAll||(wordCount>=2&&wordCount<=8));
     // For noun searches, boost score of exact name matches so they always appear
     var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();var searchLimit=6;var sr=searchBusinessesByIntent(lastMessage,searchLimit,directory,userCity);// Fall back to keyword search if intent search returns nothing
 if(sr.results.length===0){sr=searchBusinesses(lastMessage,searchLimit,directory,userCity);}// For short noun searches (likely business names), filter to strong matches only
