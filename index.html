@@ -6996,10 +6996,7 @@ function showBusinesses(startIndex, filterCat) {
     ['🪡 Find ankara fabric', 'Show me all ankara & traditional wears'],
     ['💋 Find a wig vendor', 'Show me all wig vendors'],
   ];
-  const _shuffled = [..._rotatingQueries].sort(() => Math.random() - 0.5);
-  const _pick1 = _shuffled[0];
-  const _pick2 = _shuffled[1];
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="${moreAction.replace(/'/g,"\\'")}">👀 ${moreLabel}</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="quickAsk('${_pick1[1].replace(/'/g,"\\'")}') ">${_pick1[0]}</button><button class="suggestion-btn" onclick="quickAsk('${_pick2[1].replace(/'/g,"\\'")}') ">${_pick2[0]}</button></div>`);
+    addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="${moreAction.replace(/'/g,"\\'")}">👀 ${moreLabel}</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button></div>`);
   messages.push({ role: 'assistant', content: 'Here are Nigerian businesses on Auntie Tobi: ' + page.map(b => b.name).join(', ') });
 }
 
