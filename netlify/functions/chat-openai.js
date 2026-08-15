@@ -82,9 +82,39 @@ function searchBusinessesByIntent(query, limit, directory, userCity, page) {
 
   var userRegion = getUserRegion(proximityCity);
 
-  // If query names an exact category, narrow to that category only
-  var allCats = Object.values(INTENT_GROUPS).reduce(function(a,b){return a.concat(b);}, []);
-  var exactCat = allCats.find(function(c){ return queryL.indexOf(c) !== -1; });
+  // Specific keyword → exact category mapping (handles singular/plural/partial)
+  var keywordCatMap = [
+    [/makeup.?artist|mua|glam artist/i,        'makeup artists'],
+    [/hair.?stylist|hairdress|braider|braiding/i, null],  // use full hair group
+    [/wig.?vendor|wig.?seller|sell.*wig|buy.*wig/i, 'wig vendors'],
+    [/gele.?stylist|auto.?gele/i,              'gele stylists'],
+    [/microbla/i,                               'microblading'],
+    [/skincare|skin.?care/i,                   'skincare'],
+    [/caterer|catering/i,                      'caterers'],
+    [/restaurant|bukka|dining/i,               'restaurants'],
+    [/small.?chop/i,                           'small chops'],
+    [/cake|baker|pastry/i,                     'cakes & desserts'],
+    [/suya/i,                                  'suya spot'],
+    [/food.?store|grocery|groceries|african.?store/i, 'foodstores & groceries'],
+    [/fashion.?design/i,                       'fashion designers'],
+    [/ankara|asooke/i,                         'ankara & traditional wears'],
+    [/photograph/i,                            'photography'],
+    [/event.?plan/i,                           'event planners'],
+    [/dj\b/i,                                  'djs'],
+    [/solicitor|lawyer/i,                      'solicitors'],
+    [/accountant/i,                            'accountants'],
+    [/tutor/i,                                 'tutors'],
+  ];
+
+  var exactCat = null;
+  for (var ki = 0; ki < keywordCatMap.length; ki++) {
+    if (keywordCatMap[ki][0].test(queryL)) { exactCat = keywordCatMap[ki][1]; break; }
+  }
+  // Fallback: check allCats list for exact substring
+  if (!exactCat) {
+    var allCats = Object.values(INTENT_GROUPS).reduce(function(a,b){return a.concat(b);},[]);
+    exactCat = allCats.find(function(c){ return queryL.indexOf(c) !== -1; }) || null;
+  }
   if (exactCat) groupCats = [exactCat];
 
   // Proximity scoring tiers
@@ -232,7 +262,7 @@ function searchBusinesses(query,limit,directory){
   return{results:[],scope:'uk',city:queryLoc};
 }
 
-function formatBusinessContext(businesses,scope,city){if(!businesses.length)return'';var bizData=businesses.map(function(b){return{slug:b.slug,name:b.name,cat:b.cat||'',loc:b.loc||'UK',desc:b.desc?b.desc.substring(0,100):'',verified:b.verified||false,wa:b.wa||'',phone:b.phone||''};});var scopeNote=scope==='local'&&city?'\n[SEARCH_SCOPE: Found '+businesses.length+' near '+city+'. Start with "I found some [type] near '+city+' for you 💚"]':scope==='regional'&&city?'\n[SEARCH_SCOPE: Nothing in '+city+'. Say EXACTLY: "We don\'t have any listed in '+city+' yet — check these out 💚"]':'\n[SEARCH_SCOPE: Nothing in user city. Say EXACTLY: "We don\'t have any listed in [their city] yet — check these out 💚"]';return'\n\n<<<BIZ_JSON:'+JSON.stringify(bizData)+'>>>'+scopeNote;}
+function formatBusinessContext(businesses,scope,city){if(!businesses.length)return'';var bizData=businesses.map(function(b){return{slug:b.slug,name:b.name,cat:b.cat||'',loc:b.loc||'UK',desc:b.desc?b.desc.substring(0,100):'',verified:b.verified||false,wa:b.wa||'',phone:b.phone||''};});var scopeNote=scope==='local'&&city?'\n[SEARCH_SCOPE: Found '+businesses.length+' near '+city+'. Start with: I found some [type] near '+city+' for you 💚]':scope==='regional'&&city?'\n[SEARCH_SCOPE: None in '+city+'. Say exactly: We don\'t have any listed in '+city+' yet — check these out 💚]':'\n[SEARCH_SCOPE: None in user city. Say exactly: We don\'t have any listed in [city] yet — check these out 💚]';return'\n\n<<<BIZ_JSON:'+JSON.stringify(bizData)+'>>>'+scopeNote;}
 
 async function getDirectory() {
   console.log('[chat] Directory: ' + HARDCODED_DIRECTORY.length + ' businesses');
@@ -244,8 +274,21 @@ exports.handler=async function(event){if(event.httpMethod==='OPTIONS'){return{st
 try{var body=JSON.parse(event.body);var apiKey=process.env.OPENROUTER_API_KEY;if(!apiKey)return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:'OPENROUTER_API_KEY not set'})};var lastMessage=body.messages&&body.messages.length>0?body.messages[body.messages.length-1].content||'':'';var recentMessages=body.messages?body.messages.slice(-4):[];var userCity=(body.userCity||'').toLowerCase().trim();var searchPage=parseInt(body.searchPage||0,10)||0;var isShortGreeting=/^(hi|hello|hey|hiya|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no|sure|great|cool|perfect|got it|thank|cheers)$/i.test(lastMessage.trim());var bizKeywords=/find|looking for|recommend|where can i|know any|any good|near me|show me|list me|show all|in london|in manchester|in birmingham|in leeds|caterer|hairdress|barber|salon|makeup|mua|grocery|restaurant|bukka|solicitor|accountant|tutor|plumber|photographer|event plan|decorator|dj|cleaner|travel agent|fashion|seamstress|tailor|cake|bakery|pastor|church|shop|store|business|service|trader/i.test(lastMessage);var wordCount=lastMessage.trim().split(/\s+/).length;var isNounSearch=wordCount<=6&&!/^(Can|Is|Are|Do|Does|Will|How|What|Why|When|Where|Who|Should|Would|Could|My|The|I |Please|Tell|Help|Hi|Hello|Hey)/i.test(lastMessage.trim())&&!/[?.!]/.test(lastMessage.trim());var isGenericQuestion=/^(can|will|how|what|is|are|do|does|when|where|why|should|would|could|if |please|tell|help)/i.test(lastMessage.trim());
     var showMeAll=/^show\s+(me\s+)?(all\s+)?/i.test(lastMessage.trim());var shouldSearch=!isShortGreeting&&(!isGenericQuestion||showMeAll)&&(bizKeywords||isNounSearch||showMeAll||(wordCount>=2&&wordCount<=8));
     // For noun searches, boost score of exact name matches so they always appear
-    var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();var searchLimit=6;var sr=searchBusinessesByIntent(lastMessage,searchLimit,directory,userCity,searchPage);// Fall back to keyword search if intent search returns nothing
-if(sr.results.length===0){sr=searchBusinesses(lastMessage,searchLimit,directory,userCity);}// For short noun searches (likely business names), filter to strong matches only
+    var _isNounSearch=isNounSearch;var businessContext='';if(shouldSearch){var directory=await getDirectory();// Pluralise common search terms so intent matching works correctly
+    var searchMsg = lastMessage
+      .replace(/\bcaterer\b/gi, 'caterers')
+      .replace(/\bphotographer\b/gi, 'photographers')
+      .replace(/\bplanner\b/gi, 'planners')
+      .replace(/\bhairdresser\b/gi, 'hairdressers')
+      .replace(/\bsolicitor\b/gi, 'solicitors')
+      .replace(/\baccountant\b/gi, 'accountants')
+      .replace(/\btutor\b/gi, 'tutors')
+      .replace(/\bdecorator\b/gi, 'decorators')
+      .replace(/\bwig vendor\b/gi, 'wig vendors')
+      .replace(/\bgele stylist\b/gi, 'gele stylists')
+      .replace(/\bwig seller\b/gi, 'wig vendors');
+    var searchLimit=6;var sr=searchBusinessesByIntent(searchMsg,searchLimit,directory,userCity,searchPage);// Fall back to keyword search if intent search returns nothing
+if(sr.results.length===0){sr=searchBusinesses(searchMsg,searchLimit,directory,userCity);}// For short noun searches (likely business names), filter to strong matches only
 // For any short noun search, filter to name-matching results only
 if(isNounSearch&&sr.results.length>0){
   const qClean=lastMessage.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim();
