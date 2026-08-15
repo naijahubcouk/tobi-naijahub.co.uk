@@ -6878,6 +6878,7 @@ function showBusinesses(startIndex, filterCat) {
   // Reset shown indexes when category filter changes or on first load
   if (startIndex === undefined) shownBusinessIndexes = [];
 
+  const activeCat = filterCat || null;
   const filteredBiz = activeCat ? allBiz.filter(b=>b.cat===activeCat) : allBiz;
 
   const available = filteredBiz.map((b, i) => i).filter(i => !shownBusinessIndexes.includes(i));
