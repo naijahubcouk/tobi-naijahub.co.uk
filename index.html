@@ -6879,6 +6879,14 @@ function showBusinesses(startIndex, filterCat) {
   if (startIndex === undefined) shownBusinessIndexes = [];
 
   const activeCat = filterCat || null;
+
+  const catEmojis = {
+    'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒',
+    'restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜',
+    'photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️',
+    'alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️',
+    'suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓',
+  };
   const filteredBiz = activeCat
     ? allBiz.filter(b => b.cat === activeCat)
     : allBiz.filter(b => b.verified);
@@ -6916,20 +6924,13 @@ function showBusinesses(startIndex, filterCat) {
   messages = [];
   scrollToTop();
 
-  addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">⭐ Featured Businesses on Auntie Tobi</div>');
+  addTipMessage(`<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">${activeCat ? (catEmojis[activeCat]||'🏢') + ' ' + activeCat.charAt(0).toUpperCase() + activeCat.slice(1) : '⭐ Featured Businesses on Auntie Tobi'}</div>`);
 
   // Get all unique categories sorted by count
   const allCatCounts = {};
   getLiveDirectory().filter(b=>b.slug&&b.name).forEach(b=>{ if(b.cat && b.cat!=='nigerian business') allCatCounts[b.cat]=(allCatCounts[b.cat]||0)+1; });
   const allCatsSorted = Object.entries(allCatCounts).sort((a,b)=>b[1]-a[1]).map(([c])=>c);
 
-  const catEmojis = {
-    'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒',
-    'restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜',
-    'photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️',
-    'alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️',
-    'suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓',
-  };
 
 
   page.forEach(b => {
@@ -6956,12 +6957,6 @@ function showBusinesses(startIndex, filterCat) {
     addTipMessage(cardHTML);
   });
 
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="${moreAction.replace(/'/g,"\\'")}">👀 ${moreLabel}</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button></div>`);
-
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-    <button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>
-    <button class="suggestion-btn" onclick="showAboutTobi()">ℹ️ About Auntie Tobi</button>
-  </div>`);
 
 
 
@@ -6969,7 +6964,12 @@ function showBusinesses(startIndex, filterCat) {
   const catArg = activeCat ? `,'${activeCat.replace(/'/g,"\\'")}' ` : '';
   moreAction = hasMore ? `showBusinesses(${shownBusinessIndexes.length}${catArg})` : 'resetToWelcome()';
 
-  // Categories section after cards — only on first page load
+
+
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="${moreAction.replace(/'/g,"\'")}">👀 ${moreLabel}</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button></div>`);
+  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
+
+  // Categories section — only on first page load (after CTA)
   if (startIndex === undefined) {
     const catPillsHtml = '<div style="background:white;border-radius:12px;padding:14px;">'
       + '<div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">🗂️ Nigerian Business Categories on Auntie Tobi</div>'
@@ -6979,24 +6979,6 @@ function showBusinesses(startIndex, filterCat) {
       + '</div></div>';
     addTipMessage(catPillsHtml);
   }
-  const _rotatingQueries = [
-    ['🍛 Find a caterer', 'Find a Nigerian caterer near me'],
-    ['💄 Find a makeup artist', 'Find a Nigerian makeup artist near me'],
-    ['💇 Find a hair stylist', 'Find a Nigerian hair stylist near me'],
-    ['📸 Find a photographer', 'Show me all photography businesses'],
-    ['🎂 Find a cake maker', 'Show me all cakes & desserts businesses'],
-    ['👗 Find a fashion designer', 'Show me all fashion designers'],
-    ['💆 Find a skincare brand', 'Show me all skincare businesses'],
-    ['💃 Find a gele stylist', 'Show me all gele stylists'],
-    ['🍱 Find a food store', 'Show me all foodstores & groceries businesses'],
-    ['🎉 Find an event planner', 'Show me all event planners'],
-    ['🍡 Find small chops', 'Show me all small chops businesses'],
-    ['💍 Find jewelry', 'Show me all jewelry businesses'],
-    ['🎤 Find a DJ', 'Show me all djs'],
-    ['🪡 Find ankara fabric', 'Show me all ankara & traditional wears'],
-    ['💋 Find a wig vendor', 'Show me all wig vendors'],
-  ];
-    addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
   messages.push({ role: 'assistant', content: 'Here are Nigerian businesses on Auntie Tobi: ' + page.map(b => b.name).join(', ') });
 }
 
