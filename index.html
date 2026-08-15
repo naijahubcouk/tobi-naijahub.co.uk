@@ -6879,7 +6879,9 @@ function showBusinesses(startIndex, filterCat) {
   if (startIndex === undefined) shownBusinessIndexes = [];
 
   const activeCat = filterCat || null;
-  const filteredBiz = activeCat ? allBiz.filter(b=>b.cat===activeCat) : allBiz;
+  const filteredBiz = activeCat
+    ? allBiz.filter(b => b.cat === activeCat)
+    : allBiz.filter(b => b.verified);
 
   const available = filteredBiz.map((b, i) => i).filter(i => !shownBusinessIndexes.includes(i));
 
@@ -6913,6 +6915,8 @@ function showBusinesses(startIndex, filterCat) {
   if (container) container.innerHTML = '';
   messages = [];
   scrollToTop();
+
+  addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">⭐ Featured Businesses on Auntie Tobi</div>');
 
   // Get all unique categories sorted by count
   const allCatCounts = {};
