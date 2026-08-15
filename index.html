@@ -6878,6 +6878,8 @@ function showBusinesses(startIndex, filterCat) {
   // Reset shown indexes when category filter changes or on first load
   if (startIndex === undefined) shownBusinessIndexes = [];
 
+  const filteredBiz = activeCat ? allBiz.filter(b=>b.cat===activeCat) : allBiz;
+
   const available = filteredBiz.map((b, i) => i).filter(i => !shownBusinessIndexes.includes(i));
 
   let pick = [];
@@ -6924,13 +6926,6 @@ function showBusinesses(startIndex, filterCat) {
     'suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓',
   };
 
-  const activeCat = filterCat || null;
-
-  // Category pills rendered AFTER businesses — only cats that have businesses
-  addTipMessage(`<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>`);
-
-  // Filter by category if selected
-  const filteredBiz = activeCat ? allBiz.filter(b=>b.cat===activeCat) : allBiz;
 
   page.forEach(b => {
     const cat = (b.cat && b.cat.toLowerCase() !== 'nigerian business') ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
