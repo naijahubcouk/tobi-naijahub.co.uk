@@ -1938,7 +1938,7 @@ async function logGap(question, reply) {
 
 function formatResponse(text) {
   // Extract and render business cards from JSON
-  if (text.includes('<<<BIZ_JSON:') && window._currentPage !== 'businesses') {
+  if (text.includes('<<<BIZ_JSON:')) {
     const bizMatch = text.match(/<<<BIZ_JSON:([\s\S]*?)>>>/);
     if (bizMatch) {
       try {
@@ -6865,7 +6865,7 @@ function scrollToTop() {
   });
 }
 
-function showBusinesses(startIndex) {
+function showBusinesses(startIndex, filterCat) {
   window._currentPage = 'businesses';
   scrollToTop();
   window.history.replaceState({}, '', '/');
@@ -6875,20 +6875,23 @@ function showBusinesses(startIndex) {
   if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
     shownBusinessIndexes = [];
   }
-  const available = allBiz.map((b, i) => i).filter(i => !shownBusinessIndexes.includes(i));
+  // Reset shown indexes when category filter changes or on first load
+  if (startIndex === undefined) shownBusinessIndexes = [];
+
+  const available = filteredBiz.map((b, i) => i).filter(i => !shownBusinessIndexes.includes(i));
 
   let pick = [];
   if (startIndex === undefined) {
     // First page: verified first, then shuffle the rest
-    const verifiedIdxs = available.filter(i => allBiz[i].verified);
-    const restIdxs = available.filter(i => !allBiz[i].verified);
+    const verifiedIdxs = available.filter(i => filteredBiz[i].verified);
+    const restIdxs = available.filter(i => !filteredBiz[i].verified);
     // Shuffle rest
     for (let k = restIdxs.length - 1; k > 0; k--) {
       const j = Math.floor(Math.random() * (k + 1));
       [restIdxs[k], restIdxs[j]] = [restIdxs[j], restIdxs[k]];
     }
     const ordered = [...verifiedIdxs, ...restIdxs];
-    pick = ordered.slice(0, 10);
+    pick = ordered.slice(0, 6);
   } else {
     // Show more: shuffle remaining
     const shuffled = [...available];
@@ -6896,21 +6899,38 @@ function showBusinesses(startIndex) {
       const j = Math.floor(Math.random() * (k + 1));
       [shuffled[k], shuffled[j]] = [shuffled[j], shuffled[k]];
     }
-    pick = shuffled.slice(0, 10);
+    pick = shuffled.slice(0, 6);
   }
 
   pick.forEach(i => shownBusinessIndexes.push(i));
-  const page = pick.map(i => allBiz[i]);
-  const hasMore = shownBusinessIndexes.length < allBiz.length;
+  const page = pick.map(i => filteredBiz[i]);
+  const hasMore = shownBusinessIndexes.length < filteredBiz.length;
 
   const container = document.getElementById('messages');
   if (container) container.innerHTML = '';
   messages = [];
   scrollToTop();
 
-  addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>');
+  // Get all unique categories sorted by count
+  const allCatCounts = {};
+  getLiveDirectory().filter(b=>b.slug&&b.name).forEach(b=>{ if(b.cat && b.cat!=='nigerian business') allCatCounts[b.cat]=(allCatCounts[b.cat]||0)+1; });
+  const allCatsSorted = Object.entries(allCatCounts).sort((a,b)=>b[1]-a[1]).map(([c])=>c);
 
-  // Sort: verified first on first load handled by pick logic above
+  const catEmojis = {
+    'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒',
+    'restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜',
+    'photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️',
+    'alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️',
+    'suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓',
+  };
+
+  const activeCat = filterCat || null;
+
+  // Category pills rendered AFTER businesses — only cats that have businesses
+  addTipMessage(`<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>`);
+
+  // Filter by category if selected
+  const filteredBiz = activeCat ? allBiz.filter(b=>b.cat===activeCat) : allBiz;
 
   page.forEach(b => {
     const cat = (b.cat && b.cat.toLowerCase() !== 'nigerian business') ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
@@ -6946,7 +6966,19 @@ function showBusinesses(startIndex) {
 
 
   const moreLabel = hasMore ? '🏢 Show more businesses' : '🏠 Back to Home';
-  const moreAction = hasMore ? `showBusinesses(${shownBusinessIndexes.length})` : 'resetToWelcome()';
+  const catArg = activeCat ? `,'${activeCat.replace(/'/g,"\\'")}' ` : '';
+  moreAction = hasMore ? `showBusinesses(${shownBusinessIndexes.length}${catArg})` : 'resetToWelcome()';
+
+  // Categories section after cards — only on first page load
+  if (startIndex === undefined) {
+    const catPillsHtml = '<div style="background:white;border-radius:12px;padding:14px;">'
+      + '<div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">🗂️ Nigerian Business Categories on Auntie Tobi</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      + '<span onclick="showBusinesses(undefined,null)" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;background:' + (!activeCat?'#057A44':'#f0f0f0') + ';color:' + (!activeCat?'white':'#0F1E36') + ';border:1.5px solid ' + (!activeCat?'#057A44':'#e0e0e0') + ';">All</span>'
+      + allCatsSorted.filter(cat=>allCatCounts[cat]>0).map(cat=>'<span onclick="showBusinesses(undefined,\'' + cat.replace(/'/g,"\\'") + '\')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;background:' + (activeCat===cat?'#057A44':'#f0f0f0') + ';color:' + (activeCat===cat?'white':'#0F1E36') + ';border:1.5px solid ' + (activeCat===cat?'#057A44':'#e0e0e0') + ';">' + (catEmojis[cat]||'🏢') + ' ' + cat.charAt(0).toUpperCase() + cat.slice(1) + ' <span style=\"font-size:10px;opacity:.7;\">('+allCatCounts[cat]+')</span></span>').join('')
+      + '</div></div>';
+    addTipMessage(catPillsHtml);
+  }
   const _rotatingQueries = [
     ['🍛 Find a caterer', 'Find a Nigerian caterer near me'],
     ['💄 Find a makeup artist', 'Find a Nigerian makeup artist near me'],
