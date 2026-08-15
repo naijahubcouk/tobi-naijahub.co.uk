@@ -976,7 +976,7 @@
   try {
     const p = new URLSearchParams(window.location.search);
     const action = p.get('action');
-    if (action === 'prayer' || action === 'motivation' || action === 'tip') {
+    if (action === 'prayer' || action === 'motivation' || action === 'tip' || action === 'businesses') {
       // Mark that we have a deep link — window.onload will handle it
       window._earlyAction = action;
       window._earlyContent = p.get('content') || '';
@@ -5465,6 +5465,8 @@ function handleDeepLink() {
     showTipLanding(content, b1, b2, b3, source);
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
+  } else if (action === 'businesses') {
+    setTimeout(() => { resetAndShow(showBusinesses); window.history.replaceState({}, '', window.location.pathname); }, 300);
   } else if (action === 'guardianews' || action === 'news') {
     setTimeout(() => { showAllNews(); window.history.replaceState({}, '', window.location.pathname); }, 300);
   }
