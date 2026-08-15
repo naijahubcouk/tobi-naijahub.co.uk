@@ -6969,8 +6969,7 @@ function showBusinesses(startIndex, filterCat) {
   addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="${moreAction.replace(/'/g,"\'")}">👀 ${moreLabel}</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button></div>`);
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
 
-  // Categories section — only on first page load (after CTA)
-  if (startIndex === undefined) {
+  // Categories section — always shown after CTA
     const catPillsHtml = '<div style="background:white;border-radius:12px;padding:14px;">'
       + '<div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">🗂️ Nigerian Business Categories on Auntie Tobi</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
@@ -6978,7 +6977,6 @@ function showBusinesses(startIndex, filterCat) {
       + allCatsSorted.filter(cat=>allCatCounts[cat]>0).map(cat=>'<span onclick="showBusinesses(undefined,\'' + cat.replace(/'/g,"\\'") + '\')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;background:' + (activeCat===cat?'#057A44':'#f0f0f0') + ';color:' + (activeCat===cat?'white':'#0F1E36') + ';border:1.5px solid ' + (activeCat===cat?'#057A44':'#e0e0e0') + ';">' + (catEmojis[cat]||'🏢') + ' ' + cat.charAt(0).toUpperCase() + cat.slice(1) + ' <span style=\"font-size:10px;opacity:.7;\">('+allCatCounts[cat]+')</span></span>').join('')
       + '</div></div>';
     addTipMessage(catPillsHtml);
-  }
   messages.push({ role: 'assistant', content: 'Here are Nigerian businesses on Auntie Tobi: ' + page.map(b => b.name).join(', ') });
 }
 
