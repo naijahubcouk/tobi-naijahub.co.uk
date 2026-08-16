@@ -7602,15 +7602,30 @@ function updateBellButton(on) {
   bell.style.opacity = on ? '1' : '0.8';
 }
 
-// ── On every page load: set bell from real browser state ──
+// ── On every page load: set bell from real browser + OneSignal state ──
 function syncBellState() {
   var on = getBellState();
-  updateBellButton(on);
-  if (!on) {
-    // Clear stale localStorage
-    localStorage.removeItem('tobi_notifications');
+  // Also check if OneSignal is actually opted in
+  if (on && window.OneSignalDeferred) {
+    window.OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        var optedIn = await OneSignal.User.PushSubscription.optedIn;
+        if (!optedIn) {
+          // Browser says granted but OneSignal says opted out
+          updateBellButton(false);
+          localStorage.removeItem('tobi_notifications');
+        } else {
+          updateBellButton(true);
+          localStorage.setItem('tobi_notifications', '1');
+        }
+      } catch(e) {
+        updateBellButton(on);
+      }
+    });
   } else {
-    localStorage.setItem('tobi_notifications', '1');
+    updateBellButton(on);
+    if (!on) localStorage.removeItem('tobi_notifications');
+    else localStorage.setItem('tobi_notifications', '1');
   }
 }
 
@@ -7625,19 +7640,7 @@ function setDefaultNotifPrefs() {
   if (!localStorage.getItem(NOTIF_PREFS_KEY)) {
     localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(defaults));
   }
-  var prefs = getNotifPrefs();
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.User.addTags({
-        news: prefs.news !== false ? '1' : '0',
-        articles: prefs.articles !== false ? '1' : '0',
-        tips: prefs.tips !== false ? '1' : '0',
-        motivation: prefs.motivation !== false ? '1' : '0',
-        prayer: prefs.prayer !== false ? '1' : '0',
-      });
-    } catch(e) {}
-  });
+  // Tags not used for delivery (we send to Total Subscriptions segment)
 }
 
 function showNotifToast(msg) {
@@ -7795,24 +7798,28 @@ function saveNotifPrefs() {
     prefs[toggle.getAttribute('data-key')] = toggle.getAttribute('data-state') === 'on';
   });
   localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs));
-  localStorage.setItem('tobi_notifications', '1');
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.User.addTags({
-        news: prefs.news ? '1' : '0',
-        articles: prefs.articles ? '1' : '0',
-        tips: prefs.tips ? '1' : '0',
-        motivation: prefs.motivation ? '1' : '0',
-        prayer: prefs.prayer ? '1' : '0',
-      });
-    } catch(e) {}
-  });
   var allOff = Object.values(prefs).every(function(v) { return !v; });
-  updateBellButton(!allOff);
+
+  if (allOff) {
+    // Actually unsubscribe from OneSignal
+    localStorage.removeItem('tobi_notifications');
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function(OneSignal) {
+      try { await OneSignal.User.PushSubscription.optOut(); } catch(e) {}
+    });
+    updateBellButton(false);
+  } else {
+    localStorage.setItem('tobi_notifications', '1');
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function(OneSignal) {
+      try { await OneSignal.User.PushSubscription.optIn(); } catch(e) {}
+    });
+    updateBellButton(true);
+  }
+
   var modal = document.getElementById('notifPrefsModal');
   if (modal) modal.style.display = 'none';
-  showNotifToast(allOff ? 'Notifications paused' : 'Preferences saved 💚');
+  showNotifToast(allOff ? '🔕 Notifications turned off' : 'Preferences saved 💚');
 }
 
 
