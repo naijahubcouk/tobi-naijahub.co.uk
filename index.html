@@ -7582,14 +7582,115 @@ async function submitRequest() {
 
 <script>
 // ============================================
-// TOBI PUSH NOTIFICATIONS — OneSignal
-// Replace YOUR_ONESIGNAL_APP_ID below with
-// your App ID from onesignal.com
-// ============================================
+// TOBI PUSH NOTIFICATIONS
 const ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
+const NOTIF_PREFS_KEY = 'tobi_notif_prefs';
 
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
+// ── Bell state: source of truth is BROWSER permission only ──
+function getBellState() {
+  if (typeof Notification === 'undefined') return false;
+  return Notification.permission === 'granted';
+}
+
+function updateBellButton(on) {
+  var bell = document.getElementById('notify-bell');
+  if (!bell) return;
+  bell.innerHTML = on ? '🔔' : '🔕';
+  bell.title = on ? 'Manage notifications' : 'Enable notifications';
+  bell.style.opacity = on ? '1' : '0.8';
+}
+
+// ── On every page load: set bell from real browser state ──
+function syncBellState() {
+  var on = getBellState();
+  updateBellButton(on);
+  if (!on) {
+    // Clear stale localStorage
+    localStorage.removeItem('tobi_notifications');
+  } else {
+    localStorage.setItem('tobi_notifications', '1');
+  }
+}
+
+// ── Notification preferences ──
+function getNotifPrefs() {
+  try { return JSON.parse(localStorage.getItem(NOTIF_PREFS_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+
+function setDefaultNotifPrefs() {
+  var defaults = { news: true, articles: true, tips: true, motivation: true, prayer: true };
+  if (!localStorage.getItem(NOTIF_PREFS_KEY)) {
+    localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(defaults));
+  }
+  var prefs = getNotifPrefs();
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.User.addTags({
+        news: prefs.news !== false ? '1' : '0',
+        articles: prefs.articles !== false ? '1' : '0',
+        tips: prefs.tips !== false ? '1' : '0',
+        motivation: prefs.motivation !== false ? '1' : '0',
+        prayer: prefs.prayer !== false ? '1' : '0',
+      });
+    } catch(e) {}
+  });
+}
+
+function showNotifToast(msg) {
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0F1E36;color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(function() { if (toast.parentNode) toast.remove(); }, 3500);
+}
+
+// ── Bell click: request permission directly ──
+async function handleBellClick() {
+  if (typeof Notification === 'undefined') {
+    showNotifToast('Notifications not supported on this browser');
+    return;
+  }
+
+  var perm = Notification.permission;
+
+  if (perm === 'granted') {
+    // Already subscribed — show preferences
+    showNotifPrefs();
+    return;
+  }
+
+  if (perm === 'denied') {
+    showNotifToast('Notifications blocked. Go to browser Settings → Notifications → Allow auntietobi.co.uk');
+    return;
+  }
+
+  // 'default' — request permission
+  try {
+    var result = await Notification.requestPermission();
+    if (result === 'granted') {
+      updateBellButton(true);
+      localStorage.setItem('tobi_notifications', '1');
+      showNotifToast('🔔 Notifications enabled!');
+      // Register with OneSignal
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        try { await OneSignal.User.PushSubscription.optIn(); } catch(e) {}
+        setDefaultNotifPrefs();
+      });
+      setTimeout(function() { showNotifPrefs(); }, 800);
+    } else {
+      showNotifToast('Notifications not enabled');
+    }
+  } catch(e) {
+    showNotifToast('Could not enable notifications. Try from browser settings.');
+  }
+}
+
+// ── OneSignal init ──
 function initOneSignal() {
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
@@ -7597,44 +7698,56 @@ function initOneSignal() {
       safari_web_id: '',
       serviceWorkerParam: { scope: '/' },
       serviceWorkerPath: 'OneSignalSDKWorker.js',
-      notifyButton: { enable: false }, // We use our own custom bell button
+      notifyButton: { enable: false },
       promptOptions: {
         slidedown: {
           prompts: [{
             type: 'push',
-            autoPrompt: false, // We control when to ask
+            autoPrompt: false,
             text: {
-              actionMessage: "Get notified about new Nigerian businesses, events & deals on Auntie Tobi! ",
-              acceptButton: "Yes, notify me!",
-              cancelButton: "Maybe later"
+              actionMessage: 'Get notified about Nigerian businesses, events & tips on Auntie Tobi!',
+              acceptButton: 'Yes, notify me!',
+              cancelButton: 'Maybe later'
             }
           }]
         }
       }
     });
 
-    // Handle notification click when app is open (foreground)
+    // Sync bell state after OneSignal init
+    syncBellState();
+
+    // Listen for subscription changes
+    OneSignal.User.PushSubscription.addEventListener('change', function(event) {
+      var active = event.current && event.current.optedIn;
+      updateBellButton(active);
+      if (active) {
+        localStorage.setItem('tobi_notifications', '1');
+        if (!localStorage.getItem(NOTIF_PREFS_KEY)) setDefaultNotifPrefs();
+      } else {
+        localStorage.removeItem('tobi_notifications');
+      }
+    });
+
+    // Click handler for foreground notifications
     OneSignal.Notifications.addEventListener('click', function(event) {
-      const notif = event.notification;
-      // OneSignal uses different property names across versions
-      const url = (notif && (notif.launchURL || notif.launchUrl || notif.url || notif.launch_url || notif.additionalData && notif.additionalData.url)) || '';
-      // Clear pending banner and badge
+      var notif = event.notification;
+      var url = (notif && (notif.launchURL || notif.launchUrl || notif.url)) || '';
       localStorage.removeItem('tobi_pending_notif');
-      const banner = document.getElementById('notif-update-banner');
+      var banner = document.getElementById('notif-update-banner');
       if (banner) banner.remove();
-      if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
-      // Navigate to deep link if set
+      if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(function(){});
       if (url && url !== 'https://auntietobi.co.uk' && url !== window.location.href) {
         window.location.href = url;
       }
     });
 
-    // When notification arrives while app is open — show banner instead of OS notification
+    // Foreground notification — show banner
     OneSignal.Notifications.addEventListener('foregroundWillDisplay', function(event) {
-      const notif = event.notification;
+      var notif = event.notification;
       if (notif) {
         event.preventDefault();
-        const notifUrl = notif.launchURL || notif.launchUrl || notif.url || notif.launch_url || '';
+        var notifUrl = notif.launchURL || notif.launchUrl || notif.url || '';
         localStorage.setItem('tobi_pending_notif', JSON.stringify({
           title: notif.title || 'New update from Auntie Tobi!',
           body: notif.body || 'You have a new update 🇳🇬',
@@ -7643,280 +7756,65 @@ function initOneSignal() {
         showPendingNotifBanner();
       }
     });
-
-    // Check BOTH OneSignal state AND actual browser permission
-    const isOptedIn = await OneSignal.User.PushSubscription.optedIn;
-    const browserPermission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
-    console.log('[Tobi] OneSignal optedIn:', isOptedIn, '| Browser permission:', browserPermission);
-
-    // Only treat as subscribed if BOTH OneSignal AND browser agree
-    const trulySubscribed = isOptedIn && browserPermission === 'granted';
-
-    if (trulySubscribed) {
-      localStorage.setItem('tobi_notifications', '1');
-      updateBellButton(true);
-      if (!localStorage.getItem(NOTIF_PREFS_KEY)) setDefaultNotifPrefs();
-    } else {
-      localStorage.removeItem('tobi_notifications');
-      updateBellButton(false);
-    }
-
-    // Listen for future subscription changes
-    OneSignal.User.PushSubscription.addEventListener('change', (event) => {
-      const isActive = event.current.optedIn;
-      updateBellButton(isActive);
-      if (isActive) {
-        localStorage.setItem('tobi_notifications', '1');
-        // Only set default prefs on new subscription
-        if (!localStorage.getItem(NOTIF_PREFS_KEY)) setDefaultNotifPrefs();
-      }
-    });
   });
 }
 
-function updateBellButton(isSubscribed) {
-  const bell = document.getElementById('notify-bell');
-  if (!bell) return;
-  if (isSubscribed) {
-    bell.innerHTML = '🔔';
-    bell.title = 'Notifications ON';
-    bell.style.opacity = '1';
-  } else {
-    bell.innerHTML = '🔕';
-    bell.title = 'Get Auntie Tobi notifications';
-    bell.style.opacity = '0.7';
-  }
-}
+// Run syncBellState immediately (before OneSignal loads)
+// so bell shows correct state right away
+document.addEventListener('DOMContentLoaded', function() { syncBellState(); });
 
-async function toggleNotifications() {
-  OneSignalDeferred.push(async function(OneSignal) {
-    const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
-    if (isSubscribed) {
-      await OneSignal.User.PushSubscription.optOut();
-      localStorage.removeItem('tobi_notifications');
-      updateBellButton(false);
-      showNotifToast('Notifications turned off');
-    } else {
-      await OneSignal.Slidedown.promptPush();
-    }
-  });
-}
-
-function showNotifToast(msg) {
-  const toast = document.createElement('div');
-  toast.style.cssText = `
-    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
-    background:#0F1E36; color:white; padding:10px 20px; border-radius:20px;
-    font-size:13px; font-weight:600; z-index:999999; white-space:nowrap;
-    box-shadow:0 4px 16px rgba(0,0,0,0.3);
-  `;
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-// ===== NOTIFICATION PREFERENCES =====
-const NOTIF_PREFS_KEY = 'tobi_notif_prefs';
-
-// Migration: remove events key and reset all-false prefs
-(function() {
-  try {
-    const raw = localStorage.getItem('tobi_notif_prefs');
-    if (raw) {
-      const p = JSON.parse(raw);
-      const allOff = Object.values(p).every(v => !v);
-      if ('events' in p || allOff) {
-        // Remove events key and fix all-false
-        delete p.events;
-        if (allOff) {
-          // Reset to defaults
-          localStorage.removeItem('tobi_notif_prefs');
-        } else {
-          localStorage.setItem('tobi_notif_prefs', JSON.stringify(p));
-        }
-        console.log('[Tobi] Fixed notif prefs');
-      }
-    }
-  } catch(e) { localStorage.removeItem('tobi_notif_prefs'); }
-})();
-
-function getNotifPrefs() {
-  try { return JSON.parse(localStorage.getItem(NOTIF_PREFS_KEY) || '{}'); }
-  catch { return {}; }
-}
-
-function setDefaultNotifPrefs() {
-  // Set default categories ON (events removed from prefs)
-  const defaults = { news: true, articles: true, tips: true, motivation: true, prayer: true };
-  if (!localStorage.getItem(NOTIF_PREFS_KEY)) {
-    localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(defaults));
-  }
-  // Only send tags for active notification categories (not events)
-  const prefs = getNotifPrefs();
-  const activeTags = { news: prefs.news !== false ? '1' : '0', articles: prefs.articles !== false ? '1' : '0', tips: prefs.tips !== false ? '1' : '0', motivation: prefs.motivation !== false ? '1' : '0', prayer: prefs.prayer !== false ? '1' : '0' };
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.User.addTags(activeTags);
-      console.log('[Tobi] OneSignal tags set:', activeTags);
-    } catch(e) {
-      console.log('[Tobi] OneSignal tags error:', e.message);
-    }
-  });
-}
-
-function showNotifPrompt() {
-  // Friendly prompt shown after first article read
-  const existing = document.getElementById('notifPromptBanner');
-  if (existing) return;
-
-  const banner = document.createElement('div');
-  banner.id = 'notifPromptBanner';
-  banner.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:380px;background:#0F1E36;border-radius:16px;padding:14px 16px;z-index:9998;box-shadow:0 8px 32px rgba(0,0,0,0.3);';
-  banner.innerHTML = `
-    <div style="display:flex;align-items:flex-start;gap:10px;">
-      <div style="font-size:22px;flex-shrink:0;">🔔</div>
-      <div style="flex:1;">
-        <div style="color:white;font-size:13px;font-weight:700;margin-bottom:3px;">Stay in the loop!</div>
-        <div style="color:rgba(255,255,255,0.75);font-size:12px;line-height:1.5;">Auntie Tobi can send you news, tips and motivation. Choose what you'd like 💚</div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="document.getElementById('notifPromptBanner').remove();showNotifPrefs();" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Choose preferences</button>
-          <button onclick="document.getElementById('notifPromptBanner').remove();" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border:none;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit;">Later</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(banner);
-  setTimeout(() => { if (banner.parentNode) banner.remove(); }, 8000);
+if (ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID') {
+  initOneSignal();
 }
 
 function showNotifPrefs() {
-  const modal = document.getElementById('notifPrefsModal');
+  var modal = document.getElementById('notifPrefsModal');
   if (!modal) return;
-  const prefs = getNotifPrefs();
-  const hasPrefs = localStorage.getItem(NOTIF_PREFS_KEY);
-  document.querySelectorAll('.notif-toggle').forEach(toggle => {
-    const key = toggle.getAttribute('data-key');
-    // New users with no prefs: default everything ON except prayer
-    let isOn;
-    if (!hasPrefs) {
-      isOn = key !== 'prayer';
-    } else {
-      isOn = prefs[key] !== false;
-    }
-    applyToggleState(toggle, isOn);
+  var prefs = getNotifPrefs();
+  document.querySelectorAll('.notif-toggle').forEach(function(toggle) {
+    var key = toggle.getAttribute('data-key');
+    var on = prefs[key] !== false;
+    toggle.setAttribute('data-state', on ? 'on' : 'off');
+    toggle.style.background = on ? '#057A44' : '#e5e7eb';
+    var knob = toggle.querySelector('.toggle-knob');
+    if (knob) knob.style.left = on ? '22px' : '2px';
   });
   modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function closeNotifPrefs() {
-  const modal = document.getElementById('notifPrefsModal');
-  if (modal) modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function applyToggleState(toggle, isOn) {
-  const thumb = toggle.querySelector('span');
-  toggle.style.background = isOn ? '#057A44' : '#D1D5DB';
-  thumb.style.transform = isOn ? 'translateX(20px)' : 'translateX(0px)';
-  toggle.setAttribute('data-state', isOn ? 'on' : 'off');
 }
 
 function toggleNotifPref(toggle) {
-  const isOn = toggle.getAttribute('data-state') === 'on';
-  applyToggleState(toggle, !isOn);
+  var current = toggle.getAttribute('data-state') === 'on';
+  var newState = !current;
+  toggle.setAttribute('data-state', newState ? 'on' : 'off');
+  toggle.style.background = newState ? '#057A44' : '#e5e7eb';
+  var knob = toggle.querySelector('.toggle-knob');
+  if (knob) knob.style.left = newState ? '22px' : '2px';
 }
 
 function saveNotifPrefs() {
-  const prefs = {};
-  document.querySelectorAll('.notif-toggle').forEach(toggle => {
+  var prefs = {};
+  document.querySelectorAll('.notif-toggle').forEach(function(toggle) {
     prefs[toggle.getAttribute('data-key')] = toggle.getAttribute('data-state') === 'on';
   });
   localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs));
-  // Ensure subscription flag is marked
   localStorage.setItem('tobi_notifications', '1');
-
-  // If all categories off, update bell to show 🔕
-  const allOff = Object.values(prefs).every(v => !v);
-  const bell = document.getElementById('notify-bell');
-  if (bell && allOff) {
-    bell.innerHTML = '🔕';
-    bell.title = 'Notifications off — tap to manage';
-    bell.style.opacity = '0.7';
-  } else if (bell) {
-    bell.innerHTML = '🔔';
-    bell.title = 'Manage notification preferences';
-    bell.style.opacity = '1';
-  }
-
-  // Set OneSignal tags — only send known notification categories, never events
-  const allowedTags = ['news', 'articles', 'tips', 'motivation', 'prayer'];
-  const tags = {};
-  allowedTags.forEach(k => { tags[k] = prefs[k] ? '1' : '0'; });
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   window.OneSignalDeferred.push(async function(OneSignal) {
     try {
-      await OneSignal.User.addTags(tags);
-      console.log('[Tobi] Prefs saved to OneSignal:', tags);
-    } catch(e) {
-      console.log('[Tobi] Tag save error:', e.message);
-    }
+      await OneSignal.User.addTags({
+        news: prefs.news ? '1' : '0',
+        articles: prefs.articles ? '1' : '0',
+        tips: prefs.tips ? '1' : '0',
+        motivation: prefs.motivation ? '1' : '0',
+        prayer: prefs.prayer ? '1' : '0',
+      });
+    } catch(e) {}
   });
-  const msg = document.getElementById('notif-saved-msg');
-  if (msg) { msg.style.display = 'block'; }
-  setTimeout(() => {
-    if (msg) msg.style.display = 'none';
-    closeNotifPrefs();
-  }, 1500);
-}
-
-async function handleBellClick() {
-  const browserPermission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
-  const isSubscribed = localStorage.getItem('tobi_notifications') === '1' && browserPermission === 'granted';
-
-  if (isSubscribed) {
-    showNotifPrefs();
-    return;
-  }
-
-  // If permission was denied or dismissed, guide user to enable manually
-  if (browserPermission === 'denied') {
-    showNotifToast('To enable: tap the 🔒 lock in address bar → Notifications → Allow');
-    return;
-  }
-
-  if (typeof OneSignalDeferred !== 'undefined') {
-    OneSignalDeferred.push(async function(OneSignal) {
-      try {
-        // Try native browser prompt directly if OneSignal slidedown fails
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          // Now tell OneSignal to subscribe
-          try { await OneSignal.User.PushSubscription.optIn(); } catch(e) {}
-          localStorage.setItem('tobi_notifications', '1');
-          updateBellButton(true);
-          setDefaultNotifPrefs();
-          showNotifToast('🔔 Notifications enabled!');
-          setTimeout(() => showNotifPrefs(), 600);
-        } else {
-          showNotifToast('Notifications blocked. Enable in browser settings.');
-        }
-      } catch(e) {
-        // Fallback to OneSignal slidedown
-        try {
-          await OneSignal.Slidedown.promptPush({ force: true });
-        } catch(e2) {
-          showNotifToast('To enable notifications: tap 🔒 in address bar → Notifications → Allow');
-        }
-      }
-    });
-  }
-}
-
-// Init when page loads
-if (ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID') {
-  initOneSignal();
+  var allOff = Object.values(prefs).every(function(v) { return !v; });
+  updateBellButton(!allOff);
+  var modal = document.getElementById('notifPrefsModal');
+  if (modal) modal.style.display = 'none';
+  showNotifToast(allOff ? 'Notifications paused' : 'Preferences saved 💚');
 }
 
 
