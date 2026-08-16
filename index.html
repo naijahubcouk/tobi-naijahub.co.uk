@@ -7696,8 +7696,6 @@ function initOneSignal() {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
       safari_web_id: '',
-      serviceWorkerParam: { scope: '/' },
-      serviceWorkerPath: 'OneSignalSDKWorker.js',
       notifyButton: { enable: false },
       promptOptions: {
         slidedown: {
@@ -7857,12 +7855,7 @@ if ('serviceWorker' in navigator) {
     if ('caches' in window) {
       caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
     }
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => {
-        console.log('SW registered:', reg.scope);
-        reg.update();
-      })
-      .catch(err => console.log('SW error:', err));
+    // OneSignal handles service worker registration automatically
   });
 }
 
