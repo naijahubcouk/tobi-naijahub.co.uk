@@ -41,9 +41,7 @@ async function sendTaggedPush(tag, title, body, url) {
     app_id: APP_ID,
     headings: { en: title },
     contents: { en: body },
-    url: url || 'https://auntietobi.co.uk',
     web_url: url || 'https://auntietobi.co.uk',
-    app_url: url || 'https://auntietobi.co.uk',
     chrome_web_icon: 'https://auntietobi.co.uk/icons/icon-192.png',
     chrome_web_badge: 'https://auntietobi.co.uk/icons/icon-96.png',
     // Target ALL subscribers — simplest and most reliable
