@@ -34,3 +34,29 @@ self.addEventListener('fetch', event => {
   // Everything else — network first
   event.respondWith(fetch(event.request).catch(() => new Response('', { status: 503 })));
 });
+
+// Push event handler — fallback if OneSignalSDK doesn't intercept
+self.addEventListener('push', function(event) {
+  // OneSignalSDK.sw.js handles this — this is just a safety fallback
+  if (!event.data) return;
+  try {
+    const data = event.data.json();
+    const title = data.headings && data.headings.en ? data.headings.en : 'Auntie Tobi 🇳🇬';
+    const body = data.contents && data.contents.en ? data.contents.en : '';
+    const url = data.web_url || 'https://auntietobi.co.uk';
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body: body,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-96.png',
+        data: { url: url }
+      })
+    );
+  } catch(e) {}
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  const url = event.notification.data && event.notification.data.url ? event.notification.data.url : 'https://auntietobi.co.uk';
+  event.waitUntil(clients.openWindow(url));
+});
