@@ -7596,6 +7596,7 @@ function initOneSignal() {
       appId: ONESIGNAL_APP_ID,
       safari_web_id: '',
       serviceWorkerParam: { scope: '/' },
+      serviceWorkerPath: 'OneSignalSDKWorker.js',
       notifyButton: { enable: false }, // We use our own custom bell button
       promptOptions: {
         slidedown: {
@@ -7876,27 +7877,40 @@ async function handleBellClick() {
 
   if (isSubscribed) {
     showNotifPrefs();
-  } else {
-    // Not subscribed — prompt to subscribe, then show prefs AFTER confirmed
-    if (typeof OneSignalDeferred !== 'undefined') {
-      OneSignalDeferred.push(async function(OneSignal) {
+    return;
+  }
+
+  // If permission was denied or dismissed, guide user to enable manually
+  if (browserPermission === 'denied') {
+    showNotifToast('To enable: tap the 🔒 lock in address bar → Notifications → Allow');
+    return;
+  }
+
+  if (typeof OneSignalDeferred !== 'undefined') {
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        // Try native browser prompt directly if OneSignal slidedown fails
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          // Now tell OneSignal to subscribe
+          try { await OneSignal.User.PushSubscription.optIn(); } catch(e) {}
+          localStorage.setItem('tobi_notifications', '1');
+          updateBellButton(true);
+          setDefaultNotifPrefs();
+          showNotifToast('🔔 Notifications enabled!');
+          setTimeout(() => showNotifPrefs(), 600);
+        } else {
+          showNotifToast('Notifications blocked. Enable in browser settings.');
+        }
+      } catch(e) {
+        // Fallback to OneSignal slidedown
         try {
-          await OneSignal.Slidedown.promptPush();
-        } catch(e) {}
-        // Wait up to 6 seconds for subscription to confirm
-        let waited = 0;
-        const checkSubscribed = setInterval(() => {
-          waited += 300;
-          const nowSubscribed = localStorage.getItem('tobi_notifications') === '1';
-          if (nowSubscribed || waited >= 6000) {
-            clearInterval(checkSubscribed);
-            if (nowSubscribed) {
-              setTimeout(() => showNotifPrefs(), 500);
-            }
-          }
-        }, 300);
-      });
-    }
+          await OneSignal.Slidedown.promptPush({ force: true });
+        } catch(e2) {
+          showNotifToast('To enable notifications: tap 🔒 in address bar → Notifications → Allow');
+        }
+      }
+    });
   }
 }
 
