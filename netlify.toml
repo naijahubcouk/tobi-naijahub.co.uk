@@ -58,3 +58,6 @@
 [[edge_functions]]
   function = "biz-og"
   path = "/biz/*"
+
+[functions."auto-notify-news"]
+  schedule = "0 8 * * *"
