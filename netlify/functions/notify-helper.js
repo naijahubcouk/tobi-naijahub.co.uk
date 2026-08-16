@@ -1,6 +1,5 @@
 'use strict';
 const https = require('https');
-const { getStore } = require('@netlify/blobs');
 
 const APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
 
@@ -114,6 +113,7 @@ function parseRSSItems(xml) {
 
 async function getLastNotified(store, key) {
   try {
+    if (!store || typeof store.get !== 'function') return {};
     const raw = await store.get(key);
     return raw ? JSON.parse(raw) : {};
   } catch(e) {
@@ -123,6 +123,7 @@ async function getLastNotified(store, key) {
 
 async function setLastNotified(store, key, data) {
   try {
+    if (!store || typeof store.set !== 'function') return;
     await store.set(key, JSON.stringify(data));
   } catch(e) {
     console.log('[blobs] Failed to save state:', e.message);
