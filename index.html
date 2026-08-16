@@ -7649,16 +7649,16 @@ function initOneSignal() {
       }
     });
 
-    // Sync bell button with actual OneSignal subscription state
+    // Sync bell button with ACTUAL OneSignal subscription state — never trust localStorage
     const isOptedIn = await OneSignal.User.PushSubscription.optedIn;
     if (isOptedIn) {
       localStorage.setItem('tobi_notifications', '1');
       updateBellButton(true);
-      // Only set default prefs if not already set
       if (!localStorage.getItem(NOTIF_PREFS_KEY)) setDefaultNotifPrefs();
     } else {
-      const wasSubscribed = localStorage.getItem('tobi_notifications') === '1';
-      updateBellButton(wasSubscribed);
+      // Not actually subscribed — clear stale localStorage and show bell as OFF
+      localStorage.removeItem('tobi_notifications');
+      updateBellButton(false);
     }
 
     // Listen for future subscription changes
@@ -7693,7 +7693,7 @@ async function toggleNotifications() {
     const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
     if (isSubscribed) {
       await OneSignal.User.PushSubscription.optOut();
-      localStorage.setItem('tobi_notifications', '0');
+      localStorage.removeItem('tobi_notifications');
       updateBellButton(false);
       showNotifToast('Notifications turned off');
     } else {
