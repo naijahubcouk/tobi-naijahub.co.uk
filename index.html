@@ -7651,15 +7651,19 @@ function initOneSignal() {
       }
     });
 
-    // ALWAYS sync bell from actual OneSignal state — ignore localStorage completely
+    // Check BOTH OneSignal state AND actual browser permission
     const isOptedIn = await OneSignal.User.PushSubscription.optedIn;
-    console.log('[Tobi] OneSignal optedIn:', isOptedIn);
-    if (isOptedIn) {
+    const browserPermission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+    console.log('[Tobi] OneSignal optedIn:', isOptedIn, '| Browser permission:', browserPermission);
+
+    // Only treat as subscribed if BOTH OneSignal AND browser agree
+    const trulySubscribed = isOptedIn && browserPermission === 'granted';
+
+    if (trulySubscribed) {
       localStorage.setItem('tobi_notifications', '1');
       updateBellButton(true);
       if (!localStorage.getItem(NOTIF_PREFS_KEY)) setDefaultNotifPrefs();
     } else {
-      // Definitively not subscribed — clear everything
       localStorage.removeItem('tobi_notifications');
       updateBellButton(false);
     }
@@ -7875,9 +7879,10 @@ function saveNotifPrefs() {
 }
 
 async function handleBellClick() {
-  const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
+  const browserPermission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+  const isSubscribed = localStorage.getItem('tobi_notifications') === '1' && browserPermission === 'granted';
+
   if (isSubscribed) {
-    // Already subscribed — open preferences directly
     showNotifPrefs();
   } else {
     // Not subscribed — prompt to subscribe, then show prefs AFTER confirmed
