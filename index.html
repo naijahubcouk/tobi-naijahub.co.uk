@@ -4233,6 +4233,10 @@ function showContentTools() {
             <span style="font-size:16px;">🎥</span>
             <div style="text-align:left;"><div style="color:#dc2743;font-size:12px;font-weight:700;">Reel script</div><div style="color:#6B7280;font-size:10px;">30-sec script</div></div>
           </button>
+          <button onclick="ctShowPushTool()" style="display:flex;align-items:center;gap:8px;background:#f0faf5;border:1.5px solid #057A44;border-radius:8px;padding:11px 12px;cursor:pointer;">
+            <span style="font-size:16px;">🔔</span>
+            <div style="text-align:left;"><div style="color:#057A44;font-size:12px;font-weight:700;">Push Notification</div><div style="color:#6B7280;font-size:10px;">Send to subscribers</div></div>
+          </button>
         </div>
       </div>
     </div>
@@ -4293,8 +4297,70 @@ function showContentTools() {
 
 </div>`);
 
-  // Push tool logic
-  window._ptType = 'nhs';
+function ctShowPushTool() {
+  const existing = document.getElementById('ct-push-tool');
+  if (existing) { existing.scrollIntoView({behavior:'smooth'}); return; }
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.id = 'ct-push-tool';
+  div.style.cssText = 'margin-top:12px;';
+  div.innerHTML = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
+    <div style="background:#0F1E36;padding:8px 14px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:16px;">🔔</span>
+      <span style="color:white;font-weight:700;font-size:13px;">SEND PUSH NOTIFICATION</span>
+    </div>
+    <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+      <div>
+        <label style="font-size:11px;color:#9CA3AF;font-weight:600;display:block;margin-bottom:4px;">TITLE</label>
+        <input id="pt-title" type="text" placeholder="e.g. NHS Update" style="width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;box-sizing:border-box;" oninput="ptUpdateSlug()" />
+      </div>
+      <div>
+        <label style="font-size:11px;color:#9CA3AF;font-weight:600;display:block;margin-bottom:4px;">MESSAGE</label>
+        <textarea id="pt-msg" placeholder="Type your notification message..." rows="3" style="width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#9CA3AF;font-weight:600;display:block;margin-bottom:6px;">TYPE</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;" id="pt-types">
+          <button onclick="ptSetType(this,'tip')" style="padding:5px 12px;border-radius:16px;border:1.5px solid #e0e0e0;font-size:11px;font-weight:600;cursor:pointer;background:white;color:#0F1E36;font-family:inherit;">💡 Tip</button>
+          <button onclick="ptSetType(this,'nhs')" style="padding:5px 12px;border-radius:16px;border:1.5px solid #057A44;font-size:11px;font-weight:600;cursor:pointer;background:#057A44;color:white;font-family:inherit;">💉 NHS</button>
+          <button onclick="ptSetType(this,'news')" style="padding:5px 12px;border-radius:16px;border:1.5px solid #e0e0e0;font-size:11px;font-weight:600;cursor:pointer;background:white;color:#0F1E36;font-family:inherit;">📰 News</button>
+          <button onclick="ptSetType(this,'motivation')" style="padding:5px 12px;border-radius:16px;border:1.5px solid #e0e0e0;font-size:11px;font-weight:600;cursor:pointer;background:white;color:#0F1E36;font-family:inherit;">💪 Motivation</button>
+          <button onclick="ptSetType(this,'prayer')" style="padding:5px 12px;border-radius:16px;border:1.5px solid #e0e0e0;font-size:11px;font-weight:600;cursor:pointer;background:white;color:#0F1E36;font-family:inherit;">🙏 Prayer</button>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#9CA3AF;font-weight:600;display:block;margin-bottom:4px;">SOURCE URL <span style="font-weight:400;">(optional)</span></label>
+        <input id="pt-src" type="text" placeholder="https://www.nhs.uk/..." style="width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="font-size:11px;color:#9CA3AF;font-weight:600;display:block;margin-bottom:6px;">SUGGESTION BUBBLES</label>
+        <input id="pt-b1" type="text" placeholder="Bubble 1" style="width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:7px 10px;font-size:12px;font-family:inherit;margin-bottom:5px;box-sizing:border-box;" />
+        <input id="pt-b2" type="text" placeholder="Bubble 2" style="width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:7px 10px;font-size:12px;font-family:inherit;margin-bottom:5px;box-sizing:border-box;" />
+        <input id="pt-b3" type="text" placeholder="Bubble 3" style="width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:7px 10px;font-size:12px;font-family:inherit;box-sizing:border-box;" />
+      </div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:10px 12px;">
+        <label style="font-size:11px;color:#9CA3AF;font-weight:600;display:block;margin-bottom:4px;">SHORT LINK</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="pt-slug" style="font-size:12px;color:#057A44;font-weight:600;flex:1;word-break:break-all;">auntietobi.co.uk/n/nhs-update</div>
+          <button onclick="ptCopySlug()" style="font-size:11px;padding:4px 10px;border:1.5px solid #057A44;border-radius:8px;color:#057A44;background:none;cursor:pointer;font-family:inherit;white-space:nowrap;">Copy</button>
+        </div>
+      </div>
+      <button id="pt-send" onclick="ptSendPush()" style="width:100%;padding:12px;background:#057A44;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Send Push Notification</button>
+      <div id="pt-status" style="font-size:12px;text-align:center;color:#9CA3AF;min-height:18px;"></div>
+    </div>
+  </div>`;
+
+  // Append to messages div
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message bot';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.appendChild(div);
+  msgDiv.appendChild(bubble);
+  messages.appendChild(msgDiv);
+  setTimeout(() => div.scrollIntoView({behavior:'smooth'}), 100);
+}
+window.ctShowPushTool = ctShowPushTool;
   var _ptTypeConfig = {
     tip:        { slug:'tip' },
     nhs:        { slug:'nhs-update' },
