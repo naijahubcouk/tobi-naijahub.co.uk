@@ -40,5 +40,6 @@
 # ── Short notification links (/n/slug) ──
 /n/nhs-flu   /?action=tip&content=%F0%9F%92%89%20NHS%20update%3A%20winter%20flu%20and%20COVID%20vaccination%20bookings%20opened%20today%20for%20eligible%20people.%20Pregnant%20women%20and%20parents%3A%20check%20when%20you%20or%20your%20child%20can%20be%20vaccinated.&b1=Am%20I%20eligible%20for%20the%20free%20flu%20vaccine%3F&b2=Find%20a%20Nigerian%20community%20near%20me&b3=What%20NHS%20services%20can%20I%20access%3F&source=https%3A%2F%2Fwww.england.nhs.uk%2Fsouth%2F2026%2F08%2F17%2Fget-prepared-for-winter-bookings-for-flu-and-covid-19-vaccines-now-open%2F  301
 /push    /push.html    200
+/n/nhs-update-nhs-update   https://auntietobi.co.uk/?action=tip&content=Winter%20flu%20and%20COVID%20vaccination%20bookings%20opened%20today%20for%20eligible%20people.%20Pregnant%20women%20and%20parents%3A%20check%20when%20you%20or%20your%20child%20can%20be%20vaccinated.%E2%80%9D&b1=Am%20I%20actually%20eligible%3F&b2=Can%20I%20get%20the%20flu%20vaccine%20if%20I'm%20pregnant%3F&b3=What%20age%20do%20children%20need%20to%20be%3F&source=https%3A%2F%2Fwww.england.nhs.uk%2Fsouth%2F2026%2F08%2F17%2Fget-prepared-for-winter-bookings-for-flu-and-covid-19-vaccines-now-open%2F%3Futm_source%3Dchatgpt.com   301
 /* /index.html 200
 
