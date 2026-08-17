@@ -16,7 +16,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0F1E36; min-he
 label { font-size: 11px; color: #9CA3AF; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 5px; }
 input, textarea { width: 100%; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 9px 11px; font-size: 13px; font-family: inherit; color: #0F1E36; transition: border-color .2s; }
 input:focus, textarea:focus { outline: none; border-color: #057A44; }
-textarea { resize: vertical; min-height: 80px; }
+textarea { resize: vertical; min-height: 90px; }
 .types { display: flex; flex-wrap: wrap; gap: 6px; }
 .type-btn { padding: 6px 13px; border-radius: 16px; border: 1.5px solid #e0e0e0; font-size: 12px; font-weight: 600; cursor: pointer; background: white; color: #0F1E36; font-family: inherit; transition: all .15s; }
 .type-btn.active { background: #057A44; color: white; border-color: #057A44; }
@@ -27,7 +27,6 @@ textarea { resize: vertical; min-height: 80px; }
 .send-btn:disabled { opacity: .5; cursor: not-allowed; }
 .status { font-size: 12px; text-align: center; color: #9CA3AF; min-height: 20px; }
 .divider { border: none; border-top: 1px solid #f0f0f0; }
-.section-title { font-size: 13px; font-weight: 700; color: #0F1E36; }
 </style>
 </head>
 <body>
@@ -35,7 +34,7 @@ textarea { resize: vertical; min-height: 80px; }
   <div class="header">
     <span style="font-size:20px;">🔔</span>
     <h1>Send Push Notification</h1>
-    <a href="/">← Back to app</a>
+    <a href="/">← Back</a>
   </div>
   <div class="body">
 
@@ -53,32 +52,25 @@ textarea { resize: vertical; min-height: 80px; }
       <label>Type</label>
       <div class="types" id="pt-types">
         <button class="type-btn" onclick="setType(this,'tip')">💡 Tip</button>
-        <button class="type-btn active" onclick="setType(this,'nhs')">💉 NHS Update</button>
+        <button class="type-btn active" onclick="setType(this,'update')">📢 Update</button>
         <button class="type-btn" onclick="setType(this,'news')">📰 News</button>
+        <button class="type-btn" onclick="setType(this,'event')">🎉 Event</button>
+        <button class="type-btn" onclick="setType(this,'business')">🏢 Business</button>
         <button class="type-btn" onclick="setType(this,'motivation')">💪 Motivation</button>
         <button class="type-btn" onclick="setType(this,'prayer')">🙏 Prayer</button>
+        <button class="type-btn" onclick="setType(this,'jobs')">💼 Jobs</button>
+        <button class="type-btn" onclick="setType(this,'immigration')">🛂 Immigration</button>
+        <button class="type-btn" onclick="setType(this,'money')">💷 Money</button>
+        <button class="type-btn" onclick="setType(this,'health')">💊 Health</button>
+        <button class="type-btn" onclick="setType(this,'housing')">🏠 Housing</button>
       </div>
     </div>
 
     <hr class="divider">
-    <p class="section-title">Landing page options</p>
 
     <div>
       <label>Source URL <span style="font-weight:400;text-transform:none;">(optional — for Learn More button)</span></label>
-      <input id="pt-src" type="url" placeholder="https://www.nhs.uk/...">
-    </div>
-
-    <div>
-      <label>Suggestion Bubble 1</label>
-      <input id="pt-b1" type="text" placeholder="e.g. Am I eligible for the flu vaccine?">
-    </div>
-    <div>
-      <label>Suggestion Bubble 2</label>
-      <input id="pt-b2" type="text" placeholder="e.g. Find a Nigerian community near me">
-    </div>
-    <div>
-      <label>Suggestion Bubble 3</label>
-      <input id="pt-b3" type="text" placeholder="e.g. What NHS services can I access?">
+      <input id="pt-src" type="url" placeholder="https://...">
     </div>
 
     <hr class="divider">
@@ -86,26 +78,29 @@ textarea { resize: vertical; min-height: 80px; }
     <div>
       <label>Generated Short Link</label>
       <div class="slug-box">
-        <div class="slug-text" id="pt-slug">auntietobi.co.uk/n/nhs-update</div>
+        <div class="slug-text" id="pt-slug">auntietobi.co.uk/n/update</div>
         <button class="copy-btn" onclick="copySlug()">Copy</button>
       </div>
     </div>
 
-    <button class="send-btn" id="pt-send" onclick="sendPush()">🔔 Send Push Notification</button>
+    <button class="send-btn" id="pt-send" onclick="sendPush()">🔔 Send to All Subscribers</button>
     <div class="status" id="pt-status"></div>
 
   </div>
 </div>
 
 <script>
-var currentType = 'nhs';
-var slugBase = { tip:'tip', nhs:'nhs-update', news:'news', motivation:'motivation', prayer:'prayer' };
+var currentType = 'update';
+var slugBase = {
+  tip: 'tip', update: 'update', news: 'news', event: 'event',
+  business: 'business', motivation: 'motivation', prayer: 'prayer',
+  jobs: 'jobs', immigration: 'immigration', money: 'money',
+  health: 'health', housing: 'housing'
+};
 
 function setType(btn, type) {
   currentType = type;
-  document.querySelectorAll('.type-btn').forEach(function(b) {
-    b.classList.remove('active');
-  });
+  document.querySelectorAll('.type-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   updateSlug();
 }
@@ -125,6 +120,7 @@ function copySlug() {
   var txt = 'https://' + document.getElementById('pt-slug').textContent;
   navigator.clipboard.writeText(txt).then(function() {
     var st = document.getElementById('pt-status');
+    st.style.color = '#057A44';
     st.textContent = '✅ Copied to clipboard!';
     setTimeout(function() { st.textContent = ''; }, 2000);
   });
@@ -134,15 +130,12 @@ async function sendPush() {
   var title = document.getElementById('pt-title').value.trim();
   var msg   = document.getElementById('pt-msg').value.trim();
   var src   = document.getElementById('pt-src').value.trim();
-  var b1    = document.getElementById('pt-b1').value.trim();
-  var b2    = document.getElementById('pt-b2').value.trim();
-  var b3    = document.getElementById('pt-b3').value.trim();
   var slug  = document.getElementById('pt-slug').textContent.replace('auntietobi.co.uk/n/', '');
   var st    = document.getElementById('pt-status');
   var btn   = document.getElementById('pt-send');
 
-  if (!title) { st.textContent = '⚠️ Please enter a title'; st.style.color = '#e74c3c'; return; }
-  if (!msg)   { st.textContent = '⚠️ Please enter a message'; st.style.color = '#e74c3c'; return; }
+  if (!title) { st.style.color='#e74c3c'; st.textContent='⚠️ Please enter a title'; return; }
+  if (!msg)   { st.style.color='#e74c3c'; st.textContent='⚠️ Please enter a message'; return; }
 
   btn.disabled = true;
   st.style.color = '#9CA3AF';
@@ -152,14 +145,14 @@ async function sendPush() {
     var res = await fetch('/.netlify/functions/send-push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: title, message: msg, type: currentType, slug: slug, sourceUrl: src, b1: b1, b2: b2, b3: b3 })
+      body: JSON.stringify({ title: title, message: msg, type: currentType, slug: slug, sourceUrl: src })
     });
     var data = await res.json();
     if (data.success) {
       st.style.color = '#057A44';
       st.textContent = '✅ Notification sent!'
         + (data.shortUrl ? ' · ' + data.shortUrl : '')
-        + (data.github && data.github.added ? ' · Short link saved to _redirects ✅' : '');
+        + (data.github && data.github.added ? ' · Short link saved ✅' : '');
     } else {
       st.style.color = '#e74c3c';
       st.textContent = '❌ Error: ' + (data.error || 'Unknown error');
