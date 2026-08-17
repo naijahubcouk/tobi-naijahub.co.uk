@@ -4051,7 +4051,8 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl) {
   const bb2 = b2 || (typeof tip === 'object' ? tip.b2 : null) || 'Find a Nigerian business near me';
   const bb3 = b3 || (typeof tip === 'object' ? tip.b3 : null) || 'What benefits am I entitled to?';
 
-  const tipSourceUrl = sourceUrl || (typeof tip === 'object' && tip.sourceUrl) ? (sourceUrl || tip.sourceUrl) : null;
+  const tipSourceUrl = sourceUrl || (typeof tip === 'object' && tip.sourceUrl ? tip.sourceUrl : null);
+  const tipCategory = typeof tip === 'object' ? tip.category : null;
   const categorySourceUrls2 = {
     'Money': 'https://www.moneysavingexpert.com',
     'Benefits': 'https://www.gov.uk/benefits-calculators',
@@ -4063,18 +4064,36 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl) {
     'Transport': 'https://www.gov.uk/driving-licence-categories',
     'Safety': 'https://www.gov.uk/report-crime-anonymously',
   };
-  const tipCategory = typeof tip === 'object' ? tip.category : null;
   const resolvedSourceUrl = tipSourceUrl || (tipCategory && categorySourceUrls2[tipCategory]) || 'https://www.gov.uk';
 
+  // Detect title from content
+  const isNHS = tipText && /nhs|vaccine|vaccination|flu|covid|nhs/i.test(tipText);
+  const cardTitle = isNHS ? '💉 NHS UPDATE' : '💡 TIP OF THE DAY';
+
+  // Rotating bubbles — pick 2 random extras
+  const rotatingBubbles = [
+    ['🍛 Find a caterer', 'Find a Nigerian caterer near me'],
+    ['💄 Find a makeup artist', 'Find a Nigerian makeup artist near me'],
+    ['💇 Find a hair stylist', 'Find a Nigerian hair stylist near me'],
+    ['📸 Find a photographer', 'Show me all photography businesses'],
+    ['🎉 Find an event planner', 'Show me all event planners'],
+    ['💆 Find a skincare brand', 'Show me all skincare businesses'],
+    ['🎂 Find a cake maker', 'Show me all cakes & desserts businesses'],
+    ['🍱 Find a food store', 'Show me all foodstores & groceries businesses'],
+  ];
+  const shuffled = [...rotatingBubbles].sort(() => Math.random() - 0.5);
+  const r1 = shuffled[0];
+  const r2 = shuffled[1];
+
   addTipMessage(`<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
-    <div style="background:#057A44;padding:7px 14px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">💡</span><span style="color:white;font-weight:700;font-size:13px;letter-spacing:.04em;">TIP OF THE DAY</span></div>
+    <div style="background:#057A44;padding:7px 14px;display:flex;align-items:center;gap:8px;">
+      <span style="color:white;font-weight:700;font-size:13px;letter-spacing:.04em;">${cardTitle}</span>
     </div>
     <div style="padding:14px 16px;">
       <div style="font-size:14px;color:#0F1E36;line-height:1.7;margin-bottom:14px;">${tipText}</div>
       <div style="display:flex;gap:8px;">
         <a href="${resolvedSourceUrl}" target="_blank" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">🔗 Learn More</a>
-        <button onclick="shareTipOfDay()" style="flex:1;padding:9px 8px;background:#057A44;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share Tip</button>
+        <button onclick="tobiShare('${cardTitle.replace(/'/g,"\'")} from Auntie Tobi',decodeURIComponent(this.dataset.q),decodeURIComponent(this.dataset.u))" data-q="${encodeURIComponent(tipText.substring(0,120))}" data-u="${encodeURIComponent(resolvedSourceUrl)}" style="flex:1;padding:9px 8px;background:#057A44;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
       </div>
     </div>
   </div>
@@ -4082,6 +4101,8 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl) {
     <button class="suggestion-btn" onclick="quickAsk('${bb1.replace(/'/g,"\'")}')">💬 ${bb1}</button>
     <button class="suggestion-btn" onclick="quickAsk('${bb2.replace(/'/g,"\'")}')">💬 ${bb2}</button>
     <button class="suggestion-btn" onclick="quickAsk('${bb3.replace(/'/g,"\'")}')">💬 ${bb3}</button>
+    <button class="suggestion-btn" onclick="${r1[1].includes("'") ? 'quickAsk(\'' + r1[1].replace(/'/g,"\'") + '\')' : 'quickAsk(\'' + r1[1] + '\')'}">${r1[0]}</button>
+    <button class="suggestion-btn" onclick="quickAsk('${r2[1].replace(/'/g,"\'")}') ">${r2[0]}</button>
     <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
     <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
   </div>`);
@@ -4432,6 +4453,12 @@ function showLinksPage() {
           <div style="font-size:11px;color:#666;line-height:1.4;">Questions about listings or general enquiries?</div>
         </div>
       </div>
+      <a href="javascript:void(0)" onclick="showPaidPlanCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:#fffbf0;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
+        <span style="font-size:20px;">⭐</span>
+        <span style="flex:1;text-align:left;">Premium Membership <span style="background:#FFB81C;color:#0F1E36;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;margin-left:4px;vertical-align:middle;">NEW</span><span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Get featured, reach more customers &amp; grow faster</span></span>
+        <span style="color:#ccc;">›</span>
+      </a>
+
       <a href="https://wa.me/447594674940" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#057A44;color:white;text-decoration:none;padding:11px;border-radius:10px;font-weight:800;font-size:13px;">💬 Chat With Us on WhatsApp</a>
     </div>
 
