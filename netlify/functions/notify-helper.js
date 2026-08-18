@@ -57,15 +57,20 @@ async function sendTaggedPush(tag, title, body, url) {
 
   const sent = result.data.recipients || 0;
   const id = result.data.id || 'unknown';
-  console.log(`[${tag}] ✅ Sent to ${sent} subscribers. Notification ID: ${id}`);
+  const errors = result.data.errors;
+  if (errors) {
+    console.log(`[${tag}] ⚠️ OneSignal errors:`, JSON.stringify(errors));
+  } else {
+    console.log(`[${tag}] ✅ Notification queued. ID: ${id}. Recipients: ${sent > 0 ? sent : 'queued (segment delivery)'}`);
+  }
   return result;
 }
 
 function fetchRSS(hostname, path) {
   return new Promise((resolve, reject) => {
     const req = https.request({
-      hostname: hostname || 'www.auntietobi.com',
-      path: path || '/feed.xml',
+      hostname: hostname || 'auntietobi.com',
+      path: path || '/feed/blog',
       method: 'GET',
       headers: { 'User-Agent': 'AuntieTobi-Notifier/1.0' }
     }, (res) => {
