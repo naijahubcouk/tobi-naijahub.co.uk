@@ -1172,7 +1172,13 @@ CRITICAL RULES:
 2. Only mention WhatsApp if the business has WhatsApp listed.
 3. When you cannot find a business in the data say: "I don't have that listed yet — you can search Google for Nigerian businesses near you, or visit the Auntie Tobi Website to find or list a business! 🙏🏾
 
-👉 Are you a Nigerian business owner? Get listed on Auntie Tobi and let Auntie Tobi recommend you to thousands of Nigerians across the UK! List your business on the Auntie Tobi Website — <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">click here to list your business</a> "
+👉 Are you a Nigerian business owner? Get listed on Auntie Tobi and let Auntie Tobi recommend you to thousands of Nigerians across the UK! List your business on the Auntie Tobi Website — <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">click here to list your business</a>
+
+<a href="javascript:void(0)" onclick="resetAndShow(showBusinesses);setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">🏢</span>
+      <span style="flex:1;text-align:left;">Discover Nigerian Businesses<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Find Nigerian businesses near you across the UK</span></span>
+      <span style="color:#ccc;">›</span>
+    </a> "
 
 4. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on Auntie Tobi and Auntie Tobi will tell everyone! <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Submit your event here</a> "
 
@@ -4589,6 +4595,24 @@ function showLinksPage() {
       <span style="color:#ccc;">›</span>
     </a>
 
+    <a href="javascript:void(0)" onclick="showPaidPlanCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:#fffbf0;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">⭐</span>
+      <span style="flex:1;text-align:left;">Premium Membership <span style="background:#FFB81C;color:#0F1E36;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;margin-left:4px;vertical-align:middle;">NEW</span><span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Get featured, reach more customers &amp; grow faster</span></span>
+      <span style="color:#ccc;">›</span>
+    </a>
+
+    <div style="margin-top:4px;">
+      <div style="font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:8px;padding:0 2px;">⭐ Featured Businesses</div>
+      <div style="position:relative;overflow:hidden;border-radius:12px;" id="feat-carousel">
+        <div id="feat-track" style="display:flex;transition:transform .4s ease;"><div style="min-width:100%;"><div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;position:relative;padding-top:12px;"><div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div><div style="padding:12px 14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div style="font-size:14px;font-weight:700;color:#0F1E36;">Funmis Treasure</div><span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;">Foodstores & Groceries</span></div><div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div><div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;">Funmi's Treasure is your go-to source for authentic African products and foods delivered throughout ...</div><div style="font-size:11px;color:#9CA3AF;margin-bottom:10px;">📍 30 Brimsdown Ave</div><div style="display:flex;gap:6px;"><a href="/biz/funmis-treasure" class="tobi-biz-link" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a><a href="https://wa.me/447435844799" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block;">WhatsApp</a></div></div></div></div><div style="min-width:100%;"><div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;position:relative;padding-top:12px;"><div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div><div style="padding:12px 14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div style="font-size:14px;font-weight:700;color:#0F1E36;">Tombell Education Consultancy Ltd</div><span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;">Education Consultancy</span></div><div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div><div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;">Tombelledu is a British Council Certified education consultancy helping students achieve their study...</div><div style="font-size:11px;color:#9CA3AF;margin-bottom:10px;">📍 Sandstone Dr</div><div style="display:flex;gap:6px;"><a href="/biz/tombell-education-consultancy-ltd" class="tobi-biz-link" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a><a href="https://wa.me/23490666749560" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block;">WhatsApp</a></div></div></div></div></div>
+        <div style="position:absolute;top:50%;transform:translateY(-50%);width:100%;display:flex;justify-content:space-between;padding:0 6px;pointer-events:none;">
+          <button onclick="featNav(-1)" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.95);border:1px solid #e0e0e0;cursor:pointer;font-size:16px;font-family:inherit;pointer-events:all;">‹</button>
+          <button onclick="featNav(1)" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.95);border:1px solid #e0e0e0;cursor:pointer;font-size:16px;font-family:inherit;pointer-events:all;">›</button>
+        </div>
+      </div>
+      <div id="feat-dots" style="display:flex;justify-content:center;gap:6px;margin-top:8px;"><div onclick="featGoTo(0)" style="width:7px;height:7px;border-radius:50%;background:#057A44;cursor:pointer;" id="feat-dot-0"></div><div onclick="featGoTo(1)" style="width:7px;height:7px;border-radius:50%;background:#e0e0e0;cursor:pointer;" id="feat-dot-1"></div></div>
+    </div>
+
     <div style="background:#f0f9f4;border:1.5px solid #b8e0cb;border-radius:14px;padding:15px;">
       <div style="display:flex;align-items:center;gap:11px;margin-bottom:11px;">
         <div style="width:40px;height:40px;border-radius:50%;background:#057A44;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;">
@@ -4600,12 +4624,6 @@ function showLinksPage() {
           <div style="font-size:11px;color:#666;line-height:1.4;">Questions about listings or general enquiries?</div>
         </div>
       </div>
-      <a href="javascript:void(0)" onclick="showPaidPlanCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:#fffbf0;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
-        <span style="font-size:20px;">⭐</span>
-        <span style="flex:1;text-align:left;">Premium Membership <span style="background:#FFB81C;color:#0F1E36;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;margin-left:4px;vertical-align:middle;">NEW</span><span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Get featured, reach more customers &amp; grow faster</span></span>
-        <span style="color:#ccc;">›</span>
-      </a>
-
       <a href="https://wa.me/447594674940" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#057A44;color:white;text-decoration:none;padding:11px;border-radius:10px;font-weight:800;font-size:13px;">💬 Chat With Us on WhatsApp</a>
     </div>
 
@@ -8501,6 +8519,20 @@ document.addEventListener('click',function(e){
   }
 });
 window._tobiNav=function(s){window.history.pushState({},'','/?biz='+s);if(typeof handleDeepLink==='function')handleDeepLink();};
+
+var _featCurrent = 0, _featTotal = 2, _featTimer;
+function featGoTo(n) {
+  _featCurrent = (n + _featTotal) % _featTotal;
+  var t = document.getElementById('feat-track');
+  if (t) t.style.transform = 'translateX(-' + (_featCurrent * 100) + '%)';
+  for (var i = 0; i < _featTotal; i++) {
+    var d = document.getElementById('feat-dot-' + i);
+    if (d) d.style.background = i === _featCurrent ? '#057A44' : '#e0e0e0';
+  }
+}
+function featNav(dir) { featGoTo(_featCurrent + dir); clearInterval(_featTimer); _featTimer = setInterval(function(){featGoTo(_featCurrent+1);}, 5000); }
+if (typeof window !== 'undefined') { _featTimer = setInterval(function(){featGoTo(_featCurrent+1);}, 5000); }
+
 </script>
 </body>
 </html>
