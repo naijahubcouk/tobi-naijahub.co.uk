@@ -7101,12 +7101,19 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
   window.history.replaceState({}, '', '/');
   if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
   setTimeout(() => scrollToTop(), 50);
+
+  // Clear and reset on fresh load (not Show More)
+  if (startIndex === undefined) {
+    const messages = document.getElementById('messages');
+    if (messages) messages.innerHTML = '';
+    window._busMessages = [];
+    shownBusinessIndexes = [];
+  }
   const allBiz = getLiveDirectory().filter(b => b.slug && b.slug.trim() !== '' && b.name && b.name.trim() !== '');
   if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
     shownBusinessIndexes = [];
   }
-  // Reset shown indexes when category filter changes or on first load
-  if (startIndex === undefined) shownBusinessIndexes = [];
+  // filteredBiz and locationFilteredBiz computed below
 
   const activeCat = filterCat || null;
 
@@ -7117,15 +7124,15 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
     'alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️',
     'suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓',
   };
-  const filteredBiz = activeCat
+  const activeCatFiltered = activeCat
     ? allBiz.filter(b => b.cat === activeCat)
-    : allBiz.filter(b => b.verified);
+    : allBiz;
 
-  // Apply location filter
+  // Apply location filter — when city selected show all businesses there, not just verified
   const activeLocation = locationFilter || null;
   const locationFilteredBiz = activeLocation
-    ? filteredBiz.filter(b => (b.loc||'').toLowerCase().includes(activeLocation))
-    : filteredBiz;
+    ? activeCatFiltered.filter(b => (b.loc||'').toLowerCase().includes(activeLocation))
+    : (activeCat ? activeCatFiltered : allBiz.filter(b => b.verified));
 
   // Update active city pill if present
   setTimeout(() => {
@@ -7169,7 +7176,7 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
   messages = [];
   scrollToTop();
 
-  addTipMessage(`<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">${activeCat ? (catEmojis[activeCat]||'🏢') + ' ' + activeCat.charAt(0).toUpperCase() + activeCat.slice(1) : '⭐ Featured Businesses on Auntie Tobi'}</div>`);
+  addTipMessage(`<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">${activeLocation ? '🏢 Nigerian Businesses in ' + activeLocation.charAt(0).toUpperCase() + activeLocation.slice(1) : activeCat ? (catEmojis[activeCat]||'🏢') + ' ' + activeCat.charAt(0).toUpperCase() + activeCat.slice(1) : '⭐ Featured Businesses on Auntie Tobi'}</div>`);
 
   // Get all unique categories sorted by count
   const allCatCounts = {};
