@@ -7913,6 +7913,8 @@ function initOneSignal() {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
       safari_web_id: '',
+      serviceWorkerParam: { scope: '/' },
+      serviceWorkerPath: 'OneSignalSDKWorker.js',
       notifyButton: { enable: false },
       promptOptions: {
         slidedown: {
@@ -8072,11 +8074,10 @@ navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Clear all caches to ensure fresh content
-    if ('caches' in window) {
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    }
-    // OneSignal handles service worker registration automatically
+    // Register OneSignal service worker explicitly
+    navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' })
+      .then(function(reg) { console.log('[SW] Registered:', reg.scope); })
+      .catch(function(err) { console.log('[SW] Failed:', err); });
   });
 }
 
@@ -16476,6 +16477,8 @@ function initOneSignal() {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
       safari_web_id: '',
+      serviceWorkerParam: { scope: '/' },
+      serviceWorkerPath: 'OneSignalSDKWorker.js',
       notifyButton: { enable: false },
       promptOptions: {
         slidedown: {
@@ -16635,11 +16638,10 @@ navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Clear all caches to ensure fresh content
-    if ('caches' in window) {
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    }
-    // OneSignal handles service worker registration automatically
+    // Register OneSignal service worker explicitly
+    navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' })
+      .then(function(reg) { console.log('[SW] Registered:', reg.scope); })
+      .catch(function(err) { console.log('[SW] Failed:', err); });
   });
 }
 
