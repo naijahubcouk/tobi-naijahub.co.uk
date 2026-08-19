@@ -1979,7 +1979,7 @@ function formatResponse(text) {
             + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">\uD83D\uDCCD ' + (b.loc || 'UK') + '</div>'
             + '<div style="display:flex;gap:6px;">' + actionBtns + '</div>'
             + '</div>'
-            + '</div>';
+            + '</div></a>';
         }).join('') + '</div>';
 
         text = text.replace(/<<<BIZ_JSON:[\s\S]*?>>>/, '|||BIZ_CARDS|||' + cardsHTML + '|||END_BIZ|||');
@@ -7198,6 +7198,7 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
     : 'resetToWelcome()';
   addTipMessage('<div class="suggestions" style="margin-top:8px;">'
     + '<button class="suggestion-btn" onclick="' + ma + '">' + ml + '</button>'
+    + '<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null)">🏢 All businesses</button>'
     + '<button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>'
     + '<button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button>'
     + '<button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>'
