@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Auntie Tobi — Your UK Guide for Nigerians 🇬🇧🇳🇬</title>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-W04NZL044S"></script>
@@ -7170,19 +7170,19 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
 
   page.forEach(function(b) {
     if (!b) return;
-    var cat = (b.cat && b.cat.toLowerCase() !== 'nigerian business') ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
+    var cat = (b && b.cat && typeof b.cat === 'string' && b.cat.toLowerCase() !== 'nigerian business') ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
     var su = 'https://auntietobi.co.uk/biz/' + b.slug;
     var vb = b.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div>' : '';
     var vl = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
-    var wa = b.wa ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
+    var wa = (b.verified && b.wa) ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
     var dd = b.desc ? '<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px;">' + b.desc.substring(0,120) + (b.desc.length>120?'...':'') + '</div>' : '';
     var html = '<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;position:relative;' + (b.verified?'padding-top:18px;':'') + '">'
       + vb
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
-      + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + b.name + '</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + (b.name||'') + '</div>'
       + (cat ? '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + cat + '</span>' : '')
       + '</div>' + vl + dd
-      + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'UK') + '</div>'
+      + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'UK').split(',')[0] + '</div>'
       + '<div style="display:flex;gap:6px;">'
       + '<a href="/biz/' + b.slug + '" class="tobi-biz-link" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>'
       + wa
