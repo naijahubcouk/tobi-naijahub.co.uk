@@ -124,7 +124,7 @@
     gap: 12px;
     flex-shrink: 0;
     position: relative;
-    z-index: 999;
+    z-index: 10;
   }
 
   .logo {
@@ -7992,6 +7992,8 @@ function closeNotifPrefs() {
 function showNotifPrefs() {
   var modal = document.getElementById('notifPrefsModal');
   if (!modal) return;
+  // Move to body level so .app overflow:hidden doesn't clip it
+  if (modal.parentNode !== document.body) document.body.appendChild(modal);
   var prefs = getNotifPrefs();
   document.querySelectorAll('.notif-toggle').forEach(function(toggle) {
     var key = toggle.getAttribute('data-key');
@@ -8285,7 +8287,7 @@ window.addEventListener('load', () => {
 </style>
 
 <!-- Notification Preferences Modal -->
-<div id="notifPrefsModal" style="display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;">
+<div id="notifPrefsModal" style="display:none;position:fixed;inset:0;z-index:2147483647;flex-direction:column;">
   <div onclick="closeNotifPrefs()" style="flex:1;background:rgba(0,0,0,0.5);"></div>
   <div style="background:white;border-radius:20px 20px 0 0;overflow:hidden;max-height:90vh;overflow-y:auto;">
     <!-- Header -->
@@ -16436,6 +16438,8 @@ if (ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID') {
 function showNotifPrefs() {
   var modal = document.getElementById('notifPrefsModal');
   if (!modal) return;
+  // Move to body level so .app overflow:hidden doesn't clip it
+  if (modal.parentNode !== document.body) document.body.appendChild(modal);
   var prefs = getNotifPrefs();
   document.querySelectorAll('.notif-toggle').forEach(function(toggle) {
     var key = toggle.getAttribute('data-key');
@@ -16702,7 +16706,7 @@ window.addEventListener('load', () => {
 </style>
 
 <!-- Notification Preferences Modal -->
-<div id="notifPrefsModal" style="display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;">
+<div id="notifPrefsModal" style="display:none;position:fixed;inset:0;z-index:2147483647;flex-direction:column;">
   <div onclick="closeNotifPrefs()" style="flex:1;background:rgba(0,0,0,0.5);"></div>
   <div style="background:white;border-radius:20px 20px 0 0;overflow:hidden;max-height:90vh;overflow-y:auto;">
     <!-- Header -->
