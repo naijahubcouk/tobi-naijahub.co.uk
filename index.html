@@ -7142,6 +7142,16 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
   scrollToTop();
   setTimeout(function(){ scrollToTop(); }, 50);
 
+  // Handle empty results
+  if (filtered.length === 0) {
+    var catQ2 = _cat ? _cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'") : '';
+    var catArg2 = _cat ? ("'" + catQ2 + "'") : 'null';
+    addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">' + title + '</div>');
+    addTipMessage('<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:14px;">No businesses listed here yet.<br>Try another city or browse all UK.</div>');
+    addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinesses(undefined,'+catArg2+',null)">📍 All UK</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
+    return;
+  }
+
   // Safe args for onclick — use single quotes, escape apostrophes
   var catQ = _cat ? _cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'") : '';
   var locQ = _loc ? _loc.replace(/'/g,"\\'") : '';
