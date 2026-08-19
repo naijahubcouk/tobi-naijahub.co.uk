@@ -7179,7 +7179,7 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
   // 3. BUBBLES
   var ml=hasMore?'👀 Show more':'🏠 Back to Home';
   var ma=hasMore?'showBusinesses('+shownBusinessIndexes.length+','+catArg+','+locArg+')':'resetToWelcome()';
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="'+ma+'">'+ml+'</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium</button></div>');
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="'+ma+'">'+ml+'</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button></div>');
 
   // 4. CTA
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
@@ -8063,6 +8063,32 @@ if ('serviceWorker' in navigator) {
 
 // PWA Install Prompt
 let deferredPrompt;
+
+// Detect Instagram/Facebook in-app browser and show open-in-browser prompt
+(function() {
+  var ua = navigator.userAgent || '';
+  var isInApp = /Instagram|FBAN|FBAV|FB_IAB/i.test(ua);
+  if (!isInApp) return;
+  setTimeout(function() {
+    if (document.getElementById('open-in-browser-banner')) return;
+    var isIOS = /iPhone|iPad|iPod/i.test(ua);
+    var banner = document.createElement('div');
+    banner.id = 'open-in-browser-banner';
+    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#0F1E36;color:white;padding:14px 16px;z-index:999999;display:flex;align-items:flex-start;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);';
+    banner.innerHTML = '<div style="font-size:22px;flex-shrink:0;">📲</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-weight:700;font-size:14px;margin-bottom:3px;">Install Auntie Tobi for free!</div>'
+      +'<div style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;">'
+      +(isIOS
+        ?'Tap <strong style="color:#FFB81C;">⋯</strong> at the bottom → <strong style="color:#FFB81C;">Open in Safari</strong> → then Add to Home Screen'
+        :'Tap <strong style="color:#FFB81C;">⋮</strong> top right → <strong style="color:#FFB81C;">Open in Chrome</strong> → then install')
+      +'</div></div>'
+      +'<button id="oib-close" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;flex-shrink:0;line-height:1;padding:0;">&times;</button>';
+    document.body.appendChild(banner);
+    document.getElementById('oib-close').onclick = function(){ banner.remove(); };
+    return;
+  }, 1500);
+})();
 const banner = document.getElementById('install-banner');
 const installBtn = document.getElementById('install-btn');
 const closeBtn = document.getElementById('banner-close');
@@ -15715,7 +15741,7 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
   // 3. BUBBLES
   var ml=hasMore?'👀 Show more':'🏠 Back to Home';
   var ma=hasMore?'showBusinesses('+shownBusinessIndexes.length+','+catArg+','+locArg+')':'resetToWelcome()';
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="'+ma+'">'+ml+'</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium</button></div>');
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="'+ma+'">'+ml+'</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button></div>');
 
   // 4. CTA
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
@@ -16598,7 +16624,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // PWA Install Prompt
-let deferredPrompt;
+
 const banner = document.getElementById('install-banner');
 const installBtn = document.getElementById('install-btn');
 const closeBtn = document.getElementById('banner-close');
