@@ -7984,6 +7984,11 @@ if (ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID') {
   initOneSignal();
 }
 
+function closeNotifPrefs() {
+  var modal = document.getElementById('notifPrefsModal');
+  if (modal) modal.style.display = 'none';
+}
+
 function showNotifPrefs() {
   var modal = document.getElementById('notifPrefsModal');
   if (!modal) return;
@@ -15678,121 +15683,6 @@ function scrollToTop() {
   });
 }
 
-
-function showBusinesses(startIndex, filterCat, locationFilter) {
-  window._currentPage = 'businesses';
-  window.history.replaceState({}, '', '/');
-
-  var _cat = filterCat || null;
-  var _loc = locationFilter || null;
-  var allBiz = getLiveDirectory().filter(function(b){ return b.slug && b.name; });
-
-  // Filter
-  var filtered = _cat ? allBiz.filter(function(b){return b.cat===_cat;}) : allBiz;
-  if (_loc) filtered = filtered.filter(function(b){return (b.loc||'').toLowerCase().indexOf(_loc)!==-1;});
-  if (!_cat && !_loc) filtered = allBiz.filter(function(b){return b.verified;});
-
-  if (startIndex===undefined) shownBusinessIndexes=[];
-  var avail=filtered.map(function(b,i){return i;}).filter(function(i){return shownBusinessIndexes.indexOf(i)===-1;});
-  var pick=[];
-  if (startIndex===undefined){
-    var vi=avail.filter(function(i){return filtered[i].verified;});
-    var ri=avail.filter(function(i){return !filtered[i].verified;});
-    for(var k=ri.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=ri[k];ri[k]=ri[j];ri[j]=t;}
-    pick=vi.concat(ri).slice(0,6);
-  } else {
-    var sh=avail.slice();
-    for(var k=sh.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=sh[k];sh[k]=sh[j];sh[j]=t;}
-    pick=sh.slice(0,6);
-  }
-  pick.forEach(function(i){shownBusinessIndexes.push(i);});
-  var page=pick.map(function(i){return filtered[i];});
-  var hasMore=shownBusinessIndexes.length<filtered.length;
-
-  // Clear
-  var msgEl=document.getElementById('messages');
-  if(msgEl) msgEl.innerHTML='';
-  messages=[];
-  scrollToTop();
-  setTimeout(function(){scrollToTop();},50);
-
-  var catArg=_cat?JSON.stringify(_cat):'null';
-  var locArg=_loc?JSON.stringify(_loc):'null';
-
-  // 1. TITLE
-  var title=_loc?'🏢 Nigerian Businesses in '+_loc.charAt(0).toUpperCase()+_loc.slice(1)
-    :_cat?'🏢 '+_cat.charAt(0).toUpperCase()+_cat.slice(1)
-    :'⭐ Featured Businesses on Auntie Tobi';
-  addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">'+title+'</div>');
-
-  // 2. CARDS
-  var catEmojis={'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒','restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜','photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️','alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️','suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓'};
-  page.forEach(function(b){
-    if(!b) return;
-    var cat=(b.cat&&b.cat.toLowerCase()!=='nigerian business')?b.cat.charAt(0).toUpperCase()+b.cat.slice(1):'';
-    var sn=b.name.replace(/['"]/g,'');
-    var su='https://auntietobi.co.uk/biz/'+b.slug;
-    var vb=b.verified?'<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div>':'';
-    var vl=b.verified?'<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>':'';
-    var wa=b.wa?'<a href="https://wa.me/'+b.wa.replace(/\D/g,'')+'" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>':'';
-    var dd=b.desc?'<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px;">'+b.desc.substring(0,120)+(b.desc.length>120?'...':'')+'</div>':'';
-        var card = document.createElement('div');
-    card.style.cssText = 'background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;position:relative;'+(b.verified?'padding-top:18px;':'');
-    card.innerHTML = vb
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
-      +'<div style="font-size:15px;font-weight:700;color:#0F1E36;">'+b.name+'</div>'
-      +(cat?'<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">'+cat+'</span>':'')
-      +'</div>'+vl+dd
-      +'<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+(b.loc||'UK')+'</div>'
-      +'<div style="display:flex;gap:6px;">'
-      +'<a href="/biz/'+b.slug+'" class="tobi-biz-link" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>'
-      +wa
-      +'<button class="_biz-share-btn" data-name="'+b.name.replace(/"/g,'&quot;')+'" data-url="'+su+'" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>'
-      +'</div>';
-    card.querySelectorAll && setTimeout(function(){
-      card.querySelectorAll('._biz-share-btn').forEach(function(btn){
-        btn.addEventListener('click', function(){
-          tobiShare(btn.dataset.name, 'Check out '+btn.dataset.name+' on Auntie Tobi!', btn.dataset.url);
-        });
-      });
-    }, 0);
-    addTipMessage(card.outerHTML);
-  });
-
-  // 3. BUBBLES
-  var ml=hasMore?'👀 Show more':'🏠 Back to Home';
-  var ma=hasMore?'showBusinesses('+shownBusinessIndexes.length+','+catArg+','+locArg+')':'resetToWelcome()';
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="'+ma+'">'+ml+'</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button><button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button></div>');
-
-  // 4. CTA
-  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
-
-  // 5. CATEGORIES
-  var acc={};
-  allBiz.forEach(function(b){if(b.cat&&b.cat!=='nigerian business')acc[b.cat]=(acc[b.cat]||0)+1;});
-  var acs=Object.keys(acc).sort(function(a,b){return acc[b]-acc[a];});
-  var cp='<div style="background:white;border-radius:12px;padding:14px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">🗂️ Nigerian Business Categories on Auntie Tobi</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
-  cp+='<span onclick="showBusinesses(undefined,null,'+locArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(!_cat?'#057A44':'#e0e0e0')+';background:'+(!_cat?'#057A44':'#f0f0f0')+';color:'+(!_cat?'white':'#0F1E36')+';">All</span>';
-  acs.filter(function(c){return acc[c]>0;}).forEach(function(c){
-    var a=_cat===c;
-        cp+='<span onclick="showBusinesses(undefined,\''+c.replace(/\'/g,"\\'")+'\',' + locArg + ')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(a?'#057A44':'#e0e0e0')+';background:'+(a?'#057A44':'#f0f0f0')+';color:'+(a?'white':'#0F1E36')+';">'+(catEmojis[c]||'🏢')+' '+c.charAt(0).toUpperCase()+c.slice(1)+' <span style="font-size:10px;opacity:.7;">('+acc[c]+')</span></span>';
-    });
-  cp+='</div></div>';
-  addTipMessage(cp);
-
-  // 6. CITIES
-  var cityData = [["london", 35], ["birmingham", 9], ["manchester", 8], ["sheffield", 7], ["glasgow", 5], ["nottingham", 4], ["liverpool", 3], ["colchester", 3], ["kent", 3], ["coventry", 3], ["wakefield", 2], ["newcastle", 2], ["edinburgh", 2], ["norwich", 1], ["sunderland", 1], ["bradford", 1], ["southampton", 1], ["northampton", 1], ["basildon", 1], ["cambridge", 1], ["luton", 1], ["derby", 1], ["maidstone", 1], ["middlesbrough", 1], ["bexleyheath", 1], ["brighton", 1], ["hull", 1]];
-  var lp='<div style="background:white;border-radius:12px;padding:14px;margin-top:4px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">📍 Filter by City</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
-  lp+='<span onclick="showBusinesses(undefined,'+catArg+',null)" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(!_loc?'#057A44':'#e0e0e0')+';background:'+(!_loc?'#057A44':'#f0f0f0')+';color:'+(!_loc?'white':'#0F1E36')+';">📍 All UK</span>';
-  cityData.forEach(function(cd){
-    var city=cd[0],count=cd[1],a=_loc===city;
-    lp+='<span onclick="showBusinesses(undefined,'+catArg+',\''+city+'\')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(a?'#057A44':'#e0e0e0')+';background:'+(a?'#057A44':'#f0f0f0')+';color:'+(a?'white':'#0F1E36')+';">'+city.charAt(0).toUpperCase()+city.slice(1)+' ('+count+')</span>';
-  });
-  lp+='</div></div>';
-  addTipMessage(lp);
-
-  messages.push({role:'assistant',content:'Nigerian businesses: '+page.map(function(b){return b?b.name:'';}).join(', ')});
-}
 
 function openBlogSheet(url, title, summary) {
   _blogUrl = url;
