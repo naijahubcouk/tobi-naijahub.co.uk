@@ -7097,7 +7097,7 @@ function scrollToTop() {
 
 
 
-function showBusinesses(startIndex, filterCat, locationFilter) {
+function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
   window._currentPage = 'businesses';
   window.history.replaceState({}, '', '/');
 
@@ -7106,10 +7106,12 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
   var allBiz = getLiveDirectory().filter(function(b){ return b.slug && b.name; });
 
   // Filter
+  var _all = showAll || false;
   var filtered = allBiz;
   if (_cat) filtered = filtered.filter(function(b){ return b.cat === _cat; });
   if (_loc) filtered = filtered.filter(function(b){ return (b.loc||'').toLowerCase().indexOf(_loc) !== -1; });
-  if (!_cat && !_loc) filtered = allBiz.filter(function(b){ return b.verified; });
+  if (!_cat && !_loc && !_all) filtered = allBiz.filter(function(b){ return b.verified; });
+  // When showAll=true: sort verified first, then rest shuffled
 
   // Pagination — store filter state on shownBusinessIndexes object
   if (startIndex === undefined) {
@@ -7125,11 +7127,13 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
     var vi = avail.filter(function(i){ return filtered[i].verified; });
     var ri = avail.filter(function(i){ return !filtered[i].verified; });
     for (var k=ri.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=ri[k]; ri[k]=ri[j]; ri[j]=t; }
-    pick = vi.concat(ri).slice(0,6);
+    var pageSize = _all ? 10 : 6;
+    pick = vi.concat(ri).slice(0,pageSize);
   } else {
     var sh = avail.slice();
     for (var k=sh.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=sh[k]; sh[k]=sh[j]; sh[j]=t; }
-    pick = sh.slice(0,6);
+    var pageSz = _all ? 10 : 6;
+    pick = sh.slice(0,pageSz);
   }
   pick.forEach(function(i){ shownBusinessIndexes.push(i); });
   var page = pick.map(function(i){ return filtered[i]; });
@@ -7162,6 +7166,7 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
   var title = _loc
     ? '🏢 Nigerian Businesses in ' + _loc.charAt(0).toUpperCase() + _loc.slice(1)
     : _cat ? '🏢 ' + _cat.charAt(0).toUpperCase() + _cat.slice(1)
+    : _all ? '🏢 All Nigerian Businesses on Auntie Tobi'
     : '⭐ Featured Businesses on Auntie Tobi';
   addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">' + title + '</div>');
 
@@ -7194,11 +7199,11 @@ function showBusinesses(startIndex, filterCat, locationFilter) {
   // 3. BUBBLES
   var ml = hasMore ? '👀 Show more' : '🏠 Back to Home';
   var ma = hasMore
-    ? 'showBusinesses(' + shownBusinessIndexes.length + ',' + catArg + ',' + locArg + ')'
+    ? 'showBusinesses(' + shownBusinessIndexes.length + ',' + catArg + ',' + locArg + ',' + (_all?'true':'false') + ')'
     : 'resetToWelcome()';
   addTipMessage('<div class="suggestions" style="margin-top:8px;">'
     + '<button class="suggestion-btn" onclick="' + ma + '">' + ml + '</button>'
-    + '<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null)">🏢 All businesses</button>'
+    + '<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All businesses</button>'
     + '<button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>'
     + '<button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button>'
     + '<button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>'
@@ -8524,6 +8529,9 @@ function tobiOpenBiz(slug){window.open('https://auntietobi.com/listing/'+slug,'_
 document.addEventListener('click',function(e){
   var vb=e.target.closest('.tobi-view-biz');
   if(vb){var slug=vb.dataset.slug;if(slug)window.open('https://auntietobi.com/listing/'+slug,'_blank');return;}
+  // Don't intercept button/share/wa clicks inside the card
+  if(e.target.tagName==='BUTTON'||e.target.closest('button')||e.target.closest('.suggestion-btn'))return;
+  if(e.target.tagName==='A'&&!e.target.classList.contains('tobi-biz-link')&&!e.target.closest('.tobi-biz-link'))return;
   var a=e.target.closest('.tobi-biz-link');
   if(!a)return;
   e.preventDefault();
@@ -9528,5 +9536,5 @@ setTimeout(function(){_featTimer=setInterval(function(){featGoTo(_featCurrent+1)
   } catch(e) {}
 })();
 </script>
-
-
+</body>
+</html>
