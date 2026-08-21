@@ -5234,7 +5234,6 @@ function getRandomSuggestionStr() {
 const AUNTIE_TOBI_DIRECTORY = [
 {"name":"Hilltoprise Kitchen","slug":"hilltoprise-kitchen","cat":"caterers","desc":"Hilltoprise Kitchen offers delicious meals, catering services, custom food boxes, and personalized gift boxes for different occasions. We focus on quality, care and topnotch customer experience.","loc":"Livingston, UK"},
 {"name":"Abbystoreltd","slug":"abbystoreltd","cat":"home & kitchen","desc":"We deal in household items, cookwares ,food flask, kids school bags, party packs/ souvenir etc.","loc":"Derby, UK"},
-{"name":"IKS","slug":"iks","cat":"tutors","desc":"International shipping. Reimagined.","loc":"London, UK"},
 {"name":"Eventsbykklargesse","slug":"eventsbykklargesse","cat":"event planners","desc":"Tailored Moments, Timeless Memories. We create beautiful celebrations through curated gifting and thoughtfully executed events.","loc":"Suffolk, UK"},
 {"name":"GFL BEAUTY HOME","slug":"gfl-beauty-home","cat":"wig vendors","desc":"Uncompromising quality. Seamless blending. Flawless installations. We curate the finest virgin and raw hair to give you the ultimate luxury experience.","loc":"United Kingdom"},
 {"name":"Autogelebysunshine_uk","slug":"autogelebysunshine-uk","cat":"gele stylists","desc":"Autogelesunshine_uk specializes in beautifully crafted Auto Gele, stylish men's caps, and elegant turbans for all occasions.","loc":"Liverpool, UK","wa":"447760694051"},
@@ -5254,6 +5253,7 @@ const AUNTIE_TOBI_DIRECTORY = [
 {"name":"Flourish Paradise","slug":"flourish-paradise","cat":"alaga","desc":"FlourishParadise Event creates stunning cakes and breathtaking event decorations for weddings, birthdays, corporate events, and special occasions.","loc":"31 Broad St, Parkgate, Rotherham S62 6DX, UK"},
 {"name":"Bumexcouture","slug":"bumexcouture","cat":"ankara & traditional wears","desc":"Our company was started because we have a deep love for African culture and want to use fashion to highlight its diversity and depth.","loc":"United Kingdom"},
 {"name":"Nidakprint","slug":"nidakprint","cat":"printing services","desc":"At NidakPrint, we provide a range of packaging and custom printing solutions.","loc":"United Kingdom","wa":"447592283188"},
+{"name":"IKS","slug":"iks","cat":"shipping & logistics","desc":"International shipping. Reimagined.","loc":"London, UK"},
 {"name":"Food by Ikanke","slug":"food-by-ikanke","cat":"caterers","desc":"Food by Ikanke is a luxury catering brand specializing in bespoke private dining experiences, event catering, tablescapes, and culinary styling.","loc":"London, UK"},
 {"name":"RukkyzKitchen","slug":"rukkyzkitchen","cat":"caterers","desc":"A blend of traditional and modern African cuisine, bursting with rich spices and vibrant flavours, taking you on a delicious journey through the heart of Africa in every bite.","loc":"71-75 Shelton St, London WC2H 9JQ, UK"},
 {"name":"Honeycakesandfoods","slug":"honeycakesandfoods","cat":"cakes & desert","desc":"UK-based cakes & catering business serving delicious Nigerian food, celebration cakes, pastries, small chops & party catering. Based in St Albans, Hertfordshire","loc":"Hertfordshire, UK"},
@@ -6901,68 +6901,137 @@ function scrollToTop() {
   });
 }
 
-function showBusinesses(startIndex) {
-  window._currentPage = 'businesses';
-  scrollToTop();
-  window.history.replaceState({}, '', '/');
-  if (typeof gtag !== 'undefined') gtag('event', 'pill_click', { event_category: 'navigation', event_label: 'Businesses' });
-  setTimeout(() => scrollToTop(), 50);
-  const allBiz = getLiveDirectory();
-  if (startIndex === undefined || startIndex === -1 || shownBusinessIndexes.length >= allBiz.length) {
-    shownBusinessIndexes = [];
-  }
-  const available = allBiz.map((b, i) => i).filter(i => !shownBusinessIndexes.includes(i));
-  const verified = available.filter(i => allBiz[i].verified);
-  const others = available.filter(i => !allBiz[i].verified).sort(() => Math.random() - 0.5);
-  const pick = [...verified, ...others].slice(0, 6);
-  pick.forEach(i => shownBusinessIndexes.push(i));
-  const page = pick.map(i => allBiz[i]);
-  const hasMore = shownBusinessIndexes.length < allBiz.length;
 
-  const container = document.getElementById('messages');
-  if (container) container.innerHTML = '';
+function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
+  window._currentPage = 'businesses';
+  window.history.replaceState({}, '', '/');
+
+  var _cat = filterCat || null;
+  var _loc = locationFilter || null;
+  var _all = showAll || false;
+  var allBiz = getLiveDirectory().filter(function(b){ return b.slug && b.name; });
+
+  var filtered = allBiz;
+  if (_cat) filtered = filtered.filter(function(b){ return b.cat === _cat; });
+  if (_loc) filtered = filtered.filter(function(b){ return (b.loc||'').toLowerCase().indexOf(_loc) !== -1; });
+  if (!_cat && !_loc && !_all) filtered = allBiz.filter(function(b){ return b.verified; });
+
+  if (startIndex === undefined) shownBusinessIndexes = [];
+
+  var avail = filtered.map(function(b,i){ return i; }).filter(function(i){ return shownBusinessIndexes.indexOf(i) === -1; });
+  var pick = [];
+  if (startIndex === undefined) {
+    var vi = avail.filter(function(i){ return filtered[i].verified; });
+    var ri = avail.filter(function(i){ return !filtered[i].verified; });
+    for(var k=ri.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=ri[k];ri[k]=ri[j];ri[j]=t;}
+    var ps = _all ? 10 : 6;
+    pick = vi.concat(ri).slice(0, ps);
+  } else {
+    var sh = avail.slice();
+    for(var k=sh.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=sh[k];sh[k]=sh[j];sh[j]=t;}
+    var ps = _all ? 10 : 6;
+    pick = sh.slice(0, ps);
+  }
+  pick.forEach(function(i){ shownBusinessIndexes.push(i); });
+  var page = pick.map(function(i){ return filtered[i]; });
+  var hasMore = shownBusinessIndexes.length < filtered.length;
+
+  var msgEl = document.getElementById('messages');
+  if (msgEl) msgEl.innerHTML = '';
   messages = [];
   scrollToTop();
+  setTimeout(function(){ scrollToTop(); }, 50);
 
-  addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">Nigerian businesses on Auntie Tobi 🏢</div>');
+  if (filtered.length === 0) {
+    var catArg0 = _cat ? JSON.stringify(_cat) : 'null';
+    addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">No businesses found</div>');
+    addTipMessage('<div style="padding:16px;text-align:center;color:#9CA3AF;font-size:14px;">No businesses listed here yet.<br>Try another city or browse all UK.</div>');
+    addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinesses(undefined,'+catArg0+',null)">📍 All UK</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
+    return;
+  }
 
+  var catQ = _cat ? _cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'") : '';
+  var locQ = _loc ? _loc.replace(/'/g,"\\'") : '';
+  var catArg = _cat ? ("'" + catQ + "'") : 'null';
+  var locArg = _loc ? ("'" + locQ + "'") : 'null';
+  var allArg = _all ? 'true' : 'false';
 
+  // 1. TITLE
+  var title = _loc
+    ? '🏢 Nigerian Businesses in ' + _loc.charAt(0).toUpperCase() + _loc.slice(1)
+    : _cat ? '🏢 ' + _cat.charAt(0).toUpperCase() + _cat.slice(1)
+    : _all ? '🏢 All Nigerian Businesses on Auntie Tobi'
+    : '⭐ Featured Businesses on Auntie Tobi';
+  addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">'+title+'</div>');
 
-  page.forEach(b => {
-    const cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
-    const shareUrl = 'https://auntietobi.co.uk/biz/' + b.slug;
-    const safeName = b.name.replace(/['"]/g, '');
-    const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi 💚 Find Nigerian businesses near you';
-    const verifiedBadge = b.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
-    const waBtn = (b.verified && b.wa) ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
-    const shareBtn = '<button onclick="tobiShare(\'' + safeName.replace(/'/g,"\\'") + '\',\'' + shareMsg + '\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-        const viewBtn = '<a href="/biz/' + b.slug + '" class="tobi-biz-link" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>';
-    const cardHTML = '<div style="background:white;border:' + (b.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
-      + verifiedBadge
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (b.verified ? 'margin-top:6px;' : '') + '">'
-      + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + b.name + '</div>'
-      + '<span onclick="quickAsk(\'Show me all ' + b.cat + ' businesses\')" style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;cursor:pointer;">' + cat + '</span>'
-      + '</div>'
-      + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + (b.desc ? b.desc.substring(0,100) + (b.desc.length>100?'...':'') : '') + '</div>'
-      + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'UK') + '</div>'
-      + '<div style="display:flex;gap:6px;">' + viewBtn + waBtn + shareBtn + '</div>'
-      + '</div>';
-    addTipMessage(cardHTML);
+  // 2. CARDS
+  var catEmojis={'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒','restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜','photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️','alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️','suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓','shipping & logistics':'🚢'};
+  page.forEach(function(b){
+    if(!b) return;
+    var cat=(b.cat&&b.cat.toLowerCase()!=='nigerian business')?b.cat.charAt(0).toUpperCase()+b.cat.slice(1):'';
+    var su='https://auntietobi.co.uk/biz/'+b.slug;
+    var vb=b.verified?'<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div>':'';
+    var vl=b.verified?'<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>':'';
+    var wa=(b.verified&&b.wa)?'<a href="https://wa.me/'+b.wa.replace(/\D/g,'')+'" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>':'';
+    var dd=b.desc?'<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px;">'+b.desc.substring(0,120)+(b.desc.length>120?'...':'')+'</div>':'';
+    addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;position:relative;'+(b.verified?'padding-top:18px;':'')+'">'
+      +vb+'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
+      +'<div style="font-size:15px;font-weight:700;color:#0F1E36;">'+b.name+'</div>'
+      +(cat?'<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">'+cat+'</span>':'')
+      +'</div>'+vl+dd
+      +'<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+(b.loc||'UK').split(',')[0]+'</div>'
+      +'<div style="display:flex;gap:6px;">'
+      +'<a href="/biz/'+b.slug+'" class="tobi-biz-link" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>'
+      +wa
+      +'</div></div>');
   });
 
+  // 3. BUBBLES
+  var ml = hasMore ? '👀 Show more' : '🏠 Back to Home';
+  var ma = hasMore ? 'showBusinesses('+shownBusinessIndexes.length+','+catArg+','+locArg+','+allArg+')' : 'resetToWelcome()';
+  addTipMessage('<div class="suggestions" style="margin-top:8px;">'
+    +'<button class="suggestion-btn" onclick="'+ma+'">'+ml+'</button>'
+    +'<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All businesses</button>'
+    +'<button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>'
+    +'<button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button>'
+    +'<button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>'
+    +'</div>');
+
+  // 4. CTA
   addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:12px;padding:12px 14px;"><div style="font-size:13px;color:#0F1E36;line-height:1.6;">Join the growing Auntie Tobi Business Directory for FREE and connect with Nigerian customers across the UK.<br><br>👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here to list your business</a> — it takes less than 2 minutes! 💚</div></div>');
 
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-    <button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>
-    <button class="suggestion-btn" onclick="showAboutTobi()">ℹ️ About Auntie Tobi</button>
-  </div>`);
+  // 5. CATEGORIES
+  var acc={};
+  allBiz.forEach(function(b){ if(b.cat&&b.cat!=='nigerian business') acc[b.cat]=(acc[b.cat]||0)+1; });
+  var acs=Object.keys(acc).sort(function(a,b){ return acc[b]-acc[a]; });
+  var cp='<div style="background:white;border-radius:12px;padding:14px;">'
+    +'<div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">🗂️ Nigerian Business Categories on Auntie Tobi</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+    +'<span onclick="showBusinesses(undefined,null,'+locArg+','+allArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(!_cat?'#057A44':'#e0e0e0')+';background:'+(!_cat?'#057A44':'#f0f0f0')+';color:'+(!_cat?'white':'#0F1E36')+';">All</span>';
+  acs.filter(function(c){ return acc[c]>0; }).forEach(function(c){
+    var a=_cat===c;
+    cp+='<span onclick="showBusinesses(undefined,'+JSON.stringify(c)+','+locArg+','+allArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(a?'#057A44':'#e0e0e0')+';background:'+(a?'#057A44':'#f0f0f0')+';color:'+(a?'white':'#0F1E36')+';">'+(catEmojis[c]||'🏢')+' '+c.charAt(0).toUpperCase()+c.slice(1)+' <span style="font-size:10px;opacity:.7;">('+acc[c]+')</span></span>';
+  });
+  cp+='</div></div>';
+  addTipMessage(cp);
 
+  // 6. CITIES
+  var cityData=[["london",35],["birmingham",9],["manchester",8],["sheffield",7],["glasgow",5],["nottingham",4],["liverpool",3],["colchester",3],["kent",3],["coventry",3],["wakefield",2],["newcastle",2],["edinburgh",2],["norwich",1],["sunderland",1],["bradford",1],["southampton",1],["northampton",1],["basildon",1],["cambridge",1],["luton",1],["derby",1],["maidstone",1],["middlesbrough",1],["bexleyheath",1],["brighton",1],["hull",1]];
+  var lp='<div style="background:white;border-radius:12px;padding:14px;margin-top:4px;">'
+    +'<div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;">📍 Filter by City</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+    +'<span onclick="showBusinesses(undefined,'+catArg+',null,'+allArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(!_loc?'#057A44':'#e0e0e0')+';background:'+(!_loc?'#057A44':'#f0f0f0')+';color:'+(!_loc?'white':'#0F1E36')+';">📍 All UK</span>';
+  cityData.forEach(function(cd){
+    var city=cd[0],count=cd[1],a=_loc===city;
+    lp+='<span onclick="showBusinesses(undefined,'+catArg+',\''+city+'\','+allArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(a?'#057A44':'#e0e0e0')+';background:'+(a?'#057A44':'#f0f0f0')+';color:'+(a?'white':'#0F1E36')+';">'+city.charAt(0).toUpperCase()+city.slice(1)+' ('+count+')</span>';
+  });
+  lp+='</div></div>';
+  addTipMessage(lp);
 
-
-  const moreLabel = hasMore ? '🏢 Show more businesses' : '🔄 Start again';
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinesses()">' + moreLabel + '</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian caterer near me\')">🍛 Find a caterer</button><button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button></div>');
-  messages.push({ role: 'assistant', content: 'Here are Nigerian businesses on Auntie Tobi: ' + page.map(b => b.name).join(', ') });
+  messages.push({role:'assistant',content:'Nigerian businesses: '+page.map(function(b){return b?b.name:'';}).join(', ')});
 }
+
+
 
 // ===== BLOG SHEET =====
 let _blogUrl = '', _blogTitle = '', _blogSummary = '';
