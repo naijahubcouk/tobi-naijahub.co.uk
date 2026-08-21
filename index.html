@@ -1836,7 +1836,7 @@ async function loadLiveFeeds() {
         }
       });
 
-      window._liveDirectory = merged;
+      // window._liveDirectory = merged; // disabled — using hardcoded directory
       console.log(`[Feed] Directory: ${AUNTIE_TOBI_DIRECTORY.length} hardcoded + ${merged.length - AUNTIE_TOBI_DIRECTORY.length} new from feed = ${merged.length} total`);
     }
 
@@ -1856,7 +1856,7 @@ async function loadLiveFeeds() {
 
 // Helper to get live directory (falls back to hardcoded)
 function getLiveDirectory() {
-  return window._liveDirectory || AUNTIE_TOBI_DIRECTORY;
+  return AUNTIE_TOBI_DIRECTORY;
 }
 
 // Helper to get live blog posts
