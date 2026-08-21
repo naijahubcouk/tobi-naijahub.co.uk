@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="app-version" content="202608210049">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Auntie Tobi — Your UK Guide for Nigerians 🇬🇧🇳🇬</title>
 <!-- Google tag (gtag.js) -->
@@ -6910,11 +6911,13 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
   var _loc = locationFilter || null;
   var _all = showAll || false;
   var allBiz = getLiveDirectory().filter(function(b){ return b.slug && b.name; });
+  console.log('[biz] allBiz:', allBiz.length, '| cat:', _cat, '| loc:', _loc, '| all:', _all);
 
   var filtered = allBiz;
   if (_cat) filtered = filtered.filter(function(b){ return b.cat === _cat; });
   if (_loc) filtered = filtered.filter(function(b){ return (b.loc||'').toLowerCase().indexOf(_loc) !== -1; });
   if (!_cat && !_loc && !_all) filtered = allBiz.filter(function(b){ return b.verified; });
+  console.log('[biz] filtered:', filtered.length, 'businesses');
 
   if (startIndex === undefined) shownBusinessIndexes = [];
 
