@@ -100,7 +100,11 @@ exports.handler = async function(event) {
     const rawBody = event.isBase64Encoded
       ? Buffer.from(event.body, 'base64').toString('utf8')
       : (event.body || '{}');
-    const { title, message, type, slug, sourceUrl, b1, b2, b3 } = JSON.parse(rawBody);
+    console.log('[send-push] rawBody:', rawBody.substring(0, 200));
+    const parsed = JSON.parse(rawBody);
+    console.log('[send-push] parsed keys:', Object.keys(parsed));
+    const { title, message, type, slug, sourceUrl, b1, b2, b3 } = parsed;
+    console.log('[send-push] title:', title, '| message:', message && message.substring(0,30));
     const apiKey = process.env.ONESIGNAL_API_KEY;
     const githubToken = process.env.GITHUB_TOKEN;
 
