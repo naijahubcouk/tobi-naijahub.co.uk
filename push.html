@@ -2,100 +2,90 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Push Notification Tool — Auntie Tobi</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0F1E36; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 20px; }
-.card { background: white; border-radius: 16px; width: 100%; max-width: 480px; overflow: hidden; }
-.header { background: #0F1E36; padding: 16px 20px; display: flex; align-items: center; gap: 10px; }
-.header h1 { color: white; font-size: 16px; font-weight: 800; }
-.header a { color: #FFB81C; font-size: 13px; margin-left: auto; text-decoration: none; }
-.body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-label { font-size: 11px; color: #9CA3AF; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 5px; }
-input, textarea { width: 100%; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 9px 11px; font-size: 13px; font-family: inherit; color: #0F1E36; transition: border-color .2s; }
-input:focus, textarea:focus { outline: none; border-color: #057A44; }
-textarea { resize: vertical; min-height: 90px; }
-.types { display: flex; flex-wrap: wrap; gap: 6px; }
-.type-btn { padding: 6px 13px; border-radius: 16px; border: 1.5px solid #e0e0e0; font-size: 12px; font-weight: 600; cursor: pointer; background: white; color: #0F1E36; font-family: inherit; transition: all .15s; }
-.type-btn.active { background: #057A44; color: white; border-color: #057A44; }
-.slug-box { background: #f8f8f8; border-radius: 8px; padding: 10px 13px; display: flex; align-items: center; gap: 8px; }
-.slug-text { font-size: 12px; color: #057A44; font-weight: 600; flex: 1; word-break: break-all; }
-.copy-btn { font-size: 11px; padding: 4px 10px; border: 1.5px solid #057A44; border-radius: 8px; color: #057A44; background: none; cursor: pointer; font-family: inherit; white-space: nowrap; }
-.send-btn { width: 100%; padding: 13px; background: #057A44; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
-.send-btn:disabled { opacity: .5; cursor: not-allowed; }
-.status { font-size: 12px; text-align: center; color: #9CA3AF; min-height: 20px; }
-.divider { border: none; border-top: 1px solid #f0f0f0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; }
+  .header { background: #057A44; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+  .header h1 { font-size: 18px; font-weight: 700; }
+  .header a { color: rgba(255,255,255,0.8); font-size: 13px; text-decoration: none; margin-left: auto; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: white; border-radius: 12px; padding: 16px; }
+  label { display: block; font-size: 12px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  input, textarea { width: 100%; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: inherit; color: #0F1E36; outline: none; }
+  input:focus, textarea:focus { border-color: #057A44; }
+  textarea { height: 80px; resize: none; }
+  .types { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .type-btn { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid #e0e0e0; background: #f5f5f5; cursor: pointer; color: #0F1E36; }
+  .type-btn.active { background: #057A44; border-color: #057A44; color: white; }
+  .send-btn { width: 100%; padding: 14px; background: #057A44; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .status { min-height: 20px; font-size: 13px; margin-top: 10px; font-weight: 600; text-align: center; }
+  .slug-label { font-size: 12px; color: #9CA3AF; margin-top: 6px; }
+  .slug-val { font-size: 13px; color: #057A44; font-weight: 600; }
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="header">
-    <span style="font-size:20px;">🔔</span>
-    <h1>Send Push Notification</h1>
-    <a href="/">← Back</a>
+<div class="header">
+  <span style="font-size:22px">🔔</span>
+  <h1>Send Push Notification</h1>
+  <a href="/">← Back to app</a>
+</div>
+
+<div class="wrap">
+
+  <div class="card">
+    <label>Notification Type</label>
+    <div class="types">
+      <button class="type-btn active" onclick="setType(this,'update')">📢 Update</button>
+      <button class="type-btn" onclick="setType(this,'news')">📰 News</button>
+      <button class="type-btn" onclick="setType(this,'tip')">💡 Tip</button>
+      <button class="type-btn" onclick="setType(this,'event')">🎉 Event</button>
+      <button class="type-btn" onclick="setType(this,'business')">🏢 Business</button>
+      <button class="type-btn" onclick="setType(this,'motivation')">💪 Motivation</button>
+      <button class="type-btn" onclick="setType(this,'prayer')">🙏 Prayer</button>
+      <button class="type-btn" onclick="setType(this,'jobs')">💼 Jobs</button>
+      <button class="type-btn" onclick="setType(this,'immigration')">🛂 Immigration</button>
+      <button class="type-btn" onclick="setType(this,'money')">💷 Money</button>
+      <button class="type-btn" onclick="setType(this,'health')">💊 Health</button>
+      <button class="type-btn" onclick="setType(this,'housing')">🏠 Housing</button>
+    </div>
   </div>
-  <div class="body">
 
+  <div class="card" style="display:flex;flex-direction:column;gap:12px;">
     <div>
-      <label>Notification Title</label>
-      <input id="pt-title" type="text" placeholder="e.g. NHS Update" oninput="updateSlug()">
+      <label>Title *</label>
+      <input id="push-title" type="text" placeholder="e.g. New NHS update for Nigerians" oninput="updateSlug()">
     </div>
-
     <div>
-      <label>Message</label>
-      <textarea id="pt-msg" placeholder="Type your notification message..."></textarea>
+      <label>Message *</label>
+      <textarea id="push-message" placeholder="Type your notification message here..."></textarea>
     </div>
-
     <div>
-      <label>Type</label>
-      <div class="types" id="pt-types">
-        <button class="type-btn" onclick="setType(this,'tip')">💡 Tip</button>
-        <button class="type-btn active" onclick="setType(this,'update')">📢 Update</button>
-        <button class="type-btn" onclick="setType(this,'news')">📰 News</button>
-        <button class="type-btn" onclick="setType(this,'event')">🎉 Event</button>
-        <button class="type-btn" onclick="setType(this,'business')">🏢 Business</button>
-        <button class="type-btn" onclick="setType(this,'motivation')">💪 Motivation</button>
-        <button class="type-btn" onclick="setType(this,'prayer')">🙏 Prayer</button>
-        <button class="type-btn" onclick="setType(this,'jobs')">💼 Jobs</button>
-        <button class="type-btn" onclick="setType(this,'immigration')">🛂 Immigration</button>
-        <button class="type-btn" onclick="setType(this,'money')">💷 Money</button>
-        <button class="type-btn" onclick="setType(this,'health')">💊 Health</button>
-        <button class="type-btn" onclick="setType(this,'housing')">🏠 Housing</button>
-      </div>
+      <label>Source URL (optional)</label>
+      <input id="push-src" type="url" placeholder="https://auntietobi.co.uk/...">
     </div>
-
-    <hr class="divider">
-
     <div>
-      <label>Source URL <span style="font-weight:400;text-transform:none;">(optional — for Learn More button)</span></label>
-      <input id="pt-src" type="url" placeholder="https://...">
+      <div class="slug-label">Short link preview:</div>
+      <div class="slug-val" id="push-slug">auntietobi.co.uk/n/update</div>
     </div>
-
-    <hr class="divider">
-
-    <div>
-      <label>Generated Short Link</label>
-      <div class="slug-box">
-        <div class="slug-text" id="pt-slug">auntietobi.co.uk/n/update</div>
-        <button class="copy-btn" onclick="copySlug()">Copy</button>
-      </div>
-    </div>
-
-    <button class="send-btn" id="pt-send" onclick="sendPush()">🔔 Send to All Subscribers</button>
-    <div class="status" id="pt-status"></div>
-
   </div>
+
+  <div class="card">
+    <button class="send-btn" id="push-send" onclick="sendPush()">🔔 Send to All Subscribers</button>
+    <div class="status" id="push-status"></div>
+  </div>
+
 </div>
 
 <script>
 var currentType = 'update';
 var slugBase = {
-  tip: 'tip', update: 'update', news: 'news', event: 'event',
-  business: 'business', motivation: 'motivation', prayer: 'prayer',
-  jobs: 'jobs', immigration: 'immigration', money: 'money',
-  health: 'health', housing: 'housing'
+  tip:'tip', update:'update', news:'news', event:'event',
+  business:'business', motivation:'motivation', prayer:'prayer',
+  jobs:'jobs', immigration:'immigration', money:'money',
+  health:'health', housing:'housing'
 };
 
 function setType(btn, type) {
@@ -106,62 +96,61 @@ function setType(btn, type) {
 }
 
 function slugify(s) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 25);
+  return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,25);
 }
 
 function updateSlug() {
-  var title = document.getElementById('pt-title').value;
+  var title = document.getElementById('push-title').value;
   var base = slugBase[currentType] || 'update';
   var slug = base + (title ? '-' + slugify(title) : '');
-  document.getElementById('pt-slug').textContent = 'auntietobi.co.uk/n/' + slug;
-}
-
-function copySlug() {
-  var txt = 'https://' + document.getElementById('pt-slug').textContent;
-  navigator.clipboard.writeText(txt).then(function() {
-    var st = document.getElementById('pt-status');
-    st.style.color = '#057A44';
-    st.textContent = '✅ Copied to clipboard!';
-    setTimeout(function() { st.textContent = ''; }, 2000);
-  });
+  document.getElementById('push-slug').textContent = 'auntietobi.co.uk/n/' + slug;
 }
 
 async function sendPush() {
-  var title = document.getElementById('pt-title').value.trim();
-  var msg   = document.getElementById('pt-msg').value.trim();
-  var src   = document.getElementById('pt-src').value.trim();
-  var slug  = document.getElementById('pt-slug').textContent.replace('auntietobi.co.uk/n/', '');
-  var st    = document.getElementById('pt-status');
-  var btn   = document.getElementById('pt-send');
+  var titleEl = document.getElementById('push-title');
+  var msgEl = document.getElementById('push-message');
+  var srcEl = document.getElementById('push-src');
+  var slugEl = document.getElementById('push-slug');
+  var statusEl = document.getElementById('push-status');
+  var btnEl = document.getElementById('push-send');
 
-  if (!title) { st.style.color='#e74c3c'; st.textContent='⚠️ Please enter a title'; return; }
-  if (!msg)   { st.style.color='#e74c3c'; st.textContent='⚠️ Please enter a message'; return; }
+  var title = titleEl.value.trim();
+  var message = msgEl.value.trim();
+  var sourceUrl = srcEl.value.trim();
+  var slug = slugEl.textContent.replace('auntietobi.co.uk/n/', '');
 
-  btn.disabled = true;
-  st.style.color = '#9CA3AF';
-  st.textContent = '⏳ Sending...';
+  if (!title) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a title'; titleEl.focus(); return; }
+  if (!message) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a message'; msgEl.focus(); return; }
+
+  btnEl.disabled = true;
+  statusEl.style.color = '#9CA3AF';
+  statusEl.textContent = '⏳ Sending...';
 
   try {
+    var payload = { title: title, message: message, type: currentType, slug: slug, sourceUrl: sourceUrl };
+    console.log('[push] Sending payload:', JSON.stringify(payload));
+
     var res = await fetch('/.netlify/functions/send-push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: title, message: msg, type: currentType, slug: slug, sourceUrl: src })
+      body: JSON.stringify(payload)
     });
+
     var data = await res.json();
+    console.log('[push] Response:', data);
+
     if (data.success) {
-      st.style.color = '#057A44';
-      st.textContent = '✅ Notification sent!'
-        + (data.shortUrl ? ' · ' + data.shortUrl : '')
-        + (data.github && data.github.added ? ' · Short link saved ✅' : '');
+      statusEl.style.color = '#057A44';
+      statusEl.textContent = '✅ Sent!' + (data.shortUrl ? ' Short link: ' + data.shortUrl : '');
     } else {
-      st.style.color = '#e74c3c';
-      st.textContent = '❌ Error: ' + (data.error || 'Unknown error');
+      statusEl.style.color = '#e74c3c';
+      statusEl.textContent = '❌ Error: ' + (data.error || 'Unknown error');
     }
   } catch(e) {
-    st.style.color = '#e74c3c';
-    st.textContent = '❌ Failed: ' + e.message;
+    statusEl.style.color = '#e74c3c';
+    statusEl.textContent = '❌ Failed: ' + e.message;
   } finally {
-    btn.disabled = false;
+    btnEl.disabled = false;
   }
 }
 </script>
