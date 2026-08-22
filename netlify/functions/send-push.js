@@ -97,7 +97,10 @@ exports.handler = async function(event) {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
   try {
-    const { title, message, type, slug, sourceUrl, b1, b2, b3 } = JSON.parse(event.body);
+    const rawBody = event.isBase64Encoded
+      ? Buffer.from(event.body, 'base64').toString('utf8')
+      : (event.body || '{}');
+    const { title, message, type, slug, sourceUrl, b1, b2, b3 } = JSON.parse(rawBody);
     const apiKey = process.env.ONESIGNAL_API_KEY;
     const githubToken = process.env.GITHUB_TOKEN;
 
