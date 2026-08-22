@@ -7013,7 +7013,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     +'<span onclick="showBusinesses(undefined,null,'+locArg+','+allArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(!_cat?'#057A44':'#e0e0e0')+';background:'+(!_cat?'#057A44':'#f0f0f0')+';color:'+(!_cat?'white':'#0F1E36')+';">All</span>';
   acs.filter(function(c){ return acc[c]>0; }).forEach(function(c){
     var a=_cat===c;
-     cp+='<span onclick="showBusinesses(undefined,\''+c.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\','+locArg+','+allArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(a?'#057A44':'#e0e0e0')+';background:'+(a?'#057A44':'#f0f0f0')+';color:'+(a?'white':'#0F1E36')+';">'+(catEmojis[c]||'🏢')+' '+c.charAt(0).toUpperCase()+c.slice(1)+' <span style="font-size:10px;opacity:.7;">('+acc[c]+')</span></span>';
+    cp+='<span data-cat="'+c.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" data-loc="'+(locArg==='null'?'':locArg.replace(/^'|'$/g,''))+'" data-all="'+allArg+'" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(a?'#057A44':'#e0e0e0')+';background:'+(a?'#057A44':'#f0f0f0')+';color:'+(a?'white':'#0F1E36')+';">'+(catEmojis[c]||'🏢')+' '+c.charAt(0).toUpperCase()+c.slice(1)+' <span style="font-size:10px;opacity:.7;">('+acc[c]+')</span></span>';
   });
   cp+='</div></div>';
   addTipMessage(cp);
@@ -7026,7 +7026,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     +'<span onclick="showBusinesses(undefined,'+catArg+',null,'+allArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(!_loc?'#057A44':'#e0e0e0')+';background:'+(!_loc?'#057A44':'#f0f0f0')+';color:'+(!_loc?'white':'#0F1E36')+';">📍 All UK</span>';
   cityData.forEach(function(cd){
     var city=cd[0],count=cd[1],a=_loc===city;
-    lp+='<span onclick="showBusinesses(undefined,'+catArg+',\''+city+'\','+allArg+')" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(a?'#057A44':'#e0e0e0')+';background:'+(a?'#057A44':'#f0f0f0')+';color:'+(a?'white':'#0F1E36')+';">'+city.charAt(0).toUpperCase()+city.slice(1)+' ('+count+')</span>';
+    lp+='<span data-city="'+city+'" data-cat-filter="'+(_cat||'')+'" data-all="'+allArg+'" style="cursor:pointer;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1.5px solid '+(a?'#057A44':'#e0e0e0')+';background:'+(a?'#057A44':'#f0f0f0')+';color:'+(a?'white':'#0F1E36')+';">'+city.charAt(0).toUpperCase()+city.slice(1)+' ('+count+')</span>';
   });
   lp+='</div></div>';
   addTipMessage(lp);
