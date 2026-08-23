@@ -4529,9 +4529,9 @@ function showLinksPage() {
       <span style="color:#ccc;">›</span>
     </a>
 
-    <a href="javascript:void(0)" onclick="showGroupAdvertising()" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
+    <a href="/group-advertising" class="tobi-biz-link" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">📣</span>
-      <span style="flex:1;text-align:left;">Group Advertising — £10 per business<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">10 businesses · £100 ad budget · affordable reach together</span></span>
+      <span style="flex:1;text-align:left;">Join Our Group Advertising<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">10 businesses · £10 each · £100 ad budget · grow together</span></span>
       <span style="color:#FFB81C;">›</span>
     </a>
 
@@ -5353,6 +5353,7 @@ document.addEventListener('click', function(e) {
   const anchor = e.target.closest('a[href]');
   if (anchor) {
     const href = anchor.getAttribute('href');
+    if (href === '/group-advertising') { e.preventDefault(); showGroupAdvertising(); return; }
     if (href && href.startsWith('http') && !href.includes('auntietobi.co.uk')) {
       e.preventDefault();
       window.open(href, '_blank', 'noopener,noreferrer');
