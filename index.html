@@ -977,7 +977,7 @@
   try {
     const p = new URLSearchParams(window.location.search);
     const action = p.get('action');
-    if (action === 'prayer' || action === 'motivation' || action === 'tip') {
+    if (action === 'prayer' || action === 'motivation' || action === 'tip' || action === 'group-advertising') {
       // Mark that we have a deep link — window.onload will handle it
       window._earlyAction = action;
       window._earlyContent = p.get('content') || '';
@@ -4342,7 +4342,7 @@ function showAboutTobi() {
 
 function showGroupAdvertising() {
   window._currentPage = 'group-advertising';
-  window.history.replaceState({}, '', '/');
+  window.history.replaceState({}, '', '/group-advertising');
   var msgEl = document.getElementById('messages');
   if (msgEl) msgEl.innerHTML = '';
   messages = [];
@@ -5641,7 +5641,12 @@ function handleDeepLink() {
     const b1 = params.get('b1') || window._earlyB1 || '';
     const b2 = params.get('b2') || window._earlyB2 || '';
     showPrayerLanding(content, b1, b2);
-  } else if (action === 'tip') {
+  } else if (action === 'group-advertising') {
+    window.history.replaceState({}, '', '/group-advertising');
+    showGroupAdvertising();
+    return;
+  }
+  if (action === 'tip') {
     const content = params.get('content') || window._earlyContent || '';
     const b1 = params.get('b1') || window._earlyB1 || '';
     const b2 = params.get('b2') || window._earlyB2 || '';
