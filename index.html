@@ -977,7 +977,7 @@
   try {
     const p = new URLSearchParams(window.location.search);
     const action = p.get('action');
-    if (action === 'prayer' || action === 'motivation' || action === 'tip' || action === 'group-advertising') {
+    if (action === 'prayer' || action === 'motivation' || action === 'tip') {
       // Mark that we have a deep link — window.onload will handle it
       window._earlyAction = action;
       window._earlyContent = p.get('content') || '';
