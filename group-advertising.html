@@ -4,134 +4,147 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Group Advertising — Auntie Tobi</title>
+<link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#0F1E36;padding-bottom:40px}
-.header{background:#057A44;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
-.header a{color:rgba(255,255,255,0.8);font-size:13px;text-decoration:none}
-.header h1{font-size:16px;font-weight:700;color:white;flex:1}
-.wrap{max-width:480px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f0f0;color:#0F1E36;min-height:100vh;padding-bottom:40px}
 
-.hero{background:#057A44;border-radius:14px;padding:24px 18px}
-.hero-badge{display:inline-block;background:rgba(255,255,255,0.18);color:white;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:12px}
-.hero h2{font-size:21px;font-weight:800;color:white;line-height:1.3;margin-bottom:6px}
-.hero-tagline{font-size:13px;color:rgba(255,255,255,0.85);font-style:italic;margin-bottom:14px}
-.hero-body{font-size:13px;color:rgba(255,255,255,0.92);line-height:1.7;margin-bottom:16px}
-.formula{background:rgba(255,255,255,0.15);border-radius:10px;padding:14px;text-align:center}
-.formula-big{font-size:18px;font-weight:800;color:white;margin-bottom:8px}
-.formula-note{font-size:12px;color:rgba(255,255,255,0.8);line-height:1.6}
+/* APP HEADER — matches main app */
+.app-header{background:#0F1E36;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;max-width:480px;margin:0 auto}
+.app-logo{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0}
+.app-logo img{width:100%;height:100%;object-fit:cover}
+.app-header-text{flex:1}
+.app-header-title{font-size:14px;font-weight:700;color:white;line-height:1.2}
+.app-header-sub{font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px}
+.back-btn{color:rgba(255,255,255,0.7);font-size:12px;text-decoration:none;font-weight:600;padding:6px 10px;border:1px solid rgba(255,255,255,0.2);border-radius:20px;white-space:nowrap}
 
-.card{background:white;border-radius:12px;padding:18px}
-.card-title{font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px}
+.page-wrap{max-width:480px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+
+/* HERO */
+.hero{background:#057A44;border-radius:14px;padding:22px 16px;overflow:hidden;position:relative}
+.hero::after{content:'';position:absolute;bottom:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.06)}
+.hero-badge{display:inline-block;background:rgba(255,255,255,0.18);color:white;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px}
+.hero-h{font-size:20px;font-weight:800;color:white;line-height:1.3;margin-bottom:5px}
+.hero-tag{font-size:12px;color:rgba(255,255,255,0.85);font-style:italic;margin-bottom:12px}
+.hero-body{font-size:13px;color:rgba(255,255,255,0.92);line-height:1.7;margin-bottom:14px}
+.formula-box{background:rgba(255,255,255,0.14);border-radius:10px;padding:13px 14px;text-align:center}
+.formula-main{font-size:16px;font-weight:800;color:white;margin-bottom:7px}
+.formula-note{font-size:11px;color:rgba(255,255,255,0.78);line-height:1.6}
+
+/* CARDS */
+.card{background:white;border-radius:12px;padding:16px}
+.ctitle{font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px}
 .body{font-size:13px;line-height:1.7;color:#0F1E36}
 .body b{font-weight:700}
-.body+.body{margin-top:10px}
 
-.callout{background:#f0faf5;border-left:3px solid #057A44;border-radius:0 8px 8px 0;padding:12px 14px;font-size:13px;line-height:1.65;margin-top:10px}
+.callout{background:#f0faf5;border-left:3px solid #057A44;border-radius:0 8px 8px 0;padding:11px 12px;font-size:13px;line-height:1.65;margin-top:10px;color:#0F1E36}
 
-.step-list{display:flex;flex-direction:column;gap:0}
-.step{display:flex;gap:12px;padding:11px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start}
-.step:last-child{border-bottom:none;padding-bottom:0}
-.step-n{min-width:26px;height:26px;border-radius:50%;background:#057A44;color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.step-t{font-size:13px;line-height:1.6}
-.step-t b{font-weight:700}
-
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.biz-pill{background:#f8f8f8;border:0.5px solid #e0e0e0;border-radius:8px;padding:9px 10px;display:flex;align-items:center;gap:8px}
-.biz-ico{font-size:16px;flex-shrink:0}
-.biz-name{font-size:12px;font-weight:600;color:#0F1E36;line-height:1.3}
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.biz-pill{background:#f8f8f8;border:0.5px solid #e8e8e8;border-radius:8px;padding:8px 9px;display:flex;align-items:center;gap:7px}
+.biz-ico{font-size:15px;flex-shrink:0}
+.biz-name{font-size:11px;font-weight:600;color:#0F1E36;line-height:1.3}
 .biz-sub{font-size:10px;color:#9CA3AF;margin-top:1px}
 
-.check-list{display:flex;flex-direction:column}
-.check-row{display:flex;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start}
+/* CHECKLIST */
+.check-row{display:flex;gap:9px;padding:8px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start}
 .check-row:last-child{border-bottom:none}
-.ck{color:#057A44;font-size:14px;flex-shrink:0;width:20px;padding-top:1px}
+.ck{color:#057A44;font-size:13px;flex-shrink:0;width:18px;padding-top:2px}
 .ck-t{font-size:13px;line-height:1.5}
 
-.pos-card{background:#f0faf5;border-radius:10px;padding:14px}
-.pos-head{font-size:14px;font-weight:700;color:#057A44;margin-bottom:10px}
-.pos-row{display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:6px}
+/* POSITIONS */
+.pos-box{background:#f0faf5;border-radius:10px;padding:13px;margin-bottom:8px}
+.pos-head{font-size:13px;font-weight:700;color:#057A44;margin-bottom:9px}
+.pos-row{display:flex;align-items:center;gap:9px;font-size:13px;color:#0F1E36;margin-bottom:5px}
 .pos-row:last-child{margin-bottom:0}
-.badge{background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.pos-badge{background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;white-space:nowrap}
 
-.steps-n{display:flex;flex-direction:column}
-.sn{padding:11px 0;border-bottom:0.5px solid #f0f0f0}
+/* NUMBERED STEPS */
+.sn{padding:10px 0;border-bottom:0.5px solid #f0f0f0}
 .sn:last-child{border-bottom:none}
-.sn-h{font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px}
+.sn-h{font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px}
 .sn-b{font-size:13px;color:#555;line-height:1.65}
-.sn-ul{padding-left:16px;margin-top:6px}
+.sn-ul{padding-left:15px;margin-top:5px}
 .sn-ul li{font-size:12px;color:#555;line-height:1.8}
 
-.city-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
-.city-item{background:#f0faf5;border-radius:8px;padding:10px 12px;font-size:13px;font-weight:600;color:#0F1E36}
+/* CITY LIST */
+.city-item{background:#f0faf5;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;color:#0F1E36;margin-bottom:5px}
+.city-item:last-child{margin-bottom:0}
 
-.why-box{background:#f0faf5;border-radius:10px;padding:16px}
-.why-formula{font-size:22px;font-weight:800;color:#057A44;text-align:center;margin-bottom:12px}
-.why-sign{font-size:14px;font-weight:700;color:#057A44;text-align:center;margin-top:12px}
+/* WHY BOX */
+.why-box{background:#f0faf5;border-radius:10px;padding:14px}
+.why-formula{font-size:20px;font-weight:800;color:#057A44;text-align:center;margin-bottom:10px}
+.why-sign{font-size:13px;font-weight:700;color:#057A44;text-align:center;margin-top:10px}
 
-.warn-box{background:#FFF8E7;border:1.5px solid #FFB81C;border-radius:10px;padding:14px}
-.warn-h{font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:6px}
-.warn-quote{font-size:13px;font-weight:700;font-style:italic;color:#057A44;line-height:1.5;margin-bottom:10px}
-.warn-b{font-size:13px;color:#555;line-height:1.65;margin-bottom:8px}
-.warn-ul{padding-left:16px;margin-bottom:8px}
+/* WARN */
+.warn-box{background:#FFF8E7;border:1.5px solid #FFB81C;border-radius:10px;padding:13px}
+.warn-quote{font-size:13px;font-weight:700;font-style:italic;color:#057A44;line-height:1.5;margin-bottom:8px}
+.warn-b{font-size:12px;color:#555;line-height:1.65;margin-bottom:7px}
+.warn-ul{padding-left:14px;margin-bottom:7px}
 .warn-ul li{font-size:12px;color:#555;line-height:1.8}
 
-.trans-row{display:flex;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start}
+/* TRANSPARENCY */
+.trans-row{display:flex;gap:9px;padding:8px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start}
 .trans-row:last-child{border-bottom:none}
-.trans-ico{font-size:15px;flex-shrink:0;width:22px}
-.trans-t{font-size:12px;color:#555;line-height:1.65}
+.trans-ico{font-size:14px;flex-shrink:0;width:20px}
+.trans-t{font-size:12px;color:#555;line-height:1.6}
 
-.disc-box{background:#f8f8f8;border:0.5px solid #e0e0e0;border-radius:10px;padding:12px 14px}
-.disc-h{font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:6px}
+/* DISCLAIMER */
+.disc-box{background:#f8f8f8;border:0.5px solid #e0e0e0;border-radius:10px;padding:12px}
+.disc-h{font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:5px}
 .disc-b{font-size:12px;color:#555;line-height:1.65}
-.disc-ul{padding-left:14px;margin-top:6px}
+.disc-ul{padding-left:14px;margin-top:5px}
 .disc-ul li{font-size:12px;color:#555;line-height:1.8}
 
-.price-card{background:#FFB81C;border-radius:12px;padding:20px;text-align:center}
-.price-big{font-size:48px;font-weight:800;color:#0F1E36;line-height:1}
-.price-sub{font-size:12px;color:#0F1E36;opacity:0.65;margin-top:4px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.stat{background:#f0faf5;border-radius:10px;padding:12px;text-align:center}
-.stat-n{font-size:20px;font-weight:800;color:#057A44}
-.stat-l{font-size:11px;color:#6B7280;margin-top:3px;line-height:1.3}
-
-.cta{display:block;width:100%;background:#057A44;color:white;border:none;border-radius:10px;padding:15px;font-size:15px;font-weight:700;text-align:center;cursor:pointer;text-decoration:none;margin-top:14px}
-.cta-note{font-size:12px;color:#9CA3AF;text-align:center;margin-top:8px;line-height:1.55}
-.fin-disc{font-size:11px;color:#9CA3AF;line-height:1.65;margin-top:12px;padding-top:12px;border-top:0.5px solid #e0e0e0}
+/* PRICE + CTA */
+.price-hero{background:#FFB81C;border-radius:12px;padding:18px;text-align:center}
+.price-big{font-size:44px;font-weight:800;color:#0F1E36;line-height:1}
+.price-sub{font-size:11px;color:#0F1E36;opacity:0.65;margin-top:3px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.stat{background:#f0faf5;border-radius:10px;padding:11px;text-align:center}
+.stat-n{font-size:18px;font-weight:800;color:#057A44}
+.stat-l{font-size:10px;color:#6B7280;margin-top:2px;line-height:1.3}
+.cta-btn{display:block;width:100%;background:#057A44;color:white;text-decoration:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;text-align:center;margin-top:12px}
+.cta-note{font-size:11px;color:#9CA3AF;text-align:center;margin-top:7px;line-height:1.5}
+.fin-disc{font-size:11px;color:#9CA3AF;line-height:1.65;margin-top:10px;padding-top:10px;border-top:0.5px solid #e0e0e0}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <a href="/">← Back to app</a>
-  <h1>Group Advertising</h1>
+<div class="app-header">
+  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-header-text">
+    <div class="app-header-title">Auntie Tobi</div>
+    <div class="app-header-sub">Group Advertising</div>
+  </div>
+  <a href="/" class="back-btn">← Back to app</a>
 </div>
 
-<div class="wrap">
+<div class="page-wrap">
 
 <!-- HERO -->
 <div class="hero">
   <div class="hero-badge">🇳🇬 Nigerian Businesses in the UK</div>
-  <h2>Auntie Tobi Group Advertising</h2>
-  <p class="hero-tagline">Affordable advertising. Bigger reach. Together. 💚</p>
-  <p class="hero-body">Advertising your small business shouldn't have to cost hundreds of pounds. <strong style="color:white;">Auntie Tobi Group Advertising</strong> brings Nigerian-owned businesses together to share the cost of a larger advertising campaign.<br><br>Instead of one business paying £100 for an advertising campaign:</p>
-  <div class="formula">
-    <div class="formula-big">10 businesses contribute £10 each</div>
-    <div class="formula-note"><strong style="color:white;">10 businesses × £10 = £100 advertising budget</strong><br><br>100% of the £100 contributed goes towards paid advertising.<br>Auntie Tobi does <strong style="color:white;">not</strong> take a campaign fee from the £100.</div>
+  <div class="hero-h">Auntie Tobi Group Advertising</div>
+  <div class="hero-tag">Affordable advertising. Bigger reach. Together. 💚</div>
+  <div class="hero-body">Advertising your small business shouldn't have to cost hundreds of pounds. <strong style="color:white;">Auntie Tobi Group Advertising</strong> brings Nigerian-owned businesses together to share the cost of a larger advertising campaign.<br><br>Instead of one business paying £100 for an advertising campaign:</div>
+  <div class="formula-box">
+    <div class="formula-main">10 businesses contribute £10 each</div>
+    <div class="formula-note"><strong style="color:white;">10 businesses × £10 = £100 advertising budget</strong><br><br>100% of the £100 contributed goes towards paid advertising for the group campaign.<br>Auntie Tobi does <strong style="color:white;">not</strong> take a campaign fee from the £100.</div>
   </div>
 </div>
 
 <!-- HOW IT WORKS -->
 <div class="card">
-  <div class="card-title">How does it work?</div>
+  <div class="ctitle">How does it work?</div>
   <p class="body">Each campaign brings together <b>10 Nigerian businesses from different business categories</b> in one UK city. Each participating business contributes <b>£10</b>. Your business is then featured alongside nine other Nigerian businesses in a dedicated Auntie Tobi Carousel post.</p>
-  <div class="callout"><b>£100 is collected → £100 goes into paid advertising → the post is promoted for 10 days.</b><br><br>The aim is simple: help more people discover Nigerian-owned businesses while making paid advertising more affordable for small businesses.</div>
+  <div class="callout"><b>£100 is collected → £100 goes into paid advertising → the post is promoted for 10 days.</b><br><br>The aim: help more people discover Nigerian-owned businesses while making paid advertising more affordable for small businesses.</div>
 </div>
 
-<!-- WHAT COULD THE POST LOOK LIKE -->
+<!-- WHAT THE POST LOOKS LIKE -->
 <div class="card">
-  <div class="card-title">What could the post look like?</div>
-  <div style="background:#f0faf5;border-radius:8px;padding:12px 14px;font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:12px;line-height:1.4;">AD | 10 Nigerian Businesses in London You Should Know 🇳🇬📍<br><span style="font-size:11px;font-weight:400;color:#6B7280;">One business per category. Name + what they offer + Instagram tagged.</span></div>
+  <div class="ctitle">What could the post look like?</div>
+  <div style="background:#f0faf5;border-radius:8px;padding:11px 13px;font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:10px;line-height:1.4;">AD | 10 Nigerian Businesses in London You Should Know 🇳🇬📍<br><span style="font-size:11px;font-weight:400;color:#6B7280;">One per category · name + what they offer + @Instagram tagged</span></div>
   <div class="grid2">
     <div class="biz-pill"><div class="biz-ico">🍲</div><div><div class="biz-name">Nigerian Caterer</div><div class="biz-sub">name + offer</div></div></div>
     <div class="biz-pill"><div class="biz-ico">💄</div><div><div class="biz-name">Makeup Artist</div><div class="biz-sub">name + offer</div></div></div>
@@ -144,83 +157,79 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="biz-pill"><div class="biz-ico">🎉</div><div><div class="biz-name">Events Business</div><div class="biz-sub">name + offer</div></div></div>
     <div class="biz-pill"><div class="biz-ico">💼</div><div><div class="biz-name">Professional Service</div><div class="biz-sub">name + offer</div></div></div>
   </div>
-  <p style="font-size:12px;color:#6B7280;margin-top:10px;line-height:1.55;">Each participating business also receives a short caption introduction alongside their Instagram tag. The post is published organically first before the paid advertising campaign begins.</p>
+  <p style="font-size:11px;color:#6B7280;margin-top:10px;line-height:1.55;">Each business also receives a short caption introduction alongside their Instagram tag. The post is published organically first before paid advertising begins.</p>
 </div>
 
 <!-- ONE PER CATEGORY -->
 <div class="card">
-  <div class="card-title">One business per category</div>
+  <div class="ctitle">One business per category</div>
   <p class="body">We want each participating business to have its own space to stand out. That's why we aim to feature only <b>one business from each category in each campaign.</b></p>
-  <p class="body" style="margin-top:10px;">If the Makeup Artist space has already been taken, another makeup artist will not be added to that particular campaign. The same applies to catering, cakes, photography, hair, fashion, logistics and other services.</p>
+  <p class="body" style="margin-top:8px;">If the Makeup Artist space has already been taken, another makeup artist will not be added to that campaign. The same applies to catering, cakes, photography, hair, fashion, logistics and other services.</p>
   <div class="callout"><b>Your £10 secures your category for that campaign.</b><br>Category availability is first come, first served.</div>
 </div>
 
 <!-- WHAT £10 GETS YOU -->
 <div class="card">
-  <div class="card-title">What does your £10 get you?</div>
-  <div class="check-list">
-    <div class="check-row"><div class="ck">✅</div><div class="ck-t">A place in the group Carousel post</div></div>
-    <div class="check-row"><div class="ck">✅</div><div class="ck-t">Your business name displayed</div></div>
-    <div class="check-row"><div class="ck">✅</div><div class="ck-t">Your product or service highlighted in the caption</div></div>
-    <div class="check-row"><div class="ck">✅</div><div class="ck-t">Your Instagram/business account tagged</div></div>
-    <div class="check-row"><div class="ck">✅</div><div class="ck-t">Exposure through Auntie Tobi's audience</div></div>
-    <div class="check-row"><div class="ck">✅</div><div class="ck-t">Inclusion in a campaign with a combined <b>£100 paid advertising budget</b></div></div>
-    <div class="check-row"><div class="ck">✅</div><div class="ck-t"><b>10 days of paid advertising</b></div></div>
-    <div class="check-row"><div class="ck">✅</div><div class="ck-t">A campaign report after the advertising period ends</div></div>
-  </div>
-  <div class="callout" style="margin-top:10px;"><b>Your entire £10 contribution goes into the advertising budget.</b></div>
+  <div class="ctitle">What does your £10 get you?</div>
+  <div class="check-row"><div class="ck">✅</div><div class="ck-t">A place in the group Carousel post</div></div>
+  <div class="check-row"><div class="ck">✅</div><div class="ck-t">Your business name displayed</div></div>
+  <div class="check-row"><div class="ck">✅</div><div class="ck-t">Your product or service highlighted in the caption</div></div>
+  <div class="check-row"><div class="ck">✅</div><div class="ck-t">Your Instagram/business account tagged</div></div>
+  <div class="check-row"><div class="ck">✅</div><div class="ck-t">Exposure through Auntie Tobi's audience</div></div>
+  <div class="check-row"><div class="ck">✅</div><div class="ck-t">Inclusion in a campaign with a combined <b>£100 paid advertising budget</b></div></div>
+  <div class="check-row"><div class="ck">✅</div><div class="ck-t"><b>10 days of paid advertising</b></div></div>
+  <div class="check-row"><div class="ck">✅</div><div class="ck-t">A campaign report after the advertising period ends</div></div>
+  <div class="callout" style="margin-top:8px;"><b>Your entire £10 contribution goes into the advertising budget.</b></div>
 </div>
 
 <!-- POSITIONS -->
 <div class="card">
-  <div class="card-title">How are carousel positions allocated?</div>
-  <div class="pos-card">
+  <div class="ctitle">How are carousel positions allocated?</div>
+  <div class="pos-box">
     <div class="pos-head">First come, first served.</div>
-    <div class="pos-row"><span class="badge">Position 1</span>First to confirm interest and payment</div>
-    <div class="pos-row"><span class="badge">Position 2</span>Second to confirm</div>
-    <div class="pos-row"><span class="badge">3 – 10</span>In order of confirmation</div>
+    <div class="pos-row"><span class="pos-badge">Position 1</span> First to confirm interest and payment</div>
+    <div class="pos-row"><span class="pos-badge">Position 2</span> Second to confirm</div>
+    <div class="pos-row"><span class="pos-badge">3 – 10</span> In order of confirmation</div>
   </div>
-  <p class="body" style="margin-top:10px;">If appearing earlier in the post is important to you, <b>secure your space early.</b> Once all 10 spaces have been taken, that campaign closes.</p>
+  <p class="body">If appearing earlier in the post is important to you, <b>secure your space early.</b> Once all 10 spaces have been taken, that campaign closes.</p>
 </div>
 
 <!-- WHAT HAPPENS AFTER -->
 <div class="card">
-  <div class="card-title">What happens after you join?</div>
-  <div class="steps-n">
-    <div class="sn"><div class="sn-h">1. Secure your space</div><div class="sn-b">Choose an available city campaign and pay your £10 contribution.</div></div>
-    <div class="sn"><div class="sn-h">2. Send your business information</div><div class="sn-b">You'll be asked to provide:</div><ul class="sn-ul"><li>Business name</li><li>Instagram handle</li><li>Business category</li><li>Location/areas served</li><li>Short description of what you offer</li><li>Suitable business image, logo or other requested content</li></ul></div>
-    <div class="sn"><div class="sn-h">3. Auntie Tobi creates the campaign</div><div class="sn-b">All 10 participating businesses are brought together into one Carousel discovery-style post.</div></div>
-    <div class="sn"><div class="sn-h">4. The post goes live</div><div class="sn-b">Participating businesses are tagged. We encourage everyone involved to <b>share the post with their own audience</b>. The more businesses support the campaign, the greater the opportunity for everyone.</div></div>
-    <div class="sn"><div class="sn-h">5. Organic exposure comes first</div><div class="sn-b">The post is published organically on Auntie Tobi. Paid promotion begins approximately <b>24 hours after publication</b>. Advertising start times can occasionally vary due to platform review or approval.</div></div>
-    <div class="sn"><div class="sn-h">6. The paid campaign runs</div><div class="sn-b">The combined <b>£100 advertising budget</b> is used to promote the post for approximately <b>10 days.</b></div></div>
-    <div class="sn"><div class="sn-h">7. You receive a campaign report</div><div class="sn-b">Auntie Tobi will provide all participating businesses with a report showing how the shared advertising budget was used.</div></div>
-  </div>
+  <div class="ctitle">What happens after you join?</div>
+  <div class="sn"><div class="sn-h">1. Secure your space</div><div class="sn-b">Choose an available city campaign and pay your £10 contribution.</div></div>
+  <div class="sn"><div class="sn-h">2. Send your business information</div><div class="sn-b">You'll be asked to provide:</div><ul class="sn-ul"><li>Business name</li><li>Instagram handle</li><li>Business category</li><li>Location/areas served</li><li>Short description of what you offer</li><li>Suitable business image, logo or other requested content</li></ul></div>
+  <div class="sn"><div class="sn-h">3. Auntie Tobi creates the campaign</div><div class="sn-b">All 10 businesses are brought together into one Carousel discovery-style post.</div></div>
+  <div class="sn"><div class="sn-h">4. The post goes live</div><div class="sn-b">Participating businesses are tagged. We encourage everyone to <b>share the post with their own audience</b>. The more businesses support the campaign, the greater the opportunity for everyone.</div></div>
+  <div class="sn"><div class="sn-h">5. Organic exposure comes first</div><div class="sn-b">The post is published organically on Auntie Tobi. Paid promotion begins approximately <b>24 hours after publication</b>. Advertising start times can occasionally vary due to platform review or approval.</div></div>
+  <div class="sn"><div class="sn-h">6. The paid campaign runs</div><div class="sn-b">The combined <b>£100 advertising budget</b> promotes the post for approximately <b>10 days.</b></div></div>
+  <div class="sn"><div class="sn-h">7. You receive a campaign report</div><div class="sn-b">Auntie Tobi provides all participating businesses with a report showing how the shared advertising budget was used.</div></div>
 </div>
 
 <!-- CITY CAMPAIGNS -->
 <div class="card">
-  <div class="card-title">City campaigns 📍</div>
+  <div class="ctitle">City campaigns 📍</div>
   <p class="body">We're starting with <b>city-focused campaigns</b> because we want the advertising to be relevant to the people seeing it.</p>
-  <div class="city-list" style="margin-top:12px;">
+  <div style="margin-top:10px;">
     <div class="city-item">AD | 10 Nigerian Businesses in London You Should Know 🇳🇬</div>
     <div class="city-item">AD | 10 Nigerian Businesses in Birmingham You Should Know 🇳🇬</div>
     <div class="city-item">AD | 10 Nigerian Businesses in Manchester You Should Know 🇳🇬</div>
     <div class="city-item">AD | 10 Nigerian Businesses in Leeds You Should Know 🇳🇬</div>
     <div class="city-item">AD | 10 Nigerian Businesses in Reading You Should Know 🇳🇬</div>
   </div>
-  <p class="body" style="margin-top:12px;">Businesses should either <b>be based in the featured city</b> or <b>be able to provide products/services to customers in that area.</b> An online or delivery-based business may still qualify even if based elsewhere, provided it genuinely serves customers in that area.</p>
+  <p class="body" style="margin-top:10px;">Businesses should either <b>be based in the featured city</b> or <b>be able to provide products/services to customers in that area.</b> An online or delivery-based business may still qualify even if based elsewhere, provided it genuinely serves customers in that area.</p>
 </div>
 
 <!-- UK-WIDE -->
 <div class="card">
-  <div class="card-title">What about UK-wide businesses? 🇬🇧</div>
-  <p class="body">We're beginning with city campaigns. However, as Auntie Tobi Group Advertising develops, we may also introduce dedicated <b>UK-wide campaigns</b> for businesses that genuinely serve customers nationally — such as fashion brands, beauty products, food with nationwide delivery, online stores, logistics, professional services, travel, gifts and more.</p>
-  <p class="body" style="margin-top:10px;">If your business operates nationwide, you can still <b>register your interest for future campaigns.</b></p>
+  <div class="ctitle">What about UK-wide businesses? 🇬🇧</div>
+  <p class="body">We're beginning with city campaigns. However, as Auntie Tobi Group Advertising develops, we may also introduce dedicated <b>UK-wide campaigns</b> for businesses that genuinely serve customers nationally — fashion brands, beauty products, food with nationwide delivery, online stores, logistics, professional services, travel, gifts and more.</p>
+  <p class="body" style="margin-top:8px;">If your business operates nationwide, you can still <b>register your interest for future campaigns.</b></p>
 </div>
 
 <!-- WHY GROUP ADVERTISING -->
 <div class="card">
-  <div class="card-title">Why group advertising?</div>
+  <div class="ctitle">Why group advertising?</div>
   <div class="why-box">
     <div class="why-formula">10 × £10 = £100</div>
     <p class="body">A small business may not be ready to spend £100 on one advertising campaign. But by advertising together, participating businesses can contribute a relatively small amount while benefiting from a larger combined advertising budget.<br><br>You aren't paying £100 by yourself.<br><b>You're putting £10 into a £100 group advertising campaign.</b><br><br>And when participating businesses share the campaign with their own audiences, the campaign has an opportunity to benefit from the combined communities of all the businesses involved.</p>
@@ -230,11 +239,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <!-- INSTAGRAM PAGE MATTERS -->
 <div class="card">
-  <div class="card-title">Your Instagram page matters 📱</div>
+  <div class="ctitle">Your Instagram page matters 📱</div>
   <div class="warn-box">
     <div class="warn-quote">"The advert is the door that brings people into your shop — your Instagram page is the shop itself."</div>
-    <div class="warn-b">Paid advertising can help bring more people to your business. But what happens after they discover you matters too. Whether someone decides to follow, message, enquire or buy will depend on many factors, including what they see when they arrive.</div>
-    <div class="warn-b">Before participating, make sure your Instagram page clearly shows:</div>
+    <div class="warn-b">Paid advertising can help bring more people to your business. But what happens after they discover you matters too. Before participating, make sure your Instagram page clearly shows:</div>
     <ul class="warn-ul">
       <li>What your business offers</li>
       <li>Where you're based and/or areas you serve</li>
@@ -248,42 +256,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- TRANSPARENCY -->
+<!-- ADVERTISING TRANSPARENCY -->
 <div class="card">
-  <div class="card-title">Advertising transparency 📊</div>
-  <p class="body">We believe businesses should be able to see how the shared advertising budget was used. After the advertising campaign has ended, Auntie Tobi will provide participating businesses with a campaign report including:</p>
-  <div style="margin-top:12px;">
-    <div class="trans-row"><div class="trans-ico">💷</div><div class="trans-t">Total amount spent on paid advertising</div></div>
-    <div class="trans-row"><div class="trans-ico">📅</div><div class="trans-t">Campaign duration</div></div>
-    <div class="trans-row"><div class="trans-ico">👁️</div><div class="trans-t">Paid reach/impressions or other available delivery metrics</div></div>
-    <div class="trans-row"><div class="trans-ico">📈</div><div class="trans-t">Relevant engagement or campaign performance information available from the advertising platform</div></div>
-  </div>
-  <p style="font-size:12px;color:#6B7280;margin-top:10px;line-height:1.6;">This means participating businesses can see that the agreed advertising budget was used towards promoting the campaign. The exact metrics available may vary depending on the advertising platform and campaign type.</p>
+  <div class="ctitle">Advertising transparency 📊</div>
+  <p class="body" style="margin-bottom:10px;">We believe businesses should be able to see how the shared advertising budget was used. After the advertising campaign has ended, Auntie Tobi will provide participating businesses with a campaign report including:</p>
+  <div class="trans-row"><div class="trans-ico">💷</div><div class="trans-t">Total amount spent on paid advertising</div></div>
+  <div class="trans-row"><div class="trans-ico">📅</div><div class="trans-t">Campaign duration</div></div>
+  <div class="trans-row"><div class="trans-ico">👁️</div><div class="trans-t">Paid reach/impressions or other available delivery metrics</div></div>
+  <div class="trans-row"><div class="trans-ico">📈</div><div class="trans-t">Relevant engagement or campaign performance information available from the advertising platform</div></div>
+  <p style="font-size:11px;color:#6B7280;margin-top:10px;line-height:1.6;">This means participating businesses can see that the agreed advertising budget was used towards promoting the campaign.</p>
 </div>
 
 <!-- IMPORTANT INFO -->
 <div class="card">
-  <div class="card-title">Important information before you join</div>
+  <div class="ctitle">Important information before you join</div>
   <div class="disc-box">
     <div class="disc-h">Advertising results cannot be guaranteed</div>
-    <div class="disc-b">Paid advertising is designed to increase visibility, but Auntie Tobi cannot guarantee a particular number of views, impressions, followers, profile visits, enquiries, customers, orders or sales. Campaign performance will vary.</div>
-    <ul class="disc-ul"><li>Views</li><li>Impressions</li><li>Followers</li><li>Profile visits</li><li>Enquiries</li><li>Customers</li><li>Orders</li><li>Sales</li></ul>
-    <div class="disc-b" style="margin-top:8px;">Participation in an Auntie Tobi Group Advertising campaign does not constitute a guarantee or endorsement of a participating business's products or services.</div>
+    <div class="disc-b">Paid advertising is designed to increase visibility, but Auntie Tobi cannot guarantee a particular number of:</div>
+    <ul class="disc-ul"><li>Views or impressions</li><li>Followers or profile visits</li><li>Enquiries, customers, orders or sales</li></ul>
+    <div class="disc-b" style="margin-top:8px;">Campaign performance will vary. Participation does not constitute a guarantee or endorsement of a business's products or services.</div>
   </div>
 </div>
 
 <!-- BUSINESS INFO -->
 <div class="card">
-  <div class="card-title">Business information</div>
-  <p class="body">Participating businesses are responsible for ensuring all information provided to Auntie Tobi is <b>accurate and up to date</b>, including: business name, products, services, prices, offers, location, delivery areas, contact information, Instagram details, website information, and images or promotional material supplied for the campaign.</p>
-  <p class="body" style="margin-top:10px;color:#555;">Businesses should inform Auntie Tobi if important information changes before the campaign is published. Paid campaigns will be clearly identified as advertising.</p>
+  <div class="ctitle">Business information</div>
+  <p class="body">Participating businesses are responsible for ensuring all information provided to Auntie Tobi is <b>accurate and up to date</b>, including business name, products, services, prices, offers, location, delivery areas, contact information, Instagram details, website information, and images or promotional material supplied for the campaign.</p>
+  <p class="body" style="margin-top:8px;color:#555;">Businesses should inform Auntie Tobi if important information changes before the campaign is published. Paid campaigns will be clearly identified as advertising.</p>
 </div>
 
 <!-- CTA -->
 <div class="card">
-  <div class="card-title">Want your business in the next campaign? 🇳🇬🇬🇧</div>
-  <p class="body" style="margin-bottom:14px;">Each city campaign has only <b>10 business spaces</b> and we aim to accept <b>one business per category.</b></p>
-  <div class="price-card">
+  <div class="ctitle">Want your business in the next campaign? 🇳🇬🇬🇧</div>
+  <p class="body" style="margin-bottom:12px;">Each city campaign has only <b>10 business spaces</b> and we aim to accept <b>one business per category.</b> Ready to grow together?</p>
+  <div class="price-hero">
     <div class="price-big">£10</div>
     <div class="price-sub">per business · 100% goes to paid advertising</div>
   </div>
@@ -293,8 +299,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="stat"><div class="stat-n">10 days</div><div class="stat-l">advertising campaign</div></div>
     <div class="stat"><div class="stat-n">100%</div><div class="stat-l">contributions go to ads</div></div>
   </div>
-  <p style="font-size:14px;font-weight:700;text-align:center;color:#0F1E36;margin-top:14px;">Ready to grow together?</p>
-  <a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%27m%20interested%20in%20joining%20the%20Group%20Advertising%20campaign" target="_blank" class="cta">Join the Next Group Advertising Campaign 💚</a>
+  <a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20want%20to%20join%20the%20Group%20Advertising%20campaign" target="_blank" class="cta-btn">Join the Next Group Advertising Campaign 💚</a>
   <p class="cta-note">Campaign report provided after advertising period ends.</p>
   <p class="fin-disc">Paid Group Advertising campaigns will be clearly identified as advertising. Results from paid advertising cannot be guaranteed. Participation does not constitute an endorsement of a business's products or services.</p>
 </div>
