@@ -4343,12 +4343,8 @@ function showAboutTobi() {
 function showGroupAdvertising() {
   window._currentPage = 'group-advertising';
   window.history.replaceState({}, '', '/group-advertising');
-  // Ensure app is visible before rendering
-  var appEl = document.querySelector('.app');
-  if (appEl) appEl.style.display = 'flex';
-  var msgEl = document.getElementById('messages');
-  if (msgEl) msgEl.innerHTML = '';
-  messages = [];
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
   scrollToTop();
 
   var html = `<div style="font-family:inherit;color:#0F1E36;">
@@ -5646,11 +5642,7 @@ function handleDeepLink() {
     const b2 = params.get('b2') || window._earlyB2 || '';
     showPrayerLanding(content, b1, b2);
   } else if (action === 'group-advertising') {
-    setTimeout(function() {
-      window.history.replaceState({}, '', '/group-advertising');
-      showGroupAdvertising();
-    }, 100);
-    return;
+    setTimeout(() => { resetToWelcome(); setTimeout(() => { showGroupAdvertising(); window.history.replaceState({}, '', '/group-advertising'); }, 100); }, 300);
   }
   if (action === 'tip') {
     const content = params.get('content') || window._earlyContent || '';
