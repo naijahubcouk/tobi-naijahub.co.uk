@@ -4347,9 +4347,13 @@ function showGroupAdvertising() {
   messages.innerHTML = '';
   scrollToTop();
 
-  var html = `<div style="font-family:inherit;color:#0F1E36;">
+  const s = 'style="';
+  const green = '#057A44';
+  const gold = '#FFB81C';
+  const navy = '#0F1E36';
 
-<div style="background:#057A44;padding:24px 16px;border-radius:14px 14px 0 0;margin-bottom:0;">
+  // HERO
+  addTipMessage(`<div style="background:${green};padding:24px 16px 24px;border-radius:14px;margin-bottom:0;">
   <div style="display:inline-block;background:rgba(255,255,255,0.18);color:white;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px;">🇳🇬 Nigerian Businesses in the UK</div>
   <div style="font-size:20px;font-weight:800;color:white;line-height:1.3;margin-bottom:6px;">Auntie Tobi Group Advertising</div>
   <div style="font-size:13px;color:rgba(255,255,255,0.85);font-style:italic;margin-bottom:14px;">Affordable advertising. Bigger reach. Together. 💚</div>
@@ -4358,131 +4362,101 @@ function showGroupAdvertising() {
     <div style="font-size:16px;font-weight:800;color:white;margin-bottom:8px;">10 businesses contribute £10 each</div>
     <div style="font-size:12px;color:rgba(255,255,255,0.8);line-height:1.6;"><strong style="color:white;">10 businesses × £10 = £100 advertising budget</strong><br><br>100% of the £100 contributed goes towards paid advertising for the group campaign.</div>
   </div>
-</div>
+</div>`);
 
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;">How does it work?</div>
+  // HOW IT WORKS
+  addTipMessage(`<div style="background:white;padding:18px 16px;border-radius:12px;">
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;">How does it work?</div>
   <div style="font-size:13px;line-height:1.7;margin-bottom:12px;">Each campaign brings together <strong>10 Nigerian businesses from different business categories</strong> in one UK city. Each participating business contributes <strong>£10</strong>. Your business is then featured alongside nine other Nigerian businesses in a dedicated Auntie Tobi Carousel post.</div>
-  <div style="background:#f0faf5;border-left:3px solid #057A44;border-radius:0 8px 8px 0;padding:12px 14px;font-size:13px;line-height:1.65;"><strong>£100 is collected → £100 goes into paid advertising → the post is promoted for 10 days.</strong><br><br>The aim is simple: help more people discover Nigerian-owned businesses while making paid advertising more affordable for small businesses.</div>
-</div>
+  <div style="background:#f0faf5;border-left:3px solid ${green};border-radius:0 8px 8px 0;padding:12px 14px;font-size:13px;line-height:1.65;"><strong>£100 is collected → £100 goes into paid advertising → the post is promoted for 10 days.</strong><br><br>The aim is simple: help more people discover Nigerian-owned businesses while making paid advertising more affordable for small businesses.</div>
+</div>`);
 
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">What could the post look like?</div>
-  <div style="background:#f0faf5;border-radius:8px;padding:12px 14px;font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:12px;line-height:1.4;">AD | 10 Nigerian Businesses in London You Should Know 🇳🇬📍<br><span style="font-size:11px;font-weight:400;color:#6B7280;">Each business: name + what they offer + Instagram tagged. One per category.</span></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-    ${[['🍲','Nigerian Caterer'],['💄','Makeup Artist'],['🎂','Cake Business'],['💇🏾','Hairstylist'],['📸','Photographer'],['👗','Fashion Business'],['📦','Logistics Business'],['🛒','African Grocery'],['🎉','Events Business'],['💼','Professional Service']].map(([ico,name])=>'<div style="background:#f8f8f8;border:0.5px solid #e0e0e0;border-radius:8px;padding:9px 10px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;flex-shrink:0;">'+ico+'</span><div style="font-size:12px;font-weight:600;color:#0F1E36;line-height:1.3;">'+name+'<div style="font-size:10px;color:#9CA3AF;font-weight:400;margin-top:1px;">name + offer</div></div></div>').join('')}
-  </div>
+  // WHAT THE POST LOOKS LIKE
+  const bizTypes = [['🍲','Nigerian Caterer'],['💄','Makeup Artist'],['🎂','Cake Business'],['💇🏾','Hairstylist'],['📸','Photographer'],['👗','Fashion Business'],['📦','Logistics Business'],['🛒','African Grocery'],['🎉','Events Business'],['💼','Professional Service']];
+  addTipMessage(`<div style="background:white;padding:18px 16px;border-radius:12px;">
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">What could the post look like?</div>
+  <div style="background:#f0faf5;border-radius:8px;padding:12px 14px;font-size:13px;font-weight:700;color:${navy};margin-bottom:12px;line-height:1.4;">AD | 10 Nigerian Businesses in London You Should Know 🇳🇬📍<br><span style="font-size:11px;font-weight:400;color:#6B7280;">Each business: name + what they offer + Instagram tagged. One per category.</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">${bizTypes.map(([ico,name])=>`<div style="background:#f8f8f8;border:0.5px solid #e0e0e0;border-radius:8px;padding:9px 10px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;flex-shrink:0;">${ico}</span><div style="font-size:12px;font-weight:600;color:${navy};line-height:1.3;">${name}<div style="font-size:10px;color:#9CA3AF;font-weight:400;margin-top:1px;">name + offer</div></div></div>`).join('')}</div>
   <div style="font-size:12px;color:#6B7280;margin-top:10px;line-height:1.55;">Each participating business also receives a short caption introduction alongside their Instagram tag. The post is published organically first before the paid advertising campaign begins.</div>
-</div>
+</div>`);
 
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">One business per category</div>
-  <div style="font-size:13px;line-height:1.7;margin-bottom:10px;">We want each participating business to have its own space to stand out. That's why we aim to feature only <strong>one business from each category in each campaign.</strong></div>
-  <div style="font-size:13px;line-height:1.7;margin-bottom:10px;">If the Makeup Artist space has already been taken, another makeup artist will not be added to that particular campaign. The same applies to catering, cakes, photography, hair, fashion, logistics and other services.</div>
-  <div style="background:#f0faf5;border-left:3px solid #057A44;border-radius:0 8px 8px 0;padding:12px 14px;font-size:13px;line-height:1.65;"><strong>Your £10 secures your category for that campaign.</strong><br>Category availability is first come, first served.</div>
-</div>
+  // ONE PER CATEGORY + WHAT £10 GETS YOU
+  addTipMessage(`<div style="background:white;padding:18px 16px;border-radius:12px;">
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">One business per category</div>
+  <div style="font-size:13px;line-height:1.7;margin-bottom:10px;">We want each participating business to have its own space to stand out. That's why we aim to feature only <strong>one business from each category in each campaign.</strong> If the Makeup Artist space has already been taken, another makeup artist will not be added to that particular campaign.</div>
+  <div style="background:#f0faf5;border-left:3px solid ${green};border-radius:0 8px 8px 0;padding:12px 14px;font-size:13px;line-height:1.65;margin-bottom:16px;"><strong>Your £10 secures your category for that campaign.</strong> Category availability is first come, first served.</div>
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">What does your £10 get you?</div>
+  ${['A place in the group Carousel post','Your business name displayed','Your product or service highlighted in the caption','Your Instagram/business account tagged','Exposure through Auntie Tobi\'s audience','Inclusion in a campaign with a combined <strong>£100 paid advertising budget</strong>','10 days of paid advertising','A campaign report after the advertising period ends'].map(t=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start;"><div style="color:${green};font-size:14px;flex-shrink:0;width:20px;padding-top:1px;">✅</div><div style="font-size:13px;line-height:1.5;">${t}</div></div>`).join('')}
+  <div style="background:#f0faf5;border-left:3px solid ${green};border-radius:0 8px 8px 0;padding:12px 14px;font-size:13px;margin-top:10px;"><strong>Your entire £10 contribution goes into the advertising budget.</strong></div>
+</div>`);
 
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">What does your £10 get you?</div>
-  ${[['A place in the group Carousel post'],['Your business name displayed'],['Your product or service highlighted in the caption'],['Your Instagram/business account tagged'],['Exposure through Auntie Tobi\'s audience'],['Inclusion in a campaign with a combined <strong>£100 paid advertising budget</strong>'],['10 days of paid advertising'],['A campaign report after the advertising period ends']].map(([t])=>'<div style="display:flex;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start;"><div style="color:#057A44;font-size:14px;flex-shrink:0;width:20px;padding-top:1px;">✅</div><div style="font-size:13px;line-height:1.5;">'+t+'</div></div>').join('')}
-  <div style="background:#f0faf5;border-left:3px solid #057A44;border-radius:0 8px 8px 0;padding:12px 14px;font-size:13px;margin-top:10px;"><strong>Your entire £10 contribution goes into the advertising budget.</strong></div>
-</div>
-
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">How are positions allocated?</div>
+  // POSITIONS + WHAT HAPPENS AFTER
+  addTipMessage(`<div style="background:white;padding:18px 16px;border-radius:12px;">
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">How are positions allocated?</div>
   <div style="background:#f0faf5;border-radius:10px;padding:14px;margin-bottom:10px;">
-    <div style="font-size:14px;font-weight:700;color:#057A44;margin-bottom:10px;">First come, first served.</div>
+    <div style="font-size:14px;font-weight:700;color:${green};margin-bottom:10px;">First come, first served.</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">Position 1</span>First to confirm interest and payment</div>
-      <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">Position 2</span>Second to confirm</div>
-      <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">3 – 10</span>In order of confirmation</div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="background:${gold};color:${navy};font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">Position 1</span>First to confirm interest and payment</div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="background:${gold};color:${navy};font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">Position 2</span>Second to confirm</div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="background:${gold};color:${navy};font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;">3–10</span>In order of confirmation</div>
     </div>
   </div>
-  <div style="font-size:13px;line-height:1.7;">If appearing earlier in the post matters to you, <strong>secure your space early.</strong> Once all 10 spaces have been taken, that campaign closes.</div>
-</div>
+  <div style="font-size:13px;line-height:1.7;">If appearing earlier in the post matters to you, <strong>secure your space early.</strong> Once all 10 spaces are taken, that campaign closes.</div>
+</div>`);
 
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">What happens after you join?</div>
-  ${[['1. Secure your space','Choose an available city campaign and pay your £10 contribution.',[]],['2. Send your business information','You\'ll be asked to provide:',['Business name','Instagram handle','Business category','Location/areas served','Short description of what you offer','Suitable business image, logo or other requested content']],['3. Auntie Tobi creates the campaign','All 10 businesses are brought together into one Carousel discovery-style post.',[]],['4. The post goes live','Participating businesses are tagged. We encourage everyone involved to share the post with their own audience for organic reach. The more businesses support the campaign, the greater the opportunity for everyone.',[]],['5. Organic exposure comes first','The post is published organically on Auntie Tobi. Paid promotion begins approximately <strong>24 hours after publication</strong>. Advertising start times can occasionally vary due to platform review or approval.',[]],['6. The paid campaign runs','The combined <strong>£100 advertising budget</strong> is used to promote the post for approximately <strong>10 days.</strong>',[]],['7. You receive a campaign report','After the campaign ends, Auntie Tobi provides all participating businesses with a report showing how the shared advertising budget was used.',[]],].map(([h,b,ul])=>'<div style="padding:11px 0;border-bottom:0.5px solid #f0f0f0;"><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:4px;">'+h+'</div><div style="font-size:13px;color:#555;line-height:1.65;">'+b+'</div>'+(ul.length?'<ul style="margin-top:6px;padding-left:16px;">'+ul.map(i=>'<li style="font-size:12px;color:#555;line-height:1.75;">'+i+'</li>').join('')+'</ul>':'')+'</div>').join('')}
-</div>
+  // WHAT HAPPENS AFTER YOU JOIN
+  addTipMessage(`<div style="background:white;padding:18px 16px;border-radius:12px;">
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">What happens after you join?</div>
+  ${[['1. Secure your space','Choose an available city campaign and pay your £10 contribution.',[]],['2. Send your business information','You\'ll be asked to provide:',['Business name','Instagram handle','Business category','Location/areas served','Short description of what you offer','Suitable business image or logo']],['3. Auntie Tobi creates the campaign','All 10 businesses are brought together into one Carousel discovery-style post.',[]],['4. The post goes live','Participating businesses are tagged. We encourage everyone to share the post with their own audience for organic reach.',[]],['5. Organic exposure comes first','The post is published organically. Paid promotion begins approximately <strong>24 hours after publication</strong>.',[]],['6. The paid campaign runs','The combined <strong>£100 advertising budget</strong> promotes the post for approximately <strong>10 days.</strong>',[]],['7. You receive a campaign report','Auntie Tobi provides all participating businesses with a report showing how the shared advertising budget was used.',[]],].map(([h,b,ul])=>`<div style="padding:11px 0;border-bottom:0.5px solid #f0f0f0;"><div style="font-size:13px;font-weight:700;color:${navy};margin-bottom:4px;">${h}</div><div style="font-size:13px;color:#555;line-height:1.65;">${b}</div>${ul.length?'<ul style="margin-top:6px;padding-left:16px;">'+ul.map(i=>`<li style="font-size:12px;color:#555;line-height:1.75;">${i}</li>`).join('')+'</ul>':''}</div>`).join('')}
+</div>`);
 
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">City campaigns 📍</div>
+  // CITY CAMPAIGNS + WHY
+  addTipMessage(`<div style="background:white;padding:18px 16px;border-radius:12px;">
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">City campaigns 📍</div>
   <div style="font-size:13px;line-height:1.7;margin-bottom:12px;">We're starting with <strong>city-focused campaigns</strong> because we want the advertising to be relevant to the people seeing it.</div>
-  <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
-    ${['London','Birmingham','Manchester','Leeds','Reading'].map(c=>'<div style="background:#f0faf5;border-radius:8px;padding:10px 12px;font-size:13px;font-weight:600;color:#0F1E36;">AD | 10 Nigerian Businesses in '+c+' You Should Know 🇳🇬</div>').join('')}
-  </div>
-  <div style="font-size:13px;line-height:1.7;">Businesses should either <strong>be based in the featured city</strong> or <strong>be able to provide products/services to customers in that area.</strong> An online or delivery-based business may still qualify even if based elsewhere, provided it genuinely serves customers in that area.</div>
-</div>
-
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Why group advertising?</div>
+  <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">${['London','Birmingham','Manchester','Leeds','Reading'].map(c=>`<div style="background:#f0faf5;border-radius:8px;padding:10px 12px;font-size:13px;font-weight:600;color:${navy};">AD | 10 Nigerian Businesses in ${c} You Should Know 🇳🇬</div>`).join('')}</div>
+  <div style="font-size:13px;line-height:1.7;margin-bottom:16px;">Businesses should either <strong>be based in the featured city</strong> or <strong>be able to provide products/services to customers in that area.</strong></div>
   <div style="background:#f0faf5;border-radius:10px;padding:16px;">
-    <div style="font-size:20px;font-weight:800;color:#057A44;text-align:center;margin-bottom:12px;">10 × £10 = £100</div>
-    <div style="font-size:13px;line-height:1.7;color:#0F1E36;">A small business may not be ready to spend £100 on one advertising campaign. But by advertising together, participating businesses can contribute a relatively small amount while benefiting from a larger combined advertising budget.<br><br><strong>You aren't paying £100 by yourself. You're putting £10 into a £100 group advertising campaign.</strong><br><br>And when participating businesses share the campaign with their own audiences, the campaign has an opportunity to benefit from the combined communities of all the businesses involved.</div>
-    <div style="font-size:14px;font-weight:700;color:#057A44;text-align:center;margin-top:12px;">Small contribution. Bigger campaign. Grow together. 💚</div>
+    <div style="font-size:20px;font-weight:800;color:${green};text-align:center;margin-bottom:12px;">10 × £10 = £100</div>
+    <div style="font-size:13px;line-height:1.7;color:${navy};">A small business may not be ready to spend £100 on one advertising campaign. But by advertising together, participating businesses can contribute a relatively small amount while benefiting from a larger combined advertising budget.<br><br><strong>You aren't paying £100 by yourself. You're putting £10 into a £100 group advertising campaign.</strong></div>
+    <div style="font-size:14px;font-weight:700;color:${green};text-align:center;margin-top:12px;">Small contribution. Bigger campaign. Grow together. 💚</div>
   </div>
-</div>
+</div>`);
 
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Your Instagram page matters 📱</div>
-  <div style="background:#FFF8E7;border:1.5px solid #FFB81C;border-radius:10px;padding:14px;">
-    <div style="font-size:13px;font-weight:700;font-style:italic;color:#057A44;margin-bottom:10px;line-height:1.5;">"The advert is the door that brings people into your shop — your Instagram page is the shop itself."</div>
-    <div style="font-size:13px;color:#555;line-height:1.65;margin-bottom:8px;">Paid advertising can help bring more people to your business. But what happens after they discover you matters too. Whether someone decides to follow, message, enquire or buy from you will depend on many factors, including what they see when they arrive.<br><br>Before participating, make sure your Instagram page clearly shows:</div>
-    <ul style="padding-left:16px;margin-bottom:10px;">
-      ${['What your business offers','Where you\'re based and/or areas you serve','How customers can order, book or contact you','Clear photos or videos of your products/services','Recent and relevant content','Customer reviews or examples of your work, where available','A clear Instagram bio with working website/contact links'].map(i=>'<li style="font-size:12px;color:#555;line-height:1.75;">'+i+'</li>').join('')}
-    </ul>
-    <div style="font-size:12px;color:#555;line-height:1.65;"><strong>Your Instagram page is part of your marketing.</strong> The stronger and clearer it is, the better prepared you are to turn increased visibility into followers, enquiries and customers.<br><br>Auntie Tobi's role is to help put your business in front of more people. Your page, products, pricing, offer, customer service and overall experience also play an important role in what happens next.</div>
+  // INSTAGRAM MATTERS + TRANSPARENCY
+  addTipMessage(`<div style="background:white;padding:18px 16px;border-radius:12px;">
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Your Instagram page matters 📱</div>
+  <div style="background:#FFF8E7;border:1.5px solid ${gold};border-radius:10px;padding:14px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;font-style:italic;color:${green};margin-bottom:10px;line-height:1.5;">"The advert is the door that brings people into your shop — your Instagram page is the shop itself."</div>
+    <div style="font-size:13px;color:#555;line-height:1.65;margin-bottom:8px;">Before participating, make sure your Instagram page clearly shows:</div>
+    <ul style="padding-left:16px;">${['What your business offers','Where you\'re based and/or areas you serve','How customers can order, book or contact you','Clear photos or videos of your products/services','Recent and relevant content','Customer reviews or examples of your work','A clear bio with working contact/website links'].map(i=>`<li style="font-size:12px;color:#555;line-height:1.75;">${i}</li>`).join('')}</ul>
   </div>
-</div>
-
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Advertising transparency 📊</div>
-  <div style="font-size:13px;line-height:1.7;margin-bottom:12px;">We believe businesses should be able to see how the shared advertising budget was used. After the advertising campaign has ended, Auntie Tobi will provide participating businesses with a campaign report. The report will include available advertising information such as:</div>
-  ${[['💷','Total amount spent on paid advertising'],['📅','Campaign duration'],['👁️','Paid reach/impressions or other available delivery metrics'],['📈','Relevant engagement or campaign performance information available from the advertising platform']].map(([ico,txt])=>'<div style="display:flex;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start;"><div style="font-size:15px;flex-shrink:0;width:22px;">'+ico+'</div><div style="font-size:12px;color:#555;line-height:1.65;">'+txt+'</div></div>').join('')}
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Advertising transparency 📊</div>
+  <div style="font-size:13px;line-height:1.7;margin-bottom:12px;">We believe businesses should be able to see how the shared advertising budget was used. After the advertising campaign has ended, Auntie Tobi will provide participating businesses with a campaign report including:</div>
+  ${[['💷','Total amount spent on paid advertising'],['📅','Campaign duration'],['👁️','Paid reach/impressions or other available delivery metrics'],['📈','Relevant engagement or campaign performance information from the advertising platform']].map(([ico,txt])=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start;"><div style="font-size:15px;flex-shrink:0;width:22px;">${ico}</div><div style="font-size:12px;color:#555;line-height:1.65;">${txt}</div></div>`).join('')}
   <div style="font-size:12px;color:#6B7280;line-height:1.65;margin-top:10px;">This means participating businesses can see that the agreed advertising budget was used towards promoting the campaign.</div>
-</div>
+</div>`);
 
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Important information before you join</div>
-  <div style="background:var(--surface-1,#f8f8f8);border:0.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;">
-    <div style="font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:6px;">Advertising results cannot be guaranteed</div>
+  // IMPORTANT INFO + CTA
+  addTipMessage(`<div style="background:white;padding:18px 16px;border-radius:12px;">
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Important information before you join</div>
+  <div style="background:#f8f8f8;border:0.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+    <div style="font-size:12px;font-weight:700;color:${navy};margin-bottom:6px;">Advertising results cannot be guaranteed</div>
     <div style="font-size:12px;color:#555;line-height:1.65;">Paid advertising is designed to increase visibility, but Auntie Tobi cannot guarantee a particular number of views, impressions, followers, profile visits, enquiries, customers, orders or sales. Campaign performance will vary. Participation does not constitute a guarantee or endorsement of a business's products or services.</div>
   </div>
-</div>
-
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Business information</div>
-  <div style="font-size:13px;line-height:1.7;margin-bottom:10px;">Participating businesses are responsible for ensuring all information provided to Auntie Tobi is <strong>accurate and up to date</strong>, including: business name, products, services, prices, offers, location, delivery areas, contact information, Instagram details, website information, and images or promotional material supplied for the campaign.</div>
-  <div style="font-size:13px;line-height:1.7;color:#555;">Businesses should inform Auntie Tobi if important information changes before the campaign is published.</div>
-</div>
-
-<div style="background:white;padding:18px 16px;border-bottom:0.5px solid #e0e0e0;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Paid advertising disclosure</div>
-  <div style="font-size:13px;line-height:1.7;">Auntie Tobi believes in being transparent with our community. Because participating businesses are paying to be included, <strong>paid Group Advertising campaigns will be clearly identified as advertising.</strong> This helps maintain a clear distinction between Auntie Tobi's organic community business discoveries and paid business advertising campaigns.</div>
-</div>
-
-<div style="background:white;padding:18px 16px;border-radius:0 0 14px 14px;">
-  <div style="font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Want your business in the next campaign? 🇳🇬🇬🇧</div>
-  <div style="font-size:13px;line-height:1.7;margin-bottom:14px;">Each city campaign has only <strong>10 business spaces</strong> and we aim to accept <strong>one business per category.</strong></div>
-  <div style="background:#FFB81C;border-radius:12px;padding:18px;text-align:center;margin-bottom:10px;">
-    <div style="font-size:42px;font-weight:800;color:#0F1E36;line-height:1;">£10</div>
-    <div style="font-size:12px;color:#0F1E36;opacity:0.65;margin-top:4px;">per business · 100% goes to paid advertising</div>
+  <div style="font-size:11px;font-weight:700;color:${green};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Want your business in the next campaign? 🇳🇬</div>
+  <div style="background:${gold};border-radius:12px;padding:20px;text-align:center;margin-bottom:10px;">
+    <div style="font-size:44px;font-weight:800;color:${navy};line-height:1;">£10</div>
+    <div style="font-size:12px;color:${navy};opacity:0.65;margin-top:4px;">per business · 100% goes to paid advertising</div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-    ${[['10','businesses per campaign'],['£100','paid advertising budget'],['10 days','advertising campaign'],['100%','contributions go to ads']].map(([n,l])=>'<div style="background:#f0faf5;border-radius:10px;padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:#057A44;">'+n+'</div><div style="font-size:11px;color:#6B7280;margin-top:3px;line-height:1.3;">'+l+'</div></div>').join('')}
-  </div>
-  <div style="font-size:14px;font-weight:700;text-align:center;color:#0F1E36;margin-bottom:10px;">Ready to grow together?</div>
-  <button onclick="quickAsk('I want to join the Auntie Tobi Group Advertising campaign')" style="display:block;width:100%;background:#057A44;color:white;border:none;border-radius:10px;padding:15px;font-size:15px;font-weight:700;text-align:center;cursor:pointer;">Join the Next Auntie Tobi Group Advertising Campaign 💚</button>
-  <div style="font-size:12px;color:#9CA3AF;text-align:center;margin-top:8px;line-height:1.55;">Campaign report provided after advertising period ends. Paid campaigns clearly identified as advertising.</div>
-</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">${[['10','businesses per campaign'],['£100','paid advertising budget'],['10 days','advertising campaign'],['100%','contributions go to ads']].map(([n,l])=>`<div style="background:#f0faf5;border-radius:10px;padding:12px;text-align:center;"><div style="font-size:18px;font-weight:800;color:${green};">${n}</div><div style="font-size:11px;color:#6B7280;margin-top:3px;line-height:1.3;">${l}</div></div>`).join('')}</div>
+  <div style="font-size:14px;font-weight:700;text-align:center;color:${navy};margin-bottom:10px;">Ready to grow together?</div>
+  <button onclick="quickAsk('I want to join the Auntie Tobi Group Advertising campaign')" style="display:block;width:100%;background:${green};color:white;border:none;border-radius:10px;padding:15px;font-size:15px;font-weight:700;text-align:center;cursor:pointer;">Join the Next Group Advertising Campaign 💚</button>
+  <div style="font-size:11px;color:#9CA3AF;text-align:center;margin-top:8px;line-height:1.55;">Paid campaigns clearly identified as advertising. Results cannot be guaranteed.</div>
+</div>`);
 
-</div>`;
-
-  addTipMessage(html);
   addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showLinksPage()">← Back to Links</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
-
 
 function showLinksPage() {
   window._currentPage = 'links';
@@ -5642,7 +5616,7 @@ function handleDeepLink() {
     const b2 = params.get('b2') || window._earlyB2 || '';
     showPrayerLanding(content, b1, b2);
   } else if (action === 'group-advertising') {
-    setTimeout(() => { resetToWelcome(); setTimeout(() => { showGroupAdvertising(); window.history.replaceState({}, '', '/group-advertising'); }, 100); }, 300);
+    setTimeout(() => { showGroupAdvertising(); window.history.replaceState({}, '', '/group-advertising'); }, 300);
   }
   if (action === 'tip') {
     const content = params.get('content') || window._earlyContent || '';
