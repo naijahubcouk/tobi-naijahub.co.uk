@@ -5337,6 +5337,24 @@ document.addEventListener('click', function(e) {
       return;
     }
   }
+  // Category pill click
+  var cp = e.target.closest('[data-cat]');
+  if (cp && !e.target.closest('[data-city]')) {
+    var cat = cp.getAttribute('data-cat');
+    var loc = cp.getAttribute('data-loc') || null;
+    var all = cp.getAttribute('data-all') === 'true';
+    if (cat) { showBusinesses(undefined, cat, loc || null, all); }
+    return;
+  }
+  // City pill click
+  var cyp = e.target.closest('[data-city]');
+  if (cyp) {
+    var city = cyp.getAttribute('data-city');
+    var catv = cyp.getAttribute('data-cat-filter') || null;
+    var all2 = cyp.getAttribute('data-all') === 'true';
+    if (city) { showBusinesses(undefined, catv || null, city, all2); }
+    return;
+  }
 });
 
 // Global suggestions generator
