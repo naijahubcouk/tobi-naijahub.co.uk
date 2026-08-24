@@ -5340,7 +5340,7 @@ document.addEventListener('click', function(e) {
   // Category pill click
   var cp = e.target.closest('[data-cat]');
   if (cp && !e.target.closest('[data-city]')) {
-    var cat = cp.getAttribute('data-cat');
+    var cat = cp.getAttribute('data-cat').replace(/&amp;/g,'&').replace(/&quot;/g,'"');
     var loc = cp.getAttribute('data-loc') || null;
     var all = cp.getAttribute('data-all') === 'true';
     if (cat) { showBusinesses(undefined, cat, loc || null, all); }
@@ -5350,7 +5350,7 @@ document.addEventListener('click', function(e) {
   var cyp = e.target.closest('[data-city]');
   if (cyp) {
     var city = cyp.getAttribute('data-city');
-    var catv = cyp.getAttribute('data-cat-filter') || null;
+    var catv = cyp.getAttribute('data-cat-filter').replace(/&amp;/g,'&').replace(/&quot;/g,'"') || null;
     var all2 = cyp.getAttribute('data-all') === 'true';
     if (city) { showBusinesses(undefined, catv || null, city, all2); }
     return;
@@ -5405,7 +5405,10 @@ const AUNTIE_TOBI_DIRECTORY = [
 {"name":"IKS","slug":"iks","cat":"shipping & logistics","desc":"International shipping. Reimagined.","loc":"London, UK"},
 {"name":"Food by Ikanke","slug":"food-by-ikanke","cat":"caterers","desc":"Food by Ikanke is a luxury catering brand specializing in bespoke private dining experiences, event catering, tablescapes, and culinary styling.","loc":"London, UK"},
 {"name":"RukkyzKitchen","slug":"rukkyzkitchen","cat":"caterers","desc":"A blend of traditional and modern African cuisine, bursting with rich spices and vibrant flavours, taking you on a delicious journey through the heart of Africa in every bite.","loc":"71-75 Shelton St, London WC2H 9JQ, UK"},
-{"name":"Honeycakesandfoods","slug":"honeycakesandfoods","cat":"cakes & desert","desc":"UK-based cakes & catering business serving delicious Nigerian food, celebration cakes, pastries, small chops & party catering. Based in St Albans, Hertfordshire","loc":"Hertfordshire, UK"},
+{"name":"mobitcakes and treats","slug":"mobitcakes-and-treats","cat":"cakes & desert","desc":"mobitcakes_and_treats is a Manchester-based bakery specializing in luxury cakes and pastries. L2 food hygiene and safety certified, the brand crafts customized baked goods and treats (such as chinchin","loc":"Manchester, UK"},
+{"name":"Cakesndrips","slug":"cakesndrips","cat":"cakes & desert","desc":"cakesndrips, run by cake baker Maryam, is a Manchester-based bakery specializing in luxury bespoke cakes and Swiss meringue frosting. The brand offers custom cake designs for all occasions with delive","loc":"City Rd, Manchester, UK"},
+{"name":"lunch with bee","slug":"lunch-with-bee","cat":"caterers","desc":"lunch.with.bee is a luxe event catering service based in Manchester and available to travel. Holding a 5-star hygiene rating and Level 2 Food Safety certification","loc":"Manchester, UK"},
+{"name":"aratelabeauty","slug":"aratelabeauty","cat":"makeup artists","desc":"aratelabeauty is a Manchester-based makeup artistry service founded by Josephine Aramide Odunoye. The brand provides professional beauty services specializing in bridal glam, special occasion makeup","loc":"Manchester, UK"},
 {"name":"Tojo's","slug":"tojos","cat":"caterers","desc":"TOJO’S is a Jamaican and Nigerian fusion catering and street food brand based in Stoke-on-Trent.","loc":"England, UK"},
 {"name":"D1GRILLZ","slug":"d1grillz","cat":"suya spot","desc":"D1Grillz Mobile Catering Services delivers premium live barbecue catering, bringing authentic charcoal-grilled flavours to weddings, birthdays, corporate events, festivals, private parties.","loc":"England, UK"},
 {"name":"Nulife Multimedia","slug":"nulife-multimedia","cat":"djs","desc":"Sound Hire, DJ Equipment hire, Wedding DJ, Corporate and Events DJ Hire, Concert and religious meetings sound hire and setup","loc":"England, UK"},
@@ -5486,10 +5489,13 @@ const AUNTIE_TOBI_DIRECTORY = [
 {"name":"Candy Beauty UK","slug":"candy-beauty-uk","cat":"hair stylists/braiders","desc":"Welcome to Candy Beauty, your go-to destination for high-quality hair styling and beauty care.","loc":"Walsgrave Rd, Coventry CV2 4ED, UK"},
 {"name":"Beauty Glowskin","slug":"beauty-glowskin","cat":"skincare","desc":"UK Skincare Formulator specializes in handcrafted skincare and haircare products made from scratch using carefully selected ingredients.","loc":"East London, UK"},
 {"name":"The SOE Brand","slug":"the-soe-brand","cat":"ankara & traditional wears","desc":"The SOE Brand is a fashion and lifestyle brand offering stylish, contemporary pieces designed for individuals who value confidence, quality, and effortless elegance.","loc":"Liverpool, UK"},
+{"name":"Yinxx Cuisine","slug":"yinxx-cuisine","cat":"nigerian snacks","desc":"Yinxx Cuisine provides a premium African food experience in Manchester. The business specializes in Amala catering, authentic African snacks","loc":"Manchester, UK"},
+{"name":"DA8 Palm Oil & Ofada Oil","slug":"da8-palm-oil-and-ofada-oil","cat":"foodstores & groceries","desc":"DA8 is a UK-based retail brand offering premium Palm Oil and Ofada Oil ethically sourced from Sierra Leone. The business provides authentic, high-quality cooking oils available for order","loc":"Manchester, UK","wa":"447438068944"},
 {"name":"Mannas Kitchen UK","slug":"mannas-kitchen-uk","cat":"caterers","desc":"We provide authentic , homemade Nigerian meals for busy professionals and families, cater for events as well as curate beautiful grazing tables","loc":"Colchester, UK","wa":"447867282805"},
 {"name":"Thebellefemme","slug":"thebellefemme","cat":"makeup artists","desc":"Thebellefemme Beauty Studio is a luxury beauty brand dedicated to enhancing natural beauty while creating an unforgettable experience for every client.","loc":"Birmingham, UK","wa":"447448676742"},
 {"name":"Multi Nutrient Africa Food & Frozen","slug":"multi-nutrient-africa-food-and-frozen","cat":"foodstores & groceries","desc":"Bringing Authentic African Flavours to Your Doorstep. Fresh, High-Quality Frozen Foods and African Groceries Delivered with Care.","loc":"unit 1, 8 Hanover St, Wakefield WF2 9BW, UK"},
 {"name":"Beauty By Jhay","slug":"beauty-by-jhay","cat":"wig vendors","desc":"Hey beautiful, you deserve nothing but the best! Explore our stunning range of premium wigs created to enhance your glow and match your unique vibe. Dive in and discover your next signature look.","loc":"London, UK"},
+{"name":"MakeOver By Teju","slug":"makeover-by-teju","cat":"makeup artists","desc":"Makeoverbyteju is a professional bridal and glam makeup service operating across Leeds and Manchester","loc":"Manchester, UK"},
 {"name":"Mayor Bite Bakery and Cafe","slug":"mayor-bite-bakery-and-cafe","cat":"restaurants","desc":"Family owned Edinburgh bakery & café serving fresh bread, traditional Nigerian pastries, and expertly crafted coffee bringing people together through authentic flavours and warm hospitality.","loc":"Westside Centre, Wester Hailes Rd, Edinburgh EH14 2SW, UK","wa":"447424989990"},
 {"name":"UK Luxury Wears","slug":"uk-luxury-wears","cat":"ankara & traditional wears","desc":"Discover UK Luxury Wears, your destination for luxury African ready-to-wear fashion in the UK. Shop elegant maxi dresses, bespoke outfits, and stylish occasion wear with worldwide delivery.","loc":"United Kingdom","wa":"447301643348"},
 {"name":"Fascinator by Olaoge","slug":"fascinator-by-olaoge","cat":"fashion & accessories","desc":"Shop luxury fascinators, headpieces, and accessories from Fascinator by Olaoge UK. Perfect for weddings, church, race days, and special occasions with worldwide shipping.","loc":"United Kingdom"},
@@ -5551,7 +5557,12 @@ const AUNTIE_TOBI_DIRECTORY = [
 {"name":"AM_farm2pot","slug":"am-farm2pot","cat":"foodstores & groceries","desc":"Order healthy, authentic African cooked and uncooked food online with UK-wide delivery. Enjoy delicious African cuisine and the true taste of home delivered to your door.","loc":"195, 197 Wood St, London E17 3NU, UK"},
 {"name":"African Aroma","slug":"african-aroma","cat":"caterers","desc":"African Aroma is a Manchester-based Nigerian food delivery and catering service offering home delivery across the UK.","loc":"Manchester, UK","wa":"447733763683"},
 {"name":"Bankys Kitchen","slug":"bankys-kitchen","cat":"caterers","desc":"Bankys Kitchen is a Sheffield and Birmingham-based catering service offering 100% Halal Nigerian food.","loc":"288 Abbeydale Rd, Nether Edge, Sheffield S7 1FL, UK"},
-{"name":"Flavour Hub Food & Events LTD","slug":"flavour-hub-food-and-events-ltd","cat":"caterers","desc":"We provide authentic Afro -Caribbean cuisine and modern catering services at very reasonable prices.","loc":"Kent, UK"}
+{"name":"Flavour Hub Food & Events LTD","slug":"flavour-hub-food-and-events-ltd","cat":"caterers","desc":"We provide authentic Afro -Caribbean cuisine and modern catering services at very reasonable prices.","loc":"Kent, UK"},
+{"name":"Fizzy Concept Fashion","slug":"fizzy-concept-fashion","cat":"fashion designers","desc":"Fizzy Concept Fashion is a UK-based clothing brand specializing in handmade and ready-to-wear outfits. The brand sources quality fabrics to create custom styles for various occasions.","loc":"Manchester, UK"},
+{"name":"Zarbeautie","slug":"zarbeautie","cat":"makeup artists","desc":"Zarbeautie is a Manchester-based beauty service offering professional makeup artistry, bridal looks, hair styling, and beauty training.","loc":"Manchester, UK"},
+{"name":"Opy Hotglam","slug":"opy-hotglam","cat":"makeup artists","desc":"Opy Hotglam is a Manchester-based bridal makeup artist and hair stylist. The brand provides professional beauty services, hair styling and portfolio content for special events and weddings.","loc":"Manchester, UK"},
+{"name":"Omas touch","slug":"omas-touch","cat":"skincare","desc":"Oma's_touch specialise in assisting you to discover your inner glow and boost your confidence. For all your skincare issues, semi permanent makeup, waxing and massages we got you covered.","loc":"Manchester Rd E, Little Hulton, Manchester M38 9AF, UK","wa":"07958710495"},
+{"name":"Honey Cakes and foods","slug":"honey-cakes-and-foods","cat":"cakes & desert","desc":"Honey Cakes and foods  is UK-based cakes & catering business serving delicious Nigerian food, celebration cakes, pastries, small chops & party catering. Based in St Albans, Hertfordshire","loc":"Hertfordshire, UK"}
 ];
 
 
