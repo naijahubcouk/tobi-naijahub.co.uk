@@ -101,8 +101,33 @@ textarea.tall{height:140px;resize:none}
     <div class="section-label">📰 Main Message — shown inside the app when opened</div>
     <div class="field">
       <label>Main Message *</label>
-      <textarea id="main-message" class="tall" placeholder="Write the full update, news or tip here. This is what people read when they tap the notification and open the app..." oninput="updatePreviews();refreshPreview()"></textarea>
-      <div class="helper">Full content shown as an in-app card — can be longer and more detailed</div>
+      <!-- Rich Text Toolbar -->
+      <div class="rte-toolbar">
+        <button type="button" title="Undo" onclick="rteCmd('undo')">↩</button>
+        <button type="button" title="Redo" onclick="rteCmd('redo')">↪</button>
+        <span class="rte-sep"></span>
+        <button type="button" title="Heading 1" onclick="rteCmd('formatBlock','h2')"><b>H1</b></button>
+        <button type="button" title="Heading 2" onclick="rteCmd('formatBlock','h3')"><b>H2</b></button>
+        <span class="rte-sep"></span>
+        <button type="button" title="Bold" onclick="rteCmd('bold')"><b>B</b></button>
+        <button type="button" title="Italic" onclick="rteCmd('italic')"><i>I</i></button>
+        <button type="button" title="Underline" onclick="rteCmd('underline')"><u>U</u></button>
+        <span class="rte-sep"></span>
+        <button type="button" title="Bullet list" onclick="rteCmd('insertUnorderedList')">≡</button>
+        <button type="button" title="Numbered list" onclick="rteCmd('insertOrderedList')">⋮</button>
+        <span class="rte-sep"></span>
+        <button type="button" title="Align left" onclick="rteCmd('justifyLeft')">⫡</button>
+        <button type="button" title="Align center" onclick="rteCmd('justifyCenter')">≡</button>
+        <button type="button" title="Align right" onclick="rteCmd('justifyRight')">⫠</button>
+        <span class="rte-sep"></span>
+        <button type="button" title="Insert link" onclick="rteInsertLink()">🔗</button>
+        <button type="button" title="Remove formatting" onclick="rteCmd('removeFormat')">✕</button>
+      </div>
+      <!-- Editable content area -->
+      <div id="main-message-rte" class="rte-body" contenteditable="true" oninput="syncRTE()" data-placeholder="Write your message here — use the toolbar above to format text, add lists, headings and links..."></div>
+      <!-- Hidden input synced with RTE content -->
+      <textarea id="main-message" style="display:none;"></textarea>
+    </div>
     </div>
 
     <!-- IN-APP PREVIEW -->
@@ -247,7 +272,7 @@ function setType(btn, type) {
 function updatePreviews() {
   var title = document.getElementById('push-title').value || 'Your notification title';
   var msg = document.getElementById('push-message').value || 'Your push message will appear here';
-  var main = document.getElementById('main-message').value || 'Your main message will appear here as a full in-app update...';
+  var main = docun-message').value /* replaced */ || 'Your main message will appear here as a full in-app update...';
   document.getElementById('prev-title').textContent = title;
   document.getElementById('prev-msg').textContent = msg;
   document.getElementById('prev-tag').textContent = typeLabels[currentType] || '📢 Update';
@@ -258,14 +283,14 @@ function updatePreviews() {
 async function sendPush(scheduled) {
   var title = document.getElementById('push-title').value.trim();
   var pushMsg = document.getElementById('push-message').value.trim();
-  var mainMsg = document.getElementById('main-message').value.trim();
+  var mainMsg = getMainMessage();
   var sourceUrl = document.getElementById('push-src').value.trim();
   var statusEl = document.getElementById('push-status');
   var btnEl = document.getElementById('push-send');
 
   if (!title) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a title'; document.getElementById('push-title').focus(); return; }
   if (!pushMsg) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a push message'; document.getElementById('push-message').focus(); return; }
-  if (!mainMsg) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a main message'; document.getElementById('main-message').focus(); return; }
+  if (!mainMsg) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a main message'; document.getElementById('main-message-rte').focus(); return; }
 
   btnEl.disabled = true;
   statusEl.style.color = '#9CA3AF';
@@ -380,6 +405,37 @@ function showPreviewTab(tab, btn) {
 // Also refresh preview when type changes
 var _origSetType = setType;
 setType = function(btn, type) { _origSetType(btn, type); refreshPreview(); };
+function rteCmd(cmd, val) {
+  document.getElementById('main-message-rte').focus();
+  document.execCommand(cmd, false, val || null);
+  syncRTE();
+}
+
+function rteInsertLink() {
+  var url = prompt('Enter URL:', 'https://');
+  if (url) {
+    document.getElementById('main-message-rte').focus();
+    document.execCommand('createLink', false, url);
+    syncRTE();
+  }
+}
+
+function syncRTE() {
+  var rte = document.getElementById('main-message-rte');
+  var hidden = document.getElementById('main-message');
+  if (rte && hidden) {
+    hidden.value = rte.innerHTML;
+    updatePreviews();
+    refreshPreview();
+  }
+}
+
+// Override getMainMessage to read from RTE
+function getMainMessage() {
+  var rte = document.getElementById('main-message-rte');
+  return rte ? rte.innerHTML.trim() : document.getElementById('main-message').value.trim();
+}
+
 </script>
 </body>
 </html>
