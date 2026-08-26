@@ -1019,6 +1019,7 @@
     <div class="pill" onclick="showBusinesses(undefined,null,null,true)">🏢 Businesses</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="showAllNews()">📰 News/Articles</div>
+    <div class="pill" onclick="showTobiUpdates()">📢 Updates</div>
     <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
     <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my UK driving theory test'))">🚗 Driving Theory Test</div>
     <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my Life in UK test'))">📋 Life in UK Test</div>
@@ -1812,9 +1813,10 @@ window._feedsLoaded = false;
 async function loadLiveFeeds() {
   try {
     // Load both feeds in parallel
-    const [blogRes, listingsRes] = await Promise.allSettled([
+    const [blogRes, listingsRes, updatesRes] = await Promise.allSettled([
       fetch('/.netlify/functions/fetch-blog-feed').then(r => r.json()),
       fetch('/.netlify/functions/fetch-listings-feed').then(r => r.json()),
+      fetch('/tobi-updates.json?v=' + Date.now()).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
 
     // Update blog feed
@@ -1849,6 +1851,12 @@ async function loadLiveFeeds() {
       if (msgs && !msgs.querySelector('[data-news-card]')) {
         showNewsCard();
       }
+    }
+
+    // Handle tobi-updates.json
+    if (updatesRes && updatesRes.status === 'fulfilled' && Array.isArray(updatesRes.value) && updatesRes.value.length) {
+      window._tobiUpdates = updatesRes.value;
+      console.log(`[Feed] Tobi updates: ${updatesRes.value.length} loaded`);
     }
   } catch (err) {
     console.warn('[Feed] Failed to load live feeds, using hardcoded data:', err.message);
@@ -3097,6 +3105,28 @@ function getNewsEmoji(label) {
   if (l.includes('education')) return '🎓';
   if (l.includes('event')) return '🎉';
   return '📰';
+}
+
+function showTobiUpdates() {
+  window._currentPage = 'tobi-updates';
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  scrollToTop();
+  const updates = window._tobiUpdates || [];
+  const typeLabels = {update:'📢 Update',news:'📰 News',tip:'💡 Tip',event:'🎉 Event',business:'🏢 Business',motivation:'💪 Motivation',prayer:'🙏 Prayer',jobs:'💼 Jobs',immigration:'🛂 Immigration',money:'💷 Money',health:'💊 Health',housing:'🏠 Housing'};
+  const typeColors = {update:'#057A44',news:'#1D4ED8',tip:'#D97706',event:'#7C3AED',business:'#0F1E36',motivation:'#EA580C',prayer:'#059669',jobs:'#7C2D12',immigration:'#0891B2',money:'#B45309',health:'#16A34A',housing:'#0369A1'};
+  if (!updates.length) {
+    addTipMessage('<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:14px;">No updates yet. Check back soon!</div>');
+  } else {
+    updates.forEach(function(u) {
+      const label = typeLabels[u.type] || '📢 Update';
+      const color = typeColors[u.type] || '#057A44';
+      const date = u.date ? new Date(u.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+      const srcLink = u.sourceUrl ? '<a href="' + u.sourceUrl + '" target="_blank" style="display:inline-block;margin-top:8px;font-size:12px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>' : '';
+      addTipMessage('<div style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;"><div style="background:' + color + ';padding:8px 14px;display:flex;align-items:center;justify-content:space-between;"><span style="color:white;font-weight:700;font-size:13px;">' + label + '</span><span style="color:rgba(255,255,255,0.7);font-size:11px;">' + date + '</span></div><div style="padding:14px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:6px;line-height:1.4;">' + (u.title || '') + '</div><div style="font-size:14px;color:#444;line-height:1.65;">' + (u.message || '') + '</div>' + srcLink + '</div></div>');
+    });
+  }
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showAllNews()">← All News</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
 
 function showAllNews() {
