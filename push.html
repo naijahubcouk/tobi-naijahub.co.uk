@@ -375,8 +375,8 @@ function updateSchedulePreview() {
 function refreshPreview() {
   var title = document.getElementById('push-title').value || 'Your notification title';
   var push = document.getElementById('push-message').value || 'Your push message here...';
-  var main = document.getElementById('main-message').value || 'Your main message appears here when the user opens the app...';
-  var src = document.getElementById('push-src').value;
+  var main = getMainMessage() || 'Your main message appears here when the user opens the app...';
+  var src = document.getElementById('push-src') ? document.getElementById('push-src').value : '';
   var typeLabels = {
     update:'📢 Update',news:'📰 News',tip:'💡 Tip',event:'🎉 Event',
     prayer:'🙏 Prayer',motivation:'💪 Motivation',jobs:'💼 Jobs',
@@ -390,7 +390,7 @@ function refreshPreview() {
   document.getElementById('pv-app-tag').textContent = label;
   document.getElementById('pv-app-ico').textContent = ico;
   document.getElementById('pv-app-title').textContent = title;
-  document.getElementById('pv-app-text').textContent = main;
+  document.getElementById('pv-app-text').innerHTML = main;
   var srcEl = document.getElementById('pv-app-src');
   if (srcEl) srcEl.style.display = src ? 'block' : 'none';
 }
