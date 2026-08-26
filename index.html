@@ -1018,15 +1018,8 @@
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="showBusinesses(undefined,null,null,true)">🏢 Businesses</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
-    <div class="pill" onclick="showAllNews()">📰 News/Articles</div>
-    <div class="pill" onclick="showTobiUpdates()">📢 Updates</div>
-    <div class="pill" onclick="resetAndShowJobs()">💼 Jobs</div>
-    <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my UK driving theory test'))">🚗 Driving Theory Test</div>
-    <div class="pill" onclick="localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my Life in UK test'))">📋 Life in UK Test</div>
-    <div class="pill" onclick="showJapaGuide()">🇬🇧 Japa Guide</div>
-    <div class="pill" onclick="showRequestOptions()">🔍 Request</div>
-    <div class="pill" onclick="showFeedbackForm()">📝 Feedback</div>
-    <a href="https://wa.me/447594674940" target="_blank" class="pill">💬 WhatsApp Us</a>
+    <div class="pill" onclick="showNewsAndUpdates()">📰 News & Updates</div>
+    <div class="pill" onclick="showMoreSheet()" style="background:#0F1E36;color:white;border-color:#0F1E36;">More ›</div>
   </div>
 
   <!-- SEARCH -->
@@ -3107,6 +3100,19 @@ function getNewsEmoji(label) {
   return '📰';
 }
 
+function formatMsg(text) {
+  if (!text) return '';
+  // Allow HTML directly - just wrap paragraphs if no block tags present
+  var hasBlock = /<(p|div|h[1-6]|ul|ol|li|br|hr|blockquote)/i.test(text);
+  if (hasBlock) return text;
+  // Plain text - convert blank lines to paragraphs and single newlines to br
+  var parts = text.split(/\n\n+/);
+  return parts.map(function(p) {
+    return '<p style="margin:0 0 10px 0;line-height:1.75;">' + p.replace(/\n/g,'<br>') + '</p>';
+  }).join('');
+}
+
+
 function showTobiUpdates() {
   window._currentPage = 'tobi-updates';
   const messages = document.getElementById('messages');
@@ -3122,13 +3128,124 @@ function showTobiUpdates() {
       const label = typeLabels[u.type] || '📢 Update';
       const color = typeColors[u.type] || '#057A44';
       const date = u.date ? new Date(u.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
-      const msgHtml = (u.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+      const msgHtml = formatMsg(u.message);
       const srcLink = u.sourceUrl ? '<a href="' + u.sourceUrl + '" target="_blank" style="display:inline-block;margin-top:8px;font-size:12px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>' : '';
       addTipMessage('<div style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;"><div style="background:' + color + ';padding:8px 14px;display:flex;align-items:center;justify-content:space-between;"><span style="color:white;font-weight:700;font-size:13px;">' + label + '</span><span style="color:rgba(255,255,255,0.7);font-size:11px;">' + date + '</span></div><div style="padding:14px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:6px;line-height:1.4;">' + (u.title || '') + '</div><div style="font-size:14px;color:#444;line-height:1.75;">' + msgHtml + '</div>' + srcLink + '</div></div>');
     });
   }
   addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showAllNews()">← All News</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
+
+
+function showMoreSheet() {
+  var existing = document.getElementById('more-sheet-overlay');
+  if (existing) { existing.remove(); return; }
+
+  var overlay = document.createElement('div');
+  overlay.id = 'more-sheet-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:flex-end;justify-content:center;';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  var items = [
+    {ico:'💼', label:'Jobs', fn: function(){ resetAndShowJobs(); }},
+    {ico:'🚗', label:'Driving Theory', fn: function(){ localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my UK driving theory test')); }},
+    {ico:'📋', label:'Life in UK Test', fn: function(){ localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my Life in UK test')); }},
+    {ico:'🇬🇧', label:'Japa Guide', fn: function(){ showJapaGuide(); }},
+    {ico:'🔍', label:'Request', fn: function(){ showRequestOptions(); }},
+    {ico:'📝', label:'Feedback', fn: function(){ showFeedbackForm(); }},
+    {ico:'💬', label:'WhatsApp Us', fn: function(){ window.open('https://wa.me/447594674940','_blank'); }},
+  ];
+
+  var sheet = document.createElement('div');
+  sheet.style.cssText = 'background:white;border-radius:20px 20px 0 0;padding:20px 16px 40px;width:100%;max-width:480px;';
+
+  var handle = document.createElement('div');
+  handle.style.cssText = 'width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px;';
+  sheet.appendChild(handle);
+
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:16px;font-weight:800;color:#0F1E36;margin-bottom:14px;';
+  title.textContent = 'More';
+  sheet.appendChild(title);
+
+  var grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+
+  items.forEach(function(it) {
+    var btn = document.createElement('div');
+    btn.style.cssText = 'background:#f8f9fa;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;font-size:13px;font-weight:600;color:#0F1E36;cursor:pointer;display:flex;align-items:center;gap:8px;';
+    btn.innerHTML = '<span style="font-size:18px;">' + it.ico + '</span>' + it.label;
+    btn.onclick = function() { overlay.remove(); it.fn(); };
+    grid.appendChild(btn);
+  });
+
+  sheet.appendChild(grid);
+  overlay.appendChild(sheet);
+  document.body.appendChild(overlay);
+}
+
+
+function showNewsAndUpdates(activeTab) {
+  var tab = activeTab || 'news';
+  window._currentPage = 'news-updates';
+  var messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  scrollToTop();
+
+  var updates = window._tobiUpdates || [];
+  var typeColors = {
+    update:'#057A44',news:'#1D4ED8',tip:'#D97706',event:'#7C3AED',
+    business:'#0F1E36',motivation:'#EA580C',prayer:'#059669',
+    jobs:'#7C2D12',immigration:'#0891B2',money:'#B45309',
+    health:'#16A34A',housing:'#0369A1'
+  };
+  var typeLabels = {
+    update:'📢 Update',news:'📰 News',tip:'💡 Tip',event:'🎉 Event',
+    business:'🏢 Business',motivation:'💪 Motivation',prayer:'🙏 Prayer',
+    jobs:'💼 Jobs',immigration:'🛂 Immigration',money:'💷 Money',
+    health:'💊 Health',housing:'🏠 Housing'
+  };
+
+  var badge = updates.length ? '<span style="display:inline-block;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle;">' + updates.length + '</span>' : '';
+
+  // Tab bar
+  addTipMessage('<div style="display:flex;gap:8px;margin-bottom:4px;">'
+    + '<button id="tab-btn-news" onclick="showNewsAndUpdates(\'news\')" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid ' + (tab==='news' ? '#1D4ED8;background:#EEF2FF;color:#1D4ED8' : '#e0e0e0;background:#f5f5f5;color:#6B7280') + ';font-size:13px;font-weight:700;cursor:pointer;">📰 News/Articles</button>'
+    + '<button id="tab-btn-updates" onclick="showNewsAndUpdates(\'updates\')" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid ' + (tab==='updates' ? '#057A44;background:#f0faf5;color:#057A44' : '#e0e0e0;background:#f5f5f5;color:#6B7280') + ';font-size:13px;font-weight:700;cursor:pointer;">📢 Updates' + badge + '</button>'
+    + '</div>');
+
+  if (tab === 'news') {
+    // Show news articles
+    showAllNews();
+  } else {
+    // Show tobi updates
+    if (!updates.length) {
+      addTipMessage('<div style="padding:24px;text-align:center;color:#9CA3AF;font-size:15px;">No updates yet — check back soon! 💚</div>');
+    } else {
+      updates.forEach(function(u) {
+        var label = typeLabels[u.type] || '📢 Update';
+        var color = typeColors[u.type] || '#057A44';
+        var date = u.date ? new Date(u.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+        var msgHtml = formatMsg(u.message);
+        var srcLink = u.sourceUrl ? '<a href="' + u.sourceUrl + '" target="_blank" style="display:inline-block;margin-top:8px;font-size:13px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>' : '';
+        addTipMessage('<div style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;">'
+          + '<div style="background:' + color + ';padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">'
+          + '<span style="color:white;font-weight:700;font-size:13px;">' + label + '</span>'
+          + '<span style="color:rgba(255,255,255,0.7);font-size:11px;">' + date + '</span>'
+          + '</div>'
+          + '<div style="padding:14px;">'
+          + '<div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:8px;line-height:1.4;">' + (u.title || '') + '</div>'
+          + '<div style="font-size:15px;color:#444;line-height:1.75;">' + msgHtml + '</div>'
+          + srcLink + '</div></div>');
+      });
+    }
+    addTipMessage('<div class="suggestions" style="margin-top:8px;">'
+      + '<button class="suggestion-btn" onclick="showNewsAndUpdates(\'news\')">📰 News/Articles</button>'
+      + '<button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>'
+      + '</div>');
+  }
+}
+
 
 function showAllNews() {
   window._currentPage = 'news';
@@ -4066,7 +4183,7 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
   const bb2 = b2 || (typeof tip === 'object' ? tip.b2 : null) || 'Find a Nigerian business near me';
   const bb3 = b3 || (typeof tip === 'object' ? tip.b3 : null) || 'What benefits am I entitled to?';
 
-  const tipTextSafe = tipText ? tipText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
+  const tipTextSafe = formatMsg(tipText);
   const categorySourceUrls2 = {
     'Money': 'https://www.moneysavingexpert.com',
     'Benefits': 'https://www.gov.uk/benefits-calculators',
@@ -4086,7 +4203,7 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
       <span style="color:white;font-weight:700;font-size:13px;">${categoryLabel}</span>
     </div>
     <div style="padding:14px;">
-      <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-weight:500;">${tipTextSafe}</div>
+      <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-weight:500;font-family:inherit;">${tipTextSafe}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:10px;margin-top:12px;display:flex;align-items:center;gap:8px;">
         <a href="${resolvedSourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>
       </div>
