@@ -4,6 +4,8 @@ const https = require('https');
 const ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
 const GITHUB_REPO = 'naijahubcouk/tobi-naijahub.co.uk';
 const GITHUB_FILE = '_redirects';
+const UPDATES_FILE = 'tobi-updates.json';
+const MAX_UPDATES = 50; // keep last 50 updates
 
 function httpsRequest(options, body) {
   return new Promise((resolve, reject) => {
@@ -59,6 +61,51 @@ async function updateRedirectsFile(githubToken, content, sha, message) {
     }
   }, body);
   if (res.status !== 200 && res.status !== 201) throw new Error(`GitHub PUT failed: ${res.status} ${JSON.stringify(res.data)}`);
+  return res.data;
+}
+
+async function getUpdatesFile(githubToken) {
+  try {
+    const res = await httpsRequest({
+      hostname: 'api.github.com',
+      path: `/repos/${GITHUB_REPO}/contents/${UPDATES_FILE}`,
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${githubToken}`,
+        'User-Agent': 'AuntieTobi-PushTool',
+        'Accept': 'application/vnd.github.v3+json',
+      }
+    });
+    if (res.status === 404) return { updates: [], sha: null };
+    if (res.status !== 200) throw new Error(`GitHub GET updates failed: ${res.status}`);
+    const content = Buffer.from(res.data.content, 'base64').toString('utf8');
+    return { updates: JSON.parse(content), sha: res.data.sha };
+  } catch(e) {
+    if (e.message && e.message.includes('404')) return { updates: [], sha: null };
+    throw e;
+  }
+}
+
+async function saveUpdatesFile(githubToken, updates, sha) {
+  const content = Buffer.from(JSON.stringify(updates, null, 2)).toString('base64');
+  const body = JSON.stringify({
+    message: `Add push update: ${updates[0] && updates[0].title || 'update'}`,
+    content,
+    ...(sha ? { sha } : {})
+  });
+  const res = await httpsRequest({
+    hostname: 'api.github.com',
+    path: `/repos/${GITHUB_REPO}/contents/${UPDATES_FILE}`,
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${githubToken}`,
+      'User-Agent': 'AuntieTobi-PushTool',
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
+    }
+  }, body);
+  if (res.status !== 200 && res.status !== 201) throw new Error(`GitHub PUT updates failed: ${res.status}`);
   return res.data;
 }
 
@@ -152,7 +199,32 @@ exports.handler = async function(event) {
       }
     }
 
-    // 3. Send OneSignal push with short URL
+    // 3. Save to tobi-updates.json in GitHub
+    let updatesResult = null;
+    if (githubToken) {
+      try {
+        const { updates, sha: updatesSha } = await getUpdatesFile(githubToken);
+        const newUpdate = {
+          id: Date.now().toString(),
+          title: title,
+          message: inAppContent,
+          pushMessage: message,
+          type: type || 'update',
+          sourceUrl: sourceUrl || null,
+          date: new Date().toISOString(),
+          slug: shortSlug
+        };
+        const updatedList = [newUpdate, ...updates].slice(0, MAX_UPDATES);
+        await saveUpdatesFile(githubToken, updatedList, updatesSha);
+        updatesResult = { saved: true, total: updatedList.length };
+        console.log('[send-push] Saved to tobi-updates.json:', updatesResult);
+      } catch(e) {
+        console.log('[send-push] Updates save failed (non-fatal):', e.message);
+        updatesResult = { error: e.message };
+      }
+    }
+
+    // 4. Send OneSignal push with short URL
     const pushResult = await sendOneSignalPush(apiKey, title, message, shortUrl, sendAfter || null);
     console.log(`[send-push] ✅ Sent. ID: ${pushResult.id}, recipients: ${pushResult.recipients || 'queued'}`);
 
