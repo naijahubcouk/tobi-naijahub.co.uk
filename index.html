@@ -5273,6 +5273,14 @@ function getTodaysTip() {
 }
 
 function buildTipCard(tip, suggestionStr) {
+  const actionLabels = {
+    'update':'📢 Update','news':'📰 News','tip':'💡 Tip','event':'🎉 Event',
+    'business':'🏢 Business','motivation':'💪 Motivation','prayer':'🙏 Prayer',
+    'jobs':'💼 Jobs','immigration':'🛂 Immigration','money':'💷 Money',
+    'health':'💊 Health','housing':'🏠 Housing'
+  };
+  const tipType = (typeof tip === 'object' && tip.type) ? tip.type : null;
+  const categoryLabel = (tipType && actionLabels[tipType]) ? actionLabels[tipType] : '💡 Tip';
   const categorySourceUrls = {
     'Money': 'https://www.moneysavingexpert.com',
     'Benefits': 'https://www.gov.uk/benefits-calculators',
