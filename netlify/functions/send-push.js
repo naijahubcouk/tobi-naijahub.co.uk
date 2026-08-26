@@ -62,13 +62,15 @@ async function updateRedirectsFile(githubToken, content, sha, message) {
   return res.data;
 }
 
-async function sendOneSignalPush(apiKey, title, message, url) {
+async function sendOneSignalPush(apiKey, title, message, url, sendAfterISO) {
+  const scheduleFields = sendAfterISO ? { send_after: sendAfterISO } : {};
   const payload = JSON.stringify({
     app_id: ONESIGNAL_APP_ID,
     included_segments: ['Total Subscriptions'],
     headings: { en: title },
     contents: { en: message },
     web_url: url || 'https://auntietobi.co.uk',
+    ...scheduleFields,
     chrome_web_icon: 'https://auntietobi.co.uk/icons/icon-192.png',
   });
   const res = await httpsRequest({
@@ -103,21 +105,25 @@ exports.handler = async function(event) {
     console.log('[send-push] rawBody:', rawBody.substring(0, 200));
     const parsed = JSON.parse(rawBody);
     console.log('[send-push] parsed keys:', Object.keys(parsed));
-    const { title, message, type, slug, sourceUrl, b1, b2, b3 } = parsed;
+    const { title, message, mainMessage, type, slug, sourceUrl, b1, b2, b3, sendAfter, timezone } = parsed;
+    const inAppContent = mainMessage || message; // mainMessage = in-app body, message = push notification text
     console.log('[send-push] title:', title, '| message:', message && message.substring(0,30));
     const apiKey = process.env.ONESIGNAL_API_KEY;
     const githubToken = process.env.GITHUB_TOKEN;
 
     if (!apiKey) return { statusCode: 500, headers, body: JSON.stringify({ error: 'ONESIGNAL_API_KEY not set' }) };
     if (!title || !message) return { statusCode: 400, headers, body: JSON.stringify({ error: 'title and message are required' }) };
+    if (!inAppContent) return { statusCode: 400, headers, body: JSON.stringify({ error: 'main message is required' }) };
 
     // 1. Build the deep link URL
-    const encodedContent = encodeURIComponent(message);
+    const encodedContent = encodeURIComponent(inAppContent);
     const encodedB1 = encodeURIComponent(b1 || 'How do I save money in the UK?');
     const encodedB2 = encodeURIComponent(b2 || 'Find a Nigerian business near me');
     const encodedB3 = encodeURIComponent(b3 || 'What benefits am I entitled to?');
     const encodedSrc = sourceUrl ? encodeURIComponent(sourceUrl) : '';
-    const action = (type === 'motivation' || type === 'prayer') ? type : 'tip';
+    // Use type directly so the app shows correct category label
+    const validActions = ['update','news','tip','event','business','motivation','prayer','jobs','immigration','money','health','housing'];
+    const action = validActions.includes(type) ? type : 'tip';
 
     const deepLink = `https://auntietobi.co.uk/?action=${action}&content=${encodedContent}&b1=${encodedB1}&b2=${encodedB2}&b3=${encodedB3}${sourceUrl ? '&source=' + encodedSrc : ''}`;
     const shortSlug = slug || (type + '-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 25));
@@ -147,7 +153,7 @@ exports.handler = async function(event) {
     }
 
     // 3. Send OneSignal push with short URL
-    const pushResult = await sendOneSignalPush(apiKey, title, message, shortUrl);
+    const pushResult = await sendOneSignalPush(apiKey, title, message, shortUrl, sendAfter || null);
     console.log(`[send-push] ✅ Sent. ID: ${pushResult.id}, recipients: ${pushResult.recipients || 'queued'}`);
 
     return {
