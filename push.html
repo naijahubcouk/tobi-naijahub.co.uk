@@ -15,33 +15,69 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .section-label{font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid #f0f0f0;display:flex;align-items:center;gap:8px}
 label{display:block;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
 .helper{font-size:11px;color:#9CA3AF;margin-top:4px;line-height:1.4}
-input,textarea{width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;color:#0F1E36;outline:none;background:white}
-input:focus,textarea:focus{border-color:#057A44}
+input,textarea,select{width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;color:#0F1E36;outline:none;background:white}
+input:focus,textarea:focus,select:focus{border-color:#057A44}
 textarea.short{height:70px;resize:none}
-textarea.tall{height:140px;resize:none}
 .field{margin-bottom:14px}
 .field:last-child{margin-bottom:0}
 .types{display:flex;flex-wrap:wrap;gap:6px}
 .type-btn{padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e0e0e0;background:#f5f5f5;cursor:pointer;color:#0F1E36}
 .type-btn.active{background:#057A44;border-color:#057A44;color:white}
-.preview-box{background:#f8f8f8;border-radius:10px;padding:12px;margin-top:10px}
-.preview-label{font-size:10px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-.notif-card{background:white;border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.notif-icon{font-size:20px;flex-shrink:0}
-.notif-title{font-size:13px;font-weight:700;color:#0F1E36}
-.notif-msg{font-size:12px;color:#555;margin-top:2px;line-height:1.4}
-.app-preview{background:#0F1E36;border-radius:10px;padding:12px;margin-top:8px}
-.app-preview-label{font-size:10px;color:rgba(255,255,255,0.45);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-.app-card{background:white;border-radius:8px;padding:12px}
-.app-tag{display:inline-block;background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;margin-bottom:7px}
-.app-title{font-size:14px;font-weight:700;color:#0F1E36;margin-bottom:5px;line-height:1.3}
-.app-body{font-size:13px;color:#444;line-height:1.55}
+
+/* RICH TEXT EDITOR */
+.rte-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:2px;background:#f8f8f8;border:1.5px solid #e0e0e0;border-bottom:none;border-radius:8px 8px 0 0;padding:6px 8px}
+.rte-toolbar button{background:none;border:none;cursor:pointer;padding:4px 7px;border-radius:4px;font-size:13px;color:#0F1E36;min-width:26px;line-height:1}
+.rte-toolbar button:hover{background:#e0e0e0}
+.rte-sep{width:1px;height:16px;background:#ddd;margin:0 2px;flex-shrink:0}
+.rte-body{min-height:160px;border:1.5px solid #e0e0e0;border-radius:0 0 8px 8px;padding:12px;font-size:14px;font-family:inherit;color:#0F1E36;outline:none;line-height:1.75;background:white}
+.rte-body:focus{border-color:#057A44}
+.rte-body:empty:before{content:attr(data-placeholder);color:#9CA3AF}
+.rte-body h2{font-size:17px;font-weight:700;margin:0 0 6px}
+.rte-body h3{font-size:15px;font-weight:700;margin:0 0 6px}
+.rte-body p{margin:0 0 8px}
+.rte-body ul,.rte-body ol{padding-left:18px;margin:0 0 8px}
+
+/* PREVIEW */
+.ptabs{display:flex;gap:6px;margin-bottom:14px}
+.ptab{flex:1;padding:9px;border-radius:8px;border:1.5px solid #e0e0e0;background:#f5f5f5;font-size:12px;font-weight:700;cursor:pointer;color:#6B7280}
+.ptab.active{border-color:#057A44;background:#f0faf5;color:#057A44}
+.phone{width:240px;margin:0 auto;background:#1a1a1a;border-radius:28px;padding:10px;box-shadow:0 8px 28px rgba(0,0,0,0.25)}
+.phone-screen{background:#f2f2f7;border-radius:20px;overflow:hidden}
+.phone-status{padding:8px 14px 4px;display:flex;justify-content:space-between;font-size:11px;color:#333;font-weight:600}
+.phone-notif{background:rgba(255,255,255,0.92);margin:4px 8px 8px;border-radius:12px;padding:10px;display:flex;gap:8px}
+.notif-ico{width:28px;height:28px;border-radius:7px;background:#057A44;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.notif-app{font-size:10px;color:#888;font-weight:600;margin-bottom:1px}
+.notif-title{font-size:12px;font-weight:700;color:#000;line-height:1.3}
+.notif-body{font-size:11px;color:#555;margin-top:2px;line-height:1.4}
+.app-phone{width:240px;margin:0 auto;background:#1a1a1a;border-radius:28px;padding:10px;box-shadow:0 8px 28px rgba(0,0,0,0.25)}
+.app-screen{background:#f0f0f0;border-radius:20px;overflow:hidden;min-height:260px}
+.app-top{background:#0F1E36;padding:10px 12px;display:flex;align-items:center;gap:8px}
+.app-avatar{width:26px;height:26px;border-radius:50%;background:#057A44;display:flex;align-items:center;justify-content:center;font-size:13px}
+.app-msg-wrap{padding:8px}
+.app-msg{background:white;border-radius:10px;overflow:hidden}
+.app-msg-hdr{background:#057A44;padding:6px 10px;display:flex;align-items:center;justify-content:space-between}
+.app-msg-body{padding:10px}
+.app-msg-title{font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:4px}
+.app-msg-text{font-size:11px;color:#444;line-height:1.55}
+.preview-hint{text-align:center;font-size:12px;color:#9CA3AF;margin-top:10px}
+
+/* SCHEDULE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.toggle-sw{position:relative;width:44px;height:24px;flex-shrink:0;cursor:pointer}
+.toggle-sw input{opacity:0;width:0;height:0}
+.toggle-sl{position:absolute;inset:0;background:#e0e0e0;border-radius:12px;transition:.3s}
+.toggle-sl:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:white;border-radius:50%;transition:.3s}
+.toggle-sw input:checked + .toggle-sl{background:#057A44}
+.toggle-sw input:checked + .toggle-sl:before{transform:translateX(20px)}
+
 .send-btn{width:100%;padding:15px;background:#057A44;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
 .send-btn:disabled{opacity:0.6;cursor:not-allowed}
+.sched-btn{width:100%;padding:15px;background:#0F1E36;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
 .status{min-height:20px;font-size:13px;margin-top:10px;font-weight:600;text-align:center}
 </style>
 </head>
 <body>
+
 <div class="header">
   <span style="font-size:22px">🔔</span>
   <h1>Send Push Notification</h1>
@@ -69,138 +105,99 @@ textarea.tall{height:140px;resize:none}
     </div>
   </div>
 
-  <!-- PUSH NOTIFICATION FIELDS -->
+  <!-- PUSH FIELDS -->
   <div class="card">
-    <div class="section-label">📱 Push Notification — appears on phone lock screen</div>
+    <div class="section-label">📱 Push Notification — lock screen</div>
     <div class="field">
       <label>Title *</label>
-      <input id="push-title" type="text" placeholder="e.g. New NHS update for Nigerians in the UK" oninput="updatePreviews();refreshPreview()">
-      <div class="helper">The notification headline — keep it short and clear</div>
+      <input id="push-title" type="text" placeholder="e.g. New NHS update for Nigerians in the UK" oninput="livePreview()">
+      <div class="helper">The notification headline</div>
     </div>
     <div class="field">
       <label>Push Message *</label>
-      <textarea id="push-message" class="short" placeholder="e.g. Important update — tap to read the full details inside the app" oninput="updatePreviews();refreshPreview()"></textarea>
-      <div class="helper">Short text shown on the lock screen — keep under 100 characters</div>
-    </div>
-
-    <!-- LOCK SCREEN PREVIEW -->
-    <div class="preview-box">
-      <div class="preview-label">📱 Lock screen preview</div>
-      <div class="notif-card">
-        <div class="notif-icon">🟢</div>
-        <div>
-          <div class="notif-title" id="prev-title">Your notification title</div>
-          <div class="notif-msg" id="prev-msg">Your push message will appear here</div>
-        </div>
-      </div>
+      <textarea id="push-message" class="short" placeholder="Short text shown on the lock screen..." oninput="livePreview()"></textarea>
+      <div class="helper">Keep under 100 characters</div>
     </div>
   </div>
 
-  <!-- MAIN MESSAGE FIELD -->
+  <!-- MAIN MESSAGE WITH RTE -->
   <div class="card">
-    <div class="section-label">📰 Main Message — shown inside the app when opened</div>
+    <div class="section-label">📰 Main Message — shown inside the app</div>
     <div class="field">
       <label>Main Message *</label>
-      <!-- Rich Text Toolbar -->
       <div class="rte-toolbar">
-        <button type="button" title="Undo" onclick="rteCmd('undo')">↩</button>
-        <button type="button" title="Redo" onclick="rteCmd('redo')">↪</button>
+        <button type="button" onclick="rteCmd('undo')" title="Undo">↩</button>
+        <button type="button" onclick="rteCmd('redo')" title="Redo">↪</button>
         <span class="rte-sep"></span>
-        <button type="button" title="Heading 1" onclick="rteCmd('formatBlock','h2')"><b>H1</b></button>
-        <button type="button" title="Heading 2" onclick="rteCmd('formatBlock','h3')"><b>H2</b></button>
+        <button type="button" onclick="rteCmd('formatBlock','h2')" title="Heading 1"><b>H1</b></button>
+        <button type="button" onclick="rteCmd('formatBlock','h3')" title="Heading 2"><b>H2</b></button>
         <span class="rte-sep"></span>
-        <button type="button" title="Bold" onclick="rteCmd('bold')"><b>B</b></button>
-        <button type="button" title="Italic" onclick="rteCmd('italic')"><i>I</i></button>
-        <button type="button" title="Underline" onclick="rteCmd('underline')"><u>U</u></button>
+        <button type="button" onclick="rteCmd('bold')" title="Bold"><b>B</b></button>
+        <button type="button" onclick="rteCmd('italic')" title="Italic"><i>I</i></button>
+        <button type="button" onclick="rteCmd('underline')" title="Underline"><u>U</u></button>
         <span class="rte-sep"></span>
-        <button type="button" title="Bullet list" onclick="rteCmd('insertUnorderedList')">≡</button>
-        <button type="button" title="Numbered list" onclick="rteCmd('insertOrderedList')">⋮</button>
+        <button type="button" onclick="rteCmd('insertUnorderedList')" title="Bullet list">• ≡</button>
+        <button type="button" onclick="rteCmd('insertOrderedList')" title="Numbered list">1 ≡</button>
         <span class="rte-sep"></span>
-        <button type="button" title="Align left" onclick="rteCmd('justifyLeft')">⫡</button>
-        <button type="button" title="Align center" onclick="rteCmd('justifyCenter')">≡</button>
-        <button type="button" title="Align right" onclick="rteCmd('justifyRight')">⫠</button>
-        <span class="rte-sep"></span>
-        <button type="button" title="Insert link" onclick="rteInsertLink()">🔗</button>
-        <button type="button" title="Remove formatting" onclick="rteCmd('removeFormat')">✕</button>
+        <button type="button" onclick="rteInsertLink()" title="Link">🔗</button>
+        <button type="button" onclick="rteCmd('removeFormat')" title="Clear formatting">✕</button>
       </div>
-      <!-- Editable content area -->
-      <div id="main-message-rte" class="rte-body" contenteditable="true" oninput="syncRTE()" data-placeholder="Write your message here — use the toolbar above to format text, add lists, headings and links..."></div>
-      <!-- Hidden input synced with RTE content -->
-      <textarea id="main-message" style="display:none;"></textarea>
+      <div id="rte" class="rte-body" contenteditable="true" oninput="livePreview()" data-placeholder="Write your full message here — use the toolbar to format..."></div>
+      <div class="helper">Supports bold, headings, lists and links via the toolbar</div>
     </div>
-    </div>
-
-    <!-- IN-APP PREVIEW -->
-    <div class="app-preview">
-      <div class="app-preview-label">📲 In-app card preview</div>
-      <div class="app-card">
-        <div class="app-tag" id="prev-tag">📢 Update</div>
-        <div class="app-title" id="prev-app-title">Your notification title</div>
-        <div class="app-body" id="prev-app-body">Your main message will appear here as a full in-app update...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- OPTIONAL SOURCE -->
-  <div class="card">
-    <div class="section-label">🔗 Source URL (optional)</div>
     <div class="field">
-      <label>Source Link</label>
+      <label>Source URL (optional)</label>
       <input id="push-src" type="url" placeholder="https://...">
-      <div class="helper">Link to the original article or source, if applicable</div>
     </div>
   </div>
 
   <!-- LIVE PREVIEW -->
   <div class="card">
-    <div class="section-label">👁️ Preview — see what users see</div>
-    <div style="display:flex;gap:6px;margin-bottom:14px;" id="preview-tabs">
-      <button class="type-btn active" onclick="showPreviewTab('lock',this)" style="flex:1;border-radius:8px;padding:9px;">📱 Lock screen</button>
-      <button class="type-btn" onclick="showPreviewTab('app',this)" style="flex:1;border-radius:8px;padding:9px;">📲 In-app</button>
+    <div class="section-label">👁️ Preview</div>
+    <div class="ptabs">
+      <button class="ptab active" id="ptab-lock" onclick="showTab('lock')">📱 Lock screen</button>
+      <button class="ptab" id="ptab-app" onclick="showTab('app')">📲 In-app</button>
     </div>
 
-    <!-- LOCK SCREEN TAB -->
-    <div id="preview-lock">
-      <div style="width:240px;margin:0 auto;background:#1a1a1a;border-radius:28px;padding:10px;box-shadow:0 8px 28px rgba(0,0,0,0.25);">
-        <div style="background:#f2f2f7;border-radius:20px;overflow:hidden;">
-          <div style="padding:8px 14px 4px;display:flex;justify-content:space-between;font-size:11px;color:#333;font-weight:600;"><span>9:41</span><span>●●● 🔋</span></div>
-          <div style="background:rgba(255,255,255,0.92);margin:6px 10px 10px;border-radius:14px;padding:11px;display:flex;gap:9px;align-items:flex-start;">
-            <div style="width:30px;height:30px;border-radius:8px;background:#057A44;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🟢</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:10px;color:#888;font-weight:600;margin-bottom:2px;">Auntie Tobi · now</div>
-              <div id="pv-notif-title" style="font-size:12px;font-weight:700;color:#000;line-height:1.3;">Your notification title</div>
-              <div id="pv-notif-body" style="font-size:11px;color:#555;margin-top:2px;line-height:1.4;">Your push message here...</div>
+    <div id="tab-lock">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-status"><span>9:41</span><span>●●● 🔋</span></div>
+          <div class="phone-notif">
+            <div class="notif-ico">🟢</div>
+            <div style="flex:1;min-width:0">
+              <div class="notif-app">Auntie Tobi · now</div>
+              <div class="notif-title" id="pv-lock-title">Your notification title</div>
+              <div class="notif-body" id="pv-lock-msg">Your push message will appear here...</div>
             </div>
           </div>
         </div>
       </div>
-      <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:10px;">What subscribers see on their phone</p>
+      <p class="preview-hint">What subscribers see on their phone lock screen</p>
     </div>
 
-    <!-- IN-APP TAB -->
-    <div id="preview-app" style="display:none;">
-      <div style="width:240px;margin:0 auto;background:#1a1a1a;border-radius:28px;padding:10px;box-shadow:0 8px 28px rgba(0,0,0,0.25);">
-        <div style="background:#f0f0f0;border-radius:20px;overflow:hidden;min-height:260px;">
-          <div style="background:#0F1E36;padding:10px 12px;display:flex;align-items:center;gap:8px;">
-            <div style="width:26px;height:26px;border-radius:50%;background:#057A44;display:flex;align-items:center;justify-content:center;font-size:13px;">🟢</div>
-            <div style="font-size:12px;font-weight:700;color:white;">Auntie Tobi</div>
+    <div id="tab-app" style="display:none">
+      <div class="app-phone">
+        <div class="app-screen">
+          <div class="app-top">
+            <div class="app-avatar">🟢</div>
+            <span style="font-size:12px;font-weight:700;color:white;">Auntie Tobi</span>
           </div>
-          <div style="padding:8px;">
-            <div style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-              <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;gap:6px;">
-                <span id="pv-app-ico" style="font-size:13px;">📢</span>
+          <div class="app-msg-wrap">
+            <div class="app-msg">
+              <div class="app-msg-hdr">
                 <span id="pv-app-tag" style="color:white;font-size:11px;font-weight:700;">📢 Update</span>
+                <span style="color:rgba(255,255,255,0.6);font-size:10px;">now</span>
               </div>
-              <div style="padding:10px;">
-                <div id="pv-app-title" style="font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">Your notification title</div>
-                <div id="pv-app-text" style="font-size:11px;color:#444;line-height:1.55;">Your main message appears here when the user opens the app...</div>
-                <div id="pv-app-src" style="display:none;font-size:11px;color:#057A44;margin-top:6px;font-weight:600;">🔗 Read more</div>
+              <div class="app-msg-body">
+                <div class="app-msg-title" id="pv-app-title">Your notification title</div>
+                <div class="app-msg-text" id="pv-app-text">Your main message will appear here when user opens app...</div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:10px;">What subscribers see inside the app</p>
+      <p class="preview-hint">What subscribers see inside the app</p>
     </div>
   </div>
 
@@ -212,41 +209,41 @@ textarea.tall{height:140px;resize:none}
         <div style="font-size:14px;font-weight:600;color:#0F1E36;">Schedule for later</div>
         <div style="font-size:12px;color:#9CA3AF;margin-top:2px;">Toggle to pick a date and time</div>
       </div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="schedule-toggle" onchange="toggleSchedule(this)">
-        <span class="toggle-slider"></span>
+      <label class="toggle-sw">
+        <input type="checkbox" id="sched-toggle" onchange="toggleSchedule(this)">
+        <span class="toggle-sl"></span>
       </label>
     </div>
-    <div id="schedule-fields" style="display:none;">
+    <div id="sched-fields" style="display:none">
       <div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:14px;">
         <div class="field">
           <label>Date</label>
-          <input type="date" id="schedule-date" oninput="updateSchedulePreview()">
+          <input type="date" id="sched-date" oninput="updateSchedPreview()">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div class="field">
             <label>Time</label>
-            <input type="time" id="schedule-time" oninput="updateSchedulePreview()">
+            <input type="time" id="sched-time" oninput="updateSchedPreview()">
           </div>
           <div class="field">
             <label>Timezone</label>
-            <select id="schedule-tz" onchange="updateSchedulePreview()" style="width:100%;border:1.5px solid #e0e0e0;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;color:#0F1E36;outline:none;background:white;">
-              <option value="Europe/London" selected>🇬🇧 London (GMT)</option>
+            <select id="sched-tz" onchange="updateSchedPreview()">
+              <option value="Europe/London">🇬🇧 London (GMT)</option>
               <option value="Africa/Lagos">🇳🇬 Lagos (WAT)</option>
               <option value="America/New_York">🇺🇸 New York (ET)</option>
             </select>
           </div>
         </div>
-        <div id="schedule-preview" style="font-size:12px;color:#057A44;font-weight:600;margin-top:4px;">📅 Select a date and time above</div>
+        <div id="sched-preview" style="font-size:12px;color:#057A44;font-weight:600;">📅 Select a date and time above</div>
       </div>
     </div>
   </div>
 
   <!-- SEND -->
   <div class="card">
-    <button class="send-btn" id="push-send" onclick="sendPush()">🔔 Send Now to All Subscribers</button>
-    <div id="schedule-send-wrap" style="display:none;margin-top:8px;">
-      <button class="send-btn" id="push-schedule" onclick="sendPush(true)" style="background:#0F1E36;">📅 Schedule Notification</button>
+    <button class="send-btn" id="btn-send" onclick="sendPush(false)">🔔 Send Now to All Subscribers</button>
+    <div id="btn-sched-wrap" style="display:none">
+      <button class="sched-btn" onclick="sendPush(true)">📅 Schedule Notification</button>
     </div>
     <div class="status" id="push-status"></div>
   </div>
@@ -266,45 +263,97 @@ function setType(btn, type) {
   currentType = type;
   document.querySelectorAll('.type-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
-  updatePreviews();
+  livePreview();
 }
 
-function updatePreviews() {
+function getRteContent() {
+  var rte = document.getElementById('rte');
+  return rte ? rte.innerHTML.trim() : '';
+}
+
+function rteCmd(cmd, val) {
+  document.getElementById('rte').focus();
+  document.execCommand(cmd, false, val || null);
+  livePreview();
+}
+
+function rteInsertLink() {
+  var url = prompt('Enter URL:', 'https://');
+  if (url) {
+    document.getElementById('rte').focus();
+    document.execCommand('createLink', false, url);
+    livePreview();
+  }
+}
+
+function livePreview() {
   var title = document.getElementById('push-title').value || 'Your notification title';
-  var msg = document.getElementById('push-message').value || 'Your push message will appear here';
-  var main = docun-message').value /* replaced */ || 'Your main message will appear here as a full in-app update...';
-  document.getElementById('prev-title').textContent = title;
-  document.getElementById('prev-msg').textContent = msg;
-  document.getElementById('prev-tag').textContent = typeLabels[currentType] || '📢 Update';
-  document.getElementById('prev-app-title').textContent = title;
-  document.getElementById('prev-app-body').textContent = main;
+  var msg = document.getElementById('push-message').value || 'Your push message will appear here...';
+  var main = getRteContent() || 'Your main message will appear here when user opens app...';
+  var label = typeLabels[currentType] || '📢 Update';
+
+  document.getElementById('pv-lock-title').textContent = title;
+  document.getElementById('pv-lock-msg').textContent = msg;
+  document.getElementById('pv-app-tag').textContent = label;
+  document.getElementById('pv-app-title').textContent = title;
+  document.getElementById('pv-app-text').innerHTML = main;
+}
+
+function showTab(tab) {
+  document.getElementById('tab-lock').style.display = tab === 'lock' ? 'block' : 'none';
+  document.getElementById('tab-app').style.display = tab === 'app' ? 'block' : 'none';
+  document.getElementById('ptab-lock').classList.toggle('active', tab === 'lock');
+  document.getElementById('ptab-app').classList.toggle('active', tab === 'app');
+}
+
+function toggleSchedule(el) {
+  document.getElementById('sched-fields').style.display = el.checked ? 'block' : 'none';
+  document.getElementById('btn-sched-wrap').style.display = el.checked ? 'block' : 'none';
+  if (el.checked) {
+    var d = new Date(); d.setDate(d.getDate() + 1);
+    document.getElementById('sched-date').value = d.toISOString().split('T')[0];
+    document.getElementById('sched-time').value = '08:00';
+    updateSchedPreview();
+  }
+}
+
+function updateSchedPreview() {
+  var date = document.getElementById('sched-date').value;
+  var time = document.getElementById('sched-time').value;
+  var tzEl = document.getElementById('sched-tz');
+  var tzLabel = tzEl.options[tzEl.selectedIndex].text;
+  if (date && time) {
+    var d = new Date(date + 'T' + time);
+    var formatted = d.toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long'}) + ' at ' + time;
+    document.getElementById('sched-preview').textContent = '📅 Will send: ' + formatted + ' (' + tzLabel.split('(')[1].replace(')','') + ')';
+  }
 }
 
 async function sendPush(scheduled) {
   var title = document.getElementById('push-title').value.trim();
   var pushMsg = document.getElementById('push-message').value.trim();
-  var mainMsg = getMainMessage();
+  var mainMsg = getRteContent();
   var sourceUrl = document.getElementById('push-src').value.trim();
   var statusEl = document.getElementById('push-status');
-  var btnEl = document.getElementById('push-send');
+  var btnEl = document.getElementById('btn-send');
 
   if (!title) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a title'; document.getElementById('push-title').focus(); return; }
   if (!pushMsg) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a push message'; document.getElementById('push-message').focus(); return; }
-  if (!mainMsg) { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a main message'; document.getElementById('main-message-rte').focus(); return; }
+  if (!mainMsg || mainMsg === '<br>') { statusEl.style.color='#e74c3c'; statusEl.textContent='⚠️ Please enter a main message'; document.getElementById('rte').focus(); return; }
+
+  var isScheduled = scheduled && document.getElementById('sched-toggle').checked;
+  var sendAfter = null;
+  if (isScheduled) {
+    var d = document.getElementById('sched-date').value;
+    var t = document.getElementById('sched-time').value;
+    if (d && t) sendAfter = new Date(d + 'T' + t).toISOString();
+  }
 
   btnEl.disabled = true;
   statusEl.style.color = '#9CA3AF';
-  statusEl.textContent = '⏳ Sending...';
+  statusEl.textContent = isScheduled ? '⏳ Scheduling...' : '⏳ Sending...';
 
   try {
-    var isScheduled = scheduled && document.getElementById('schedule-toggle').checked;
-    var schedDate = isScheduled ? document.getElementById('schedule-date').value : null;
-    var schedTime = isScheduled ? document.getElementById('schedule-time').value : null;
-    var schedTz = isScheduled ? document.getElementById('schedule-tz').value : null;
-    var sendAfter = null;
-    if (isScheduled && schedDate && schedTime) {
-      sendAfter = new Date(schedDate + 'T' + schedTime).toISOString();
-    }
     var payload = {
       title: title,
       message: pushMsg,
@@ -312,23 +361,22 @@ async function sendPush(scheduled) {
       type: currentType,
       sourceUrl: sourceUrl,
       sendAfter: sendAfter,
-      timezone: schedTz
+      timezone: document.getElementById('sched-tz').value
     };
-    console.log('[push] Sending:', JSON.stringify(payload));
+    console.log('[push] Sending:', JSON.stringify(payload).substring(0,200));
 
     var res = await fetch('/.netlify/functions/send-push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     var data = await res.json();
     console.log('[push] Response:', data);
 
     if (data.success) {
       statusEl.style.color = '#057A44';
-      var msg = data.scheduled ? '📅 Scheduled for ' + data.scheduledFor + '!' : '✅ Sent!';
-      statusEl.textContent = msg + (data.shortUrl ? '  Short link: ' + data.shortUrl : '');
+      var msg = data.scheduled ? '📅 Scheduled for ' + (data.scheduledFor || '') : '✅ Sent!';
+      statusEl.textContent = msg + (data.shortUrl ? '  · ' + data.shortUrl : '');
     } else {
       statusEl.style.color = '#e74c3c';
       statusEl.textContent = '❌ Error: ' + (data.error || 'Unknown error');
@@ -340,102 +388,6 @@ async function sendPush(scheduled) {
     btnEl.disabled = false;
   }
 }
-
-function toggleSchedule(el) {
-  var fields = document.getElementById('schedule-fields');
-  var schedBtn = document.getElementById('schedule-send-wrap');
-  var sendBtn = document.getElementById('push-send');
-  if (el.checked) {
-    fields.style.display = 'block';
-    schedBtn.style.display = 'block';
-    sendBtn.textContent = '🔔 Send Now Instead';
-    var d = new Date(); d.setDate(d.getDate()+1);
-    var yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-    document.getElementById('schedule-date').value = yyyy+'-'+mm+'-'+dd;
-    document.getElementById('schedule-time').value = '08:00';
-    updateSchedulePreview();
-  } else {
-    fields.style.display = 'none';
-    schedBtn.style.display = 'none';
-    sendBtn.textContent = '🔔 Send Now to All Subscribers';
-  }
-}
-
-function updateSchedulePreview() {
-  var date = document.getElementById('schedule-date').value;
-  var time = document.getElementById('schedule-time').value;
-  var tzEl = document.getElementById('schedule-tz');
-  var tzLabel = tzEl.options[tzEl.selectedIndex].text;
-  if (date && time) {
-    var d = new Date(date + 'T' + time);
-    var formatted = d.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'}) + ' at ' + time;
-    document.getElementById('schedule-preview').textContent = '📅 Will send: ' + formatted + ' (' + tzLabel.split('(')[1].replace(')','') + ')';
-  }
-}
-function refreshPreview() {
-  var title = document.getElementById('push-title').value || 'Your notification title';
-  var push = document.getElementById('push-message').value || 'Your push message here...';
-  var main = getMainMessage() || 'Your main message appears here when the user opens the app...';
-  var src = document.getElementById('push-src') ? document.getElementById('push-src').value : '';
-  var typeLabels = {
-    update:'📢 Update',news:'📰 News',tip:'💡 Tip',event:'🎉 Event',
-    prayer:'🙏 Prayer',motivation:'💪 Motivation',jobs:'💼 Jobs',
-    housing:'🏠 Housing',health:'💊 Health',money:'💷 Money',
-    business:'🏢 Business',immigration:'🛂 Immigration'
-  };
-  var label = typeLabels[currentType] || '💡 Tip';
-  var ico = label.split(' ')[0];
-  document.getElementById('pv-notif-title').textContent = title;
-  document.getElementById('pv-notif-body').textContent = push;
-  document.getElementById('pv-app-tag').textContent = label;
-  document.getElementById('pv-app-ico').textContent = ico;
-  document.getElementById('pv-app-title').textContent = title;
-  document.getElementById('pv-app-text').innerHTML = main;
-  var srcEl = document.getElementById('pv-app-src');
-  if (srcEl) srcEl.style.display = src ? 'block' : 'none';
-}
-
-function showPreviewTab(tab, btn) {
-  document.getElementById('preview-lock').style.display = tab === 'lock' ? 'block' : 'none';
-  document.getElementById('preview-app').style.display = tab === 'app' ? 'block' : 'none';
-  document.querySelectorAll('#preview-tabs .type-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-}
-
-// Also refresh preview when type changes
-var _origSetType = setType;
-setType = function(btn, type) { _origSetType(btn, type); refreshPreview(); };
-function rteCmd(cmd, val) {
-  document.getElementById('main-message-rte').focus();
-  document.execCommand(cmd, false, val || null);
-  syncRTE();
-}
-
-function rteInsertLink() {
-  var url = prompt('Enter URL:', 'https://');
-  if (url) {
-    document.getElementById('main-message-rte').focus();
-    document.execCommand('createLink', false, url);
-    syncRTE();
-  }
-}
-
-function syncRTE() {
-  var rte = document.getElementById('main-message-rte');
-  var hidden = document.getElementById('main-message');
-  if (rte && hidden) {
-    hidden.value = rte.innerHTML;
-    updatePreviews();
-    refreshPreview();
-  }
-}
-
-// Override getMainMessage to read from RTE
-function getMainMessage() {
-  var rte = document.getElementById('main-message-rte');
-  return rte ? rte.innerHTML.trim() : document.getElementById('main-message').value.trim();
-}
-
 </script>
 </body>
 </html>
