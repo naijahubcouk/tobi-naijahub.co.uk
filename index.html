@@ -102,6 +102,9 @@
     justify-content: center;
     padding: 16px;
   }
+  body.exam-mode {
+    background: #f0f2f5;
+  }
 
   .app {
     width: 100%;
@@ -683,17 +686,17 @@
     line-height: 1.5;
   }
   .exam-options {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
   .exam-option {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: white;
-    border: 1.5px solid #E2E8F0;
-    border-radius: 10px;
+    border: 2px solid #E2E8F0;
+    border-radius: 20px;
     padding: 10px 14px;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 14px;
@@ -1724,7 +1727,7 @@ function checkExamAnswer(userMessage) {
 }
 
 function sendExamQuestion(testType) {
-  examState.active = true;
+  examState.active = true; document.body.classList.add('exam-mode');
   examState.testType = testType;
   if (typeof gtag !== 'undefined') gtag('event', 'exam_question', { event_category: 'exam', event_label: testType });
   
@@ -7509,7 +7512,7 @@ const BUSINESS_REQUEST_URL = 'https://script.google.com/macros/s/AKfycbzzLdMi0NP
 
 function clearExamState() {
   nhsMode = false;
-  examState.active = false;
+  examState.active = false; document.body.classList.remove('exam-mode');
   examState.testType = null;
   examState.currentQuestion = null;
   examState.questionsAnswered = 0;
@@ -7539,7 +7542,7 @@ function resetToWelcome() {
   window._currentPage = 'home';
   nhsMode = false;
   // Reset exam state variables without clearing DOM
-  examState.active = false;
+  examState.active = false; document.body.classList.remove('exam-mode');
   examState.testType = null;
   examState.currentQuestion = null;
   examState.questionsAnswered = 0;
