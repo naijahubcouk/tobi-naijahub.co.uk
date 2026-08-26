@@ -977,7 +977,7 @@
   try {
     const p = new URLSearchParams(window.location.search);
     const action = p.get('action');
-    if (action === 'prayer' || action === 'motivation' || action === 'tip') {
+    if (action === 'prayer' || action === 'motivation' || action === 'tip' || action === 'update' || action === 'event' || action === 'business' || action === 'jobs' || action === 'immigration' || action === 'money' || action === 'health' || action === 'housing') {
       // Mark that we have a deep link — window.onload will handle it
       window._earlyAction = action;
       window._earlyContent = p.get('content') || '';
@@ -4015,11 +4015,20 @@ function showJapaGuide() {
 }
 
 
-function showTipLanding(tip, b1, b2, b3, sourceUrl) {
+function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
   window._currentPage = 'tip';
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
   scrollToTop();
+
+  // Determine category label from actionType
+  const actionLabels = {
+    'update':'📢 Update','news':'📰 News','tip':'💡 Tip','event':'🎉 Event',
+    'business':'🏢 Business','motivation':'💪 Motivation','prayer':'🙏 Prayer',
+    'jobs':'💼 Jobs','immigration':'🛂 Immigration','money':'💷 Money',
+    'health':'💊 Health','housing':'🏠 Housing'
+  };
+  const categoryLabel = actionLabels[actionType] || '💡 Tip';
 
   const tipText = typeof tip === 'object' ? tip.tip : tip;
   const bb1 = b1 || (typeof tip === 'object' ? tip.b1 : null) || 'How do I save money in the UK?';
@@ -4042,8 +4051,8 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl) {
   const resolvedSourceUrl = tipSourceUrl || (tipCategory && categorySourceUrls2[tipCategory]) || 'https://www.gov.uk';
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
     <div style="background:#057A44;padding:8px 14px;display:flex;align-items:center;gap:8px;">
-      <span style="font-size:18px;">💡</span>
-      <span style="color:white;font-weight:700;font-size:13px;">TIP OF THE DAY</span>
+      <span style="font-size:18px;">${actionLabels[actionType] ? actionLabels[actionType].split(' ')[0] : '💡'}</span>
+      <span style="color:white;font-weight:700;font-size:13px;">${categoryLabel}</span>
     </div>
     <div style="padding:14px;">
       <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-weight:500;">${tipText}</div>
@@ -5279,7 +5288,7 @@ function buildTipCard(tip, suggestionStr) {
   const tipHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
       <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:16px;">💡</span>
-        <span style="color:white;font-weight:700;font-size:15px;">TIP OF THE DAY</span>
+        <span style="color:white;font-weight:700;font-size:15px;">${categoryLabel}</span>
       </div>
       <div style="padding:5px;">
         <div style="display:inline-block;background:#EAF3DE;color:#3B6D11;font-size:13px;font-weight:700;padding:1px 6px;border-radius:50px;margin-bottom:3px;">${tip.emoji} ${tip.category.toUpperCase()}</div>
@@ -5657,13 +5666,13 @@ function handleDeepLink() {
   } else if (action === 'group-advertising') {
     setTimeout(() => { showGroupAdvertising(); window.history.replaceState({}, '', '/group-advertising'); }, 300);
   }
-  if (action === 'tip') {
+  if (['tip','update','event','business','jobs','immigration','money','health','housing'].includes(action)) {
     const content = params.get('content') || window._earlyContent || '';
     const b1 = params.get('b1') || window._earlyB1 || '';
     const b2 = params.get('b2') || window._earlyB2 || '';
     const b3 = params.get('b3') || window._earlyB3 || '';
     const source = params.get('source') || '';
-    showTipLanding(content, b1, b2, b3, source);
+    showTipLanding(content, b1, b2, b3, source, action);
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
   } else if (action === 'guardianews' || action === 'news') {
