@@ -74,12 +74,12 @@ textarea.tall{height:140px;resize:none}
     <div class="section-label">📱 Push Notification — appears on phone lock screen</div>
     <div class="field">
       <label>Title *</label>
-      <input id="push-title" type="text" placeholder="e.g. New NHS update for Nigerians in the UK" oninput="updatePreviews()">
+      <input id="push-title" type="text" placeholder="e.g. New NHS update for Nigerians in the UK" oninput="updatePreviews();refreshPreview()">
       <div class="helper">The notification headline — keep it short and clear</div>
     </div>
     <div class="field">
       <label>Push Message *</label>
-      <textarea id="push-message" class="short" placeholder="e.g. Important update — tap to read the full details inside the app" oninput="updatePreviews()"></textarea>
+      <textarea id="push-message" class="short" placeholder="e.g. Important update — tap to read the full details inside the app" oninput="updatePreviews();refreshPreview()"></textarea>
       <div class="helper">Short text shown on the lock screen — keep under 100 characters</div>
     </div>
 
@@ -101,7 +101,7 @@ textarea.tall{height:140px;resize:none}
     <div class="section-label">📰 Main Message — shown inside the app when opened</div>
     <div class="field">
       <label>Main Message *</label>
-      <textarea id="main-message" class="tall" placeholder="Write the full update, news or tip here. This is what people read when they tap the notification and open the app..." oninput="updatePreviews()"></textarea>
+      <textarea id="main-message" class="tall" placeholder="Write the full update, news or tip here. This is what people read when they tap the notification and open the app..." oninput="updatePreviews();refreshPreview()"></textarea>
       <div class="helper">Full content shown as an in-app card — can be longer and more detailed</div>
     </div>
 
@@ -123,6 +123,59 @@ textarea.tall{height:140px;resize:none}
       <label>Source Link</label>
       <input id="push-src" type="url" placeholder="https://...">
       <div class="helper">Link to the original article or source, if applicable</div>
+    </div>
+  </div>
+
+  <!-- LIVE PREVIEW -->
+  <div class="card">
+    <div class="section-label">👁️ Preview — see what users see</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;" id="preview-tabs">
+      <button class="type-btn active" onclick="showPreviewTab('lock',this)" style="flex:1;border-radius:8px;padding:9px;">📱 Lock screen</button>
+      <button class="type-btn" onclick="showPreviewTab('app',this)" style="flex:1;border-radius:8px;padding:9px;">📲 In-app</button>
+    </div>
+
+    <!-- LOCK SCREEN TAB -->
+    <div id="preview-lock">
+      <div style="width:240px;margin:0 auto;background:#1a1a1a;border-radius:28px;padding:10px;box-shadow:0 8px 28px rgba(0,0,0,0.25);">
+        <div style="background:#f2f2f7;border-radius:20px;overflow:hidden;">
+          <div style="padding:8px 14px 4px;display:flex;justify-content:space-between;font-size:11px;color:#333;font-weight:600;"><span>9:41</span><span>●●● 🔋</span></div>
+          <div style="background:rgba(255,255,255,0.92);margin:6px 10px 10px;border-radius:14px;padding:11px;display:flex;gap:9px;align-items:flex-start;">
+            <div style="width:30px;height:30px;border-radius:8px;background:#057A44;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🟢</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;color:#888;font-weight:600;margin-bottom:2px;">Auntie Tobi · now</div>
+              <div id="pv-notif-title" style="font-size:12px;font-weight:700;color:#000;line-height:1.3;">Your notification title</div>
+              <div id="pv-notif-body" style="font-size:11px;color:#555;margin-top:2px;line-height:1.4;">Your push message here...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:10px;">What subscribers see on their phone</p>
+    </div>
+
+    <!-- IN-APP TAB -->
+    <div id="preview-app" style="display:none;">
+      <div style="width:240px;margin:0 auto;background:#1a1a1a;border-radius:28px;padding:10px;box-shadow:0 8px 28px rgba(0,0,0,0.25);">
+        <div style="background:#f0f0f0;border-radius:20px;overflow:hidden;min-height:260px;">
+          <div style="background:#0F1E36;padding:10px 12px;display:flex;align-items:center;gap:8px;">
+            <div style="width:26px;height:26px;border-radius:50%;background:#057A44;display:flex;align-items:center;justify-content:center;font-size:13px;">🟢</div>
+            <div style="font-size:12px;font-weight:700;color:white;">Auntie Tobi</div>
+          </div>
+          <div style="padding:8px;">
+            <div style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+              <div style="background:#057A44;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+                <span id="pv-app-ico" style="font-size:13px;">📢</span>
+                <span id="pv-app-tag" style="color:white;font-size:11px;font-weight:700;">📢 Update</span>
+              </div>
+              <div style="padding:10px;">
+                <div id="pv-app-title" style="font-size:12px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">Your notification title</div>
+                <div id="pv-app-text" style="font-size:11px;color:#444;line-height:1.55;">Your main message appears here when the user opens the app...</div>
+                <div id="pv-app-src" style="display:none;font-size:11px;color:#057A44;margin-top:6px;font-weight:600;">🔗 Read more</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:10px;">What subscribers see inside the app</p>
     </div>
   </div>
 
@@ -294,6 +347,39 @@ function updateSchedulePreview() {
     document.getElementById('schedule-preview').textContent = '📅 Will send: ' + formatted + ' (' + tzLabel.split('(')[1].replace(')','') + ')';
   }
 }
+function refreshPreview() {
+  var title = document.getElementById('push-title').value || 'Your notification title';
+  var push = document.getElementById('push-message').value || 'Your push message here...';
+  var main = document.getElementById('main-message').value || 'Your main message appears here when the user opens the app...';
+  var src = document.getElementById('push-src').value;
+  var typeLabels = {
+    update:'📢 Update',news:'📰 News',tip:'💡 Tip',event:'🎉 Event',
+    prayer:'🙏 Prayer',motivation:'💪 Motivation',jobs:'💼 Jobs',
+    housing:'🏠 Housing',health:'💊 Health',money:'💷 Money',
+    business:'🏢 Business',immigration:'🛂 Immigration'
+  };
+  var label = typeLabels[currentType] || '💡 Tip';
+  var ico = label.split(' ')[0];
+  document.getElementById('pv-notif-title').textContent = title;
+  document.getElementById('pv-notif-body').textContent = push;
+  document.getElementById('pv-app-tag').textContent = label;
+  document.getElementById('pv-app-ico').textContent = ico;
+  document.getElementById('pv-app-title').textContent = title;
+  document.getElementById('pv-app-text').textContent = main;
+  var srcEl = document.getElementById('pv-app-src');
+  if (srcEl) srcEl.style.display = src ? 'block' : 'none';
+}
+
+function showPreviewTab(tab, btn) {
+  document.getElementById('preview-lock').style.display = tab === 'lock' ? 'block' : 'none';
+  document.getElementById('preview-app').style.display = tab === 'app' ? 'block' : 'none';
+  document.querySelectorAll('#preview-tabs .type-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+// Also refresh preview when type changes
+var _origSetType = setType;
+setType = function(btn, type) { _origSetType(btn, type); refreshPreview(); };
 </script>
 </body>
 </html>
