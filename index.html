@@ -3122,8 +3122,9 @@ function showTobiUpdates() {
       const label = typeLabels[u.type] || '📢 Update';
       const color = typeColors[u.type] || '#057A44';
       const date = u.date ? new Date(u.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+      const msgHtml = (u.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
       const srcLink = u.sourceUrl ? '<a href="' + u.sourceUrl + '" target="_blank" style="display:inline-block;margin-top:8px;font-size:12px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>' : '';
-      addTipMessage('<div style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;"><div style="background:' + color + ';padding:8px 14px;display:flex;align-items:center;justify-content:space-between;"><span style="color:white;font-weight:700;font-size:13px;">' + label + '</span><span style="color:rgba(255,255,255,0.7);font-size:11px;">' + date + '</span></div><div style="padding:14px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:6px;line-height:1.4;">' + (u.title || '') + '</div><div style="font-size:14px;color:#444;line-height:1.65;">' + (u.message || '') + '</div>' + srcLink + '</div></div>');
+      addTipMessage('<div style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;"><div style="background:' + color + ';padding:8px 14px;display:flex;align-items:center;justify-content:space-between;"><span style="color:white;font-weight:700;font-size:13px;">' + label + '</span><span style="color:rgba(255,255,255,0.7);font-size:11px;">' + date + '</span></div><div style="padding:14px;"><div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:6px;line-height:1.4;">' + (u.title || '') + '</div><div style="font-size:14px;color:#444;line-height:1.75;">' + msgHtml + '</div>' + srcLink + '</div></div>');
     });
   }
   addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showAllNews()">← All News</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
@@ -4065,7 +4066,7 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
   const bb2 = b2 || (typeof tip === 'object' ? tip.b2 : null) || 'Find a Nigerian business near me';
   const bb3 = b3 || (typeof tip === 'object' ? tip.b3 : null) || 'What benefits am I entitled to?';
 
-  const tipSourceUrl = sourceUrl || (typeof tip === 'object' && tip.sourceUrl) ? (sourceUrl || tip.sourceUrl) : null;
+  const tipTextSafe = tipText ? tipText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
   const categorySourceUrls2 = {
     'Money': 'https://www.moneysavingexpert.com',
     'Benefits': 'https://www.gov.uk/benefits-calculators',
@@ -4085,7 +4086,7 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
       <span style="color:white;font-weight:700;font-size:13px;">${categoryLabel}</span>
     </div>
     <div style="padding:14px;">
-      <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-weight:500;">${tipText}</div>
+      <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-weight:500;">${tipTextSafe}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:10px;margin-top:12px;display:flex;align-items:center;gap:8px;">
         <a href="${resolvedSourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>
       </div>
