@@ -173,9 +173,9 @@ exports.handler = async function(event) {
     const action = validActions.includes(type) ? type : 'tip';
 
     // Use slug-based deep link to avoid URL length limits with rich HTML content
-    const deepLink = `https://auntietobi.co.uk/?action=${action}&slug=${encodeURIComponent(shortSlug)}&content=${encodedContent}&b1=${encodedB1}&b2=${encodedB2}&b3=${encodedB3}${sourceUrl ? '&source=' + encodedSrc : ''}`;
     const shortSlug = slug || (type + '-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 25));
     const shortUrl = `https://auntietobi.co.uk/n/${shortSlug}`;
+    const deepLink = `https://auntietobi.co.uk/?action=${action}&slug=${encodeURIComponent(shortSlug)}&content=${encodedContent}&b1=${encodedB1}&b2=${encodedB2}&b3=${encodedB3}${sourceUrl ? '&source=' + encodedSrc : ''}`;
 
     // 2. Add redirect to GitHub _redirects (if GitHub token available)
     let githubResult = null;
