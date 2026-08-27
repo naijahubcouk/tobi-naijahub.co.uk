@@ -5894,36 +5894,32 @@ function handleDeepLink() {
   }
   if (['tip','update','event','business','jobs','immigration','money','health','housing'].includes(action)) {
     const slug = params.get('slug') || '';
-    let content = params.get('content') || window._earlyContent || '';
-    // Look up richer content from tobi-updates.json by slug (avoids URL length limits)
-    if (slug && window._tobiUpdates && window._tobiUpdates.length) {
-      const match = window._tobiUpdates.find(function(u){ return u.slug === slug; });
-      if (match && match.message) content = match.message;
-    }
+    const fallbackContent = params.get('content') || window._earlyContent || '';
     const b1 = params.get('b1') || window._earlyB1 || '';
     const b2 = params.get('b2') || window._earlyB2 || '';
     const b3 = params.get('b3') || window._earlyB3 || '';
     const source = params.get('source') || '';
-    // If we have a slug, try to fetch fresh from tobi-updates.json
     function resolveAndShow(c) { showTipLanding(c, b1, b2, b3, source, action); }
     if (slug) {
-      // Check if already loaded
-      var cached = window._tobiUpdates && window._tobiUpdates.find(function(u){ return u.slug === slug; });
-      if (cached && cached.message) {
-        resolveAndShow(cached.message);
-      } else {
-        // Fetch directly from JSON file
-        fetch('/tobi-updates.json?v=' + Date.now())
-          .then(function(r){ return r.json(); })
-          .then(function(updates){
-            window._tobiUpdates = updates;
-            var match = updates.find(function(u){ return u.slug === slug; });
-            resolveAndShow(match && match.message ? match.message : (content || ''));
-          })
-          .catch(function(){ resolveAndShow(content || ''); });
-      }
+      // Always fetch fresh from tobi-updates.json — never trust URL content param (can be broken HTML)
+      fetch('/tobi-updates.json?v=' + Date.now())
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .then(function(updates){
+          window._tobiUpdates = updates;
+          var match = updates.find(function(u){ return u.slug === slug; });
+          if (match && match.message) {
+            resolveAndShow(match.message);
+          } else if (match && match.title) {
+            resolveAndShow(match.title);
+          } else if (fallbackContent && !fallbackContent.includes('%3C') && !fallbackContent.includes('<span style')) {
+            resolveAndShow(fallbackContent);
+          } else {
+            resolveAndShow('');
+          }
+        })
+        .catch(function(){ resolveAndShow(fallbackContent || ''); });
     } else {
-      resolveAndShow(content);
+      resolveAndShow(fallbackContent);
     }
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
@@ -8336,29 +8332,48 @@ function saveNotifPrefs() {
 async function handleBellClick() {
   const isSubscribed = localStorage.getItem('tobi_notifications') === '1';
   if (isSubscribed) {
-    // Already subscribed — open preferences directly
     showNotifPrefs();
-  } else {
-    // Not subscribed — prompt to subscribe, then show prefs AFTER confirmed
-    if (typeof OneSignalDeferred !== 'undefined') {
-      OneSignalDeferred.push(async function(OneSignal) {
+    return;
+  }
+  // Check actual OneSignal subscription state before prompting
+  if (typeof OneSignalDeferred !== 'undefined') {
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        // Check if already subscribed at OneSignal level
+        const isPushEnabled = await OneSignal.User.PushSubscription.optedIn;
+        if (isPushEnabled) {
+          // Already subscribed — just sync localStorage and open prefs
+          localStorage.setItem('tobi_notifications', '1');
+          var b = document.getElementById('notify-bell');
+          if (b) { b.innerHTML = '🔔'; b.style.opacity = '1'; b.title = 'Manage notification preferences'; }
+          showNotifPrefs();
+          return;
+        }
+        // Not subscribed — prompt
         try {
           await OneSignal.Slidedown.promptPush();
-        } catch(e) {}
-        // Wait up to 6 seconds for subscription to confirm
+        } catch(e) {
+          // If "Already subscribed" error, sync state
+          if (e && e.message && e.message.includes('subscribed')) {
+            localStorage.setItem('tobi_notifications', '1');
+            var bell = document.getElementById('notify-bell');
+            if (bell) { bell.innerHTML = '🔔'; bell.style.opacity = '1'; }
+            showNotifPrefs();
+          }
+          return;
+        }
+        // Wait for subscription to confirm
         let waited = 0;
         const checkSubscribed = setInterval(() => {
           waited += 300;
           const nowSubscribed = localStorage.getItem('tobi_notifications') === '1';
           if (nowSubscribed || waited >= 6000) {
             clearInterval(checkSubscribed);
-            if (nowSubscribed) {
-              setTimeout(() => showNotifPrefs(), 500);
-            }
+            if (nowSubscribed) setTimeout(() => showNotifPrefs(), 500);
           }
         }, 300);
-      });
-    }
+      } catch(e) {}
+    });
   }
 }
 
