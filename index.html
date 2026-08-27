@@ -1727,7 +1727,7 @@ function checkExamAnswer(userMessage) {
 }
 
 function sendExamQuestion(testType) {
-  examState.active = true; document.body.classList.add('exam-mode');
+  examState.active = true; document.body.classList.add('exam-mode'); document.body.classList.add('exam-mode');
   examState.testType = testType;
   if (typeof gtag !== 'undefined') gtag('event', 'exam_question', { event_category: 'exam', event_label: testType });
   
@@ -2491,10 +2491,10 @@ let _searchTimer = null;
   // End multi-search layer
   const lowerText = userText.toLowerCase();
   if (lowerText.includes('driving theory') || lowerText.includes('theory test')) {
-    examState.active = true;
+    examState.active = true; document.body.classList.add('exam-mode');
     examState.testType = 'driving';
   } else if (lowerText.includes('life in uk') || lowerText.includes('life in the uk')) {
-    examState.active = true;
+    examState.active = true; document.body.classList.add('exam-mode');
     examState.testType = 'life';
   } else if (
     !lowerText.includes('why join') &&
@@ -2785,14 +2785,14 @@ function quickAsk(text) {
 
   // Check if this is an exam prep request from pill
   if (text === 'Help me prepare for my UK driving theory test') {
-    examState.active = true;
+    examState.active = true; document.body.classList.add('exam-mode');
     examState.testType = 'driving';
     examState.currentQuestion = null;
     examState.questionsAnswered = 0;
     examState.correctAnswers = 0;
     examState.weakAreas = {};
   } else if (text === 'Help me prepare for my Life in UK test') {
-    examState.active = true;
+    examState.active = true; document.body.classList.add('exam-mode');
     examState.testType = 'life';
     examState.currentQuestion = null;
     examState.questionsAnswered = 0;
@@ -3151,8 +3151,8 @@ function showMoreSheet() {
 
   var items = [
     {ico:'💼', label:'Jobs', fn: function(){ resetAndShowJobs(); }},
-    {ico:'🚗', label:'Driving Theory', fn: function(){ localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my UK driving theory test')); }},
-    {ico:'📋', label:'Life in UK Test', fn: function(){ localStorage.getItem('tobi_exam_paused')==='1'?showResumeTestPrompt():(clearExamState(),quickAsk('Help me prepare for my Life in UK test')); }},
+    {ico:'🚗', label:'Driving Theory', fn: function(){ clearExamState();quickAsk('Help me prepare for my UK driving theory test'); }},
+    {ico:'📋', label:'Life in UK Test', fn: function(){ clearExamState();quickAsk('Help me prepare for my Life in UK test'); }},
     {ico:'🇬🇧', label:'Japa Guide', fn: function(){ showJapaGuide(); }},
     {ico:'🔍', label:'Request', fn: function(){ showRequestOptions(); }},
     {ico:'📝', label:'Feedback', fn: function(){ showFeedbackForm(); }},
