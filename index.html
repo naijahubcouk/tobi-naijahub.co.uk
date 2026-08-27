@@ -1594,10 +1594,19 @@ function extractAndSaveExamData(userMessage, botReply) {
   const progress = getExamProgress() || {};
   const combined = (userMessage + ' ' + botReply).toLowerCase();
 
-  // Save name if mentioned
-  if (botReply.includes('Nice to meet you') || botReply.includes('welcome back')) {
-    const nameMatch = botReply.match(/(?:meet you|back)\s+([A-Z][a-z]+)/);
-    if (nameMatch) saveExamProgress({ name: nameMatch[1] });
+  // Save name if bot asked and user replied with a name
+  const botAskedName = botReply.toLowerCase().includes('your name') || botReply.toLowerCase().includes('may i know') || botReply.toLowerCase().includes("what's your name");
+  if (botAskedName && userMessage.trim().length > 0 && userMessage.trim().length < 30) {
+    // Simple heuristic - if reply is short and looks like a name
+    const nameGuess = userMessage.trim().split(' ')[0];
+    if (nameGuess && /^[A-Za-z]{2,}$/.test(nameGuess)) {
+      saveExamProgress({ name: nameGuess });
+      window._examUserName = nameGuess;
+    }
+  }
+  if (botReply.includes('Nice to meet you') || botReply.includes('welcome back') || botReply.includes('Hello again')) {
+    const nameMatch = botReply.match(/(?:meet you|back|again)[,\s]+([A-Z][a-z]+)/);
+    if (nameMatch) { saveExamProgress({ name: nameMatch[1] }); window._examUserName = nameMatch[1]; }
   }
 
   // Save test type
@@ -2715,6 +2724,48 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
           // Generic pool — always random so feels varied
           const pool = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean);
           ctxBtns = pool.slice(0, 3);
+        }
+
+        // 🚫 Suppress generic suggestions during exam — show smart contextual ones instead
+        if (examState.active) {
+          const rl = replyLower;
+          let examBtns = [];
+
+          // Name question
+          if (rl.includes('what is your name') || rl.includes("what's your name") || rl.includes('may i know your name') || rl.includes('can i get your name')) {
+            examBtns = []; // let them type their name
+          }
+          // Date question
+          else if (rl.includes('test date') || rl.includes('have a date') || rl.includes('booked') || rl.includes('scheduled')) {
+            examBtns = ['Yes, I have a date', 'Not yet'];
+          }
+          // Ready/start question
+          else if (rl.includes('ready to start') || rl.includes('shall we begin') || rl.includes('want to begin') || rl.includes('start the test') || rl.includes('start a practice')) {
+            examBtns = ['Yes, let\'s go!', 'Give me a tip first'];
+          }
+          // Correct/wrong answer
+          else if (rl.includes('correct') || rl.includes('well done') || rl.includes('that\'s right') || rl.includes('next question')) {
+            examBtns = ['Next question ➡️', 'Explain more', 'Take a break'];
+          }
+          else if (rl.includes('incorrect') || rl.includes('wrong answer') || rl.includes('the correct answer')) {
+            examBtns = ['Next question ➡️', 'Explain this topic', 'Try again'];
+          }
+          // End of session
+          else if (rl.includes('well done') && rl.includes('score') || rl.includes('your score') || rl.includes('completed')) {
+            examBtns = ['Continue practising', 'Review weak areas', '🏠 Home'];
+          }
+          // Continue/more questions
+          else if (rl.includes('another question') || rl.includes('more question') || rl.includes('continue')) {
+            examBtns = ['Yes, next question', 'Take a break'];
+          }
+
+          if (examBtns.length > 0) {
+            const examBtnHtml = examBtns.map(s =>
+              `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`
+            ).join('');
+            addTipMessage(`<div class="suggestions" style="margin-top:8px;">${examBtnHtml}</div>`);
+          }
+          return; // skip generic suggestions entirely
         }
 
         const btns = ctxBtns.slice(0, 3).map(s =>
@@ -5826,12 +5877,26 @@ function handleDeepLink() {
     setTimeout(() => { showGroupAdvertising(); window.history.replaceState({}, '', '/group-advertising'); }, 300);
   }
   if (['tip','update','event','business','jobs','immigration','money','health','housing'].includes(action)) {
-    const content = params.get('content') || window._earlyContent || '';
+    const slug = params.get('slug') || '';
+    let content = params.get('content') || window._earlyContent || '';
+    // Look up richer content from tobi-updates.json by slug (avoids URL length limits)
+    if (slug && window._tobiUpdates && window._tobiUpdates.length) {
+      const match = window._tobiUpdates.find(function(u){ return u.slug === slug; });
+      if (match && match.message) content = match.message;
+    }
     const b1 = params.get('b1') || window._earlyB1 || '';
     const b2 = params.get('b2') || window._earlyB2 || '';
     const b3 = params.get('b3') || window._earlyB3 || '';
     const source = params.get('source') || '';
-    showTipLanding(content, b1, b2, b3, source, action);
+    // If slug given but updates not loaded yet, wait briefly then display
+    if (slug && (!window._tobiUpdates || !window._tobiUpdates.length)) {
+      setTimeout(function() {
+        var match2 = window._tobiUpdates && window._tobiUpdates.find(function(u){ return u.slug === slug; });
+        showTipLanding((match2 && match2.message) ? match2.message : content, b1, b2, b3, source, action);
+      }, 1500);
+    } else {
+      showTipLanding(content, b1, b2, b3, source, action);
+    }
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
   } else if (action === 'guardianews' || action === 'news') {
