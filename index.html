@@ -1010,7 +1010,7 @@
         }
       })();
     </script>
-      <button onclick="hardRefreshApp()" title="Refresh app" style="background:none;border:none;cursor:pointer;padding:2px;opacity:0.85;color:white;line-height:1;display:flex;align-items:center;">
+      <button onclick="this.style.opacity='0.4';this.style.transform='rotate(360deg)';this.style.transition='transform 0.6s';hardRefreshApp();" title="Refresh app" style="background:none;border:none;cursor:pointer;padding:2px;opacity:0.85;color:white;line-height:1;display:flex;align-items:center;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       </button>
       <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="background:none;border:none;cursor:pointer;padding:2px;opacity:0.85;transition:opacity 0.2s;color:white;line-height:1;display:flex;align-items:center;">
@@ -7915,15 +7915,20 @@ async function submitFeedback() {
 }
 
 function hardRefreshApp() {
+  var doReload = function() { window.location.href = window.location.pathname + '?nocache=' + Date.now(); };
+  // Clear caches and unregister service workers
+  var tasks = [];
   if ('caches' in window) {
-    caches.keys().then(function(names) {
-      Promise.all(names.map(function(n){ return caches.delete(n); })).then(function(){
-        window.location.reload(true);
-      });
-    });
-  } else {
-    window.location.reload(true);
+    tasks.push(caches.keys().then(function(names) {
+      return Promise.all(names.map(function(n){ return caches.delete(n); }));
+    }));
   }
+  if ('serviceWorker' in navigator) {
+    tasks.push(navigator.serviceWorker.getRegistrations().then(function(regs) {
+      return Promise.all(regs.map(function(r){ return r.unregister(); }));
+    }));
+  }
+  Promise.all(tasks).then(doReload).catch(doReload);
 }
 
 function shareAuntieTobi() {
