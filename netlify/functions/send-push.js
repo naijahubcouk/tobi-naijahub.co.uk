@@ -175,7 +175,8 @@ exports.handler = async function(event) {
     // Use slug-based deep link to avoid URL length limits with rich HTML content
     const shortSlug = slug || (type + '-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 25));
     const shortUrl = `https://auntietobi.co.uk/n/${shortSlug}`;
-    const deepLink = `https://auntietobi.co.uk/?action=${action}&slug=${encodeURIComponent(shortSlug)}&content=${encodedContent}&b1=${encodedB1}&b2=${encodedB2}&b3=${encodedB3}${sourceUrl ? '&source=' + encodedSrc : ''}`;
+    // Deep link uses slug only - content fetched from tobi-updates.json to avoid URL length issues
+    const deepLink = `https://auntietobi.co.uk/?action=${action}&slug=${encodeURIComponent(shortSlug)}`;
 
     // 2. Add redirect to GitHub _redirects (if GitHub token available)
     let githubResult = null;
