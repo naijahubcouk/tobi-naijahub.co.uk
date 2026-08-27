@@ -1010,6 +1010,9 @@
         }
       })();
     </script>
+      <button onclick="hardRefreshApp()" title="Refresh app" style="background:none;border:none;cursor:pointer;padding:2px;opacity:0.85;color:white;line-height:1;display:flex;align-items:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
       <button onclick="shareAuntieTobi()" title="Share Auntie Tobi" style="background:none;border:none;cursor:pointer;padding:2px;opacity:0.85;transition:opacity 0.2s;color:white;line-height:1;display:flex;align-items:center;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
       </button>
@@ -5888,14 +5891,26 @@ function handleDeepLink() {
     const b2 = params.get('b2') || window._earlyB2 || '';
     const b3 = params.get('b3') || window._earlyB3 || '';
     const source = params.get('source') || '';
-    // If slug given but updates not loaded yet, wait briefly then display
-    if (slug && (!window._tobiUpdates || !window._tobiUpdates.length)) {
-      setTimeout(function() {
-        var match2 = window._tobiUpdates && window._tobiUpdates.find(function(u){ return u.slug === slug; });
-        showTipLanding((match2 && match2.message) ? match2.message : content, b1, b2, b3, source, action);
-      }, 1500);
+    // If we have a slug, try to fetch fresh from tobi-updates.json
+    function resolveAndShow(c) { showTipLanding(c, b1, b2, b3, source, action); }
+    if (slug) {
+      // Check if already loaded
+      var cached = window._tobiUpdates && window._tobiUpdates.find(function(u){ return u.slug === slug; });
+      if (cached && cached.message) {
+        resolveAndShow(cached.message);
+      } else {
+        // Fetch directly from JSON file
+        fetch('/tobi-updates.json?v=' + Date.now())
+          .then(function(r){ return r.json(); })
+          .then(function(updates){
+            window._tobiUpdates = updates;
+            var match = updates.find(function(u){ return u.slug === slug; });
+            resolveAndShow(match && match.message ? match.message : (content || ''));
+          })
+          .catch(function(){ resolveAndShow(content || ''); });
+      }
     } else {
-      showTipLanding(content, b1, b2, b3, source, action);
+      resolveAndShow(content);
     }
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
@@ -7880,6 +7895,18 @@ async function submitFeedback() {
   } catch(err) {
     status.style.color = '#EF4444';
     status.textContent = 'Something went wrong — please try again! 🙏🏾';
+  }
+}
+
+function hardRefreshApp() {
+  if ('caches' in window) {
+    caches.keys().then(function(names) {
+      Promise.all(names.map(function(n){ return caches.delete(n); })).then(function(){
+        window.location.reload(true);
+      });
+    });
+  } else {
+    window.location.reload(true);
   }
 }
 
