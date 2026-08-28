@@ -2404,21 +2404,21 @@ let _searchTimer = null;
       removeTyping();
       isLoading = false;
       document.getElementById('sendBtn').disabled = false;
-      const fakeText = '<<<BIZ_JSON:' + JSON.stringify(bizResults.map(b => ({
-        slug: b.slug, name: b.name, cat: b.cat||'', loc: b.loc||'UK',
-        desc: b.desc ? b.desc.substring(0,100) : '', verified: b.verified||false, wa: b.wa||'', phone: b.phone||''
-      }))) + '>>>';
-      // Save context for "show more" button
-      window._lastBizCat = detectedCat || null;
-      window._lastBizLoc = detectedLoc2 || null;
-
-      addMessage('bot', formatResponse(fakeText), true);
-
-      // Add show more button preserving food/location context
       var detectedCat = intentCats ? intentCats[0] : null;
       var UK_CITIES = ['basingstoke','london','manchester','birmingham','liverpool','bristol','leeds','glasgow','edinburgh','cardiff','coventry','sheffield','leicester','nottingham','newcastle','bradford','brighton','hull','plymouth','wolverhampton','derby','reading','southampton','portsmouth','norwich','swindon','exeter','cambridge','oxford','york','milton keynes','luton','watford','ipswich','peterborough','cheltenham','slough','basildon','sittingbourne','wakefield'];
       var queryLower2 = userText.toLowerCase();
       var detectedLoc2 = UK_CITIES.find(function(c){ return queryLower2.includes(c); }) || null;
+
+      const fakeText = '<<<BIZ_JSON:' + JSON.stringify(bizResults.map(b => ({
+        slug: b.slug, name: b.name, cat: b.cat||'', loc: b.loc||'UK',
+        desc: b.desc ? b.desc.substring(0,100) : '', verified: b.verified||false, wa: b.wa||'', phone: b.phone||''
+      }))) + '>>>';
+
+      // Save context for "show more" button
+      window._lastBizCat = detectedCat || null;
+      window._lastBizLoc = detectedLoc2 || null;
+
+      addTipMessage(formatResponse(fakeText));
       if (detectedCat || detectedLoc2) {
         var catStr2 = detectedCat ? "'" + detectedCat.replace(/'/g,"\\'") + "'" : 'null';
         var locStr2 = detectedLoc2 ? "'" + detectedLoc2 + "'" : 'null';
