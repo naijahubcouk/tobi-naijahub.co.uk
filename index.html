@@ -1022,7 +1022,7 @@
     <div class="pill" onclick="showBusinesses(undefined,null,null,true)">🏢 Businesses</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="showNewsAndUpdates()">📰 News & Updates</div>
-    <div class="pill" onclick="showMarketplace()">🛍️ Marketplace</div>
+    <div class="pill" onclick="window.open('https://auntietobi.co.uk/marketplace','_blank')">🛍️ Marketplace</div>
     <div class="pill" onclick="showMoreSheet()" style="background:#0F1E36;color:white;border-color:#0F1E36;">More ›</div>
   </div>
 
@@ -3203,6 +3203,8 @@ function showMoreSheet() {
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
   var items = [
+    {ico:'💚', label:'Business Club', fn: function(){ overlay.remove(); showBusinessClub(); }, color:'#057A44', bg:'#f0faf5', border:'#057A44'},
+    {ico:'📣', label:'Group Advertising', fn: function(){ overlay.remove(); window.open('https://auntietobi.co.uk/group-advertising','_blank'); }, color:'#B45309', bg:'#FFFBEB', border:'#FFB81C'},
     {ico:'💼', label:'Jobs', fn: function(){ resetAndShowJobs(); }},
     {ico:'🚗', label:'Driving Theory', fn: function(){ clearExamState();quickAsk('Help me prepare for my UK driving theory test'); }},
     {ico:'📋', label:'Life in UK Test', fn: function(){ clearExamState();quickAsk('Help me prepare for my Life in UK test'); }},
@@ -3229,7 +3231,10 @@ function showMoreSheet() {
 
   items.forEach(function(it) {
     var btn = document.createElement('div');
-    btn.style.cssText = 'background:#f8f9fa;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;font-size:13px;font-weight:600;color:#0F1E36;cursor:pointer;display:flex;align-items:center;gap:8px;';
+    var bg = it.bg || '#f8f9fa';
+    var border = it.border || '#e5e7eb';
+    var color = it.color || '#0F1E36';
+    btn.style.cssText = 'background:' + bg + ';border:1.5px solid ' + border + ';border-radius:10px;padding:12px;font-size:13px;font-weight:600;color:' + color + ';cursor:pointer;display:flex;align-items:center;gap:8px;';
     btn.innerHTML = '<span style="font-size:18px;">' + it.ico + '</span>' + it.label;
     btn.onclick = function() { overlay.remove(); it.fn(); };
     grid.appendChild(btn);
