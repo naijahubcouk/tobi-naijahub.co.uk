@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Auntie Tobi Business Club</title>
+<link rel="icon" href="/tobi-face-128.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;padding-bottom:60px}
+.app-header{background:#0F1E36;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:540px;margin:0 auto}
+.app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0}
+.app-logo img{width:100%;height:100%;object-fit:cover}
+.app-header-text{flex:1}
+.app-header-title{font-size:16px;font-weight:700;color:white}
+.app-header-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px}
+.header-btns{display:flex;gap:6px}
+.back-btn{color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;font-weight:600;padding:7px 11px;border:1.5px solid rgba(255,255,255,0.25);border-radius:20px;white-space:nowrap}
+.wrap{max-width:540px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#0F1E36 0%,#1a3055 100%);border-radius:16px;padding:28px 20px;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'💚';position:absolute;bottom:-20px;right:-10px;font-size:100px;opacity:0.08}
+.hero-badge{display:inline-block;background:rgba(255,184,28,0.2);color:#FFB81C;font-size:12px;font-weight:700;padding:4px 14px;border-radius:20px;margin-bottom:14px}
+.hero-title{font-size:26px;font-weight:800;color:white;line-height:1.25;margin-bottom:8px}
+.hero-sub{font-size:16px;color:rgba(255,255,255,0.75);margin-bottom:6px;font-style:italic}
+.hero-body{font-size:15px;color:rgba(255,255,255,0.88);line-height:1.75;margin-bottom:20px}
+.price-pill{background:#FFB81C;border-radius:12px;padding:16px 20px;display:inline-block;text-align:center}
+.price-big{font-size:36px;font-weight:800;color:#0F1E36;line-height:1}
+.price-sub{font-size:13px;color:#0F1E36;opacity:0.7;margin-top:4px}
+
+/* CARDS */
+.card{background:white;border-radius:14px;padding:20px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.section-icon{font-size:22px;margin-bottom:6px}
+.section-tag{font-size:11px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
+.section-title{font-size:19px;font-weight:800;color:#0F1E36;margin-bottom:12px;line-height:1.3}
+.body{font-size:16px;line-height:1.8;color:#1a1a1a}
+.body b{font-weight:700;color:#0F1E36}
+.body+.body{margin-top:10px}
+.callout{background:#f0faf5;border-left:4px solid #057A44;border-radius:0 10px 10px 0;padding:13px 16px;font-size:16px;line-height:1.75;margin-top:12px;color:#0F1E36;font-weight:500}
+
+/* BENEFIT ROWS */
+.benefit-row{display:flex;gap:12px;padding:11px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start}
+.benefit-row:last-child{border-bottom:none}
+.b-ico{font-size:20px;flex-shrink:0;width:28px;padding-top:2px}
+.b-text{font-size:15px;line-height:1.65;color:#1a1a1a}
+.b-text b{font-weight:700;color:#0F1E36}
+
+/* EXAMPLES */
+.example-list{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.example-item{background:#f8f9fa;border:0.5px solid #e5e7eb;border-radius:9px;padding:10px 14px;font-size:14px;color:#0F1E36;font-weight:500}
+
+/* COMPARISON TABLE */
+.table-wrap{overflow-x:auto;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:10px 12px;text-align:left;font-weight:700;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;border-bottom:2px solid #e5e7eb}
+th:nth-child(2){text-align:center}
+th:nth-child(3){text-align:center;color:#057A44}
+td{padding:9px 12px;border-bottom:0.5px solid #f0f0f0;font-size:13px;color:#0F1E36;line-height:1.5}
+td:nth-child(2){text-align:center;color:#9CA3AF}
+td:nth-child(3){text-align:center;color:#057A44;font-weight:600}
+tr:last-child td{border-bottom:none}
+.free-col{background:#f8f9fa}
+.club-col{background:#f0faf5}
+
+/* EVERYTHING INCLUDED */
+.included-grid{display:flex;flex-direction:column;gap:0}
+.inc-row{display:flex;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start;font-size:15px;line-height:1.6}
+.inc-row:last-child{border-bottom:none}
+.inc-ico{flex-shrink:0;width:26px}
+
+/* IS IT FOR YOU */
+.fit-row{display:flex;gap:12px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start;font-size:15px;line-height:1.6}
+.fit-row:last-child{border-bottom:none}
+
+/* CTA */
+.cta-card{background:#0F1E36;border-radius:16px;padding:28px 20px;text-align:center}
+.cta-title{font-size:22px;font-weight:800;color:white;margin-bottom:6px}
+.cta-price{font-size:40px;font-weight:800;color:#FFB81C;margin:14px 0 4px}
+.cta-duration{font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:20px}
+.cta-tagline{font-size:15px;color:rgba(255,255,255,0.8);margin-bottom:20px;font-style:italic}
+.cta-btn{display:block;width:100%;background:#057A44;color:white;text-decoration:none;border-radius:12px;padding:17px;font-size:17px;font-weight:800;text-align:center;letter-spacing:0.3px}
+.cta-note{font-size:13px;color:rgba(255,255,255,0.5);margin-top:12px;line-height:1.5}
+
+/* SECTION DIVIDER HEADER */
+.s-header{display:flex;align-items:center;gap:10px;background:#0F1E36;border-radius:12px;padding:14px 18px}
+.s-header-ico{font-size:22px}
+.s-header-txt{font-size:16px;font-weight:800;color:white}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-header-text">
+    <div class="app-header-title">Auntie Tobi</div>
+    <div class="app-header-sub">Business Club</div>
+  </div>
+  <div class="header-btns">
+    <a href="/" class="back-btn">🏠 App</a>
+    <a href="/?action=links" class="back-btn">← Links</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🇳🇬 Nigerian Businesses in the UK</div>
+  <div class="hero-title">Auntie Tobi Business Club 💚</div>
+  <div class="hero-sub">More visibility. More support. More opportunities to grow.</div>
+  <div class="hero-body">Running a business takes work — from getting discovered and attracting customers to knowing what to improve next.<br><br>The Auntie Tobi Business Club is designed to help Nigerian businesses across the UK stay visible, showcase what they offer and grow with practical business support and strategies.<br><br><b style="color:white;">Don't just wait to be discovered. Get visible. Get supported. Keep growing. 💚</b></div>
+
+
+</div>
+
+<!-- VISIBILITY SECTION -->
+<div class="s-header">
+  <div class="s-header-ico">📣</div>
+  <div class="s-header-txt">Get Seen Throughout the Year</div>
+</div>
+
+<!-- SPOTLIGHT -->
+<div class="card">
+  <div class="section-icon">🌟</div>
+  <div class="section-tag">Included in membership</div>
+  <div class="section-title">1 Dedicated Auntie Tobi Business Spotlight — Instagram + Blog</div>
+  <p class="body">Every Business Club member receives <b>one dedicated Auntie Tobi Business Spotlight on Instagram and the Auntie Tobi Blog</b> during their 12-month membership — focused entirely on your business.</p>
+  <p class="body" style="margin-top:10px;">We can introduce our community to who you are, what your business offers, where you're based, areas you serve, your products or services and how customers can contact, order or book with you.</p>
+  <div class="callout">Your Spotlight will be scheduled within your membership year according to the Auntie Tobi content calendar.</div>
+</div>
+
+<!-- MONTHLY GROUP PROMOTION -->
+<div class="card">
+  <div class="section-icon">📣</div>
+  <div class="section-tag">Up to 12 per year</div>
+  <div class="section-title">Monthly Business Group Promotion</div>
+  <p class="body">Don't wait and hope to be featured. Business Club members have the opportunity to participate in an <b>Auntie Tobi Business Club group feature every month</b> — up to 12 during your membership year.</p>
+  <div class="example-list">
+    <div class="example-item">🇳🇬 10 Nigerian Businesses You Should Know</div>
+    <div class="example-item">💷 Here's What £20 Can Get You 👀</div>
+    <div class="example-item">📍 Nigerian Businesses in Manchester You Should Know</div>
+    <div class="example-item">💄 Nigerian Beauty Businesses to Discover</div>
+    <div class="example-item">🍲 Nigerian Food Businesses You Should Know</div>
+    <div class="example-item">🎄 Businesses to Shop With This Christmas</div>
+    <div class="example-item">💚 Auntie Tobi Business Club Finds</div>
+  </div>
+  <p class="body" style="margin-top:12px;">Features may be organised by <b>location, category, season, occasion or theme</b>.</p>
+</div>
+
+<!-- WEEKLY VISIBILITY -->
+<div class="s-header">
+  <div class="s-header-ico">📱</div>
+  <div class="s-header-txt">Weekly Instagram Visibility</div>
+</div>
+
+<div class="card">
+  <div class="section-icon">📲</div>
+  <div class="section-tag">Up to once per week</div>
+  <div class="section-title">Weekly Story Repost</div>
+  <p class="body">Business Club members can tag Auntie Tobi in <b>eligible promotional Story content for reposting — up to once per week</b>. This could include new products, booking availability, offers, menus, events, new services, business milestones, customer favourites and other relevant business updates.</p>
+  <div class="callout">Content remains subject to Auntie Tobi's content and advertising guidelines.</div>
+</div>
+
+<div class="card">
+  <div class="section-icon">🔁</div>
+  <div class="section-tag">Up to once per week</div>
+  <div class="section-title">Weekly Post / Reel Repost</div>
+  <p class="body">Business Club members can tag <b>one eligible Instagram post or Reel per week</b> for consideration using Instagram's Repost feature. This means Auntie Tobi can help give suitable member content additional visibility without republishing it as a new Auntie Tobi feed post.</p>
+</div>
+
+<!-- DIRECTORY -->
+<div class="s-header">
+  <div class="s-header-ico">⭐</div>
+  <div class="s-header-txt">Stand Out in the Directory</div>
+</div>
+
+<div class="card">
+  <div class="section-icon">⭐</div>
+  <div class="section-tag">Apply during membership</div>
+  <div class="section-title">Verification Opportunity</div>
+  <p class="body">Business Club members can apply to go through the <b>Auntie Tobi Business Verification process</b>. Businesses that successfully complete the required checks can receive an <b>Auntie Tobi Verified badge</b> on their directory profile.</p>
+  <div class="callout">Membership does not automatically make a business Verified. The badge means the business has completed Auntie Tobi's stated verification checks. It is not a guarantee of the quality of its products or services.</div>
+</div>
+
+<div class="card">
+  <div class="section-icon">⬆️</div>
+  <div class="section-tag">Enhanced visibility</div>
+  <div class="section-title">Priority Directory Placement</div>
+  <p class="body">Business Club members receive <b>priority visibility within relevant Auntie Tobi Business Directory searches and categories</b> compared with standard free listings — when someone searches by 📍 location or 💄 category.</p>
+</div>
+
+<div class="card">
+  <div class="section-icon">⭐</div>
+  <div class="section-tag">Rotating placement</div>
+  <div class="section-title">Featured on Auntie Tobi</div>
+  <p class="body">Business Club members can also receive <b>Featured Business visibility across the Auntie Tobi website and app</b> during their membership.</p>
+  <p class="body" style="margin-top:10px;">This gives members additional opportunities to be discovered by people browsing Auntie Tobi beyond social media.</p>
+  <div class="callout">Featured positions rotate between eligible Business Club members and are not permanent placements.</div>
+</div>
+
+
+
+
+
+<div class="card">
+  <div class="section-icon">📚</div>
+  <div class="section-tag">Ongoing access</div>
+  <div class="section-title">Business Resources</div>
+  <p class="body" style="margin-bottom:12px;">Short, practical resources to help you market your business more effectively:</p>
+  <div class="benefit-row"><div class="b-ico">📸</div><div class="b-text">How to Take Better Product Photos</div></div>
+  <div class="benefit-row"><div class="b-ico">📱</div><div class="b-text">20 Reel Ideas for Small Businesses</div></div>
+  <div class="benefit-row"><div class="b-ico">✍🏾</div><div class="b-text">How to Write Captions That Sell</div></div>
+  <div class="benefit-row"><div class="b-ico">💷</div><div class="b-text">How to Price Your Products</div></div>
+  <div class="benefit-row"><div class="b-ico">⭐</div><div class="b-text">How to Get More Customer Reviews</div></div>
+  <div class="benefit-row"><div class="b-ico">📲</div><div class="b-text">How to Set Up WhatsApp Business</div></div>
+  <div class="benefit-row"><div class="b-ico">🎥</div><div class="b-text">How to Create Simple Reels</div></div>
+  <div class="benefit-row"><div class="b-ico">🗓️</div><div class="b-text">Monthly and seasonal content ideas</div></div>
+</div>
+
+<!-- COLLABORATION -->
+<div class="card">
+  <div class="section-icon">🤝</div>
+  <div class="section-tag">Member benefit</div>
+  <div class="section-title">Collaboration Opportunities</div>
+  <p class="body">Auntie Tobi Business Club helps members discover other Nigerian-owned businesses that may be suitable for collaborations.</p>
+  <div class="example-list" style="margin-top:10px;">
+    <div class="example-item">🎂 Baker × Event Planner</div>
+    <div class="example-item">💄 Makeup Artist × Photographer</div>
+    <div class="example-item">🍲 Caterer × Decorator</div>
+    <div class="example-item">👗 Fashion Brand × Content Creator</div>
+    <div class="example-item">🎁 Gift Business × Event Business</div>
+  </div>
+  <div class="callout">Members can indicate whether they're open to collaborations and the types of businesses they'd like to connect with. Auntie Tobi can help facilitate introductions where appropriate, but collaborations and their outcomes are not guaranteed.</div>
+</div>
+
+<!-- CHECK-UP -->
+<div class="card">
+  <div class="section-icon">📊</div>
+  <div class="section-tag">1 per membership year</div>
+  <div class="section-title">Annual Instagram Business Check-Up</div>
+  <p class="body">Is your Instagram page ready when potential customers arrive? Every Business Club member receives <b>one Auntie Tobi Instagram Business Check-Up during their 12-month membership</b>.</p>
+  <p class="body" style="margin-top:10px;">We'll review your bio, profile presentation, how clearly you explain what you offer, location/service area, contact and ordering information, highlights, pinned content, calls-to-action, content presentation and how easy it is for a potential customer to understand what to do next.</p>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+    <div style="background:#f0faf5;border-radius:9px;padding:12px 14px;font-size:14px;font-weight:600;color:#057A44;">✅ What's working</div>
+    <div style="background:#FFF8E7;border-radius:9px;padding:12px 14px;font-size:14px;font-weight:600;color:#B45309;">⚠️ What could be improved</div>
+    <div style="background:#f0f4ff;border-radius:9px;padding:12px 14px;font-size:14px;font-weight:600;color:#1D4ED8;">🎯 Suggested next steps</div>
+  </div>
+</div>
+
+<!-- EVERYTHING INCLUDED -->
+<div class="s-header">
+  <div class="s-header-ico">💚</div>
+  <div class="s-header-txt">Everything Included</div>
+</div>
+
+<div class="card">
+  <p class="body" style="margin-bottom:14px;">Your <b>£49.99 annual Business Club membership</b> includes:</p>
+  <div class="included-grid">
+    <div class="inc-row"><div class="inc-ico">🌟</div><div>1 Dedicated Business Spotlight — Instagram + Blog</div></div>
+    <div class="inc-row"><div class="inc-ico">📣</div><div>Monthly Business Group Promotion — up to 12 per year</div></div>
+    <div class="inc-row"><div class="inc-ico">📲</div><div>Weekly eligible Story repost opportunity</div></div>
+    <div class="inc-row"><div class="inc-ico">🔁</div><div>Weekly eligible Post/Reel Repost opportunity</div></div>
+    <div class="inc-row"><div class="inc-ico">⭐</div><div>Business Verification opportunity</div></div>
+    <div class="inc-row"><div class="inc-ico">⭐</div><div>Rotating Featured Business placement on Auntie Tobi website &amp; app</div></div>
+    <div class="inc-row"><div class="inc-ico">⬆️</div><div>Priority Business Directory placement</div></div>
+    <div class="inc-row"><div class="inc-ico">🛍️</div><div>Marketplace Product/Service placement on app &amp; website</div></div>
+    <div class="inc-row"><div class="inc-ico">📚</div><div>Business resources</div></div>
+    <div class="inc-row"><div class="inc-ico">🤝</div><div>Collaboration opportunities</div></div>
+    <div class="inc-row"><div class="inc-ico">📊</div><div>Annual Instagram Business Check-Up</div></div>
+  </div>
+  <div style="background:#0F1E36;border-radius:10px;padding:14px;text-align:center;margin-top:16px;">
+    <div style="font-size:20px;font-weight:800;color:#FFB81C;">All for £49.99 for 12 months</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.6);margin-top:4px;">Approximately £4.17 per month</div>
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="card">
+  <div class="section-icon">🛍️</div>
+  <div class="section-tag">Active membership benefit</div>
+  <div class="section-title">Marketplace Product / Service Placement</div>
+  <p class="body">Business Club members can feature <b>one product or service on the Auntie Tobi App &amp; Website</b> throughout their active membership.</p>
+  <p class="body" style="margin-top:10px;">Customers can discover what you offer and click directly to your website, booking page or WhatsApp to buy, book or enquire.</p>
+</div>
+
+<div class="s-header">
+  <div class="s-header-ico">📋</div>
+  <div class="s-header-txt">Free Listing vs Business Club</div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th class="free-col">Free</th>
+          <th class="club-col">💚 Club</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Business Directory Listing</td><td class="free-col">✓</td><td class="club-col">✓</td></tr>
+        <tr><td>Claim & Manage Listing</td><td class="free-col">✓</td><td class="club-col">✓</td></tr>
+        <tr><td>Organic feature possibility</td><td class="free-col">✓</td><td class="club-col">✓</td></tr>
+        <tr><td>Dedicated Business Spotlight</td><td class="free-col">—</td><td class="club-col">✓ 1/year</td></tr>
+        <tr><td>Monthly Group Promotion</td><td class="free-col">—</td><td class="club-col">✓ Up to 12/yr</td></tr>
+        <tr><td>Weekly Story Repost</td><td class="free-col">—</td><td class="club-col">✓</td></tr>
+        <tr><td>Weekly Post/Reel Repost</td><td class="free-col">—</td><td class="club-col">✓</td></tr>
+        <tr><td>Priority Directory Placement</td><td class="free-col">—</td><td class="club-col">✓</td></tr>
+        <tr><td>Featured Website/App Placement</td><td class="free-col">—</td><td class="club-col">✓ Rotating</td></tr>
+        <tr><td>Featured Website/App Placement</td><td class="free-col">—</td><td class="club-col">✓ Rotating</td></tr>
+        <tr><td>Verification Opportunity</td><td class="free-col">—</td><td class="club-col">✓</td></tr>
+        <tr><td>Group Advertising Benefits</td><td class="free-col">—</td><td class="club-col">✓</td></tr>
+        <tr><td>Marketplace Placement</td><td class="free-col">—</td><td class="club-col">✓</td></tr>
+        <tr><td>Business Resources</td><td class="free-col">—</td><td class="club-col">✓</td></tr>
+        <tr><td>Collaboration Opportunities</td><td class="free-col">—</td><td class="club-col">✓</td></tr>
+        <tr><td>Instagram Business Check-Up</td><td class="free-col">—</td><td class="club-col">✓ Annual</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+    <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
+      <div style="font-size:13px;font-weight:700;color:#6B7280;margin-bottom:4px;">Free Listing</div>
+      <div style="font-size:13px;color:#555;line-height:1.5;">Be available to be discovered.</div>
+    </div>
+    <div style="background:#f0faf5;border-radius:10px;padding:12px;text-align:center;">
+      <div style="font-size:13px;font-weight:700;color:#057A44;margin-bottom:4px;">💚 Business Club</div>
+      <div style="font-size:13px;color:#555;line-height:1.5;">Don't just wait. Let Auntie Tobi help you stay visible.</div>
+    </div>
+  </div>
+</div>
+
+<!-- IS IT FOR YOU -->
+<div class="card">
+  <div class="section-icon">💡</div>
+  <div class="section-title">Is the Business Club for you?</div>
+  <p class="body" style="margin-bottom:14px;">The Business Club may be suitable if you're a Nigerian business owner in the UK who wants to:</p>
+  <div class="fit-row"><div style="font-size:18px;flex-shrink:0;width:26px;">📣</div><div>Increase your business visibility</div></div>
+  <div class="fit-row"><div style="font-size:18px;flex-shrink:0;width:26px;">🇳🇬</div><div>Reach more of the Nigerian community in the UK</div></div>
+  <div class="fit-row"><div style="font-size:18px;flex-shrink:0;width:26px;">📱</div><div>Improve how you present your business online</div></div>
+  <div class="fit-row"><div style="font-size:18px;flex-shrink:0;width:26px;">💡</div><div>Get help with content ideas</div></div>
+  <div class="fit-row"><div style="font-size:18px;flex-shrink:0;width:26px;">🤝</div><div>Connect with other Nigerian businesses</div></div>
+  <div class="fit-row"><div style="font-size:18px;flex-shrink:0;width:26px;">📍</div><div>Stand out in the Auntie Tobi Business Directory</div></div>
+  <div class="fit-row"><div style="font-size:18px;flex-shrink:0;width:26px;">💚</div><div>Be part of a growing Nigerian business community</div></div>
+</div>
+
+<!-- CTA -->
+<div class="cta-card">
+  <div class="cta-title">Auntie Tobi Business Club</div>
+  <div class="cta-price">£49.99</div>
+  <div class="cta-duration">for 12 months · approximately £4.17 per month</div>
+  <div class="cta-tagline">Get seen. Get support. Make connections.</div>
+  <a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%27m%20interested%20in%20joining%20the%20Business%20Club" target="_blank" class="cta-btn">JOIN THE BUSINESS CLUB →</a>
+  <p class="cta-note">Message us on WhatsApp to get started</p>
+</div>
+
+</div>
+</body>
+</html>
