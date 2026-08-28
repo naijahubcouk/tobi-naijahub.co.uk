@@ -1188,15 +1188,15 @@ CRITICAL RULES:
 "Great question! 😊 Here's everything you need to know:
 
 👉 **Already listed on Auntie Tobi?**
-You can claim your listing by visiting your business page on <a href="https://auntietobi.com" target="_blank" style="color:#057A44;font-weight:700;">auntietobi.com</a> and clicking 'Claim this listing'. Once claimed you can log in to your dashboard to manage your profile and upgrade to the Premium Membership.
+You can claim your listing by visiting your business page on <a href="https://auntietobi.com" target="_blank" style="color:#057A44;font-weight:700;">auntietobi.com</a> and clicking 'Claim this listing'. Once claimed you can log in to your dashboard to manage your profile and upgrade to the Auntie Tobi Business Club.
 
 👉 **Not listed yet?**
 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Add your business here</a> — it's free to get started!
 
-⭐ **Premium Membership — £49.99/yr**
+⭐ **Auntie Tobi Business Club — £49.99/yr**
 Upgrade in your dashboard to unlock:
 
-⭐ Premium Membership — £49.99/yr
+⭐ Auntie Tobi Business Club — £49.99/yr
 
 📌 Verified Member Badge — Display a trusted Verified Member badge and showcase your complete business profile, including your services, contact details and business information.
 🌟 Featured on Auntie Tobi — Your business is featured for increased visibility across both platforms (website and app).
@@ -1209,9 +1209,9 @@ Ready to get started? 👉 <a href="https://auntietobi.com/new-listing" target="
 
 Got questions or need help claiming your listing? <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">Chat with our support team on WhatsApp</a> — we respond quickly and will sort you out! 💪🏾"
 
-When users ask "Why should I join the Premium Membership?" respond with EXACTLY this:
+When users ask "Why should I join the Auntie Tobi Business Club?" respond with EXACTLY this:
 
-"Great question! Here's why the Premium Membership is worth every penny 💷:
+"Great question! Here's why the Auntie Tobi Business Club is worth every penny 💷:
 
 🤖 Auntie Tobi ACTIVELY recommends your business — when someone asks for a makeup artist, restaurant, photographer or any service you offer, Auntie Tobi mentions YOU first. That's real customers, not just a listing nobody sees.
 
@@ -1241,7 +1241,7 @@ Key points:
 - Auntie Tobi is a directory to help people discover Nigerian-owned businesses in the UK
 - Some listings are created by the Auntie Tobi team using publicly available information
 - Business owners can claim their listing to update details, add photos and manage their profile
-- Basic listings are currently FREE. Premium/Premium Membership offers enhanced features
+- Basic listings are currently FREE. Premium/Auntie Tobi Business Club offers enhanced features
 - A Premium Listing does NOT guarantee specific results including enquiries, sales or traffic
 - Auntie Tobi may remove or suspend any listing at any time if information is inaccurate or misleading
 
@@ -2510,7 +2510,7 @@ let _searchTimer = null;
     !lowerText.includes('why should i join') &&
     !lowerText.includes('benefits of') &&
     (
-      lowerText.includes('premium membership') ||
+      lowerText.includes('Auntie Tobi Business Club') ||
       lowerText.includes('premium plan') ||
       lowerText.includes('paid plan') ||
       lowerText.includes('upgrade my listing') ||
@@ -2520,7 +2520,7 @@ let _searchTimer = null;
       lowerText.includes('get verified') ||
       lowerText.includes('verified badge') ||
       lowerText.includes('verified member') ||
-      (lowerText.includes('premium') && (lowerText.includes('listing') || lowerText.includes('join') || lowerText.includes('cost') || lowerText.includes('price') || lowerText.includes('how much') || lowerText.includes('membership')))
+      (lowerText.includes('business-club') && (lowerText.includes('listing') || lowerText.includes('join') || lowerText.includes('cost') || lowerText.includes('price') || lowerText.includes('how much') || lowerText.includes('membership')))
     )
   ) {
     removeTyping();
@@ -3191,6 +3191,8 @@ function showTobiUpdates() {
 }
 
 
+function showBusinessClub() { window.open("https://auntietobi.co.uk/business-club", "_blank"); }
+
 function showMoreSheet() {
   var existing = document.getElementById('more-sheet-overlay');
   if (existing) { existing.remove(); return; }
@@ -3848,10 +3850,10 @@ function showHowToBecomePremium() {
   messages.innerHTML = '';
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
     <div style="background:#057A44;padding:10px 14px;">
-      <span style="color:white;font-weight:700;font-size:14px;">💳 How do I become a Premium Member?</span>
+      <span style="color:white;font-weight:700;font-size:14px;">💳 How do I become a Business Club Member?</span>
     </div>
     <div style="padding:14px 16px;">
-      <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:14px;">It's simple! Here's how to upgrade to Premium Membership:</div>
+      <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:14px;">It's simple! Here's how to upgrade to Auntie Tobi Business Club:</div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
         <div style="display:flex;gap:10px;align-items:flex-start;">
           <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
@@ -3863,7 +3865,7 @@ function showHowToBecomePremium() {
         </div>
         <div style="display:flex;gap:10px;align-items:flex-start;">
           <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
-          <div style="font-size:13px;color:#0F1E36;line-height:1.6;"><strong>In your dashboard</strong> — you'll see the option to upgrade to Premium Membership and complete your payment.</div>
+          <div style="font-size:13px;color:#0F1E36;line-height:1.6;"><strong>In your dashboard</strong> — you'll see the option to upgrade to Auntie Tobi Business Club and complete your payment.</div>
         </div>
       </div>
       <div style="background:#FFF8E7;border:1px solid #FFB81C;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
@@ -3874,7 +3876,7 @@ function showHowToBecomePremium() {
   </div>`;
   addTipMessage(html);
   const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ View Premium Membership</button><button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ View Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
 }
 
 function showFAQCard(suppressBubbles = false) {
@@ -3999,7 +4001,7 @@ function showFAQCard(suppressBubbles = false) {
 
       <div class="faq-row" style="border-top:1px solid #e5e7eb;">
         <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
-          <span style="font-size:13px;font-weight:700;color:#0F1E36;">⭐ Tell me about Premium Membership</span>
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">⭐ Tell me about Auntie Tobi Business Club</span>
           <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
         </button>
         <div class="faq-answer" style="display:none;padding-bottom:14px;">
@@ -4023,11 +4025,11 @@ function showFAQCard(suppressBubbles = false) {
 
       <div class="faq-row" style="border-top:1px solid #e5e7eb;">
         <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
-          <span style="font-size:13px;font-weight:700;color:#0F1E36;">💳 How do I become a Premium Member?</span>
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">💳 How do I become a Business Club Member?</span>
           <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
         </button>
         <div class="faq-answer" style="display:none;padding-bottom:14px;">
-          <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:12px;">It's simple! Here's how to upgrade to Premium Membership:</div>
+          <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:12px;">It's simple! Here's how to upgrade to Auntie Tobi Business Club:</div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
             <div style="display:flex;gap:10px;align-items:flex-start;">
               <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
@@ -4039,7 +4041,7 @@ function showFAQCard(suppressBubbles = false) {
             </div>
             <div style="display:flex;gap:10px;align-items:flex-start;">
               <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
-              <div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>In your dashboard</strong> — you'll see the option to upgrade to Premium Membership and complete your payment there.</div>
+              <div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>In your dashboard</strong> — you'll see the option to upgrade to Auntie Tobi Business Club and complete your payment there.</div>
             </div>
           </div>
           <div style="background:#FFF8E7;border:1px solid #FFB81C;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -4757,7 +4759,7 @@ function showLinksPage() {
     <a href="https://auntietobi.co.uk/business-club" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #057A44;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">💚</span>
       <span style="flex:1;text-align:left;">Auntie Tobi Business Club
-        <span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:2px;">£49.99/year — visibility, support & growth for Nigerian businesses</span>
+        <span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:2px;">Visibility, support &amp; growth for Nigerian businesses in the UK</span>
       </span>
       <span style="color:#057A44;font-size:18px;">›</span>
     </a>
@@ -5003,7 +5005,7 @@ function showPaidPlanCard() {
   const html = `<div style="background:white;border:2px solid #057A44;border-radius:12px;overflow:hidden;">
     <div style="background:#057A44;padding:14px 16px;text-align:center;">
       <div style="display:inline-block;background:#FFB81C;color:#412402;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;margin-bottom:8px;">⭐ Most Popular</div>
-      <div style="font-size:17px;font-weight:700;color:white;margin-bottom:4px;">Premium Membership</div>
+      <div style="font-size:17px;font-weight:700;color:white;margin-bottom:4px;">Auntie Tobi Business Club</div>
       <div style="font-size:26px;font-weight:700;color:#FFB81C;">£49.99<span style="font-size:13px;color:rgba(255,255,255,0.75);font-weight:400;">/yr</span></div>
       <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:4px;">Get your business seen by Nigerians in the UK</div>
     </div>
@@ -5040,7 +5042,7 @@ function showPaidPlanCard() {
   </div>`;
   addTipMessage(html);
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-    <button class="suggestion-btn" onclick="showHowToBecomePremium()">💳 How do I become a Premium Member?</button>
+    <button class="suggestion-btn" onclick="showHowToBecomePremium()">💳 How do I become a Business Club Member?</button>
     <button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">📋 How do I list my business?</button>
     <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>
   </div>`);
@@ -5859,7 +5861,7 @@ function handleDeepLink() {
     return;
   }
 
-  if (action === 'premium') {
+  if (action === 'business-club') {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
@@ -5874,7 +5876,7 @@ function handleDeepLink() {
     setTimeout(() => {
       showFAQCard(true);
       const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button><button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
     }, 300);
   } else if (action === 'japa') {
@@ -5882,7 +5884,7 @@ function handleDeepLink() {
   } else if (action === 'nhs') {
     nhsMode = true;
     setTimeout(() => { quickAsk('What NHS services can I access as a Nigerian in the UK?'); window.history.replaceState({}, '', window.location.pathname); }, 500);
-  } else if (action === 'premium') {
+  } else if (action === 'business-club') {
     setTimeout(() => { showPaidPlanCard(); }, 300);
   } else if (action === 'businesses') {
     setTimeout(() => { resetAndShow(showBusinesses); }, 300);
@@ -7430,7 +7432,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     +'<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All businesses</button>'
     +'<button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>'
     +'<button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button>'
-    +'<button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Premium Membership</button>'
+    +'<button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Auntie Tobi Business Club</button>'
     +'</div>');
 
   // 4. CTA
