@@ -226,7 +226,7 @@
   }
 
   .msg.user { align-self: flex-end; flex-direction: row-reverse; }
-  .msg.bot { align-self: flex-start; width: 96%; }
+  .msg.bot { align-self: flex-start; width: 100%; }
 
   .avatar {
     width: 32px;
@@ -5141,11 +5141,7 @@ function showFeaturedCarousel() {
     if (el) el.innerHTML = renderSlide(current);
   };
 
-  var wrapper = document.createElement('div');
-  wrapper.id = 'featured-carousel-slot';
-  wrapper.innerHTML = renderSlide(0);
-  var msgs = document.getElementById('messages');
-  msgs.appendChild(wrapper);
+  addTipMessage('<div id="featured-carousel-slot">' + renderSlide(0) + '</div>');
 }
 
 function showFeaturedBusinesses() {
@@ -5206,13 +5202,11 @@ function showMarketplaceCarousel() {
 
   window._mpGoTo = function(idx) {
     var el = document.getElementById('mp-carousel-slot');
-    if (el) el.innerHTML = renderSlide(idx);
+    if (el) { el.innerHTML = renderSlide(idx); }
   };
 
-  var wrapper = document.createElement('div');
-  wrapper.id = 'mp-carousel-slot';
-  wrapper.innerHTML = renderSlide(0);
-  document.getElementById('messages').appendChild(wrapper);
+  // Use addTipMessage then replace its content with the carousel slot
+  var msg = addTipMessage('<div id="mp-carousel-slot">' + renderSlide(0) + '</div>');
 }
 
 function showMarketplace(filterCat) {
@@ -9435,7 +9429,6 @@ function resetToWelcome() {
       // News card placeholder — filled by loadLiveFeeds when feed is ready
       addTipMessage('<div data-news-card-placeholder="1" style="display:none;"></div>');
       liveNewsShownCount = 2;
-      showSponsoredAd();
       const tip = getTodaysTip();
       console.log('tip:', tip);
       const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
@@ -9678,7 +9671,7 @@ function hardRefreshApp() {
 }
 
 function shareAuntieTobi() {
-  const shareText = '🤖 Meet Auntie Tobi – Your UK Guide for Nigerians 🇬🇧🇳🇬\n\nGet trusted answers, discover Nigerian businesses and events, find jobs, and stay updated with UK news and immigration. 💚\n\nInstall the app and turn on notifications.\n\n👉 Try it FREE: auntietobi.co.uk';
+  const shareText = '🤖 Meet Auntie Tobi – Your UK Guide for Nigerians 🇬🇧🇳🇬\n\nGet answers, discover Nigerian businesses and events, find jobs, and stay updated with UK news and immigration. 💚\n\nInstall the app and turn on notifications.\n\n👉 Try it FREE: auntietobi.co.uk';
   if (navigator.share) {
     navigator.share({
       title: '🤖 Meet Auntie Tobi – Your UK Guide for Nigerians 🇬🇧🇳🇬',
