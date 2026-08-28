@@ -5148,9 +5148,11 @@ function showFeaturedCarousel() {
     window._featSwipe = { cur: 0 };
     window._featSwipe.goTo = function(i) {
       window._featSwipe.cur = ((i%count)+count)%count;
-      track.style.transform = 'translateX(-' + (window._featSwipe.cur*100) + '%)';
+      track.style.transform = 'translateX(-' + (window._featSwipe.cur * wrap.offsetWidth) + 'px)';
       for (var j=0;j<count;j++) { var d=document.getElementById('feat-dot-'+j); if(d){d.style.width=j===window._featSwipe.cur?'20px':'8px';d.style.borderRadius=j===window._featSwipe.cur?'4px':'50%';d.style.background=j===window._featSwipe.cur?'#FFB81C':'#e0e0e0';} }
     };
+    var slideEls2 = track.querySelectorAll('div[style*="min-width:100%"]');
+    slideEls2.forEach(function(s){ s.style.minWidth = wrap.offsetWidth + 'px'; s.style.width = wrap.offsetWidth + 'px'; });
     var sx=0,drag=false,moved=false;
     wrap.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;drag=true;moved=false;},{passive:true});
     wrap.addEventListener('touchmove',function(e){if(drag)moved=true;},{passive:true});
@@ -5227,12 +5229,16 @@ function showMarketplaceCarousel() {
     window._mpSwipe = { cur: 0 };
     window._mpSwipe.goTo = function(i) {
       window._mpSwipe.cur = ((i % count) + count) % count;
-      track.style.transform = 'translateX(-' + (window._mpSwipe.cur * 100) + '%)';
+      var slideW = wrap.offsetWidth;
+      track.style.transform = 'translateX(-' + (window._mpSwipe.cur * slideW) + 'px)';
       for (var j = 0; j < count; j++) {
         var d = document.getElementById('mp-dot-' + j);
         if (d) { d.style.width = j===window._mpSwipe.cur?'20px':'8px'; d.style.borderRadius = j===window._mpSwipe.cur?'4px':'50%'; d.style.background = j===window._mpSwipe.cur?'#057A44':'#e0e0e0'; }
       }
     };
+    // Set each slide width explicitly
+    var slideEls = track.querySelectorAll('div[style*="min-width:100%"]');
+    slideEls.forEach(function(s){ s.style.minWidth = wrap.offsetWidth + 'px'; s.style.width = wrap.offsetWidth + 'px'; });
     var sx = 0, sy = 0, drag = false, moved = false;
     wrap.addEventListener('touchstart', function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; drag=true; moved=false; }, {passive:true});
     wrap.addEventListener('touchmove', function(e){ if(drag) moved=true; }, {passive:true});
