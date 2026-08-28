@@ -1,5 +1,15 @@
 [
   {
+    "id": "1787945551683",
+    "title": "Energy Bills Going Up Again 📈",
+    "message": "Your October bills are rising 4%. Let's break down what this means for your wallet and budget.",
+    "pushMessage": "Your October bills are rising 4%. Let's break down what this means for your wallet and budget.",
+    "type": "update",
+    "sourceUrl": null,
+    "date": "2026-08-28T19:32:31.683Z",
+    "slug": "update-energy-bills-going-up-aga"
+  },
+  {
     "id": "1787944916736",
     "title": "Energy Prices Going Up Again",
     "message": "Your bills are rising 4% from October. Here's what you need to know to stay prepared.",
