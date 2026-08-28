@@ -5100,48 +5100,66 @@ function buildFeaturedCard(b, compact) {
 function showFeaturedCarousel() {
   var featured = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured; });
   if (!featured.length) return;
-  var current = 0;
 
-  function renderSlide(idx) {
-    var b = featured[idx];
+  var slides = featured.map(function(b, i) {
     var verHtml = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:8px;"><svg style="width:13px;height:13px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:12px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
     var waBtn = b.wa ? '<a href="https://wa.me/' + b.wa + '" target="_blank" style="flex:1;padding:10px;background:#25D366;color:white;border-radius:8px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>' : '';
-    var dots = featured.map(function(_, i){
-      return '<div style="width:' + (i===idx?'20px':'8px') + ';height:8px;border-radius:' + (i===idx?'4px':'50%') + ';background:' + (i===idx?'#FFB81C':'#e0e0e0') + ';transition:.2s;cursor:pointer;" onclick="window._featGoTo(' + i + ')"></div>';
-    }).join('');
-    return '<div style="background:white;border-radius:14px;overflow:visible;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
-      + '<div onclick="showFeaturedBusinesses()" style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-radius:14px 14px 0 0;">'
-      + '<div style="color:white;font-size:14px;font-weight:700;">⭐ Featured Businesses</div>'
-      + '<div style="color:#FFB81C;font-size:12px;font-weight:600;">See all →</div>'
-      + '</div>'
-      + '<div style="border:2px solid #FFB81C;border-radius:14px;position:relative;background:white;margin:14px 12px 10px;">'
-      + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;">⭐ Featured Business</div>'
-      + '<div style="padding:20px 14px 14px;">'
+    return '<div style="min-width:100%;flex-shrink:0;">'
+      + '<div style="border:2px solid #FFB81C;border-radius:14px;position:relative;margin:14px 12px 12px;background:white;cursor:grab;user-select:none;">'
+      + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;pointer-events:none;">⭐ Featured Business</div>'
+      + '<div style="padding:20px 14px 14px;pointer-events:none;">'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">'
       + '<div style="font-size:16px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + '</div>'
       + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + (b.cat||'Business') + '</span>'
-      + '</div>'
-      + verHtml
+      + '</div>' + verHtml
       + '<p style="font-size:13px;color:#444;line-height:1.6;margin-bottom:8px;">' + (b.desc||'') + '</p>'
       + '<p style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'') + '</p>'
-      + '<div style="display:flex;gap:8px;">'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;padding:0 14px 14px;pointer-events:auto;">'
       + '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">View Details</a>'
-      + waBtn
-      + '</div></div></div>'
-      + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px 14px;">'
-      + (featured.length > 1 ? '<button onclick="window._featGoTo(' + ((idx-1+featured.length)%featured.length) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;">‹</button>' : '')
-      + dots
-      + (featured.length > 1 ? '<button onclick="window._featGoTo(' + ((idx+1)%featured.length) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;">›</button>' : '')
-      + '</div></div>';
-  }
+      + waBtn + '</div></div></div>';
+  }).join('');
 
-  window._featGoTo = function(idx) {
-    current = idx;
-    var el = document.getElementById('featured-carousel-slot');
-    if (el) el.innerHTML = renderSlide(current);
-  };
+  var count = featured.length;
+  var dots = featured.map(function(_, i){
+    return '<div id="feat-dot-' + i + '" style="width:' + (i===0?'20':'8') + 'px;height:8px;border-radius:' + (i===0?'4px':'50%') + ';background:' + (i===0?'#FFB81C':'#e0e0e0') + ';transition:.2s;cursor:pointer;flex-shrink:0;" onclick="window._featSwipe.goTo(' + i + ')"></div>';
+  }).join('');
 
-  addTipMessage('<div id="featured-carousel-slot">' + renderSlide(0) + '</div>');
+  var html = '<div style="background:white;border-radius:14px;overflow:visible;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
+    + '<div onclick="showFeaturedBusinesses()" style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-radius:14px 14px 0 0;">'
+    + '<div style="color:white;font-size:14px;font-weight:700;">⭐ Featured Businesses</div>'
+    + '<div style="color:#FFB81C;font-size:12px;font-weight:600;">See all →</div>'
+    + '</div>'
+    + '<div id="feat-swipe-wrap" style="overflow:hidden;position:relative;">'
+    + '<div id="feat-swipe-track" style="display:flex;transition:transform 0.3s ease;">'
+    + slides + '</div></div>'
+    + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px 14px;">'
+    + (count>1?'<button onclick="window._featSwipe.goTo(window._featSwipe.cur-1)" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">‹</button>':'')
+    + dots
+    + (count>1?'<button onclick="window._featSwipe.goTo(window._featSwipe.cur+1)" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">›</button>':'')
+    + '</div></div>';
+
+  addTipMessage(html);
+
+  setTimeout(function() {
+    var wrap = document.getElementById('feat-swipe-wrap');
+    var track = document.getElementById('feat-swipe-track');
+    if (!wrap || !track) return;
+    window._featSwipe = { cur: 0 };
+    window._featSwipe.goTo = function(i) {
+      window._featSwipe.cur = ((i%count)+count)%count;
+      track.style.transform = 'translateX(-' + (window._featSwipe.cur*100) + '%)';
+      for (var j=0;j<count;j++) { var d=document.getElementById('feat-dot-'+j); if(d){d.style.width=j===window._featSwipe.cur?'20px':'8px';d.style.borderRadius=j===window._featSwipe.cur?'4px':'50%';d.style.background=j===window._featSwipe.cur?'#FFB81C':'#e0e0e0';} }
+    };
+    var sx=0,drag=false,moved=false;
+    wrap.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;drag=true;moved=false;},{passive:true});
+    wrap.addEventListener('touchmove',function(e){if(drag)moved=true;},{passive:true});
+    wrap.addEventListener('touchend',function(e){if(!drag||!moved)return;var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40)window._featSwipe.goTo(dx<0?window._featSwipe.cur+1:window._featSwipe.cur-1);drag=false;});
+    wrap.addEventListener('mousedown',function(e){sx=e.clientX;drag=true;moved=false;e.preventDefault();});
+    wrap.addEventListener('mousemove',function(e){if(drag)moved=true;});
+    wrap.addEventListener('mouseup',function(e){if(!drag||!moved)return;var dx=e.clientX-sx;if(Math.abs(dx)>40)window._featSwipe.goTo(dx<0?window._featSwipe.cur+1:window._featSwipe.cur-1);drag=false;});
+    wrap.addEventListener('mouseleave',function(){drag=false;});
+  }, 100);
 }
 
 function showFeaturedBusinesses() {
@@ -5163,58 +5181,67 @@ function showFeaturedBusinesses() {
 function showMarketplaceCarousel() {
   if (!MARKETPLACE_PRODUCTS.length) return;
 
-  function renderSlide(idx) {
-    var p = MARKETPLACE_PRODUCTS[idx];
+  var slides = MARKETPLACE_PRODUCTS.map(function(p, i) {
     var imgHtml = p.img
-      ? '<img src="' + p.img + '" style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;">'
-      : '<div style="width:100%;height:200px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:54px;">' + (p.emoji||'🛍️') + '</div>';
-    var dots = MARKETPLACE_PRODUCTS.map(function(_, i){
-      return '<div onclick="window._mpGoTo(' + i + ')" style="width:' + (i===idx?'20':'8') + 'px;height:8px;border-radius:' + (i===idx?'4px':'50%') + ';background:' + (i===idx?'#057A44':'#e0e0e0') + ';transition:.2s;cursor:pointer;flex-shrink:0;"></div>';
-    }).join('');
-    var prevBtn = '<button onclick="window._mpGoTo(' + ((idx-1+MARKETPLACE_PRODUCTS.length)%MARKETPLACE_PRODUCTS.length) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">‹</button>';
-    var nextBtn = '<button onclick="window._mpGoTo(' + ((idx+1)%MARKETPLACE_PRODUCTS.length) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">›</button>';
-    return imgHtml
+      ? '<img src="' + p.img + '" style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;pointer-events:none;">'
+      : '<div style="width:100%;height:200px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:54px;pointer-events:none;">' + (p.emoji||'🛍️') + '</div>';
+    return '<div style="min-width:100%;flex-shrink:0;">'
+      + imgHtml
       + '<div style="padding:14px 14px 16px;">'
       + '<div style="font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">💻 ' + p.category + '</div>'
       + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:4px;">' + p.name + '</div>'
       + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:8px;">' + p.business + '</div>'
       + '<div style="font-size:20px;font-weight:800;color:#0F1E36;margin-bottom:12px;">' + p.price + '</div>'
       + '<a href="' + p.link + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>'
-      + '</div>';
-  }
+      + '</div></div>';
+  }).join('');
 
-  window._mpGoTo = function(i) {
-    var slot = document.getElementById('mp-product-slot');
-    var nav = document.getElementById('mp-nav-slot');
-    if (slot) slot.innerHTML = renderSlide(i);
-    if (nav) {
-      var dots = MARKETPLACE_PRODUCTS.map(function(_, j){
-        return '<div onclick="window._mpGoTo(' + j + ')" style="width:' + (j===i?'20':'8') + 'px;height:8px;border-radius:' + (j===i?'4px':'50%') + ';background:' + (j===i?'#057A44':'#e0e0e0') + ';transition:.2s;cursor:pointer;flex-shrink:0;"></div>';
-      }).join('');
-      var prev = '<button onclick="window._mpGoTo(' + ((i-1+MARKETPLACE_PRODUCTS.length)%MARKETPLACE_PRODUCTS.length) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">‹</button>';
-      var next = '<button onclick="window._mpGoTo(' + ((i+1)%MARKETPLACE_PRODUCTS.length) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">›</button>';
-      nav.innerHTML = prev + dots + next;
-    }
-  };
+  var dots = MARKETPLACE_PRODUCTS.map(function(_, i){
+    return '<div id="mp-dot-' + i + '" style="width:' + (i===0?'20':'8') + 'px;height:8px;border-radius:' + (i===0?'4px':'50%') + ';background:' + (i===0?'#057A44':'#e0e0e0') + ';transition:.2s;cursor:pointer;flex-shrink:0;" onclick="window._mpSwipe.goTo(' + i + ')"></div>';
+  }).join('');
+
+  var count = MARKETPLACE_PRODUCTS.length;
 
   var html = '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
-    + '<div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-radius:14px 14px 0 0;">'
+    + '<div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">'
     + '<div style="color:white;font-size:14px;font-weight:700;">🛍️ Marketplace (Products/Services)</div>'
     + '<a href="https://auntietobi.co.uk/marketplace" target="_blank" style="color:#FFB81C;font-size:12px;font-weight:600;text-decoration:none;">See all →</a>'
     + '</div>'
-    + '<div id="mp-product-slot" style="border:1.5px solid #e0e0e0;border-radius:14px;margin:12px 12px 0;overflow:hidden;">' + renderSlide(0) + '</div>'
-    + '<a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20would%20like%20to%20list%20my%20product%20or%20service%20on%20the%20Marketplace" target="_blank" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 12px 0;background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;text-decoration:none;">'
-    + '<span style="font-size:12px;color:#0F1E36;font-weight:600;line-height:1.4;">Want to list your product or service on the Marketplace?</span>'
-    + '<span style="background:#057A44;color:white;border-radius:7px;padding:7px 11px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;">💬 Contact Us</span>'
-    + '</a>'
-    + '<div id="mp-nav-slot" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px 14px;">'
-    + '<button onclick="window._mpGoTo(' + (MARKETPLACE_PRODUCTS.length-1) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">‹</button>'
-    + MARKETPLACE_PRODUCTS.map(function(_, i){ return '<div onclick="window._mpGoTo(' + i + ')" style="width:' + (i===0?'20':'8') + 'px;height:8px;border-radius:' + (i===0?'4px':'50%') + ';background:' + (i===0?'#057A44':'#e0e0e0') + ';transition:.2s;cursor:pointer;flex-shrink:0;"></div>'; }).join('')
-    + '<button onclick="window._mpGoTo(1)" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">›</button>'
-    + '</div>'
-    + '</div>';
+    + '<div id="mp-swipe-wrap" style="overflow:hidden;position:relative;cursor:grab;user-select:none;">'
+    + '<div id="mp-swipe-track" style="display:flex;transition:transform 0.3s ease;">'
+    + slides
+    + '</div></div>'
+    + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px 14px;">'
+    + '<button onclick="window._mpSwipe.goTo(window._mpSwipe.cur-1)" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">‹</button>'
+    + dots
+    + '<button onclick="window._mpSwipe.goTo(window._mpSwipe.cur+1)" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">›</button>'
+    + '</div></div>';
 
   addTipMessage(html);
+
+  // Init swipe after DOM renders
+  setTimeout(function() {
+    var wrap = document.getElementById('mp-swipe-wrap');
+    var track = document.getElementById('mp-swipe-track');
+    if (!wrap || !track) return;
+    window._mpSwipe = { cur: 0 };
+    window._mpSwipe.goTo = function(i) {
+      window._mpSwipe.cur = ((i % count) + count) % count;
+      track.style.transform = 'translateX(-' + (window._mpSwipe.cur * 100) + '%)';
+      for (var j = 0; j < count; j++) {
+        var d = document.getElementById('mp-dot-' + j);
+        if (d) { d.style.width = j===window._mpSwipe.cur?'20px':'8px'; d.style.borderRadius = j===window._mpSwipe.cur?'4px':'50%'; d.style.background = j===window._mpSwipe.cur?'#057A44':'#e0e0e0'; }
+      }
+    };
+    var sx = 0, sy = 0, drag = false, moved = false;
+    wrap.addEventListener('touchstart', function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; drag=true; moved=false; }, {passive:true});
+    wrap.addEventListener('touchmove', function(e){ if(drag) moved=true; }, {passive:true});
+    wrap.addEventListener('touchend', function(e){ if(!drag||!moved) return; var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy; if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40) window._mpSwipe.goTo(dx<0?window._mpSwipe.cur+1:window._mpSwipe.cur-1); drag=false; });
+    wrap.addEventListener('mousedown', function(e){ sx=e.clientX; drag=true; moved=false; e.preventDefault(); });
+    wrap.addEventListener('mousemove', function(e){ if(drag) moved=true; });
+    wrap.addEventListener('mouseup', function(e){ if(!drag||!moved) return; var dx=e.clientX-sx; if(Math.abs(dx)>40) window._mpSwipe.goTo(dx<0?window._mpSwipe.cur+1:window._mpSwipe.cur-1); drag=false; });
+    wrap.addEventListener('mouseleave', function(){ drag=false; });
+  }, 100);
 }
 
 function showMarketplace(filterCat) {
@@ -9680,7 +9707,7 @@ function hardRefreshApp() {
 }
 
 function shareAuntieTobi() {
-  const shareText = '🤖 Meet Auntie Tobi – UK Guide for Nigerians 🇬🇧🇳🇬\n\nGet answers, discover Nigerian businesses and events and stay updated with UK news that matters 💚\n\nInstall the app and turn on notifications.\n\n👉 Try it FREE: auntietobi.co.uk';
+  const shareText = '🤖 Meet Auntie Tobi – UK Guide for Nigerians 🇬🇧🇳🇬\n\nGet answers, discover Nigerian businesses, events and stay updated with UK news that matters 💚\n\nInstall the app and turn on notifications.\n\n👉 Try it FREE: auntietobi.co.uk';
   if (navigator.share) {
     navigator.share({
       title: '🤖 Meet Auntie Tobi – UK Guide for Nigerians 🇬🇧🇳🇬',
