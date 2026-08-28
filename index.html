@@ -5089,8 +5089,15 @@ function showMarketplace(filterCat) {
   messages.innerHTML = '';
   scrollToTop();
 
-  var cats = ['All', 'Cakes & Treats', 'Beauty', 'Groceries', 'Gifts', 'Fashion', 'Food'];
+  var cats = ['All', 'Digital Product', 'Cakes & Treats', 'Beauty', 'Groceries', 'Gifts', 'Fashion', 'Food'];
   var active = filterCat || 'All';
+
+  var filterPills = cats.map(function(c){
+    var isActive = c === active;
+    var style = 'padding:7px 13px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid ' + (isActive ? '#057A44;background:#057A44;color:white' : '#e0e0e0;background:white;color:#0F1E36') + ';cursor:pointer;white-space:nowrap;flex-shrink:0;';
+    var label = c === 'Digital Product' ? '💻 Digital' : c;
+    return '<button data-mpcat="' + c + '" class="mp-filter-btn" style="' + style + '">' + label + '</button>';
+  }).join('');
 
   var filtered = active === 'All' ? MARKETPLACE_PRODUCTS : MARKETPLACE_PRODUCTS.filter(function(p){ return p.category === active; });
 
