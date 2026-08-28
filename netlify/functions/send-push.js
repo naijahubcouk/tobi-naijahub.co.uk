@@ -116,7 +116,7 @@ async function sendOneSignalPush(apiKey, title, message, url, sendAfterISO) {
     included_segments: ['Total Subscriptions'],
     headings: { en: title },
     contents: { en: message },
-    web_url: url || 'https://auntietobi.co.uk',
+    web_url: deepLink || 'https://auntietobi.co.uk',
     ...scheduleFields,
     chrome_web_icon: 'https://auntietobi.co.uk/icons/icon-192.png',
   });
