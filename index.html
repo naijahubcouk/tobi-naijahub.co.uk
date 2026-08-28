@@ -4757,7 +4757,15 @@ function showLinksPage() {
       <span style="color:#ccc;">›</span>
     </a>
 
-    <a href="https://auntietobi.co.uk/marketplace" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+    <a href="https://auntietobi.co.uk/featured-businesses" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">⭐</span>
+      <span style="flex:1;text-align:left;">Featured Businesses
+        <span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:2px;">Verified Nigerian businesses recommended by Auntie Tobi</span>
+      </span>
+      <span style="color:#FFB81C;">›</span>
+    </a>
+
+    <a href="https://auntietobi.co.uk/marketplace" target="_blank' style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">🛍️</span>
       <span style="flex:1;text-align:left;">Marketplace
         <span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:2px;">Products & services from Nigerian businesses in the UK</span>
@@ -5067,6 +5075,58 @@ function buildProductCard(p, compact) {
     + '<div style="font-size:15px;font-weight:800;color:#0F1E36;margin-bottom:8px;">' + p.price + '</div>'
     + '<a href="' + btnLink + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:9px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">' + btnLabel + '</a>'
     + '</div></div>';
+}
+
+function buildFeaturedCard(b, compact) {
+  var verHtml = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg style="width:12px;height:12px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
+  var waBtn = b.wa ? '<a href="https://wa.me/' + b.wa + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:7px;font-size:11px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>' : '';
+  var viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:7px;font-size:11px;font-weight:700;text-align:center;text-decoration:none;">View Details</a>';
+  var minW = compact ? 'min-width:220px;flex-shrink:0;scroll-snap-align:start;' : '';
+  var descLen = compact ? 80 : 200;
+  var desc = (b.desc||'').length > descLen ? b.desc.substring(0,descLen) + '...' : (b.desc||'');
+  return '<div style="' + minW + 'border:2px solid #FFB81C;border-radius:14px;position:relative;background:white;margin-top:10px;">'
+    + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;">⭐ Featured Business</div>'
+    + '<div style="padding:20px 12px 12px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:4px;">'
+    + '<div style="font-size:14px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + '</div>'
+    + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + (b.cat||'Business') + '</span>'
+    + '</div>'
+    + verHtml
+    + '<p style="font-size:11px;color:#444;line-height:1.5;margin-bottom:5px;">' + desc + '</p>'
+    + '<p style="font-size:11px;color:#9CA3AF;margin-bottom:10px;">📍 ' + (b.loc||'') + '</p>'
+    + '<div style="display:flex;gap:6px;">' + viewBtn + waBtn + '</div>'
+    + '</div></div>';
+}
+
+function showFeaturedCarousel() {
+  var featured = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured; });
+  if (!featured.length) return;
+  var slides = featured.map(function(b){ return buildFeaturedCard(b, true); }).join('');
+  addTipMessage(
+    '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
+    + '<div onclick="showFeaturedBusinesses()" style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">'
+    + '<div style="color:white;font-size:14px;font-weight:700;">⭐ Featured Businesses</div>'
+    + '<div style="color:#FFB81C;font-size:12px;font-weight:600;">See all →</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:10px;padding:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;">'
+    + slides + '</div></div>'
+  );
+}
+
+function showFeaturedBusinesses() {
+  window._currentPage = 'featured-businesses';
+  var messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  scrollToTop();
+  var featured = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured; });
+  addTipMessage(
+    '<div style="background:#0F1E36;border-radius:14px;padding:18px 16px;margin-bottom:4px;">'
+    + '<div style="font-size:17px;font-weight:800;color:white;margin-bottom:4px;">⭐ Featured Businesses</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.6);">Verified Nigerian businesses recommended by Auntie Tobi</div>'
+    + '</div>'
+  );
+  featured.forEach(function(b){ addTipMessage(buildFeaturedCard(b, false)); });
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinessClub()">💚 Join the Business Club</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
 
 function showMarketplaceCarousel() {
@@ -5664,194 +5724,1762 @@ function getRandomSuggestionStr() {
 // ============================================
 
 const AUNTIE_TOBI_DIRECTORY = [
-{"name":"Hilltoprise Kitchen","slug":"hilltoprise-kitchen","cat":"caterers","desc":"Hilltoprise Kitchen offers delicious meals, catering services, custom food boxes, and personalized gift boxes for different occasions. We focus on quality, care and topnotch customer experience.","loc":"Livingston, UK"},
-{"name":"Abbystoreltd","slug":"abbystoreltd","cat":"home & kitchen","desc":"We deal in household items, cookwares ,food flask, kids school bags, party packs/ souvenir etc.","loc":"Derby, UK"},
-{"name":"Eventsbykklargesse","slug":"eventsbykklargesse","cat":"event planners","desc":"Tailored Moments, Timeless Memories. We create beautiful celebrations through curated gifting and thoughtfully executed events.","loc":"Suffolk, UK"},
-{"name":"GFL BEAUTY HOME","slug":"gfl-beauty-home","cat":"wig vendors","desc":"Uncompromising quality. Seamless blending. Flawless installations. We curate the finest virgin and raw hair to give you the ultimate luxury experience.","loc":"United Kingdom"},
-{"name":"Autogelebysunshine_uk","slug":"autogelebysunshine-uk","cat":"gele stylists","desc":"Autogelesunshine_uk specializes in beautifully crafted Auto Gele, stylish men's caps, and elegant turbans for all occasions.","loc":"Liverpool, UK","wa":"447760694051"},
-{"name":"Apparelby22","slug":"apparelby22","cat":"fashion designers","desc":"We design premium, structurally beautiful garments crafted to make a sophisticated statement.","loc":"Birmingham, UK"},
-{"name":"Wendy Beauty Artistry","slug":"wendy-beauty-artistry","cat":"makeup artists","desc":"Experience beauty that truly empowers. From radiant makeup to elegant hair styling, and from flawless lashes to expert microblading, every detail is thoughtfully crafted with passion and precision.","loc":"69 Foxton Wood Ave., Ballymena BT42 4BF, UK"},
-{"name":"Bimfem Beauty Hub","slug":"bimfem-beauty-hub","cat":"skincare","desc":"Welcome to Bimfem Beauty Hub, your go-to destination in the UK for authentic African hair and skincare products. We take pride in offering a carefully curated selection of high-quality, natural produc","loc":"8 Wigeon Path, London SE28 0DS, UK"},
-{"name":"zionnzarahgele","slug":"zionnzarahgele","cat":"gele stylists","desc":"The art of modern royalty. Crafting flawless, structurally stunning Gele designs that elevate your traditional look. Crowned with precision and elegance for brides and special events.","loc":"Norwich, UK"},
-{"name":"Shoppayhairs","slug":"shoppayhairs","cat":"wig vendors","desc":"Redefining luxury hair. Premium raw and virgin wigs crafted for seamless blending and effortless glamour. Invest in your ultimate crown.","loc":"65 The Avenue, Doncaster DN4, UK"},
-{"name":"Diamond Concept Photography","slug":"diamond-concept-photography","cat":"photography","desc":"We capture timeless storytelling rooted in culture, faith, and family. Nigerian-owned UK studio serving weddings, portraits, and meaningful moments for 20+ years.","loc":"Quayside Dr, Colchester CO2, UK"},
-{"name":"Tecnis Academy","slug":"tecnis-academy","cat":"tutors","desc":"We provide engaging online and face-to-face tuition in Maths, English, Physics, Chemistry, and Biology for students from pre-school to Year 13.","loc":"55 West St, Sittingbourne ME10 1AN, UK","wa":"447792834542"},
-{"name":"Lushnaturalsuk","slug":"lushnaturalsuk","cat":"skincare","desc":"Curated natural body care products pure skincare, body enhancers, and plant-based aphrodisiacs for a holistic beauty experience.","loc":"London, UK"},
-{"name":"Elgloreenaturals","slug":"elgloreenaturals","cat":"hair care","desc":"At El Gloree, we believe that God made everything beautiful. It is our mission to provide our customers toxin-free, yet effective products that help you take care of your natural allure.","loc":"United Kingdom"},
-{"name":"Peroevents","slug":"peroevents","cat":"alaga","desc":"Events should be fun and memories not stressful. After working so hard to pay for all the event related expenses, we don’t think you should be worried about anything else.","loc":"United Kingdom"},
-{"name":"Goke Photography","slug":"goke-photography","cat":"photography","desc":"Gokephotography provides a variety of photography genres ranging from wedding photography, engagements, portraits, family portraits, children and newborn photography.","loc":"Tilbury RM18, UK"},
-{"name":"Beauty by Derin Dominiquee","slug":"beauty-by-derin-dominiquee","cat":"microblading","desc":"Beauty by Derin Dominique offers expert beauty treatments designed to enhance your natural beauty. Founded by Aderinsola, delivering confidence, elegance, and personalised care with every appointment.","loc":"Birmingham B5 6EN, UK","wa":"447784877084"},
-{"name":"Reniksmakeover","slug":"reniksmakeover","cat":"gele stylists","desc":"ReniksMakeover is a professional beauty brand specializing in luxury bridal and event makeup, hairstyling, and gele artistry.","loc":"England, UK"},
-{"name":"Flourish Paradise","slug":"flourish-paradise","cat":"alaga","desc":"FlourishParadise Event creates stunning cakes and breathtaking event decorations for weddings, birthdays, corporate events, and special occasions.","loc":"31 Broad St, Parkgate, Rotherham S62 6DX, UK"},
-{"name":"Bumexcouture","slug":"bumexcouture","cat":"ankara & traditional wears","desc":"Our company was started because we have a deep love for African culture and want to use fashion to highlight its diversity and depth.","loc":"United Kingdom"},
-{"name":"Nidakprint","slug":"nidakprint","cat":"printing services","desc":"At NidakPrint, we provide a range of packaging and custom printing solutions.","loc":"United Kingdom","wa":"447592283188"},
-{"name":"IKS","slug":"iks","cat":"shipping & logistics","desc":"International shipping. Reimagined.","loc":"London, UK"},
-{"name":"Food by Ikanke","slug":"food-by-ikanke","cat":"caterers","desc":"Food by Ikanke is a luxury catering brand specializing in bespoke private dining experiences, event catering, tablescapes, and culinary styling.","loc":"London, UK"},
-{"name":"RukkyzKitchen","slug":"rukkyzkitchen","cat":"caterers","desc":"A blend of traditional and modern African cuisine, bursting with rich spices and vibrant flavours, taking you on a delicious journey through the heart of Africa in every bite.","loc":"71-75 Shelton St, London WC2H 9JQ, UK"},
-{"name":"mobitcakes and treats","slug":"mobitcakes-and-treats","cat":"cakes & desert","desc":"mobitcakes_and_treats is a Manchester-based bakery specializing in luxury cakes and pastries. L2 food hygiene and safety certified, the brand crafts customized baked goods and treats (such as chinchin","loc":"Manchester, UK"},
-{"name":"Cakesndrips","slug":"cakesndrips","cat":"cakes & desert","desc":"cakesndrips, run by cake baker Maryam, is a Manchester-based bakery specializing in luxury bespoke cakes and Swiss meringue frosting. The brand offers custom cake designs for all occasions with delive","loc":"City Rd, Manchester, UK"},
-{"name":"lunch with bee","slug":"lunch-with-bee","cat":"caterers","desc":"lunch.with.bee is a luxe event catering service based in Manchester and available to travel. Holding a 5-star hygiene rating and Level 2 Food Safety certification","loc":"Manchester, UK"},
-{"name":"aratelabeauty","slug":"aratelabeauty","cat":"makeup artists","desc":"aratelabeauty is a Manchester-based makeup artistry service founded by Josephine Aramide Odunoye. The brand provides professional beauty services specializing in bridal glam, special occasion makeup","loc":"Manchester, UK"},
-{"name":"Tojo's","slug":"tojos","cat":"caterers","desc":"TOJO’S is a Jamaican and Nigerian fusion catering and street food brand based in Stoke-on-Trent.","loc":"England, UK"},
-{"name":"D1GRILLZ","slug":"d1grillz","cat":"suya spot","desc":"D1Grillz Mobile Catering Services delivers premium live barbecue catering, bringing authentic charcoal-grilled flavours to weddings, birthdays, corporate events, festivals, private parties.","loc":"England, UK"},
-{"name":"Nulife Multimedia","slug":"nulife-multimedia","cat":"djs","desc":"Sound Hire, DJ Equipment hire, Wedding DJ, Corporate and Events DJ Hire, Concert and religious meetings sound hire and setup","loc":"England, UK"},
-{"name":"ABChops","slug":"abchops","cat":"small chops","desc":"We focus on small chops and cocktails. We have been in business for over a year. We deliver promptly and will always work with clients budget. Our chops are top-notch and mouth watering.","loc":"Sunderland, UK"},
-{"name":"Jamesbakkeruk","slug":"jamesbakkeruk","cat":"cakes & desert","desc":"We deliver quality and delicious cakes from wedding cakes to birthday cakes we do it all","loc":"London, UK"},
-{"name":"Abenigele","slug":"abenigele","cat":"gele stylists","desc":"A London-based Gele artistry brand specialising in traditional and modern Gele styling for weddings, events, photoshoots, and creative productions.","loc":"England, UK"},
-{"name":"Mamahzxtensions","slug":"mamahzxtensions","cat":"wig vendors","desc":"Discover luxury wigs crafted from premium synthetic fibres and human hair. Lightweight, natural-looking, versatile, and easy to style for everyday confidence.","loc":"50B Kellett Rd, London SW2 1ED, UK"},
-{"name":"Fresh Mind Visuals","slug":"fresh-mind-visuals","cat":"photography","desc":"A team of Photographers & Creatives, we capture moments through photography.","loc":"Manchester, UK"},
-{"name":"Treats by Jemie","slug":"treats-by-jemie","cat":"small chops","desc":"Freshly baked African pastries in Glasgow, including meat pies, fish rolls, puff puff, and small chops. Taste home in every bite.","loc":"Glasgow, UK","wa":"447350166897"},
-{"name":"hormaposhbeautyempire","slug":"hormaposhbeautyempire","cat":"makeup artists","desc":"Professional makeup services like bridal makeup, party guest glam, celebrant glam ups, gele styling, auto gele sale, microblading, lash services, beauty training, and special event glam.","loc":"England, UK"},
-{"name":"Winifred Lux Hair","slug":"winifred-lux-hair","cat":"hair stylists/braiders","desc":"Your trusted home for custom wigs, styling and luxury extensions. 2+ years of putting 5-star quality service above the price tag. Check our reviews and shop with confidence!","loc":"Birmingham, UK"},
-{"name":"Ruqiey_glitz","slug":"ruqiey-glitz","cat":"makeup artists","desc":"A makeup artist dedicated to enhancing natural beauty with clean; flawless; and long-lasting makeup looks.","loc":"Bradford, UK"},
-{"name":"makeupbyenesmemoire","slug":"makeupbyenesmemoire","cat":"makeup artists","desc":"Makeup artistry -bridal and event makeup. Bridal trial sessions Traditional coral beads rentals (we beautify brides as well) Microblading services","loc":"Colchester, UK"},
-{"name":"Demis Restaurant","slug":"demis-restaurant","cat":"restaurants","desc":"Demi’s Restaurant in Cricklewood, London serves authentic Nigerian and West African cuisine, including jollof rice and suya, made fresh daily by expert chefs.","loc":"89 Cricklewood Broadway, London NW2 3JG, UK","wa":"447908458479"},
-{"name":"Lady in charge","slug":"lady-in-charge","cat":"ankara & traditional wears","desc":"African ready-to-wear clothing in the UK featuring Ankara, Adire, Brocade, and Aso-Oke. Stylish African fashion with fast 24-hour UK delivery available.","loc":"United Kingdom","wa":"447957999312"},
-{"name":"The Yideh Glam","slug":"the-yideh-glam","cat":"makeup artists","desc":"A professional Makeup Artist with over 4 years of experience in the beauty industry. I specialize in creating flawless, long-lasting makeup looks tailored to each client’s unique style and occasion.","loc":"Kent, UK"},
-{"name":"twinklesluxe_mua","slug":"twinklesluxe-mua","cat":"makeup artists","desc":"A professional bridal makeup artist based in Southampton, specializing in natural/ skin-like, long-lasting glams.","loc":"Southampton, UK"},
-{"name":"Dele Photography","slug":"dele-photography","cat":"photography","desc":"A Professional Photographer based in London My dedication lies in advocating for the projects I truly believe in.","loc":"London, UK"},
-{"name":"Accessories by Dija","slug":"accessories-by-dija","cat":"fashion & accessories","desc":"Premium jewellery collection for the modern individual, crafted with precision and designed to bring timeless elegance and style to every look.","loc":"35 Clare St, Northampton NN1 3JE, UK","wa":"447823794582"},
-{"name":"My Naija Nibbles","slug":"my-naija-nibbles","cat":"nigerian snacks","desc":"Authentic Naija snacks and event souvenirs based in Manchester with UK-wide delivery. Nostalgic treats beautifully packaged for every occasion—shop online today.","loc":"Manchester, UK"},
-{"name":"Dammyskitchenuk","slug":"dammyskitchenuk","cat":"caterers","desc":"Dammys Kitchen UK delivers premium Nigerian meals across the UK, saving busy professionals time on cooking and shopping. We also offer stress-free catering for events, parties, and celebrations.","loc":"Twine Rd, Lupset, Wakefield WF2 8FQ, UK","wa":"447480832467"},
-{"name":"Asowumi","slug":"asowumi","cat":"ankara & traditional wears","desc":"Shop African ready-to-wear clothing rooted in culture, blending rich African heritage with modern fashion. A leading online African fashion store serving customers worldwide.","loc":"Stafford St, Walsall WS2, UK","wa":"447440794858"},
-{"name":"Cleverkitchenuk","slug":"cleverkitchenuk","cat":"caterers","desc":"Clever Kitchen celebrates African and Caribbean culinary heritage through wholesome homemade meals made with care and tradition. We create flavorful dishes that bring people together."},
-{"name":"M’s kitchen","slug":"ms-kitchen","cat":"cakes & desert","desc":"Creating memorable experiences for every special occasion with stunning cakes; flavorful meals; and exceptional catering services.","loc":"London, UK"},
-{"name":"Preciousrolamakeup","slug":"preciousrolamakeup","cat":"makeup artists","desc":"We offer professional bridal makeup, makeup and gele styling, as well as photography and videography services, helping you look your best while beautifully capturing every special moment of your celeb","loc":"London, UK"},
-{"name":"Ncjfooduk","slug":"ncjfooduk","cat":"nigerian snacks","desc":"Discover authentic African foods in the UK including premium Kilishi, goat meat, and dried snails. Order fresh African delicacies with fast nationwide delivery from Scotland.","loc":"Scotland, UK","wa":"447479076899"},
-{"name":"Despruce Fashion","slug":"despruce-fashion","cat":"fashion & accessories","desc":"Discover premium non-tarnish jewellery and stylish clothing designed for everyday luxury. Shop affordable fashion, elegant looks, and fast UK delivery today.","loc":"United Kingdom","wa":"447472643946"},
-{"name":"Yushadcaterers","slug":"yushadcaterers","cat":"caterers","desc":"Enjoy quality catering services with a 5⭐ food hygiene rating, fully insured corporate catering, and delicious meals prepared to the highest standards.","loc":"United Kingdom"},
-{"name":"Laraskitchenuk","slug":"laraskitchenuk","cat":"caterers","desc":"Experience authentic Nigerian home cooking delivered across the UK. Enjoy delicious, affordable meals that bring comfort, tradition, and the taste of home to busy families and professionals.","loc":"Rainham, UK","wa":"447970676572"},
-{"name":"Ojanaijafoods","slug":"ojanaijafoods","cat":"foodstores & groceries","desc":"Shop premium Kpomo and smoky Panla Fish from Oja Naija Foods. Enjoy 100% natural, preservative-free Nigerian ingredients delivered across the UK for delicious, authentic meals."},
-{"name":"GlamwtJade | NORTHEAST MUA","slug":"glamwtjade-northeast-mua","cat":"makeup artists","desc":"At GlamwtJade, we create luxury, flawless, and long-lasting makeup tailored to enhance your natural beauty. Leave every appointment feeling confident, radiant, and camera-ready.","loc":"United Kingdom"},
-{"name":"Funmis Treasure","slug":"funmis-treasure","cat":"foodstores & groceries","desc":"Funmi's Treasure is your go-to source for authentic African products and foods delivered throughout the UK with speed, reliability, and a personal touch.","loc":"30 Brimsdown Ave, Laindon, Basildon SS15 6NY, UK","wa":"447435844799","verified":true},
-{"name":"BranchNaijaUK","slug":"branchnaijauk","cat":"caterers","desc":"We are Nigerian food brand bringing the rich glamour of Naija cuisine straight to the UK,From our hygienically rated 5 ⭐️ kitchen.","loc":"United Kingdom","wa":"447498878750"},
-{"name":"Ingenious Cookware UK","slug":"ingenious-cookware-uk","cat":"home & kitchen","desc":"Shop quality cookware and kitchen essentials in the UK. Registered UK brand with Klarna payments, nationwide delivery, and trusted products for every kitchen.","loc":"53, 57 Sutton Rd, Southend-on-Sea SS2 5PE, UK","wa":"447777763899"},
-{"name":"Ovenrush UK","slug":"ovenrush-uk","cat":"cakes & desert","desc":"Order custom cakes, pastries, and small chops in the UK for birthdays, weddings, baby showers, and corporate events. Freshly made and beautifully crafted. 🎂","loc":"United Kingdom"},
-{"name":"Sisiabeke Kitchen","slug":"sisiabeke-kitchen","cat":"caterers","desc":"Sisiabeke's Kitchen offers authentic African and intercontinental catering for weddings, parties, corporate events, and custom cakes. Book today.","loc":"Manchester, UK"},
-{"name":"Perissos Food","slug":"perissos-food","cat":"foodstores & groceries","desc":"Perissos Foods is dedicated to bringing people together through delicious, high-quality food made with fresh ingredients and authentic recipes.","loc":"Cambridgeshire, UK"},
-{"name":"Ireniq official","slug":"ireniq-official","cat":"fashion & accessories","desc":"IRENIQ is a premium fashion brand creating elevated everyday essentials that combine quality craftsmanship, timeless design, and modern confidence.","loc":"London, UK"},
-{"name":"Fola Fabrics Ltd","slug":"fola-fabrics-ltd","cat":"ankara & traditional wears","desc":"Luxury Fabrics & Accessories for Every Celebration Shop premium beaded, non-beaded laces, Swiss Atiku, stylish head-ties, party heels & purses for men and women — delivered across the UK, US, Canada,","loc":"Unit 41, The Mall, Luton LU1 2TD, UK"},
-{"name":"Kelldynasty","slug":"kelldynasty","cat":"ankara & traditional wears","desc":"We create stunning ready-to-wear outfits made from authentic African Ankara fabrics — bold, vibrant, and designed to make you stand out.","loc":"256 Manor Ln, Sheffield, UK"},
-{"name":"Exclusive kiddies/ fabric store","slug":"exclusive-kiddies-fabric-store","cat":"fashion & accessories","loc":"London, UK"},
-{"name":"Crownkool couture","slug":"crownkool-couture","cat":"ankara & traditional wears","desc":"Crown Kool Couture is a fashion brand specializing in bespoke and ready-to-wear outfits that combine elegance, creativity, and expert craftsmanship","loc":"Doncaster, UK","wa":"447564703169"},
-{"name":"House of Sassy Foods","slug":"house-of-sassy-foods","cat":"caterers","desc":"Order authentic Nigerian and African food from House of Sassy Foods. Enjoy online ordering, catering for weddings and events, groceries, homemade drinks, and UK-wide delivery.","loc":"United Kingdom"},
-{"name":"Teethom Events","slug":"teethom-events","cat":"event planners","desc":"Professional event décor and planning in Liverpool. We create stunning weddings, birthdays, baby showers, corporate events, balloon décor, floral styling, and custom backdrops.","loc":"Liverpool, UK"},
-{"name":"Dexzcrown Clothing","slug":"dexzcrown-clothing","cat":"fashion & accessories","desc":"Shop stylish ready-to-wear African print clothing at Dexzcrown Clothing. Discover quality Ankara fashion, inclusive sizing, secure checkout, and free UK delivery on orders over £150.","loc":"United Kingdom"},
-{"name":"ZZM Locs","slug":"zzm-locs","cat":"hair stylists/braiders","desc":"Zzmlocs is a home-based and mobile loc specialist in Canterbury, Kent, offering professional loc care with precision, patience, and genuine care. We specialise in starter locs, retwists, loc repairs.","loc":"Nutwood Ave, Sturry, Canterbury, UK"},
-{"name":"Xander Afritrade Ltd","slug":"xander-afritrade-ltd","cat":"foodstores & groceries","desc":"Shop authentic African food, beauty products, fashion, and lifestyle essentials at Xander Afritrade Ltd. Enjoy secure shopping, special offers, fast delivery, and quality products sourced from Africa.","loc":"United Kingdom"},
-{"name":"Celebritycheftreats","slug":"celebritycheftreats","cat":"nigerian snacks","desc":"Celebrity Chef Treats is a food and catering brand serving freshly prepared meals, delicious treats, and exceptional catering services for every occasion.","loc":"London, UK"},
-{"name":"Wholesale Beauty Hub","slug":"wholesale-beauty-hub","cat":"skincare","desc":"Shop skincare, makeup, beauty tools, and top brands at Wholesale Beauty Products UK. Enjoy competitive prices, next-day UK delivery, worldwide shipping, and exclusive beauty deals.","loc":"London, UK"},
-{"name":"Events to the tee","slug":"events-to-the-tee","cat":"event planners","desc":"Events to the Tee is a UK-based event planning company creating elegant weddings, birthdays, baby showers, corporate events, and unforgettable celebrations.","loc":"London, UK"},
-{"name":"Niyotee Events","slug":"niyotee-events","cat":"event planners","desc":"We are a seasoned events and wedding planner and help create amazing experiences and memories with our clients budget","loc":"Scotland, UK"},
-{"name":"House Of Erika","slug":"house-of-erika","cat":"ankara & traditional wears","desc":"House of Ekira is a contemporary fashion brand creating elegant, high-quality outfits for women who love timeless style with a modern touch.","loc":"Kent, UK","wa":"447432467585"},
-{"name":"Naetiv Asooke","slug":"naetiv-asooke","cat":"ankara & traditional wears","desc":"Naetiv Aṣọ Òkè celebrates the rich heritage of Yoruba craftsmanship through beautifully woven, premium Aṣọ Òkè fabrics.","loc":"London, UK","wa":"447402579274"},
-{"name":"Agbeke Artistry","slug":"agbeke-artistry","cat":"fashion designers","desc":"At Agbeke artistry, we curate and create Afrocentric fashion that celebrates the beauty, diversity, and heritage of Africa.","loc":"London, UK"},
-{"name":"Ron Luxury Fashion","slug":"ron-luxury-fashion","cat":"ankara & traditional wears","desc":"Ron Luxury Fashion is a premium fashion brand offering stylish, high-quality clothing and accessories for men and women who appreciate elegance and modern luxury.","loc":"Coventry, UK","wa":"447983674752"},
-{"name":"Girlush beauty","slug":"girlush-beauty","cat":"skincare","desc":"Girlush Beauty is a Manchester-based skincare and body care brand offering naturally infused products for all skin types, ages, and genders. Shop quality with UK and worldwide delivery","loc":"London, UK"},
-{"name":"Marryme foods","slug":"marryme-foods","cat":"caterers","desc":"In the heart of Glasgow, far from the warmth and rhythm of Nigeria, MarryMeFoods was born from memory, longing, and love.","loc":"54 White St, Glasgow G11 5EA, UK"},
-{"name":"Skinsential","slug":"skinsential","cat":"skincare","desc":"At Skinsentials, we believe skincare is more than a routine; it’s a form of self-care. Inspired by the desire for simple, effective, & results-driven skincare","loc":"Derbyshire, UK"},
-{"name":"Afrifresh catering","slug":"afrifresh-catering","cat":"nigerian snacks","desc":"Afrifresh is a UK-based luxury catering company, bringing together authentic African flavours, elegant desserts, refreshing drinks","loc":"110 Cheltenham Cres, Preston, UK"},
-{"name":"GNG Vogue","slug":"gng-vogue","cat":"fashion designers","desc":"GNG Vogue is a fashion and lifestyle brand offering stylish, high-quality clothing and accessories for individuals who value confidence","loc":"Newcastle, UK"},
-{"name":"Dluxe Gems UK","slug":"dluxe-gems-uk","cat":"jewelry","desc":"DLuxe Gems UK is a luxury jewellery and accessories brand offering elegant, high-quality pieces designed to elevate every look.","loc":"London, UK"},
-{"name":"Pastryzone Catering","slug":"pastryzone-catering","cat":"caterers","desc":"Pastry Zone Catering is a catering and pastry brand specializing in freshly baked treats, delicious meals, and professional catering services for all occasions","loc":"Maidstone, UK"},
-{"name":"Erni's Bakery & Foods","slug":"ernis-bakery-and-foods","cat":"cakes & desert","desc":"Handcrafted Bread and Pastries baked daily from scratch in the heart of Middlesbrough","loc":"6 Kings Rd, North Ormesby, Middlesbrough TS3 6NF, UK"},
-{"name":"DressLine","slug":"dressline","cat":"fashion designers","desc":"Dressline was founded on a simple realization: Great style has no boundaries. We saw a need for a fashion bridge,a place where the sleek, structured silhouettes of British fashion meet the bold","loc":"98 Gordon St, Leigh WN7 1RT, UK"},
-{"name":"Beauty by Derin Dominique | Semi-Permanent Beauty Treatments","slug":"beauty-by-derin-dominique-or-semi-permanent-beauty-treatments","cat":"microblading","desc":"Luxury semi-permanent beauty services including lashes, brows, tattoos, piercings, and pedicures. Where artistry meets timeless beauty.","loc":"Birmingham B5 6EN, UK"},
-{"name":"Gails Bakery","slug":"gails-bakery","cat":"cakes & desert","loc":"Bolton, UK"},
-{"name":"Gandkstyles","slug":"gandkstyles","cat":"ankara & traditional wears","desc":"Gandkstyles UK is a UK-based African fashion brand offering stylish ready-to-wear women's clothing, Ankara prints, casual wear, and jogger sets.","loc":"Glebe St, Leven KY8 4QN, UK","wa":"447887661383"},
-{"name":"Purplelips","slug":"purplelips","cat":"makeup artists","desc":"Purplelips is a premier, luxury beauty service specializing in high-end bridal and soft glam makeup artistry.","loc":"Colchester, UK","wa":"447414129863"},
-{"name":"Savvvy cosmetics","slug":"savvvy-cosmetics","cat":"skincare","desc":"Azeezat Damilola Mobolaji is a passionate skincare entrepreneur, licensed beauty expert, and the visionary founder of Savvvy Cosmetics, a skincare and spa brand rooted in science, and nature."},
-{"name":"JM Claire Beauty and Skincare Shop","slug":"jm-claire-beauty-and-skincare-shop","cat":"skincare","desc":"At JM Claire LTD, we are passionate about bringing premium hair, skin care, and cosmetic products closer to you. We combine quality with affordability to ensure that our customers enjoy only the best.","loc":"London, UK"},
-{"name":"Sleek_CollectionsUK","slug":"sleekcollectionsuk","cat":"fashion designers","desc":"Shop Sleek Collections for stylish, high-quality modest fashion, elegant turbans and ready-to-wear outfits for women. Designed for confidence, comfort and everyday elegance ! with fast UK delivery and","loc":"London, UK"},
-{"name":"Afrikenfoodsltd","slug":"afrikenfoodsltd","cat":"nigerian snacks","desc":"Afriken Foods Ltd is a trusted supplier of authentic African food products, groceries, and specialty ingredients, bringing the rich taste of Africa to homes across the UK.","loc":"United Kingdom"},
-{"name":"Ladyincharge","slug":"ladyincharge","cat":"fashion designers","desc":"Shop Ankara cloth, bubu gowns, snatch dresses, Aso Oke pants, and African bridal wear. Explore elegant kimono robes, beach kimonos, and dresses with kimonos. Bold African wear dress styles made for mo","loc":"Scarborough, UK"},
-{"name":"BeeyondBeauty.uk","slug":"beeyondbeautyuk","cat":"makeup artists","desc":"Luxury makeup artist specializing in soft glam, full glam, and bridal beauty. My goal is to enhance your natural beauty while creating a flawless, elevated finish tailored to every occasion.","loc":"Birmingham, UK"},
-{"name":"Elamen Beauty","slug":"elamen-beauty","cat":"skincare","desc":"Shop premium skincare and beauty products at Elamen Beauty. Explore face, body and makeup essentials with fast UK delivery and free shipping over £60.","loc":"London, UK"},
-{"name":"Beautybydaz Uk","slug":"beautybydaz-uk","cat":"skincare","desc":"Get the best online skincare items in London, United Kingdom from Cerave and other korean beauty skincare products. Items are affordable and delivered nationwide","loc":"London, UK"},
-{"name":"Persola Beauty","slug":"persola-beauty","cat":"makeup artists","desc":"Enhancing natural beauty with a high-end, editorial touch. Specializing in flawless, radiant skin and timeless looks for bridal, editorial, and special occasions. Let’s bring your vision to life.","loc":"Aylesbury, UK"},
-{"name":"Candy Beauty UK","slug":"candy-beauty-uk","cat":"hair stylists/braiders","desc":"Welcome to Candy Beauty, your go-to destination for high-quality hair styling and beauty care.","loc":"Walsgrave Rd, Coventry CV2 4ED, UK"},
-{"name":"Beauty Glowskin","slug":"beauty-glowskin","cat":"skincare","desc":"UK Skincare Formulator specializes in handcrafted skincare and haircare products made from scratch using carefully selected ingredients.","loc":"East London, UK"},
-{"name":"The SOE Brand","slug":"the-soe-brand","cat":"ankara & traditional wears","desc":"The SOE Brand is a fashion and lifestyle brand offering stylish, contemporary pieces designed for individuals who value confidence, quality, and effortless elegance.","loc":"Liverpool, UK"},
-{"name":"Lizzybee Pure Palms","slug":"lizzybee-pure-palms","cat":"foodstores & groceries","desc":"Shop authentic Nigerian groceries and cooking essentials from Lizzybee Pure Palms in the UK, with quality food products and convenient event equipment rentals.","loc":"Manchester, UK"},
-{"name":"Quaidnce | Gift Hampers","slug":"quaidnce-gift-hampers","cat":"gifts & hampers","desc":"Discover Quaidnce, a Manchester-based gift hamper business creating thoughtfully curated hampers for birthdays, celebrations and everyday special moments.","loc":"Manchester, UK"},
-{"name":"Yinxx Cuisine","slug":"yinxx-cuisine","cat":"nigerian snacks","desc":"Yinxx Cuisine provides a premium African food experience in Manchester. The business specializes in Amala catering, authentic African snacks","loc":"Manchester, UK"},
-{"name":"DA8 Palm Oil & Ofada Oil","slug":"da8-palm-oil-and-ofada-oil","cat":"foodstores & groceries","desc":"DA8 is a UK-based retail brand offering premium Palm Oil and Ofada Oil ethically sourced from Sierra Leone. The business provides authentic, high-quality cooking oils available for order","loc":"Manchester, UK","wa":"447438068944"},
-{"name":"Mannas Kitchen UK","slug":"mannas-kitchen-uk","cat":"caterers","desc":"We provide authentic , homemade Nigerian meals for busy professionals and families, cater for events as well as curate beautiful grazing tables","loc":"Colchester, UK","wa":"447867282805"},
-{"name":"Thebellefemme","slug":"thebellefemme","cat":"makeup artists","desc":"Thebellefemme Beauty Studio is a luxury beauty brand dedicated to enhancing natural beauty while creating an unforgettable experience for every client.","loc":"Birmingham, UK","wa":"447448676742"},
-{"name":"Multi Nutrient Africa Food & Frozen","slug":"multi-nutrient-africa-food-and-frozen","cat":"foodstores & groceries","desc":"Bringing Authentic African Flavours to Your Doorstep. Fresh, High-Quality Frozen Foods and African Groceries Delivered with Care.","loc":"unit 1, 8 Hanover St, Wakefield WF2 9BW, UK"},
-{"name":"Beauty By Jhay","slug":"beauty-by-jhay","cat":"wig vendors","desc":"Hey beautiful, you deserve nothing but the best! Explore our stunning range of premium wigs created to enhance your glow and match your unique vibe. Dive in and discover your next signature look.","loc":"London, UK"},
-{"name":"MakeOver By Teju","slug":"makeover-by-teju","cat":"makeup artists","desc":"Makeoverbyteju is a professional bridal and glam makeup service operating across Leeds and Manchester","loc":"Manchester, UK"},
-{"name":"Mayor Bite Bakery and Cafe","slug":"mayor-bite-bakery-and-cafe","cat":"restaurants","desc":"Family owned Edinburgh bakery & café serving fresh bread, traditional Nigerian pastries, and expertly crafted coffee bringing people together through authentic flavours and warm hospitality.","loc":"Westside Centre, Wester Hailes Rd, Edinburgh EH14 2SW, UK","wa":"447424989990"},
-{"name":"UK Luxury Wears","slug":"uk-luxury-wears","cat":"ankara & traditional wears","desc":"Discover UK Luxury Wears, your destination for luxury African ready-to-wear fashion in the UK. Shop elegant maxi dresses, bespoke outfits, and stylish occasion wear with worldwide delivery.","loc":"United Kingdom","wa":"447301643348"},
-{"name":"Fascinator by Olaoge","slug":"fascinator-by-olaoge","cat":"fashion & accessories","desc":"Shop luxury fascinators, headpieces, and accessories from Fascinator by Olaoge UK. Perfect for weddings, church, race days, and special occasions with worldwide shipping.","loc":"United Kingdom"},
-{"name":"Ibile Foods","slug":"ibile-foods","cat":"caterers","desc":"Ibile Foods UK is a UK-based Nigerian food brand bringing the authentic taste of home to your doorstep.","loc":"Newport, UK"},
-{"name":"Augrin Foods","slug":"augrin-foods","cat":"foodstores & groceries","desc":"At Augrin Foods UK, we are passionate about bringing the best of authentic African flavours straight to your kitchen. Our carefully curated range of high-quality ingredients.","loc":"Manchester, UK"},
-{"name":"Honeyspotuk","slug":"honeyspotuk","cat":"caterers","desc":"Honey Spot UK is a UK-based dessert brand serving handcrafted sweet treats that bring people together.","loc":"Glasgow, UK"},
-{"name":"DOA Foods","slug":"doa-foods","cat":"foodstores & groceries","desc":"DOA Foods UK is a UK-based African grocery brand making authentic Nigerian, African, and Caribbean food products easily accessible across the UK.","loc":"Lime Square, Ashton Old Rd, Openshaw, Manchester M11 1DA, UK"},
-{"name":"Food emporium uk","slug":"food-emporium-uk","cat":"restaurants","desc":"Food Emporium UK is a UK-based Nigerian food brand serving freshly prepared authentic Nigerian meals. Best known for their delicious amala and other traditional favourites","loc":"Sheffield, UK"},
-{"name":"LayersbyMo","slug":"layersbymo","cat":"cakes & desert","desc":"Small Chops and Party Platters offering luxe canapés and dessert setups for weddings, birthdays, corporate, and private events, beautifully crafted to elevate every occasion.","loc":"Sheffield, UK","wa":"447442655583"},
-{"name":"TNI Luxury Wears","slug":"tni-luxury-wears","cat":"ankara & traditional wears","desc":"Shop luxury abayas, Turkish wear and stylish turbans at TNI Luxury Wears in Glasgow. UK delivery with elegant modest fashion for every occasion.","loc":"Glasgow, UK"},
-{"name":"Eurek Afro-Caribbean","slug":"eurek-afro-caribbean","cat":"foodstores & groceries","desc":"Shop authentic African and Caribbean groceries at Eureka Afro-Caribbean Market in Hertford. Find fresh produce, spices, frozen foods, pantry essentials and more.","loc":"First Floor Bull Plain, 15 Bull Plain, Hertford SG14 1DX, UK"},
-{"name":"Obaroxa","slug":"obaroxa","cat":"fashion & accessories","desc":"Shop premium African fashion at Obaroxa. Discover elegant dresses, luxury occasion wear, and contemporary African styles with UK and international delivery.","loc":"United Kingdom"},
-{"name":"Beautybykj","slug":"beautybykj","cat":"wig vendors","desc":"Shop premium 100% human hair at Beauty By KJ in London. Discover bone straight, wavy, curly and bouncy styles designed for a luxurious, natural look.","loc":"167 Camberwell Rd, London SE5 0HB, UK"},
-{"name":"Meecakes1","slug":"meecakes1","cat":"cakes & desert","desc":"Discover Meecakes1 Food and Cafe for bespoke birthday, wedding, anniversary and celebration cakes, beautifully handcrafted to make every occasion special.","loc":"7 Abbey St, Leicester LE1 3TE, UK","wa":"447378737833"},
-{"name":"BAKT Jeweller","slug":"bakt-jeweller","cat":"jewelry","desc":"BAKT Jeweller is a trusted UK-based gold jewellery brand specialising in authentic 18K–21K pure gold pieces.","loc":"Sheffield, UK"},
-{"name":"DH Accessories UK","slug":"dh-accessories-uk","cat":"jewelry","desc":"DH Accessories UK is a UK-based jewellery and watches brand offering statement pieces designed to elevate every occasion.","loc":"United Kingdom"},
-{"name":"Yemiluxe Jewelry","slug":"yemiluxe-jewelry","cat":"jewelry","desc":"Yemiluxe Jewelry is a UK-based jewellery brand offering stylish, non-tarnish pieces that look like real gold.","loc":"Peckham, London, UK"},
-{"name":"dluxegems_uk","slug":"dluxegems-uk","cat":"jewelry","desc":"dluxegems_uk is a UK-based jewelry brand dedicated to offering affordable luxury through premium Brazilian gold-filled and high-quality non-tarnish jewelry.","loc":"Plymouth, UK"},
-{"name":"herhairbang","slug":"herhairbang","cat":"wig vendors","desc":"herhairbang is a UK-based online boutique specializing in premium 100% human hair extensions and wigs.","loc":"Dartford, UK"},
-{"name":"ronnyshairlane","slug":"ronnyshairlane","cat":"wig vendors","desc":"ronnyshairlane is a Sheffield-based hair brand specializing in high-quality human hair wigs and professional wig revamp services.","loc":"Sheffield, UK"},
-{"name":"brunettesglammm","slug":"brunettesglammm","cat":"wig vendors","desc":"brunettesglammm is a Manchester-based boutique offering raw hair and premium wigs.","loc":"Manchester, UK"},
-{"name":"sobriqluxewigs","slug":"sobriqluxewigs","cat":"wig vendors","desc":"sobriqluxewigs is a Manchester-based wig store focused on empowering Black women to feel confident with premium hair products.","loc":"Manchester, UK"},
-{"name":"Clem's Hair","slug":"clems-hair","cat":"wig vendors","desc":"Clem's Hair is a London-based hair brand offering premium hair extensions and wig products.","loc":"182 High St N, London E6 2JA, UK"},
-{"name":"Midey hair","slug":"midey-hair","cat":"wig vendors","desc":"At MideyHairCollection, we are dedicated to delivering excellence through high-quality products, personalized services, and a commitment to customer satisfaction.","loc":"United Kingdom"},
-{"name":"Hairbysparkle","slug":"hairbysparkle","cat":"wig vendors","desc":"hair.by.sparkles is a UK-registered hair boutique based in Camberley, specializing in premium quality donor and virgin wigs.","loc":"Camberley, UK"},
-{"name":"Reowigs","slug":"reowigs","cat":"wig vendors","desc":"reowigs is a Birmingham-based wig brand and educational platform specializing in effortless, glueless, ready-to-wear wigs.","loc":"Birmingham, UK"},
-{"name":"thehairxential","slug":"thehairxential","cat":"wig vendors","desc":"thehairxential is an Aldershot-based boutique offering premium hair extensions, maintenance products, braiding extensions, and essential hair accessories.","loc":"Aldershot, UK"},
-{"name":"luxehair_bysophie","slug":"luxehair-bysophie","cat":"wig vendors","desc":"luxehair_bysophie is a registered UK-based wig store specializing in premium raw and virgin hair extensions and wigs.","loc":"United Kingdom"},
-{"name":"abtomstitches_uk","slug":"abtomstitches-uk","cat":"fashion designers","desc":"abtomstitches_uk is a UK-based fashion brand based in Bedford, Bedfordshire, specializing in ready-to-wear designs and bespoke tailoring.","loc":"United Kingdom"},
-{"name":"alaserfashion__","slug":"alaserfashion","cat":"fashion designers","desc":"alaserfashion__ is a wholesale and retail fashion brand offering handmade Nigerian designs. Specializing in rich Bubu gowns, stylish two-piece sets, and tailored menswear","loc":"United Kingdom"},
-{"name":"Foodcourt Events Catering","slug":"foodcourt-events-catering","cat":"small chops","desc":"Foodcourt Events Catering is an award-winning catering brand based in Birmingham, United Kingdom","loc":"Birmingham, UK"},
-{"name":"Timahs Kiichen UK","slug":"timahs-kiichen-uk","cat":"caterers","desc":"Timahs Kiichen UK is a London-based food vendor offering premium Nigerian cuisine across the UK.","loc":"London, UK"},
-{"name":"Ronkky Special Kitchen","slug":"ronkky-special-kitchen","cat":"caterers","desc":"Ronkky Special Kitchen  is a UK-based Nigerian food delivery and luxury catering brand operated by a celebrity chef. Specializing in bulk orders, event catering, and authentic Nigerian dishes,","loc":"London, UK"},
-{"name":"EOW Planner","slug":"eow-planner","cat":"event planners","desc":"EOW Planner is an event planning business founded by Elsie Ofulue, recognized as a UKAWP Elite Planner and TWIA Highly Commended Planner.","loc":"London, UK"},
-{"name":"Naijaroma Restaurant","slug":"naijaroma-restaurant","cat":"restaurants","desc":"naijaromarestaurant is a Birmingham-based restaurant serving authentic cuisine.","loc":"8 Bordesley St, Birmingham, UK"},
-{"name":"Orionbloomuk","slug":"orionbloomuk","cat":"makeup artists","desc":"Whether you are looking to book professional makeup services, discover tailored beauty insight, or collaborate on digital beauty campaigns, orionbloomuk delivers unparalleled expertise in melanin-focu","loc":"United Kingdom","wa":"4407732785019"},
-{"name":"Adunnified Beauty","slug":"adunnified-beauty","cat":"makeup artists","desc":"I am a Makeup, Gele and SPMU artist. I am available to travel anywhere in and outside UK.","loc":"Bexleyheath, UK"},
-{"name":"Photomaster Studios","slug":"photomaster-studios","cat":"photography","desc":"Creating timeless art through the lens of passion and precision.","loc":"Roden House, Roden St, Nottingham NG3 1JH, UK"},
-{"name":"Jollofmama","slug":"jollofmama","cat":"restaurants","desc":"Discover the vibrant flavors of Nigeria with Jollof Mama, London's finest destination for authentic West African cuisine. Enjoy traditional recipes with a modern twist that bring the heart and soul of","loc":"London, UK"},
-{"name":"De spruce Fashion","slug":"de-spruce-fashion","cat":"fashion & accessories","desc":"DSF Non-Tarnish Jewellery Set is a Luxury gold-look jewellery made for everyday elegance. Non-tarnish titanium steel, stylish, durable and perfect for every occasion. Shop now!","loc":"Northampton, UK"},
-{"name":"Kelz J Bukka & Grills","slug":"kelz-j-bukka-and-grills","cat":"restaurants","desc":"Kelz J Bukka & Grills in Hove brings the rich flavors of Nigerian cuisine to your table, blending tradition and taste.","loc":"Beresford Court, Somerhill Rd, Brighton and Hove, Hove BN3 1RH, UK"},
-{"name":"Funkesglam","slug":"funkesglam","cat":"makeup artists","desc":"Funke's Glam provides professional makeup services across London and Essex, specialising in bridal, photoshoot, special occasion, and everyday glam. Flawless looks tailored to your unique style.","loc":"55 Christchurch Ave, Rainham RM13 8JA, UK"},
-{"name":"280degrees","slug":"280degrees","cat":"restaurants","desc":"Step inside 280 Degrees African Restaurant and experience the vibrant colours, rich flavours, and warm atmosphere that define authentic African dining. Our gallery captures the heart of our kitchen","loc":"280 Kilburn High Rd, London NW6 2BY, UK"},
-{"name":"Justpalmoil","slug":"justpalmoil","cat":"foodstores & groceries","desc":"Discover the authentic taste of Undiluted Palm Oil from Just Palm Oil, sourced directly from Calabar, Nigeria, known for producing top-quality palm products.","loc":"Bladon Court, Barrow Rd, London SW16 5NE, UK"},
-{"name":"Xstarhaircollectionz","slug":"xstarhaircollectionz","cat":"wig vendors","desc":"Xstar Hair Collectionz is your trusted destination for premium quality wigs and hair products designed to empower your beauty and enhance your growth.","loc":"Glasgow, UK","wa":"447342572629"},
-{"name":"HairMistress","slug":"hairmistress","cat":"makeup artists","desc":"Experience exceptional beauty treatments with Hair Mistress, where convenience meets professionalism, as services can be enjoyed either at their warm studio in Erith or at your preferred location.","loc":"237 Bexley Rd, Erith DA8 3EX, UK","wa":"447762137315"},
-{"name":"Uwagboe’s Kitchen & Grill - Leith Walk","slug":"uwagboes-kitchen-and-grill-leith-walk","cat":"restaurants","desc":"Uwagboe's Kitchen & Grill brings the vibrant flavors of Nigeria to the heart of Edinburgh, offering an authentic culinary experience.","loc":"250-252 Leith Walk, Edinburgh EH6 5EL, UK"},
-{"name":"Craving Delight","slug":"craving-delight","cat":"restaurants","desc":"Cravings Delight Ltd brings authentic African cuisine to the heart of Hull, offering a delightful menu that satisfies diverse culinary cravings.","loc":"11 Grimston St, Hull HU1 3HG, UK"},
-{"name":"1212AfroCaribbean","slug":"1212afrocaribbean","cat":"foodstores & groceries","desc":"Missing the taste of home? 1212Afrocaribbean delivers authentic African and Caribbean groceries, spices, and essentials directly to your doorstep with convenience and care.","loc":"43 Mansfield Rd, Nottingham NG1 3FB, UK","wa":"447450914311"},
-{"name":"Tombell Education Consultancy Ltd","slug":"tombell-education-consultancy-ltd","cat":"education consultancy","desc":"Tombelledu is a British Council Certified education consultancy helping students achieve their study abroad goals. From applications and admissions to visa support and arrival assistance, we provide e","loc":"Sandstone Dr, Kemsley, Sittingbourne ME10, UK","wa":"2349066674956","verified":true},
-{"name":"Loaf & Ladle Co.","slug":"loaf-and-ladle-co","cat":"cakes & desert","desc":"Loaf & Ladle Co. serves homemade comfort food made with care, from freshly baked banana bread to hearty wraps and warm meals, crafted for rich flavour and satisfaction.","loc":"376 Radford Rd, Nottingham NG7 5GQ, UK"},
-{"name":"4R Luxury Events","slug":"4r-luxury-events","cat":"event planners","desc":"4R Luxury Events is a luxury destination wedding and event planning service operating across the UK, Turks & Caicos, France, Portugal, and Morocco.","loc":"London, UK"},
-{"name":"Efys Kitchen UK","slug":"efys-kitchen-uk","cat":"caterers","desc":"efyskitchenuk is a Coventry-based culinary service offering authentic homemade Nigerian food across the UK.","loc":"Coventry, UK"},
-{"name":"Fabulous Fashion Wears","slug":"fabulous-fashion-wears","cat":"ankara & traditional wears","desc":"Fabulous Fashion Wears is a UK-based African clothing brand offering luxury styles at affordable prices.","loc":"Nottingham, UK"},
-{"name":"Apex SQR UK","slug":"apex-sqr-uk","cat":"fashion & accessories","desc":"Apex SQR UK is a Witham, Essex-based bridal shop specializing in signature statement accessories for weddings, owambes, and special occasions.","loc":"Witham, UK"},
-{"name":"Crux Nxtion Events","slug":"crux-nxtion-events","cat":"event planners","desc":"Crux Nxtion Events is a UK-based event planning and party entertainment service. Specializing in large-scale social gatherings, trade fairs, festivals","loc":"Sheffield, UK"},
-{"name":"Tastee9ja","slug":"tastee9ja","cat":"caterers","desc":"Tastee9ja is a Rugby, Warwickshire-based catering service offering authentic Nigerian cuisine across the UK.","loc":"Warwickshire, UK"},
-{"name":"Food Experience With Marian","slug":"food-experience-with-marian","cat":"caterers","desc":"Food Experience With Marian is a Newcastle-based food vendor offering homemade meals and custom food hampers across the UK.","loc":"Newcastle, UK"},
-{"name":"AM_farm2pot","slug":"am-farm2pot","cat":"foodstores & groceries","desc":"Order healthy, authentic African cooked and uncooked food online with UK-wide delivery. Enjoy delicious African cuisine and the true taste of home delivered to your door.","loc":"195, 197 Wood St, London E17 3NU, UK"},
-{"name":"African Aroma","slug":"african-aroma","cat":"caterers","desc":"African Aroma is a Manchester-based Nigerian food delivery and catering service offering home delivery across the UK.","loc":"Manchester, UK","wa":"447733763683"},
-{"name":"Bankys Kitchen","slug":"bankys-kitchen","cat":"caterers","desc":"Bankys Kitchen is a Sheffield and Birmingham-based catering service offering 100% Halal Nigerian food.","loc":"288 Abbeydale Rd, Nether Edge, Sheffield S7 1FL, UK"},
-{"name":"Flavour Hub Food & Events LTD","slug":"flavour-hub-food-and-events-ltd","cat":"caterers","desc":"We provide authentic Afro -Caribbean cuisine and modern catering services at very reasonable prices.","loc":"Kent, UK"},
-{"name":"Fizzy Concept Fashion","slug":"fizzy-concept-fashion","cat":"fashion designers","desc":"Fizzy Concept Fashion is a UK-based clothing brand specializing in handmade and ready-to-wear outfits. The brand sources quality fabrics to create custom styles for various occasions.","loc":"Manchester, UK"},
-{"name":"Zarbeautie","slug":"zarbeautie","cat":"makeup artists","desc":"Zarbeautie is a Manchester-based beauty service offering professional makeup artistry, bridal looks, hair styling, and beauty training.","loc":"Manchester, UK"},
-{"name":"Opy Hotglam","slug":"opy-hotglam","cat":"makeup artists","desc":"Opy Hotglam is a Manchester-based bridal makeup artist and hair stylist. The brand provides professional beauty services, hair styling and portfolio content for special events and weddings.","loc":"Manchester, UK"},
-{"name":"Omas touch","slug":"omas-touch","cat":"skincare","desc":"Oma's_touch specialise in assisting you to discover your inner glow and boost your confidence. For all your skincare issues, semi permanent makeup, waxing and massages we got you covered.","loc":"Manchester Rd E, Little Hulton, Manchester M38 9AF, UK","wa":"07958710495"},
-{"name":"Honey Cakes and foods","slug":"honey-cakes-and-foods","cat":"cakes & desert","desc":"Honey Cakes and foods  is UK-based cakes & catering business serving delicious Nigerian food, celebration cakes, pastries, small chops & party catering. Based in St Albans, Hertfordshire","loc":"Hertfordshire, UK"},
-{"name":"Marvellous Cakes","slug":"marvellous-cakes","cat":"cakes & desert","desc":"Discover Marvellous Cakes, a Manchester-based bakery creating beautiful cakes for birthdays, weddings and special occasions. Enquire and order via WhatsApp.","loc":"Manchester, UK","wa":"447585646396"},
-{"name":"Odunhair Collectionz","slug":"odunhair-collectionz","cat":"wig vendors","desc":"Shop luxury ready-to-wear and custom wigs from Odunhair Collectionz. Discover bespoke wigs, professional wig revamps and one-to-one wig-making training.","loc":"Manchester, UK","wa":"447769136652"},
-{"name":"Labisi Beauty","slug":"labisi-beauty","cat":"makeup artists","desc":"Discover Labisi Beauty, a makeup artist in Salford and Manchester offering affordable makeup for weddings, events and special occasions, with travel available.","loc":"Manchester, UK","wa":"447482549975"},
-{"name":"Akomu Kitchen","slug":"akomu-kitchen","cat":"caterers","desc":"Discover Akomu Kitchen, a Nigerian food delivery service in Manchester offering freshly made-to-order Nigerian meals with delivery across the UK.","loc":"Manchester, UK"}
+  {
+    "name": "Hilltoprise Kitchen",
+    "slug": "hilltoprise-kitchen",
+    "cat": "caterers",
+    "desc": "Hilltoprise Kitchen offers delicious meals, catering services, custom food boxes, and personalized gift boxes for different occasions. We focus on quality, care and topnotch customer experience. ",
+    "loc": "Livingston",
+    "ig": "https://www.instagram.com/hilltoprisekiitchen/"
+  },
+  {
+    "name": "Abbystoreltd ",
+    "slug": "abbystoreltd",
+    "cat": "home & kitchen",
+    "desc": "We deal in household items, cookwares ,food flask, kids school bags, party packs/ souvenir etc. ",
+    "loc": "Derby",
+    "ig": "https://www.instagram.com/abbystore_uk/"
+  },
+  {
+    "name": "Eventsbykklargesse",
+    "slug": "eventsbykklargesse",
+    "cat": "event planners",
+    "desc": "Tailored Moments, Timeless Memories. We create beautiful celebrations through curated gifting and thoughtfully executed events.",
+    "loc": "Suffolk"
+  },
+  {
+    "name": "HelloPeriodz",
+    "slug": "helloperiodz",
+    "cat": "tutors",
+    "desc": "All about first periods",
+    "loc": ""
+  },
+  {
+    "name": "GFL BEAUTY HOME",
+    "slug": "gfl-beauty-home",
+    "cat": "wig vendors",
+    "desc": "Uncompromising quality. Seamless blending. Flawless installations. We curate the finest virgin and raw hair to give you the ultimate luxury experience.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/hairbygfl_/"
+  },
+  {
+    "name": "Autogelebysunshine_uk",
+    "slug": "autogelebysunshine-uk",
+    "cat": "gele stylists",
+    "desc": "Autogelesunshine_uk specializes in beautifully crafted Auto Gele, stylish men's caps, and elegant turbans for all occasions.",
+    "loc": "Liverpool",
+    "wa": "447760694051",
+    "ig": "https://www.instagram.com/autogelebysunshine_uk/"
+  },
+  {
+    "name": "Apparelby22",
+    "slug": "apparelby22",
+    "cat": "fashion designers",
+    "desc": "We design premium, structurally beautiful garments crafted to make a sophisticated statement.",
+    "loc": "Birmingham",
+    "ig": "https://www.instagram.com/apparelby22_uk/"
+  },
+  {
+    "name": "Wendy Beauty Artistry",
+    "slug": "wendy-beauty-artistry",
+    "cat": "makeup artists",
+    "desc": "Experience beauty that truly empowers. From radiant makeup to elegant hair styling, and from flawless lashes to expert microblading, every detail is thoughtfully crafted with passion and precision.",
+    "loc": "69 Foxton Wood Ave., Ballymena BT42 4BF",
+    "ig": "https://www.instagram.com/wendybeautyartistry/"
+  },
+  {
+    "name": "Bimfem Beauty Hub",
+    "slug": "bimfem-beauty-hub",
+    "cat": "skincare",
+    "desc": "Welcome to Bimfem Beauty Hub, your go-to destination in the UK for authentic African hair and skincare products. We take pride in offering a carefully curated selection of high-quality, natural produc",
+    "loc": "8 Wigeon Path, London SE28 0DS",
+    "ig": "https://www.instagram.com/bimfembeautyhubuk/"
+  },
+  {
+    "name": "zionnzarahgele",
+    "slug": "zionnzarahgele",
+    "cat": "gele stylists",
+    "desc": "The art of modern royalty. Crafting flawless, structurally stunning Gele designs that elevate your traditional look. Crowned with precision and elegance for brides and special events.",
+    "loc": "Norwich",
+    "ig": "https://www.instagram.com/zionnzarahgele?igsh=eTJqdzNxZzl4MXdh"
+  },
+  {
+    "name": "Shoppayhairs",
+    "slug": "shoppayhairs",
+    "cat": "wig vendors",
+    "desc": "Redefining luxury hair. Premium raw and virgin wigs crafted for seamless blending and effortless glamour. Invest in your ultimate crown.",
+    "loc": "65 The Avenue, Doncaster DN4",
+    "ig": "https://www.instagram.com/shoppayhairs?igsh=MWZ5dHA1ejFveDlxMw=="
+  },
+  {
+    "name": "Diamond Concept Photography",
+    "slug": "diamond-concept-photography",
+    "cat": "photography",
+    "desc": "We capture timeless storytelling rooted in culture, faith, and family. Nigerian-owned UK studio serving weddings, portraits, and meaningful moments for 20+ years.\n",
+    "loc": "Quayside Dr, Colchester CO2",
+    "ig": "https://www.instagram.com/diamond_concept_photography/"
+  },
+  {
+    "name": "Tecnis Academy",
+    "slug": "tecnis-academy",
+    "cat": "tutors",
+    "desc": "We provide engaging online and face-to-face tuition in Maths, English, Physics, Chemistry, and Biology for students from pre-school to Year 13. ",
+    "loc": "55 West St, Sittingbourne ME10 1AN",
+    "ig": "https://www.instagram.com/tecnis_academy_tutoring/"
+  },
+  {
+    "name": "Lushnaturalsuk",
+    "slug": "lushnaturalsuk",
+    "cat": "skincare",
+    "desc": "Curated natural body care products pure skincare, body enhancers, and plant-based aphrodisiacs for a holistic beauty experience.",
+    "loc": "London"
+  },
+  {
+    "name": "Elgloreenaturals",
+    "slug": "elgloreenaturals",
+    "cat": "hair care",
+    "desc": "At El Gloree, we believe that God made everything beautiful. It is our mission to provide our customers toxin-free, yet effective products that help you take care of your natural allure.",
+    "loc": "United Kingdom"
+  },
+  {
+    "name": "Peroevents",
+    "slug": "peroevents",
+    "cat": "alaga",
+    "desc": "Events should be fun and memories not stressful. After working so hard to pay for all the event related expenses, we don’t think you should be worried about anything else.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/peroevents/"
+  },
+  {
+    "name": "Goke Photography",
+    "slug": "goke-photography",
+    "cat": "photography",
+    "desc": "Gokephotography provides a variety of photography genres ranging from wedding photography, engagements, portraits, family portraits, children and newborn photography.",
+    "loc": "Tilbury RM18",
+    "ig": "https://www.instagram.com/gokephotographyltd/"
+  },
+  {
+    "name": "Reniksmakeover",
+    "slug": "reniksmakeover",
+    "cat": "gele stylists",
+    "desc": "ReniksMakeover is a professional beauty brand specializing in luxury bridal and event makeup, hairstyling, and gele artistry.",
+    "loc": "England",
+    "ig": "https://www.instagram.com/reniksmakeovers?igsh=ZGk3eDRkYTAzamVz"
+  },
+  {
+    "name": "Flourish Paradise",
+    "slug": "flourish-paradise",
+    "cat": "alaga",
+    "desc": "FlourishParadise Event creates stunning cakes and breathtaking event decorations for weddings, birthdays, corporate events, and special occasions.",
+    "loc": "31 Broad St, Parkgate, Rotherham S62 6DX"
+  },
+  {
+    "name": "Bumexcouture",
+    "slug": "bumexcouture",
+    "cat": "ankara & traditional wears",
+    "desc": "Our company was started because we have a deep love for African culture and want to use fashion to highlight its diversity and depth. ",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/bumexcouture"
+  },
+  {
+    "name": "Nidakprint",
+    "slug": "nidakprint",
+    "cat": "printing services",
+    "desc": "At NidakPrint, we provide a range of packaging and custom printing solutions.",
+    "loc": "United Kingdom",
+    "wa": "447592283188",
+    "ig": "https://www.instagram.com/nidakprint"
+  },
+  {
+    "name": "IKS",
+    "slug": "iks",
+    "cat": "shipping & logistics",
+    "desc": "International shipping. Reimagined.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/sendwithiks"
+  },
+  {
+    "name": "Food by Ikanke",
+    "slug": "food-by-ikanke",
+    "cat": "caterers",
+    "desc": "Food by Ikanke is a luxury catering brand specializing in bespoke private dining experiences, event catering, tablescapes, and culinary styling.",
+    "loc": "London",
+    "ig": "Https://www.instagram.com/foodbyikanke?igsh=MTgyMmZuaTA5czNxdQ=="
+  },
+  {
+    "name": "RukkyzKitchen",
+    "slug": "rukkyzkitchen",
+    "cat": "caterers",
+    "desc": "A blend of traditional and modern African cuisine, bursting with rich spices and vibrant flavours, taking you on a delicious journey through the heart of Africa in every bite.\n",
+    "loc": "71-75 Shelton St, London WC2H 9JQ",
+    "ig": "https://www.instagram.com/rukkyz_kitchen"
+  },
+  {
+    "name": "mobitcakes and treats",
+    "slug": "mobitcakes-and-treats",
+    "cat": "cakes & desert",
+    "desc": "mobitcakes_and_treats is a Manchester-based bakery specializing in luxury cakes and pastries. L2 food hygiene and safety certified, the brand crafts customized baked goods and treats (such as chinchin",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/mobitcakes_and_treats?igsi=cnVndmN4cHI4bmsz"
+  },
+  {
+    "name": "Cakesndrips",
+    "slug": "cakesndrips",
+    "cat": "cakes & desert",
+    "desc": "cakesndrips, run by cake baker Maryam, is a Manchester-based bakery specializing in luxury bespoke cakes and Swiss meringue frosting. The brand offers custom cake designs for all occasions with delive",
+    "loc": "City Rd, Manchester",
+    "ig": "https://www.instagram.com/cakesndrips?igsi=MWo1bTZ2M3pqZ2pnOA=="
+  },
+  {
+    "name": "lunch with bee",
+    "slug": "lunch-with-bee",
+    "cat": "caterers",
+    "desc": "lunch.with.bee is a luxe event catering service based in Manchester and available to travel. Holding a 5-star hygiene rating and Level 2 Food Safety certification",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/lunch.with.bee?igsi=MWpucjJyczY2bzFuMw=="
+  },
+  {
+    "name": "aratelabeauty",
+    "slug": "aratelabeauty",
+    "cat": "makeup artists",
+    "desc": "aratelabeauty is a Manchester-based makeup artistry service founded by Josephine Aramide Odunoye. The brand provides professional beauty services specializing in bridal glam, special occasion makeup ",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/aratelabeauty?igsi=YnRiYmIwemV5ZDdw"
+  },
+  {
+    "name": "Tojo's",
+    "slug": "tojos",
+    "cat": "caterers",
+    "desc": "TOJO’S is a Jamaican and Nigerian fusion catering and street food brand based in Stoke-on-Trent. ",
+    "loc": "England",
+    "ig": "https://www.instagram.com/tojosuk"
+  },
+  {
+    "name": "D1GRILLZ ",
+    "slug": "d1grillz",
+    "cat": "suya spot",
+    "desc": "D1Grillz Mobile Catering Services delivers premium live barbecue catering, bringing authentic charcoal-grilled flavours to weddings, birthdays, corporate events, festivals, private parties.",
+    "loc": "England",
+    "ig": "https://www.instagram.com/d1grillz"
+  },
+  {
+    "name": "Nulife Multimedia",
+    "slug": "nulife-multimedia",
+    "cat": "djs",
+    "desc": "Sound Hire, DJ Equipment hire, Wedding DJ, Corporate and Events DJ Hire, Concert and religious meetings sound hire and setup",
+    "loc": "England",
+    "ig": "https://www.instagram.com/beatsbynulife"
+  },
+  {
+    "name": "ABChops",
+    "slug": "abchops",
+    "cat": "small chops",
+    "desc": "We focus on small chops and cocktails.\nWe have been in business for over a year.\nWe deliver promptly and will always work with clients budget.\nOur chops are top-notch and mouth watering.",
+    "loc": "Sunderland",
+    "ig": "https://www.instagram.com/abchopss"
+  },
+  {
+    "name": "Jamesbakkeruk",
+    "slug": "jamesbakkeruk",
+    "cat": "cakes & desert",
+    "desc": "We deliver quality and delicious cakes from wedding cakes to birthday cakes we do it all",
+    "loc": "London",
+    "ig": "https://www.instagram.com/jamesbakkeruk"
+  },
+  {
+    "name": "Abenigele ",
+    "slug": "abenigele",
+    "cat": "gele stylists",
+    "desc": "A London-based Gele artistry brand specialising in traditional and modern Gele styling for weddings, events, photoshoots, and creative productions.",
+    "loc": "England",
+    "ig": "https://www.instagram.com/abenigele"
+  },
+  {
+    "name": "Mamahzxtensions",
+    "slug": "mamahzxtensions",
+    "cat": "wig vendors",
+    "desc": "Discover luxury wigs crafted from premium synthetic fibres and human hair. Lightweight, natural-looking, versatile, and easy to style for everyday confidence.",
+    "loc": "50B Kellett Rd, London SW2 1ED",
+    "ig": "https://www.instagram.com/mamahzxtensions/"
+  },
+  {
+    "name": "Fresh Mind Visuals",
+    "slug": "fresh-mind-visuals",
+    "cat": "photography",
+    "desc": "A team of Photographers & Creatives, we capture moments through photography.",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/freshmind.visuals"
+  },
+  {
+    "name": "Treats by Jemie",
+    "slug": "treats-by-jemie",
+    "cat": "small chops",
+    "desc": "Freshly baked African pastries in Glasgow, including meat pies, fish rolls, puff puff, and small chops. Taste home in every bite.\n",
+    "loc": "Glasgow",
+    "wa": "447350166897",
+    "ig": "https://www.instagram.com/treatsbyjemie"
+  },
+  {
+    "name": "hormaposhbeautyempire",
+    "slug": "hormaposhbeautyempire",
+    "cat": "makeup artists",
+    "desc": "Professional makeup services like bridal makeup, party guest glam, celebrant glam ups, gele styling, auto gele sale, microblading, lash services, beauty training, and special event glam.",
+    "loc": "England",
+    "ig": "https://www.instagram.com/hormaposhbeautylounge"
+  },
+  {
+    "name": "Winifred Lux Hair",
+    "slug": "winifred-lux-hair",
+    "cat": "hair stylists/braiders",
+    "desc": "Your trusted home for custom wigs, styling and luxury extensions. 2+ years of putting 5-star quality service above the price tag. Check our reviews and shop with confidence!",
+    "loc": "Birmingham",
+    "ig": "https://www.instagram.com/winifred_lux_hairs"
+  },
+  {
+    "name": "Ruqiey_glitz",
+    "slug": "ruqiey-glitz",
+    "cat": "makeup artists",
+    "desc": "A makeup artist dedicated to enhancing natural beauty with clean; flawless; and long-lasting makeup looks.",
+    "loc": "Bradford",
+    "ig": "https://www.instagram.com/ruqiey_glitz"
+  },
+  {
+    "name": "makeupbyenesmemoire",
+    "slug": "makeupbyenesmemoire",
+    "cat": "makeup artists",
+    "desc": "Makeup artistry -bridal and event makeup.\nBridal trial sessions\nTraditional coral beads rentals (we beautify brides as well)\nMicroblading services",
+    "loc": "Colchester",
+    "ig": "https://www.instagram.com/makeupbyenesmemoire"
+  },
+  {
+    "name": "Demis Restaurant",
+    "slug": "demis-restaurant",
+    "cat": "restaurants",
+    "desc": "Demi’s Restaurant in Cricklewood, London serves authentic Nigerian and West African cuisine, including jollof rice and suya, made fresh daily by expert chefs.",
+    "loc": "89 Cricklewood Broadway, London NW2 3JG",
+    "wa": "447908458479",
+    "ig": "https://www.instagram.com/demisrestaurant/"
+  },
+  {
+    "name": "Lady in charge",
+    "slug": "lady-in-charge",
+    "cat": "ankara & traditional wears",
+    "desc": "African ready-to-wear clothing in the UK featuring Ankara, Adire, Brocade, and Aso-Oke. Stylish African fashion with fast 24-hour UK delivery available.\n",
+    "loc": "United Kingdom",
+    "wa": "447957999312",
+    "ig": "https://www.instagram.com/ladyincharge___"
+  },
+  {
+    "name": "The Yideh Glam ",
+    "slug": "the-yideh-glam",
+    "cat": "makeup artists",
+    "desc": "A professional Makeup Artist with over 4 years of experience in the beauty industry. I specialize in creating flawless, long-lasting makeup looks tailored to each client’s unique style and occasion. ",
+    "loc": "Kent",
+    "ig": "https://www.instagram.com/the_yhidehglam"
+  },
+  {
+    "name": "twinklesluxe_mua",
+    "slug": "twinklesluxe-mua",
+    "cat": "makeup artists",
+    "desc": "A professional bridal makeup artist based in Southampton, specializing in natural/ skin-like, long-lasting glams. ",
+    "loc": "Southampton",
+    "ig": "https://www.instagram.com/twinklesluxe_mua"
+  },
+  {
+    "name": "Dele Photography",
+    "slug": "dele-photography",
+    "cat": "photography",
+    "desc": "A Professional Photographer based in London My dedication lies in advocating for the projects I truly believe in.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/delephotography"
+  },
+  {
+    "name": "Accessories by Dija",
+    "slug": "accessories-by-dija",
+    "cat": "fashion & accessories",
+    "desc": "Premium jewellery collection for the modern individual, crafted with precision and designed to bring timeless elegance and style to every look.\n",
+    "loc": "35 Clare St, Northampton NN1 3JE",
+    "wa": "%2B447823794582",
+    "ig": "https://www.instagram.com/accessoriesbydija/"
+  },
+  {
+    "name": "My Naija Nibbles",
+    "slug": "my-naija-nibbles",
+    "cat": "nigerian snacks",
+    "desc": "Authentic Naija snacks and event souvenirs based in Manchester with UK-wide delivery. Nostalgic treats beautifully packaged for every occasion—shop online today.\n",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/mynaijanibbles/"
+  },
+  {
+    "name": "Dammyskitchenuk",
+    "slug": "dammyskitchenuk",
+    "cat": "caterers",
+    "desc": "Dammys Kitchen UK delivers premium Nigerian meals across the UK, saving busy professionals time on cooking and shopping. We also offer stress-free catering for events, parties, and celebrations.\n",
+    "loc": "Twine Rd, Lupset, Wakefield WF2 8FQ",
+    "ig": "https://www.instagram.com/dammyskitchenuk/"
+  },
+  {
+    "name": "Asowumi",
+    "slug": "asowumi",
+    "cat": "ankara & traditional wears",
+    "desc": "Shop African ready-to-wear clothing rooted in culture, blending rich African heritage with modern fashion. A leading online African fashion store serving customers worldwide.\n",
+    "loc": "Stafford St, Walsall WS2",
+    "wa": "447440794858",
+    "ig": "https://www.instagram.com/asowumi/"
+  },
+  {
+    "name": "Cleverkitchenuk",
+    "slug": "cleverkitchenuk",
+    "cat": "caterers",
+    "desc": "Clever Kitchen celebrates African and Caribbean culinary heritage through wholesome homemade meals made with care and tradition. We create flavorful dishes that bring people together.",
+    "loc": "",
+    "ig": "https://www.instagram.com/cleverkitchenuk/"
+  },
+  {
+    "name": "M’s kitchen",
+    "slug": "ms-kitchen",
+    "cat": "cakes & desert",
+    "desc": "Creating memorable experiences for every special occasion with stunning cakes; flavorful meals; and exceptional catering services.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/ms_cakes_pastries"
+  },
+  {
+    "name": "Preciousrolamakeup",
+    "slug": "preciousrolamakeup",
+    "cat": "makeup artists",
+    "desc": "We offer professional bridal makeup, makeup and gele styling, as well as photography and videography services, helping you look your best while beautifully capturing every special moment of your celeb",
+    "loc": "London",
+    "ig": "https://www.instagram.com/preciousrolamakeup"
+  },
+  {
+    "name": "Despruce Fashion",
+    "slug": "despruce-fashion",
+    "cat": "fashion & accessories",
+    "desc": "Discover premium non-tarnish jewellery and stylish clothing designed for everyday luxury. Shop affordable fashion, elegant looks, and fast UK delivery today.",
+    "loc": "United Kingdom",
+    "wa": "447472643946",
+    "ig": "https://www.instagram.com/desprucefashion/"
+  },
+  {
+    "name": "Yushadcaterers",
+    "slug": "yushadcaterers",
+    "cat": "caterers",
+    "desc": "Enjoy quality catering services with a 5⭐ food hygiene rating, fully insured corporate catering, and delicious meals prepared to the highest standards.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/yushadcaterers/"
+  },
+  {
+    "name": "Laraskitchenuk",
+    "slug": "laraskitchenuk",
+    "cat": "caterers",
+    "desc": "Experience authentic Nigerian home cooking delivered across the UK. Enjoy delicious, affordable meals that bring comfort, tradition, and the taste of home to busy families and professionals.",
+    "loc": "Rainham",
+    "ig": "https://www.instagram.com/laraskitchenuk/"
+  },
+  {
+    "name": "Ojanaijafoods",
+    "slug": "ojanaijafoods",
+    "cat": "foodstores & groceries",
+    "desc": "Shop premium Kpomo and smoky Panla Fish from Oja Naija Foods. Enjoy 100% natural, preservative-free Nigerian ingredients delivered across the UK for delicious, authentic meals.",
+    "loc": "",
+    "ig": "https://www.instagram.com/oja_naija_foods/"
+  },
+  {
+    "name": "GlamwtJade | NORTHEAST MUA ",
+    "slug": "glamwtjade-northeast-mua",
+    "cat": "makeup artists",
+    "desc": "At GlamwtJade, we create luxury, flawless, and long-lasting makeup tailored to enhance your natural beauty. Leave every appointment feeling confident, radiant, and camera-ready.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/glamwtjade?igsh=MXc3cWQ2OG9lY3hpMw%3D%3D&utm_source=qr"
+  },
+  {
+    "name": "Funmis Treasure",
+    "slug": "funmis-treasure",
+    "cat": "foodstores & groceries",
+    "desc": "Funmi's Treasure is your go-to source for authentic African products and foods delivered throughout the UK with speed, reliability, and a personal touch.",
+    "loc": "30 Brimsdown Ave, Laindon, Basildon SS15 6NY",
+    "wa": "447435844799",
+    "verified": true,
+    "featured": true,
+    "ig": "https://www.instagram.com/Funmistreasure"
+  },
+  {
+    "name": "Chop Suya London",
+    "slug": "chop-suya-london",
+    "cat": "suya spot",
+    "desc": "Chop Suya, Chop Life 😋 serving limited daily drops of authentic Nigerian flavours. Pre-order via message and enjoy delivery on Deliveroo.\n",
+    "loc": "Roycraft House, 15 Linton Rd., Barking IG11 8HE",
+    "wa": "447858799958",
+    "ig": "https://www.instagram.com/Chopsuyalondon"
+  },
+  {
+    "name": "BranchNaijaUK",
+    "slug": "branchnaijauk",
+    "cat": "caterers",
+    "desc": "We are Nigerian food brand bringing the rich glamour of Naija cuisine straight to the UK,From our hygienically rated 5 ⭐️ kitchen.",
+    "loc": "United Kingdom",
+    "wa": "447498878750",
+    "ig": "https://www.instagram.com/branchnaijauk"
+  },
+  {
+    "name": "Ingenious Cookware UK",
+    "slug": "ingenious-cookware-uk",
+    "cat": "home & kitchen",
+    "desc": "Shop quality cookware and kitchen essentials in the UK. Registered UK brand with Klarna payments, nationwide delivery, and trusted products for every kitchen.\n",
+    "loc": "53, 57 Sutton Rd, Southend-on-Sea SS2 5PE",
+    "wa": "447777763899",
+    "ig": "https://www.instagram.com/ingenious_cookware_uk"
+  },
+  {
+    "name": "Ovenrush UK",
+    "slug": "ovenrush-uk",
+    "cat": "cakes & desert",
+    "desc": "Order custom cakes, pastries, and small chops in the UK for birthdays, weddings, baby showers, and corporate events. Freshly made and beautifully crafted. 🎂",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/ovenrush_uk"
+  },
+  {
+    "name": "Sisiabeke Kitchen",
+    "slug": "sisiabeke-kitchen",
+    "cat": "caterers",
+    "desc": "Sisiabeke's Kitchen offers authentic African and intercontinental catering for weddings, parties, corporate events, and custom cakes. Book today.",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/sisiabekekitchen/"
+  },
+  {
+    "name": "Perissos Food ",
+    "slug": "perissos-food",
+    "cat": "foodstores & groceries",
+    "desc": "Perissos Foods is dedicated to bringing people together through delicious, high-quality food made with fresh ingredients and authentic recipes.",
+    "loc": "Cambridgeshire",
+    "ig": "https://www.instagram.com/perissosfoods"
+  },
+  {
+    "name": "Ireniq official ",
+    "slug": "ireniq-official",
+    "cat": "fashion & accessories",
+    "desc": "IRENIQ is a premium fashion brand creating elevated everyday essentials that combine quality craftsmanship, timeless design, and modern confidence.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/ireniqofficial?igsh=aWNpeGZmcGNsMjdo"
+  },
+  {
+    "name": "Fola Fabrics Ltd",
+    "slug": "fola-fabrics-ltd",
+    "cat": "ankara & traditional wears",
+    "desc": "Luxury Fabrics & Accessories for Every Celebration\nShop premium beaded, non-beaded laces, Swiss Atiku, stylish head-ties, party heels & purses for men and women — delivered across the UK, US, Canada, ",
+    "loc": "Unit 41, The Mall, Luton LU1 2TD",
+    "ig": "https://www.instagram.com/officialfolafabrics?igsh=MTRpZW43aTNzYnNjeQ=="
+  },
+  {
+    "name": "Kelldynasty",
+    "slug": "kelldynasty",
+    "cat": "ankara & traditional wears",
+    "desc": "We create stunning ready-to-wear outfits made from authentic African Ankara fabrics — bold, vibrant, and designed to make you stand out.",
+    "loc": "256 Manor Ln, Sheffield",
+    "ig": "https://www.instagram.com/kelldynasty_fabrics"
+  },
+  {
+    "name": "Exclusive kiddies/ fabric store",
+    "slug": "exclusive-kiddies-fabric-store",
+    "cat": "fashion & accessories",
+    "desc": "",
+    "loc": "London",
+    "ig": "https://www.instagram.com/exclusive_fabrics_uk"
+  },
+  {
+    "name": "Crownkool couture",
+    "slug": "crownkool-couture",
+    "cat": "ankara & traditional wears",
+    "desc": "Crown Kool Couture is a fashion brand specializing in bespoke and ready-to-wear outfits that combine elegance, creativity, and expert craftsmanship",
+    "loc": "Doncaster",
+    "ig": "https://www.instagram.com/crownkoolcouture"
+  },
+  {
+    "name": "House of Sassy Foods",
+    "slug": "house-of-sassy-foods",
+    "cat": "caterers",
+    "desc": "Order authentic Nigerian and African food from House of Sassy Foods. Enjoy online ordering, catering for weddings and events, groceries, homemade drinks, and UK-wide delivery.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/houseofsassyfoods"
+  },
+  {
+    "name": "Teethom Events",
+    "slug": "teethom-events",
+    "cat": "event planners",
+    "desc": "Professional event décor and planning in Liverpool. We create stunning weddings, birthdays, baby showers, corporate events, balloon décor, floral styling, and custom backdrops.",
+    "loc": "Liverpool",
+    "ig": "https://www.instagram.com/teethomevents/"
+  },
+  {
+    "name": "Dexzcrown Clothing",
+    "slug": "dexzcrown-clothing",
+    "cat": "fashion & accessories",
+    "desc": "Shop stylish ready-to-wear African print clothing at Dexzcrown Clothing. Discover quality Ankara fashion, inclusive sizing, secure checkout, and free UK delivery on orders over £150.",
+    "loc": "United Kingdom",
+    "ig": "www.instagram.com/dexzcrown"
+  },
+  {
+    "name": "ZZM Locs",
+    "slug": "zzm-locs",
+    "cat": "hair stylists/braiders",
+    "desc": "Zzmlocs is a home-based and mobile loc specialist in Canterbury, Kent, offering professional loc care with precision, patience, and genuine care. We specialise in starter locs, retwists, loc repairs.",
+    "loc": "Nutwood Ave, Sturry, Canterbury",
+    "ig": "https://www.instagram.com/zzmlocs/"
+  },
+  {
+    "name": "Xander Afritrade Ltd",
+    "slug": "xander-afritrade-ltd",
+    "cat": "foodstores & groceries",
+    "desc": "Shop authentic African food, beauty products, fashion, and lifestyle essentials at Xander Afritrade Ltd. Enjoy secure shopping, special offers, fast delivery, and quality products sourced from Africa.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/shop_xander/"
+  },
+  {
+    "name": "Celebritycheftreats",
+    "slug": "celebritycheftreats",
+    "cat": "nigerian snacks",
+    "desc": "Celebrity Chef Treats is a food and catering brand serving freshly prepared meals, delicious treats, and exceptional catering services for every occasion.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/celebrity_chef_treats"
+  },
+  {
+    "name": "Wholesale Beauty Hub",
+    "slug": "wholesale-beauty-hub",
+    "cat": "skincare",
+    "desc": "Shop skincare, makeup, beauty tools, and top brands at Wholesale Beauty Products UK. Enjoy competitive prices, next-day UK delivery, worldwide shipping, and exclusive beauty deals.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/wholesalebeautyhub_uk"
+  },
+  {
+    "name": "Events to the tee",
+    "slug": "events-to-the-tee",
+    "cat": "event planners",
+    "desc": "Events to the Tee is a UK-based event planning company creating elegant weddings, birthdays, baby showers, corporate events, and unforgettable celebrations.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/eventstothetee"
+  },
+  {
+    "name": "Niyotee Events",
+    "slug": "niyotee-events",
+    "cat": "event planners",
+    "desc": "We are a seasoned events and wedding planner and help create amazing experiences and memories with our clients budget",
+    "loc": "Scotland",
+    "ig": "https://www.instagram.com/niyotee_events"
+  },
+  {
+    "name": "House Of Erika",
+    "slug": "house-of-erika",
+    "cat": "ankara & traditional wears",
+    "desc": "House of Ekira is a contemporary fashion brand creating elegant, high-quality outfits for women who love timeless style with a modern touch.",
+    "loc": "Kent",
+    "wa": "447432467585",
+    "ig": "https://www.instagram.com/houseofekira"
+  },
+  {
+    "name": "Naetiv Asooke",
+    "slug": "naetiv-asooke",
+    "cat": "ankara & traditional wears",
+    "desc": "Naetiv Aṣọ Òkè celebrates the rich heritage of Yoruba craftsmanship through beautifully woven, premium Aṣọ Òkè fabrics.",
+    "loc": "London",
+    "wa": "%2B447402579274",
+    "ig": "https://www.instagram.com/naetiv_asooke"
+  },
+  {
+    "name": "Agbeke Artistry",
+    "slug": "agbeke-artistry",
+    "cat": "fashion designers",
+    "desc": "At Agbeke artistry, we curate and create Afrocentric fashion that celebrates the beauty, diversity, and heritage of Africa.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/rtw_byagbeke"
+  },
+  {
+    "name": "Ron Luxury Fashion",
+    "slug": "ron-luxury-fashion",
+    "cat": "ankara & traditional wears",
+    "desc": "Ron Luxury Fashion is a premium fashion brand offering stylish, high-quality clothing and accessories for men and women who appreciate elegance and modern luxury.",
+    "loc": "Coventry",
+    "ig": "https://www.instagram.com/ronluxuryfashion?igsh=MTFwb2o0eGFlZ29sdw=="
+  },
+  {
+    "name": "Girlush beauty ",
+    "slug": "girlush-beauty",
+    "cat": "skincare",
+    "desc": "Girlush Beauty is a Manchester-based skincare and body care brand offering naturally infused products for all skin types, ages, and genders. Shop quality with UK and worldwide delivery",
+    "loc": "London",
+    "ig": "https://www.instagram.com/girlush.beauty"
+  },
+  {
+    "name": "Marryme foods",
+    "slug": "marryme-foods",
+    "cat": "caterers",
+    "desc": "In the heart of Glasgow, far from the warmth and rhythm of Nigeria,\nMarryMeFoods was born from memory, longing, and love. ",
+    "loc": "54 White St, Glasgow G11 5EA",
+    "ig": "https://www.instagram.com/marrymefoods247"
+  },
+  {
+    "name": "Skinsential",
+    "slug": "skinsential",
+    "cat": "skincare",
+    "desc": "At Skinsentials, we believe skincare is more than a routine; it’s a form of self-care. Inspired by the desire for simple, effective, & results-driven skincare",
+    "loc": "Derbyshire",
+    "ig": "https://www.instagram.com/skinsentials.uk"
+  },
+  {
+    "name": "Afrifresh catering",
+    "slug": "afrifresh-catering",
+    "cat": "nigerian snacks",
+    "desc": "Afrifresh is a UK-based luxury catering company, bringing together authentic African flavours, elegant desserts, refreshing drinks",
+    "loc": "110 Cheltenham Cres, Preston",
+    "ig": "https://www.instagram.com/afrifresh.co.uk"
+  },
+  {
+    "name": "GNG Vogue ",
+    "slug": "gng-vogue",
+    "cat": "fashion designers",
+    "desc": "GNG Vogue is a fashion and lifestyle brand offering stylish, high-quality clothing and accessories for individuals who value confidence",
+    "loc": "Newcastle",
+    "ig": "https://www.instagram.com/gng_vogue"
+  },
+  {
+    "name": "Dluxe Gems UK",
+    "slug": "dluxe-gems-uk",
+    "cat": "jewelry",
+    "desc": "DLuxe Gems UK is a luxury jewellery and accessories brand offering elegant, high-quality pieces designed to elevate every look.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/dluxegems_uk"
+  },
+  {
+    "name": "Pastryzone Catering",
+    "slug": "pastryzone-catering",
+    "cat": "caterers",
+    "desc": "Pastry Zone Catering is a catering and pastry brand specializing in freshly baked treats, delicious meals, and professional catering services for all occasions",
+    "loc": "Maidstone",
+    "ig": "https://www.instagram.com/pastryzone_catering"
+  },
+  {
+    "name": "Erni's Bakery & Foods",
+    "slug": "ernis-bakery-and-foods",
+    "cat": "cakes & desert",
+    "desc": "Handcrafted Bread and Pastries baked daily from scratch in the heart of Middlesbrough",
+    "loc": "6 Kings Rd, North Ormesby, Middlesbrough TS3 6NF",
+    "ig": "https://www.instagram.com/ernis_bakery"
+  },
+  {
+    "name": "DressLine",
+    "slug": "dressline",
+    "cat": "fashion designers",
+    "desc": "Dressline was founded on a simple realization: Great style has no boundaries. We saw a need for a fashion bridge,a place where the sleek, structured silhouettes of British fashion meet the bold",
+    "loc": "98 Gordon St, Leigh WN7 1RT",
+    "ig": "https://www.instagram.com/dressline.uk"
+  },
+  {
+    "name": "Beauty by Derin Dominique | Semi-Permanent Beauty Treatments",
+    "slug": "beauty-by-derin-dominique-or-semi-permanent-beauty-treatments",
+    "cat": "microblading",
+    "desc": "Luxury semi-permanent beauty services including lashes, brows, tattoos, piercings, and pedicures. Where artistry meets timeless beauty.",
+    "loc": "Birmingham B5 6EN",
+    "ig": "https://www.instagram.com/beautyby_derindominiquee"
+  },
+  {
+    "name": "Gails Bakery",
+    "slug": "gails-bakery",
+    "cat": "cakes & desert",
+    "desc": "",
+    "loc": "Bolton",
+    "ig": "https://www.instagram.com/gails_bakery"
+  },
+  {
+    "name": "Gandkstyles",
+    "slug": "gandkstyles",
+    "cat": "ankara & traditional wears",
+    "desc": "Gandkstyles UK is a UK-based African fashion brand offering stylish ready-to-wear women's clothing, Ankara prints, casual wear, and jogger sets.",
+    "loc": "Glebe St, Leven KY8 4QN",
+    "wa": "447887661383",
+    "ig": "https://www.instagram.com/gandkstylesuk/"
+  },
+  {
+    "name": "Purplelips",
+    "slug": "purplelips",
+    "cat": "makeup artists",
+    "desc": "Purplelips is a premier, luxury beauty service specializing in high-end bridal and soft glam makeup artistry.",
+    "loc": "Colchester",
+    "wa": "%2B447414129863",
+    "ig": "https://www.instagram.com/purplelips_1/"
+  },
+  {
+    "name": "Ladiva Weaves",
+    "slug": "ladiva-weaves",
+    "cat": "wig vendors",
+    "desc": "Discover LaDiva Weaves’ premium 100% raw human hair, ethically sourced from Vietnam, Cambodia and India. Shop luxury wigs and weaves with worldwide delivery.\n",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/ladivaweavesuk/"
+  },
+  {
+    "name": "skperfumesandfragrancesuk",
+    "slug": "skperfumesandfragrancesuk",
+    "cat": "fashion & accessories",
+    "desc": "skperfumesandfragrancesuk offers a curated selection of luxury perfume oils and original, long-lasting fragrances across the UK.",
+    "loc": "United Kingdom",
+    "ig": "Https://www.instagram.com/skperfumesandfragrancesuk?igsi=Y3plNDV2N2VjdGRj"
+  },
+  {
+    "name": "glam by bamz",
+    "slug": "glam-by-bamz",
+    "cat": "makeup artists",
+    "desc": "glamby.bamz is a luxury bridal and event makeup artist based in Glasgow, serving brides across Scotland with professional makeup artistry and bridal content services.",
+    "loc": "Glasgow",
+    "ig": "Https://www.instagram.com/glamby.bamz?igsi=MWUxZnQ3emg0NDFwdQ=="
+  },
+  {
+    "name": "moj beauty",
+    "slug": "moj-beauty",
+    "cat": "makeup artists",
+    "desc": "moj.beauty specializes in soft, natural glam for brides across Aberdeen, Glasgow, and Edinburgh. Available to travel, the brand also operates as a beauty educator offering makeup training classes.",
+    "loc": "Aberdeen",
+    "ig": "Https://www.instagram.com/moj.beauty?igsi=MXducXR1cWJjcW5jOA=="
+  },
+  {
+    "name": "ariyapot",
+    "slug": "ariyapot",
+    "cat": "caterers",
+    "desc": "ariyapot provides authentic Nigerian food and catering services in Glasgow, Scotland. Boasting a 5-star food rating, the chef offers indoor and outdoor event catering as well as bulk family meal order",
+    "loc": "Glasgow",
+    "ig": "Https://www.instagram.com/ariyapot?igsi=MWw2a3N6bGwwdmZibA=="
+  },
+  {
+    "name": "johadezzbeautypro",
+    "slug": "johadezzbeautypro",
+    "cat": "makeup artists",
+    "desc": "johadezzbeautypro is a Scotland-based professional makeup artist specializing in bridal and event makeup across Glasgow and the UK.",
+    "loc": "Glasgow",
+    "ig": "Https://www.instagram.com/johadezzbeautypro?igsi=anRsY25waTFsbm9i"
+  },
+  {
+    "name": "glamourgoldcakesuk",
+    "slug": "glamourgoldcakesuk",
+    "cat": "cakes & desert",
+    "desc": "glamourgoldcakesuk is an award-winning bakery service based in Aberdeen, Scotland. The brand specializes in luxury cakes, desserts, and custom treats for weddings, birthdays, and special celebrations.",
+    "loc": "Aberdeen",
+    "ig": "Https://www.instagram.com/glamourgoldcakesuk?igsi=Z3V3aG42Z3BuOTdo"
+  },
+  {
+    "name": "hazelcateringuk",
+    "slug": "hazelcateringuk",
+    "cat": "caterers",
+    "desc": "hazelcateringuk is a Nigerian food vendor based in Milton Keynes, UK. The brand provides freshly made meals, soup bowls, and full event catering services with pre-order options.",
+    "loc": "Milton Keynes",
+    "ig": "https://www.instagram.com/hazelcateringuk?igsi=MWYyZGxjdmQzZ3N3Ng=="
+  },
+  {
+    "name": "drlollieskitchen",
+    "slug": "drlollieskitchen",
+    "cat": "caterers",
+    "desc": "drlollieskitchen is a food delivery service offering authentic Lagos Ata Agoyin. The brand serves as an online marketplace for local Ata Agoyin dishes prepared for order.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/drlollieskitchen?igsi=MXJ5cGk5bXNrdW1tMw=="
+  },
+  {
+    "name": "debstecottage_cakes_more",
+    "slug": "debstecottage-cakes-more",
+    "cat": "cakes & desert",
+    "desc": "debstecottage_cakes_more offers Nigerian cakes and food catering services in Wrexham, UK. Holding a 5-star food hygiene rating, the business provides custom baked goods, meals.",
+    "loc": "Wrexham",
+    "ig": "Https://www.instagram.com/debstecottage_cakes_more?igsi=aGduOXF5cDR5OGNk "
+  },
+  {
+    "name": "sehimek london_fashion store",
+    "slug": "sehimek-london-fashion-store",
+    "cat": "fashion & accessories",
+    "desc": "sehimek.london_fashion.store is a UK-based shopping and retail brand offering quality ready-to-wear fashion pieces, high-value wigs, and raffia accessories. Products can be ordered online via their of",
+    "loc": "Lincolnshire",
+    "ig": "Https://www.instagram.com/sehimek.london_fashion.store?igsi=MWVqamcybXlyd3dyaw=="
+  },
+  {
+    "name": "irisekitchen",
+    "slug": "irisekitchen",
+    "cat": "caterers",
+    "desc": "irisekitchen is an Edinburgh-based food and catering business specializing in freshly prepared African and Nigerian meals, large tray platters, and side dishes.",
+    "loc": "Edinburgh",
+    "ig": "Https://www.instagram.com/irisekitchen?igsi=NzBwbDVsOGJ0YXIx"
+  },
+  {
+    "name": "sumi makeover",
+    "slug": "sumi-makeover",
+    "cat": "makeup artists",
+    "desc": "sumi.makeover is a professional bridal and event makeup artist based in Mansfield, Nottinghamshire, available for local and international travel bookings.",
+    "loc": "Mansfield",
+    "ig": "Https://www.instagram.com/sumi.makeover?igsi=NHVsODB6d3BqZ2ts"
+  },
+  {
+    "name": "Savvvy cosmetics",
+    "slug": "savvvy-cosmetics",
+    "cat": "skincare",
+    "desc": "Azeezat Damilola Mobolaji is a passionate skincare entrepreneur, licensed beauty expert, and the visionary founder of Savvvy Cosmetics, a skincare and spa brand rooted in science, and nature.",
+    "loc": "",
+    "ig": "https://www.instagram.com/savvvycosmetics"
+  },
+  {
+    "name": "JM Claire Beauty and Skincare Shop",
+    "slug": "jm-claire-beauty-and-skincare-shop",
+    "cat": "skincare",
+    "desc": "At JM Claire LTD, we are passionate about bringing premium hair, skin care, and cosmetic products closer to you. We combine quality with affordability to ensure that our customers enjoy only the best.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/uk_skincare_vendor"
+  },
+  {
+    "name": "Sleek_CollectionsUK",
+    "slug": "sleekcollectionsuk",
+    "cat": "fashion designers",
+    "desc": "Shop Sleek Collections for stylish, high-quality modest fashion, elegant turbans and ready-to-wear outfits for women. Designed for confidence, comfort and everyday elegance ! with fast UK delivery and",
+    "loc": "London",
+    "ig": "https://www.instagram.com/sleek_collectionsuk"
+  },
+  {
+    "name": "Afrikenfoodsltd",
+    "slug": "afrikenfoodsltd",
+    "cat": "nigerian snacks",
+    "desc": "Afriken Foods Ltd is a trusted supplier of authentic African food products, groceries, and specialty ingredients, bringing the rich taste of Africa to homes across the UK.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/afrikenfoodsltd"
+  },
+  {
+    "name": "Ladyincharge",
+    "slug": "ladyincharge",
+    "cat": "fashion designers",
+    "desc": "Shop Ankara cloth, bubu gowns, snatch dresses, Aso Oke pants, and African bridal wear. Explore elegant kimono robes, beach kimonos, and dresses with kimonos. Bold African wear dress styles made for mo",
+    "loc": "Scarborough",
+    "ig": "https://www.instagram.com/ladyincharge"
+  },
+  {
+    "name": "BeeyondBeauty.uk",
+    "slug": "beeyondbeautyuk",
+    "cat": "makeup artists",
+    "desc": "Luxury makeup artist specializing in soft glam, full glam, and bridal beauty. My goal is to enhance your natural beauty while creating a flawless, elevated finish tailored to every occasion.",
+    "loc": "Birmingham",
+    "ig": "https://www.instagram.com/beeyondbeauty.uk"
+  },
+  {
+    "name": " Elamen Beauty",
+    "slug": "elamen-beauty",
+    "cat": "skincare",
+    "desc": "Shop premium skincare and beauty products at Elamen Beauty. Explore face, body and makeup essentials with fast UK delivery and free shipping over £60.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/el_amenbeautyuk"
+  },
+  {
+    "name": "Beautybydaz Uk",
+    "slug": "beautybydaz-uk",
+    "cat": "skincare",
+    "desc": "Get the best online skincare items in London, United Kingdom from Cerave and other korean beauty skincare products. Items are affordable and delivered nationwide",
+    "loc": "London",
+    "ig": "https://www.instagram.com/beautybydazuk"
+  },
+  {
+    "name": "Persola Beauty",
+    "slug": "persola-beauty",
+    "cat": "makeup artists",
+    "desc": "Enhancing natural beauty with a high-end, editorial touch. Specializing in flawless, radiant skin and timeless looks for bridal, editorial, and special occasions. Let’s bring your vision to life.",
+    "loc": "Aylesbury",
+    "ig": "https://www.instagram.com/perosola_beauty?igsh=YmYwYjhnODJzMDZ4"
+  },
+  {
+    "name": "Candy Beauty UK",
+    "slug": "candy-beauty-uk",
+    "cat": "hair stylists/braiders",
+    "desc": "Welcome to Candy Beauty, your go-to destination for high-quality hair styling and beauty care. ",
+    "loc": "Walsgrave Rd, Coventry CV2 4ED",
+    "ig": "https://www.instagram.com/candybeauty.uk"
+  },
+  {
+    "name": "Beauty Glowskin",
+    "slug": "beauty-glowskin",
+    "cat": "skincare",
+    "desc": "UK Skincare Formulator specializes in handcrafted skincare and haircare products made from scratch using carefully selected ingredients. ",
+    "loc": "East London"
+  },
+  {
+    "name": "The SOE Brand",
+    "slug": "the-soe-brand",
+    "cat": "ankara & traditional wears",
+    "desc": "The SOE Brand is a fashion and lifestyle brand offering stylish, contemporary pieces designed for individuals who value confidence, quality, and effortless elegance.",
+    "loc": "Liverpool",
+    "ig": "https://www.instagram.com/the_soebrand"
+  },
+  {
+    "name": "Lizzybee Pure Palms",
+    "slug": "lizzybee-pure-palms",
+    "cat": "foodstores & groceries",
+    "desc": "Shop authentic Nigerian groceries and cooking essentials from Lizzybee Pure Palms in the UK, with quality food products and convenient event equipment rentals.\n",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/lizzybee_pure_palm/"
+  },
+  {
+    "name": "Quaidnce | Gift Hampers",
+    "slug": "quaidnce-gift-hampers",
+    "cat": "gifts & hampers",
+    "desc": "Discover Quaidnce, a Manchester-based gift hamper business creating thoughtfully curated hampers for birthdays, celebrations and everyday special moments.\n",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/quaidnce/"
+  },
+  {
+    "name": "Yinxx Cuisine",
+    "slug": "yinxx-cuisine",
+    "cat": "nigerian snacks",
+    "desc": "Yinxx Cuisine provides a premium African food experience in Manchester. The business specializes in Amala catering, authentic African snacks",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/yinxx_cuisine?igsi=MWlrNjV4OGp0angybA=="
+  },
+  {
+    "name": "DA8 Palm Oil & Ofada Oil",
+    "slug": "da8-palm-oil-and-ofada-oil",
+    "cat": "foodstores & groceries",
+    "desc": "DA8 is a UK-based retail brand offering premium Palm Oil and Ofada Oil ethically sourced from Sierra Leone. The business provides authentic, high-quality cooking oils available for order",
+    "loc": "Manchester",
+    "wa": "447438068944",
+    "ig": "https://www.instagram.com/yinxx_cuisine?igsi=MWlrNjV4OGp0angybA=="
+  },
+  {
+    "name": "Mannas Kitchen UK",
+    "slug": "mannas-kitchen-uk",
+    "cat": "caterers",
+    "desc": "We provide authentic , homemade Nigerian meals for busy professionals and families, cater for events as well as curate beautiful grazing tables",
+    "loc": "Colchester",
+    "ig": "https://www.instagram.com/mannas_kitchenuk/"
+  },
+  {
+    "name": "Thebellefemme",
+    "slug": "thebellefemme",
+    "cat": "makeup artists",
+    "desc": "Thebellefemme Beauty Studio is a luxury beauty brand dedicated to enhancing natural beauty while creating an unforgettable experience for every client.",
+    "loc": "Birmingham",
+    "wa": "%2B447448676742",
+    "ig": "https://www.instagram.com/thebellefemme_?igsh=enh1eGJoOW01bngz"
+  },
+  {
+    "name": "Multi Nutrient Africa Food & Frozen ",
+    "slug": "multi-nutrient-africa-food-and-frozen",
+    "cat": "foodstores & groceries",
+    "desc": "Bringing Authentic African Flavours to Your Doorstep. Fresh, High-Quality Frozen Foods and African Groceries Delivered with Care.\n",
+    "loc": "unit 1, 8 Hanover St, Wakefield WF2 9BW",
+    "ig": "https://www.instagram.com/multinutrientafricafood_frozen/"
+  },
+  {
+    "name": "Beauty By Jhay",
+    "slug": "beauty-by-jhay",
+    "cat": "wig vendors",
+    "desc": "Hey beautiful, you deserve nothing but the best! Explore our stunning range of premium wigs created to enhance your glow and match your unique vibe. Dive in and discover your next signature look.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/_beautybyjhay"
+  },
+  {
+    "name": "MakeOver By Teju",
+    "slug": "makeover-by-teju",
+    "cat": "makeup artists",
+    "desc": "Makeoverbyteju is a professional bridal and glam makeup service operating across Leeds and Manchester",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/makeoverbyteju?igsi=dDlmanc0bHpsNGVm"
+  },
+  {
+    "name": "Mayor Bite Bakery and Cafe",
+    "slug": "mayor-bite-bakery-and-cafe",
+    "cat": "restaurants",
+    "desc": "Family owned Edinburgh bakery & café serving fresh bread, traditional Nigerian pastries, and expertly crafted coffee bringing people together through authentic flavours and warm hospitality.",
+    "loc": "Westside Centre, Wester Hailes Rd, Edinburgh EH14 2SW",
+    "wa": "%2B447424989990",
+    "ig": "https://www.instagram.com/mayorsbiteedinburgh?igsh=dnNwZTE5Nzh1amlu"
+  },
+  {
+    "name": "UK Luxury Wears",
+    "slug": "uk-luxury-wears",
+    "cat": "ankara & traditional wears",
+    "desc": "Discover UK Luxury Wears, your destination for luxury African ready-to-wear fashion in the UK. Shop elegant maxi dresses, bespoke outfits, and stylish occasion wear with worldwide delivery. ",
+    "loc": "United Kingdom",
+    "wa": "447301643348",
+    "ig": "https://www.instagram.com/uk_luxurywears/"
+  },
+  {
+    "name": "Fascinator by Olaoge",
+    "slug": "fascinator-by-olaoge",
+    "cat": "fashion & accessories",
+    "desc": "Shop luxury fascinators, headpieces, and accessories from Fascinator by Olaoge UK. Perfect for weddings, church, race days, and special occasions with worldwide shipping.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/fascinatorbyolaogeuk/"
+  },
+  {
+    "name": "Ibile Foods",
+    "slug": "ibile-foods",
+    "cat": "caterers",
+    "desc": "Ibile Foods UK is a UK-based Nigerian food brand bringing the authentic taste of home to your doorstep.",
+    "loc": "Newport",
+    "ig": "https://www.instagram.com/ibilefoods_uk?igsh=MW5ycjJuczVrbzV0eg=="
+  },
+  {
+    "name": "Augrin Foods",
+    "slug": "augrin-foods",
+    "cat": "foodstores & groceries",
+    "desc": "At Augrin Foods UK, we are passionate about bringing the best of authentic African flavours straight to your kitchen. Our carefully curated range of high-quality ingredients.",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/augrinfooduk?igsh=Ymo0cjJsMWRuMGc="
+  },
+  {
+    "name": "Honeyspotuk",
+    "slug": "honeyspotuk",
+    "cat": "caterers",
+    "desc": "Honey Spot UK is a UK-based dessert brand serving handcrafted sweet treats that bring people together.",
+    "loc": "Glasgow",
+    "ig": "https://www.instagram.com/honeyspotuk?igsh=eGxmMWZna2dkbW5j"
+  },
+  {
+    "name": "DOA Foods",
+    "slug": "doa-foods",
+    "cat": "foodstores & groceries",
+    "desc": "DOA Foods UK is a UK-based African grocery brand making authentic Nigerian, African, and Caribbean food products easily accessible across the UK.",
+    "loc": "Lime Square, Ashton Old Rd, Openshaw, Manchester M11 1DA",
+    "ig": "https://www.instagram.com/doafoodsuk?igsh=YjQ0c2czN25sNDc1"
+  },
+  {
+    "name": "Food emporium uk",
+    "slug": "food-emporium-uk",
+    "cat": "restaurants",
+    "desc": "Food Emporium UK is a UK-based Nigerian food brand serving freshly prepared authentic Nigerian meals. Best known for their delicious amala and other traditional favourites",
+    "loc": "Sheffield",
+    "ig": "https://www.instagram.com/foodemporiumuk?igsh=NmttaDNoOGZxOWRp"
+  },
+  {
+    "name": "LayersbyMo",
+    "slug": "layersbymo",
+    "cat": "cakes & desert",
+    "desc": "Small Chops and Party Platters offering luxe canapés and dessert setups for weddings, birthdays, corporate, and private events, beautifully crafted to elevate every occasion.\n",
+    "loc": "Sheffield",
+    "wa": "447442655583",
+    "ig": "https://www.instagram.com/layersbymo"
+  },
+  {
+    "name": "TNI Luxury Wears",
+    "slug": "tni-luxury-wears",
+    "cat": "ankara & traditional wears",
+    "desc": "Shop luxury abayas, Turkish wear and stylish turbans at TNI Luxury Wears in Glasgow. UK delivery with elegant modest fashion for every occasion.",
+    "loc": "Glasgow",
+    "ig": "https://www.instagram.com/tni_luxury_wears/"
+  },
+  {
+    "name": "Eurek Afro-Caribbean",
+    "slug": "eurek-afro-caribbean",
+    "cat": "foodstores & groceries",
+    "desc": "Shop authentic African and Caribbean groceries at Eureka Afro-Caribbean Market in Hertford. Find fresh produce, spices, frozen foods, pantry essentials and more.",
+    "loc": "First Floor Bull Plain, 15 Bull Plain, Hertford SG14 1DX",
+    "ig": "https://www.instagram.com/eurekaafrocaribbean/"
+  },
+  {
+    "name": "Obaroxa",
+    "slug": "obaroxa",
+    "cat": "fashion & accessories",
+    "desc": "Shop premium African fashion at Obaroxa. Discover elegant dresses, luxury occasion wear, and contemporary African styles with UK and international delivery.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/obaroxa/"
+  },
+  {
+    "name": "Beautybykj",
+    "slug": "beautybykj",
+    "cat": "wig vendors",
+    "desc": "Shop premium 100% human hair at Beauty By KJ in London. Discover bone straight, wavy, curly and bouncy styles designed for a luxurious, natural look.\n",
+    "loc": "167 Camberwell Rd, London SE5 0HB",
+    "ig": "https://www.instagram.com/beautybykj_london"
+  },
+  {
+    "name": "Meecakes1",
+    "slug": "meecakes1",
+    "cat": "cakes & desert",
+    "desc": "Discover Meecakes1 Food and Cafe for bespoke birthday, wedding, anniversary and celebration cakes, beautifully handcrafted to make every occasion special.\n",
+    "loc": "7 Abbey St, Leicester LE1 3TE",
+    "wa": "447378737833",
+    "ig": "https://www.instagram.com/meecakes1/"
+  },
+  {
+    "name": "BAKT Jeweller",
+    "slug": "bakt-jeweller",
+    "cat": "jewelry",
+    "desc": "BAKT Jeweller is a trusted UK-based gold jewellery brand specialising in authentic 18K–21K pure gold pieces.",
+    "loc": "Sheffield",
+    "ig": "https://www.instagram.com/baktjeweller"
+  },
+  {
+    "name": "DH Accessories UK",
+    "slug": "dh-accessories-uk",
+    "cat": "jewelry",
+    "desc": "DH Accessories UK is a UK-based jewellery and watches brand offering statement pieces designed to elevate every occasion. ",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/dhaccessoriesuk?igsh=MTVuNmg2YW8xMjFrNQ=="
+  },
+  {
+    "name": "Yemiluxe Jewelry",
+    "slug": "yemiluxe-jewelry",
+    "cat": "jewelry",
+    "desc": "Yemiluxe Jewelry is a UK-based jewellery brand offering stylish, non-tarnish pieces that look like real gold. ",
+    "loc": "Peckham, London",
+    "ig": "https://www.instagram.com/yemiluxejewelry"
+  },
+  {
+    "name": "dluxegems_uk",
+    "slug": "dluxegems-uk",
+    "cat": "jewelry",
+    "desc": "dluxegems_uk is a UK-based jewelry brand dedicated to offering affordable luxury through premium Brazilian gold-filled and high-quality non-tarnish jewelry. ",
+    "loc": "Plymouth",
+    "ig": "https://www.instagram.com/dluxegems_uk"
+  },
+  {
+    "name": "herhairbang",
+    "slug": "herhairbang",
+    "cat": "wig vendors",
+    "desc": "herhairbang is a UK-based online boutique specializing in premium 100% human hair extensions and wigs.",
+    "loc": "Dartford",
+    "ig": "https://www.instagram.com/herhairbang?igsh=MWJwejRyc2xkamFwMQ=="
+  },
+  {
+    "name": "Ronnys Hair Lane",
+    "slug": "ronnys-hair-lane",
+    "cat": "wig vendors",
+    "desc": "Ronnyshairlane is a Sheffield-based hair brand specializing in high-quality human hair wigs and professional wig revamp services.",
+    "loc": "Sheffield",
+    "ig": "https://www.instagram.com/ronnyshairlane?igsh=b250NGtpamUzOGtq"
+  },
+  {
+    "name": "brunettesglammm",
+    "slug": "brunettesglammm",
+    "cat": "wig vendors",
+    "desc": "brunettesglammm is a Manchester-based boutique offering raw hair and premium wigs.",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/brunettesglammm"
+  },
+  {
+    "name": "sobriqluxewigs",
+    "slug": "sobriqluxewigs",
+    "cat": "wig vendors",
+    "desc": "sobriqluxewigs is a Manchester-based wig store focused on empowering Black women to feel confident with premium hair products.",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/sobriqluxewigs?igsh=Mmp0enJsMTh3YTJ6"
+  },
+  {
+    "name": "Clem's Hair",
+    "slug": "clems-hair",
+    "cat": "wig vendors",
+    "desc": "Clem's Hair is a London-based hair brand offering premium hair extensions and wig products.",
+    "loc": "182 High St N, London E6 2JA",
+    "ig": "https://www.instagram.com/clemshair_?igsh=MXI4aWZrMXlzYzBsbw=="
+  },
+  {
+    "name": "Midey hair",
+    "slug": "midey-hair",
+    "cat": "wig vendors",
+    "desc": "At MideyHairCollection, we are dedicated to delivering excellence through high-quality products, personalized services, and a commitment to customer satisfaction.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/mideyhaircollection?igsh=MXR2cnBubGZiYzBidw=="
+  },
+  {
+    "name": "Hairbysparkle",
+    "slug": "hairbysparkle",
+    "cat": "wig vendors",
+    "desc": "hair.by.sparkles is a UK-registered hair boutique based in Camberley, specializing in premium quality donor and virgin wigs.",
+    "loc": "Camberley",
+    "ig": "https://www.instagram.com/hair.by.sparkles?igsh=aWJwdmdqZWt2amN0"
+  },
+  {
+    "name": "Reowigs",
+    "slug": "reowigs",
+    "cat": "wig vendors",
+    "desc": "reowigs is a Birmingham-based wig brand and educational platform specializing in effortless, glueless, ready-to-wear wigs.",
+    "loc": "Birmingham",
+    "ig": "https://www.instagram.com/reowigs?igsh=cHUwcXlodzU0Nmhy"
+  },
+  {
+    "name": "luxehair_bysophie",
+    "slug": "luxehair-bysophie",
+    "cat": "wig vendors",
+    "desc": "luxehair_bysophie is a registered UK-based wig store specializing in premium raw and virgin hair extensions and wigs.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/luxehair_bysophie?igsh=MXFhbzE0dGIwZHN5Zw=="
+  },
+  {
+    "name": "abtomstitches_uk",
+    "slug": "abtomstitches-uk",
+    "cat": "fashion designers",
+    "desc": "abtomstitches_uk is a UK-based fashion brand based in Bedford, Bedfordshire, specializing in ready-to-wear designs and bespoke tailoring.",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/abtomstitches_uk?igsh=NnA5OTN6emw4bGY5"
+  },
+  {
+    "name": "alaserfashion__",
+    "slug": "alaserfashion",
+    "cat": "fashion designers",
+    "desc": "alaserfashion__ is a wholesale and retail fashion brand offering handmade Nigerian designs. Specializing in rich Bubu gowns, stylish two-piece sets, and tailored menswear",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/alaserfashion__?igsh=MXExZnZuOTQwazdnMQ=="
+  },
+  {
+    "name": "Foodcourt Events Catering",
+    "slug": "foodcourt-events-catering",
+    "cat": "small chops",
+    "desc": "Foodcourt Events Catering is an award-winning catering brand based in Birmingham, United Kingdom",
+    "loc": "Birmingham",
+    "ig": "https://www.instagram.com/foodcourt_events_catering?igsh=MnEwdHQwbXBkeHRq"
+  },
+  {
+    "name": "Timahs Kiichen UK",
+    "slug": "timahs-kiichen-uk",
+    "cat": "caterers",
+    "desc": "Timahs Kiichen UK is a London-based food vendor offering premium Nigerian cuisine across the UK.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/timahskichen.uk?igsh=MWx1cDdmY2J2NWhqNQ=="
+  },
+  {
+    "name": "Ronkky Special Kitchen ",
+    "slug": "ronkky-special-kitchen",
+    "cat": "caterers",
+    "desc": "Ronkky Special Kitchen  is a UK-based Nigerian food delivery and luxury catering brand operated by a celebrity chef. Specializing in bulk orders, event catering, and authentic Nigerian dishes,",
+    "loc": "London",
+    "ig": "https://www.instagram.com/ronkkyspecialkitchen?igsh=cm16dXgzaWVycTg="
+  },
+  {
+    "name": "EOW Planner",
+    "slug": "eow-planner",
+    "cat": "event planners",
+    "desc": "EOW Planner is an event planning business founded by Elsie Ofulue, recognized as a UKAWP Elite Planner and TWIA Highly Commended Planner.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/eow.planner?igsh=ZWl0dnJtZmQ0MWsz"
+  },
+  {
+    "name": "Naijaroma Restaurant",
+    "slug": "naijaroma-restaurant",
+    "cat": "restaurants",
+    "desc": "naijaromarestaurant is a Birmingham-based restaurant serving authentic cuisine.",
+    "loc": "8 Bordesley St, Birmingham",
+    "ig": "https://www.instagram.com/naijaaromarestaurant?igsh=MmdqdWd4M2gydnc1"
+  },
+  {
+    "name": "Orionbloomuk",
+    "slug": "orionbloomuk",
+    "cat": "makeup artists",
+    "desc": "Whether you are looking to book professional makeup services, discover tailored beauty insight, or collaborate on digital beauty campaigns, orionbloomuk delivers unparalleled expertise in melanin-focu",
+    "loc": "United Kingdom",
+    "wa": "4407732785019",
+    "ig": "https://www.instagram.com/orionbloomuk/"
+  },
+  {
+    "name": "Adunnified Beauty",
+    "slug": "adunnified-beauty",
+    "cat": "makeup artists",
+    "desc": "I am a Makeup, Gele and SPMU artist. I am available to travel anywhere in and outside UK. ",
+    "loc": "Bexleyheath",
+    "ig": "https://www.instagram.com/adunnifiedbeauty"
+  },
+  {
+    "name": "Photomaster Studios",
+    "slug": "photomaster-studios",
+    "cat": "photography",
+    "desc": "Creating timeless art through the lens of passion and precision.",
+    "loc": "Roden House, Roden St, Nottingham NG3 1JH",
+    "ig": "https://www.instagram.com/photomaster_studio"
+  },
+  {
+    "name": "Jollofmama",
+    "slug": "jollofmama",
+    "cat": "restaurants",
+    "desc": "Discover the vibrant flavors of Nigeria with Jollof Mama, London's finest destination for authentic West African cuisine. Enjoy traditional recipes with a modern twist that bring the heart and soul of",
+    "loc": "London",
+    "ig": "https://www.instagram.com/jollofmama"
+  },
+  {
+    "name": "De spruce Fashion",
+    "slug": "de-spruce-fashion",
+    "cat": "fashion & accessories",
+    "desc": "DSF Non-Tarnish Jewellery Set is a Luxury gold-look jewellery made for everyday elegance. Non-tarnish titanium steel, stylish, durable and perfect for every occasion. Shop now!",
+    "loc": "Northampton",
+    "ig": "https://www.instagram.com/desprucefashion/"
+  },
+  {
+    "name": "Kelz J Bukka & Grills",
+    "slug": "kelz-j-bukka-and-grills",
+    "cat": "restaurants",
+    "desc": "Kelz J Bukka & Grills in Hove brings the rich flavors of Nigerian cuisine to your table, blending tradition and taste.",
+    "loc": "Beresford Court, Somerhill Rd, Brighton and Hove, Hove BN3 1RH",
+    "ig": "https://www.instagram.com/kelz_j_bukka/"
+  },
+  {
+    "name": "Funkesglam",
+    "slug": "funkesglam",
+    "cat": "makeup artists",
+    "desc": "Funke's Glam provides professional makeup services across London and Essex, specialising in bridal, photoshoot, special occasion, and everyday glam. Flawless looks tailored to your unique style.\n",
+    "loc": "55 Christchurch Ave, Rainham RM13 8JA",
+    "ig": "https://www.instagram.com/funkesglam"
+  },
+  {
+    "name": "280degrees",
+    "slug": "280degrees",
+    "cat": "restaurants",
+    "desc": "Step inside 280 Degrees African Restaurant and experience the vibrant colours, rich flavours, and warm atmosphere that define authentic African dining. Our gallery captures the heart of our kitchen",
+    "loc": "280 Kilburn High Rd, London NW6 2BY",
+    "ig": "https://www.instagram.com/280degreesbar/"
+  },
+  {
+    "name": "Justpalmoil",
+    "slug": "justpalmoil",
+    "cat": "foodstores & groceries",
+    "desc": "Discover the authentic taste of Undiluted Palm Oil from Just Palm Oil, sourced directly from Calabar, Nigeria, known for producing top-quality palm products.",
+    "loc": "Bladon Court, Barrow Rd, London SW16 5NE",
+    "ig": "https://www.instagram.com/just_palmoil_uk/"
+  },
+  {
+    "name": "Xstarhaircollectionz",
+    "slug": "xstarhaircollectionz",
+    "cat": "wig vendors",
+    "desc": "Xstar Hair Collectionz is your trusted destination for premium quality wigs and hair products designed to empower your beauty and enhance your growth.",
+    "loc": "Glasgow",
+    "wa": "447342572629",
+    "ig": "https://www.instagram.com/xstarhaircollectionz"
+  },
+  {
+    "name": "HairMistress",
+    "slug": "hairmistress",
+    "cat": "makeup artists",
+    "desc": "Experience exceptional beauty treatments with Hair Mistress, where convenience meets professionalism, as services can be enjoyed either at their warm studio in Erith or at your preferred location.",
+    "loc": "237 Bexley Rd, Erith DA8 3EX",
+    "wa": "447762137315",
+    "ig": "https://www.instagram.com/hairmistressandmakeover/"
+  },
+  {
+    "name": "Uwagboe’s Kitchen & Grill - Leith Walk",
+    "slug": "uwagboes-kitchen-and-grill-leith-walk",
+    "cat": "restaurants",
+    "desc": "Uwagboe's Kitchen & Grill brings the vibrant flavors of Nigeria to the heart of Edinburgh, offering an authentic culinary experience.",
+    "loc": "250-252 Leith Walk, Edinburgh EH6 5EL",
+    "ig": "https://www.instagram.com/uwagboeskitchen/"
+  },
+  {
+    "name": "Craving Delight",
+    "slug": "craving-delight",
+    "cat": "restaurants",
+    "desc": "Cravings Delight Ltd brings authentic African cuisine to the heart of Hull, offering a delightful menu that satisfies diverse culinary cravings.",
+    "loc": "11 Grimston St, Hull HU1 3HG"
+  },
+  {
+    "name": "1212AfroCaribbean",
+    "slug": "1212afrocaribbean",
+    "cat": "foodstores & groceries",
+    "desc": "Missing the taste of home? 1212Afrocaribbean delivers authentic African and Caribbean groceries, spices, and essentials directly to your doorstep with convenience and care.",
+    "loc": "43 Mansfield Rd, Nottingham NG1 3FB",
+    "ig": "https://www.instagram.com/1212afrocaribbean_shop/"
+  },
+  {
+    "name": "Tombell Education Consultancy Ltd",
+    "slug": "tombell-education-consultancy-ltd",
+    "cat": "education consultancy",
+    "desc": "Tombelledu is a British Council Certified education consultancy helping students achieve their study abroad goals. From applications and admissions to visa support and arrival assistance, we provide e",
+    "loc": "Sandstone Dr, Kemsley, Sittingbourne ME10",
+    "wa": "2349066674956",
+    "verified": true,
+    "featured": true,
+    "ig": "https://www.instagram.com/tombelledu/"
+  },
+  {
+    "name": "Loaf & Ladle Co.",
+    "slug": "loaf-and-ladle-co",
+    "cat": "cakes & desert",
+    "desc": "Loaf & Ladle Co. serves homemade comfort food made with care, from freshly baked banana bread to hearty wraps and warm meals, crafted for rich flavour and satisfaction.\n",
+    "loc": "376 Radford Rd, Nottingham NG7 5GQ",
+    "ig": "https://www.instagram.com/loafandladleco"
+  },
+  {
+    "name": "AC CHOW",
+    "slug": "ac-chow",
+    "cat": "private chef",
+    "desc": "AC Chow is a community-driven food brand serving authentic, flavorful dishes made with the finest ingredients, crafted with passion and tradition to deliver a memorable culinary experience.\n",
+    "loc": "42 St Albans Dr, Stevenage SG1 4RU",
+    "ig": "https://www.instagram.com/ac_chow"
+  },
+  {
+    "name": "4R Luxury Events",
+    "slug": "4r-luxury-events",
+    "cat": "event planners",
+    "desc": "4R Luxury Events is a luxury destination wedding and event planning service operating across the UK, Turks & Caicos, France, Portugal, and Morocco.",
+    "loc": "London",
+    "ig": "https://www.instagram.com/4rluxuryevents?igsh=MmU3Z3BubGM1YjUz"
+  },
+  {
+    "name": "Efys Kitchen UK",
+    "slug": "efys-kitchen-uk",
+    "cat": "caterers",
+    "desc": "efyskitchenuk is a Coventry-based culinary service offering authentic homemade Nigerian food across the UK.",
+    "loc": "Coventry",
+    "ig": "Https://www.instagram.com/efyskitchenuk?igsh=MTAxdXd2aGFxM2pmcQ=="
+  },
+  {
+    "name": "Fabulous Fashion Wears",
+    "slug": "fabulous-fashion-wears",
+    "cat": "ankara & traditional wears",
+    "desc": "Fabulous Fashion Wears is a UK-based African clothing brand offering luxury styles at affordable prices. ",
+    "loc": "Nottingham",
+    "ig": "https://www.instagram.com/fabulousfashionwears28_backup"
+  },
+  {
+    "name": "Apex SQR UK",
+    "slug": "apex-sqr-uk",
+    "cat": "fashion & accessories",
+    "desc": "Apex SQR UK is a Witham, Essex-based bridal shop specializing in signature statement accessories for weddings, owambes, and special occasions.",
+    "loc": "Witham",
+    "ig": "https://www.instagram.com/apexsqruk_?igsh=dm4wdzRibjV2M2U1"
+  },
+  {
+    "name": "Crux Nxtion Events",
+    "slug": "crux-nxtion-events",
+    "cat": "event planners",
+    "desc": "Crux Nxtion Events is a UK-based event planning and party entertainment service. Specializing in large-scale social gatherings, trade fairs, festivals",
+    "loc": "Sheffield",
+    "ig": "https://www.instagram.com/cruxnxtioneventsuk?igsh=MTVuNTV2N21qeHozcw=="
+  },
+  {
+    "name": "Tastee9ja",
+    "slug": "tastee9ja",
+    "cat": "caterers",
+    "desc": "Tastee9ja is a Rugby, Warwickshire-based catering service offering authentic Nigerian cuisine across the UK.",
+    "loc": "Warwickshire",
+    "ig": "https://www.instagram.com/tastee9ja?igsh=MW1zbzJlMm1hOXhybA=="
+  },
+  {
+    "name": "Food Experience With Marian",
+    "slug": "food-experience-with-marian",
+    "cat": "caterers",
+    "desc": "Food Experience With Marian is a Newcastle-based food vendor offering homemade meals and custom food hampers across the UK.",
+    "loc": "Newcastle",
+    "ig": "Https://www.instagram.com/foodexperiencewithmarian?igsh=dnQ3cTFucTMxOG1h"
+  },
+  {
+    "name": "AM_farm2pot",
+    "slug": "am-farm2pot",
+    "cat": "foodstores & groceries",
+    "desc": "Order healthy, authentic African cooked and uncooked food online with UK-wide delivery. Enjoy delicious African cuisine and the true taste of home delivered to your door.",
+    "loc": "195, 197 Wood St, London E17 3NU",
+    "ig": "https://www.instagram.com/am_farm2pot"
+  },
+  {
+    "name": "African Aroma",
+    "slug": "african-aroma",
+    "cat": "caterers",
+    "desc": "African Aroma is a Manchester-based Nigerian food delivery and catering service offering home delivery across the UK. ",
+    "loc": "Manchester",
+    "wa": "%2B447733763683",
+    "ig": "https://www.instagram.com/africanaroma.uk"
+  },
+  {
+    "name": "Bankys Kitchen",
+    "slug": "bankys-kitchen",
+    "cat": "caterers",
+    "desc": "Bankys Kitchen is a Sheffield and Birmingham-based catering service offering 100% Halal Nigerian food.",
+    "loc": "288 Abbeydale Rd, Nether Edge, Sheffield S7 1FL",
+    "ig": "https://www.instagram.com/bankys_kitchen?igsh=MTljazg5ZzU3Y2Q5bg=="
+  },
+  {
+    "name": "Flavour Hub Food & Events LTD",
+    "slug": "flavour-hub-food-and-events-ltd",
+    "cat": "caterers",
+    "desc": "We provide authentic Afro -Caribbean cuisine and modern catering services at very reasonable prices.",
+    "loc": "Kent",
+    "ig": "https://www.instagram.com/flavour_hubuk"
+  },
+  {
+    "name": "Fizzy Concept Fashion",
+    "slug": "fizzy-concept-fashion",
+    "cat": "fashion designers",
+    "desc": "Fizzy Concept Fashion is a UK-based clothing brand specializing in handmade and ready-to-wear outfits. The brand sources quality fabrics to create custom styles for various occasions.",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/fizzyconceptfashion?igsi=YTMyMXN6NWJtYTlw"
+  },
+  {
+    "name": "Zarbeautie",
+    "slug": "zarbeautie",
+    "cat": "makeup artists",
+    "desc": "Zarbeautie is a Manchester-based beauty service offering professional makeup artistry, bridal looks, hair styling, and beauty training.",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/zarbeautie"
+  },
+  {
+    "name": "Opy Hotglam",
+    "slug": "opy-hotglam",
+    "cat": "makeup artists",
+    "desc": "Opy Hotglam is a Manchester-based bridal makeup artist and hair stylist. The brand provides professional beauty services, hair styling and portfolio content for special events and weddings.",
+    "loc": "Manchester",
+    "ig": "https://www.instagram.com/opy_hotglam?igsi=MW5xb3czdjc0N2k4Zw=="
+  },
+  {
+    "name": "Ncjfooduk",
+    "slug": "ncjfooduk",
+    "cat": "nigerian snacks",
+    "desc": "Discover authentic African foods in the UK including premium Kilishi, goat meat, and dried snails. Order fresh African delicacies with fast nationwide delivery from Scotland.",
+    "loc": "Scotland",
+    "wa": "447479076899",
+    "ig": "https://www.instagram.com/ncjfooduk"
+  },
+  {
+    "name": "Abike Olobe Foods",
+    "slug": "abike-olobe-foods",
+    "cat": "foodstores & groceries",
+    "desc": "Shop authentic African groceries from AbikeOlobe Foods, including yam flour, gari, beans, palm oil, crayfish, dried fish, iru, spices and pantry essentials.\n\n",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/abikeolobeafricangrocerystore/"
+  },
+  {
+    "name": "SEHIMEK LONDON",
+    "slug": "sehimek-london",
+    "cat": "ankara & traditional wears",
+    "desc": "Shop SEHIMEK LONDON for African-inspired women’s fashion, ready-to-wear clothing, handcrafted raffia accessories, pixie wigs and hair care essentials.\n\n",
+    "loc": "Freeman St, Grimsby DN32 7DS",
+    "ig": "https://www.instagram.com/sehimek.london_fashion.store/"
+  },
+  {
+    "name": "Omas touch ",
+    "slug": "omas-touch",
+    "cat": "skincare",
+    "desc": "Oma's_touch specialise in assisting you to discover your inner glow and boost your confidence. For all your skincare issues, semi permanent makeup, waxing and massages we got you covered.",
+    "loc": "Manchester Rd E, Little Hulton, Manchester M38 9AF",
+    "wa": "07958710495",
+    "ig": "https:// www.instagram.com/omas_touch7 "
+  },
+  {
+    "name": "Honey Cakes and foods ",
+    "slug": "honey-cakes-and-foods",
+    "cat": "cakes & desert",
+    "desc": "Honey Cakes and foods  is UK-based cakes & catering business serving delicious Nigerian food, celebration cakes, pastries, small chops & party catering. Based in St Albans, Hertfordshire",
+    "loc": "Hertfordshire",
+    "ig": "https://www.instagram.com/_honeycakesandfoods/"
+  },
+  {
+    "name": "Marvellous Cakes",
+    "slug": "marvellous-cakes",
+    "cat": "cakes & desert",
+    "desc": "Discover Marvellous Cakes, a Manchester-based bakery creating beautiful cakes for birthdays, weddings and special occasions. Enquire and order via WhatsApp.\n",
+    "loc": "Manchester",
+    "wa": "%2B447585646396",
+    "ig": "https://www.instagram.com/marvellous_cakes_mcr/"
+  },
+  {
+    "name": "Odunhair Collectionz",
+    "slug": "odunhair-collectionz",
+    "cat": "wig vendors",
+    "desc": "Shop luxury ready-to-wear and custom wigs from Odunhair Collectionz. Discover bespoke wigs, professional wig revamps and one-to-one wig-making training.\n",
+    "loc": "Manchester",
+    "wa": "447769136652",
+    "ig": "https://www.instagram.com/odunhair_collectionz/"
+  },
+  {
+    "name": "Labisi Beauty",
+    "slug": "labisi-beauty",
+    "cat": "makeup artists",
+    "desc": "Discover Labisi Beauty, a makeup artist in Salford and Manchester offering affordable makeup for weddings, events and special occasions, with travel available.\n",
+    "loc": "Manchester",
+    "wa": "447482549975",
+    "ig": "https://www.instagram.com/labisi_beauty/"
+  },
+  {
+    "name": "Akomu Kitchen",
+    "slug": "akomu-kitchen",
+    "cat": "caterers",
+    "desc": "Discover Akomu Kitchen, a Nigerian food delivery service in Manchester offering freshly made-to-order Nigerian meals with delivery across the UK.\n",
+    "loc": "Manchester"
+  },
+  {
+    "name": "Thehairxential",
+    "slug": "thehairxential",
+    "cat": "wig vendors",
+    "desc": "Thehairxential is an Aldershot-based offering premium hair extensions, maintenance products, braiding extensions, and essential hair accessories.",
+    "loc": "Aldershot",
+    "ig": "https://www.instagram.com/thehairxcential"
+  },
+  {
+    "name": "Hairbywade",
+    "slug": "hairbywade",
+    "cat": "wig vendors",
+    "desc": "HairbyWade is a luxury hair brand specialising in premium quality human hair wigs, bundles and bespoke wig services. From custom wig making and styling to revamping, colouring and installations.",
+    "loc": "21 Market St, Mexborough S64 0EL",
+    "ig": "https://www.instagram.com/hairby_wade/"
+  },
+  {
+    "name": "Deetee Bevs",
+    "slug": "deetee-bevs",
+    "cat": "drinks",
+    "desc": "Discover DeeTee Beverages for Tiger Nut Drink, Zobo, Pomo and Palm Oil, bringing the taste of Nigeria to the UK.\n",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/deetee_bevs/"
+  },
+  {
+    "name": "LuxeByFaith",
+    "slug": "luxebyfaith",
+    "cat": "fashion & accessories",
+    "desc": "Shop Luxe by Faith for premium Afro-chic ready-to-wear fashion, Bubu dresses, Vogue dresses and pre-order styles, with worldwide delivery available.\n",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/luxebyfaith_89/"
+  },
+  {
+    "name": "BNM Jewels ",
+    "slug": "bnmjewels",
+    "cat": "jewelry",
+    "desc": "Discover high-quality, unique & timeless jewellery designed to make you feel effortlessly elegant and confident. Perfect for everyday wear, gifting or special occasions. Shop our collection today! 💎\n",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/bnmjewels_uk"
+  },
+  {
+    "name": "Relish Indelight",
+    "slug": "relish-indelight",
+    "cat": "cakes & desert",
+    "desc": "Discover Relish Indelight in Aberdeen, Scotland, offering cakes, desserts, pastries, small chops, canapés and healthy drinks. Order via DM or WhatsApp.\n",
+    "loc": "",
+    "wa": "447780395685",
+    "ig": "https://www.instagram.com/relish_indelight/"
+  },
+  {
+    "name": "Buchis Photography ",
+    "slug": "buchis-photography",
+    "cat": "photography",
+    "desc": "Buchis Photography offers event and portrait photography and videography services and is available to travel for bookings.\n",
+    "loc": "Milton Keynes",
+    "ig": "https://www.instagram.com/buchis_photography/"
+  },
+  {
+    "name": "Debstecottage Cakes and More",
+    "slug": "debstecottage-cakes-and-more",
+    "cat": "cakes & desert",
+    "desc": "Discover Debstecottage Cakes & More in Wrexham for Nigerian food and cakes, with small and bulk orders available and delivery across the UK.\n",
+    "loc": "Wrexham",
+    "ig": "https://www.instagram.com/debstecottage_cakes_more/"
+  },
+  {
+    "name": "Afroneva Hair Co.",
+    "slug": "afroneva-hair-co",
+    "cat": "hair stylists/braiders",
+    "desc": "Afroneva Hair Co. in Wolverhampton offers dreadlock services, starter locs, retwisting, relocking, braids, textured wigs and Afro hair care products.\n\n",
+    "loc": "Wolverhampton"
+  },
+  {
+    "name": "Amakas Bites",
+    "slug": "amakas-bites",
+    "cat": "small chops",
+    "desc": "Order meat pies, puff puff, Zobo and parfait from Amaka’s Bites in Manchester, with individual and event orders available.\n",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/amakas.bites/"
+  },
+  {
+    "name": "CakesbyChemie",
+    "slug": "cakesbychemie",
+    "cat": "cakes & desert",
+    "desc": "Discover CakesbyChemie in Buntingford, Hertfordshire, for professionally made cakes for weddings, birthdays, graduations, baby celebrations and special occasions.\n",
+    "loc": "Buntingford",
+    "ig": "https://www.instagram.com/cakesbychemie/"
+  },
+  {
+    "name": "TM Clothing Collections ",
+    "slug": "tm-clothing-collections",
+    "cat": "ankara & traditional wears",
+    "desc": "Discover TM Clothing Collections in Northampton for stylish African attire and handcrafted ready-to-wear dresses, with worldwide shipping available.\n",
+    "loc": "United Kingdom",
+    "ig": "https://www.instagram.com/tmclothingcollections/"
+  }
 ];
 
 
@@ -7737,7 +9365,8 @@ function resetToWelcome() {
       console.log('tipHtml built');
       addTipMessage(tipHtml);
       console.log('message added');
-      showSponsoredAd();
+      showFeaturedCarousel();
+  showSponsoredAd();
       showUpcomingEventCard();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
