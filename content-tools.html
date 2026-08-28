@@ -955,7 +955,7 @@ function closeSendModal() {
   document.getElementById('sendModal').classList.remove('open');
 }
 
-async async function sendNotification(schedule) {
+async function sendNotification(schedule) {
   const title = document.getElementById('modalTitle').value.trim();
   const body = document.getElementById('modalBody').value.trim();
   const url = document.getElementById('modalUrl').value || 'https://auntietobi.co.uk';
