@@ -5166,17 +5166,54 @@ function showFeaturedBusinesses() {
 }
 
 function showMarketplaceCarousel() {
-  var slides = MARKETPLACE_PRODUCTS.map(function(p){ return buildProductCard(p, true); }).join('');
-  addTipMessage(
-    '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
-    + '<div onclick="showMarketplace()" style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">'
-    + '<div style="color:white;font-size:14px;font-weight:700;">🛍️ Marketplace (Products/Services)</div>'
-    + '<div style="color:#FFB81C;font-size:12px;font-weight:600;">See all →</div>'
-    + '</div>'
-    + '<div style="display:flex;gap:10px;padding:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;">'
-    + slides
-    + '</div></div>'
-  );
+  if (!MARKETPLACE_PRODUCTS.length) return;
+  var current = 0;
+
+  function renderSlide(idx) {
+    var p = MARKETPLACE_PRODUCTS[idx];
+    var imgHtml = p.img
+      ? '<img src="' + p.img + '" style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;background:#f5f5f5;">'
+      : '<div style="width:100%;height:200px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:54px;">' + (p.emoji||'🛍️') + '</div>';
+    var dots = MARKETPLACE_PRODUCTS.map(function(_, i){
+      return '<div onclick="window._mpGoTo(' + i + ')" style="width:' + (i===idx?'20px':'8px') + ';height:8px;border-radius:' + (i===idx?'4px':'50%') + ';background:' + (i===idx?'#057A44':'#e0e0e0') + ';transition:.2s;cursor:pointer;"></div>';
+    }).join('');
+    var navBtns = MARKETPLACE_PRODUCTS.length > 1
+      ? '<button onclick="window._mpGoTo(' + ((idx-1+MARKETPLACE_PRODUCTS.length)%MARKETPLACE_PRODUCTS.length) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">‹</button>'
+        + dots
+        + '<button onclick="window._mpGoTo(' + ((idx+1)%MARKETPLACE_PRODUCTS.length) + ')" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">›</button>'
+      : dots;
+
+    return '<div style="background:white;border-radius:14px;overflow:visible;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
+      + '<div onclick="showMarketplace()" style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-radius:14px 14px 0 0;">'
+      + '<div style="color:white;font-size:14px;font-weight:700;">🛍️ Marketplace (Products/Services)</div>'
+      + '<div style="color:#FFB81C;font-size:12px;font-weight:600;">See all →</div>'
+      + '</div>'
+      + '<div style="border:1.5px solid #e0e0e0;border-radius:14px;margin:12px 12px 10px;overflow:hidden;background:white;">'
+      + imgHtml
+      + '<div style="padding:14px 14px 16px;">'
+      + '<div style="font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">💻 ' + p.category + '</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:4px;">' + p.name + '</div>'
+      + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:8px;">' + p.business + '</div>'
+      + '<div style="font-size:20px;font-weight:800;color:#0F1E36;margin-bottom:12px;">' + p.price + '</div>'
+      + '<a href="' + p.link + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>'
+      + '</div></div>'
+      + '<a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20would%20like%20to%20list%20my%20product%20or%20service%20on%20the%20Marketplace" target="_blank" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 12px 10px;background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;text-decoration:none;">'
+      + '<span style="font-size:12px;color:#0F1E36;font-weight:600;line-height:1.4;">Want to list your product or service on the Marketplace?</span>'
+      + '<span style="background:#057A44;color:white;border-radius:7px;padding:7px 11px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;">💬 Contact Us</span>'
+      + '</a>'
+      + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 14px 14px;">' + navBtns + '</div>'
+      + '</div>';
+  }
+
+  window._mpGoTo = function(idx) {
+    var el = document.getElementById('mp-carousel-slot');
+    if (el) el.innerHTML = renderSlide(idx);
+  };
+
+  var wrapper = document.createElement('div');
+  wrapper.id = 'mp-carousel-slot';
+  wrapper.innerHTML = renderSlide(0);
+  document.getElementById('messages').appendChild(wrapper);
 }
 
 function showMarketplace(filterCat) {
@@ -5198,7 +5235,10 @@ function showMarketplace(filterCat) {
   var filtered = active === 'All' ? MARKETPLACE_PRODUCTS : MARKETPLACE_PRODUCTS.filter(function(p){ return p.category === active; });
 
   var grid = filtered.length
-    ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;">' + filtered.map(function(p){ return buildProductCard(p, false); }).join('') + '</div>'
+    ? '<div style="display:flex;flex-direction:column;gap:12px;padding:12px;">' + filtered.map(function(p){
+        var imgHtml = p.img ? '<img src="' + p.img + '" style="width:100%;height:220px;object-fit:cover;object-position:top;display:block;background:#f5f5f5;">' : '<div style="height:220px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:54px;">' + (p.emoji||'🛍️') + '</div>';
+        return '<div style="border:1.5px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;">' + imgHtml + '<div style="padding:14px 14px 16px;"><div style="font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px;">💻 ' + p.category + '</div><div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:3px;">' + p.name + '</div><div style="font-size:12px;color:#9CA3AF;margin-bottom:8px;">' + p.business + '</div><div style="font-size:20px;font-weight:800;color:#0F1E36;margin-bottom:12px;">' + p.price + '</div><a href="' + p.link + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a></div></div>';
+      }).join('') + '</div>'
     : '<div style="padding:24px;text-align:center;color:#9CA3AF;font-size:14px;">No products in this category yet.</div>';
 
   addTipMessage(
@@ -5209,6 +5249,7 @@ function showMarketplace(filterCat) {
     + '</div>'
     + '<div style="display:flex;gap:6px;padding:10px 12px;overflow-x:auto;scrollbar-width:none;border-bottom:0.5px solid #f0f0f0;">' + filterPills + '</div>'
     + grid
+    + '<a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20would%20like%20to%20list%20my%20product%20or%20service%20on%20the%20Marketplace" target="_blank" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 12px 12px;background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:12px 14px;text-decoration:none;"><span style="font-size:13px;color:#0F1E36;font-weight:600;line-height:1.4;">Want to list your product or service on the Marketplace?</span><span style="background:#057A44;color:white;border-radius:7px;padding:8px 12px;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;">💬 Contact Us</span></a>'
     + '</div>'
   );
 
