@@ -1022,6 +1022,7 @@
     <div class="pill" onclick="showBusinesses(undefined,null,null,true)">🏢 Businesses</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="showNewsAndUpdates()">📰 News & Updates</div>
+    <div class="pill" onclick="showMarketplace()">🛍️ Marketplace</div>
     <div class="pill" onclick="showMoreSheet()" style="background:#0F1E36;color:white;border-color:#0F1E36;">More ›</div>
   </div>
 
@@ -5001,46 +5002,112 @@ function showDailyMotivation() {
   addTipMessage(html);
 }
 
-function showSponsoredAd() {
-  const ads = [
-    {
-      html: `<div style="background:#0F1E36;border-radius:8px;overflow:hidden;">
-        <div style="padding:5px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid rgba(255,255,255,0.1);">
-          <span style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.5px;">SPONSORED</span>
-          <span style="font-size:10px;color:rgba(255,255,255,0.4);">📚 Book Recommendation</span>
-        </div>
-        <div style="padding:14px;text-align:center;">
-          <img src="https://naijabiz.b-cdn.net/service-the-vehicle-to-gr-selar.co-67350afac3b99.jpg" alt="Service: The Vehicle To Greatness" style="width:100px;height:140px;object-fit:cover;border-radius:6px;margin:0 auto 12px;display:block;">
-          <div style="font-size:15px;font-weight:700;color:white;line-height:1.3;margin-bottom:4px;">Service: The Vehicle To Greatness</div>
-          <div style="font-size:12px;color:#C9A227;margin-bottom:8px;font-weight:600;">Rebuilding the Family System</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:14px;">🏡 Build a stronger family God's way. Service, faith & family habits that shape children into Kingdom builders.</div>
-          <a href="https://selar.com/7w755i" target="_blank" style="display:inline-block;background:#C9A227;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">📖 Get the Book (£3.00) →</a>
-        </div>
-      </div>`
-    },
-    {
-      html: `<div style="background:#F5F5F5;border:2px solid #7A0F3A;border-radius:8px;overflow:hidden;">
-        <div style="padding:5px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #C77A7F;">
-          <span style="font-size:10px;color:#B65F66;font-weight:600;letter-spacing:0.5px;">SPONSORED</span>
-          <span style="font-size:10px;color:#7A0F3A;font-weight:700;">📚 Book Recommendation</span>
-        </div>
-        <div style="display:flex;gap:0;">
-          
-          <div style="padding:14px;text-align:center;flex:1;">
-            <img src="https://naijabiz.b-cdn.net/Untitled%20design%20(3)%20(1).png" alt="Bloomly First Period Guide" style="width:100px;height:140px;object-fit:cover;border-radius:6px;margin:0 auto 12px;display:block;">
-            <div style="font-size:15px;font-weight:700;color:#7A0F3A;line-height:1.3;margin-bottom:6px;">Do you have a daughter aged 8–13? 👧🏾</div>
-            <div style="font-size:12px;color:#B65F66;font-weight:600;margin-bottom:8px;">Her first period may be closer than you think.</div>
-            <div style="font-size:12px;color:#333;line-height:1.6;margin-bottom:14px;">Get the <strong>BLOOMLY Book + Digital Bundle</strong> — age-appropriate guidance to help your daughter feel ready and confident. 🩷</div>
-            <a href="https://www.helloperiodz.com/bloomly-bundle" target="_blank" style="display:inline-block;background:#B65F66;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:9px 24px;border-radius:20px;">🩷 Get the Book + Bundle (£10.00) →</a>
-          </div>
-        </div>
-      </div>`
-    }
-  ];
+// ============================================================
+// MARKETPLACE (Products/Services)
+// ============================================================
+const MARKETPLACE_PRODUCTS = [
+  {
+    id: 'mp1',
+    name: 'E-Book / Print Copy — Service: The Vehicle To Greatness: Rebuilding The Family System',
+    shortName: 'Service: The Vehicle To Greatness',
+    business: 'PatUch Concepts',
+    category: 'Digital Product',
+    emoji: '📘',
+    img: 'https://naijabiz.b-cdn.net/service-the-vehicle-to-gr-selar.co-67350afac3b99.jpg',
+    price: '£3',
+    desc: 'A powerful e-book and print copy exploring service as the vehicle to greatness. Foreword by Debola Deji-Kurunmi.',
+    link: 'https://selar.com/7w755i',
+    btnText: 'Learn More'
+  },
+  {
+    id: 'mp2',
+    name: 'Prepare Your Daughter for Her First Period with BLOOMLY 🩷',
+    shortName: 'BLOOMLY — First Period Guide 🩷',
+    business: 'Hello Periodz',
+    category: 'Digital Product',
+    emoji: '🩷',
+    img: 'https://naijabiz.b-cdn.net/19.png',
+    price: '£10',
+    desc: 'Digital/paperback guide to help parents prepare their daughters for their first period with confidence.',
+    link: 'https://www.helloperiodz.com/bloomly-bundle',
+    btnText: 'Learn More'
+  }
+];
 
-  const ad = ads[Math.floor(Math.random() * ads.length)];
-  addTipMessage(ad.html);
+function buildProductCard(p, compact) {
+  var btnLink = p.link || '#';
+  var btnLabel = p.btnText || 'Learn More';
+  var imgHtml = p.img
+    ? '<img src="' + p.img + '" style="width:100%;height:' + (compact ? '110' : '130') + 'px;object-fit:cover;object-position:top;display:block;">'
+    : '<div style="width:100%;height:' + (compact ? '110' : '130') + 'px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:' + (compact ? '36' : '44') + 'px;">' + (p.emoji||'🛍️') + '</div>';
+  var displayName = compact ? (p.shortName || p.name) : p.name;
+  if (compact) {
+    return '<div style="min-width:155px;flex-shrink:0;scroll-snap-align:start;border:1px solid #f0f0f0;border-radius:10px;overflow:hidden;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.06);">'
+      + imgHtml
+      + '<div style="padding:8px 10px 10px;">'
+      + '<div style="font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px;">💻 ' + p.category + '</div>'
+      + '<div style="font-size:12px;font-weight:700;color:#0F1E36;line-height:1.35;margin-bottom:4px;">' + displayName + '</div>'
+      + '<div style="font-size:14px;font-weight:800;color:#0F1E36;margin-bottom:6px;">' + p.price + '</div>'
+      + '<a href="' + btnLink + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:6px;padding:7px;font-size:11px;font-weight:700;text-align:center;text-decoration:none;">' + btnLabel + '</a>'
+      + '</div></div>';
+  }
+  return '<div style="border:1px solid #f0f0f0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.06);">'
+    + imgHtml
+    + '<div style="padding:10px 12px 12px;">'
+    + '<div style="font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px;">💻 ' + p.category + '</div>'
+    + '<div style="font-size:13px;font-weight:700;color:#0F1E36;line-height:1.35;margin-bottom:4px;">' + p.name + '</div>'
+    + '<div style="font-size:15px;font-weight:800;color:#0F1E36;margin-bottom:8px;">' + p.price + '</div>'
+    + '<a href="' + btnLink + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:9px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">' + btnLabel + '</a>'
+    + '</div></div>';
 }
+
+function showMarketplaceCarousel() {
+  var slides = MARKETPLACE_PRODUCTS.map(function(p){ return buildProductCard(p, true); }).join('');
+  addTipMessage(
+    '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
+    + '<div onclick="showMarketplace()" style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">'
+    + '<div style="color:white;font-size:14px;font-weight:700;">🛍️ Marketplace (Products/Services)</div>'
+    + '<div style="color:#FFB81C;font-size:12px;font-weight:600;">See all →</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:10px;padding:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;">'
+    + slides
+    + '</div></div>'
+  );
+}
+
+function showMarketplace(filterCat) {
+  window._currentPage = 'marketplace';
+  var messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  scrollToTop();
+
+  var cats = ['All', 'Cakes & Treats', 'Beauty', 'Groceries', 'Gifts', 'Fashion', 'Food'];
+  var active = filterCat || 'All';
+
+  var filtered = active === 'All' ? MARKETPLACE_PRODUCTS : MARKETPLACE_PRODUCTS.filter(function(p){ return p.category === active; });
+
+  var grid = filtered.length
+    ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;">' + filtered.map(function(p){ return buildProductCard(p, false); }).join('') + '</div>'
+    : '<div style="padding:24px;text-align:center;color:#9CA3AF;font-size:14px;">No products in this category yet.</div>';
+
+  addTipMessage(
+    '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
+    + '<div style="background:#0F1E36;padding:14px 16px;">'
+    + '<div style="font-size:17px;font-weight:800;color:white;">🛍️ Marketplace</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:3px;">Products & services from Nigerian businesses in the UK</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:6px;padding:10px 12px;overflow-x:auto;scrollbar-width:none;border-bottom:0.5px solid #f0f0f0;">' + filterPills + '</div>'
+    + grid
+    + '</div>'
+  );
+
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 Browse Businesses</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
+}
+
+function showSponsoredAd() {
+  showMarketplaceCarousel();
+}
+
 function showNaijaFoodFestivalCard() {
   const eventHtml = `<div id="naija-food-fest-card" style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
     <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
@@ -5535,6 +5602,9 @@ document.addEventListener('click', function(e) {
       return;
     }
   }
+  // Marketplace filter pill
+  var mpf = e.target.closest('[data-mpcat]');
+  if (mpf) { showMarketplace(mpf.getAttribute('data-mpcat')); return; }
   // Category pill click
   var cp = e.target.closest('[data-cat]');
   if (cp && !e.target.closest('[data-city]')) {
@@ -7659,7 +7729,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showBusinessClub()" style="background:#057A44;color:white;border-color:#057A44;">💚 Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/group-advertising\',\'_blank\')" style="background:#FFB81C;color:#0F1E36;border-color:#FFB81C;">📣 Group Advertising</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showBusinessClub()" style="background:#057A44;color:white;border-color:#057A44;">💚 Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/group-advertising\',\'_blank\')" style="background:#FFB81C;color:#0F1E36;border-color:#FFB81C;">📣 Group Advertising</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
