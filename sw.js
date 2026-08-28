@@ -1,10 +1,13 @@
-// Auntie Tobi Service Worker v202608280001
-// Clears old caches on update, delegates push to OneSignal
+// Auntie Tobi Service Worker v202608280002
+// OneSignal handles push — we handle caching
 
-const CACHE_VERSION = 'v202608280001';
+// Import OneSignal FIRST so it registers its push/notificationclick handlers
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+
+const CACHE_VERSION = 'v202608280002';
 
 self.addEventListener('install', function(e) {
-  self.skipWaiting(); // activate immediately
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', function(e) {
@@ -15,26 +18,20 @@ self.addEventListener('activate', function(e) {
             .map(function(k) { return caches.delete(k); })
       );
     }).then(function() {
-      return self.clients.claim(); // take control of all tabs
+      return self.clients.claim();
     })
   );
 });
 
-// Network-first fetch — always get fresh content, no caching
+// Network-first fetch — always serve fresh
 self.addEventListener('fetch', function(e) {
-  // Only handle same-origin GET requests
   if (e.request.method !== 'GET') return;
   if (!e.request.url.startsWith(self.location.origin)) return;
-  // Skip netlify functions — always network
   if (e.request.url.includes('/.netlify/')) return;
 
   e.respondWith(
     fetch(e.request).catch(function() {
-      // Offline fallback — return cached index if available
       return caches.match('/index.html');
     })
   );
 });
-
-// Delegate push handling to OneSignal
-importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
