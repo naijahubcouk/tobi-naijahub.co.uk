@@ -9702,19 +9702,13 @@ async function submitFeedback() {
 
 function hardRefreshApp() {
   var doReload = function() { window.location.href = window.location.pathname + '?nocache=' + Date.now(); };
-  // Clear caches and unregister service workers
-  var tasks = [];
   if ('caches' in window) {
-    tasks.push(caches.keys().then(function(names) {
-      return Promise.all(names.map(function(n){ return caches.delete(n); }));
-    }));
+    caches.keys().then(function(names) {
+      Promise.all(names.map(function(n){ return caches.delete(n); })).then(doReload).catch(doReload);
+    }).catch(doReload);
+  } else {
+    doReload();
   }
-  if ('serviceWorker' in navigator) {
-    tasks.push(navigator.serviceWorker.getRegistrations().then(function(regs) {
-      return Promise.all(regs.map(function(r){ return r.unregister(); }));
-    }));
-  }
-  Promise.all(tasks).then(doReload).catch(doReload);
 }
 
 function shareAuntieTobi() {
@@ -10209,15 +10203,7 @@ navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e
   }
 });
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.getRegistrations().then(function(regs) {
-      regs.forEach(function(r) {
-        if (r.active && r.active.scriptURL && r.active.scriptURL.indexOf('sw.js') > -1) r.unregister();
-      });
-    });
-  });
-}
+// Service worker registration handled by OneSignal and sw.js
 
 // PWA Install Prompt
 let deferredPrompt;
