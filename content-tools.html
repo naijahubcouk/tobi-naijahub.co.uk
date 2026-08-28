@@ -955,7 +955,7 @@ function closeSendModal() {
   document.getElementById('sendModal').classList.remove('open');
 }
 
-async function sendNotification(schedule) {
+async async function sendNotification(schedule) {
   const title = document.getElementById('modalTitle').value.trim();
   const body = document.getElementById('modalBody').value.trim();
   const url = document.getElementById('modalUrl').value || 'https://auntietobi.co.uk';
@@ -973,7 +973,13 @@ async function sendNotification(schedule) {
   btnNow.textContent = '⏳ Sending...';
 
   try {
-    const payload = { title, body, url };
+    const payload = {
+      title,
+      message: body,           // short push text (lock screen)
+      mainMessage: body,       // in-app content body
+      sourceUrl: url !== 'https://auntietobi.co.uk' ? url : '',
+      type: 'update',
+    };
     if (schedule && scheduledTime) {
       payload.scheduledTime = new Date(scheduledTime).toISOString();
     }
