@@ -2524,7 +2524,7 @@ let _searchTimer = null;
     )
   ) {
     removeTyping();
-    showPaidPlanCard();
+    showBusinessClub();
     isLoading = false;
     document.getElementById('sendBtn').disabled = false;
     return;
@@ -3876,7 +3876,7 @@ function showHowToBecomePremium() {
   </div>`;
   addTipMessage(html);
   const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ View Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinessClub()">⭐ View Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
 }
 
 function showFAQCard(suppressBubbles = false) {
@@ -5001,53 +5001,6 @@ function showDailyMotivation() {
   addTipMessage(html);
 }
 
-function showPaidPlanCard() {
-  const html = `<div style="background:white;border:2px solid #057A44;border-radius:12px;overflow:hidden;">
-    <div style="background:#057A44;padding:14px 16px;text-align:center;">
-      <div style="display:inline-block;background:#FFB81C;color:#412402;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;margin-bottom:8px;">⭐ Most Popular</div>
-      <div style="font-size:17px;font-weight:700;color:white;margin-bottom:4px;">Auntie Tobi Business Club</div>
-      <div style="font-size:26px;font-weight:700;color:#FFB81C;">£49.99<span style="font-size:13px;color:rgba(255,255,255,0.75);font-weight:400;">/yr</span></div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:4px;">Get your business seen by Nigerians in the UK</div>
-    </div>
-    <div style="padding:14px 16px;">
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
-          <span style="font-size:16px;flex-shrink:0;">📌</span>
-          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Verified Member Badge</div><div style="font-size:12px;color:#555;line-height:1.5;">Display a trusted Verified Member badge and showcase your complete business profile, including your services, contact details and business information.</div></div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
-          <span style="font-size:16px;flex-shrink:0;">🌟</span>
-          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Featured on Auntie Tobi</div><div style="font-size:12px;color:#555;line-height:1.5;">Your business is featured for increased visibility across both platforms — website and app.</div></div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
-          <span style="font-size:16px;flex-shrink:0;">🔍</span>
-          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Better Search Visibility</div><div style="font-size:12px;color:#555;line-height:1.5;">Your business appears higher when users search for services like yours.</div></div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
-          <span style="font-size:16px;flex-shrink:0;">🤖</span>
-          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Active AI Recommendations</div><div style="font-size:12px;color:#555;line-height:1.5;">Auntie Tobi actively suggests your business to users looking for your services.</div></div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:0.5px solid #f0f0f0;">
-          <span style="font-size:16px;flex-shrink:0;">💬</span>
-          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Instant WhatsApp / Website Button</div><div style="font-size:12px;color:#555;line-height:1.5;">Customers can message you directly in one click from Auntie Tobi.</div></div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:16px;flex-shrink:0;">📣</span>
-          <div><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Community Spotlight Post</div><div style="font-size:12px;color:#555;line-height:1.5;">Get featured on Auntie Tobi's Instagram page and Telegram group to increase awareness.</div></div>
-        </div>
-      </div>
-      <a href="https://auntietobi.com/new-listing" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:14px;font-weight:700;padding:12px;border-radius:8px;text-align:center;margin-bottom:8px;">🚀 Get Started — £49.99/yr</a>
-      <a href="https://wa.me/447594674940" target="_blank" style="display:block;background:#f0faf5;color:#057A44;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-align:center;">💬 Message the team on WhatsApp</a>
-    </div>
-  </div>`;
-  addTipMessage(html);
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-    <button class="suggestion-btn" onclick="showHowToBecomePremium()">💳 How do I become a Business Club Member?</button>
-    <button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">📋 How do I list my business?</button>
-    <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>
-  </div>`);
-}
-
 function showSponsoredAd() {
   const ads = [
     {
@@ -5865,7 +5818,7 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      showPaidPlanCard();
+      showBusinessClub();
       window.history.replaceState({}, '', window.location.pathname);
     }, 300);
   } else if (action === 'about') {
@@ -5876,7 +5829,7 @@ function handleDeepLink() {
     setTimeout(() => {
       showFAQCard(true);
       const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinessClub()">⭐ Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
     }, 300);
   } else if (action === 'japa') {
@@ -5885,7 +5838,7 @@ function handleDeepLink() {
     nhsMode = true;
     setTimeout(() => { quickAsk('What NHS services can I access as a Nigerian in the UK?'); window.history.replaceState({}, '', window.location.pathname); }, 500);
   } else if (action === 'business-club') {
-    setTimeout(() => { showPaidPlanCard(); }, 300);
+    setTimeout(() => { showBusinessClub(); }, 300);
   } else if (action === 'businesses') {
     setTimeout(() => { resetAndShow(showBusinesses); }, 300);
   } else if (action === 'motivation') {
@@ -7432,7 +7385,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     +'<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All businesses</button>'
     +'<button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>'
     +'<button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button>'
-    +'<button class="suggestion-btn" onclick="showPaidPlanCard()">⭐ Auntie Tobi Business Club</button>'
+    +'<button class="suggestion-btn" onclick="showBusinessClub()">⭐ Auntie Tobi Business Club</button>'
     +'</div>');
 
   // 4. CTA
