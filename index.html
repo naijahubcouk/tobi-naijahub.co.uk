@@ -2422,7 +2422,10 @@ let _searchTimer = null;
       if (detectedCat || detectedLoc2) {
         var catStr2 = detectedCat ? "'" + detectedCat.replace(/'/g,"\\'") + "'" : 'null';
         var locStr2 = detectedLoc2 ? "'" + detectedLoc2 + "'" : 'null';
-        addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinesses(undefined,' + catStr2 + ',' + locStr2 + ',true)">👀 See all matching businesses</button><button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All businesses</button></div>');
+        var catLabel = detectedCat ? detectedCat.charAt(0).toUpperCase() + detectedCat.slice(1) : '';
+        var moreBtns = detectedCat ? '<button class="suggestion-btn" onclick="showBusinesses(undefined,' + catStr2 + ',null,true)">🏢 All ' + catLabel + '</button>' : '';
+        moreBtns += '<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All Businesses</button>';
+        addTipMessage('<div class="suggestions" style="margin-top:8px;">' + moreBtns + '</div>');
       }
 
       messages.push({ role: 'assistant', content: 'Here are the businesses I found for you!' });
@@ -2713,81 +2716,30 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
     // Contextual follow-up suggestions based on reply topic (not biz/job — those handled above)
     if (!isBizResponse && !isJobReply && !nhsMode) {
       setTimeout(() => {
-        const currentCity = userCity || window.userCity || '';
-        const cityLabel = currentCity ? ` near ${currentCity}` : '';
-        const userLower = (userText || '').toLowerCase();
-
-        // Build contextual suggestions based on what was asked
-        let ctxBtns = [];
-
-        if (replyLower.includes('bank') || replyLower.includes('account') || replyLower.includes('money') || replyLower.includes('finance')) {
-          ctxBtns = ['How do I improve my credit score in the UK?', 'How do I send money to Nigeria cheaply?', 'What is the best UK bank for Nigerians?'];
-        } else if (replyLower.includes('school') || replyLower.includes('education') || replyLower.includes('university') || replyLower.includes('course')) {
-          ctxBtns = ['How do I get my Nigerian qualifications recognised in the UK?', 'What free courses are available in the UK?', 'How do I apply for a student visa?'];
-        } else if (replyLower.includes('driving') || replyLower.includes('licence') || replyLower.includes('license') || replyLower.includes('car')) {
-          ctxBtns = ['Help me prepare for my UK driving theory test', 'How do I convert my Nigerian licence to a UK licence?', 'What are UK road rules I should know?'];
-        } else if (replyLower.includes('rent') || replyLower.includes('house') || replyLower.includes('flat') || replyLower.includes('accommodation')) {
-          ctxBtns = ['What are my rights as a tenant in the UK?', 'How does council tax work?', `Find a Nigerian business${cityLabel}`];
-        } else if (replyLower.includes('visa') || replyLower.includes('immigration') || replyLower.includes('ilr') || replyLower.includes('brp')) {
-          ctxBtns = ['How do I apply for ILR?', 'What is the Life in UK test?', 'Help me prepare for my Life in UK test'];
-        } else if (replyLower.includes('nhs') || replyLower.includes('doctor') || replyLower.includes('health') || replyLower.includes('gp')) {
-          ctxBtns = ['How do I register with a GP in the UK?', 'What NHS services can I access as a Nigerian?', 'How do I access mental health support in the UK?'];
-        } else if (replyLower.includes('business') || replyLower.includes('self-employed') || replyLower.includes('entrepreneur')) {
-          ctxBtns = [`Find a Nigerian business${cityLabel}`, 'How do I start a business in the UK?', 'How do I register as self-employed?'];
-        } else if (replyLower.includes('event') || replyLower.includes('festival') || replyLower.includes('party')) {
-          ctxBtns = ['What Nigerian events are coming up?', `Find a Nigerian caterer${cityLabel}`, `Find a Nigerian DJ${cityLabel}`];
-        } else {
-          // Generic pool — always random so feels varied
-          const pool = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean);
-          ctxBtns = pool.slice(0, 3);
+        // Detect what category was searched
+        const userLower2 = (userText || '').toLowerCase();
+        const CAT_MAP = [
+          { keys: ['caterer','catering','food','restaurant','jollof','suya','groceries','grocery','cook'], label: 'Caterers', cat: 'caterers' },
+          { keys: ['makeup','beauty','mua','glam','lash','nail','hair'], label: 'Beauty', cat: 'beauty' },
+          { keys: ['photographer','photography','photo'], label: 'Photographers', cat: 'photographers' },
+          { keys: ['dj','mc','entertainer','event planner','decorator'], label: 'Event Services', cat: 'event planners' },
+          { keys: ['tailor','seamstress','fashion','ankara','clothing'], label: 'Fashion', cat: 'fashion' },
+          { keys: ['solicitor','lawyer','accountant','tax','legal'], label: 'Professional Services', cat: 'solicitors' },
+          { keys: ['cleaner','cleaning'], label: 'Cleaners', cat: 'cleaners' },
+          { keys: ['transport','driver','courier','delivery'], label: 'Transport', cat: 'transport' },
+        ];
+        var matchedCat = null;
+        for (var cm of CAT_MAP) {
+          if (cm.keys.some(k => userLower2.includes(k))) { matchedCat = cm; break; }
         }
 
-        // 🚫 Suppress generic suggestions during exam — show smart contextual ones instead
-        if (examState.active) {
-          const rl = replyLower;
-          let examBtns = [];
-
-          // Name question
-          if (rl.includes('what is your name') || rl.includes("what's your name") || rl.includes('may i know your name') || rl.includes('can i get your name')) {
-            examBtns = []; // let them type their name
-          }
-          // Date question
-          else if (rl.includes('test date') || rl.includes('have a date') || rl.includes('booked') || rl.includes('scheduled')) {
-            examBtns = ['Yes, I have a date', 'Not yet'];
-          }
-          // Ready/start question
-          else if (rl.includes('ready to start') || rl.includes('shall we begin') || rl.includes('want to begin') || rl.includes('start the test') || rl.includes('start a practice')) {
-            examBtns = ['Yes, let\'s go!', 'Give me a tip first'];
-          }
-          // Correct/wrong answer
-          else if (rl.includes('correct') || rl.includes('well done') || rl.includes('that\'s right') || rl.includes('next question')) {
-            examBtns = ['Next question ➡️', 'Explain more', 'Take a break'];
-          }
-          else if (rl.includes('incorrect') || rl.includes('wrong answer') || rl.includes('the correct answer')) {
-            examBtns = ['Next question ➡️', 'Explain this topic', 'Try again'];
-          }
-          // End of session
-          else if (rl.includes('well done') && rl.includes('score') || rl.includes('your score') || rl.includes('completed')) {
-            examBtns = ['Continue practising', 'Review weak areas', '🏠 Home'];
-          }
-          // Continue/more questions
-          else if (rl.includes('another question') || rl.includes('more question') || rl.includes('continue')) {
-            examBtns = ['Yes, next question', 'Take a break'];
-          }
-
-          if (examBtns.length > 0) {
-            const examBtnHtml = examBtns.map(s =>
-              `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`
-            ).join('');
-            addTipMessage(`<div class="suggestions" style="margin-top:8px;">${examBtnHtml}</div>`);
-          }
-          return; // skip generic suggestions entirely
+        var bizBtns = '';
+        if (matchedCat) {
+          bizBtns += `<button class="suggestion-btn" onclick="showBusinesses(undefined,'${matchedCat.cat}',null,true)">🏢 All ${matchedCat.label}</button>`;
         }
+        bizBtns += '<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All Businesses</button>';
 
-        const btns = ctxBtns.slice(0, 3).map(s =>
-          `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`
-        ).join('');
-        addTipMessage(`<div class="suggestions" style="margin-top:8px;">${btns}</div>`);
+        addTipMessage(`<div class="suggestions" style="margin-top:8px;">${bizBtns}</div>`);
       }, 400);
     }
 
@@ -4844,6 +4796,9 @@ function showLinksPage() {
   </div>`;
 
   addTipMessage(html);
+
+    showFeaturedCarousel();
+  showMarketplaceCarousel();
 
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">
     <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
@@ -9491,7 +9446,7 @@ function resetToWelcome() {
       // News card placeholder — filled by loadLiveFeeds when feed is ready
       addTipMessage('<div data-news-card-placeholder="1" style="display:none;"></div>');
       liveNewsShownCount = 2;
-      showSponsoredAd();
+      showFeaturedCarousel();
       const tip = getTodaysTip();
       console.log('tip:', tip);
       const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
@@ -9499,7 +9454,7 @@ function resetToWelcome() {
       addTipMessage(tipHtml);
       console.log('message added');
       showUpcomingEventCard();
-      showFeaturedCarousel();
+      showSponsoredAd();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
