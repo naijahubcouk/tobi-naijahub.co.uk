@@ -2543,7 +2543,6 @@ let _searchTimer = null;
     )
   ) {
     removeTyping();
-    showBusinessClub();
     isLoading = false;
     document.getElementById('sendBtn').disabled = false;
     return;
@@ -3159,7 +3158,7 @@ function showTobiUpdates() {
 }
 
 
-function showBusinessClub() { window.open("https://auntietobi.co.uk/business-club", "_blank"); }
+function showBusinessClub() { /* hidden until ready */ }
 
 function showMoreSheet() {
   var existing = document.getElementById('more-sheet-overlay');
@@ -3171,7 +3170,6 @@ function showMoreSheet() {
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
   var items = [
-    {ico:'💚', label:'Business Club', fn: function(){ overlay.remove(); showBusinessClub(); }, color:'#057A44', bg:'#f0faf5', border:'#057A44'},
     {ico:'📣', label:'Group Advertising', fn: function(){ overlay.remove(); window.open('https://auntietobi.co.uk/group-advertising','_blank'); }, color:'#B45309', bg:'#FFFBEB', border:'#FFB81C'},
     {ico:'💼', label:'Jobs', fn: function(){ resetAndShowJobs(); }},
     {ico:'🚗', label:'Driving Theory', fn: function(){ clearExamState();quickAsk('Help me prepare for my UK driving theory test'); }},
@@ -3849,7 +3847,7 @@ function showHowToBecomePremium() {
   </div>`;
   addTipMessage(html);
   const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinessClub()">⭐ View Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
 }
 
 function showFAQCard(suppressBubbles = false) {
@@ -4737,13 +4735,6 @@ function showLinksPage() {
       <span style="color:#ccc;">›</span>
     </a>
 
-    <a href="https://auntietobi.co.uk/business-club" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #057A44;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">💚</span>
-      <span style="flex:1;text-align:left;">Auntie Tobi Business Club
-        <span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:2px;">Visibility, support &amp; growth for Nigerian businesses in the UK</span>
-      </span>
-      <span style="color:#057A44;font-size:18px;">›</span>
-    </a>
 
     <a href="https://auntietobi.co.uk/group-advertising" target="_blank" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0F1E36 0%,#1a2f4a 100%);color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">📣</span>
@@ -5145,7 +5136,7 @@ function showFeaturedBusinesses() {
     + '</div>'
   );
   featured.forEach(function(b){ addTipMessage(buildFeaturedCard(b, false)); });
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinessClub()">💚 Join the Business Club</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
 
 function showMarketplaceCarousel() {
@@ -7610,7 +7601,6 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      showBusinessClub();
       window.history.replaceState({}, '', window.location.pathname);
     }, 300);
   } else if (action === 'about') {
@@ -7621,7 +7611,7 @@ function handleDeepLink() {
     setTimeout(() => {
       showFAQCard(true);
       const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 3);
-      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinessClub()">⭐ Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
+      addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="quickAsk('How do I list my business on Auntie Tobi?')">🏢 List my business</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Upcoming Events</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
       window.history.replaceState({}, '', window.location.pathname);
     }, 300);
   } else if (action === 'japa') {
@@ -7630,7 +7620,6 @@ function handleDeepLink() {
     nhsMode = true;
     setTimeout(() => { quickAsk('What NHS services can I access as a Nigerian in the UK?'); window.history.replaceState({}, '', window.location.pathname); }, 500);
   } else if (action === 'business-club') {
-    setTimeout(() => { showBusinessClub(); }, 300);
   } else if (action === 'businesses') {
     setTimeout(() => { resetAndShow(showBusinesses); }, 300);
   } else if (action === 'motivation') {
@@ -9177,7 +9166,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     +'<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All businesses</button>'
     +'<button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>'
     +'<button class="suggestion-btn" onclick="showAllNews()">📰 Latest news</button>'
-    +'<button class="suggestion-btn" onclick="showBusinessClub()">⭐ Auntie Tobi Business Club</button>'
+    +''
     +'</div>');
 
   // 4. CTA
@@ -9452,7 +9441,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="showBusinessClub()" style="background:#057A44;color:white;border-color:#057A44;">💚 Auntie Tobi Business Club</button><button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/group-advertising\',\'_blank\')" style="background:#FFB81C;color:#0F1E36;border-color:#FFB81C;">📣 Group Advertising</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/group-advertising\',\'_blank\')" style="background:#FFB81C;color:#0F1E36;border-color:#FFB81C;">📣 Group Advertising</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
