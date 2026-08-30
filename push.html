@@ -147,6 +147,12 @@ textarea.short{height:70px;resize:none}
     </div>
     <div class="field">
       <label>Source URL (optional)</label>
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <select id="push-recent-posts" style="flex:1;border:1.5px solid #e0e0e0;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0F1E36;outline:none;background:white;" onchange="fillFromPost(this.value)">
+          <option value="">— Pick a recent blog post —</option>
+        </select>
+        <button onclick="loadRecentPosts()" style="background:#0F1E36;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">🔄 Load</button>
+      </div>
       <input id="push-src" type="url" placeholder="https://...">
     </div>
   </div>
@@ -361,7 +367,8 @@ async function sendPush(scheduled) {
       type: currentType,
       sourceUrl: sourceUrl,
       sendAfter: sendAfter,
-      timezone: document.getElementById('sched-tz').value
+      timezone: document.getElementById('sched-tz').value,
+      saveToUpdates: true
     };
     console.log('[push] Sending:', JSON.stringify(payload).substring(0,200));
 

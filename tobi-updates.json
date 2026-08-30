@@ -1,28 +1,8 @@
 [
   {
-    "id": "1787945551683",
-    "title": "Energy Bills Going Up Again 📈",
-    "message": "Your October bills are rising 4%. Let's break down what this means for your wallet and budget.",
-    "pushMessage": "Your October bills are rising 4%. Let's break down what this means for your wallet and budget.",
-    "type": "update",
-    "sourceUrl": null,
-    "date": "2026-08-28T19:32:31.683Z",
-    "slug": "update-energy-bills-going-up-aga"
-  },
-  {
-    "id": "1787944916736",
-    "title": "Energy Prices Going Up Again",
-    "message": "Your bills are rising 4% from October. Here's what you need to know to stay prepared.",
-    "pushMessage": "Your bills are rising 4% from October. Here's what you need to know to stay prepared.",
-    "type": "update",
-    "sourceUrl": null,
-    "date": "2026-08-28T19:21:56.736Z",
-    "slug": "update-energy-prices-going-up-ag"
-  },
-  {
     "id": "1787832699657",
-    "title": "⛈️ Yellow Thunderstorm Warning TODAY",
-    "message": "<h3><br></h3><p>🚨 <strong>Yellow Thunderstorm Warning TODAY</strong></p><p>The Met Office has expanded its <strong>yellow thunderstorm warning</strong> across parts of England and Wales.</p><p><br></p><p>⛈️ Heavy downpours<br>⚡ Lightning and possible hail<br>🌊 Localised flooding possible<br>🚗 Travel disruption possible</p><p><br></p><p>If you're travelling today, <strong>check your area and journey before leaving home</strong> and allow extra time.</p><p><br></p><p>📍 Weather can vary significantly by location, so check your postcode for the latest warning.</p><p><br></p><p><a href=\"https://weather.metoffice.gov.uk/warnings-and-advice/uk-warnings?utm_source=chatgpt.com\">Check your area — Met Office Weather Warnings</a></p><p><br></p><p>💚 <strong>Auntie Tobi Tip:</strong> Don't assume because it's dry where you are now that you're outside the warning area. Conditions can change quickly.</p>",
+    "title": "\u26c8\ufe0f Yellow Thunderstorm Warning TODAY",
+    "message": "<h3><br></h3><p>\ud83d\udea8 <strong>Yellow Thunderstorm Warning TODAY</strong></p><p>The Met Office has expanded its <strong>yellow thunderstorm warning</strong> across parts of England and Wales.</p><p><br></p><p>\u26c8\ufe0f Heavy downpours<br>\u26a1 Lightning and possible hail<br>\ud83c\udf0a Localised flooding possible<br>\ud83d\ude97 Travel disruption possible</p><p><br></p><p>If you're travelling today, <strong>check your area and journey before leaving home</strong> and allow extra time.</p><p><br></p><p>\ud83d\udccd Weather can vary significantly by location, so check your postcode for the latest warning.</p><p><br></p><p><a href=\"https://weather.metoffice.gov.uk/warnings-and-advice/uk-warnings?utm_source=chatgpt.com\">Check your area \u2014 Met Office Weather Warnings</a></p><p><br></p><p>\ud83d\udc9a <strong>Auntie Tobi Tip:</strong> Don't assume because it's dry where you are now that you're outside the warning area. Conditions can change quickly.</p>",
     "pushMessage": "Heavy rain and thunderstorms could cause flooding and travel disruption across parts of England and Wales today. Check if your area is affected.",
     "type": "update",
     "sourceUrl": null,
@@ -31,9 +11,9 @@
   },
   {
     "id": "1787762532933",
-    "title": "🚨 UK Workers: Employment Rights Are Changing From October 2026",
-    "message": "<p><span style=\"font-family: inherit;\"><br></span></p><p><span style=\"font-family: inherit;\">More employment-law changes are coming in the UK from </span><strong style=\"font-family: inherit;\">October 2026</strong><span style=\"font-family: inherit;\">.</span></p><p><span style=\"font-family: inherit;\"><br></span></p><p>One of the biggest changes is that employers will be expected to take <strong>all reasonable steps to prevent sexual harassment at work</strong>, with stronger responsibilities around harassment involving third parties such as customers, clients or service users.</p><p><br></p><p>There are more changes coming after that too.</p><p><br></p><p>From <strong>1 January 2027</strong>, the qualifying period for ordinary unfair-dismissal protection is due to reduce from <strong>2 years to 6 months</strong>.</p><p><br></p><h3>Who should pay attention?</h3><p>This matters to:</p><ul><li><p>Employees</p></li><li><p>Agency and temporary workers</p></li><li><p>Managers and supervisors</p></li><li><p>Business owners</p></li><li><p>Employers</p></li><li><p>HR teams</p></li></ul><div><br></div><h3>Why it matters</h3><p>Some people still assume they need to work for an employer for years before gaining meaningful workplace protection.</p><p>The rules are changing.</p><p><br></p><p>Employers should be reviewing their policies, training and complaint procedures now, while workers should understand their rights before problems happen.</p><p><br></p><p>⚠️ <strong>Important:</strong> The October changes are <strong>not in force yet</strong>. They are due to start from <strong>October 2026</strong>, with further reforms from January 2027.</p><p><br></p><p>💚 <strong>Auntie Tobi Says:</strong><br>Don’t wait until something goes wrong at work before learning your rights.</p><p><br></p><p><a href=\"https://www.gov.uk/government/publications/implementing-the-plan-to-make-work-pay-and-employment-rights-act/plan-to-make-work-pay-and-employment-rights-act-timeline-update?utm_source=chatgpt.com\"><strong>Source:</strong> HMRC Employer Bulletin / UK employment-law reforms.</a></p>",
-    "pushMessage": "New UK worker protections start October 2026 with more changes coming in January 2027. Tap to see what’s changing.",
+    "title": "\ud83d\udea8 UK Workers: Employment Rights Are Changing From October 2026",
+    "message": "<p><span style=\"font-family: inherit;\"><br></span></p><p><span style=\"font-family: inherit;\">More employment-law changes are coming in the UK from </span><strong style=\"font-family: inherit;\">October 2026</strong><span style=\"font-family: inherit;\">.</span></p><p><span style=\"font-family: inherit;\"><br></span></p><p>One of the biggest changes is that employers will be expected to take <strong>all reasonable steps to prevent sexual harassment at work</strong>, with stronger responsibilities around harassment involving third parties such as customers, clients or service users.</p><p><br></p><p>There are more changes coming after that too.</p><p><br></p><p>From <strong>1 January 2027</strong>, the qualifying period for ordinary unfair-dismissal protection is due to reduce from <strong>2 years to 6 months</strong>.</p><p><br></p><h3>Who should pay attention?</h3><p>This matters to:</p><ul><li><p>Employees</p></li><li><p>Agency and temporary workers</p></li><li><p>Managers and supervisors</p></li><li><p>Business owners</p></li><li><p>Employers</p></li><li><p>HR teams</p></li></ul><div><br></div><h3>Why it matters</h3><p>Some people still assume they need to work for an employer for years before gaining meaningful workplace protection.</p><p>The rules are changing.</p><p><br></p><p>Employers should be reviewing their policies, training and complaint procedures now, while workers should understand their rights before problems happen.</p><p><br></p><p>\u26a0\ufe0f <strong>Important:</strong> The October changes are <strong>not in force yet</strong>. They are due to start from <strong>October 2026</strong>, with further reforms from January 2027.</p><p><br></p><p>\ud83d\udc9a <strong>Auntie Tobi Says:</strong><br>Don\u2019t wait until something goes wrong at work before learning your rights.</p><p><br></p><p><a href=\"https://www.gov.uk/government/publications/implementing-the-plan-to-make-work-pay-and-employment-rights-act/plan-to-make-work-pay-and-employment-rights-act-timeline-update?utm_source=chatgpt.com\"><strong>Source:</strong> HMRC Employer Bulletin / UK employment-law reforms.</a></p>",
+    "pushMessage": "New UK worker protections start October 2026 with more changes coming in January 2027. Tap to see what\u2019s changing.",
     "type": "update",
     "sourceUrl": null,
     "date": "2026-08-26T16:42:12.933Z",
