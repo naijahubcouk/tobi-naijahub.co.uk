@@ -152,7 +152,7 @@ exports.handler = async function(event) {
     console.log('[send-push] rawBody:', rawBody.substring(0, 200));
     const parsed = JSON.parse(rawBody);
     console.log('[send-push] parsed keys:', Object.keys(parsed));
-    const { title, message, mainMessage, type, slug, sourceUrl, b1, b2, b3, sendAfter, timezone } = parsed;
+    const { title, message, mainMessage, type, slug, sourceUrl, b1, b2, b3, sendAfter, timezone, saveToUpdates } = parsed;
     const inAppContent = mainMessage || message; // mainMessage = in-app body, message = push notification text
     console.log('[send-push] title:', title, '| message:', message && message.substring(0,30));
     const apiKey = process.env.ONESIGNAL_API_KEY;
@@ -201,9 +201,9 @@ exports.handler = async function(event) {
       }
     }
 
-    // 3. Save to tobi-updates.json in GitHub
+    // 3. Save to tobi-updates.json in GitHub (only when saveToUpdates: true)
     let updatesResult = null;
-    if (githubToken) {
+    if (githubToken && saveToUpdates === true) {
       try {
         const { updates, sha: updatesSha } = await getUpdatesFile(githubToken);
         const newUpdate = {
