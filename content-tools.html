@@ -979,6 +979,7 @@ async function sendNotification(schedule) {
       mainMessage: body,       // in-app content body
       sourceUrl: url !== 'https://auntietobi.co.uk' ? url : '',
       type: 'update',
+      saveToUpdates: true,     // save slug so notification click doesn't show blank
     };
     if (schedule && scheduledTime) {
       payload.scheduledTime = new Date(scheduledTime).toISOString();
