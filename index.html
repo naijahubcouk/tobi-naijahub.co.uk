@@ -4696,6 +4696,17 @@ function showLinksPage() {
 
   const html = `<div data-links-page="1" style="display:flex;flex-direction:column;gap:10px;">
 
+    <a href="javascript:void(0)" onclick="showInstallGuide();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);text-decoration:none;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);">
+      <div style="width:52px;height:52px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+        <img src="/tobi-face-128.png" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">
+      </div>
+      <div style="flex:1;">
+        <div style="color:white;font-size:15px;font-weight:800;line-height:1.3;margin-bottom:3px;">📲 Install Auntie Tobi</div>
+        <div style="color:rgba(255,255,255,0.85);font-size:12px;line-height:1.4;">Add to your home screen — works like an app, no App Store needed!</div>
+      </div>
+      <span style="color:rgba(255,255,255,0.7);font-size:20px;">›</span>
+    </a>
+
     <a <a href="javascript:void(0)" onclick="showAboutTobi();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">ℹ️</span>
       <span style="flex:1;text-align:left;">About Auntie Tobi<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Who is Auntie Tobi and what can she do?</span></span>
@@ -5119,7 +5130,7 @@ function showFeaturedCarousel() {
     } else {
       clearInterval(window._featAutoRotate);
     }
-  }, 5000);
+  }, 7000);
 
   window._featSwipe = { cur: 0 };
     // Auto-rotate every 5 seconds
@@ -5131,7 +5142,7 @@ function showFeaturedCarousel() {
     } else {
       clearInterval(window._featAutoRotate);
     }
-  }, 5000);
+  }, 7000);
 
   window._featSwipe.goTo = function(i) {
       // Auto-rotate every 5 seconds
@@ -5143,7 +5154,7 @@ function showFeaturedCarousel() {
     } else {
       clearInterval(window._featAutoRotate);
     }
-  }, 5000);
+  }, 7000);
 
   window._featSwipe.cur = ((i%count)+count)%count;
       track.style.transform = 'translateX(-' + (window._featSwipe.cur * wrap.offsetWidth) + 'px)';
@@ -5168,7 +5179,7 @@ function showFeaturedCarousel() {
       } else {
         clearInterval(window._featAutoRotate);
       }
-    }, 5000);
+    }, 7000);
   }, 100);
 }
 function showFeaturedBusinesses() {
@@ -5193,10 +5204,11 @@ function showMarketplaceCarousel() {
     if (!p.expires) return true;
     return new Date(p.expires) > now;
   });
-  // Use featured products for home carousel if any are marked, else show all active
-  var featuredProducts = activeProducts.filter(function(p){ return p.featured; });
-  var products = featuredProducts.length ? featuredProducts : activeProducts;
+  var products = activeProducts;
   if (!products.length) return;
+  // Randomise starting position on each load so products rotate on refresh
+  var startIdx = Math.floor(Math.random() * products.length);
+  var products = products.slice(startIdx).concat(products.slice(0, startIdx));
 
   var slides = activeProducts.map(function(p, i) {
     var imgHtml = p.img
@@ -5279,7 +5291,7 @@ function showMarketplaceCarousel() {
       } else {
         clearInterval(window._mpAutoRotate);
       }
-    }, 5000);
+    }, 7000);
   }, 100);
 }
 
@@ -10335,20 +10347,18 @@ window.addEventListener('appinstalled', () => {
 window.addEventListener('load', () => {
   const params = new URLSearchParams(window.location.search);
   const q = params.get('q');
-  const nocache = params.get('nocache');
+  const action = params.get('action');
   if (q) {
     setTimeout(() => sendMessage(decodeURIComponent(q)), 1000);
-  } else if (nocache) {
-    // Pull-to-refresh or hard refresh — clean URL and go home
+  } else if (!action) {
+    // Fresh load / pull-to-refresh with no action — go home
     window.history.replaceState({}, '', '/');
-    setTimeout(() => resetToWelcome(), 300);
   }
 });
 
-// Also handle browser back-forward cache (pageshow)
+// Handle pull-to-refresh and browser back-forward cache
 window.addEventListener('pageshow', function(e) {
   if (e.persisted) {
-    // Page restored from cache (e.g. swipe back) — go home
     resetToWelcome();
   }
 });
