@@ -5151,7 +5151,10 @@ function showMarketplaceCarousel() {
     if (!p.expires) return true;
     return new Date(p.expires) > now;
   });
-  if (!activeProducts.length) return;
+  // Use featured products for home carousel if any are marked, else show all active
+  var featuredProducts = activeProducts.filter(function(p){ return p.featured; });
+  var products = featuredProducts.length ? featuredProducts : activeProducts;
+  if (!products.length) return;
 
   var slides = activeProducts.map(function(p, i) {
     var imgHtml = p.img
