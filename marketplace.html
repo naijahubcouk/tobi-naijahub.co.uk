@@ -74,13 +74,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <!-- FILTERS -->
   <div class="filters" id="filters">
     <div class="fp active" data-cat="All">All</div>
+    <div class="fp" data-cat="Hair">💇🏾‍♀️ Hair</div>
+    <div class="fp" data-cat="Gift Hamper">🎁 Gift Hampers</div>
     <div class="fp" data-cat="Digital Product">💻 Digital</div>
-    <div class="fp" data-cat="Cakes & Treats">🎂 Cakes</div>
     <div class="fp" data-cat="Beauty">💄 Beauty</div>
-    <div class="fp" data-cat="Groceries">🛒 Groceries</div>
-    <div class="fp" data-cat="Gifts">🎁 Gifts</div>
-    <div class="fp" data-cat="Fashion">👗 Fashion</div>
     <div class="fp" data-cat="Food">🍲 Food</div>
+    <div class="fp" data-cat="Fashion">👗 Fashion</div>
   </div>
 
   <!-- GRID -->
@@ -171,7 +170,9 @@ function buildCard(p) {
 
 function renderGrid(cat) {
   var grid = document.getElementById('product-grid');
-  var filtered = cat === 'All' ? PRODUCTS : PRODUCTS.filter(function(p){ return p.category === cat; });
+  var now = new Date();
+  var active = PRODUCTS.filter(function(p){ return !p.expires || new Date(p.expires) > now; });
+  var filtered = cat === 'All' ? active : active.filter(function(p){ return p.category === cat; });
   if (!filtered.length) {
     grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No products in this category yet — check back soon!</div>';
   } else {
@@ -190,9 +191,7 @@ document.getElementById('filters').addEventListener('click', function(e) {
 renderGrid('All');
 </script>
 </body>
-</html>const PRODUCTS = [
-  
-];!DOCTYPE html>
+</html>!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -291,53 +290,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <script>
-var PRODUCTS = [
-  {
-    id: 'mp1',
-    name: 'E-Book / Print Copy — Service: The Vehicle To Greatness: Rebuilding The Family System',
-    shortName: 'Service: The Vehicle To Greatness',
-    business: 'PatUch Concepts',
-    category: 'Digital Product',
-    img: 'https://naijabiz.b-cdn.net/service-the-vehicle-to-gr-selar.co-67350afac3b99.jpg',
-    price: '£3',
-    link: 'https://selar.com/7w755i',
-    btnText: 'Learn More'
-  },
-  {
-    id: 'mp2',
-    name: 'Prepare Your Daughter for Her First Period with BLOOMLY 🩷',
-    shortName: 'BLOOMLY — First Period Guide 🩷',
-    business: 'Hello Periodz',
-    category: 'Digital Product',
-    img: 'https://naijabiz.b-cdn.net/19.png',
-    price: '£10',
-    link: 'https://www.helloperiodz.com/bloomly-bundle',
-    btnText: 'Learn More'
-  },
-  {
-    id: 'mp4',
-    name: 'Lush Fringe Curl',
-    shortName: 'Lush Fringe Curl',
-    business: 'Ladiva Weaves',
-    category: 'Hair',
-    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/Screenshot%202026-09-01%20124624.png',
-    price: '£149.99',
-    link: 'https://ladivaweaves.com/product-details/product/lush-fringe-curl/?variant=689a014ef4b3dea0abe54536',
-    btnText: 'Buy Now'
-  },
-  {
-    id: 'mp3',
-    name: 'Sweet Treat Hamper',
-    shortName: 'Sweet Treat Hamper',
-    business: 'Dulce Luxe Treats',
-    category: 'Gift Hamper',
-    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/ChatGPT%20Image%20Sep%201%2C%202026%2C%2012_35_00%20PM.png',
-    price: '£20',
-    link: 'https://wa.me/447407238787',
-    btnText: 'Buy Now',
-    expires: '2026-12-01'
-  }
-];
+
 
 var currentCat = 'All';
 
@@ -361,7 +314,9 @@ function buildCard(p) {
 
 function renderGrid(cat) {
   var grid = document.getElementById('product-grid');
-  var filtered = cat === 'All' ? PRODUCTS : PRODUCTS.filter(function(p){ return p.category === cat; });
+  var now = new Date();
+  var active = PRODUCTS.filter(function(p){ return !p.expires || new Date(p.expires) > now; });
+  var filtered = cat === 'All' ? active : active.filter(function(p){ return p.category === cat; });
   if (!filtered.length) {
     grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No products in this category yet — check back soon!</div>';
   } else {
