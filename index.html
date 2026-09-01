@@ -1966,7 +1966,7 @@ function formatResponse(text) {
             : '';
 
           const waBtn = (b.wa)
-            ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
+            ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
             : '';
 
                     const viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View details</a>'
@@ -2491,7 +2491,7 @@ let _searchTimer = null;
       if (bizMatches.length > 0) {
         html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">🏢 Businesses</div>`;
         bizMatches.forEach(b => {
-          const wa = b.wa ? `<a href="https://wa.me/${b.wa.replace(/\D/g,'')}" target="_blank" style="color:#25D366;font-weight:700;text-decoration:none;font-size:11px;">💬 WhatsApp</a>` : '';
+          const wa = b.wa ? `<a href="https://wa.me/${b.wa.replace(/\D/g,'')}?text=${encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚')}" target="_blank" style="color:#25D366;font-weight:700;text-decoration:none;font-size:11px;">💬 WhatsApp</a>` : '';
           html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${b.name}</div><div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${b.cat||b.category||''} · ${b.loc||b.location||''}</div>${wa}</div>`;
         });
       }
@@ -4960,6 +4960,33 @@ function showDailyMotivation() {
 // ============================================================
 const MARKETPLACE_PRODUCTS = [
   {
+    id: 'mp4',
+    name: 'Lush Fringe Curl',
+    shortName: 'Lush Fringe Curl',
+    business: 'Ladiva Weaves',
+    category: 'Hair',
+    emoji: '💇🏾‍♀️',
+    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/Screenshot%202026-09-01%20124624.png',
+    price: '£149.99',
+    desc: '',
+    link: 'https://ladivaweaves.com/product-details/product/lush-fringe-curl/?variant=689a014ef4b3dea0abe54536',
+    btnText: 'Buy Now',
+  },
+  {
+    id: 'mp3',
+    name: 'Sweet Treat Hamper',
+    shortName: 'Sweet Treat Hamper',
+    business: 'Dulce Luxe Treats',
+    category: 'Gift Hamper',
+    emoji: '🎁',
+    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/ChatGPT%20Image%20Sep%201%2C%202026%2C%2012_35_00%20PM.png',
+    price: '£20',
+    desc: '',
+    link: 'https://wa.me/447407238787',
+    btnText: 'Buy Now',
+    expires: '2026-12-01'
+  },
+  {
     id: 'mp1',
     name: 'E-Book / Print Copy — Service: The Vehicle To Greatness: Rebuilding The Family System',
     shortName: 'Service: The Vehicle To Greatness',
@@ -5016,7 +5043,7 @@ function buildProductCard(p, compact) {
 
 function buildFeaturedCard(b, compact) {
   var verHtml = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg style="width:12px;height:12px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
-  var waBtn = b.wa ? '<a href="https://wa.me/' + b.wa + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:7px;font-size:11px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>' : '';
+  var waBtn = b.wa ? '<a href="https://wa.me/' + b.wa + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:7px;font-size:11px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>' : '';
   var viewBtn = '<a href="https://auntietobi.com/listing/' + b.slug + '" target="_blank" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:7px;font-size:11px;font-weight:700;text-align:center;text-decoration:none;">View Details</a>';
   var minW = compact ? 'min-width:220px;flex-shrink:0;scroll-snap-align:start;' : '';
   var descLen = compact ? 80 : 200;
@@ -5041,7 +5068,7 @@ function showFeaturedCarousel() {
 
   var slides = featured.map(function(b, i) {
     var verHtml = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:8px;"><svg style="width:13px;height:13px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:12px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
-    var waBtn = b.wa ? '<a href="https://wa.me/' + b.wa + '" target="_blank" style="flex:1;padding:10px;background:#25D366;color:white;border-radius:8px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>' : '';
+    var waBtn = b.wa ? '<a href="https://wa.me/' + b.wa + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" style="flex:1;padding:10px;background:#25D366;color:white;border-radius:8px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>' : '';
     return '<div style="min-width:100%;flex-shrink:0;">'
       + '<div style="border:2px solid #FFB81C;border-radius:14px;position:relative;margin:14px 12px 0;background:white;">'
       + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;pointer-events:none;">⭐ Featured Business</div>'
@@ -5119,9 +5146,14 @@ function showFeaturedBusinesses() {
 }
 
 function showMarketplaceCarousel() {
-  if (!MARKETPLACE_PRODUCTS.length) return;
+  var now = new Date();
+  var activeProducts = MARKETPLACE_PRODUCTS.filter(function(p) {
+    if (!p.expires) return true;
+    return new Date(p.expires) > now;
+  });
+  if (!activeProducts.length) return;
 
-  var slides = MARKETPLACE_PRODUCTS.map(function(p, i) {
+  var slides = activeProducts.map(function(p, i) {
     var imgHtml = p.img
       ? '<img src="' + p.img + '" style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;pointer-events:none;">'
       : '<div style="width:100%;height:200px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:54px;pointer-events:none;">' + (p.emoji||'🛍️') + '</div>';
@@ -5132,15 +5164,20 @@ function showMarketplaceCarousel() {
       + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:4px;">' + p.name + '</div>'
       + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:8px;">' + p.business + '</div>'
       + '<div style="font-size:20px;font-weight:800;color:#0F1E36;margin-bottom:12px;">' + p.price + '</div>'
-      + '<a href="' + p.link + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>'
+      + (p.wa
+        ? '<div style="display:flex;gap:8px;">'
+          + (p.link ? '<a href="' + p.link + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>' : '')
+          + '<a href="https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') + '" target="_blank" style="' + (p.link ? 'flex:1;' : 'width:100%;') + 'display:block;background:#25D366;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>'
+          + '</div>'
+        : '<a href="' + (p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(p.btnText === 'Buy Now' ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚' : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') : p.link) + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>')
       + '</div></div>';
   }).join('');
 
-  var dots = MARKETPLACE_PRODUCTS.map(function(_, i){
+  var dots = activeProducts.map(function(_, i){
     return '<div id="mp-dot-' + i + '" style="width:' + (i===0?'20':'8') + 'px;height:8px;border-radius:' + (i===0?'4px':'50%') + ';background:' + (i===0?'#057A44':'#e0e0e0') + ';transition:.2s;cursor:pointer;flex-shrink:0;" onclick="window._mpSwipe.goTo(' + i + ')"></div>';
   }).join('');
 
-  var count = MARKETPLACE_PRODUCTS.length;
+  var count = activeProducts.length;
 
   var html = '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
     + '<div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">'
@@ -9123,7 +9160,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     var su='https://auntietobi.co.uk/biz/'+b.slug;
     var vb=b.verified?'<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div>':'';
     var vl=b.verified?'<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>':'';
-    var wa=(b.verified&&b.wa)?'<a href="https://wa.me/'+b.wa.replace(/\D/g,'')+'" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>':'';
+    var wa=(b.verified&&b.wa)?'<a href="https://wa.me/'+b.wa.replace(/\D/g,'')+'?text='+encodeURIComponent('Hi, I found '+b.name+' on Auntie Tobi 💚')+'" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>':'';
     var dd=b.desc?'<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px;">'+b.desc.substring(0,120)+(b.desc.length>120?'...':'')+'</div>':'';
     addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;position:relative;'+(b.verified?'padding-top:18px;':'')+'">'
       +vb+'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
