@@ -4841,7 +4841,7 @@ function showWelcomeCard() {
   // Add suggestion bubbles
   const suggStr = getRandomSuggestionStr();
   const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
   const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">${rotatingBtns}${fixedBtns}</div>`);
 }
@@ -5110,9 +5110,42 @@ function showFeaturedCarousel() {
     var wrap = document.getElementById('feat-swipe-wrap');
     var track = document.getElementById('feat-swipe-track');
     if (!wrap || !track) return;
-    window._featSwipe = { cur: 0 };
-    window._featSwipe.goTo = function(i) {
-      window._featSwipe.cur = ((i%count)+count)%count;
+    // Auto-rotate every 5 seconds
+  if (window._featAutoRotate) clearInterval(window._featAutoRotate);
+  window._featAutoRotate = setInterval(function() {
+    if (document.getElementById('feat-track')) {
+      var next = (window._featCur !== undefined ? window._featCur + 1 : 1);
+      window._featSwipe && window._featSwipe.goTo(next);
+    } else {
+      clearInterval(window._featAutoRotate);
+    }
+  }, 5000);
+
+  window._featSwipe = { cur: 0 };
+    // Auto-rotate every 5 seconds
+  if (window._featAutoRotate) clearInterval(window._featAutoRotate);
+  window._featAutoRotate = setInterval(function() {
+    if (document.getElementById('feat-track')) {
+      var next = (window._featCur !== undefined ? window._featCur + 1 : 1);
+      window._featSwipe && window._featSwipe.goTo(next);
+    } else {
+      clearInterval(window._featAutoRotate);
+    }
+  }, 5000);
+
+  window._featSwipe.goTo = function(i) {
+      // Auto-rotate every 5 seconds
+  if (window._featAutoRotate) clearInterval(window._featAutoRotate);
+  window._featAutoRotate = setInterval(function() {
+    if (document.getElementById('feat-track')) {
+      var next = (window._featCur !== undefined ? window._featCur + 1 : 1);
+      window._featSwipe && window._featSwipe.goTo(next);
+    } else {
+      clearInterval(window._featAutoRotate);
+    }
+  }, 5000);
+
+  window._featSwipe.cur = ((i%count)+count)%count;
       track.style.transform = 'translateX(-' + (window._featSwipe.cur * wrap.offsetWidth) + 'px)';
       for (var j=0;j<count;j++) { var d=document.getElementById('feat-dot-'+j); if(d){d.style.width=j===window._featSwipe.cur?'20px':'8px';d.style.borderRadius=j===window._featSwipe.cur?'4px':'50%';d.style.background=j===window._featSwipe.cur?'#FFB81C':'#e0e0e0';} }
     };
@@ -5126,9 +5159,18 @@ function showFeaturedCarousel() {
     wrap.addEventListener('mousemove',function(e){if(drag)moved=true;});
     wrap.addEventListener('mouseup',function(e){if(!drag||!moved)return;var dx=e.clientX-sx;if(Math.abs(dx)>40)window._featSwipe.goTo(dx<0?window._featSwipe.cur+1:window._featSwipe.cur-1);drag=false;});
     wrap.addEventListener('mouseleave',function(){drag=false;});
+
+    // Auto-rotate every 5 seconds
+    if (window._featAutoRotate) clearInterval(window._featAutoRotate);
+    window._featAutoRotate = setInterval(function() {
+      if (document.getElementById('feat-track')) {
+        window._featSwipe.goTo(window._featSwipe.cur + 1);
+      } else {
+        clearInterval(window._featAutoRotate);
+      }
+    }, 5000);
   }, 100);
 }
-
 function showFeaturedBusinesses() {
   window._currentPage = 'featured-businesses';
   var messages = document.getElementById('messages');
@@ -5228,6 +5270,16 @@ function showMarketplaceCarousel() {
     wrap.addEventListener('mousemove', function(e){ if(drag) moved=true; });
     wrap.addEventListener('mouseup', function(e){ if(!drag||!moved) return; var dx=e.clientX-sx; if(Math.abs(dx)>40) window._mpSwipe.goTo(dx<0?window._mpSwipe.cur+1:window._mpSwipe.cur-1); drag=false; });
     wrap.addEventListener('mouseleave', function(){ drag=false; });
+
+    // Auto-rotate every 5 seconds
+    if (window._mpAutoRotate) clearInterval(window._mpAutoRotate);
+    window._mpAutoRotate = setInterval(function() {
+      if (document.getElementById('mp-track')) {
+        window._mpSwipe.goTo(window._mpSwipe.cur + 1);
+      } else {
+        clearInterval(window._mpAutoRotate);
+      }
+    }, 5000);
   }, 100);
 }
 
@@ -9463,7 +9515,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/group-advertising\',\'_blank\')" style="background:#FFB81C;color:#0F1E36;border-color:#FFB81C;">📣 Group Advertising</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/group-advertising\',\'_blank\')" style="background:#FFB81C;color:#0F1E36;border-color:#FFB81C;">📣 Group Advertising</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
@@ -9479,7 +9531,7 @@ function resetToWelcome() {
         const m = document.getElementById('messages');
         if (m && m.innerHTML.trim() === '') {
           addTipMessage('<div style="padding:12px;font-size:14px;color:#555;text-align:center;">👋🏾 Welcome back! What can Auntie Tobi help you with today? 😊</div>');
-          const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+          const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
           addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fallbackBtns}</div>`);
         }
       }, 500);
@@ -9491,7 +9543,7 @@ function resetToWelcome() {
       if (m) {
         m.innerHTML = '';
         addTipMessage('<div style="padding:12px;font-size:14px;color:#555;text-align:center;">👋🏾 Welcome back! What can Auntie Tobi help you with today? 😊</div>');
-        const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 Naija Businesses Near Me</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+        const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
         addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fallbackBtns}</div>`);
       }
     }
@@ -10283,8 +10335,21 @@ window.addEventListener('appinstalled', () => {
 window.addEventListener('load', () => {
   const params = new URLSearchParams(window.location.search);
   const q = params.get('q');
+  const nocache = params.get('nocache');
   if (q) {
     setTimeout(() => sendMessage(decodeURIComponent(q)), 1000);
+  } else if (nocache) {
+    // Pull-to-refresh or hard refresh — clean URL and go home
+    window.history.replaceState({}, '', '/');
+    setTimeout(() => resetToWelcome(), 300);
+  }
+});
+
+// Also handle browser back-forward cache (pageshow)
+window.addEventListener('pageshow', function(e) {
+  if (e.persisted) {
+    // Page restored from cache (e.g. swipe back) — go home
+    resetToWelcome();
   }
 });
 </script>
