@@ -4968,7 +4968,7 @@ const MARKETPLACE_PRODUCTS = [
     emoji: '💇🏾‍♀️',
     img: 'https://naijabiz.b-cdn.net/Marketplace%20products/Screenshot%202026-09-01%20124624.png',
     price: '£149.99',
-    desc: '',
+    desc: 'Turn heads with Lush Fringe Curl Wig, a stunning raw hair wig with soft curls and a chic fringe.',
     link: 'https://ladivaweaves.com/product-details/product/lush-fringe-curl/?variant=689a014ef4b3dea0abe54536',
     btnText: 'Buy Now',
   },
@@ -4981,7 +4981,7 @@ const MARKETPLACE_PRODUCTS = [
     emoji: '🎁',
     img: 'https://naijabiz.b-cdn.net/Marketplace%20products/ChatGPT%20Image%20Sep%201%2C%202026%2C%2012_35_00%20PM.png',
     price: '£20',
-    desc: '',
+    desc: 'A delicious treat hamper filled with freshly made cake in jars and banana breads — perfect for gifting. 🎂🍌💜',
     link: 'https://wa.me/447407238787',
     btnText: 'Buy Now',
     expires: '2026-12-01'
@@ -5157,20 +5157,23 @@ function showMarketplaceCarousel() {
     var imgHtml = p.img
       ? '<img src="' + p.img + '" style="width:100%;height:220px;object-fit:contain;background:#f8f8f8;padding:8px;display:block;pointer-events:none;">'
       : '<div style="width:100%;height:200px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:54px;pointer-events:none;">' + (p.emoji||'🛍️') + '</div>';
-    return '<div style="min-width:100%;flex-shrink:0;">'
+    return '<div style="min-width:100%;flex-shrink:0;display:flex;flex-direction:column;">'
       + imgHtml
-      + '<div style="padding:14px 14px 16px;">'
-      + '<div style="font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">💻 ' + p.category + '</div>'
-      + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:4px;">' + p.name + '</div>'
-      + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:8px;">' + p.business + '</div>'
-      + '<div style="font-size:20px;font-weight:800;color:#0F1E36;margin-bottom:12px;">' + p.price + '</div>'
+      + '<div style="padding:12px 14px 14px;height:160px;overflow:hidden;display:flex;flex-direction:column;">'
+      + '<div style="font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px;">' + (p.emoji || '💻') + ' ' + p.category + '</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#0F1E36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px;">' + (p.shortName || p.name) + '</div>'
+      + '<div style="font-size:11px;color:#9CA3AF;margin-bottom:5px;">' + p.business + '</div>'
+      + '<div style="font-size:12px;font-weight:600;color:#333;line-height:1.5;height:36px;overflow:hidden;flex-shrink:0;margin-bottom:5px;">' + (p.desc ? p.desc.substring(0, 100) : '') + '</div>'
+      + '<div style="flex:1;"></div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
+      + '<div style="font-size:20px;font-weight:800;color:#0F1E36;">' + p.price + '</div>'
       + (p.wa
         ? '<div style="display:flex;gap:8px;">'
           + (p.link ? '<a href="' + p.link + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>' : '')
           + '<a href="https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') + '" target="_blank" style="' + (p.link ? 'flex:1;' : 'width:100%;') + 'display:block;background:#25D366;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>'
           + '</div>'
         : '<a href="' + (p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(p.btnText === 'Buy Now' ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚' : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') : p.link) + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>')
-      + '</div></div>';
+      + '</div></div></div>';
   }).join('');
 
   var dots = activeProducts.map(function(_, i){
