@@ -99,6 +99,200 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script>
 var PRODUCTS = [
   {
+    id: 'mp4',
+    name: 'Lush Fringe Curl',
+    shortName: 'Lush Fringe Curl',
+    business: 'Ladiva Weaves',
+    category: 'Hair',
+    emoji: '💇🏾‍♀️',
+    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/Screenshot%202026-09-01%20124624.png',
+    price: '£149.99',
+    link: 'https://ladivaweaves.com/product-details/product/lush-fringe-curl/?variant=689a014ef4b3dea0abe54536',
+    btnText: 'Buy Now'
+  },
+  {
+    id: 'mp3',
+    name: 'Sweet Treat Hamper',
+    shortName: 'Sweet Treat Hamper',
+    business: 'Dulce Luxe Treats',
+    category: 'Gift Hamper',
+    emoji: '🎁',
+    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/ChatGPT%20Image%20Sep%201%2C%202026%2C%2012_35_00%20PM.png',
+    price: '£20',
+    link: 'https://wa.me/447407238787',
+    btnText: 'Buy Now',
+    expires: '2026-12-01'
+  },
+  {
+    id: 'mp2',
+    name: 'Prepare Your Daughter for Her First Period with BLOOMLY 🩷',
+    shortName: 'BLOOMLY — First Period Guide 🩷',
+    business: 'Hello Periodz',
+    category: 'Digital Product',
+    emoji: '🩷',
+    img: 'https://naijabiz.b-cdn.net/19.png',
+    price: '£10',
+    link: 'https://www.helloperiodz.com/bloomly-bundle',
+    btnText: 'Learn More'
+  },
+  {
+    id: 'mp1',
+    name: 'E-Book / Print Copy — Service: The Vehicle To Greatness: Rebuilding The Family System',
+    shortName: 'Service: The Vehicle To Greatness',
+    business: 'PatUch Concepts',
+    category: 'Digital Product',
+    emoji: '📘',
+    img: 'https://naijabiz.b-cdn.net/service-the-vehicle-to-gr-selar.co-67350afac3b99.jpg',
+    price: '£3',
+    link: 'https://selar.com/7w755i',
+    btnText: 'Learn More'
+  }
+];
+
+var currentCat = 'All';
+
+function buildCard(p) {
+  var now = new Date();
+  if (p.expires && new Date(p.expires) <= now) return '';
+  var waText = p.btnText === 'Buy Now'
+    ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚'
+    : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚';
+  var link = p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(waText) : p.link;
+  return '<div class="pc">'
+    + '<img class="pc-img" src="' + p.img + '" alt="' + p.name + '" loading="lazy" style="object-fit:contain;background:#f8f8f8;padding:8px;">'
+    + '<div class="pc-body">'
+    + '<div class="pc-cat">' + (p.emoji || '💻') + ' ' + p.category + '</div>'
+    + '<div class="pc-name">' + p.name + '</div>'
+    + '<div class="pc-biz">' + p.business + '</div>'
+    + '<div class="pc-price">' + p.price + '</div>'
+    + '<a href="' + link + '" target="_blank" class="pc-btn">' + p.btnText + '</a>'
+    + '</div></div>';
+}
+
+function renderGrid(cat) {
+  var grid = document.getElementById('product-grid');
+  var filtered = cat === 'All' ? PRODUCTS : PRODUCTS.filter(function(p){ return p.category === cat; });
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No products in this category yet — check back soon!</div>';
+  } else {
+    grid.innerHTML = filtered.map(buildCard).join('');
+  }
+}
+
+document.getElementById('filters').addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-cat]');
+  if (!btn) return;
+  document.querySelectorAll('.fp').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderGrid(btn.getAttribute('data-cat'));
+});
+
+renderGrid('All');
+</script>
+</body>
+</html>const PRODUCTS = [
+  
+];!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Marketplace — Auntie Tobi</title>
+<link rel="icon" href="/tobi-face-128.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;padding-bottom:60px}
+.app-header{background:#0F1E36;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:540px;margin:0 auto}
+.app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0}
+.app-logo img{width:100%;height:100%;object-fit:cover}
+.app-header-text{flex:1}
+.app-header-title{font-size:16px;font-weight:700;color:white}
+.app-header-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px}
+.header-btns{display:flex;gap:6px}
+.back-btn{color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;font-weight:600;padding:7px 11px;border:1.5px solid rgba(255,255,255,0.25);border-radius:20px;white-space:nowrap}
+
+.wrap{max-width:540px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+
+.hero{background:#0F1E36;border-radius:14px;padding:22px 18px}
+.hero-badge{display:inline-block;background:rgba(255,184,28,0.2);color:#FFB81C;font-size:12px;font-weight:700;padding:4px 14px;border-radius:20px;margin-bottom:12px}
+.hero-title{font-size:22px;font-weight:800;color:white;margin-bottom:6px}
+.hero-sub{font-size:15px;color:rgba(255,255,255,0.75);line-height:1.65}
+
+.filters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.filters::-webkit-scrollbar{display:none}
+.fp{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;border:1.5px solid #e0e0e0;background:white;color:#0F1E36;flex-shrink:0;transition:.2s}
+.fp.active{background:#057A44;border-color:#057A44;color:white}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.pc{border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.pc-img{width:100%;height:160px;object-fit:cover;object-position:top;display:block;background:#f5f5f5}
+.pc-body{padding:11px 12px 13px}
+.pc-cat{font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px}
+.pc-name{font-size:13px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:4px}
+.pc-biz{font-size:11px;color:#9CA3AF;margin-bottom:6px}
+.pc-price{font-size:16px;font-weight:800;color:#0F1E36;margin-bottom:10px}
+.pc-btn{display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:10px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;border:none;cursor:pointer}
+
+.empty{padding:32px;text-align:center;color:#9CA3AF;font-size:15px;background:white;border-radius:12px}
+
+.list-card{background:#0F1E36;border-radius:14px;padding:22px 18px;text-align:center}
+.list-title{font-size:18px;font-weight:800;color:white;margin-bottom:8px}
+.list-sub{font-size:14px;color:rgba(255,255,255,0.7);line-height:1.65;margin-bottom:18px}
+.list-btn{display:inline-block;background:#057A44;color:white;text-decoration:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:700}
+.list-note{font-size:12px;color:rgba(255,255,255,0.45);margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-header-text">
+    <div class="app-header-title">Auntie Tobi</div>
+    <div class="app-header-sub">Marketplace</div>
+  </div>
+  <div class="header-btns">
+    <a href="/" class="back-btn">🏠 App</a>
+    <a href="/?action=links" class="back-btn">← Links</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-badge">🛍️ Products & Services</div>
+    <div class="hero-title">Auntie Tobi Marketplace</div>
+    <div class="hero-sub">Products and services from Nigerian businesses and creators in the UK.</div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters" id="filters">
+    <div class="fp active" data-cat="All">All</div>
+    <div class="fp" data-cat="Digital Product">💻 Digital</div>
+    <div class="fp" data-cat="Cakes & Treats">🎂 Cakes</div>
+    <div class="fp" data-cat="Beauty">💄 Beauty</div>
+    <div class="fp" data-cat="Groceries">🛒 Groceries</div>
+    <div class="fp" data-cat="Gifts">🎁 Gifts</div>
+    <div class="fp" data-cat="Fashion">👗 Fashion</div>
+    <div class="fp" data-cat="Food">🍲 Food</div>
+  </div>
+
+  <!-- GRID -->
+  <div class="grid" id="product-grid"></div>
+
+  <!-- LIST YOUR PRODUCT -->
+  <div class="list-card">
+    <div class="list-title">List Your Product or Service</div>
+    <div class="list-sub">Are you a Nigerian business or creator in the UK? Get your product or service in front of the Auntie Tobi community.</div>
+    <a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20would%20like%20to%20list%20my%20product%20or%20service%20on%20the%20Marketplace" target="_blank" class="list-btn">💬 Contact Us on WhatsApp</a>
+    <p class="list-note">Available to Auntie Tobi Business Club members</p>
+  </div>
+
+</div>
+
+<script>
+var PRODUCTS = [
+  {
     id: 'mp1',
     name: 'E-Book / Print Copy — Service: The Vehicle To Greatness: Rebuilding The Family System',
     shortName: 'Service: The Vehicle To Greatness',
@@ -119,20 +313,49 @@ var PRODUCTS = [
     price: '£10',
     link: 'https://www.helloperiodz.com/bloomly-bundle',
     btnText: 'Learn More'
+  },
+  {
+    id: 'mp4',
+    name: 'Lush Fringe Curl',
+    shortName: 'Lush Fringe Curl',
+    business: 'Ladiva Weaves',
+    category: 'Hair',
+    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/Screenshot%202026-09-01%20124624.png',
+    price: '£149.99',
+    link: 'https://ladivaweaves.com/product-details/product/lush-fringe-curl/?variant=689a014ef4b3dea0abe54536',
+    btnText: 'Buy Now'
+  },
+  {
+    id: 'mp3',
+    name: 'Sweet Treat Hamper',
+    shortName: 'Sweet Treat Hamper',
+    business: 'Dulce Luxe Treats',
+    category: 'Gift Hamper',
+    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/ChatGPT%20Image%20Sep%201%2C%202026%2C%2012_35_00%20PM.png',
+    price: '£20',
+    link: 'https://wa.me/447407238787',
+    btnText: 'Buy Now',
+    expires: '2026-12-01'
   }
 ];
 
 var currentCat = 'All';
 
 function buildCard(p) {
+  var now = new Date();
+  if (p.expires && new Date(p.expires) <= now) return '';
+  var waText = p.btnText === 'Buy Now'
+    ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚'
+    : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚';
+  var link = p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(waText) : p.link;
   return '<div class="pc">'
-    + '<img class="pc-img" src="' + p.img + '" alt="' + p.name + '" loading="lazy">'
+    + '<img class="pc-img" src="' + p.img + '" alt="' + p.name + '" loading="lazy" style="object-fit:contain;background:#f8f8f8;padding:8px;">'
     + '<div class="pc-body">'
-    + '<div class="pc-cat">💻 ' + p.category + '</div>'
+    + '<div class="pc-cat">' + (p.emoji || '💻') + ' ' + p.category + '</div>'
     + '<div class="pc-name">' + p.name + '</div>'
     + '<div class="pc-biz">' + p.business + '</div>'
     + '<div class="pc-price">' + p.price + '</div>'
-    + '<a href="' + p.link + '" target="_blank" class="pc-btn">' + p.btnText + '</a>'
+    + '<a href="' + link + '" target="_blank" class="pc-btn">' + p.btnText + '</a>'
     + '</div></div>';
 }
 
