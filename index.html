@@ -7973,7 +7973,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
       +'<div style="display:flex;gap:6px;">'
       +'<button onclick="tobiOpenBiz(\''+b.slug+'\')" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View Details</button>'
       +wa
-      +(b.featured ? '' : '<button onclick="if(navigator.share){navigator.share({title:\''+b.name.replace(/'/g,'')+'\'',url:\'https://auntietobi.co.uk/?biz='+b.slug+'\'});}else{navigator.clipboard&&navigator.clipboard.writeText(\'https://auntietobi.co.uk/?biz='+b.slug+'\');}" style="padding:9px 10px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤</button>')
+      +(b.featured ? '' : '<button onclick="shareBiz(\''+b.slug+'\',\''+b.name.replace(/'/g,'')+'\')\" style=\"padding:9px 10px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;\">📤</button>')
       +'</div></div>');
   });
 
@@ -9265,6 +9265,15 @@ window.addEventListener('pageshow', function(e) {
     </div>
   </div>
 </div>
+
+function shareBiz(slug, name) {
+  var url = 'https://auntietobi.co.uk/?biz=' + slug;
+  if (navigator.share) {
+    navigator.share({ title: name, url: url });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url);
+  }
+}
 
 function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleDeepLink();}
 <script>
