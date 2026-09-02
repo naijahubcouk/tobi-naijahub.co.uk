@@ -1969,7 +1969,7 @@ function formatResponse(text) {
             ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
             : '';
 
-                    const viewBtn = '';
+                    const viewBtn = '<a href="https://auntietobi.com/listing/' + business.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>';
 
           const shareBtn = '<button data-share-title="' + safeName.replace(/"/g,'&quot;') + '" data-share-desc="' + shareMsg.replace(/"/g,'&quot;') + '" data-share-url="' + shareUrl + '" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">\uD83D\uDCE4 Share</button>';
 
@@ -5356,7 +5356,7 @@ function showFeaturedCarousel() {
       + '<p style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'') + '</p>'
       + '</div>'
       + '<div style="display:flex;gap:8px;padding:0 14px 14px;pointer-events:auto;">'
-      + '<button onclick="tobiOpenBiz(\'' + b.slug + '\')" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View Details</button>'
+      + '<a href="https://auntietobi.com/listing/'+b.slug+'" target="_blank" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>'
       + '<button onclick="shareBiz(\'' + b.slug + '\')" style="flex:1;padding:10px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#0F1E36;">📤 Share</button>' + '</div></div></div>';
   }).join('');
 
@@ -6388,7 +6388,7 @@ function handleDeepLink() {
         const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
         const waBtn = (business.wa) ? '<a href="https://wa.me/' + business.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
         const shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-                const viewBtn = '';
+                const viewBtn = '<a href="https://auntietobi.com/listing/' + business.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>';
         const cardHTML = '<div style="background:white;border:' + (business.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
           + verifiedBadge
           + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (business.verified ? 'margin-top:6px;' : '') + '">'
@@ -7960,12 +7960,12 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
       +(cat?'<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">'+cat+'</span>':'')
       +'</div>'+vl+dd
       +'<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+(b.loc||'UK').split(',')[0]+'</div>'
-      +'<div style="display:flex;gap:6px;">'
-      +'<button onclick="tobiOpenBiz(\''+b.slug+'\')" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View Details</button>'
-      +wa
-      +(b.featured ? '' : '<button onclick="shareBiz(\''+b.slug+'\',\''+b.name.replace(/'/g,'')+'\')\" style=\"padding:9px 10px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;\">📤</button>')
+      +'<div style="display:flex;gap:8px;">'
+      +'<a href="https://auntietobi.com/listing/'+b.slug+'" target="_blank" style="flex:1;padding:10px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>'
+      +'<button onclick="shareBiz(\''+b.slug+'\')" style="flex:1;padding:10px 8px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:#0F1E36;">📤 Share</button>'
       +'</div></div>');
   });
+
 
   // 3. BUBBLES
   var ml = hasMore ? '👀 Show more' : '🏠 Back to Home';
@@ -9295,10 +9295,11 @@ function tobi_imgZoom(src) {
   document.body.appendChild(overlay);
 }
 
-function shareBiz(slug, name) {
+function shareBiz(slug) {
   var url = 'https://auntietobi.co.uk/?biz=' + slug;
-  if (navigator.share) {
-    navigator.share({ title: name, url: url });
+  if (navigator.share) { navigator.share({ title: 'Check out this business on Auntie Tobi', url: url }); }
+  else if (navigator.clipboard) { navigator.clipboard.writeText(url).then(function(){ alert('Link copied! 📋'); }); }
+});
   } else if (navigator.clipboard) {
     navigator.clipboard.writeText(url);
   }
