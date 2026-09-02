@@ -163,7 +163,7 @@ function buildCard(p) {
     : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚';
   var link = p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(waText) : p.link;
   return '<div class="pc">'
-    + '<img class="pc-img" src="' + p.img + '" alt="' + p.name + '" loading="lazy" style="object-fit:contain;background:#f8f8f8;padding:8px;">'
+    + '<img class="pc-img" src="' + p.img + '" alt="' + p.name + '" loading="lazy" onclick="tobi_imgZoom(\'' + p.img + '\')" style="object-fit:contain;background:#f8f8f8;padding:8px;cursor:zoom-in;">'
     + '<div class="pc-body">'
     + '<div class="pc-cat">' + (p.emoji || '💻') + ' ' + p.category + '</div>'
     + '<div class="pc-name">' + p.name + '</div>'
@@ -195,6 +195,19 @@ document.getElementById('filters').addEventListener('click', function(e) {
 });
 
 renderGrid('All');
+</script>
+
+<script>
+function tobi_imgZoom(src) {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
+  overlay.onclick = function(){ document.body.removeChild(overlay); };
+  var img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;box-shadow:0 4px 30px rgba(0,0,0,0.5);';
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+}
 </script>
 </body>
 </html>!DOCTYPE html>
@@ -309,7 +322,7 @@ function buildCard(p) {
     : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚';
   var link = p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(waText) : p.link;
   return '<div class="pc">'
-    + '<img class="pc-img" src="' + p.img + '" alt="' + p.name + '" loading="lazy" style="object-fit:contain;background:#f8f8f8;padding:8px;">'
+    + '<img class="pc-img" src="' + p.img + '" alt="' + p.name + '" loading="lazy" onclick="tobi_imgZoom(\'' + p.img + '\')" style="object-fit:contain;background:#f8f8f8;padding:8px;cursor:zoom-in;">'
     + '<div class="pc-body">'
     + '<div class="pc-cat">' + (p.emoji || '💻') + ' ' + p.category + '</div>'
     + '<div class="pc-name">' + p.name + '</div>'
@@ -341,6 +354,19 @@ document.getElementById('filters').addEventListener('click', function(e) {
 });
 
 renderGrid('All');
+</script>
+
+<script>
+function tobi_imgZoom(src) {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
+  overlay.onclick = function(){ document.body.removeChild(overlay); };
+  var img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;box-shadow:0 4px 30px rgba(0,0,0,0.5);';
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+}
 </script>
 </body>
 </html>
