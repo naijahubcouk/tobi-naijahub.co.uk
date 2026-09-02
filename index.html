@@ -8102,9 +8102,9 @@ function shareBiz(slug) {
   var name = biz ? biz.name : 'this business';
   var cat = biz && biz.cat ? biz.cat : '';
   var catLine = cat ? 'Looking for a ' + cat + '? ' : '';
-  var msg = catLine + 'Check out ' + name + ' on Auntie Tobi — your go-to for Nigerian businesses in the UK 💚 ' + url;
+  var msg = catLine + 'Check out ' + name + ' on Auntie Tobi — your go-to for Nigerian businesses in the UK 💚';
   if (navigator.share) { navigator.share({ title: name + ' — Auntie Tobi', text: msg, url: url }); }
-  else if (navigator.clipboard) { navigator.clipboard.writeText(msg).then(function(){ alert('Link copied! 📋'); }); }
+  else if (navigator.clipboard) { navigator.clipboard.writeText(msg + ' ' + url).then(function(){ alert('Link copied! 📋'); }); }
 }
 </script>
 <!-- Feedback Form Modal -->
