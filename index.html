@@ -3209,13 +3209,13 @@ function showInstallGuide() {
         ${igStep('1','#FFB81C','#0F1E36','Install the app first','Add Auntie Tobi to your home screen (see Install tab)','📲')}
         ${igStep('2','#FFB81C','#0F1E36','Tap the 🔕 bell icon','Top-right corner of the Auntie Tobi app','🔕')}
         ${igStep('3','#FFB81C','#0F1E36','Tap "Allow" when prompted','Allow notifications so we can send you updates','✅')}
-        <div style="background:#fff8e1;border:1.5px solid #FFB81C;border-radius:10px;padding:10px 12px;font-size:12px;color:#0F1E36;line-height:1.6;margin-top:10px;">🔔 You'll receive: 🌅 Morning Prayer · 💪 Daily Motivation · 💡 Tips of the Day · 📰 News & Articles</div>
+        <div style="background:#fff8e1;border:1.5px solid #FFB81C;border-radius:10px;padding:10px 12px;font-size:12px;color:#0F1E36;line-height:1.6;margin-top:10px;"><strong>🔔 Choose what you'd like to receive from Auntie Tobi:</strong><br><br>🌅 Morning Prayer<br>💪 Daily Motivation<br>💡 Tip of the Day<br>📰 News & Articles</div>
       </div>
       <div id="ig-notify-ios" style="display:none;">
         ${igStep('1','#FFB81C','#0F1E36','Install & open from home screen','Always open from your home screen icon, not Safari','🏠')}
         ${igStep('2','#FFB81C','#0F1E36','Tap the 🔕 bell icon','Top-right corner of the Auntie Tobi app','🔕')}
         ${igStep('3','#FFB81C','#0F1E36','Tap "Allow" — iOS 16.4+ required','Allow notifications when Safari asks','✅')}
-        <div style="background:#fff8e1;border:1.5px solid #FFB81C;border-radius:10px;padding:10px 12px;font-size:12px;color:#0F1E36;line-height:1.6;margin-top:10px;">🔔 You'll receive: 🌅 Morning Prayer · 💪 Daily Motivation · 💡 Tips of the Day · 📰 News & Articles</div>
+        <div style="background:#fff8e1;border:1.5px solid #FFB81C;border-radius:10px;padding:10px 12px;font-size:12px;color:#0F1E36;line-height:1.6;margin-top:10px;"><strong>🔔 Choose what you'd like to receive from Auntie Tobi:</strong><br><br>🌅 Morning Prayer<br>💪 Daily Motivation<br>💡 Tip of the Day<br>📰 News & Articles</div>
       </div>
     </div>
   </div>`;
@@ -3916,50 +3916,125 @@ function showNewsCard() {
 function showHowToBecomePremium() {
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
-  const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;">
-    <div style="background:#057A44;padding:10px 14px;">
-      <span style="color:white;font-weight:700;font-size:14px;">💳 How do I become a Business Club Member?</span>
-    </div>
-    <div style="padding:14px 16px;">
-      <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:14px;">It's simple! Here's how to upgrade to Auntie Tobi Business Club:</div>
-      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
-          <div style="font-size:13px;color:#0F1E36;line-height:1.6;"><strong>New business?</strong> <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List your business here</a> — it's free to get started.</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
-          <div style="font-size:13px;color:#0F1E36;line-height:1.6;"><strong>Already listed?</strong> Claim your listing on <a href="https://auntietobi.com" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">auntietobi.com</a> to access your dashboard.</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
-          <div style="font-size:13px;color:#0F1E36;line-height:1.6;"><strong>In your dashboard</strong> — you'll see the option to upgrade to Auntie Tobi Business Club and complete your payment.</div>
+  const html = `    <div style="padding:0 16px;">
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">Who is Auntie Tobi?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;transition:transform 0.2s;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Your friendly AI Digital Auntie, built specifically for Nigerians living in the UK . Think of her as your AI Auntie — always available to answer questions, explain things clearly, and help you navigate UK life with confidence.</div>
+      </div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">Who is Auntie Tobi for?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Auntie Tobi is for Nigerians living in the UK. Whether you've just arrived (japa'd) or you've been here for years, she's here to help you settle, succeed, and thrive.</div>
+      </div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">What can Auntie Tobi help me with?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🇬🇧 Life in the UK</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">NHS & GP registration &nbsp;|&nbsp; Housing & renting &nbsp;|&nbsp; Bills & council services &nbsp;|&nbsp; Schools & education</div>
+            </div>
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">💼 Jobs & Careers</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Job search support &nbsp;|&nbsp; CV writing &nbsp;|&nbsp; Interview prep &nbsp;|&nbsp; Career advice</div>
+            </div>
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🛂 Visas & Immigration</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Visa information &nbsp;|&nbsp; Immigration guidance &nbsp;|&nbsp; eVisa & UKVI updates</div>
+            </div>
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🚗 Driving & UK Test</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Theory Test practice &nbsp;|&nbsp; UK driving rules &nbsp;|&nbsp; Life in UK Test prep</div>
+            </div>
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🏢 Businesses & 🎉 Events</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Restaurants, salons & services &nbsp;|&nbsp; Local businesses near you &nbsp;|&nbsp; Nigerian events & meetups</div>
+            </div>
+          </div>
         </div>
       </div>
-      <div style="background:#FFF8E7;border:1px solid #FFB81C;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
-        <div style="font-size:13px;color:#412402;line-height:1.6;">💡 <strong>Having issues?</strong> No problem — our team is happy to help you get set up!</div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">Why was Auntie Tobi created?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Moving to or living in the UK can be overwhelming. Auntie Tobi exists to:<br><br>✔ Explain things simply<br>✔ Point you in the right direction<br>✔ Save you time and stress<br>✔ Help you make informed decisions</div>
       </div>
-      <a href="https://wa.me/447594674940" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:11px;border-radius:8px;text-align:center;">💬 Message the team on WhatsApp</a>
-    </div>
-  </div>`;
-  addTipMessage(html);
-  const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean).slice(0, 2);
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">💬 Chat with the team</button>${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('')}</div>`);
-}
 
-function showFAQCard(suppressBubbles = false) {
-  const messages = document.getElementById('messages');
-  messages.innerHTML = '';
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">How do I use Auntie Tobi?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;">
+          <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:6px;">Simply type your question — just like chatting with a trusted auntie. Examples:</div>
+          <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;font-size:11px;color:#555;line-height:2.1;">"How do I register with a GP?"<br>"Find Nigerian restaurants near me."<br>"Can I drive in the UK with a Nigerian licence?"<br>"Help me write a UK CV."</div>
+        </div>
+      </div>
 
-  const faqId = 'faq-' + Date.now();
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">How do I install Auntie Tobi?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;">
+          <div style="background:#f0f4ff;border-radius:6px;padding:8px 10px;font-size:12px;color:#333;line-height:1.9;margin-bottom:4px;">📱 <strong>Android</strong> — Open in Chrome → tap Add to Home Screen<br>🍏 <strong>iPhone</strong> — Open in Safari → tap Add to Home Screen</div>
+          <div style="font-size:11px;color:#888;font-style:italic;">No App Store. No Google Play. No downloads. Just open and go.</div>
+        </div>
+      </div>
 
-  const html = `<div id="${faqId}" style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">🔔 Why should I enable notifications?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:2.1;">✅ UK news affecting Nigerians<br>✅ Immigration and visa updates<br>✅ Jobs and opportunities<br>✅ NHS and benefits news<br>✅ Community events & policy changes<br><br><span style="color:#057A44;font-weight:600;">Auntie Tobi helps you stay one step ahead.</span></div>
+      </div>
 
-    <div style="background:#0F1E36;padding:14px 16px;">
-      <div style="font-size:10px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">AUNTIE TOBI</div>
-      <div style="font-size:17px;font-weight:700;color:white;margin-bottom:2px;">❓ FAQ About Auntie Tobi</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.6);">Tap a question to read the answer</div>
-    </div>
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">Is Auntie Tobi free?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Yes! 🎉 Auntie Tobi is completely free to use and available whenever you need help. No subscriptions, no hidden costs.</div>
+      </div>
+
+      <div class="faq-row">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">I own a business. Can I list it?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;">
+          <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:8px;">Absolutely! Add your listing and connect with Nigerians across the UK.</div>
+          <a href="https://auntietobi.com/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:6px;text-align:center;">📢 List your business here</a>
+        </div>
+      </div>
+
+      <div class="faq-row" style="border-top:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">⭐ Tell me about Auntie Tobi Business Club</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:14px;">
+          <div style="text-align:center;padding:16px 8px;">
+            <div style="font-size:36px;margin-bottom:10px;">🚀</div>
+            <div style="font-size:15px;font-weight:800;color:#0F1E36;margin-bottom:6px;">Coming Soon!</div>
+            <div style="font-size:12px;color:#9CA3AF;line-height:1.6;margin-bottom:14px;">The Auntie Tobi Business Club is on its way. Stay tuned for something exciting for Nigerian businesses in the UK.</div>
+            <div style="display:inline-block;background:#fff8e1;border:1.5px solid #FFB81C;color:#B45309;font-size:12px;font-weight:700;padding:6px 16px;border-radius:20px;">🔔 Watch this space</div>
+          </div>
+        </div>
 
     <div style="padding:0 16px;">
 
@@ -4091,35 +4166,153 @@ function showFAQCard(suppressBubbles = false) {
         </div>
       </div>
 
-      <div class="faq-row" style="border-top:1px solid #e5e7eb;">
+      <div class="faq-row" style="border-top:1px solid #e5e7eb;">(suppressBubbles = false) {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+
+  const faqId = 'faq-' + Date.now();
+
+  const html = `<div id="${faqId}" style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+
+    <div style="background:#0F1E36;padding:14px 16px;">
+      <div style="font-size:10px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">AUNTIE TOBI</div>
+      <div style="font-size:17px;font-weight:700;color:white;margin-bottom:2px;">❓ FAQ About Auntie Tobi</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);">Tap a question to read the answer</div>
+    </div>
+
+    <div style="padding:0 16px;">
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
         <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
-          <span style="font-size:13px;font-weight:700;color:#0F1E36;">💳 How do I become a Business Club Member?</span>
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">Who is Auntie Tobi?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;transition:transform 0.2s;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Your friendly AI Digital Auntie, built specifically for Nigerians living in the UK . Think of her as your AI Auntie — always available to answer questions, explain things clearly, and help you navigate UK life with confidence.</div>
+      </div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">Who is Auntie Tobi for?</span>
           <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
         </button>
-        <div class="faq-answer" style="display:none;padding-bottom:14px;">
-          <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:12px;">It's simple! Here's how to upgrade to Auntie Tobi Business Club:</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
-            <div style="display:flex;gap:10px;align-items:flex-start;">
-              <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
-              <div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>New business?</strong> <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List your business here</a> — it's free to get started.</div>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Auntie Tobi is for Nigerians living in the UK. Whether you've just arrived (japa'd) or you've been here for years, she's here to help you settle, succeed, and thrive.</div>
+      </div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">What can Auntie Tobi help me with?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🇬🇧 Life in the UK</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">NHS & GP registration &nbsp;|&nbsp; Housing & renting &nbsp;|&nbsp; Bills & council services &nbsp;|&nbsp; Schools & education</div>
             </div>
-            <div style="display:flex;gap:10px;align-items:flex-start;">
-              <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
-              <div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>Already listed?</strong> Claim your business listing on <a href="https://auntietobi.com" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">auntietobi.com</a> to access your dashboard.</div>
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">💼 Jobs & Careers</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Job search support &nbsp;|&nbsp; CV writing &nbsp;|&nbsp; Interview prep &nbsp;|&nbsp; Career advice</div>
             </div>
-            <div style="display:flex;gap:10px;align-items:flex-start;">
-              <div style="background:#057A44;color:white;font-size:11px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
-              <div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>In your dashboard</strong> — you'll see the option to upgrade to Auntie Tobi Business Club and complete your payment there.</div>
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🛂 Visas & Immigration</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Visa information &nbsp;|&nbsp; Immigration guidance &nbsp;|&nbsp; eVisa & UKVI updates</div>
+            </div>
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🚗 Driving & UK Test</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Theory Test practice &nbsp;|&nbsp; UK driving rules &nbsp;|&nbsp; Life in UK Test prep</div>
+            </div>
+            <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🏢 Businesses & 🎉 Events</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Restaurants, salons & services &nbsp;|&nbsp; Local businesses near you &nbsp;|&nbsp; Nigerian events & meetups</div>
             </div>
           </div>
-          <div style="background:#FFF8E7;border:1px solid #FFB81C;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-            <div style="font-size:12px;color:#412402;line-height:1.6;">💡 <strong>Having issues?</strong> No problem — our team is happy to help you get set up!</div>
-          </div>
-          <a href="https://wa.me/447594674940" target="_blank" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-align:center;">💬 Message the team on WhatsApp</a>
         </div>
       </div>
 
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">Why was Auntie Tobi created?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Moving to or living in the UK can be overwhelming. Auntie Tobi exists to:<br><br>✔ Explain things simply<br>✔ Point you in the right direction<br>✔ Save you time and stress<br>✔ Help you make informed decisions</div>
+      </div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">How do I use Auntie Tobi?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;">
+          <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:6px;">Simply type your question — just like chatting with a trusted auntie. Examples:</div>
+          <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;font-size:11px;color:#555;line-height:2.1;">"How do I register with a GP?"<br>"Find Nigerian restaurants near me."<br>"Can I drive in the UK with a Nigerian licence?"<br>"Help me write a UK CV."</div>
+        </div>
+      </div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">How do I install Auntie Tobi?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;">
+          <div style="background:#f0f4ff;border-radius:6px;padding:8px 10px;font-size:12px;color:#333;line-height:1.9;margin-bottom:4px;">📱 <strong>Android</strong> — Open in Chrome → tap Add to Home Screen<br>🍏 <strong>iPhone</strong> — Open in Safari → tap Add to Home Screen</div>
+          <div style="font-size:11px;color:#888;font-style:italic;">No App Store. No Google Play. No downloads. Just open and go.</div>
+        </div>
+      </div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">🔔 Why should I enable notifications?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:2.1;">✅ UK news affecting Nigerians<br>✅ Immigration and visa updates<br>✅ Jobs and opportunities<br>✅ NHS and benefits news<br>✅ Community events & policy changes<br><br><span style="color:#057A44;font-weight:600;">Auntie Tobi helps you stay one step ahead.</span></div>
+      </div>
+
+      <div class="faq-row" style="border-bottom:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">Is Auntie Tobi free?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;font-size:12px;color:#555;line-height:1.7;">Yes! 🎉 Auntie Tobi is completely free to use and available whenever you need help. No subscriptions, no hidden costs.</div>
+      </div>
+
+      <div class="faq-row">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">I own a business. Can I list it?</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:12px;">
+          <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:8px;">Absolutely! Add your listing and connect with Nigerians across the UK.</div>
+          <a href="https://auntietobi.com/new-listing" target="_blank" style="display:block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:700;padding:10px;border-radius:6px;text-align:center;">📢 List your business here</a>
+        </div>
+      </div>
+
+      <div class="faq-row" style="border-top:1px solid #e5e7eb;">
+        <button onclick="toggleFaq(this)" style="width:100%;background:none;border:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="font-size:13px;font-weight:700;color:#0F1E36;">⭐ Tell me about Auntie Tobi Business Club</span>
+          <span class="faq-icon" style="font-size:16px;color:#FFB81C;flex-shrink:0;margin-left:8px;">＋</span>
+        </button>
+        <div class="faq-answer" style="display:none;padding-bottom:14px;">
+          <div style="text-align:center;padding:16px 8px;">
+            <div style="font-size:36px;margin-bottom:10px;">🚀</div>
+            <div style="font-size:15px;font-weight:800;color:#0F1E36;margin-bottom:6px;">Coming Soon!</div>
+            <div style="font-size:12px;color:#9CA3AF;line-height:1.6;margin-bottom:14px;">The Auntie Tobi Business Club is on its way. Stay tuned for something exciting for Nigerian businesses in the UK.</div>
+            <div style="display:inline-block;background:#fff8e1;border:1.5px solid #FFB81C;color:#B45309;font-size:12px;font-weight:700;padding:6px 16px;border-radius:20px;">🔔 Watch this space</div>
+          </div>
+        </div>
+        </div>(suppressBubbles = false) {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+
+  const faqId = 'faq-' + Date.now();
+
+  const html = `<div id="${faqId}" style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+
+    <div style="background:#0F1E36;padding:14px 16px;">
+      <div style="font-size:10px;font-weight:700;color:#FFB81C;letter-spacing:1px;margin-bottom:4px;">AUNTIE TOBI</div>
+      <div style="font-size:17px;font-weight:700;color:white;margin-bottom:2px;">❓ FAQ About Auntie Tobi</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);">Tap a question to read the answer</div>
     </div>
+</div>
 
     <div style="background:#0F1E36;padding:12px 16px;text-align:center;">
       <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:2px;">💡 Information is power.</div>
