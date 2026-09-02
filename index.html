@@ -8095,6 +8095,12 @@ function closeBlogSheet() {
 
 // (blog-read-more handler merged into global click handler above)
 
+
+function shareBiz(slug) {
+  var url = 'https://auntietobi.co.uk/?biz=' + slug;
+  if (navigator.share) { navigator.share({ title: 'Check out this business on Auntie Tobi', url: url }); }
+  else if (navigator.clipboard) { navigator.clipboard.writeText(url).then(function(){ alert('Link copied! 📋'); }); }
+}
 </script>
 <!-- Feedback Form Modal -->
 <div id="feedback-modal" style="display:none;position:fixed;inset:0;background:rgba(15,30,54,0.85);z-index:999999;align-items:center;justify-content:center;padding:20px;">
@@ -9293,16 +9299,6 @@ function tobi_imgZoom(src) {
   overlay.appendChild(closeBtn);
   overlay.appendChild(img);
   document.body.appendChild(overlay);
-}
-
-function shareBiz(slug) {
-  var url = 'https://auntietobi.co.uk/?biz=' + slug;
-  if (navigator.share) { navigator.share({ title: 'Check out this business on Auntie Tobi', url: url }); }
-  else if (navigator.clipboard) { navigator.clipboard.writeText(url).then(function(){ alert('Link copied! 📋'); }); }
-});
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(url);
-  }
 }
 
 
