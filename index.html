@@ -1969,7 +1969,7 @@ function formatResponse(text) {
             ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
             : '';
 
-                    const viewBtn = '<button onclick="tobiOpenBiz(\'' + b.slug + '\')" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View Details</button'; var _dum = 'View details</a>'
+                    const viewBtn = '';
 
           const shareBtn = '<button data-share-title="' + safeName.replace(/"/g,'&quot;') + '" data-share-desc="' + shareMsg.replace(/"/g,'&quot;') + '" data-share-url="' + shareUrl + '" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">\uD83D\uDCE4 Share</button>';
 
@@ -5318,7 +5318,7 @@ function buildProductCard(p, compact) {
 
 function buildFeaturedCard(b, compact) {
   var verHtml = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg style="width:12px;height:12px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
-  var waBtn = b.wa ? '<a href="https://wa.me/' + b.wa + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:7px;font-size:11px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>' : '';
+  var waBtn = '';
   var viewBtn = '<button onclick="tobiOpenBiz(\'' + b.slug + '\')" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View Details</button>';
   var minW = compact ? 'min-width:220px;flex-shrink:0;scroll-snap-align:start;' : '';
   var descLen = compact ? 80 : 200;
@@ -5357,7 +5357,7 @@ function showFeaturedCarousel() {
       + '</div>'
       + '<div style="display:flex;gap:8px;padding:0 14px 14px;pointer-events:auto;">'
       + '<button onclick="tobiOpenBiz(\'' + b.slug + '\')" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View Details</button>'
-      + waBtn + '</div></div></div>';
+      + '<button onclick="shareBiz(\'' + b.slug + '\')" style="flex:1;padding:10px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#0F1E36;">📤 Share</button>' + '</div></div></div>';
   }).join('');
 
   var count = featured.length;
@@ -6388,7 +6388,7 @@ function handleDeepLink() {
         const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
         const waBtn = (business.verified && business.wa) ? '<a href="https://wa.me/' + business.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
         const shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-                const viewBtn = '<button onclick="tobiOpenBiz(\'' + business.slug + '\')" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View details</a>';
+                const viewBtn = '';
         const cardHTML = '<div style="background:white;border:' + (business.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
           + verifiedBadge
           + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (business.verified ? 'margin-top:6px;' : '') + '">'
@@ -7290,9 +7290,9 @@ function _renderNotifBanner(notif) {
 
 // ===== CANONICAL EVENTS LIST — single source of truth =====
 const ALL_EVENTS = [
-  { emoji:'😂', title:"Nigerian Comedy in Belfast: MC Casino's Funny By Nature", summary:"Nigerian comedy, music, food and entertainment at Botanic Inn Belfast. Standard ticket £25.", date:'6 Sep 2026', dateObj:new Date(2026,8,6), loc:'Belfast', time:'Sun 6 Sep, 5pm–11pm', url:'https://auntietobi.com/blog/Nigerian-Comedy-Comes-to-Belfast:-MC-Casino\'s-Funny-By-Nature-Live-This-September' },
-  { emoji:'🎓', title:'Free Nigerian Student Welcome Workshop — Glasgow', summary:'University of Strathclyde Nigeria Society Welcome Workshop for new Nigerian students. Free entry, refreshments provided.', date:'21 Sep 2026', dateObj:new Date(2026,8,21), loc:'Glasgow', time:'Mon 21 Sep, 4pm–7pm', url:'https://auntietobi.com/blog/New-Nigerian-Student-in-Glasgow-This-Free-Welcome-Workshop-Could-Help-You-Settle-In' },
-  { emoji:'🍽️', title:'A Night with Mamaki 3.0 — Dagenham', summary:'Food, drinks, music, comedy, dancing and networking. Dress code: DO YOU Glamour.', date:'18 Oct 2026', dateObj:new Date(2026,9,18), loc:'Dagenham', time:'Sun 18 Oct, 5pm–10pm', url:'https://auntietobi.com/blog/A-Night-with-Mamaki-3.0-Food-Music-Comedy-and-Networking-in-Dagenham' },
+  { emoji:'😂', title:"Nigerian Comedy in Belfast: MC Casino's Funny By Nature", summary:"Nigerian comedy, music, food and entertainment at Botanic Inn Belfast.", date:'6 Sep 2026', dateObj:new Date(2026,8,6), loc:'Belfast', time:'Sun 6 Sep, 5pm–11pm', url:'https://auntietobi.com/blog/Nigerian-Comedy-Comes-to-Belfast:-MC-Casino\'s-Funny-By-Nature-Live-This-September' },
+  { emoji:'🎓', title:'Free Nigerian Student Welcome Workshop — Glasgow', summary:'University of Strathclyde Nigeria Society Welcome Workshop for new Nigerian students.', date:'21 Sep 2026', dateObj:new Date(2026,8,21), loc:'Glasgow', time:'Mon 21 Sep, 4pm–7pm', url:'https://auntietobi.com/blog/New-Nigerian-Student-in-Glasgow-This-Free-Welcome-Workshop-Could-Help-You-Settle-In' },
+  { emoji:'🍽️', title:'A Night with Mamaki 3.0 — Dagenham', summary:'Food, drinks, music, comedy, dancing and networking.', date:'18 Oct 2026', dateObj:new Date(2026,9,18), loc:'Dagenham', time:'Sun 18 Oct, 5pm–10pm', url:'https://auntietobi.com/blog/A-Night-with-Mamaki-3.0-Food-Music-Comedy-and-Networking-in-Dagenham' },
 ];
 
 function showUpcomingEventCard() {
@@ -9256,16 +9256,7 @@ window.addEventListener('pageshow', function(e) {
   </div>
 </div>
 
-function shareBiz(slug, name) {
-  var url = 'https://auntietobi.co.uk/?biz=' + slug;
-  if (navigator.share) {
-    navigator.share({ title: name, url: url });
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(url);
-  }
-}
-
-function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleDeepLink();}
+,'','/?biz='+slug);handleDeepLink();}
 <script>
 </script>
 
@@ -9303,6 +9294,18 @@ function tobi_imgZoom(src) {
   overlay.appendChild(img);
   document.body.appendChild(overlay);
 }
+
+function shareBiz(slug, name) {
+  var url = 'https://auntietobi.co.uk/?biz=' + slug;
+  if (navigator.share) {
+    navigator.share({ title: name, url: url });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url);
+  }
+}
+
+
+function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleDeepLink();}
 </script>
 </body>
 </html>
