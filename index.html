@@ -3158,7 +3158,104 @@ function showTobiUpdates() {
 }
 
 
-function showBusinessClub() { /* hidden until ready */ }
+function showInstallGuide() {
+  window._currentPage = 'install';
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  scrollToTop();
+
+  const html = `<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#057A44,#045e34);padding:16px;display:flex;align-items:center;gap:12px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🤖</div>
+      <div style="flex:1;color:white;">
+        <div style="font-size:16px;font-weight:800;margin-bottom:3px;">📲 Install Auntie Tobi & Get Notified</div>
+        <div style="font-size:12px;opacity:.85;line-height:1.4;">Add to your home screen and turn on notifications</div>
+      </div>
+    </div>
+    <!-- Section tabs -->
+    <div style="display:flex;gap:8px;padding:14px 14px 0;">
+      <button id="ig-stab-install" onclick="igSection('install')" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:2px solid #057A44;background:#057A44;color:white;cursor:pointer;font-family:inherit;">📲 Install App</button>
+      <button id="ig-stab-notify" onclick="igSection('notify')" style="flex:1;padding:10px 6px;border-radius:10px;font-size:12px;font-weight:700;border:2px solid #e0e0e0;background:white;color:#9CA3AF;cursor:pointer;font-family:inherit;">🔔 Notifications</button>
+    </div>
+    <!-- INSTALL SECTION -->
+    <div id="ig-section-install" style="padding:14px;">
+      <div style="display:flex;gap:6px;margin-bottom:14px;">
+        <button id="ig-i-a" onclick="igOS('install','android')" style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid #3ddc84;background:#3ddc84;color:#0F1E36;cursor:pointer;font-family:inherit;">🤖 Android</button>
+        <button id="ig-i-i" onclick="igOS('install','ios')" style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid #e0e0e0;background:white;color:#9CA3AF;cursor:pointer;font-family:inherit;">🍎 iPhone</button>
+      </div>
+      <div id="ig-install-android">
+        ${igStep('1','#3ddc84','#0F1E36','Open in Chrome','Make sure you\'re using Chrome on your Android','🌐')}
+        ${igStep('2','#3ddc84','#0F1E36','Tap the three dots ⋮','Top-right menu icon in Chrome','⋮')}
+        ${igStep('3','#3ddc84','#0F1E36','Tap "Add to Home screen"','Or "Install app" — tap either option','➕')}
+        ${igStep('4','#3ddc84','#0F1E36','Tap "Install" — done! 💚','Auntie Tobi appears on your home screen','✅')}
+        <div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:10px 12px;font-size:12px;color:#0F1E36;line-height:1.6;margin-top:10px;">💡 See a banner at the bottom? Tap "Add Auntie Tobi to home screen" — even faster!</div>
+      </div>
+      <div id="ig-install-ios" style="display:none;">
+        ${igStep('1','#0F1E36','white','Open in Safari','Must be Safari — not Chrome or Firefox','🧭')}
+        ${igStep('2','#0F1E36','white','Tap the Share button ⬆️','Box with arrow at the bottom of Safari','⬆️')}
+        ${igStep('3','#0F1E36','white','Tap "Add to Home Screen"','Scroll down the share sheet to find it','📱')}
+        ${igStep('4','#0F1E36','white','Tap "Add" — done! 💚','Auntie Tobi appears on your iPhone home screen','✅')}
+        <div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:10px 12px;font-size:12px;color:#0F1E36;line-height:1.6;margin-top:10px;">💡 Apple only allows installation from Safari — not Chrome.</div>
+      </div>
+    </div>
+    <!-- NOTIFY SECTION -->
+    <div id="ig-section-notify" style="padding:14px;display:none;">
+      <div style="display:flex;gap:6px;margin-bottom:14px;">
+        <button id="ig-n-a" onclick="igOS('notify','android')" style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid #3ddc84;background:#3ddc84;color:#0F1E36;cursor:pointer;font-family:inherit;">🤖 Android</button>
+        <button id="ig-n-i" onclick="igOS('notify','ios')" style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid #e0e0e0;background:white;color:#9CA3AF;cursor:pointer;font-family:inherit;">🍎 iPhone</button>
+      </div>
+      <div id="ig-notify-android">
+        ${igStep('1','#FFB81C','#0F1E36','Install the app first','Add Auntie Tobi to your home screen (see Install tab)','📲')}
+        ${igStep('2','#FFB81C','#0F1E36','Tap the 🔕 bell icon','Top-right corner of the Auntie Tobi app','🔕')}
+        ${igStep('3','#FFB81C','#0F1E36','Tap "Allow" when prompted','Allow notifications so we can send you updates','✅')}
+        <div style="background:#fff8e1;border:1.5px solid #FFB81C;border-radius:10px;padding:10px 12px;font-size:12px;color:#0F1E36;line-height:1.6;margin-top:10px;">🔔 You'll receive: 🌅 Morning Prayer · 💪 Daily Motivation · 💡 Tips of the Day · 📰 News & Articles</div>
+      </div>
+      <div id="ig-notify-ios" style="display:none;">
+        ${igStep('1','#FFB81C','#0F1E36','Install & open from home screen','Always open from your home screen icon, not Safari','🏠')}
+        ${igStep('2','#FFB81C','#0F1E36','Tap the 🔕 bell icon','Top-right corner of the Auntie Tobi app','🔕')}
+        ${igStep('3','#FFB81C','#0F1E36','Tap "Allow" — iOS 16.4+ required','Allow notifications when Safari asks','✅')}
+        <div style="background:#fff8e1;border:1.5px solid #FFB81C;border-radius:10px;padding:10px 12px;font-size:12px;color:#0F1E36;line-height:1.6;margin-top:10px;">🔔 You'll receive: 🌅 Morning Prayer · 💪 Daily Motivation · 💡 Tips of the Day · 📰 News & Articles</div>
+      </div>
+    </div>
+  </div>`;
+
+  addTipMessage(html);
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showLinksPage()">← Back to Links</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
+}
+
+function igStep(num, bg, col, title, desc, ico) {
+  return '<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f5f5f5;">'
+    + '<div style="width:24px;height:24px;border-radius:50%;background:' + bg + ';color:' + col + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:2px;">' + num + '</div>'
+    + '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:1px;">' + title + '</div><div style="font-size:12px;color:#555;line-height:1.5;">' + desc + '</div></div>'
+    + '<div style="font-size:17px;flex-shrink:0;margin-top:2px;">' + ico + '</div></div>';
+}
+
+function igSection(s) {
+  ['install','notify'].forEach(function(x) {
+    var el = document.getElementById('ig-section-' + x);
+    if (el) el.style.display = x === s ? 'block' : 'none';
+    var tab = document.getElementById('ig-stab-' + x);
+    if (tab) { tab.style.background = x === s ? '#057A44' : 'white'; tab.style.color = x === s ? 'white' : '#9CA3AF'; tab.style.borderColor = x === s ? '#057A44' : '#e0e0e0'; }
+  });
+}
+
+function igOS(section, os) {
+  var prefix = section === 'install' ? 'ig-install' : 'ig-notify';
+  var tabPrefix = section === 'install' ? 'ig-i' : 'ig-n';
+  ['android','ios'].forEach(function(o) {
+    var panel = document.getElementById(prefix + '-' + o);
+    if (panel) panel.style.display = o === os ? 'block' : 'none';
+    var tab = document.getElementById(tabPrefix + '-' + o.charAt(0));
+    if (tab) {
+      if (o === os && os === 'android') { tab.style.background = '#3ddc84'; tab.style.borderColor = '#3ddc84'; tab.style.color = '#0F1E36'; }
+      else if (o === os && os === 'ios') { tab.style.background = '#0F1E36'; tab.style.borderColor = '#0F1E36'; tab.style.color = 'white'; }
+      else { tab.style.background = 'white'; tab.style.borderColor = '#e0e0e0'; tab.style.color = '#9CA3AF'; }
+    }
+  });
+}
+
+
 
 function showMoreSheet() {
   var existing = document.getElementById('more-sheet-overlay');
@@ -4664,39 +4761,9 @@ function showLinksPage() {
   messages.innerHTML = '';
   scrollToTop();
 
-  // Rotating info facts — NOT clickable
-  const _facts = [
-    '🏢 Growing directory of Nigerian-owned businesses across the UK',
-    '\u{1f49a} Auntie Tobi is completely free to use — no sign up needed',
-    '\u{1f916} Powered by AI to help Nigerians navigate UK life',
-    '\u{1f4f0} Get the latest UK news affecting Nigerians daily',
-    '\u{1f389} Find Nigerian community events near you across the UK',
-    '\u{1f514} Turn on notifications to never miss an update',
-    '\u{1f1f3}\u{1f1ec}\u{1f1ec}\u{1f1e7} Built for Nigerians living, working and thriving in the UK',
-    '\u{1f4ac} Ask Auntie Tobi anything — from NHS to immigration to housing',
-    '\u{2705} Verified businesses get a badge and WhatsApp button',
-    '\u{1f4cd} List your Nigerian business for FREE on Auntie Tobi',
-    '\u{1f680} Auntie Tobi grows every week — new businesses added regularly',
-    '\u{1f6c2} Immigration guidance, visa tips and UK life hacks all in one place',
-  ];
-  let _factIdx = 0;
-  const _factEl = document.createElement('div');
-  _factEl.style.cssText = 'background:#057A44;border-radius:12px;padding:12px 16px;font-size:13px;color:white;font-weight:700;text-align:center;margin-bottom:10px;transition:opacity 0.4s;pointer-events:none;user-select:none;';
-  _factEl.textContent = _facts[0];
-  messages.appendChild(_factEl);
-
-  setInterval(() => {
-    _factEl.style.opacity = '0';
-    setTimeout(() => {
-      _factIdx = (_factIdx + 1) % _facts.length;
-      _factEl.textContent = _facts[_factIdx];
-      _factEl.style.opacity = '1';
-    }, 400);
-  }, 3000);
-
   const html = `<div data-links-page="1" style="display:flex;flex-direction:column;gap:10px;">
 
-    <a href="javascript:void(0)" onclick="showInstallGuide();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);text-decoration:none;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);">
+    <a <a href="javascript:void(0)" onclick="showInstallGuide();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);text-decoration:none;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);">
       <div style="width:52px;height:52px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
         <img src="/tobi-face-128.png" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">
       </div>
@@ -4707,38 +4774,26 @@ function showLinksPage() {
       <span style="color:rgba(255,255,255,0.7);font-size:20px;">›</span>
     </a>
 
-    <a <a href="javascript:void(0)" onclick="showAboutTobi();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+    <a <a <a href="javascript:void(0)" onclick="showAboutTobi();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">ℹ️</span>
       <span style="flex:1;text-align:left;">About Auntie Tobi<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Who is Auntie Tobi and what can she do?</span></span>
       <span style="color:#ccc;">›</span>
     </a>
 
-    <a <a href="javascript:void(0)" onclick="showFAQCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+    <a <a <a href="javascript:void(0)" onclick="showFAQCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">❓</span>
       <span style="flex:1;text-align:left;">FAQ<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Common questions about Auntie Tobi</span></span>
       <span style="color:#ccc;">›</span>
     </a>
 
-    <a <a href="https://auntietobi.com/new-listing" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+    <a <a <a href="https://auntietobi.com/new-listing" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">📍</span>
       <span style="flex:1;text-align:left;">List Your Business<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Get discovered by thousands of Nigerians in the UK</span></span>
       <span style="color:#ccc;">›</span>
     </a>
 
 
-    <a <a href="javascript:void(0)" onclick="showEventsFromNews();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">🎉</span>
-      <span style="flex:1;text-align:left;">Upcoming Events<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Nigerian community events across the UK</span></span>
-      <span style="color:#ccc;">›</span>
-    </a>
-
-    <a <a href="javascript:void(0)" onclick="showAllNews();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">📰</span>
-      <span style="flex:1;text-align:left;">Latest News &amp; Articles<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">UK news and guides for Nigerians</span></span>
-      <span style="color:#ccc;">›</span>
-    </a>
-
-    <a <a href="https://auntietobi.co.uk/group-advertising" target="_blank" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0F1E36 0%,#1a2f4a 100%);color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
+    <a <a <a href="https://auntietobi.co.uk/group-advertising" target="_blank" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0F1E36 0%,#1a2f4a 100%);color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">📣</span>
       <span style="flex:1;text-align:left;">Group Instagram Advertisement
         <span style="display:block;font-size:11px;color:rgba(255,255,255,0.65);font-weight:400;margin-top:2px;">Click to learn more — affordable ads for Nigerian businesses</span>
@@ -4746,7 +4801,19 @@ function showLinksPage() {
       <span style="color:#FFB81C;font-size:18px;">›</span>
     </a>
 
-    <a <a href="https://t.me/auntietobi_uk" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+    <a <a <a href="javascript:void(0)" onclick="showEventsFromNews();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">🎉</span>
+      <span style="flex:1;text-align:left;">Upcoming Events<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Nigerian community events across the UK</span></span>
+      <span style="color:#ccc;">›</span>
+    </a>
+
+    <a <a <a href="javascript:void(0)" onclick="showAllNews();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">📰</span>
+      <span style="flex:1;text-align:left;">Latest News &amp; Articles<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">UK news and guides for Nigerians</span></span>
+      <span style="color:#ccc;">›</span>
+    </a>
+
+    <a <a <a href="https://t.me/auntietobi_uk" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">👥</span>
       <span style="flex:1;text-align:left;">Join Our Telegram Group<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Stay connected with the community</span></span>
       <span style="color:#ccc;">›</span>
