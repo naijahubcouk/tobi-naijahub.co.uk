@@ -176,13 +176,14 @@ function buildCard(p) {
   var waText = p.btnText === 'Buy Now'
     ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚'
     : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to enquire 💚';
-  var link = p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(waText) : p.link;
+  var waLink = 'https://wa.me/' + (p.wa ? p.wa.replace(/[^0-9]/g,'') : '') + '?text=' + encodeURIComponent(waText);
+  var link = p.wa && !p.link ? waLink : (p.link && p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(waText) : p.link);
   return '<div class="pc">'
     + '<img class="pc-img" src="' + p.img + '" alt="' + p.name + '" loading="lazy" onclick="tobi_imgZoom(\'' + p.img + '\')" style="object-fit:contain;background:#f8f8f8;padding:8px;cursor:zoom-in;">'
     + '<div class="pc-body">'
     + '<div class="pc-cat">' + (p.emoji || '💻') + ' ' + p.category + '</div>'
     + '<div class="pc-name">' + p.name + '</div>'
-    + '<div class="pc-biz">' + (p.bizSlug ? '<span style="color:#1d9bf0;font-weight:700;cursor:pointer;">' + p.business + '</span>' : p.business) + '</div>'
+    + '<div class="pc-biz">' + (p.bizSlug ? '<a href="https://auntietobi.co.uk/?biz=' + p.bizSlug + '" style="color:#1d9bf0;font-weight:700;text-decoration:none;">' + p.business + '</a>' : p.business) + '</div>'
     + '<div class="pc-desc">' + (p.desc || '') + '</div>'
     + '<div class="pc-price">' + p.price + '</div>'
     + '<a href="' + link + '" target="_blank" class="pc-btn">' + p.btnText + '</a>'

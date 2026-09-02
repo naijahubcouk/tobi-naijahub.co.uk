@@ -5494,10 +5494,12 @@ function showMarketplaceCarousel() {
       + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
       + '<div style="font-size:20px;font-weight:800;color:#0F1E36;">' + p.price + '</div>'
       + (p.wa
-        ? '<div style="display:flex;gap:8px;">'
-          + (p.link ? '<a href="' + p.link + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>' : '')
-          + '<a href="https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') + '" target="_blank" style="' + (p.link ? 'flex:1;' : 'width:100%;') + 'display:block;background:#25D366;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>'
-          + '</div>'
+        ? (p.link
+          ? '<div style="display:flex;gap:8px;">'
+            + '<a href="' + p.link + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>'
+            + '<a href="https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') + '" target="_blank" style="flex:1;display:block;background:#25D366;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>'
+            + '</div>'
+          : '<a href="https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(p.btnText === 'Buy Now' ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚' : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to enquire 💚') + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>')
         : '<a href="' + (p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(p.btnText === 'Buy Now' ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚' : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') : p.link) + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>')
       + '</div></div></div>';
   }).join('');
@@ -5530,7 +5532,9 @@ function showMarketplaceCarousel() {
     var wrap = document.getElementById('mp-swipe-wrap');
     var track = document.getElementById('mp-swipe-track');
     if (!wrap || !track) return;
-    window._mpSwipe = { cur: 0 };
+    var randomStart = Math.floor(Math.random() * count);
+    window._mpSwipe = { cur: randomStart };
+    setTimeout(function(){ window._mpSwipe.goTo(randomStart); }, 0);
     window._mpSwipe.goTo = function(i) {
       window._mpSwipe.cur = ((i % count) + count) % count;
       var slideW = wrap.offsetWidth;
