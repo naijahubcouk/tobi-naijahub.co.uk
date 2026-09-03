@@ -5486,7 +5486,6 @@ function showMarketplaceCarousel() {
   });
   if (!activeProducts.length) return;
 
-  // True shuffle
   var products = (function(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -5506,18 +5505,19 @@ function showMarketplaceCarousel() {
       ? '<a onclick="tobiOpenBiz(\'' + p.bizSlug + '\')" style="color:#1d9bf0;font-weight:700;text-decoration:none;cursor:pointer;">' + p.business + '</a>'
       : '<span style="color:#9CA3AF;">' + p.business + '</span>';
     return '<div style="min-width:100%;flex-shrink:0;">'
-      + '<div style="border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin:0 2px;">'
       + '<div style="position:relative;">'
-      + '<img src="' + p.img + '" onclick="tobi_imgZoom(\'' + p.img + '\')" style="width:100%;height:180px;object-fit:contain;background:#f8f8f8;padding:8px;display:block;cursor:zoom-in;">'
-      + '<div style="position:absolute;top:0;left:0;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:0 0 10px 0;">' + (p.emoji||'💻') + ' ' + p.category + '</div>'
+      + '<img src="' + p.img + '" onclick="tobi_imgZoom(\'' + p.img + '\')" style="width:100%;height:260px;object-fit:contain;background:#f8f8f8;padding:10px;display:block;cursor:zoom-in;">'
+      + '<div style="position:absolute;top:0;left:0;background:#057A44;color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:0 0 12px 0;">' + (p.emoji||'💻') + ' ' + p.category + '</div>'
       + '</div>'
-      + '<div style="padding:11px 12px 13px;display:flex;flex-direction:column;">'
-      + '<div style="font-size:13px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px;">' + p.name + '</div>'
-      + '<div style="font-size:11px;margin-bottom:6px;">' + bizHtml + '</div>'
-      + '<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:54px;">' + (p.desc || '') + '</div>'
-      + '<div style="font-size:16px;font-weight:800;color:#0F1E36;margin-bottom:10px;">' + p.price + '</div>'
-      + '<a href="' + link + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:10px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>'
-      + '</div></div></div>';
+      + '<div style="padding:14px 16px 16px;">'
+      + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + p.name + '</div>'
+      + '<div style="font-size:12px;margin-bottom:8px;">' + bizHtml + '</div>'
+      + '<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + (p.desc || '') + '</div>'
+      + '<div style="display:flex;align-items:center;gap:12px;">'
+      + '<div style="font-size:22px;font-weight:800;color:#0F1E36;flex-shrink:0;">' + p.price + '</div>'
+      + '<a href="' + link + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>'
+      + '</div>'
+      + '</div></div>';
   });
 
   var count = products.length;
@@ -5530,8 +5530,8 @@ function showMarketplaceCarousel() {
     + '<span style="color:white;font-size:14px;font-weight:700;">🛍️ Marketplace</span>'
     + '<a href="https://auntietobi.co.uk/marketplace" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;background:white;padding:3px 8px;border-radius:10px;text-decoration:none;">See all →</a>'
     + '</div>'
-    + '<div style="overflow:hidden;padding:12px 12px 0;">'
-    + '<div id="mp-track" style="display:flex;transition:transform .35s ease;">'
+    + '<div style="overflow:hidden;">'
+    + '<div id="mp-track" style="display:flex;transition:transform .35s cubic-bezier(.25,.46,.45,.94);">'
     + slides.join('')
     + '</div>'
     + '</div>'
@@ -5542,6 +5542,7 @@ function showMarketplaceCarousel() {
 
   window._mpSwipe = { cur: 0 };
   var randomStart = Math.floor(Math.random() * count);
+
   window._mpSwipe.goTo = function(i) {
     i = ((i % count) + count) % count;
     window._mpSwipe.cur = i;
@@ -5552,6 +5553,7 @@ function showMarketplaceCarousel() {
       if (dot) { dot.style.width = j===i ? '20px' : '8px'; dot.style.opacity = j===i ? '1' : '0.3'; }
     }
   };
+
   setTimeout(function(){ window._mpSwipe.goTo(randomStart); }, 0);
 
   var mpTimer = setInterval(function() {
@@ -5561,9 +5563,11 @@ function showMarketplaceCarousel() {
 
   var mpTrack = document.getElementById('mp-track');
   if (mpTrack) {
-    var sx = 0;
-    mpTrack.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; }, {passive:true});
+    var sx = 0, moved = false;
+    mpTrack.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; moved = false; }, {passive:true});
+    mpTrack.addEventListener('touchmove', function(){ moved = true; }, {passive:true});
     mpTrack.addEventListener('touchend', function(e){
+      if (!moved) return;
       var dx = e.changedTouches[0].clientX - sx;
       if (Math.abs(dx) > 40) window._mpSwipe.goTo(window._mpSwipe.cur + (dx < 0 ? 1 : -1));
     }, {passive:true});
