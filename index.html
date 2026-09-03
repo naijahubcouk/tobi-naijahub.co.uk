@@ -5484,7 +5484,9 @@ function showMarketplaceCarousel() {
     if (!p.expires) return true;
     return new Date(p.expires) > now;
   });
-  // Shuffle products randomly on each load
+  if (!activeProducts.length) return;
+
+  // True shuffle
   var products = (function(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -5493,144 +5495,79 @@ function showMarketplaceCarousel() {
     }
     return a;
   })(activeProducts);
-  if (!products.length) return;
 
-  var slides = activeProducts.map(function(p, i) {
-    var imgHtml = p.img
-      ? '<img src="' + p.img + '" onclick="tobi_imgZoom(\'' + p.img + '\')" style="width:100%;height:220px;object-fit:contain;background:#f8f8f8;padding:8px;display:block;cursor:zoom-in;">'
-      : '<div style="width:100%;height:200px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:54px;pointer-events:none;">' + (p.emoji||'🛍️') + '</div>';
-    return '<div style="min-width:100%;flex-shrink:0;display:flex;flex-direction:column;">'
+  var slides = products.map(function(p, i) {
+    var waText = p.btnText === 'Buy Now'
+      ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚'
+      : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to enquire 💚';
+    var waLink = 'https://wa.me/' + (p.wa ? p.wa.replace(/[^0-9]/g,'') : '') + '?text=' + encodeURIComponent(waText);
+    var link = p.wa && !p.link ? waLink : p.link;
+    var bizHtml = p.bizSlug
+      ? '<a onclick="tobiOpenBiz(\'' + p.bizSlug + '\')" style="color:#1d9bf0;font-weight:700;text-decoration:none;cursor:pointer;">' + p.business + '</a>'
+      : '<span style="color:#9CA3AF;">' + p.business + '</span>';
+    return '<div style="min-width:100%;flex-shrink:0;">'
+      + '<div style="border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin:0 2px;">'
       + '<div style="position:relative;">'
-      + imgHtml
+      + '<img src="' + p.img + '" onclick="tobi_imgZoom(\'' + p.img + '\')" style="width:100%;height:180px;object-fit:contain;background:#f8f8f8;padding:8px;display:block;cursor:zoom-in;">'
       + '<div style="position:absolute;top:0;left:0;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:0 0 10px 0;">' + (p.emoji||'💻') + ' ' + p.category + '</div>'
       + '</div>'
-      + '<div style="padding:12px 14px 14px;display:flex;flex-direction:column;">'
-      + '<div style="font-size:14px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:3px;">' + p.name + '</div>'
-      + '<div style="font-size:11px;margin-bottom:5px;">' + (p.bizSlug ? '<a onclick="tobiOpenBiz(\''+p.bizSlug+'\')" style="color:#1d9bf0;font-weight:700;text-decoration:none;cursor:pointer;">' + p.business + '</a>' : '<span style="color:#9CA3AF;">' + p.business + '</span>') + '</div>'
-      + '<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:10px;">' + (p.desc || '') + '</div>'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
-      + '<div style="font-size:20px;font-weight:800;color:#0F1E36;">' + p.price + '</div>'
-      + (p.link||p.wa ? (p.wa && !p.link ? '<a href="https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(p.btnText==='Buy Now'?'Hi, I saw your '+p.name+' on Auntie Tobi and I\'d like to order 💚':'Hi, I saw your '+p.name+' on Auntie Tobi and I\'d like to enquire 💚') + '" target="_blank" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;display:block;">' + p.btnText + '</a>' : '<a href="' + p.link + '" target="_blank" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;display:block;">' + p.btnText + '</a>') : '')
-      + '</div>'
-      + '</div>'
-      + '<div style="font-size:11px;margin-bottom:5px;">' + (p.bizSlug ? '<a onclick="tobiOpenBiz(\''+p.bizSlug+'\')" style="color:#1d9bf0;font-weight:700;text-decoration:none;cursor:pointer;">' + p.business + '</a>' : '<span style="color:#9CA3AF;">' + p.business + '</span>') + '</div>'
-      + '<span style="display:inline-block;background:#e8f5ee;color:#057A44;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:6px;">' + (p.emoji || '💻') + ' ' + p.category + '</span>'
-      + '<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:10px;">' + (p.desc || '') + '</div>'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
-      
-      + (p.wa
-        ? (p.link
-          ? '<div style="display:flex;gap:8px;">'
-            + '<a href="' + p.link + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>'
-            + '<a href="https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') + '" target="_blank" style="flex:1;display:block;background:#25D366;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">💬 WhatsApp</a>'
-            + '</div>'
-          : '<a href="https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(p.btnText === 'Buy Now' ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚' : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to enquire 💚') + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>')
-        : '<a href="' + (p.link.includes('wa.me') ? p.link + '?text=' + encodeURIComponent(p.btnText === 'Buy Now' ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order 💚' : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to know more 💚') : p.link) + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>')
+      + '<div style="padding:11px 12px 13px;display:flex;flex-direction:column;">'
+      + '<div style="font-size:13px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px;">' + p.name + '</div>'
+      + '<div style="font-size:11px;margin-bottom:6px;">' + bizHtml + '</div>'
+      + '<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:54px;">' + (p.desc || '') + '</div>'
+      + '<div style="font-size:16px;font-weight:800;color:#0F1E36;margin-bottom:10px;">' + p.price + '</div>'
+      + '<a href="' + link + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:10px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a>'
       + '</div></div></div>';
+  });
+
+  var count = products.length;
+  var dots = products.map(function(_, i) {
+    return '<div id="mp-dot-' + i + '" style="height:8px;border-radius:4px;background:#057A44;transition:all .3s;' + (i===0 ? 'width:20px;opacity:1;' : 'width:8px;opacity:0.3;') + '"></div>';
   }).join('');
 
-  var dots = activeProducts.map(function(_, i){
-    return '<div id="mp-dot-' + i + '" style="width:' + (i===0?'20':'8') + 'px;height:8px;border-radius:' + (i===0?'4px':'50%') + ';background:' + (i===0?'#057A44':'#e0e0e0') + ';transition:.2s;cursor:pointer;flex-shrink:0;" onclick="window._mpSwipe.goTo(' + i + ')"></div>';
-  }).join('');
-
-  var count = activeProducts.length;
-
-  var html = '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
+  var carouselHtml = '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
     + '<div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">'
-    + '<div style="color:white;font-size:14px;font-weight:700;">🛍️ Marketplace (Products/Services)</div>'
-    + '<a href="https://auntietobi.co.uk/marketplace" target="_blank" style="color:#FFB81C;font-size:12px;font-weight:600;text-decoration:none;">See all →</a>'
+    + '<span style="color:white;font-size:14px;font-weight:700;">🛍️ Marketplace</span>'
+    + '<a href="https://auntietobi.co.uk/marketplace" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;background:white;padding:3px 8px;border-radius:10px;text-decoration:none;">See all →</a>'
     + '</div>'
-    + '<div id="mp-swipe-wrap" style="overflow:hidden;position:relative;cursor:grab;user-select:none;">'
-    + '<div id="mp-swipe-track" style="display:flex;transition:transform 0.3s ease;">'
-    + slides
-    + '</div></div>'
-    + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px 14px;">'
-    + '<button onclick="window._mpSwipe.goTo(window._mpSwipe.cur-1)" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">‹</button>'
-    + dots
-    + '<button onclick="window._mpSwipe.goTo(window._mpSwipe.cur+1)" style="background:none;border:1.5px solid #e0e0e0;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:#0F1E36;flex-shrink:0;">›</button>'
-    + '</div></div>';
-
-  addTipMessage(html);
-
-  // Init swipe after DOM renders
-  setTimeout(function() {
-    var wrap = document.getElementById('mp-swipe-wrap');
-    var track = document.getElementById('mp-swipe-track');
-    if (!wrap || !track) return;
-    var randomStart = Math.floor(Math.random() * count);
-    window._mpSwipe = { cur: randomStart };
-    setTimeout(function(){ window._mpSwipe.goTo(randomStart); }, 0);
-    window._mpSwipe.goTo = function(i) {
-      window._mpSwipe.cur = ((i % count) + count) % count;
-      var slideW = wrap.offsetWidth;
-      track.style.transform = 'translateX(-' + (window._mpSwipe.cur * slideW) + 'px)';
-      for (var j = 0; j < count; j++) {
-        var d = document.getElementById('mp-dot-' + j);
-        if (d) { d.style.width = j===window._mpSwipe.cur?'20px':'8px'; d.style.borderRadius = j===window._mpSwipe.cur?'4px':'50%'; d.style.background = j===window._mpSwipe.cur?'#057A44':'#e0e0e0'; }
-      }
-    };
-    // Set each slide width explicitly
-    var slideEls = track.querySelectorAll('div[style*="min-width:100%"]');
-    slideEls.forEach(function(s){ s.style.minWidth = wrap.offsetWidth + 'px'; s.style.width = wrap.offsetWidth + 'px'; });
-    var sx = 0, sy = 0, drag = false, moved = false;
-    wrap.addEventListener('touchstart', function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; drag=true; moved=false; }, {passive:true});
-    wrap.addEventListener('touchmove', function(e){ if(drag) moved=true; }, {passive:true});
-    wrap.addEventListener('touchend', function(e){ if(!drag||!moved) return; var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy; if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40) window._mpSwipe.goTo(dx<0?window._mpSwipe.cur+1:window._mpSwipe.cur-1); drag=false; });
-    wrap.addEventListener('mousedown', function(e){ sx=e.clientX; drag=true; moved=false; e.preventDefault(); });
-    wrap.addEventListener('mousemove', function(e){ if(drag) moved=true; });
-    wrap.addEventListener('mouseup', function(e){ if(!drag||!moved) return; var dx=e.clientX-sx; if(Math.abs(dx)>40) window._mpSwipe.goTo(dx<0?window._mpSwipe.cur+1:window._mpSwipe.cur-1); drag=false; });
-    wrap.addEventListener('mouseleave', function(){ drag=false; });
-
-    // Auto-rotate every 5 seconds
-    if (window._mpAutoRotate) clearInterval(window._mpAutoRotate);
-    window._mpAutoRotate = setInterval(function() {
-      if (document.getElementById('mp-track')) {
-        window._mpSwipe.goTo(window._mpSwipe.cur + 1);
-      } else {
-        clearInterval(window._mpAutoRotate);
-      }
-    }, 7000);
-  }, 100);
-}
-
-function showMarketplace(filterCat) {
-  window._currentPage = 'marketplace';
-  var messages = document.getElementById('messages');
-  messages.innerHTML = '';
-  scrollToTop();
-
-  var cats = ['All', 'Digital Product', 'Cakes & Treats', 'Beauty', 'Groceries', 'Gifts', 'Fashion', 'Food'];
-  var active = filterCat || 'All';
-
-  var filterPills = cats.map(function(c){
-    var isActive = c === active;
-    var style = 'padding:7px 13px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid ' + (isActive ? '#057A44;background:#057A44;color:white' : '#e0e0e0;background:white;color:#0F1E36') + ';cursor:pointer;white-space:nowrap;flex-shrink:0;';
-    var label = c === 'Digital Product' ? '💻 Digital' : c;
-    return '<button data-mpcat="' + c + '" class="mp-filter-btn" style="' + style + '">' + label + '</button>';
-  }).join('');
-
-  var filtered = active === 'All' ? MARKETPLACE_PRODUCTS : MARKETPLACE_PRODUCTS.filter(function(p){ return p.category === active; });
-
-  var grid = filtered.length
-    ? '<div style="display:flex;flex-direction:column;gap:12px;padding:12px;">' + filtered.map(function(p){
-        var imgHtml = p.img ? '<img src="' + p.img + '" style="width:100%;height:220px;object-fit:cover;object-position:top;display:block;background:#f5f5f5;">' : '<div style="height:220px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:54px;">' + (p.emoji||'🛍️') + '</div>';
-        return '<div style="border:1.5px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;">' + imgHtml + '<div style="padding:14px 14px 16px;"><div style="font-size:10px;font-weight:700;color:#057A44;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px;">💻 ' + p.category + '</div><div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:3px;">' + p.name + '</div><div style="font-size:12px;color:#9CA3AF;margin-bottom:8px;">' + p.business + '</div><div style="font-size:20px;font-weight:800;color:#0F1E36;margin-bottom:12px;">' + p.price + '</div><a href="' + p.link + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:8px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">' + p.btnText + '</a></div></div>';
-      }).join('') + '</div>'
-    : '<div style="padding:24px;text-align:center;color:#9CA3AF;font-size:14px;">No products in this category yet.</div>';
-
-  addTipMessage(
-    '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
-    + '<div style="background:#0F1E36;padding:14px 16px;">'
-    + '<div style="font-size:17px;font-weight:800;color:white;">🛍️ Marketplace</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:3px;">Products & services from Nigerian businesses in the UK</div>'
+    + '<div style="overflow:hidden;padding:12px 12px 0;">'
+    + '<div id="mp-track" style="display:flex;transition:transform .35s ease;">'
+    + slides.join('')
     + '</div>'
-    + '<div style="display:flex;gap:6px;padding:10px 12px;overflow-x:auto;scrollbar-width:none;border-bottom:0.5px solid #f0f0f0;">' + filterPills + '</div>'
-    + grid
-    + '<a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20would%20like%20to%20list%20my%20product%20or%20service%20on%20the%20Marketplace" target="_blank" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 12px 12px;background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:12px 14px;text-decoration:none;"><span style="font-size:13px;color:#0F1E36;font-weight:600;line-height:1.4;">Want to list your product or service on the Marketplace?</span><span style="background:#057A44;color:white;border-radius:7px;padding:8px 12px;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;">💬 Contact Us</span></a>'
     + '</div>'
-  );
+    + '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;">' + dots + '</div>'
+    + '</div>';
 
-  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 Browse Businesses</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
+  addTipMessage(carouselHtml);
+
+  window._mpSwipe = { cur: 0 };
+  var randomStart = Math.floor(Math.random() * count);
+  window._mpSwipe.goTo = function(i) {
+    i = ((i % count) + count) % count;
+    window._mpSwipe.cur = i;
+    var track = document.getElementById('mp-track');
+    if (track) track.style.transform = 'translateX(-' + (i * 100) + '%)';
+    for (var j = 0; j < count; j++) {
+      var dot = document.getElementById('mp-dot-' + j);
+      if (dot) { dot.style.width = j===i ? '20px' : '8px'; dot.style.opacity = j===i ? '1' : '0.3'; }
+    }
+  };
+  setTimeout(function(){ window._mpSwipe.goTo(randomStart); }, 0);
+
+  var mpTimer = setInterval(function() {
+    if (!document.getElementById('mp-track')) { clearInterval(mpTimer); return; }
+    window._mpSwipe.goTo(window._mpSwipe.cur + 1);
+  }, 7000);
+
+  var mpTrack = document.getElementById('mp-track');
+  if (mpTrack) {
+    var sx = 0;
+    mpTrack.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; }, {passive:true});
+    mpTrack.addEventListener('touchend', function(e){
+      var dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 40) window._mpSwipe.goTo(window._mpSwipe.cur + (dx < 0 ? 1 : -1));
+    }, {passive:true});
+  }
 }
 
 function showSponsoredAd() {
