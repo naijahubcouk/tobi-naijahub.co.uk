@@ -5352,7 +5352,7 @@ function showFeaturedCarousel() {
       + '<div style="font-size:16px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + '</div>'
       + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + (b.cat||'Business') + '</span>'
       + '</div>' + verHtml
-      + '<p style="font-size:13px;color:#444;line-height:1.6;margin-bottom:8px;height:42px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;min-height:58px;">' + (b.desc ? b.desc.substring(0,120) + (b.desc.length > 120 ? '...' : '') : '') + '</p>'
+      + '<p style="font-size:13px;color:#444;line-height:1.6;margin-bottom:8px;height:42px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;">' + (b.desc ? b.desc.substring(0,120) + (b.desc.length > 120 ? '...' : '') : '') + '</p>'
       + '<p style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'').split(',')[0] + '</p>'
       + '</div>'
       + '<div style="display:flex;gap:8px;padding:0 14px 14px;pointer-events:auto;">'
@@ -7891,7 +7891,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
   var filtered = allBiz;
   if (_cat) filtered = filtered.filter(function(b){ return b.cat === _cat; });
   if (_loc) filtered = filtered.filter(function(b){ return ((b.loc||'').split(',')[0]).toLowerCase().indexOf(_loc) !== -1; });
-  if (!_cat && !_loc && !_all) filtered = allBiz.filter(function(b){ return b.verified; });
+  if (!_cat && !_loc && !_all) filtered = allBiz.filter(function(b){ return b.verified || b.featured; });
   // Featured businesses always first
   filtered = filtered.slice().sort(function(a,b){ return (b.featured?1:0)-(a.featured?1:0); });
   console.log('[biz] filtered:', filtered.length, 'businesses');
@@ -7953,7 +7953,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     var vb=b.verified?'<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div>':'';
     var vl=b.verified?'<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>':'';
     var wa='';
-    var dd=b.desc?'<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:58px;">'+b.desc+'</div>':'<div style="min-height:58px;"></div>';
+    var dd=b.desc?'<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px;">'+b.desc+'</div>':'';
     addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;position:relative;'+(b.verified?'padding-top:18px;':'')+'">'
       +vb+'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
       +'<div style="font-size:15px;font-weight:700;color:#0F1E36;">'+b.name+'</div>'
