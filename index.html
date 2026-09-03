@@ -5231,15 +5231,15 @@ function showDailyMotivation() {
 const MARKETPLACE_PRODUCTS = [
   {
     id: 'mp6',
-    name: 'Bubu Dress',
-    shortName: 'Bubu Dress',
+    name: '"Jaine" 2pc Kimono Set',
+    shortName: '"Jaine" 2pc Kimono Set',
     business: 'LuxebyFaith',
     bizSlug: 'luxebyfaith',
     category: 'Fashion',
     emoji: '👗',
-    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/WhatsApp%20Image%202026-09-02%20at%2021.47.16.jpeg',
-    price: '£30',
-    desc: 'Step up your wardrobe game with our Lydia Rich Auntie BUBU. Sizes 10-18.',
+    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/WhatsApp%20Image%202026-09-03%20at%2002.40.00.jpeg',
+    price: '£45',
+    desc: 'Available in 4 different Aso-Oke.',
     link: '',
     btnText: 'Buy Now',
     wa: '447939650782',
@@ -8079,8 +8079,13 @@ function shareBiz(slug) {
   var cat = biz && biz.cat ? biz.cat : '';
   var catLine = cat ? 'Looking for a ' + cat + '? ' : '';
   var msg = catLine + 'Check out ' + name + ' on Auntie Tobi — your go-to for Nigerian businesses in the UK 💚';
-  if (navigator.share) { navigator.share({ title: name + ' — Auntie Tobi', text: msg, url: url }); }
-  else if (navigator.clipboard) { navigator.clipboard.writeText(msg + ' ' + url).then(function(){ alert('Link copied! 📋'); }); }
+  if (navigator.share) {
+    navigator.share({ text: msg + '\n' + url }).catch(function(){
+      navigator.clipboard && navigator.clipboard.writeText(msg + '\n' + url).then(function(){ alert('Link copied! 📋'); });
+    });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg + '\n' + url).then(function(){ alert('Link copied! 📋'); });
+  }
 }
 </script>
 <!-- Feedback Form Modal -->
