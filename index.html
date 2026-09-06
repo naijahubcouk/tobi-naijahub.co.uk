@@ -3663,6 +3663,7 @@ function showAllNews() {
   window._allNewsData = filtered;
   window._allNewsShownCount = 0;
   window._renderAllNewsBatch(0);
+  setTimeout(showNewsArchive, 100);
 }
 
 function showEventsFromNews() {
@@ -8145,6 +8146,104 @@ function shareBiz(slug) {
   } else if (navigator.clipboard) {
     navigator.clipboard.writeText(msg + '\n' + url).then(function(){ alert('Link copied! 📋'); });
   }
+}
+
+function showNewsArchive() {
+  const posts = getLiveBlogPosts() || [];
+
+  // Build category counts
+  const catEmojis = {
+    'News':'📰','Events':'🎉','Money':'💷','Housing':'🏠','Lifestyle':'💡',
+    'Health':'🏥','Education':'🎓','Business':'💼','Family':'👨‍👩‍👧','Food':'🍲',
+    'Did You Know':'🤔','Immigration':'📋'
+  };
+  const catCounts = {};
+  const monthCounts = {};
+  posts.forEach(p => {
+    if (!p.pubDate) return;
+    const label = p.label || 'News';
+    catCounts[label] = (catCounts[label]||0) + 1;
+    const m = p.pubDate.substring(0,7);
+    monthCounts[m] = (monthCounts[m]||0) + 1;
+  });
+
+  // Categories sorted by count
+  const cats = Object.entries(catCounts).sort((a,b) => b[1]-a[1]);
+  const catHtml = cats.map(([label, count]) => {
+    const emoji = catEmojis[label] || '📄';
+    return `<div onclick="showNewsByCategory('${label}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:0.5px solid #f0f0f0;border-right:0.5px solid #f0f0f0;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;width:24px;text-align:center;">${emoji}</span>
+        <span style="font-size:13px;font-weight:700;color:#0F1E36;">${label}</span>
+      </div>
+      <span style="font-size:11px;color:white;background:#057A44;border-radius:20px;padding:1px 7px;font-weight:700;">${count}</span>
+    </div>`;
+  });
+
+  // Make grid of 2 columns
+  const catGrid = `<div style="display:grid;grid-template-columns:1fr 1fr;">${catHtml.join('')}</div>`;
+
+  // Archive by month sorted newest first
+  const months = Object.entries(monthCounts).sort((a,b) => b[0].localeCompare(a[0]));
+  const maxCount = Math.max(...months.map(m=>m[1]));
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthHtml = months.map(([ym, count]) => {
+    const [y,m] = ym.split('-');
+    const name = monthNames[parseInt(m)-1] + ' ' + y;
+    const pct = Math.round((count/maxCount)*100);
+    return `<div onclick="showNewsByMonth('${ym}')" style="padding:10px 14px;border-bottom:0.5px solid #f0f0f0;cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:13px;font-weight:700;color:#0F1E36;">${name}</span>
+        <span style="font-size:11px;color:white;background:#057A44;border-radius:20px;padding:1px 7px;font-weight:700;">${count}</span>
+      </div>
+      <div style="height:4px;border-radius:2px;background:#e8f5ee;"><div style="height:4px;border-radius:2px;background:#057A44;width:${pct}%;"></div></div>
+    </div>`;
+  });
+
+  const html = `<div style="display:flex;flex-direction:column;gap:12px;">
+    <div style="background:white;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;">
+      <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">📂</span>
+        <span style="color:white;font-size:13px;font-weight:700;">Browse by category</span>
+      </div>
+      ${catGrid}
+    </div>
+    <div style="background:white;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;">
+      <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">🗂️</span>
+        <span style="color:white;font-size:13px;font-weight:700;">Archive</span>
+      </div>
+      <div>${monthHtml.join('')}</div>
+    </div>
+  </div>`;
+
+  addTipMessage(html);
+}
+
+function showNewsByCategory(label) {
+  const posts = getLiveBlogPosts() || [];
+  const filtered = posts.filter(p => (p.label||'News') === label)
+    .sort((a,b) => (b.pubDate||'').localeCompare(a.pubDate||''));
+  if (!filtered.length) return;
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = '';
+  scrollToTop();
+  window._allNewsData = filtered;
+  window._allNewsShownCount = 0;
+  window._renderAllNewsBatch(0);
+}
+
+function showNewsByMonth(ym) {
+  const posts = getLiveBlogPosts() || [];
+  const filtered = posts.filter(p => p.pubDate && p.pubDate.startsWith(ym))
+    .sort((a,b) => (b.pubDate||'').localeCompare(a.pubDate||''));
+  if (!filtered.length) return;
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = '';
+  scrollToTop();
+  window._allNewsData = filtered;
+  window._allNewsShownCount = 0;
+  window._renderAllNewsBatch(0);
 }
 </script>
 <!-- Feedback Form Modal -->
