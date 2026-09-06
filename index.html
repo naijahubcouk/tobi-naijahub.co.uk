@@ -5552,7 +5552,7 @@ function showMarketplaceCarousel() {
 
     return '<div class="mp-slide" style="flex-shrink:0;background:white;">'
       + '<div style="position:relative;">'
-      + '<img src="' + (p.img||'') + '" style="width:100%;height:260px;object-fit:cover;display:block;" onerror="this.style.background=\'#f8f8f8\'">'
+      + '<img src="' + (p.img||'') + '" onclick="tobi_imgZoom(\'' + (p.img||'') + '\')" style="width:100%;height:260px;object-fit:cover;display:block;cursor:zoom-in;" onerror="this.style.background=\'#f8f8f8\'">'
       + '<div style="position:absolute;top:0;left:0;background:#057A44;color:white;font-size:10px;font-weight:700;padding:5px 12px;border-radius:0 0 12px 0;">' + (p.emoji||'💻') + ' ' + p.category + '</div>'
       + '</div>'
       + '<div style="padding:10px 12px 14px;border-top:0.5px solid #f0f0f0;">'
@@ -6296,6 +6296,7 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'Multi Nutrient Africa Food & Frozen', slug:'multi-nutrient-africa-food-and-frozen', cat:'foodstores & groceries', loc:'unit 1, 8 Hanover St, Wakefield WF2 9BW, UK', desc:'Bringing Authentic African Flavours to Your Doorstep. Fresh, High-Quality Frozen Foods and African Groceries Delivered with Care.', wa:'44447838011113', ig:'multinutrientafricafood_frozen'},
   {name:'Beauty By Jhay', slug:'beauty-by-jhay', cat:'wig vendors', loc:'London, UK', desc:'Hey beautiful, you deserve nothing but the best! Explore our stunning range of premium wigs created to enhance your glow and match your unique vibe. Dive in and discover your next signature look.', wa:'44447587409533', ig:'_beautybyjhay'},
   {name:'MakeOver By Teju', slug:'makeover-by-teju', cat:'makeup artists', loc:'Manchester, UK', desc:'Makeoverbyteju is a professional bridal and glam makeup service operating across Leeds and Manchester', wa:'44447565210770', ig:'makeoverbyteju'},
+  {name:'SEHIMEK LONDON', slug:'sehimek-london', cat:'ankara & traditional wears', loc:'Freeman St, Grimsby DN32 7DS, UK', desc:'Shop SEHIMEK LONDON for African-inspired women’s fashion, ready-to-wear clothing, handcrafted raffia accessories, pixie wigs and hair care essentials.', wa:'44447748490937', ig:'sehimek.london_fashion.store'},
   {name:'Mayor Bite Bakery and Cafe', slug:'mayor-bite-bakery-and-cafe', cat:'restaurants', loc:'Westside Centre, Wester Hailes Rd, Edinburgh EH14 2SW, UK', desc:'Family owned Edinburgh bakery & café serving fresh bread, traditional Nigerian pastries, and expertly crafted coffee bringing people together through authentic flavours and warm hospitality.', wa:'447424989990', ig:'mayorsbiteedinburgh'},
   {name:'UK Luxury Wears', slug:'uk-luxury-wears', cat:'ankara & traditional wears', loc:'United Kingdom', desc:'Discover UK Luxury Wears, your destination for luxury African ready-to-wear fashion in the UK. Shop elegant maxi dresses, bespoke outfits, and stylish occasion wear with worldwide delivery.', wa:'447301643348', ig:'uk_luxurywears'},
   {name:'Fascinator by Olaoge', slug:'fascinator-by-olaoge', cat:'fashion & accessories', loc:'United Kingdom', desc:'Shop luxury fascinators, headpieces, and accessories from Fascinator by Olaoge UK. Perfect for weddings, church, race days, and special occasions with worldwide shipping.', ig:'fascinatorbyolaogeuk'},
@@ -6377,7 +6378,8 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'Afroneva Hair Co.', slug:'afroneva-hair-co', cat:'hair stylists/braiders', loc:'Wolverhampton, UK', desc:'Afroneva Hair Co. in Wolverhampton offers dreadlock services, starter locs, retwisting, relocking, braids, textured wigs and Afro hair care products.', wa:'44447435334787'},
   {name:'Amakas Bites', slug:'amakas-bites', cat:'small chops', loc:'United Kingdom', desc:'Order meat pies, puff puff, Zobo and parfait from Amaka’s Bites in Manchester, with individual and event orders available.', ig:'amakas.bites'},
   {name:'CakesbyChemie', slug:'cakesbychemie', cat:'cakes & desert', loc:'Buntingford, UK', desc:'Discover CakesbyChemie in Buntingford, Hertfordshire, for professionally made cakes for weddings, birthdays, graduations, baby celebrations and special occasions.', ig:'cakesbychemie'},
-  {name:'TM Clothing Collections', slug:'tm-clothing-collections', cat:'ankara & traditional wears', loc:'United Kingdom', desc:'Discover TM Clothing Collections in Northampton for stylish African attire and handcrafted ready-to-wear dresses, with worldwide shipping available.', wa:'44447368628047', ig:'tmclothingcollections'}
+  {name:'TM Clothing Collections', slug:'tm-clothing-collections', cat:'ankara & traditional wears', loc:'United Kingdom', desc:'Discover TM Clothing Collections in Northampton for stylish African attire and handcrafted ready-to-wear dresses, with worldwide shipping available.', wa:'44447368628047', ig:'tmclothingcollections'},
+  {name:'DulceLuxe Treats', slug:'dulceluxe-treats', cat:'cakes & desert', loc:'Coventry, UK', desc:'Discover Dulce Luxe Treats in Coventry for custom celebration cakes, banana bread, cake in a jar and yoghurt parfait, with postage available on selected treats.', ig:'dulce_luxe_treats'}
 ];
 
 
