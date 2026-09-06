@@ -8232,6 +8232,7 @@ function showNewsByCategory(label) {
   window._allNewsData = filtered;
   window._allNewsShownCount = 0;
   window._renderAllNewsBatch(0);
+  setTimeout(showNewsArchive, 100);
 }
 
 function showNewsByMonth(ym) {
@@ -8245,6 +8246,7 @@ function showNewsByMonth(ym) {
   window._allNewsData = filtered;
   window._allNewsShownCount = 0;
   window._renderAllNewsBatch(0);
+  setTimeout(showNewsArchive, 100);
 }
 </script>
 <!-- Feedback Form Modal -->
