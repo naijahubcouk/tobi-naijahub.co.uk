@@ -3150,7 +3150,7 @@ function showTobiUpdates() {
   messages.innerHTML = '';
   scrollToTop();
   const updates = window._tobiUpdates || [];
-  const typeLabels = {update:'📢 Update',news:'📰 News',tip:'💡 Tip',event:'🎉 Event',business:'🏢 Business',motivation:'💪 Motivation',prayer:'🙏 Prayer',jobs:'💼 Jobs',immigration:'🛂 Immigration',money:'💷 Money',health:'💊 Health',housing:'🏠 Housing'};
+  const typeLabels = {update:'📢 Update',news:'📰 News',tip:"💡 Today's Tip",event:'🎉 Event',business:'🏢 Business',motivation:'💪 Motivation',prayer:'🙏 Prayer',jobs:'💼 Jobs',immigration:'🛂 Immigration',money:'💷 Money',health:'💊 Health',housing:'🏠 Housing'};
   const typeColors = {update:'#057A44',news:'#1D4ED8',tip:'#D97706',event:'#7C3AED',business:'#0F1E36',motivation:'#EA580C',prayer:'#059669',jobs:'#7C2D12',immigration:'#0891B2',money:'#B45309',health:'#16A34A',housing:'#0369A1'};
   if (!updates.length) {
     addTipMessage('<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:14px;">No updates yet. Check back soon!</div>');
@@ -3334,7 +3334,7 @@ function showNewsAndUpdates(activeTab) {
     health:'#16A34A',housing:'#0369A1'
   };
   var typeLabels = {
-    update:'📢 Update',news:'📰 News',tip:'💡 Tip',event:'🎉 Event',
+    update:'📢 Update',news:'📰 News',tip:"💡 Today's Tip",event:'🎉 Event',
     business:'🏢 Business',motivation:'💪 Motivation',prayer:'🙏 Prayer',
     jobs:'💼 Jobs',immigration:'🛂 Immigration',money:'💷 Money',
     health:'💊 Health',housing:'🏠 Housing'
@@ -4490,12 +4490,12 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
 
   // Determine category label from actionType
   const actionLabels = {
-    'update':'📢 Update','news':'📰 News','tip':'💡 Tip','event':'🎉 Event',
+    'update':'📢 Update','news':'📰 News','tip':"💡 Today's Tip",'event':'🎉 Event',
     'business':'🏢 Business','motivation':'💪 Motivation','prayer':'🙏 Prayer',
     'jobs':'💼 Jobs','immigration':'🛂 Immigration','money':'💷 Money',
     'health':'💊 Health','housing':'🏠 Housing'
   };
-  const categoryLabel = actionLabels[actionType] || '💡 Tip';
+  const categoryLabel = actionLabels[actionType] || "💡 Today's Tip";
 
   const tipText = typeof tip === 'object' ? tip.tip : tip;
   const bb1 = b1 || (typeof tip === 'object' ? tip.b1 : null) || 'How do I save money in the UK?';
@@ -5996,13 +5996,13 @@ function getTodaysTip() {
 
 function buildTipCard(tip, suggestionStr) {
   const actionLabels = {
-    'update':'📢 Update','news':'📰 News','tip':'💡 Tip','event':'🎉 Event',
+    'update':'📢 Update','news':'📰 News','tip':"💡 Today's Tip",'event':'🎉 Event',
     'business':'🏢 Business','motivation':'💪 Motivation','prayer':'🙏 Prayer',
     'jobs':'💼 Jobs','immigration':'🛂 Immigration','money':'💷 Money',
     'health':'💊 Health','housing':'🏠 Housing'
   };
   const tipType = (typeof tip === 'object' && tip.type) ? tip.type : null;
-  const categoryLabel = (tipType && actionLabels[tipType]) ? actionLabels[tipType] : '💡 Tip';
+  const categoryLabel = (tipType && actionLabels[tipType]) ? actionLabels[tipType] : "💡 Today's Tip";
   const categorySourceUrls = {
     'Money': 'https://www.moneysavingexpert.com',
     'Benefits': 'https://www.gov.uk/benefits-calculators',
@@ -6017,7 +6017,6 @@ function buildTipCard(tip, suggestionStr) {
   const sourceUrl = tip.sourceUrl || categorySourceUrls[tip.category] || 'https://www.gov.uk';
   const tipHtml = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:4px;overflow:hidden;">
       <div style="background:#057A44;padding:2px 4px;display:flex;align-items:center;gap:8px;">
-        <span style="font-size:16px;">💡</span>
         <span style="color:white;font-weight:700;font-size:15px;">${categoryLabel}</span>
       </div>
       <div style="padding:5px;">
