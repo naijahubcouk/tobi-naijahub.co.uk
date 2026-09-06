@@ -1024,8 +1024,8 @@
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="showBusinesses(undefined,null,null,true)">🏢 Businesses</div>
     <div class="pill" onclick="window.open('https://auntietobi.co.uk/marketplace','_blank')">🛍️ Marketplace</div>
-    <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="showNewsAndUpdates()">📰 News & Updates</div>
+    <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="showMoreSheet()" style="background:#0F1E36;color:white;border-color:#0F1E36;">More ›</div>
   </div>
 
@@ -3423,6 +3423,7 @@ function showAllNews() {
     window._allNewsData = filtered;
     window._allNewsShownCount = 0;
     window._renderAllNewsBatch(0);
+    setTimeout(showNewsArchive, 100);
     return;
   }
 
