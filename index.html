@@ -3837,6 +3837,9 @@ function showAllLiveNews() {
 }
 
 function showNewsCard() {
+  // Never show twice
+  if (document.querySelector('[data-news-card]')) return;
+
   // Use live feed — filter to last 7 days only
   const livePosts = getLiveBlogPosts();
 
@@ -5262,6 +5265,20 @@ function showDailyMotivation() {
 // MARKETPLACE (Products/Services)
 // ============================================================
 const MARKETPLACE_PRODUCTS = [
+  {
+    id: 'mp7',
+    name: 'Event Planner',
+    shortName: 'Event Planner',
+    business: 'Nimi Events',
+    category: 'Events',
+    emoji: '🎉',
+    img: 'https://naijabiz.b-cdn.net/Marketplace%20products/ChatGPT%20Image%20Sep%206%2C%202026%2C%2005_28_53%20PM.png',
+    price: '',
+    desc: "We're here to help bring your vision to life, from intimate celebrations to corporate gatherings, we're your combo deal 😍",
+    link: '',
+    btnText: 'Enquire',
+    wa: '447586764246',
+  },
   {
     id: 'mp6',
     name: '"Jaine" 2pc Kimono Set',
@@ -8268,7 +8285,7 @@ function resetToWelcome() {
       showDailyMotivation();
       liveNewsShownCount = 2;
       addTipMessage('<div data-news-card-placeholder="1"></div>');
-      showNewsCard();
+      setTimeout(function(){ if (!document.querySelector('[data-news-card]')) showNewsCard(); }, 1500);
       showFeaturedCarousel();
       const tip = getTodaysTip();
       console.log('tip:', tip);
