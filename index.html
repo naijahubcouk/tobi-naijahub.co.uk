@@ -7941,18 +7941,22 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
   var avail = filtered.map(function(b,i){ return i; }).filter(function(i){ return shownBusinessIndexes.indexOf(i) === -1; });
   var pick = [];
   if (startIndex === undefined) {
-    var vi = avail.filter(function(i){ return filtered[i].verified; });
-    var ri = avail.filter(function(i){ return !filtered[i].verified; });
+    // Featured always first, then verified, then rest
+    var fi = avail.filter(function(i){ return filtered[i].featured; });
+    var vi = avail.filter(function(i){ return filtered[i].verified && !filtered[i].featured; });
+    var ri = avail.filter(function(i){ return !filtered[i].verified && !filtered[i].featured; });
     for(var k=ri.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=ri[k];ri[k]=ri[j];ri[j]=t;}
     var ps = _all ? 10 : 6;
-    pick = vi.concat(ri).slice(0, ps);
+    pick = fi.concat(vi).concat(ri).slice(0, ps);
   } else {
-    var sh = avail.slice();
+    // On load more: always re-include featured + new batch
+    var fi2 = filtered.map(function(b,i){ return i; }).filter(function(i){ return filtered[i].featured; });
+    var sh = avail.filter(function(i){ return !filtered[i].featured; });
     for(var k=sh.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=sh[k];sh[k]=sh[j];sh[j]=t;}
     var ps = _all ? 10 : 6;
-    pick = sh.slice(0, ps);
+    pick = fi2.concat(sh.slice(0, ps));
   }
-  pick.forEach(function(i){ shownBusinessIndexes.push(i); });
+  pick.forEach(function(i){ if(shownBusinessIndexes.indexOf(i)===-1) shownBusinessIndexes.push(i); });
   var page = pick.map(function(i){ return filtered[i]; });
   var hasMore = shownBusinessIndexes.length < filtered.length;
 
@@ -7986,6 +7990,15 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
 
   // 2. CARDS
   var catEmojis={'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒','restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜','photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️','alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️','suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓','shipping & logistics':'🚢'};
+  // On load more, show featured businesses as carousel at top
+  if (startIndex !== undefined) {
+    var featBiz = filtered.filter(function(b){ return b.featured; });
+    if (featBiz.length > 0) {
+      var featCards = featBiz.map(function(b){ return buildFeaturedCard(b, true); }).join('');
+      addTipMessage('<div style="overflow-x:auto;display:flex;gap:12px;padding:4px 2px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;">' + featCards + '</div>');
+    }
+  }
+
   page.forEach(function(b){
     if(!b) return;
     var cat=(b.cat&&b.cat.toLowerCase()!=='nigerian business')?b.cat.charAt(0).toUpperCase()+b.cat.slice(1):'';
