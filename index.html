@@ -3839,6 +3839,8 @@ function showAllLiveNews() {
 }
 
 function showNewsCard() {
+  // Only show on home page
+  if (window._currentPage !== 'home') return;
   // Never show twice
   if (document.querySelector('[data-news-card]')) return;
 
@@ -3847,7 +3849,7 @@ function showNewsCard() {
 
   // If feed not loaded yet, retry after 2s
   if (!livePosts || livePosts.length === 0) {
-    setTimeout(showNewsCard, 2000);
+    setTimeout(function(){ if (window._currentPage === 'home') showNewsCard(); }, 2000);
     return;
   }
 
@@ -7947,14 +7949,16 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     var ri = avail.filter(function(i){ return !filtered[i].verified && !filtered[i].featured; });
     for(var k=ri.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=ri[k];ri[k]=ri[j];ri[j]=t;}
     var ps = _all ? 10 : 6;
-    pick = fi.concat(vi).concat(ri).slice(0, ps);
+    // Show featured first as featured cards, then verified, then rest
+    pick = vi.concat(ri).slice(0, ps);
+    // Render featured as full cards first
+    fi.forEach(function(i){ shownBusinessIndexes.push(i); addTipMessage(buildFeaturedCard(filtered[i], false)); });
   } else {
-    // On load more: always re-include featured + new batch
-    var fi2 = filtered.map(function(b,i){ return i; }).filter(function(i){ return filtered[i].featured; });
+    // On load more: exclude featured (they show in carousel above)
     var sh = avail.filter(function(i){ return !filtered[i].featured; });
     for(var k=sh.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=sh[k];sh[k]=sh[j];sh[j]=t;}
     var ps = _all ? 10 : 6;
-    pick = fi2.concat(sh.slice(0, ps));
+    pick = sh.slice(0, ps);
   }
   pick.forEach(function(i){ if(shownBusinessIndexes.indexOf(i)===-1) shownBusinessIndexes.push(i); });
   var page = pick.map(function(i){ return filtered[i]; });
@@ -7990,13 +7994,12 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
 
   // 2. CARDS
   var catEmojis={'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒','restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜','photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️','alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️','suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓','shipping & logistics':'🚢'};
-  // On load more, show featured businesses as carousel at top
+  // On load more, show featured businesses as full-width cards at top
   if (startIndex !== undefined) {
     var featBiz = filtered.filter(function(b){ return b.featured; });
-    if (featBiz.length > 0) {
-      var featCards = featBiz.map(function(b){ return buildFeaturedCard(b, true); }).join('');
-      addTipMessage('<div style="overflow-x:auto;display:flex;gap:12px;padding:4px 2px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;">' + featCards + '</div>');
-    }
+    featBiz.forEach(function(b){
+      addTipMessage(buildFeaturedCard(b, false));
+    });
   }
 
   page.forEach(function(b){
