@@ -7233,7 +7233,14 @@ function showWeeklyNotificationPrompt() {
       const p = document.getElementById('notif-weekly-popup');
       if (p) p.remove();
       if (typeof OneSignalDeferred !== 'undefined') {
-        OneSignalDeferred.push(async function(OneSignal) {
+        // Reset dismissed flag every 7 days
+  const dismissed = localStorage.getItem('tobi_notif_dismissed');
+  if (dismissed) {
+    const age = Date.now() - parseInt(dismissed);
+    if (age > 7 * 24 * 60 * 60 * 1000) localStorage.removeItem('tobi_notif_dismissed');
+  }
+
+  OneSignalDeferred.push(async function(OneSignal) {
           try {
             await OneSignal.Slidedown.promptPush();
             let tries = 0;
@@ -8417,6 +8424,14 @@ function resetToWelcome() {
       addTipMessage('<div data-news-card-placeholder="1"></div>');
       setTimeout(function(){ if (!document.querySelector('[data-news-card]')) showNewsCard(); }, 1500);
       showFeaturedCarousel();
+      // Show notification prompt to users who haven't subscribed
+      setTimeout(function() {
+        if (window._currentPage !== 'home') return;
+        var notifEnabled = localStorage.getItem('tobi_notifications') === '1';
+        if (!notifEnabled && !localStorage.getItem('tobi_notif_dismissed')) {
+          showNotifPrompt();
+        }
+      }, 8000);
       const tip = getTodaysTip();
       console.log('tip:', tip);
       const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
@@ -8963,17 +8978,22 @@ function showNotifPrompt() {
     <div style="display:flex;align-items:flex-start;gap:10px;">
       <div style="font-size:22px;flex-shrink:0;">🔔</div>
       <div style="flex:1;">
-        <div style="color:white;font-size:13px;font-weight:700;margin-bottom:3px;">Stay in the loop!</div>
-        <div style="color:rgba(255,255,255,0.75);font-size:12px;line-height:1.5;">Auntie Tobi can send you news, tips and motivation. Choose what you'd like 💚</div>
+        <div style="color:white;font-size:13px;font-weight:700;margin-bottom:3px;">Stay in the loop! 🇳🇬</div>
+        <div style="color:rgba(255,255,255,0.75);font-size:12px;line-height:1.5;">Get news, tips & motivation from Auntie Tobi 💚</div>
         <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="document.getElementById('notifPromptBanner').remove();showNotifPrefs();" style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Choose preferences</button>
-          <button onclick="document.getElementById('notifPromptBanner').remove();" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border:none;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit;">Later</button>
+          <button onclick="
+            document.getElementById('notifPromptBanner').remove();
+            if(typeof OneSignalDeferred !== 'undefined'){
+              OneSignalDeferred.push(function(OneSignal){ OneSignal.Slidedown.promptPush(); });
+            }
+          " style="flex:1;background:#057A44;color:white;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🔔 Allow notifications</button>
+          <button onclick="localStorage.setItem('tobi_notif_dismissed', Date.now().toString());document.getElementById('notifPromptBanner').remove();" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border:none;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit;">Later</button>
         </div>
       </div>
     </div>
   `;
   document.body.appendChild(banner);
-  setTimeout(() => { if (banner.parentNode) banner.remove(); }, 8000);
+  setTimeout(() => { if (banner.parentNode) banner.remove(); }, 12000);
 }
 
 function showNotifPrefs() {
