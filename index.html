@@ -4987,9 +4987,7 @@ function showGroupAdvertising() {
 addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showLinksPage()">← Back to Links</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
 
-fun
-
-    <a href="javascript:void(0)" onclick="showFeaturedEventCard();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;"><span style="font-size:20px;">🍽️</span><span style="flex:1;text-align:left;">A Night with Mamaki 3.0<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Featured Event · 18 Oct · Dagenham</span></span><span style="background:#FFB81C;color:#0F1E36;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">⭐ New</span></a>ction showLinksPage() {
+function showLinksPage() {
   window._currentPage = 'links';
   const messages = document.getElementById('messages');
   messages.innerHTML = '';
@@ -5560,59 +5558,6 @@ function showFeaturedBusinesses() {
   addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
 
-
-function showFeaturedEventCard() {
-  var wrap = document.createElement('div');
-  wrap.style.cssText = 'border-radius:14px;overflow:hidden;border:0.5px solid #e0e0e0;box-shadow:0 2px 8px rgba(0,0,0,0.08);background:white;';
-
-  var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2009_03_02%20PM.png';
-
-  var imgWrap = document.createElement('div');
-  imgWrap.style.cssText = 'position:relative;cursor:pointer;';
-  imgWrap.onclick = function(){ tobi_imgZoom(imgUrl); };
-
-  var img = document.createElement('img');
-  img.src = imgUrl;
-  img.style.cssText = 'width:100%;height:220px;object-fit:cover;display:block;';
-
-  var badge = document.createElement('div');
-  badge.style.cssText = 'position:absolute;top:10px;left:10px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;';
-  badge.textContent = '⭐ Featured Event';
-
-  var grad = document.createElement('div');
-  grad.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(15,30,54,0.85));pointer-events:none;';
-
-  imgWrap.appendChild(img);
-  imgWrap.appendChild(badge);
-  imgWrap.appendChild(grad);
-
-  var body = document.createElement('div');
-  body.style.cssText = 'padding:14px 16px 16px;';
-  body.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">🍽️</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">🎉 Event</span></div>'
-    + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">A Night with Mamaki 3.0 — Dagenham</div>'
-    + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">'
-    + '<div style="font-size:12px;color:#555;">📅 Sunday 18 October 2026 · 5pm–10pm</div>'
-    + '<div style="font-size:12px;color:#555;">📍 Dagenham, London</div>'
-    + '<div style="font-size:12px;color:#555;">🍲 Food · Music · Comedy · Networking</div>'
-    + '</div>';
-
-  var btn = document.createElement('a');
-  btn.href = 'https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi';
-  btn.target = '_blank';
-  btn.style.cssText = 'display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;';
-  btn.textContent = '🎟️ Get Tickets';
-  body.appendChild(btn);
-
-  wrap.appendChild(imgWrap);
-  wrap.appendChild(body);
-
-  var msg = document.createElement('div');
-  msg.className = 'msg bot';
-  msg.style.alignItems = 'flex-start';
-  msg.innerHTML = '<div style="flex:1;min-width:0;"></div>';
-  msg.querySelector('div').appendChild(wrap);
-  document.getElementById('messages').appendChild(msg);
-}
 
 function showMarketplaceCarousel() {
   var now = new Date();
@@ -8550,7 +8495,6 @@ function resetToWelcome() {
       console.log('message added');
       showUpcomingEventCard();
       showSponsoredAd();
-      showFeaturedEventCard();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
