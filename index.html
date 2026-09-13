@@ -5617,6 +5617,27 @@ function showFeaturedBusinesses() {
 
 
 
+function showFeaturedEventCard() {
+  var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2009_03_02%20PM.png';
+  var ticketUrl = 'https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi';
+  var html = '<div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
+    + '<div style="position:relative;cursor:pointer;background:#0F1E36;" onclick="tobi_imgZoom(this.querySelector(\'img\').src)">'
+    + '<div style="position:absolute;top:10px;left:10px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Event</div>'
+    + '<img src="' + imgUrl + '" style="width:100%;display:block;object-fit:contain;">'
+    + '</div>'
+    + '<div style="background:white;padding:14px 16px 16px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#127869;&#65039;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">&#127881; Event</span></div>'
+    + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">A Night with Mamaki 3.0 &mdash; Dagenham</div>'
+    + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">'
+    + '<div style="font-size:12px;color:#555;">&#128197; Sunday 18 October 2026 &middot; 5pm&ndash;10pm</div>'
+    + '<div style="font-size:12px;color:#555;">&#128205; Dagenham, London</div>'
+    + '<div style="font-size:12px;color:#555;">&#127858; Food &middot; Music &middot; Comedy &middot; Networking</div>'
+    + '</div>'
+    + '<a href="' + ticketUrl + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#127903;&#65039; Get Tickets</a>'
+    + '</div></div>';
+  addTipMessage(html);
+}
+
 function showMarketplaceCarousel() {
   var now = new Date();
   var activeProducts = MARKETPLACE_PRODUCTS.filter(function(p) {
@@ -8536,7 +8557,6 @@ function resetToWelcome() {
       liveNewsShownCount = 2;
       addTipMessage('<div data-news-card-placeholder="1"></div>');
       setTimeout(function(){ if (!document.querySelector('[data-news-card]')) showNewsCard(); }, 1500);
-      showFeaturedCarousel();
       // Show notification prompt to users who haven't subscribed
       setTimeout(function() {
         if (window._currentPage !== 'home') return;
@@ -8551,6 +8571,7 @@ function resetToWelcome() {
       console.log('tipHtml built');
       addTipMessage(tipHtml);
       console.log('message added');
+      showFeaturedEventCard();
       showSponsoredAd();
       // Install prompt card after marketplace
       addTipMessage('<div style="margin-top:8px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);cursor:pointer;" onclick="showInstallGuide()"><div style="width:48px;height:48px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:26px;">&#129302;</div><div style="flex:1;"><div style="color:white;font-size:14px;font-weight:800;margin-bottom:2px;">&#128242; Install Auntie Tobi</div><div style="color:rgba(255,255,255,0.85);font-size:11px;line-height:1.4;">Add to your home screen &#8212; works like an app!</div></div><span style="color:rgba(255,255,255,0.7);font-size:20px;">&#8250;</span></div>');
