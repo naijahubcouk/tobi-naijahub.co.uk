@@ -5081,11 +5081,9 @@ function showLinksPage() {
   </div>`;
 
   addTipMessage(html);
+  setTimeout(initLinksMarketplace, 100);
 
-    showFeaturedCarousel();
-  showMarketplaceCarousel();
 
-  addTipMessage('<div class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="resetToWelcome()">&#127968; Home</button><button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">&#127962; Businesses</button><button class="suggestion-btn" onclick="showEventsFromNews()">&#127881; Events</button><button class="suggestion-btn" onclick="resetToWelcome()">&#128172; Ask Auntie Tobi</button></div>');
 }
 function initLinksMarketplace() {
   var vp = document.getElementById('links-mp-viewport');
