@@ -3245,6 +3245,7 @@ function showInstallGuide() {
   </div>`;
 
   addTipMessage(html);
+  setTimeout(initLinksMarketplace, 100);
   addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showLinksPage()">← Back to Links</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
 
@@ -5006,67 +5007,63 @@ function showLinksPage() {
 
   const html = `<div data-links-page="1" style="display:flex;flex-direction:column;gap:10px;">
 
-
-    <a <a <a href="javascript:void(0)" onclick="showAboutTobi();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">ℹ️</span>
+    <a href="javascript:void(0)" onclick="showAboutTobi();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">&#8505;&#65039;</span>
       <span style="flex:1;text-align:left;">About Auntie Tobi<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Who is Auntie Tobi and what can she do?</span></span>
-      <span style="color:#ccc;">›</span>
+      <span style="color:#ccc;">&#8250;</span>
     </a>
 
-    <a <a <a href="javascript:void(0)" onclick="showFAQCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">❓</span>
+    <a href="javascript:void(0)" onclick="showFAQCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">&#10067;</span>
       <span style="flex:1;text-align:left;">FAQ<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Common questions about Auntie Tobi</span></span>
-      <span style="color:#ccc;">›</span>
+      <span style="color:#ccc;">&#8250;</span>
     </a>
 
-    <a <a <a href="https://auntietobi.com/new-listing" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">📍</span>
+    <a href="https://auntietobi.com/new-listing" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">&#128205;</span>
       <span style="flex:1;text-align:left;">List Your Business<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Get discovered by thousands of Nigerians in the UK</span></span>
-      <span style="color:#ccc;">›</span>
+      <span style="color:#ccc;">&#8250;</span>
     </a>
 
-
-    <a <a <a href="https://auntietobi.co.uk/group-advertising" target="_blank" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0F1E36 0%,#1a2f4a 100%);color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">📣</span>
-      <span style="flex:1;text-align:left;">Group Instagram Advertisement
-        <span style="display:block;font-size:11px;color:rgba(255,255,255,0.65);font-weight:400;margin-top:2px;">Click to learn more — affordable ads for Nigerian businesses</span>
-      </span>
-      <span style="color:#FFB81C;font-size:18px;">›</span>
+    <a href="https://auntietobi.co.uk/group-advertising" target="_blank" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0F1E36 0%,#1a2f4a 100%);color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">&#128227;</span>
+      <span style="flex:1;text-align:left;">Group Instagram Advertisement<span style="display:block;font-size:11px;color:rgba(255,255,255,0.65);font-weight:400;margin-top:2px;">Click to learn more &mdash; affordable ads for Nigerian businesses</span></span>
+      <span style="color:#FFB81C;font-size:18px;">&#8250;</span>
     </a>
-
-    <a <a <a href="javascript:void(0)" onclick="showEventsFromNews();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">🎉</span>
-      <span style="flex:1;text-align:left;">Upcoming Events<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Nigerian community events across the UK</span></span>
-      <span style="color:#ccc;">›</span>
-    </a>
-
-    <a <a <a href="javascript:void(0)" onclick="showAllNews();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">📰</span>
-      <span style="flex:1;text-align:left;">Latest News &amp; Articles<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">UK news and guides for Nigerians</span></span>
-      <span style="color:#ccc;">›</span>
-    </a>
-
-    <a href="https://auntietobi.co.uk/marketplace" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">🛍️</span>
-      <span style="flex:1;text-align:left;">Marketplace<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Products from Nigerian businesses in the UK</span></span>
-      <span style="color:#ccc;">›</span>
-    </a>
-
-    <a href="javascript:void(0)" onclick="showInstallGuide();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);text-decoration:none;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);">
-      <div style="width:52px;height:52px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:28px;">🤖</div>
-      <div style="flex:1;">
-        <div style="color:white;font-size:15px;font-weight:800;line-height:1.3;margin-bottom:3px;">📲 Install Auntie Tobi</div>
-        <div style="color:rgba(255,255,255,0.85);font-size:12px;line-height:1.4;">Add to your home screen — works like an app, no App Store needed!</div>
+    <a href="https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi" target="_blank" style="display:block;border-radius:12px;overflow:hidden;border:1.5px solid #FFB81C;text-decoration:none;">
+      <div style="position:relative;">
+        <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2009_03_02%20PM.png" style="width:100%;height:140px;object-fit:cover;display:block;">
+        <div style="position:absolute;top:8px;left:8px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;">&#11088; Featured Event</div>
       </div>
-      <span style="color:rgba(255,255,255,0.7);font-size:20px;">›</span>
+      <div style="background:white;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#0F1E36;">A Night with Mamaki 3.0</div>
+          <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">&#128197; 18 Oct &middot; &#128205; Dagenham, London</div>
+        </div>
+        <div style="background:#057A44;color:white;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:700;white-space:nowrap;">&#127903;&#65039; Tickets</div>
+      </div>
     </a>
-
-    <a <a <a href="https://t.me/auntietobi_uk" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">👥</span>
+    <div id="links-mp-wrap" style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+      <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="color:white;font-size:14px;font-weight:700;">&#128722;&#65039; Marketplace</span>
+        <a href="https://auntietobi.co.uk/marketplace" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;background:white;padding:3px 8px;border-radius:10px;text-decoration:none;">See all &#8594;</a>
+      </div>
+      <div id="links-mp-viewport" style="overflow:hidden;width:100%;"></div>
+      <div id="links-mp-dots" style="display:flex;justify-content:center;gap:6px;padding:8px 14px;"></div>
+    </div>
+    <a href="javascript:void(0)" onclick="showInstallGuide();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);text-decoration:none;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);">
+      <div style="width:52px;height:52px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:28px;">&#129302;</div>
+      <div style="flex:1;">
+        <div style="color:white;font-size:15px;font-weight:800;line-height:1.3;margin-bottom:3px;">&#128242; Install Auntie Tobi</div>
+        <div style="color:rgba(255,255,255,0.85);font-size:12px;line-height:1.4;">Add to your home screen &mdash; works like an app, no App Store needed!</div>
+      </div>
+      <span style="color:rgba(255,255,255,0.7);font-size:20px;">&#8250;</span>
+    </a>
+    <a href="https://t.me/auntietobi_uk" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">&#128101;</span>
       <span style="flex:1;text-align:left;">Join Our Telegram Group<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Stay connected with the community</span></span>
-      <span style="color:#ccc;">›</span>
+      <span style="color:#ccc;">&#8250;</span>
     </a>
-
     <div style="background:#f0f9f4;border:1.5px solid #b8e0cb;border-radius:14px;padding:15px;">
       <div style="display:flex;align-items:center;gap:11px;margin-bottom:11px;">
         <div style="width:40px;height:40px;border-radius:50%;background:#057A44;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;">
@@ -5081,24 +5078,70 @@ function showLinksPage() {
       <a href="https://wa.me/447594674940" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#057A44;color:white;text-decoration:none;padding:11px;border-radius:10px;font-weight:800;font-size:13px;">💬 Chat With Us on WhatsApp</a>
     </div>
 
-    `;
+  </div>`;
 
   addTipMessage(html);
 
     showFeaturedCarousel();
   showMarketplaceCarousel();
 
-  addTipMessage(`<div class="suggestions" style="margin-top:4px;">
-    <button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button>
-    <button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 Businesses</button>
-    <button class="suggestion-btn" onclick="showEventsFromNews()">🎉 Events</button>
-    <button class="suggestion-btn" onclick="resetToWelcome()">💬 Ask Auntie Tobi</button>
-  </div>`);
+  addTipMessage('<div class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="resetToWelcome()">&#127968; Home</button><button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">&#127962; Businesses</button><button class="suggestion-btn" onclick="showEventsFromNews()">&#127881; Events</button><button class="suggestion-btn" onclick="resetToWelcome()">&#128172; Ask Auntie Tobi</button></div>');
 }
+function initLinksMarketplace() {
+  var vp = document.getElementById('links-mp-viewport');
+  var dotsEl = document.getElementById('links-mp-dots');
+  if (!vp || !dotsEl) return;
+  var now = new Date();
+  var products = MARKETPLACE_PRODUCTS.filter(function(p){ return !p.expires || new Date(p.expires) > now; });
+  if (!products.length) return;
+  var W = vp.offsetWidth || 300;
+  var track = document.createElement('div');
+  track.style.cssText = 'display:flex;transition:transform .35s ease;width:' + (W * products.length) + 'px;';
+  products.forEach(function(p) {
+    var waText = "Hi, I saw " + p.name + " on Auntie Tobi and I'd like to enquire";
+    var link = (p.wa && !p.link) ? 'https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(waText) : (p.link || '#');
+    var slide = document.createElement('div');
+    slide.style.cssText = 'width:' + W + 'px;flex-shrink:0;';
+    var imgWrap = document.createElement('div');
+    imgWrap.style.position = 'relative';
+    var img = document.createElement('img');
+    img.src = p.img || '';
+    img.style.cssText = 'width:100%;height:180px;object-fit:cover;display:block;cursor:zoom-in;';
+    img.addEventListener('click', function(){ tobi_imgZoom(p.img); });
+    var badge = document.createElement('div');
+    badge.style.cssText = 'position:absolute;top:0;left:0;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:0 0 10px 0;';
+    badge.textContent = (p.emoji||'') + ' ' + p.category;
+    imgWrap.appendChild(img); imgWrap.appendChild(badge);
+    var body = document.createElement('div');
+    body.style.cssText = 'padding:10px 12px 12px;';
+    body.innerHTML = '<div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">' + p.name + '</div>'
+      + '<div style="font-size:11px;color:#9CA3AF;margin-bottom:8px;">' + p.business + '</div>'
+      + '<div style="border-top:0.5px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">'
+      + (p.price ? '<div style="font-size:16px;font-weight:800;color:#0F1E36;">' + p.price + '</div>' : '')
+      + '<a href="' + link + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:8px;font-size:12px;font-weight:700;text-align:center;text-decoration:none;">' + (p.btnText||'Enquire') + '</a>'
+      + '</div>';
+    slide.appendChild(imgWrap); slide.appendChild(body);
+    track.appendChild(slide);
+  });
+  vp.appendChild(track);
+  var cur = 0, count = products.length;
+  products.forEach(function(_,i){
+    var dot = document.createElement('div');
+    dot.id = 'lmp-dot-' + i;
+    dot.style.cssText = 'height:8px;border-radius:4px;background:#057A44;transition:all .3s;width:' + (i===0?'20':'8') + 'px;opacity:' + (i===0?'1':'0.3') + ';';
+    dotsEl.appendChild(dot);
+  });
+  function goTo(i){ i=((i%count)+count)%count; cur=i; track.style.transform='translateX(-'+(i*W)+'px)';
+    for(var j=0;j<count;j++){var d=document.getElementById('lmp-dot-'+j);if(d){d.style.width=j===i?'20px':'8px';d.style.opacity=j===i?'1':'0.3';}} }
+  var timer = setInterval(function(){ if(!document.getElementById('links-mp-viewport')){clearInterval(timer);return;} goTo(cur+1); }, 7000);
+  var sx=0,mv=false;
+  vp.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;mv=false;},{passive:true});
+  vp.addEventListener('touchmove',function(){mv=true;},{passive:true});
+  vp.addEventListener('touchend',function(e){if(!mv)return;var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40)goTo(cur+(dx<0?1:-1));},{passive:true});
+}
+
 function addBackToLinksBtn() {
-  addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-    <button class="suggestion-btn" onclick="showLinksPage()">← Back to Links</button>
-  </div>`);
+  addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showLinksPage()">&#8592; Back to Links</button></div>');
 }
 
 
@@ -8511,6 +8554,8 @@ function resetToWelcome() {
       addTipMessage(tipHtml);
       console.log('message added');
       showSponsoredAd();
+      // Install prompt card after marketplace
+      addTipMessage('<div style="margin-top:8px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);cursor:pointer;" onclick="showInstallGuide()"><div style="width:48px;height:48px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:26px;">&#129302;</div><div style="flex:1;"><div style="color:white;font-size:14px;font-weight:800;margin-bottom:2px;">&#128242; Install Auntie Tobi</div><div style="color:rgba(255,255,255,0.85);font-size:11px;line-height:1.4;">Add to your home screen &#8212; works like an app!</div></div><span style="color:rgba(255,255,255,0.7);font-size:20px;">&#8250;</span></div>');
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
