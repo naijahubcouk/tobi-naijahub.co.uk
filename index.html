@@ -5033,7 +5033,7 @@ function showLinksPage() {
     <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
       <div style="position:relative;background:#0F1E36;">
         <div style="position:absolute;top:10px;left:10px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Event</div>
-        <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2009_03_02%20PM.png" style="width:100%;display:block;object-fit:contain;">
+        <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2014%2C%202026%2C%2007_36_13%20PM.png" style="width:100%;display:block;object-fit:contain;">
       </div>
       <div style="background:white;padding:14px 16px 16px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#127869;&#65039;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">&#127881; Event</span></div>
@@ -5621,7 +5621,7 @@ function showFeaturedBusinesses() {
 
 
 function showFeaturedEventCard() {
-  var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2012%2C%202026%2C%2009_03_02%20PM.png';
+  var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2014%2C%202026%2C%2007_36_13%20PM.png';
   var ticketUrl = 'https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi';
   var html = '<div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
     + '<div style="position:relative;cursor:pointer;background:#0F1E36;" onclick="tobi_imgZoom(this.querySelector(\'img\').src)">'
@@ -5648,27 +5648,23 @@ function showMarketplaceCarousel() {
   });
   if (!activeProducts.length) return;
 
-  var products = (function(arr) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-  })(activeProducts);
-
+  // Shuffle
+  var products = activeProducts.slice();
+  for (var i = products.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = products[i]; products[i] = products[j]; products[j] = t;
+  }
   var count = products.length;
 
+  // Dots HTML
   var dots = products.map(function(_, i) {
-    var w = i === 0 ? '20' : '8';
-    var o = i === 0 ? '1' : '0.3';
-    return '<div id="mp-dot-' + i + '" style="height:8px;border-radius:4px;background:#057A44;transition:all .3s;width:' + w + 'px;opacity:' + o + ';"></div>';
+    return '<div id="mp-dot-' + i + '" style="height:8px;border-radius:4px;background:#057A44;transition:all .3s;width:' + (i===0?'20':'8') + 'px;opacity:' + (i===0?'1':'0.3') + ';"></div>';
   }).join('');
 
   var carouselHtml = '<div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
     + '<div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">'
-    + '<span style="color:white;font-size:14px;font-weight:700;">🛍\uFE0F Marketplace</span>'
-    + '<a href="https://auntietobi.co.uk/marketplace" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;background:white;padding:3px 8px;border-radius:10px;text-decoration:none;">See all \u2192</a>'
+    + '<span style="color:white;font-size:14px;font-weight:700;">&#128722;&#65039; Marketplace</span>'
+    + '<a href="https://auntietobi.co.uk/marketplace" target="_blank" style="color:#057A44;font-size:11px;font-weight:700;background:white;padding:3px 8px;border-radius:10px;text-decoration:none;">See all &#8594;</a>'
     + '</div>'
     + '<div id="mp-viewport" style="overflow:hidden;width:100%;">'
     + '<div id="mp-track" style="display:flex;transition:transform .35s ease;"></div>'
@@ -5686,65 +5682,75 @@ function showMarketplaceCarousel() {
     track.style.width = (W * count) + 'px';
 
     products.forEach(function(p) {
-      var waText = p.btnText === 'Buy Now'
-        ? 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to order \uD83D\uDC9A'
-        : 'Hi, I saw your ' + p.name + ' on Auntie Tobi and I\'d like to enquire \uD83D\uDC9A';
+      var waText = "Hi, I saw " + p.name + " on Auntie Tobi and I'd like to enquire";
       var link = (p.wa && !p.link)
         ? 'https://wa.me/' + p.wa.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(waText)
         : (p.link || '#');
 
       var slide = document.createElement('div');
       slide.className = 'mp-slide';
-      slide.style.cssText = 'flex-shrink:0;width:' + W + 'px;';
+      slide.style.cssText = 'flex-shrink:0;width:' + W + 'px;background:white;display:flex;flex-direction:column;';
 
+      // Image
       var imgWrap = document.createElement('div');
-      imgWrap.style.cssText = 'position:relative;';
+      imgWrap.style.cssText = 'position:relative;background:#f8f8f8;height:240px;overflow:hidden;';
 
       var img = document.createElement('img');
       img.src = p.img || '';
       img.style.cssText = 'width:100%;height:240px;display:block;object-fit:contain;background:#f8f8f8;cursor:zoom-in;';
-      img.onclick = function(){ tobi_imgZoom(p.img); };
-      img.onerror = function(){ this.style.background = '#f8f8f8'; };
+      img.addEventListener('click', function(){ tobi_imgZoom(p.img); });
 
       var badge = document.createElement('div');
       badge.style.cssText = 'position:absolute;top:0;left:0;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:0 0 10px 0;';
-      badge.textContent = (p.emoji || '\uD83D\uDCBB') + ' ' + p.category;
+      badge.textContent = (p.emoji || '') + ' ' + p.category;
 
       imgWrap.appendChild(img);
       imgWrap.appendChild(badge);
+
+      // Body
+      var body = document.createElement('div');
+      body.style.cssText = 'padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;';
+
+      var nameEl = document.createElement('div');
+      nameEl.style.cssText = 'font-size:14px;font-weight:700;color:#0F1E36;line-height:1.35;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;';
+      nameEl.textContent = p.name || '';
 
       var bizEl = document.createElement('div');
       bizEl.style.cssText = 'font-size:11px;margin-bottom:6px;';
       if (p.bizSlug) {
         var bizLink = document.createElement('a');
         bizLink.style.cssText = 'color:#1d9bf0;font-weight:700;text-decoration:none;cursor:pointer;';
-        bizLink.textContent = p.business;
+        bizLink.textContent = p.business || '';
         bizLink.onclick = function(e){ e.preventDefault(); tobiOpenBiz(p.bizSlug); };
         bizEl.appendChild(bizLink);
       } else {
         bizEl.innerHTML = '<span style="color:#9CA3AF;">' + (p.business||'') + '</span>';
       }
 
-      var body = document.createElement('div');
-      body.style.cssText = 'padding:10px 12px 12px;border-top:0.5px solid #f0f0f0;';
-      body.innerHTML = '<div style="font-size:14px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + (p.name||'') + '</div>';
-      body.appendChild(bizEl);
-      body.innerHTML += '<div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + (p.desc||'') + '</div>';
+      var descEl = document.createElement('div');
+      descEl.style.cssText = 'font-size:12px;color:#555;line-height:1.5;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px;';
+      descEl.textContent = p.desc || '';
 
       var footer = document.createElement('div');
-      footer.style.cssText = 'border-top:0.5px solid #f0f0f0;padding-top:10px;display:flex;align-items:center;gap:8px;';
+      footer.style.cssText = 'border-top:0.5px solid #f0f0f0;padding-top:10px;display:flex;align-items:center;gap:8px;margin-top:auto;';
+
       if (p.price) {
         var priceEl = document.createElement('div');
         priceEl.style.cssText = 'font-size:18px;font-weight:800;color:#0F1E36;flex-shrink:0;';
         priceEl.textContent = p.price;
         footer.appendChild(priceEl);
       }
+
       var btn = document.createElement('a');
       btn.href = link;
       btn.target = '_blank';
       btn.style.cssText = 'flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:9px;font-size:12px;font-weight:700;text-align:center;text-decoration:none;white-space:nowrap;';
-      btn.textContent = p.btnText || 'Buy Now';
+      btn.textContent = p.btnText || 'Enquire';
       footer.appendChild(btn);
+
+      body.appendChild(nameEl);
+      body.appendChild(bizEl);
+      body.appendChild(descEl);
       body.appendChild(footer);
 
       slide.appendChild(imgWrap);
@@ -5765,7 +5771,6 @@ function showMarketplaceCarousel() {
     }
 
     goTo(cur);
-    window._mpSwipe = { goTo: goTo };
 
     var timer = setInterval(function(){
       if (!document.getElementById('mp-track')) { clearInterval(timer); return; }
@@ -8576,8 +8581,6 @@ function resetToWelcome() {
       console.log('message added');
       showFeaturedEventCard();
       showSponsoredAd();
-      // Install prompt card after marketplace
-      addTipMessage('<div style="margin-top:8px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);cursor:pointer;" onclick="showInstallGuide()"><div style="width:48px;height:48px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:26px;">&#129302;</div><div style="flex:1;"><div style="color:white;font-size:14px;font-weight:800;margin-bottom:2px;">&#128242; Install Auntie Tobi</div><div style="color:rgba(255,255,255,0.85);font-size:11px;line-height:1.4;">Add to your home screen &#8212; works like an app!</div></div><span style="color:rgba(255,255,255,0.7);font-size:20px;">&#8250;</span></div>');
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
