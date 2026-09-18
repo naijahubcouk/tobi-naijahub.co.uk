@@ -8128,9 +8128,14 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     var ri = avail.filter(function(i){ return !filtered[i].verified && !filtered[i].featured; });
     for(var k=ri.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=ri[k];ri[k]=ri[j];ri[j]=t;}
     var ps = _all ? 10 : 6;
-    // Show featured first as featured cards, then verified, then rest
-    // First load: only show featured businesses, no regular cards
-    pick = [];
+    // Show featured first as featured cards
+    if (!_all) {
+      // Featured-only mode: just show featured cards, no regular cards
+      pick = [];
+    } else {
+      // All businesses mode: show featured + regular
+      pick = vi.concat(ri).slice(0, ps);
+    }
   } else {
     // On load more: exclude featured (they show in carousel above)
     var sh = avail.filter(function(i){ return !filtered[i].featured; });
