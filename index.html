@@ -5330,6 +5330,21 @@ function showDailyMotivation() {
 // ============================================================
 const MARKETPLACE_PRODUCTS = [
   {
+    id: 'mp10',
+    name: 'A Night with Mamaki 3.0',
+    shortName: 'A Night with Mamaki 3.0',
+    business: 'Mamaki',
+    bizSlug: '',
+    category: 'Events',
+    emoji: '🎉',
+    img: 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2014%2C%202026%2C%2007_36_13%20PM.png',
+    price: '',
+    desc: 'An unforgettable evening of food, music, comedy & networking. 📅 18 Oct · 📍 Dagenham, London',
+    link: 'https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi',
+    btnText: '🎟️ Get Tickets',
+    wa: '',
+  },
+  {
     id: 'mp9',
     name: 'Makeup Artist',
     shortName: 'Makeup Artist',
@@ -8115,8 +8130,6 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     var ps = _all ? 10 : 6;
     // Show featured first as featured cards, then verified, then rest
     pick = vi.concat(ri).slice(0, ps);
-    // Render featured as full cards first
-    fi.forEach(function(i){ shownBusinessIndexes.push(i); addTipMessage(buildFeaturedCard(filtered[i], false)); });
   } else {
     // On load more: exclude featured (they show in carousel above)
     var sh = avail.filter(function(i){ return !filtered[i].featured; });
@@ -8133,6 +8146,11 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
   messages = [];
   scrollToTop();
   setTimeout(function(){ scrollToTop(); }, 50);
+
+  // Render featured businesses first (after clear)
+  if (startIndex === undefined) {
+    fi.forEach(function(i){ shownBusinessIndexes.push(i); addTipMessage(buildFeaturedCard(filtered[i], false)); });
+  }
 
   if (filtered.length === 0) {
     var catArg0 = _cat ? JSON.stringify(_cat) : 'null';
