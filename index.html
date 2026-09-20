@@ -5065,6 +5065,22 @@ function showLinksPage() {
         <a href="https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#127903;&#65039; Get Tickets</a>
       </div>
     </div>
+
+    <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector('img').src)">
+        <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>
+        <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png" style="width:100%;display:block;object-fit:contain;">
+      </div>
+      <div style="background:white;padding:14px 16px 16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#128722;&#65039;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">Featured Business</span></div>
+        <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">Xander Afritrade Ltd</div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">
+          <div style="font-size:12px;color:#555;">&#128722;&#65039; Authentic African food, beauty, fashion &amp; lifestyle</div>
+          <div style="font-size:12px;color:#555;">&#128666; UK-wide delivery</div>
+        </div>
+        <a href="https://xandertrade.com/" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#128722;&#65039; Shop Now</a>
+      </div>
+    </div>
     <div id="links-mp-wrap" style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
         <span style="color:white;font-size:14px;font-weight:700;">&#128722;&#65039; Marketplace</span>
@@ -5577,6 +5593,11 @@ function showFeaturedCarousel() {
   var featured = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured; });
   if (!featured.length) return;
 
+  // Shuffle featured order each visit
+  for (var _fk = featured.length-1; _fk > 0; _fk--) {
+    var _fj = Math.floor(Math.random() * (_fk+1));
+    var _ft = featured[_fk]; featured[_fk] = featured[_fj]; featured[_fj] = _ft;
+  }
   var slides = featured.map(function(b, i) {
     var verHtml = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:8px;"><svg style="width:13px;height:13px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:12px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
     var waBtn = '';
@@ -5717,6 +5738,26 @@ function showFeaturedEventCard() {
     + '<div style="font-size:12px;color:#555;">&#127858; Food &middot; Music &middot; Comedy &middot; Networking</div>'
     + '</div>'
     + '<a href="' + ticketUrl + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#127903;&#65039; Get Tickets</a>'
+    + '</div></div>';
+  addTipMessage(html);
+}
+
+function showXanderFeatureCard() {
+  var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png';
+  var shopUrl = 'https://xandertrade.com/';
+  var html = '<div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
+    + '<div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector(\'img\').src)">'
+    + '<div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>'
+    + '<img src="' + imgUrl + '" style="width:100%;display:block;object-fit:contain;">'
+    + '</div>'
+    + '<div style="background:white;padding:14px 16px 16px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#128722;&#65039;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">Featured Business</span></div>'
+    + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">Xander Afritrade Ltd</div>'
+    + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">'
+    + '<div style="font-size:12px;color:#555;">&#128722;&#65039; Authentic African food, beauty, fashion &amp; lifestyle</div>'
+    + '<div style="font-size:12px;color:#555;">&#128666; UK-wide delivery</div>'
+    + '</div>'
+    + '<a href="' + shopUrl + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#128722;&#65039; Shop Now</a>'
     + '</div></div>';
   addTipMessage(html);
 }
@@ -8210,9 +8251,14 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
   scrollToTop();
   setTimeout(function(){ scrollToTop(); }, 50);
 
-  // Render featured businesses first (after clear)
+  // Render featured businesses first (after clear) — shuffle order each time
   if (startIndex === undefined) {
-    fi.forEach(function(i){ shownBusinessIndexes.push(i); addTipMessage(buildFeaturedCard(filtered[i], false)); });
+    var fiShuffled = fi.slice();
+    for (var _k = fiShuffled.length-1; _k > 0; _k--) {
+      var _j = Math.floor(Math.random() * (_k+1));
+      var _t = fiShuffled[_k]; fiShuffled[_k] = fiShuffled[_j]; fiShuffled[_j] = _t;
+    }
+    fiShuffled.forEach(function(i){ shownBusinessIndexes.push(i); addTipMessage(buildFeaturedCard(filtered[i], false)); });
   }
 
   if (filtered.length === 0) {
@@ -8676,6 +8722,7 @@ function resetToWelcome() {
       addTipMessage(tipHtml);
       console.log('message added');
       showFeaturedEventCard();
+      showXanderFeatureCard();
       showSponsoredAd();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
