@@ -3294,6 +3294,9 @@ function showMoreSheet() {
   var items = [
     {ico:'📣', label:'Group Advertising', fn: function(){ overlay.remove(); window.open('https://auntietobi.co.uk/group-advertising','_blank'); }, color:'#B45309', bg:'#FFFBEB', border:'#FFB81C'},
     {ico:'💼', label:'Jobs', fn: function(){ resetAndShowJobs(); }},
+    {ico:'💚', label:'Sponsor Giveaway', fn: function(){ overlay.remove(); window.open('https://auntietobi.co.uk/giveaway-sponsor','_blank'); }, color:'#057A44', bg:'#e8f5ee', border:'#b8e0cb'},
+    {ico:'🎁', label:'Giveaway Terms', fn: function(){ overlay.remove(); window.open('https://auntietobi.co.uk/giveaway-terms','_blank'); }},
+    {ico:'👥', label:'Telegram Group', fn: function(){ overlay.remove(); window.open('https://t.me/auntietobi_uk','_blank'); }},
     {ico:'🚗', label:'Driving Theory', fn: function(){ clearExamState();quickAsk('Help me prepare for my UK driving theory test'); }},
     {ico:'📋', label:'Life in UK Test', fn: function(){ clearExamState();quickAsk('Help me prepare for my Life in UK test'); }},
     {ico:'🇬🇧', label:'Japa Guide', fn: function(){ showJapaGuide(); }},
@@ -3380,27 +3383,43 @@ function showNewsAndUpdates(activeTab) {
       + '<button style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #e0e0e0;background:#f5f5f5;color:#6B7280;font-size:13px;font-weight:700;cursor:pointer;" onclick="showNewsAndUpdates(\'updates\')">📢 Updates' + badge + '</button>'
       + '</div>';
     msgs.insertBefore(tabBar.firstElementChild, msgs.firstChild);
+    scrollToTop();
+    setTimeout(function(){ scrollToTop(); }, 300);
   } else {
     if (!updates.length) {
       addTipMessage('<div style="padding:24px;text-align:center;color:#9CA3AF;font-size:15px;">No updates yet — check back soon! 💚</div>');
     } else {
+      var _uid = 0;
       updates.forEach(function(u) {
         var label = typeLabels[u.type] || '📢 Update';
         var color = typeColors[u.type] || '#057A44';
         var date = u.date ? new Date(u.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
         var msgHtml = formatMsg(u.message);
-        var srcLink = u.sourceUrl ? '<a href="' + u.sourceUrl + '" target="_blank" style="display:inline-block;margin-top:8px;font-size:13px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>' : '';
-        addTipMessage(
-          '<div style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;">'
-          + '<div style="background:' + color + ';padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">'
+        var srcLink = u.sourceUrl ? '<a href="' + u.sourceUrl + '" target="_blank" style="display:inline-block;margin-top:10px;font-size:13px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>' : '';
+        var uid = 'upd-' + (_uid++);
+        var card = document.createElement('div');
+        card.style.cssText = 'background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;cursor:pointer;';
+        card.innerHTML = '<div style="background:' + color + ';padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">'
           + '<span style="color:white;font-weight:700;font-size:13px;">' + label + '</span>'
           + '<span style="color:rgba(255,255,255,0.7);font-size:11px;">' + date + '</span>'
           + '</div>'
-          + '<div style="padding:14px;">'
-          + '<div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:8px;line-height:1.4;">' + (u.title || '') + '</div>'
-          + '<div style="font-size:15px;color:#444;line-height:1.75;">' + msgHtml + '</div>'
-          + srcLink + '</div></div>'
-        );
+          + '<div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">'
+          + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;flex:1;">' + (u.title || label) + '</div>'
+          + '<span id="' + uid + '-arr" style="color:#9CA3AF;font-size:20px;margin-left:10px;flex-shrink:0;">›</span>'
+          + '</div>'
+          + '<div id="' + uid + '-body" style="display:none;padding:0 14px 14px;font-size:15px;color:#444;line-height:1.75;border-top:0.5px solid #f0f0f0;padding-top:12px;">'
+          + msgHtml + srcLink + '</div>';
+        card.addEventListener('click', function() {
+          var body = document.getElementById(uid + '-body');
+          var arr = document.getElementById(uid + '-arr');
+          var open = body.style.display !== 'none';
+          body.style.display = open ? 'none' : 'block';
+          arr.textContent = open ? '›' : '⌄';
+        });
+        var wrap = document.createElement('div');
+        wrap.className = 'msg bot';
+        wrap.appendChild(card);
+        document.getElementById('messages').appendChild(wrap);
       });
     }
     addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showNewsAndUpdates(\'news\')">📰 News/Articles</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
