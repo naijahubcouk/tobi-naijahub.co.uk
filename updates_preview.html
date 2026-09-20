@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Updates Preview</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#f2f2f7;padding:16px;max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:8px;}
+</style>
+</head>
+<body>
+
+<!-- Tab bar -->
+<div style="display:flex;gap:8px;">
+  <button style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #e0e0e0;background:#f5f5f5;color:#6B7280;font-size:13px;font-weight:700;">📰 News/Articles</button>
+  <button style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #057A44;background:#f0faf5;color:#057A44;font-size:13px;font-weight:700;">📢 Updates</button>
+</div>
+
+<!-- Update card — COLLAPSED (title only) -->
+<div id="u1" style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;cursor:pointer;" onclick="toggleUpdate('u1')">
+  <div style="background:#057A44;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">
+    <span style="color:white;font-weight:700;font-size:13px;">📢 Update</span>
+    <span style="color:rgba(255,255,255,0.7);font-size:11px;">15 Sep 2026</span>
+  </div>
+  <div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;flex:1;">New Nigerian businesses added to the directory this week</div>
+    <span id="u1-arr" style="color:#9CA3AF;font-size:18px;margin-left:10px;flex-shrink:0;">›</span>
+  </div>
+  <div id="u1-body" style="display:none;padding:0 14px 14px;font-size:15px;color:#444;line-height:1.75;border-top:0.5px solid #f0f0f0;padding-top:12px;">
+    We've added 7 new businesses this week including food, beauty and fashion. Check them out in the Business Directory! 💚
+  </div>
+</div>
+
+<!-- Update card 2 -->
+<div id="u2" style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;cursor:pointer;" onclick="toggleUpdate('u2')">
+  <div style="background:#1D4ED8;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">
+    <span style="color:white;font-weight:700;font-size:13px;">📰 News</span>
+    <span style="color:rgba(255,255,255,0.7);font-size:11px;">6 Sep 2026</span>
+  </div>
+  <div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;flex:1;">Skilled Worker visa — major changes explained</div>
+    <span id="u2-arr" style="color:#9CA3AF;font-size:18px;margin-left:10px;flex-shrink:0;">›</span>
+  </div>
+  <div id="u2-body" style="display:none;padding:0 14px 14px;font-size:15px;color:#444;line-height:1.75;border-top:0.5px solid #f0f0f0;padding-top:12px;">
+    The UK government has announced changes to the Skilled Worker visa route. Here's what you need to know...
+    <a href="#" style="display:inline-block;margin-top:8px;font-size:13px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>
+  </div>
+</div>
+
+<!-- Update card 3 -->
+<div id="u3" style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;cursor:pointer;" onclick="toggleUpdate('u3')">
+  <div style="background:#D97706;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">
+    <span style="color:white;font-weight:700;font-size:13px;">💡 Today's Tip</span>
+    <span style="color:rgba(255,255,255,0.7);font-size:11px;">12 Sep 2026</span>
+  </div>
+  <div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;flex:1;">Register with a GP — it's free and important</div>
+    <span id="u3-arr" style="color:#9CA3AF;font-size:18px;margin-left:10px;flex-shrink:0;">›</span>
+  </div>
+  <div id="u3-body" style="display:none;padding:0 14px 14px;font-size:15px;color:#444;line-height:1.75;border-top:0.5px solid #f0f0f0;padding-top:12px;">
+    Make sure you're registered with a GP near you — it's free on the NHS and essential for accessing healthcare quickly.
+  </div>
+</div>
+
+<script>
+function toggleUpdate(id) {
+  var body = document.getElementById(id + '-body');
+  var arr = document.getElementById(id + '-arr');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  arr.textContent = open ? '›' : '⌄';
+  arr.style.transform = open ? '' : 'rotate(0deg)';
+}
+</script>
+</body>
+</html>
