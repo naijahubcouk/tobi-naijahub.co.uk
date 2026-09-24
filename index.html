@@ -1976,7 +1976,7 @@ function formatResponse(text) {
           const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi \uD83D\uDC9A Find Nigerian businesses near you';
 
           const verifiedHeader = b.verified
-            ? '<div style="background:#FFB81C;padding:5px 14px;display:flex;align-items:center;gap:6px;"><span style="font-size:11px;font-weight:800;color:#0F1E36;">\u2705 Verified Business</span></div>'
+            ? '<div style="background:#FFB81C;padding:5px 14px;display:flex;align-items:center;gap:6px;"><span style="font-size:11px;font-weight:800;color:#0F1E36;">' + (b.featured ? '\u2B50 Featured Business' : '\u2705 Verified Business') + '</span></div>'
             : '';
 
           const waBtn = (b.wa)
@@ -1993,7 +1993,7 @@ function formatResponse(text) {
             + verifiedHeader
             + '<div style="padding:14px;">'
             + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:8px;">'
-            + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + '</div>'
+            + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + (b.verified ? tobiTick(16) : '') + '</div>'
             + '<span onclick="quickAsk(\'Show me all ' + (b.cat||'').replace(/'/g,"\\'") + ' businesses\')" style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;cursor:pointer;margin-top:2px;">' + cat + '</span>'
             + '</div>'
             + (b.desc ? '<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:8px;">' + b.desc + '</div>' : '')
@@ -2166,9 +2166,9 @@ function formatResponse(text) {
         tagHTML = `<span class="card-tag ${tagClass}">${emoji} ${tag.toUpperCase()}</span>`;
       } else if (line.startsWith('NAME:')) {
         const bizName = line.replace('NAME:', '').trim();
-        const verifiedBizNames = ['Funmis Treasure', 'Tombell Education Consultancy'];
+        const verifiedBizNames = getLiveDirectory().filter(x => x.verified).map(x => x.name);
         const isVerified = verifiedBizNames.some(v => bizName.toLowerCase().includes(v.toLowerCase()));
-        const vBadge = isVerified ? `<span style="display:inline-flex;align-items:center;gap:3px;background:white;color:#1D9BF0;font-size:9px;font-weight:800;padding:2px 8px;border-radius:50px;margin-left:5px;vertical-align:middle;border:1.5px solid #1D9BF0;"><span style="color:#1D9BF0;font-size:11px;">✓</span> Verified</span>` : '';
+        const vBadge = isVerified ? tobiTick(15) : '';
         bodyHTML += `<div class="card-name">${bizName}${vBadge}</div>`;
       } else if (line.startsWith('DETAIL:')) {
         bodyHTML += `<div class="card-desc">${line.replace('DETAIL:', '').trim()}</div>`;
@@ -5314,9 +5314,18 @@ function buildProductCard(p, compact) {
     + '</div></div>';
 }
 
+// Blue verified tick shown next to verified business names
+function tobiTick(size) {
+  size = size || 16;
+  return '<svg role="img" aria-label="Verified" style="width:' + size + 'px;height:' + size + 'px;flex-shrink:0;vertical-align:-3px;margin-left:4px;" viewBox="0 0 24 24"><title>Verified</title><path fill="#1D9BF0" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.6-5.8"/></svg>';
+}
+function tobiWaUrl(b) {
+  return 'https://wa.me/' + String(b.wa || '').replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚');
+}
+
 function buildFeaturedCard(b, compact) {
-  var verHtml = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg style="width:12px;height:12px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
-  var waBtn = '';
+  var verHtml = '';
+  var waBtn = (b.verified && b.wa) ? '<a href="' + tobiWaUrl(b) + '" target="_blank" rel="noopener" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
   var viewBtn = '<button onclick="tobiOpenBiz(\'' + b.slug + '\')" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View Details</button>';
   var minW = compact ? 'min-width:220px;flex-shrink:0;scroll-snap-align:start;' : '';
   var descLen = compact ? 80 : 200;
@@ -5325,7 +5334,7 @@ function buildFeaturedCard(b, compact) {
     + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;">⭐ Featured Business</div>'
     + '<div style="padding:20px 12px 12px;">'
     + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:4px;">'
-    + '<div style="font-size:14px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + '</div>'
+    + '<div style="font-size:14px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + (b.verified ? tobiTick(15) : '') + '</div>'
     + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + (b.cat||'Business') + '</span>'
     + '</div>'
     + verHtml
@@ -5345,21 +5354,21 @@ function showFeaturedCarousel() {
     var _ft = featured[_fk]; featured[_fk] = featured[_fj]; featured[_fj] = _ft;
   }
   var slides = featured.map(function(b, i) {
-    var verHtml = b.verified ? '<div style="display:flex;align-items:center;gap:4px;margin-bottom:8px;"><svg style="width:13px;height:13px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:12px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>' : '';
-    var waBtn = '';
+    var verHtml = '';
+    var waBtn = (b.verified && b.wa) ? '<a href="' + tobiWaUrl(b) + '" target="_blank" rel="noopener" style="flex:1;padding:10px;background:#25D366;color:white;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
     return '<div style="min-width:100%;flex-shrink:0;">'
       + '<div style="border:2px solid #FFB81C;border-radius:14px;position:relative;margin:14px 12px 0;background:white;">'
       + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;pointer-events:none;">⭐ Featured Business</div>'
       + '<div style="padding:20px 14px 14px;pointer-events:none;">'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">'
-      + '<div style="font-size:16px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + '</div>'
+      + '<div style="font-size:16px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + (b.verified ? tobiTick(17) : '') + '</div>'
       + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + (b.cat||'Business') + '</span>'
       + '</div>' + verHtml
       + '<p style="font-size:13px;color:#444;line-height:1.6;margin-bottom:8px;height:42px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;">' + (b.desc ? b.desc.substring(0,120) + (b.desc.length > 120 ? '...' : '') : '') + '</p>'
       + '<p style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'').split(',')[0] + '</p>'
       + '</div>'
       + '<div style="display:flex;gap:8px;padding:0 14px 14px;pointer-events:auto;">'
-      + '<a href="https://auntietobi.com/listing/'+b.slug+'" target="_blank" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>'
+      + '<a href="https://auntietobi.com/listing/'+b.slug+'" target="_blank" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>' + waBtn
       + '<button onclick="shareBiz(\'' + b.slug + '\')" style="flex:1;padding:10px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#0F1E36;">📤 Share</button>' + '</div></div></div>';
   }).join('');
 
@@ -6256,7 +6265,7 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'Laraskitchenuk', slug:'laraskitchenuk', cat:'caterers', loc:'Rainham', desc:'Experience authentic Nigerian home cooking delivered across the UK. Enjoy delicious, affordable meals that bring comfort, tradition, and the taste of home to busy families and professionals.', wa:'447970676572', ig:'laraskitchenuk'},
   {name:'Ojanaijafoods', slug:'ojanaijafoods', cat:'foodstores & groceries', loc:'UK', desc:'Shop premium Kpomo and smoky Panla Fish from Oja Naija Foods. Enjoy 100% natural, preservative-free Nigerian ingredients delivered across the UK for delicious, authentic meals.', wa:'447493733473', ig:'oja_naija_foods'},
   {name:'GlamwtJade | NORTHEAST MUA', slug:'glamwtjade-northeast-mua', cat:'makeup artists', loc:'Middlesbrough', desc:'At GlamwtJade, we create luxury, flawless, and long-lasting makeup tailored to enhance your natural beauty. Leave every appointment feeling confident, radiant, and camera-ready.', wa:'447916324103', ig:'glamwtjade'},
-  {name:'Funmis Treasure', slug:'funmis-treasure', featured:true, cat:'foodstores & groceries', loc:'Basildon', desc:'Funmi\'s Treasure is your go-to source for authentic African products and foods delivered throughout the UK with speed, reliability, and a personal touch.', wa:'447435844799', ig:'Funmistreasure', featured:true},
+  {name:'Funmis Treasure', slug:'funmis-treasure', featured:true, cat:'foodstores & groceries', loc:'Basildon', desc:'Funmi\'s Treasure is your go-to source for authentic African products and foods delivered throughout the UK with speed, reliability, and a personal touch.', wa:'447435844799', ig:'Funmistreasure', featured:true, verified:true},
   {name:'BranchNaijaUK', slug:'branchnaijauk', cat:'caterers', loc:'United Kingdom', desc:'We are Nigerian food brand bringing the rich glamour of Naija cuisine straight to the UK,From our hygienically rated 5 ⭐️ kitchen.', wa:'447498878750', ig:'branchnaijauk'},
   {name:'Ingenious Cookware UK', slug:'ingenious-cookware-uk', cat:'home & kitchen', loc:'Southend-on-Sea', desc:'Shop quality cookware and kitchen essentials in the UK. Registered UK brand with Klarna payments, nationwide delivery, and trusted products for every kitchen.', wa:'447777763899', ig:'ingenious_cookware_uk'},
   {name:'Ovenrush UK', slug:'ovenrush-uk', cat:'cakes & desert', loc:'United Kingdom', desc:'Order custom cakes, pastries, and small chops in the UK for birthdays, weddings, baby showers, and corporate events. Freshly made and beautifully crafted. 🎂', ig:'ovenrush_uk'},
@@ -6374,7 +6383,7 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'Uwagboe’s Kitchen & Grill - Leith Walk', slug:'uwagboes-kitchen-and-grill-leith-walk', cat:'restaurants', loc:'Edinburgh', desc:'Uwagboe\'s Kitchen & Grill brings the vibrant flavors of Nigeria to the heart of Edinburgh, offering an authentic culinary experience.', wa:'441315312796', ig:'uwagboeskitchen'},
   {name:'Craving Delight', slug:'craving-delight', cat:'restaurants', loc:'Hull', desc:'Cravings Delight Ltd brings authentic African cuisine to the heart of Hull, offering a delightful menu that satisfies diverse culinary cravings.', wa:'441482600029'},
   {name:'1212AfroCaribbean', slug:'1212afrocaribbean', cat:'foodstores & groceries', loc:'Nottingham', desc:'Missing the taste of home? 1212Afrocaribbean delivers authentic African and Caribbean groceries, spices, and essentials directly to your doorstep with convenience and care.', wa:'447450914311', ig:'1212afrocaribbean_shop'},
-  {name:'Tombell Education Consultancy Ltd', slug:'tombell-education-consultancy-ltd', featured:true, cat:'education consultancy', loc:'Kent', desc:'Tombelledu is a British Council Certified education consultancy helping students achieve their study abroad goals. From applications and admissions to visa support and arrival assistance, we provide e', wa:'2349066674956', ig:'tombelledu', featured:true},
+  {name:'Tombell Education Consultancy Ltd', slug:'tombell-education-consultancy-ltd', featured:true, cat:'education consultancy', loc:'Kent', desc:'Tombelledu is a British Council Certified education consultancy helping students achieve their study abroad goals. From applications and admissions to visa support and arrival assistance, we provide e', wa:'2349066674956', ig:'tombelledu', featured:true, verified:true},
   {name:'Loaf & Ladle Co.', slug:'loaf-and-ladle-co', cat:'cakes & desert', loc:'Nottingham', desc:'Loaf & Ladle Co. serves homemade comfort food made with care, from freshly baked banana bread to hearty wraps and warm meals, crafted for rich flavour and satisfaction.', wa:'447988166456', ig:'loafandladleco'},
   {name:'AC CHOW', slug:'ac-chow', cat:'private chef', loc:'Stevenage', desc:'AC Chow is a community-driven food brand serving authentic, flavorful dishes made with the finest ingredients, crafted with passion and tradition to deliver a memorable culinary experience.', wa:'447436859210', ig:'ac_chow'},
   {name:'4R Luxury Events', slug:'4r-luxury-events', cat:'event planners', loc:'London', desc:'4R Luxury Events is a luxury destination wedding and event planning service operating across the UK, Turks & Caicos, France, Portugal, and Morocco.', wa:'447476726446', ig:'4rluxuryevents'},
@@ -6416,7 +6425,7 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'FavouredSzn – Affordable African Fashion & Ready-to-Wear UK', slug:'favouredszn-affordable-african-fashion-and-ready-to-wear-uk', cat:'ankara & traditional wears', loc:'Leicester', desc:'Shop FavouredSzn Apparels for stylish Ankara, Adire, Aso-Oke and Nigerian-inspired ready-to-wear fashion for women in the UK.', wa:'447774150323', ig:'favouredszn_apparels'},
   {name:'Jola Signature Hibiscus Drink (zobo)', slug:'jola-signature-hibiscus-drink-zobo', cat:'drinks', loc:'UK', desc:'Discover Jola Signature Zobo in Preston for fresh Zobo hibiscus drinks with no added sugar, personalised bottles and bulk orders for all occasions.', wa:'447985023045', ig:'jola_signature_zobo_drink'},
   {name:'Oma’s Touch Aesthetics', slug:'omas-touch-aesthetics', cat:'aesthetics', loc:'Manchester', desc:'Discover Oma’s Touch Aesthetics in Salford, Manchester for massage, waxing, skincare, brows, semi-permanent makeup and luxury beauty treatments.', wa:'447958710495', ig:'omas_touch7'},
-  {name:'Xander Afritrade Ltd', slug:'xander-afritrade-ltd', featured:true, cat:'foodstores & groceries', loc:'United Kingdom', desc:'Shop authentic African food, beauty products, fashion, and lifestyle essentials at Xander Afritrade Ltd. Enjoy secure shopping, special offers, fast delivery, and quality products sourced from Africa.', wa:'447346124351', ig:'shop_xander', featured:true},
+  {name:'Xander Afritrade Ltd', slug:'xander-afritrade-ltd', featured:true, cat:'foodstores & groceries', loc:'United Kingdom', desc:'Shop authentic African food, beauty products, fashion, and lifestyle essentials at Xander Afritrade Ltd. Enjoy secure shopping, special offers, fast delivery, and quality products sourced from Africa.', wa:'447346124351', ig:'shop_xander', featured:true, verified:true},
   {name:'Aryana | Pantry essentials delivered to you', slug:'aryana-pantry-essentials-delivered-to-you', cat:'foodstores & groceries', loc:'UK', desc:'Aryana offers quality African pantry essentials at affordable prices. Shop gari, beans, flour, fufu and everyday West African food staples with UK-wide delivery. Enjoy great value, reliable quality.', ig:'aryanafoodsuk'},
   {name:'AnibeautyHairs', slug:'anibeautyhairs', cat:'wig vendors', loc:'Birmingham', desc:'Shop human hair and realistic braided wigs from Ani Beauty Hairs in Birmingham, with hair revamp services and nationwide UK delivery available.', wa:'447440595143', ig:'anibeautyhairs'},
   {name:'Stainless Did It Hair', slug:'stainless-did-it-hair', cat:'hair stylists/braiders', loc:'Crawley', desc:'We specialise in wig making, frontal install, sew ins and wig revamp service.', wa:'447493665222', ig:'stainlessdidit'},
@@ -6443,14 +6452,14 @@ function handleDeepLink() {
         const desc = business.desc ? business.desc.substring(0,100) + (business.desc.length > 100 ? '...' : '') : '';
         const shareUrl = 'https://auntietobi.co.uk?biz=' + business.slug;
         const safeName = business.name.replace(/['"]/g,'');
-        const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">✅ Verified Business</div>' : '';
+        const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">' + (business.featured ? '⭐ Featured Business' : '✅ Verified Business') + '</div>' : '';
         const waBtn = (business.wa) ? '<a href="https://wa.me/' + business.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
         const shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
                 const viewBtn = '<a href="https://auntietobi.com/listing/' + business.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>';
         const cardHTML = '<div style="background:white;border:' + (business.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
           + verifiedBadge
           + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (business.verified ? 'margin-top:6px;' : '') + '">'
-          + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + business.name + '</div>'
+          + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + business.name + (business.verified ? tobiTick(16) : '') + '</div>'
           + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + cat + '</span>'
           + '</div>'
           + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + desc + '</div>'
@@ -8049,12 +8058,12 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll, featured
     var cat=(b.cat&&b.cat.toLowerCase()!=='nigerian business')?b.cat.charAt(0).toUpperCase()+b.cat.slice(1):'';
     var su='https://auntietobi.co.uk/biz/'+b.slug;
     var vb=b.verified?'<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">⭐ Featured Business</div>':'';
-    var vl=b.verified?'<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style="font-size:11px;color:#1d9bf0;font-weight:600;">Verified Business</span></div>':'';
+    var vl='';
     var wa='';
     var dd=b.desc?'<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px;">'+b.desc+'</div>':'';
     addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;position:relative;'+(b.verified?'padding-top:18px;':'')+'">'
       +vb+'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
-      +'<div style="font-size:15px;font-weight:700;color:#0F1E36;">'+b.name+'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#0F1E36;">'+b.name+(b.verified?tobiTick(16):'')+'</div>'
       +(cat?'<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">'+cat+'</span>':'')
       +'</div>'+vl+dd
       +'<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+(b.loc||'UK').split(',')[0]+'</div>'
