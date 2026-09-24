@@ -5314,11 +5314,53 @@ function buildProductCard(p, compact) {
     + '</div></div>';
 }
 
-// Blue verified tick shown next to verified business names
+// Blue verified tick shown next to verified business names.
+// Tap (or hover on desktop) shows "Verified registered business".
 function tobiTick(size) {
   size = size || 16;
-  return '<svg role="img" aria-label="Verified" style="width:' + size + 'px;height:' + size + 'px;flex-shrink:0;vertical-align:-3px;margin-left:4px;" viewBox="0 0 24 24"><title>Verified</title><path fill="#1D9BF0" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.6-5.8"/></svg>';
+  return '<span class="tobi-tick" role="button" tabindex="0" aria-label="Verified registered business" onclick="tobiTickTap(event,this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){tobiTickTap(event,this)}" onmouseenter="if(tobiCanHover())tobiTickShow(this)" onmouseleave="if(tobiCanHover())tobiTickHide()" style="display:inline-flex;vertical-align:-3px;margin-left:4px;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent;">'
+    + '<svg aria-hidden="true" style="width:' + size + 'px;height:' + size + 'px;flex-shrink:0;" viewBox="0 0 24 24"><path fill="#1D9BF0" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.6-5.8"/></svg>'
+    + '</span>';
 }
+function tobiCanHover() { return !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches); }
+var _tobiTickTimer = null;
+function tobiTickShow(el) {
+  var tip = document.getElementById('tobiTickTip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'tobiTickTip';
+    tip.setAttribute('role', 'status');
+    tip.style.cssText = 'position:fixed;z-index:99999;background:#0F1E36;color:#fff;font-size:12px;font-weight:600;padding:7px 11px;border-radius:8px;white-space:nowrap;display:flex;align-items:center;gap:5px;pointer-events:none;opacity:0;transition:opacity .15s;font-family:inherit;';
+    tip.innerHTML = '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24"><path fill="#1D9BF0" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/></svg>Verified registered business'
+      + '<span style="position:absolute;top:100%;left:50%;margin-left:-6px;border:6px solid transparent;border-top-color:#0F1E36;"></span>';
+    document.body.appendChild(tip);
+  }
+  var r = el.getBoundingClientRect();
+  tip.style.opacity = '0';
+  tip.style.left = '0px'; tip.style.top = '0px';
+  var w = tip.offsetWidth, h = tip.offsetHeight;
+  var left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+  var top = r.top - h - 8;
+  if (top < 8) top = r.bottom + 8;
+  tip.style.left = left + 'px'; tip.style.top = top + 'px';
+  var arrow = tip.lastChild;
+  arrow.style.left = (r.left + r.width / 2 - left) + 'px';
+  arrow.style.display = (top > r.top) ? 'none' : 'block';
+  tip.style.opacity = '1';
+  clearTimeout(_tobiTickTimer);
+  _tobiTickTimer = setTimeout(tobiTickHide, 2500);
+}
+function tobiTickHide() {
+  var tip = document.getElementById('tobiTickTip');
+  if (tip) tip.style.opacity = '0';
+}
+function tobiTickTap(e, el) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  tobiTickShow(el);
+}
+document.addEventListener('click', function(e){ if (!e.target.closest || !e.target.closest('.tobi-tick')) tobiTickHide(); });
+window.addEventListener('scroll', tobiTickHide, true);
+
 function tobiWaUrl(b) {
   return 'https://wa.me/' + String(b.wa || '').replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚');
 }
