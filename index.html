@@ -1022,7 +1022,7 @@
 
   <div class="pills">
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
-    <div class="pill" onclick="showBusinesses(undefined,null,null,true)">🏢 Businesses</div>
+    <div class="pill" onclick="showBusinesses(undefined,null,null,true,true)">🏢 Businesses</div>
     <div class="pill" onclick="window.open('https://auntietobi.co.uk/marketplace','_blank')">🛍️ Marketplace</div>
     <div class="pill" onclick="showNewsAndUpdates()">📰 News & Updates</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
@@ -7946,7 +7946,7 @@ function scrollToTop() {
 }
 
 
-function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
+function showBusinesses(startIndex, filterCat, locationFilter, showAll, featuredOnly) {
   window._currentPage = 'businesses';
   window.history.replaceState({}, '', '/');
 
@@ -7981,7 +7981,8 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
       pick = [];
     } else {
       // All businesses mode: show featured + regular
-      pick = vi.concat(ri).slice(0, ps);
+      // featuredOnly (Businesses pill): featured cards only on first view
+      pick = featuredOnly ? [] : vi.concat(ri).slice(0, ps);
     }
   } else {
     // On load more: exclude featured (they show in carousel above)
@@ -8007,6 +8008,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
       var _j = Math.floor(Math.random() * (_k+1));
       var _t = fiShuffled[_k]; fiShuffled[_k] = fiShuffled[_j]; fiShuffled[_j] = _t;
     }
+    if (featuredOnly) addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">⭐ Featured Businesses on Auntie Tobi</div>');
     fiShuffled.forEach(function(i){ shownBusinessIndexes.push(i); addTipMessage(buildFeaturedCard(filtered[i], false)); });
   }
 
@@ -8030,7 +8032,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll) {
     : _cat ? '🏢 ' + _cat.charAt(0).toUpperCase() + _cat.slice(1)
     : _all ? '🏢 All Nigerian Businesses on Auntie Tobi'
     : '⭐ Featured Businesses on Auntie Tobi';
-  addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">'+title+'</div>');
+  if (!featuredOnly) addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">'+title+'</div>');
 
   // 2. CARDS
   var catEmojis={'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒','restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜','photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️','alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️','suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓','shipping & logistics':'🚢'};
