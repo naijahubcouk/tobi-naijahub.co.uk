@@ -1007,7 +1007,7 @@
       <button id="notify-bell" onclick="handleBellClick()" title="Get Auntie Tobi notifications" style="background:none;border:none;cursor:pointer;font-size:22px;padding:2px;opacity:0.7;transition:opacity 0.2s;">🔕</button>
     <script>
       (function() {
-        if (localStorage.getItem('tobi_notifications') === '1') {
+        if (localStorage.getItem('tobi_notifications') === '1' && localStorage.getItem('tobi_notif_off') !== '1') {
           var b = document.getElementById('notify-bell');
           if (b) { b.innerHTML = '🔔'; b.title = 'Manage notification preferences'; b.style.opacity = '1'; }
         }
@@ -8964,6 +8964,7 @@ function initOneSignal() {
 function updateBellButton(isSubscribed) {
   const bell = document.getElementById('notify-bell');
   if (!bell) return;
+  if (localStorage.getItem('tobi_notif_off') === '1') isSubscribed = false;
   if (isSubscribed) {
     bell.innerHTML = '🔔';
     bell.title = 'Notifications ON';
@@ -9082,24 +9083,31 @@ function showNotifPrompt() {
   setTimeout(() => { if (banner.parentNode) banner.remove(); }, 12000);
 }
 
+// Notifications screen: one On/Off switch (categories removed Sept 2026)
+const NOTIF_OFF_KEY = 'tobi_notif_off';
+
+function setNotifMasterUI(isOn) {
+  const t = document.getElementById('notifMasterToggle');
+  const l = document.getElementById('notifMasterLabel');
+  if (!t) return;
+  t.style.background = isOn ? '#057A44' : '#D1D5DB';
+  t.querySelector('span').style.transform = isOn ? 'translateX(20px)' : 'translateX(0px)';
+  t.setAttribute('aria-checked', isOn ? 'true' : 'false');
+  t.setAttribute('data-state', isOn ? 'on' : 'off');
+  if (l) l.textContent = isOn ? 'On' : 'Off';
+}
+
 function showNotifPrefs() {
   const modal = document.getElementById('notifPrefsModal');
   if (!modal) return;
-  const prefs = getNotifPrefs();
-  const hasPrefs = localStorage.getItem(NOTIF_PREFS_KEY);
-  document.querySelectorAll('.notif-toggle').forEach(toggle => {
-    const key = toggle.getAttribute('data-key');
-    // New users with no prefs: default everything ON except prayer
-    let isOn;
-    if (!hasPrefs) {
-      isOn = key !== 'prayer';
-    } else {
-      isOn = prefs[key] !== false;
-    }
-    applyToggleState(toggle, isOn);
-  });
+  setNotifMasterUI(localStorage.getItem(NOTIF_OFF_KEY) !== '1');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  // Confirm with OneSignal's real state
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    try { setNotifMasterUI(!!OneSignal.User.PushSubscription.optedIn); } catch(e) {}
+  });
 }
 
 function closeNotifPrefs() {
@@ -9108,59 +9116,40 @@ function closeNotifPrefs() {
   document.body.style.overflow = '';
 }
 
-function applyToggleState(toggle, isOn) {
-  const thumb = toggle.querySelector('span');
-  toggle.style.background = isOn ? '#057A44' : '#D1D5DB';
-  thumb.style.transform = isOn ? 'translateX(20px)' : 'translateX(0px)';
-  toggle.setAttribute('data-state', isOn ? 'on' : 'off');
-}
-
-function toggleNotifPref(toggle) {
-  const isOn = toggle.getAttribute('data-state') === 'on';
-  applyToggleState(toggle, !isOn);
-}
-
-function saveNotifPrefs() {
-  const prefs = {};
-  document.querySelectorAll('.notif-toggle').forEach(toggle => {
-    prefs[toggle.getAttribute('data-key')] = toggle.getAttribute('data-state') === 'on';
-  });
-  localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs));
-  // Ensure subscription flag is marked
-  localStorage.setItem('tobi_notifications', '1');
-
-  // If all categories off, update bell to show 🔕
-  const allOff = Object.values(prefs).every(v => !v);
-  const bell = document.getElementById('notify-bell');
-  if (bell && allOff) {
-    bell.innerHTML = '🔕';
-    bell.title = 'Notifications off — tap to manage';
-    bell.style.opacity = '0.7';
-  } else if (bell) {
-    bell.innerHTML = '🔔';
-    bell.title = 'Manage notification preferences';
-    bell.style.opacity = '1';
-  }
-
-  // Set OneSignal tags — only send known notification categories, never events
-  const allowedTags = ['news', 'articles', 'tips', 'motivation', 'prayer'];
-  const tags = {};
-  allowedTags.forEach(k => { tags[k] = prefs[k] ? '1' : '0'; });
+function toggleNotifMaster() {
+  const t = document.getElementById('notifMasterToggle');
+  const turnOn = !(t && t.getAttribute('data-state') === 'on');
+  setNotifMasterUI(turnOn);
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   window.OneSignalDeferred.push(async function(OneSignal) {
     try {
-      await OneSignal.User.addTags(tags);
-      console.log('[Tobi] Prefs saved to OneSignal:', tags);
+      if (turnOn) {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+          setNotifMasterUI(false); // blocked in browser settings
+          return;
+        }
+        if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+          await OneSignal.Notifications.requestPermission();
+        }
+        await OneSignal.User.PushSubscription.optIn();
+        const ok = !!OneSignal.User.PushSubscription.optedIn;
+        if (ok) {
+          localStorage.removeItem(NOTIF_OFF_KEY);
+          localStorage.setItem('tobi_notifications', '1');
+        }
+        setNotifMasterUI(ok);
+        updateBellButton(ok);
+      } else {
+        await OneSignal.User.PushSubscription.optOut();
+        localStorage.setItem(NOTIF_OFF_KEY, '1');
+        localStorage.setItem('tobi_notifications', '1'); // keep bell opening this screen
+        updateBellButton(false);
+      }
     } catch(e) {
-      console.log('[Tobi] Tag save error:', e.message);
+      console.log('[Tobi] Notification switch error:', e && e.message);
+      setNotifMasterUI(!!(OneSignal.User && OneSignal.User.PushSubscription && OneSignal.User.PushSubscription.optedIn));
     }
   });
-  const msg = document.getElementById('notif-saved-msg');
-  if (msg) { msg.style.display = 'block'; }
-  setTimeout(() => {
-    if (msg) msg.style.display = 'none';
-    closeNotifPrefs();
-  }, 1500);
 }
 
 async function handleBellClick() {
@@ -9437,112 +9426,20 @@ window.addEventListener('pageshow', function(e) {
 <!-- Notification Preferences Modal -->
 <div id="notifPrefsModal" style="display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;">
   <div onclick="closeNotifPrefs()" style="flex:1;background:rgba(0,0,0,0.5);"></div>
-  <div style="background:white;border-radius:20px 20px 0 0;overflow:hidden;max-height:90vh;overflow-y:auto;">
-    <!-- Header -->
-    <div style="background:#057A44;padding:16px 18px 14px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;">🔔</div>
-        <div>
-          <div style="color:white;font-size:14px;font-weight:700;">Notification preferences</div>
-          <div style="color:rgba(255,255,255,0.75);font-size:11px;">Choose what Auntie Tobi sends you</div>
-        </div>
+  <div style="background:white;border-radius:20px 20px 0 0;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);">
+    <div style="background:#0F1E36;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="color:white;font-size:16px;font-weight:700;">🔔 Notifications</div>
+      <button onclick="closeNotifPrefs()" aria-label="Close" style="background:rgba(255,255,255,0.15);border:none;color:white;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;">×</button>
+    </div>
+    <div style="padding:20px 18px 26px;display:flex;align-items:center;justify-content:space-between;">
+      <div id="notifMasterLabel" style="font-size:15px;font-weight:700;color:#0F1E36;">On</div>
+      <div id="notifMasterToggle" role="switch" aria-checked="true" aria-label="Notifications" tabindex="0" onclick="toggleNotifMaster()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleNotifMaster();}" style="position:relative;width:46px;height:26px;border-radius:13px;cursor:pointer;flex-shrink:0;transition:background 0.2s;background:#057A44;">
+        <span style="position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:white;transition:transform 0.2s;pointer-events:none;transform:translateX(20px);"></span>
       </div>
-      <button onclick="closeNotifPrefs()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;">×</button>
-    </div>
-
-    <!-- Section: Breaking & News -->
-    <div style="padding:10px 16px 4px;border-bottom:none;">
-      <span style="font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.8px;text-transform:uppercase;">Breaking & News</span>
-    </div>
-
-    <div style="border-bottom:0.5px solid #f0f0f0;">
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;">
-        <div style="width:40px;height:40px;border-radius:10px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">📰</div>
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:700;color:#0F1E36;">News</div>
-          <div style="font-size:12px;color:#6B7280;margin-top:1px;">UK news affecting Nigerians — immigration, politics, economy</div>
-        </div>
-        <div class="notif-toggle" data-key="news" onclick="toggleNotifPref(this)" style="position:relative;width:44px;height:24px;border-radius:12px;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
-          <span style="position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:white;transition:transform 0.2s;pointer-events:none;"></span>
-        </div>
-      </div>
-    </div>
-
-    <div style="border-bottom:0.5px solid #f0f0f0;">
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;">
-        <div style="width:40px;height:40px;border-radius:10px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">📖</div>
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:700;color:#0F1E36;">Articles</div>
-          <div style="font-size:12px;color:#6B7280;margin-top:1px;">Guides, how-tos, money tips, housing, jobs and more</div>
-        </div>
-        <div class="notif-toggle" data-key="articles" onclick="toggleNotifPref(this)" style="position:relative;width:44px;height:24px;border-radius:12px;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
-          <span style="position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:white;transition:transform 0.2s;pointer-events:none;"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section: Community -->
-    <div style="padding:10px 16px 4px;margin-top:4px;">
-      <span style="font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.8px;text-transform:uppercase;">Community</span>
-    </div>
-
-    <div style="border-bottom:0.5px solid #f0f0f0;">
-    <!-- Section: Daily -->
-    <div style="padding:10px 16px 4px;margin-top:4px;">
-      <span style="font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:0.8px;text-transform:uppercase;">Daily from Auntie Tobi</span>
-    </div>
-
-    <div style="border-bottom:0.5px solid #f0f0f0;">
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;">
-        <div style="width:40px;height:40px;border-radius:10px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">💡</div>
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:700;color:#0F1E36;">Tips of the day</div>
-          <div style="font-size:12px;color:#6B7280;margin-top:1px;">Daily practical UK life tips — sent every morning</div>
-        </div>
-        <div class="notif-toggle" data-key="tips" onclick="toggleNotifPref(this)" style="position:relative;width:44px;height:24px;border-radius:12px;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
-          <span style="position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:white;transition:transform 0.2s;pointer-events:none;"></span>
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;">
-        <div style="width:40px;height:40px;border-radius:10px;background:#FCEBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">💪</div>
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:700;color:#0F1E36;">Motivation of the day</div>
-          <div style="font-size:12px;color:#6B7280;margin-top:1px;">Daily encouragement — sent every morning</div>
-        </div>
-        <div class="notif-toggle" data-key="motivation" onclick="toggleNotifPref(this)" style="position:relative;width:44px;height:24px;border-radius:12px;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
-          <span style="position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:white;transition:transform 0.2s;pointer-events:none;"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Prayer (OFF by default) -->
-    <div style="padding:14px 16px;border-bottom:0.5px solid #f0f0f0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div style="display:flex;align-items:center;gap:12px;flex:1;">
-          <span style="font-size:22px;">🕊️</span>
-          <div>
-          <div style="font-size:14px;font-weight:700;color:#0F1E36;">Morning Prayer</div>
-          <div style="font-size:12px;color:#6B7280;margin-top:1px;">A short prayer to start your day — sent at 8am</div>
-        </div>
-        </div>
-        <div class="notif-toggle" data-key="prayer" onclick="toggleNotifPref(this)" style="position:relative;width:44px;height:24px;border-radius:12px;cursor:pointer;flex-shrink:0;transition:background 0.2s;">
-          <span style="position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:white;transition:transform 0.2s;pointer-events:none;"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Save -->
-    <div style="padding:14px 16px 24px;background:#f8f8f8;border-top:0.5px solid #f0f0f0;">
-      <button onclick="saveNotifPrefs()" style="width:100%;background:#057A44;color:white;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Save preferences</button>
-      <div id="notif-saved-msg" style="display:none;text-align:center;font-size:12px;color:#057A44;margin-top:8px;font-weight:700;">✅ Preferences saved!</div>
     </div>
   </div>
 </div>
 
-,'','/?biz='+slug);handleDeepLink();}
 <script>
 </script>
 
