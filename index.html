@@ -4603,6 +4603,18 @@ function showAboutTobi() {
 }
 
 
+// Loads Instagram's official embed script (once) and renders any posts on the page
+function loadInstagramEmbeds() {
+  if (window.instgrm && window.instgrm.Embeds) { window.instgrm.Embeds.process(); return; }
+  if (document.getElementById('ig-embed-js')) return;
+  var sc = document.createElement('script');
+  sc.id = 'ig-embed-js';
+  sc.async = true;
+  sc.src = 'https://www.instagram.com/embed.js';
+  sc.onload = function(){ if (window.instgrm && window.instgrm.Embeds) window.instgrm.Embeds.process(); };
+  document.body.appendChild(sc);
+}
+
 function showGroupAdvertising() {
   window._currentPage = 'group-advertising';
   window.history.replaceState({}, '', '/group-advertising');
@@ -4719,47 +4731,26 @@ function showGroupAdvertising() {
 </div>`);
 
     addTipMessage(`<div style="background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;">
-    <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="color:white;font-size:14px;font-weight:700;">📣 Group Ad Results</span>
-        <span style="background:#FFB81C;color:#7a4a00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">Day 4</span>
+    <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;gap:8px;">
+      <span style="color:white;font-size:14px;font-weight:700;">✅ Completed Ads</span>
+      <span style="background:#FFB81C;color:#7a4a00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">2 campaigns</span>
+    </div>
+    <div style="padding:0 12px 12px;">
+      <div style="background:white;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;margin-top:10px;">
+        <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DcwJhyQjSA8/?utm_source=ig_embed" data-instgrm-captioned data-instgrm-version="14" style="background:#FFF;border:0;margin:0;max-width:100%;min-width:0;padding:0;width:100%;">
+          <a href="https://www.instagram.com/p/DcwJhyQjSA8/" target="_blank" rel="noopener" style="display:block;padding:40px 12px;text-align:center;color:#9CA3AF;font-size:12px;text-decoration:none;">Loading Instagram post…</a>
+        </blockquote>
+        <a href="https://www.instagram.com/p/DcwJhyQjSA8/" target="_blank" rel="noopener" style="display:block;background:#0F1E36;color:white;text-align:center;border-radius:8px;padding:10px;font-size:13px;font-weight:700;text-decoration:none;margin:10px 12px 12px;">📸 View on Instagram</a>
       </div>
-    </div>
-    <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%206%2C%202026%2C%2010_10_20%20AM.png" style="width:100%;display:block;max-height:280px;object-fit:cover;">
-    <div style="padding:10px 14px 8px;border-bottom:0.5px solid #f0f0f0;">
-      <div style="font-size:13px;font-weight:700;color:#0F1E36;line-height:1.4;">10 Nigerian Businesses in the UK You Should Know — Pt 1</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:0.5px solid #f0f0f0;">
-      <div style="padding:12px 8px;text-align:center;border-right:0.5px solid #f0f0f0;">
-        <div style="font-size:20px;font-weight:700;color:#e05c5c;">257</div>
-        <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">❤️ Likes</div>
+      <div style="background:white;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;margin-top:10px;">
+        <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DdHVsmgjcBT/?utm_source=ig_embed" data-instgrm-captioned data-instgrm-version="14" style="background:#FFF;border:0;margin:0;max-width:100%;min-width:0;padding:0;width:100%;">
+          <a href="https://www.instagram.com/p/DdHVsmgjcBT/" target="_blank" rel="noopener" style="display:block;padding:40px 12px;text-align:center;color:#9CA3AF;font-size:12px;text-decoration:none;">Loading Instagram post…</a>
+        </blockquote>
+        <a href="https://www.instagram.com/p/DdHVsmgjcBT/" target="_blank" rel="noopener" style="display:block;background:#0F1E36;color:white;text-align:center;border-radius:8px;padding:10px;font-size:13px;font-weight:700;text-decoration:none;margin:10px 12px 12px;">📸 View on Instagram</a>
       </div>
-      <div style="padding:12px 8px;text-align:center;border-right:0.5px solid #f0f0f0;">
-        <div style="font-size:20px;font-weight:700;color:#0F1E36;">62</div>
-        <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">💬 Comments</div>
-      </div>
-      <div style="padding:12px 8px;text-align:center;border-right:0.5px solid #f0f0f0;">
-        <div style="font-size:20px;font-weight:700;color:#0F1E36;">58</div>
-        <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">📤 Shares</div>
-      </div>
-      <div style="padding:12px 8px;text-align:center;">
-        <div style="font-size:20px;font-weight:700;color:#057A44;">140</div>
-        <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">🔖 Saves</div>
-      </div>
-    </div>
-    <div style="padding:8px 14px 4px;">
-      <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Overview</div>
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 14px;border-bottom:0.5px solid #f0f0f0;">
-      <span style="font-size:13px;color:#555;">Views</span><span style="font-size:13px;font-weight:700;color:#0F1E36;">27,546</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 14px;border-bottom:0.5px solid #f0f0f0;">
-      <span style="font-size:13px;color:#555;">Post interactions</span><span style="font-size:13px;font-weight:700;color:#0F1E36;">517</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 14px;">
-      <span style="font-size:13px;color:#555;">Profile activity</span><span style="font-size:13px;font-weight:700;color:#0F1E36;">897</span>
     </div>
   </div>`);
+    loadInstagramEmbeds();
 
 addTipMessage('<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="showLinksPage()">← Back to Links</button><button class="suggestion-btn" onclick="resetToWelcome()">🏠 Home</button></div>');
 }
