@@ -36,24 +36,30 @@
   [headers.values]
     Cache-Control = "no-cache"
 
-[functions."auto-notify-articles"]
-  schedule = "*/30 * * * *"
+# PAUSED 2026-09-25 (Chrome spam warning) — remove the # on the next 2 lines to switch back on
+# [functions."auto-notify-articles"]
+#  schedule = "*/30 * * * *"
 
-[functions."auto-notify-events"]
-  schedule = "*/30 * * * *"
+# PAUSED 2026-09-25 (Chrome spam warning) — remove the # on the next 2 lines to switch back on
+# [functions."auto-notify-events"]
+#  schedule = "*/30 * * * *"
 
-[functions."auto-notify-motivation"]
-  schedule = "0 10 * * *"
+# PAUSED 2026-09-25 (Chrome spam warning) — remove the # on the next 2 lines to switch back on
+# [functions."auto-notify-motivation"]
+#  schedule = "0 10 * * *"
 
-[functions."auto-notify-tips"]
-  schedule = "0 15 * * *"
+# PAUSED 2026-09-25 (Chrome spam warning) — remove the # on the next 2 lines to switch back on
+# [functions."auto-notify-tips"]
+#  schedule = "0 15 * * *"
 
-[functions."auto-notify-prayer"]
-  schedule = "5 6 * * *"
+# PAUSED 2026-09-25 (Chrome spam warning) — remove the # on the next 2 lines to switch back on
+# [functions."auto-notify-prayer"]
+#  schedule = "5 6 * * *"
 
 [functions."sync-directory"]
   schedule = "0 */2 * * *"
 
 
-[functions."auto-notify-news"]
-  schedule = "0 8 * * *"
+# PAUSED 2026-09-25 (Chrome spam warning) — remove the # on the next 2 lines to switch back on
+# [functions."auto-notify-news"]
+#  schedule = "0 8 * * *"
