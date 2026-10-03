@@ -127,6 +127,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <a href="https://www.instagram.com/lush_byliz/" target="_blank" rel="noopener"><img class="ga-img" src="https://naijabiz.b-cdn.net/Group%20Advert/WhatsApp%20Image%202026-10-03%20at%2018.27.59.jpeg" alt="Group advert for @lush_byliz" loading="lazy"></a>
         <a href="https://www.instagram.com/lush_byliz/" target="_blank" rel="noopener" class="ga-btn">📸 View on Instagram</a>
       </div>
+      <div class="ga-card">
+        <a href="https://www.instagram.com/mamaki_sauces/" target="_blank" rel="noopener"><img class="ga-img" src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2014%2C%202026%2C%2007_36_13%20PM.png" alt="Group advert for @mamaki_sauces" loading="lazy"></a>
+        <a href="https://www.instagram.com/mamaki_sauces/" target="_blank" rel="noopener" class="ga-btn">📸 View on Instagram</a>
+      </div>
     </div>
   </div>
 
@@ -371,6 +375,20 @@ function tobi_imgZoom(src) {
   overlay.appendChild(img);
   document.body.appendChild(overlay);
 }
+</script>
+
+<script>
+// Group Advert: show the businesses in a new random order on every visit/refresh
+(function(){
+  var grid = document.querySelector('#group-advert .ga-grid');
+  if (!grid) return;
+  var cards = Array.prototype.slice.call(grid.children);
+  for (var i = cards.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = cards[i]; cards[i] = cards[j]; cards[j] = t;
+  }
+  cards.forEach(function(c){ grid.appendChild(c); });
+})();
 </script>
 </body>
 </html>
