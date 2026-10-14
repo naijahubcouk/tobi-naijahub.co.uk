@@ -4599,7 +4599,7 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
     'Safety': 'https://www.gov.uk/report-crime-anonymously',
   };
   const tipCategory = typeof tip === 'object' ? tip.category : null;
-  const resolvedSourceUrl = tipSourceUrl || (tipCategory && categorySourceUrls2[tipCategory]) || 'https://www.gov.uk';
+  const resolvedSourceUrl = sourceUrl || (typeof tip === 'object' && (tip.sourceUrl || tip.url)) || (tipCategory && categorySourceUrls2[tipCategory]) || 'https://www.gov.uk';
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
     <div style="background:#057A44;padding:8px 14px;display:flex;align-items:center;gap:8px;">
       <span style="font-size:18px;">${actionLabels[actionType] ? actionLabels[actionType].split(' ')[0] : '💡'}</span>

@@ -63,3 +63,36 @@
 # PAUSED 2026-09-25 (Chrome spam warning) — remove the # on the next 2 lines to switch back on
 # [functions."auto-notify-news"]
 #  schedule = "0 8 * * *"
+
+# ── App deep links ──
+# Send these addresses to the app (index.html) so it can open the right screen.
+# Real files (e.g. a business page under /biz/) are still served first.
+[[redirects]]
+  from = "/blog/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/biz/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/links"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/news"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/events"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/content-tools"
+  to = "/index.html"
+  status = 200
