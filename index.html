@@ -1920,8 +1920,426 @@ function getLiveDirectory() {
 }
 
 // Helper to get live blog posts
+// Built-in copy of the blog articles (from the blog export). Used when the live feed fails,
+// and merged with the live feed so newly published posts show even if the feed is behind.
+const TOBI_BUILTIN_NEWS = [
+    {
+      emoji: "✈️",
+      title: "Travelling to Nigeria This Christmas? Check These 3 UK eVisa Details Before You Fly!",
+      summary: "Travelling from the UK to Nigeria this Christmas? Check your UK eVisa, passport details and immigration status before flying to avoid return travel problems.",
+      url: "https://auntietobi.com/blog/Travelling-to-Nigeria-This-Christmas-Check-These-3-UK-eVisa-Details-Before-You-Fly!",
+      label: "Travel",
+      date: "14 Oct 2026"
+    },
+    {
+      emoji: "📸",
+      title: "Looking for Nigerian Photographers in the UK? Discover These 10 Photography Businesses",
+      summary: "Looking for a photographer in the UK? Discover 10 photography businesses featured by Auntie Tobi, with portfolio examples covering portraits, maternity, fashion, celebrations and more.",
+      url: "https://auntietobi.com/blog/Looking-for-Nigerian-Photographers-in-the-UK-Discover-These-10-Photography-Businesses",
+      label: "Business",
+      date: "13 Oct 2026"
+    },
+    {
+      emoji: "⛽💷",
+      title: "Did You Know? You Can Now Compare Petrol and Diesel Prices on Google Maps in the UK!",
+      summary: "Learn how to compare petrol and diesel prices on Google Maps in the UK, find cheaper nearby filling stations and save money with Fuel Finder.",
+      url: "https://auntietobi.com/blog/Did-You-Know-You-Can-Now-Compare-Petrol-and-Diesel-Prices-on-Google-Maps-in-the-UK!",
+      label: "Did You Know",
+      date: "13 Oct 2026"
+    },
+    {
+      emoji: "💡",
+      title: "Stopped by the Police in the UK? Know These Basic Rights 👀🇬🇧",
+      summary: "Stopped by the police in England or Wales? Learn your basic rights when questioned, searched or stopped while driving, and when you must provide information.",
+      url: "https://auntietobi.com/blog/Stopped-by-the-Police-in-the-UK-Know-These-Basic-Rights",
+      label: "Lifestyle",
+      date: "13 Sep 2026"
+    },
+    {
+      emoji: "💡",
+      title: "UK Emergency Numbers Explained: When to Call 999, 111, 101 and 105",
+      summary: "Confused about UK emergency numbers? Learn when to call 999, NHS 111, police 101 and power-cut number 105 with this simple UK guide.",
+      url: "https://auntietobi.com/blog/UK-Emergency-Numbers-Explained:-When-to-Call-999-111-101-and-105",
+      label: "Lifestyle",
+      date: "6 Sep 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Skilled Worker Change: Recognised Modern-Slavery Victims Will Be Allowed to Work for Any Employer",
+      summary: "From 8 October 2026, eligible Skilled Workers recognised as modern-slavery victims can work for any employer. Learn who qualifies and how the new UK rule works.",
+      url: "https://auntietobi.com/blog/Skilled-Worker-Change:-Recognised-Modern-Slavery-Victims-Will-Be-Allowed-to-Work-for-Any-Employer",
+      label: "News",
+      date: "6 Sep 2026"
+    },
+    {
+      emoji: "🚨",
+      title: "UK Households Are Being Encouraged to Prepare for Emergencies — Here's What to Keep at Home",
+      summary: "UK households are encouraged to keep basic emergency supplies at home in case essential services are disrupted. Here's what the government recommends.",
+      url: "https://auntietobi.com/blog/UK-Households-Are-Being-Encouraged-to-Prepare-for-Emergencies-Here%27s-What-to-Keep-at-Home",
+      label: "Family",
+      date: "30 Aug 2026"
+    },
+    {
+      emoji: "💷",
+      title: "Energy Price Cap Rises 4% From October 2026: What UK Households Need to Know",
+      summary: "The UK energy price cap rises 4% from October 2026. Find out what the new cap means for household energy bills and how the changes could affect you.",
+      url: "https://auntietobi.com/blog/Energy-Price-Cap-Rises-4percent-From-October-2026:-What-UK-Households-Need-to-Know",
+      label: "Money",
+      date: "28 Aug 2026"
+    },
+    {
+      emoji: "🏠",
+      title: "How Council Tax Works in the UK: A Simple Guide for Nigerianns",
+      summary: "Understand how Council Tax works in the UK, including bands, payments, discounts, student exemptions and what Nigerians need to know when renting or moving home.",
+      url: "https://auntietobi.com/blog/How-Council-Tax-Works-in-the-UK:-A-Simple-Guide-for-Nigerianns",
+      label: "Housing",
+      date: "26 Aug 2026"
+    },
+    {
+      emoji: "🤔",
+      title: "Did You Know There Is a Bridge in Leeds Named After a Nigerian? 🇳🇬",
+      summary: "Discover the story of David Oluwale, the Nigerian man whose life and legacy are remembered by a bridge over the River Aire in Leeds.",
+      url: "https://auntietobi.com/blog/Did-You-Know-There-Is-a-Bridge-in-Leeds-Named-After-a-Nigerian",
+      label: "Did You Know",
+      date: "22 Aug 2026"
+    },
+    {
+      emoji: "💷",
+      title: "Your UK Payslip Explained: A Simple Guide for Nigerians Working in the UK",
+      summary: "Understand your UK payslip with this simple guide for Nigerians. Learn about tax codes, PAYE, National Insurance, pensions, deductions and take-home pay.",
+      url: "https://auntietobi.com/blog/Your-UK-Payslip-Explained:-A-Simple-Guide-for-Nigerians-Working-in-the-UK",
+      label: "Money",
+      date: "22 Aug 2026"
+    },
+    {
+      emoji: "🏥",
+      title: "How the NHS Works: A Beginner’s Guide for Nigerians in the UK",
+      summary: "New to the UK? Learn how the NHS works, including registering with a GP, NHS 111, 999, A&E, prescriptions, dentists, pharmacies and when you may need to pay.",
+      url: "https://auntietobi.com/blog/How-the-NHS-Works:-A-Beginner%27s-Guide-for-Nigerians-in-the-UK",
+      label: "Health",
+      date: "20 Aug 2026"
+    },
+    {
+      emoji: "🎓",
+      title: "How the UK School System Works: A Guide for Nigerian Parents",
+      summary: "New to the UK with children? Understand the school system in England, including Reception, primary and secondary school, year groups, admissions, GCSEs, sixth form, attendance, free school meals and SEND support.",
+      url: "https://auntietobi.com/blog/How-the-UK-School-System-Works:-A-Guide-for-Nigerian-Parents",
+      label: "Education",
+      date: "20 Aug 2026"
+    },
+    {
+      emoji: "💷",
+      title: "How to Build Your Credit Score in the UK From Scratch",
+      summary: "New to the UK with little or no credit history? Learn practical ways to build your UK credit history from scratch, improve your creditworthiness and avoid common mistakes.",
+      url: "https://auntietobi.com/blog/How-to-Build-Your-Credit-Score-in-the-UK-From-Scratch",
+      label: "Money",
+      date: "19 Aug 2026"
+    },
+    {
+      emoji: "📰",
+      title: "UK Salmonella Outbreak Linked to Eggs: What You Need to Know",
+      summary: "A UK Salmonella Enteritidis outbreak has affected more than 200 people, with eggs a key focus of the investigation. Here’s what families need to know.",
+      url: "https://auntietobi.com/blog/UK-Salmonella-Outbreak-Linked-to-Eggs:-What-You-Need-to-Know",
+      label: "News",
+      date: "19 Aug 2026"
+    },
+    {
+      emoji: "💡",
+      title: "New to the UK? 30 Things Every Nigerian Should Know About Living in the UK",
+      summary: "New to the UK from Nigeria? Discover 30 important things every Nigerian should know about UK life, including NHS, work, housing, money, transport, schools, bills and everyday life.",
+      url: "https://auntietobi.com/blog/New-to-the-UK-30-Things-Every-Nigerian-Should-Know-About-Living-in-the-UK",
+      label: "Lifestyle",
+      date: "18 Aug 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Have a Medical Condition? DVLA Has Changed How You Can Report It Online",
+      summary: "DVLA has expanded its online medical service for UK drivers. Check around 1,600 conditions, report qualifying conditions online and potentially save up to 10 days compared with applying by post.",
+      url: "https://auntietobi.com/blog/Have-a-Medical-Condition-DVLA-Has-Changed-How-You-Can-Report-It-Online",
+      label: "News",
+      date: "18 Aug 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Disabled Bus Passes to Offer 24/7 Free Travel Across England From April 2027",
+      summary: "Disabled Bus Pass Holders to Get Free Bus Travel Any Time of Day Across England From April 2027",
+      url: "https://auntietobi.com/blog/Disabled-Bus-Passes-to-Offer-247-Free-Travel-Across-England-From-April-2027",
+      label: "News",
+      date: "18 Aug 2026"
+    },
+    {
+      emoji: "🏠",
+      title: "Cheapest Places to Rent in the UK in 2026: Best Cities for Nigerians Looking to Save Money",
+      summary: "Discover the cheapest places to rent in the UK in 2026. See the most affordable cities, average rental costs, and Auntie Tobi's money-saving tips for Nigerians living in the UK",
+      url: "https://auntietobi.com/blog/Cheapest-Places-to-Rent-in-the-UK-in-2026:-Best-Cities-for-Nigerians-Looking-to-Save-Money",
+      label: "Housing",
+      date: "5 Aug 2026"
+    },
+    {
+      emoji: "📰",
+      title: "UK Set for Fourth Heatwave Next Week: What Nigerians in the UK Need to Know",
+      summary: "Another UK heatwave could arrive next week, with temperatures reaching 30°C in some areas. Find out what Nigerians in the UK should know, how to stay safe.",
+      url: "https://auntietobi.com/blog/UK-Set-for-Fourth-Heatwave-Next-Week:-What-Nigerians-in-the-UK-Need-to-Know",
+      label: "News",
+      date: "25 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Could You Be Fined £1,000 for Using a Hosepipe? Here's What Nigerians in the UK Need to Know",
+      summary: "Learn how UK hosepipe bans work, whether water meter customers are affected, and what the rules mean for Nigerians living in the UK.",
+      url: "https://auntietobi.com/blog/Could-You-Be-Fined-pound1000-for-Using-a-Hosepipe-Here%27s-What-Nigerians-in-the-UK-Need-to-Know",
+      label: "News",
+      date: "25 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Bus Fares Across England to Be Capped at £2: What Nigerians in the UK Need to Know",
+      summary: "The UK government has announced plans to cap many single bus fares across England at £2 from January 2027. Here is what it could mean for Nigerians, families, workers and students across England.",
+      url: "https://auntietobi.com/blog/Bus-Fares-Across-England-to-Be-Capped-at-pound2:-What-Nigerians-in-the-UK-Need-to-Know",
+      label: "News",
+      date: "22 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "UK Energy Bills to Fall as Government Announces VAT Cut from October 2026",
+      summary: "The UK government has announced a VAT cut on household electricity bills from October 2026. Find out what it means for Nigerians living in the UK and how much you could save.",
+      url: "https://auntietobi.com/blog/UK-Energy-Bills-to-Fall-as-Government-Announces-VAT-Cut-from-October-2026",
+      label: "News",
+      date: "21 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Andy Burnham Becomes UK Prime Minister: What Nigerians in the UK Need to Know",
+      summary: "Andy Burnham is the UK's new Prime Minister. Find out what this means for Nigerians in the UK, including immigration, jobs, and the latest government updates.",
+      url: "https://auntietobi.com/blog/Andy-Burnham-Becomes-UK-Prime-Minister:-What-Nigerians-in-the-UK-Need-to-Know",
+      label: "News",
+      date: "20 Jul 2026"
+    },
+    {
+      emoji: "💷",
+      title: "20 Places Where Kids Eat FREE or for £1 During the UK Summer Holidays 2026",
+      summary: "Looking to save money this summer? Discover over 20 UK restaurants, cafés and supermarkets where kids eat FREE or for just £1 during the 2026 school holidays. Perfect for families across the UK.",
+      url: "https://auntietobi.com/blog/20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026",
+      label: "Money",
+      date: "19 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "UK Immigration Rules Updated (HC 259): What Nigerians in the UK Need to Know",
+      summary: "The UK Home Office has published new Immigration Rules under HC 259. Find out what has changed, who is affected, and what Nigerians in the UK need to know.",
+      url: "https://auntietobi.com/blog/UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know",
+      label: "News",
+      date: "19 Jul 2026"
+    },
+    {
+      emoji: "💷",
+      title: "UK-Based Nigerians Earning £2,600 Are Worse Off Than Someone on ₦60,000 in Nigeria? Here's What Was Said",
+      summary: "Daniel Bwala says some UK-based Nigerians earning £2,600 a month may be worse off than someone earning ₦60,000 in Nigeria. Here's what he said, why it has sparked debate, and the reality of living in the UK.",
+      url: "https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said",
+      label: "Money",
+      date: "18 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries",
+      summary: "Nigerians travelling to the UK must obtain entry clearance before travel. Here's what the latest UK guidance means and who is affected.",
+      url: "https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries",
+      label: "News",
+      date: "18 Jul 2026"
+    },
+    {
+      emoji: "💷",
+      title: "Do You Really Need a TV Licence in the UK? Here's the Simple Rule Every Nigerian Should Know",
+      summary: "Learn who needs a UK TV Licence, who doesn't, how TV Licensing checks compliance, and what happens if you own a TV but don't watch live television or BBC iPlayer.",
+      url: "https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know",
+      label: "Money",
+      date: "15 Jul 2026"
+    },
+    {
+      emoji: "🎓",
+      title: "Free Government-Funded Courses in England: Boost Your Career Without Paying Tuition",
+      summary: "Discover how eligible adults in England, including many Nigerians, can access free government-funded courses. Learn who qualifies, what you can study, and how to apply.",
+      url: "https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition",
+      label: "Money",
+      date: "13 Jul 2026"
+    },
+    {
+      emoji: "🏡",
+      title: "Metro Bank's New 100% Mortgage: Should You Jump at It?",
+      summary: "Metro Bank's 100% mortgage explained: Learn how no-deposit mortgages work, the benefits, risks, and what first-time buyers in the UK should consider before applying.",
+      url: "https://auntietobi.com/blog/Metro-Bank%27s-New-100percent-Mortgage:-Should-You-Jump-at-It",
+      label: "Housing",
+      date: "13 Jul 2026"
+    },
+    {
+      emoji: "💼",
+      title: "10 Common Mistakes Nigerians Make When Starting a Business in the UK (And How to Avoid Them)",
+      summary: "Learn the 10 most common mistakes Nigerians make when starting a business in the UK and discover practical tips to avoid them. Build your business with confidence and set yourself up for long-term success with Auntie Tobi.",
+      url: "https://auntietobi.com/blog/10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)",
+      label: "Business",
+      date: "9 Jul 2026"
+    },
+    {
+      emoji: "🥣",
+      title: "FREE Breakfast at Morrisons This Summer: Families in the UK Can Save Money During School Holidays",
+      summary: "Discover how Nigerian families in the UK can enjoy free breakfast at Morrisons this summer. Learn about the Kellogg’s Breakfast Club offer and save money during school holidays.",
+      url: "https://auntietobi.com/blog/FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays",
+      label: "Money",
+      date: "8 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "UK Government Considers Faster Settlement for Migrants Who Make an 'Exceptional Contribution'",
+      summary: "UK ministers are considering a faster settlement route for migrants who make an exceptional contribution. Find out what the proposed changes could mean for Nigerians living in the UK",
+      url: "https://auntietobi.com/blog/UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-%27Exceptional-Contribution%27",
+      label: "News",
+      date: "8 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Nigerians in the UK Can Now Renew Their Nigerian Passport Contactlessly: Here's How",
+      summary: "Learn how Nigerians in the UK can renew their Nigerian passport using the NIS Contactless Passport Application System with this step-by-step guide.",
+      url: "https://auntietobi.com/blog/Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Here%27s-How",
+      label: "News",
+      date: "8 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Nigel Farage Resigns as MP, Triggering a By-Election – What It Means for the UK",
+      summary: "Nigel Farage steps down as Clacton MP, sparking a by-election. Find out what this means for UK politics and Nigerians in the UK.",
+      url: "https://auntietobi.com/blog/Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK",
+      label: "News",
+      date: "7 Jul 2026"
+    },
+    {
+      emoji: "🏡",
+      title: "10 Smart Ways to Reduce Your Household Bills This Summer in the UK",
+      summary: "Discover 10 practical ways Nigerians in the UK can reduce electricity, water, and household bills this summer while staying comfortable during the warmer months.",
+      url: "https://auntietobi.com/blog/10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK",
+      label: "Money",
+      date: "5 Jul 2026"
+    },
+    {
+      emoji: "🌡️",
+      title: "UK Weather Update: Another Heatwave Could Push Temperatures Above 30°C This Week",
+      summary: "Another UK heatwave is on the way, with temperatures expected to exceed 30°C in parts of England",
+      url: "https://auntietobi.com/blog/UK-Weather-Update:-Another-Heatwave-Could-Push-Temperatures-Above-30C-This-Week",
+      label: "News",
+      date: "4 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Over 1.34 Million Nigerian Visa Applications Refused Since 2005",
+      summary: "Over 1.34M Nigerian visa applications refused since 2005. Explore approval trends and key tips to improve your UK visa application success rate.",
+      url: "https://auntietobi.com/blog/Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005",
+      label: "News",
+      date: "3 Jul 2026"
+    },
+    {
+      emoji: "📰",
+      title: "UK Immigration Update: House of Lords Challenges Proposed ILR Changes",
+      summary: "The House of Lords has challenged the UK's proposed ILR changes. Find out what this means for Nigerians and migrants living in the UK.",
+      url: "https://auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes",
+      label: "News",
+      date: "26 Jun 2026"
+    },
+    {
+      emoji: "🍼",
+      title: "Aldi Freezes Baby Formula Price Until End of 2026",
+      summary: "Aldi has frozen the price of its Mamia First Infant Milk at £6.99 until the end of 2026, helping UK families save on baby essentials. Find out what this means for Nigerian parents in the UK and how much you could save. 👶🇬🇧💷",
+      url: "https://auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026",
+      label: "Money",
+      date: "23 Jun 2026"
+    },
+    {
+      emoji: "💷",
+      title: "What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money",
+      summary: "",
+      url: "https://auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money",
+      label: "Money",
+      date: "23 Jun 2026"
+    },
+    {
+      emoji: "📰",
+      title: "UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C This We",
+      summary: "The UK has issued a rare Red Heat Warning as temperatures could reach 40°C this week. Find out how the heatwave may affect travel, schools, health, and daily life.",
+      url: "https://auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We",
+      label: "News",
+      date: "23 Jun 2026"
+    },
+    {
+      emoji: "🏠",
+      title: "No Huge Savings? How to Buy Your First UK Home with Just a £5,000 Deposit!",
+      summary: "Trapped in the rent cycle? Discover how first-time buyers can skip massive deposit goals and secure a home with a flat minimum deposit of just £5,000 using the Lloyds Bank £5k Deposit Mortgage scheme.",
+      url: "https://auntietobi.com/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!",
+      label: "Housing",
+      date: "22 Jun 2026"
+    },
+    {
+      emoji: "📰",
+      title: "Prime Minister Keir Starmer Announces Resignation",
+      summary: "Less than two years after his historic landslide victory, Sir Keir Starmer has announced his resignation as UK Prime Minister and Labour leader following intense internal party pressure",
+      url: "https://auntietobi.com/blog/Prime-Minister-Keir-Starmer-Announces-Resignation",
+      label: "News",
+      date: "22 Jun 2026"
+    },
+    {
+      emoji: "🚌",
+      title: "FREE BUS TRAVEL FOR CHILDREN IN AUGUST 2026",
+      summary: "Good news for families 👨‍👩‍👧‍👦 The UK Government has announced that children aged 5–15 will travel free on buses across England in August 2026.",
+      url: "https://auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026",
+      label: "News",
+      date: "21 Jun 2026"
+    },
+    {
+      emoji: "🏠",
+      title: "Did You Know? UK Landlords Must Protect Tenant Deposits or Risk Legal Action",
+      summary: "Is your UK rental deposit safe? Landlords have exactly 30 days to protect it or face legal penalties of up to 3x the amount.",
+      url: "https://auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action",
+      label: "Housing",
+      date: "13 Jun 2026"
+    },
+    {
+      emoji: "🍲",
+      title: "Best Nigerian Restaurants in London (Ranked 2026 Guide)",
+      summary: "Discover the best Nigerian restaurants in London, ranked by quality, authenticity, and dining experience. From Michelin-starred fine dining spots to beloved street food favourites, this guide highlights where to enjoy rich jollof rice, suya, egusi soup, and more across the city’s top Nigerian eateries.",
+      url: "https://auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)",
+      label: "Food",
+      date: "31 May 2026"
+    }
+  ];
+
+function tobiNewsKey(x) {
+  var u = String((x && x.url) || '');
+  var slug = u.indexOf('/blog/') > -1 ? u.split('/blog/')[1] : '';
+  try { slug = decodeURIComponent(slug); } catch (e) {}
+  slug = slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+  var t = String((x && x.title) || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return { slug: slug, title: t };
+}
+function tobiBuiltinAsPosts() {
+  var M = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  return TOBI_BUILTIN_NEWS.map(function(n) {
+    var p = (n.date || '').split(' ');
+    var d = new Date(Date.UTC(parseInt(p[2],10), M[p[1]] || 0, parseInt(p[0],10) || 1, 9));
+    var slug = n.url && n.url.indexOf('/blog/') > -1 ? n.url.split('/blog/')[1] : '';
+    return Object.assign({}, n, {
+      pubDate: isNaN(d) ? '' : d.toISOString(),
+      slug: slug,
+      appUrl: slug ? 'https://auntietobi.co.uk/blog/' + slug : 'https://auntietobi.co.uk',
+      _builtin: true
+    });
+  });
+}
+
 function getLiveBlogPosts() {
-  return window._liveBlogPosts || null;
+  var live = window._liveBlogPosts || [];
+  var builtin = tobiBuiltinAsPosts();
+  if (!live.length) return builtin.length ? builtin : null;
+  var seenSlug = {}, seenTitle = {};
+  live.forEach(function(x){ var k = tobiNewsKey(x); if (k.slug) seenSlug[k.slug] = 1; if (k.title) seenTitle[k.title] = 1; });
+  var extra = builtin.filter(function(x){ var k = tobiNewsKey(x); return !(k.slug && seenSlug[k.slug]) && !(k.title && seenTitle[k.title]); });
+  return live.concat(extra);
 }
 
 // Load feeds in background on startup — called from window.onload after all variables are defined
@@ -3323,8 +3741,6 @@ function showMoreSheet() {
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
   var items = [
-    {ico:'💚', label:'Join Our Business Club', fn: function(){ overlay.remove(); window.open('https://auntietobi.co.uk/business-club','_blank'); }, color:'#057A44', bg:'#e8f5ee', border:'#057A44'},
-    {ico:'📣', label:'Group Advertising', fn: function(){ overlay.remove(); window.open('https://auntietobi.co.uk/group-advertising','_blank'); }, color:'#B45309', bg:'#FFFBEB', border:'#FFB81C'},
     {ico:'💼', label:'Jobs', fn: function(){ resetAndShowJobs(); }},
     {ico:'👥', label:'Telegram Group', fn: function(){ overlay.remove(); window.open('https://t.me/auntietobi_uk','_blank'); }},
     {ico:'🚗', label:'Driving Theory', fn: function(){ clearExamState();quickAsk('Help me prepare for my UK driving theory test'); }},
@@ -3478,7 +3894,7 @@ function showAllNews() {
         label: (item.label || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
         emoji: (!item.emoji || item.emoji === '📰') ? getNewsEmoji((item.label || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim()) : item.emoji,
       }));
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    filtered.sort((a, b) => (new Date(b.pubDate || b.date) || 0) - (new Date(a.pubDate || a.date) || 0));
     const messages = document.getElementById('messages');
     messages.innerHTML = '';
     window._allNewsData = filtered;
@@ -3489,392 +3905,7 @@ function showAllNews() {
   }
 
   // Hardcoded fallback
-  const news = [
-    {
-      emoji: "✈️",
-      title: "Travelling to Nigeria This Christmas? Check These 3 UK eVisa Details Before You Fly!",
-      summary: "Travelling from the UK to Nigeria this Christmas? Check your UK eVisa, passport details and immigration status before flying to avoid return travel problems.",
-      url: "https://auntietobi.com/blog/Travelling-to-Nigeria-This-Christmas-Check-These-3-UK-eVisa-Details-Before-You-Fly!",
-      label: "Travel",
-      date: "14 Oct 2026"
-    },
-    {
-      emoji: "📸",
-      title: "Looking for Nigerian Photographers in the UK? Discover These 10 Photography Businesses",
-      summary: "Looking for a photographer in the UK? Discover 10 photography businesses featured by Auntie Tobi, with portfolio examples covering portraits, maternity, fashion, celebrations and more.",
-      url: "https://auntietobi.com/blog/Looking-for-Nigerian-Photographers-in-the-UK-Discover-These-10-Photography-Businesses",
-      label: "Business",
-      date: "13 Oct 2026"
-    },
-    {
-      emoji: "⛽💷",
-      title: "Did You Know? You Can Now Compare Petrol and Diesel Prices on Google Maps in the UK!",
-      summary: "Learn how to compare petrol and diesel prices on Google Maps in the UK, find cheaper nearby filling stations and save money with Fuel Finder.",
-      url: "https://auntietobi.com/blog/Did-You-Know-You-Can-Now-Compare-Petrol-and-Diesel-Prices-on-Google-Maps-in-the-UK!",
-      label: "Did You Know",
-      date: "13 Oct 2026"
-    },
-    {
-      emoji: "💡",
-      title: "Stopped by the Police in the UK? Know These Basic Rights 👀🇬🇧",
-      summary: "Stopped by the police in England or Wales? Learn your basic rights when questioned, searched or stopped while driving, and when you must provide information.",
-      url: "https://auntietobi.com/blog/Stopped-by-the-Police-in-the-UK-Know-These-Basic-Rights",
-      label: "Lifestyle",
-      date: "13 Sep 2026"
-    },
-    {
-      emoji: "💡",
-      title: "UK Emergency Numbers Explained: When to Call 999, 111, 101 and 105",
-      summary: "Confused about UK emergency numbers? Learn when to call 999, NHS 111, police 101 and power-cut number 105 with this simple UK guide.",
-      url: "https://auntietobi.com/blog/UK-Emergency-Numbers-Explained:-When-to-Call-999-111-101-and-105",
-      label: "Lifestyle",
-      date: "6 Sep 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Skilled Worker Change: Recognised Modern-Slavery Victims Will Be Allowed to Work for Any Employer",
-      summary: "From 8 October 2026, eligible Skilled Workers recognised as modern-slavery victims can work for any employer. Learn who qualifies and how the new UK rule works.",
-      url: "https://auntietobi.com/blog/Skilled-Worker-Change:-Recognised-Modern-Slavery-Victims-Will-Be-Allowed-to-Work-for-Any-Employer",
-      label: "News",
-      date: "6 Sep 2026"
-    },
-    {
-      emoji: "🚨",
-      title: "UK Households Are Being Encouraged to Prepare for Emergencies — Here's What to Keep at Home",
-      summary: "UK households are encouraged to keep basic emergency supplies at home in case essential services are disrupted. Here's what the government recommends.",
-      url: "https://auntietobi.com/blog/UK-Households-Are-Being-Encouraged-to-Prepare-for-Emergencies-Here%27s-What-to-Keep-at-Home",
-      label: "Family",
-      date: "30 Aug 2026"
-    },
-    {
-      emoji: "💷",
-      title: "Energy Price Cap Rises 4% From October 2026: What UK Households Need to Know",
-      summary: "The UK energy price cap rises 4% from October 2026. Find out what the new cap means for household energy bills and how the changes could affect you.",
-      url: "https://auntietobi.com/blog/Energy-Price-Cap-Rises-4percent-From-October-2026:-What-UK-Households-Need-to-Know",
-      label: "Money",
-      date: "28 Aug 2026"
-    },
-    {
-      emoji: "🏠",
-      title: "How Council Tax Works in the UK: A Simple Guide for Nigerianns",
-      summary: "Understand how Council Tax works in the UK, including bands, payments, discounts, student exemptions and what Nigerians need to know when renting or moving home.",
-      url: "https://auntietobi.com/blog/How-Council-Tax-Works-in-the-UK:-A-Simple-Guide-for-Nigerianns",
-      label: "Housing",
-      date: "26 Aug 2026"
-    },
-    {
-      emoji: "🤔",
-      title: "Did You Know There Is a Bridge in Leeds Named After a Nigerian? 🇳🇬",
-      summary: "Discover the story of David Oluwale, the Nigerian man whose life and legacy are remembered by a bridge over the River Aire in Leeds.",
-      url: "https://auntietobi.com/blog/Did-You-Know-There-Is-a-Bridge-in-Leeds-Named-After-a-Nigerian",
-      label: "Did You Know",
-      date: "22 Aug 2026"
-    },
-    {
-      emoji: "💷",
-      title: "Your UK Payslip Explained: A Simple Guide for Nigerians Working in the UK",
-      summary: "Understand your UK payslip with this simple guide for Nigerians. Learn about tax codes, PAYE, National Insurance, pensions, deductions and take-home pay.",
-      url: "https://auntietobi.com/blog/Your-UK-Payslip-Explained:-A-Simple-Guide-for-Nigerians-Working-in-the-UK",
-      label: "Money",
-      date: "22 Aug 2026"
-    },
-    {
-      emoji: "🏥",
-      title: "How the NHS Works: A Beginner’s Guide for Nigerians in the UK",
-      summary: "New to the UK? Learn how the NHS works, including registering with a GP, NHS 111, 999, A&E, prescriptions, dentists, pharmacies and when you may need to pay.",
-      url: "https://auntietobi.com/blog/How-the-NHS-Works:-A-Beginner%27s-Guide-for-Nigerians-in-the-UK",
-      label: "Health",
-      date: "20 Aug 2026"
-    },
-    {
-      emoji: "🎓",
-      title: "How the UK School System Works: A Guide for Nigerian Parents",
-      summary: "New to the UK with children? Understand the school system in England, including Reception, primary and secondary school, year groups, admissions, GCSEs, sixth form, attendance, free school meals and SEND support.",
-      url: "https://auntietobi.com/blog/How-the-UK-School-System-Works:-A-Guide-for-Nigerian-Parents",
-      label: "Education",
-      date: "20 Aug 2026"
-    },
-    {
-      emoji: "💷",
-      title: "How to Build Your Credit Score in the UK From Scratch",
-      summary: "New to the UK with little or no credit history? Learn practical ways to build your UK credit history from scratch, improve your creditworthiness and avoid common mistakes.",
-      url: "https://auntietobi.com/blog/How-to-Build-Your-Credit-Score-in-the-UK-From-Scratch",
-      label: "Money",
-      date: "19 Aug 2026"
-    },
-    {
-      emoji: "📰",
-      title: "UK Salmonella Outbreak Linked to Eggs: What You Need to Know",
-      summary: "A UK Salmonella Enteritidis outbreak has affected more than 200 people, with eggs a key focus of the investigation. Here’s what families need to know.",
-      url: "https://auntietobi.com/blog/UK-Salmonella-Outbreak-Linked-to-Eggs:-What-You-Need-to-Know",
-      label: "News",
-      date: "19 Aug 2026"
-    },
-    {
-      emoji: "💡",
-      title: "New to the UK? 30 Things Every Nigerian Should Know About Living in the UK",
-      summary: "New to the UK from Nigeria? Discover 30 important things every Nigerian should know about UK life, including NHS, work, housing, money, transport, schools, bills and everyday life.",
-      url: "https://auntietobi.com/blog/New-to-the-UK-30-Things-Every-Nigerian-Should-Know-About-Living-in-the-UK",
-      label: "Lifestyle",
-      date: "18 Aug 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Have a Medical Condition? DVLA Has Changed How You Can Report It Online",
-      summary: "DVLA has expanded its online medical service for UK drivers. Check around 1,600 conditions, report qualifying conditions online and potentially save up to 10 days compared with applying by post.",
-      url: "https://auntietobi.com/blog/Have-a-Medical-Condition-DVLA-Has-Changed-How-You-Can-Report-It-Online",
-      label: "News",
-      date: "18 Aug 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Disabled Bus Passes to Offer 24/7 Free Travel Across England From April 2027",
-      summary: "Disabled Bus Pass Holders to Get Free Bus Travel Any Time of Day Across England From April 2027",
-      url: "https://auntietobi.com/blog/Disabled-Bus-Passes-to-Offer-247-Free-Travel-Across-England-From-April-2027",
-      label: "News",
-      date: "18 Aug 2026"
-    },
-    {
-      emoji: "🏠",
-      title: "Cheapest Places to Rent in the UK in 2026: Best Cities for Nigerians Looking to Save Money",
-      summary: "Discover the cheapest places to rent in the UK in 2026. See the most affordable cities, average rental costs, and Auntie Tobi's money-saving tips for Nigerians living in the UK",
-      url: "https://auntietobi.com/blog/Cheapest-Places-to-Rent-in-the-UK-in-2026:-Best-Cities-for-Nigerians-Looking-to-Save-Money",
-      label: "Housing",
-      date: "5 Aug 2026"
-    },
-    {
-      emoji: "📰",
-      title: "UK Set for Fourth Heatwave Next Week: What Nigerians in the UK Need to Know",
-      summary: "Another UK heatwave could arrive next week, with temperatures reaching 30°C in some areas. Find out what Nigerians in the UK should know, how to stay safe.",
-      url: "https://auntietobi.com/blog/UK-Set-for-Fourth-Heatwave-Next-Week:-What-Nigerians-in-the-UK-Need-to-Know",
-      label: "News",
-      date: "25 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Could You Be Fined £1,000 for Using a Hosepipe? Here's What Nigerians in the UK Need to Know",
-      summary: "Learn how UK hosepipe bans work, whether water meter customers are affected, and what the rules mean for Nigerians living in the UK.",
-      url: "https://auntietobi.com/blog/Could-You-Be-Fined-pound1000-for-Using-a-Hosepipe-Here%27s-What-Nigerians-in-the-UK-Need-to-Know",
-      label: "News",
-      date: "25 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Bus Fares Across England to Be Capped at £2: What Nigerians in the UK Need to Know",
-      summary: "The UK government has announced plans to cap many single bus fares across England at £2 from January 2027. Here is what it could mean for Nigerians, families, workers and students across England.",
-      url: "https://auntietobi.com/blog/Bus-Fares-Across-England-to-Be-Capped-at-pound2:-What-Nigerians-in-the-UK-Need-to-Know",
-      label: "News",
-      date: "22 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "UK Energy Bills to Fall as Government Announces VAT Cut from October 2026",
-      summary: "The UK government has announced a VAT cut on household electricity bills from October 2026. Find out what it means for Nigerians living in the UK and how much you could save.",
-      url: "https://auntietobi.com/blog/UK-Energy-Bills-to-Fall-as-Government-Announces-VAT-Cut-from-October-2026",
-      label: "News",
-      date: "21 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Andy Burnham Becomes UK Prime Minister: What Nigerians in the UK Need to Know",
-      summary: "Andy Burnham is the UK's new Prime Minister. Find out what this means for Nigerians in the UK, including immigration, jobs, and the latest government updates.",
-      url: "https://auntietobi.com/blog/Andy-Burnham-Becomes-UK-Prime-Minister:-What-Nigerians-in-the-UK-Need-to-Know",
-      label: "News",
-      date: "20 Jul 2026"
-    },
-    {
-      emoji: "💷",
-      title: "20 Places Where Kids Eat FREE or for £1 During the UK Summer Holidays 2026",
-      summary: "Looking to save money this summer? Discover over 20 UK restaurants, cafés and supermarkets where kids eat FREE or for just £1 during the 2026 school holidays. Perfect for families across the UK.",
-      url: "https://auntietobi.com/blog/20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026",
-      label: "Money",
-      date: "19 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "UK Immigration Rules Updated (HC 259): What Nigerians in the UK Need to Know",
-      summary: "The UK Home Office has published new Immigration Rules under HC 259. Find out what has changed, who is affected, and what Nigerians in the UK need to know.",
-      url: "https://auntietobi.com/blog/UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know",
-      label: "News",
-      date: "19 Jul 2026"
-    },
-    {
-      emoji: "💷",
-      title: "UK-Based Nigerians Earning £2,600 Are Worse Off Than Someone on ₦60,000 in Nigeria? Here's What Was Said",
-      summary: "Daniel Bwala says some UK-based Nigerians earning £2,600 a month may be worse off than someone earning ₦60,000 in Nigeria. Here's what he said, why it has sparked debate, and the reality of living in the UK.",
-      url: "https://auntietobi.com/blog/UK-Based-Nigerians-Earning-pound2600-Are-Worse-Off-Than-Someone-on-naira60000-in-Nigeria-Here%27s-What-Was-Said",
-      label: "Money",
-      date: "18 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "UK Confirms Entry Clearance Requirement for Nigerians and 32 Other African Countries",
-      summary: "Nigerians travelling to the UK must obtain entry clearance before travel. Here's what the latest UK guidance means and who is affected.",
-      url: "https://auntietobi.com/blog/UK-Confirms-Entry-Clearance-Requirement-for-Nigerians-and-32-Other-African-Countries",
-      label: "News",
-      date: "18 Jul 2026"
-    },
-    {
-      emoji: "💷",
-      title: "Do You Really Need a TV Licence in the UK? Here's the Simple Rule Every Nigerian Should Know",
-      summary: "Learn who needs a UK TV Licence, who doesn't, how TV Licensing checks compliance, and what happens if you own a TV but don't watch live television or BBC iPlayer.",
-      url: "https://auntietobi.com/blog/Do-You-Really-Need-a-TV-Licence-in-the-UK-Here%27s-the-Simple-Rule-Every-Nigerian-Should-Know",
-      label: "Money",
-      date: "15 Jul 2026"
-    },
-    {
-      emoji: "🎓",
-      title: "Free Government-Funded Courses in England: Boost Your Career Without Paying Tuition",
-      summary: "Discover how eligible adults in England, including many Nigerians, can access free government-funded courses. Learn who qualifies, what you can study, and how to apply.",
-      url: "https://auntietobi.com/blog/Free-Government-Funded-Courses-in-England:-Boost-Your-Career-Without-Paying-Tuition",
-      label: "Money",
-      date: "13 Jul 2026"
-    },
-    {
-      emoji: "🏡",
-      title: "Metro Bank's New 100% Mortgage: Should You Jump at It?",
-      summary: "Metro Bank's 100% mortgage explained: Learn how no-deposit mortgages work, the benefits, risks, and what first-time buyers in the UK should consider before applying.",
-      url: "https://auntietobi.com/blog/Metro-Bank%27s-New-100percent-Mortgage:-Should-You-Jump-at-It",
-      label: "Housing",
-      date: "13 Jul 2026"
-    },
-    {
-      emoji: "💼",
-      title: "10 Common Mistakes Nigerians Make When Starting a Business in the UK (And How to Avoid Them)",
-      summary: "Learn the 10 most common mistakes Nigerians make when starting a business in the UK and discover practical tips to avoid them. Build your business with confidence and set yourself up for long-term success with Auntie Tobi.",
-      url: "https://auntietobi.com/blog/10-Common-Mistakes-Nigerians-Make-When-Starting-a-Business-in-the-UK-(And-How-to-Avoid-Them)",
-      label: "Business",
-      date: "9 Jul 2026"
-    },
-    {
-      emoji: "🥣",
-      title: "FREE Breakfast at Morrisons This Summer: Families in the UK Can Save Money During School Holidays",
-      summary: "Discover how Nigerian families in the UK can enjoy free breakfast at Morrisons this summer. Learn about the Kellogg’s Breakfast Club offer and save money during school holidays.",
-      url: "https://auntietobi.com/blog/FREE-Breakfast-at-Morrisons-This-Summer:-Families-in-the-UK-Can-Save-Money-During-School-Holidays",
-      label: "Money",
-      date: "8 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "UK Government Considers Faster Settlement for Migrants Who Make an 'Exceptional Contribution'",
-      summary: "UK ministers are considering a faster settlement route for migrants who make an exceptional contribution. Find out what the proposed changes could mean for Nigerians living in the UK",
-      url: "https://auntietobi.com/blog/UK-Government-Considers-Faster-Settlement-for-Migrants-Who-Make-an-%27Exceptional-Contribution%27",
-      label: "News",
-      date: "8 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Nigerians in the UK Can Now Renew Their Nigerian Passport Contactlessly: Here's How",
-      summary: "Learn how Nigerians in the UK can renew their Nigerian passport using the NIS Contactless Passport Application System with this step-by-step guide.",
-      url: "https://auntietobi.com/blog/Nigerians-in-the-UK-Can-Now-Renew-Their-Nigerian-Passport-Contactlessly:-Here%27s-How",
-      label: "News",
-      date: "8 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Nigel Farage Resigns as MP, Triggering a By-Election – What It Means for the UK",
-      summary: "Nigel Farage steps down as Clacton MP, sparking a by-election. Find out what this means for UK politics and Nigerians in the UK.",
-      url: "https://auntietobi.com/blog/Nigel-Farage-Resigns-as-MP-Triggering-a-By-Election-What-It-Means-for-the-UK",
-      label: "News",
-      date: "7 Jul 2026"
-    },
-    {
-      emoji: "🏡",
-      title: "10 Smart Ways to Reduce Your Household Bills This Summer in the UK",
-      summary: "Discover 10 practical ways Nigerians in the UK can reduce electricity, water, and household bills this summer while staying comfortable during the warmer months.",
-      url: "https://auntietobi.com/blog/10-Smart-Ways-to-Reduce-Your-Household-Bills-This-Summer-in-the-UK",
-      label: "Money",
-      date: "5 Jul 2026"
-    },
-    {
-      emoji: "🌡️",
-      title: "UK Weather Update: Another Heatwave Could Push Temperatures Above 30°C This Week",
-      summary: "Another UK heatwave is on the way, with temperatures expected to exceed 30°C in parts of England",
-      url: "https://auntietobi.com/blog/UK-Weather-Update:-Another-Heatwave-Could-Push-Temperatures-Above-30C-This-Week",
-      label: "News",
-      date: "4 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Over 1.34 Million Nigerian Visa Applications Refused Since 2005",
-      summary: "Over 1.34M Nigerian visa applications refused since 2005. Explore approval trends and key tips to improve your UK visa application success rate.",
-      url: "https://auntietobi.com/blog/Over-1.34-Million-Nigerian-Visa-Applications-Refused-Since-2005",
-      label: "News",
-      date: "3 Jul 2026"
-    },
-    {
-      emoji: "📰",
-      title: "UK Immigration Update: House of Lords Challenges Proposed ILR Changes",
-      summary: "The House of Lords has challenged the UK's proposed ILR changes. Find out what this means for Nigerians and migrants living in the UK.",
-      url: "https://auntietobi.com/blog/UK-Immigration-Update:-House-of-Lords-Challenges-Proposed-ILR-Changes",
-      label: "News",
-      date: "26 Jun 2026"
-    },
-    {
-      emoji: "🍼",
-      title: "Aldi Freezes Baby Formula Price Until End of 2026",
-      summary: "Aldi has frozen the price of its Mamia First Infant Milk at £6.99 until the end of 2026, helping UK families save on baby essentials. Find out what this means for Nigerian parents in the UK and how much you could save. 👶🇬🇧💷",
-      url: "https://auntietobi.com/blog/Aldi-Freezes-Baby-Formula-Price-Until-End-of-2026",
-      label: "Money",
-      date: "23 Jun 2026"
-    },
-    {
-      emoji: "💷",
-      title: "What Andy Burnham as UK Prime Minister Could Mean for Taxes, Bills and Your Money",
-      summary: "",
-      url: "https://auntietobi.com/blog/What-Andy-Burnham-as-UK-Prime-Minister-Could-Mean-for-Taxes-Bills-and-Your-Money",
-      label: "Money",
-      date: "23 Jun 2026"
-    },
-    {
-      emoji: "📰",
-      title: "UK Issues Rare Red Heat Warning as Temperatures Could Reach 40°C This We",
-      summary: "The UK has issued a rare Red Heat Warning as temperatures could reach 40°C this week. Find out how the heatwave may affect travel, schools, health, and daily life.",
-      url: "https://auntietobi.com/blog/UK-Issues-Rare-Red-Heat-Warning-as-Temperatures-Could-Reach-40C-This-We",
-      label: "News",
-      date: "23 Jun 2026"
-    },
-    {
-      emoji: "🏠",
-      title: "No Huge Savings? How to Buy Your First UK Home with Just a £5,000 Deposit!",
-      summary: "Trapped in the rent cycle? Discover how first-time buyers can skip massive deposit goals and secure a home with a flat minimum deposit of just £5,000 using the Lloyds Bank £5k Deposit Mortgage scheme.",
-      url: "https://auntietobi.com/blog/No-Huge-Savings-How-to-Buy-Your-First-UK-Home-with-Just-a-pound5000-Deposit!",
-      label: "Housing",
-      date: "22 Jun 2026"
-    },
-    {
-      emoji: "📰",
-      title: "Prime Minister Keir Starmer Announces Resignation",
-      summary: "Less than two years after his historic landslide victory, Sir Keir Starmer has announced his resignation as UK Prime Minister and Labour leader following intense internal party pressure",
-      url: "https://auntietobi.com/blog/Prime-Minister-Keir-Starmer-Announces-Resignation",
-      label: "News",
-      date: "22 Jun 2026"
-    },
-    {
-      emoji: "🚌",
-      title: "FREE BUS TRAVEL FOR CHILDREN IN AUGUST 2026",
-      summary: "Good news for families 👨‍👩‍👧‍👦 The UK Government has announced that children aged 5–15 will travel free on buses across England in August 2026.",
-      url: "https://auntietobi.com/blog/FREE-BUS-TRAVEL-FOR-CHILDREN-IN-AUGUST-2026",
-      label: "News",
-      date: "21 Jun 2026"
-    },
-    {
-      emoji: "🏠",
-      title: "Did You Know? UK Landlords Must Protect Tenant Deposits or Risk Legal Action",
-      summary: "Is your UK rental deposit safe? Landlords have exactly 30 days to protect it or face legal penalties of up to 3x the amount.",
-      url: "https://auntietobi.com/blog/Did-You-Know-UK-Landlords-Must-Protect-Tenant-Deposits-or-Risk-Legal-Action",
-      label: "Housing",
-      date: "13 Jun 2026"
-    },
-    {
-      emoji: "🍲",
-      title: "Best Nigerian Restaurants in London (Ranked 2026 Guide)",
-      summary: "Discover the best Nigerian restaurants in London, ranked by quality, authenticity, and dining experience. From Michelin-starred fine dining spots to beloved street food favourites, this guide highlights where to enjoy rich jollof rice, suya, egusi soup, and more across the city’s top Nigerian eateries.",
-      url: "https://auntietobi.com/blog/Best-Nigerian-Restaurants-in-London-(Ranked-2026-Guide)",
-      label: "Food",
-      date: "31 May 2026"
-    }
-  ];
+  const news = TOBI_BUILTIN_NEWS.slice();
 
   // Filter out Events — they go in the Events section
   const filtered = news.filter(item => item.label !== 'Events');
@@ -4992,12 +5023,6 @@ function showLinksPage() {
       <span style="color:#ccc;">&#8250;</span>
     </a>
 
-    <a href="https://auntietobi.co.uk/marketplace#group-advert" target="_blank" style="display:flex;align-items:center;gap:12px;background:#FFB81C;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #0F1E36;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">&#128227;</span>
-      <span style="flex:1;text-align:left;">Group Advert &mdash; Businesses Featured<span style="display:block;font-size:11px;color:#3d2c00;font-weight:400;margin-top:2px;">See the businesses from our latest Group Advert</span></span>
-      <span style="color:#0F1E36;font-size:18px;">&#8250;</span>
-    </a>
-
     <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
       <div style="position:relative;background:#0F1E36;">
         <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Event</div>
@@ -5038,16 +5063,6 @@ function showLinksPage() {
       <div id="links-mp-viewport" style="overflow:hidden;width:100%;"></div>
       <div id="links-mp-dots" style="display:flex;justify-content:center;gap:6px;padding:8px 14px;"></div>
     </div>
-    <a href="https://auntietobi.co.uk/business-club" target="_blank" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#057A44 0%,#04603a 100%);color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">&#128154;</span>
-      <span style="flex:1;text-align:left;">Join Our Business Club<span style="display:block;font-size:11px;color:rgba(255,255,255,0.75);font-weight:400;margin-top:2px;">Resources, visibility &amp; support &mdash; from &pound;50/year</span></span>
-      <span style="color:#FFB81C;font-size:18px;">&#8250;</span>
-    </a>
-    <a href="https://auntietobi.co.uk/group-advertising" target="_blank" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0F1E36 0%,#1a2f4a 100%);color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #FFB81C;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">&#128227;</span>
-      <span style="flex:1;text-align:left;">Group Instagram Advertisement<span style="display:block;font-size:11px;color:rgba(255,255,255,0.65);font-weight:400;margin-top:2px;">Click to learn more &mdash; affordable ads for Nigerian businesses</span></span>
-      <span style="color:#FFB81C;font-size:18px;">&#8250;</span>
-    </a>
     <a href="javascript:void(0)" onclick="showInstallGuide();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);text-decoration:none;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);">
       <div style="width:52px;height:52px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:28px;">&#129302;</div>
       <div style="flex:1;">
@@ -5225,7 +5240,7 @@ function showWelcomeCard() {
   // Add suggestion bubbles
   const suggStr = getRandomSuggestionStr();
   const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-  const fixedBtns = '<button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/business-club\',\'_blank\')" style="background:#057A44;color:white;border-color:#057A44;">💚 Join Our Business Club</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
   const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">${rotatingBtns}${fixedBtns}</div>`);
 }
@@ -8765,7 +8780,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/business-club\',\'_blank\')" style="background:#057A44;color:white;border-color:#057A44;">💚 Join Our Business Club</button><button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/group-advertising\',\'_blank\')" style="background:#FFB81C;color:#0F1E36;border-color:#FFB81C;">📣 Group Advertising</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
@@ -8781,7 +8796,7 @@ function resetToWelcome() {
         const m = document.getElementById('messages');
         if (m && m.innerHTML.trim() === '') {
           addTipMessage('<div style="padding:12px;font-size:14px;color:#555;text-align:center;">👋🏾 Welcome back! What can Auntie Tobi help you with today? 😊</div>');
-          const fallbackBtns = '<button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/business-club\',\'_blank\')" style="background:#057A44;color:white;border-color:#057A44;">💚 Join Our Business Club</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+          const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
           addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fallbackBtns}</div>`);
         }
       }, 500);
@@ -8793,7 +8808,7 @@ function resetToWelcome() {
       if (m) {
         m.innerHTML = '';
         addTipMessage('<div style="padding:12px;font-size:14px;color:#555;text-align:center;">👋🏾 Welcome back! What can Auntie Tobi help you with today? 😊</div>');
-        const fallbackBtns = '<button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/business-club\',\'_blank\')" style="background:#057A44;color:white;border-color:#057A44;">💚 Join Our Business Club</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+        const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
         addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fallbackBtns}</div>`);
       }
     }
