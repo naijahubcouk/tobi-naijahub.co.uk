@@ -3445,7 +3445,7 @@ function showAllNews() {
       .map(item => ({
         ...item,
         label: (item.label || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
-        emoji: item.emoji === '📰' ? getNewsEmoji(item.label) : item.emoji,
+        emoji: (!item.emoji || item.emoji === '📰') ? getNewsEmoji((item.label || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim()) : item.emoji,
       }));
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
     const messages = document.getElementById('messages');
@@ -8278,14 +8278,30 @@ function shareBiz(slug) {
   }
 }
 
-function showNewsArchive() {
-  const posts = getLiveBlogPosts() || [];
-  const nonEvents = posts.filter(p => {
-    const label = (p.label||'').toLowerCase();
-    return label !== 'events' && label !== 'event';
+// Cleans a feed post for the news archive: strips CDATA from labels, adds an emoji,
+// and works out its year-month from any date format the feed uses.
+function tobiNewsPost(p) {
+  var label = String(p.label || 'News').replace(/<!\[CDATA\[|\]\]>/g, '').trim() || 'News';
+  var d = p.pubDate ? new Date(p.pubDate) : (p.date ? new Date(p.date) : null);
+  if (d && isNaN(d)) d = null;
+  var ym = d ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') : '';
+  return Object.assign({}, p, {
+    label: label,
+    emoji: (p.emoji && p.emoji !== '📰') ? p.emoji : (typeof getNewsEmoji === 'function' ? getNewsEmoji(label) : '📰'),
+    _ym: ym,
+    _time: d ? d.getTime() : 0
   });
+}
+function tobiNewsPosts() {
+  return (getLiveBlogPosts() || []).map(tobiNewsPost).filter(function(p){
+    var l = p.label.toLowerCase(); return l !== 'events' && l !== 'event';
+  });
+}
+var TOBI_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-  // Build category counts
+function showNewsArchive() {
+  const nonEvents = tobiNewsPosts();
+  if (!nonEvents.length) return;
   const catEmojis = {
     'News':'📰','Events':'🎉','Money':'💷','Housing':'🏠','Lifestyle':'💡',
     'Health':'🏥','Education':'🎓','Business':'💼','Family':'👨‍👩‍👧','Food':'🍲',
@@ -8294,38 +8310,30 @@ function showNewsArchive() {
   const catCounts = {};
   const monthCounts = {};
   nonEvents.forEach(p => {
-    if (!p.pubDate) return;
-    const label = p.label || 'News';
-    catCounts[label] = (catCounts[label]||0) + 1;
-    const m = p.pubDate.substring(0,7);
-    monthCounts[m] = (monthCounts[m]||0) + 1;
+    catCounts[p.label] = (catCounts[p.label]||0) + 1;
+    if (p._ym) monthCounts[p._ym] = (monthCounts[p._ym]||0) + 1;
   });
 
-  // Categories sorted by count
   const cats = Object.entries(catCounts).sort((a,b) => b[1]-a[1]);
   const catHtml = cats.map(([label, count]) => {
     const emoji = catEmojis[label] || '📄';
-    return `<div onclick="showNewsByCategory('${label}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:0.5px solid #f0f0f0;border-right:0.5px solid #f0f0f0;cursor:pointer;">
-      <div style="display:flex;align-items:center;gap:8px;">
+    return `<div class="tobi-arch-cat" data-cat="${encodeURIComponent(label)}" role="button" tabindex="0" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:0.5px solid #f0f0f0;border-right:0.5px solid #f0f0f0;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;">
         <span style="font-size:18px;width:24px;text-align:center;">${emoji}</span>
         <span style="font-size:13px;font-weight:700;color:#0F1E36;">${label}</span>
       </div>
       <span style="font-size:11px;color:white;background:#057A44;border-radius:20px;padding:1px 7px;font-weight:700;">${count}</span>
     </div>`;
   });
-
-  // Make grid of 2 columns
   const catGrid = `<div style="display:grid;grid-template-columns:1fr 1fr;">${catHtml.join('')}</div>`;
 
-  // Archive by month sorted newest first
   const months = Object.entries(monthCounts).sort((a,b) => b[0].localeCompare(a[0]));
-  const maxCount = Math.max(...months.map(m=>m[1]));
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const maxCount = Math.max(1, ...months.map(m=>m[1]));
   const monthHtml = months.map(([ym, count]) => {
     const [y,m] = ym.split('-');
-    const name = monthNames[parseInt(m)-1] + ' ' + y;
+    const name = TOBI_MONTHS[parseInt(m,10)-1] + ' ' + y;
     const pct = Math.round((count/maxCount)*100);
-    return `<div onclick="showNewsByMonth('${ym}')" style="padding:10px 14px;border-bottom:0.5px solid #f0f0f0;cursor:pointer;">
+    return `<div class="tobi-arch-month" data-ym="${ym}" role="button" tabindex="0" style="padding:10px 14px;border-bottom:0.5px solid #f0f0f0;cursor:pointer;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <span style="font-size:13px;font-weight:700;color:#0F1E36;">${name}</span>
         <span style="font-size:11px;color:white;background:#057A44;border-radius:20px;padding:1px 7px;font-weight:700;">${count}</span>
@@ -8334,7 +8342,7 @@ function showNewsArchive() {
     </div>`;
   });
 
-  const html = `<div style="display:flex;flex-direction:column;gap:12px;">
+  const html = `<div id="tobi-news-archive" style="display:flex;flex-direction:column;gap:12px;">
     <div style="background:white;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;">
       <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:16px;">📂</span>
@@ -8342,48 +8350,58 @@ function showNewsArchive() {
       </div>
       ${catGrid}
     </div>
-    <div style="background:white;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;">
+    ${months.length ? `<div style="background:white;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;">
       <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:16px;">🗂️</span>
         <span style="color:white;font-size:13px;font-weight:700;">Archive</span>
       </div>
       <div>${monthHtml.join('')}</div>
-    </div>
+    </div>` : ''}
   </div>`;
 
   addTipMessage(html);
 }
 
-function showNewsByCategory(label) {
-  const posts = getLiveBlogPosts() || [];
-  const filtered = posts.filter(p => {
-    const l = (p.label||'News').toLowerCase();
-    return (p.label||'News') === label && l !== 'events' && l !== 'event';
-  }).sort((a,b) => (b.pubDate||'').localeCompare(a.pubDate||''));
-  if (!filtered.length) return;
+// One listener handles taps on any category or month (works with any label text)
+document.addEventListener('click', function(e) {
+  var c = e.target.closest && e.target.closest('.tobi-arch-cat');
+  if (c) { showNewsByCategory(decodeURIComponent(c.getAttribute('data-cat'))); return; }
+  var m = e.target.closest && e.target.closest('.tobi-arch-month');
+  if (m) showNewsByMonth(m.getAttribute('data-ym'));
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var el = e.target.closest && e.target.closest('.tobi-arch-cat,.tobi-arch-month');
+  if (el) { e.preventDefault(); el.click(); }
+});
+
+function tobiShowFilteredNews(title, list) {
   const msgs = document.getElementById('messages');
   msgs.innerHTML = '';
   scrollToTop();
-  window._allNewsData = filtered;
-  window._allNewsShownCount = 0;
-  window._renderAllNewsBatch(0);
+  addTipMessage(`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+    <div style="font-size:15px;font-weight:700;color:#0F1E36;">${title} <span style="font-size:12px;color:#6B7280;font-weight:600;">· ${list.length} article${list.length===1?'':'s'}</span></div>
+    <button class="suggestion-btn" onclick="showAllNews()" style="flex-shrink:0;">← All news</button>
+  </div>`);
+  if (!list.length) {
+    addTipMessage('<div style="font-size:14px;color:#555;padding:10px;">No articles here yet — check back soon! 💚</div>');
+  } else {
+    window._allNewsData = list;
+    window._allNewsShownCount = 0;
+    window._renderAllNewsBatch(0);
+  }
   setTimeout(showNewsArchive, 100);
 }
 
+function showNewsByCategory(label) {
+  const list = tobiNewsPosts().filter(p => p.label === label).sort((a,b) => b._time - a._time);
+  tobiShowFilteredNews('📂 ' + label, list);
+}
+
 function showNewsByMonth(ym) {
-  const posts = getLiveBlogPosts() || [];
-  const filtered = posts.filter(p => {
-    const l = (p.label||'').toLowerCase();
-    return p.pubDate && p.pubDate.startsWith(ym) && l !== 'events' && l !== 'event';
-  }).sort((a,b) => (b.pubDate||'').localeCompare(a.pubDate||''));
-  if (!filtered.length) return;
-  const msgs = document.getElementById('messages');
-  msgs.innerHTML = '';
-  scrollToTop();
-  window._allNewsData = filtered;
-  window._allNewsShownCount = 0;
-  window._renderAllNewsBatch(0);
-  setTimeout(showNewsArchive, 100);
+  const list = tobiNewsPosts().filter(p => p._ym === ym).sort((a,b) => b._time - a._time);
+  const [y,m] = (ym||'').split('-');
+  tobiShowFilteredNews('🗂️ ' + (TOBI_MONTHS[parseInt(m,10)-1] || '') + ' ' + (y||''), list);
 }
 </script>
 <!-- Feedback Form Modal -->
