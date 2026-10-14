@@ -2734,11 +2734,11 @@ function addTipMessage(html) {
   const sugMatch = content.match(/\[SUGGESTIONS:(.*?)\]/s);
   let suggestionsHtml = '';
   if (sugMatch) {
-    let suggestions = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean);
+    let suggestions = sugMatch[1].split('|').map(s => s.trim()).filter(Boolean).filter(s => !(/near me|nearby|around me|close to me/i.test(s) && tobiIsBusinessSearch(s)));
     // Remove ALL [SUGGESTIONS:...] blocks from content
     content = content.replace(/\[SUGGESTIONS:.*?\]/gs, '').trim();
     // Pad to minimum 3 suggestions
-    const defaults = ['Find a Nigerian business near me', 'What events are coming up?', 'Ask me anything 💚'];
+    const defaults = ['How do I find a job in the UK?', 'What events are coming up?', 'Ask me anything 💚'];
     while (suggestions.length < 3) suggestions.push(defaults[suggestions.length]);
     suggestionsHtml = `<div class="suggestions" style="margin-top:8px;">${suggestions.map(s => {
       if (s.includes('See all businesses') || s.includes('Browse all businesses')) {
@@ -2796,6 +2796,26 @@ function removeTyping() {
   if (t) t.remove();
 }
 
+function tobiIsBusinessSearch(t){
+  var s=String(t||'').toLowerCase();
+  var BIZ=/\b(business(es)?|shops?|stores?|restaurants?|caterers?|catering|chefs?|nigerian food|african food|food (shops?|stores?|delivery|vendors?)|grocer(y|ies)|suya|cakes?|bakers?|bakery|hair ?(stylists?|dressers?|salons?)|hairstylists?|braid(s|ers?|ing)?|wigs?|stylists?|barbers?|make-?up( artists?)?|mua|photographers?|photography|videographers?|tailors?|seamstress(es)?|aso[- ]?oke|ankara|jewell?ery|djs?|event planners?|decorators?|printing|printers?|lawyers?|solicitors?|accountants?|cleaners?|tutors?|nail (techs?|salons?)|lashes|beauty salons?|salons?|plumbers?|electricians?|mechanics?|driving instructors?|removals?|cargo|shipping|logistics|venues?|vendors?)\b/;
+  var INTENT=/\b(find|near me|nearby|around me|close to me|looking for|recommend|where can i (get|find|buy)|who (sells|does|can)|any good|need an?|i want an?|best|show me|list of|search|in (london|manchester|birmingham|leeds|glasgow|liverpool|sheffield|bristol|nottingham|leicester|coventry|cardiff|edinburgh|essex|kent|luton|reading|milton keynes|newcastle|bradford|southampton))\b/;
+  var EXCLUDE=/\b(start|starting|register|registering|open|opening|set ?up|grow|growing|list|listing|promote|advertis\w*|market|run|close|my) (a |my |the |our )?business|business (club|visa|account|plan|loan|grant|insurance|rates|name|tax)|self[- ]employ|food bank|business club|group advert/;
+  return BIZ.test(s) && INTENT.test(s) && !EXCLUDE.test(s);
+}
+
+// Business searches go straight to the All Businesses page (with category and city filters)
+function tobiOpenAllBusinesses() {
+  showBusinesses(undefined, null, null, true);
+  var m = document.getElementById('messages');
+  if (m) {
+    var note = document.createElement('div');
+    note.className = 'msg bot';
+    note.innerHTML = '<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:10px 12px;font-size:13px;color:#0F1E36;line-height:1.5;">🏢 Here are the Nigerian businesses on Auntie Tobi. Scroll down and pick a <b>category</b> or <b>city</b> to find what you need 💚</div>';
+    m.insertBefore(note, m.firstChild);
+  }
+}
+
 async function sendMessage(text) {
   const input = document.getElementById('input');
   const userText = text || input.value.trim();
@@ -2829,6 +2849,16 @@ async function sendMessage(text) {
       // Replace user message with exam context for Claude
       messages[messages.length - 1] = { role: 'user', content: examResult };
     }
+  }
+
+  // Business searches -> All Businesses page with categories
+  if (!examState.active && window._currentPage !== 'businesses' && tobiIsBusinessSearch(userText)) {
+    removeTyping();
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+    if (typeof gtag !== 'undefined') gtag('event', 'business_search', { event_category: 'businesses', event_label: userText.slice(0, 80) });
+    tobiOpenAllBusinesses();
+    return;
   }
 
 
@@ -3248,9 +3278,8 @@ function quickAsk(text) {
     showBusinesses(undefined, window._lastBizCat || null, window._lastBizLoc || null, true);
     return;
   }
-  if (text === 'Find a Nigerian business near me') {
-    const city = userCity || 'near you';
-    sendMessage(`Find a Nigerian business in ${city}`);
+  if (text === 'Find a Nigerian business near me' || tobiIsBusinessSearch(text)) {
+    tobiOpenAllBusinesses();
     return;
   }
   if (text === 'List your business on Auntie Tobi →' || text === 'List your business on Auntie Tobi →' || text === 'List your business on Auntie Tobi') {
@@ -3586,7 +3615,7 @@ window._renderAllNewsBatch = function(from) {
   if (hasMore) {
     const nextFrom = window._allNewsShownCount;
     const moreLabel = isEvents ? '🎉 More Events' : '📰 More News';
-    addTipMessage(`<div id="all-news-more-btn" class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="window._renderAllNewsBatch(${nextFrom})">${moreLabel}</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button></div>`);
+    addTipMessage(`<div id="all-news-more-btn" class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="window._renderAllNewsBatch(${nextFrom})">${moreLabel}</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button></div>`);
   } else {
     const sugg = getRandomSuggestionStr().split('|').map(s => s.trim()).filter(Boolean);
     addTipMessage(`<div class="suggestions" style="margin-top:8px;">${sugg.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('')}</div>`);
@@ -4129,7 +4158,7 @@ function showMoreLiveNews() {
     const moreBtnHtml = hasMore
       ? `<button class="suggestion-btn" onclick="showMoreLiveNews()">📰 More Live News</button>`
       : '';
-    addTipMessage(`<div id="live-news-more-btn" class="suggestions" style="margin-top:4px;">${moreBtnHtml}<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button>${suggBtns}</div>`);
+    addTipMessage(`<div id="live-news-more-btn" class="suggestions" style="margin-top:4px;">${moreBtnHtml}<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button>${suggBtns}</div>`);
   });
 }
 
@@ -4554,7 +4583,7 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
 
   const tipText = typeof tip === 'object' ? tip.tip : tip;
   const bb1 = b1 || (typeof tip === 'object' ? tip.b1 : null) || 'How do I save money in the UK?';
-  const bb2 = b2 || (typeof tip === 'object' ? tip.b2 : null) || 'Find a Nigerian business near me';
+  const bb2 = b2 || (typeof tip === 'object' ? tip.b2 : null) || 'How do I find a job in the UK?';
   const bb3 = b3 || (typeof tip === 'object' ? tip.b3 : null) || 'What benefits am I entitled to?';
 
   const tipTextSafe = formatMsg(tipText);
@@ -4618,7 +4647,7 @@ function showMotivationLanding(quote, b1, b2, b3) {
   }
 
   const bb1 = b1 || 'How do I find a job in the UK?';
-  const bb2 = b2 || 'Find a Nigerian business near me';
+  const bb2 = b2 || 'How do I find a job in the UK?';
   const bb3 = b3 || 'How do I improve my UK credit score?';
 
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
@@ -4667,7 +4696,7 @@ function showPrayerLanding(prayer, b1, b2) {
   }
 
   const bb1 = b1 || 'What Nigerian community events are near me?';
-  const bb2 = b2 || 'Find a Nigerian business near me';
+  const bb2 = b2 || 'How do I find a job in the UK?';
 
   const html = `<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;overflow:hidden;">
     <div style="background:#0F1E36;padding:8px 14px;display:flex;align-items:center;gap:8px;">
@@ -6470,18 +6499,18 @@ document.addEventListener('click', function(e) {
 // Global suggestions generator
 function getRandomSuggestionStr() {
   const allSuggestions = [
-    ['I just arrived in the UK, help me settle', 'Find a Nigerian business near me', 'How do I get my NIN?'],
-    ['Find a Nigerian restaurant near me', 'How do I send money to Nigeria cheaply?', 'How do I get my Nigerian qualifications recognised in the UK?'],
+    ['I just arrived in the UK, help me settle', 'How do I apply for a UK provisional driving licence?', 'How do I get my NIN?'],
+    ['How do I get a National Insurance number?', 'How do I send money to Nigeria cheaply?', 'How do I get my Nigerian qualifications recognised in the UK?'],
     ['How do I register my child for school in the UK?', 'What events are coming up?', 'How do I open a UK bank account?'],
-    ['Find a makeup artist near me', 'How do I start a business in the UK?', 'How do I improve my credit score in the UK?'],
-    ['Find a Nigerian hair stylist near me', 'How do I get my UK driving licence?', 'What are the best cities for Nigerians in the UK?'],
+    ['How do I check my right to work in the UK?', 'How do I start a business in the UK?', 'How do I improve my credit score in the UK?'],
+    ['How do I report a problem with my landlord?', 'How do I get my UK driving licence?', 'What are the best cities for Nigerians in the UK?'],
     ['How do I register with a GP in the UK?', 'Find a Nigerian event this month', 'How do I apply for ILR?'],
-    ['Find Nigerian food near me', 'How do I find a job in the UK?', 'How do I find affordable housing in the UK?'],
-    ['How long can I use my Nigerian license in the UK?', 'Find a makeup artist near me', 'What is the cost of living in the UK?'],
+    ['How do I apply for Universal Credit?', 'How do I find a job in the UK?', 'How do I find affordable housing in the UK?'],
+    ['How long can I use my Nigerian license in the UK?', 'How do I check my right to work in the UK?', 'What is the cost of living in the UK?'],
     ['What benefits am I entitled to in the UK?', 'What do I need to know about UK schools for my children?', 'What is the NHS and how does it work?'],
     ['How do I prepare for the Life in the UK test?', 'Find a Nigerian event near me', 'How do I get a National Insurance number?'],
-    ['How do I rent a house in the UK?', 'What is council tax and how do I pay it?', 'Find a Nigerian photographer near me'],
-    ['How do I prepare for my driving theory test?', 'What Nigerian food shops are near me?', 'How do I bring my family to the UK?'],
+    ['How do I rent a house in the UK?', 'What is council tax and how do I pay it?', 'How do I register to vote in the UK?'],
+    ['How do I prepare for my driving theory test?', 'How do I apply for a British passport?', 'How do I bring my family to the UK?'],
     ['How do I set up a UK bank account?', 'Find a Nigerian event this weekend', 'How do I get a skilled worker visa?']
   ];
   const randomSet = allSuggestions[Math.floor(Math.random() * allSuggestions.length)];
@@ -7778,7 +7807,7 @@ function showEventsCard() {
       addTipMessage(`<div class="suggestions" style="margin-top:8px;">
         <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">📣 Post Your Event</button>
         <button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button>
-        <button class="suggestion-btn" onclick="quickAsk('Find a Nigerian business near me')">🏢 Businesses Near Me</button>
+        
       </div>`);
     }
   };
