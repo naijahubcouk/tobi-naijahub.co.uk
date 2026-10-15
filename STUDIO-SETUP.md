@@ -136,7 +136,7 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 
 ## 7b. Growth features (free — never use the AI allowance)
 
-- **Today** (home page): 3 actions a day (content, sales, visibility) chosen from ready-made templates using the member's business type, products, weekly goal, day of the week and content calendar. Same 3 all day, new ones tomorrow, no repeats from the last 3 days. "Do it" opens the right tool already filled in; creating from it ticks the action off.
+- **Today** (home page): 3 actions a day (content, customers, visibility) **written by AI for each business** from its profile, channels, products, weekly goal and the date. Free for members (not counted); about 0.03p per member per day, shown in Studio spend. Same 3 all day; recreated straight away when the profile or goal changes (ticked-off ones kept). "Show me different actions" up to 3 times a day. If the AI is unavailable, ready-made templates are used instead. "Do it" opens the right tool already filled in; creating from it ticks the action off.
 - **Quick create**: Promote my product, Get engagement, Thank my customers, Announce availability. One tap creates a hook, caption, call to action, hashtags and Story idea (1 generation).
 - **Weekly goal**: more enquiries, more bookings, promote a new product, or get seen. Shapes the daily actions. No results are promised.
 - **Plan**: the 7/30-day planner fills a calendar (one post per day). Each post can be marked To do / Drafted / Posted / Done, and "Create this" turns it into a caption or Reel. New plans keep anything already drafted or posted, and avoid recent topics.

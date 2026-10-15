@@ -233,7 +233,7 @@ details.faq li+li{margin-top:4px}
     { preset: 'thank', label: 'Thank my customers', icon: '<path d="M12 21s-7-4.4-9.3-9A5.3 5.3 0 0112 6a5.3 5.3 0 019.3 6c-2.3 4.6-9.3 9-9.3 9z"/>' },
     { preset: 'announce', label: 'Announce availability', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 15l2 2 4-4"/>' }
   ];
-  var KIND = { content: 'Content', sales: 'Sales', visibility: 'Visibility' };
+  var KIND = { content: 'Content', sales: 'Customers', visibility: 'Visibility' };
   var STATUS_LABELS = { todo: 'To do', drafted: 'Drafted', posted: 'Posted', done: 'Done' };
   var TONE_LABELS = { warm: 'Warm & friendly', professional: 'Professional', vibrant: 'Vibrant', luxury: 'Luxury', bold: 'Bold', cultural: 'Proudly Naija-British' };
   var CTA_IDEAS = ['DM us to order', 'Send us a WhatsApp', 'Tap the link in bio', 'Book your slot today', 'Call us', 'Visit our website'];
@@ -821,7 +821,7 @@ details.faq li+li{margin-top:4px}
       bindHistoryRows(); bindRenew(); return;
     }
     app.innerHTML = '<main><p class="sub">' + greeting() + ' 👋🏾</p><h1>' + esc(name) + '</h1>' +
-      '<p class="sub" style="margin:2px 0 14px">Let’s make progress in your business today.</p><div id="todayBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div>' +
+      '<p class="sub" style="margin:2px 0 14px">Let’s make progress in your business today.</p><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Planning today\u2019s actions for your business\u2026</p></div></div>' +
       '<h2>Quick create</h2>' + quickRow() +
       '<div style="margin-top:18px">' + allowanceCard() + '</div>' +
       '<h2>Recent</h2>' + historyRows(S.history.slice(0, 3)) +
@@ -849,9 +849,15 @@ details.faq li+li{margin-top:4px}
           '<div style="flex:1;min-width:0"><span class="kind ' + esc(a.kind) + '">' + esc(KIND[a.kind] || a.kind) + '</span><b>' + esc(a.title) + '</b><p>' + esc(a.why) + '</p>' +
           (isDone ? '' : '<button class="btn small primary" data-doit="' + esc(a.id) + '">Do it →</button>') + '</div></div>';
       }).join('') + '</div>' +
+      (left ? '<div style="text-align:center;margin-top:8px">' + (r.shufflesLeft > 0 ? '<button class="btn link" id="shuffleBtn">\u21bb Show me different actions</button>' : '<span class="hint">New suggestions tomorrow</span>') + '</div>' : '') +
       (r.checkin && r.checkin.needed ? '<div class="note" style="margin-top:12px;display:flex;align-items:center;gap:10px"><span style="flex:1">⏱️ <b>1-minute check-in:</b> record ' + (r.checkin.date === S.today.day ? 'today’s' : 'yesterday’s') + ' enquiries, bookings and sales.</span><button class="btn small ghost" id="toTrack">Record</button></div>' : '');
     $('#chgGoal').onclick = function () { pickGoal(function () { showHome(); }); };
     var tt = $('#toTrack'); if (tt) tt.onclick = function () { showTrack(r.checkin.date); };
+    var sh = $('#shuffleBtn'); if (sh) sh.onclick = async function () {
+      sh.disabled = true; sh.textContent = 'Thinking of new ideas\u2026';
+      try { S.today = await api('studio-growth', 'today', { shuffle: true }); renderToday(); }
+      catch (x) { toast(x.message); sh.disabled = false; sh.textContent = '\u21bb Show me different actions'; }
+    };
     $$('[data-tick]', box).forEach(function (b) {
       b.onclick = async function () {
         var id = b.dataset.tick, nowDone = (S.today.done || []).indexOf(id) < 0;
@@ -884,7 +890,7 @@ details.faq li+li{margin-top:4px}
     $('#gClose', scrim).onclick = function () { scrim.remove(); };
     $$('[data-goal]', scrim).forEach(function (b) {
       b.onclick = async function () {
-        try { var r = await api('studio-growth', 'goal-set', { goal: b.dataset.goal }); if (S.today) S.today.goal = r.goal; scrim.remove(); toast('Goal set — new actions from tomorrow'); if (after) after(); }
+        try { var r = await api('studio-growth', 'goal-set', { goal: b.dataset.goal }); if (S.today) S.today.goal = r.goal; scrim.remove(); toast('Goal set \u2014 your actions have been updated'); if (after) after(); }
         catch (x) { toast(x.message); }
       };
     });

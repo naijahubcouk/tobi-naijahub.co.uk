@@ -15,6 +15,16 @@
 const core = require('../core');
 const growth = require('../growth');
 const { HttpError, handler } = core;
+const gen = require('../generate');
+
+// AI-written daily actions: free for members; the small cost is added to Studio spend.
+function aiOpts(auth, shuffle) {
+  return {
+    shuffle,
+    ai: (messages, maxTokens) => gen.callModel(messages, maxTokens, auth.settings, { json: true }),
+    track: usage => gen.addGlobal(core.monthKey(), { id: 'daily-actions', tool: 'daily-actions', cost: 0, inTok: usage.inTok, outTok: usage.outTok, costUsd: usage.costUsd }, auth.settings),
+  };
+}
 
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
@@ -26,7 +36,7 @@ exports.handler = handler(async (ctx) => {
     case 'today': {
       const profile = await core.getJson(`profiles/${core.enc(email)}`);
       if (!profile || !profile.businessName) throw new HttpError(409, 'profile_required', 'Please complete your business profile first.');
-      return growth.today(email, profile);
+      return growth.today(email, profile, aiOpts(auth, !!body.shuffle));
     }
     case 'action-done':
       return growth.setActionDone(email, String(body.id || '').slice(0, 80), !!body.done);
