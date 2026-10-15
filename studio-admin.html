@@ -66,7 +66,7 @@ tbody tr:hover{background:#FFFCF5}
 <body>
 <header><div><b>Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="subs">Add-on subscriptions</button>
+  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="subs">AI Power</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button>
 </nav>
 <div id="app"></div>
@@ -130,23 +130,27 @@ tbody tr:hover{background:#FFFCF5}
     var m = o.months.filter(function (x) { return x.month === o.month; })[0] || { count: 0, costUsd: 0, inTok: 0, outTok: 0 };
     var mem = await api('members-list'); S.members = mem.members;
     var active = mem.members.filter(function (x) { return x.membershipActive; }).length;
-    var power = mem.members.filter(function (x) { return x.plan === 'power'; }).length;
+    var pw = mem.members.filter(function (x) { return x.powerActive; });
+    var power = pw.length, yearly = pw.filter(function (x) { return x.addon && x.addon.interval === 'year'; }).length;
+    var revenue = (power - yearly) * 5 + yearly * 50 / 12;
     var c = o.config;
     var issues = [];
     if (c.email === 'missing') issues.push('Email sending is not configured (RESEND_API_KEY) — members can’t get codes.');
     if (/log/.test(c.email)) issues.push('STUDIO_EMAIL_MODE=log is on: codes go to function logs, not email. Testing only — never in production.');
     if (!c.ai) issues.push('No AI key found (OPENROUTER_API_KEY / STUDIO_OPENROUTER_API_KEY).');
-    if (!c.stripe) issues.push('Stripe isn’t fully configured — the AI Power add-on is hidden from members.');
+    if (!c.stripe) issues.push('Stripe isn\u2019t fully configured \u2014 AI Power can\u2019t be bought yet.');
     app.innerHTML = '<main><h1>Overview · ' + esc(o.month) + '</h1>' +
       (issues.length ? '<div class="warn stack" style="margin-bottom:14px">' + issues.map(function (i) { return '<div>⚠️ ' + esc(i) + '</div>'; }).join('') + '</div>' : '') +
       (o.alertCount ? '<div class="warn" style="margin-bottom:14px">You have <b>' + o.alertCount + '</b> alert(s). <button class="btn small ghost" id="toAlerts">View</button></div>' : '') +
       '<div class="grid">' +
-      stat(active, 'Active members') + stat(power, 'AI Power subscribers') + stat(m.count, 'Generations this month') +
-      stat(gbp(m.costUsd || 0), 'Estimated AI cost this month') + stat('£' + (power * 5), 'Add-on revenue / month (gross)') +
-      stat(Math.round(100 * m.count / Math.max(1, o.settings.globalMonthlyGenerationCap)) + '%', 'of monthly safety cap (' + o.settings.globalMonthlyGenerationCap + ')') +
+      stat(active, 'Active Business Club members') + stat(power, 'AI Power subscribers (' + (power - yearly) + ' monthly, ' + yearly + ' yearly)') +
+      stat(m.count || 0, 'Generations this month') + stat(gbp(m.costUsd || 0), 'Estimated AI cost this month') +
+      stat('\u00a3' + revenue.toFixed(2), 'AI Power revenue / month (gross, yearly spread over 12)') +
+      stat('\u00a3' + o.settings.spendWarnGbp, 'Spend warning amount (never blocks)') +
       '</div><h2>Setup</h2><div class="card"><table style="border:0"><tbody>' +
       row('Email codes', c.email) + row('AI model', c.model + (c.ai ? '' : ' (no key)')) + row('Stripe', c.stripe ? 'configured (' + c.stripeMode + ' mode)' : 'not configured') +
-      row('Spending cap', '£' + o.settings.globalMonthlyCostCapGbp + ' / month (Studio pauses new AI requests at this point)') + '</tbody></table></div></main>';
+      row('AI Power plans', (c.stripePlans || []).map(function (i) { return i === 'year' ? 'Yearly \u00a350' : 'Monthly \u00a35'; }).join(', ') || 'none configured') +
+      row('Spend warning', 'Email + alert at \u00a3' + o.settings.spendWarnGbp + ' and \u00a3' + (o.settings.spendWarnGbp * 2) + ' a month. The Studio never stops for spending.') + '</tbody></table></div></main>';
     var ta = $('#toAlerts'); if (ta) ta.onclick = function () { go('alerts'); };
   }
   function stat(v, l) { return '<div class="card stat"><b>' + esc(v) + '</b><span>' + esc(l) + '</span></div>'; }
@@ -154,13 +158,20 @@ tbody tr:hover{background:#FFFCF5}
 
   // ── members ──
   function statusPill(m) {
+    if (m.blocked) return '<span class="pill p-warn">blocked</span>';
+    if (m.status === 'none') return '<span class="muted">not a member</span>';
     if (m.status === 'active' && !m.membershipActive) return '<span class="pill p-expired">expired</span>';
     return '<span class="pill p-' + esc(m.status) + '">' + esc(m.status) + '</span>';
   }
+  function typePill(m) {
+    if (m.blocked) return '<span class="pill p-warn">Blocked</span>';
+    return { both: '<span class="pill p-power">Club + AI Power</span>', ai_power: '<span class="pill p-power">AI Power</span>', club: '<span class="pill p-active">Business Club</span>' }[m.type] ||
+      (m.readOnly ? '<span class="pill p-inactive">Read-only</span>' : '<span class="pill p-inactive">No access</span>');
+  }
   function addonPill(a) {
-    if (!a) return '<span class="muted">—</span>';
+    if (!a) return '<span class="muted">\u2014</span>';
     var cls = ['active', 'trialing'].indexOf(a.status) > -1 ? 'p-power' : ['past_due', 'unpaid', 'incomplete'].indexOf(a.status) > -1 ? 'p-warn' : 'p-inactive';
-    return '<span class="pill ' + cls + '">' + esc(a.status) + (a.cancelAtPeriodEnd ? ' · ending' : '') + '</span>';
+    return '<span class="pill ' + cls + '">' + (a.interval === 'year' ? 'yearly' : 'monthly') + ' \u00b7 ' + esc(a.status) + (a.cancelAtPeriodEnd ? ' \u00b7 ending' : '') + '</span>';
   }
 
   async function vMembers(q) {
@@ -168,18 +179,20 @@ tbody tr:hover{background:#FFFCF5}
     var r = await api('members-list'); S.members = r.members;
     app.innerHTML = '<main><h1>Members</h1><div class="row" style="margin-bottom:12px"><input id="q" placeholder="Search email or name" style="max-width:320px" value="' + esc(q || '') + '">' +
       '<button class="btn primary" id="add">+ Add member</button><button class="btn ghost" id="imp">Bulk add</button></div>' +
-      '<div class="tw"><table><thead><tr><th>Member</th><th>Status</th><th>Expires</th><th>Plan</th><th>This month</th><th>Add-on</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>' +
-      '<p class="muted" style="margin-top:8px">Members get access only when status is <b>active</b> and the expiry date hasn’t passed. Changes apply instantly.</p></main>';
+      '<div class="tw"><table><thead><tr><th>Person</th><th>Access</th><th>Business Club</th><th>AI Power</th><th>Today</th><th>This month</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>' +
+      '<p class="muted" style="margin-top:8px">Access = active Business Club (status active, not expired) <b>or</b> paid AI Power. AI Power-only customers appear here automatically after paying. Changes apply instantly.</p></main>';
     function draw() {
       var s = $('#q').value.toLowerCase();
       var list = S.members.filter(function (m) { return !s || m.email.indexOf(s) > -1 || (m.name || '').toLowerCase().indexOf(s) > -1; });
       $('#tb').innerHTML = list.length ? list.map(function (m) {
-        var pct = m.limit ? Math.min(100, Math.round(100 * m.usage.used / m.limit)) : 0;
-        return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + (m.lastLoginAt ? ' · last signed in ' + d(m.lastLoginAt) : '') + '</div></td><td>' + statusPill(m) + '</td><td>' + d(m.membershipExpiresAt) + '</td>' +
-          '<td>' + (m.plan === 'power' ? '<span class="pill p-power">AI Power</span>' : 'Standard') + (m.allowanceOverride != null ? '<div class="muted">custom limit</div>' : '') + '</td>' +
-          '<td>' + m.usage.used + ' / ' + m.limit + '<div class="bar"><span style="width:' + pct + '%"></span></div><div class="muted">' + gbp(m.usage.costUsd || 0) + '</div></td>' +
-          '<td>' + addonPill(m.addon) + '</td><td><button class="btn small ghost" data-e="' + esc(m.email) + '">Manage</button></td></tr>';
-      }).join('') : '<tr><td colspan="7" class="muted">No members yet. Add your first Business Club member.</td></tr>';
+        var pct = m.limit ? Math.min(100, Math.round(100 * m.today.used / m.limit)) : 0;
+        return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + (m.lastLoginAt ? ' \u00b7 last signed in ' + d(m.lastLoginAt) : '') + '</div></td><td>' + typePill(m) + '</td>' +
+          '<td>' + statusPill(m) + (m.status !== 'none' && m.membershipExpiresAt ? '<div class="muted">to ' + d(m.membershipExpiresAt) + '</div>' : '') + '</td>' +
+          '<td>' + addonPill(m.addon) + '</td>' +
+          '<td>' + m.today.used + ' / ' + m.limit + (m.allowanceOverride != null ? ' <span class="muted">(custom)</span>' : '') + '<div class="bar"><span style="width:' + pct + '%"></span></div></td>' +
+          '<td>' + m.usage.used + ' <span class="muted">gens</span><div class="muted">' + gbp(m.usage.costUsd || 0) + '</div></td>' +
+          '<td><button class="btn small ghost" data-e="' + esc(m.email) + '">Manage</button></td></tr>';
+      }).join('') : '<tr><td colspan="7" class="muted">No one yet. Add your first Business Club member.</td></tr>';
       $$('[data-e]').forEach(function (b) { b.onclick = function () { editMember(b.dataset.e); }; });
     }
     $('#q').oninput = draw; draw();
@@ -197,13 +210,14 @@ tbody tr:hover{background:#FFFCF5}
     var s = sheet('<h2 style="margin:0">' + (email ? 'Manage member' : 'Add member') + '</h2>' +
       '<div><label for="me">Email</label><input id="me" type="email" value="' + esc(m.email) + '"' + (email ? ' disabled' : '') + '></div>' +
       '<div><label for="mn">Name / business</label><input id="mn" value="' + esc(m.name) + '"></div>' +
-      '<div class="f2"><div><label for="ms">Status</label><select id="ms"><option value="active">Active (approved)</option><option value="pending">Pending approval</option><option value="inactive">Inactive</option></select></div>' +
+      '<div class="f2"><div><label for="ms">Status</label><select id="ms"><option value="active">Club member \u2014 active</option><option value="pending">Club member \u2014 pending approval</option><option value="inactive">Club member \u2014 inactive</option><option value="none">Not a Club member</option></select></div>' +
       '<div><label for="mx">Membership expires</label><input id="mx" type="date" value="' + esc(m.membershipExpiresAt || '') + '"></div></div>' +
-      '<div><label for="mo">Custom monthly allowance <span class="muted">(blank = plan default)</span></label><input id="mo" type="number" min="0" max="5000" value="' + (m.allowanceOverride == null ? '' : m.allowanceOverride) + '"></div>' +
+      '<label style="display:flex;gap:8px;align-items:center;font-weight:500"><input id="mb" type="checkbox" style="width:auto"' + (m.blocked ? ' checked' : '') + '> Block account (no access at all, signs out all devices, AI Power stops renewing)</label>' +
+      '<div><label for="mo">Custom daily allowance <span class="muted">(blank = plan default)</span></label><input id="mo" type="number" min="0" max="5000" value="' + (m.allowanceOverride == null ? '' : m.allowanceOverride) + '"></div>' +
       '<div><label for="mt">Private notes</label><textarea id="mt" rows="2">' + esc(m.notes) + '</textarea></div>' +
-      (email ? '<div class="card stack"><b>AI Power add-on</b><div>' + addonPill(m.addon) + (m.addon && m.addon.currentPeriodEnd ? ' <span class="muted">period ends ' + d(m.addon.currentPeriodEnd) + '</span>' : '') + '</div>' +
+      (email ? '<div class="card stack"><b>AI Power</b><div>' + addonPill(m.addon) + (m.addon && m.addon.currentPeriodEnd ? ' <span class="muted">period ends ' + d(m.addon.currentPeriodEnd) + '</span>' : '') + '</div>' +
         (m.stripeCustomerId ? '<div class="muted">Stripe customer: ' + esc(m.stripeCustomerId) + '</div><button class="btn small ghost" id="sync">Re-check with Stripe</button>' : '<div class="muted">No Stripe customer yet.</div>') +
-        '<div class="muted">Deactivating or expiring a member pauses their add-on immediately and stops it renewing.</div></div>' +
+        '<div class="muted">AI Power is separate from Business Club: changing Club status doesn\u2019t affect it. Members switch plan or cancel themselves; refunds are done in Stripe.</div></div>' +
         '<div class="card stack"><b>Usage history</b><div id="uh" class="muted">Loading…</div></div>' : '') +
       '<div class="err hidden" id="merr"></div>' +
       '<div class="row"><button class="btn primary" id="msave">' + (email ? 'Save changes' : 'Add member') + '</button><button class="btn ghost" id="mcancel">Cancel</button>' +
@@ -212,7 +226,7 @@ tbody tr:hover{background:#FFFCF5}
     $('#mcancel', s).onclick = function () { s.remove(); };
     $('#msave', s).onclick = async function () {
       var b = this; b.disabled = true; $('#merr', s).classList.add('hidden');
-      var payload = { email: $('#me', s).value, name: $('#mn', s).value, status: $('#ms', s).value, membershipExpiresAt: $('#mx', s).value, allowanceOverride: $('#mo', s).value === '' ? null : Number($('#mo', s).value), notes: $('#mt', s).value };
+      var payload = { email: $('#me', s).value, name: $('#mn', s).value, status: $('#ms', s).value, membershipExpiresAt: $('#mx', s).value, allowanceOverride: $('#mo', s).value === '' ? null : Number($('#mo', s).value), notes: $('#mt', s).value, blocked: $('#mb', s).checked };
       try { await api(email ? 'member-update' : 'member-add', payload); s.remove(); toast('Saved'); vMembers(); }
       catch (x) { $('#merr', s).textContent = x.message; $('#merr', s).classList.remove('hidden'); b.disabled = false; }
     };
@@ -221,7 +235,7 @@ tbody tr:hover{background:#FFFCF5}
       var sy = $('#sync', s); if (sy) sy.onclick = async function () { try { var r = await api('member-stripe-sync', { email: email }); toast('Add-on: ' + (r.addon ? r.addon.status : 'none')); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       try {
         var u = await api('member-usage', { email: email });
-        $('#uh', s).innerHTML = u.months.length ? u.months.map(function (x) { return esc(x.month) + ': <b>' + x.used + '</b> generations · ' + gbp(x.costUsd || 0); }).join('<br>') : 'No usage yet.';
+        $('#uh', s).innerHTML = 'Today: <b>' + u.today + '</b> used<br>' + (u.months.length ? u.months.map(function (x) { return esc(x.month) + ': <b>' + x.used + '</b> generations · ' + gbp(x.costUsd || 0); }).join('<br>') : 'No usage yet.');
       } catch (x) { $('#uh', s).textContent = x.message; }
     }
   }
@@ -244,11 +258,16 @@ tbody tr:hover{background:#FFFCF5}
     var r = await api('members-list'); S.members = r.members;
     var list = r.members.filter(function (m) { return m.addon; });
     var live = list.filter(function (m) { return ['active', 'trialing'].indexOf(m.addon.status) > -1; });
-    app.innerHTML = '<main><h1>AI Power subscriptions</h1><div class="grid" style="margin-bottom:14px">' + stat(live.length, 'Active') + stat('£' + live.length * 5 + '/mo', 'Gross revenue') +
-      stat(list.filter(function (m) { return m.addon.cancelAtPeriodEnd; }).length, 'Cancelling at period end') + stat(list.filter(function (m) { return ['past_due', 'unpaid', 'incomplete'].indexOf(m.addon.status) > -1; }).length, 'Payment problems') + '</div>' +
-      '<div class="tw"><table><thead><tr><th>Member</th><th>Status</th><th>Current period ends</th><th>Membership</th><th>Usage</th></tr></thead><tbody>' +
-      (list.length ? list.map(function (m) { return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + '</div></td><td>' + addonPill(m.addon) + '</td><td>' + d(m.addon.currentPeriodEnd) + '</td><td>' + statusPill(m) + ' <span class="muted">to ' + d(m.membershipExpiresAt) + '</span></td><td>' + m.usage.used + ' / ' + m.limit + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="muted">No add-on subscriptions yet.</td></tr>') +
-      '</tbody></table></div><p class="muted" style="margin-top:8px">Refunds, invoices and payment details are managed in your Stripe dashboard. Members cancel themselves from Account → Manage subscription.</p></main>';
+    var yearly = live.filter(function (m) { return m.addon.interval === 'year'; }).length, monthly = live.length - yearly;
+    app.innerHTML = '<main><h1>AI Power subscriptions</h1><div class="grid" style="margin-bottom:14px">' +
+      stat(live.length, 'Active (' + monthly + ' monthly, ' + yearly + ' yearly)') +
+      stat('£' + (monthly * 5 + yearly * 50 / 12).toFixed(2) + '/mo', 'Gross revenue (yearly spread over 12)') +
+      stat(live.filter(function (m) { return m.status === 'none'; }).length, 'Not Business Club members') +
+      stat(list.filter(function (m) { return m.addon.cancelAtPeriodEnd; }).length, 'Cancelling at period end') +
+      stat(list.filter(function (m) { return ['past_due', 'unpaid', 'incomplete'].indexOf(m.addon.status) > -1; }).length, 'Payment problems') + '</div>' +
+      '<div class="tw"><table><thead><tr><th>Person</th><th>AI Power</th><th>Renews / ends</th><th>Business Club</th><th>Today</th></tr></thead><tbody>' +
+      (list.length ? list.map(function (m) { return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + '</div></td><td>' + addonPill(m.addon) + '</td><td>' + d(m.addon.currentPeriodEnd) + '</td><td>' + statusPill(m) + '</td><td>' + m.today.used + ' / ' + m.limit + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="muted">No AI Power subscriptions yet.</td></tr>') +
+      '</tbody></table></div><p class="muted" style="margin-top:8px">Refunds, invoices and payment details are managed in your Stripe dashboard. People switch plan or cancel themselves from Account → Manage subscription.</p></main>';
   }
 
   // ── usage ──
@@ -274,17 +293,18 @@ tbody tr:hover{background:#FFFCF5}
     loading();
     var o = S.overview = await api('overview'); var st = o.settings;
     function f(k, l, hint, step) { return '<div><label for="s_' + k + '">' + esc(l) + '</label><input id="s_' + k + '" type="number" step="' + (step || 1) + '" value="' + esc(st[k]) + '">' + (hint ? '<div class="muted">' + esc(hint) + '</div>' : '') + '</div>'; }
-    app.innerHTML = '<main><h1>Allowances &amp; limits</h1><div class="card stack"><h2 style="margin:0">Monthly allowances</h2><div class="f2">' +
-      f('standardLimit', 'Standard Business Club', 'Generations per month') + f('powerLimit', 'With AI Power add-on', 'Total generations per month') + '</div>' +
-      '<p class="muted">Changes apply immediately. Per-member custom limits (Members → Manage) override these.</p></div>' +
+    app.innerHTML = '<main><h1>Allowances &amp; limits</h1><div class="card stack"><h2 style="margin:0">Daily allowances</h2><div class="f2">' +
+      f('standardLimit', 'Business Club', 'Generations per day') + f('powerLimit', 'AI Power', 'Generations per day (with or without Club)') + '</div>' +
+      '<p class="muted">A 30-day content plan uses 3 generations; everything else uses 1. Allowances reset at midnight UK time.</p>' +
+      '<p class="muted">Changes apply immediately. Per-person custom limits (Members \u2192 Manage) override these.</p></div>' +
       '<div class="card stack" style="margin-top:12px"><h2 style="margin:0">Spending protection</h2><div class="f2">' +
-      f('globalMonthlyCostCapGbp', 'Monthly AI spend cap (£)', 'Studio pauses new requests when reached', 0.01) + f('globalMonthlyGenerationCap', 'Monthly generation cap (all members)', '') +
+      f('spendWarnGbp', 'Warn me when monthly AI spend reaches (\u00a3)', 'Email + alert at this amount and at double. Never blocks members.', 0.01) +
       f('perMinuteLimit', 'Max generations per member per minute', 'Stops bursts and scripts') + '</div></div>' +
       '<div class="card stack" style="margin-top:12px"><h2 style="margin:0">AI model &amp; pricing</h2><div><label for="s_model">Model</label><input id="s_model" value="' + esc(st.model) + '" placeholder="' + esc(o.config.model) + '"><div class="muted">Leave blank for the default (' + esc(o.config.model) + ').</div></div><div class="f2">' +
       f('inputPricePerMUsd', 'Input price ($ per 1M tokens)', 'Fallback for cost estimates', 0.01) + f('outputPricePerMUsd', 'Output price ($ per 1M tokens)', '', 0.01) + f('usdToGbp', 'USD → GBP rate', '', 0.01) + '</div></div>' +
       '<div class="err hidden" id="serr" style="margin-top:12px"></div><button class="btn primary" id="ssave" style="margin-top:12px">Save settings</button></main>';
     $('#ssave').onclick = async function () {
-      var keys = ['standardLimit', 'powerLimit', 'globalMonthlyCostCapGbp', 'globalMonthlyGenerationCap', 'perMinuteLimit', 'inputPricePerMUsd', 'outputPricePerMUsd', 'usdToGbp'];
+      var keys = ['standardLimit', 'powerLimit', 'spendWarnGbp', 'perMinuteLimit', 'inputPricePerMUsd', 'outputPricePerMUsd', 'usdToGbp'];
       var settings = { model: $('#s_model').value.trim() }; keys.forEach(function (k) { settings[k] = $('#s_' + k).value; });
       try { await api('settings-save', { settings: settings }); toast('Settings saved'); } catch (x) { $('#serr').textContent = x.message; $('#serr').classList.remove('hidden'); }
     };

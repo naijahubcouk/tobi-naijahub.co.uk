@@ -10,7 +10,8 @@ const { HttpError, handler, requireEmail, rateLimit, enc, cas, getJson, cleanTex
 const gen = require('./studio-lib/generate');
 const stripe = require('./studio-lib/stripe');
 
-const STATUSES = ['pending', 'active', 'inactive'];
+// Business Club status. 'none' = not a Club member (e.g. AI Power-only customer).
+const STATUSES = ['pending', 'active', 'inactive', 'none'];
 
 async function mapLimit(items, n, fn) {
   const out = new Array(items.length);
@@ -33,21 +34,29 @@ function validDate(d) {
 
 function monthOk(m) { return /^\d{4}-\d{2}$/.test(String(m || '')); }
 
-function summarizeMember(m, settings, usage) {
+function memberType(m, acc) {
+  if (acc.membershipActive && acc.powerActive) return 'both';
+  if (acc.powerActive) return 'ai_power';
+  if (acc.membershipActive) return 'club';
+  return 'none';
+}
+
+function summarizeMember(m, settings, monthUsage, todayUsage) {
   const acc = core.access(m, settings);
   return {
     email: m.email, name: m.name || '', status: m.status, membershipExpiresAt: m.membershipExpiresAt || null,
     notes: m.notes || '', allowanceOverride: Number.isInteger(m.allowanceOverride) ? m.allowanceOverride : null,
     createdAt: m.createdAt, lastLoginAt: m.lastLoginAt || null,
-    membershipActive: acc.membershipActive, plan: acc.plan, limit: acc.limit,
+    membershipActive: acc.membershipActive, powerActive: acc.powerActive, readOnly: acc.readOnly,
+    blocked: !!m.blocked, type: memberType(m, acc), plan: acc.plan, limit: acc.limit, source: m.source || 'admin',
     addon: m.addon || null, stripeCustomerId: m.stripeCustomerId || null,
-    usage: usage ? { used: usage.used, costUsd: usage.costUsd, byTool: usage.byTool } : { used: 0, costUsd: 0, byTool: {} },
+    today: { used: todayUsage ? todayUsage.used : 0 },
+    usage: monthUsage ? { used: monthUsage.used, runs: monthUsage.runs, costUsd: monthUsage.costUsd, byTool: monthUsage.byTool } : { used: 0, runs: 0, costUsd: 0, byTool: {} },
   };
 }
 
 async function saveMember(actor, raw, isNew) {
   const email = requireEmail(raw.email);
-  const settings = await core.getSettings();
   let before = null;
   const saved = await cas(`members/${enc(email)}`, cur => {
     if (isNew && cur) throw new HttpError(409, 'exists', 'That member already exists — edit them instead.');
@@ -69,20 +78,21 @@ async function saveMember(actor, raw, isNew) {
       if (v !== null && (!Number.isInteger(v) || v < 0 || v > 5000)) throw new HttpError(400, 'invalid', 'Allowance override must be a whole number 0–5000, or blank.');
       m.allowanceOverride = v;
     }
+    if (raw.blocked !== undefined) m.blocked = !!raw.blocked;
     if (!m.status) m.status = 'pending';
     m.updatedAt = core.nowIso();
     return m;
   });
   await core.audit(actor, isNew ? 'member_add' : 'member_update', { email, status: saved.status, expires: saved.membershipExpiresAt, override: saved.allowanceOverride });
 
-  // Membership no longer active → stop AI Power renewals straight away.
-  const wasActive = before && core.access(before, settings).membershipActive;
-  const nowActive = core.access(saved, settings).membershipActive;
-  if (!nowActive && saved.addon && core.LIVE_SUB_STATUSES.includes(saved.addon.status)) {
-    try { await stripe.enforceMembership(email); }
-    catch (e) { await core.alert('stripe_enforce_failed', 'Could not stop AI Power renewal after deactivation — check Stripe', { email }); }
-  } else if (nowActive && !wasActive && saved.stripeCustomerId && core.env('STRIPE_SECRET_KEY')) {
-    await stripe.syncCustomer(saved.stripeCustomerId).catch(() => {});
+  // AI Power is independent of Business Club. Only blocking an account stops its renewal.
+  const newlyBlocked = saved.blocked && !(before && before.blocked);
+  if (newlyBlocked) {
+    await cas(`members/${enc(email)}`, cur => ({ ...cur, sessionEpoch: (cur.sessionEpoch || 0) + 1 }));
+    if (saved.stripeCustomerId && saved.addon && core.LIVE_SUB_STATUSES.includes(saved.addon.status) && core.env('STRIPE_SECRET_KEY')) {
+      try { await stripe.syncCustomer(saved.stripeCustomerId); }
+      catch (e) { await core.alert('stripe_block_failed', 'Account blocked but AI Power renewal could not be stopped — check Stripe', { email }); }
+    }
   }
   return saved;
 }
@@ -133,7 +143,8 @@ exports.handler = handler(async (ctx) => {
           email: core.env('RESEND_API_KEY') ? 'resend' : (core.env('STUDIO_EMAIL_MODE') === 'log' ? 'log (testing only)' : 'missing'),
           ai: !!(core.env('STUDIO_OPENROUTER_API_KEY') || core.env('OPENROUTER_API_KEY') || core.env('OPENAI_API_KEY')),
           model: core.modelFor(settings),
-          stripe: !!(core.env('STRIPE_SECRET_KEY') && core.env('STRIPE_PRICE_POWER') && core.env('STRIPE_WEBHOOK_SECRET')),
+          stripe: stripe.billingEnabled(),
+          stripePlans: stripe.availableIntervals(),
           stripeMode: (core.env('STRIPE_SECRET_KEY') || '').startsWith('sk_live') ? 'live' : 'test',
         },
         alertCount: alerts,
@@ -142,14 +153,16 @@ exports.handler = handler(async (ctx) => {
 
     case 'members-list': {
       const month = monthOk(body.month) ? body.month : core.monthKey();
+      const day = core.dayKey();
       const members = await allMembers();
-      const usages = await mapLimit(members, 10, m => getJson(gen.usageKey(m.email, month)));
-      return { month, members: members.map((m, i) => summarizeMember(m, settings, usages[i])).sort((a, b) => a.email.localeCompare(b.email)) };
+      const months = await mapLimit(members, 10, m => getJson(gen.monthUsageKey(m.email, month)));
+      const days = await mapLimit(members, 10, m => getJson(gen.usageKey(m.email, day)));
+      return { month, day, members: members.map((m, i) => summarizeMember(m, settings, months[i], days[i])).sort((a, b) => a.email.localeCompare(b.email)) };
     }
 
     case 'member-add': {
       const m = await saveMember(actor, body, true);
-      return { member: summarizeMember(m, settings, null) };
+      return { member: summarizeMember(m, settings, null, null) };
     }
 
     case 'members-import': {
@@ -169,7 +182,7 @@ exports.handler = handler(async (ctx) => {
 
     case 'member-update': {
       const m = await saveMember(actor, body, false);
-      return { member: summarizeMember(m, settings, null) };
+      return { member: summarizeMember(m, settings, null, null) };
     }
 
     case 'member-revoke-sessions': {
@@ -184,12 +197,14 @@ exports.handler = handler(async (ctx) => {
 
     case 'member-usage': {
       const email = requireEmail(body.email);
-      const keys = (await core.listKeys('usage/')).filter(k => k.endsWith(`/${enc(email)}`)).sort().slice(-12);
+      const keys = (await core.listKeys('usage-month/')).filter(k => k.endsWith(`/${enc(email)}`)).sort().slice(-12);
       const rows = await mapLimit(keys, 6, async k => {
         const u = await getJson(k);
-        return { month: k.split('/')[1], used: u.used, costUsd: u.costUsd, byTool: u.byTool };
+        return { month: k.split('/')[1], used: u.used, runs: u.runs, costUsd: u.costUsd, byTool: u.byTool };
       });
-      return { email, months: rows };
+      const today = await getJson(gen.usageKey(email, core.dayKey()));
+      rows.reverse();
+      return { email, today: today ? today.used : 0, months: rows };
     }
 
     case 'member-stripe-sync': {
@@ -213,8 +228,7 @@ exports.handler = handler(async (ctx) => {
         standardLimit: num('standardLimit', 0, 5000, true),
         powerLimit: num('powerLimit', 0, 5000, true),
         perMinuteLimit: num('perMinuteLimit', 1, 60, true),
-        globalMonthlyGenerationCap: num('globalMonthlyGenerationCap', 0, 1000000, true),
-        globalMonthlyCostCapGbp: num('globalMonthlyCostCapGbp', 0, 10000, false),
+        spendWarnGbp: num('spendWarnGbp', 0, 100000, false),
         inputPricePerMUsd: num('inputPricePerMUsd', 0, 100, false),
         outputPricePerMUsd: num('outputPricePerMUsd', 0, 500, false),
         usdToGbp: num('usdToGbp', 0.1, 5, false),

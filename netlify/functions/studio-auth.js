@@ -1,20 +1,24 @@
 'use strict';
 /*
- * Business Studio member sign-in (passwordless).
+ * Business Studio sign-in (passwordless).
  * POST /.netlify/functions/studio-auth  { action, ... }
- *   request-code  { email }          → always the same reply (no account enumeration)
- *   verify-code   { email, code }    → sets an HttpOnly session cookie
- *   stepup-request {}                → emails a fresh code to the signed-in member
- *   stepup-verify  { code }          → marks this session as freshly verified
- *   logout        {}                 → ends this device's session
- *   logout-all    {}                 → signs out every device
+ *   request-code   { email }         → sign in. Codes only go to people with access (no enumeration).
+ *   verify-code    { email, code }   → sets an HttpOnly session cookie
+ *   signup-request { email }         → "Get AI Power": anyone can verify their email to buy
+ *   signup-verify  { email, code }   → session for buying; no account until payment succeeds
+ *   stepup-request {} / stepup-verify { code } → fresh verification for payments
+ *   logout {} / logout-all {}
  */
 const core = require('./studio-lib/core');
 const { HttpError, handler, requireEmail, rateLimit, getMember, getSettings, access } = core;
 
-const GENERIC = 'If that email belongs to an active Business Club member, a 6-digit code is on its way. It expires in 10 minutes.';
+const GENERIC = 'If that email has Studio access, a 6-digit code is on its way. It expires in 10 minutes.';
 
 async function jitter() { await core.sleep(250 + Math.random() * 400); }
+
+async function markLogin(email) {
+  await core.cas(`members/${core.enc(email)}`, cur => cur ? { ...cur, lastLoginAt: core.nowIso() } : undefined).catch(() => {});
+}
 
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
@@ -24,8 +28,7 @@ exports.handler = handler(async (ctx) => {
       await rateLimit('otp-ip', ctx.ip, 20, 60 * 60 * 1000);
       await rateLimit('otp-email', email, 6, 60 * 60 * 1000, 'Too many codes requested for this email. Please try again in an hour.');
       const member = await getMember(email);
-      const settings = await getSettings();
-      if (access(member, settings).membershipActive) await core.issueOtp(email, 'member');
+      if (access(member, await getSettings()).canView) await core.issueOtp(email, 'member');
       else await jitter();
       return { ok: true, message: GENERIC };
     }
@@ -37,24 +40,48 @@ exports.handler = handler(async (ctx) => {
       const ok = await core.checkOtp(email, 'member', body.code);
       if (!ok) throw new HttpError(400, 'invalid_code', 'That code is incorrect or has expired. Please check it or request a new one.');
       const member = await getMember(email);
-      if (!access(member, await getSettings()).membershipActive) {
-        throw new HttpError(403, 'membership_inactive', 'Your Business Club membership is not active.');
+      if (!access(member, await getSettings()).canView) {
+        throw new HttpError(403, 'no_access', 'This email doesn\'t have Studio access. You can get AI Power to start.');
       }
       const s = await core.createSession(email, 'member', ctx.event);
       ctx.cookiesOut.push(s.cookie);
-      await core.cas(`members/${core.enc(email)}`, cur => cur ? { ...cur, lastLoginAt: core.nowIso() } : undefined).catch(() => {});
+      await markLogin(email);
+      return { ok: true };
+    }
+
+    case 'signup-request': {
+      const email = requireEmail(body.email);
+      await rateLimit('signup-ip', ctx.ip, 10, 60 * 60 * 1000);
+      await rateLimit('otp-email', email, 6, 60 * 60 * 1000, 'Too many codes requested for this email. Please try again in an hour.');
+      const member = await getMember(email);
+      if (member && member.blocked) await jitter();
+      else await core.issueOtp(email, 'signup');
+      return { ok: true, message: 'We\'ve emailed you a 6-digit code. It expires in 10 minutes.' };
+    }
+
+    case 'signup-verify': {
+      const email = requireEmail(body.email);
+      await rateLimit('verify-ip', ctx.ip, 40, 60 * 60 * 1000);
+      await rateLimit('verify-email', email, 12, 60 * 60 * 1000, 'Too many attempts. Please request a new code later.');
+      const ok = await core.checkOtp(email, 'signup', body.code);
+      if (!ok) throw new HttpError(400, 'invalid_code', 'That code is incorrect or has expired. Please check it or request a new one.');
+      const member = await getMember(email);
+      if (member && member.blocked) throw new HttpError(403, 'account_blocked', 'This account has been suspended. Please contact Auntie Tobi.');
+      const s = await core.createSession(email, 'member', ctx.event);
+      ctx.cookiesOut.push(s.cookie);
+      if (member) await markLogin(email);
       return { ok: true };
     }
 
     case 'stepup-request': {
-      const auth = await core.requireMember(ctx);
+      const auth = await core.requireMember(ctx, { level: 'buyer' });
       await rateLimit('otp-email', auth.sess.email, 6, 60 * 60 * 1000, 'Too many codes requested. Please try again in an hour.');
       await core.issueOtp(auth.sess.email, 'member');
       return { ok: true, message: 'We\'ve emailed you a 6-digit code.' };
     }
 
     case 'stepup-verify': {
-      const auth = await core.requireMember(ctx);
+      const auth = await core.requireMember(ctx, { level: 'buyer' });
       await rateLimit('verify-email', auth.sess.email, 12, 60 * 60 * 1000, 'Too many attempts. Please try again later.');
       const ok = await core.checkOtp(auth.sess.email, 'member', body.code);
       if (!ok) throw new HttpError(400, 'invalid_code', 'That code is incorrect or has expired.');
@@ -71,8 +98,10 @@ exports.handler = handler(async (ctx) => {
     }
 
     case 'logout-all': {
-      const auth = await core.requireMember(ctx, { allowInactive: true });
-      await core.cas(`members/${core.enc(auth.sess.email)}`, cur => ({ ...cur, sessionEpoch: (cur.sessionEpoch || 0) + 1 }));
+      const auth = await core.requireMember(ctx, { level: 'buyer' });
+      if (auth.member) {
+        await core.cas(`members/${core.enc(auth.sess.email)}`, cur => cur ? { ...cur, sessionEpoch: (cur.sessionEpoch || 0) + 1 } : undefined);
+      }
       await core.del(auth.sessKey).catch(() => {});
       ctx.cookiesOut.length = 0;
       ctx.cookiesOut.push(core.clearCookie(core.COOKIE_MEMBER));

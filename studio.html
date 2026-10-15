@@ -39,7 +39,7 @@ a{color:var(--green)}
 .top .back{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--cream);margin-left:-6px}
 .top .back:focus-visible,.top .back:hover{background:var(--navy-2)}
 .top .spacer{flex:1}
-.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.3px}
+.pill{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.3px}
 .pill.gold{background:var(--gold);color:var(--navy)}
 .pill.green{background:var(--green-l);color:var(--green-d)}
 .pill.cream{background:rgba(251,246,236,.12);color:var(--cream)}
@@ -188,6 +188,7 @@ details.faq li+li{margin-top:4px}
   var app = document.getElementById('app');
 
   var TOOL_META = {
+    ideas: { blurb: '6 fresh ideas for your business', hello: 'Stuck for what to post? I’ll give you 6 fresh ideas made for your business — each with a hook and what to film.', icon: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0012 3z"/>' },
     caption: { blurb: 'Three scroll-stopping captions', hello: 'Tell me what this post is about and I’ll write three captions in your brand voice.', icon: '<path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/>' },
     reel: { blurb: 'Hook, scenes and voiceover', hello: 'What should your Reel show? I’ll plan the hook, every scene and the words to say.', icon: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/>' },
     promo: { blurb: 'Offers, launches and sales', hello: 'What are you promoting? I’ll write it to sell — honestly, no hype you can’t back up.', icon: '<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M16 9a4 4 0 010 6M19 6a8 8 0 010 12"/>' },
@@ -259,10 +260,10 @@ details.faq li+li{margin-top:4px}
     document.getElementById('topAvatar').classList.toggle('hidden', !!o.back);
     $$('nav.tabs button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.tab === o.tab ? 'page' : 'false'); });
     var tp = document.getElementById('topPlan');
-    if (S.boot && S.boot.access && S.boot.access.membershipActive) {
+    if (S.boot && S.boot.access && S.boot.access.canView) {
       tp.classList.remove('hidden');
       tp.className = 'pill ' + (S.boot.access.plan === 'power' ? 'gold' : 'cream');
-      tp.textContent = S.boot.access.plan === 'power' ? 'AI Power' : 'Standard';
+      tp.textContent = S.boot.access.plan === 'club' ? 'Club' : planLabel();
     } else tp.classList.add('hidden');
     window.scrollTo(0, 0);
   }
@@ -274,51 +275,61 @@ details.faq li+li{margin-top:4px}
   });
 
   // ───────────── sign in ─────────────
-  function showSignIn(prefill) {
-    setChrome({ tabs: false });
+  // mode: 'signin' (members) or 'signup' (Get AI Power — anyone can verify their email to buy)
+  function showSignIn(prefill, mode) {
+    mode = mode || 'signin';
+    var up = mode === 'signup';
+    setChrome({ tabs: false, back: up ? function () { showSignIn(); } : null });
     app.innerHTML =
       '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt="Auntie Tobi">' +
-      '<div class="kicker">Members only</div><h1>Welcome to your Business Studio</h1>' +
-      '<p class="sub" style="margin-top:8px">Create captions, Reels, promos and more in your brand voice. Sign in with the email you used for your Business Club membership.</p></div>' +
+      (up ? '<div class="kicker">AI Power</div><h1>Get AI Power</h1>' +
+        '<p class="sub" style="margin-top:8px">100 AI generations a day for captions, Reels, promos, content ideas and more — written in your brand voice. £5 a month or £50 a year. First, confirm your email.</p></div>'
+        : '<div class="kicker">Auntie Tobi</div><h1>Welcome to your Business Studio</h1>' +
+        '<p class="sub" style="margin-top:8px">Create captions, Reels, promos and more in your brand voice. Sign in with your Business Club or AI Power email.</p></div>') +
       '<form class="card stack" id="emailForm" novalidate>' +
       '<div><label class="f" for="email">Email address</label><input type="email" id="email" autocomplete="email" inputmode="email" required placeholder="you@yourbusiness.co.uk" value="' + esc(prefill || S.email) + '"></div>' +
       '<div class="err hidden" id="err" role="alert"></div>' +
-      '<button class="btn primary block" id="sendBtn">Send my code</button>' +
+      '<button class="btn ' + (up ? 'gold' : 'primary') + ' block" id="sendBtn">' + (up ? 'Continue' : 'Send my code') + '</button>' +
       '<p class="hint" style="text-align:center">No password needed. We’ll email you a 6-digit code.</p></form>' +
-      '<p class="hint" style="text-align:center;margin-top:18px">Not a member yet? <a href="/business-club">Find out about the Business Club</a></p></div>';
-    var f = $('#emailForm');
-    f.addEventListener('submit', async function (e) {
+      (up ? '<p class="hint" style="text-align:center;margin-top:18px">Already have access? <button class="btn link" id="toSignin">Sign in</button></p>'
+        : '<div class="card plan stack" style="margin-top:18px;text-align:center"><b>Not a Business Club member?</b><div class="sub">Get AI Power on its own — 100 generations a day.</div><button class="btn gold block" id="toSignup">Get AI Power</button></div>' +
+          '<p class="hint" style="text-align:center;margin-top:14px"><a href="/business-club">About the Business Club</a></p>') + '</div>';
+    var ts = $('#toSignup'); if (ts) ts.onclick = function () { showSignIn($('#email').value, 'signup'); };
+    var ti = $('#toSignin'); if (ti) ti.onclick = function () { showSignIn($('#email').value); };
+    $('#emailForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       var email = $('#email').value.trim();
       var err = $('#err'); err.classList.add('hidden');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Please enter a valid email address.'; err.classList.remove('hidden'); return; }
-      var btn = $('#sendBtn'); btn.disabled = true; btn.textContent = 'Sending…';
+      var btn = $('#sendBtn'), label = btn.textContent; btn.disabled = true; btn.textContent = 'Sending…';
       try {
-        var r = await api('studio-auth', 'request-code', { email: email });
-        S.email = email; showCode(r.message);
-      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Send my code'; }
+        var r = await api('studio-auth', up ? 'signup-request' : 'request-code', { email: email });
+        S.email = email; showCode(r.message, mode);
+      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = label; }
     });
     setTimeout(function () { var i = $('#email'); if (i && !i.value) i.focus(); }, 50);
   }
 
-  function showCode(message) {
-    setChrome({ tabs: false, back: function () { showSignIn(); } });
+  function showCode(message, mode) {
+    var up = mode === 'signup';
+    setChrome({ tabs: false, back: function () { showSignIn('', mode); } });
     app.innerHTML =
       '<div class="auth-wrap"><div class="auth-hero"><div class="kicker">Check your email</div><h1>Enter your code</h1>' +
       '<p class="sub" style="margin-top:8px">' + esc(message) + '</p><p class="sub" style="margin-top:6px"><b>' + esc(S.email) + '</b></p></div>' +
       '<form class="card stack" id="codeForm" novalidate>' +
       '<div><label class="f sr" for="code">6-digit code</label><input class="code-input" type="text" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••"></div>' +
       '<div class="err hidden" id="err" role="alert"></div>' +
-      '<button class="btn primary block" id="verifyBtn">Sign in</button>' +
+      '<button class="btn primary block" id="verifyBtn">' + (up ? 'Confirm email' : 'Sign in') + '</button>' +
       '<p class="hint" style="text-align:center">You’ll stay signed in on this device.</p>' +
       '<div class="row" style="justify-content:space-between"><button type="button" class="btn link" id="resend" disabled>Resend code</button><button type="button" class="btn link" id="other">Use a different email</button></div>' +
-      '</form><p class="hint" style="text-align:center;margin-top:16px">Can’t find it? Check spam or promotions. Still nothing? Your email may not be registered — contact Auntie Tobi.</p></div>';
+      '</form><p class="hint" style="text-align:center;margin-top:16px">Can’t find it? Check spam or promotions.' + (up ? '' : ' Still nothing? This email may not have Studio access yet — you can <button class="btn link" id="toUp" style="font-size:inherit">get AI Power</button>.') + '</p></div>';
+    var tu = $('#toUp'); if (tu) tu.onclick = function () { showSignIn(S.email, 'signup'); };
     var code = $('#code');
     code.addEventListener('input', function () {
       code.value = code.value.replace(/\D/g, '').slice(0, 6);
       if (code.value.length === 6) $('#codeForm').requestSubmit ? $('#codeForm').requestSubmit() : $('#verifyBtn').click();
     });
-    $('#other').onclick = function () { showSignIn(''); };
+    $('#other').onclick = function () { showSignIn('', mode); };
     var left = 60, rs = $('#resend');
     var timer = setInterval(function () {
       left--; rs.textContent = left > 0 ? 'Resend code (' + left + 's)' : 'Resend code';
@@ -326,18 +337,20 @@ details.faq li+li{margin-top:4px}
     }, 1000);
     rs.onclick = async function () {
       rs.disabled = true;
-      try { await api('studio-auth', 'request-code', { email: S.email }); toast('If your email is registered, a new code is on its way'); }
+      try { await api('studio-auth', up ? 'signup-request' : 'request-code', { email: S.email }); toast('A new code is on its way'); }
       catch (x) { toast(x.message); }
     };
     $('#codeForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       var err = $('#err'); err.classList.add('hidden');
       if (code.value.length !== 6) { err.textContent = 'Enter all 6 digits.'; err.classList.remove('hidden'); return; }
-      var btn = $('#verifyBtn'); btn.disabled = true; btn.textContent = 'Checking…';
+      var btn = $('#verifyBtn'), label = btn.textContent; btn.disabled = true; btn.textContent = 'Checking…';
       try {
-        await api('studio-auth', 'verify-code', { email: S.email, code: code.value });
+        await api('studio-auth', up ? 'signup-verify' : 'verify-code', { email: S.email, code: code.value });
         clearInterval(timer); await start();
-      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Sign in'; code.select(); }
+      } catch (x) {
+        err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = label; code.select();
+      }
     });
     setTimeout(function () { code.focus(); }, 50);
   }
@@ -373,36 +386,79 @@ details.faq li+li{margin-top:4px}
   }
 
   // ───────────── boot ─────────────
+  function planLabel() {
+    var a = S.boot.access;
+    if (a.plan === 'power') return 'AI Power';
+    if (a.plan === 'club') return 'Business Club';
+    return a.readOnly ? 'Read-only' : '';
+  }
+
   async function start() {
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
     try { S.boot = await api('studio-api', 'bootstrap', {}, { quiet401: true }); }
-    catch (e) { if (e.status === 401) return showSignIn(); app.innerHTML = '<main><div class="err">' + esc(e.message) + '</div><button class="btn ghost" style="margin-top:12px" onclick="location.reload()">Try again</button></main>'; return; }
+    catch (e) {
+      if (e.status === 401) return showSignIn();
+      if (e.code === 'account_blocked') return showMessage('Account suspended', e.message);
+      app.innerHTML = '<main><div class="err">' + esc(e.message) + '</div><button class="btn ghost" style="margin-top:12px" onclick="location.reload()">Try again</button></main>'; return;
+    }
     S.history = S.boot.recent || [];
     var q = new URLSearchParams(location.search);
     if (q.get('billing')) {
       history.replaceState(null, '', location.pathname);
-      if (q.get('billing') === 'success') {
-        toast('Payment received — setting up AI Power…');
-        try { await api('studio-billing', 'refresh'); S.boot = await api('studio-api', 'bootstrap'); } catch (e) {}
-        if (S.boot.access.plan === 'power') toast('AI Power is active — enjoy 200 generations a month!');
-      } else if (q.get('billing') === 'managed') {
-        try { await api('studio-billing', 'refresh'); S.boot = await api('studio-api', 'bootstrap'); } catch (e) {}
+      if (q.get('billing') === 'success' || q.get('billing') === 'managed') {
+        if (q.get('billing') === 'success') toast('Payment received — setting up AI Power…');
+        try { await api('studio-billing', 'refresh'); S.boot = await api('studio-api', 'bootstrap'); S.history = S.boot.recent || []; } catch (e) {}
+        if (q.get('billing') === 'success' && S.boot.access.plan === 'power') toast('AI Power is active — ' + S.boot.limits.power + ' generations a day!');
       }
     }
-    if (!S.boot.access.membershipActive) return showInactive();
-    if (!S.boot.profile) return showProfileForm(true);
+    if (S.boot.state === 'buyer') return showBuy();
+    if (S.boot.state === 'active' && !S.boot.profile) return showProfileForm(true);
     showHome();
   }
 
-  function showInactive() {
+  function showMessage(title, text) {
     setChrome({ tabs: false });
-    app.innerHTML = '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt=""><h1>Your membership isn’t active</h1>' +
-      '<p class="sub" style="margin-top:8px">The Business Studio is for active Auntie Tobi Business Club members. Please renew your membership to carry on creating.</p></div>' +
-      '<div class="stack"><a class="btn gold block" href="/business-club">Renew Business Club</a>' +
-      (S.boot.addon && S.boot.addon.status && ['active', 'trialing', 'past_due'].indexOf(S.boot.addon.status) > -1 ? '<button class="btn ghost block" id="portal">Manage AI Power subscription</button><p class="hint">Your AI Power add-on is paused while your membership is inactive and won’t renew again.</p>' : '') +
-      '<button class="btn link" id="out">Sign out</button></div></div>';
+    app.innerHTML = '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt=""><h1>' + esc(title) + '</h1><p class="sub" style="margin-top:8px">' + esc(text) + '</p></div><button class="btn link" id="out">Sign out</button></div>';
     $('#out').onclick = signOut;
-    var p = $('#portal'); if (p) p.onclick = openPortal;
+  }
+
+  // Plan choice: monthly / yearly AI Power
+  function planChoices() {
+    var iv = (S.boot.billing && S.boot.billing.intervals) || [];
+    if (!iv.length) return '<div class="note">AI Power isn’t available to buy just yet. Please check back soon.</div>';
+    var l = S.boot.limits.power;
+    var opts = {
+      month: '<button class="card plan stack" data-buy="month" style="text-align:left;width:100%"><div class="row" style="justify-content:space-between"><b>Monthly</b></div><div class="price">£5<span style="font-size:15px;font-weight:500"> /month</span></div><div class="sub">Renews monthly. Cancel any time.</div></button>',
+      year: '<button class="card plan stack" data-buy="year" style="text-align:left;width:100%"><div class="row" style="justify-content:space-between"><b>Yearly</b><span class="pill gold">2 months free</span></div><div class="price">£50<span style="font-size:15px;font-weight:500"> /year</span></div><div class="sub">One payment a year. Cancel any time.</div></button>'
+    };
+    return '<ul style="margin:0 0 12px 18px;font-size:14.5px"><li><b>' + l + ' AI generations a day</b></li><li>All 7 Studio tools, in your brand voice</li><li>Save, edit and reuse everything in your library</li><li>Switch between monthly and yearly any time</li></ul>' +
+      '<div class="stack">' + iv.map(function (i) { return opts[i]; }).join('') + '</div>' +
+      '<p class="hint" style="text-align:center;margin-top:10px">Secure payment by Stripe.</p>';
+  }
+  function bindPlanChoices(root) {
+    $$('[data-buy]', root || app).forEach(function (b) { b.onclick = function () { startCheckout(b.dataset.buy); }; });
+  }
+
+  function showBuy() {
+    setChrome({ tabs: false });
+    var m = S.boot.member || {};
+    app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' +
+      (m.isClub ? 'Your Business Club membership isn’t active right now, but you can still use the Studio with AI Power.' : 'Email confirmed! Choose how you’d like to pay for AI Power and you’ll be creating in a minute.') +
+      '</p></div><h1 style="margin-bottom:12px">Get AI Power</h1>' + planChoices() +
+      '<p class="hint" style="text-align:center;margin-top:16px">Signed in as ' + esc(m.email || '') + ' · <button class="btn link" id="out" style="font-size:inherit">Sign out</button></p></main>';
+    bindPlanChoices(); $('#out').onclick = signOut;
+  }
+
+  function readOnlyBanner() {
+    return '<section class="card plan stack" style="margin-bottom:6px"><b>Your AI Power has ended</b><div class="sub">You can still view, edit and copy everything in your library. Renew to create new content.</div><button class="btn gold block" id="renewBtn">Renew AI Power</button></section>';
+  }
+  function bindRenew() { var r = $('#renewBtn'); if (r) r.onclick = showRenew; }
+  function showRenew() {
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="rnT"><h2 id="rnT" style="margin:0">AI Power</h2>' + planChoices() + '<button class="btn ghost block" id="rnClose">Not now</button></div>';
+    document.body.appendChild(scrim);
+    bindPlanChoices(scrim);
+    $('#rnClose', scrim).onclick = function () { scrim.remove(); };
   }
 
   // ───────────── profile ─────────────
@@ -479,25 +535,27 @@ details.faq li+li{margin-top:4px}
 
   // ───────────── home ─────────────
   function allowanceCard() {
-    var u = S.boot.usage || { used: 0, limit: 0, remaining: 0, resetsOn: '' };
+    var u = S.boot.usage || { used: 0, limit: 0, remaining: 0 };
     var pct = u.limit ? Math.min(100, Math.round(100 * (u.limit - u.remaining) / u.limit)) : 100;
-    return '<section class="card allow" aria-label="AI generations left">' +
+    var canUp = S.boot.access.plan !== 'power' && S.boot.billing.enabled && !S.boot.access.addonLive;
+    return '<section class="card allow" aria-label="AI generations left today">' +
       '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="big">' + u.remaining + '</div>' +
-      '<div style="font-weight:700;margin-top:4px">AI generations left this month</div></div>' +
-      '<span class="pill ' + (S.boot.access.plan === 'power' ? 'gold' : 'cream') + '">' + (S.boot.access.plan === 'power' ? 'AI Power' : 'Standard') + '</span></div>' +
+      '<div style="font-weight:700;margin-top:4px">AI generations left today</div></div>' +
+      '<span class="pill ' + (S.boot.access.plan === 'power' ? 'gold' : 'cream') + '">' + esc(planLabel()) + '</span></div>' +
       '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + u.limit + '" aria-valuenow="' + (u.limit - u.remaining) + '"><span style="width:' + pct + '%"></span></div>' +
-      '<div class="meta">' + (u.limit - u.remaining) + ' of ' + u.limit + ' used · resets ' + fmtDate(u.resetsOn, { day: 'numeric', month: 'long' }) + '</div>' +
+      '<div class="meta">' + (u.limit - u.remaining) + ' of ' + u.limit + ' used today · resets at midnight</div>' +
       '<div class="row" style="margin-top:10px;justify-content:space-between"><button class="link" id="whatCounts">What counts as a generation?</button>' +
-      (S.boot.access.plan !== 'power' && S.boot.billingEnabled ? '<button class="btn gold small" id="upBtn">Get 200/month</button>' : '') + '</div></section>';
+      (canUp ? '<button class="btn gold small" id="upBtn">Get ' + S.boot.limits.power + '/day</button>' : '') + '</div></section>';
   }
 
   function whatCounts() {
     var l = S.boot.limits;
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="wcT"><h2 id="wcT" style="margin:0">What counts as a generation?</h2>' +
-      '<p>Each time you tap <b>Create</b> or <b>Regenerate</b> and get a result, that’s <b>one generation</b> — whichever tool you use. A single generation can include several options (for example, 3 captions or a whole 30-day plan).</p>' +
-      '<p><b>Free — never counted:</b> editing, copying, saving, viewing your library, and updating your profile. If something goes wrong and you don’t get a result, you’re not charged.</p>' +
-      '<p><b>Your allowance:</b> Standard Business Club includes ' + l.standard + ' generations a month. AI Power (£5/month) gives you ' + l.power + ' a month in total. Allowances reset on the 1st of each month (UK time) and unused generations don’t roll over.</p>' +
+      '<p>Each time you tap <b>Create</b> or <b>Regenerate</b> and get a result, that’s <b>one generation</b> — even when you get several options (like 3 captions or 6 content ideas).</p>' +
+      '<p><b>One exception:</b> a <b>30-day content plan uses 3 generations</b>, because it’s a much bigger piece of work. A 7-day plan uses 1.</p>' +
+      '<p><b>Free — never counted:</b> editing, copying, saving, viewing your library and updating your profile. If something goes wrong and you don’t get a result, you’re not charged.</p>' +
+      '<p><b>Your daily allowance:</b> Business Club members get ' + l.standard + ' a day. AI Power gives you ' + l.power + ' a day (£5/month or £50/year). Allowances reset every night at midnight (UK time) and unused generations don’t carry over.</p>' +
       '<button class="btn primary block" id="wcOk">Got it</button></div>';
     document.body.appendChild(scrim);
     $('#wcOk', scrim).onclick = function () { scrim.remove(); };
@@ -524,19 +582,22 @@ details.faq li+li{margin-top:4px}
 
   function showHome() {
     setChrome({ tabs: true, tab: 'home' });
-    app.innerHTML = '<main><p class="sub">' + greeting() + ',</p><h1 style="margin-bottom:14px">' + esc(S.boot.profile.businessName) + '</h1>' +
-      allowanceCard() + '<h2>What shall we create?</h2>' + toolGrid() +
+    var ro = S.boot.access.readOnly;
+    var name = S.boot.profile ? S.boot.profile.businessName : '';
+    app.innerHTML = '<main><p class="sub">' + greeting() + (name ? ',' : '') + '</p><h1 style="margin-bottom:14px">' + esc(name || 'Welcome back') + '</h1>' +
+      (ro ? readOnlyBanner() : allowanceCard() + '<h2>What shall we create?</h2>' + toolGrid()) +
       '<h2>Recent</h2>' + historyRows(S.history.slice(0, 5)) +
       (S.history.length ? '<button class="btn link" id="allBtn" style="margin-top:6px">See your full library →</button>' : '') + '</main>';
-    bindTools(); bindHistoryRows();
-    $('#whatCounts').onclick = whatCounts;
-    var up = $('#upBtn'); if (up) up.onclick = showAccount;
+    bindTools(); bindHistoryRows(); bindRenew();
+    var wc = $('#whatCounts'); if (wc) wc.onclick = whatCounts;
+    var up = $('#upBtn'); if (up) up.onclick = showRenew;
     var all = $('#allBtn'); if (all) all.onclick = showLibrary;
   }
 
   function showCreate() {
     setChrome({ tabs: true, tab: 'create' });
-    app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 16px">Pick a tool. Each result uses 1 generation — you have <b>' + S.boot.usage.remaining + '</b> left.</p>' + toolGrid() + '</main>';
+    if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Create</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
+    app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 16px">Pick a tool. You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' + toolGrid() + '</main>';
     bindTools();
   }
 
@@ -559,7 +620,7 @@ details.faq li+li{margin-top:4px}
       }).join('') +
       '<div class="err hidden" id="terr" role="alert"></div>' +
       '<button class="btn primary block" id="go">' + icon('<path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/>', 18) + ' Create</button>' +
-      '<div class="cost" id="cost">Uses 1 generation · ' + S.boot.usage.remaining + ' left this month</div></form>' +
+      '<div class="cost" id="cost"></div></form>' +
       '<div id="result" style="margin-top:18px"></div></main>';
 
     $$('[data-choice]', app).forEach(function (g) {
@@ -576,6 +637,13 @@ details.faq li+li{margin-top:4px}
       return out;
     }
 
+    function costFor(inp) { return (t.cost && t.cost.values[inp[t.cost.field]]) || 1; }
+    function updateCost() {
+      var c = costFor(readInput());
+      $('#cost').textContent = 'Uses ' + c + ' generation' + (c > 1 ? 's' : '') + ' \u00b7 ' + S.boot.usage.remaining + ' left today';
+    }
+    $$('.chip', app).forEach(function (c) { c.addEventListener('click', updateCost); });
+    updateCost();
     $('#tform').addEventListener('submit', function (e) { e.preventDefault(); run(readInput()); });
 
     async function run(inp) {
@@ -583,6 +651,7 @@ details.faq li+li{margin-top:4px}
       var miss = t.fields.filter(function (f) { return f.required && !String(inp[f.name] || '').trim(); });
       if (miss.length) { err.textContent = 'Please fill in: ' + miss[0].label; err.classList.remove('hidden'); return; }
       if (S.boot.usage.remaining <= 0) return showLimitReached();
+      if (S.boot.usage.remaining < costFor(inp)) { err.textContent = 'This needs ' + costFor(inp) + ' generations and you have ' + S.boot.usage.remaining + ' left today. Your allowance resets at midnight.'; err.classList.remove('hidden'); return; }
       var btn = $('#go'); btn.disabled = true;
       var resEl = $('#result');
       resEl.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Writing"><i></i><i></i><i></i></span> Writing in your brand voice…</p></div>';
@@ -598,7 +667,7 @@ details.faq li+li{margin-top:4px}
       }
       btn.disabled = false;
       S.boot.usage = r.usage;
-      $('#cost').textContent = 'Uses 1 generation · ' + r.usage.remaining + ' left this month';
+      updateCost();
       addToHistory(r.item);
       resEl.innerHTML = '';
       renderResult(resEl, r.item, function () { run(inp); });
@@ -616,16 +685,16 @@ details.faq li+li{margin-top:4px}
   // Editable result with copy / save / regenerate. Edits autosave (free).
   function renderResult(el, item, onRegenerate) {
     var parts = splitOptions(item.edited != null ? item.edited : item.output);
-    var many = parts.length > 1;
-    el.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (many ? 'Here are ' + parts.length + ' options. Tap any text to edit it.' : 'Here you go! Tap the text to edit it.') + '</p></div>' +
+    var many = parts.length > 1, word = item.tool === 'ideas' ? 'Idea' : 'Option';
+    el.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (many ? 'Here are ' + parts.length + ' ' + word.toLowerCase() + 's. Tap any text to edit it.' : 'Here you go! Tap the text to edit it.') + '</p></div>' +
       '<div class="stack" id="opts">' + parts.map(function (p, i) {
-        return '<div class="option"><div class="oh"><span>' + (many ? 'Option ' + (i + 1) : 'Your content') + '</span><button class="btn small ghost" data-copy="' + i + '">' + icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>', 16) + ' Copy</button></div>' +
-          '<textarea data-opt="' + i + '" aria-label="' + (many ? 'Option ' + (i + 1) : 'Content') + '">' + esc(p) + '</textarea></div>';
+        return '<div class="option"><div class="oh"><span>' + (many ? word + ' ' + (i + 1) : 'Your content') + '</span><button class="btn small ghost" data-copy="' + i + '">' + icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>', 16) + ' Copy</button></div>' +
+          '<textarea data-opt="' + i + '" aria-label="' + (many ? word + ' ' + (i + 1) : 'Content') + '">' + esc(p) + '</textarea></div>';
       }).join('') + '</div>' +
       '<div class="row wrap" style="margin-top:12px">' +
       '<button class="btn ghost small" id="saveBtn">' + (item.saved ? '★ Saved' : '☆ Save') + '</button>' +
       (many ? '<button class="btn ghost small" id="copyAll">Copy all</button>' : '') +
-      (onRegenerate ? '<button class="btn ghost small" id="regen">↻ Regenerate <span class="saved-tag">(1 generation)</span></button>' : '') +
+      (onRegenerate ? '<button class="btn ghost small" id="regen">\u21bb Regenerate <span class="saved-tag">(' + (item.cost || 1) + ' generation' + ((item.cost || 1) > 1 ? 's' : '') + ')</span></button>' : '') +
       '<span class="saved-tag" id="editState" style="margin-left:auto"></span></div>';
     $$('textarea[data-opt]', el).forEach(function (ta) { autosize(ta); });
     function current() { return $$('textarea[data-opt]', el).map(function (ta) { return ta.value.trim(); }).join('\n---\n'); }
@@ -656,15 +725,15 @@ details.faq li+li{margin-top:4px}
   }
 
   function showLimitReached() {
-    var power = S.boot.access.plan === 'power';
+    var canUp = S.boot.access.plan !== 'power' && S.boot.billing.enabled && !S.boot.access.addonLive;
     var scrim = document.createElement('div'); scrim.className = 'scrim';
-    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="lrT"><h2 id="lrT" style="margin:0">You’ve used this month’s generations</h2>' +
-      '<p>Your allowance resets on <b>' + fmtDate(S.boot.usage.resetsOn, { day: 'numeric', month: 'long' }) + '</b>. You can still view, edit and copy everything in your library.</p>' +
-      (!power && S.boot.billingEnabled ? '<div class="card plan"><b>AI Power add-on</b><div class="price">£5<span style="font-size:15px;font-weight:500">/month</span></div><p class="sub">' + S.boot.limits.power + ' generations a month in total. Cancel any time — your annual membership stays.</p></div><button class="btn gold block" id="lrUp">Get AI Power</button>' : '') +
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="lrT"><h2 id="lrT" style="margin:0">You’ve used today’s generations</h2>' +
+      '<p>Your allowance resets at <b>midnight</b>. You can still view, edit and copy everything in your library.</p>' +
+      (canUp ? '<p><b>Want more?</b> AI Power gives you ' + S.boot.limits.power + ' generations a day.</p><button class="btn gold block" id="lrUp">See AI Power plans</button>' : '') +
       '<button class="btn ghost block" id="lrOk">OK</button></div>';
     document.body.appendChild(scrim);
     $('#lrOk', scrim).onclick = function () { scrim.remove(); };
-    var up = $('#lrUp', scrim); if (up) up.onclick = function () { scrim.remove(); startCheckout(); };
+    var up = $('#lrUp', scrim); if (up) up.onclick = function () { scrim.remove(); showRenew(); };
   }
 
   // ───────────── library ─────────────
@@ -702,8 +771,8 @@ details.faq li+li{margin-top:4px}
   }
 
   // ───────────── account & billing ─────────────
-  async function startCheckout() {
-    try { var r = await api('studio-billing', 'checkout'); location.href = r.url; }
+  async function startCheckout(interval) {
+    try { var r = await api('studio-billing', 'checkout', { interval: interval === 'year' ? 'year' : 'month' }); location.href = r.url; }
     catch (x) { if (x.code !== 'cancelled') toast(x.message); }
   }
   async function openPortal() {
@@ -715,25 +784,31 @@ details.faq li+li{margin-top:4px}
     S.boot = null; showSignIn();
   }
 
+  function d(iso, y) { return fmtDate(iso, y ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'long' }); }
+
   function planSection() {
-    var a = S.boot.access, ad = S.boot.addon, l = S.boot.limits;
-    var exp = fmtDate(S.boot.member.membershipExpiresAt, { day: 'numeric', month: 'long', year: 'numeric' });
-    var html = '<h2>Membership</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>Business Club</b><span class="pill green">Active</span></div>' +
-      '<div class="sub" style="margin-top:2px">Annual membership valid until <b>' + exp + '</b>. Includes ' + l.standard + ' AI generations a month.</div></div>';
-    if (!S.boot.billingEnabled && !ad) return html;
+    var a = S.boot.access, ad = S.boot.addon, l = S.boot.limits, m = S.boot.member;
+    var html = '';
+    // Business Club (only shown to Club members)
+    if (m.isClub) {
+      html += '<h2>Business Club</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>Annual membership</b><span class="pill ' + (a.membershipActive ? 'green' : 'cream" style="background:#ECEDF0;color:var(--muted)') + '">' + (a.membershipActive ? 'Active' : 'Not active') + '</span></div>' +
+        '<div class="sub">' + (a.membershipActive ? 'Valid until <b>' + d(m.membershipExpiresAt, 1) + '</b>. Includes ' + l.standard + ' AI generations a day.' : 'Your Business Club membership isn’t active. <a href="/business-club">Renew it here</a>.') + '</div></div>';
+    }
+    // AI Power
+    html += '<h2>AI Power</h2>';
+    var period = ad && ad.interval === 'year' ? '£50/year' : '£5/month';
     if (ad && ['active', 'trialing'].indexOf(ad.status) > -1) {
-      html += '<div class="card plan stack" style="margin-top:12px"><div class="row" style="justify-content:space-between"><b>AI Power add-on</b><span class="pill gold">' + (ad.cancelAtPeriodEnd ? 'Ending' : 'Active') + '</span></div>' +
-        '<div class="sub">' + l.power + ' generations a month in total · £5/month</div>' +
-        '<div>' + (ad.cancelAtPeriodEnd ? 'Ends on <b>' + fmtDate(ad.currentPeriodEnd, { day: 'numeric', month: 'long' }) + '</b> — you’ll go back to ' + l.standard + ' a month. Your annual membership is not affected.' : 'Renews on <b>' + fmtDate(ad.currentPeriodEnd, { day: 'numeric', month: 'long' }) + '</b>.') + '</div>' +
-        '<button class="btn ghost block" id="manage">' + (ad.cancelAtPeriodEnd ? 'Restart or manage subscription' : 'Manage or cancel subscription') + '</button></div>';
+      html += '<div class="card plan stack"><div class="row" style="justify-content:space-between"><b>AI Power · ' + (ad.interval === 'year' ? 'Yearly' : 'Monthly') + '</b><span class="pill gold">' + (ad.cancelAtPeriodEnd ? 'Ending' : 'Active') + '</span></div>' +
+        '<div class="sub">' + l.power + ' generations a day · ' + period + '</div>' +
+        '<div>' + (ad.cancelAtPeriodEnd ? 'Ends on <b>' + d(ad.currentPeriodEnd, 1) + '</b>.' + (a.membershipActive ? ' You’ll go back to ' + l.standard + ' a day with your Business Club membership.' : ' After that you can still view your library.') : 'Renews on <b>' + d(ad.currentPeriodEnd, 1) + '</b>.') + '</div>' +
+        '<button class="btn ghost block" id="manage">' + (ad.cancelAtPeriodEnd ? 'Restart or manage subscription' : 'Switch plan, manage or cancel') + '</button></div>';
     } else if (ad && ['past_due', 'unpaid', 'incomplete'].indexOf(ad.status) > -1) {
-      html += '<div class="card stack" style="margin-top:12px;border-color:var(--danger)"><b>AI Power is paused</b><div class="err">Your last payment didn’t go through. Update your card to get your ' + l.power + ' generations back. Your annual membership is not affected.</div>' +
+      html += '<div class="card stack" style="border-color:var(--danger)"><b>AI Power is paused</b><div class="err">Your last payment didn’t go through. Update your card to get your ' + l.power + ' generations a day back.' + (a.membershipActive ? ' Your Business Club membership is not affected.' : '') + '</div>' +
         '<button class="btn primary block" id="manage">Update payment details</button></div>';
-    } else if (S.boot.billingEnabled) {
-      html += '<div class="card plan stack" style="margin-top:12px"><div class="row" style="justify-content:space-between"><b>AI Power add-on</b><span class="pill gold">Optional</span></div>' +
-        '<div class="price">£5<span style="font-size:15px;font-weight:500"> /month</span></div>' +
-        '<ul><li><b>' + l.power + ' AI generations a month</b> in total (instead of ' + l.standard + ')</li><li>All six Studio tools</li><li>Renews monthly — cancel any time</li><li>Cancelling never affects your annual membership</li></ul>' +
-        '<button class="btn gold block" id="upgrade">Add AI Power</button><p class="hint" style="text-align:center">Secure payment by Stripe. We’ll ask you to confirm with an email code first.</p></div>';
+    } else if (S.boot.billing.enabled) {
+      html += '<div class="card stack">' + (a.membershipActive ? '<p class="sub" style="margin:0">You have ' + l.standard + ' a day with Business Club. Upgrade for ' + l.power + ' a day.</p>' : '') + planChoices() + '</div>';
+    } else if (!m.isClub) {
+      html += '<div class="note">AI Power isn’t available right now.</div>';
     }
     return html;
   }
@@ -743,20 +818,20 @@ details.faq li+li{margin-top:4px}
     var p = S.boot.profile;
     app.innerHTML = '<main><h1>Account</h1><p class="sub" style="margin-top:4px">' + esc(S.boot.member.email) + '</p>' +
       planSection() +
-      '<h2>Business profile</h2><div class="card"><b>' + esc(p.businessName) + '</b><div class="sub">' + esc(p.industry) + ' · ' + esc(p.location) + '</div>' +
-      '<div class="sub" style="margin-top:4px">Tone: ' + esc(TONE_LABELS[p.tone] || p.tone) + (p.instagram ? ' · ' + esc(p.instagram) : '') + '</div>' +
-      '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' +
-      '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation, for any tool.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset on the 1st of each month. Unused generations don’t roll over.</li></ul></details>' +
-      '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days.</p>' +
+      (p ? '<h2>Business profile</h2><div class="card"><b>' + esc(p.businessName) + '</b><div class="sub">' + esc(p.industry) + ' · ' + esc(p.location) + '</div>' +
+        '<div class="sub" style="margin-top:4px">Tone: ' + esc(TONE_LABELS[p.tone] || p.tone) + (p.instagram ? ' · ' + esc(p.instagram) : '') + '</div>' +
+        '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' : '') +
+      '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation.</li><li>A <b>30-day content plan uses 3</b>. Everything else uses 1.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset at midnight (UK time). Unused generations don’t carry over.</li></ul></details>' +
+      '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days and before any payment.</p>' +
       '<button class="btn ghost block" id="out">Sign out</button><button class="btn link danger" id="outAll">Sign out on all devices</button></div></main>';
-    $('#editP').onclick = function () { showProfileForm(false); };
+    var ep = $('#editP'); if (ep) ep.onclick = function () { showProfileForm(false); };
     $('#out').onclick = signOut;
     $('#outAll').onclick = async function () {
       if (!confirm('Sign out everywhere, including this device?')) return;
       try { await api('studio-auth', 'logout-all'); } catch (e) {}
       S.boot = null; showSignIn();
     };
-    var up = $('#upgrade'); if (up) up.onclick = startCheckout;
+    bindPlanChoices();
     var mg = $('#manage'); if (mg) mg.onclick = openPortal;
   }
 

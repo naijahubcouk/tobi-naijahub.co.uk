@@ -15,11 +15,10 @@ const MIN = 60 * 1000;
 
 // ───────────────────────── configuration ─────────────────────────
 const DEFAULT_SETTINGS = {
-  standardLimit: 20,            // generations per month, Standard Business Club
-  powerLimit: 200,              // generations per month in total with AI Power
+  standardLimit: 20,            // generations per DAY, Business Club only
+  powerLimit: 100,              // generations per DAY with AI Power (with or without Club)
   perMinuteLimit: 6,            // burst protection per member
-  globalMonthlyGenerationCap: 4000, // hard stop for the whole studio
-  globalMonthlyCostCapGbp: 25,  // hard stop on estimated AI spend
+  spendWarnGbp: 30,             // email + admin alert when monthly AI spend passes this (and 2x). Never blocks.
   model: '',                    // blank = STUDIO_MODEL env or openai/gpt-4o-mini
   inputPricePerMUsd: 0.15,      // used only when the provider does not report cost
   outputPricePerMUsd: 0.60,
@@ -235,19 +234,15 @@ function cleanText(v, max) {
   return String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, max || 500);
 }
 
-// Calendar month in UK time, e.g. "2026-10". Allowances reset on the 1st.
-function monthKey(date) {
-  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit' })
+// UK calendar day, e.g. "2026-10-15". Allowances reset at midnight UK time.
+function dayKey(date) {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' })
     .formatToParts(date || new Date());
-  const y = parts.find(p => p.type === 'year').value;
-  const m = parts.find(p => p.type === 'month').value;
-  return `${y}-${m}`;
+  const get = t => parts.find(p => p.type === t).value;
+  return `${get('year')}-${get('month')}-${get('day')}`;
 }
-function nextResetDate(date) {
-  const [y, m] = monthKey(date).split('-').map(Number);
-  const ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1;
-  return `${ny}-${String(nm).padStart(2, '0')}-01`;
-}
+// UK calendar month, e.g. "2026-10" — used for cost reporting.
+function monthKey(date) { return dayKey(date).slice(0, 7); }
 
 // ───────────────────────── rate limiting ─────────────────────────
 // Fixed-window counter. Throws 429 when exceeded.
@@ -282,22 +277,38 @@ function endOfDayUk(dateStr) {
 
 const LIVE_SUB_STATUSES = ['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'];
 
+/*
+ * Access rules
+ *  - Business Club (admin-managed, annual):  20 a day
+ *  - AI Power (paid via Stripe, monthly or yearly), with or without Club: 100 a day
+ *  - AI Power is independent of Club: one ending does not affect the other.
+ *  - Someone whose AI Power ended (and has no active Club) can still sign in read-only
+ *    to view and copy their library.
+ *  - "blocked" (admin) removes all access.
+ */
 function access(member, settings, now) {
   now = now || Date.now();
-  const membershipActive = !!member && member.status === 'active' &&
+  const blocked = !!(member && member.blocked);
+  const membershipActive = !blocked && !!member && member.status === 'active' &&
     !!member.membershipExpiresAt && endOfDayUk(member.membershipExpiresAt) >= now;
   const addon = (member && member.addon) || null;
-  const addonPaid = !!addon && (addon.status === 'active' || addon.status === 'trialing');
-  const powerActive = membershipActive && addonPaid;
+  const powerActive = !blocked && !!addon && (addon.status === 'active' || addon.status === 'trialing');
+  const canCreate = membershipActive || powerActive;
+  const canView = canCreate || (!blocked && !!addon);
   let limit = powerActive ? settings.powerLimit : settings.standardLimit;
   if (member && Number.isInteger(member.allowanceOverride) && member.allowanceOverride >= 0) limit = member.allowanceOverride;
   return {
-    membershipActive,
-    powerActive,
+    blocked,
+    membershipActive,          // Business Club
+    powerActive,               // AI Power paid and current
+    canCreate,
+    canView,
+    readOnly: canView && !canCreate,
     addonStatus: addon ? addon.status : null,
+    addonInterval: addon ? addon.interval || null : null,
     addonLive: !!addon && LIVE_SUB_STATUSES.includes(addon.status),
-    plan: powerActive ? 'power' : 'standard',
-    limit: membershipActive ? limit : 0,
+    plan: powerActive ? 'power' : membershipActive ? 'club' : 'none',
+    limit: canCreate ? limit : 0,
   };
 }
 
@@ -334,11 +345,15 @@ async function createSession(email, role, event) {
 }
 
 /*
- * Loads the member session, enforcing expiry, revocation and membership status.
+ * Loads the member session, enforcing expiry, revocation and access level.
+ *   opts.level = 'create' (default) — Club or AI Power active
+ *              = 'view'   — also allows read-only (AI Power ended) accounts
+ *              = 'buyer'  — also allows a verified email with no account yet (buying AI Power)
  * Renews idle expiry and rotates the token weekly (old token gets a 2-minute grace).
  */
 async function requireMember(ctx, opts) {
   opts = opts || {};
+  const level = opts.level || 'create';
   const token = parseCookies(ctx.event)[COOKIE_MEMBER];
   if (!token || token.length > 100) throw new HttpError(401, 'signed_out', 'Please sign in.');
   const key = `sess/${sha256(token)}`;
@@ -351,13 +366,17 @@ async function requireMember(ctx, opts) {
   const member = await getMember(sess.email);
   const settings = await getSettings();
   const acc = access(member, settings, now);
-  if (!member || (member.sessionEpoch || 0) !== (sess.epoch || 0)) {
+  if ((member && (member.sessionEpoch || 0) !== (sess.epoch || 0)) || (!member && sess.epoch)) {
     await del(key).catch(() => {});
     ctx.cookiesOut.push(clearCookie(COOKIE_MEMBER));
     throw new HttpError(401, 'signed_out', 'Please sign in again.');
   }
-  if (!acc.membershipActive && !opts.allowInactive) {
-    throw new HttpError(403, 'membership_inactive', 'Your Business Club membership is not active. Please contact Auntie Tobi to renew.');
+  if (acc.blocked) throw new HttpError(403, 'account_blocked', 'This account has been suspended. Please contact Auntie Tobi.');
+  const allowed = level === 'buyer' ? true : level === 'view' ? acc.canView : acc.canCreate;
+  if (!allowed) {
+    throw new HttpError(403, acc.readOnly ? 'read_only' : 'no_access',
+      acc.readOnly ? 'Your AI Power has ended. Renew it to create new content — your library is still here.'
+        : 'You need an active Business Club membership or AI Power to use the Studio.');
   }
   // Renew / rotate
   if (!sess.rotatedAt && now - sess.createdAt > SESSION.rotateMs) {
@@ -446,13 +465,19 @@ async function sendCodeEmail(email, code, purpose) {
 <p style="margin:0;font-size:13px;color:#5b6475">Didn't ask for this? Ignore this email — nobody can sign in without the code.</p>
 </div><p style="font-size:12px;color:#8a8f99;text-align:center;margin-top:16px">auntietobi.co.uk</p></div></body></html>`;
 
+  if (!env('RESEND_API_KEY') && env('STUDIO_EMAIL_MODE') === 'log') {
+    // Preview-only testing aid. Never set STUDIO_EMAIL_MODE=log for production.
+    console.log(`[studio] EMAIL_MODE=log — code for ${email} (${purpose}): ${code}`);
+    return;
+  }
+  const ok = await sendEmail([email], subject, text, html);
+  if (!ok) throw new HttpError(502, 'email_failed', 'We couldn\'t send your code just now. Please try again shortly.');
+}
+
+async function sendEmail(to, subject, text, html) {
   const key = env('RESEND_API_KEY');
   if (!key) {
-    if (env('STUDIO_EMAIL_MODE') === 'log') {
-      // Preview-only testing aid. Never set STUDIO_EMAIL_MODE=log for production.
-      console.log(`[studio] EMAIL_MODE=log — code for ${email} (${purpose}): ${code}`);
-      return;
-    }
+    if (env('STUDIO_EMAIL_MODE') === 'log') { console.log(`[studio] EMAIL_MODE=log — to ${to.join(',')}: ${subject}`); return true; }
     throw new HttpError(500, 'email_not_configured', 'Email sending is not configured yet.');
   }
   const res = await fetch('https://api.resend.com/emails', {
@@ -460,13 +485,19 @@ async function sendCodeEmail(email, code, purpose) {
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: env('STUDIO_EMAIL_FROM', 'Auntie Tobi Studio <studio@auntietobi.co.uk>'),
-      to: [email], subject, text, html,
+      to, subject, text, ...(html ? { html } : {}),
     }),
   });
-  if (!res.ok) {
-    console.error('[studio] email send failed', res.status, (await res.text()).slice(0, 300));
-    throw new HttpError(502, 'email_failed', 'We couldn\'t send your code just now. Please try again shortly.');
-  }
+  if (!res.ok) console.error('[studio] email send failed', res.status, (await res.text()).slice(0, 300));
+  return res.ok;
+}
+
+// Notifies every admin by email (best effort — never throws).
+async function emailAdmins(subject, text) {
+  const to = adminEmails();
+  if (!to.length) return;
+  try { await sendEmail(to, `[Business Studio] ${subject}`, text); }
+  catch (e) { console.error('[studio] admin email failed', e && e.message); }
 }
 
 // ───────────────────────── admin audit & alerts ─────────────────────────
@@ -487,7 +518,7 @@ module.exports = {
   env, adminEmails, HttpError, Abort, respond, handler, header,
   store, getJson, setJson, del, listKeys, cas, sleep,
   normalizeEmail, requireEmail, enc, sha256, hmac, randomToken, nowIso, cleanText,
-  monthKey, nextResetDate, rateLimit, getSettings, modelFor,
+  dayKey, monthKey, rateLimit, getSettings, modelFor, sendEmail, emailAdmins,
   getMember, access, endOfDayUk,
   parseCookies, cookie, clearCookie, createSession, requireMember, requireFresh, requireAdmin,
   issueOtp, checkOtp, audit, alert,

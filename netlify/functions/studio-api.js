@@ -7,6 +7,7 @@ const core = require('./studio-lib/core');
 const { HttpError, handler, cleanText, enc, cas } = core;
 const tools = require('./studio-lib/tools');
 const gen = require('./studio-lib/generate');
+const stripe = require('./studio-lib/stripe');
 
 const PROFILE_FIELDS = {
   businessName: 80, industry: 60, location: 80, products: 600, customers: 400,
@@ -39,24 +40,33 @@ async function getProfile(email) { return core.getJson(`profiles/${enc(email)}`)
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const action = body.action;
-  const auth = await core.requireMember(ctx, { allowInactive: action === 'bootstrap' });
+  const level = action === 'bootstrap' ? 'buyer' : action === 'generate' ? 'create' : 'view';
+  const auth = await core.requireMember(ctx, { level });
   const email = auth.sess.email;
 
   switch (action) {
     case 'bootstrap': {
-      const [profile, history] = await Promise.all([getProfile(email), core.getJson(gen.historyIndexKey(email))]);
       const m = auth.member;
-      return {
-        member: { email, name: m.name || '', membershipExpiresAt: m.membershipExpiresAt },
-        access: auth.access,
-        addon: m.addon ? { status: m.addon.status, currentPeriodEnd: m.addon.currentPeriodEnd, cancelAtPeriodEnd: m.addon.cancelAtPeriodEnd } : null,
-        usage: auth.access.membershipActive ? await gen.usageSummary(email, auth.access) : null,
-        profile: profile || null,
+      const base = {
         tools: tools.publicToolList(),
         tones: Object.keys(tools.TONES),
-        recent: ((history && history.items) || []).slice(0, 5),
         limits: { standard: auth.settings.standardLimit, power: auth.settings.powerLimit },
-        billingEnabled: !!(core.env('STRIPE_SECRET_KEY') && core.env('STRIPE_PRICE_POWER')),
+        billing: { enabled: stripe.billingEnabled(), intervals: stripe.billingEnabled() ? stripe.availableIntervals() : [] },
+      };
+      if (!m || !auth.access.canView) {
+        // Verified email without an account (or without access): offer AI Power.
+        return { ...base, state: 'buyer', member: { email, isClub: !!m && m.status !== 'none', membershipExpiresAt: m ? m.membershipExpiresAt : null }, access: auth.access };
+      }
+      const [profile, history] = await Promise.all([getProfile(email), core.getJson(gen.historyIndexKey(email))]);
+      return {
+        ...base,
+        state: auth.access.canCreate ? 'active' : 'readonly',
+        member: { email, name: m.name || '', isClub: m.status !== 'none', membershipExpiresAt: m.membershipExpiresAt },
+        access: auth.access,
+        addon: m.addon ? { status: m.addon.status, interval: m.addon.interval, currentPeriodEnd: m.addon.currentPeriodEnd, cancelAtPeriodEnd: m.addon.cancelAtPeriodEnd } : null,
+        usage: auth.access.canCreate ? await gen.usageSummary(email, auth.access) : null,
+        profile: profile || null,
+        recent: ((history && history.items) || []).slice(0, 5),
       };
     }
 
