@@ -5,8 +5,8 @@
  * Every event is signature-checked, then the customer's subscriptions are re-read from Stripe
  * and the member's access is rewritten — so retries, duplicates and out-of-order events are safe.
  */
-const core = require('./studio-lib/core');
-const stripe = require('./studio-lib/stripe');
+const core = require('../core');
+const stripe = require('../stripe');
 const { HttpError, handler } = core;
 
 const HANDLED = new Set([

@@ -3,11 +3,11 @@
  * Business Studio member API. Every action requires a valid member session.
  * POST /.netlify/functions/studio-api  { action, ... }
  */
-const core = require('./studio-lib/core');
+const core = require('../core');
 const { HttpError, handler, cleanText, enc, cas } = core;
-const tools = require('./studio-lib/tools');
-const gen = require('./studio-lib/generate');
-const stripe = require('./studio-lib/stripe');
+const tools = require('../tools');
+const gen = require('../generate');
+const stripe = require('../stripe');
 
 const PROFILE_FIELDS = {
   businessName: 80, industry: 60, location: 80, products: 600, customers: 400,

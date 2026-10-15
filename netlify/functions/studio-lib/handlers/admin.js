@@ -5,11 +5,11 @@
  * there is deliberately no "log in as member" feature.
  * POST /.netlify/functions/studio-admin  { action, ... }
  */
-const core = require('./studio-lib/core');
+const core = require('../core');
 const { HttpError, handler, requireEmail, rateLimit, enc, cas, getJson, cleanText } = core;
-const gen = require('./studio-lib/generate');
-const stripe = require('./studio-lib/stripe');
-const growth = require('./studio-lib/growth');
+const gen = require('../generate');
+const stripe = require('../stripe');
+const growth = require('../growth');
 
 // Business Club status. 'none' = not a Club member (e.g. AI Power-only customer).
 const STATUSES = ['pending', 'active', 'inactive', 'none'];

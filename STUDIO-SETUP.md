@@ -23,18 +23,8 @@ Upload to a **new branch called `studio`** (not `main`).
 |---|---|---|
 | `studio.html` | repo root | New |
 | `studio-admin.html` | repo root | New |
-| `netlify/functions/studio-auth.js` | `netlify/functions/` | New |
-| `netlify/functions/studio-api.js` | `netlify/functions/` | New |
-| `netlify/functions/studio-billing.js` | `netlify/functions/` | New |
-| `netlify/functions/studio-stripe-webhook.js` | `netlify/functions/` | New |
-| `netlify/functions/studio-admin.js` | `netlify/functions/` | New |
-| `netlify/functions/studio-growth.js` | `netlify/functions/` | New |
-| `netlify/functions/studio-maintenance.js` | `netlify/functions/` | New |
-| `netlify/functions/studio-lib/core.js` | `netlify/functions/studio-lib/` (new folder) | New |
-| `netlify/functions/studio-lib/tools.js` | `netlify/functions/studio-lib/` | New |
-| `netlify/functions/studio-lib/generate.js` | `netlify/functions/studio-lib/` | New |
-| `netlify/functions/studio-lib/stripe.js` | `netlify/functions/studio-lib/` | New |
-| `netlify/functions/studio-lib/growth.js` | `netlify/functions/studio-lib/` | New |
+| `netlify/functions/studio-auth.mjs`, `studio-api.mjs`, `studio-billing.mjs`, `studio-admin.mjs`, `studio-growth.mjs`, `studio-stripe-webhook.mjs`, `studio-maintenance.mjs` | `netlify/functions/` | New — Netlify's current function format (needed for safe allowance counting) |
+| `netlify/functions/studio-lib/` (whole folder, including `handlers/`) | `netlify/functions/studio-lib/` | New — shared Studio code (not functions themselves) |
 | `_redirects` | repo root | **Changed** — 4 lines added after `/business-club` |
 | `netlify.toml` | repo root | **Changed** — daily `studio-maintenance` schedule added |
 | `package.json` | repo root | **Changed** — adds `@netlify/blobs` 10.7.13 (Netlify installs it automatically) |
@@ -43,7 +33,7 @@ Upload to a **new branch called `studio`** (not `main`).
 Why the three changed files matter:
 - **`_redirects`** makes `/studio` and `/studio-admin` work (they must sit above the `/* /index.html 200` line at the bottom).
 - **`package.json`** pins the storage library to a version that supports safe "only-if-unchanged" writes. That is what stops two simultaneous requests overspending an allowance. Your knowledge base functions use the same library and are unaffected.
-- **`netlify.toml`** runs a daily tidy-up that also stops AI Power renewing when an annual membership expires.
+- **`netlify.toml`**: only a comment line; the daily tidy-up is scheduled inside `studio-maintenance.mjs`.
 
 > Heads-up: `send-push.js` edits `_redirects` on `main` when you send a notification. Before merging `studio` into `main`, re-download the latest `_redirects` from `main`, and re-add only the 4 Studio lines.
 

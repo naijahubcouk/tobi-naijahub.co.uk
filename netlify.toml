@@ -59,9 +59,7 @@
 [functions."sync-directory"]
   schedule = "0 */2 * * *"
 
-# Business Studio daily housekeeping (membership expiry → stop AI Power renewals; tidy old codes/sessions)
-[functions."studio-maintenance"]
-  schedule = "17 3 * * *"
+# Business Studio daily housekeeping is scheduled inside netlify/functions/studio-maintenance.mjs
 
 
 # PAUSED 2026-09-25 (Chrome spam warning) — remove the # on the next 2 lines to switch back on

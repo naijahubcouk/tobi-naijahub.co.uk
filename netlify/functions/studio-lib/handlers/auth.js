@@ -9,7 +9,7 @@
  *   stepup-request {} / stepup-verify { code } → fresh verification for payments
  *   logout {} / logout-all {}
  */
-const core = require('./studio-lib/core');
+const core = require('../core');
 const { HttpError, handler, requireEmail, rateLimit, getMember, getSettings, access } = core;
 
 const GENERIC = 'If that email has Studio access, a 6-digit code is on its way. It expires in 10 minutes.';

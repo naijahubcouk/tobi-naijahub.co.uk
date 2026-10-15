@@ -5,8 +5,8 @@
  * POST /.netlify/functions/studio-billing  { action: 'checkout' (+ interval: 'month'|'year') | 'portal' | 'refresh' }
  * Starting or managing a subscription needs an email code from the last 24 hours.
  */
-const core = require('./studio-lib/core');
-const stripe = require('./studio-lib/stripe');
+const core = require('../core');
+const stripe = require('../stripe');
 const { HttpError, handler } = core;
 
 exports.handler = handler(async (ctx) => {

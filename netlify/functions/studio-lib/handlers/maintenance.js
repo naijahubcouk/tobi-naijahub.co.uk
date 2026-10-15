@@ -1,13 +1,12 @@
 'use strict';
 /*
- * Daily Business Studio housekeeping (scheduled in netlify.toml, 03:17 UTC).
+ * Daily Business Studio housekeeping (scheduled at 03:17 UTC via config in studio-maintenance.mjs).
  *  - Removes expired codes, sessions, rate-limit counters and old webhook records.
  * Scheduled functions can't be called from the public web.
  */
-const core = require('./studio-lib/core');
+const core = require('../core');
 
 exports.handler = async (event) => {
-  if (event && event.blobs) require('@netlify/blobs').connectLambda(event);
   const started = Date.now();
   const now = Date.now();
   const report = { cleaned: 0 };

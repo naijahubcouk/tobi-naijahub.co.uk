@@ -12,8 +12,8 @@
  *   progress-save { date, enquiries, bookings, salesCount, salesGbp, posts, note }
  *   summary                      → template-based weekly summary
  */
-const core = require('./studio-lib/core');
-const growth = require('./studio-lib/growth');
+const core = require('../core');
+const growth = require('../growth');
 const { HttpError, handler } = core;
 
 exports.handler = handler(async (ctx) => {
