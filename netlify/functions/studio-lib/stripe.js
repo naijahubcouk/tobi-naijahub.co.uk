@@ -1,0 +1,242 @@
+'use strict';
+/*
+ * Stripe for the £5/month AI Power add-on. No SDK — plain HTTPS with a pinned API version.
+ * Stripe is the source of truth: every webhook re-fetches the customer's subscriptions
+ * and rewrites the member's add-on state, so events arriving twice or out of order are harmless.
+ */
+const crypto = require('crypto');
+const core = require('./core');
+const { HttpError, env, cas, getJson, setJson, enc, sha256 } = core;
+
+const API_VERSION = '2024-06-20';
+
+function key() {
+  const k = env('STRIPE_SECRET_KEY');
+  if (!k) throw new HttpError(500, 'billing_not_configured', 'Payments are not set up yet.');
+  return k;
+}
+function priceId() {
+  const p = env('STRIPE_PRICE_POWER');
+  if (!p) throw new HttpError(500, 'billing_not_configured', 'Payments are not set up yet.');
+  return p;
+}
+
+function formEncode(obj, prefix, out) {
+  out = out || [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined || v === null) continue;
+    const name = prefix ? `${prefix}[${k}]` : k;
+    if (typeof v === 'object') formEncode(v, name, out);
+    else out.push(`${encodeURIComponent(name)}=${encodeURIComponent(String(v))}`);
+  }
+  return out.join('&');
+}
+
+async function api(method, path, params, idempotencyKey) {
+  const headers = { Authorization: `Bearer ${key()}`, 'Stripe-Version': API_VERSION };
+  let url = `https://api.stripe.com/v1${path}`, body;
+  if (method === 'GET') {
+    const q = params ? formEncode(params) : '';
+    if (q) url += `?${q}`;
+  } else {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    body = params ? formEncode(params) : '';
+    if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
+  }
+  const res = await fetch(url, { method, headers, body });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    console.error('[studio] stripe error', method, path, res.status, data && data.error && data.error.message);
+    const err = new HttpError(502, 'billing_error', 'The payment service had a problem. Please try again.');
+    err.stripe = data && data.error;
+    throw err;
+  }
+  return data;
+}
+
+// ───────────── webhook signature ─────────────
+function verifyWebhook(rawBody, sigHeader, tolerance) {
+  const secret = env('STRIPE_WEBHOOK_SECRET');
+  if (!secret) throw new HttpError(500, 'billing_not_configured', 'Webhook secret missing.');
+  const parts = String(sigHeader || '').split(',').map(s => s.trim().split('='));
+  const t = (parts.find(p => p[0] === 't') || [])[1];
+  const sigs = parts.filter(p => p[0] === 'v1').map(p => p[1]);
+  if (!t || !sigs.length) throw new HttpError(400, 'bad_signature', 'Missing signature.');
+  const age = Math.abs(Date.now() / 1000 - Number(t));
+  if (!(age <= (tolerance || 300))) throw new HttpError(400, 'bad_signature', 'Signature too old.');
+  const expected = crypto.createHmac('sha256', secret).update(`${t}.${rawBody}`, 'utf8').digest('hex');
+  const ok = sigs.some(s => {
+    const a = Buffer.from(s, 'hex'), b = Buffer.from(expected, 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  });
+  if (!ok) throw new HttpError(400, 'bad_signature', 'Invalid signature.');
+  return JSON.parse(rawBody);
+}
+
+// ───────────── customer ↔ member link ─────────────
+async function ensureCustomer(email) {
+  const member = await core.getMember(email);
+  if (member && member.stripeCustomerId) return member.stripeCustomerId;
+  const cus = await api('POST', '/customers', {
+    email, description: 'Auntie Tobi Business Club member',
+    metadata: { studio_member: email },
+  }, `studio-cus-${sha256(email).slice(0, 32)}`);
+  await cas(`members/${enc(email)}`, cur => {
+    if (!cur) throw new HttpError(404, 'not_member', 'Member not found.');
+    if (cur.stripeCustomerId) return undefined;
+    return { ...cur, stripeCustomerId: cus.id, updatedAt: core.nowIso() };
+  });
+  await setJson(`stripe-customers/${cus.id}`, { email });
+  const fresh = await core.getMember(email);
+  return fresh.stripeCustomerId;
+}
+
+async function emailForCustomer(customerId, customerObj) {
+  const idx = await getJson(`stripe-customers/${customerId}`);
+  if (idx && idx.email) return idx.email;
+  const c = customerObj || await api('GET', `/customers/${customerId}`);
+  const e = core.normalizeEmail(c && c.metadata && c.metadata.studio_member);
+  return e || null;
+}
+
+function isOurs(sub) {
+  const p = env('STRIPE_PRICE_POWER');
+  return (sub.items && sub.items.data || []).some(it => it.price && it.price.id === p);
+}
+
+/*
+ * Re-reads all of a customer's subscriptions and updates the member record.
+ * Cancels (and refunds) any accidental duplicate add-on subscription.
+ * Schedules cancellation at period end if annual membership is no longer active.
+ */
+async function syncCustomer(customerId) {
+  const email = await emailForCustomer(customerId);
+  if (!email) {
+    await core.alert('stripe_unlinked', 'Stripe customer not linked to any Studio member', { customerId });
+    return null;
+  }
+  const subs = await api('GET', '/subscriptions', { customer: customerId, status: 'all', limit: 20 });
+  const ours = (subs.data || []).filter(isOurs);
+  let live = ours.filter(s => core.LIVE_SUB_STATUSES.includes(s.status)).sort((a, b) => a.created - b.created);
+
+  // Duplicate protection: keep the oldest live subscription, cancel + refund the rest.
+  if (live.length > 1) {
+    const [keep, ...extra] = live;
+    for (const s of extra) {
+      await api('DELETE', `/subscriptions/${s.id}`, {}, `studio-dup-cancel-${s.id}`).catch(() => {});
+      let refunded = false;
+      try {
+        if (s.latest_invoice) {
+          const inv = await api('GET', `/invoices/${s.latest_invoice}`);
+          if (inv.payment_intent && inv.amount_paid > 0) {
+            await api('POST', '/refunds', { payment_intent: inv.payment_intent }, `studio-dup-refund-${s.id}`);
+            refunded = true;
+          }
+        }
+      } catch (e) { /* recorded in the alert below */ }
+      await core.alert('duplicate_subscription', `Duplicate AI Power subscription cancelled${refunded ? ' and refunded' : ' — check refund in Stripe'}`, { email, kept: keep.id, cancelled: s.id, refunded });
+    }
+    live = [keep];
+  }
+
+  const member = await core.getMember(email);
+  const settings = await core.getSettings();
+  const acc = core.access({ ...(member || {}), addon: null }, settings);
+  let current = live[0] || ours.sort((a, b) => b.created - a.created)[0] || null;
+
+  // Annual membership ended → stop future renewals (current paid month runs out, no further charges).
+  if (current && core.LIVE_SUB_STATUSES.includes(current.status) && !acc.membershipActive && !current.cancel_at_period_end) {
+    current = await api('POST', `/subscriptions/${current.id}`, { cancel_at_period_end: 'true', metadata: { cancel_reason: 'annual_membership_inactive' } }, `studio-expire-${current.id}-${core.monthKey()}`);
+    await core.alert('membership_expired_addon', 'Annual membership inactive — AI Power set to cancel at period end', { email, subscription: current.id });
+  }
+
+  const addon = current ? {
+    subscriptionId: current.id,
+    status: current.status,
+    currentPeriodEnd: current.current_period_end ? new Date(current.current_period_end * 1000).toISOString() : null,
+    cancelAtPeriodEnd: !!current.cancel_at_period_end,
+    updatedAt: core.nowIso(),
+  } : null;
+
+  await cas(`members/${enc(email)}`, cur => {
+    if (!cur) return undefined;
+    const next = { ...cur, addon, stripeCustomerId: cur.stripeCustomerId || customerId, updatedAt: core.nowIso() };
+    if (addon && core.LIVE_SUB_STATUSES.includes(addon.status)) delete next.pendingCheckout;
+    return next;
+  });
+  if (!(await getJson(`stripe-customers/${customerId}`))) await setJson(`stripe-customers/${customerId}`, { email });
+  return { email, addon };
+}
+
+// ───────────── checkout & portal ─────────────
+function siteUrl(event) {
+  const configured = env('STUDIO_SITE_URL');
+  if (configured) return configured.replace(/\/$/, '');
+  const host = core.header(event, 'host');
+  return `https://${host}`;
+}
+
+async function startCheckout(email, event) {
+  const member = await core.getMember(email);
+  const settings = await core.getSettings();
+  const acc = core.access(member, settings);
+  if (!acc.membershipActive) throw new HttpError(403, 'membership_inactive', 'AI Power is only available to active Business Club members.');
+  if (acc.addonLive) throw new HttpError(409, 'already_subscribed', 'You already have AI Power. Use "Manage subscription" to make changes.');
+
+  // Re-check with Stripe in case a webhook hasn't arrived yet.
+  const customerId = await ensureCustomer(email);
+  const synced = await syncCustomer(customerId);
+  if (synced && synced.addon && core.LIVE_SUB_STATUSES.includes(synced.addon.status)) {
+    throw new HttpError(409, 'already_subscribed', 'You already have AI Power. Use "Manage subscription" to make changes.');
+  }
+
+  // One open checkout at a time: reuse it rather than creating another.
+  const now = Date.now();
+  let reuse = null, nonce = null;
+  await cas(`members/${enc(email)}`, cur => {
+    const pc = cur.pendingCheckout;
+    if (pc && pc.expiresAt > now + 60 * 1000 && pc.url) { reuse = pc.url; return undefined; }
+    if (pc && pc.creating && now - pc.creating < 30 * 1000) throw new HttpError(409, 'in_progress', 'Your checkout is being prepared — please wait a moment.');
+    nonce = core.randomToken(8);
+    return { ...cur, pendingCheckout: { creating: now, nonce } };
+  });
+  if (reuse) return reuse;
+
+  const base = siteUrl(event);
+  const expiresAt = Math.floor(now / 1000) + 31 * 60;
+  let session;
+  try {
+    session = await api('POST', '/checkout/sessions', {
+      mode: 'subscription',
+      customer: customerId,
+      client_reference_id: sha256(email).slice(0, 40),
+      line_items: { 0: { price: priceId(), quantity: 1 } },
+      metadata: { studio_member: email },
+      subscription_data: { metadata: { studio_member: email } },
+      success_url: `${base}/studio?billing=success`,
+      cancel_url: `${base}/studio?billing=cancelled`,
+      expires_at: expiresAt,
+    }, `studio-checkout-${sha256(email).slice(0, 24)}-${nonce}`);
+  } catch (e) {
+    await cas(`members/${enc(email)}`, cur => ({ ...cur, pendingCheckout: null })).catch(() => {});
+    throw e;
+  }
+  await cas(`members/${enc(email)}`, cur => ({ ...cur, pendingCheckout: { id: session.id, url: session.url, expiresAt: expiresAt * 1000 } }));
+  return session.url;
+}
+
+async function portalUrl(email, event) {
+  const member = await core.getMember(email);
+  if (!member || !member.stripeCustomerId) throw new HttpError(404, 'no_subscription', 'There is no subscription to manage yet.');
+  const s = await api('POST', '/billing_portal/sessions', { customer: member.stripeCustomerId, return_url: `${siteUrl(event)}/studio?billing=managed` });
+  return s.url;
+}
+
+// Used by admin deactivation and the daily check.
+async function enforceMembership(email) {
+  const member = await core.getMember(email);
+  if (!member || !member.stripeCustomerId || !env('STRIPE_SECRET_KEY')) return null;
+  return syncCustomer(member.stripeCustomerId);
+}
+
+module.exports = { api, verifyWebhook, syncCustomer, startCheckout, portalUrl, enforceMembership, emailForCustomer, API_VERSION };

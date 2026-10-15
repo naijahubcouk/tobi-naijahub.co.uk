@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0F1E36">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
+<title>Studio Admin — Auntie Tobi</title>
+<link rel="icon" href="/favicon-32x32.png">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--green:#057A44;--green-d:#04613A;--green-l:#E3F2EA;--gold:#FFB81C;--gold-l:#FFF1CF;--navy:#0F1E36;--navy-2:#1C2E4D;--cream:#FBF6EC;--line:#EADFC8;--muted:#5B6475;--danger:#B3261E;--danger-l:#FCE8E6;--font:'DM Sans',-apple-system,Segoe UI,Roboto,sans-serif;--display:'Fraunces',Georgia,serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--navy);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+.hidden{display:none!important}
+header{background:var(--navy);color:var(--cream);padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+header b{font-family:var(--display);font-size:18px}
+header small{color:var(--gold);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700}
+header .sp{flex:1}
+header button{color:var(--cream);font-size:13px;opacity:.85}
+nav{display:flex;gap:4px;overflow-x:auto;background:#fff;border-bottom:1px solid var(--line);padding:6px 10px;position:sticky;top:52px;z-index:9}
+nav button{padding:8px 12px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);white-space:nowrap}
+nav button[aria-current=page]{background:var(--navy);color:var(--cream)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-family:var(--display);font-size:24px;margin-bottom:12px}
+h2{font-family:var(--display);font-size:18px;margin:20px 0 10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.stat b{display:block;font-family:var(--display);font-size:28px;line-height:1.1}
+.stat span{color:var(--muted);font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:10px 14px;font-weight:700;min-height:42px}
+.btn.primary{background:var(--green);color:#fff}.btn.gold{background:var(--gold);color:var(--navy)}
+.btn.ghost{border:1.5px solid var(--line);background:#fff}.btn.small{min-height:32px;padding:5px 10px;font-size:13px}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.5}
+input,select,textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;font-size:15px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(5,122,68,.15)}
+label{display:block;font-weight:700;font-size:13px;margin-bottom:4px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.f2{grid-template-columns:1fr}}
+.stack>*+*{margin-top:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:14px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#F7F1E3;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#FFFCF5}
+.tw{overflow-x:auto;border-radius:14px}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
+.p-active{background:var(--green-l);color:var(--green-d)}.p-pending{background:var(--gold-l);color:#7A5300}.p-inactive,.p-expired{background:#ECEDF0;color:var(--muted)}
+.p-power{background:var(--gold);color:var(--navy)}.p-warn{background:var(--danger-l);color:var(--danger)}
+.muted{color:var(--muted);font-size:13px}
+.err{background:var(--danger-l);color:var(--danger);border-radius:10px;padding:9px 11px;font-weight:500}
+.warn{background:var(--gold-l);border-radius:10px;padding:10px 12px}
+.bar{height:6px;background:#EEE6D3;border-radius:999px;overflow:hidden;min-width:70px}
+.bar span{display:block;height:100%;background:var(--green)}
+.scrim{position:fixed;inset:0;background:rgba(15,30,54,.55);display:flex;align-items:center;justify-content:center;z-index:30;padding:12px}
+.sheet{background:var(--cream);border-radius:16px;padding:18px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
+.login{max-width:380px;margin:60px auto;padding:0 16px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 16px;border-radius:10px;z-index:40}
+</style>
+</head>
+<body>
+<header><div><b>Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
+<nav id="nav" class="hidden">
+  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="subs">Add-on subscriptions</button>
+  <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button>
+</nav>
+<div id="app"></div>
+<script>
+'use strict';
+(function () {
+  var app = document.getElementById('app');
+  var S = { overview: null, members: null, month: null };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2500); }
+  function d(iso) { return iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }
+  function gbp(usd) { var r = S.overview ? S.overview.settings.usdToGbp : 0.79; return '£' + (usd * r).toFixed(usd * r < 1 ? 3 : 2); }
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function plusYear() { var x = new Date(); x.setFullYear(x.getFullYear() + 1); return x.toISOString().slice(0, 10); }
+
+  async function api(action, payload) {
+    var res = await fetch('/.netlify/functions/studio-admin', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify(Object.assign({ action: action }, payload || {})) });
+    var data = await res.json().catch(function () { return {}; });
+    if (res.status === 401 && action !== 'login-verify') { login(); throw new Error('Please sign in'); }
+    if (!res.ok) throw new Error(data.message || 'Something went wrong');
+    return data;
+  }
+
+  // ── login ──
+  function login() {
+    $('#nav').classList.add('hidden'); $('#logout').classList.add('hidden'); $('#who').textContent = '';
+    app.innerHTML = '<div class="login"><h1>Admin sign in</h1><form class="card stack" id="lf"><div><label for="em">Admin email</label><input id="em" type="email" autocomplete="email" required></div>' +
+      '<div id="cw" class="hidden"><label for="cd">6-digit code</label><input id="cd" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></div>' +
+      '<div class="err hidden" id="le"></div><button class="btn primary" style="width:100%" id="lb">Email me a code</button></form><p class="muted" style="margin-top:10px">Only addresses in STUDIO_ADMIN_EMAILS can sign in.</p></div>';
+    var sent = false;
+    $('#lf').onsubmit = async function (e) {
+      e.preventDefault(); var le = $('#le'); le.classList.add('hidden'); $('#lb').disabled = true;
+      try {
+        if (!sent) { await api('login-request', { email: $('#em').value }); sent = true; $('#cw').classList.remove('hidden'); $('#lb').textContent = 'Sign in'; $('#cd').focus(); }
+        else { await api('login-verify', { email: $('#em').value, code: $('#cd').value }); boot(); }
+      } catch (x) { le.textContent = x.message; le.classList.remove('hidden'); }
+      $('#lb').disabled = false;
+    };
+  }
+
+  // ── nav ──
+  $$('#nav button').forEach(function (b) { b.onclick = function () { go(b.dataset.v); }; });
+  $('#logout').onclick = async function () { try { await api('logout'); } catch (e) {} login(); };
+  function go(v) {
+    $$('#nav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
+    ({ overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit })[v]();
+  }
+  async function boot() {
+    try { S.overview = await api('overview'); } catch (e) { return; }
+    $('#nav').classList.remove('hidden'); $('#logout').classList.remove('hidden'); $('#who').textContent = S.overview.admin;
+    go('overview');
+  }
+  function loading() { app.innerHTML = '<main><p class="muted">Loading…</p></main>'; }
+
+  // ── overview ──
+  async function vOverview() {
+    loading();
+    var o = S.overview = await api('overview');
+    var m = o.months.filter(function (x) { return x.month === o.month; })[0] || { count: 0, costUsd: 0, inTok: 0, outTok: 0 };
+    var mem = await api('members-list'); S.members = mem.members;
+    var active = mem.members.filter(function (x) { return x.membershipActive; }).length;
+    var power = mem.members.filter(function (x) { return x.plan === 'power'; }).length;
+    var c = o.config;
+    var issues = [];
+    if (c.email === 'missing') issues.push('Email sending is not configured (RESEND_API_KEY) — members can’t get codes.');
+    if (/log/.test(c.email)) issues.push('STUDIO_EMAIL_MODE=log is on: codes go to function logs, not email. Testing only — never in production.');
+    if (!c.ai) issues.push('No AI key found (OPENROUTER_API_KEY / STUDIO_OPENROUTER_API_KEY).');
+    if (!c.stripe) issues.push('Stripe isn’t fully configured — the AI Power add-on is hidden from members.');
+    app.innerHTML = '<main><h1>Overview · ' + esc(o.month) + '</h1>' +
+      (issues.length ? '<div class="warn stack" style="margin-bottom:14px">' + issues.map(function (i) { return '<div>⚠️ ' + esc(i) + '</div>'; }).join('') + '</div>' : '') +
+      (o.alertCount ? '<div class="warn" style="margin-bottom:14px">You have <b>' + o.alertCount + '</b> alert(s). <button class="btn small ghost" id="toAlerts">View</button></div>' : '') +
+      '<div class="grid">' +
+      stat(active, 'Active members') + stat(power, 'AI Power subscribers') + stat(m.count, 'Generations this month') +
+      stat(gbp(m.costUsd || 0), 'Estimated AI cost this month') + stat('£' + (power * 5), 'Add-on revenue / month (gross)') +
+      stat(Math.round(100 * m.count / Math.max(1, o.settings.globalMonthlyGenerationCap)) + '%', 'of monthly safety cap (' + o.settings.globalMonthlyGenerationCap + ')') +
+      '</div><h2>Setup</h2><div class="card"><table style="border:0"><tbody>' +
+      row('Email codes', c.email) + row('AI model', c.model + (c.ai ? '' : ' (no key)')) + row('Stripe', c.stripe ? 'configured (' + c.stripeMode + ' mode)' : 'not configured') +
+      row('Spending cap', '£' + o.settings.globalMonthlyCostCapGbp + ' / month (Studio pauses new AI requests at this point)') + '</tbody></table></div></main>';
+    var ta = $('#toAlerts'); if (ta) ta.onclick = function () { go('alerts'); };
+  }
+  function stat(v, l) { return '<div class="card stat"><b>' + esc(v) + '</b><span>' + esc(l) + '</span></div>'; }
+  function row(k, v) { return '<tr><th style="width:160px;background:none">' + esc(k) + '</th><td>' + esc(v) + '</td></tr>'; }
+
+  // ── members ──
+  function statusPill(m) {
+    if (m.status === 'active' && !m.membershipActive) return '<span class="pill p-expired">expired</span>';
+    return '<span class="pill p-' + esc(m.status) + '">' + esc(m.status) + '</span>';
+  }
+  function addonPill(a) {
+    if (!a) return '<span class="muted">—</span>';
+    var cls = ['active', 'trialing'].indexOf(a.status) > -1 ? 'p-power' : ['past_due', 'unpaid', 'incomplete'].indexOf(a.status) > -1 ? 'p-warn' : 'p-inactive';
+    return '<span class="pill ' + cls + '">' + esc(a.status) + (a.cancelAtPeriodEnd ? ' · ending' : '') + '</span>';
+  }
+
+  async function vMembers(q) {
+    loading();
+    var r = await api('members-list'); S.members = r.members;
+    app.innerHTML = '<main><h1>Members</h1><div class="row" style="margin-bottom:12px"><input id="q" placeholder="Search email or name" style="max-width:320px" value="' + esc(q || '') + '">' +
+      '<button class="btn primary" id="add">+ Add member</button><button class="btn ghost" id="imp">Bulk add</button></div>' +
+      '<div class="tw"><table><thead><tr><th>Member</th><th>Status</th><th>Expires</th><th>Plan</th><th>This month</th><th>Add-on</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>' +
+      '<p class="muted" style="margin-top:8px">Members get access only when status is <b>active</b> and the expiry date hasn’t passed. Changes apply instantly.</p></main>';
+    function draw() {
+      var s = $('#q').value.toLowerCase();
+      var list = S.members.filter(function (m) { return !s || m.email.indexOf(s) > -1 || (m.name || '').toLowerCase().indexOf(s) > -1; });
+      $('#tb').innerHTML = list.length ? list.map(function (m) {
+        var pct = m.limit ? Math.min(100, Math.round(100 * m.usage.used / m.limit)) : 0;
+        return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + (m.lastLoginAt ? ' · last signed in ' + d(m.lastLoginAt) : '') + '</div></td><td>' + statusPill(m) + '</td><td>' + d(m.membershipExpiresAt) + '</td>' +
+          '<td>' + (m.plan === 'power' ? '<span class="pill p-power">AI Power</span>' : 'Standard') + (m.allowanceOverride != null ? '<div class="muted">custom limit</div>' : '') + '</td>' +
+          '<td>' + m.usage.used + ' / ' + m.limit + '<div class="bar"><span style="width:' + pct + '%"></span></div><div class="muted">' + gbp(m.usage.costUsd || 0) + '</div></td>' +
+          '<td>' + addonPill(m.addon) + '</td><td><button class="btn small ghost" data-e="' + esc(m.email) + '">Manage</button></td></tr>';
+      }).join('') : '<tr><td colspan="7" class="muted">No members yet. Add your first Business Club member.</td></tr>';
+      $$('[data-e]').forEach(function (b) { b.onclick = function () { editMember(b.dataset.e); }; });
+    }
+    $('#q').oninput = draw; draw();
+    $('#add').onclick = function () { editMember(null); };
+    $('#imp').onclick = bulkAdd;
+  }
+
+  function sheet(html) {
+    var s = document.createElement('div'); s.className = 'scrim'; s.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true">' + html + '</div>';
+    document.body.appendChild(s); s.addEventListener('click', function (e) { if (e.target === s) s.remove(); }); return s;
+  }
+
+  async function editMember(email) {
+    var m = email ? S.members.filter(function (x) { return x.email === email; })[0] : { email: '', name: '', status: 'active', membershipExpiresAt: plusYear(), allowanceOverride: null, notes: '' };
+    var s = sheet('<h2 style="margin:0">' + (email ? 'Manage member' : 'Add member') + '</h2>' +
+      '<div><label for="me">Email</label><input id="me" type="email" value="' + esc(m.email) + '"' + (email ? ' disabled' : '') + '></div>' +
+      '<div><label for="mn">Name / business</label><input id="mn" value="' + esc(m.name) + '"></div>' +
+      '<div class="f2"><div><label for="ms">Status</label><select id="ms"><option value="active">Active (approved)</option><option value="pending">Pending approval</option><option value="inactive">Inactive</option></select></div>' +
+      '<div><label for="mx">Membership expires</label><input id="mx" type="date" value="' + esc(m.membershipExpiresAt || '') + '"></div></div>' +
+      '<div><label for="mo">Custom monthly allowance <span class="muted">(blank = plan default)</span></label><input id="mo" type="number" min="0" max="5000" value="' + (m.allowanceOverride == null ? '' : m.allowanceOverride) + '"></div>' +
+      '<div><label for="mt">Private notes</label><textarea id="mt" rows="2">' + esc(m.notes) + '</textarea></div>' +
+      (email ? '<div class="card stack"><b>AI Power add-on</b><div>' + addonPill(m.addon) + (m.addon && m.addon.currentPeriodEnd ? ' <span class="muted">period ends ' + d(m.addon.currentPeriodEnd) + '</span>' : '') + '</div>' +
+        (m.stripeCustomerId ? '<div class="muted">Stripe customer: ' + esc(m.stripeCustomerId) + '</div><button class="btn small ghost" id="sync">Re-check with Stripe</button>' : '<div class="muted">No Stripe customer yet.</div>') +
+        '<div class="muted">Deactivating or expiring a member pauses their add-on immediately and stops it renewing.</div></div>' +
+        '<div class="card stack"><b>Usage history</b><div id="uh" class="muted">Loading…</div></div>' : '') +
+      '<div class="err hidden" id="merr"></div>' +
+      '<div class="row"><button class="btn primary" id="msave">' + (email ? 'Save changes' : 'Add member') + '</button><button class="btn ghost" id="mcancel">Cancel</button>' +
+      (email ? '<button class="btn small ghost danger" id="mrev" style="margin-left:auto">Sign out all devices</button>' : '') + '</div>');
+    $('#ms', s).value = m.status;
+    $('#mcancel', s).onclick = function () { s.remove(); };
+    $('#msave', s).onclick = async function () {
+      var b = this; b.disabled = true; $('#merr', s).classList.add('hidden');
+      var payload = { email: $('#me', s).value, name: $('#mn', s).value, status: $('#ms', s).value, membershipExpiresAt: $('#mx', s).value, allowanceOverride: $('#mo', s).value === '' ? null : Number($('#mo', s).value), notes: $('#mt', s).value };
+      try { await api(email ? 'member-update' : 'member-add', payload); s.remove(); toast('Saved'); vMembers(); }
+      catch (x) { $('#merr', s).textContent = x.message; $('#merr', s).classList.remove('hidden'); b.disabled = false; }
+    };
+    if (email) {
+      $('#mrev', s).onclick = async function () { if (!confirm('Sign this member out on every device?')) return; try { await api('member-revoke-sessions', { email: email }); toast('Signed out everywhere'); } catch (x) { toast(x.message); } };
+      var sy = $('#sync', s); if (sy) sy.onclick = async function () { try { var r = await api('member-stripe-sync', { email: email }); toast('Add-on: ' + (r.addon ? r.addon.status : 'none')); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
+      try {
+        var u = await api('member-usage', { email: email });
+        $('#uh', s).innerHTML = u.months.length ? u.months.map(function (x) { return esc(x.month) + ': <b>' + x.used + '</b> generations · ' + gbp(x.costUsd || 0); }).join('<br>') : 'No usage yet.';
+      } catch (x) { $('#uh', s).textContent = x.message; }
+    }
+  }
+
+  function bulkAdd() {
+    var s = sheet('<h2 style="margin:0">Bulk add members</h2><p class="muted">Paste email addresses separated by commas, spaces or new lines. Existing members are skipped.</p>' +
+      '<textarea id="be" rows="6" placeholder="ada@business.co.uk&#10;tunde@shop.com"></textarea>' +
+      '<div class="f2"><div><label for="bs">Status</label><select id="bs"><option value="active">Active (approved)</option><option value="pending">Pending approval</option></select></div><div><label for="bx">Membership expires</label><input id="bx" type="date" value="' + plusYear() + '"></div></div>' +
+      '<div id="br" class="muted"></div><div class="row"><button class="btn primary" id="bgo">Add members</button><button class="btn ghost" id="bc">Close</button></div>');
+    $('#bc', s).onclick = function () { s.remove(); vMembers(); };
+    $('#bgo', s).onclick = async function () {
+      try { var r = await api('members-import', { emails: $('#be', s).value, status: $('#bs', s).value, membershipExpiresAt: $('#bx', s).value }); $('#br', s).innerHTML = 'Added <b>' + r.added.length + '</b>' + (r.skipped.length ? ' · skipped ' + r.skipped.length + ' (already members): ' + esc(r.skipped.join(', ')) : ''); }
+      catch (x) { $('#br', s).textContent = x.message; }
+    };
+  }
+
+  // ── subscriptions ──
+  async function vSubs() {
+    loading();
+    var r = await api('members-list'); S.members = r.members;
+    var list = r.members.filter(function (m) { return m.addon; });
+    var live = list.filter(function (m) { return ['active', 'trialing'].indexOf(m.addon.status) > -1; });
+    app.innerHTML = '<main><h1>AI Power subscriptions</h1><div class="grid" style="margin-bottom:14px">' + stat(live.length, 'Active') + stat('£' + live.length * 5 + '/mo', 'Gross revenue') +
+      stat(list.filter(function (m) { return m.addon.cancelAtPeriodEnd; }).length, 'Cancelling at period end') + stat(list.filter(function (m) { return ['past_due', 'unpaid', 'incomplete'].indexOf(m.addon.status) > -1; }).length, 'Payment problems') + '</div>' +
+      '<div class="tw"><table><thead><tr><th>Member</th><th>Status</th><th>Current period ends</th><th>Membership</th><th>Usage</th></tr></thead><tbody>' +
+      (list.length ? list.map(function (m) { return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + '</div></td><td>' + addonPill(m.addon) + '</td><td>' + d(m.addon.currentPeriodEnd) + '</td><td>' + statusPill(m) + ' <span class="muted">to ' + d(m.membershipExpiresAt) + '</span></td><td>' + m.usage.used + ' / ' + m.limit + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="muted">No add-on subscriptions yet.</td></tr>') +
+      '</tbody></table></div><p class="muted" style="margin-top:8px">Refunds, invoices and payment details are managed in your Stripe dashboard. Members cancel themselves from Account → Manage subscription.</p></main>';
+  }
+
+  // ── usage ──
+  async function vUsage(month) {
+    loading();
+    var o = S.overview = await api('overview');
+    month = month || o.month;
+    var r = await api('members-list', { month: month });
+    var rows = r.members.filter(function (m) { return m.usage.used > 0; }).sort(function (a, b) { return b.usage.used - a.usage.used; });
+    var months = o.months.slice().reverse();
+    app.innerHTML = '<main><h1>Usage &amp; costs</h1>' +
+      '<div class="tw"><table><thead><tr><th>Month</th><th>Generations</th><th>Tokens in / out</th><th>Est. cost</th><th>Avg per generation</th></tr></thead><tbody>' +
+      (months.length ? months.map(function (x) { return '<tr><td><button class="btn small ghost" data-m="' + esc(x.month) + '">' + esc(x.month) + '</button></td><td>' + (x.count || 0) + '</td><td>' + (x.inTok || 0).toLocaleString() + ' / ' + (x.outTok || 0).toLocaleString() + '</td><td><b>' + gbp(x.costUsd || 0) + '</b></td><td>' + (x.count ? gbp(x.costUsd / x.count) : '—') + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="muted">No usage yet.</td></tr>') +
+      '</tbody></table></div>' +
+      '<h2>By member · ' + esc(month) + '</h2><div class="tw"><table><thead><tr><th>Member</th><th>Used</th><th>Limit</th><th>Est. cost</th><th>Top tools</th></tr></thead><tbody>' +
+      (rows.length ? rows.map(function (m) { var tools = Object.entries(m.usage.byTool || {}).sort(function (a, b) { return b[1] - a[1]; }).map(function (t) { return esc(t[0]) + ' ' + t[1]; }).join(', '); return '<tr><td>' + esc(m.email) + '</td><td>' + m.usage.used + '</td><td>' + m.limit + '</td><td>' + gbp(m.usage.costUsd || 0) + '</td><td class="muted">' + tools + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="muted">No usage this month.</td></tr>') +
+      '</tbody></table></div><p class="muted" style="margin-top:8px">Costs use the AI provider’s reported cost where available, otherwise the token prices in Allowances &amp; limits. GBP uses the exchange rate set there.</p></main>';
+    $$('[data-m]').forEach(function (b) { b.onclick = function () { vUsage(b.dataset.m); }; });
+  }
+
+  // ── settings ──
+  async function vSettings() {
+    loading();
+    var o = S.overview = await api('overview'); var st = o.settings;
+    function f(k, l, hint, step) { return '<div><label for="s_' + k + '">' + esc(l) + '</label><input id="s_' + k + '" type="number" step="' + (step || 1) + '" value="' + esc(st[k]) + '">' + (hint ? '<div class="muted">' + esc(hint) + '</div>' : '') + '</div>'; }
+    app.innerHTML = '<main><h1>Allowances &amp; limits</h1><div class="card stack"><h2 style="margin:0">Monthly allowances</h2><div class="f2">' +
+      f('standardLimit', 'Standard Business Club', 'Generations per month') + f('powerLimit', 'With AI Power add-on', 'Total generations per month') + '</div>' +
+      '<p class="muted">Changes apply immediately. Per-member custom limits (Members → Manage) override these.</p></div>' +
+      '<div class="card stack" style="margin-top:12px"><h2 style="margin:0">Spending protection</h2><div class="f2">' +
+      f('globalMonthlyCostCapGbp', 'Monthly AI spend cap (£)', 'Studio pauses new requests when reached', 0.01) + f('globalMonthlyGenerationCap', 'Monthly generation cap (all members)', '') +
+      f('perMinuteLimit', 'Max generations per member per minute', 'Stops bursts and scripts') + '</div></div>' +
+      '<div class="card stack" style="margin-top:12px"><h2 style="margin:0">AI model &amp; pricing</h2><div><label for="s_model">Model</label><input id="s_model" value="' + esc(st.model) + '" placeholder="' + esc(o.config.model) + '"><div class="muted">Leave blank for the default (' + esc(o.config.model) + ').</div></div><div class="f2">' +
+      f('inputPricePerMUsd', 'Input price ($ per 1M tokens)', 'Fallback for cost estimates', 0.01) + f('outputPricePerMUsd', 'Output price ($ per 1M tokens)', '', 0.01) + f('usdToGbp', 'USD → GBP rate', '', 0.01) + '</div></div>' +
+      '<div class="err hidden" id="serr" style="margin-top:12px"></div><button class="btn primary" id="ssave" style="margin-top:12px">Save settings</button></main>';
+    $('#ssave').onclick = async function () {
+      var keys = ['standardLimit', 'powerLimit', 'globalMonthlyCostCapGbp', 'globalMonthlyGenerationCap', 'perMinuteLimit', 'inputPricePerMUsd', 'outputPricePerMUsd', 'usdToGbp'];
+      var settings = { model: $('#s_model').value.trim() }; keys.forEach(function (k) { settings[k] = $('#s_' + k).value; });
+      try { await api('settings-save', { settings: settings }); toast('Settings saved'); } catch (x) { $('#serr').textContent = x.message; $('#serr').classList.remove('hidden'); }
+    };
+  }
+
+  // ── alerts & audit ──
+  async function vAlerts() {
+    loading();
+    var r = await api('alerts-list');
+    app.innerHTML = '<main><h1>Alerts</h1>' + (r.alerts.length ? '<div class="stack">' + r.alerts.map(function (a) {
+      return '<div class="card row" style="justify-content:space-between;align-items:flex-start"><div><b>' + esc(a.message) + '</b><div class="muted">' + new Date(a.ts).toLocaleString('en-GB') + ' · ' + esc(a.kind) + '</div><div class="muted">' + esc(JSON.stringify(a.detail)) + '</div></div><button class="btn small ghost" data-k="' + esc(a.key) + '">Dismiss</button></div>';
+    }).join('') + '</div>' : '<p class="muted">No alerts. Payment problems, duplicate subscriptions and spend-cap pauses appear here.</p>') + '</main>';
+    $$('[data-k]').forEach(function (b) { b.onclick = async function () { await api('alert-dismiss', { key: b.dataset.k }); vAlerts(); }; });
+  }
+  async function vAudit() {
+    loading();
+    var r = await api('audit-list');
+    app.innerHTML = '<main><h1>Activity log</h1><div class="tw"><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Details</th></tr></thead><tbody>' +
+      r.entries.filter(Boolean).map(function (e) { return '<tr><td>' + new Date(e.ts).toLocaleString('en-GB') + '</td><td>' + esc(e.actor) + '</td><td>' + esc(e.action) + '</td><td class="muted">' + esc(JSON.stringify(e.detail)) + '</td></tr>'; }).join('') +
+      '</tbody></table></div></main>';
+  }
+
+  boot().catch(login);
+})();
+</script>
+</body>
+</html>

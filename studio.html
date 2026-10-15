@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0F1E36">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
+<title>Business Studio — Auntie Tobi</title>
+<link rel="icon" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" href="/favicon-180x180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#057A44;--green-d:#04613A;--green-l:#E3F2EA;
+  --gold:#FFB81C;--gold-l:#FFF1CF;--navy:#0F1E36;--navy-2:#1C2E4D;
+  --cream:#FBF6EC;--card:#FFFFFF;--line:#EADFC8;--muted:#5B6475;--danger:#B3261E;--danger-l:#FCE8E6;
+  --radius:16px;--shadow:0 1px 2px rgba(15,30,54,.06),0 4px 16px rgba(15,30,54,.06);
+  --font:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --display:'Fraunces',Georgia,serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;min-height:100dvh;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+body.no-nav{padding-bottom:24px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--green)}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;background:var(--navy);color:var(--cream);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+.top img{width:34px;height:34px;border-radius:50%;border:2px solid var(--gold);background:var(--cream)}
+.top .brand{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.2px;line-height:1.1}
+.top .brand small{display:block;font-family:var(--font);font-weight:500;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold)}
+.top .back{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--cream);margin-left:-6px}
+.top .back:focus-visible,.top .back:hover{background:var(--navy-2)}
+.top .spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.3px}
+.pill.gold{background:var(--gold);color:var(--navy)}
+.pill.green{background:var(--green-l);color:var(--green-d)}
+.pill.cream{background:rgba(251,246,236,.12);color:var(--cream)}
+
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-family:var(--display);font-size:26px;line-height:1.15;font-weight:700;letter-spacing:-.2px}
+h2{font-family:var(--display);font-size:20px;line-height:1.2;font-weight:700;margin:22px 0 10px}
+.sub{color:var(--muted);font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.stack>*+*{margin-top:12px}
+
+/* forms */
+label.f{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+label.f .opt{font-weight:400;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted);margin-top:4px}
+input[type=email],input[type=text],input[type=url],input[type=date],textarea,select{
+  width:100%;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s}
+textarea{resize:vertical;min-height:84px}
+input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(5,122,68,.15)}
+.code-input{font-size:30px!important;letter-spacing:12px;text-align:center;font-weight:700;padding:14px!important}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:500;line-height:1.2}
+.chip[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:var(--cream)}
+.chip:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:500}
+.switch{position:relative;width:48px;height:28px;border-radius:999px;background:var(--line);transition:background .15s;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s}
+.switch[aria-checked=true]{background:var(--green)}
+.switch[aria-checked=true]::after{left:23px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:13px 18px;font-weight:700;font-size:16px;min-height:48px;transition:transform .05s,background .15s,opacity .15s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.primary{background:var(--green);color:#fff}
+.btn.primary:hover:not(:disabled){background:var(--green-d)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--navy)}
+.btn.small{min-height:38px;padding:8px 12px;font-size:14px;border-radius:10px}
+.btn.block{width:100%}
+.btn.link{padding:6px 0;min-height:0;color:var(--green);font-weight:700}
+.btn.danger{color:var(--danger)}
+.row{display:flex;gap:10px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.err{background:var(--danger-l);color:var(--danger);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:500}
+.note{background:var(--gold-l);border-radius:12px;padding:12px;font-size:14px}
+
+/* sign in */
+.auth-wrap{max-width:420px;margin:0 auto;padding:28px 18px}
+.auth-hero{text-align:center;margin-bottom:20px}
+.auth-hero img{width:84px;height:84px;border-radius:50%;border:3px solid var(--gold);background:#fff;margin-bottom:12px}
+.auth-hero .kicker{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--green);font-weight:700}
+
+/* allowance */
+.allow{background:var(--navy);color:var(--cream);border:0;position:relative;overflow:hidden}
+.allow::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,184,28,.25),transparent 70%)}
+.allow .big{font-family:var(--display);font-size:44px;line-height:1;font-weight:700;color:var(--gold)}
+.bar{height:8px;background:rgba(251,246,236,.15);border-radius:999px;overflow:hidden;margin:12px 0 8px}
+.bar span{display:block;height:100%;background:var(--gold);border-radius:999px;transition:width .4s}
+.allow .meta{font-size:13px;color:rgba(251,246,236,.8)}
+.allow button.link{color:var(--gold);font-weight:700;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+
+/* tools */
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tool{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;text-align:left;display:flex;flex-direction:column;gap:8px;min-height:116px;box-shadow:var(--shadow);transition:border-color .15s,transform .05s}
+.tool:hover{border-color:var(--green)}
+.tool:active{transform:scale(.98)}
+.tool .ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--green-l);color:var(--green)}
+.tool:nth-child(3n+2) .ico{background:var(--gold-l);color:#9A6A00}
+.tool:nth-child(3n) .ico{background:#E7EAF0;color:var(--navy)}
+.tool b{font-size:15px;line-height:1.25}
+.tool span{font-size:12.5px;color:var(--muted);line-height:1.35}
+
+/* lists */
+.list{display:flex;flex-direction:column;gap:8px}
+.li{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+.li .t{flex:1;min-width:0}
+.li .t b{display:block;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .t small{color:var(--muted);font-size:12.5px}
+.li .star{color:var(--gold);font-size:18px}
+.empty{text-align:center;color:var(--muted);padding:28px 12px;font-size:15px}
+
+/* conversation */
+.bubble{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.bubble img{width:36px;height:36px;border-radius:50%;border:2px solid var(--gold);background:#fff;flex:none}
+.bubble p{background:#fff;border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 14px;font-size:15px;box-shadow:var(--shadow)}
+.typing{display:inline-flex;gap:4px;padding:4px 0}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--green);opacity:.4;animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.option{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)}
+.option .oh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--green)}
+.option textarea{border:0;padding:4px 2px;min-height:60px;box-shadow:none;font-size:15px;line-height:1.55;resize:none;overflow:hidden}
+.option textarea:focus{box-shadow:none;background:#FFFCF5}
+.cost{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
+.saved-tag{font-size:12px;color:var(--muted)}
+
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11.5px;font-weight:700;color:var(--muted);border-radius:12px}
+nav.tabs button[aria-current=page]{color:var(--green)}
+nav.tabs button[aria-current=page] svg{background:var(--green-l)}
+nav.tabs svg{width:44px;height:28px;padding:4px 12px;border-radius:999px}
+
+/* modal & toast */
+.scrim{position:fixed;inset:0;background:rgba(15,30,54,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--cream);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+@media(min-width:600px){.scrim{align-items:center}.sheet{border-radius:20px}}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:90vw}
+details.faq{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+details.faq summary{font-weight:700;cursor:pointer}
+details.faq ul{margin:8px 0 0 18px;font-size:14px;color:var(--navy)}
+details.faq li+li{margin-top:4px}
+.steps{display:flex;gap:6px;margin:6px 0 16px}
+.steps span{flex:1;height:4px;border-radius:999px;background:var(--line)}
+.steps span.on{background:var(--green)}
+.plan{border:2px solid var(--gold);background:linear-gradient(180deg,#fff, var(--gold-l))}
+.plan .price{font-family:var(--display);font-size:30px;font-weight:700}
+.plan ul{margin:10px 0 14px 18px;font-size:14.5px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="no-nav">
+
+<header class="top" id="top">
+  <button class="back hidden" id="backBtn" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <img src="/tobi-face-128.png" alt="" id="topAvatar">
+  <div class="brand">Business Studio<small>Auntie Tobi Business Club</small></div>
+  <div class="spacer"></div>
+  <span class="pill cream hidden" id="topPlan"></span>
+</header>
+
+<div id="app" aria-live="polite"></div>
+
+<nav class="tabs hidden" id="tabs" aria-label="Main">
+  <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg>Home</button>
+  <button data-tab="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/></svg>Create</button>
+  <button data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Library</button>
+  <button data-tab="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Account</button>
+</nav>
+
+<script>
+'use strict';
+(function () {
+  // ───────────── state ─────────────
+  var S = { boot: null, email: '', view: null, history: [] };
+  var app = document.getElementById('app');
+
+  var TOOL_META = {
+    caption: { blurb: 'Three scroll-stopping captions', hello: 'Tell me what this post is about and I’ll write three captions in your brand voice.', icon: '<path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/>' },
+    reel: { blurb: 'Hook, scenes and voiceover', hello: 'What should your Reel show? I’ll plan the hook, every scene and the words to say.', icon: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/>' },
+    promo: { blurb: 'Offers, launches and sales', hello: 'What are you promoting? I’ll write it to sell — honestly, no hype you can’t back up.', icon: '<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M16 9a4 4 0 010 6M19 6a8 8 0 010 12"/>' },
+    planner: { blurb: '7 or 30 days of ideas', hello: 'Let’s plan your content. Pick 7 or 30 days and I’ll map out every post.', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>' },
+    bio: { blurb: 'Bios and descriptions', hello: 'Which bio or description do you need? I’ll give you three options to choose from.', icon: '<circle cx="9" cy="10" r="3"/><path d="M4 19c1-3 3-4 5-4s4 1 5 4M15 8h5M15 12h5M17 16h3"/>' },
+    message: { blurb: 'Reply to customers well', hello: 'Paste what your customer said (or describe it) and I’ll help you reply the right way.', icon: '<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/><path d="M8 11h8M8 14h5"/>' }
+  };
+  var TONE_LABELS = { warm: 'Warm & friendly', professional: 'Professional', vibrant: 'Vibrant', luxury: 'Luxury', bold: 'Bold', cultural: 'Proudly Naija-British' };
+  var CTA_IDEAS = ['DM us to order', 'Send us a WhatsApp', 'Tap the link in bio', 'Book your slot today', 'Call us', 'Visit our website'];
+
+  // ───────────── helpers ─────────────
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var b = new Uint8Array(16); crypto.getRandomValues(b);
+    return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join('').replace(/^(.{8})(.{4})(.{4})(.{4})/, '$1-$2-$3-$4-');
+  }
+  function fmtDate(iso, opts) { try { return new Date(iso).toLocaleDateString('en-GB', opts || { day: 'numeric', month: 'short' }); } catch (e) { return ''; } }
+  function toast(msg) {
+    var t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg;
+    document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600);
+  }
+  function icon(path, size) { return '<svg width="' + (size || 22) + '" height="' + (size || 22) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>'; }
+  function autosize(ta) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; }
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); toast('Copied'); }
+    catch (e) {
+      var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast('Copied'); } catch (e2) { toast('Couldn’t copy — select and copy manually'); }
+      ta.remove();
+    }
+  }
+
+  // ───────────── API ─────────────
+  async function api(fn, action, payload, opts) {
+    opts = opts || {};
+    var body = Object.assign({ action: action }, payload || {});
+    var res, data;
+    try {
+      res = await fetch('/.netlify/functions/' + fn, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-Studio': '1' },
+        body: JSON.stringify(body)
+      });
+      data = await res.json().catch(function () { return {}; });
+    } catch (e) {
+      var ne = new Error('You seem to be offline. Please check your connection and try again.'); ne.code = 'network'; throw ne;
+    }
+    if (res.ok) return data;
+    var err = new Error(data.message || 'Something went wrong. Please try again.');
+    err.code = data.error; err.status = res.status; err.data = data;
+    if (res.status === 401 && !opts.quiet401) { S.boot = null; showSignIn(); }
+    if (err.code === 'reauth_required' && !opts.noStepUp) {
+      await stepUp();
+      return api(fn, action, payload, Object.assign({}, opts, { noStepUp: true }));
+    }
+    throw err;
+  }
+
+  // ───────────── chrome ─────────────
+  function setChrome(o) {
+    document.getElementById('tabs').classList.toggle('hidden', !o.tabs);
+    document.body.classList.toggle('no-nav', !o.tabs);
+    var back = document.getElementById('backBtn');
+    back.classList.toggle('hidden', !o.back);
+    back.onclick = o.back || null;
+    document.getElementById('topAvatar').classList.toggle('hidden', !!o.back);
+    $$('nav.tabs button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.tab === o.tab ? 'page' : 'false'); });
+    var tp = document.getElementById('topPlan');
+    if (S.boot && S.boot.access && S.boot.access.membershipActive) {
+      tp.classList.remove('hidden');
+      tp.className = 'pill ' + (S.boot.access.plan === 'power' ? 'gold' : 'cream');
+      tp.textContent = S.boot.access.plan === 'power' ? 'AI Power' : 'Standard';
+    } else tp.classList.add('hidden');
+    window.scrollTo(0, 0);
+  }
+  $$('nav.tabs button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.dataset.tab;
+      if (t === 'home') showHome(); else if (t === 'create') showCreate(); else if (t === 'library') showLibrary(); else showAccount();
+    });
+  });
+
+  // ───────────── sign in ─────────────
+  function showSignIn(prefill) {
+    setChrome({ tabs: false });
+    app.innerHTML =
+      '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt="Auntie Tobi">' +
+      '<div class="kicker">Members only</div><h1>Welcome to your Business Studio</h1>' +
+      '<p class="sub" style="margin-top:8px">Create captions, Reels, promos and more in your brand voice. Sign in with the email you used for your Business Club membership.</p></div>' +
+      '<form class="card stack" id="emailForm" novalidate>' +
+      '<div><label class="f" for="email">Email address</label><input type="email" id="email" autocomplete="email" inputmode="email" required placeholder="you@yourbusiness.co.uk" value="' + esc(prefill || S.email) + '"></div>' +
+      '<div class="err hidden" id="err" role="alert"></div>' +
+      '<button class="btn primary block" id="sendBtn">Send my code</button>' +
+      '<p class="hint" style="text-align:center">No password needed. We’ll email you a 6-digit code.</p></form>' +
+      '<p class="hint" style="text-align:center;margin-top:18px">Not a member yet? <a href="/business-club">Find out about the Business Club</a></p></div>';
+    var f = $('#emailForm');
+    f.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var email = $('#email').value.trim();
+      var err = $('#err'); err.classList.add('hidden');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Please enter a valid email address.'; err.classList.remove('hidden'); return; }
+      var btn = $('#sendBtn'); btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        var r = await api('studio-auth', 'request-code', { email: email });
+        S.email = email; showCode(r.message);
+      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Send my code'; }
+    });
+    setTimeout(function () { var i = $('#email'); if (i && !i.value) i.focus(); }, 50);
+  }
+
+  function showCode(message) {
+    setChrome({ tabs: false, back: function () { showSignIn(); } });
+    app.innerHTML =
+      '<div class="auth-wrap"><div class="auth-hero"><div class="kicker">Check your email</div><h1>Enter your code</h1>' +
+      '<p class="sub" style="margin-top:8px">' + esc(message) + '</p><p class="sub" style="margin-top:6px"><b>' + esc(S.email) + '</b></p></div>' +
+      '<form class="card stack" id="codeForm" novalidate>' +
+      '<div><label class="f sr" for="code">6-digit code</label><input class="code-input" type="text" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••"></div>' +
+      '<div class="err hidden" id="err" role="alert"></div>' +
+      '<button class="btn primary block" id="verifyBtn">Sign in</button>' +
+      '<p class="hint" style="text-align:center">You’ll stay signed in on this device.</p>' +
+      '<div class="row" style="justify-content:space-between"><button type="button" class="btn link" id="resend" disabled>Resend code</button><button type="button" class="btn link" id="other">Use a different email</button></div>' +
+      '</form><p class="hint" style="text-align:center;margin-top:16px">Can’t find it? Check spam or promotions. Still nothing? Your email may not be registered — contact Auntie Tobi.</p></div>';
+    var code = $('#code');
+    code.addEventListener('input', function () {
+      code.value = code.value.replace(/\D/g, '').slice(0, 6);
+      if (code.value.length === 6) $('#codeForm').requestSubmit ? $('#codeForm').requestSubmit() : $('#verifyBtn').click();
+    });
+    $('#other').onclick = function () { showSignIn(''); };
+    var left = 60, rs = $('#resend');
+    var timer = setInterval(function () {
+      left--; rs.textContent = left > 0 ? 'Resend code (' + left + 's)' : 'Resend code';
+      if (left <= 0) { rs.disabled = false; clearInterval(timer); }
+    }, 1000);
+    rs.onclick = async function () {
+      rs.disabled = true;
+      try { await api('studio-auth', 'request-code', { email: S.email }); toast('If your email is registered, a new code is on its way'); }
+      catch (x) { toast(x.message); }
+    };
+    $('#codeForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var err = $('#err'); err.classList.add('hidden');
+      if (code.value.length !== 6) { err.textContent = 'Enter all 6 digits.'; err.classList.remove('hidden'); return; }
+      var btn = $('#verifyBtn'); btn.disabled = true; btn.textContent = 'Checking…';
+      try {
+        await api('studio-auth', 'verify-code', { email: S.email, code: code.value });
+        clearInterval(timer); await start();
+      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Sign in'; code.select(); }
+    });
+    setTimeout(function () { code.focus(); }, 50);
+  }
+
+  // Fresh verification for sensitive actions (billing)
+  function stepUp() {
+    return new Promise(function (resolve, reject) {
+      var scrim = document.createElement('div'); scrim.className = 'scrim';
+      scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="suT">' +
+        '<h2 id="suT" style="margin:0">Confirm it’s you</h2>' +
+        '<p class="sub">For your security, payments need a fresh email code. We’ll send one to <b>' + esc(S.boot ? S.boot.member.email : '') + '</b>.</p>' +
+        '<div id="suCodeWrap" class="hidden"><label class="f sr" for="suCode">Code</label><input class="code-input" id="suCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>' +
+        '<div class="err hidden" id="suErr" role="alert"></div>' +
+        '<button class="btn primary block" id="suGo">Email me a code</button><button class="btn ghost block" id="suCancel">Cancel</button></div>';
+      document.body.appendChild(scrim);
+      var sent = false, go = $('#suGo', scrim), errEl = $('#suErr', scrim);
+      function close(ok) { scrim.remove(); ok ? resolve() : reject(Object.assign(new Error('Cancelled'), { code: 'cancelled' })); }
+      $('#suCancel', scrim).onclick = function () { close(false); };
+      go.onclick = async function () {
+        errEl.classList.add('hidden'); go.disabled = true;
+        try {
+          if (!sent) {
+            await api('studio-auth', 'stepup-request', {}, { noStepUp: true });
+            sent = true; $('#suCodeWrap', scrim).classList.remove('hidden'); go.textContent = 'Confirm'; $('#suCode', scrim).focus();
+          } else {
+            await api('studio-auth', 'stepup-verify', { code: $('#suCode', scrim).value.replace(/\D/g, '') }, { noStepUp: true });
+            close(true);
+          }
+        } catch (x) { errEl.textContent = x.message; errEl.classList.remove('hidden'); }
+        go.disabled = false;
+      };
+    });
+  }
+
+  // ───────────── boot ─────────────
+  async function start() {
+    app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    try { S.boot = await api('studio-api', 'bootstrap', {}, { quiet401: true }); }
+    catch (e) { if (e.status === 401) return showSignIn(); app.innerHTML = '<main><div class="err">' + esc(e.message) + '</div><button class="btn ghost" style="margin-top:12px" onclick="location.reload()">Try again</button></main>'; return; }
+    S.history = S.boot.recent || [];
+    var q = new URLSearchParams(location.search);
+    if (q.get('billing')) {
+      history.replaceState(null, '', location.pathname);
+      if (q.get('billing') === 'success') {
+        toast('Payment received — setting up AI Power…');
+        try { await api('studio-billing', 'refresh'); S.boot = await api('studio-api', 'bootstrap'); } catch (e) {}
+        if (S.boot.access.plan === 'power') toast('AI Power is active — enjoy 200 generations a month!');
+      } else if (q.get('billing') === 'managed') {
+        try { await api('studio-billing', 'refresh'); S.boot = await api('studio-api', 'bootstrap'); } catch (e) {}
+      }
+    }
+    if (!S.boot.access.membershipActive) return showInactive();
+    if (!S.boot.profile) return showProfileForm(true);
+    showHome();
+  }
+
+  function showInactive() {
+    setChrome({ tabs: false });
+    app.innerHTML = '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt=""><h1>Your membership isn’t active</h1>' +
+      '<p class="sub" style="margin-top:8px">The Business Studio is for active Auntie Tobi Business Club members. Please renew your membership to carry on creating.</p></div>' +
+      '<div class="stack"><a class="btn gold block" href="/business-club">Renew Business Club</a>' +
+      (S.boot.addon && S.boot.addon.status && ['active', 'trialing', 'past_due'].indexOf(S.boot.addon.status) > -1 ? '<button class="btn ghost block" id="portal">Manage AI Power subscription</button><p class="hint">Your AI Power add-on is paused while your membership is inactive and won’t renew again.</p>' : '') +
+      '<button class="btn link" id="out">Sign out</button></div></div>';
+    $('#out').onclick = signOut;
+    var p = $('#portal'); if (p) p.onclick = openPortal;
+  }
+
+  // ───────────── profile ─────────────
+  var PROFILE_STEPS = [
+    { title: 'Your business', fields: [
+      ['businessName', 'Business name', 'text', 'e.g. Pastry Zone Catering', 80],
+      ['industry', 'Industry or category', 'text', 'e.g. Catering, Hair, Fashion, Cleaning', 60],
+      ['location', 'Where in the UK?', 'text', 'e.g. Peckham, London — or UK-wide delivery', 80]] },
+    { title: 'What you offer', fields: [
+      ['products', 'Products and services', 'area', 'e.g. Small chops, jollof trays, party catering for 20–200 guests', 600],
+      ['customers', 'Who are your customers?', 'area', 'e.g. Busy Nigerian families and event planners in South London', 400],
+      ['description', 'Describe your business in a few sentences', 'area', 'What makes you special? How long have you been going?', 1200]] },
+    { title: 'Your brand voice', fields: [
+      ['instagram', 'Instagram handle', 'text', '@yourbusiness', 60, true],
+      ['website', 'Website', 'text', 'yourbusiness.co.uk', 200, true],
+      ['tone', 'Brand tone', 'tone'],
+      ['toneNotes', 'Anything else about how you sound?', 'area', 'e.g. Use pidgin lightly, never too formal', 200, true],
+      ['ctas', 'Preferred calls to action', 'ctas']] }
+  ];
+
+  function fieldHtml(f, p) {
+    var name = f[0], label = f[1], type = f[2], ph = f[3] || '', max = f[4] || 200, optional = f[5];
+    var lab = '<label class="f" for="pf_' + name + '">' + esc(label) + (optional ? ' <span class="opt">(optional)</span>' : '') + '</label>';
+    if (type === 'text') return '<div>' + lab + '<input type="text" id="pf_' + name + '" name="' + name + '" maxlength="' + max + '" placeholder="' + esc(ph) + '" value="' + esc(p[name] || '') + '"></div>';
+    if (type === 'area') return '<div>' + lab + '<textarea id="pf_' + name + '" name="' + name + '" maxlength="' + max + '" placeholder="' + esc(ph) + '">' + esc(p[name] || '') + '</textarea></div>';
+    if (type === 'tone') {
+      var cur = p.tone || 'warm';
+      return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-single="tone">' +
+        S.boot.tones.map(function (t) { return '<button type="button" class="chip" data-val="' + t + '" aria-pressed="' + (t === cur) + '">' + esc(TONE_LABELS[t] || t) + '</button>'; }).join('') + '</div></div>';
+    }
+    if (type === 'ctas') {
+      var list = (p.ctas || []).join('\n');
+      return '<div>' + lab + '<textarea id="pf_ctas" name="ctas" placeholder="One per line, e.g. DM us to order">' + esc(list) + '</textarea>' +
+        '<div class="hint">Tap to add:</div><div class="chips" style="margin-top:6px">' + CTA_IDEAS.map(function (c) { return '<button type="button" class="chip" data-cta="' + esc(c) + '">+ ' + esc(c) + '</button>'; }).join('') + '</div></div>';
+    }
+  }
+
+  function showProfileForm(firstTime) {
+    var p = Object.assign({}, S.boot.profile || {});
+    var step = 0;
+    function collect() {
+      $$('[name]', app).forEach(function (el) { p[el.name] = el.name === 'ctas' ? el.value.split('\n') : el.value; });
+      var tc = $('[data-single=tone] [aria-pressed=true]', app); if (tc) p.tone = tc.dataset.val;
+    }
+    function render() {
+      var steps = firstTime ? [PROFILE_STEPS[step]] : PROFILE_STEPS;
+      setChrome({ tabs: !firstTime, tab: 'account', back: firstTime ? (step > 0 ? function () { collect(); step--; render(); } : null) : showAccount });
+      app.innerHTML = '<main><form id="pform" novalidate>' +
+        (firstTime ? '<div class="steps">' + PROFILE_STEPS.map(function (s, i) { return '<span class="' + (i <= step ? 'on' : '') + '"></span>'; }).join('') + '</div>' +
+          '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (step === 0 ? 'Welcome! Tell me about your business once, and I’ll use it every time I write for you. You can change it any time.' : step === 1 ? 'Lovely. Now, what do you sell and who buys it?' : 'Last bit — how should you sound?') + '</p></div>'
+          : '<h1>Business profile</h1><p class="sub" style="margin:6px 0 16px">Used automatically in everything you create.</p>') +
+        steps.map(function (s) { return (firstTime ? '' : '<h2>' + esc(s.title) + '</h2>') + '<div class="card stack">' + s.fields.map(function (f) { return fieldHtml(f, p); }).join('') + '</div>'; }).join('') +
+        '<div class="err hidden" id="perr" role="alert" style="margin-top:12px"></div>' +
+        '<button class="btn primary block" style="margin-top:16px" id="psave">' + (firstTime && step < 2 ? 'Next' : 'Save profile') + '</button></form></main>';
+      $$('[data-single=tone] .chip', app).forEach(function (c) { c.onclick = function () { $$('[data-single=tone] .chip', app).forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); }; });
+      $$('[data-cta]', app).forEach(function (c) { c.onclick = function () { var ta = $('#pf_ctas'); var lines = ta.value.split('\n').filter(Boolean); if (lines.indexOf(c.dataset.cta) < 0 && lines.length < 6) { lines.push(c.dataset.cta); ta.value = lines.join('\n'); } }; });
+      $('#pform').addEventListener('submit', async function (e) {
+        e.preventDefault(); collect();
+        var err = $('#perr'); err.classList.add('hidden');
+        var stepDef = firstTime ? [PROFILE_STEPS[step]] : PROFILE_STEPS;
+        var missing = [];
+        stepDef.forEach(function (s) { s.fields.forEach(function (f) { if (['text', 'area'].indexOf(f[2]) > -1 && !f[5] && !String(p[f[0]] || '').trim()) missing.push(f[1]); }); });
+        if (missing.length) { err.textContent = 'Please fill in: ' + missing.join(', '); err.classList.remove('hidden'); return; }
+        if (firstTime && step < 2) { step++; render(); return; }
+        var btn = $('#psave'); btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+          var r = await api('studio-api', 'profile-save', { profile: p });
+          S.boot.profile = r.profile; toast(firstTime ? 'All set! Let’s create something.' : 'Profile saved'); showHome();
+        } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Save profile'; }
+      });
+    }
+    render();
+  }
+
+  // ───────────── home ─────────────
+  function allowanceCard() {
+    var u = S.boot.usage || { used: 0, limit: 0, remaining: 0, resetsOn: '' };
+    var pct = u.limit ? Math.min(100, Math.round(100 * (u.limit - u.remaining) / u.limit)) : 100;
+    return '<section class="card allow" aria-label="AI generations left">' +
+      '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="big">' + u.remaining + '</div>' +
+      '<div style="font-weight:700;margin-top:4px">AI generations left this month</div></div>' +
+      '<span class="pill ' + (S.boot.access.plan === 'power' ? 'gold' : 'cream') + '">' + (S.boot.access.plan === 'power' ? 'AI Power' : 'Standard') + '</span></div>' +
+      '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + u.limit + '" aria-valuenow="' + (u.limit - u.remaining) + '"><span style="width:' + pct + '%"></span></div>' +
+      '<div class="meta">' + (u.limit - u.remaining) + ' of ' + u.limit + ' used · resets ' + fmtDate(u.resetsOn, { day: 'numeric', month: 'long' }) + '</div>' +
+      '<div class="row" style="margin-top:10px;justify-content:space-between"><button class="link" id="whatCounts">What counts as a generation?</button>' +
+      (S.boot.access.plan !== 'power' && S.boot.billingEnabled ? '<button class="btn gold small" id="upBtn">Get 200/month</button>' : '') + '</div></section>';
+  }
+
+  function whatCounts() {
+    var l = S.boot.limits;
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="wcT"><h2 id="wcT" style="margin:0">What counts as a generation?</h2>' +
+      '<p>Each time you tap <b>Create</b> or <b>Regenerate</b> and get a result, that’s <b>one generation</b> — whichever tool you use. A single generation can include several options (for example, 3 captions or a whole 30-day plan).</p>' +
+      '<p><b>Free — never counted:</b> editing, copying, saving, viewing your library, and updating your profile. If something goes wrong and you don’t get a result, you’re not charged.</p>' +
+      '<p><b>Your allowance:</b> Standard Business Club includes ' + l.standard + ' generations a month. AI Power (£5/month) gives you ' + l.power + ' a month in total. Allowances reset on the 1st of each month (UK time) and unused generations don’t roll over.</p>' +
+      '<button class="btn primary block" id="wcOk">Got it</button></div>';
+    document.body.appendChild(scrim);
+    $('#wcOk', scrim).onclick = function () { scrim.remove(); };
+    scrim.addEventListener('click', function (e) { if (e.target === scrim) scrim.remove(); });
+  }
+
+  function historyRows(items) {
+    if (!items.length) return '<div class="empty">Nothing here yet. Your creations will appear here.</div>';
+    return '<div class="list">' + items.map(function (i) {
+      return '<button class="li" data-item="' + esc(i.id) + '"><div class="t"><b>' + esc(i.title) + '</b><small>' + fmtDate(i.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</small></div>' + (i.saved ? '<span class="star" aria-label="Saved">★</span>' : '') + '</button>';
+    }).join('') + '</div>';
+  }
+  function bindHistoryRows() { $$('[data-item]', app).forEach(function (b) { b.onclick = function () { showItem(b.dataset.item); }; }); }
+
+  function toolGrid() {
+    return '<div class="tools">' + S.boot.tools.map(function (t) {
+      var m = TOOL_META[t.id] || {};
+      return '<button class="tool" data-tool="' + t.id + '"><span class="ico">' + icon(m.icon || '') + '</span><b>' + esc(t.name) + '</b><span>' + esc(m.blurb || '') + '</span></button>';
+    }).join('') + '</div>';
+  }
+  function bindTools() { $$('[data-tool]', app).forEach(function (b) { b.onclick = function () { showTool(b.dataset.tool); }; }); }
+
+  function greeting() { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
+
+  function showHome() {
+    setChrome({ tabs: true, tab: 'home' });
+    app.innerHTML = '<main><p class="sub">' + greeting() + ',</p><h1 style="margin-bottom:14px">' + esc(S.boot.profile.businessName) + '</h1>' +
+      allowanceCard() + '<h2>What shall we create?</h2>' + toolGrid() +
+      '<h2>Recent</h2>' + historyRows(S.history.slice(0, 5)) +
+      (S.history.length ? '<button class="btn link" id="allBtn" style="margin-top:6px">See your full library →</button>' : '') + '</main>';
+    bindTools(); bindHistoryRows();
+    $('#whatCounts').onclick = whatCounts;
+    var up = $('#upBtn'); if (up) up.onclick = showAccount;
+    var all = $('#allBtn'); if (all) all.onclick = showLibrary;
+  }
+
+  function showCreate() {
+    setChrome({ tabs: true, tab: 'create' });
+    app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 16px">Pick a tool. Each result uses 1 generation — you have <b>' + S.boot.usage.remaining + '</b> left.</p>' + toolGrid() + '</main>';
+    bindTools();
+  }
+
+  // ───────────── tools ─────────────
+  function toolDef(id) { return S.boot.tools.filter(function (t) { return t.id === id; })[0]; }
+
+  function showTool(toolId, prefill) {
+    var t = toolDef(toolId); if (!t) return showHome();
+    var m = TOOL_META[toolId] || {};
+    var input = {};
+    t.fields.forEach(function (f) { input[f.name] = prefill && prefill[f.name] !== undefined ? prefill[f.name] : (f.type === 'text' ? '' : f.default); });
+    setChrome({ tabs: true, tab: 'create', back: showCreate });
+    app.innerHTML = '<main><h1 style="font-size:22px;margin-bottom:12px">' + esc(t.name) + '</h1>' +
+      '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(m.hello || '') + '</p></div>' +
+      '<form class="card stack" id="tform" novalidate>' + t.fields.map(function (f) {
+        if (f.type === 'text') return '<div><label class="f" for="tf_' + f.name + '">' + esc(f.label) + (f.required ? '' : ' <span class="opt">(optional)</span>') + '</label><textarea id="tf_' + f.name + '" data-field="' + f.name + '" maxlength="' + f.max + '" rows="' + (f.max > 600 ? 4 : 2) + '"' + (f.required ? ' required' : '') + '>' + esc(input[f.name]) + '</textarea></div>';
+        if (f.type === 'choice') return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(f.label) + '</span><div class="chips" data-choice="' + f.name + '">' + f.options.map(function (o) { return '<button type="button" class="chip" data-val="' + esc(o) + '" aria-pressed="' + (o === input[f.name]) + '">' + esc(o === '7' || o === '30' ? o + ' days' : o.charAt(0).toUpperCase() + o.slice(1)) + '</button>'; }).join('') + '</div></div>';
+        if (f.type === 'bool') return '<div class="toggle"><span id="lb_' + f.name + '">' + esc(f.label) + '</span><button type="button" class="switch" role="switch" aria-labelledby="lb_' + f.name + '" data-bool="' + f.name + '" aria-checked="' + !!input[f.name] + '"></button></div>';
+        return '';
+      }).join('') +
+      '<div class="err hidden" id="terr" role="alert"></div>' +
+      '<button class="btn primary block" id="go">' + icon('<path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/>', 18) + ' Create</button>' +
+      '<div class="cost" id="cost">Uses 1 generation · ' + S.boot.usage.remaining + ' left this month</div></form>' +
+      '<div id="result" style="margin-top:18px"></div></main>';
+
+    $$('[data-choice]', app).forEach(function (g) {
+      $$('.chip', g).forEach(function (c) { c.onclick = function () { $$('.chip', g).forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); }; });
+    });
+    $$('[data-bool]', app).forEach(function (s) { s.onclick = function () { s.setAttribute('aria-checked', s.getAttribute('aria-checked') !== 'true'); }; });
+    var first = $('textarea', app); if (first && !prefill) setTimeout(function () { first.focus(); }, 60);
+
+    function readInput() {
+      var out = {};
+      $$('[data-field]', app).forEach(function (el) { out[el.dataset.field] = el.value; });
+      $$('[data-choice]', app).forEach(function (g) { var on = $('[aria-pressed=true]', g); if (on) out[g.dataset.choice] = on.dataset.val; });
+      $$('[data-bool]', app).forEach(function (s) { out[s.dataset.bool] = s.getAttribute('aria-checked') === 'true'; });
+      return out;
+    }
+
+    $('#tform').addEventListener('submit', function (e) { e.preventDefault(); run(readInput()); });
+
+    async function run(inp) {
+      var err = $('#terr'); err.classList.add('hidden');
+      var miss = t.fields.filter(function (f) { return f.required && !String(inp[f.name] || '').trim(); });
+      if (miss.length) { err.textContent = 'Please fill in: ' + miss[0].label; err.classList.remove('hidden'); return; }
+      if (S.boot.usage.remaining <= 0) return showLimitReached();
+      var btn = $('#go'); btn.disabled = true;
+      var resEl = $('#result');
+      resEl.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Writing"><i></i><i></i><i></i></span> Writing in your brand voice…</p></div>';
+      resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      var reqId = uuid(), r;
+      try {
+        try { r = await api('studio-api', 'generate', { tool: toolId, input: inp, requestId: reqId }); }
+        catch (x) { if (x.code === 'network') r = await api('studio-api', 'generate', { tool: toolId, input: inp, requestId: reqId }); else throw x; }
+      } catch (x) {
+        btn.disabled = false; resEl.innerHTML = '';
+        if (x.code === 'limit_reached') return showLimitReached();
+        err.textContent = x.message; err.classList.remove('hidden'); return;
+      }
+      btn.disabled = false;
+      S.boot.usage = r.usage;
+      $('#cost').textContent = 'Uses 1 generation · ' + r.usage.remaining + ' left this month';
+      addToHistory(r.item);
+      resEl.innerHTML = '';
+      renderResult(resEl, r.item, function () { run(inp); });
+    }
+  }
+
+  function addToHistory(item) {
+    S.history = [{ id: item.id, tool: item.tool, title: item.title, createdAt: item.createdAt, saved: item.saved }].concat(S.history.filter(function (h) { return h.id !== item.id; }));
+  }
+
+  function splitOptions(text) {
+    return String(text).split(/\n\s*-{3,}\s*\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  // Editable result with copy / save / regenerate. Edits autosave (free).
+  function renderResult(el, item, onRegenerate) {
+    var parts = splitOptions(item.edited != null ? item.edited : item.output);
+    var many = parts.length > 1;
+    el.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (many ? 'Here are ' + parts.length + ' options. Tap any text to edit it.' : 'Here you go! Tap the text to edit it.') + '</p></div>' +
+      '<div class="stack" id="opts">' + parts.map(function (p, i) {
+        return '<div class="option"><div class="oh"><span>' + (many ? 'Option ' + (i + 1) : 'Your content') + '</span><button class="btn small ghost" data-copy="' + i + '">' + icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>', 16) + ' Copy</button></div>' +
+          '<textarea data-opt="' + i + '" aria-label="' + (many ? 'Option ' + (i + 1) : 'Content') + '">' + esc(p) + '</textarea></div>';
+      }).join('') + '</div>' +
+      '<div class="row wrap" style="margin-top:12px">' +
+      '<button class="btn ghost small" id="saveBtn">' + (item.saved ? '★ Saved' : '☆ Save') + '</button>' +
+      (many ? '<button class="btn ghost small" id="copyAll">Copy all</button>' : '') +
+      (onRegenerate ? '<button class="btn ghost small" id="regen">↻ Regenerate <span class="saved-tag">(1 generation)</span></button>' : '') +
+      '<span class="saved-tag" id="editState" style="margin-left:auto"></span></div>';
+    $$('textarea[data-opt]', el).forEach(function (ta) { autosize(ta); });
+    function current() { return $$('textarea[data-opt]', el).map(function (ta) { return ta.value.trim(); }).join('\n---\n'); }
+    var tmr;
+    $$('textarea[data-opt]', el).forEach(function (ta) {
+      ta.addEventListener('input', function () {
+        autosize(ta); $('#editState', el).textContent = 'Editing…';
+        clearTimeout(tmr);
+        tmr = setTimeout(async function () {
+          try { await api('studio-api', 'item-update', { id: item.id, edited: current() }); item.edited = current(); $('#editState', el).textContent = 'Changes saved'; }
+          catch (x) { $('#editState', el).textContent = 'Couldn’t save edit'; }
+        }, 900);
+      });
+    });
+    $$('[data-copy]', el).forEach(function (b) { b.onclick = function () { copyText($('textarea[data-opt="' + b.dataset.copy + '"]', el).value); }; });
+    var ca = $('#copyAll', el); if (ca) ca.onclick = function () { copyText(current().replace(/\n---\n/g, '\n\n')); };
+    $('#saveBtn', el).onclick = async function () {
+      var b = this; b.disabled = true;
+      try {
+        var r = await api('studio-api', 'item-update', { id: item.id, saved: !item.saved });
+        item.saved = r.item.saved; b.textContent = item.saved ? '★ Saved' : '☆ Save';
+        S.history = S.history.map(function (h) { return h.id === item.id ? Object.assign({}, h, { saved: item.saved }) : h; });
+        toast(item.saved ? 'Saved to your library' : 'Removed from saved');
+      } catch (x) { toast(x.message); }
+      b.disabled = false;
+    };
+    var rg = $('#regen', el); if (rg) rg.onclick = onRegenerate;
+  }
+
+  function showLimitReached() {
+    var power = S.boot.access.plan === 'power';
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="lrT"><h2 id="lrT" style="margin:0">You’ve used this month’s generations</h2>' +
+      '<p>Your allowance resets on <b>' + fmtDate(S.boot.usage.resetsOn, { day: 'numeric', month: 'long' }) + '</b>. You can still view, edit and copy everything in your library.</p>' +
+      (!power && S.boot.billingEnabled ? '<div class="card plan"><b>AI Power add-on</b><div class="price">£5<span style="font-size:15px;font-weight:500">/month</span></div><p class="sub">' + S.boot.limits.power + ' generations a month in total. Cancel any time — your annual membership stays.</p></div><button class="btn gold block" id="lrUp">Get AI Power</button>' : '') +
+      '<button class="btn ghost block" id="lrOk">OK</button></div>';
+    document.body.appendChild(scrim);
+    $('#lrOk', scrim).onclick = function () { scrim.remove(); };
+    var up = $('#lrUp', scrim); if (up) up.onclick = function () { scrim.remove(); startCheckout(); };
+  }
+
+  // ───────────── library ─────────────
+  function showLibrary(filter) {
+    filter = filter || 'all';
+    setChrome({ tabs: true, tab: 'library' });
+    app.innerHTML = '<main><h1>Library</h1><p class="sub" style="margin:6px 0 12px">Everything you’ve created. Viewing, editing and copying are free.</p>' +
+      '<div class="chips" id="lf" style="margin-bottom:14px">' + [['all', 'All'], ['saved', '★ Saved']].concat(S.boot.tools.map(function (t) { return [t.id, t.name]; })).map(function (o) { return '<button class="chip" data-f="' + o[0] + '" aria-pressed="' + (o[0] === filter) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>' +
+      '<div id="lbody"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    $$('#lf .chip', app).forEach(function (c) { c.onclick = function () { showLibrary(c.dataset.f); }; });
+    var payload = filter === 'saved' ? { savedOnly: true } : filter === 'all' ? {} : { tool: filter };
+    api('studio-api', 'history-list', payload).then(function (r) {
+      if (filter === 'all') S.history = r.items;
+      $('#lbody').innerHTML = historyRows(r.items); bindHistoryRows();
+    }).catch(function (x) { $('#lbody').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; });
+  }
+
+  async function showItem(id) {
+    setChrome({ tabs: true, tab: 'library', back: function () { showLibrary(); } });
+    app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    var r;
+    try { r = await api('studio-api', 'item-get', { id: id }); }
+    catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var item = r.item, t = toolDef(item.tool) || { name: item.tool };
+    app.innerHTML = '<main><p class="sub">' + esc(t.name) + ' · ' + fmtDate(item.createdAt, { day: 'numeric', month: 'long', year: 'numeric' }) + '</p>' +
+      '<h1 style="font-size:20px;margin:4px 0 14px">' + esc(item.title) + '</h1><div id="res"></div>' +
+      '<div class="row wrap" style="margin-top:18px;gap:14px"><button class="btn link" id="again">Use these settings again</button><button class="btn link danger" id="del">Delete</button></div></main>';
+    renderResult($('#res'), item, null);
+    $('#again').onclick = function () { showTool(item.tool, item.input); };
+    $('#del').onclick = async function () {
+      if (!confirm('Delete this from your library?')) return;
+      try { await api('studio-api', 'item-delete', { id: id }); S.history = S.history.filter(function (h) { return h.id !== id; }); toast('Deleted'); showLibrary(); }
+      catch (x) { toast(x.message); }
+    };
+  }
+
+  // ───────────── account & billing ─────────────
+  async function startCheckout() {
+    try { var r = await api('studio-billing', 'checkout'); location.href = r.url; }
+    catch (x) { if (x.code !== 'cancelled') toast(x.message); }
+  }
+  async function openPortal() {
+    try { var r = await api('studio-billing', 'portal'); location.href = r.url; }
+    catch (x) { if (x.code !== 'cancelled') toast(x.message); }
+  }
+  async function signOut() {
+    try { await api('studio-auth', 'logout', {}, { quiet401: true }); } catch (e) {}
+    S.boot = null; showSignIn();
+  }
+
+  function planSection() {
+    var a = S.boot.access, ad = S.boot.addon, l = S.boot.limits;
+    var exp = fmtDate(S.boot.member.membershipExpiresAt, { day: 'numeric', month: 'long', year: 'numeric' });
+    var html = '<h2>Membership</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>Business Club</b><span class="pill green">Active</span></div>' +
+      '<div class="sub" style="margin-top:2px">Annual membership valid until <b>' + exp + '</b>. Includes ' + l.standard + ' AI generations a month.</div></div>';
+    if (!S.boot.billingEnabled && !ad) return html;
+    if (ad && ['active', 'trialing'].indexOf(ad.status) > -1) {
+      html += '<div class="card plan stack" style="margin-top:12px"><div class="row" style="justify-content:space-between"><b>AI Power add-on</b><span class="pill gold">' + (ad.cancelAtPeriodEnd ? 'Ending' : 'Active') + '</span></div>' +
+        '<div class="sub">' + l.power + ' generations a month in total · £5/month</div>' +
+        '<div>' + (ad.cancelAtPeriodEnd ? 'Ends on <b>' + fmtDate(ad.currentPeriodEnd, { day: 'numeric', month: 'long' }) + '</b> — you’ll go back to ' + l.standard + ' a month. Your annual membership is not affected.' : 'Renews on <b>' + fmtDate(ad.currentPeriodEnd, { day: 'numeric', month: 'long' }) + '</b>.') + '</div>' +
+        '<button class="btn ghost block" id="manage">' + (ad.cancelAtPeriodEnd ? 'Restart or manage subscription' : 'Manage or cancel subscription') + '</button></div>';
+    } else if (ad && ['past_due', 'unpaid', 'incomplete'].indexOf(ad.status) > -1) {
+      html += '<div class="card stack" style="margin-top:12px;border-color:var(--danger)"><b>AI Power is paused</b><div class="err">Your last payment didn’t go through. Update your card to get your ' + l.power + ' generations back. Your annual membership is not affected.</div>' +
+        '<button class="btn primary block" id="manage">Update payment details</button></div>';
+    } else if (S.boot.billingEnabled) {
+      html += '<div class="card plan stack" style="margin-top:12px"><div class="row" style="justify-content:space-between"><b>AI Power add-on</b><span class="pill gold">Optional</span></div>' +
+        '<div class="price">£5<span style="font-size:15px;font-weight:500"> /month</span></div>' +
+        '<ul><li><b>' + l.power + ' AI generations a month</b> in total (instead of ' + l.standard + ')</li><li>All six Studio tools</li><li>Renews monthly — cancel any time</li><li>Cancelling never affects your annual membership</li></ul>' +
+        '<button class="btn gold block" id="upgrade">Add AI Power</button><p class="hint" style="text-align:center">Secure payment by Stripe. We’ll ask you to confirm with an email code first.</p></div>';
+    }
+    return html;
+  }
+
+  function showAccount() {
+    setChrome({ tabs: true, tab: 'account' });
+    var p = S.boot.profile;
+    app.innerHTML = '<main><h1>Account</h1><p class="sub" style="margin-top:4px">' + esc(S.boot.member.email) + '</p>' +
+      planSection() +
+      '<h2>Business profile</h2><div class="card"><b>' + esc(p.businessName) + '</b><div class="sub">' + esc(p.industry) + ' · ' + esc(p.location) + '</div>' +
+      '<div class="sub" style="margin-top:4px">Tone: ' + esc(TONE_LABELS[p.tone] || p.tone) + (p.instagram ? ' · ' + esc(p.instagram) : '') + '</div>' +
+      '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' +
+      '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation, for any tool.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset on the 1st of each month. Unused generations don’t roll over.</li></ul></details>' +
+      '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days.</p>' +
+      '<button class="btn ghost block" id="out">Sign out</button><button class="btn link danger" id="outAll">Sign out on all devices</button></div></main>';
+    $('#editP').onclick = function () { showProfileForm(false); };
+    $('#out').onclick = signOut;
+    $('#outAll').onclick = async function () {
+      if (!confirm('Sign out everywhere, including this device?')) return;
+      try { await api('studio-auth', 'logout-all'); } catch (e) {}
+      S.boot = null; showSignIn();
+    };
+    var up = $('#upgrade'); if (up) up.onclick = startCheckout;
+    var mg = $('#manage'); if (mg) mg.onclick = openPortal;
+  }
+
+  start();
+})();
+</script>
+</body>
+</html>
