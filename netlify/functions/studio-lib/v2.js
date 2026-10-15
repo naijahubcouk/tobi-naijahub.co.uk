@@ -31,4 +31,7 @@ function toV2(lambdaHandler) {
   };
 }
 
-module.exports = { toV2 };
+// Hands the statically imported Blobs module to the shared code.
+function useBlobs(mod) { require('./core').setBlobsModule(mod); }
+
+module.exports = { toV2, useBlobs };

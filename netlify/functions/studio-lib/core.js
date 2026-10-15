@@ -143,6 +143,7 @@ function clientIp(event) {
 
 // ───────────────────────── storage ─────────────────────────
 let blobsLib = null;
+function setBlobsModule(mod) { blobsLib = mod; }
 function blobs() {
   if (!blobsLib) blobsLib = require('@netlify/blobs');
   return blobsLib;
@@ -516,7 +517,7 @@ module.exports = {
   STORE_NAME, DAY, MIN, SESSION, DEFAULT_SETTINGS, LIVE_SUB_STATUSES,
   COOKIE_MEMBER, COOKIE_ADMIN,
   env, adminEmails, HttpError, Abort, respond, handler, header,
-  store, getJson, setJson, del, listKeys, cas, sleep,
+  store, getJson, setJson, del, listKeys, cas, sleep, setBlobsModule,
   normalizeEmail, requireEmail, enc, sha256, hmac, randomToken, nowIso, cleanText,
   dayKey, monthKey, rateLimit, getSettings, modelFor, sendEmail, emailAdmins,
   getMember, access, endOfDayUk,
