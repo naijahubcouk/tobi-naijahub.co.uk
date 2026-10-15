@@ -41,18 +41,18 @@ function productsOf(profile) {
 const T = [
   // content
   { id: 'c-showoff', slot: 'content', title: 'Show off {product}', why: 'Products shown clearly get more enquiries than general posts.', go: { tool: 'oneclick', input: { preset: 'promote', product: '{product}' } } },
-  { id: 'c-reel-make', slot: 'content', title: 'Make a short Reel about {product}', why: 'Reels reach people who don’t follow you yet.', go: { tool: 'reel', input: { idea: 'Show {product} from start to finish — how it’s made, prepared or used', duration: '30 seconds' } } },
+  { id: 'c-reel-make', needs: ['instagram', 'tiktok', 'facebook'], slot: 'content', title: 'Make a short Reel about {product}', why: 'Reels reach people who don’t follow you yet.', go: { tool: 'reel', input: { idea: 'Show {product} from start to finish — how it’s made, prepared or used', duration: '30 seconds' } } },
   { id: 'c-tip', slot: 'content', title: 'Share a tip your customers will save', why: 'Helpful posts get saved and shared, and build trust.', go: { tool: 'caption', input: { topic: 'A practical tip about {product} for {customers}', goal: 'educate' } } },
-  { id: 'c-bts', slot: 'content', title: 'Show what happens behind the scenes', why: 'People buy from people — let them see you at work.', go: { tool: 'reel', input: { idea: 'Behind the scenes of a normal day at {business}', style: 'behind the scenes' } } },
+  { id: 'c-bts', needs: ['instagram', 'tiktok', 'facebook'], slot: 'content', title: 'Show what happens behind the scenes', why: 'People buy from people — let them see you at work.', go: { tool: 'reel', input: { idea: 'Behind the scenes of a normal day at {business}', style: 'behind the scenes' } } },
   { id: 'c-faq', slot: 'content', title: 'Answer a question customers often ask', why: 'Answering common questions saves you time in your DMs.', go: { tool: 'caption', input: { topic: 'A question customers often ask about {product}, and the answer', goal: 'educate' } } },
   { id: 'c-ideas', slot: 'content', title: 'Get 6 fresh content ideas', why: 'Stock up on ideas so you’re never stuck for what to post.', go: { tool: 'ideas', input: {} } },
-  { id: 'c-food', slot: 'content', groups: ['food'], title: 'Make people hungry for {product}', why: 'Close-up food content is what makes people order.', go: { tool: 'reel', input: { idea: 'Slow, close-up shots of {product} — steam, textures, the first cut or bite', style: 'voiceover with clips', duration: '15 seconds' } } },
+  { id: 'c-food', needs: ['instagram', 'tiktok', 'facebook'], slot: 'content', groups: ['food'], title: 'Make people hungry for {product}', why: 'Close-up food content is what makes people order.', go: { tool: 'reel', input: { idea: 'Slow, close-up shots of {product} — steam, textures, the first cut or bite', style: 'voiceover with clips', duration: '15 seconds' } } },
   { id: 'c-beauty', slot: 'content', groups: ['beauty'], title: 'Post a before-and-after', why: 'Transformations are the most shared beauty content.', go: { tool: 'caption', input: { topic: 'A before-and-after transformation using {product}', goal: 'sell' } } },
-  { id: 'c-fashion', slot: 'content', groups: ['fashion'], title: 'Style {product} three ways', why: 'Styling ideas help customers picture themselves wearing it.', go: { tool: 'reel', input: { idea: 'Three ways to style {product} for different occasions', style: 'trend / transition' } } },
-  { id: 'c-events', slot: 'content', groups: ['events'], title: 'Show a set-up from start to finish', why: 'Seeing the transformation sells your service.', go: { tool: 'reel', input: { idea: 'Time-lapse of an event set-up from empty room to finished', style: 'voiceover with clips' } } },
+  { id: 'c-fashion', needs: ['instagram', 'tiktok', 'facebook'], slot: 'content', groups: ['fashion'], title: 'Style {product} three ways', why: 'Styling ideas help customers picture themselves wearing it.', go: { tool: 'reel', input: { idea: 'Three ways to style {product} for different occasions', style: 'trend / transition' } } },
+  { id: 'c-events', needs: ['instagram', 'tiktok', 'facebook'], slot: 'content', groups: ['events'], title: 'Show a set-up from start to finish', why: 'Seeing the transformation sells your service.', go: { tool: 'reel', input: { idea: 'Time-lapse of an event set-up from empty room to finished', style: 'voiceover with clips' } } },
   { id: 'c-services', slot: 'content', groups: ['services'], title: 'Explain one thing people get wrong', why: 'Myth-busting shows expertise and builds trust.', go: { tool: 'caption', input: { topic: 'A common mistake people make about {product}, and what to do instead', goal: 'educate' } } },
   { id: 'c-thanks', slot: 'content', title: 'Thank your customers publicly', why: 'Appreciation posts encourage reviews and repeat customers.', go: { tool: 'oneclick', input: { preset: 'thank', product: '{product}' } } },
-  { id: 'c-newteaser', slot: 'content', goals: ['new_product'], title: 'Tease your new product', why: 'A teaser builds curiosity before you launch.', go: { tool: 'reel', input: { idea: 'A teaser for something new: {product} — show glimpses without revealing everything', duration: '15 seconds' } } },
+  { id: 'c-newteaser', needs: ['instagram', 'tiktok', 'facebook'], slot: 'content', goals: ['new_product'], title: 'Tease your new product', why: 'A teaser builds curiosity before you launch.', go: { tool: 'reel', input: { idea: 'A teaser for something new: {product} — show glimpses without revealing everything', duration: '15 seconds' } } },
   // sales / customers
   { id: 's-followup', slot: 'sales', title: 'Follow up with interested customers', why: 'Many sales happen on the follow-up, not the first message.', go: { tool: 'message', input: { situation: 'follow up a quote', points: 'A friendly check-in about {product}', channel: 'WhatsApp' } } },
   { id: 's-review', slot: 'sales', title: 'Ask a happy customer for a review', why: 'Reviews make new customers trust you faster.', go: { tool: 'message', input: { situation: 'ask for a review', channel: 'WhatsApp' } } },
@@ -61,15 +61,23 @@ const T = [
   { id: 's-booking', slot: 'sales', goals: ['bookings'], title: 'Prepare a booking confirmation message', why: 'Clear confirmations reduce no-shows and questions.', go: { tool: 'message', input: { situation: 'booking / order confirmation', channel: 'WhatsApp' } } },
   { id: 's-offer', slot: 'sales', goals: ['enquiries', 'bookings', 'new_product'], title: 'Promote an offer on {product}', why: 'A clear offer with a deadline gives people a reason to act now.', go: { tool: 'promo', input: { offer: '{product}', format: 'Instagram post', urgency: 'moderate' } } },
   { id: 's-launch', slot: 'sales', goals: ['new_product'], title: 'Write your launch announcement', why: 'Tell people exactly what’s new and how to get it.', go: { tool: 'promo', input: { offer: 'Launching: {product}', format: 'Instagram post', urgency: 'moderate' } } },
-  { id: 's-broadcast', slot: 'sales', goals: ['enquiries', 'bookings', 'new_product'], title: 'Send a WhatsApp broadcast', why: 'Past customers are the easiest people to sell to.', go: { tool: 'promo', input: { offer: '{product}', format: 'WhatsApp broadcast', urgency: 'gentle' } } },
+  { id: 's-broadcast', needs: ['whatsapp'], slot: 'sales', goals: ['enquiries', 'bookings', 'new_product'], title: 'Send a WhatsApp broadcast', why: 'Past customers are the easiest people to sell to.', go: { tool: 'promo', input: { offer: '{product}', format: 'WhatsApp broadcast', urgency: 'gentle' } } },
   // visibility / engagement
   { id: 'v-engage', slot: 'visibility', title: 'Start a conversation with your followers', why: 'Comments and replies push your posts to more people.', go: { tool: 'oneclick', input: { preset: 'engage', product: '{product}' } } },
-  { id: 'v-poll', slot: 'visibility', title: 'Post a Story poll', why: 'Polls are quick wins that keep you in people’s Stories.', go: { tool: 'oneclick', input: { preset: 'engage', product: '{product}', details: 'As Instagram Stories with a poll or question sticker' } } },
+  { id: 'v-poll', needs: ['instagram', 'facebook'], slot: 'visibility', title: 'Post a Story poll', why: 'Polls are quick wins that keep you in people’s Stories.', go: { tool: 'oneclick', input: { preset: 'engage', product: '{product}', details: 'As Instagram Stories with a poll or question sticker' } } },
   { id: 'v-intro', slot: 'visibility', goals: ['visibility', 'enquiries'], title: 'Introduce your business to new followers', why: 'New followers need to know who you are and how you help.', go: { tool: 'caption', input: { topic: 'Introducing {business}: who we are, what we do and who we help', goal: 'announce' } } },
-  { id: 'v-bio', slot: 'visibility', title: 'Refresh your Instagram bio', why: 'Your bio is the first thing new visitors read.', go: { tool: 'bio', input: { type: 'Instagram bio (150 characters)' } } },
+  { id: 'v-bio', needs: ['instagram'], slot: 'visibility', title: 'Refresh your Instagram bio', why: 'Your bio is the first thing new visitors read.', go: { tool: 'bio', input: { type: 'Instagram bio (150 characters)' } } },
   { id: 'v-avail', slot: 'visibility', dow: [4, 5], title: 'Announce your availability for the weekend', why: 'Thursdays and Fridays are when people plan their weekends.', go: { tool: 'oneclick', input: { preset: 'announce', product: '{product}' } } },
   { id: 'v-avail2', slot: 'visibility', goals: ['bookings'], title: 'Announce your next available dates', why: 'Showing availability prompts people to book.', go: { tool: 'oneclick', input: { preset: 'announce', product: '{product}' } } },
-  { id: 'v-reel', slot: 'visibility', goals: ['visibility'], title: 'Join in with a trend Reel', why: 'Trends help new people discover you.', go: { tool: 'reel', input: { idea: 'A popular trend format adapted to {business} and {product}', style: 'trend / transition', duration: '15 seconds' } } },
+  { id: 'v-reel', needs: ['instagram', 'tiktok', 'facebook'], slot: 'visibility', goals: ['visibility'], title: 'Join in with a trend Reel', why: 'Trends help new people discover you.', go: { tool: 'reel', input: { idea: 'A popular trend format adapted to {business} and {product}', style: 'trend / transition', duration: '15 seconds' } } },
+  // channel-specific
+  { id: 'v-listing', needs: ['listing'], slot: 'visibility', title: 'Share your Auntie Tobi listing', why: 'Your listing shows your details in one place — share the link so new customers can find you.', go: { tool: 'oneclick', input: { preset: 'listing' } } },
+  { id: 'v-listing-desc', needs: ['listing'], slot: 'visibility', title: 'Freshen up your listing description', why: 'A clear description helps people choose you in the Auntie Tobi directory.', go: { tool: 'bio', input: { type: 'Directory listing' } } },
+  { id: 'c-website', needs: ['website'], slot: 'content', title: 'Add a short update to your website', why: 'Fresh website content helps people (and Google) find you.', go: { tool: 'caption', input: { topic: 'A helpful update or short article about {product} for {customers}', platform: 'Website / blog', goal: 'educate' } } },
+  { id: 'v-website-about', needs: ['website'], slot: 'visibility', title: 'Polish your website “About us”', why: 'Visitors decide quickly — make your About section clear and warm.', go: { tool: 'bio', input: { type: 'Website "About us"' } } },
+  { id: 's-wa-status', needs: ['whatsapp'], slot: 'sales', title: 'Post {product} on your WhatsApp Status', why: 'Your contacts already know you — Status is a quick, free way to remind them.', go: { tool: 'oneclick', input: { preset: 'promote', product: '{product}', platform: 'WhatsApp Status' } } },
+  { id: 's-google-review', needs: ['google'], slot: 'sales', title: 'Ask a customer for a Google review', why: 'Google reviews help you show up when people search locally.', go: { tool: 'message', input: { situation: 'ask for a review', points: 'Ask them to leave a review on our Google Business profile', channel: 'WhatsApp' } } },
+  { id: 'v-google-desc', needs: ['google'], slot: 'visibility', title: 'Update your Google Business description', why: 'A clear description helps you appear in local searches.', go: { tool: 'bio', input: { type: 'Google Business description (750 characters)' } } },
 ];
 
 // Small deterministic PRNG so a member gets the same 3 actions all day.
@@ -209,13 +217,16 @@ async function today(email, profile) {
   };
   const dow = ukDow(day);
   const g = goal && goal.goal;
-  const fits = t => (!t.goals || (g && t.goals.includes(g))) && (!t.groups || t.groups.includes(group)) && (!t.dow || t.dow.includes(dow));
+  const channels = profile.channels && profile.channels.length ? profile.channels : ['instagram'];
+  if (profile.listingSlug && !channels.includes('listing')) channels.push('listing');
+  const fits = t => (!t.goals || (g && t.goals.includes(g))) && (!t.groups || t.groups.includes(group)) && (!t.dow || t.dow.includes(dow)) &&
+    (!t.needs || t.needs.some(c => channels.includes(c)));
   function pick(slot, extra) {
     let pool = T.filter(t => t.slot === slot && fits(t) && !recent.has(t.id) && !(extra || []).includes(t.id));
     if (!pool.length) pool = T.filter(t => t.slot === slot && fits(t) && !(extra || []).includes(t.id));
     // Goal-specific and business-type templates are favoured.
     const weighted = [];
-    pool.forEach(t => { const w = 1 + (t.goals ? 2 : 0) + (t.groups ? 2 : 0) + (t.dow ? 3 : 0); for (let i = 0; i < w; i++) weighted.push(t); });
+    pool.forEach(t => { const w = 1 + (t.goals ? 2 : 0) + (t.groups ? 2 : 0) + (t.dow ? 3 : 0) + (t.needs && !t.needs.includes('instagram') ? 2 : 0); for (let i = 0; i < w; i++) weighted.push(t); });
     return weighted[Math.floor(rnd() * weighted.length)] || T.find(t => t.slot === slot && !t.goals && !t.groups && !t.dow);
   }
   const actions = [];

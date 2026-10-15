@@ -190,7 +190,9 @@ tbody tr:hover{background:#FFFCF5}
       var list = S.members.filter(function (m) { return !s || m.email.indexOf(s) > -1 || (m.name || '').toLowerCase().indexOf(s) > -1; });
       $('#tb').innerHTML = list.length ? list.map(function (m) {
         var pct = m.limit ? Math.min(100, Math.round(100 * m.today.used / m.limit)) : 0;
-        return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + (m.lastLoginAt ? ' \u00b7 last signed in ' + d(m.lastLoginAt) : '') + '</div></td><td>' + typePill(m) + '</td>' +
+        var biz = m.business || {};
+        return '<tr><td><b>' + esc(m.email) + '</b>' + (biz.name ? '<div>' + esc(biz.name) + '</div>' : '') +
+          (biz.listingUrl ? '<div class="muted"><a href="' + esc(biz.listingUrl) + '" target="_blank" rel="noopener">Auntie Tobi listing</a></div>' : '') + '<div class="muted">' + esc(m.name) + (m.lastLoginAt ? ' \u00b7 last signed in ' + d(m.lastLoginAt) : '') + '</div></td><td>' + typePill(m) + '</td>' +
           '<td>' + statusPill(m) + (m.status !== 'none' && m.membershipExpiresAt ? '<div class="muted">to ' + d(m.membershipExpiresAt) + '</div>' : '') + '</td>' +
           '<td>' + addonPill(m.addon) + '</td>' +
           '<td>' + m.today.used + ' / ' + m.limit + (m.allowanceOverride != null ? ' <span class="muted">(custom)</span>' : '') + '<div class="bar"><span style="width:' + pct + '%"></span></div></td>' +
@@ -219,6 +221,13 @@ tbody tr:hover{background:#FFFCF5}
       '<label style="display:flex;gap:8px;align-items:center;font-weight:500"><input id="mb" type="checkbox" style="width:auto"' + (m.blocked ? ' checked' : '') + '> Block account (no access at all, signs out all devices, AI Power stops renewing)</label>' +
       '<div><label for="mo">Custom daily allowance <span class="muted">(blank = plan default)</span></label><input id="mo" type="number" min="0" max="5000" value="' + (m.allowanceOverride == null ? '' : m.allowanceOverride) + '"></div>' +
       '<div><label for="mt">Private notes</label><textarea id="mt" rows="2">' + esc(m.notes) + '</textarea></div>' +
+      (email ? (function () {
+        var biz = m.business || {};
+        return '<div class="card stack"><b>Business &amp; links</b><div>' + (biz.name ? esc(biz.name) : '<span class="muted">No business profile yet</span>') + '</div>' +
+          '<div class="muted">Auntie Tobi listing: ' + (biz.listingUrl ? '<a href="' + esc(biz.listingUrl) + '" target="_blank" rel="noopener">' + esc(biz.listingSlug) + '</a> <button class="btn small ghost danger" id="unlinkL">Remove listing link</button>' : 'not linked') + '</div>' +
+          '<div class="muted">Website: ' + (biz.website ? '<a href="' + esc(biz.website) + '" target="_blank" rel="noopener">' + esc(biz.website) + '</a>' : 'none') + '</div>' +
+          '<div class="muted">Customers find them on: ' + esc((biz.channels || []).join(', ') || '\u2014') + (biz.mainChannel ? ' \u00b7 posts point to ' + esc(biz.mainChannel) : '') + '</div></div>';
+      })() : '') +
       (email ? '<div class="card stack"><b>AI Power</b><div>' + addonPill(m.addon) + (m.addon && m.addon.currentPeriodEnd ? ' <span class="muted">period ends ' + d(m.addon.currentPeriodEnd) + '</span>' : '') + '</div>' +
         (m.stripeCustomerId ? '<div class="muted">Stripe customer: ' + esc(m.stripeCustomerId) + '</div><button class="btn small ghost" id="sync">Re-check with Stripe</button>' : '<div class="muted">No Stripe customer yet.</div>') +
         '<div class="muted">AI Power is separate from Business Club: changing Club status doesn\u2019t affect it. Members switch plan or cancel themselves; refunds are done in Stripe.</div></div>' +
@@ -236,6 +245,7 @@ tbody tr:hover{background:#FFFCF5}
     };
     if (email) {
       $('#mrev', s).onclick = async function () { if (!confirm('Sign this member out on every device?')) return; try { await api('member-revoke-sessions', { email: email }); toast('Signed out everywhere'); } catch (x) { toast(x.message); } };
+      var ulk = $('#unlinkL', s); if (ulk) ulk.onclick = async function () { if (!confirm('Remove this listing link? The member can add the right one in their profile.')) return; try { await api('member-unlink-listing', { email: email }); toast('Listing link removed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       var sy = $('#sync', s); if (sy) sy.onclick = async function () { try { var r = await api('member-stripe-sync', { email: email }); toast('Add-on: ' + (r.addon ? r.addon.status : 'none')); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       try {
         var u = await api('member-usage', { email: email });

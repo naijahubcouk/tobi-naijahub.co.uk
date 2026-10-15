@@ -145,6 +145,16 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 
 ---
 
+## 7c. Recognising businesses (listing, website, channels)
+
+- **Is this your business?** If a member's sign-in email matches the email on an Auntie Tobi listing, setup starts by asking them. "Yes" links the listing and fills in their details; "No" won't ask again. Only listings with an email in `netlify/functions/directory.json` can be matched this way — the live list in `index.html` has no emails.
+- **Paste a link:** otherwise members can paste their listing link (`auntietobi.co.uk/biz/...`) and/or website in "Where customers find you". All listings in the live app can be found this way (read from your site and cached for 6 hours).
+- **Channels:** members tick where customers find them (Instagram, Facebook, TikTok, WhatsApp, Website, Auntie Tobi listing, Google Business) and where posts should send people. Calls to action, links, hashtags and daily actions follow this.
+- **Promote my Auntie Tobi listing** quick-create button appears once a listing is linked (1 generation).
+- **Admin:** Members shows each person's listing, website and channels; "Remove listing link" fixes a wrong link.
+
+---
+
 ## 8. Running costs (estimates — check current prices)
 
 | Service | Cost |

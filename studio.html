@@ -226,7 +226,7 @@ details.faq li+li{margin-top:4px}
     bio: { blurb: 'Bios and descriptions', hello: 'Which bio or description do you need? I’ll give you three options to choose from.', icon: '<circle cx="9" cy="10" r="3"/><path d="M4 19c1-3 3-4 5-4s4 1 5 4M15 8h5M15 12h5M17 16h3"/>' },
     message: { blurb: 'Reply to customers well', hello: 'Paste what your customer said (or describe it) and I’ll help you reply the right way.', icon: '<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/><path d="M8 11h8M8 14h5"/>' }
   };
-  var CHOICE_LABELS = { promote: 'Promote my product', engage: 'Get engagement', thank: 'Thank my customers', announce: 'Announce availability' };
+  var CHOICE_LABELS = { listing: 'Promote my Auntie Tobi listing', promote: 'Promote my product', engage: 'Get engagement', thank: 'Thank my customers', announce: 'Announce availability' };
   var QUICK = [
     { preset: 'promote', label: 'Promote my product', icon: '<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M16 9a4 4 0 010 6"/>' },
     { preset: 'engage', label: 'Get engagement', icon: '<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>' },
@@ -515,19 +515,41 @@ details.faq li+li{margin-top:4px}
       ['products', 'Products and services', 'area', 'e.g. Small chops, jollof trays, party catering for 20–200 guests', 600],
       ['customers', 'Who are your customers?', 'area', 'e.g. Busy Nigerian families and event planners in South London', 400],
       ['description', 'Describe your business in a few sentences', 'area', 'What makes you special? How long have you been going?', 1200]] },
-    { title: 'Your brand voice', fields: [
-      ['instagram', 'Instagram handle', 'text', '@yourbusiness', 60, true],
+    { title: 'Where customers find you', fields: [
+      ['listing', 'Your Auntie Tobi listing link', 'listing'],
       ['website', 'Website', 'text', 'yourbusiness.co.uk', 200, true],
+      ['whatsapp', 'WhatsApp number', 'text', 'e.g. 447700900123', 20, true],
+      ['instagram', 'Instagram handle', 'text', '@yourbusiness', 60, true],
+      ['channels', 'Where do customers find you?', 'channels'],
+      ['mainChannel', 'Where should posts send people?', 'main']] },
+    { title: 'Your brand voice', fields: [
       ['tone', 'Brand tone', 'tone'],
       ['toneNotes', 'Anything else about how you sound?', 'area', 'e.g. Use pidgin lightly, never too formal', 200, true],
       ['ctas', 'Preferred calls to action', 'ctas']] }
   ];
+  var CHANNELS = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['tiktok', 'TikTok'], ['whatsapp', 'WhatsApp'], ['website', 'Website'], ['listing', 'Auntie Tobi listing'], ['google', 'Google Business']];
+  function channelName(c) { var f = CHANNELS.filter(function (x) { return x[0] === c; })[0]; return f ? f[1] : c; }
 
   function fieldHtml(f, p) {
     var name = f[0], label = f[1], type = f[2], ph = f[3] || '', max = f[4] || 200, optional = f[5];
     var lab = '<label class="f" for="pf_' + name + '">' + esc(label) + (optional ? ' <span class="opt">(optional)</span>' : '') + '</label>';
     if (type === 'text') return '<div>' + lab + '<input type="text" id="pf_' + name + '" name="' + name + '" maxlength="' + max + '" placeholder="' + esc(ph) + '" value="' + esc(p[name] || '') + '"></div>';
     if (type === 'area') return '<div>' + lab + '<textarea id="pf_' + name + '" name="' + name + '" maxlength="' + max + '" placeholder="' + esc(ph) + '">' + esc(p[name] || '') + '</textarea></div>';
+    if (type === 'listing') {
+      var L = p._listing;
+      return '<div id="listingBox"><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + ' <span class="opt">(optional)</span></span>' +
+        (L ? '<div class="note" style="display:flex;gap:10px;align-items:center"><div style="flex:1;min-width:0;overflow-wrap:anywhere">✅ <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '') + '<br><a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:13px">' + esc(L.url.replace('https://www.', '')) + '</a></div><button type="button" class="btn link danger" id="unlinkL" style="flex:none">Remove</button></div>'
+          : '<div class="row"><input type="text" id="pf_listingLink" placeholder="auntietobi.co.uk/biz/your-business" style="flex:1"><button type="button" class="btn ghost small" id="checkL" style="min-height:46px">Check</button></div>' +
+            '<div class="hint">Paste the link to your page on Auntie Tobi. We’ll use it in your posts and can fill in your details.</div><div id="lres"></div>') + '</div>';
+    }
+    if (type === 'channels') {
+      var on = p.channels && p.channels.length ? p.channels : ['instagram'];
+      return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-multi="channels">' +
+        CHANNELS.map(function (c) { return '<button type="button" class="chip" data-val="' + c[0] + '" aria-pressed="' + (on.indexOf(c[0]) > -1) + '">' + esc(c[1]) + '</button>'; }).join('') + '</div><div class="hint">Tick all that apply.</div></div>';
+    }
+    if (type === 'main') {
+      return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-single="mainChannel" id="mainChips"></div><div class="hint">Your posts’ calls to action will point here.</div></div>';
+    }
     if (type === 'tone') {
       var cur = p.tone || 'warm';
       return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-single="tone">' +
@@ -540,24 +562,96 @@ details.faq li+li{margin-top:4px}
     }
   }
 
-  function showProfileForm(firstTime) {
+  function prefillFromListing(p, L) {
+    if (!L) return;
+    p._listing = L; p.listingSlug = L.slug;
+    if (!p.businessName) p.businessName = L.name;
+    if (!p.industry && L.cat) p.industry = L.cat.charAt(0).toUpperCase() + L.cat.slice(1);
+    if (!p.location && L.loc) p.location = L.loc;
+    if (!p.description && L.desc) p.description = L.desc;
+    if (!p.instagram && L.ig) p.instagram = '@' + L.ig;
+    if (!p.website && L.website) p.website = L.website;
+    if (!p.whatsapp && L.wa) p.whatsapp = L.wa;
+    var ch = (p.channels || []).slice();
+    ['listing'].concat(L.ig ? ['instagram'] : [], L.wa ? ['whatsapp'] : [], L.website ? ['website'] : []).forEach(function (c) { if (ch.indexOf(c) < 0) ch.push(c); });
+    p.channels = ch;
+    if (!p.mainChannel) p.mainChannel = L.ig ? 'instagram' : L.wa ? 'whatsapp' : 'listing';
+  }
+
+  // "Is this your business?" — shown before setup when the member's email matches a listing.
+  async function maybeConfirmListing(p) {
+    if (p.listingSlug) return;
+    var r; try { r = await api('studio-api', 'listing-suggest'); } catch (e) { return; }
+    if (!r.listing) return;
+    var L = r.listing;
+    return new Promise(function (resolve) {
+      setChrome({ tabs: false });
+      app.innerHTML = '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt=""><div class="kicker">We found you on Auntie Tobi</div><h1>Is this your business?</h1></div>' +
+        '<div class="card stack"><div><b style="font-size:18px">' + esc(L.name) + '</b><div class="sub">' + esc([L.cat, L.loc].filter(Boolean).join(' · ')) + '</div></div>' +
+        (L.desc ? '<p style="font-size:14.5px">' + esc(L.desc) + '</p>' : '') +
+        '<a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:14px">View listing ↗</a>' +
+        '<button class="btn primary block" id="yesL">Yes, this is my business</button><button class="btn ghost block" id="noL">No, it’s not</button>' +
+        '<p class="hint" style="text-align:center">If yes, we’ll fill in your details from your listing — you can change anything.</p></div></div>';
+      $('#yesL').onclick = async function () {
+        this.disabled = true;
+        try { var x = await api('studio-api', 'listing-link', { slug: L.slug }); prefillFromListing(p, x.listing); S.boot.listing = x.listing; } catch (e) { toast(e.message); }
+        resolve();
+      };
+      $('#noL').onclick = async function () { try { await api('studio-api', 'listing-decline', { slug: L.slug }); } catch (e) {} resolve(); };
+    });
+  }
+
+  async function showProfileForm(firstTime) {
     var p = Object.assign({}, S.boot.profile || {});
+    p._listing = S.boot.listing || null;
+    if (firstTime) await maybeConfirmListing(p);
+    if (!p.channels || !p.channels.length) p.channels = p.listingSlug ? ['listing'] : ['instagram'];
     var step = 0;
     function collect() {
       $$('[name]', app).forEach(function (el) { p[el.name] = el.name === 'ctas' ? el.value.split('\n') : el.value; });
       var tc = $('[data-single=tone] [aria-pressed=true]', app); if (tc) p.tone = tc.dataset.val;
+      var mc = $('[data-multi=channels]', app); if (mc) p.channels = $$('.chip[aria-pressed=true]', mc).map(function (c) { return c.dataset.val; });
+      var mn = $('#mainChips [aria-pressed=true]', app); if (mn) p.mainChannel = mn.dataset.val;
+    }
+    function drawMain() {
+      var box = $('#mainChips', app); if (!box) return;
+      var ch = $$('[data-multi=channels] .chip[aria-pressed=true]', app).map(function (c) { return c.dataset.val; });
+      if (!ch.length) ch = ['instagram'];
+      if (ch.indexOf(p.mainChannel) < 0) p.mainChannel = ch[0];
+      box.innerHTML = ch.map(function (c) { return '<button type="button" class="chip" data-val="' + c + '" aria-pressed="' + (c === p.mainChannel) + '">' + esc(channelName(c)) + '</button>'; }).join('');
+      $$('.chip', box).forEach(function (c) { c.onclick = function () { p.mainChannel = c.dataset.val; $$('.chip', box).forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); }; });
+    }
+    function bindListing() {
+      var ck = $('#checkL', app), ul = $('#unlinkL', app);
+      if (ck) ck.onclick = async function () {
+        var link = $('#pf_listingLink').value.trim(), out = $('#lres');
+        if (!link) return;
+        ck.disabled = true; out.innerHTML = '<p class="hint">Checking…</p>';
+        try {
+          var r = await api('studio-api', 'listing-lookup', { link: link });
+          var L = r.listing;
+          out.innerHTML = '<div class="note stack" style="margin-top:8px"><div>Found: <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '') + '</div><button type="button" class="btn primary small" id="useL">Link this listing and fill in my details</button></div>';
+          $('#useL').onclick = function () { collect(); prefillFromListing(p, L); toast('Listing linked — save your profile to keep it'); render(); };
+        } catch (x) { out.innerHTML = '<div class="err" style="margin-top:8px">' + esc(x.message) + '</div>'; }
+        ck.disabled = false;
+      };
+      if (ul) ul.onclick = function () { collect(); p._listing = null; p.listingSlug = ''; p.channels = (p.channels || []).filter(function (c) { return c !== 'listing'; }); render(); };
     }
     function render() {
       var steps = firstTime ? [PROFILE_STEPS[step]] : PROFILE_STEPS;
+      var last = PROFILE_STEPS.length - 1;
       setChrome({ tabs: !firstTime, tab: 'account', back: firstTime ? (step > 0 ? function () { collect(); step--; render(); } : null) : showAccount });
+      var hello = ['Welcome! Tell me about your business once, and I’ll use it every time I write for you. You can change it any time.', 'Lovely. Now, what do you sell and who buys it?', 'Where do customers find you? I’ll point your posts there.', 'Last bit — how should you sound?'];
       app.innerHTML = '<main><form id="pform" novalidate>' +
         (firstTime ? '<div class="steps">' + PROFILE_STEPS.map(function (s, i) { return '<span class="' + (i <= step ? 'on' : '') + '"></span>'; }).join('') + '</div>' +
-          '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (step === 0 ? 'Welcome! Tell me about your business once, and I’ll use it every time I write for you. You can change it any time.' : step === 1 ? 'Lovely. Now, what do you sell and who buys it?' : 'Last bit — how should you sound?') + '</p></div>'
+          '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (step === 0 && p._listing ? 'Thanks! I’ve filled in what I could from your Auntie Tobi listing — check it and change anything you like.' : hello[step]) + '</p></div>'
           : '<h1>Business profile</h1><p class="sub" style="margin:6px 0 16px">Used automatically in everything you create.</p>') +
         steps.map(function (s) { return (firstTime ? '' : '<h2>' + esc(s.title) + '</h2>') + '<div class="card stack">' + s.fields.map(function (f) { return fieldHtml(f, p); }).join('') + '</div>'; }).join('') +
         '<div class="err hidden" id="perr" role="alert" style="margin-top:12px"></div>' +
-        '<button class="btn primary block" style="margin-top:16px" id="psave">' + (firstTime && step < 2 ? 'Next' : 'Save profile') + '</button></form></main>';
+        '<button class="btn primary block" style="margin-top:16px" id="psave">' + (firstTime && step < last ? 'Next' : 'Save profile') + '</button></form></main>';
       $$('[data-single=tone] .chip', app).forEach(function (c) { c.onclick = function () { $$('[data-single=tone] .chip', app).forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); }; });
+      $$('[data-multi=channels] .chip', app).forEach(function (c) { c.onclick = function () { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); drawMain(); }; });
+      drawMain(); bindListing();
       $$('[data-cta]', app).forEach(function (c) { c.onclick = function () { var ta = $('#pf_ctas'); var lines = ta.value.split('\n').filter(Boolean); if (lines.indexOf(c.dataset.cta) < 0 && lines.length < 6) { lines.push(c.dataset.cta); ta.value = lines.join('\n'); } }; });
       $('#pform').addEventListener('submit', async function (e) {
         e.preventDefault(); collect();
@@ -566,11 +660,13 @@ details.faq li+li{margin-top:4px}
         var missing = [];
         stepDef.forEach(function (s) { s.fields.forEach(function (f) { if (['text', 'area'].indexOf(f[2]) > -1 && !f[5] && !String(p[f[0]] || '').trim()) missing.push(f[1]); }); });
         if (missing.length) { err.textContent = 'Please fill in: ' + missing.join(', '); err.classList.remove('hidden'); return; }
-        if (firstTime && step < 2) { step++; render(); return; }
+        if (firstTime && step < last) { step++; render(); return; }
         var btn = $('#psave'); btn.disabled = true; btn.textContent = 'Saving…';
+        var send = Object.assign({}, p); delete send._listing; send.listingSlug = p.listingSlug || '';
         try {
-          var r = await api('studio-api', 'profile-save', { profile: p });
-          S.boot.profile = r.profile; toast(firstTime ? 'All set! Let’s create something.' : 'Profile saved'); showHome();
+          await api('studio-api', 'profile-save', { profile: send });
+          S.boot = await api('studio-api', 'bootstrap'); S.history = S.boot.recent || [];
+          toast(firstTime ? 'All set! Let’s create something.' : 'Profile saved'); showHome();
         } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Save profile'; }
       });
     }
@@ -625,8 +721,16 @@ details.faq li+li{margin-top:4px}
   function greeting() { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
 
   function quickRow() {
-    return '<div class="quick">' + QUICK.map(function (q) { return '<button data-quick="' + q.preset + '">' + icon(q.icon, 20) + esc(q.label) + '</button>'; }).join('') + '</div>' +
+    var list = S.boot.listing ? [{ preset: 'listing', label: 'Promote my Auntie Tobi listing', icon: '<path d="M10 13a5 5 0 007.5.5l3-3a5 5 0 00-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 00-7.5-.5l-3 3a5 5 0 007 7l1.7-1.7"/>' }].concat(QUICK) : QUICK;
+    return '<div class="quick">' + list.map(function (q) { return '<button data-quick="' + q.preset + '">' + icon(q.icon, 20) + esc(q.label) + '</button>'; }).join('') + '</div>' +
       '<p class="hint" style="margin-top:6px">One tap = hook, caption, call to action, hashtags and a Story idea. Uses 1 generation.</p>';
+  }
+  function defaultPlatform() {
+    var p = S.boot.profile || {}, ch = p.channels && p.channels.length ? p.channels : ['instagram'];
+    var map = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', whatsapp: 'WhatsApp Status', website: 'Website / blog' };
+    if (map[p.mainChannel]) return map[p.mainChannel];
+    for (var i = 0; i < ch.length; i++) if (map[ch[i]]) return map[ch[i]];
+    return 'WhatsApp Status';
   }
   function firstProduct() {
     var p = (S.boot.profile && S.boot.profile.products) || '';
@@ -855,7 +959,7 @@ details.faq li+li{margin-top:4px}
     var t = toolDef(toolId); if (!t) return showHome();
     var m = TOOL_META[toolId] || {};
     var input = {};
-    t.fields.forEach(function (f) { input[f.name] = prefill && prefill[f.name] !== undefined ? prefill[f.name] : (f.type === 'text' ? '' : f.default); });
+    t.fields.forEach(function (f) { input[f.name] = prefill && prefill[f.name] !== undefined ? prefill[f.name] : (f.name === 'platform' ? defaultPlatform() : f.type === 'text' ? '' : f.default); });
     setChrome({ tabs: true, tab: opts.tab || 'create', back: opts.back || showCreate });
     app.innerHTML = '<main><h1 style="font-size:22px;margin-bottom:12px">' + esc(t.name) + '</h1>' +
       '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(opts.intro || m.hello || '') + '</p></div>' +
@@ -1074,6 +1178,8 @@ details.faq li+li{margin-top:4px}
       planSection() +
       (p ? '<h2>Business profile</h2><div class="card"><b>' + esc(p.businessName) + '</b><div class="sub">' + esc(p.industry) + ' · ' + esc(p.location) + '</div>' +
         '<div class="sub" style="margin-top:4px">Tone: ' + esc(TONE_LABELS[p.tone] || p.tone) + (p.instagram ? ' · ' + esc(p.instagram) : '') + '</div>' +
+        '<div class="sub" style="margin-top:4px">Customers find you on: ' + esc((p.channels || ['instagram']).map(channelName).join(', ')) + (p.mainChannel ? ' \u00b7 posts point to ' + esc(channelName(p.mainChannel)) : '') + '</div>' +
+        (S.boot.listing ? '<div class="sub" style="margin-top:4px">Auntie Tobi listing: <a href="' + esc(S.boot.listing.url) + '" target="_blank" rel="noopener">' + esc(S.boot.listing.name) + '</a></div>' : '<div class="sub" style="margin-top:4px">No Auntie Tobi listing linked \u2014 add it in your profile.</div>') +
         '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' : '') +
       '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation.</li><li>A <b>30-day content plan uses 3</b>. Everything else uses 1.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset at midnight (UK time). Unused generations don’t carry over.</li></ul></details>' +
       '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days and before any payment.</p>' +

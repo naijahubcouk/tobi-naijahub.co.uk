@@ -229,7 +229,12 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   const tool = tools.TOOLS[toolId];
   if (!tool) throw new HttpError(400, 'unknown_tool', 'Unknown tool.');
   if (!profile || !profile.businessName) throw new HttpError(409, 'profile_required', 'Please complete your business profile first.');
+  rawInput = rawInput && typeof rawInput === 'object' ? { ...rawInput } : {};
+  if (tool.fields.some(f => f.name === 'platform') && !tools.PLATFORMS.includes(rawInput.platform)) rawInput.platform = tools.defaultPlatform(profile);
   const input = tools.validateInput(toolId, rawInput);
+  if (toolId === 'oneclick' && input.preset === 'listing' && !profile.listingSlug) {
+    throw new HttpError(409, 'listing_required', 'Link your Auntie Tobi listing first (Account \u2192 Business profile).');
+  }
   const cost = tools.costOf(toolId, input);
   const day = dayKey();
 

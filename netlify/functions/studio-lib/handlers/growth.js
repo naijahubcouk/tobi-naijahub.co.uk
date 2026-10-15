@@ -25,7 +25,7 @@ exports.handler = handler(async (ctx) => {
   switch (body.action) {
     case 'today': {
       const profile = await core.getJson(`profiles/${core.enc(email)}`);
-      if (!profile) throw new HttpError(409, 'profile_required', 'Please complete your business profile first.');
+      if (!profile || !profile.businessName) throw new HttpError(409, 'profile_required', 'Please complete your business profile first.');
       return growth.today(email, profile);
     }
     case 'action-done':

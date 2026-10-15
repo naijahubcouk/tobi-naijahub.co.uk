@@ -159,7 +159,14 @@ exports.handler = handler(async (ctx) => {
       const members = await allMembers();
       const months = await mapLimit(members, 10, m => getJson(gen.monthUsageKey(m.email, month)));
       const days = await mapLimit(members, 10, m => getJson(gen.usageKey(m.email, day)));
-      return { month, day, members: members.map((m, i) => summarizeMember(m, settings, months[i], days[i])).sort((a, b) => a.email.localeCompare(b.email)) };
+      const profiles = await mapLimit(members, 10, m => getJson(`profiles/${enc(m.email)}`));
+      return { month, day, members: members.map((m, i) => {
+        const out = summarizeMember(m, settings, months[i], days[i]);
+        const p = profiles[i] || {};
+        out.business = { name: p.businessName || '', listingSlug: p.listingSlug || '', listingUrl: p.listingSlug ? `https://www.auntietobi.co.uk/biz/${p.listingSlug}` : '',
+          website: p.website || '', channels: p.channels || [], mainChannel: p.mainChannel || '' };
+        return out;
+      }).sort((a, b) => a.email.localeCompare(b.email)) };
     }
 
     case 'member-add': {
@@ -195,6 +202,19 @@ exports.handler = handler(async (ctx) => {
       });
       await core.audit(actor, 'member_revoke_sessions', { email });
       return { ok: true };
+    }
+
+    case 'member-unlink-listing': {
+      const email = requireEmail(body.email);
+      let removed = '';
+      await cas(`profiles/${enc(email)}`, cur => {
+        if (!cur || !cur.listingSlug) return undefined;
+        removed = cur.listingSlug;
+        return { ...cur, listingSlug: '', channels: (cur.channels || []).filter(c => c !== 'listing'),
+          listingDeclined: [...new Set([...(cur.listingDeclined || []), cur.listingSlug])].slice(-20), updatedAt: core.nowIso() };
+      });
+      await core.audit(actor, 'member_unlink_listing', { email, slug: removed });
+      return { ok: true, removed };
     }
 
     case 'member-usage': {
