@@ -5,6 +5,16 @@ Nothing in the public Auntie Tobi app is changed. Test everything on a preview b
 
 ---
 
+## Your addresses (Netlify project: aesthetic-monstera-8a2d85)
+
+| What | Preview (studio branch) | Live |
+|---|---|---|
+| Member Studio | https://studio--aesthetic-monstera-8a2d85.netlify.app/studio | https://www.auntietobi.co.uk/studio |
+| Admin | https://studio--aesthetic-monstera-8a2d85.netlify.app/studio-admin | https://www.auntietobi.co.uk/studio-admin |
+| Stripe webhook | https://studio--aesthetic-monstera-8a2d85.netlify.app/.netlify/functions/studio-stripe-webhook | https://www.auntietobi.co.uk/.netlify/functions/studio-stripe-webhook |
+
+---
+
 ## 1. Where each file goes in GitHub
 
 Upload to a **new branch called `studio`** (not `main`).
