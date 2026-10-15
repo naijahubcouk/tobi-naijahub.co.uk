@@ -127,7 +127,7 @@ async function addGlobal(month, info, settings) {
 }
 
 // ───────────── model call ─────────────
-async function callModel(messages, maxTokens, settings) {
+async function callModel(messages, maxTokens, settings, opts) {
   const provider = env('STUDIO_PROVIDER', env('STUDIO_OPENROUTER_API_KEY') || env('OPENROUTER_API_KEY') ? 'openrouter' : 'openai');
   let url, key, model = core.modelFor(settings);
   if (provider === 'openai') {
@@ -140,7 +140,8 @@ async function callModel(messages, maxTokens, settings) {
   }
   if (!key) throw new HttpError(500, 'ai_not_configured', 'AI is not configured yet.');
 
-  const body = { model, messages, max_tokens: maxTokens, temperature: 0.85 };
+  const body = { model, messages, max_tokens: maxTokens, temperature: opts && opts.json ? 0.2 : 0.85 };
+  if (opts && opts.json) body.response_format = { type: 'json_object' };
   if (provider === 'openrouter') body.usage = { include: true };
 
   const ctrl = new AbortController();
@@ -288,5 +289,5 @@ async function usageSummary(email, access) {
 
 module.exports = {
   generate, usageSummary, getItem, itemKey, historyIndexKey, usageKey, monthUsageKey, globalKey,
-  reserve, commit, release, callModel, emptyUsage,
+  reserve, commit, release, callModel, emptyUsage, addGlobal,
 };

@@ -9,6 +9,7 @@ const tools = require('../tools');
 const gen = require('../generate');
 const stripe = require('../stripe');
 const directory = require('../directory');
+const website = require('../website');
 
 const PROFILE_FIELDS = {
   businessName: 80, industry: 60, location: 80, products: 600, customers: 400,
@@ -120,6 +121,18 @@ exports.handler = handler(async (ctx) => {
       });
       await core.audit(email, 'listing_linked', { slug: b.slug, byEmailMatch: b.email === email });
       return { listing: directory.publicListing(b), profile: saved.businessName ? saved : null };
+    }
+
+    case 'website-read': {
+      // Setup helper: reads their public website and drafts profile fields. Free for the member
+      // (not counted against the daily allowance); the small AI cost is added to Studio spend.
+      await core.rateLimit('website-read', email, 6, 60 * 60 * 1000, 'You\u2019ve read a few websites already \u2014 please type your details or try again later.');
+      await core.rateLimit('website-read-day', email, 15, 24 * 60 * 60 * 1000, 'Please try again tomorrow, or type your details in.');
+      const out = await website.read(body.url, auth.settings, gen.callModel);
+      if (out.usage) {
+        await gen.addGlobal(core.monthKey(), { id: 'website-read', tool: 'website-read', cost: 0, inTok: out.usage.inTok, outTok: out.usage.outTok, costUsd: out.usage.costUsd }, auth.settings);
+      }
+      return { site: out.site, draft: out.draft, hadText: out.hadText };
     }
 
     case 'listing-decline': {

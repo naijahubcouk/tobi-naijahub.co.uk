@@ -578,6 +578,73 @@ details.faq li+li{margin-top:4px}
     if (!p.mainChannel) p.mainChannel = L.ig ? 'instagram' : L.wa ? 'whatsapp' : 'listing';
   }
 
+  function prefillFromWebsite(p, r) {
+    var d = r.draft || {}, site = r.site || {};
+    var set = function (k, v) { if (v && !String(p[k] || '').trim()) p[k] = v; };
+    set('businessName', d.businessName || site.name);
+    set('industry', d.industry); set('location', d.location); set('products', d.products);
+    set('customers', d.customers); set('description', d.description || site.description);
+    set('website', site.url ? site.url.replace(/\/$/, '') : '');
+    set('instagram', site.instagram); set('whatsapp', site.whatsapp);
+    var ch = (p.channels || []).slice();
+    ['website'].concat(site.instagram ? ['instagram'] : [], site.whatsapp ? ['whatsapp'] : [], site.facebook ? ['facebook'] : [], site.tiktok ? ['tiktok'] : [])
+      .forEach(function (c) { if (ch.indexOf(c) < 0) ch.push(c); });
+    p.channels = ch;
+    if (!p.mainChannel) p.mainChannel = 'website';
+  }
+
+  // New step 1 for first-time setup: start from an Auntie Tobi listing or a website.
+  function showFindBusiness(p) {
+    return new Promise(function (resolve) {
+      setChrome({ tabs: false });
+      function draw(msg) {
+        var L = p._listing;
+        app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (msg || 'Welcome! Let’s find your business so I can fill in your details for you.') + '</p></div>' +
+          '<h1 style="margin-bottom:12px">Find your business</h1>' +
+          '<div class="card stack">' +
+            '<div><label class="f" for="fb_listing">Your Auntie Tobi listing link</label>' +
+            (L ? '<div class="note">✅ <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '') + ' — linked</div>'
+              : '<div class="row"><input type="text" id="fb_listing" placeholder="auntietobi.co.uk/biz/your-business" style="flex:1"><button type="button" class="btn ghost small" id="fbFindL" style="min-height:46px">Find</button></div>') + '</div>' +
+            '<div style="text-align:center;color:var(--muted);font-size:13px;font-weight:700">AND / OR</div>' +
+            '<div><label class="f" for="fb_web">Your website</label>' +
+            (p._webRead ? '<div class="note">✅ Read <b>' + esc(p._webRead) + '</b></div>'
+              : '<div class="row"><input type="text" id="fb_web" placeholder="yourbusiness.co.uk" inputmode="url" style="flex:1" value="' + esc(p.website || '') + '"><button type="button" class="btn ghost small" id="fbReadW" style="min-height:46px">Read</button></div>' +
+                '<div class="hint">We’ll read your website and draft your details — free, it doesn’t use your generations.</div>') + '</div>' +
+            '<div class="err hidden" id="fbErr" role="alert"></div>' +
+          '</div>' +
+          '<button class="btn primary block" style="margin-top:16px" id="fbNext">' + (L || p._webRead ? 'Check my details →' : 'Continue') + '</button>' +
+          (L || p._webRead ? '' : '<button class="btn link block" id="fbSkip" style="margin-top:6px">I don’t have either — I’ll type my details</button>') + '</main>';
+        var err = $('#fbErr');
+        function fail(m) { err.textContent = m; err.classList.remove('hidden'); }
+        var fl = $('#fbFindL'); if (fl) fl.onclick = async function () {
+          var link = $('#fb_listing').value.trim(); if (!link) return fail('Paste your listing link first.');
+          err.classList.add('hidden'); fl.disabled = true; fl.textContent = 'Finding…';
+          try {
+            var r = await api('studio-api', 'listing-lookup', { link: link });
+            prefillFromListing(p, r.listing); p._filledFrom = 'listing';
+            draw('Found you! ✅ <b>' + esc(r.listing.name) + '</b>. Add your website too if you have one, or carry on.');
+          } catch (x) { fl.disabled = false; fl.textContent = 'Find'; fail(x.message); }
+        };
+        var rw = $('#fbReadW'); if (rw) rw.onclick = async function () {
+          var url = $('#fb_web').value.trim(); if (!url) return fail('Type your website address first.');
+          err.classList.add('hidden'); rw.disabled = true; rw.textContent = 'Reading…';
+          app.querySelector('.bubble p').innerHTML = '<span class="typing" aria-label="Reading"><i></i><i></i><i></i></span> Reading your website — this can take up to 20 seconds…';
+          try {
+            var r = await api('studio-api', 'website-read', { url: url });
+            prefillFromWebsite(p, r); p._webRead = (r.site && r.site.url || url).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); p._filledFrom = p._filledFrom || 'website';
+            draw(r.draft ? 'Done! I’ve drafted your details from your website — you’ll check them next.' : 'I read your website but there wasn’t much text, so I’ve filled what I could. You’ll add the rest next.');
+          } catch (x) { draw(); fail(x.message); }
+        };
+        $('#fbNext').onclick = function () {
+          var w = $('#fb_web'); if (w && w.value.trim() && !p.website) p.website = w.value.trim();
+          resolve();
+        };
+        var sk = $('#fbSkip'); if (sk) sk.onclick = function () { resolve(); };
+      }
+      draw();
+    });
+  }
+
   // "Is this your business?" — shown before setup when the member's email matches a listing.
   async function maybeConfirmListing(p) {
     if (p.listingSlug) return;
@@ -594,7 +661,7 @@ details.faq li+li{margin-top:4px}
         '<p class="hint" style="text-align:center">If yes, we’ll fill in your details from your listing — you can change anything.</p></div></div>';
       $('#yesL').onclick = async function () {
         this.disabled = true;
-        try { var x = await api('studio-api', 'listing-link', { slug: L.slug }); prefillFromListing(p, x.listing); S.boot.listing = x.listing; } catch (e) { toast(e.message); }
+        try { var x = await api('studio-api', 'listing-link', { slug: L.slug }); prefillFromListing(p, x.listing); p._filledFrom = 'listing'; S.boot.listing = x.listing; } catch (e) { toast(e.message); }
         resolve();
       };
       $('#noL').onclick = async function () { try { await api('studio-api', 'listing-decline', { slug: L.slug }); } catch (e) {} resolve(); };
@@ -605,6 +672,7 @@ details.faq li+li{margin-top:4px}
     var p = Object.assign({}, S.boot.profile || {});
     p._listing = S.boot.listing || null;
     if (firstTime) await maybeConfirmListing(p);
+    if (firstTime && !p._listing) await showFindBusiness(p);
     if (!p.channels || !p.channels.length) p.channels = p.listingSlug ? ['listing'] : ['instagram'];
     var step = 0;
     function collect() {
@@ -644,7 +712,7 @@ details.faq li+li{margin-top:4px}
       var hello = ['Welcome! Tell me about your business once, and I’ll use it every time I write for you. You can change it any time.', 'Lovely. Now, what do you sell and who buys it?', 'Where do customers find you? I’ll point your posts there.', 'Last bit — how should you sound?'];
       app.innerHTML = '<main><form id="pform" novalidate>' +
         (firstTime ? '<div class="steps">' + PROFILE_STEPS.map(function (s, i) { return '<span class="' + (i <= step ? 'on' : '') + '"></span>'; }).join('') + '</div>' +
-          '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (step === 0 && p._listing ? 'Thanks! I’ve filled in what I could from your Auntie Tobi listing — check it and change anything you like.' : hello[step]) + '</p></div>'
+          '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (step === 0 && p._filledFrom ? 'I\u2019ve filled in what I could from your ' + (p._filledFrom === 'listing' ? 'Auntie Tobi listing' : 'website') + ' \u2014 check it and change anything you like.' : hello[step]) + '</p></div>'
           : '<h1>Business profile</h1><p class="sub" style="margin:6px 0 16px">Used automatically in everything you create.</p>') +
         steps.map(function (s) { return (firstTime ? '' : '<h2>' + esc(s.title) + '</h2>') + '<div class="card stack">' + s.fields.map(function (f) { return fieldHtml(f, p); }).join('') + '</div>'; }).join('') +
         '<div class="err hidden" id="perr" role="alert" style="margin-top:12px"></div>' +
@@ -662,7 +730,7 @@ details.faq li+li{margin-top:4px}
         if (missing.length) { err.textContent = 'Please fill in: ' + missing.join(', '); err.classList.remove('hidden'); return; }
         if (firstTime && step < last) { step++; render(); return; }
         var btn = $('#psave'); btn.disabled = true; btn.textContent = 'Saving…';
-        var send = Object.assign({}, p); delete send._listing; send.listingSlug = p.listingSlug || '';
+        var send = Object.assign({}, p); delete send._listing; delete send._filledFrom; delete send._webRead; send.listingSlug = p.listingSlug || '';
         try {
           await api('studio-api', 'profile-save', { profile: send });
           S.boot = await api('studio-api', 'bootstrap'); S.history = S.boot.recent || [];
