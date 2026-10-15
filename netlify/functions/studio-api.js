@@ -83,7 +83,7 @@ exports.handler = handler(async (ctx) => {
         email, profile, settings: auth.settings, access: auth.access,
         toolId: body.tool, rawInput: body.input, idemKey: body.requestId,
       });
-      return { item: out.item, replayed: out.replayed, usage: await gen.usageSummary(email, auth.access) };
+      return { item: out.item, replayed: out.replayed, calendarAdded: out.calendarAdded || 0, usage: await gen.usageSummary(email, auth.access) };
     }
 
     case 'history-list': {

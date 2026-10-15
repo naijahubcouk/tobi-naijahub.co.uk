@@ -17,6 +17,7 @@
 const core = require('./core');
 const { HttpError, Abort, cas, getJson, setJson, del, enc, dayKey, monthKey, randomToken, env } = core;
 const tools = require('./tools');
+const growth = require('./growth');
 
 const PENDING_STALE_MS = 3 * 60 * 1000;
 const MAX_IN_FLIGHT = 2;
@@ -243,7 +244,8 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
 
   let result;
   try {
-    const extra = toolId === 'ideas' ? { avoid: await recentIdeas(email) } : {};
+    const extra = toolId === 'ideas' ? { avoid: (await recentIdeas(email)).concat(await growth.recentTopics(email)).slice(0, 40) }
+      : toolId === 'planner' ? { avoid: await growth.recentTopics(email) } : {};
     result = await callModel(tools.buildMessages(toolId, input, profile, extra), tool.maxTokens, settings);
   } catch (e) {
     await release(email, idemKey, day);
@@ -260,7 +262,12 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   await commit(email, idemKey, day, info);
   await addGlobal(monthKey(), info, settings);
   await addToHistory(email, item);
-  return { item, replayed: false };
+  let calendarAdded = 0;
+  if (toolId === 'planner') {
+    calendarAdded = await growth.savePlanToCalendar(email, id, result.text, core.dayKey(), Number(input.days) || 7)
+      .catch(e => { console.error('[studio] calendar save failed', e); return 0; });
+  }
+  return { item, replayed: false, calendarAdded };
 }
 
 async function usageSummary(email, access) {

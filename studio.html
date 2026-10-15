@@ -141,7 +141,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;borde
 nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11.5px;font-weight:700;color:var(--muted);border-radius:12px}
 nav.tabs button[aria-current=page]{color:var(--green)}
 nav.tabs button[aria-current=page] svg{background:var(--green-l)}
-nav.tabs svg{width:44px;height:28px;padding:4px 12px;border-radius:999px}
+nav.tabs svg{width:40px;height:28px;padding:4px 10px;border-radius:999px}
 
 /* modal & toast */
 .scrim{position:fixed;inset:0;background:rgba(15,30,54,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
@@ -158,6 +158,34 @@ details.faq li+li{margin-top:4px}
 .plan{border:2px solid var(--gold);background:linear-gradient(180deg,#fff, var(--gold-l))}
 .plan .price{font-family:var(--display);font-size:30px;font-weight:700}
 .plan ul{margin:10px 0 14px 18px;font-size:14.5px}
+/* growth */
+.act{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start}
+.act.done{opacity:.6}
+.act .tick{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:#fff;margin-top:2px}
+.act.done .tick{background:var(--green);border-color:var(--green)}
+.act .kind{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
+.act .kind.sales{color:#9A6A00}.act .kind.visibility{color:var(--navy)}
+.act b{display:block;font-size:15.5px;line-height:1.3;margin:2px 0}
+.act p{font-size:13.5px;color:var(--muted);margin-bottom:8px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.quick button{background:var(--navy);color:var(--cream);border-radius:14px;padding:12px;text-align:left;display:flex;gap:8px;align-items:center;font-weight:700;font-size:14px;line-height:1.2;min-height:56px}
+.quick button svg{color:var(--gold);flex:none}
+.goalbar{display:flex;align-items:center;gap:8px;background:var(--gold-l);border-radius:12px;padding:10px 12px;font-size:14px}
+.goalbar b{flex:1}
+.cal-day{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+.cal{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+.cal .fmt{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;background:#E7EAF0;margin-right:6px}
+.cal .st{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.cal .st .chip{padding:5px 10px;font-size:12.5px}
+.num{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.num:last-child{border-bottom:0}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-size:20px;font-weight:700}
+.step input{width:76px;text-align:center;padding:8px}
+.wk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wk div{background:var(--cream);border-radius:12px;padding:10px;text-align:center}
+.wk b{display:block;font-family:var(--display);font-size:24px;line-height:1.1}
+.wk span{font-size:12px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -169,15 +197,17 @@ details.faq li+li{margin-top:4px}
   <div class="brand">Business Studio<small>Auntie Tobi Business Club</small></div>
   <div class="spacer"></div>
   <span class="pill cream hidden" id="topPlan"></span>
+  <button class="back hidden" id="acctBtn" aria-label="Account" style="margin-right:-6px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
 </header>
 
 <div id="app" aria-live="polite"></div>
 
 <nav class="tabs hidden" id="tabs" aria-label="Main">
-  <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg>Home</button>
+  <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg>Today</button>
   <button data-tab="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/></svg>Create</button>
+  <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Plan</button>
+  <button data-tab="track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Track</button>
   <button data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Library</button>
-  <button data-tab="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Account</button>
 </nav>
 
 <script>
@@ -196,6 +226,15 @@ details.faq li+li{margin-top:4px}
     bio: { blurb: 'Bios and descriptions', hello: 'Which bio or description do you need? I’ll give you three options to choose from.', icon: '<circle cx="9" cy="10" r="3"/><path d="M4 19c1-3 3-4 5-4s4 1 5 4M15 8h5M15 12h5M17 16h3"/>' },
     message: { blurb: 'Reply to customers well', hello: 'Paste what your customer said (or describe it) and I’ll help you reply the right way.', icon: '<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/><path d="M8 11h8M8 14h5"/>' }
   };
+  var CHOICE_LABELS = { promote: 'Promote my product', engage: 'Get engagement', thank: 'Thank my customers', announce: 'Announce availability' };
+  var QUICK = [
+    { preset: 'promote', label: 'Promote my product', icon: '<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M16 9a4 4 0 010 6"/>' },
+    { preset: 'engage', label: 'Get engagement', icon: '<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>' },
+    { preset: 'thank', label: 'Thank my customers', icon: '<path d="M12 21s-7-4.4-9.3-9A5.3 5.3 0 0112 6a5.3 5.3 0 019.3 6c-2.3 4.6-9.3 9-9.3 9z"/>' },
+    { preset: 'announce', label: 'Announce availability', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 15l2 2 4-4"/>' }
+  ];
+  var KIND = { content: 'Content', sales: 'Sales', visibility: 'Visibility' };
+  var STATUS_LABELS = { todo: 'To do', drafted: 'Drafted', posted: 'Posted', done: 'Done' };
   var TONE_LABELS = { warm: 'Warm & friendly', professional: 'Professional', vibrant: 'Vibrant', luxury: 'Luxury', bold: 'Bold', cultural: 'Proudly Naija-British' };
   var CTA_IDEAS = ['DM us to order', 'Send us a WhatsApp', 'Tap the link in bio', 'Book your slot today', 'Call us', 'Visit our website'];
 
@@ -210,6 +249,7 @@ details.faq li+li{margin-top:4px}
   }
   function fmtDate(iso, opts) { try { return new Date(iso).toLocaleDateString('en-GB', opts || { day: 'numeric', month: 'short' }); } catch (e) { return ''; } }
   function toast(msg) {
+    $$('.toast').forEach(function (x) { x.remove(); });
     var t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg;
     document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600);
   }
@@ -259,6 +299,9 @@ details.faq li+li{margin-top:4px}
     back.onclick = o.back || null;
     document.getElementById('topAvatar').classList.toggle('hidden', !!o.back);
     $$('nav.tabs button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.tab === o.tab ? 'page' : 'false'); });
+    var ab = document.getElementById('acctBtn');
+    ab.classList.toggle('hidden', !o.tabs); ab.onclick = function () { showAccount(); };
+    ab.style.background = o.tab === 'account' ? 'var(--navy-2)' : '';
     var tp = document.getElementById('topPlan');
     if (S.boot && S.boot.access && S.boot.access.canView) {
       tp.classList.remove('hidden');
@@ -270,7 +313,7 @@ details.faq li+li{margin-top:4px}
   $$('nav.tabs button').forEach(function (b) {
     b.addEventListener('click', function () {
       var t = b.dataset.tab;
-      if (t === 'home') showHome(); else if (t === 'create') showCreate(); else if (t === 'library') showLibrary(); else showAccount();
+      if (t === 'home') showHome(); else if (t === 'create') showCreate(); else if (t === 'plan') showPlan(); else if (t === 'track') showTrack(); else showLibrary();
     });
   });
 
@@ -395,6 +438,7 @@ details.faq li+li{margin-top:4px}
 
   async function start() {
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    S.today = null;
     try { S.boot = await api('studio-api', 'bootstrap', {}, { quiet401: true }); }
     catch (e) {
       if (e.status === 401) return showSignIn();
@@ -571,7 +615,7 @@ details.faq li+li{margin-top:4px}
   function bindHistoryRows() { $$('[data-item]', app).forEach(function (b) { b.onclick = function () { showItem(b.dataset.item); }; }); }
 
   function toolGrid() {
-    return '<div class="tools">' + S.boot.tools.map(function (t) {
+    return '<div class="tools">' + S.boot.tools.filter(function (t) { return t.id !== 'oneclick'; }).map(function (t) {
       var m = TOOL_META[t.id] || {};
       return '<button class="tool" data-tool="' + t.id + '"><span class="ico">' + icon(m.icon || '') + '</span><b>' + esc(t.name) + '</b><span>' + esc(m.blurb || '') + '</span></button>';
     }).join('') + '</div>';
@@ -580,41 +624,244 @@ details.faq li+li{margin-top:4px}
 
   function greeting() { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
 
-  function showHome() {
+  function quickRow() {
+    return '<div class="quick">' + QUICK.map(function (q) { return '<button data-quick="' + q.preset + '">' + icon(q.icon, 20) + esc(q.label) + '</button>'; }).join('') + '</div>' +
+      '<p class="hint" style="margin-top:6px">One tap = hook, caption, call to action, hashtags and a Story idea. Uses 1 generation.</p>';
+  }
+  function firstProduct() {
+    var p = (S.boot.profile && S.boot.profile.products) || '';
+    return p.split(/[,;\n]/)[0].trim().slice(0, 120);
+  }
+  function bindQuick(back) {
+    $$('[data-quick]', app).forEach(function (b) {
+      b.onclick = function () { showTool('oneclick', { preset: b.dataset.quick, product: firstProduct() }, { autoRun: true, back: back || showCreate }); };
+    });
+  }
+
+  // ───────────── My Business Today ─────────────
+  async function showHome() {
     setChrome({ tabs: true, tab: 'home' });
     var ro = S.boot.access.readOnly;
     var name = S.boot.profile ? S.boot.profile.businessName : '';
-    app.innerHTML = '<main><p class="sub">' + greeting() + (name ? ',' : '') + '</p><h1 style="margin-bottom:14px">' + esc(name || 'Welcome back') + '</h1>' +
-      (ro ? readOnlyBanner() : allowanceCard() + '<h2>What shall we create?</h2>' + toolGrid()) +
-      '<h2>Recent</h2>' + historyRows(S.history.slice(0, 5)) +
+    if (ro) {
+      app.innerHTML = '<main><p class="sub">' + greeting() + ',</p><h1 style="margin-bottom:14px">' + esc(name || 'Welcome back') + '</h1>' + readOnlyBanner() +
+        '<h2>Recent</h2>' + historyRows(S.history.slice(0, 5)) + '</main>';
+      bindHistoryRows(); bindRenew(); return;
+    }
+    app.innerHTML = '<main><p class="sub">' + greeting() + ' 👋🏾</p><h1>' + esc(name) + '</h1>' +
+      '<p class="sub" style="margin:2px 0 14px">Let’s make progress in your business today.</p><div id="todayBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div>' +
+      '<h2>Quick create</h2>' + quickRow() +
+      '<div style="margin-top:18px">' + allowanceCard() + '</div>' +
+      '<h2>Recent</h2>' + historyRows(S.history.slice(0, 3)) +
       (S.history.length ? '<button class="btn link" id="allBtn" style="margin-top:6px">See your full library →</button>' : '') + '</main>';
-    bindTools(); bindHistoryRows(); bindRenew();
+    bindHistoryRows(); bindQuick(showHome);
     var wc = $('#whatCounts'); if (wc) wc.onclick = whatCounts;
     var up = $('#upBtn'); if (up) up.onclick = showRenew;
     var all = $('#allBtn'); if (all) all.onclick = showLibrary;
+    var r;
+    try { r = await api('studio-growth', 'today'); } catch (x) { var tb = $('#todayBox'); if (tb) tb.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    S.today = r; renderToday();
+  }
+
+  function renderToday() {
+    var box = $('#todayBox'); if (!box || !S.today) return;
+    var r = S.today, done = r.done || [];
+    var left = r.actions.filter(function (a) { return done.indexOf(a.id) < 0; }).length;
+    box.innerHTML =
+      (r.goal ? '<div class="goalbar">🎯 <b>This week: ' + esc(r.goals[r.goal.goal]) + '</b><button class="btn link" id="chgGoal" style="padding:0">Change</button></div>'
+        : '<div class="goalbar">🎯 <b>Set your goal for the week</b><button class="btn small gold" id="chgGoal">Set goal</button></div>') +
+      '<h2 style="margin-top:16px">' + (left ? 'Your 3 actions today' : 'All done for today 🎉') + '</h2>' +
+      '<div class="stack">' + r.actions.map(function (a) {
+        var isDone = done.indexOf(a.id) > -1;
+        return '<div class="act' + (isDone ? ' done' : '') + '"><button class="tick" data-tick="' + esc(a.id) + '" aria-label="' + (isDone ? 'Mark not done' : 'Mark done') + '" aria-pressed="' + isDone + '">' + (isDone ? icon('<path d="M5 12l5 5 9-10"/>', 16) : '') + '</button>' +
+          '<div style="flex:1;min-width:0"><span class="kind ' + esc(a.kind) + '">' + esc(KIND[a.kind] || a.kind) + '</span><b>' + esc(a.title) + '</b><p>' + esc(a.why) + '</p>' +
+          (isDone ? '' : '<button class="btn small primary" data-doit="' + esc(a.id) + '">Do it →</button>') + '</div></div>';
+      }).join('') + '</div>' +
+      (r.checkin && r.checkin.needed ? '<div class="note" style="margin-top:12px;display:flex;align-items:center;gap:10px"><span style="flex:1">⏱️ <b>1-minute check-in:</b> record ' + (r.checkin.date === S.today.day ? 'today’s' : 'yesterday’s') + ' enquiries, bookings and sales.</span><button class="btn small ghost" id="toTrack">Record</button></div>' : '');
+    $('#chgGoal').onclick = function () { pickGoal(function () { showHome(); }); };
+    var tt = $('#toTrack'); if (tt) tt.onclick = function () { showTrack(r.checkin.date); };
+    $$('[data-tick]', box).forEach(function (b) {
+      b.onclick = async function () {
+        var id = b.dataset.tick, nowDone = (S.today.done || []).indexOf(id) < 0;
+        try { await api('studio-growth', 'action-done', { id: id, done: nowDone }); } catch (x) { return toast(x.message); }
+        S.today.done = nowDone ? (S.today.done || []).concat(id) : S.today.done.filter(function (d) { return d !== id; });
+        if (nowDone) toast('Nice one! ✅');
+        renderToday();
+      };
+    });
+    $$('[data-doit]', box).forEach(function (b) {
+      b.onclick = function () {
+        var a = S.today.actions.filter(function (x) { return x.id === b.dataset.doit; })[0];
+        showTool(a.go.tool, a.go.input, { back: showHome, tab: 'home', intro: a.title + ' — I’ve filled this in for you. Change anything you like, then tap Create.',
+          onSuccess: function () {
+            api('studio-growth', 'action-done', { id: a.id, done: true }).then(function () { if (S.today && S.today.done.indexOf(a.id) < 0) S.today.done.push(a.id); }).catch(function () {});
+            if (a.calendarId) api('studio-growth', 'calendar-update', { id: a.calendarId, status: 'drafted' }).catch(function () {});
+          } });
+      };
+    });
+  }
+
+  function pickGoal(after) {
+    var goals = (S.today && S.today.goals) || { enquiries: 'Get more enquiries', bookings: 'Get more bookings or orders', new_product: 'Promote a new product or service', visibility: 'Get seen by more people' };
+    var cur = S.today && S.today.goal ? S.today.goal.goal : '';
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="gT"><h2 id="gT" style="margin:0">What’s your goal this week?</h2><p class="sub">Your daily actions will focus on it. You can change it any time.</p>' +
+      Object.keys(goals).map(function (k) { return '<button class="btn ' + (k === cur ? 'primary' : 'ghost') + ' block" data-goal="' + k + '">' + esc(goals[k]) + '</button>'; }).join('') +
+      '<button class="btn link" id="gClose">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    $('#gClose', scrim).onclick = function () { scrim.remove(); };
+    $$('[data-goal]', scrim).forEach(function (b) {
+      b.onclick = async function () {
+        try { var r = await api('studio-growth', 'goal-set', { goal: b.dataset.goal }); if (S.today) S.today.goal = r.goal; scrim.remove(); toast('Goal set — new actions from tomorrow'); if (after) after(); }
+        catch (x) { toast(x.message); }
+      };
+    });
   }
 
   function showCreate() {
     setChrome({ tabs: true, tab: 'create' });
     if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Create</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
-    app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 16px">Pick a tool. You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' + toolGrid() + '</main>';
-    bindTools();
+    app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 14px">You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' +
+      '<h2 style="margin-top:0">Quick create</h2>' + quickRow() + '<h2>All tools</h2>' + toolGrid() + '</main>';
+    bindTools(); bindQuick(showCreate);
+  }
+
+  // ───────────── Plan: goal + content calendar ─────────────
+  function fmtDay(day, today) {
+    if (day === today) return 'Today';
+    var t = new Date(Date.parse(today + 'T12:00:00Z') + 86400000).toISOString().slice(0, 10);
+    if (day === t) return 'Tomorrow';
+    return new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+  }
+
+  async function showPlan() {
+    setChrome({ tabs: true, tab: 'plan' });
+    if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Plan</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
+    app.innerHTML = '<main><h1>Plan</h1><p class="sub" style="margin:4px 0 14px">Your weekly goal and content calendar.</p><div id="goalBox"></div>' +
+      '<div class="row" style="margin-top:14px"><button class="btn primary" id="p7" style="flex:1">Plan 7 days</button><button class="btn ghost" id="p30" style="flex:1">Plan 30 days</button></div>' +
+      '<p class="hint">7 days uses 1 generation, 30 days uses 3. Posts you’ve already drafted or posted are kept.</p>' +
+      '<div id="calBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    $('#p7').onclick = function () { showTool('planner', { days: '7' }, { back: showPlan, tab: 'plan' }); };
+    $('#p30').onclick = function () { showTool('planner', { days: '30' }, { back: showPlan, tab: 'plan' }); };
+    try {
+      if (!S.today) S.today = await api('studio-growth', 'today');
+      var g = S.today.goal;
+      $('#goalBox').innerHTML = '<div class="goalbar">🎯 <b>' + (g ? 'This week: ' + esc(S.today.goals[g.goal]) : 'No weekly goal yet') + '</b><button class="btn small ' + (g ? 'ghost' : 'gold') + '" id="pg">' + (g ? 'Change' : 'Set goal') + '</button></div>';
+      $('#pg').onclick = function () { pickGoal(showPlan); };
+      var r = await api('studio-growth', 'calendar-list');
+      renderCalendar(r.items, r.today);
+    } catch (x) { $('#calBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; }
+  }
+
+  function renderCalendar(items, today) {
+    var box = $('#calBox'); if (!box) return;
+    var weekAgo = new Date(Date.parse(today + 'T12:00:00Z') - 7 * 86400000).toISOString().slice(0, 10);
+    var shown = items.filter(function (i) { return i.date >= weekAgo; });
+    if (!shown.length) { box.innerHTML = '<div class="empty">No posts planned yet. Tap <b>Plan 7 days</b> and your plan will appear here, one post per day.</div>'; return; }
+    var html = '', lastDay = '';
+    shown.forEach(function (i) {
+      if (i.date !== lastDay) { html += '<div class="cal-day">' + esc(fmtDay(i.date, today)) + (i.date < today ? ' · past' : '') + '</div>'; lastDay = i.date; }
+      html += '<div class="cal" data-cal="' + esc(i.id) + '"><div><span class="fmt">' + esc(i.format) + '</span><b>' + esc(i.title) + '</b></div>' +
+        (i.hook ? '<div class="sub" style="font-size:13.5px;margin-top:4px">Hook: ' + esc(i.hook) + '</div>' : '') +
+        (i.cta ? '<div class="sub" style="font-size:13.5px">CTA: ' + esc(i.cta) + '</div>' : '') +
+        '<div class="st">' + ['todo', 'drafted', 'posted', 'done'].map(function (st) { return '<button class="chip" data-st="' + st + '" aria-pressed="' + (i.status === st) + '">' + STATUS_LABELS[st] + '</button>'; }).join('') + '</div>' +
+        '<div class="row" style="margin-top:8px;justify-content:space-between"><button class="btn small primary" data-make>Create this</button><button class="btn link danger" data-del style="font-size:13px">Remove</button></div></div>';
+    });
+    box.innerHTML = html;
+    $$('[data-cal]', box).forEach(function (card) {
+      var id = card.dataset.cal, item = items.filter(function (x) { return x.id === id; })[0];
+      $$('[data-st]', card).forEach(function (c) {
+        c.onclick = async function () {
+          try { await api('studio-growth', 'calendar-update', { id: id, status: c.dataset.st }); item.status = c.dataset.st; $$('[data-st]', card).forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); if (c.dataset.st === 'posted') toast('Posted — well done! ✅'); }
+          catch (x) { toast(x.message); }
+        };
+      });
+      $('[data-make]', card).onclick = function () {
+        var topic = item.title + (item.hook ? '. Hook: ' + item.hook : '');
+        var go = /reel/i.test(item.format) ? ['reel', { idea: topic }] : ['caption', { topic: topic }];
+        showTool(go[0], go[1], { back: showPlan, tab: 'plan', intro: 'From your calendar: ' + item.title,
+          onSuccess: function () { if (item.status === 'todo') api('studio-growth', 'calendar-update', { id: id, status: 'drafted' }).catch(function () {}); } });
+      };
+      $('[data-del]', card).onclick = async function () {
+        if (!confirm('Remove this from your calendar?')) return;
+        try { await api('studio-growth', 'calendar-delete', { id: id }); card.remove(); } catch (x) { toast(x.message); }
+      };
+    });
+  }
+
+  // ───────────── Track: progress + weekly summary ─────────────
+  var TRACK_FIELDS = [['enquiries', 'Enquiries', 'Messages, DMs or calls asking about you'], ['bookings', 'Bookings / orders', 'Confirmed bookings or orders'], ['salesCount', 'Sales', 'Number of sales'], ['salesGbp', 'Sales value (£)', 'Total value, if you know it'], ['posts', 'Posts', 'Posts, Reels or Stories you shared']];
+
+  async function showTrack(date) {
+    setChrome({ tabs: true, tab: 'track' });
+    if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Track</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
+    app.innerHTML = '<main><h1>Track</h1><p class="sub" style="margin:4px 0 14px">Record your numbers in a minute. Only you see them.</p><div id="trBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    var p, sum;
+    try { p = await api('studio-growth', 'progress-get'); sum = await api('studio-growth', 'summary'); }
+    catch (x) { $('#trBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    var today = p.today, yday = new Date(Date.parse(today + 'T12:00:00Z') - 86400000).toISOString().slice(0, 10);
+    date = date === yday ? yday : (date || today);
+    function draw() {
+      var e = p.entries[date] || {};
+      $('#trBox').innerHTML =
+        '<div class="card stack"><div class="chips" id="dsel"><button class="chip" data-d="' + today + '" aria-pressed="' + (date === today) + '">Today</button><button class="chip" data-d="' + yday + '" aria-pressed="' + (date === yday) + '">Yesterday</button></div>' +
+        '<div>' + TRACK_FIELDS.map(function (f) {
+          return '<div class="num"><label for="n_' + f[0] + '"><b style="display:block;font-size:15px">' + esc(f[1]) + '</b><span class="hint" style="margin:0">' + esc(f[2]) + '</span></label><div class="step">' +
+            (f[0] === 'salesGbp' ? '' : '<button type="button" data-dec="' + f[0] + '" aria-label="Less">−</button>') +
+            '<input id="n_' + f[0] + '" type="number" inputmode="' + (f[0] === 'salesGbp' ? 'decimal' : 'numeric') + '" min="0" step="' + (f[0] === 'salesGbp' ? '0.01' : '1') + '" value="' + (e[f[0]] || 0) + '">' +
+            (f[0] === 'salesGbp' ? '' : '<button type="button" data-inc="' + f[0] + '" aria-label="More">+</button>') + '</div></div>';
+        }).join('') + '</div>' +
+        '<div><label class="f" for="n_note">Note <span class="opt">(optional)</span></label><input type="text" id="n_note" maxlength="300" value="' + esc(e.note || '') + '" placeholder="e.g. Ran a weekend offer"></div>' +
+        '<div class="err hidden" id="nerr" role="alert"></div><button class="btn primary block" id="nsave">' + (p.entries[date] ? 'Update' : 'Save') + '</button></div>' +
+        summaryHtml(sum);
+      $$('#dsel .chip').forEach(function (c) { c.onclick = function () { date = c.dataset.d; draw(); }; });
+      $$('[data-inc]').forEach(function (b) { b.onclick = function () { var i = $('#n_' + b.dataset.inc); i.value = (Number(i.value) || 0) + 1; }; });
+      $$('[data-dec]').forEach(function (b) { b.onclick = function () { var i = $('#n_' + b.dataset.dec); i.value = Math.max(0, (Number(i.value) || 0) - 1); }; });
+      $('#nsave').onclick = async function () {
+        var body = { date: date, note: $('#n_note').value };
+        TRACK_FIELDS.forEach(function (f) { body[f[0]] = $('#n_' + f[0]).value; });
+        $('#nerr').classList.add('hidden');
+        try {
+          var r = await api('studio-growth', 'progress-save', body);
+          p.entries[date] = r.entry; sum = await api('studio-growth', 'summary');
+          if (S.today && S.today.checkin) S.today.checkin.needed = false;
+          toast('Saved ✅'); draw();
+        } catch (x) { $('#nerr').textContent = x.message; $('#nerr').classList.remove('hidden'); }
+      };
+    }
+    draw();
+  }
+
+  function summaryHtml(s) {
+    var t = s.thisWeek, l = s.lastWeek;
+    function cmp(k) { if (!l) return ''; var d = t[k] - l[k]; return '<span style="display:block;font-size:11.5px;color:' + (d > 0 ? 'var(--green)' : d < 0 ? 'var(--danger)' : 'var(--muted)') + '">' + (d > 0 ? '▲ ' + d : d < 0 ? '▼ ' + Math.abs(d) : 'same') + ' vs last week</span>'; }
+    return '<h2>This week</h2><div class="card stack"><div class="wk">' +
+      '<div><b>' + t.enquiries + '</b><span>Enquiries</span>' + cmp('enquiries') + '</div>' +
+      '<div><b>' + t.bookings + '</b><span>Bookings</span>' + cmp('bookings') + '</div>' +
+      '<div><b>' + t.salesCount + '</b><span>Sales' + (t.salesGbp ? ' · £' + t.salesGbp.toLocaleString('en-GB') : '') + '</span>' + cmp('salesCount') + '</div>' +
+      '<div><b>' + t.posts + '</b><span>Posts recorded</span></div>' +
+      '<div><b>' + s.postedThisWeek + '</b><span>Calendar posts done</span></div>' +
+      '<div><b>' + s.actionsDone + '</b><span>Daily actions done</span></div></div>' +
+      (s.tips.length ? '<div><b style="display:block;margin-bottom:6px">Ideas for this week</b><ul style="margin-left:18px;font-size:14.5px">' + s.tips.map(function (x) { return '<li style="margin-bottom:4px">' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '') +
+      '<p class="hint">' + esc(s.note) + ' Week starts Monday.</p></div>';
   }
 
   // ───────────── tools ─────────────
   function toolDef(id) { return S.boot.tools.filter(function (t) { return t.id === id; })[0]; }
 
-  function showTool(toolId, prefill) {
+  // opts: { back, onSuccess(item), autoRun, intro }
+  function showTool(toolId, prefill, opts) {
+    opts = opts || {};
     var t = toolDef(toolId); if (!t) return showHome();
     var m = TOOL_META[toolId] || {};
     var input = {};
     t.fields.forEach(function (f) { input[f.name] = prefill && prefill[f.name] !== undefined ? prefill[f.name] : (f.type === 'text' ? '' : f.default); });
-    setChrome({ tabs: true, tab: 'create', back: showCreate });
+    setChrome({ tabs: true, tab: opts.tab || 'create', back: opts.back || showCreate });
     app.innerHTML = '<main><h1 style="font-size:22px;margin-bottom:12px">' + esc(t.name) + '</h1>' +
-      '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(m.hello || '') + '</p></div>' +
+      '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(opts.intro || m.hello || '') + '</p></div>' +
       '<form class="card stack" id="tform" novalidate>' + t.fields.map(function (f) {
         if (f.type === 'text') return '<div><label class="f" for="tf_' + f.name + '">' + esc(f.label) + (f.required ? '' : ' <span class="opt">(optional)</span>') + '</label><textarea id="tf_' + f.name + '" data-field="' + f.name + '" maxlength="' + f.max + '" rows="' + (f.max > 600 ? 4 : 2) + '"' + (f.required ? ' required' : '') + '>' + esc(input[f.name]) + '</textarea></div>';
-        if (f.type === 'choice') return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(f.label) + '</span><div class="chips" data-choice="' + f.name + '">' + f.options.map(function (o) { return '<button type="button" class="chip" data-val="' + esc(o) + '" aria-pressed="' + (o === input[f.name]) + '">' + esc(o === '7' || o === '30' ? o + ' days' : o.charAt(0).toUpperCase() + o.slice(1)) + '</button>'; }).join('') + '</div></div>';
+        if (f.type === 'choice') return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(f.label) + '</span><div class="chips" data-choice="' + f.name + '">' + f.options.map(function (o) { return '<button type="button" class="chip" data-val="' + esc(o) + '" aria-pressed="' + (o === input[f.name]) + '">' + esc(CHOICE_LABELS[o] || (o === '7' || o === '30' ? o + ' days' : o.charAt(0).toUpperCase() + o.slice(1))) + '</button>'; }).join('') + '</div></div>';
         if (f.type === 'bool') return '<div class="toggle"><span id="lb_' + f.name + '">' + esc(f.label) + '</span><button type="button" class="switch" role="switch" aria-labelledby="lb_' + f.name + '" data-bool="' + f.name + '" aria-checked="' + !!input[f.name] + '"></button></div>';
         return '';
       }).join('') +
@@ -671,7 +918,10 @@ details.faq li+li{margin-top:4px}
       addToHistory(r.item);
       resEl.innerHTML = '';
       renderResult(resEl, r.item, function () { run(inp); });
+      if (r.calendarAdded) toast(r.calendarAdded + ' posts added to your calendar');
+      if (opts.onSuccess) { try { opts.onSuccess(r.item); } catch (e) {} }
     }
+    if (opts.autoRun) run(readInput());
   }
 
   function addToHistory(item) {
@@ -685,10 +935,14 @@ details.faq li+li{margin-top:4px}
   // Editable result with copy / save / regenerate. Edits autosave (free).
   function renderResult(el, item, onRegenerate) {
     var parts = splitOptions(item.edited != null ? item.edited : item.output);
+    // Labelled sections (one-click posts): "HOOK: …", "CAPTION: …"
+    var labels = parts.map(function (p) { var m = p.match(/^([A-Z][A-Z ]{2,24}):\s*/); return m ? m[1] : null; });
+    var labelled = parts.length > 1 && labels.every(Boolean);
+    if (labelled) parts = parts.map(function (p, i) { return p.slice(p.indexOf(':') + 1).trim(); });
     var many = parts.length > 1, word = item.tool === 'ideas' ? 'Idea' : 'Option';
-    el.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (many ? 'Here are ' + parts.length + ' ' + word.toLowerCase() + 's. Tap any text to edit it.' : 'Here you go! Tap the text to edit it.') + '</p></div>' +
+    el.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (labelled ? 'Here\u2019s your post, ready to go. Tap any part to edit it.' : many ? 'Here are ' + parts.length + ' ' + word.toLowerCase() + 's. Tap any text to edit it.' : 'Here you go! Tap the text to edit it.') + '</p></div>' +
       '<div class="stack" id="opts">' + parts.map(function (p, i) {
-        return '<div class="option"><div class="oh"><span>' + (many ? word + ' ' + (i + 1) : 'Your content') + '</span><button class="btn small ghost" data-copy="' + i + '">' + icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>', 16) + ' Copy</button></div>' +
+        return '<div class="option"><div class="oh"><span>' + (labelled ? labels[i].charAt(0) + labels[i].slice(1).toLowerCase() : many ? word + ' ' + (i + 1) : 'Your content') + '</span><button class="btn small ghost" data-copy="' + i + '">' + icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>', 16) + ' Copy</button></div>' +
           '<textarea data-opt="' + i + '" aria-label="' + (many ? word + ' ' + (i + 1) : 'Content') + '">' + esc(p) + '</textarea></div>';
       }).join('') + '</div>' +
       '<div class="row wrap" style="margin-top:12px">' +
@@ -697,7 +951,7 @@ details.faq li+li{margin-top:4px}
       (onRegenerate ? '<button class="btn ghost small" id="regen">\u21bb Regenerate <span class="saved-tag">(' + (item.cost || 1) + ' generation' + ((item.cost || 1) > 1 ? 's' : '') + ')</span></button>' : '') +
       '<span class="saved-tag" id="editState" style="margin-left:auto"></span></div>';
     $$('textarea[data-opt]', el).forEach(function (ta) { autosize(ta); });
-    function current() { return $$('textarea[data-opt]', el).map(function (ta) { return ta.value.trim(); }).join('\n---\n'); }
+    function current() { return $$('textarea[data-opt]', el).map(function (ta, i) { return (labelled ? labels[i] + ': ' : '') + ta.value.trim(); }).join('\n---\n'); }
     var tmr;
     $$('textarea[data-opt]', el).forEach(function (ta) {
       ta.addEventListener('input', function () {
@@ -781,7 +1035,7 @@ details.faq li+li{margin-top:4px}
   }
   async function signOut() {
     try { await api('studio-auth', 'logout', {}, { quiet401: true }); } catch (e) {}
-    S.boot = null; showSignIn();
+    S.boot = null; S.today = null; showSignIn();
   }
 
   function d(iso, y) { return fmtDate(iso, y ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'long' }); }

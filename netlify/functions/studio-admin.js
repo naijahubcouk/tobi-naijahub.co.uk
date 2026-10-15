@@ -9,6 +9,7 @@ const core = require('./studio-lib/core');
 const { HttpError, handler, requireEmail, rateLimit, enc, cas, getJson, cleanText } = core;
 const gen = require('./studio-lib/generate');
 const stripe = require('./studio-lib/stripe');
+const growth = require('./studio-lib/growth');
 
 // Business Club status. 'none' = not a Club member (e.g. AI Power-only customer).
 const STATUSES = ['pending', 'active', 'inactive', 'none'];
@@ -148,6 +149,7 @@ exports.handler = handler(async (ctx) => {
           stripeMode: (core.env('STRIPE_SECRET_KEY') || '').startsWith('sk_live') ? 'live' : 'test',
         },
         alertCount: alerts,
+        pilot: await growth.pilotSummary(7),
       };
     }
 

@@ -19,7 +19,33 @@ const text = (name, label, max, required) => ({ name, label, type: 'text', max: 
 const choice = (name, label, options, dflt) => ({ name, label, type: 'choice', options, default: dflt });
 const bool = (name, label, dflt) => ({ name, label, type: 'bool', default: !!dflt });
 
+const ONECLICK = {
+  promote: 'Promote this product or service so people want to buy or book it',
+  engage: 'Get people commenting, replying and sharing — a question, poll or relatable moment',
+  thank: 'Thank customers warmly and show appreciation (without inventing any customer names or reviews)',
+  announce: 'Announce availability — open for orders or bookings, slots available, how to get in touch',
+};
+
 const TOOLS = {
+  oneclick: {
+    name: 'One-click post',
+    maxTokens: 800,
+    fields: [
+      choice('preset', 'What do you want to do?', Object.keys(ONECLICK), 'promote'),
+      text('product', 'Which product or service?', 200),
+      text('details', 'Anything to include? (price, date, offer)', 300),
+    ],
+    prompt: i => `Create a ready-to-post Instagram content pack.
+Purpose: ${ONECLICK[i.preset]}
+Product or service: ${i.product || 'choose the most relevant from the business profile'}
+${i.details ? `Include (use exactly as given): ${i.details}\n` : 'Do not invent prices, dates or offers.\n'}Write exactly these five sections, each separated by a line containing only ---, and start each section with its label:
+HOOK: one scroll-stopping first line
+CAPTION: the full caption (60–120 words, natural line breaks, a few emojis) ending with the call to action
+CALL TO ACTION: one of the business's preferred calls to action
+HASHTAGS: 12–18 relevant hashtags (niche, UK location, Nigerian-UK community)
+STORY IDEA: 2–3 short frames for an Instagram Story to go with the post, with on-screen text and a sticker idea`,
+  },
+
   ideas: {
     name: 'Content ideas',
     maxTokens: 1300,
@@ -104,11 +130,14 @@ Provide 2 versions separated by a line containing only ---. Each version must en
       text('focus', 'Focus for this period (launch, season, offer…)', 500),
       choice('frequency', 'Posting frequency', ['daily', '5 times a week', '3 times a week'], '5 times a week'),
     ],
-    prompt: i => `Create a ${i.days}-day Instagram content plan.
+    prompt: (i, extra) => `Create a ${i.days}-day Instagram content plan.
 ${i.focus ? `Focus: ${i.focus}\n` : ''}Posting frequency: ${i.frequency}. Mark non-posting days as "Rest / engage with followers".
-For each posting day give: Day number — content type (post, carousel, Reel or stories) — content idea — a one-line hook — call to action.
+Write every day on its own line in exactly this format (use the | character):
+Day 1 | Reel | content idea | Hook: one-line hook | CTA: call to action
+Content type must be one of: Post, Carousel, Reel, Stories. For non-posting days write: Day 2 | Rest | Rest / engage with followers
 Mix selling, education, behind-the-scenes, customer love and community content. Include relevant UK and Nigerian cultural moments only if genuinely suitable.
-${i.days === '30' ? 'Group the plan into Week 1–Week 5 headings. Keep each day to one or two lines.' : 'Add one practical tip at the end.'}`,
+${i.days === '30' ? 'You may add Week 1–Week 5 heading lines. Keep each day to one line.' : 'Add one practical tip at the end.'}
+${extra && extra.avoid && extra.avoid.length ? `Avoid repeating these recently used topics:\n${extra.avoid.map(a => `- ${a}`).join('\n')}` : ''}`,
   },
 
   bio: {
@@ -211,10 +240,13 @@ function buildMessages(toolId, input, profile, extra) {
   ];
 }
 
+const ONECLICK_LABELS = { promote: 'Promote', engage: 'Get engagement', thank: 'Thank customers', announce: 'Announce availability' };
+
 function titleFor(toolId, input) {
+  if (toolId === 'oneclick') return `${ONECLICK_LABELS[input.preset]}${input.product ? `: ${input.product}` : ''}`.slice(0, 90);
   const first = input.topic || input.idea || input.offer || input.focus || input.type || input.situation || '';
   const t = TOOLS[toolId].name + (toolId === 'planner' ? ` (${input.days} days)` : '');
   return first ? `${t}: ${first}`.slice(0, 90) : t;
 }
 
-module.exports = { TOOLS, TONES, publicToolList, validateInput, buildMessages, titleFor, costOf };
+module.exports = { TOOLS, TONES, ONECLICK_LABELS, publicToolList, validateInput, buildMessages, titleFor, costOf };

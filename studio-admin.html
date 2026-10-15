@@ -147,7 +147,11 @@ tbody tr:hover{background:#FFFCF5}
       stat(m.count || 0, 'Generations this month') + stat(gbp(m.costUsd || 0), 'Estimated AI cost this month') +
       stat('\u00a3' + revenue.toFixed(2), 'AI Power revenue / month (gross, yearly spread over 12)') +
       stat('\u00a3' + o.settings.spendWarnGbp, 'Spend warning amount (never blocks)') +
-      '</div><h2>Setup</h2><div class="card"><table style="border:0"><tbody>' +
+      '</div><h2>Pilot \u00b7 last 7 days</h2><div class="grid">' +
+      stat(o.pilot.activeMembers, 'Members using daily actions or tracking') + stat(o.pilot.actionsDone, 'Daily actions completed') +
+      stat(o.pilot.checkins, 'Progress check-ins recorded') + stat(o.pilot.postsMarked, 'Calendar posts marked posted') +
+      '</div><p class="muted" style="margin-top:6px">Counts only what members do in the Studio \u2014 useful for judging whether a pilot group really uses it.</p>' +
+      '<h2>Setup</h2><div class="card"><table style="border:0"><tbody>' +
       row('Email codes', c.email) + row('AI model', c.model + (c.ai ? '' : ' (no key)')) + row('Stripe', c.stripe ? 'configured (' + c.stripeMode + ' mode)' : 'not configured') +
       row('AI Power plans', (c.stripePlans || []).map(function (i) { return i === 'year' ? 'Yearly \u00a350' : 'Monthly \u00a35'; }).join(', ') || 'none configured') +
       row('Spend warning', 'Email + alert at \u00a3' + o.settings.spendWarnGbp + ' and \u00a3' + (o.settings.spendWarnGbp * 2) + ' a month. The Studio never stops for spending.') + '</tbody></table></div></main>';

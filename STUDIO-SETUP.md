@@ -18,11 +18,13 @@ Upload to a **new branch called `studio`** (not `main`).
 | `netlify/functions/studio-billing.js` | `netlify/functions/` | New |
 | `netlify/functions/studio-stripe-webhook.js` | `netlify/functions/` | New |
 | `netlify/functions/studio-admin.js` | `netlify/functions/` | New |
+| `netlify/functions/studio-growth.js` | `netlify/functions/` | New |
 | `netlify/functions/studio-maintenance.js` | `netlify/functions/` | New |
 | `netlify/functions/studio-lib/core.js` | `netlify/functions/studio-lib/` (new folder) | New |
 | `netlify/functions/studio-lib/tools.js` | `netlify/functions/studio-lib/` | New |
 | `netlify/functions/studio-lib/generate.js` | `netlify/functions/studio-lib/` | New |
 | `netlify/functions/studio-lib/stripe.js` | `netlify/functions/studio-lib/` | New |
+| `netlify/functions/studio-lib/growth.js` | `netlify/functions/studio-lib/` | New |
 | `_redirects` | repo root | **Changed** — 4 lines added after `/business-club` |
 | `netlify.toml` | repo root | **Changed** — daily `studio-maintenance` schedule added |
 | `package.json` | repo root | **Changed** — adds `@netlify/blobs` 10.7.13 (Netlify installs it automatically) |
@@ -129,6 +131,17 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 - **Abuse protection**: allowance checked and reserved atomically on the server; double-clicks replay the first result; max 2 requests in flight and 6 per minute per person; output-length caps per tool. Content ideas avoid repeating the person's recent ideas.
 - **Spending**: never blocked. You get an **email and an admin alert when monthly AI spend passes £30**, and again at £60. Change the amount in Admin → Allowances & limits.
 - **Payments**: every subscription is tied to a verified email's Stripe customer. Stripe is re-checked on every webhook, so missed or repeated events self-correct. A second subscription is blocked, and one that slips through is cancelled and refunded automatically. Failed payment → AI Power paused until paid (Club members keep their 20 a day). **Block account** in the admin removes all access, signs them out everywhere and stops AI Power renewing.
+
+---
+
+## 7b. Growth features (free — never use the AI allowance)
+
+- **Today** (home page): 3 actions a day (content, sales, visibility) chosen from ready-made templates using the member's business type, products, weekly goal, day of the week and content calendar. Same 3 all day, new ones tomorrow, no repeats from the last 3 days. "Do it" opens the right tool already filled in; creating from it ticks the action off.
+- **Quick create**: Promote my product, Get engagement, Thank my customers, Announce availability. One tap creates a hook, caption, call to action, hashtags and Story idea (1 generation).
+- **Weekly goal**: more enquiries, more bookings, promote a new product, or get seen. Shapes the daily actions. No results are promised.
+- **Plan**: the 7/30-day planner fills a calendar (one post per day). Each post can be marked To do / Drafted / Posted / Done, and "Create this" turns it into a caption or Reel. New plans keep anything already drafted or posted, and avoid recent topics.
+- **Track**: members record enquiries, bookings, sales, sales value and posts. A weekly summary (template-based) compares with last week and gives simple suggestions — based only on what they entered.
+- **Admin → Overview → Pilot**: members active, daily actions completed, check-ins and posts marked posted in the last 7 days.
 
 ---
 
