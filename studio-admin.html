@@ -69,6 +69,12 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 .td-done .td-check{background:var(--green)}.td-done .td-b b{text-decoration:line-through;color:var(--muted)}.td-late{background:#FFF7F6;margin:0 -14px;padding:11px 14px}
 .td-b{flex:1;min-width:0}.td-m{font-size:12.5px;margin-top:2px}.tdbar{height:8px;background:#E7EDE9;border-radius:99px;overflow:hidden;margin:10px 0 4px}.tdbar span{display:block;height:100%;background:var(--green)}
 .note{background:var(--green-l);border:1px solid #CFEBDB;border-radius:14px;padding:12px 14px;line-height:1.5}
+.iv{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}.iv:last-child{border-bottom:0}
+.iv-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.iv-h b{font-size:16px}
+.iv-next{font-size:13px;color:var(--muted)}.iv-next.due{color:var(--danger);font-weight:700}
+.iv a.btn{text-decoration:none;color:var(--navy)}.iv a.btn.primary{color:#fff}
+.iv-sent{background:var(--gold-l);border-radius:10px;padding:8px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--navy)}.chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
 .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
 .p-active{background:var(--green-l);color:var(--green-d)}.p-pending{background:var(--gold-l);color:#7A5300}.p-inactive,.p-expired{background:#ECEDF0;color:var(--muted)}
 .p-power{background:var(--gold);color:var(--navy)}.pill .over{background:var(--green-d);color:#fff;border-radius:999px;padding:0 5px;margin-left:2px;font-size:11px}.p-warn{background:var(--danger-l);color:var(--danger)}
@@ -86,7 +92,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 <body>
 <header><div><b>Business Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="today">Today</button><button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="subs">Business Studio Pro</button>
+  <button data-v="today">Today</button><button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites</button><button data-v="subs">Business Studio Pro</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -141,7 +147,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   $('#logout').onclick = async function () { try { await api('logout'); } catch (e) {} login(); };
   function go(v) {
     $$('#nav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
-    ({ today: vToday, overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket })[v]();
+    ({ today: vToday, overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket, invites: vInvites })[v]();
   }
   async function boot() {
     try { S.overview = await api('overview'); } catch (e) { return; }
@@ -615,8 +621,112 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     draw();
   }
 
+  // ── Business Club invites: follow up every business listed on Auntie Tobi ──
+  var IV_PILL = { new: 'p-inactive', waiting: 'p-pending', interested: 'p-active', notnow: 'p-inactive', declined: 'p-warn', joined: 'p-power' };
+  var IV_KIND = { invite: 'Send invite', fu1: 'Send follow-up', fu2: 'Send last check-in' };
+  var IV_FILTERS = [['today', 'To do today'], ['new', 'Not contacted'], ['waiting', 'Waiting for reply'], ['interested', 'Interested'], ['notnow', 'Not now'], ['declined', 'Not interested'], ['joined', 'Joined'], ['all', 'All']];
+  function waNum(n) { n = String(n || '').replace(/\D/g, ''); if (/^0/.test(n)) n = '44' + n.slice(1); return n; }
+  function ivNext(x, today) {
+    if (x.status === 'joined') return '';
+    if (x.due) return '<span class="iv-next due">' + (x.status === 'notnow' ? 'Check back today' : x.nextKind === 'fu2' ? 'Last check-in due' : 'Follow-up due') + (x.nextAt && x.nextAt < today ? ' (since ' + esc(tdDay(x.nextAt)) + ')' : '') + '</span>';
+    if (x.status === 'waiting' && x.finished) return '<span class="iv-next">No reply after 3 messages</span>';
+    if (x.status === 'waiting' && x.nextAt) return '<span class="iv-next">Next follow-up ' + esc(tdDay(x.nextAt)) + '</span>';
+    if (x.status === 'notnow' && x.checkBackAt) return '<span class="iv-next">Check back ' + esc(tdDay(x.checkBackAt)) + '</span>';
+    return '';
+  }
+  function ivRow(x, today, isNewToday) {
+    var canSend = x.status !== 'joined' && x.status !== 'declined' && !(x.status === 'waiting' && x.finished);
+    var msg = x.message, enc = encodeURIComponent(msg);
+    var ch = [];
+    if (x.wa) ch.push('<a class="btn small primary" target="_blank" rel="noopener" data-ivvia="WhatsApp" data-s="' + esc(x.slug) + '" href="https://wa.me/' + waNum(x.wa) + '?text=' + enc + '">WhatsApp</a>');
+    if (x.ig) ch.push('<a class="btn small ghost" target="_blank" rel="noopener" data-ivvia="Instagram" data-copy="1" data-s="' + esc(x.slug) + '" href="https://www.instagram.com/' + encodeURIComponent(x.ig) + '/">📷 Instagram DM</a>');
+    if (x.email) ch.push('<a class="btn small ghost" data-ivvia="email" data-s="' + esc(x.slug) + '" href="mailto:' + esc(x.email) + '?subject=' + encodeURIComponent('Join the Auntie Tobi Business Club') + '&body=' + enc + '">Email</a>');
+    ch.push('<button class="btn small ghost" data-ivcopy="' + esc(x.slug) + '">Copy message</button>');
+    return '<div class="iv" data-row="' + esc(x.slug) + '">' +
+      '<div class="iv-h"><b>' + esc(x.name) + '</b><span class="muted" style="font-size:13px">' + esc([x.cat, x.loc].filter(Boolean).join(' · ')) + '</span><span class="pill ' + (IV_PILL[x.status] || '') + '">' + esc(x.label) + '</span>' + (isNewToday ? '<span class="pill p-pending">New today</span>' : '') + ivNext(x, today) +
+        '<a href="' + esc(x.listing) + '" target="_blank" rel="noopener" style="margin-left:auto;font-size:13px">Listing ↗</a></div>' +
+      (canSend ? '<div class="row" style="gap:6px;align-items:center"><span style="font-size:13px;font-weight:700;margin-right:2px">' + IV_KIND[x.nextKind] + ':</span>' + ch.join('') + (!x.wa && !x.ig && !x.email ? '<span class="muted" style="font-size:13px">No WhatsApp, Instagram or email on the listing' + (x.phone ? ' — phone ' + esc(x.phone) : '') + '</span>' : '') + '</div>' : '') +
+      '<div class="iv-sent hidden" data-sent="' + esc(x.slug) + '"><span>Sent it?</span><button class="btn small primary" data-ivact="sent" data-s="' + esc(x.slug) + '">✓ Mark as sent</button><button class="btn small ghost" data-ivhide="' + esc(x.slug) + '">Not yet</button></div>' +
+      '<div class="row" style="gap:6px">' + (x.status === 'joined' ? '' :
+        (canSend ? '<button class="btn small ghost" data-ivact="sent" data-s="' + esc(x.slug) + '" title="Mark as sent without opening">✓ Sent</button>' : '') +
+        (x.status !== 'interested' ? '<button class="btn small ghost" data-ivact="interested" data-s="' + esc(x.slug) + '">😊 Interested</button>' : '') +
+        '<button class="btn small ghost" data-ivnotnow="' + esc(x.slug) + '">⏳ Not now</button>' +
+        (x.status !== 'declined' ? '<button class="btn small ghost" data-ivact="declined" data-s="' + esc(x.slug) + '">Not interested</button>' : '') +
+        '<button class="btn small ghost" data-ivact="joined" data-s="' + esc(x.slug) + '">🎉 Joined</button>') +
+        '<button class="btn small ghost" data-ivmore="' + esc(x.slug) + '">Notes &amp; history' + (x.notes ? ' 📝' : '') + '</button></div></div>';
+  }
+  async function vInvites() {
+    loading();
+    var r; try { r = S.iv = await api('invites-view'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var f = S.ivFilter || 'today', q = (S.ivQ || '').toLowerCase(), st = r.stats;
+    var due = r.rows.filter(function (x) { return x.due; });
+    var newOnes = r.rows.filter(function (x) { return x.status === 'new'; }).slice(0, r.newTodo);
+    var list = f === 'today' ? due.concat(newOnes) : r.rows.filter(function (x) { return f === 'all' || x.status === f; });
+    if (q) list = r.rows.filter(function (x) { return (x.name + ' ' + x.cat + ' ' + x.loc + ' ' + x.ig).toLowerCase().indexOf(q) > -1; });
+    var newSet = {}; newOnes.forEach(function (x) { newSet[x.slug] = 1; });
+    var count = function (k) { return k === 'today' ? due.length + newOnes.length : k === 'all' ? r.rows.length : r.rows.filter(function (x) { return x.status === k; }).length; };
+    app.innerHTML = '<main><h1>Business Club invites</h1><p class="muted" style="margin:4px 0 14px">Invite every business listed on Auntie Tobi to join the Business Club, and follow up until they reply. Follow-ups come up ' + 3 + ' days after the invite, then 7 days later, then stop.</p>' +
+      '<div class="grid">' +
+        '<div class="card stat"><b>' + st.total + '</b><span>Businesses on Auntie Tobi</span></div>' +
+        '<div class="card stat"><b>' + st.contacted + '</b><span>Contacted</span></div>' +
+        '<div class="card stat"><b>' + st.replied + '</b><span>Replied</span></div>' +
+        '<div class="card stat"><b>' + st.interested + '</b><span>Interested</span></div>' +
+        '<div class="card stat"><b>' + st.joined + '</b><span>Joined · ' + st.rate + '% of contacted</span></div>' +
+      '</div>' +
+      '<div class="card row" style="margin-top:12px;align-items:center;gap:10px;flex-wrap:wrap"><b style="flex:1;min-width:220px">Today: ' + due.length + ' follow-up' + (due.length === 1 ? '' : 's') + ' due · ' + r.newTodo + ' new to invite <span class="muted" style="font-weight:400">(' + r.newToday + ' of ' + r.perDay + ' new sent today)</span></b>' +
+        '<label style="display:flex;align-items:center;gap:6px;font-weight:600;margin:0">New invites a day <input type="number" id="ivPer" min="0" max="50" value="' + r.perDay + '" style="width:70px"></label><button class="btn small ghost" id="ivPerSave">Save</button><button class="btn small ghost" id="ivMsgs">✎ Edit messages</button></div>' +
+      '<div class="row" style="margin:14px 0 8px;gap:8px;flex-wrap:wrap;align-items:center"><div class="chips">' + IV_FILTERS.map(function (x) { return '<button class="chip" data-ivf="' + x[0] + '" aria-pressed="' + (!q && f === x[0]) + '">' + x[1] + ' (' + count(x[0]) + ')</button>'; }).join('') + '</div>' +
+        '<input id="ivQ" placeholder="Search businesses…" value="' + esc(S.ivQ || '') + '" style="max-width:240px;margin-left:auto"></div>' +
+      '<div class="card">' + (list.length ? list.map(function (x) { return ivRow(x, r.today, f === 'today' && !q && newSet[x.slug]); }).join('') : '<p class="muted" style="margin:6px 0">' + (f === 'today' ? 'Nothing to do today 🎉 — new invites come up tomorrow.' : 'No businesses here.') + '</p>') + '</div></main>';
+    var reload = function () { vInvites(); };
+    var byS = function (sl) { return r.rows.filter(function (x) { return x.slug === sl; })[0]; };
+    var act = async function (slug, a, extra) { try { await api('invites-act', Object.assign({ slug: slug, act: a }, extra || {})); toast({ sent: 'Marked as sent — follow-up scheduled', interested: 'Marked interested 😊', declined: 'Marked not interested', joined: 'Marked as joined 🎉', notnow: 'We’ll remind you to check back', reset: 'Reset' }[a] || 'Saved'); reload(); } catch (x) { toast(x.message); } };
+    $$('[data-ivf]').forEach(function (b) { b.onclick = function () { S.ivFilter = b.dataset.ivf; S.ivQ = ''; vInvites(); }; });
+    var qi = $('#ivQ'), qt; qi.oninput = function () { clearTimeout(qt); qt = setTimeout(function () { S.ivQ = qi.value.trim(); vInvites(); setTimeout(function () { var n = $('#ivQ'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 0); }, 350); };
+    $$('[data-ivvia]').forEach(function (a) {
+      a.addEventListener('click', function () {
+        var x = byS(a.dataset.s);
+        if (a.dataset.copy) { try { navigator.clipboard.writeText(x.message); toast('Message copied — paste it in their DMs'); } catch (e) {} }
+        var bar = $('[data-sent="' + a.dataset.s + '"]'); if (bar) { bar.classList.remove('hidden'); bar.dataset.via = a.dataset.ivvia; }
+      });
+    });
+    $$('[data-ivcopy]').forEach(function (b) { b.onclick = async function () { var x = byS(b.dataset.ivcopy); try { await navigator.clipboard.writeText(x.message); } catch (e) { prompt('Copy this message:', x.message); } toast('Message copied'); var bar = $('[data-sent="' + x.slug + '"]'); if (bar) bar.classList.remove('hidden'); }; });
+    $$('[data-ivhide]').forEach(function (b) { b.onclick = function () { $('[data-sent="' + b.dataset.ivhide + '"]').classList.add('hidden'); }; });
+    $$('[data-ivact]').forEach(function (b) { b.onclick = function () { var bar = $('[data-sent="' + b.dataset.s + '"]'); act(b.dataset.s, b.dataset.ivact, { via: bar && bar.dataset.via || '' }); }; });
+    $$('[data-ivnotnow]').forEach(function (b) {
+      b.onclick = function () {
+        var sl = b.dataset.ivnotnow, s2 = sheet('<h2 style="margin:0">Check back when?</h2><p class="muted">' + esc(byS(sl).name) + ' isn’t ready yet. We’ll put them back on your list on the day.</p><div class="row">' + [30, 60, 90].map(function (d2) { return '<button class="btn ghost" data-nd="' + d2 + '">In ' + d2 + ' days</button>'; }).join('') + '</div><button class="btn link" id="ndX">Cancel</button>');
+        $$('[data-nd]', s2).forEach(function (x) { x.onclick = function () { s2.remove(); act(sl, 'notnow', { days: Number(x.dataset.nd) }); }; });
+        $('#ndX', s2).onclick = function () { s2.remove(); };
+      };
+    });
+    $$('[data-ivmore]').forEach(function (b) {
+      b.onclick = function () {
+        var x = byS(b.dataset.ivmore);
+        var s2 = sheet('<h2 style="margin:0">' + esc(x.name) + '</h2><div class="muted">' + esc([x.cat, x.loc].filter(Boolean).join(' · ')) + '</div>' +
+          '<div class="muted" style="font-size:13px">' + [x.wa ? 'WhatsApp ' + esc(x.wa) : '', x.phone ? 'Phone ' + esc(x.phone) : '', x.ig ? '@' + esc(x.ig) : '', x.email ? esc(x.email) : '', x.website ? '<a href="' + esc(x.website) + '" target="_blank" rel="noopener">Website ↗</a>' : ''].filter(Boolean).join(' · ') + '</div>' +
+          '<div><label for="ivN">Notes</label><textarea id="ivN" rows="3" placeholder="e.g. Spoke to Tolu — wants to join after Christmas">' + esc(x.notes) + '</textarea></div>' +
+          '<div><b>History</b>' + (x.history.length ? '<ul style="margin:6px 0 0 18px">' + x.history.map(function (h) { return '<li>' + esc(new Date(h.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + ' — ' + esc(h.what) + '</li>'; }).join('') + '</ul>' : '<p class="muted" style="margin:4px 0">Not contacted yet.</p>') + '</div>' +
+          '<div class="row"><button class="btn primary" id="ivNs">Save notes</button><button class="btn ghost" id="ivNx">Close</button>' + (x.status !== 'new' ? '<button class="btn ghost danger" id="ivR" style="margin-left:auto">Reset to not contacted</button>' : '') + '</div>');
+        $('#ivNx', s2).onclick = function () { s2.remove(); };
+        $('#ivNs', s2).onclick = async function () { try { await api('invites-act', { slug: x.slug, act: 'note', notes: $('#ivN', s2).value }); toast('Notes saved'); s2.remove(); reload(); } catch (e) { toast(e.message); } };
+        var rs = $('#ivR', s2); if (rs) rs.onclick = function () { if (confirm('Reset ' + x.name + ' to not contacted?')) { s2.remove(); act(x.slug, 'reset'); } };
+      };
+    });
+    $('#ivPerSave').onclick = async function () { try { await api('invites-settings', { settings: { perDay: Number($('#ivPer').value) } }); toast('Saved'); reload(); } catch (x) { toast(x.message); } };
+    $('#ivMsgs').onclick = function () {
+      var t = r.templates, L = { invite: '1. First invite', fu1: '2. Follow-up (3 days later)', fu2: '3. Last check-in (7 days after that)' };
+      var s2 = sheet('<h2 style="margin:0">Invite messages</h2><p class="muted">Use <b>{name}</b> for the business name, <b>{listing}</b> for their Auntie Tobi listing link and <b>{club}</b> for the Business Club link.</p>' +
+        Object.keys(L).map(function (k) { return '<div><label for="ivT_' + k + '">' + L[k] + '</label><textarea id="ivT_' + k + '" rows="9">' + esc(t[k]) + '</textarea><button class="btn link" data-ivdef="' + k + '" style="font-size:13px">Reset to original</button></div>'; }).join('') +
+        '<div class="row"><button class="btn primary" id="ivTs">Save messages</button><button class="btn ghost" id="ivTx">Close</button></div>');
+      $$('[data-ivdef]', s2).forEach(function (b) { b.onclick = function () { $('#ivT_' + b.dataset.ivdef, s2).value = r.defaults[b.dataset.ivdef]; }; });
+      $('#ivTx', s2).onclick = function () { s2.remove(); };
+      $('#ivTs', s2).onclick = async function () { var tt = {}; Object.keys(L).forEach(function (k) { tt[k] = $('#ivT_' + k, s2).value; }); try { await api('invites-settings', { settings: { templates: tt } }); toast('Messages saved'); s2.remove(); reload(); } catch (e) { toast(e.message); } };
+    };
+  }
+
   // ── Today: daily to-do list (overdue until marked) ──
-  var TD_ICO = { verify: '🏛️', market: '🛍️', alert: '🔔', renew: '⏳', spotlight: '📣', lesson: '📚', share: '📲', task: '📝' };
+  var TD_ICO = { verify: '🏛️', market: '🛍️', alert: '🔔', renew: '⏳', spotlight: '📣', lesson: '📚', share: '📲', invites: '💌', task: '📝' };
   var TD_MAX = 10;
   var TD_SHARE = { stories: 'Story', reposts: 'repost', discovery: 'discovery feature' };
   var TD_REPEAT = { once: 'Once', daily: 'Every day', weekdays: 'Weekdays (Mon–Fri)', weekly: 'Every week' };
@@ -636,6 +746,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     if (it.kind === 'verify' || it.kind === 'spotlight') out.push('<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>' + (m.number ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(m.number) + '">GOV.UK</a>' : ''));
     if (it.kind === 'renew') out.push((m.whatsapp ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://wa.me/' + esc(String(m.whatsapp).replace(/\D/g, '').replace(/^0/, '44')) + '?text=' + encodeURIComponent('Hi! Your Auntie Tobi Business Club membership ends on ' + d(m.expires) + '. Renew here to keep your benefits: https://auntietobi.co.uk/business-club 💚') + '">WhatsApp</a>' : '') + '<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>');
     if (it.kind === 'lesson') out.push('<button class="btn small ghost" data-tgo="resources">Open</button>');
+    if (it.kind === 'invites') out.push('<button class="btn small ghost" data-tgo="invites">Open Club invites</button>');
     if (it.kind === 'alert') out.push('<button class="btn small ghost" data-tgo="alerts">Alerts</button>');
     return out.join('');
   }
