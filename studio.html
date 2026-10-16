@@ -55,7 +55,7 @@ h2{font-family:var(--display);font-size:20px;line-height:1.2;font-weight:700;mar
 label.f{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
 label.f .opt{font-weight:400;color:var(--muted)}
 .hint{font-size:13px;color:var(--muted);margin-top:4px}
-input[type=email],input[type=text],input[type=url],input[type=date],textarea,select{
+input:not([type]),input[type=email],input[type=text],input[type=url],input[type=date],input[type=number],textarea,select{
   width:100%;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s}
 textarea{resize:vertical;min-height:84px}
 input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(5,122,68,.15)}
@@ -186,6 +186,19 @@ details.faq li+li{margin-top:4px}
 .wk div{background:var(--cream);border-radius:12px;padding:10px;text-align:center}
 .wk b{display:block;font-family:var(--display);font-size:24px;line-height:1.1}
 .wk span{font-size:12px;color:var(--muted)}
+[hidden]{display:none!important}
+.row>div{min-width:0}
+a.btn{text-decoration:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.optact{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.logo-box{width:72px;height:72px;border-radius:14px;border:1.5px dashed var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);flex:none;overflow:hidden}
+.logo-box img{width:100%;height:100%;object-fit:contain}
+.colour{flex:1;display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;font-size:14px;font-weight:600;cursor:pointer}
+.colour input{width:40px;height:40px;border:0;padding:0;background:none;border-radius:8px;cursor:pointer;flex:none}
+.imgprev{margin:0 auto;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);background:#fff}
+.imgprev canvas{display:block;width:100%;height:auto}
+.posted{font-size:11px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:999px;padding:2px 8px;white-space:nowrap}
+@media print{body.printing>*:not(#app){display:none!important}body.printing #app>*:not(main),body.printing main>*:not(#printArea){display:none!important}body.printing,body.printing #app,body.printing main{background:#fff!important;padding:0!important;margin:0!important;max-width:none!important}body.printing .docpaper{border:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -773,7 +786,7 @@ details.faq li+li{margin-top:4px}
   function historyRows(items) {
     if (!items.length) return '<div class="empty">Nothing here yet. Your creations will appear here.</div>';
     return '<div class="list">' + items.map(function (i) {
-      return '<button class="li" data-item="' + esc(i.id) + '"><div class="t"><b>' + esc(i.title) + '</b><small>' + fmtDate(i.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</small></div>' + (i.saved ? '<span class="star" aria-label="Saved">★</span>' : '') + '</button>';
+      return '<button class="li" data-item="' + esc(i.id) + '"><div class="t"><b>' + esc(i.title) + '</b><small>' + fmtDate(i.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</small></div>' + (i.posted ? '<span class="posted">Posted</span>' : '') + (i.saved ? '<span class="star" aria-label="Saved">★</span>' : '') + '</button>';
     }).join('') + '</div>';
   }
   function bindHistoryRows() { $$('[data-item]', app).forEach(function (b) { b.onclick = function () { showItem(b.dataset.item); }; }); }
@@ -870,7 +883,7 @@ details.faq li+li{margin-top:4px}
     $$('[data-doit]', box).forEach(function (b) {
       b.onclick = function () {
         var a = S.today.actions.filter(function (x) { return x.id === b.dataset.doit; })[0];
-        showTool(a.go.tool, a.go.input, { back: showHome, tab: 'home', intro: a.title + ' — I’ve filled this in for you. Change anything you like, then tap Create.',
+        showTool(a.go.tool, a.go.input, { back: showHome, tab: 'home', calendarId: a.calendarId, intro: a.title + ' — I’ve filled this in for you. Change anything you like, then tap Create.',
           onSuccess: function () {
             api('studio-growth', 'action-done', { id: a.id, done: true }).then(function () { if (S.today && S.today.done.indexOf(a.id) < 0) S.today.done.push(a.id); }).catch(function () {});
             if (a.calendarId) api('studio-growth', 'calendar-update', { id: a.calendarId, status: 'drafted' }).catch(function () {});
@@ -957,7 +970,7 @@ details.faq li+li{margin-top:4px}
       $('[data-make]', card).onclick = function () {
         var topic = item.title + (item.hook ? '. Hook: ' + item.hook : '');
         var go = /reel/i.test(item.format) ? ['reel', { idea: topic }] : ['caption', { topic: topic }];
-        showTool(go[0], go[1], { back: showPlan, tab: 'plan', intro: 'From your calendar: ' + item.title,
+        showTool(go[0], go[1], { back: showPlan, tab: 'plan', calendarId: id, intro: 'From your calendar: ' + item.title,
           onSuccess: function () { if (item.status === 'todo') api('studio-growth', 'calendar-update', { id: id, status: 'drafted' }).catch(function () {}); } });
       };
       $('[data-del]', card).onclick = async function () {
@@ -973,7 +986,8 @@ details.faq li+li{margin-top:4px}
   async function showTrack(date) {
     setChrome({ tabs: true, tab: 'track' });
     if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Track</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
-    app.innerHTML = '<main><h1>Track</h1><p class="sub" style="margin:4px 0 14px">Record your numbers in a minute. Only you see them.</p><div id="trBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    app.innerHTML = '<main>' + trackHeader('nums') + '<p class="sub" style="margin:0 0 14px">Record your numbers in a minute. Only you see them.</p><div id="trBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindTrackHeader();
     var p, sum;
     try { p = await api('studio-growth', 'progress-get'); sum = await api('studio-growth', 'summary'); }
     catch (x) { $('#trBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
@@ -1083,8 +1097,8 @@ details.faq li+li{margin-top:4px}
       resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       var reqId = uuid(), r;
       try {
-        try { r = await api('studio-api', 'generate', { tool: toolId, input: inp, requestId: reqId }); }
-        catch (x) { if (x.code === 'network') r = await api('studio-api', 'generate', { tool: toolId, input: inp, requestId: reqId }); else throw x; }
+        try { r = await api('studio-api', 'generate', { tool: toolId, input: inp, requestId: reqId, calendarId: opts.calendarId || undefined }); }
+        catch (x) { if (x.code === 'network') r = await api('studio-api', 'generate', { tool: toolId, input: inp, requestId: reqId, calendarId: opts.calendarId || undefined }); else throw x; }
       } catch (x) {
         btn.disabled = false; resEl.innerHTML = '';
         if (x.code === 'limit_reached') return showLimitReached();
@@ -1103,7 +1117,7 @@ details.faq li+li{margin-top:4px}
   }
 
   function addToHistory(item) {
-    S.history = [{ id: item.id, tool: item.tool, title: item.title, createdAt: item.createdAt, saved: item.saved }].concat(S.history.filter(function (h) { return h.id !== item.id; }));
+    S.history = [{ id: item.id, tool: item.tool, title: item.title, createdAt: item.createdAt, saved: item.saved, posted: item.posted }].concat(S.history.filter(function (h) { return h.id !== item.id; }));
   }
 
   function splitOptions(text) {
@@ -1121,9 +1135,11 @@ details.faq li+li{margin-top:4px}
     el.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (labelled ? 'Here\u2019s your post, ready to go. Tap any part to edit it.' : many ? 'Here are ' + parts.length + ' ' + word.toLowerCase() + 's. Tap any text to edit it.' : 'Here you go! Tap the text to edit it.') + '</p></div>' +
       '<div class="stack" id="opts">' + parts.map(function (p, i) {
         return '<div class="option"><div class="oh"><span>' + (labelled ? labels[i].charAt(0) + labels[i].slice(1).toLowerCase() : many ? word + ' ' + (i + 1) : 'Your content') + '</span><button class="btn small ghost" data-copy="' + i + '">' + icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>', 16) + ' Copy</button></div>' +
-          '<textarea data-opt="' + i + '" aria-label="' + (many ? word + ' ' + (i + 1) : 'Content') + '">' + esc(p) + '</textarea></div>';
+          '<textarea data-opt="' + i + '" aria-label="' + (many ? word + ' ' + (i + 1) : 'Content') + '">' + esc(p) + '</textarea>' +
+          '<div class="optact"><button class="btn small ghost" data-share="' + i + '">' + icon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>', 16) + ' Share</button><button class="btn small ghost" data-img="' + i + '">' + icon('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>', 16) + ' Make image</button></div></div>';
       }).join('') + '</div>' +
       '<div class="row wrap" style="margin-top:12px">' +
+      '<button class="btn ' + (item.posted ? 'ghost' : 'gold') + ' small" id="postedBtn"' + (item.posted ? ' disabled' : '') + '>' + (item.posted ? '\u2713 Posted' : '\u2713 I posted this') + '</button>' +
       '<button class="btn ghost small" id="saveBtn">' + (item.saved ? '★ Saved' : '☆ Save') + '</button>' +
       (many ? '<button class="btn ghost small" id="copyAll">Copy all</button>' : '') +
       (onRegenerate ? '<button class="btn ghost small" id="regen">\u21bb Regenerate <span class="saved-tag">(' + (item.cost || 1) + ' generation' + ((item.cost || 1) > 1 ? 's' : '') + ')</span></button>' : '') +
@@ -1154,6 +1170,17 @@ details.faq li+li{margin-top:4px}
       b.disabled = false;
     };
     var rg = $('#regen', el); if (rg) rg.onclick = onRegenerate;
+    $$('[data-share]', el).forEach(function (b) { b.onclick = function () { shareText($('textarea[data-opt="' + b.dataset.share + '"]', el).value); }; });
+    $$('[data-img]', el).forEach(function (b) { b.onclick = function () { showMakeImage($('textarea[data-opt="' + b.dataset.img + '"]', el).value, item, function () { showItem(item.id); }); }; });
+    $('#postedBtn', el).onclick = async function () {
+      var b = this; b.disabled = true;
+      try {
+        await api('studio-api', 'item-posted', { id: item.id });
+        item.posted = true; b.textContent = '\u2713 Posted'; b.className = 'btn ghost small';
+        S.history = S.history.map(function (h) { return h.id === item.id ? Object.assign({}, h, { posted: true }) : h; });
+        toast('Brilliant! Counted in Track \u2705');
+      } catch (x) { toast(x.message); b.disabled = false; }
+    };
   }
 
   function showLimitReached() {
@@ -1200,6 +1227,454 @@ details.faq li+li{margin-top:4px}
       try { await api('studio-api', 'item-delete', { id: id }); S.history = S.history.filter(function (h) { return h.id !== id; }); toast('Deleted'); showLibrary(); }
       catch (x) { toast(x.message); }
     };
+  }
+
+  // ───────────── shared: brand, logo, canvas helpers ─────────────
+  function brand() {
+    var b = (S.boot.profile && S.boot.profile.brand) || {};
+    return { color1: b.color1 || '#057A44', color2: b.color2 || '#FFB81C', font: b.font || 'modern' };
+  }
+  function brandFont(weight) {
+    var f = brand().font;
+    return f === 'elegant' ? (weight || 700) + ' {size}px Fraunces, Georgia, serif' : (f === 'bold' ? 800 : (weight || 700)) + ' {size}px "DM Sans", Arial, sans-serif';
+  }
+  function fontAt(tpl, size) { return tpl.replace('{size}', Math.round(size)); }
+  async function loadLogo() {
+    if (!S.boot.profile || !S.boot.profile.hasLogo) return null;
+    if (S.logoImg !== undefined) return S.logoImg;
+    try {
+      var r = await api('studio-api', 'logo-get');
+      if (!r.dataUrl) { S.logoImg = null; return null; }
+      S.logoImg = await new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = r.dataUrl; });
+    } catch (e) { S.logoImg = null; }
+    return S.logoImg;
+  }
+  async function fontsReady() {
+    try { await Promise.all(['700 40px "DM Sans"', '800 40px "DM Sans"', '400 20px "DM Sans"', '700 40px Fraunces'].map(function (f) { return document.fonts.load(f); })); } catch (e) {}
+  }
+  function wrapLines(ctx, text, maxW) {
+    var out = [];
+    String(text || '').split('\n').forEach(function (para) {
+      var words = para.split(/\s+/).filter(Boolean), line = '';
+      words.forEach(function (w) {
+        var test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width > maxW && line) { out.push(line); line = w; } else line = test;
+      });
+      out.push(line);
+    });
+    return out;
+  }
+  function luminance(hex) {
+    var c = hex.replace('#', ''); var r = parseInt(c.substr(0, 2), 16) / 255, g = parseInt(c.substr(2, 2), 16) / 255, b = parseInt(c.substr(4, 2), 16) / 255;
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function canvasBlob(canvas) { return new Promise(function (res) { canvas.toBlob(function (b) { res(b); }, 'image/png'); }); }
+  async function shareOrDownload(canvas, filename, text) {
+    var blob = await canvasBlob(canvas);
+    var file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text: text || '' }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('Image saved to your downloads');
+  }
+  function gbp(pence) { return '£' + (pence / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function dmy(d) { return d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''; }
+
+  // ───────────── Money: quotes, invoices, receipts ─────────────
+  var DOC_NAMES = { quote: 'Quote', invoice: 'Invoice', receipt: 'Receipt' };
+  var DOC_STATUS = { draft: ['Draft', 'cream'], sent: ['Sent', 'green'], paid: ['Paid', 'green'], overdue: ['Overdue', 'danger'], void: ['Cancelled', 'cream'] };
+  function statusPill(st) { var s = DOC_STATUS[st] || [st, 'cream']; return '<span class="pill ' + (s[1] === 'danger' ? '" style="background:var(--danger-l);color:var(--danger)' : s[1] === 'green' ? 'green' : '" style="background:#ECEDF0;color:var(--muted)') + '">' + esc(s[0]) + '</span>'; }
+
+  function trackHeader(active) {
+    return '<h1>Track</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="tabNums" aria-pressed="' + (active === 'nums') + '">Numbers</button><button class="chip" id="tabMoney" aria-pressed="' + (active === 'money') + '">£ Money</button></div>';
+  }
+  function bindTrackHeader() {
+    var a = $('#tabNums'), b = $('#tabMoney');
+    if (a) a.onclick = function () { showTrack(); };
+    if (b) b.onclick = function () { showMoney(); };
+  }
+
+  async function showMoney() {
+    setChrome({ tabs: true, tab: 'track' });
+    app.innerHTML = '<main>' + trackHeader('money') + '<div id="mBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindTrackHeader();
+    var l, st;
+    try { l = await api('studio-money', 'list'); st = await api('studio-money', 'settings-get'); }
+    catch (x) { $('#mBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    var ready = !st.settings.suggested;
+    $('#mBox').innerHTML =
+      '<section class="card allow" style="margin-bottom:14px"><div class="big">' + gbp(l.unpaidPence) + '</div><div style="font-weight:700;margin-top:4px">Unpaid invoices</div>' +
+        '<div class="meta" style="margin-top:6px">' + (l.overdueCount ? '⚠️ ' + l.overdueCount + ' overdue' : 'Nothing overdue') + (l.draftCount ? ' · ' + l.draftCount + ' draft' + (l.draftCount > 1 ? 's' : '') : '') + '</div></section>' +
+      (ready ? '' : '<div class="note stack" style="margin-bottom:12px"><b>First, add your details</b><span>Your business name, contact and bank details appear on every document. You only do this once.</span><button class="btn primary small" id="mSet">Add my details</button></div>') +
+      '<div class="quick" style="margin-bottom:6px"><button data-new="invoice">' + icon('<path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 13h6M9 17h4"/>', 20) + 'New invoice</button><button data-new="quote">' + icon('<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6"/>', 20) + 'New quote</button>' +
+        '<button data-new="receipt">' + icon('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>', 20) + 'New receipt</button><button id="mSet2">' + icon('<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 01-.1 1.2l2 1.6-2 3.4-2.4-1a7 7 0 01-2 1.2L14 21h-4l-.4-2.6a7 7 0 01-2-1.2l-2.4 1-2-3.4 2-1.6A7 7 0 015 12c0-.4 0-.8.1-1.2l-2-1.6 2-3.4 2.4 1a7 7 0 012-1.2L10 3h4l.4 2.6a7 7 0 012 1.2l2.4-1 2 3.4-2 1.6c.1.4.1.8.1 1.2z"/>', 20) + 'My details</button></div>' +
+      '<h2>Documents</h2>' + (l.docs.length ? '<div class="list">' + l.docs.map(function (d) {
+        return '<button class="li" data-doc="' + esc(d.id) + '"><div class="t"><b>' + esc(d.number) + ' · ' + esc(d.customerName) + '</b><small>' + esc(DOC_NAMES[d.type]) + ' · ' + dmy(d.issueDate) + (d.dueDate && d.type === 'invoice' ? ' · due ' + dmy(d.dueDate) : '') + '</small></div><div style="text-align:right"><b>' + gbp(d.totalPence) + '</b><div>' + statusPill(d.status) + '</div></div></button>';
+      }).join('') + '</div>' : '<div class="empty">No documents yet. Create your first quote or invoice above.</div>') +
+      '<p class="hint" style="margin-top:14px">Not accounting or tax software — keep your own records for HMRC.</p>';
+    $$('[data-new]').forEach(function (b) { b.onclick = function () { ready ? showDocEditor(null, b.dataset.new) : showMoneySettings(function () { showDocEditor(null, b.dataset.new); }); }; });
+    var s1 = $('#mSet'); if (s1) s1.onclick = function () { showMoneySettings(showMoney); };
+    $('#mSet2').onclick = function () { showMoneySettings(showMoney); };
+    $$('[data-doc]').forEach(function (b) { b.onclick = function () { showDocView(b.dataset.doc); }; });
+  }
+
+  async function showMoneySettings(after) {
+    setChrome({ tabs: true, tab: 'track', back: showMoney });
+    app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    var s = (await api('studio-money', 'settings-get')).settings;
+    var f = function (k, label, ph, opt, type) { return '<div><label class="f" for="ms_' + k + '">' + esc(label) + (opt ? ' <span class="opt">(optional)</span>' : '') + '</label>' + (type === 'area' ? '<textarea id="ms_' + k + '" rows="2" placeholder="' + esc(ph) + '">' + esc(s[k] || '') + '</textarea>' : '<input type="' + (type || 'text') + '" id="ms_' + k + '" placeholder="' + esc(ph) + '" value="' + esc(s[k] == null ? '' : s[k]) + '"' + (type === 'number' ? ' inputmode="numeric" min="0" max="120"' : '') + '>') + '</div>'; };
+    app.innerHTML = '<main><h1>Document details</h1><p class="sub" style="margin:6px 0 14px">Shown on your quotes, invoices and receipts. Only you can see these.</p>' +
+      '<div class="card stack">' + f('displayName', 'Business name on documents', 'e.g. Ada Cakes') + f('email', 'Email', 'hello@yourbusiness.co.uk', true, 'email') + f('phone', 'Phone / WhatsApp', '07700 900123', true) + f('address', 'Address', 'Only if you want it on documents', true, 'area') + '</div>' +
+      '<h2>Bank details for payment</h2><div class="card stack">' + f('bankAccountName', 'Account name', 'e.g. Ada Cakes Ltd', true) + '<div class="row">' + '<div style="flex:1">' + f('sortCode', 'Sort code', '12-34-56', true).replace('<div>', '').replace(/<\/div>$/, '') + '</div><div style="flex:1">' + f('accountNumber', 'Account number', '12345678', true).replace('<div>', '').replace(/<\/div>$/, '') + '</div></div>' +
+        '<p class="hint">Stored privately with your account and only printed on your own documents.</p></div>' +
+      '<h2>Other</h2><div class="card stack">' + f('paymentTermsDays', 'Invoices due after (days)', '14', false, 'number') + f('vatNumber', 'VAT number', 'Only if VAT registered', true) + f('footerNote', 'Note at the bottom', 'Thank you for your business!', true) + '</div>' +
+      '<div class="err hidden" id="msErr" style="margin-top:12px"></div><button class="btn primary block" id="msSave" style="margin-top:14px">Save details</button></main>';
+    $('#msSave').onclick = async function () {
+      var b = this, body = {}; ['displayName', 'email', 'phone', 'address', 'bankAccountName', 'sortCode', 'accountNumber', 'paymentTermsDays', 'vatNumber', 'footerNote'].forEach(function (k) { body[k] = $('#ms_' + k).value; });
+      b.disabled = true;
+      try { await api('studio-money', 'settings-save', { settings: body }); toast('Details saved'); (after || showMoney)(); }
+      catch (x) { $('#msErr').textContent = x.message; $('#msErr').classList.remove('hidden'); b.disabled = false; }
+    };
+  }
+
+  async function showDocEditor(id, type) {
+    setChrome({ tabs: true, tab: 'track', back: id ? function () { showDocView(id); } : showMoney });
+    var d = { type: type, customer: { name: '', phone: '', email: '' }, items: [{ desc: '', qty: 1, pricePence: 0 }], deliveryPence: 0, discountPence: 0, notes: '', dueDate: '', issueDate: '' };
+    if (id) { app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>'; d = (await api('studio-money', 'get', { id: id })).doc; }
+    var items = d.items.map(function (it) { return { desc: it.desc, qty: it.qty, price: it.pricePence ? (it.pricePence / 100).toFixed(2) : '' }; });
+    function money(v) { var n = Number(String(v || '').replace(/[£,\s]/g, '')); return isFinite(n) ? Math.round(n * 100) : 0; }
+    function recalc() {
+      var sub = items.reduce(function (a, it) { return a + Math.round((Number(it.qty) || 0) * money(it.price)); }, 0);
+      var total = Math.max(0, sub + money($('#de_delivery').value) - money($('#de_discount').value));
+      $('#deTotal').textContent = gbp(total);
+    }
+    function draw() {
+      app.innerHTML = '<main><h1>' + (id ? 'Edit ' : 'New ') + esc(DOC_NAMES[d.type].toLowerCase()) + '</h1>' + (id ? '<p class="sub">' + esc(d.number) + '</p>' : '') +
+        '<h2>Customer</h2><div class="card stack"><div><label class="f" for="de_cname">Name</label><input id="de_cname" value="' + esc(d.customer.name) + '" placeholder="e.g. Tolu Adeyemi"></div>' +
+        '<div class="row"><div style="flex:1"><label class="f" for="de_cphone">WhatsApp / phone <span class="opt">(optional)</span></label><input id="de_cphone" inputmode="tel" value="' + esc(d.customer.phone) + '" placeholder="447700900123"></div></div>' +
+        '<div><label class="f" for="de_cemail">Email <span class="opt">(optional)</span></label><input id="de_cemail" type="email" value="' + esc(d.customer.email) + '"></div></div>' +
+        '<h2>Items</h2><div class="stack" id="deItems">' + items.map(function (it, i) {
+          return '<div class="card stack" data-row="' + i + '"><div><label class="f" for="di_d' + i + '">Description</label><input id="di_d' + i + '" data-k="desc" value="' + esc(it.desc) + '" placeholder="e.g. 3-tier celebration cake"></div>' +
+            '<div class="row"><div style="flex:1"><label class="f" for="di_q' + i + '">Qty</label><input id="di_q' + i + '" data-k="qty" inputmode="decimal" value="' + esc(it.qty) + '"></div><div style="flex:2"><label class="f" for="di_p' + i + '">Price each (£)</label><input id="di_p' + i + '" data-k="price" inputmode="decimal" value="' + esc(it.price) + '" placeholder="0.00"></div>' +
+            (items.length > 1 ? '<button type="button" class="btn link danger" data-rm="' + i + '" style="align-self:flex-end">Remove</button>' : '') + '</div></div>';
+        }).join('') + '</div><button class="btn ghost small" id="deAdd" style="margin-top:10px">+ Add item</button>' +
+        '<h2>Extras</h2><div class="card stack"><div class="row"><div style="flex:1"><label class="f" for="de_delivery">Delivery (£)</label><input id="de_delivery" inputmode="decimal" value="' + (d.deliveryPence ? (d.deliveryPence / 100).toFixed(2) : '') + '" placeholder="0.00"></div><div style="flex:1"><label class="f" for="de_discount">Discount (£)</label><input id="de_discount" inputmode="decimal" value="' + (d.discountPence ? (d.discountPence / 100).toFixed(2) : '') + '" placeholder="0.00"></div></div>' +
+        (d.type === 'invoice' ? '<div><label class="f" for="de_due">Due date <span class="opt">(blank = your usual terms)</span></label><input id="de_due" type="date" value="' + esc(d.dueDate || '') + '"></div>' : '') +
+        '<div><label class="f" for="de_notes">Notes <span class="opt">(optional)</span></label><textarea id="de_notes" rows="2" placeholder="' + (d.type === 'quote' ? 'e.g. Valid for 14 days. 50% deposit to confirm.' : 'e.g. Collection on Saturday 2pm') + '">' + esc(d.notes) + '</textarea></div></div>' +
+        '<div class="card" style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b>Total</b><b id="deTotal" style="font-family:var(--display);font-size:24px">£0.00</b></div>' +
+        '<div class="err hidden" id="deErr" style="margin-top:12px"></div><button class="btn primary block" id="deSave" style="margin-top:14px">Save and preview</button></main>';
+      $$('[data-row] input').forEach(function (inp) { inp.oninput = function () { items[Number(inp.closest('[data-row]').dataset.row)][inp.dataset.k] = inp.value; recalc(); }; });
+      $$('[data-rm]').forEach(function (b) { b.onclick = function () { keepCustomer(); items.splice(Number(b.dataset.rm), 1); draw(); }; });
+      $('#deAdd').onclick = function () { keepCustomer(); items.push({ desc: '', qty: 1, price: '' }); draw(); var last = $('#di_d' + (items.length - 1)); if (last) last.focus(); };
+      $('#de_delivery').oninput = recalc; $('#de_discount').oninput = recalc;
+      recalc();
+      $('#deSave').onclick = async function () {
+        keepCustomer();
+        var b = this; b.disabled = true; $('#deErr').classList.add('hidden');
+        var body = { id: id || undefined, type: d.type, customer: d.customer, items: items.filter(function (it) { return String(it.desc).trim(); }).map(function (it) { return { desc: it.desc, qty: Number(it.qty) || 0, price: it.price || '0' }; }),
+          delivery: $('#de_delivery').value || '0', discount: $('#de_discount').value || '0', notes: $('#de_notes').value, dueDate: $('#de_due') ? $('#de_due').value : '', issueDate: d.issueDate || undefined };
+        try { var r = await api('studio-money', 'save', { doc: body }); toast('Saved'); showDocView(r.doc.id); }
+        catch (x) { $('#deErr').textContent = x.message; $('#deErr').classList.remove('hidden'); b.disabled = false; }
+      };
+    }
+    function keepCustomer() { var n = $('#de_cname'); if (!n) return; d.customer = { name: n.value, phone: $('#de_cphone').value, email: $('#de_cemail').value }; d.notes = $('#de_notes').value; var dl = $('#de_delivery'); d.deliveryPence = Math.round((Number(dl.value) || 0) * 100); d.discountPence = Math.round((Number($('#de_discount').value) || 0) * 100); if ($('#de_due')) d.dueDate = $('#de_due').value; }
+    draw();
+  }
+
+  function docHtml(d, s, logo) {
+    var b = brand(), light = luminance(b.color1) > 0.6, fg = light ? '#0F1E36' : '#fff';
+    var row = function (l, v, strong) { return '<tr><td style="padding:6px 0;color:#5B6475">' + esc(l) + '</td><td style="padding:6px 0;text-align:right;' + (strong ? 'font-weight:800;font-size:18px' : '') + '">' + v + '</td></tr>'; };
+    return '<div class="docpaper" style="background:#fff;color:#0F1E36;border-radius:14px;overflow:hidden;border:1px solid var(--line);font-size:14px">' +
+      '<div style="background:' + b.color1 + ';color:' + fg + ';padding:18px 18px 14px;display:flex;gap:12px;align-items:center">' + (logo ? '<img src="' + logo.src + '" alt="" style="width:52px;height:52px;object-fit:contain;border-radius:10px;background:#fff">' : '') +
+        '<div style="flex:1"><div style="font-weight:800;font-size:18px">' + esc(s.displayName || (S.boot.profile && S.boot.profile.businessName) || '') + '</div><div style="opacity:.85;font-size:12.5px">' + esc([s.phone, s.email].filter(Boolean).join(' · ')) + '</div></div>' +
+        '<div style="text-align:right"><div style="font-weight:800;letter-spacing:1px;text-transform:uppercase">' + esc(DOC_NAMES[d.type]) + '</div><div style="font-size:12.5px;opacity:.85">' + esc(d.number) + '</div></div></div>' +
+      '<div style="padding:16px 18px" class="stack"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#5B6475">FOR</div><b>' + esc(d.customer.name) + '</b>' + (d.customer.phone ? '<div style="font-size:12.5px;color:#5B6475">' + esc(d.customer.phone) + '</div>' : '') + '</div>' +
+        '<div style="text-align:right;font-size:12.5px;color:#5B6475">Date: ' + dmy(d.issueDate) + (d.type === 'invoice' && d.dueDate ? '<br><b style="color:#0F1E36">Due: ' + dmy(d.dueDate) + '</b>' : '') + (d.type === 'receipt' ? '<br>Paid by ' + esc(d.paidMethod || 'bank transfer') : '') + '</div></div>' +
+        '<table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr style="border-bottom:2px solid ' + b.color1 + '"><th style="text-align:left;padding:6px 0;font-size:11px;letter-spacing:.8px;color:#5B6475">ITEM</th><th style="text-align:right;padding:6px 0;font-size:11px;color:#5B6475">QTY</th><th style="text-align:right;padding:6px 0;font-size:11px;color:#5B6475">AMOUNT</th></tr></thead><tbody>' +
+          d.items.map(function (it) { return '<tr style="border-bottom:1px solid #EEE6D3"><td style="padding:8px 0">' + esc(it.desc) + '<div style="font-size:12px;color:#5B6475">' + gbp(it.pricePence) + ' each</div></td><td style="text-align:right;padding-left:10px">' + esc(it.qty) + '</td><td style="text-align:right;padding-left:14px;white-space:nowrap">' + gbp(Math.round(it.qty * it.pricePence)) + '</td></tr>'; }).join('') + '</tbody></table>' +
+        '<table style="width:100%;max-width:260px;margin-left:auto">' + row('Subtotal', gbp(d.subtotalPence)) + (d.deliveryPence ? row('Delivery', gbp(d.deliveryPence)) : '') + (d.discountPence ? row('Discount', '−' + gbp(d.discountPence)) : '') + row(d.type === 'receipt' ? 'Paid' : 'Total', gbp(d.totalPence), true) + '</table>' +
+        (d.type !== 'receipt' && (s.bankAccountName || s.sortCode) ? '<div style="background:#F7F1E3;border-radius:10px;padding:10px 12px;font-size:13px"><b>Pay by bank transfer</b><br>' + esc(s.bankAccountName || '') + (s.sortCode ? '<br>Sort code ' + esc(s.sortCode) : '') + (s.accountNumber ? ' · Account ' + esc(s.accountNumber) : '') + '<br>Reference: ' + esc(d.number) + '</div>' : '') +
+        (d.notes ? '<div style="font-size:13px;white-space:pre-wrap">' + esc(d.notes) + '</div>' : '') +
+        '<div style="font-size:12px;color:#5B6475;border-top:1px solid #EEE6D3;padding-top:8px">' + esc([s.footerNote, s.vatNumber ? 'VAT no. ' + s.vatNumber : '', s.address].filter(Boolean).join(' · ')) + '</div></div></div>';
+  }
+
+  // Draws the document onto a canvas (A4 proportions) for a shareable image.
+  async function docCanvas(d, s, logo) {
+    await fontsReady();
+    var b = brand(), W = 1240, pad = 80, light = luminance(b.color1) > 0.6, fg = light ? '#0F1E36' : '#FFFFFF';
+    var rowsH = d.items.length * 92;
+    var H = 820 + rowsH + 900;
+    var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
+    x.fillStyle = b.color1; x.fillRect(0, 0, W, 240);
+    var tx = pad;
+    if (logo) { x.fillStyle = '#fff'; roundRect(x, pad, 50, 140, 140, 22); x.fill(); var r = Math.min(120 / logo.width, 120 / logo.height); x.drawImage(logo, pad + 70 - logo.width * r / 2, 120 - logo.height * r / 2, logo.width * r, logo.height * r); tx = pad + 170; }
+    x.fillStyle = fg; x.font = '800 46px "DM Sans", Arial'; x.fillText(s.displayName || '', tx, 118);
+    x.font = '400 28px "DM Sans", Arial'; x.globalAlpha = .85; x.fillText([s.phone, s.email].filter(Boolean).join('  ·  '), tx, 164); x.globalAlpha = 1;
+    x.textAlign = 'right'; x.font = '800 44px "DM Sans", Arial'; x.fillText(DOC_NAMES[d.type].toUpperCase(), W - pad, 112);
+    x.font = '400 30px "DM Sans", Arial'; x.fillText(d.number, W - pad, 158); x.textAlign = 'left';
+    var y = 330;
+    x.fillStyle = '#5B6475'; x.font = '700 24px "DM Sans", Arial'; x.fillText('FOR', pad, y);
+    x.fillStyle = '#0F1E36'; x.font = '700 36px "DM Sans", Arial'; x.fillText(d.customer.name, pad, y + 46);
+    if (d.customer.phone) { x.fillStyle = '#5B6475'; x.font = '400 28px "DM Sans", Arial'; x.fillText(d.customer.phone, pad, y + 86); }
+    x.textAlign = 'right'; x.fillStyle = '#5B6475'; x.font = '400 28px "DM Sans", Arial'; x.fillText('Date: ' + dmy(d.issueDate), W - pad, y + 10);
+    if (d.type === 'invoice' && d.dueDate) { x.fillStyle = '#0F1E36'; x.font = '700 30px "DM Sans", Arial'; x.fillText('Due: ' + dmy(d.dueDate), W - pad, y + 54); }
+    if (d.type === 'receipt') { x.fillText('Paid by ' + (d.paidMethod || 'bank transfer'), W - pad, y + 54); }
+    x.textAlign = 'left';
+    y = 520;
+    x.fillStyle = '#5B6475'; x.font = '700 22px "DM Sans", Arial'; x.fillText('ITEM', pad, y); x.textAlign = 'right'; x.fillText('QTY', W - pad - 260, y); x.fillText('AMOUNT', W - pad, y); x.textAlign = 'left';
+    x.fillStyle = b.color1; x.fillRect(pad, y + 16, W - pad * 2, 4);
+    y += 70;
+    d.items.forEach(function (it) {
+      x.fillStyle = '#0F1E36'; x.font = '400 30px "DM Sans", Arial';
+      var desc = it.desc; while (x.measureText(desc).width > W - pad * 2 - 420 && desc.length > 3) desc = desc.slice(0, -2);
+      x.fillText(desc + (desc !== it.desc ? '…' : ''), pad, y);
+      x.fillStyle = '#5B6475'; x.font = '400 24px "DM Sans", Arial'; x.fillText(gbp(it.pricePence) + ' each', pad, y + 34);
+      x.fillStyle = '#0F1E36'; x.font = '400 30px "DM Sans", Arial'; x.textAlign = 'right'; x.fillText(String(it.qty), W - pad - 260, y); x.fillText(gbp(Math.round(it.qty * it.pricePence)), W - pad, y); x.textAlign = 'left';
+      x.fillStyle = '#EEE6D3'; x.fillRect(pad, y + 52, W - pad * 2, 2);
+      y += 92;
+    });
+    y += 30;
+    var line = function (label, val, big) { x.textAlign = 'left'; x.fillStyle = big ? '#0F1E36' : '#5B6475'; x.font = (big ? '800 38px' : '400 30px') + ' "DM Sans", Arial'; x.fillText(label, W - pad - 460, y); x.textAlign = 'right'; x.fillStyle = '#0F1E36'; x.fillText(val, W - pad, y); x.textAlign = 'left'; y += big ? 64 : 48; };
+    line('Subtotal', gbp(d.subtotalPence)); if (d.deliveryPence) line('Delivery', gbp(d.deliveryPence)); if (d.discountPence) line('Discount', '−' + gbp(d.discountPence));
+    line(d.type === 'receipt' ? 'Paid' : 'Total', gbp(d.totalPence), true);
+    y += 20;
+    if (d.type !== 'receipt' && (s.bankAccountName || s.sortCode)) {
+      x.fillStyle = '#F7F1E3'; roundRect(x, pad, y, W - pad * 2, 190, 20); x.fill();
+      x.fillStyle = '#0F1E36'; x.font = '700 30px "DM Sans", Arial'; x.fillText('Pay by bank transfer', pad + 30, y + 52);
+      x.font = '400 28px "DM Sans", Arial'; x.fillText((s.bankAccountName || '') + (s.sortCode ? '   Sort code ' + s.sortCode : '') + (s.accountNumber ? '   Account ' + s.accountNumber : ''), pad + 30, y + 100);
+      x.fillText('Reference: ' + d.number, pad + 30, y + 146); y += 230;
+    }
+    if (d.notes) { x.fillStyle = '#0F1E36'; x.font = '400 28px "DM Sans", Arial'; wrapLines(x, d.notes, W - pad * 2).slice(0, 6).forEach(function (l) { x.fillText(l, pad, y); y += 40; }); }
+    x.fillStyle = '#5B6475'; x.font = '400 24px "DM Sans", Arial';
+    x.fillText([s.footerNote, s.vatNumber ? 'VAT no. ' + s.vatNumber : ''].filter(Boolean).join('  ·  '), pad, y + 60);
+    var out = document.createElement('canvas'); out.width = W; out.height = Math.min(H, Math.max(W, y + 130));
+    var ox = out.getContext('2d'); ox.fillStyle = '#fff'; ox.fillRect(0, 0, W, out.height); ox.drawImage(c, 0, 0);
+    return out;
+  }
+
+  function reminderText(d, s) {
+    var name = (d.customer.name || '').split(' ')[0] || 'there', biz = s.displayName || '';
+    var bank = (s.bankAccountName || s.sortCode) ? '\n\nBank transfer: ' + (s.bankAccountName || '') + (s.sortCode ? ', sort code ' + s.sortCode : '') + (s.accountNumber ? ', account ' + s.accountNumber : '') + '. Reference: ' + d.number + '.' : '';
+    if (d.type === 'quote') return 'Hi ' + name + ', here’s your quote ' + d.number + ' for ' + gbp(d.totalPence) + '. Let me know if you’d like to go ahead or have any questions.\n\nThank you — ' + biz;
+    if (d.type === 'receipt') return 'Hi ' + name + ', thank you for your payment of ' + gbp(d.totalPence) + '. Here’s your receipt ' + d.number + '.\n\nThank you — ' + biz;
+    var st = d.displayStatus;
+    if (st === 'overdue') return 'Hi ' + name + ', I hope you’re well. Just a gentle reminder that invoice ' + d.number + ' for ' + gbp(d.totalPence) + ' was due on ' + dmy(d.dueDate) + '. If you’ve already paid, thank you and please ignore this.' + bank + '\n\nThank you — ' + biz;
+    return 'Hi ' + name + ', here’s your invoice ' + d.number + ' for ' + gbp(d.totalPence) + (d.dueDate ? ', due by ' + dmy(d.dueDate) : '') + '.' + bank + '\n\nThank you — ' + biz;
+  }
+  function waLink(phone, text) { var n = String(phone || '').replace(/\D/g, ''); if (n.indexOf('0') === 0) n = '44' + n.slice(1); return 'https://wa.me/' + (n || '') + '?text=' + encodeURIComponent(text); }
+
+  async function showDocView(id) {
+    setChrome({ tabs: true, tab: 'track', back: showMoney });
+    app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    var r; try { r = await api('studio-money', 'get', { id: id }); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var d = r.doc, s = r.settings || {}, logo = await loadLogo();
+    var st = d.displayStatus, msg = reminderText(d, s);
+    var next = d.type === 'quote' ? 'Turn into invoice' : d.type === 'invoice' && st !== 'paid' && st !== 'void' ? 'Mark paid & make receipt' : '';
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between;margin-bottom:10px"><h1 style="font-size:22px">' + esc(d.number) + '</h1>' + statusPill(st) + '</div>' +
+      '<div id="printArea">' + docHtml(d, s, logo) + '</div>' +
+      '<div class="stack" style="margin-top:14px">' +
+        '<a class="btn primary block" id="dvWa" href="' + esc(waLink(d.customer.phone, msg)) + '" target="_blank" rel="noopener">' + icon('<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>', 18) + ' ' + (st === 'overdue' ? 'Send payment reminder on WhatsApp' : 'Send on WhatsApp') + '</a>' +
+        '<div class="row"><button class="btn ghost" id="dvImg" style="flex:1">Save / share image</button><button class="btn ghost" id="dvPdf" style="flex:1">Save as PDF</button></div>' +
+        '<div class="row wrap">' + (d.status === 'draft' && d.type !== 'receipt' ? '<button class="btn ghost small" data-st="sent">Mark as sent</button>' : '') +
+          (next ? '<button class="btn gold small" id="dvConv">' + esc(next) + '</button>' : '') +
+          (d.status !== 'void' ? '<button class="btn ghost small" id="dvEdit">Edit</button>' : '') +
+          (d.status === 'draft' ? '<button class="btn link danger" id="dvDel">Delete draft</button>' : d.status !== 'void' && d.type !== 'receipt' ? '<button class="btn link danger" data-st="void">Cancel</button>' : '') + '</div>' +
+        '<p class="hint">“Save as PDF” opens your phone’s print screen — choose “Save as PDF” there.</p></div></main>';
+    $('#dvWa').addEventListener('click', function () { if (d.status === 'draft' && d.type !== 'receipt') api('studio-money', 'status', { id: id, status: 'sent' }).catch(function () {}); });
+    $('#dvImg').onclick = async function () { this.disabled = true; try { await shareOrDownload(await docCanvas(d, s, logo), d.number + '.png', msg); } finally { this.disabled = false; } };
+    $('#dvPdf').onclick = function () { document.body.classList.add('printing'); window.print(); setTimeout(function () { document.body.classList.remove('printing'); }, 500); };
+    $$('[data-st]').forEach(function (b) { b.onclick = async function () { if (b.dataset.st === 'void' && !confirm('Cancel this document?')) return; try { await api('studio-money', 'status', { id: id, status: b.dataset.st }); toast('Updated'); showDocView(id); } catch (x) { toast(x.message); } }; });
+    var cv = $('#dvConv'); if (cv) cv.onclick = async function () { cv.disabled = true; try { var n = await api('studio-money', 'convert', { id: id }); toast(n.doc.type === 'receipt' ? 'Paid — receipt created' : 'Invoice created'); showDocView(n.doc.id); } catch (x) { toast(x.message); cv.disabled = false; } };
+    var ed = $('#dvEdit'); if (ed) ed.onclick = function () { showDocEditor(id); };
+    var dl = $('#dvDel'); if (dl) dl.onclick = async function () { if (!confirm('Delete this draft?')) return; try { await api('studio-money', 'delete', { id: id }); toast('Deleted'); showMoney(); } catch (x) { toast(x.message); } };
+  }
+
+  // ───────────── brand kit (Account) ─────────────
+  function brandKitHtml() {
+    var b = brand(), p = S.boot.profile || {};
+    return '<h2>Brand kit</h2><div class="card stack" id="bkCard"><p class="sub" style="margin:0">Used on your post images, quotes, invoices and receipts.</p>' +
+      '<div class="row" style="gap:14px;align-items:center"><div id="bkLogo" class="logo-box">' + (p.hasLogo ? '' : 'No logo') + '</div><div class="stack" style="gap:6px;flex:1">' +
+        '<label class="btn ghost small" style="cursor:pointer;text-align:center">' + (p.hasLogo ? 'Change logo' : 'Upload logo') + '<input type="file" id="bkFile" accept="image/png,image/jpeg,image/webp" class="sr-only"></label>' +
+        (p.hasLogo ? '<button class="btn link danger" id="bkDel" style="align-self:flex-start">Remove logo</button>' : '') + '</div></div>' +
+      '<div class="row" style="gap:12px"><label class="colour"><input type="color" id="bkC1" value="' + b.color1 + '"><span>Main colour</span></label><label class="colour"><input type="color" id="bkC2" value="' + b.color2 + '"><span>Accent colour</span></label></div>' +
+      '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Font style</span><div class="chips" id="bkFont">' +
+        [['modern', 'Modern'], ['elegant', 'Elegant'], ['bold', 'Bold']].map(function (o) { return '<button type="button" class="chip" data-font="' + o[0] + '" aria-pressed="' + (b.font === o[0]) + '" style="font-family:' + (o[0] === 'elegant' ? 'Fraunces,serif' : 'inherit') + ';font-weight:' + (o[0] === 'bold' ? 800 : 500) + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
+      '<button class="btn primary block" id="bkSave">Save brand kit</button></div>';
+  }
+  function resizeImage(file, maxSide, type) {
+    return new Promise(function (res, rej) {
+      if (!/^image\//.test(file.type)) return rej(new Error('Please choose an image.'));
+      var fr = new FileReader();
+      fr.onerror = function () { rej(new Error('Couldn’t read that image.')); };
+      fr.onload = function () {
+        var im = new Image();
+        im.onerror = function () { rej(new Error('Couldn’t read that image.')); };
+        im.onload = function () {
+          var r = Math.min(1, maxSide / Math.max(im.width, im.height)), c = document.createElement('canvas');
+          c.width = Math.round(im.width * r); c.height = Math.round(im.height * r);
+          var x = c.getContext('2d');
+          if (type === 'image/jpeg') { x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); }
+          x.drawImage(im, 0, 0, c.width, c.height);
+          res(c.toDataURL(type || 'image/png', 0.86));
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  async function bindBrandKit() {
+    var card = $('#bkCard'); if (!card) return;
+    var font = brand().font;
+    $$('#bkFont .chip').forEach(function (c) { c.onclick = function () { font = c.dataset.font; $$('#bkFont .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); }; });
+    if (S.boot.profile && S.boot.profile.hasLogo) { var lg = await loadLogo(); if (lg) $('#bkLogo').innerHTML = '<img src="' + lg.src + '" alt="Your logo">'; }
+    $('#bkFile').onchange = async function () {
+      var f = this.files[0]; if (!f) return;
+      try {
+        var url = await resizeImage(f, 400, 'image/png');
+        if (url.length > 270000) url = await resizeImage(f, 400, 'image/jpeg');
+        if (url.length > 270000) url = await resizeImage(f, 260, 'image/jpeg');
+        await api('studio-api', 'logo-save', { dataUrl: url });
+        S.boot.profile.hasLogo = true; S.logoImg = undefined; toast('Logo saved'); showAccount();
+      } catch (x) { toast(x.message); }
+    };
+    var del = $('#bkDel'); if (del) del.onclick = async function () {
+      if (!confirm('Remove your logo?')) return;
+      try { await api('studio-api', 'logo-delete'); S.boot.profile.hasLogo = false; S.logoImg = null; toast('Logo removed'); showAccount(); } catch (x) { toast(x.message); }
+    };
+    $('#bkSave').onclick = async function () {
+      var b = this; b.disabled = true;
+      try { var r = await api('studio-api', 'brand-save', { color1: $('#bkC1').value, color2: $('#bkC2').value, font: font }); S.boot.profile.brand = r.brand; toast('Brand kit saved'); }
+      catch (x) { toast(x.message); }
+      b.disabled = false;
+    };
+  }
+
+  // ───────────── share + "I posted this" ─────────────
+  function shareText(text) {
+    if (navigator.share) { navigator.share({ text: text }).catch(function () {}); return; }
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="shT"><h2 id="shT" style="margin:0">Share</h2>' +
+      '<a class="btn primary block" href="https://wa.me/?text=' + encodeURIComponent(text) + '" target="_blank" rel="noopener">Send on WhatsApp</a>' +
+      '<button class="btn ghost block" id="shCopy">Copy for Instagram, TikTok or Facebook</button>' +
+      '<p class="hint" style="margin:0">Copy it, open the app, then paste it into your post.</p><button class="btn link" id="shX">Close</button></div>';
+    document.body.appendChild(scrim);
+    $('#shCopy', scrim).onclick = function () { copyText(text); scrim.remove(); };
+    $('#shX', scrim).onclick = function () { scrim.remove(); };
+    scrim.onclick = function (e) { if (e.target === scrim) scrim.remove(); };
+  }
+
+  // ───────────── make an image (branded post graphic, drawn on the phone) ─────────────
+  var IMG_TEMPLATES = [
+    ['offer', 'Offer', 'SPECIAL OFFER'], ['tip', 'Tip / quote', ''], ['orders', 'Taking orders', 'NOW TAKING ORDERS'],
+    ['thanks', 'Thank you', 'THANK YOU'], ['announce', 'News', 'ANNOUNCEMENT'], ['plain', 'Plain', '']
+  ];
+  function cleanHeadline(text) {
+    var first = String(text || '').split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l && !/^#/.test(l); })[0] || '';
+    first = first.replace(/^(hook|caption|headline|post|idea|title)\b[^:]{0,24}:\s*/i, '').replace(/^[\u201c"']+|[\u201d"']+$/g, '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim();
+    if (first.length > 90) { var cut = first.slice(0, 90); var dot = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? ')); first = dot > 30 ? cut.slice(0, dot + 1) : cut.replace(/\s+\S*$/, '') + '…'; }
+    return first;
+  }
+  function pickTemplate(item) {
+    var p = item && item.input && item.input.preset;
+    return p === 'promote' || item && item.tool === 'promo' ? 'offer' : p === 'thank' ? 'thanks' : p === 'announce' ? 'announce' : p === 'engage' ? 'tip' : 'plain';
+  }
+
+  async function drawPost(o) {
+    await fontsReady();
+    var b = brand(), W = 1080, H = o.size === 'story' ? 1920 : 1080;
+    var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
+    var tpl = o.template, bg, fg, accent = b.color2;
+    if (tpl === 'orders') { bg = b.color2; } else if (tpl === 'tip' || tpl === 'plain') { bg = '#FBF6EC'; } else { bg = b.color1; }
+    fg = luminance(bg) > 0.55 ? '#0F1E36' : '#FFFFFF';
+    if (tpl === 'orders') accent = b.color1;
+    if (tpl === 'plain' || tpl === 'tip') accent = b.color1;
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    if (o.photo) {
+      var ph = o.photo, r = Math.max(W / ph.width, H / ph.height);
+      x.drawImage(ph, (W - ph.width * r) / 2, (H - ph.height * r) / 2, ph.width * r, ph.height * r);
+      var g = x.createLinearGradient(0, H * 0.25, 0, H); g.addColorStop(0, 'rgba(0,0,0,0.15)'); g.addColorStop(1, 'rgba(0,0,0,0.78)');
+      x.fillStyle = g; x.fillRect(0, 0, W, H); fg = '#FFFFFF';
+    } else if (tpl === 'offer' || tpl === 'announce' || tpl === 'thanks') {
+      x.fillStyle = accent; x.globalAlpha = 0.18; x.beginPath(); x.arc(W - 80, 120, 300, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(60, H - 60, 200, 0, Math.PI * 2); x.fill(); x.globalAlpha = 1;
+    }
+    if (tpl === 'announce' && !o.photo) { x.fillStyle = accent; x.fillRect(0, 0, W, 22); x.fillRect(0, H - 22, W, 22); }
+    var pad = 90, label = (IMG_TEMPLATES.filter(function (t) { return t[0] === tpl; })[0] || [])[2];
+    var top = o.size === 'story' ? 300 : 150;
+    // label badge
+    if (label) {
+      x.font = '700 34px "DM Sans", Arial'; var lw = x.measureText(label).width + 56;
+      x.fillStyle = o.photo ? b.color2 : accent; roundRect(x, pad, top, lw, 68, 34); x.fill();
+      x.fillStyle = luminance(o.photo ? b.color2 : accent) > 0.55 ? '#0F1E36' : '#FFFFFF'; x.fillText(label, pad + 28, top + 46);
+      top += 120;
+    }
+    if (tpl === 'tip' && !o.photo) { x.fillStyle = b.color1; x.font = '700 220px Fraunces, Georgia'; x.fillText('“', pad - 10, top + 150); top += 150; }
+    // headline: shrink until it fits
+    var maxH = H - top - (o.size === 'story' ? 520 : 300), size = 96, lines;
+    var face = brand().font;
+    var fam = function (s) { return face === 'elegant' ? '700 ' + s + 'px Fraunces, Georgia' : (face === 'bold' ? '800 ' : '700 ') + s + 'px "DM Sans", Arial'; };
+    do { x.font = fam(size); lines = wrapLines(x, o.headline || ' ', W - pad * 2); size -= 4; } while (lines.length * size * 1.18 > maxH && size > 40);
+    size += 4; x.font = fam(size); x.fillStyle = fg;
+    var lh = size * 1.18;
+    lines.forEach(function (l, i) { x.fillText(l, pad, top + size + i * lh); });
+    var y = top + size + lines.length * lh + 20;
+    if (o.sub) { x.font = '400 42px "DM Sans", Arial'; x.globalAlpha = 0.9; wrapLines(x, o.sub, W - pad * 2).slice(0, 3).forEach(function (l) { x.fillText(l, pad, y + 20); y += 56; }); x.globalAlpha = 1; }
+    // footer: logo + business name + contact
+    var fy = H - (o.size === 'story' ? 260 : 150), fx = pad;
+    if (o.logo) { var s2 = 96, rr = Math.min(s2 / o.logo.width, s2 / o.logo.height); x.fillStyle = '#fff'; roundRect(x, pad, fy - 4, 112, 112, 22); x.fill(); x.drawImage(o.logo, pad + 56 - o.logo.width * rr / 2, fy + 52 - o.logo.height * rr / 2, o.logo.width * rr, o.logo.height * rr); fx = pad + 136; }
+    x.fillStyle = fg; x.font = '700 40px "DM Sans", Arial'; x.fillText(o.name || '', fx, fy + 42);
+    if (o.contact) { x.font = '400 32px "DM Sans", Arial'; x.globalAlpha = 0.85; x.fillText(o.contact, fx, fy + 88); x.globalAlpha = 1; }
+    return c;
+  }
+
+  function showMakeImage(text, item, back) {
+    var p = S.boot.profile || {};
+    var st = { template: pickTemplate(item), size: 'square', headline: cleanHeadline(text), sub: '', photo: null, name: p.businessName || '', contact: p.instagram || (S.boot.listing ? 'Find us on Auntie Tobi' : '') };
+    setChrome({ tabs: true, tab: 'create', back: back });
+    app.innerHTML = '<main><h1 style="font-size:22px">Make an image</h1><p class="sub" style="margin:6px 0 12px">Uses your brand colours and logo. Free — doesn’t use a generation.</p>' +
+      '<div class="imgprev" id="ipWrap"><canvas id="ipCanvas" aria-label="Preview of your image"></canvas></div>' +
+      '<div class="card stack" style="margin-top:12px"><div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Style</span><div class="chips" id="ipTpl">' +
+        IMG_TEMPLATES.map(function (t) { return '<button type="button" class="chip" data-t="' + t[0] + '" aria-pressed="' + (t[0] === st.template) + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Size</span><div class="chips" id="ipSize"><button type="button" class="chip" data-s="square" aria-pressed="true">Post (square)</button><button type="button" class="chip" data-s="story" aria-pressed="false">Story / Status</button></div></div>' +
+      '<div><label class="f" for="ipHead">Headline</label><textarea id="ipHead" rows="2" maxlength="120">' + esc(st.headline) + '</textarea></div>' +
+      '<div><label class="f" for="ipSub">Small text <span class="opt">(optional)</span></label><input id="ipSub" maxlength="90" placeholder="e.g. This weekend only · DM to order"></div>' +
+      '<div class="row"><div style="flex:1"><label class="f" for="ipName">Business name</label><input id="ipName" maxlength="40" value="' + esc(st.name) + '"></div><div style="flex:1"><label class="f" for="ipContact">Contact line</label><input id="ipContact" maxlength="40" value="' + esc(st.contact) + '"></div></div>' +
+      '<div class="row wrap"><label class="btn ghost small" style="cursor:pointer">Add background photo<input type="file" id="ipPhoto" accept="image/*" class="sr-only"></label><button type="button" class="btn link" id="ipNoPhoto" hidden>Remove photo</button></div>' +
+      '<p class="hint" style="margin:0">Your photo stays on your phone — it isn’t uploaded.</p></div>' +
+      '<button class="btn primary block" id="ipShare" style="margin-top:14px">Save / share image</button>' +
+      (p.hasLogo ? '' : '<p class="hint" style="text-align:center">Tip: add your logo and colours in <a href="#" id="ipBrand">Account → Brand kit</a>.</p>') + '</main>';
+    var logo = null, timer;
+    function redraw() {
+      clearTimeout(timer);
+      timer = setTimeout(async function () {
+        var c = await drawPost(Object.assign({ logo: logo }, st)), view = $('#ipCanvas'); if (!view) return;
+        view.width = c.width; view.height = c.height; view.getContext('2d').drawImage(c, 0, 0);
+        $('#ipWrap').style.maxWidth = st.size === 'story' ? '260px' : '420px';
+      }, 120);
+    }
+    loadLogo().then(function (l) { logo = l; redraw(); });
+    $$('#ipTpl .chip').forEach(function (c) { c.onclick = function () { st.template = c.dataset.t; $$('#ipTpl .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); redraw(); }; });
+    $$('#ipSize .chip').forEach(function (c) { c.onclick = function () { st.size = c.dataset.s; $$('#ipSize .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); redraw(); }; });
+    [['ipHead', 'headline'], ['ipSub', 'sub'], ['ipName', 'name'], ['ipContact', 'contact']].forEach(function (k) { $('#' + k[0]).oninput = function () { st[k[1]] = this.value; redraw(); }; });
+    $('#ipPhoto').onchange = async function () {
+      var f = this.files[0]; if (!f) return;
+      try {
+        var url = await resizeImage(f, 1600, 'image/jpeg');
+        st.photo = await new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.src = url; });
+        $('#ipNoPhoto').hidden = false; redraw();
+      } catch (x) { toast(x.message); }
+    };
+    $('#ipNoPhoto').onclick = function () { st.photo = null; this.hidden = true; $('#ipPhoto').value = ''; redraw(); };
+    $('#ipShare').onclick = async function () {
+      var b = this; b.disabled = true;
+      try { await shareOrDownload(await drawPost(Object.assign({ logo: logo }, st)), (st.name || 'post').replace(/[^\w]+/g, '-').toLowerCase() + '-' + st.template + '.png', ''); }
+      finally { b.disabled = false; }
+    };
+    var bl = $('#ipBrand'); if (bl) bl.onclick = function (e) { e.preventDefault(); showAccount(); };
+    redraw();
   }
 
   // ───────────── account & billing ─────────────
@@ -1255,6 +1730,7 @@ details.faq li+li{margin-top:4px}
         '<div class="sub" style="margin-top:4px">Customers find you on: ' + esc((p.channels || ['instagram']).map(channelName).join(', ')) + (p.mainChannel ? ' \u00b7 posts point to ' + esc(channelName(p.mainChannel)) : '') + '</div>' +
         (S.boot.listing ? '<div class="sub" style="margin-top:4px">Auntie Tobi listing: <a href="' + esc(S.boot.listing.url) + '" target="_blank" rel="noopener">' + esc(S.boot.listing.name) + '</a></div>' : '<div class="sub" style="margin-top:4px">No Auntie Tobi listing linked \u2014 add it in your profile.</div>') +
         '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' : '') +
+      (p ? brandKitHtml() : '') +
       '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation.</li><li>A <b>30-day content plan uses 3</b>. Everything else uses 1.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset at midnight (UK time). Unused generations don’t carry over.</li></ul></details>' +
       '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days and before any payment.</p>' +
       '<button class="btn ghost block" id="out">Sign out</button><button class="btn link danger" id="outAll">Sign out on all devices</button></div></main>';
@@ -1266,6 +1742,7 @@ details.faq li+li{margin-top:4px}
       S.boot = null; showSignIn();
     };
     bindPlanChoices();
+    bindBrandKit();
     var mg = $('#manage'); if (mg) mg.onclick = openPortal;
   }
 

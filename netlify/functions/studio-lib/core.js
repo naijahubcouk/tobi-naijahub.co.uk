@@ -91,7 +91,7 @@ function handler(fn, opts) {
       connectBlobs(event);
       if (!opts.allowGet && event.httpMethod !== 'POST') throw new HttpError(405, 'method_not_allowed');
       if (event.httpMethod === 'POST' && !opts.skipCsrf) checkSameOrigin(event);
-      ctx.body = event.httpMethod === 'POST' && !opts.rawBody ? parseJson(event) : {};
+      ctx.body = event.httpMethod === 'POST' && !opts.rawBody ? parseJson(event, opts.maxBody) : {};
       ctx.ip = clientIp(event);
       const out = await fn(ctx);
       if (out && out.statusCode) {
@@ -105,10 +105,10 @@ function handler(fn, opts) {
   };
 }
 
-function parseJson(event) {
+function parseJson(event, maxBody) {
   let raw = event.body || '';
   if (event.isBase64Encoded) raw = Buffer.from(raw, 'base64').toString('utf8');
-  if (raw.length > 64 * 1024) throw new HttpError(413, 'too_large', 'Request is too large.');
+  if (raw.length > (maxBody || 64 * 1024)) throw new HttpError(413, 'too_large', 'That\u2019s too large to upload.');
   if (!raw) return {};
   try {
     const v = JSON.parse(raw);

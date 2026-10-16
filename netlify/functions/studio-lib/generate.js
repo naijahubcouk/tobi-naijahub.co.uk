@@ -225,7 +225,7 @@ async function recentIdeas(email) {
 }
 
 // ───────────── main entry ─────────────
-async function generate({ email, profile, settings, access, toolId, rawInput, idemKey }) {
+async function generate({ email, profile, settings, access, toolId, rawInput, idemKey, calendarId }) {
   if (!/^[A-Za-z0-9-]{16,64}$/.test(String(idemKey || ''))) throw new HttpError(400, 'bad_request', 'Missing request id.');
   const tool = tools.TOOLS[toolId];
   if (!tool) throw new HttpError(400, 'unknown_tool', 'Unknown tool.');
@@ -261,7 +261,8 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   const id = `${Date.now().toString(36)}${randomToken(6).replace(/[^A-Za-z0-9]/g, '')}`.slice(0, 24);
   const item = {
     id, tool: toolId, title: tools.titleFor(toolId, input), input, cost,
-    output: result.text, edited: null, saved: false,
+    output: result.text, edited: null, saved: false, posted: false,
+    calendarId: /^[A-Za-z0-9_-]{4,40}$/.test(String(calendarId || '')) ? String(calendarId) : '',
     createdAt: new Date().toISOString(), updatedAt: null, model: result.model,
   };
   const info = { id, tool: toolId, cost, inTok: result.inTok, outTok: result.outTok, costUsd: result.costUsd };

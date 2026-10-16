@@ -23,7 +23,7 @@ Upload to a **new branch called `studio`** (not `main`).
 |---|---|---|
 | `studio.html` | repo root | New |
 | `studio-admin.html` | repo root | New |
-| `netlify/functions/studio-auth.mjs`, `studio-api.mjs`, `studio-billing.mjs`, `studio-admin.mjs`, `studio-growth.mjs`, `studio-stripe-webhook.mjs`, `studio-maintenance.mjs` | `netlify/functions/` | New — Netlify's current function format (needed for safe allowance counting) |
+| `netlify/functions/studio-auth.mjs`, `studio-api.mjs`, `studio-billing.mjs`, `studio-admin.mjs`, `studio-growth.mjs`, `studio-money.mjs`, `studio-stripe-webhook.mjs`, `studio-maintenance.mjs` | `netlify/functions/` | New — Netlify's current function format (needed for safe allowance counting) |
 | `netlify/functions/studio-lib/` (whole folder, including `handlers/`) | `netlify/functions/studio-lib/` | New — shared Studio code (not functions themselves) |
 | `_redirects` | repo root | **Changed** — 4 lines added after `/business-club` |
 | `netlify.toml` | repo root | **Changed** — daily `studio-maintenance` schedule added |
@@ -153,6 +153,18 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 - **Channels:** members tick where customers find them (Instagram, Facebook, TikTok, WhatsApp, Website, Auntie Tobi listing, Google Business) and where posts should send people. Calls to action, links, hashtags and daily actions follow this.
 - **Promote my Auntie Tobi listing** quick-create button appears once a listing is linked (1 generation).
 - **Admin:** Members shows each person's listing, website and channels; "Remove listing link" fixes a wrong link.
+
+---
+
+## 7d. Money, brand kit and sharing (free — no AI, never uses the allowance)
+
+- **Track → £ Money:** quotes, invoices and receipts. Members add their document details once (business name, contact, bank account name, sort code, account number, payment terms, optional VAT number and footer). Numbers run INV-0001, QUO-0001, REC-0001. Statuses: Draft, Sent, Paid, Cancelled; "Overdue" shows automatically after the due date. A quote turns into an invoice in one tap; "Mark paid & make receipt" marks the invoice paid and creates the receipt. Only drafts can be deleted.
+- **Sending:** "Send on WhatsApp" opens WhatsApp with a ready message (and a polite reminder when overdue) including the bank details and reference. "Save / share image" makes a branded picture of the document; "Save as PDF" uses the phone's print screen.
+- **Privacy:** bank details are stored with the member's account (Netlify Blobs, `money-settings/`) and only appear on their own documents. Admin doesn't show them. The page reminds members it isn't accounting or tax software.
+- **Brand kit (Account):** logo (resized on the phone, max ~200 KB, stored at `logos/`), main and accent colours, and font style (Modern, Elegant, Bold). Used on documents and post images.
+- **Make an image:** every result has "Make an image": 6 styles (Offer, Tip/quote, Taking orders, Thank you, News, Plain), square post or story size, optional background photo. Images are drawn on the phone — photos are never uploaded and nothing is stored.
+- **Share:** every result has "Share" (the phone's share menu; on computers, WhatsApp or copy).
+- **I posted this:** adds 1 to today's posts in Track, shows "Posted" in the Library, and marks the calendar post as posted when it came from the calendar or a daily action.
 
 ---
 

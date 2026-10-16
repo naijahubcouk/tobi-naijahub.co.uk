@@ -10,6 +10,7 @@ const gen = require('../generate');
 const stripe = require('../stripe');
 const directory = require('../directory');
 const website = require('../website');
+const growth = require('../growth');
 
 const PROFILE_FIELDS = {
   businessName: 80, industry: 60, location: 80, products: 600, customers: 400,
@@ -135,6 +136,51 @@ exports.handler = handler(async (ctx) => {
       return { site: out.site, draft: out.draft, hadText: out.hadText };
     }
 
+    case 'brand-save': {
+      const hex = v => /^#[0-9a-fA-F]{6}$/.test(String(v || '')) ? String(v).toUpperCase() : null;
+      const brand = { color1: hex(body.color1) || '#057A44', color2: hex(body.color2) || '#FFB81C',
+        font: ['modern', 'elegant', 'bold'].includes(body.font) ? body.font : 'modern' };
+      const saved = await cas(`profiles/${enc(email)}`, cur => ({ ...(cur || { createdAt: core.nowIso() }), brand }));
+      return { brand: saved.brand };
+    }
+
+    case 'logo-save': {
+      // Small image (resized on the phone first). PNG, JPEG or WebP data URL, max ~200 KB.
+      const url = String(body.dataUrl || '');
+      const m = url.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/);
+      if (!m || url.length > 280000) throw new HttpError(400, 'invalid_logo', 'Please choose a PNG or JPG image (it\u2019s resized automatically).');
+      const bytes = Buffer.from(m[2], 'base64');
+      const magic = { png: [0x89, 0x50, 0x4E, 0x47], jpeg: [0xFF, 0xD8, 0xFF], webp: [0x52, 0x49, 0x46, 0x46] }[m[1]];
+      if (!magic.every((b, i) => bytes[i] === b)) throw new HttpError(400, 'invalid_logo', 'That file doesn\u2019t look like an image.');
+      await core.setJson(`logos/${enc(email)}`, { dataUrl: url, updatedAt: core.nowIso() });
+      await cas(`profiles/${enc(email)}`, cur => ({ ...(cur || { createdAt: core.nowIso() }), hasLogo: true }));
+      return { ok: true };
+    }
+
+    case 'logo-get': {
+      const l = await core.getJson(`logos/${enc(email)}`);
+      return { dataUrl: l ? l.dataUrl : null };
+    }
+
+    case 'logo-delete': {
+      await core.del(`logos/${enc(email)}`).catch(() => {});
+      await cas(`profiles/${enc(email)}`, cur => cur ? { ...cur, hasLogo: false } : undefined);
+      return { ok: true };
+    }
+
+    case 'item-posted': {
+      // "I posted this": +1 post in Track today, calendar item → Posted, Library badge. Counted once per item.
+      const item = await gen.getItem(email, body.id);
+      if (item.posted) return { item, already: true };
+      const updated = { ...item, posted: true, postedAt: core.nowIso() };
+      await core.setJson(gen.itemKey(email, item.id), updated);
+      await cas(gen.historyIndexKey(email), cur => cur ? { items: cur.items.map(i => i.id === item.id ? { ...i, posted: true } : i) } : undefined);
+      await growth.addPost(email);
+      if (item.calendarId) await growth.updateCalendarItem(email, item.calendarId, 'posted').catch(() => {});
+      else await growth.pilotBump(email, 'postsMarked');
+      return { item: updated };
+    }
+
     case 'listing-decline': {
       const slug = String(body.slug || '').slice(0, 80);
       await cas(`profiles/${enc(email)}`, cur => {
@@ -148,7 +194,8 @@ exports.handler = handler(async (ctx) => {
     case 'profile-save': {
       const p = await cleanProfile(body.profile, await getProfile(email), ctx.event);
       const now = core.nowIso();
-      const saved = await cas(`profiles/${enc(email)}`, cur => ({ ...p, createdAt: (cur && cur.createdAt) || now, updatedAt: now }));
+      // Brand kit and logo are saved separately and kept here.
+      const saved = await cas(`profiles/${enc(email)}`, cur => ({ ...p, brand: cur && cur.brand, hasLogo: !!(cur && cur.hasLogo), createdAt: (cur && cur.createdAt) || now, updatedAt: now }));
       return { profile: saved };
     }
 
@@ -156,7 +203,7 @@ exports.handler = handler(async (ctx) => {
       const profile = await getProfile(email);
       const out = await gen.generate({
         email, profile, settings: auth.settings, access: auth.access,
-        toolId: body.tool, rawInput: body.input, idemKey: body.requestId,
+        toolId: body.tool, rawInput: body.input, idemKey: body.requestId, calendarId: body.calendarId,
       });
       return { item: out.item, replayed: out.replayed, calendarAdded: out.calendarAdded || 0, usage: await gen.usageSummary(email, auth.access) };
     }
@@ -198,6 +245,6 @@ exports.handler = handler(async (ctx) => {
     default:
       throw new HttpError(400, 'unknown_action', 'Unknown action.');
   }
-});
+}, { maxBody: 300 * 1024 }); // room for a resized logo
 
 exports._cleanProfile = cleanProfile;

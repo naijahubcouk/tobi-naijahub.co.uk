@@ -417,6 +417,20 @@ const FIELDS = { enquiries: 10000, bookings: 10000, salesCount: 100000, salesGbp
 
 async function getProgress(email) { return (await getJson(progKey(email))) || { entries: {} }; }
 
+// +1 post today (from "I posted this"). Keeps the other numbers for the day.
+async function addPost(email) {
+  const day = dayKey();
+  let isNew = false;
+  await cas(progKey(email), cur => {
+    const p = cur || { entries: {} };
+    const e = p.entries[day] || { enquiries: 0, bookings: 0, salesCount: 0, salesGbp: 0, posts: 0, note: '' };
+    isNew = !p.entries[day];
+    p.entries[day] = { ...e, posts: (e.posts || 0) + 1, savedAt: core.nowIso() };
+    return p;
+  });
+  return isNew;
+}
+
 async function saveProgress(email, date, raw) {
   const day = dayKey();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date)) || date > day || date < addDays(day, -60)) {
@@ -524,5 +538,5 @@ async function pilotSummary(days) {
 
 module.exports = {
   GOALS, getGoal, setGoal, parsePlan, savePlanToCalendar, listCalendar, updateCalendarItem, deleteCalendarItem,
-  recentTopics, today, setActionDone, getProgress, saveProgress, summary, pilotBump, pilotSummary, addDays, TEMPLATES: T,
+  recentTopics, today, setActionDone, getProgress, saveProgress, addPost, summary, pilotBump, pilotSummary, addDays, TEMPLATES: T,
 };
