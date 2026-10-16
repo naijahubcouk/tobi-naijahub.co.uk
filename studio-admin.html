@@ -617,6 +617,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 
   // ── Today: daily to-do list (overdue until marked) ──
   var TD_ICO = { verify: '🏛️', market: '🛍️', alert: '🔔', renew: '⏳', spotlight: '📣', lesson: '📚', share: '📲', task: '📝' };
+  var TD_MAX = 10;
   var TD_SHARE = { stories: 'Story', reposts: 'repost', discovery: 'discovery feature' };
   var TD_REPEAT = { once: 'Once', daily: 'Every day', weekdays: 'Weekdays (Mon–Fri)', weekly: 'Every week' };
   var TD_DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -652,10 +653,15 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     loading();
     var r; try { r = await api('todo-today'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
     var total = r.counts.today + r.counts.overdue + r.counts.done;
+    // Show the top 10 (overdue first, then today); "See all" shows the rest on this page.
+    var lim = S.tdAll ? Infinity : TD_MAX;
+    var shOver = r.overdue.slice(0, lim), shToday = r.todayItems.slice(0, Math.max(0, lim - shOver.length));
+    var hidden = r.overdue.length + r.todayItems.length - shOver.length - shToday.length;
     app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:baseline"><h1 style="margin:0">Today · ' + esc(tdDay(r.today)) + '</h1><span class="muted">' + r.counts.done + ' of ' + total + ' done</span></div>' +
       '<div class="tdbar"><span style="width:' + (total ? Math.round(r.counts.done / total * 100) : 0) + '%"></span></div>' +
-      (r.overdue.length ? '<h2 style="color:var(--danger)">⚠️ Overdue (' + r.overdue.length + ')</h2><div class="card td-list">' + r.overdue.map(function (i) { return tdRow(i, 'overdue'); }).join('') + '</div>' : '') +
-      '<h2>✅ To do today (' + r.todayItems.length + ')</h2><div class="card td-list">' + (r.todayItems.length ? r.todayItems.map(function (i) { return tdRow(i, 'today'); }).join('') : '<p class="muted" style="margin:6px 0">All done for today 🎉</p>') + '</div>' +
+      (shOver.length ? '<h2 style="color:var(--danger)">⚠️ Overdue (' + r.overdue.length + ')</h2><div class="card td-list">' + shOver.map(function (i) { return tdRow(i, 'overdue'); }).join('') + '</div>' : '') +
+      (shToday.length || !hidden ? '<h2>✅ To do today (' + r.todayItems.length + ')</h2><div class="card td-list">' + (shToday.length ? shToday.map(function (i) { return tdRow(i, 'today'); }).join('') : '<p class="muted" style="margin:6px 0">All done for today 🎉</p>') + '</div>' : '') +
+      (hidden ? '<div style="text-align:center;margin-top:10px"><button class="btn ghost" id="tdAll">See all (' + hidden + ' more) →</button></div>' : S.tdAll && (r.overdue.length + r.todayItems.length) > TD_MAX ? '<div style="text-align:center;margin-top:10px"><button class="btn ghost" id="tdFewer">Show fewer</button></div>' : '') +
       '<div class="card stack" style="margin-top:12px"><b>+ Add a task</b><div class="row"><input id="tdT" placeholder="e.g. Post a daily Story, Reply to sponsors" style="flex:2;min-width:200px">' +
         '<select id="tdR" style="width:auto">' + Object.keys(TD_REPEAT).map(function (k) { return '<option value="' + k + '">' + TD_REPEAT[k] + '</option>'; }).join('') + '</select>' +
         '<input type="date" id="tdD" value="' + esc(r.today) + '" style="width:auto"><select id="tdW" style="width:auto;display:none">' + TD_DOW.map(function (n, i) { return '<option value="' + i + '"' + (i === new Date(r.today + 'T12:00:00Z').getUTCDay() ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
@@ -664,6 +670,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       (r.doneToday.length ? '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">✓ Done today (' + r.doneToday.length + ')</summary><div class="card td-list" style="margin-top:8px">' + r.doneToday.map(function (i) { return tdRow(i, 'done'); }).join('') + '</div></details>' : '') +
       '<p class="muted" style="margin-top:14px">Anything not ticked by the end of the day stays at the top as <b>Overdue</b> until you mark it done or skip it. Share tasks show the 5 members who’ve waited longest; the rest come up as you tick these off.</p></main>';
     var refresh = function () { vToday(); };
+    var ta = $('#tdAll'); if (ta) ta.onclick = function () { S.tdAll = true; vToday(); };
+    var tf = $('#tdFewer'); if (tf) tf.onclick = function () { S.tdAll = false; vToday(); };
     $$('[data-tdone]').forEach(function (b) { b.onclick = async function () { var row = b.closest('.td'); try { await api('todo-mark', { key: b.dataset.tdone, how: row.classList.contains('td-done') ? 'undo' : 'done' }); refresh(); } catch (x) { toast(x.message); } }; });
     $$('[data-tskip]').forEach(function (b) { b.onclick = async function () { try { await api('todo-mark', { key: b.dataset.tskip, how: 'skip' }); toast('Skipped'); refresh(); } catch (x) { toast(x.message); } }; });
     $$('[data-tig]').forEach(function (b) {

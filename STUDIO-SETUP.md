@@ -311,3 +311,7 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - Handle comes from: the member's Business Studio profile → one added in Admin (`admin-ig/<email>`) → their Auntie Tobi directory listing.
 - If none: "No Instagram on file · + Add Instagram" — paste a handle or link once (`member-ig-set`); ✎ changes one you added.
 - Also fixed: between midnight and 1am UK time (BST), items ticked showed as not done today, new follow-ups were dated a day early, and lesson views could count twice — dates now use UK time.
+
+## 7r. To-do lists show 10 at a time
+
+- Admin → Today and the members' to-do card show at most 10 tasks (overdue first, then today) with **See all (N more) →**. Admin expands in place (Show fewer folds it back); members open the full to-do screen. Counts still include everything.
