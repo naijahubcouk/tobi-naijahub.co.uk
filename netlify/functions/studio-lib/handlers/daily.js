@@ -29,7 +29,7 @@ async function sendReminderPush() {
       app_id: ONESIGNAL_APP_ID,
       filters: [{ field: 'tag', key: 'studio_reminder', relation: '=', value: '1' }],
       headings: { en: 'Auntie Tobi Business Studio' },
-      contents: { en: 'Your actions for today are ready 💚 Five minutes is all it takes.' },
+      contents: { en: 'Your Business Tip for today is ready 💡 Open your Business Studio to read it.' },
       web_url: `${siteUrl()}/studio`,
       chrome_web_icon: 'https://www.auntietobi.co.uk/tobi-face-256.png',
     }),
@@ -85,7 +85,7 @@ async function buildDigest(member, acc) {
     }
   }
   sec('This week', [
-    sum.goal ? 'Check your weekly goal on Today and do your 3 daily actions.' : 'Set a goal for this week on Today — your daily actions will focus on it.',
+    sum.goal ? 'Read your daily Business Tip on Today — Auntie Tobi’s coaching for your business, fresh every morning.' : 'Set a goal for this week on Today — your daily Business Tips will focus on it.',
     ...(sum.tips || []).slice(0, 2),
   ]);
   if (lesson) sec('A lesson for you', [`${lesson.title} (${lesson.readMins || 3} min read) — ${lesson.reason}`]);
@@ -145,7 +145,7 @@ async function sendPersonalReminders(started) {
     const n = c ? c.today + c.overdue : 0;
     const msg = n
       ? `You have ${n} task${n === 1 ? '' : 's'} today${c.overdue ? `, ${c.overdue} overdue` : ''} 💚 Open your Business Studio to tick them off.`
-      : 'Your actions for today are ready 💚 Five minutes is all it takes.';
+      : 'Your Business Tip for today is ready 💡 Open your Business Studio to read it.';
     const r = await notify.pushToMember(email, 'Auntie Tobi Business Studio', msg);
     if (/^2/.test(r)) sent++;
   }

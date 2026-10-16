@@ -396,6 +396,15 @@ async function today(email, profile, opts) {
   return respond(saved || (await getJson(dailyKey(email, day))));
 }
 
+// Today screen (daily Business Tip replaced the 3 actions): goal, today's planned posts and the check-in prompt. No AI.
+async function home(email) {
+  const day = dayKey();
+  const [goal, cal, progress] = await Promise.all([getGoal(email), listCalendar(email), getProgress(email)]);
+  const yesterday = addDays(day, -1);
+  const checkin = { needed: !progress.entries[yesterday] && !progress.entries[day], date: progress.entries[yesterday] ? day : yesterday };
+  return { day, goal, goals: GOALS, planned: cal.filter(i => i.date === day && i.status !== 'posted' && i.status !== 'done'), checkin, progress };
+}
+
 async function setActionDone(email, id, done) {
   const day = dayKey();
   let changed = false;
@@ -496,13 +505,13 @@ async function summary(email) {
   const g = goal && goal.goal;
   if (!thisWeek.days && !lastWeek.days) tips.push('Record your numbers for a few days and your weekly summary will appear here. It only takes a minute.');
   else {
-    if (thisWeek.posts + postedThisWeek < 3) tips.push('Try to post at least 3 times this week — your daily actions give you a ready-made idea each day.');
+    if (thisWeek.posts + postedThisWeek < 3) tips.push('Try to post at least 3 times this week — plan them in Business Studio → Plan.');
     if (thisWeek.enquiries > 0 && thisWeek.bookings === 0) tips.push('You had enquiries but no bookings or orders recorded. Try a friendly follow-up message to the people who asked.');
     if (lastWeek.days && thisWeek.enquiries > lastWeek.enquiries) tips.push('You recorded more enquiries than last week. Look at what you posted and do more of it.');
     if (lastWeek.days && thisWeek.enquiries < lastWeek.enquiries && day >= addDays(ws, 4)) tips.push('Enquiries are lower than last week so far. A clear offer or a reminder of your availability can help.');
     if (thisWeek.salesCount > 0) tips.push('You made sales this week — ask one of those customers for a review while it’s fresh.');
   }
-  if (!g) tips.push('Set a weekly goal so your daily actions focus on what matters most to you.');
+  if (!g) tips.push('Set a weekly goal so your daily Business Tips focus on what matters most to you.');
   else if (g === 'visibility') tips.push('For visibility, Reels and Story polls usually reach the most new people.');
   else if (g === 'new_product') tips.push('For a new product, mix teasers, a launch post and a WhatsApp broadcast to past customers.');
   else if (g === 'bookings') tips.push('For bookings, announce your next available dates and make it easy to book.');
@@ -541,5 +550,5 @@ async function pilotSummary(days) {
 
 module.exports = {
   GOALS, getGoal, setGoal, parsePlan, savePlanToCalendar, listCalendar, updateCalendarItem, deleteCalendarItem,
-  recentTopics, today, setActionDone, getProgress, saveProgress, addPost, bump, summary, pilotBump, pilotSummary, addDays, TEMPLATES: T,
+  recentTopics, today, home, setActionDone, getProgress, saveProgress, addPost, bump, summary, pilotBump, pilotSummary, addDays, TEMPLATES: T,
 };
