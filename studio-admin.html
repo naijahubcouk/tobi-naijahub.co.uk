@@ -15,7 +15,7 @@
 body{background:var(--cream);color:var(--navy);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
-.hidden{display:none!important}
+.hidden,[hidden]{display:none!important}
 header{background:var(--navy);color:var(--cream);padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
 header b{font-family:var(--display);font-size:18px}
 header small{color:var(--gold);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700}
@@ -67,7 +67,7 @@ tbody tr:hover{background:#FFFCF5}
 <header><div><b>Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
   <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="subs">AI Power</button>
-  <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button>
+  <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
 <script>
@@ -114,7 +114,7 @@ tbody tr:hover{background:#FFFCF5}
   $('#logout').onclick = async function () { try { await api('logout'); } catch (e) {} login(); };
   function go(v) {
     $$('#nav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
-    ({ overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit })[v]();
+    ({ overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources })[v]();
   }
   async function boot() {
     try { S.overview = await api('overview'); } catch (e) { return; }
@@ -122,6 +122,176 @@ tbody tr:hover{background:#FFFCF5}
     go('overview');
   }
   function loading() { app.innerHTML = '<main><p class="muted">Loading…</p></main>'; }
+
+  // ── Resources (content manager) ──
+  var RES_STATUS = { published: ['Published', 'p-active'], draft: ['Draft', 'p-pending'], planned: ['Coming soon', 'p-inactive'] };
+  var RES_TAGS = { all: 'Everyone', food: 'Food & catering', beauty: 'Beauty & hair', fashion: 'Fashion', events: 'Events', photo: 'Photo & creative', services: 'Services', retail: 'Products & retail' };
+  var RES_STUDIO = [['', 'None'], ['tool:bio', 'Tool: Bio & business description'], ['tool:message', 'Tool: Customer message assistant'], ['tool:caption', 'Tool: Post caption'], ['tool:reel', 'Tool: Reel script'], ['tool:ideas', 'Tool: Content ideas'], ['tool:promo', 'Tool: Promotion / offer'], ['tool:planner', 'Tool: Content planner'], ['tool:oneclick', 'Tool: One-click post'],
+    ['screen:goal', 'Screen: Today (weekly goal)'], ['screen:plan', 'Screen: Plan (calendar)'], ['screen:track', 'Screen: Track (numbers)'], ['screen:money', 'Screen: Money (invoices)'], ['screen:profile', 'Screen: Business profile'], ['screen:brand', 'Screen: Account (brand kit)']];
+  function resPill(m, day) {
+    var s = RES_STATUS[m.status] || [m.status, ''];
+    if (m.status === 'published' && m.publishAt && m.publishAt > day) s = ['Scheduled ' + d(m.publishAt), 'p-pending'];
+    return '<span class="pill ' + s[1] + '">' + esc(s[0]) + '</span>';
+  }
+  function rt(src) {
+    function inline(s) { return esc(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>'); }
+    return String(src || '').replace(/\r/g, '').split(/\n{2,}/).map(function (block) {
+      var lines = block.split('\n');
+      if (lines.every(function (l) { return /^\s*-\s+/.test(l); })) return '<ul style="margin-left:20px">' + lines.map(function (l) { return '<li>' + inline(l.replace(/^\s*-\s+/, '')) + '</li>'; }).join('') + '</ul>';
+      if (lines.every(function (l) { return /^\s*\d+\.\s+/.test(l); })) return '<ol style="margin-left:20px">' + lines.map(function (l) { return '<li>' + inline(l.replace(/^\s*\d+\.\s+/, '')) + '</li>'; }).join('') + '</ol>';
+      if (/^##\s+/.test(block)) return '<h3 style="font-family:var(--display);margin-top:12px">' + inline(block.replace(/^##\s+/, '')) + '</h3>';
+      if (/^>\s?/.test(block)) return '<div class="warn">' + inline(block.replace(/^>\s?/gm, '')) + '</div>';
+      return '<p>' + inline(block).replace(/\n/g, '<br>') + '</p>';
+    }).join('<div style="height:8px"></div>');
+  }
+
+  async function vResources(filter) {
+    filter = filter || S.resFilter || 'all'; S.resFilter = filter;
+    loading();
+    var r, dash;
+    try { r = await api('res-list'); dash = await api('res-dashboard'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    S.resData = r;
+    var mods = {}; r.modules.forEach(function (m) { mods[m.id] = m; });
+    var list = r.lessons.filter(function (m) { return filter === 'all' || (filter === 'review' ? dash.needsReview.some(function (x) { return x.id === m.id; }) : m.status === filter); });
+    var views = r.stats.all.views || {}, comps = r.stats.all.completes || {};
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between"><h1 style="margin:0">Resources</h1><button class="btn primary" id="rNew">+ New lesson</button></div>' +
+      '<p class="muted" style="margin:6px 0 14px">Your Business Growth Library for Business Club members. Members only see <b>Published</b> lessons (from their publish date). <b>Coming soon</b> shows the title only; <b>Draft</b> is hidden.</p>' +
+      '<div class="grid">' + stat(dash.published, 'Published') + stat(dash.drafts, 'Drafts') + stat(dash.scheduled, 'Scheduled') + stat(dash.planned, 'Coming soon') + stat(dash.newThisMonth, 'New this month') + stat(dash.viewsMonth, 'Views this month') + stat(dash.completionsMonth, 'Completions this month') + '</div>' +
+      (dash.needsReview.length ? '<div class="warn stack" style="margin-top:14px"><b>⚠️ ' + dash.needsReview.length + ' resource' + (dash.needsReview.length > 1 ? 's need' : ' needs') + ' reviewing</b><div class="muted">Not reviewed within its review period (or never reviewed). Check facts and platform details, then press “Mark reviewed today”.</div><div>' + dash.needsReview.slice(0, 8).map(function (x) { return '<button class="btn small ghost" data-edit="' + esc(x.id) + '" style="margin:3px 4px 0 0">' + esc(x.title) + '</button>'; }).join('') + '</div></div>' : '') +
+      '<div class="f2" style="margin-top:14px"><div class="card"><b>Most viewed (all time)</b>' + (dash.mostViewed.length ? '<ol style="margin:8px 0 0 18px">' + dash.mostViewed.map(function (x) { return '<li>' + esc(x.title) + ' <span class="muted">· ' + x.count + '</span></li>'; }).join('') + '</ol>' : '<p class="muted">No views yet.</p>') + '</div>' +
+        '<div class="card"><b>Most completed (all time)</b>' + (dash.completions.length ? '<ol style="margin:8px 0 0 18px">' + dash.completions.map(function (x) { return '<li>' + esc(x.title) + ' <span class="muted">· ' + x.count + '</span></li>'; }).join('') + '</ol>' : '<p class="muted">No completions yet.</p>') + '</div></div>' +
+      '<div class="row" style="margin:16px 0 10px">' + [['all', 'All'], ['published', 'Published'], ['draft', 'Drafts'], ['planned', 'Coming soon'], ['review', 'Needs review']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-rf="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="tw"><table><thead><tr><th>Lesson</th><th>Status</th><th>Featured</th><th>Views</th><th>Done</th><th>Reviewed</th><th></th></tr></thead><tbody>' +
+      (list.length ? list.map(function (m) {
+        var mm = mods[m.module] || { n: '', title: '' };
+        return '<tr><td><b>' + esc(m.title) + '</b><div class="muted">Module ' + esc(mm.n) + ' · ' + esc(mm.title) + (m.month ? ' · ' + esc(m.month) : '') + '</div></td><td>' + resPill(m, r.today) + '</td><td class="muted">' + (m.featured ? '⭐ ' + esc(m.collection || 'Featured') : '') + '</td>' +
+          '<td>' + (views[m.id] || 0) + '</td><td>' + (comps[m.id] || 0) + '</td><td class="muted">' + (m.reviewedAt ? d(m.reviewedAt) : '—') + '</td><td><button class="btn small ghost" data-edit="' + esc(m.id) + '">Edit</button></td></tr>';
+      }).join('') : '<tr><td colspan="7" class="muted">Nothing here.</td></tr>') + '</tbody></table></div></main>';
+    $('#rNew').onclick = function () { editLesson(null); };
+    $$('[data-rf]').forEach(function (b) { b.onclick = function () { vResources(b.dataset.rf); }; });
+    $$('[data-edit]').forEach(function (b) { b.onclick = function () { editLesson(b.dataset.edit); }; });
+  }
+
+  async function editLesson(id) {
+    loading();
+    var L;
+    try { L = id ? (await api('res-get', { id: id })).lesson : { module: 'm01', order: 99, title: '', summary: '', status: 'draft', publishAt: '', featured: false, collection: '', collectionOrder: 0, month: '', tags: ['all'], readMins: 0, learn: '', seeTitle: 'Fictional example: ', see: '', do: '', use: [], studio: null, sources: [], reviewedAt: '', reviewMonths: 12, disclaimer: '', image: '' }; }
+    catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    if (!S.resData) S.resData = await api('res-list');
+    var blocks = JSON.parse(JSON.stringify(L.use || []));
+    var image = L.image || '';
+    var studioVal = L.studio ? (L.studio.tool ? 'tool:' + L.studio.tool : 'screen:' + L.studio.screen) : '';
+    function opt(v, cur, label) { return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(label) + '</option>'; }
+    function blockHtml(b, i) {
+      var head = '<div class="row" style="justify-content:space-between"><b>' + ({ checklist: '☑️ Checklist', template: '📄 Copyable template', worksheet: '✍️ Worksheet', file: '📎 Downloadable file', calculator: '🧮 Pricing calculator' }[b.type]) + '</b><div class="row">' +
+        '<button class="btn small ghost" data-bup="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="Move up">↑</button><button class="btn small ghost danger" data-brm="' + i + '">Remove</button></div></div>' +
+        '<div><label>Title</label><input data-b="' + i + '" data-k="title" value="' + esc(b.title || '') + '"></div>';
+      if (b.type === 'checklist') return head + '<div><label>Items (one per line)</label><textarea data-b="' + i + '" data-k="items" rows="6">' + esc((b.items || []).join('\n')) + '</textarea></div>';
+      if (b.type === 'template') return head + '<div><label>Template text (members can copy and download it)</label><textarea data-b="' + i + '" data-k="text" rows="6">' + esc(b.text || '') + '</textarea></div><div><label>Note under it (optional)</label><input data-b="' + i + '" data-k="note" value="' + esc(b.note || '') + '"></div>';
+      if (b.type === 'worksheet') return head + '<div><label>Questions (one per line). Add a hint after | and put [big] at the end for a larger box</label><textarea data-b="' + i + '" data-k="fields" rows="6" placeholder="My main goal | e.g. 10 new enquiries\nWeek 1 actions [big]">' + esc((b.fields || []).map(function (f) { return f.label + (f.hint ? ' | ' + f.hint : '') + (f.long ? ' [big]' : ''); }).join('\n')) + '</textarea></div>';
+      if (b.type === 'file') return head + '<div class="row"><span class="muted">' + (b.fileId ? esc(b.name) + ' · ' + Math.round((b.size || 0) / 1024) + ' KB' : 'No file yet') + '</span><label class="btn small ghost" style="margin:0;cursor:pointer">' + (b.fileId ? 'Replace file' : 'Upload file') + '<input type="file" data-bfile="' + i + '" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.xlsx,.csv,.txt"></label></div><div class="muted">PDF, image, Word, Excel, CSV or text. Max 3.5 MB.</div><div><label>Note (optional)</label><input data-b="' + i + '" data-k="note" value="' + esc(b.note || '') + '"></div>';
+      if (b.type === 'calculator') return head + '<div class="muted">Shows the pricing calculator (materials, time, running costs, profit). Works on the member’s phone; nothing is stored.</div>';
+      return head;
+    }
+    function readBlocks() {
+      $$('[data-b]').forEach(function (el) {
+        var b = blocks[Number(el.dataset.b)], k = el.dataset.k; if (!b) return;
+        if (k === 'items') b.items = el.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+        else if (k === 'fields') b.fields = el.value.split('\n').map(function (x) { x = x.trim(); if (!x) return null; var long = /\[big\]\s*$/i.test(x); x = x.replace(/\[big\]\s*$/i, '').trim(); var p = x.split('|'); return { label: p[0].trim(), hint: (p[1] || '').trim(), long: long }; }).filter(Boolean);
+        else b[k] = el.value;
+      });
+    }
+    function drawBlocks() {
+      $('#bList').innerHTML = blocks.length ? blocks.map(function (b, i) { return '<div class="card stack" style="background:#FFFCF5">' + blockHtml(b, i) + '</div>'; }).join('') : '<p class="muted">No resources yet. Add a checklist, template, worksheet, file or calculator.</p>';
+      $$('[data-brm]').forEach(function (b) { b.onclick = function () { readBlocks(); blocks.splice(Number(b.dataset.brm), 1); drawBlocks(); }; });
+      $$('[data-bup]').forEach(function (b) { b.onclick = function () { readBlocks(); var i = Number(b.dataset.bup); var t = blocks[i - 1]; blocks[i - 1] = blocks[i]; blocks[i] = t; drawBlocks(); }; });
+      $$('[data-bfile]').forEach(function (inp) {
+        inp.onchange = async function () {
+          var f = inp.files[0]; if (!f) return; readBlocks();
+          try { var up = await uploadFile(f); var b = blocks[Number(inp.dataset.bfile)]; b.fileId = up.fileId; b.name = up.name; b.size = up.size; b.mime = up.mime; if (!b.title) b.title = up.name; toast('File uploaded'); drawBlocks(); }
+          catch (x) { toast(x.message); }
+        };
+      });
+    }
+    var mods = S.resData.modules;
+    app.innerHTML = '<main style="max-width:860px"><div class="row" style="justify-content:space-between"><button class="btn small ghost" id="eBack">← All resources</button><div class="row">' + (id ? '<button class="btn small ghost danger" id="eDel">Delete</button>' : '') + '<button class="btn small ghost" id="ePrev">Preview</button></div></div>' +
+      '<h1 style="margin-top:12px">' + (id ? 'Edit lesson' : 'New lesson') + '</h1>' +
+      '<div class="card stack"><div class="f2"><div><label for="eMod">Module</label><select id="eMod">' + mods.map(function (m) { return opt(m.id, L.module, m.n + ' — ' + m.title); }).join('') + '</select></div><div><label for="eOrder">Order in module</label><input id="eOrder" type="number" min="0" max="999" value="' + esc(L.order) + '"></div></div>' +
+        '<div><label for="eTitle">Title</label><input id="eTitle" maxlength="140" value="' + esc(L.title) + '"></div>' +
+        '<div><label for="eSum">Short description (shown in lists)</label><input id="eSum" maxlength="300" value="' + esc(L.summary) + '"></div>' +
+        '<div class="f2"><div><label for="eStatus">Status</label><select id="eStatus">' + opt('draft', L.status, 'Draft — hidden from members') + opt('published', L.status, 'Published') + opt('planned', L.status, 'Coming soon — title only') + '</select></div><div><label for="ePub">Publish date (members see it from this date)</label><input id="ePub" type="date" value="' + esc(L.publishAt || '') + '"></div></div>' +
+        '<div class="f2"><div id="eMonthW"><label for="eMonth">Monthly edition (Module 07 only)</label><input id="eMonth" type="month" value="' + esc(L.month || '') + '"></div><div><label for="eMins">Reading time (minutes, blank = automatic)</label><input id="eMins" type="number" min="0" max="60" value="' + esc(L.readMins || '') + '"></div></div>' +
+        '<div class="f2"><div><label><input type="checkbox" id="eFeat" style="width:auto"' + (L.featured ? ' checked' : '') + '> Feature on the Resources homepage</label><input id="eCol" placeholder="Collection, e.g. Month 1 — Getting Visible" value="' + esc(L.collection || '') + '"></div><div><label for="eColO">Position in collection</label><input id="eColO" type="number" min="0" max="99" value="' + esc(L.collectionOrder || 0) + '"></div></div>' +
+        '<div><label>Recommend to</label><div class="row">' + Object.keys(RES_TAGS).map(function (t) { return '<label style="font-weight:500;margin:0"><input type="checkbox" data-tag="' + t + '" style="width:auto"' + ((L.tags || []).indexOf(t) > -1 ? ' checked' : '') + '> ' + esc(RES_TAGS[t]) + '</label>'; }).join('') + '</div><div class="muted">Based on the industry in the member’s business profile. Everyone can still open every lesson.</div></div>' +
+        '<div><label>Cover image (optional)</label><div class="row"><span class="muted" id="eImgN">' + (image ? 'Image attached' : 'None') + '</span><label class="btn small ghost" style="margin:0;cursor:pointer">Upload image<input type="file" id="eImg" class="hidden" accept=".png,.jpg,.jpeg,.webp"></label>' + '<button class="btn small ghost danger" id="eImgX"' + (image ? '' : ' hidden') + '>Remove</button></div></div></div>' +
+      '<h2>Lesson content</h2><div class="muted" style="margin-bottom:8px">Formatting: <code>## Heading</code> · <code>- bullet</code> · <code>1. numbered</code> · <code>**bold**</code> · <code>&gt; Tip box</code> · <code>[link text](https://…)</code>. Leave a blank line between paragraphs.</div>' +
+      '<div class="card stack"><div><label for="eLearn">LEARN — Understand the topic (3–5 minute read)</label><textarea id="eLearn" rows="16">' + esc(L.learn || '') + '</textarea></div>' +
+        '<div><label for="eSeeT">SEE — Example heading (label fictional examples clearly)</label><input id="eSeeT" maxlength="160" value="' + esc(L.seeTitle || '') + '"></div><div><label for="eSee">SEE — Realistic business example</label><textarea id="eSee" rows="8">' + esc(L.see || '') + '</textarea></div>' +
+        '<div><label for="eDo">DO — One practical activity</label><textarea id="eDo" rows="5">' + esc(L.do || '') + '</textarea></div>' +
+        '<div class="f2"><div><label for="eStudio">Button to open in Studio (optional)</label><select id="eStudio">' + RES_STUDIO.map(function (o) { return opt(o[0], studioVal, o[1]); }).join('') + '</select></div><div><label for="eStudioL">Button text</label><input id="eStudioL" maxlength="60" value="' + esc(L.studio ? L.studio.label : '') + '" placeholder="e.g. Write 3 bio options in Studio"></div></div></div>' +
+      '<h2>USE — Practical resources</h2><div id="bList" class="stack"></div><div class="row" style="margin-top:10px">' + [['checklist', '+ Checklist'], ['template', '+ Template'], ['worksheet', '+ Worksheet'], ['file', '+ File'], ['calculator', '+ Pricing calculator']].map(function (b) { return '<button class="btn small ghost" data-badd="' + b[0] + '">' + b[1] + '</button>'; }).join('') + '</div>' +
+      '<h2>Accuracy</h2><div class="card stack"><div><label for="eSrc">Sources (one per line: Title | https://link)</label><textarea id="eSrc" rows="3">' + esc((L.sources || []).map(function (s) { return s.title + (s.url ? ' | ' + s.url : ''); }).join('\n')) + '</textarea></div>' +
+        '<div class="f2"><div><label for="eRev">Last reviewed</label><div class="row"><input id="eRev" type="date" value="' + esc(L.reviewedAt || '') + '" style="flex:1"><button class="btn small ghost" id="eRevT">Mark reviewed today</button></div></div><div><label for="eRevM">Review again after</label><select id="eRevM">' + [3, 6, 12, 24].map(function (n) { return opt(String(n), String(L.reviewMonths || 12), n + ' months'); }).join('') + '</select><div class="muted">Use 6 months for Instagram, WhatsApp and other apps that change often.</div></div></div>' +
+        '<div><label for="eDisc">Note at the bottom (e.g. “General guidance, not legal or tax advice”)</label><input id="eDisc" maxlength="400" value="' + esc(L.disclaimer || '') + '"></div></div>' +
+      '<div class="err hidden" id="eErr" style="margin-top:12px"></div><div class="row" style="margin-top:14px;position:sticky;bottom:0;background:var(--cream);padding:10px 0"><button class="btn primary" id="eSave">Save</button><button class="btn ghost" id="eSaveD">Save as draft</button><button class="btn ghost" id="ePrev2">Preview</button></div></main>';
+    drawBlocks();
+    function syncMonth() { $('#eMonthW').style.opacity = $('#eMod').value === 'm07' ? 1 : .45; }
+    $('#eMod').onchange = syncMonth; syncMonth();
+    $$('[data-badd]').forEach(function (b) { b.onclick = function () { readBlocks(); var t = b.dataset.badd; blocks.push(t === 'checklist' ? { type: t, title: '', items: [] } : t === 'template' ? { type: t, title: '', text: '' } : t === 'worksheet' ? { type: t, title: '', fields: [] } : t === 'calculator' ? { type: t, title: 'Pricing calculator', kind: 'pricing' } : { type: t, title: '' }); drawBlocks(); }; });
+    $('#eRevT').onclick = function () { $('#eRev').value = today(); };
+    $('#eImg').onchange = async function () { var f = this.files[0]; if (!f) return; try { var up = await uploadFile(f); image = up.fileId; $('#eImgN').textContent = up.name; $('#eImgX').hidden = false; toast('Image uploaded'); } catch (x) { toast(x.message); } };
+    $('#eImgX').onclick = function () { image = ''; $('#eImgN').textContent = 'None'; this.hidden = true; };
+    $('#eBack').onclick = function () { vResources(); };
+    function collect(statusOverride) {
+      readBlocks();
+      var sv = $('#eStudio').value, st = null;
+      if (sv) { var p = sv.split(':'); st = p[0] === 'tool' ? { tool: p[1], input: L.studio && L.studio.tool === p[1] ? L.studio.input : {} } : { screen: p[1] }; st.label = $('#eStudioL').value.trim() || 'Open in Studio'; }
+      return { id: id || undefined, module: $('#eMod').value, order: $('#eOrder').value, title: $('#eTitle').value, summary: $('#eSum').value, status: statusOverride || $('#eStatus').value,
+        publishAt: $('#ePub').value, month: $('#eMonth').value, readMins: $('#eMins').value, featured: $('#eFeat').checked, collection: $('#eCol').value, collectionOrder: $('#eColO').value,
+        tags: $$('[data-tag]').filter(function (c) { return c.checked; }).map(function (c) { return c.dataset.tag; }), image: image,
+        learn: $('#eLearn').value, seeTitle: $('#eSeeT').value, see: $('#eSee').value, do: $('#eDo').value, studio: st, use: blocks,
+        sources: $('#eSrc').value.split('\n').map(function (x) { var p = x.split('|'); return p[0].trim() ? { title: p[0].trim(), url: (p[1] || '').trim() } : null; }).filter(Boolean),
+        reviewedAt: $('#eRev').value, reviewMonths: $('#eRevM').value, disclaimer: $('#eDisc').value };
+    }
+    async function save(statusOverride) {
+      var e = $('#eErr'); e.classList.add('hidden');
+      var body = collect(statusOverride);
+      if (body.status === 'published' && !confirm(body.publishAt && body.publishAt > today() ? 'Schedule this for members from ' + d(body.publishAt) + '?' : 'Publish this to all Business Club members now?')) return;
+      try { var r = await api('res-save', { lesson: body }); toast(body.status === 'published' ? 'Published' : 'Saved'); id = r.lesson.id; editLesson(id); }
+      catch (x) { e.textContent = x.message; e.classList.remove('hidden'); e.scrollIntoView({ block: 'center' }); }
+    }
+    $('#eSave').onclick = function () { save(); };
+    $('#eSaveD').onclick = function () { save('draft'); };
+    $('#ePrev').onclick = $('#ePrev2').onclick = function () { previewLesson(collect()); };
+    var dl = $('#eDel'); if (dl) dl.onclick = async function () {
+      if (!confirm('Delete “' + L.title + '”? Members will lose their progress on it. This can’t be undone.')) return;
+      try { await api('res-delete', { id: id }); toast('Deleted'); vResources(); } catch (x) { toast(x.message); }
+    };
+  }
+
+  function uploadFile(f) {
+    return new Promise(function (resolve, reject) {
+      if (f.size > 3.5 * 1024 * 1024) return reject(new Error('Files must be under 3.5 MB.'));
+      var fr = new FileReader();
+      fr.onerror = function () { reject(new Error('Couldn’t read that file.')); };
+      fr.onload = function () { var ext = (f.name.split('.').pop() || '').toLowerCase(), mime = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv', txt: 'text/plain' }[ext];
+        if (!mime) return reject(new Error('Upload a PDF, image, Word, Excel, CSV or text file.'));
+        var url = String(fr.result).replace(/^data:[^;,]*;base64,/, 'data:' + mime + ';base64,'); api('res-upload', { name: f.name, dataUrl: url }).then(resolve, reject); };
+      fr.readAsDataURL(f);
+    });
+  }
+
+  function previewLesson(L) {
+    var s = sheet('<div class="stack"><div class="row" style="justify-content:space-between"><span class="muted">Preview — how members will see the text</span><button class="btn small ghost" id="pvX">Close</button></div>' +
+      '<h1 style="margin:0">' + esc(L.title || 'Untitled') + '</h1><p class="muted">' + esc(L.summary) + '</p>' +
+      (L.learn ? '<div class="card" style="background:#F2FBF6"><b>LEARN</b>' + rt(L.learn) + '</div>' : '') +
+      (L.see ? '<div class="card" style="background:#FFF8E6"><b>SEE — ' + esc(L.seeTitle) + '</b>' + rt(L.see) + '</div>' : '') +
+      (L.do ? '<div class="card" style="background:var(--navy);color:var(--cream)"><b>DO</b>' + rt(L.do) + (L.studio ? '<p><span class="pill p-power">' + esc(L.studio.label) + '</span></p>' : '') + '</div>' : '') +
+      (L.use.length ? '<div class="card"><b>USE</b>' + L.use.map(function (b) { return '<div style="margin-top:8px"><b>' + esc(b.title) + '</b>' + (b.items ? '<ul style="margin-left:20px">' + b.items.map(function (i) { return '<li>☐ ' + esc(i) + '</li>'; }).join('') + '</ul>' : '') + (b.text ? '<pre style="white-space:pre-wrap;font-family:inherit;background:#F2FBF6;padding:8px;border-radius:8px">' + esc(b.text) + '</pre>' : '') + (b.fields ? '<ul style="margin-left:20px">' + b.fields.map(function (f) { return '<li>' + esc(f.label) + '</li>'; }).join('') + '</ul>' : '') + (b.type === 'file' ? '<div class="muted">📎 ' + esc(b.name || 'File') + '</div>' : '') + (b.type === 'calculator' ? '<div class="muted">Pricing calculator</div>' : '') + '</div>'; }).join('') + '</div>' : '') +
+      (L.sources.length || L.reviewedAt ? '<p class="muted">' + (L.sources.length ? 'Sources: ' + L.sources.map(function (x) { return esc(x.title); }).join(' · ') + '. ' : '') + (L.reviewedAt ? 'Last reviewed ' + d(L.reviewedAt) : '') + '</p>' : '') + '</div>');
+    s.querySelector('.sheet').style.maxWidth = '640px';
+    $('#pvX', s).onclick = function () { s.remove(); };
+  }
 
   // ── overview ──
   async function vOverview() {

@@ -55,7 +55,7 @@ h2{font-family:var(--display);font-size:20px;line-height:1.2;font-weight:700;mar
 label.f{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
 label.f .opt{font-weight:400;color:var(--muted)}
 .hint{font-size:13px;color:var(--muted);margin-top:4px}
-input:not([type]),input[type=email],input[type=text],input[type=url],input[type=date],input[type=number],textarea,select{
+input:not([type]),input[type=search],input[type=email],input[type=text],input[type=url],input[type=date],input[type=number],textarea,select{
   width:100%;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s}
 textarea{resize:vertical;min-height:84px}
 input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(5,122,68,.15)}
@@ -199,6 +199,64 @@ a.btn{text-decoration:none}
 .imgprev canvas{display:block;width:100%;height:auto}
 .posted{font-size:11px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:999px;padding:2px 8px;white-space:nowrap}
 @media print{body.printing>*:not(#app){display:none!important}body.printing #app>*:not(main),body.printing main>*:not(#printArea){display:none!important}body.printing,body.printing #app,body.printing main{background:#fff!important;padding:0!important;margin:0!important;max-width:none!important}body.printing .docpaper{border:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+[data-lesson] .t b,.li.soon .t b{white-space:normal}
+.li.soon{background:transparent;border-style:dashed;opacity:.75}
+.li .snip{display:block;margin-top:2px}
+.ldot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.ldot.done{background:var(--green);border-color:var(--green)}
+.reswelcome{background:#F2FBF6;border:1px solid #CFEBDB;border-radius:var(--radius);padding:16px}
+.reswelcome h2{margin:0 0 6px;font-size:20px}
+.reswelcome p{font-size:14.5px;color:var(--navy-2)}
+.rsearch{display:flex;gap:8px;margin-top:12px}
+.rsearch input{flex:1;min-width:0}
+.pbar{display:block;height:7px;background:#E6EFE9;border-radius:999px;overflow:hidden}
+.pbar span{display:block;height:100%;background:var(--green);border-radius:999px}
+.modgrid{display:grid;grid-template-columns:1fr;gap:10px}
+.modcard{display:grid!important;grid-template-columns:40px 1fr;column-gap:12px;row-gap:3px}
+.modcard>*{grid-column:2}.modcard .mi{grid-column:1;grid-row:1/span 6}
+@media(min-width:560px){.modgrid{grid-template-columns:1fr 1fr}}
+.modcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.modcard .mi,.modhead .mi{width:40px;height:40px;border-radius:12px;background:#F2FBF6;color:var(--green);display:flex;align-items:center;justify-content:center}
+.modcard .mn,.modhead .mn{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--green)}
+.modcard b{font-family:var(--display);font-size:18px;line-height:1.2}
+.modcard .md{font-size:14px;color:var(--muted)}
+.modcard .mc{font-size:12.5px;font-weight:700;color:var(--navy-2)}
+.modcard .mgo{font-weight:800;color:var(--green);font-size:14px;margin-top:2px}
+.modhead{display:flex;gap:12px;align-items:center}
+.modhead h1{font-size:24px}
+.lesson .lmeta{font-size:12px;font-weight:700;letter-spacing:.6px;color:var(--green);text-transform:uppercase;margin-bottom:6px}
+.lesson h1{font-size:26px}
+.lsimg img{width:100%;border-radius:var(--radius);margin-top:12px;display:block}
+.lsec{background:#F2FBF6;border:1px solid #CFEBDB;border-radius:var(--radius);padding:16px;margin-top:14px}
+.lsec.see{background:#FFF8E6;border-color:#F3E2B3}
+.lsec.do{background:var(--navy);color:var(--cream);border-color:var(--navy)}
+.lsec.do .rt p,.lsec.do .rt li{color:var(--cream)}
+.lsec.use{background:#fff;border-color:var(--line)}
+.lh{font-family:var(--display);font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;margin-bottom:10px;line-height:1.2}
+.lh span{font-family:var(--font);font-size:11px;font-weight:800;letter-spacing:1.4px;background:var(--green);color:#fff;border-radius:999px;padding:4px 9px;flex:none}
+.see .lh span{background:var(--gold);color:var(--navy)}.do .lh span{background:var(--gold);color:var(--navy)}
+.rt{font-size:15.5px;line-height:1.65}
+.rt p+p,.rt p+ul,.rt p+ol,.rt ul+p,.rt ol+p,.rt h3+p,.rt .tipbox+p,.rt p+.tipbox{margin-top:10px}
+.rt h3{font-family:var(--display);font-size:18px;margin:18px 0 6px}
+.rt ul,.rt ol{margin:8px 0 0 20px}.rt li{margin-bottom:4px}
+.rt a{color:var(--green-d);font-weight:700}
+.tipbox{background:#fff;border-left:4px solid var(--gold);border-radius:10px;padding:10px 12px;font-weight:500;margin-top:10px}
+.useblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:#FCFDFC}
+.ubh{margin-bottom:8px}.ubh span{display:block;font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--green);text-transform:uppercase}.ubh b{font-size:16px}
+.checks{display:flex;flex-direction:column;gap:2px}
+.useblock textarea[rows="1"]{min-height:48px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-bottom:1px solid #EEF3EF;font-size:15px;cursor:pointer}
+.chk:last-child{border-bottom:0}
+.chk input{width:22px;height:22px;flex:none;accent-color:var(--green);margin-top:1px}
+.chk input:checked+span{color:var(--muted);text-decoration:line-through}
+.tpl{white-space:pre-wrap;font-family:var(--font);font-size:15px;background:#F2FBF6;border-radius:10px;padding:12px;line-height:1.55;border:1px dashed #BFE2CD}
+.lfoot{margin-top:16px;font-size:13px;color:var(--muted)}.lfoot p+p{margin-top:4px}.lfoot a{color:var(--green-d)}
+.pcout{background:#F2FBF6;border-radius:12px;padding:12px}.pcout .row{padding:2px 0}
+#printArea.ponly{display:none}
+.wsprint{font-family:var(--font);color:#0F1E36;padding:10px}.wsprint h1{font-family:var(--display);font-size:24px;margin:6px 0}.wsprint h3{font-size:14px;margin:16px 0 4px}
+.wsp-brand{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#057A44;font-weight:800}
+.wsp-ans{border-bottom:1px solid #999;padding:4px 0 8px;min-height:28px;font-size:14px}.wsp-ans.blank{min-height:60px}
+@media print{body.printing #printArea.ponly{display:block!important}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -326,7 +384,7 @@ a.btn{text-decoration:none}
   $$('nav.tabs button').forEach(function (b) {
     b.addEventListener('click', function () {
       var t = b.dataset.tab;
-      if (t === 'home') showHome(); else if (t === 'create') showCreate(); else if (t === 'plan') showPlan(); else if (t === 'track') showTrack(); else showLibrary();
+      if (t === 'home') showHome(); else if (t === 'create') showCreate(); else if (t === 'plan') showPlan(); else if (t === 'track') showTrack(); else openLibraryTab();
     });
   });
 
@@ -1199,9 +1257,11 @@ a.btn{text-decoration:none}
   function showLibrary(filter) {
     filter = filter || 'all';
     setChrome({ tabs: true, tab: 'library' });
-    app.innerHTML = '<main><h1>Library</h1><p class="sub" style="margin:6px 0 12px">Everything you’ve created. Viewing, editing and copying are free.</p>' +
+    S.libView = 'mine';
+    app.innerHTML = '<main>' + libHeader('mine') + '<p class="sub" style="margin:0 0 12px">Everything you’ve created. Viewing, editing and copying are free.</p>' +
       '<div class="chips" id="lf" style="margin-bottom:14px">' + [['all', 'All'], ['saved', '★ Saved']].concat(S.boot.tools.map(function (t) { return [t.id, t.name]; })).map(function (o) { return '<button class="chip" data-f="' + o[0] + '" aria-pressed="' + (o[0] === filter) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>' +
       '<div id="lbody"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindLibHeader();
     $$('#lf .chip', app).forEach(function (c) { c.onclick = function () { showLibrary(c.dataset.f); }; });
     var payload = filter === 'saved' ? { savedOnly: true } : filter === 'all' ? {} : { tool: filter };
     api('studio-api', 'history-list', payload).then(function (r) {
@@ -1675,6 +1735,300 @@ a.btn{text-decoration:none}
     };
     var bl = $('#ipBrand'); if (bl) bl.onclick = function (e) { e.preventDefault(); showAccount(); };
     redraw();
+  }
+
+  // ───────────── Resources — Your Business Growth Library (Business Club) ─────────────
+  var MOD_ICONS = {
+    start: '<path d="M5 21V4l7 3 7-3v17l-7-3-7 3z"/>',
+    insta: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
+    content: '<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/>',
+    sales: '<path d="M3 3h2l2.4 12.2a2 2 0 002 1.6h7.7a2 2 0 002-1.6L21 7H6"/><circle cx="10" cy="20" r="1"/><circle cx="17" cy="20" r="1"/>',
+    tools: '<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+    growth: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+    monthly: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    visibility: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+  };
+  var M07_SECTIONS = ['Monthly Content Calendar', 'Seasonal UK Marketing Opportunities', 'Reel Hooks & Story Prompts', 'Product and Service Promotion Ideas', 'Customer Engagement Ideas', 'Monthly Business Challenge'];
+
+  // Light lesson formatting: ## heading, - bullets, 1. numbers, **bold**, > tip, [link](https://…)
+  function rt(src) {
+    function inline(s) {
+      return esc(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+        .replace(/\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g, function (m, t, u) { return '<a href="' + u + '" target="_blank" rel="noopener">' + t + '</a>'; });
+    }
+    var out = [], list = null;
+    function close() { if (list) { out.push('</' + list + '>'); list = null; } }
+    String(src || '').replace(/\r/g, '').split(/\n{2,}/).forEach(function (block) {
+      var lines = block.split('\n');
+      if (lines.every(function (l) { return /^\s*-\s+/.test(l); })) { close(); out.push('<ul>' + lines.map(function (l) { return '<li>' + inline(l.replace(/^\s*-\s+/, '')) + '</li>'; }).join('') + '</ul>'); return; }
+      if (lines.every(function (l) { return /^\s*\d+\.\s+/.test(l); })) { close(); out.push('<ol>' + lines.map(function (l) { return '<li>' + inline(l.replace(/^\s*\d+\.\s+/, '')) + '</li>'; }).join('') + '</ol>'); return; }
+      close();
+      if (/^##\s+/.test(block)) { out.push('<h3>' + inline(block.replace(/^##\s+/, '')) + '</h3>'); return; }
+      if (/^>\s?/.test(block)) { out.push('<div class="tipbox">' + inline(block.replace(/^>\s?/gm, '')).replace(/\n/g, '<br>') + '</div>'); return; }
+      out.push('<p>' + inline(block).replace(/\n/g, '<br>') + '</p>');
+    });
+    close();
+    return out.join('');
+  }
+
+  function clubOnly() { return !(S.boot && S.boot.access && S.boot.access.membershipActive); }
+  function libHeader(active) {
+    return '<h1>Library</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📚 Resources</button><button class="chip" id="libMine" aria-pressed="' + (active === 'mine') + '">My content</button></div>';
+  }
+  function bindLibHeader() {
+    var a = $('#libRes'), b = $('#libMine');
+    if (a) a.onclick = function () { S.libView = 'res'; showResources(); };
+    if (b) b.onclick = function () { S.libView = 'mine'; showLibrary(); };
+  }
+  function openLibraryTab() {
+    var v = S.libView || (clubOnly() ? 'mine' : 'res');
+    if (v === 'res') showResources(); else showLibrary();
+  }
+
+  function resLocked() {
+    return '<section class="card stack" style="text-align:center;padding:24px 18px"><div style="font-size:34px">📚</div><h2 style="margin:0">Your Business Growth Library</h2>' +
+      '<p class="sub">Practical lessons, templates and monthly marketing ideas are part of <b>Auntie Tobi Business Club</b> membership.</p>' +
+      '<a class="btn primary block" href="/business-club">See Business Club</a><p class="hint" style="margin:0">Already a member? Contact Auntie Tobi if this doesn’t look right.</p></section>';
+  }
+
+  function lessonById(id) { return (S.res && S.res.lessons.filter(function (l) { return l.id === id; })[0]) || null; }
+  function liveLessons() { return S.res.lessons.filter(function (l) { return l.status !== 'planned'; }); }
+  function lessonRow(l, opts) {
+    opts = opts || {};
+    var p = S.res.progress, done = !!p.completed[l.id], saved = !!p.saved[l.id];
+    if (l.status === 'planned') return '<div class="li soon"><div class="t"><b>' + esc(l.title) + '</b><small>Coming soon</small></div></div>';
+    var mod = S.res.modules.filter(function (m) { return m.id === l.module; })[0];
+    return '<button class="li" data-lesson="' + esc(l.id) + '"><span class="ldot' + (done ? ' done' : '') + '" aria-hidden="true">' + (done ? '✓' : '') + '</span><div class="t"><b>' + esc(l.title) + '</b><small>' +
+      (opts.module && mod ? esc(mod.title) + ' · ' : '') + (l.readMins ? l.readMins + ' min read' : 'Resource') + (done ? ' · Completed' : p.opened[l.id] ? ' · Started' : '') + '</small>' +
+      (opts.snippet ? '<small class="snip">' + esc(opts.snippet) + '</small>' : '') + '</div>' + (saved ? '<span class="star" aria-label="Saved">★</span>' : '') + '</button>';
+  }
+  function bindLessonRows(root, back) { $$('[data-lesson]', root).forEach(function (b) { b.onclick = function () { showLesson(b.dataset.lesson, back); }; }); }
+
+  async function showResources() {
+    S.libView = 'res';
+    setChrome({ tabs: true, tab: 'library' });
+    if (clubOnly()) { app.innerHTML = '<main>' + libHeader('res') + resLocked() + '</main>'; bindLibHeader(); return; }
+    app.innerHTML = '<main>' + libHeader('res') + '<div id="resBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindLibHeader();
+    try { S.res = await api('studio-resources', 'home'); }
+    catch (x) { $('#resBox').innerHTML = x.code === 'club_only' ? resLocked() : '<div class="err">' + esc(x.message) + '</div>'; return; }
+    drawResources();
+  }
+
+  function drawResources() {
+    var r = S.res, p = r.progress, live = liveLessons();
+    var byRecent = function (obj) { return Object.keys(obj).filter(function (id) { return lessonById(id); }).sort(function (a, b) { return obj[b].localeCompare(obj[a]); }); };
+    var cont = byRecent(p.opened).filter(function (id) { return !p.completed[id]; }).slice(0, 3).map(lessonById);
+    var month = r.today.slice(0, 7);
+    var fresh = live.filter(function (l) { return (l.publishAt || '').slice(0, 7) === month && !(l.featured && l.collection); }).sort(function (a, b) { return (b.publishAt || '').localeCompare(a.publishAt || ''); }).slice(0, 4);
+    var cols = {}; live.filter(function (l) { return l.featured && l.collection; }).forEach(function (l) { (cols[l.collection] = cols[l.collection] || []).push(l); });
+    var rec = [];
+    if (!p.hideRecs) {
+      if (r.recTag) rec = live.filter(function (l) { return (l.tags || []).indexOf(r.recTag) > -1 && !p.completed[l.id]; });
+      if (rec.length < 2) rec = rec.concat(live.filter(function (l) { return l.module === 'm01' && !p.completed[l.id] && rec.indexOf(l) < 0; }));
+      rec = rec.slice(0, 4);
+    }
+    var saved = byRecent(p.saved).map(lessonById).filter(Boolean);
+    var doneN = live.filter(function (l) { return p.completed[l.id]; }).length, pct = live.length ? Math.round(doneN / live.length * 100) : 0;
+    $('#resBox').innerHTML =
+      '<section class="reswelcome"><h2>Welcome to Your Business Growth Library 💚</h2><p>Practical resources, business tips and growth strategies to help you build a stronger business, attract customers and keep moving forward.</p>' +
+        '<form id="rsForm" role="search" class="rsearch"><input type="search" id="rsQ" placeholder="Search lessons, e.g. bio, pricing, reviews" aria-label="Search resources" maxlength="100"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form></section>' +
+      '<div id="rsResults"></div><div id="rsMain">' +
+      (cont.length ? '<h2>Continue learning</h2><div class="list">' + cont.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      Object.keys(cols).map(function (c) { return '<h2>' + esc(c) + '</h2><div class="list">' + cols[c].sort(function (a, b) { return (a.collectionOrder || 0) - (b.collectionOrder || 0); }).map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>'; }).join('') +
+      (fresh.length ? '<h2>New this month</h2><div class="list">' + fresh.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:13px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (saved.length ? '<h2>My saved resources</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      '<h2>My learning progress</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>' + doneN + ' of ' + live.length + ' lessons completed</b><span class="sub">' + pct + '%</span></div><div class="pbar"><span style="width:' + pct + '%"></span></div></div>' +
+      '<h2>Explore resources</h2><div class="modgrid">' + r.modules.map(function (m) {
+        var ls = r.lessons.filter(function (l) { return l.module === m.id; }), lv = ls.filter(function (l) { return l.status !== 'planned'; });
+        var dn = lv.filter(function (l) { return p.completed[l.id]; }).length, started = lv.some(function (l) { return p.opened[l.id]; });
+        var count = m.id === 'm07' ? (lv.length ? lv.length + ' edition' + (lv.length > 1 ? 's' : '') : 'First edition coming soon') : lv.length + ' lesson' + (lv.length === 1 ? '' : 's') + (ls.length > lv.length ? ' · ' + (ls.length - lv.length) + ' coming soon' : '');
+        return '<button class="modcard" data-mod="' + m.id + '"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 22) + '</span><span class="mn">MODULE ' + esc(m.n) + '</span><b>' + esc(m.title) + '</b><span class="md">' + esc(m.desc) + '</span>' +
+          '<span class="mc">' + esc(count) + '</span>' + (lv.length ? '<span class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></span>' : '') +
+          '<span class="mgo">' + (started && dn < lv.length ? 'Continue' : dn && dn === lv.length ? 'Review' : 'Explore') + ' →</span></button>';
+      }).join('') + '</div>' +
+      (p.hideRecs ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
+      '</div>';
+    bindLessonRows($('#resBox'), showResources);
+    $$('[data-mod]').forEach(function (b) { b.onclick = function () { showModule(b.dataset.mod); }; });
+    var rh = $('#recHide'); if (rh) rh.onclick = function () { p.hideRecs = true; api('studio-resources', 'prefs', { hideRecs: true }).catch(function () {}); drawResources(); };
+    var rs = $('#recShow'); if (rs) rs.onclick = function () { p.hideRecs = false; api('studio-resources', 'prefs', { hideRecs: false }).catch(function () {}); drawResources(); };
+    $('#rsForm').onsubmit = async function (e) {
+      e.preventDefault();
+      var q = $('#rsQ').value.trim(), out = $('#rsResults');
+      if (!q) { out.innerHTML = ''; $('#rsMain').classList.remove('hidden'); return; }
+      out.innerHTML = '<div class="empty"><div class="typing"><i></i><i></i><i></i></div></div>';
+      try {
+        var s = await api('studio-resources', 'search', { q: q });
+        $('#rsMain').classList.add('hidden');
+        out.innerHTML = '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + s.results.length + ' result' + (s.results.length === 1 ? '' : 's') + ' for “' + esc(q) + '”</h2><button class="btn link" id="rsClear">Clear</button></div>' +
+          (s.results.length ? '<div class="list">' + s.results.map(function (x) { return lessonRow(x.meta, { module: true, snippet: x.snippet }); }).join('') + '</div>' : '<div class="empty">Nothing found. Try a different word, like “Instagram” or “enquiries”.</div>');
+        bindLessonRows(out, showResources);
+        $('#rsClear').onclick = function () { $('#rsQ').value = ''; out.innerHTML = ''; $('#rsMain').classList.remove('hidden'); };
+      } catch (x) { out.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; }
+    };
+  }
+
+  async function showModule(id) {
+    if (!S.res) { try { S.res = await api('studio-resources', 'home'); } catch (x) { return showResources(); } }
+    var m = S.res.modules.filter(function (x) { return x.id === id; })[0]; if (!m) return showResources();
+    setChrome({ tabs: true, tab: 'library', back: showResources });
+    var ls = S.res.lessons.filter(function (l) { return l.module === id; }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+    var body;
+    if (id === 'm07') {
+      var months = {}; ls.filter(function (l) { return l.status !== 'planned' && l.month; }).forEach(function (l) { (months[l.month] = months[l.month] || []).push(l); });
+      var keys = Object.keys(months).sort().reverse();
+      body = (keys.length ? keys.map(function (k) { return '<h2>' + esc(new Date(k + '-01T12:00:00Z').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })) + ' edition</h2><div class="list">' + months[k].map(function (l) { return lessonRow(l); }).join('') + '</div>'; }).join('')
+        : '<div class="note stack"><b>First edition coming soon</b><span>New ideas are added every month. You’ll be able to browse past editions here.</span></div>') +
+        '<h2>What each edition includes</h2><div class="card"><ul style="margin-left:18px">' + M07_SECTIONS.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></div>';
+    } else {
+      body = '<div class="list">' + ls.map(function (l) { return lessonRow(l); }).join('') + '</div>';
+    }
+    var lv = ls.filter(function (l) { return l.status !== 'planned'; }), dn = lv.filter(function (l) { return S.res.progress.completed[l.id]; }).length;
+    app.innerHTML = '<main><div class="modhead"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 26) + '</span><div><span class="mn">MODULE ' + esc(m.n) + '</span><h1>' + esc(m.title) + '</h1></div></div><p class="sub" style="margin:6px 0 12px">' + esc(m.desc) + '</p>' +
+      (lv.length ? '<div class="card stack" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><b>' + dn + ' of ' + lv.length + ' completed</b></div><div class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></div></div>' : '') +
+      body + '</main>';
+    bindLessonRows(app, function () { showModule(id); });
+  }
+
+  function downloadText(name, text) {
+    var blob = new Blob([text], { type: 'text/plain;charset=utf-8' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  function fileSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+
+  function studioGo(st, back) {
+    if (st.tool) return showTool(st.tool, st.input || {}, { back: back, tab: 'library', intro: 'From your lesson — I’ve set this up for you. Change anything you like, then tap Create.' });
+    var map = { goal: showHome, plan: showPlan, money: showMoney, track: function () { showTrack(); }, profile: function () { showProfileForm(false); }, brand: showAccount };
+    (map[st.screen] || showHome)();
+  }
+
+  async function showLesson(id, back) {
+    back = back || showResources;
+    setChrome({ tabs: true, tab: 'library', back: back });
+    app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    var r;
+    try { r = await api('studio-resources', 'lesson', { id: id }); }
+    catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var l = r.lesson, mine = r.mine;
+    if (S.res) { S.res.progress.opened[id] = new Date().toISOString(); S.res.progress.last = id; }
+    var mod = (S.res && S.res.modules.filter(function (m) { return m.id === l.module; })[0]) || { n: l.module.slice(1), title: '' };
+    var checks = {}; (mine.checks || []).forEach(function (k) { checks[k] = true; });
+    var self = function () { showLesson(id, back); };
+    function block(b, bi) {
+      var h = '<div class="useblock" data-bi="' + bi + '"><div class="ubh"><span>' + esc({ checklist: 'Checklist', template: 'Template', worksheet: 'Worksheet', file: 'Download', calculator: 'Calculator' }[b.type] || '') + '</span><b>' + esc(b.title) + '</b></div>';
+      if (b.type === 'checklist') {
+        var n = b.items.filter(function (x, ii) { return checks[bi + ':' + ii]; }).length;
+        h += '<div class="checks">' + b.items.map(function (it, ii) { var k = bi + ':' + ii; return '<label class="chk"><input type="checkbox" data-ck="' + k + '"' + (checks[k] ? ' checked' : '') + '><span>' + esc(it) + '</span></label>'; }).join('') + '</div><div class="hint" data-cc="' + bi + '">' + n + ' of ' + b.items.length + ' done</div>';
+      } else if (b.type === 'template') {
+        h += '<pre class="tpl">' + esc(b.text) + '</pre>' + (b.note ? '<p class="hint">' + esc(b.note) + '</p>' : '') + '<div class="row" style="margin-top:8px"><button class="btn small ghost" data-tcopy="' + bi + '">Copy</button><button class="btn small ghost" data-tdl="' + bi + '">Download</button></div>';
+      } else if (b.type === 'worksheet') {
+        var ans = mine.answers || {};
+        h += '<div class="stack">' + b.fields.map(function (f, fi) { var k = bi + ':' + fi; return '<div><label class="f" for="ws_' + bi + '_' + fi + '">' + esc(f.label) + '</label>' + (f.hint ? '<div class="hint" style="margin:0 0 4px">' + esc(f.hint) + '</div>' : '') + '<textarea id="ws_' + bi + '_' + fi + '" data-ws="' + k + '" rows="' + (f.long ? 3 : 1) + '" maxlength="2000">' + esc(ans[k] || '') + '</textarea></div>'; }).join('') + '</div>' +
+          '<div class="row" style="margin-top:10px"><span class="saved-tag" data-wst="' + bi + '">Your answers save automatically</span></div><div class="row" style="margin-top:6px"><button class="btn small ghost" data-wprint="' + bi + '">Print / save as PDF</button><button class="btn small ghost" data-wdl="' + bi + '">Download</button></div>';
+      } else if (b.type === 'file') {
+        h += (b.note ? '<p class="hint" style="margin:0 0 8px">' + esc(b.note) + '</p>' : '') + '<button class="btn small primary" data-file="' + esc(b.fileId) + '" data-fname="' + esc(b.name) + '">Download ' + esc(b.name) + (b.size ? ' (' + fileSize(b.size) + ')' : '') + '</button>';
+      } else if (b.type === 'calculator') {
+        h += pricingCalcHtml(bi);
+      }
+      return h + '</div>';
+    }
+    app.innerHTML = '<main class="lesson"><div class="lmeta">Module ' + esc(mod.n) + (mod.title ? ' · ' + esc(mod.title) : '') + (l.readMins ? ' · ' + l.readMins + ' min read' : '') + '</div>' +
+      '<h1>' + esc(l.title) + '</h1>' + (l.summary ? '<p class="sub" style="margin-top:6px">' + esc(l.summary) + '</p>' : '') +
+      '<div class="row" style="margin:12px 0 4px"><button class="btn small ' + (mine.saved ? 'gold' : 'ghost') + '" id="lsSave">' + (mine.saved ? '★ Saved' : '☆ Save') + '</button>' + (mine.completed ? '<span class="pill green">✓ Completed</span>' : '') + '</div>' +
+      (l.image ? '<div id="lsImg" class="lsimg"></div>' : '') +
+      (l.learn ? '<section class="lsec learn"><div class="lh"><span>LEARN</span>Understand the topic</div><div class="rt">' + rt(l.learn) + '</div></section>' : '') +
+      (l.see ? '<section class="lsec see"><div class="lh"><span>SEE</span>' + esc(l.seeTitle || 'Example') + '</div><div class="rt">' + rt(l.see) + '</div></section>' : '') +
+      (l.do ? '<section class="lsec do"><div class="lh"><span>DO</span>Take action</div><div class="rt">' + rt(l.do) + '</div>' + (l.studio ? '<button class="btn gold block" id="lsStudio" style="margin-top:10px">' + esc(l.studio.label) + '</button>' + (l.studio.tool ? '<p class="hint" style="text-align:center">Uses ' + (l.studio.tool === 'planner' && l.studio.input && l.studio.input.days === '30' ? '3 generations' : '1 generation') + ' if you tap Create</p>' : '') : '') + '</section>' : '') +
+      ((l.use || []).length ? '<section class="lsec use"><div class="lh"><span>USE</span>Practical resources</div>' + l.use.map(block).join('') + '</section>' : '') +
+      ((l.sources || []).length || l.reviewedAt || l.disclaimer ? '<div class="lfoot">' + (l.disclaimer ? '<p>' + esc(l.disclaimer) + '</p>' : '') +
+        ((l.sources || []).length ? '<p><b>Sources:</b> ' + l.sources.map(function (s) { return s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.title) + '</a>' : esc(s.title); }).join(' · ') + '</p>' : '') +
+        (l.reviewedAt ? '<p>Last reviewed: ' + esc(dmy(l.reviewedAt)) + '</p>' : '') + '</div>' : '') +
+      '<button class="btn ' + (mine.completed ? 'ghost' : 'primary') + ' block" id="lsDone" style="margin-top:18px">' + (mine.completed ? '✓ Completed — mark as not done' : 'Mark lesson as complete') + '</button>' +
+      (r.next ? '<button class="btn ghost block" id="lsNext" style="margin-top:10px">Next: ' + esc(r.next.title) + ' →</button>' : '<button class="btn ghost block" id="lsMod" style="margin-top:10px">Back to module</button>') +
+      '</main>';
+    if (l.image) api('studio-resources', 'file', { id: id, fileId: l.image }).then(function (f) { var d = $('#lsImg'); if (d) d.innerHTML = '<img src="' + f.dataUrl + '" alt="">'; }).catch(function () {});
+    $('#lsSave').onclick = async function () {
+      var b = this, on = !mine.saved; b.disabled = true;
+      try { await api('studio-resources', 'save', { id: id, on: on }); mine.saved = on; if (S.res) { if (on) S.res.progress.saved[id] = new Date().toISOString(); else delete S.res.progress.saved[id]; }
+        b.textContent = on ? '★ Saved' : '☆ Save'; b.className = 'btn small ' + (on ? 'gold' : 'ghost'); toast(on ? 'Saved to My saved resources' : 'Removed from saved'); } catch (x) { toast(x.message); }
+      b.disabled = false;
+    };
+    $('#lsDone').onclick = async function () {
+      var b = this, done = !mine.completed; b.disabled = true;
+      try { await api('studio-resources', 'complete', { id: id, done: done }); mine.completed = done ? new Date().toISOString() : null;
+        if (S.res) { if (done) S.res.progress.completed[id] = mine.completed; else delete S.res.progress.completed[id]; }
+        toast(done ? 'Lesson completed — well done! 🎉' : 'Marked as not done'); self(); } catch (x) { toast(x.message); b.disabled = false; }
+    };
+    var nx = $('#lsNext'); if (nx) nx.onclick = function () { showLesson(r.next.id, back); };
+    var md = $('#lsMod'); if (md) md.onclick = function () { showModule(l.module); };
+    var stb = $('#lsStudio'); if (stb) stb.onclick = function () { studioGo(l.studio, self); };
+    $$('[data-ck]').forEach(function (c) {
+      c.onchange = async function () {
+        var bi = c.dataset.ck.split(':')[0], on = c.checked;
+        checks[c.dataset.ck] = on;
+        var b = l.use[Number(bi)]; $('[data-cc="' + bi + '"]').textContent = b.items.filter(function (x, ii) { return checks[bi + ':' + ii]; }).length + ' of ' + b.items.length + ' done';
+        try { await api('studio-resources', 'check', { id: id, key: c.dataset.ck, on: on }); } catch (x) { c.checked = !on; checks[c.dataset.ck] = !on; toast(x.message); }
+      };
+    });
+    $$('[data-tcopy]').forEach(function (b) { b.onclick = function () { copyText(l.use[Number(b.dataset.tcopy)].text); }; });
+    $$('[data-tdl]').forEach(function (b) { b.onclick = function () { var u = l.use[Number(b.dataset.tdl)]; downloadText(slugName(u.title) + '.txt', u.title + '\n\n' + u.text + '\n'); }; });
+    var wsTimers = {};
+    $$('[data-ws]').forEach(function (ta) {
+      autosize(ta);
+      ta.addEventListener('input', function () {
+        autosize(ta); var k = ta.dataset.ws, bi = k.split(':')[0], st = $('[data-wst="' + bi + '"]'); st.textContent = 'Saving…';
+        clearTimeout(wsTimers[k]);
+        wsTimers[k] = setTimeout(async function () {
+          try { await api('studio-resources', 'answer', { id: id, key: k, text: ta.value }); (mine.answers = mine.answers || {})[k] = ta.value; st.textContent = 'Saved'; }
+          catch (x) { st.textContent = 'Couldn’t save — ' + x.message; }
+        }, 800);
+      });
+    });
+    function worksheetText(bi) { var b = l.use[Number(bi)]; return b.title + '\n' + l.title + '\n\n' + b.fields.map(function (f, fi) { var el = $('#ws_' + bi + '_' + fi); return f.label + '\n' + ((el && el.value.trim()) || '______________________________') + '\n'; }).join('\n'); }
+    $$('[data-wdl]').forEach(function (b) { b.onclick = function () { downloadText(slugName(l.use[Number(b.dataset.wdl)].title) + '.txt', worksheetText(b.dataset.wdl)); }; });
+    $$('[data-wprint]').forEach(function (b) {
+      b.onclick = function () {
+        var bi = b.dataset.wprint, u = l.use[Number(bi)], pa = document.createElement('div'); pa.id = 'printArea'; pa.className = 'ponly';
+        pa.innerHTML = '<div class="wsprint"><div class="wsp-brand">Auntie Tobi Business Club · Resources</div><h1>' + esc(u.title) + '</h1><p>' + esc(l.title) + '</p>' +
+          u.fields.map(function (f, fi) { var el = $('#ws_' + bi + '_' + fi), v = el ? el.value.trim() : ''; return '<h3>' + esc(f.label) + '</h3><div class="wsp-ans' + (v ? '' : ' blank') + '">' + (v ? esc(v).replace(/\n/g, '<br>') : '&nbsp;') + '</div>'; }).join('') + '</div>';
+        $('main').appendChild(pa); document.body.classList.add('printing'); window.print();
+        setTimeout(function () { document.body.classList.remove('printing'); pa.remove(); }, 600);
+      };
+    });
+    $$('[data-file]').forEach(function (b) {
+      b.onclick = async function () {
+        b.disabled = true;
+        try { var f = await api('studio-resources', 'file', { id: id, fileId: b.dataset.file }); var a = document.createElement('a'); a.href = f.dataUrl; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }
+        catch (x) { toast(x.message); }
+        b.disabled = false;
+      };
+    });
+    bindPricingCalc(l);
+  }
+  function slugName(t) { return String(t || 'resource').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'resource'; }
+
+  // Pricing calculator (used by the pricing lesson). Runs on the phone; nothing is sent anywhere.
+  function pricingCalcHtml(bi) {
+    var f = function (k, label, hint) { return '<div><label class="f" for="pc_' + k + '">' + esc(label) + '</label>' + (hint ? '<div class="hint" style="margin:0 0 4px">' + esc(hint) + '</div>' : '') + '<input type="number" inputmode="decimal" min="0" step="0.01" id="pc_' + k + '" data-pc="' + k + '" placeholder="0"></div>'; };
+    return '<div class="stack pcalc">' + f('materials', 'Materials / ingredients per item (£)', 'Everything that goes into one item or one booking') +
+      f('packaging', 'Packaging, delivery or travel per item (£)') + f('hours', 'Your time per item (hours)') + f('rate', 'What you want to pay yourself per hour (£)') +
+      f('overheads', 'Monthly running costs (£)', 'Rent, phone, apps, equipment, insurance, fees') + f('volume', 'How many you sell in a typical month') + f('margin', 'Profit you want on top (%)', 'e.g. 20') +
+      '<div class="pcout" id="pcOut"><b>Fill in the boxes to see your price</b></div><p class="hint">A starting point only — also check what customers expect to pay and what similar businesses charge.</p></div>';
+  }
+  function bindPricingCalc(l) {
+    if (!$('#pcOut')) return;
+    var n = function (k) { var v = Number(($('#pc_' + k) || {}).value); return isFinite(v) && v > 0 ? v : 0; };
+    function calc() {
+      var cost = n('materials') + n('packaging'), labour = n('hours') * n('rate'), over = n('volume') ? n('overheads') / n('volume') : 0;
+      var full = cost + labour + over, price = full * (1 + n('margin') / 100);
+      $('#pcOut').innerHTML = full ? '<div class="row" style="justify-content:space-between"><span>Direct costs</span><b>' + gbp(Math.round(cost * 100)) + '</b></div><div class="row" style="justify-content:space-between"><span>Your time</span><b>' + gbp(Math.round(labour * 100)) + '</b></div>' +
+        '<div class="row" style="justify-content:space-between"><span>Share of running costs</span><b>' + gbp(Math.round(over * 100)) + '</b></div><div class="row" style="justify-content:space-between"><span>Break-even price</span><b>' + gbp(Math.round(full * 100)) + '</b></div>' +
+        '<div class="row" style="justify-content:space-between;font-size:18px;margin-top:6px"><span>Suggested price</span><b>' + gbp(Math.round(price * 100)) + '</b></div>' : '<b>Fill in the boxes to see your price</b>';
+    }
+    $$('[data-pc]').forEach(function (i) { i.oninput = calc; });
   }
 
   // ───────────── account & billing ─────────────

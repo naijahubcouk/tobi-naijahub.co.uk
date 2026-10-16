@@ -10,6 +10,7 @@ const { HttpError, handler, requireEmail, rateLimit, enc, cas, getJson, cleanTex
 const gen = require('../generate');
 const stripe = require('../stripe');
 const growth = require('../growth');
+const resources = require('../resources');
 
 // Business Club status. 'none' = not a Club member (e.g. AI Power-only customer).
 const STATUSES = ['pending', 'active', 'inactive', 'none'];
@@ -279,9 +280,31 @@ exports.handler = handler(async (ctx) => {
       return { entries: await mapLimit(keys, 8, k => getJson(k)) };
     }
 
+    // ── Resources (content manager) ──
+    case 'res-list': return resources.adminList();
+    case 'res-dashboard': return resources.adminDashboard();
+    case 'res-get': return { lesson: await resources.adminGet(String(body.id || '')) };
+    case 'res-save': {
+      const lesson = await resources.adminSave(actor, body.lesson);
+      await core.audit(actor, 'resource_save', { id: lesson.id, status: lesson.status });
+      return { lesson };
+    }
+    case 'res-delete': {
+      await resources.adminDelete(String(body.id || ''));
+      await core.audit(actor, 'resource_delete', { id: String(body.id || '') });
+      return { ok: true };
+    }
+    case 'res-upload': {
+      await rateLimit('res-upload', actor, 60, 60 * 60 * 1000);
+      const f = await resources.adminUpload(body);
+      await core.audit(actor, 'resource_upload', { fileId: f.fileId, name: f.name, size: f.size });
+      return f;
+    }
+    case 'res-file': return resources.adminFile(String(body.fileId || ''));
+
     default:
       throw new HttpError(400, 'unknown_action', 'Unknown action.');
   }
-});
+}, { maxBody: 5 * 1024 * 1024 });
 
 function requireAdmin(ctx) { return core.requireAdmin(ctx); }

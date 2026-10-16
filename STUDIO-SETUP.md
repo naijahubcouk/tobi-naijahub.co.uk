@@ -23,7 +23,7 @@ Upload to a **new branch called `studio`** (not `main`).
 |---|---|---|
 | `studio.html` | repo root | New |
 | `studio-admin.html` | repo root | New |
-| `netlify/functions/studio-auth.mjs`, `studio-api.mjs`, `studio-billing.mjs`, `studio-admin.mjs`, `studio-growth.mjs`, `studio-money.mjs`, `studio-stripe-webhook.mjs`, `studio-maintenance.mjs` | `netlify/functions/` | New — Netlify's current function format (needed for safe allowance counting) |
+| `netlify/functions/studio-auth.mjs`, `studio-api.mjs`, `studio-billing.mjs`, `studio-admin.mjs`, `studio-growth.mjs`, `studio-money.mjs`, `studio-resources.mjs`, `studio-stripe-webhook.mjs`, `studio-maintenance.mjs` | `netlify/functions/` | New — Netlify's current function format (needed for safe allowance counting) |
 | `netlify/functions/studio-lib/` (whole folder, including `handlers/`) | `netlify/functions/studio-lib/` | New — shared Studio code (not functions themselves) |
 | `_redirects` | repo root | **Changed** — 4 lines added after `/business-club` |
 | `netlify.toml` | repo root | **Changed** — daily `studio-maintenance` schedule added |
@@ -165,6 +165,17 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 - **Make an image:** every result has "Make an image": 6 styles (Offer, Tip/quote, Taking orders, Thank you, News, Plain), square post or story size, optional background photo. Images are drawn on the phone — photos are never uploaded and nothing is stored.
 - **Share:** every result has "Share" (the phone's share menu; on computers, WhatsApp or copy).
 - **I posted this:** adds 1 to today's posts in Track, shows "Posted" in the Library, and marks the calendar post as posted when it came from the calendar or a daily action.
+
+---
+
+## 7e. Resources — Your Business Growth Library (Business Club only, free)
+
+- **Members:** Library tab → **📚 Resources**. Search, Continue learning, featured collections (e.g. Month 1 — Getting Visible), New this month, Recommended for their business (from the industry in their profile; they can hide it), saved resources, progress, and the 8 module cards. Each lesson has LEARN, SEE (a clearly labelled fictional example), DO and USE (checklists that tick, copyable templates, worksheets that save, downloadable files, pricing calculator), plus Save and Mark complete. Lessons can include a button that opens the right Studio tool or screen (tools still use 1 generation when they tap Create; reading never does).
+- **Who can see it:** active Business Club members only. AI Power-only customers and expired members see a "part of Business Club" page. Progress is stored per member (`learn/`) and nobody else can see it.
+- **You (Studio Admin → Resources):** add and edit lessons without code — module, order, title, description, Draft / Published / Coming soon, publish date (schedule ahead), feature on homepage + collection name, monthly edition month (Module 07), who to recommend it to, cover image, LEARN/SEE/DO text, a Studio button, USE resources (checklist, template, worksheet, file up to 3.5 MB, pricing calculator), sources, last reviewed date and review period, and a note at the bottom. "Preview" shows the text before you publish.
+- **Dashboard:** published, drafts, scheduled, coming soon, new this month, views and completions this month, most viewed, most completed, and **needs review** (lessons past their review period or never reviewed — use 6 months for Instagram/WhatsApp lessons).
+- **Formatting in lesson text:** `## Heading`, `- bullet`, `1. numbered`, `**bold**`, `> Tip box`, `[link text](https://…)`; blank line between paragraphs.
+- **Launch content** loads automatically the first time Resources is opened. Your edits and deletions are never overwritten by later updates.
 
 ---
 
