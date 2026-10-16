@@ -3,8 +3,7 @@
  * Auntie Tobi Marketplace
  *   GET  /.netlify/functions/studio-market?feed=1        live listings (JSON, cached ~1 min) — used by /marketplace and the app
  *   GET  /.netlify/functions/studio-market?img=<id>      a listing photo
- *   POST { action: 'public-code', email }                 anyone with the form link: email a 6-digit code
- *   POST { action: 'public-submit', email, code, contact, listing, photos[] }  → waits for admin review
+ *   POST { action: 'public-submit', email, contact, listing, photos[] }  anyone with the form link → waits for admin review
  *   POST { action: 'mine' | 'save' | 'img' | 'withdraw' | 'remove' }        Business Club members (signed in)
  */
 const core = require('../core');
@@ -41,22 +40,15 @@ exports.handler = handler(async (ctx) => {
 
   switch (body.action) {
     // ── public form (anyone with the link) ──
-    case 'public-code': {
-      if (body.website) return { ok: true }; // spam trap
-      const email = core.requireEmail(body.email);
-      await core.rateLimit('mkt-code-ip', ctx.ip || 'x', 8, 60 * 60 * 1000, 'Too many codes requested. Please try again in an hour.');
-      await core.rateLimit('mkt-code-em', email, 4, 60 * 60 * 1000, 'Too many codes requested. Please try again in an hour.');
-      await core.issueOtp(email, 'market');
-      return { ok: true };
-    }
     case 'public-submit': {
-      if (body.website) return { ok: true };
+      if (body.website) return { ok: true }; // spam trap (hidden field)
+      if (Number(body.t) > 0 && Number(body.t) < 4000) return { ok: true }; // filled in faster than a person could
       const email = core.requireEmail(body.email);
       await core.rateLimit('mkt-sub-ip', ctx.ip || 'x', 6, 24 * 60 * 60 * 1000, 'You’ve sent several listings today. Please try again tomorrow, or message us on WhatsApp.');
+      await core.rateLimit('mkt-sub-em', email, 3, 24 * 60 * 60 * 1000, 'You’ve sent several listings today. Please try again tomorrow, or message us on WhatsApp.');
       const photos = Array.isArray(body.photos) ? body.photos.slice(0, market.MAX_IMGS) : [];
       if (!photos.length) throw new HttpError(400, 'invalid', 'Please add at least one photo.');
-      market.clean({ ...body.listing, imgs: [] }, { allowNoImg: true }); // check everything before using up the code
-      if (!(await core.checkOtp(email, 'market', body.code))) throw new HttpError(400, 'bad_code', 'That code didn’t work. Check it, or ask for a new one.');
+      market.clean({ ...body.listing, imgs: [] }, { allowNoImg: true }); // check everything before storing photos
       const ids = [];
       for (const p of photos) ids.push(await market.saveImage(p, `public:${email}`));
       const rec = await market.publicCreate({ ...body.contact, email }, body.listing, ids);

@@ -47,7 +47,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
 .pc-desc{font-size:12px;color:#555;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .pc-price{font-size:16px;font-weight:800;margin-bottom:10px}.pc-btn{background:var(--green);color:#fff;border-radius:8px;padding:10px;font-size:13px;font-weight:700;text-align:center}
 .done{text-align:center;padding:28px 18px}.done .big{font-size:46px}.done h2{font-size:21px;margin:8px 0}
-.codebox{font-size:26px;letter-spacing:8px;text-align:center;font-weight:800}
 </style>
 </head>
 <body>
@@ -61,7 +60,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
     <div class="hero-badge">🛍️ List your product or service</div>
     <h1>Get on the Auntie Tobi Marketplace</h1>
     <p>Fill in the details below. Auntie Tobi reviews every listing before it goes live on the Marketplace and in the Auntie Tobi app.</p>
-    <div class="steps"><span>1 · Fill in the form</span><span>2 · Confirm your email</span><span>3 · We review it</span></div>
+    <div class="steps"><span>1 · Fill in the form</span><span>2 · Auntie Tobi reviews it</span><span>3 · It goes live</span></div>
   </div>
 
   <form id="f" class="card" novalidate>
@@ -86,19 +85,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
     <div><label>Preview</label><div id="prev"></div></div>
     <label class="check"><input type="checkbox" id="ok"> <span>I’m allowed to sell this, the details are accurate, and I’m happy for Auntie Tobi to show it on the Marketplace and in the Auntie Tobi app.</span></label>
     <div class="err hidden" id="err"></div>
-    <button class="btn" id="go" type="submit">Continue</button>
-    <p class="hint" style="text-align:center">Next, we’ll email you a 6-digit code to confirm it’s you.</p>
+    <button class="btn" id="go" type="submit">Submit my listing</button>
+    <p class="hint" style="text-align:center">We’ll email you when it’s live, or if anything needs changing.</p>
   </form>
-
-  <div class="card hidden" id="codeStep">
-    <h2>Check your email</h2>
-    <p>We’ve sent a 6-digit code to <b id="codeTo"></b>. It expires in 10 minutes.</p>
-    <div><label for="code">Code</label><input id="code" class="codebox" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
-    <div class="err hidden" id="err2"></div>
-    <button class="btn" id="send">Submit my listing</button>
-    <button class="btn ghost" id="back" type="button">← Back to the form</button>
-    <p class="hint" style="text-align:center">No email? Check spam, or <a href="#" id="resend">send a new code</a>.</p>
-  </div>
 
   <div class="card done hidden" id="done">
     <div class="big">💚</div>
@@ -175,25 +164,16 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
     if (!$('#ok').checked) return 'Please tick the box to confirm.';
     return '';
   }
-  async function sendCode() { await api('public-code', { email: $('#em').value.trim(), website: $('#website').value }); }
+  var started = Date.now();
   $('#f').onsubmit = async function (e) {
     e.preventDefault(); $('#err').classList.add('hidden');
     var m = check(); if (m) return fail($('#err'), m);
-    var b = $('#go'); b.disabled = true; b.textContent = 'Sending code…';
-    try { await sendCode(); $('#codeTo').textContent = $('#em').value.trim(); $('#f').classList.add('hidden'); $('#codeStep').classList.remove('hidden'); window.scrollTo(0, 0); $('#code').focus(); }
-    catch (x) { fail($('#err'), x.message); }
-    b.disabled = false; b.textContent = 'Continue';
-  };
-  $('#back').onclick = function () { $('#codeStep').classList.add('hidden'); $('#f').classList.remove('hidden'); };
-  $('#resend').onclick = async function (e) { e.preventDefault(); try { await sendCode(); alert('A new code is on its way (it can take a minute).'); } catch (x) { fail($('#err2'), x.message); } };
-  $('#send').onclick = async function () {
-    $('#err2').classList.add('hidden');
-    var b = this; b.disabled = true; b.textContent = 'Sending…';
+    var b = $('#go'); b.disabled = true; b.textContent = 'Sending…';
     try {
-      await api('public-submit', { email: $('#em').value.trim(), code: $('#code').value.trim(), website: $('#website').value,
+      await api('public-submit', { email: $('#em').value.trim(), website: $('#website').value, t: Date.now() - started,
         contact: { name: $('#nm').value, whatsapp: $('#cwa').value, instagram: $('#ig').value }, listing: listing(), photos: photos });
-      $('#codeStep').classList.add('hidden'); $('#done').classList.remove('hidden'); window.scrollTo(0, 0);
-    } catch (x) { fail($('#err2'), x.message); b.disabled = false; b.textContent = 'Submit my listing'; }
+      $('#f').classList.add('hidden'); $('#done').classList.remove('hidden'); window.scrollTo(0, 0);
+    } catch (x) { fail($('#err'), x.message); b.disabled = false; b.textContent = 'Submit my listing'; }
   };
   drawPhotos(); prev();
 })();
