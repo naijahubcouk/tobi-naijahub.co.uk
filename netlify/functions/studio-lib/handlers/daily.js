@@ -45,7 +45,7 @@ async function buildDigest(member, acc) {
     core.getJson(`profiles/${core.enc(email)}`), growth.summary(email), money.list(email), money.reminders(email, { all: true }),
   ]);
   const lw = sum.lastWeek || { enquiries: 0, bookings: 0, salesCount: 0, salesGbp: 0, posts: 0, days: 0 };
-  const lesson = acc.membershipActive ? await resources.suggestLesson(email, profile, { thisWeek: sum.lastWeek || {}, lastWeek: {} }).catch(() => null) : null;
+  const lesson = acc.resources ? await resources.suggestLesson(email, profile, { thisWeek: sum.lastWeek || {}, lastWeek: {} }).catch(() => null) : null;
   const name = (profile && profile.businessName) || 'your business';
   const studio = `${siteUrl()}/studio`;
   const unsub = `${siteUrl()}/.netlify/functions/studio-unsubscribe?e=${encodeURIComponent(email)}&t=${prefs.unsubToken(email)}`;
@@ -79,7 +79,7 @@ async function buildDigest(member, acc) {
     if (recent.length) {
       const by = {}; for (const e of recent) by[e.label] = (by[e.label] || 0) + 1;
       const parts = Object.entries(by).map(([l, n]) => `${n} ${l.toLowerCase()}${n > 1 ? 's' : ''}`).join(', ');
-      sec('From Auntie Tobi 💚', [`Last week Auntie Tobi shared your business ${recent.length} time${recent.length > 1 ? 's' : ''}: ${parts}. See the full record in Studio → Account → My benefits.`]);
+      sec('From Auntie Tobi 💚', [`Last week Auntie Tobi shared your business ${recent.length} time${recent.length > 1 ? 's' : ''}: ${parts}. See the full record in Business Studio → Account → My benefits.`]);
     }
   }
   sec('This week', [
@@ -89,12 +89,12 @@ async function buildDigest(member, acc) {
   if (lesson) sec('A lesson for you', [`${lesson.title} (${lesson.readMins || 3} min read) — ${lesson.reason}`]);
 
   const subject = `Your week ahead, ${name} 💚`;
-  const text = `Good morning from Auntie Tobi Business Studio!\n${lines.join('\n')}\n\nOpen Studio: ${studio}\n\nYou get this weekly round-up because you have a Business Studio account. Turn it off in Studio → Account, or unsubscribe: ${unsub}`;
+  const text = `Good morning from Auntie Tobi Business Studio!\n${lines.join('\n')}\n\nOpen Business Studio: ${studio}\n\nYou get this weekly round-up because you have a Business Studio account. Turn it off in Business Studio → Account, or unsubscribe: ${unsub}`;
   const htmlBody = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#0F1E36;max-width:560px;margin:0 auto;padding:8px">
 <div style="background:#0F1E36;color:#FBF6EC;border-radius:14px;padding:18px 18px 16px"><div style="font-family:Georgia,serif;font-size:20px;font-weight:bold">Your week ahead 💚</div><div style="color:#FFB81C;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px">${escHtml(name)}</div></div>
 ${html.join('')}
 <p style="margin:24px 0"><a href="${studio}" style="background:#057A44;color:#fff;text-decoration:none;font-weight:bold;padding:12px 18px;border-radius:10px;display:inline-block">Open Business Studio</a></p>
-<p style="font-size:12px;color:#5B6475">You get this weekly round-up because you have an Auntie Tobi Business Studio account. Turn it off in Studio → Account, or <a href="${unsub}" style="color:#5B6475">unsubscribe</a>.</p></div>`;
+<p style="font-size:12px;color:#5B6475">You get this weekly round-up because you have an Auntie Tobi Business Studio account. Turn it off in Business Studio → Account, or <a href="${unsub}" style="color:#5B6475">unsubscribe</a>.</p></div>`;
   return { subject, text, html: htmlBody, unsub };
 }
 

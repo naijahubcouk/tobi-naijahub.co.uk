@@ -1,6 +1,6 @@
 'use strict';
 /*
- * AI Power billing (monthly £5 or yearly £50) for signed-in people — Business Club members
+ * Business Studio Pro billing (monthly £5 or yearly £50) for signed-in people — Business Club members
  * and non-members alike.
  * POST /.netlify/functions/studio-billing  { action: 'checkout' (+ interval: 'month'|'year') | 'portal' | 'refresh' }
  * Starting or managing a subscription needs an email code from the last 24 hours.
@@ -16,7 +16,7 @@ exports.handler = handler(async (ctx) => {
 
   switch (action) {
     case 'checkout': {
-      if (!stripe.billingEnabled()) throw new HttpError(503, 'billing_not_configured', 'AI Power isn\'t available to buy just yet.');
+      if (!stripe.billingEnabled()) throw new HttpError(503, 'billing_not_configured', 'Business Studio Pro isn\'t available to buy just yet.');
       const interval = ctx.body.interval === 'year' ? 'year' : 'month';
       core.requireFresh(auth, core.SESSION.freshBillingMs);
       await core.rateLimit('checkout', email, 10, 60 * 60 * 1000);

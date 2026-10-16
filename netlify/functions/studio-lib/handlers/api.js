@@ -76,7 +76,7 @@ exports.handler = handler(async (ctx) => {
         billing: { enabled: stripe.billingEnabled(), intervals: stripe.billingEnabled() ? stripe.availableIntervals() : [] },
       };
       if (!m || !auth.access.canView) {
-        // Verified email without an account (or without access): offer AI Power.
+        // Verified email without an account (or without access): offer Business Studio Pro.
         return { ...base, state: 'buyer', member: { email, isClub: !!m && m.status !== 'none', membershipExpiresAt: m ? m.membershipExpiresAt : null }, access: auth.access };
       }
       const [profile, history] = await Promise.all([getProfile(email), core.getJson(gen.historyIndexKey(email))]);
@@ -126,7 +126,7 @@ exports.handler = handler(async (ctx) => {
 
     case 'website-read': {
       // Setup helper: reads their public website and drafts profile fields. Free for the member
-      // (not counted against the daily allowance); the small AI cost is added to Studio spend.
+      // (not counted against the daily allowance); the small AI cost is added to Business Studio spend.
       await core.rateLimit('website-read', email, 6, 60 * 60 * 1000, 'You\u2019ve read a few websites already \u2014 please type your details or try again later.');
       await core.rateLimit('website-read-day', email, 15, 24 * 60 * 60 * 1000, 'Please try again tomorrow, or type your details in.');
       const out = await website.read(body.url, auth.settings, gen.callModel);

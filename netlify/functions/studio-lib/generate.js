@@ -120,7 +120,7 @@ async function addGlobal(month, info, settings) {
   }).catch(e => console.error('[studio] global usage update failed', e));
   if (crossed) {
     const amount = crossed === 2 ? warnAt * 2 : warnAt;
-    const msg = `AI spend for ${month} has passed £${amount.toFixed(2)} (now about £${total.toFixed(2)}). The Studio is still running — this is a warning only.${crossed === 2 ? ' This is double your warning amount: check the admin Usage page for unusual activity.' : ''}`;
+    const msg = `AI spend for ${month} has passed £${amount.toFixed(2)} (now about £${total.toFixed(2)}). The Business Studio is still running — this is a warning only.${crossed === 2 ? ' This is double your warning amount: check the admin Usage page for unusual activity.' : ''}`;
     await core.alert('spend_warning', msg, { month, totalGbp: Math.round(total * 100) / 100, level: crossed });
     await core.emailAdmins(`AI spend passed £${amount.toFixed(0)} this month`, `${msg}\n\nAdmin: ${env('STUDIO_SITE_URL', 'https://www.auntietobi.co.uk')}/studio-admin`);
   }

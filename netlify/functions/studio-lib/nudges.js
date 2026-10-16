@@ -19,13 +19,14 @@ async function forMember(email, access) {
     getJson(`profiles/${enc(email)}`), prefs.get(email), money.getSettings(email), growth.getGoal(email),
     getJson(gen.historyIndexKey(email)), growth.summary(email),
   ]);
-  const learn = club ? await resources.getProgress(email) : null;
+  const lib = !!(access && access.resources);
+  const learn = lib ? await resources.getProgress(email) : null;
   const steps = [
     { id: 'profile', label: 'Complete your business profile', done: !!(profile && profile.businessName && profile.products), go: 'profile' },
     { id: 'brand', label: 'Add your logo and colours', done: !!(profile && (profile.hasLogo || profile.brand)), go: 'brand' },
     { id: 'money', label: 'Add your invoice details', done: !!ms, go: 'money' },
     { id: 'goal', label: 'Set a goal for this week', done: !!goal, go: 'goal' },
-    club
+    lib
       ? { id: 'lesson', label: 'Open your first lesson', done: !!(learn && Object.keys(learn.opened || {}).length), go: 'lesson' }
       : { id: 'create', label: 'Create your first post', done: !!(hist && hist.items && hist.items.length), go: 'create' },
     { id: 'review', label: 'Add your review link', done: !!pr.reviewLink, go: 'review' },
@@ -40,7 +41,7 @@ async function forMember(email, access) {
   }
   const doneN = steps.filter(s => s.done).length;
   let lesson = null;
-  if (club) { try { lesson = await resources.suggestLesson(email, profile, summary); } catch (e) { console.error('[studio] lesson suggestion failed', e && e.message); } }
+  if (lib) { try { lesson = await resources.suggestLesson(email, profile, summary); } catch (e) { console.error('[studio] lesson suggestion failed', e && e.message); } }
   let priorities = null, shared = [];
   if (club) {
     const member = await core.getMember(email);

@@ -7,7 +7,7 @@
  *
  * Formatting used in lesson text:  ## Heading   - bullet   1. numbered   **bold**   > Tip box   [link](https://…)
  */
-const VERSION = 7;
+const VERSION = 8;
 const REVIEWED = '2026-10-16';
 
 // Every module and lesson title. "planned" = shown to members as Coming soon.
@@ -313,6 +313,15 @@ for (const [mod, set] of [['m01', C1], ['m02', C2], ['m04', C4], ['m03', C36.m03
   for (const [title, body] of Object.entries(set)) FULL[idFor(mod, title)] = body;
 }
 
+// "Studio" → "Business Studio" in all lesson text (seed update 8).
+const STUD = /(?<!Business )(?<![\w-])Studio(?![\w-])/g;
+function bs(v) {
+  if (typeof v === 'string') return v.replace(STUD, 'Business Studio');
+  if (Array.isArray(v)) return v.map(bs);
+  if (v && typeof v === 'object') { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = k === 'tool' || k === 'id' || k === 'module' ? x : bs(x); return o; }
+  return v;
+}
+
 function lessons() {
   const out = [];
   for (const [mod, titles] of Object.entries(OUTLINE)) {
@@ -321,7 +330,7 @@ function lessons() {
       const full = FULL[id];
       const base = { id, module: mod, order: i + 1, title, summary: '', status: 'planned', tags: ['all'], use: [], seedRev: 1, reviewedAt: '', reviewMonths: 12, learn: '', see: '', do: '' };
       const words = full ? [full.learn, full.see, full.do].join(' ').split(/\s+/).length : 0;
-      out.push(full ? { ...base, ...full, readMins: full.readMins || Math.max(1, Math.round(words / 200)), status: full.status || 'published', publishAt: full.status === 'planned' ? '' : (full.publishAt || REVIEWED), reviewedAt: full.reviewedAt || REVIEWED, seedRev: full.seedRev || 2 } : base);
+      out.push(full ? bs({ ...base, ...full, readMins: full.readMins || Math.max(1, Math.round(words / 200)), status: full.status || 'published', publishAt: full.status === 'planned' ? '' : (full.publishAt || REVIEWED), reviewedAt: full.reviewedAt || REVIEWED, seedRev: (full.seedRev || 2) + 1 }) : base);
     });
   }
   return out;

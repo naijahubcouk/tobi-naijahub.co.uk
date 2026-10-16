@@ -13,8 +13,8 @@ const { HttpError, handler } = core;
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const auth = await core.requireMember(ctx, { level: 'view' });
-  if (!auth.access.membershipActive) {
-    throw new HttpError(403, 'club_only', 'Resources are part of Auntie Tobi Business Club membership.');
+  if (!auth.access.resources) {
+    throw new HttpError(403, 'club_only', 'Resources are part of Auntie Tobi Business Club and Business Studio Pro.');
   }
   const email = auth.sess.email;
   await core.rateLimit('resources', email, 600, 60 * 60 * 1000);

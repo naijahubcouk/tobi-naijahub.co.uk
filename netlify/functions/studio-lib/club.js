@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Business Club payments through the Stripe Payment Link → automatic Studio access.
+ * Business Club payments through the Stripe Payment Link → automatic Business Studio access.
  *   STUDIO_CLUB_PAYMENT_LINK = plink_… (the ID of your £50 Business Club payment link)
  * When that link is paid, the email used at checkout becomes an active Business Club member
  * for 12 months (renewals add 12 months to the current expiry, so no days are lost).
@@ -58,14 +58,14 @@ async function activateFromSession(session) {
 
   if (blocked) {
     await core.alert('club_payment_blocked', 'A blocked account paid for Business Club — access NOT given. Check and refund if needed.', { email, session: session.id });
-    await core.emailAdmins('Blocked account paid for Business Club', `${email} paid through the Business Club payment link, but their account is blocked, so no access was given. Check in Studio Admin and refund in Stripe if needed.`);
+    await core.emailAdmins('Blocked account paid for Business Club', `${email} paid through the Business Club payment link, but their account is blocked, so no access was given. Check in Business Studio Admin and refund in Stripe if needed.`);
     return { ok: false, reason: 'blocked', email };
   }
 
   await core.audit('stripe', isNew ? 'club_joined' : 'club_renewed', { email, expires, previous: before });
   await core.alert(isNew ? 'club_joined' : 'club_renewed', `${isNew ? 'New Business Club member' : 'Business Club renewal'}: ${name ? name + ' — ' : ''}${email} (until ${expires})`, { email, expires });
   await core.emailAdmins(isNew ? `New Business Club member: ${name || email}` : `Business Club renewal: ${name || email}`,
-    `${name ? name + '\n' : ''}${email}\nMembership active until ${expires}${before ? ` (was ${before})` : ''}.\n\nThey can sign in to the Studio now. Remember to set up their Featured Business and Marketplace listing — track it in Studio Admin → Benefits.`);
+    `${name ? name + '\n' : ''}${email}\nMembership active until ${expires}${before ? ` (was ${before})` : ''}.\n\nThey can sign in to the Business Studio now. Remember to set up their Featured Business and Marketplace listing — track it in Business Studio Admin → Benefits.`);
   try { await sendWelcome(email, name, expires, isNew); } catch (e) { console.error('[studio] club welcome email failed', e && e.message); }
   return { ok: true, email, expires, isNew };
 }
@@ -92,7 +92,7 @@ async function alertRefundOrDispute(type, obj) {
   const amount = typeof obj.amount_refunded === 'number' ? obj.amount_refunded : obj.amount;
   const what = type === 'charge.refunded' ? 'refunded' : 'disputed';
   await core.alert(`payment_${what}`, `A payment was ${what}${email ? ` (${email})` : ''} — check whether to change their Business Club access`, { email, amount, id: obj.id });
-  await core.emailAdmins(`Payment ${what}${email ? `: ${email}` : ''}`, `A Stripe payment was ${what}${email ? ` for ${email}` : ''}. Studio access has NOT been changed. If it was a Business Club payment, update the member in Studio Admin → Members if needed.`);
+  await core.emailAdmins(`Payment ${what}${email ? `: ${email}` : ''}`, `A Stripe payment was ${what}${email ? ` for ${email}` : ''}. Business Studio access has NOT been changed. If it was a Business Club payment, update the member in Business Studio Admin → Members if needed.`);
 }
 
 module.exports = { isClubSession, activateFromSession, alertRefundOrDispute, addYear, sendWelcome };

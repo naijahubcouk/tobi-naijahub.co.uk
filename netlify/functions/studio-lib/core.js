@@ -16,7 +16,7 @@ const MIN = 60 * 1000;
 // ───────────────────────── configuration ─────────────────────────
 const DEFAULT_SETTINGS = {
   standardLimit: 20,            // generations per DAY, Business Club only
-  powerLimit: 100,              // generations per DAY with AI Power (with or without Club)
+  powerLimit: 100,              // generations per DAY with Business Studio Pro (with or without Club)
   perMinuteLimit: 6,            // burst protection per member
   spendWarnGbp: 30,             // email + admin alert when monthly AI spend passes this (and 2x). Never blocks.
   model: '',                    // blank = STUDIO_MODEL env or openai/gpt-4o-mini
@@ -44,7 +44,7 @@ function env(name, fallback) {
 
 function secret() {
   const s = env('STUDIO_SECRET');
-  if (!s || s.length < 32) throw new HttpError(500, 'server_misconfigured', 'Studio is not configured yet (STUDIO_SECRET).');
+  if (!s || s.length < 32) throw new HttpError(500, 'server_misconfigured', 'Business Studio is not configured yet (STUDIO_SECRET).');
   return s;
 }
 
@@ -281,9 +281,9 @@ const LIVE_SUB_STATUSES = ['active', 'trialing', 'past_due', 'unpaid', 'incomple
 /*
  * Access rules
  *  - Business Club (admin-managed, annual):  20 a day
- *  - AI Power (paid via Stripe, monthly or yearly), with or without Club: 100 a day
- *  - AI Power is independent of Club: one ending does not affect the other.
- *  - Someone whose AI Power ended (and has no active Club) can still sign in read-only
+ *  - Business Studio Pro (paid via Stripe, monthly or yearly), with or without Club: 100 a day
+ *  - Business Studio Pro is independent of Club: one ending does not affect the other.
+ *  - Someone whose Business Studio Pro ended (and has no active Club) can still sign in read-only
  *    to view and copy their library.
  *  - "blocked" (admin) removes all access.
  */
@@ -301,7 +301,7 @@ function access(member, settings, now) {
   return {
     blocked,
     membershipActive,          // Business Club
-    powerActive,               // AI Power paid and current
+    powerActive,               // Business Studio Pro paid and current
     canCreate,
     canView,
     readOnly: canView && !canCreate,
@@ -309,6 +309,7 @@ function access(member, settings, now) {
     addonInterval: addon ? addon.interval || null : null,
     addonLive: !!addon && LIVE_SUB_STATUSES.includes(addon.status),
     plan: powerActive ? 'power' : membershipActive ? 'club' : 'none',
+    resources: membershipActive || powerActive, // Library resources: Business Club or Business Studio Pro
     limit: canCreate ? limit : 0,
   };
 }
@@ -347,9 +348,9 @@ async function createSession(email, role, event) {
 
 /*
  * Loads the member session, enforcing expiry, revocation and access level.
- *   opts.level = 'create' (default) — Club or AI Power active
- *              = 'view'   — also allows read-only (AI Power ended) accounts
- *              = 'buyer'  — also allows a verified email with no account yet (buying AI Power)
+ *   opts.level = 'create' (default) — Club or Business Studio Pro active
+ *              = 'view'   — also allows read-only (Business Studio Pro ended) accounts
+ *              = 'buyer'  — also allows a verified email with no account yet (buying Business Studio Pro)
  * Renews idle expiry and rotates the token weekly (old token gets a 2-minute grace).
  */
 async function requireMember(ctx, opts) {
@@ -376,8 +377,8 @@ async function requireMember(ctx, opts) {
   const allowed = level === 'buyer' ? true : level === 'view' ? acc.canView : acc.canCreate;
   if (!allowed) {
     throw new HttpError(403, acc.readOnly ? 'read_only' : 'no_access',
-      acc.readOnly ? 'Your AI Power has ended. Renew it to create new content — your library is still here.'
-        : 'You need an active Business Club membership or AI Power to use the Studio.');
+      acc.readOnly ? 'Your Business Studio Pro has ended. Renew it to create new content — your library is still here.'
+        : 'You need an active Business Club membership or Business Studio Pro to use the Business Studio.');
   }
   // Renew / rotate
   if (!sess.rotatedAt && now - sess.createdAt > SESSION.rotateMs) {
@@ -453,7 +454,7 @@ async function checkOtp(email, purpose, code) {
 // ───────────────────────── email ─────────────────────────
 async function sendCodeEmail(email, code, purpose) {
   const subject = purpose === 'admin'
-    ? `${code} is your Studio admin code`
+    ? `${code} is your Business Studio admin code`
     : purpose === 'market' ? `${code} is your Auntie Tobi Marketplace code`
     : `${code} is your Auntie Tobi Business Studio code`;
   const text = `Your one-time code is ${code}\n\nIt expires in 10 minutes. If you didn't ask for this, you can ignore this email — nobody can sign in without the code.\n\n${purpose === 'market' ? 'Auntie Tobi Marketplace' : 'Auntie Tobi Business Studio'}`;
@@ -486,7 +487,7 @@ async function sendEmail(to, subject, text, html, headers) {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: env('STUDIO_EMAIL_FROM', 'Auntie Tobi Studio <studio@auntietobi.co.uk>'),
+      from: env('STUDIO_EMAIL_FROM', 'Auntie Tobi Business Studio <studio@mail.auntietobi.co.uk>'),
       to, subject, text, ...(html ? { html } : {}), ...(headers ? { headers } : {}),
     }),
   });

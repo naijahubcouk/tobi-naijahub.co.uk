@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F1E36">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://naijabiz.b-cdn.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
-<title>Studio Admin — Auntie Tobi</title>
+<title>Business Studio Admin — Auntie Tobi</title>
 <link rel="icon" href="/favicon-32x32.png">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -78,9 +78,9 @@ tbody tr:hover{background:#FFFCF5}
 </style>
 </head>
 <body>
-<header><div><b>Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
+<header><div><b>Business Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="subs">AI Power</button>
+  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="subs">Business Studio Pro</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -244,7 +244,7 @@ tbody tr:hover{background:#FFFCF5}
       '<div class="card stack"><div><label for="eLearn">LEARN — Understand the topic (3–5 minute read)</label><textarea id="eLearn" rows="16">' + esc(L.learn || '') + '</textarea></div>' +
         '<div><label for="eSeeT">SEE — Example heading (label fictional examples clearly)</label><input id="eSeeT" maxlength="160" value="' + esc(L.seeTitle || '') + '"></div><div><label for="eSee">SEE — Realistic business example</label><textarea id="eSee" rows="8">' + esc(L.see || '') + '</textarea></div>' +
         '<div><label for="eDo">DO — One practical activity</label><textarea id="eDo" rows="5">' + esc(L.do || '') + '</textarea></div>' +
-        '<div class="f2"><div><label for="eStudio">Button to open in Studio (optional)</label><select id="eStudio">' + RES_STUDIO.map(function (o) { return opt(o[0], studioVal, o[1]); }).join('') + '</select></div><div><label for="eStudioL">Button text</label><input id="eStudioL" maxlength="60" value="' + esc(L.studio ? L.studio.label : '') + '" placeholder="e.g. Write 3 bio options in Studio"></div></div></div>' +
+        '<div class="f2"><div><label for="eStudio">Button to open in Business Studio (optional)</label><select id="eStudio">' + RES_STUDIO.map(function (o) { return opt(o[0], studioVal, o[1]); }).join('') + '</select></div><div><label for="eStudioL">Button text</label><input id="eStudioL" maxlength="60" value="' + esc(L.studio ? L.studio.label : '') + '" placeholder="e.g. Write 3 bio options in Business Studio"></div></div></div>' +
       '<h2>USE — Practical resources</h2><div id="bList" class="stack"></div><div class="row" style="margin-top:10px">' + [['checklist', '+ Checklist'], ['template', '+ Template'], ['worksheet', '+ Worksheet'], ['file', '+ File'], ['calculator', '+ Pricing calculator']].map(function (b) { return '<button class="btn small ghost" data-badd="' + b[0] + '">' + b[1] + '</button>'; }).join('') + '</div>' +
       '<h2>Accuracy</h2><div class="card stack"><div><label for="eSrc">Sources (one per line: Title | https://link)</label><textarea id="eSrc" rows="3">' + esc((L.sources || []).map(function (s) { return s.title + (s.url ? ' | ' + s.url : ''); }).join('\n')) + '</textarea></div>' +
         '<div class="f2"><div><label for="eRev">Last reviewed</label><div class="row"><input id="eRev" type="date" value="' + esc(L.reviewedAt || '') + '" style="flex:1"><button class="btn small ghost" id="eRevT">Mark reviewed today</button></div></div><div><label for="eRevM">Review again after</label><select id="eRevM">' + [3, 6, 12, 24].map(function (n) { return opt(String(n), String(L.reviewMonths || 12), n + ' months'); }).join('') + '</select><div class="muted">Use 6 months for Instagram, WhatsApp and other apps that change often.</div></div></div>' +
@@ -259,7 +259,7 @@ tbody tr:hover{background:#FFFCF5}
     function collect(statusOverride) {
       readBlocks();
       var sv = $('#eStudio').value, st = null;
-      if (sv) { var p = sv.split(':'); st = p[0] === 'tool' ? { tool: p[1], input: L.studio && L.studio.tool === p[1] ? L.studio.input : {} } : { screen: p[1] }; st.label = $('#eStudioL').value.trim() || 'Open in Studio'; }
+      if (sv) { var p = sv.split(':'); st = p[0] === 'tool' ? { tool: p[1], input: L.studio && L.studio.tool === p[1] ? L.studio.input : {} } : { screen: p[1] }; st.label = $('#eStudioL').value.trim() || 'Open in Business Studio'; }
       return { id: id || undefined, module: $('#eMod').value, order: $('#eOrder').value, title: $('#eTitle').value, summary: $('#eSum').value, status: statusOverride || $('#eStatus').value,
         publishAt: $('#ePub').value, readMins: $('#eMins').value, featured: $('#eFeat').checked, collection: $('#eCol').value, collectionOrder: $('#eColO').value,
         tags: $$('[data-tag]').filter(function (c) { return c.checked; }).map(function (c) { return c.dataset.tag; }), image: image,
@@ -361,7 +361,7 @@ tbody tr:hover{background:#FFFCF5}
           return '<div style="width:120px"><label for="tg_' + f[0] + '">' + f[1] + '</label><input type="number" min="0" max="50" id="tg_' + f[0] + '" value="' + t[f[0]] + '"></div>';
         }).join('') + '<button class="btn primary small" id="tgSave">Save targets</button></div></details>' +
       '<div class="row" style="margin:14px 0 10px">' + [['all', 'All'], ['verify', '🏛️ Verification requests'], ['week', 'Due this week'], ['month', 'Due this month'], ['collabs', 'Collabs due'], ['spotlight', 'Spotlight not done'], ['ending', 'Ends ≤ 60 days, still owed'], ['longest', 'Longest since shared'], ['checkup', 'Check-Up not done'], ['setup', 'Featured/Marketplace to set up']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
-      '<div class="tw"><table><thead><tr><th>Member</th><th>Ends</th><th>This week</th><th>This month</th><th>This year</th><th>Featured</th><th>Market</th><th>Badge</th><th>Last shared</th><th>Check-Up</th><th>Studio use</th><th></th></tr></thead><tbody>' +
+      '<div class="tw"><table><thead><tr><th>Member</th><th>Ends</th><th>This week</th><th>This month</th><th>This year</th><th>Featured</th><th>Market</th><th>Badge</th><th>Last shared</th><th>Check-Up</th><th>Business Studio use</th><th></th></tr></thead><tbody>' +
       (list.length ? list.map(function (x) {
         var p = x.prog;
         return '<tr><td><b>' + esc(x.business || x.name || x.email) + '</b><div class="muted">' + esc(x.email) + '</div>' + benLogBtns(x.email) + '</td>' +
@@ -519,7 +519,7 @@ tbody tr:hover{background:#FFFCF5}
     var groups = { review: L.filter(isRev), waiting: L.filter(isWait), live: L.filter(isLive), all: L };
     var extra = Object.keys(r.allowance || {});
     app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:center"><h1 style="margin:0">Marketplace</h1><button class="btn primary small" id="mkNew">+ Add a listing</button></div>' +
-      '<p class="muted" style="margin:6px 0 12px">Business Club members manage their own listing in Studio (1 each, unless you allow more). Anyone you send the form link to can submit one. Nothing goes live until you approve it.</p>' +
+      '<p class="muted" style="margin:6px 0 12px">Business Club members manage their own listing in Business Studio (1 each, unless you allow more). Anyone you send the form link to can submit one. Nothing goes live until you approve it.</p>' +
       '<div class="note" style="margin-bottom:12px"><b>Form link to send to businesses:</b> <code style="word-break:break-all">' + esc(formUrl) + '</code> <button class="btn small ghost" id="mkCopy">Copy link</button> <a class="btn small ghost" href="/marketplace/list" target="_blank" rel="noopener">Open form</a> <a class="btn small ghost" href="/marketplace" target="_blank" rel="noopener">View Marketplace</a></div>' +
       '<div class="row" style="margin-bottom:12px">' + [['review', 'To review'], ['waiting', 'Waiting for their edit'], ['live', 'Live'], ['all', 'All listings']].map(function (t) { return '<button class="btn small ' + (t[0] === tab ? 'primary' : 'ghost') + '" data-mt="' + t[0] + '">' + t[1] + ' (' + groups[t[0]].length + ')</button>'; }).join('') + '</div>' +
       (tab === 'review' || tab === 'waiting' ? (groups[tab].length ? groups[tab].map(function (x) {
@@ -574,7 +574,7 @@ tbody tr:hover{background:#FFFCF5}
         '<div class="f2"><div><label for="mkL">Web link</label><input id="mkL" value="' + esc(f.link) + '" placeholder="https://… (or leave empty for WhatsApp)"></div><div><label for="mkW">WhatsApp number</label><input id="mkW" value="' + esc(f.wa) + '"></div></div>' +
         '<div class="f2"><div><label for="mkT">Button</label><select id="mkT">' + btns.map(function (b) { return '<option' + (f.btnText === b ? ' selected' : '') + '>' + b + '</option>'; }).join('') + '</select></div><div><label for="mkE">End date</label><input type="date" id="mkE" value="' + esc(f.endsAt) + '"></div></div>' +
         '<div><label>Auntie Tobi business listing</label><div id="mkBz"></div></div>' +
-        '<div><label for="mkO">Owner (Club member email)</label><input id="mkO" value="' + esc(x ? x.owner : '') + '" placeholder="Lets this member edit it in Studio"></div>' +
+        '<div><label for="mkO">Owner (Club member email)</label><input id="mkO" value="' + esc(x ? x.owner : '') + '" placeholder="Lets this member edit it in Business Studio"></div>' +
         (x && x.owner ? '<div class="muted">This member can have <b>' + allowance + '</b> listing' + (allowance === 1 ? '' : 's') + ' — change it under “Extra listings for members”.</div>' : '') +
         '<div class="row"><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="mkPin" style="width:auto"' + (x && x.pinned ? ' checked' : '') + '> 📌 Pin to top</label><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="mkHid" style="width:auto"' + (x && x.hidden ? ' checked' : '') + '> Hide from Marketplace</label></div>' +
         '<div class="err hidden" id="mkErr"></div><div class="row"><button class="btn primary" id="mkSave">Save</button><button class="btn ghost" id="mkX">Close</button>' + (x ? '<button class="btn ghost danger" id="mkDel" style="margin-left:auto">Delete listing</button>' : '') + '</div>');
@@ -608,24 +608,24 @@ tbody tr:hover{background:#FFFCF5}
     if (c.email === 'missing') issues.push('Email sending is not configured (RESEND_API_KEY) — members can’t get codes.');
     if (/log/.test(c.email)) issues.push('STUDIO_EMAIL_MODE=log is on: codes go to function logs, not email. Testing only — never in production.');
     if (!c.ai) issues.push('No AI key found (OPENROUTER_API_KEY / STUDIO_OPENROUTER_API_KEY).');
-    if (!c.stripe) issues.push('Stripe isn\u2019t fully configured \u2014 AI Power can\u2019t be bought yet.');
+    if (!c.stripe) issues.push('Stripe isn\u2019t fully configured \u2014 Business Studio Pro can\u2019t be bought yet.');
     app.innerHTML = '<main><h1 id="ovH1">Overview · ' + esc(o.month) + '</h1>' +
       (issues.length ? '<div class="warn stack" style="margin-bottom:14px">' + issues.map(function (i) { return '<div>⚠️ ' + esc(i) + '</div>'; }).join('') + '</div>' : '') +
       (o.alertCount ? '<div class="warn" style="margin-bottom:14px">You have <b>' + o.alertCount + '</b> alert(s). <button class="btn small ghost" id="toAlerts">View</button></div>' : '') +
       '<div class="grid">' +
-      stat(active, 'Active Business Club members') + stat(power, 'AI Power subscribers (' + (power - yearly) + ' monthly, ' + yearly + ' yearly)') +
+      stat(active, 'Active Business Club members') + stat(power, 'Business Studio Pro subscribers (' + (power - yearly) + ' monthly, ' + yearly + ' yearly)') +
       stat(m.count || 0, 'Generations this month') + stat(gbp(m.costUsd || 0), 'Estimated AI cost this month') +
-      stat('\u00a3' + revenue.toFixed(2), 'AI Power revenue / month (gross, yearly spread over 12)') +
+      stat('\u00a3' + revenue.toFixed(2), 'Business Studio Pro revenue / month (gross, yearly spread over 12)') +
       stat('\u00a3' + o.settings.spendWarnGbp, 'Spend warning amount (never blocks)') +
       '</div><h2>Pilot \u00b7 last 7 days</h2><div class="grid">' +
       stat(o.pilot.activeMembers, 'Members using daily actions or tracking') + stat(o.pilot.actionsDone, 'Daily actions completed') +
       stat(o.pilot.checkins, 'Progress check-ins recorded') + stat(o.pilot.postsMarked, 'Calendar posts marked posted') +
-      '</div><p class="muted" style="margin-top:6px">Counts only what members do in the Studio \u2014 useful for judging whether a pilot group really uses it.</p>' +
+      '</div><p class="muted" style="margin-top:6px">Counts only what members do in the Business Studio \u2014 useful for judging whether a pilot group really uses it.</p>' +
       '<h2>Setup</h2><div class="card"><table style="border:0"><tbody>' +
       row('Email codes', c.email) + row('AI model', c.model + (c.ai ? '' : ' (no key)')) + row('Stripe', c.stripe ? 'configured (' + c.stripeMode + ' mode)' : 'not configured') +
-      row('AI Power plans', (c.stripePlans || []).map(function (i) { return i === 'year' ? 'Yearly \u00a350' : 'Monthly \u00a35'; }).join(', ') || 'none configured') +
-      row('Business Club auto-access', c.clubLink && c.webhook ? 'On \u2014 paying the Club link gives Studio access automatically' : 'Off \u2014 set STUDIO_CLUB_PAYMENT_LINK and the Stripe webhook (see setup guide); add members manually until then') +
-      row('Spend warning', 'Email + alert at \u00a3' + o.settings.spendWarnGbp + ' and \u00a3' + (o.settings.spendWarnGbp * 2) + ' a month. The Studio never stops for spending.') + '</tbody></table></div></main>';
+      row('Business Studio Pro plans', (c.stripePlans || []).map(function (i) { return i === 'year' ? 'Yearly \u00a350' : 'Monthly \u00a35'; }).join(', ') || 'none configured') +
+      row('Business Club auto-access', c.clubLink && c.webhook ? 'On \u2014 paying the Club link gives Business Studio access automatically' : 'Off \u2014 set STUDIO_CLUB_PAYMENT_LINK and the Stripe webhook (see setup guide); add members manually until then') +
+      row('Spend warning', 'Email + alert at \u00a3' + o.settings.spendWarnGbp + ' and \u00a3' + (o.settings.spendWarnGbp * 2) + ' a month. The Business Studio never stops for spending.') + '</tbody></table></div></main>';
     var ta = $('#toAlerts'); if (ta) ta.onclick = function () { go('alerts'); };
     try {
       var bd = await api('benefits-due');
@@ -659,7 +659,7 @@ tbody tr:hover{background:#FFFCF5}
   }
   function typePill(m) {
     if (m.blocked) return '<span class="pill p-warn">Blocked</span>';
-    return { both: '<span class="pill p-power">Club + AI Power</span>', ai_power: '<span class="pill p-power">AI Power</span>', club: '<span class="pill p-active">Business Club</span>' }[m.type] ||
+    return { both: '<span class="pill p-power">Club + Business Studio Pro</span>', ai_power: '<span class="pill p-power">Business Studio Pro</span>', club: '<span class="pill p-active">Business Club</span>' }[m.type] ||
       (m.readOnly ? '<span class="pill p-inactive">Read-only</span>' : '<span class="pill p-inactive">No access</span>');
   }
   function addonPill(a) {
@@ -673,8 +673,8 @@ tbody tr:hover{background:#FFFCF5}
     var r = await api('members-list'); S.members = r.members;
     app.innerHTML = '<main><h1>Members</h1><div class="row" style="margin-bottom:12px"><input id="q" placeholder="Search email or name" style="max-width:320px" value="' + esc(q || '') + '">' +
       '<button class="btn primary" id="add">+ Add member</button><button class="btn ghost" id="imp">Bulk add</button></div>' +
-      '<div class="tw"><table><thead><tr><th>Person</th><th>Access</th><th>Business Club</th><th>AI Power</th><th>Today</th><th>This month</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>' +
-      '<p class="muted" style="margin-top:8px">Access = active Business Club (status active, not expired) <b>or</b> paid AI Power. AI Power-only customers appear here automatically after paying. Changes apply instantly.</p></main>';
+      '<div class="tw"><table><thead><tr><th>Person</th><th>Access</th><th>Business Club</th><th>Business Studio Pro</th><th>Today</th><th>This month</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>' +
+      '<p class="muted" style="margin-top:8px">Access = active Business Club (status active, not expired) <b>or</b> paid Business Studio Pro. Business Studio Pro-only customers appear here automatically after paying. Changes apply instantly.</p></main>';
     function draw() {
       var s = $('#q').value.toLowerCase();
       var list = S.members.filter(function (m) { return !s || m.email.indexOf(s) > -1 || (m.name || '').toLowerCase().indexOf(s) > -1; });
@@ -708,7 +708,7 @@ tbody tr:hover{background:#FFFCF5}
       '<div><label for="mn">Name / business</label><input id="mn" value="' + esc(m.name) + '"></div>' +
       '<div class="f2"><div><label for="ms">Status</label><select id="ms"><option value="active">Club member \u2014 active</option><option value="pending">Club member \u2014 pending approval</option><option value="inactive">Club member \u2014 inactive</option><option value="none">Not a Club member</option></select></div>' +
       '<div><label for="mx">Membership expires</label><input id="mx" type="date" value="' + esc(m.membershipExpiresAt || '') + '"></div></div>' +
-      '<label style="display:flex;gap:8px;align-items:center;font-weight:500"><input id="mb" type="checkbox" style="width:auto"' + (m.blocked ? ' checked' : '') + '> Block account (no access at all, signs out all devices, AI Power stops renewing)</label>' +
+      '<label style="display:flex;gap:8px;align-items:center;font-weight:500"><input id="mb" type="checkbox" style="width:auto"' + (m.blocked ? ' checked' : '') + '> Block account (no access at all, signs out all devices, Business Studio Pro stops renewing)</label>' +
       '<div><label for="mo">Custom daily allowance <span class="muted">(blank = plan default)</span></label><input id="mo" type="number" min="0" max="5000" value="' + (m.allowanceOverride == null ? '' : m.allowanceOverride) + '"></div>' +
       '<div><label for="mt">Private notes</label><textarea id="mt" rows="2">' + esc(m.notes) + '</textarea></div>' +
       (email ? (function () {
@@ -719,9 +719,9 @@ tbody tr:hover{background:#FFFCF5}
           '<div class="muted">Customers find them on: ' + esc((biz.channels || []).join(', ') || '\u2014') + (biz.mainChannel ? ' \u00b7 posts point to ' + esc(biz.mainChannel) : '') + '</div>' +
           '<div class="muted">Price list page: ' + (m.shop ? '<a href="/p/' + esc(m.shop.slug) + '" target="_blank" rel="noopener">/p/' + esc(m.shop.slug) + '</a> \u00b7 ' + (m.shop.disabled ? '<b style="color:var(--danger)">taken down by admin</b>' : m.shop.published ? 'published' : 'not published') + ' \u00b7 ' + m.shop.items + ' items <button class="btn small ghost' + (m.shop.disabled ? '' : ' danger') + '" id="shopTg">' + (m.shop.disabled ? 'Allow page again' : 'Take page down') + '</button>' : 'none') + '</div></div>';
       })() : '') +
-      (email ? '<div class="card stack"><b>AI Power</b><div>' + addonPill(m.addon) + (m.addon && m.addon.currentPeriodEnd ? ' <span class="muted">period ends ' + d(m.addon.currentPeriodEnd) + '</span>' : '') + '</div>' +
+      (email ? '<div class="card stack"><b>Business Studio Pro</b><div>' + addonPill(m.addon) + (m.addon && m.addon.currentPeriodEnd ? ' <span class="muted">period ends ' + d(m.addon.currentPeriodEnd) + '</span>' : '') + '</div>' +
         (m.stripeCustomerId ? '<div class="muted">Stripe customer: ' + esc(m.stripeCustomerId) + '</div><button class="btn small ghost" id="sync">Re-check with Stripe</button>' : '<div class="muted">No Stripe customer yet.</div>') +
-        '<div class="muted">AI Power is separate from Business Club: changing Club status doesn\u2019t affect it. Members switch plan or cancel themselves; refunds are done in Stripe.</div></div>' +
+        '<div class="muted">Business Studio Pro is separate from Business Club: changing Club status doesn\u2019t affect it. Members switch plan or cancel themselves; refunds are done in Stripe.</div></div>' +
         '<div class="card stack"><b>Usage history</b><div id="uh" class="muted">Loading…</div></div>' +
         '<button class="btn ghost" id="mBen">🎁 Business Club benefits (Spotlight, shares, Check-Up)</button>' : '') +
       '<div class="err hidden" id="merr"></div>' +
@@ -739,7 +739,7 @@ tbody tr:hover{background:#FFFCF5}
       $('#mrev', s).onclick = async function () { if (!confirm('Sign this member out on every device?')) return; try { await api('member-revoke-sessions', { email: email }); toast('Signed out everywhere'); } catch (x) { toast(x.message); } };
       var ulk = $('#unlinkL', s); if (ulk) ulk.onclick = async function () { if (!confirm('Remove this listing link? The member can add the right one in their profile.')) return; try { await api('member-unlink-listing', { email: email }); toast('Listing link removed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       $('#mBen', s).onclick = function () { s.remove(); editBenefits(email, function () { vMembers(); }); };
-      var stg = $('#shopTg', s); if (stg) stg.onclick = async function () { var dis = !m.shop.disabled; if (dis && !confirm('Take this member\u2019s public price list page down? They will still see it in Studio.')) return; try { await api('member-shop-disable', { email: email, disabled: dis }); toast(dis ? 'Page taken down' : 'Page allowed again'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
+      var stg = $('#shopTg', s); if (stg) stg.onclick = async function () { var dis = !m.shop.disabled; if (dis && !confirm('Take this member\u2019s public price list page down? They will still see it in Business Studio.')) return; try { await api('member-shop-disable', { email: email, disabled: dis }); toast(dis ? 'Page taken down' : 'Page allowed again'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       var sy = $('#sync', s); if (sy) sy.onclick = async function () { try { var r = await api('member-stripe-sync', { email: email }); toast('Add-on: ' + (r.addon ? r.addon.status : 'none')); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       try {
         var u = await api('member-usage', { email: email });
@@ -767,14 +767,14 @@ tbody tr:hover{background:#FFFCF5}
     var list = r.members.filter(function (m) { return m.addon; });
     var live = list.filter(function (m) { return ['active', 'trialing'].indexOf(m.addon.status) > -1; });
     var yearly = live.filter(function (m) { return m.addon.interval === 'year'; }).length, monthly = live.length - yearly;
-    app.innerHTML = '<main><h1>AI Power subscriptions</h1><div class="grid" style="margin-bottom:14px">' +
+    app.innerHTML = '<main><h1>Business Studio Pro subscriptions</h1><div class="grid" style="margin-bottom:14px">' +
       stat(live.length, 'Active (' + monthly + ' monthly, ' + yearly + ' yearly)') +
       stat('£' + (monthly * 5 + yearly * 50 / 12).toFixed(2) + '/mo', 'Gross revenue (yearly spread over 12)') +
       stat(live.filter(function (m) { return m.status === 'none'; }).length, 'Not Business Club members') +
       stat(list.filter(function (m) { return m.addon.cancelAtPeriodEnd; }).length, 'Cancelling at period end') +
       stat(list.filter(function (m) { return ['past_due', 'unpaid', 'incomplete'].indexOf(m.addon.status) > -1; }).length, 'Payment problems') + '</div>' +
-      '<div class="tw"><table><thead><tr><th>Person</th><th>AI Power</th><th>Renews / ends</th><th>Business Club</th><th>Today</th></tr></thead><tbody>' +
-      (list.length ? list.map(function (m) { return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + '</div></td><td>' + addonPill(m.addon) + '</td><td>' + d(m.addon.currentPeriodEnd) + '</td><td>' + statusPill(m) + '</td><td>' + m.today.used + ' / ' + m.limit + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="muted">No AI Power subscriptions yet.</td></tr>') +
+      '<div class="tw"><table><thead><tr><th>Person</th><th>Business Studio Pro</th><th>Renews / ends</th><th>Business Club</th><th>Today</th></tr></thead><tbody>' +
+      (list.length ? list.map(function (m) { return '<tr><td><b>' + esc(m.email) + '</b><div class="muted">' + esc(m.name) + '</div></td><td>' + addonPill(m.addon) + '</td><td>' + d(m.addon.currentPeriodEnd) + '</td><td>' + statusPill(m) + '</td><td>' + m.today.used + ' / ' + m.limit + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="muted">No Business Studio Pro subscriptions yet.</td></tr>') +
       '</tbody></table></div><p class="muted" style="margin-top:8px">Refunds, invoices and payment details are managed in your Stripe dashboard. People switch plan or cancel themselves from Account → Manage subscription.</p></main>';
   }
 
@@ -802,7 +802,7 @@ tbody tr:hover{background:#FFFCF5}
     var o = S.overview = await api('overview'); var st = o.settings;
     function f(k, l, hint, step) { return '<div><label for="s_' + k + '">' + esc(l) + '</label><input id="s_' + k + '" type="number" step="' + (step || 1) + '" value="' + esc(st[k]) + '">' + (hint ? '<div class="muted">' + esc(hint) + '</div>' : '') + '</div>'; }
     app.innerHTML = '<main><h1>Allowances &amp; limits</h1><div class="card stack"><h2 style="margin:0">Daily allowances</h2><div class="f2">' +
-      f('standardLimit', 'Business Club', 'Generations per day') + f('powerLimit', 'AI Power', 'Generations per day (with or without Club)') + '</div>' +
+      f('standardLimit', 'Business Club', 'Generations per day') + f('powerLimit', 'Business Studio Pro', 'Generations per day (with or without Club)') + '</div>' +
       '<p class="muted">A 30-day content plan uses 3 generations; everything else uses 1. Allowances reset at midnight UK time.</p>' +
       '<p class="muted">Changes apply immediately. Per-person custom limits (Members \u2192 Manage) override these.</p></div>' +
       '<div class="card stack" style="margin-top:12px"><h2 style="margin:0">Spending protection</h2><div class="f2">' +

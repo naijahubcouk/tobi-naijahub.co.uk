@@ -4,7 +4,7 @@
  * POST /.netlify/functions/studio-auth  { action, ... }
  *   request-code   { email }         → sign in. Codes only go to people with access (no enumeration).
  *   verify-code    { email, code }   → sets an HttpOnly session cookie
- *   signup-request { email }         → "Get AI Power": anyone can verify their email to buy
+ *   signup-request { email }         → "Get Business Studio Pro": anyone can verify their email to buy
  *   signup-verify  { email, code }   → session for buying; no account until payment succeeds
  *   stepup-request {} / stepup-verify { code } → fresh verification for payments
  *   logout {} / logout-all {}
@@ -12,7 +12,7 @@
 const core = require('../core');
 const { HttpError, handler, requireEmail, rateLimit, getMember, getSettings, access } = core;
 
-const GENERIC = 'If that email has Studio access, a 6-digit code is on its way. It expires in 10 minutes.';
+const GENERIC = 'If that email has Business Studio access, a 6-digit code is on its way. It expires in 10 minutes.';
 
 async function jitter() { await core.sleep(250 + Math.random() * 400); }
 
@@ -41,7 +41,7 @@ exports.handler = handler(async (ctx) => {
       if (!ok) throw new HttpError(400, 'invalid_code', 'That code is incorrect or has expired. Please check it or request a new one.');
       const member = await getMember(email);
       if (!access(member, await getSettings()).canView) {
-        throw new HttpError(403, 'no_access', 'This email doesn\'t have Studio access. You can get AI Power to start.');
+        throw new HttpError(403, 'no_access', 'This email doesn\'t have Business Studio access. Sign in with the email you used to pay, or join the Business Club.');
       }
       const s = await core.createSession(email, 'member', ctx.event);
       ctx.cookiesOut.push(s.cookie);
