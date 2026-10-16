@@ -464,9 +464,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       '<button class="btn ' + (up ? 'gold' : 'primary') + ' block" id="sendBtn">' + (up ? 'Continue' : 'Send my code') + '</button>' +
       '<p class="hint" style="text-align:center">No password needed. We’ll email you a 6-digit code.</p></form>' +
       (up ? '<p class="hint" style="text-align:center;margin-top:18px">Already have access? <button class="btn link" id="toSignin">Sign in</button></p>'
-        : '<div class="card plan stack" style="margin-top:18px"><b style="font-size:16px">💚 Not a member yet? Auntie Tobi Business Club — £50/year</b>' +
-          '<ul class="clubticks"><li>Business Spotlight or collab on Instagram + Blog</li><li>Featured Business on the app &amp; website for 1 year</li><li>Your product or service on the Marketplace</li><li>Business Discovery features &amp; Instagram repost opportunities</li><li>Verification badge for eligible businesses</li><li>Business Studio — content ideas, follow-ups, tracker &amp; Library</li></ul>' +
-          '<a class="btn gold block" href="/business-club">Join the Business Club →</a></div>') + '</div>';
+        : '') + '</div>';
     var ts = $('#toSignup'); if (ts) ts.onclick = function () { showSignIn($('#email').value, 'signup'); };
     var ti = $('#toSignin'); if (ti) ti.onclick = function () { showSignIn($('#email').value); };
     $('#emailForm').addEventListener('submit', async function (e) {
