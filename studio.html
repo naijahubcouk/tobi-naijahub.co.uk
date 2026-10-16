@@ -1748,7 +1748,6 @@ a.btn{text-decoration:none}
     monthly: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     visibility: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
   };
-  var M07_SECTIONS = ['Monthly Content Calendar', 'Seasonal UK Marketing Opportunities', 'Reel Hooks & Story Prompts', 'Product and Service Promotion Ideas', 'Customer Engagement Ideas', 'Monthly Business Challenge'];
 
   // Light lesson formatting: ## heading, - bullets, 1. numbers, **bold**, > tip, [link](https://…)
   function rt(src) {
@@ -1843,7 +1842,7 @@ a.btn{text-decoration:none}
       '<h2>Explore resources</h2><div class="modgrid">' + r.modules.map(function (m) {
         var ls = r.lessons.filter(function (l) { return l.module === m.id; }), lv = ls.filter(function (l) { return l.status !== 'planned'; });
         var dn = lv.filter(function (l) { return p.completed[l.id]; }).length, started = lv.some(function (l) { return p.opened[l.id]; });
-        var count = m.id === 'm07' ? (lv.length ? lv.length + ' edition' + (lv.length > 1 ? 's' : '') : 'First edition coming soon') : lv.length + ' lesson' + (lv.length === 1 ? '' : 's') + (ls.length > lv.length ? ' · ' + (ls.length - lv.length) + ' coming soon' : '');
+        var count = lv.length + ' lesson' + (lv.length === 1 ? '' : 's') + (ls.length > lv.length ? ' · ' + (ls.length - lv.length) + ' coming soon' : '');
         return '<button class="modcard" data-mod="' + m.id + '"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 22) + '</span><span class="mn">MODULE ' + esc(m.n) + '</span><b>' + esc(m.title) + '</b><span class="md">' + esc(m.desc) + '</span>' +
           '<span class="mc">' + esc(count) + '</span>' + (lv.length ? '<span class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></span>' : '') +
           '<span class="mgo">' + (started && dn < lv.length ? 'Continue' : dn && dn === lv.length ? 'Review' : 'Explore') + ' →</span></button>';
@@ -1875,16 +1874,7 @@ a.btn{text-decoration:none}
     var m = S.res.modules.filter(function (x) { return x.id === id; })[0]; if (!m) return showResources();
     setChrome({ tabs: true, tab: 'library', back: showResources });
     var ls = S.res.lessons.filter(function (l) { return l.module === id; }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
-    var body;
-    if (id === 'm07') {
-      var months = {}; ls.filter(function (l) { return l.status !== 'planned' && l.month; }).forEach(function (l) { (months[l.month] = months[l.month] || []).push(l); });
-      var keys = Object.keys(months).sort().reverse();
-      body = (keys.length ? keys.map(function (k) { return '<h2>' + esc(new Date(k + '-01T12:00:00Z').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })) + ' edition</h2><div class="list">' + months[k].map(function (l) { return lessonRow(l); }).join('') + '</div>'; }).join('')
-        : '<div class="note stack"><b>First edition coming soon</b><span>New ideas are added every month. You’ll be able to browse past editions here.</span></div>') +
-        '<h2>What each edition includes</h2><div class="card"><ul style="margin-left:18px">' + M07_SECTIONS.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></div>';
-    } else {
-      body = '<div class="list">' + ls.map(function (l) { return lessonRow(l); }).join('') + '</div>';
-    }
+    var body = '<div class="list">' + ls.map(function (l) { return lessonRow(l); }).join('') + '</div>';
     var lv = ls.filter(function (l) { return l.status !== 'planned'; }), dn = lv.filter(function (l) { return S.res.progress.completed[l.id]; }).length;
     app.innerHTML = '<main><div class="modhead"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 26) + '</span><div><span class="mn">MODULE ' + esc(m.n) + '</span><h1>' + esc(m.title) + '</h1></div></div><p class="sub" style="margin:6px 0 12px">' + esc(m.desc) + '</p>' +
       (lv.length ? '<div class="card stack" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><b>' + dn + ' of ' + lv.length + ' completed</b></div><div class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></div></div>' : '') +

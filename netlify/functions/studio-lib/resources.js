@@ -26,8 +26,6 @@ const MODULES = [
   { id: 'm04', n: '04', title: 'Sales & Customer Experience', desc: 'Turn interest into enquiries, orders and repeat customers.', icon: 'sales' },
   { id: 'm05', n: '05', title: 'Business Tools', desc: 'Simple tools that save time.', icon: 'tools' },
   { id: 'm06', n: '06', title: 'Business Growth & Strategy', desc: 'Build a stronger business step by step.', icon: 'growth' },
-  { id: 'm07', n: '07', title: 'Monthly Content & Marketing Ideas', desc: 'Fresh marketing inspiration added every month.', icon: 'monthly' },
-  { id: 'm08', n: '08', title: 'Auntie Tobi Visibility & Collaboration', desc: 'Make the most of your membership benefits.', icon: 'visibility' },
 ];
 const MODULE_IDS = MODULES.map(m => m.id);
 const STATUSES = ['planned', 'draft', 'published'];
@@ -67,7 +65,7 @@ function metaOf(l) {
   };
 }
 
-function isLive(meta, day) { return meta.status === 'published' && (!meta.publishAt || meta.publishAt <= (day || today())); }
+function isLive(meta, day) { return MODULE_IDS.includes(meta.module) && meta.status === 'published' && (!meta.publishAt || meta.publishAt <= (day || today())); }
 
 // ───────────── seeding (first run, and new lessons shipped with later updates) ─────────────
 // Never overwrites anything you've edited in admin, and never re-adds a lesson you deleted.
@@ -95,6 +93,8 @@ async function ensureSeeded() {
       const i = data.lessons.findIndex(m => m.id === l.id);
       if (i >= 0) data.lessons[i] = metaOf(l); else data.lessons.push(metaOf(l));
     }
+    // Remove untouched launch lessons from modules that no longer exist.
+    data.lessons = data.lessons.filter(m => MODULE_IDS.includes(m.module) || m.source !== 'seed' || m.adminEdited);
     data.seedVersion = seed.VERSION;
     return data;
   });
@@ -130,7 +130,7 @@ async function getProgress(email) { return (await getJson(progressKey(email))) |
 async function home(email, profile) {
   const idx = await index();
   const day = today();
-  const visible = idx.lessons.filter(m => isLive(m, day) || m.status === 'planned');
+  const visible = idx.lessons.filter(m => isLive(m, day) || (m.status === 'planned' && MODULE_IDS.includes(m.module)));
   const p = await getProgress(email);
   const tag = recommendTag(profile);
   return {
@@ -331,7 +331,6 @@ function cleanLesson(raw, existing) {
     if (STUDIO_LINKS.tools.includes(s.tool)) l.studio = { label: cleanText(s.label, 60), tool: s.tool, input: s.input && typeof s.input === 'object' ? JSON.parse(JSON.stringify(s.input).slice(0, 2000)) : {} };
     else if (STUDIO_LINKS.screens.includes(s.screen)) l.studio = { label: cleanText(s.label, 60), screen: s.screen };
   }
-  if (module === 'm07' && status !== 'planned' && !l.month) throw new HttpError(400, 'missing_field', 'Monthly ideas need a month (e.g. 2026-11).');
   if (status === 'published' && !l.learn.trim() && !l.use.length) throw new HttpError(400, 'missing_field', 'Add some content before publishing (Learn or a resource).');
   if (status === 'published' && !l.publishAt) l.publishAt = today();
   if (!l.readMins && l.learn) l.readMins = Math.max(1, Math.round(plain(l.learn + ' ' + l.see + ' ' + l.do).split(' ').length / 200));
@@ -343,7 +342,7 @@ function slugify(t) { return String(t).toLowerCase().replace(/&/g, ' and ').repl
 async function adminList() {
   const idx = await index();
   const [all, month] = await Promise.all([getJson('res/stats/all'), getJson(`res/stats/${core.monthKey()}`)]);
-  return { modules: MODULES, tags: TAGS, lessons: idx.lessons.map(({ text, ...m }) => m).sort(sortLessons), stats: { all: all || { views: {}, completes: {} }, month: month || { views: {}, completes: {} } }, today: today(), monthKey: core.monthKey() };
+  return { modules: MODULES, tags: TAGS, lessons: idx.lessons.filter(m => MODULE_IDS.includes(m.module)).map(({ text, ...m }) => m).sort(sortLessons), stats: { all: all || { views: {}, completes: {} }, month: month || { views: {}, completes: {} } }, today: today(), monthKey: core.monthKey() };
 }
 
 async function adminGet(id) {

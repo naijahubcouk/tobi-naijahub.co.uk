@@ -7,7 +7,7 @@
  *
  * Formatting used in lesson text:  ## Heading   - bullet   1. numbered   **bold**   > Tip box   [link](https://…)
  */
-const VERSION = 1;
+const VERSION = 2;
 const REVIEWED = '2026-10-16';
 
 // Every module and lesson title. "planned" = shown to members as Coming soon.
@@ -18,7 +18,6 @@ const OUTLINE = {
   m04: ['Understanding Your Customer’s Buying Journey', 'How to Present Your Products or Services', 'Writing Offers Without Constant Discounts', 'How to Respond to Customer Enquiries', 'Following Up Without Being Pushy', 'How to Ask for Customer Reviews', 'Encouraging Repeat Purchases and Referrals'],
   m05: ['Setting Up WhatsApp Business', 'Using WhatsApp Catalogue, Labels & Quick Replies', 'Creating Designs With Canva', 'Using ChatGPT Responsibly for Business', 'Using Google Business Profile Where Eligible', 'Organising Orders and Customer Enquiries', 'Simple Business Tracking With Spreadsheets'],
   m06: ['Business Mindset: Ownership & Consistency', 'Visibility vs Sales: Understanding the Difference', 'Pricing Your Products or Services', 'Understanding Costs, Profit and Cash Flow', 'Finding Your Competitive Advantage', 'Building Customer Trust', 'Creating a Simple 90-Day Growth Strategy', 'Learning From Your Business Results'],
-  m08: ['Preparing Your Business for an Auntie Tobi Spotlight', 'Submitting Products to the Marketplace', 'Getting Your Business Ready for Discovery Features', 'How to Make the Most of a Feature or Repost', 'Finding Suitable Business Collaborations', 'Tracking Enquiries From Auntie Tobi', 'Preparing for Your Business Check-In'],
 };
 
 function slug(t) { return String(t).toLowerCase().replace(/’/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48); }
