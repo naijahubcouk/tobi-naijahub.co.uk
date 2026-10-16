@@ -104,6 +104,11 @@ async function saveMember(actor, raw, isNew) {
   return saved;
 }
 
+async function notifyBenefit(email, kind) {
+  const what = { stories: 'shared your business on her Story', reposts: 'reposted your post', discovery: 'featured your business', collabs: 'did a collab with you' }[kind];
+  if (what) await notify.pushToMember(email, 'Auntie Tobi 💚', `Auntie Tobi ${what}! See it in your Business Studio.`);
+}
+
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const action = body.action;
@@ -334,10 +339,7 @@ exports.handler = handler(async (ctx) => {
       if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
       const r = action === 'benefits-log' ? await benefits.log(email, member, body.kind, body.note, body.date, body.notify !== false, body.link) : await benefits.unlog(email, member, body.kind, body.index);
       await core.audit(actor, action === 'benefits-log' ? 'benefit_logged' : 'benefit_unlogged', { email, kind: body.kind, notify: body.notify !== false });
-      if (action === 'benefits-log' && body.notify !== false) {
-        const what = { stories: 'shared your business on her Story', reposts: 'reposted your post', discovery: 'featured your business', collabs: 'did a collab with you' }[body.kind];
-        await notify.pushToMember(email, 'Auntie Tobi 💚', `Auntie Tobi ${what}! See it in your Business Studio.`);
-      }
+      if (action === 'benefits-log' && body.notify !== false) await notifyBenefit(email, body.kind);
       return r;
     }
     case 'benefits-targets-save': {
@@ -390,10 +392,37 @@ exports.handler = handler(async (ctx) => {
     }
     case 'todo-mark': {
       const how = String(body.how || '');
+      // Ticking a share row logs ONE share of that type (the row stays until the target is met).
+      if (how === 'done' && /^share:/.test(String(body.key || ''))) {
+        const it = await todo.get(String(body.key));
+        if (it && it.kind === 'share' && it.meta && it.meta.type && !it.doneAt && !it.skippedAt) {
+          const member = await core.getMember(it.meta.email);
+          if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
+          const loggedAt = core.nowIso();
+          await benefits.log(it.meta.email, member, it.meta.type, '', core.dayKey(), true);
+          const y = (await benefits.getYear(it.meta.email, member)).year;
+          const entry = ((y && y[it.meta.type]) || []).find(e => e.loggedAt >= loggedAt) || ((y && y[it.meta.type]) || [])[0];
+          await core.audit(actor, 'benefit_logged', { email: it.meta.email, kind: it.meta.type, notify: true, from: 'today' });
+          await notifyBenefit(it.meta.email, it.meta.type);
+          return { item: it, logged: { email: it.meta.email, type: it.meta.type, loggedAt: entry ? entry.loggedAt : '' } };
+        }
+      }
       const it = await todo.mark(String(body.key || ''), how);
       if (how === 'done' && it.kind === 'alert' && it.meta && /^alerts\/[\w:.\-]+$/.test(it.meta.alertKey || '')) await core.del(it.meta.alertKey).catch(() => {});
       await core.audit(actor, `todo_${how}`, { key: it.key });
       return { item: it };
+    }
+    case 'todo-share-undo': {
+      const email = requireEmail(body.email);
+      const type = String(body.type || '');
+      const member = await core.getMember(email);
+      if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
+      const y = (await benefits.getYear(email, member)).year;
+      const i = ((y && y[type]) || []).findIndex(e => e.loggedAt && e.loggedAt === String(body.loggedAt || ''));
+      if (i < 0) throw new HttpError(404, 'not_found', 'That share was already removed.');
+      await benefits.unlog(email, member, type, i);
+      await core.audit(actor, 'benefit_unlogged', { email, kind: type, from: 'today' });
+      return { ok: true };
     }
     case 'todo-add': {
       const def = await todo.addDef(body.task);

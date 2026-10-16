@@ -297,3 +297,10 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - Open page (no sign-in, no usage limit — Seun's choice). Paste an Instagram bio (+ optional handle and notes) → listing title (≤60), meta description (140–160, with a Google preview), full description (120–200 words) and details pulled from the bio (name, category, section, location, phone, WhatsApp, email, website, Instagram, suggested /biz/ link). Copy buttons, "↻ New" per part, editable, last 20 kept on the device.
 - Written for the Auntie Tobi business directory; never invents facts, leaves "[add location]" gaps.
 - Function: `studio-listing` (`studio-lib/handlers/listing.js`). Bot trap: hidden field + page open > 1.5s + same-site header. Cost ≈ 0.03p a listing, in Business Studio spend as `listing`. `noindex`.
+
+## 7p. Admin Today — one share row per type
+
+- Share tasks are now one row per member per type: Story, repost (per week) and discovery feature (per month), e.g. "Share Ada Cakes: repost (1 of 2 done this week)".
+- The row's **+1** logs ONE share of that type in the member's record (they see it in My benefits and get the usual push). The row stays and updates until the target is met, then ticks itself. An **Undo** shows for 6 seconds (`todo-share-undo`).
+- **Skip** hides only that row for today. **Open record** opens the member's benefits.
+- Still up to 5 members at a time (longest-waiting first); each can have 1–3 rows. Old combined share tasks are replaced automatically.

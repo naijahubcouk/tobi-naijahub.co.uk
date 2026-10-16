@@ -89,7 +89,9 @@ async function refresh(data) {
     if (left >= 0 && left <= RENEW_DAYS) add(`renew:${m.email}:${m.membershipExpiresAt}`, 'renew', `${name}’s membership ends ${m.membershipExpiresAt} — send a renewal message`, { email: m.email, expires: m.membershipExpiresAt, whatsapp: p && p.whatsapp });
     const pr = benefits.progress(y, targets, day);
     const due = { stories: pr.stories.due, reposts: pr.reposts.due, discovery: pr.discovery.due };
-    if (due.stories || due.reposts || due.discovery) owed.push({ email: m.email, name, due, lastShared: y ? benefits.lastShared(y) : '', weekStart: pr.weekStart, month: day.slice(0, 7) });
+    const types = {};
+    for (const t of SHARE_TYPES) if (pr[t].due) types[t] = { n: pr[t].n, target: pr[t].target, period: t === 'discovery' ? day.slice(0, 7) : pr.weekStart };
+    if (Object.keys(types).length) owed.push({ email: m.email, name, due, types, lastShared: y ? benefits.lastShared(y) : '', weekStart: pr.weekStart, month: day.slice(0, 7) });
   }
   // Lessons ready for approval
   const ready = data.lessonsReady || [];
@@ -110,21 +112,32 @@ async function refresh(data) {
       if (new Date(a.ts).toISOString() < s.since) continue;
       add(`alert:${a.key}`, 'alert', a.message, { alertKey: a.key });
     }
-    // Shares: keep up to 5 open, topped up from the longest-waiting members.
+    // Shares: one row per member per type (Story / repost / discovery), for up to 5 members at a time,
+    // topped up from the longest-waiting members. A row stays open (and overdue) until that type is met.
     const owedBy = new Map(owed.map(o => [o.email, o]));
+    const taken = new Set();
     for (const [k, it] of Object.entries(items)) {
       if (it.kind !== 'share' || it.doneAt || it.skippedAt) continue;
-      const o = owedBy.get(it.meta.email);
-      if (o) { still.add(k); it.meta.due = o.due; it.title = shareTitle(o); } // stays open (and overdue) while they're still owed
+      if (!it.meta || !it.meta.type) { delete items[k]; continue; } // old combined task → replaced by one row per type
+      const o = owedBy.get(it.meta.email), ty = o && o.types[it.meta.type];
+      if (ty && ty.period === it.meta.period) { still.add(k); Object.assign(it.meta, { n: ty.n, target: ty.target }); it.title = shareRowTitle(o.name, it.meta.type, ty); taken.add(o.email); }
     }
-    const openShares = Object.values(items).filter(it => it.kind === 'share' && !it.doneAt && !it.skippedAt);
-    const taken = new Set(openShares.map(it => it.meta.email));
-    const queue = owed.filter(o => !taken.has(o.email) && !(items[`share:${o.email}:${o.weekStart}`] && items[`share:${o.email}:${o.weekStart}`].due === day))
-      .sort((a, b) => (a.lastShared || '0').localeCompare(b.lastShared || '0'));
-    for (const o of queue.slice(0, Math.max(0, SHARE_SLOTS - openShares.length))) {
-      const key = `share:${o.email}:${o.weekStart}`;
-      still.add(key);
-      items[key] = { key, kind: 'share', title: shareTitle(o), auto: true, due: day, createdAt: now, meta: { email: o.email, weekStart: o.weekStart, due: o.due } };
+    const addRows = o => {
+      for (const [type, ty] of Object.entries(o.types)) {
+        const key = `share:${o.email}:${type}:${ty.period}`, ex = items[key];
+        if (ex && !ex.doneAt && !ex.skippedAt) continue;           // already open
+        if (ex && (ex.skippedAt || ex.doneAt) && ex.due === day) continue; // skipped (or finished) today
+        still.add(key);
+        items[key] = { key, kind: 'share', title: shareRowTitle(o.name, type, ty), auto: true, due: day, createdAt: now, meta: { email: o.email, type, period: ty.period, n: ty.n, target: ty.target } };
+      }
+    };
+    for (const email of taken) addRows(owedBy.get(email)); // e.g. a new week started for a member already on the list
+    const queue = owed.filter(o => !taken.has(o.email)).sort((a, b) => (a.lastShared || '0').localeCompare(b.lastShared || '0'));
+    let slots = Math.max(0, SHARE_SLOTS - taken.size);
+    for (const o of queue) {
+      if (!slots) break;
+      const before = still.size; addRows(o);
+      if (still.size > before) slots--;
     }
     // Add new automatic items (due today) and your own tasks for today.
     for (const [k, w] of Object.entries(want)) if (!items[k]) items[k] = { ...w, due: day, createdAt: now };
@@ -155,6 +168,11 @@ async function refresh(data) {
   return view;
 }
 
+const SHARE_TYPES = ['stories', 'reposts', 'discovery'];
+const SHARE_WORD = { stories: 'Story', reposts: 'repost', discovery: 'discovery feature' };
+function shareRowTitle(name, type, ty) {
+  return `Share ${name}: ${SHARE_WORD[type]} (${ty.n} of ${ty.target} done this ${type === 'discovery' ? 'month' : 'week'})`;
+}
 function shareTitle(o) {
   const parts = [];
   if (o.due.stories) parts.push(`${o.due.stories} Stor${o.due.stories === 1 ? 'y' : 'ies'}`);
@@ -191,6 +209,8 @@ async function mark(key, how) {
   return item;
 }
 
+async function get(key) { const s = await getJson(STATE); return (s && s.items && s.items[key]) || null; }
+
 async function summary() {
   const s = await getJson(STATE);
   if (!s) return null;
@@ -198,4 +218,4 @@ async function summary() {
   return v.counts;
 }
 
-module.exports = { refresh, mark, addDef, deleteDef, getDefs, summary, defAppliesOn, SHARE_SLOTS };
+module.exports = { refresh, mark, get, addDef, deleteDef, getDefs, summary, defAppliesOn, SHARE_SLOTS, SHARE_TYPES };

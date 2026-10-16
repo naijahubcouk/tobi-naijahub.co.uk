@@ -64,6 +64,7 @@ tbody tr:hover{background:#FFFCF5}
 .mkc-btn{margin-top:4px;background:#057A44;color:#fff;border-radius:8px;padding:8px;font-weight:700;text-align:center;font-size:12.5px}
 .td-list{padding:4px 14px}.td{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}.td:last-child{border-bottom:0}
 .td-check{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:2px solid var(--green);background:#fff;color:#fff;font-weight:800;cursor:pointer;margin-top:1px}
+.td-check.td-share{width:auto;min-width:38px;padding:0 8px;border-radius:14px;color:var(--green);font-size:13px}.td-check.td-share:hover{background:var(--green);color:#fff}
 .td-done .td-check{background:var(--green)}.td-done .td-b b{text-decoration:line-through;color:var(--muted)}.td-late{background:#FFF7F6;margin:0 -14px;padding:11px 14px}
 .td-b{flex:1;min-width:0}.td-m{font-size:12.5px;margin-top:2px}.tdbar{height:8px;background:#E7EDE9;border-radius:99px;overflow:hidden;margin:10px 0 4px}.tdbar span{display:block;height:100%;background:var(--green)}
 .note{background:var(--green-l);border:1px solid #CFEBDB;border-radius:14px;padding:12px 14px;line-height:1.5}
@@ -96,6 +97,13 @@ tbody tr:hover{background:#FFFCF5}
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function undoToast(m, onUndo) {
+    var t = document.createElement('div'); t.className = 'toast'; t.style.display = 'flex'; t.style.gap = '12px'; t.style.alignItems = 'center';
+    t.innerHTML = '<span></span><button class="btn small" style="background:var(--gold);color:var(--navy);border:0">Undo</button>';
+    t.firstChild.textContent = m; document.body.appendChild(t);
+    var gone = setTimeout(function () { t.remove(); }, 6000);
+    t.lastChild.onclick = function () { clearTimeout(gone); t.remove(); onUndo(); };
+  }
   function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2500); }
   function d(iso) { return iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }
   function gbp(usd) { var r = S.overview ? S.overview.settings.usdToGbp : 0.79; return '£' + (usd * r).toFixed(usd * r < 1 ? 3 : 2); }
@@ -608,12 +616,13 @@ tbody tr:hover{background:#FFFCF5}
 
   // ── Today: daily to-do list (overdue until marked) ──
   var TD_ICO = { verify: '🏛️', market: '🛍️', alert: '🔔', renew: '⏳', spotlight: '📣', lesson: '📚', share: '📲', task: '📝' };
+  var TD_SHARE = { stories: 'Story', reposts: 'repost', discovery: 'discovery feature' };
   var TD_REPEAT = { once: 'Once', daily: 'Every day', weekdays: 'Weekdays (Mon–Fri)', weekly: 'Every week' };
   var TD_DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   function tdDay(day) { return new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); }
   function tdActions(it) {
     var m = it.meta || {}, out = [];
-    if (it.kind === 'share') out.push('<button class="btn small ghost" data-tq="stories" data-e="' + esc(m.email) + '">+Story</button><button class="btn small ghost" data-tq="reposts" data-e="' + esc(m.email) + '">+Repost</button>' + (m.due && m.due.discovery ? '<button class="btn small ghost" data-tq="discovery" data-e="' + esc(m.email) + '">+Discovery</button>' : ''));
+    if (it.kind === 'share') out.push('<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open record</button>');
     if (it.kind === 'market') out.push('<button class="btn small ghost" data-tgo="market">Review</button>');
     if (it.kind === 'verify' || it.kind === 'spotlight') out.push('<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>' + (m.number ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(m.number) + '">GOV.UK</a>' : ''));
     if (it.kind === 'renew') out.push((m.whatsapp ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://wa.me/' + esc(String(m.whatsapp).replace(/\D/g, '').replace(/^0/, '44')) + '?text=' + encodeURIComponent('Hi! Your Auntie Tobi Business Club membership ends on ' + d(m.expires) + '. Renew here to keep your benefits: https://auntietobi.co.uk/business-club 💚') + '">WhatsApp</a>' : '') + '<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>');
@@ -624,10 +633,11 @@ tbody tr:hover{background:#FFFCF5}
   function tdRow(it, state) {
     var done = state === 'done';
     return '<div class="td' + (done ? ' td-done' : '') + (state === 'overdue' ? ' td-late' : '') + '">' +
-      '<button class="td-check" data-tdone="' + esc(it.key) + '" aria-label="' + (done ? 'Mark not done' : 'Mark done') + '" title="' + (done ? 'Undo' : 'Mark done') + '">' + (done ? '✓' : '') + '</button>' +
+      (it.kind === 'share' && !done ? '<button class="td-check td-share" data-tshare="' + esc(it.key) + '" data-e="' + esc(it.meta.email) + '" data-ty="' + esc(it.meta.type) + '" aria-label="Log 1 ' + esc(TD_SHARE[it.meta.type] || 'share') + '" title="Log 1 ' + esc(TD_SHARE[it.meta.type] || 'share') + '">+1</button>'
+        : '<button class="td-check" data-tdone="' + esc(it.key) + '" aria-label="' + (done ? 'Mark not done' : 'Mark done') + '" title="' + (done ? 'Undo' : 'Mark done') + '">' + (done ? '✓' : '') + '</button>') +
       '<div class="td-b"><div><span class="td-ico">' + (TD_ICO[it.kind] || '•') + '</span> <b>' + esc(it.title) + '</b></div>' +
       '<div class="muted td-m">' + (state === 'overdue' ? '<span class="pill p-warn">Overdue since ' + esc(tdDay(it.due)) + (it.daysOverdue > 1 ? ' · ' + it.daysOverdue + ' days' : '') + '</span> ' : '') +
-        (done ? (it.skippedAt ? 'Skipped' : it.autoDone ? 'Done automatically' : 'Done') : (it.auto ? 'Ticks itself when it’s dealt with' : (it.meta && it.meta.repeat && it.meta.repeat !== 'once' ? TD_REPEAT[it.meta.repeat] : 'Your task'))) + '</div>' +
+        (done ? (it.skippedAt ? 'Skipped' : it.autoDone ? (it.kind === 'share' ? 'All done for this ' + (it.meta && it.meta.type === 'discovery' ? 'month' : 'week') : 'Done automatically') : 'Done') : it.kind === 'share' ? 'Tap +1 each time you share — the member is told. Ticks off at ' + esc(String(it.meta.target)) + '.' : (it.auto ? 'Ticks itself when it’s dealt with' : (it.meta && it.meta.repeat && it.meta.repeat !== 'once' ? TD_REPEAT[it.meta.repeat] : 'Your task'))) + '</div>' +
         (done ? '' : '<div class="row" style="gap:4px;margin-top:6px">' + tdActions(it) + '<button class="btn small ghost" data-tskip="' + esc(it.key) + '" style="color:var(--muted)">Skip</button></div>') + '</div></div>';
   }
   async function vToday() {
@@ -648,6 +658,19 @@ tbody tr:hover{background:#FFFCF5}
     var refresh = function () { vToday(); };
     $$('[data-tdone]').forEach(function (b) { b.onclick = async function () { var row = b.closest('.td'); try { await api('todo-mark', { key: b.dataset.tdone, how: row.classList.contains('td-done') ? 'undo' : 'done' }); refresh(); } catch (x) { toast(x.message); } }; });
     $$('[data-tskip]').forEach(function (b) { b.onclick = async function () { try { await api('todo-mark', { key: b.dataset.tskip, how: 'skip' }); toast('Skipped'); refresh(); } catch (x) { toast(x.message); } }; });
+    $$('[data-tshare]').forEach(function (b) {
+      b.onclick = async function () {
+        b.disabled = true; var word = TD_SHARE[b.dataset.ty] || 'share';
+        try {
+          var r = await api('todo-mark', { key: b.dataset.tshare, how: 'done' });
+          var lg = r.logged;
+          refresh();
+          if (lg) undoToast('1 ' + word + ' logged — member told', async function () {
+            try { await api('todo-share-undo', { email: lg.email, type: lg.type, loggedAt: lg.loggedAt }); toast('Undone'); refresh(); } catch (x) { toast(x.message); }
+          });
+        } catch (x) { toast(x.message); b.disabled = false; }
+      };
+    });
     $$('[data-tq]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { await api('benefits-log', { email: b.dataset.e, kind: b.dataset.tq, notify: true }); toast(BEN_LOG[b.dataset.tq] + ' logged — member told'); refresh(); } catch (x) { toast(x.message); b.disabled = false; } }; });
     $$('[data-tgo]').forEach(function (b) { b.onclick = function () { if (b.dataset.tgo === 'market') S.mkTab = 'review'; go(b.dataset.tgo); }; });
     $$('[data-tben]').forEach(function (b) { b.onclick = function () { editBenefits(b.dataset.tben, refresh); }; });
