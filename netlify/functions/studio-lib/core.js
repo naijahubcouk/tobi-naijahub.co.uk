@@ -454,11 +454,12 @@ async function checkOtp(email, purpose, code) {
 async function sendCodeEmail(email, code, purpose) {
   const subject = purpose === 'admin'
     ? `${code} is your Studio admin code`
+    : purpose === 'market' ? `${code} is your Auntie Tobi Marketplace code`
     : `${code} is your Auntie Tobi Business Studio code`;
-  const text = `Your one-time code is ${code}\n\nIt expires in 10 minutes. If you didn't ask for this, you can ignore this email — nobody can sign in without the code.\n\nAuntie Tobi Business Studio`;
+  const text = `Your one-time code is ${code}\n\nIt expires in 10 minutes. If you didn't ask for this, you can ignore this email — nobody can sign in without the code.\n\n${purpose === 'market' ? 'Auntie Tobi Marketplace' : 'Auntie Tobi Business Studio'}`;
   const html = `<!doctype html><html><body style="margin:0;background:#FBF6EC;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0F1E36">
 <div style="max-width:440px;margin:0 auto;padding:32px 20px">
-<div style="background:#057A44;color:#FBF6EC;border-radius:16px 16px 0 0;padding:18px 22px;font-weight:700;font-size:16px">Auntie Tobi Business Studio</div>
+<div style="background:#057A44;color:#FBF6EC;border-radius:16px 16px 0 0;padding:18px 22px;font-weight:700;font-size:16px">${purpose === 'market' ? 'Auntie Tobi Marketplace' : 'Auntie Tobi Business Studio'}</div>
 <div style="background:#fff;border-radius:0 0 16px 16px;padding:24px 22px;border:1px solid #eadfc8;border-top:0">
 <p style="margin:0 0 12px;font-size:15px">Here's your one-time code:</p>
 <p style="margin:0 0 16px;font-size:34px;letter-spacing:8px;font-weight:800;color:#0F1E36">${code}</p>

@@ -236,3 +236,13 @@ Refunds and disputes only **alert you** — access is never removed automaticall
 | Stripe (UK cards) | ≈ 1.5% + 20p per payment, plus Stripe Billing ≈ 0.7% → about 31p on each £5 payment, about £1.30 on each £50 payment |
 
 The admin "Usage & costs" page shows the actual AI cost per month and per member.
+
+## 7i. Marketplace — listings with review
+
+- **Members:** Studio → Account → Your links → **Marketplace listing**. Each Business Club member gets **1 listing**; give more in Studio Admin → Marketplace → *Extra listings for members*. Members can edit any time — every change is reviewed, and the live version stays up meanwhile. Member listings show only while their Club membership is active.
+- **Anyone you send the link to:** `https://auntietobi.co.uk/marketplace/list` (not indexed by search engines). No code needed — it's free and goes to your review queue (spam trap + 3 a day per email, 6 a day per connection).
+- **Admin:** Studio Admin → **Marketplace**: *To review* (with before/after for changes) → Approve / Request changes / Reject — the person is emailed each time. *Live* / *All*: edit, pin to top, hide, set an end date, assign an owner (so a member can edit it in Studio), delete.
+- Approving a Club member's listing ticks **Marketplace listing ✓** in their Benefits.
+- The Marketplace page and the app load live listings from `/.netlify/functions/studio-market?feed=1` (cached ~1 minute). The hard-coded lists in `marketplace.html` / `index.html` are now only a fallback if that can't load — manage products in Admin, not in the code.
+- The 11 products that were hard-coded were imported automatically on first use (`studio-lib/market-seed.js`).
+- **Link to the business listing:** the public form, the Studio form and the admin editor all have *Find your business on Auntie Tobi* — a search over the business directory (`studio-market?bizq=…`, never returns emails). The chosen listing is checked on the server; unknown ones are dropped. The review card shows the link with a check: ✓ email matches the listing / ⚠️ different email / no email on file.

@@ -13,6 +13,8 @@ const growth = require('../growth');
 const resources = require('../resources');
 const benefits = require('../benefits');
 const notify = require('../notify');
+const market = require('../market');
+function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
 
 // Business Club status. 'none' = not a Club member (e.g. AI Power-only customer).
 const STATUSES = ['pending', 'active', 'inactive', 'none'];
@@ -356,6 +358,66 @@ exports.handler = handler(async (ctx) => {
         };
       });
       return { rows, today: day, targets, weekStart: benefits.weekStart(day) };
+    }
+
+    // ── Marketplace (review & manage listings) ──
+    case 'market-list': {
+      const list = await market.all();
+      const allowance = (await getJson('market/allowance')) || {};
+      return { listings: list.map(r => ({ ...r, status: market.status(r) })).sort((a, b) => (b.submittedAt || b.updatedAt || '').localeCompare(a.submittedAt || a.updatedAt || '')), allowance, cats: market.CATS, buttons: market.BUTTONS };
+    }
+    case 'market-get': {
+      const r = await market.get(body.id);
+      if (!r) throw new HttpError(404, 'not_found', 'Listing not found.');
+      return { listing: { ...r, status: market.status(r) }, allowance: r.owner ? await market.allowanceOf(r.owner) : null, cats: market.CATS, buttons: market.BUTTONS };
+    }
+    case 'market-img': return { id: await market.saveImage(body.dataUrl, `admin:${actor}`) };
+    case 'market-save': {
+      const raw = body.listing && typeof body.listing === 'object' ? body.listing : {};
+      const prev = body.id ? await market.get(String(body.id)) : null;
+      const who = (body.meta && body.meta.owner) || (prev && (prev.owner || (prev.contact && prev.contact.email))) || '';
+      const lk = await require('./market').checkLink(ctx.event, raw.bizSlug, who);
+      const r = await market.adminSave(body.id ? String(body.id) : '', { ...raw, bizSlug: lk.slug }, body.meta, lk.link);
+      await core.audit(actor, 'market_save', { id: r.id });
+      return { listing: { ...r, status: market.status(r) } };
+    }
+    case 'market-delete': {
+      await market.adminDelete(body.id);
+      await core.audit(actor, 'market_delete', { id: body.id });
+      return { ok: true };
+    }
+    case 'market-allowance': {
+      const email = requireEmail(body.email);
+      const n = await market.setAllowance(email, body.n);
+      await core.audit(actor, 'market_allowance', { email, n });
+      return { email, n };
+    }
+    case 'market-review': {
+      const decision = String(body.decision || '');
+      const { listing: r, wasLive } = await market.review(String(body.id || ''), decision, body.note);
+      await core.audit(actor, `market_${decision}`, { id: r.id });
+      const f = r.live && decision === 'approve' ? r.live : (r.draft || r.live || {});
+      const to = r.owner || (r.contact && r.contact.email);
+      const first = (r.contact && r.contact.name ? r.contact.name.split(' ')[0] : '') || '';
+      const where = r.source === 'member' ? `${siteUrl()}/studio` : `${siteUrl()}/marketplace`;
+      const note = String(body.note || '').trim();
+      const msg = {
+        approve: [`Your listing is live on the Auntie Tobi Marketplace 🎉`, `${first ? `Hi ${first},` : 'Hello,'}\n\nGood news — “${f.name}” is ${wasLive ? 'updated and ' : ''}live on the Auntie Tobi Marketplace.\n\nSee it here: ${siteUrl()}/marketplace\n\nShare the link with your customers too!\n\nAuntie Tobi 💚`],
+        changes: [`A small change is needed on your Marketplace listing`, `${first ? `Hi ${first},` : 'Hello,'}\n\nThank you for “${f.name}”. Before it goes live, Auntie Tobi has asked for a change:\n\n${note || '(see Studio)'}\n\n${r.source === 'member' ? `Update it in your Business Studio: ${where}` : 'Reply to this email or message us on WhatsApp (https://wa.me/447594674940) with the update.'}\n\nAuntie Tobi 💚`],
+        reject: [`About your Marketplace listing`, `${first ? `Hi ${first},` : 'Hello,'}\n\nThank you for sending “${f.name}” to the Auntie Tobi Marketplace. ${wasLive ? 'Your latest change wasn’t accepted, so your listing stays as it was.' : 'We’re not able to list it at the moment.'}${note ? `\n\n${note}` : ''}\n\nAny questions? Message us on WhatsApp: https://wa.me/447594674940\n\nAuntie Tobi 💚`],
+      }[decision];
+      if (to && msg) { try { await core.sendEmail([to], msg[0], msg[1]); } catch (e) { console.error('[studio] market email failed', e && e.message); } }
+      if (r.owner && decision === 'approve') {
+        await notify.pushToMember(r.owner, 'Auntie Tobi 💚', `“${f.name}” is live on the Marketplace!`);
+        const member = await core.getMember(r.owner);
+        if (member && benefits.yearKeyOf(member)) {
+          const y = (await benefits.getYear(r.owner, member)).year;
+          if (y && !y.marketplace.done) await benefits.update(r.owner, member, { marketplace: { done: true }, notify: false }).catch(() => {});
+        }
+      } else if (r.owner && decision === 'changes') {
+        await notify.pushToMember(r.owner, 'Auntie Tobi', 'A small change is needed on your Marketplace listing — see Studio.');
+      }
+      return { listing: { ...r, status: market.status(r) } };
     }
 
     // ── Resources (content manager) ──

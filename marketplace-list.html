@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'none'; base-uri 'none'">
+<title>List your product — Auntie Tobi Marketplace</title>
+<link rel="icon" href="/tobi-face-128.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0F1E36;--green:#057A44;--green-d:#04603a;--gold:#FFB81C;--line:#E6E1D6;--muted:#6B7280;--danger:#B42318}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:var(--navy);padding-bottom:60px;line-height:1.5}
+.app-header{background:var(--navy);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:600px;margin:0 auto}
+.app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0}.app-logo img{width:100%;height:100%;object-fit:cover}
+.app-header-title{font-size:16px;font-weight:700;color:#fff}.app-header-sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+.back-btn{margin-left:auto;color:rgba(255,255,255,.85);font-size:12px;text-decoration:none;font-weight:600;padding:7px 11px;border:1.5px solid rgba(255,255,255,.25);border-radius:20px;white-space:nowrap}
+.wrap{max-width:600px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.hero{background:var(--navy);border-radius:14px;padding:22px 18px;color:#fff}
+.hero-badge{display:inline-block;background:rgba(255,184,28,.2);color:var(--gold);font-size:12px;font-weight:700;padding:4px 14px;border-radius:20px;margin-bottom:12px}
+.hero h1{font-size:22px;font-weight:800;margin-bottom:6px}.hero p{font-size:15px;color:rgba(255,255,255,.78)}
+.steps{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.steps span{background:rgba(255,255,255,.1);border-radius:20px;padding:5px 11px;font-size:12.5px;font-weight:600}
+.card{background:#fff;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h2{font-size:17px;font-weight:800}
+label{display:block;font-weight:700;font-size:14px;margin-bottom:5px}.opt{font-weight:400;color:var(--muted)}
+input,select,textarea{width:100%;font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff;color:var(--navy)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
+.row{display:flex;gap:10px}.row>div{flex:1;min-width:0}
+.hint{font-size:13px;color:var(--muted);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:9px 14px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;color:var(--navy)}
+.chip[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#fff}
+.photos{display:flex;flex-wrap:wrap;gap:8px}.ph{position:relative;width:92px;height:92px;border-radius:12px;overflow:hidden;background:#f6f2ea;border:1.5px solid var(--line)}
+.ph img{width:100%;height:100%;object-fit:cover}.ph.add{display:flex;align-items:center;justify-content:center;text-align:center;font-size:12.5px;font-weight:700;color:var(--green);cursor:pointer;border-style:dashed}
+.phx{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(15,30,54,.8);color:#fff;font-size:15px;cursor:pointer}
+.ph .main{position:absolute;left:0;right:0;bottom:0;background:var(--green);color:#fff;font-size:10.5px;font-weight:700;text-align:center;padding:2px 0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.btn{display:block;width:100%;background:var(--green);color:#fff;border:0;border-radius:12px;padding:14px;font:inherit;font-size:16px;font-weight:800;cursor:pointer}
+.btn:disabled{opacity:.6;cursor:default}.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.err{background:#FDECEA;color:var(--danger);border-radius:10px;padding:10px 12px;font-size:14px;font-weight:600}
+.hidden{display:none!important}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:14px}.check input{width:20px;height:20px;flex-shrink:0;margin-top:2px}
+.trap{position:absolute;left:-9999px;top:-9999px}
+.pc{border:.5px solid #e0e0e0;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06);max-width:260px}
+.pc-img{position:relative;height:180px;background:#f8f8f8;display:flex;align-items:center;justify-content:center;color:#9CA3AF;font-size:14px}.pc-img img{width:100%;height:100%;object-fit:contain;padding:8px}
+.pc-cat{position:absolute;top:0;left:0;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:0 0 10px 0;text-transform:uppercase}
+.pc-body{padding:11px 12px 13px}.pc-name{font-size:13px;font-weight:700;margin-bottom:3px}.pc-biz{font-size:11px;color:#9CA3AF;margin-bottom:6px}
+.pc-desc{font-size:12px;color:#555;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pc-price{font-size:16px;font-weight:800;margin-bottom:10px}.pc-btn{background:var(--green);color:#fff;border-radius:8px;padding:10px;font-size:13px;font-weight:700;text-align:center}
+.done{text-align:center;padding:28px 18px}.done .big{font-size:46px}.done h2{font-size:21px;margin:8px 0}
+.bzp{display:flex;gap:10px;align-items:center;justify-content:space-between;border-radius:12px;padding:11px 12px;font-size:14px;line-height:1.4}
+.bzp-on{background:#E7F5EE;border:1.5px solid #9ED7B8}.bzp-on b{color:#04603a}.bzp-none{background:#F6F2EA;border:1.5px dashed #E0D6C2;color:#5B6475}
+.bzp-m{color:#6B7280}.bzp-act{display:flex;gap:12px;align-items:center;flex-shrink:0}.bzp-act a{color:#057A44;font-weight:700;font-size:13px}
+.bzp-link{background:none;border:0;color:#057A44;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.bzp-s{display:flex;flex-direction:column;gap:8px}.bzp-s .bzp-link{align-self:flex-start}
+.bzp-res{display:flex;flex-direction:column;gap:6px}.bzp-r{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #E6E1D6;border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer;color:#0F1E36}
+.bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div><div class="app-header-title">Auntie Tobi</div><div class="app-header-sub">Marketplace</div></div>
+  <a href="/marketplace" class="back-btn">🛍️ Marketplace</a>
+</div>
+<div class="wrap" id="app">
+  <div class="hero">
+    <div class="hero-badge">🛍️ List your product or service</div>
+    <h1>Get on the Auntie Tobi Marketplace</h1>
+    <p>Fill in the details below. Auntie Tobi reviews every listing before it goes live on the Marketplace and in the Auntie Tobi app.</p>
+    <div class="steps"><span>1 · Fill in the form</span><span>2 · Auntie Tobi reviews it</span><span>3 · It goes live</span></div>
+  </div>
+
+  <form id="f" class="card" novalidate>
+    <h2>About your business</h2>
+    <div><label>Find your business on Auntie Tobi</label><div id="bizpick"></div><div class="hint">We link your product to your Auntie Tobi business page, so customers can see more about you.</div></div>
+    <div><label for="biz">Business name</label><input id="biz" maxlength="80" autocomplete="organization" required></div>
+    <div class="row"><div><label for="nm">Your name</label><input id="nm" maxlength="80" autocomplete="name" required></div><div><label for="em">Email</label><input id="em" type="email" maxlength="120" autocomplete="email" inputmode="email" required></div></div>
+    <div class="row"><div><label for="cwa">WhatsApp <span class="opt">(optional)</span></label><input id="cwa" inputmode="tel" maxlength="20" placeholder="07700 900123"></div><div><label for="ig">Instagram <span class="opt">(optional)</span></label><input id="ig" maxlength="60" placeholder="@yourbusiness"></div></div>
+    <div class="trap" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" tabindex="-1" autocomplete="off"></div>
+
+    <h2 style="margin-top:6px">Your product or service</h2>
+    <div><label>Photos <span class="opt">(1 to 4 — the first is the main photo)</span></label><div class="photos" id="photos"></div></div>
+    <div><label for="pn">Product or service name</label><input id="pn" maxlength="100" placeholder="e.g. Ankara two-piece set" required></div>
+    <div class="row"><div><label for="cat">Category</label><select id="cat" required><option value="">Choose…</option><option value="Fashion">👗 Fashion</option><option value="Food">🍲 Food</option><option value="Beauty">💄 Beauty</option><option value="Hair">💇🏾‍♀️ Hair</option><option value="Events">🎉 Events</option><option value="Gift Hamper">🎁 Gift Hampers</option><option value="Digital Product">💻 Digital product</option><option value="Other">🛍️ Other</option></select></div>
+      <div><label for="pr">Price <span class="opt">(optional)</span></label><input id="pr" maxlength="24" placeholder="£45 / from £30"></div></div>
+    <div><label for="ds">Short description</label><textarea id="ds" rows="3" maxlength="600" placeholder="What it is, who it’s for, sizes or options, where you deliver." required></textarea></div>
+    <div><label>When customers tap the button…</label><div class="chips"><button type="button" class="chip" data-how="wa" aria-pressed="true">💬 Message me on WhatsApp</button><button type="button" class="chip" data-how="link" aria-pressed="false">🔗 Go to my website or booking link</button></div></div>
+    <div id="howWa"><label for="pwa">WhatsApp number for orders</label><input id="pwa" inputmode="tel" maxlength="20" placeholder="07700 900123"></div>
+    <div id="howLink" class="hidden"><label for="pl">Web link</label><input id="pl" inputmode="url" maxlength="500" placeholder="https://…"></div>
+    <div class="row"><div><label for="bt">Button text</label><select id="bt"><option>Buy Now</option><option>Book Now</option><option>🎟️ Get Tickets</option><option>Enquire</option><option>Learn More</option></select></div>
+      <div><label for="end">End date <span class="opt">(optional)</span></label><input id="end" type="date"><div class="hint">For events or offers — it disappears after this date.</div></div></div>
+
+    <div><label>Preview</label><div id="prev"></div></div>
+    <label class="check"><input type="checkbox" id="ok"> <span>I’m allowed to sell this, the details are accurate, and I’m happy for Auntie Tobi to show it on the Marketplace and in the Auntie Tobi app.</span></label>
+    <div class="err hidden" id="err"></div>
+    <button class="btn" id="go" type="submit">Submit my listing</button>
+    <p class="hint" style="text-align:center">We’ll email you when it’s live, or if anything needs changing.</p>
+  </form>
+
+  <div class="card done hidden" id="done">
+    <div class="big">💚</div>
+    <h2>Thank you — it’s with Auntie Tobi</h2>
+    <p>We’ll review your listing and email you as soon as it’s live (or if anything needs changing).</p>
+    <p style="margin-top:14px"><a href="/marketplace" style="color:#057A44;font-weight:700">See the Marketplace →</a></p>
+  </div>
+</div>
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var EMOJI = { Events: '🎉', Hair: '💇🏾‍♀️', 'Gift Hamper': '🎁', 'Digital Product': '💻', Food: '🍲', Beauty: '💄', Fashion: '👗', Other: '🛍️' };
+  var photos = [], how = 'wa', bizChoice = null;
+  // ── "Find your business on Auntie Tobi" picker (links a Marketplace product to the business listing) ──
+  function bizPicker(box, initial, onChange, opts) {
+    opts = opts || {};
+    var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var cap = function (s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
+    var state = initial && initial.slug ? initial : (initial === 'none' ? 'none' : null), timer = null, seq = 0;
+    function set(v) { state = v; draw(); if (onChange) onChange(v); }
+    function draw() {
+      if (state && state.slug) {
+        box.innerHTML = '<div class="bzp bzp-on"><div><b>✓ ' + E(opts.linkedLabel || 'Linked to your Auntie Tobi listing') + '</b><div>' + E(state.name) + (state.cat || state.loc ? ' <span class="bzp-m">· ' + E(cap(state.cat)) + (state.loc ? ' · ' + E(state.loc) : '') + '</span>' : '') + '</div></div>' +
+          '<div class="bzp-act">' + (state.url ? '<a href="' + E(state.url) + '" target="_blank" rel="noopener">View</a>' : '') + '<button type="button" class="bzp-link" data-bz="change">Change</button></div></div>';
+      } else if (state === 'none') {
+        box.innerHTML = '<div class="bzp bzp-none"><div>' + E(opts.noneLabel || 'Not linked — my business isn’t on Auntie Tobi yet.') + '</div><button type="button" class="bzp-link" data-bz="change">Search again</button></div>';
+      } else {
+        box.innerHTML = '<div class="bzp-s"><input type="search" class="bzp-in" placeholder="Type your business name…" autocomplete="off" aria-label="Search for your business on Auntie Tobi"><div class="bzp-res" role="listbox"></div>' +
+          '<button type="button" class="bzp-link" data-bz="none">' + E(opts.noneButton || 'My business isn’t listed on Auntie Tobi yet') + '</button></div>';
+        var inp = box.querySelector('.bzp-in'), res = box.querySelector('.bzp-res');
+        inp.oninput = function () {
+          clearTimeout(timer); var q = inp.value.trim();
+          if (q.length < 2) { res.innerHTML = ''; return; }
+          timer = setTimeout(function () {
+            var my = ++seq;
+            fetch('/.netlify/functions/studio-market?bizq=' + encodeURIComponent(q)).then(function (r) { return r.json(); }).then(function (d) {
+              if (my !== seq) return;
+              var list = (d && d.results) || [];
+              res.innerHTML = list.length ? list.map(function (b, i) { return '<button type="button" class="bzp-r" data-i="' + i + '"><b>' + E(b.name) + '</b><span>' + E(cap(b.cat)) + (b.loc ? ' · ' + E(b.loc) : '') + '</span></button>'; }).join('') : '<div class="bzp-empty">No business found with that name. Try a shorter name, or tap below if you’re not on Auntie Tobi yet.</div>';
+              Array.prototype.forEach.call(res.querySelectorAll('[data-i]'), function (el) { el.onclick = function () { set(list[Number(el.dataset.i)]); }; });
+            }).catch(function () { if (my === seq) res.innerHTML = '<div class="bzp-empty">Couldn’t search just now — please try again.</div>'; });
+          }, 250);
+        };
+        if (opts.focus) inp.focus();
+      }
+      Array.prototype.forEach.call(box.querySelectorAll('[data-bz]'), function (b) { b.onclick = function () { if (b.dataset.bz === 'none') set('none'); else { opts.focus = true; set(null); } }; });
+    }
+    draw();
+    return { get: function () { return state && state.slug ? state : null; } };
+  }
+
+  async function api(action, payload) {
+    var res = await fetch('/.netlify/functions/studio-market', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify(Object.assign({ action: action }, payload)) });
+    var d = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(d.message || 'Something went wrong. Please try again.');
+    return d;
+  }
+  function resize(file, max) {
+    return new Promise(function (ok, no) {
+      if (!/^image\//.test(file.type)) return no(new Error('Please choose a photo.'));
+      var fr = new FileReader(); fr.onerror = function () { no(new Error('Couldn’t read that photo.')); };
+      fr.onload = function () {
+        var im = new Image(); im.onerror = function () { no(new Error('Couldn’t read that photo.')); };
+        im.onload = function () {
+          var r = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas');
+          c.width = Math.round(im.width * r); c.height = Math.round(im.height * r);
+          var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+          ok(c.toDataURL('image/jpeg', 0.84));
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  function drawPhotos() {
+    $('#photos').innerHTML = photos.map(function (u, i) { return '<div class="ph"><img src="' + u + '" alt="Photo ' + (i + 1) + '"><button type="button" class="phx" data-x="' + i + '" aria-label="Remove photo ' + (i + 1) + '">×</button>' + (i ? '' : '<span class="main">Main</span>') + '</div>'; }).join('') +
+      (photos.length < 4 ? '<label class="ph add"><span>＋<br>Add photo</span><input type="file" accept="image/*" class="sr-only" id="pf" multiple></label>' : '');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-x]'), function (b) { b.onclick = function () { photos.splice(Number(b.dataset.x), 1); drawPhotos(); prev(); }; });
+    var pf = $('#pf'); if (pf) pf.onchange = async function () {
+      var files = Array.prototype.slice.call(pf.files, 0, 4 - photos.length);
+      for (var i = 0; i < files.length; i++) { try { var u = await resize(files[i], 1100); if (u.length > 330000) u = await resize(files[i], 800); photos.push(u); } catch (e) { alert(e.message); } }
+      drawPhotos(); prev();
+    };
+  }
+  function listing() {
+    return { business: $('#biz').value, name: $('#pn').value, category: $('#cat').value, price: $('#pr').value, desc: $('#ds').value, btnText: $('#bt').value,
+      wa: how === 'wa' ? $('#pwa').value : '', link: how === 'link' ? $('#pl').value : '', endsAt: $('#end').value, bizSlug: bizChoice && bizChoice.slug ? bizChoice.slug : '' };
+  }
+  function prev() {
+    var l = listing();
+    $('#prev').innerHTML = '<div class="pc"><div class="pc-img">' + (photos[0] ? '<img src="' + photos[0] + '" alt="">' : '📷 Your photo') + '<span class="pc-cat">' + (EMOJI[l.category] || '🛍️') + ' ' + esc(l.category || 'Category') + '</span></div>' +
+      '<div class="pc-body"><div class="pc-name">' + esc(l.name || 'Your product or service') + '</div><div class="pc-biz">' + esc(l.business) + '</div><div class="pc-desc">' + esc(l.desc || 'A short description customers will see.') + '</div>' +
+      (l.price ? '<div class="pc-price">' + esc(l.price) + '</div>' : '') + '<div class="pc-btn">' + esc(l.btnText) + '</div></div></div>';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#f input, #f select, #f textarea'), function (e) { e.addEventListener('input', prev); e.addEventListener('change', prev); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-how]'), function (c) {
+    c.onclick = function () { how = c.dataset.how; Array.prototype.forEach.call(document.querySelectorAll('[data-how]'), function (x) { x.setAttribute('aria-pressed', x === c); }); $('#howWa').classList.toggle('hidden', how !== 'wa'); $('#howLink').classList.toggle('hidden', how !== 'link'); };
+  });
+  function fail(el, msg) { el.textContent = msg; el.classList.remove('hidden'); el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  function check() {
+    var l = listing();
+    if (!bizChoice) return 'Search for your business on Auntie Tobi — or tap “My business isn’t listed on Auntie Tobi yet”.';
+    if (!$('#biz').value.trim()) return 'Please add your business name.';
+    if (!$('#nm').value.trim()) return 'Please add your name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('#em').value.trim())) return 'Please check your email address.';
+    if (!photos.length) return 'Please add at least one photo.';
+    if (l.name.trim().length < 3) return 'Please add the name of your product or service.';
+    if (!l.category) return 'Please choose a category.';
+    if (l.desc.trim().length < 10) return 'Please add a short description (a sentence or two).';
+    if (how === 'wa' && l.wa.replace(/\D/g, '').length < 10) return 'Please add the WhatsApp number customers should message.';
+    if (how === 'link' && !/^(https:\/\/)?[^\s.]+\.[^\s]+/.test(l.link.trim())) return 'Please add your web link.';
+    if (!$('#ok').checked) return 'Please tick the box to confirm.';
+    return '';
+  }
+  var started = Date.now();
+  $('#f').onsubmit = async function (e) {
+    e.preventDefault(); $('#err').classList.add('hidden');
+    var m = check(); if (m) return fail($('#err'), m);
+    var b = $('#go'); b.disabled = true; b.textContent = 'Sending…';
+    try {
+      await api('public-submit', { email: $('#em').value.trim(), website: $('#website').value, t: Date.now() - started,
+        contact: { name: $('#nm').value, whatsapp: $('#cwa').value, instagram: $('#ig').value }, listing: listing(), photos: photos });
+      $('#f').classList.add('hidden'); $('#done').classList.remove('hidden'); window.scrollTo(0, 0);
+    } catch (x) { fail($('#err'), x.message); b.disabled = false; b.textContent = 'Submit my listing'; }
+  };
+  bizPicker($('#bizpick'), null, function (v) { bizChoice = v; if (v && v.slug) { $('#biz').value = v.name; prev(); } });
+  drawPhotos(); prev();
+})();
+</script>
+</body>
+</html>

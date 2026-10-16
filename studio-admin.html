@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F1E36">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://naijabiz.b-cdn.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
 <title>Studio Admin — Auntie Tobi</title>
 <link rel="icon" href="/favicon-32x32.png">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -49,6 +49,19 @@ th{background:#F7F1E3;font-size:12px;text-transform:uppercase;letter-spacing:.6p
 tr:last-child td{border-bottom:0}
 tbody tr:hover{background:#FFFCF5}
 .tw{overflow-x:auto;border-radius:14px}
+.bzp{display:flex;gap:10px;align-items:center;justify-content:space-between;border-radius:12px;padding:11px 12px;font-size:14px;line-height:1.4}
+.bzp-on{background:#E7F5EE;border:1.5px solid #9ED7B8}.bzp-on b{color:#04603a}.bzp-none{background:#F6F2EA;border:1.5px dashed #E0D6C2;color:#5B6475}
+.bzp-m{color:#6B7280}.bzp-act{display:flex;gap:12px;align-items:center;flex-shrink:0}.bzp-act a{color:#057A44;font-weight:700;font-size:13px}
+.bzp-link{background:none;border:0;color:#057A44;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.bzp-s{display:flex;flex-direction:column;gap:8px}.bzp-s .bzp-link{align-self:flex-start}
+.bzp-res{display:flex;flex-direction:column;gap:6px}.bzp-r{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #E6E1D6;border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer;color:#0F1E36}
+.bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
+.mkc{width:250px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.mkc-img{position:relative;height:160px;background:#f8f8f8;display:flex;align-items:center;justify-content:center}.mkc-img img{width:100%;height:100%;object-fit:contain;padding:6px}
+.mkc-cat{position:absolute;top:0;left:0;background:#057A44;color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:0 0 10px 0;text-transform:uppercase}
+.mkc-n{position:absolute;top:6px;right:6px;background:rgba(15,30,54,.75);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px}
+.mkc-b{padding:10px 12px 12px;font-size:13px;display:flex;flex-direction:column;gap:3px}.mkc-d{color:#555;font-size:12.5px;line-height:1.45}.mkc-p{font-weight:800;font-size:15px}
+.mkc-btn{margin-top:4px;background:#057A44;color:#fff;border-radius:8px;padding:8px;font-weight:700;text-align:center;font-size:12.5px}
 .note{background:var(--green-l);border:1px solid #CFEBDB;border-radius:14px;padding:12px 14px;line-height:1.5}
 .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
 .p-active{background:var(--green-l);color:var(--green-d)}.p-pending{background:var(--gold-l);color:#7A5300}.p-inactive,.p-expired{background:#ECEDF0;color:var(--muted)}
@@ -67,7 +80,7 @@ tbody tr:hover{background:#FFFCF5}
 <body>
 <header><div><b>Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="subs">AI Power</button>
+  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="subs">AI Power</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -115,7 +128,7 @@ tbody tr:hover{background:#FFFCF5}
   $('#logout').onclick = async function () { try { await api('logout'); } catch (e) {} login(); };
   function go(v) {
     $$('#nav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
-    ({ overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits })[v]();
+    ({ overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket })[v]();
   }
   async function boot() {
     try { S.overview = await api('overview'); } catch (e) { return; }
@@ -410,6 +423,172 @@ tbody tr:hover{background:#FFFCF5}
     $$('[data-unlog]', s).forEach(function (b) { b.onclick = async function () { if (!confirm('Remove this entry?')) return; try { await api('benefits-unlog', { email: email, kind: b.dataset.unlog, index: Number(b.dataset.i) }); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
   }
 
+  // ── Marketplace: review & manage listings ──
+  var MK_EMOJI = { Events: '🎉', Hair: '💇🏾‍♀️', 'Gift Hamper': '🎁', 'Digital Product': '💻', Food: '🍲', Beauty: '💄', Fashion: '👗', Other: '🛍️' };
+  var MK_ST = { pending: ['New — to review', 'p-pending'], live: ['Live', 'p-active'], live_change_pending: ['Live · change to review', 'p-pending'], live_changes_requested: ['Live · waiting for their edit', 'p-inactive'],
+    changes: ['Waiting for their edit', 'p-inactive'], rejected: ['Rejected', 'p-inactive'], hidden: ['Hidden', 'p-inactive'], ended: ['Ended', 'p-inactive'], draft: ['Draft', 'p-inactive'] };
+  var MK_SRC = { member: '💚 Club member', public: '🌍 Public form', admin: '🛠️ Added by admin' };
+  function mkImg(ref) { return /^i_/.test(ref) ? '/.netlify/functions/studio-market?img=' + encodeURIComponent(ref) : ref; }
+  function mkCard(f, changed) {
+    f = f || {}; changed = changed || {};
+    var hl = function (k) { return changed[k] ? ' style="background:#FFF4D6;border-radius:4px"' : ''; };
+    return '<div class="mkc"><div class="mkc-img"' + (changed.imgs ? ' style="outline:3px solid #FFB81C"' : '') + '>' + (f.imgs && f.imgs.length ? '<img src="' + esc(mkImg(f.imgs[0])) + '" alt="">' : '<span class="muted">No photo</span>') + (f.imgs && f.imgs.length > 1 ? '<span class="mkc-n">1/' + f.imgs.length + '</span>' : '') + '<span class="mkc-cat"' + hl('category') + '>' + (MK_EMOJI[f.category] || '🛍️') + ' ' + esc(f.category) + '</span></div>' +
+      '<div class="mkc-b"><b' + hl('name') + '>' + esc(f.name) + '</b><div class="muted"' + hl('business') + '>' + esc(f.business) + '</div><div class="mkc-d"' + hl('desc') + '>' + esc(f.desc) + '</div>' + (f.price ? '<div class="mkc-p"' + hl('price') + '>' + esc(f.price) + '</div>' : '') +
+      '<div class="mkc-btn"' + hl('btnText') + '>' + esc(f.btnText) + '</div><div class="muted" style="font-size:11.5px;margin-top:6px;word-break:break-all"' + hl(f.link ? 'link' : 'wa') + '>' + (f.link ? '🔗 ' + esc(f.link) : f.wa ? '💬 WhatsApp +' + esc(f.wa) : '') + (f.endsAt ? '<br>Ends ' + esc(d(f.endsAt)) : '') + '</div></div></div>';
+  }
+  function mkDiff(a, b) {
+    var out = {}; if (!a || !b) return out;
+    ['name', 'business', 'category', 'price', 'desc', 'btnText', 'link', 'wa', 'endsAt'].forEach(function (k) { if (String(a[k] || '') !== String(b[k] || '')) out[k] = true; });
+    if (JSON.stringify(a.imgs || []) !== JSON.stringify(b.imgs || [])) out.imgs = true;
+    return out;
+  }
+  function mkLink(x) {
+    var k = x.link, f = x.draft || x.live || {};
+    if (!k && f.bizSlug) return '<div class="muted">🔗 Linked to Auntie Tobi listing <a href="/?biz=' + esc(f.bizSlug) + '" target="_blank" rel="noopener">' + esc(f.bizSlug) + '</a></div>';
+    if (!k) return '<div class="muted">🔗 Not linked to an Auntie Tobi listing — you can link one with Edit.</div>';
+    var who = x.owner || (x.contact && x.contact.email) || '';
+    var flag = k.check === 'email_match' ? '<span class="pill p-active">✓ Their email matches this listing</span>' : k.check === 'email_differs' ? '<span class="pill p-warn">⚠️ Sent by ' + esc(who) + ' — the listing’s email is different. Check it’s them.</span>' : '<span class="pill p-pending">No email on this listing — check it’s them</span>';
+    return '<div>🔗 Linked to <b>' + esc(k.name) + '</b> <span class="muted">· ' + esc(k.cat || '') + (k.loc ? ' · ' + esc(k.loc) : '') + '</span> <a href="' + esc(k.url) + '" target="_blank" rel="noopener">View listing</a> ' + flag + '</div>';
+  }
+  function mkWho(x) {
+    var c = x.contact || {};
+    return '<div><span class="pill p-inactive">' + (MK_SRC[x.source] || x.source) + '</span> ' + (x.owner ? '<b>' + esc(x.owner) + '</b>' : '') +
+      (x.source === 'public' ? ' <b>' + esc(c.name || '') + '</b> · <a href="mailto:' + esc(c.email || '') + '">' + esc(c.email || '') + '</a>' + (c.whatsapp ? ' · WhatsApp ' + esc(c.whatsapp) : '') + (c.instagram ? ' · <a href="https://instagram.com/' + esc(c.instagram) + '" target="_blank" rel="noopener">@' + esc(c.instagram) + '</a>' : '') : '') +
+      (x.submittedAt ? ' <span class="muted">· sent ' + esc(new Date(x.submittedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + '</span>' : '') + '</div>';
+  }
+  function resizeAdmin(file, max) {
+    return new Promise(function (ok, no) {
+      if (!/^image\//.test(file.type)) return no(new Error('Please choose an image.'));
+      var fr = new FileReader(); fr.onerror = function () { no(new Error('Couldn’t read that image.')); };
+      fr.onload = function () { var im = new Image(); im.onerror = function () { no(new Error('Couldn’t read that image.')); }; im.onload = function () { var r = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * r); c.height = Math.round(im.height * r); var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL('image/jpeg', 0.84)); }; im.src = fr.result; };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  // ── "Find your business on Auntie Tobi" picker (links a Marketplace product to the business listing) ──
+  function bizPicker(box, initial, onChange, opts) {
+    opts = opts || {};
+    var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var cap = function (s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
+    var state = initial && initial.slug ? initial : (initial === 'none' ? 'none' : null), timer = null, seq = 0;
+    function set(v) { state = v; draw(); if (onChange) onChange(v); }
+    function draw() {
+      if (state && state.slug) {
+        box.innerHTML = '<div class="bzp bzp-on"><div><b>✓ ' + E(opts.linkedLabel || 'Linked to your Auntie Tobi listing') + '</b><div>' + E(state.name) + (state.cat || state.loc ? ' <span class="bzp-m">· ' + E(cap(state.cat)) + (state.loc ? ' · ' + E(state.loc) : '') + '</span>' : '') + '</div></div>' +
+          '<div class="bzp-act">' + (state.url ? '<a href="' + E(state.url) + '" target="_blank" rel="noopener">View</a>' : '') + '<button type="button" class="bzp-link" data-bz="change">Change</button></div></div>';
+      } else if (state === 'none') {
+        box.innerHTML = '<div class="bzp bzp-none"><div>' + E(opts.noneLabel || 'Not linked — my business isn’t on Auntie Tobi yet.') + '</div><button type="button" class="bzp-link" data-bz="change">Search again</button></div>';
+      } else {
+        box.innerHTML = '<div class="bzp-s"><input type="search" class="bzp-in" placeholder="Type your business name…" autocomplete="off" aria-label="Search for your business on Auntie Tobi"><div class="bzp-res" role="listbox"></div>' +
+          '<button type="button" class="bzp-link" data-bz="none">' + E(opts.noneButton || 'My business isn’t listed on Auntie Tobi yet') + '</button></div>';
+        var inp = box.querySelector('.bzp-in'), res = box.querySelector('.bzp-res');
+        inp.oninput = function () {
+          clearTimeout(timer); var q = inp.value.trim();
+          if (q.length < 2) { res.innerHTML = ''; return; }
+          timer = setTimeout(function () {
+            var my = ++seq;
+            fetch('/.netlify/functions/studio-market?bizq=' + encodeURIComponent(q)).then(function (r) { return r.json(); }).then(function (d) {
+              if (my !== seq) return;
+              var list = (d && d.results) || [];
+              res.innerHTML = list.length ? list.map(function (b, i) { return '<button type="button" class="bzp-r" data-i="' + i + '"><b>' + E(b.name) + '</b><span>' + E(cap(b.cat)) + (b.loc ? ' · ' + E(b.loc) : '') + '</span></button>'; }).join('') : '<div class="bzp-empty">No business found with that name. Try a shorter name, or tap below if you’re not on Auntie Tobi yet.</div>';
+              Array.prototype.forEach.call(res.querySelectorAll('[data-i]'), function (el) { el.onclick = function () { set(list[Number(el.dataset.i)]); }; });
+            }).catch(function () { if (my === seq) res.innerHTML = '<div class="bzp-empty">Couldn’t search just now — please try again.</div>'; });
+          }, 250);
+        };
+        if (opts.focus) inp.focus();
+      }
+      Array.prototype.forEach.call(box.querySelectorAll('[data-bz]'), function (b) { b.onclick = function () { if (b.dataset.bz === 'none') set('none'); else { opts.focus = true; set(null); } }; });
+    }
+    draw();
+    return { get: function () { return state && state.slug ? state : null; } };
+  }
+
+  async function vMarket(tab) {
+    tab = tab || S.mkTab || 'review'; S.mkTab = tab;
+    loading();
+    var r; try { r = await api('market-list'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var L = r.listings, formUrl = location.origin + '/marketplace/list';
+    var isRev = function (x) { return x.status === 'pending' || x.status === 'live_change_pending'; };
+    var isWait = function (x) { return x.status === 'changes' || x.status === 'live_changes_requested'; };
+    var isLive = function (x) { return x.live && !x.hidden && x.status !== 'ended'; };
+    var groups = { review: L.filter(isRev), waiting: L.filter(isWait), live: L.filter(isLive), all: L };
+    var extra = Object.keys(r.allowance || {});
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:center"><h1 style="margin:0">Marketplace</h1><button class="btn primary small" id="mkNew">+ Add a listing</button></div>' +
+      '<p class="muted" style="margin:6px 0 12px">Business Club members manage their own listing in Studio (1 each, unless you allow more). Anyone you send the form link to can submit one. Nothing goes live until you approve it.</p>' +
+      '<div class="note" style="margin-bottom:12px"><b>Form link to send to businesses:</b> <code style="word-break:break-all">' + esc(formUrl) + '</code> <button class="btn small ghost" id="mkCopy">Copy link</button> <a class="btn small ghost" href="/marketplace/list" target="_blank" rel="noopener">Open form</a> <a class="btn small ghost" href="/marketplace" target="_blank" rel="noopener">View Marketplace</a></div>' +
+      '<div class="row" style="margin-bottom:12px">' + [['review', 'To review'], ['waiting', 'Waiting for their edit'], ['live', 'Live'], ['all', 'All listings']].map(function (t) { return '<button class="btn small ' + (t[0] === tab ? 'primary' : 'ghost') + '" data-mt="' + t[0] + '">' + t[1] + ' (' + groups[t[0]].length + ')</button>'; }).join('') + '</div>' +
+      (tab === 'review' || tab === 'waiting' ? (groups[tab].length ? groups[tab].map(function (x) {
+        var ch = mkDiff(x.live, x.draft);
+        return '<div class="card stack" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center"><span class="pill ' + (MK_ST[x.status] || ['', ''])[1] + '">' + esc((MK_ST[x.status] || [x.status])[0]) + '</span><button class="btn small ghost" data-mke="' + esc(x.id) + '">Edit</button></div>' + mkWho(x) + mkLink(x) +
+          (x.note ? '<div class="muted"><b>Your note:</b> ' + esc(x.note) + '</div>' : '') +
+          (x.live ? '<div class="row" style="align-items:flex-start;gap:14px"><div><div class="muted" style="margin-bottom:4px">Live now</div>' + mkCard(x.live) + '</div><div><div class="muted" style="margin-bottom:4px">Proposed change' + (Object.keys(ch).length ? ' — changed: <b>' + Object.keys(ch).join(', ') + '</b>' : '') + '</div>' + mkCard(x.draft, ch) + '</div></div>'
+            : '<div class="row" style="align-items:flex-start;gap:14px">' + mkCard(x.draft) + (x.draft.imgs.length > 1 ? '<div class="row" style="gap:6px">' + x.draft.imgs.slice(1).map(function (i) { return '<img src="' + esc(mkImg(i)) + '" alt="" style="width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">'; }).join('') + '</div>' : '') + '</div>') +
+          (tab === 'review' ? '<div class="row"><button class="btn primary" data-mka="' + esc(x.id) + '">✓ Approve — go live</button><button class="btn ghost" data-mkc="' + esc(x.id) + '">Request changes</button><button class="btn ghost danger" data-mkr="' + esc(x.id) + '">' + (x.live ? 'Reject change' : 'Reject') + '</button></div>' : '<div class="muted">They’ve been asked to make a change. You can still approve it as it is:</div><div class="row"><button class="btn small ghost" data-mka="' + esc(x.id) + '">Approve anyway</button></div>') + '</div>';
+      }).join('') : '<div class="card muted">' + (tab === 'review' ? 'Nothing to review 🎉' : 'Nobody is making changes right now.') + '</div>') :
+      '<div class="tw"><table><thead><tr><th></th><th>Listing</th><th>Status</th><th>From</th><th>Pinned</th><th></th></tr></thead><tbody>' + groups[tab].map(function (x) {
+        var f = x.live || x.draft || {};
+        return '<tr><td style="width:64px">' + (f.imgs && f.imgs[0] ? '<img src="' + esc(mkImg(f.imgs[0])) + '" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:8px">' : '') + '</td><td><b>' + esc(f.name) + '</b><div class="muted">' + esc(f.business) + ' · ' + esc(f.category) + (f.price ? ' · ' + esc(f.price) : '') + (f.endsAt ? ' · ends ' + esc(d(f.endsAt)) : '') + '</div></td>' +
+          '<td><span class="pill ' + (MK_ST[x.status] || ['', ''])[1] + '">' + esc((MK_ST[x.status] || [x.status])[0]) + '</span></td><td class="muted">' + (MK_SRC[x.source] || '') + (x.owner ? '<br>' + esc(x.owner) : x.contact && x.contact.email ? '<br>' + esc(x.contact.email) : '') + '</td>' +
+          '<td>' + (x.pinned ? '📌' : '') + '</td><td style="white-space:nowrap"><button class="btn small primary" data-mke="' + esc(x.id) + '">Edit</button> ' + (x.live ? '<button class="btn small ghost" data-mkpin="' + esc(x.id) + '">' + (x.pinned ? 'Unpin' : 'Pin to top') + '</button> <button class="btn small ghost" data-mkhide="' + esc(x.id) + '">' + (x.hidden ? 'Show' : 'Hide') + '</button>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>') +
+      '<h2>Extra listings for members</h2><div class="card stack"><p class="muted" style="margin:0">Every Business Club member can have 1 listing. Give someone more here.</p>' +
+        (extra.length ? '<div>' + extra.map(function (e) { return '<div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0"><span>' + esc(e) + '</span><span><b>' + r.allowance[e] + '</b> listings <button class="btn small ghost" data-mkal="' + esc(e) + '">Reset to 1</button></span></div>'; }).join('') + '</div>' : '') +
+        '<div class="row"><input id="alE" placeholder="member@email.com" style="flex:2;min-width:180px"><input id="alN" type="number" min="0" max="50" value="2" style="width:90px"><button class="btn small primary" id="alSave">Save</button></div></div></main>';
+    $$('[data-mt]').forEach(function (b) { b.onclick = function () { vMarket(b.dataset.mt); }; });
+    $('#mkCopy').onclick = function () { navigator.clipboard.writeText(formUrl).then(function () { toast('Link copied'); }); };
+    $('#mkNew').onclick = function () { editMarket(null); };
+    $$('[data-mke]').forEach(function (b) { b.onclick = function () { editMarket(b.dataset.mke); }; });
+    var byId = function (id) { return L.filter(function (x) { return x.id === id; })[0]; };
+    var decide = async function (id, decision, note) { try { await api('market-review', { id: id, decision: decision, note: note || '' }); toast({ approve: 'Approved — it’s live 🎉', changes: 'Change requested — they’ve been emailed', reject: 'Rejected — they’ve been emailed' }[decision]); vMarket(); } catch (x) { toast(x.message); } };
+    $$('[data-mka]').forEach(function (b) { b.onclick = function () { b.disabled = true; decide(b.dataset.mka, 'approve'); }; });
+    $$('[data-mkc]').forEach(function (b) { b.onclick = function () { var n = prompt('What should they change? (This is emailed to them.)', 'Please add a clearer photo of the product.'); if (n) decide(b.dataset.mkc, 'changes', n); }; });
+    $$('[data-mkr]').forEach(function (b) { b.onclick = function () { var n = prompt('Reason (optional — emailed to them):', ''); if (n !== null) decide(b.dataset.mkr, 'reject', n); }; });
+    var meta = async function (id, m) { var x = byId(id); try { await api('market-save', { id: id, listing: x.draft && /pending|changes/.test(x.status) ? x.draft : x.live, meta: m }); vMarket(); } catch (e) { toast(e.message); } };
+    $$('[data-mkpin]').forEach(function (b) { b.onclick = function () { meta(b.dataset.mkpin, { pinned: !byId(b.dataset.mkpin).pinned }); }; });
+    $$('[data-mkhide]').forEach(function (b) { b.onclick = function () { meta(b.dataset.mkhide, { hidden: !byId(b.dataset.mkhide).hidden }); }; });
+    $$('[data-mkal]').forEach(function (b) { b.onclick = async function () { try { await api('market-allowance', { email: b.dataset.mkal, n: 1 }); vMarket(); } catch (e) { toast(e.message); } }; });
+    $('#alSave').onclick = async function () { try { await api('market-allowance', { email: $('#alE').value, n: Number($('#alN').value) }); toast('Saved'); vMarket(); } catch (e) { toast(e.message); } };
+  }
+
+  async function editMarket(id) {
+    var x = null, cats = ['Fashion', 'Food', 'Beauty', 'Hair', 'Events', 'Gift Hamper', 'Digital Product', 'Other'], btns = ['Buy Now', 'Book Now', '🎟️ Get Tickets', 'Enquire', 'Learn More'], allowance = null;
+    if (id) { try { var r = await api('market-get', { id: id }); x = r.listing; allowance = r.allowance; } catch (e) { toast(e.message); return; } }
+    var editingDraft = !!(x && x.draft && /pending|changes/.test(x.status));
+    var f = x ? Object.assign({}, editingDraft ? x.draft : x.live) : { business: '', name: '', category: 'Other', price: '', desc: '', btnText: 'Enquire', link: '', wa: '', endsAt: '', bizSlug: '', imgs: [] };
+    f.imgs = (f.imgs || []).slice();
+    var bz = x && x.link && x.link.slug ? x.link : f.bizSlug ? { slug: f.bizSlug, name: f.bizSlug, url: '/?biz=' + f.bizSlug } : null;
+    var s;
+    function draw() {
+      if (s) s.remove();
+      s = sheet('<h2 style="margin:0">' + (x ? 'Edit listing' : 'Add a listing') + '</h2>' + (x ? '<div class="muted">' + (editingDraft ? 'You’re editing the version waiting for review — approve it afterwards to publish.' : 'Changes go live straight away.') + '</div>' + mkWho(x) : '<div class="muted">Listings you add go live straight away.</div>') +
+        '<div><b>Photos</b> <span class="muted">(up to 4, first is the main photo)</span><div class="row" style="gap:8px;margin-top:6px">' + f.imgs.map(function (ref, i) { return '<div style="position:relative"><img src="' + esc(mkImg(ref)) + '" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><button class="btn small ghost danger" data-phx="' + i + '" style="position:absolute;top:2px;right:2px;min-height:22px;padding:0 6px">×</button>' + (i ? '<button class="btn small ghost" data-ph1="' + i + '" style="position:absolute;bottom:2px;left:2px;min-height:20px;padding:0 5px;font-size:11px">Make main</button>' : '<span class="pill p-active" style="position:absolute;bottom:3px;left:3px">Main</span>') + '</div>'; }).join('') +
+          (f.imgs.length < 4 ? '<label class="btn small ghost" style="cursor:pointer;height:84px;display:flex;align-items:center">+ Add photo<input type="file" accept="image/*" id="mkPh" multiple style="display:none"></label>' : '') + '</div></div>' +
+        '<div class="f2"><div><label for="mkN">Name</label><input id="mkN" value="' + esc(f.name) + '"></div><div><label for="mkB">Business</label><input id="mkB" value="' + esc(f.business) + '"></div></div>' +
+        '<div class="f2"><div><label for="mkC">Category</label><select id="mkC">' + cats.map(function (c) { return '<option' + (f.category === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></div><div><label for="mkP">Price</label><input id="mkP" value="' + esc(f.price) + '"></div></div>' +
+        '<div><label for="mkD">Description</label><textarea id="mkD" rows="3">' + esc(f.desc) + '</textarea></div>' +
+        '<div class="f2"><div><label for="mkL">Web link</label><input id="mkL" value="' + esc(f.link) + '" placeholder="https://… (or leave empty for WhatsApp)"></div><div><label for="mkW">WhatsApp number</label><input id="mkW" value="' + esc(f.wa) + '"></div></div>' +
+        '<div class="f2"><div><label for="mkT">Button</label><select id="mkT">' + btns.map(function (b) { return '<option' + (f.btnText === b ? ' selected' : '') + '>' + b + '</option>'; }).join('') + '</select></div><div><label for="mkE">End date</label><input type="date" id="mkE" value="' + esc(f.endsAt) + '"></div></div>' +
+        '<div><label>Auntie Tobi business listing</label><div id="mkBz"></div></div>' +
+        '<div><label for="mkO">Owner (Club member email)</label><input id="mkO" value="' + esc(x ? x.owner : '') + '" placeholder="Lets this member edit it in Studio"></div>' +
+        (x && x.owner ? '<div class="muted">This member can have <b>' + allowance + '</b> listing' + (allowance === 1 ? '' : 's') + ' — change it under “Extra listings for members”.</div>' : '') +
+        '<div class="row"><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="mkPin" style="width:auto"' + (x && x.pinned ? ' checked' : '') + '> 📌 Pin to top</label><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="mkHid" style="width:auto"' + (x && x.hidden ? ' checked' : '') + '> Hide from Marketplace</label></div>' +
+        '<div class="err hidden" id="mkErr"></div><div class="row"><button class="btn primary" id="mkSave">Save</button><button class="btn ghost" id="mkX">Close</button>' + (x ? '<button class="btn ghost danger" id="mkDel" style="margin-left:auto">Delete listing</button>' : '') + '</div>');
+      var keep = function () { f.name = $('#mkN', s).value; f.business = $('#mkB', s).value; f.category = $('#mkC', s).value; f.price = $('#mkP', s).value; f.desc = $('#mkD', s).value; f.link = $('#mkL', s).value; f.wa = $('#mkW', s).value; f.btnText = $('#mkT', s).value; f.endsAt = $('#mkE', s).value; f.bizSlug = bz && bz.slug ? bz.slug : ''; };
+      bizPicker($('#mkBz', s), bz || 'none', function (v) { bz = v; }, { linkedLabel: 'Linked to Auntie Tobi listing', noneLabel: 'Not linked to an Auntie Tobi listing.', noneButton: 'Not on Auntie Tobi' });
+      $$('[data-phx]', s).forEach(function (b) { b.onclick = function () { keep(); f.imgs.splice(Number(b.dataset.phx), 1); draw(); }; });
+      $$('[data-ph1]', s).forEach(function (b) { b.onclick = function () { keep(); var i = Number(b.dataset.ph1); f.imgs.unshift(f.imgs.splice(i, 1)[0]); draw(); }; });
+      var ph = $('#mkPh', s); if (ph) ph.onchange = async function () { keep(); var files = Array.prototype.slice.call(ph.files, 0, 4 - f.imgs.length); for (var i = 0; i < files.length; i++) { try { var u = await resizeAdmin(files[i], 1200); if (u.length > 360000) u = await resizeAdmin(files[i], 900); f.imgs.push((await api('market-img', { dataUrl: u })).id); } catch (e) { toast(e.message); } } draw(); };
+      $('#mkX', s).onclick = function () { s.remove(); };
+      var del = $('#mkDel', s); if (del) del.onclick = async function () { if (!confirm('Delete this listing and its photos? This can’t be undone.')) return; try { await api('market-delete', { id: x.id }); toast('Deleted'); s.remove(); vMarket(); } catch (e) { toast(e.message); } };
+      $('#mkSave', s).onclick = async function () {
+        keep(); var b = this; b.disabled = true; $('#mkErr', s).classList.add('hidden');
+        try { await api('market-save', { id: x ? x.id : '', listing: f, meta: { owner: $('#mkO', s).value.trim(), pinned: $('#mkPin', s).checked, hidden: $('#mkHid', s).checked } }); toast('Saved'); s.remove(); vMarket(); }
+        catch (e) { $('#mkErr', s).textContent = e.message; $('#mkErr', s).classList.remove('hidden'); b.disabled = false; }
+      };
+    }
+    draw();
+  }
+
   async function vOverview() {
     loading();
     var o = S.overview = await api('overview');
@@ -451,6 +630,15 @@ tbody tr:hover{background:#FFFCF5}
           (bd.monthMembers ? ' ' + bd.discovery + ' discovery feature' + (bd.discovery === 1 ? '' : 's') + ' due this month.' : '') + ' <button class="btn small ghost" id="toBen">Open Benefits</button>';
         $('#ovH1').after(box);
         $('#toBen').onclick = function () { S.benFilter = bd.weekMembers ? 'week' : 'all'; go('benefits'); };
+      }
+    } catch (x) {}
+    try {
+      var ml = await api('market-list');
+      var rv = ml.listings.filter(function (x) { return x.status === 'pending' || x.status === 'live_change_pending'; }).length;
+      if (rv && $('#ovH1')) {
+        var mb = document.createElement('div'); mb.className = 'note'; mb.style.marginBottom = '14px';
+        mb.innerHTML = '🛍️ <b>Marketplace:</b> ' + rv + ' listing' + (rv === 1 ? '' : 's') + ' waiting for your review. <button class="btn small ghost" id="toMk">Review</button>';
+        $('#ovH1').after(mb); $('#toMk').onclick = function () { S.mkTab = 'review'; go('market'); };
       }
     } catch (x) {}
   }

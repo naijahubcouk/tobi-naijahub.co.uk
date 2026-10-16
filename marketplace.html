@@ -330,7 +330,8 @@ function shuffle(arr) {
 function renderGrid(cat) {
   var grid = document.getElementById('product-grid');
   var now = new Date();
-  var active = shuffle(PRODUCTS.filter(function(p){ return !p.expires || new Date(p.expires) > now; }));
+  var live = PRODUCTS.filter(function(p){ return !p.expires || new Date(p.expires) > now; });
+  var active = live.filter(function(p){ return p.pinned; }).concat(shuffle(live.filter(function(p){ return !p.pinned; })));
   var filtered = cat === 'All' ? active : active.filter(function(p){ return p.category === cat; });
   if (!filtered.length) {
     grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No products in this category yet — check back soon!</div>';
@@ -348,6 +349,13 @@ document.getElementById('filters').addEventListener('click', function(e) {
 });
 
 renderGrid('All');
+
+// Live listings (reviewed in Studio Admin → Marketplace). The list above is only a fallback if this can't load.
+fetch('/.netlify/functions/studio-market?feed=1').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+  if (!d || !Array.isArray(d.items) || !d.items.length) return;
+  PRODUCTS = d.items;
+  var a = document.querySelector('.fp.active'); renderGrid(a ? a.getAttribute('data-cat') : 'All');
+}).catch(function(){});
 </script>
 
 <script>
