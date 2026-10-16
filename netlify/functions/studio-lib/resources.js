@@ -32,7 +32,7 @@ const STATUSES = ['planned', 'draft', 'published'];
 const TAGS = ['all', 'food', 'beauty', 'fashion', 'events', 'photo', 'services', 'retail'];
 const TAG_LABELS = { food: 'food businesses', beauty: 'beauty and hair businesses', fashion: 'fashion businesses', events: 'event businesses', photo: 'photographers and creatives', services: 'service businesses', retail: 'product sellers' };
 const BLOCK_TYPES = ['checklist', 'template', 'worksheet', 'file', 'calculator'];
-const STUDIO_LINKS = { tools: ['oneclick', 'ideas', 'caption', 'reel', 'promo', 'planner', 'bio', 'message'], screens: ['goal', 'plan', 'money', 'track', 'profile', 'brand'] };
+const STUDIO_LINKS = { tools: ['oneclick', 'ideas', 'caption', 'reel', 'promo', 'planner', 'bio', 'message'], screens: ['goal', 'plan', 'money', 'track', 'profile', 'brand', 'review', 'customers', 'image'] };
 const MAX_LESSONS = 400;
 const MAX_FILE_BYTES = 3.5 * 1024 * 1024;
 const FILE_MIMES = { 'application/pdf': 'pdf', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp',
@@ -58,7 +58,7 @@ function metaOf(l) {
     publishAt: l.publishAt || '', featured: !!l.featured, collection: l.collection || '', collectionOrder: l.collectionOrder || 0,
     month: l.month || '', tags: l.tags || ['all'], readMins: l.readMins || 0,
     reviewedAt: l.reviewedAt || '', reviewMonths: l.reviewMonths || 12,
-    useTypes: (l.use || []).map(b => b.type), hasStudio: !!l.studio,
+    useTypes: (l.use || []).map(b => b.type), hasStudio: !!l.studio, hasContent: !!(l.learn && l.learn.trim()),
     source: l.source || 'admin', adminEdited: !!l.adminEdited, seedRev: l.seedRev || 0,
     createdAt: l.createdAt, updatedAt: l.updatedAt,
     text: [l.title, l.summary, plain(l.learn), plain(l.see), plain(l.do)].join(' ').slice(0, 4000),
@@ -429,6 +429,8 @@ async function adminDashboard() {
     scheduled: lessons.filter(m => m.status === 'published' && !isLive(m, day)).length,
     drafts: lessons.filter(m => m.status === 'draft').length,
     planned: lessons.filter(m => m.status === 'planned').length,
+    readyToPublish: lessons.filter(m => m.status === 'planned' && m.hasContent).map(m => ({ id: m.id, title: m.title, collection: m.collection })),
+    readyToPublish: lessons.filter(m => m.status === 'planned' && m.hasContent).map(m => ({ id: m.id, title: m.title, collection: m.collection })),
     newThisMonth: live.filter(m => (m.publishAt || '').slice(0, 7) === monthKey).length,
     mostViewed: top(stats.all.views, 8), mostViewedMonth: top(stats.month.views, 8),
     completions: top(stats.all.completes, 8), completionsMonth: Object.values(stats.month.completes || {}).reduce((a, b) => a + b, 0),
@@ -437,7 +439,45 @@ async function adminDashboard() {
   };
 }
 
+
+// One lesson to suggest on Today / in the weekly email, with the reason. Rule-based (no AI).
+async function suggestLesson(email, profile, summary) {
+  const idx = await index();
+  const day = today();
+  const live = idx.lessons.filter(m => isLive(m, day)).sort(sortLessons);
+  if (!live.length) return null;
+  const p = await getProgress(email);
+  const open = id => { const m = live.find(x => x.id === id); return m && !p.completed[id] ? m : null; };
+  const pick = (m, reason) => (m ? { id: m.id, title: m.title, summary: m.summary, readMins: m.readMins, reason } : null);
+  const t = (summary && summary.thisWeek) || {}, l = (summary && summary.lastWeek) || {};
+  const enquiries = (t.enquiries || 0) + (l.enquiries || 0), sales = (t.salesCount || 0) + (t.bookings || 0) + (l.salesCount || 0) + (l.bookings || 0);
+  const posts = t.posts || 0;
+  const channels = (profile && profile.channels) || [];
+  if (!Object.keys(p.opened || {}).length) {
+    const r = pick(open('m01-welcome-to-auntie-tobi-business-club') || open('m01-create-your-30-day-business-action-plan'), 'A good place to start');
+    if (r) return r;
+  }
+  if (enquiries >= 3 && sales === 0) {
+    const r = pick(open('m04-how-to-turn-enquiries-into-orders') || open('m04-following-up-without-being-pushy') || open('m04-how-to-respond-to-customer-enquiries'), `You\u2019ve recorded ${enquiries} enquiries but no sales or bookings yet`);
+    if (r) return r;
+  }
+  if (summary && summary.thisWeek && summary.thisWeek.days >= 2 && posts === 0) {
+    const r = pick(open('m03-writing-captions-that-encourage-action') || open('m02-understanding-reels-stories-and-carousels') || open('m03-how-to-take-better-product-photos'), 'No posts recorded this week yet');
+    if (r) return r;
+  }
+  if (!channels.length || channels.includes('instagram')) {
+    const r = pick(open('m02-optimising-your-instagram-bio'), 'Quick win: make your profile clearer');
+    if (r) return r;
+  }
+  const tag = recommendTag(profile);
+  const tagged = tag ? live.find(m => (m.tags || []).includes(tag) && !p.completed[m.id] && m.module !== 'm01') : null;
+  if (tagged) return pick(tagged, `Recommended for ${TAG_LABELS[tag]}`);
+  const next = live.find(m => !p.completed[m.id]);
+  return next ? pick(next, 'Your next lesson') : null;
+}
+
 module.exports = {
+  suggestLesson, getProgress,
   MODULES, TAGS, STATUSES, isLive, recommendTag, ensureSeeded,
   home, lessonFor, setComplete, setSaved, setCheck, setAnswer, setPrefs, search, memberFile,
   adminList, adminGet, adminSave, adminDelete, adminUpload, adminFile, adminDashboard, needsReview,

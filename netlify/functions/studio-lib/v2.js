@@ -27,7 +27,8 @@ function toV2(lambdaHandler) {
     for (const [k, list] of Object.entries(out.multiValueHeaders || {})) {
       for (const v of list) h.append(k, String(v));
     }
-    return new Response(out.body === undefined || out.body === null ? '' : out.body, { status: out.statusCode || 200, headers: h });
+    const body = out.body === undefined || out.body === null ? '' : out.isBase64Encoded ? Buffer.from(out.body, 'base64') : out.body;
+    return new Response(body, { status: out.statusCode || 200, headers: h });
   };
 }
 

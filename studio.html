@@ -5,10 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F1E36">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://*.onesignal.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://onesignal.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://cdn.onesignal.com https://onesignal.com; connect-src 'self' https://onesignal.com https://*.onesignal.com; form-action 'self'; base-uri 'none'">
 <title>Business Studio — Auntie Tobi</title>
 <link rel="icon" href="/favicon-32x32.png">
 <link rel="apple-touch-icon" href="/favicon-180x180.png">
+<link rel="manifest" href="/studio-manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Business Studio">
+<script src="/studio-qr.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -257,6 +261,20 @@ a.btn{text-decoration:none}
 .wsp-brand{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#057A44;font-weight:800}
 .wsp-ans{border-bottom:1px solid #999;padding:4px 0 8px;min-height:28px;font-size:14px}.wsp-ans.blank{min-height:60px}
 @media print{body.printing #printArea.ponly{display:block!important}}
+.free{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.8px;background:var(--gold-l);color:#7A5300;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+.tool.freetool .ico{background:var(--gold-l);color:#7A5300}
+.tool.freetool{position:relative}.tool.freetool b .free{position:absolute;top:14px;right:12px;margin:0}
+h2 .free{font-family:var(--font)}
+.setup{margin-bottom:14px}
+.setstep{display:flex;gap:10px;align-items:center;width:100%;padding:9px 2px;border-bottom:1px solid #EEF3EF;font-size:15px;font-weight:500;color:var(--navy)}
+.setstep:last-child{border-bottom:0}.setstep.done{color:var(--muted)}.setstep.done span:nth-child(2){text-decoration:line-through}
+.installcard{margin-bottom:14px}
+.act.chase{border-left:4px solid var(--gold)}.act.chase.overdue{border-left-color:var(--danger)}
+.slugrow{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+.slugrow span{padding:12px 0 12px 12px;color:var(--muted);font-size:14px;white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.slugrow input{border:0!important;box-shadow:none!important;padding-left:2px!important;min-width:0}
+ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
+.cust b{word-break:break-word}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -855,6 +873,28 @@ a.btn{text-decoration:none}
       return '<button class="tool" data-tool="' + t.id + '"><span class="ico">' + icon(m.icon || '') + '</span><b>' + esc(t.name) + '</b><span>' + esc(m.blurb || '') + '</span></button>';
     }).join('') + '</div>';
   }
+  var FREE_TOOLS = [
+    ['image', 'Make an image', 'Branded post or Story graphic', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>'],
+    ['shop', 'Price list page', 'Your prices + WhatsApp ordering', '<path d="M4 7h16l-1 13H5z"/><path d="M9 7a3 3 0 016 0"/>'],
+    ['review', 'Review link & QR', 'Get more customer reviews', '<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>'],
+    ['invoice', 'Quote or invoice', 'Get paid with your bank details', '<path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 13h6M9 17h4"/>']
+  ];
+  function freeToolGrid() {
+    return '<h2>Free tools <span class="free">NO GENERATIONS USED</span></h2><div class="tools">' + FREE_TOOLS.map(function (t) {
+      return '<button class="tool freetool" data-free="' + t[0] + '"><span class="ico">' + icon(t[3]) + '</span><b>' + esc(t[1]) + '<span class="free">FREE</span></b><span>' + esc(t[2]) + '</span></button>';
+    }).join('') + '</div>';
+  }
+  function bindFreeTools() {
+    $$('[data-free]', app).forEach(function (b) {
+      b.onclick = function () {
+        var k = b.dataset.free;
+        if (k === 'image') showMakeImage('', null, showCreate);
+        else if (k === 'shop') showShop(showCreate);
+        else if (k === 'review') showReview(showCreate);
+        else showMoney();
+      };
+    });
+  }
   function bindTools() { $$('[data-tool]', app).forEach(function (b) { b.onclick = function () { showTool(b.dataset.tool); }; }); }
 
   function greeting() { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
@@ -892,7 +932,8 @@ a.btn{text-decoration:none}
       bindHistoryRows(); bindRenew(); return;
     }
     app.innerHTML = '<main><p class="sub">' + greeting() + ' 👋🏾</p><h1>' + esc(name) + '</h1>' +
-      '<p class="sub" style="margin:2px 0 14px">Let’s make progress in your business today.</p><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Planning today\u2019s actions for your business\u2026</p></div></div>' +
+      '<p class="sub" style="margin:2px 0 14px">Let’s make progress in your business today.</p><div id="nudgeTop"></div><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Planning today\u2019s actions for your business\u2026</p></div></div>' +
+      '<div id="nudgeLesson"></div>' +
       '<h2>Quick create</h2>' + quickRow() +
       '<div style="margin-top:18px">' + allowanceCard() + '</div>' +
       '<h2>Recent</h2>' + historyRows(S.history.slice(0, 3)) +
@@ -901,6 +942,7 @@ a.btn{text-decoration:none}
     var wc = $('#whatCounts'); if (wc) wc.onclick = whatCounts;
     var up = $('#upBtn'); if (up) up.onclick = showRenew;
     var all = $('#allBtn'); if (all) all.onclick = showLibrary;
+    loadNudges();
     var r;
     try { r = await api('studio-growth', 'today'); } catch (x) { var tb = $('#todayBox'); if (tb) tb.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     S.today = r; renderToday();
@@ -971,8 +1013,8 @@ a.btn{text-decoration:none}
     setChrome({ tabs: true, tab: 'create' });
     if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Create</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
     app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 14px">You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' +
-      '<h2 style="margin-top:0">Quick create</h2>' + quickRow() + '<h2>All tools</h2>' + toolGrid() + '</main>';
-    bindTools(); bindQuick(showCreate);
+      '<h2 style="margin-top:0">Quick create</h2>' + quickRow() + '<h2>All tools</h2>' + toolGrid() + freeToolGrid() + '</main>';
+    bindTools(); bindQuick(showCreate); bindFreeTools();
   }
 
   // ───────────── Plan: goal + content calendar ─────────────
@@ -1048,7 +1090,8 @@ a.btn{text-decoration:none}
     bindTrackHeader();
     var p, sum;
     try { p = await api('studio-growth', 'progress-get'); sum = await api('studio-growth', 'summary'); }
-    catch (x) { $('#trBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    catch (x) { if ($('#trBox')) $('#trBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#trBox')) return;
     var today = p.today, yday = new Date(Date.parse(today + 'T12:00:00Z') - 86400000).toISOString().slice(0, 10);
     date = date === yday ? yday : (date || today);
     function draw() {
@@ -1349,12 +1392,13 @@ a.btn{text-decoration:none}
   function statusPill(st) { var s = DOC_STATUS[st] || [st, 'cream']; return '<span class="pill ' + (s[1] === 'danger' ? '" style="background:var(--danger-l);color:var(--danger)' : s[1] === 'green' ? 'green' : '" style="background:#ECEDF0;color:var(--muted)') + '">' + esc(s[0]) + '</span>'; }
 
   function trackHeader(active) {
-    return '<h1>Track</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="tabNums" aria-pressed="' + (active === 'nums') + '">Numbers</button><button class="chip" id="tabMoney" aria-pressed="' + (active === 'money') + '">£ Money</button></div>';
+    return '<h1>Track</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="tabNums" aria-pressed="' + (active === 'nums') + '">Numbers</button><button class="chip" id="tabMoney" aria-pressed="' + (active === 'money') + '">£ Money</button><button class="chip" id="tabCust" aria-pressed="' + (active === 'cust') + '">Customers</button></div>';
   }
   function bindTrackHeader() {
     var a = $('#tabNums'), b = $('#tabMoney');
     if (a) a.onclick = function () { showTrack(); };
     if (b) b.onclick = function () { showMoney(); };
+    var c = $('#tabCust'); if (c) c.onclick = function () { showCustomers(); };
   }
 
   async function showMoney() {
@@ -1363,7 +1407,8 @@ a.btn{text-decoration:none}
     bindTrackHeader();
     var l, st;
     try { l = await api('studio-money', 'list'); st = await api('studio-money', 'settings-get'); }
-    catch (x) { $('#mBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    catch (x) { if ($('#mBox')) $('#mBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#mBox')) return;
     var ready = !st.settings.suggested;
     $('#mBox').innerHTML =
       '<section class="card allow" style="margin-bottom:14px"><div class="big">' + gbp(l.unpaidPence) + '</div><div style="font-weight:700;margin-top:4px">Unpaid invoices</div>' +
@@ -1400,9 +1445,9 @@ a.btn{text-decoration:none}
     };
   }
 
-  async function showDocEditor(id, type) {
-    setChrome({ tabs: true, tab: 'track', back: id ? function () { showDocView(id); } : showMoney });
-    var d = { type: type, customer: { name: '', phone: '', email: '' }, items: [{ desc: '', qty: 1, pricePence: 0 }], deliveryPence: 0, discountPence: 0, notes: '', dueDate: '', issueDate: '' };
+  async function showDocEditor(id, type, prefill) {
+    setChrome({ tabs: true, tab: 'track', back: id ? function () { showDocView(id); } : prefill ? showCustomers : showMoney });
+    var d = { type: type, customer: { name: (prefill && prefill.name) || '', phone: (prefill && prefill.phone) || '', email: (prefill && prefill.email) || '' }, items: [{ desc: '', qty: 1, pricePence: 0 }], deliveryPence: 0, discountPence: 0, notes: '', dueDate: '', issueDate: '' };
     if (id) { app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>'; d = (await api('studio-money', 'get', { id: id })).doc; }
     var items = d.items.map(function (it) { return { desc: it.desc, qty: it.qty, price: it.pricePence ? (it.pricePence / 100).toFixed(2) : '' }; });
     function money(v) { var n = Number(String(v || '').replace(/[£,\s]/g, '')); return isFinite(n) ? Math.round(n * 100) : 0; }
@@ -1811,6 +1856,7 @@ a.btn{text-decoration:none}
     bindLibHeader();
     try { S.res = await api('studio-resources', 'home'); }
     catch (x) { $('#resBox').innerHTML = x.code === 'club_only' ? resLocked() : '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#resBox')) return;
     drawResources();
   }
 
@@ -1891,7 +1937,8 @@ a.btn{text-decoration:none}
 
   function studioGo(st, back) {
     if (st.tool) return showTool(st.tool, st.input || {}, { back: back, tab: 'library', intro: 'From your lesson — I’ve set this up for you. Change anything you like, then tap Create.' });
-    var map = { goal: showHome, plan: showPlan, money: showMoney, track: function () { showTrack(); }, profile: function () { showProfileForm(false); }, brand: showAccount };
+    var map = { goal: showHome, plan: showPlan, money: showMoney, track: function () { showTrack(); }, profile: function () { showProfileForm(false); }, brand: function () { showAccount('brand'); },
+      review: function () { showReview(back); }, customers: showCustomers, image: function () { showMakeImage('', null, back); } };
     (map[st.screen] || showHome)();
   }
 
@@ -2021,6 +2068,302 @@ a.btn{text-decoration:none}
     $$('[data-pc]').forEach(function (i) { i.oninput = calc; });
   }
 
+  // ───────────── Today extras: set-up checklist, money reminders, lesson for you, install ─────────────
+  var deferredInstall = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredInstall = e; });
+  function isStandalone() { try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch (e) { return false; } }
+  function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  function quoteFollowUp(d, s) {
+    var name = (d.customer.name || '').split(' ')[0] || 'there';
+    return 'Hi ' + name + ', just checking you received quote ' + d.number + ' for ' + gbp(d.totalPence) + ' 😊 Happy to answer any questions or adjust anything to suit you. Would you like me to go ahead and book you in?\n\nThank you — ' + ((s && s.displayName) || '');
+  }
+
+  async function loadNudges() {
+    var top = $('#nudgeTop'), bottom = $('#nudgeLesson');
+    if (!top) return;
+    var n;
+    try { n = await api('studio-extras', 'nudges'); } catch (x) { return; }
+    S.nudges = n;
+    var html = '';
+    // Set-up checklist
+    if (!n.setup.hidden) {
+      html += '<section class="card stack setup"><div class="row" style="justify-content:space-between;align-items:baseline"><b>Get set up — ' + n.setup.done + ' of ' + n.setup.total + ' done</b><button class="btn link" id="setupHide" style="font-size:13px">Hide</button></div>' +
+        '<div class="pbar"><span style="width:' + Math.round(n.setup.done / n.setup.total * 100) + '%"></span></div><div class="checks">' + n.setup.steps.map(function (s) {
+          return '<button class="setstep' + (s.done ? ' done' : '') + '" data-step="' + s.go + '"' + (s.done ? ' disabled' : '') + '><span class="ldot' + (s.done ? ' done' : '') + '">' + (s.done ? '✓' : '') + '</span><span style="flex:1;text-align:left">' + esc(s.label) + '</span>' + (s.done ? '' : '<span aria-hidden="true">→</span>') + '</button>';
+        }).join('') + '</div></section>';
+    }
+    // Install as an app
+    if (!isStandalone() && !lsGet('studioInstallHidden') && (deferredInstall || isIOS() || /android/i.test(navigator.userAgent))) {
+      html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn link" id="instHide" style="font-size:13px">Not now</button></div></section>';
+    }
+    // Money reminders
+    if (n.reminders.length) {
+      html += '<h2 style="margin-top:16px">To chase</h2><div class="stack">' + n.reminders.map(function (r) {
+        var d = r.doc, label = r.kind === 'overdue' ? '⚠️ ' + d.number + ' is overdue' : r.kind === 'due' ? d.number + ' is due ' + (d.dueDate === S.nudgeToday ? 'today' : dmy(d.dueDate)) : 'Quote ' + d.number + ' is waiting for a reply';
+        var msg = r.kind === 'quote' ? quoteFollowUp(d, n.moneySettings) : reminderText(d, n.moneySettings || {});
+        return '<div class="act chase ' + r.kind + '"><div style="flex:1;min-width:0"><b>' + esc(label) + '</b><p>' + esc(d.customer.name) + ' · ' + gbp(d.totalPence) + (r.kind === 'overdue' ? ' · was due ' + dmy(d.dueDate) : '') + '</p><div class="row" style="margin-top:8px">' +
+          (d.customer.phone ? '<a class="btn small primary" href="' + esc(waLink(d.customer.phone, msg)) + '" target="_blank" rel="noopener" data-sent="' + esc(d.id) + '">' + (r.kind === 'quote' ? 'Follow up on WhatsApp' : 'Send reminder') + '</a>' : '<button class="btn small primary" data-copymsg="' + esc(d.id) + '">Copy message</button>') +
+          '<button class="btn small ghost" data-open="' + esc(d.id) + '">Open</button><button class="btn link" data-later="' + esc(d.id) + '" style="font-size:13px">Later</button></div></div></div>';
+      }).join('') + '</div>';
+    }
+    top.innerHTML = html;
+    if (bottom && n.lesson) {
+      bottom.innerHTML = '<h2>A lesson for you</h2><button class="li" data-lesson="' + esc(n.lesson.id) + '" style="border-color:#CFEBDB;background:#F2FBF6"><span class="ldot" aria-hidden="true">📚</span><div class="t"><b>' + esc(n.lesson.title) + '</b><small>' + esc(n.lesson.reason) + ' · ' + (n.lesson.readMins || 3) + ' min read</small></div><span aria-hidden="true">→</span></button>';
+      bindLessonRows(bottom, showHome);
+    }
+    var sh = $('#setupHide'); if (sh) sh.onclick = function () { api('studio-extras', 'prefs-save', { prefs: { setupHidden: true } }).catch(function () {}); n.setup.hidden = true; loadNudgesRender(); };
+    $$('[data-step]', top).forEach(function (b) { b.onclick = function () { goStep(b.dataset.step); }; });
+    var ib = $('#instBtn'); if (ib) ib.onclick = installApp;
+    var ih = $('#instHide'); if (ih) ih.onclick = function () { lsSet('studioInstallHidden', '1'); var c = $('.installcard'); if (c) c.remove(); };
+    function find(id) { return n.reminders.filter(function (r) { return r.doc.id === id; })[0]; }
+    $$('[data-sent]', top).forEach(function (a) { a.addEventListener('click', function () { api('studio-extras', 'reminded', { id: a.dataset.sent }).catch(function () {}); setTimeout(function () { var c = a.closest('.act'); if (c) c.remove(); }, 400); }); });
+    $$('[data-copymsg]', top).forEach(function (b) { b.onclick = function () { var r = find(b.dataset.copymsg); copyText(r.kind === 'quote' ? quoteFollowUp(r.doc, n.moneySettings) : reminderText(r.doc, n.moneySettings || {})); api('studio-extras', 'reminded', { id: r.doc.id }).catch(function () {}); }; });
+    $$('[data-open]', top).forEach(function (b) { b.onclick = function () { showDocView(b.dataset.open); }; });
+    $$('[data-later]', top).forEach(function (b) { b.onclick = function () { api('studio-extras', 'reminded', { id: b.dataset.later }).catch(function () {}); b.closest('.act').remove(); toast('I’ll remind you again in 3 days'); }; });
+  }
+  function loadNudgesRender() { var c = $('.setup'); if (c) c.remove(); }
+
+  function goStep(go) {
+    if (go === 'profile') return showProfileForm(false);
+    if (go === 'brand') return showAccount('brand');
+    if (go === 'money') return showMoneySettings(showHome);
+    if (go === 'goal') return pickGoal(function () { showHome(); });
+    if (go === 'lesson') return showResources();
+    if (go === 'create') return showCreate();
+    if (go === 'review') return showReview(showHome);
+  }
+
+  function installApp() {
+    if (deferredInstall) {
+      deferredInstall.prompt();
+      deferredInstall.userChoice.then(function (c) { if (c && c.outcome === 'accepted') { lsSet('studioInstallHidden', '1'); var x = $('.installcard'); if (x) x.remove(); toast('Added — look for Business Studio on your home screen'); } deferredInstall = null; }).catch(function () {});
+      return;
+    }
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="inT"><h2 id="inT" style="margin:0">Add Studio to your home screen</h2>' +
+      (isIOS() ? '<ol class="steps"><li>Tap the <b>Share</b> button (the square with an arrow) in Safari.</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><p class="hint">On iPhone this works in Safari. If you’re in another app’s browser, open this page in Safari first.</p>'
+        : '<ol class="steps"><li>Tap the browser menu (⋮) at the top right.</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li><li>Tap <b>Install</b> or <b>Add</b>.</li></ol>') +
+      '<button class="btn ghost block" id="inOk">OK</button></div>';
+    document.body.appendChild(scrim);
+    $('#inOk', scrim).onclick = function () { scrim.remove(); };
+  }
+
+  // ───────────── daily reminders (push, via OneSignal) ─────────────
+  var ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
+  function loadOneSignal() {
+    if (S.osPromise) return S.osPromise;
+    S.osPromise = new Promise(function (resolve, reject) {
+      var done = false, timer = setTimeout(function () { if (!done) { S.osPromise = null; reject(new Error('Reminders couldn’t start. They only work on the live Auntie Tobi site, in a browser that supports notifications.')); } }, 15000);
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function (OS) {
+        try { await OS.init({ appId: ONESIGNAL_APP_ID, serviceWorkerPath: 'sw.js', serviceWorkerParam: { scope: '/' }, notifyButton: { enable: false } }); done = true; clearTimeout(timer); resolve(OS); }
+        catch (e) { done = true; clearTimeout(timer); S.osPromise = null; reject(new Error('Reminders only work on the live Auntie Tobi site.')); }
+      });
+      var s = document.createElement('script'); s.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'; s.defer = true;
+      s.onerror = function () { done = true; clearTimeout(timer); S.osPromise = null; reject(new Error('Couldn’t load notifications. Check your connection.')); };
+      document.head.appendChild(s);
+    });
+    return S.osPromise;
+  }
+  async function setReminders(on) {
+    if (!('Notification' in window)) throw new Error(isIOS() ? 'On iPhone, add Studio to your home screen first, then turn on reminders from the app.' : 'This browser doesn’t support notifications.');
+    var OS = await loadOneSignal();
+    if (on) {
+      await OS.Notifications.requestPermission();
+      if (!OS.Notifications.permission) throw new Error('Notifications are blocked for this site. Allow them in your browser settings, then try again.');
+      var p = await api('studio-extras', 'prefs-get');
+      await OS.login(p.pushId);
+      OS.User.addTag('studio_reminder', '1');
+    } else {
+      try { OS.User.removeTag('studio_reminder'); } catch (e) {}
+    }
+    await api('studio-extras', 'prefs-save', { prefs: { remindersOn: on } });
+  }
+
+  // ───────────── Account: app, reminders, weekly email ─────────────
+  function extrasAccountHtml() {
+    return '<h2>Phone app &amp; reminders</h2><div class="card stack" id="exCard"><div class="toggle"><span id="lb_wk">Weekly round-up email (Monday morning)</span><button type="button" class="switch" role="switch" aria-labelledby="lb_wk" id="wkSw" aria-checked="false" disabled></button></div>' +
+      '<div class="toggle"><span id="lb_rm">Daily reminder notification (about 8am)</span><button type="button" class="switch" role="switch" aria-labelledby="lb_rm" id="rmSw" aria-checked="false" disabled></button></div>' +
+      '<p class="hint" style="margin:0">The reminder is sent to this phone or computer. On iPhone, add Studio to your home screen first.</p>' +
+      (isStandalone() ? '' : '<button class="btn ghost block" id="acInst">Add Studio to my home screen</button>') + '</div>' +
+      '<h2>Your links</h2><div class="list"><button class="li" id="acRev"><div class="t"><b>Review link &amp; QR code</b><small>Make it easy for customers to review you</small></div><span aria-hidden="true">→</span></button>' +
+      '<button class="li" id="acShop"><div class="t"><b>Price list page</b><small>A shareable page with your prices and WhatsApp ordering</small></div><span aria-hidden="true">→</span></button></div>';
+  }
+  async function bindExtrasAccount() {
+    var wk = $('#wkSw'), rm = $('#rmSw'); if (!wk) return;
+    $('#acRev').onclick = function () { showReview(showAccount); };
+    $('#acShop').onclick = function () { showShop(showAccount); };
+    var ai = $('#acInst'); if (ai) ai.onclick = installApp;
+    var p; try { p = (await api('studio-extras', 'prefs-get')).prefs; } catch (x) { return; }
+    wk.setAttribute('aria-checked', p.weeklyEmail !== false); rm.setAttribute('aria-checked', !!p.remindersOn); wk.disabled = false; rm.disabled = false;
+    wk.onclick = async function () {
+      var on = wk.getAttribute('aria-checked') !== 'true'; wk.disabled = true;
+      try { await api('studio-extras', 'prefs-save', { prefs: { weeklyEmail: on } }); wk.setAttribute('aria-checked', on); toast(on ? 'Weekly email on' : 'Weekly email off'); } catch (x) { toast(x.message); }
+      wk.disabled = false;
+    };
+    rm.onclick = async function () {
+      var on = rm.getAttribute('aria-checked') !== 'true'; rm.disabled = true;
+      try { await setReminders(on); rm.setAttribute('aria-checked', on); toast(on ? 'Daily reminder on 🔔' : 'Daily reminder off'); } catch (x) { toast(x.message); }
+      rm.disabled = false;
+    };
+  }
+
+  // ───────────── Customers (built from quotes, invoices and receipts) ─────────────
+  async function showCustomers() {
+    setChrome({ tabs: true, tab: 'track' });
+    app.innerHTML = '<main>' + trackHeader('cust') + '<div id="cuBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindTrackHeader();
+    var r; try { r = await api('studio-extras', 'customers'); } catch (x) { if ($('#cuBox')) $('#cuBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#cuBox')) return;
+    var list = r.customers, rl = r.reviewLink, biz = (S.boot.profile && S.boot.profile.businessName) || '';
+    function first(n) { return (n || '').split(' ')[0] || 'there'; }
+    function again(c) { return 'Hi ' + first(c.name) + ', hope you’re well! 😊 It’s been a while since your ' + (c.lastItem ? c.lastItem.toLowerCase() : 'last order') + '. Just letting you know I have availability coming up — would you like me to save you a slot or send you the latest prices?\n\nThank you — ' + biz; }
+    function review(c) { return 'Hi ' + first(c.name) + ', thank you so much for choosing ' + biz + '! If you have a minute, an honest review would really help my small business: ' + (rl || '[your review link]') + ' 💚'; }
+    function draw(q) {
+      var s = (q || '').toLowerCase(), rows = list.filter(function (c) { return !s || (c.name || '').toLowerCase().indexOf(s) > -1 || (c.phone || '').indexOf(s) > -1; });
+      $('#cuList').innerHTML = rows.length ? rows.map(function (c, i) {
+        return '<div class="card stack cust"><div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><b>' + esc(c.name) + '</b><div class="hint" style="margin:0">' + esc(c.phone || c.email || 'No phone saved') + '</div></div><div style="text-align:right"><b>' + gbp(c.spentPence) + '</b><div class="hint" style="margin:0">spent</div></div></div>' +
+          '<div class="hint" style="margin:0">' + c.orders + ' order' + (c.orders === 1 ? '' : 's') + (c.quotes ? ' · ' + c.quotes + ' quote' + (c.quotes === 1 ? '' : 's') : '') + ' · last ' + dmy(c.last) + (c.lastItem ? ' · ' + esc(c.lastItem) : '') + (c.unpaidPence ? ' · <b style="color:var(--danger)">' + gbp(c.unpaidPence) + ' unpaid</b>' : '') + '</div>' +
+          '<div class="row wrap">' + (c.phone ? '<a class="btn small primary" target="_blank" rel="noopener" href="' + esc(waLink(c.phone, again(c))) + '">Message again</a><a class="btn small ghost" target="_blank" rel="noopener" href="' + esc(waLink(c.phone, review(c))) + '"' + (rl ? '' : ' data-norl="1"') + '>Ask for a review</a>' : '<button class="btn small ghost" data-cpy="' + i + '">Copy message</button>') +
+          '<button class="btn small ghost" data-inv="' + i + '">New invoice</button></div></div>';
+      }).join('') : '<div class="empty">' + (list.length ? 'No customers match.' : 'Your customers will appear here automatically when you create quotes, invoices or receipts in Money.') + '</div>';
+      $$('[data-norl]').forEach(function (a) { a.addEventListener('click', function (e) { if (!confirm('You haven’t added your review link yet. Add it now?')) return; e.preventDefault(); showReview(showCustomers); }); });
+      $$('[data-cpy]').forEach(function (b) { b.onclick = function () { copyText(again(rows[Number(b.dataset.cpy)])); }; });
+      $$('[data-inv]').forEach(function (b) { b.onclick = function () { var c = rows[Number(b.dataset.inv)]; showDocEditor(null, 'invoice', { name: c.name, phone: c.phone, email: c.email }); }; });
+    }
+    $('#cuBox').innerHTML = '<p class="sub" style="margin:0 0 12px">Built automatically from your quotes, invoices and receipts. Only you can see it.</p>' +
+      (list.length > 5 ? '<input type="search" id="cuQ" placeholder="Search customers" aria-label="Search customers" style="margin-bottom:12px">' : '') +
+      '<div class="row" style="margin-bottom:12px;gap:16px"><div><b style="font-size:22px;font-family:var(--display)">' + list.length + '</b><div class="hint" style="margin:0">customers</div></div><div><b style="font-size:22px;font-family:var(--display)">' + list.filter(function (c) { return c.orders > 1; }).length + '</b><div class="hint" style="margin:0">came back</div></div></div>' +
+      '<div class="stack" id="cuList"></div>';
+    var cq = $('#cuQ'); if (cq) cq.oninput = function () { draw(cq.value); };
+    draw('');
+  }
+
+  // ───────────── Review link & QR code ─────────────
+  function qrModules(text) { var q = qrcode(0, 'M'); q.addData(text); q.make(); return q; }
+  function drawQr(ctx, text, x, y, size) {
+    var q = qrModules(text), n = q.getModuleCount(), cell = size / (n + 8), off = cell * 4;
+    ctx.fillStyle = '#fff'; ctx.fillRect(x, y, size, size); ctx.fillStyle = '#0F1E36';
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) ctx.fillRect(Math.floor(x + off + c * cell), Math.floor(y + off + r * cell), Math.ceil(cell), Math.ceil(cell));
+  }
+  async function reviewCard(link, title, sub) {
+    await fontsReady();
+    var b = brand(), W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
+    var fg = luminance(b.color1) > 0.6 ? '#0F1E36' : '#FFFFFF', logo = await loadLogo(), name = (S.boot.profile && S.boot.profile.businessName) || '';
+    x.fillStyle = b.color1; x.fillRect(0, 0, W, H);
+    x.fillStyle = b.color2; x.globalAlpha = .2; x.beginPath(); x.arc(W - 60, 80, 260, 0, Math.PI * 2); x.fill(); x.globalAlpha = 1;
+    var y = 120;
+    if (logo) { x.fillStyle = '#fff'; roundRect(x, W / 2 - 70, y, 140, 140, 28); x.fill(); var r = Math.min(116 / logo.width, 116 / logo.height); x.drawImage(logo, W / 2 - logo.width * r / 2, y + 70 - logo.height * r / 2, logo.width * r, logo.height * r); y += 180; }
+    x.textAlign = 'center'; x.fillStyle = fg; x.font = '800 54px "DM Sans", Arial'; x.fillText(name, W / 2, y + 40); y += 110;
+    x.font = (brand().font === 'elegant' ? '700 66px Fraunces, Georgia' : '800 66px "DM Sans", Arial');
+    wrapLines(x, title, W - 160).forEach(function (l) { x.fillText(l, W / 2, y + 40); y += 78; });
+    x.font = '400 36px "DM Sans", Arial'; x.globalAlpha = .9; wrapLines(x, sub, W - 200).forEach(function (l) { x.fillText(l, W / 2, y + 30); y += 48; }); x.globalAlpha = 1;
+    var qs = 520; y += 40; x.fillStyle = '#fff'; roundRect(x, W / 2 - qs / 2 - 20, y - 20, qs + 40, qs + 40, 32); x.fill(); drawQr(x, link, W / 2 - qs / 2, y, qs);
+    y += qs + 70; x.fillStyle = fg; x.font = '700 34px "DM Sans", Arial'; x.fillText('⭐⭐⭐⭐⭐', W / 2, y);
+    x.textAlign = 'left';
+    return c;
+  }
+  async function showReview(back) {
+    setChrome({ tabs: true, tab: 'create', back: back || showCreate });
+    app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    var p; try { p = (await api('studio-extras', 'prefs-get')).prefs; } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var listing = S.boot.listing;
+    app.innerHTML = '<main><h1 style="font-size:22px">Review link &amp; QR code</h1><p class="sub" style="margin:6px 0 14px">Make it easy for happy customers to leave a review. Free.</p>' +
+      '<div class="card stack"><div><label class="f" for="rvL">Where should reviews go?</label><select id="rvL">' + ['Google', 'Auntie Tobi listing', 'Facebook', 'Trustpilot', 'Website', 'Other'].map(function (o) { return '<option' + (o === (p.reviewLabel || 'Google') ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div>' +
+        '<div><label class="f" for="rvU">Review link</label><input id="rvU" type="url" inputmode="url" placeholder="https://g.page/r/…/review" value="' + esc(p.reviewLink || '') + '"><div class="hint" id="rvHint"></div></div>' +
+        (listing ? '<button class="btn small ghost" id="rvUseL" style="align-self:flex-start">Use my Auntie Tobi listing</button>' : '') +
+        '<button class="btn primary block" id="rvSave">Save link</button></div>' +
+      '<div id="rvOut"></div>' +
+      '<p class="hint" style="margin-top:14px">Ask every genuine customer for an honest review and don’t offer anything in return — see the “How to Ask for Customer Reviews” lesson for the UK rules.</p></main>';
+    function hint() { var l = $('#rvL').value; $('#rvHint').textContent = l === 'Google' ? 'In your Google Business Profile, look for “Ask for reviews” or “Share review form” and copy the link.' : l === 'Auntie Tobi listing' ? 'Use the link to your listing page on Auntie Tobi.' : 'Paste the page where customers can leave a review.'; }
+    $('#rvL').onchange = hint; hint();
+    var ul = $('#rvUseL'); if (ul) ul.onclick = function () { $('#rvL').value = 'Auntie Tobi listing'; $('#rvU').value = listing.url; hint(); };
+    async function out(link) {
+      if (!link) { $('#rvOut').innerHTML = ''; return; }
+      var biz = (S.boot.profile && S.boot.profile.businessName) || '';
+      var msg = 'Hi [name], thank you so much for choosing ' + biz + '! 😊 If you have a minute, an honest review would really help my small business: ' + link + ' Thank you!';
+      $('#rvOut').innerHTML = '<h2>Your QR card</h2><div class="imgprev" style="max-width:300px"><canvas id="rvC" aria-label="Review QR card"></canvas></div>' +
+        '<div class="row" style="margin-top:10px;justify-content:center"><button class="btn primary" id="rvDl">Save / share card</button></div><p class="hint" style="text-align:center">Print it for your counter, stall, packaging or receipts.</p>' +
+        '<h2>Message to send</h2><div class="option"><textarea id="rvMsg" aria-label="Review request message">' + esc(msg) + '</textarea><div class="optact"><button class="btn small ghost" id="rvCopy">Copy</button><a class="btn small ghost" id="rvWa" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(msg) + '">Send on WhatsApp</a></div></div>';
+      autosize($('#rvMsg'));
+      $('#rvMsg').oninput = function () { autosize(this); $('#rvWa').href = 'https://wa.me/?text=' + encodeURIComponent(this.value); };
+      $('#rvCopy').onclick = function () { copyText($('#rvMsg').value); };
+      var card = await reviewCard(link, 'Enjoyed it? Leave us a review', 'Scan with your phone camera — it only takes a minute. Thank you! 💚');
+      var v = $('#rvC'); if (!v) return; v.width = card.width; v.height = card.height; v.getContext('2d').drawImage(card, 0, 0);
+      $('#rvDl').onclick = function () { shareOrDownload(card, 'review-qr-card.png', ''); };
+    }
+    $('#rvSave').onclick = async function () {
+      var b = this; b.disabled = true;
+      try { var r = await api('studio-extras', 'prefs-save', { prefs: { reviewLink: $('#rvU').value, reviewLabel: $('#rvL').value } }); $('#rvU').value = r.prefs.reviewLink; toast(r.prefs.reviewLink ? 'Review link saved' : 'Review link removed'); out(r.prefs.reviewLink); }
+      catch (x) { toast(x.message); }
+      b.disabled = false;
+    };
+    out(p.reviewLink);
+  }
+
+  // ───────────── Price list page ─────────────
+  async function showShop(back) {
+    back = back || showCreate;
+    setChrome({ tabs: true, tab: 'create', back: back });
+    app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    var r; try { r = await api('studio-extras', 'shop-get'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var sh = r.shop, base = r.base, items = (sh.items || []).map(function (i) { return Object.assign({}, i); });
+    function draw() {
+      var url = sh.slug ? base + sh.slug : '';
+      app.innerHTML = '<main><h1 style="font-size:22px">Price list page</h1><p class="sub" style="margin:6px 0 14px">A simple page with your products, prices and a WhatsApp order button. Share it in your bio, Status and messages. Free.</p>' +
+        (sh.slug && !sh.isNew ? '<div class="card stack" style="margin-bottom:14px;' + (sh.published ? 'border-color:#CFEBDB;background:#F2FBF6' : '') + '"><div class="row" style="justify-content:space-between"><b>' + (sh.published ? '🟢 Live' : 'Not published yet') + '</b>' + (sh.published ? '<a class="btn small ghost" href="' + esc(url) + '" target="_blank" rel="noopener">View page</a>' : '') + '</div>' +
+          '<div class="hint" style="margin:0;word-break:break-all">' + esc(url) + '</div><div class="row wrap">' + (sh.published ? '<button class="btn small primary" id="shShare">Share link</button><button class="btn small ghost" id="shCopy">Copy link</button><button class="btn small ghost" id="shQr">QR code</button><button class="btn link danger" id="shOff">Unpublish</button>' : '<button class="btn small primary" id="shOn">Publish my page</button>') + '</div></div>' : '') +
+        '<div class="card stack"><div><label class="f" for="shSlug">Page link</label><div class="slugrow"><span>' + esc(base.replace(/^https?:\/\//, '')) + '</span><input id="shSlug" value="' + esc(sh.slug || sh.suggestedSlug || '') + '" maxlength="40" autocapitalize="off" spellcheck="false"></div><div class="hint">Letters, numbers and dashes, e.g. ada-cakes-croydon.</div></div>' +
+          '<div><label class="f" for="shTitle">Title</label><input id="shTitle" maxlength="80" value="' + esc(sh.title || '') + '"></div>' +
+          '<div><label class="f" for="shIntro">Short introduction <span class="opt">(optional)</span></label><textarea id="shIntro" rows="2" maxlength="400">' + esc(sh.intro || '') + '</textarea></div>' +
+          '<div class="row"><div style="flex:1"><label class="f" for="shArea">Area <span class="opt">(optional)</span></label><input id="shArea" maxlength="80" value="' + esc(sh.area || '') + '" placeholder="e.g. Croydon · UK delivery"></div><div style="flex:1"><label class="f" for="shWa">WhatsApp number</label><input id="shWa" inputmode="tel" maxlength="20" value="' + esc(sh.whatsapp || '') + '" placeholder="07700 900123"></div></div>' +
+          '<div><label class="f" for="shNote">Ordering note <span class="opt">(optional)</span></label><input id="shNote" maxlength="200" value="' + esc(sh.orderNote || '') + '" placeholder="e.g. Order 3 days ahead. 50% deposit to confirm."></div></div>' +
+        '<h2>Products and prices</h2><div class="stack" id="shItems">' + items.map(function (it, i) {
+          return '<div class="card stack" data-it="' + i + '"><div class="row" style="justify-content:space-between"><b class="hint" style="margin:0">Item ' + (i + 1) + '</b><div class="row">' + (i ? '<button class="btn small ghost" data-up="' + i + '" aria-label="Move up">↑</button>' : '') + '<button class="btn link danger" data-del="' + i + '">Remove</button></div></div>' +
+            '<div class="row"><div style="flex:2"><label class="f" for="in_' + i + '">Name</label><input id="in_' + i + '" data-k="name" maxlength="70" value="' + esc(it.name) + '" placeholder="e.g. Party tray (serves 20)"></div><div style="flex:1"><label class="f" for="ip_' + i + '">Price</label><input id="ip_' + i + '" data-k="price" maxlength="30" value="' + esc(it.price) + '" placeholder="£85 / from £45"></div></div>' +
+            '<div><label class="f" for="id_' + i + '">Description <span class="opt">(optional)</span></label><input id="id_' + i + '" data-k="desc" maxlength="260" value="' + esc(it.desc) + '"></div>' +
+            '<div class="row">' + (it.id ? (it.hasImg ? '<span class="pill green">📷 Photo added</span><label class="btn small ghost" style="cursor:pointer">Change<input type="file" accept="image/*" class="sr-only" data-img="' + i + '"></label><button class="btn link danger" data-imgdel="' + i + '">Remove photo</button>' : '<label class="btn small ghost" style="cursor:pointer">Add photo<input type="file" accept="image/*" class="sr-only" data-img="' + i + '"></label>') : '<span class="hint" style="margin:0">Save to add a photo</span>') + '</div></div>';
+        }).join('') + '</div>' +
+        (items.length < 30 ? '<button class="btn ghost small" id="shAdd" style="margin-top:10px">+ Add item</button>' : '') +
+        '<div class="err hidden" id="shErr" style="margin-top:12px"></div><button class="btn primary block" id="shSave" style="margin-top:14px">Save page</button>' +
+        '<p class="hint">Only publish prices you’re happy to honour. Your page shows while your membership or AI Power is active.</p></main>';
+      $$('[data-it] input[data-k]').forEach(function (inp) { inp.oninput = function () { items[Number(inp.closest('[data-it]').dataset.it)][inp.dataset.k] = inp.value; }; });
+      $$('[data-del]').forEach(function (b) { b.onclick = function () { keep(); items.splice(Number(b.dataset.del), 1); draw(); }; });
+      $$('[data-up]').forEach(function (b) { b.onclick = function () { keep(); var i = Number(b.dataset.up), t = items[i - 1]; items[i - 1] = items[i]; items[i] = t; draw(); }; });
+      var add = $('#shAdd'); if (add) add.onclick = function () { keep(); items.push({ name: '', price: '', desc: '' }); draw(); var l = $('#in_' + (items.length - 1)); if (l) l.focus(); };
+      $('#shSave').onclick = save;
+      $$('[data-img]').forEach(function (inp) {
+        inp.onchange = async function () {
+          var f = inp.files[0], it = items[Number(inp.dataset.img)]; if (!f) return; keep();
+          try { var url = await resizeImage(f, 900, 'image/jpeg'); if (url.length > 270000) url = await resizeImage(f, 640, 'image/jpeg'); var x = await api('studio-extras', 'shop-img', { itemId: it.id, dataUrl: url }); sh = x.shop; items = sh.items.map(function (i) { return Object.assign({}, i); }); toast('Photo added'); draw(); }
+          catch (x) { toast(x.message); }
+        };
+      });
+      $$('[data-imgdel]').forEach(function (b) { b.onclick = async function () { keep(); try { var x = await api('studio-extras', 'shop-img-delete', { itemId: items[Number(b.dataset.imgdel)].id }); sh = x.shop; items = sh.items.map(function (i) { return Object.assign({}, i); }); draw(); } catch (e) { toast(e.message); } }; });
+      var on = $('#shOn'); if (on) on.onclick = function () { publish(true); };
+      var off = $('#shOff'); if (off) off.onclick = function () { if (confirm('Unpublish your page? The link will stop working until you publish again.')) publish(false); };
+      var cp = $('#shCopy'); if (cp) cp.onclick = function () { copyText(url); };
+      var ss = $('#shShare'); if (ss) ss.onclick = function () { shareText(sh.title + ' — prices and ordering: ' + url); };
+      var qb = $('#shQr'); if (qb) qb.onclick = async function () { var card = await reviewCard(url, 'See our prices & order', 'Scan with your phone camera to see what we offer and order on WhatsApp.'); shareOrDownload(card, 'price-list-qr.png', ''); };
+    }
+    function keep() {
+      var g = function (id) { var e = $('#' + id); return e ? e.value : ''; };
+      sh = Object.assign({}, sh, { slug: g('shSlug'), title: g('shTitle'), intro: g('shIntro'), area: g('shArea'), whatsapp: g('shWa'), orderNote: g('shNote') });
+    }
+    async function save() {
+      keep(); var b = $('#shSave'); b.disabled = true; $('#shErr').classList.add('hidden');
+      try { var x = await api('studio-extras', 'shop-save', { shop: { slug: sh.slug, title: sh.title, intro: sh.intro, area: sh.area, whatsapp: sh.whatsapp, orderNote: sh.orderNote, items: items } }); sh = x.shop; items = sh.items.map(function (i) { return Object.assign({}, i); }); toast('Page saved'); draw(); }
+      catch (e) { $('#shErr').textContent = e.message; $('#shErr').classList.remove('hidden'); b.disabled = false; }
+    }
+    async function publish(onOff) {
+      try { var x = await api('studio-extras', 'shop-publish', { on: onOff }); sh = x.shop; toast(onOff ? 'Your page is live 🎉' : 'Page unpublished'); draw(); } catch (e) { toast(e.message); }
+    }
+    draw();
+  }
+
   // ───────────── account & billing ─────────────
   async function startCheckout(interval) {
     try { var r = await api('studio-billing', 'checkout', { interval: interval === 'year' ? 'year' : 'month' }); location.href = r.url; }
@@ -2064,7 +2407,8 @@ a.btn{text-decoration:none}
     return html;
   }
 
-  function showAccount() {
+  function showAccount(section) {
+    if (typeof section !== 'string') section = '';
     setChrome({ tabs: true, tab: 'account' });
     var p = S.boot.profile;
     app.innerHTML = '<main><h1>Account</h1><p class="sub" style="margin-top:4px">' + esc(S.boot.member.email) + '</p>' +
@@ -2074,7 +2418,7 @@ a.btn{text-decoration:none}
         '<div class="sub" style="margin-top:4px">Customers find you on: ' + esc((p.channels || ['instagram']).map(channelName).join(', ')) + (p.mainChannel ? ' \u00b7 posts point to ' + esc(channelName(p.mainChannel)) : '') + '</div>' +
         (S.boot.listing ? '<div class="sub" style="margin-top:4px">Auntie Tobi listing: <a href="' + esc(S.boot.listing.url) + '" target="_blank" rel="noopener">' + esc(S.boot.listing.name) + '</a></div>' : '<div class="sub" style="margin-top:4px">No Auntie Tobi listing linked \u2014 add it in your profile.</div>') +
         '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' : '') +
-      (p ? brandKitHtml() : '') +
+      (p ? brandKitHtml() : '') + extrasAccountHtml() +
       '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation.</li><li>A <b>30-day content plan uses 3</b>. Everything else uses 1.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset at midnight (UK time). Unused generations don’t carry over.</li></ul></details>' +
       '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days and before any payment.</p>' +
       '<button class="btn ghost block" id="out">Sign out</button><button class="btn link danger" id="outAll">Sign out on all devices</button></div></main>';
@@ -2087,6 +2431,8 @@ a.btn{text-decoration:none}
     };
     bindPlanChoices();
     bindBrandKit();
+    bindExtrasAccount();
+    if (section === 'brand') setTimeout(function () { var bk = $('#bkCard'); if (bk) bk.scrollIntoView({ block: 'start' }); }, 50);
     var mg = $('#manage'); if (mg) mg.onclick = openPortal;
   }
 

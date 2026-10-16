@@ -206,4 +206,63 @@ async function remove(email, id) {
   });
 }
 
-module.exports = { getSettings, saveSettings, list, get, save, setStatus, convert, remove, TYPES };
+
+// "I've sent a reminder" / "remind me later" — hides the Today reminder for 3 days.
+async function markReminded(email, id) {
+  await cas(docsKey(email), cur => {
+    if (!cur) throw new HttpError(404, 'not_found', 'That document no longer exists.');
+    const d = cur.docs.find(x => x.id === id);
+    if (!d) throw new HttpError(404, 'not_found', 'That document no longer exists.');
+    d.remindedAt = core.nowIso();
+    return cur;
+  });
+  return { ok: true };
+}
+
+// Things to chase, for the Today screen and the weekly email.
+async function reminders(email, opts) {
+  const today = core.dayKey();
+  const data = (await getJson(docsKey(email))) || { docs: [] };
+  const fresh = d => (opts && opts.all) || !d.remindedAt || Date.now() - Date.parse(d.remindedAt) > 3 * core.DAY;
+  const converted = new Set(data.docs.filter(d => d.fromId).map(d => d.fromId));
+  const soon = (() => { const x = new Date(`${today}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + 2); return x.toISOString().slice(0, 10); })();
+  const out = [];
+  for (const raw of data.docs) {
+    const d = withTotals(raw, today);
+    if (d.status === 'void' || !fresh(d)) continue;
+    let kind = null;
+    if (d.displayStatus === 'overdue') kind = 'overdue';
+    else if (d.type === 'invoice' && d.status === 'sent' && d.dueDate && d.dueDate <= soon) kind = 'due';
+    else if (d.type === 'quote' && d.status === 'sent' && !converted.has(d.id) && Date.now() - Date.parse(d.updatedAt || d.createdAt) > 3 * core.DAY) kind = 'quote';
+    if (kind) out.push({ kind, doc: { id: d.id, type: d.type, number: d.number, customer: d.customer, totalPence: d.totalPence, dueDate: d.dueDate, issueDate: d.issueDate, displayStatus: d.displayStatus } });
+  }
+  const rank = { overdue: 0, due: 1, quote: 2 };
+  return out.sort((a, b) => rank[a.kind] - rank[b.kind] || (a.doc.dueDate || a.doc.issueDate).localeCompare(b.doc.dueDate || b.doc.issueDate));
+}
+
+// Customer list built from documents (no separate data entry).
+async function customers(email) {
+  const data = (await getJson(docsKey(email))) || { docs: [] };
+  const byId = new Map(data.docs.map(d => [d.id, d]));
+  const groups = new Map();
+  for (const raw of data.docs) {
+    if (raw.status === 'void') continue;
+    const d = withTotals(raw, core.dayKey());
+    const phone = String(d.customer.phone || '').replace(/\D/g, '').replace(/^0/, '44');
+    const k = phone || `n:${String(d.customer.name || '').trim().toLowerCase()}`;
+    if (k === 'n:') continue;
+    const g = groups.get(k) || { key: k, name: '', phone: '', email: '', orders: 0, spentPence: 0, unpaidPence: 0, quotes: 0, first: d.issueDate, last: d.issueDate, lastItem: '', lastDocId: '' };
+    if (!g.last || d.issueDate >= g.last) { g.last = d.issueDate; g.name = d.customer.name || g.name; g.lastItem = (d.items[0] && d.items[0].desc) || ''; g.lastDocId = d.id; }
+    if (!g.phone && d.customer.phone) g.phone = d.customer.phone;
+    if (!g.email && d.customer.email) g.email = d.customer.email;
+    if (!g.name) g.name = d.customer.name;
+    if (d.issueDate < g.first) g.first = d.issueDate;
+    if (d.type === 'quote') g.quotes++;
+    if (d.type === 'invoice' && d.status !== 'draft') { g.orders++; if (d.status === 'paid') g.spentPence += d.totalPence; else g.unpaidPence += d.totalPence; }
+    if (d.type === 'receipt') { const src = d.fromId && byId.get(d.fromId); if (!src || src.type !== 'invoice') { g.orders++; g.spentPence += d.totalPence; } }
+    groups.set(k, g);
+  }
+  return [...groups.values()].sort((a, b) => b.last.localeCompare(a.last));
+}
+
+module.exports = { getSettings, saveSettings, list, get, save, setStatus, convert, remove, markReminded, reminders, customers, TYPES };

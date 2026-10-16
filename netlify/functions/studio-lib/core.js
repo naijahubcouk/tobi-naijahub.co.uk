@@ -475,7 +475,7 @@ async function sendCodeEmail(email, code, purpose) {
   if (!ok) throw new HttpError(502, 'email_failed', 'We couldn\'t send your code just now. Please try again shortly.');
 }
 
-async function sendEmail(to, subject, text, html) {
+async function sendEmail(to, subject, text, html, headers) {
   const key = env('RESEND_API_KEY');
   if (!key) {
     if (env('STUDIO_EMAIL_MODE') === 'log') { console.log(`[studio] EMAIL_MODE=log — to ${to.join(',')}: ${subject}`); return true; }
@@ -486,7 +486,7 @@ async function sendEmail(to, subject, text, html) {
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: env('STUDIO_EMAIL_FROM', 'Auntie Tobi Studio <studio@auntietobi.co.uk>'),
-      to, subject, text, ...(html ? { html } : {}),
+      to, subject, text, ...(html ? { html } : {}), ...(headers ? { headers } : {}),
     }),
   });
   if (!res.ok) console.error('[studio] email send failed', res.status, (await res.text()).slice(0, 300));

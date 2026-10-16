@@ -23,7 +23,8 @@ Upload to a **new branch called `studio`** (not `main`).
 |---|---|---|
 | `studio.html` | repo root | New |
 | `studio-admin.html` | repo root | New |
-| `netlify/functions/studio-auth.mjs`, `studio-api.mjs`, `studio-billing.mjs`, `studio-admin.mjs`, `studio-growth.mjs`, `studio-money.mjs`, `studio-resources.mjs`, `studio-stripe-webhook.mjs`, `studio-maintenance.mjs` | `netlify/functions/` | New — Netlify's current function format (needed for safe allowance counting) |
+| `studio-qr.js`, `studio-manifest.json` | repo root | New — QR codes (served from your own site) and the “add to home screen” app settings |
+| `netlify/functions/studio-auth.mjs`, `studio-api.mjs`, `studio-billing.mjs`, `studio-admin.mjs`, `studio-growth.mjs`, `studio-money.mjs`, `studio-resources.mjs`, `studio-extras.mjs`, `studio-page.mjs`, `studio-daily.mjs`, `studio-unsubscribe.mjs`, `studio-stripe-webhook.mjs`, `studio-maintenance.mjs` | `netlify/functions/` | New — Netlify's current function format (needed for safe allowance counting) |
 | `netlify/functions/studio-lib/` (whole folder, including `handlers/`) | `netlify/functions/studio-lib/` | New — shared Studio code (not functions themselves) |
 | `_redirects` | repo root | **Changed** — 4 lines added after `/business-club` |
 | `netlify.toml` | repo root | **Changed** — daily `studio-maintenance` schedule added |
@@ -68,6 +69,8 @@ Netlify → **Site configuration → Environment variables**. Each can have diff
 | `STRIPE_PRICE_POWER_YEARLY` | Price ID of the £50/year price (`price_…`) | For AI Power |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret of the webhook endpoint (`whsec_…`) | For AI Power |
 | `STUDIO_SITE_URL` | `https://www.auntietobi.co.uk` in production (leave blank on preview) | Production |
+| `ONESIGNAL_API_KEY` | **Already set** for your app's notifications — reused for the Studio daily reminder. Make sure its scope includes Functions | For reminders (exists) |
+| `STUDIO_WEEKLY_EMAIL_MAX` | Most weekly round-up emails sent per day (default 60, to stay inside Resend's free 100-a-day limit alongside sign-in codes). Raise it if you upgrade Resend | Optional |
 | `STUDIO_EMAIL_MODE` | Set to `log` **on Branch deploys only** if you want to test before Resend is ready — codes appear in Netlify function logs instead of email. **Never set this in production.** | Testing only |
 
 Without Stripe variables the Studio still works for Business Club members; AI Power just can't be bought yet. If only one price is set, only that plan is offered.
@@ -176,6 +179,21 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 - **Dashboard:** published, drafts, scheduled, coming soon, new this month, views and completions this month, most viewed, most completed, and **needs review** (lessons past their review period or never reviewed — use 6 months for Instagram/WhatsApp lessons).
 - **Formatting in lesson text:** `## Heading`, `- bullet`, `1. numbered`, `**bold**`, `> Tip box`, `[link text](https://…)`; blank line between paragraphs.
 - **Launch content** loads automatically the first time Resources is opened. Your edits and deletions are never overwritten by later updates.
+
+---
+
+## 7f. Everyday helpers (all free — no AI)
+
+- **Create → Free tools:** Make an image, Price list page, Review link & QR, Quote or invoice. None use generations.
+- **Today → Get set up:** a 6-step checklist (profile, logo & colours, invoice details, weekly goal, first lesson or first post, review link). Members can hide it; it disappears when done.
+- **Today → To chase:** overdue invoices, invoices due within 2 days, and quotes sent more than 3 days ago with no invoice. One tap opens WhatsApp with a polite message; "Later" hides it for 3 days.
+- **Today → A lesson for you** (Business Club): picked from their numbers — e.g. enquiries but no sales → the follow-up lesson; no posts this week → captions/content lessons.
+- **Track → Customers:** built automatically from quotes, invoices and receipts (name, phone, orders, spent, unpaid, last order), with Message again, Ask for a review and New invoice.
+- **Review link & QR:** members save their Google/Auntie Tobi/other review link; Studio makes a branded QR card to print or share, and a ready review-request message. QR codes are made on the phone (`studio-qr.js`), no outside service.
+- **Price list page:** members add products, prices, photos and their WhatsApp number, choose a link and publish at **`/p/their-link`**. Each item has an "Order on WhatsApp" button. The page only shows while their Club membership or AI Power is active. **Admin → Members → Manage** shows the page and has **Take page down**. Links are first come, first served; a few words (admin, studio, auntietobi…) are reserved.
+- **Weekly round-up email:** Monday mornings (with Tuesday/Wednesday catch-up if there are many members): last week's numbers, unpaid/overdue invoices, quotes waiting, this week's focus and a lesson. Members turn it off in Account or with the unsubscribe link. Sent from `studio-daily` (07:52 UTC daily).
+- **Add to home screen & daily reminder:** Studio installs like an app (Android: one tap; iPhone: Share → Add to Home Screen). Members can turn on an ~8am reminder in Account → Phone app & reminders. It uses your existing OneSignal app, tagged `studio_reminder`, so Studio reminders only go to people who turned them on.
+- **Testing note:** scheduled jobs (weekly email, reminders) only run on the **live** site, not branch previews, and OneSignal only works on your live domain. Everything else can be tested on the preview.
 
 ---
 

@@ -7,7 +7,7 @@
  *
  * Formatting used in lesson text:  ## Heading   - bullet   1. numbered   **bold**   > Tip box   [link](https://…)
  */
-const VERSION = 2;
+const VERSION = 3;
 const REVIEWED = '2026-10-16';
 
 // Every module and lesson title. "planned" = shown to members as Coming soon.
@@ -15,7 +15,7 @@ const OUTLINE = {
   m01: ['Welcome to Auntie Tobi Business Club', 'How to Make the Most of Your Membership', 'Set Your Business Goals', 'Create Your 30-Day Business Action Plan', 'Understanding Your Ideal Customer'],
   m02: ['Optimising Your Instagram Bio', 'Profile Photos, Highlights & Pinned Posts', 'Understanding Reels, Stories & Carousels', 'How to Attract the Right Followers', 'Turning Profile Visitors Into Enquiries', 'Understanding Instagram Insights'],
   m03: ['The Three Types of Business Content: Attract, Build Trust & Sell', 'How to Take Better Product Photos', 'How to Create Simple Reels', '20 Reel Ideas for Small Businesses', 'Writing Captions That Encourage Action', 'Planning One Week of Content in 30 Minutes', 'Repurposing One Piece of Content'],
-  m04: ['Understanding Your Customer’s Buying Journey', 'How to Present Your Products or Services', 'Writing Offers Without Constant Discounts', 'How to Respond to Customer Enquiries', 'Following Up Without Being Pushy', 'How to Ask for Customer Reviews', 'Encouraging Repeat Purchases and Referrals'],
+  m04: ['Understanding Your Customer’s Buying Journey', 'How to Present Your Products or Services', 'Writing Offers Without Constant Discounts', 'How to Respond to Customer Enquiries', 'Following Up Without Being Pushy', 'How to Ask for Customer Reviews', 'Encouraging Repeat Purchases and Referrals', 'How to Turn Enquiries Into Orders'],
   m05: ['Setting Up WhatsApp Business', 'Using WhatsApp Catalogue, Labels & Quick Replies', 'Creating Designs With Canva', 'Using ChatGPT Responsibly for Business', 'Using Google Business Profile Where Eligible', 'Organising Orders and Customer Enquiries', 'Simple Business Tracking With Spreadsheets'],
   m06: ['Business Mindset: Ownership & Consistency', 'Visibility vs Sales: Understanding the Difference', 'Pricing Your Products or Services', 'Understanding Costs, Profit and Cash Flow', 'Finding Your Competitive Advantage', 'Building Customer Trust', 'Creating a Simple 90-Day Growth Strategy', 'Learning From Your Business Results'],
 };
@@ -306,6 +306,12 @@ Find **three people** who asked about prices or availability but didn’t book. 
   disclaimer: 'General business guidance, not legal advice. For marketing rules, see the ICO guidance.',
 };
 
+// Launch content written in resources-content/ (matched by module + title).
+const C1 = require('./resources-content/m01'), C2 = require('./resources-content/m02'), C4 = require('./resources-content/m04'), C36 = require('./resources-content/m03m06');
+for (const [mod, set] of [['m01', C1], ['m02', C2], ['m04', C4], ['m03', C36.m03], ['m06', C36.m06]]) {
+  for (const [title, body] of Object.entries(set)) FULL[idFor(mod, title)] = body;
+}
+
 function lessons() {
   const out = [];
   for (const [mod, titles] of Object.entries(OUTLINE)) {
@@ -314,7 +320,7 @@ function lessons() {
       const full = FULL[id];
       const base = { id, module: mod, order: i + 1, title, summary: '', status: 'planned', tags: ['all'], use: [], seedRev: 1, reviewedAt: '', reviewMonths: 12, learn: '', see: '', do: '' };
       const words = full ? [full.learn, full.see, full.do].join(' ').split(/\s+/).length : 0;
-      out.push(full ? { ...base, ...full, readMins: full.readMins || Math.max(1, Math.round(words / 200)), status: full.status || 'published', publishAt: full.publishAt || REVIEWED, reviewedAt: full.reviewedAt || REVIEWED, seedRev: full.seedRev || 1 } : base);
+      out.push(full ? { ...base, ...full, readMins: full.readMins || Math.max(1, Math.round(words / 200)), status: full.status || 'published', publishAt: full.status === 'planned' ? '' : (full.publishAt || REVIEWED), reviewedAt: full.reviewedAt || REVIEWED, seedRev: full.seedRev || 2 } : base);
     });
   }
   return out;

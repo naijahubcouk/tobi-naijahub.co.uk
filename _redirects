@@ -47,6 +47,7 @@
 # ── Business Studio (members-only) ──
 /studio          /studio.html        200
 /studio-admin    /studio-admin.html  200
+/p/:slug         /.netlify/functions/studio-page?s=:slug  200
 /netlify/functions/studio-lib/*  /404  404!
 /group-advertising  /group-advertising.html  200
 /n/update-working-parents-31-august   https://auntietobi.co.uk/?action=update&slug=update-working-parents-31-august   301

@@ -161,11 +161,14 @@ exports.handler = handler(async (ctx) => {
       const months = await mapLimit(members, 10, m => getJson(gen.monthUsageKey(m.email, month)));
       const days = await mapLimit(members, 10, m => getJson(gen.usageKey(m.email, day)));
       const profiles = await mapLimit(members, 10, m => getJson(`profiles/${enc(m.email)}`));
+      const shops = await mapLimit(members, 10, m => getJson(`shop/${enc(m.email)}`));
       return { month, day, members: members.map((m, i) => {
         const out = summarizeMember(m, settings, months[i], days[i]);
         const p = profiles[i] || {};
         out.business = { name: p.businessName || '', listingSlug: p.listingSlug || '', listingUrl: p.listingSlug ? `https://www.auntietobi.co.uk/biz/${p.listingSlug}` : '',
           website: p.website || '', channels: p.channels || [], mainChannel: p.mainChannel || '' };
+        const sh = shops[i];
+        out.shop = sh && sh.slug ? { slug: sh.slug, published: !!sh.published, disabled: !!m.shopDisabled, items: sh.items.length } : null;
         return out;
       }).sort((a, b) => a.email.localeCompare(b.email)) };
     }
@@ -278,6 +281,14 @@ exports.handler = handler(async (ctx) => {
     case 'audit-list': {
       const keys = (await core.listKeys('audit/')).sort().reverse().slice(0, 100);
       return { entries: await mapLimit(keys, 8, k => getJson(k)) };
+    }
+
+    case 'member-shop-disable': {
+      const email = requireEmail(body.email);
+      const disabled = !!body.disabled;
+      await cas(`members/${enc(email)}`, cur => { if (!cur) throw new HttpError(404, 'not_found', 'Member not found.'); return { ...cur, shopDisabled: disabled }; });
+      await core.audit(actor, disabled ? 'shop_disabled' : 'shop_enabled', { email });
+      return { ok: true, disabled };
     }
 
     // ── Resources (content manager) ──
