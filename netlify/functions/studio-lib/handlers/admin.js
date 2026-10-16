@@ -12,6 +12,7 @@ const stripe = require('../stripe');
 const growth = require('../growth');
 const resources = require('../resources');
 const benefits = require('../benefits');
+const notify = require('../notify');
 
 // Business Club status. 'none' = not a Club member (e.g. AI Power-only customer).
 const STATUSES = ['pending', 'active', 'inactive', 'none'];
@@ -295,30 +296,50 @@ exports.handler = handler(async (ctx) => {
 
     // ── Business Club benefits ──
     case 'benefits-get': {
+      let b, t;
       const email = requireEmail(body.email);
       const member = await core.getMember(email);
       if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
-      return { member: { email, name: member.name || '', membershipExpiresAt: member.membershipExpiresAt || '', status: member.status }, ...(await benefits.getYear(email, member)) };
+      return { member: { email, name: member.name || '', membershipExpiresAt: member.membershipExpiresAt || '', status: member.status }, ...(b = await benefits.getYear(email, member)), targets: (t = await benefits.getTargets()), prog: benefits.progress(b.year, t) };
     }
     case 'benefits-update': {
       const email = requireEmail(body.email);
       const member = await core.getMember(email);
       if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
+      const before = new Set(benefits.feed((await benefits.getYear(email, member)).year).map(e => `${e.kind}|${e.loggedAt}`));
       const r = await benefits.update(email, member, body.patch);
       await core.audit(actor, 'benefits_update', { email, keys: Object.keys(body.patch || {}) });
+      const fresh = benefits.feed(r.year).filter(e => e.notify && !before.has(`${e.kind}|${e.loggedAt}`));
+      if (fresh.length) await notify.pushToMember(email, 'Auntie Tobi 💚', `${fresh.map(e => e.label).join(' & ')} — it’s done! See it in your Business Studio.`);
       return r;
     }
     case 'benefits-log': case 'benefits-unlog': {
       const email = requireEmail(body.email);
       const member = await core.getMember(email);
       if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
-      const r = action === 'benefits-log' ? await benefits.log(email, member, body.kind, body.note, body.date) : await benefits.unlog(email, member, body.kind, body.index);
-      await core.audit(actor, action === 'benefits-log' ? 'benefit_logged' : 'benefit_unlogged', { email, kind: body.kind });
+      const r = action === 'benefits-log' ? await benefits.log(email, member, body.kind, body.note, body.date, body.notify !== false, body.link) : await benefits.unlog(email, member, body.kind, body.index);
+      await core.audit(actor, action === 'benefits-log' ? 'benefit_logged' : 'benefit_unlogged', { email, kind: body.kind, notify: body.notify !== false });
+      if (action === 'benefits-log' && body.notify !== false) {
+        const what = { stories: 'shared your business on her Story', reposts: 'reposted your post', discovery: 'featured your business', collabs: 'did a collab with you' }[body.kind];
+        await notify.pushToMember(email, 'Auntie Tobi 💚', `Auntie Tobi ${what}! See it in your Business Studio.`);
+      }
       return r;
     }
-    case 'benefits-overview': {
+    case 'benefits-targets-save': {
+      const targets = await benefits.saveTargets(body.targets);
+      await core.audit(actor, 'benefit_targets_save', targets);
+      return { targets };
+    }
+    case 'benefits-overview': case 'benefits-due': {
       const members = (await allMembers()).filter(m => core.access(m, settings).membershipActive);
       const month = core.monthKey(), day = core.dayKey();
+      const targets = await benefits.getTargets();
+      if (action === 'benefits-due') {
+        const progs = await mapLimit(members, 8, async m => benefits.progress((await benefits.getYear(m.email, m)).year, targets, day));
+        const sum = k => progs.reduce((a, p) => a + p[k].due, 0);
+        return { members: members.length, stories: sum('stories'), reposts: sum('reposts'), discovery: sum('discovery'),
+          weekMembers: progs.filter(p => p.stories.due || p.reposts.due).length, monthMembers: progs.filter(p => p.discovery.due).length, targets };
+      }
       const since = growth.addDays(day, -30);
       const rows = await mapLimit(members, 8, async m => {
         const [b, p, usage, prog] = await Promise.all([benefits.getYear(m.email, m), getJson(`profiles/${enc(m.email)}`), getJson(gen.monthUsageKey(m.email, month)), growth.getProgress(m.email)]);
@@ -328,12 +349,13 @@ exports.handler = handler(async (ctx) => {
         return {
           email: m.email, name: m.name || '', business: (p && p.businessName) || '', expires: m.membershipExpiresAt, daysLeft,
           spotlight: y.spotlight.status, spotlightDate: y.spotlight.date, featured: y.featured.done, marketplace: y.marketplace.done, badge: y.badge,
-          stories: y.stories.length, reposts: y.reposts.length, discovery: y.discovery.length, lastShared: benefits.lastShared(y),
+          stories: y.stories.length, reposts: y.reposts.length, discovery: y.discovery.length, collabs: (y.collabs || []).length, lastShared: benefits.lastShared(y),
+          prog: benefits.progress(y, targets, day),
           checkup: y.checkup.done, checkupDate: y.checkup.date, priorities: y.checkup.priorities.length, prioritiesDone: (y.prioritiesDone || []).length,
           generationsMonth: usage ? usage.used || 0 : 0, posts30,
         };
       });
-      return { rows, today: day };
+      return { rows, today: day, targets, weekStart: benefits.weekStart(day) };
     }
 
     // ── Resources (content manager) ──

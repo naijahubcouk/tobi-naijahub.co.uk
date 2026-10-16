@@ -35,10 +35,11 @@ async function update(email, raw) {
   return { ...DEFAULTS, ...next };
 }
 
+async function markBenefitsSeen(email) { await cas(key(email), cur => ({ ...DEFAULTS, ...(cur || {}), benefitsSeenAt: core.nowIso() })); }
 async function markDigest(email) { await cas(key(email), cur => ({ ...DEFAULTS, ...(cur || {}), lastDigestAt: core.nowIso() })); }
 
 // Anonymous ID for push notifications (OneSignal external ID) — never the email itself.
 function pushId(email) { return `studio_${core.hmac(`push:${email}`).slice(0, 32)}`; }
 function unsubToken(email) { return core.hmac(`unsub:${email}`).slice(0, 40); }
 
-module.exports = { get, update, markDigest, pushId, unsubToken, REVIEW_LABELS, DEFAULTS };
+module.exports = { get, update, markDigest, markBenefitsSeen, pushId, unsubToken, REVIEW_LABELS, DEFAULTS };

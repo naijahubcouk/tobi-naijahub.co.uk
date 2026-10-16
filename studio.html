@@ -278,6 +278,7 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
 .pill.fu-new{background:#ECEDF0;color:var(--navy-2)}.pill.fu-quoted{background:var(--gold-l);color:#7A5300}.pill.fu-booked{background:var(--green-l);color:var(--green-d)}.pill.fu-notnow{background:#ECEDF0;color:var(--muted)}
 .act.chase.fu{border-left-color:var(--green)}
 ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #EEF3EF;font-size:14px}ul.hist li:last-child{border-bottom:0}ul.hist li span{color:var(--muted);min-width:86px;font-size:13px}
+.shared{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .benrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF3EF}.benrow:last-child{border-bottom:0}
 .benico{font-size:20px;width:28px;text-align:center;flex:none}
@@ -2107,6 +2108,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
           return '<button class="setstep' + (s.done ? ' done' : '') + '" data-step="' + s.go + '"' + (s.done ? ' disabled' : '') + '><span class="ldot' + (s.done ? ' done' : '') + '">' + (s.done ? '✓' : '') + '</span><span style="flex:1;text-align:left">' + esc(s.label) + '</span>' + (s.done ? '' : '<span aria-hidden="true">→</span>') + '</button>';
         }).join('') + '</div></section>';
     }
+    html += sharedCard(n.shared);
     html += prioritiesCard(n.priorities);
     // Install as an app
     if (!isStandalone() && !lsGet('studioInstallHidden') && (deferredInstall || isIOS() || /android/i.test(navigator.userAgent))) {
@@ -2128,6 +2130,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     }
     top.innerHTML = html;
     bindPriorities(top);
+    bindShared(top);
     $('#logEnq', top).onclick = function () { fuLogSheet(function () { loadNudges(); }); };
     var ft = $('#fuToday', top); if (ft) bindFuCards(ft, fus, n.reviewLink, function () { loadNudges(); });
     if (bottom && n.lesson) {
@@ -2611,7 +2614,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   }
   async function bindBenefitsAccount() {
     var card = $('#benCard'); if (!card) return;
-    var r; try { r = await api('studio-extras', 'benefits-mine'); } catch (x) { card.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    var r; try { r = await api('studio-extras', 'benefits-mine', { markSeen: true }); } catch (x) { card.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     if (!$('#benCard')) return;
     var b = r.benefits, biz = (S.boot.profile && S.boot.profile.businessName) || '[business name]';
     if (!b) { card.innerHTML = '<p class="hint" style="margin:0">Your benefits will show here once your membership dates are set.</p>'; return; }
@@ -2621,16 +2624,41 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var ask = function (label, text) { return '<a class="btn link" style="font-size:13px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(atWa(text)) + '">' + esc(label) + ' →</a>'; };
     var sp = b.spotlight;
     card.innerHTML = '<p class="hint" style="margin:0">Membership year ends <b>' + esc(dmy(b.yearKey)) + '</b>.</p>' +
-      row('📣', 'Business Spotlight or collab', sp.status === 'done' ? 'Done ' + esc(dmy(sp.date)) + (sp.link ? ' · <a href="' + esc(sp.link) + '" target="_blank" rel="noopener">View</a>' : '') : sp.status === 'scheduled' ? 'Scheduled' + (sp.date ? ' for ' + esc(dmy(sp.date)) : '') : 'Not yet', sp.status === 'done',
+      row('📣', 'Business Spotlight', sp.status === 'done' ? 'Done ' + esc(dmy(sp.date)) + (sp.link ? ' · <a href="' + esc(sp.link) + '" target="_blank" rel="noopener">View</a>' : '') : sp.status === 'scheduled' ? 'Scheduled' + (sp.date ? ' for ' + esc(dmy(sp.date)) : '') : 'Not yet', sp.status === 'done',
         sp.status === 'none' ? ask('Plan my Spotlight', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to plan my Business Spotlight.') : '') +
       row('⭐', 'Featured Business (app & website)', b.featured.done ? 'Live since ' + esc(dmy(b.featured.date)) : 'Being set up', b.featured.done) +
       row('🛍️', 'Marketplace listing', b.marketplace.done ? 'Live since ' + esc(dmy(b.marketplace.date)) : 'Not listed yet', b.marketplace.done,
         b.marketplace.done ? '' : ask('Send my product or service', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to add my product or service to the Marketplace.')) +
       row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.badge === 'not_eligible' ? 'Not eligible at the moment' : 'Not verified yet', b.badge === 'yes',
         b.badge === 'yes' || b.badge === 'not_eligible' ? '' : ask('Ask about verification', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. How can I get verified?')) +
-      row('📲', 'Shared by Auntie Tobi this year', b.counts.stories + ' Story share' + (b.counts.stories === 1 ? '' : 's') + ' · ' + b.counts.reposts + ' repost' + (b.counts.reposts === 1 ? '' : 's') + ' · ' + b.counts.discovery + ' discovery feature' + (b.counts.discovery === 1 ? '' : 's') + '<br>Auntie Tobi chooses whose content to share — keep posting your best work.', false) +
+      row('📲', 'Shared by Auntie Tobi this year', b.counts.stories + ' Story share' + (b.counts.stories === 1 ? '' : 's') + ' · ' + b.counts.reposts + ' repost' + (b.counts.reposts === 1 ? '' : 's') + ' · ' + b.counts.discovery + ' discovery feature' + (b.counts.discovery === 1 ? '' : 's') + ' · ' + (b.counts.collabs || 0) + ' collab' + (b.counts.collabs === 1 ? '' : 's') + '<br>Auntie Tobi chooses whose content to share — keep posting your best work.', false) +
       row('🧭', 'Business Check-Up with Accountability', b.checkup.done ? 'Done ' + esc(dmy(b.checkup.date)) + (b.checkup.priorities.length ? ' · ' + b.prioritiesDone.length + ' of ' + b.checkup.priorities.length + ' priorities done' : '') : 'Not booked yet', b.checkup.done,
-        b.checkup.done ? '' : ask('Book my Check-Up', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to book my Business Check-Up. The main thing I’d like help with is: '));
+        b.checkup.done ? '' : ask('Book my Check-Up', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to book my Business Check-Up. The main thing I’d like help with is: ')) +
+      benFeedHtml(b.feed || []);
+    if (S.nudges) S.nudges.shared = [];
+    var sc = $('#sharedCard'); if (sc) sc.remove();
+  }
+  var BEN_ICO = { stories: '📲', reposts: '🔁', discovery: '🔎', collabs: '🤝', spotlight: '📣', featured: '⭐', marketplace: '🛍️' };
+  function benFeedItem(e) {
+    return '<div class="benrow" style="padding:6px 0"><span class="benico">' + (BEN_ICO[e.kind] || '💚') + '</span><div style="flex:1;min-width:0"><b>' + esc(e.label) + '</b> <span class="hint" style="margin:0">' + esc(dmy(e.at)) + '</span>' +
+      (e.note ? '<div class="hint" style="margin:0">' + esc(e.note) + '</div>' : '') + (e.link ? '<div><a class="btn link" style="font-size:13px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(e.link) + '">View →</a></div>' : '') + '</div></div>';
+  }
+  function benFeedHtml(feed) {
+    if (!feed.length) return '<div style="border-top:1px solid var(--line);padding-top:10px"><b>What Auntie Tobi has done for you</b><p class="hint" style="margin:4px 0 0">Nothing yet this membership year — it’ll appear here, with dates, as soon as it happens.</p></div>';
+    var first = feed.slice(0, 8), rest = feed.slice(8);
+    return '<div style="border-top:1px solid var(--line);padding-top:10px"><b>What Auntie Tobi has done for you</b> <span class="hint" style="margin:0">(' + feed.length + ' this year)</span>' + first.map(benFeedItem).join('') +
+      (rest.length ? '<details><summary class="hint" style="cursor:pointer;margin:4px 0">Show ' + rest.length + ' more</summary>' + rest.map(benFeedItem).join('') + '</details>' : '') + '</div>';
+  }
+  function sharedCard(items) {
+    if (!items || !items.length) return '';
+    return '<section class="card stack shared" id="sharedCard"><b>💚 Auntie Tobi shared your business</b>' + items.slice(0, 4).map(benFeedItem).join('') +
+      (items.length > 4 ? '<p class="hint" style="margin:0">…and ' + (items.length - 4) + ' more in Account → My benefits.</p>' : '') +
+      '<div class="row"><button class="btn small primary" id="sharedOk">Thank you 💚</button><button class="btn link" id="sharedAll" style="font-size:13px">See all my benefits</button></div></section>';
+  }
+  function bindShared(root) {
+    var ok = $('#sharedOk', root), all = $('#sharedAll', root);
+    if (ok) ok.onclick = async function () { var c = $('#sharedCard'); if (c) c.remove(); try { await api('studio-extras', 'benefits-seen'); } catch (x) {} };
+    if (all) all.onclick = function () { showAccount(); };
   }
 
   // ───────────── account & billing ─────────────

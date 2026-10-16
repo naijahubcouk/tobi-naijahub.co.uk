@@ -9,7 +9,24 @@ const core = require('./core');
 const { HttpError, cas, getJson, enc, cleanText } = core;
 
 const key = email => `benefits/${enc(email)}`;
-const LOG_KINDS = ['stories', 'reposts', 'discovery'];
+const LOG_KINDS = ['stories', 'reposts', 'discovery', 'collabs'];
+const LABELS = { stories: 'Story share', reposts: 'Post/Reel repost', discovery: 'Discovery feature', collabs: 'Collab', spotlight: 'Business Spotlight', featured: 'Featured Business', marketplace: 'Marketplace listing' };
+
+// Minimum targets per member (the aim is to over-deliver). Admin-only; members never see these.
+const DEFAULT_TARGETS = { storiesWeek: 2, repostsWeek: 2, discoveryMonth: 2, collabsYear: 2, spotlightYear: 1 };
+const TARGETS_KEY = 'config/benefit-targets';
+async function getTargets() { return { ...DEFAULT_TARGETS, ...((await getJson(TARGETS_KEY)) || {}) }; }
+async function saveTargets(raw) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  const next = {};
+  for (const k of Object.keys(DEFAULT_TARGETS)) {
+    const v = Number(raw[k]);
+    if (!Number.isInteger(v) || v < 0 || v > 50) throw new HttpError(400, 'invalid', 'Targets must be whole numbers between 0 and 50.');
+    next[k] = v;
+  }
+  await core.setJson(TARGETS_KEY, next);
+  return next;
+}
 const SPOTLIGHT = ['none', 'scheduled', 'done'];
 const BADGE = ['unknown', 'yes', 'no', 'not_eligible'];
 const validDate = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || '')) && !isNaN(Date.parse(d));
@@ -21,7 +38,7 @@ function emptyYear() {
     featured: { done: false, date: '' },
     marketplace: { done: false, date: '' },
     badge: 'unknown',
-    stories: [], reposts: [], discovery: [],
+    stories: [], reposts: [], discovery: [], collabs: [],
     checkup: { done: false, date: '', notes: '', priorities: [] },
     prioritiesDone: [],
   };
@@ -57,10 +74,17 @@ async function update(email, member, raw) {
   return change(email, member, y => {
     if (raw.spotlight) {
       const s = raw.spotlight;
-      y.spotlight = { status: SPOTLIGHT.includes(s.status) ? s.status : y.spotlight.status, date: validDate(s.date) ? s.date : '', link: httpsUrl(s.link) };
+      const was = y.spotlight || {};
+      const status = SPOTLIGHT.includes(s.status) ? s.status : was.status;
+      y.spotlight = { status, date: validDate(s.date) ? s.date : '', link: httpsUrl(s.link) };
+      if (status === 'done') { y.spotlight.loggedAt = was.status === 'done' && was.loggedAt ? was.loggedAt : core.nowIso(); y.spotlight.notify = was.status === 'done' ? was.notify !== false : raw.notify !== false; }
     }
     for (const k of ['featured', 'marketplace']) {
-      if (raw[k]) y[k] = { done: !!raw[k].done, date: raw[k].done ? (validDate(raw[k].date) ? raw[k].date : core.dayKey()) : '' };
+      if (raw[k]) {
+        const was = y[k] || {};
+        y[k] = { done: !!raw[k].done, date: raw[k].done ? (validDate(raw[k].date) ? raw[k].date : core.dayKey()) : '' };
+        if (y[k].done) { y[k].loggedAt = was.done && was.loggedAt ? was.loggedAt : core.nowIso(); y[k].notify = was.done ? was.notify !== false : raw.notify !== false; }
+      }
     }
     if ('badge' in raw) y.badge = BADGE.includes(raw.badge) ? raw.badge : y.badge;
     if (raw.checkup) {
@@ -74,10 +98,12 @@ async function update(email, member, raw) {
 }
 
 // Admin: log a Story share, repost or discovery feature.
-async function log(email, member, kind, note, date) {
+async function log(email, member, kind, note, date, notify, link) {
   if (!LOG_KINDS.includes(kind)) throw new HttpError(400, 'invalid', 'Invalid type.');
   return change(email, member, y => {
-    y[kind] = [{ at: validDate(date) ? date : core.dayKey(), note: cleanText(note, 200) }, ...(y[kind] || [])].slice(0, 200);
+    const entry = { at: validDate(date) ? date : core.dayKey(), note: cleanText(note, 200), loggedAt: core.nowIso(), notify: notify !== false };
+    const l = httpsUrl(link); if (l) entry.link = l;
+    y[kind] = [entry, ...(y[kind] || [])].slice(0, 400);
   });
 }
 async function unlog(email, member, kind, index) {
@@ -98,9 +124,38 @@ async function setPriorityDone(email, member, index, done) {
 }
 
 function lastShared(y) {
-  const all = [...(y.stories || []), ...(y.reposts || []), ...(y.discovery || [])].map(e => e.at);
+  const all = [...(y.stories || []), ...(y.reposts || []), ...(y.discovery || []), ...(y.collabs || [])].map(e => e.at);
   if (y.spotlight && y.spotlight.status === 'done' && y.spotlight.date) all.push(y.spotlight.date);
   return all.sort().pop() || '';
+}
+
+// Monday of the UK week containing `day` (YYYY-MM-DD).
+function weekStart(day) { const d = new Date(`${day}T12:00:00Z`); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); }
+
+// Progress against the targets. `due` is what's still owed this period (never negative); `over` is how far ahead.
+function progress(y, t, day) {
+  y = y || emptyYear(); day = day || core.dayKey();
+  const ws = weekStart(day), month = day.slice(0, 7);
+  const cnt = (list, f) => (list || []).filter(e => f(e.at)).length;
+  const one = (n, target, period) => ({ n, target, period, due: Math.max(0, target - n), over: Math.max(0, n - target), met: n >= target });
+  return {
+    weekStart: ws,
+    stories: one(cnt(y.stories, a => a >= ws && a <= day), t.storiesWeek, 'week'),
+    reposts: one(cnt(y.reposts, a => a >= ws && a <= day), t.repostsWeek, 'week'),
+    discovery: one(cnt(y.discovery, a => a.slice(0, 7) === month), t.discoveryMonth, 'month'),
+    collabs: one((y.collabs || []).length, t.collabsYear, 'year'),
+    spotlight: one(y.spotlight && y.spotlight.status === 'done' ? 1 : 0, t.spotlightYear, 'year'),
+  };
+}
+
+// Everything done for the member this year, newest first (what they see in Account).
+function feed(y) {
+  if (!y) return [];
+  const out = [];
+  for (const k of LOG_KINDS) for (const e of y[k] || []) out.push({ kind: k, label: LABELS[k], at: e.at, note: e.note || '', link: e.link || '', loggedAt: e.loggedAt || '', notify: e.notify !== false && !!e.loggedAt });
+  for (const k of ['featured', 'marketplace']) if (y[k] && y[k].done) out.push({ kind: k, label: LABELS[k], at: y[k].date, note: 'Now live', link: '', loggedAt: y[k].loggedAt || '', notify: y[k].notify !== false && !!y[k].loggedAt });
+  if (y.spotlight && y.spotlight.status === 'done') out.push({ kind: 'spotlight', label: LABELS.spotlight, at: y.spotlight.date, note: '', link: y.spotlight.link || '', loggedAt: y.spotlight.loggedAt || '', notify: y.spotlight.notify !== false && !!y.spotlight.loggedAt });
+  return out.sort((a, b) => (b.at || '').localeCompare(a.at || '') || (b.loggedAt || '').localeCompare(a.loggedAt || ''));
 }
 
 // What the member sees (no admin notes).
@@ -110,10 +165,11 @@ function forMember(yearKey, y) {
     yearKey,
     spotlight: { status: y.spotlight.status, date: y.spotlight.date, link: y.spotlight.link },
     featured: y.featured, marketplace: y.marketplace, badge: y.badge,
-    counts: { stories: (y.stories || []).length, reposts: (y.reposts || []).length, discovery: (y.discovery || []).length },
+    counts: { stories: (y.stories || []).length, reposts: (y.reposts || []).length, discovery: (y.discovery || []).length, collabs: (y.collabs || []).length },
+    feed: feed(y).map(({ kind, label, at, note, link }) => ({ kind, label, at, note, link })),
     checkup: { done: y.checkup.done, date: y.checkup.date, priorities: y.checkup.priorities || [] },
     prioritiesDone: y.prioritiesDone || [],
   };
 }
 
-module.exports = { getYear, update, log, unlog, setPriorityDone, forMember, lastShared, yearKeyOf, emptyYear, LOG_KINDS };
+module.exports = { getYear, update, log, unlog, setPriorityDone, forMember, lastShared, yearKeyOf, emptyYear, LOG_KINDS, LABELS, DEFAULT_TARGETS, getTargets, saveTargets, progress, feed, weekStart };
