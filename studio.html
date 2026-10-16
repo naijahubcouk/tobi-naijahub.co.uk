@@ -318,7 +318,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .mt-check{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:2px solid var(--green);background:#fff;color:#fff;font-weight:800;cursor:pointer;margin-top:1px}
 .mt-done .mt-check{background:var(--green)}.mt-done .mt-t{text-decoration:line-through;color:var(--muted)}.mt-t{font-size:15px;font-weight:600;line-height:1.35}
 .mt-late{background:#FFF6F5;margin:0 -14px;padding:9px 14px}.mt-od{color:var(--danger);font-weight:700}.mt-h{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:6px}
-.mt .btn.link{font-size:13px;padding:0;min-height:0}.mt-add summary{cursor:pointer;color:var(--green);font-weight:700;font-size:14px;margin-top:4px}
+.mt .btn.link{font-size:13px;padding:0;min-height:0}.mt-day{font-size:13px;font-weight:700;color:var(--navy);margin-top:8px}.mt-soon{border:2px dashed #C9D3CC!important;cursor:default;display:grid;place-items:center;color:var(--muted);font-size:13px}.mt-add summary{cursor:pointer;color:var(--green);font-weight:700;font-size:14px;margin-top:4px}
 .shared{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .benrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF3EF}.benrow:last-child{border-bottom:0}
@@ -2172,42 +2172,93 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   var MT_DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   function mtDay(day) { return new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); }
   function mtRow(it, state) {
-    var done = state === 'done', m = it.meta || {};
-    var act = done ? '' : (it.kind === 'followup' ? '<button class="btn link" data-mtfu="' + esc(m.id) + '">Open</button> · ' : it.kind === 'invoice' ? '<button class="btn link" data-mtinv="' + esc(m.id) + '">Open</button> · ' : '') +
-      '<button class="btn link" data-mtskip="' + esc(it.key) + '" style="color:var(--muted)">Skip</button>';
-    return '<div class="mt' + (done ? ' mt-done' : '') + (state === 'overdue' ? ' mt-late' : '') + '"><button class="mt-check" data-mtdone="' + esc(it.key) + '" aria-label="' + (done ? 'Mark not done' : 'Mark done') + '">' + (done ? '✓' : '') + '</button>' +
+    var done = state === 'done', soon = state === 'soon', m = it.meta || {};
+    var own = it.kind === 'task';
+    var act = done ? '' : (it.kind === 'followup' ? '<button class="btn link" data-mtfu="' + esc(m.id) + '">Open</button>' : it.kind === 'invoice' ? '<button class="btn link" data-mtinv="' + esc(m.id) + '">Open</button>' : '');
+    if (!done && (!soon || own)) {
+      var rm = soon && own && m.repeat === 'once';
+      act += (act ? ' · ' : '') + '<button class="btn link" ' + (rm ? 'data-mtrm="' + esc(m.def) + '"' : 'data-mtskip="' + esc(it.key) + '"') + ' style="color:var(--muted)">' + (rm ? 'Remove' : 'Skip') + '</button>';
+    }
+    var label = done ? (it.skippedAt ? 'Skipped' : 'Done') + (it.due && it.due !== S.mtToday ? ' · for ' + esc(mtDay(it.due)) : '')
+      : it.kind === 'followup' ? 'Follow-up' : it.kind === 'invoice' ? (soon ? 'Invoice due' : 'Overdue invoice') : it.kind === 'priority' ? 'Check-Up priority' : (m.repeat && m.repeat !== 'once' ? MT_REPEAT[m.repeat] : 'Your task');
+    var check = soon && !own ? '<span class="mt-check mt-soon" aria-hidden="true"></span>'
+      : '<button class="mt-check" data-mtdone="' + esc(it.key) + '" aria-label="' + (done ? 'Mark not done' : 'Mark done') + '">' + (done ? '✓' : '') + '</button>';
+    return '<div class="mt' + (done ? ' mt-done' : '') + (state === 'overdue' ? ' mt-late' : '') + '">' + check +
       '<div style="flex:1;min-width:0"><div class="mt-t">' + (MT_ICO[it.kind] || '•') + ' ' + esc(it.title) + '</div>' +
-      '<div class="hint" style="margin:2px 0 0">' + (state === 'overdue' ? '<span class="mt-od">Overdue since ' + esc(mtDay(it.due)) + '</span> · ' : '') +
-        (done ? (it.skippedAt ? 'Skipped' : it.autoDone ? 'Done' : 'Done') : it.kind === 'followup' ? 'Follow-up' : it.kind === 'invoice' ? 'Overdue invoice' : it.kind === 'priority' ? 'Check-Up priority' : (m.repeat && m.repeat !== 'once' ? MT_REPEAT[m.repeat] : 'Your task')) +
+      '<div class="hint" style="margin:2px 0 0">' + (state === 'overdue' ? '<span class="mt-od">Overdue since ' + esc(mtDay(it.due)) + '</span> · ' : '') + label +
         (act ? ' · ' + act : '') + '</div></div></div>';
   }
+  function mtDayHead(day, today) {
+    var t = new Date(Date.parse(today + 'T12:00:00Z') + 86400000).toISOString().slice(0, 10);
+    return day === t ? 'Tomorrow' : new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+  }
+  // Coming-up items grouped under day headings.
+  function mtComing(list, today) {
+    var out = '', last = '';
+    list.forEach(function (i) { if (i.due !== last) { out += '<div class="mt-day">' + esc(mtDayHead(i.due, today)) + '</div>'; last = i.due; } out += mtRow(i, 'soon'); });
+    return out;
+  }
+  function mtAddForm(r, open) {
+    return '<details class="mt-add"' + (open ? ' open' : '') + '><summary>+ Add a task</summary><div class="stack" style="margin-top:8px"><input id="mtT" maxlength="160" placeholder="e.g. Bake for Saturday’s order, Post on Instagram">' +
+      '<div class="row"><select id="mtR" style="flex:1">' + Object.keys(MT_REPEAT).map(function (k) { return '<option value="' + k + '">' + MT_REPEAT[k] + '</option>'; }).join('') + '</select>' +
+      '<input type="date" id="mtD" value="' + esc(r.today) + '" min="' + esc(r.today) + '" style="flex:1"><select id="mtW" style="flex:1;display:none">' + MT_DOW.map(function (n, i) { return '<option value="' + i + '"' + (i === new Date(r.today + 'T12:00:00Z').getUTCDay() ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div>' +
+      '<button class="btn primary block" id="mtAdd">Add to my list</button></div></details>';
+  }
+  function mtRepeating(r) {
+    return r.defs.map(function (x) {
+      return '<div class="mt"><span class="mt-check mt-soon" aria-hidden="true">↻</span><div style="flex:1;min-width:0"><div class="mt-t">📝 ' + esc(x.title) + '</div><div class="hint" style="margin:2px 0 0">' + (x.repeat === 'weekly' ? 'Every ' + MT_DOW[x.dow] : MT_REPEAT[x.repeat]) +
+        ' · <button class="btn link danger" data-mtdel="' + esc(x.id) + '">Stop</button></div></div></div>';
+    }).join('');
+  }
+  function bindTodo(box, reload) {
+    $$('[data-mtdone]', box).forEach(function (b) { b.onclick = async function () { var done = b.closest('.mt').classList.contains('mt-done'); try { await api('studio-extras', 'todo-mark', { key: b.dataset.mtdone, how: done ? 'undo' : 'done' }); if (!done) toast('Done ✅'); reload(); } catch (x) { toast(x.message); } }; });
+    $$('[data-mtskip]', box).forEach(function (b) { b.onclick = async function () { try { await api('studio-extras', 'todo-mark', { key: b.dataset.mtskip, how: 'skip' }); reload(); } catch (x) { toast(x.message); } }; });
+    $$('[data-mtrm]', box).forEach(function (b) { b.onclick = async function () { if (!confirm('Remove this task?')) return; try { await api('studio-extras', 'todo-def-delete', { id: b.dataset.mtrm }); toast('Removed'); reload(); } catch (x) { toast(x.message); } }; });
+    $$('[data-mtfu]', box).forEach(function (b) { b.onclick = function () { showFollowup(b.dataset.mtfu); }; });
+    $$('[data-mtinv]', box).forEach(function (b) { b.onclick = function () { showDocView(b.dataset.mtinv); }; });
+    $$('[data-mtdel]', box).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop this repeating task?')) return; try { await api('studio-extras', 'todo-def-delete', { id: b.dataset.mtdel }); reload(); } catch (x) { toast(x.message); } }; });
+    var rep = $('#mtR', box); if (!rep) return;
+    rep.onchange = function () { $('#mtD', box).style.display = rep.value === 'once' ? '' : 'none'; $('#mtW', box).style.display = rep.value === 'weekly' ? '' : 'none'; };
+    $('#mtAdd', box).onclick = async function () {
+      var t = $('#mtT', box).value.trim(); if (!t) { $('#mtT', box).focus(); return; }
+      try { await api('studio-extras', 'todo-add', { task: { title: t, repeat: rep.value, date: $('#mtD', box).value, dow: Number($('#mtW', box).value) } }); toast('Added to your list'); reload(); } catch (x) { toast(x.message); }
+    };
+  }
+  var MT_CARD_SOON = 5;
   async function loadTodo() {
     var box = $('#todoCard'); if (!box) return;
     var r; try { r = await api('studio-extras', 'todo-today'); } catch (x) { box.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     if (!$('#todoCard')) return;
+    S.mtToday = r.today;
     var total = r.counts.today + r.counts.overdue + r.counts.done;
-    box.innerHTML = '<div class="row" style="justify-content:space-between;align-items:baseline"><b>📋 My to-do list</b><span class="hint" style="margin:0">' + r.counts.done + ' of ' + total + ' done</span></div>' +
+    var soon = r.comingUp || [];
+    box.innerHTML = '<div class="row" style="justify-content:space-between;align-items:baseline"><b>📋 My to-do list</b><span class="hint" style="margin:0">' + r.counts.done + ' of ' + total + ' done today</span></div>' +
       (total ? '<div class="pbar"><span style="width:' + Math.round(r.counts.done / total * 100) + '%"></span></div>' : '') +
       (r.overdue.length ? '<div class="mt-h" style="color:var(--danger)">⚠️ Overdue (' + r.overdue.length + ')</div>' + r.overdue.map(function (i) { return mtRow(i, 'overdue'); }).join('') : '') +
-      (r.todayItems.length ? '<div class="mt-h">Today</div>' + r.todayItems.map(function (i) { return mtRow(i, 'today'); }).join('') : (r.overdue.length ? '' : '<p class="hint" style="margin:4px 0">' + (r.counts.done ? 'All done for today 🎉' : 'Nothing on your list yet. Add what you need to do today — it stays here until you tick it.') + '</p>')) +
-      '<details class="mt-add"' + (total ? '' : ' open') + '><summary>+ Add a task</summary><div class="stack" style="margin-top:8px"><input id="mtT" maxlength="160" placeholder="e.g. Bake for Saturday’s order, Post on Instagram">' +
-        '<div class="row"><select id="mtR" style="flex:1">' + Object.keys(MT_REPEAT).map(function (k) { return '<option value="' + k + '">' + MT_REPEAT[k] + '</option>'; }).join('') + '</select>' +
-        '<input type="date" id="mtD" value="' + esc(r.today) + '" style="flex:1"><select id="mtW" style="flex:1;display:none">' + MT_DOW.map(function (n, i) { return '<option value="' + i + '"' + (i === new Date(r.today + 'T12:00:00Z').getUTCDay() ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div>' +
-        '<button class="btn primary block" id="mtAdd">Add to my list</button>' +
-        (r.defs.length ? '<div class="hint" style="margin:0">Repeating: ' + r.defs.map(function (x) { return esc(x.title) + ' (' + (x.repeat === 'weekly' ? 'every ' + MT_DOW[x.dow] : MT_REPEAT[x.repeat].toLowerCase()) + ') <button class="btn link danger" data-mtdel="' + esc(x.id) + '" style="font-size:12px">remove</button>'; }).join(' · ') + '</div>' : '') + '</div></details>' +
-      (r.doneToday.length ? '<details><summary class="hint" style="cursor:pointer;margin:6px 0 0">✓ Done today (' + r.doneToday.length + ')</summary>' + r.doneToday.map(function (i) { return mtRow(i, 'done'); }).join('') + '</details>' : '');
-    $$('[data-mtdone]', box).forEach(function (b) { b.onclick = async function () { var done = b.closest('.mt').classList.contains('mt-done'); try { await api('studio-extras', 'todo-mark', { key: b.dataset.mtdone, how: done ? 'undo' : 'done' }); if (!done) toast('Done ✅'); loadTodo(); } catch (x) { toast(x.message); } }; });
-    $$('[data-mtskip]', box).forEach(function (b) { b.onclick = async function () { try { await api('studio-extras', 'todo-mark', { key: b.dataset.mtskip, how: 'skip' }); loadTodo(); } catch (x) { toast(x.message); } }; });
-    $$('[data-mtfu]', box).forEach(function (b) { b.onclick = function () { showFollowup(b.dataset.mtfu); }; });
-    $$('[data-mtinv]', box).forEach(function (b) { b.onclick = function () { showDocView(b.dataset.mtinv); }; });
-    $$('[data-mtdel]', box).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop this repeating task?')) return; try { await api('studio-extras', 'todo-def-delete', { id: b.dataset.mtdel }); loadTodo(); } catch (x) { toast(x.message); } }; });
-    var rep = $('#mtR', box); rep.onchange = function () { $('#mtD', box).style.display = rep.value === 'once' ? '' : 'none'; $('#mtW', box).style.display = rep.value === 'weekly' ? '' : 'none'; };
-    $('#mtAdd', box).onclick = async function () {
-      var t = $('#mtT', box).value.trim(); if (!t) { $('#mtT', box).focus(); return; }
-      try { await api('studio-extras', 'todo-add', { task: { title: t, repeat: rep.value, date: $('#mtD', box).value, dow: Number($('#mtW', box).value) } }); toast('Added to your list'); loadTodo(); } catch (x) { toast(x.message); }
-    };
+      (r.todayItems.length ? '<div class="mt-h">Today</div>' + r.todayItems.map(function (i) { return mtRow(i, 'today'); }).join('') : (r.overdue.length ? '' : '<p class="hint" style="margin:4px 0">' + (r.counts.done ? 'All done for today 🎉' : soon.length ? 'Nothing due today.' : 'Nothing on your list yet. Add what you need to do — today or later. It stays here until you tick it.') + '</p>')) +
+      (soon.length ? '<div class="mt-h">Coming up — next 7 days</div>' + mtComing(soon.slice(0, MT_CARD_SOON), r.today) : '') +
+      mtAddForm(r, !total && !soon.length) +
+      (r.doneToday.length ? '<details><summary class="hint" style="cursor:pointer;margin:6px 0 0">✓ Done today (' + r.doneToday.length + ')</summary>' + r.doneToday.map(function (i) { return mtRow(i, 'done'); }).join('') + '</details>' : '') +
+      '<button class="btn link" id="mtAll" style="margin-top:4px">See all' + (soon.length > MT_CARD_SOON ? ' (' + (soon.length - MT_CARD_SOON) + ' more coming up)' : '') + ' →</button>';
+    bindTodo(box, loadTodo);
+    $('#mtAll', box).onclick = showTodoAll;
   }
 
+  async function showTodoAll() {
+    setChrome({ tabs: true, tab: 'home', back: showHome });
+    app.innerHTML = '<main><h1>My to-do list</h1><p class="sub" style="margin:4px 0 14px">Everything on your list — overdue, today, coming up and done.</p><section class="card stack mtcard" id="mtFull"><div class="typing"><i></i><i></i><i></i></div></section></main>';
+    var r; try { r = await api('studio-extras', 'todo-today', { full: true }); } catch (x) { var b0 = $('#mtFull'); if (b0) b0.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    var box = $('#mtFull'); if (!box) return;
+    S.mtToday = r.today;
+    var sec = function (title, body, color) { return '<div class="mt-h"' + (color ? ' style="color:' + color + '"' : '') + '>' + title + '</div>' + body; };
+    box.innerHTML = mtAddForm(r, false) +
+      sec('⚠️ Overdue (' + r.overdue.length + ')', r.overdue.length ? r.overdue.map(function (i) { return mtRow(i, 'overdue'); }).join('') : '<p class="hint" style="margin:4px 0">Nothing overdue 👏🏾</p>', r.overdue.length ? 'var(--danger)' : '') +
+      sec('Today (' + r.todayItems.length + ')', r.todayItems.length ? r.todayItems.map(function (i) { return mtRow(i, 'today'); }).join('') : '<p class="hint" style="margin:4px 0">Nothing left for today.</p>') +
+      sec('Coming up — next 30 days (' + r.comingUp.length + ')', r.comingUp.length ? mtComing(r.comingUp, r.today) : '<p class="hint" style="margin:4px 0">Nothing planned yet. Add a task with a future date and it will show here.</p>') +
+      sec('↻ Repeating tasks (' + r.defs.length + ')', r.defs.length ? mtRepeating(r) : '<p class="hint" style="margin:4px 0">No repeating tasks. Choose “Every day”, “Weekdays” or “Every week” when you add a task.</p>') +
+      sec('✓ Done — last 30 days (' + (r.done || []).length + ')', (r.done || []).length ? '<details><summary class="hint" style="cursor:pointer;margin:4px 0">Show</summary>' + r.done.map(function (i) { return mtRow(i, 'done'); }).join('') + '</details>' : '<p class="hint" style="margin:4px 0">Nothing ticked off yet.</p>');
+    bindTodo(box, showTodoAll);
+  }
   async function loadNudges() {
     var top = $('#nudgeTop'), bottom = $('#nudgeLesson');
     if (!top) return;

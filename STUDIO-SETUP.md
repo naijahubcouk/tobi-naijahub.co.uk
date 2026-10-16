@@ -284,3 +284,10 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - The weekly goal bar, 1-minute check-in and today's planned calendar post stay on Today.
 - Morning push (no tasks): "Your Business Tip for today is ready 💡". The weekly email points to the tip.
 - The old `today` action (3 actions) remains in the API only for older cached app versions.
+
+## 7n. Members' to-do list — Coming up and See all
+
+- The to-do card on Today now has **Coming up — next 7 days** (up to 5 items, grouped by day): members' own tasks with a future date, weekly tasks on their days, customer follow-ups falling due, and invoices falling due. Daily / weekday tasks aren't repeated there (they show under Repeating tasks).
+- **See all →** opens the whole list: Overdue, Today, Coming up (next 30 days), Repeating tasks (with Stop) and Done (last 30 days), plus Add a task.
+- Own future tasks can be ticked early (they won't come back on the day), skipped (weekly) or removed (one-off). Follow-ups and invoices in Coming up are shown for information with an Open button and appear to tick on their day.
+- API: `studio-extras` `todo-today` with `{ full: true }` for the See all view.

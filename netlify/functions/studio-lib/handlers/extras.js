@@ -60,7 +60,7 @@ exports.handler = handler(async (ctx) => {
       return { benefits: benefits.forMember(r.yearKey, r.year) };
     }
     // ── My to-do list ──
-    case 'todo-today': return memtodo.refresh(email, auth.member, auth.access);
+    case 'todo-today': return memtodo.refresh(email, auth.member, auth.access, { full: !!body.full });
     case 'todo-mark': return { item: await memtodo.mark(email, auth.member, String(body.key || '').slice(0, 200), String(body.how || '')) };
     case 'todo-add': return { def: await memtodo.addDef(email, body.task) };
     case 'todo-def-delete': { await memtodo.deleteDef(email, String(body.id || '')); return { ok: true }; }
