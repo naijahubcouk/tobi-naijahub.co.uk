@@ -378,6 +378,19 @@ async function adminSave(actor, raw) {
   return lesson;
 }
 
+// Approve ready lessons: publish them for members today (lessons already scheduled later keep their date).
+async function adminApprove(actor, ids) {
+  ids = (Array.isArray(ids) ? ids : [ids]).map(String).slice(0, 60);
+  if (!ids.length) throw new HttpError(400, 'invalid', 'Choose a lesson to approve.');
+  const day = today(), out = [];
+  for (const id of ids) {
+    const l = await adminGet(id);
+    if (l.status === 'published') { out.push(l); continue; }
+    out.push(await adminSave(actor, { ...l, status: 'published', publishAt: l.publishAt && l.publishAt > day ? l.publishAt : day }));
+  }
+  return out;
+}
+
 async function adminDelete(id) {
   requireId(id);
   await cas(INDEX_KEY, cur => {
@@ -480,5 +493,5 @@ module.exports = {
   suggestLesson, getProgress,
   MODULES, TAGS, STATUSES, isLive, recommendTag, ensureSeeded,
   home, lessonFor, setComplete, setSaved, setCheck, setAnswer, setPrefs, search, memberFile,
-  adminList, adminGet, adminSave, adminDelete, adminUpload, adminFile, adminDashboard, needsReview,
+  adminList, adminGet, adminSave, adminApprove, adminDelete, adminUpload, adminFile, adminDashboard, needsReview,
 };
