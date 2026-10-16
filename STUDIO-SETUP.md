@@ -245,3 +245,4 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - Approving a Club member's listing ticks **Marketplace listing ✓** in their Benefits.
 - The Marketplace page and the app load live listings from `/.netlify/functions/studio-market?feed=1` (cached ~1 minute). The hard-coded lists in `marketplace.html` / `index.html` are now only a fallback if that can't load — manage products in Admin, not in the code.
 - The 11 products that were hard-coded were imported automatically on first use (`studio-lib/market-seed.js`).
+- **Link to the business listing:** the public form, the Studio form and the admin editor all have *Find your business on Auntie Tobi* — a search over the business directory (`studio-market?bizq=…`, never returns emails). The chosen listing is checked on the server; unknown ones are dropped. The review card shows the link with a check: ✓ email matches the listing / ⚠️ different email / no email on file.

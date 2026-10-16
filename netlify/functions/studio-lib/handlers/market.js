@@ -9,6 +9,17 @@
 const core = require('../core');
 const { HttpError, handler } = core;
 const market = require('../market');
+const directory = require('../directory');
+
+// Checks the Auntie Tobi listing someone picked. Unknown slugs are dropped.
+// check: 'email_match' (their email is the listing's email), 'email_differs', 'no_email' (listing has no email on file).
+async function checkLink(event, slug, email) {
+  if (!slug) return { slug: '', link: null };
+  const b = await directory.bySlug(event, slug);
+  if (!b) return { slug: '', link: null };
+  const check = !b.email ? 'no_email' : email && b.email === core.normalizeEmail(email) ? 'email_match' : 'email_differs';
+  return { slug: b.slug, link: { slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, url: directory.listingUrl(b.slug), check } };
+}
 
 function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
 const ADMIN_URL = () => `${siteUrl()}/studio-admin`;
@@ -31,6 +42,11 @@ exports.handler = handler(async (ctx) => {
       const m = img.dataUrl.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
       return { statusCode: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'public, max-age=86400', 'Netlify-CDN-Cache-Control': 'public, max-age=604800, durable', 'X-Content-Type-Options': 'nosniff' }, body: m[2], isBase64Encoded: true };
     }
+    if (q.bizq !== undefined) {
+      await core.rateLimit('mkt-bizq', ctx.ip || 'x', 300, 60 * 60 * 1000, 'Too many searches. Please wait a little.');
+      const results = await directory.search(event, String(q.bizq).slice(0, 80), 8);
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }, body: JSON.stringify({ results }) };
+    }
     if (q.feed) {
       const items = await market.feed();
       return { statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=30', 'Netlify-CDN-Cache-Control': 'public, max-age=60, stale-while-revalidate=300, durable', 'X-Content-Type-Options': 'nosniff', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ items, at: core.nowIso() }) };
@@ -49,9 +65,10 @@ exports.handler = handler(async (ctx) => {
       const photos = Array.isArray(body.photos) ? body.photos.slice(0, market.MAX_IMGS) : [];
       if (!photos.length) throw new HttpError(400, 'invalid', 'Please add at least one photo.');
       market.clean({ ...body.listing, imgs: [] }, { allowNoImg: true }); // check everything before storing photos
+      const lk = await checkLink(event, body.listing && body.listing.bizSlug, email);
       const ids = [];
       for (const p of photos) ids.push(await market.saveImage(p, `public:${email}`));
-      const rec = await market.publicCreate({ ...body.contact, email }, body.listing, ids);
+      const rec = await market.publicCreate({ ...body.contact, email }, { ...body.listing, bizSlug: lk.slug }, ids, lk.link);
       await tellAdmins(rec, 'new');
       try {
         await core.sendEmail([email], 'We’ve received your Marketplace listing 💚',
@@ -70,9 +87,12 @@ exports.handler = handler(async (ctx) => {
     case 'mine': return market.mine(email);
     case 'img': return { id: await market.saveImage(body.dataUrl, email) };
     case 'save': {
-      const profile = await core.getJson(`profiles/${core.enc(email)}`);
       const isNew = !body.id;
-      const rec = await market.memberSave(email, auth.member, body.id ? String(body.id) : '', body.listing, profile);
+      const raw = body.listing && typeof body.listing === 'object' ? body.listing : {};
+      let slug = raw.bizSlug;
+      if (slug === undefined) { const profile = await core.getJson(`profiles/${core.enc(email)}`); slug = (profile && profile.listingSlug) || ''; }
+      const lk = await checkLink(event, slug, email);
+      const rec = await market.memberSave(email, auth.member, body.id ? String(body.id) : '', { ...raw, bizSlug: lk.slug }, lk.link);
       await core.audit(email, isNew ? 'market_submit' : 'market_change', { id: rec.id });
       await tellAdmins(rec, rec.live ? 'change' : 'new');
       return { listing: market.forOwner(rec) };
@@ -87,3 +107,4 @@ exports.handler = handler(async (ctx) => {
   }
 }, { allowGet: true, maxBody: 1700 * 1024 });
 exports.tellAdmins = tellAdmins;
+exports.checkLink = checkLink;

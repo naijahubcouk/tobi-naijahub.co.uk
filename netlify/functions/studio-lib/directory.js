@@ -117,4 +117,25 @@ function slugFromLink(link) {
   throw new HttpError(400, 'invalid_link', 'That doesn\u2019t look like an Auntie Tobi listing link. It should look like auntietobi.co.uk/biz/your-business');
 }
 
-module.exports = { load, bySlug, byEmail, slugFromLink, publicListing, listingUrl, parseIndexDirectory };
+// Search by business name (also category, location, slug, Instagram). Best matches first. Never returns emails.
+async function search(event, q, limit) {
+  const norm = v => String(v || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const nq = norm(q);
+  if (nq.length < 2) return [];
+  const words = nq.split(' ');
+  const scored = [];
+  for (const b of await load(event)) {
+    const name = norm(b.name), hay = `${name} ${norm(b.slug)} ${norm(b.ig)} ${norm(b.cat)} ${norm(b.loc)}`;
+    if (!words.every(w => hay.includes(w))) continue;
+    let score = 0;
+    if (name === nq) score += 100;
+    if (name.startsWith(nq)) score += 50;
+    if (name.includes(nq)) score += 25;
+    if (words.every(w => name.includes(w))) score += 10;
+    scored.push([score, b]);
+  }
+  scored.sort((a, b) => b[0] - a[0] || a[1].name.localeCompare(b[1].name));
+  return scored.slice(0, limit || 8).map(([, b]) => ({ name: b.name, slug: b.slug, cat: b.cat, loc: b.loc, url: listingUrl(b.slug) }));
+}
+
+module.exports = { load, bySlug, byEmail, search, slugFromLink, publicListing, listingUrl, parseIndexDirectory };

@@ -142,24 +142,24 @@ async function mine(email) {
   return { listings: list.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')).map(r => forOwner(r)), allowance, used, canAdd: used < allowance };
 }
 function forOwner(r) {
-  return { id: r.id, status: status(r), live: r.live, draft: r.draft, note: r.state === 'changes' || r.state === 'rejected' ? r.note || '' : '', submittedAt: r.submittedAt || '', approvedAt: r.approvedAt || '' };
+  return { id: r.id, status: status(r), live: r.live, draft: r.draft, link: r.link || null, note: r.state === 'changes' || r.state === 'rejected' ? r.note || '' : '', submittedAt: r.submittedAt || '', approvedAt: r.approvedAt || '' };
 }
 
 // Member creates or edits their listing → goes to review. A live version stays up meanwhile.
-async function memberSave(email, member, id, raw, profile) {
-  const fields = clean({ ...raw, bizSlug: (profile && profile.listingSlug) || '' });
+async function memberSave(email, member, id, raw, link) {
+  const fields = clean(raw);
   let out, before = [];
   if (!id) {
     const m = await mine(email);
     if (!m.canAdd) throw new HttpError(403, 'limit', m.allowance === 1 ? 'Your Business Club membership includes one Marketplace listing. You can edit it any time — or ask Auntie Tobi about adding another.' : `You can have up to ${m.allowance} listings. Edit one of them, or ask Auntie Tobi about adding another.`);
     id = newId('l_');
-    out = { id, source: 'member', owner: email, contact: { email, name: member.name || '' }, live: null, draft: fields, state: 'pending', note: '', pinned: false, hidden: false, createdAt: core.nowIso(), submittedAt: core.nowIso(), updatedAt: core.nowIso() };
+    out = { id, source: 'member', owner: email, contact: { email, name: member.name || '' }, live: null, draft: fields, link: link || null, state: 'pending', note: '', pinned: false, hidden: false, createdAt: core.nowIso(), submittedAt: core.nowIso(), updatedAt: core.nowIso() };
     await setJson(lkey(id), out);
   } else {
     await cas(lkey(id), cur => {
       if (!cur || cur.owner !== email) throw new HttpError(404, 'not_found', 'Listing not found.');
       before = imgsOf(cur);
-      out = { ...cur, draft: fields, state: 'pending', note: '', submittedAt: core.nowIso(), updatedAt: core.nowIso() };
+      out = { ...cur, draft: fields, link: link || null, state: 'pending', note: '', submittedAt: core.nowIso(), updatedAt: core.nowIso() };
       return out;
     });
     await dropUnused(before, out);
@@ -190,7 +190,7 @@ async function memberRemove(email, id) {
 }
 
 // Anyone with the link: submitted after confirming their email.
-async function publicCreate(contactRaw, raw, imgIds) {
+async function publicCreate(contactRaw, raw, imgIds, link) {
   const contact = {
     name: cleanText(contactRaw && contactRaw.name, 80),
     email: core.normalizeEmail(contactRaw && contactRaw.email),
@@ -200,19 +200,19 @@ async function publicCreate(contactRaw, raw, imgIds) {
   if (!contact.name) throw new HttpError(400, 'invalid', 'Please add your name.');
   const fields = clean({ ...raw, imgs: imgIds });
   const id = newId('l_');
-  const rec = { id, source: 'public', owner: '', contact, live: null, draft: fields, state: 'pending', note: '', pinned: false, hidden: false, createdAt: core.nowIso(), submittedAt: core.nowIso(), updatedAt: core.nowIso() };
+  const rec = { id, source: 'public', owner: '', contact, live: null, draft: fields, link: link || null, state: 'pending', note: '', pinned: false, hidden: false, createdAt: core.nowIso(), submittedAt: core.nowIso(), updatedAt: core.nowIso() };
   await setJson(lkey(id), rec);
   return rec;
 }
 
 // ── admin ──
-async function adminSave(id, raw, meta) {
+async function adminSave(id, raw, meta, link) {
   meta = meta || {};
   const fields = clean(raw, { allowPast: true });
   let out, before = [];
   if (!id) {
     id = newId('l_');
-    out = { id, source: 'admin', owner: '', contact: {}, live: fields, draft: null, state: '', note: '', pinned: false, hidden: false, createdAt: core.nowIso(), approvedAt: core.nowIso(), updatedAt: core.nowIso() };
+    out = { id, source: 'admin', owner: '', contact: {}, live: fields, draft: null, link: link || null, state: '', note: '', pinned: false, hidden: false, createdAt: core.nowIso(), approvedAt: core.nowIso(), updatedAt: core.nowIso() };
     applyMeta(out, meta);
     await setJson(lkey(id), out);
     return out;
@@ -223,6 +223,7 @@ async function adminSave(id, raw, meta) {
     out = { ...cur, updatedAt: core.nowIso() };
     // Edits apply to what's waiting for review if there is one, otherwise straight to the live version.
     if (out.draft && (out.state === 'pending' || out.state === 'changes')) out.draft = fields; else out.live = fields;
+    if (link !== undefined) out.link = link;
     applyMeta(out, meta);
     return out;
   });

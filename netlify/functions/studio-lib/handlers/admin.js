@@ -373,7 +373,11 @@ exports.handler = handler(async (ctx) => {
     }
     case 'market-img': return { id: await market.saveImage(body.dataUrl, `admin:${actor}`) };
     case 'market-save': {
-      const r = await market.adminSave(body.id ? String(body.id) : '', body.listing, body.meta);
+      const raw = body.listing && typeof body.listing === 'object' ? body.listing : {};
+      const prev = body.id ? await market.get(String(body.id)) : null;
+      const who = (body.meta && body.meta.owner) || (prev && (prev.owner || (prev.contact && prev.contact.email))) || '';
+      const lk = await require('./market').checkLink(ctx.event, raw.bizSlug, who);
+      const r = await market.adminSave(body.id ? String(body.id) : '', { ...raw, bizSlug: lk.slug }, body.meta, lk.link);
       await core.audit(actor, 'market_save', { id: r.id });
       return { listing: { ...r, status: market.status(r) } };
     }

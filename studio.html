@@ -294,6 +294,13 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .mph img{width:100%;height:100%;object-fit:cover}.mph.add{display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;color:var(--green);cursor:pointer;border-style:dashed}
 .mphx{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(15,30,54,.8);color:#fff;font-size:15px;line-height:1;cursor:pointer}
 .mph1{position:absolute;left:0;right:0;bottom:0;border:0;background:rgba(15,30,54,.7);color:#fff;font-size:10.5px;font-weight:700;padding:3px 0;cursor:pointer;text-align:center}.mph1.on{background:#057A44;cursor:default}
+.bzp{display:flex;gap:10px;align-items:center;justify-content:space-between;border-radius:12px;padding:11px 12px;font-size:14px;line-height:1.4}
+.bzp-on{background:#E7F5EE;border:1.5px solid #9ED7B8}.bzp-on b{color:#04603a}.bzp-none{background:#F6F2EA;border:1.5px dashed #E0D6C2;color:#5B6475}
+.bzp-m{color:#6B7280}.bzp-act{display:flex;gap:12px;align-items:center;flex-shrink:0}.bzp-act a{color:#057A44;font-weight:700;font-size:13px}
+.bzp-link{background:none;border:0;color:#057A44;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.bzp-s{display:flex;flex-direction:column;gap:8px}.bzp-s .bzp-link{align-self:flex-start}
+.bzp-res{display:flex;flex-direction:column;gap:6px}.bzp-r{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #E6E1D6;border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer;color:#0F1E36}
+.bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
 .mktgrid{display:grid;gap:16px}@media(min-width:760px){.mktgrid{grid-template-columns:1fr 280px;align-items:start}}
 .shared{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
@@ -2425,6 +2432,44 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       (f.price ? '<div class="mpc-price">' + esc(f.price) + '</div>' : '') + '<div class="mpc-btn">' + esc(f.btnText || 'Enquire') + '</div></div></div>';
   }
 
+  // ── "Find your business on Auntie Tobi" picker (links a Marketplace product to the business listing) ──
+  function bizPicker(box, initial, onChange, opts) {
+    opts = opts || {};
+    var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var cap = function (s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
+    var state = initial && initial.slug ? initial : (initial === 'none' ? 'none' : null), timer = null, seq = 0;
+    function set(v) { state = v; draw(); if (onChange) onChange(v); }
+    function draw() {
+      if (state && state.slug) {
+        box.innerHTML = '<div class="bzp bzp-on"><div><b>✓ ' + E(opts.linkedLabel || 'Linked to your Auntie Tobi listing') + '</b><div>' + E(state.name) + (state.cat || state.loc ? ' <span class="bzp-m">· ' + E(cap(state.cat)) + (state.loc ? ' · ' + E(state.loc) : '') + '</span>' : '') + '</div></div>' +
+          '<div class="bzp-act">' + (state.url ? '<a href="' + E(state.url) + '" target="_blank" rel="noopener">View</a>' : '') + '<button type="button" class="bzp-link" data-bz="change">Change</button></div></div>';
+      } else if (state === 'none') {
+        box.innerHTML = '<div class="bzp bzp-none"><div>' + E(opts.noneLabel || 'Not linked — my business isn’t on Auntie Tobi yet.') + '</div><button type="button" class="bzp-link" data-bz="change">Search again</button></div>';
+      } else {
+        box.innerHTML = '<div class="bzp-s"><input type="search" class="bzp-in" placeholder="Type your business name…" autocomplete="off" aria-label="Search for your business on Auntie Tobi"><div class="bzp-res" role="listbox"></div>' +
+          '<button type="button" class="bzp-link" data-bz="none">' + E(opts.noneButton || 'My business isn’t listed on Auntie Tobi yet') + '</button></div>';
+        var inp = box.querySelector('.bzp-in'), res = box.querySelector('.bzp-res');
+        inp.oninput = function () {
+          clearTimeout(timer); var q = inp.value.trim();
+          if (q.length < 2) { res.innerHTML = ''; return; }
+          timer = setTimeout(function () {
+            var my = ++seq;
+            fetch('/.netlify/functions/studio-market?bizq=' + encodeURIComponent(q)).then(function (r) { return r.json(); }).then(function (d) {
+              if (my !== seq) return;
+              var list = (d && d.results) || [];
+              res.innerHTML = list.length ? list.map(function (b, i) { return '<button type="button" class="bzp-r" data-i="' + i + '"><b>' + E(b.name) + '</b><span>' + E(cap(b.cat)) + (b.loc ? ' · ' + E(b.loc) : '') + '</span></button>'; }).join('') : '<div class="bzp-empty">No business found with that name. Try a shorter name, or tap below if you’re not on Auntie Tobi yet.</div>';
+              Array.prototype.forEach.call(res.querySelectorAll('[data-i]'), function (el) { el.onclick = function () { set(list[Number(el.dataset.i)]); }; });
+            }).catch(function () { if (my === seq) res.innerHTML = '<div class="bzp-empty">Couldn’t search just now — please try again.</div>'; });
+          }, 250);
+        };
+        if (opts.focus) inp.focus();
+      }
+      Array.prototype.forEach.call(box.querySelectorAll('[data-bz]'), function (b) { b.onclick = function () { if (b.dataset.bz === 'none') set('none'); else { opts.focus = true; set(null); } }; });
+    }
+    draw();
+    return { get: function () { return state && state.slug ? state : null; } };
+  }
+
   async function showMarket(back) {
     back = back || showAccount;
     setChrome({ tabs: true, tab: 'home', back: back });
@@ -2456,6 +2501,9 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var base = l ? (l.draft && /pending|changes/.test(l.status) ? l.draft : l.live || l.draft) : null;
     var f = base ? Object.assign({}, base, { imgs: (base.imgs || []).slice() }) : { business: p.businessName || '', name: '', category: '', price: '', desc: '', btnText: 'Buy Now', link: '', wa: p.whatsapp || '', endsAt: '', imgs: [] };
     var how = f.link ? 'link' : 'wa';
+    // Linked Auntie Tobi listing: what this listing had, else the one in their profile.
+    var bizSel = l ? (l.link && l.link.slug ? l.link : (f.bizSlug ? { slug: f.bizSlug, name: f.business } : 'none')) : (S.boot.listing ? S.boot.listing : null);
+    if (bizSel && bizSel.slug) f.bizSlug = bizSel.slug;
     function draw() {
       app.innerHTML = '<main><h1 style="font-size:22px">' + (l ? 'Edit your listing' : 'Add your product or service') + '</h1><p class="sub" style="margin:6px 0 14px">' + (l && l.live ? 'Your live listing stays up while Auntie Tobi reviews your change.' : 'Auntie Tobi will review it and let you know when it’s live.') + '</p>' +
         '<div class="mktgrid"><div class="card stack">' +
@@ -2466,6 +2514,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
         '<div class="row"><div style="flex:1"><label class="f" for="mCat">Category</label><select id="mCat"><option value="">Choose…</option>' + MKT_CATS.map(function (c) { return '<option value="' + esc(c) + '"' + (f.category === c ? ' selected' : '') + '>' + esc(MKT_EMOJI[c] + ' ' + (MKT_CAT_LABEL[c] || c)) + '</option>'; }).join('') + '</select></div>' +
           '<div style="flex:1"><label class="f" for="mPrice">Price <span class="opt">(optional)</span></label><input id="mPrice" maxlength="24" value="' + esc(f.price) + '" placeholder="£45 / from £30"></div></div>' +
         '<div><label class="f" for="mDesc">Short description</label><textarea id="mDesc" rows="3" maxlength="600" placeholder="What it is, who it’s for, sizes or options, where you deliver.">' + esc(f.desc) + '</textarea></div>' +
+        '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Your business on Auntie Tobi</span><div id="mBizPick"></div><div class="hint">Your product links to your Auntie Tobi business page.</div></div>' +
         '<div><label class="f" for="mBiz">Business name</label><input id="mBiz" maxlength="80" value="' + esc(f.business) + '"></div>' +
         '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">When customers tap the button…</span><div class="chips"><button type="button" class="chip" data-how="wa" aria-pressed="' + (how === 'wa') + '">💬 Message me on WhatsApp</button><button type="button" class="chip" data-how="link" aria-pressed="' + (how === 'link') + '">🔗 Go to my website or booking link</button></div></div>' +
         (how === 'wa' ? '<div><label class="f" for="mWa">WhatsApp number</label><input id="mWa" inputmode="tel" maxlength="20" value="' + esc(f.wa) + '" placeholder="07700 900123"></div>' : '<div><label class="f" for="mLink">Web link</label><input id="mLink" inputmode="url" maxlength="500" value="' + esc(f.link) + '" placeholder="https://…"></div>') +
@@ -2474,6 +2523,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
         '<div class="err hidden" id="mErr"></div><button class="btn primary block" id="mSave">' + (l ? 'Send change for review' : 'Submit for review') + '</button></div>' +
         '<div><div class="hint" style="margin:0 0 6px">Preview — how it will look on the Marketplace</div><div id="mPrev" style="max-width:280px">' + mktCard(f) + '</div></div></div></main>';
       [['mName', 'name'], ['mPrice', 'price'], ['mDesc', 'desc'], ['mBiz', 'business'], ['mWa', 'wa'], ['mLink', 'link'], ['mEnd', 'endsAt']].forEach(function (x) { var e = $('#' + x[0]); if (e) e.oninput = function () { f[x[1]] = e.value; $('#mPrev').innerHTML = mktCard(f); }; });
+      bizPicker($('#mBizPick'), bizSel, function (v) { bizSel = v; f.bizSlug = v && v.slug ? v.slug : ''; if (v && v.slug && !f.business) { f.business = v.name; $('#mBiz').value = v.name; $('#mPrev').innerHTML = mktCard(f); } }, { noneLabel: 'Not linked to an Auntie Tobi listing.', noneButton: 'My business isn’t listed on Auntie Tobi yet' });
       $('#mCat').onchange = function () { f.category = this.value; $('#mPrev').innerHTML = mktCard(f); };
       $('#mBtn').onchange = function () { f.btnText = this.value; $('#mPrev').innerHTML = mktCard(f); };
       $$('[data-how]').forEach(function (c) { c.onclick = function () { how = c.dataset.how; draw(); }; });
@@ -2489,7 +2539,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       };
       $('#mSave').onclick = async function () {
         var b = this; b.disabled = true; $('#mErr').classList.add('hidden');
-        var payload = Object.assign({}, f, { link: how === 'link' ? f.link : '', wa: how === 'wa' ? f.wa : '' });
+        var payload = Object.assign({}, f, { link: how === 'link' ? f.link : '', wa: how === 'wa' ? f.wa : '', bizSlug: bizSel && bizSel.slug ? bizSel.slug : '' });
         try { await api('studio-market', 'save', { id: l ? l.id : '', listing: payload }); toast(l ? 'Change sent for review 💚' : 'Sent for review 💚'); done(); }
         catch (x) { $('#mErr').textContent = x.message; $('#mErr').classList.remove('hidden'); b.disabled = false; }
       };
