@@ -14,6 +14,7 @@ const resources = require('../resources');
 const benefits = require('../benefits');
 const notify = require('../notify');
 const market = require('../market');
+const todo = require('../todo');
 function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
 
 // Business Club status. 'none' = not a Club member (e.g. Business Studio Pro-only customer).
@@ -373,6 +374,37 @@ exports.handler = handler(async (ctx) => {
       });
       return { rows, today: day, targets, weekStart: benefits.weekStart(day) };
     }
+
+    // ── Daily to-do list ──
+    case 'todo-today': {
+      const members = await allMembers();
+      const club = members.filter(m => core.access(m, settings).membershipActive);
+      const profiles = {};
+      await mapLimit(club, 8, async m => { profiles[m.email] = await getJson(`profiles/${enc(m.email)}`); });
+      const akeys = (await core.listKeys('alerts/')).sort().reverse().slice(0, 100);
+      const alerts = (await mapLimit(akeys, 8, async k => ({ key: k, ...(await getJson(k)) }))).filter(a => a && a.ts);
+      let lessonsReady = [];
+      try { lessonsReady = (await resources.adminDashboard()).readyToPublish || []; } catch (e) { console.error('[studio] todo lessons failed', e && e.message); }
+      const view = await todo.refresh({ members, settings, profiles, alerts, lessonsReady });
+      return { ...view, defs: await todo.getDefs() };
+    }
+    case 'todo-mark': {
+      const how = String(body.how || '');
+      const it = await todo.mark(String(body.key || ''), how);
+      if (how === 'done' && it.kind === 'alert' && it.meta && /^alerts\/[\w:.\-]+$/.test(it.meta.alertKey || '')) await core.del(it.meta.alertKey).catch(() => {});
+      await core.audit(actor, `todo_${how}`, { key: it.key });
+      return { item: it };
+    }
+    case 'todo-add': {
+      const def = await todo.addDef(body.task);
+      await core.audit(actor, 'todo_add', { id: def.id, repeat: def.repeat });
+      return { def };
+    }
+    case 'todo-def-delete': {
+      await todo.deleteDef(String(body.id || ''));
+      return { ok: true };
+    }
+    case 'todo-summary': return { counts: await todo.summary() };
 
     // ── Marketplace (review & manage listings) ──
     case 'market-list': {

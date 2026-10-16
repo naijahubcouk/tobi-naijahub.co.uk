@@ -258,3 +258,10 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - In Stripe, rename the product to **Business Studio Pro** (Products → your AI Power product → Edit) so checkout and receipts show the new name. Prices and subscriptions don't change.
 - Optional: set `STUDIO_EMAIL_FROM` to `Auntie Tobi Business Studio <studio@mail.auntietobi.co.uk>` so emails show the new name.
 - Lesson text now says “Business Studio” (seed update 8). Lessons you've edited or approved in Admin are left as they are.
+
+## 7k. Admin daily to-do list (Business Studio Admin → Today)
+
+- Opens first when you sign in to Business Studio Admin. Sections: **Overdue** (anything from an earlier day not ticked — it stays until you mark it done or skip it), **To do today**, **Done today**.
+- **Automatic tasks** (tick themselves once dealt with): verification requests, Marketplace reviews, lessons waiting for approval (grouped), Spotlights scheduled up to today, memberships ending within 14 days (with a WhatsApp renewal message), new alerts (marking one done also dismisses the alert), and shares owed — only the **5 members who've waited longest**, with +Story / +Repost / +Discovery buttons; the rest come up as those are done.
+- **Your tasks:** one-off (a date), every day, weekdays, or one day a week. Days you didn't open Admin are filled in (up to 14 days) so missed ones show as overdue. Stopping a repeating task removes its open copies.
+- No email — it's in Admin only. Stored in `admin-todo/state` and `admin-todo/defs`.
