@@ -94,6 +94,14 @@ async function refresh(data) {
     for (const t of SHARE_TYPES) if (pr[t].due) types[t] = { n: pr[t].n, target: pr[t].target, period: t === 'discovery' ? day.slice(0, 7) : pr.weekStart };
     if (Object.keys(types).length) owed.push({ email: m.email, name, due, types, lastShared: y ? benefits.lastShared(y) : '', weekStart: pr.weekStart, month: day.slice(0, 7) });
   }
+  // Business Club invites (follow-ups due + new businesses to invite today)
+  const inv = data.invites;
+  if (inv && (inv.due || inv.newTodo)) {
+    const parts = [];
+    if (inv.due) parts.push(`${inv.due} follow-up${inv.due === 1 ? '' : 's'} due`);
+    if (inv.newTodo) parts.push(`${inv.newTodo} new business${inv.newTodo === 1 ? '' : 'es'} to invite`);
+    add(`invites:${day}`, 'invites', `Business Club invites: ${parts.join(', ')}`, inv);
+  }
   // Lessons ready for approval
   const ready = data.lessonsReady || [];
   if (ready.length === 1) add(`lesson:${ready[0].id}`, 'lesson', `Approve lesson: ${ready[0].title}`, { id: ready[0].id });
@@ -141,7 +149,10 @@ async function refresh(data) {
       if (still.size > before) slots--;
     }
     // Add new automatic items (due today) and your own tasks for today.
-    for (const [k, w] of Object.entries(want)) if (!items[k]) items[k] = { ...w, due: day, createdAt: now };
+    for (const [k, w] of Object.entries(want)) {
+      if (!items[k]) items[k] = { ...w, due: day, createdAt: now };
+      else if (!items[k].doneAt && !items[k].skippedAt) { items[k].title = w.title; items[k].meta = w.meta; } // keep counts current
+    }
     // Your tasks: today, plus any days missed since the list was last opened (up to 14), so missed ones show as overdue.
     const lastDay = s.lastGen ? s.lastGen.slice(0, 10) : day;
     const from = lastDay < day ? (daysBetween(lastDay, day) > 14 ? addDays(day, -14) : addDays(lastDay, 1)) : day;
@@ -182,7 +193,7 @@ function shareTitle(o) {
   return `Share ${o.name}: ${parts.join(', ')} still due`;
 }
 
-const ORDER = { verify: 1, market: 2, alert: 3, renew: 4, spotlight: 5, lesson: 6, share: 7, task: 8 };
+const ORDER = { verify: 1, market: 2, alert: 3, renew: 4, spotlight: 5, lesson: 6, invites: 7, share: 8, task: 9 };
 function makeView(s, day) {
   const all = Object.values(s.items);
   const sort = (a, b) => (a.due || '').localeCompare(b.due || '') || (ORDER[a.kind] || 9) - (ORDER[b.kind] || 9) || (a.createdAt || '').localeCompare(b.createdAt || '');

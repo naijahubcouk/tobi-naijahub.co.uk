@@ -315,3 +315,12 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 ## 7r. To-do lists show 10 at a time
 
 - Admin → Today and the members' to-do card show at most 10 tasks (overdue first, then today) with **See all (N more) →**. Admin expands in place (Show fewer folds it back); members open the full to-do screen. Counts still include everything.
+
+## 7s. Business Club invites (Admin → Club invites)
+
+- Every business listed on Auntie Tobi (live app list + directory.json) with its category, location, WhatsApp, Instagram, email, phone and listing link. Club members (linked listing or same email) show as **Joined** automatically.
+- Messages (benefits only, no offer) include the business name, **their own Auntie Tobi listing link** and the Business Club link: first invite → follow-up 3 days later → last check-in 7 days after that → stops. Edit them in **✎ Edit messages** ({name}, {listing}, {club}); "Reset to original" restores.
+- WhatsApp opens with the message typed; Instagram copies it and opens their profile; Email opens a draft; Copy message. Then **✓ Mark as sent** schedules the next follow-up.
+- Replies: Interested · Not now (check back in 30/60/90 days) · Not interested (never due again) · Joined. Notes & history per business; Reset.
+- **To do today** = follow-ups due + new businesses to invite (default **5 a day**, change it at the top). Today list gets one "Business Club invites" task that ticks itself when they're done.
+- Stored in `invites/state`. Admin actions: `invites-view`, `invites-act`, `invites-settings`.

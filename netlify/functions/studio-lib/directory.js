@@ -67,7 +67,7 @@ function merge(live) {
   }
   return [...bySlug.values()].map(b => ({
     name: norm(b.name), slug: norm(b.slug), cat: norm(b.cat), loc: norm(b.loc), desc: norm(b.desc),
-    wa: norm(b.wa), ig: norm(b.ig).replace(/^@/, ''), website: norm(b.website), email: core.normalizeEmail(b.email),
+    wa: norm(b.wa), ig: norm(b.ig).replace(/^@/, ''), website: norm(b.website), email: core.normalizeEmail(b.email), phone: norm(b.phone),
     verified: !!b.verified,
   }));
 }

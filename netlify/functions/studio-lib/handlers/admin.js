@@ -16,6 +16,7 @@ const notify = require('../notify');
 const market = require('../market');
 const todo = require('../todo');
 const directory = require('../directory');
+const invites = require('../invites');
 
 // Instagram for a member: their Business Studio profile → one you added in Admin → their Auntie Tobi listing.
 const igClean = v => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/[/?#].*$/, '');
@@ -401,7 +402,9 @@ exports.handler = handler(async (ctx) => {
       const alerts = (await mapLimit(akeys, 8, async k => ({ key: k, ...(await getJson(k)) }))).filter(a => a && a.ts);
       let lessonsReady = [];
       try { lessonsReady = (await resources.adminDashboard()).readyToPublish || []; } catch (e) { console.error('[studio] todo lessons failed', e && e.message); }
-      const view = await todo.refresh({ members, settings, profiles, alerts, lessonsReady });
+      let inv = null;
+      try { inv = await invites.summary(ctx.event, { members, profiles, settings }); } catch (e) { console.error('[studio] todo invites failed', e && e.message); }
+      const view = await todo.refresh({ members, settings, profiles, alerts, lessonsReady, invites: inv });
       // Instagram link for every task about a member (and Marketplace listings linked to one).
       const igs = {};
       const items = [...view.overdue, ...view.todayItems];
@@ -441,6 +444,23 @@ exports.handler = handler(async (ctx) => {
       if (how === 'done' && it.kind === 'alert' && it.meta && /^alerts\/[\w:.\-]+$/.test(it.meta.alertKey || '')) await core.del(it.meta.alertKey).catch(() => {});
       await core.audit(actor, `todo_${how}`, { key: it.key });
       return { item: it };
+    }
+    // ── Business Club invites (follow up every business on Auntie Tobi) ──
+    case 'invites-view': {
+      const members = await allMembers();
+      const profiles = {};
+      await mapLimit(members.filter(m => core.access(m, settings).membershipActive), 8, async m => { profiles[m.email] = await getJson(`profiles/${enc(m.email)}`); });
+      return invites.view(ctx.event, { members, profiles, settings });
+    }
+    case 'invites-act': {
+      const rec = await invites.act(body.slug, String(body.act || ''), { days: body.days, notes: body.notes, via: body.via });
+      if (body.act !== 'note') await core.audit(actor, `invite_${body.act}`, { slug: body.slug });
+      return { rec };
+    }
+    case 'invites-settings': {
+      const st = await invites.saveSettings(body.settings);
+      await core.audit(actor, 'invites_settings', { perDay: st.perDay });
+      return { settings: st };
     }
     case 'member-ig-set': {
       const email = requireEmail(body.email);
