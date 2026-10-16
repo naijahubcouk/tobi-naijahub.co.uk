@@ -148,6 +148,7 @@ exports.handler = handler(async (ctx) => {
           model: core.modelFor(settings),
           stripe: stripe.billingEnabled(),
           stripePlans: stripe.availableIntervals(),
+          clubLink: !!core.env('STUDIO_CLUB_PAYMENT_LINK'), webhook: !!core.env('STRIPE_WEBHOOK_SECRET'),
           stripeMode: (core.env('STRIPE_SECRET_KEY') || '').startsWith('sk_live') ? 'live' : 'test',
         },
         alertCount: alerts,

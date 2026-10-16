@@ -208,6 +208,24 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 
 ---
 
+## 7h. Business Club payment link → automatic Studio access
+
+When someone pays your **£50 Business Club Stripe payment link**, the Studio automatically:
+- creates (or renews) their account with the email they paid with — active for **12 months** (a renewal adds 12 months to their current expiry, so no days are lost; an expired member gets 12 months from today);
+- emails them a welcome with the link to `/studio` (they sign in with that email — a 6-digit code, no password);
+- emails you and adds an Alert ("New Business Club member" / "Business Club renewal");
+- uses the payment form's **Business name** custom field (if you add one) as the member name.
+
+Refunds and disputes only **alert you** — access is never removed automatically. A blocked account that pays gets no access and you're warned.
+
+**One-time Stripe setup (live mode):**
+1. Stripe → **Payment Links** → open the £50 Business Club link → copy its ID (starts `plink_`). In Netlify add `STUDIO_CLUB_PAYMENT_LINK` = that ID (Production).
+2. On the same link → **After payment** → "Don't show confirmation page" → redirect to `https://www.auntietobi.co.uk/studio?welcome=1`. (Optional: add a custom text field "Business name".)
+3. Stripe → **Developers → Webhooks → Add endpoint**: `https://www.auntietobi.co.uk/.netlify/functions/studio-stripe-webhook`. Events: `checkout.session.completed`, `charge.refunded`, `charge.dispute.created` (plus the AI Power events in section 5 if you sell AI Power). Copy the signing secret into Netlify as `STRIPE_WEBHOOK_SECRET` (Production).
+4. Admin → Overview shows **Business Club auto-access: On** when both are set.
+
+---
+
 ## 8. Running costs (estimates — check current prices)
 
 | Service | Cost |

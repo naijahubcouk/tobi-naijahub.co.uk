@@ -403,6 +403,7 @@ tbody tr:hover{background:#FFFCF5}
       '<h2>Setup</h2><div class="card"><table style="border:0"><tbody>' +
       row('Email codes', c.email) + row('AI model', c.model + (c.ai ? '' : ' (no key)')) + row('Stripe', c.stripe ? 'configured (' + c.stripeMode + ' mode)' : 'not configured') +
       row('AI Power plans', (c.stripePlans || []).map(function (i) { return i === 'year' ? 'Yearly \u00a350' : 'Monthly \u00a35'; }).join(', ') || 'none configured') +
+      row('Business Club auto-access', c.clubLink && c.webhook ? 'On \u2014 paying the Club link gives Studio access automatically' : 'Off \u2014 set STUDIO_CLUB_PAYMENT_LINK and the Stripe webhook (see setup guide); add members manually until then') +
       row('Spend warning', 'Email + alert at \u00a3' + o.settings.spendWarnGbp + ' and \u00a3' + (o.settings.spendWarnGbp * 2) + ' a month. The Studio never stops for spending.') + '</tbody></table></div></main>';
     var ta = $('#toAlerts'); if (ta) ta.onclick = function () { go('alerts'); };
   }
