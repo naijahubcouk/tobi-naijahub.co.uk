@@ -31,6 +31,26 @@ function httpsLink(v) {
   if (!u || u.protocol !== 'https:' || !u.hostname.includes('.') || s.length > 500 || /["'<>\s\\]/.test(u.toString())) throw new HttpError(400, 'invalid_link', 'Please paste the full web link (it should start with https://).');
   return u.toString();
 }
+// Companies House: a GOV.UK company page link or a company number → the 8-character number ('' if empty).
+const CH_HOSTS = ['find-and-update.company-information.service.gov.uk', 'beta.companieshouse.gov.uk', 'www.gov.uk'];
+function chNumber(v) {
+  let s = String(v || '').trim();
+  if (!s) return '';
+  const bad = () => { throw new HttpError(400, 'invalid_companies_house', 'Please paste your company’s page from GOV.UK (find-and-update.company-information.service.gov.uk/company/…) or your 8-character company number.'); };
+  if (/[./]/.test(s)) {
+    let u; try { u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`); } catch { bad(); }
+    if (!CH_HOSTS.includes(u.hostname.toLowerCase())) bad();
+    const m = u.pathname.match(/\/company\/([A-Za-z0-9]{6,8})(?:\/|$)/);
+    if (!m) bad();
+    s = m[1];
+  }
+  s = s.replace(/\s+/g, '').toUpperCase();
+  if (/^\d{6,8}$/.test(s)) s = s.padStart(8, '0');
+  if (!/^(?:\d{8}|[A-Z]{2}\d{6})$/.test(s)) bad();
+  return s;
+}
+const chUrl = n => (n ? `https://find-and-update.company-information.service.gov.uk/company/${n}` : '');
+
 function waNumber(v) {
   let d = String(v || '').replace(/\D/g, '');
   if (!d) return '';
@@ -56,6 +76,7 @@ function clean(raw, opts) {
     wa: waNumber(raw.wa),
     endsAt: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.endsAt || '')) ? raw.endsAt : '',
     bizSlug: /^[a-z0-9-]{2,120}$/.test(String(raw.bizSlug || '')) ? raw.bizSlug : '',
+    companiesHouse: chNumber(raw.companiesHouse),
     imgs: (Array.isArray(raw.imgs) ? raw.imgs : []).filter(v => isImgId(v) || isCdnImg(v)).slice(0, MAX_IMGS),
   };
   if (!f.business) bad('Please add your business name.');
@@ -277,6 +298,7 @@ function toCard(r) {
   return {
     id: r.id, name: escH(f.name), shortName: escH(f.name), business: escH(f.business), bizSlug: f.bizSlug, category: f.category, emoji: EMOJI[f.category] || '🛍️',
     img: imgs[0] || '', imgs, price: escH(f.price), desc: escH(f.desc), link: f.link, btnText: escH(f.btnText), wa: f.wa, expires, pinned: !!r.pinned,
+    verified: !!f.companiesHouse, // blue tick: approved with a Companies House registration
   };
 }
 async function feed() {
@@ -296,6 +318,7 @@ async function feed() {
 }
 
 module.exports = {
+  chNumber, chUrl,
   CATS, BUTTONS, EMOJI, MAX_IMGS, clean, saveImage, getImage, all, get, status, mine, forOwner, memberSave, memberWithdraw, memberRemove,
   publicCreate, adminSave, review, adminDelete, allowanceOf, setAllowance, feed, toCard, ensureSeed, isImgId,
 };

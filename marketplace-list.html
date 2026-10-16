@@ -54,6 +54,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
 .bzp-s{display:flex;flex-direction:column;gap:8px}.bzp-s .bzp-link{align-self:flex-start}
 .bzp-res{display:flex;flex-direction:column;gap:6px}.bzp-r{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #E6E1D6;border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer;color:#0F1E36}
 .bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
+.chbox{background:#EEF6FD;border:1.5px solid #CFE4F7;border-radius:12px;padding:12px}
 </style>
 </head>
 <body>
@@ -87,6 +88,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
     <div><label>When customers tap the button…</label><div class="chips"><button type="button" class="chip" data-how="wa" aria-pressed="true">💬 Message me on WhatsApp</button><button type="button" class="chip" data-how="link" aria-pressed="false">🔗 Go to my website or booking link</button></div></div>
     <div id="howWa"><label for="pwa">WhatsApp number for orders</label><input id="pwa" inputmode="tel" maxlength="20" placeholder="07700 900123"></div>
     <div id="howLink" class="hidden"><label for="pl">Web link</label><input id="pl" inputmode="url" maxlength="500" placeholder="https://…"></div>
+    <div class="chbox"><label for="ch">🏛️ Registered with Companies House? <span class="opt">(optional)</span></label><input id="ch" maxlength="200" placeholder="Company number or GOV.UK link" autocapitalize="characters"><div class="hint">Paste your company’s page from GOV.UK, or just your company number. It shows customers you’re a registered business. Find it at find-and-update.company-information.service.gov.uk — sole traders can leave this empty. Verified businesses get a blue tick on the Marketplace.</div></div>
     <div class="row"><div><label for="bt">Button text</label><select id="bt"><option>Buy Now</option><option>Book Now</option><option>🎟️ Get Tickets</option><option>Enquire</option><option>Learn More</option></select></div>
       <div><label for="end">End date <span class="opt">(optional)</span></label><input id="end" type="date"><div class="hint">For events or offers — it disappears after this date.</div></div></div>
 
@@ -183,7 +185,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
   }
   function listing() {
     return { business: $('#biz').value, name: $('#pn').value, category: $('#cat').value, price: $('#pr').value, desc: $('#ds').value, btnText: $('#bt').value,
-      wa: how === 'wa' ? $('#pwa').value : '', link: how === 'link' ? $('#pl').value : '', endsAt: $('#end').value, bizSlug: bizChoice && bizChoice.slug ? bizChoice.slug : '' };
+      wa: how === 'wa' ? $('#pwa').value : '', link: how === 'link' ? $('#pl').value : '', endsAt: $('#end').value, bizSlug: bizChoice && bizChoice.slug ? bizChoice.slug : '', companiesHouse: $('#ch').value.trim() };
   }
   function prev() {
     var l = listing();
@@ -208,6 +210,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
     if (l.desc.trim().length < 10) return 'Please add a short description (a sentence or two).';
     if (how === 'wa' && l.wa.replace(/\D/g, '').length < 10) return 'Please add the WhatsApp number customers should message.';
     if (how === 'link' && !/^(https:\/\/)?[^\s.]+\.[^\s]+/.test(l.link.trim())) return 'Please add your web link.';
+    var ch = $('#ch').value.trim();
+    if (ch && !/company-information\.service\.gov\.uk\/company\/[A-Za-z0-9]{6,8}|companieshouse\.gov\.uk\/company\/[A-Za-z0-9]{6,8}/i.test(ch) && !/^([A-Za-z]{2}\d{6}|\d{6,8})$/.test(ch.replace(/\s+/g, ''))) return 'Please check your Companies House link or company number (8 characters, e.g. 12345678 or SC123456).';
     if (!$('#ok').checked) return 'Please tick the box to confirm.';
     return '';
   }

@@ -433,12 +433,12 @@ tbody tr:hover{background:#FFFCF5}
     f = f || {}; changed = changed || {};
     var hl = function (k) { return changed[k] ? ' style="background:#FFF4D6;border-radius:4px"' : ''; };
     return '<div class="mkc"><div class="mkc-img"' + (changed.imgs ? ' style="outline:3px solid #FFB81C"' : '') + '>' + (f.imgs && f.imgs.length ? '<img src="' + esc(mkImg(f.imgs[0])) + '" alt="">' : '<span class="muted">No photo</span>') + (f.imgs && f.imgs.length > 1 ? '<span class="mkc-n">1/' + f.imgs.length + '</span>' : '') + '<span class="mkc-cat"' + hl('category') + '>' + (MK_EMOJI[f.category] || '🛍️') + ' ' + esc(f.category) + '</span></div>' +
-      '<div class="mkc-b"><b' + hl('name') + '>' + esc(f.name) + '</b><div class="muted"' + hl('business') + '>' + esc(f.business) + '</div><div class="mkc-d"' + hl('desc') + '>' + esc(f.desc) + '</div>' + (f.price ? '<div class="mkc-p"' + hl('price') + '>' + esc(f.price) + '</div>' : '') +
+      '<div class="mkc-b"><b' + hl('name') + '>' + esc(f.name) + '</b><div class="muted"' + hl('business') + '>' + esc(f.business) + (f.companiesHouse ? ' <span title="Verified" style="color:#1D9BF0">✔</span>' : '') + '</div><div class="mkc-d"' + hl('desc') + '>' + esc(f.desc) + '</div>' + (f.price ? '<div class="mkc-p"' + hl('price') + '>' + esc(f.price) + '</div>' : '') +
       '<div class="mkc-btn"' + hl('btnText') + '>' + esc(f.btnText) + '</div><div class="muted" style="font-size:11.5px;margin-top:6px;word-break:break-all"' + hl(f.link ? 'link' : 'wa') + '>' + (f.link ? '🔗 ' + esc(f.link) : f.wa ? '💬 WhatsApp +' + esc(f.wa) : '') + (f.endsAt ? '<br>Ends ' + esc(d(f.endsAt)) : '') + '</div></div></div>';
   }
   function mkDiff(a, b) {
     var out = {}; if (!a || !b) return out;
-    ['name', 'business', 'category', 'price', 'desc', 'btnText', 'link', 'wa', 'endsAt'].forEach(function (k) { if (String(a[k] || '') !== String(b[k] || '')) out[k] = true; });
+    ['name', 'business', 'category', 'price', 'desc', 'btnText', 'link', 'wa', 'endsAt', 'companiesHouse'].forEach(function (k) { if (String(a[k] || '') !== String(b[k] || '')) out[k] = true; });
     if (JSON.stringify(a.imgs || []) !== JSON.stringify(b.imgs || [])) out.imgs = true;
     return out;
   }
@@ -449,6 +449,11 @@ tbody tr:hover{background:#FFFCF5}
     var who = x.owner || (x.contact && x.contact.email) || '';
     var flag = k.check === 'email_match' ? '<span class="pill p-active">✓ Their email matches this listing</span>' : k.check === 'email_differs' ? '<span class="pill p-warn">⚠️ Sent by ' + esc(who) + ' — the listing’s email is different. Check it’s them.</span>' : '<span class="pill p-pending">No email on this listing — check it’s them</span>';
     return '<div>🔗 Linked to <b>' + esc(k.name) + '</b> <span class="muted">· ' + esc(k.cat || '') + (k.loc ? ' · ' + esc(k.loc) : '') + '</span> <a href="' + esc(k.url) + '" target="_blank" rel="noopener">View listing</a> ' + flag + '</div>';
+  }
+  function mkCh(x) {
+    var f = x.draft || x.live || {};
+    if (!f.companiesHouse) return '<div class="muted">🏛️ No Companies House number — no blue tick.</div>';
+    return '<div>🏛️ Companies House: <b>' + esc(f.companiesHouse) + '</b> <a href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(f.companiesHouse) + '" target="_blank" rel="noopener">Check on GOV.UK</a> <span class="muted">— make sure the company name matches. Approving gives the blue verified tick.</span></div>';
   }
   function mkWho(x) {
     var c = x.contact || {};
@@ -519,7 +524,7 @@ tbody tr:hover{background:#FFFCF5}
       '<div class="row" style="margin-bottom:12px">' + [['review', 'To review'], ['waiting', 'Waiting for their edit'], ['live', 'Live'], ['all', 'All listings']].map(function (t) { return '<button class="btn small ' + (t[0] === tab ? 'primary' : 'ghost') + '" data-mt="' + t[0] + '">' + t[1] + ' (' + groups[t[0]].length + ')</button>'; }).join('') + '</div>' +
       (tab === 'review' || tab === 'waiting' ? (groups[tab].length ? groups[tab].map(function (x) {
         var ch = mkDiff(x.live, x.draft);
-        return '<div class="card stack" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center"><span class="pill ' + (MK_ST[x.status] || ['', ''])[1] + '">' + esc((MK_ST[x.status] || [x.status])[0]) + '</span><button class="btn small ghost" data-mke="' + esc(x.id) + '">Edit</button></div>' + mkWho(x) + mkLink(x) +
+        return '<div class="card stack" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center"><span class="pill ' + (MK_ST[x.status] || ['', ''])[1] + '">' + esc((MK_ST[x.status] || [x.status])[0]) + '</span><button class="btn small ghost" data-mke="' + esc(x.id) + '">Edit</button></div>' + mkWho(x) + mkLink(x) + mkCh(x) +
           (x.note ? '<div class="muted"><b>Your note:</b> ' + esc(x.note) + '</div>' : '') +
           (x.live ? '<div class="row" style="align-items:flex-start;gap:14px"><div><div class="muted" style="margin-bottom:4px">Live now</div>' + mkCard(x.live) + '</div><div><div class="muted" style="margin-bottom:4px">Proposed change' + (Object.keys(ch).length ? ' — changed: <b>' + Object.keys(ch).join(', ') + '</b>' : '') + '</div>' + mkCard(x.draft, ch) + '</div></div>'
             : '<div class="row" style="align-items:flex-start;gap:14px">' + mkCard(x.draft) + (x.draft.imgs.length > 1 ? '<div class="row" style="gap:6px">' + x.draft.imgs.slice(1).map(function (i) { return '<img src="' + esc(mkImg(i)) + '" alt="" style="width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">'; }).join('') + '</div>' : '') + '</div>') +
@@ -568,12 +573,13 @@ tbody tr:hover{background:#FFFCF5}
         '<div><label for="mkD">Description</label><textarea id="mkD" rows="3">' + esc(f.desc) + '</textarea></div>' +
         '<div class="f2"><div><label for="mkL">Web link</label><input id="mkL" value="' + esc(f.link) + '" placeholder="https://… (or leave empty for WhatsApp)"></div><div><label for="mkW">WhatsApp number</label><input id="mkW" value="' + esc(f.wa) + '"></div></div>' +
         '<div class="f2"><div><label for="mkT">Button</label><select id="mkT">' + btns.map(function (b) { return '<option' + (f.btnText === b ? ' selected' : '') + '>' + b + '</option>'; }).join('') + '</select></div><div><label for="mkE">End date</label><input type="date" id="mkE" value="' + esc(f.endsAt) + '"></div></div>' +
+        '<div><label for="mkCh">🏛️ Companies House (number or GOV.UK link)</label><input id="mkCh" value="' + esc(f.companiesHouse || '') + '" placeholder="e.g. 12345678 — gives the blue verified tick on the Marketplace"></div>' +
         '<div><label>Auntie Tobi business listing</label><div id="mkBz"></div></div>' +
         '<div><label for="mkO">Owner (Club member email)</label><input id="mkO" value="' + esc(x ? x.owner : '') + '" placeholder="Lets this member edit it in Studio"></div>' +
         (x && x.owner ? '<div class="muted">This member can have <b>' + allowance + '</b> listing' + (allowance === 1 ? '' : 's') + ' — change it under “Extra listings for members”.</div>' : '') +
         '<div class="row"><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="mkPin" style="width:auto"' + (x && x.pinned ? ' checked' : '') + '> 📌 Pin to top</label><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="mkHid" style="width:auto"' + (x && x.hidden ? ' checked' : '') + '> Hide from Marketplace</label></div>' +
         '<div class="err hidden" id="mkErr"></div><div class="row"><button class="btn primary" id="mkSave">Save</button><button class="btn ghost" id="mkX">Close</button>' + (x ? '<button class="btn ghost danger" id="mkDel" style="margin-left:auto">Delete listing</button>' : '') + '</div>');
-      var keep = function () { f.name = $('#mkN', s).value; f.business = $('#mkB', s).value; f.category = $('#mkC', s).value; f.price = $('#mkP', s).value; f.desc = $('#mkD', s).value; f.link = $('#mkL', s).value; f.wa = $('#mkW', s).value; f.btnText = $('#mkT', s).value; f.endsAt = $('#mkE', s).value; f.bizSlug = bz && bz.slug ? bz.slug : ''; };
+      var keep = function () { f.name = $('#mkN', s).value; f.business = $('#mkB', s).value; f.category = $('#mkC', s).value; f.price = $('#mkP', s).value; f.desc = $('#mkD', s).value; f.link = $('#mkL', s).value; f.wa = $('#mkW', s).value; f.btnText = $('#mkT', s).value; f.endsAt = $('#mkE', s).value; f.bizSlug = bz && bz.slug ? bz.slug : ''; f.companiesHouse = $('#mkCh', s).value.trim(); };
       bizPicker($('#mkBz', s), bz || 'none', function (v) { bz = v; }, { linkedLabel: 'Linked to Auntie Tobi listing', noneLabel: 'Not linked to an Auntie Tobi listing.', noneButton: 'Not on Auntie Tobi' });
       $$('[data-phx]', s).forEach(function (b) { b.onclick = function () { keep(); f.imgs.splice(Number(b.dataset.phx), 1); draw(); }; });
       $$('[data-ph1]', s).forEach(function (b) { b.onclick = function () { keep(); var i = Number(b.dataset.ph1); f.imgs.unshift(f.imgs.splice(i, 1)[0]); draw(); }; });

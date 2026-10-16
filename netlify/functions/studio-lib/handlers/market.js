@@ -10,6 +10,7 @@ const core = require('../core');
 const { HttpError, handler } = core;
 const market = require('../market');
 const directory = require('../directory');
+const cleanName = c => core.cleanText(c && c.name, 80);
 
 // Checks the Auntie Tobi listing someone picked. Unknown slugs are dropped.
 // check: 'email_match' (their email is the listing's email), 'email_differs', 'no_email' (listing has no email on file).
@@ -66,13 +67,21 @@ exports.handler = handler(async (ctx) => {
       if (!photos.length) throw new HttpError(400, 'invalid', 'Please add at least one photo.');
       market.clean({ ...body.listing, imgs: [] }, { allowNoImg: true }); // check everything before storing photos
       const lk = await checkLink(event, body.listing && body.listing.bizSlug, email);
+      // A Business Club member using the form link: it becomes their member listing (counts as their 1, editable in Studio).
+      const member = await core.getMember(email);
+      const isClub = !!(member && !member.blocked && core.access(member, await core.getSettings()).membershipActive);
+      if (isClub && !(await market.mine(email)).canAdd) throw new HttpError(403, 'limit', 'You already have your Business Club Marketplace listing. To change it, sign in to your Business Studio (auntietobi.co.uk/studio) → Account → Marketplace listing.');
       const ids = [];
       for (const p of photos) ids.push(await market.saveImage(p, `public:${email}`));
-      const rec = await market.publicCreate({ ...body.contact, email }, { ...body.listing, bizSlug: lk.slug }, ids, lk.link);
+      const listing = { ...body.listing, bizSlug: lk.slug, imgs: ids };
+      const rec = isClub
+        ? await market.memberSave(email, { ...member, name: member.name || cleanName(body.contact) }, '', listing, lk.link)
+        : await market.publicCreate({ ...body.contact, email }, listing, ids, lk.link);
+      if (isClub) await core.audit(email, 'market_submit', { id: rec.id, via: 'form' });
       await tellAdmins(rec, 'new');
       try {
         await core.sendEmail([email], 'We’ve received your Marketplace listing 💚',
-          `Hi ${rec.contact.name.split(' ')[0]},\n\nThank you for sending “${rec.draft.name}” to the Auntie Tobi Marketplace. Auntie Tobi will review it and email you as soon as it’s live (or if anything needs changing).\n\nAuntie Tobi 💚\nhttps://www.auntietobi.co.uk/marketplace`);
+          `Hi ${(rec.contact.name || cleanName(body.contact) || 'there').split(' ')[0]},\n\nThank you for sending “${rec.draft.name}” to the Auntie Tobi Marketplace. Auntie Tobi will review it and email you as soon as it’s live (or if anything needs changing).\n\nAuntie Tobi 💚\nhttps://www.auntietobi.co.uk/marketplace`);
       } catch (e) { console.error('[studio] market confirmation email failed', e && e.message); }
       return { ok: true, id: rec.id };
     }

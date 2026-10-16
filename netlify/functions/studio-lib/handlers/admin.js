@@ -412,7 +412,10 @@ exports.handler = handler(async (ctx) => {
         const member = await core.getMember(r.owner);
         if (member && benefits.yearKeyOf(member)) {
           const y = (await benefits.getYear(r.owner, member)).year;
-          if (y && !y.marketplace.done) await benefits.update(r.owner, member, { marketplace: { done: true }, notify: false }).catch(() => {});
+          const patch = {};
+          if (y && !y.marketplace.done) patch.marketplace = { done: true };
+          if (y && r.live && r.live.companiesHouse && y.badge !== 'yes') patch.badge = 'yes'; // Companies House registration → verified
+          if (Object.keys(patch).length) await benefits.update(r.owner, member, { ...patch, notify: false }).catch(() => {});
         }
       } else if (r.owner && decision === 'changes') {
         await notify.pushToMember(r.owner, 'Auntie Tobi', 'A small change is needed on your Marketplace listing — see Studio.');

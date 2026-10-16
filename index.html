@@ -5182,11 +5182,12 @@ function initLinksMarketplace() {
     imgWrap.appendChild(img); imgWrap.appendChild(badge);
     var body = document.createElement('div');
     body.style.cssText = 'padding:10px 12px 12px;';
-    body.innerHTML = '<div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">' + p.name + '</div>'
-      + '<div style="font-size:11px;color:#9CA3AF;margin-bottom:8px;">' + p.business + '</div>'
+    var mpE = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    body.innerHTML = '<div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:3px;">' + mpE(p.name) + '</div>'
+      + '<div style="font-size:11px;color:#9CA3AF;margin-bottom:8px;">' + mpE(p.business) + (p.verified ? tobiTick(12) : '') + '</div>'
       + '<div style="border-top:0.5px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">'
-      + (p.price ? '<div style="font-size:16px;font-weight:800;color:#0F1E36;">' + p.price + '</div>' : '')
-      + '<a href="' + link + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:8px;font-size:12px;font-weight:700;text-align:center;text-decoration:none;">' + (p.btnText||'Enquire') + '</a>'
+      + (p.price ? '<div style="font-size:16px;font-weight:800;color:#0F1E36;">' + mpE(p.price) + '</div>' : '')
+      + '<a href="' + mpE(link) + '" target="_blank" style="flex:1;display:block;background:#057A44;color:white;border-radius:8px;padding:8px;font-size:12px;font-weight:700;text-align:center;text-decoration:none;">' + mpE(p.btnText||'Enquire') + '</a>'
       + '</div>';
     slide.appendChild(imgWrap); slide.appendChild(body);
     track.appendChild(slide);
@@ -5561,8 +5562,12 @@ var MARKETPLACE_PRODUCTS = [
   try {
     fetch('/.netlify/functions/studio-market?feed=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
       if (!d || !Array.isArray(d.items) || !d.items.length) return;
+      var un = function (v) { var t = document.createElement('textarea'); t.innerHTML = v == null ? '' : String(v); return t.value; };
       MARKETPLACE_PRODUCTS.length = 0;
-      d.items.forEach(function (p) { MARKETPLACE_PRODUCTS.push(p); });
+      d.items.forEach(function (p) {
+        ['name', 'shortName', 'business', 'price', 'desc', 'btnText'].forEach(function (k) { p[k] = un(p[k]); });
+        MARKETPLACE_PRODUCTS.push(p);
+      });
     }).catch(function () {});
   } catch (e) {}
 })();
@@ -5922,8 +5927,10 @@ function showMarketplaceCarousel() {
         bizLink.onclick = function(e){ e.preventDefault(); tobiOpenBiz(p.bizSlug); };
         bizEl.appendChild(bizLink);
       } else {
-        bizEl.innerHTML = '<span style="color:#9CA3AF;">' + (p.business||'') + '</span>';
+        var bizSpan = document.createElement('span'); bizSpan.style.color = '#9CA3AF'; bizSpan.textContent = p.business || '';
+        bizEl.appendChild(bizSpan);
       }
+      if (p.verified) bizEl.insertAdjacentHTML('beforeend', tobiTick(12));
 
       var descEl = document.createElement('div');
       descEl.style.cssText = 'font-size:12px;color:#555;line-height:1.5;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px;';

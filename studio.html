@@ -301,6 +301,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .bzp-s{display:flex;flex-direction:column;gap:8px}.bzp-s .bzp-link{align-self:flex-start}
 .bzp-res{display:flex;flex-direction:column;gap:6px}.bzp-r{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #E6E1D6;border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer;color:#0F1E36}
 .bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
+.chbox{background:#EEF6FD;border:1px solid #CFE4F7;border-radius:12px;padding:12px}.chbox .hint{margin-bottom:0}
 .mktgrid{display:grid;gap:16px}@media(min-width:760px){.mktgrid{grid-template-columns:1fr 280px;align-items:start}}
 .shared{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
@@ -2423,12 +2424,13 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     live_changes_requested: ['🟢 Live · ✏️ your change needs an edit', 'goldl'], changes: ['✏️ Changes requested', 'goldl'], rejected: ['Not accepted', 'grey'],
     hidden: ['Hidden by Auntie Tobi', 'grey'], ended: ['Ended (end date passed)', 'grey'], draft: ['Not submitted', 'grey']
   };
+  var MKT_TICK = '<svg aria-label="Verified" role="img" viewBox="0 0 24 24" style="width:13px;height:13px;vertical-align:-2px;margin-left:3px"><path fill="#1D9BF0" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.6-5.8"/></svg>';
   function mktImgSrc(ref) { return /^i_/.test(ref) ? '/.netlify/functions/studio-market?img=' + encodeURIComponent(ref) : ref; }
   function mktCard(f) {
     f = f || {};
     var img = f.imgs && f.imgs.length ? '<img src="' + esc(mktImgSrc(f.imgs[0])) + '" alt="">' : '<div class="mpc-noimg">📷 Add a photo</div>';
     return '<div class="mpc"><div class="mpc-img">' + img + (f.imgs && f.imgs.length > 1 ? '<span class="mpc-count">1/' + f.imgs.length + '</span>' : '') + '<span class="mpc-cat">' + (MKT_EMOJI[f.category] || '🛍️') + ' ' + esc(f.category || 'Category') + '</span></div>' +
-      '<div class="mpc-body"><b class="mpc-name">' + esc(f.name || 'Your product or service') + '</b><div class="mpc-biz">' + esc(f.business || '') + '</div><div class="mpc-desc">' + esc(f.desc || 'A short description customers will see.') + '</div>' +
+      '<div class="mpc-body"><b class="mpc-name">' + esc(f.name || 'Your product or service') + '</b><div class="mpc-biz">' + esc(f.business || '') + (f.companiesHouse ? MKT_TICK : '') + '</div><div class="mpc-desc">' + esc(f.desc || 'A short description customers will see.') + '</div>' +
       (f.price ? '<div class="mpc-price">' + esc(f.price) + '</div>' : '') + '<div class="mpc-btn">' + esc(f.btnText || 'Enquire') + '</div></div></div>';
   }
 
@@ -2518,11 +2520,12 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
         '<div><label class="f" for="mBiz">Business name</label><input id="mBiz" maxlength="80" value="' + esc(f.business) + '"></div>' +
         '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">When customers tap the button…</span><div class="chips"><button type="button" class="chip" data-how="wa" aria-pressed="' + (how === 'wa') + '">💬 Message me on WhatsApp</button><button type="button" class="chip" data-how="link" aria-pressed="' + (how === 'link') + '">🔗 Go to my website or booking link</button></div></div>' +
         (how === 'wa' ? '<div><label class="f" for="mWa">WhatsApp number</label><input id="mWa" inputmode="tel" maxlength="20" value="' + esc(f.wa) + '" placeholder="07700 900123"></div>' : '<div><label class="f" for="mLink">Web link</label><input id="mLink" inputmode="url" maxlength="500" value="' + esc(f.link) + '" placeholder="https://…"></div>') +
+        '<div class="chbox"><label class="f" for="mCh">🏛️ Registered with Companies House? <span class="opt">(optional)</span></label><input id="mCh" maxlength="200" value="' + esc(f.companiesHouse || '') + '" placeholder="Company number or GOV.UK link" autocapitalize="characters"><div class="hint">Paste your company’s page from GOV.UK, or just your company number. It shows customers you’re a registered business. Find it at find-and-update.company-information.service.gov.uk — sole traders can leave this empty. Verified businesses get a blue tick on the Marketplace.</div></div>' +
         '<div class="row"><div style="flex:1"><label class="f" for="mBtn">Button text</label><select id="mBtn">' + MKT_BTNS.map(function (b) { return '<option' + (f.btnText === b ? ' selected' : '') + '>' + esc(b) + '</option>'; }).join('') + '</select></div>' +
           '<div style="flex:1"><label class="f" for="mEnd">End date <span class="opt">(optional — e.g. events)</span></label><input type="date" id="mEnd" value="' + esc(f.endsAt) + '"></div></div>' +
         '<div class="err hidden" id="mErr"></div><button class="btn primary block" id="mSave">' + (l ? 'Send change for review' : 'Submit for review') + '</button></div>' +
         '<div><div class="hint" style="margin:0 0 6px">Preview — how it will look on the Marketplace</div><div id="mPrev" style="max-width:280px">' + mktCard(f) + '</div></div></div></main>';
-      [['mName', 'name'], ['mPrice', 'price'], ['mDesc', 'desc'], ['mBiz', 'business'], ['mWa', 'wa'], ['mLink', 'link'], ['mEnd', 'endsAt']].forEach(function (x) { var e = $('#' + x[0]); if (e) e.oninput = function () { f[x[1]] = e.value; $('#mPrev').innerHTML = mktCard(f); }; });
+      [['mName', 'name'], ['mPrice', 'price'], ['mDesc', 'desc'], ['mBiz', 'business'], ['mWa', 'wa'], ['mLink', 'link'], ['mEnd', 'endsAt'], ['mCh', 'companiesHouse']].forEach(function (x) { var e = $('#' + x[0]); if (e) e.oninput = function () { f[x[1]] = e.value; $('#mPrev').innerHTML = mktCard(f); }; });
       bizPicker($('#mBizPick'), bizSel, function (v) { bizSel = v; f.bizSlug = v && v.slug ? v.slug : ''; if (v && v.slug && !f.business) { f.business = v.name; $('#mBiz').value = v.name; $('#mPrev').innerHTML = mktCard(f); } }, { noneLabel: 'Not linked to an Auntie Tobi listing.', noneButton: 'My business isn’t listed on Auntie Tobi yet' });
       $('#mCat').onchange = function () { f.category = this.value; $('#mPrev').innerHTML = mktCard(f); };
       $('#mBtn').onchange = function () { f.btnText = this.value; $('#mPrev').innerHTML = mktCard(f); };
@@ -2785,10 +2788,10 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var sp = b.spotlight;
     card.innerHTML = '<p class="hint" style="margin:0">Membership year ends <b>' + esc(dmy(b.yearKey)) + '</b>.</p>' +
       row('📣', 'Business Spotlight', sp.status === 'done' ? 'Done ' + esc(dmy(sp.date)) + (sp.link ? ' · <a href="' + esc(sp.link) + '" target="_blank" rel="noopener">View</a>' : '') : sp.status === 'scheduled' ? 'Scheduled' + (sp.date ? ' for ' + esc(dmy(sp.date)) : '') : 'Not yet', sp.status === 'done',
-        sp.status === 'none' ? ask('Plan my Spotlight', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to plan my Business Spotlight.') : '') +
+        '') +
       row('⭐', 'Featured Business (app & website)', b.featured.done ? 'Live since ' + esc(dmy(b.featured.date)) : 'Being set up', b.featured.done) +
       row('🛍️', 'Marketplace listing', b.marketplace.done ? 'Live since ' + esc(dmy(b.marketplace.date)) : 'Not listed yet', b.marketplace.done,
-        b.marketplace.done ? '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-gomkt="1">Manage my listing →</button>' : '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-gomkt="1">Add my product or service →</button>') +
+        b.marketplace.done ? '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-gomkt="1">Manage my listing →</button>' : '<a class="btn link" style="font-size:13px;padding:0;min-height:0" href="/marketplace/list" target="_blank" rel="noopener">Add my product or service →</a>') +
       row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.badge === 'not_eligible' ? 'Not eligible at the moment' : 'Not verified yet', b.badge === 'yes',
         b.badge === 'yes' || b.badge === 'not_eligible' ? '' : ask('Ask about verification', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. How can I get verified?')) +
       row('📲', 'Shared by Auntie Tobi this year', b.counts.stories + ' Story share' + (b.counts.stories === 1 ? '' : 's') + ' · ' + b.counts.reposts + ' repost' + (b.counts.reposts === 1 ? '' : 's') + ' · ' + b.counts.discovery + ' discovery feature' + (b.counts.discovery === 1 ? '' : 's') + ' · ' + (b.counts.collabs || 0) + ' collab' + (b.counts.collabs === 1 ? '' : 's') + '<br>Auntie Tobi chooses whose content to share — keep posting your best work.', false) +
