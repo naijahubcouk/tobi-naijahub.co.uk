@@ -470,6 +470,11 @@ exports.handler = handler(async (ctx) => {
     case 'res-list': return resources.adminList();
     case 'res-dashboard': return resources.adminDashboard();
     case 'res-get': return { lesson: await resources.adminGet(String(body.id || '')) };
+    case 'res-approve': {
+      const done = await resources.adminApprove(actor, body.ids || body.id);
+      await core.audit(actor, 'resource_approve', { ids: done.map(l => l.id) });
+      return { approved: done.map(l => ({ id: l.id, title: l.title, status: l.status, publishAt: l.publishAt })) };
+    }
     case 'res-save': {
       const lesson = await resources.adminSave(actor, body.lesson);
       await core.audit(actor, 'resource_save', { id: lesson.id, status: lesson.status });
