@@ -303,6 +303,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
 .chbox{background:#EEF6FD;border:1px solid #CFE4F7;border-radius:12px;padding:12px}.chbox .hint{margin-bottom:0}
 .mktgrid{display:grid;gap:16px}@media(min-width:760px){.mktgrid{grid-template-columns:1fr 280px;align-items:start}}
+.clubticks{list-style:none;margin:4px 0 6px;padding:0;text-align:left}.clubticks li{position:relative;padding:4px 0 4px 24px;font-size:14.5px;line-height:1.45}.clubticks li::before{content:'✓';position:absolute;left:2px;color:var(--green);font-weight:800}
 .shared{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .benrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF3EF}.benrow:last-child{border-bottom:0}
@@ -450,7 +451,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       (up ? '<div class="kicker">Business Studio Pro</div><h1>Get Business Studio Pro</h1>' +
         '<p class="sub" style="margin-top:8px">All the Business Studio tools, 100 AI generations a day and the Business Growth Library — captions, Reels, promos, content plans, follow-ups, quotes and more. £5 a month or £50 a year. First, confirm your email.</p></div>'
         : '<div class="kicker">Auntie Tobi</div><h1>Welcome to your Business Studio</h1>' +
-        '<p class="sub" style="margin-top:8px">Create captions, Reels, promos and more in your brand voice. Sign in with your Business Club or Business Studio Pro email.</p></div>') +
+        '<p class="sub" style="margin-top:8px">Your Auntie Tobi Business Club tools in one place — create captions, Reels and promos in your brand voice, follow up with customers, send quotes and invoices, track your results and learn with the Business Growth Library. Sign in with the email you used to pay.</p></div>') +
       (!up && /[?&]welcome=1/.test(location.search) ? '<div class="note stack" style="margin-bottom:12px"><b>\ud83c\udf89 Welcome to the Business Club!</b><span>Sign in with the <b>email you used to pay</b>. We\u2019ll send you a 6-digit code. If it says you don\u2019t have access yet, wait a minute and try again \u2014 it can take a moment after payment.</span></div>' : '') +
       '<form class="card stack" id="emailForm" novalidate>' +
       '<div><label class="f" for="email">Email address</label><input type="email" id="email" autocomplete="email" inputmode="email" required placeholder="you@yourbusiness.co.uk" value="' + esc(prefill || S.email) + '"></div>' +
@@ -458,8 +459,9 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       '<button class="btn ' + (up ? 'gold' : 'primary') + ' block" id="sendBtn">' + (up ? 'Continue' : 'Send my code') + '</button>' +
       '<p class="hint" style="text-align:center">No password needed. We’ll email you a 6-digit code.</p></form>' +
       (up ? '<p class="hint" style="text-align:center;margin-top:18px">Already have access? <button class="btn link" id="toSignin">Sign in</button></p>'
-        : '<div class="card plan stack" style="margin-top:18px;text-align:center"><b>Just want the tools?</b><div class="sub">Business Studio Pro: all the Business Studio tools, 100 AI a day and the resources library — £5/month or £50/year.</div><button class="btn gold block" id="toSignup">Get Business Studio Pro</button></div>' +
-          '<p class="hint" style="text-align:center;margin-top:14px"><a href="/business-club">About the Business Club</a></p>') + '</div>';
+        : '<div class="card plan stack" style="margin-top:18px"><b style="font-size:16px">💚 Not a member yet? Auntie Tobi Business Club — £50/year</b>' +
+          '<ul class="clubticks"><li>Business Spotlight or collab on Instagram + Blog</li><li>Featured Business on the app &amp; website for 1 year</li><li>Your product or service on the Marketplace</li><li>Business Discovery features &amp; Instagram repost opportunities</li><li>Verification badge for eligible businesses</li><li>Business Studio — content ideas, follow-ups, tracker &amp; Library</li></ul>' +
+          '<a class="btn gold block" href="/business-club">Join the Business Club →</a></div>') + '</div>';
     var ts = $('#toSignup'); if (ts) ts.onclick = function () { showSignIn($('#email').value, 'signup'); };
     var ti = $('#toSignin'); if (ti) ti.onclick = function () { showSignIn($('#email').value); };
     $('#emailForm').addEventListener('submit', async function (e) {
@@ -488,7 +490,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       '<button class="btn primary block" id="verifyBtn">' + (up ? 'Confirm email' : 'Sign in') + '</button>' +
       '<p class="hint" style="text-align:center">You’ll stay signed in on this device.</p>' +
       '<div class="row" style="justify-content:space-between"><button type="button" class="btn link" id="resend" disabled>Resend code</button><button type="button" class="btn link" id="other">Use a different email</button></div>' +
-      '</form><p class="hint" style="text-align:center;margin-top:16px">Can’t find it? Check spam or promotions.' + (up ? '' : ' Still nothing? This email may not have Business Studio access yet — you can <button class="btn link" id="toUp" style="font-size:inherit">get Business Studio Pro</button>.') + '</p></div>';
+      '</form><p class="hint" style="text-align:center;margin-top:16px">Can’t find it? Check spam or promotions.' + (up ? '' : ' Still nothing? Make sure it’s the email you used to pay. Not a member yet? <a href="/business-club">Join the Business Club</a>.') + '</p></div>';
     var tu = $('#toUp'); if (tu) tu.onclick = function () { showSignIn(S.email, 'signup'); };
     var code = $('#code');
     code.addEventListener('input', function () {
@@ -564,13 +566,12 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     S.today = null;
     try { S.boot = await api('studio-api', 'bootstrap', {}, { quiet401: true }); }
     catch (e) {
-      if (e.status === 401) return showSignIn('', /[?&]pro=1/.test(location.search) ? 'signup' : undefined);
+      if (e.status === 401) return showSignIn();
       if (e.code === 'account_blocked') return showMessage('Account suspended', e.message);
       app.innerHTML = '<main><div class="err">' + esc(e.message) + '</div><button class="btn ghost" style="margin-top:12px" onclick="location.reload()">Try again</button></main>'; return;
     }
     S.history = S.boot.recent || [];
     var q = new URLSearchParams(location.search);
-    if (q.get('pro') === '1') { try { history.replaceState({}, '', location.pathname); } catch (x) {} if (!(S.boot.access && S.boot.access.powerActive)) return showAccount(); }
     if (q.get('billing')) {
       history.replaceState(null, '', location.pathname);
       if (q.get('billing') === 'success' || q.get('billing') === 'managed') {

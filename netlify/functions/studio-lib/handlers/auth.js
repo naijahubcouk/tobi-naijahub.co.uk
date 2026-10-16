@@ -41,7 +41,7 @@ exports.handler = handler(async (ctx) => {
       if (!ok) throw new HttpError(400, 'invalid_code', 'That code is incorrect or has expired. Please check it or request a new one.');
       const member = await getMember(email);
       if (!access(member, await getSettings()).canView) {
-        throw new HttpError(403, 'no_access', 'This email doesn\'t have Business Studio access. You can get Business Studio Pro to start.');
+        throw new HttpError(403, 'no_access', 'This email doesn\'t have Business Studio access. Sign in with the email you used to pay, or join the Business Club.');
       }
       const s = await core.createSession(email, 'member', ctx.event);
       ctx.cookiesOut.push(s.cookie);

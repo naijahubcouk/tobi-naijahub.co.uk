@@ -254,7 +254,7 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 
 - **Business Club** (£50/year): Business Studio with 20 AI a day, Library resources, and all Auntie Tobi promotion.
 - **Business Studio Pro** (£5/month or £50/year, the same Stripe prices as before): all Business Studio tools, 100 AI a day and the Library resources — **no** promotion (Spotlight, Featured, Marketplace, reposts, verification, Check-Up). Club members can add Pro to get 100 a day.
-- Sold from the Business Club page (“Just want the tools?” → `/studio?pro=1`) and from the Business Studio sign-in page.
+- For now Pro is only offered inside the Business Studio (Account → Business Studio Pro, and the "Want more?" prompt) — not on the sign-in page or the Business Club page.
 - In Stripe, rename the product to **Business Studio Pro** (Products → your AI Power product → Edit) so checkout and receipts show the new name. Prices and subscriptions don't change.
 - Optional: set `STUDIO_EMAIL_FROM` to `Auntie Tobi Business Studio <studio@mail.auntietobi.co.uk>` so emails show the new name.
 - Lesson text now says “Business Studio” (seed update 8). Lessons you've edited or approved in Admin are left as they are.
