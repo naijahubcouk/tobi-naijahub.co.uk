@@ -2,7 +2,7 @@
 // Module 01 — Start Here. Formatting: ## Heading, - bullet, 1. numbered, **bold**, > Tip box, [link](https://…)
 module.exports = {
   'Welcome to Auntie Tobi Business Club': {
-    seedRev: 4,
+    seedRev: 5,
     summary: 'What the Business Club is for, what you get, and the simplest way to start using it this week.',
     tags: ['all'], reviewMonths: 12,
     learn: `Welcome to the Auntie Tobi Business Club. 💚
@@ -24,9 +24,9 @@ The full list is on the [Business Club page](https://auntietobi.co.uk/business-c
 - **Featured Business** on the Auntie Tobi app and website for 1 year.
 - **Your product or service on the Marketplace** for 1 year.
 - **A verification badge** for eligible businesses that complete verification.
-- **Story, post and Reel repost opportunities.**
+- **Story, post and Reel repost opportunities** — members can be selected by Auntie Tobi to be shared.
 - **Business Studio** — this Resources library, content ideas, the follow-up tool and the tracker, plus quotes, invoices and branded images.
-- **An Annual Instagram Check-Up** — practical suggestions to improve your profile.
+- **A Business Check-Up with Accountability** — a look at how your business is going, with agreed priorities you track in Studio.
 
 If you have a question about any of these, message Auntie Tobi on [WhatsApp](https://wa.me/447594674940).
 
@@ -78,7 +78,7 @@ None of these took more than 20 minutes. By the end of the month her profile is 
   },
 
   'How to Make the Most of Your Membership': {
-    seedRev: 4,
+    seedRev: 5,
     summary: 'A simple weekly routine for using Studio, Resources and your visibility benefits — in about an hour a week.',
     tags: ['all'], reviewMonths: 12,
     learn: `Most memberships go unused not because they’re not useful, but because life gets busy. The members who get the most out of the Business Club usually have a simple routine. Here is one that takes about an hour a week, split into small pieces.
@@ -116,8 +116,8 @@ Your membership includes visibility in the Auntie Tobi community (see the [Busin
 
 - **At least one Business Spotlight or collab** on the Auntie Tobi Instagram and Blog.
 - **Featured Business** on the app and website, and **your product or service on the Marketplace**, for the year.
-- **Story, post and Reel repost opportunities** — tag Auntie Tobi when you share your work.
-- An **Annual Instagram Check-Up** with practical suggestions for your profile.
+- **Story, post and Reel repost opportunities** — Auntie Tobi selects members to share during the year, so keep posting good content.
+- A **Business Check-Up with Accountability** — you agree clear priorities, then set them as weekly goals in Studio and track your progress.
 
 These work best when you’re ready for them:
 
@@ -126,7 +126,7 @@ These work best when you’re ready for them:
 - You know what you want people to do after they see you (for example, “message us to book your Christmas order”).
 - You can reply to new enquiries quickly when your Spotlight goes out — and log them in Follow-ups so nobody is forgotten.
 
-If you have a busy season coming up — Christmas, wedding season, back to school — it’s worth asking Auntie Tobi on [WhatsApp](https://wa.me/447594674940) about timing your Spotlight. Doing your Instagram Check-Up first means your profile is ready when new people arrive.
+If you have a busy season coming up — Christmas, wedding season, back to school — it’s worth asking Auntie Tobi on [WhatsApp](https://wa.me/447594674940) about timing your Spotlight. Doing your Business Check-Up first means your profile and offer are ready when new people arrive.
 
 ## Keep your listing up to date
 
@@ -152,10 +152,10 @@ When the Spotlight goes out, his profile is ready: clear bio, a pinned “How to
         'I’ve put a 10-minute Monday plan in my calendar',
         'I’ve put a 15-minute Friday review in my calendar',
         'I know which busy season I want my Business Spotlight to support',
-        'I’ve asked for my Annual Instagram Check-Up',
+        'I’ve asked for my Business Check-Up',
       ] },
       { type: 'template', title: 'Message to plan your Business Spotlight', text: `Hi Auntie Tobi, I’m a Business Club member — [business name]. I’d like to plan my Business Spotlight. My busiest period is [month/season] and I’d like to promote [product/service/offer]. When would be a good time?` },
-      { type: 'template', title: 'Message to book your Annual Instagram Check-Up', text: `Hi Auntie Tobi, I’m a Business Club member — [business name], Instagram @[your handle]. I’d like to book my Annual Instagram Check-Up, please.` },
+      { type: 'template', title: 'Message to book your Business Check-Up', text: `Hi Auntie Tobi, I’m a Business Club member — [business name]. I’d like to book my Business Check-Up, please. The main thing I’d like help with is [your biggest challenge right now].` },
     ],
     studio: { label: 'Set this week’s goal', screen: 'goal' },
     sources: [{ title: 'Auntie Tobi Business Club — what’s included', url: 'https://auntietobi.co.uk/business-club' }],

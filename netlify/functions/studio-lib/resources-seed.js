@@ -7,7 +7,7 @@
  *
  * Formatting used in lesson text:  ## Heading   - bullet   1. numbered   **bold**   > Tip box   [link](https://…)
  */
-const VERSION = 6;
+const VERSION = 7;
 const REVIEWED = '2026-10-16';
 
 // Every module and lesson title. "planned" = shown to members as Coming soon.
