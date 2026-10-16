@@ -477,7 +477,7 @@ Over a year, most of her bookings come from returning clients and their friends 
   },
 
   'How to Turn Enquiries Into Orders': {
-    ...M3, collectionOrder: 3,
+    ...M3, collectionOrder: 3, seedRev: 3,
     summary: 'Practical steps to help more of the people who enquire actually book — without pressure or discounts.',
     tags: ALL, reviewMonths: 12,
     learn: `If you’re getting enquiries but not many orders, that’s actually good news: people are interested. The work now is to make it easier for them to say yes.
@@ -511,7 +511,7 @@ Read back through recent enquiries that didn’t turn into orders. Common reason
 
 **6. Make paying easy.** Send a clear quote or invoice with bank details and a reference straight away. Explain deposits and deadlines.
 
-**7. Follow up.** One or two polite follow-ups often make the difference (see “Following Up Without Being Pushy”). Studio’s Today screen reminds you about quotes waiting for a reply.
+**7. Follow up.** One or two polite follow-ups often make the difference (see “Following Up Without Being Pushy”). Log each enquiry in Studio’s **Follow-ups** and it will remind you on the Today screen, with the message already written.
 
 ## Handling “It’s too expensive”
 

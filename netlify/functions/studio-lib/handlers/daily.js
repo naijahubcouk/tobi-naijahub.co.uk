@@ -11,6 +11,7 @@ const prefs = require('../prefs');
 const money = require('../money');
 const growth = require('../growth');
 const resources = require('../resources');
+const fu = require('../followups');
 const { siteUrl } = require('./extras');
 
 const ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
@@ -61,6 +62,15 @@ async function buildDigest(member, acc) {
   if (overdue.length) moneyRows.push(`${overdue.length} overdue invoice${overdue.length > 1 ? 's' : ''}: ${overdue.slice(0, 3).map(r => `${r.doc.number} (${r.doc.customer.name})`).join(', ')} — send a friendly reminder from Today`);
   if (quotes.length) moneyRows.push(`${quotes.length} quote${quotes.length > 1 ? 's' : ''} waiting for a reply — a quick follow-up often wins the job`);
   if (moneyRows.length) sec('Money', moneyRows);
+  const fl = await fu.list(email).catch(() => null);
+  if (fl) {
+    const soon = fl.items.filter(i => i.nextAt && i.nextAt <= growth.addDays(core.dayKey(), 6));
+    const rows = [];
+    if (soon.length) rows.push(`${soon.length} follow-up${soon.length > 1 ? 's' : ''} due this week${soon.length ? `: ${soon.slice(0, 3).map(i => i.name).join(', ')}${soon.length > 3 ? '…' : ''}` : ''} — they’ll be on your Today screen`);
+    const ls = fl.items.filter(i => i.createdAt >= new Date(Date.now() - 7 * core.DAY).toISOString());
+    if (ls.length) rows.push(`${ls.length} enquir${ls.length > 1 ? 'ies' : 'y'} logged last week, ${ls.filter(i => i.stage === 'booked').length} booked so far`);
+    if (rows.length) sec('Follow-ups', rows);
+  }
   sec('This week', [
     sum.goal ? 'Check your weekly goal on Today and do your 3 daily actions.' : 'Set a goal for this week on Today — your daily actions will focus on it.',
     ...(sum.tips || []).slice(0, 2),

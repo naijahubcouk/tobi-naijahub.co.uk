@@ -7,7 +7,7 @@
  *
  * Formatting used in lesson text:  ## Heading   - bullet   1. numbered   **bold**   > Tip box   [link](https://…)
  */
-const VERSION = 3;
+const VERSION = 4;
 const REVIEWED = '2026-10-16';
 
 // Every module and lesson title. "planned" = shown to members as Coming soon.
@@ -265,7 +265,7 @@ For time-sensitive things like events, adjust: if their party is in 10 days, fol
 
 ## Keep track so nobody slips through
 
-You don’t need special software. A note on your phone, a WhatsApp label (if you use WhatsApp Business), or a simple list with name, date of enquiry, what they asked about, and the date to follow up is enough. Many people find that a quick check every morning stops enquiries going cold.
+You don’t need special software. A note on your phone, a WhatsApp label (if you use WhatsApp Business), or a simple list with name, date of enquiry, what they asked about, and the date to follow up is enough. Many people find that a quick check every morning stops enquiries going cold.\n\nIn Studio, tap **+ Log enquiry** on Today or in **Track \u2192 Follow-ups**. Studio reminds you when each follow-up is due (after 2 days, then 7 days \u2014 you can change this) and writes the WhatsApp message for you to check and send.
 
 ## Respect people’s choices
 
@@ -299,7 +299,8 @@ Find **three people** who asked about prices or availability but didn’t book. 
       'I stop after two follow-ups unless there’s a new reason',
     ] },
   ],
-  studio: { label: 'Write a follow-up in Studio', tool: 'message', input: { situation: 'follow up a quote' } },
+  studio: { label: 'Open my follow-ups', screen: 'followups' },
+  seedRev: 3,
   sources: [
     { title: 'ICO — Guide to PECR: electronic and telephone marketing', url: 'https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/' },
   ],

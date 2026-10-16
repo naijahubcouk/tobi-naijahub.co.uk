@@ -27,6 +27,9 @@ async function update(email, raw) {
   if ('weeklyEmail' in raw) patch.weeklyEmail = !!raw.weeklyEmail;
   if ('remindersOn' in raw) patch.remindersOn = !!raw.remindersOn;
   if ('reviewLink' in raw) patch.reviewLink = validLink(raw.reviewLink);
+  if ('fuGaps' in raw && Array.isArray(raw.fuGaps)) patch.fuGaps = raw.fuGaps.map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 60).slice(0, 3);
+  if ('fuKeepDays' in raw) patch.fuKeepDays = Number(raw.fuKeepDays) || 0;
+  if ('fuKeepKind' in raw) patch.fuKeepKind = raw.fuKeepKind === 'rebook' ? 'rebook' : 'ideas';
   if ('reviewLabel' in raw) patch.reviewLabel = REVIEW_LABELS.includes(raw.reviewLabel) ? raw.reviewLabel : 'Other';
   const next = await cas(key(email), cur => ({ ...DEFAULTS, ...(cur || {}), ...patch, updatedAt: core.nowIso() }));
   return { ...DEFAULTS, ...next };

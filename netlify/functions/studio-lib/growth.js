@@ -418,18 +418,21 @@ const FIELDS = { enquiries: 10000, bookings: 10000, salesCount: 100000, salesGbp
 async function getProgress(email) { return (await getJson(progKey(email))) || { entries: {} }; }
 
 // +1 post today (from "I posted this"). Keeps the other numbers for the day.
-async function addPost(email) {
+// +1 on one of today's numbers in Track (keeps the others as they are).
+async function bump(email, field, by) {
+  if (!FIELDS[field]) throw new Error('bad field');
   const day = dayKey();
   let isNew = false;
   await cas(progKey(email), cur => {
     const p = cur || { entries: {} };
     const e = p.entries[day] || { enquiries: 0, bookings: 0, salesCount: 0, salesGbp: 0, posts: 0, note: '' };
     isNew = !p.entries[day];
-    p.entries[day] = { ...e, posts: (e.posts || 0) + 1, savedAt: core.nowIso() };
+    p.entries[day] = { ...e, [field]: Math.max(0, (e[field] || 0) + (by === undefined ? 1 : by)), savedAt: core.nowIso() };
     return p;
   });
   return isNew;
 }
+async function addPost(email) { return bump(email, 'posts'); }
 
 async function saveProgress(email, date, raw) {
   const day = dayKey();
@@ -538,5 +541,5 @@ async function pilotSummary(days) {
 
 module.exports = {
   GOALS, getGoal, setGoal, parsePlan, savePlanToCalendar, listCalendar, updateCalendarItem, deleteCalendarItem,
-  recentTopics, today, setActionDone, getProgress, saveProgress, addPost, summary, pilotBump, pilotSummary, addDays, TEMPLATES: T,
+  recentTopics, today, setActionDone, getProgress, saveProgress, addPost, bump, summary, pilotBump, pilotSummary, addDays, TEMPLATES: T,
 };

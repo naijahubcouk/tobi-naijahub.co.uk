@@ -275,6 +275,9 @@ h2 .free{font-family:var(--font)}
 .slugrow input{border:0!important;box-shadow:none!important;padding-left:2px!important;min-width:0}
 ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
 .cust b{word-break:break-word}
+.pill.fu-new{background:#ECEDF0;color:var(--navy-2)}.pill.fu-quoted{background:var(--gold-l);color:#7A5300}.pill.fu-booked{background:var(--green-l);color:var(--green-d)}.pill.fu-notnow{background:#ECEDF0;color:var(--muted)}
+.act.chase.fu{border-left-color:var(--green)}
+ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #EEF3EF;font-size:14px}ul.hist li:last-child{border-bottom:0}ul.hist li span{color:var(--muted);min-width:86px;font-size:13px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1392,13 +1395,14 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
   function statusPill(st) { var s = DOC_STATUS[st] || [st, 'cream']; return '<span class="pill ' + (s[1] === 'danger' ? '" style="background:var(--danger-l);color:var(--danger)' : s[1] === 'green' ? 'green' : '" style="background:#ECEDF0;color:var(--muted)') + '">' + esc(s[0]) + '</span>'; }
 
   function trackHeader(active) {
-    return '<h1>Track</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="tabNums" aria-pressed="' + (active === 'nums') + '">Numbers</button><button class="chip" id="tabMoney" aria-pressed="' + (active === 'money') + '">£ Money</button><button class="chip" id="tabCust" aria-pressed="' + (active === 'cust') + '">Customers</button></div>';
+    return '<h1>Track</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="tabNums" aria-pressed="' + (active === 'nums') + '">Numbers</button><button class="chip" id="tabMoney" aria-pressed="' + (active === 'money') + '">£ Money</button><button class="chip" id="tabFu" aria-pressed="' + (active === 'fu') + '">Follow-ups</button><button class="chip" id="tabCust" aria-pressed="' + (active === 'cust') + '">Customers</button></div>';
   }
   function bindTrackHeader() {
     var a = $('#tabNums'), b = $('#tabMoney');
     if (a) a.onclick = function () { showTrack(); };
     if (b) b.onclick = function () { showMoney(); };
     var c = $('#tabCust'); if (c) c.onclick = function () { showCustomers(); };
+    var fb = $('#tabFu'); if (fb) fb.onclick = function () { showFollowups(); };
   }
 
   async function showMoney() {
@@ -1445,8 +1449,8 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
     };
   }
 
-  async function showDocEditor(id, type, prefill) {
-    setChrome({ tabs: true, tab: 'track', back: id ? function () { showDocView(id); } : prefill ? showCustomers : showMoney });
+  async function showDocEditor(id, type, prefill, link) {
+    setChrome({ tabs: true, tab: 'track', back: id ? function () { showDocView(id); } : link && link.followupId ? function () { showFollowup(link.followupId); } : prefill ? showCustomers : showMoney });
     var d = { type: type, customer: { name: (prefill && prefill.name) || '', phone: (prefill && prefill.phone) || '', email: (prefill && prefill.email) || '' }, items: [{ desc: '', qty: 1, pricePence: 0 }], deliveryPence: 0, discountPence: 0, notes: '', dueDate: '', issueDate: '' };
     if (id) { app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>'; d = (await api('studio-money', 'get', { id: id })).doc; }
     var items = d.items.map(function (it) { return { desc: it.desc, qty: it.qty, price: it.pricePence ? (it.pricePence / 100).toFixed(2) : '' }; });
@@ -1481,7 +1485,11 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
         var b = this; b.disabled = true; $('#deErr').classList.add('hidden');
         var body = { id: id || undefined, type: d.type, customer: d.customer, items: items.filter(function (it) { return String(it.desc).trim(); }).map(function (it) { return { desc: it.desc, qty: Number(it.qty) || 0, price: it.price || '0' }; }),
           delivery: $('#de_delivery').value || '0', discount: $('#de_discount').value || '0', notes: $('#de_notes').value, dueDate: $('#de_due') ? $('#de_due').value : '', issueDate: d.issueDate || undefined };
-        try { var r = await api('studio-money', 'save', { doc: body }); toast('Saved'); showDocView(r.doc.id); }
+        try {
+          var r = await api('studio-money', 'save', { doc: body }); toast('Saved');
+          if (link && link.followupId) { S.fuData = null; await api('studio-extras', 'fu-stage', { id: link.followupId, stage: 'quoted', quoteId: r.doc.id }).catch(function () {}); }
+          showDocView(r.doc.id);
+        }
         catch (x) { $('#deErr').textContent = x.message; $('#deErr').classList.remove('hidden'); b.disabled = false; }
       };
     }
@@ -1938,7 +1946,7 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
   function studioGo(st, back) {
     if (st.tool) return showTool(st.tool, st.input || {}, { back: back, tab: 'library', intro: 'From your lesson — I’ve set this up for you. Change anything you like, then tap Create.' });
     var map = { goal: showHome, plan: showPlan, money: showMoney, track: function () { showTrack(); }, profile: function () { showProfileForm(false); }, brand: function () { showAccount('brand'); },
-      review: function () { showReview(back); }, customers: showCustomers, image: function () { showMakeImage('', null, back); } };
+      review: function () { showReview(back); }, customers: showCustomers, followups: function () { showFollowups(); }, image: function () { showMakeImage('', null, back); } };
     (map[st.screen] || showHome)();
   }
 
@@ -2100,8 +2108,12 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
       html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn link" id="instHide" style="font-size:13px">Not now</button></div></section>';
     }
     // Money reminders
+    var fus = n.followups || [];
+    html += '<div class="row" style="justify-content:space-between;align-items:baseline;margin-top:16px"><h2 style="margin:0">To chase' + (fus.length + n.reminders.length ? ' (' + (fus.length + n.reminders.length) + ')' : '') + '</h2><button class="btn small ghost" id="logEnq">+ Log enquiry</button></div>' +
+      (fus.length ? '<div class="stack" id="fuToday" style="margin-top:10px">' + fus.map(function (it) { return fuDueCard(it, n.reviewLink); }).join('') + '</div>' : '') +
+      (!fus.length && !n.reminders.length ? '<p class="hint" style="margin:6px 0 0">Nothing to chase today. When someone asks about your business, log it and I’ll remind you to follow up.</p>' : '');
     if (n.reminders.length) {
-      html += '<h2 style="margin-top:16px">To chase</h2><div class="stack">' + n.reminders.map(function (r) {
+      html += '<div class="stack" style="margin-top:10px">' + n.reminders.map(function (r) {
         var d = r.doc, label = r.kind === 'overdue' ? '⚠️ ' + d.number + ' is overdue' : r.kind === 'due' ? d.number + ' is due ' + (d.dueDate === S.nudgeToday ? 'today' : dmy(d.dueDate)) : 'Quote ' + d.number + ' is waiting for a reply';
         var msg = r.kind === 'quote' ? quoteFollowUp(d, n.moneySettings) : reminderText(d, n.moneySettings || {});
         return '<div class="act chase ' + r.kind + '"><div style="flex:1;min-width:0"><b>' + esc(label) + '</b><p>' + esc(d.customer.name) + ' · ' + gbp(d.totalPence) + (r.kind === 'overdue' ? ' · was due ' + dmy(d.dueDate) : '') + '</p><div class="row" style="margin-top:8px">' +
@@ -2110,6 +2122,8 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
       }).join('') + '</div>';
     }
     top.innerHTML = html;
+    $('#logEnq', top).onclick = function () { fuLogSheet(function () { loadNudges(); }); };
+    var ft = $('#fuToday', top); if (ft) bindFuCards(ft, fus, n.reviewLink, function () { loadNudges(); });
     if (bottom && n.lesson) {
       bottom.innerHTML = '<h2>A lesson for you</h2><button class="li" data-lesson="' + esc(n.lesson.id) + '" style="border-color:#CFEBDB;background:#F2FBF6"><span class="ldot" aria-hidden="true">📚</span><div class="t"><b>' + esc(n.lesson.title) + '</b><small>' + esc(n.lesson.reason) + ' · ' + (n.lesson.readMins || 3) + ' min read</small></div><span aria-hidden="true">→</span></button>';
       bindLessonRows(bottom, showHome);
@@ -2362,6 +2376,207 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
       try { var x = await api('studio-extras', 'shop-publish', { on: onOff }); sh = x.shop; toast(onOff ? 'Your page is live 🎉' : 'Page unpublished'); draw(); } catch (e) { toast(e.message); }
     }
     draw();
+  }
+
+  // ───────────── Follow-ups (members follow up with their customers) ─────────────
+  var FU_SOURCES = ['Instagram', 'WhatsApp', 'TikTok', 'Facebook', 'Auntie Tobi', 'Referral', 'Website', 'Walk-in', 'Other'];
+  var FU_KEEP = [[0, 'Off'], [14, 'Every 2 weeks'], [30, 'Monthly'], [60, 'Every 2 months'], [90, 'Every 3 months'], [180, 'Every 6 months'], [365, 'Yearly']];
+  var FU_STAGE = { new: ['Active', 'cream'], quoted: ['Quoted', 'gold'], booked: ['Booked', 'green'], notnow: ['Not now', 'grey'] };
+  var FU_KIND = { fu1: 'Follow up', fu2: 'Second follow-up', checkback: 'Check back in', thanks: 'Say thank you', keep: 'Keep in touch' };
+
+  function fuFirst(n) { return (n || '').trim().split(/\s+/)[0] || 'there'; }
+  function fuAgo(iso) {
+    var d = Math.round((Date.parse(S.fuToday || new Date().toISOString().slice(0, 10)) - Date.parse(String(iso).slice(0, 10))) / 86400000);
+    return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d < 14 ? d + ' days ago' : d < 60 ? Math.round(d / 7) + ' weeks ago' : Math.round(d / 30) + ' months ago';
+  }
+  function fuPeriod(days) { return days >= 330 ? 'a year' : days >= 45 ? Math.round(days / 30) + ' months' : days >= 12 ? Math.round(days / 7) + ' weeks' : days + ' days'; }
+  function fuMessage(it, kind, reviewLink) {
+    var f = fuFirst(it.name), biz = (S.boot.profile && S.boot.profile.businessName) || '', about = it.about || 'your enquiry';
+    var sign = biz ? '\n\nThank you — ' + biz : '';
+    if (kind === 'fu1') return 'Hi ' + f + ', just checking in about ' + about + ' 😊 Did you have any questions, or would you like me to go ahead and book you in or take your order? Happy to help.' + sign;
+    if (kind === 'fu2') return 'Hi ' + f + ', I’m planning my bookings for the next couple of weeks. Would you still like ' + about + '? No worries at all if plans have changed — just let me know 😊' + sign;
+    if (kind === 'checkback') return 'Hi ' + f + ', hope you’re well! You asked about ' + about + ' a little while ago. I have availability coming up — would you like me to send you the details?' + sign;
+    if (kind === 'thanks') return 'Hi ' + f + ', thank you so much for choosing ' + (biz || 'us') + '! 💚 I really hope you loved your ' + about + '.' + (reviewLink ? '\n\nIf you have a minute, an honest review would really help my small business: ' + reviewLink : '') + sign;
+    if (kind === 'keep') {
+      var since = it.bookedAt ? Math.round((Date.now() - Date.parse(it.bookedAt)) / 86400000) : it.keepDays || 30;
+      if (it.keepKind === 'rebook') return 'Hi ' + f + ', hope you’re well! It’s been about ' + fuPeriod(since) + ' since your ' + about + '. Would you like me to save you a slot or take your next order? I have availability on [dates].' + sign;
+      var ideas = [
+        'Hi ' + f + ', hope you’re well! 😊 Just a quick hello from ' + (biz || 'us') + ' — I have availability coming up if you need anything. Any celebrations or plans coming up?',
+        'Hi ' + f + '! I thought you might like to know about something new: [what’s new — a product, menu, style or date]. Would you like the details?',
+        'Hi ' + f + ', hope all is well! A quick tip from ' + (biz || 'us') + ': [a useful tip for your customers]. Let me know if you need anything.',
+        'Hi ' + f + ', thank you again for supporting ' + (biz || 'my small business') + ' 💚 If you know anyone who needs [what you offer], I’d really appreciate a recommendation.'
+      ];
+      return ideas[(it.keepCount || 0) % ideas.length];
+    }
+    return 'Hi ' + f + ',';
+  }
+  function fuPill(stage) { var s = FU_STAGE[stage] || [stage, 'cream']; return '<span class="pill fu-' + stage + '">' + esc(s[0]) + '</span>'; }
+  function fuNextText(it) {
+    if (!it.nextAt) return it.stage === 'booked' ? 'No more reminders' : it.stage === 'notnow' ? 'No reminder set' : 'Follow-ups done';
+    var due = it.nextAt <= (S.fuToday || '');
+    return (due ? 'Due now: ' : 'Next: ') + (FU_KIND[it.dueKind] || 'Reminder').toLowerCase() + (due ? '' : ' on ' + dmy(it.nextAt));
+  }
+
+  // Message sheet: edit, then send on WhatsApp (or copy). Marks the step as done.
+  function fuSendSheet(it, kind, reviewLink, after) {
+    var msg = fuMessage(it, kind, reviewLink);
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="fsT"><h2 id="fsT" style="margin:0">' + esc(FU_KIND[kind] || 'Message') + ': ' + esc(it.name) + '</h2>' +
+      '<p class="hint" style="margin:0">Check it sounds like you and fill in anything in [brackets].</p><textarea id="fsMsg" rows="6" aria-label="Message">' + esc(msg) + '</textarea>' +
+      (it.phone ? '<a class="btn primary block" id="fsWa" target="_blank" rel="noopener" href="' + esc(waLink(it.phone, msg)) + '">Send on WhatsApp</a><button class="btn ghost block" id="fsCopy">Copy instead</button>'
+        : '<button class="btn primary block" id="fsCopy">Copy message</button><p class="hint" style="margin:0">Add their WhatsApp number to send in one tap.</p>') +
+      '<button class="btn link" id="fsX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    var ta = $('#fsMsg', scrim); autosize(ta);
+    ta.oninput = function () { autosize(ta); var a = $('#fsWa', scrim); if (a) a.href = waLink(it.phone, ta.value); };
+    async function done(copied) {
+      if (copied) copyText(ta.value);
+      try { await api('studio-extras', 'fu-sent', { id: it.id, kind: kind }); } catch (x) { toast(x.message); }
+      scrim.remove(); if (!copied) toast('Marked as sent ✅'); if (after) after();
+    }
+    var wa = $('#fsWa', scrim); if (wa) wa.addEventListener('click', function () { setTimeout(function () { done(false); }, 300); });
+    $('#fsCopy', scrim).onclick = function () { done(true); };
+    $('#fsX', scrim).onclick = function () { scrim.remove(); };
+  }
+
+  function fuNotNowSheet(it, after) {
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    var opt = function (days, label) { var d = new Date(); d.setDate(d.getDate() + days); return '<button class="btn ghost block" data-cb="' + d.toISOString().slice(0, 10) + '">' + label + '</button>'; };
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="nnT"><h2 id="nnT" style="margin:0">Not now — check back?</h2><p class="sub">Studio will remind you to get back in touch.</p>' +
+      opt(30, 'In 1 month') + opt(90, 'In 3 months') + opt(180, 'In 6 months') +
+      '<div class="row"><input type="date" id="nnD" style="flex:1" aria-label="Pick a date"><button class="btn ghost" id="nnPick">Set</button></div>' +
+      '<button class="btn ghost block" data-cb="">No reminder</button><button class="btn link" id="nnX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    async function set(date) { try { await api('studio-extras', 'fu-stage', { id: it.id, stage: 'notnow', checkBackAt: date }); toast(date ? 'I’ll remind you on ' + dmy(date) : 'Marked as not now'); } catch (x) { toast(x.message); } scrim.remove(); if (after) after(); }
+    $$('[data-cb]', scrim).forEach(function (b) { b.onclick = function () { set(b.dataset.cb); }; });
+    $('#nnPick', scrim).onclick = function () { var v = $('#nnD', scrim).value; if (v) set(v); };
+    $('#nnX', scrim).onclick = function () { scrim.remove(); };
+  }
+
+  function fuLogSheet(after, prefill) {
+    var p = prefill || {};
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="lgT"><h2 id="lgT" style="margin:0">Log an enquiry</h2><p class="sub" style="margin:0">Takes 10 seconds. Studio reminds you to follow up.</p>' +
+      '<div><label class="f" for="lgN">Name</label><input id="lgN" maxlength="80" value="' + esc(p.name || '') + '" placeholder="e.g. Tolu"></div>' +
+      '<div><label class="f" for="lgP">WhatsApp / phone <span class="opt">(optional)</span></label><input id="lgP" inputmode="tel" maxlength="20" value="' + esc(p.phone || '') + '" placeholder="07700 900123"></div>' +
+      '<div><label class="f" for="lgA">What did they ask about?</label><input id="lgA" maxlength="140" placeholder="e.g. a 40th birthday cake for 12 Nov"></div>' +
+      '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Where did they find you?</span><div class="chips" id="lgS">' + FU_SOURCES.map(function (s, i) { return '<button type="button" class="chip" data-v="' + esc(s) + '" aria-pressed="' + (i === 0) + '">' + esc(s) + '</button>'; }).join('') + '</div></div>' +
+      '<div><label class="f" for="lgV">Rough value <span class="opt">(optional, £)</span></label><input id="lgV" inputmode="decimal" maxlength="10" placeholder="e.g. 120"></div>' +
+      '<div class="err hidden" id="lgE"></div><button class="btn primary block" id="lgSave">Save &amp; remind me</button><button class="btn link" id="lgX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    var src = 'Instagram';
+    $$('#lgS .chip', scrim).forEach(function (c) { c.onclick = function () { src = c.dataset.v; $$('#lgS .chip', scrim).forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); }; });
+    setTimeout(function () { $('#lgN', scrim).focus(); }, 60);
+    $('#lgX', scrim).onclick = function () { scrim.remove(); };
+    $('#lgSave', scrim).onclick = async function () {
+      var b = this; b.disabled = true; $('#lgE', scrim).classList.add('hidden');
+      try {
+        var r = await api('studio-extras', 'fu-add', { item: { name: $('#lgN', scrim).value, phone: $('#lgP', scrim).value, about: $('#lgA', scrim).value, source: src, value: $('#lgV', scrim).value } });
+        scrim.remove(); toast('Logged — I’ll remind you on ' + dmy(r.item.nextAt) + ' ✅'); if (after) after(r.item);
+      } catch (x) { $('#lgE', scrim).textContent = x.message; $('#lgE', scrim).classList.remove('hidden'); b.disabled = false; }
+    };
+  }
+
+  function fuDueCard(it, reviewLink) {
+    var label = FU_KIND[it.dueKind] + ': ' + it.name;
+    var sub = it.dueKind === 'thanks' ? 'Booked ' + fuAgo(it.bookedAt) : it.dueKind === 'keep' ? 'Last booked ' + fuAgo(it.bookedAt) : 'Asked ' + fuAgo(it.createdAt);
+    return '<div class="act chase fu" data-fu="' + esc(it.id) + '"><div style="flex:1;min-width:0"><b>' + esc(label) + '</b><p>' + esc((it.about ? it.about + ' · ' : '') + sub + (it.source ? ' · ' + it.source : '')) + '</p>' +
+      '<div class="row wrap" style="margin-top:8px"><button class="btn small primary" data-fumsg="' + esc(it.id) + '">' + (it.dueKind === 'thanks' ? 'Write thank-you' : 'Write message') + '</button>' +
+      (it.dueKind === 'fu1' || it.dueKind === 'fu2' || it.dueKind === 'checkback' ? '<button class="btn small ghost" data-fubook="' + esc(it.id) + '">Booked 🎉</button><button class="btn small ghost" data-funo="' + esc(it.id) + '">Not now</button>' : '') +
+      '<button class="btn link" data-fusnz="' + esc(it.id) + '" style="font-size:13px">Tomorrow</button></div></div></div>';
+  }
+  function bindFuCards(root, list, reviewLink, refresh) {
+    var find = function (id) { return list.filter(function (x) { return x.id === id; })[0]; };
+    $$('[data-fumsg]', root).forEach(function (b) { b.onclick = function () { var it = find(b.dataset.fumsg); fuSendSheet(it, it.dueKind, reviewLink, refresh); }; });
+    $$('[data-fubook]', root).forEach(function (b) { b.onclick = async function () { try { await api('studio-extras', 'fu-stage', { id: b.dataset.fubook, stage: 'booked' }); toast('Brilliant — booked! 🎉 Added to Track.'); refresh(); } catch (x) { toast(x.message); } }; });
+    $$('[data-funo]', root).forEach(function (b) { b.onclick = function () { fuNotNowSheet(find(b.dataset.funo), refresh); }; });
+    $$('[data-fusnz]', root).forEach(function (b) { b.onclick = async function () { try { await api('studio-extras', 'fu-snooze', { id: b.dataset.fusnz, days: 1 }); toast('I’ll remind you tomorrow'); refresh(); } catch (x) { toast(x.message); } }; });
+  }
+
+  // Track → Follow-ups
+  async function showFollowups(filter) {
+    filter = filter || S.fuFilter || 'due'; S.fuFilter = filter;
+    setChrome({ tabs: true, tab: 'track' });
+    app.innerHTML = '<main>' + trackHeader('fu') + '<div id="fuBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindTrackHeader();
+    var r; try { r = await api('studio-extras', 'fu-list'); } catch (x) { if ($('#fuBox')) $('#fuBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#fuBox')) return;
+    S.fuToday = r.today; S.fuData = r;
+    var st = r.stats, items = r.items;
+    var counts = { due: r.due.length, active: items.filter(function (i) { return i.stage === 'new' || i.stage === 'quoted'; }).length, booked: items.filter(function (i) { return i.stage === 'booked'; }).length, notnow: items.filter(function (i) { return i.stage === 'notnow'; }).length, all: items.length };
+    var shown = filter === 'due' ? r.due : filter === 'active' ? items.filter(function (i) { return i.stage === 'new' || i.stage === 'quoted'; }) : filter === 'all' ? items : items.filter(function (i) { return i.stage === filter; });
+    $('#fuBox').innerHTML =
+      '<div class="row" style="justify-content:space-between;margin-bottom:12px"><p class="sub" style="margin:0;flex:1">Everyone who asked about your business, and when to follow up.</p><button class="btn small primary" id="fuNew">+ Log enquiry</button></div>' +
+      '<section class="card stack" style="margin-bottom:12px"><b>This month</b><div class="wk"><div><b>' + st.enquiries + '</b><span>Enquiries</span></div><div><b>' + st.booked + '</b><span>Booked</span></div><div><b>' + st.rate + '%</b><span>Booked rate</span></div></div>' +
+        (st.bookedValuePence ? '<div class="hint" style="margin:0">Booked value: <b>' + gbp(st.bookedValuePence) + '</b> (from the rough values you entered)</div>' : '') +
+        (st.bySource.length ? '<div class="hint" style="margin:0">Where enquiries came from: ' + st.bySource.slice(0, 4).map(function (s) { return '<b>' + esc(s.source) + '</b> ' + s.enquiries + (s.booked ? ' (' + s.booked + ' booked)' : ''); }).join(' · ') + '</div>' : '') + '</section>' +
+      '<div class="chips" style="margin-bottom:12px">' + [['due', 'Due'], ['active', 'Active'], ['booked', 'Booked'], ['notnow', 'Not now'], ['all', 'All']].map(function (f) { return '<button class="chip" data-fuf="' + f[0] + '" aria-pressed="' + (f[0] === filter) + '">' + f[1] + ' (' + counts[f[0]] + ')</button>'; }).join('') + '</div>' +
+      (filter === 'due' ? (shown.length ? '<div class="stack" id="fuDue">' + shown.map(function (i) { return fuDueCard(i, r.reviewLink); }).join('') + '</div>' : '<div class="empty">Nothing to follow up today 🎉' + (counts.active ? '' : '<br>Log your next enquiry and Studio will remind you.') + '</div>')
+        : (shown.length ? '<div class="list">' + shown.map(function (i) { return '<button class="li" data-fuopen="' + esc(i.id) + '"><div class="t"><b>' + esc(i.name) + '</b><small>' + esc((i.about ? i.about + ' · ' : '') + i.source) + '</small><small class="snip">' + esc(fuNextText(i)) + '</small></div>' + fuPill(i.stage) + '</button>'; }).join('') + '</div>' : '<div class="empty">Nobody here yet.</div>')) +
+      '<button class="btn link" id="fuSet" style="margin-top:14px">⚙️ Default timings: follow up after ' + r.defaults.gaps.join(' then ') + ' days · keep in touch ' + esc((FU_KEEP.filter(function (k) { return k[0] === r.defaults.keepDays; })[0] || [0, 'off'])[1].toLowerCase()) + '</button>' +
+      '<p class="hint">Studio never messages anyone for you — it reminds you and writes the message, and you press send. Only you can see this list.</p>';
+    $('#fuNew').onclick = function () { fuLogSheet(function () { showFollowups(); }); };
+    $$('[data-fuf]').forEach(function (b) { b.onclick = function () { showFollowups(b.dataset.fuf); }; });
+    $$('[data-fuopen]').forEach(function (b) { b.onclick = function () { showFollowup(b.dataset.fuopen); }; });
+    var due = $('#fuDue'); if (due) { bindFuCards(due, r.due, r.reviewLink, function () { showFollowups(); }); $$('[data-fu]', due).forEach(function (c) { c.querySelector('b').style.cursor = 'pointer'; c.querySelector('b').onclick = function () { showFollowup(c.dataset.fu); }; }); }
+    $('#fuSet').onclick = function () { fuDefaultsSheet(r.defaults, function () { showFollowups(); }); };
+  }
+
+  function fuTimingFields(gaps, keepDays, keepKind, pre) {
+    var g1 = gaps[0] || 2, g2 = gaps.length > 1 ? gaps[1] : 0;
+    return '<div class="row"><div style="flex:1"><label class="f" for="' + pre + 'g1">First follow-up after</label><select id="' + pre + 'g1">' + [1, 2, 3, 5, 7].map(function (n) { return '<option value="' + n + '"' + (n === g1 ? ' selected' : '') + '>' + n + ' day' + (n > 1 ? 's' : '') + '</option>'; }).join('') + (gaps.length === 0 ? '<option value="0" selected>No follow-ups</option>' : '<option value="0">No follow-ups</option>') + '</select></div>' +
+      '<div style="flex:1"><label class="f" for="' + pre + 'g2">Then after</label><select id="' + pre + 'g2"><option value="0"' + (g2 === 0 ? ' selected' : '') + '>No second one</option>' + [3, 5, 7, 10, 14].map(function (n) { return '<option value="' + n + '"' + (n === g2 ? ' selected' : '') + '>' + n + ' days</option>'; }).join('') + '</select></div></div>' +
+      '<div class="row"><div style="flex:1"><label class="f" for="' + pre + 'kd">After they book, keep in touch</label><select id="' + pre + 'kd">' + FU_KEEP.map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === keepDays ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></div>' +
+      '<div style="flex:1"><label class="f" for="' + pre + 'kk">Message type</label><select id="' + pre + 'kk"><option value="ideas"' + (keepKind !== 'rebook' ? ' selected' : '') + '>Friendly ideas</option><option value="rebook"' + (keepKind === 'rebook' ? ' selected' : '') + '>Rebook reminder</option></select></div></div>';
+  }
+  function fuReadTiming(root, pre) {
+    var g1 = Number($('#' + pre + 'g1', root).value), g2 = Number($('#' + pre + 'g2', root).value);
+    return { gaps: g1 ? (g2 ? [g1, g2] : [g1]) : [], keepDays: Number($('#' + pre + 'kd', root).value), keepKind: $('#' + pre + 'kk', root).value };
+  }
+  function fuDefaultsSheet(d, after) {
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="fdT"><h2 id="fdT" style="margin:0">Default timings</h2><p class="sub" style="margin:0">Used for new enquiries. You can still change them for each person.</p>' +
+      fuTimingFields(d.gaps, d.keepDays, d.keepKind, 'fd') + '<p class="hint" style="margin:0">“Rebook reminder” suits services people repeat (hair, lashes, cleaning). “Friendly ideas” rotates keep-in-touch messages: a hello, what’s new, a tip, and a referral ask.</p>' +
+      '<button class="btn primary block" id="fdSave">Save</button><button class="btn link" id="fdX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    $('#fdX', scrim).onclick = function () { scrim.remove(); };
+    $('#fdSave', scrim).onclick = async function () {
+      var t = fuReadTiming(scrim, 'fd'); if (!t.gaps.length) t.gaps = [2];
+      try { await api('studio-extras', 'fu-defaults', { defaults: t }); toast('Defaults saved'); scrim.remove(); if (after) after(); } catch (x) { toast(x.message); }
+    };
+  }
+
+  async function showFollowup(id) {
+    setChrome({ tabs: true, tab: 'track', back: function () { showFollowups(); } });
+    var r = S.fuData; if (!r) { try { r = S.fuData = await api('studio-extras', 'fu-list'); S.fuToday = r.today; } catch (x) { return showFollowups(); } }
+    var it = r.items.filter(function (x) { return x.id === id; })[0]; if (!it) return showFollowups();
+    function refresh() { S.fuData = null; api('studio-extras', 'fu-list').then(function (x) { S.fuData = x; S.fuToday = x.today; showFollowup(id); }).catch(function () { showFollowups(); }); }
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1 style="font-size:24px">' + esc(it.name) + '</h1><p class="sub" style="margin:2px 0 0">' + esc(it.source) + ' · asked ' + fuAgo(it.createdAt) + '</p></div>' + fuPill(it.stage) + '</div>' +
+      '<div class="note" style="margin:12px 0">' + esc(fuNextText(it)) + (it.nextAt && it.nextAt <= r.today ? ' <button class="btn small primary" id="fdMsg" style="margin-left:6px">Write message</button>' : '') + '</div>' +
+      '<div class="row wrap" style="margin-bottom:6px">' + (it.phone ? '<a class="btn small ghost" target="_blank" rel="noopener" href="' + esc(waLink(it.phone, 'Hi ' + fuFirst(it.name) + ', ')) + '">WhatsApp</a>' : '') +
+        (it.stage !== 'booked' ? '<button class="btn small gold" id="fdBook">Booked 🎉</button>' : '') + (it.stage !== 'booked' && !it.quoteId ? '<button class="btn small ghost" id="fdQuote">Create quote</button>' : '') +
+        (it.stage === 'new' || it.stage === 'quoted' ? '<button class="btn small ghost" id="fdNo">Not now</button>' : '<button class="btn small ghost" id="fdAct">Make active again</button>') + '</div>' +
+      '<h2>Details</h2><div class="card stack"><div><label class="f" for="fdN">Name</label><input id="fdN" maxlength="80" value="' + esc(it.name) + '"></div>' +
+        '<div><label class="f" for="fdP">WhatsApp / phone</label><input id="fdP" inputmode="tel" maxlength="20" value="' + esc(it.phone) + '"></div>' +
+        '<div><label class="f" for="fdA">What they asked about</label><input id="fdA" maxlength="140" value="' + esc(it.about) + '"></div>' +
+        '<div class="row"><div style="flex:1"><label class="f" for="fdS">Where they found you</label><select id="fdS">' + FU_SOURCES.map(function (s) { return '<option' + (s === it.source ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('') + '</select></div><div style="flex:1"><label class="f" for="fdV">Rough value (£)</label><input id="fdV" inputmode="decimal" value="' + (it.valuePence ? (it.valuePence / 100).toFixed(0) : '') + '"></div></div>' +
+        '<div><label class="f" for="fdNotes">Notes <span class="opt">(optional)</span></label><textarea id="fdNotes" rows="2" maxlength="500">' + esc(it.notes || '') + '</textarea></div></div>' +
+      '<h2>Reminders for ' + esc(fuFirst(it.name)) + '</h2><div class="card stack">' + fuTimingFields(it.gaps || [], it.keepDays, it.keepKind, 'pt') + '</div>' +
+      '<button class="btn primary block" id="fdSave" style="margin-top:14px">Save changes</button>' +
+      ((it.history || []).length ? '<h2>History</h2><div class="card"><ul class="hist">' + it.history.map(function (h) { return '<li><span>' + esc(dmy(h.at.slice(0, 10))) + '</span>' + esc(h.what) + '</li>'; }).join('') + '</ul></div>' : '') +
+      '<button class="btn link danger" id="fdDel" style="margin-top:14px">Delete ' + esc(fuFirst(it.name)) + ' from my list</button></main>';
+    var m = $('#fdMsg'); if (m) m.onclick = function () { fuSendSheet(it, it.dueKind, r.reviewLink, refresh); };
+    var bk = $('#fdBook'); if (bk) bk.onclick = async function () { try { await api('studio-extras', 'fu-stage', { id: id, stage: 'booked' }); toast('Booked! 🎉 Added to Track.'); refresh(); } catch (x) { toast(x.message); } };
+    var no = $('#fdNo'); if (no) no.onclick = function () { fuNotNowSheet(it, refresh); };
+    var ac = $('#fdAct'); if (ac) ac.onclick = async function () { try { await api('studio-extras', 'fu-stage', { id: id, stage: 'new' }); refresh(); } catch (x) { toast(x.message); } };
+    var qt = $('#fdQuote'); if (qt) qt.onclick = function () { showDocEditor(null, 'quote', { name: it.name, phone: it.phone }, { followupId: id }); };
+    $('#fdSave').onclick = async function () {
+      var b = this; b.disabled = true;
+      var t = fuReadTiming(app, 'pt');
+      try { await api('studio-extras', 'fu-update', { id: id, patch: { name: $('#fdN').value, phone: $('#fdP').value, about: $('#fdA').value, source: $('#fdS').value, value: $('#fdV').value, notes: $('#fdNotes').value, gaps: t.gaps, keepDays: t.keepDays, keepKind: t.keepKind } }); toast('Saved'); refresh(); }
+      catch (x) { toast(x.message); b.disabled = false; }
+    };
+    $('#fdDel').onclick = async function () { if (!confirm('Delete ' + it.name + ' and their history from your follow-ups?')) return; try { await api('studio-extras', 'fu-delete', { id: id }); toast('Deleted'); S.fuData = null; showFollowups(); } catch (x) { toast(x.message); } };
   }
 
   // ───────────── account & billing ─────────────

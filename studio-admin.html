@@ -127,7 +127,7 @@ tbody tr:hover{background:#FFFCF5}
   var RES_STATUS = { published: ['Published', 'p-active'], draft: ['Draft', 'p-pending'], planned: ['Coming soon', 'p-inactive'] };
   var RES_TAGS = { all: 'Everyone', food: 'Food & catering', beauty: 'Beauty & hair', fashion: 'Fashion', events: 'Events', photo: 'Photo & creative', services: 'Services', retail: 'Products & retail' };
   var RES_STUDIO = [['', 'None'], ['tool:bio', 'Tool: Bio & business description'], ['tool:message', 'Tool: Customer message assistant'], ['tool:caption', 'Tool: Post caption'], ['tool:reel', 'Tool: Reel script'], ['tool:ideas', 'Tool: Content ideas'], ['tool:promo', 'Tool: Promotion / offer'], ['tool:planner', 'Tool: Content planner'], ['tool:oneclick', 'Tool: One-click post'],
-    ['screen:goal', 'Screen: Today (weekly goal)'], ['screen:plan', 'Screen: Plan (calendar)'], ['screen:track', 'Screen: Track (numbers)'], ['screen:money', 'Screen: Money (invoices)'], ['screen:profile', 'Screen: Business profile'], ['screen:brand', 'Screen: Account (brand kit)']];
+    ['screen:goal', 'Screen: Today (weekly goal)'], ['screen:plan', 'Screen: Plan (calendar)'], ['screen:track', 'Screen: Track (numbers)'], ['screen:money', 'Screen: Money (invoices)'], ['screen:profile', 'Screen: Business profile'], ['screen:brand', 'Screen: Account (brand kit)'], ['screen:followups', 'Screen: Follow-ups'], ['screen:customers', 'Screen: Customers'], ['screen:review', 'Screen: Review link & QR'], ['screen:image', 'Screen: Make an image']];
   function resPill(m, day) {
     var s = RES_STATUS[m.status] || [m.status, ''];
     if (m.status === 'published' && m.publishAt && m.publishAt > day) s = ['Scheduled ' + d(m.publishAt), 'p-pending'];
