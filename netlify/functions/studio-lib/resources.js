@@ -151,7 +151,7 @@ async function lessonFor(email, id) {
   const p = await getProgress(email);
   // Record the open (once a day per member counts as a view).
   const day = today();
-  const firstToday = !p.opened[id] || p.opened[id].slice(0, 10) !== day;
+  const firstToday = !p.opened[id] || core.dayKey(new Date(p.opened[id])) !== day; // UK date of the last open
   await cas(progressKey(email), cur => {
     const d = cur || { completed: {}, saved: {}, opened: {}, checks: {}, answers: {} };
     d.opened = d.opened || {}; d.opened[id] = core.nowIso(); d.last = id; d.lastAt = d.opened[id];

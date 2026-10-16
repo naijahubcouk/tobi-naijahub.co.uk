@@ -15,6 +15,20 @@ const benefits = require('../benefits');
 const notify = require('../notify');
 const market = require('../market');
 const todo = require('../todo');
+const directory = require('../directory');
+
+// Instagram for a member: their Business Studio profile → one you added in Admin → their Auntie Tobi listing.
+const igClean = v => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/[/?#].*$/, '');
+async function igOf(event, email, profile) {
+  const fromProfile = igClean(profile && profile.instagram);
+  if (fromProfile) return { handle: fromProfile, source: 'profile' };
+  const saved = await getJson(`admin-ig/${enc(email)}`);
+  if (saved && saved.handle) return { handle: saved.handle, source: 'admin' };
+  let b = null;
+  try { b = (profile && profile.listingSlug ? await directory.bySlug(event, profile.listingSlug) : null) || await directory.byEmail(event, email); } catch (e) { /* directory unavailable */ }
+  const fromListing = igClean(b && b.ig);
+  return fromListing ? { handle: fromListing, source: 'listing' } : null;
+}
 function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
 
 // Business Club status. 'none' = not a Club member (e.g. Business Studio Pro-only customer).
@@ -388,6 +402,22 @@ exports.handler = handler(async (ctx) => {
       let lessonsReady = [];
       try { lessonsReady = (await resources.adminDashboard()).readyToPublish || []; } catch (e) { console.error('[studio] todo lessons failed', e && e.message); }
       const view = await todo.refresh({ members, settings, profiles, alerts, lessonsReady });
+      // Instagram link for every task about a member (and Marketplace listings linked to one).
+      const igs = {};
+      const items = [...view.overdue, ...view.todayItems];
+      for (const it of items) {
+        if (it.kind === 'market' && it.meta && it.meta.id) {
+          try {
+            const r = await market.get(it.meta.id); const f = (r && (r.draft || r.live)) || {};
+            if (r && r.owner) it.meta.email = r.owner;
+            else if (f.bizSlug) { const b = await directory.bySlug(ctx.event, f.bizSlug); const h = igClean(b && b.ig); if (h) it.ig = { handle: h, source: 'listing' }; }
+          } catch (e) { /* listing gone */ }
+        }
+        const em = it.meta && it.meta.email;
+        if (!em || it.ig) continue;
+        if (!(em in igs)) igs[em] = await igOf(ctx.event, em, profiles[em] || await getJson(`profiles/${enc(em)}`));
+        it.ig = igs[em] || { handle: '', source: 'none', email: em };
+      }
       return { ...view, defs: await todo.getDefs() };
     }
     case 'todo-mark': {
@@ -411,6 +441,14 @@ exports.handler = handler(async (ctx) => {
       if (how === 'done' && it.kind === 'alert' && it.meta && /^alerts\/[\w:.\-]+$/.test(it.meta.alertKey || '')) await core.del(it.meta.alertKey).catch(() => {});
       await core.audit(actor, `todo_${how}`, { key: it.key });
       return { item: it };
+    }
+    case 'member-ig-set': {
+      const email = requireEmail(body.email);
+      const handle = igClean(body.handle);
+      if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) throw new HttpError(400, 'invalid', 'That doesn’t look like an Instagram handle — e.g. toluskitchen_leeds');
+      await core.setJson(`admin-ig/${enc(email)}`, { handle, at: core.nowIso(), by: actor });
+      await core.audit(actor, 'member_ig_set', { email, handle });
+      return { handle };
     }
     case 'todo-share-undo': {
       const email = requireEmail(body.email);

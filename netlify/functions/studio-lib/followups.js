@@ -40,19 +40,20 @@ async function defaults(email) {
 }
 
 // Works out what is due next for one person.
+// UK date of a timestamp (a date on its own is kept as it is).
+const ukDate = v => { v = String(v || ''); return v.length > 10 ? core.dayKey(new Date(v)) : v.slice(0, 10); };
 function schedule(it) {
-  const created = it.createdAt.slice(0, 10);
   if (it.stage === 'booked') {
-    const booked = (it.bookedAt || it.createdAt).slice(0, 10);
+    const booked = ukDate(it.bookedAt || it.createdAt);
     if (!it.thankSent) return { nextAt: addDays(booked, 1), kind: 'thanks' };
     if (!it.keepDays) return { nextAt: '', kind: '' };
-    const base = (it.lastKeepAt || it.thankSentAt || it.bookedAt || it.createdAt).slice(0, 10);
+    const base = ukDate(it.lastKeepAt || it.thankSentAt || it.bookedAt || it.createdAt);
     return { nextAt: addDays(base, it.keepDays), kind: 'keep' };
   }
   if (it.stage === 'notnow') return it.checkBackAt ? { nextAt: it.checkBackAt, kind: 'checkback' } : { nextAt: '', kind: '' };
   const step = it.step || 0;
   if (step >= it.gaps.length) return { nextAt: '', kind: '' };
-  const base = (it.lastContactAt || it.createdAt).slice(0, 10);
+  const base = ukDate(it.lastContactAt || it.createdAt);
   return { nextAt: addDays(base, it.gaps[step]), kind: step === 0 ? 'fu1' : 'fu2' };
 }
 function withNext(it) {
