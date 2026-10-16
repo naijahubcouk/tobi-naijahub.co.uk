@@ -48,20 +48,38 @@ async function deleteDef(email, id) {
   });
 }
 
+const fuTitle = it => `${FU_KIND[it.dueKind] || 'Follow up'} ${it.name || 'your customer'}${it.about ? ` — ${it.about}` : ''}`;
+const invTitle = (d, verb) => {
+  const who = (d.customer && d.customer.name) || d.customerName || '';
+  const bits = [who, d.totalPence ? gbp(d.totalPence) : ''].filter(Boolean).join(', ');
+  return `${verb} invoice ${d.number}${bits ? ` (${bits})` : ''}`;
+};
+
 // Brings the list up to date and returns the view.
-async function refresh(email, member, access) {
+// opts.full → the whole list (coming up for 30 days, done for 30 days); otherwise coming up for 7 days.
+async function refresh(email, member, access, opts) {
+  opts = opts || {};
   const day = core.dayKey();
-  const want = {};
+  const horizon = addDays(day, opts.full ? 30 : 7);
+  const want = {}, upcoming = [];
   const add = (k, kind, title, meta) => { want[k] = { key: k, kind, title, auto: true, meta: meta || {} }; };
 
-  for (const it of (await fu.due(email)).due) {
-    const what = FU_KIND[it.dueKind] || 'Follow up';
-    add(`fu:${it.id}:${it.dueKind}:${it.nextAt}`, 'followup', `${what} ${it.name || 'your customer'}${it.about ? ` — ${it.about}` : ''}`, { id: it.id });
+  const fl = await fu.list(email);
+  for (const it of fl.items) {
+    if (!it.nextAt) continue;
+    if (it.nextAt <= day) add(`fu:${it.id}:${it.dueKind}:${it.nextAt}`, 'followup', fuTitle(it), { id: it.id });
+    else if (it.nextAt <= horizon) upcoming.push({ key: `fu:${it.id}:${it.dueKind}:${it.nextAt}`, kind: 'followup', title: fuTitle(it), due: it.nextAt, auto: true, upcoming: true, meta: { id: it.id } });
   }
+  try {
+    const docs = ((await money.list(email)) || {}).docs || [];
+    for (const d of docs) if (d.type === 'invoice' && d.status === 'sent' && d.dueDate && d.dueDate > day && d.dueDate <= horizon) {
+      upcoming.push({ key: `invdue:${d.id}`, kind: 'invoice', title: invTitle(d, 'Payment due:'), due: d.dueDate, auto: true, upcoming: true, meta: { id: d.id } });
+    }
+  } catch (e) { /* money not set up */ }
   for (const r of await money.reminders(email, { all: true })) {
     if (r.kind !== 'overdue') continue;
     const d = r.doc;
-    add(`inv:${d.id}`, 'invoice', `Chase invoice ${d.number}${d.customer && d.customer.name ? ` (${d.customer.name}` : ' ('}${d.totalPence ? `, ${gbp(d.totalPence)}` : ''})`, { id: d.id });
+    add(`inv:${d.id}`, 'invoice', invTitle(d, 'Chase'), { id: d.id });
   }
   if (access && access.membershipActive && member) {
     const b = await benefits.getYear(email, member);
@@ -96,30 +114,56 @@ async function refresh(email, member, access) {
     // Automatic items tick themselves once dealt with.
     for (const [k, it] of Object.entries(items)) if (it.auto && !it.doneAt && !it.skippedAt && !want[k]) { it.doneAt = now; it.autoDone = true; }
     const cutoff = addDays(day, -30);
-    for (const [k, it] of Object.entries(items)) if ((it.doneAt || it.skippedAt) && (it.doneAt || it.skippedAt).slice(0, 10) < cutoff) delete items[k];
+    for (const [k, it] of Object.entries(items)) if ((it.doneAt || it.skippedAt) && (it.doneAt || it.skippedAt).slice(0, 10) < cutoff && (it.due || '') < day) delete items[k];
     s.lastGen = now;
-    view = makeView(s, day);
+    // Coming up: your one-off tasks with a future date, and weekly tasks on their days.
+    // (Daily and weekday tasks are shown once under Repeating tasks, not on every future day.)
+    const future = upcoming.slice();
+    for (const d of s.defs || []) {
+      const days = [];
+      if (d.repeat === 'once') { if (d.date > day && d.date <= horizon) days.push(d.date); }
+      else if (d.repeat === 'weekly') for (let x = addDays(day, 1); x <= horizon; x = addDays(x, 1)) if (todo.defAppliesOn(d, x)) days.push(x);
+      for (const x of days) {
+        const k = `c:${d.id}:${x}`, it = items[k];
+        if (it && (it.doneAt || it.skippedAt)) continue;
+        future.push(it ? { ...it, upcoming: true } : { key: k, kind: 'task', title: d.title, auto: false, due: x, upcoming: true, meta: { def: d.id, repeat: d.repeat } });
+      }
+    }
+    view = makeView(s, day, future, opts.full);
     return s;
   });
   return view;
 }
 
 const ORDER = { followup: 1, invoice: 2, priority: 3, task: 4 };
-function makeView(s, day) {
+function makeView(s, day, future, full) {
   const all = Object.values(s.items || {});
   const sort = (a, b) => (a.due || '').localeCompare(b.due || '') || (ORDER[a.kind] || 9) - (ORDER[b.kind] || 9) || (a.createdAt || '').localeCompare(b.createdAt || '');
   const open = all.filter(it => !it.doneAt && !it.skippedAt);
   const overdue = open.filter(it => it.due < day).sort(sort).map(it => ({ ...it, daysOverdue: daysBetween(it.due, day) }));
-  const todayItems = open.filter(it => it.due >= day).sort(sort);
+  const todayItems = open.filter(it => it.due === day).sort(sort);
   const doneToday = all.filter(it => ((it.doneAt || it.skippedAt) || '').slice(0, 10) === day).sort((a, b) => (b.doneAt || b.skippedAt).localeCompare(a.doneAt || a.skippedAt));
-  return { today: day, overdue, todayItems, doneToday, defs: (s.defs || []).filter(d => d.repeat !== 'once'), counts: { overdue: overdue.length, today: todayItems.length, done: doneToday.filter(i => i.doneAt).length } };
+  const comingUp = (future || []).sort(sort);
+  const out = { today: day, overdue, todayItems, doneToday, comingUp, defs: (s.defs || []).filter(d => d.repeat !== 'once'),
+    counts: { overdue: overdue.length, today: todayItems.length, done: doneToday.filter(i => i.doneAt).length, comingUp: comingUp.length } };
+  if (full) out.done = all.filter(it => it.doneAt || it.skippedAt).sort((a, b) => (b.doneAt || b.skippedAt).localeCompare(a.doneAt || a.skippedAt)).slice(0, 200);
+  return out;
 }
 
 async function mark(email, member, k, how) {
   let item;
   await cas(key(email), cur => {
-    if (!cur || !cur.items[k]) throw new HttpError(404, 'not_found', 'That task isn’t on your list any more.');
-    const it = { ...cur.items[k] }, now = core.nowIso();
+    let base = cur && cur.items[k];
+    if (!base && cur) {
+      // Ticking (or skipping) one of your own tasks before its day.
+      const m = /^c:([A-Za-z0-9]+):(\d{4}-\d{2}-\d{2})$/.exec(k);
+      const def = m && (cur.defs || []).find(d => d.id === m[1]);
+      if (def && m[2] > core.dayKey() && m[2] <= addDays(core.dayKey(), 400) && todo.defAppliesOn(def, m[2])) {
+        base = { key: k, kind: 'task', title: def.title, auto: false, due: m[2], createdAt: core.nowIso(), meta: { def: def.id, repeat: def.repeat } };
+      }
+    }
+    if (!base) throw new HttpError(404, 'not_found', 'That task isn’t on your list any more.');
+    const it = { ...base }, now = core.nowIso();
     if (how === 'done') { it.doneAt = now; delete it.skippedAt; it.autoDone = false; }
     else if (how === 'skip') { it.skippedAt = now; delete it.doneAt; }
     else if (how === 'undo') { delete it.doneAt; delete it.skippedAt; delete it.autoDone; }
