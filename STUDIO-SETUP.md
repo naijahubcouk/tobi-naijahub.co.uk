@@ -265,3 +265,10 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - **Automatic tasks** (tick themselves once dealt with): verification requests, Marketplace reviews, lessons waiting for approval (grouped), Spotlights scheduled up to today, memberships ending within 14 days (with a WhatsApp renewal message), new alerts (marking one done also dismisses the alert), and shares owed — only the **5 members who've waited longest**, with +Story / +Repost / +Discovery buttons; the rest come up as those are done.
 - **Your tasks:** one-off (a date), every day, weekdays, or one day a week. Days you didn't open Admin are filled in (up to 14 days) so missed ones show as overdue. Stopping a repeating task removes its open copies.
 - No email — it's in Admin only. Stored in `admin-todo/state` and `admin-todo/defs`.
+
+## 7l. Members' to-do list (Business Studio → Today)
+
+- A **📋 My to-do list** card on Today: **Overdue** (not ticked on an earlier day — stays until ticked or skipped), **Today**, **+ Add a task** (once / every day / weekdays / one day a week), **Done today**.
+- Also lists, automatically: **follow-ups due** (from their follow-up list), **overdue invoices**, and **Check-Up priorities** (Club). These tick themselves when dealt with; ticking a priority here also ticks it on the priorities card.
+- Missed days (up to 14) are filled in so missed tasks show as overdue. Stored per member in `mtodo/<email>`.
+- The **8am reminder** is now personal for each member with reminders on: “You have 4 tasks today, 1 overdue 💚”.
