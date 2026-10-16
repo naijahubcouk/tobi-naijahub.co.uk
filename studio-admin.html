@@ -337,6 +337,7 @@ tbody tr:hover{background:#FFFCF5}
       spotlight: function (x) { return x.spotlight !== 'done'; },
       ending: function (x) { return x.daysLeft <= 60 && (x.spotlight !== 'done' || x.prog.collabs.due); },
       longest: function () { return true; },
+      verify: function (x) { return !!x.verify; },
       checkup: function (x) { return !x.checkup; },
       setup: function (x) { return !x.featured || !x.marketplace; }
     };
@@ -359,7 +360,7 @@ tbody tr:hover{background:#FFFCF5}
         '<div class="row" style="margin-top:10px;align-items:flex-end">' + [['storiesWeek', 'Stories / week'], ['repostsWeek', 'Reposts / week'], ['discoveryMonth', 'Discovery / month'], ['collabsYear', 'Collabs / year'], ['spotlightYear', 'Spotlight / year']].map(function (f) {
           return '<div style="width:120px"><label for="tg_' + f[0] + '">' + f[1] + '</label><input type="number" min="0" max="50" id="tg_' + f[0] + '" value="' + t[f[0]] + '"></div>';
         }).join('') + '<button class="btn primary small" id="tgSave">Save targets</button></div></details>' +
-      '<div class="row" style="margin:14px 0 10px">' + [['all', 'All'], ['week', 'Due this week'], ['month', 'Due this month'], ['collabs', 'Collabs due'], ['spotlight', 'Spotlight not done'], ['ending', 'Ends ≤ 60 days, still owed'], ['longest', 'Longest since shared'], ['checkup', 'Check-Up not done'], ['setup', 'Featured/Marketplace to set up']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
+      '<div class="row" style="margin:14px 0 10px">' + [['all', 'All'], ['verify', '🏛️ Verification requests'], ['week', 'Due this week'], ['month', 'Due this month'], ['collabs', 'Collabs due'], ['spotlight', 'Spotlight not done'], ['ending', 'Ends ≤ 60 days, still owed'], ['longest', 'Longest since shared'], ['checkup', 'Check-Up not done'], ['setup', 'Featured/Marketplace to set up']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
       '<div class="tw"><table><thead><tr><th>Member</th><th>Ends</th><th>This week</th><th>This month</th><th>This year</th><th>Featured</th><th>Market</th><th>Badge</th><th>Last shared</th><th>Check-Up</th><th>Studio use</th><th></th></tr></thead><tbody>' +
       (list.length ? list.map(function (x) {
         var p = x.prog;
@@ -368,7 +369,7 @@ tbody tr:hover{background:#FFFCF5}
           '<td style="white-space:nowrap">' + benProg(p, 'stories', true) + '<br>' + benProg(p, 'reposts', true) + '</td>' +
           '<td style="white-space:nowrap">' + benProg(p, 'discovery', true) + '</td>' +
           '<td style="white-space:nowrap">' + benProg(p, 'collabs', true) + '<br>' + benProg(p, 'spotlight', true) + (x.spotlight === 'scheduled' ? '<div class="muted">Spotlight scheduled' + (x.spotlightDate ? ' ' + esc(d(x.spotlightDate)) : '') + '</div>' : '') + '</td>' +
-          '<td>' + benYes(x.featured) + '</td><td>' + benYes(x.marketplace) + '</td><td>' + benBadge(x.badge) + '</td>' +
+          '<td>' + benYes(x.featured) + '</td><td>' + benYes(x.marketplace) + '</td><td>' + benBadge(x.badge) + (x.verify ? '<div><span class="pill p-pending">🏛️ Request</span></div>' : '') + '</td>' +
           '<td>' + (x.lastShared ? esc(d(x.lastShared)) : '<span class="pill p-warn">Never</span>') + '<div class="muted">' + (x.stories + x.reposts + x.discovery + x.collabs) + ' this year</div></td>' +
           '<td>' + (x.checkup ? '<span class="pill p-active">Done</span>' + (x.priorities ? '<div class="muted">' + x.prioritiesDone + '/' + x.priorities + ' priorities ticked</div>' : '') : '<span class="muted">Not yet</span>') + '</td>' +
           '<td class="muted">' + x.generationsMonth + ' AI this month<br>' + x.posts30 + ' posts in 30 days</td>' +
@@ -400,6 +401,7 @@ tbody tr:hover{background:#FFFCF5}
       '<div class="card stack"><div class="row" style="justify-content:space-between;align-items:center"><b>📣 Business Spotlight — dedicated post (Instagram + Blog)</b>' + benProg(p, 'spotlight') + '</div><div class="f2"><div><label for="bsS">Status</label><select id="bsS"><option value="none">Not yet</option><option value="scheduled">Scheduled</option><option value="done">Done</option></select></div><div><label for="bsD">Date</label><input type="date" id="bsD" value="' + esc(y.spotlight.date) + '"></div></div><div><label for="bsL">Link to the post or blog (optional — the member sees it)</label><input id="bsL" placeholder="https://…" value="' + esc(y.spotlight.link) + '"></div></div>' +
       '<div class="card stack"><b>⭐ Featured Business &amp; 🛍️ Marketplace (1 year)</b><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bfF" style="width:auto"' + (y.featured.done ? ' checked' : '') + '> Featured Business is live' + (y.featured.date ? ' <span class="muted">(since ' + esc(d(y.featured.date)) + ')</span>' : '') + '</label>' +
         '<label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bfM" style="width:auto"' + (y.marketplace.done ? ' checked' : '') + '> Marketplace listing is live' + (y.marketplace.date ? ' <span class="muted">(since ' + esc(d(y.marketplace.date)) + ')</span>' : '') + '</label>' +
+        (y.verify && y.verify.status === 'pending' ? '<div class="note stack"><b>🏛️ Verification request</b><div>Companies House number <b>' + esc(y.verify.number) + '</b> · sent ' + esc(d(y.verify.at.slice(0, 10))) + ' · <a href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(y.verify.number) + '" target="_blank" rel="noopener">Check on GOV.UK</a></div><div class="muted">Check the company name and status match their business. Then remember to give their business listing the blue tick in your directory.</div><div class="row"><button class="btn primary small" id="vYes">✓ Verify</button><button class="btn ghost small" id="vNo">Not eligible</button></div></div>' : y.verify ? '<div class="muted">🏛️ Last request: ' + esc(y.verify.number) + ' — ' + (y.verify.status === 'verified' ? 'verified' : 'not eligible') + '</div>' : '') +
         '<div><label for="bfB">✅ Verification badge</label><select id="bfB"><option value="unknown">Not checked yet</option><option value="yes">Verified</option><option value="no">Not verified yet</option><option value="not_eligible">Not eligible</option></select></div></div>' +
       '<div class="card stack"><b>🧭 Business Check-Up with Accountability</b><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bcD" style="width:auto"' + (y.checkup.done ? ' checked' : '') + '> Check-Up done</label><div><label for="bcT">Date</label><input type="date" id="bcT" value="' + esc(y.checkup.date) + '" style="width:auto"></div>' +
         '<div><label for="bcP">Agreed priorities (one per line, up to 5) — these appear on the member’s Today screen</label><textarea id="bcP" rows="4" placeholder="Post 3 times a week with a clear call to action\nFollow up every enquiry within 2 days\nAdd prices to Instagram Highlights">' + esc((y.checkup.priorities || []).join('\n')) + '</textarea>' + (y.checkup.priorities.length ? '<div class="muted">Member has ticked ' + (y.prioritiesDone || []).length + ' of ' + y.checkup.priorities.length + '</div>' : '') + '</div>' +
@@ -419,6 +421,9 @@ tbody tr:hover{background:#FFFCF5}
         toast('Benefits saved'); s.remove(); if (after) after();
       } catch (x) { toast(x.message); b.disabled = false; }
     };
+    var answer = async function (badge, note) { try { await api('benefits-update', { email: email, patch: { badge: badge, verifyNote: note || '', notify: true } }); toast(badge === 'yes' ? 'Verified — they’ve been told ✅' : 'Answered — they’ve been emailed'); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } };
+    var vy = $('#vYes', s); if (vy) vy.onclick = function () { answer('yes'); };
+    var vn = $('#vNo', s); if (vn) vn.onclick = function () { var n = prompt('Reason (optional — emailed to them):', ''); if (n !== null) answer('not_eligible', n); };
     $$('[data-log]', s).forEach(function (b) { b.onclick = async function () { var k = b.dataset.log; var tell = $('#lt_' + k, s).checked; try { await api('benefits-log', { email: email, kind: k, date: $('#ld_' + k, s).value, note: $('#ln_' + k, s).value, notify: tell }); toast(BEN_LOG[k] + ' logged' + (tell ? ' — member told' : '')); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
     $$('[data-unlog]', s).forEach(function (b) { b.onclick = async function () { if (!confirm('Remove this entry?')) return; try { await api('benefits-unlog', { email: email, kind: b.dataset.unlog, index: Number(b.dataset.i) }); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
   }
@@ -627,9 +632,9 @@ tbody tr:hover{background:#FFFCF5}
       if (bd.members && $('#ovH1')) {
         var box = document.createElement('div'); box.className = 'note'; box.style.marginBottom = '14px';
         box.innerHTML = '💚 <b>Business Club this week:</b> ' + (bd.weekMembers ? bd.stories + ' Story share' + (bd.stories === 1 ? '' : 's') + ' and ' + bd.reposts + ' repost' + (bd.reposts === 1 ? '' : 's') + ' still due across ' + bd.weekMembers + ' member' + (bd.weekMembers === 1 ? '' : 's') + '.' : 'all Stories and reposts done ✓') +
-          (bd.monthMembers ? ' ' + bd.discovery + ' discovery feature' + (bd.discovery === 1 ? '' : 's') + ' due this month.' : '') + ' <button class="btn small ghost" id="toBen">Open Benefits</button>';
+          (bd.monthMembers ? ' ' + bd.discovery + ' discovery feature' + (bd.discovery === 1 ? '' : 's') + ' due this month.' : '') + (bd.verifyRequests ? ' <b>🏛️ ' + bd.verifyRequests + ' verification request' + (bd.verifyRequests === 1 ? '' : 's') + '.</b>' : '') + ' <button class="btn small ghost" id="toBen">Open Benefits</button>';
         $('#ovH1').after(box);
-        $('#toBen').onclick = function () { S.benFilter = bd.weekMembers ? 'week' : 'all'; go('benefits'); };
+        $('#toBen').onclick = function () { S.benFilter = bd.verifyRequests ? 'verify' : bd.weekMembers ? 'week' : 'all'; go('benefits'); };
       }
     } catch (x) {}
     try {

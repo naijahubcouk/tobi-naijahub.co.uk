@@ -308,11 +308,23 @@ exports.handler = handler(async (ctx) => {
       const email = requireEmail(body.email);
       const member = await core.getMember(email);
       if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
-      const before = new Set(benefits.feed((await benefits.getYear(email, member)).year).map(e => `${e.kind}|${e.loggedAt}`));
+      const prevYear = (await benefits.getYear(email, member)).year;
+      const before = new Set(benefits.feed(prevYear).map(e => `${e.kind}|${e.loggedAt}`));
+      const wasPending = !!(prevYear && prevYear.verify && prevYear.verify.status === 'pending');
       const r = await benefits.update(email, member, body.patch);
       await core.audit(actor, 'benefits_update', { email, keys: Object.keys(body.patch || {}) });
       const fresh = benefits.feed(r.year).filter(e => e.notify && !before.has(`${e.kind}|${e.loggedAt}`));
       if (fresh.length) await notify.pushToMember(email, 'Auntie Tobi 💚', `${fresh.map(e => e.label).join(' & ')} — it’s done! See it in your Business Studio.`);
+      // A verification request was answered → tell the member by email.
+      const v = r.year.verify;
+      if (v && v.answeredAt && Date.now() - Date.parse(v.answeredAt) < 60000 && wasPending) {
+        const ok = v.status === 'verified';
+        try {
+          await core.sendEmail([email], ok ? 'Your business is verified on Auntie Tobi ✅' : 'About your verification request',
+            ok ? `Good news — Auntie Tobi has checked your Companies House registration (${v.number}) and your business is now verified.\n\nSee it in your Business Studio: ${siteUrl()}/studio\n\nAuntie Tobi 💚`
+               : `Thank you for your verification request. We weren’t able to verify your business at the moment.${v.note ? `\n\n${v.note}` : ''}\n\nAny questions? Message us on WhatsApp: https://wa.me/447594674940\n\nAuntie Tobi 💚`);
+        } catch (e) { console.error('[studio] verify email failed', e && e.message); }
+      }
       return r;
     }
     case 'benefits-log': case 'benefits-unlog': {
@@ -337,9 +349,10 @@ exports.handler = handler(async (ctx) => {
       const month = core.monthKey(), day = core.dayKey();
       const targets = await benefits.getTargets();
       if (action === 'benefits-due') {
-        const progs = await mapLimit(members, 8, async m => benefits.progress((await benefits.getYear(m.email, m)).year, targets, day));
+        let verifyRequests = 0;
+        const progs = await mapLimit(members, 8, async m => { const y = (await benefits.getYear(m.email, m)).year; if (y && y.verify && y.verify.status === 'pending') verifyRequests++; return benefits.progress(y, targets, day); });
         const sum = k => progs.reduce((a, p) => a + p[k].due, 0);
-        return { members: members.length, stories: sum('stories'), reposts: sum('reposts'), discovery: sum('discovery'),
+        return { verifyRequests, members: members.length, stories: sum('stories'), reposts: sum('reposts'), discovery: sum('discovery'),
           weekMembers: progs.filter(p => p.stories.due || p.reposts.due).length, monthMembers: progs.filter(p => p.discovery.due).length, targets };
       }
       const since = growth.addDays(day, -30);
@@ -354,6 +367,7 @@ exports.handler = handler(async (ctx) => {
           stories: y.stories.length, reposts: y.reposts.length, discovery: y.discovery.length, collabs: (y.collabs || []).length, lastShared: benefits.lastShared(y),
           prog: benefits.progress(y, targets, day),
           checkup: y.checkup.done, checkupDate: y.checkup.date, priorities: y.checkup.priorities.length, prioritiesDone: (y.prioritiesDone || []).length,
+          verify: y.verify && y.verify.status === 'pending' ? { number: y.verify.number, at: y.verify.at } : null,
           generationsMonth: usage ? usage.used || 0 : 0, posts30,
         };
       });

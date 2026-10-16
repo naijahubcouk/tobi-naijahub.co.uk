@@ -75,13 +75,13 @@ async function sendWelcome(email, name, expires, isNew) {
   const until = new Date(`${expires}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const hi = name ? `Hi ${name.split(' ')[0]},` : 'Hello,';
   const subject = isNew ? 'Welcome to the Auntie Tobi Business Club 💚' : 'Your Auntie Tobi Business Club membership is renewed 💚';
-  const text = `${hi}\n\n${isNew ? 'Thank you for joining the Auntie Tobi Business Club! Your membership is active' : 'Thank you for renewing! Your membership is now active'} until ${until}.\n\nOpen your Business Studio: ${studio}\nSign in with this email address (${email}) — we’ll send you a 6-digit code, no password needed.\n\nGood first steps:\n• Complete your business profile\n• Read “Welcome to Auntie Tobi Business Club” in Library → Resources\n• Message us on WhatsApp to plan your Business Spotlight: https://wa.me/447594674940\n\nAuntie Tobi 💚`;
+  const text = `${hi}\n\n${isNew ? 'Thank you for joining the Auntie Tobi Business Club! Your membership is active' : 'Thank you for renewing! Your membership is now active'} until ${until}.\n\nOpen your Business Studio: ${studio}\nSign in with this email address (${email}) — we’ll send you a 6-digit code, no password needed.\n\nGood first steps:\n• Complete your business profile\n• Add your product or service to the Marketplace: ${siteUrl()}/marketplace/list\n• Read “Welcome to Auntie Tobi Business Club” in Library → Resources\n\nAuntie Tobi 💚`;
   const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#0F1E36;max-width:560px;margin:0 auto;padding:8px">
 <div style="background:#057A44;color:#fff;border-radius:14px;padding:18px"><div style="font-size:20px;font-weight:bold">${isNew ? 'Welcome to the Business Club 💚' : 'Membership renewed 💚'}</div><div style="opacity:.9;margin-top:4px">Active until <b>${until}</b></div></div>
 <p style="margin:18px 0 8px">${hi}</p><p>${isNew ? 'Thank you for joining the Auntie Tobi Business Club!' : 'Thank you for renewing your Auntie Tobi Business Club membership!'} Your Business Studio is ready.</p>
 <p style="margin:20px 0"><a href="${studio}" style="background:#057A44;color:#fff;text-decoration:none;font-weight:bold;padding:12px 18px;border-radius:10px;display:inline-block">Open your Business Studio</a></p>
 <p>Sign in with <b>${email}</b> — we’ll email you a 6-digit code. No password needed.</p>
-<p><b>Good first steps</b></p><ul style="padding-left:18px"><li>Complete your business profile</li><li>Read “Welcome to Auntie Tobi Business Club” in Library → Resources</li><li><a href="https://wa.me/447594674940" style="color:#057A44">Message us on WhatsApp</a> to plan your Business Spotlight</li></ul>
+<p><b>Good first steps</b></p><ul style="padding-left:18px"><li>Complete your business profile</li><li><a href="${siteUrl()}/marketplace/list" style="color:#057A44">Add your product or service to the Marketplace</a></li><li>Read “Welcome to Auntie Tobi Business Club” in Library → Resources</li></ul>
 <p style="color:#5B6475;font-size:13px">Auntie Tobi 💚</p></div>`;
   await core.sendEmail([email], subject, text, html);
 }
@@ -95,4 +95,4 @@ async function alertRefundOrDispute(type, obj) {
   await core.emailAdmins(`Payment ${what}${email ? `: ${email}` : ''}`, `A Stripe payment was ${what}${email ? ` for ${email}` : ''}. Studio access has NOT been changed. If it was a Business Club payment, update the member in Studio Admin → Members if needed.`);
 }
 
-module.exports = { isClubSession, activateFromSession, alertRefundOrDispute, addYear };
+module.exports = { isClubSession, activateFromSession, alertRefundOrDispute, addYear, sendWelcome };

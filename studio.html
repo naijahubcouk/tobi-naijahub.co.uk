@@ -301,6 +301,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .bzp-s{display:flex;flex-direction:column;gap:8px}.bzp-s .bzp-link{align-self:flex-start}
 .bzp-res{display:flex;flex-direction:column;gap:6px}.bzp-r{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #E6E1D6;border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer;color:#0F1E36}
 .bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
+.chbox{background:#EEF6FD;border:1px solid #CFE4F7;border-radius:12px;padding:12px}.chbox .hint{margin-bottom:0}
 .mktgrid{display:grid;gap:16px}@media(min-width:760px){.mktgrid{grid-template-columns:1fr 280px;align-items:start}}
 .shared{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
@@ -2129,7 +2130,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     if (!n.setup.hidden) {
       html += '<section class="card stack setup"><div class="row" style="justify-content:space-between;align-items:baseline"><b>Get set up — ' + n.setup.done + ' of ' + n.setup.total + ' done</b><button class="btn link" id="setupHide" style="font-size:13px">Hide</button></div>' +
         '<div class="pbar"><span style="width:' + Math.round(n.setup.done / n.setup.total * 100) + '%"></span></div><div class="checks">' + n.setup.steps.map(function (s) {
-          return '<button class="setstep' + (s.done ? ' done' : '') + '" data-step="' + s.go + '"' + (s.done ? ' disabled' : '') + '><span class="ldot' + (s.done ? ' done' : '') + '">' + (s.done ? '✓' : '') + '</span><span style="flex:1;text-align:left">' + esc(s.label) + '</span>' + (s.done ? '' : '<span aria-hidden="true">→</span>') + '</button>';
+          return '<button class="setstep' + (s.done ? ' done' : '') + '" data-step="' + s.go + '"' + (s.done ? ' disabled' : '') + '><span class="ldot' + (s.done ? ' done' : '') + '">' + (s.done ? '✓' : '') + '</span><span style="flex:1;text-align:left">' + esc(s.label) + (s.note ? ' <small class="hint" style="margin:0;display:block">⏳ ' + esc(s.note) + '</small>' : '') + '</span>' + (s.done ? '' : '<span aria-hidden="true">→</span>') + '</button>';
         }).join('') + '</div></section>';
     }
     html += sharedCard(n.shared);
@@ -2181,6 +2182,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     if (go === 'lesson') return showResources();
     if (go === 'create') return showCreate();
     if (go === 'review') return showReview(showHome);
+    if (go === 'market') return showMarket(showHome);
+    if (go === 'verify') return showVerify(showHome);
   }
 
   function installApp() {
@@ -2468,6 +2471,23 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     }
     draw();
     return { get: function () { return state && state.slug ? state : null; } };
+  }
+
+  // ── Verify your Business (Companies House → verification badge on their Auntie Tobi listing) ──
+  function showVerify(back) {
+    back = back || showAccount;
+    setChrome({ tabs: true, tab: 'home', back: back });
+    var biz = (S.boot.profile && S.boot.profile.businessName) || '';
+    app.innerHTML = '<main><h1 style="font-size:22px">Verify your Business</h1><p class="sub" style="margin:6px 0 14px">Verified businesses get the blue tick on their Auntie Tobi business listing, so customers know they’re dealing with a registered business.</p>' +
+      '<div class="card stack chbox"><label class="f" for="vCh">🏛️ Registered with Companies House?</label><input id="vCh" maxlength="200" placeholder="Company number or GOV.UK link" autocapitalize="characters">' +
+      '<div class="hint">Paste your company’s page from GOV.UK, or just your company number. It shows customers you’re a registered business. Find it at <a href="https://find-and-update.company-information.service.gov.uk" target="_blank" rel="noopener">find-and-update.company-information.service.gov.uk</a>.</div>' +
+      '<div class="err hidden" id="vErr"></div><button class="btn primary block" id="vSend">Send for verification</button></div>' +
+      '<p class="hint">Auntie Tobi checks the company details match your business, then lets you know. Not registered with Companies House? <a href="' + esc(atWa('Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’m not registered with Companies House — how can I get verified?')) + '" target="_blank" rel="noopener">Message Auntie Tobi</a>.</p></main>';
+    $('#vSend').onclick = async function () {
+      var b = this; b.disabled = true; $('#vErr').classList.add('hidden');
+      try { await api('studio-extras', 'verify-request', { companiesHouse: $('#vCh').value }); toast('Sent — Auntie Tobi will check 💚'); back(); }
+      catch (x) { $('#vErr').textContent = x.message; $('#vErr').classList.remove('hidden'); b.disabled = false; }
+    };
   }
 
   async function showMarket(back) {
@@ -2785,21 +2805,22 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var sp = b.spotlight;
     card.innerHTML = '<p class="hint" style="margin:0">Membership year ends <b>' + esc(dmy(b.yearKey)) + '</b>.</p>' +
       row('📣', 'Business Spotlight', sp.status === 'done' ? 'Done ' + esc(dmy(sp.date)) + (sp.link ? ' · <a href="' + esc(sp.link) + '" target="_blank" rel="noopener">View</a>' : '') : sp.status === 'scheduled' ? 'Scheduled' + (sp.date ? ' for ' + esc(dmy(sp.date)) : '') : 'Not yet', sp.status === 'done',
-        sp.status === 'none' ? ask('Plan my Spotlight', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to plan my Business Spotlight.') : '') +
+        '') +
       row('⭐', 'Featured Business (app & website)', b.featured.done ? 'Live since ' + esc(dmy(b.featured.date)) : 'Being set up', b.featured.done) +
       row('🛍️', 'Marketplace listing', b.marketplace.done ? 'Live since ' + esc(dmy(b.marketplace.date)) : 'Not listed yet', b.marketplace.done,
-        b.marketplace.done ? '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-gomkt="1">Manage my listing →</button>' : '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-gomkt="1">Add my product or service →</button>') +
-      row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.badge === 'not_eligible' ? 'Not eligible at the moment' : 'Not verified yet', b.badge === 'yes',
-        b.badge === 'yes' || b.badge === 'not_eligible' ? '' : ask('Ask about verification', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. How can I get verified?')) +
+        b.marketplace.done ? '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-gomkt="1">Manage my listing →</button>' : '<a class="btn link" style="font-size:13px;padding:0;min-height:0" href="/marketplace/list" target="_blank" rel="noopener">Add my product or service →</a>') +
+      row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.verify && b.verify.status === 'pending' ? '⏳ Verification requested (Companies House ' + esc(b.verify.number) + ') — Auntie Tobi will check' : b.badge === 'not_eligible' || (b.verify && b.verify.status === 'not_eligible') ? 'Not verified at the moment' + (b.verify && b.verify.note ? ' — ' + esc(b.verify.note) : '') : 'Not verified yet', b.badge === 'yes',
+        b.badge === 'yes' || (b.verify && b.verify.status === 'pending') ? '' : '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-goverify="1">Verify your Business →</button>') +
       row('📲', 'Shared by Auntie Tobi this year', b.counts.stories + ' Story share' + (b.counts.stories === 1 ? '' : 's') + ' · ' + b.counts.reposts + ' repost' + (b.counts.reposts === 1 ? '' : 's') + ' · ' + b.counts.discovery + ' discovery feature' + (b.counts.discovery === 1 ? '' : 's') + ' · ' + (b.counts.collabs || 0) + ' collab' + (b.counts.collabs === 1 ? '' : 's') + '<br>Auntie Tobi chooses whose content to share — keep posting your best work.', false) +
       row('🧭', 'Business Check-Up with Accountability', b.checkup.done ? 'Done ' + esc(dmy(b.checkup.date)) + (b.checkup.priorities.length ? ' · ' + b.prioritiesDone.length + ' of ' + b.checkup.priorities.length + ' priorities done' : '') : 'Not booked yet', b.checkup.done,
         b.checkup.done ? '' : ask('Book my Check-Up', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to book my Business Check-Up. The main thing I’d like help with is: ')) +
       benFeedHtml(b.feed || []);
     $$('[data-gomkt]', card).forEach(function (x) { x.onclick = function () { showMarket(showAccount); }; });
+    $$('[data-goverify]', card).forEach(function (x) { x.onclick = function () { showVerify(showAccount); }; });
     if (S.nudges) S.nudges.shared = [];
     var sc = $('#sharedCard'); if (sc) sc.remove();
   }
-  var BEN_ICO = { stories: '📲', reposts: '🔁', discovery: '🔎', collabs: '🤝', spotlight: '📣', featured: '⭐', marketplace: '🛍️' };
+  var BEN_ICO = { verified: '✅', stories: '📲', reposts: '🔁', discovery: '🔎', collabs: '🤝', spotlight: '📣', featured: '⭐', marketplace: '🛍️' };
   function benFeedItem(e) {
     return '<div class="benrow" style="padding:6px 0"><span class="benico">' + (BEN_ICO[e.kind] || '💚') + '</span><div style="flex:1;min-width:0"><b>' + esc(e.label) + '</b> <span class="hint" style="margin:0">' + esc(dmy(e.at)) + '</span>' +
       (e.note ? '<div class="hint" style="margin:0">' + esc(e.note) + '</div>' : '') + (e.link ? '<div><a class="btn link" style="font-size:13px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(e.link) + '">View →</a></div>' : '') + '</div></div>';
@@ -2812,7 +2833,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   }
   function sharedCard(items) {
     if (!items || !items.length) return '';
-    return '<section class="card stack shared" id="sharedCard"><b>💚 Auntie Tobi shared your business</b>' + items.slice(0, 4).map(benFeedItem).join('') +
+    return '<section class="card stack shared" id="sharedCard"><b>' + (items.every(function (i) { return /stories|reposts|discovery|collabs|spotlight/.test(i.kind); }) ? '💚 Auntie Tobi shared your business' : '💚 News from Auntie Tobi') + '</b>' + items.slice(0, 4).map(benFeedItem).join('') +
       (items.length > 4 ? '<p class="hint" style="margin:0">…and ' + (items.length - 4) + ' more in Account → My benefits.</p>' : '') +
       '<div class="row"><button class="btn small primary" id="sharedOk">Thank you 💚</button><button class="btn link" id="sharedAll" style="font-size:13px">See all my benefits</button></div></section>';
   }

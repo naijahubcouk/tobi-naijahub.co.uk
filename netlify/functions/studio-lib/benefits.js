@@ -10,7 +10,7 @@ const { HttpError, cas, getJson, enc, cleanText } = core;
 
 const key = email => `benefits/${enc(email)}`;
 const LOG_KINDS = ['stories', 'reposts', 'discovery', 'collabs'];
-const LABELS = { stories: 'Story share', reposts: 'Post/Reel repost', discovery: 'Discovery feature', collabs: 'Collab', spotlight: 'Business Spotlight', featured: 'Featured Business', marketplace: 'Marketplace listing' };
+const LABELS = { verified: 'Verification badge', stories: 'Story share', reposts: 'Post/Reel repost', discovery: 'Discovery feature', collabs: 'Collab', spotlight: 'Business Spotlight', featured: 'Featured Business', marketplace: 'Marketplace listing' };
 
 // Minimum targets per member (the aim is to over-deliver). Admin-only; members never see these.
 const DEFAULT_TARGETS = { storiesWeek: 2, repostsWeek: 2, discoveryMonth: 2, collabsYear: 2, spotlightYear: 1 };
@@ -86,7 +86,16 @@ async function update(email, member, raw) {
         if (y[k].done) { y[k].loggedAt = was.done && was.loggedAt ? was.loggedAt : core.nowIso(); y[k].notify = was.done ? was.notify !== false : raw.notify !== false; }
       }
     }
-    if ('badge' in raw) y.badge = BADGE.includes(raw.badge) ? raw.badge : y.badge;
+    if ('badge' in raw && BADGE.includes(raw.badge)) {
+      const was = y.badge;
+      y.badge = raw.badge;
+      if (raw.badge === 'yes' && was !== 'yes') { y.badgeLoggedAt = core.nowIso(); y.badgeNotify = raw.notify !== false; y.badgeDate = core.dayKey(); }
+      if (raw.badge !== 'yes') { delete y.badgeLoggedAt; delete y.badgeDate; }
+      // Answer an open verification request.
+      if (y.verify && y.verify.status === 'pending' && (raw.badge === 'yes' || raw.badge === 'not_eligible' || raw.badge === 'no')) {
+        y.verify = { ...y.verify, status: raw.badge === 'yes' ? 'verified' : 'not_eligible', note: cleanText(raw.verifyNote, 400), answeredAt: core.nowIso() };
+      }
+    }
     if (raw.checkup) {
       const c = raw.checkup;
       const priorities = (Array.isArray(c.priorities) ? c.priorities : String(c.priorities || '').split('\n')).map(p => cleanText(p, 160)).filter(Boolean).slice(0, 5);
@@ -109,6 +118,15 @@ async function log(email, member, kind, note, date, notify, link) {
 async function unlog(email, member, kind, index) {
   if (!LOG_KINDS.includes(kind)) throw new HttpError(400, 'invalid', 'Invalid type.');
   return change(email, member, y => { const i = Number(index); if (Number.isInteger(i) && i >= 0) y[kind].splice(i, 1); });
+}
+
+// Member: ask to be verified with their Companies House number.
+async function requestVerify(email, member, number) {
+  if (!number) throw new HttpError(400, 'invalid', 'Please add your Companies House link or company number.');
+  return change(email, member, y => {
+    if (y.badge === 'yes') throw new HttpError(409, 'already', 'Your business is already verified.');
+    y.verify = { number, at: core.nowIso(), status: 'pending' };
+  });
 }
 
 // Member: tick a Check-Up priority.
@@ -154,6 +172,7 @@ function feed(y) {
   const out = [];
   for (const k of LOG_KINDS) for (const e of y[k] || []) out.push({ kind: k, label: LABELS[k], at: e.at, note: e.note || '', link: e.link || '', loggedAt: e.loggedAt || '', notify: e.notify !== false && !!e.loggedAt });
   for (const k of ['featured', 'marketplace']) if (y[k] && y[k].done) out.push({ kind: k, label: LABELS[k], at: y[k].date, note: 'Now live', link: '', loggedAt: y[k].loggedAt || '', notify: y[k].notify !== false && !!y[k].loggedAt });
+  if (y.badge === 'yes' && y.badgeLoggedAt) out.push({ kind: 'verified', label: LABELS.verified, at: y.badgeDate || y.badgeLoggedAt.slice(0, 10), note: 'Your business is verified ✓', link: '', loggedAt: y.badgeLoggedAt, notify: y.badgeNotify !== false });
   if (y.spotlight && y.spotlight.status === 'done') out.push({ kind: 'spotlight', label: LABELS.spotlight, at: y.spotlight.date, note: '', link: y.spotlight.link || '', loggedAt: y.spotlight.loggedAt || '', notify: y.spotlight.notify !== false && !!y.spotlight.loggedAt });
   return out.sort((a, b) => (b.at || '').localeCompare(a.at || '') || (b.loggedAt || '').localeCompare(a.loggedAt || ''));
 }
@@ -168,8 +187,9 @@ function forMember(yearKey, y) {
     counts: { stories: (y.stories || []).length, reposts: (y.reposts || []).length, discovery: (y.discovery || []).length, collabs: (y.collabs || []).length },
     feed: feed(y).map(({ kind, label, at, note, link }) => ({ kind, label, at, note, link })),
     checkup: { done: y.checkup.done, date: y.checkup.date, priorities: y.checkup.priorities || [] },
+    verify: y.verify ? { status: y.verify.status, number: y.verify.number, at: y.verify.at, note: y.verify.note || '' } : null,
     prioritiesDone: y.prioritiesDone || [],
   };
 }
 
-module.exports = { getYear, update, log, unlog, setPriorityDone, forMember, lastShared, yearKeyOf, emptyYear, LOG_KINDS, LABELS, DEFAULT_TARGETS, getTargets, saveTargets, progress, feed, weekStart };
+module.exports = { getYear, update, log, unlog, setPriorityDone, requestVerify, forMember, lastShared, yearKeyOf, emptyYear, LOG_KINDS, LABELS, DEFAULT_TARGETS, getTargets, saveTargets, progress, feed, weekStart };
