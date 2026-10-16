@@ -17,7 +17,7 @@ const shop = require('../shop');
 const fu = require('../followups');
 const benefits = require('../benefits');
 
-const VIEW = new Set(['nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine']);
+const VIEW = new Set(['nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine', 'benefits-seen']);
 const idOf = v => { const s = String(v || ''); if (!/^[A-Za-z0-9_-]{4,20}$/.test(s)) throw new HttpError(400, 'bad_id', 'Invalid item.'); return s; };
 
 exports.handler = handler(async (ctx) => {
@@ -43,7 +43,12 @@ exports.handler = handler(async (ctx) => {
     case 'benefits-mine': {
       if (!auth.access.membershipActive) return { benefits: null };
       const b = await benefits.getYear(email, auth.member);
+      if (body.markSeen) await prefs.markBenefitsSeen(email);
       return { benefits: benefits.forMember(b.yearKey, b.year), membershipExpiresAt: auth.member.membershipExpiresAt };
+    }
+    case 'benefits-seen': {
+      await prefs.markBenefitsSeen(email);
+      return { ok: true };
     }
     case 'priority-done': {
       if (!auth.access.membershipActive) throw new HttpError(403, 'club_only', 'This is part of Business Club membership.');

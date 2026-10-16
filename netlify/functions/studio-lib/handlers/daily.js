@@ -12,6 +12,7 @@ const money = require('../money');
 const growth = require('../growth');
 const resources = require('../resources');
 const fu = require('../followups');
+const benefits = require('../benefits');
 const { siteUrl } = require('./extras');
 
 const ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
@@ -70,6 +71,16 @@ async function buildDigest(member, acc) {
     const ls = fl.items.filter(i => i.createdAt >= new Date(Date.now() - 7 * core.DAY).toISOString());
     if (ls.length) rows.push(`${ls.length} enquir${ls.length > 1 ? 'ies' : 'y'} logged last week, ${ls.filter(i => i.stage === 'booked').length} booked so far`);
     if (rows.length) sec('Follow-ups', rows);
+  }
+  if (acc.membershipActive) {
+    const b = await benefits.getYear(email, member).catch(() => null);
+    const since = growth.addDays(core.dayKey(), -7);
+    const recent = b ? benefits.feed(b.year).filter(e => e.at >= since && ['stories', 'reposts', 'discovery', 'collabs', 'spotlight'].includes(e.kind)) : [];
+    if (recent.length) {
+      const by = {}; for (const e of recent) by[e.label] = (by[e.label] || 0) + 1;
+      const parts = Object.entries(by).map(([l, n]) => `${n} ${l.toLowerCase()}${n > 1 ? 's' : ''}`).join(', ');
+      sec('From Auntie Tobi 💚', [`Last week Auntie Tobi shared your business ${recent.length} time${recent.length > 1 ? 's' : ''}: ${parts}. See the full record in Studio → Account → My benefits.`]);
+    }
   }
   sec('This week', [
     sum.goal ? 'Check your weekly goal on Today and do your 3 daily actions.' : 'Set a goal for this week on Today — your daily actions will focus on it.',

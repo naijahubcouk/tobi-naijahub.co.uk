@@ -49,9 +49,10 @@ th{background:#F7F1E3;font-size:12px;text-transform:uppercase;letter-spacing:.6p
 tr:last-child td{border-bottom:0}
 tbody tr:hover{background:#FFFCF5}
 .tw{overflow-x:auto;border-radius:14px}
+.note{background:var(--green-l);border:1px solid #CFEBDB;border-radius:14px;padding:12px 14px;line-height:1.5}
 .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
 .p-active{background:var(--green-l);color:var(--green-d)}.p-pending{background:var(--gold-l);color:#7A5300}.p-inactive,.p-expired{background:#ECEDF0;color:var(--muted)}
-.p-power{background:var(--gold);color:var(--navy)}.p-warn{background:var(--danger-l);color:var(--danger)}
+.p-power{background:var(--gold);color:var(--navy)}.pill .over{background:var(--green-d);color:#fff;border-radius:999px;padding:0 5px;margin-left:2px;font-size:11px}.p-warn{background:var(--danger-l);color:var(--danger)}
 .muted{color:var(--muted);font-size:13px}
 .err{background:var(--danger-l);color:var(--danger);border-radius:10px;padding:9px 11px;font-weight:500}
 .warn{background:var(--gold-l);border-radius:10px;padding:10px 12px}
@@ -294,85 +295,121 @@ tbody tr:hover{background:#FFFCF5}
   }
 
   // ── Business Club benefits ──
-  var BEN_LOG = { stories: 'Story share', reposts: 'Post/Reel repost', discovery: 'Discovery feature' };
+  var BEN_LOG = { stories: 'Story share', reposts: 'Post/Reel repost', discovery: 'Discovery feature', collabs: 'Collab' };
+  var BEN_ICO = { stories: '📲', reposts: '🔁', discovery: '🔎', collabs: '🤝', spotlight: '📣' };
+  var BEN_PER = { week: 'this week', month: 'this month', year: 'this year' };
   function benYes(v) { return v ? '<span class="pill p-active">✓</span>' : '<span class="muted">—</span>'; }
-  function benSpot(r) { return r.spotlight === 'done' ? '<span class="pill p-active">Done ' + esc(d(r.spotlightDate)) + '</span>' : r.spotlight === 'scheduled' ? '<span class="pill p-pending">Scheduled' + (r.spotlightDate ? ' ' + esc(d(r.spotlightDate)) : '') + '</span>' : '<span class="pill p-warn">Not yet</span>'; }
   function benBadge(v) { return { yes: '<span class="pill p-active">Verified</span>', no: '<span class="muted">No</span>', not_eligible: '<span class="muted">Not eligible</span>' }[v] || '<span class="muted">?</span>'; }
+  // "3 / 2 +1" — green when met (and celebrated when over-delivered), amber when still due.
+  function benProg(p, k, short) {
+    var x = p[k], cls = x.target === 0 ? 'p-inactive' : x.met ? 'p-active' : 'p-pending';
+    return '<span class="pill ' + cls + '" title="' + esc(BEN_LOG[k] || 'Business Spotlight') + ': ' + x.n + ' of ' + x.target + ' ' + BEN_PER[x.period] + '">' + BEN_ICO[k] + ' ' + x.n + '/' + x.target + (x.over ? ' <span class="over">+' + x.over + '</span>' : '') + '</span>' + (short ? '' : ' <span class="muted">' + BEN_PER[x.period] + '</span>');
+  }
+  function benLogBtns(email) {
+    return '<div class="row" style="margin-top:4px;gap:4px">' + ['stories', 'reposts', 'discovery', 'collabs'].map(function (k) {
+      return '<button class="btn small ghost" data-q="' + k + '" data-e="' + esc(email) + '" title="Log a ' + esc(BEN_LOG[k]) + ' (dated today, member is told)">+' + { stories: 'Story', reposts: 'Repost', discovery: 'Discovery', collabs: 'Collab' }[k] + '</button>';
+    }).join('') + '</div>';
+  }
 
   async function vBenefits(filter) {
     filter = filter || S.benFilter || 'all'; S.benFilter = filter;
     loading();
     var r; try { r = await api('benefits-overview'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
-    var rows = r.rows.slice();
+    var rows = r.rows.slice(), t = r.targets;
     var F = {
       all: function () { return true; },
-      longest: function () { return true; },
+      week: function (x) { return x.prog.stories.due || x.prog.reposts.due; },
+      month: function (x) { return x.prog.discovery.due; },
+      collabs: function (x) { return x.prog.collabs.due; },
       spotlight: function (x) { return x.spotlight !== 'done'; },
-      ending: function (x) { return x.daysLeft <= 60 && x.spotlight !== 'done'; },
+      ending: function (x) { return x.daysLeft <= 60 && (x.spotlight !== 'done' || x.prog.collabs.due); },
+      longest: function () { return true; },
       checkup: function (x) { return !x.checkup; },
       setup: function (x) { return !x.featured || !x.marketplace; }
     };
     var list = rows.filter(F[filter] || F.all);
     if (filter === 'longest') list.sort(function (a, b) { return (a.lastShared || '0').localeCompare(b.lastShared || '0') || a.daysLeft - b.daysLeft; });
+    else if (filter === 'week') list.sort(function (a, b) { return (b.prog.stories.due + b.prog.reposts.due) - (a.prog.stories.due + a.prog.reposts.due) || (a.lastShared || '0').localeCompare(b.lastShared || '0'); });
     else list.sort(function (a, b) { return a.daysLeft - b.daysLeft; });
     var count = function (f) { return rows.filter(F[f]).length; };
-    app.innerHTML = '<main><h1>Business Club benefits</h1><p class="muted" style="margin:-4px 0 14px">What each active member has received this membership year. Use it to choose who to promote next and make sure nobody misses out.</p>' +
-      '<div class="grid">' + stat(rows.length, 'Active members') + stat(rows.filter(function (x) { return x.spotlight === 'done'; }).length + ' / ' + rows.length, 'Spotlights done') + stat(rows.filter(function (x) { return x.checkup; }).length + ' / ' + rows.length, 'Check-Ups done') +
-        stat(rows.filter(function (x) { return !x.lastShared; }).length, 'Never shared this year') + stat(count('ending'), 'Ending soon without Spotlight') + '</div>' +
-      '<div class="row" style="margin:16px 0 10px">' + [['all', 'All'], ['longest', 'Longest since shared'], ['spotlight', 'Spotlight not done'], ['ending', 'Ends ≤ 60 days, no Spotlight'], ['checkup', 'Check-Up not done'], ['setup', 'Featured/Marketplace to set up']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
-      '<div class="tw"><table><thead><tr><th>Member</th><th>Ends</th><th>Spotlight</th><th>Featured</th><th>Market</th><th>Badge</th><th>Shares</th><th>Last shared</th><th>Check-Up</th><th>Studio use</th><th></th></tr></thead><tbody>' +
+    var tot = function (k) { return rows.reduce(function (a, x) { return a + x.prog[k].due; }, 0); };
+    var wk = count('week'), mo = count('month');
+    var summary = rows.length ? (wk
+      ? '<b>This week:</b> ' + tot('stories') + ' Story share' + (tot('stories') === 1 ? '' : 's') + ' and ' + tot('reposts') + ' repost' + (tot('reposts') === 1 ? '' : 's') + ' still due across ' + wk + ' member' + (wk === 1 ? '' : 's') + '.'
+      : '<b>This week:</b> every member has had their Stories and reposts ✓ — anything more is a bonus.') +
+      (mo ? ' <b>This month:</b> ' + tot('discovery') + ' discovery feature' + (tot('discovery') === 1 ? '' : 's') + ' due for ' + mo + ' member' + (mo === 1 ? '' : 's') + '.' : ' <b>This month:</b> discovery features all done ✓') : '';
+    app.innerHTML = '<main><h1>Business Club benefits</h1><p class="muted" style="margin:-4px 0 10px">Targets are the minimum for each member — the aim is to over-deliver. Only you see the targets; members see what you’ve done for them.</p>' +
+      (summary ? '<div class="note" style="margin-bottom:12px">' + summary + '</div>' : '') +
+      '<div class="grid">' + stat(rows.length, 'Active members') + stat(wk, 'Due Stories/reposts this week') + stat(mo, 'Due discovery this month') +
+        stat(rows.filter(function (x) { return x.spotlight === 'done'; }).length + ' / ' + rows.length, 'Spotlights done') + stat(rows.filter(function (x) { return x.checkup; }).length + ' / ' + rows.length, 'Check-Ups done') + '</div>' +
+      '<details class="card" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">🎯 Targets per member: ' + t.storiesWeek + ' Stories & ' + t.repostsWeek + ' reposts a week · ' + t.discoveryMonth + ' discovery a month · ' + t.collabsYear + ' collabs & ' + t.spotlightYear + ' Spotlight a year <span class="muted" style="font-weight:400">— change</span></summary>' +
+        '<div class="row" style="margin-top:10px;align-items:flex-end">' + [['storiesWeek', 'Stories / week'], ['repostsWeek', 'Reposts / week'], ['discoveryMonth', 'Discovery / month'], ['collabsYear', 'Collabs / year'], ['spotlightYear', 'Spotlight / year']].map(function (f) {
+          return '<div style="width:120px"><label for="tg_' + f[0] + '">' + f[1] + '</label><input type="number" min="0" max="50" id="tg_' + f[0] + '" value="' + t[f[0]] + '"></div>';
+        }).join('') + '<button class="btn primary small" id="tgSave">Save targets</button></div></details>' +
+      '<div class="row" style="margin:14px 0 10px">' + [['all', 'All'], ['week', 'Due this week'], ['month', 'Due this month'], ['collabs', 'Collabs due'], ['spotlight', 'Spotlight not done'], ['ending', 'Ends ≤ 60 days, still owed'], ['longest', 'Longest since shared'], ['checkup', 'Check-Up not done'], ['setup', 'Featured/Marketplace to set up']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
+      '<div class="tw"><table><thead><tr><th>Member</th><th>Ends</th><th>This week</th><th>This month</th><th>This year</th><th>Featured</th><th>Market</th><th>Badge</th><th>Last shared</th><th>Check-Up</th><th>Studio use</th><th></th></tr></thead><tbody>' +
       (list.length ? list.map(function (x) {
-        return '<tr><td><b>' + esc(x.business || x.name || x.email) + '</b><div class="muted">' + esc(x.email) + '</div></td>' +
+        var p = x.prog;
+        return '<tr><td><b>' + esc(x.business || x.name || x.email) + '</b><div class="muted">' + esc(x.email) + '</div>' + benLogBtns(x.email) + '</td>' +
           '<td>' + esc(d(x.expires)) + '<div class="muted"' + (x.daysLeft <= 60 ? ' style="color:var(--danger)"' : '') + '>' + x.daysLeft + ' days</div></td>' +
-          '<td>' + benSpot(x) + '</td><td>' + benYes(x.featured) + '</td><td>' + benYes(x.marketplace) + '</td><td>' + benBadge(x.badge) + '</td>' +
-          '<td class="muted" style="white-space:nowrap">📲 ' + x.stories + ' · 🔁 ' + x.reposts + ' · 🔎 ' + x.discovery + '<div class="row" style="margin-top:4px;gap:4px"><button class="btn small ghost" data-q="stories" data-e="' + esc(x.email) + '" title="Log a Story share">+Story</button><button class="btn small ghost" data-q="reposts" data-e="' + esc(x.email) + '" title="Log a post/Reel repost">+Repost</button></div></td>' +
-          '<td>' + (x.lastShared ? esc(d(x.lastShared)) : '<span class="pill p-warn">Never</span>') + '</td>' +
+          '<td style="white-space:nowrap">' + benProg(p, 'stories', true) + '<br>' + benProg(p, 'reposts', true) + '</td>' +
+          '<td style="white-space:nowrap">' + benProg(p, 'discovery', true) + '</td>' +
+          '<td style="white-space:nowrap">' + benProg(p, 'collabs', true) + '<br>' + benProg(p, 'spotlight', true) + (x.spotlight === 'scheduled' ? '<div class="muted">Spotlight scheduled' + (x.spotlightDate ? ' ' + esc(d(x.spotlightDate)) : '') + '</div>' : '') + '</td>' +
+          '<td>' + benYes(x.featured) + '</td><td>' + benYes(x.marketplace) + '</td><td>' + benBadge(x.badge) + '</td>' +
+          '<td>' + (x.lastShared ? esc(d(x.lastShared)) : '<span class="pill p-warn">Never</span>') + '<div class="muted">' + (x.stories + x.reposts + x.discovery + x.collabs) + ' this year</div></td>' +
           '<td>' + (x.checkup ? '<span class="pill p-active">Done</span>' + (x.priorities ? '<div class="muted">' + x.prioritiesDone + '/' + x.priorities + ' priorities ticked</div>' : '') : '<span class="muted">Not yet</span>') + '</td>' +
           '<td class="muted">' + x.generationsMonth + ' AI this month<br>' + x.posts30 + ' posts in 30 days</td>' +
           '<td><button class="btn small primary" data-ben="' + esc(x.email) + '">Open</button></td></tr>';
-      }).join('') : '<tr><td colspan="11" class="muted">Nobody here.</td></tr>') + '</tbody></table></div></main>';
+      }).join('') : '<tr><td colspan="12" class="muted">Nobody here' + (filter === 'week' || filter === 'month' ? ' — everyone’s had theirs. Anything more is over-delivering 🌟' : '.') + '</td></tr>') + '</tbody></table></div></main>';
     $$('[data-bf]').forEach(function (b) { b.onclick = function () { vBenefits(b.dataset.bf); }; });
     $$('[data-ben]').forEach(function (b) { b.onclick = function () { editBenefits(b.dataset.ben, function () { vBenefits(); }); }; });
-    $$('[data-q]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { await api('benefits-log', { email: b.dataset.e, kind: b.dataset.q }); toast(BEN_LOG[b.dataset.q] + ' logged'); vBenefits(); } catch (x) { toast(x.message); b.disabled = false; } }; });
+    $$('[data-q]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { await api('benefits-log', { email: b.dataset.e, kind: b.dataset.q, notify: true }); toast(BEN_LOG[b.dataset.q] + ' logged — member told'); vBenefits(); } catch (x) { toast(x.message); b.disabled = false; } }; });
+    $('#tgSave').onclick = async function () {
+      var tg = {}; ['storiesWeek', 'repostsWeek', 'discoveryMonth', 'collabsYear', 'spotlightYear'].forEach(function (k) { tg[k] = Number($('#tg_' + k).value); });
+      try { await api('benefits-targets-save', { targets: tg }); toast('Targets saved'); vBenefits(); } catch (x) { toast(x.message); }
+    };
   }
 
   async function editBenefits(email, after) {
     var r; try { r = await api('benefits-get', { email: email }); } catch (x) { toast(x.message); return; }
     if (!r.year) { toast('This member has no membership expiry date yet. Set one in Members first.'); return; }
-    var y = r.year;
+    var y = r.year, p = r.prog;
     function logList(kind) {
       var items = y[kind] || [];
-      return '<div class="card stack"><div class="row" style="justify-content:space-between"><b>' + esc(BEN_LOG[kind]) + 's: ' + items.length + '</b></div>' +
-        '<div class="row"><input type="date" id="ld_' + kind + '" value="' + today() + '" style="width:auto"><input id="ln_' + kind + '" placeholder="Note (optional), e.g. Christmas cakes Reel" style="flex:1;min-width:160px"><button class="btn small primary" data-log="' + kind + '">+ Log</button></div>' +
-        (items.length ? '<div class="muted">' + items.slice(0, 6).map(function (e, i) { return esc(d(e.at)) + (e.note ? ' — ' + esc(e.note) : '') + ' <button class="btn small ghost danger" data-unlog="' + kind + '" data-i="' + i + '" style="min-height:22px;padding:0 6px">×</button>'; }).join('<br>') + (items.length > 6 ? '<br>…and ' + (items.length - 6) + ' more' : '') + '</div>' : '') + '</div>';
+      return '<div class="card stack"><div class="row" style="justify-content:space-between;align-items:center"><b>' + BEN_ICO[kind] + ' ' + esc(BEN_LOG[kind]) + 's: ' + items.length + ' this year</b>' + benProg(p, kind) + '</div>' +
+        '<div class="row"><input type="date" id="ld_' + kind + '" value="' + today() + '" style="width:auto"><input id="ln_' + kind + '" placeholder="Note the member sees (optional), e.g. Christmas cakes Reel" style="flex:1;min-width:160px">' +
+        '<label class="muted" style="display:flex;gap:6px;align-items:center;font-weight:500;margin:0"><input type="checkbox" id="lt_' + kind + '" checked style="width:auto"> Let them know</label><button class="btn small primary" data-log="' + kind + '">+ Log</button></div>' +
+        (items.length ? '<div class="muted">' + items.slice(0, 8).map(function (e, i) { return esc(d(e.at)) + (e.note ? ' — ' + esc(e.note) : '') + (e.loggedAt && e.notify === false ? ' <span title="Member wasn’t notified">🔕</span>' : '') + ' <button class="btn small ghost danger" data-unlog="' + kind + '" data-i="' + i + '" style="min-height:22px;padding:0 6px">×</button>'; }).join('<br>') + (items.length > 8 ? '<br>…and ' + (items.length - 8) + ' more' : '') + '</div>' : '') + '</div>';
     }
     var s = sheet('<h2 style="margin:0">Business Club benefits</h2><div class="muted">' + esc(r.member.name || '') + ' ' + esc(email) + ' · membership year ending <b>' + esc(d(r.yearKey)) + '</b>' + (r.pastYears.length ? ' · earlier years kept: ' + r.pastYears.map(function (k) { return esc(d(k)); }).join(', ') : '') + '</div>' +
-      '<div class="card stack"><b>📣 Business Spotlight or collab (Instagram + Blog)</b><div class="f2"><div><label for="bsS">Status</label><select id="bsS"><option value="none">Not yet</option><option value="scheduled">Scheduled</option><option value="done">Done</option></select></div><div><label for="bsD">Date</label><input type="date" id="bsD" value="' + esc(y.spotlight.date) + '"></div></div><div><label for="bsL">Link to the post or blog (optional)</label><input id="bsL" placeholder="https://…" value="' + esc(y.spotlight.link) + '"></div></div>' +
+      '<div class="card"><b>🎯 Against targets</b><div class="row" style="margin-top:8px;gap:6px">' + ['stories', 'reposts', 'discovery', 'collabs', 'spotlight'].map(function (k) { return '<span>' + benProg(p, k) + '</span>'; }).join('') + '</div></div>' +
+      '<h2 style="margin:6px 0 0">Log what you’ve done</h2>' + logList('stories') + logList('reposts') + logList('discovery') + logList('collabs') +
+      '<div class="card stack"><div class="row" style="justify-content:space-between;align-items:center"><b>📣 Business Spotlight — dedicated post (Instagram + Blog)</b>' + benProg(p, 'spotlight') + '</div><div class="f2"><div><label for="bsS">Status</label><select id="bsS"><option value="none">Not yet</option><option value="scheduled">Scheduled</option><option value="done">Done</option></select></div><div><label for="bsD">Date</label><input type="date" id="bsD" value="' + esc(y.spotlight.date) + '"></div></div><div><label for="bsL">Link to the post or blog (optional — the member sees it)</label><input id="bsL" placeholder="https://…" value="' + esc(y.spotlight.link) + '"></div></div>' +
       '<div class="card stack"><b>⭐ Featured Business &amp; 🛍️ Marketplace (1 year)</b><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bfF" style="width:auto"' + (y.featured.done ? ' checked' : '') + '> Featured Business is live' + (y.featured.date ? ' <span class="muted">(since ' + esc(d(y.featured.date)) + ')</span>' : '') + '</label>' +
         '<label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bfM" style="width:auto"' + (y.marketplace.done ? ' checked' : '') + '> Marketplace listing is live' + (y.marketplace.date ? ' <span class="muted">(since ' + esc(d(y.marketplace.date)) + ')</span>' : '') + '</label>' +
         '<div><label for="bfB">✅ Verification badge</label><select id="bfB"><option value="unknown">Not checked yet</option><option value="yes">Verified</option><option value="no">Not verified yet</option><option value="not_eligible">Not eligible</option></select></div></div>' +
       '<div class="card stack"><b>🧭 Business Check-Up with Accountability</b><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bcD" style="width:auto"' + (y.checkup.done ? ' checked' : '') + '> Check-Up done</label><div><label for="bcT">Date</label><input type="date" id="bcT" value="' + esc(y.checkup.date) + '" style="width:auto"></div>' +
         '<div><label for="bcP">Agreed priorities (one per line, up to 5) — these appear on the member’s Today screen</label><textarea id="bcP" rows="4" placeholder="Post 3 times a week with a clear call to action\nFollow up every enquiry within 2 days\nAdd prices to Instagram Highlights">' + esc((y.checkup.priorities || []).join('\n')) + '</textarea>' + (y.checkup.priorities.length ? '<div class="muted">Member has ticked ' + (y.prioritiesDone || []).length + ' of ' + y.checkup.priorities.length + '</div>' : '') + '</div>' +
         '<div><label for="bcN">Private notes (only admins see these)</label><textarea id="bcN" rows="3">' + esc(y.checkup.notes) + '</textarea></div></div>' +
-      '<div class="row"><button class="btn primary" id="bSave">Save benefits</button><button class="btn ghost" id="bClose">Close</button></div>' +
-      '<h2 style="margin:6px 0 0">Shares this year</h2>' + logList('stories') + logList('reposts') + logList('discovery'));
+      '<label class="muted" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="bNt" checked style="width:auto"> Let them know when something above becomes done or live</label>' +
+      '<div class="row"><button class="btn primary" id="bSave">Save</button><button class="btn ghost" id="bClose">Close</button></div>');
     $('#bsS', s).value = y.spotlight.status; $('#bfB', s).value = y.badge;
     $('#bClose', s).onclick = function () { s.remove(); if (after) after(); };
     $('#bSave', s).onclick = async function () {
       var b = this; b.disabled = true;
       try {
         await api('benefits-update', { email: email, patch: {
+          notify: $('#bNt', s).checked,
           spotlight: { status: $('#bsS', s).value, date: $('#bsD', s).value, link: $('#bsL', s).value },
           featured: { done: $('#bfF', s).checked, date: y.featured.date }, marketplace: { done: $('#bfM', s).checked, date: y.marketplace.date }, badge: $('#bfB', s).value,
           checkup: { done: $('#bcD', s).checked, date: $('#bcT', s).value, priorities: $('#bcP', s).value, notes: $('#bcN', s).value } } });
         toast('Benefits saved'); s.remove(); if (after) after();
       } catch (x) { toast(x.message); b.disabled = false; }
     };
-    $$('[data-log]', s).forEach(function (b) { b.onclick = async function () { var k = b.dataset.log; try { await api('benefits-log', { email: email, kind: k, date: $('#ld_' + k, s).value, note: $('#ln_' + k, s).value }); toast(BEN_LOG[k] + ' logged'); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
+    $$('[data-log]', s).forEach(function (b) { b.onclick = async function () { var k = b.dataset.log; var tell = $('#lt_' + k, s).checked; try { await api('benefits-log', { email: email, kind: k, date: $('#ld_' + k, s).value, note: $('#ln_' + k, s).value, notify: tell }); toast(BEN_LOG[k] + ' logged' + (tell ? ' — member told' : '')); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
     $$('[data-unlog]', s).forEach(function (b) { b.onclick = async function () { if (!confirm('Remove this entry?')) return; try { await api('benefits-unlog', { email: email, kind: b.dataset.unlog, index: Number(b.dataset.i) }); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
   }
 
-  // ── overview ──
   async function vOverview() {
     loading();
     var o = S.overview = await api('overview');
@@ -388,7 +425,7 @@ tbody tr:hover{background:#FFFCF5}
     if (/log/.test(c.email)) issues.push('STUDIO_EMAIL_MODE=log is on: codes go to function logs, not email. Testing only — never in production.');
     if (!c.ai) issues.push('No AI key found (OPENROUTER_API_KEY / STUDIO_OPENROUTER_API_KEY).');
     if (!c.stripe) issues.push('Stripe isn\u2019t fully configured \u2014 AI Power can\u2019t be bought yet.');
-    app.innerHTML = '<main><h1>Overview · ' + esc(o.month) + '</h1>' +
+    app.innerHTML = '<main><h1 id="ovH1">Overview · ' + esc(o.month) + '</h1>' +
       (issues.length ? '<div class="warn stack" style="margin-bottom:14px">' + issues.map(function (i) { return '<div>⚠️ ' + esc(i) + '</div>'; }).join('') + '</div>' : '') +
       (o.alertCount ? '<div class="warn" style="margin-bottom:14px">You have <b>' + o.alertCount + '</b> alert(s). <button class="btn small ghost" id="toAlerts">View</button></div>' : '') +
       '<div class="grid">' +
@@ -406,6 +443,16 @@ tbody tr:hover{background:#FFFCF5}
       row('Business Club auto-access', c.clubLink && c.webhook ? 'On \u2014 paying the Club link gives Studio access automatically' : 'Off \u2014 set STUDIO_CLUB_PAYMENT_LINK and the Stripe webhook (see setup guide); add members manually until then') +
       row('Spend warning', 'Email + alert at \u00a3' + o.settings.spendWarnGbp + ' and \u00a3' + (o.settings.spendWarnGbp * 2) + ' a month. The Studio never stops for spending.') + '</tbody></table></div></main>';
     var ta = $('#toAlerts'); if (ta) ta.onclick = function () { go('alerts'); };
+    try {
+      var bd = await api('benefits-due');
+      if (bd.members && $('#ovH1')) {
+        var box = document.createElement('div'); box.className = 'note'; box.style.marginBottom = '14px';
+        box.innerHTML = '💚 <b>Business Club this week:</b> ' + (bd.weekMembers ? bd.stories + ' Story share' + (bd.stories === 1 ? '' : 's') + ' and ' + bd.reposts + ' repost' + (bd.reposts === 1 ? '' : 's') + ' still due across ' + bd.weekMembers + ' member' + (bd.weekMembers === 1 ? '' : 's') + '.' : 'all Stories and reposts done ✓') +
+          (bd.monthMembers ? ' ' + bd.discovery + ' discovery feature' + (bd.discovery === 1 ? '' : 's') + ' due this month.' : '') + ' <button class="btn small ghost" id="toBen">Open Benefits</button>';
+        $('#ovH1').after(box);
+        $('#toBen').onclick = function () { S.benFilter = bd.weekMembers ? 'week' : 'all'; go('benefits'); };
+      }
+    } catch (x) {}
   }
   function stat(v, l) { return '<div class="card stat"><b>' + esc(v) + '</b><span>' + esc(l) + '</span></div>'; }
   function row(k, v) { return '<tr><th style="width:160px;background:none">' + esc(k) + '</th><td>' + esc(v) + '</td></tr>'; }
