@@ -9,6 +9,7 @@
  * once the thing is dealt with (review done, weekly shares met, alert dismissed …).
  */
 const crypto = require('crypto');
+const ukDay = iso => (iso ? core.dayKey(new Date(iso)) : ''); // UK date of a timestamp (ticks just after midnight count for the right day)
 const core = require('./core');
 const { HttpError, cas, getJson, cleanText } = core;
 const benefits = require('./benefits');
@@ -160,7 +161,7 @@ async function refresh(data) {
     }
     // Tidy: forget finished items after 30 days.
     const cutoff = addDays(day, -30);
-    for (const [k, it] of Object.entries(items)) if ((it.doneAt || it.skippedAt) && (it.doneAt || it.skippedAt).slice(0, 10) < cutoff) delete items[k];
+    for (const [k, it] of Object.entries(items)) if ((it.doneAt || it.skippedAt) && ukDay(it.doneAt || it.skippedAt) < cutoff) delete items[k];
     s.lastGen = now;
     view = makeView(s, day);
     return s;
@@ -188,7 +189,7 @@ function makeView(s, day) {
   const open = all.filter(it => !it.doneAt && !it.skippedAt);
   const overdue = open.filter(it => it.due < day).sort(sort).map(it => ({ ...it, daysOverdue: daysBetween(it.due, day) }));
   const todayItems = open.filter(it => it.due >= day).sort(sort);
-  const doneToday = all.filter(it => (it.doneAt && it.doneAt.slice(0, 10) === day) || (it.skippedAt && it.skippedAt.slice(0, 10) === day))
+  const doneToday = all.filter(it => ukDay(it.doneAt) === day || ukDay(it.skippedAt) === day)
     .sort((a, b) => (b.doneAt || b.skippedAt).localeCompare(a.doneAt || a.skippedAt));
   return { today: day, overdue, todayItems, doneToday, counts: { overdue: overdue.length, today: todayItems.length, done: doneToday.filter(i => i.doneAt).length } };
 }

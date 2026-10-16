@@ -64,6 +64,7 @@ tbody tr:hover{background:#FFFCF5}
 .mkc-btn{margin-top:4px;background:#057A44;color:#fff;border-radius:8px;padding:8px;font-weight:700;text-align:center;font-size:12.5px}
 .td-list{padding:4px 14px}.td{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}.td:last-child{border-bottom:0}
 .td-check{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:2px solid var(--green);background:#fff;color:#fff;font-weight:800;cursor:pointer;margin-top:1px}
+a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:center}
 .td-check.td-share{width:auto;min-width:38px;padding:0 8px;border-radius:14px;color:var(--green);font-size:13px}.td-check.td-share:hover{background:var(--green);color:#fff}
 .td-done .td-check{background:var(--green)}.td-done .td-b b{text-decoration:line-through;color:var(--muted)}.td-late{background:#FFF7F6;margin:0 -14px;padding:11px 14px}
 .td-b{flex:1;min-width:0}.td-m{font-size:12.5px;margin-top:2px}.tdbar{height:8px;background:#E7EDE9;border-radius:99px;overflow:hidden;margin:10px 0 4px}.tdbar span{display:block;height:100%;background:var(--green)}
@@ -620,8 +621,15 @@ tbody tr:hover{background:#FFFCF5}
   var TD_REPEAT = { once: 'Once', daily: 'Every day', weekdays: 'Weekdays (Mon–Fri)', weekly: 'Every week' };
   var TD_DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   function tdDay(day) { return new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); }
+  function tdIg(it) {
+    var g = it.ig; if (!g) return '';
+    if (g.handle) return '<a class="btn small ghost ig" target="_blank" rel="noopener" href="https://www.instagram.com/' + encodeURIComponent(g.handle) + '/" title="Open their Instagram">📷 @' + esc(g.handle) + ' ↗</a>' +
+      (g.source === 'admin' ? '<button class="btn small ghost" data-tig="' + esc((it.meta && it.meta.email) || g.email || '') + '" data-cur="' + esc(g.handle) + '" title="Change Instagram" style="color:var(--muted)">✎</button>' : '');
+    var em = (it.meta && it.meta.email) || g.email;
+    return em ? '<span class="muted" style="font-size:13px;align-self:center">No Instagram on file</span><button class="btn small ghost" data-tig="' + esc(em) + '">+ Add Instagram</button>' : '';
+  }
   function tdActions(it) {
-    var m = it.meta || {}, out = [];
+    var m = it.meta || {}, out = [tdIg(it)];
     if (it.kind === 'share') out.push('<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open record</button>');
     if (it.kind === 'market') out.push('<button class="btn small ghost" data-tgo="market">Review</button>');
     if (it.kind === 'verify' || it.kind === 'spotlight') out.push('<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>' + (m.number ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(m.number) + '">GOV.UK</a>' : ''));
@@ -658,6 +666,13 @@ tbody tr:hover{background:#FFFCF5}
     var refresh = function () { vToday(); };
     $$('[data-tdone]').forEach(function (b) { b.onclick = async function () { var row = b.closest('.td'); try { await api('todo-mark', { key: b.dataset.tdone, how: row.classList.contains('td-done') ? 'undo' : 'done' }); refresh(); } catch (x) { toast(x.message); } }; });
     $$('[data-tskip]').forEach(function (b) { b.onclick = async function () { try { await api('todo-mark', { key: b.dataset.tskip, how: 'skip' }); toast('Skipped'); refresh(); } catch (x) { toast(x.message); } }; });
+    $$('[data-tig]').forEach(function (b) {
+      b.onclick = async function () {
+        var h = prompt('Instagram handle or link for this business (e.g. toluskitchen_leeds):', b.dataset.cur || '');
+        if (h === null || !h.trim()) return;
+        try { var r = await api('member-ig-set', { email: b.dataset.tig, handle: h.trim() }); toast('Instagram saved: @' + r.handle); refresh(); } catch (x) { toast(x.message); }
+      };
+    });
     $$('[data-tshare]').forEach(function (b) {
       b.onclick = async function () {
         b.disabled = true; var word = TD_SHARE[b.dataset.ty] || 'share';

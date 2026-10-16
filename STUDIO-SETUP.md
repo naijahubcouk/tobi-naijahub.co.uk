@@ -304,3 +304,10 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - The row's **+1** logs ONE share of that type in the member's record (they see it in My benefits and get the usual push). The row stays and updates until the target is met, then ticks itself. An **Undo** shows for 6 seconds (`todo-share-undo`).
 - **Skip** hides only that row for today. **Open record** opens the member's benefits.
 - Still up to 5 members at a time (longest-waiting first); each can have 1–3 rows. Old combined share tasks are replaced automatically.
+
+## 7q. Admin Today — Instagram on member tasks
+
+- Every task about a member (shares, Companies House check, Spotlight, renewal, and Marketplace reviews from members or linked to an Auntie Tobi listing) shows **📷 @handle ↗**, opening their Instagram in a new tab.
+- Handle comes from: the member's Business Studio profile → one added in Admin (`admin-ig/<email>`) → their Auntie Tobi directory listing.
+- If none: "No Instagram on file · + Add Instagram" — paste a handle or link once (`member-ig-set`); ✎ changes one you added.
+- Also fixed: between midnight and 1am UK time (BST), items ticked showed as not done today, new follow-ups were dated a day early, and lesson views could count twice — dates now use UK time.

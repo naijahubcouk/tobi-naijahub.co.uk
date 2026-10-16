@@ -7,6 +7,7 @@
  * Automatic items come from the member's own follow-ups, overdue invoices and Check-Up priorities, and tick themselves.
  */
 const crypto = require('crypto');
+const ukDay = iso => (iso ? core.dayKey(new Date(iso)) : ''); // UK date of a timestamp (ticks just after midnight count for the right day)
 const core = require('./core');
 const { HttpError, cas, getJson, cleanText, enc } = core;
 const fu = require('./followups');
@@ -114,7 +115,7 @@ async function refresh(email, member, access, opts) {
     // Automatic items tick themselves once dealt with.
     for (const [k, it] of Object.entries(items)) if (it.auto && !it.doneAt && !it.skippedAt && !want[k]) { it.doneAt = now; it.autoDone = true; }
     const cutoff = addDays(day, -30);
-    for (const [k, it] of Object.entries(items)) if ((it.doneAt || it.skippedAt) && (it.doneAt || it.skippedAt).slice(0, 10) < cutoff && (it.due || '') < day) delete items[k];
+    for (const [k, it] of Object.entries(items)) if ((it.doneAt || it.skippedAt) && ukDay(it.doneAt || it.skippedAt) < cutoff && (it.due || '') < day) delete items[k];
     s.lastGen = now;
     // Coming up: your one-off tasks with a future date, and weekly tasks on their days.
     // (Daily and weekday tasks are shown once under Repeating tasks, not on every future day.)
@@ -142,7 +143,7 @@ function makeView(s, day, future, full) {
   const open = all.filter(it => !it.doneAt && !it.skippedAt);
   const overdue = open.filter(it => it.due < day).sort(sort).map(it => ({ ...it, daysOverdue: daysBetween(it.due, day) }));
   const todayItems = open.filter(it => it.due === day).sort(sort);
-  const doneToday = all.filter(it => ((it.doneAt || it.skippedAt) || '').slice(0, 10) === day).sort((a, b) => (b.doneAt || b.skippedAt).localeCompare(a.doneAt || a.skippedAt));
+  const doneToday = all.filter(it => ukDay(it.doneAt || it.skippedAt) === day).sort((a, b) => (b.doneAt || b.skippedAt).localeCompare(a.doneAt || a.skippedAt));
   const comingUp = (future || []).sort(sort);
   const out = { today: day, overdue, todayItems, doneToday, comingUp, defs: (s.defs || []).filter(d => d.repeat !== 'once'),
     counts: { overdue: overdue.length, today: todayItems.length, done: doneToday.filter(i => i.doneAt).length, comingUp: comingUp.length } };
