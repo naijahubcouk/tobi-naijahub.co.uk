@@ -8828,13 +8828,17 @@ function resetToWelcome() {
       console.log('message added');
       showFeaturedEventCard();
       showXanderFeatureCard();
+      addTipMessage('<div data-club-card="1" style="background:linear-gradient(135deg,#057A44,#04603a);border-radius:12px;padding:14px 16px;color:white;">'
+        + '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💚 Own a business? Join the Auntie Tobi Business Club</div>'
+        + '<div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.9);margin-bottom:10px;">Get seen by more Nigerians in the UK — Spotlight, Featured Business, Marketplace &amp; your own Business Studio.</div>'
+        + '<a href="/business-club" style="display:inline-block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:800;padding:9px 16px;border-radius:20px;">Join the Business Club →</a></div>');
       showSponsoredAd();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
