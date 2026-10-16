@@ -5395,7 +5395,7 @@ function showDailyMotivation() {
 // ============================================================
 // MARKETPLACE (Products/Services)
 // ============================================================
-const MARKETPLACE_PRODUCTS = [
+var MARKETPLACE_PRODUCTS = [
   {
     id: 'mp11',
     name: 'Shirt Dress',
@@ -5556,6 +5556,16 @@ const MARKETPLACE_PRODUCTS = [
     btnText: 'Learn More'
   },
 ];
+// Live Marketplace listings (reviewed in Studio Admin → Marketplace). The list above is only a fallback.
+(function loadLiveMarketplace() {
+  try {
+    fetch('/.netlify/functions/studio-market?feed=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (!d || !Array.isArray(d.items) || !d.items.length) return;
+      MARKETPLACE_PRODUCTS.length = 0;
+      d.items.forEach(function (p) { MARKETPLACE_PRODUCTS.push(p); });
+    }).catch(function () {});
+  } catch (e) {}
+})();
 
 function buildProductCard(p, compact) {
   var btnLink = p.link || '#';

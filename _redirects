@@ -42,6 +42,7 @@
 /push    /push.html    200
 /group-advertising-policy  /group-advertising-policy.html  200
 /featured-businesses  /featured-businesses.html  200
+/marketplace/list  /marketplace-list.html  200
 /marketplace  /marketplace.html  200
 /business-club  /business-club.html  200
 # ── Business Studio (members-only) ──
