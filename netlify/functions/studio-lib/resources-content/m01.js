@@ -2,6 +2,7 @@
 // Module 01 — Start Here. Formatting: ## Heading, - bullet, 1. numbered, **bold**, > Tip box, [link](https://…)
 module.exports = {
   'Welcome to Auntie Tobi Business Club': {
+    seedRev: 3,
     summary: 'What the Business Club is for, what you get, and the simplest way to start using it this week.',
     tags: ['all'], reviewMonths: 12,
     learn: `Welcome to the Auntie Tobi Business Club. 💚
@@ -20,7 +21,7 @@ The full list is on the [Business Club page](https://auntietobi.co.uk/business-c
 
 - **This Resources library** — practical lessons, checklists, templates and worksheets.
 - **Business Studio** — AI help with posts, captions, Reels, offers and customer messages, plus free tools for planning, tracking, invoices and images.
-- **Visibility in the Auntie Tobi community** — such as a priority directory listing, one dedicated feature post and one place in a paid group advert during your membership year, and selected reposts and discovery opportunities.
+- **Visibility in the Auntie Tobi community** — such as a priority directory listing, one dedicated feature post during your membership year, and selected reposts and discovery opportunities.
 - **A verified badge** for eligible businesses that complete verification.
 
 If you have a question about any of these, message Auntie Tobi on [WhatsApp](https://wa.me/447594674940).
@@ -72,6 +73,7 @@ None of these took more than 20 minutes. By the end of the month her profile is 
   },
 
   'How to Make the Most of Your Membership': {
+    seedRev: 3,
     summary: 'A simple weekly routine for using Studio, Resources and your visibility benefits — in about an hour a week.',
     tags: ['all'], reviewMonths: 12,
     learn: `Most memberships go unused not because they’re not useful, but because life gets busy. The members who get the most out of the Business Club usually have a simple routine. Here is one that takes about an hour a week, split into small pieces.
@@ -105,7 +107,7 @@ Always read what Studio writes before you use it. You know your business, your p
 
 ## Plan ahead for your visibility benefits
 
-Your membership includes visibility in the Auntie Tobi community, including a dedicated feature post and a place in a paid group advert during your membership year (see the [Business Club page](https://auntietobi.co.uk/business-club) for full details). These work best when you’re ready for them:
+Your membership includes visibility in the Auntie Tobi community, including a dedicated feature post during your membership year (see the [Business Club page](https://auntietobi.co.uk/business-club) for full details). These work best when you’re ready for them:
 
 - Your Instagram bio and link make it clear how to order or book.
 - You have a few good photos or videos that show what you do.
