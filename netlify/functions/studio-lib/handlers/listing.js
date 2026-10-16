@@ -14,6 +14,7 @@ const gen = require('../generate');
 const SECTIONS = ['beauty & fashion', 'food dining & grocieries', 'events & entertainment', 'professional services & communities', 'home & services'];
 const CATS = ['makeup artists', 'caterers', 'ankara & traditional wears', 'skincare', 'restaurants', 'foodstores & groceries', 'photography', 'cakes & desert', 'wig vendors', 'gele stylists', 'fashion & accessories', 'event planners', 'fashion designers', 'alaga', 'small chops', 'nigerian snacks', 'tutors', 'hair care', 'microblading', 'printing services', 'suya spot', 'djs', 'hair stylists/braiders', 'home & kitchen', 'education consultancy'];
 const LIMITS = { title: 60, meta: 160, desc: 1600 };
+const NAME_RULES = `Business-name rules (for "titles"): the listing title is JUST the business name — nothing else (no "–", no location or description unless it is genuinely part of the name). Work out the real name from the bio and/or the Instagram username: split joined words, add capitals and apostrophes (e.g. toluskitchen_leeds → "Tolu's Kitchen", glam.by.funmi → "Glam by Funmi", naijasnacksuk → "Naija Snacks UK"). Use Title Case (small words like "by", "and", "of" lower-case unless first; keep acronyms like UK, NG, MUA in capitals). Give TWO different sensible readings of the name (e.g. with and without a place word, or two ways to split the username). If a name is written clearly in the bio, option 1 must be that name, tidied. Never invent words that aren't suggested by the username or bio. Max 50 characters each.`;
 
 function slugify(s) { return String(s || '').toLowerCase().replace(/['’‘`]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60); }
 const clip = (s, n) => { s = cleanText(s, n + 40); if (s.length <= n) return s; const cut = s.slice(0, n); const sp = cut.lastIndexOf(' '); return (sp > n * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s,;:–—-]+$/, ''); };
@@ -34,28 +35,38 @@ function fullPrompt(bio, handle, notes) {
   return `${brief(bio, handle, notes)}
 
 Write the directory listing:
-- title: max 60 characters. Format like "Business Name – What They Do in Location" (use the real business name from the bio or handle). If no location, leave it out of the title.
+- titles: an array of exactly 2 options for the business name (see the rules below).
 - meta: the Google meta description, 140–160 characters. Say what they offer, where, and who for, ending with a gentle call to action (e.g. "Book via Auntie Tobi.").
 - description: the full listing description, 120–200 words, 2–3 short paragraphs separated by a blank line: what they do and their specialities; who they serve and where (mention delivery or travel only if stated); how to order or book (use only contact methods in the bio, e.g. "Send a DM on Instagram"). Write about the business in the third person.
-- details: pulled ONLY from the bio/notes, empty string if not there: name (business name), category (best match from this list, or your own short lower-case category if none fits: ${CATS.join(', ')}), section (one of: ${SECTIONS.join(', ')}), location (town/city as written), phone, whatsapp, email, website, instagram (handle without @).
-Return JSON: {"title":"","meta":"","description":"","details":{"name":"","category":"","section":"","location":"","phone":"","whatsapp":"","email":"","website":"","instagram":""}}`;
+- details: pulled ONLY from the bio/notes, empty string if not there: name (the same as titles[0]), category (best match from this list, or your own short lower-case category if none fits: ${CATS.join(', ')}), section (one of: ${SECTIONS.join(', ')}), location (town/city as written), phone, whatsapp, email, website, instagram (handle without @).
+${NAME_RULES}
+Return JSON: {"titles":["",""],"meta":"","description":"","details":{"name":"","category":"","section":"","location":"","phone":"","whatsapp":"","email":"","website":"","instagram":""}}`;
 }
 
 function partPrompt(part, bio, handle, notes, current) {
   const what = {
-    title: 'a NEW listing title, max 60 characters, different wording from the current one. Format like "Business Name – What They Do in Location".',
+    title: '2 NEW options for the business name, different from the current ones where sensible (follow the business-name rules below).',
     meta: 'a NEW Google meta description, 140–160 characters, different wording from the current one, ending with a gentle call to action.',
     desc: 'a NEW full listing description, 120–200 words, 2–3 short paragraphs separated by a blank line, different wording and structure from the current one. Third person.',
   }[part];
   return `${brief(bio, handle, notes)}
 
 Current listing (for context):
-Title: ${current.title || ''}
+Business name options: ${(current.titles || [current.title || '']).join(' / ')}
 Meta description: ${current.meta || ''}
 Description: ${current.description || ''}
 
 Write ${what}
-Return JSON: {"text":""}`;
+${part === 'title' ? NAME_RULES + '\nReturn JSON: {"titles":["",""]}' : 'Return JSON: {"text":""}'}`;
+}
+
+function cleanTitles(list) {
+  const out = [];
+  for (const t of Array.isArray(list) ? list : []) {
+    const v = clip(String(t || '').replace(/^["'“”]+|["'“”]+$/g, ''), LIMITS.title);
+    if (v && !out.some(o => o.toLowerCase() === v.toLowerCase())) out.push(v);
+  }
+  return out.slice(0, 2);
 }
 
 function parse(text) {
@@ -94,16 +105,23 @@ exports.handler = handler(async (ctx) => {
   await gen.addGlobal(core.monthKey(), { id: 'listing', tool: 'listing', cost: 0, inTok: res.inTok, outTok: res.outTok, costUsd: res.costUsd }, settings).catch(() => {});
   const p = parse(res.text);
 
+  if (part === 'title') {
+    const titles = cleanTitles(p.titles);
+    if (!titles.length) throw new HttpError(502, 'ai_error', 'The AI gave an odd answer — please try again.');
+    return { part, titles };
+  }
   if (part) {
     const text = part === 'desc' ? multi(p.text, LIMITS.desc) : clip(p.text, LIMITS[part]);
     if (!text) throw new HttpError(502, 'ai_error', 'The AI gave an odd answer — please try again.');
     return { part, text };
   }
+  const titles = cleanTitles(p.titles || (p.title ? [p.title] : []));
   const out = {
-    title: clip(p.title, LIMITS.title),
+    titles,
+    title: titles[0] || '',
     meta: clip(p.meta, LIMITS.meta),
     description: multi(p.description, LIMITS.desc),
-    details: cleanDetails(p.details, handle),
+    details: cleanDetails({ ...(p.details || {}), name: titles[0] || (p.details && p.details.name) }, handle),
   };
   if (!out.title || !out.meta || out.description.length < 40) throw new HttpError(502, 'ai_error', 'The AI gave an odd answer — please tap Generate again.');
   return out;

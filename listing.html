@@ -42,6 +42,12 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
 .hist{display:flex;flex-direction:column;gap:6px}.hist button{text-align:left;background:#FAFAF7;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;cursor:pointer;color:var(--navy)}
 .hist small{display:block;color:var(--muted);font-size:12px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.topts{display:flex;flex-direction:column;gap:8px}
+.topt{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;background:#fff}
+.topt.on{border-color:var(--green);background:var(--green-l)}
+.topt .r{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center}
+.topt.on .r{border-color:var(--green);background:var(--green);box-shadow:inset 0 0 0 3px #fff}
+.topt b{flex:1;font-size:17px;min-width:0;overflow-wrap:anywhere}
 .hidden{display:none!important}
 @media (max-width:520px){.det{grid-template-columns:90px 1fr auto}}
 </style>
@@ -63,7 +69,11 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
 
   <section class="card hidden" id="result">
     <h2>Your listing</h2>
-    <div class="out"><div class="out-h"><b>Listing title</b><span class="count" id="cTitle"></span><button class="btn small ghost" data-re="title">↻ New</button><button class="btn small copy" data-copy="oTitle">Copy</button></div><textarea id="oTitle" rows="2"></textarea></div>
+    <div class="out"><div class="out-h"><b>Listing title — business name</b><button class="btn small ghost" data-re="title">↻ New</button></div>
+      <p class="hint" style="margin-top:-4px">Two ways to read the name. Tap one to use it — you can still edit it below.</p>
+      <div class="topts" id="tOpts"></div>
+      <div class="out-h" style="margin-top:2px"><b style="font-size:13px;color:var(--muted)">Chosen title</b><span class="count" id="cTitle"></span><button class="btn small copy" data-copy="oTitle">Copy</button></div>
+      <input id="oTitle" maxlength="80"></div>
     <div class="out"><div class="out-h"><b>Meta description</b><span class="count" id="cMeta"></span><button class="btn small ghost" data-re="meta">↻ New</button><button class="btn small copy" data-copy="oMeta">Copy</button></div><textarea id="oMeta" rows="3"></textarea>
       <div class="serp" aria-label="Google preview"><div class="u" id="sUrl">auntietobi.co.uk › biz</div><div class="t" id="sTitle"></div><div class="d" id="sMeta"></div></div></div>
     <div class="out"><div class="out-h"><b>Full description</b><span class="count" id="cDesc"></span><button class="btn small ghost" data-re="desc">↻ New</button><button class="btn small copy" data-copy="oDesc">Copy</button></div><textarea id="oDesc" rows="10"></textarea></div>
@@ -99,6 +109,28 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
     el.className = 'count' + (hi && n > hi ? ' bad' : lo && n < lo ? ' warn' : '');
   }
   function words(s) { return (String(s).trim().match(/\S+/g) || []).length; }
+  function slugify(t) { return String(t || '').toLowerCase().replace(/['’‘`]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60); }
+  function renderTitles() {
+    var list = (cur && cur.titles && cur.titles.length) ? cur.titles : (cur && cur.title ? [cur.title] : []);
+    var chosen = $('#oTitle').value;
+    $('#tOpts').innerHTML = list.map(function (t, i) {
+      return '<div class="topt' + (t === chosen ? ' on' : '') + '" data-ti="' + i + '" role="radio" tabindex="0" aria-checked="' + (t === chosen) + '"><span class="r"></span><b>' + esc(t) + '</b><button class="btn small copy" data-ct="' + i + '">Copy</button></div>';
+    }).join('');
+    document.querySelectorAll('[data-ti]').forEach(function (el) {
+      el.onclick = function (e) { if (e.target.closest('[data-ct]')) return; $('#oTitle').value = list[Number(el.dataset.ti)]; useName(); };
+      el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); } };
+    });
+    document.querySelectorAll('[data-ct]').forEach(function (b) { b.onclick = function () { copy(list[Number(b.dataset.ct)], b); }; });
+  }
+  // The chosen name is the business name in Details and the suggested /biz/ link.
+  function useName() {
+    if (!cur) return;
+    var name = $('#oTitle').value.trim();
+    cur.details = cur.details || {};
+    if (name) { cur.details.name = name; cur.details.slug = slugify(name); cur.details.listingUrl = cur.details.slug ? 'https://www.auntietobi.co.uk/biz/' + cur.details.slug : ''; }
+    $('#sUrl').textContent = cur.details.slug ? 'auntietobi.co.uk › biz › ' + cur.details.slug : 'auntietobi.co.uk › biz';
+    renderDetails(cur.details); renderTitles(); refreshCounts();
+  }
   function refreshCounts() {
     var t = $('#oTitle').value, m = $('#oMeta').value, d = $('#oDesc').value;
     counter($('#cTitle'), t.length, 0, 60); counter($('#cMeta'), m.length, 140, 160);
@@ -117,11 +149,9 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
   }
   function show(r) {
     cur = r;
-    $('#oTitle').value = r.title; $('#oMeta').value = r.meta; $('#oDesc').value = r.description;
-    $('#sUrl').textContent = r.details && r.details.slug ? 'auntietobi.co.uk › biz › ' + r.details.slug : 'auntietobi.co.uk › biz';
-    renderDetails(r.details || {});
+    $('#oTitle').value = r.title || (r.titles && r.titles[0]) || ''; $('#oMeta').value = r.meta; $('#oDesc').value = r.description;
     $('#result').classList.remove('hidden');
-    refreshCounts(); ['#oTitle', '#oMeta', '#oDesc'].forEach(function (s) { grow($(s)); });
+    useName(); ['#oMeta', '#oDesc'].forEach(function (s) { grow($(s)); });
   }
   async function copy(text, btn) {
     try { await navigator.clipboard.writeText(text); }
@@ -131,7 +161,7 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
   function saveHist() {
     if (!cur || !cur.id) return;
     var h = lsGet().filter(function (x) { return x.id !== cur.id; });
-    h.unshift({ id: cur.id, at: cur.at, inputs: cur.inputs, title: cur.title, meta: cur.meta, description: cur.description, details: cur.details });
+    h.unshift({ id: cur.id, at: cur.at, inputs: cur.inputs, title: cur.title, titles: cur.titles, meta: cur.meta, description: cur.description, details: cur.details });
     lsSet(h.slice(0, 20)); renderHist();
   }
   function renderHist() {
@@ -171,8 +201,9 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
       b.disabled = true; var old = b.textContent; b.textContent = 'Writing…';
       try {
         var r = await api({ action: 'generate', part: part, bio: inputs.bio, handle: inputs.handle, notes: inputs.notes, hp: $('#hpf').value, t: Date.now() - opened,
-          current: { title: $('#oTitle').value, meta: $('#oMeta').value, description: $('#oDesc').value } });
-        $(el).value = r.text; grow($(el)); refreshCounts();
+          current: { title: $('#oTitle').value, titles: cur.titles, meta: $('#oMeta').value, description: $('#oDesc').value } });
+        if (part === 'title') { cur.titles = r.titles; $('#oTitle').value = r.titles[0]; useName(); }
+        else { $(el).value = r.text; grow($(el)); refreshCounts(); }
       } catch (e) { $('#msg').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
       b.disabled = false; b.textContent = old;
     };
@@ -184,7 +215,9 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
     Object.keys(LABELS).forEach(function (k) { if (d[k]) lines.push(LABELS[k] + ': ' + (k === 'instagram' ? '@' + d[k] : d[k])); });
     copy(lines.join('\n'), $('#copyAll'));
   };
-  ['#oTitle', '#oMeta', '#oDesc'].forEach(function (s) { $(s).addEventListener('input', function () { grow($(s)); refreshCounts(); }); });
+  ['#oMeta', '#oDesc'].forEach(function (s) { $(s).addEventListener('input', function () { grow($(s)); refreshCounts(); }); });
+  $('#oTitle').addEventListener('input', function () { refreshCounts(); renderTitles(); });
+  $('#oTitle').addEventListener('change', useName);
   $('#clearHist').onclick = function () { if (confirm('Clear your recent listings on this device?')) { lsSet([]); renderHist(); } };
   renderHist();
 })();
