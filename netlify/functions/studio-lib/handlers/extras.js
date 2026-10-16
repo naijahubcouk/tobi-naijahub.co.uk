@@ -16,8 +16,9 @@ const nudges = require('../nudges');
 const shop = require('../shop');
 const fu = require('../followups');
 const benefits = require('../benefits');
+const memtodo = require('../memtodo');
 
-const VIEW = new Set(['nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine', 'benefits-seen']);
+const VIEW = new Set(['nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine', 'benefits-seen', 'todo-today', 'todo-mark', 'todo-add', 'todo-def-delete']);
 const idOf = v => { const s = String(v || ''); if (!/^[A-Za-z0-9_-]{4,20}$/.test(s)) throw new HttpError(400, 'bad_id', 'Invalid item.'); return s; };
 
 exports.handler = handler(async (ctx) => {
@@ -58,6 +59,11 @@ exports.handler = handler(async (ctx) => {
       await core.audit(email, 'verify_request', { number });
       return { benefits: benefits.forMember(r.yearKey, r.year) };
     }
+    // ── My to-do list ──
+    case 'todo-today': return memtodo.refresh(email, auth.member, auth.access);
+    case 'todo-mark': return { item: await memtodo.mark(email, auth.member, String(body.key || '').slice(0, 200), String(body.how || '')) };
+    case 'todo-add': return { def: await memtodo.addDef(email, body.task) };
+    case 'todo-def-delete': { await memtodo.deleteDef(email, String(body.id || '')); return { ok: true }; }
     case 'benefits-seen': {
       await prefs.markBenefitsSeen(email);
       return { ok: true };

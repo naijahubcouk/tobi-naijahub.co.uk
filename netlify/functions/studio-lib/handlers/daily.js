@@ -13,6 +13,8 @@ const growth = require('../growth');
 const resources = require('../resources');
 const fu = require('../followups');
 const benefits = require('../benefits');
+const memtodo = require('../memtodo');
+const notify = require('../notify');
 const { siteUrl } = require('./extras');
 
 const ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
@@ -123,13 +125,42 @@ async function sendWeeklyEmails(started) {
   return `sent=${sent} checked=${checked}`;
 }
 
+// Each member with reminders on gets their own message: how many tasks today and overdue.
+async function sendPersonalReminders(started) {
+  if (!core.env('ONESIGNAL_API_KEY')) return 'skipped (no ONESIGNAL_API_KEY)';
+  const settings = await core.getSettings();
+  let sent = 0, checked = 0, timedOut = false;
+  for (const k of await core.listKeys('prefs/')) {
+    if (Date.now() - started > 12000) { timedOut = true; break; }
+    const pr = await core.getJson(k);
+    if (!pr || !pr.remindersOn) continue;
+    const email = decodeURIComponent(k.slice('prefs/'.length));
+    const member = await core.getMember(email);
+    if (!member) continue;
+    const acc = core.access(member, settings);
+    if (!acc.canView) continue;
+    checked++;
+    let c = null;
+    try { c = await memtodo.counts(email, member, acc); } catch (e) { console.error('[studio] todo counts failed', e && e.message); }
+    const n = c ? c.today + c.overdue : 0;
+    const msg = n
+      ? `You have ${n} task${n === 1 ? '' : 's'} today${c.overdue ? `, ${c.overdue} overdue` : ''} 💚 Open your Business Studio to tick them off.`
+      : 'Your actions for today are ready 💚 Five minutes is all it takes.';
+    const r = await notify.pushToMember(email, 'Auntie Tobi Business Studio', msg);
+    if (/^2/.test(r)) sent++;
+  }
+  return `sent=${sent} checked=${checked}${timedOut ? ' (stopped early: time limit)' : ''}`;
+}
+
 exports.handler = async () => {
   const started = Date.now();
   const report = {};
-  try { report.push = await sendReminderPush(); } catch (e) { report.push = `error ${e && e.message}`; }
+  try { report.push = await sendPersonalReminders(started); } catch (e) { report.push = `error ${e && e.message}`; }
   try { report.email = await sendWeeklyEmails(started); } catch (e) { report.email = `error ${e && e.message}`; }
   console.log('[studio] daily', JSON.stringify(report));
   return { statusCode: 200, body: JSON.stringify(report) };
 };
 exports.buildDigest = buildDigest;
+exports.sendPersonalReminders = sendPersonalReminders;
+exports.sendReminderPush = sendReminderPush;
 exports.sendWeeklyEmails = sendWeeklyEmails;

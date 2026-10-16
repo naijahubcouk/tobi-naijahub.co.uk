@@ -304,6 +304,11 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .chbox{background:#EEF6FD;border:1px solid #CFE4F7;border-radius:12px;padding:12px}.chbox .hint{margin-bottom:0}
 .mktgrid{display:grid;gap:16px}@media(min-width:760px){.mktgrid{grid-template-columns:1fr 280px;align-items:start}}
 .clubticks{list-style:none;margin:4px 0 6px;padding:0;text-align:left}.clubticks li{position:relative;padding:4px 0 4px 24px;font-size:14.5px;line-height:1.45}.clubticks li::before{content:'✓';position:absolute;left:2px;color:var(--green);font-weight:800}
+.mtcard{margin-bottom:14px}.mt{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #EEF3EF}.mt:last-of-type{border-bottom:0}
+.mt-check{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:2px solid var(--green);background:#fff;color:#fff;font-weight:800;cursor:pointer;margin-top:1px}
+.mt-done .mt-check{background:var(--green)}.mt-done .mt-t{text-decoration:line-through;color:var(--muted)}.mt-t{font-size:15px;font-weight:600;line-height:1.35}
+.mt-late{background:#FFF6F5;margin:0 -14px;padding:9px 14px}.mt-od{color:var(--danger);font-weight:700}.mt-h{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.mt .btn.link{font-size:13px;padding:0;min-height:0}.mt-add summary{cursor:pointer;color:var(--green);font-weight:700;font-size:14px;margin-top:4px}
 .shared{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .benrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF3EF}.benrow:last-child{border-bottom:0}
@@ -1073,12 +1078,13 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     $('#p30').onclick = function () { showTool('planner', { days: '30' }, { back: showPlan, tab: 'plan' }); };
     try {
       if (!S.today) S.today = await api('studio-growth', 'today');
+      if (!$('#goalBox')) return; // left the Plan screen while it was loading
       var g = S.today.goal;
       $('#goalBox').innerHTML = '<div class="goalbar">🎯 <b>' + (g ? 'This week: ' + esc(S.today.goals[g.goal]) : 'No weekly goal yet') + '</b><button class="btn small ' + (g ? 'ghost' : 'gold') + '" id="pg">' + (g ? 'Change' : 'Set goal') + '</button></div>';
       $('#pg').onclick = function () { pickGoal(showPlan); };
       var r = await api('studio-growth', 'calendar-list');
       renderCalendar(r.items, r.today);
-    } catch (x) { $('#calBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; }
+    } catch (x) { if ($('#calBox')) $('#calBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; }
   }
 
   function renderCalendar(items, today) {
@@ -1347,7 +1353,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     api('studio-api', 'history-list', payload).then(function (r) {
       if (filter === 'all') S.history = r.items;
       $('#lbody').innerHTML = historyRows(r.items); bindHistoryRows();
-    }).catch(function (x) { $('#lbody').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; });
+    }).catch(function (x) { if ($('#lbody')) $('#lbody').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; });
   }
 
   async function showItem(id) {
@@ -2123,6 +2129,48 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     return 'Hi ' + name + ', just checking you received quote ' + d.number + ' for ' + gbp(d.totalPence) + ' 😊 Happy to answer any questions or adjust anything to suit you. Would you like me to go ahead and book you in?\n\nThank you — ' + ((s && s.displayName) || '');
   }
 
+  // ───────────── My to-do list (Today) ─────────────
+  var MT_ICO = { followup: '📞', invoice: '💷', priority: '🧭', task: '📝' };
+  var MT_REPEAT = { once: 'Once', daily: 'Every day', weekdays: 'Weekdays', weekly: 'Every week' };
+  var MT_DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function mtDay(day) { return new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); }
+  function mtRow(it, state) {
+    var done = state === 'done', m = it.meta || {};
+    var act = done ? '' : (it.kind === 'followup' ? '<button class="btn link" data-mtfu="' + esc(m.id) + '">Open</button> · ' : it.kind === 'invoice' ? '<button class="btn link" data-mtinv="' + esc(m.id) + '">Open</button> · ' : '') +
+      '<button class="btn link" data-mtskip="' + esc(it.key) + '" style="color:var(--muted)">Skip</button>';
+    return '<div class="mt' + (done ? ' mt-done' : '') + (state === 'overdue' ? ' mt-late' : '') + '"><button class="mt-check" data-mtdone="' + esc(it.key) + '" aria-label="' + (done ? 'Mark not done' : 'Mark done') + '">' + (done ? '✓' : '') + '</button>' +
+      '<div style="flex:1;min-width:0"><div class="mt-t">' + (MT_ICO[it.kind] || '•') + ' ' + esc(it.title) + '</div>' +
+      '<div class="hint" style="margin:2px 0 0">' + (state === 'overdue' ? '<span class="mt-od">Overdue since ' + esc(mtDay(it.due)) + '</span> · ' : '') +
+        (done ? (it.skippedAt ? 'Skipped' : it.autoDone ? 'Done' : 'Done') : it.kind === 'followup' ? 'Follow-up' : it.kind === 'invoice' ? 'Overdue invoice' : it.kind === 'priority' ? 'Check-Up priority' : (m.repeat && m.repeat !== 'once' ? MT_REPEAT[m.repeat] : 'Your task')) +
+        (act ? ' · ' + act : '') + '</div></div></div>';
+  }
+  async function loadTodo() {
+    var box = $('#todoCard'); if (!box) return;
+    var r; try { r = await api('studio-extras', 'todo-today'); } catch (x) { box.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#todoCard')) return;
+    var total = r.counts.today + r.counts.overdue + r.counts.done;
+    box.innerHTML = '<div class="row" style="justify-content:space-between;align-items:baseline"><b>📋 My to-do list</b><span class="hint" style="margin:0">' + r.counts.done + ' of ' + total + ' done</span></div>' +
+      (total ? '<div class="pbar"><span style="width:' + Math.round(r.counts.done / total * 100) + '%"></span></div>' : '') +
+      (r.overdue.length ? '<div class="mt-h" style="color:var(--danger)">⚠️ Overdue (' + r.overdue.length + ')</div>' + r.overdue.map(function (i) { return mtRow(i, 'overdue'); }).join('') : '') +
+      (r.todayItems.length ? '<div class="mt-h">Today</div>' + r.todayItems.map(function (i) { return mtRow(i, 'today'); }).join('') : (r.overdue.length ? '' : '<p class="hint" style="margin:4px 0">' + (r.counts.done ? 'All done for today 🎉' : 'Nothing on your list yet. Add what you need to do today — it stays here until you tick it.') + '</p>')) +
+      '<details class="mt-add"' + (total ? '' : ' open') + '><summary>+ Add a task</summary><div class="stack" style="margin-top:8px"><input id="mtT" maxlength="160" placeholder="e.g. Bake for Saturday’s order, Post on Instagram">' +
+        '<div class="row"><select id="mtR" style="flex:1">' + Object.keys(MT_REPEAT).map(function (k) { return '<option value="' + k + '">' + MT_REPEAT[k] + '</option>'; }).join('') + '</select>' +
+        '<input type="date" id="mtD" value="' + esc(r.today) + '" style="flex:1"><select id="mtW" style="flex:1;display:none">' + MT_DOW.map(function (n, i) { return '<option value="' + i + '"' + (i === new Date(r.today + 'T12:00:00Z').getUTCDay() ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div>' +
+        '<button class="btn primary block" id="mtAdd">Add to my list</button>' +
+        (r.defs.length ? '<div class="hint" style="margin:0">Repeating: ' + r.defs.map(function (x) { return esc(x.title) + ' (' + (x.repeat === 'weekly' ? 'every ' + MT_DOW[x.dow] : MT_REPEAT[x.repeat].toLowerCase()) + ') <button class="btn link danger" data-mtdel="' + esc(x.id) + '" style="font-size:12px">remove</button>'; }).join(' · ') + '</div>' : '') + '</div></details>' +
+      (r.doneToday.length ? '<details><summary class="hint" style="cursor:pointer;margin:6px 0 0">✓ Done today (' + r.doneToday.length + ')</summary>' + r.doneToday.map(function (i) { return mtRow(i, 'done'); }).join('') + '</details>' : '');
+    $$('[data-mtdone]', box).forEach(function (b) { b.onclick = async function () { var done = b.closest('.mt').classList.contains('mt-done'); try { await api('studio-extras', 'todo-mark', { key: b.dataset.mtdone, how: done ? 'undo' : 'done' }); if (!done) toast('Done ✅'); loadTodo(); } catch (x) { toast(x.message); } }; });
+    $$('[data-mtskip]', box).forEach(function (b) { b.onclick = async function () { try { await api('studio-extras', 'todo-mark', { key: b.dataset.mtskip, how: 'skip' }); loadTodo(); } catch (x) { toast(x.message); } }; });
+    $$('[data-mtfu]', box).forEach(function (b) { b.onclick = function () { showFollowup(b.dataset.mtfu); }; });
+    $$('[data-mtinv]', box).forEach(function (b) { b.onclick = function () { showDocView(b.dataset.mtinv); }; });
+    $$('[data-mtdel]', box).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop this repeating task?')) return; try { await api('studio-extras', 'todo-def-delete', { id: b.dataset.mtdel }); loadTodo(); } catch (x) { toast(x.message); } }; });
+    var rep = $('#mtR', box); rep.onchange = function () { $('#mtD', box).style.display = rep.value === 'once' ? '' : 'none'; $('#mtW', box).style.display = rep.value === 'weekly' ? '' : 'none'; };
+    $('#mtAdd', box).onclick = async function () {
+      var t = $('#mtT', box).value.trim(); if (!t) { $('#mtT', box).focus(); return; }
+      try { await api('studio-extras', 'todo-add', { task: { title: t, repeat: rep.value, date: $('#mtD', box).value, dow: Number($('#mtW', box).value) } }); toast('Added to your list'); loadTodo(); } catch (x) { toast(x.message); }
+    };
+  }
+
   async function loadNudges() {
     var top = $('#nudgeTop'), bottom = $('#nudgeLesson');
     if (!top) return;
@@ -2138,6 +2186,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
         }).join('') + '</div></section>';
     }
     html += sharedCard(n.shared);
+    html += '<section class="card stack mtcard" id="todoCard"><b>📋 My to-do list</b><div class="typing"><i></i><i></i><i></i></div></section>';
     html += prioritiesCard(n.priorities);
     // Install as an app
     if (!isStandalone() && !lsGet('studioInstallHidden') && (deferredInstall || isIOS() || /android/i.test(navigator.userAgent))) {
@@ -2159,6 +2208,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     }
     top.innerHTML = html;
     bindPriorities(top);
+    loadTodo();
     bindShared(top);
     $('#logEnq', top).onclick = function () { fuLogSheet(function () { loadNudges(); }); };
     var ft = $('#fuToday', top); if (ft) bindFuCards(ft, fus, n.reviewLink, function () { loadNudges(); });
