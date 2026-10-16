@@ -337,6 +337,7 @@ tbody tr:hover{background:#FFFCF5}
       spotlight: function (x) { return x.spotlight !== 'done'; },
       ending: function (x) { return x.daysLeft <= 60 && (x.spotlight !== 'done' || x.prog.collabs.due); },
       longest: function () { return true; },
+      verify: function (x) { return !!x.verify; },
       checkup: function (x) { return !x.checkup; },
       setup: function (x) { return !x.featured || !x.marketplace; }
     };
@@ -359,7 +360,7 @@ tbody tr:hover{background:#FFFCF5}
         '<div class="row" style="margin-top:10px;align-items:flex-end">' + [['storiesWeek', 'Stories / week'], ['repostsWeek', 'Reposts / week'], ['discoveryMonth', 'Discovery / month'], ['collabsYear', 'Collabs / year'], ['spotlightYear', 'Spotlight / year']].map(function (f) {
           return '<div style="width:120px"><label for="tg_' + f[0] + '">' + f[1] + '</label><input type="number" min="0" max="50" id="tg_' + f[0] + '" value="' + t[f[0]] + '"></div>';
         }).join('') + '<button class="btn primary small" id="tgSave">Save targets</button></div></details>' +
-      '<div class="row" style="margin:14px 0 10px">' + [['all', 'All'], ['week', 'Due this week'], ['month', 'Due this month'], ['collabs', 'Collabs due'], ['spotlight', 'Spotlight not done'], ['ending', 'Ends ≤ 60 days, still owed'], ['longest', 'Longest since shared'], ['checkup', 'Check-Up not done'], ['setup', 'Featured/Marketplace to set up']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
+      '<div class="row" style="margin:14px 0 10px">' + [['all', 'All'], ['verify', '🏛️ Verification requests'], ['week', 'Due this week'], ['month', 'Due this month'], ['collabs', 'Collabs due'], ['spotlight', 'Spotlight not done'], ['ending', 'Ends ≤ 60 days, still owed'], ['longest', 'Longest since shared'], ['checkup', 'Check-Up not done'], ['setup', 'Featured/Marketplace to set up']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
       '<div class="tw"><table><thead><tr><th>Member</th><th>Ends</th><th>This week</th><th>This month</th><th>This year</th><th>Featured</th><th>Market</th><th>Badge</th><th>Last shared</th><th>Check-Up</th><th>Studio use</th><th></th></tr></thead><tbody>' +
       (list.length ? list.map(function (x) {
         var p = x.prog;
@@ -368,7 +369,7 @@ tbody tr:hover{background:#FFFCF5}
           '<td style="white-space:nowrap">' + benProg(p, 'stories', true) + '<br>' + benProg(p, 'reposts', true) + '</td>' +
           '<td style="white-space:nowrap">' + benProg(p, 'discovery', true) + '</td>' +
           '<td style="white-space:nowrap">' + benProg(p, 'collabs', true) + '<br>' + benProg(p, 'spotlight', true) + (x.spotlight === 'scheduled' ? '<div class="muted">Spotlight scheduled' + (x.spotlightDate ? ' ' + esc(d(x.spotlightDate)) : '') + '</div>' : '') + '</td>' +
-          '<td>' + benYes(x.featured) + '</td><td>' + benYes(x.marketplace) + '</td><td>' + benBadge(x.badge) + '</td>' +
+          '<td>' + benYes(x.featured) + '</td><td>' + benYes(x.marketplace) + '</td><td>' + benBadge(x.badge) + (x.verify ? '<div><span class="pill p-pending">🏛️ Request</span></div>' : '') + '</td>' +
           '<td>' + (x.lastShared ? esc(d(x.lastShared)) : '<span class="pill p-warn">Never</span>') + '<div class="muted">' + (x.stories + x.reposts + x.discovery + x.collabs) + ' this year</div></td>' +
           '<td>' + (x.checkup ? '<span class="pill p-active">Done</span>' + (x.priorities ? '<div class="muted">' + x.prioritiesDone + '/' + x.priorities + ' priorities ticked</div>' : '') : '<span class="muted">Not yet</span>') + '</td>' +
           '<td class="muted">' + x.generationsMonth + ' AI this month<br>' + x.posts30 + ' posts in 30 days</td>' +
@@ -400,6 +401,7 @@ tbody tr:hover{background:#FFFCF5}
       '<div class="card stack"><div class="row" style="justify-content:space-between;align-items:center"><b>📣 Business Spotlight — dedicated post (Instagram + Blog)</b>' + benProg(p, 'spotlight') + '</div><div class="f2"><div><label for="bsS">Status</label><select id="bsS"><option value="none">Not yet</option><option value="scheduled">Scheduled</option><option value="done">Done</option></select></div><div><label for="bsD">Date</label><input type="date" id="bsD" value="' + esc(y.spotlight.date) + '"></div></div><div><label for="bsL">Link to the post or blog (optional — the member sees it)</label><input id="bsL" placeholder="https://…" value="' + esc(y.spotlight.link) + '"></div></div>' +
       '<div class="card stack"><b>⭐ Featured Business &amp; 🛍️ Marketplace (1 year)</b><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bfF" style="width:auto"' + (y.featured.done ? ' checked' : '') + '> Featured Business is live' + (y.featured.date ? ' <span class="muted">(since ' + esc(d(y.featured.date)) + ')</span>' : '') + '</label>' +
         '<label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bfM" style="width:auto"' + (y.marketplace.done ? ' checked' : '') + '> Marketplace listing is live' + (y.marketplace.date ? ' <span class="muted">(since ' + esc(d(y.marketplace.date)) + ')</span>' : '') + '</label>' +
+        (y.verify && y.verify.status === 'pending' ? '<div class="note stack"><b>🏛️ Verification request</b><div>Companies House number <b>' + esc(y.verify.number) + '</b> · sent ' + esc(d(y.verify.at.slice(0, 10))) + ' · <a href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(y.verify.number) + '" target="_blank" rel="noopener">Check on GOV.UK</a></div><div class="muted">Check the company name and status match their business. Then remember to give their business listing the blue tick in your directory.</div><div class="row"><button class="btn primary small" id="vYes">✓ Verify</button><button class="btn ghost small" id="vNo">Not eligible</button></div></div>' : y.verify ? '<div class="muted">🏛️ Last request: ' + esc(y.verify.number) + ' — ' + (y.verify.status === 'verified' ? 'verified' : 'not eligible') + '</div>' : '') +
         '<div><label for="bfB">✅ Verification badge</label><select id="bfB"><option value="unknown">Not checked yet</option><option value="yes">Verified</option><option value="no">Not verified yet</option><option value="not_eligible">Not eligible</option></select></div></div>' +
       '<div class="card stack"><b>🧭 Business Check-Up with Accountability</b><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bcD" style="width:auto"' + (y.checkup.done ? ' checked' : '') + '> Check-Up done</label><div><label for="bcT">Date</label><input type="date" id="bcT" value="' + esc(y.checkup.date) + '" style="width:auto"></div>' +
         '<div><label for="bcP">Agreed priorities (one per line, up to 5) — these appear on the member’s Today screen</label><textarea id="bcP" rows="4" placeholder="Post 3 times a week with a clear call to action\nFollow up every enquiry within 2 days\nAdd prices to Instagram Highlights">' + esc((y.checkup.priorities || []).join('\n')) + '</textarea>' + (y.checkup.priorities.length ? '<div class="muted">Member has ticked ' + (y.prioritiesDone || []).length + ' of ' + y.checkup.priorities.length + '</div>' : '') + '</div>' +
@@ -419,6 +421,9 @@ tbody tr:hover{background:#FFFCF5}
         toast('Benefits saved'); s.remove(); if (after) after();
       } catch (x) { toast(x.message); b.disabled = false; }
     };
+    var answer = async function (badge, note) { try { await api('benefits-update', { email: email, patch: { badge: badge, verifyNote: note || '', notify: true } }); toast(badge === 'yes' ? 'Verified — they’ve been told ✅' : 'Answered — they’ve been emailed'); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } };
+    var vy = $('#vYes', s); if (vy) vy.onclick = function () { answer('yes'); };
+    var vn = $('#vNo', s); if (vn) vn.onclick = function () { var n = prompt('Reason (optional — emailed to them):', ''); if (n !== null) answer('not_eligible', n); };
     $$('[data-log]', s).forEach(function (b) { b.onclick = async function () { var k = b.dataset.log; var tell = $('#lt_' + k, s).checked; try { await api('benefits-log', { email: email, kind: k, date: $('#ld_' + k, s).value, note: $('#ln_' + k, s).value, notify: tell }); toast(BEN_LOG[k] + ' logged' + (tell ? ' — member told' : '')); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
     $$('[data-unlog]', s).forEach(function (b) { b.onclick = async function () { if (!confirm('Remove this entry?')) return; try { await api('benefits-unlog', { email: email, kind: b.dataset.unlog, index: Number(b.dataset.i) }); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
   }
@@ -433,12 +438,12 @@ tbody tr:hover{background:#FFFCF5}
     f = f || {}; changed = changed || {};
     var hl = function (k) { return changed[k] ? ' style="background:#FFF4D6;border-radius:4px"' : ''; };
     return '<div class="mkc"><div class="mkc-img"' + (changed.imgs ? ' style="outline:3px solid #FFB81C"' : '') + '>' + (f.imgs && f.imgs.length ? '<img src="' + esc(mkImg(f.imgs[0])) + '" alt="">' : '<span class="muted">No photo</span>') + (f.imgs && f.imgs.length > 1 ? '<span class="mkc-n">1/' + f.imgs.length + '</span>' : '') + '<span class="mkc-cat"' + hl('category') + '>' + (MK_EMOJI[f.category] || '🛍️') + ' ' + esc(f.category) + '</span></div>' +
-      '<div class="mkc-b"><b' + hl('name') + '>' + esc(f.name) + '</b><div class="muted"' + hl('business') + '>' + esc(f.business) + (f.companiesHouse ? ' <span title="Verified" style="color:#1D9BF0">✔</span>' : '') + '</div><div class="mkc-d"' + hl('desc') + '>' + esc(f.desc) + '</div>' + (f.price ? '<div class="mkc-p"' + hl('price') + '>' + esc(f.price) + '</div>' : '') +
+      '<div class="mkc-b"><b' + hl('name') + '>' + esc(f.name) + '</b><div class="muted"' + hl('business') + '>' + esc(f.business) + '</div><div class="mkc-d"' + hl('desc') + '>' + esc(f.desc) + '</div>' + (f.price ? '<div class="mkc-p"' + hl('price') + '>' + esc(f.price) + '</div>' : '') +
       '<div class="mkc-btn"' + hl('btnText') + '>' + esc(f.btnText) + '</div><div class="muted" style="font-size:11.5px;margin-top:6px;word-break:break-all"' + hl(f.link ? 'link' : 'wa') + '>' + (f.link ? '🔗 ' + esc(f.link) : f.wa ? '💬 WhatsApp +' + esc(f.wa) : '') + (f.endsAt ? '<br>Ends ' + esc(d(f.endsAt)) : '') + '</div></div></div>';
   }
   function mkDiff(a, b) {
     var out = {}; if (!a || !b) return out;
-    ['name', 'business', 'category', 'price', 'desc', 'btnText', 'link', 'wa', 'endsAt', 'companiesHouse'].forEach(function (k) { if (String(a[k] || '') !== String(b[k] || '')) out[k] = true; });
+    ['name', 'business', 'category', 'price', 'desc', 'btnText', 'link', 'wa', 'endsAt'].forEach(function (k) { if (String(a[k] || '') !== String(b[k] || '')) out[k] = true; });
     if (JSON.stringify(a.imgs || []) !== JSON.stringify(b.imgs || [])) out.imgs = true;
     return out;
   }
@@ -449,11 +454,6 @@ tbody tr:hover{background:#FFFCF5}
     var who = x.owner || (x.contact && x.contact.email) || '';
     var flag = k.check === 'email_match' ? '<span class="pill p-active">✓ Their email matches this listing</span>' : k.check === 'email_differs' ? '<span class="pill p-warn">⚠️ Sent by ' + esc(who) + ' — the listing’s email is different. Check it’s them.</span>' : '<span class="pill p-pending">No email on this listing — check it’s them</span>';
     return '<div>🔗 Linked to <b>' + esc(k.name) + '</b> <span class="muted">· ' + esc(k.cat || '') + (k.loc ? ' · ' + esc(k.loc) : '') + '</span> <a href="' + esc(k.url) + '" target="_blank" rel="noopener">View listing</a> ' + flag + '</div>';
-  }
-  function mkCh(x) {
-    var f = x.draft || x.live || {};
-    if (!f.companiesHouse) return '<div class="muted">🏛️ No Companies House number — no blue tick.</div>';
-    return '<div>🏛️ Companies House: <b>' + esc(f.companiesHouse) + '</b> <a href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(f.companiesHouse) + '" target="_blank" rel="noopener">Check on GOV.UK</a> <span class="muted">— make sure the company name matches. Approving gives the blue verified tick.</span></div>';
   }
   function mkWho(x) {
     var c = x.contact || {};
@@ -524,7 +524,7 @@ tbody tr:hover{background:#FFFCF5}
       '<div class="row" style="margin-bottom:12px">' + [['review', 'To review'], ['waiting', 'Waiting for their edit'], ['live', 'Live'], ['all', 'All listings']].map(function (t) { return '<button class="btn small ' + (t[0] === tab ? 'primary' : 'ghost') + '" data-mt="' + t[0] + '">' + t[1] + ' (' + groups[t[0]].length + ')</button>'; }).join('') + '</div>' +
       (tab === 'review' || tab === 'waiting' ? (groups[tab].length ? groups[tab].map(function (x) {
         var ch = mkDiff(x.live, x.draft);
-        return '<div class="card stack" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center"><span class="pill ' + (MK_ST[x.status] || ['', ''])[1] + '">' + esc((MK_ST[x.status] || [x.status])[0]) + '</span><button class="btn small ghost" data-mke="' + esc(x.id) + '">Edit</button></div>' + mkWho(x) + mkLink(x) + mkCh(x) +
+        return '<div class="card stack" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center"><span class="pill ' + (MK_ST[x.status] || ['', ''])[1] + '">' + esc((MK_ST[x.status] || [x.status])[0]) + '</span><button class="btn small ghost" data-mke="' + esc(x.id) + '">Edit</button></div>' + mkWho(x) + mkLink(x) +
           (x.note ? '<div class="muted"><b>Your note:</b> ' + esc(x.note) + '</div>' : '') +
           (x.live ? '<div class="row" style="align-items:flex-start;gap:14px"><div><div class="muted" style="margin-bottom:4px">Live now</div>' + mkCard(x.live) + '</div><div><div class="muted" style="margin-bottom:4px">Proposed change' + (Object.keys(ch).length ? ' — changed: <b>' + Object.keys(ch).join(', ') + '</b>' : '') + '</div>' + mkCard(x.draft, ch) + '</div></div>'
             : '<div class="row" style="align-items:flex-start;gap:14px">' + mkCard(x.draft) + (x.draft.imgs.length > 1 ? '<div class="row" style="gap:6px">' + x.draft.imgs.slice(1).map(function (i) { return '<img src="' + esc(mkImg(i)) + '" alt="" style="width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">'; }).join('') + '</div>' : '') + '</div>') +
@@ -573,13 +573,12 @@ tbody tr:hover{background:#FFFCF5}
         '<div><label for="mkD">Description</label><textarea id="mkD" rows="3">' + esc(f.desc) + '</textarea></div>' +
         '<div class="f2"><div><label for="mkL">Web link</label><input id="mkL" value="' + esc(f.link) + '" placeholder="https://… (or leave empty for WhatsApp)"></div><div><label for="mkW">WhatsApp number</label><input id="mkW" value="' + esc(f.wa) + '"></div></div>' +
         '<div class="f2"><div><label for="mkT">Button</label><select id="mkT">' + btns.map(function (b) { return '<option' + (f.btnText === b ? ' selected' : '') + '>' + b + '</option>'; }).join('') + '</select></div><div><label for="mkE">End date</label><input type="date" id="mkE" value="' + esc(f.endsAt) + '"></div></div>' +
-        '<div><label for="mkCh">🏛️ Companies House (number or GOV.UK link)</label><input id="mkCh" value="' + esc(f.companiesHouse || '') + '" placeholder="e.g. 12345678 — gives the blue verified tick on the Marketplace"></div>' +
         '<div><label>Auntie Tobi business listing</label><div id="mkBz"></div></div>' +
         '<div><label for="mkO">Owner (Club member email)</label><input id="mkO" value="' + esc(x ? x.owner : '') + '" placeholder="Lets this member edit it in Studio"></div>' +
         (x && x.owner ? '<div class="muted">This member can have <b>' + allowance + '</b> listing' + (allowance === 1 ? '' : 's') + ' — change it under “Extra listings for members”.</div>' : '') +
         '<div class="row"><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="mkPin" style="width:auto"' + (x && x.pinned ? ' checked' : '') + '> 📌 Pin to top</label><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="mkHid" style="width:auto"' + (x && x.hidden ? ' checked' : '') + '> Hide from Marketplace</label></div>' +
         '<div class="err hidden" id="mkErr"></div><div class="row"><button class="btn primary" id="mkSave">Save</button><button class="btn ghost" id="mkX">Close</button>' + (x ? '<button class="btn ghost danger" id="mkDel" style="margin-left:auto">Delete listing</button>' : '') + '</div>');
-      var keep = function () { f.name = $('#mkN', s).value; f.business = $('#mkB', s).value; f.category = $('#mkC', s).value; f.price = $('#mkP', s).value; f.desc = $('#mkD', s).value; f.link = $('#mkL', s).value; f.wa = $('#mkW', s).value; f.btnText = $('#mkT', s).value; f.endsAt = $('#mkE', s).value; f.bizSlug = bz && bz.slug ? bz.slug : ''; f.companiesHouse = $('#mkCh', s).value.trim(); };
+      var keep = function () { f.name = $('#mkN', s).value; f.business = $('#mkB', s).value; f.category = $('#mkC', s).value; f.price = $('#mkP', s).value; f.desc = $('#mkD', s).value; f.link = $('#mkL', s).value; f.wa = $('#mkW', s).value; f.btnText = $('#mkT', s).value; f.endsAt = $('#mkE', s).value; f.bizSlug = bz && bz.slug ? bz.slug : ''; };
       bizPicker($('#mkBz', s), bz || 'none', function (v) { bz = v; }, { linkedLabel: 'Linked to Auntie Tobi listing', noneLabel: 'Not linked to an Auntie Tobi listing.', noneButton: 'Not on Auntie Tobi' });
       $$('[data-phx]', s).forEach(function (b) { b.onclick = function () { keep(); f.imgs.splice(Number(b.dataset.phx), 1); draw(); }; });
       $$('[data-ph1]', s).forEach(function (b) { b.onclick = function () { keep(); var i = Number(b.dataset.ph1); f.imgs.unshift(f.imgs.splice(i, 1)[0]); draw(); }; });
@@ -633,9 +632,9 @@ tbody tr:hover{background:#FFFCF5}
       if (bd.members && $('#ovH1')) {
         var box = document.createElement('div'); box.className = 'note'; box.style.marginBottom = '14px';
         box.innerHTML = '💚 <b>Business Club this week:</b> ' + (bd.weekMembers ? bd.stories + ' Story share' + (bd.stories === 1 ? '' : 's') + ' and ' + bd.reposts + ' repost' + (bd.reposts === 1 ? '' : 's') + ' still due across ' + bd.weekMembers + ' member' + (bd.weekMembers === 1 ? '' : 's') + '.' : 'all Stories and reposts done ✓') +
-          (bd.monthMembers ? ' ' + bd.discovery + ' discovery feature' + (bd.discovery === 1 ? '' : 's') + ' due this month.' : '') + ' <button class="btn small ghost" id="toBen">Open Benefits</button>';
+          (bd.monthMembers ? ' ' + bd.discovery + ' discovery feature' + (bd.discovery === 1 ? '' : 's') + ' due this month.' : '') + (bd.verifyRequests ? ' <b>🏛️ ' + bd.verifyRequests + ' verification request' + (bd.verifyRequests === 1 ? '' : 's') + '.</b>' : '') + ' <button class="btn small ghost" id="toBen">Open Benefits</button>';
         $('#ovH1').after(box);
-        $('#toBen').onclick = function () { S.benFilter = bd.weekMembers ? 'week' : 'all'; go('benefits'); };
+        $('#toBen').onclick = function () { S.benFilter = bd.verifyRequests ? 'verify' : bd.weekMembers ? 'week' : 'all'; go('benefits'); };
       }
     } catch (x) {}
     try {

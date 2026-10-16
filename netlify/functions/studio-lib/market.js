@@ -76,7 +76,6 @@ function clean(raw, opts) {
     wa: waNumber(raw.wa),
     endsAt: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.endsAt || '')) ? raw.endsAt : '',
     bizSlug: /^[a-z0-9-]{2,120}$/.test(String(raw.bizSlug || '')) ? raw.bizSlug : '',
-    companiesHouse: chNumber(raw.companiesHouse),
     imgs: (Array.isArray(raw.imgs) ? raw.imgs : []).filter(v => isImgId(v) || isCdnImg(v)).slice(0, MAX_IMGS),
   };
   if (!f.business) bad('Please add your business name.');
@@ -298,7 +297,6 @@ function toCard(r) {
   return {
     id: r.id, name: escH(f.name), shortName: escH(f.name), business: escH(f.business), bizSlug: f.bizSlug, category: f.category, emoji: EMOJI[f.category] || '🛍️',
     img: imgs[0] || '', imgs, price: escH(f.price), desc: escH(f.desc), link: f.link, btnText: escH(f.btnText), wa: f.wa, expires, pinned: !!r.pinned,
-    verified: !!f.companiesHouse, // blue tick: approved with a Companies House registration
   };
 }
 async function feed() {

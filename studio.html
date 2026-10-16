@@ -2130,7 +2130,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     if (!n.setup.hidden) {
       html += '<section class="card stack setup"><div class="row" style="justify-content:space-between;align-items:baseline"><b>Get set up — ' + n.setup.done + ' of ' + n.setup.total + ' done</b><button class="btn link" id="setupHide" style="font-size:13px">Hide</button></div>' +
         '<div class="pbar"><span style="width:' + Math.round(n.setup.done / n.setup.total * 100) + '%"></span></div><div class="checks">' + n.setup.steps.map(function (s) {
-          return '<button class="setstep' + (s.done ? ' done' : '') + '" data-step="' + s.go + '"' + (s.done ? ' disabled' : '') + '><span class="ldot' + (s.done ? ' done' : '') + '">' + (s.done ? '✓' : '') + '</span><span style="flex:1;text-align:left">' + esc(s.label) + '</span>' + (s.done ? '' : '<span aria-hidden="true">→</span>') + '</button>';
+          return '<button class="setstep' + (s.done ? ' done' : '') + '" data-step="' + s.go + '"' + (s.done ? ' disabled' : '') + '><span class="ldot' + (s.done ? ' done' : '') + '">' + (s.done ? '✓' : '') + '</span><span style="flex:1;text-align:left">' + esc(s.label) + (s.note ? ' <small class="hint" style="margin:0;display:block">⏳ ' + esc(s.note) + '</small>' : '') + '</span>' + (s.done ? '' : '<span aria-hidden="true">→</span>') + '</button>';
         }).join('') + '</div></section>';
     }
     html += sharedCard(n.shared);
@@ -2182,6 +2182,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     if (go === 'lesson') return showResources();
     if (go === 'create') return showCreate();
     if (go === 'review') return showReview(showHome);
+    if (go === 'market') return showMarket(showHome);
+    if (go === 'verify') return showVerify(showHome);
   }
 
   function installApp() {
@@ -2424,13 +2426,12 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     live_changes_requested: ['🟢 Live · ✏️ your change needs an edit', 'goldl'], changes: ['✏️ Changes requested', 'goldl'], rejected: ['Not accepted', 'grey'],
     hidden: ['Hidden by Auntie Tobi', 'grey'], ended: ['Ended (end date passed)', 'grey'], draft: ['Not submitted', 'grey']
   };
-  var MKT_TICK = '<svg aria-label="Verified" role="img" viewBox="0 0 24 24" style="width:13px;height:13px;vertical-align:-2px;margin-left:3px"><path fill="#1D9BF0" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.6-5.8"/></svg>';
   function mktImgSrc(ref) { return /^i_/.test(ref) ? '/.netlify/functions/studio-market?img=' + encodeURIComponent(ref) : ref; }
   function mktCard(f) {
     f = f || {};
     var img = f.imgs && f.imgs.length ? '<img src="' + esc(mktImgSrc(f.imgs[0])) + '" alt="">' : '<div class="mpc-noimg">📷 Add a photo</div>';
     return '<div class="mpc"><div class="mpc-img">' + img + (f.imgs && f.imgs.length > 1 ? '<span class="mpc-count">1/' + f.imgs.length + '</span>' : '') + '<span class="mpc-cat">' + (MKT_EMOJI[f.category] || '🛍️') + ' ' + esc(f.category || 'Category') + '</span></div>' +
-      '<div class="mpc-body"><b class="mpc-name">' + esc(f.name || 'Your product or service') + '</b><div class="mpc-biz">' + esc(f.business || '') + (f.companiesHouse ? MKT_TICK : '') + '</div><div class="mpc-desc">' + esc(f.desc || 'A short description customers will see.') + '</div>' +
+      '<div class="mpc-body"><b class="mpc-name">' + esc(f.name || 'Your product or service') + '</b><div class="mpc-biz">' + esc(f.business || '') + '</div><div class="mpc-desc">' + esc(f.desc || 'A short description customers will see.') + '</div>' +
       (f.price ? '<div class="mpc-price">' + esc(f.price) + '</div>' : '') + '<div class="mpc-btn">' + esc(f.btnText || 'Enquire') + '</div></div></div>';
   }
 
@@ -2470,6 +2471,23 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     }
     draw();
     return { get: function () { return state && state.slug ? state : null; } };
+  }
+
+  // ── Verify your Business (Companies House → verification badge on their Auntie Tobi listing) ──
+  function showVerify(back) {
+    back = back || showAccount;
+    setChrome({ tabs: true, tab: 'home', back: back });
+    var biz = (S.boot.profile && S.boot.profile.businessName) || '';
+    app.innerHTML = '<main><h1 style="font-size:22px">Verify your Business</h1><p class="sub" style="margin:6px 0 14px">Verified businesses get the blue tick on their Auntie Tobi business listing, so customers know they’re dealing with a registered business.</p>' +
+      '<div class="card stack chbox"><label class="f" for="vCh">🏛️ Registered with Companies House?</label><input id="vCh" maxlength="200" placeholder="Company number or GOV.UK link" autocapitalize="characters">' +
+      '<div class="hint">Paste your company’s page from GOV.UK, or just your company number. It shows customers you’re a registered business. Find it at <a href="https://find-and-update.company-information.service.gov.uk" target="_blank" rel="noopener">find-and-update.company-information.service.gov.uk</a>.</div>' +
+      '<div class="err hidden" id="vErr"></div><button class="btn primary block" id="vSend">Send for verification</button></div>' +
+      '<p class="hint">Auntie Tobi checks the company details match your business, then lets you know. Not registered with Companies House? <a href="' + esc(atWa('Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’m not registered with Companies House — how can I get verified?')) + '" target="_blank" rel="noopener">Message Auntie Tobi</a>.</p></main>';
+    $('#vSend').onclick = async function () {
+      var b = this; b.disabled = true; $('#vErr').classList.add('hidden');
+      try { await api('studio-extras', 'verify-request', { companiesHouse: $('#vCh').value }); toast('Sent — Auntie Tobi will check 💚'); back(); }
+      catch (x) { $('#vErr').textContent = x.message; $('#vErr').classList.remove('hidden'); b.disabled = false; }
+    };
   }
 
   async function showMarket(back) {
@@ -2520,12 +2538,11 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
         '<div><label class="f" for="mBiz">Business name</label><input id="mBiz" maxlength="80" value="' + esc(f.business) + '"></div>' +
         '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">When customers tap the button…</span><div class="chips"><button type="button" class="chip" data-how="wa" aria-pressed="' + (how === 'wa') + '">💬 Message me on WhatsApp</button><button type="button" class="chip" data-how="link" aria-pressed="' + (how === 'link') + '">🔗 Go to my website or booking link</button></div></div>' +
         (how === 'wa' ? '<div><label class="f" for="mWa">WhatsApp number</label><input id="mWa" inputmode="tel" maxlength="20" value="' + esc(f.wa) + '" placeholder="07700 900123"></div>' : '<div><label class="f" for="mLink">Web link</label><input id="mLink" inputmode="url" maxlength="500" value="' + esc(f.link) + '" placeholder="https://…"></div>') +
-        '<div class="chbox"><label class="f" for="mCh">🏛️ Registered with Companies House? <span class="opt">(optional)</span></label><input id="mCh" maxlength="200" value="' + esc(f.companiesHouse || '') + '" placeholder="Company number or GOV.UK link" autocapitalize="characters"><div class="hint">Paste your company’s page from GOV.UK, or just your company number. It shows customers you’re a registered business. Find it at find-and-update.company-information.service.gov.uk — sole traders can leave this empty. Verified businesses get a blue tick on the Marketplace.</div></div>' +
         '<div class="row"><div style="flex:1"><label class="f" for="mBtn">Button text</label><select id="mBtn">' + MKT_BTNS.map(function (b) { return '<option' + (f.btnText === b ? ' selected' : '') + '>' + esc(b) + '</option>'; }).join('') + '</select></div>' +
           '<div style="flex:1"><label class="f" for="mEnd">End date <span class="opt">(optional — e.g. events)</span></label><input type="date" id="mEnd" value="' + esc(f.endsAt) + '"></div></div>' +
         '<div class="err hidden" id="mErr"></div><button class="btn primary block" id="mSave">' + (l ? 'Send change for review' : 'Submit for review') + '</button></div>' +
         '<div><div class="hint" style="margin:0 0 6px">Preview — how it will look on the Marketplace</div><div id="mPrev" style="max-width:280px">' + mktCard(f) + '</div></div></div></main>';
-      [['mName', 'name'], ['mPrice', 'price'], ['mDesc', 'desc'], ['mBiz', 'business'], ['mWa', 'wa'], ['mLink', 'link'], ['mEnd', 'endsAt'], ['mCh', 'companiesHouse']].forEach(function (x) { var e = $('#' + x[0]); if (e) e.oninput = function () { f[x[1]] = e.value; $('#mPrev').innerHTML = mktCard(f); }; });
+      [['mName', 'name'], ['mPrice', 'price'], ['mDesc', 'desc'], ['mBiz', 'business'], ['mWa', 'wa'], ['mLink', 'link'], ['mEnd', 'endsAt']].forEach(function (x) { var e = $('#' + x[0]); if (e) e.oninput = function () { f[x[1]] = e.value; $('#mPrev').innerHTML = mktCard(f); }; });
       bizPicker($('#mBizPick'), bizSel, function (v) { bizSel = v; f.bizSlug = v && v.slug ? v.slug : ''; if (v && v.slug && !f.business) { f.business = v.name; $('#mBiz').value = v.name; $('#mPrev').innerHTML = mktCard(f); } }, { noneLabel: 'Not linked to an Auntie Tobi listing.', noneButton: 'My business isn’t listed on Auntie Tobi yet' });
       $('#mCat').onchange = function () { f.category = this.value; $('#mPrev').innerHTML = mktCard(f); };
       $('#mBtn').onchange = function () { f.btnText = this.value; $('#mPrev').innerHTML = mktCard(f); };
@@ -2792,17 +2809,18 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       row('⭐', 'Featured Business (app & website)', b.featured.done ? 'Live since ' + esc(dmy(b.featured.date)) : 'Being set up', b.featured.done) +
       row('🛍️', 'Marketplace listing', b.marketplace.done ? 'Live since ' + esc(dmy(b.marketplace.date)) : 'Not listed yet', b.marketplace.done,
         b.marketplace.done ? '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-gomkt="1">Manage my listing →</button>' : '<a class="btn link" style="font-size:13px;padding:0;min-height:0" href="/marketplace/list" target="_blank" rel="noopener">Add my product or service →</a>') +
-      row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.badge === 'not_eligible' ? 'Not eligible at the moment' : 'Not verified yet', b.badge === 'yes',
-        b.badge === 'yes' || b.badge === 'not_eligible' ? '' : ask('Ask about verification', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. How can I get verified?')) +
+      row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.verify && b.verify.status === 'pending' ? '⏳ Verification requested (Companies House ' + esc(b.verify.number) + ') — Auntie Tobi will check' : b.badge === 'not_eligible' || (b.verify && b.verify.status === 'not_eligible') ? 'Not verified at the moment' + (b.verify && b.verify.note ? ' — ' + esc(b.verify.note) : '') : 'Not verified yet', b.badge === 'yes',
+        b.badge === 'yes' || (b.verify && b.verify.status === 'pending') ? '' : '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-goverify="1">Verify your Business →</button>') +
       row('📲', 'Shared by Auntie Tobi this year', b.counts.stories + ' Story share' + (b.counts.stories === 1 ? '' : 's') + ' · ' + b.counts.reposts + ' repost' + (b.counts.reposts === 1 ? '' : 's') + ' · ' + b.counts.discovery + ' discovery feature' + (b.counts.discovery === 1 ? '' : 's') + ' · ' + (b.counts.collabs || 0) + ' collab' + (b.counts.collabs === 1 ? '' : 's') + '<br>Auntie Tobi chooses whose content to share — keep posting your best work.', false) +
       row('🧭', 'Business Check-Up with Accountability', b.checkup.done ? 'Done ' + esc(dmy(b.checkup.date)) + (b.checkup.priorities.length ? ' · ' + b.prioritiesDone.length + ' of ' + b.checkup.priorities.length + ' priorities done' : '') : 'Not booked yet', b.checkup.done,
         b.checkup.done ? '' : ask('Book my Check-Up', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to book my Business Check-Up. The main thing I’d like help with is: ')) +
       benFeedHtml(b.feed || []);
     $$('[data-gomkt]', card).forEach(function (x) { x.onclick = function () { showMarket(showAccount); }; });
+    $$('[data-goverify]', card).forEach(function (x) { x.onclick = function () { showVerify(showAccount); }; });
     if (S.nudges) S.nudges.shared = [];
     var sc = $('#sharedCard'); if (sc) sc.remove();
   }
-  var BEN_ICO = { stories: '📲', reposts: '🔁', discovery: '🔎', collabs: '🤝', spotlight: '📣', featured: '⭐', marketplace: '🛍️' };
+  var BEN_ICO = { verified: '✅', stories: '📲', reposts: '🔁', discovery: '🔎', collabs: '🤝', spotlight: '📣', featured: '⭐', marketplace: '🛍️' };
   function benFeedItem(e) {
     return '<div class="benrow" style="padding:6px 0"><span class="benico">' + (BEN_ICO[e.kind] || '💚') + '</span><div style="flex:1;min-width:0"><b>' + esc(e.label) + '</b> <span class="hint" style="margin:0">' + esc(dmy(e.at)) + '</span>' +
       (e.note ? '<div class="hint" style="margin:0">' + esc(e.note) + '</div>' : '') + (e.link ? '<div><a class="btn link" style="font-size:13px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(e.link) + '">View →</a></div>' : '') + '</div></div>';
@@ -2815,7 +2833,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   }
   function sharedCard(items) {
     if (!items || !items.length) return '';
-    return '<section class="card stack shared" id="sharedCard"><b>💚 Auntie Tobi shared your business</b>' + items.slice(0, 4).map(benFeedItem).join('') +
+    return '<section class="card stack shared" id="sharedCard"><b>' + (items.every(function (i) { return /stories|reposts|discovery|collabs|spotlight/.test(i.kind); }) ? '💚 Auntie Tobi shared your business' : '💚 News from Auntie Tobi') + '</b>' + items.slice(0, 4).map(benFeedItem).join('') +
       (items.length > 4 ? '<p class="hint" style="margin:0">…and ' + (items.length - 4) + ' more in Account → My benefits.</p>' : '') +
       '<div class="row"><button class="btn small primary" id="sharedOk">Thank you 💚</button><button class="btn link" id="sharedAll" style="font-size:13px">See all my benefits</button></div></section>';
   }

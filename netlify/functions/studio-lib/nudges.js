@@ -11,6 +11,7 @@ const resources = require('./resources');
 const gen = require('./generate');
 const fu = require('./followups');
 const benefits = require('./benefits');
+const market = require('./market');
 
 async function forMember(email, access) {
   const club = !!(access && access.membershipActive);
@@ -29,6 +30,14 @@ async function forMember(email, access) {
       : { id: 'create', label: 'Create your first post', done: !!(hist && hist.items && hist.items.length), go: 'create' },
     { id: 'review', label: 'Add your review link', done: !!pr.reviewLink, go: 'review' },
   ];
+  if (club) {
+    const member = await core.getMember(email);
+    const [mk, b] = await Promise.all([market.mine(email).catch(() => null), benefits.getYear(email, member)]);
+    const y = b.year;
+    steps.push({ id: 'market', label: 'Add your Marketplace listing', done: !!(mk && mk.listings.length), go: 'market' });
+    const pending = !!(y && y.verify && y.verify.status === 'pending');
+    steps.push({ id: 'verify', label: 'Verify your business', done: !!(y && y.badge === 'yes'), pending, note: pending ? 'Waiting for Auntie Tobi' : '', go: 'verify' });
+  }
   const doneN = steps.filter(s => s.done).length;
   let lesson = null;
   if (club) { try { lesson = await resources.suggestLesson(email, profile, summary); } catch (e) { console.error('[studio] lesson suggestion failed', e && e.message); } }
