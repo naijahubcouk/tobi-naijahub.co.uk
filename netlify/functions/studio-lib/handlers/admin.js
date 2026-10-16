@@ -11,6 +11,7 @@ const gen = require('../generate');
 const stripe = require('../stripe');
 const growth = require('../growth');
 const resources = require('../resources');
+const benefits = require('../benefits');
 
 // Business Club status. 'none' = not a Club member (e.g. AI Power-only customer).
 const STATUSES = ['pending', 'active', 'inactive', 'none'];
@@ -289,6 +290,49 @@ exports.handler = handler(async (ctx) => {
       await cas(`members/${enc(email)}`, cur => { if (!cur) throw new HttpError(404, 'not_found', 'Member not found.'); return { ...cur, shopDisabled: disabled }; });
       await core.audit(actor, disabled ? 'shop_disabled' : 'shop_enabled', { email });
       return { ok: true, disabled };
+    }
+
+    // ── Business Club benefits ──
+    case 'benefits-get': {
+      const email = requireEmail(body.email);
+      const member = await core.getMember(email);
+      if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
+      return { member: { email, name: member.name || '', membershipExpiresAt: member.membershipExpiresAt || '', status: member.status }, ...(await benefits.getYear(email, member)) };
+    }
+    case 'benefits-update': {
+      const email = requireEmail(body.email);
+      const member = await core.getMember(email);
+      if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
+      const r = await benefits.update(email, member, body.patch);
+      await core.audit(actor, 'benefits_update', { email, keys: Object.keys(body.patch || {}) });
+      return r;
+    }
+    case 'benefits-log': case 'benefits-unlog': {
+      const email = requireEmail(body.email);
+      const member = await core.getMember(email);
+      if (!member) throw new HttpError(404, 'not_found', 'Member not found.');
+      const r = action === 'benefits-log' ? await benefits.log(email, member, body.kind, body.note, body.date) : await benefits.unlog(email, member, body.kind, body.index);
+      await core.audit(actor, action === 'benefits-log' ? 'benefit_logged' : 'benefit_unlogged', { email, kind: body.kind });
+      return r;
+    }
+    case 'benefits-overview': {
+      const members = (await allMembers()).filter(m => core.access(m, settings).membershipActive);
+      const month = core.monthKey(), day = core.dayKey();
+      const since = growth.addDays(day, -30);
+      const rows = await mapLimit(members, 8, async m => {
+        const [b, p, usage, prog] = await Promise.all([benefits.getYear(m.email, m), getJson(`profiles/${enc(m.email)}`), getJson(gen.monthUsageKey(m.email, month)), growth.getProgress(m.email)]);
+        const y = b.year || benefits.emptyYear();
+        const posts30 = Object.entries(prog.entries || {}).filter(([d]) => d >= since).reduce((a, [, e]) => a + (e.posts || 0), 0);
+        const daysLeft = Math.round((Date.parse(`${m.membershipExpiresAt}T12:00:00Z`) - Date.parse(`${day}T12:00:00Z`)) / 86400000);
+        return {
+          email: m.email, name: m.name || '', business: (p && p.businessName) || '', expires: m.membershipExpiresAt, daysLeft,
+          spotlight: y.spotlight.status, spotlightDate: y.spotlight.date, featured: y.featured.done, marketplace: y.marketplace.done, badge: y.badge,
+          stories: y.stories.length, reposts: y.reposts.length, discovery: y.discovery.length, lastShared: benefits.lastShared(y),
+          checkup: y.checkup.done, checkupDate: y.checkup.date, priorities: y.checkup.priorities.length, prioritiesDone: (y.prioritiesDone || []).length,
+          generationsMonth: usage ? usage.used || 0 : 0, posts30,
+        };
+      });
+      return { rows, today: day };
     }
 
     // ── Resources (content manager) ──

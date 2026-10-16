@@ -66,7 +66,7 @@ tbody tr:hover{background:#FFFCF5}
 <body>
 <header><div><b>Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="subs">AI Power</button>
+  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="subs">AI Power</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -114,7 +114,7 @@ tbody tr:hover{background:#FFFCF5}
   $('#logout').onclick = async function () { try { await api('logout'); } catch (e) {} login(); };
   function go(v) {
     $$('#nav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
-    ({ overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources })[v]();
+    ({ overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits })[v]();
   }
   async function boot() {
     try { S.overview = await api('overview'); } catch (e) { return; }
@@ -293,6 +293,85 @@ tbody tr:hover{background:#FFFCF5}
     $('#pvX', s).onclick = function () { s.remove(); };
   }
 
+  // ── Business Club benefits ──
+  var BEN_LOG = { stories: 'Story share', reposts: 'Post/Reel repost', discovery: 'Discovery feature' };
+  function benYes(v) { return v ? '<span class="pill p-active">✓</span>' : '<span class="muted">—</span>'; }
+  function benSpot(r) { return r.spotlight === 'done' ? '<span class="pill p-active">Done ' + esc(d(r.spotlightDate)) + '</span>' : r.spotlight === 'scheduled' ? '<span class="pill p-pending">Scheduled' + (r.spotlightDate ? ' ' + esc(d(r.spotlightDate)) : '') + '</span>' : '<span class="pill p-warn">Not yet</span>'; }
+  function benBadge(v) { return { yes: '<span class="pill p-active">Verified</span>', no: '<span class="muted">No</span>', not_eligible: '<span class="muted">Not eligible</span>' }[v] || '<span class="muted">?</span>'; }
+
+  async function vBenefits(filter) {
+    filter = filter || S.benFilter || 'all'; S.benFilter = filter;
+    loading();
+    var r; try { r = await api('benefits-overview'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var rows = r.rows.slice();
+    var F = {
+      all: function () { return true; },
+      longest: function () { return true; },
+      spotlight: function (x) { return x.spotlight !== 'done'; },
+      ending: function (x) { return x.daysLeft <= 60 && x.spotlight !== 'done'; },
+      checkup: function (x) { return !x.checkup; },
+      setup: function (x) { return !x.featured || !x.marketplace; }
+    };
+    var list = rows.filter(F[filter] || F.all);
+    if (filter === 'longest') list.sort(function (a, b) { return (a.lastShared || '0').localeCompare(b.lastShared || '0') || a.daysLeft - b.daysLeft; });
+    else list.sort(function (a, b) { return a.daysLeft - b.daysLeft; });
+    var count = function (f) { return rows.filter(F[f]).length; };
+    app.innerHTML = '<main><h1>Business Club benefits</h1><p class="muted" style="margin:-4px 0 14px">What each active member has received this membership year. Use it to choose who to promote next and make sure nobody misses out.</p>' +
+      '<div class="grid">' + stat(rows.length, 'Active members') + stat(rows.filter(function (x) { return x.spotlight === 'done'; }).length + ' / ' + rows.length, 'Spotlights done') + stat(rows.filter(function (x) { return x.checkup; }).length + ' / ' + rows.length, 'Check-Ups done') +
+        stat(rows.filter(function (x) { return !x.lastShared; }).length, 'Never shared this year') + stat(count('ending'), 'Ending soon without Spotlight') + '</div>' +
+      '<div class="row" style="margin:16px 0 10px">' + [['all', 'All'], ['longest', 'Longest since shared'], ['spotlight', 'Spotlight not done'], ['ending', 'Ends ≤ 60 days, no Spotlight'], ['checkup', 'Check-Up not done'], ['setup', 'Featured/Marketplace to set up']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
+      '<div class="tw"><table><thead><tr><th>Member</th><th>Ends</th><th>Spotlight</th><th>Featured</th><th>Market</th><th>Badge</th><th>Shares</th><th>Last shared</th><th>Check-Up</th><th>Studio use</th><th></th></tr></thead><tbody>' +
+      (list.length ? list.map(function (x) {
+        return '<tr><td><b>' + esc(x.business || x.name || x.email) + '</b><div class="muted">' + esc(x.email) + '</div></td>' +
+          '<td>' + esc(d(x.expires)) + '<div class="muted"' + (x.daysLeft <= 60 ? ' style="color:var(--danger)"' : '') + '>' + x.daysLeft + ' days</div></td>' +
+          '<td>' + benSpot(x) + '</td><td>' + benYes(x.featured) + '</td><td>' + benYes(x.marketplace) + '</td><td>' + benBadge(x.badge) + '</td>' +
+          '<td class="muted" style="white-space:nowrap">📲 ' + x.stories + ' · 🔁 ' + x.reposts + ' · 🔎 ' + x.discovery + '<div class="row" style="margin-top:4px;gap:4px"><button class="btn small ghost" data-q="stories" data-e="' + esc(x.email) + '" title="Log a Story share">+Story</button><button class="btn small ghost" data-q="reposts" data-e="' + esc(x.email) + '" title="Log a post/Reel repost">+Repost</button></div></td>' +
+          '<td>' + (x.lastShared ? esc(d(x.lastShared)) : '<span class="pill p-warn">Never</span>') + '</td>' +
+          '<td>' + (x.checkup ? '<span class="pill p-active">Done</span>' + (x.priorities ? '<div class="muted">' + x.prioritiesDone + '/' + x.priorities + ' priorities ticked</div>' : '') : '<span class="muted">Not yet</span>') + '</td>' +
+          '<td class="muted">' + x.generationsMonth + ' AI this month<br>' + x.posts30 + ' posts in 30 days</td>' +
+          '<td><button class="btn small primary" data-ben="' + esc(x.email) + '">Open</button></td></tr>';
+      }).join('') : '<tr><td colspan="11" class="muted">Nobody here.</td></tr>') + '</tbody></table></div></main>';
+    $$('[data-bf]').forEach(function (b) { b.onclick = function () { vBenefits(b.dataset.bf); }; });
+    $$('[data-ben]').forEach(function (b) { b.onclick = function () { editBenefits(b.dataset.ben, function () { vBenefits(); }); }; });
+    $$('[data-q]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { await api('benefits-log', { email: b.dataset.e, kind: b.dataset.q }); toast(BEN_LOG[b.dataset.q] + ' logged'); vBenefits(); } catch (x) { toast(x.message); b.disabled = false; } }; });
+  }
+
+  async function editBenefits(email, after) {
+    var r; try { r = await api('benefits-get', { email: email }); } catch (x) { toast(x.message); return; }
+    if (!r.year) { toast('This member has no membership expiry date yet. Set one in Members first.'); return; }
+    var y = r.year;
+    function logList(kind) {
+      var items = y[kind] || [];
+      return '<div class="card stack"><div class="row" style="justify-content:space-between"><b>' + esc(BEN_LOG[kind]) + 's: ' + items.length + '</b></div>' +
+        '<div class="row"><input type="date" id="ld_' + kind + '" value="' + today() + '" style="width:auto"><input id="ln_' + kind + '" placeholder="Note (optional), e.g. Christmas cakes Reel" style="flex:1;min-width:160px"><button class="btn small primary" data-log="' + kind + '">+ Log</button></div>' +
+        (items.length ? '<div class="muted">' + items.slice(0, 6).map(function (e, i) { return esc(d(e.at)) + (e.note ? ' — ' + esc(e.note) : '') + ' <button class="btn small ghost danger" data-unlog="' + kind + '" data-i="' + i + '" style="min-height:22px;padding:0 6px">×</button>'; }).join('<br>') + (items.length > 6 ? '<br>…and ' + (items.length - 6) + ' more' : '') + '</div>' : '') + '</div>';
+    }
+    var s = sheet('<h2 style="margin:0">Business Club benefits</h2><div class="muted">' + esc(r.member.name || '') + ' ' + esc(email) + ' · membership year ending <b>' + esc(d(r.yearKey)) + '</b>' + (r.pastYears.length ? ' · earlier years kept: ' + r.pastYears.map(function (k) { return esc(d(k)); }).join(', ') : '') + '</div>' +
+      '<div class="card stack"><b>📣 Business Spotlight or collab (Instagram + Blog)</b><div class="f2"><div><label for="bsS">Status</label><select id="bsS"><option value="none">Not yet</option><option value="scheduled">Scheduled</option><option value="done">Done</option></select></div><div><label for="bsD">Date</label><input type="date" id="bsD" value="' + esc(y.spotlight.date) + '"></div></div><div><label for="bsL">Link to the post or blog (optional)</label><input id="bsL" placeholder="https://…" value="' + esc(y.spotlight.link) + '"></div></div>' +
+      '<div class="card stack"><b>⭐ Featured Business &amp; 🛍️ Marketplace (1 year)</b><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bfF" style="width:auto"' + (y.featured.done ? ' checked' : '') + '> Featured Business is live' + (y.featured.date ? ' <span class="muted">(since ' + esc(d(y.featured.date)) + ')</span>' : '') + '</label>' +
+        '<label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bfM" style="width:auto"' + (y.marketplace.done ? ' checked' : '') + '> Marketplace listing is live' + (y.marketplace.date ? ' <span class="muted">(since ' + esc(d(y.marketplace.date)) + ')</span>' : '') + '</label>' +
+        '<div><label for="bfB">✅ Verification badge</label><select id="bfB"><option value="unknown">Not checked yet</option><option value="yes">Verified</option><option value="no">Not verified yet</option><option value="not_eligible">Not eligible</option></select></div></div>' +
+      '<div class="card stack"><b>🧭 Business Check-Up with Accountability</b><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="bcD" style="width:auto"' + (y.checkup.done ? ' checked' : '') + '> Check-Up done</label><div><label for="bcT">Date</label><input type="date" id="bcT" value="' + esc(y.checkup.date) + '" style="width:auto"></div>' +
+        '<div><label for="bcP">Agreed priorities (one per line, up to 5) — these appear on the member’s Today screen</label><textarea id="bcP" rows="4" placeholder="Post 3 times a week with a clear call to action\nFollow up every enquiry within 2 days\nAdd prices to Instagram Highlights">' + esc((y.checkup.priorities || []).join('\n')) + '</textarea>' + (y.checkup.priorities.length ? '<div class="muted">Member has ticked ' + (y.prioritiesDone || []).length + ' of ' + y.checkup.priorities.length + '</div>' : '') + '</div>' +
+        '<div><label for="bcN">Private notes (only admins see these)</label><textarea id="bcN" rows="3">' + esc(y.checkup.notes) + '</textarea></div></div>' +
+      '<div class="row"><button class="btn primary" id="bSave">Save benefits</button><button class="btn ghost" id="bClose">Close</button></div>' +
+      '<h2 style="margin:6px 0 0">Shares this year</h2>' + logList('stories') + logList('reposts') + logList('discovery'));
+    $('#bsS', s).value = y.spotlight.status; $('#bfB', s).value = y.badge;
+    $('#bClose', s).onclick = function () { s.remove(); if (after) after(); };
+    $('#bSave', s).onclick = async function () {
+      var b = this; b.disabled = true;
+      try {
+        await api('benefits-update', { email: email, patch: {
+          spotlight: { status: $('#bsS', s).value, date: $('#bsD', s).value, link: $('#bsL', s).value },
+          featured: { done: $('#bfF', s).checked, date: y.featured.date }, marketplace: { done: $('#bfM', s).checked, date: y.marketplace.date }, badge: $('#bfB', s).value,
+          checkup: { done: $('#bcD', s).checked, date: $('#bcT', s).value, priorities: $('#bcP', s).value, notes: $('#bcN', s).value } } });
+        toast('Benefits saved'); s.remove(); if (after) after();
+      } catch (x) { toast(x.message); b.disabled = false; }
+    };
+    $$('[data-log]', s).forEach(function (b) { b.onclick = async function () { var k = b.dataset.log; try { await api('benefits-log', { email: email, kind: k, date: $('#ld_' + k, s).value, note: $('#ln_' + k, s).value }); toast(BEN_LOG[k] + ' logged'); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
+    $$('[data-unlog]', s).forEach(function (b) { b.onclick = async function () { if (!confirm('Remove this entry?')) return; try { await api('benefits-unlog', { email: email, kind: b.dataset.unlog, index: Number(b.dataset.i) }); s.remove(); editBenefits(email, after); } catch (x) { toast(x.message); } }; });
+  }
+
   // ── overview ──
   async function vOverview() {
     loading();
@@ -402,7 +481,8 @@ tbody tr:hover{background:#FFFCF5}
       (email ? '<div class="card stack"><b>AI Power</b><div>' + addonPill(m.addon) + (m.addon && m.addon.currentPeriodEnd ? ' <span class="muted">period ends ' + d(m.addon.currentPeriodEnd) + '</span>' : '') + '</div>' +
         (m.stripeCustomerId ? '<div class="muted">Stripe customer: ' + esc(m.stripeCustomerId) + '</div><button class="btn small ghost" id="sync">Re-check with Stripe</button>' : '<div class="muted">No Stripe customer yet.</div>') +
         '<div class="muted">AI Power is separate from Business Club: changing Club status doesn\u2019t affect it. Members switch plan or cancel themselves; refunds are done in Stripe.</div></div>' +
-        '<div class="card stack"><b>Usage history</b><div id="uh" class="muted">Loading…</div></div>' : '') +
+        '<div class="card stack"><b>Usage history</b><div id="uh" class="muted">Loading…</div></div>' +
+        '<button class="btn ghost" id="mBen">🎁 Business Club benefits (Spotlight, shares, Check-Up)</button>' : '') +
       '<div class="err hidden" id="merr"></div>' +
       '<div class="row"><button class="btn primary" id="msave">' + (email ? 'Save changes' : 'Add member') + '</button><button class="btn ghost" id="mcancel">Cancel</button>' +
       (email ? '<button class="btn small ghost danger" id="mrev" style="margin-left:auto">Sign out all devices</button>' : '') + '</div>');
@@ -417,6 +497,7 @@ tbody tr:hover{background:#FFFCF5}
     if (email) {
       $('#mrev', s).onclick = async function () { if (!confirm('Sign this member out on every device?')) return; try { await api('member-revoke-sessions', { email: email }); toast('Signed out everywhere'); } catch (x) { toast(x.message); } };
       var ulk = $('#unlinkL', s); if (ulk) ulk.onclick = async function () { if (!confirm('Remove this listing link? The member can add the right one in their profile.')) return; try { await api('member-unlink-listing', { email: email }); toast('Listing link removed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
+      $('#mBen', s).onclick = function () { s.remove(); editBenefits(email, function () { vMembers(); }); };
       var stg = $('#shopTg', s); if (stg) stg.onclick = async function () { var dis = !m.shop.disabled; if (dis && !confirm('Take this member\u2019s public price list page down? They will still see it in Studio.')) return; try { await api('member-shop-disable', { email: email, disabled: dis }); toast(dis ? 'Page taken down' : 'Page allowed again'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       var sy = $('#sync', s); if (sy) sy.onclick = async function () { try { var r = await api('member-stripe-sync', { email: email }); toast('Add-on: ' + (r.addon ? r.addon.status : 'none')); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       try {

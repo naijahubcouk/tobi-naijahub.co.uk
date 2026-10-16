@@ -198,6 +198,16 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 
 ---
 
+## 7g. Business Club benefits tracking
+
+- **Admin → Benefits:** every active Business Club member with their current membership year: Business Spotlight (not yet / scheduled / done, date, link), Featured Business, Marketplace, verification badge, Story shares, post/Reel reposts and discovery features (counts), last shared, Business Check-Up, and Studio use (AI generations this month, posts in the last 30 days). Quick **+Story / +Repost** buttons log a share in one click.
+- **Filters to help you choose who to promote:** Longest since shared, Spotlight not done, Ends within 60 days with no Spotlight, Check-Up not done, Featured/Marketplace to set up.
+- **Open** (or Members → Manage → Business Club benefits) edits everything, logs shares with a date and note, and records the Check-Up: done/date, **private notes** (admins only) and up to 5 **agreed priorities**.
+- **Members see:** the priorities on their Today screen (they tick them off — you see progress), and **Account → My Business Club benefits** (what they've had, plus WhatsApp buttons to plan their Spotlight, send a Marketplace product, ask about verification or book their Check-Up). They never see your notes.
+- A membership year is tied to the member's expiry date: when you renew someone (new expiry), a fresh year starts and earlier years are kept.
+
+---
+
 ## 8. Running costs (estimates — check current prices)
 
 | Service | Cost |

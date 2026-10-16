@@ -10,6 +10,7 @@ const growth = require('./growth');
 const resources = require('./resources');
 const gen = require('./generate');
 const fu = require('./followups');
+const benefits = require('./benefits');
 
 async function forMember(email, access) {
   const club = !!(access && access.membershipActive);
@@ -31,6 +32,12 @@ async function forMember(email, access) {
   const doneN = steps.filter(s => s.done).length;
   let lesson = null;
   if (club) { try { lesson = await resources.suggestLesson(email, profile, summary); } catch (e) { console.error('[studio] lesson suggestion failed', e && e.message); } }
+  let priorities = null;
+  if (club) {
+    const member = await core.getMember(email);
+    const b = await benefits.getYear(email, member);
+    if (b.year && b.year.checkup.priorities.length) priorities = { items: b.year.checkup.priorities, done: b.year.prioritiesDone || [], date: b.year.checkup.date };
+  }
   const f = await fu.due(email);
   const linked = new Set(f.linkedQuoteIds);
   const reminders = (await money.reminders(email)).filter(r => !(r.kind === 'quote' && linked.has(r.doc.id))).slice(0, 4);
@@ -38,7 +45,7 @@ async function forMember(email, access) {
     setup: { steps, done: doneN, total: steps.length, hidden: !!pr.setupHidden || doneN === steps.length },
     lesson,
     reminders,
-    followups: f.due.slice(0, 8), followupsDue: f.due.length,
+    followups: f.due.slice(0, 8), followupsDue: f.due.length, priorities,
     moneySettings: ms ? { displayName: ms.displayName, bankAccountName: ms.bankAccountName, sortCode: ms.sortCode, accountNumber: ms.accountNumber } : null,
     reviewLink: pr.reviewLink || '',
   };

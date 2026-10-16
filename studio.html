@@ -278,6 +278,9 @@ ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
 .pill.fu-new{background:#ECEDF0;color:var(--navy-2)}.pill.fu-quoted{background:var(--gold-l);color:#7A5300}.pill.fu-booked{background:var(--green-l);color:var(--green-d)}.pill.fu-notnow{background:#ECEDF0;color:var(--muted)}
 .act.chase.fu{border-left-color:var(--green)}
 ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #EEF3EF;font-size:14px}ul.hist li:last-child{border-bottom:0}ul.hist li span{color:var(--muted);min-width:86px;font-size:13px}
+.prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
+.benrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF3EF}.benrow:last-child{border-bottom:0}
+.benico{font-size:20px;width:28px;text-align:center;flex:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -2103,6 +2106,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
           return '<button class="setstep' + (s.done ? ' done' : '') + '" data-step="' + s.go + '"' + (s.done ? ' disabled' : '') + '><span class="ldot' + (s.done ? ' done' : '') + '">' + (s.done ? '✓' : '') + '</span><span style="flex:1;text-align:left">' + esc(s.label) + '</span>' + (s.done ? '' : '<span aria-hidden="true">→</span>') + '</button>';
         }).join('') + '</div></section>';
     }
+    html += prioritiesCard(n.priorities);
     // Install as an app
     if (!isStandalone() && !lsGet('studioInstallHidden') && (deferredInstall || isIOS() || /android/i.test(navigator.userAgent))) {
       html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn link" id="instHide" style="font-size:13px">Not now</button></div></section>';
@@ -2122,6 +2126,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       }).join('') + '</div>';
     }
     top.innerHTML = html;
+    bindPriorities(top);
     $('#logEnq', top).onclick = function () { fuLogSheet(function () { loadNudges(); }); };
     var ft = $('#fuToday', top); if (ft) bindFuCards(ft, fus, n.reviewLink, function () { loadNudges(); });
     if (bottom && n.lesson) {
@@ -2579,6 +2584,54 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     $('#fdDel').onclick = async function () { if (!confirm('Delete ' + it.name + ' and their history from your follow-ups?')) return; try { await api('studio-extras', 'fu-delete', { id: id }); toast('Deleted'); S.fuData = null; showFollowups(); } catch (x) { toast(x.message); } };
   }
 
+  // ───────────── Business Club benefits (member view) ─────────────
+  var AT_WA = '447594674940';
+  function atWa(text) { return 'https://wa.me/' + AT_WA + '?text=' + encodeURIComponent(text); }
+  function prioritiesCard(pr) {
+    if (!pr || !pr.items.length) return '';
+    var done = pr.done || [], n = done.length;
+    return '<section class="card stack prio"><div class="row" style="justify-content:space-between;align-items:baseline"><b>🧭 Your Check-Up priorities</b><span class="hint prioN" style="margin:0">' + n + ' of ' + pr.items.length + ' done</span></div>' +
+      '<div class="checks">' + pr.items.map(function (p, i) { var on = done.indexOf(i) > -1; return '<label class="chk"><input type="checkbox" data-prio="' + i + '"' + (on ? ' checked' : '') + '><span>' + esc(p) + '</span></label>'; }).join('') + '</div>' +
+      '<p class="hint" style="margin:0">Agreed at your Business Check-Up' + (pr.date ? ' on ' + dmy(pr.date) : '') + '. Tick each one off as you do it.</p></section>';
+  }
+  function bindPriorities(root) {
+    $$('[data-prio]', root).forEach(function (c) {
+      c.onchange = async function () {
+        var on = c.checked;
+        try { var r = await api('studio-extras', 'priority-done', { index: Number(c.dataset.prio), done: on }); if (S.nudges && S.nudges.priorities) S.nudges.priorities.done = r.prioritiesDone; var pn = $('.prioN', root); if (pn) pn.textContent = r.prioritiesDone.length + ' of ' + $$('[data-prio]', root).length + ' done'; if (on) toast('Well done! ✅'); }
+        catch (x) { c.checked = !on; toast(x.message); }
+      };
+    });
+  }
+
+  function benefitsAccountHtml() {
+    if (!(S.boot.access && S.boot.access.membershipActive)) return '';
+    return '<h2>My Business Club benefits</h2><div class="card stack" id="benCard"><div class="empty" style="padding:6px"><div class="typing"><i></i><i></i><i></i></div></div></div>';
+  }
+  async function bindBenefitsAccount() {
+    var card = $('#benCard'); if (!card) return;
+    var r; try { r = await api('studio-extras', 'benefits-mine'); } catch (x) { card.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#benCard')) return;
+    var b = r.benefits, biz = (S.boot.profile && S.boot.profile.businessName) || '[business name]';
+    if (!b) { card.innerHTML = '<p class="hint" style="margin:0">Your benefits will show here once your membership dates are set.</p>'; return; }
+    function row(ico, title, status, ok, action) {
+      return '<div class="benrow"><span class="benico">' + ico + '</span><div style="flex:1;min-width:0"><b>' + esc(title) + '</b><div class="hint" style="margin:0">' + status + '</div>' + (action || '') + '</div>' + (ok ? '<span class="pill green">✓</span>' : '') + '</div>';
+    }
+    var ask = function (label, text) { return '<a class="btn link" style="font-size:13px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(atWa(text)) + '">' + esc(label) + ' →</a>'; };
+    var sp = b.spotlight;
+    card.innerHTML = '<p class="hint" style="margin:0">Membership year ends <b>' + esc(dmy(b.yearKey)) + '</b>.</p>' +
+      row('📣', 'Business Spotlight or collab', sp.status === 'done' ? 'Done ' + esc(dmy(sp.date)) + (sp.link ? ' · <a href="' + esc(sp.link) + '" target="_blank" rel="noopener">View</a>' : '') : sp.status === 'scheduled' ? 'Scheduled' + (sp.date ? ' for ' + esc(dmy(sp.date)) : '') : 'Not yet', sp.status === 'done',
+        sp.status === 'none' ? ask('Plan my Spotlight', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to plan my Business Spotlight.') : '') +
+      row('⭐', 'Featured Business (app & website)', b.featured.done ? 'Live since ' + esc(dmy(b.featured.date)) : 'Being set up', b.featured.done) +
+      row('🛍️', 'Marketplace listing', b.marketplace.done ? 'Live since ' + esc(dmy(b.marketplace.date)) : 'Not listed yet', b.marketplace.done,
+        b.marketplace.done ? '' : ask('Send my product or service', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to add my product or service to the Marketplace.')) +
+      row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.badge === 'not_eligible' ? 'Not eligible at the moment' : 'Not verified yet', b.badge === 'yes',
+        b.badge === 'yes' || b.badge === 'not_eligible' ? '' : ask('Ask about verification', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. How can I get verified?')) +
+      row('📲', 'Shared by Auntie Tobi this year', b.counts.stories + ' Story share' + (b.counts.stories === 1 ? '' : 's') + ' · ' + b.counts.reposts + ' repost' + (b.counts.reposts === 1 ? '' : 's') + ' · ' + b.counts.discovery + ' discovery feature' + (b.counts.discovery === 1 ? '' : 's') + '<br>Auntie Tobi chooses whose content to share — keep posting your best work.', false) +
+      row('🧭', 'Business Check-Up with Accountability', b.checkup.done ? 'Done ' + esc(dmy(b.checkup.date)) + (b.checkup.priorities.length ? ' · ' + b.prioritiesDone.length + ' of ' + b.checkup.priorities.length + ' priorities done' : '') : 'Not booked yet', b.checkup.done,
+        b.checkup.done ? '' : ask('Book my Check-Up', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to book my Business Check-Up. The main thing I’d like help with is: '));
+  }
+
   // ───────────── account & billing ─────────────
   async function startCheckout(interval) {
     try { var r = await api('studio-billing', 'checkout', { interval: interval === 'year' ? 'year' : 'month' }); location.href = r.url; }
@@ -2633,7 +2686,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
         '<div class="sub" style="margin-top:4px">Customers find you on: ' + esc((p.channels || ['instagram']).map(channelName).join(', ')) + (p.mainChannel ? ' \u00b7 posts point to ' + esc(channelName(p.mainChannel)) : '') + '</div>' +
         (S.boot.listing ? '<div class="sub" style="margin-top:4px">Auntie Tobi listing: <a href="' + esc(S.boot.listing.url) + '" target="_blank" rel="noopener">' + esc(S.boot.listing.name) + '</a></div>' : '<div class="sub" style="margin-top:4px">No Auntie Tobi listing linked \u2014 add it in your profile.</div>') +
         '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' : '') +
-      (p ? brandKitHtml() : '') + extrasAccountHtml() +
+      benefitsAccountHtml() + (p ? brandKitHtml() : '') + extrasAccountHtml() +
       '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation.</li><li>A <b>30-day content plan uses 3</b>. Everything else uses 1.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset at midnight (UK time). Unused generations don’t carry over.</li></ul></details>' +
       '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days and before any payment.</p>' +
       '<button class="btn ghost block" id="out">Sign out</button><button class="btn link danger" id="outAll">Sign out on all devices</button></div></main>';
@@ -2647,6 +2700,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     bindPlanChoices();
     bindBrandKit();
     bindExtrasAccount();
+    bindBenefitsAccount();
     if (section === 'brand') setTimeout(function () { var bk = $('#bkCard'); if (bk) bk.scrollIntoView({ block: 'start' }); }, 50);
     var mg = $('#manage'); if (mg) mg.onclick = openPortal;
   }

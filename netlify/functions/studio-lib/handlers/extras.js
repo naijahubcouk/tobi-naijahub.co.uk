@@ -15,8 +15,9 @@ const money = require('../money');
 const nudges = require('../nudges');
 const shop = require('../shop');
 const fu = require('../followups');
+const benefits = require('../benefits');
 
-const VIEW = new Set(['nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list']);
+const VIEW = new Set(['nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine']);
 const idOf = v => { const s = String(v || ''); if (!/^[A-Za-z0-9_-]{4,20}$/.test(s)) throw new HttpError(400, 'bad_id', 'Invalid item.'); return s; };
 
 exports.handler = handler(async (ctx) => {
@@ -38,6 +39,17 @@ exports.handler = handler(async (ctx) => {
     case 'shop-img': return { shop: await shop.setImage(email, idOf(body.itemId), body.dataUrl) };
     case 'shop-img-delete': return { shop: await shop.deleteImage(email, idOf(body.itemId)) };
     case 'shop-publish': { const s = await shop.publish(email, !!body.on); return { shop: s, url: `${siteUrl()}/p/${s.slug}` }; }
+    // ── Business Club benefits (member view) ──
+    case 'benefits-mine': {
+      if (!auth.access.membershipActive) return { benefits: null };
+      const b = await benefits.getYear(email, auth.member);
+      return { benefits: benefits.forMember(b.yearKey, b.year), membershipExpiresAt: auth.member.membershipExpiresAt };
+    }
+    case 'priority-done': {
+      if (!auth.access.membershipActive) throw new HttpError(403, 'club_only', 'This is part of Business Club membership.');
+      const r = await benefits.setPriorityDone(email, auth.member, body.index, !!body.done);
+      return { prioritiesDone: r.year.prioritiesDone };
+    }
     // ── Follow-ups ──
     case 'fu-list': return { ...(await fu.list(email)), reviewLink: (await prefs.get(email)).reviewLink };
     case 'fu-add': return { item: await fu.add(email, body.item) };
