@@ -15,7 +15,7 @@ exports.handler = core.handler(async (ctx) => {
   const q = ctx.event.queryStringParameters || {};
   const email = core.normalizeEmail(q.e);
   const t = String(q.t || '');
-  if (!email || t.length !== 40 || t !== prefs.unsubToken(email)) return page('Link not valid', 'This unsubscribe link doesn’t look right. You can turn the weekly email off in Studio → Account.');
+  if (!email || t.length !== 40 || t !== prefs.unsubToken(email)) return page('Link not valid', 'This unsubscribe link doesn’t look right. You can turn the weekly email off in Business Studio → Account.');
   await prefs.update(email, { weeklyEmail: false });
-  return page('You’re unsubscribed', 'You won’t get the weekly round-up email any more. You can turn it back on in Studio → Account.');
+  return page('You’re unsubscribed', 'You won’t get the weekly round-up email any more. You can turn it back on in Business Studio → Account.');
 }, { allowGet: true });

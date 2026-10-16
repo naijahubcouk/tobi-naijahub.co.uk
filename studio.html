@@ -427,7 +427,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     if (S.boot && S.boot.access && S.boot.access.canView) {
       tp.classList.remove('hidden');
       tp.className = 'pill ' + (S.boot.access.plan === 'power' ? 'gold' : 'cream');
-      tp.textContent = S.boot.access.plan === 'club' ? 'Club' : planLabel();
+      tp.textContent = S.boot.access.plan === 'club' ? 'Club' : S.boot.access.plan === 'power' ? 'Pro' : planLabel();
+      var bsm = document.querySelector('.brand small'); if (bsm) bsm.textContent = S.boot.access.membershipActive ? 'Auntie Tobi Business Club' : 'Auntie Tobi';
     } else tp.classList.add('hidden');
     window.scrollTo(0, 0);
   }
@@ -439,17 +440,17 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   });
 
   // ───────────── sign in ─────────────
-  // mode: 'signin' (members) or 'signup' (Get AI Power — anyone can verify their email to buy)
+  // mode: 'signin' (members) or 'signup' (Get Business Studio Pro — anyone can verify their email to buy)
   function showSignIn(prefill, mode) {
     mode = mode || 'signin';
     var up = mode === 'signup';
     setChrome({ tabs: false, back: up ? function () { showSignIn(); } : null });
     app.innerHTML =
       '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt="Auntie Tobi">' +
-      (up ? '<div class="kicker">AI Power</div><h1>Get AI Power</h1>' +
-        '<p class="sub" style="margin-top:8px">100 AI generations a day for captions, Reels, promos, content ideas and more — written in your brand voice. £5 a month or £50 a year. First, confirm your email.</p></div>'
+      (up ? '<div class="kicker">Business Studio Pro</div><h1>Get Business Studio Pro</h1>' +
+        '<p class="sub" style="margin-top:8px">All the Business Studio tools, 100 AI generations a day and the Business Growth Library — captions, Reels, promos, content plans, follow-ups, quotes and more. £5 a month or £50 a year. First, confirm your email.</p></div>'
         : '<div class="kicker">Auntie Tobi</div><h1>Welcome to your Business Studio</h1>' +
-        '<p class="sub" style="margin-top:8px">Create captions, Reels, promos and more in your brand voice. Sign in with your Business Club or AI Power email.</p></div>') +
+        '<p class="sub" style="margin-top:8px">Create captions, Reels, promos and more in your brand voice. Sign in with your Business Club or Business Studio Pro email.</p></div>') +
       (!up && /[?&]welcome=1/.test(location.search) ? '<div class="note stack" style="margin-bottom:12px"><b>\ud83c\udf89 Welcome to the Business Club!</b><span>Sign in with the <b>email you used to pay</b>. We\u2019ll send you a 6-digit code. If it says you don\u2019t have access yet, wait a minute and try again \u2014 it can take a moment after payment.</span></div>' : '') +
       '<form class="card stack" id="emailForm" novalidate>' +
       '<div><label class="f" for="email">Email address</label><input type="email" id="email" autocomplete="email" inputmode="email" required placeholder="you@yourbusiness.co.uk" value="' + esc(prefill || S.email) + '"></div>' +
@@ -457,7 +458,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       '<button class="btn ' + (up ? 'gold' : 'primary') + ' block" id="sendBtn">' + (up ? 'Continue' : 'Send my code') + '</button>' +
       '<p class="hint" style="text-align:center">No password needed. We’ll email you a 6-digit code.</p></form>' +
       (up ? '<p class="hint" style="text-align:center;margin-top:18px">Already have access? <button class="btn link" id="toSignin">Sign in</button></p>'
-        : '<div class="card plan stack" style="margin-top:18px;text-align:center"><b>Not a Business Club member?</b><div class="sub">Get AI Power on its own — 100 generations a day.</div><button class="btn gold block" id="toSignup">Get AI Power</button></div>' +
+        : '<div class="card plan stack" style="margin-top:18px;text-align:center"><b>Just want the tools?</b><div class="sub">Business Studio Pro: all the Business Studio tools, 100 AI a day and the resources library — £5/month or £50/year.</div><button class="btn gold block" id="toSignup">Get Business Studio Pro</button></div>' +
           '<p class="hint" style="text-align:center;margin-top:14px"><a href="/business-club">About the Business Club</a></p>') + '</div>';
     var ts = $('#toSignup'); if (ts) ts.onclick = function () { showSignIn($('#email').value, 'signup'); };
     var ti = $('#toSignin'); if (ti) ti.onclick = function () { showSignIn($('#email').value); };
@@ -487,7 +488,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       '<button class="btn primary block" id="verifyBtn">' + (up ? 'Confirm email' : 'Sign in') + '</button>' +
       '<p class="hint" style="text-align:center">You’ll stay signed in on this device.</p>' +
       '<div class="row" style="justify-content:space-between"><button type="button" class="btn link" id="resend" disabled>Resend code</button><button type="button" class="btn link" id="other">Use a different email</button></div>' +
-      '</form><p class="hint" style="text-align:center;margin-top:16px">Can’t find it? Check spam or promotions.' + (up ? '' : ' Still nothing? This email may not have Studio access yet — you can <button class="btn link" id="toUp" style="font-size:inherit">get AI Power</button>.') + '</p></div>';
+      '</form><p class="hint" style="text-align:center;margin-top:16px">Can’t find it? Check spam or promotions.' + (up ? '' : ' Still nothing? This email may not have Business Studio access yet — you can <button class="btn link" id="toUp" style="font-size:inherit">get Business Studio Pro</button>.') + '</p></div>';
     var tu = $('#toUp'); if (tu) tu.onclick = function () { showSignIn(S.email, 'signup'); };
     var code = $('#code');
     code.addEventListener('input', function () {
@@ -553,7 +554,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   // ───────────── boot ─────────────
   function planLabel() {
     var a = S.boot.access;
-    if (a.plan === 'power') return 'AI Power';
+    if (a.plan === 'power') return 'Business Studio Pro';
     if (a.plan === 'club') return 'Business Club';
     return a.readOnly ? 'Read-only' : '';
   }
@@ -563,18 +564,19 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     S.today = null;
     try { S.boot = await api('studio-api', 'bootstrap', {}, { quiet401: true }); }
     catch (e) {
-      if (e.status === 401) return showSignIn();
+      if (e.status === 401) return showSignIn('', /[?&]pro=1/.test(location.search) ? 'signup' : undefined);
       if (e.code === 'account_blocked') return showMessage('Account suspended', e.message);
       app.innerHTML = '<main><div class="err">' + esc(e.message) + '</div><button class="btn ghost" style="margin-top:12px" onclick="location.reload()">Try again</button></main>'; return;
     }
     S.history = S.boot.recent || [];
     var q = new URLSearchParams(location.search);
+    if (q.get('pro') === '1') { try { history.replaceState({}, '', location.pathname); } catch (x) {} if (!(S.boot.access && S.boot.access.powerActive)) return showAccount(); }
     if (q.get('billing')) {
       history.replaceState(null, '', location.pathname);
       if (q.get('billing') === 'success' || q.get('billing') === 'managed') {
-        if (q.get('billing') === 'success') toast('Payment received — setting up AI Power…');
+        if (q.get('billing') === 'success') toast('Payment received — setting up Business Studio Pro…');
         try { await api('studio-billing', 'refresh'); S.boot = await api('studio-api', 'bootstrap'); S.history = S.boot.recent || []; } catch (e) {}
-        if (q.get('billing') === 'success' && S.boot.access.plan === 'power') toast('AI Power is active — ' + S.boot.limits.power + ' generations a day!');
+        if (q.get('billing') === 'success' && S.boot.access.plan === 'power') toast('Business Studio Pro is active — ' + S.boot.limits.power + ' generations a day!');
       }
     }
     if (S.boot.state === 'buyer') return showBuy();
@@ -588,16 +590,17 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     $('#out').onclick = signOut;
   }
 
-  // Plan choice: monthly / yearly AI Power
+  // Plan choice: monthly / yearly Business Studio Pro
   function planChoices() {
     var iv = (S.boot.billing && S.boot.billing.intervals) || [];
-    if (!iv.length) return '<div class="note">AI Power isn’t available to buy just yet. Please check back soon.</div>';
+    if (!iv.length) return '<div class="note">Business Studio Pro isn’t available to buy just yet. Please check back soon.</div>';
     var l = S.boot.limits.power;
     var opts = {
       month: '<button class="card plan stack" data-buy="month" style="text-align:left;width:100%"><div class="row" style="justify-content:space-between"><b>Monthly</b></div><div class="price">£5<span style="font-size:15px;font-weight:500"> /month</span></div><div class="sub">Renews monthly. Cancel any time.</div></button>',
       year: '<button class="card plan stack" data-buy="year" style="text-align:left;width:100%"><div class="row" style="justify-content:space-between"><b>Yearly</b><span class="pill gold">2 months free</span></div><div class="price">£50<span style="font-size:15px;font-weight:500"> /year</span></div><div class="sub">One payment a year. Cancel any time.</div></button>'
     };
-    return '<ul style="margin:0 0 12px 18px;font-size:14.5px"><li><b>' + l + ' AI generations a day</b></li><li>All 7 Studio tools, in your brand voice</li><li>Save, edit and reuse everything in your library</li><li>Switch between monthly and yearly any time</li></ul>' +
+    return '<ul style="margin:0 0 12px 18px;font-size:14.5px"><li><b>' + l + ' AI generations a day</b></li><li>All the Business Studio tools, in your brand voice</li><li>The Business Growth Library — lessons, templates and checklists</li><li>Follow-ups, quotes &amp; invoices, tracker and price list page</li><li>Switch between monthly and yearly any time</li></ul>' +
+      (S.boot && S.boot.access && S.boot.access.membershipActive ? '' : '<p class="hint" style="margin:-4px 0 12px">Business Studio Pro is the tools only. Promotion by Auntie Tobi (Spotlight, Featured Business, Marketplace, reposts) is part of the <a href="/business-club">Business Club</a>.</p>') +
       '<div class="stack">' + iv.map(function (i) { return opts[i]; }).join('') + '</div>' +
       '<p class="hint" style="text-align:center;margin-top:10px">Secure payment by Stripe.</p>';
   }
@@ -609,19 +612,19 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     setChrome({ tabs: false });
     var m = S.boot.member || {};
     app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' +
-      (m.isClub ? 'Your Business Club membership isn’t active right now, but you can still use the Studio with AI Power.' : 'Email confirmed! Choose how you’d like to pay for AI Power and you’ll be creating in a minute.') +
-      '</p></div><h1 style="margin-bottom:12px">Get AI Power</h1>' + planChoices() +
+      (m.isClub ? 'Your Business Club membership isn’t active right now, but you can still use the Business Studio with Business Studio Pro.' : 'Email confirmed! Choose how you’d like to pay for Business Studio Pro and you’ll be creating in a minute.') +
+      '</p></div><h1 style="margin-bottom:12px">Get Business Studio Pro</h1>' + planChoices() +
       '<p class="hint" style="text-align:center;margin-top:16px">Signed in as ' + esc(m.email || '') + ' · <button class="btn link" id="out" style="font-size:inherit">Sign out</button></p></main>';
     bindPlanChoices(); $('#out').onclick = signOut;
   }
 
   function readOnlyBanner() {
-    return '<section class="card plan stack" style="margin-bottom:6px"><b>Your AI Power has ended</b><div class="sub">You can still view, edit and copy everything in your library. Renew to create new content.</div><button class="btn gold block" id="renewBtn">Renew AI Power</button></section>';
+    return '<section class="card plan stack" style="margin-bottom:6px"><b>Your Business Studio Pro has ended</b><div class="sub">You can still view, edit and copy everything in your library. Renew to create new content.</div><button class="btn gold block" id="renewBtn">Renew Business Studio Pro</button></section>';
   }
   function bindRenew() { var r = $('#renewBtn'); if (r) r.onclick = showRenew; }
   function showRenew() {
     var scrim = document.createElement('div'); scrim.className = 'scrim';
-    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="rnT"><h2 id="rnT" style="margin:0">AI Power</h2>' + planChoices() + '<button class="btn ghost block" id="rnClose">Not now</button></div>';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="rnT"><h2 id="rnT" style="margin:0">Business Studio Pro</h2>' + planChoices() + '<button class="btn ghost block" id="rnClose">Not now</button></div>';
     document.body.appendChild(scrim);
     bindPlanChoices(scrim);
     $('#rnClose', scrim).onclick = function () { scrim.remove(); };
@@ -885,7 +888,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       '<p>Each time you tap <b>Create</b> or <b>Regenerate</b> and get a result, that’s <b>one generation</b> — even when you get several options (like 3 captions or 6 content ideas).</p>' +
       '<p><b>One exception:</b> a <b>30-day content plan uses 3 generations</b>, because it’s a much bigger piece of work. A 7-day plan uses 1.</p>' +
       '<p><b>Free — never counted:</b> editing, copying, saving, viewing your library and updating your profile. If something goes wrong and you don’t get a result, you’re not charged.</p>' +
-      '<p><b>Your daily allowance:</b> Business Club members get ' + l.standard + ' a day. AI Power gives you ' + l.power + ' a day (£5/month or £50/year). Allowances reset every night at midnight (UK time) and unused generations don’t carry over.</p>' +
+      '<p><b>Your daily allowance:</b> Business Club members get ' + l.standard + ' a day. Business Studio Pro gives you ' + l.power + ' a day (£5/month or £50/year). Allowances reset every night at midnight (UK time) and unused generations don’t carry over.</p>' +
       '<button class="btn primary block" id="wcOk">Got it</button></div>';
     document.body.appendChild(scrim);
     $('#wcOk', scrim).onclick = function () { scrim.remove(); };
@@ -1322,7 +1325,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="lrT"><h2 id="lrT" style="margin:0">You’ve used today’s generations</h2>' +
       '<p>Your allowance resets at <b>midnight</b>. You can still view, edit and copy everything in your library.</p>' +
-      (canUp ? '<p><b>Want more?</b> AI Power gives you ' + S.boot.limits.power + ' generations a day.</p><button class="btn gold block" id="lrUp">See AI Power plans</button>' : '') +
+      (canUp ? '<p><b>Want more?</b> Business Studio Pro gives you ' + S.boot.limits.power + ' generations a day.</p><button class="btn gold block" id="lrUp">See Business Studio Pro plans</button>' : '') +
       '<button class="btn ghost block" id="lrOk">OK</button></div>';
     document.body.appendChild(scrim);
     $('#lrOk', scrim).onclick = function () { scrim.remove(); };
@@ -1853,7 +1856,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     return out.join('');
   }
 
-  function clubOnly() { return !(S.boot && S.boot.access && S.boot.access.membershipActive); }
+  function clubOnly() { return !(S.boot && S.boot.access && (S.boot.access.membershipActive || S.boot.access.powerActive)); } // = no Library resources
   function libHeader(active) {
     return '<h1>Library</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📚 Resources</button><button class="chip" id="libMine" aria-pressed="' + (active === 'mine') + '">My content</button></div>';
   }
@@ -1869,7 +1872,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 
   function resLocked() {
     return '<section class="card stack" style="text-align:center;padding:24px 18px"><div style="font-size:34px">📚</div><h2 style="margin:0">Your Business Growth Library</h2>' +
-      '<p class="sub">Practical lessons, templates and monthly marketing ideas are part of <b>Auntie Tobi Business Club</b> membership.</p>' +
+      '<p class="sub">Practical lessons, templates and monthly marketing ideas are part of <b>Auntie Tobi Business Club</b> and <b>Business Studio Pro</b>.</p>' +
       '<a class="btn primary block" href="/business-club">See Business Club</a><p class="hint" style="margin:0">Already a member? Contact Auntie Tobi if this doesn’t look right.</p></section>';
   }
 
@@ -2137,7 +2140,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     html += prioritiesCard(n.priorities);
     // Install as an app
     if (!isStandalone() && !lsGet('studioInstallHidden') && (deferredInstall || isIOS() || /android/i.test(navigator.userAgent))) {
-      html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn link" id="instHide" style="font-size:13px">Not now</button></div></section>';
+      html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Business Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn link" id="instHide" style="font-size:13px">Not now</button></div></section>';
     }
     // Money reminders
     var fus = n.followups || [];
@@ -2193,7 +2196,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       return;
     }
     var scrim = document.createElement('div'); scrim.className = 'scrim';
-    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="inT"><h2 id="inT" style="margin:0">Add Studio to your home screen</h2>' +
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="inT"><h2 id="inT" style="margin:0">Add Business Studio to your home screen</h2>' +
       (isIOS() ? '<ol class="steps"><li>Tap the <b>Share</b> button (the square with an arrow) in Safari.</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><p class="hint">On iPhone this works in Safari. If you’re in another app’s browser, open this page in Safari first.</p>'
         : '<ol class="steps"><li>Tap the browser menu (⋮) at the top right.</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li><li>Tap <b>Install</b> or <b>Add</b>.</li></ol>') +
       '<button class="btn ghost block" id="inOk">OK</button></div>';
@@ -2219,7 +2222,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     return S.osPromise;
   }
   async function setReminders(on) {
-    if (!('Notification' in window)) throw new Error(isIOS() ? 'On iPhone, add Studio to your home screen first, then turn on reminders from the app.' : 'This browser doesn’t support notifications.');
+    if (!('Notification' in window)) throw new Error(isIOS() ? 'On iPhone, add Business Studio to your home screen first, then turn on reminders from the app.' : 'This browser doesn’t support notifications.');
     var OS = await loadOneSignal();
     if (on) {
       await OS.Notifications.requestPermission();
@@ -2237,8 +2240,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   function extrasAccountHtml() {
     return '<h2>Phone app &amp; reminders</h2><div class="card stack" id="exCard"><div class="toggle"><span id="lb_wk">Weekly round-up email (Monday morning)</span><button type="button" class="switch" role="switch" aria-labelledby="lb_wk" id="wkSw" aria-checked="false" disabled></button></div>' +
       '<div class="toggle"><span id="lb_rm">Daily reminder notification (about 8am)</span><button type="button" class="switch" role="switch" aria-labelledby="lb_rm" id="rmSw" aria-checked="false" disabled></button></div>' +
-      '<p class="hint" style="margin:0">The reminder is sent to this phone or computer. On iPhone, add Studio to your home screen first.</p>' +
-      (isStandalone() ? '' : '<button class="btn ghost block" id="acInst">Add Studio to my home screen</button>') + '</div>' +
+      '<p class="hint" style="margin:0">The reminder is sent to this phone or computer. On iPhone, add Business Studio to your home screen first.</p>' +
+      (isStandalone() ? '' : '<button class="btn ghost block" id="acInst">Add Business Studio to my home screen</button>') + '</div>' +
       '<h2>Your links</h2><div class="list"><button class="li" id="acRev"><div class="t"><b>Review link &amp; QR code</b><small>Make it easy for customers to review you</small></div><span aria-hidden="true">→</span></button>' +
       '<button class="li" id="acShop"><div class="t"><b>Price list page</b><small>A shareable page with your prices and WhatsApp ordering</small></div><span aria-hidden="true">→</span></button>' +
       (S.boot.access && S.boot.access.membershipActive ? '<button class="li" id="acMkt"><div class="t"><b>Marketplace listing</b><small>Show your product or service on the Auntie Tobi Marketplace</small></div><span aria-hidden="true">→</span></button>' : '') + '</div>';
@@ -2381,7 +2384,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
         }).join('') + '</div>' +
         (items.length < 30 ? '<button class="btn ghost small" id="shAdd" style="margin-top:10px">+ Add item</button>' : '') +
         '<div class="err hidden" id="shErr" style="margin-top:12px"></div><button class="btn primary block" id="shSave" style="margin-top:14px">Save page</button>' +
-        '<p class="hint">Only publish prices you’re happy to honour. Your page shows while your membership or AI Power is active.</p></main>';
+        '<p class="hint">Only publish prices you’re happy to honour. Your page shows while your membership or Business Studio Pro is active.</p></main>';
       $$('[data-it] input[data-k]').forEach(function (inp) { inp.oninput = function () { items[Number(inp.closest('[data-it]').dataset.it)][inp.dataset.k] = inp.value; }; });
       $$('[data-del]').forEach(function (b) { b.onclick = function () { keep(); items.splice(Number(b.dataset.del), 1); draw(); }; });
       $$('[data-up]').forEach(function (b) { b.onclick = function () { keep(); var i = Number(b.dataset.up), t = items[i - 1]; items[i - 1] = items[i]; items[i] = t; draw(); }; });
@@ -2631,7 +2634,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   function fuNotNowSheet(it, after) {
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     var opt = function (days, label) { var d = new Date(); d.setDate(d.getDate() + days); return '<button class="btn ghost block" data-cb="' + d.toISOString().slice(0, 10) + '">' + label + '</button>'; };
-    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="nnT"><h2 id="nnT" style="margin:0">Not now — check back?</h2><p class="sub">Studio will remind you to get back in touch.</p>' +
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="nnT"><h2 id="nnT" style="margin:0">Not now — check back?</h2><p class="sub">Business Studio will remind you to get back in touch.</p>' +
       opt(30, 'In 1 month') + opt(90, 'In 3 months') + opt(180, 'In 6 months') +
       '<div class="row"><input type="date" id="nnD" style="flex:1" aria-label="Pick a date"><button class="btn ghost" id="nnPick">Set</button></div>' +
       '<button class="btn ghost block" data-cb="">No reminder</button><button class="btn link" id="nnX">Cancel</button></div>';
@@ -2645,7 +2648,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   function fuLogSheet(after, prefill) {
     var p = prefill || {};
     var scrim = document.createElement('div'); scrim.className = 'scrim';
-    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="lgT"><h2 id="lgT" style="margin:0">Log an enquiry</h2><p class="sub" style="margin:0">Takes 10 seconds. Studio reminds you to follow up.</p>' +
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="lgT"><h2 id="lgT" style="margin:0">Log an enquiry</h2><p class="sub" style="margin:0">Takes 10 seconds. Business Studio reminds you to follow up.</p>' +
       '<div><label class="f" for="lgN">Name</label><input id="lgN" maxlength="80" value="' + esc(p.name || '') + '" placeholder="e.g. Tolu"></div>' +
       '<div><label class="f" for="lgP">WhatsApp / phone <span class="opt">(optional)</span></label><input id="lgP" inputmode="tel" maxlength="20" value="' + esc(p.phone || '') + '" placeholder="07700 900123"></div>' +
       '<div><label class="f" for="lgA">What did they ask about?</label><input id="lgA" maxlength="140" placeholder="e.g. a 40th birthday cake for 12 Nov"></div>' +
@@ -2700,10 +2703,10 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
         (st.bookedValuePence ? '<div class="hint" style="margin:0">Booked value: <b>' + gbp(st.bookedValuePence) + '</b> (from the rough values you entered)</div>' : '') +
         (st.bySource.length ? '<div class="hint" style="margin:0">Where enquiries came from: ' + st.bySource.slice(0, 4).map(function (s) { return '<b>' + esc(s.source) + '</b> ' + s.enquiries + (s.booked ? ' (' + s.booked + ' booked)' : ''); }).join(' · ') + '</div>' : '') + '</section>' +
       '<div class="chips" style="margin-bottom:12px">' + [['due', 'Due'], ['active', 'Active'], ['booked', 'Booked'], ['notnow', 'Not now'], ['all', 'All']].map(function (f) { return '<button class="chip" data-fuf="' + f[0] + '" aria-pressed="' + (f[0] === filter) + '">' + f[1] + ' (' + counts[f[0]] + ')</button>'; }).join('') + '</div>' +
-      (filter === 'due' ? (shown.length ? '<div class="stack" id="fuDue">' + shown.map(function (i) { return fuDueCard(i, r.reviewLink); }).join('') + '</div>' : '<div class="empty">Nothing to follow up today 🎉' + (counts.active ? '' : '<br>Log your next enquiry and Studio will remind you.') + '</div>')
+      (filter === 'due' ? (shown.length ? '<div class="stack" id="fuDue">' + shown.map(function (i) { return fuDueCard(i, r.reviewLink); }).join('') + '</div>' : '<div class="empty">Nothing to follow up today 🎉' + (counts.active ? '' : '<br>Log your next enquiry and Business Studio will remind you.') + '</div>')
         : (shown.length ? '<div class="list">' + shown.map(function (i) { return '<button class="li" data-fuopen="' + esc(i.id) + '"><div class="t"><b>' + esc(i.name) + '</b><small>' + esc((i.about ? i.about + ' · ' : '') + i.source) + '</small><small class="snip">' + esc(fuNextText(i)) + '</small></div>' + fuPill(i.stage) + '</button>'; }).join('') + '</div>' : '<div class="empty">Nobody here yet.</div>')) +
       '<button class="btn link" id="fuSet" style="margin-top:14px">⚙️ Default timings: follow up after ' + r.defaults.gaps.join(' then ') + ' days · keep in touch ' + esc((FU_KEEP.filter(function (k) { return k[0] === r.defaults.keepDays; })[0] || [0, 'off'])[1].toLowerCase()) + '</button>' +
-      '<p class="hint">Studio never messages anyone for you — it reminds you and writes the message, and you press send. Only you can see this list.</p>';
+      '<p class="hint">Business Studio never messages anyone for you — it reminds you and writes the message, and you press send. Only you can see this list.</p>';
     $('#fuNew').onclick = function () { fuLogSheet(function () { showFollowups(); }); };
     $$('[data-fuf]').forEach(function (b) { b.onclick = function () { showFollowups(b.dataset.fuf); }; });
     $$('[data-fuopen]').forEach(function (b) { b.onclick = function () { showFollowup(b.dataset.fuopen); }; });
@@ -2867,21 +2870,21 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       html += '<h2>Business Club</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>Annual membership</b><span class="pill ' + (a.membershipActive ? 'green' : 'cream" style="background:#ECEDF0;color:var(--muted)') + '">' + (a.membershipActive ? 'Active' : 'Not active') + '</span></div>' +
         '<div class="sub">' + (a.membershipActive ? 'Valid until <b>' + d(m.membershipExpiresAt, 1) + '</b>. Includes ' + l.standard + ' AI generations a day.' : 'Your Business Club membership isn’t active. <a href="/business-club">Renew it here</a>.') + '</div></div>';
     }
-    // AI Power
-    html += '<h2>AI Power</h2>';
+    // Business Studio Pro
+    html += '<h2>Business Studio Pro</h2>';
     var period = ad && ad.interval === 'year' ? '£50/year' : '£5/month';
     if (ad && ['active', 'trialing'].indexOf(ad.status) > -1) {
-      html += '<div class="card plan stack"><div class="row" style="justify-content:space-between"><b>AI Power · ' + (ad.interval === 'year' ? 'Yearly' : 'Monthly') + '</b><span class="pill gold">' + (ad.cancelAtPeriodEnd ? 'Ending' : 'Active') + '</span></div>' +
+      html += '<div class="card plan stack"><div class="row" style="justify-content:space-between"><b>Business Studio Pro · ' + (ad.interval === 'year' ? 'Yearly' : 'Monthly') + '</b><span class="pill gold">' + (ad.cancelAtPeriodEnd ? 'Ending' : 'Active') + '</span></div>' +
         '<div class="sub">' + l.power + ' generations a day · ' + period + '</div>' +
         '<div>' + (ad.cancelAtPeriodEnd ? 'Ends on <b>' + d(ad.currentPeriodEnd, 1) + '</b>.' + (a.membershipActive ? ' You’ll go back to ' + l.standard + ' a day with your Business Club membership.' : ' After that you can still view your library.') : 'Renews on <b>' + d(ad.currentPeriodEnd, 1) + '</b>.') + '</div>' +
         '<button class="btn ghost block" id="manage">' + (ad.cancelAtPeriodEnd ? 'Restart or manage subscription' : 'Switch plan, manage or cancel') + '</button></div>';
     } else if (ad && ['past_due', 'unpaid', 'incomplete'].indexOf(ad.status) > -1) {
-      html += '<div class="card stack" style="border-color:var(--danger)"><b>AI Power is paused</b><div class="err">Your last payment didn’t go through. Update your card to get your ' + l.power + ' generations a day back.' + (a.membershipActive ? ' Your Business Club membership is not affected.' : '') + '</div>' +
+      html += '<div class="card stack" style="border-color:var(--danger)"><b>Business Studio Pro is paused</b><div class="err">Your last payment didn’t go through. Update your card to get your ' + l.power + ' generations a day back.' + (a.membershipActive ? ' Your Business Club membership is not affected.' : '') + '</div>' +
         '<button class="btn primary block" id="manage">Update payment details</button></div>';
     } else if (S.boot.billing.enabled) {
       html += '<div class="card stack">' + (a.membershipActive ? '<p class="sub" style="margin:0">You have ' + l.standard + ' a day with Business Club. Upgrade for ' + l.power + ' a day.</p>' : '') + planChoices() + '</div>';
     } else if (!m.isClub) {
-      html += '<div class="note">AI Power isn’t available right now.</div>';
+      html += '<div class="note">Business Studio Pro isn’t available right now.</div>';
     }
     return html;
   }

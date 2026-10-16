@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Stripe webhook: AI Power subscriptions and Business Club payment-link purchases (automatic Studio access).
+ * Stripe webhook: Business Studio Pro subscriptions and Business Club payment-link purchases (automatic Business Studio access).
  * Endpoint: https://<your-site>/.netlify/functions/studio-stripe-webhook
  * Every event is signature-checked, then the customer's subscriptions are re-read from Stripe
  * and the member's access is rewritten — so retries, duplicates and out-of-order events are safe.
@@ -31,7 +31,7 @@ exports.handler = handler(async (ctx) => {
   const obj = (event.data && event.data.object) || {};
   const done = async (out) => { await core.setJson(`stripe-events/${event.id}`, { type: event.type, at: Date.now() }); return out; };
 
-  // Business Club payment link → automatic Studio access.
+  // Business Club payment link → automatic Business Studio access.
   if (event.type === 'checkout.session.completed' && club.isClubSession(obj)) {
     const r = await club.activateFromSession(obj);
     return done({ received: true, club: r.ok ? (r.isNew ? 'joined' : 'renewed') : r.reason });
@@ -54,7 +54,7 @@ exports.handler = handler(async (ctx) => {
   const result = await stripe.syncCustomer(customerId);
 
   if (event.type === 'invoice.payment_failed' && result) {
-    await core.alert('payment_failed', 'AI Power payment failed — add-on paused until payment succeeds', { email: result.email, invoice: obj.id });
+    await core.alert('payment_failed', 'Business Studio Pro payment failed — add-on paused until payment succeeds', { email: result.email, invoice: obj.id });
   }
 
   await core.setJson(`stripe-events/${event.id}`, { type: event.type, at: Date.now() });

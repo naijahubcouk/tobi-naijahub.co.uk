@@ -29,7 +29,7 @@ async function tellAdmins(rec, kind) {
   const f = rec.draft || rec.live || {};
   const who = rec.source === 'member' ? `Business Club member ${rec.owner}` : `${rec.contact.name || ''} <${rec.contact.email || ''}> (public form)`;
   await core.emailAdmins(kind === 'change' ? `Marketplace change to review: ${f.name}` : `New Marketplace listing to review: ${f.name}`,
-    `${who} ${kind === 'change' ? 'updated' : 'submitted'} a Marketplace listing.\n\n${f.name} — ${f.business}\n${f.category}${f.price ? ` · ${f.price}` : ''}\n${f.desc}\n\nReview it in Studio Admin → Marketplace: ${ADMIN_URL()}`);
+    `${who} ${kind === 'change' ? 'updated' : 'submitted'} a Marketplace listing.\n\n${f.name} — ${f.business}\n${f.category}${f.price ? ` · ${f.price}` : ''}\n${f.desc}\n\nReview it in Business Studio Admin → Marketplace: ${ADMIN_URL()}`);
   await core.alert('market_review', `Marketplace ${kind === 'change' ? 'change' : 'listing'} to review: ${f.name} (${f.business})`, { id: rec.id });
 }
 
@@ -67,7 +67,7 @@ exports.handler = handler(async (ctx) => {
       if (!photos.length) throw new HttpError(400, 'invalid', 'Please add at least one photo.');
       market.clean({ ...body.listing, imgs: [] }, { allowNoImg: true }); // check everything before storing photos
       const lk = await checkLink(event, body.listing && body.listing.bizSlug, email);
-      // A Business Club member using the form link: it becomes their member listing (counts as their 1, editable in Studio).
+      // A Business Club member using the form link: it becomes their member listing (counts as their 1, editable in Business Studio).
       const member = await core.getMember(email);
       const isClub = !!(member && !member.blocked && core.access(member, await core.getSettings()).membershipActive);
       if (isClub && !(await market.mine(email)).canAdd) throw new HttpError(403, 'limit', 'You already have your Business Club Marketplace listing. To change it, sign in to your Business Studio (auntietobi.co.uk/studio) → Account → Marketplace listing.');

@@ -16,7 +16,7 @@ const notify = require('../notify');
 const market = require('../market');
 function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
 
-// Business Club status. 'none' = not a Club member (e.g. AI Power-only customer).
+// Business Club status. 'none' = not a Club member (e.g. Business Studio Pro-only customer).
 const STATUSES = ['pending', 'active', 'inactive', 'none'];
 
 async function mapLimit(items, n, fn) {
@@ -91,13 +91,13 @@ async function saveMember(actor, raw, isNew) {
   });
   await core.audit(actor, isNew ? 'member_add' : 'member_update', { email, status: saved.status, expires: saved.membershipExpiresAt, override: saved.allowanceOverride });
 
-  // AI Power is independent of Business Club. Only blocking an account stops its renewal.
+  // Business Studio Pro is independent of Business Club. Only blocking an account stops its renewal.
   const newlyBlocked = saved.blocked && !(before && before.blocked);
   if (newlyBlocked) {
     await cas(`members/${enc(email)}`, cur => ({ ...cur, sessionEpoch: (cur.sessionEpoch || 0) + 1 }));
     if (saved.stripeCustomerId && saved.addon && core.LIVE_SUB_STATUSES.includes(saved.addon.status) && core.env('STRIPE_SECRET_KEY')) {
       try { await stripe.syncCustomer(saved.stripeCustomerId); }
-      catch (e) { await core.alert('stripe_block_failed', 'Account blocked but AI Power renewal could not be stopped — check Stripe', { email }); }
+      catch (e) { await core.alert('stripe_block_failed', 'Account blocked but Business Studio Pro renewal could not be stopped — check Stripe', { email }); }
     }
   }
   return saved;
@@ -417,7 +417,7 @@ exports.handler = handler(async (ctx) => {
       const note = String(body.note || '').trim();
       const msg = {
         approve: [`Your listing is live on the Auntie Tobi Marketplace 🎉`, `${first ? `Hi ${first},` : 'Hello,'}\n\nGood news — “${f.name}” is ${wasLive ? 'updated and ' : ''}live on the Auntie Tobi Marketplace.\n\nSee it here: ${siteUrl()}/marketplace\n\nShare the link with your customers too!\n\nAuntie Tobi 💚`],
-        changes: [`A small change is needed on your Marketplace listing`, `${first ? `Hi ${first},` : 'Hello,'}\n\nThank you for “${f.name}”. Before it goes live, Auntie Tobi has asked for a change:\n\n${note || '(see Studio)'}\n\n${r.source === 'member' ? `Update it in your Business Studio: ${where}` : 'Reply to this email or message us on WhatsApp (https://wa.me/447594674940) with the update.'}\n\nAuntie Tobi 💚`],
+        changes: [`A small change is needed on your Marketplace listing`, `${first ? `Hi ${first},` : 'Hello,'}\n\nThank you for “${f.name}”. Before it goes live, Auntie Tobi has asked for a change:\n\n${note || '(see Business Studio)'}\n\n${r.source === 'member' ? `Update it in your Business Studio: ${where}` : 'Reply to this email or message us on WhatsApp (https://wa.me/447594674940) with the update.'}\n\nAuntie Tobi 💚`],
         reject: [`About your Marketplace listing`, `${first ? `Hi ${first},` : 'Hello,'}\n\nThank you for sending “${f.name}” to the Auntie Tobi Marketplace. ${wasLive ? 'Your latest change wasn’t accepted, so your listing stays as it was.' : 'We’re not able to list it at the moment.'}${note ? `\n\n${note}` : ''}\n\nAny questions? Message us on WhatsApp: https://wa.me/447594674940\n\nAuntie Tobi 💚`],
       }[decision];
       if (to && msg) { try { await core.sendEmail([to], msg[0], msg[1]); } catch (e) { console.error('[studio] market email failed', e && e.message); } }
@@ -429,7 +429,7 @@ exports.handler = handler(async (ctx) => {
           if (y && !y.marketplace.done) await benefits.update(r.owner, member, { marketplace: { done: true }, notify: false }).catch(() => {});
         }
       } else if (r.owner && decision === 'changes') {
-        await notify.pushToMember(r.owner, 'Auntie Tobi', 'A small change is needed on your Marketplace listing — see Studio.');
+        await notify.pushToMember(r.owner, 'Auntie Tobi', 'A small change is needed on your Marketplace listing — see Business Studio.');
       }
       return { listing: { ...r, status: market.status(r) } };
     }

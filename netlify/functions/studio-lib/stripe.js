@@ -1,13 +1,13 @@
 'use strict';
 /*
- * Stripe for AI Power (sold to anyone, independent of Business Club):
+ * Stripe for Business Studio Pro (sold to anyone, independent of Business Club):
  *   £5 / month  → STRIPE_PRICE_POWER_MONTHLY
  *   £50 / year  → STRIPE_PRICE_POWER_YEARLY
  * No SDK — plain HTTPS with a pinned API version.
  *
  * Stripe is the source of truth: every webhook re-fetches the customer's subscriptions
- * and rewrites the account's AI Power state, so events arriving twice or out of order are harmless.
- * A Studio account for a non-member is created only once a subscription exists (after payment).
+ * and rewrites the account's Business Studio Pro state, so events arriving twice or out of order are harmless.
+ * A Business Studio account for a non-member is created only once a subscription exists (after payment).
  */
 const crypto = require('crypto');
 const core = require('./core');
@@ -88,7 +88,7 @@ function verifyWebhook(rawBody, sigHeader, tolerance) {
 }
 
 // ───────────── account records ─────────────
-// Existing Studio accounts live in members/…; people buying AI Power who have no account yet
+// Existing Business Studio accounts live in members/…; people buying Business Studio Pro who have no account yet
 // are tracked in buyers/… until their first subscription exists.
 async function recordKeyFor(email) {
   return (await core.getMember(email)) ? `members/${enc(email)}` : `buyers/${enc(email)}`;
@@ -132,14 +132,14 @@ function isOurs(sub) { return !!intervalOf(sub); }
 
 /*
  * Re-reads the customer's subscriptions and updates the account.
- *  - Creates the Studio account for a new AI Power buyer once a subscription exists.
- *  - Cancels (and refunds) any accidental duplicate AI Power subscription.
+ *  - Creates the Business Studio account for a new Business Studio Pro buyer once a subscription exists.
+ *  - Cancels (and refunds) any accidental duplicate Business Studio Pro subscription.
  *  - Blocked accounts are set not to renew.
  */
 async function syncCustomer(customerId) {
   const email = await emailForCustomer(customerId);
   if (!email) {
-    await core.alert('stripe_unlinked', 'Stripe customer not linked to any Studio account', { customerId });
+    await core.alert('stripe_unlinked', 'Stripe customer not linked to any Business Studio account', { customerId });
     return null;
   }
   const subs = await api('GET', '/subscriptions', { customer: customerId, status: 'all', limit: 20 });
@@ -160,7 +160,7 @@ async function syncCustomer(customerId) {
           }
         }
       } catch (e) { /* recorded in the alert below */ }
-      await core.alert('duplicate_subscription', `Duplicate AI Power subscription cancelled${refunded ? ' and refunded' : ' — check refund in Stripe'}`, { email, kept: keep.id, cancelled: s.id, refunded });
+      await core.alert('duplicate_subscription', `Duplicate Business Studio Pro subscription cancelled${refunded ? ' and refunded' : ' — check refund in Stripe'}`, { email, kept: keep.id, cancelled: s.id, refunded });
     }
     live = [keep];
   }
@@ -215,14 +215,14 @@ async function startCheckout(email, interval, event) {
   const member = await core.getMember(email);
   if (member && member.blocked) throw new HttpError(403, 'account_blocked', 'This account has been suspended.');
   if (member && member.addon && core.LIVE_SUB_STATUSES.includes(member.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have AI Power. Use "Manage subscription" to switch plan or make changes.');
+    throw new HttpError(409, 'already_subscribed', 'You already have Business Studio Pro. Use "Manage subscription" to switch plan or make changes.');
   }
 
   // Re-check with Stripe in case a webhook hasn't arrived yet.
   const customerId = await ensureCustomer(email);
   const synced = await syncCustomer(customerId);
   if (synced && synced.addon && core.LIVE_SUB_STATUSES.includes(synced.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have AI Power. Use "Manage subscription" to switch plan or make changes.');
+    throw new HttpError(409, 'already_subscribed', 'You already have Business Studio Pro. Use "Manage subscription" to switch plan or make changes.');
   }
 
   // One open checkout per plan at a time: reuse it rather than creating another.

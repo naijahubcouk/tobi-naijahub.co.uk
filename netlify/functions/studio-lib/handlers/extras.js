@@ -54,7 +54,7 @@ exports.handler = handler(async (ctx) => {
       const profile = await core.getJson(`profiles/${core.enc(email)}`);
       const biz = (profile && profile.businessName) || email;
       await core.alert('verify_request', `Verification request: ${biz} — Companies House ${number}`, { email, number });
-      await core.emailAdmins(`Verification request: ${biz}`, `${biz} (${email}) asked to be verified.\n\nCompanies House number: ${number}\nCheck it: https://find-and-update.company-information.service.gov.uk/company/${number}\n\nAnswer it in Studio Admin → Benefits → Verification requests.`);
+      await core.emailAdmins(`Verification request: ${biz}`, `${biz} (${email}) asked to be verified.\n\nCompanies House number: ${number}\nCheck it: https://find-and-update.company-information.service.gov.uk/company/${number}\n\nAnswer it in Business Studio Admin → Benefits → Verification requests.`);
       await core.audit(email, 'verify_request', { number });
       return { benefits: benefits.forMember(r.yearKey, r.year) };
     }
