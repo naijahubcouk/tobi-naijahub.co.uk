@@ -62,6 +62,10 @@ tbody tr:hover{background:#FFFCF5}
 .mkc-n{position:absolute;top:6px;right:6px;background:rgba(15,30,54,.75);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px}
 .mkc-b{padding:10px 12px 12px;font-size:13px;display:flex;flex-direction:column;gap:3px}.mkc-d{color:#555;font-size:12.5px;line-height:1.45}.mkc-p{font-weight:800;font-size:15px}
 .mkc-btn{margin-top:4px;background:#057A44;color:#fff;border-radius:8px;padding:8px;font-weight:700;text-align:center;font-size:12.5px}
+.td-list{padding:4px 14px}.td{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}.td:last-child{border-bottom:0}
+.td-check{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:2px solid var(--green);background:#fff;color:#fff;font-weight:800;cursor:pointer;margin-top:1px}
+.td-done .td-check{background:var(--green)}.td-done .td-b b{text-decoration:line-through;color:var(--muted)}.td-late{background:#FFF7F6;margin:0 -14px;padding:11px 14px}
+.td-b{flex:1;min-width:0}.td-m{font-size:12.5px;margin-top:2px}.tdbar{height:8px;background:#E7EDE9;border-radius:99px;overflow:hidden;margin:10px 0 4px}.tdbar span{display:block;height:100%;background:var(--green)}
 .note{background:var(--green-l);border:1px solid #CFEBDB;border-radius:14px;padding:12px 14px;line-height:1.5}
 .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
 .p-active{background:var(--green-l);color:var(--green-d)}.p-pending{background:var(--gold-l);color:#7A5300}.p-inactive,.p-expired{background:#ECEDF0;color:var(--muted)}
@@ -80,7 +84,7 @@ tbody tr:hover{background:#FFFCF5}
 <body>
 <header><div><b>Business Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="subs">Business Studio Pro</button>
+  <button data-v="today">Today</button><button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="subs">Business Studio Pro</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -128,12 +132,12 @@ tbody tr:hover{background:#FFFCF5}
   $('#logout').onclick = async function () { try { await api('logout'); } catch (e) {} login(); };
   function go(v) {
     $$('#nav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
-    ({ overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket })[v]();
+    ({ today: vToday, overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket })[v]();
   }
   async function boot() {
     try { S.overview = await api('overview'); } catch (e) { return; }
     $('#nav').classList.remove('hidden'); $('#logout').classList.remove('hidden'); $('#who').textContent = S.overview.admin;
-    go('overview');
+    go('today');
   }
   function loading() { app.innerHTML = '<main><p class="muted">Loading…</p></main>'; }
 
@@ -594,6 +598,59 @@ tbody tr:hover{background:#FFFCF5}
     draw();
   }
 
+  // ── Today: daily to-do list (overdue until marked) ──
+  var TD_ICO = { verify: '🏛️', market: '🛍️', alert: '🔔', renew: '⏳', spotlight: '📣', lesson: '📚', share: '📲', task: '📝' };
+  var TD_REPEAT = { once: 'Once', daily: 'Every day', weekdays: 'Weekdays (Mon–Fri)', weekly: 'Every week' };
+  var TD_DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  function tdDay(day) { return new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); }
+  function tdActions(it) {
+    var m = it.meta || {}, out = [];
+    if (it.kind === 'share') out.push('<button class="btn small ghost" data-tq="stories" data-e="' + esc(m.email) + '">+Story</button><button class="btn small ghost" data-tq="reposts" data-e="' + esc(m.email) + '">+Repost</button>' + (m.due && m.due.discovery ? '<button class="btn small ghost" data-tq="discovery" data-e="' + esc(m.email) + '">+Discovery</button>' : ''));
+    if (it.kind === 'market') out.push('<button class="btn small ghost" data-tgo="market">Review</button>');
+    if (it.kind === 'verify' || it.kind === 'spotlight') out.push('<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>' + (m.number ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(m.number) + '">GOV.UK</a>' : ''));
+    if (it.kind === 'renew') out.push((m.whatsapp ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://wa.me/' + esc(String(m.whatsapp).replace(/\D/g, '').replace(/^0/, '44')) + '?text=' + encodeURIComponent('Hi! Your Auntie Tobi Business Club membership ends on ' + d(m.expires) + '. Renew here to keep your benefits: https://auntietobi.co.uk/business-club 💚') + '">WhatsApp</a>' : '') + '<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>');
+    if (it.kind === 'lesson') out.push('<button class="btn small ghost" data-tgo="resources">Open</button>');
+    if (it.kind === 'alert') out.push('<button class="btn small ghost" data-tgo="alerts">Alerts</button>');
+    return out.join('');
+  }
+  function tdRow(it, state) {
+    var done = state === 'done';
+    return '<div class="td' + (done ? ' td-done' : '') + (state === 'overdue' ? ' td-late' : '') + '">' +
+      '<button class="td-check" data-tdone="' + esc(it.key) + '" aria-label="' + (done ? 'Mark not done' : 'Mark done') + '" title="' + (done ? 'Undo' : 'Mark done') + '">' + (done ? '✓' : '') + '</button>' +
+      '<div class="td-b"><div><span class="td-ico">' + (TD_ICO[it.kind] || '•') + '</span> <b>' + esc(it.title) + '</b></div>' +
+      '<div class="muted td-m">' + (state === 'overdue' ? '<span class="pill p-warn">Overdue since ' + esc(tdDay(it.due)) + (it.daysOverdue > 1 ? ' · ' + it.daysOverdue + ' days' : '') + '</span> ' : '') +
+        (done ? (it.skippedAt ? 'Skipped' : it.autoDone ? 'Done automatically' : 'Done') : (it.auto ? 'Ticks itself when it’s dealt with' : (it.meta && it.meta.repeat && it.meta.repeat !== 'once' ? TD_REPEAT[it.meta.repeat] : 'Your task'))) + '</div>' +
+        (done ? '' : '<div class="row" style="gap:4px;margin-top:6px">' + tdActions(it) + '<button class="btn small ghost" data-tskip="' + esc(it.key) + '" style="color:var(--muted)">Skip</button></div>') + '</div></div>';
+  }
+  async function vToday() {
+    loading();
+    var r; try { r = await api('todo-today'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var total = r.counts.today + r.counts.overdue + r.counts.done;
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:baseline"><h1 style="margin:0">Today · ' + esc(tdDay(r.today)) + '</h1><span class="muted">' + r.counts.done + ' of ' + total + ' done</span></div>' +
+      '<div class="tdbar"><span style="width:' + (total ? Math.round(r.counts.done / total * 100) : 0) + '%"></span></div>' +
+      (r.overdue.length ? '<h2 style="color:var(--danger)">⚠️ Overdue (' + r.overdue.length + ')</h2><div class="card td-list">' + r.overdue.map(function (i) { return tdRow(i, 'overdue'); }).join('') + '</div>' : '') +
+      '<h2>✅ To do today (' + r.todayItems.length + ')</h2><div class="card td-list">' + (r.todayItems.length ? r.todayItems.map(function (i) { return tdRow(i, 'today'); }).join('') : '<p class="muted" style="margin:6px 0">All done for today 🎉</p>') + '</div>' +
+      '<div class="card stack" style="margin-top:12px"><b>+ Add a task</b><div class="row"><input id="tdT" placeholder="e.g. Post a daily Story, Reply to sponsors" style="flex:2;min-width:200px">' +
+        '<select id="tdR" style="width:auto">' + Object.keys(TD_REPEAT).map(function (k) { return '<option value="' + k + '">' + TD_REPEAT[k] + '</option>'; }).join('') + '</select>' +
+        '<input type="date" id="tdD" value="' + esc(r.today) + '" style="width:auto"><select id="tdW" style="width:auto;display:none">' + TD_DOW.map(function (n, i) { return '<option value="' + i + '"' + (i === new Date(r.today + 'T12:00:00Z').getUTCDay() ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>' +
+        '<button class="btn primary small" id="tdAdd">Add</button></div>' +
+        (r.defs.filter(function (x) { return x.repeat !== 'once'; }).length ? '<div class="muted">Repeating: ' + r.defs.filter(function (x) { return x.repeat !== 'once'; }).map(function (x) { return esc(x.title) + ' <span>(' + (x.repeat === 'weekly' ? 'every ' + TD_DOW[x.dow] : TD_REPEAT[x.repeat].toLowerCase()) + ')</span> <button class="btn small ghost danger" data-tdel="' + esc(x.id) + '" style="min-height:22px;padding:0 6px">×</button>'; }).join(' · ') + '</div>' : '') + '</div>' +
+      (r.doneToday.length ? '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">✓ Done today (' + r.doneToday.length + ')</summary><div class="card td-list" style="margin-top:8px">' + r.doneToday.map(function (i) { return tdRow(i, 'done'); }).join('') + '</div></details>' : '') +
+      '<p class="muted" style="margin-top:14px">Anything not ticked by the end of the day stays at the top as <b>Overdue</b> until you mark it done or skip it. Share tasks show the 5 members who’ve waited longest; the rest come up as you tick these off.</p></main>';
+    var refresh = function () { vToday(); };
+    $$('[data-tdone]').forEach(function (b) { b.onclick = async function () { var row = b.closest('.td'); try { await api('todo-mark', { key: b.dataset.tdone, how: row.classList.contains('td-done') ? 'undo' : 'done' }); refresh(); } catch (x) { toast(x.message); } }; });
+    $$('[data-tskip]').forEach(function (b) { b.onclick = async function () { try { await api('todo-mark', { key: b.dataset.tskip, how: 'skip' }); toast('Skipped'); refresh(); } catch (x) { toast(x.message); } }; });
+    $$('[data-tq]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { await api('benefits-log', { email: b.dataset.e, kind: b.dataset.tq, notify: true }); toast(BEN_LOG[b.dataset.tq] + ' logged — member told'); refresh(); } catch (x) { toast(x.message); b.disabled = false; } }; });
+    $$('[data-tgo]').forEach(function (b) { b.onclick = function () { if (b.dataset.tgo === 'market') S.mkTab = 'review'; go(b.dataset.tgo); }; });
+    $$('[data-tben]').forEach(function (b) { b.onclick = function () { editBenefits(b.dataset.tben, refresh); }; });
+    $$('[data-tdel]').forEach(function (b) { b.onclick = async function () { if (!confirm('Stop this repeating task?')) return; try { await api('todo-def-delete', { id: b.dataset.tdel }); refresh(); } catch (x) { toast(x.message); } }; });
+    var rep = $('#tdR'); rep.onchange = function () { $('#tdD').style.display = rep.value === 'once' ? '' : 'none'; $('#tdW').style.display = rep.value === 'weekly' ? '' : 'none'; };
+    $('#tdAdd').onclick = async function () {
+      var t = $('#tdT').value.trim(); if (!t) { $('#tdT').focus(); return; }
+      try { await api('todo-add', { task: { title: t, repeat: rep.value, date: $('#tdD').value, dow: Number($('#tdW').value) } }); toast('Task added'); refresh(); } catch (x) { toast(x.message); }
+    };
+  }
+
   async function vOverview() {
     loading();
     var o = S.overview = await api('overview');
@@ -635,6 +692,14 @@ tbody tr:hover{background:#FFFCF5}
           (bd.monthMembers ? ' ' + bd.discovery + ' discovery feature' + (bd.discovery === 1 ? '' : 's') + ' due this month.' : '') + (bd.verifyRequests ? ' <b>🏛️ ' + bd.verifyRequests + ' verification request' + (bd.verifyRequests === 1 ? '' : 's') + '.</b>' : '') + ' <button class="btn small ghost" id="toBen">Open Benefits</button>';
         $('#ovH1').after(box);
         $('#toBen').onclick = function () { S.benFilter = bd.verifyRequests ? 'verify' : bd.weekMembers ? 'week' : 'all'; go('benefits'); };
+      }
+    } catch (x) {}
+    try {
+      var tc = (await api('todo-summary')).counts;
+      if (tc && (tc.today || tc.overdue) && $('#ovH1')) {
+        var tb = document.createElement('div'); tb.className = 'note'; tb.style.marginBottom = '14px';
+        tb.innerHTML = '📋 <b>Today:</b> ' + tc.today + ' to do' + (tc.overdue ? ', <b style="color:var(--danger)">' + tc.overdue + ' overdue</b>' : '') + ' · ' + tc.done + ' done <button class="btn small ghost" id="toTd">Open Today</button>';
+        $('#ovH1').after(tb); $('#toTd').onclick = function () { go('today'); };
       }
     } catch (x) {}
     try {
