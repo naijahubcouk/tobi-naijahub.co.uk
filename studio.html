@@ -177,6 +177,16 @@ details.faq li+li{margin-top:4px}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .quick button{background:var(--navy);color:var(--cream);border-radius:14px;padding:12px;text-align:left;display:flex;gap:8px;align-items:center;font-weight:700;font-size:14px;line-height:1.2;min-height:56px}
 .quick button svg{color:var(--gold);flex:none}
+.tipcard{background:#fff;border:1px solid var(--line);border-left:5px solid var(--gold);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.tipcard .tk{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.tipcard .tk img{width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);background:var(--cream);flex:none}
+.tipcard .tk small{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
+.tipcard .tk span{font-size:13px;color:var(--muted)}
+.tipcard h3{font-family:var(--display);font-size:21px;line-height:1.25;margin:2px 0 8px;color:var(--navy)}
+.tipcard p.tb{font-size:15px;line-height:1.55;margin:0 0 12px}
+.tipcard .try{background:var(--green-l);border-radius:12px;padding:11px 12px;font-size:14px;line-height:1.45;margin-bottom:12px}
+.tipcard .try b{color:var(--green-d)}
+.tipcard .tact{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .goalbar{display:flex;align-items:center;gap:8px;background:var(--gold-l);border-radius:12px;padding:10px 12px;font-size:14px}
 .goalbar b{flex:1}
 .cal-day{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
@@ -972,7 +982,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       bindHistoryRows(); bindRenew(); return;
     }
     app.innerHTML = '<main><p class="sub">' + greeting() + ' 👋🏾</p><h1>' + esc(name) + '</h1>' +
-      '<p class="sub" style="margin:2px 0 14px">Let’s make progress in your business today.</p><div id="nudgeTop"></div><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Planning today\u2019s actions for your business\u2026</p></div></div>' +
+      '<p class="sub" style="margin:2px 0 14px">Let’s make progress in your business today.</p><div id="nudgeTop"></div><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Auntie Tobi is writing today\u2019s Business Tip for you\u2026</p></div></div>' +
       '<div id="nudgeLesson"></div>' +
       '<h2>Quick create</h2>' + quickRow() +
       '<div style="margin-top:18px">' + allowanceCard() + '</div>' +
@@ -984,66 +994,95 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var all = $('#allBtn'); if (all) all.onclick = showLibrary;
     loadNudges();
     var r;
-    try { r = await api('studio-growth', 'today'); } catch (x) { var tb = $('#todayBox'); if (tb) tb.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    try { r = await api('studio-growth', 'home'); } catch (x) { var tb = $('#todayBox'); if (tb) tb.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     S.today = r; renderToday();
+  }
+
+  function tipGo(t, back) {
+    if (!t.go) return;
+    var g = t.go;
+    if (g.screen === 'track') return showTrack();
+    if (g.screen === 'money') return showMoney();
+    if (g.screen === 'customers') return showCustomers();
+    if (g.screen === 'followups') return showFollowups();
+    if (g.screen === 'plan') return showPlan();
+    if (g.screen === 'resources') return showResources();
+    if (g.tool) showTool(g.tool, g.input || {}, { back: back || showHome, tab: 'home', intro: t.headline + ' — I’ve filled this in for you. Change anything you like, then tap Create.' });
+  }
+
+  function tipCard(t, opts) {
+    opts = opts || {};
+    var when = t.day ? new Date(t.day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+    return '<div class="tipcard" data-tip="' + esc(t.id) + '">' +
+      '<div class="tk"><img src="/tobi-face-128.png" alt=""><div><small>' + (opts.title || 'Today’s Business Tip') + '</small><span>' + esc(t.topicLabel || 'Business tip') + (opts.showDate && when ? ' · ' + esc(when) : '') + '</span></div></div>' +
+      '<h3>' + esc(t.headline) + '</h3><p class="tb">' + esc(t.body) + '</p>' +
+      '<div class="try"><b>Try this today:</b> ' + esc(t.step) + '</div>' +
+      '<div class="tact">' + (t.go ? '<button class="btn small primary" data-tgo="' + esc(t.id) + '">' + esc(t.goLabel || 'Help me do it') + ' →</button>' : '') +
+      '<button class="btn small ghost" data-tsave="' + esc(t.id) + '" aria-pressed="' + (t.saved ? 'true' : 'false') + '">' + (t.saved ? '★ Saved' : '☆ Save tip') + '</button></div></div>';
+  }
+
+  function bindTipCards(root, list, back, onChange) {
+    $$('[data-tgo]', root).forEach(function (b) {
+      b.onclick = function () { var t = list.filter(function (x) { return x.id === b.dataset.tgo; })[0]; if (t) tipGo(t, back); };
+    });
+    $$('[data-tsave]', root).forEach(function (b) {
+      b.onclick = async function () {
+        var t = list.filter(function (x) { return x.id === b.dataset.tsave; })[0]; if (!t) return;
+        var on = !t.saved; b.disabled = true;
+        try { var r = await api('studio-growth', 'tip-save', { id: t.id, on: on }); t.saved = on; if (S.today) S.today.savedCount = r.savedCount; toast(on ? 'Tip saved ⭐' : 'Removed from saved tips'); }
+        catch (x) { toast(x.message); }
+        b.disabled = false; if (onChange) onChange();
+      };
+    });
   }
 
   function renderToday() {
     var box = $('#todayBox'); if (!box || !S.today) return;
-    var r = S.today, done = r.done || [];
-    var left = r.actions.filter(function (a) { return done.indexOf(a.id) < 0; }).length;
+    var r = S.today, t = r.tip;
     box.innerHTML =
       (r.goal ? '<div class="goalbar">🎯 <b>This week: ' + esc(r.goals[r.goal.goal]) + '</b><button class="btn link" id="chgGoal" style="padding:0">Change</button></div>'
         : '<div class="goalbar">🎯 <b>Set your goal for the week</b><button class="btn small gold" id="chgGoal">Set goal</button></div>') +
-      '<h2 style="margin-top:16px">' + (left ? 'Your 3 actions today' : 'All done for today 🎉') + '</h2>' +
-      '<div class="stack">' + r.actions.map(function (a) {
-        var isDone = done.indexOf(a.id) > -1;
-        return '<div class="act' + (isDone ? ' done' : '') + '"><button class="tick" data-tick="' + esc(a.id) + '" aria-label="' + (isDone ? 'Mark not done' : 'Mark done') + '" aria-pressed="' + isDone + '">' + (isDone ? icon('<path d="M5 12l5 5 9-10"/>', 16) : '') + '</button>' +
-          '<div style="flex:1;min-width:0"><span class="kind ' + esc(a.kind) + '">' + esc(KIND[a.kind] || a.kind) + '</span><b>' + esc(a.title) + '</b><p>' + esc(a.why) + '</p>' +
-          (isDone ? '' : '<button class="btn small primary" data-doit="' + esc(a.id) + '">Do it →</button>') + '</div></div>';
-      }).join('') + '</div>' +
-      (left ? '<div style="text-align:center;margin-top:8px">' + (r.shufflesLeft > 0 ? '<button class="btn link" id="shuffleBtn">\u21bb Show me different actions</button>' : '<span class="hint">New suggestions tomorrow</span>') + '</div>' : '') +
+      '<div style="margin-top:14px">' + (t ? tipCard(t) : '') + '</div>' +
+      (r.savedCount ? '<div style="text-align:center;margin-top:6px"><button class="btn link" id="savedTips">⭐ Your saved tips (' + r.savedCount + ')</button></div>' : '') +
+      ((r.planned || []).length ? '<div class="note" style="margin-top:12px;display:flex;align-items:center;gap:10px"><span style="flex:1">📅 <b>Planned for today:</b> ' + esc(r.planned[0].title) + (r.planned.length > 1 ? ' (+' + (r.planned.length - 1) + ' more)' : '') + '</span><button class="btn small ghost" id="toPlan">Write it</button></div>' : '') +
       (r.checkin && r.checkin.needed ? '<div class="note" style="margin-top:12px;display:flex;align-items:center;gap:10px"><span style="flex:1">⏱️ <b>1-minute check-in:</b> record ' + (r.checkin.date === S.today.day ? 'today’s' : 'yesterday’s') + ' enquiries, bookings and sales.</span><button class="btn small ghost" id="toTrack">Record</button></div>' : '');
     $('#chgGoal').onclick = function () { pickGoal(function () { showHome(); }); };
     var tt = $('#toTrack'); if (tt) tt.onclick = function () { showTrack(r.checkin.date); };
-    var sh = $('#shuffleBtn'); if (sh) sh.onclick = async function () {
-      sh.disabled = true; sh.textContent = 'Thinking of new ideas\u2026';
-      try { S.today = await api('studio-growth', 'today', { shuffle: true }); renderToday(); }
-      catch (x) { toast(x.message); sh.disabled = false; sh.textContent = '\u21bb Show me different actions'; }
+    var tp = $('#toPlan'); if (tp) tp.onclick = function () {
+      var p = r.planned[0], topic = p.title + (p.hook ? '. Hook: ' + p.hook : '');
+      showTool(/reel/i.test(p.format || '') ? 'reel' : 'caption', /reel/i.test(p.format || '') ? { idea: topic } : { topic: topic }, { back: showHome, tab: 'home', calendarId: p.id, intro: 'From your calendar: ' + p.title,
+        onSuccess: function () { if (p.status === 'todo') api('studio-growth', 'calendar-update', { id: p.id, status: 'drafted' }).catch(function () {}); } });
     };
-    $$('[data-tick]', box).forEach(function (b) {
-      b.onclick = async function () {
-        var id = b.dataset.tick, nowDone = (S.today.done || []).indexOf(id) < 0;
-        try { await api('studio-growth', 'action-done', { id: id, done: nowDone }); } catch (x) { return toast(x.message); }
-        S.today.done = nowDone ? (S.today.done || []).concat(id) : S.today.done.filter(function (d) { return d !== id; });
-        if (nowDone) toast('Nice one! ✅');
-        renderToday();
-      };
-    });
-    $$('[data-doit]', box).forEach(function (b) {
-      b.onclick = function () {
-        var a = S.today.actions.filter(function (x) { return x.id === b.dataset.doit; })[0];
-        showTool(a.go.tool, a.go.input, { back: showHome, tab: 'home', calendarId: a.calendarId, intro: a.title + ' — I’ve filled this in for you. Change anything you like, then tap Create.',
-          onSuccess: function () {
-            api('studio-growth', 'action-done', { id: a.id, done: true }).then(function () { if (S.today && S.today.done.indexOf(a.id) < 0) S.today.done.push(a.id); }).catch(function () {});
-            if (a.calendarId) api('studio-growth', 'calendar-update', { id: a.calendarId, status: 'drafted' }).catch(function () {});
-          } });
-      };
-    });
+    var sv = $('#savedTips'); if (sv) sv.onclick = showSavedTips;
+    if (t) bindTipCards(box, [t], showHome, function () { renderToday(); });
+  }
+
+  async function showSavedTips() {
+    setChrome({ tabs: true, tab: 'home', back: showHome });
+    app.innerHTML = '<main><h1>Saved tips</h1><p class="sub" style="margin:4px 0 14px">Business Tips you’ve saved from Auntie Tobi.</p><div id="stBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    var r;
+    try { r = await api('studio-growth', 'tips-saved'); } catch (x) { if ($('#stBox')) $('#stBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    var box = $('#stBox'); if (!box) return;
+    var list = r.tips || [];
+    function draw() {
+      box.innerHTML = list.length ? '<div class="stack">' + list.map(function (t) { return tipCard(t, { title: 'Saved tip', showDate: true }); }).join('') + '</div>' : '<div class="empty">No saved tips yet. Tap ☆ Save tip on any tip you want to keep.</div>';
+      bindTipCards(box, list, showSavedTips, draw);
+    }
+    draw();
   }
 
   function pickGoal(after) {
     var goals = (S.today && S.today.goals) || { enquiries: 'Get more enquiries', bookings: 'Get more bookings or orders', new_product: 'Promote a new product or service', visibility: 'Get seen by more people' };
     var cur = S.today && S.today.goal ? S.today.goal.goal : '';
     var scrim = document.createElement('div'); scrim.className = 'scrim';
-    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="gT"><h2 id="gT" style="margin:0">What’s your goal this week?</h2><p class="sub">Your daily actions will focus on it. You can change it any time.</p>' +
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="gT"><h2 id="gT" style="margin:0">What’s your goal this week?</h2><p class="sub">Your daily Business Tips will focus on it. You can change it any time.</p>' +
       Object.keys(goals).map(function (k) { return '<button class="btn ' + (k === cur ? 'primary' : 'ghost') + ' block" data-goal="' + k + '">' + esc(goals[k]) + '</button>'; }).join('') +
       '<button class="btn link" id="gClose">Cancel</button></div>';
     document.body.appendChild(scrim);
     $('#gClose', scrim).onclick = function () { scrim.remove(); };
     $$('[data-goal]', scrim).forEach(function (b) {
       b.onclick = async function () {
-        try { var r = await api('studio-growth', 'goal-set', { goal: b.dataset.goal }); if (S.today) S.today.goal = r.goal; scrim.remove(); toast('Goal set \u2014 your actions have been updated'); if (after) after(); }
+        try { var r = await api('studio-growth', 'goal-set', { goal: b.dataset.goal }); if (S.today) S.today.goal = r.goal; scrim.remove(); toast('Goal set \u2014 your tips will focus on it'); if (after) after(); }
         catch (x) { toast(x.message); }
       };
     });
@@ -1075,7 +1114,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     $('#p7').onclick = function () { showTool('planner', { days: '7' }, { back: showPlan, tab: 'plan' }); };
     $('#p30').onclick = function () { showTool('planner', { days: '30' }, { back: showPlan, tab: 'plan' }); };
     try {
-      if (!S.today) S.today = await api('studio-growth', 'today');
+      if (!S.today) S.today = await api('studio-growth', 'home');
       if (!$('#goalBox')) return; // left the Plan screen while it was loading
       var g = S.today.goal;
       $('#goalBox').innerHTML = '<div class="goalbar">🎯 <b>' + (g ? 'This week: ' + esc(S.today.goals[g.goal]) : 'No weekly goal yet') + '</b><button class="btn small ' + (g ? 'ghost' : 'gold') + '" id="pg">' + (g ? 'Change' : 'Set goal') + '</button></div>';

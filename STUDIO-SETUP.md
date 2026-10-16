@@ -272,3 +272,15 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - Also lists, automatically: **follow-ups due** (from their follow-up list), **overdue invoices**, and **Check-Up priorities** (Club). These tick themselves when dealt with; ticking a priority here also ticks it on the priorities card.
 - Missed days (up to 14) are filled in so missed tasks show as overdue. Stored per member in `mtodo/<email>`.
 - The **8am reminder** is now personal for each member with reminders on: “You have 4 tasks today, 1 overdue 💚”.
+
+
+## 7m. Daily Business Tip (replaced "Your 3 actions today")
+
+- **Today** now shows one **Business Tip** a day from Auntie Tobi as a business coach, written by AI for each business (profile, products, customers, weekly goal and the last 7 days of recorded numbers). Each tip has a headline, 2–3 sentences of coaching, a "Try this today" step and, where it fits, a **Help me do it →** button that opens the right tool or screen (Money, Customers, Follow-ups, Plan, Track, Resources).
+- Topics rotate (pricing, customer service, repeat customers, reviews, social media, getting found, money, UK basics, time, mindset, products and offers) with no repeat within 6 days; the weekly goal makes matching topics more likely.
+- Same tip all day — one AI call per member per day, only when they open Business Studio. Free for members; the cost (about 0.02p a tip) shows in Business Studio spend as `daily-tip`.
+- If the AI is unavailable, a tip comes from the written library (`studio-lib/tips-library.js`, about 60 tips).
+- **☆ Save tip** keeps tips; "Your saved tips" link under the card. Stored in `tips/<email>` (last 21 days + up to 60 saved).
+- The weekly goal bar, 1-minute check-in and today's planned calendar post stay on Today.
+- Morning push (no tasks): "Your Business Tip for today is ready 💡". The weekly email points to the tip.
+- The old `today` action (3 actions) remains in the API only for older cached app versions.

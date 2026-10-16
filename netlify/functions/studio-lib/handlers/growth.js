@@ -2,7 +2,9 @@
 /*
  * Business growth features (free — no AI, never uses the allowance).
  * POST /.netlify/functions/studio-growth  { action, ... }
- *   today                        → 3 daily actions, goal, today's calendar items, check-in prompt
+ *   home                         → today's Business Tip, goal, today's planned posts, check-in prompt
+ *   tip-save {id, on} / tips-saved → save a tip / list saved tips
+ *   today                        → (old) 3 daily actions — kept for older app versions
  *   action-done   { id, done }   → tick a daily action
  *   goal-set      { goal }
  *   calendar-list                → content calendar
@@ -14,6 +16,7 @@
  */
 const core = require('../core');
 const growth = require('../growth');
+const tips = require('../tips');
 const { HttpError, handler } = core;
 const gen = require('../generate');
 
@@ -33,6 +36,22 @@ exports.handler = handler(async (ctx) => {
   await core.rateLimit('growth', email, 240, 60 * 60 * 1000);
 
   switch (body.action) {
+    case 'home': {
+      const profile = await core.getJson(`profiles/${core.enc(email)}`);
+      if (!profile || !profile.businessName) throw new HttpError(409, 'profile_required', 'Please complete your business profile first.');
+      const h = await growth.home(email);
+      const o = aiOpts(auth, false);
+      const t = await tips.today(email, profile, {
+        ai: o.ai, goal: h.goal, goalLabel: h.goal ? growth.GOALS[h.goal.goal] : '', progress: h.progress,
+        track: usage => gen.addGlobal(core.monthKey(), { id: 'daily-tip', tool: 'daily-tip', cost: 0, inTok: usage.inTok, outTok: usage.outTok, costUsd: usage.costUsd }, auth.settings),
+      });
+      delete h.progress;
+      return { ...h, tip: t.tip, savedCount: t.savedCount };
+    }
+    case 'tip-save':
+      return tips.setSaved(email, body.id, !!body.on);
+    case 'tips-saved':
+      return tips.listSaved(email);
     case 'today': {
       const profile = await core.getJson(`profiles/${core.enc(email)}`);
       if (!profile || !profile.businessName) throw new HttpError(409, 'profile_required', 'Please complete your business profile first.');
