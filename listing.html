@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'none'; base-uri 'none'">
+<title>Listing writer — Auntie Tobi</title>
+<link rel="icon" href="/tobi-face-128.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0F1E36;--green:#057A44;--green-d:#04603a;--green-l:#E3F2EA;--gold:#FFB81C;--gold-l:#FFF1CF;--line:#E6E1D6;--muted:#6B7280;--danger:#B42318}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:var(--navy);padding-bottom:60px;line-height:1.5}
+.app-header{background:var(--navy);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:720px;margin:0 auto;border-bottom:3px solid var(--gold)}
+.app-header img{width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);object-fit:cover}
+.app-header b{display:block;font-size:16px;color:#fff}.app-header small{font-size:12px;color:var(--gold);font-weight:600}
+.wrap{max-width:720px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.card{background:#fff;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h2{font-size:17px;font-weight:800}
+label{display:block;font-weight:700;font-size:14px;margin-bottom:5px}.opt{font-weight:400;color:var(--muted)}
+input,textarea{width:100%;font:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff;color:var(--navy)}
+textarea{resize:vertical;line-height:1.5}
+input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
+.hint{font-size:13px;color:var(--muted)}
+.btn{font:inherit;font-weight:700;font-size:15px;border:0;border-radius:10px;padding:12px 16px;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--green);color:#fff;width:100%;font-size:16px}.btn.primary:disabled{opacity:.6;cursor:default}
+.btn.small{font-size:13px;padding:7px 12px;min-height:0;border-radius:8px}
+.btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--navy)}
+.btn.copy{background:var(--navy);color:#fff}.btn.copy.ok{background:var(--green)}
+.out{border:1.5px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.out-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.out-h b{font-size:14px;flex:1}
+.count{font-size:12px;font-weight:700;border-radius:20px;padding:2px 9px;background:var(--green-l);color:var(--green-d)}
+.count.warn{background:var(--gold-l);color:#7A5300}.count.bad{background:#FDECEA;color:var(--danger)}
+.out textarea{border-color:transparent;background:#FAFAF7;padding:10px}
+.serp{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-family:Arial,sans-serif}
+.serp .u{font-size:12px;color:#4d5156}.serp .t{font-size:18px;color:#1a0dab;line-height:1.3;margin:2px 0}.serp .d{font-size:13px;color:#4d5156}
+.det{display:grid;grid-template-columns:110px 1fr auto;gap:6px 10px;align-items:center;font-size:14px}
+.det span{color:var(--muted)}.det em{font-style:normal;color:var(--muted)}
+.err{background:#FDECEA;color:var(--danger);border-radius:10px;padding:10px 12px;font-size:14px}
+.typing{display:inline-flex;gap:4px}.typing i{width:7px;height:7px;border-radius:50%;background:var(--green);animation:b 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.hist{display:flex;flex-direction:column;gap:6px}.hist button{text-align:left;background:#FAFAF7;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;cursor:pointer;color:var(--navy)}
+.hist small{display:block;color:var(--muted);font-size:12px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.hidden{display:none!important}
+@media (max-width:520px){.det{grid-template-columns:90px 1fr auto}}
+</style>
+</head>
+<body>
+<div class="app-header"><img src="/tobi-face-128.png" alt=""><div><b>Listing writer</b><small>Auntie Tobi business directory</small></div></div>
+<div class="wrap">
+  <section class="card">
+    <h2>Paste an Instagram bio</h2>
+    <div><label for="bio">Instagram bio</label><textarea id="bio" rows="6" maxlength="1500" placeholder="e.g. 🎂 Celebration cakes &amp; cupcakes | Croydon, London 📍 | Weddings • Birthdays • Naming ceremonies | DM to order 📩 | WhatsApp 07700 900123"></textarea></div>
+    <div><label for="handle">Instagram handle <span class="opt">(optional)</span></label><input id="handle" maxlength="60" placeholder="@adacakes" autocapitalize="off" autocomplete="off"></div>
+    <div><label for="notes">Anything else to include <span class="opt">(optional)</span></label><input id="notes" maxlength="600" placeholder="e.g. Delivers across South London, nut-free options"></div>
+    <div class="hp" aria-hidden="true"><label for="hpf">Leave empty</label><input id="hpf" tabindex="-1" autocomplete="off"></div>
+    <button class="btn primary" id="go">✨ Generate listing</button>
+    <p class="hint">Written for the Auntie Tobi business directory. Nothing is made up — anything missing from the bio is left as a gap for you to fill.</p>
+  </section>
+
+  <div id="msg"></div>
+
+  <section class="card hidden" id="result">
+    <h2>Your listing</h2>
+    <div class="out"><div class="out-h"><b>Listing title</b><span class="count" id="cTitle"></span><button class="btn small ghost" data-re="title">↻ New</button><button class="btn small copy" data-copy="oTitle">Copy</button></div><textarea id="oTitle" rows="2"></textarea></div>
+    <div class="out"><div class="out-h"><b>Meta description</b><span class="count" id="cMeta"></span><button class="btn small ghost" data-re="meta">↻ New</button><button class="btn small copy" data-copy="oMeta">Copy</button></div><textarea id="oMeta" rows="3"></textarea>
+      <div class="serp" aria-label="Google preview"><div class="u" id="sUrl">auntietobi.co.uk › biz</div><div class="t" id="sTitle"></div><div class="d" id="sMeta"></div></div></div>
+    <div class="out"><div class="out-h"><b>Full description</b><span class="count" id="cDesc"></span><button class="btn small ghost" data-re="desc">↻ New</button><button class="btn small copy" data-copy="oDesc">Copy</button></div><textarea id="oDesc" rows="10"></textarea></div>
+    <div class="out"><div class="out-h"><b>Details from the bio</b><button class="btn small copy" id="copyAll">Copy everything</button></div><div class="det" id="det"></div></div>
+  </section>
+
+  <section class="card hidden" id="histCard">
+    <div class="out-h"><h2 style="flex:1">Recent listings</h2><button class="btn small ghost" id="clearHist">Clear</button></div>
+    <p class="hint" style="margin-top:-6px">Your last 20, saved on this device only.</p>
+    <div class="hist" id="hist"></div>
+  </section>
+</div>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var opened = Date.now(), cur = null, inputs = null;
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  function lsGet() { try { return JSON.parse(localStorage.getItem('atListingHist') || '[]'); } catch (e) { return []; } }
+  function lsSet(v) { try { localStorage.setItem('atListingHist', JSON.stringify(v)); } catch (e) {} }
+
+  async function api(payload) {
+    var res, data;
+    try {
+      res = await fetch('/.netlify/functions/studio-listing', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify(payload) });
+      data = await res.json().catch(function () { return {}; });
+    } catch (e) { throw new Error('No connection — please check your internet and try again.'); }
+    if (!res.ok) throw new Error((data && data.message) || 'Something went wrong — please try again.');
+    return data;
+  }
+  function counter(el, n, lo, hi) {
+    el.textContent = n + (hi ? ' / ' + hi : '') + ' characters';
+    el.className = 'count' + (hi && n > hi ? ' bad' : lo && n < lo ? ' warn' : '');
+  }
+  function words(s) { return (String(s).trim().match(/\S+/g) || []).length; }
+  function refreshCounts() {
+    var t = $('#oTitle').value, m = $('#oMeta').value, d = $('#oDesc').value;
+    counter($('#cTitle'), t.length, 0, 60); counter($('#cMeta'), m.length, 140, 160);
+    var w = words(d), c = $('#cDesc'); c.textContent = w + ' words'; c.className = 'count' + (w < 120 ? ' warn' : w > 220 ? ' warn' : '');
+    $('#sTitle').textContent = t; $('#sMeta').textContent = m;
+    if (cur) { cur.title = t; cur.meta = m; cur.description = d; saveHist(); }
+  }
+  function grow(el) { el.style.height = 'auto'; el.style.height = (el.scrollHeight + 4) + 'px'; }
+  var LABELS = { name: 'Business', category: 'Category', section: 'Section', location: 'Location', phone: 'Phone', whatsapp: 'WhatsApp', email: 'Email', website: 'Website', instagram: 'Instagram', listingUrl: 'Listing link' };
+  function renderDetails(d) {
+    $('#det').innerHTML = Object.keys(LABELS).map(function (k) {
+      var v = d[k] ? (k === 'instagram' ? '@' + d[k] : d[k]) : '';
+      return '<span>' + LABELS[k] + '</span>' + (v ? '<div style="min-width:0;overflow-wrap:anywhere">' + esc(v) + '</div><button class="btn small ghost" data-cv="' + esc(v) + '">Copy</button>' : '<em>Not in bio</em><span></span>');
+    }).join('');
+    document.querySelectorAll('[data-cv]').forEach(function (b) { b.onclick = function () { copy(b.dataset.cv, b); }; });
+  }
+  function show(r) {
+    cur = r;
+    $('#oTitle').value = r.title; $('#oMeta').value = r.meta; $('#oDesc').value = r.description;
+    $('#sUrl').textContent = r.details && r.details.slug ? 'auntietobi.co.uk › biz › ' + r.details.slug : 'auntietobi.co.uk › biz';
+    renderDetails(r.details || {});
+    $('#result').classList.remove('hidden');
+    refreshCounts(); ['#oTitle', '#oMeta', '#oDesc'].forEach(function (s) { grow($(s)); });
+  }
+  async function copy(text, btn) {
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) { var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (x) {} ta.remove(); }
+    var old = btn.textContent; btn.textContent = 'Copied ✓'; btn.classList.add('ok'); setTimeout(function () { btn.textContent = old; btn.classList.remove('ok'); }, 1400);
+  }
+  function saveHist() {
+    if (!cur || !cur.id) return;
+    var h = lsGet().filter(function (x) { return x.id !== cur.id; });
+    h.unshift({ id: cur.id, at: cur.at, inputs: cur.inputs, title: cur.title, meta: cur.meta, description: cur.description, details: cur.details });
+    lsSet(h.slice(0, 20)); renderHist();
+  }
+  function renderHist() {
+    var h = lsGet();
+    $('#histCard').classList.toggle('hidden', !h.length);
+    $('#hist').innerHTML = h.map(function (x, i) { return '<button data-h="' + i + '">' + esc(x.title || (x.details && x.details.name) || 'Listing') + '<small>' + esc(new Date(x.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + '</small></button>'; }).join('');
+    document.querySelectorAll('[data-h]').forEach(function (b) {
+      b.onclick = function () {
+        var x = lsGet()[Number(b.dataset.h)]; if (!x) return;
+        inputs = x.inputs || inputs; if (x.inputs) { $('#bio').value = x.inputs.bio || ''; $('#handle').value = x.inputs.handle || ''; $('#notes').value = x.inputs.notes || ''; }
+        show(x); window.scrollTo({ top: $('#result').offsetTop - 80, behavior: 'smooth' });
+      };
+    });
+  }
+  function busy(on) {
+    $('#go').disabled = on;
+    $('#go').innerHTML = on ? '<span class="typing"><i></i><i></i><i></i></span>&nbsp; Writing your listing…' : '✨ Generate listing';
+  }
+
+  $('#go').onclick = async function () {
+    var bio = $('#bio').value.trim();
+    if (bio.length < 10) { $('#msg').innerHTML = '<div class="err">Please paste the Instagram bio first.</div>'; $('#bio').focus(); return; }
+    $('#msg').innerHTML = ''; busy(true);
+    inputs = { bio: bio, handle: $('#handle').value.trim(), notes: $('#notes').value.trim() };
+    try {
+      var r = await api({ action: 'generate', bio: inputs.bio, handle: inputs.handle, notes: inputs.notes, hp: $('#hpf').value, t: Date.now() - opened });
+      r.id = String(Date.now()); r.at = new Date().toISOString(); r.inputs = inputs;
+      show(r); saveHist();
+      window.scrollTo({ top: $('#result').offsetTop - 80, behavior: 'smooth' });
+    } catch (e) { $('#msg').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
+    busy(false);
+  };
+  document.querySelectorAll('[data-re]').forEach(function (b) {
+    b.onclick = async function () {
+      if (!cur || !inputs) return;
+      var part = b.dataset.re, el = { title: '#oTitle', meta: '#oMeta', desc: '#oDesc' }[part];
+      b.disabled = true; var old = b.textContent; b.textContent = 'Writing…';
+      try {
+        var r = await api({ action: 'generate', part: part, bio: inputs.bio, handle: inputs.handle, notes: inputs.notes, hp: $('#hpf').value, t: Date.now() - opened,
+          current: { title: $('#oTitle').value, meta: $('#oMeta').value, description: $('#oDesc').value } });
+        $(el).value = r.text; grow($(el)); refreshCounts();
+      } catch (e) { $('#msg').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
+      b.disabled = false; b.textContent = old;
+    };
+  });
+  document.querySelectorAll('[data-copy]').forEach(function (b) { b.onclick = function () { copy($('#' + b.dataset.copy).value, b); }; });
+  $('#copyAll').onclick = function () {
+    if (!cur) return;
+    var d = cur.details || {}, lines = ['Title: ' + $('#oTitle').value, '', 'Meta description: ' + $('#oMeta').value, '', 'Description:', $('#oDesc').value, ''];
+    Object.keys(LABELS).forEach(function (k) { if (d[k]) lines.push(LABELS[k] + ': ' + (k === 'instagram' ? '@' + d[k] : d[k])); });
+    copy(lines.join('\n'), $('#copyAll'));
+  };
+  ['#oTitle', '#oMeta', '#oDesc'].forEach(function (s) { $(s).addEventListener('input', function () { grow($(s)); refreshCounts(); }); });
+  $('#clearHist').onclick = function () { if (confirm('Clear your recent listings on this device?')) { lsSet([]); renderHist(); } };
+  renderHist();
+})();
+</script>
+</body>
+</html>

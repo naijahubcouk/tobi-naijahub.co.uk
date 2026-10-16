@@ -291,3 +291,9 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - **See all →** opens the whole list: Overdue, Today, Coming up (next 30 days), Repeating tasks (with Stop) and Done (last 30 days), plus Add a task.
 - Own future tasks can be ticked early (they won't come back on the day), skipped (weekly) or removed (one-off). Follow-ups and invoices in Coming up are shown for information with an Open button and appear to tick on their day.
 - API: `studio-extras` `todo-today` with `{ full: true }` for the See all view.
+
+## 7o. Listing writer — auntietobi.co.uk/listing
+
+- Open page (no sign-in, no usage limit — Seun's choice). Paste an Instagram bio (+ optional handle and notes) → listing title (≤60), meta description (140–160, with a Google preview), full description (120–200 words) and details pulled from the bio (name, category, section, location, phone, WhatsApp, email, website, Instagram, suggested /biz/ link). Copy buttons, "↻ New" per part, editable, last 20 kept on the device.
+- Written for the Auntie Tobi business directory; never invents facts, leaves "[add location]" gaps.
+- Function: `studio-listing` (`studio-lib/handlers/listing.js`). Bot trap: hidden field + page open > 1.5s + same-site header. Cost ≈ 0.03p a listing, in Business Studio spend as `listing`. `noindex`.
