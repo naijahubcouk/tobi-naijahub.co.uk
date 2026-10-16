@@ -294,7 +294,7 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 
 ## 7o. Listing writer — auntietobi.co.uk/listing
 
-- Open page (no sign-in, no usage limit — Seun's choice). Paste an Instagram bio (+ optional handle and notes) → listing title (≤60), meta description (140–160, with a Google preview), full description (120–200 words) and details pulled from the bio (name, category, section, location, phone, WhatsApp, email, website, Instagram, suggested /biz/ link). Copy buttons, "↻ New" per part, editable, last 20 kept on the device.
+- Open page (no sign-in, no usage limit — Seun's choice). Paste an Instagram bio (+ optional handle and notes) → listing title = the business name, as 2 options that make sense of the username (Title Case, e.g. toluskitchen_leeds → Tolu's Kitchen); tap one to use it (it becomes the Business name and /biz/ link), meta description (140–160, with a Google preview), full description (120–200 words) and details pulled from the bio (name, category, section, location, phone, WhatsApp, email, website, Instagram, suggested /biz/ link). Copy buttons, "↻ New" per part, editable, last 20 kept on the device.
 - Written for the Auntie Tobi business directory; never invents facts, leaves "[add location]" gaps.
 - Function: `studio-listing` (`studio-lib/handlers/listing.js`). Bot trap: hidden field + page open > 1.5s + same-site header. Cost ≈ 0.03p a listing, in Business Studio spend as `listing`. `noindex`.
 
