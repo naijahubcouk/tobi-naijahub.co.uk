@@ -139,7 +139,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <div id="signin" class="signin hidden">
   <img src="/tobi-face-128.png" alt="">
   <h1 style="font-family:var(--display);font-size:28px;margin:12px 0 4px">Auntie Tobi HQ</h1>
-  <p class="muted" style="margin-bottom:16px">Your Content Hub. Sign in with your admin email.</p>
+  <p class="muted" style="margin-bottom:16px">Your Content Hub. Sign in with your email — we’ll send you a code.</p>
   <div class="stack">
     <div><label for="em">Email</label><input id="em" type="email" autocomplete="email"></div>
     <div id="cdBox" class="hidden"><label for="cd">6-digit code</label><input id="cd" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></div>
@@ -160,7 +160,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="board">🗂️ Board <span class="n" id="nIdeas"></span></button>
       <button data-nav="calendar">📅 Calendar</button>
       <button data-nav="posted">📲 Posted</button>
-      <a href="/studio-admin">📋 Admin ↗</a>
+      <button id="teamBtn" class="hidden">👥 Team access</button>
+      <a href="/studio-admin" id="adminLink" class="hidden">📋 Admin ↗</a>
     </div>
     <div class="side-foot">Paste ideas from ChatGPT, keep the good ones, plan them and track what you post. Nothing is posted for you.<br><button class="btn link" id="so" style="color:#D5DCE8;margin-top:8px;font-size:12.5px">Sign out</button></div>
   </aside>
@@ -211,17 +212,18 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   $('#siBtn').onclick = async function () {
     var b = this, err = $('#siErr'); err.classList.add('hidden'); b.disabled = true;
     try {
-      if ($('#cdBox').classList.contains('hidden')) { await call('studio-admin', 'login-request', { email: $('#em').value.trim() }); $('#cdBox').classList.remove('hidden'); b.textContent = 'Sign in'; $('#cd').focus(); }
-      else { await call('studio-admin', 'login-verify', { email: $('#em').value.trim(), code: $('#cd').value.trim() }); $('#signin').classList.add('hidden'); boot(); }
+      if ($('#cdBox').classList.contains('hidden')) { await call('studio-hq', 'login-request', { email: $('#em').value.trim() }); $('#cdBox').classList.remove('hidden'); b.textContent = 'Sign in'; $('#cd').focus(); }
+      else { await call('studio-hq', 'login-verify', { email: $('#em').value.trim(), code: $('#cd').value.trim() }); $('#signin').classList.add('hidden'); boot(); }
     } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); }
     b.disabled = false;
   };
   ['#em', '#cd'].forEach(function (s) { $(s).addEventListener('keydown', function (e) { if (e.key === 'Enter') $('#siBtn').click(); }); });
-  $('#so').onclick = async function () { try { await call('studio-admin', 'logout'); } catch (x) {} location.reload(); };
+  $('#so').onclick = async function () { try { await call('studio-hq', 'logout'); } catch (x) {} location.reload(); };
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.today = r.today; S.month = r.today.slice(0, 7);
+    S.items = r.items; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {};
+    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -296,7 +298,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var cnt = function (st) { return S.items.filter(function (c) { return c.status === st; }).length; };
     var h = new Date().toLocaleString('en-GB', { hour: 'numeric', hour12: false, timeZone: 'Europe/London' });
     var hi = Number(h) < 12 ? 'Good morning' : Number(h) < 18 ? 'Good afternoon' : 'Good evening';
-    $('#view').innerHTML = '<div class="wrap"><p class="muted">' + hi + ', Seun 👋🏾</p>' +
+    $('#view').innerHTML = '<div class="wrap"><p class="muted">' + hi + (S.names[S.me] ? ', ' + esc(S.names[S.me]) : '') + ' 👋🏾</p>' +
       '<div class="stats">' +
         '<div class="card"><b>' + todays.length + '</b><span>📅 to post today</span></div>' +
         '<div class="card"><b>' + soon.length + '</b><span>planned next 7 days</span></div>' +
@@ -529,6 +531,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div id="eLinkBox"' + (c.status === 'posted' ? '' : ' class="hidden"') + '><label for="eL">Link to the post</label><input id="eL" value="' + esc(c.postLink) + '" placeholder="https://www.instagram.com/p/…"></div>' +
       '<div><label>Images</label><div class="imgs" id="eImgs"></div><button class="btn small ghost" id="eAddImg" style="margin-top:6px">＋ Add image</button><input type="file" id="eFile" accept="image/*" multiple class="hidden"></div>' +
       '<div><label for="eN">Notes</label><textarea id="eN" rows="2" placeholder="Anything to remember — who to tag, what photo to use…">' + esc(c.notes) + '</textarea></div>' +
+      (!isNew && (c.updatedBy || c.createdBy) ? '<div class="muted" style="font-size:12.5px">' + (c.createdBy ? 'Added by ' + esc(who(c.createdBy)) + ' · ' : '') + 'Last edited by ' + esc(who(c.updatedBy || c.createdBy)) + ' · ' + esc(new Date(c.updatedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + '</div>' : '') +
       '<div class="row" style="position:sticky;bottom:-18px;background:var(--cream);padding:12px 0 2px"><button class="btn primary" id="eS">Save</button><button class="btn ghost" id="eX">Cancel</button>' + (isNew ? '' : '<button class="btn ghost danger" id="eDel" style="margin-left:auto">🗑 Delete</button>') + '</div></div>');
     var drawImgs = function () { $('#eImgs', s).innerHTML = imgs.map(function (id, i) { return '<div><img src="/.netlify/functions/studio-hq?img=' + esc(id) + '" alt=""><button data-ri="' + i + '" aria-label="Remove image">×</button></div>'; }).join(''); $$('[data-ri]', s).forEach(function (b) { b.onclick = function () { imgs.splice(Number(b.dataset.ri), 1); drawImgs(); }; }); };
     drawImgs();
@@ -559,6 +562,23 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       img.onerror = function () { bad(new Error('That image couldn’t be opened.')); }; img.src = url;
     });
   }
+  function who(e) { return e === S.me ? 'you' : S.names[e] || String(e || '').split('@')[0]; }
+  $('#teamBtn').onclick = function () {
+    $('#side').classList.remove('open');
+    var s = sheet('<h2>👥 Team access</h2><p class="muted" style="margin:6px 0 12px">People here can sign in to <b>HQ only</b> with their email and a code — paste, edit, plan and mark posts. They can’t open Business Studio Admin. Remove someone and they’re signed out straight away.</p>' +
+      '<div id="tmList" class="stack" style="gap:6px"></div>' +
+      '<div class="row" style="margin-top:12px;gap:6px"><input id="tmNm" placeholder="Name" style="width:130px"><input id="tmNew" type="email" placeholder="assistant@email.com" style="flex:1;min-width:180px"><button class="btn ghost" id="tmAdd">Add</button></div>' +
+      '<div class="err hidden" id="tmErr"></div>' +
+      '<div class="row" style="margin-top:14px"><button class="btn primary" id="tmSave">Save</button><button class="btn ghost" id="tmX">Close</button></div>' +
+      '<p class="muted" style="font-size:12.5px;margin-top:10px">Send them this link: <b>' + esc(location.origin) + '/hq</b></p>');
+    var list = S.team.emails.slice(), nm = Object.assign({}, S.team.names);
+    var draw = function () { $('#tmList', s).innerHTML = list.length ? list.map(function (e, i) { return '<div class="row" style="justify-content:space-between;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px"><span><b>' + esc(nm[e] || '') + '</b>' + (nm[e] ? ' · ' : '') + esc(e) + '</span><button class="btn small ghost danger" data-rm="' + i + '">Remove</button></div>'; }).join('') : '<p class="muted" style="margin:0">Only you have access.</p>'; $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { list.splice(Number(b.dataset.rm), 1); draw(); }; }); };
+    draw();
+    var add = function () { var v = $('#tmNew', s).value.trim().toLowerCase(), n = $('#tmNm', s).value.trim(); if (!v) return; if (list.indexOf(v) < 0) list.push(v); if (n) nm[v] = n; $('#tmNew', s).value = ''; $('#tmNm', s).value = ''; draw(); };
+    $('#tmAdd', s).onclick = add; $('#tmNew', s).onkeydown = function (e) { if (e.key === 'Enter') add(); };
+    $('#tmX', s).onclick = function () { s.remove(); };
+    $('#tmSave', s).onclick = async function () { add(); try { var r = await api('team-save', { emails: list, names: nm }); S.team = r.team; Object.assign(S.names, r.team.names); s.remove(); toast('Team access saved'); } catch (x) { var e = $('#tmErr', s); e.textContent = x.message; e.classList.remove('hidden'); } };
+  };
   function sheet(html) { var s = document.createElement('div'); s.className = 'scrim'; s.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>'; document.body.appendChild(s); s.addEventListener('click', function (e) { if (e.target === s) s.remove(); }); return s; }
   boot();
 })();

@@ -36,6 +36,7 @@ const SESSION = {
 
 const COOKIE_MEMBER = '__Host-studio_sid';
 const COOKIE_ADMIN = '__Host-studio_admin';
+const COOKIE_HQ = '__Host-studio_hq';   // HQ-only sign-in (Content Hub team, e.g. an assistant) — never admin
 
 function env(name, fallback) {
   const v = process.env[name];
@@ -336,13 +337,13 @@ async function createSession(email, role, event) {
   const sess = {
     email, role,
     createdAt: now, lastSeen: now, verifiedAt: now,
-    expiresAt: role === 'admin' ? now + SESSION.adminMs : now + SESSION.idleMs,
-    absoluteExpiry: role === 'admin' ? now + SESSION.adminMs : now + SESSION.absoluteMs,
+    expiresAt: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + 7 * DAY : now + SESSION.idleMs,
+    absoluteExpiry: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + 7 * DAY : now + SESSION.absoluteMs,
     epoch: member ? (member.sessionEpoch || 0) : 0,
     device: cleanText(header(event, 'user-agent'), 160),
   };
   await setJson(`sess/${sha256(token)}`, sess);
-  const name = role === 'admin' ? COOKIE_ADMIN : COOKIE_MEMBER;
+  const name = role === 'admin' ? COOKIE_ADMIN : role === 'hq' ? COOKIE_HQ : COOKIE_MEMBER;
   return { token, sess, cookie: cookie(name, token, (sess.expiresAt - now) / 1000) };
 }
 
@@ -456,11 +457,13 @@ async function sendCodeEmail(email, code, purpose) {
   const subject = purpose === 'admin'
     ? `${code} is your Business Studio admin code`
     : purpose === 'market' ? `${code} is your Auntie Tobi Marketplace code`
+    : purpose === 'hq' ? `${code} is your Auntie Tobi HQ code`
     : `${code} is your Auntie Tobi Business Studio code`;
-  const text = `Your one-time code is ${code}\n\nIt expires in 10 minutes. If you didn't ask for this, you can ignore this email — nobody can sign in without the code.\n\n${purpose === 'market' ? 'Auntie Tobi Marketplace' : 'Auntie Tobi Business Studio'}`;
+  const brand = purpose === 'market' ? 'Auntie Tobi Marketplace' : purpose === 'hq' ? 'Auntie Tobi HQ' : 'Auntie Tobi Business Studio';
+  const text = `Your one-time code is ${code}\n\nIt expires in 10 minutes. If you didn't ask for this, you can ignore this email — nobody can sign in without the code.\n\n${brand}`;
   const html = `<!doctype html><html><body style="margin:0;background:#FBF6EC;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0F1E36">
 <div style="max-width:440px;margin:0 auto;padding:32px 20px">
-<div style="background:#057A44;color:#FBF6EC;border-radius:16px 16px 0 0;padding:18px 22px;font-weight:700;font-size:16px">${purpose === 'market' ? 'Auntie Tobi Marketplace' : 'Auntie Tobi Business Studio'}</div>
+<div style="background:#057A44;color:#FBF6EC;border-radius:16px 16px 0 0;padding:18px 22px;font-weight:700;font-size:16px">${brand}</div>
 <div style="background:#fff;border-radius:0 0 16px 16px;padding:24px 22px;border:1px solid #eadfc8;border-top:0">
 <p style="margin:0 0 12px;font-size:15px">Here's your one-time code:</p>
 <p style="margin:0 0 16px;font-size:34px;letter-spacing:8px;font-weight:800;color:#0F1E36">${code}</p>
@@ -517,7 +520,7 @@ async function alert(kind, message, detail) {
 
 module.exports = {
   STORE_NAME, DAY, MIN, SESSION, DEFAULT_SETTINGS, LIVE_SUB_STATUSES,
-  COOKIE_MEMBER, COOKIE_ADMIN,
+  COOKIE_MEMBER, COOKIE_ADMIN, COOKIE_HQ,
   env, adminEmails, HttpError, Abort, respond, handler, header,
   store, getJson, setJson, del, listKeys, cas, sleep, setBlobsModule,
   normalizeEmail, requireEmail, enc, sha256, hmac, randomToken, nowIso, cleanText,
