@@ -37,7 +37,7 @@ function clean(raw, prev) {
     hashtags: raw.hashtags !== undefined ? [...new Set((Array.isArray(raw.hashtags) ? raw.hashtags : String(raw.hashtags || '').split(/[\s,]+/))
       .map(t => String(t).trim()).filter(Boolean).map(t => (t.startsWith('#') ? t : `#${t}`)).filter(t => /^#[0-9A-Za-z_À-ɏ]{1,60}$/.test(t)))].slice(0, 40) : (p.hashtags || []),
     keywords: raw.keywords !== undefined ? cleanText(raw.keywords, 300) : (p.keywords || ''),
-    notes: raw.notes !== undefined ? multi(raw.notes, 2000) : (p.notes || ''),
+    notes: raw.notes !== undefined ? multi(raw.notes, 4000) : (p.notes || ''),
     status: pick('status', STATUSES, 'idea'),
     starred: raw.starred !== undefined ? !!raw.starred : !!p.starred,
     planDate: raw.planDate !== undefined ? (isDay(raw.planDate) ? raw.planDate : '') : (p.planDate || ''),
@@ -95,14 +95,16 @@ async function saveMany(cards, source) {
   await cas(KEY, cur => {
     const s = cur ? { items: { ...cur.items } } : { items: {} };
     if (live(s.items).length + cards.length > MAX_ITEMS) throw new HttpError(400, 'too_many', 'You have a lot of cards — delete or archive some first.');
-    const now = core.nowIso();
+    const base = Date.now();
     out.length = 0;
-    for (const raw of cards) {
+    cards.forEach((raw, i) => {
       const c = clean({ ...raw, status: 'idea' });
-      if (!c.caption && c.title === 'Untitled idea') continue;
-      const card = { id: newId('k'), ...c, source: SOURCES.includes(source) ? source : 'chatgpt', createdAt: now, updatedAt: now };
+      if (!c.caption && c.title === 'Untitled idea') return;
+      // Newest first on the Board, so the first card of the paste gets the latest time — keeps the paste's order.
+      const at = new Date(base - i).toISOString();
+      const card = { id: newId('k'), ...c, source: SOURCES.includes(source) ? source : 'chatgpt', createdAt: at, updatedAt: at };
       s.items[card.id] = card; out.push(card);
-    }
+    });
     return tidy(s);
   });
   return out;

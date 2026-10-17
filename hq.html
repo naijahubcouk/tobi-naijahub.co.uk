@@ -469,29 +469,43 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   }
   function previewSheet(text, mode) {
     var cards = HQSplit.split(text, { mode: mode });
+    cards.forEach(function (c) { if (c.selected === undefined) c.selected = true; if (!c.section) c.section = 'Ideas'; c.notes = c.notes || ''; });
     var s = sheet('<div id="pvw"></div>');
     var draw = function () {
+      var groups = []; cards.forEach(function (c, i) { var g = groups.filter(function (x) { return x.name === c.section; })[0]; if (!g) { g = { name: c.section, idx: [] }; groups.push(g); } g.idx.push(i); });
+      var n = cards.filter(function (c) { return c.selected; }).length;
       $('#pvw', s).innerHTML = '<div class="row" style="justify-content:space-between"><h2>Found ' + cards.length + ' idea' + (cards.length === 1 ? '' : 's') + '</h2><div class="row">' + (mode === 'one' ? '<button class="btn small ghost" id="pvAuto">Split into ideas</button>' : '<button class="btn small ghost" id="pvOne">Keep as one card</button>') + '<button class="btn small ghost" id="pvBack">← Edit paste</button></div></div>' +
-        '<p class="muted" style="margin:4px 0 10px">Remove ones you don’t want, merge any that were split wrongly, and fix the type. Everything saves to 💡 Ideas.</p><div class="stack">' +
-        cards.map(function (c, i) {
-          return '<div class="pv"><div class="pvh"><input class="pt" data-pt="' + i + '" value="' + esc(c.title) + '" aria-label="Title">' +
-            '<select data-ty="' + i + '" aria-label="Type">' + Object.keys(TYPE).map(function (k) { return '<option value="' + k + '"' + (c.type === k ? ' selected' : '') + '>' + TYPE[k] + '</option>'; }).join('') + '</select>' +
-            '<select data-tp="' + i + '" aria-label="Topic">' + Object.keys(TOPIC).map(function (k) { return '<option value="' + k + '"' + (c.topic === k ? ' selected' : '') + '>' + TOPIC[k] + '</option>'; }).join('') + '</select></div>' +
-            '<textarea data-cp="' + i + '" rows="' + Math.min(8, Math.max(2, (c.caption.match(/\n/g) || []).length + 1)) + '">' + esc(c.caption) + '</textarea>' +
-            (c.keywords ? '<div class="tags">🔑 ' + esc(c.keywords) + '</div>' : '') + (c.hashtags.length ? '<div class="tags"># ' + esc(c.hashtags.join(' ')) + '</div>' : '') +
-            '<div class="row"><button class="btn small ghost danger" data-rm="' + i + '">🗑 Remove</button>' + (i < cards.length - 1 ? '<button class="btn small ghost" data-mg="' + i + '">⤵ Merge with next</button>' : '') + '</div></div>';
-        }).join('') + '</div>' +
-        '<div class="row" style="position:sticky;bottom:-18px;background:var(--cream);padding:12px 0 2px;margin-top:10px"><button class="btn primary" id="pvSave"' + (cards.length ? '' : ' disabled') + '>Save ' + cards.length + ' card' + (cards.length === 1 ? '' : 's') + ' to Ideas</button><button class="btn ghost" id="pvX">Cancel</button></div>';
+        '<p class="muted" style="margin:4px 0 10px">Untick anything you don’t want, merge any that were split wrongly, and fix the type. Ticked cards save to 💡 Ideas.</p>' +
+        groups.map(function (g) {
+          var on = g.idx.filter(function (i) { return cards[i].selected; }).length;
+          return '<div class="pvg"><div class="row" style="justify-content:space-between;margin:14px 0 6px"><b style="font-family:var(--display);font-size:16px">' + esc(g.name) + ' <span class="muted" style="font-family:var(--font);font-size:13px;font-weight:500">' + on + ' of ' + g.idx.length + '</span></b>' +
+            (groups.length > 1 || g.idx.length > 1 ? '<span class="row" style="gap:4px"><button class="btn small ghost" data-gall="' + esc(g.name) + '">All</button><button class="btn small ghost" data-gnone="' + esc(g.name) + '">None</button></span>' : '') + '</div><div class="stack">' +
+            g.idx.map(function (i) {
+              var c = cards[i];
+              return '<div class="pv" style="' + (c.selected ? '' : 'opacity:.5') + '"><div class="pvh"><input type="checkbox" data-sel="' + i + '"' + (c.selected ? ' checked' : '') + ' style="width:20px;height:20px;flex:none" aria-label="Keep this card"><input class="pt" data-pt="' + i + '" value="' + esc(c.title) + '" aria-label="Title">' +
+                '<select data-ty="' + i + '" aria-label="Type">' + Object.keys(TYPE).map(function (k) { return '<option value="' + k + '"' + (c.type === k ? ' selected' : '') + '>' + TYPE[k] + '</option>'; }).join('') + '</select>' +
+                '<select data-tp="' + i + '" aria-label="Topic">' + Object.keys(TOPIC).map(function (k) { return '<option value="' + k + '"' + (c.topic === k ? ' selected' : '') + '>' + TOPIC[k] + '</option>'; }).join('') + '</select></div>' +
+                '<textarea data-cp="' + i + '" rows="' + Math.min(8, Math.max(2, (c.caption.match(/\n/g) || []).length + 1)) + '">' + esc(c.caption) + '</textarea>' +
+                (c.keywords ? '<div class="tags">🔑 ' + esc(c.keywords.length > 140 ? c.keywords.slice(0, 140) + '…' : c.keywords) + '</div>' : '') + (c.hashtags.length ? '<div class="tags"># ' + esc(c.hashtags.join(' ')) + '</div>' : '') +
+                (c.notes ? '<details class="tags"><summary style="cursor:pointer">📎 Notes &amp; sources</summary><div style="white-space:pre-wrap;margin-top:4px">' + esc(c.notes) + '</div></details>' : '') +
+                (i < cards.length - 1 && cards[i + 1].section === c.section ? '<div class="row"><button class="btn small ghost" data-mg="' + i + '">⤵ Merge with next</button></div>' : '') + '</div>';
+            }).join('') + '</div></div>';
+        }).join('') +
+        '<div class="row" style="position:sticky;bottom:-18px;background:var(--cream);padding:12px 0 2px;margin-top:10px"><button class="btn primary" id="pvSave"' + (n ? '' : ' disabled') + '>Save ' + n + ' card' + (n === 1 ? '' : 's') + ' to Ideas</button><button class="btn ghost" id="pvX">Cancel</button></div>';
       var keep = function () { cards.forEach(function (c, i) { c.title = $('[data-pt="' + i + '"]', s).value; c.type = $('[data-ty="' + i + '"]', s).value; c.topic = $('[data-tp="' + i + '"]', s).value; c.caption = $('[data-cp="' + i + '"]', s).value; }); };
-      $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { keep(); cards.splice(Number(b.dataset.rm), 1); draw(); }; });
-      $$('[data-mg]', s).forEach(function (b) { b.onclick = function () { keep(); var i = Number(b.dataset.mg); cards.splice(i, 2, HQSplit.merge(cards[i], cards[i + 1])); draw(); }; });
+      $$('[data-sel]', s).forEach(function (b) { b.onchange = function () { keep(); cards[Number(b.dataset.sel)].selected = b.checked; var y = $('#pvw', s).parentNode.scrollTop; draw(); $('#pvw', s).parentNode.scrollTop = y; }; });
+      var setGroup = function (name, on) { keep(); cards.forEach(function (c) { if (c.section === name) c.selected = on; }); var y = $('#pvw', s).parentNode.scrollTop; draw(); $('#pvw', s).parentNode.scrollTop = y; };
+      $$('[data-gall]', s).forEach(function (b) { b.onclick = function () { setGroup(b.dataset.gall, true); }; });
+      $$('[data-gnone]', s).forEach(function (b) { b.onclick = function () { setGroup(b.dataset.gnone, false); }; });
+      $$('[data-mg]', s).forEach(function (b) { b.onclick = function () { keep(); var i = Number(b.dataset.mg); var m = HQSplit.merge(cards[i], cards[i + 1]); m.section = cards[i].section; m.selected = true; m.notes = [cards[i].notes, cards[i + 1].notes].filter(Boolean).join('\n\n'); cards.splice(i, 2, m); draw(); }; });
       var one = $('#pvOne', s); if (one) one.onclick = function () { s.remove(); previewSheet(text, 'one'); };
       var au = $('#pvAuto', s); if (au) au.onclick = function () { s.remove(); previewSheet(text, 'auto'); };
       $('#pvBack', s).onclick = function () { s.remove(); pasteSheet(); setTimeout(function () { var p = $('#px'); if (p) p.value = text; }, 0); };
       $('#pvX', s).onclick = function () { if (confirm('Discard these ideas?')) s.remove(); };
       $('#pvSave', s).onclick = async function () {
         keep(); this.disabled = true;
-        try { var r = await api('save-many', { items: cards, source: 'chatgpt' }); r.items.forEach(upsert); s.remove(); toast(r.items.length + ' idea' + (r.items.length === 1 ? '' : 's') + ' saved 💡'); S.tab = 'idea'; go('board'); }
+        var keepCards = cards.filter(function (c) { return c.selected; }).map(function (c) { return { title: c.title, type: c.type, topic: c.topic, caption: c.caption, hashtags: c.hashtags, keywords: c.keywords, notes: c.notes }; });
+        try { var r = await api('save-many', { items: keepCards, source: 'chatgpt' }); r.items.forEach(upsert); s.remove(); toast(r.items.length + ' idea' + (r.items.length === 1 ? '' : 's') + ' saved 💡'); S.tab = 'idea'; go('board'); }
         catch (x) { toast(x.message); this.disabled = false; }
       };
     };

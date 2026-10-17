@@ -105,6 +105,7 @@
     if (lines.length > 2 && INTRO.test(clean(lines[0])) && clean(lines[0]).length < 160) lines.shift();
     while (lines.length && (!lines[lines.length - 1].trim() || OUTRO.test(clean(lines[lines.length - 1])))) lines.pop();
     if (!lines.join('').trim()) return [];
+    if (opts.mode !== 'one' && isBrief(lines)) { var bc = splitBrief(lines); if (bc.length >= 2) return bc; }
     var kind = opts.mode === 'one' ? 'none' : pickBoundary(lines);
     if (kind === 'num') {
       // A numbered list is only separate ideas if the items have their own text under them
@@ -133,6 +134,223 @@
     return out.length ? out : [card(lines, '')];
   }
 
+  // ───────────── content briefs (sections, numbered ideas, tables) ─────────────
+  var KEEP_UP = ['UK', 'NHS', 'BST', 'GMT', 'CMA', 'HMRC', 'DFE', 'CTA', 'ILR', 'BRP', 'EU', 'DBS', 'GP', 'AI', 'FAQ', 'TV', 'DIY', 'ID', 'CV', 'PDF', 'SEO', 'Q&A', 'IG', 'NYSC', 'JAMB', 'WAEC', 'MP', 'MPS'];
+  var SMALL = ['a', 'an', 'and', 'as', 'at', 'by', 'for', 'from', 'in', 'into', 'of', 'on', 'or', 'the', 'to', 'with', 'vs'];
+  function niceCase(s) {
+    s = String(s || '').trim();
+    var letters = s.replace(/[^A-Za-z]/g, ''), upper = letters.replace(/[^A-Z]/g, '').length;
+    if (letters.length < 4 || upper / letters.length < 0.7) return s;
+    var first = true;
+    return s.toLowerCase().replace(/[a-z][a-z'’&]*/g, function (w) {
+      var up = w.toUpperCase(), out;
+      if (KEEP_UP.indexOf(up) >= 0) out = up;
+      else if (!first && SMALL.indexOf(w) >= 0) out = w;
+      else out = w.charAt(0).toUpperCase() + w.slice(1);
+      first = false; return out;
+    }).replace(/([—–:-]\s+)([a-z])/g, function (m, a, b) { return a + b.toUpperCase(); });
+  }
+  var stripMd = function (t) { return String(t || '').replace(/\*\*|__/g, '').replace(/(^|\s)\*(?=\S)|(\S)\*(?=\s|$)/g, '$1$2').trim(); };
+  var noUtm = function (u) { return u.replace(/[?&]utm_[a-z]+=[^&\s)#]*/gi, '').replace(/\?(?=#|$)/, ''); };
+  var dropLead = function (t) { return String(t || '').replace(/^[\s\d.)]*/, '').replace(/^[^\w“"'‘£#@]+/u, '').trim(); };
+  var isTable = function (l) { return /^\s*\|.*\|\s*$/.test(l); };
+  var isTableSep = function (l) { return /^\s*\|[\s:|-]+\|\s*$/.test(l); };
+  var cells = function (l) { return l.trim().replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); }); };
+  var headLevel = function (l) { var m = /^(#{1,6})\s+\S/.exec(l); return m ? m[1].length : 0; };
+  var boldOnly = function (l) { return /^\s*\*\*[^*]+\*\*\s*$/.test(l); };
+  var quoteish = function (t) { return /^["“‘']/.test(t.trim()); };
+
+  function isBrief(lines) {
+    var big = lines.filter(function (l) { var h = headLevel(l); return h >= 1 && h <= 2; }).length;
+    var tables = lines.filter(isTable).length;
+    return big >= 2 || (big >= 1 && tables >= 3);
+  }
+
+  // Pull links out: inline [text](url) citations are removed from the text and kept as sources.
+  function takeLinks(text, sources) {
+    return text.replace(/\[([^\]]{1,120})\]\((https?:\/\/[^\s)]+)\)/g, function (m, t, u) { u = noUtm(u); if (sources.indexOf(u) < 0) sources.push(u); return ''; }).replace(/\s+([.,;:!?])/g, '$1').replace(/[ \t]{2,}/g, ' ').trimEnd();
+  }
+
+  // One idea written as a block of lines (HOOK / Format / CTA / body…).
+  function ideaCard(heading, lines, ctx) {
+    var hook = '', cta = '', type = '', notes = [], sources = [], body = [], hashtags = [], keywords = '';
+    for (var i = 0; i < lines.length; i++) {
+      var raw = lines[i], t = stripMd(raw);
+      if (!t || SEP.test(t)) { if (body.length && body[body.length - 1] !== '') body.push(''); continue; }
+      if (/^#[\wÀ-ɏ]+(\s+#[\wÀ-ɏ]+)*$/.test(t)) { (t.match(/#[\wÀ-ɏ]+/g) || []).forEach(function (h) { if (hashtags.indexOf(h) < 0) hashtags.push(h); }); continue; }
+      var lab = /^([A-Za-z][A-Za-z ]{1,30}?)\s*:\s*(.*)$/.exec(t), key = lab ? lab[1].toLowerCase().trim() : '', val = lab ? lab[2].trim() : '';
+      if (key === 'hook') { if (!val) { while (i + 1 < lines.length && !stripMd(lines[i + 1])) i++; val = stripMd(lines[++i] || ''); } hook = val; continue; }
+      if (key === 'format' || key === 'post type') { type = mapType(val); continue; }
+      if (key === 'cta' || key === 'call to action') { cta = val; continue; }
+      if (/sponsor|tag|credit/.test(key) && val) { notes.push(lab[1].trim() + ': ' + val); continue; }
+      if (key === 'keywords' || key === 'keyword line') { keywords = val; continue; }
+      if (/^\[[^\]]+\]\(https?:\/\/[^)]+\)$/.test(t)) { takeLinks(t, sources); continue; }
+      body.push(takeLinks(t, sources));
+    }
+    while (body.length && body[body.length - 1] === '') body.pop();
+    while (body.length && body[0] === '') body.shift();
+    var caption = [hook ? 'HOOK: ' + hook : '', body.join('\n'), cta ? 'CTA: ' + cta : ''].filter(Boolean).join('\n\n');
+    var title = niceCase(dropLead(stripMd(heading)));
+    var hay = heading + ' ' + caption.slice(0, 500);
+    return { title: title.slice(0, 120) || 'Untitled idea', type: type || ctx.type || detectType(hay), topic: ctx.topic || topicFromLabel(heading) || detectTopic(hay), caption: caption.slice(0, 8000), hashtags: hashtags, keywords: keywords, notes: notesText(notes, sources), section: ctx.section, selected: ctx.selected !== false };
+  }
+  function notesText(notes, sources) { return notes.concat(sources.length ? ['Sources:\n' + sources.join('\n')] : []).join('\n\n'); }
+  function mapType(v) {
+    v = String(v || '').toLowerCase();
+    if (/reel|video|tiktok/.test(v)) return 'reel';
+    if (/carousel|slides/.test(v)) return 'carousel';
+    if (/story|stories|poll|quiz|slider|question/.test(v)) return 'story';
+    if (/blog|article/.test(v)) return 'blog';
+    if (/static|post|image|graphic|photo/.test(v)) return 'post';
+    return '';
+  }
+  function topicFromLabel(h) {
+    var t = stripMd(h).toUpperCase();
+    if (/BUSINESS DISCOVERY|DISCOVERY SERIES|SPOTLIGHT/.test(t)) return 'discovery';
+    if (/\bEVENT|BLACK HISTORY|FESTIVAL\b/.test(t)) return 'event';
+    if (/MOTIVATION|FAITH|MORNING|AFTERNOON|EVENING/.test(t)) return 'motivation';
+    if (/FAMILY|IMMIGRATION|SCHOLARSHIP|JOBS?|SCHOOL|HOUSING|HEALTH|NHS|GOVERNMENT|DEADLINE|UK INFO|OPPORTUNIT/.test(t)) return 'uk-info';
+    if (/PROMO|SPONSOR|OFFER/.test(t)) return 'promo';
+    if (/COMMUNITY|ENGAGEMENT/.test(t)) return 'community';
+    if (/DISCOVERY/.test(t)) return 'discovery';
+    return '';
+  }
+
+  function tableCards(rows, header, ctx) {
+    var h = header.map(function (x) { return stripMd(x).toLowerCase(); });
+    var col = function (re) { for (var i = 0; i < h.length; i++) if (re.test(h[i])) return i; return -1; };
+    var cTitle = col(/^(idea|title|post|topic|content idea)$/), cHook = col(/hook|ready-to-post|content|caption|text/), cFmt = col(/format|^type$|story type/), cCta = col(/cta|call to action/), cTime = col(/^time$/), cNum = col(/^(story|#|no\.?)$/);
+    var out = [];
+    if (ctx.combine) {
+      // A Story plan: one card listing every frame.
+      var linesOut = rows.map(function (r, i) {
+        var bits = [];
+        bits.push(cTime >= 0 ? stripMd(r[cTime]) : (cNum >= 0 ? stripMd(r[cNum]) + '.' : (i + 1) + '.'));
+        var ty = cFmt >= 0 ? stripMd(r[cFmt]) : ''; if (ty) bits.push(ty + ' —');
+        bits.push(takeLinks(stripMd(cHook >= 0 ? r[cHook] : r[r.length - 1]), []));
+        return bits.join(' ');
+      });
+      return [{ title: ctx.title, type: 'story', topic: 'community', caption: linesOut.join('\n'), hashtags: [], keywords: '', notes: '', section: ctx.section, selected: true, combined: true }];
+    }
+    rows.forEach(function (r) {
+      var title = cTitle >= 0 ? r[cTitle] : (cHook >= 0 ? r[cHook] : r[0]);
+      var hook = cHook >= 0 && cHook !== cTitle ? stripMd(r[cHook]) : '';
+      var cta = cCta >= 0 ? stripMd(r[cCta]) : '';
+      var t = niceCase(dropLead(stripMd(title)));
+      var caption = [hook ? 'HOOK: ' + hook : '', cta ? 'CTA: ' + cta : ''].filter(Boolean).join('\n\n');
+      out.push({ title: t.slice(0, 120) || 'Untitled idea', type: (cFmt >= 0 && mapType(r[cFmt])) || ctx.type || detectType(t + ' ' + hook), topic: topicFromLabel(title) || detectTopic(t + ' ' + hook), caption: caption, hashtags: [], keywords: '', notes: '', section: ctx.section, selected: true });
+    });
+    return out;
+  }
+
+  function splitBrief(lines) {
+    // Global hashtags / keywords (usually at the end) apply to every card without its own.
+    var gTags = [], gKw = '';
+    lines = lines.map(function (l) {
+      var t = stripMd(l);
+      var m = /^suggested hashtags?\s*:?\s*(.*)$/i.exec(t); if (m) { gTags = (m[1].match(/#[\wÀ-ɏ]+/g) || []); return ''; }
+      var k = /^(?:suggested\s+)?keywords?\s*:\s*(.+)$/i.exec(t); if (k && !/^keyword line/i.test(t)) { gKw = k[1].trim(); return ''; }
+      return l;
+    });
+    // Sections = # / ## headings.
+    var sections = [], cur = null;
+    lines.forEach(function (l) {
+      var lv = headLevel(l);
+      if (lv === 1 || lv === 2) { cur = { title: stripMd(l.replace(/^#+\s*/, '')), lines: [] }; sections.push(cur); return; }
+      if (!cur) { cur = { title: '', lines: [] }; sections.push(cur); }
+      cur.lines.push(l);
+    });
+    var cards = [], details = [];
+    sections.forEach(function (sec, si) {
+      var name = niceCase(dropLead(sec.title));
+      var T = sec.title.toUpperCase();
+      var isIntro = si === 0 && (/BRIEF|EDITION|DIGEST|ROUND-?UP|NEWSLETTER/.test(T) || !sec.title);
+      var isPlan = /POSTING PLAN|SCHEDULE|TIMETABLE/.test(T);
+      var isStory = /STOR(Y|IES)/.test(T);
+      var isNote = /PRIORITY|SUMMARY|TAKEAWAY|RECOMMENDATION|STRATEGY|FOCUS/.test(T) && !/IDEA/.test(T);
+      var ctx = { section: name || 'Ideas', type: isStory ? 'story' : '', topic: /MOTIVATION/.test(T) ? 'motivation' : '' };
+      // Split the section into blocks: ### items, tables and loose text.
+      var blocks = [], b = { head: '', lines: [], sub: false };
+      sec.lines.forEach(function (l) {
+        if (headLevel(l) >= 3) { blocks.push(b); b = { head: l.replace(/^#+\s*/, ''), lines: [] }; return; }
+        b.lines.push(l);
+      });
+      blocks.push(b);
+      blocks.forEach(function (blk, bi) {
+        var hasText = blk.lines.some(function (l) { return l.trim(); });
+        var tbl = blk.lines.filter(isTable);
+        var bodyLines = blk.lines.filter(function (l) { return !isTable(l); });
+        var H = stripMd(blk.head).toUpperCase();
+        // "### Verified details…" → facts to attach to the matching ideas.
+        if (/VERIFIED|DETAILS|SOURCES|FACT/.test(H) && !/^\d/.test(stripMd(blk.head))) {
+          var curD = null;
+          blk.lines.forEach(function (l) {
+            var t = stripMd(l); if (!t) return;
+            var m = /^([A-Z][A-Za-z' ]{1,40}):\s*(.+)$/.exec(t);
+            if (m && /^\s*\*\*/.test(l)) { curD = { label: m[1].trim(), text: m[2], sources: [] }; curD.text = takeLinks(curD.text, curD.sources); details.push(curD); return; }
+            if (curD) { var x = takeLinks(t, curD.sources); if (x.trim()) curD.text += ' ' + x; }
+          });
+          return;
+        }
+        if (isPlan && (tbl.length || !blk.head)) return; // the posting plan table only repeats ideas (dates ignored)
+        if (isIntro && !/^\d{1,2}[.)]\s/.test(stripMd(blk.head))) return;
+        // A ### that only names the section's day/date (e.g. "### Friday, 16 October") → part of the section name.
+        if (blk.head && !hasText && bi === 0) return;
+        if (blk.head && tbl.length && !bodyLines.some(function (l) { return stripMd(l) && !/^[*_]/.test(l.trim()) && !boldOnly(l); }) && /^(MON|TUE|WED|THU|FRI|SAT|SUN)/.test(H)) { ctx.sub = stripMd(blk.head); }
+        if (tbl.length >= 2) {
+          var rows = tbl.filter(function (l) { return !isTableSep(l); }).map(cells);
+          var header = rows.shift();
+          var combine = isStory;
+          var title = name + (blk.head && /^(MON|TUE|WED|THU|FRI|SAT|SUN)/.test(H) ? ' — ' + stripMd(blk.head) : (ctx.sub && bi > 0 ? ' — ' + ctx.sub : ''));
+          var tc = tableCards(rows, header, { section: ctx.section, type: ctx.type, combine: combine, title: title });
+          // Loose lines after a Story table (e.g. "Quiz answer: …") belong to that card.
+          var extra = bodyLines.map(stripMd).filter(Boolean).filter(function (t) { return !/^#/.test(t) && !SEP.test(t); });
+          if (combine && extra.length) tc[0].caption += '\n\n' + extra.map(function (t) { return takeLinks(t, []); }).join('\n');
+          cards = cards.concat(tc);
+          return;
+        }
+        if (!blk.head) {
+          if (isNote && hasText) {
+            var nt = bodyLines.map(stripMd).filter(Boolean).join('\n');
+            cards.push({ title: name || 'Notes', type: 'post', topic: 'community', caption: nt, hashtags: [], keywords: '', notes: '', section: ctx.section, selected: false, isNote: true });
+          }
+          return;
+        }
+        // A ### heading whose text is several bold titles = a container of ideas ("### Three posts to prepare next").
+        var titlesInside = blk.lines.filter(function (l) { var t = stripMd(l); return boldOnly(l) && !/:$/.test(t) && !quoteish(t) && t.length < 80; });
+        if (titlesInside.length >= 2) {
+          var curI = null;
+          blk.lines.forEach(function (l) {
+            var t = stripMd(l);
+            if (boldOnly(l) && !/:$/.test(t) && !quoteish(t) && t.length < 80) { curI = { head: t, lines: [] }; cards.push(curI); return; }
+            if (curI) curI.lines.push(l);
+          });
+          var subCtx = { section: niceCase(dropLead(stripMd(blk.head))) || ctx.section, type: ctx.type, topic: ctx.topic };
+          cards = cards.map(function (c) { return c.head !== undefined && c.lines ? ideaCard(c.head, c.lines, subCtx) : c; });
+          return;
+        }
+        if (!hasText) return;
+        var card = ideaCard(blk.head, blk.lines, ctx);
+        if (isNote) { card.selected = false; card.isNote = true; }
+        cards.push(card);
+      });
+    });
+    // Attach verified details to the idea they're about.
+    details.forEach(function (d) {
+      var words = d.label.toLowerCase().split(/\s+/).filter(function (w) { return w.length > 3; });
+      var best = null, score = 0;
+      cards.forEach(function (c) { var t = (c.title + ' ' + c.caption).toLowerCase(); var s = words.filter(function (w) { return t.indexOf(w.replace(/s$/, '')) >= 0; }).length; if (s > score) { score = s; best = c; } });
+      var txt = d.label + ': ' + d.text.trim() + (d.sources.length ? '\nSources:\n' + d.sources.join('\n') : '');
+      if (best) best.notes = (best.notes ? best.notes + '\n\n' : '') + 'Verified details — ' + txt;
+    });
+    cards.forEach(function (c) {
+      if (!c.hashtags.length && gTags.length && c.type !== 'story') c.hashtags = gTags.slice();
+      if (!c.keywords && gKw && c.type !== 'story') c.keywords = gKw;
+      if (!c.caption && !c.title) c.selected = false;
+    });
+    return cards.filter(function (c) { return c.caption || (c.title && c.title !== 'Untitled idea'); });
+  }
+
   function merge(a, b) {
     var tags = a.hashtags.slice(); (b.hashtags || []).forEach(function (t) { if (tags.indexOf(t) < 0) tags.push(t); });
     return { title: a.title, type: a.type, topic: a.topic, caption: [a.caption, (b.title && b.title !== 'Untitled idea' ? b.title + '\n' : '') + b.caption].filter(Boolean).join('\n\n'), hashtags: tags, keywords: [a.keywords, b.keywords].filter(Boolean).join(' · ') };
@@ -143,6 +361,6 @@
     return [String(c.caption || '').trim(), c.keywords ? String(c.keywords).trim() : '', (c.hashtags || []).join(' ')].filter(Boolean).join('\n\n');
   }
 
-  var api = { split: split, merge: merge, fullCaption: fullCaption, detectType: detectType, detectTopic: detectTopic, TYPES: TYPES, TOPICS: TOPICS };
+  var api = { split: split, niceCase: niceCase, merge: merge, fullCaption: fullCaption, detectType: detectType, detectTopic: detectTopic, TYPES: TYPES, TOPICS: TOPICS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.HQSplit = api;
 })(this);
