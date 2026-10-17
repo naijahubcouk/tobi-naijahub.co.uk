@@ -246,6 +246,8 @@ async function recentQuick(email, goal) {
 const REFINE = {
   shorter: 'Make every section noticeably shorter and punchier (about half the length) while keeping the meaning, the call to action and any real details.',
   conversational: 'Rewrite every section to sound more conversational and personal — like the owner chatting to a friend — while keeping the meaning, the call to action and any real details.',
+  polite: 'Rewrite every section to be warmer and more polite while staying clear — keep the meaning and any real details.',
+  firm: 'Rewrite every section to be firmer and more direct while staying professional and respectful — keep the meaning and any real details.',
 };
 async function refine({ email, profile, settings, id, how }) {
   if (!REFINE[how]) throw new HttpError(400, 'invalid', 'Unknown change.');

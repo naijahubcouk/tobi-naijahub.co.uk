@@ -348,6 +348,9 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .idea{margin-top:14px;border-left:5px solid var(--gold)}.ideah{font-weight:800;font-size:14px}.ideah span{color:var(--green-d)}
 .qtweak{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
 .qtweak .free{font-size:10.5px;font-weight:800;color:var(--green-d);background:var(--green-l);border-radius:6px;padding:1px 5px;margin-left:3px}
+.tlcats{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}.tlcats .chip{white-space:nowrap;flex:none}
+.tlh{display:flex;align-items:center;gap:8px;font-size:15px;margin:16px 0 8px;color:var(--navy)}.tlh svg{color:var(--green)}.tlh span{font-size:12px;color:var(--muted);font-weight:600}
+.whatnext{margin-top:12px;background:var(--green-l);border-radius:14px;padding:12px 14px}.whatnext .btn{background:#fff}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1011,12 +1014,6 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   }
   function bindHistoryRows() { $$('[data-item]', app).forEach(function (b) { b.onclick = function () { showItem(b.dataset.item); }; }); }
 
-  function toolGrid() {
-    return '<div class="tools">' + S.boot.tools.filter(function (t) { return t.id !== 'oneclick' && !t.hidden; }).map(function (t) {
-      var m = TOOL_META[t.id] || {};
-      return '<button class="tool" data-tool="' + t.id + '"><span class="ico">' + icon(m.icon || '') + '</span><b>' + esc(t.name) + '</b><span>' + esc(m.blurb || '') + '</span></button>';
-    }).join('') + '</div>';
-  }
   var FREE_TOOLS = [
     ['image', 'Make an image', 'Branded post or Story graphic', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>'],
     ['shop', 'Price list page', 'Your prices + WhatsApp ordering', '<path d="M4 7h16l-1 13H5z"/><path d="M9 7a3 3 0 016 0"/>'],
@@ -1040,6 +1037,132 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     });
   }
   function bindTools() { $$('[data-tool]', app).forEach(function (b) { b.onclick = function () { showTool(b.dataset.tool); }; }); }
+  // ── All tools (Create tab): 29 AI tools in 6 categories + free tools, with search ──
+  var CATS = [
+    ['content', 'Content Creation', '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>'],
+    ['sales', 'Sales & Promotions', '<path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.5"/>'],
+    ['brand', 'Brand & Visibility', '<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>'],
+    ['customers', 'Customer Communication', '<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>'],
+    ['growth', 'Business Growth', '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>'],
+    ['planning', 'Planning & Productivity', '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>']
+  ];
+  var CAT_ICON = {}; CATS.forEach(function (c) { CAT_ICON[c[0]] = c[2]; });
+  var FREE_CAT = { image: 'content', shop: 'sales', review: 'customers', invoice: 'planning' };
+  function toolList() { return S.boot.tools.filter(function (t) { return t.id !== 'oneclick' && !t.hidden; }); }
+  function toolGrid() {
+    return '<input id="tlQ" type="search" placeholder="Search ' + (toolList().length + FREE_TOOLS.length) + ' tools…" value="' + esc(S.toolQ || '') + '" aria-label="Search tools" style="margin-bottom:10px">' +
+      '<div class="chips tlcats" style="margin-bottom:12px"><button class="chip" data-tc="" aria-pressed="' + !S.toolCat + '">All</button>' + CATS.map(function (c) { return '<button class="chip" data-tc="' + c[0] + '" aria-pressed="' + (S.toolCat === c[0]) + '">' + esc(c[1]) + '</button>'; }).join('') + '</div>' +
+      '<div id="toolBox">' + toolCards() + '</div>';
+  }
+  function toolCard(t) {
+    var m = TOOL_META[t.id] || {};
+    return '<button class="tool" data-tool="' + t.id + '"><span class="ico">' + icon(m.icon || CAT_ICON[t.cat] || '') + '</span><b>' + esc(t.name.charAt(0).toUpperCase() + t.name.slice(1)) + (t.cost ? '' : '') + '</b><span>' + esc(m.blurb || t.blurb || '') + '</span></button>';
+  }
+  function freeCard(f) { return '<button class="tool freetool" data-free="' + f[0] + '"><span class="ico">' + icon(f[3]) + '</span><b>' + esc(f[1]) + '<span class="free">FREE</span></b><span>' + esc(f[2]) + '</span></button>'; }
+  function toolCards() {
+    var q = (S.toolQ || '').toLowerCase().trim(), cat = S.toolCat || '';
+    var match = function (name, blurb) { return !q || (name + ' ' + blurb).toLowerCase().indexOf(q) > -1; };
+    var groups = CATS.filter(function (c) { return !cat || c[0] === cat; }).map(function (c) {
+      var ai = toolList().filter(function (t) { return (t.cat || 'content') === c[0] && match(t.name, (TOOL_META[t.id] || {}).blurb || t.blurb || ''); });
+      var fr = FREE_TOOLS.filter(function (f) { return FREE_CAT[f[0]] === c[0] && match(f[1], f[2]); });
+      if (!ai.length && !fr.length) return '';
+      return '<h3 class="tlh">' + icon(c[2], 18) + esc(c[1]) + ' <span>' + (ai.length + fr.length) + '</span></h3><div class="tools">' + ai.map(toolCard).join('') + fr.map(freeCard).join('') + '</div>';
+    }).join('');
+    return groups || '<p class="hint">No tools match “' + esc(S.toolQ) + '”.</p>';
+  }
+  function bindToolDir() {
+    var box = $('#toolBox');
+    var rebind = function () { bindTools(); bindFreeTools(); };
+    var qi = $('#tlQ'); if (qi) qi.oninput = function () { S.toolQ = qi.value; box.innerHTML = toolCards(); rebind(); };
+    $$('[data-tc]', app).forEach(function (b) { b.onclick = function () { S.toolCat = b.dataset.tc; $$('[data-tc]', app).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); box.innerHTML = toolCards(); rebind(); }; });
+    rebind();
+  }
+
+  // ── After every result: quick changes + "What should I do next?" ──
+  var REFINE_SETS = {
+    message: ['polite', 'firm', 'shorter'], followup: ['polite', 'firm', 'shorter'], complaint: ['polite', 'firm', 'shorter'],
+    growth30: [], weekly: [], planner: [], checkup: [], salesideas: [], idealcustomer: [], collab: [], seo: [], hashtags: [], faq: ['shorter']
+  };
+  var REFINE_LABEL = { shorter: '✂️ Shorter', conversational: '💬 More conversational', polite: '🤝 More polite', firm: '💪 Firmer' };
+  var NO_TURN = { reel: 1, stories: 1, message: 1, followup: 1, complaint: 1, growth30: 1, weekly: 1, planner: 1, checkup: 1, salesideas: 1, idealcustomer: 1, collab: 1, seo: 1, hashtags: 1, faq: 1, bio: 1, usp: 1, ideas: 1, repurpose: 1 };
+  var NEXT = {
+    caption: ['stories', 'hashtags', 'carousel'], ideas: ['reel', 'caption', 'weekly'], reel: ['stories', 'hashtags', 'caption'], carousel: ['stories', 'hashtags', 'repurpose'],
+    stories: ['caption', 'reel', 'weekly'], hashtags: ['caption', 'seo'], repurpose: ['weekly', 'hashtags'], product: ['stories', 'faq', 'offer'],
+    booking: ['stories', 'followup', 'testimonial'], launch: ['stories', 'offer', 'product'], offer: ['stories', 'followup', 'repurpose'], promo: ['stories', 'followup', 'repurpose'],
+    followup: ['booking', 'appreciation'], idealcustomer: ['ideas', 'usp', 'weekly'], usp: ['bio', 'brandstory', 'carousel'], brandstory: ['bio', 'carousel', 'reel'],
+    seo: ['bio', 'product'], bio: ['usp', 'seo'], message: ['followup', 'appreciation'], testimonial: ['stories', 'appreciation'], appreciation: ['testimonial', 'offer'],
+    faq: ['carousel', 'stories'], complaint: ['message', 'checkup'], salesideas: ['weekly', 'offer', 'followup'], growth30: ['weekly', 'planner'], collab: ['message', 'weekly'],
+    checkup: ['bio', 'salesideas', 'growth30'], weekly: ['ideas', 'planner'], planner: ['weekly', 'reel'], oneclick: ['stories', 'hashtags'], quick: ['stories', 'hashtags', 'weekly']
+  };
+  var NEXT_WHY = {
+    stories: 'Make matching Stories', hashtags: 'Get hashtags & keywords', carousel: 'Turn it into a carousel', reel: 'Make a Reel', caption: 'Write the caption', weekly: 'Plan this week',
+    repurpose: 'Repurpose it everywhere', seo: 'Search keywords', faq: 'Answer buyer questions', offer: 'Create a special offer', followup: 'Follow up enquiries', testimonial: 'Share a real review',
+    product: 'Write a product description', booking: 'Promote bookings', appreciation: 'Thank your customers', usp: 'Sharpen your USP', bio: 'Update your bio', brandstory: 'Tell your story',
+    ideas: 'Get more content ideas', planner: 'Plan your posts', message: 'Write a customer message', checkup: 'Run a business check-up', salesideas: 'Find sales ideas', growth30: 'Make a 30-day plan'
+  };
+  function nextPrefill(toolId, item, text) {
+    var t = toolDef(toolId); if (!t) return {};
+    var about = String(item.title || '').split(': ').slice(1).join(': ') || '';
+    var out = {}, fld = t.fields.filter(function (f) { return f.type === 'text'; });
+    if (!fld.length) return out;
+    var main = (fld.filter(function (f) { return f.required; })[0] || fld[0]).name;
+    out[main] = (toolId === 'repurpose' ? text : about || text).slice(0, (fld.filter(function (f) { return f.name === main; })[0] || {}).max || 400);
+    return out;
+  }
+  function planTasks(item, text) {
+    var today = new Date(Date.parse((S.today && S.today.day || new Date().toISOString().slice(0, 10)) + 'T12:00:00Z')), out = [];
+    var iso = function (d) { return d.toISOString().slice(0, 10); };
+    if (item.tool === 'growth30') {
+      (text.match(/^\s*-\s*Day\s*(\d{1,2})\s*[:\-–]\s*(.+)$/gim) || []).forEach(function (l) { var m = l.match(/Day\s*(\d{1,2})\s*[:\-–]\s*(.+)$/i); var d = new Date(today); d.setUTCDate(d.getUTCDate() + Number(m[1]) - 1); out.push({ title: m[2].trim().slice(0, 160), date: iso(d) }); });
+    } else if (item.tool === 'weekly') {
+      ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'].forEach(function (day, dow) {
+        var m = text.match(new RegExp('(?:^|\\n)' + day + ':\\s*([^\\n]+(?:\\n(?!---|[A-Z ]{3,}:)[^\\n]+)*)', 'i')); if (!m) return;
+        var d = new Date(today), diff = (dow - d.getUTCDay() + 7) % 7; d.setUTCDate(d.getUTCDate() + diff);
+        var title = m[1].replace(/\s+/g, ' ').trim(); if (/^rest\b/i.test(title) && title.length < 30) return;
+        out.push({ title: title.slice(0, 160), date: iso(d) });
+      });
+    }
+    return out;
+  }
+  function resultExtras(el, item, regen, back) {
+    var tool = item.tool, g = item.input && item.input.goal;
+    var text = function () { return $$('textarea[data-opt]', el).map(function (t) { return t.value; }).join('\n\n'); };
+    var refine = tool === 'quick' ? (g === 'post' ? [] : ['shorter', 'conversational']) : (REFINE_SETS[tool] || ['shorter', 'conversational']);
+    var turn = tool === 'quick' ? (g === 'post' ? [] : ['reel', 'stories'].filter(function (x) { return x !== g; })) : NO_TURN[tool] ? [] : ['reel', 'stories'];
+    var nexts = (NEXT[tool] || []).filter(function (id) { return toolDef(id) && id !== tool; }).slice(0, 3);
+    var box = document.createElement('div'); box.className = 'rextras';
+    var html = '';
+    if (refine.length || turn.length) html += '<div class="qtweak"><span class="saved-tag">Quick changes:</span>' + refine.map(function (k) { return '<button class="btn ghost small" data-rf="' + k + '">' + REFINE_LABEL[k] + ' <span class="free">free</span></button>'; }).join('') +
+      turn.map(function (k) { return '<button class="btn ghost small" data-turn="' + k + '">' + (k === 'reel' ? '🎬 Turn into a Reel' : '📱 Turn into Stories') + '</button>'; }).join('') + '</div>';
+    if (tool === 'growth30' || tool === 'weekly') html += '<div class="qtweak"><button class="btn gold small" id="toTodo">📋 Add these actions to my to-do list</button><span class="saved-tag">Free</span></div>';
+    if (nexts.length) html += '<div class="whatnext"><b>➡️ What should I do next?</b><div class="row wrap" style="gap:6px;margin-top:8px">' + nexts.map(function (id) { return '<button class="btn ghost small" data-next="' + id + '">' + icon((TOOL_META[id] || {}).icon || CAT_ICON[toolDef(id).cat] || '', 16) + ' ' + esc(NEXT_WHY[id] || toolDef(id).name) + '</button>'; }).join('') + '</div></div>';
+    if (!html) return;
+    box.innerHTML = html; el.appendChild(box);
+    var redo = function (newItem) { if (tool === 'quick') showQuickResult(el, newItem, regen, back); else { renderResult(el, newItem, regen); resultExtras(el, newItem, regen, back); } };
+    $$('[data-rf]', box).forEach(function (b) {
+      b.onclick = async function () {
+        $$('button', box).forEach(function (x) { x.disabled = true; }); var old = b.innerHTML; b.textContent = 'Rewriting…';
+        try {
+          var r = await api('studio-api', 'refine', { id: item.id, how: b.dataset.rf });
+          var before = r.previous != null ? r.previous : item.output;
+          redo(r.item);
+          undoToast({ shorter: 'Made shorter', conversational: 'Made more conversational', polite: 'Made more polite', firm: 'Made firmer' }[b.dataset.rf], async function () {
+            try { var u = await api('studio-api', 'item-update', { id: item.id, edited: before }); redo(u.item); } catch (x) { toast(x.message); }
+          });
+        } catch (x) { toast(x.message); b.innerHTML = old; $$('button', box).forEach(function (y) { y.disabled = false; }); }
+      };
+    });
+    $$('[data-turn]', box).forEach(function (b) { b.onclick = function () { runQuick(b.dataset.turn, '', { source: text().slice(0, 2000), back: back }); }; });
+    $$('[data-next]', box).forEach(function (b) { b.onclick = function () { var id = b.dataset.next; showTool(id, nextPrefill(id, item, text()), { back: back, intro: 'Next step from your ' + ((toolDef(tool) || {}).name || 'result').toLowerCase() + '. Check the details, then tap Create.' }); }; });
+    var td = $('#toTodo', box); if (td) td.onclick = async function () {
+      var tasks = planTasks(item, text());
+      if (!tasks.length) return toast('Couldn’t find the daily actions — add them by hand from the plan.');
+      this.disabled = true;
+      try { var r = await api('studio-extras', 'todo-add-many', { tasks: tasks }); toast(r.n + ' actions added to your to-do list ✅'); this.textContent = '✓ Added to my to-do list'; }
+      catch (x) { toast(x.message); this.disabled = false; }
+    };
+  }
+
 
   function greeting() { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
 
@@ -1130,7 +1253,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     renderResult(el, item, regen);
     var rg = $('#regen', el); if (rg) rg.innerHTML = '↻ New angle <span class="saved-tag">(1 generation)</span>';
     var g = item.input && item.input.goal;
-    if (g === 'post') {
+    if (g === 'post') { resultExtras(el, item, regen, back);
       $$('.option', el).forEach(function (o, i) {
         var ta = $('textarea[data-opt]', o); if (!ta) return;
         var b = document.createElement('button'); b.className = 'btn primary small'; b.style.marginTop = '8px'; b.textContent = '✨ Make this';
@@ -1143,29 +1266,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       });
       return;
     }
-    var row = document.createElement('div'); row.className = 'qtweak';
-    row.innerHTML = '<span class="saved-tag">Quick changes:</span><button class="btn ghost small" data-rf="shorter">✂️ Shorter <span class="free">free</span></button><button class="btn ghost small" data-rf="conversational">💬 More conversational <span class="free">free</span></button>' +
-      (g !== 'reel' ? '<button class="btn ghost small" data-turn="reel">🎬 Turn into a Reel</button>' : '') + (g !== 'stories' ? '<button class="btn ghost small" data-turn="stories">📱 Turn into Stories</button>' : '');
-    el.appendChild(row);
-    $$('[data-rf]', row).forEach(function (b) {
-      b.onclick = async function () {
-        $$('button', row).forEach(function (x) { x.disabled = true; }); var old = b.innerHTML; b.textContent = 'Rewriting…';
-        try {
-          var r = await api('studio-api', 'refine', { id: item.id, how: b.dataset.rf });
-          var before = r.previous != null ? r.previous : item.output;
-          showQuickResult(el, r.item, regen, back);
-          undoToast(b.dataset.rf === 'shorter' ? 'Made shorter' : 'Made more conversational', async function () {
-            try { var u = await api('studio-api', 'item-update', { id: item.id, edited: before }); showQuickResult(el, u.item, regen, back); } catch (x) { toast(x.message); }
-          });
-        } catch (x) { toast(x.message); b.innerHTML = old; $$('button', row).forEach(function (y) { y.disabled = false; }); }
-      };
-    });
-    $$('[data-turn]', row).forEach(function (b) {
-      b.onclick = function () {
-        var text = $$('textarea[data-opt]', el).map(function (t) { return t.value; }).join('\n\n').slice(0, 2000);
-        runQuick(b.dataset.turn, '', { source: text, back: back });
-      };
-    });
+    resultExtras(el, item, regen, back);
   }
   function undoToast(msg, undo) {
     $$('.toast').forEach(function (x) { x.remove(); });
@@ -1297,8 +1398,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     setChrome({ tabs: true, tab: 'create' });
     if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Create</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
     app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 14px">You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' +
-      '<h2 style="margin-top:0">Quick create</h2>' + quickRow() + '<h2>All tools</h2>' + toolGrid() + freeToolGrid() + '</main>';
-    bindTools(); bindQuick(showCreate); bindFreeTools();
+      '<h2 style="margin-top:0">Quick create</h2>' + quickRow() + '<h2 id="allTools">All tools</h2>' + toolGrid() + '</main>';
+    bindQuick(showCreate); bindToolDir();
   }
 
   // ───────────── Plan: goal + content calendar ─────────────
@@ -1435,8 +1536,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var input = {};
     t.fields.forEach(function (f) { input[f.name] = prefill && prefill[f.name] !== undefined ? prefill[f.name] : (f.name === 'platform' ? defaultPlatform() : f.type === 'text' ? '' : f.default); });
     setChrome({ tabs: true, tab: opts.tab || 'create', back: opts.back || showCreate });
-    app.innerHTML = '<main><h1 style="font-size:22px;margin-bottom:12px">' + esc(t.name) + '</h1>' +
-      '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(opts.intro || m.hello || '') + '</p></div>' +
+    app.innerHTML = '<main><h1 style="font-size:22px;margin-bottom:12px">' + esc(t.name.charAt(0).toUpperCase() + t.name.slice(1)) + '</h1>' +
+      '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(opts.intro || m.hello || t.hello || '') + '</p></div>' +
       '<form class="card stack" id="tform" novalidate>' + t.fields.map(function (f) {
         if (f.type === 'text') return '<div><label class="f" for="tf_' + f.name + '">' + esc(f.label) + (f.required ? '' : ' <span class="opt">(optional)</span>') + '</label><textarea id="tf_' + f.name + '" data-field="' + f.name + '" maxlength="' + f.max + '" rows="' + (f.max > 600 ? 4 : 2) + '"' + (f.required ? ' required' : '') + '>' + esc(input[f.name]) + '</textarea></div>';
         if (f.type === 'choice') return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(f.label) + '</span><div class="chips" data-choice="' + f.name + '">' + f.options.map(function (o) { return '<button type="button" class="chip" data-val="' + esc(o) + '" aria-pressed="' + (o === input[f.name]) + '">' + esc(CHOICE_LABELS[o] || (o === '7' || o === '30' ? o + ' days' : o.charAt(0).toUpperCase() + o.slice(1))) + '</button>'; }).join('') + '</div></div>';
@@ -1496,6 +1597,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       addToHistory(r.item);
       resEl.innerHTML = '';
       renderResult(resEl, r.item, function () { run(inp); });
+      resultExtras(resEl, r.item, function () { run(inp); }, opts.back || showCreate);
       if (r.calendarAdded) toast(r.calendarAdded + ' posts added to your calendar');
       if (opts.onSuccess) { try { opts.onSuccess(r.item); } catch (e) {} }
     }
@@ -1511,7 +1613,9 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   }
 
   // Editable result with copy / save / regenerate. Edits autosave (free).
+  var NOT_POST = { message: 1, followup: 1, complaint: 1, idealcustomer: 1, usp: 1, seo: 1, salesideas: 1, growth30: 1, collab: 1, checkup: 1, weekly: 1, planner: 1, hashtags: 1, bio: 1, faq: 1 };
   function renderResult(el, item, onRegenerate) {
+    var postable = !NOT_POST[item.tool];
     var parts = splitOptions(item.edited != null ? item.edited : item.output);
     // Labelled sections (one-click posts): "HOOK: …", "CAPTION: …"
     var labels = parts.map(function (p) { var m = p.match(/^([A-Z][A-Z0-9 ]{2,24}):\s*/); return m ? m[1] : null; });
@@ -1522,10 +1626,10 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       '<div class="stack" id="opts">' + parts.map(function (p, i) {
         return '<div class="option"><div class="oh"><span>' + (labelled ? labels[i].charAt(0) + labels[i].slice(1).toLowerCase() : many ? word + ' ' + (i + 1) : 'Your content') + '</span><button class="btn small ghost" data-copy="' + i + '">' + icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>', 16) + ' Copy</button></div>' +
           '<textarea data-opt="' + i + '" aria-label="' + (many ? word + ' ' + (i + 1) : 'Content') + '">' + esc(p) + '</textarea>' +
-          (labelled && /^(HASHTAGS|KEYWORDS)$/.test(labels[i]) ? '' : '<div class="optact"><button class="btn small ghost" data-share="' + i + '">' + icon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>', 16) + ' Share</button><button class="btn small ghost" data-img="' + i + '">' + icon('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>', 16) + ' Make image</button></div>')+'</div>';
+          (labelled && /^(HASHTAGS|KEYWORDS)$/.test(labels[i]) ? '' : '<div class="optact"><button class="btn small ghost" data-share="' + i + '">' + icon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>', 16) + ' Share</button>' + (postable ? '<button class="btn small ghost" data-img="' + i + '">' + icon('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>', 16) + ' Make image</button>' : '') + '</div>')+'</div>';
       }).join('') + '</div>' +
       '<div class="row wrap" style="margin-top:12px">' +
-      '<button class="btn ' + (item.posted ? 'ghost' : 'gold') + ' small" id="postedBtn"' + (item.posted ? ' disabled' : '') + '>' + (item.posted ? '\u2713 Posted' : '\u2713 I posted this') + '</button>' +
+      (postable ? '<button class="btn ' + (item.posted ? 'ghost' : 'gold') + ' small" id="postedBtn"' + (item.posted ? ' disabled' : '') + '>' + (item.posted ? '\u2713 Posted' : '\u2713 I posted this') + '</button>' : '') +
       '<button class="btn ghost small" id="saveBtn">' + (item.saved ? '★ Saved' : '☆ Save') + '</button>' +
       (many ? '<button class="btn ghost small" id="copyAll">Copy all</button>' : '') +
       (onRegenerate ? '<button class="btn ghost small" id="regen">\u21bb Regenerate <span class="saved-tag">(' + (item.cost || 1) + ' generation' + ((item.cost || 1) > 1 ? 's' : '') + ')</span></button>' : '') +
@@ -1558,7 +1662,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var rg = $('#regen', el); if (rg) rg.onclick = onRegenerate;
     $$('[data-share]', el).forEach(function (b) { b.onclick = function () { shareText($('textarea[data-opt="' + b.dataset.share + '"]', el).value); }; });
     $$('[data-img]', el).forEach(function (b) { b.onclick = function () { showMakeImage($('textarea[data-opt="' + b.dataset.img + '"]', el).value, item, function () { showItem(item.id); }); }; });
-    $('#postedBtn', el).onclick = async function () {
+    var pbtn = $('#postedBtn', el); if (pbtn) pbtn.onclick = async function () {
       var b = this; b.disabled = true;
       try {
         await api('studio-api', 'item-posted', { id: item.id });
@@ -1587,7 +1691,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     setChrome({ tabs: true, tab: 'library' });
     S.libView = 'mine';
     app.innerHTML = '<main>' + libHeader('mine') + '<p class="sub" style="margin:0 0 12px">Everything you’ve created. Viewing, editing and copying are free.</p>' +
-      '<div class="chips" id="lf" style="margin-bottom:14px">' + [['all', 'All'], ['saved', '★ Saved']].concat(S.boot.tools.map(function (t) { return [t.id, t.name]; })).map(function (o) { return '<button class="chip" data-f="' + o[0] + '" aria-pressed="' + (o[0] === filter) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>' +
+      '<div class="chips" id="lf" style="margin-bottom:14px">' + [['all', 'All'], ['saved', '★ Saved']].concat(S.boot.tools.filter(function (t) { return t.id === filter || S.history.some(function (h) { return h.tool === t.id; }); }).map(function (t) { return [t.id, t.name.charAt(0).toUpperCase() + t.name.slice(1)]; })).map(function (o) { return '<button class="chip" data-f="' + o[0] + '" aria-pressed="' + (o[0] === filter) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>' +
       '<div id="lbody"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
     bindLibHeader();
     $$('#lf .chip', app).forEach(function (c) { c.onclick = function () { showLibrary(c.dataset.f); }; });
