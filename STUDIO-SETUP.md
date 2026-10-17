@@ -325,6 +325,13 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - **To do today** = follow-ups due + new businesses to invite (default **5 a day**, change it at the top). Today list gets one "Business Club invites" task that ticks itself when they're done.
 - Stored in `invites/state`. Admin actions: `invites-view`, `invites-act`, `invites-settings`.
 
+## 7t. Club invites — emails for GHL campaigns
+Every business row shows its email with **📋 Copy**. No email? **+ Add email**. Wrong email? **✎** to change it (saved on the invite record only — the public listing isn't changed; "Use the listing's email" undoes it).
+Above the list (for whichever filter or search you're on):
+- **📋 Copy all emails** — one per line, ready to paste into GHL.
+- **⬇ Download for GHL (CSV)** — Name, Company Name, Email, Phone (+44), Category, Location, Instagram, Listing Link, Next Message, Tags. Import in GHL → Contacts → Import, then add them to your campaign.
+- **✓ Mark these N as sent** — after they're in your campaign. Each moves on its own step (invite → follow-up in 3 days → 7 days → stop); Joined / Not interested / finished ones are skipped.
+
 ## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)
 
 Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**

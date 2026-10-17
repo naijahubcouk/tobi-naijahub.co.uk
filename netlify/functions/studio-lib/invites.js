@@ -99,7 +99,7 @@ async function view(event, ctx) {
     const status = joined.has(b.slug) ? 'joined' : rec.status;
     const kind = nextKind(rec);
     return {
-      slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, wa: b.wa, ig: b.ig, email: b.email, phone: b.phone, website: b.website,
+      slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, wa: b.wa, ig: b.ig, email: rec.email || b.email || '', emailAdded: !!rec.email, listingEmail: b.email || '', phone: b.phone, website: b.website,
       listing: directory.listingUrl(b.slug), status, label: STATUS_LABEL[status],
       due: status !== 'joined' && isDue(rec, day), step: rec.step || 0, nextAt: rec.nextAt || '', checkBackAt: rec.checkBackAt || '',
       notes: rec.notes || '', history: (rec.history || []).slice(0, 12), lastAt: rec.lastAt || '',
@@ -131,14 +131,45 @@ async function summary(event, ctx) {
 const log = (rec, what) => { rec.history = [{ at: core.nowIso(), what }, ...(rec.history || [])].slice(0, 30); rec.lastAt = core.nowIso(); };
 
 // action: sent | interested | notnow | declined | joined | reset | note
+const okSlug = slug => { slug = String(slug || '').toLowerCase(); if (!/^[a-z0-9-]{1,120}$/.test(slug)) throw new HttpError(400, 'invalid', 'Invalid business.'); return slug; };
+const EMAIL_RE = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
+
 async function act(slug, action, opts) {
   opts = opts || {};
-  slug = String(slug || '').toLowerCase();
-  if (!/^[a-z0-9-]{1,120}$/.test(slug)) throw new HttpError(400, 'invalid', 'Invalid business.');
+  slug = okSlug(slug);
   const day = core.dayKey();
   let out;
   await cas(KEY, cur => {
     const s = cur ? { ...empty(), ...cur, items: { ...cur.items } } : empty();
+    out = apply(s, slug, action, opts, day);
+    return s;
+  });
+  return out;
+}
+
+// Several businesses at once (e.g. "Mark these as sent" after adding them to a GHL campaign).
+async function actMany(slugs, action, opts) {
+  if (action !== 'sent') throw new HttpError(400, 'invalid', 'Invalid action.');
+  slugs = [...new Set((Array.isArray(slugs) ? slugs : []).map(okSlug))];
+  if (!slugs.length) throw new HttpError(400, 'invalid', 'Nothing to mark.');
+  if (slugs.length > 300) throw new HttpError(400, 'invalid', 'Up to 300 at a time.');
+  const day = core.dayKey();
+  let n = 0;
+  await cas(KEY, cur => {
+    const s = cur ? { ...empty(), ...cur, items: { ...cur.items } } : empty();
+    n = 0;
+    for (const slug of slugs) {
+      const r = s.items[slug];
+      if (r && (r.status === 'declined' || r.status === 'joined' || (r.status === 'waiting' && (r.step || 0) >= 3))) continue;
+      apply(s, slug, 'sent', opts || {}, day); n++;
+    }
+    return s;
+  });
+  return n;
+}
+
+function apply(s, slug, action, opts, day) {
+  {
     const rec = { status: 'new', step: 0, history: [], sentDays: [], ...(s.items[slug] || {}) };
     rec.history = [...(rec.history || [])]; rec.sentDays = [...(rec.sentDays || [])];
     const via = opts.via ? ` (${cleanText(opts.via, 20)})` : '';
@@ -156,12 +187,17 @@ async function act(slug, action, opts) {
     else if (action === 'joined') { rec.status = 'joined'; rec.nextAt = ''; log(rec, 'Joined the Business Club 🎉'); }
     else if (action === 'reset') { rec.status = 'new'; rec.step = 0; rec.nextAt = ''; delete rec.checkBackAt; delete rec.firstAt; rec.sentDays = []; log(rec, 'Reset to not contacted'); }
     else if (action === 'note') { rec.notes = cleanText(opts.notes, 600); }
+    else if (action === 'email') {
+      // Admin-added or corrected email (used for copying and the GHL export). Empty = go back to the listing's email.
+      const e = String(opts.email || '').trim().toLowerCase();
+      if (e && (!EMAIL_RE.test(e) || e.length > 200)) throw new HttpError(400, 'invalid', 'That doesn’t look like an email address.');
+      if (e) { if (rec.email !== e) log(rec, rec.email ? `Email changed to ${e}` : `Email added: ${e}`); rec.email = e; }
+      else if (rec.email) { delete rec.email; log(rec, 'Email reset to the listing'); }
+    }
     else throw new HttpError(400, 'invalid', 'Invalid action.');
     s.items[slug] = rec;
-    out = rec;
-    return s;
-  });
-  return out;
+    return rec;
+  }
 }
 
 async function saveSettings(raw) {
@@ -185,4 +221,4 @@ async function saveSettings(raw) {
   return saved;
 }
 
-module.exports = { view, summary, act, saveSettings, DEFAULT_TEMPLATES, STATUSES, GAP1, GAP2 };
+module.exports = { view, summary, act, actMany, saveSettings, DEFAULT_TEMPLATES, STATUSES, GAP1, GAP2 };

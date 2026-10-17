@@ -455,9 +455,14 @@ exports.handler = handler(async (ctx) => {
       return invites.view(ctx.event, { members, profiles, settings });
     }
     case 'invites-act': {
-      const rec = await invites.act(body.slug, String(body.act || ''), { days: body.days, notes: body.notes, via: body.via });
+      const rec = await invites.act(body.slug, String(body.act || ''), { days: body.days, notes: body.notes, via: body.via, email: body.email });
       if (body.act !== 'note') await core.audit(actor, `invite_${body.act}`, { slug: body.slug });
       return { rec };
+    }
+    case 'invites-act-many': {
+      const n = await invites.actMany(body.slugs, String(body.act || ''), { via: body.via });
+      await core.audit(actor, `invite_${body.act}_many`, { n });
+      return { n };
     }
     case 'invites-settings': {
       const st = await invites.saveSettings(body.settings);
