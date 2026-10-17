@@ -73,6 +73,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 .iv-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.iv-h b{font-size:16px}
 .iv-next{font-size:13px;color:var(--muted)}.iv-next.due{color:var(--danger);font-weight:700}
 .iv a.btn{text-decoration:none;color:var(--navy)}.iv a.btn.primary{color:#fff}
+.iv-em{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;margin:0 0 8px}.iv-em .iv-addr{font-weight:600;word-break:break-all}
+.iv-bulk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0 0 10px;font-size:14px}.iv-bulk>span{flex:1;min-width:200px}
 .iv-sent{background:var(--gold-l);border-radius:10px;padding:8px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--navy)}.chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
 .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
@@ -645,6 +647,10 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     return '<div class="iv" data-row="' + esc(x.slug) + '">' +
       '<div class="iv-h"><b>' + esc(x.name) + '</b><span class="muted" style="font-size:13px">' + esc([x.cat, x.loc].filter(Boolean).join(' · ')) + '</span><span class="pill ' + (IV_PILL[x.status] || '') + '">' + esc(x.label) + '</span>' + (isNewToday ? '<span class="pill p-pending">New today</span>' : '') + ivNext(x, today) +
         '<a href="' + esc(x.listing) + '" target="_blank" rel="noopener" style="margin-left:auto;font-size:13px">Listing ↗</a></div>' +
+      '<div class="iv-em">' + (x.email
+        ? '✉️ <span class="iv-addr">' + esc(x.email) + '</span>' + (x.emailAdded ? '<span class="muted" style="font-size:12px">(added by you)</span>' : '') +
+          '<button class="btn small ghost" data-ivcem="' + esc(x.slug) + '">📋 Copy</button><button class="btn small ghost" data-ivem="' + esc(x.slug) + '" title="Change email" style="color:var(--muted)">✎</button>'
+        : '<span class="muted">✉️ No email</span><button class="btn small ghost" data-ivem="' + esc(x.slug) + '">+ Add email</button>') + '</div>' +
       (canSend ? '<div class="row" style="gap:6px;align-items:center"><span style="font-size:13px;font-weight:700;margin-right:2px">' + IV_KIND[x.nextKind] + ':</span>' + ch.join('') + (!x.wa && !x.ig && !x.email ? '<span class="muted" style="font-size:13px">No WhatsApp, Instagram or email on the listing' + (x.phone ? ' — phone ' + esc(x.phone) : '') + '</span>' : '') + '</div>' : '') +
       '<div class="iv-sent hidden" data-sent="' + esc(x.slug) + '"><span>Sent it?</span><button class="btn small primary" data-ivact="sent" data-s="' + esc(x.slug) + '">✓ Mark as sent</button><button class="btn small ghost" data-ivhide="' + esc(x.slug) + '">Not yet</button></div>' +
       '<div class="row" style="gap:6px">' + (x.status === 'joined' ? '' :
@@ -664,6 +670,9 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var list = f === 'today' ? due.concat(newOnes) : r.rows.filter(function (x) { return f === 'all' || x.status === f; });
     if (q) list = r.rows.filter(function (x) { return (x.name + ' ' + x.cat + ' ' + x.loc + ' ' + x.ig).toLowerCase().indexOf(q) > -1; });
     var newSet = {}; newOnes.forEach(function (x) { newSet[x.slug] = 1; });
+    var canSendX = function (x) { return x.status !== 'joined' && x.status !== 'declined' && !(x.status === 'waiting' && x.finished); };
+    var withEm = list.filter(function (x) { return x.email; });
+    var canMark = withEm.filter(canSendX);
     var count = function (k) { return k === 'today' ? due.length + newOnes.length : k === 'all' ? r.rows.length : r.rows.filter(function (x) { return x.status === k; }).length; };
     app.innerHTML = '<main><h1>Business Club invites</h1><p class="muted" style="margin:4px 0 14px">Invite every business listed on Auntie Tobi to join the Business Club, and follow up until they reply. Follow-ups come up ' + 3 + ' days after the invite, then 7 days later, then stop.</p>' +
       '<div class="grid">' +
@@ -677,6 +686,9 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
         '<label style="display:flex;align-items:center;gap:6px;font-weight:600;margin:0">New invites a day <input type="number" id="ivPer" min="0" max="50" value="' + r.perDay + '" style="width:70px"></label><button class="btn small ghost" id="ivPerSave">Save</button><button class="btn small ghost" id="ivMsgs">✎ Edit messages</button></div>' +
       '<div class="row" style="margin:14px 0 8px;gap:8px;flex-wrap:wrap;align-items:center"><div class="chips">' + IV_FILTERS.map(function (x) { return '<button class="chip" data-ivf="' + x[0] + '" aria-pressed="' + (!q && f === x[0]) + '">' + x[1] + ' (' + count(x[0]) + ')</button>'; }).join('') + '</div>' +
         '<input id="ivQ" placeholder="Search businesses…" value="' + esc(S.ivQ || '') + '" style="max-width:240px;margin-left:auto"></div>' +
+      (withEm.length ? '<div class="iv-bulk"><span><b>' + withEm.length + '</b> of ' + list.length + ' here have an email' + (list.length > withEm.length ? ' <span class="muted">(' + (list.length - withEm.length) + ' missing — use + Add email)</span>' : '') + '</span>' +
+        '<button class="btn small ghost" id="ivCopyAll">📋 Copy all emails</button><button class="btn small ghost" id="ivCsv">⬇ Download for GHL (CSV)</button>' +
+        (canMark.length ? '<button class="btn small primary" id="ivMarkAll">✓ Mark these ' + canMark.length + ' as sent</button>' : '') + '</div>' : '') +
       '<div class="card">' + (list.length ? list.map(function (x) { return ivRow(x, r.today, f === 'today' && !q && newSet[x.slug]); }).join('') : '<p class="muted" style="margin:6px 0">' + (f === 'today' ? 'Nothing to do today 🎉 — new invites come up tomorrow.' : 'No businesses here.') + '</p>') + '</div></main>';
     var reload = function () { vInvites(); };
     var byS = function (sl) { return r.rows.filter(function (x) { return x.slug === sl; })[0]; };
@@ -691,6 +703,42 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       });
     });
     $$('[data-ivcopy]').forEach(function (b) { b.onclick = async function () { var x = byS(b.dataset.ivcopy); try { await navigator.clipboard.writeText(x.message); } catch (e) { prompt('Copy this message:', x.message); } toast('Message copied'); var bar = $('[data-sent="' + x.slug + '"]'); if (bar) bar.classList.remove('hidden'); }; });
+    var copyText = async function (t, msg) { try { await navigator.clipboard.writeText(t); toast(msg); } catch (e) { prompt('Copy this:', t); } };
+    $$('[data-ivcem]').forEach(function (b) { b.onclick = function () { copyText(byS(b.dataset.ivcem).email, 'Email copied'); b.textContent = 'Copied ✓'; setTimeout(function () { b.textContent = '📋 Copy'; }, 1500); }; });
+    $$('[data-ivem]').forEach(function (b) {
+      b.onclick = function () {
+        var x = byS(b.dataset.ivem);
+        var s2 = sheet('<h2 style="margin:0">' + (x.email ? 'Change email' : 'Add email') + ' — ' + esc(x.name) + '</h2><p class="muted">Saved in Admin for copying and the GHL download. It doesn’t change their public listing.</p>' +
+          '<div><label for="ivE">Email</label><input id="ivE" type="email" value="' + esc(x.email) + '" placeholder="hello@business.co.uk" autocomplete="off"></div>' +
+          (x.listingEmail && x.emailAdded ? '<p class="muted" style="font-size:13px;margin:0">Listing email: ' + esc(x.listingEmail) + '</p>' : '') +
+          '<div class="err hidden" id="ivEe"></div>' +
+          '<div class="row"><button class="btn primary" id="ivEs">Save email</button><button class="btn ghost" id="ivEx">Cancel</button>' + (x.emailAdded ? '<button class="btn link" id="ivEr" style="margin-left:auto">Use the listing’s email' + (x.listingEmail ? '' : ' (none)') + '</button>' : '') + '</div>');
+        var inp = $('#ivE', s2); inp.focus();
+        var save = async function (val) {
+          try { await api('invites-act', { slug: x.slug, act: 'email', email: val }); s2.remove(); toast(val ? 'Email saved' : 'Back to the listing’s email'); reload(); }
+          catch (e) { var er = $('#ivEe', s2); er.textContent = e.message; er.classList.remove('hidden'); }
+        };
+        $('#ivEs', s2).onclick = function () { var v = inp.value.trim(); if (!v) { var er = $('#ivEe', s2); er.textContent = 'Type the email address.'; er.classList.remove('hidden'); return; } save(v); };
+        inp.onkeydown = function (e) { if (e.key === 'Enter') $('#ivEs', s2).click(); };
+        $('#ivEx', s2).onclick = function () { s2.remove(); };
+        var rr = $('#ivEr', s2); if (rr) rr.onclick = function () { save(''); };
+      };
+    });
+    var ca = $('#ivCopyAll'); if (ca) ca.onclick = function () { copyText(withEm.map(function (x) { return x.email; }).join('\n'), withEm.length + ' email' + (withEm.length === 1 ? '' : 's') + ' copied — paste into GHL'); };
+    var cv = $('#ivCsv'); if (cv) cv.onclick = function () {
+      var q2 = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+      var ph = function (x) { var n = String(x.phone || x.wa || '').replace(/\D/g, ''); if (!n) return ''; if (/^0/.test(n)) n = '44' + n.slice(1); return '+' + n; };
+      var rows2 = [['Name', 'Company Name', 'Email', 'Phone', 'Category', 'Location', 'Instagram', 'Listing Link', 'Next Message', 'Tags']].concat(withEm.map(function (x) {
+        return [x.name, x.name, x.email, ph(x), x.cat, x.loc, x.ig ? 'https://www.instagram.com/' + x.ig + '/' : '', x.listing, { invite: 'Invite', fu1: 'Follow-up', fu2: 'Last check-in' }[x.nextKind] || '', 'auntie-tobi-directory,club-invite'];
+      }));
+      var blob = new Blob(['\ufeff' + rows2.map(function (r2) { return r2.map(q2).join(','); }).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'auntie-tobi-club-invites-' + (q ? 'search' : f) + '-' + r.today + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+      toast('Downloaded ' + withEm.length + ' businesses — import into GHL Contacts');
+    };
+    var ma = $('#ivMarkAll'); if (ma) ma.onclick = async function () {
+      if (!confirm('Mark these ' + canMark.length + ' businesses as sent (GHL campaign)? Their next follow-ups will be scheduled.')) return;
+      try { var res = await api('invites-act-many', { slugs: canMark.map(function (x) { return x.slug; }), act: 'sent', via: 'GHL campaign' }); toast(res.n + ' marked as sent — follow-ups scheduled'); reload(); } catch (e) { toast(e.message); }
+    };
     $$('[data-ivhide]').forEach(function (b) { b.onclick = function () { $('[data-sent="' + b.dataset.ivhide + '"]').classList.add('hidden'); }; });
     $$('[data-ivact]').forEach(function (b) { b.onclick = function () { var bar = $('[data-sent="' + b.dataset.s + '"]'); act(b.dataset.s, b.dataset.ivact, { via: bar && bar.dataset.via || '' }); }; });
     $$('[data-ivnotnow]').forEach(function (b) {
