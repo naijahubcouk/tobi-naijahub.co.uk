@@ -61,8 +61,11 @@ function memberType(m, acc) {
   if (acc.membershipActive && acc.powerActive) return 'both';
   if (acc.powerActive) return 'ai_power';
   if (acc.membershipActive) return 'club';
+  if (acc.free) return 'free';
   return 'none';
 }
+// Short plan name for Admin lists: Free / Club / Pro / Pro Plus (Club + add-on shows the add-on).
+function planName(a) { return a.tier === 'plus' ? 'Pro Plus' : a.tier === 'pro' ? 'Pro' : a.membershipActive ? 'Club' : a.free ? 'Free' : a.readOnly ? 'Read-only' : 'Ended'; }
 
 function summarizeMember(m, settings, monthUsage, todayUsage) {
   const acc = core.access(m, settings);
@@ -71,7 +74,7 @@ function summarizeMember(m, settings, monthUsage, todayUsage) {
     notes: m.notes || '', allowanceOverride: Number.isInteger(m.allowanceOverride) ? m.allowanceOverride : null,
     createdAt: m.createdAt, lastLoginAt: m.lastLoginAt || null,
     membershipActive: acc.membershipActive, powerActive: acc.powerActive, readOnly: acc.readOnly,
-    blocked: !!m.blocked, type: memberType(m, acc), plan: acc.plan, limit: acc.limit, source: m.source || 'admin',
+    blocked: !!m.blocked, type: memberType(m, acc), plan: acc.plan, tier: acc.tier, free: acc.free, limit: acc.limit, source: m.source || 'admin',
     addon: m.addon || null, stripeCustomerId: m.stripeCustomerId || null,
     today: { used: todayUsage ? todayUsage.used : 0 },
     usage: monthUsage ? { used: monthUsage.used, runs: monthUsage.runs, costUsd: monthUsage.costUsd, byTool: monthUsage.byTool } : { used: 0, runs: 0, costUsd: 0, byTool: {} },
@@ -172,7 +175,7 @@ exports.handler = handler(async (ctx) => {
           ai: !!(core.env('STUDIO_OPENROUTER_API_KEY') || core.env('OPENROUTER_API_KEY') || core.env('OPENAI_API_KEY')),
           model: core.modelFor(settings),
           stripe: stripe.billingEnabled(),
-          stripePlans: stripe.availableIntervals(),
+          stripePlans: stripe.availableIntervals(), stripeTiers: stripe.availablePlans(),
           clubLink: !!core.env('STUDIO_CLUB_PAYMENT_LINK'), webhook: !!core.env('STRIPE_WEBHOOK_SECRET'),
           stripeMode: (core.env('STRIPE_SECRET_KEY') || '').startsWith('sk_live') ? 'live' : 'test',
         },
@@ -278,7 +281,9 @@ exports.handler = handler(async (ctx) => {
         return v;
       };
       const next = {
+        freeLimit: num('freeLimit', 0, 5000, true),
         standardLimit: num('standardLimit', 0, 5000, true),
+        proLimit: num('proLimit', 0, 5000, true),
         powerLimit: num('powerLimit', 0, 5000, true),
         perMinuteLimit: num('perMinuteLimit', 1, 60, true),
         spendWarnGbp: num('spendWarnGbp', 0, 100000, false),
@@ -460,7 +465,7 @@ exports.handler = handler(async (ctx) => {
       await mapLimit(members.filter(m => core.access(m, settings).canView || th[m.email]), 8, async m => {
         const p = await getJson(`profiles/${enc(m.email)}`).catch(() => null);
         const a = core.access(m, settings);
-        people[m.email] = { name: (p && p.businessName) || '', plan: a.powerActive ? 'Pro' : a.membershipActive ? 'Club' : a.readOnly ? 'Read-only' : 'Ended', active: a.canView };
+        people[m.email] = { name: (p && p.businessName) || '', plan: planName(a), active: a.canView };
       });
       const rows = Object.entries(th).map(([email, x]) => ({ email, ...x, ...(people[email] || { name: '', plan: byEmail[email] ? 'Ended' : 'Not a member' }) }))
         .sort((a, b) => (b.unreadAdmin > 0) - (a.unreadAdmin > 0) || b.updatedAt.localeCompare(a.updatedAt));
@@ -474,7 +479,7 @@ exports.handler = handler(async (ctx) => {
       const m = await getJson(`members/${enc(email)}`);
       const p = await getJson(`profiles/${enc(email)}`).catch(() => null);
       const a = m ? core.access(m, settings) : null;
-      return { ...t, name: (p && p.businessName) || '', plan: a ? (a.powerActive ? 'Pro' : a.membershipActive ? 'Club' : a.readOnly ? 'Read-only' : 'Ended') : 'Not a member', isMember: !!m };
+      return { ...t, name: (p && p.businessName) || '', plan: a ? planName(a) : 'Not a member', isMember: !!m };
     }
     case 'msg-send': {
       const email = requireEmail(body.email);

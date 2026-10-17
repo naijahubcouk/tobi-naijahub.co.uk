@@ -1,8 +1,9 @@
 'use strict';
 /*
- * Stripe for Business Studio Pro (sold to anyone, independent of Business Club):
- *   £5 / month  → STRIPE_PRICE_POWER_MONTHLY
- *   £50 / year  → STRIPE_PRICE_POWER_YEARLY
+ * Stripe for the Business Studio add-ons (sold to anyone, independent of Business Club):
+ *   Pro       50 a day:  £3 / month → STRIPE_PRICE_PRO_MONTHLY     £30 / year → STRIPE_PRICE_PRO_YEARLY
+ *   Pro Plus 100 a day:  £5 / month → STRIPE_PRICE_POWER_MONTHLY   £50 / year → STRIPE_PRICE_POWER_YEARLY
+ *   (the £5/£50 prices are the original "Business Studio Pro" ones — existing subscribers are Pro Plus)
  * No SDK — plain HTTPS with a pinned API version.
  *
  * Stripe is the source of truth: every webhook re-fetches the customer's subscriptions
@@ -20,19 +21,23 @@ function key() {
   if (!k) throw new HttpError(500, 'billing_not_configured', 'Payments are not set up yet.');
   return k;
 }
+const TIERS = ['pro', 'plus'];
 function prices() {
   return {
-    month: env('STRIPE_PRICE_POWER_MONTHLY') || env('STRIPE_PRICE_POWER') || null,
-    year: env('STRIPE_PRICE_POWER_YEARLY') || null,
+    plus: { month: env('STRIPE_PRICE_POWER_MONTHLY') || env('STRIPE_PRICE_POWER') || null, year: env('STRIPE_PRICE_POWER_YEARLY') || null },
+    pro: { month: env('STRIPE_PRICE_PRO_MONTHLY') || null, year: env('STRIPE_PRICE_PRO_YEARLY') || null },
   };
 }
-function billingEnabled() {
-  const p = prices();
-  return !!(env('STRIPE_SECRET_KEY') && env('STRIPE_WEBHOOK_SECRET') && (p.month || p.year));
+function availablePlans() {   // { pro: ['month','year'], plus: [...] } — only what's configured
+  const p = prices(), out = {};
+  for (const t of TIERS) { const iv = ['month', 'year'].filter(i => p[t][i]); if (iv.length) out[t] = iv; }
+  return out;
 }
-function availableIntervals() {
-  const p = prices();
-  return ['month', 'year'].filter(i => p[i]);
+function billingEnabled() {
+  return !!(env('STRIPE_SECRET_KEY') && env('STRIPE_WEBHOOK_SECRET') && Object.keys(availablePlans()).length);
+}
+function availableIntervals() {   // kept for older callers: intervals of Pro Plus
+  return availablePlans().plus || [];
 }
 
 function formEncode(obj, prefix, out) {
@@ -119,16 +124,17 @@ async function emailForCustomer(customerId) {
   return core.normalizeEmail(c && c.metadata && c.metadata.studio_member) || null;
 }
 
-function intervalOf(sub) {
+function planOf(sub) {
   const p = prices();
   for (const it of (sub.items && sub.items.data) || []) {
     const id = it.price && it.price.id;
-    if (id && id === p.year) return 'year';
-    if (id && id === p.month) return 'month';
+    if (!id) continue;
+    for (const t of TIERS) for (const i of ['month', 'year']) if (p[t][i] && id === p[t][i]) return { tier: t, interval: i };
   }
   return null;
 }
-function isOurs(sub) { return !!intervalOf(sub); }
+function intervalOf(sub) { const pl = planOf(sub); return pl ? pl.interval : null; }
+function isOurs(sub) { return !!planOf(sub); }
 
 /*
  * Re-reads the customer's subscriptions and updates the account.
@@ -176,6 +182,7 @@ async function syncCustomer(customerId) {
     subscriptionId: current.id,
     status: current.status,
     interval: intervalOf(current),
+    tier: (planOf(current) || {}).tier || 'plus',
     currentPeriodEnd: current.current_period_end ? new Date(current.current_period_end * 1000).toISOString() : null,
     cancelAtPeriodEnd: !!current.cancel_at_period_end,
     updatedAt: core.nowIso(),
@@ -209,20 +216,21 @@ function siteUrl(event) {
   return `https://${core.header(event, 'host')}`;
 }
 
-async function startCheckout(email, interval, event) {
-  const priceId = prices()[interval];
+async function startCheckout(email, interval, event, tier) {
+  tier = tier === 'pro' ? 'pro' : 'plus';
+  const priceId = prices()[tier][interval];
   if (!priceId) throw new HttpError(400, 'invalid_plan', 'That plan is not available.');
   const member = await core.getMember(email);
   if (member && member.blocked) throw new HttpError(403, 'account_blocked', 'This account has been suspended.');
   if (member && member.addon && core.LIVE_SUB_STATUSES.includes(member.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have Business Studio Pro. Use "Manage subscription" to switch plan or make changes.');
+    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio add-on. Use "Switch plan, manage or cancel" to move between Pro and Pro Plus.');
   }
 
   // Re-check with Stripe in case a webhook hasn't arrived yet.
   const customerId = await ensureCustomer(email);
   const synced = await syncCustomer(customerId);
   if (synced && synced.addon && core.LIVE_SUB_STATUSES.includes(synced.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have Business Studio Pro. Use "Manage subscription" to switch plan or make changes.');
+    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio add-on. Use "Switch plan, manage or cancel" to move between Pro and Pro Plus.');
   }
 
   // One open checkout per plan at a time: reuse it rather than creating another.
@@ -232,10 +240,10 @@ async function startCheckout(email, interval, event) {
   await cas(recKey, cur => {
     const r = cur || { email, createdAt: core.nowIso() };
     const pc = r.pendingCheckout;
-    if (pc && pc.interval === interval && pc.expiresAt > now + 60 * 1000 && pc.url) { reuse = pc.url; return undefined; }
+    if (pc && pc.interval === interval && (pc.tier || 'plus') === tier && pc.expiresAt > now + 60 * 1000 && pc.url) { reuse = pc.url; return undefined; }
     if (pc && pc.creating && now - pc.creating < 30 * 1000) throw new HttpError(409, 'in_progress', 'Your checkout is being prepared — please wait a moment.');
     nonce = core.randomToken(8);
-    return { ...r, pendingCheckout: { creating: now, nonce, interval } };
+    return { ...r, pendingCheckout: { creating: now, nonce, interval, tier } };
   });
   if (reuse) return reuse;
 
@@ -248,7 +256,7 @@ async function startCheckout(email, interval, event) {
       customer: customerId,
       client_reference_id: sha256(email).slice(0, 40),
       line_items: { 0: { price: priceId, quantity: 1 } },
-      metadata: { studio_member: email, interval },
+      metadata: { studio_member: email, interval, tier },
       subscription_data: { metadata: { studio_member: email } },
       success_url: `${base}/studio?billing=success`,
       cancel_url: `${base}/studio?billing=cancelled`,
@@ -258,7 +266,7 @@ async function startCheckout(email, interval, event) {
     await cas(recKey, cur => ({ ...(cur || {}), pendingCheckout: null })).catch(() => {});
     throw e;
   }
-  await cas(recKey, cur => ({ ...(cur || {}), pendingCheckout: { id: session.id, url: session.url, interval, expiresAt: expiresAt * 1000 } }));
+  await cas(recKey, cur => ({ ...(cur || {}), pendingCheckout: { id: session.id, url: session.url, interval, tier, expiresAt: expiresAt * 1000 } }));
   return session.url;
 }
 
@@ -271,5 +279,5 @@ async function portalUrl(email, event) {
 
 module.exports = {
   api, verifyWebhook, syncCustomer, startCheckout, portalUrl, emailForCustomer,
-  billingEnabled, availableIntervals, prices, API_VERSION,
+  billingEnabled, availableIntervals, availablePlans, prices, planOf, API_VERSION, TIERS,
 };

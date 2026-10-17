@@ -101,7 +101,7 @@ async function run(opts) {
     const manual = !!cfg.manual[core.normalizeEmail(m.email)];
     if (!manual && (!m.createdAt || m.createdAt < cfg.since)) continue;
     const acc = core.access(m, opts.settings);
-    if (!acc.canView) continue;
+    if (!acc.canView || acc.free) continue;   // Free plan accounts don't get the Club welcome series
     report.checked++;
     const p = (await getJson(progKey(m.email))) || { startedAt: now.toISOString(), sent: {} };
     if (p.stopped) continue;

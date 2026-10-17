@@ -72,8 +72,8 @@ exports.handler = handler(async (ctx) => {
       const base = {
         tools: tools.publicToolList(),
         tones: Object.keys(tools.TONES),
-        limits: { standard: auth.settings.standardLimit, power: auth.settings.powerLimit },
-        billing: { enabled: stripe.billingEnabled(), intervals: stripe.billingEnabled() ? stripe.availableIntervals() : [] },
+        limits: { free: auth.settings.freeLimit, standard: auth.settings.standardLimit, pro: auth.settings.proLimit, power: auth.settings.powerLimit },
+        billing: { enabled: stripe.billingEnabled(), intervals: stripe.billingEnabled() ? stripe.availableIntervals() : [], plans: stripe.billingEnabled() ? stripe.availablePlans() : {} },
       };
       if (!m || !auth.access.canView) {
         // Verified email without an account (or without access): offer Business Studio Pro.
@@ -85,7 +85,7 @@ exports.handler = handler(async (ctx) => {
         state: auth.access.canCreate ? 'active' : 'readonly',
         member: { email, name: m.name || '', isClub: m.status !== 'none', membershipExpiresAt: m.membershipExpiresAt },
         access: auth.access,
-        addon: m.addon ? { status: m.addon.status, interval: m.addon.interval, currentPeriodEnd: m.addon.currentPeriodEnd, cancelAtPeriodEnd: m.addon.cancelAtPeriodEnd } : null,
+        addon: m.addon ? { status: m.addon.status, interval: m.addon.interval, tier: m.addon.tier === 'pro' ? 'pro' : 'plus', currentPeriodEnd: m.addon.currentPeriodEnd, cancelAtPeriodEnd: m.addon.cancelAtPeriodEnd } : null,
         usage: auth.access.canCreate ? await gen.usageSummary(email, auth.access) : null,
         profile: profile && profile.businessName ? profile : null,
         listing: profile && profile.listingSlug ? directory.publicListing(await directory.bySlug(ctx.event, profile.listingSlug)) : null,
