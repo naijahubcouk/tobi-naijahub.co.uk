@@ -57,6 +57,7 @@ async function forMember(email, access) {
   const linked = new Set(f.linkedQuoteIds);
   const reminders = (await money.reminders(email)).filter(r => !(r.kind === 'quote' && linked.has(r.doc.id))).slice(0, 4);
   return {
+    installDone: !!pr.installDone,
     setup: { steps, done: doneN, total: steps.length, hidden: !!pr.setupHidden || doneN === steps.length },
     lesson,
     reminders,

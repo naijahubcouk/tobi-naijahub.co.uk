@@ -1,12 +1,12 @@
 'use strict';
 /*
  * Small per-member settings that don't belong in the business profile.
- *   prefs/<email>  { setupHidden, weeklyEmail, reviewLink, reviewLabel, remindersOn, lastDigestAt }
+ *   prefs/<email>  { setupHidden, installDone, weeklyEmail, reviewLink, reviewLabel, remindersOn, lastDigestAt }
  */
 const core = require('./core');
 const { HttpError, cas, getJson, enc, cleanText } = core;
 
-const DEFAULTS = { setupHidden: false, weeklyEmail: true, reviewLink: '', reviewLabel: '', remindersOn: false, lastDigestAt: '' };
+const DEFAULTS = { setupHidden: false, installDone: false, weeklyEmail: true, reviewLink: '', reviewLabel: '', remindersOn: false, lastDigestAt: '' };
 const REVIEW_LABELS = ['Google', 'Auntie Tobi listing', 'Facebook', 'Trustpilot', 'Website', 'Other'];
 const key = email => `prefs/${enc(email)}`;
 
@@ -26,6 +26,7 @@ async function update(email, raw) {
   if ('setupHidden' in raw) patch.setupHidden = !!raw.setupHidden;
   if ('weeklyEmail' in raw) patch.weeklyEmail = !!raw.weeklyEmail;
   if ('remindersOn' in raw) patch.remindersOn = !!raw.remindersOn;
+  if ('installDone' in raw) patch.installDone = !!raw.installDone; // added Business Studio to the home screen — stop asking on every device
   if ('reviewLink' in raw) patch.reviewLink = validLink(raw.reviewLink);
   if ('fuGaps' in raw && Array.isArray(raw.fuGaps)) patch.fuGaps = raw.fuGaps.map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 60).slice(0, 3);
   if ('fuKeepDays' in raw) patch.fuKeepDays = Number(raw.fuKeepDays) || 0;
