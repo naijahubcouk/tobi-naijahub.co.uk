@@ -223,6 +223,12 @@ async function mark(key, how) {
 
 async function get(key) { const s = await getJson(STATE); return (s && s.items && s.items[key]) || null; }
 
+// The list as it was last refreshed (no new automatic items) — for Auntie Tobi HQ.
+async function peek() {
+  const s = await getJson(STATE);
+  return s ? makeView(s, core.dayKey()) : null;
+}
+
 async function summary() {
   const s = await getJson(STATE);
   if (!s) return null;
@@ -230,4 +236,4 @@ async function summary() {
   return v.counts;
 }
 
-module.exports = { refresh, mark, get, addDef, deleteDef, getDefs, summary, defAppliesOn, SHARE_SLOTS, SHARE_TYPES };
+module.exports = { refresh, mark, get, peek, addDef, deleteDef, getDefs, summary, defAppliesOn, SHARE_SLOTS, SHARE_TYPES };

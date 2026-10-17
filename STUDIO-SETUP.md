@@ -324,3 +324,18 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - Replies: Interested · Not now (check back in 30/60/90 days) · Not interested (never due again) · Joined. Notes & history per business; Reset.
 - **To do today** = follow-ups due + new businesses to invite (default **5 a day**, change it at the top). Today list gets one "Business Club invites" task that ticks itself when they're done.
 - Stored in `invites/state`. Admin actions: `invites-view`, `invites-act`, `invites-settings`.
+
+## 8. Auntie Tobi HQ — Seun's private AI assistant (auntietobi.co.uk/hq)
+
+Phase 1 (built): private page, separate from the members' Business Studio. Sign in with the admin email (same sign-in as Admin — signing in to either works for both).
+
+- **Chat**: ChatGPT-style, replies stream word by word. Saved conversations (rename, pin, delete, search titles and messages), copy / regenerate / edit-and-resend / download (.md) / save as prompt. Voice input where the browser supports it (Chrome, Safari). **Everyday** model (`openai/gpt-4o-mini`, ~0.1p a reply) or **Smart** (`openai/gpt-4.1`, ~1–2p) — change the model IDs in Settings.
+- **Business memory ("Teach Auntie Tobi")**: editable facts by category with source and date (`hq/memory`). Starts with starter facts from the site — check them. When you tell HQ something durable in chat, it shows **"Save to business memory?"** — nothing is saved unless you tap Save. Memory goes into every chat.
+- **Live business snapshot**: every chat sees your admin Today list (overdue / today / open tasks), Club and Pro member counts, renewals in 30 days, Marketplace reviews waiting, Club invite numbers and alerts (refreshed every 2 minutes). The home screen shows the same at a glance.
+- **Uploads**: images (resized, sent to the model with that message only), PDF, Word (.docx), Excel (.xlsx/.xls), CSV and text — read in the browser (PDF/Word/Excel readers load from cdnjs) and sent as data, never as instructions. Up to ~60,000 characters per file.
+- **Saved prompts**: 6 starters (focus today, today's content, discovery post, UK update → blog, event promo plan, weekly plan) — add/edit/delete; [brackets] are highlighted to fill in.
+- **Cost control**: monthly budget (default **£10**; warning at 80%, stops at 100% until raised). Large messages that would cost over ~3p ask first. HQ spend is in Settings & usage and also in Admin → Usage & costs (as `hq`).
+- **Rules built in**: British English; never invents facts, businesses, analytics, vacancies or government updates; can't browse the web yet (says so); never claims to post or message anyone; realistic top-3 priorities.
+- Function: `studio-hq` (`studio-lib/hq.js`, `handlers/hq.js`); streaming at `?stream=1`. Storage keys `hq/*`.
+
+Next phases: 2 — scheduled tasks + 7am daily brief by email · 3 — content calendar + promotions tracker · 4 — live research with sources, sponsorship job finder, images, reports (needs an OpenAI API key and a search option) · 5 — publishing integrations.
