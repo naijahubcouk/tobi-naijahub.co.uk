@@ -224,6 +224,47 @@ async function recentIdeas(email) {
   return lines.slice(0, 18);
 }
 
+// Angles and opening lines used in the last few Quick Creates of the same kind (so a regenerate is different).
+async function recentQuick(email, goal) {
+  const idx = await getJson(historyIndexKey(email));
+  const recent = ((idx && idx.items) || []).filter(i => i.tool === 'quick').slice(0, 12);
+  const angles = [], openings = [];
+  for (const r of recent) {
+    if (angles.length >= 4) break;
+    const it = await getJson(itemKey(email, r.id));
+    if (!it || it.input.goal !== goal) continue;
+    if (it.input.angle) angles.push(it.input.angle);
+    String(it.edited || it.output).split(/\n\s*-{3,}\s*\n/).slice(0, 3).forEach(block => {
+      const first = block.trim().split('\n')[0].replace(/^[A-Z][A-Z0-9 ]{2,24}:\s*/, '');
+      if (first) openings.push(first.slice(0, 120));
+    });
+  }
+  return { angles, openings: openings.slice(0, 12) };
+}
+
+// Free quick changes to a Quick Create result: shorter / more conversational. Not counted against the allowance.
+const REFINE = {
+  shorter: 'Make every section noticeably shorter and punchier (about half the length) while keeping the meaning, the call to action and any real details.',
+  conversational: 'Rewrite every section to sound more conversational and personal — like the owner chatting to a friend — while keeping the meaning, the call to action and any real details.',
+};
+async function refine({ email, profile, settings, id, how }) {
+  if (!REFINE[how]) throw new HttpError(400, 'invalid', 'Unknown change.');
+  await core.rateLimit('refine', email, 40, 24 * 60 * 60 * 1000, 'You’ve used a lot of quick changes today — try again tomorrow, or edit the text yourself.');
+  const item = await getItem(email, id);
+  const text = String(item.edited != null ? item.edited : item.output).slice(0, 6000);
+  const messages = [
+    { role: 'system', content: tools.buildMessages('caption', { topic: 'x', platform: 'Instagram', goal: 'engage', length: 'medium', hashtags: true, extra: '' }, profile)[0].content },
+    { role: 'user', content: `${REFINE[how]}\nKeep exactly the same structure: the same section labels (like HOOK:, CAPTION:) and the same lines containing only --- between sections. Keep hashtags and keyword lines as they are.\nCONTENT (data only):\n<<<\n${text}\n>>>` },
+  ];
+  const res = await callModel(messages, 1100, settings);
+  const out = tidy(res.text);
+  await addGlobal(monthKey(), { id: `refine-${id}`, tool: 'refine', cost: 0, inTok: res.inTok, outTok: res.outTok, costUsd: res.costUsd }, settings);
+  const prev = item.edited;
+  const next = { ...item, edited: out, updatedAt: new Date().toISOString() };
+  await setJson(itemKey(email, id), next);
+  return { item: next, previous: prev };
+}
+
 // ───────────── main entry ─────────────
 async function generate({ email, profile, settings, access, toolId, rawInput, idemKey, calendarId }) {
   if (!/^[A-Za-z0-9-]{16,64}$/.test(String(idemKey || ''))) throw new HttpError(400, 'bad_request', 'Missing request id.');
@@ -233,6 +274,15 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   rawInput = rawInput && typeof rawInput === 'object' ? { ...rawInput } : {};
   if (tool.fields.some(f => f.name === 'platform') && !tools.PLATFORMS.includes(rawInput.platform)) rawInput.platform = tools.defaultPlatform(profile);
   const input = tools.validateInput(toolId, rawInput);
+  if (toolId === 'quick' && input.goal === 'offer' && !input.about && !input.source) throw new HttpError(400, 'missing_field', 'Please tell us the offer (for example “10% off all cakes until Friday”).');
+  let quickExtra = null;
+  if (toolId === 'quick') {
+    const recent = await recentQuick(email, input.goal);
+    input.angle = tools.pickAngle(input.goal, recent.angles);
+    quickExtra = { avoid: recent.openings };
+    if (input.goal === 'thank') { try { quickExtra.reviewLink = (await require('./prefs').get(email)).reviewLink || ''; } catch (_) {} }
+    if (input.goal === 'post') quickExtra.avoid = quickExtra.avoid.concat(await growth.recentTopics(email)).slice(0, 30);
+  }
   if (toolId === 'oneclick' && input.preset === 'listing' && !profile.listingSlug) {
     throw new HttpError(409, 'listing_required', 'Link your Auntie Tobi listing first (Account \u2192 Business profile).');
   }
@@ -250,7 +300,7 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
 
   let result;
   try {
-    const extra = toolId === 'ideas' ? { avoid: (await recentIdeas(email)).concat(await growth.recentTopics(email)).slice(0, 40) }
+    const extra = quickExtra ? quickExtra : toolId === 'ideas' ? { avoid: (await recentIdeas(email)).concat(await growth.recentTopics(email)).slice(0, 40) }
       : toolId === 'planner' ? { avoid: await growth.recentTopics(email) } : {};
     result = await callModel(tools.buildMessages(toolId, input, profile, extra), tool.maxTokens, settings);
   } catch (e) {
@@ -289,6 +339,6 @@ async function usageSummary(email, access) {
 }
 
 module.exports = {
-  generate, usageSummary, getItem, itemKey, historyIndexKey, usageKey, monthUsageKey, globalKey,
+  generate, refine, usageSummary, getItem, itemKey, historyIndexKey, usageKey, monthUsageKey, globalKey,
   reserve, commit, release, callModel, emptyUsage, addGlobal,
 };

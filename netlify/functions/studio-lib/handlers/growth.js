@@ -17,6 +17,7 @@
 const core = require('../core');
 const growth = require('../growth');
 const tips = require('../tips');
+const dailyidea = require('../dailyidea');
 const { HttpError, handler } = core;
 const gen = require('../generate');
 
@@ -41,12 +42,18 @@ exports.handler = handler(async (ctx) => {
       if (!profile || !profile.businessName) throw new HttpError(409, 'profile_required', 'Please complete your business profile first.');
       const h = await growth.home(email);
       const o = aiOpts(auth, false);
-      const t = await tips.today(email, profile, {
-        ai: o.ai, goal: h.goal, goalLabel: h.goal ? growth.GOALS[h.goal.goal] : '', progress: h.progress,
-        track: usage => gen.addGlobal(core.monthKey(), { id: 'daily-tip', tool: 'daily-tip', cost: 0, inTok: usage.inTok, outTok: usage.outTok, costUsd: usage.costUsd }, auth.settings),
-      });
+      const [t, idea] = await Promise.all([
+        tips.today(email, profile, {
+          ai: o.ai, goal: h.goal, goalLabel: h.goal ? growth.GOALS[h.goal.goal] : '', progress: h.progress,
+          track: usage => gen.addGlobal(core.monthKey(), { id: 'daily-tip', tool: 'daily-tip', cost: 0, inTok: usage.inTok, outTok: usage.outTok, costUsd: usage.costUsd }, auth.settings),
+        }),
+        dailyidea.today(email, profile, {
+          ai: o.ai,
+          track: usage => gen.addGlobal(core.monthKey(), { id: 'daily-idea', tool: 'daily-idea', cost: 0, inTok: usage.inTok, outTok: usage.outTok, costUsd: usage.costUsd }, auth.settings),
+        }).catch(e => { console.error('[studio] daily idea', e && e.message); return null; }),
+      ]);
       delete h.progress;
-      return { ...h, tip: t.tip, savedCount: t.savedCount };
+      return { ...h, tip: t.tip, savedCount: t.savedCount, idea };
     }
     case 'tip-save':
       return tips.setSaved(email, body.id, !!body.on);

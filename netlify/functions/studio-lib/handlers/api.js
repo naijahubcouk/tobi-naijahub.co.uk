@@ -62,7 +62,7 @@ async function getProfile(email) { return core.getJson(`profiles/${enc(email)}`)
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const action = body.action;
-  const level = action === 'bootstrap' ? 'buyer' : action === 'generate' ? 'create' : 'view';
+  const level = action === 'bootstrap' ? 'buyer' : action === 'generate' || action === 'refine' ? 'create' : 'view';
   const auth = await core.requireMember(ctx, { level });
   const email = auth.sess.email;
 
@@ -206,6 +206,11 @@ exports.handler = handler(async (ctx) => {
         toolId: body.tool, rawInput: body.input, idemKey: body.requestId, calendarId: body.calendarId,
       });
       return { item: out.item, replayed: out.replayed, calendarAdded: out.calendarAdded || 0, usage: await gen.usageSummary(email, auth.access) };
+    }
+
+    case 'refine': {
+      const profile = await getProfile(email);
+      return gen.refine({ email, profile, settings: auth.settings, id: body.id, how: String(body.how || '') });
     }
 
     case 'history-list': {
