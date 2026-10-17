@@ -11,6 +11,7 @@
 const core = require('./core');
 const { HttpError, cas, getJson, cleanText } = core;
 const directory = require('./directory');
+const ghl = require('./ghl');
 
 const KEY = 'invites/state';
 const GAP1 = 3, GAP2 = 7;
@@ -50,6 +51,39 @@ Your listing: {listing}
 
 No pressure at all — wishing you a great week!`,
 };
+
+const SUBJECT = { invite: 'Join the Auntie Tobi Business Club', fu1: 'Following up — Auntie Tobi Business Club', fu2: 'One last check-in from Auntie Tobi' };
+
+/*
+ * Email a business through GHL: adds/updates them as a GHL contact, sends the email from GHL,
+ * then marks the invite as sent (schedules the next follow-up). test=true sends to the admin instead and changes nothing.
+ */
+async function emailViaGhl(event, slug, opts) {
+  opts = opts || {};
+  if (!ghl.status().connected) throw new HttpError(409, 'ghl_not_connected', 'GHL isn’t connected yet — add GHL_TOKEN and GHL_LOCATION_ID in Netlify.');
+  if (!opts.test && !/^[a-z0-9][a-z0-9-]{0,80}$/.test(String(slug || ''))) throw new HttpError(400, 'invalid', 'Unknown business.');
+  const subject = core.cleanText(opts.subject, 160), text = String(opts.body || '').replace(/\r/g, '').trim().slice(0, 6000);
+  if (!subject || text.length < 10) throw new HttpError(400, 'invalid', 'Please add a subject and a message.');
+  if (opts.test) {
+    const me = core.normalizeEmail(opts.adminEmail);
+    const c = await ghl.upsertContact({ email: me, name: 'Auntie Tobi (test)', tags: ['auntie-tobi-test'] });
+    await ghl.sendEmail({ contactId: c.id, to: me, subject: `[TEST] ${subject}`, text });
+    return { test: true, to: me };
+  }
+  const list = await directory.load(event);
+  const b = list.find(x => x.slug === String(slug || '').toLowerCase());
+  if (!b) throw new HttpError(404, 'not_found', 'That business isn’t on Auntie Tobi any more.');
+  const to = core.normalizeEmail(opts.to || b.email);
+  if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) throw new HttpError(400, 'no_email', 'This business has no email address on its listing.');
+  const s = await load();
+  const rec = s.items[b.slug] || { status: 'new' };
+  const kind = nextKind(rec);
+  const c = await ghl.upsertContact({ email: to, name: b.name, companyName: b.name, phone: b.phone || (b.wa ? `+${String(b.wa).replace(/\D/g, '').replace(/^0/, '44')}` : ''), website: b.website, tags: ['auntie-tobi-directory', 'club-invite', kind === 'invite' ? 'invite-sent' : 'invite-followup'] });
+  await ghl.sendEmail({ contactId: c.id, to, subject, text });
+  const out = await act(b.slug, 'sent', { via: 'GHL email' });
+  await cas(KEY, cur => { const st = cur || empty(); const r = st.items[b.slug]; if (!r) return undefined; return { ...st, items: { ...st.items, [b.slug]: { ...r, ghlContactId: c.id } } }; });
+  return { rec: { ...out, ghlContactId: c.id }, ghlUrl: ghl.contactUrl(c.id), to };
+}
 
 function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
 const clubUrl = () => `${siteUrl()}/business-club`;
@@ -104,6 +138,7 @@ async function view(event, ctx) {
       due: status !== 'joined' && isDue(rec, day), step: rec.step || 0, nextAt: rec.nextAt || '', checkBackAt: rec.checkBackAt || '',
       notes: rec.notes || '', history: (rec.history || []).slice(0, 12), lastAt: rec.lastAt || '',
       nextKind: kind, message: fill(tpl[kind], b), finished: status === 'waiting' && (rec.step || 0) >= 3,
+      ghlUrl: rec.ghlContactId ? ghl.contactUrl(rec.ghlContactId) : '',
     };
   });
   const sentToday = Object.values(s.items).filter(r => (r.sentDays || []).includes(day) && r.firstAt && core.dayKey(new Date(r.firstAt)) === day).length;
@@ -119,7 +154,7 @@ async function view(event, ctx) {
   }
   const contactedJoined = rows.filter(r => r.status === 'joined' && s.items[r.slug] && s.items[r.slug].firstAt).length;
   stats.rate = stats.contacted ? Math.round(contactedJoined / stats.contacted * 100) : 0;
-  return { today: day, rows, stats, perDay: s.settings.perDay, newToday: sentToday, newTodo: Math.max(0, Math.min(s.settings.perDay - sentToday, stats.newLeft)), templates: tpl, defaults: DEFAULT_TEMPLATES, club: clubUrl() };
+  return { today: day, rows, stats, perDay: s.settings.perDay, newToday: sentToday, newTodo: Math.max(0, Math.min(s.settings.perDay - sentToday, stats.newLeft)), templates: tpl, defaults: DEFAULT_TEMPLATES, club: clubUrl(), ghl: ghl.status(), subject: SUBJECT };
 }
 
 // For the Today list: follow-ups due + new invites still to send today.
@@ -185,4 +220,4 @@ async function saveSettings(raw) {
   return saved;
 }
 
-module.exports = { view, summary, act, saveSettings, DEFAULT_TEMPLATES, STATUSES, GAP1, GAP2 };
+module.exports = { view, summary, act, emailViaGhl, saveSettings, DEFAULT_TEMPLATES, STATUSES, GAP1, GAP2 };

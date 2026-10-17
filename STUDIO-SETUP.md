@@ -325,6 +325,20 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - **To do today** = follow-ups due + new businesses to invite (default **5 a day**, change it at the top). Today list gets one "Business Club invites" task that ticks itself when they're done.
 - Stored in `invites/state`. Admin actions: `invites-view`, `invites-act`, `invites-settings`.
 
+## 7t. Club invite emails through GHL (GoHighLevel)
+When GHL is connected, the **Email** button on Club invites becomes **✉️ Email via GHL**. It opens a form (To, Subject, Message — editable) and:
+- adds/updates the business as a GHL contact (tags `auntie-tobi-directory`, `club-invite`, and `invite-sent` or `invite-followup`; phone from the listing),
+- sends the email from **Auntie Tobi <info@auntietobi.com>** through GHL Conversations (replies land in the GHL inbox),
+- marks the invite as sent and schedules the next follow-up, and shows **Open in GHL ↗** on the row.
+**Send a test to myself** sends a `[TEST]` copy to the signed-in admin only and changes nothing. **Open in my email app instead** still works. If GHL refuses a send, nothing is marked as sent.
+
+Setup (one time):
+1. GHL → Settings → **Private Integrations** → Create. Scopes: **View/Edit Contacts** and **View/Edit Conversations + Conversation Messages**. Copy the token.
+2. GHL → Settings → Business Profile → copy the **Location ID**.
+3. GHL → Settings → Email Services: make sure **auntietobi.com** is a verified sending domain (so mail from info@auntietobi.com delivers).
+4. Netlify → Site configuration → Environment variables: `GHL_TOKEN` = the token, `GHL_LOCATION_ID` = the Location ID. Optional `GHL_EMAIL_FROM` (default `Auntie Tobi <info@auntietobi.com>`). Redeploy.
+The Club invites header shows **✉️ GHL connected** once it's set up. Never put the token in the website code.
+
 ## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)
 
 Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**
