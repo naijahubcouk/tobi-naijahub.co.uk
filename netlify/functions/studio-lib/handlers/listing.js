@@ -4,7 +4,7 @@
  *   POST { action: 'generate', bio, handle, notes, hp, t }                → full listing
  *   POST { action: 'generate', part: 'title'|'meta'|'desc', bio, handle, notes, current: {...} } → just that part again
  * Writes an Auntie Tobi business directory listing from an Instagram bio.
- * No limit on use (Seun's choice). Bot trap: hidden field `hp` must be empty, and the page must have been open > 1.5s.
+ * No limit on use (Auntie Tobi's choice). Bot trap: hidden field `hp` must be empty, and the page must have been open > 1.5s.
  * The small AI cost is added to Business Studio spend as "listing".
  */
 const core = require('../core');

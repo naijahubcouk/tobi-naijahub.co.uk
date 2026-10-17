@@ -14,7 +14,7 @@ async function pushToMember(email, heading, message, opts) {
     const key = core.env('ONESIGNAL_API_KEY');
     if (!key) return 'skipped (no key)';
     const pr = await prefs.get(email);
-    // Messages from Seun go to anyone who allowed notifications on this device; other nudges only if reminders are on.
+    // Messages from Auntie Tobi go to anyone who allowed notifications on this device; other nudges only if reminders are on.
     if (!pr.remindersOn && !(opts && opts.always)) return 'skipped (reminders off)';
     const res = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',

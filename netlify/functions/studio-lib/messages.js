@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Admin ↔ member messages (Business Studio). Text only. Each member has one private thread with Seun.
+ * Admin ↔ member messages (Business Studio). Text only. Each member has one private thread with Auntie Tobi.
  *
  *   msg/thread/<email>   { email, messages: [{ id, from: 'member'|'admin', text, at }], memberReadAt, adminReadAt, done, emailedFor }
  *   msg/index            { threads: { <email>: { updatedAt, lastText, lastFrom, unreadAdmin, done } } }   (Admin inbox)

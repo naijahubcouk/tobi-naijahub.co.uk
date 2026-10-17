@@ -451,7 +451,7 @@ exports.handler = handler(async (ctx) => {
       return { item: it };
     }
     // ── Business Club invites (follow up every business on Auntie Tobi) ──
-    // ── Messages (member ↔ Seun) ──
+    // ── Messages (member ↔ Auntie Tobi) ──
     case 'msg-inbox': {
       const th = await messages.inbox();
       const members = await allMembers();

@@ -294,7 +294,7 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 
 ## 7o. Listing writer — auntietobi.co.uk/listing
 
-- Open page (no sign-in, no usage limit — Seun's choice). Paste an Instagram bio (+ optional handle and notes) → listing title = the business name, as 2 options that make sense of the username (Title Case, e.g. toluskitchen_leeds → Tolu's Kitchen); tap one to use it (it becomes the Business name and /biz/ link), meta description (140–160, with a Google preview), full description (120–200 words) and details pulled from the bio (name, category, section, location, phone, WhatsApp, email, website, Instagram, suggested /biz/ link). Copy buttons, "↻ New" per part, editable, last 20 kept on the device.
+- Open page (no sign-in, no usage limit — Auntie Tobi's choice). Paste an Instagram bio (+ optional handle and notes) → listing title = the business name, as 2 options that make sense of the username (Title Case, e.g. toluskitchen_leeds → Tolu's Kitchen); tap one to use it (it becomes the Business name and /biz/ link), meta description (140–160, with a Google preview), full description (120–200 words) and details pulled from the bio (name, category, section, location, phone, WhatsApp, email, website, Instagram, suggested /biz/ link). Copy buttons, "↻ New" per part, editable, last 20 kept on the device.
 - Written for the Auntie Tobi business directory; never invents facts, leaves "[add location]" gaps.
 - Function: `studio-listing` (`studio-lib/handlers/listing.js`). Bot trap: hidden field + page open > 1.5s + same-site header. Cost ≈ 0.03p a listing, in Business Studio spend as `listing`. `noindex`.
 
@@ -332,8 +332,8 @@ Above the list (for whichever filter or search you're on):
 - **⬇ Download for GHL (CSV)** — Name, Company Name, Email, Phone (+44), Category, Location, Instagram, Listing Link, Next Message, Tags. Import in GHL → Contacts → Import, then add them to your campaign.
 - **✓ Mark these N as sent** — after they're in your campaign. Each moves on its own step (invite → follow-up in 3 days → 7 days → stop); Joined / Not interested / finished ones are skipped.
 
-## 7u. Messages — members ↔ Seun (text only)
-- **Members:** 💬 button in the Business Studio header (red dot with the unread count) opens a private chat with Seun. Shows Sent ✓ / Seen. Checks for new messages every few seconds while open.
+## 7u. Messages — members ↔ Auntie Tobi (text only)
+- **Members:** 💬 button in the Business Studio header (red dot with the unread count) opens a private chat with Auntie Tobi. Shows Sent ✓ / Seen. Checks for new messages every few seconds while open.
 - **Admin → Messages:** inbox (Inbox / Unread / Done / All, search), conversation with Open record, ✓ Done (comes back if they reply), ⚡ Quick replies (editable), ✏️ New message to any active member. Nav shows the unread count; Today shows "N unread messages from members".
 - **📣 Announcement:** to All members / Business Club / Business Studio Pro. Shows in each matching member's chat (gold), one push to all of them, deletable. Doesn't fill your inbox; members can reply privately.
 - **Notifications:** your reply → push to the member (if they allowed notifications); unread for 3 hours → one email (hourly job `studio-messages-remind`, never for announcements). A member's first unread message → one email to you (STUDIO_ADMIN_EMAILS).
@@ -341,7 +341,7 @@ Above the list (for whichever filter or search you're on):
 
 ## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)
 
-Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**
+Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**
 
 - **📋 Paste from ChatGPT**: paste a whole reply; the free splitter (`/hq-split.js`, rules not AI) cuts it into idea cards wherever a new idea starts (Idea 1 / Post 2 / Reel: …, ### headings, bold titles, --- lines, numbered ideas — but numbered *steps* inside one idea stay together). Each card gets a type (post, Reel, carousel, Story, blog), topic, title, caption, hashtags and keyword line; chatty intros and "Would you like me to…" lines are dropped. A preview lets you remove, merge, retitle or change type before saving. "Keep as one card" if needed.
 - **Content briefs** (the long ChatGPT "Content Brief" format with # sections, ### numbered ideas, tables of ideas, Story plans, motivations, "Verified details", suggested hashtags/keywords) are recognised automatically: one card per idea / table row; each Story plan becomes one Story card listing every frame; motivations and "posts to prepare next" become cards; "Verified details" and source links (utm tags removed) go into the matching card's notes; HOOK / Format / CTA are read; ALL-CAPS titles become Title Case; the brief's hashtags and keyword line go on every non-Story card without its own; intro and posting-plan tables are skipped; a "growth priority" note card is offered unticked. The preview groups cards by section with tick boxes and All / None per section. Dates in the brief are ignored.
@@ -361,11 +361,11 @@ Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with 
 
 ### 🗑 Bin (deleted cards kept 30 days)
 - Deleting a card moves it to **Bin** (menu shows a count). Toast: "Moved to Bin — kept for 30 days" with Undo.
-- Bin lists each card with who deleted it, when, and days left. **Restore** / **Restore all** (Seun and the HQ team) put cards back exactly as they were (stage, date, images).
-- **Delete forever** / **Empty Bin** — Seun only, and only for cards already in the Bin. After 30 days cards (and their images) are removed automatically.
+- Bin lists each card with who deleted it, when, and days left. **Restore** / **Restore all** (Auntie Tobi and the HQ team) put cards back exactly as they were (stage, date, images).
+- **Delete forever** / **Empty Bin** — Auntie Tobi only, and only for cards already in the Bin. After 30 days cards (and their images) are removed automatically.
 
 ### HQ team access (assistant sign-in)
-- HQ → **👥 Team access** (only Seun sees it): add a name + email. They go to **/hq**, enter their email and get an "Auntie Tobi HQ code".
+- HQ → **👥 Team access** (only Auntie Tobi sees it): add a name + email. They go to **/hq**, enter their email and get an "Auntie Tobi HQ code".
 - Team members can paste, edit, plan, mark posted and delete in HQ only. Their session cannot open Business Studio Admin (separate `__Host-studio_hq` cookie, role `hq`, 7 days).
 - Remove someone and they're signed out immediately (the team list is checked on every request). Stored in blob `hq/team`. Starts with Favour (hellofavouradentan@gmail.com).
 - Cards show "Added by … · Last edited by …".

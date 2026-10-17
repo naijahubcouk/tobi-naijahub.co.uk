@@ -1,9 +1,9 @@
 'use strict';
 /*
- * Member ↔ Seun messages — POST /.netlify/functions/studio-messages  { action, ... }   (signed-in members)
- *   get    { read }   the conversation (+ announcements); read=true marks Seun's messages as read
+ * Member ↔ Auntie Tobi messages — POST /.netlify/functions/studio-messages  { action, ... }   (signed-in members)
+ *   get    { read }   the conversation (+ announcements); read=true marks Auntie Tobi's messages as read
  *   unread            count for the red dot
- *   send   { text }   send a message to Seun
+ *   send   { text }   send a message to Auntie Tobi
  */
 const core = require('../core');
 const { HttpError, handler } = core;

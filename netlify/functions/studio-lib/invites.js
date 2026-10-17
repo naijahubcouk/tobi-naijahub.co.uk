@@ -20,7 +20,7 @@ const STATUS_LABEL = { new: 'Not contacted', waiting: 'Waiting for reply', inter
 const DEFAULT_TEMPLATES = {
   invite: `Hi {name} 👋🏾
 
-I’m Seun from Auntie Tobi. Your business is listed on the Auntie Tobi app — here’s your listing: {listing}
+It’s Auntie Tobi here 💚 Your business is listed on the Auntie Tobi app — here’s your listing: {listing}
 
 I’d love to invite you to the Auntie Tobi Business Club. Members get:
 • Your business shared on Auntie Tobi’s Instagram Stories, posts and Reels every week

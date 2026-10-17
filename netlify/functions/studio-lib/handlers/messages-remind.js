@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Hourly (scheduled in studio-messages-remind.mjs): if Seun replied and the member hasn't read it for 3 hours,
+ * Hourly (scheduled in studio-messages-remind.mjs): if Auntie Tobi replied and the member hasn't read it for 3 hours,
  * send them one email so the reply isn't missed. One email per new reply; announcements never trigger an email.
  */
 const core = require('../core');

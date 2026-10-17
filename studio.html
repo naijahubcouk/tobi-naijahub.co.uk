@@ -476,7 +476,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     });
   });
 
-  // ───────────── messages with Auntie Tobi (Seun) ─────────────
+  // ───────────── messages with Auntie Tobi ─────────────
   S.msgUnread = 0;
   function msgDot() { var d = document.getElementById('msgDot'); if (d) { d.classList.toggle('hidden', !S.msgUnread); d.textContent = S.msgUnread > 9 ? '9+' : (S.msgUnread || ''); } }
   async function checkUnread() {
@@ -501,7 +501,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       var me = m.from === 'member';
       return '<div class="bub ' + (me ? 'me' : 'them') + (m.announce ? ' ann' : '') + (m.pending ? ' pend' : '') + '">' + (m.announce ? '<div class="annl">📣 Announcement</div>' : '') +
         '<div class="bt">' + linkify(m.text) + '</div><div class="bm">' + (m.pending ? 'Sending…' : msgTime(m.at)) + (me && !m.pending ? (m.seen ? ' · Seen' : ' · Sent ✓') : '') + '</div></div>';
-    }).join('') : '<div class="empty" style="padding:30px 10px"><img src="/tobi-face-128.png" alt="" style="width:64px;height:64px;border-radius:50%;border:2px solid var(--gold)"><p style="margin:10px 0 4px;font-weight:700">Message Auntie Tobi</p><p class="sub" style="margin:0">Questions about Business Studio, your membership or your business? Send a message — it goes straight to Seun.</p></div>';
+    }).join('') : '<div class="empty" style="padding:30px 10px"><img src="/tobi-face-128.png" alt="" style="width:64px;height:64px;border-radius:50%;border:2px solid var(--gold)"><p style="margin:10px 0 4px;font-weight:700">Message Auntie Tobi</p><p class="sub" style="margin:0">Questions about Business Studio, your membership or your business? Send a message — it goes straight to Auntie Tobi.</p></div>';
     box.dataset.ready = '1';
     if (nearBottom) box.scrollTop = box.scrollHeight;
   }
@@ -515,7 +515,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   function showMessages() {
     setChrome({ back: function () { stopMsgPoll(); showHome(); }, tab: 'messages' });
     S.msgView = true;
-    app.innerHTML = '<main class="msgs"><div class="mhead"><img src="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><div class="sub" style="margin:0;font-size:13px">Seun usually replies within a day</div></div></div>' +
+    app.innerHTML = '<main class="msgs"><div class="mhead"><img src="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><div class="sub" style="margin:0;font-size:13px">Usually replies within a day</div></div></div>' +
       '<div class="mlist" id="msgList"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div>' +
       '<form class="mcomp" id="msgForm"><label class="sr" for="msgIn">Message</label><textarea id="msgIn" rows="1" maxlength="2000" placeholder="Type a message…"></textarea><button class="btn primary" id="msgSend" type="submit" aria-label="Send">Send</button></form></main>';
     var inp = $('#msgIn');
