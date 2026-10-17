@@ -347,7 +347,7 @@ Above the list (for whichever filter or search you're on):
 - Prompts are tailored to the business type. Tool id `quick` (hidden from "All tools"); free changes = `refine` action; idea stored in `idea/<email>`.
 
 ## 7w. All tools (Create tab) — 29 AI tools in 6 categories
-- Search box + category chips; free tools sit in their categories with a FREE tag.
+- Create shows 6 category tiles (tap one to see its tools, ‹ All categories to go back) + a search box across all tools; free tools sit in their categories with a FREE tag. Quick Create and today's idea are on Today only.
 - **Content Creation:** Content ideas, Post caption, Reel script, Carousel creator, Instagram Story creator, Hashtag & SEO helper, Repurpose content.
 - **Sales & Promotions:** Sales & promo, Product description, Booking promotion, New product launch, Special offer creator, Sales follow-up.
 - **Brand & Visibility:** Bio & business description, Ideal customer finder, Unique selling point, Brand story creator, Business SEO keywords.
