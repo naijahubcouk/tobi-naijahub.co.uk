@@ -65,8 +65,8 @@ Netlify → **Site configuration → Environment variables**. Each can have diff
 | `STUDIO_OPENROUTER_API_KEY` | Optional separate OpenRouter key just for the Studio, with its own credit limit (recommended) | Optional |
 | `STUDIO_MODEL` | Defaults to `openai/gpt-4o-mini` (same as the chatbot) | Optional |
 | `STRIPE_SECRET_KEY` | Stripe secret key (`sk_test_…` on preview, `sk_live_…` in production) | For Business Studio Pro |
-| `STRIPE_PRICE_POWER_MONTHLY` | Price ID of the £5/month price (`price_…`) | For Pro Plus (100 a day) |
-| `STRIPE_PRICE_POWER_YEARLY` | Price ID of the £50/year price (`price_…`) | For Pro Plus (100 a day) |
+| `STRIPE_PRICE_POWER_MONTHLY` | Price ID of the £5/month price (`price_…`) | For Plus (100 a day) |
+| `STRIPE_PRICE_POWER_YEARLY` | Price ID of the £50/year price (`price_…`) | For Plus (100 a day) |
 | `STRIPE_PRICE_PRO_MONTHLY` | Price ID of the £3/month price (`price_…`) | For Pro (50 a day) |
 | `STRIPE_PRICE_PRO_YEARLY` | Price ID of the £30/year price (`price_…`) | For Pro (50 a day) |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret of the webhook endpoint (`whsec_…`) | For Business Studio Pro |
@@ -90,24 +90,24 @@ Until the domain is verified, Resend only lets you send to your own Resend accou
 
 ---
 
-## 5. Stripe (add-ons: Pro £3/month or £30/year · Pro Plus £5/month or £50/year — sold to anyone)
+## 5. Stripe (add-ons: Pro £3/month or £30/year · Plus £5/month or £50/year — sold to anyone)
 
 Do this in **Test mode** first (toggle top-right in Stripe).
 
-1. **Product catalogue → Add product**: name "Business Studio Pro Plus" (your existing "Business Studio Pro" product can simply be renamed — its prices stay the same). **Two recurring prices**:
+1. **Product catalogue → Add product**: name "Business Studio Plus" (your existing "Business Studio Pro" product can simply be renamed — its prices stay the same). **Two recurring prices**:
    - **£5.00 GBP monthly** → Price ID in `STRIPE_PRICE_POWER_MONTHLY`
    - **£50.00 GBP yearly** → Price ID in `STRIPE_PRICE_POWER_YEARLY`
-   (Existing subscribers on these prices are Pro Plus — 100 a day — nothing changes for them.)
+   (Existing subscribers on these prices are Plus — 100 a day — nothing changes for them.)
    **Add product**: name "Business Studio Pro". **Two recurring prices**:
    - **£3.00 GBP monthly** → Price ID in `STRIPE_PRICE_PRO_MONTHLY`
    - **£30.00 GBP yearly** → Price ID in `STRIPE_PRICE_PRO_YEARLY`
-   Until the Pro prices are added, only Pro Plus can be bought (Admin → Overview warns you).
+   Until the Pro prices are added, only Plus can be bought (Admin → Overview warns you).
 2. **Developers → API keys** → Secret key → `STRIPE_SECRET_KEY`.
 3. **Developers → Webhooks → Add endpoint**
    - URL: `https://studio--<your-site>.netlify.app/.netlify/functions/studio-stripe-webhook` (preview), later `https://www.auntietobi.co.uk/.netlify/functions/studio-stripe-webhook`
    - Events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`, `invoice.paid`, `invoice.payment_failed`, `invoice.payment_action_required`
    - Copy the **Signing secret** → `STRIPE_WEBHOOK_SECRET`.
-4. **Settings → Billing → Customer portal**: turn on "Cancel subscriptions" (choose **at end of billing period**), "Update payment methods", and **"Switch plans"** — add **both products (Pro and Pro Plus) with all four prices** so people can move between Pro and Pro Plus and between monthly and yearly. Save.
+4. **Settings → Billing → Customer portal**: turn on "Cancel subscriptions" (choose **at end of billing period**), "Update payment methods", and **"Switch plans"** — add **both products (Pro and Plus) with all four prices** so people can move between Pro and Plus and between monthly and yearly. Save.
 5. **Settings → Billing → Subscriptions and emails**: turn on Smart Retries and failed-payment emails.
 6. Test with card `4242 4242 4242 4242`, any future date, any CVC.
 7. For launch, repeat steps 1–4 in **Live mode** and put the live values in the **Production** context.
@@ -365,9 +365,9 @@ Above the list (for whichever filter or search you're on):
 - Every result: Shorter / More conversational (free) — message tools get More polite / Firmer (free); Turn into a Reel / Stories (1); **➡️ What should I do next?** (free suggestions that open the next tool pre-filled). 30-day growth plan and weekly plan: **📋 Add these actions to my to-do list** (free). "I posted this"/"Make image" hidden on non-post tools.
 - Honesty rules in prompts: offers/prices/dates never invented, reviews use exact words, complaints never admit liability or promise refunds, FAQs use [placeholders] for unknown policies, collaborations never name real businesses.
 
-## 7y. Plans — Free, Business Club, Pro, Pro Plus
+## 7y. Plans — Free, Business Club, Pro, Plus
 
-| | Free | Business Club | Pro | Pro Plus |
+| | Free | Business Club | Pro | Plus |
 |---|---|---|---|---|
 | Price | £0 | £50/year | £3/month · £30/year | £5/month · £50/year |
 | AI generations a day (Admin → Allowances & limits) | 5 (`freeLimit`) | 20 (`standardLimit`) | 50 (`proLimit`) | 100 (`powerLimit`) |
@@ -381,7 +381,7 @@ Above the list (for whichever filter or search you're on):
 - **Advanced tools** (locked on Free, checked on the server): Repurpose, Ideal customer finder, Business SEO keywords, Sales improvement ideas, 30-day growth plan, Collaboration ideas, Business check-up. **Limited** tools: Content planner (7 days free, 30 days paid), New product launch (announcement free, full campaign paid), Weekly marketing plan (basic free, advanced paid). Free users see 🔒 CLUB · PRO; opening a locked tool shows what it does and how to unlock it — nothing is charged.
 - When a Club membership or add-on ends, the person moves to the **Free plan** (they keep their library). Use **Block** in Members to remove access completely. Set Free plan to 0 to switch it off (then ended accounts become read-only, as before).
 - The welcome series is not sent to Free plan accounts. Announcements to "All" include Free accounts.
-- Older subscriptions with no plan recorded count as Pro Plus.
+- Older subscriptions with no plan recorded count as Plus.
 
 ## 7x. Welcome series — 5 automatic messages for new members
 
@@ -424,3 +424,9 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - Team members can paste, edit, plan, mark posted and delete in HQ only. Their session cannot open Business Studio Admin (separate `__Host-studio_hq` cookie, role `hq`, 7 days).
 - Remove someone and they're signed out immediately (the team list is checked on every request). Stored in blob `hq/team`. Starts with Favour (hellofavouradentan@gmail.com).
 - Cards show "Added by … · Last edited by …".
+
+## 7z. Business Studio page — auntietobi.co.uk/business-studio
+
+- `business-studio.html`: what Business Studio does, how it works, the 6 tool groups (🔒 = advanced), free extras, the four plans, a comparison table and FAQs.
+- **Start free** buttons go to `/studio?start=free` (opens the Start free screen). **Get Pro / Get Plus** go to `/studio?start=pro` (sign-up, then the Pro / Plus choice; signed-in members go straight to the plans).
+- Linked from the Business Studio sign-in page ("See what's included and the plans") and from the Business Club page (Business Studio section).

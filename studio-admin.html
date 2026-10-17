@@ -232,7 +232,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       list.innerHTML = bubbles(t); list.dataset.n = t.messages.length; list.dataset.seen = t.memberReadAt; if (near) list.scrollTop = list.scrollHeight; return;
     }
     var draft = (S.msgDrafts || {})[email] || '';
-    pane.innerHTML = '<div class="mph"><div><b style="font-size:17px">' + esc(t.name || email) + '</b> <span class="pill p-' + (/^Pro/.test(t.plan) ? 'power' : t.plan === 'Club' ? 'active' : t.plan === 'Free' ? 'pending' : 'inactive') + '">' + esc(t.plan) + '</span><div class="muted" style="font-size:13px">' + esc(email) + '</div></div>' +
+    pane.innerHTML = '<div class="mph"><div><b style="font-size:17px">' + esc(t.name || email) + '</b> <span class="pill p-' + (/^(Pro|Plus)/.test(t.plan) ? 'power' : t.plan === 'Club' ? 'active' : t.plan === 'Free' ? 'pending' : 'inactive') + '">' + esc(t.plan) + '</span><div class="muted" style="font-size:13px">' + esc(email) + '</div></div>' +
       '<div class="row">' + (t.isMember ? '<button class="btn small ghost" id="mRec">Open record</button>' : '') + (t.messages.length ? '<button class="btn small ghost" id="mDone">' + (t.done ? '↩ Move to inbox' : '✓ Done') + '</button>' : '') + '</div></div>' +
       '<div class="mlist" id="mList" data-email="' + esc(email) + '" data-n="' + t.messages.length + '" data-seen="' + esc(t.memberReadAt) + '">' + bubbles(t) + '</div>' +
       '<div class="mqr hidden" id="mQr">' + (S.msg.quick || []).map(function (x, i) { return '<button class="chip" data-qr="' + i + '">' + esc(x.length > 60 ? x.slice(0, 57) + '…' : x) + '</button>'; }).join('') + '</div>' +
@@ -1078,15 +1078,15 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     if (/log/.test(c.email)) issues.push('STUDIO_EMAIL_MODE=log is on: codes go to function logs, not email. Testing only — never in production.');
     if (!c.ai) issues.push('No AI key found (OPENROUTER_API_KEY / STUDIO_OPENROUTER_API_KEY).');
     if (!c.stripe) issues.push('Stripe isn\u2019t fully configured \u2014 Business Studio Pro can\u2019t be bought yet.');
-    else if (!(c.stripeTiers || {}).pro) issues.push('Pro (\u00a33/month) isn\u2019t set up in Stripe yet \u2014 only Pro Plus can be bought. See the setup guide, section 5.');
+    else if (!(c.stripeTiers || {}).pro) issues.push('Pro (\u00a33/month) isn\u2019t set up in Stripe yet \u2014 only Plus can be bought. See the setup guide, section 5.');
     app.innerHTML = '<main><h1 id="ovH1">Overview · ' + esc(o.month) + '</h1>' +
       (issues.length ? '<div class="warn stack" style="margin-bottom:14px">' + issues.map(function (i) { return '<div>⚠️ ' + esc(i) + '</div>'; }).join('') + '</div>' : '') +
       (o.alertCount ? '<div class="warn" style="margin-bottom:14px">You have <b>' + o.alertCount + '</b> alert(s). <button class="btn small ghost" id="toAlerts">View</button></div>' : '') +
       '<div class="grid">' +
       stat(freeN, 'Free plan accounts') + stat(active, 'Active Business Club members') +
-      stat(power, 'Pro add-ons: ' + pros + ' Pro, ' + pluses + ' Pro Plus (' + (power - yearly) + ' monthly, ' + yearly + ' yearly)') +
+      stat(power, 'Pro add-ons: ' + pros + ' Pro, ' + pluses + ' Plus (' + (power - yearly) + ' monthly, ' + yearly + ' yearly)') +
       stat(m.count || 0, 'Generations this month') + stat(gbp(m.costUsd || 0), 'Estimated AI cost this month') +
-      stat('\u00a3' + revenue.toFixed(2), 'Pro + Pro Plus revenue / month (gross, yearly spread over 12)') +
+      stat('\u00a3' + revenue.toFixed(2), 'Pro + Plus revenue / month (gross, yearly spread over 12)') +
       stat('\u00a3' + o.settings.spendWarnGbp, 'Spend warning amount (never blocks)') +
       '</div><h2>Pilot \u00b7 last 7 days</h2><div class="grid">' +
       stat(o.pilot.activeMembers, 'Members using daily actions or tracking') + stat(o.pilot.actionsDone, 'Daily actions completed') +
@@ -1095,7 +1095,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       '<h2>Setup</h2><div class="card"><table style="border:0"><tbody>' +
       row('Email codes', c.email) + row('AI model', c.model + (c.ai ? '' : ' (no key)')) + row('Stripe', c.stripe ? 'configured (' + c.stripeMode + ' mode)' : 'not configured') +
       row('Pro plans (£3 / £30)', ((c.stripeTiers || {}).pro || []).map(function (i) { return i === 'year' ? 'Yearly \u00a330' : 'Monthly \u00a33'; }).join(', ') || 'not set up yet — add STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_PRO_YEARLY') +
-      row('Pro Plus plans (£5 / £50)', ((c.stripeTiers || {}).plus || []).map(function (i) { return i === 'year' ? 'Yearly \u00a350' : 'Monthly \u00a35'; }).join(', ') || 'none configured') +
+      row('Plus plans (£5 / £50)', ((c.stripeTiers || {}).plus || []).map(function (i) { return i === 'year' ? 'Yearly \u00a350' : 'Monthly \u00a35'; }).join(', ') || 'none configured') +
       row('Business Club auto-access', c.clubLink && c.webhook ? 'On \u2014 paying the Club link gives Business Studio access automatically' : 'Off \u2014 set STUDIO_CLUB_PAYMENT_LINK and the Stripe webhook (see setup guide); add members manually until then') +
       row('Spend warning', 'Email + alert at \u00a3' + o.settings.spendWarnGbp + ' and \u00a3' + (o.settings.spendWarnGbp * 2) + ' a month. The Business Studio never stops for spending.') + '</tbody></table></div></main>';
     var ta = $('#toAlerts'); if (ta) ta.onclick = function () { go('alerts'); };
@@ -1139,14 +1139,14 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   }
   function typePill(m) {
     if (m.blocked) return '<span class="pill p-warn">Blocked</span>';
-    var tn = m.tier === 'pro' ? 'Pro' : 'Pro Plus';
+    var tn = m.tier === 'pro' ? 'Pro' : 'Plus';
     return { both: '<span class="pill p-power">Club + ' + tn + '</span>', ai_power: '<span class="pill p-power">' + tn + '</span>', club: '<span class="pill p-active">Business Club</span>', free: '<span class="pill p-pending">Free</span>' }[m.type] ||
       (m.readOnly ? '<span class="pill p-inactive">Read-only</span>' : '<span class="pill p-inactive">No access</span>');
   }
   function addonPill(a) {
     if (!a) return '<span class="muted">\u2014</span>';
     var cls = ['active', 'trialing'].indexOf(a.status) > -1 ? 'p-power' : ['past_due', 'unpaid', 'incomplete'].indexOf(a.status) > -1 ? 'p-warn' : 'p-inactive';
-    return '<span class="pill ' + cls + '">' + (a.tier === 'pro' ? 'Pro' : 'Pro Plus') + ' \u00b7 ' + (a.interval === 'year' ? 'yearly' : 'monthly') + ' \u00b7 ' + esc(a.status) + (a.cancelAtPeriodEnd ? ' \u00b7 ending' : '') + '</span>';
+    return '<span class="pill ' + cls + '">' + (a.tier === 'pro' ? 'Pro' : 'Plus') + ' \u00b7 ' + (a.interval === 'year' ? 'yearly' : 'monthly') + ' \u00b7 ' + esc(a.status) + (a.cancelAtPeriodEnd ? ' \u00b7 ending' : '') + '</span>';
   }
 
   async function vMembers(q) {
@@ -1155,7 +1155,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     app.innerHTML = '<main><h1>Members</h1><div class="row" style="margin-bottom:12px"><input id="q" placeholder="Search email or name" style="max-width:320px" value="' + esc(q || '') + '">' +
       '<button class="btn primary" id="add">+ Add member</button><button class="btn ghost" id="imp">Bulk add</button></div>' +
       '<div class="tw"><table><thead><tr><th>Person</th><th>Access</th><th>Business Club</th><th>Pro add-on</th><th>Today</th><th>This month</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>' +
-      '<p class="muted" style="margin-top:8px">Plans: <b>Free</b> (anyone who signs up — everyday tools), <b>Business Club</b> (status active, not expired), <b>Pro</b> / <b>Pro Plus</b> (paid add-ons — appear here automatically after paying). Ending a Club membership moves the person to the Free plan; use <b>Block</b> to remove access completely. Changes apply instantly.</p></main>';
+      '<p class="muted" style="margin-top:8px">Plans: <b>Free</b> (anyone who signs up — everyday tools), <b>Business Club</b> (status active, not expired), <b>Pro</b> / <b>Plus</b> (paid add-ons — appear here automatically after paying). Ending a Club membership moves the person to the Free plan; use <b>Block</b> to remove access completely. Changes apply instantly.</p></main>';
     function draw() {
       var s = $('#q').value.toLowerCase();
       var list = S.members.filter(function (m) { return !s || m.email.indexOf(s) > -1 || (m.name || '').toLowerCase().indexOf(s) > -1; });
@@ -1248,8 +1248,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var list = r.members.filter(function (m) { return m.addon; });
     var live = list.filter(function (m) { return ['active', 'trialing'].indexOf(m.addon.status) > -1; });
     var yearly = live.filter(function (m) { return m.addon.interval === 'year'; }).length, monthly = live.length - yearly;
-    app.innerHTML = '<main><h1>Pro &amp; Pro Plus subscriptions</h1><div class="grid" style="margin-bottom:14px">' +
-      stat(live.length, 'Active: ' + live.filter(function (m) { return m.addon.tier === 'pro'; }).length + ' Pro, ' + live.filter(function (m) { return m.addon.tier !== 'pro'; }).length + ' Pro Plus (' + monthly + ' monthly, ' + yearly + ' yearly)') +
+    app.innerHTML = '<main><h1>Pro &amp; Plus subscriptions</h1><div class="grid" style="margin-bottom:14px">' +
+      stat(live.length, 'Active: ' + live.filter(function (m) { return m.addon.tier === 'pro'; }).length + ' Pro, ' + live.filter(function (m) { return m.addon.tier !== 'pro'; }).length + ' Plus (' + monthly + ' monthly, ' + yearly + ' yearly)') +
       stat('£' + live.reduce(function (sum, m) { var y = m.addon.interval === 'year'; return sum + (m.addon.tier === 'pro' ? (y ? 30 / 12 : 3) : (y ? 50 / 12 : 5)); }, 0).toFixed(2) + '/mo', 'Gross revenue (yearly spread over 12)') +
       stat(live.filter(function (m) { return m.status === 'none'; }).length, 'Not Business Club members') +
       stat(list.filter(function (m) { return m.addon.cancelAtPeriodEnd; }).length, 'Cancelling at period end') +
@@ -1284,9 +1284,9 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     function f(k, l, hint, step) { return '<div><label for="s_' + k + '">' + esc(l) + '</label><input id="s_' + k + '" type="number" step="' + (step || 1) + '" value="' + esc(st[k]) + '">' + (hint ? '<div class="muted">' + esc(hint) + '</div>' : '') + '</div>'; }
     app.innerHTML = '<main><h1>Allowances &amp; limits</h1><div class="card stack"><h2 style="margin:0">Daily allowances</h2><div class="f2">' +
       f('freeLimit', 'Free plan', 'Generations per day — everyday tools only. 0 = Free plan off (new sign-ups need to pay)') + f('standardLimit', 'Business Club', 'Generations per day — every tool') +
-      f('proLimit', 'Pro (£3/month · £30/year)', 'Generations per day — every tool') + f('powerLimit', 'Pro Plus (£5/month · £50/year)', 'Generations per day — every tool') + '</div>' +
+      f('proLimit', 'Pro (£3/month · £30/year)', 'Generations per day — every tool') + f('powerLimit', 'Plus (£5/month · £50/year)', 'Generations per day — every tool') + '</div>' +
       '<p class="muted">Someone with more than one plan (e.g. Club + Pro) gets the highest. A 30-day content plan uses 3 generations; everything else uses 1. Allowances reset at midnight UK time.</p>' +
-      '<p class="muted">Advanced tools (Club, Pro and Pro Plus only): Repurpose, Ideal customer finder, Business SEO keywords, Sales improvement ideas, 30-day growth plan, Collaboration ideas, Business check-up — plus the 30-day content plan, full launch campaign and advanced weekly plan.</p>' +
+      '<p class="muted">Advanced tools (Club, Pro and Plus only): Repurpose, Ideal customer finder, Business SEO keywords, Sales improvement ideas, 30-day growth plan, Collaboration ideas, Business check-up — plus the 30-day content plan, full launch campaign and advanced weekly plan.</p>' +
       '<p class="muted">Changes apply immediately. Per-person custom limits (Members \u2192 Manage) override these.</p></div>' +
       '<div class="card stack" style="margin-top:12px"><h2 style="margin:0">Spending protection</h2><div class="f2">' +
       f('spendWarnGbp', 'Warn me when monthly AI spend reaches (\u00a3)', 'Email + alert at this amount and at double. Never blocks members.', 0.01) +

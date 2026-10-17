@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auntie Tobi Business Studio</title>
+<meta name="description" content="Auntie Tobi Business Studio — your business assistant in your brand voice. Captions, Reels, offers, customer replies and growth plans for Nigerian businesses in the UK. Start free.">
+<meta property="og:title" content="Auntie Tobi Business Studio 💚">
+<meta property="og:description" content="Captions, Reels, offers and customer replies made for your business in seconds. Start free — 5 a day, no card needed.">
+<link rel="icon" href="/icons/studio-icon-48.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;min-height:100vh;padding-bottom:60px}
+a{color:#057A44}
+.app-header{background:#0F1E36;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:520px;margin:0 auto}
+.app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0}
+.app-logo img{width:100%;height:100%;object-fit:cover}
+.app-header-text{flex:1;min-width:0}
+.app-header-title{font-size:16px;font-weight:700;color:white}
+.header-btns{display:flex;gap:6px}
+.back-btn{color:rgba(255,255,255,0.8);font-size:12px;text-decoration:none;font-weight:600;padding:7px 11px;border:1.5px solid rgba(255,255,255,0.25);border-radius:20px;white-space:nowrap}
+.wrap{max-width:520px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+
+.hero{background:#0F1E36;border-radius:14px;padding:24px 18px}
+.h-badge{display:inline-block;background:rgba(255,184,28,0.25);color:#FFB81C;font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:12px}
+.h-title{font-size:26px;font-weight:800;color:white;line-height:1.25;margin-bottom:10px}
+.h-title span{color:#FFB81C}
+.h-sub{font-size:18px;color:rgba(255,255,255,0.8);line-height:1.6;margin-bottom:16px}
+.qs{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+.q{background:rgba(255,255,255,0.07);border-left:3px solid #FFB81C;border-radius:0 8px 8px 0;padding:9px 12px;font-size:15px;color:white;font-style:italic}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cta-btn{display:block;width:100%;color:white;text-decoration:none;border-radius:12px;padding:15px 10px;font-size:16.5px;font-weight:700;text-align:center;background:#057A44}
+.cta-btn.gold{background:#FFB81C;color:#0F1E36}
+.cta-btn.ghost{background:transparent;color:white;border:1.5px solid rgba(255,255,255,0.35)}
+.cta-btn.navy{background:#0F1E36;color:#FFB81C}
+.h-note{font-size:14px;color:rgba(255,255,255,0.6);text-align:center;margin-top:10px}
+
+.card{background:white;border-radius:14px;padding:20px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.ctitle{font-size:12px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
+.ch{font-size:22px;font-weight:800;line-height:1.3;margin-bottom:8px}
+.body{font-size:17px;line-height:1.7;color:#0F1E36}
+
+.cat{padding:14px 0;border-bottom:0.5px solid #f0f0f0}
+.cat:last-child{border-bottom:none;padding-bottom:0}
+.cat-h{font-size:18.5px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cat-ico{font-size:21px;width:28px;flex-shrink:0;text-align:center}
+.cat-b{font-size:16.5px;line-height:1.65;padding-left:36px;color:#333}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;padding-left:36px}
+.chip{background:#f0faf5;color:#0F1E36;border:0.5px solid #cfe9dc;border-radius:16px;padding:6px 11px;font-size:14.5px;font-weight:600}
+.chip.lk{background:#F2F3F5;border-color:#E2E4E8;color:#3B4556}
+.legend{font-size:14px;color:#6B7280;margin-top:12px;line-height:1.5}
+
+.steps{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.step{display:flex;gap:12px;align-items:flex-start}
+.step-n{width:34px;height:34px;border-radius:50%;background:#FFB81C;color:#0F1E36;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px}
+.step b{display:block;font-size:17.5px;margin-bottom:2px}
+.step span{font-size:16px;line-height:1.6;color:#333}
+
+.example{background:#FFF8E7;border:1.5px solid #FFE3A3;border-radius:12px;padding:14px;margin-top:14px}
+.ex-in{font-size:14px;font-weight:700;color:#7A5300;margin-bottom:6px}
+.ex-out{font-size:16px;line-height:1.6;color:#0F1E36;white-space:pre-line}
+.ex-note{font-size:13.5px;color:#6B7280;margin-top:8px}
+
+.free-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.fx{background:#f0faf5;border-radius:12px;padding:12px}
+.fx b{display:block;font-size:15.5px;margin-bottom:3px}
+.fx span{font-size:14px;line-height:1.45;color:#333}
+
+.plans{display:flex;flex-direction:column;gap:10px}
+.plan{border-radius:14px;padding:18px 16px;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:2px solid transparent}
+.plan.club{border-color:#057A44}
+.plan.pro{border-color:#FFB81C}
+.plan.plus{background:#0F1E36;color:white}
+.p-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.p-name{font-size:19px;font-weight:800}
+.p-tag{font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.p-tag.g{background:#E6F6EE;color:#057A44}
+.p-tag.y{background:#FFB81C;color:#0F1E36}
+.p-price{font-size:30px;font-weight:800;margin:6px 0 2px}
+.p-price span{font-size:15px;font-weight:600;opacity:0.75}
+.plan.club .p-price{color:#057A44}
+.plan.plus .p-price{color:#FFB81C}
+.p-alt{font-size:14px;opacity:0.75}
+.p-credits{font-size:16.5px;font-weight:800;margin:10px 0 6px}
+.ticks{list-style:none;margin-top:4px}
+.ticks li{font-size:15.5px;line-height:1.55;padding:3px 0 3px 22px;position:relative}
+.ticks li::before{content:"✓";position:absolute;left:0;color:#057A44;font-weight:800}
+.ticks li.x::before{content:"–";color:#B0B4BB}
+.ticks li.x{color:#7A8190}
+.plan.plus .ticks li::before{color:#FFB81C}
+.plan.plus .ticks li.x{color:rgba(255,255,255,0.5)}
+.plan .cta-btn{margin-top:14px}
+.plan.plus .cta-btn{background:#FFB81C;color:#0F1E36}
+
+.tbl-wrap{overflow-x:auto;margin:6px -4px 0}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:13px;font-weight:800;padding:9px 4px;text-align:center;white-space:nowrap}
+.tbl th.c1{background:#E6F6EE;color:#057A44}.tbl th.c2{background:#057A44;color:white}.tbl th.c3{background:#FFB81C;color:#0F1E36}.tbl th.c4{background:#0F1E36;color:#FFB81C}
+.tbl td{padding:9px 4px;border-bottom:0.5px solid #f0f0f0;text-align:center}
+.tbl td.lbl{text-align:left;color:#333;line-height:1.35;padding-right:6px}
+.tbl td.y{color:#057A44;font-weight:800}
+.tbl td.n{color:#c4c4c4}
+
+.faq details{border-bottom:0.5px solid #eee;padding:12px 0}
+.faq details:last-child{border-bottom:none}
+.faq summary{font-size:17px;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:#057A44;font-weight:800;font-size:20px;line-height:1}
+.faq details[open] summary::after{content:"–"}
+.faq p{font-size:16px;line-height:1.65;color:#333;margin-top:8px}
+
+.navy-end{background:#0F1E36;border-radius:14px;padding:22px 18px;text-align:center}
+.ne-1{font-size:20px;color:white;font-weight:800;line-height:1.4}
+.ne-2{font-size:16px;color:rgba(255,255,255,0.8);line-height:1.6;margin:8px 0 16px}
+.ne-3{font-size:15px;color:rgba(255,255,255,0.7);margin-top:14px;line-height:1.6}
+.ne-3 a{color:#FFB81C;font-weight:700}
+.cta-note{font-size:14.5px;color:#6B7280;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-header-text"><div class="app-header-title">Auntie Tobi Business Studio</div></div>
+  <div class="header-btns">
+    <a href="/studio" class="back-btn">Sign in</a>
+    <a href="/" class="back-btn">🏠 App</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="h-badge">💚 For Nigerian businesses in the UK</div>
+  <div class="h-title">Your business assistant, <span>in your brand voice</span></div>
+  <div class="h-sub">Captions, Reels, offers and customer replies made for <b style="color:white">your</b> business in seconds — on your phone or computer.</div>
+  <div class="qs">
+    <div class="q">What should I post today?</div>
+    <div class="q">How do I reply to this customer nicely?</div>
+    <div class="q">How do I promote my offer this weekend?</div>
+    <div class="q">What should I focus on this month?</div>
+  </div>
+  <div class="btns">
+    <a href="/studio?start=free" class="cta-btn gold">Start free</a>
+    <a href="#plans" class="cta-btn ghost">See plans</a>
+  </div>
+  <div class="h-note">Free plan: 5 a day · no card needed</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="card">
+  <div class="ctitle">How it works</div>
+  <div class="ch">Set up once. Create in seconds.</div>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><div><b>Tell us about your business</b><span>Your business name, what you sell, who your customers are and how you like to sound. Do it once — or let us read your website to fill it in.</span></div></div>
+    <div class="step"><div class="step-n">2</div><div><b>Pick what you need</b><span>A post, a Reel, an offer, a reply to a customer, a plan for the week… Answer a question or two.</span></div></div>
+    <div class="step"><div class="step-n">3</div><div><b>Copy, post or send</b><span>Get ready-to-use content written for your business. Make it shorter or more conversational for free, save it to your library, and post it yourself.</span></div></div>
+  </div>
+  <div class="example">
+    <div class="ex-in">Example — “Promote an offer” for a cake business</div>
+    <div class="ex-out">🎂 Weekend treat alert! Order any celebration cake by Thursday and get 6 cupcakes FREE 🧁
+Perfect for birthdays, naming ceremonies and family gatherings.
+📩 DM “CAKE” to book your slot — limited weekend orders!</div>
+    <div class="ex-note">An illustration of the style. Your results use your own business details and the exact offer you give — prices and dates are never made up.</div>
+  </div>
+</div>
+
+<!-- WHAT YOU CAN DO -->
+<div class="card">
+  <div class="ctitle">What you can do</div>
+  <div class="ch">30 AI tools in 6 groups</div>
+  <div class="cat"><div class="cat-h"><span class="cat-ico">✍️</span>Content creation</div><div class="cat-b">Never be stuck for what to post.</div>
+    <div class="chips"><span class="chip">Post captions</span><span class="chip">Reel scripts</span><span class="chip">Carousels</span><span class="chip">Instagram Stories</span><span class="chip">Content ideas</span><span class="chip">Hashtags &amp; SEO</span><span class="chip lk">🔒 Repurpose content</span></div></div>
+  <div class="cat"><div class="cat-h"><span class="cat-ico">🏷️</span>Sales &amp; promotions</div><div class="cat-b">Turn followers into customers.</div>
+    <div class="chips"><span class="chip">Promote an offer</span><span class="chip">Product descriptions</span><span class="chip">Booking promotion</span><span class="chip">Sales follow-up</span><span class="chip">Launch announcement</span><span class="chip lk">🔒 Full launch campaign</span></div></div>
+  <div class="cat"><div class="cat-h"><span class="cat-ico">⭐</span>Brand &amp; visibility</div><div class="cat-b">Explain clearly why customers should choose you.</div>
+    <div class="chips"><span class="chip">Bio &amp; business description</span><span class="chip">Unique selling point</span><span class="chip">Brand story</span><span class="chip lk">🔒 Ideal customer finder</span><span class="chip lk">🔒 Business SEO keywords</span></div></div>
+  <div class="cat"><div class="cat-h"><span class="cat-ico">💬</span>Customer communication</div><div class="cat-b">Reply professionally — even when it’s tricky.</div>
+    <div class="chips"><span class="chip">Customer replies</span><span class="chip">Complaint responses</span><span class="chip">Thank-you messages</span><span class="chip">Review posts</span><span class="chip">FAQs</span></div></div>
+  <div class="cat"><div class="cat-h"><span class="cat-ico">📈</span>Business growth</div><div class="cat-b">Know what to work on next.</div>
+    <div class="chips"><span class="chip lk">🔒 30-day growth plan</span><span class="chip lk">🔒 Business check-up</span><span class="chip lk">🔒 Sales improvement ideas</span><span class="chip lk">🔒 Collaboration ideas</span></div></div>
+  <div class="cat"><div class="cat-h"><span class="cat-ico">🗓️</span>Planning</div><div class="cat-b">Stay consistent without the stress.</div>
+    <div class="chips"><span class="chip">7-day content plan</span><span class="chip">Weekly marketing plan</span><span class="chip lk">🔒 30-day content plan</span><span class="chip lk">🔒 Advanced weekly plan</span></div></div>
+  <div class="legend">🔒 Advanced tools — included with the Business Club, Business Studio Pro and Business Studio Plus. Everything else is on the Free plan too.</div>
+</div>
+
+<!-- FREE EXTRAS -->
+<div class="card">
+  <div class="ctitle">Included on every plan</div>
+  <div class="ch">Helpful extras that never use your daily allowance</div>
+  <div class="free-grid">
+    <div class="fx"><b>💡 Daily content idea</b><span>A fresh idea for your business every day</span></div>
+    <div class="fx"><b>🔔 Follow-up reminders</b><span>Never forget an enquiry again</span></div>
+    <div class="fx"><b>🧾 Quotes &amp; invoices</b><span>With your bank details, ready to send</span></div>
+    <div class="fx"><b>🛍️ Price list page</b><span>Your prices + WhatsApp ordering link</span></div>
+    <div class="fx"><b>🖼️ Branded images</b><span>Post and Story graphics in your colours</span></div>
+    <div class="fx"><b>⭐ Review link &amp; QR</b><span>Make it easy for customers to review you</span></div>
+    <div class="fx"><b>📊 Results tracker</b><span>Enquiries, bookings and sales in one place</span></div>
+    <div class="fx"><b>✅ To-do list</b><span>Your business tasks in one list</span></div>
+  </div>
+</div>
+
+<!-- PLANS -->
+<div id="plans" class="ctitle" style="text-align:center;margin:8px 0 0">Plans</div>
+<div class="plans">
+  <div class="plan">
+    <div class="p-top"><div class="p-name">Free</div><span class="p-tag g">Start here</span></div>
+    <div class="p-price">£0</div><div class="p-alt">No card needed</div>
+    <div class="p-credits">5 AI generations a day</div>
+    <ul class="ticks"><li>All the everyday tools</li><li>All the free extras</li><li class="x">Advanced tools</li><li class="x">Growth Library</li></ul>
+    <a href="/studio?start=free" class="cta-btn">Start free</a>
+  </div>
+  <div class="plan club">
+    <div class="p-top"><div class="p-name">💚 Business Club</div><span class="p-tag g">Best for growing</span></div>
+    <div class="p-price">£50 <span>/year</span></div><div class="p-alt">About £4.17 a month · paid once a year</div>
+    <div class="p-credits">20 AI generations a day</div>
+    <ul class="ticks"><li>Every tool, including the advanced ones</li><li>Business Growth Library — lessons, templates, checklists</li><li><b>Promotion by Auntie Tobi</b> — Business Spotlight, Featured Business, Marketplace listing, reposts</li><li>Verified badge for eligible businesses</li></ul>
+    <a href="/business-club" class="cta-btn">See the Business Club</a>
+  </div>
+  <div class="plan pro">
+    <div class="p-top"><div class="p-name">Business Studio Pro</div><span class="p-tag y">Best value</span></div>
+    <div class="p-price">£3 <span>/month</span></div><div class="p-alt">or £30 a year (2 months free) · cancel any time</div>
+    <div class="p-credits">50 AI generations a day</div>
+    <ul class="ticks"><li>Every tool, including the advanced ones</li><li>Business Growth Library</li><li>All the free extras</li><li class="x">Promotion by Auntie Tobi (that’s the Club)</li></ul>
+    <a href="/studio?start=pro" class="cta-btn gold">Get Pro</a>
+  </div>
+  <div class="plan plus">
+    <div class="p-top"><div class="p-name">Business Studio Plus</div><span class="p-tag y">Most generations</span></div>
+    <div class="p-price">£5 <span>/month</span></div><div class="p-alt">or £50 a year (2 months free) · cancel any time</div>
+    <div class="p-credits">100 AI generations a day</div>
+    <ul class="ticks"><li>Every tool, including the advanced ones</li><li>Business Growth Library</li><li>All the free extras</li><li class="x">Promotion by Auntie Tobi (that’s the Club)</li></ul>
+    <a href="/studio?start=pro" class="cta-btn">Get Plus</a>
+  </div>
+</div>
+<p class="cta-note">Club members can add Pro or Plus for more generations a day — you always get the highest.</p>
+
+<!-- COMPARE -->
+<div class="card">
+  <div class="ctitle">Compare</div>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th></th><th class="c1">Free</th><th class="c2">Club</th><th class="c3">Pro</th><th class="c4">Plus</th></tr></thead>
+    <tbody>
+      <tr><td class="lbl">Price</td><td>£0</td><td>£50/yr</td><td>£3/mo</td><td>£5/mo</td></tr>
+      <tr><td class="lbl">AI generations a day</td><td>5</td><td>20</td><td>50</td><td>100</td></tr>
+      <tr><td class="lbl">Everyday tools</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td class="lbl">Free extras</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td class="lbl">Advanced tools</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td class="lbl">Growth Library</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td class="lbl">Promotion by Auntie Tobi</td><td class="n">–</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td></tr>
+      <tr><td class="lbl">Verified badge &amp; Marketplace</td><td class="n">–</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- FAQ -->
+<div class="card faq">
+  <div class="ctitle">Questions</div>
+  <details><summary>What is an “AI generation”?</summary><p>Each time you tap Create or Regenerate and get a result, that’s one generation — even when you get several options (like 3 captions). A 30-day plan uses 3. Editing, copying, saving and making a result shorter or more conversational are free. If something goes wrong and you don’t get a result, it isn’t counted. Your allowance resets every night at midnight.</p></details>
+  <details><summary>Does it post to Instagram for me?</summary><p>No — you stay in control. Business Studio writes the content; you copy it and post or send it yourself, wherever your customers are (Instagram, TikTok, Facebook, WhatsApp or your website).</p></details>
+  <details><summary>Business Club or Pro — which is right for me?</summary><p>Choose the <b>Business Club</b> if you want Auntie Tobi to help people discover your business — Spotlight, Featured Business, Marketplace listing and reposts — plus every tool. Choose <b>Pro</b> or <b>Plus</b> if you only want the tools and more generations a day. You can have both.</p></details>
+  <details><summary>Can I cancel any time?</summary><p>Yes. Pro and Plus can be cancelled from your Account at any time — you keep them until the end of the period you’ve paid for, then you go back to the Free plan. Your saved content stays in your library.</p></details>
+  <details><summary>Can I switch between Pro and Plus?</summary><p>Yes — from Account → “Switch plan, manage or cancel”. You can also move between monthly and yearly.</p></details>
+  <details><summary>Is my business information private?</summary><p>Your Business Studio is private to your account — your profile, drafts and library aren’t shown to anyone else. Your price list page is only public if you choose to publish it. To write your content, your request and business profile are sent to our AI provider.</p></details>
+  <details><summary>Will the content sound like me?</summary><p>It uses the tone you choose (warm, professional, fun…) and your own details — products, customers, location and calls to action. You can always edit it before you post.</p></details>
+</div>
+
+<!-- END -->
+<div class="navy-end">
+  <div class="ne-1">Less time writing. More time running your business.</div>
+  <div class="ne-2">Start free today — 5 AI generations a day, no card needed. Upgrade whenever you’re ready.</div>
+  <a href="/studio?start=free" class="cta-btn gold">Start free</a>
+  <div class="ne-3">Want Auntie Tobi to promote your business too? <a href="/business-club">See the Business Club →</a></div>
+</div>
+<p class="cta-note">Questions? <a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20have%20a%20question%20about%20Business%20Studio" target="_blank" rel="noopener" style="font-weight:700">Chat with us on WhatsApp</a></p>
+
+</div>
+</body>
+</html>

@@ -704,7 +704,7 @@ function costOf(toolId, input) {
   return (r && input && r.values[input[r.field]]) || 1;
 }
 
-// Advanced tools — Business Club, Pro and Pro Plus. Free plan: everyday tools only.
+// Advanced tools — Business Club, Pro and Plus. Free plan: everyday tools only.
 const PAID_TOOLS = ['repurpose', 'idealcustomer', 'seo', 'salesideas', 'growth30', 'collab', 'checkup'];
 // Tools that are free in a basic form, with an advanced option for paid plans.
 const PAID_OPTIONS = {
