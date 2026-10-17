@@ -498,6 +498,12 @@ exports.handler = handler(async (ctx) => {
       await core.audit(actor, 'msg_announce', { audience: item.audience, n: to.length });
       return { item, reached: to.length, announcements: await messages.announcements() };
     }
+    case 'msg-welcome-get': return { welcome: await require('../welcome').get() };
+    case 'msg-welcome-save': {
+      const w = await require('../welcome').save(body.welcome);
+      await core.audit(actor, 'msg_welcome', { on: w.on });
+      return { welcome: w };
+    }
     case 'msg-ann-save': return { annSaved: await messages.saveAnnouncementDraft(body.item) };
     case 'msg-ann-saved-delete': return { annSaved: await messages.deleteAnnouncementDraft(body.id) };
     case 'msg-announce-delete': {

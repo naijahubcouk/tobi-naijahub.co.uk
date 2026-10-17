@@ -2,9 +2,11 @@
 /*
  * Hourly (scheduled in studio-messages-remind.mjs): if Auntie Tobi replied and the member hasn't read it for 3 hours,
  * send them one email so the reply isn't missed. One email per new reply; announcements never trigger an email.
+ * Also sends the next due Welcome series message to new members (9am–7pm UK only).
  */
 const core = require('../core');
 const messages = require('../messages');
+const welcome = require('../welcome');
 
 const AFTER_MS = 3 * 60 * 60 * 1000, MAX_PER_RUN = 40;
 function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
@@ -36,10 +38,19 @@ async function run() {
   return report;
 }
 
+async function runWelcome() {
+  const keys = await core.listKeys('members/');
+  const members = [];
+  for (const k of keys) { const m = await core.getJson(k); if (m) members.push(m); }
+  return welcome.run({ members, settings: await core.getSettings() });
+}
+
 exports.run = run;
+exports.runWelcome = runWelcome;
 exports.handler = async () => {
   let report = {};
   try { report = await run(); } catch (e) { console.error('[studio] message reminders error', e); }
+  try { report.welcome = await runWelcome(); } catch (e) { console.error('[studio] welcome series error', e); }
   console.log('[studio] message reminders', JSON.stringify(report));
   return { statusCode: 200, body: JSON.stringify(report) };
 };
