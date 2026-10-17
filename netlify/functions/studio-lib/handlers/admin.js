@@ -465,7 +465,7 @@ exports.handler = handler(async (ctx) => {
       const rows = Object.entries(th).map(([email, x]) => ({ email, ...x, ...(people[email] || { name: '', plan: byEmail[email] ? 'Ended' : 'Not a member' }) }))
         .sort((a, b) => (b.unreadAdmin > 0) - (a.unreadAdmin > 0) || b.updatedAt.localeCompare(a.updatedAt));
       const contacts = Object.entries(people).filter(([, p]) => p.active).map(([email, p]) => ({ email, name: p.name, plan: p.plan })).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
-      return { rows, contacts, unread: rows.reduce((n, r) => n + (r.unreadAdmin || 0), 0), quick: await messages.quick(), announcements: await messages.announcements(), max: messages.MAX_TEXT };
+      return { rows, contacts, unread: rows.reduce((n, r) => n + (r.unreadAdmin || 0), 0), quick: await messages.quick(), announcements: await messages.announcements(), annSaved: await messages.savedAnnouncements(), max: messages.MAX_TEXT };
     }
     case 'msg-unread': return { unread: await messages.unreadForAdmin() };
     case 'msg-thread': {
@@ -498,6 +498,8 @@ exports.handler = handler(async (ctx) => {
       await core.audit(actor, 'msg_announce', { audience: item.audience, n: to.length });
       return { item, reached: to.length, announcements: await messages.announcements() };
     }
+    case 'msg-ann-save': return { annSaved: await messages.saveAnnouncementDraft(body.item) };
+    case 'msg-ann-saved-delete': return { annSaved: await messages.deleteAnnouncementDraft(body.id) };
     case 'msg-announce-delete': {
       await messages.deleteAnnouncement(String(body.id || ''));
       await core.audit(actor, 'msg_announce_delete', { id: body.id });
