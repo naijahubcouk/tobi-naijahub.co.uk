@@ -40,6 +40,18 @@ async function addDef(email, raw) {
   });
   return def;
 }
+// Several one-off tasks at once (e.g. "Add to my to-do list" from a growth or weekly plan).
+async function addMany(email, list) {
+  list = (Array.isArray(list) ? list : []).slice(0, 35).map(r => ({ title: cleanText(r && r.title, 160), date: isDay(r && r.date) ? r.date : core.dayKey() })).filter(r => r.title.length >= 2);
+  if (!list.length) throw new HttpError(400, 'invalid', 'No tasks to add.');
+  const defs = list.map(r => ({ id: `d${crypto.randomBytes(5).toString('hex')}`, title: r.title, repeat: 'once', date: r.date, createdAt: core.nowIso() }));
+  await cas(key(email), cur => {
+    const s = cur || empty();
+    if ((s.defs || []).length + defs.length > 150) throw new HttpError(400, 'too_many', 'Your to-do list is full — tick off or remove some tasks first.');
+    return { ...s, defs: [...(s.defs || []), ...defs] };
+  });
+  return defs.length;
+}
 async function deleteDef(email, id) {
   await cas(key(email), cur => {
     if (!cur) return undefined;
@@ -181,4 +193,4 @@ async function mark(email, member, k, how) {
 
 async function counts(email, member, access) { return (await refresh(email, member, access)).counts; }
 
-module.exports = { refresh, mark, addDef, deleteDef, counts };
+module.exports = { addMany, refresh, mark, addDef, deleteDef, counts };

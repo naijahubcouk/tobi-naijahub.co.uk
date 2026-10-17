@@ -63,6 +63,7 @@ exports.handler = handler(async (ctx) => {
     case 'todo-today': return memtodo.refresh(email, auth.member, auth.access, { full: !!body.full });
     case 'todo-mark': return { item: await memtodo.mark(email, auth.member, String(body.key || '').slice(0, 200), String(body.how || '')) };
     case 'todo-add': return { def: await memtodo.addDef(email, body.task) };
+    case 'todo-add-many': return { n: await memtodo.addMany(email, body.tasks) };
     case 'todo-def-delete': { await memtodo.deleteDef(email, String(body.id || '')); return { ok: true }; }
     case 'benefits-seen': {
       await prefs.markBenefitsSeen(email);
