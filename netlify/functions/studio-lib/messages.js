@@ -152,6 +152,34 @@ async function deleteAnnouncement(id) {
   if (!n) throw new HttpError(404, 'not_found', 'That announcement no longer exists.');
 }
 
+// ── saved announcement messages (reusable drafts) ──  msg/annsaved { items: [{ id, title, text, audience }] }
+const DEFAULT_SAVED = [
+  { id: 'sfeedback', title: 'Ask for feedback', audience: 'all', text: 'Hi everyone 💚 Business Studio has lots of new tools this week. I’d love your help making it even better:\n1. Which tool do you use most?\n2. What’s one thing that’s confusing or not working?\n3. What would you love Business Studio to do for your business?\nJust reply here — I read every message!' },
+  { id: 'snewtools', title: 'New tools are live', audience: 'all', text: 'New in Business Studio 🎉 Open Create → All tools to try them. Tell me which one helps you most!' },
+  { id: 'slive', title: 'Live session reminder', audience: 'club', text: 'Our next Business Club live session is on [day] at [time] 🎉 Bring your questions — see you there!' },
+];
+async function savedAnnouncements() { const s = await getJson('msg/annsaved'); return s && Array.isArray(s.items) ? s.items : DEFAULT_SAVED.slice(); }
+async function saveAnnouncementDraft(raw) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  const text = checkText(raw.text);
+  const title = core.cleanText(raw.title, 60) || text.split('\n')[0].slice(0, 40);
+  const audience = AUDIENCES.includes(raw.audience) ? raw.audience : 'all';
+  const items = await savedAnnouncements();
+  const id = /^s[a-z0-9]{3,30}$/.test(String(raw.id || '')) && items.some(x => x.id === raw.id) ? raw.id : newId().replace(/^m/, 's');
+  const next = items.filter(x => x.id !== id);
+  const pos = items.findIndex(x => x.id === id);
+  const item = { id, title, text, audience };
+  if (pos >= 0) next.splice(pos, 0, item); else next.unshift(item);
+  if (next.length > 30) throw new HttpError(400, 'too_many', 'You have 30 saved messages — delete some first.');
+  await setJson('msg/annsaved', { items: next, updatedAt: core.nowIso() });
+  return next;
+}
+async function deleteAnnouncementDraft(id) {
+  const items = (await savedAnnouncements()).filter(x => x.id !== String(id || ''));
+  await setJson('msg/annsaved', { items, updatedAt: core.nowIso() });
+  return items;
+}
+
 // Replies the member hasn't read for a while (for the reminder email). Direct replies only, not announcements.
 async function staleUnread(email, olderThanMs) {
   const t = await getJson(tKey(email));
@@ -165,4 +193,4 @@ async function staleUnread(email, olderThanMs) {
 }
 async function markEmailed(email, id) { await cas(tKey(email), cur => (cur ? { ...cur, emailedFor: id } : undefined)); }
 
-module.exports = { memberView, memberUnread, addMessage, inbox, adminThread, setDone, unreadForAdmin, quick, saveQuick, announcements, announce, deleteAnnouncement, inAudience, staleUnread, markEmailed, AUDIENCES, MAX_TEXT };
+module.exports = { savedAnnouncements, saveAnnouncementDraft, deleteAnnouncementDraft, memberView, memberUnread, addMessage, inbox, adminThread, setDone, unreadForAdmin, quick, saveQuick, announcements, announce, deleteAnnouncement, inAudience, staleUnread, markEmailed, AUDIENCES, MAX_TEXT };

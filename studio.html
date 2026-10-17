@@ -1398,8 +1398,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     setChrome({ tabs: true, tab: 'create' });
     if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Create</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
     app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 14px">You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' +
-      '<h2 style="margin-top:0">Quick create</h2>' + quickRow() + '<h2 id="allTools">All tools</h2>' + toolGrid() + '</main>';
-    bindQuick(showCreate); bindToolDir();
+      '<h2 id="allTools" style="margin-top:0">All tools</h2>' + toolGrid() + '</main>';
+    bindToolDir();
   }
 
   // ───────────── Plan: goal + content calendar ─────────────

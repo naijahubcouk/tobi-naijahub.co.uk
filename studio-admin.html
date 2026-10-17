@@ -132,7 +132,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var gone = setTimeout(function () { t.remove(); }, 6000);
     t.lastChild.onclick = function () { clearTimeout(gone); t.remove(); onUndo(); };
   }
-  function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2500); }
+  function toast(m) { $$('.toast').forEach(function (x) { x.remove(); }); var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2500); }
   function d(iso) { return iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }
   function gbp(usd) { var r = S.overview ? S.overview.settings.usdToGbp : 0.79; return '£' + (usd * r).toFixed(usd * r < 1 ? 3 : 2); }
   function today() { return new Date().toISOString().slice(0, 10); }
@@ -271,12 +271,25 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   }
   function annSheet() {
     var anns = S.msg.announcements || [];
+    var saved = S.msg.annSaved || [];
     var s2 = sheet('<h2 style="margin:0">📣 Announcement</h2><p class="muted">Goes into every chosen member’s chat as an announcement, with a push notification. Members can reply to you privately.</p>' +
+      '<div><b>💾 Saved messages</b><div class="stack" id="anSv" style="gap:6px;margin-top:6px">' + (saved.length ? saved.map(function (x) { return '<div class="row" style="flex-wrap:nowrap;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 8px"><button class="btn small ghost" data-anuse="' + esc(x.id) + '" style="flex:1;justify-content:flex-start;text-align:left;border:0;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.title) + '</span><span class="muted" style="font-weight:500;font-size:12px;margin-left:6px;white-space:nowrap">· ' + esc(MSG_AUD[x.audience]) + '</span></button><button class="btn small ghost danger" data-andel="' + esc(x.id) + '" aria-label="Delete saved message">✕</button></div>'; }).join('') : '<p class="muted" style="margin:0">No saved messages yet.</p>') + '</div></div>' +
       '<div><label for="anA">Send to</label><select id="anA">' + Object.keys(MSG_AUD).map(function (k) { return '<option value="' + k + '">' + MSG_AUD[k] + '</option>'; }).join('') + '</select></div>' +
       '<div><label for="anT">Message</label><textarea id="anT" rows="6" maxlength="' + (S.msg.max || 2000) + '" placeholder="e.g. Our next Business Club live session is on Thursday at 7pm…"></textarea></div><div class="err hidden" id="anE"></div>' +
-      '<div class="row"><button class="btn primary" id="anS">Send announcement</button><button class="btn ghost" id="anX">Close</button></div>' +
+      '<div class="row"><button class="btn primary" id="anS">Send announcement</button><button class="btn ghost" id="anSave">💾 Save for later</button><button class="btn ghost" id="anX">Close</button></div>' +
       '<div><b>Sent</b>' + (anns.length ? '<div class="stack" style="gap:6px;margin-top:6px">' + anns.map(function (a) { return '<div class="card" style="padding:10px 12px"><div class="row" style="justify-content:space-between"><span class="muted" style="font-size:12.5px">' + esc(mTime(a.at)) + ' · ' + esc(MSG_AUD[a.audience]) + '</span><button class="btn small ghost danger" data-and="' + esc(a.id) + '">Delete</button></div><div style="white-space:pre-wrap;margin-top:4px">' + esc(a.text) + '</div></div>'; }).join('') + '</div>' : '<p class="muted" style="margin:4px 0">None yet.</p>') + '</div>');
     $('#anX', s2).onclick = function () { s2.remove(); };
+    var using = null;
+    $$('[data-anuse]', s2).forEach(function (b) { b.onclick = function () { var x = saved.filter(function (y) { return y.id === b.dataset.anuse; })[0]; using = x.id; $('#anT', s2).value = x.text; $('#anA', s2).value = x.audience; $('#anT', s2).focus(); toast('Loaded “' + x.title + '” — edit it if you like, then send'); }; });
+    $$('[data-andel]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this saved message?')) return; try { var r = await api('msg-ann-saved-delete', { id: b.dataset.andel }); S.msg.annSaved = r.annSaved; s2.remove(); annSheet(); toast('Saved message deleted'); } catch (x) { toast(x.message); } }; });
+    $('#anSave', s2).onclick = async function () {
+      var t = $('#anT', s2).value.trim(), e = $('#anE', s2);
+      if (!t) { e.textContent = 'Type the message first.'; e.classList.remove('hidden'); return; }
+      var cur = using ? saved.filter(function (y) { return y.id === using; })[0] : null;
+      if (cur && cur.text !== t && !confirm('Update your saved message “' + cur.title + '” with this text?\n\nOK = update it · Cancel = save as a new message')) cur = null;
+      var title = prompt(cur ? 'Update saved message — name:' : 'Name this saved message:', cur ? cur.title : t.split('\n')[0].slice(0, 40)); if (title === null) return;
+      try { var r = await api('msg-ann-save', { item: { id: cur ? cur.id : '', title: title, text: t, audience: $('#anA', s2).value } }); S.msg.annSaved = r.annSaved; var keep = { t: t, a: $('#anA', s2).value }; s2.remove(); annSheet(); $('#anT').value = keep.t; $('#anA').value = keep.a; toast(cur ? 'Saved message updated 💾' : 'Saved for later 💾'); } catch (x) { toast(x.message); }
+    };
     $('#anS', s2).onclick = async function () {
       var t = $('#anT', s2).value.trim(), a = $('#anA', s2).value, e = $('#anE', s2);
       if (!t) { e.textContent = 'Type the announcement first.'; e.classList.remove('hidden'); return; }
