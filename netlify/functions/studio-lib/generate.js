@@ -275,7 +275,13 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   if (!profile || !profile.businessName) throw new HttpError(409, 'profile_required', 'Please complete your business profile first.');
   rawInput = rawInput && typeof rawInput === 'object' ? { ...rawInput } : {};
   if (tool.fields.some(f => f.name === 'platform') && !tools.PLATFORMS.includes(rawInput.platform)) rawInput.platform = tools.defaultPlatform(profile);
+  const paidOk = !access || access.paidTools !== false;
+  const po = tools.PAID_OPTIONS[toolId];
+  if (!paidOk && po && rawInput[po.field] === undefined) rawInput[po.field] = po.free;   // Free plan: the basic version by default
   const input = tools.validateInput(toolId, rawInput);
+  if (!paidOk && tools.needsPaid(toolId, input)) {
+    throw new HttpError(403, 'paid_only', (po && !tools.PAID_TOOLS.includes(toolId) ? po.label + ' is' : `${tool.name} is`) + ' part of the Business Club, Pro and Pro Plus. Upgrade to unlock it.', { tool: toolId });
+  }
   if (toolId === 'quick' && input.goal === 'offer' && !input.about && !input.source) throw new HttpError(400, 'missing_field', 'Please tell us the offer (for example “10% off all cakes until Friday”).');
   let quickExtra = null;
   if (toolId === 'quick') {
@@ -304,7 +310,7 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   try {
     const extra = quickExtra ? quickExtra : toolId === 'ideas' ? { avoid: (await recentIdeas(email)).concat(await growth.recentTopics(email)).slice(0, 40) }
       : toolId === 'planner' ? { avoid: await growth.recentTopics(email) } : {};
-    result = await callModel(tools.buildMessages(toolId, input, profile, extra), tool.maxTokens, settings);
+    result = await callModel(tools.buildMessages(toolId, input, profile, extra), tool.maxTokensFor ? tool.maxTokensFor(input) : tool.maxTokens, settings);
   } catch (e) {
     await release(email, idemKey, day);
     throw e;

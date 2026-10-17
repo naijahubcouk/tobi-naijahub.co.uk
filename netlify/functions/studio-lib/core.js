@@ -15,8 +15,10 @@ const MIN = 60 * 1000;
 
 // ───────────────────────── configuration ─────────────────────────
 const DEFAULT_SETTINGS = {
-  standardLimit: 20,            // generations per DAY, Business Club only
-  powerLimit: 100,              // generations per DAY with Business Studio Pro (with or without Club)
+  freeLimit: 5,                 // generations per DAY on the Free plan (0 = Free plan switched off)
+  standardLimit: 20,            // generations per DAY, Business Club
+  proLimit: 50,                 // generations per DAY with Business Studio Pro (£3/month)
+  powerLimit: 100,              // generations per DAY with Business Studio Pro Plus (£5/month)
   perMinuteLimit: 6,            // burst protection per member
   spendWarnGbp: 30,             // email + admin alert when monthly AI spend passes this (and 2x). Never blocks.
   model: '',                    // blank = STUDIO_MODEL env or openai/gpt-4o-mini
@@ -288,29 +290,45 @@ const LIVE_SUB_STATUSES = ['active', 'trialing', 'past_due', 'unpaid', 'incomple
  *    to view and copy their library.
  *  - "blocked" (admin) removes all access.
  */
+/*
+ * Plans:  Free (any account, everyday tools)  ·  Business Club  ·  add-ons Pro / Pro Plus (sold to anyone).
+ * Credits a day = the highest of the plans someone has. Club and the add-ons unlock the advanced tools.
+ */
 function access(member, settings, now) {
   now = now || Date.now();
+  settings = settings || DEFAULT_SETTINGS;
   const blocked = !!(member && member.blocked);
   const membershipActive = !blocked && !!member && member.status === 'active' &&
     !!member.membershipExpiresAt && endOfDayUk(member.membershipExpiresAt) >= now;
   const addon = (member && member.addon) || null;
-  const powerActive = !blocked && !!addon && (addon.status === 'active' || addon.status === 'trialing');
-  const canCreate = membershipActive || powerActive;
+  const powerActive = !blocked && !!addon && (addon.status === 'active' || addon.status === 'trialing');   // any paid add-on
+  const tier = powerActive ? (addon.tier === 'pro' ? 'pro' : 'plus') : null;   // older subscriptions (£5) are Pro Plus
+  const freeLimit = Number.isInteger(settings.freeLimit) ? settings.freeLimit : DEFAULT_SETTINGS.freeLimit;
+  const freeActive = !blocked && !!member && !membershipActive && !powerActive && freeLimit > 0;
+  const canCreate = membershipActive || powerActive || freeActive;
   const canView = canCreate || (!blocked && !!addon);
-  let limit = powerActive ? settings.powerLimit : settings.standardLimit;
+  const lim = k => (Number.isInteger(settings[k]) ? settings[k] : DEFAULT_SETTINGS[k]);
+  let limit = freeActive ? freeLimit : 0;
+  if (membershipActive) limit = Math.max(limit, lim('standardLimit'));
+  if (tier === 'pro') limit = Math.max(limit, lim('proLimit'));
+  if (tier === 'plus') limit = Math.max(limit, lim('powerLimit'));
   if (member && Number.isInteger(member.allowanceOverride) && member.allowanceOverride >= 0) limit = member.allowanceOverride;
   return {
     blocked,
     membershipActive,          // Business Club
-    powerActive,               // Business Studio Pro paid and current
+    powerActive,               // Business Studio Pro or Pro Plus paid and current
+    tier,                      // 'pro' | 'plus' | null
+    free: freeActive,          // Free plan (no Club, no add-on)
+    paidTools: membershipActive || powerActive, // advanced tools
     canCreate,
     canView,
     readOnly: canView && !canCreate,
     addonStatus: addon ? addon.status : null,
     addonInterval: addon ? addon.interval || null : null,
+    addonTier: addon ? (addon.tier === 'pro' ? 'pro' : 'plus') : null,
     addonLive: !!addon && LIVE_SUB_STATUSES.includes(addon.status),
-    plan: powerActive ? 'power' : membershipActive ? 'club' : 'none',
-    resources: membershipActive || powerActive, // Library resources: Business Club or Business Studio Pro
+    plan: tier === 'plus' ? 'plus' : tier === 'pro' ? 'pro' : membershipActive ? 'club' : freeActive ? 'free' : 'none',
+    resources: membershipActive || powerActive, // Library resources: Business Club or an add-on
     limit: canCreate ? limit : 0,
   };
 }
@@ -379,7 +397,7 @@ async function requireMember(ctx, opts) {
   if (!allowed) {
     throw new HttpError(403, acc.readOnly ? 'read_only' : 'no_access',
       acc.readOnly ? 'Your Business Studio Pro has ended. Renew it to create new content — your library is still here.'
-        : 'You need an active Business Club membership or Business Studio Pro to use the Business Studio.');
+        : 'You need a Business Studio account to use this. Sign in or start free.');
   }
   // Renew / rotate
   if (!sess.rotatedAt && now - sess.createdAt > SESSION.rotateMs) {

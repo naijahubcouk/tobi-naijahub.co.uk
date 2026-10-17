@@ -1,8 +1,8 @@
 'use strict';
 /*
- * Business Studio Pro billing (monthly £5 or yearly £50) for signed-in people — Business Club members
+ * Business Studio add-on billing — Pro (£3/month, £30/year) or Pro Plus (£5/month, £50/year) — for signed-in people — Business Club members
  * and non-members alike.
- * POST /.netlify/functions/studio-billing  { action: 'checkout' (+ interval: 'month'|'year') | 'portal' | 'refresh' }
+ * POST /.netlify/functions/studio-billing  { action: 'checkout' (+ interval: 'month'|'year', tier: 'pro'|'plus') | 'portal' | 'refresh' }
  * Starting or managing a subscription needs an email code from the last 24 hours.
  */
 const core = require('../core');
@@ -18,9 +18,11 @@ exports.handler = handler(async (ctx) => {
     case 'checkout': {
       if (!stripe.billingEnabled()) throw new HttpError(503, 'billing_not_configured', 'Business Studio Pro isn\'t available to buy just yet.');
       const interval = ctx.body.interval === 'year' ? 'year' : 'month';
+      const tier = ctx.body.tier === 'pro' ? 'pro' : 'plus';
+      if (!(stripe.availablePlans()[tier] || []).includes(interval)) throw new HttpError(400, 'invalid_plan', 'That plan is not available.');
       core.requireFresh(auth, core.SESSION.freshBillingMs);
       await core.rateLimit('checkout', email, 10, 60 * 60 * 1000);
-      return { url: await stripe.startCheckout(email, interval, ctx.event) };
+      return { url: await stripe.startCheckout(email, interval, ctx.event, tier) };
     }
     case 'portal': {
       core.requireFresh(auth, core.SESSION.freshBillingMs);

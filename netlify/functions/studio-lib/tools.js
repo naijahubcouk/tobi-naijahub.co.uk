@@ -395,22 +395,25 @@ ${SOCIAL[i.platform] ? `HASHTAGS: ${SOCIAL[i.platform]} relevant hashtags` : ''}
   },
   launch: {
     name: 'New product launch', cat: 'sales', blurb: 'Build excitement before launch',
-    hello: 'Launching something new? I’ll plan your teaser, launch-day and follow-up posts.',
+    hello: 'Launching something new? I’ll write your launch announcement — or plan the full campaign: teaser, launch-day and follow-up posts.',
     maxTokens: 1200,
     fields: [
       text('product', 'What are you launching?', 300, true),
       text('date', 'Launch date (optional)', 80),
       text('details', 'What’s special or new about it?', 500),
+      choice('plan', 'What do you need?', ['full launch campaign', 'launch announcement'], 'full launch campaign'),
     ],
     prompt: i => `${INDUSTRY_NOTE}
-Plan a launch for: ${i.product}
+${i.plan === 'launch announcement' ? 'Write a launch announcement for' : 'Plan a launch for'}: ${i.product}
 ${i.date ? `Launch date (use exactly): ${i.date}\n` : 'No launch date given — write [launch date] where it is needed.\n'}${i.details ? `What's special (use as given): ${i.details}\n` : ''}Never invent prices, quantities or features.
 ${SEP}
-TEASER POST: a mysterious, curiosity-building post for a few days before (don't reveal everything)
+${i.plan === 'launch announcement' ? `LAUNCH POST: the launch announcement — what it is, why it’s special and how to order
+STORY: one short Story to share the news
+HASHTAGS: 8–10 relevant hashtags` : `TEASER POST: a mysterious, curiosity-building post for a few days before (don't reveal everything)
 COUNTDOWN STORY: Story text with a countdown sticker idea
 LAUNCH DAY POST: the full launch post with what it is, why it’s special and how to order
 FOLLOW UP POST: a post for 3–5 days later (e.g. first customer reactions — without inventing any — or a closer look)
-HASHTAGS: 10–12 relevant hashtags`,
+HASHTAGS: 10–12 relevant hashtags`}`,
   },
   offer: {
     name: 'Special offer creator', cat: 'sales', blurb: 'Promote discounts and bundles',
@@ -658,15 +661,17 @@ TOP 3 FIXES: the three changes that would help most, in order`,
   // ───────────── Planning & Productivity ─────────────
   weekly: {
     name: 'Weekly marketing plan', cat: 'planning', blurb: 'Plan manageable weekly actions',
-    hello: 'I’ll plan one small marketing task a day for this week — doable around your work.',
+    hello: 'I’ll plan one small marketing task a day for this week — doable around your work. Advanced adds a ready post idea, caption and Story for each day.',
     maxTokens: 1000,
+    maxTokensFor: i => (i.level === 'advanced' ? 2200 : 1000),
     fields: [
       text('focus', 'Focus for this week (optional)', 300),
       choice('time', 'Time you have', ['15 minutes a day', '30 minutes a day', '1 hour a day'], '30 minutes a day'),
+      choice('level', 'Plan type', ['basic', 'advanced'], 'basic'),
     ],
     prompt: i => `${INDUSTRY_NOTE}
 Plan this week's marketing in small daily tasks (${i.time}).${i.focus ? ` Focus: ${i.focus}.` : ''} Mix content, customers and visibility. Each task starts with a verb and is realistic.
-${SEP}
+${i.level === 'advanced' ? 'For every day from Monday to Saturday, write it as: the task, then "Post idea:" one line, then "Caption:" a short ready-to-post caption (2–4 lines, no invented prices or offers), then "Story:" one Story idea.\n' : ''}${SEP}
 WEEKLY GOAL: one clear, measurable goal for the week
 MONDAY: the task
 TUESDAY: the task
@@ -699,9 +704,24 @@ function costOf(toolId, input) {
   return (r && input && r.values[input[r.field]]) || 1;
 }
 
+// Advanced tools — Business Club, Pro and Pro Plus. Free plan: everyday tools only.
+const PAID_TOOLS = ['repurpose', 'idealcustomer', 'seo', 'salesideas', 'growth30', 'collab', 'checkup'];
+// Tools that are free in a basic form, with an advanced option for paid plans.
+const PAID_OPTIONS = {
+  planner: { field: 'days', values: ['30'], label: '30-day plan', free: '7' },
+  launch: { field: 'plan', values: ['full launch campaign'], label: 'Full launch campaign', free: 'launch announcement' },
+  weekly: { field: 'level', values: ['advanced'], label: 'Advanced plan', free: 'basic' },
+};
+function needsPaid(toolId, input) {
+  if (PAID_TOOLS.includes(toolId)) return true;
+  const o = PAID_OPTIONS[toolId];
+  return !!(o && input && o.values.includes(input[o.field]));
+}
+
 function publicToolList() {
   return Object.entries(TOOLS).map(([id, t]) => ({
     id, name: t.name, hidden: !!t.hidden, cat: t.cat || 'content', blurb: t.blurb || '', hello: t.hello || '', cost: COST_RULES[id] || null,
+    paid: PAID_TOOLS.includes(id), paidOption: PAID_OPTIONS[id] || null,
     fields: t.fields.map(f => ({ name: f.name, label: f.label, type: f.type, options: f.options, default: f.default, required: !!f.required, max: f.max })),
   }));
 }
@@ -812,4 +832,4 @@ function titleFor(toolId, input) {
   return first ? `${t}: ${first}`.slice(0, 90) : t;
 }
 
-module.exports = { QUICK_GOALS, QUICK_LABELS, QUICK_ANGLES, pickAngle, TOOLS, TONES, ONECLICK_LABELS, PLATFORMS, defaultPlatform, listingUrl, publicToolList, validateInput, buildMessages, titleFor, costOf };
+module.exports = { QUICK_GOALS, QUICK_LABELS, QUICK_ANGLES, pickAngle, TOOLS, TONES, ONECLICK_LABELS, PLATFORMS, defaultPlatform, listingUrl, publicToolList, validateInput, buildMessages, titleFor, costOf, PAID_TOOLS, PAID_OPTIONS, needsPaid };

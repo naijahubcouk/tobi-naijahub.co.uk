@@ -4,8 +4,8 @@
  * POST /.netlify/functions/studio-auth  { action, ... }
  *   request-code   { email }         → sign in. Codes only go to people with access (no enumeration).
  *   verify-code    { email, code }   → sets an HttpOnly session cookie
- *   signup-request { email }         → "Get Business Studio Pro": anyone can verify their email to buy
- *   signup-verify  { email, code }   → session for buying; no account until payment succeeds
+ *   signup-request { email }         → "Start free" / "Get Pro": anyone can verify their email
+ *   signup-verify  { email, code }   → creates a Free plan account (if the Free plan is on) and signs in
  *   stepup-request {} / stepup-verify { code } → fresh verification for payments
  *   logout {} / logout-all {}
  */
@@ -15,6 +15,27 @@ const { HttpError, handler, requireEmail, rateLimit, getMember, getSettings, acc
 const GENERIC = 'If that email has Business Studio access, a 6-digit code is on its way. It expires in 10 minutes.';
 
 async function jitter() { await core.sleep(250 + Math.random() * 400); }
+
+// Free plan: a verified email gets an account straight away (Club and add-ons are layered on later).
+async function createFreeAccount(email) {
+  const settings = await getSettings();
+  if (!(settings.freeLimit > 0)) return null;
+  const buyer = await core.getJson(`buyers/${core.enc(email)}`);
+  let created = false;
+  const now = core.nowIso();
+  await core.cas(`members/${core.enc(email)}`, cur => {
+    if (cur) return undefined;
+    created = true;
+    const r = { email, name: '', status: 'none', membershipExpiresAt: null, sessionEpoch: 0, createdAt: now, updatedAt: now, source: 'free', lastLoginAt: now };
+    if (buyer && buyer.stripeCustomerId) r.stripeCustomerId = buyer.stripeCustomerId;
+    return r;
+  });
+  if (created) {
+    if (buyer) await core.del(`buyers/${core.enc(email)}`).catch(() => {});
+    await core.audit(email, 'account_created_free', {});
+  }
+  return created;
+}
 
 async function markLogin(email) {
   await core.cas(`members/${core.enc(email)}`, cur => cur ? { ...cur, lastLoginAt: core.nowIso() } : undefined).catch(() => {});
@@ -65,12 +86,13 @@ exports.handler = handler(async (ctx) => {
       await rateLimit('verify-email', email, 12, 60 * 60 * 1000, 'Too many attempts. Please request a new code later.');
       const ok = await core.checkOtp(email, 'signup', body.code);
       if (!ok) throw new HttpError(400, 'invalid_code', 'That code is incorrect or has expired. Please check it or request a new one.');
-      const member = await getMember(email);
+      let member = await getMember(email);
       if (member && member.blocked) throw new HttpError(403, 'account_blocked', 'This account has been suspended. Please contact Auntie Tobi.');
+      const isNew = !member && !!(await createFreeAccount(email));
       const s = await core.createSession(email, 'member', ctx.event);
       ctx.cookiesOut.push(s.cookie);
       if (member) await markLogin(email);
-      return { ok: true };
+      return { ok: true, created: isNew };
     }
 
     case 'stepup-request': {
