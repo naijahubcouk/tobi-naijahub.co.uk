@@ -332,6 +332,13 @@ Above the list (for whichever filter or search you're on):
 - **⬇ Download for GHL (CSV)** — Name, Company Name, Email, Phone (+44), Category, Location, Instagram, Listing Link, Next Message, Tags. Import in GHL → Contacts → Import, then add them to your campaign.
 - **✓ Mark these N as sent** — after they're in your campaign. Each moves on its own step (invite → follow-up in 3 days → 7 days → stop); Joined / Not interested / finished ones are skipped.
 
+## 7u. Messages — members ↔ Seun (text only)
+- **Members:** 💬 button in the Business Studio header (red dot with the unread count) opens a private chat with Seun. Shows Sent ✓ / Seen. Checks for new messages every few seconds while open.
+- **Admin → Messages:** inbox (Inbox / Unread / Done / All, search), conversation with Open record, ✓ Done (comes back if they reply), ⚡ Quick replies (editable), ✏️ New message to any active member. Nav shows the unread count; Today shows "N unread messages from members".
+- **📣 Announcement:** to All members / Business Club / Business Studio Pro. Shows in each matching member's chat (gold), one push to all of them, deletable. Doesn't fill your inbox; members can reply privately.
+- **Notifications:** your reply → push to the member (if they allowed notifications); unread for 3 hours → one email (hourly job `studio-messages-remind`, never for announcements). A member's first unread message → one email to you (STUDIO_ADMIN_EMAILS).
+- Storage: `msg/thread/<email>`, `msg/index`, `msg/announce`, `msg/quick`. Function: `studio-messages`.
+
 ## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)
 
 Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**
