@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Auntie Tobi Business Studio</title>
-<meta name="description" content="Auntie Tobi Business Studio — your business assistant in your brand voice. Captions, Reels, offers, customer replies and growth plans for Nigerian businesses in the UK. Start free.">
+<meta name="description" content="Auntie Tobi Business Studio — one place to plan, manage and grow your business. Your everyday workspace for customers, content, planning and business growth, with AI help when you need it. Start free.">
 <meta property="og:title" content="Auntie Tobi Business Studio 💚">
-<meta property="og:description" content="Captions, Reels, offers and customer replies made for your business in seconds. Start free — 5 a day, no card needed.">
+<meta property="og:description" content="One place to plan, manage and grow your business. Customers, follow-ups, to-dos, content calendar, quotes and AI help. Start free.">
 <link rel="icon" href="/icons/studio-icon-48.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -119,6 +119,9 @@ a{color:#057A44}
 
 .hero-ex{display:none}
 .duo{display:flex;flex-direction:column;gap:12px}
+.f6{display:grid;grid-template-columns:1fr;gap:10px;margin-top:6px}
+.f6i{background:#f0faf5;border-radius:12px;padding:14px}.f6i span{font-size:24px}.f6i b{display:block;font-size:17px;margin:4px 0 4px}.f6i p{font-size:15.5px;line-height:1.6;color:#333}
+.cats .example{margin:4px 0 14px}
 /* ── laptop ── phones unchanged */
 @media (min-width:900px){
   body{padding-bottom:80px}
@@ -135,6 +138,8 @@ a{color:#057A44}
   .hx-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
   .hx-top img{width:30px;height:30px;border-radius:50%;border:2px solid #FFB81C}
   .hx-top b{font-size:15px}.hx-top span{font-size:13px;color:#6B7280}
+  .hx-dash{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0 10px}.hx-dash div{background:#f0faf5;border-radius:10px;padding:8px 6px}.hx-dash b{display:block;font-size:22px;color:#0F1E36}.hx-dash span{font-size:11.5px;color:#4B5563;font-weight:600;line-height:1.2;display:block}
+  .hx-row{font-size:14px;padding:8px 0;border-top:1px solid #EEF0F3;color:#0F1E36}.hx-btn{float:right;font-size:12px;font-weight:700;background:#057A44;color:#fff;border-radius:8px;padding:2px 8px}
   .hx-out{font-size:15px;line-height:1.6;white-space:pre-line;background:#FFF8E7;border-radius:10px;padding:12px}
   .hx-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.hx-tags span{font-size:12.5px;font-weight:700;background:#f0faf5;color:#057A44;border-radius:999px;padding:4px 10px}
   .hx-note{font-size:12px;color:#6B7280;margin-top:8px}
@@ -142,7 +147,8 @@ a{color:#057A44}
   .card{padding:28px 30px}
   .ch{font-size:26px}
   .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-  .card .example{display:none}
+  .f6{grid-template-columns:repeat(3,1fr);gap:14px}
+  .card.cats .example{grid-column:1/-1}
   .card.cats{display:grid;grid-template-columns:repeat(3,1fr);column-gap:28px}
   .card.cats>.ctitle,.card.cats>.ch,.card.cats>.legend{grid-column:1/-1}
   .cat{border-bottom:0;padding:14px 0}
@@ -173,39 +179,60 @@ a{color:#057A44}
 <!-- HERO -->
 <div class="hero">
   <div class="h-badge">💚 For Nigerian businesses in the UK</div>
-  <div class="h-title">Your business assistant, <span>in your brand voice</span></div>
-  <div class="h-sub">Captions, Reels, offers and customer replies made for <b style="color:white">your</b> business in seconds — on your phone or computer.</div>
+  <div class="h-title">One Place to Plan, Manage &amp; <span>Grow Your Business.</span></div>
+  <div class="h-sub">Your everyday workspace for customers, content, planning and business growth. Keep track of enquiries, follow up with customers, plan your content and manage your daily tasks — with AI help when you need it.</div>
   <div class="qs">
-    <div class="q">What should I post today?</div>
-    <div class="q">How do I reply to this customer nicely?</div>
-    <div class="q">How do I promote my offer this weekend?</div>
-    <div class="q">What should I focus on this month?</div>
+    <div class="q">Who do I need to follow up with today?</div>
+    <div class="q">What needs doing before Saturday’s orders?</div>
+    <div class="q">What should I post this week?</div>
+    <div class="q">How is my business actually doing?</div>
   </div>
   <div class="btns">
     <a href="/studio?start=free" class="cta-btn gold">Start free</a>
     <a href="#plans" class="cta-btn ghost">See plans</a>
   </div>
-  <div class="h-note">Free plan: 5 a day · no card needed</div>
+  <div class="h-note">Free to start · no card needed</div>
   <div class="hero-ex" aria-hidden="true">
-    <div class="qs" style="margin-bottom:14px"><div class="q">What should I post today?</div><div class="q">How do I promote my offer this weekend?</div></div>
-    <div class="hx-card"><div class="hx-top"><img src="/tobi-face-128.png" alt=""><b>Promote an offer</b><span>Cake business · Instagram</span></div>
-    <div class="hx-out">🎂 Weekend treat alert! Order any celebration cake by Thursday and get 6 cupcakes FREE 🧁
-Perfect for birthdays, naming ceremonies and family gatherings.
-📩 DM “CAKE” to book your slot — limited weekend orders!</div>
-    <div class="hx-tags"><span>✂️ Shorter</span><span>💬 More conversational</span><span>☆ Save</span></div>
-    <div class="hx-note">Example of the style — your results use your own details.</div></div>
+    <div class="hx-card">
+      <div class="hx-top"><img src="/tobi-face-128.png" alt=""><b>Good morning! 💚</b><span>Here’s what needs your attention today.</span></div>
+      <div class="hx-dash"><div><b>3</b><span>Follow-ups due</span></div><div><b>5</b><span>Tasks today</span></div><div><b>2</b><span>Posts planned</span></div><div><b>4</b><span>New enquiries</span></div></div>
+      <div class="hx-row">🔔 <b>Follow up Tolu</b> — 40th birthday cake <span class="hx-btn">Write message</span></div>
+      <div class="hx-row">📋 <b>Buy packaging</b> for Saturday’s orders</div>
+      <div class="hx-row">📅 <b>Reel:</b> behind the scenes in the kitchen</div>
+      <div class="hx-note">Example with sample figures — your Today shows your own business.</div>
+    </div>
+  </div>
+</div>
+
+<!-- EVERYTHING YOU NEED -->
+<div class="card feats6">
+  <div class="ctitle">Everything you need</div>
+  <div class="ch">Stay on top of your business — every day</div>
+  <div class="f6">
+    <div class="f6i"><span>👥</span><b>Never miss a follow-up</b><p>Log enquiries in seconds, see each customer’s stage — New, Contacted, Quoted, Booked, Completed — and get reminded who to contact next, with the WhatsApp message written for you.</p></div>
+    <div class="f6i"><span>📋</span><b>Stay organised every day</b><p>Your to-do list with priorities, repeating tasks and overdue reminders. Follow-ups and unpaid invoices are added for you.</p></div>
+    <div class="f6i"><span>📅</span><b>Plan your content with confidence</b><p>A content calendar for your posts, Reels and Stories — plan, draft and mark them as posted.</p></div>
+    <div class="f6i"><span>📊</span><b>Know how your business is doing</b><p>Track enquiries, bookings and sales. Paid invoices and completed customers are added automatically.</p></div>
+    <div class="f6i"><span>🎯</span><b>Turn goals into action</b><p>Set a weekly goal and get a personalised Business Tip every day with one small step to take.</p></div>
+    <div class="f6i"><span>🧾</span><b>Quotes, invoices &amp; price lists</b><p>Customer-ready quotes, invoices and receipts with your bank details — and a price list page with WhatsApp ordering.</p></div>
   </div>
 </div>
 
 <!-- HOW IT WORKS -->
 <div class="card">
   <div class="ctitle">How it works</div>
-  <div class="ch">Set up once. Create in seconds.</div>
+  <div class="ch">Set up once. Open it every morning.</div>
   <div class="steps">
     <div class="step"><div class="step-n">1</div><div><b>Tell us about your business</b><span>Your business name, what you sell, who your customers are and how you like to sound. Do it once — or let us read your website to fill it in.</span></div></div>
-    <div class="step"><div class="step-n">2</div><div><b>Pick what you need</b><span>A post, a Reel, an offer, a reply to a customer, a plan for the week… Answer a question or two.</span></div></div>
-    <div class="step"><div class="step-n">3</div><div><b>Copy, post or send</b><span>Get ready-to-use content written for your business. Make it shorter or more conversational for free, save it to your library, and post it yourself.</span></div></div>
+    <div class="step"><div class="step-n">2</div><div><b>Add things as they happen</b><span>Tap ＋ to log an enquiry, add a task, plan a post or create a quote. It takes seconds.</span></div></div>
+    <div class="step"><div class="step-n">3</div><div><b>Open Today each morning</b><span>See who to follow up with, what needs doing and what to post — and get it done, with AI help when you need words.</span></div></div>
   </div>
+</div>
+
+<!-- WHAT YOU CAN DO -->
+<div class="card cats">
+  <div class="ctitle">Create content when you need it</div>
+  <div class="ch">AI help, personalised to your business — 30 tools in 6 groups</div>
   <div class="example">
     <div class="ex-in">Example — “Promote an offer” for a cake business</div>
     <div class="ex-out">🎂 Weekend treat alert! Order any celebration cake by Thursday and get 6 cupcakes FREE 🧁
@@ -213,12 +240,6 @@ Perfect for birthdays, naming ceremonies and family gatherings.
 📩 DM “CAKE” to book your slot — limited weekend orders!</div>
     <div class="ex-note">An illustration of the style. Your results use your own business details and the exact offer you give — prices and dates are never made up.</div>
   </div>
-</div>
-
-<!-- WHAT YOU CAN DO -->
-<div class="card cats">
-  <div class="ctitle">What you can do</div>
-  <div class="ch">30 AI tools in 6 groups</div>
   <div class="cat"><div class="cat-h"><span class="cat-ico">✍️</span>Content creation</div><div class="cat-b">Never be stuck for what to post.</div>
     <div class="chips"><span class="chip">Post captions</span><span class="chip">Reel scripts</span><span class="chip">Carousels</span><span class="chip">Instagram Stories</span><span class="chip">Content ideas</span><span class="chip">Hashtags &amp; SEO</span><span class="chip lk">🔒 Repurpose content</span></div></div>
   <div class="cat"><div class="cat-h"><span class="cat-ico">🏷️</span>Sales &amp; promotions</div><div class="cat-b">Turn followers into customers.</div>
@@ -257,7 +278,7 @@ Perfect for birthdays, naming ceremonies and family gatherings.
     <div class="p-top"><div class="p-name">Free</div><span class="p-tag g">Start here</span></div>
     <div class="p-price">£0</div><div class="p-alt">No card needed</div>
     <div class="p-credits">5 AI generations a day</div>
-    <ul class="ticks"><li>All the everyday tools</li><li>All the free extras</li><li class="x">Advanced tools</li><li class="x">Growth Library</li></ul>
+    <ul class="ticks"><li>Customers &amp; follow-ups, to-do list, content calendar, tracker, quotes &amp; invoices — unlimited</li><li>The everyday AI tools</li><li class="x">Advanced AI tools</li><li class="x">Growth Library</li></ul>
     <a href="/studio?start=free" class="cta-btn">Start free</a>
   </div>
   <div class="plan club">
@@ -293,9 +314,10 @@ Perfect for birthdays, naming ceremonies and family gatherings.
     <tbody>
       <tr><td class="lbl">Price</td><td>£0</td><td>£50/yr</td><td>£3/mo</td><td>£5/mo</td></tr>
       <tr><td class="lbl">AI generations a day</td><td>5</td><td>20</td><td>50</td><td>100</td></tr>
-      <tr><td class="lbl">Everyday tools</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td class="lbl">Customers, to-do, calendar, tracker, quotes &amp; invoices</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td class="lbl">Everyday AI tools</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
       <tr><td class="lbl">Free extras</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
-      <tr><td class="lbl">Advanced tools</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td class="lbl">Advanced AI tools</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
       <tr><td class="lbl">Growth Library</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
       <tr><td class="lbl">Promotion by Auntie Tobi</td><td class="n">–</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td></tr>
       <tr><td class="lbl">Verified badge &amp; Marketplace</td><td class="n">–</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td></tr>
@@ -318,8 +340,8 @@ Perfect for birthdays, naming ceremonies and family gatherings.
 </div>
 <!-- END -->
 <div class="navy-end">
-  <div class="ne-1">Less time writing. More time running your business.</div>
-  <div class="ne-2">Start free today — 5 AI generations a day, no card needed. Upgrade whenever you’re ready.</div>
+  <div class="ne-1">Your business doesn’t have to be all over the place.</div>
+  <div class="ne-2">From your next customer follow-up to your next marketing campaign — keep everything organised in one simple workspace. Start free today, no card needed.</div>
   <a href="/studio?start=free" class="cta-btn gold">Start free</a>
   <div class="ne-3">Want Auntie Tobi to promote your business too? <a href="/business-club">See the Business Club →</a></div>
 </div>

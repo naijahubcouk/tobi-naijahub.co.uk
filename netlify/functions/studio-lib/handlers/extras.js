@@ -18,7 +18,7 @@ const fu = require('../followups');
 const benefits = require('../benefits');
 const memtodo = require('../memtodo');
 
-const VIEW = new Set(['nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine', 'benefits-seen', 'todo-today', 'todo-mark', 'todo-add', 'todo-def-delete']);
+const VIEW = new Set(['dashboard', 'my-data', 'account-delete', 'nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine', 'benefits-seen', 'todo-today', 'todo-mark', 'todo-add', 'todo-def-delete']);
 const idOf = v => { const s = String(v || ''); if (!/^[A-Za-z0-9_-]{4,20}$/.test(s)) throw new HttpError(400, 'bad_id', 'Invalid item.'); return s; };
 
 exports.handler = handler(async (ctx) => {
@@ -64,6 +64,17 @@ exports.handler = handler(async (ctx) => {
     case 'todo-mark': return { item: await memtodo.mark(email, auth.member, String(body.key || '').slice(0, 200), String(body.how || '')) };
     case 'todo-add': return { def: await memtodo.addDef(email, body.task) };
     case 'todo-add-many': return { n: await memtodo.addMany(email, body.tasks) };
+    case 'todo-priority': return memtodo.setPriority(email, String(body.id || '').slice(0, 30), !!body.on);
+    case 'dashboard': return dashboard(email, auth);
+    case 'my-data': { await core.rateLimit('my-data', email, 10, 60 * 60 * 1000); return { data: await require('../account').exportData(email) }; }
+    case 'account-delete': {
+      if (String(body.confirm || '').trim().toUpperCase() !== 'DELETE') throw new HttpError(400, 'confirm', 'Type DELETE to confirm.');
+      core.requireFresh(auth, core.SESSION.freshBillingMs);
+      const r = await require('../account').deleteAccount(email);
+      await core.del(auth.sessKey).catch(() => {});
+      ctx.cookiesOut.push(core.clearCookie(core.COOKIE_MEMBER));
+      return { ok: true, deleted: r.deleted };
+    }
     case 'todo-def-delete': { await memtodo.deleteDef(email, String(body.id || '')); return { ok: true }; }
     case 'benefits-seen': {
       await prefs.markBenefitsSeen(email);
@@ -79,13 +90,39 @@ exports.handler = handler(async (ctx) => {
     case 'fu-add': return { item: await fu.add(email, body.item) };
     case 'fu-update': return { item: await fu.update(email, idOf(body.id), body.patch) };
     case 'fu-sent': return { item: await fu.sent(email, idOf(body.id), ['fu1', 'fu2', 'checkback', 'thanks', 'keep'].includes(body.kind) ? body.kind : '') };
-    case 'fu-stage': return { item: await fu.setStage(email, idOf(body.id), String(body.stage || ''), { checkBackAt: body.checkBackAt, quoteId: body.quoteId }) };
+    case 'fu-stage': return { item: await fu.setStage(email, idOf(body.id), String(body.stage || ''), { checkBackAt: body.checkBackAt, quoteId: body.quoteId, value: body.value, amount: body.amount, recordSale: body.recordSale }) };
     case 'fu-snooze': return { item: await fu.snooze(email, idOf(body.id), body.days) };
     case 'fu-delete': await fu.remove(email, idOf(body.id)); return { ok: true };
     case 'fu-defaults': return { defaults: await fu.saveDefaults(email, body.defaults) };
     default: throw new HttpError(400, 'unknown_action', 'Unknown action.');
   }
 }, { maxBody: 300 * 1024 });
+
+// My Business Today: the numbers at the top of Today. Everything is the member's own data.
+async function dashboard(email, auth) {
+  const growth = require('../growth');
+  const day = core.dayKey();
+  const addDays = (d, n) => { const x = new Date(`${d}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+  const [fl, td, cal, docs] = await Promise.all([
+    fu.list(email),
+    memtodo.refresh(email, auth.member, auth.access).catch(() => null),
+    growth.listCalendar(email).catch(() => []),
+    money.list(email).catch(() => ({ docs: [] })),
+  ]);
+  const weekAgo = addDays(day, -6), weekAhead = addDays(day, 6);
+  const plannedWeek = cal.filter(i => i.date >= day && i.date <= weekAhead && i.status !== 'posted' && i.status !== 'done');
+  return {
+    today: day,
+    followupsDue: fl.due.length,
+    tasksToday: td ? td.counts.today + td.counts.overdue : 0,
+    tasksOverdue: td ? td.counts.overdue : 0,
+    postsToday: plannedWeek.filter(i => i.date === day).length,
+    postsWeek: plannedWeek.length,
+    newEnquiries: fl.items.filter(i => core.dayKey(new Date(i.createdAt)) >= weekAgo).length,
+    pipeline: fl.pipeline,
+    unpaidInvoices: ((docs && docs.docs) || []).filter(d => d.type === 'invoice' && (d.status === 'sent' || d.status === 'overdue')).length,
+  };
+}
 
 function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
 exports.siteUrl = siteUrl;

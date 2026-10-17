@@ -134,7 +134,7 @@ async function get(email, id) {
 async function save(email, raw) {
   const settings = await getSettings(email);
   const id = raw && raw.id ? String(raw.id).slice(0, 20) : null;
-  let saved = null;
+  let saved = null, newSale = false;
   await cas(docsKey(email), cur => {
     const data = cur || { counters: {}, docs: [] };
     data.counters = data.counters || {};
@@ -153,17 +153,21 @@ async function save(email, raw) {
       data.counters[type] = n;
       saved = { id: newId(), type, number: `${TYPES[type]}-${String(n).padStart(4, '0')}`, status: type === 'receipt' ? 'paid' : 'draft', ...fields,
         fromId: raw.fromId ? String(raw.fromId).slice(0, 20) : '', createdAt: now, updatedAt: now, paidAt: type === 'receipt' ? now : '' };
+      // A receipt on its own is a sale; a receipt made from an invoice is counted when that invoice is marked paid.
+      if (type === 'receipt' && !(saved.fromId && data.docs.some(d => d.id === saved.fromId && d.type === 'invoice'))) { saved.saleTracked = true; newSale = true; }
       data.docs.push(saved);
       data.docs = trim(data.docs);
     }
     return data;
   });
-  return withTotals(saved, core.dayKey());
+  const full = withTotals(saved, core.dayKey());
+  if (newSale) await recordSale(email, full.totalPence);
+  return full;
 }
 
 async function setStatus(email, id, status) {
   if (!STATUSES.includes(status)) throw new HttpError(400, 'invalid', 'Invalid status.');
-  let out = null;
+  let out = null, trackSale = false;
   await cas(docsKey(email), cur => {
     if (!cur) throw new HttpError(404, 'not_found', 'That document no longer exists.');
     const i = cur.docs.findIndex(d => d.id === id);
@@ -172,10 +176,19 @@ async function setStatus(email, id, status) {
     if (d.type === 'receipt' && status !== 'paid' && status !== 'void') throw new HttpError(400, 'invalid', 'A receipt is always paid.');
     if (d.type === 'quote' && status === 'paid') throw new HttpError(400, 'invalid', 'Turn the quote into an invoice to record payment.');
     out = { ...d, status, paidAt: status === 'paid' ? (d.paidAt || core.nowIso()) : '', updatedAt: core.nowIso() };
+    if (status === 'paid' && d.type === 'invoice' && !d.saleTracked) { out.saleTracked = true; trackSale = true; }
     cur.docs[i] = out;
     return cur;
   });
-  return withTotals(out, core.dayKey());
+  const full = withTotals(out, core.dayKey());
+  if (trackSale) await recordSale(email, full.totalPence);
+  return full;
+}
+// A paid invoice (or a receipt on its own) is added to Track automatically: 1 sale + the amount.
+async function recordSale(email, pence) {
+  const growth = require('./growth');
+  await growth.bump(email, 'salesCount').catch(() => {});
+  if (pence > 0) await growth.bump(email, 'salesGbp', pence / 100).catch(() => {});
 }
 
 // quote → invoice, invoice → receipt (marks the invoice paid)
