@@ -74,11 +74,18 @@ exports.handler = handler(async (ctx) => {
   const who = await requireHq(ctx);
   await core.rateLimit('hq', who.email, 1200, 60 * 60 * 1000);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
-    case 'delete': return { n: await hq.remove(body.ids || body.id, false) };
-    case 'restore': return { n: await hq.remove(body.ids || body.id, true) };
+    case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
+    case 'restore': return { n: await hq.remove(body.ids || body.id, true, who.email), items: await hq.list() };
+    case 'bin': return { bin: await hq.bin() };
+    case 'purge': {
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Seun can delete cards forever.');
+      const n = await hq.purge(body.ids || body.id);
+      await core.audit(who.email, 'hq_purge', { n });
+      return { n, bin: await hq.bin() };
+    }
     case 'img': return { id: await hq.saveImage(body.dataUrl) };
     case 'team-save': {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Seun can change who has access.');
