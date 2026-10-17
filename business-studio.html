@@ -116,6 +116,45 @@ a{color:#057A44}
 .ne-3{font-size:15px;color:rgba(255,255,255,0.7);margin-top:14px;line-height:1.6}
 .ne-3 a{color:#FFB81C;font-weight:700}
 .cta-note{font-size:14.5px;color:#6B7280;text-align:center;line-height:1.6}
+
+.hero-ex{display:none}
+.duo{display:flex;flex-direction:column;gap:12px}
+/* ── laptop ── phones unchanged */
+@media (min-width:900px){
+  body{padding-bottom:80px}
+  .app-header{max-width:none;padding:14px max(24px,calc((100vw - 1120px)/2))}
+  .wrap{max-width:1120px;padding:24px;gap:18px}
+  .hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);column-gap:40px;padding:44px 40px;align-items:start}
+  .hero>*{grid-column:1}
+  .hero .h-title{font-size:40px}
+  .hero .h-sub{font-size:19px}
+  .hero>.qs{display:none}
+  .hero>.h-badge{justify-self:start}
+  .hero-ex{display:block;grid-column:2;grid-row:1/span 6;align-self:center}
+  .hx-card{background:white;border-radius:14px;padding:16px}
+  .hx-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .hx-top img{width:30px;height:30px;border-radius:50%;border:2px solid #FFB81C}
+  .hx-top b{font-size:15px}.hx-top span{font-size:13px;color:#6B7280}
+  .hx-out{font-size:15px;line-height:1.6;white-space:pre-line;background:#FFF8E7;border-radius:10px;padding:12px}
+  .hx-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.hx-tags span{font-size:12.5px;font-weight:700;background:#f0faf5;color:#057A44;border-radius:999px;padding:4px 10px}
+  .hx-note{font-size:12px;color:#6B7280;margin-top:8px}
+  .btns{max-width:460px}
+  .card{padding:28px 30px}
+  .ch{font-size:26px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .card .example{display:none}
+  .card.cats{display:grid;grid-template-columns:repeat(3,1fr);column-gap:28px}
+  .card.cats>.ctitle,.card.cats>.ch,.card.cats>.legend{grid-column:1/-1}
+  .cat{border-bottom:0;padding:14px 0}
+  .cat-b,.chips{padding-left:0}
+  .free-grid{grid-template-columns:repeat(4,1fr);gap:12px}
+  .plans{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:stretch}
+  .plan{display:flex;flex-direction:column}
+  .plan .ticks{flex:1}
+  .duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+  .navy-end{padding:40px}
+  .navy-end .cta-btn{max-width:360px;margin:0 auto}
+}
 </style>
 </head>
 <body>
@@ -147,6 +186,15 @@ a{color:#057A44}
     <a href="#plans" class="cta-btn ghost">See plans</a>
   </div>
   <div class="h-note">Free plan: 5 a day · no card needed</div>
+  <div class="hero-ex" aria-hidden="true">
+    <div class="qs" style="margin-bottom:14px"><div class="q">What should I post today?</div><div class="q">How do I promote my offer this weekend?</div></div>
+    <div class="hx-card"><div class="hx-top"><img src="/tobi-face-128.png" alt=""><b>Promote an offer</b><span>Cake business · Instagram</span></div>
+    <div class="hx-out">🎂 Weekend treat alert! Order any celebration cake by Thursday and get 6 cupcakes FREE 🧁
+Perfect for birthdays, naming ceremonies and family gatherings.
+📩 DM “CAKE” to book your slot — limited weekend orders!</div>
+    <div class="hx-tags"><span>✂️ Shorter</span><span>💬 More conversational</span><span>☆ Save</span></div>
+    <div class="hx-note">Example of the style — your results use your own details.</div></div>
+  </div>
 </div>
 
 <!-- HOW IT WORKS -->
@@ -168,7 +216,7 @@ Perfect for birthdays, naming ceremonies and family gatherings.
 </div>
 
 <!-- WHAT YOU CAN DO -->
-<div class="card">
+<div class="card cats">
   <div class="ctitle">What you can do</div>
   <div class="ch">30 AI tools in 6 groups</div>
   <div class="cat"><div class="cat-h"><span class="cat-ico">✍️</span>Content creation</div><div class="cat-b">Never be stuck for what to post.</div>
@@ -236,6 +284,7 @@ Perfect for birthdays, naming ceremonies and family gatherings.
 </div>
 <p class="cta-note">Club members can add Pro or Plus for more generations a day — you always get the highest.</p>
 
+<div class="duo">
 <!-- COMPARE -->
 <div class="card">
   <div class="ctitle">Compare</div>
@@ -266,6 +315,7 @@ Perfect for birthdays, naming ceremonies and family gatherings.
   <details><summary>Will the content sound like me?</summary><p>It uses the tone you choose (warm, professional, fun…) and your own details — products, customers, location and calls to action. You can always edit it before you post.</p></details>
 </div>
 
+</div>
 <!-- END -->
 <div class="navy-end">
   <div class="ne-1">Less time writing. More time running your business.</div>
