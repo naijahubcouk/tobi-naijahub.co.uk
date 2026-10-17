@@ -450,3 +450,14 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - **Sales in Track fill themselves:** an invoice marked paid (or a receipt on its own) adds 1 sale + the amount; Completed & paid does the same unless that customer's invoice was already counted. Bookings are counted when a customer is booked.
 - **To-do:** tap ☆ to make one of your tasks a priority — priorities show first.
 - **Your data (Account):** Download my data (JSON) and Delete my account (type DELETE + a fresh email code; cancels any Pro/Plus subscription immediately; Club benefits end). AI usage counts, the audit log and Stripe's payment records are kept.
+
+## 7ab. Plan — content hub like HQ
+
+- **Board:** Ideas · Drafting · Ready · Scheduled (all four columns on a laptop; one at a time on a phone), with search and a type filter. **+ New card** or **+ Add** in a column.
+- **Card:** title, type (Post, Reel, Carousel, Story, WhatsApp), stage, date and time, caption/script, hashtags, notes and one photo. Adding a date makes it **Scheduled** (it appears on the calendar); removing the date sends it back to Ready.
+- **✨ Write with AI** opens the matching Create tool (caption, Reel, carousel or Stories) and puts the result into the card. **📋 Copy caption** copies caption + hashtags. **✓ Mark as posted** (optional link) moves it to Posted and counts 1 post in Track (once).
+- **Calendar:** month view with each day's cards; tap a day to see them or **+ Add on this day**.
+- **Posted:** everything posted, newest first, with links.
+- **✨ Plan 7 or 30 days with AI** fills the calendar with cards; cards you edited, drafted or posted are kept.
+- **📅 Add to Plan** on Create results and on Today's content idea.
+- Older calendar posts were converted automatically (To do → Scheduled, Drafted → Scheduled + drafted, Posted/Done → Posted). Photos: `planimg/<email>/<id>`.

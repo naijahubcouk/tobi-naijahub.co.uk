@@ -30,11 +30,14 @@ function aiOpts(auth, shuffle) {
   };
 }
 
+const plan = require('../plan');
+const idOf40 = v => { const s = String(v || ''); if (!/^[A-Za-z0-9_-]{4,40}$/.test(s)) throw new HttpError(400, 'bad_id', 'Invalid card.'); return s; };
+
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const auth = await core.requireMember(ctx); // active Business Club or AI Power
   const email = auth.sess.email;
-  await core.rateLimit('growth', email, 240, 60 * 60 * 1000);
+  await core.rateLimit('growth', email, 600, 60 * 60 * 1000);
 
   switch (body.action) {
     case 'home': {
@@ -72,6 +75,14 @@ exports.handler = handler(async (ctx) => {
       return { items: await growth.listCalendar(email), today: core.dayKey() };
     case 'calendar-update':
       return { item: await growth.updateCalendarItem(email, String(body.id || '').slice(0, 40), body.status) };
+    // ── Plan: content cards (board, calendar, posted) ──
+    case 'plan-list': return { cards: await plan.list(email), today: core.dayKey() };
+    case 'plan-save': return { card: await plan.save(email, body.card) };
+    case 'plan-posted': return { card: await plan.posted(email, idOf40(body.id), body.link) };
+    case 'plan-delete': await plan.remove(email, idOf40(body.id)); return { ok: true };
+    case 'plan-img': return plan.setImage(email, idOf40(body.id), body.dataUrl);
+    case 'plan-img-get': return { dataUrl: await plan.getImage(email, idOf40(body.id)) };
+    case 'plan-img-delete': await plan.deleteImage(email, idOf40(body.id)); return { ok: true };
     case 'calendar-delete':
       await growth.deleteCalendarItem(email, String(body.id || '').slice(0, 40));
       return { ok: true };
@@ -89,4 +100,4 @@ exports.handler = handler(async (ctx) => {
     default:
       throw new HttpError(400, 'unknown_action', 'Unknown action.');
   }
-});
+}, { maxBody: 2 * 1024 * 1024 });

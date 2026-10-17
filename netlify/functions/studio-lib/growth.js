@@ -115,8 +115,8 @@ async function setGoal(email, goal) {
 
 // ───────────── calendar ─────────────
 function calKey(email) { return `calendar/${enc(email)}`; }
-const CAL_MAX = 200;
-const STATUSES = ['todo', 'drafted', 'posted', 'done'];
+const CAL_MAX = 400;
+const STATUSES = ['todo', 'drafted', 'posted', 'done'];   // older names still accepted; cards use plan.js statuses
 
 // Planner output lines: "Day 3 | Reel | idea | Hook: … | CTA: …"
 function parsePlan(text) {
@@ -144,11 +144,12 @@ async function savePlanToCalendar(email, planItemId, text, startDay, days) {
   const end = addDays(startDay, days);
   await cas(calKey(email), cur => {
     let items = (cur && cur.items) || [];
-    // Replace untouched items in the new plan's date range; keep anything drafted/posted/done.
-    items = items.filter(i => !(i.date >= startDay && i.date < end && i.status === 'todo'));
+    // Replace untouched planner cards in the new plan's date range; keep anything you edited, drafted or posted.
+    items = items.filter(i => !(i.date >= startDay && i.date < end && (i.status === 'todo' || (i.status === 'scheduled' && i.fromPlanner && !i.edited && !i.drafted))));
     for (const p of parsed) {
       const date = addDays(startDay, p.day - 1);
-      items.push({ id: `${date.replace(/-/g, '')}${core.randomToken(3).replace(/[^A-Za-z0-9]/g, '')}`, date, ...p, status: 'todo', planId: planItemId, createdAt: core.nowIso() });
+      items.push({ id: `${date.replace(/-/g, '')}${core.randomToken(3).replace(/[^A-Za-z0-9]/g, '')}`, date, ...p, type: require('./plan').normalize({ format: p.format }).type,
+        notes: [p.hook ? `Hook: ${p.hook}` : '', p.cta ? `CTA: ${p.cta}` : ''].filter(Boolean).join('\n'), status: 'scheduled', fromPlanner: true, planId: planItemId, createdAt: core.nowIso() });
     }
     items.sort((a, b) => a.date.localeCompare(b.date));
     if (items.length > CAL_MAX) items = items.slice(items.length - CAL_MAX);
@@ -166,12 +167,17 @@ async function updateCalendarItem(email, id, status) {
     if (!cur) throw new HttpError(404, 'not_found', 'Item not found.');
     const items = cur.items.map(i => {
       if (i.id !== id) return i;
-      prev = i.status; found = { ...i, status, updatedAt: core.nowIso() }; return found;
+      prev = i.status;
+      const now = core.nowIso();
+      if (status === 'posted' || status === 'done') found = { ...i, status: 'posted', postedAt: i.postedAt || now, postCounted: true, updatedAt: now };
+      else if (status === 'drafted') found = { ...i, drafted: true, status: i.date ? 'scheduled' : (['idea', 'todo'].includes(i.status) ? 'drafting' : i.status), updatedAt: now };
+      else found = { ...i, status: i.date ? 'scheduled' : 'ready', updatedAt: now };
+      return found;
     });
     if (!found) throw new HttpError(404, 'not_found', 'Item not found.');
     return { items };
   });
-  if (prev !== 'posted' && status === 'posted') await pilotBump(email, 'postsMarked');
+  if (prev !== 'posted' && prev !== 'done' && found.status === 'posted') await pilotBump(email, 'postsMarked');
   return found;
 }
 
@@ -234,11 +240,11 @@ async function templateActions(email, profile, day, goal, cal, planned) {
 
 // Today's planned calendar post, or Monday planning, takes the content slot.
 function fixedContentAction(day, cal, planned) {
-  const todo = planned.find(p => p.status === 'todo');
+  const todo = planned.find(p => p.status === 'todo' || (p.status === 'scheduled' && !p.drafted && !p.caption));
   if (todo) {
     const topic = `${todo.title}${todo.hook ? `. Hook: ${todo.hook}` : ''}`;
     return { id: `cal-${todo.id}`, template: 'calendar', kind: 'content', title: `Today’s planned post: ${todo.title}`, why: 'It’s on your content calendar for today.', calendarId: todo.id,
-      go: /reel/i.test(todo.format) ? { tool: 'reel', input: { idea: topic } } : { tool: 'caption', input: { topic } } };
+      go: /reel/i.test(todo.format || todo.type || '') ? { tool: 'reel', input: { idea: topic } } : { tool: 'caption', input: { topic } } };
   }
   if (ukDow(day) === 1 && !cal.some(i => i.date >= day && i.date < addDays(day, 7))) {
     return { id: 'plan-week', template: 'plan-week', kind: 'content', title: 'Plan this week’s content', why: 'A plan for the week makes every day easier.', go: { tool: 'planner', input: { days: '7', frequency: '5 times a week' } } };
