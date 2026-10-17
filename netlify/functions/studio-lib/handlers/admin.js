@@ -64,8 +64,8 @@ function memberType(m, acc) {
   if (acc.free) return 'free';
   return 'none';
 }
-// Short plan name for Admin lists: Free / Club / Pro / Pro Plus (Club + add-on shows the add-on).
-function planName(a) { return a.tier === 'plus' ? 'Pro Plus' : a.tier === 'pro' ? 'Pro' : a.membershipActive ? 'Club' : a.free ? 'Free' : a.readOnly ? 'Read-only' : 'Ended'; }
+// Short plan name for Admin lists: Free / Club / Pro / Plus (Club + add-on shows the add-on).
+function planName(a) { return a.tier === 'plus' ? 'Plus' : a.tier === 'pro' ? 'Pro' : a.membershipActive ? 'Club' : a.free ? 'Free' : a.readOnly ? 'Read-only' : 'Ended'; }
 
 function summarizeMember(m, settings, monthUsage, todayUsage) {
   const acc = core.access(m, settings);

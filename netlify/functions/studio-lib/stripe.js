@@ -2,8 +2,8 @@
 /*
  * Stripe for the Business Studio add-ons (sold to anyone, independent of Business Club):
  *   Pro       50 a day:  £3 / month → STRIPE_PRICE_PRO_MONTHLY     £30 / year → STRIPE_PRICE_PRO_YEARLY
- *   Pro Plus 100 a day:  £5 / month → STRIPE_PRICE_POWER_MONTHLY   £50 / year → STRIPE_PRICE_POWER_YEARLY
- *   (the £5/£50 prices are the original "Business Studio Pro" ones — existing subscribers are Pro Plus)
+ *   Plus 100 a day:  £5 / month → STRIPE_PRICE_POWER_MONTHLY   £50 / year → STRIPE_PRICE_POWER_YEARLY
+ *   (the £5/£50 prices are the original "Business Studio Pro" ones — existing subscribers are Plus)
  * No SDK — plain HTTPS with a pinned API version.
  *
  * Stripe is the source of truth: every webhook re-fetches the customer's subscriptions
@@ -36,7 +36,7 @@ function availablePlans() {   // { pro: ['month','year'], plus: [...] } — only
 function billingEnabled() {
   return !!(env('STRIPE_SECRET_KEY') && env('STRIPE_WEBHOOK_SECRET') && Object.keys(availablePlans()).length);
 }
-function availableIntervals() {   // kept for older callers: intervals of Pro Plus
+function availableIntervals() {   // kept for older callers: intervals of Plus
   return availablePlans().plus || [];
 }
 
@@ -223,14 +223,14 @@ async function startCheckout(email, interval, event, tier) {
   const member = await core.getMember(email);
   if (member && member.blocked) throw new HttpError(403, 'account_blocked', 'This account has been suspended.');
   if (member && member.addon && core.LIVE_SUB_STATUSES.includes(member.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio add-on. Use "Switch plan, manage or cancel" to move between Pro and Pro Plus.');
+    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio add-on. Use "Switch plan, manage or cancel" to move between Pro and Plus.');
   }
 
   // Re-check with Stripe in case a webhook hasn't arrived yet.
   const customerId = await ensureCustomer(email);
   const synced = await syncCustomer(customerId);
   if (synced && synced.addon && core.LIVE_SUB_STATUSES.includes(synced.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio add-on. Use "Switch plan, manage or cancel" to move between Pro and Pro Plus.');
+    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio add-on. Use "Switch plan, manage or cancel" to move between Pro and Plus.');
   }
 
   // One open checkout per plan at a time: reuse it rather than creating another.

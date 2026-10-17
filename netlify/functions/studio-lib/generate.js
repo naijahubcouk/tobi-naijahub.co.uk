@@ -280,7 +280,7 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   if (!paidOk && po && rawInput[po.field] === undefined) rawInput[po.field] = po.free;   // Free plan: the basic version by default
   const input = tools.validateInput(toolId, rawInput);
   if (!paidOk && tools.needsPaid(toolId, input)) {
-    throw new HttpError(403, 'paid_only', (po && !tools.PAID_TOOLS.includes(toolId) ? po.label + ' is' : `${tool.name} is`) + ' part of the Business Club, Pro and Pro Plus. Upgrade to unlock it.', { tool: toolId });
+    throw new HttpError(403, 'paid_only', (po && !tools.PAID_TOOLS.includes(toolId) ? po.label + ' is' : `${tool.name} is`) + ' part of the Business Club, Pro and Plus. Upgrade to unlock it.', { tool: toolId });
   }
   if (toolId === 'quick' && input.goal === 'offer' && !input.about && !input.source) throw new HttpError(400, 'missing_field', 'Please tell us the offer (for example “10% off all cakes until Friday”).');
   let quickExtra = null;

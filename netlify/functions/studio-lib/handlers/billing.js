@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Business Studio add-on billing — Pro (£3/month, £30/year) or Pro Plus (£5/month, £50/year) — for signed-in people — Business Club members
+ * Business Studio add-on billing — Pro (£3/month, £30/year) or Plus (£5/month, £50/year) — for signed-in people — Business Club members
  * and non-members alike.
  * POST /.netlify/functions/studio-billing  { action: 'checkout' (+ interval: 'month'|'year', tier: 'pro'|'plus') | 'portal' | 'refresh' }
  * Starting or managing a subscription needs an email code from the last 24 hours.

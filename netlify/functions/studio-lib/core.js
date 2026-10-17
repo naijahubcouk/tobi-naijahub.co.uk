@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS = {
   freeLimit: 5,                 // generations per DAY on the Free plan (0 = Free plan switched off)
   standardLimit: 20,            // generations per DAY, Business Club
   proLimit: 50,                 // generations per DAY with Business Studio Pro (£3/month)
-  powerLimit: 100,              // generations per DAY with Business Studio Pro Plus (£5/month)
+  powerLimit: 100,              // generations per DAY with Business Studio Plus (£5/month)
   perMinuteLimit: 6,            // burst protection per member
   spendWarnGbp: 30,             // email + admin alert when monthly AI spend passes this (and 2x). Never blocks.
   model: '',                    // blank = STUDIO_MODEL env or openai/gpt-4o-mini
@@ -291,7 +291,7 @@ const LIVE_SUB_STATUSES = ['active', 'trialing', 'past_due', 'unpaid', 'incomple
  *  - "blocked" (admin) removes all access.
  */
 /*
- * Plans:  Free (any account, everyday tools)  ·  Business Club  ·  add-ons Pro / Pro Plus (sold to anyone).
+ * Plans:  Free (any account, everyday tools)  ·  Business Club  ·  add-ons Pro / Plus (sold to anyone).
  * Credits a day = the highest of the plans someone has. Club and the add-ons unlock the advanced tools.
  */
 function access(member, settings, now) {
@@ -302,7 +302,7 @@ function access(member, settings, now) {
     !!member.membershipExpiresAt && endOfDayUk(member.membershipExpiresAt) >= now;
   const addon = (member && member.addon) || null;
   const powerActive = !blocked && !!addon && (addon.status === 'active' || addon.status === 'trialing');   // any paid add-on
-  const tier = powerActive ? (addon.tier === 'pro' ? 'pro' : 'plus') : null;   // older subscriptions (£5) are Pro Plus
+  const tier = powerActive ? (addon.tier === 'pro' ? 'pro' : 'plus') : null;   // older subscriptions (£5) are Plus
   const freeLimit = Number.isInteger(settings.freeLimit) ? settings.freeLimit : DEFAULT_SETTINGS.freeLimit;
   const freeActive = !blocked && !!member && !membershipActive && !powerActive && freeLimit > 0;
   const canCreate = membershipActive || powerActive || freeActive;
@@ -316,7 +316,7 @@ function access(member, settings, now) {
   return {
     blocked,
     membershipActive,          // Business Club
-    powerActive,               // Business Studio Pro or Pro Plus paid and current
+    powerActive,               // Business Studio Pro or Plus paid and current
     tier,                      // 'pro' | 'plus' | null
     free: freeActive,          // Free plan (no Club, no add-on)
     paidTools: membershipActive || powerActive, // advanced tools
