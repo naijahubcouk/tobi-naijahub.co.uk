@@ -65,8 +65,8 @@ Netlify → **Site configuration → Environment variables**. Each can have diff
 | `STUDIO_OPENROUTER_API_KEY` | Optional separate OpenRouter key just for the Studio, with its own credit limit (recommended) | Optional |
 | `STUDIO_MODEL` | Defaults to `openai/gpt-4o-mini` (same as the chatbot) | Optional |
 | `STRIPE_SECRET_KEY` | Stripe secret key (`sk_test_…` on preview, `sk_live_…` in production) | For Business Studio Pro |
-| `STRIPE_PRICE_POWER_MONTHLY` | Price ID of the £5/month price (`price_…`) | For Plus (100 a day) |
-| `STRIPE_PRICE_POWER_YEARLY` | Price ID of the £50/year price (`price_…`) | For Plus (100 a day) |
+| `STRIPE_PRICE_PLUS_MONTHLY` | Price ID of the £5/month price (`price_…`) | For Plus (100 a day). Older name `STRIPE_PRICE_POWER_MONTHLY` also works |
+| `STRIPE_PRICE_PLUS_YEARLY` | Price ID of the £50/year price (`price_…`) | For Plus (100 a day). Older name `STRIPE_PRICE_POWER_YEARLY` also works |
 | `STRIPE_PRICE_PRO_MONTHLY` | Price ID of the £3/month price (`price_…`) | For Pro (50 a day) |
 | `STRIPE_PRICE_PRO_YEARLY` | Price ID of the £30/year price (`price_…`) | For Pro (50 a day) |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret of the webhook endpoint (`whsec_…`) | For Business Studio Pro |
@@ -95,8 +95,8 @@ Until the domain is verified, Resend only lets you send to your own Resend accou
 Do this in **Test mode** first (toggle top-right in Stripe).
 
 1. **Product catalogue → Add product**: name "Business Studio Plus" (your existing "Business Studio Pro" product can simply be renamed — its prices stay the same). **Two recurring prices**:
-   - **£5.00 GBP monthly** → Price ID in `STRIPE_PRICE_POWER_MONTHLY`
-   - **£50.00 GBP yearly** → Price ID in `STRIPE_PRICE_POWER_YEARLY`
+   - **£5.00 GBP monthly** → Price ID in `STRIPE_PRICE_PLUS_MONTHLY`
+   - **£50.00 GBP yearly** → Price ID in `STRIPE_PRICE_PLUS_YEARLY`
    (Existing subscribers on these prices are Plus — 100 a day — nothing changes for them.)
    **Add product**: name "Business Studio Pro". **Two recurring prices**:
    - **£3.00 GBP monthly** → Price ID in `STRIPE_PRICE_PRO_MONTHLY`
