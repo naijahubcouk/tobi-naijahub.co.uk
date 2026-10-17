@@ -240,11 +240,11 @@ async function templateActions(email, profile, day, goal, cal, planned) {
 
 // Today's planned calendar post, or Monday planning, takes the content slot.
 function fixedContentAction(day, cal, planned) {
-  const todo = planned.find(p => p.status === 'todo');
+  const todo = planned.find(p => p.status === 'todo' || (p.status === 'scheduled' && !p.drafted && !p.caption));
   if (todo) {
     const topic = `${todo.title}${todo.hook ? `. Hook: ${todo.hook}` : ''}`;
     return { id: `cal-${todo.id}`, template: 'calendar', kind: 'content', title: `Today’s planned post: ${todo.title}`, why: 'It’s on your content calendar for today.', calendarId: todo.id,
-      go: /reel/i.test(todo.format) ? { tool: 'reel', input: { idea: topic } } : { tool: 'caption', input: { topic } } };
+      go: /reel/i.test(todo.format || todo.type || '') ? { tool: 'reel', input: { idea: topic } } : { tool: 'caption', input: { topic } } };
   }
   if (ukDow(day) === 1 && !cal.some(i => i.date >= day && i.date < addDays(day, 7))) {
     return { id: 'plan-week', template: 'plan-week', kind: 'content', title: 'Plan this week’s content', why: 'A plan for the week makes every day easier.', go: { tool: 'planner', input: { days: '7', frequency: '5 times a week' } } };

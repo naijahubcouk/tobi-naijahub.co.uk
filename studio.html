@@ -1586,8 +1586,8 @@ nav.tabs .navsep{display:none}
     var tt = $('#toTrack'); if (tt) tt.onclick = function () { showTrack(r.checkin.date); };
     var tp = $('#toPlan'); if (tp) tp.onclick = function () {
       var p = r.planned[0], topic = p.title + (p.hook ? '. Hook: ' + p.hook : '');
-      showTool(/reel/i.test(p.format || '') ? 'reel' : 'caption', /reel/i.test(p.format || '') ? { idea: topic } : { topic: topic }, { back: showHome, tab: 'home', calendarId: p.id, intro: 'From your calendar: ' + p.title,
-        onSuccess: function () { if (p.status === 'todo') api('studio-growth', 'calendar-update', { id: p.id, status: 'drafted' }).catch(function () {}); } });
+      showTool(/reel/i.test(p.format || p.type || '') ? 'reel' : 'caption', /reel/i.test(p.format || p.type || '') ? { idea: topic } : { topic: topic }, { back: showHome, tab: 'home', calendarId: p.id, intro: 'From your calendar: ' + p.title,
+        onSuccess: function () { if (p.status !== 'posted') api('studio-growth', 'calendar-update', { id: p.id, status: 'drafted' }).catch(function () {}); } });
     };
     var sv = $('#savedTips'); if (sv) sv.onclick = showSavedTips;
     if (t) bindTipCards(box, [t], showHome, function () { renderToday(); });
