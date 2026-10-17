@@ -7,10 +7,20 @@
  */
 const core = require('../core');
 const stripe = require('../stripe');
+const subcare = require('../subcare');
 const { HttpError, handler } = core;
 
 exports.handler = handler(async (ctx) => {
   const action = ctx.body.action;
+  // Cancel from the secure link in our emails — no sign-in needed. Only stops renewal; can be undone.
+  if (action === 'link-info' || action === 'link-cancel') {
+    await core.rateLimit('cancel-link-ip', ctx.ip, 30, 60 * 60 * 1000);
+    const email = core.normalizeEmail(ctx.body.email);
+    const member = email ? await core.getMember(email) : null;
+    if (!member || !subcare.checkLink(email, ctx.body.token, member)) throw new HttpError(400, 'invalid_link', 'This link has expired. Open Business Studio → Account to manage your plan.');
+    if (action === 'link-cancel') await subcare.setCancel(email, true);
+    return { info: subcare.linkInfo(await core.getMember(email)) };
+  }
   const auth = await core.requireMember(ctx, { level: 'buyer' });
   const email = auth.sess.email;
 
@@ -28,6 +38,12 @@ exports.handler = handler(async (ctx) => {
       core.requireFresh(auth, core.SESSION.freshBillingMs);
       await core.rateLimit('portal', email, 20, 60 * 60 * 1000);
       return { url: await stripe.portalUrl(email, ctx.event) };
+    }
+    case 'cancel':
+    case 'resume': {
+      await core.rateLimit('cancel', email, 20, 60 * 60 * 1000);
+      const addon = await subcare.setCancel(email, action === 'cancel');
+      return { addon: addon ? { status: addon.status, interval: addon.interval, tier: addon.tier, currentPeriodEnd: addon.currentPeriodEnd, cancelAtPeriodEnd: addon.cancelAtPeriodEnd } : null };
     }
     case 'refresh': {
       // Called when returning from Stripe so access updates even before the webhook lands.

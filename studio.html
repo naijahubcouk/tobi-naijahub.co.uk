@@ -709,6 +709,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   }
 
   async function start() {
+    var cq = new URLSearchParams(location.search);
+    if (cq.get('cancel') === '1' && cq.get('e') && cq.get('t')) { var ce = cq.get('e'), ct = cq.get('t'); history.replaceState(null, '', location.pathname); return showCancelLink(ce, ct); }
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
     S.today = null;
     try { S.boot = await api('studio-api', 'bootstrap', {}, { quiet401: true }); }
@@ -734,6 +736,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     if (S.boot.state === 'active' && !S.boot.profile) return showProfileForm(true);
     checkUnread();
     if (location.hash === '#messages' && S.boot.access && S.boot.access.canView) { history.replaceState(null, '', location.pathname + location.search); return showMessages(); }
+    if (location.hash === '#account' && S.boot.state === 'active') { history.replaceState(null, '', location.pathname + location.search); return showAccount(); }
     showHome();
   }
 
@@ -754,7 +757,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       var lim = tierLimit(t);
       return '<button class="card plan stack" data-buy="' + t + '"><div class="row" style="justify-content:space-between"><b>' + TIER_NAME[t] + '</b>' + (t === 'plus' ? '<span class="pill gold">Most generations</span>' : '<span class="pill green">Best value</span>') + '</div>' +
         '<div class="price"><span class="ivm">' + TIER_PRICE[t].month + '<span style="font-size:15px;font-weight:500"> /month</span></span><span class="ivy">' + TIER_PRICE[t].year + '<span style="font-size:15px;font-weight:500"> /year</span></span></div>' +
-        '<div class="sub" style="margin:0"><b>' + lim + ' AI generations a day</b> · every tool, including the advanced ones</div></button>';
+        '<div class="sub" style="margin:0"><b>' + lim + ' AI generations a day</b> · every tool, including the advanced ones</div>' +
+        '<div class="hint" style="margin:0"><span class="ivm">Renews automatically every month</span><span class="ivy">Renews automatically every year</span> · we remind you before each payment · cancel any time in 2 taps</div></button>';
     };
     return '<div class="stack plch" data-iv="' + iv + '">' +
       (hasMonth && hasYear ? '<div class="chips" role="group" aria-label="Billing"><button type="button" class="chip" data-iv="month" aria-pressed="' + (iv === 'month') + '">Monthly</button><button type="button" class="chip" data-iv="year" aria-pressed="' + (iv === 'year') + '">Yearly · 2 months free</button></div>' : '') +
@@ -2783,6 +2787,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   // ───────────── Account: app, reminders, weekly email ─────────────
   function extrasAccountHtml() {
     return '<h2>Phone app &amp; reminders</h2><div class="card stack" id="exCard"><div class="toggle"><span id="lb_wk">Weekly round-up email (Monday morning)</span><button type="button" class="switch" role="switch" aria-labelledby="lb_wk" id="wkSw" aria-checked="false" disabled></button></div>' +
+      (S.boot.addon ? '<div class="toggle"><span id="lb_rr">Remind me before each Pro / Plus payment</span><button type="button" class="switch" role="switch" aria-labelledby="lb_rr" id="rrSw" aria-checked="true" disabled></button></div>' : '') +
       '<div class="toggle"><span id="lb_rm">Daily reminder notification (about 8am)</span><button type="button" class="switch" role="switch" aria-labelledby="lb_rm" id="rmSw" aria-checked="false" disabled></button></div>' +
       '<p class="hint" style="margin:0">The reminder is sent to this phone or computer. On iPhone, add Business Studio to your home screen first.</p>' +
       (isStandalone() ? '' : '<button class="btn ghost block" id="acInst">Add Business Studio to my home screen</button>') + '</div>' +
@@ -2798,6 +2803,11 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var ai = $('#acInst'); if (ai) ai.onclick = installApp;
     var p; try { p = (await api('studio-extras', 'prefs-get')).prefs; } catch (x) { return; }
     wk.setAttribute('aria-checked', p.weeklyEmail !== false); rm.setAttribute('aria-checked', !!p.remindersOn); wk.disabled = false; rm.disabled = false;
+    var rr = $('#rrSw'); if (rr) { rr.setAttribute('aria-checked', p.renewalReminders !== false); rr.disabled = false; rr.onclick = async function () {
+      var on = rr.getAttribute('aria-checked') !== 'true'; rr.disabled = true;
+      try { await api('studio-extras', 'prefs-save', { prefs: { renewalReminders: on } }); rr.setAttribute('aria-checked', on); toast(on ? 'We’ll remind you before each payment' : 'Payment reminders off'); } catch (x) { toast(x.message); }
+      rr.disabled = false;
+    }; }
     wk.onclick = async function () {
       var on = wk.getAttribute('aria-checked') !== 'true'; wk.disabled = true;
       try { await api('studio-extras', 'prefs-save', { prefs: { weeklyEmail: on } }); wk.setAttribute('aria-checked', on); toast(on ? 'Weekly email on' : 'Weekly email off'); } catch (x) { toast(x.message); }
@@ -3395,6 +3405,41 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     try { var r = await api('studio-billing', 'checkout', { interval: interval === 'year' ? 'year' : 'month', tier: tier === 'pro' ? 'pro' : 'plus' }); location.href = r.url; }
     catch (x) { if (x.code !== 'cancelled') toast(x.message); }
   }
+  // Cancel in one tap: stops renewal, keeps the plan until the end date.
+  function cancelSheet() {
+    var ad = S.boot.addon || {}, a = S.boot.access, l = S.boot.limits, tier = ad.tier === 'pro' ? 'pro' : 'plus';
+    var after = a.membershipActive ? 'your Business Club allowance (' + l.standard + ' a day)' : 'the Free plan (' + l.free + ' a day)';
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="cnT"><h2 id="cnT" style="margin:0">Cancel ' + esc(TIER_NAME[tier]) + '?</h2>' +
+      '<p style="margin:0">You won’t be charged again. Your plan stays on until <b>' + esc(d(ad.currentPeriodEnd, 1)) + '</b>, then you’ll go back to ' + esc(after) + '. Everything in your library stays.</p>' +
+      '<p class="hint" style="margin:0">Changed your mind later? Tap “Keep my plan” any time before then.</p>' +
+      '<button class="btn primary block" id="cnGo" style="background:var(--danger);border-color:var(--danger)">Cancel subscription</button><button class="btn ghost block" id="cnX">Keep my plan</button></div>';
+    document.body.appendChild(scrim);
+    $('#cnX', scrim).onclick = function () { scrim.remove(); };
+    $('#cnGo', scrim).onclick = async function () {
+      var b = $('#cnGo', scrim); b.disabled = true; b.textContent = 'Cancelling…';
+      try { var r = await api('studio-billing', 'cancel'); S.boot.addon = Object.assign({}, S.boot.addon, r.addon); scrim.remove(); toast('Cancelled — your plan stays on until ' + d(ad.currentPeriodEnd)); showAccount(); }
+      catch (x) { toast(x.message); b.disabled = false; b.textContent = 'Cancel subscription'; }
+    };
+  }
+  // Opened from the "Cancel subscription" button in our emails — works without signing in.
+  async function showCancelLink(e, t) {
+    setChrome({ tabs: false });
+    app.innerHTML = '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt=""><h1>Your subscription</h1></div><div class="card stack" id="clBox"><p class="sub">Loading…</p></div></div>';
+    var box = $('#clBox'), info;
+    var draw = function () {
+      if (info.cancelled || !info.live) {
+        box.innerHTML = '<b>' + esc(info.plan) + ' is cancelled ✅</b><p class="sub" style="margin:0">You won’t be charged again.' + (info.live ? ' It stays on until <b>' + esc(d(info.endsAt, 1)) + '</b>. Changed your mind? Sign in and tap Account → Keep my plan.' : '') + '</p><a class="btn ghost block" href="/studio" style="text-align:center">Open Business Studio</a>';
+        return;
+      }
+      box.innerHTML = '<b>Cancel ' + esc(info.plan) + '?</b><p class="sub" style="margin:0">It’s ' + esc(info.amount) + ' a ' + esc(info.period) + '. If you cancel, you won’t be charged again and it stays on until <b>' + esc(d(info.endsAt, 1)) + '</b>. Your library stays.</p>' +
+        '<button class="btn primary block" id="clGo" style="background:var(--danger);border-color:var(--danger)">Cancel subscription</button><a class="btn ghost block" href="/studio" style="text-align:center">Keep it</a>';
+      $('#clGo').onclick = async function () { var b = $('#clGo'); b.disabled = true; b.textContent = 'Cancelling…'; try { info = (await api('studio-billing', 'link-cancel', { email: e, token: t }, { quiet401: true })).info; draw(); } catch (x) { toast(x.message); b.disabled = false; b.textContent = 'Cancel subscription'; } };
+    };
+    try { info = (await api('studio-billing', 'link-info', { email: e, token: t }, { quiet401: true })).info; draw(); }
+    catch (x) { box.innerHTML = '<p class="err" style="margin:0">' + esc(x.message) + '</p><a class="btn ghost block" href="/studio" style="text-align:center">Open Business Studio</a>'; }
+  }
+
   async function openPortal() {
     try { var r = await api('studio-billing', 'portal'); location.href = r.url; }
     catch (x) { if (x.code !== 'cancelled') toast(x.message); }
@@ -3427,9 +3472,11 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     if (ad && ['active', 'trialing'].indexOf(ad.status) > -1) {
       html += '<div class="card plan stack"><div class="row" style="justify-content:space-between"><b>' + TIER_NAME[tier] + ' · ' + (ad.interval === 'year' ? 'Yearly' : 'Monthly') + '</b><span class="pill gold">' + (ad.cancelAtPeriodEnd ? 'Ending' : 'Active') + '</span></div>' +
         '<div class="sub">' + tierLimit(tier) + ' generations a day · ' + period + '</div>' +
-        '<div>' + (ad.cancelAtPeriodEnd ? 'Ends on <b>' + d(ad.currentPeriodEnd, 1) + '</b>.' + after : 'Renews on <b>' + d(ad.currentPeriodEnd, 1) + '</b>.') + '</div>' +
+        '<div>' + (ad.cancelAtPeriodEnd ? 'Ends on <b>' + d(ad.currentPeriodEnd, 1) + '</b>.' + after : 'Renews on <b>' + d(ad.currentPeriodEnd, 1) + '</b>' + (ad.amount ? ' (£' + (ad.amount % 100 ? (ad.amount / 100).toFixed(2) : ad.amount / 100) + ')' : '') + '. We’ll remind you before then.') + '</div>' +
         (tier === 'pro' && !ad.cancelAtPeriodEnd ? '<p class="hint" style="margin:0">Want ' + l.power + ' a day? Choose <b>Plus</b> under “Switch plan”.</p>' : '') +
-        '<button class="btn ghost block" id="manage">' + (ad.cancelAtPeriodEnd ? 'Restart or manage subscription' : 'Switch plan, manage or cancel') + '</button></div>';
+        (ad.cancelAtPeriodEnd ? '<button class="btn gold block" id="resumeSub">Keep my plan</button>' : '') +
+        '<button class="btn ghost block" id="manage">' + (ad.cancelAtPeriodEnd ? 'Payment details & invoices' : 'Switch plan, payment details & invoices') + '</button>' +
+        (ad.cancelAtPeriodEnd ? '' : '<button class="btn link" id="cancelSub" style="color:var(--danger);font-weight:700">Cancel subscription</button>') + '</div>';
     } else if (ad && ['past_due', 'unpaid', 'incomplete'].indexOf(ad.status) > -1) {
       html += '<div class="card stack" style="border-color:var(--danger)"><b>' + TIER_NAME[tier] + ' is paused</b><div class="err">Your last payment didn’t go through. Update your card to get your ' + tierLimit(tier) + ' generations a day back.' + (a.membershipActive ? ' Your Business Club membership is not affected.' : '') + '</div>' +
         '<button class="btn primary block" id="manage">Update payment details</button></div>';
@@ -3469,6 +3516,12 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     bindBenefitsAccount();
     if (section === 'brand') setTimeout(function () { var bk = $('#bkCard'); if (bk) bk.scrollIntoView({ block: 'start' }); }, 50);
     var mg = $('#manage'); if (mg) mg.onclick = openPortal;
+    var cs = $('#cancelSub'); if (cs) cs.onclick = cancelSheet;
+    var rs = $('#resumeSub'); if (rs) rs.onclick = async function () {
+      rs.disabled = true;
+      try { var r = await api('studio-billing', 'resume'); S.boot.addon = Object.assign({}, S.boot.addon, r.addon); toast('Great — your plan carries on 💚'); showAccount(); }
+      catch (x) { toast(x.message); rs.disabled = false; }
+    };
   }
 
   start();

@@ -183,6 +183,7 @@ async function syncCustomer(customerId) {
     status: current.status,
     interval: intervalOf(current),
     tier: (planOf(current) || {}).tier || 'plus',
+    amount: (((current.items && current.items.data) || [])[0] || {}).price && Number.isInteger(current.items.data[0].price.unit_amount) ? current.items.data[0].price.unit_amount : undefined,
     currentPeriodEnd: current.current_period_end ? new Date(current.current_period_end * 1000).toISOString() : null,
     cancelAtPeriodEnd: !!current.cancel_at_period_end,
     updatedAt: core.nowIso(),
@@ -190,8 +191,9 @@ async function syncCustomer(customerId) {
 
   if (!member && !addon) return { email, addon: null };  // nothing bought yet
 
-  let created = false;
+  let created = false, prevAddon = null;
   await cas(`members/${enc(email)}`, cur => {
+    prevAddon = cur ? cur.addon || null : null;
     if (!cur) {
       created = true;
       return { email, name: '', status: 'none', membershipExpiresAt: null, sessionEpoch: 0, createdAt: core.nowIso(),
@@ -206,6 +208,7 @@ async function syncCustomer(customerId) {
     await core.audit('stripe', 'account_created_ai_power', { email, interval: addon && addon.interval });
   }
   if (!(await getJson(`stripe-customers/${customerId}`))) await setJson(`stripe-customers/${customerId}`, { email });
+  await require('./subcare').onSync(email, prevAddon, addon);
   return { email, addon };
 }
 
@@ -258,6 +261,7 @@ async function startCheckout(email, interval, event, tier) {
       line_items: { 0: { price: priceId, quantity: 1 } },
       metadata: { studio_member: email, interval, tier },
       subscription_data: { metadata: { studio_member: email } },
+      custom_text: { submit: { message: `Renews automatically every ${interval === 'year' ? 'year' : 'month'} until you cancel. We’ll remind you before each payment, and you can cancel any time in 2 taps in your Business Studio Account.` } },
       success_url: `${base}/studio?billing=success`,
       cancel_url: `${base}/studio?billing=cancelled`,
       expires_at: expiresAt,

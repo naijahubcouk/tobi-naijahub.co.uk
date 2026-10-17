@@ -45,12 +45,20 @@ async function runWelcome() {
   return welcome.run({ members, settings: await core.getSettings() });
 }
 
+async function runRenewals() {
+  const members = [];
+  for (const k of await core.listKeys('members/')) { const m = await core.getJson(k); if (m && m.addon) members.push(m); }
+  return require('../subcare').runReminders({ members, settings: await core.getSettings() });
+}
+
 exports.run = run;
+exports.runRenewals = runRenewals;
 exports.runWelcome = runWelcome;
 exports.handler = async () => {
   let report = {};
   try { report = await run(); } catch (e) { console.error('[studio] message reminders error', e); }
   try { report.welcome = await runWelcome(); } catch (e) { console.error('[studio] welcome series error', e); }
+  try { report.renewals = await runRenewals(); } catch (e) { console.error('[studio] renewal reminders error', e); }
   console.log('[studio] message reminders', JSON.stringify(report));
   return { statusCode: 200, body: JSON.stringify(report) };
 };

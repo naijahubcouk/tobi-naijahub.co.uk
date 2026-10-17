@@ -383,6 +383,15 @@ Above the list (for whichever filter or search you're on):
 - The welcome series is not sent to Free plan accounts. Announcements to "All" include Free accounts.
 - Older subscriptions with no plan recorded count as Plus.
 
+## 7y-2. Pro / Plus subscriptions — reminders and easy cancelling
+
+- Plan cards and the Stripe checkout say: renews automatically every month/year · we remind you before each payment · cancel any time in 2 taps.
+- **Welcome email** after payment: plan, generations a day, next payment date and amount, and a Cancel button.
+- **Renewal reminders** (email + push, 9am–7pm UK, hourly job): monthly 3 days before; yearly 7 days and 1 day before. Not sent when cancelling. Members can turn them off in Account → Phone app & reminders.
+- **Cancel in one tap**: Account → Cancel subscription (stops renewal, keeps the plan until the end date) and **Keep my plan** to undo. The Cancel button in the emails works without signing in (secure link tied to that subscription).
+- **Confirmation email** whenever a subscription is set to end (in the app, from the email link or in the Stripe portal).
+- You never need to cancel anything yourself. Admin → Pro & Plus subscriptions shows who is ending.
+
 ## 7x. Welcome series — 5 automatic messages for new members
 
 - Admin → Messages → **👋 Welcome series**. Off by default. Tick **On** and Save to start.

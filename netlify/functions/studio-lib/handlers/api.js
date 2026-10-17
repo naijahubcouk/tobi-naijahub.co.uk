@@ -85,7 +85,7 @@ exports.handler = handler(async (ctx) => {
         state: auth.access.canCreate ? 'active' : 'readonly',
         member: { email, name: m.name || '', isClub: m.status !== 'none', membershipExpiresAt: m.membershipExpiresAt },
         access: auth.access,
-        addon: m.addon ? { status: m.addon.status, interval: m.addon.interval, tier: m.addon.tier === 'pro' ? 'pro' : 'plus', currentPeriodEnd: m.addon.currentPeriodEnd, cancelAtPeriodEnd: m.addon.cancelAtPeriodEnd } : null,
+        addon: m.addon ? { status: m.addon.status, interval: m.addon.interval, tier: m.addon.tier === 'pro' ? 'pro' : 'plus', amount: m.addon.amount || null, currentPeriodEnd: m.addon.currentPeriodEnd, cancelAtPeriodEnd: m.addon.cancelAtPeriodEnd } : null,
         usage: auth.access.canCreate ? await gen.usageSummary(email, auth.access) : null,
         profile: profile && profile.businessName ? profile : null,
         listing: profile && profile.listingSlug ? directory.publicListing(await directory.bySlug(ctx.event, profile.listingSlug)) : null,
