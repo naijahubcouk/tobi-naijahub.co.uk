@@ -2487,8 +2487,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     html += '<section class="card stack mtcard" id="todoCard"><b>📋 My to-do list</b><div class="typing"><i></i><i></i><i></i></div></section>';
     html += prioritiesCard(n.priorities);
     // Install as an app
-    if (!isStandalone() && !lsGet('studioInstallHidden') && (deferredInstall || isIOS() || /android/i.test(navigator.userAgent))) {
-      html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Business Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn link" id="instHide" style="font-size:13px">Not now</button></div></section>';
+    if (!isStandalone() && !n.installDone && !lsGet('studioInstallDone') && !lsGet('studioInstallHidden') && !(Number(lsGet('studioInstallLater')) > Date.now()) && (deferredInstall || isIOS() || /android/i.test(navigator.userAgent))) {
+      html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Business Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn small ghost" id="instDone" title="I’ve already added it">✓ Done</button><button class="btn link" id="instHide" style="font-size:13px">Not now</button></div></section>';
     }
     // Money reminders
     var fus = n.followups || [];
@@ -2517,7 +2517,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var sh = $('#setupHide'); if (sh) sh.onclick = function () { api('studio-extras', 'prefs-save', { prefs: { setupHidden: true } }).catch(function () {}); n.setup.hidden = true; loadNudgesRender(); };
     $$('[data-step]', top).forEach(function (b) { b.onclick = function () { goStep(b.dataset.step); }; });
     var ib = $('#instBtn'); if (ib) ib.onclick = installApp;
-    var ih = $('#instHide'); if (ih) ih.onclick = function () { lsSet('studioInstallHidden', '1'); var c = $('.installcard'); if (c) c.remove(); };
+    var ih = $('#instHide'); if (ih) ih.onclick = function () { lsSet('studioInstallLater', String(Date.now() + 7 * 864e5)); var c = $('.installcard'); if (c) c.remove(); toast('OK — we’ll ask again in a week'); };
+    var idn = $('#instDone'); if (idn) idn.onclick = function () { lsSet('studioInstallDone', '1'); var c = $('.installcard'); if (c) c.remove(); toast('Great — we won’t ask again 💚'); api('studio-extras', 'prefs-save', { prefs: { installDone: true } }).catch(function () {}); };
     function find(id) { return n.reminders.filter(function (r) { return r.doc.id === id; })[0]; }
     $$('[data-sent]', top).forEach(function (a) { a.addEventListener('click', function () { api('studio-extras', 'reminded', { id: a.dataset.sent }).catch(function () {}); setTimeout(function () { var c = a.closest('.act'); if (c) c.remove(); }, 400); }); });
     $$('[data-copymsg]', top).forEach(function (b) { b.onclick = function () { var r = find(b.dataset.copymsg); copyText(r.kind === 'quote' ? quoteFollowUp(r.doc, n.moneySettings) : reminderText(r.doc, n.moneySettings || {})); api('studio-extras', 'reminded', { id: r.doc.id }).catch(function () {}); }; });
@@ -2541,7 +2542,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   function installApp() {
     if (deferredInstall) {
       deferredInstall.prompt();
-      deferredInstall.userChoice.then(function (c) { if (c && c.outcome === 'accepted') { lsSet('studioInstallHidden', '1'); var x = $('.installcard'); if (x) x.remove(); toast('Added — look for Business Studio on your home screen'); } deferredInstall = null; }).catch(function () {});
+      deferredInstall.userChoice.then(function (c) { if (c && c.outcome === 'accepted') { lsSet('studioInstallDone', '1'); api('studio-extras', 'prefs-save', { prefs: { installDone: true } }).catch(function () {}); var x = $('.installcard'); if (x) x.remove(); toast('Added — look for Business Studio on your home screen'); } deferredInstall = null; }).catch(function () {});
       return;
     }
     var scrim = document.createElement('div'); scrim.className = 'scrim';
