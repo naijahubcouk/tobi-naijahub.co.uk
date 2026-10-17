@@ -358,6 +358,17 @@ Above the list (for whichever filter or search you're on):
 - Every result: Shorter / More conversational (free) — message tools get More polite / Firmer (free); Turn into a Reel / Stories (1); **➡️ What should I do next?** (free suggestions that open the next tool pre-filled). 30-day growth plan and weekly plan: **📋 Add these actions to my to-do list** (free). "I posted this"/"Make image" hidden on non-post tools.
 - Honesty rules in prompts: offers/prices/dates never invented, reviews use exact words, complaints never admit liability or promise refunds, FAQs use [placeholders] for unknown policies, collaborations never name real businesses.
 
+## 7x. Welcome series — 5 automatic messages for new members
+
+- Admin → Messages → **👋 Welcome series**. Off by default. Tick **On** and Save to start.
+- Only members who join **after** it's switched on get the messages (`since` date) — existing members never receive them.
+- 5 messages, each with its own "days after joining" (0–90) and on/off; defaults are days 0, 1, 3, 7, 14. `{business}` becomes the member's business name.
+- Messages land in the member's private chat from Auntie Tobi, with a push notification. Replies come to the Admin inbox like any other message.
+- Sent by the hourly `studio-messages-remind` function, only between 9am and 7pm UK time, at most one message per member per hour. "Straight away" (day 0) means within the hour of joining (or 9am next morning if they join in the evening).
+- Members must still have access (`canView`). Each card shows "Sent to N members".
+- **➕ Add a member to the series** (bottom of the window): for existing members. Type their email → their series starts that day (Message 1 within the hour, 9am–7pm). The email must already have a member account. "Added by you" lists them; ✕ stops the series for that person. Re-adding never repeats messages already sent.
+- Storage: `msg/welcome` (settings + stats), `msg/wel/<email>` (what each member has been sent).
+
 ## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)
 
 Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**

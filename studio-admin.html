@@ -199,7 +199,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var rows = r.rows.filter(function (x) { return f === 'all' || (f === 'unread' ? x.unreadAdmin > 0 : f === 'done' ? x.done : !x.done); })
       .filter(function (x) { return !q || (x.name + ' ' + x.email + ' ' + x.lastText).toLowerCase().indexOf(q) > -1; });
     var cnt = function (k) { return r.rows.filter(function (x) { return k === 'all' || (k === 'unread' ? x.unreadAdmin > 0 : k === 'done' ? x.done : !x.done); }).length; };
-    app.innerHTML = '<main class="msgmain"><div class="row" style="justify-content:space-between;margin-bottom:12px"><h1 style="margin:0">Messages</h1><div class="row"><button class="btn small ghost" id="mNew">✏️ New message</button><button class="btn small gold" id="mAnn">📣 Announcement</button><button class="btn small ghost" id="mQuick">⚡ Quick replies</button></div></div>' +
+    app.innerHTML = '<main class="msgmain"><div class="row" style="justify-content:space-between;margin-bottom:12px"><h1 style="margin:0">Messages</h1><div class="row"><button class="btn small ghost" id="mNew">✏️ New message</button><button class="btn small gold" id="mAnn">📣 Announcement</button><button class="btn small ghost" id="mWel">👋 Welcome series</button><button class="btn small ghost" id="mQuick">⚡ Quick replies</button></div></div>' +
       '<div class="mwrap"><div class="mside card"><input id="mQ" placeholder="Search members…" value="' + esc(S.msgQ || '') + '"><div class="chips" style="margin:8px 0">' + MSG_F.map(function (x) { return '<button class="chip" data-mf="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + x[1] + ' (' + cnt(x[0]) + ')</button>'; }).join('') + '</div>' +
         '<div class="mrows">' + (rows.length ? rows.map(function (x) {
           return '<button class="mrow' + (S.msgOpen === x.email ? ' on' : '') + (x.unreadAdmin ? ' un' : '') + '" data-mo="' + esc(x.email) + '"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b class="mname">' + esc(x.name || x.email) + '</b><span class="muted" style="font-size:12px;white-space:nowrap">' + esc(mTime(x.updatedAt)) + '</span></div>' +
@@ -210,7 +210,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     $$('[data-mf]').forEach(function (b) { b.onclick = function () { S.msgF = b.dataset.mf; vMessages(); }; });
     var qi = $('#mQ'), qt; qi.oninput = function () { clearTimeout(qt); qt = setTimeout(function () { S.msgQ = qi.value.trim(); vMessages(); setTimeout(function () { var n = $('#mQ'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 0); }, 350); };
     $$('[data-mo]').forEach(function (b) { b.onclick = function () { $$('.mrow').forEach(function (x) { x.classList.toggle('on', x === b); }); b.classList.remove('un'); var nb = $('.nbadge', b); if (nb) nb.remove(); openThread(b.dataset.mo); }; });
-    $('#mNew').onclick = newMsgSheet; $('#mAnn').onclick = annSheet; $('#mQuick').onclick = quickSheet;
+    $('#mNew').onclick = newMsgSheet; $('#mAnn').onclick = annSheet; $('#mQuick').onclick = quickSheet; $('#mWel').onclick = welcomeSheet;
     if (S.msgOpen) openThread(S.msgOpen);
     clearInterval(S.msgTimer);
     S.msgTimer = setInterval(async function () {
@@ -299,6 +299,45 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       catch (x) { e.textContent = x.message; e.classList.remove('hidden'); this.disabled = false; }
     };
     $$('[data-and]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this announcement? It disappears from members’ chats.')) return; try { var r = await api('msg-announce-delete', { id: b.dataset.and }); S.msg.announcements = r.announcements; s2.remove(); annSheet(); toast('Announcement deleted'); } catch (x) { toast(x.message); } }; });
+  }
+  async function welcomeSheet() {
+    var w; try { w = (await api('msg-welcome-get')).welcome; } catch (x) { toast(x.message); return; }
+    var dayLabel = function (n) { return n === 0 ? 'Straight away' : 'Day ' + n; };
+    var s2 = sheet('<div class="row" style="justify-content:space-between"><h2 style="margin:0">👋 Welcome series</h2>' +
+      '<label class="row" style="gap:8px;font-weight:700;margin:0"><input type="checkbox" id="wOn"' + (w.on ? ' checked' : '') + ' style="width:20px;height:20px"> ' + (w.on ? '<span class="pill p-active">On</span>' : '<span class="pill p-inactive">Off</span>') + '</label></div>' +
+      '<p class="muted" style="margin:0">Messages go into each <b>new</b> member’s private chat from Auntie Tobi, with a push notification — between 9am and 7pm UK time. Only members who join ' + (w.since ? 'after <b>' + esc(d(w.since)) + '</b>' : 'after you switch it on') + ' get them. <b>{business}</b> = their business name. Replies come to your inbox.</p>' +
+      w.steps.map(function (st, i) {
+        return '<div class="card stack wstep" data-wid="' + esc(st.id) + '" style="padding:12px;gap:8px"><div class="row" style="justify-content:space-between;align-items:center"><b>Message ' + (i + 1) + '</b>' +
+          '<span class="muted" style="font-size:12.5px">Sent to ' + ((w.stats || {})[st.id] || 0) + ' member' + (((w.stats || {})[st.id] || 0) === 1 ? '' : 's') + '</span></div>' +
+          '<div class="row" style="gap:8px;align-items:center"><label style="margin:0;font-weight:600">Send</label><input type="number" min="0" max="90" class="wDays" value="' + st.days + '" style="width:80px"><span class="muted wLab">' + (st.days === 0 ? 'day(s) after joining · straight away' : 'day(s) after joining') + '</span>' +
+          '<label class="row" style="gap:6px;margin:0 0 0 auto;font-weight:600"><input type="checkbox" class="wOnStep"' + (st.on ? ' checked' : '') + '> Send this one</label></div>' +
+          '<textarea class="wText" rows="4" maxlength="2000">' + esc(st.text) + '</textarea></div>';
+      }).join('') +
+      '<div class="card stack" style="padding:12px;gap:8px"><b>➕ Add a member to the series</b><p class="muted" style="margin:0;font-size:13.5px">For members who joined before it was switched on. Their series starts today — Message 1 within the hour (9am–7pm), then the rest on their days. Nobody gets the same message twice.</p>' +
+      '<div class="row" style="flex-wrap:nowrap"><input type="email" id="wAddE" placeholder="member@email.com" style="flex:1"><button class="btn small" id="wAdd">Add</button></div><div id="wMan"></div></div>' +
+      '<div class="err hidden" id="wErr"></div><div class="row"><button class="btn primary" id="wSave">Save</button><button class="btn ghost" id="wX">Close</button></div>');
+    $$('.wDays', s2).forEach(function (inp) { inp.oninput = function () { var lab = inp.parentNode.querySelector('.wLab'); lab.textContent = Number(inp.value) === 0 ? 'day(s) after joining · straight away' : 'day(s) after joining'; }; });
+    var drawMan = function () {
+      var em = Object.keys(w.manual || {}).sort(function (a, b) { return (w.manual[b].at || '').localeCompare(w.manual[a].at || ''); });
+      $('#wMan', s2).innerHTML = em.length ? '<div class="muted" style="font-size:12.5px;font-weight:700;margin-bottom:4px">Added by you</div>' + em.map(function (e) { return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;padding:4px 0"><span>' + esc(e) + ' <span class="muted" style="font-size:12.5px">· added ' + esc(d(w.manual[e].at)) + '</span></span><button class="btn small ghost danger" data-wrm="' + esc(e) + '" aria-label="Stop the series for ' + esc(e) + '">✕</button></div>'; }).join('') : '';
+      $$('[data-wrm]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop the welcome series for ' + b.dataset.wrm + '?')) return; try { w.manual = (await api('msg-welcome-remove', { email: b.dataset.wrm })).welcome.manual; drawMan(); toast('Stopped for ' + b.dataset.wrm); } catch (x) { toast(x.message); } }; });
+    };
+    drawMan();
+    $('#wAdd', s2).onclick = async function () {
+      var inp = $('#wAddE', s2), e = inp.value.trim(); if (!e) { inp.focus(); return; }
+      try { var r = await api('msg-welcome-add', { email: e }); w.manual = r.welcome.manual; inp.value = ''; drawMan();
+        toast(!r.welcome.on ? 'Added — switch the series On and Save so it sends' : r.already ? 'Added — they’ll get the messages they haven’t had yet' : 'Added — Message 1 goes out within the hour (9am–7pm) 👋'); }
+      catch (x) { toast(x.message); }
+    };
+    $('#wAddE', s2).onkeydown = function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); $('#wAdd', s2).click(); } };
+    $('#wX', s2).onclick = function () { s2.remove(); };
+    $('#wSave', s2).onclick = async function () {
+      var steps = $$('.wstep', s2).map(function (c) { return { id: c.dataset.wid, days: Number($('.wDays', c).value), on: $('.wOnStep', c).checked, text: $('.wText', c).value }; });
+      var on = $('#wOn', s2).checked;
+      if (on && !w.on && !confirm('Switch on the welcome series? Members who join from now on will get these messages automatically.')) return;
+      try { var r = await api('msg-welcome-save', { welcome: { on: on, steps: steps } }); s2.remove(); toast(r.welcome.on ? 'Welcome series saved — it’s on 👋' : 'Welcome series saved (off)'); }
+      catch (x) { var e = $('#wErr', s2); e.textContent = x.message; e.classList.remove('hidden'); }
+    };
   }
   function quickSheet() {
     var list = (S.msg.quick || []).slice();
