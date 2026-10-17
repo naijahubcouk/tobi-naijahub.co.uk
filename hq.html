@@ -133,6 +133,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   .f2,.f3{grid-template-columns:1fr}
   .top h1{font-size:19px}
 }
+.lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}.sctag{font-size:13px}.note{background:var(--gold-l);border-radius:10px;padding:8px 12px;font-size:13.5px}
 </style>
 </head>
 <body>
@@ -258,7 +259,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (opts.thumb && c.imgs && c.imgs[0] ? '<img class="th" src="/.netlify/functions/studio-hq?img=' + esc(c.imgs[0]) + '" alt="">' : '') +
       '<button class="star' + (c.starred ? ' on' : '') + '" data-star="' + c.id + '" aria-label="Star">★</button>' +
       '<div class="meta"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="tp">' + esc(TOPIC[c.topic] || '') + '</span></div>' +
-      '<div class="tt">' + esc(c.title) + '</div>' + (c.caption ? '<div class="cp">' + esc(c.caption) + '</div>' : '') +
+      '<div class="tt">' + esc(c.title) + (c.script ? ' <span class="sctag" title="Has a script">🎬</span>' : '') + '</div>' + (c.caption || c.script ? '<div class="cp">' + esc(c.caption || c.script) + '</div>' : '') +
       (when ? '<div>' + when + '</div>' : '') + (qa ? '<div class="qa">' + qa + '</div>' : '') + '</div>';
   }
   function bindCards(root) {
@@ -318,11 +319,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   function todayCard(c) {
     var late = isLate(c);
     return '<div class="card" style="' + (late ? 'border-color:#F2B8B3;background:#FFF8F7' : '') + '"><div class="row" style="justify-content:space-between"><div class="row"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="date' + (late ? ' late' : '') + '">' + esc(fmtDay(c.planDate)) + (c.planTime ? ' · ' + esc(c.planTime) : '') + '</span></div><button class="btn link" data-op="' + c.id + '">Open</button></div>' +
-      '<div style="font-weight:700;font-size:16px;margin:6px 0 2px">' + esc(c.title) + '</div>' + (c.caption ? '<div class="muted" style="font-size:14px;white-space:pre-wrap;max-height:4.6em;overflow:hidden">' + esc(c.caption) + '</div>' : '') +
+      '<div style="font-weight:700;font-size:16px;margin:6px 0 2px">' + esc(c.title) + (c.script ? ' <span class="sctag">🎬</span>' : '') + '</div>' + (c.caption ? '<div class="muted" style="font-size:14px;white-space:pre-wrap;max-height:4.6em;overflow:hidden">' + esc(c.caption) + '</div>' : '') +
       '<div class="posttools" style="margin-top:10px">' + postTools(c) + '</div></div>';
   }
   function postTools(c) {
-    return '<button class="btn small primary" data-cc="' + c.id + '">📋 Copy caption</button>' +
+    return (c.script ? '<button class="btn small ghost" data-cs="' + c.id + '">🎬 Copy script</button>' : '') + '<button class="btn small primary" data-cc="' + c.id + '">📋 Copy caption</button>' +
       (c.imgs && c.imgs.length ? '<button class="btn small ghost" data-dl="' + c.id + '">⬇ Download image' + (c.imgs.length > 1 ? 's' : '') + '</button>' : '') +
       '<a class="btn small ghost" href="https://www.instagram.com/" target="_blank" rel="noopener">Open Instagram ↗</a>' +
       '<button class="btn small ghost" data-posted="' + c.id + '">✅ Mark as posted</button>' +
@@ -334,11 +335,12 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   }
   function bindPostTools(root) {
     $$('[data-cc]', root).forEach(function (b) { b.onclick = function () { copy(HQSplit.fullCaption(byId(b.dataset.cc))); }; });
+    $$('[data-cs]', root).forEach(function (b) { b.onclick = function () { copy(byId(b.dataset.cs).script, 'Script copied'); }; });
     $$('[data-dl]', root).forEach(function (b) { b.onclick = function () { var c = byId(b.dataset.dl); c.imgs.forEach(function (id, i) { downloadImg(id, (c.title || 'auntie-tobi').replace(/[^\w-]+/g, '-').slice(0, 40) + (c.imgs.length > 1 ? '-' + (i + 1) : '')); }); }; });
     $$('[data-posted]', root).forEach(function (b) { b.onclick = function () { markPosted(byId(b.dataset.posted)); }; });
     $$('[data-resched]', root).forEach(function (b) { b.onclick = function () { planSheet(byId(b.dataset.resched)); }; });
   }
-  async function copy(t) { try { await navigator.clipboard.writeText(t); toast('Caption copied — paste it into Instagram'); } catch (e) { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); toast('Caption copied'); } catch (x) {} a.remove(); } }
+  async function copy(t, msg) { try { await navigator.clipboard.writeText(t); toast(msg || 'Caption copied — paste it into Instagram'); } catch (e) { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); toast('Caption copied'); } catch (x) {} a.remove(); } }
   async function downloadImg(id, name) {
     try { var r = await fetch('/.netlify/functions/studio-hq?img=' + encodeURIComponent(id), { credentials: 'same-origin' }); var b = await r.blob(); var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name + (/png/.test(b.type) ? '.png' : '.jpg'); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); } catch (e) { toast('Couldn’t download the image'); }
   }
@@ -350,7 +352,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       if (f.type && c.type !== f.type) return false;
       if (f.topic && c.topic !== f.topic) return false;
       if (f.star && !c.starred) return false;
-      if (q && (c.title + ' ' + c.caption + ' ' + (c.hashtags || []).join(' ') + ' ' + c.keywords + ' ' + c.notes).toLowerCase().indexOf(q) < 0) return false;
+      if (q && (c.title + ' ' + (c.script || '') + ' ' + c.caption + ' ' + (c.hashtags || []).join(' ') + ' ' + c.keywords + ' ' + c.notes).toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
   }
@@ -392,7 +394,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (i >= ids.length) { toast('All ideas reviewed 🎉'); rerender(); return; }
     var c = byId(ids[i]);
     var s = sheet('<div class="row" style="justify-content:space-between"><h2>Review ideas</h2><span class="muted">' + (i + 1) + ' of ' + ids.length + '</span></div>' +
-      '<div class="card" style="margin:12px 0"><div class="meta row"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="tp">' + esc(TOPIC[c.topic]) + '</span></div><div style="font-weight:700;font-size:17px;margin:6px 0">' + esc(c.title) + '</div><div style="white-space:pre-wrap;font-size:14px;max-height:40vh;overflow:auto">' + esc(c.caption) + '</div>' + (c.keywords ? '<p class="muted" style="font-size:13px;margin-top:6px">' + esc(c.keywords) + '</p>' : '') + (c.hashtags.length ? '<p class="muted" style="font-size:13px">' + esc(c.hashtags.join(' ')) + '</p>' : '') + '</div>' +
+      '<div class="card" style="margin:12px 0"><div class="meta row"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="tp">' + esc(TOPIC[c.topic]) + '</span></div><div style="font-weight:700;font-size:17px;margin:6px 0">' + esc(c.title) + '</div>' + (c.script ? '<div class="lbl">🎬 Script</div><div style="white-space:pre-wrap;font-size:14px;max-height:22vh;overflow:auto">' + esc(c.script) + '</div><div class="lbl">✍️ Caption</div>' : '') + '<div style="white-space:pre-wrap;font-size:14px;max-height:' + (c.script ? '22vh' : '40vh') + ';overflow:auto">' + esc(c.caption) + '</div>' + (c.keywords ? '<p class="muted" style="font-size:13px;margin-top:6px">' + esc(c.keywords) + '</p>' : '') + (c.hashtags.length ? '<p class="muted" style="font-size:13px">' + esc(c.hashtags.join(' ')) + '</p>' : '') + '</div>' +
       '<div class="row"><button class="btn primary" data-k="ready">✅ Keep — Ready</button><button class="btn ghost" data-k="drafting">✍️ Keep — needs work</button><button class="btn ghost" data-k="skip">Skip</button><button class="btn ghost danger" data-k="del">🗑 Delete</button><button class="btn link" data-k="stop" style="margin-left:auto">Stop</button></div>');
     $$('[data-k]', s).forEach(function (b) {
       b.onclick = async function () {
@@ -487,6 +489,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
               return '<div class="pv" style="' + (c.selected ? '' : 'opacity:.5') + '"><div class="pvh"><input type="checkbox" data-sel="' + i + '"' + (c.selected ? ' checked' : '') + ' style="width:20px;height:20px;flex:none" aria-label="Keep this card"><input class="pt" data-pt="' + i + '" value="' + esc(c.title) + '" aria-label="Title">' +
                 '<select data-ty="' + i + '" aria-label="Type">' + Object.keys(TYPE).map(function (k) { return '<option value="' + k + '"' + (c.type === k ? ' selected' : '') + '>' + TYPE[k] + '</option>'; }).join('') + '</select>' +
                 '<select data-tp="' + i + '" aria-label="Topic">' + Object.keys(TOPIC).map(function (k) { return '<option value="' + k + '"' + (c.topic === k ? ' selected' : '') + '>' + TOPIC[k] + '</option>'; }).join('') + '</select></div>' +
+                (c.script ? '<div class="lbl">🎬 Script</div><textarea data-sc="' + i + '" rows="' + Math.min(8, Math.max(2, (c.script.match(/\n/g) || []).length + 1)) + '">' + esc(c.script) + '</textarea><div class="lbl">✍️ Caption</div>' : '') +
                 '<textarea data-cp="' + i + '" rows="' + Math.min(8, Math.max(2, (c.caption.match(/\n/g) || []).length + 1)) + '">' + esc(c.caption) + '</textarea>' +
                 (c.keywords ? '<div class="tags">🔑 ' + esc(c.keywords.length > 140 ? c.keywords.slice(0, 140) + '…' : c.keywords) + '</div>' : '') + (c.hashtags.length ? '<div class="tags"># ' + esc(c.hashtags.join(' ')) + '</div>' : '') +
                 (c.notes ? '<details class="tags"><summary style="cursor:pointer">📎 Notes &amp; sources</summary><div style="white-space:pre-wrap;margin-top:4px">' + esc(c.notes) + '</div></details>' : '') +
@@ -494,7 +497,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
             }).join('') + '</div></div>';
         }).join('') +
         '<div class="row" style="position:sticky;bottom:-18px;background:var(--cream);padding:12px 0 2px;margin-top:10px"><button class="btn primary" id="pvSave"' + (n ? '' : ' disabled') + '>Save ' + n + ' card' + (n === 1 ? '' : 's') + ' to Ideas</button><button class="btn ghost" id="pvX">Cancel</button></div>';
-      var keep = function () { cards.forEach(function (c, i) { c.title = $('[data-pt="' + i + '"]', s).value; c.type = $('[data-ty="' + i + '"]', s).value; c.topic = $('[data-tp="' + i + '"]', s).value; c.caption = $('[data-cp="' + i + '"]', s).value; }); };
+      var keep = function () { cards.forEach(function (c, i) { c.title = $('[data-pt="' + i + '"]', s).value; c.type = $('[data-ty="' + i + '"]', s).value; c.topic = $('[data-tp="' + i + '"]', s).value; c.caption = $('[data-cp="' + i + '"]', s).value; var sc = $('[data-sc="' + i + '"]', s); if (sc) c.script = sc.value; }); };
       $$('[data-sel]', s).forEach(function (b) { b.onchange = function () { keep(); cards[Number(b.dataset.sel)].selected = b.checked; var y = $('#pvw', s).parentNode.scrollTop; draw(); $('#pvw', s).parentNode.scrollTop = y; }; });
       var setGroup = function (name, on) { keep(); cards.forEach(function (c) { if (c.section === name) c.selected = on; }); var y = $('#pvw', s).parentNode.scrollTop; draw(); $('#pvw', s).parentNode.scrollTop = y; };
       $$('[data-gall]', s).forEach(function (b) { b.onclick = function () { setGroup(b.dataset.gall, true); }; });
@@ -506,7 +509,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       $('#pvX', s).onclick = function () { if (confirm('Discard these ideas?')) s.remove(); };
       $('#pvSave', s).onclick = async function () {
         keep(); this.disabled = true;
-        var keepCards = cards.filter(function (c) { return c.selected; }).map(function (c) { return { title: c.title, type: c.type, topic: c.topic, caption: c.caption, hashtags: c.hashtags, keywords: c.keywords, notes: c.notes }; });
+        var keepCards = cards.filter(function (c) { return c.selected; }).map(function (c) { return { title: c.title, type: c.type, topic: c.topic, script: c.script || '', caption: c.caption, hashtags: c.hashtags, keywords: c.keywords, notes: c.notes }; });
         try { var r = await api('save-many', { items: keepCards, source: 'chatgpt' }); r.items.forEach(upsert); s.remove(); toast(r.items.length + ' idea' + (r.items.length === 1 ? '' : 's') + ' saved 💡'); S.tab = 'idea'; go('board'); }
         catch (x) { toast(x.message); this.disabled = false; }
       };
@@ -516,8 +519,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   // ── card editor ──
   function editCard(c) {
-    var isNew = !c; c = c || { title: '', type: 'post', topic: 'community', caption: '', hashtags: [], keywords: '', notes: '', status: 'idea', imgs: [], planDate: '', planTime: '', postLink: '' };
+    var isNew = !c; c = c || { title: '', type: 'post', topic: 'community', script: '', caption: '', hashtags: [], keywords: '', notes: '', status: 'idea', imgs: [], planDate: '', planTime: '', postLink: '' };
     var imgs = (c.imgs || []).slice();
+    // Older cards had script and caption in one box — split them if they're clearly labelled.
+    var sc0 = c.script || '', cp0 = c.caption || '', autoSplit = false;
+    if (!isNew && !sc0 && cp0) { var sp = HQSplit.separate(cp0, c.type); if (sp.script) { sc0 = sp.script; cp0 = sp.caption; autoSplit = true; } }
     var s = sheet('<div class="row" style="justify-content:space-between"><h2>' + (isNew ? '＋ New idea' : 'Edit card') + '</h2>' + (isNew ? '' : '<button class="btn small ghost" id="eStar">' + (c.starred ? '★ Starred' : '☆ Star') + '</button>') + '</div>' +
       (!isNew && ['ready', 'scheduled'].indexOf(c.status) >= 0 ? '<div class="posttools" style="margin-top:10px">' + postTools(c) + '</div>' : '') +
       '<div class="stack" style="margin-top:12px">' +
@@ -525,7 +531,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="f3"><div><label for="eTy">Type</label><select id="eTy">' + Object.keys(TYPE).map(function (k) { return '<option value="' + k + '"' + (c.type === k ? ' selected' : '') + '>' + TYPE[k] + '</option>'; }).join('') + '</select></div>' +
         '<div><label for="eTp">Topic</label><select id="eTp">' + Object.keys(TOPIC).map(function (k) { return '<option value="' + k + '"' + (c.topic === k ? ' selected' : '') + '>' + TOPIC[k] + '</option>'; }).join('') + '</select></div>' +
         '<div><label for="eSt">Stage</label><select id="eSt">' + Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + (c.status === k ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('') + '</select></div></div>' +
-      '<div><label for="eC">Caption / script</label><textarea id="eC" rows="8">' + esc(c.caption) + '</textarea></div>' +
+      (autoSplit ? '<div class="note">✂️ We split this into Script and Caption — check it, then Save.</div>' : '') +
+      '<div><label for="eSc">🎬 Script <span class="muted" style="font-weight:400">— what to film or say (hook, scenes, voiceover, on-screen text)</span></label><textarea id="eSc" rows="6" placeholder="HOOK: …&#10;SCENE 1: …">' + esc(sc0) + '</textarea></div>' +
+      '<div><label for="eC">✍️ Caption <span class="muted" style="font-weight:400">— what goes under the post</span></label><textarea id="eC" rows="7">' + esc(cp0) + '</textarea></div>' +
       '<div class="f2"><div><label for="eK">Keyword line</label><input id="eK" value="' + esc(c.keywords) + '"></div><div><label for="eH">Hashtags</label><input id="eH" value="' + esc((c.hashtags || []).join(' ')) + '" placeholder="#NigeriansInUK #AuntieTobi"></div></div>' +
       '<div class="f2"><div><label for="eD">Post date</label><input type="date" id="eD" value="' + esc(c.planDate) + '"></div><div><label for="eTm">Time</label><input type="time" id="eTm" value="' + esc(c.planTime) + '"></div></div>' +
       '<div id="eLinkBox"' + (c.status === 'posted' ? '' : ' class="hidden"') + '><label for="eL">Link to the post</label><input id="eL" value="' + esc(c.postLink) + '" placeholder="https://www.instagram.com/p/…"></div>' +
@@ -546,7 +554,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#eX', s).onclick = function () { s.remove(); };
     var dl = $('#eDel', s); if (dl) dl.onclick = function () { s.remove(); del([c.id]); };
     $('#eS', s).onclick = async function () {
-      var item = { title: $('#eT', s).value, type: $('#eTy', s).value, topic: $('#eTp', s).value, status: $('#eSt', s).value, caption: $('#eC', s).value, keywords: $('#eK', s).value, hashtags: $('#eH', s).value, planDate: $('#eD', s).value, planTime: $('#eTm', s).value, postLink: $('#eL', s).value, notes: $('#eN', s).value, imgs: imgs, starred: !!c.starred };
+      var item = { title: $('#eT', s).value, type: $('#eTy', s).value, topic: $('#eTp', s).value, status: $('#eSt', s).value, script: $('#eSc', s).value, caption: $('#eC', s).value, keywords: $('#eK', s).value, hashtags: $('#eH', s).value, planDate: $('#eD', s).value, planTime: $('#eTm', s).value, postLink: $('#eL', s).value, notes: $('#eN', s).value, imgs: imgs, starred: !!c.starred };
       if (!isNew) item.id = c.id;
       // Picking "Scheduled" needs a date.
       if (item.status === 'scheduled' && !item.planDate) { toast('Add a post date to schedule it'); $('#eD', s).focus(); return; }

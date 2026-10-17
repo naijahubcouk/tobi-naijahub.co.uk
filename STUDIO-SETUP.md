@@ -346,6 +346,12 @@ Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with 
 - **Admin → Today** gets "🗓️ N posts planned for today" which ticks itself when they're marked posted.
 - Function `studio-hq` (`studio-lib/hq.js`, `handlers/hq.js`); storage `hq/content` and `hq/img/*`. Nothing is ever posted automatically.
 
+### Script and Caption (separate boxes)
+- Each card has **🎬 Script** (what to film/say — hook, scenes, voiceover, on-screen text) above **✍️ Caption** (what goes under the post).
+- Pasting from ChatGPT: lines labelled HOOK / SCENE / SCRIPT / VOICEOVER / ON-SCREEN TEXT / B-ROLL / SHOT / SLIDE n (and timings like "0–3s:") go to Script; "CAPTION:" goes to Caption; unlabelled text stays Caption. A HOOK on a plain post stays in the caption (it's the opening line) unless there are other script lines.
+- Older cards with labelled text are split when opened (check, then Save).
+- **📋 Copy caption** copies caption + keywords + hashtags only; **🎬 Copy script** copies the script.
+
 ### HQ team access (assistant sign-in)
 - HQ → **👥 Team access** (only Seun sees it): add a name + email. They go to **/hq**, enter their email and get an "Auntie Tobi HQ code".
 - Team members can paste, edit, plan, mark posted and delete in HQ only. Their session cannot open Business Studio Admin (separate `__Host-studio_hq` cookie, role `hq`, 7 days).

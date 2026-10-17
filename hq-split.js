@@ -97,7 +97,49 @@
     return { title: title.slice(0, 120) || 'Untitled idea', type: detectType(hay), topic: detectTopic(hay + ' ' + hashtags.join(' ')), caption: caption.slice(0, 8000), hashtags: hashtags.slice(0, 40), keywords: keywords.slice(0, 300) };
   }
 
-  function split(text, opts) {
+  // ───────────── Script vs Caption ─────────────
+  // Script = what to film / say (hook, scenes, voiceover, on-screen text). Caption = what goes under the post.
+  var SCRIPT_LBL = /^(?:hook|scene\s*\d*|script|voice\s*-?over|vo|on[\s-]*screen(?:\s*text)?|text\s*on\s*screen|b[\s-]?roll|shot\s*\d*|clip\s*\d*|visuals?|audio|music|sound|transition|frame\s*\d*|slide\s*\d+|filming|what\s+to\s+film|talking\s*points?|intro|outro)\b/i;
+  var CAPTION_LBL = /^(?:(?:post|instagram|ig|suggested|full)\s+)?caption\b/i;
+  var TIME_LBL = /^\(?\d{1,2}\s*[-–—]\s*\d{1,2}\s*s(?:ec(?:onds?)?)?\)?\s*[:\-–—]/i;
+  function lineLabel(l) {
+    var t = String(l || '').replace(/^[\s>*_\-•·–—\d.)]*/, '').replace(/^[^\w(]+/u, '').replace(/\*\*|__/g, '');
+    var m = /^([^:]{1,40}?)(\s*\([^)]{0,20}\))?\s*[:\-–—]\s*(.*)$/.exec(t);
+    if (TIME_LBL.test(t)) return { kind: 'script', rest: t };
+    if (!m) return null;
+    var head = m[1].trim();
+    if (CAPTION_LBL.test(head)) return { kind: 'caption', rest: m[3].trim(), label: head };
+    if (SCRIPT_LBL.test(head)) return { kind: 'script', rest: m[3].trim(), label: head };
+    return null;
+  }
+  function separate(text, type) {
+    var lines = String(text || '').replace(/\r/g, '').split('\n');
+    var labels = lines.map(lineLabel);
+    var hasScript = labels.some(function (x) { return x && x.kind === 'script' && !/^hook$/i.test(x.label || ''); });
+    var hookIsScript = hasScript || /^(reel|story)$/.test(type || '');
+    if (!labels.some(function (x) { return x && x.kind === 'script' && (hookIsScript || !/^hook$/i.test(x.label || '')); })) return { script: '', caption: String(text || '').trim() };
+    var sc = [], cp = [], mode = 'caption', sticky = false;
+    lines.forEach(function (l, i) {
+      var lb = labels[i];
+      if (lb && lb.kind === 'script' && !hookIsScript && /^hook$/i.test(lb.label || '')) lb = null;
+      if (lb && lb.kind === 'caption') { mode = 'caption'; sticky = true; if (lb.rest) cp.push(lb.rest); return; }
+      if (lb && lb.kind === 'script') { mode = 'script'; sticky = !lb.rest; if (!(sticky && /^(?:script|video\s*script|reel\s*script)$/i.test(lb.label || ''))) sc.push(l.replace(/\*\*|__/g, '').trim()); return; }
+      if (!l.trim()) { if (mode === 'script' && !sticky) { sc.push(''); mode = 'caption'; } else (mode === 'script' ? sc : cp).push(''); return; }
+      (mode === 'script' ? sc : cp).push(l);
+    });
+    var tidy = function (a) { return a.join('\n').replace(/\n{3,}/g, '\n\n').trim(); };
+    return { script: tidy(sc), caption: tidy(cp) };
+  }
+  function withScript(c) {
+    if (!c || c.script) return c;
+    var r = separate(c.caption, c.type);
+    c.script = r.script; c.caption = r.caption;
+    return c;
+  }
+
+  function split(text, opts) { return splitRaw(text, opts).map(withScript); }
+
+  function splitRaw(text, opts) {
     opts = opts || {};
     var lines = String(text || '').replace(/\r/g, '').split('\n');
     // Drop a chatty intro line and outro questions.
@@ -353,7 +395,7 @@
 
   function merge(a, b) {
     var tags = a.hashtags.slice(); (b.hashtags || []).forEach(function (t) { if (tags.indexOf(t) < 0) tags.push(t); });
-    return { title: a.title, type: a.type, topic: a.topic, caption: [a.caption, (b.title && b.title !== 'Untitled idea' ? b.title + '\n' : '') + b.caption].filter(Boolean).join('\n\n'), hashtags: tags, keywords: [a.keywords, b.keywords].filter(Boolean).join(' · ') };
+    return { title: a.title, type: a.type, topic: a.topic, script: [a.script, b.script].filter(Boolean).join('\n\n'), notes: [a.notes, b.notes].filter(Boolean).join('\n\n'), section: a.section, selected: a.selected, caption: [a.caption, (b.title && b.title !== 'Untitled idea' ? b.title + '\n' : '') + b.caption].filter(Boolean).join('\n\n'), hashtags: tags, keywords: [a.keywords, b.keywords].filter(Boolean).join(' · ') };
   }
 
   // Caption, keyword line and hashtags together — what you paste into Instagram.
@@ -361,6 +403,6 @@
     return [String(c.caption || '').trim(), c.keywords ? String(c.keywords).trim() : '', (c.hashtags || []).join(' ')].filter(Boolean).join('\n\n');
   }
 
-  var api = { split: split, niceCase: niceCase, merge: merge, fullCaption: fullCaption, detectType: detectType, detectTopic: detectTopic, TYPES: TYPES, TOPICS: TOPICS };
+  var api = { split: split, separate: separate, niceCase: niceCase, merge: merge, fullCaption: fullCaption, detectType: detectType, detectTopic: detectTopic, TYPES: TYPES, TOPICS: TOPICS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.HQSplit = api;
 })(this);

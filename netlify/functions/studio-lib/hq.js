@@ -6,7 +6,7 @@
  *   hq/content    { items: { <id>: card } }
  *   hq/img/<id>   { dataUrl, at }     (images on cards, resized in the browser)
  *
- * card: { id, title, type, topic, caption, hashtags: [], keywords, notes, status, starred, source,
+ * card: { id, title, type, topic, script, caption, hashtags: [], keywords, notes, status, starred, source,
  *         planDate, planTime, postedAt, postLink, imgs: [], createdAt, updatedAt, deletedAt? }
  * status: idea | drafting | ready | scheduled | posted | archived
  */
@@ -36,6 +36,7 @@ function clean(raw, prev) {
     title: raw.title !== undefined ? cleanText(raw.title, 140) : (p.title || ''),
     type: pick('type', TYPES, 'post'),
     topic: pick('topic', TOPICS, 'community'),
+    script: raw.script !== undefined ? multi(raw.script, 8000) : (p.script || ''),
     caption: raw.caption !== undefined ? multi(raw.caption, 8000) : (p.caption || ''),
     hashtags: raw.hashtags !== undefined ? [...new Set((Array.isArray(raw.hashtags) ? raw.hashtags : String(raw.hashtags || '').split(/[\s,]+/))
       .map(t => String(t).trim()).filter(Boolean).map(t => (t.startsWith('#') ? t : `#${t}`)).filter(t => /^#[0-9A-Za-z_À-ɏ]{1,60}$/.test(t)))].slice(0, 40) : (p.hashtags || []),
@@ -48,7 +49,7 @@ function clean(raw, prev) {
     postLink: raw.postLink !== undefined ? (/^https?:\/\/\S{3,300}$/i.test(String(raw.postLink).trim()) ? String(raw.postLink).trim() : '') : (p.postLink || ''),
     imgs: raw.imgs !== undefined ? (Array.isArray(raw.imgs) ? raw.imgs : []).filter(id => /^i[a-z0-9]{6,30}$/.test(String(id))).slice(0, 6) : (p.imgs || []),
   };
-  if (!out.title) out.title = (out.caption.split('\n').find(l => l.trim()) || 'Untitled idea').replace(/[*_#>]/g, '').trim().slice(0, 80) || 'Untitled idea';
+  if (!out.title) out.title = ((out.caption || out.script).split('\n').find(l => l.trim()) || 'Untitled idea').replace(/[*_#>]/g, '').trim().slice(0, 80) || 'Untitled idea';
   // A date on the plan makes it "scheduled"; taking the date off sends it back to "ready".
   if (raw.planDate !== undefined) {
     if (out.planDate && ['idea', 'drafting', 'ready'].includes(out.status)) out.status = 'scheduled';
@@ -82,7 +83,7 @@ async function save(raw, by) {
     } else {
       if (live(s.items).length >= MAX_ITEMS) throw new HttpError(400, 'too_many', 'You have a lot of cards — delete or archive some first.');
       const c = clean(raw);
-      if (!c.caption && c.title === 'Untitled idea') throw new HttpError(400, 'invalid', 'Type or paste the idea first.');
+      if (!c.caption && !c.script && c.title === 'Untitled idea') throw new HttpError(400, 'invalid', 'Type or paste the idea first.');
       out = { id: newId('k'), ...c, source: SOURCES.includes(raw.source) ? raw.source : 'me', createdAt: now, updatedAt: now, createdBy: by, updatedBy: by };
     }
     s.items[out.id] = out;
@@ -104,7 +105,7 @@ async function saveMany(cards, source, by) {
     out.length = 0;
     cards.forEach((raw, i) => {
       const c = clean({ ...raw, status: 'idea' });
-      if (!c.caption && c.title === 'Untitled idea') return;
+      if (!c.caption && !c.script && c.title === 'Untitled idea') return;
       // Newest first on the Board, so the first card of the paste gets the latest time — keeps the paste's order.
       const at = new Date(base - i).toISOString();
       const card = { id: newId('k'), ...c, source: SOURCES.includes(source) ? source : 'chatgpt', createdAt: at, updatedAt: at, createdBy: by, updatedBy: by };
