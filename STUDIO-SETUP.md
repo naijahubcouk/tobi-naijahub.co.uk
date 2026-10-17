@@ -352,6 +352,11 @@ Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with 
 - Older cards with labelled text are split when opened (check, then Save).
 - **📋 Copy caption** copies caption + keywords + hashtags only; **🎬 Copy script** copies the script.
 
+### 🗑 Bin (deleted cards kept 30 days)
+- Deleting a card moves it to **Bin** (menu shows a count). Toast: "Moved to Bin — kept for 30 days" with Undo.
+- Bin lists each card with who deleted it, when, and days left. **Restore** / **Restore all** (Seun and the HQ team) put cards back exactly as they were (stage, date, images).
+- **Delete forever** / **Empty Bin** — Seun only, and only for cards already in the Bin. After 30 days cards (and their images) are removed automatically.
+
 ### HQ team access (assistant sign-in)
 - HQ → **👥 Team access** (only Seun sees it): add a name + email. They go to **/hq**, enter their email and get an "Auntie Tobi HQ code".
 - Team members can paste, edit, plan, mark posted and delete in HQ only. Their session cannot open Business Studio Admin (separate `__Host-studio_hq` cookie, role `hq`, 7 days).

@@ -117,7 +117,7 @@ async function saveMany(cards, source, by) {
 }
 
 // Delete goes to a 30-day bin so it can be undone.
-async function remove(ids, restore) {
+async function remove(ids, restore, by) {
   ids = (Array.isArray(ids) ? ids : [ids]).map(String).slice(0, 200);
   let n = 0;
   await cas(KEY, cur => {
@@ -125,11 +125,34 @@ async function remove(ids, restore) {
     const s = { items: { ...cur.items } };
     for (const id of ids) {
       const c = s.items[id]; if (!c) continue;
-      s.items[id] = restore ? (() => { const x = { ...c }; delete x.deletedAt; return x; })() : { ...c, deletedAt: core.nowIso() };
+      if (restore ? !c.deletedAt : c.deletedAt) continue;
+      s.items[id] = restore ? (() => { const x = { ...c }; delete x.deletedAt; delete x.deletedBy; if (by) { x.restoredBy = String(by).slice(0, 200); x.restoredAt = core.nowIso(); } return x; })() : { ...c, deletedAt: core.nowIso(), deletedBy: by ? String(by).slice(0, 200) : '' };
       n++;
     }
     return tidy(s);
   });
+  return n;
+}
+
+// The Bin: deleted cards, newest first, with days left before they go for good.
+async function bin() {
+  const s = await load();
+  const now = Date.now();
+  return Object.values(s.items).filter(c => c.deletedAt).map(c => ({ ...c, daysLeft: Math.max(0, Math.ceil((Date.parse(c.deletedAt) + TRASH_DAYS * core.DAY - now) / core.DAY)) }))
+    .filter(c => c.daysLeft > 0).sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+}
+
+// Delete forever (only cards already in the Bin).
+async function purge(ids) {
+  ids = (Array.isArray(ids) ? ids : [ids]).map(String).slice(0, 500);
+  let n = 0; const imgs = [];
+  await cas(KEY, cur => {
+    if (!cur) return undefined;
+    const s = { items: { ...cur.items } }; n = 0; imgs.length = 0;
+    for (const id of ids) { const c = s.items[id]; if (!c || !c.deletedAt) continue; imgs.push(...(c.imgs || [])); delete s.items[id]; n++; }
+    return s;
+  });
+  for (const img of imgs) await core.del(`hq/img/${img}`).catch(() => {});
   return n;
 }
 
@@ -175,4 +198,4 @@ async function setTeam(emails, nameMap) {
   return { emails: list, names: nm };
 }
 
-module.exports = { team, teamFull, names, setTeam, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };
+module.exports = { team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };

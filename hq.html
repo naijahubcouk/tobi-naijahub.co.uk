@@ -134,6 +134,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   .top h1{font-size:19px}
 }
 .lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}.sctag{font-size:13px}.note{background:var(--gold-l);border-radius:10px;padding:8px 12px;font-size:13.5px}
+.binrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.binrow:last-child{border-bottom:0}
 </style>
 </head>
 <body>
@@ -161,6 +162,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="board">🗂️ Board <span class="n" id="nIdeas"></span></button>
       <button data-nav="calendar">📅 Calendar</button>
       <button data-nav="posted">📲 Posted</button>
+      <button data-nav="bin">🗑 Bin <span class="n" id="nBin"></span></button>
       <button id="teamBtn" class="hidden">👥 Team access</button>
       <a href="/studio-admin" id="adminLink" class="hidden">📋 Admin ↗</a>
     </div>
@@ -223,18 +225,19 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {};
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {};
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
   function go(v) {
-    S.view = ['today', 'board', 'calendar', 'posted'].indexOf(v) >= 0 ? v : 'today';
+    S.view = ['today', 'board', 'calendar', 'posted', 'bin'].indexOf(v) >= 0 ? v : 'today';
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
     var n = S.items.filter(function (c) { return c.status === 'idea'; }).length; $('#nIdeas').textContent = n || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted })[S.view]();
+    $('#nBin').textContent = (S.bin || []).length || '';
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
@@ -270,11 +273,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('[data-del]', root).forEach(function (b) { b.onclick = function () { del([b.dataset.del]); }; });
   }
   async function quickSave(patch, msg) { try { var r = await api('save', { item: patch }); upsert(r.item); if (msg) toast(msg); rerender(); return r.item; } catch (x) { toast(x.message); } }
+  function toBin(cards) { var now = new Date().toISOString(); S.bin = cards.map(function (c) { return Object.assign({}, c, { deletedAt: now, deletedBy: S.me, daysLeft: S.trashDays }); }).concat((S.bin || []).filter(function (b) { return !cards.some(function (c) { return c.id === b.id; }); })); }
+  function fromBin(ids) { S.bin = (S.bin || []).filter(function (b) { return ids.indexOf(b.id) < 0; }); }
   async function del(ids) {
     try {
       await api('delete', { ids: ids }); var gone = S.items.filter(function (c) { return ids.indexOf(c.id) >= 0; });
-      S.items = S.items.filter(function (c) { return ids.indexOf(c.id) < 0; }); rerender();
-      toast(ids.length === 1 ? 'Deleted' : ids.length + ' cards deleted', async function () { try { await api('restore', { ids: ids }); gone.forEach(upsert); rerender(); toast('Restored'); } catch (x) { toast(x.message); } });
+      S.items = S.items.filter(function (c) { return ids.indexOf(c.id) < 0; }); toBin(gone); rerender();
+      toast((ids.length === 1 ? 'Moved to Bin' : ids.length + ' cards moved to Bin') + ' — kept for ' + S.trashDays + ' days', async function () { try { await api('restore', { ids: ids }); gone.forEach(upsert); fromBin(ids); rerender(); toast('Restored'); } catch (x) { toast(x.message); } });
     } catch (x) { toast(x.message); }
   }
   function markPosted(c) {
@@ -400,7 +405,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       b.onclick = async function () {
         var k = b.dataset.k; s.remove();
         if (k === 'stop') { rerender(); return; }
-        if (k === 'del') { try { await api('delete', { ids: [c.id] }); S.items = S.items.filter(function (x) { return x.id !== c.id; }); } catch (x) { toast(x.message); } }
+        if (k === 'del') { try { await api('delete', { ids: [c.id] }); S.items = S.items.filter(function (x) { return x.id !== c.id; }); toBin([c]); toast('Moved to Bin — kept for ' + S.trashDays + ' days'); } catch (x) { toast(x.message); } }
         else if (k !== 'skip') { try { upsert((await api('save', { item: { id: c.id, status: k } })).item); } catch (x) { toast(x.message); } }
         review(ids, k === 'del' ? i : i + 1); // deleted cards drop out of the list, so stay on the same position
       };
@@ -444,6 +449,30 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   }
 
   // ── Posted ──
+  function vBin() {
+    $('#ttl').textContent = 'Bin'; $('#topRight').innerHTML = '';
+    var q = (S.binQ || '').toLowerCase();
+    var list = (S.bin || []).filter(function (c) { return !q || (c.title + ' ' + (c.script || '') + ' ' + (c.caption || '')).toLowerCase().indexOf(q) > -1; });
+    var ago = function (iso) { var d = Math.floor((Date.now() - Date.parse(iso)) / 86400000); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'; };
+    $('#view').innerHTML = '<div class="wrap"><p class="muted" style="margin:0 0 12px">Deleted cards stay here for ' + S.trashDays + ' days, then they’re removed for good. Restore puts a card back exactly where it was.</p>' +
+      ((S.bin || []).length ? '<div class="row" style="margin-bottom:12px"><input id="binQ" placeholder="Search the Bin…" value="' + esc(S.binQ || '') + '" style="max-width:280px"><button class="btn small ghost" id="binAll" style="margin-left:auto">↩ Restore all' + (q ? ' shown' : '') + ' (' + list.length + ')</button>' +
+        (S.isAdmin ? '<button class="btn small ghost danger" id="binEmpty">Empty Bin…</button>' : '') + '</div>' : '') +
+      (list.length ? '<div class="card" style="padding:2px 14px">' + list.map(function (c) {
+        return '<div class="binrow"><div style="flex:1;min-width:0"><div class="row" style="gap:6px"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="tp">' + esc(STATUS[c.status] || '') + '</span>' + (c.planDate ? '<span class="tp">📅 ' + esc(fmtDay(c.planDate)) + '</span>' : '') + '</div>' +
+          '<div style="font-weight:700;margin:4px 0 2px">' + esc(c.title) + '</div>' +
+          '<div class="muted" style="font-size:13px">Deleted ' + ago(c.deletedAt) + (c.deletedBy ? ' by ' + esc(who(c.deletedBy)) : '') + ' · <b style="color:' + (c.daysLeft <= 3 ? 'var(--danger)' : 'inherit') + '">' + c.daysLeft + ' day' + (c.daysLeft === 1 ? '' : 's') + ' left</b></div></div>' +
+          '<div class="row" style="gap:6px;flex:none"><button class="btn small primary" data-rs="' + c.id + '">↩ Restore</button>' + (S.isAdmin ? '<button class="btn small ghost danger" data-pg="' + c.id + '">Delete forever</button>' : '') + '</div></div>';
+      }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">' + (q ? 'Nothing in the Bin matches that.' : 'The Bin is empty. 🎉') + '</p></div>') + '</div>';
+    var restore = async function (ids, label) {
+      try { var r = await api('restore', { ids: ids }); S.items = r.items; fromBin(ids); toast(label); rerender(); } catch (x) { toast(x.message); }
+    };
+    $$('[data-rs]').forEach(function (b) { b.onclick = function () { restore([b.dataset.rs], 'Restored ↩ — back in ' + (STATUS[(S.bin.filter(function (c) { return c.id === b.dataset.rs; })[0] || {}).status] || 'the Board').replace(/^\S+\s/, '')); }; });
+    var purge = async function (ids, msg) { try { var r = await api('purge', { ids: ids }); S.bin = r.bin; toast(msg); rerender(); } catch (x) { toast(x.message); } };
+    $$('[data-pg]').forEach(function (b) { b.onclick = function () { var c = S.bin.filter(function (x) { return x.id === b.dataset.pg; })[0]; if (confirm('Delete “' + c.title + '” forever? This can’t be undone.')) purge([c.id], 'Deleted forever'); }; });
+    var ra = $('#binAll'); if (ra) ra.onclick = function () { if (!list.length) return; if (list.length > 1 && !confirm('Restore ' + list.length + ' cards?')) return; restore(list.map(function (c) { return c.id; }), list.length + ' card' + (list.length === 1 ? '' : 's') + ' restored ↩'); };
+    var em = $('#binEmpty'); if (em) em.onclick = function () { if (confirm('Delete all ' + S.bin.length + ' cards in the Bin forever? This can’t be undone.')) purge(S.bin.map(function (c) { return c.id; }), 'Bin emptied'); };
+    var bq = $('#binQ'), bt; if (bq) bq.oninput = function () { clearTimeout(bt); bt = setTimeout(function () { S.binQ = bq.value.trim(); vBin(); var n = $('#binQ'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 300); };
+  }
   function vPosted() {
     $('#ttl').textContent = 'Posted'; $('#topRight').innerHTML = '';
     var posted = S.items.filter(function (c) { return c.status === 'posted'; }).sort(function (a, b) { return (b.postedAt || '').localeCompare(a.postedAt || ''); });
