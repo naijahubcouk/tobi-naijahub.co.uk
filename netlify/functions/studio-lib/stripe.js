@@ -2,7 +2,8 @@
 /*
  * Stripe for the Business Studio add-ons (sold to anyone, independent of Business Club):
  *   Pro       50 a day:  £3 / month → STRIPE_PRICE_PRO_MONTHLY     £30 / year → STRIPE_PRICE_PRO_YEARLY
- *   Plus 100 a day:  £5 / month → STRIPE_PRICE_POWER_MONTHLY   £50 / year → STRIPE_PRICE_POWER_YEARLY
+ *   Plus 100 a day:  £5 / month → STRIPE_PRICE_PLUS_MONTHLY    £50 / year → STRIPE_PRICE_PLUS_YEARLY
+ *   (older STRIPE_PRICE_POWER_MONTHLY / _YEARLY still work if the PLUS ones aren't set)
  *   (the £5/£50 prices are the original "Business Studio Pro" ones — existing subscribers are Plus)
  * No SDK — plain HTTPS with a pinned API version.
  *
@@ -24,7 +25,7 @@ function key() {
 const TIERS = ['pro', 'plus'];
 function prices() {
   return {
-    plus: { month: env('STRIPE_PRICE_POWER_MONTHLY') || env('STRIPE_PRICE_POWER') || null, year: env('STRIPE_PRICE_POWER_YEARLY') || null },
+    plus: { month: env('STRIPE_PRICE_PLUS_MONTHLY') || env('STRIPE_PRICE_POWER_MONTHLY') || env('STRIPE_PRICE_POWER') || null, year: env('STRIPE_PRICE_PLUS_YEARLY') || env('STRIPE_PRICE_POWER_YEARLY') || null },
     pro: { month: env('STRIPE_PRICE_PRO_MONTHLY') || null, year: env('STRIPE_PRICE_PRO_YEARLY') || null },
   };
 }
