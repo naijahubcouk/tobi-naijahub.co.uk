@@ -128,6 +128,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ne-2{font-size:17px;color:white;font-weight:800;line-height:1.6;margin-top:8px}
 .ne-3{font-size:16px;color:#FFB81C;font-weight:700;margin-top:14px}
 .cta-note{font-size:15px;color:#6B7280;text-align:center;line-height:1.6}
+
+/* ── laptop ── phones unchanged */
+@media (min-width:900px){
+  body{padding-bottom:80px}
+  .app-header{max-width:none;padding:14px max(24px,calc((100vw - 1120px)/2))}
+  .wrap{max-width:1120px;padding:24px;gap:18px}
+  .hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);column-gap:40px;padding:44px 40px;align-items:start}
+  .hero>*{grid-column:1}
+  .hero .h-title{font-size:40px}
+  .hero .qs{grid-column:2;grid-row:1/span 5;margin:0;align-self:center}
+  .hero>.h-badge{justify-self:start}
+  .hero .cta-btn{max-width:420px}
+  .card{padding:28px 30px}
+  #club{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:36px}
+  #club>*{grid-column:1/-1}
+  #club>.feat{grid-column:auto;border-bottom:0;border-top:0.5px solid #f0f0f0}
+  #club .plan-head{margin:-28px -30px 16px;padding:28px 30px}
+  #club .cta-btn{max-width:420px;margin-left:auto;margin-right:auto}
+  #join{max-width:720px;width:100%;margin:0 auto}
+  .navy-end{padding:40px}
+}
 </style>
 </head>
 <body>
