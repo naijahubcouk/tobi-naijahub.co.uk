@@ -339,6 +339,13 @@ Above the list (for whichever filter or search you're on):
 - **Notifications:** your reply → push to the member (if they allowed notifications); unread for 3 hours → one email (hourly job `studio-messages-remind`, never for announcements). A member's first unread message → one email to you (STUDIO_ADMIN_EMAILS).
 - Storage: `msg/thread/<email>`, `msg/index`, `msg/announce`, `msg/quick`. Function: `studio-messages`.
 
+## 7v. Quick Create (Today + Create)
+- **⭐ What should I post?** (big card): 3 ideas for today from the business profile, each with **✨ Make this**.
+- Tiles: **Create a Reel** (optional topic + product chips), **Instagram Stories** (what for?), **Promote an Offer** (offer required — never invents prices/dates; urgency only if it really ends), **Thank a Customer** (who and what for, optional — never invents names/reviews; private message uses the member's review link from Account), **Attract Customers** (no question).
+- Results: labelled sections (Hook, Caption/Script, CTA, Hashtags, Keywords) each with Copy; **↻ New angle** (1 generation — rotates angles, avoids recent openings); **Shorter** and **More conversational** are free (max 40 a day per member, with Undo); **Turn into a Reel / Stories** (1 generation).
+- **💡 Today's content idea** under Quick Create: one AI idea per business per day (~0.02p, written fallback), **✨ Create this**.
+- Prompts are tailored to the business type. Tool id `quick` (hidden from "All tools"); free changes = `refine` action; idea stored in `idea/<email>`.
+
 ## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)
 
 Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**
