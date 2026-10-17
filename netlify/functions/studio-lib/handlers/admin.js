@@ -17,6 +17,7 @@ const market = require('../market');
 const todo = require('../todo');
 const directory = require('../directory');
 const invites = require('../invites');
+const messages = require('../messages');
 
 // Instagram for a member: their Business Studio profile → one you added in Admin → their Auntie Tobi listing.
 const igClean = v => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/[/?#].*$/, '');
@@ -406,7 +407,9 @@ exports.handler = handler(async (ctx) => {
       try { inv = await invites.summary(ctx.event, { members, profiles, settings }); } catch (e) { console.error('[studio] todo invites failed', e && e.message); }
       let postsToday = [];
       try { postsToday = await require('../hq').plannedToday(); } catch (e) { console.error('[studio] todo posts failed', e && e.message); }
-      const view = await todo.refresh({ members, settings, profiles, alerts, lessonsReady, invites: inv, postsToday });
+      let unreadMessages = 0;
+      try { unreadMessages = await messages.unreadForAdmin(); } catch (e) { console.error('[studio] todo messages failed', e && e.message); }
+      const view = await todo.refresh({ members, settings, profiles, alerts, lessonsReady, invites: inv, postsToday, unreadMessages });
       // Instagram link for every task about a member (and Marketplace listings linked to one).
       const igs = {};
       const items = [...view.overdue, ...view.todayItems];
@@ -448,6 +451,58 @@ exports.handler = handler(async (ctx) => {
       return { item: it };
     }
     // ── Business Club invites (follow up every business on Auntie Tobi) ──
+    // ── Messages (member ↔ Auntie Tobi) ──
+    case 'msg-inbox': {
+      const th = await messages.inbox();
+      const members = await allMembers();
+      const byEmail = {}; members.forEach(m => { byEmail[m.email] = m; });
+      const people = {};
+      await mapLimit(members.filter(m => core.access(m, settings).canView || th[m.email]), 8, async m => {
+        const p = await getJson(`profiles/${enc(m.email)}`).catch(() => null);
+        const a = core.access(m, settings);
+        people[m.email] = { name: (p && p.businessName) || '', plan: a.powerActive ? 'Pro' : a.membershipActive ? 'Club' : a.readOnly ? 'Read-only' : 'Ended', active: a.canView };
+      });
+      const rows = Object.entries(th).map(([email, x]) => ({ email, ...x, ...(people[email] || { name: '', plan: byEmail[email] ? 'Ended' : 'Not a member' }) }))
+        .sort((a, b) => (b.unreadAdmin > 0) - (a.unreadAdmin > 0) || b.updatedAt.localeCompare(a.updatedAt));
+      const contacts = Object.entries(people).filter(([, p]) => p.active).map(([email, p]) => ({ email, name: p.name, plan: p.plan })).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
+      return { rows, contacts, unread: rows.reduce((n, r) => n + (r.unreadAdmin || 0), 0), quick: await messages.quick(), announcements: await messages.announcements(), max: messages.MAX_TEXT };
+    }
+    case 'msg-unread': return { unread: await messages.unreadForAdmin() };
+    case 'msg-thread': {
+      const email = requireEmail(body.email);
+      const t = await messages.adminThread(email);
+      const m = await getJson(`members/${enc(email)}`);
+      const p = await getJson(`profiles/${enc(email)}`).catch(() => null);
+      const a = m ? core.access(m, settings) : null;
+      return { ...t, name: (p && p.businessName) || '', plan: a ? (a.powerActive ? 'Pro' : a.membershipActive ? 'Club' : a.readOnly ? 'Read-only' : 'Ended') : 'Not a member', isMember: !!m };
+    }
+    case 'msg-send': {
+      const email = requireEmail(body.email);
+      const m = await getJson(`members/${enc(email)}`);
+      if (!m) throw new HttpError(404, 'not_found', 'That person isn’t a Business Studio member.');
+      const { msg } = await messages.addMessage(email, 'admin', body.text);
+      await notify.pushToMember(email, 'Auntie Tobi replied 💬', msg.text.length > 120 ? msg.text.slice(0, 117) + '…' : msg.text, { always: true, path: '/studio#messages' });
+      await core.audit(actor, 'msg_send', { email });
+      return { msg };
+    }
+    case 'msg-done': {
+      await messages.setDone(requireEmail(body.email), !!body.done);
+      return { ok: true };
+    }
+    case 'msg-quick-save': return { quick: await messages.saveQuick(body.replies) };
+    case 'msg-announce': {
+      const item = await messages.announce(body.text, String(body.audience || ''), actor);
+      const members = await allMembers();
+      const to = members.filter(m => messages.inAudience(core.access(m, settings), item.audience)).map(m => m.email);
+      await notify.pushToMany(to, 'Message from Auntie Tobi 📣', item.text.length > 120 ? item.text.slice(0, 117) + '…' : item.text);
+      await core.audit(actor, 'msg_announce', { audience: item.audience, n: to.length });
+      return { item, reached: to.length, announcements: await messages.announcements() };
+    }
+    case 'msg-announce-delete': {
+      await messages.deleteAnnouncement(String(body.id || ''));
+      await core.audit(actor, 'msg_announce_delete', { id: body.id });
+      return { announcements: await messages.announcements() };
+    }
     case 'invites-view': {
       const members = await allMembers();
       const profiles = {};

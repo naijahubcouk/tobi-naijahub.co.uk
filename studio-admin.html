@@ -92,12 +92,28 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 .sheet{background:var(--cream);border-radius:16px;padding:18px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
 .login{max-width:380px;margin:60px auto;padding:0 16px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 16px;border-radius:10px;z-index:40}
+.nbadge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#E5484D;color:#fff;font-size:11.5px;font-weight:800;margin-left:4px}
+.mwrap{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:12px;height:calc(100vh - 210px);min-height:460px}
+.mside{display:flex;flex-direction:column;min-height:0}.mrows{overflow:auto;flex:1;margin:0 -6px}
+.mrow{display:block;width:100%;text-align:left;padding:10px;border-radius:10px;border:0;background:none;font:inherit;color:inherit;cursor:pointer}.mrow:hover{background:var(--cream)}.mrow.on{background:var(--green-l)}
+.mrow.un .mname,.mrow.un .mprev{font-weight:800;color:var(--navy)}
+.mname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mprev{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.mpane{display:flex;flex-direction:column;min-height:0;padding:0}
+.mempty{margin:auto;text-align:center;padding:30px}
+.mph{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.mpane .mlist{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:var(--cream)}
+.bub{max-width:75%;padding:9px 13px;border-radius:16px;font-size:14.5px;line-height:1.45;word-wrap:break-word}.bub .bt{white-space:pre-wrap}.bub .bm{font-size:11px;opacity:.7;margin-top:3px;text-align:right}
+.bub.me{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:5px}.bub.me a{color:#fff}
+.bub.them{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px}
+.mqr{display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;border-top:1px solid var(--line)}
+.mpane .mcomp{display:flex;gap:8px;align-items:flex-end;padding:10px 16px;border-top:1px solid var(--line)}.mpane .mcomp textarea{flex:1;resize:vertical;min-height:46px}
+@media(max-width:760px){.mwrap{grid-template-columns:1fr;height:auto}.mrows{max-height:40vh}.mpane{min-height:70vh}}
 </style>
 </head>
 <body>
 <header><div><b>Business Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="today">Today</button><button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites</button><button data-v="subs">Business Studio Pro</button>
+  <button data-v="today">Today</button><button data-v="messages">Messages <span class="nbadge hidden" id="msgBadge"></span></button><button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites</button><button data-v="subs">Business Studio Pro</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -151,14 +167,138 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   $$('#nav button').forEach(function (b) { b.onclick = function () { go(b.dataset.v); }; });
   $('#logout').onclick = async function () { try { await api('logout'); } catch (e) {} login(); };
   function go(v) {
+    clearInterval(S.msgTimer);
     $$('#nav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
-    ({ today: vToday, overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket, invites: vInvites })[v]();
+    ({ today: vToday, overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket, invites: vInvites, messages: vMessages })[v]();
   }
   async function boot() {
     try { S.overview = await api('overview'); } catch (e) { return; }
     $('#nav').classList.remove('hidden'); $('#logout').classList.remove('hidden'); $('#who').textContent = S.overview.admin;
-    go('today');
+    msgBadge(); clearInterval(S.badgeTimer); S.badgeTimer = setInterval(function () { if (!document.hidden) msgBadge(); }, 60000);
+    if (location.hash === '#messages') { history.replaceState(null, '', location.pathname); go('messages'); } else go('today');
   }
+  async function msgBadge() {
+    try { var n = (await api('msg-unread')).unread || 0; var b = $('#msgBadge'); b.textContent = n > 99 ? '99+' : n; b.classList.toggle('hidden', !n); S.msgUnread = n; return n; } catch (e) { return 0; }
+  }
+
+  // ── Messages: private chat with each member + announcements ──
+  var MSG_AUD = { all: 'All members', club: 'Business Club', pro: 'Business Studio Pro' };
+  var MSG_F = [['inbox', 'Inbox'], ['unread', 'Unread'], ['done', 'Done'], ['all', 'All']];
+  function mTime(iso) {
+    var x = new Date(iso), n = new Date(), t = x.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (x.toDateString() === n.toDateString()) return t;
+    var y = new Date(n); y.setDate(n.getDate() - 1); if (x.toDateString() === y.toDateString()) return 'Yesterday ' + t;
+    return x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + t;
+  }
+  function mLink(t) { return esc(t).replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+  async function vMessages() {
+    loading();
+    var r; try { r = S.msg = await api('msg-inbox'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    msgBadge();
+    var f = S.msgF || 'inbox', q = (S.msgQ || '').toLowerCase();
+    var rows = r.rows.filter(function (x) { return f === 'all' || (f === 'unread' ? x.unreadAdmin > 0 : f === 'done' ? x.done : !x.done); })
+      .filter(function (x) { return !q || (x.name + ' ' + x.email + ' ' + x.lastText).toLowerCase().indexOf(q) > -1; });
+    var cnt = function (k) { return r.rows.filter(function (x) { return k === 'all' || (k === 'unread' ? x.unreadAdmin > 0 : k === 'done' ? x.done : !x.done); }).length; };
+    app.innerHTML = '<main class="msgmain"><div class="row" style="justify-content:space-between;margin-bottom:12px"><h1 style="margin:0">Messages</h1><div class="row"><button class="btn small ghost" id="mNew">✏️ New message</button><button class="btn small gold" id="mAnn">📣 Announcement</button><button class="btn small ghost" id="mQuick">⚡ Quick replies</button></div></div>' +
+      '<div class="mwrap"><div class="mside card"><input id="mQ" placeholder="Search members…" value="' + esc(S.msgQ || '') + '"><div class="chips" style="margin:8px 0">' + MSG_F.map(function (x) { return '<button class="chip" data-mf="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + x[1] + ' (' + cnt(x[0]) + ')</button>'; }).join('') + '</div>' +
+        '<div class="mrows">' + (rows.length ? rows.map(function (x) {
+          return '<button class="mrow' + (S.msgOpen === x.email ? ' on' : '') + (x.unreadAdmin ? ' un' : '') + '" data-mo="' + esc(x.email) + '"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b class="mname">' + esc(x.name || x.email) + '</b><span class="muted" style="font-size:12px;white-space:nowrap">' + esc(mTime(x.updatedAt)) + '</span></div>' +
+            '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;margin-top:2px"><span class="mprev">' + (x.lastFrom === 'admin' ? 'You: ' : '') + esc(x.lastText) + '</span>' + (x.unreadAdmin ? '<span class="nbadge">' + x.unreadAdmin + '</span>' : x.done ? '<span class="muted" style="font-size:12px">✓ Done</span>' : '') + '</div>' +
+            '<div class="muted" style="font-size:12px;margin-top:2px">' + esc(x.plan) + (x.name ? ' · ' + esc(x.email) : '') + '</div></button>';
+        }).join('') : '<p class="muted" style="padding:10px 4px">' + (f === 'inbox' && !q ? 'No messages yet. When members message you, they show up here.' : 'Nothing here.') + '</p>') + '</div></div>' +
+        '<div class="mpane card" id="mPane"><div class="mempty"><div style="font-size:34px">💬</div><p><b>Pick a conversation</b></p><p class="muted">or start one with <b>✏️ New message</b>.</p></div></div></div></main>';
+    $$('[data-mf]').forEach(function (b) { b.onclick = function () { S.msgF = b.dataset.mf; vMessages(); }; });
+    var qi = $('#mQ'), qt; qi.oninput = function () { clearTimeout(qt); qt = setTimeout(function () { S.msgQ = qi.value.trim(); vMessages(); setTimeout(function () { var n = $('#mQ'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 0); }, 350); };
+    $$('[data-mo]').forEach(function (b) { b.onclick = function () { $$('.mrow').forEach(function (x) { x.classList.toggle('on', x === b); }); b.classList.remove('un'); var nb = $('.nbadge', b); if (nb) nb.remove(); openThread(b.dataset.mo); }; });
+    $('#mNew').onclick = newMsgSheet; $('#mAnn').onclick = annSheet; $('#mQuick').onclick = quickSheet;
+    if (S.msgOpen) openThread(S.msgOpen);
+    clearInterval(S.msgTimer);
+    S.msgTimer = setInterval(async function () {
+      if (document.hidden || !$('#mPane')) return;
+      if (S.msgOpen) openThread(S.msgOpen, true);
+      var before = S.msgUnread, n = await msgBadge(); if (n !== before && !$('.scrim') && !(($('#mIn') || {}).value)) vMessages();
+    }, 8000);
+  }
+  async function openThread(email, quiet) {
+    S.msgOpen = email;
+    var pane = $('#mPane'); if (!pane) return;
+    if (!quiet) pane.innerHTML = '<p class="muted" style="padding:20px">Loading…</p>';
+    var t; try { t = await api('msg-thread', { email: email }); } catch (x) { if (!quiet) pane.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (S.msgOpen !== email || !$('#mPane')) return;
+    var list = $('#mList');
+    if (quiet && list && list.dataset.email === email) {
+      if (list.dataset.n === String(t.messages.length) && list.dataset.seen === String(t.memberReadAt)) return;
+      var near = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+      list.innerHTML = bubbles(t); list.dataset.n = t.messages.length; list.dataset.seen = t.memberReadAt; if (near) list.scrollTop = list.scrollHeight; return;
+    }
+    var draft = (S.msgDrafts || {})[email] || '';
+    pane.innerHTML = '<div class="mph"><div><b style="font-size:17px">' + esc(t.name || email) + '</b> <span class="pill p-' + (t.plan === 'Pro' ? 'power' : t.plan === 'Club' ? 'active' : 'inactive') + '">' + esc(t.plan) + '</span><div class="muted" style="font-size:13px">' + esc(email) + '</div></div>' +
+      '<div class="row">' + (t.isMember ? '<button class="btn small ghost" id="mRec">Open record</button>' : '') + (t.messages.length ? '<button class="btn small ghost" id="mDone">' + (t.done ? '↩ Move to inbox' : '✓ Done') + '</button>' : '') + '</div></div>' +
+      '<div class="mlist" id="mList" data-email="' + esc(email) + '" data-n="' + t.messages.length + '" data-seen="' + esc(t.memberReadAt) + '">' + bubbles(t) + '</div>' +
+      '<div class="mqr hidden" id="mQr">' + (S.msg.quick || []).map(function (x, i) { return '<button class="chip" data-qr="' + i + '">' + esc(x.length > 60 ? x.slice(0, 57) + '…' : x) + '</button>'; }).join('') + '</div>' +
+      '<form class="mcomp" id="mForm"><button type="button" class="btn small ghost" id="mQrBtn" title="Quick replies">⚡</button><textarea id="mIn" rows="2" maxlength="' + (S.msg.max || 2000) + '" placeholder="Reply to ' + esc(t.name || email) + '… (Enter to send, Shift+Enter for a new line)">' + esc(draft) + '</textarea><button class="btn primary" id="mSend">Send</button></form>';
+    var ml = $('#mList'); ml.scrollTop = ml.scrollHeight;
+    var inp = $('#mIn'); inp.focus();
+    inp.oninput = function () { S.msgDrafts = S.msgDrafts || {}; S.msgDrafts[email] = inp.value; };
+    inp.onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#mForm').requestSubmit(); } };
+    $('#mQrBtn').onclick = function () { $('#mQr').classList.toggle('hidden'); };
+    $$('[data-qr]').forEach(function (b) { b.onclick = function () { var v = S.msg.quick[Number(b.dataset.qr)]; inp.value = inp.value ? inp.value.replace(/\s*$/, '\n') + v : v; inp.oninput(); inp.focus(); $('#mQr').classList.add('hidden'); }; });
+    $('#mForm').onsubmit = async function (e) {
+      e.preventDefault(); var text = inp.value.trim(); if (!text) return;
+      $('#mSend').disabled = true;
+      try { await api('msg-send', { email: email, text: text }); inp.value = ''; if (S.msgDrafts) delete S.msgDrafts[email]; await openThread(email, true); var l = $('#mList'); if (l) l.scrollTop = l.scrollHeight; }
+      catch (x) { toast(x.message); }
+      var sb = $('#mSend'); if (sb) sb.disabled = false;
+    };
+    var rec = $('#mRec'); if (rec) rec.onclick = function () { editMember(email); };
+    var dn = $('#mDone'); if (dn) dn.onclick = async function () { try { await api('msg-done', { email: email, done: !t.done }); toast(t.done ? 'Moved back to inbox' : 'Marked done ✓'); if (!t.done) S.msgOpen = null; vMessages(); } catch (x) { toast(x.message); } };
+  }
+  function bubbles(t) {
+    if (!t.messages.length) return '<p class="muted" style="text-align:center;margin:30px 0">No messages yet — say hello 👋</p>';
+    return t.messages.map(function (m) {
+      var me = m.from === 'admin';
+      return '<div class="bub ' + (me ? 'me' : 'them') + '"><div class="bt">' + mLink(m.text) + '</div><div class="bm">' + esc(mTime(m.at)) + (me ? (m.seen ? ' · Seen' : ' · Sent ✓') : '') + '</div></div>';
+    }).join('');
+  }
+  function newMsgSheet() {
+    var c = S.msg.contacts || [];
+    var s2 = sheet('<h2 style="margin:0">✏️ New message</h2><p class="muted">Start a private chat with a member.</p><input id="nmQ" placeholder="Search by business or email…"><div id="nmL" class="stack" style="max-height:50vh;overflow:auto;gap:4px"></div><button class="btn ghost" id="nmX">Cancel</button>');
+    var draw = function () { var q = $('#nmQ', s2).value.toLowerCase(); var l = c.filter(function (x) { return !q || (x.name + ' ' + x.email).toLowerCase().indexOf(q) > -1; }).slice(0, 60);
+      $('#nmL', s2).innerHTML = l.length ? l.map(function (x) { return '<button class="mrow" data-nm="' + esc(x.email) + '"><b>' + esc(x.name || x.email) + '</b><div class="muted" style="font-size:12px">' + esc(x.plan) + (x.name ? ' · ' + esc(x.email) : '') + '</div></button>'; }).join('') : '<p class="muted">No members match.</p>';
+      $$('[data-nm]', s2).forEach(function (b) { b.onclick = function () { s2.remove(); S.msgF = 'all'; S.msgQ = ''; S.msgOpen = b.dataset.nm; vMessages(); }; }); };
+    $('#nmQ', s2).oninput = draw; draw(); $('#nmQ', s2).focus();
+    $('#nmX', s2).onclick = function () { s2.remove(); };
+  }
+  function annSheet() {
+    var anns = S.msg.announcements || [];
+    var s2 = sheet('<h2 style="margin:0">📣 Announcement</h2><p class="muted">Goes into every chosen member’s chat as an announcement, with a push notification. Members can reply to you privately.</p>' +
+      '<div><label for="anA">Send to</label><select id="anA">' + Object.keys(MSG_AUD).map(function (k) { return '<option value="' + k + '">' + MSG_AUD[k] + '</option>'; }).join('') + '</select></div>' +
+      '<div><label for="anT">Message</label><textarea id="anT" rows="6" maxlength="' + (S.msg.max || 2000) + '" placeholder="e.g. Our next Business Club live session is on Thursday at 7pm…"></textarea></div><div class="err hidden" id="anE"></div>' +
+      '<div class="row"><button class="btn primary" id="anS">Send announcement</button><button class="btn ghost" id="anX">Close</button></div>' +
+      '<div><b>Sent</b>' + (anns.length ? '<div class="stack" style="gap:6px;margin-top:6px">' + anns.map(function (a) { return '<div class="card" style="padding:10px 12px"><div class="row" style="justify-content:space-between"><span class="muted" style="font-size:12.5px">' + esc(mTime(a.at)) + ' · ' + esc(MSG_AUD[a.audience]) + '</span><button class="btn small ghost danger" data-and="' + esc(a.id) + '">Delete</button></div><div style="white-space:pre-wrap;margin-top:4px">' + esc(a.text) + '</div></div>'; }).join('') + '</div>' : '<p class="muted" style="margin:4px 0">None yet.</p>') + '</div>');
+    $('#anX', s2).onclick = function () { s2.remove(); };
+    $('#anS', s2).onclick = async function () {
+      var t = $('#anT', s2).value.trim(), a = $('#anA', s2).value, e = $('#anE', s2);
+      if (!t) { e.textContent = 'Type the announcement first.'; e.classList.remove('hidden'); return; }
+      if (!confirm('Send this announcement to ' + MSG_AUD[a] + '?')) return;
+      this.disabled = true;
+      try { var r = await api('msg-announce', { text: t, audience: a }); S.msg.announcements = r.announcements; s2.remove(); toast('Announcement sent to ' + r.reached + ' member' + (r.reached === 1 ? '' : 's') + ' 📣'); }
+      catch (x) { e.textContent = x.message; e.classList.remove('hidden'); this.disabled = false; }
+    };
+    $$('[data-and]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this announcement? It disappears from members’ chats.')) return; try { var r = await api('msg-announce-delete', { id: b.dataset.and }); S.msg.announcements = r.announcements; s2.remove(); annSheet(); toast('Announcement deleted'); } catch (x) { toast(x.message); } }; });
+  }
+  function quickSheet() {
+    var list = (S.msg.quick || []).slice();
+    var s2 = sheet('<h2 style="margin:0">⚡ Quick replies</h2><p class="muted">Saved answers you can drop into a reply with the ⚡ button.</p><div id="qrL" class="stack" style="gap:6px"></div><button class="btn small ghost" id="qrAdd">＋ Add a quick reply</button><div class="row"><button class="btn primary" id="qrS">Save</button><button class="btn ghost" id="qrX">Cancel</button></div>');
+    var draw = function () { $('#qrL', s2).innerHTML = list.map(function (x, i) { return '<div class="row" style="flex-wrap:nowrap;align-items:flex-start"><textarea data-qi="' + i + '" rows="2" style="flex:1">' + esc(x) + '</textarea><button class="btn small ghost danger" data-qd="' + i + '" aria-label="Remove">✕</button></div>'; }).join('') || '<p class="muted">No quick replies.</p>';
+      $$('[data-qi]', s2).forEach(function (t) { t.oninput = function () { list[Number(t.dataset.qi)] = t.value; }; });
+      $$('[data-qd]', s2).forEach(function (b) { b.onclick = function () { list.splice(Number(b.dataset.qd), 1); draw(); }; }); };
+    draw();
+    $('#qrAdd', s2).onclick = function () { list.push(''); draw(); var all = $$('[data-qi]', s2); all[all.length - 1].focus(); };
+    $('#qrX', s2).onclick = function () { s2.remove(); };
+    $('#qrS', s2).onclick = async function () { try { var r = await api('msg-quick-save', { replies: list }); S.msg.quick = r.quick; s2.remove(); toast('Quick replies saved'); if (S.msgOpen) openThread(S.msgOpen); } catch (x) { toast(x.message); } };
+  }
+
   function loading() { app.innerHTML = '<main><p class="muted">Loading…</p></main>'; }
 
   // ── Resources (content manager) ──
@@ -777,7 +917,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   }
 
   // ── Today: daily to-do list (overdue until marked) ──
-  var TD_ICO = { verify: '🏛️', market: '🛍️', alert: '🔔', renew: '⏳', spotlight: '📣', lesson: '📚', share: '📲', invites: '💌', posts: '🗓️', task: '📝' };
+  var TD_ICO = { messages: '💬', verify: '🏛️', market: '🛍️', alert: '🔔', renew: '⏳', spotlight: '📣', lesson: '📚', share: '📲', invites: '💌', posts: '🗓️', task: '📝' };
   var TD_MAX = 10;
   var TD_SHARE = { stories: 'Story', reposts: 'repost', discovery: 'discovery feature' };
   var TD_REPEAT = { once: 'Once', daily: 'Every day', weekdays: 'Weekdays (Mon–Fri)', weekly: 'Every week' };
@@ -798,6 +938,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     if (it.kind === 'renew') out.push((m.whatsapp ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://wa.me/' + esc(String(m.whatsapp).replace(/\D/g, '').replace(/^0/, '44')) + '?text=' + encodeURIComponent('Hi! Your Auntie Tobi Business Club membership ends on ' + d(m.expires) + '. Renew here to keep your benefits: https://auntietobi.co.uk/business-club 💚') + '">WhatsApp</a>' : '') + '<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>');
     if (it.kind === 'lesson') out.push('<button class="btn small ghost" data-tgo="resources">Open</button>');
     if (it.kind === 'invites') out.push('<button class="btn small ghost" data-tgo="invites">Open Club invites</button>');
+    if (it.kind === 'messages') out.push('<button class="btn small ghost" data-tgo="messages">Open Messages</button>');
     if (it.kind === 'posts') out.push('<a class="btn small ghost" href="/hq" style="text-decoration:none;color:var(--navy)">Open Content Hub ↗</a>');
     if (it.kind === 'alert') out.push('<button class="btn small ghost" data-tgo="alerts">Alerts</button>');
     return out.join('');

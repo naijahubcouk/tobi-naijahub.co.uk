@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Auntie Tobi HQ — Seun's private Content Hub (/hq). Admin only. No AI.
+ * Auntie Tobi HQ — Auntie Tobi's private Content Hub (/hq). Admin only. No AI.
  * Paste content ideas from ChatGPT (split into cards in the browser by /hq-split.js), review, plan, post, track.
  *
  *   hq/content    { items: { <id>: card } }
@@ -185,8 +185,8 @@ async function plannedToday() {
 // ── HQ team (sign in to HQ only) ──
 async function teamFull() { const t = await getJson(TEAM_KEY); return t && Array.isArray(t.emails) ? { emails: t.emails, names: t.names || {} } : { emails: DEFAULT_TEAM.slice(), names: { ...DEFAULT_NAMES } }; }
 async function team() { return (await teamFull()).emails; }
-// Display names: team names + "Seun" for admins.
-async function names() { const t = await teamFull(); const out = { ...t.names }; for (const e of core.adminEmails()) out[e] = 'Seun'; return out; }
+// Display names: team names + "Auntie Tobi" for admins.
+async function names() { const t = await teamFull(); const out = { ...t.names }; for (const e of core.adminEmails()) out[e] = 'Auntie Tobi'; return out; }
 async function setTeam(emails, nameMap) {
   const raw = (Array.isArray(emails) ? emails : []).map(e => String(e || '').trim()).filter(Boolean);
   for (const e of raw) if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) || !core.normalizeEmail(e)) throw new HttpError(400, 'invalid', `“${e.slice(0, 80)}” doesn’t look like an email address.`);

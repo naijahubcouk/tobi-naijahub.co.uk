@@ -325,6 +325,20 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .benrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF3EF}.benrow:last-child{border-bottom:0}
 .benico{font-size:20px;width:28px;text-align:center;flex:none}
+@media(max-width:440px){.top .brand small{letter-spacing:.5px;font-size:10px;white-space:nowrap}.top{gap:8px}}
+.msgbtn{position:relative}.mdot{position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#E5484D;color:#fff;font-size:10.5px;font-weight:800;display:grid;place-items:center;border:2px solid var(--navy)}
+.msgs{display:flex;flex-direction:column;height:calc(100vh - 62px - env(safe-area-inset-top));height:calc(100dvh - 62px - env(safe-area-inset-top));padding-bottom:0!important}
+.mhead{display:flex;gap:10px;align-items:center;padding:4px 2px 12px;border-bottom:1px solid var(--line)}.mhead img{width:42px;height:42px;border-radius:50%;border:2px solid var(--gold)}
+.mlist{flex:1;overflow:auto;padding:14px 2px;display:flex;flex-direction:column;gap:8px}
+.bub{max-width:82%;padding:9px 13px;border-radius:16px;font-size:15px;line-height:1.45;word-wrap:break-word}
+.bub .bt{white-space:pre-wrap}.bub .bm{font-size:11px;opacity:.7;margin-top:3px;text-align:right}
+.bub.me{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:5px}.bub.me a{color:#fff}
+.bub.them{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px}
+.bub.ann{background:var(--gold-l,#FFF1CF);border-color:#F3DC9C}.annl{font-size:11.5px;font-weight:800;letter-spacing:.3px;margin-bottom:2px}
+.bub.pend{opacity:.6}
+.mcomp{display:flex;gap:8px;align-items:flex-end;padding:10px 0 calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--cream)}
+.mcomp textarea{flex:1;resize:none;min-height:44px;max-height:140px;border-radius:22px;padding:11px 16px}
+.mcomp .btn{border-radius:22px;min-height:44px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -336,6 +350,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   <div class="brand">Business Studio<small>Auntie Tobi Business Club</small></div>
   <div class="spacer"></div>
   <span class="pill cream hidden" id="topPlan"></span>
+  <button class="back hidden msgbtn" id="msgBtn" aria-label="Message Auntie Tobi" title="Message Auntie Tobi"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1121 12z"/></svg><span class="mdot hidden" id="msgDot"></span></button>
   <button class="back hidden" id="acctBtn" aria-label="Account" style="margin-right:-6px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
 </header>
 
@@ -441,6 +456,10 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     var ab = document.getElementById('acctBtn');
     ab.classList.toggle('hidden', !o.tabs); ab.onclick = function () { showAccount(); };
     ab.style.background = o.tab === 'account' ? 'var(--navy-2)' : '';
+    var mb = document.getElementById('msgBtn');
+    mb.classList.toggle('hidden', !(o.tabs && S.boot && S.boot.access && S.boot.access.canView)); mb.onclick = function () { showMessages(); };
+    if (o.tab !== 'messages') stopMsgPoll();
+    msgDot();
     var tp = document.getElementById('topPlan');
     if (S.boot && S.boot.access && S.boot.access.canView) {
       tp.classList.remove('hidden');
@@ -456,6 +475,65 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       if (t === 'home') showHome(); else if (t === 'create') showCreate(); else if (t === 'plan') showPlan(); else if (t === 'track') showTrack(); else openLibraryTab();
     });
   });
+
+  // ───────────── messages with Auntie Tobi ─────────────
+  S.msgUnread = 0;
+  function msgDot() { var d = document.getElementById('msgDot'); if (d) { d.classList.toggle('hidden', !S.msgUnread); d.textContent = S.msgUnread > 9 ? '9+' : (S.msgUnread || ''); } }
+  async function checkUnread() {
+    if (!S.boot || !S.boot.access || !S.boot.access.canView) return;
+    try { S.msgUnread = (await api('studio-messages', 'unread', {}, { quiet401: true })).unread || 0; msgDot(); } catch (e) {}
+  }
+  setInterval(function () { if (!document.hidden && S.msgView !== true) checkUnread(); }, 90000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { if (S.msgView) loadMsgs(false); else checkUnread(); } });
+  function stopMsgPoll() { S.msgView = false; clearInterval(S.msgTimer); }
+  function msgTime(iso) {
+    var d = new Date(iso), now = new Date(), t = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (d.toDateString() === now.toDateString()) return t;
+    var y = new Date(now); y.setDate(now.getDate() - 1);
+    if (d.toDateString() === y.toDateString()) return 'Yesterday ' + t;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + t;
+  }
+  function linkify(t) { return esc(t).replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+  function drawMsgs(list) {
+    var box = $('#msgList'); if (!box) return;
+    var nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80 || !box.dataset.ready;
+    box.innerHTML = list.length ? list.map(function (m) {
+      var me = m.from === 'member';
+      return '<div class="bub ' + (me ? 'me' : 'them') + (m.announce ? ' ann' : '') + (m.pending ? ' pend' : '') + '">' + (m.announce ? '<div class="annl">📣 Announcement</div>' : '') +
+        '<div class="bt">' + linkify(m.text) + '</div><div class="bm">' + (m.pending ? 'Sending…' : msgTime(m.at)) + (me && !m.pending ? (m.seen ? ' · Seen' : ' · Sent ✓') : '') + '</div></div>';
+    }).join('') : '<div class="empty" style="padding:30px 10px"><img src="/tobi-face-128.png" alt="" style="width:64px;height:64px;border-radius:50%;border:2px solid var(--gold)"><p style="margin:10px 0 4px;font-weight:700">Message Auntie Tobi</p><p class="sub" style="margin:0">Questions about Business Studio, your membership or your business? Send a message — it goes straight to Auntie Tobi.</p></div>';
+    box.dataset.ready = '1';
+    if (nearBottom) box.scrollTop = box.scrollHeight;
+  }
+  async function loadMsgs(first) {
+    if (!S.msgView) return;
+    try {
+      var r = await api('studio-messages', 'get', { read: true });
+      S.msgList = r.messages; S.msgUnread = 0; msgDot(); drawMsgs(r.messages);
+    } catch (e) { if (first && $('#msgList')) $('#msgList').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
+  }
+  function showMessages() {
+    setChrome({ back: function () { stopMsgPoll(); showHome(); }, tab: 'messages' });
+    S.msgView = true;
+    app.innerHTML = '<main class="msgs"><div class="mhead"><img src="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><div class="sub" style="margin:0;font-size:13px">Usually replies within a day</div></div></div>' +
+      '<div class="mlist" id="msgList"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div>' +
+      '<form class="mcomp" id="msgForm"><label class="sr" for="msgIn">Message</label><textarea id="msgIn" rows="1" maxlength="2000" placeholder="Type a message…"></textarea><button class="btn primary" id="msgSend" type="submit" aria-label="Send">Send</button></form></main>';
+    var inp = $('#msgIn');
+    inp.addEventListener('input', function () { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 140) + 'px'; });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(min-width:700px)').matches) { e.preventDefault(); $('#msgForm').requestSubmit(); } });
+    $('#msgForm').onsubmit = async function (e) {
+      e.preventDefault();
+      var text = inp.value.trim(); if (!text) return;
+      var temp = { from: 'member', text: text, at: new Date().toISOString(), pending: true };
+      S.msgList = (S.msgList || []).concat([temp]); drawMsgs(S.msgList); var bx = $('#msgList'); bx.scrollTop = bx.scrollHeight;
+      inp.value = ''; inp.style.height = 'auto';
+      try { await api('studio-messages', 'send', { text: text }); await loadMsgs(false); }
+      catch (x) { toast(x.message); S.msgList = S.msgList.filter(function (m) { return m !== temp; }); drawMsgs(S.msgList); inp.value = text; }
+    };
+    loadMsgs(true);
+    clearInterval(S.msgTimer);
+    S.msgTimer = setInterval(function () { if (!document.hidden && $('#msgList')) loadMsgs(false); else if (!$('#msgList')) stopMsgPoll(); }, 6000);
+  }
 
   // ───────────── sign in ─────────────
   // mode: 'signin' (members) or 'signup' (Get Business Studio Pro — anyone can verify their email to buy)
@@ -597,6 +675,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
     }
     if (S.boot.state === 'buyer') return showBuy();
     if (S.boot.state === 'active' && !S.boot.profile) return showProfileForm(true);
+    checkUnread();
+    if (location.hash === '#messages' && S.boot.access && S.boot.access.canView) { history.replaceState(null, '', location.pathname + location.search); return showMessages(); }
     showHome();
   }
 

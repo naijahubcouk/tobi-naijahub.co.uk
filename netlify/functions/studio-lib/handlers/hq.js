@@ -81,14 +81,14 @@ exports.handler = handler(async (ctx) => {
     case 'restore': return { n: await hq.remove(body.ids || body.id, true, who.email), items: await hq.list() };
     case 'bin': return { bin: await hq.bin() };
     case 'purge': {
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Seun can delete cards forever.');
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can delete cards forever.');
       const n = await hq.purge(body.ids || body.id);
       await core.audit(who.email, 'hq_purge', { n });
       return { n, bin: await hq.bin() };
     }
     case 'img': return { id: await hq.saveImage(body.dataUrl) };
     case 'team-save': {
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Seun can change who has access.');
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change who has access.');
       const t = await hq.setTeam(body.emails, body.names);
       await core.audit(who.email, 'hq_team', { n: t.emails.length });
       return { team: t };
