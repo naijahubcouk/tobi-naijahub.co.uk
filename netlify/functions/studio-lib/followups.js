@@ -16,7 +16,10 @@ const prefs = require('./prefs');
 
 const MAX = 500;
 const SOURCES = ['Instagram', 'WhatsApp', 'TikTok', 'Facebook', 'Auntie Tobi', 'Referral', 'Website', 'Walk-in', 'Other'];
-const STAGES = ['new', 'quoted', 'booked', 'notnow'];
+const STAGES = ['new', 'quoted', 'booked', 'completed', 'notnow', 'lost'];
+// What members see: New → Contacted → Quoted → Booked → Completed, or Not now / Lost.
+const DISPLAY = ['new', 'contacted', 'quoted', 'booked', 'completed', 'notnow', 'lost'];
+const isWon = s => s === 'booked' || s === 'completed';
 const KEEP_DAYS = [0, 14, 30, 60, 90, 180, 365];
 const KEEP_KINDS = ['ideas', 'rebook'];
 const key = email => `followups/${enc(email)}`;
@@ -43,7 +46,8 @@ async function defaults(email) {
 // UK date of a timestamp (a date on its own is kept as it is).
 const ukDate = v => { v = String(v || ''); return v.length > 10 ? core.dayKey(new Date(v)) : v.slice(0, 10); };
 function schedule(it) {
-  if (it.stage === 'booked') {
+  if (it.stage === 'lost') return { nextAt: '', kind: '' };
+  if (isWon(it.stage)) {
     const booked = ukDate(it.bookedAt || it.createdAt);
     if (!it.thankSent) return { nextAt: addDays(booked, 1), kind: 'thanks' };
     if (!it.keepDays) return { nextAt: '', kind: '' };
@@ -59,7 +63,8 @@ function schedule(it) {
 function withNext(it) {
   const s = schedule(it);
   const nextAt = it.snoozeUntil && s.nextAt && it.snoozeUntil > s.nextAt ? it.snoozeUntil : s.nextAt;
-  return { ...it, nextAt, dueKind: s.kind };
+  const display = it.stage === 'new' ? ((it.step || 0) > 0 || it.lastContactAt ? 'contacted' : 'new') : it.stage;
+  return { ...it, nextAt, dueKind: s.kind, display };
 }
 
 async function load(email) { return (await getJson(key(email))) || { items: [] }; }
@@ -100,7 +105,7 @@ async function add(email, raw) {
     data.items.unshift(it);
     if (data.items.length > MAX) {
       // Drop the oldest finished ones first.
-      const done = data.items.map((x, i) => ({ x, i })).filter(o => o.x.stage === 'notnow' || (o.x.stage === 'booked' && !o.x.keepDays)).pop();
+      const done = data.items.map((x, i) => ({ x, i })).filter(o => o.x.stage === 'notnow' || o.x.stage === 'lost' || (isWon(o.x.stage) && !o.x.keepDays)).pop();
       data.items.splice(done ? done.i : data.items.length - 1, 1);
     }
     return data;
@@ -142,16 +147,32 @@ async function sent(email, id, kind) {
 async function setStage(email, id, stage, opts) {
   if (!STAGES.includes(stage)) throw new HttpError(400, 'invalid', 'Invalid stage.');
   opts = opts || {};
-  let becameBooked = false;
+  let becameBooked = false, recordSale = 0, linkedQuote = '';
   const out = await mutate(email, id, it => {
-    if (stage === 'booked' && it.stage !== 'booked') { it.bookedAt = core.nowIso(); becameBooked = true; it.thankSent = false; }
+    if (isWon(stage) && !isWon(it.stage)) { it.bookedAt = core.nowIso(); becameBooked = true; it.thankSent = false; }
+    if (isWon(stage) && opts.value !== undefined && opts.value !== '') { const v = toPence(opts.value); if (v) it.valuePence = v; }
+    if (stage === 'completed') {
+      it.completedAt = core.nowIso();
+      const amt = opts.amount !== undefined && opts.amount !== '' ? toPence(opts.amount) : 0;
+      if (amt) it.valuePence = amt;
+      if (opts.recordSale !== false && !it.saleRecorded && amt) { recordSale = amt; it.saleRecorded = true; linkedQuote = it.quoteId || ''; }
+    }
     if (stage === 'quoted' && opts.quoteId) it.quoteId = String(opts.quoteId).slice(0, 20);
     if (stage === 'notnow') it.checkBackAt = validDate(opts.checkBackAt) ? opts.checkBackAt : '';
     if (stage === 'new' || stage === 'quoted') { if (it.stage === 'notnow') it.step = 0; }
     it.stage = stage; it.snoozeUntil = '';
-    logEvent(it, { new: 'Moved back to active', quoted: 'Quote sent', booked: 'Booked 🎉', notnow: opts.checkBackAt ? `Not now — check back ${opts.checkBackAt}` : 'Not now' }[stage]);
+    logEvent(it, { new: 'Moved back to active', quoted: 'Quote sent', booked: 'Booked 🎉', completed: recordSale ? `Completed & paid — £${(recordSale / 100).toFixed(2)} added to Track` : 'Completed ✅', lost: 'Marked as lost', notnow: opts.checkBackAt ? `Not now — check back ${opts.checkBackAt}` : 'Not now' }[stage]);
   });
   if (becameBooked && opts.countInTrack !== false) await growth.bump(email, 'bookings').catch(() => {});
+  if (recordSale) {
+    // Don't count it twice if the linked quote's invoice was already marked paid (that records the sale itself).
+    let already = false;
+    if (linkedQuote) {
+      const docs = ((await getJson(`money/${enc(email)}`)) || { docs: [] }).docs;
+      already = docs.some(d => (d.fromId === linkedQuote || d.id === linkedQuote) && d.saleTracked);
+    }
+    if (!already) { await growth.bump(email, 'salesCount').catch(() => {}); await growth.bump(email, 'salesGbp', recordSale / 100).catch(() => {}); }
+  }
   return out;
 }
 
@@ -170,7 +191,7 @@ async function remove(email, id) {
 
 // Keeps linked quotes in step with Money: quote sent → quoted; invoice paid / receipt → booked.
 async function syncWithMoney(email, data) {
-  const linked = data.items.filter(it => it.quoteId && it.stage !== 'booked' && it.stage !== 'notnow');
+  const linked = data.items.filter(it => it.quoteId && !isWon(it.stage) && it.stage !== 'notnow' && it.stage !== 'lost');
   if (!linked.length) return data;
   const docs = ((await getJson(`money/${enc(email)}`)) || { docs: [] }).docs;
   const changes = [];
@@ -188,13 +209,13 @@ async function syncWithMoney(email, data) {
 
 function stats(items, month) {
   const inMonth = items.filter(i => i.createdAt.slice(0, 7) === month);
-  const bookedMonth = items.filter(i => i.stage === 'booked' && (i.bookedAt || '').slice(0, 7) === month);
+  const bookedMonth = items.filter(i => isWon(i.stage) && (i.bookedAt || '').slice(0, 7) === month);
   const bySource = {};
   for (const i of inMonth) {
     const s = bySource[i.source] || (bySource[i.source] = { source: i.source, enquiries: 0, booked: 0 });
-    s.enquiries++; if (i.stage === 'booked') s.booked++;
+    s.enquiries++; if (isWon(i.stage)) s.booked++;
   }
-  const convertedFromMonth = inMonth.filter(i => i.stage === 'booked').length;
+  const convertedFromMonth = inMonth.filter(i => isWon(i.stage)).length;
   return {
     month, enquiries: inMonth.length, booked: bookedMonth.length,
     rate: inMonth.length ? Math.round(convertedFromMonth / inMonth.length * 100) : 0,
@@ -209,7 +230,8 @@ async function list(email) {
   const day = core.dayKey();
   const items = data.items.map(withNext);
   const due = items.filter(i => i.nextAt && i.nextAt <= day).sort((a, b) => a.nextAt.localeCompare(b.nextAt));
-  return { items, due, stats: stats(items, core.monthKey()), defaults: await defaults(email), sources: SOURCES, keepDays: KEEP_DAYS, today: day };
+  const pipeline = {}; for (const s of DISPLAY) pipeline[s] = 0; for (const i of items) pipeline[i.display]++;
+  return { items, due, pipeline, stats: stats(items, core.monthKey()), defaults: await defaults(email), sources: SOURCES, keepDays: KEEP_DAYS, today: day };
 }
 
 async function due(email) {
@@ -227,4 +249,4 @@ async function saveDefaults(email, raw) {
   return defaults(email);
 }
 
-module.exports = { add, update, sent, setStage, snooze, remove, list, due, saveDefaults, schedule, SOURCES, KEEP_DAYS };
+module.exports = { add, update, sent, setStage, snooze, remove, list, due, saveDefaults, schedule, SOURCES, KEEP_DAYS, STAGES, DISPLAY };

@@ -436,7 +436,7 @@ async function bump(email, field, by) {
     const p = cur || { entries: {} };
     const e = p.entries[day] || { enquiries: 0, bookings: 0, salesCount: 0, salesGbp: 0, posts: 0, note: '' };
     isNew = !p.entries[day];
-    p.entries[day] = { ...e, [field]: Math.max(0, (e[field] || 0) + (by === undefined ? 1 : by)), savedAt: core.nowIso() };
+    p.entries[day] = { ...e, [field]: Math.max(0, Math.round(((e[field] || 0) + (by === undefined ? 1 : by)) * 100) / 100), savedAt: core.nowIso() };
     return p;
   });
   return isNew;

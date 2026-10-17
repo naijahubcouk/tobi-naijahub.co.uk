@@ -439,3 +439,14 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - `business-studio.html`: what Business Studio does, how it works, the 6 tool groups (🔒 = advanced), free extras, the four plans, a comparison table and FAQs.
 - **Start free** buttons go to `/studio?start=free` (opens the Start free screen). **Get Pro / Get Plus** go to `/studio?start=pro` (sign-up, then the Pro / Plus choice; signed-in members go straight to the plans).
 - Linked from the Business Studio sign-in page ("See what's included and the plans") and from the Business Club page (Business Studio section).
+
+## 7aa. Business workspace (Today dashboard, Customers, sales tracking, your data)
+
+- **Positioning:** "Auntie Tobi Business Studio — One Place to Plan, Manage & Grow Your Business. Your everyday workspace for customers, content, planning and business growth." (sign-in and /business-studio).
+- **Tabs:** Today · Customers · Plan · Track · Create. Library is in the laptop sidebar and in Today → Your business tools.
+- **Today:** four numbers from the member's own data — Follow-ups due, Tasks today (and late), Posts planned this week, New enquiries this week — then the weekly goal and the personalised Business Tip, set-up, to-do list and To chase. Right side / lower down: Your business tools, Quick create, generations left, Recent.
+- **＋ in the header:** add a task (with ⭐ priority), log an enquiry, a quote or invoice, today's numbers or content — from any screen.
+- **Customers:** stages New → Contacted → Quoted → Booked → Completed (plus Not now / Lost) with counts. Each customer: WhatsApp, ✍️ Prepare reply (Create → customer message, pre-filled), 🧾 Create quote, Booked 🎉 (optional value), Completed & paid ✅ (amount → added to Track), Not now, Lost. "From quotes & invoices" lists customers from documents.
+- **Sales in Track fill themselves:** an invoice marked paid (or a receipt on its own) adds 1 sale + the amount; Completed & paid does the same unless that customer's invoice was already counted. Bookings are counted when a customer is booked.
+- **To-do:** tap ☆ to make one of your tasks a priority — priorities show first.
+- **Your data (Account):** Download my data (JSON) and Delete my account (type DELETE + a fresh email code; cancels any Pro/Plus subscription immediately; Club benefits end). AI usage counts, the audit log and Stripe's payment records are kept.

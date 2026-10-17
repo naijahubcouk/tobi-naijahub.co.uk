@@ -293,7 +293,7 @@ h2 .free{font-family:var(--font)}
 .slugrow input{border:0!important;box-shadow:none!important;padding-left:2px!important;min-width:0}
 ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
 .cust b{word-break:break-word}
-.pill.fu-new{background:#ECEDF0;color:var(--navy-2)}.pill.fu-quoted{background:var(--gold-l);color:#7A5300}.pill.fu-booked{background:var(--green-l);color:var(--green-d)}.pill.fu-notnow{background:#ECEDF0;color:var(--muted)}
+.pill.fu-new{background:#ECEDF0;color:var(--navy-2)}.pill.fu-quoted{background:var(--gold-l);color:#7A5300}.pill.fu-booked{background:var(--green-l);color:var(--green-d)}.pill.fu-notnow{background:#ECEDF0;color:var(--muted)}.pill.fu-contacted{background:#E8ECF4;color:var(--navy)}.pill.fu-completed{background:var(--green);color:#fff}.pill.fu-lost{background:#F6E7E7;color:#8A2B2B}
 .act.chase.fu{border-left-color:var(--green)}
 ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #EEF3EF;font-size:14px}ul.hist li:last-child{border-bottom:0}ul.hist li span{color:var(--muted);min-width:86px;font-size:13px}
 .mpc{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -365,6 +365,22 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ── tablet & laptop ── phones are unchanged */
 nav.tabs button.deskonly{display:none}
+.pipe{display:flex;align-items:stretch;gap:4px;overflow-x:auto;padding-bottom:2px}
+.pipe .pstage{flex:1;min-width:62px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.pipe .pstage b{font-size:20px;line-height:1.1;font-family:var(--display)}.pipe .pstage span{font-size:11.5px;font-weight:700;color:var(--muted)}
+.pipe .pstage.on{background:var(--navy);border-color:var(--navy)}.pipe .pstage.on b,.pipe .pstage.on span{color:#fff}
+.pipe .parr{align-self:center;color:var(--muted);font-weight:700}
+.pipe.mini .pstage{padding:5px 4px;min-width:0}.pipe.mini .pstage.on{background:var(--green);border-color:var(--green)}
+.dash{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:2px 0 14px}
+.dash button{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:2px}
+.dash b{font-family:var(--display);font-size:26px;line-height:1.05}.dash span{font-size:12px;font-weight:600;color:var(--muted);line-height:1.25}
+.dash button.hot b{color:var(--danger)}
+@media (max-width:480px){.dash{grid-template-columns:repeat(2,1fr)}.pipe{gap:3px}.pipe .parr{display:none}.pipe .pstage{min-width:0;padding:7px 2px}.pipe .pstage span{font-size:10.5px}.pipe.mini .pstage span{font-size:10px}}
+.btools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.btools button{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;font-weight:700;text-align:center;line-height:1.2}
+.btools .bi{font-size:22px;line-height:1}
+.mt-star{font-size:16px;line-height:1;padding:2px 4px;color:#C9CDD5}.mt-star.on{color:var(--gold)}
+.quickadd{width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:24px;font-weight:700;line-height:1}
 @media (min-width:700px){
   main{max-width:780px;padding:20px 24px}
   .tools{grid-template-columns:repeat(3,1fr)}
@@ -404,6 +420,7 @@ nav.tabs .navsep{display:none}
   <div class="brand">Business Studio<small>Auntie Tobi Business Club</small></div>
   <div class="spacer"></div>
   <span class="pill cream hidden" id="topPlan"></span>
+  <button class="quickadd hidden" id="qaBtn" aria-label="Quick add" title="Quick add">+</button>
   <button class="back hidden msgbtn" id="msgBtn" aria-label="Message Auntie Tobi" title="Message Auntie Tobi"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1121 12z"/></svg><span class="mdot hidden" id="msgDot"></span></button>
   <button class="back hidden" id="acctBtn" aria-label="Account" style="margin-right:-6px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
 </header>
@@ -412,11 +429,12 @@ nav.tabs .navsep{display:none}
 
 <nav class="tabs hidden" id="tabs" aria-label="Main">
   <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg>Today</button>
-  <button data-tab="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/></svg>Create</button>
+  <button data-tab="customers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2"/></svg>Customers</button>
   <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Plan</button>
   <button data-tab="track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Track</button>
-  <button data-tab="library" id="libTabBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Library</button>
+  <button data-tab="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/></svg>Create</button>
   <span class="navsep" aria-hidden="true"></span>
+  <button data-tab="library" id="libTabBtn" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Library</button>
   <button data-tab="messages" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>Messages</button>
   <button data-tab="account" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Account</button>
 </nav>
@@ -516,6 +534,8 @@ nav.tabs .navsep{display:none}
     var ab = document.getElementById('acctBtn');
     ab.classList.toggle('hidden', !o.tabs); ab.onclick = function () { showAccount(); };
     ab.style.background = o.tab === 'account' ? 'var(--navy-2)' : '';
+    var qa = document.getElementById('qaBtn');
+    qa.classList.toggle('hidden', !(o.tabs && S.boot && S.boot.access && S.boot.access.canCreate)); qa.onclick = quickAddSheet;
     var mb = document.getElementById('msgBtn');
     mb.classList.toggle('hidden', !(o.tabs && S.boot && S.boot.access && S.boot.access.canView)); mb.onclick = function () { showMessages(); };
     if (o.tab !== 'messages') stopMsgPoll();
@@ -532,7 +552,7 @@ nav.tabs .navsep{display:none}
   $$('nav.tabs button').forEach(function (b) {
     b.addEventListener('click', function () {
       var t = b.dataset.tab;
-      if (t === 'home') showHome(); else if (t === 'create') showCreate(); else if (t === 'plan') showPlan(); else if (t === 'track') showTrack(); else if (t === 'messages') showMessages(); else if (t === 'account') showAccount(); else openLibraryTab();
+      if (t === 'home') showHome(); else if (t === 'create') showCreate(); else if (t === 'plan') showPlan(); else if (t === 'track') showTrack(); else if (t === 'messages') showMessages(); else if (t === 'account') showAccount(); else if (t === 'customers') showFollowups(); else openLibraryTab();
     });
   });
 
@@ -604,11 +624,11 @@ nav.tabs .navsep{display:none}
     app.innerHTML =
       '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt="Auntie Tobi">' +
       (fr ? '<div class="kicker">Free plan</div><h1>Start free</h1>' +
-        '<p class="sub" style="margin-top:8px">Create captions, Reels, Stories, offers and customer replies in your brand voice — 5 AI generations a day, free. No card needed. Upgrade any time. First, confirm your email.</p></div>'
+        '<p class="sub" style="margin-top:8px">Keep track of enquiries and follow-ups, plan your content, manage your daily tasks and quotes — free. Plus 5 AI generations a day for captions, Reels and customer replies. No card needed. First, confirm your email.</p></div>'
       : up ? '<div class="kicker">Business Studio Pro</div><h1>Get Business Studio Pro</h1>' +
         '<p class="sub" style="margin-top:8px">Every Business Studio tool, including the advanced ones, and the Business Growth Library. <b>Pro</b>: 50 AI generations a day for £3 a month. <b>Plus</b>: 100 a day for £5 a month. First, confirm your email.</p></div>'
-        : '<div class="kicker">Auntie Tobi</div><h1>Welcome to your Business Studio</h1>' +
-        '<p class="sub" style="margin-top:8px">Your business tools in one place — create captions, Reels and promos in your brand voice, follow up with customers, send quotes and invoices and track your results. Sign in with your email.</p></div>') +
+        : '<div class="kicker">Auntie Tobi Business Studio</div><h1>One Place to Plan, Manage &amp; Grow Your Business.</h1>' +
+        '<p class="sub" style="margin-top:8px">Your everyday workspace for customers, content, planning and business growth. Sign in with your email.</p></div>') +
       (!up && /[?&]welcome=1/.test(location.search) ? '<div class="note stack" style="margin-bottom:12px"><b>\ud83c\udf89 Welcome to the Business Club!</b><span>Sign in with the <b>email you used to pay</b>. We\u2019ll send you a 6-digit code. If it says you don\u2019t have access yet, wait a minute and try again \u2014 it can take a moment after payment.</span></div>' : '') +
       '<form class="card stack" id="emailForm" novalidate>' +
       '<div><label class="f" for="email">Email address</label><input type="email" id="email" autocomplete="email" inputmode="email" required placeholder="you@yourbusiness.co.uk" value="' + esc(prefill || S.email) + '"></div>' +
@@ -617,7 +637,7 @@ nav.tabs .navsep{display:none}
       '<p class="hint" style="text-align:center">No password needed. We’ll email you a 6-digit code.</p></form>' +
       '<p class="hint" style="text-align:center;margin-top:12px"><a href="/business-studio">See what’s included and the plans →</a></p>' +
       (up ? '<p class="hint" style="text-align:center;margin-top:18px">Already have an account? <button class="btn link" id="toSignin">Sign in</button></p>'
-        : '<div class="card stack" style="margin-top:14px;text-align:center"><div><b>New to Business Studio?</b></div><div class="sub" style="margin:0">Start free — 5 AI generations a day, no card needed.</div><button class="btn gold block" id="toFree" type="button">Start free</button></div>') + '</div>';
+        : '<div class="card stack" style="margin-top:14px;text-align:center"><div><b>New to Business Studio?</b></div><div class="sub" style="margin:0">Start free — customers, to-dos, calendar and quotes, plus 5 AI generations a day. No card needed.</div><button class="btn gold block" id="toFree" type="button">Start free</button></div>') + '</div>';
     var ts = $('#toSignup'); if (ts) ts.onclick = function () { showSignIn($('#email').value, 'signup'); };
     var tf = $('#toFree'); if (tf) tf.onclick = function () { showSignIn($('#email').value, 'free'); };
     var ti = $('#toSignin'); if (ti) ti.onclick = function () { showSignIn($('#email').value); };
@@ -1397,8 +1417,9 @@ nav.tabs .navsep{display:none}
       bindHistoryRows(); bindRenew(); return;
     }
     app.innerHTML = '<main><div class="hgrid"><div class="hl"><p class="sub">' + greeting() + ' 👋🏾</p><h1>' + esc(name) + '</h1>' +
-      '<p class="sub" style="margin:2px 0 14px">Let’s make progress in your business today.</p><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Auntie Tobi is writing today\u2019s Business Tip for you\u2026</p></div></div><div id="nudgeTop" style="margin-top:14px"></div>' +
+      '<p class="sub" style="margin:2px 0 12px">Here’s what needs your attention today.</p><div class="dash" id="dashBox">' + dashTiles(S.dash) + '</div><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Auntie Tobi is writing today\u2019s Business Tip for you\u2026</p></div></div><div id="nudgeTop" style="margin-top:14px"></div>' +
       '<div id="nudgeLesson"></div></div><div class="hr">' +
+      '<h2>Your business tools</h2>' + bizTools() +
       '<h2>Quick create</h2>' + quickRow() +
       '<div style="margin-top:18px">' + allowanceCard() + '</div>' +
       '<h2>Recent</h2>' + historyRows(S.history.slice(0, 3)) +
@@ -1408,9 +1429,85 @@ nav.tabs .navsep{display:none}
     var up = $('#upBtn'); if (up) up.onclick = function () { isFree() ? showUpgrade() : showRenew(); };
     var all = $('#allBtn'); if (all) all.onclick = showLibrary;
     loadNudges();
+    bindBizTools(); loadDash();
     var r;
     try { r = await api('studio-growth', 'home'); } catch (x) { var tb = $('#todayBox'); if (tb) tb.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     S.today = r; renderToday();
+  }
+
+  // ── My Business Today: the numbers at the top (the member's own data) ──
+  function dashTiles(d) {
+    var n = function (v) { return d ? String(v) : '–'; };
+    return '<button data-dash="fu"' + (d && d.followupsDue ? ' class="hot"' : '') + '><b>' + n(d && d.followupsDue) + '</b><span>Follow-ups due</span></button>' +
+      '<button data-dash="todo"' + (d && d.tasksOverdue ? ' class="hot"' : '') + '><b>' + n(d && d.tasksToday) + '</b><span>Tasks today' + (d && d.tasksOverdue ? ' (' + d.tasksOverdue + ' late)' : '') + '</span></button>' +
+      '<button data-dash="plan"><b>' + n(d && d.postsWeek) + '</b><span>Posts planned this week</span></button>' +
+      '<button data-dash="new"><b>' + n(d && d.newEnquiries) + '</b><span>New enquiries this week</span></button>';
+  }
+  function bindDash() {
+    $$('[data-dash]').forEach(function (b) { b.onclick = function () {
+      var k = b.dataset.dash;
+      if (k === 'fu') return showFollowups('due');
+      if (k === 'new') return showFollowups('all');
+      if (k === 'plan') return showPlan();
+      var c = $('#todoCard'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); else showTodoAll();
+    }; });
+  }
+  async function loadDash() {
+    bindDash();
+    try { S.dash = await api('studio-extras', 'dashboard'); } catch (x) { return; }
+    var b = $('#dashBox'); if (b) { b.innerHTML = dashTiles(S.dash); bindDash(); }
+  }
+  var BIZ_TOOLS = [['customers', '👥', 'Customers'], ['todo', '📋', 'To-do list'], ['plan', '📅', 'Content calendar'], ['track', '📊', 'Tracker'],
+    ['goal', '🎯', 'Planner'], ['money', '🧾', 'Quotes &amp; invoices'], ['create', '✨', 'Create'], ['library', '📚', 'Library']];
+  function bizTools() { return '<div class="btools">' + BIZ_TOOLS.map(function (t) { return '<button data-bt="' + t[0] + '"><span class="bi">' + t[1] + '</span>' + t[2] + '</button>'; }).join('') + '</div>'; }
+  function bindBizTools() {
+    $$('[data-bt]').forEach(function (b) { b.onclick = function () {
+      var k = b.dataset.bt;
+      if (k === 'customers') return showFollowups();
+      if (k === 'todo') return showTodoAll();
+      if (k === 'plan') return showPlan();
+      if (k === 'track') return showTrack();
+      if (k === 'goal') return pickGoal(function () { showHome(); });
+      if (k === 'money') return showMoney();
+      if (k === 'create') return showCreate();
+      openLibraryTab();
+    }; });
+  }
+  // ＋ in the header: add something from any screen
+  function quickAddSheet() {
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    var opt = function (k, ico, t, sub) { return '<button class="li" data-qa="' + k + '"><div class="t"><b>' + ico + ' ' + t + '</b><small>' + sub + '</small></div><span aria-hidden="true">→</span></button>'; };
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="qaT"><h2 id="qaT" style="margin:0">Add</h2><div class="list">' +
+      opt('task', '📋', 'A task', 'Something you need to do') + opt('enq', '👥', 'An enquiry', 'Someone asked about your business') +
+      opt('quote', '🧾', 'A quote or invoice', 'For a customer') + opt('sale', '💷', 'Today’s numbers', 'Enquiries, bookings and sales') +
+      opt('post', '✨', 'Content', 'A post, Reel, offer or reply') + '</div><button class="btn link" id="qaX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    $('#qaX', scrim).onclick = function () { scrim.remove(); };
+    scrim.addEventListener('click', function (e) { if (e.target === scrim) scrim.remove(); });
+    $$('[data-qa]', scrim).forEach(function (b) { b.onclick = function () {
+      var k = b.dataset.qa; scrim.remove();
+      if (k === 'task') return quickTaskSheet();
+      if (k === 'enq') return fuLogSheet(function () { S.fuData = null; showFollowups('all'); });
+      if (k === 'quote') return showMoney();
+      if (k === 'sale') return showTrack();
+      showCreate();
+    }; });
+  }
+  function quickTaskSheet() {
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    var today = (S.mtToday || new Date().toISOString().slice(0, 10));
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="qtT"><h2 id="qtT" style="margin:0">Add a task</h2>' +
+      '<input id="qtT1" maxlength="160" placeholder="e.g. Buy packaging for Saturday’s orders">' +
+      '<div class="row"><input type="date" id="qtD" value="' + esc(today) + '" min="' + esc(today) + '" style="flex:1" aria-label="Date"><label class="row" style="gap:6px;margin:0;font-weight:700;white-space:nowrap"><input type="checkbox" id="qtP" style="width:20px;height:20px"> ⭐ Priority</label></div>' +
+      '<button class="btn primary block" id="qtGo">Add to my list</button><button class="btn link" id="qtX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    setTimeout(function () { $('#qtT1', scrim).focus(); }, 60);
+    $('#qtX', scrim).onclick = function () { scrim.remove(); };
+    $('#qtGo', scrim).onclick = async function () {
+      var t = $('#qtT1', scrim).value.trim(); if (!t) { $('#qtT1', scrim).focus(); return; }
+      try { await api('studio-extras', 'todo-add', { task: { title: t, repeat: 'once', date: $('#qtD', scrim).value, priority: $('#qtP', scrim).checked } }); scrim.remove(); toast('Added to your to-do list ✅'); if ($('#todoCard')) loadTodo(); if ($('#dashBox')) loadDash(); }
+      catch (x) { toast(x.message); }
+    };
   }
 
   function tipGo(t, back) {
@@ -1909,14 +2006,21 @@ nav.tabs .navsep{display:none}
   function statusPill(st) { var s = DOC_STATUS[st] || [st, 'cream']; return '<span class="pill ' + (s[1] === 'danger' ? '" style="background:var(--danger-l);color:var(--danger)' : s[1] === 'green' ? 'green' : '" style="background:#ECEDF0;color:var(--muted)') + '">' + esc(s[0]) + '</span>'; }
 
   function trackHeader(active) {
-    return '<h1>Track</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="tabNums" aria-pressed="' + (active === 'nums') + '">Numbers</button><button class="chip" id="tabMoney" aria-pressed="' + (active === 'money') + '">£ Money</button><button class="chip" id="tabFu" aria-pressed="' + (active === 'fu') + '">Follow-ups</button><button class="chip" id="tabCust" aria-pressed="' + (active === 'cust') + '">Customers</button></div>';
+    return '<h1>Track</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="tabNums" aria-pressed="' + (active === 'nums') + '">Numbers</button><button class="chip" id="tabMoney" aria-pressed="' + (active === 'money') + '">£ Quotes &amp; invoices</button></div>';
   }
   function bindTrackHeader() {
     var a = $('#tabNums'), b = $('#tabMoney');
     if (a) a.onclick = function () { showTrack(); };
     if (b) b.onclick = function () { showMoney(); };
+  }
+  function custHeader(active) {
+    return '<div class="row" style="justify-content:space-between;align-items:center"><h1>Customers</h1><button class="btn small primary" id="fuNew">+ Log enquiry</button></div>' +
+      '<div class="chips" style="margin:10px 0 14px"><button class="chip" id="tabEnq" aria-pressed="' + (active === 'fu') + '">Enquiries &amp; follow-ups</button><button class="chip" id="tabCust" aria-pressed="' + (active === 'inv') + '">From quotes &amp; invoices</button></div>';
+  }
+  function bindCustHeader() {
+    var a = $('#tabEnq'); if (a) a.onclick = function () { showFollowups(); };
     var c = $('#tabCust'); if (c) c.onclick = function () { showCustomers(); };
-    var fb = $('#tabFu'); if (fb) fb.onclick = function () { showFollowups(); };
+    var n = $('#fuNew'); if (n) n.onclick = function () { fuLogSheet(function (it) { S.fuData = null; showFollowups('all'); }); };
   }
 
   async function showMoney() {
@@ -2618,12 +2722,13 @@ nav.tabs .navsep{display:none}
     }
     var label = done ? (it.skippedAt ? 'Skipped' : 'Done') + (it.due && it.due !== S.mtToday ? ' · for ' + esc(mtDay(it.due)) : '')
       : it.kind === 'followup' ? 'Follow-up' : it.kind === 'invoice' ? (soon ? 'Invoice due' : 'Overdue invoice') : it.kind === 'priority' ? 'Check-Up priority' : (m.repeat && m.repeat !== 'once' ? MT_REPEAT[m.repeat] : 'Your task');
+    var star = own && !done && m.def ? '<button class="mt-star' + (it.star ? ' on' : '') + '" data-mtstar="' + esc(m.def) + '" data-on="' + (it.star ? '1' : '') + '" aria-label="' + (it.star ? 'Remove priority' : 'Mark as priority') + '" title="Priority">' + (it.star ? '★' : '☆') + '</button>' : '';
     var check = soon && !own ? '<span class="mt-check mt-soon" aria-hidden="true"></span>'
       : '<button class="mt-check" data-mtdone="' + esc(it.key) + '" aria-label="' + (done ? 'Mark not done' : 'Mark done') + '">' + (done ? '✓' : '') + '</button>';
     return '<div class="mt' + (done ? ' mt-done' : '') + (state === 'overdue' ? ' mt-late' : '') + '">' + check +
       '<div style="flex:1;min-width:0"><div class="mt-t">' + (MT_ICO[it.kind] || '•') + ' ' + esc(it.title) + '</div>' +
       '<div class="hint" style="margin:2px 0 0">' + (state === 'overdue' ? '<span class="mt-od">Overdue since ' + esc(mtDay(it.due)) + '</span> · ' : '') + label +
-        (act ? ' · ' + act : '') + '</div></div></div>';
+        (act ? ' · ' + act : '') + '</div></div>' + star + '</div>';
   }
   function mtDayHead(day, today) {
     var t = new Date(Date.parse(today + 'T12:00:00Z') + 86400000).toISOString().slice(0, 10);
@@ -2639,6 +2744,7 @@ nav.tabs .navsep{display:none}
     return '<details class="mt-add"' + (open ? ' open' : '') + '><summary>+ Add a task</summary><div class="stack" style="margin-top:8px"><input id="mtT" maxlength="160" placeholder="e.g. Bake for Saturday’s order, Post on Instagram">' +
       '<div class="row"><select id="mtR" style="flex:1">' + Object.keys(MT_REPEAT).map(function (k) { return '<option value="' + k + '">' + MT_REPEAT[k] + '</option>'; }).join('') + '</select>' +
       '<input type="date" id="mtD" value="' + esc(r.today) + '" min="' + esc(r.today) + '" style="flex:1"><select id="mtW" style="flex:1;display:none">' + MT_DOW.map(function (n, i) { return '<option value="' + i + '"' + (i === new Date(r.today + 'T12:00:00Z').getUTCDay() ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div>' +
+      '<label class="row" style="gap:8px;margin:0;font-weight:700"><input type="checkbox" id="mtPri" style="width:20px;height:20px"> ⭐ Priority — show it first</label>' +
       '<button class="btn primary block" id="mtAdd">Add to my list</button></div></details>';
   }
   function mtRepeating(r) {
@@ -2653,12 +2759,13 @@ nav.tabs .navsep{display:none}
     $$('[data-mtrm]', box).forEach(function (b) { b.onclick = async function () { if (!confirm('Remove this task?')) return; try { await api('studio-extras', 'todo-def-delete', { id: b.dataset.mtrm }); toast('Removed'); reload(); } catch (x) { toast(x.message); } }; });
     $$('[data-mtfu]', box).forEach(function (b) { b.onclick = function () { showFollowup(b.dataset.mtfu); }; });
     $$('[data-mtinv]', box).forEach(function (b) { b.onclick = function () { showDocView(b.dataset.mtinv); }; });
+    $$('[data-mtstar]', box).forEach(function (b) { b.onclick = async function () { var on = !b.dataset.on; try { await api('studio-extras', 'todo-priority', { id: b.dataset.mtstar, on: on }); toast(on ? '⭐ Priority — shown first' : 'Priority removed'); reload(); } catch (x) { toast(x.message); } }; });
     $$('[data-mtdel]', box).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop this repeating task?')) return; try { await api('studio-extras', 'todo-def-delete', { id: b.dataset.mtdel }); reload(); } catch (x) { toast(x.message); } }; });
     var rep = $('#mtR', box); if (!rep) return;
     rep.onchange = function () { $('#mtD', box).style.display = rep.value === 'once' ? '' : 'none'; $('#mtW', box).style.display = rep.value === 'weekly' ? '' : 'none'; };
     $('#mtAdd', box).onclick = async function () {
       var t = $('#mtT', box).value.trim(); if (!t) { $('#mtT', box).focus(); return; }
-      try { await api('studio-extras', 'todo-add', { task: { title: t, repeat: rep.value, date: $('#mtD', box).value, dow: Number($('#mtW', box).value) } }); toast('Added to your list'); reload(); } catch (x) { toast(x.message); }
+      try { await api('studio-extras', 'todo-add', { task: { title: t, repeat: rep.value, date: $('#mtD', box).value, dow: Number($('#mtW', box).value), priority: !!($('#mtPri', box) && $('#mtPri', box).checked) } }); toast('Added to your list'); reload(); } catch (x) { toast(x.message); }
     };
   }
   var MT_CARD_SOON = 5, MT_CARD_MAX = 10;
@@ -2856,9 +2963,9 @@ nav.tabs .navsep{display:none}
 
   // ───────────── Customers (built from quotes, invoices and receipts) ─────────────
   async function showCustomers() {
-    setChrome({ tabs: true, tab: 'track' });
-    app.innerHTML = '<main>' + trackHeader('cust') + '<div id="cuBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
-    bindTrackHeader();
+    setChrome({ tabs: true, tab: 'customers' });
+    app.innerHTML = '<main>' + custHeader('inv') + '<div id="cuBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindCustHeader();
     var r; try { r = await api('studio-extras', 'customers'); } catch (x) { if ($('#cuBox')) $('#cuBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     if (!$('#cuBox')) return;
     var list = r.customers, rl = r.reviewLink, biz = (S.boot.profile && S.boot.profile.businessName) || '';
@@ -3161,7 +3268,7 @@ nav.tabs .navsep{display:none}
   // ───────────── Follow-ups (members follow up with their customers) ─────────────
   var FU_SOURCES = ['Instagram', 'WhatsApp', 'TikTok', 'Facebook', 'Auntie Tobi', 'Referral', 'Website', 'Walk-in', 'Other'];
   var FU_KEEP = [[0, 'Off'], [14, 'Every 2 weeks'], [30, 'Monthly'], [60, 'Every 2 months'], [90, 'Every 3 months'], [180, 'Every 6 months'], [365, 'Yearly']];
-  var FU_STAGE = { new: ['Active', 'cream'], quoted: ['Quoted', 'gold'], booked: ['Booked', 'green'], notnow: ['Not now', 'grey'] };
+  var FU_STAGE = { new: ['New', 'cream'], contacted: ['Contacted', 'cream'], quoted: ['Quoted', 'gold'], booked: ['Booked', 'green'], completed: ['Completed', 'green'], notnow: ['Not now', 'grey'], lost: ['Lost', 'grey'] };
   var FU_KIND = { fu1: 'Follow up', fu2: 'Second follow-up', checkback: 'Check back in', thanks: 'Say thank you', keep: 'Keep in touch' };
 
   function fuFirst(n) { return (n || '').trim().split(/\s+/)[0] || 'there'; }
@@ -3192,7 +3299,7 @@ nav.tabs .navsep{display:none}
   }
   function fuPill(stage) { var s = FU_STAGE[stage] || [stage, 'cream']; return '<span class="pill fu-' + stage + '">' + esc(s[0]) + '</span>'; }
   function fuNextText(it) {
-    if (!it.nextAt) return it.stage === 'booked' ? 'No more reminders' : it.stage === 'notnow' ? 'No reminder set' : 'Follow-ups done';
+    if (!it.nextAt) return it.stage === 'booked' || it.stage === 'completed' ? 'No more reminders' : it.stage === 'lost' ? 'Lost — no reminders' : it.stage === 'notnow' ? 'No reminder set' : 'Follow-ups done';
     var due = it.nextAt <= (S.fuToday || '');
     return (due ? 'Due now: ' : 'Next: ') + (FU_KIND[it.dueKind] || 'Reminder').toLowerCase() + (due ? '' : ' on ' + dmy(it.nextAt));
   }
@@ -3268,7 +3375,7 @@ nav.tabs .navsep{display:none}
   function bindFuCards(root, list, reviewLink, refresh) {
     var find = function (id) { return list.filter(function (x) { return x.id === id; })[0]; };
     $$('[data-fumsg]', root).forEach(function (b) { b.onclick = function () { var it = find(b.dataset.fumsg); fuSendSheet(it, it.dueKind, reviewLink, refresh); }; });
-    $$('[data-fubook]', root).forEach(function (b) { b.onclick = async function () { try { await api('studio-extras', 'fu-stage', { id: b.dataset.fubook, stage: 'booked' }); toast('Brilliant — booked! 🎉 Added to Track.'); refresh(); } catch (x) { toast(x.message); } }; });
+    $$('[data-fubook]', root).forEach(function (b) { b.onclick = function () { fuWonSheet(find(b.dataset.fubook), 'booked', refresh); }; });
     $$('[data-funo]', root).forEach(function (b) { b.onclick = function () { fuNotNowSheet(find(b.dataset.funo), refresh); }; });
     $$('[data-fusnz]', root).forEach(function (b) { b.onclick = async function () { try { await api('studio-extras', 'fu-snooze', { id: b.dataset.fusnz, days: 1 }); toast('I’ll remind you tomorrow'); refresh(); } catch (x) { toast(x.message); } }; });
   }
@@ -3276,30 +3383,50 @@ nav.tabs .navsep{display:none}
   // Track → Follow-ups
   async function showFollowups(filter) {
     filter = filter || S.fuFilter || 'due'; S.fuFilter = filter;
-    setChrome({ tabs: true, tab: 'track' });
-    app.innerHTML = '<main>' + trackHeader('fu') + '<div id="fuBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
-    bindTrackHeader();
+    setChrome({ tabs: true, tab: 'customers' });
+    app.innerHTML = '<main>' + custHeader('fu') + '<div id="fuBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindCustHeader();
     var r; try { r = await api('studio-extras', 'fu-list'); } catch (x) { if ($('#fuBox')) $('#fuBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     if (!$('#fuBox')) return;
     S.fuToday = r.today; S.fuData = r;
-    var st = r.stats, items = r.items;
-    var counts = { due: r.due.length, active: items.filter(function (i) { return i.stage === 'new' || i.stage === 'quoted'; }).length, booked: items.filter(function (i) { return i.stage === 'booked'; }).length, notnow: items.filter(function (i) { return i.stage === 'notnow'; }).length, all: items.length };
-    var shown = filter === 'due' ? r.due : filter === 'active' ? items.filter(function (i) { return i.stage === 'new' || i.stage === 'quoted'; }) : filter === 'all' ? items : items.filter(function (i) { return i.stage === filter; });
+    var st = r.stats, items = r.items, pl = r.pipeline || {};
+    var shown = filter === 'due' ? r.due : filter === 'all' ? items : items.filter(function (i) { return (i.display || i.stage) === filter; });
+    var stage = function (k) { var x = FU_STAGE[k]; return '<button class="pstage' + (filter === k ? ' on' : '') + '" data-fuf="' + k + '"><b>' + (pl[k] || 0) + '</b><span>' + esc(x[0]) + '</span></button>'; };
     $('#fuBox').innerHTML =
-      '<div class="row" style="justify-content:space-between;margin-bottom:12px"><p class="sub" style="margin:0;flex:1">Everyone who asked about your business, and when to follow up.</p><button class="btn small primary" id="fuNew">+ Log enquiry</button></div>' +
-      '<section class="card stack" style="margin-bottom:12px"><b>This month</b><div class="wk"><div><b>' + st.enquiries + '</b><span>Enquiries</span></div><div><b>' + st.booked + '</b><span>Booked</span></div><div><b>' + st.rate + '%</b><span>Booked rate</span></div></div>' +
-        (st.bookedValuePence ? '<div class="hint" style="margin:0">Booked value: <b>' + gbp(st.bookedValuePence) + '</b> (from the rough values you entered)</div>' : '') +
+      '<p class="sub" style="margin:0 0 12px">Everyone who asked about your business — where they are, and who needs you next.</p>' +
+      '<div class="pipe" role="group" aria-label="Stages">' + ['new', 'contacted', 'quoted', 'booked', 'completed'].map(stage).join('<span class="parr" aria-hidden="true">›</span>') + '</div>' +
+      '<div class="chips" style="margin:10px 0 12px"><button class="chip" data-fuf="due" aria-pressed="' + (filter === 'due') + '">🔔 Due today (' + r.due.length + ')</button><button class="chip" data-fuf="notnow" aria-pressed="' + (filter === 'notnow') + '">Not now (' + (pl.notnow || 0) + ')</button><button class="chip" data-fuf="lost" aria-pressed="' + (filter === 'lost') + '">Lost (' + (pl.lost || 0) + ')</button><button class="chip" data-fuf="all" aria-pressed="' + (filter === 'all') + '">All (' + items.length + ')</button></div>' +
+      (filter === 'due' ? (shown.length ? '<div class="stack" id="fuDue">' + shown.map(function (i) { return fuDueCard(i, r.reviewLink); }).join('') + '</div>' : '<div class="empty">Nobody to follow up today 🎉' + (items.length ? '' : '<br>Log your next enquiry and Business Studio will remind you.') + '</div>')
+        : (shown.length ? '<div class="list">' + shown.map(function (i) { return '<button class="li" data-fuopen="' + esc(i.id) + '"><div class="t"><b>' + esc(i.name) + '</b><small>' + esc((i.about ? i.about + ' · ' : '') + i.source + (i.valuePence ? ' · ' + gbp(i.valuePence) : '')) + '</small><small class="snip">' + esc(fuNextText(i)) + '</small></div>' + fuPill(i.display || i.stage) + '</button>'; }).join('') + '</div>' : '<div class="empty">Nobody here yet.</div>')) +
+      '<section class="card stack" style="margin-top:16px"><b>This month</b><div class="wk"><div><b>' + st.enquiries + '</b><span>Enquiries</span></div><div><b>' + st.booked + '</b><span>Booked</span></div><div><b>' + st.rate + '%</b><span>Booked rate</span></div></div>' +
+        (st.bookedValuePence ? '<div class="hint" style="margin:0">Booked value: <b>' + gbp(st.bookedValuePence) + '</b></div>' : '') +
         (st.bySource.length ? '<div class="hint" style="margin:0">Where enquiries came from: ' + st.bySource.slice(0, 4).map(function (s) { return '<b>' + esc(s.source) + '</b> ' + s.enquiries + (s.booked ? ' (' + s.booked + ' booked)' : ''); }).join(' · ') + '</div>' : '') + '</section>' +
-      '<div class="chips" style="margin-bottom:12px">' + [['due', 'Due'], ['active', 'Active'], ['booked', 'Booked'], ['notnow', 'Not now'], ['all', 'All']].map(function (f) { return '<button class="chip" data-fuf="' + f[0] + '" aria-pressed="' + (f[0] === filter) + '">' + f[1] + ' (' + counts[f[0]] + ')</button>'; }).join('') + '</div>' +
-      (filter === 'due' ? (shown.length ? '<div class="stack" id="fuDue">' + shown.map(function (i) { return fuDueCard(i, r.reviewLink); }).join('') + '</div>' : '<div class="empty">Nothing to follow up today 🎉' + (counts.active ? '' : '<br>Log your next enquiry and Business Studio will remind you.') + '</div>')
-        : (shown.length ? '<div class="list">' + shown.map(function (i) { return '<button class="li" data-fuopen="' + esc(i.id) + '"><div class="t"><b>' + esc(i.name) + '</b><small>' + esc((i.about ? i.about + ' · ' : '') + i.source) + '</small><small class="snip">' + esc(fuNextText(i)) + '</small></div>' + fuPill(i.stage) + '</button>'; }).join('') + '</div>' : '<div class="empty">Nobody here yet.</div>')) +
       '<button class="btn link" id="fuSet" style="margin-top:14px">⚙️ Default timings: follow up after ' + r.defaults.gaps.join(' then ') + ' days · keep in touch ' + esc((FU_KEEP.filter(function (k) { return k[0] === r.defaults.keepDays; })[0] || [0, 'off'])[1].toLowerCase()) + '</button>' +
       '<p class="hint">Business Studio never messages anyone for you — it reminds you and writes the message, and you press send. Only you can see this list.</p>';
-    $('#fuNew').onclick = function () { fuLogSheet(function () { showFollowups(); }); };
     $$('[data-fuf]').forEach(function (b) { b.onclick = function () { showFollowups(b.dataset.fuf); }; });
     $$('[data-fuopen]').forEach(function (b) { b.onclick = function () { showFollowup(b.dataset.fuopen); }; });
     var due = $('#fuDue'); if (due) { bindFuCards(due, r.due, r.reviewLink, function () { showFollowups(); }); $$('[data-fu]', due).forEach(function (c) { c.querySelector('b').style.cursor = 'pointer'; c.querySelector('b').onclick = function () { showFollowup(c.dataset.fu); }; }); }
     $('#fuSet').onclick = function () { fuDefaultsSheet(r.defaults, function () { showFollowups(); }); };
+  }
+
+  // Booked (optional value) / Completed & paid (amount → recorded in Track)
+  function fuWonSheet(it, stage, after) {
+    var done = stage === 'completed';
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="wnT"><h2 id="wnT" style="margin:0">' + (done ? 'Completed &amp; paid ✅' : 'Booked 🎉') + ' — ' + esc(it.name) + '</h2>' +
+      '<p class="sub" style="margin:0">' + (done ? 'How much did they pay? It’s added to your sales in Track.' : 'Brilliant! Business Studio adds the booking to Track and reminds you to say thank you.') + '</p>' +
+      '<div><label class="f" for="wnV">' + (done ? 'Amount paid (£)' : 'Value (£) <span class="opt">(optional)</span>') + '</label><input id="wnV" inputmode="decimal" maxlength="10" value="' + (it.valuePence ? (it.valuePence / 100).toFixed(it.valuePence % 100 ? 2 : 0) : '') + '" placeholder="e.g. 120"></div>' +
+      (done && it.quoteId ? '<p class="hint" style="margin:0">If you already marked their invoice as paid, it’s counted once — not twice.</p>' : '') +
+      '<div class="err hidden" id="wnE"></div><button class="btn primary block" id="wnGo">' + (done ? 'Save and add to Track' : 'Mark as booked') + '</button><button class="btn link" id="wnX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    setTimeout(function () { $('#wnV', scrim).focus(); }, 60);
+    $('#wnX', scrim).onclick = function () { scrim.remove(); };
+    $('#wnGo', scrim).onclick = async function () {
+      var v = $('#wnV', scrim).value.trim();
+      if (done && !(Number(v.replace(/[£,\s]/g, '')) > 0)) { var e = $('#wnE', scrim); e.textContent = 'Type the amount they paid (or 0 if it was free).'; e.classList.remove('hidden'); if (v !== '0') return; }
+      try { await api('studio-extras', 'fu-stage', done ? { id: it.id, stage: 'completed', amount: v } : { id: it.id, stage: 'booked', value: v }); scrim.remove(); toast(done ? 'Saved — added to your sales in Track ✅' : 'Booked! 🎉 Added to Track.'); if (after) after(); }
+      catch (x) { toast(x.message); }
+    };
   }
 
   function fuTimingFields(gaps, keepDays, keepKind, pre) {
@@ -3327,15 +3454,19 @@ nav.tabs .navsep{display:none}
   }
 
   async function showFollowup(id) {
-    setChrome({ tabs: true, tab: 'track', back: function () { showFollowups(); } });
+    setChrome({ tabs: true, tab: 'customers', back: function () { showFollowups(); } });
     var r = S.fuData; if (!r) { try { r = S.fuData = await api('studio-extras', 'fu-list'); S.fuToday = r.today; } catch (x) { return showFollowups(); } }
     var it = r.items.filter(function (x) { return x.id === id; })[0]; if (!it) return showFollowups();
     function refresh() { S.fuData = null; api('studio-extras', 'fu-list').then(function (x) { S.fuData = x; S.fuToday = x.today; showFollowup(id); }).catch(function () { showFollowups(); }); }
     app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1 style="font-size:24px">' + esc(it.name) + '</h1><p class="sub" style="margin:2px 0 0">' + esc(it.source) + ' · asked ' + fuAgo(it.createdAt) + '</p></div>' + fuPill(it.stage) + '</div>' +
       '<div class="note" style="margin:12px 0">' + esc(fuNextText(it)) + (it.nextAt && it.nextAt <= r.today ? ' <button class="btn small primary" id="fdMsg" style="margin-left:6px">Write message</button>' : '') + '</div>' +
-      '<div class="row wrap" style="margin-bottom:6px">' + (it.phone ? '<a class="btn small ghost" target="_blank" rel="noopener" href="' + esc(waLink(it.phone, 'Hi ' + fuFirst(it.name) + ', ')) + '">WhatsApp</a>' : '') +
-        (it.stage !== 'booked' ? '<button class="btn small gold" id="fdBook">Booked 🎉</button>' : '') + (it.stage !== 'booked' && !it.quoteId ? '<button class="btn small ghost" id="fdQuote">Create quote</button>' : '') +
-        (it.stage === 'new' || it.stage === 'quoted' ? '<button class="btn small ghost" id="fdNo">Not now</button>' : '<button class="btn small ghost" id="fdAct">Make active again</button>') + '</div>' +
+      '<div class="pipe mini" aria-label="Stage">' + ['new', 'contacted', 'quoted', 'booked', 'completed'].map(function (k) { var order = ['new', 'contacted', 'quoted', 'booked', 'completed'], cur = order.indexOf(it.display || it.stage); return '<span class="pstage' + (order.indexOf(k) <= cur ? ' on' : '') + '"><span>' + esc(FU_STAGE[k][0]) + '</span></span>'; }).join('<span class="parr" aria-hidden="true">›</span>') + '</div>' +
+      '<div class="row wrap" style="margin:10px 0 6px">' + (it.phone ? '<a class="btn small ghost" target="_blank" rel="noopener" href="' + esc(waLink(it.phone, 'Hi ' + fuFirst(it.name) + ', ')) + '">WhatsApp</a>' : '') +
+        '<button class="btn small ghost" id="fdReply">✍️ Prepare reply</button>' +
+        (it.stage !== 'booked' && it.stage !== 'completed' && !it.quoteId ? '<button class="btn small ghost" id="fdQuote">🧾 Create quote</button>' : '') +
+        (it.stage !== 'booked' && it.stage !== 'completed' ? '<button class="btn small gold" id="fdBook">Booked 🎉</button>' : '') +
+        (it.stage !== 'completed' ? '<button class="btn small primary" id="fdDone">Completed &amp; paid ✅</button>' : '') +
+        (it.stage === 'new' || it.stage === 'quoted' ? '<button class="btn small ghost" id="fdNo">Not now</button><button class="btn small ghost" id="fdLost">Lost</button>' : '<button class="btn small ghost" id="fdAct">Make active again</button>') + '</div>' +
       '<h2>Details</h2><div class="card stack"><div><label class="f" for="fdN">Name</label><input id="fdN" maxlength="80" value="' + esc(it.name) + '"></div>' +
         '<div><label class="f" for="fdP">WhatsApp / phone</label><input id="fdP" inputmode="tel" maxlength="20" value="' + esc(it.phone) + '"></div>' +
         '<div><label class="f" for="fdA">What they asked about</label><input id="fdA" maxlength="140" value="' + esc(it.about) + '"></div>' +
@@ -3346,7 +3477,14 @@ nav.tabs .navsep{display:none}
       ((it.history || []).length ? '<h2>History</h2><div class="card"><ul class="hist">' + it.history.map(function (h) { return '<li><span>' + esc(dmy(h.at.slice(0, 10))) + '</span>' + esc(h.what) + '</li>'; }).join('') + '</ul></div>' : '') +
       '<button class="btn link danger" id="fdDel" style="margin-top:14px">Delete ' + esc(fuFirst(it.name)) + ' from my list</button></main>';
     var m = $('#fdMsg'); if (m) m.onclick = function () { fuSendSheet(it, it.dueKind, r.reviewLink, refresh); };
-    var bk = $('#fdBook'); if (bk) bk.onclick = async function () { try { await api('studio-extras', 'fu-stage', { id: id, stage: 'booked' }); toast('Booked! 🎉 Added to Track.'); refresh(); } catch (x) { toast(x.message); } };
+    var bk = $('#fdBook'); if (bk) bk.onclick = function () { fuWonSheet(it, 'booked', refresh); };
+    var dn = $('#fdDone'); if (dn) dn.onclick = function () { fuWonSheet(it, 'completed', refresh); };
+    var ls = $('#fdLost'); if (ls) ls.onclick = async function () { if (!confirm('Mark ' + it.name + ' as lost? Reminders stop. You can make them active again later.')) return; try { await api('studio-extras', 'fu-stage', { id: id, stage: 'lost' }); toast('Marked as lost'); refresh(); } catch (x) { toast(x.message); } };
+    var rp = $('#fdReply'); if (rp) rp.onclick = function () {
+      var sit = it.stage === 'quoted' ? 'follow up a quote' : it.stage === 'booked' ? 'booking / order confirmation' : 'reply to an enquiry';
+      showTool('message', { situation: sit, points: (it.about ? 'They asked about: ' + it.about + '. ' : '') + 'Customer name: ' + fuFirst(it.name) + '.', channel: it.phone ? 'WhatsApp' : 'Instagram DM' },
+        { back: function () { showFollowup(id); }, tab: 'customers', intro: 'A reply for ' + it.name + ' — paste their message if you have it, then tap Create.' });
+    };
     var no = $('#fdNo'); if (no) no.onclick = function () { fuNotNowSheet(it, refresh); };
     var ac = $('#fdAct'); if (ac) ac.onclick = async function () { try { await api('studio-extras', 'fu-stage', { id: id, stage: 'new' }); refresh(); } catch (x) { toast(x.message); } };
     var qt = $('#fdQuote'); if (qt) qt.onclick = function () { showDocEditor(null, 'quote', { name: it.name, phone: it.phone }, { followupId: id }); };
@@ -3478,6 +3616,34 @@ nav.tabs .navsep{display:none}
     try { var r = await api('studio-billing', 'portal'); location.href = r.url; }
     catch (x) { if (x.code !== 'cancelled') toast(x.message); }
   }
+  async function downloadMyData() {
+    try {
+      var r = await api('studio-extras', 'my-data');
+      var blob = new Blob([JSON.stringify(r.data, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'business-studio-my-data-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      toast('Your data is downloading');
+    } catch (x) { toast(x.message); }
+  }
+  function deleteAccountSheet() {
+    var a = S.boot.access || {};
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="daT"><h2 id="daT" style="margin:0">Delete my account?</h2>' +
+      '<p style="margin:0">This permanently deletes your business profile, customers and follow-ups, to-do list, calendar, quotes and invoices, saved content and your price list page. <b>It can’t be undone.</b></p>' +
+      (a.addonLive ? '<p class="err" style="margin:0">Your Pro / Plus subscription will be cancelled straight away (no refund for the rest of this period).</p>' : '') +
+      (a.membershipActive ? '<p class="err" style="margin:0">You’ll lose access to your Business Club membership and its benefits.</p>' : '') +
+      '<p class="hint" style="margin:0">Tip: download your data first. Payment records stay with Stripe as the law requires.</p>' +
+      '<div><label class="f" for="daC">Type DELETE to confirm</label><input id="daC" autocomplete="off" autocapitalize="characters"></div>' +
+      '<button class="btn primary block" id="daGo" style="background:var(--danger);border-color:var(--danger)">Delete my account</button><button class="btn ghost block" id="daX">Keep my account</button></div>';
+    document.body.appendChild(scrim);
+    $('#daX', scrim).onclick = function () { scrim.remove(); };
+    $('#daGo', scrim).onclick = async function () {
+      var b = $('#daGo', scrim); b.disabled = true;
+      try { await api('studio-extras', 'account-delete', { confirm: $('#daC', scrim).value }); scrim.remove(); S.boot = null; showMessage('Account deleted', 'Your Business Studio account and data have been deleted. Thank you for using Auntie Tobi Business Studio 💚'); }
+      catch (x) { if (x.code !== 'cancelled') toast(x.message); b.disabled = false; }
+    };
+  }
+
   async function signOut() {
     try { await api('studio-auth', 'logout', {}, { quiet401: true }); } catch (e) {}
     S.boot = null; S.today = null; showSignIn();
@@ -3535,9 +3701,13 @@ nav.tabs .navsep{display:none}
         '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' : '') +
       benefitsAccountHtml() + (p ? brandKitHtml() : '') + extrasAccountHtml() +
       '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation.</li><li>A <b>30-day content plan uses 3</b>. Everything else uses 1.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset at midnight (UK time). Unused generations don’t carry over.</li></ul></details>' +
+      '<h2>Your data</h2><div class="card stack"><p class="sub" style="margin:0">Your Business Studio is private to your account — your customers, tasks, quotes, invoices and content aren’t shown to anyone else. Business Studio stores them so it can remind you and keep your records; requests you make in Create are sent to our AI provider to write the content.</p>' +
+        '<button class="btn ghost block" id="myData">⬇️ Download my data</button><button class="btn link danger" id="delAcct">Delete my account</button></div>' +
       '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days and before any payment.</p>' +
       '<button class="btn ghost block" id="out">Sign out</button><button class="btn link danger" id="outAll">Sign out on all devices</button></div></main>';
     var ep = $('#editP'); if (ep) ep.onclick = function () { showProfileForm(false); };
+    $('#myData').onclick = downloadMyData;
+    $('#delAcct').onclick = deleteAccountSheet;
     $('#out').onclick = signOut;
     $('#outAll').onclick = async function () {
       if (!confirm('Sign out everywhere, including this device?')) return;
