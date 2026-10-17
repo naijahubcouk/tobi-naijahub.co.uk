@@ -365,6 +365,25 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ── tablet & laptop ── phones are unchanged */
 nav.tabs button.deskonly{display:none}
+.pcolsel{margin:0 0 10px}
+.pboard{display:block}.pcol{display:none}.pcol.sel{display:block}
+.pcol-h{display:flex;align-items:center;gap:8px;margin:2px 0 8px}.pcol-h b{font-size:15px}.pcol-h span{font-size:12px;font-weight:700;color:var(--muted);background:#ECEDF0;border-radius:999px;padding:1px 8px}.pcol-h .btn{margin-left:auto;padding:0;min-height:0;font-size:14px}
+.pcard{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;box-shadow:var(--shadow);cursor:pointer}
+.pcard b{font-size:15px;line-height:1.3}.pc-top{display:flex;justify-content:space-between;align-items:center;gap:6px}.pc-type{font-size:12px;font-weight:700;color:var(--muted)}
+.pc-date{font-size:12.5px;font-weight:700;color:var(--green-d)}.pc-snip{font-size:13px;color:var(--muted);line-height:1.4}.pc-link{font-size:13px;font-weight:700}
+.pempty{font-size:13px;color:var(--muted);padding:14px;border:1.5px dashed var(--line);border-radius:12px;text-align:center}
+.pcal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.pcal-h b{font-family:var(--display);font-size:20px}
+.pgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.pwd{font-size:11px;font-weight:700;color:var(--muted);text-align:center;padding:2px 0}
+.pday{min-height:58px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;overflow:hidden}
+.pday.off{background:transparent;border:0}.pday.past{opacity:.6}.pday.today{border-color:var(--gold);border-width:2px}.pday.sel{background:var(--navy);border-color:var(--navy)}.pday.sel .pdn,.pday.sel .pdc em{color:#fff}
+.pdn{font-size:12px;font-weight:800}.pdc{font-size:12px;line-height:1.2;display:flex;gap:3px;max-width:100%}.pdc em{font-style:normal;display:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pdc.done{opacity:.55}.pdm{font-size:11px;color:var(--muted);font-weight:700}
+.pdaylist .pcard{margin-bottom:8px}
+.cimg img{max-width:100%;max-height:320px;border-radius:12px;display:block}
+@media (min-width:700px){.pdc em{display:inline}.pday{min-height:84px}}
+@media (min-width:1024px){.pcolsel{display:none}.pboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}.pcol{display:block;background:#F4F1EA;border-radius:16px;padding:10px}.pday{min-height:96px}
+  main.planpage{max-width:1180px}.pdaylist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pdaylist .pcard{margin:0}
+  main.cardpage{max-width:760px}}
 .pipe{display:flex;align-items:stretch;gap:4px;overflow-x:auto;padding-bottom:2px}
 .pipe .pstage{flex:1;min-width:62px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
 .pipe .pstage b{font-size:20px;line-height:1.1;font-family:var(--display)}.pipe .pstage span{font-size:11.5px;font-weight:700;color:var(--muted)}
@@ -1257,6 +1276,8 @@ nav.tabs .navsep{display:none}
     var html = '';
     if (refine.length || turn.length) html += '<div class="qtweak"><span class="saved-tag">Quick changes:</span>' + refine.map(function (k) { return '<button class="btn ghost small" data-rf="' + k + '">' + REFINE_LABEL[k] + ' <span class="free">free</span></button>'; }).join('') +
       turn.map(function (k) { return '<button class="btn ghost small" data-turn="' + k + '">' + (k === 'reel' ? '🎬 Turn into a Reel' : '📱 Turn into Stories') + '</button>'; }).join('') + '</div>';
+    var planType = { reel: 'reel', carousel: 'carousel', stories: 'story' }[tool] || (tool === 'quick' ? ({ reel: 'reel', stories: 'story' }[g] || 'post') : 'post');
+    if (!NOT_POST[tool] && tool !== 'planner' && !item.calendarId) html += '<div class="qtweak"><button class="btn ghost small" id="toPlan">📅 Add to Plan</button><span class="saved-tag">Schedule it on your calendar</span></div>';
     if (tool === 'growth30' || tool === 'weekly') html += '<div class="qtweak"><button class="btn gold small" id="toTodo">📋 Add these actions to my to-do list</button><span class="saved-tag">Free</span></div>';
     if (nexts.length) html += '<div class="whatnext"><b>➡️ What should I do next?</b><div class="row wrap" style="gap:6px;margin-top:8px">' + nexts.map(function (id) { return '<button class="btn ghost small" data-next="' + id + '">' + icon((TOOL_META[id] || {}).icon || CAT_ICON[toolDef(id).cat] || '', 16) + ' ' + esc(NEXT_WHY[id] || toolDef(id).name) + '</button>'; }).join('') + '</div></div>';
     if (!html) return;
@@ -1277,6 +1298,7 @@ nav.tabs .navsep{display:none}
     });
     $$('[data-turn]', box).forEach(function (b) { b.onclick = function () { runQuick(b.dataset.turn, '', { source: text().slice(0, 2000), back: back }); }; });
     $$('[data-next]', box).forEach(function (b) { b.onclick = function () { var id = b.dataset.next; showTool(id, nextPrefill(id, item, text()), { back: back, intro: 'Next step from your ' + ((toolDef(tool) || {}).name || 'result').toLowerCase() + '. Check the details, then tap Create.' }); }; });
+    var tp = $('#toPlan', box); if (tp) tp.onclick = function () { addToPlanSheet({ title: item.title || ((toolDef(tool) || {}).name || 'Content'), type: planType, caption: text().slice(0, 4000), status: 'ready', contentId: item.id }); };
     var td = $('#toTodo', box); if (td) td.onclick = async function () {
       var tasks = planTasks(item, text());
       if (!tasks.length) return toast('Couldn’t find the daily actions — add them by hand from the plan.');
@@ -1300,7 +1322,7 @@ nav.tabs .navsep{display:none}
     return '<div class="card idea"><div class="ideah">💡 Need inspiration? <span>Try today’s content idea</span></div>' +
       '<div class="row" style="gap:8px;margin:8px 0 4px;align-items:center"><b style="font-size:16px;flex:1">' + esc(d.title) + '</b><span class="pill goldl">' + esc(d.format) + '</span></div>' +
       (d.hook ? '<p style="margin:0 0 6px;font-style:italic">“' + esc(d.hook) + '”</p>' : '') + '<p class="sub" style="margin:0 0 10px">' + esc(d.show) + '</p>' +
-      '<button class="btn primary small" id="ideaGo">✨ Create this</button></div>';
+      '<div class="row" style="gap:8px"><button class="btn primary small" id="ideaGo">✨ Create this</button><button class="btn ghost small" id="ideaPlan">📅 Add to Plan</button></div></div>';
   }
   function defaultPlatform() {
     var p = S.boot.profile || {}, ch = p.channels && p.channels.length ? p.channels : ['instagram'];
@@ -1319,6 +1341,7 @@ nav.tabs .navsep{display:none}
   function bindQuick(back) {
     $$('[data-qc]', app).forEach(function (b) { b.onclick = function () { askQuick(b.dataset.qc, back); }; });
     var ig = $('#ideaGo'); if (ig) ig.onclick = function () { var d = S.today.idea; runQuick(d.goal, (d.title + '. Hook: ' + d.hook + '. ' + d.show).slice(0, 400), { back: back }); };
+    var ipl = $('#ideaPlan'); if (ipl) ipl.onclick = function () { var d = S.today.idea; addToPlanSheet({ title: d.title, type: /reel/i.test(d.format || '') ? 'reel' : /stor/i.test(d.format || '') ? 'story' : /carousel/i.test(d.format || '') ? 'carousel' : 'post', notes: (d.hook ? 'Hook: ' + d.hook + '\n' : '') + (d.show || ''), status: 'idea' }); };
   }
   // At most one question, then straight to the result.
   function askQuick(goal, back) {
@@ -1617,60 +1640,181 @@ nav.tabs .navsep{display:none}
     return new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
   }
 
-  async function showPlan() {
+  // ───────────── Plan: content hub (board · calendar · posted), like Auntie Tobi HQ ─────────────
+  var PT = { post: ['📸', 'Post'], reel: ['🎬', 'Reel'], carousel: ['🖼️', 'Carousel'], story: ['⭕', 'Story'], whatsapp: ['💬', 'WhatsApp'] };
+  var PCOLS = [['idea', 'Ideas'], ['drafting', 'Drafting'], ['ready', 'Ready'], ['scheduled', 'Scheduled']];
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  function pDate(d, t) { if (!d) return ''; var x = new Date(d + 'T12:00:00Z'); return x.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + (t ? ' · ' + t : ''); }
+  function pCard(c) {
+    var ty = PT[c.type] || PT.post;
+    return '<button class="pcard" data-card="' + esc(c.id) + '"><div class="pc-top"><span class="pc-type">' + ty[0] + ' ' + ty[1] + '</span>' + (c.hasImg ? '<span title="Has a photo">📷</span>' : '') + '</div>' +
+      '<b>' + esc(c.title) + '</b>' + (c.date ? '<span class="pc-date">📅 ' + esc(pDate(c.date, c.time)) + '</span>' : '') +
+      (c.caption ? '<span class="pc-snip">' + esc(c.caption.slice(0, 90)) + (c.caption.length > 90 ? '…' : '') + '</span>' : c.drafted ? '<span class="pc-snip">Drafted in Create</span>' : '') + '</button>';
+  }
+  async function showPlan(view) {
     setChrome({ tabs: true, tab: 'plan' });
     if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Plan</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
-    app.innerHTML = '<main><h1>Plan</h1><p class="sub" style="margin:4px 0 14px">Your weekly goal and content calendar.</p><div id="goalBox"></div>' +
-      '<div class="row" style="margin-top:14px"><button class="btn primary" id="p7" style="flex:1">Plan 7 days</button><button class="btn ghost" id="p30" style="flex:1">Plan 30 days</button></div>' +
-      '<p class="hint">7 days uses 1 generation, 30 days uses 3. Posts you’ve already drafted or posted are kept.</p>' +
-      '<div id="calBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
-    $('#p7').onclick = function () { showTool('planner', { days: '7' }, { back: showPlan, tab: 'plan' }); };
-    $('#p30').onclick = function () { showTool('planner', { days: '30' }, { back: showPlan, tab: 'plan' }); };
+    view = view || S.planView || 'board'; S.planView = view;
+    app.innerHTML = '<main class="planpage"><div class="row" style="justify-content:space-between;align-items:center"><h1>Plan</h1><button class="btn small primary" id="pNew">+ New card</button></div>' +
+      '<p class="sub" style="margin:4px 0 12px">Your content hub — ideas, drafts, your calendar and what you’ve posted.</p><div id="goalBox"></div>' +
+      '<div class="chips" style="margin:12px 0 10px">' + [['board', '🗂️ Board'], ['calendar', '📅 Calendar'], ['posted', '✅ Posted']].map(function (v) { return '<button class="chip" data-pv="' + v[0] + '" aria-pressed="' + (v[0] === view) + '">' + v[1] + '</button>'; }).join('') +
+      '<button class="chip" id="pAi">✨ Plan 7 or 30 days with AI</button></div>' +
+      '<div id="planBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    $('#pNew').onclick = function () { showCard(null, {}); };
+    $$('[data-pv]').forEach(function (b) { b.onclick = function () { showPlan(b.dataset.pv); }; });
+    $('#pAi').onclick = function () {
+      var scrim = document.createElement('div'); scrim.className = 'scrim';
+      scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true"><h2 style="margin:0">✨ Plan with AI</h2><p class="sub" style="margin:0">Auntie Tobi plans a post for each day and adds them to your calendar as cards. Cards you’ve edited, drafted or posted are kept.</p>' +
+        '<button class="btn primary block" id="ai7">Plan 7 days (1 generation)</button><button class="btn ghost block" id="ai30">Plan 30 days (3 generations)</button><button class="btn link" id="aiX">Cancel</button></div>';
+      document.body.appendChild(scrim);
+      $('#aiX', scrim).onclick = function () { scrim.remove(); };
+      $('#ai7', scrim).onclick = function () { scrim.remove(); showTool('planner', { days: '7' }, { back: function () { showPlan('calendar'); }, tab: 'plan' }); };
+      $('#ai30', scrim).onclick = function () { scrim.remove(); showTool('planner', { days: '30' }, { back: function () { showPlan('calendar'); }, tab: 'plan' }); };
+    };
     try {
       if (!S.today) S.today = await api('studio-growth', 'home');
-      if (!$('#goalBox')) return; // left the Plan screen while it was loading
+      if (!$('#goalBox')) return;
       var g = S.today.goal;
       $('#goalBox').innerHTML = '<div class="goalbar">🎯 <b>' + (g ? 'This week: ' + esc(S.today.goals[g.goal]) : 'No weekly goal yet') + '</b><button class="btn small ' + (g ? 'ghost' : 'gold') + '" id="pg">' + (g ? 'Change' : 'Set goal') + '</button></div>';
-      $('#pg').onclick = function () { pickGoal(showPlan); };
-      var r = await api('studio-growth', 'calendar-list');
-      renderCalendar(r.items, r.today);
-    } catch (x) { if ($('#calBox')) $('#calBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; }
+      $('#pg').onclick = function () { pickGoal(function () { showPlan(); }); };
+      var r = await api('studio-growth', 'plan-list');
+      S.planCards = r.cards; S.planToday = r.today;
+      if (!$('#planBox')) return;
+      if (view === 'calendar') planCalendar(); else if (view === 'posted') planPosted(); else planBoard();
+    } catch (x) { if ($('#planBox')) $('#planBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; }
   }
-
-  function renderCalendar(items, today) {
-    var box = $('#calBox'); if (!box) return;
-    var weekAgo = new Date(Date.parse(today + 'T12:00:00Z') - 7 * 86400000).toISOString().slice(0, 10);
-    var shown = items.filter(function (i) { return i.date >= weekAgo; });
-    if (!shown.length) { box.innerHTML = '<div class="empty">No posts planned yet. Tap <b>Plan 7 days</b> and your plan will appear here, one post per day.</div>'; return; }
-    var html = '', lastDay = '';
-    shown.forEach(function (i) {
-      if (i.date !== lastDay) { html += '<div class="cal-day">' + esc(fmtDay(i.date, today)) + (i.date < today ? ' · past' : '') + '</div>'; lastDay = i.date; }
-      html += '<div class="cal" data-cal="' + esc(i.id) + '"><div><span class="fmt">' + esc(i.format) + '</span><b>' + esc(i.title) + '</b></div>' +
-        (i.hook ? '<div class="sub" style="font-size:13.5px;margin-top:4px">Hook: ' + esc(i.hook) + '</div>' : '') +
-        (i.cta ? '<div class="sub" style="font-size:13.5px">CTA: ' + esc(i.cta) + '</div>' : '') +
-        '<div class="st">' + ['todo', 'drafted', 'posted', 'done'].map(function (st) { return '<button class="chip" data-st="' + st + '" aria-pressed="' + (i.status === st) + '">' + STATUS_LABELS[st] + '</button>'; }).join('') + '</div>' +
-        '<div class="row" style="margin-top:8px;justify-content:space-between"><button class="btn small primary" data-make>Create this</button><button class="btn link danger" data-del style="font-size:13px">Remove</button></div></div>';
-    });
-    box.innerHTML = html;
-    $$('[data-cal]', box).forEach(function (card) {
-      var id = card.dataset.cal, item = items.filter(function (x) { return x.id === id; })[0];
-      $$('[data-st]', card).forEach(function (c) {
-        c.onclick = async function () {
-          try { await api('studio-growth', 'calendar-update', { id: id, status: c.dataset.st }); item.status = c.dataset.st; $$('[data-st]', card).forEach(function (x) { x.setAttribute('aria-pressed', x === c); }); if (c.dataset.st === 'posted') toast('Posted — well done! ✅'); }
-          catch (x) { toast(x.message); }
-        };
-      });
-      $('[data-make]', card).onclick = function () {
-        var topic = item.title + (item.hook ? '. Hook: ' + item.hook : '');
-        var go = /reel/i.test(item.format) ? ['reel', { idea: topic }] : ['caption', { topic: topic }];
-        showTool(go[0], go[1], { back: showPlan, tab: 'plan', calendarId: id, intro: 'From your calendar: ' + item.title,
-          onSuccess: function () { if (item.status === 'todo') api('studio-growth', 'calendar-update', { id: id, status: 'drafted' }).catch(function () {}); } });
+  function bindCards(root) { $$('[data-card]', root).forEach(function (b) { b.onclick = function () { showCard(b.dataset.card); }; }); }
+  function planBoard() {
+    var box = $('#planBox'), cards = S.planCards || [], q = (S.planQ || '').toLowerCase(), ty = S.planType || '';
+    var col = S.planCol || 'idea';
+    var match = function (c) { return (!ty || c.type === ty) && (!q || (c.title + ' ' + c.caption + ' ' + c.notes).toLowerCase().indexOf(q) > -1); };
+    var by = {}; PCOLS.forEach(function (k) { by[k[0]] = cards.filter(function (c) { return c.status === k[0] && match(c); }); });
+    box.innerHTML = '<div class="row" style="margin-bottom:10px;flex-wrap:nowrap"><input id="pQ" type="search" placeholder="Search cards…" value="' + esc(S.planQ || '') + '" style="flex:1"><select id="pT" style="width:auto">' +
+        '<option value="">All types</option>' + Object.keys(PT).map(function (k) { return '<option value="' + k + '"' + (ty === k ? ' selected' : '') + '>' + PT[k][0] + ' ' + PT[k][1] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="chips pcolsel">' + PCOLS.map(function (k) { return '<button class="chip" data-pc="' + k[0] + '" aria-pressed="' + (col === k[0]) + '">' + k[1] + ' (' + by[k[0]].length + ')</button>'; }).join('') + '</div>' +
+      '<div class="pboard">' + PCOLS.map(function (k) {
+        return '<section class="pcol' + (col === k[0] ? ' sel' : '') + '"><div class="pcol-h"><b>' + k[1] + '</b><span>' + by[k[0]].length + '</span>' + (k[0] !== 'scheduled' ? '<button class="btn link" data-padd="' + k[0] + '" aria-label="Add to ' + k[1] + '">+ Add</button>' : '') + '</div>' +
+          (by[k[0]].length ? by[k[0]].map(pCard).join('') : '<div class="pempty">' + ({ idea: 'Jot down ideas as they come — tap + Add.', drafting: 'Cards you’re writing.', ready: 'Ready to post — add a date to schedule.', scheduled: 'Cards with a date. Plan with AI or add a date to a card.' })[k[0]] + '</div>') + '</section>';
+      }).join('') + '</div>';
+    var qi = $('#pQ'), qt; qi.oninput = function () { clearTimeout(qt); qt = setTimeout(function () { S.planQ = qi.value; planBoard(); var n = $('#pQ'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+    $('#pT').onchange = function () { S.planType = this.value; planBoard(); };
+    $$('[data-pc]').forEach(function (b) { b.onclick = function () { S.planCol = b.dataset.pc; planBoard(); }; });
+    $$('[data-padd]').forEach(function (b) { b.onclick = function () { showCard(null, { status: b.dataset.padd }); }; });
+    bindCards(box);
+  }
+  function planCalendar() {
+    var box = $('#planBox'), cards = S.planCards || [], today = S.planToday;
+    var m = S.planMonth || today.slice(0, 7), y = Number(m.slice(0, 4)), mo = Number(m.slice(5, 7)) - 1;
+    var first = new Date(Date.UTC(y, mo, 1)), days = new Date(Date.UTC(y, mo + 1, 0)).getUTCDate(), lead = (first.getUTCDay() + 6) % 7;
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    var sel = S.planDay && S.planDay.slice(0, 7) === m ? S.planDay : (today.slice(0, 7) === m ? today : m + '-01');
+    var cells = '';
+    for (var i = 0; i < lead; i++) cells += '<div class="pday off"></div>';
+    for (var d = 1; d <= days; d++) {
+      var ds = m + '-' + pad(d), list = cards.filter(function (c) { return c.date === ds; });
+      cells += '<button class="pday' + (ds === today ? ' today' : '') + (ds === sel ? ' sel' : '') + (ds < today ? ' past' : '') + '" data-pd="' + ds + '"><span class="pdn">' + d + '</span>' +
+        list.slice(0, 3).map(function (c) { return '<span class="pdc' + (c.status === 'posted' ? ' done' : '') + '">' + (PT[c.type] || PT.post)[0] + '<em>' + esc(c.title) + '</em></span>'; }).join('') + (list.length > 3 ? '<span class="pdm">+' + (list.length - 3) + '</span>' : '') + '</button>';
+    }
+    var dayList = cards.filter(function (c) { return c.date === sel; });
+    box.innerHTML = '<div class="pcal-h"><button class="btn small ghost" id="pmP" aria-label="Previous month">‹</button><b>' + MONTHS[mo] + ' ' + y + '</b><button class="btn small ghost" id="pmN" aria-label="Next month">›</button></div>' +
+      '<div class="pgrid">' + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(function (w) { return '<div class="pwd">' + w + '</div>'; }).join('') + cells + '</div>' +
+      '<div class="row" style="justify-content:space-between;margin:14px 0 8px"><h2 style="margin:0">' + esc(pDate(sel)) + '</h2><button class="btn small ghost" id="pAddDay">+ Add on this day</button></div>' +
+      (dayList.length ? '<div class="pdaylist">' + dayList.map(pCard).join('') + '</div>' : '<p class="hint">Nothing planned for this day.</p>');
+    var shift = function (n) { var dt = new Date(Date.UTC(y, mo + n, 1)); S.planMonth = dt.getUTCFullYear() + '-' + pad(dt.getUTCMonth() + 1); S.planDay = ''; planCalendar(); };
+    $('#pmP').onclick = function () { shift(-1); }; $('#pmN').onclick = function () { shift(1); };
+    $$('[data-pd]').forEach(function (b) { b.onclick = function () { S.planDay = b.dataset.pd; planCalendar(); }; });
+    $('#pAddDay').onclick = function () { showCard(null, { date: sel }); };
+    bindCards(box);
+  }
+  function planPosted() {
+    var box = $('#planBox'), list = (S.planCards || []).filter(function (c) { return c.status === 'posted'; }).sort(function (a, b) { return (b.postedAt || b.date || '').localeCompare(a.postedAt || a.date || ''); });
+    box.innerHTML = list.length ? '<p class="hint" style="margin:0 0 10px">' + list.length + ' posted — every one counts in Track.</p><div class="pdaylist">' + list.map(function (c) {
+      return '<div class="pcard posted" data-card="' + esc(c.id) + '" role="button" tabindex="0"><div class="pc-top"><span class="pc-type">' + (PT[c.type] || PT.post)[0] + ' ' + (PT[c.type] || PT.post)[1] + '</span><span class="pill green">Posted</span></div><b>' + esc(c.title) + '</b>' +
+        '<span class="pc-date">✅ ' + esc(pDate((c.postedAt || '').slice(0, 10) || c.date)) + '</span>' + (c.postLink ? '<a class="pc-link" href="' + esc(c.postLink) + '" target="_blank" rel="noopener">View post →</a>' : '') + '</div>';
+    }).join('') + '</div>' : '<div class="empty">Nothing posted yet. Open a card and tap <b>✓ Mark as posted</b> when it’s live.</div>';
+    $$('.pc-link', box).forEach(function (a) { a.onclick = function (e) { e.stopPropagation(); }; });
+    bindCards(box);
+  }
+  // Card editor
+  async function showCard(id, preset) {
+    preset = preset || {};
+    var c = id ? (S.planCards || []).filter(function (x) { return x.id === id; })[0] : null;
+    if (id && !c) return showPlan();
+    c = c || { title: preset.title || '', type: preset.type || 'post', status: preset.status || 'idea', date: preset.date || '', time: '', caption: preset.caption || '', hashtags: '', notes: preset.notes || '' };
+    var back = function () { showPlan(); };
+    setChrome({ tabs: true, tab: 'plan', back: back });
+    var posted = c.status === 'posted';
+    app.innerHTML = '<main class="cardpage"><div class="row" style="justify-content:space-between;align-items:center"><h1 style="font-size:22px">' + (id ? 'Content card' : 'New card') + '</h1>' + (posted ? '<span class="pill green">Posted</span>' : id ? '<span class="pill goldl">' + esc((PCOLS.filter(function (k) { return k[0] === c.status; })[0] || ['', c.status])[1]) + '</span>' : '') + '</div>' +
+      '<div class="card stack" style="margin-top:12px"><div><label class="f" for="cT">Title</label><input id="cT" maxlength="140" value="' + esc(c.title) + '" placeholder="e.g. Behind the scenes: Saturday’s orders"></div>' +
+      '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Type</span><div class="chips" id="cTy">' + Object.keys(PT).map(function (k) { return '<button type="button" class="chip" data-v="' + k + '" aria-pressed="' + (c.type === k) + '">' + PT[k][0] + ' ' + PT[k][1] + '</button>'; }).join('') + '</div></div>' +
+      (posted ? '' : '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Stage</span><div class="chips" id="cSt">' + [['idea', 'Idea'], ['drafting', 'Drafting'], ['ready', 'Ready']].map(function (k) { return '<button type="button" class="chip" data-v="' + k[0] + '" aria-pressed="' + (c.status === k[0] || (c.status === 'scheduled' && k[0] === 'ready')) + '">' + k[1] + '</button>'; }).join('') + '</div></div>') +
+      '<div class="row"><div style="flex:1"><label class="f" for="cD">Date <span class="opt">(adds it to your calendar)</span></label><input type="date" id="cD" value="' + esc(c.date || '') + '"></div><div style="width:120px"><label class="f" for="cTm">Time</label><input type="time" id="cTm" value="' + esc(c.time || '') + '"></div></div>' +
+      '<div><label class="f" for="cC">Caption / script</label><textarea id="cC" rows="7" maxlength="4000" placeholder="Write it here — or tap ✨ Write with AI">' + esc(c.caption) + '</textarea></div>' +
+      '<div><label class="f" for="cH">Hashtags <span class="opt">(optional)</span></label><input id="cH" maxlength="600" value="' + esc(c.hashtags) + '" placeholder="#smallbusiness #londonbakery"></div>' +
+      '<div><label class="f" for="cN">Notes <span class="opt">(what to film, props, ideas)</span></label><textarea id="cN" rows="3" maxlength="1500">' + esc(c.notes) + '</textarea></div>' +
+      (id ? '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Photo <span class="opt">(optional)</span></span><div id="cImg" class="cimg">' + (c.hasImg ? '<span class="hint">Loading photo…</span>' : '') + '</div><label class="btn small ghost" style="cursor:pointer;margin-top:6px">' + (c.hasImg ? 'Change photo' : '📷 Add a photo') + '<input type="file" id="cFile" accept="image/*" class="hidden"></label>' + (c.hasImg ? ' <button class="btn link danger" id="cImgDel" style="font-size:13px">Remove photo</button>' : '') + '</div>' : '<p class="hint" style="margin:0">You can add a photo after saving.</p>') +
+      (posted ? '<div><label class="f" for="cL">Link to the post <span class="opt">(optional)</span></label><input id="cL" maxlength="500" value="' + esc(c.postLink || '') + '" placeholder="https://instagram.com/p/…"></div>' : '') +
+      '<div class="err hidden" id="cE"></div>' +
+      '<div class="row wrap"><button class="btn primary" id="cSave" style="flex:1">Save</button><button class="btn gold" id="cAi" style="flex:1">✨ Write with AI</button></div>' +
+      '<div class="row wrap">' + (id ? '<button class="btn small ghost" id="cCopy">📋 Copy caption</button>' : '') + (id && !posted ? '<button class="btn small ghost" id="cPosted">✓ Mark as posted</button>' : '') + (id && posted ? '<button class="btn small ghost" id="cUnpost">Move back to Ready</button>' : '') + '</div>' +
+      (id ? '<button class="btn link danger" id="cDel">Delete card</button>' : '') + '</div></main>';
+    $$('#cTy .chip, #cSt .chip').forEach(function (ch) { ch.onclick = function () { $$('.chip', ch.parentNode).forEach(function (x) { x.setAttribute('aria-pressed', x === ch); }); }; });
+    autosize($('#cC'));
+    function read() {
+      var st = $('#cSt [aria-pressed=true]');
+      var o = { title: $('#cT').value, type: ($('#cTy [aria-pressed=true]') || {}).dataset.v, date: $('#cD').value, time: $('#cTm').value, caption: $('#cC').value, hashtags: $('#cH').value, notes: $('#cN').value };
+      if (posted) { o.status = 'posted'; o.postLink = $('#cL').value; } else o.status = st ? st.dataset.v : 'idea';
+      if (id) o.id = id;
+      return o;
+    }
+    async function save(quiet) {
+      var e = $('#cE'); e.classList.add('hidden');
+      try { var r = await api('studio-growth', 'plan-save', { card: read() }); upsertCard(r.card); if (!quiet) toast(id ? 'Saved ✅' : 'Card added to your plan ✅'); return r.card; }
+      catch (x) { e.textContent = x.message; e.classList.remove('hidden'); return null; }
+    }
+    $('#cSave').onclick = async function () { var cd = await save(); if (cd && !id) showCard(cd.id); };
+    $('#cAi').onclick = async function () {
+      var cd = await save(true); if (!cd) return;
+      var topic = cd.title + (cd.notes ? '. ' + cd.notes.replace(/\n/g, ' ') : '');
+      var go = cd.type === 'reel' ? ['reel', { idea: topic }] : cd.type === 'carousel' ? ['carousel', { topic: topic }] : cd.type === 'story' ? ['stories', { purpose: topic }] : ['caption', cd.type === 'whatsapp' ? { topic: topic, platform: 'WhatsApp Status' } : { topic: topic }];
+      showTool(go[0], go[1], { back: function () { showCard(cd.id); }, tab: 'plan', calendarId: cd.id, intro: 'For your card: ' + cd.title + ' — I’ll add the result to the card.',
+        onSuccess: function (item) {
+          var text = String(item.edited != null ? item.edited : item.output || '');
+          api('studio-growth', 'plan-save', { card: { id: cd.id, caption: text.slice(0, 4000), status: cd.status === 'idea' ? 'drafting' : cd.status, contentId: item.id } }).then(function (r) { upsertCard(r.card); toast('Added to your card 📅'); }).catch(function () {});
+        } });
+    };
+    var cp = $('#cCopy'); if (cp) cp.onclick = function () { copyText($('#cC').value + ($('#cH').value ? '\n\n' + $('#cH').value : '')); toast('Copied'); };
+    var po = $('#cPosted'); if (po) po.onclick = async function () {
+      var cd = await save(true); if (!cd) return;
+      var link = prompt('Posted! 🎉 Paste the link to the post if you have it (optional):', '') || '';
+      try { var r = await api('studio-growth', 'plan-posted', { id: cd.id, link: link }); upsertCard(r.card); toast('Posted — counted in Track ✅'); showPlan('posted'); } catch (x) { toast(x.message); }
+    };
+    var up = $('#cUnpost'); if (up) up.onclick = async function () { try { var r = await api('studio-growth', 'plan-save', { card: { id: id, status: 'ready' } }); upsertCard(r.card); showCard(id); } catch (x) { toast(x.message); } };
+    var dl = $('#cDel'); if (dl) dl.onclick = async function () { if (!confirm('Delete this card?')) return; try { await api('studio-growth', 'plan-delete', { id: id }); S.planCards = (S.planCards || []).filter(function (x) { return x.id !== id; }); toast('Deleted'); showPlan(); } catch (x) { toast(x.message); } };
+    if (id) {
+      var box = $('#cImg');
+      if (c.hasImg) api('studio-growth', 'plan-img-get', { id: id }).then(function (r) { if (box && r.dataUrl) box.innerHTML = '<img src="' + r.dataUrl + '" alt="Card photo">'; }).catch(function () {});
+      $('#cFile').onchange = async function () {
+        var f = this.files && this.files[0]; if (!f) return;
+        try { var url = await resizeImage(f, 1080, 'image/jpeg'); await api('studio-growth', 'plan-img', { id: id, dataUrl: url }); var cc = (S.planCards || []).filter(function (x) { return x.id === id; })[0]; if (cc) cc.hasImg = true; toast('Photo added 📷'); showCard(id); }
+        catch (x) { toast(x.message); }
       };
-      $('[data-del]', card).onclick = async function () {
-        if (!confirm('Remove this from your calendar?')) return;
-        try { await api('studio-growth', 'calendar-delete', { id: id }); card.remove(); } catch (x) { toast(x.message); }
-      };
-    });
+      var idel = $('#cImgDel'); if (idel) idel.onclick = async function () { try { await api('studio-growth', 'plan-img-delete', { id: id }); var cc = (S.planCards || []).filter(function (x) { return x.id === id; })[0]; if (cc) cc.hasImg = false; showCard(id); } catch (x) { toast(x.message); } };
+    }
+  }
+  function upsertCard(cd) { S.planCards = S.planCards || []; var i = S.planCards.findIndex(function (x) { return x.id === cd.id; }); if (i > -1) S.planCards[i] = Object.assign({}, S.planCards[i], cd); else S.planCards.push(cd); }
+  // "📅 Add to Plan" from a Create result or today's content idea
+  function addToPlanSheet(card) {
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true"><h2 style="margin:0">📅 Add to Plan</h2><div><label class="f" for="apT">Title</label><input id="apT" maxlength="140" value="' + esc(card.title || '') + '"></div>' +
+      '<div><label class="f" for="apD">Date <span class="opt">(optional — leave empty to keep it in Ready)</span></label><input type="date" id="apD"></div>' +
+      '<button class="btn primary block" id="apGo">Add card</button><button class="btn link" id="apX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    $('#apX', scrim).onclick = function () { scrim.remove(); };
+    $('#apGo', scrim).onclick = async function () {
+      try { var r = await api('studio-growth', 'plan-save', { card: Object.assign({}, card, { title: $('#apT', scrim).value, date: $('#apD', scrim).value }) }); upsertCard(r.card); scrim.remove(); toast('Added to your Plan 📅'); }
+      catch (x) { toast(x.message); }
+    };
   }
 
   // ───────────── Track: progress + weekly summary ─────────────

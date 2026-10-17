@@ -10,7 +10,7 @@ const { getJson, del, enc } = core;
 
 const SINGLE = ['members', 'buyers', 'profiles', 'prefs', 'followups', 'mtodo', 'money', 'money-settings', 'calendar', 'goals',
   'progress', 'history', 'tips', 'idea', 'learn', 'logos', 'shop', 'benefits', 'admin-ig', 'msg/thread', 'msg/wel', 'billing/remind'];
-const PREFIXED = ['content', 'daily', 'shop-img'];
+const PREFIXED = ['content', 'daily', 'shop-img', 'planimg'];
 
 async function exportData(email) {
   const e = enc(email), out = { exportedAt: core.nowIso(), email, note: 'Everything Auntie Tobi Business Studio stores for your account.' };
