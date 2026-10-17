@@ -347,13 +347,14 @@ Above the list (for whichever filter or search you're on):
 - Prompts are tailored to the business type. Tool id `quick` (hidden from "All tools"); free changes = `refine` action; idea stored in `idea/<email>`.
 
 ## 7w. All tools (Create tab) — 29 AI tools in 6 categories
-- Create shows 6 category tiles (tap one to see its tools, ‹ All categories to go back) + a search box across all tools; free tools sit in their categories with a FREE tag. Quick Create and today's idea are on Today only.
+- Create shows a search box and all 6 category buttons (wrapped, no scrolling) — tap one to show only its tools; free tools sit in their categories with a FREE tag. Quick Create and today's idea are on Today only.
 - **Content Creation:** Content ideas, Post caption, Reel script, Carousel creator, Instagram Story creator, Hashtag & SEO helper, Repurpose content.
 - **Sales & Promotions:** Sales & promo, Product description, Booking promotion, New product launch, Special offer creator, Sales follow-up.
 - **Brand & Visibility:** Bio & business description, Ideal customer finder, Unique selling point, Brand story creator, Business SEO keywords.
 - **Customer Communication:** Customer message assistant, Review & testimonial posts, Customer appreciation, FAQ creator, Complaint response.
 - **Business Growth:** Sales improvement ideas, 30-day growth plan (3 generations), Collaboration ideas, Business check-up.
 - **Planning & Productivity:** Content planner, Weekly marketing plan.
+- **☆ Save to Library** on every result (toast with View → Library → My content → ★ Saved).
 - Every result: Shorter / More conversational (free) — message tools get More polite / Firmer (free); Turn into a Reel / Stories (1); **➡️ What should I do next?** (free suggestions that open the next tool pre-filled). 30-day growth plan and weekly plan: **📋 Add these actions to my to-do list** (free). "I posted this"/"Make image" hidden on non-post tools.
 - Honesty rules in prompts: offers/prices/dates never invented, reviews use exact words, complaints never admit liability or promise refunds, FAQs use [placeholders] for unknown policies, collaborations never name real businesses.
 

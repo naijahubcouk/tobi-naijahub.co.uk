@@ -357,6 +357,8 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
 .cattile:nth-child(2) .ico,.cattile:nth-child(5) .ico{background:var(--gold-l);color:#7A5300}.cattile:nth-child(3) .ico,.cattile:nth-child(6) .ico{background:#E8ECF4;color:var(--navy)}
 .cattile b{font-size:15px;line-height:1.25}.cattile span{font-size:12.5px;color:var(--muted);line-height:1.35}.cattile em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--green-d);margin-top:auto}
 .catback{padding:0;margin:0 0 4px;font-size:14px}
+.tlcats{flex-wrap:wrap;gap:6px;margin-bottom:6px}.tlcats .chip{padding:7px 12px;font-size:13.5px}.tlcats .chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.savebtn{border:1.5px solid var(--gold);background:#fff;color:var(--navy);font-weight:800}.savebtn.on{background:var(--gold-l);border-color:var(--gold)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1058,6 +1060,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   function toolList() { return S.boot.tools.filter(function (t) { return t.id !== 'oneclick' && !t.hidden; }); }
   function toolGrid() {
     return '<input id="tlQ" type="search" placeholder="Search ' + (toolList().length + FREE_TOOLS.length) + ' tools…" value="' + esc(S.toolQ || '') + '" aria-label="Search tools" style="margin-bottom:12px">' +
+      '<div class="chips tlcats"><button class="chip" data-tc="" aria-pressed="' + !S.toolCat + '">All</button>' + CATS.map(function (c) { return '<button class="chip" data-tc="' + c[0] + '" aria-pressed="' + (S.toolCat === c[0]) + '">' + esc(c[1]) + '</button>'; }).join('') + '</div>' +
       '<div id="toolBox">' + toolCards() + '</div>';
   }
   function catCount(c) { return toolList().filter(function (t) { return (t.cat || 'content') === c; }).length + FREE_TOOLS.filter(function (f) { return FREE_CAT[f[0]] === c; }).length; }
@@ -1073,23 +1076,21 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
   function freeCard(f) { return '<button class="tool freetool" data-free="' + f[0] + '"><span class="ico">' + icon(f[3]) + '</span><b>' + esc(f[1]) + '<span class="free">FREE</span></b><span>' + esc(f[2]) + '</span></button>'; }
   function toolCards() {
     var q = (S.toolQ || '').toLowerCase().trim(), cat = S.toolCat || '';
-    if (!q && !cat) return catTiles();
+
     var match = function (name, blurb) { return !q || (name + ' ' + blurb).toLowerCase().indexOf(q) > -1; };
     var groups = CATS.filter(function (c) { return !cat || c[0] === cat; }).map(function (c) {
       var ai = toolList().filter(function (t) { return (t.cat || 'content') === c[0] && match(t.name, (TOOL_META[t.id] || {}).blurb || t.blurb || ''); });
       var fr = FREE_TOOLS.filter(function (f) { return FREE_CAT[f[0]] === c[0] && match(f[1], f[2]); });
       if (!ai.length && !fr.length) return '';
-      return (cat && !q ? '<button class="btn link catback" data-tc="">‹ All categories</button>' : '') + '<h3 class="tlh">' + icon(c[2], 18) + esc(c[1]) + ' <span>' + (ai.length + fr.length) + '</span></h3><div class="tools">' + ai.map(toolCard).join('') + fr.map(freeCard).join('') + '</div>';
+      return '<h3 class="tlh">' + icon(c[2], 18) + esc(c[1]) + ' <span>' + (ai.length + fr.length) + '</span></h3><div class="tools">' + ai.map(toolCard).join('') + fr.map(freeCard).join('') + '</div>';
     }).join('');
     return groups || '<p class="hint">No tools match “' + esc(S.toolQ) + '”.</p>';
   }
   function bindToolDir() {
     var box = $('#toolBox');
-    var draw = function () {
-      box.innerHTML = toolCards(); bindTools(); bindFreeTools();
-      $$('[data-tc]', box).forEach(function (b) { b.onclick = function () { S.toolCat = b.dataset.tc; S.toolQ = ''; var qi = $('#tlQ'); if (qi) qi.value = ''; draw(); var h = $('#allTools'); if (h) h.scrollIntoView({ block: 'start', behavior: 'smooth' }); }; });
-    };
-    var qi = $('#tlQ'); if (qi) qi.oninput = function () { S.toolQ = qi.value; if (S.toolQ) S.toolCat = ''; draw(); };
+    var draw = function () { box.innerHTML = toolCards(); bindTools(); bindFreeTools(); };
+    $$('.tlcats [data-tc]', app).forEach(function (b) { b.onclick = function () { S.toolCat = b.dataset.tc; S.toolQ = ''; var qi = $('#tlQ'); if (qi) qi.value = ''; $$('.tlcats [data-tc]', app).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); draw(); }; });
+    var qi = $('#tlQ'); if (qi) qi.oninput = function () { S.toolQ = qi.value; if (S.toolQ && S.toolCat) { S.toolCat = ''; $$('.tlcats [data-tc]', app).forEach(function (x) { x.setAttribute('aria-pressed', !x.dataset.tc); }); } draw(); };
     draw();
   }
 
@@ -1282,6 +1283,13 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       return;
     }
     resultExtras(el, item, regen, back);
+  }
+  function actionToast(msg, label, fn) {
+    $$('.toast').forEach(function (x) { x.remove(); });
+    var t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status');
+    t.innerHTML = '<span></span> <button class="btn link" style="color:var(--gold);padding:0 0 0 10px;font-weight:800"></button>'; t.firstChild.textContent = msg; t.lastChild.textContent = label;
+    document.body.appendChild(t); var tm = setTimeout(function () { t.remove(); }, 6000);
+    t.lastChild.onclick = function () { clearTimeout(tm); t.remove(); fn(); };
   }
   function undoToast(msg, undo) {
     $$('.toast').forEach(function (x) { x.remove(); });
@@ -1645,7 +1653,7 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       }).join('') + '</div>' +
       '<div class="row wrap" style="margin-top:12px">' +
       (postable ? '<button class="btn ' + (item.posted ? 'ghost' : 'gold') + ' small" id="postedBtn"' + (item.posted ? ' disabled' : '') + '>' + (item.posted ? '\u2713 Posted' : '\u2713 I posted this') + '</button>' : '') +
-      '<button class="btn ghost small" id="saveBtn">' + (item.saved ? '★ Saved' : '☆ Save') + '</button>' +
+      '<button class="btn small savebtn' + (item.saved ? ' on' : '') + '" id="saveBtn">' + (item.saved ? '★ Saved in Library' : '☆ Save to Library') + '</button>' +
       (many ? '<button class="btn ghost small" id="copyAll">Copy all</button>' : '') +
       (onRegenerate ? '<button class="btn ghost small" id="regen">\u21bb Regenerate <span class="saved-tag">(' + (item.cost || 1) + ' generation' + ((item.cost || 1) > 1 ? 's' : '') + ')</span></button>' : '') +
       '<span class="saved-tag" id="editState" style="margin-left:auto"></span></div>';
@@ -1668,9 +1676,10 @@ ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bo
       var b = this; b.disabled = true;
       try {
         var r = await api('studio-api', 'item-update', { id: item.id, saved: !item.saved });
-        item.saved = r.item.saved; b.textContent = item.saved ? '★ Saved' : '☆ Save';
+        item.saved = r.item.saved; b.textContent = item.saved ? '★ Saved in Library' : '☆ Save to Library'; b.classList.toggle('on', item.saved);
         S.history = S.history.map(function (h) { return h.id === item.id ? Object.assign({}, h, { saved: item.saved }) : h; });
-        toast(item.saved ? 'Saved to your library' : 'Removed from saved');
+        if (item.saved) actionToast('Saved to your Library ★', 'View', function () { S.libView = 'mine'; showLibrary('saved'); });
+        else toast('Removed from your saved items');
       } catch (x) { toast(x.message); }
       b.disabled = false;
     };
