@@ -366,6 +366,7 @@ Above the list (for whichever filter or search you're on):
 - Messages land in the member's private chat from Auntie Tobi, with a push notification. Replies come to the Admin inbox like any other message.
 - Sent by the hourly `studio-messages-remind` function, only between 9am and 7pm UK time, at most one message per member per hour. "Straight away" (day 0) means within the hour of joining (or 9am next morning if they join in the evening).
 - Members must still have access (`canView`). Each card shows "Sent to N members".
+- **➕ Add a member to the series** (bottom of the window): for existing members. Type their email → their series starts that day (Message 1 within the hour, 9am–7pm). The email must already have a member account. "Added by you" lists them; ✕ stops the series for that person. Re-adding never repeats messages already sent.
 - Storage: `msg/welcome` (settings + stats), `msg/wel/<email>` (what each member has been sent).
 
 ## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)

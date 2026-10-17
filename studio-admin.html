@@ -313,8 +313,23 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
           '<label class="row" style="gap:6px;margin:0 0 0 auto;font-weight:600"><input type="checkbox" class="wOnStep"' + (st.on ? ' checked' : '') + '> Send this one</label></div>' +
           '<textarea class="wText" rows="4" maxlength="2000">' + esc(st.text) + '</textarea></div>';
       }).join('') +
+      '<div class="card stack" style="padding:12px;gap:8px"><b>➕ Add a member to the series</b><p class="muted" style="margin:0;font-size:13.5px">For members who joined before it was switched on. Their series starts today — Message 1 within the hour (9am–7pm), then the rest on their days. Nobody gets the same message twice.</p>' +
+      '<div class="row" style="flex-wrap:nowrap"><input type="email" id="wAddE" placeholder="member@email.com" style="flex:1"><button class="btn small" id="wAdd">Add</button></div><div id="wMan"></div></div>' +
       '<div class="err hidden" id="wErr"></div><div class="row"><button class="btn primary" id="wSave">Save</button><button class="btn ghost" id="wX">Close</button></div>');
     $$('.wDays', s2).forEach(function (inp) { inp.oninput = function () { var lab = inp.parentNode.querySelector('.wLab'); lab.textContent = Number(inp.value) === 0 ? 'day(s) after joining · straight away' : 'day(s) after joining'; }; });
+    var drawMan = function () {
+      var em = Object.keys(w.manual || {}).sort(function (a, b) { return (w.manual[b].at || '').localeCompare(w.manual[a].at || ''); });
+      $('#wMan', s2).innerHTML = em.length ? '<div class="muted" style="font-size:12.5px;font-weight:700;margin-bottom:4px">Added by you</div>' + em.map(function (e) { return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;padding:4px 0"><span>' + esc(e) + ' <span class="muted" style="font-size:12.5px">· added ' + esc(d(w.manual[e].at)) + '</span></span><button class="btn small ghost danger" data-wrm="' + esc(e) + '" aria-label="Stop the series for ' + esc(e) + '">✕</button></div>'; }).join('') : '';
+      $$('[data-wrm]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop the welcome series for ' + b.dataset.wrm + '?')) return; try { w.manual = (await api('msg-welcome-remove', { email: b.dataset.wrm })).welcome.manual; drawMan(); toast('Stopped for ' + b.dataset.wrm); } catch (x) { toast(x.message); } }; });
+    };
+    drawMan();
+    $('#wAdd', s2).onclick = async function () {
+      var inp = $('#wAddE', s2), e = inp.value.trim(); if (!e) { inp.focus(); return; }
+      try { var r = await api('msg-welcome-add', { email: e }); w.manual = r.welcome.manual; inp.value = ''; drawMan();
+        toast(!r.welcome.on ? 'Added — switch the series On and Save so it sends' : r.already ? 'Added — they’ll get the messages they haven’t had yet' : 'Added — Message 1 goes out within the hour (9am–7pm) 👋'); }
+      catch (x) { toast(x.message); }
+    };
+    $('#wAddE', s2).onkeydown = function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); $('#wAdd', s2).click(); } };
     $('#wX', s2).onclick = function () { s2.remove(); };
     $('#wSave', s2).onclick = async function () {
       var steps = $$('.wstep', s2).map(function (c) { return { id: c.dataset.wid, days: Number($('.wDays', c).value), on: $('.wOnStep', c).checked, text: $('.wText', c).value }; });

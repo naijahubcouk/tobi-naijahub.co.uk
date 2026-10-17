@@ -4,9 +4,11 @@
  * over their first weeks. Runs in the hourly messages job, only between 9am and 7pm UK time.
  *
  *   msg/welcome            { on, since, steps: [{ id, days, text, on }], stats: { <stepId>: n } }
- *   msg/wel/<email>        { startedAt, sent: { <stepId>: at } }      (per member)
+ *   msg/wel/<email>        { startedAt, sent: { <stepId>: at }, stopped? }      (per member)
+ *   msg/welcome.manual     { <email>: { at, by } }   members Admin added by hand (e.g. existing members)
  *
- * Only members whose account was created after the series was switched on ("since") get it.
+ * Members whose account was created after the series was switched on ("since") get it,
+ * plus anyone added by hand. A member never gets the same message twice.
  */
 const core = require('./core');
 const { HttpError, cas, getJson, setJson } = core;
@@ -22,9 +24,9 @@ const DEFAULT_STEPS = [
   { id: 'w4', days: 7, on: true, text: 'One week in 🎉 Explore Create → All tools: 29 tools for posts, offers, customer messages and growth plans. Try the 30-day growth plan and add the actions straight to your to-do list.' },
   { id: 'w5', days: 14, on: true, text: 'How’s Business Studio working for you so far, {business}? What’s one thing you’d love it to do for your business? Just reply — I read every message 💚' },
 ];
-const empty = () => ({ on: false, since: '', steps: DEFAULT_STEPS.map(s => ({ ...s })), stats: {} });
+const empty = () => ({ on: false, since: '', steps: DEFAULT_STEPS.map(s => ({ ...s })), stats: {}, manual: {} });
 
-async function get() { const c = await getJson(KEY); return c ? { ...empty(), ...c, stats: c.stats || {} } : empty(); }
+async function get() { const c = await getJson(KEY); return c ? { ...empty(), ...c, stats: c.stats || {}, manual: c.manual || {} } : empty(); }
 
 async function save(raw) {
   raw = raw && typeof raw === 'object' ? raw : {};
@@ -53,6 +55,30 @@ async function save(raw) {
   return out;
 }
 
+// Add an existing member by hand: their series starts today (messages already sent are never repeated).
+async function addMember(email, by) {
+  email = core.normalizeEmail(email);
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, 'invalid_email', 'Please enter a valid email address.');
+  const m = await core.getMember(email);
+  if (!m) throw new HttpError(404, 'not_found', 'No member account with that email yet — they need to join first.');
+  const cur = await getJson(progKey(email));
+  const p = cur ? { ...cur, sent: cur.sent || {} } : { startedAt: core.nowIso(), sent: {} };
+  if (cur && cur.stopped) { delete p.stopped; p.startedAt = core.nowIso(); }
+  await setJson(progKey(email), p);
+  let out;
+  await cas(KEY, c0 => { const c = c0 ? { ...empty(), ...c0 } : empty(); c.manual = { ...(c.manual || {}), [email]: { at: core.nowIso(), by: by || '' } }; out = c; return c; });
+  return { welcome: out, already: Object.keys(p.sent).length };
+}
+// Stop the series for someone added by hand.
+async function removeMember(email) {
+  email = core.normalizeEmail(email);
+  const cur = await getJson(progKey(email));
+  if (cur) await setJson(progKey(email), { ...cur, stopped: true });
+  let out;
+  await cas(KEY, c0 => { const c = c0 ? { ...empty(), ...c0 } : empty(); const man = { ...(c.manual || {}) }; delete man[email]; c.manual = man; out = c; return c; });
+  return out;
+}
+
 function ukHour(d) { return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: 'Europe/London' }).format(d || new Date())); }
 
 /*
@@ -71,11 +97,15 @@ async function run(opts) {
   const started = Date.now();
   for (const m of opts.members) {
     if (Date.now() - started > 18000 || report.sent >= 150) break;
-    if (!m || !m.email || !m.createdAt || m.createdAt < cfg.since) continue;
+    if (!m || !m.email) continue;
+    const manual = !!cfg.manual[core.normalizeEmail(m.email)];
+    if (!manual && (!m.createdAt || m.createdAt < cfg.since)) continue;
     const acc = core.access(m, opts.settings);
     if (!acc.canView) continue;
     report.checked++;
     const p = (await getJson(progKey(m.email))) || { startedAt: now.toISOString(), sent: {} };
+    if (p.stopped) continue;
+    p.sent = p.sent || {};
     const days = Math.floor((now - Date.parse(p.startedAt)) / core.DAY);
     const next = steps.find(s => !p.sent[s.id] && s.days <= days);
     if (!next) { if (!(await getJson(progKey(m.email)))) await setJson(progKey(m.email), p); continue; }
@@ -94,4 +124,4 @@ async function run(opts) {
   return report;
 }
 
-module.exports = { get, save, run, DEFAULT_STEPS };
+module.exports = { get, save, run, addMember, removeMember, DEFAULT_STEPS };
