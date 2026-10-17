@@ -113,7 +113,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 <body>
 <header><div><b>Business Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="today">Today</button><button data-v="messages">Messages <span class="nbadge hidden" id="msgBadge"></span></button><button data-v="overview">Overview</button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites</button><button data-v="subs">Business Studio Pro</button>
+  <button data-v="overview">Overview</button><button data-v="today">Today</button><button data-v="messages">Messages <span class="nbadge hidden" id="msgBadge"></span></button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites</button><button data-v="subs">Pro &amp; Plus</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -175,7 +175,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     try { S.overview = await api('overview'); } catch (e) { return; }
     $('#nav').classList.remove('hidden'); $('#logout').classList.remove('hidden'); $('#who').textContent = S.overview.admin;
     msgBadge(); clearInterval(S.badgeTimer); S.badgeTimer = setInterval(function () { if (!document.hidden) msgBadge(); }, 60000);
-    if (location.hash === '#messages') { history.replaceState(null, '', location.pathname); go('messages'); } else go('today');
+    if (location.hash === '#messages') { history.replaceState(null, '', location.pathname); go('messages'); } else go('overview');
   }
   async function msgBadge() {
     try { var n = (await api('msg-unread')).unread || 0; var b = $('#msgBadge'); b.textContent = n > 99 ? '99+' : n; b.classList.toggle('hidden', !n); S.msgUnread = n; return n; } catch (e) { return 0; }
