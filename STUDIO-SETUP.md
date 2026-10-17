@@ -324,3 +324,16 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - Replies: Interested · Not now (check back in 30/60/90 days) · Not interested (never due again) · Joined. Notes & history per business; Reset.
 - **To do today** = follow-ups due + new businesses to invite (default **5 a day**, change it at the top). Today list gets one "Business Club invites" task that ticks itself when they're done.
 - Stored in `invites/state`. Admin actions: `invites-view`, `invites-act`, `invites-settings`.
+
+## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)
+
+Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**
+
+- **📋 Paste from ChatGPT**: paste a whole reply; the free splitter (`/hq-split.js`, rules not AI) cuts it into idea cards wherever a new idea starts (Idea 1 / Post 2 / Reel: …, ### headings, bold titles, --- lines, numbered ideas — but numbered *steps* inside one idea stay together). Each card gets a type (post, Reel, carousel, Story, blog), topic, title, caption, hashtags and keyword line; chatty intros and "Would you like me to…" lines are dropped. A preview lets you remove, merge, retitle or change type before saving. "Keep as one card" if needed.
+- **＋ Quick add** for your own ideas; images can be added to any card (resized in the browser).
+- **🗂️ Board**: 💡 Ideas → ✍️ Drafting → ✅ Ready → 📅 Scheduled → 📲 Posted (+ Archived). Search, filter by type/topic, ★ star. **👀 Review one by one** goes through Ideas: keep (Ready / needs work), skip or delete. 🗑 Delete goes to a 30-day bin with Undo.
+- **📅 Calendar**: month view (agenda list on phones). Yellow planned, green posted, red missed. ＋ on a day picks an idea to plan there. A date makes a card Scheduled; removing it puts it back to Ready.
+- **🏠 Today**: posts for today and any missed ones with **📋 Copy caption** (caption + keyword line + hashtags), **⬇ Download image**, **Open Instagram**, **✅ Mark as posted** (+ post link) and ↻ Reschedule; coming up next 7 days; counts.
+- **📲 Posted**: everything posted with date, type and link; this week / month / total and by type.
+- **Admin → Today** gets "🗓️ N posts planned for today" which ticks itself when they're marked posted.
+- Function `studio-hq` (`studio-lib/hq.js`, `handlers/hq.js`); storage `hq/content` and `hq/img/*`. Nothing is ever posted automatically.

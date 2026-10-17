@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0F1E36">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
+<title>Auntie Tobi HQ — Content Hub</title>
+<link rel="icon" href="/favicon-32x32.png">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--green:#057A44;--green-d:#04613A;--green-l:#E3F2EA;--gold:#FFB81C;--gold-l:#FFF1CF;--navy:#0F1E36;--navy-2:#1C2E4D;--navy-3:#2A3D60;--cream:#FBF6EC;--line:#EADFC8;--muted:#5B6475;--danger:#B3261E;--danger-l:#FCE8E6;--font:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--display:'Fraunces',Georgia,serif;--side:260px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--cream);color:var(--navy);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--green)}
+.hidden,[hidden]{display:none!important}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;min-height:40px;text-decoration:none;white-space:nowrap}
+.btn.primary{background:var(--green);color:#fff}.btn.primary:hover{background:var(--green-d)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--navy)}
+.btn.danger{color:var(--danger)}
+.btn.small{padding:5px 10px;min-height:0;font-size:13px;border-radius:8px}
+.btn.link{padding:0;min-height:0;color:var(--green)}
+.btn:disabled{opacity:.55;cursor:default}
+input,select,textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff}
+textarea{resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
+label{display:block;font-weight:700;font-size:13px;margin-bottom:4px}
+.muted{color:var(--muted)}.err{background:var(--danger-l);color:var(--danger);border-radius:10px;padding:10px 12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stack>*+*{margin-top:10px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 14px;border-radius:10px;z-index:80;max-width:92vw;display:flex;gap:12px;align-items:center}
+.toast button{background:var(--gold);color:var(--navy);border-radius:7px;padding:4px 10px;font-weight:800;font-size:13px}
+
+.app{display:flex;height:100vh;height:100dvh}
+aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:10px;padding:16px 16px 12px}
+.brand img{width:38px;height:38px;border-radius:50%;border:2px solid var(--gold);background:var(--cream)}
+.brand b{font-family:var(--display);font-size:19px;display:block;line-height:1.1}.brand small{color:var(--gold);font-size:10.5px;letter-spacing:1.3px;text-transform:uppercase;font-weight:700}
+.side-actions{padding:4px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.side-nav{display:flex;flex-direction:column;padding:0 8px;gap:2px}
+.side-nav button,.side-nav a{text-align:left;padding:10px 12px;border-radius:8px;color:#D5DCE8;font-weight:600;display:flex;gap:10px;align-items:center;text-decoration:none}
+.side-nav button[aria-current=page]{background:var(--navy-3);color:#fff}
+.side-nav .n{margin-left:auto;background:var(--navy-3);border-radius:999px;padding:0 8px;font-size:12px;color:#fff}
+.side-foot{margin-top:auto;padding:12px 16px 16px;font-size:12.5px;color:#9AA6BC;border-top:1px solid var(--navy-3)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);min-height:56px}
+.top h1{font-family:var(--display);font-size:22px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu-btn{display:none;font-size:22px;padding:4px 8px}
+.view{flex:1;overflow-y:auto;min-height:0}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+
+/* chips & badges */
+.t{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:700;background:#F1ECE1;color:var(--navy)}
+.t.reel{background:#FDE7EF;color:#9B1B4F}.t.carousel{background:#E7EEFD;color:#1F4AA8}.t.story{background:#FFF1CF;color:#7A5300}.t.blog{background:#EAE7FD;color:#4B2BA8}.t.post{background:var(--green-l);color:var(--green-d)}
+.tp{font-size:12px;color:var(--muted);font-weight:600}
+.chipbar{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--navy)}.chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
+.stats .card b{display:block;font-family:var(--display);font-size:28px;line-height:1.1}.stats .card span{font-size:13px;color:var(--muted)}
+.h2{font-family:var(--display);font-size:19px;margin:20px 0 8px}
+
+/* content card */
+.kc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:5px;position:relative}
+.kc:hover{border-color:#CFC2A4;box-shadow:0 2px 8px rgba(15,30,54,.06)}
+.kc .tt{font-weight:700;line-height:1.3;padding-right:24px}
+.kc .cp{font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kc .meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.kc .star{position:absolute;top:8px;right:8px;font-size:16px;color:#C9BFA8}.kc .star.on{color:var(--gold)}
+.kc .qa{display:flex;gap:4px;margin-top:2px}
+.kc .qa button{font-size:12px;font-weight:700;color:var(--muted);padding:3px 7px;border-radius:6px;border:1px solid var(--line);background:#fff}.kc .qa button:hover{color:var(--navy);border-color:#CFC2A4}
+.kc.late{border-color:#F2B8B3;background:#FFF8F7}
+.kc img.th{width:100%;height:110px;object-fit:cover;border-radius:8px}
+.date{font-size:12px;font-weight:700;color:var(--green-d)}.date.late{color:var(--danger)}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:12px;align-items:start;overflow-x:auto;padding-bottom:8px}
+.col{background:#F4EEE2;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.col h3{font-size:14px;display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
+.col h3 span{background:#fff;border-radius:999px;padding:0 8px;font-size:12px}
+.col .empty{font-size:13px;color:var(--muted);padding:8px 4px}
+.tabs{display:none}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal .dh{font-size:12px;font-weight:700;color:var(--muted);text-align:center;padding:4px 0}
+.cal .d{background:#fff;border:1px solid var(--line);border-radius:10px;min-height:108px;padding:6px;display:flex;flex-direction:column;gap:4px}
+.cal .d.out{background:transparent;border-style:dashed;opacity:.55}
+.cal .d.today{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+.cal .d .n{font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.cal .d .add{opacity:0;color:var(--green);font-weight:800;font-size:15px;padding:0 4px}.cal .d:hover .add{opacity:1}
+.ev{font-size:12px;border-radius:6px;padding:3px 6px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.ev.s{background:var(--gold-l)}.ev.p{background:var(--green-l);color:var(--green-d)}.ev.late{background:var(--danger-l);color:var(--danger)}
+.agenda{display:none}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(15,30,54,.5);z-index:60;display:grid;place-items:center;padding:14px}
+.sheet{background:var(--cream);border-radius:16px;padding:18px;width:min(720px,100%);max-height:92vh;overflow-y:auto}
+.sheet h2{font-family:var(--display);font-size:21px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.posttools{background:var(--green-l);border-radius:12px;padding:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.imgs{display:flex;gap:8px;flex-wrap:wrap}
+.imgs div{position:relative}.imgs img{width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.imgs button{position:absolute;top:-6px;right:-6px;background:var(--navy);color:#fff;border-radius:50%;width:22px;height:22px;font-size:13px}
+
+/* paste preview */
+.pv{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.pv .pvh{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pv input.pt{font-weight:700;flex:1;min-width:180px}
+.pv select{width:auto;padding:6px 8px}
+.pv textarea{font-size:13.5px}
+.pv .tags{font-size:12.5px;color:var(--muted)}
+
+.signin{max-width:400px;margin:12vh auto 0;padding:24px}
+.signin img{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold)}
+
+@media (max-width:900px){
+  aside{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%);transition:transform .2s}
+  aside.open{transform:none;box-shadow:0 0 0 100vmax rgba(15,30,54,.45)}
+  .menu-btn{display:block}
+  .board{display:block}.board .col{display:none}.board .col.on{display:flex}
+  .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px}
+  .tabs .chip{white-space:nowrap}
+  .cal{display:none}.agenda{display:block}
+  .f2,.f3{grid-template-columns:1fr}
+  .top h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div id="signin" class="signin hidden">
+  <img src="/tobi-face-128.png" alt="">
+  <h1 style="font-family:var(--display);font-size:28px;margin:12px 0 4px">Auntie Tobi HQ</h1>
+  <p class="muted" style="margin-bottom:16px">Your Content Hub. Sign in with your admin email.</p>
+  <div class="stack">
+    <div><label for="em">Email</label><input id="em" type="email" autocomplete="email"></div>
+    <div id="cdBox" class="hidden"><label for="cd">6-digit code</label><input id="cd" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></div>
+    <div class="err hidden" id="siErr"></div>
+    <button class="btn primary" id="siBtn" style="width:100%">Send me a code</button>
+  </div>
+</div>
+
+<div class="app hidden" id="app">
+  <aside id="side">
+    <div class="brand"><img src="/tobi-face-128.png" alt=""><div><b>Auntie Tobi HQ</b><small>Content Hub</small></div></div>
+    <div class="side-actions">
+      <button class="btn gold" id="pasteBtn">📋 Paste from ChatGPT</button>
+      <button class="btn ghost" id="addBtn" style="background:transparent;color:var(--cream);border-color:var(--navy-3)">＋ Quick add</button>
+    </div>
+    <div class="side-nav">
+      <button data-nav="today">🏠 Today</button>
+      <button data-nav="board">🗂️ Board <span class="n" id="nIdeas"></span></button>
+      <button data-nav="calendar">📅 Calendar</button>
+      <button data-nav="posted">📲 Posted</button>
+      <a href="/studio-admin">📋 Admin ↗</a>
+    </div>
+    <div class="side-foot">Paste ideas from ChatGPT, keep the good ones, plan them and track what you post. Nothing is posted for you.<br><button class="btn link" id="so" style="color:#D5DCE8;margin-top:8px;font-size:12.5px">Sign out</button></div>
+  </aside>
+  <div class="main">
+    <div class="top"><button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button><h1 id="ttl">Today</h1><span id="topRight"></span></div>
+    <div class="view" id="view"></div>
+  </div>
+</div>
+
+<script src="/hq-split.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var TYPE = { post: '🖼️ Post', reel: '🎬 Reel', carousel: '🗂️ Carousel', story: '⏳ Story', blog: '📝 Blog' };
+  var TOPIC = { discovery: 'Business discovery', 'uk-info': 'UK info', community: 'Community', promo: 'Promotion', event: 'Event', motivation: 'Motivation' };
+  var STATUS = { idea: '💡 Ideas', drafting: '✍️ Drafting', ready: '✅ Ready', scheduled: '📅 Scheduled', posted: '📲 Posted', archived: '🗄️ Archived' };
+  var NEXT = { idea: 'drafting', drafting: 'ready', ready: 'scheduled' };
+  var S = { items: [], view: 'today', filter: { q: '', type: '', topic: '', star: false }, tab: 'idea', month: null };
+  function toast(m, undo) {
+    var t = document.createElement('div'); t.className = 'toast'; t.innerHTML = '<span></span>' + (undo ? '<button>Undo</button>' : ''); t.firstChild.textContent = m; document.body.appendChild(t);
+    var gone = setTimeout(function () { t.remove(); }, undo ? 6000 : 2600);
+    if (undo) t.lastChild.onclick = function () { clearTimeout(gone); t.remove(); undo(); };
+  }
+  async function call(fn, action, payload) {
+    var res, data;
+    try {
+      res = await fetch('/.netlify/functions/' + fn, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify(Object.assign({ action: action }, payload || {})) });
+      data = await res.json().catch(function () { return {}; });
+    } catch (e) { throw new Error('No connection — check your internet and try again.'); }
+    if (res.status === 401 && fn === 'studio-hq') { showSignIn(); throw new Error('Please sign in.'); }
+    if (!res.ok) throw new Error((data && data.message) || 'Something went wrong.');
+    return data;
+  }
+  var api = function (a, p) { return call('studio-hq', a, p); };
+  function today() { return S.today; }
+  function addDays(day, n) { var d = new Date(day + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+  function fmtDay(day) { if (day === today()) return 'Today'; if (day === addDays(today(), 1)) return 'Tomorrow'; return new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); }
+  function weekStart(day) { var d = new Date(day + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); }
+  function byId(id) { return S.items.filter(function (x) { return x.id === id; })[0]; }
+  function upsert(it) { var i = S.items.findIndex(function (x) { return x.id === it.id; }); if (i >= 0) S.items[i] = it; else S.items.unshift(it); }
+  function isLate(c) { return c.status === 'scheduled' && c.planDate && c.planDate < today(); }
+
+  // ── sign in ──
+  function showSignIn() { $('#app').classList.add('hidden'); $('#signin').classList.remove('hidden'); $('#em').focus(); }
+  $('#siBtn').onclick = async function () {
+    var b = this, err = $('#siErr'); err.classList.add('hidden'); b.disabled = true;
+    try {
+      if ($('#cdBox').classList.contains('hidden')) { await call('studio-admin', 'login-request', { email: $('#em').value.trim() }); $('#cdBox').classList.remove('hidden'); b.textContent = 'Sign in'; $('#cd').focus(); }
+      else { await call('studio-admin', 'login-verify', { email: $('#em').value.trim(), code: $('#cd').value.trim() }); $('#signin').classList.add('hidden'); boot(); }
+    } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); }
+    b.disabled = false;
+  };
+  ['#em', '#cd'].forEach(function (s) { $(s).addEventListener('keydown', function (e) { if (e.key === 'Enter') $('#siBtn').click(); }); });
+  $('#so').onclick = async function () { try { await call('studio-admin', 'logout'); } catch (x) {} location.reload(); };
+
+  async function boot() {
+    var r; try { r = await api('boot'); } catch (x) { return; }
+    S.items = r.items; S.today = r.today; S.month = r.today.slice(0, 7);
+    $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
+    go(location.hash.slice(1) || 'today');
+  }
+  function go(v) {
+    S.view = ['today', 'board', 'calendar', 'posted'].indexOf(v) >= 0 ? v : 'today';
+    try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
+    $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
+    $('#side').classList.remove('open');
+    var n = S.items.filter(function (c) { return c.status === 'idea'; }).length; $('#nIdeas').textContent = n || '';
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted })[S.view]();
+  }
+  function rerender() { go(S.view); }
+  window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
+  $$('.side-nav [data-nav]').forEach(function (b) { b.onclick = function () { go(b.dataset.nav); }; });
+  $('#menuBtn').onclick = function (e) { e.stopPropagation(); $('#side').classList.toggle('open'); };
+  document.addEventListener('click', function (e) { var sd = $('#side'); if (sd.classList.contains('open') && !sd.contains(e.target)) sd.classList.remove('open'); });
+  $('#pasteBtn').onclick = function () { $('#side').classList.remove('open'); pasteSheet(); };
+  $('#addBtn').onclick = function () { $('#side').classList.remove('open'); editCard(null); };
+
+  // ── card ──
+  function cardHtml(c, opts) {
+    opts = opts || {};
+    var late = isLate(c);
+    var when = c.status === 'posted' ? '<span class="date">Posted ' + esc(fmtDay((c.postedAt || '').slice(0, 10))) + '</span>' : c.planDate ? '<span class="date' + (late ? ' late' : '') + '">' + (late ? 'Missed · ' : '') + esc(fmtDay(c.planDate)) + (c.planTime ? ' ' + esc(c.planTime) : '') + '</span>' : '';
+    var qa = '';
+    if (!opts.noQa) {
+      if (NEXT[c.status]) qa += '<button data-next="' + c.id + '">' + (c.status === 'ready' ? '📅 Plan' : '→ ' + STATUS[NEXT[c.status]].replace(/^\S+\s/, '')) + '</button>';
+      if (c.status === 'scheduled') qa += '<button data-posted="' + c.id + '">✅ Posted</button>';
+      qa += '<button data-del="' + c.id + '" title="Delete">🗑</button>';
+    }
+    return '<div class="kc' + (late ? ' late' : '') + '" data-open="' + c.id + '">' +
+      (opts.thumb && c.imgs && c.imgs[0] ? '<img class="th" src="/.netlify/functions/studio-hq?img=' + esc(c.imgs[0]) + '" alt="">' : '') +
+      '<button class="star' + (c.starred ? ' on' : '') + '" data-star="' + c.id + '" aria-label="Star">★</button>' +
+      '<div class="meta"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="tp">' + esc(TOPIC[c.topic] || '') + '</span></div>' +
+      '<div class="tt">' + esc(c.title) + '</div>' + (c.caption ? '<div class="cp">' + esc(c.caption) + '</div>' : '') +
+      (when ? '<div>' + when + '</div>' : '') + (qa ? '<div class="qa">' + qa + '</div>' : '') + '</div>';
+  }
+  function bindCards(root) {
+    $$('[data-open]', root).forEach(function (el) { el.onclick = function (e) { if (e.target.closest('button')) return; editCard(byId(el.dataset.open)); }; });
+    $$('[data-star]', root).forEach(function (b) { b.onclick = function () { var c = byId(b.dataset.star); quickSave({ id: c.id, starred: !c.starred }); }; });
+    $$('[data-next]', root).forEach(function (b) { b.onclick = function () { var c = byId(b.dataset.next); if (c.status === 'ready') planSheet(c); else quickSave({ id: c.id, status: NEXT[c.status] }, 'Moved to ' + STATUS[NEXT[c.status]].replace(/^\S+\s/, '')); }; });
+    $$('[data-posted]', root).forEach(function (b) { b.onclick = function () { markPosted(byId(b.dataset.posted)); }; });
+    $$('[data-del]', root).forEach(function (b) { b.onclick = function () { del([b.dataset.del]); }; });
+  }
+  async function quickSave(patch, msg) { try { var r = await api('save', { item: patch }); upsert(r.item); if (msg) toast(msg); rerender(); return r.item; } catch (x) { toast(x.message); } }
+  async function del(ids) {
+    try {
+      await api('delete', { ids: ids }); var gone = S.items.filter(function (c) { return ids.indexOf(c.id) >= 0; });
+      S.items = S.items.filter(function (c) { return ids.indexOf(c.id) < 0; }); rerender();
+      toast(ids.length === 1 ? 'Deleted' : ids.length + ' cards deleted', async function () { try { await api('restore', { ids: ids }); gone.forEach(upsert); rerender(); toast('Restored'); } catch (x) { toast(x.message); } });
+    } catch (x) { toast(x.message); }
+  }
+  function markPosted(c) {
+    var s = sheet('<h2>Mark as posted</h2><p class="muted" style="margin:4px 0 12px">' + esc(c.title) + '</p><div class="stack"><div><label for="pl">Link to the post <span class="muted" style="font-weight:400">(optional)</span></label><input id="pl" placeholder="https://www.instagram.com/p/…" value="' + esc(c.postLink || '') + '"></div><div class="row"><button class="btn primary" id="plS">✅ Mark as posted</button><button class="btn ghost" id="plX">Cancel</button></div></div>');
+    $('#plX', s).onclick = function () { s.remove(); };
+    $('#plS', s).onclick = async function () { s.remove(); await quickSave({ id: c.id, status: 'posted', postLink: $('#pl', s).value.trim() }, 'Marked as posted 🎉'); };
+  }
+  function planSheet(c, day) {
+    var s = sheet('<h2>Plan this post</h2><p class="muted" style="margin:4px 0 12px">' + esc(c.title) + '</p><div class="f2"><div><label for="pd">Date</label><input type="date" id="pd" value="' + esc(c.planDate || day || today()) + '"></div><div><label for="pt">Time <span class="muted" style="font-weight:400">(optional)</span></label><input type="time" id="pt" value="' + esc(c.planTime || '') + '"></div></div><div class="row" style="margin-top:12px"><button class="btn primary" id="pS">📅 Schedule</button><button class="btn ghost" id="pX">Cancel</button></div>');
+    $('#pX', s).onclick = function () { s.remove(); };
+    $('#pS', s).onclick = async function () { var d = $('#pd', s).value; if (!d) return; s.remove(); await quickSave({ id: c.id, planDate: d, planTime: $('#pt', s).value }, 'Planned for ' + fmtDay(d)); };
+  }
+
+  // ── Today ──
+  function vToday() {
+    $('#ttl').textContent = 'Today'; $('#topRight').innerHTML = '';
+    var t = today(), ws = weekStart(t);
+    var todays = S.items.filter(function (c) { return c.status === 'scheduled' && c.planDate === t; }).sort(function (a, b) { return (a.planTime || '99').localeCompare(b.planTime || '99'); });
+    var missed = S.items.filter(isLate).sort(function (a, b) { return a.planDate.localeCompare(b.planDate); });
+    var soon = S.items.filter(function (c) { return c.status === 'scheduled' && c.planDate > t && c.planDate <= addDays(t, 7); }).sort(function (a, b) { return (a.planDate + (a.planTime || '')).localeCompare(b.planDate + (b.planTime || '')); });
+    var postedWeek = S.items.filter(function (c) { return c.status === 'posted' && (c.postedAt || '').slice(0, 10) >= ws; }).length;
+    var cnt = function (st) { return S.items.filter(function (c) { return c.status === st; }).length; };
+    var h = new Date().toLocaleString('en-GB', { hour: 'numeric', hour12: false, timeZone: 'Europe/London' });
+    var hi = Number(h) < 12 ? 'Good morning' : Number(h) < 18 ? 'Good afternoon' : 'Good evening';
+    $('#view').innerHTML = '<div class="wrap"><p class="muted">' + hi + ', Seun 👋🏾</p>' +
+      '<div class="stats">' +
+        '<div class="card"><b>' + todays.length + '</b><span>📅 to post today</span></div>' +
+        '<div class="card"><b>' + soon.length + '</b><span>planned next 7 days</span></div>' +
+        '<div class="card"><b>' + cnt('ready') + '</b><span>✅ ready to plan</span></div>' +
+        '<div class="card"><b>' + cnt('idea') + '</b><span>💡 ideas to review</span></div>' +
+        '<div class="card"><b>' + postedWeek + '</b><span>📲 posted this week</span></div>' +
+      '</div>' +
+      (missed.length ? '<div class="h2" style="color:var(--danger)">⚠️ Missed (' + missed.length + ')</div><p class="muted" style="margin:-4px 0 8px">Planned but not marked as posted — post it, mark it posted or reschedule.</p><div class="stack" id="missed">' + missed.map(function (c) { return todayCard(c); }).join('') + '</div>' : '') +
+      '<div class="h2">📅 To post today</div>' + (todays.length ? '<div class="stack" id="todays">' + todays.map(function (c) { return todayCard(c); }).join('') + '</div>' : '<div class="card"><p class="muted">Nothing planned for today.</p>' + (cnt('ready') ? '<button class="btn ghost small" id="planNow" style="margin-top:8px">📅 Plan something from Ready (' + cnt('ready') + ')</button>' : '') + '</div>') +
+      (soon.length ? '<div class="h2">Coming up</div><div class="card" style="padding:4px 14px">' + soon.map(function (c) { return '<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="date" style="min-width:110px">' + esc(fmtDay(c.planDate)) + (c.planTime ? ' ' + esc(c.planTime) : '') + '</span><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><a href="#" data-op="' + c.id + '" style="color:var(--navy);font-weight:600;flex:1;min-width:150px">' + esc(c.title) + '</a></div>'; }).join('') + '</div>' : '') +
+      (!S.items.length ? '<div class="card" style="margin-top:18px;background:var(--gold-l);border-color:#F2D58A"><b>Start here</b><p class="muted" style="margin:4px 0 10px">Copy a reply from ChatGPT with your content ideas and paste it in — HQ splits it into cards you can keep, plan and track.</p><button class="btn gold" id="startPaste">📋 Paste from ChatGPT</button></div>' : '') + '</div>';
+    bindToday();
+    var pn = $('#planNow'); if (pn) pn.onclick = function () { pickSheet(today()); };
+    var sp = $('#startPaste'); if (sp) sp.onclick = function () { pasteSheet(); };
+    $$('[data-op]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); editCard(byId(a.dataset.op)); }; });
+  }
+  function todayCard(c) {
+    var late = isLate(c);
+    return '<div class="card" style="' + (late ? 'border-color:#F2B8B3;background:#FFF8F7' : '') + '"><div class="row" style="justify-content:space-between"><div class="row"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="date' + (late ? ' late' : '') + '">' + esc(fmtDay(c.planDate)) + (c.planTime ? ' · ' + esc(c.planTime) : '') + '</span></div><button class="btn link" data-op="' + c.id + '">Open</button></div>' +
+      '<div style="font-weight:700;font-size:16px;margin:6px 0 2px">' + esc(c.title) + '</div>' + (c.caption ? '<div class="muted" style="font-size:14px;white-space:pre-wrap;max-height:4.6em;overflow:hidden">' + esc(c.caption) + '</div>' : '') +
+      '<div class="posttools" style="margin-top:10px">' + postTools(c) + '</div></div>';
+  }
+  function postTools(c) {
+    return '<button class="btn small primary" data-cc="' + c.id + '">📋 Copy caption</button>' +
+      (c.imgs && c.imgs.length ? '<button class="btn small ghost" data-dl="' + c.id + '">⬇ Download image' + (c.imgs.length > 1 ? 's' : '') + '</button>' : '') +
+      '<a class="btn small ghost" href="https://www.instagram.com/" target="_blank" rel="noopener">Open Instagram ↗</a>' +
+      '<button class="btn small ghost" data-posted="' + c.id + '">✅ Mark as posted</button>' +
+      (isLate(c) ? '<button class="btn small ghost" data-resched="' + c.id + '">↻ Reschedule</button>' : '');
+  }
+  function bindToday(root) {
+    bindPostTools(root);
+    $$('[data-op]', root).forEach(function (b) { b.onclick = function (e) { e.preventDefault(); editCard(byId(b.dataset.op)); }; });
+  }
+  function bindPostTools(root) {
+    $$('[data-cc]', root).forEach(function (b) { b.onclick = function () { copy(HQSplit.fullCaption(byId(b.dataset.cc))); }; });
+    $$('[data-dl]', root).forEach(function (b) { b.onclick = function () { var c = byId(b.dataset.dl); c.imgs.forEach(function (id, i) { downloadImg(id, (c.title || 'auntie-tobi').replace(/[^\w-]+/g, '-').slice(0, 40) + (c.imgs.length > 1 ? '-' + (i + 1) : '')); }); }; });
+    $$('[data-posted]', root).forEach(function (b) { b.onclick = function () { markPosted(byId(b.dataset.posted)); }; });
+    $$('[data-resched]', root).forEach(function (b) { b.onclick = function () { planSheet(byId(b.dataset.resched)); }; });
+  }
+  async function copy(t) { try { await navigator.clipboard.writeText(t); toast('Caption copied — paste it into Instagram'); } catch (e) { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); toast('Caption copied'); } catch (x) {} a.remove(); } }
+  async function downloadImg(id, name) {
+    try { var r = await fetch('/.netlify/functions/studio-hq?img=' + encodeURIComponent(id), { credentials: 'same-origin' }); var b = await r.blob(); var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name + (/png/.test(b.type) ? '.png' : '.jpg'); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); } catch (e) { toast('Couldn’t download the image'); }
+  }
+
+  // ── Board ──
+  function filtered() {
+    var f = S.filter, q = f.q.toLowerCase();
+    return S.items.filter(function (c) {
+      if (f.type && c.type !== f.type) return false;
+      if (f.topic && c.topic !== f.topic) return false;
+      if (f.star && !c.starred) return false;
+      if (q && (c.title + ' ' + c.caption + ' ' + (c.hashtags || []).join(' ') + ' ' + c.keywords + ' ' + c.notes).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+  function vBoard() {
+    $('#ttl').textContent = 'Board'; $('#topRight').innerHTML = '<button class="btn small ghost" id="arch">' + (S.showArchived ? 'Hide archived' : '🗄️ Archived') + '</button>';
+    $('#arch').onclick = function () { S.showArchived = !S.showArchived; vBoard(); };
+    var list = filtered(), cols = ['idea', 'drafting', 'ready', 'scheduled', 'posted'].concat(S.showArchived ? ['archived'] : []);
+    var colItems = function (st) {
+      var l = list.filter(function (c) { return c.status === st; });
+      if (st === 'scheduled') l.sort(function (a, b) { return (a.planDate + (a.planTime || '')).localeCompare(b.planDate + (b.planTime || '')); });
+      else if (st === 'posted') l.sort(function (a, b) { return (b.postedAt || '').localeCompare(a.postedAt || ''); }).splice(20);
+      else l.sort(function (a, b) { return (b.starred ? 1 : 0) - (a.starred ? 1 : 0) || (b.updatedAt || '').localeCompare(a.updatedAt || ''); });
+      return l;
+    };
+    var f = S.filter;
+    $('#view').innerHTML = '<div class="wrap" style="max-width:none">' +
+      '<div class="row" style="margin-bottom:10px"><input id="q" placeholder="Search ideas, captions, hashtags…" value="' + esc(f.q) + '" style="max-width:300px">' +
+        '<select id="fType" style="width:auto"><option value="">All types</option>' + Object.keys(TYPE).map(function (k) { return '<option value="' + k + '"' + (f.type === k ? ' selected' : '') + '>' + TYPE[k] + '</option>'; }).join('') + '</select>' +
+        '<select id="fTopic" style="width:auto"><option value="">All topics</option>' + Object.keys(TOPIC).map(function (k) { return '<option value="' + k + '"' + (f.topic === k ? ' selected' : '') + '>' + TOPIC[k] + '</option>'; }).join('') + '</select>' +
+        '<button class="chip" id="fStar" aria-pressed="' + f.star + '">★ Starred</button></div>' +
+      '<div class="tabs">' + cols.map(function (st) { return '<button class="chip" data-tab="' + st + '" aria-pressed="' + (S.tab === st) + '">' + STATUS[st] + ' (' + colItems(st).length + ')</button>'; }).join('') + '</div>' +
+      '<div class="board" style="grid-template-columns:repeat(' + cols.length + ',minmax(220px,1fr))">' + cols.map(function (st) {
+        var l = colItems(st);
+        return '<div class="col' + (S.tab === st ? ' on' : '') + '"><h3>' + STATUS[st] + '<span>' + l.length + '</span></h3>' +
+          (st === 'idea' && l.length > 1 ? '<button class="btn small ghost" data-review="1" style="align-self:flex-start">👀 Review one by one</button>' : '') +
+          (l.length ? l.map(function (c) { return cardHtml(c); }).join('') : '<div class="empty">' + (st === 'idea' ? 'Paste from ChatGPT to add ideas.' : 'Nothing here yet.') + '</div>') + '</div>';
+      }).join('') + '</div></div>';
+    var qi = $('#q'), qt; qi.oninput = function () { clearTimeout(qt); qt = setTimeout(function () { S.filter.q = qi.value; vBoard(); var n = $('#q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+    $('#fType').onchange = function () { S.filter.type = this.value; vBoard(); };
+    $('#fTopic').onchange = function () { S.filter.topic = this.value; vBoard(); };
+    $('#fStar').onclick = function () { S.filter.star = !S.filter.star; vBoard(); };
+    $$('[data-tab]').forEach(function (b) { b.onclick = function () { S.tab = b.dataset.tab; vBoard(); }; });
+    $$('[data-review]').forEach(function (b) { b.onclick = function () { review(colItems('idea').map(function (c) { return c.id; }), 0); }; });
+    bindCards($('#view'));
+  }
+  // Review ideas one at a time: keep (→ drafting / ready), skip or delete.
+  function review(ids, i) {
+    ids = ids.filter(function (id) { return byId(id); });
+    if (i >= ids.length) { toast('All ideas reviewed 🎉'); rerender(); return; }
+    var c = byId(ids[i]);
+    var s = sheet('<div class="row" style="justify-content:space-between"><h2>Review ideas</h2><span class="muted">' + (i + 1) + ' of ' + ids.length + '</span></div>' +
+      '<div class="card" style="margin:12px 0"><div class="meta row"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="tp">' + esc(TOPIC[c.topic]) + '</span></div><div style="font-weight:700;font-size:17px;margin:6px 0">' + esc(c.title) + '</div><div style="white-space:pre-wrap;font-size:14px;max-height:40vh;overflow:auto">' + esc(c.caption) + '</div>' + (c.keywords ? '<p class="muted" style="font-size:13px;margin-top:6px">' + esc(c.keywords) + '</p>' : '') + (c.hashtags.length ? '<p class="muted" style="font-size:13px">' + esc(c.hashtags.join(' ')) + '</p>' : '') + '</div>' +
+      '<div class="row"><button class="btn primary" data-k="ready">✅ Keep — Ready</button><button class="btn ghost" data-k="drafting">✍️ Keep — needs work</button><button class="btn ghost" data-k="skip">Skip</button><button class="btn ghost danger" data-k="del">🗑 Delete</button><button class="btn link" data-k="stop" style="margin-left:auto">Stop</button></div>');
+    $$('[data-k]', s).forEach(function (b) {
+      b.onclick = async function () {
+        var k = b.dataset.k; s.remove();
+        if (k === 'stop') { rerender(); return; }
+        if (k === 'del') { try { await api('delete', { ids: [c.id] }); S.items = S.items.filter(function (x) { return x.id !== c.id; }); } catch (x) { toast(x.message); } }
+        else if (k !== 'skip') { try { upsert((await api('save', { item: { id: c.id, status: k } })).item); } catch (x) { toast(x.message); } }
+        review(ids, k === 'del' ? i : i + 1); // deleted cards drop out of the list, so stay on the same position
+      };
+    });
+  }
+
+  // ── Calendar ──
+  function vCalendar() {
+    var m = S.month, first = m + '-01';
+    var title = new Date(first + 'T12:00:00Z').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    $('#ttl').textContent = 'Calendar';
+    $('#topRight').innerHTML = '<div class="row" style="flex-wrap:nowrap"><button class="btn small ghost" id="mPrev">‹</button><b style="min-width:130px;text-align:center">' + esc(title) + '</b><button class="btn small ghost" id="mNext">›</button><button class="btn small ghost" id="mToday">Today</button></div>';
+    var start = weekStart(first), days = [];
+    for (var d = start; days.length < 42; d = addDays(d, 1)) { days.push(d); if (days.length >= 35 && d.slice(0, 7) !== m && days.length % 7 === 0) break; }
+    var on = function (day) {
+      return S.items.filter(function (c) { return (c.status === 'scheduled' && c.planDate === day) || (c.status === 'posted' && (c.postedAt || '').slice(0, 10) === day); })
+        .sort(function (a, b) { return (a.planTime || '99').localeCompare(b.planTime || '99'); });
+    };
+    var ev = function (c) { return '<button class="ev ' + (c.status === 'posted' ? 'p' : isLate(c) ? 'late' : 's') + '" data-op="' + c.id + '" title="' + esc(c.title) + '">' + (c.status === 'posted' ? '✓ ' : '') + (c.planTime && c.status !== 'posted' ? esc(c.planTime) + ' ' : '') + esc(c.title) + '</button>'; };
+    var monthDays = days.filter(function (x) { return x.slice(0, 7) === m; });
+    $('#view').innerHTML = '<div class="wrap" style="max-width:1200px"><p class="muted" style="margin-bottom:10px">Yellow = planned · green = posted · red = missed. Tap ＋ on a day to plan a Ready idea there.</p>' +
+      '<div class="cal">' + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(function (x) { return '<div class="dh">' + x + '</div>'; }).join('') +
+      days.map(function (day) { var l = on(day); return '<div class="d' + (day.slice(0, 7) !== m ? ' out' : '') + (day === today() ? ' today' : '') + '"><div class="n">' + Number(day.slice(8)) + '<button class="add" data-add="' + day + '" aria-label="Plan a post">＋</button></div>' + l.map(ev).join('') + '</div>'; }).join('') + '</div>' +
+      '<div class="agenda">' + monthDays.map(function (day) { var l = on(day); return '<div class="card" style="margin-bottom:8px' + (day === today() ? ';border-color:var(--green)' : '') + '"><div class="row" style="justify-content:space-between"><b>' + esc(new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + (day === today() ? ' · Today' : '') + '</b><button class="btn link" data-add="' + day + '">＋ Plan</button></div>' + (l.length ? '<div class="stack" style="margin-top:6px">' + l.map(ev).join('') + '</div>' : '') + '</div>'; }).join('') + '</div></div>';
+    var mv = function (n) { var dd = new Date(S.month + '-15T12:00:00Z'); dd.setUTCMonth(dd.getUTCMonth() + n); S.month = dd.toISOString().slice(0, 7); vCalendar(); };
+    $('#mPrev').onclick = function () { mv(-1); }; $('#mNext').onclick = function () { mv(1); }; $('#mToday').onclick = function () { S.month = today().slice(0, 7); vCalendar(); };
+    $$('[data-add]').forEach(function (b) { b.onclick = function () { pickSheet(b.dataset.add); }; });
+    $$('[data-op]').forEach(function (b) { b.onclick = function () { editCard(byId(b.dataset.op)); }; });
+  }
+  // Pick an idea to plan on a day.
+  function pickSheet(day) {
+    var pool = S.items.filter(function (c) { return ['ready', 'drafting', 'idea'].indexOf(c.status) >= 0; }).sort(function (a, b) { var o = { ready: 0, drafting: 1, idea: 2 }; return o[a.status] - o[b.status] || (b.starred ? 1 : 0) - (a.starred ? 1 : 0); });
+    var s = sheet('<h2>Plan a post for ' + esc(fmtDay(day)) + '</h2><div class="row" style="margin:10px 0"><input id="pq" placeholder="Search…" style="flex:1;min-width:160px"><input type="time" id="ptm" style="width:auto" aria-label="Time"></div><div class="stack" id="plist"></div>');
+    var draw = function () {
+      var q = $('#pq', s).value.toLowerCase();
+      var l = pool.filter(function (c) { return !q || (c.title + ' ' + c.caption).toLowerCase().indexOf(q) > -1; });
+      $('#plist', s).innerHTML = l.length ? l.slice(0, 50).map(function (c) { return '<button class="kc" data-pick="' + c.id + '" style="text-align:left;width:100%"><div class="meta"><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><span class="tp">' + STATUS[c.status] + '</span></div><div class="tt">' + esc(c.title) + '</div></button>'; }).join('') : '<p class="muted">No ideas to plan — paste some from ChatGPT first.</p>';
+      $$('[data-pick]', s).forEach(function (b) { b.onclick = async function () { s.remove(); await quickSave({ id: b.dataset.pick, planDate: day, planTime: $('#ptm', s).value }, 'Planned for ' + fmtDay(day)); }; });
+    };
+    $('#pq', s).oninput = draw; draw();
+  }
+
+  // ── Posted ──
+  function vPosted() {
+    $('#ttl').textContent = 'Posted'; $('#topRight').innerHTML = '';
+    var posted = S.items.filter(function (c) { return c.status === 'posted'; }).sort(function (a, b) { return (b.postedAt || '').localeCompare(a.postedAt || ''); });
+    var t = today(), ws = weekStart(t), ms = t.slice(0, 7);
+    var wk = posted.filter(function (c) { return (c.postedAt || '').slice(0, 10) >= ws; }), mo = posted.filter(function (c) { return (c.postedAt || '').slice(0, 7) === ms; });
+    var byType = {}; mo.forEach(function (c) { byType[c.type] = (byType[c.type] || 0) + 1; });
+    var groups = {}; posted.forEach(function (c) { var k = (c.postedAt || '').slice(0, 7); (groups[k] = groups[k] || []).push(c); });
+    $('#view').innerHTML = '<div class="wrap"><div class="stats">' +
+      '<div class="card"><b>' + wk.length + '</b><span>posted this week</span></div><div class="card"><b>' + mo.length + '</b><span>posted this month</span></div>' +
+      '<div class="card"><b>' + posted.length + '</b><span>posted in total</span></div>' +
+      '<div class="card"><span style="display:block;margin-bottom:4px">This month by type</span>' + (Object.keys(byType).length ? Object.keys(byType).map(function (k) { return '<span class="t ' + k + '" style="margin:2px 4px 0 0">' + TYPE[k] + ' ' + byType[k] + '</span>'; }).join('') : '<span>—</span>') + '</div></div>' +
+      (posted.length ? Object.keys(groups).map(function (k) {
+        return '<div class="h2">' + esc(new Date(k + '-15T12:00:00Z').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })) + '</div><div class="card" style="padding:2px 14px">' + groups[k].map(function (c) {
+          return '<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line)"><span class="date" style="min-width:96px">' + esc(new Date(c.postedAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + '</span><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><a href="#" data-op="' + c.id + '" style="color:var(--navy);font-weight:600;flex:1;min-width:150px">' + esc(c.title) + '</a>' + (c.postLink ? '<a href="' + esc(c.postLink) + '" target="_blank" rel="noopener" class="btn small ghost">View post ↗</a>' : '') + '</div>';
+        }).join('') + '</div>';
+      }).join('') : '<div class="card"><p class="muted">When you mark a post as posted, it shows here with its date and link.</p></div>') + '</div>';
+    $$('[data-op]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); editCard(byId(a.dataset.op)); }; });
+  }
+
+  // ── paste from ChatGPT ──
+  function pasteSheet() {
+    var s = sheet('<h2>📋 Paste from ChatGPT</h2><p class="muted" style="margin:4px 0 10px">Paste a whole reply — HQ splits it into separate idea cards. You can check and tidy them before saving. Free — no AI used.</p>' +
+      '<textarea id="px" rows="12" placeholder="Paste here…"></textarea><div class="row" style="margin-top:10px"><button class="btn primary" id="pxGo">Sort into cards →</button><button class="btn ghost" id="pxX">Cancel</button></div>');
+    $('#pxX', s).onclick = function () { s.remove(); };
+    $('#px', s).focus();
+    $('#pxGo', s).onclick = function () { var t = $('#px', s).value; if (!t.trim()) { $('#px', s).focus(); return; } s.remove(); previewSheet(t, 'auto'); };
+  }
+  function previewSheet(text, mode) {
+    var cards = HQSplit.split(text, { mode: mode });
+    var s = sheet('<div id="pvw"></div>');
+    var draw = function () {
+      $('#pvw', s).innerHTML = '<div class="row" style="justify-content:space-between"><h2>Found ' + cards.length + ' idea' + (cards.length === 1 ? '' : 's') + '</h2><div class="row">' + (mode === 'one' ? '<button class="btn small ghost" id="pvAuto">Split into ideas</button>' : '<button class="btn small ghost" id="pvOne">Keep as one card</button>') + '<button class="btn small ghost" id="pvBack">← Edit paste</button></div></div>' +
+        '<p class="muted" style="margin:4px 0 10px">Remove ones you don’t want, merge any that were split wrongly, and fix the type. Everything saves to 💡 Ideas.</p><div class="stack">' +
+        cards.map(function (c, i) {
+          return '<div class="pv"><div class="pvh"><input class="pt" data-pt="' + i + '" value="' + esc(c.title) + '" aria-label="Title">' +
+            '<select data-ty="' + i + '" aria-label="Type">' + Object.keys(TYPE).map(function (k) { return '<option value="' + k + '"' + (c.type === k ? ' selected' : '') + '>' + TYPE[k] + '</option>'; }).join('') + '</select>' +
+            '<select data-tp="' + i + '" aria-label="Topic">' + Object.keys(TOPIC).map(function (k) { return '<option value="' + k + '"' + (c.topic === k ? ' selected' : '') + '>' + TOPIC[k] + '</option>'; }).join('') + '</select></div>' +
+            '<textarea data-cp="' + i + '" rows="' + Math.min(8, Math.max(2, (c.caption.match(/\n/g) || []).length + 1)) + '">' + esc(c.caption) + '</textarea>' +
+            (c.keywords ? '<div class="tags">🔑 ' + esc(c.keywords) + '</div>' : '') + (c.hashtags.length ? '<div class="tags"># ' + esc(c.hashtags.join(' ')) + '</div>' : '') +
+            '<div class="row"><button class="btn small ghost danger" data-rm="' + i + '">🗑 Remove</button>' + (i < cards.length - 1 ? '<button class="btn small ghost" data-mg="' + i + '">⤵ Merge with next</button>' : '') + '</div></div>';
+        }).join('') + '</div>' +
+        '<div class="row" style="position:sticky;bottom:-18px;background:var(--cream);padding:12px 0 2px;margin-top:10px"><button class="btn primary" id="pvSave"' + (cards.length ? '' : ' disabled') + '>Save ' + cards.length + ' card' + (cards.length === 1 ? '' : 's') + ' to Ideas</button><button class="btn ghost" id="pvX">Cancel</button></div>';
+      var keep = function () { cards.forEach(function (c, i) { c.title = $('[data-pt="' + i + '"]', s).value; c.type = $('[data-ty="' + i + '"]', s).value; c.topic = $('[data-tp="' + i + '"]', s).value; c.caption = $('[data-cp="' + i + '"]', s).value; }); };
+      $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { keep(); cards.splice(Number(b.dataset.rm), 1); draw(); }; });
+      $$('[data-mg]', s).forEach(function (b) { b.onclick = function () { keep(); var i = Number(b.dataset.mg); cards.splice(i, 2, HQSplit.merge(cards[i], cards[i + 1])); draw(); }; });
+      var one = $('#pvOne', s); if (one) one.onclick = function () { s.remove(); previewSheet(text, 'one'); };
+      var au = $('#pvAuto', s); if (au) au.onclick = function () { s.remove(); previewSheet(text, 'auto'); };
+      $('#pvBack', s).onclick = function () { s.remove(); pasteSheet(); setTimeout(function () { var p = $('#px'); if (p) p.value = text; }, 0); };
+      $('#pvX', s).onclick = function () { if (confirm('Discard these ideas?')) s.remove(); };
+      $('#pvSave', s).onclick = async function () {
+        keep(); this.disabled = true;
+        try { var r = await api('save-many', { items: cards, source: 'chatgpt' }); r.items.forEach(upsert); s.remove(); toast(r.items.length + ' idea' + (r.items.length === 1 ? '' : 's') + ' saved 💡'); S.tab = 'idea'; go('board'); }
+        catch (x) { toast(x.message); this.disabled = false; }
+      };
+    };
+    draw();
+  }
+
+  // ── card editor ──
+  function editCard(c) {
+    var isNew = !c; c = c || { title: '', type: 'post', topic: 'community', caption: '', hashtags: [], keywords: '', notes: '', status: 'idea', imgs: [], planDate: '', planTime: '', postLink: '' };
+    var imgs = (c.imgs || []).slice();
+    var s = sheet('<div class="row" style="justify-content:space-between"><h2>' + (isNew ? '＋ New idea' : 'Edit card') + '</h2>' + (isNew ? '' : '<button class="btn small ghost" id="eStar">' + (c.starred ? '★ Starred' : '☆ Star') + '</button>') + '</div>' +
+      (!isNew && ['ready', 'scheduled'].indexOf(c.status) >= 0 ? '<div class="posttools" style="margin-top:10px">' + postTools(c) + '</div>' : '') +
+      '<div class="stack" style="margin-top:12px">' +
+      '<div><label for="eT">Title</label><input id="eT" value="' + esc(c.title) + '" maxlength="140"></div>' +
+      '<div class="f3"><div><label for="eTy">Type</label><select id="eTy">' + Object.keys(TYPE).map(function (k) { return '<option value="' + k + '"' + (c.type === k ? ' selected' : '') + '>' + TYPE[k] + '</option>'; }).join('') + '</select></div>' +
+        '<div><label for="eTp">Topic</label><select id="eTp">' + Object.keys(TOPIC).map(function (k) { return '<option value="' + k + '"' + (c.topic === k ? ' selected' : '') + '>' + TOPIC[k] + '</option>'; }).join('') + '</select></div>' +
+        '<div><label for="eSt">Stage</label><select id="eSt">' + Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + (c.status === k ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('') + '</select></div></div>' +
+      '<div><label for="eC">Caption / script</label><textarea id="eC" rows="8">' + esc(c.caption) + '</textarea></div>' +
+      '<div class="f2"><div><label for="eK">Keyword line</label><input id="eK" value="' + esc(c.keywords) + '"></div><div><label for="eH">Hashtags</label><input id="eH" value="' + esc((c.hashtags || []).join(' ')) + '" placeholder="#NigeriansInUK #AuntieTobi"></div></div>' +
+      '<div class="f2"><div><label for="eD">Post date</label><input type="date" id="eD" value="' + esc(c.planDate) + '"></div><div><label for="eTm">Time</label><input type="time" id="eTm" value="' + esc(c.planTime) + '"></div></div>' +
+      '<div id="eLinkBox"' + (c.status === 'posted' ? '' : ' class="hidden"') + '><label for="eL">Link to the post</label><input id="eL" value="' + esc(c.postLink) + '" placeholder="https://www.instagram.com/p/…"></div>' +
+      '<div><label>Images</label><div class="imgs" id="eImgs"></div><button class="btn small ghost" id="eAddImg" style="margin-top:6px">＋ Add image</button><input type="file" id="eFile" accept="image/*" multiple class="hidden"></div>' +
+      '<div><label for="eN">Notes</label><textarea id="eN" rows="2" placeholder="Anything to remember — who to tag, what photo to use…">' + esc(c.notes) + '</textarea></div>' +
+      '<div class="row" style="position:sticky;bottom:-18px;background:var(--cream);padding:12px 0 2px"><button class="btn primary" id="eS">Save</button><button class="btn ghost" id="eX">Cancel</button>' + (isNew ? '' : '<button class="btn ghost danger" id="eDel" style="margin-left:auto">🗑 Delete</button>') + '</div></div>');
+    var drawImgs = function () { $('#eImgs', s).innerHTML = imgs.map(function (id, i) { return '<div><img src="/.netlify/functions/studio-hq?img=' + esc(id) + '" alt=""><button data-ri="' + i + '" aria-label="Remove image">×</button></div>'; }).join(''); $$('[data-ri]', s).forEach(function (b) { b.onclick = function () { imgs.splice(Number(b.dataset.ri), 1); drawImgs(); }; }); };
+    drawImgs();
+    if (!isNew) bindPostTools(s);
+    $('#eSt', s).onchange = function () { $('#eLinkBox', s).classList.toggle('hidden', this.value !== 'posted'); };
+    $('#eAddImg', s).onclick = function () { $('#eFile', s).click(); };
+    $('#eFile', s).onchange = async function () {
+      var files = Array.prototype.slice.call(this.files, 0, 6 - imgs.length); this.value = '';
+      for (var i = 0; i < files.length; i++) { try { var d = await resize(files[i], 1600); imgs.push((await api('img', { dataUrl: d })).id); drawImgs(); } catch (x) { toast(x.message); } }
+    };
+    var st = $('#eStar', s); if (st) st.onclick = function () { c.starred = !c.starred; st.textContent = c.starred ? '★ Starred' : '☆ Star'; };
+    $('#eX', s).onclick = function () { s.remove(); };
+    var dl = $('#eDel', s); if (dl) dl.onclick = function () { s.remove(); del([c.id]); };
+    $('#eS', s).onclick = async function () {
+      var item = { title: $('#eT', s).value, type: $('#eTy', s).value, topic: $('#eTp', s).value, status: $('#eSt', s).value, caption: $('#eC', s).value, keywords: $('#eK', s).value, hashtags: $('#eH', s).value, planDate: $('#eD', s).value, planTime: $('#eTm', s).value, postLink: $('#eL', s).value, notes: $('#eN', s).value, imgs: imgs, starred: !!c.starred };
+      if (!isNew) item.id = c.id;
+      // Picking "Scheduled" needs a date.
+      if (item.status === 'scheduled' && !item.planDate) { toast('Add a post date to schedule it'); $('#eD', s).focus(); return; }
+      this.disabled = true;
+      try { var r = await api('save', { item: item }); upsert(r.item); s.remove(); toast(isNew ? 'Idea added 💡' : 'Saved'); rerender(); } catch (x) { toast(x.message); this.disabled = false; }
+    };
+    if (isNew) $('#eT', s).focus();
+  }
+  function resize(file, max) {
+    return new Promise(function (ok, bad) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () { var r = Math.min(1, max / Math.max(img.width, img.height)); var c = document.createElement('canvas'); c.width = Math.round(img.width * r); c.height = Math.round(img.height * r); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', 0.88)); };
+      img.onerror = function () { bad(new Error('That image couldn’t be opened.')); }; img.src = url;
+    });
+  }
+  function sheet(html) { var s = document.createElement('div'); s.className = 'scrim'; s.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>'; document.body.appendChild(s); s.addEventListener('click', function (e) { if (e.target === s) s.remove(); }); return s; }
+  boot();
+})();
+</script>
+</body>
+</html>

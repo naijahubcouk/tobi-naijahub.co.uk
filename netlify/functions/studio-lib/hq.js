@@ -1,0 +1,154 @@
+'use strict';
+/*
+ * Auntie Tobi HQ — Seun's private Content Hub (/hq). Admin only. No AI.
+ * Paste content ideas from ChatGPT (split into cards in the browser by /hq-split.js), review, plan, post, track.
+ *
+ *   hq/content    { items: { <id>: card } }
+ *   hq/img/<id>   { dataUrl, at }     (images on cards, resized in the browser)
+ *
+ * card: { id, title, type, topic, caption, hashtags: [], keywords, notes, status, starred, source,
+ *         planDate, planTime, postedAt, postLink, imgs: [], createdAt, updatedAt, deletedAt? }
+ * status: idea | drafting | ready | scheduled | posted | archived
+ */
+const crypto = require('crypto');
+const core = require('./core');
+const { HttpError, cas, getJson, setJson, cleanText } = core;
+
+const KEY = 'hq/content';
+const TYPES = ['post', 'reel', 'carousel', 'story', 'blog'];
+const TOPICS = ['discovery', 'uk-info', 'community', 'promo', 'event', 'motivation'];
+const STATUSES = ['idea', 'drafting', 'ready', 'scheduled', 'posted', 'archived'];
+const SOURCES = ['chatgpt', 'me'];
+const MAX_ITEMS = 3000, TRASH_DAYS = 30;
+const newId = p => `${p}${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
+const isDay = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
+const isTime = t => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(t || ''));
+const multi = (s, n) => String(s || '').replace(/\r/g, '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, n);
+
+function clean(raw, prev) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  const p = prev || {};
+  const pick = (k, list, def) => (list.includes(raw[k]) ? raw[k] : (raw[k] === undefined ? (p[k] || def) : def));
+  const out = {
+    title: raw.title !== undefined ? cleanText(raw.title, 140) : (p.title || ''),
+    type: pick('type', TYPES, 'post'),
+    topic: pick('topic', TOPICS, 'community'),
+    caption: raw.caption !== undefined ? multi(raw.caption, 8000) : (p.caption || ''),
+    hashtags: raw.hashtags !== undefined ? [...new Set((Array.isArray(raw.hashtags) ? raw.hashtags : String(raw.hashtags || '').split(/[\s,]+/))
+      .map(t => String(t).trim()).filter(Boolean).map(t => (t.startsWith('#') ? t : `#${t}`)).filter(t => /^#[0-9A-Za-z_À-ɏ]{1,60}$/.test(t)))].slice(0, 40) : (p.hashtags || []),
+    keywords: raw.keywords !== undefined ? cleanText(raw.keywords, 300) : (p.keywords || ''),
+    notes: raw.notes !== undefined ? multi(raw.notes, 2000) : (p.notes || ''),
+    status: pick('status', STATUSES, 'idea'),
+    starred: raw.starred !== undefined ? !!raw.starred : !!p.starred,
+    planDate: raw.planDate !== undefined ? (isDay(raw.planDate) ? raw.planDate : '') : (p.planDate || ''),
+    planTime: raw.planTime !== undefined ? (isTime(raw.planTime) ? raw.planTime : '') : (p.planTime || ''),
+    postLink: raw.postLink !== undefined ? (/^https?:\/\/\S{3,300}$/i.test(String(raw.postLink).trim()) ? String(raw.postLink).trim() : '') : (p.postLink || ''),
+    imgs: raw.imgs !== undefined ? (Array.isArray(raw.imgs) ? raw.imgs : []).filter(id => /^i[a-z0-9]{6,30}$/.test(String(id))).slice(0, 6) : (p.imgs || []),
+  };
+  if (!out.title) out.title = (out.caption.split('\n').find(l => l.trim()) || 'Untitled idea').replace(/[*_#>]/g, '').trim().slice(0, 80) || 'Untitled idea';
+  // A date on the plan makes it "scheduled"; taking the date off sends it back to "ready".
+  if (raw.planDate !== undefined) {
+    if (out.planDate && ['idea', 'drafting', 'ready'].includes(out.status)) out.status = 'scheduled';
+    if (!out.planDate && out.status === 'scheduled') out.status = 'ready';
+  }
+  if (out.status === 'posted' && p.status !== 'posted') out.postedAt = raw.postedAt && isDay(String(raw.postedAt).slice(0, 10)) ? String(raw.postedAt) : core.nowIso();
+  else if (out.status === 'posted') out.postedAt = p.postedAt || core.nowIso();
+  else out.postedAt = '';
+  return out;
+}
+
+async function load() { return (await getJson(KEY)) || { items: {} }; }
+function live(items) { return Object.values(items).filter(c => !c.deletedAt); }
+
+async function list() {
+  const s = await load();
+  return live(s.items).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+}
+
+async function save(raw) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  let out;
+  await cas(KEY, cur => {
+    const s = cur ? { items: { ...cur.items } } : { items: {} };
+    const now = core.nowIso();
+    if (raw.id) {
+      const prev = s.items[raw.id];
+      if (!prev || prev.deletedAt) throw new HttpError(404, 'not_found', 'That card no longer exists.');
+      out = { ...prev, ...clean(raw, prev), id: prev.id, source: prev.source, createdAt: prev.createdAt, updatedAt: now };
+    } else {
+      if (live(s.items).length >= MAX_ITEMS) throw new HttpError(400, 'too_many', 'You have a lot of cards — delete or archive some first.');
+      const c = clean(raw);
+      if (!c.caption && c.title === 'Untitled idea') throw new HttpError(400, 'invalid', 'Type or paste the idea first.');
+      out = { id: newId('k'), ...c, source: SOURCES.includes(raw.source) ? raw.source : 'me', createdAt: now, updatedAt: now };
+    }
+    s.items[out.id] = out;
+    return tidy(s);
+  });
+  return out;
+}
+
+// Several cards at once (from the paste preview).
+async function saveMany(cards, source) {
+  cards = (Array.isArray(cards) ? cards : []).slice(0, 60);
+  if (!cards.length) throw new HttpError(400, 'invalid', 'Nothing to save.');
+  const out = [];
+  await cas(KEY, cur => {
+    const s = cur ? { items: { ...cur.items } } : { items: {} };
+    if (live(s.items).length + cards.length > MAX_ITEMS) throw new HttpError(400, 'too_many', 'You have a lot of cards — delete or archive some first.');
+    const now = core.nowIso();
+    out.length = 0;
+    for (const raw of cards) {
+      const c = clean({ ...raw, status: 'idea' });
+      if (!c.caption && c.title === 'Untitled idea') continue;
+      const card = { id: newId('k'), ...c, source: SOURCES.includes(source) ? source : 'chatgpt', createdAt: now, updatedAt: now };
+      s.items[card.id] = card; out.push(card);
+    }
+    return tidy(s);
+  });
+  return out;
+}
+
+// Delete goes to a 30-day bin so it can be undone.
+async function remove(ids, restore) {
+  ids = (Array.isArray(ids) ? ids : [ids]).map(String).slice(0, 200);
+  let n = 0;
+  await cas(KEY, cur => {
+    if (!cur) return undefined;
+    const s = { items: { ...cur.items } };
+    for (const id of ids) {
+      const c = s.items[id]; if (!c) continue;
+      s.items[id] = restore ? (() => { const x = { ...c }; delete x.deletedAt; return x; })() : { ...c, deletedAt: core.nowIso() };
+      n++;
+    }
+    return tidy(s);
+  });
+  return n;
+}
+
+function tidy(s) {
+  const cutoff = Date.now() - TRASH_DAYS * core.DAY;
+  for (const [id, c] of Object.entries(s.items)) {
+    if (c.deletedAt && Date.parse(c.deletedAt) < cutoff) {
+      delete s.items[id];
+      for (const img of c.imgs || []) core.del(`hq/img/${img}`).catch(() => {});
+    }
+  }
+  return s;
+}
+
+async function saveImage(dataUrl) {
+  if (!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(String(dataUrl || ''))) throw new HttpError(400, 'invalid', 'Please upload a PNG, JPG or WebP image.');
+  if (dataUrl.length > 2200000) throw new HttpError(413, 'too_large', 'That image is too large.');
+  const id = newId('i');
+  await setJson(`hq/img/${id}`, { dataUrl, at: core.nowIso() });
+  return id;
+}
+async function getImage(id) { if (!/^i[a-z0-9]{6,30}$/.test(String(id || ''))) return null; return getJson(`hq/img/${id}`); }
+
+// For the Admin Today list: posts planned for today that aren't posted yet.
+async function plannedToday() {
+  const day = core.dayKey();
+  return live((await load()).items).filter(c => c.status === 'scheduled' && c.planDate === day).map(c => ({ id: c.id, title: c.title, time: c.planTime || '' }));
+}
+
+module.exports = { list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };

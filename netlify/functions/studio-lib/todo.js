@@ -102,6 +102,11 @@ async function refresh(data) {
     if (inv.newTodo) parts.push(`${inv.newTodo} new business${inv.newTodo === 1 ? '' : 'es'} to invite`);
     add(`invites:${day}`, 'invites', `Business Club invites: ${parts.join(', ')}`, inv);
   }
+  // Content Hub (HQ): posts planned for today, not marked posted yet
+  if (data.postsToday && data.postsToday.length) {
+    const n = data.postsToday.length;
+    add(`posts:${day}`, 'posts', `${n} post${n === 1 ? '' : 's'} planned for today: ${data.postsToday.slice(0, 3).map(p => (p.time ? `${p.time} ` : '') + p.title).join(' · ')}${n > 3 ? '…' : ''}`, { n });
+  }
   // Lessons ready for approval
   const ready = data.lessonsReady || [];
   if (ready.length === 1) add(`lesson:${ready[0].id}`, 'lesson', `Approve lesson: ${ready[0].title}`, { id: ready[0].id });
@@ -193,7 +198,7 @@ function shareTitle(o) {
   return `Share ${o.name}: ${parts.join(', ')} still due`;
 }
 
-const ORDER = { verify: 1, market: 2, alert: 3, renew: 4, spotlight: 5, lesson: 6, invites: 7, share: 8, task: 9 };
+const ORDER = { verify: 1, market: 2, alert: 3, renew: 4, spotlight: 5, lesson: 6, posts: 7, invites: 8, share: 9, task: 10 };
 function makeView(s, day) {
   const all = Object.values(s.items);
   const sort = (a, b) => (a.due || '').localeCompare(b.due || '') || (ORDER[a.kind] || 9) - (ORDER[b.kind] || 9) || (a.createdAt || '').localeCompare(b.createdAt || '');
@@ -223,6 +228,12 @@ async function mark(key, how) {
 
 async function get(key) { const s = await getJson(STATE); return (s && s.items && s.items[key]) || null; }
 
+// The list as it was last refreshed (no new automatic items) — for Auntie Tobi HQ.
+async function peek() {
+  const s = await getJson(STATE);
+  return s ? makeView(s, core.dayKey()) : null;
+}
+
 async function summary() {
   const s = await getJson(STATE);
   if (!s) return null;
@@ -230,4 +241,4 @@ async function summary() {
   return v.counts;
 }
 
-module.exports = { refresh, mark, get, addDef, deleteDef, getDefs, summary, defAppliesOn, SHARE_SLOTS, SHARE_TYPES };
+module.exports = { refresh, mark, get, peek, addDef, deleteDef, getDefs, summary, defAppliesOn, SHARE_SLOTS, SHARE_TYPES };
