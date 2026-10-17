@@ -15,6 +15,9 @@ const core = require('./core');
 const { HttpError, cas, getJson, setJson, cleanText } = core;
 
 const KEY = 'hq/content';
+const TEAM_KEY = 'hq/team';   // { emails: [] } — people who can sign in to HQ only (not Admin)
+const DEFAULT_TEAM = ['hellofavouradentan@gmail.com'];
+const DEFAULT_NAMES = { 'hellofavouradentan@gmail.com': 'Favour' };
 const TYPES = ['post', 'reel', 'carousel', 'story', 'blog'];
 const TOPICS = ['discovery', 'uk-info', 'community', 'promo', 'event', 'motivation'];
 const STATUSES = ['idea', 'drafting', 'ready', 'scheduled', 'posted', 'archived'];
@@ -65,8 +68,9 @@ async function list() {
   return live(s.items).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
 }
 
-async function save(raw) {
+async function save(raw, by) {
   raw = raw && typeof raw === 'object' ? raw : {};
+  by = by ? String(by).slice(0, 200) : '';
   let out;
   await cas(KEY, cur => {
     const s = cur ? { items: { ...cur.items } } : { items: {} };
@@ -74,12 +78,12 @@ async function save(raw) {
     if (raw.id) {
       const prev = s.items[raw.id];
       if (!prev || prev.deletedAt) throw new HttpError(404, 'not_found', 'That card no longer exists.');
-      out = { ...prev, ...clean(raw, prev), id: prev.id, source: prev.source, createdAt: prev.createdAt, updatedAt: now };
+      out = { ...prev, ...clean(raw, prev), id: prev.id, source: prev.source, createdAt: prev.createdAt, updatedAt: now, updatedBy: by || prev.updatedBy || '' };
     } else {
       if (live(s.items).length >= MAX_ITEMS) throw new HttpError(400, 'too_many', 'You have a lot of cards — delete or archive some first.');
       const c = clean(raw);
       if (!c.caption && c.title === 'Untitled idea') throw new HttpError(400, 'invalid', 'Type or paste the idea first.');
-      out = { id: newId('k'), ...c, source: SOURCES.includes(raw.source) ? raw.source : 'me', createdAt: now, updatedAt: now };
+      out = { id: newId('k'), ...c, source: SOURCES.includes(raw.source) ? raw.source : 'me', createdAt: now, updatedAt: now, createdBy: by, updatedBy: by };
     }
     s.items[out.id] = out;
     return tidy(s);
@@ -88,7 +92,8 @@ async function save(raw) {
 }
 
 // Several cards at once (from the paste preview).
-async function saveMany(cards, source) {
+async function saveMany(cards, source, by) {
+  by = by ? String(by).slice(0, 200) : '';
   cards = (Array.isArray(cards) ? cards : []).slice(0, 60);
   if (!cards.length) throw new HttpError(400, 'invalid', 'Nothing to save.');
   const out = [];
@@ -102,7 +107,7 @@ async function saveMany(cards, source) {
       if (!c.caption && c.title === 'Untitled idea') return;
       // Newest first on the Board, so the first card of the paste gets the latest time — keeps the paste's order.
       const at = new Date(base - i).toISOString();
-      const card = { id: newId('k'), ...c, source: SOURCES.includes(source) ? source : 'chatgpt', createdAt: at, updatedAt: at };
+      const card = { id: newId('k'), ...c, source: SOURCES.includes(source) ? source : 'chatgpt', createdAt: at, updatedAt: at, createdBy: by, updatedBy: by };
       s.items[card.id] = card; out.push(card);
     });
     return tidy(s);
@@ -153,4 +158,20 @@ async function plannedToday() {
   return live((await load()).items).filter(c => c.status === 'scheduled' && c.planDate === day).map(c => ({ id: c.id, title: c.title, time: c.planTime || '' }));
 }
 
-module.exports = { list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };
+// ── HQ team (sign in to HQ only) ──
+async function teamFull() { const t = await getJson(TEAM_KEY); return t && Array.isArray(t.emails) ? { emails: t.emails, names: t.names || {} } : { emails: DEFAULT_TEAM.slice(), names: { ...DEFAULT_NAMES } }; }
+async function team() { return (await teamFull()).emails; }
+// Display names: team names + "Seun" for admins.
+async function names() { const t = await teamFull(); const out = { ...t.names }; for (const e of core.adminEmails()) out[e] = 'Seun'; return out; }
+async function setTeam(emails, nameMap) {
+  const raw = (Array.isArray(emails) ? emails : []).map(e => String(e || '').trim()).filter(Boolean);
+  for (const e of raw) if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) || !core.normalizeEmail(e)) throw new HttpError(400, 'invalid', `“${e.slice(0, 80)}” doesn’t look like an email address.`);
+  const list = [...new Set(raw.map(e => core.normalizeEmail(e)))];
+  const nm = {}; const given = nameMap && typeof nameMap === 'object' ? nameMap : {};
+  for (const [k, v] of Object.entries(given)) { const e = core.normalizeEmail(k); const n = cleanText(v, 40); if (e && list.includes(e) && n) nm[e] = n; }
+  if (list.length > 20) throw new HttpError(400, 'invalid', 'Up to 20 people.');
+  await setJson(TEAM_KEY, { emails: list, names: nm, updatedAt: core.nowIso() });
+  return { emails: list, names: nm };
+}
+
+module.exports = { team, teamFull, names, setTeam, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };

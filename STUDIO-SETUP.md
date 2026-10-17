@@ -345,3 +345,9 @@ Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with 
 - **📲 Posted**: everything posted with date, type and link; this week / month / total and by type.
 - **Admin → Today** gets "🗓️ N posts planned for today" which ticks itself when they're marked posted.
 - Function `studio-hq` (`studio-lib/hq.js`, `handlers/hq.js`); storage `hq/content` and `hq/img/*`. Nothing is ever posted automatically.
+
+### HQ team access (assistant sign-in)
+- HQ → **👥 Team access** (only Seun sees it): add a name + email. They go to **/hq**, enter their email and get an "Auntie Tobi HQ code".
+- Team members can paste, edit, plan, mark posted and delete in HQ only. Their session cannot open Business Studio Admin (separate `__Host-studio_hq` cookie, role `hq`, 7 days).
+- Remove someone and they're signed out immediately (the team list is checked on every request). Stored in blob `hq/team`. Starts with Favour (hellofavouradentan@gmail.com).
+- Cards show "Added by … · Last edited by …".
