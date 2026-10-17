@@ -325,17 +325,15 @@ The admin "Usage & costs" page shows the actual AI cost per month and per member
 - **To do today** = follow-ups due + new businesses to invite (default **5 a day**, change it at the top). Today list gets one "Business Club invites" task that ticks itself when they're done.
 - Stored in `invites/state`. Admin actions: `invites-view`, `invites-act`, `invites-settings`.
 
-## 8. Auntie Tobi HQ — Seun's private AI assistant (auntietobi.co.uk/hq)
+## 8. Auntie Tobi HQ — Content Hub (auntietobi.co.uk/hq)
 
-Phase 1 (built): private page, separate from the members' Business Studio. Sign in with the admin email (same sign-in as Admin — signing in to either works for both).
+Seun's private content organiser (chatting stays in ChatGPT Plus). Sign in with the admin email — same sign-in as Admin. **No AI is used, so there's no AI cost.**
 
-- **Chat**: ChatGPT-style, replies stream word by word. Saved conversations (rename, pin, delete, search titles and messages), copy / regenerate / edit-and-resend / download (.md) / save as prompt. Voice input where the browser supports it (Chrome, Safari). **Everyday** model (`openai/gpt-4o-mini`, ~0.1p a reply) or **Smart** (`openai/gpt-4.1`, ~1–2p) — change the model IDs in Settings.
-- **Business memory ("Teach Auntie Tobi")**: editable facts by category with source and date (`hq/memory`). Starts with starter facts from the site — check them. When you tell HQ something durable in chat, it shows **"Save to business memory?"** — nothing is saved unless you tap Save. Memory goes into every chat.
-- **Live business snapshot**: every chat sees your admin Today list (overdue / today / open tasks), Club and Pro member counts, renewals in 30 days, Marketplace reviews waiting, Club invite numbers and alerts (refreshed every 2 minutes). The home screen shows the same at a glance.
-- **Uploads**: images (resized, sent to the model with that message only), PDF, Word (.docx), Excel (.xlsx/.xls), CSV and text — read in the browser (PDF/Word/Excel readers load from cdnjs) and sent as data, never as instructions. Up to ~60,000 characters per file.
-- **Saved prompts**: 6 starters (focus today, today's content, discovery post, UK update → blog, event promo plan, weekly plan) — add/edit/delete; [brackets] are highlighted to fill in.
-- **Cost control**: monthly budget (default **£10**; warning at 80%, stops at 100% until raised). Large messages that would cost over ~3p ask first. HQ spend is in Settings & usage and also in Admin → Usage & costs (as `hq`).
-- **Rules built in**: British English; never invents facts, businesses, analytics, vacancies or government updates; can't browse the web yet (says so); never claims to post or message anyone; realistic top-3 priorities.
-- Function: `studio-hq` (`studio-lib/hq.js`, `handlers/hq.js`); streaming at `?stream=1`. Storage keys `hq/*`.
-
-Next phases: 2 — scheduled tasks + 7am daily brief by email · 3 — content calendar + promotions tracker · 4 — live research with sources, sponsorship job finder, images, reports (needs an OpenAI API key and a search option) · 5 — publishing integrations.
+- **📋 Paste from ChatGPT**: paste a whole reply; the free splitter (`/hq-split.js`, rules not AI) cuts it into idea cards wherever a new idea starts (Idea 1 / Post 2 / Reel: …, ### headings, bold titles, --- lines, numbered ideas — but numbered *steps* inside one idea stay together). Each card gets a type (post, Reel, carousel, Story, blog), topic, title, caption, hashtags and keyword line; chatty intros and "Would you like me to…" lines are dropped. A preview lets you remove, merge, retitle or change type before saving. "Keep as one card" if needed.
+- **＋ Quick add** for your own ideas; images can be added to any card (resized in the browser).
+- **🗂️ Board**: 💡 Ideas → ✍️ Drafting → ✅ Ready → 📅 Scheduled → 📲 Posted (+ Archived). Search, filter by type/topic, ★ star. **👀 Review one by one** goes through Ideas: keep (Ready / needs work), skip or delete. 🗑 Delete goes to a 30-day bin with Undo.
+- **📅 Calendar**: month view (agenda list on phones). Yellow planned, green posted, red missed. ＋ on a day picks an idea to plan there. A date makes a card Scheduled; removing it puts it back to Ready.
+- **🏠 Today**: posts for today and any missed ones with **📋 Copy caption** (caption + keyword line + hashtags), **⬇ Download image**, **Open Instagram**, **✅ Mark as posted** (+ post link) and ↻ Reschedule; coming up next 7 days; counts.
+- **📲 Posted**: everything posted with date, type and link; this week / month / total and by type.
+- **Admin → Today** gets "🗓️ N posts planned for today" which ticks itself when they're marked posted.
+- Function `studio-hq` (`studio-lib/hq.js`, `handlers/hq.js`); storage `hq/content` and `hq/img/*`. Nothing is ever posted automatically.

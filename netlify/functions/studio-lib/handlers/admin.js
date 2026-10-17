@@ -404,7 +404,9 @@ exports.handler = handler(async (ctx) => {
       try { lessonsReady = (await resources.adminDashboard()).readyToPublish || []; } catch (e) { console.error('[studio] todo lessons failed', e && e.message); }
       let inv = null;
       try { inv = await invites.summary(ctx.event, { members, profiles, settings }); } catch (e) { console.error('[studio] todo invites failed', e && e.message); }
-      const view = await todo.refresh({ members, settings, profiles, alerts, lessonsReady, invites: inv });
+      let postsToday = [];
+      try { postsToday = await require('../hq').plannedToday(); } catch (e) { console.error('[studio] todo posts failed', e && e.message); }
+      const view = await todo.refresh({ members, settings, profiles, alerts, lessonsReady, invites: inv, postsToday });
       // Instagram link for every task about a member (and Marketplace listings linked to one).
       const igs = {};
       const items = [...view.overdue, ...view.todayItems];
