@@ -459,12 +459,6 @@ exports.handler = handler(async (ctx) => {
       if (body.act !== 'note') await core.audit(actor, `invite_${body.act}`, { slug: body.slug });
       return { rec };
     }
-    case 'invites-email': {
-      await rateLimit('ghl-send', actor, 120, 60 * 60 * 1000);
-      const r = await invites.emailViaGhl(ctx.event, body.slug, { subject: body.subject, body: body.body, to: body.to, test: !!body.test, adminEmail: actor });
-      await core.audit(actor, r.test ? 'invite_email_test' : 'invite_email_ghl', { slug: body.slug || '', to: r.to });
-      return r;
-    }
     case 'invites-settings': {
       const st = await invites.saveSettings(body.settings);
       await core.audit(actor, 'invites_settings', { perDay: st.perDay });

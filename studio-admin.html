@@ -640,7 +640,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var ch = [];
     if (x.wa) ch.push('<a class="btn small primary" target="_blank" rel="noopener" data-ivvia="WhatsApp" data-s="' + esc(x.slug) + '" href="https://wa.me/' + waNum(x.wa) + '?text=' + enc + '">WhatsApp</a>');
     if (x.ig) ch.push('<a class="btn small ghost" target="_blank" rel="noopener" data-ivvia="Instagram" data-copy="1" data-s="' + esc(x.slug) + '" href="https://www.instagram.com/' + encodeURIComponent(x.ig) + '/">📷 Instagram DM</a>');
-    if (x.email) ch.push(S.iv && S.iv.ghl && S.iv.ghl.connected ? '<button class="btn small ghost" data-ivghl="' + esc(x.slug) + '">✉️ Email via GHL</button>' : '<a class="btn small ghost" data-ivvia="email" data-s="' + esc(x.slug) + '" href="mailto:' + esc(x.email) + '?subject=' + encodeURIComponent('Join the Auntie Tobi Business Club') + '&body=' + enc + '">Email</a>');
+    if (x.email) ch.push('<a class="btn small ghost" data-ivvia="email" data-s="' + esc(x.slug) + '" href="mailto:' + esc(x.email) + '?subject=' + encodeURIComponent('Join the Auntie Tobi Business Club') + '&body=' + enc + '">Email</a>');
     ch.push('<button class="btn small ghost" data-ivcopy="' + esc(x.slug) + '">Copy message</button>');
     return '<div class="iv" data-row="' + esc(x.slug) + '">' +
       '<div class="iv-h"><b>' + esc(x.name) + '</b><span class="muted" style="font-size:13px">' + esc([x.cat, x.loc].filter(Boolean).join(' · ')) + '</span><span class="pill ' + (IV_PILL[x.status] || '') + '">' + esc(x.label) + '</span>' + (isNewToday ? '<span class="pill p-pending">New today</span>' : '') + ivNext(x, today) +
@@ -653,7 +653,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
         '<button class="btn small ghost" data-ivnotnow="' + esc(x.slug) + '">⏳ Not now</button>' +
         (x.status !== 'declined' ? '<button class="btn small ghost" data-ivact="declined" data-s="' + esc(x.slug) + '">Not interested</button>' : '') +
         '<button class="btn small ghost" data-ivact="joined" data-s="' + esc(x.slug) + '">🎉 Joined</button>') +
-        '<button class="btn small ghost" data-ivmore="' + esc(x.slug) + '">Notes &amp; history' + (x.notes ? ' 📝' : '') + '</button>' + (x.ghlUrl ? '<a class="btn small ghost" href="' + esc(x.ghlUrl) + '" target="_blank" rel="noopener">Open in GHL ↗</a>' : '') + '</div></div>';
+        '<button class="btn small ghost" data-ivmore="' + esc(x.slug) + '">Notes &amp; history' + (x.notes ? ' 📝' : '') + '</button></div></div>';
   }
   async function vInvites() {
     loading();
@@ -674,7 +674,6 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
         '<div class="card stat"><b>' + st.joined + '</b><span>Joined · ' + st.rate + '% of contacted</span></div>' +
       '</div>' +
       '<div class="card row" style="margin-top:12px;align-items:center;gap:10px;flex-wrap:wrap"><b style="flex:1;min-width:220px">Today: ' + due.length + ' follow-up' + (due.length === 1 ? '' : 's') + ' due · ' + r.newTodo + ' new to invite <span class="muted" style="font-weight:400">(' + r.newToday + ' of ' + r.perDay + ' new sent today)</span></b>' +
-        (r.ghl && r.ghl.connected ? '<span class="pill p-active" title="Emails send from ' + esc(r.ghl.from) + '">✉️ GHL connected</span>' : '<span class="pill p-inactive" title="Add ' + esc((r.ghl && r.ghl.missing || []).join(' and ')) + ' in Netlify">✉️ GHL not connected</span>') +
         '<label style="display:flex;align-items:center;gap:6px;font-weight:600;margin:0">New invites a day <input type="number" id="ivPer" min="0" max="50" value="' + r.perDay + '" style="width:70px"></label><button class="btn small ghost" id="ivPerSave">Save</button><button class="btn small ghost" id="ivMsgs">✎ Edit messages</button></div>' +
       '<div class="row" style="margin:14px 0 8px;gap:8px;flex-wrap:wrap;align-items:center"><div class="chips">' + IV_FILTERS.map(function (x) { return '<button class="chip" data-ivf="' + x[0] + '" aria-pressed="' + (!q && f === x[0]) + '">' + x[1] + ' (' + count(x[0]) + ')</button>'; }).join('') + '</div>' +
         '<input id="ivQ" placeholder="Search businesses…" value="' + esc(S.ivQ || '') + '" style="max-width:240px;margin-left:auto"></div>' +
@@ -690,30 +689,6 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
         if (a.dataset.copy) { try { navigator.clipboard.writeText(x.message); toast('Message copied — paste it in their DMs'); } catch (e) {} }
         var bar = $('[data-sent="' + a.dataset.s + '"]'); if (bar) { bar.classList.remove('hidden'); bar.dataset.via = a.dataset.ivvia; }
       });
-    });
-    $$('[data-ivghl]').forEach(function (b) {
-      b.onclick = function () {
-        var x = byS(b.dataset.ivghl), subj = (r.subject && r.subject[x.nextKind]) || 'Join the Auntie Tobi Business Club';
-        var s2 = sheet('<h2 style="margin:0">✉️ Email ' + esc(x.name) + '</h2><p class="muted">Sends from <b>' + esc(r.ghl.from) + '</b> through GHL. ' + esc(x.name) + ' is added to GHL as a contact, and replies go to your GHL inbox.</p>' +
-          '<div><label for="gTo">To</label><input id="gTo" value="' + esc(x.email) + '" disabled></div>' +
-          '<div><label for="gSu">Subject</label><input id="gSu" value="' + esc(subj) + '" maxlength="160"></div>' +
-          '<div><label for="gBo">Message</label><textarea id="gBo" rows="14">' + esc(x.message) + '</textarea></div>' +
-          '<div class="err hidden" id="gErr"></div>' +
-          '<div class="row"><button class="btn primary" id="gSend">Send via GHL</button><button class="btn ghost" id="gTest">Send a test to myself</button><button class="btn ghost" id="gX">Cancel</button>' +
-          '<a class="btn link" style="margin-left:auto;font-size:13px" href="mailto:' + esc(x.email) + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(x.message) + '">Open in my email app instead</a></div>');
-        var err = function (m) { var e = $('#gErr', s2); e.textContent = m; e.classList.toggle('hidden', !m); };
-        $('#gX', s2).onclick = function () { s2.remove(); };
-        var go2 = async function (test, btn) {
-          err(''); btn.disabled = true; var old = btn.textContent; btn.textContent = test ? 'Sending test…' : 'Sending…';
-          try {
-            var res = await api('invites-email', { slug: x.slug, subject: $('#gSu', s2).value, body: $('#gBo', s2).value, test: test });
-            if (test) { toast('Test sent to ' + res.to + ' — check your inbox'); btn.disabled = false; btn.textContent = old; return; }
-            s2.remove(); toast('Emailed via GHL ✓ — next follow-up scheduled'); reload();
-          } catch (x2) { err(x2.message); btn.disabled = false; btn.textContent = old; }
-        };
-        $('#gSend', s2).onclick = function () { go2(false, this); };
-        $('#gTest', s2).onclick = function () { go2(true, this); };
-      };
     });
     $$('[data-ivcopy]').forEach(function (b) { b.onclick = async function () { var x = byS(b.dataset.ivcopy); try { await navigator.clipboard.writeText(x.message); } catch (e) { prompt('Copy this message:', x.message); } toast('Message copied'); var bar = $('[data-sent="' + x.slug + '"]'); if (bar) bar.classList.remove('hidden'); }; });
     $$('[data-ivhide]').forEach(function (b) { b.onclick = function () { $('[data-sent="' + b.dataset.ivhide + '"]').classList.add('hidden'); }; });
