@@ -22,6 +22,7 @@ exports.handler = handler(async (ctx) => {
   if (body.action === 'file') await res.assertToolFile(String(body.id || ''), String(body.fileId || ''), acc);
   switch (body.action) {
     case 'tools': return res.toolsList(email, acc);
+    case 'my-work': return res.myWork(email, acc);
     case 'tool': return res.toolFor(email, String(body.id || ''), acc);
     case 'tool-save': return res.setToolSaved(email, String(body.id || ''), !!body.on, acc);
     case 'home': {
