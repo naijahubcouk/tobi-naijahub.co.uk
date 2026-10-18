@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,238 +7,304 @@
 <meta name="description" content="Auntie Tobi Business Club — £50/year. More exposure. More support. More opportunities to grow. A membership to help Nigerian businesses in the UK become more visible, stay organised and develop practical skills for business growth.">
 <meta property="og:title" content="Auntie Tobi Business Club 💚">
 <meta property="og:description" content="More exposure. More support. More opportunities to grow. A membership for Nigerian businesses in the UK — £50/year.">
+<meta property="og:image" content="https://www.auntietobi.co.uk/tobi-face-512.png">
 <link rel="icon" href="/tobi-face-128.png">
 <style>
+:root{--navy:#0F1E36;--navy2:#18294A;--green:#057A44;--green-l:#E8F5EE;--gold:#FFB81C;--gold-l:#FFF4D6;--ink:#0F1E36;--muted:#5B6474;--line:#E6E2D8;--bg:#F7F5EF;--card:#FFFFFF}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:80px}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;min-height:100vh;padding-bottom:60px}
-.app-header{background:#0F1E36;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:520px;margin:0 auto}
-.app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0}
-.app-logo img{width:100%;height:100%;object-fit:cover}
-.app-header-text{flex:1;min-width:0}
-.app-header-title{font-size:17.5px;font-weight:700;color:white}
-.app-header-sub{font-size:14px;color:rgba(255,255,255,0.55);margin-top:2px}
-.header-btns{display:flex;gap:6px}
-.back-btn{color:rgba(255,255,255,0.8);font-size:14px;text-decoration:none;font-weight:600;padding:7px 11px;border:1.5px solid rgba(255,255,255,0.25);border-radius:20px;white-space:nowrap}
-.wrap{max-width:520px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%;display:block}
+.wrap{max-width:1120px;margin:0 auto;padding:0 18px}
 
-.hero{background:#0F1E36;border-radius:14px;padding:24px 18px}
-.h-badge{display:inline-block;background:rgba(255,184,28,0.25);color:#FFB81C;font-size:15px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:12px}
-.h-title{font-size:25px;font-weight:800;color:white;line-height:1.25;margin-bottom:8px}
-.h-sub{font-size:19.5px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:16px}
-.qs{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
-.q{background:rgba(255,255,255,0.07);border-left:3px solid #FFB81C;border-radius:0 8px 8px 0;padding:9px 12px;font-size:16.5px;color:white;font-style:italic}
-.h-body{font-size:19.5px;color:rgba(255,255,255,0.9);line-height:1.75;margin-bottom:16px}
-.h-body b{color:white}
-.h-tag{font-size:20.5px;font-weight:800;color:#FFB81C;line-height:1.4;margin-bottom:10px}
-.h-inc{font-size:18.5px;font-weight:800;color:white;margin:4px 0 10px}
-.h-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin:0 0 16px;padding:0}
-.h-list li{display:flex;gap:10px;font-size:18.5px;line-height:1.55;color:rgba(255,255,255,0.88)}
-.h-list li b{color:white}
-.hi-ico{flex:0 0 auto}
-.h-all{font-size:21.5px;font-weight:800;color:#FFB81C;margin-bottom:10px}
-.h-note{font-size:15.5px;line-height:1.55;color:rgba(255,255,255,0.65);margin-bottom:16px}
-.plan-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.plan-mini{border-radius:12px;padding:14px 12px;text-align:center;text-decoration:none;display:block}
-.plan-mini.club{background:#057A44;color:white}
-.plan-mini.plus{background:#FFB81C;color:#0F1E36}
-.pm-name{font-size:15px;font-weight:700}
-.pm-price{font-size:28px;font-weight:800;margin:4px 0 2px}
-.pm-per{font-size:14px;opacity:0.8}
-.pm-desc{font-size:15px;line-height:1.45;margin-top:8px;opacity:0.9}
+/* header */
+.hdr{position:sticky;top:0;z-index:30;background:var(--navy);color:#fff}
+.hdr .wrap{display:flex;align-items:center;gap:12px;height:62px}
+.hdr img{width:38px;height:38px;border-radius:50%;border:2px solid var(--gold)}
+.hdr b{font-size:17px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr nav{display:flex;gap:6px}
+.hdr nav a{text-decoration:none;font-size:14px;font-weight:700;color:rgba(255,255,255,.88);padding:8px 12px;border:1.5px solid rgba(255,255,255,.22);border-radius:999px;white-space:nowrap}
+.hdr nav a.join{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+@media(max-width:560px){.hdr nav a.hide-s{display:none}}
 
-.card{background:white;border-radius:14px;padding:20px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
-.ctitle{font-size:14px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px}
-.body{font-size:19.5px;line-height:1.8;color:#0F1E36;font-weight:500}
-.body+.body{margin-top:10px}
-.callout{background:#f0faf5;border-left:4px solid #057A44;border-radius:0 10px 10px 0;padding:14px 16px;font-size:19.5px;line-height:1.7;margin-top:12px;color:#0F1E36}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:800;font-size:17px;border-radius:14px;padding:15px 24px;border:2px solid transparent;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.gold{background:var(--gold);color:var(--navy);box-shadow:0 6px 18px rgba(255,184,28,.28)}
+.btn.green{background:var(--green);color:#fff;box-shadow:0 6px 18px rgba(5,122,68,.22)}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}
+.btn.block{display:flex;width:100%}
 
-.plan-head{border-radius:14px 14px 0 0;margin:-20px -18px 16px;padding:20px 18px}
-.plan-head.club{background:#057A44;color:white}
-.plan-head.plus{background:#0F1E36;color:white}
-.ph-tag{font-size:14px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;opacity:0.85}
-.ph-name{font-size:23px;font-weight:800;margin-top:4px}
-.ph-price{font-size:36px;font-weight:800;margin-top:6px}
-.ph-price span{font-size:16.5px;font-weight:600;opacity:0.8}
-.plan-head.plus .ph-price{color:#FFB81C}
-.ph-desc{font-size:19.5px;line-height:1.6;margin-top:8px;opacity:0.9}
-.sec-label{font-size:14px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.8px;margin:18px 0 4px}
+/* hero */
+.hero{background:radial-gradient(1200px 500px at 85% -10%,#24406E 0%,transparent 60%),var(--navy);color:#fff;padding:44px 0 56px}
+.hero .wrap{display:grid;gap:36px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,184,28,.16);color:var(--gold);font-weight:800;font-size:14px;padding:6px 14px;border-radius:999px;letter-spacing:.2px}
+.hero h1{font-size:38px;line-height:1.15;font-weight:850;letter-spacing:-.5px;margin:16px 0 10px}
+.hero .tag{font-size:21px;font-weight:800;color:var(--gold);line-height:1.35;margin-bottom:14px}
+.hero p.lead{font-size:18px;color:rgba(255,255,255,.82);max-width:560px}
+.price-chip{display:inline-flex;align-items:baseline;gap:10px;margin:22px 0 22px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);padding:10px 16px;border-radius:14px}
+.price-chip b{font-size:30px;font-weight:850}
+.price-chip span{color:rgba(255,255,255,.72);font-size:15px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px}
+.trust{margin-top:18px;font-size:14px;color:rgba(255,255,255,.62);display:flex;flex-wrap:wrap;gap:6px 16px}
+/* member card graphic */
+.mcard{justify-self:center;width:100%;max-width:400px;aspect-ratio:1.58;border-radius:22px;padding:24px;background:linear-gradient(135deg,#0B6B3E 0%,#057A44 45%,#0E8F55 100%);color:#fff;position:relative;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.35);transform:rotate(-3deg)}
+.mcard:before{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,184,28,.18)}
+.mcard:after{content:"";position:absolute;left:-40px;bottom:-70px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07)}
+.mcard .top{display:flex;align-items:center;gap:10px;position:relative}
+.mcard .top img{width:44px;height:44px;border-radius:50%;border:2px solid var(--gold)}
+.mcard .top b{font-size:15px;line-height:1.2}
+.mcard .top small{display:block;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);font-weight:800}
+.mcard .biz{position:absolute;left:24px;bottom:58px;font-size:22px;font-weight:850}
+.mcard .meta{position:absolute;left:24px;right:24px;bottom:22px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:rgba(255,255,255,.8)}
+.mcard .ver{background:#fff;color:var(--green);font-weight:850;font-size:12.5px;padding:4px 10px;border-radius:999px}
 
-.feat{padding:14px 0;border-bottom:0.5px solid #f0f0f0}
-.feat:last-child{border-bottom:none}
-.feat-h{font-size:21px;font-weight:800;color:#0F1E36;display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.feat-ico{font-size:22.5px;width:28px;flex-shrink:0;text-align:center}
-.feat-b{font-size:19.5px;color:#0F1E36;font-weight:500;line-height:1.75;padding-left:36px}
-.feat-b+.feat-b{margin-top:8px}
-.feat-b b{color:#0F1E36;font-weight:800}
-.feat-note{font-size:18.5px;color:#057A44;line-height:1.6;margin-top:8px;padding-left:34px;font-weight:600}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;padding-left:36px}
-.chip{background:#f0faf5;color:#0F1E36;border:0.5px solid #cfe9dc;border-radius:16px;padding:7px 12px;font-size:17px;font-weight:600}
-.ticks{list-style:none;margin-top:8px;padding-left:36px}
-.ticks li{font-size:19.5px;color:#0F1E36;font-weight:500;line-height:1.65;padding:3px 0 3px 22px;position:relative}
-.ticks li::before{content:"✓";position:absolute;left:0;color:#057A44;font-weight:800}
-.ticks li b{color:#0F1E36;font-weight:800}
+/* sections */
+section{padding:56px 0}
+.eyebrow{font-size:13px;font-weight:850;letter-spacing:1.4px;text-transform:uppercase;color:var(--green);margin-bottom:8px}
+h2{font-size:30px;line-height:1.2;font-weight:850;letter-spacing:-.3px;margin-bottom:10px}
+.sub{color:var(--muted);font-size:17.5px;max-width:640px}
+.head{margin-bottom:26px}
+.center{text-align:center}.center .sub{margin:0 auto}
 
-.best{background:#f8f9fa;border-radius:12px;padding:16px;margin-top:14px}
-.best-h{font-size:17.5px;font-weight:800;color:#0F1E36;margin-bottom:8px}
-.price-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#FFB81C;border-radius:12px;padding:14px 16px;margin-top:14px}
-.ps-big{font-size:21.5px;font-weight:800;color:#0F1E36}
-.ps-small{font-size:15.5px;color:#0F1E36;opacity:0.75;margin-top:2px}
-.ps-month{text-align:right;font-size:23px;font-weight:800;color:#0F1E36;white-space:nowrap}
-.ps-month span{display:block;font-size:13px;font-weight:600;opacity:0.7}
+/* benefits */
+.grid{display:grid;gap:14px}
+.ben{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:8px}
+.ben .ico{width:46px;height:46px;border-radius:14px;background:var(--green-l);display:grid;place-items:center;font-size:23px}
+.ben h3{font-size:18px;line-height:1.3}
+.ben p{color:var(--muted);font-size:16px;line-height:1.55}
+.ben.hl{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ben.hl p{color:rgba(255,255,255,.75)}
+.ben.hl .ico{background:rgba(255,184,28,.18)}
 
-.cta-btn{display:block;width:100%;color:white;text-decoration:none;border-radius:12px;padding:16px;font-size:18.5px;font-weight:700;text-align:center;margin-top:14px;background:#057A44}
-.cta-btn.plus{background:#0F1E36;color:#FFB81C}
+/* steps */
+.steps{display:grid;gap:14px;counter-reset:s}
+.step{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 22px 22px 76px;position:relative}
+.step:before{counter-increment:s;content:counter(s);position:absolute;left:22px;top:22px;width:38px;height:38px;border-radius:50%;background:var(--gold);color:var(--navy);font-weight:850;display:grid;place-items:center;font-size:18px}
+.step h3{font-size:18px;margin-bottom:4px}
+.step p{color:var(--muted);font-size:16px}
 
-.quote{background:#0F1E36;color:white;border-radius:12px;padding:16px;font-size:18.5px;font-weight:700;line-height:1.5;text-align:center;margin:10px 0}
-.diff{display:grid;gap:8px;margin-top:12px}
-.diff div{border-radius:10px;padding:12px 14px;font-size:17.5px;line-height:1.55}
-.diff .d1{background:#f0faf5}
-.diff .d2{background:#FFF8E7}
+/* details accordion */
+.acc{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.acc details{border-top:1px solid var(--line)}
+.acc details:first-child{border-top:0}
+.acc summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;font-weight:800;font-size:17px}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary .i{font-size:22px;flex:0 0 auto}
+.acc summary .t{flex:1}
+.acc summary .t small{display:block;font-weight:600;color:var(--muted);font-size:14px;margin-top:2px}
+.acc summary:after{content:"";width:10px;height:10px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(45deg);transition:transform .2s;margin-right:4px;flex:0 0 auto}
+.acc details[open] summary:after{transform:rotate(-135deg)}
+.acc .body{padding:0 20px 20px 56px;color:#2B3443;font-size:16px}
+.acc .body p{margin-bottom:10px}
+.acc .body .note{font-size:14.5px;color:var(--muted);background:#F7F7F4;border-left:3px solid var(--gold);padding:10px 12px;border-radius:0 10px 10px 0;margin-top:6px}
+.acc .body a{color:var(--green);font-weight:700}
+ul.ticks{list-style:none;display:flex;flex-direction:column;gap:8px;margin:8px 0}
+ul.ticks li{position:relative;padding-left:28px}
+ul.ticks li:before{content:"";position:absolute;left:2px;top:6px;width:16px;height:16px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/11px no-repeat}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--green-l);color:var(--green);font-weight:700;font-size:13.5px;padding:4px 10px;border-radius:999px}
 
-.tbl-wrap{overflow-x:auto;margin:0 -6px}
-.tbl{width:100%;border-collapse:collapse;font-size:16.5px}
-.tbl th{font-size:15.5px;font-weight:800;padding:10px 6px;text-align:center;background:#057A44;color:white;white-space:nowrap}
-.tbl th:first-child{background:transparent}
-.tbl th.plus-col{background:#0F1E36;color:#FFB81C}
-.tbl td{padding:10px 6px;border-bottom:0.5px solid #f0f0f0;text-align:center;color:#0F1E36;width:22%}
-.tbl td.lbl{text-align:left;width:56%;color:#333;line-height:1.4}
-.tbl td.yes{color:#057A44;font-weight:800;font-size:17.5px}
-.tbl td.no{color:#c4c4c4}
-.tbl td[data-plus]{background:#FFFBF0}
+/* who + price */
+.split{display:grid;gap:18px;align-items:stretch}
+.who{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px}
+.who h3{font-size:20px;margin-bottom:10px}
+.price{background:var(--navy);color:#fff;border-radius:22px;padding:28px;position:relative;overflow:hidden}
+.price:before{content:"";position:absolute;right:-80px;top:-80px;width:240px;height:240px;border-radius:50%;background:rgba(255,184,28,.14)}
+.price .lab{font-size:13px;letter-spacing:1.4px;text-transform:uppercase;font-weight:850;color:var(--gold)}
+.price .amt{font-size:52px;font-weight:850;line-height:1;margin:10px 0 4px}
+.price .amt span{font-size:18px;font-weight:700;color:rgba(255,255,255,.7)}
+.price .per{color:rgba(255,255,255,.72);font-size:15px;margin-bottom:16px}
+.price ul.ticks li{color:rgba(255,255,255,.9);font-size:16px}
+.price ul.ticks li:before{background-color:var(--gold);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F1E36' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")}
+.price .btn{margin-top:20px}
+.price .small{margin-top:12px;font-size:13.5px;color:rgba(255,255,255,.6);text-align:center}
 
-.choose{border-radius:12px;padding:16px;margin-top:10px}
-.choose.club{background:#f0faf5;border:1.5px solid #057A44}
-.choose.plus{background:#FFF8E7;border:1.5px solid #FFB81C}
-.choose-h{font-size:18.5px;font-weight:800;margin-bottom:8px}
-.choose p{font-size:17.5px;line-height:1.75;color:#333}
-.choose p+p{margin-top:8px}
-.say{font-size:17.5px;font-style:italic;color:#0F1E36;font-weight:600;padding:6px 0 6px 12px;border-left:3px solid #FFB81C;margin-top:6px}
+/* faq */
+.faq{max-width:820px;margin:0 auto}
+.faq details{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px}
+.faq summary{list-style:none;cursor:pointer;padding:16px 18px;font-weight:800;display:flex;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary:after{content:"+";font-size:22px;line-height:1;color:var(--green);font-weight:700}
+.faq details[open] summary:after{content:"–"}
+.faq details p{padding:0 18px 16px;color:#2B3443;font-size:16px}
+.faq a{color:var(--green);font-weight:700}
 
-.final{border-radius:14px;padding:20px 18px;text-align:left}
-.final.club{background:white;border:2px solid #057A44}
-.final.plus{background:#0F1E36;color:white}
-.f-name{font-size:21.5px;font-weight:800}
-.f-price{font-size:32px;font-weight:800;margin:4px 0 8px}
-.final.club .f-price{color:#057A44}
-.final.plus .f-price{color:#FFB81C}
-.f-for{font-size:17.5px;line-height:1.6;opacity:0.85;margin-bottom:10px}
-.final.plus .ticks li{color:rgba(255,255,255,0.92)}
-.final.plus .ticks li b{color:white}
-.final.plus .cta-btn{background:#FFB81C;color:#0F1E36}
-.pro-note{font-size:16.5px;line-height:1.6;color:rgba(255,255,255,0.75);margin-top:12px}
-.final.plus .ticks li::before{color:#FFB81C}
-.final .ticks,.best .ticks{padding-left:0}
-.final.plus .cta-btn{background:#FFB81C;color:#0F1E36}
+/* end band */
+.end{background:var(--navy);color:#fff;text-align:center;padding:56px 0 70px}
+.end h2{color:#fff}
+.end .sub{color:rgba(255,255,255,.75);margin:0 auto 22px}
+.end .disc{margin:22px auto 0;max-width:680px;font-size:13.5px;color:rgba(255,255,255,.55)}
+footer{background:#0A1628;color:rgba(255,255,255,.55);font-size:13.5px;text-align:center;padding:18px}
+footer a{color:rgba(255,255,255,.75)}
 
-.navy-end{background:#0F1E36;border-radius:14px;padding:22px 18px;text-align:center}
-.ne-1{font-size:18.5px;color:rgba(255,255,255,0.85);line-height:1.6}
-.ne-2{font-size:18.5px;color:white;font-weight:800;line-height:1.6;margin-top:8px}
-.ne-3{font-size:17.5px;color:#FFB81C;font-weight:700;margin-top:14px}
-.cta-note{font-size:16.5px;color:#6B7280;text-align:center;line-height:1.6}
+/* sticky mobile join bar */
+.sbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(15,30,54,.97);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px;transform:translateY(110%);transition:transform .25s}
+.sbar.show{transform:none}
+.sbar div{flex:1;color:#fff;line-height:1.25}
+.sbar div b{display:block;font-size:16px}
+.sbar div span{font-size:13px;color:rgba(255,255,255,.7)}
+.sbar .btn{padding:12px 18px;font-size:16px}
 
-/* ── laptop ── phones unchanged */
-@media (min-width:900px){
-  body{padding-bottom:80px}
-  .app-header{max-width:none;padding:14px max(24px,calc((100vw - 1120px)/2))}
-  .wrap{max-width:1120px;padding:24px;gap:18px}
-  .hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);column-gap:40px;padding:44px 40px;align-items:start}
-  .hero>*{grid-column:1}
-  .hero .h-title{font-size:42px}
-  .hero .qs{grid-column:2;grid-row:1/span 5;margin:0;align-self:center}
-  .hero>.h-badge{justify-self:start}
-  .hero .cta-btn{max-width:420px}
-  .card{padding:28px 30px}
-  #club{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:36px}
-  #club>*{grid-column:1/-1}
-  #club>.feat{grid-column:auto;border-bottom:0;border-top:0.5px solid #f0f0f0}
-  #club .plan-head{margin:-28px -30px 16px;padding:28px 30px}
-  #club .cta-btn{max-width:420px;margin-left:auto;margin-right:auto}
-  #join{max-width:720px;width:100%;margin:0 auto}
-  .navy-end{padding:40px}
+@media(min-width:720px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .steps{grid-template-columns:repeat(3,1fr)}
+  .step{padding:70px 22px 22px}
+  .step:before{top:22px}
+  .split{grid-template-columns:1.1fr .9fr}
+  h2{font-size:34px}
+  .sbar{display:none}
 }
-
-/* Tablets and laptops: everything about 10% smaller (phones unchanged). */
-@media (min-width:768px){html{zoom:.9}}
+@media(min-width:980px){
+  .hero{padding:70px 0 84px}
+  .hero .wrap{grid-template-columns:1.15fr .85fr}
+  .hero h1{font-size:50px}
+  .grid{grid-template-columns:repeat(3,1fr)}
+  section{padding:72px 0}
+}
+@media(min-width:768px){body{font-size:16px}.hero p.lead{font-size:17px}.sub{font-size:16.5px}.ben p,.step p,.acc .body,.faq details p{font-size:15px}.btn{font-size:16px}}
 </style>
 </head>
 <body>
 
-<div class="app-header">
-  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
-  <div class="app-header-text">
-    <div class="app-header-title">Auntie Tobi Business Club</div>
-  </div>
-  <div class="header-btns">
-    <a href="/" class="back-btn">🏠 App</a>
-    <a href="/?action=links" class="back-btn">← Links</a>
-  </div>
-</div>
-
-<div class="wrap">
+<header class="hdr"><div class="wrap">
+  <img src="/tobi-face-128.png" alt="">
+  <b>Auntie Tobi Business Club</b>
+  <nav><a href="/" class="hide-s">🏠 App</a><a href="/?action=links" class="hide-s">← Links</a><a href="#join" class="join">Join</a></nav>
+</div></header>
 
 <!-- HERO -->
-<div class="hero">
-  <div class="h-badge">💚 For Nigerian businesses in the UK</div>
-  <div class="h-title">💚 Auntie Tobi Business Club — £50/year</div>
-  <div class="h-tag">More exposure. More support. More opportunities to grow.</div>
-  <div class="h-sub">A membership created to help Nigerian businesses in the UK become more visible, stay organised and develop practical skills for business growth.</div>
-  <div class="h-inc">Your membership includes:</div>
-  <ul class="h-list"><li><span class="hi-ico">💚</span><span><b>Business Exposure &amp; Discovery</b> — Dedicated business spotlight, Marketplace visibility and opportunities to feature across Auntie Tobi.</span></li><li><span class="hi-ico">💚</span><span><b>Full Business Studio Access</b> — Manage customers, plan content, organise your business and use AI tools with 20 daily AI credits.</span></li><li><span class="hi-ico">💚</span><span><b>Business Growth Lessons</b> — Practical lessons covering marketing, sales, customer experience, planning and business growth.</span></li><li><span class="hi-ico">💚</span><span><b>Templates &amp; Tools Library</b> — Ready-to-use checklists, scripts, planners, worksheets and calculators.</span></li><li><span class="hi-ico">💚</span><span><b>New Monthly Resources</b> — Fresh practical materials to help you improve your business.</span></li><li><span class="hi-ico">💚</span><span><b>Business Check-Ins &amp; Support</b> — Guidance, accountability and support to help you stay focused on your business goals.</span></li><li><span class="hi-ico">💚</span><span><b>Business Connections</b> — Opportunities to connect and collaborate with other business owners.</span></li></ul>
-  <div class="h-all">All for £50 per year.</div>
-  <div class="h-note">Our goal is to help expose your business to more potential customers and support your growth. We do not guarantee views, enquiries, bookings or sales.</div>
-  <a href="#join" class="cta-btn" style="margin-top:4px;">Join the Business Club — £50/year →</a>
-</div>
+<div class="hero" id="top"><div class="wrap">
+  <div>
+    <span class="badge">💚 For Nigerian businesses in the UK</span>
+    <h1>Auntie Tobi Business Club</h1>
+    <div class="tag">More exposure. More support. More opportunities to grow.</div>
+    <p class="lead">A membership created to help Nigerian businesses in the UK become more visible, stay organised and develop practical skills for business growth.</p>
+    <div class="price-chip"><b>£50</b><span>per year · about £4.17 a month</span></div>
+    <div class="ctas">
+      <a class="btn gold" href="https://buy.stripe.com/8x2eVccnf1U3a287SR4Ni0e" target="_blank" rel="noopener">Join the Business Club →</a>
+      <a class="btn ghost" href="#included">See what’s included</a>
+    </div>
+    <div class="trust"><span>🔒 Secure payment by Stripe</span><span>📅 12 months’ membership</span><span>💬 Questions? We’re on WhatsApp</span></div>
+  </div>
+  <div class="mcard" aria-hidden="true">
+    <div class="top"><img src="/tobi-face-128.png" alt=""><b><small>Business Club</small>Auntie Tobi</b></div>
+    <div class="biz">Your Business</div>
+    <div class="meta"><span>Member · 12 months</span><span class="ver">✓ Verified</span></div>
+  </div>
+</div></div>
 
-<!-- MEMBERSHIP -->
-<div class="card" id="club">
-  <div class="plan-head club">
-    <div class="ph-tag">Annual membership</div>
-    <div class="ph-name">💚 Auntie Tobi Business Club</div>
-    <div class="ph-price">£50 <span>per year</span></div>
-    <div class="ph-desc">More exposure. More support. More opportunities to grow.</div>
+<!-- WHAT YOU GET -->
+<section id="included"><div class="wrap">
+  <div class="head"><div class="eyebrow">Your membership includes</div><h2>Everything you need to be seen and grow</h2><p class="sub">Promotion by Auntie Tobi, the full Business Studio and practical support — in one yearly membership.</p></div>
+  <div class="grid">
+    <div class="ben hl"><div class="ico">📣</div><h3>Business Exposure &amp; Discovery</h3><p>Dedicated business spotlight, Marketplace visibility and opportunities to feature across Auntie Tobi.</p></div>
+    <div class="ben"><div class="ico">💻</div><h3>Full Business Studio Access</h3><p>Manage customers, plan content, organise your business and use AI tools with 20 daily AI credits.</p></div>
+    <div class="ben"><div class="ico">📚</div><h3>Business Growth Lessons</h3><p>Practical lessons covering marketing, sales, customer experience, planning and business growth.</p></div>
+    <div class="ben"><div class="ico">🧰</div><h3>Templates &amp; Tools Library</h3><p>Ready-to-use checklists, scripts, planners, worksheets and calculators.</p></div>
+    <div class="ben"><div class="ico">🆕</div><h3>New Monthly Resources</h3><p>Fresh practical materials to help you improve your business.</p></div>
+    <div class="ben"><div class="ico">🤝</div><h3>Business Check-Ins &amp; Support</h3><p>Guidance, accountability and support to help you stay focused on your business goals.</p></div>
+    <div class="ben"><div class="ico">🔗</div><h3>Business Connections</h3><p>Opportunities to connect and collaborate with other business owners.</p></div>
   </div>
-  <div class="sec-label">Membership includes — in detail</div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">📣</span>Business Spotlight or collab on Instagram + Blog</div><div class="feat-b">Receive <b>at least 1 dedicated Business Spotlight or collaboration post within your membership year</b>, shared on the Auntie Tobi Instagram and published on the Auntie Tobi Blog. Use it to:</div><ul class="ticks"><li>Introduce your business and the story behind it</li><li>Showcase a product or service</li><li>Promote an offer, launch or something new</li><li>Help more of the Auntie Tobi community discover your business</li></ul><div class="feat-note">Because it’s also on the Blog, people can come across your Spotlight again and share it after the Instagram post.</div></div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">💚</span>Business Club Promotional Opportunities — Business Discovery</div><div class="feat-b">As an Auntie Tobi Business Club member, your business will have opportunities to be featured in our <b>business discovery series and promotional campaigns</b> throughout the year.</div><div class="feat-b">These features are designed to increase your business visibility, introduce your products or services to potential customers, and help more Nigerians across the UK discover businesses like yours.</div><div class="feat-note">Please note: Features are scheduled based on relevant campaigns, business categories and promotional opportunities. The number and frequency of features may vary.</div></div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">⭐</span>Featured Business on the Auntie Tobi app and website — for 1 year</div><div class="feat-b">Your business is shown as a <b>Featured Business</b> on the Auntie Tobi app and website <b>for 12 months</b>, to help people looking for Nigerian businesses in the UK find you.</div></div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">🛍️</span>Your product or service on the Marketplace — for 1 year</div><div class="feat-b">List <b>your product or service on the Auntie Tobi Marketplace for 12 months</b>, where the community browses products and services from Nigerian businesses in the UK.</div><div class="feat-note"><a href="/marketplace" style="color:#057A44">Visit the Marketplace →</a></div></div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">✅</span>Auntie Tobi verification badge</div><div class="feat-b"><b>Eligible businesses</b> that complete the Auntie Tobi verification can display the <b>verified badge</b> — a simple signal that can help customers feel confident about you.</div></div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">📲</span>Instagram Story Repost Opportunities</div><div class="feat-b">Business Club members will have opportunities for their businesses, products and services to be shared on <b>Auntie Tobi’s Instagram Stories</b> throughout the year, helping them reach a wider audience and attract potential customers.</div><div class="feat-note">Story reposts will be selected and scheduled by Auntie Tobi based on content suitability, relevance and promotional opportunities. The frequency of reposts may vary.</div></div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">📲</span>Instagram Post &amp; Reel Repost Opportunities</div><div class="feat-b">Business Club members will have opportunities for their <b>Instagram posts and Reels</b> to be reposted or shared with the Auntie Tobi audience throughout the year, helping increase their business visibility, reach potential customers and showcase their products or services.</div><div class="feat-note">Posts and Reels will be selected by Auntie Tobi based on content quality, relevance and promotional opportunities. The frequency of reposts may vary.</div></div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">💻</span>Access to the Auntie Tobi Business Studio</div><div class="feat-b">Your own online Business Studio to plan, create and keep track — on your phone or computer. It includes:</div><ul class="ticks"><li><b>Business Growth Lessons</b> — eight learning modules on Instagram, content, sales, customer experience, business tools, planning, growth and Auntie Tobi visibility</li><li><b>Templates &amp; Tools</b> — the premium library of message scripts, planners, pricing calculators, worksheets and checklists</li><li><b>Business Studio Tutorials</b> — step-by-step guides to every feature</li><li><b>Content ideas</b> — fresh ideas, captions, Reel scripts and content plans for your business (AI help included every day)</li><li><b>Follow-up tool</b> — log enquiries, get reminded to follow up and keep in touch with past customers</li><li><b>Tracker</b> — record enquiries, bookings and sales and see what’s working</li></ul><div class="chips"><span class="chip">Quotes & invoices</span><span class="chip">Branded post images</span><span class="chip">Price list page</span><span class="chip">Review QR code</span><span class="chip">Daily actions</span></div><div class="feat-note">New resources are added regularly. <a href="/business-studio" style="color:#057A44">See everything in the Business Studio →</a></div></div>
-<div class="feat"><div class="feat-h"><span class="feat-ico">📊</span>Business Check-Up &amp; Accountability</div><div class="feat-b">Access a simple <b>business check-up</b> to review your goals, progress, online presence and areas for improvement.</div><div class="feat-b">Use <b>Auntie Tobi Business Studio</b> to set goals, plan your next steps and track your progress at your own pace.</div><div class="feat-note">💚 A self-guided tool to help you stay focused, organised and consistent.</div></div>
-  <div class="best">
-    <div class="best-h">The Business Club is for you if you want to:</div>
-    <ul class="ticks"><li>Expose your business to more of the Nigerian community in the UK</li><li>Be featured on Auntie Tobi and easier to find</li><li>Have practical tools and ideas you can use at your own pace</li><li>Follow up with customers and keep track of what’s working</li></ul>
-  </div>
-  <div class="price-strip">
-    <div><div class="ps-big">£50 for 12 months</div><div class="ps-small">Paid once a year</div></div>
-    <div class="ps-month">£4.17<span>approx. per month</span></div>
-  </div>
-  <a href="https://buy.stripe.com/8x2eVccnf1U3a287SR4Ni0e" target="_blank" rel="noopener" class="cta-btn">Join Business Club — £50 →</a>
-</div>
+</div></section>
 
-<!-- READY TO JOIN -->
-<div class="card" id="join" style="background:transparent;box-shadow:none;padding:0;">
-  <div class="ctitle" style="text-align:center;margin:6px 0 10px;">Ready to join?</div>
-  <div class="final club">
-    <div class="f-name">💚 Auntie Tobi Business Club</div>
-    <div class="f-price">£50/year</div>
-    <div class="f-for">More exposure. More support. More opportunities to grow.</div>
-    <ul class="ticks"><li>At least 1 Business Spotlight or collab on Auntie Tobi Instagram + Blog</li><li>Business Club promotional opportunities — Business Discovery</li><li>Featured Business on the Auntie Tobi app/website for 1 year</li><li>Your product or service on the Marketplace for 1 year</li><li>Verification badge for eligible businesses</li><li>Instagram Story repost opportunities</li><li>Instagram Post &amp; Reel repost opportunities</li><li>Auntie Tobi Business Studio — resources, content ideas, follow-up tool and tracker</li><li>Business Check-Up &amp; Accountability</li></ul>
-    <a href="https://buy.stripe.com/8x2eVccnf1U3a287SR4Ni0e" target="_blank" rel="noopener" class="cta-btn">Join Business Club — £50 →</a>
+<!-- HOW IT WORKS -->
+<section style="padding-top:0"><div class="wrap">
+  <div class="head center"><div class="eyebrow">How it works</div><h2>Three simple steps</h2></div>
+  <div class="steps">
+    <div class="step"><h3>Join the Business Club</h3><p>Pay £50 securely with Stripe. Your membership lasts 12 months.</p></div>
+    <div class="step"><h3>Set up your Business Studio &amp; listing</h3><p>Add your business profile, link your Auntie Tobi listing and add your product or service to the Marketplace.</p></div>
+    <div class="step"><h3>Get featured and grow</h3><p>Look out for your Spotlight, discovery features and reposts — and use the lessons and tools at your own pace.</p></div>
   </div>
-  <p class="cta-note" style="margin-top:12px;">🔒 Secure payment by Stripe. Questions before joining? <a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20have%20a%20question%20about%20the%20Business%20Club" target="_blank" rel="noopener" style="color:#057A44;font-weight:700;">Chat with us on WhatsApp</a></p>
-</div>
+</div></section>
+
+<!-- IN DETAIL -->
+<section style="padding-top:0"><div class="wrap">
+  <div class="head"><div class="eyebrow">In detail</div><h2>Your visibility and support benefits</h2><p class="sub">Tap any benefit to see exactly what’s included.</p></div>
+  <div class="acc">
+    <details><summary><span class="i">📣</span><span class="t">Business Spotlight or collab on Instagram + Blog<small>At least 1 in your membership year</small></span></summary><div class="body">
+      <p>Receive <b>at least 1 dedicated Business Spotlight or collaboration post within your membership year</b>, shared on the Auntie Tobi Instagram and published on the Auntie Tobi Blog. Use it to:</p>
+      <ul class="ticks"><li>Introduce your business and the story behind it</li><li>Showcase a product or service</li><li>Promote an offer, launch or something new</li><li>Help more of the Auntie Tobi community discover your business</li></ul>
+      <div class="note">Because it’s also on the Blog, people can come across your Spotlight again and share it after the Instagram post.</div></div></details>
+    <details><summary><span class="i">💚</span><span class="t">Business Discovery features<small>Promotional campaigns through the year</small></span></summary><div class="body">
+      <p>As a Business Club member, your business will have opportunities to be featured in our <b>business discovery series and promotional campaigns</b> throughout the year.</p>
+      <p>These features are designed to increase your business visibility, introduce your products or services to potential customers, and help more Nigerians across the UK discover businesses like yours.</p>
+      <div class="note">Features are scheduled based on relevant campaigns, business categories and promotional opportunities. The number and frequency of features may vary.</div></div></details>
+    <details><summary><span class="i">⭐</span><span class="t">Featured Business on the Auntie Tobi app and website<small>For 12 months</small></span></summary><div class="body">
+      <p>Your business is shown as a <b>Featured Business</b> on the Auntie Tobi app and website <b>for 12 months</b>, to help people looking for Nigerian businesses in the UK find you.</p></div></details>
+    <details><summary><span class="i">🛍️</span><span class="t">Your product or service on the Marketplace<small>For 12 months</small></span></summary><div class="body">
+      <p>List <b>your product or service on the Auntie Tobi Marketplace for 12 months</b>, where the community browses products and services from Nigerian businesses in the UK.</p>
+      <p><a href="/marketplace">Visit the Marketplace →</a></p></div></details>
+    <details><summary><span class="i">✅</span><span class="t">Auntie Tobi verification badge<small>For eligible businesses</small></span></summary><div class="body">
+      <p><b>Eligible businesses</b> that complete the Auntie Tobi verification can display the <b>verified badge</b> — a simple signal that can help customers feel confident about you.</p></div></details>
+    <details><summary><span class="i">📲</span><span class="t">Instagram Story repost opportunities<small>Through the year</small></span></summary><div class="body">
+      <p>Your business, products and services can be shared on <b>Auntie Tobi’s Instagram Stories</b> throughout the year, helping you reach a wider audience and attract potential customers.</p>
+      <div class="note">Story reposts are selected and scheduled by Auntie Tobi based on content suitability, relevance and promotional opportunities. The frequency of reposts may vary.</div></div></details>
+    <details><summary><span class="i">🎬</span><span class="t">Instagram Post &amp; Reel repost opportunities<small>Through the year</small></span></summary><div class="body">
+      <p>Your <b>Instagram posts and Reels</b> can be reposted or shared with the Auntie Tobi audience throughout the year, helping increase your visibility, reach potential customers and showcase your products or services.</p>
+      <div class="note">Posts and Reels are selected by Auntie Tobi based on content quality, relevance and promotional opportunities. The frequency of reposts may vary.</div></div></details>
+    <details><summary><span class="i">💻</span><span class="t">Access to the Auntie Tobi Business Studio<small>Lessons, templates, AI tools and more</small></span></summary><div class="body">
+      <p>Your own online Business Studio to plan, create and keep track — on your phone or computer. It includes:</p>
+      <ul class="ticks"><li><b>Business Growth Lessons</b> — eight learning modules on Instagram, content, sales, customer experience, business tools, planning, growth and Auntie Tobi visibility</li><li><b>Templates &amp; Tools</b> — the premium library of message scripts, planners, pricing calculators, worksheets and checklists</li><li><b>Business Studio Tutorials</b> — step-by-step guides to every feature</li><li><b>Content ideas</b> — fresh ideas, captions, Reel scripts and content plans for your business, with 20 daily AI credits</li><li><b>Follow-up tool</b> — log enquiries, get reminded to follow up and keep in touch with past customers</li><li><b>Tracker</b> — record enquiries, bookings and sales and see what’s working</li></ul>
+      <div class="chips"><span class="chip">Quotes &amp; invoices</span><span class="chip">Branded post images</span><span class="chip">Price list page</span><span class="chip">Review QR code</span><span class="chip">Daily actions</span></div>
+      <p style="margin-top:10px"><a href="/business-studio">See everything in the Business Studio →</a></p></div></details>
+    <details><summary><span class="i">📊</span><span class="t">Business Check-Up &amp; Accountability<small>A self-guided tool</small></span></summary><div class="body">
+      <p>Access a simple <b>business check-up</b> to review your goals, progress, online presence and areas for improvement.</p>
+      <p>Use <b>Auntie Tobi Business Studio</b> to set goals, plan your next steps and track your progress at your own pace.</p>
+      <div class="note">💚 A self-guided tool to help you stay focused, organised and consistent.</div></div></details>
+  </div>
+</div></section>
+
+<!-- WHO + PRICE -->
+<section style="padding-top:0" id="join"><div class="wrap">
+  <div class="split">
+    <div class="who">
+      <div class="eyebrow">Is it for me?</div>
+      <h3>The Business Club is for you if you want to:</h3>
+      <ul class="ticks"><li>Expose your business to more of the Nigerian community in the UK</li><li>Be featured on Auntie Tobi and easier to find</li><li>Have practical tools and ideas you can use at your own pace</li><li>Follow up with customers and keep track of what’s working</li></ul>
+      <p class="sub" style="margin-top:14px;font-size:15.5px">Not a Nigerian business in the UK? <a href="/business-studio" style="color:var(--green);font-weight:700">Business Studio</a> is for any business — start free.</p>
+    </div>
+    <div class="price">
+      <div class="lab">Annual membership</div>
+      <div class="amt">£50 <span>/ 12 months</span></div>
+      <div class="per">Paid once a year · about £4.17 a month</div>
+      <ul class="ticks"><li>Business Spotlight or collab on Instagram + Blog</li><li>Featured Business &amp; Marketplace listing for 12 months</li><li>Story, Post &amp; Reel repost opportunities</li><li>Full Business Studio with 20 daily AI credits</li><li>Lessons, templates, check-ins and connections</li></ul>
+      <a class="btn gold block" href="https://buy.stripe.com/8x2eVccnf1U3a287SR4Ni0e" target="_blank" rel="noopener">Join the Business Club — £50 →</a>
+      <div class="small">🔒 Secure payment by Stripe</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- FAQ -->
+<section style="padding-top:0"><div class="wrap">
+  <div class="head center"><div class="eyebrow">Questions</div><h2>Good to know</h2></div>
+  <div class="faq">
+    <details><summary>Who can join the Business Club?</summary><p>The Business Club is for Nigerian businesses in the UK. If you run any other kind of business, you can use <a href="/business-studio">Business Studio</a> — it’s free to start.</p></details>
+    <details><summary>How long does membership last?</summary><p>12 months. It’s £50, paid once a year — about £4.17 a month.</p></details>
+    <details><summary>Is Business Studio included?</summary><p>Yes. You get the full Business Studio — every tool including the advanced ones, 20 daily AI credits, all the Growth Lessons and the full Templates &amp; Tools library.</p></details>
+    <details><summary>When will my Spotlight and features happen?</summary><p>You’ll get at least 1 dedicated Spotlight or collaboration post within your membership year. Discovery features and reposts are scheduled through the year based on campaigns, business categories and content suitability, so how often they happen can vary.</p></details>
+    <details><summary>Do you guarantee views or sales?</summary><p>No. Our goal is to help expose your business to more potential customers and support your growth. We do not guarantee views, enquiries, bookings or sales.</p></details>
+    <details><summary>I have another question</summary><p>We’re happy to help — <a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20have%20a%20question%20about%20the%20Business%20Club" target="_blank" rel="noopener">chat with us on WhatsApp</a>.</p></details>
+  </div>
+</div></section>
 
 <!-- END -->
-<div class="navy-end">
-  <div class="ne-1">Helping you expose your business, with resources and promotional support — <b style="color:white;">all year round.</b></div>
-  <div class="ne-2">One membership. <span style="color:#FFB81C;">£50 a year.</span></div>
-  <div class="ne-3">Let’s grow your business together. 💚</div>
-</div>
+<div class="end"><div class="wrap">
+  <h2>Let’s grow your business together 💚</h2>
+  <p class="sub">One membership. Promotion, tools and support — all year round. <b style="color:var(--gold)">£50 a year.</b></p>
+  <a class="btn gold" href="https://buy.stripe.com/8x2eVccnf1U3a287SR4Ni0e" target="_blank" rel="noopener">Join the Business Club →</a>
+  <p class="disc">Our goal is to help expose your business to more potential customers and support your growth. We do not guarantee views, enquiries, bookings or sales.</p>
+</div></div>
+<footer>Auntie Tobi · <a href="/">auntietobi.co.uk</a> · <a href="/business-studio">Business Studio</a></footer>
 
-</div>
+<div class="sbar" id="sbar"><div><b>Business Club · £50/year</b><span>For Nigerian businesses in the UK</span></div><a class="btn gold" href="https://buy.stripe.com/8x2eVccnf1U3a287SR4Ni0e" target="_blank" rel="noopener">Join →</a></div>
+<script>
+(function () {
+  var bar = document.getElementById('sbar'), hero = document.getElementById('top'), end = document.querySelector('.end');
+  function upd() { var past = hero.getBoundingClientRect().bottom < 0, atEnd = end.getBoundingClientRect().top < window.innerHeight; bar.classList.toggle('show', past && !atEnd); }
+  window.addEventListener('scroll', upd, { passive: true }); upd();
+})();
+</script>
 </body>
 </html>
