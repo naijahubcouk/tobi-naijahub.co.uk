@@ -245,6 +245,7 @@ Provide 2 versions separated by a line containing only ---. Each version must en
       choice('days', 'Plan length', ['7', '30'], '7'),
       text('focus', 'Focus for this period (launch, season, offer…)', 500),
       choice('frequency', 'Posting frequency', ['daily', '5 times a week', '3 times a week'], '5 times a week'),
+      choice('place', 'Where should the posts go?', ['my calendar', 'Ideas'], 'my calendar'),
     ],
     prompt: (i, extra) => `Create a ${i.days}-day content plan for the places this business's customers find it (see profile).
 ${i.focus ? `Focus: ${i.focus}\n` : ''}Posting frequency: ${i.frequency}. Mark non-posting days as "Rest / engage with followers".

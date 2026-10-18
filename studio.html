@@ -51,6 +51,7 @@ a{color:var(--green)}
 .pill.grey{background:#ECEDF0;color:var(--muted)}
 .pill.goldl{background:var(--gold-l);color:#7A5300}
 .opt{font-weight:400;color:var(--muted)}
+.aiopt{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line,#e5e7eb);border-radius:14px;padding:12px 14px;font:inherit;cursor:pointer}.aiopt b{display:block;font-size:15px}.aiopt span{display:block;color:var(--muted);font-size:13px;margin-top:2px}.aiopt[aria-pressed=true]{border-color:#16a34a;background:#f0fdf4}
 .pill.cream{background:rgba(251,246,236,.12);color:var(--cream)}
 
 main{max-width:640px;margin:0 auto;padding:16px}
@@ -1851,12 +1852,18 @@ nav.tabs .navsep{display:none}
     $$('[data-pv]').forEach(function (b) { b.onclick = function () { showPlan(b.dataset.pv); }; });
     $('#pAi').onclick = function () {
       var scrim = document.createElement('div'); scrim.className = 'scrim';
-      scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true"><h2 style="margin:0">✨ Plan with AI</h2><p class="sub" style="margin:0">Auntie Tobi plans a post for each day and adds them to your calendar as cards. Cards you’ve edited, drafted or posted are kept.</p>' +
+      var place = 'my calendar';
+      scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true"><h2 style="margin:0">✨ Plan with AI</h2><p class="sub" style="margin:0">Auntie Tobi plans a post for each day — format, idea, hook and call to action.</p>' +
+        '<div class="stack" style="gap:8px" id="aiPlace">' +
+        '<button type="button" class="aiopt" data-v="my calendar" aria-pressed="true"><b>📅 Put them on my calendar</b><span>Automatic — each post gets a date, starting today. Cards you’ve edited, drafted or posted are kept.</span></button>' +
+        '<button type="button" class="aiopt" data-v="Ideas" aria-pressed="false"><b>💡 Add them to my Ideas</b><span>Manual — the posts go into Plan → Ideas with no dates. You choose when to post each one.</span></button></div>' +
         '<button class="btn primary block" id="ai7">Plan 7 days (1 generation)</button><button class="btn ghost block" id="ai30">Plan 30 days (3 generations)</button><button class="btn link" id="aiX">Cancel</button></div>';
       document.body.appendChild(scrim);
+      $$('#aiPlace .aiopt', scrim).forEach(function (b) { b.onclick = function () { place = b.dataset.v; $$('#aiPlace .aiopt', scrim).forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); }); }; });
       $('#aiX', scrim).onclick = function () { scrim.remove(); };
-      $('#ai7', scrim).onclick = function () { scrim.remove(); showTool('planner', { days: '7' }, { back: function () { showPlan('calendar'); }, tab: 'plan' }); };
-      $('#ai30', scrim).onclick = function () { scrim.remove(); showTool('planner', { days: '30' }, { back: function () { showPlan('calendar'); }, tab: 'plan' }); };
+      function go(days) { scrim.remove(); showTool('planner', { days: days, place: place }, { back: function () { showPlan(place === 'Ideas' ? 'board' : 'calendar'); }, tab: 'plan' }); }
+      $('#ai7', scrim).onclick = function () { go('7'); };
+      $('#ai30', scrim).onclick = function () { go('30'); };
     };
     try {
       if (!S.today) S.today = await api('studio-growth', 'home');
@@ -2182,6 +2189,13 @@ nav.tabs .navsep{display:none}
       renderResult(resEl, r.item, function () { run(inp); });
       resultExtras(resEl, r.item, function () { run(inp); }, opts.back || showCreate);
       if (r.calendarAdded) toast(r.calendarAdded + ' posts added to your calendar');
+      if (r.ideasAdded) {
+        toast(r.ideasAdded + ' post ideas added to your Plan');
+        var ib = document.createElement('div'); ib.className = 'card'; ib.style.cssText = 'margin-bottom:12px;background:#ecfdf5;border-color:#a7f3d0';
+        ib.innerHTML = '<b>💡 ' + r.ideasAdded + ' post ideas added to Plan → Ideas</b><p class="sub" style="margin:4px 0 10px">They have no dates yet. Open each one to write the caption and pick a date.</p><button class="btn small primary" id="seeIdeas">View my ideas</button>';
+        resEl.insertBefore(ib, resEl.firstChild);
+        $('#seeIdeas', ib).onclick = function () { S.planCol = 'idea'; showPlan('board'); };
+      }
       if (opts.onSuccess) { try { opts.onSuccess(r.item); } catch (e) {} }
     }
     if (opts.autoRun) run(readInput());
