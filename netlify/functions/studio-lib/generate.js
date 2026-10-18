@@ -343,12 +343,14 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   if (res.fromCredits) await credits.commit(email, idemKey, info);
   await addGlobal(monthKey(), info, settings);
   await addToHistory(email, item);
-  let calendarAdded = 0;
+  let calendarAdded = 0, ideasAdded = 0;
   if (toolId === 'planner') {
-    calendarAdded = await growth.savePlanToCalendar(email, id, result.text, core.dayKey(), Number(input.days) || 7)
+    if (input.place === 'Ideas') {
+      ideasAdded = await growth.savePlanToIdeas(email, id, result.text, Number(input.days) || 7).catch(e => { console.error('[studio] ideas save failed', e); return 0; });
+    } else calendarAdded = await growth.savePlanToCalendar(email, id, result.text, core.dayKey(), Number(input.days) || 7)
       .catch(e => { console.error('[studio] calendar save failed', e); return 0; });
   }
-  return { item, replayed: false, calendarAdded };
+  return { item, replayed: false, calendarAdded, ideasAdded };
 }
 
 async function usageSummary(email, access) {

@@ -167,6 +167,25 @@ async function savePlanToCalendar(email, planItemId, text, startDay, days) {
   return parsed.length;
 }
 
+// Manual planning: the same AI plan, added to Plan → Ideas with no dates, so the member schedules them.
+async function savePlanToIdeas(email, planItemId, text, days) {
+  const parsed = parsePlan(text).filter(p => p.day >= 1 && p.day <= days);
+  if (!parsed.length) return 0;
+  let added = 0;
+  await cas(calKey(email), cur => {
+    let items = (cur && cur.items) || [];
+    const room = Math.max(0, CAL_MAX - items.length);
+    for (const p of parsed.slice(0, room)) {
+      items.push({ id: `i${Date.now().toString(36)}${core.randomToken(3).replace(/[^A-Za-z0-9]/g, '')}${p.day}`, date: '', ...p, type: require('./plan').normalize({ format: p.format }).type,
+        notes: [p.hook ? `Hook: ${p.hook}` : '', p.cta ? `CTA: ${p.cta}` : ''].filter(Boolean).join('\n'), status: 'idea', fromPlannerIdeas: true, planId: planItemId, createdAt: core.nowIso() });
+      added++;
+    }
+    if (!added) throw new HttpError(400, 'too_many', 'Your plan is full — delete some old cards first.');
+    return { items };
+  });
+  return added;
+}
+
 async function listCalendar(email) { return ((await getJson(calKey(email))) || {}).items || []; }
 
 async function updateCalendarItem(email, id, status) {
@@ -565,6 +584,6 @@ async function pilotSummary(days) {
 
 module.exports = {
   goalLabel,
-  GOALS, getGoal, setGoal, parsePlan, savePlanToCalendar, listCalendar, updateCalendarItem, deleteCalendarItem,
+  GOALS, getGoal, setGoal, parsePlan, savePlanToCalendar, savePlanToIdeas, listCalendar, updateCalendarItem, deleteCalendarItem,
   recentTopics, today, home, setActionDone, getProgress, saveProgress, addPost, bump, summary, pilotBump, pilotSummary, addDays, TEMPLATES: T,
 };
