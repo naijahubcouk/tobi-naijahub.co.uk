@@ -64,7 +64,7 @@ async function hold(email, idemKey, n) {
     const c = cur || empty();
     c.holds = c.holds || {};
     if (c.holds[idemKey]) return undefined;
-    if (balanceOf(c, now) < n) throw new HttpError(402, 'limit_reached', 'You’ve used all your AI generations for today. Buy credits or upgrade to keep going.', { remaining: 0 });
+    if (balanceOf(c, now) < n) throw new HttpError(402, 'limit_reached', 'You’ve used all your daily AI credits. Buy extra credits or upgrade to keep going.', { remaining: 0 });
     c.holds[idemKey] = { n, t: now };
     return c;
   });
@@ -85,7 +85,7 @@ async function commit(email, idemKey, info) {
     let need = h.n;
     for (const l of liveLots(c, Date.now())) { if (!need) break; const take = Math.min(l.left, need); l.left -= take; need -= take; }
     delete c.holds[idemKey];
-    pushLog(c, { n: -(h.n - need), what: `Used for ${(info && info.tool) || 'a generation'}` });
+    pushLog(c, { n: -(h.n - need), what: `Used for ${(info && info.tool) || 'an AI tool'}` });
     return c;
   });
 }
@@ -170,7 +170,7 @@ async function fromSession(s) {
   await core.audit(email, 'credits_bought', { credits: n, pence, session: s.id });
   const exp = new Date(Date.now() + VALID_MS).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' });
   await core.sendEmail([email], `${n} AI credits added to your Business Studio`,
-    `Thank you! ${n} AI credits have been added to your Auntie Tobi Business Studio.\n\nYour daily generations are used first; your credits are used when you need more. They last until ${exp}.\n\nThis was a one-off payment — nothing will renew.\n\nAuntie Tobi 💚`).catch(() => {});
+    `Thank you! ${n} AI credits have been added to your Auntie Tobi Business Studio.\n\nYour daily AI credits are used first; your extra credits are used when you need more. They last until ${exp}.\n\nThis was a one-off payment — nothing will renew.\n\nAuntie Tobi 💚`).catch(() => {});
   return { ok: true, email, credits: n };
 }
 

@@ -55,9 +55,9 @@ async function reserve(email, idemKey, limit, day, cost, creditsAvail) {
         if (creditsAvail >= need) {
           split = { daily: remaining, fromCredits: need };
         } else if (remaining > 0) {
-          throw new HttpError(402, 'not_enough', `This needs ${cost} generations and you have ${remaining} left today${creditsAvail ? ` plus ${creditsAvail} credits` : ''}. Buy credits or upgrade to keep going.`, { used: u.used, limit, remaining, credits: creditsAvail });
+          throw new HttpError(402, 'not_enough', `This needs ${cost} AI credits and you have ${remaining} daily left${creditsAvail ? ` plus ${creditsAvail} extra` : ''}. Buy credits or upgrade to keep going.`, { used: u.used, limit, remaining, credits: creditsAvail });
         } else {
-          throw new HttpError(402, 'limit_reached', 'You\'ve used all your AI generations for today. Buy credits or upgrade to keep going — or come back after midnight.', { used: u.used, limit, remaining: 0, credits: creditsAvail });
+          throw new HttpError(402, 'limit_reached', 'You\'ve used all your daily AI credits. Buy extra credits or upgrade to keep going — or come back after midnight.', { used: u.used, limit, remaining: 0, credits: creditsAvail });
         }
       } else split = { daily: cost, fromCredits: 0 };
       u.pending[idemKey] = { t: now, n: split.daily, c: split.fromCredits };
