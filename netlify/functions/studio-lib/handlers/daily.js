@@ -47,7 +47,7 @@ async function buildDigest(member, acc) {
     core.getJson(`profiles/${core.enc(email)}`), growth.summary(email), money.list(email), money.reminders(email, { all: true }),
   ]);
   const lw = sum.lastWeek || { enquiries: 0, bookings: 0, salesCount: 0, salesGbp: 0, posts: 0, days: 0 };
-  const lesson = acc.resources ? await resources.suggestLesson(email, profile, { thisWeek: sum.lastWeek || {}, lastWeek: {} }).catch(() => null) : null;
+  const lesson = acc.resources ? await resources.suggestLesson(email, profile, { thisWeek: sum.lastWeek || {}, lastWeek: {} }, { full: true, club: !!acc.membershipActive }).catch(() => null) : null;
   const name = (profile && profile.businessName) || 'your business';
   const studio = `${siteUrl()}/studio`;
   const unsub = `${siteUrl()}/.netlify/functions/studio-unsubscribe?e=${encodeURIComponent(email)}&t=${prefs.unsubToken(email)}`;

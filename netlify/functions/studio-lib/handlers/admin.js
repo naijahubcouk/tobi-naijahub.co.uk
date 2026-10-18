@@ -676,6 +676,11 @@ exports.handler = handler(async (ctx) => {
       await core.audit(actor, 'resource_save', { id: lesson.id, status: lesson.status });
       return { lesson };
     }
+    case 'res-unpublish': {
+      const lesson = await resources.adminUnpublish(actor, String(body.id || ''));
+      await core.audit(actor, 'res_unpublish', { id: lesson.id });
+      return { lesson };
+    }
     case 'res-delete': {
       await resources.adminDelete(String(body.id || ''));
       await core.audit(actor, 'resource_delete', { id: String(body.id || '') });

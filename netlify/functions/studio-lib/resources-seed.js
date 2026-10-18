@@ -7,7 +7,7 @@
  *
  * Formatting used in lesson text:  ## Heading   - bullet   1. numbered   **bold**   > Tip box   [link](https://…)
  */
-const VERSION = 8;
+const VERSION = 9;
 const REVIEWED = '2026-10-16';
 
 // Every module and lesson title. "planned" = shown to members as Coming soon.
@@ -18,6 +18,9 @@ const OUTLINE = {
   m04: ['Understanding Your Customer’s Buying Journey', 'How to Present Your Products or Services', 'Writing Offers Without Constant Discounts', 'How to Respond to Customer Enquiries', 'Following Up Without Being Pushy', 'How to Ask for Customer Reviews', 'Encouraging Repeat Purchases and Referrals', 'How to Turn Enquiries Into Orders'],
   m05: ['Setting Up WhatsApp Business', 'Using WhatsApp Catalogue, Labels & Quick Replies', 'Creating Designs With Canva', 'Using ChatGPT Responsibly for Business', 'Using Google Business Profile Where Eligible', 'Organising Orders and Customer Enquiries', 'Simple Business Tracking With Spreadsheets'],
   m06: ['Business Mindset: Ownership & Consistency', 'Visibility vs Sales: Understanding the Difference', 'Pricing Your Products or Services', 'Understanding Costs, Profit and Cash Flow', 'Finding Your Competitive Advantage', 'Building Customer Trust', 'Creating a Simple 90-Day Growth Strategy', 'Learning From Your Business Results'],
+  m07: ['How to Build Your Monthly Marketing Calendar', 'How to Plan Seasonal Campaigns', 'How to Prepare for Product Launches and Promotions', 'How to Use Stories to Build Customer Relationships', 'How to Plan a Customer Appreciation Campaign', 'How to Balance Sales Posts With Helpful Content', 'How to Review Last Month and Plan the Next'],
+  m08: ['Prepare Your Business for a Dedicated Spotlight', 'Create an Effective Marketplace Product or Service Listing', 'How to Submit Your Business for Relevant Discovery Features', 'How to Make the Most of an Auntie Tobi Repost', 'How to Collaborate With Complementary Businesses', 'Track Enquiries Generated Through Auntie Tobi', 'Prepare for Your Business Check-In and Stay Accountable'],
+  m09: ['Focus: Doing Fewer Things Well', 'Staying Consistent When Results Are Slow'],
 };
 
 function slug(t) { return String(t).toLowerCase().replace(/’/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48); }
@@ -309,9 +312,12 @@ Find **three people** who asked about prices or availability but didn’t book. 
 
 // Launch content written in resources-content/ (matched by module + title).
 const C1 = require('./resources-content/m01'), C2 = require('./resources-content/m02'), C4 = require('./resources-content/m04'), C36 = require('./resources-content/m03m06');
+const C9 = require('./resources-content/m09'), TOOLS = require('./resources-content/tools');
 for (const [mod, set] of [['m01', C1], ['m02', C2], ['m04', C4], ['m03', C36.m03], ['m06', C36.m06]]) {
   for (const [title, body] of Object.entries(set)) FULL[idFor(mod, title)] = body;
 }
+// Business Mindset: the first lesson keeps its original id (it used to be in module 06).
+for (const [title, body] of Object.entries(C9)) FULL[idFor(title === 'Business Mindset: Ownership & Consistency' ? 'm06' : 'm09', title)] = body;
 
 // "Studio" → "Business Studio" in all lesson text (seed update 8).
 const STUD = /(?<!Business )(?<![\w-])Studio(?![\w-])/g;
@@ -333,6 +339,8 @@ function lessons() {
       out.push(full ? bs({ ...base, ...full, readMins: full.readMins || Math.max(1, Math.round(words / 200)), status: full.status || 'published', publishAt: full.status === 'planned' ? '' : (full.publishAt || REVIEWED), reviewedAt: full.reviewedAt || REVIEWED, seedRev: (full.seedRev || 2) + 1 }) : base);
     });
   }
+  // Templates & Tools only: calculators and Business Studio shortcuts (tools, not lessons — published).
+  TOOLS.forEach((t, i) => out.push(bs({ order: 90 + i, status: 'published', publishAt: REVIEWED, reviewedAt: REVIEWED, reviewMonths: 12, tags: ['all'], learn: '', see: '', do: '', readMins: 0, ...t })));
   return out;
 }
 

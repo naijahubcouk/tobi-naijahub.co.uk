@@ -476,3 +476,14 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - **Free plan:** sees everything in Templates & Tools but can only open the ones marked **Free** (5 to start: Follow-up 1 and 2, Instagram Bio Checklist, Thank-you after an order, Weekly review). Lessons stay locked.
 - **Admin → Resources:** each resource in a lesson has **Show in Templates & Tools** and **Free on the Free plan** switches. **+ New template or tool** makes a resource without a lesson (shows only in Templates & Tools).
 - **Saved & history** (everything members created with AI) moved to **Create → ★ Saved & history**.
+
+## 7ae. Resources — 9 modules, Club module, Business Mindset, tools by business need
+
+- **Learn modules:** 01 Start Here · 02 Business Mindset · 03 Instagram · 04 Content & Visibility · 05 Sales & Customer Experience · 06 Business Tools & Productivity · 07 Business Growth & Strategy · 08 Monthly Marketing & Business Planning · 09 Auntie Tobi Visibility & Collaboration.
+- **Who sees what:** Club, Pro and Plus see every module except **09 Auntie Tobi Visibility & Collaboration**, which is for **Business Club members only** (others see the titles with "💚 Business Club"). **Business Mindset is open to everyone, including the Free plan.** Free members see other modules locked.
+- The two Business Club lessons ("Welcome to Auntie Tobi Business Club", "How to Make the Most of Your Membership") moved to the Club module; members keep their progress.
+- **No placeholders:** members only see published lessons. Planned titles stay in Admin until written and approved. A module appears once it has a published lesson.
+- **Business Mindset:** 3 lessons are written and waiting for your approval (Admin → Resources → ready to publish).
+- **Templates & Tools** are grouped by business need (Planning & Goals, Social Media & Content, Customers & Follow-ups, Pricing/Sales & Money, Marketing & Promotions, Productivity & Operations, Business Club Toolkit), with a Type filter. New: 4 calculators (product pricing, service pricing, profit margin, promotion profit) and links to the Business Studio tools (Plan, Customers, Track, Quotes & invoices, To-do, Weekly goal, Marketplace).
+- **Send to a Studio tool:** checklists → "Add unticked items to my to-do list"; worksheets → "Turn my answers into tasks"; content templates → "Send to Plan ideas"; customer scripts → "Use with a customer". Checklists print to PDF; worksheets and calculators download as CSV.
+- **Admin → Resources:** each resource has a group, a "Send to" button choice, Free plan and show/hide switches; calculators have a type; "+ Link to a Studio tool"; published lessons have an **Unpublish** button.
