@@ -17,8 +17,8 @@ const MIN = 60 * 1000;
 const DEFAULT_SETTINGS = {
   freeLimit: 5,                 // generations per DAY on the Free plan (0 = Free plan switched off)
   standardLimit: 20,            // generations per DAY, Business Club
-  proLimit: 50,                 // generations per DAY with Business Studio Pro (£3/month)
-  powerLimit: 100,              // generations per DAY with Business Studio Plus (£5/month)
+  proLimit: 50,                 // generations per DAY with Business Studio Pro (no longer sold; existing subscribers)
+  powerLimit: 50,               // generations per DAY with Business Studio Plus (£50/year)
   perMinuteLimit: 6,            // burst protection per member
   spendWarnGbp: 30,             // email + admin alert when monthly AI spend passes this (and 2x). Never blocks.
   model: '',                    // blank = STUDIO_MODEL env or openai/gpt-4o-mini
@@ -399,7 +399,7 @@ async function requireMember(ctx, opts) {
   const allowed = level === 'buyer' ? true : level === 'view' ? acc.canView : acc.canCreate;
   if (!allowed) {
     throw new HttpError(403, acc.readOnly ? 'read_only' : 'no_access',
-      acc.readOnly ? 'Your Business Studio Pro has ended. Renew it to create new content — your library is still here.'
+      acc.readOnly ? 'Your Business Studio plan has ended. Renew it to create new content — your library is still here.'
         : 'You need a Business Studio account to use this. Sign in or start free.');
   }
   // Renew / rotate

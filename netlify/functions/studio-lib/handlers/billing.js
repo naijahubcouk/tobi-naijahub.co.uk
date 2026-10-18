@@ -27,9 +27,9 @@ exports.handler = handler(async (ctx) => {
 
   switch (action) {
     case 'checkout': {
-      if (!stripe.billingEnabled()) throw new HttpError(503, 'billing_not_configured', 'Business Studio Pro isn\'t available to buy just yet.');
-      const interval = ctx.body.interval === 'year' ? 'year' : 'month';
-      const tier = 'pro';   // Plus is no longer sold
+      if (!stripe.billingEnabled()) throw new HttpError(503, 'billing_not_configured', 'Business Studio Plus isn\'t available to buy just yet.');
+      const interval = 'year';
+      const tier = 'plus';   // the only plan for sale (yearly)
       if (!(stripe.availablePlans()[tier] || []).includes(interval)) throw new HttpError(400, 'invalid_plan', 'That plan is not available.');
       core.requireFresh(auth, core.SESSION.freshBillingMs);
       await core.rateLimit('checkout', email, 10, 60 * 60 * 1000);

@@ -29,18 +29,19 @@ function prices() {
     pro: { month: env('STRIPE_PRICE_PRO_MONTHLY') || null, year: env('STRIPE_PRICE_PRO_YEARLY') || null },
   };
 }
-// Plans for sale. Plus is no longer sold (existing Plus subscribers keep it — prices() still recognises them).
-const FOR_SALE = ['pro'];
-function availablePlans() {   // { pro: ['month','year'] } — only what's configured and for sale
+// For sale: Business Studio Plus, yearly only (£50/year). Pro and monthly Plus are no longer sold —
+// existing subscribers keep them (prices() still recognises every price).
+const FOR_SALE = { plus: ['year'] };
+function availablePlans() {   // { plus: ['year'] } — only what's configured and for sale
   const p = prices(), out = {};
-  for (const t of FOR_SALE) { const iv = ['month', 'year'].filter(i => p[t][i]); if (iv.length) out[t] = iv; }
+  for (const [t, ivs] of Object.entries(FOR_SALE)) { const iv = ivs.filter(i => p[t][i]); if (iv.length) out[t] = iv; }
   return out;
 }
 function billingEnabled() {
   return !!(env('STRIPE_SECRET_KEY') && env('STRIPE_WEBHOOK_SECRET') && Object.keys(availablePlans()).length);
 }
 function availableIntervals() {   // kept for older callers
-  return availablePlans().pro || [];
+  return availablePlans().plus || [];
 }
 
 function formEncode(obj, prefix, out) {
@@ -223,20 +224,20 @@ function siteUrl(event) {
 }
 
 async function startCheckout(email, interval, event, tier) {
-  tier = 'pro';
+  tier = 'plus';
   const priceId = prices()[tier][interval];
   if (!priceId) throw new HttpError(400, 'invalid_plan', 'That plan is not available.');
   const member = await core.getMember(email);
   if (member && member.blocked) throw new HttpError(403, 'account_blocked', 'This account has been suspended.');
   if (member && member.addon && core.LIVE_SUB_STATUSES.includes(member.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have Business Studio Pro. Use "Manage or cancel" in your Account.');
+    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio plan. Use "Manage or cancel" in your Account.');
   }
 
   // Re-check with Stripe in case a webhook hasn't arrived yet.
   const customerId = await ensureCustomer(email);
   const synced = await syncCustomer(customerId);
   if (synced && synced.addon && core.LIVE_SUB_STATUSES.includes(synced.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have Business Studio Pro. Use "Manage or cancel" in your Account.');
+    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio plan. Use "Manage or cancel" in your Account.');
   }
 
   // One open checkout per plan at a time: reuse it rather than creating another.

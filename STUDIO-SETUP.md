@@ -490,7 +490,7 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 
 ## 7af. Plans: Free, Business Club, Pro + AI credit top-ups
 
-- **For sale:** Free (5 a day), Business Club (£50/year, 20 a day + promotion), **Business Studio Pro** (£3/month or £30/year, 50 a day). **Plus is no longer sold** — existing Plus subscribers keep it (100 a day) until they cancel. In Stripe → Settings → Billing → **Customer portal → Switch plans**, remove the Plus prices so nobody can switch to it.
+- **For sale:** Free (5 a day), Business Club (£50/year, 20 a day + promotion), **Business Studio Plus — £50/year only, 50 a day** (uses `STRIPE_PRICE_PLUS_YEARLY`). **Pro (£3/£30) and Plus monthly (£5) are no longer sold** — existing subscribers keep them until they cancel. In Stripe → Settings → Billing → **Customer portal → Switch plans**, leave only the Plus yearly price. If you saved settings before, set Admin → Allowances & limits → Business Studio Plus to **50**.
 - **AI credit top-ups** (any plan, including Free): £5 for 300 · £10 for 750 · £20 for 1,600. One-off payment through Stripe Checkout — nothing renews. **No Stripe products to create**: the app sends the pack name and price. Set packs or switch top-ups off in Admin → Allowances & limits.
 - Daily generations are used first, then credits (oldest first). Credits last 12 months. A failed generation costs nothing. Credits add generations only — advanced tools still need the Club or Pro.
 - The Stripe webhook already listens to `checkout.session.completed` (adds the credits once) and `charge.refunded` (removes the unused credits from that purchase and alerts you).

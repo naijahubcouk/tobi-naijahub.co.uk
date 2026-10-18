@@ -2,7 +2,7 @@
 /*
  * AI credit top-ups — one-off packs bought through Stripe Checkout (no subscription, no renewal).
  * Anyone with a Business Studio account can buy them (Free, Club, Pro). Credits only add AI generations —
- * advanced tools still come with a plan.
+ * advanced tools still come with the Club or Plus.
  *
  * Daily generations are used first; purchased credits only when today's allowance can't cover a request.
  * Oldest credits (soonest expiry) are used first. Credits last 12 months.
