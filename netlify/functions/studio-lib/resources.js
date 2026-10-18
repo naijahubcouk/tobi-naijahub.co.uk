@@ -22,23 +22,24 @@ const seed = require('./resources-seed');
 // Display order = this list. access: 'club' = Business Club members only; 'all' = every plan, including Free.
 const MODULES = [
   { id: 't01', n: 'T', title: 'Business Studio Tutorials', desc: 'Step-by-step guides to using Business Studio.', icon: 'tutorial', access: 'all', kind: 'tutorial' },
-  { id: 'm01', n: '01', title: 'Start Here: Build Your Business Foundation', desc: 'Get organised, understand your customers and decide what to focus on.', icon: 'start' },
-  { id: 'm09', n: '02', title: 'Business Mindset', desc: 'Ownership, focus and consistency — the habits behind a steady business.', icon: 'mind', access: 'all' },
-  { id: 'm02', n: '03', title: 'Instagram for Business', desc: 'Turn your profile into a clearer, more trustworthy business presence.', icon: 'insta' },
-  { id: 'm03', n: '04', title: 'Content & Visibility', desc: 'Create content with a purpose instead of posting randomly.', icon: 'content' },
-  { id: 'm04', n: '05', title: 'Sales & Customer Experience', desc: 'Manage enquiries, communicate well and encourage repeat business.', icon: 'sales' },
-  { id: 'm05', n: '06', title: 'Business Tools & Productivity', desc: 'Save time, miss fewer tasks and build reliable routines.', icon: 'tools' },
-  { id: 'm06', n: '07', title: 'Business Growth & Strategy', desc: 'Understand your numbers and make better decisions.', icon: 'growth' },
-  { id: 'm07', n: '08', title: 'Monthly Marketing & Business Planning', desc: 'Plan around your customers, goals and seasonal opportunities.', icon: 'monthly' },
-  { id: 'm08', n: '09', title: 'Auntie Tobi Visibility & Collaboration', desc: 'Make the most of your Business Club Spotlight, Marketplace, reposts and Check-Up.', icon: 'visibility', access: 'club' },
+  { id: 'm01', n: '01', title: 'Start Here', desc: 'Become more intentional about how you run, market and grow your business — free for everyone.', icon: 'start', access: 'all' },
+  { id: 'm02', n: '02', title: 'Instagram for Business', desc: 'Turn your profile into a clearer, more trustworthy business presence.', icon: 'insta' },
+  { id: 'm03', n: '03', title: 'Content & Visibility', desc: 'Create content with a purpose instead of posting randomly.', icon: 'content' },
+  { id: 'm04', n: '04', title: 'Sales & Customer Experience', desc: 'Manage enquiries, communicate well and encourage repeat business.', icon: 'sales' },
+  { id: 'm05', n: '05', title: 'Business Tools & Productivity', desc: 'Save time, miss fewer tasks and build reliable routines.', icon: 'tools' },
+  { id: 'm06', n: '06', title: 'Business Growth & Strategy', desc: 'Understand your numbers and make better decisions.', icon: 'growth' },
+  { id: 'm07', n: '07', title: 'Monthly Marketing & Business Planning', desc: 'Plan around your customers, goals and seasonal opportunities.', icon: 'monthly' },
+  { id: 'm08', n: '08', title: 'Auntie Tobi Visibility & Collaboration', desc: 'Make the most of your Business Club Spotlight, Marketplace, reposts and Check-Up.', icon: 'visibility', access: 'club' },
 ];
 // Lessons moved to another module (ids stay the same, so members keep their progress).
 const MOVES = {
   'm01-welcome-to-auntie-tobi-business-club': 'm08',
   'm01-how-to-make-the-most-of-your-membership': 'm08',
-  'm06-business-mindset-ownership-and-consistency': 'm09',
 };
 const MOVES_VERSION = 1;
+// Lessons taken out of use (made drafts once — content kept, members stop seeing them). Start Here was rewritten.
+const RETIRE = ['m01-set-your-business-goals', 'm01-create-your-30-day-business-action-plan', 'm01-understanding-your-ideal-customer'];
+const RETIRE_VERSION = 1;
 const MODULE_ACCESS = Object.fromEntries(MODULES.map(m => [m.id, m.access || 'paid']));
 // acc: { full (Club, Pro or Plus), club (Business Club) }
 function canModule(mod, acc) { const a = MODULE_ACCESS[mod]; return a === 'all' ? true : a === 'club' ? !!(acc && acc.club) : !!(acc && acc.full); }
@@ -62,7 +63,7 @@ const GROUPS = [
   { id: 'club', label: 'Business Club Toolkit', icon: '💚' },
 ];
 const GROUP_IDS = GROUPS.map(g => g.id);
-const MODULE_GROUP = { t01: 'operations', m01: 'planning', m09: 'planning', m02: 'content', m03: 'content', m04: 'customers', m05: 'operations', m06: 'money', m07: 'marketing', m08: 'club' };
+const MODULE_GROUP = { t01: 'operations', m01: 'planning', m02: 'content', m03: 'content', m04: 'customers', m05: 'operations', m06: 'money', m07: 'marketing', m08: 'club' };
 function groupOf(b, module) { return GROUP_IDS.includes(b.group) ? b.group : b.type === 'calculator' ? 'money' : MODULE_GROUP[module] || 'planning'; }
 function sendOf(b, group) {
   if (b.send === 'none') return '';
@@ -99,7 +100,7 @@ const TOOL_TYPES = [
 // Free plan samples (until you choose others in Admin).
 const DEFAULT_FREE = new Set([
   'm04-following-up-without-being-pushy~0', 'm04-following-up-without-being-pushy~1', 'm02-optimising-your-instagram-bio~0',
-  'm04-encouraging-repeat-purchases-and-referrals~0', 'm01-create-your-30-day-business-action-plan~1',
+  'm04-encouraging-repeat-purchases-and-referrals~0',
 ]);
 function previewOf(b) {
   if (b.type === 'checklist') return (b.items || []).slice(0, 2).join(' · ').slice(0, 140);
@@ -176,9 +177,22 @@ async function applyMoves(idx) {
   });
   return out || (await getJson(INDEX_KEY)) || idx;
 }
+async function applyRetire(idx) {
+  if ((idx.retireVersion || 0) >= RETIRE_VERSION) return idx;
+  const now = core.nowIso();
+  for (const id of RETIRE) await cas(lessonKey(id), cur => (cur && cur.status !== 'draft' ? { ...cur, status: 'draft', adminEdited: true, updatedAt: now } : undefined)).catch(() => {});
+  const out = await cas(INDEX_KEY, cur => {
+    if (!cur || (cur.retireVersion || 0) >= RETIRE_VERSION) return undefined;
+    cur.lessons = cur.lessons.map(m => (RETIRE.includes(m.id) ? { ...m, status: 'draft', adminEdited: true, updatedAt: now } : m));
+    cur.retireVersion = RETIRE_VERSION;
+    return cur;
+  });
+  return out || (await getJson(INDEX_KEY)) || idx;
+}
 async function index() {
   let idx = (await ensureSeeded()) || { lessons: [] };
   if (idx.lessons.length) idx = await applyMoves(idx);
+  if (idx.lessons.length) idx = await applyRetire(idx);
   // Older index entries (before Templates & Tools) are refreshed from the lesson once.
   if (idx.lessons.some(m => !Array.isArray(m.tools))) {
     const fresh = {};

@@ -14,7 +14,7 @@ const { HttpError, handler } = core;
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const auth = await core.requireMember(ctx, { level: 'view' });
-  // Club, Pro and Plus: every module except Club-only ones (Business Club). Free: the Mindset module and sample templates.
+  // Club, Pro and Plus: every module except Club-only ones (Business Club). Free: Start Here, the tutorials and sample templates.
   const acc = { full: !!auth.access.resources, club: !!auth.access.membershipActive };
   const email = auth.sess.email;
   await core.rateLimit('resources', email, 600, 60 * 60 * 1000);

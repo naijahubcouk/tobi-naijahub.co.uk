@@ -30,7 +30,7 @@ const APP = `Business Studio features (use only these; don't invent buttons or s
 - To-do list: add a task with a date and ⭐ Priority; repeating tasks; tick off.
 - Quotes & invoices: Quote, Invoice or Receipt; customer, items, prices, notes, bank details; Share link; statuses Draft, Sent, Paid, Overdue, Cancelled; Turn into invoice; paid invoices go into the tracker.
 - Track: Today's numbers — enquiries, bookings and sales.
-- Resources: 🎓 Tutorials (free), 📚 Growth Lessons (Business Club and Plus; Business Mindset free), 🧰 Templates & Tools. Lessons have Learn, an example, an action and templates; Mark lesson as complete; ☆ Save.`;
+- Resources: 🎓 Tutorials (free), 📚 Growth Lessons (Start Here free; the rest with Business Club and Plus), 🧰 Templates & Tools. Lessons have Learn, an example, an action and templates; Mark lesson as complete; ☆ Save.`;
 
 const BLOCK_SPEC = `Practical resources ("use") are objects of one of these shapes:
 {"type":"checklist","title":"…","items":["…","…"]}            (5–10 short items)

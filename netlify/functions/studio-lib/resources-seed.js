@@ -7,21 +7,20 @@
  *
  * Formatting used in lesson text:  ## Heading   - bullet   1. numbered   **bold**   > Tip box   [link](https://…)
  */
-const VERSION = 10;
+const VERSION = 11;
 const REVIEWED = '2026-10-16';
 
 // Every module and lesson title. "planned" = shown to members as Coming soon.
 const OUTLINE = {
   t01: Object.keys(require('./resources-content/tutorials')),
-  m01: ['Welcome to Auntie Tobi Business Club', 'How to Make the Most of Your Membership', 'Set Your Business Goals', 'Create Your 30-Day Business Action Plan', 'Understanding Your Ideal Customer'],
+  m01: ['Welcome to Auntie Tobi Business Club', 'How to Make the Most of Your Membership', ...Object.keys(require('./resources-content/m01-start'))],
   m02: ['Optimising Your Instagram Bio', 'Profile Photos, Highlights & Pinned Posts', 'Understanding Reels, Stories & Carousels', 'How to Attract the Right Followers', 'Turning Profile Visitors Into Enquiries', 'Understanding Instagram Insights'],
   m03: ['The Three Types of Business Content: Attract, Build Trust & Sell', 'How to Take Better Product Photos', 'How to Create Simple Reels', '20 Reel Ideas for Small Businesses', 'Writing Captions That Encourage Action', 'Planning One Week of Content in 30 Minutes', 'Repurposing One Piece of Content'],
   m04: ['Understanding Your Customer’s Buying Journey', 'How to Present Your Products or Services', 'Writing Offers Without Constant Discounts', 'How to Respond to Customer Enquiries', 'Following Up Without Being Pushy', 'How to Ask for Customer Reviews', 'Encouraging Repeat Purchases and Referrals', 'How to Turn Enquiries Into Orders'],
   m05: ['Setting Up WhatsApp Business', 'Using WhatsApp Catalogue, Labels & Quick Replies', 'Creating Designs With Canva', 'Using ChatGPT Responsibly for Business', 'Using Google Business Profile Where Eligible', 'Organising Orders and Customer Enquiries', 'Simple Business Tracking With Spreadsheets'],
-  m06: ['Business Mindset: Ownership & Consistency', 'Visibility vs Sales: Understanding the Difference', 'Pricing Your Products or Services', 'Understanding Costs, Profit and Cash Flow', 'Finding Your Competitive Advantage', 'Building Customer Trust', 'Creating a Simple 90-Day Growth Strategy', 'Learning From Your Business Results'],
+  m06: ['Visibility vs Sales: Understanding the Difference', 'Pricing Your Products or Services', 'Understanding Costs, Profit and Cash Flow', 'Finding Your Competitive Advantage', 'Building Customer Trust', 'Creating a Simple 90-Day Growth Strategy', 'Learning From Your Business Results'],
   m07: ['How to Build Your Monthly Marketing Calendar', 'How to Plan Seasonal Campaigns', 'How to Prepare for Product Launches and Promotions', 'How to Use Stories to Build Customer Relationships', 'How to Plan a Customer Appreciation Campaign', 'How to Balance Sales Posts With Helpful Content', 'How to Review Last Month and Plan the Next'],
   m08: ['Prepare Your Business for a Dedicated Spotlight', 'Create an Effective Marketplace Product or Service Listing', 'How to Submit Your Business for Relevant Discovery Features', 'How to Make the Most of an Auntie Tobi Repost', 'How to Collaborate With Complementary Businesses', 'Track Enquiries Generated Through Auntie Tobi', 'Prepare for Your Business Check-In and Stay Accountable'],
-  m09: ['Focus: Doing Fewer Things Well', 'Staying Consistent When Results Are Slow'],
 };
 
 function slug(t) { return String(t).toLowerCase().replace(/’/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48); }
@@ -313,12 +312,10 @@ Find **three people** who asked about prices or availability but didn’t book. 
 
 // Launch content written in resources-content/ (matched by module + title).
 const C1 = require('./resources-content/m01'), C2 = require('./resources-content/m02'), C4 = require('./resources-content/m04'), C36 = require('./resources-content/m03m06');
-const C9 = require('./resources-content/m09'), TOOLS = require('./resources-content/tools'), CT = require('./resources-content/tutorials');
-for (const [mod, set] of [['t01', CT], ['m01', C1], ['m02', C2], ['m04', C4], ['m03', C36.m03], ['m06', C36.m06]]) {
+const CS = require('./resources-content/m01-start'), TOOLS = require('./resources-content/tools'), CT = require('./resources-content/tutorials');
+for (const [mod, set] of [['t01', CT], ['m01', C1], ['m01', CS], ['m02', C2], ['m04', C4], ['m03', C36.m03], ['m06', C36.m06]]) {
   for (const [title, body] of Object.entries(set)) FULL[idFor(mod, title)] = body;
 }
-// Business Mindset: the first lesson keeps its original id (it used to be in module 06).
-for (const [title, body] of Object.entries(C9)) FULL[idFor(title === 'Business Mindset: Ownership & Consistency' ? 'm06' : 'm09', title)] = body;
 
 // "Studio" → "Business Studio" in all lesson text (seed update 8).
 const STUD = /(?<!Business )(?<![\w-])Studio(?![\w-])/g;

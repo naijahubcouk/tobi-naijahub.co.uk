@@ -241,12 +241,12 @@ Paid invoices and completed customers are added for you, so you don’t enter th
     studio: { label: 'Open Track', screen: 'track' },
   }),
 
-  'Resources: Lessons, Templates & Tools': T({
+  'Resources: Lessons, Templates & Tools': T({ seedRev: 2,
     summary: 'Find step-by-step guides, practical lessons and ready-to-use templates.',
     learn: `**Resources** has three parts:
 
 - **🎓 Tutorials** — step-by-step guides to using Business Studio, like this one. Free for everyone.
-- **📚 Growth Lessons** — short, practical lessons on Instagram, content, sales, customer experience, planning and growth. With the Business Club and Business Studio Plus. The Business Mindset lessons are free for everyone.
+- **📚 Growth Lessons** — short, practical lessons on Instagram, content, sales, customer experience, planning and growth. **Start Here** is free for everyone; the other modules come with the Business Club and Business Studio Plus.
 - **🧰 Templates & Tools** — customer message scripts, planners, pricing calculators, worksheets and checklists. With the Business Club and Business Studio Plus, with some free starter resources on every plan.
 
 ## Using a lesson
