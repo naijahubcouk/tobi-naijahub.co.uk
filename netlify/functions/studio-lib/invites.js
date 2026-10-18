@@ -83,7 +83,7 @@ function joinedSet(members, profiles, settings, list) {
     if (!core.access(m, settings).membershipActive) continue;
     emails.add(m.email);
     const p = profiles && profiles[m.email];
-    if (p && p.listingSlug) slugs.add(p.listingSlug);
+    if (p && p.listingSlug && require('./listinglinks').trusted(p)) slugs.add(p.listingSlug);
   }
   return new Set(list.filter(b => slugs.has(b.slug) || (b.email && emails.has(b.email))).map(b => b.slug));
 }

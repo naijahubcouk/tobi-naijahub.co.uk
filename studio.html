@@ -94,6 +94,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0
 .row.wrap{flex-wrap:wrap}
 .err{background:var(--danger-l);color:var(--danger);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:500}
 .note{background:var(--gold-l);border-radius:12px;padding:12px;font-size:14px}
+.fbres{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line,#EEE6D3);border-radius:12px;padding:10px 12px}
 
 /* sign in */
 .auth-wrap{max-width:420px;margin:0 auto;padding:28px 18px}
@@ -931,6 +932,10 @@ nav.tabs .navsep{display:none}
     }
   }
 
+  // Details filled from a listing or website can be undone if the person picked the wrong one.
+  var FILL_KEYS = ['businessName', 'industry', 'location', 'description', 'products', 'customers', 'instagram', 'website', 'whatsapp', 'channels', 'mainChannel', '_igFrom', '_igVal'];
+  function snapshot(p) { var o = {}; FILL_KEYS.forEach(function (k) { o[k] = Array.isArray(p[k]) ? p[k].slice() : p[k]; }); return o; }
+  function restore(p, o) { if (o) FILL_KEYS.forEach(function (k) { p[k] = Array.isArray(o[k]) ? o[k].slice() : o[k]; }); }
   function prefillFromListing(p, L) {
     if (!L) return;
     p._listing = L; p.listingSlug = L.slug;
@@ -938,8 +943,8 @@ nav.tabs .navsep{display:none}
     if (!p.industry && L.cat) p.industry = L.cat.charAt(0).toUpperCase() + L.cat.slice(1);
     if (!p.location && L.loc) p.location = L.loc;
     if (!p.description && L.desc) p.description = L.desc;
-    if (!p.instagram && L.ig) p.instagram = '@' + L.ig;
-    if (!p.website && L.website) p.website = L.website;
+    if (!p.instagram && L.ig) { p.instagram = '@' + L.ig; p._igFrom = 'listing'; p._igVal = p.instagram; }
+    if (!p.website && L.website) p.website = String(L.website).replace(/[?#].*$/, '').replace(/\/$/, '');
     if (!p.whatsapp && L.wa) p.whatsapp = L.wa;
     var ch = (p.channels || []).slice();
     ['listing'].concat(L.ig ? ['instagram'] : [], L.wa ? ['whatsapp'] : [], L.website ? ['website'] : []).forEach(function (c) { if (ch.indexOf(c) < 0) ch.push(c); });
@@ -954,7 +959,9 @@ nav.tabs .navsep{display:none}
     set('industry', d.industry); set('location', d.location); set('products', d.products);
     set('customers', d.customers); set('description', d.description || site.description);
     set('website', site.url ? site.url.replace(/\/$/, '') : '');
+    if (site.instagram && !String(p.instagram || '').trim()) p._igFrom = 'website';
     set('instagram', site.instagram); set('whatsapp', site.whatsapp);
+    if (p._igFrom === 'website' && !p._igVal) p._igVal = p.instagram;
     var ch = (p.channels || []).slice();
     ['website'].concat(site.instagram ? ['instagram'] : [], site.whatsapp ? ['whatsapp'] : [], site.facebook ? ['facebook'] : [], site.tiktok ? ['tiktok'] : [])
       .forEach(function (c) { if (ch.indexOf(c) < 0) ch.push(c); });
@@ -962,37 +969,84 @@ nav.tabs .navsep{display:none}
     if (!p.mainChannel) p.mainChannel = 'website';
   }
 
-  // New step 1 for first-time setup: start from an Auntie Tobi listing or a website.
+  // New step 1 for first-time setup: search for your Auntie Tobi listing (or paste its link) and/or read your website.
   function showFindBusiness(p) {
     return new Promise(function (resolve) {
       setChrome({ tabs: false });
+      var results = null, lastQ = '', showLink = false;
+      function confirmListing(L, check) {
+        app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>Is this your business? Please check carefully — I’ll use these details in everything I write for you.</p></div>' +
+          '<div class="card stack" style="margin-top:12px"><div><div style="font-size:21px;font-weight:800;line-height:1.25">' + esc(L.name) + '</div>' +
+          '<div class="sub" style="margin:4px 0 0">' + esc([L.cat, L.loc].filter(Boolean).join(' · ')) + '</div></div>' +
+          (L.desc ? '<p style="font-size:14.5px;margin:0">' + esc(L.desc.length > 220 ? L.desc.slice(0, 220) + '…' : L.desc) + '</p>' : '') +
+          '<a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:14px">View the listing ↗</a>' +
+          (check === 'email_match' ? '' : '<div class="note" style="font-size:13.5px">Auntie Tobi will quickly check this business is yours. You can use everything straight away.</div>') +
+          '<button class="btn primary block" id="fbYes">Yes, this is my business</button><button class="btn ghost block" id="fbNo">No — choose another</button></div></main>';
+        $('#fbYes').onclick = function () { p._preListing = snapshot(p); prefillFromListing(p, L); p._filledFrom = 'listing'; draw('Found you! ✅ <b>' + esc(L.name) + '</b>. Add your website too if you have one, or carry on.'); };
+        $('#fbNo').onclick = function () { draw(); };
+      }
+      async function pick(slugOrLink, btn) {
+        var err = $('#fbErr'); if (err) err.classList.add('hidden');
+        if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
+        try { var r = await api('studio-api', 'listing-lookup', { link: slugOrLink }); confirmListing(r.listing, r.check); }
+        catch (x) { if (btn) { btn.disabled = false; btn.textContent = 'This is mine'; } if (err) { err.textContent = x.message; err.classList.remove('hidden'); } else toast(x.message); }
+      }
+      function confirmWebsite(r, url) {
+        var site = r.site || {}, d = r.draft || {};
+        var host = (site.url || url).replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '');
+        var name = d.businessName || site.name || '';
+        app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>I’ve read the website. Is this yours? I’ll use it to fill in your details and in links I give customers.</p></div>' +
+          '<div class="card stack" style="margin-top:12px"><div><div class="sub" style="margin:0">We read</div><div style="font-size:21px;font-weight:800;line-height:1.25;word-break:break-word">' + esc(host) + '</div></div>' +
+          (name || d.location ? '<div><b>' + esc(name) + '</b>' + (d.location ? '<div class="sub" style="margin:0">' + esc(d.location) + '</div>' : '') + '</div>' : '') +
+          (site.description || d.description ? '<p style="font-size:14.5px;margin:0">' + esc(String(d.description || site.description).slice(0, 200)) + '</p>' : '') +
+          '<button class="btn primary block" id="fbWYes">Yes, this is my website</button><button class="btn ghost block" id="fbWNo">No — choose another</button></div></main>';
+        $('#fbWYes').onclick = function () {
+          p._preWeb = snapshot(p); if (site.url || url) p.website = String(site.url || url).replace(/\/$/, ''); prefillFromWebsite(p, r); p._webRead = host; p._filledFrom = p._filledFrom || 'website';
+          draw(r.draft ? 'Done! I’ve drafted your details from your website — you’ll check them next.' : 'I read your website but there wasn’t much text, so I’ve filled what I could. You’ll add the rest next.');
+        };
+        $('#fbWNo').onclick = function () { draw(); var w = $('#fb_web'); if (w) { w.value = ''; w.focus(); } };
+      }
+      function resultsHtml() {
+        if (!results) return '';
+        if (!results.length) return '<p class="hint" style="margin:6px 0 0">No business called “' + esc(lastQ) + '” on Auntie Tobi. Try a shorter name — or skip this and add your website or type your details.</p>';
+        return '<div class="stack" style="gap:8px;margin-top:8px">' + results.map(function (b) {
+          return '<div class="fbres"><div style="min-width:0"><b>' + esc(b.name) + '</b><div class="sub" style="margin:0;font-size:13px">' + esc([b.cat, b.loc].filter(Boolean).join(' · ')) + ' · <a href="' + esc(b.url) + '" target="_blank" rel="noopener">View ↗</a></div></div>' +
+            (b.taken ? '<span class="saved-tag" style="white-space:nowrap">Already linked</span>' : '<button type="button" class="btn ghost small" data-pick="' + esc(b.slug) + '">This is mine</button>') + '</div>';
+        }).join('') + '</div>' + (results.some(function (b) { return b.taken; }) ? '<p class="hint" style="margin-top:6px">“Already linked” means another account uses it. If it’s yours, message Auntie Tobi.</p>' : '');
+      }
       function draw(msg) {
         var L = p._listing;
         app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + (msg || 'Welcome! Let’s find your business so I can fill in your details for you.') + '</p></div>' +
           '<h1 style="margin-bottom:12px">Find your business</h1>' +
           '<div class="card stack">' +
-            '<div><label class="f" for="fb_listing">Your Auntie Tobi listing link</label>' +
-            (L ? '<div class="note">✅ <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '') + ' — linked</div>'
-              : '<div class="row"><input type="text" id="fb_listing" placeholder="auntietobi.co.uk/biz/your-business" style="flex:1"><button type="button" class="btn ghost small" id="fbFindL" style="min-height:46px">Find</button></div>') + '</div>' +
+            '<div><label class="f" for="fb_q">Are you on Auntie Tobi? Search your business name</label>' +
+            (L ? '<div class="note">✅ <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '') + ' — linked <button type="button" class="btn link small" id="fbChange">Change</button></div>'
+              : '<form id="fbSF" class="row" role="search"><input type="search" id="fb_q" placeholder="e.g. Ada Cakes" maxlength="80" style="flex:1" value="' + esc(lastQ) + '"><button class="btn ghost small" id="fbSearch" style="min-height:46px">Search</button></form>' + resultsHtml() +
+                (showLink ? '<div class="row" style="margin-top:10px"><input type="text" id="fb_listing" placeholder="auntietobi.co.uk/biz/your-business" style="flex:1"><button type="button" class="btn ghost small" id="fbFindL" style="min-height:46px">Find</button></div>'
+                  : '<button type="button" class="btn link small" id="fbShowLink" style="margin-top:6px;padding-left:0">I have my listing link</button>')) + '</div>' +
             '<div style="text-align:center;color:var(--muted);font-size:13px;font-weight:700">AND / OR</div>' +
             '<div><label class="f" for="fb_web">Your website</label>' +
-            (p._webRead ? '<div class="note">✅ Read <b>' + esc(p._webRead) + '</b></div>'
+            (p._webRead ? '<div class="note">✅ Read <b>' + esc(p._webRead) + '</b> <button type="button" class="btn link small" id="fbWebChange">Change</button></div>'
               : '<div class="row"><input type="text" id="fb_web" placeholder="yourbusiness.co.uk" inputmode="url" style="flex:1" value="' + esc(p.website || '') + '"><button type="button" class="btn ghost small" id="fbReadW" style="min-height:46px">Read</button></div>' +
                 '<div class="hint">We’ll read your website and draft your details — free, it doesn’t use your generations.</div>') + '</div>' +
             '<div class="err hidden" id="fbErr" role="alert"></div>' +
           '</div>' +
           '<button class="btn primary block" style="margin-top:16px" id="fbNext">' + (L || p._webRead ? 'Check my details →' : 'Continue') + '</button>' +
-          (L || p._webRead ? '' : '<button class="btn link block" id="fbSkip" style="margin-top:6px">I don’t have either — I’ll type my details</button>') + '</main>';
+          (L || p._webRead ? '' : '<button class="btn link block" id="fbSkip" style="margin-top:6px">I’m not on Auntie Tobi and don’t have a website — I’ll type my details</button>') + '</main>';
         var err = $('#fbErr');
         function fail(m) { err.textContent = m; err.classList.remove('hidden'); }
-        var fl = $('#fbFindL'); if (fl) fl.onclick = async function () {
+        var sf = $('#fbSF'); if (sf) sf.onsubmit = async function (e) {
+          e.preventDefault(); var q = $('#fb_q').value.trim(); if (q.length < 2) return fail('Type at least 2 letters of your business name.');
+          var sb = $('#fbSearch'); sb.disabled = true; sb.textContent = 'Searching…';
+          try { var r = await api('studio-api', 'listing-search', { q: q }); results = r.results; lastQ = q; draw(msg); var qi = $('#fb_q'); if (qi) qi.focus(); }
+          catch (x) { sb.disabled = false; sb.textContent = 'Search'; fail(x.message); }
+        };
+        $$('[data-pick]').forEach(function (b) { b.onclick = function () { pick(b.dataset.pick, b); }; });
+        var sl = $('#fbShowLink'); if (sl) sl.onclick = function () { showLink = true; draw(msg); var i = $('#fb_listing'); if (i) i.focus(); };
+        var chg = $('#fbChange'); if (chg) chg.onclick = function () { restore(p, p._preListing); p._preListing = null; p._listing = null; p.listingSlug = ''; p.channels = (p.channels || []).filter(function (c) { return c !== 'listing'; }); if (p._filledFrom === 'listing') p._filledFrom = p._webRead ? 'website' : ''; draw(); };
+        var fl = $('#fbFindL'); if (fl) fl.onclick = function () {
           var link = $('#fb_listing').value.trim(); if (!link) return fail('Paste your listing link first.');
-          err.classList.add('hidden'); fl.disabled = true; fl.textContent = 'Finding…';
-          try {
-            var r = await api('studio-api', 'listing-lookup', { link: link });
-            prefillFromListing(p, r.listing); p._filledFrom = 'listing';
-            draw('Found you! ✅ <b>' + esc(r.listing.name) + '</b>. Add your website too if you have one, or carry on.');
-          } catch (x) { fl.disabled = false; fl.textContent = 'Find'; fail(x.message); }
+          fl.textContent = 'Finding…'; pick(link, null);
         };
         var rw = $('#fbReadW'); if (rw) rw.onclick = async function () {
           var url = $('#fb_web').value.trim(); if (!url) return fail('Type your website address first.');
@@ -1000,10 +1054,10 @@ nav.tabs .navsep{display:none}
           app.querySelector('.bubble p').innerHTML = '<span class="typing" aria-label="Reading"><i></i><i></i><i></i></span> Reading your website — this can take up to 20 seconds…';
           try {
             var r = await api('studio-api', 'website-read', { url: url });
-            prefillFromWebsite(p, r); p._webRead = (r.site && r.site.url || url).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); p._filledFrom = p._filledFrom || 'website';
-            draw(r.draft ? 'Done! I’ve drafted your details from your website — you’ll check them next.' : 'I read your website but there wasn’t much text, so I’ve filled what I could. You’ll add the rest next.');
+            confirmWebsite(r, url);
           } catch (x) { draw(); fail(x.message); }
         };
+        var wc = $('#fbWebChange'); if (wc) wc.onclick = function () { restore(p, p._preWeb); p._preWeb = null; p._webRead = ''; if (p._filledFrom === 'website') p._filledFrom = p._listing ? 'listing' : ''; draw(); };
         $('#fbNext').onclick = function () {
           var w = $('#fb_web'); if (w && w.value.trim() && !p.website) p.website = w.value.trim();
           resolve();
@@ -1099,7 +1153,7 @@ nav.tabs .navsep{display:none}
         if (missing.length) { err.textContent = 'Please fill in: ' + missing.join(', '); err.classList.remove('hidden'); return; }
         if (firstTime && step < last) { step++; render(); return; }
         var btn = $('#psave'); btn.disabled = true; btn.textContent = 'Saving…';
-        var send = Object.assign({}, p); delete send._listing; delete send._filledFrom; delete send._webRead; send.listingSlug = p.listingSlug || '';
+        var send = Object.assign({}, p); var igN = function (v) { return String(v || '').toLowerCase().replace(/^@/, '').trim(); }; send.igSource = p._igFrom && igN(p.instagram) === igN(p._igVal) ? p._igFrom : ''; Object.keys(send).forEach(function (k) { if (k.charAt(0) === '_') delete send[k]; }); send.listingSlug = p.listingSlug || '';
         try {
           await api('studio-api', 'profile-save', { profile: send });
           S.boot = await api('studio-api', 'bootstrap'); S.history = S.boot.recent || [];

@@ -17,17 +17,20 @@ const market = require('../market');
 const todo = require('../todo');
 const directory = require('../directory');
 const invites = require('../invites');
+const links = require('../listinglinks');
+const webcheck = require('../websitecheck');
 const messages = require('../messages');
 
 // Instagram for a member: their Business Studio profile → one you added in Admin → their Auntie Tobi listing.
 const igClean = v => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/[/?#].*$/, '');
 async function igOf(event, email, profile) {
   const fromProfile = igClean(profile && profile.instagram);
-  if (fromProfile) return { handle: fromProfile, source: 'profile' };
+  const igDoubtful = profile && ((profile.igSource === 'website' && !webcheck.trusted(profile)) || (profile.igSource === 'listing' && !links.trusted(profile)));
+  if (fromProfile && !igDoubtful) return { handle: fromProfile, source: 'profile' };
   const saved = await getJson(`admin-ig/${enc(email)}`);
   if (saved && saved.handle) return { handle: saved.handle, source: 'admin' };
   let b = null;
-  try { b = (profile && profile.listingSlug ? await directory.bySlug(event, profile.listingSlug) : null) || await directory.byEmail(event, email); } catch (e) { /* directory unavailable */ }
+  try { b = (profile && profile.listingSlug && links.trusted(profile) ? await directory.bySlug(event, profile.listingSlug) : null) || await directory.byEmail(event, email); } catch (e) { /* directory unavailable */ }
   const fromListing = igClean(b && b.ig);
   return fromListing ? { handle: fromListing, source: 'listing' } : null;
 }
@@ -196,6 +199,8 @@ exports.handler = handler(async (ctx) => {
         const out = summarizeMember(m, settings, months[i], days[i]);
         const p = profiles[i] || {};
         out.business = { name: p.businessName || '', listingSlug: p.listingSlug || '', listingUrl: p.listingSlug ? `https://www.auntietobi.co.uk/biz/${p.listingSlug}` : '',
+          listingCheck: p.listingCheck || '', listingConfirmed: !!p.listingConfirmed, listingTrusted: links.trusted(p),
+          websiteCheck: p.websiteCheck || '', websiteConfirmed: !!p.websiteConfirmed, websiteTrusted: webcheck.trusted(p),
           website: p.website || '', channels: p.channels || [], mainChannel: p.mainChannel || '' };
         const sh = shops[i];
         out.shop = sh && sh.slug ? { slug: sh.slug, published: !!sh.published, disabled: !!m.shopDisabled, items: sh.items.length } : null;
@@ -238,6 +243,24 @@ exports.handler = handler(async (ctx) => {
       return { ok: true };
     }
 
+    case 'member-confirm-website': {
+      const email = requireEmail(body.email);
+      let ok = false;
+      await cas(`profiles/${enc(email)}`, cur => { if (!cur || !cur.website) return undefined; ok = true; return { ...cur, websiteConfirmed: true, updatedAt: core.nowIso() }; });
+      if (!ok) throw new HttpError(404, 'not_found', 'This member has no website.');
+      await core.audit(actor, 'member_confirm_website', { email });
+      return { ok: true };
+    }
+
+    case 'member-confirm-listing': {
+      const email = requireEmail(body.email);
+      let slug = '';
+      await cas(`profiles/${enc(email)}`, cur => { if (!cur || !cur.listingSlug) return undefined; slug = cur.listingSlug; return { ...cur, listingConfirmed: true, updatedAt: core.nowIso() }; });
+      if (!slug) throw new HttpError(404, 'not_found', 'This member has no linked listing.');
+      await core.audit(actor, 'member_confirm_listing', { email, slug });
+      return { ok: true };
+    }
+
     case 'member-unlink-listing': {
       const email = requireEmail(body.email);
       let removed = '';
@@ -247,6 +270,7 @@ exports.handler = handler(async (ctx) => {
         return { ...cur, listingSlug: '', channels: (cur.channels || []).filter(c => c !== 'listing'),
           listingDeclined: [...new Set([...(cur.listingDeclined || []), cur.listingSlug])].slice(-20), updatedAt: core.nowIso() };
       });
+      if (removed) await links.release(email, removed);
       await core.audit(actor, 'member_unlink_listing', { email, slug: removed });
       return { ok: true, removed };
     }

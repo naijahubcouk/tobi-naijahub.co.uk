@@ -11,6 +11,8 @@ const stripe = require('../stripe');
 const directory = require('../directory');
 const website = require('../website');
 const growth = require('../growth');
+const links = require('../listinglinks');
+const webcheck = require('../websitecheck');
 
 const PROFILE_FIELDS = {
   businessName: 80, industry: 60, location: 80, products: 600, customers: 400,
@@ -20,7 +22,7 @@ const PROFILE_FIELDS = {
 const CHANNELS = ['instagram', 'facebook', 'tiktok', 'whatsapp', 'website', 'listing', 'google'];
 
 // existing: the saved profile (keeps the linked listing, which is only changed via listing-link).
-async function cleanProfile(raw, existing, event) {
+async function cleanProfile(raw, existing, event, email) {
   raw = raw && typeof raw === 'object' ? raw : {};
   const p = {};
   for (const [k, max] of Object.entries(PROFILE_FIELDS)) p[k] = cleanText(raw[k], max);
@@ -36,13 +38,19 @@ async function cleanProfile(raw, existing, event) {
   if (p.whatsapp && !/^\+?\d{10,15}$/.test(p.whatsapp)) throw new HttpError(400, 'invalid_field', 'WhatsApp number looks wrong \u2014 include the country code, e.g. 447700900123');
   // Auntie Tobi listing: kept from the saved profile, or cleared if the box is emptied.
   p.listingSlug = existing && existing.listingSlug ? existing.listingSlug : '';
-  if (raw.listingSlug === '' || raw.listingSlug === null) p.listingSlug = '';
-  else if (raw.listingSlug && raw.listingSlug !== p.listingSlug) {
-    const b = await directory.bySlug(event, raw.listingSlug);
-    if (!b) throw new HttpError(400, 'invalid_link', 'We couldn\u2019t find that Auntie Tobi listing.');
-    p.listingSlug = b.slug;
+  for (const k of ['listingCheck', 'listingConfirmed', 'listingLinkedAt']) if (existing && existing[k] !== undefined) p[k] = existing[k];
+  if (raw.listingSlug === '' || raw.listingSlug === null) {
+    if (p.listingSlug) await links.release(email, p.listingSlug);
+    p.listingSlug = ''; delete p.listingCheck; delete p.listingConfirmed; delete p.listingLinkedAt;
+  } else if (raw.listingSlug && raw.listingSlug !== p.listingSlug) {
+    const old = p.listingSlug;
+    const { fields } = await links.linkFields(event, raw.listingSlug, email);
+    Object.assign(p, fields);
+    if (old && old !== p.listingSlug) await links.release(email, old);
   }
   p.listingDeclined = (existing && existing.listingDeclined) || [];
+  p.igSource = ['website', 'listing'].includes(raw.igSource) && p.instagram ? raw.igSource : (existing && existing.instagram === p.instagram ? existing.igSource || '' : '');
+  Object.assign(p, await webcheck.check(email, p, existing));
   p.channels = (Array.isArray(raw.channels) ? raw.channels : []).filter(c => CHANNELS.includes(c));
   p.channels = [...new Set(p.channels)];
   if (p.listingSlug && !p.channels.includes('listing')) p.channels.push('listing');
@@ -99,28 +107,42 @@ exports.handler = handler(async (ctx) => {
       if (profile && profile.listingSlug) return { listing: null };
       const b = await directory.byEmail(ctx.event, email);
       if (!b || (profile && (profile.listingDeclined || []).includes(b.slug))) return { listing: null };
+      if (await links.takenBy(b.slug, email)) return { listing: null };
       return { listing: directory.publicListing(b) };
+    }
+
+    case 'listing-search': {
+      // "Find your business" — search Auntie Tobi listings by name. Never returns emails.
+      await core.rateLimit('listing-search', email, 120, 60 * 60 * 1000);
+      const q = cleanText(body.q, 80);
+      const found = await directory.search(ctx.event, q, 8);
+      const map = await links.owners();
+      const me = core.normalizeEmail(email);
+      return { results: found.map(r => ({ ...r, taken: !!(map[r.slug] && map[r.slug] !== me) })) };
     }
 
     case 'listing-lookup': {
       const slug = directory.slugFromLink(body.link);
       const b = slug ? await directory.bySlug(ctx.event, slug) : null;
       if (!b) throw new HttpError(404, 'not_found', 'We couldn\u2019t find that listing. Check the link \u2014 it looks like auntietobi.co.uk/biz/your-business');
-      return { listing: directory.publicListing(b) };
+      await links.assertFree(b.slug, email);
+      return { listing: directory.publicListing(b), check: links.checkFor(b, email) };
     }
 
     case 'listing-link': {
-      const b = await directory.bySlug(ctx.event, body.slug);
-      if (!b) throw new HttpError(404, 'not_found', 'We couldn\u2019t find that listing.');
+      const { b, fields } = await links.linkFields(ctx.event, String(body.slug || ''), email);
       const now = core.nowIso();
+      let old = '';
       const saved = await cas(`profiles/${enc(email)}`, cur => {
         const p = cur ? { ...cur } : { createdAt: now };
-        p.listingSlug = b.slug;
+        old = p.listingSlug || '';
+        Object.assign(p, fields);
         p.channels = [...new Set([...(p.channels || []), 'listing'])];
         p.updatedAt = now;
         return p;
       });
-      await core.audit(email, 'listing_linked', { slug: b.slug, byEmailMatch: b.email === email });
+      if (old && old !== b.slug) await links.release(email, old);
+      await core.audit(email, 'listing_linked', { slug: b.slug, check: fields.listingCheck });
       return { listing: directory.publicListing(b), profile: saved.businessName ? saved : null };
     }
 
@@ -133,6 +155,7 @@ exports.handler = handler(async (ctx) => {
       if (out.usage) {
         await gen.addGlobal(core.monthKey(), { id: 'website-read', tool: 'website-read', cost: 0, inTok: out.usage.inTok, outTok: out.usage.outTok, costUsd: out.usage.costUsd }, auth.settings);
       }
+      await webcheck.recordRead(email, body.url, out.site, out.draft);
       return { site: out.site, draft: out.draft, hadText: out.hadText };
     }
 
@@ -192,7 +215,7 @@ exports.handler = handler(async (ctx) => {
     }
 
     case 'profile-save': {
-      const p = await cleanProfile(body.profile, await getProfile(email), ctx.event);
+      const p = await cleanProfile(body.profile, await getProfile(email), ctx.event, email);
       const now = core.nowIso();
       // Brand kit and logo are saved separately and kept here.
       const saved = await cas(`profiles/${enc(email)}`, cur => ({ ...p, brand: cur && cur.brand, hasLogo: !!(cur && cur.hasLogo), createdAt: (cur && cur.createdAt) || now, updatedAt: now }));
