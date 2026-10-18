@@ -543,7 +543,7 @@ function slugify(t) { return String(t).toLowerCase().replace(/&/g, ' and ').repl
 async function adminList() {
   const idx = await index();
   const [all, month] = await Promise.all([getJson('res/stats/all'), getJson(`res/stats/${core.monthKey()}`)]);
-  return { modules: MODULES, groups: GROUPS, calcKinds: CALC_KINDS, tags: TAGS, lessons: idx.lessons.filter(m => MODULE_IDS.includes(m.module)).map(({ text, ...m }) => m).sort(sortLessons), stats: { all: all || { views: {}, completes: {} }, month: month || { views: {}, completes: {} } }, today: today(), monthKey: core.monthKey() };
+  return { modules: MODULES, groups: GROUPS, calcKinds: CALC_KINDS, tags: TAGS, lessons: idx.lessons.filter(m => MODULE_IDS.includes(m.module)).map(m => ({ ...m, text: String(m.text || '').slice(0, 4000) })).sort(sortLessons), stats: { all: all || { views: {}, completes: {} }, month: month || { views: {}, completes: {} } }, today: today(), monthKey: core.monthKey() };
 }
 
 async function adminGet(id) {
