@@ -24,7 +24,10 @@ function notFound() {
 
 exports.handler = core.handler(async (ctx) => {
   const q = ctx.event.queryStringParameters || {};
-  const slug = String(q.s || '').slice(0, 60);
+  // /p/<slug> reaches this function by a rewrite. Depending on the platform, the slug arrives as ?s= or only in the original path.
+  const fromPath = (String(ctx.event.path || '').match(/^\/p\/([^/?#]+)/) || [])[1] || '';
+  let slug = String(q.s || fromPath || '').slice(0, 60);
+  try { slug = decodeURIComponent(slug); } catch (e) {}
   if (q.img) {
     const img = await shop.publicImage(slug, String(q.img).slice(0, 20));
     if (!img) return { statusCode: 404, headers: { 'Content-Type': 'text/plain' }, body: 'Not found' };
