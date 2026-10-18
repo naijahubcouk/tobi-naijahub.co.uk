@@ -461,3 +461,10 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - **✨ Plan 7 or 30 days with AI** fills the calendar with cards; cards you edited, drafted or posted are kept.
 - **📅 Add to Plan** on Create results and on Today's content idea.
 - Older calendar posts were converted automatically (To do → Scheduled, Drafted → Scheduled + drafted, Posted/Done → Posted). Photos: `planimg/<email>/<id>`.
+
+## 7ac. Find your business — listing and website checks
+
+- **First sign-in:** members search their business name on Auntie Tobi (or paste their listing link), then confirm "Is this your business?". They can also read their website and confirm "Is this your website?". "Change" undoes the details that were filled in.
+- **One business per member:** a listing linked to one account shows "Already linked" to everyone else and can't be linked twice. Unlinking (by the member, in Admin, or by deleting the account) frees it.
+- **Listing check (Admin → Members):** ✓ Email matches (listing email = sign-in email), or "Email differs" / "Listing has no email — check it's theirs" with a **Confirm it's theirs** button. Until confirmed, HQ doesn't use that listing's Instagram and Club invites don't count the business as joined. Links made before this check stay trusted.
+- **Website check:** flagged if the business name doesn't match the website they read ("name differs") or another member uses the same website ("also used by another member"). Nothing is blocked; HQ won't use an Instagram that came from a flagged website until you **Confirm it's theirs**. A new website is checked again.

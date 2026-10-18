@@ -9,7 +9,7 @@ const core = require('./core');
 const { getJson, del, enc } = core;
 
 const SINGLE = ['members', 'buyers', 'profiles', 'prefs', 'followups', 'mtodo', 'money', 'money-settings', 'calendar', 'goals',
-  'progress', 'history', 'tips', 'idea', 'learn', 'logos', 'shop', 'benefits', 'admin-ig', 'msg/thread', 'msg/wel', 'billing/remind'];
+  'progress', 'history', 'tips', 'idea', 'learn', 'logos', 'shop', 'benefits', 'admin-ig', 'msg/thread', 'msg/wel', 'billing/remind', 'webread'];
 const PREFIXED = ['content', 'daily', 'shop-img', 'planimg'];
 
 async function exportData(email) {
@@ -43,6 +43,8 @@ async function deleteAccount(email) {
   const shop = await getJson(`shop/${e}`).catch(() => null);
   if (shop && shop.slug) await del(`shop-slug/${shop.slug}`).catch(() => {});
   if (member && member.stripeCustomerId) await del(`stripe-customers/${member.stripeCustomerId}`).catch(() => {});
+  await require('./listinglinks').release(email).catch(() => {});
+  await require('./websitecheck').release(email).catch(() => {});
   let n = 0;
   for (const k of SINGLE) { await del(`${k}/${e}`).then(() => n++).catch(() => {}); }
   for (const p of PREFIXED) for (const k of await core.listKeys(`${p}/${e}/`).catch(() => [])) { await del(k).then(() => n++).catch(() => {}); }

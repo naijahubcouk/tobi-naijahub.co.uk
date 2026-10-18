@@ -694,6 +694,19 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     });
   }
 
+  // Listing link check: confirmed when the listing's email = sign-in email, or you confirm it here.
+  function listingCheckHtml(biz) {
+    if (biz.listingConfirmed) return '<span class="pill p-active">✓ Confirmed by you</span>';
+    if (biz.listingCheck === 'email_match') return '<span class="pill p-active">✓ Email matches</span>';
+    if (!biz.listingCheck) return '<span class="pill p-inactive">Linked before checks</span>';
+    return '<span class="pill p-pending">' + (biz.listingCheck === 'no_email' ? 'Listing has no email' : 'Email differs') + ' — check it\u2019s theirs</span> <button class="btn small" id="confirmL">Confirm it\u2019s theirs</button>';
+  }
+  function websiteCheckHtml(biz) {
+    if (biz.websiteConfirmed) return '<span class="pill p-active">✓ Confirmed by you</span>';
+    if (biz.websiteCheck === 'name_differs') return '<span class="pill p-pending">Website check: name differs</span> <button class="btn small" id="confirmW">Confirm it\u2019s theirs</button>';
+    if (biz.websiteCheck === 'shared') return '<span class="pill p-pending">Website check: also used by another member</span> <button class="btn small" id="confirmW">Confirm it\u2019s theirs</button>';
+    return '';
+  }
   // ── "Find your business on Auntie Tobi" picker (links a Marketplace product to the business listing) ──
   function bizPicker(box, initial, onChange, opts) {
     opts = opts || {};
@@ -1163,7 +1176,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
         var pct = m.limit ? Math.min(100, Math.round(100 * m.today.used / m.limit)) : 0;
         var biz = m.business || {};
         return '<tr><td><b>' + esc(m.email) + '</b>' + (biz.name ? '<div>' + esc(biz.name) + '</div>' : '') +
-          (biz.listingUrl ? '<div class="muted"><a href="' + esc(biz.listingUrl) + '" target="_blank" rel="noopener">Auntie Tobi listing</a></div>' : '') + '<div class="muted">' + esc(m.name) + (m.lastLoginAt ? ' \u00b7 last signed in ' + d(m.lastLoginAt) : '') + '</div></td><td>' + typePill(m) + '</td>' +
+          (biz.listingUrl ? '<div class="muted"><a href="' + esc(biz.listingUrl) + '" target="_blank" rel="noopener">Auntie Tobi listing</a>' + (biz.listingTrusted ? '' : ' <span class="pill p-pending">to check</span>') + '</div>' : '') + (biz.websiteTrusted === false ? '<div class="muted">Website <span class="pill p-pending">to check</span></div>' : '') + '<div class="muted">' + esc(m.name) + (m.lastLoginAt ? ' \u00b7 last signed in ' + d(m.lastLoginAt) : '') + '</div></td><td>' + typePill(m) + '</td>' +
           '<td>' + statusPill(m) + (m.status !== 'none' && m.membershipExpiresAt ? '<div class="muted">to ' + d(m.membershipExpiresAt) + '</div>' : '') + '</td>' +
           '<td>' + addonPill(m.addon) + '</td>' +
           '<td>' + m.today.used + ' / ' + m.limit + (m.allowanceOverride != null ? ' <span class="muted">(custom)</span>' : '') + '<div class="bar"><span style="width:' + pct + '%"></span></div></td>' +
@@ -1195,8 +1208,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       (email ? (function () {
         var biz = m.business || {};
         return '<div class="card stack"><b>Business &amp; links</b><div>' + (biz.name ? esc(biz.name) : '<span class="muted">No business profile yet</span>') + '</div>' +
-          '<div class="muted">Auntie Tobi listing: ' + (biz.listingUrl ? '<a href="' + esc(biz.listingUrl) + '" target="_blank" rel="noopener">' + esc(biz.listingSlug) + '</a> <button class="btn small ghost danger" id="unlinkL">Remove listing link</button>' : 'not linked') + '</div>' +
-          '<div class="muted">Website: ' + (biz.website ? '<a href="' + esc(biz.website) + '" target="_blank" rel="noopener">' + esc(biz.website) + '</a>' : 'none') + '</div>' +
+          '<div class="muted">Auntie Tobi listing: ' + (biz.listingUrl ? '<a href="' + esc(biz.listingUrl) + '" target="_blank" rel="noopener">' + esc(biz.listingSlug) + '</a> ' + listingCheckHtml(biz) + ' <button class="btn small ghost danger" id="unlinkL">Remove listing link</button>' : 'not linked') + '</div>' +
+          '<div class="muted">Website: ' + (biz.website ? '<a href="' + esc(biz.website) + '" target="_blank" rel="noopener">' + esc(biz.website) + '</a> ' + websiteCheckHtml(biz) : 'none') + '</div>' +
           '<div class="muted">Customers find them on: ' + esc((biz.channels || []).join(', ') || '\u2014') + (biz.mainChannel ? ' \u00b7 posts point to ' + esc(biz.mainChannel) : '') + '</div>' +
           '<div class="muted">Price list page: ' + (m.shop ? '<a href="/p/' + esc(m.shop.slug) + '" target="_blank" rel="noopener">/p/' + esc(m.shop.slug) + '</a> \u00b7 ' + (m.shop.disabled ? '<b style="color:var(--danger)">taken down by admin</b>' : m.shop.published ? 'published' : 'not published') + ' \u00b7 ' + m.shop.items + ' items <button class="btn small ghost' + (m.shop.disabled ? '' : ' danger') + '" id="shopTg">' + (m.shop.disabled ? 'Allow page again' : 'Take page down') + '</button>' : 'none') + '</div></div>';
       })() : '') +
@@ -1218,6 +1231,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     };
     if (email) {
       $('#mrev', s).onclick = async function () { if (!confirm('Sign this member out on every device?')) return; try { await api('member-revoke-sessions', { email: email }); toast('Signed out everywhere'); } catch (x) { toast(x.message); } };
+      var cfw = $('#confirmW', s); if (cfw) cfw.onclick = async function () { try { await api('member-confirm-website', { email: email }); toast('Website confirmed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
+      var cfl = $('#confirmL', s); if (cfl) cfl.onclick = async function () { try { await api('member-confirm-listing', { email: email }); toast('Listing confirmed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       var ulk = $('#unlinkL', s); if (ulk) ulk.onclick = async function () { if (!confirm('Remove this listing link? The member can add the right one in their profile.')) return; try { await api('member-unlink-listing', { email: email }); toast('Listing link removed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       $('#mBen', s).onclick = function () { s.remove(); editBenefits(email, function () { vMembers(); }); };
       var stg = $('#shopTg', s); if (stg) stg.onclick = async function () { var dis = !m.shop.disabled; if (dis && !confirm('Take this member\u2019s public price list page down? They will still see it in Business Studio.')) return; try { await api('member-shop-disable', { email: email, disabled: dis }); toast(dis ? 'Page taken down' : 'Page allowed again'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
