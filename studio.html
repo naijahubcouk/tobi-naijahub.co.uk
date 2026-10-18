@@ -28,7 +28,7 @@
   --display:'Fraunces',Georgia,serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+html,body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:17.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;min-height:100dvh;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
 body.no-nav{padding-bottom:24px}
 button,input,textarea,select{font:inherit;color:inherit}
@@ -40,38 +40,38 @@ a{color:var(--green)}
 /* header */
 .top{position:sticky;top:0;z-index:20;background:var(--navy);color:var(--cream);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
 .top img{width:34px;height:34px;border-radius:50%;border:2px solid var(--gold);background:var(--cream)}
-.top .brand{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.2px;line-height:1.1}
-.top .brand small{display:block;font-family:var(--font);font-weight:500;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold)}
+.top .brand{font-family:var(--display);font-weight:700;font-size:19.5px;letter-spacing:.2px;line-height:1.1}
+.top .brand small{display:block;font-family:var(--font);font-weight:500;font-size:13px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold)}
 .top .back{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--cream);margin-left:-6px}
 .top .back:focus-visible,.top .back:hover{background:var(--navy-2)}
 .top .spacer{flex:1}
-.pill{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.3px}
+.pill{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:14px;font-weight:700;letter-spacing:.3px}
 .pill.gold{background:var(--gold);color:var(--navy)}
 .pill.green{background:var(--green-l);color:var(--green-d)}
 .pill.grey{background:#ECEDF0;color:var(--muted)}
 .pill.goldl{background:var(--gold-l);color:#7A5300}
 .opt{font-weight:400;color:var(--muted)}
-.aiopt{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line,#e5e7eb);border-radius:14px;padding:12px 14px;font:inherit;cursor:pointer}.aiopt b{display:block;font-size:15px}.aiopt span{display:block;color:var(--muted);font-size:13px;margin-top:2px}.aiopt[aria-pressed=true]{border-color:#16a34a;background:#f0fdf4}
+.aiopt{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line,#e5e7eb);border-radius:14px;padding:12px 14px;font:inherit;cursor:pointer}.aiopt b{display:block;font-size:16.5px}.aiopt span{display:block;color:var(--muted);font-size:15px;margin-top:2px}.aiopt[aria-pressed=true]{border-color:#16a34a;background:#f0fdf4}
 .pill.cream{background:rgba(251,246,236,.12);color:var(--cream)}
 
 main{max-width:640px;margin:0 auto;padding:16px}
-h1{font-family:var(--display);font-size:26px;line-height:1.15;font-weight:700;letter-spacing:-.2px}
-h2{font-family:var(--display);font-size:20px;line-height:1.2;font-weight:700;margin:22px 0 10px}
-.sub{color:var(--muted);font-size:15px}
+h1{font-family:var(--display);font-size:28px;line-height:1.15;font-weight:700;letter-spacing:-.2px}
+h2{font-family:var(--display);font-size:21.5px;line-height:1.2;font-weight:700;margin:22px 0 10px}
+.sub{color:var(--muted);font-size:16.5px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
 .stack>*+*{margin-top:12px}
 
 /* forms */
-label.f{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+label.f{display:block;font-weight:700;font-size:15.5px;margin-bottom:6px}
 label.f .opt{font-weight:400;color:var(--muted)}
-.hint{font-size:13px;color:var(--muted);margin-top:4px}
+.hint{font-size:15px;color:var(--muted);margin-top:4px}
 input:not([type]),input[type=search],input[type=email],input[type=text],input[type=url],input[type=date],input[type=number],textarea,select{
-  width:100%;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s}
+  width:100%;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:17.5px;outline:none;transition:border-color .15s,box-shadow .15s}
 textarea{resize:vertical;min-height:84px}
 input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(5,122,68,.15)}
-.code-input{font-size:30px!important;letter-spacing:12px;text-align:center;font-weight:700;padding:14px!important}
+.code-input{font-size:32px!important;letter-spacing:12px;text-align:center;font-weight:700;padding:14px!important}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:500;line-height:1.2}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:15.5px;font-weight:500;line-height:1.2}
 .chip[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:var(--cream)}
 .chip:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:500}
@@ -80,22 +80,22 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0
 .switch[aria-checked=true]{background:var(--green)}
 .switch[aria-checked=true]::after{left:23px}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:13px 18px;font-weight:700;font-size:16px;min-height:48px;transition:transform .05s,background .15s,opacity .15s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:13px 18px;font-weight:700;font-size:17.5px;min-height:48px;transition:transform .05s,background .15s,opacity .15s}
 .btn:active{transform:scale(.98)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .btn.primary{background:var(--green);color:#fff}
 .btn.primary:hover:not(:disabled){background:var(--green-d)}
 .btn.gold{background:var(--gold);color:var(--navy)}
 .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--navy)}
-.btn.small{min-height:38px;padding:8px 12px;font-size:14px;border-radius:10px}
+.btn.small{min-height:38px;padding:8px 12px;font-size:15.5px;border-radius:10px}
 .btn.block{width:100%}
 .btn.link{padding:6px 0;min-height:0;color:var(--green);font-weight:700}
 .btn.danger{color:var(--danger)}
 .row{display:flex;gap:10px;align-items:center}
 .row.wrap{flex-wrap:wrap}
-.err{background:var(--danger-l);color:var(--danger);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:500}
-.note{background:var(--gold-l);border-radius:12px;padding:12px;font-size:14px}
-.li.tl{align-items:flex-start}.li.tl .t small{display:block;line-height:1.4}.li.tl .snip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.li.tl .t{min-width:0}.li.tl .tli{font-size:20px;line-height:1.2;margin-top:1px}.li.tl.locked{opacity:.78}.li.tl .tlk{font-size:16px}
+.err{background:var(--danger-l);color:var(--danger);border-radius:12px;padding:10px 12px;font-size:15.5px;font-weight:500}
+.note{background:var(--gold-l);border-radius:12px;padding:12px;font-size:15.5px}
+.li.tl{align-items:flex-start}.li.tl .t small{display:block;line-height:1.4}.li.tl .snip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.li.tl .t{min-width:0}.li.tl .tli{font-size:21.5px;line-height:1.2;margin-top:1px}.li.tl.locked{opacity:.78}.li.tl .tlk{font-size:17.5px}
 .rtool .useblock .ubh{display:none}.rtool .useblock{background:#fff;padding:14px}
 .cpack{text-align:left;width:100%;cursor:pointer}
 .fbres{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line,#EEE6D3);border-radius:12px;padding:10px 12px}
@@ -104,16 +104,16 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0
 .auth-wrap{max-width:420px;margin:0 auto;padding:28px 18px}
 .auth-hero{text-align:center;margin-bottom:20px}
 .auth-hero img{width:84px;height:84px;border-radius:50%;border:3px solid var(--gold);background:#fff;margin-bottom:12px}
-.auth-hero .kicker{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--green);font-weight:700}
+.auth-hero .kicker{font-size:14px;letter-spacing:1.6px;text-transform:uppercase;color:var(--green);font-weight:700}
 
 /* allowance */
 .allow{background:var(--navy);color:var(--cream);border:0;position:relative;overflow:hidden}
 .allow::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,184,28,.25),transparent 70%)}
-.allow .big{font-family:var(--display);font-size:44px;line-height:1;font-weight:700;color:var(--gold)}
+.allow .big{font-family:var(--display);font-size:47px;line-height:1;font-weight:700;color:var(--gold)}
 .bar{height:8px;background:rgba(251,246,236,.15);border-radius:999px;overflow:hidden;margin:12px 0 8px}
 .bar span{display:block;height:100%;background:var(--gold);border-radius:999px;transition:width .4s}
-.allow .meta{font-size:13px;color:rgba(251,246,236,.8)}
-.allow button.link{color:var(--gold);font-weight:700;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.allow .meta{font-size:15px;color:rgba(251,246,236,.8)}
+.allow button.link{color:var(--gold);font-weight:700;font-size:15px;text-decoration:underline;text-underline-offset:3px}
 
 /* tools */
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -123,36 +123,36 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0
 .tool .ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--green-l);color:var(--green)}
 .tool:nth-child(3n+2) .ico{background:var(--gold-l);color:#9A6A00}
 .tool:nth-child(3n) .ico{background:#E7EAF0;color:var(--navy)}
-.tool b{font-size:15px;line-height:1.25}
-.tool span{font-size:12.5px;color:var(--muted);line-height:1.35}
+.tool b{font-size:16.5px;line-height:1.25}
+.tool span{font-size:14.5px;color:var(--muted);line-height:1.35}
 
 /* lists */
 .list{display:flex;flex-direction:column;gap:8px}
 .li{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;text-align:left;width:100%}
 .li .t{flex:1;min-width:0}
-.li .t b{display:block;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.li .t small{color:var(--muted);font-size:12.5px}
-.li .star{color:var(--gold);font-size:18px}
-.empty{text-align:center;color:var(--muted);padding:28px 12px;font-size:15px}
+.li .t b{display:block;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .t small{color:var(--muted);font-size:14.5px}
+.li .star{color:var(--gold);font-size:19.5px}
+.empty{text-align:center;color:var(--muted);padding:28px 12px;font-size:16.5px}
 
 /* conversation */
 .bubble{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
 .bubble img{width:36px;height:36px;border-radius:50%;border:2px solid var(--gold);background:#fff;flex:none}
-.bubble p{background:#fff;border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 14px;font-size:15px;box-shadow:var(--shadow)}
+.bubble p{background:#fff;border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 14px;font-size:16.5px;box-shadow:var(--shadow)}
 .typing{display:inline-flex;gap:4px;padding:4px 0}
 .typing i{width:7px;height:7px;border-radius:50%;background:var(--green);opacity:.4;animation:blink 1.2s infinite}
 .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
 .option{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)}
-.option .oh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--green)}
-.option textarea{border:0;padding:4px 2px;min-height:60px;box-shadow:none;font-size:15px;line-height:1.55;resize:none;overflow:hidden}
+.option .oh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:14px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--green)}
+.option textarea{border:0;padding:4px 2px;min-height:60px;box-shadow:none;font-size:16.5px;line-height:1.55;resize:none;overflow:hidden}
 .option textarea:focus{box-shadow:none;background:#FFFCF5}
-.cost{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
-.saved-tag{font-size:12px;color:var(--muted)}
+.cost{font-size:15px;color:var(--muted);text-align:center;margin-top:8px}
+.saved-tag{font-size:14px;color:var(--muted)}
 
 /* nav */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
-nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11.5px;font-weight:700;color:var(--muted);border-radius:12px}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:13.5px;font-weight:700;color:var(--muted);border-radius:12px}
 nav.tabs button[aria-current=page]{color:var(--green)}
 nav.tabs button[aria-current=page] svg{background:var(--green-l)}
 nav.tabs svg{width:40px;height:28px;padding:4px 10px;border-radius:999px}
@@ -161,76 +161,76 @@ nav.tabs svg{width:40px;height:28px;padding:4px 10px;border-radius:999px}
 .scrim{position:fixed;inset:0;background:rgba(15,30,54,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--cream);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
 @media(min-width:600px){.scrim{align-items:center}.sheet{border-radius:20px}}
-.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:90vw}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 16px;border-radius:12px;font-size:15.5px;font-weight:500;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:90vw}
 details.faq{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 details.faq summary{font-weight:700;cursor:pointer}
-details.faq ul{margin:8px 0 0 18px;font-size:14px;color:var(--navy)}
+details.faq ul{margin:8px 0 0 18px;font-size:15.5px;color:var(--navy)}
 details.faq li+li{margin-top:4px}
 .steps{display:flex;gap:6px;margin:6px 0 16px}
 .steps span{flex:1;height:4px;border-radius:999px;background:var(--line)}
 .steps span.on{background:var(--green)}
 .plan{border:2px solid var(--gold);background:linear-gradient(180deg,#fff, var(--gold-l))}
-.plan .price{font-family:var(--display);font-size:30px;font-weight:700}
-.plan ul{margin:10px 0 14px 18px;font-size:14.5px}
+.plan .price{font-family:var(--display);font-size:32px;font-weight:700}
+.plan ul{margin:10px 0 14px 18px;font-size:16px}
 /* growth */
 .act{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start}
 .act.done{opacity:.6}
 .act .tick{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:#fff;margin-top:2px}
 .act.done .tick{background:var(--green);border-color:var(--green)}
-.act .kind{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
+.act .kind{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
 .act .kind.sales{color:#9A6A00}.act .kind.visibility{color:var(--navy)}
-.act b{display:block;font-size:15.5px;line-height:1.3;margin:2px 0}
-.act p{font-size:13.5px;color:var(--muted);margin-bottom:8px}
+.act b{display:block;font-size:17px;line-height:1.3;margin:2px 0}
+.act p{font-size:15px;color:var(--muted);margin-bottom:8px}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.quick button{background:var(--navy);color:var(--cream);border-radius:14px;padding:12px;text-align:left;display:flex;gap:8px;align-items:center;font-weight:700;font-size:14px;line-height:1.2;min-height:56px}
+.quick button{background:var(--navy);color:var(--cream);border-radius:14px;padding:12px;text-align:left;display:flex;gap:8px;align-items:center;font-weight:700;font-size:15.5px;line-height:1.2;min-height:56px}
 .quick button svg{color:var(--gold);flex:none}
 .tipcard{background:#fff;border:1px solid var(--line);border-left:5px solid var(--gold);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
 .tipcard .tk{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .tipcard .tk img{width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);background:var(--cream);flex:none}
-.tipcard .tk small{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
-.tipcard .tk span{font-size:13px;color:var(--muted)}
-.tipcard h3{font-family:var(--display);font-size:21px;line-height:1.25;margin:2px 0 8px;color:var(--navy)}
-.tipcard p.tb{font-size:15px;line-height:1.55;margin:0 0 12px}
-.tipcard .try{background:var(--green-l);border-radius:12px;padding:11px 12px;font-size:14px;line-height:1.45;margin-bottom:12px}
+.tipcard .tk small{display:block;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
+.tipcard .tk span{font-size:15px;color:var(--muted)}
+.tipcard h3{font-family:var(--display);font-size:22.5px;line-height:1.25;margin:2px 0 8px;color:var(--navy)}
+.tipcard p.tb{font-size:16.5px;line-height:1.55;margin:0 0 12px}
+.tipcard .try{background:var(--green-l);border-radius:12px;padding:11px 12px;font-size:15.5px;line-height:1.45;margin-bottom:12px}
 .tipcard .try b{color:var(--green-d)}
 .tipcard .tact{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.goalbar{display:flex;align-items:center;gap:8px;background:var(--gold-l);border-radius:12px;padding:10px 12px;font-size:14px}
+.goalbar{display:flex;align-items:center;gap:8px;background:var(--gold-l);border-radius:12px;padding:10px 12px;font-size:15.5px}
 .goalbar b{flex:1}
-.cal-day{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+.cal-day{font-size:14px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
 .cal{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
-.cal .fmt{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;background:#E7EAF0;margin-right:6px}
+.cal .fmt{display:inline-block;font-size:13px;font-weight:700;border-radius:6px;padding:2px 7px;background:#E7EAF0;margin-right:6px}
 .cal .st{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.cal .st .chip{padding:5px 10px;font-size:12.5px}
+.cal .st .chip{padding:5px 10px;font-size:14.5px}
 .num{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
 .num:last-child{border-bottom:0}
 .step{display:flex;align-items:center;gap:6px}
-.step button{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-size:20px;font-weight:700}
+.step button{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-size:21.5px;font-weight:700}
 .step input{width:76px;text-align:center;padding:8px}
 .wk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .wk div{background:var(--cream);border-radius:12px;padding:10px;text-align:center}
-.wk b{display:block;font-family:var(--display);font-size:24px;line-height:1.1}
-.wk span{font-size:12px;color:var(--muted)}
+.wk b{display:block;font-family:var(--display);font-size:25px;line-height:1.1}
+.wk span{font-size:14px;color:var(--muted)}
 [hidden]{display:none!important}
 .row>div{min-width:0}
 a.btn{text-decoration:none}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 .optact{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-.logo-box{width:72px;height:72px;border-radius:14px;border:1.5px dashed var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);flex:none;overflow:hidden}
+.logo-box{width:72px;height:72px;border-radius:14px;border:1.5px dashed var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);flex:none;overflow:hidden}
 .logo-box img{width:100%;height:100%;object-fit:contain}
-.colour{flex:1;display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;font-size:14px;font-weight:600;cursor:pointer}
+.colour{flex:1;display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;font-size:15.5px;font-weight:600;cursor:pointer}
 .colour input{width:40px;height:40px;border:0;padding:0;background:none;border-radius:8px;cursor:pointer;flex:none}
 .imgprev{margin:0 auto;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);background:#fff}
 .imgprev canvas{display:block;width:100%;height:auto}
-.posted{font-size:11px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.posted{font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);border-radius:999px;padding:2px 8px;white-space:nowrap}
 @media print{body.printing>*:not(#app){display:none!important}body.printing #app>*:not(main),body.printing main>*:not(#printArea){display:none!important}body.printing,body.printing #app,body.printing main{background:#fff!important;padding:0!important;margin:0!important;max-width:none!important}body.printing .docpaper{border:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 [data-lesson] .t b,.li.soon .t b{white-space:normal}
 .li.soon{background:transparent;border-style:dashed;opacity:.75}
 .li .snip{display:block;margin-top:2px}
-.ldot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.ldot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff}
 .ldot.done{background:var(--green);border-color:var(--green)}
 .reswelcome{background:#F2FBF6;border:1px solid #CFEBDB;border-radius:var(--radius);padding:16px}
-.reswelcome h2{margin:0 0 6px;font-size:20px}
-.reswelcome p{font-size:14.5px;color:var(--navy-2)}
+.reswelcome h2{margin:0 0 6px;font-size:21.5px}
+.reswelcome p{font-size:16px;color:var(--navy-2)}
 .rsearch{display:flex;gap:8px;margin-top:12px}
 .rsearch input{flex:1;min-width:0}
 .pbar{display:block;height:7px;background:#E6EFE9;border-radius:999px;overflow:hidden}
@@ -241,148 +241,148 @@ a.btn{text-decoration:none}
 @media(min-width:560px){.modgrid{grid-template-columns:1fr 1fr}}
 .modcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
 .modcard .mi,.modhead .mi{width:40px;height:40px;border-radius:12px;background:#F2FBF6;color:var(--green);display:flex;align-items:center;justify-content:center}
-.modcard .mn,.modhead .mn{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--green)}
-.modcard b{font-family:var(--display);font-size:18px;line-height:1.2}
-.modcard .md{font-size:14px;color:var(--muted)}
-.modcard .mc{font-size:12.5px;font-weight:700;color:var(--navy-2)}
-.modcard .mgo{font-weight:800;color:var(--green);font-size:14px;margin-top:2px}
+.modcard .mn,.modhead .mn{font-size:13px;font-weight:800;letter-spacing:1.2px;color:var(--green)}
+.modcard b{font-family:var(--display);font-size:19.5px;line-height:1.2}
+.modcard .md{font-size:15.5px;color:var(--muted)}
+.modcard .mc{font-size:14.5px;font-weight:700;color:var(--navy-2)}
+.modcard .mgo{font-weight:800;color:var(--green);font-size:15.5px;margin-top:2px}
 .modhead{display:flex;gap:12px;align-items:center}
-.modhead h1{font-size:24px}
-.lesson .lmeta{font-size:12px;font-weight:700;letter-spacing:.6px;color:var(--green);text-transform:uppercase;margin-bottom:6px}
-.lesson h1{font-size:26px}
+.modhead h1{font-size:25px}
+.lesson .lmeta{font-size:14px;font-weight:700;letter-spacing:.6px;color:var(--green);text-transform:uppercase;margin-bottom:6px}
+.lesson h1{font-size:28px}
 .lsimg img{width:100%;border-radius:var(--radius);margin-top:12px;display:block}
 .lsec{background:#F2FBF6;border:1px solid #CFEBDB;border-radius:var(--radius);padding:16px;margin-top:14px}
 .lsec.see{background:#FFF8E6;border-color:#F3E2B3}
 .lsec.do{background:var(--navy);color:var(--cream);border-color:var(--navy)}
 .lsec.do .rt p,.lsec.do .rt li{color:var(--cream)}
 .lsec.use{background:#fff;border-color:var(--line)}
-.lh{font-family:var(--display);font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;margin-bottom:10px;line-height:1.2}
-.lh span{font-family:var(--font);font-size:11px;font-weight:800;letter-spacing:1.4px;background:var(--green);color:#fff;border-radius:999px;padding:4px 9px;flex:none}
+.lh{font-family:var(--display);font-weight:700;font-size:19.5px;display:flex;align-items:center;gap:10px;margin-bottom:10px;line-height:1.2}
+.lh span{font-family:var(--font);font-size:13px;font-weight:800;letter-spacing:1.4px;background:var(--green);color:#fff;border-radius:999px;padding:4px 9px;flex:none}
 .see .lh span{background:var(--gold);color:var(--navy)}.do .lh span{background:var(--gold);color:var(--navy)}
-.rt{font-size:15.5px;line-height:1.65}
+.rt{font-size:17px;line-height:1.65}
 .rt p+p,.rt p+ul,.rt p+ol,.rt ul+p,.rt ol+p,.rt h3+p,.rt .tipbox+p,.rt p+.tipbox{margin-top:10px}
-.rt h3{font-family:var(--display);font-size:18px;margin:18px 0 6px}
+.rt h3{font-family:var(--display);font-size:19.5px;margin:18px 0 6px}
 .rt ul,.rt ol{margin:8px 0 0 20px}.rt li{margin-bottom:4px}
 .rt a{color:var(--green-d);font-weight:700}
 .tipbox{background:#fff;border-left:4px solid var(--gold);border-radius:10px;padding:10px 12px;font-weight:500;margin-top:10px}
 .useblock{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:#FCFDFC}
-.ubh{margin-bottom:8px}.ubh span{display:block;font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--green);text-transform:uppercase}.ubh b{font-size:16px}
+.ubh{margin-bottom:8px}.ubh span{display:block;font-size:13px;font-weight:800;letter-spacing:1.2px;color:var(--green);text-transform:uppercase}.ubh b{font-size:17.5px}
 .checks{display:flex;flex-direction:column;gap:2px}
 .useblock textarea[rows="1"]{min-height:48px}
-.chk{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-bottom:1px solid #EEF3EF;font-size:15px;cursor:pointer}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-bottom:1px solid #EEF3EF;font-size:16.5px;cursor:pointer}
 .chk:last-child{border-bottom:0}
 .chk input{width:22px;height:22px;flex:none;accent-color:var(--green);margin-top:1px}
 .chk input:checked+span{color:var(--muted);text-decoration:line-through}
-.tpl{white-space:pre-wrap;font-family:var(--font);font-size:15px;background:#F2FBF6;border-radius:10px;padding:12px;line-height:1.55;border:1px dashed #BFE2CD}
-.lfoot{margin-top:16px;font-size:13px;color:var(--muted)}.lfoot p+p{margin-top:4px}.lfoot a{color:var(--green-d)}
+.tpl{white-space:pre-wrap;font-family:var(--font);font-size:16.5px;background:#F2FBF6;border-radius:10px;padding:12px;line-height:1.55;border:1px dashed #BFE2CD}
+.lfoot{margin-top:16px;font-size:15px;color:var(--muted)}.lfoot p+p{margin-top:4px}.lfoot a{color:var(--green-d)}
 .pcout{background:#F2FBF6;border-radius:12px;padding:12px}.pcout .row{padding:2px 0}
 #printArea.ponly{display:none}
-.wsprint{font-family:var(--font);color:#0F1E36;padding:10px}.wsprint h1{font-family:var(--display);font-size:24px;margin:6px 0}.wsprint h3{font-size:14px;margin:16px 0 4px}
-.wsp-brand{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#057A44;font-weight:800}
-.wsp-ans{border-bottom:1px solid #999;padding:4px 0 8px;min-height:28px;font-size:14px}.wsp-ans.blank{min-height:60px}
+.wsprint{font-family:var(--font);color:#0F1E36;padding:10px}.wsprint h1{font-family:var(--display);font-size:25px;margin:6px 0}.wsprint h3{font-size:15.5px;margin:16px 0 4px}
+.wsp-brand{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#057A44;font-weight:800}
+.wsp-ans{border-bottom:1px solid #999;padding:4px 0 8px;min-height:28px;font-size:15.5px}.wsp-ans.blank{min-height:60px}
 @media print{body.printing #printArea.ponly{display:block!important}}
-.free{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.8px;background:var(--gold-l);color:#7A5300;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+.free{display:inline-block;font-size:12.5px;font-weight:800;letter-spacing:.8px;background:var(--gold-l);color:#7A5300;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
 .tool.freetool .ico{background:var(--gold-l);color:#7A5300}
 .tool.freetool{position:relative}.tool.freetool b .free{position:absolute;top:14px;right:12px;margin:0}
-.tool.locked{position:relative}.tool.locked b .lock{position:absolute;top:12px;right:10px;margin:0;background:#ECEDF0;color:var(--navy);font-size:9.5px;letter-spacing:.3px;padding:2px 6px}
+.tool.locked{position:relative}.tool.locked b .lock{position:absolute;top:12px;right:10px;margin:0;background:#ECEDF0;color:var(--navy);font-size:11.5px;letter-spacing:.3px;padding:2px 6px}
 .tiers{display:grid;gap:10px}.tiers .plan{text-align:left;width:100%}.tiers .plan .ivy{display:none}.tiers.year .plan .ivm{display:none}.tiers.year .plan .ivy{display:inline}
 .chip[data-locked]{opacity:.75}
 h2 .free{font-family:var(--font)}
 .setup{margin-bottom:14px}
-.setstep{display:flex;gap:10px;align-items:center;width:100%;padding:9px 2px;border-bottom:1px solid #EEF3EF;font-size:15px;font-weight:500;color:var(--navy)}
+.setstep{display:flex;gap:10px;align-items:center;width:100%;padding:9px 2px;border-bottom:1px solid #EEF3EF;font-size:16.5px;font-weight:500;color:var(--navy)}
 .setstep:last-child{border-bottom:0}.setstep.done{color:var(--muted)}.setstep.done span:nth-child(2){text-decoration:line-through}
 .installcard{margin-bottom:14px}
 .act.chase{border-left:4px solid var(--gold)}.act.chase.overdue{border-left-color:var(--danger)}
 .slugrow{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
-.slugrow span{padding:12px 0 12px 12px;color:var(--muted);font-size:14px;white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.slugrow span{padding:12px 0 12px 12px;color:var(--muted);font-size:15.5px;white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
 .slugrow input{border:0!important;box-shadow:none!important;padding-left:2px!important;min-width:0}
 ol.steps{margin-left:20px}ol.steps li{margin-bottom:8px}
 .cust b{word-break:break-word}
 .pill.fu-new{background:#ECEDF0;color:var(--navy-2)}.pill.fu-quoted{background:var(--gold-l);color:#7A5300}.pill.fu-booked{background:var(--green-l);color:var(--green-d)}.pill.fu-notnow{background:#ECEDF0;color:var(--muted)}.pill.fu-contacted{background:#E8ECF4;color:var(--navy)}.pill.fu-completed{background:var(--green);color:#fff}.pill.fu-lost{background:#F6E7E7;color:#8A2B2B}
 .act.chase.fu{border-left-color:var(--green)}
-ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #EEF3EF;font-size:14px}ul.hist li:last-child{border-bottom:0}ul.hist li span{color:var(--muted);min-width:86px;font-size:13px}
+ul.hist{list-style:none}ul.hist li{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #EEF3EF;font-size:15.5px}ul.hist li:last-child{border-bottom:0}ul.hist li span{color:var(--muted);min-width:86px;font-size:15px}
 .mpc{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .mpc-img{position:relative;background:#f8f8f8;height:170px;display:flex;align-items:center;justify-content:center}
 .mpc-img img{width:100%;height:100%;object-fit:contain;padding:6px}
-.mpc-noimg{color:var(--muted);font-size:14px}
-.mpc-cat{position:absolute;top:0;left:0;background:#057A44;color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:0 0 10px 0;text-transform:uppercase;letter-spacing:.3px}
-.mpc-count{position:absolute;top:8px;right:8px;background:rgba(15,30,54,.75);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px}
+.mpc-noimg{color:var(--muted);font-size:15.5px}
+.mpc-cat{position:absolute;top:0;left:0;background:#057A44;color:#fff;font-size:12px;font-weight:700;padding:4px 9px;border-radius:0 0 10px 0;text-transform:uppercase;letter-spacing:.3px}
+.mpc-count{position:absolute;top:8px;right:8px;background:rgba(15,30,54,.75);color:#fff;font-size:12px;font-weight:700;padding:3px 8px;border-radius:10px}
 .mpc-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:3px}
-.mpc-name{font-size:14px;line-height:1.35}.mpc-biz{font-size:12px;color:#9CA3AF}.mpc-desc{font-size:12.5px;color:#555;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.mpc-price{font-size:16px;font-weight:800}.mpc-btn{margin-top:6px;background:#057A44;color:#fff;border-radius:8px;padding:9px;font-size:13px;font-weight:700;text-align:center}
+.mpc-name{font-size:15.5px;line-height:1.35}.mpc-biz{font-size:14px;color:#9CA3AF}.mpc-desc{font-size:14.5px;color:#555;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mpc-price{font-size:17.5px;font-weight:800}.mpc-btn{margin-top:6px;background:#057A44;color:#fff;border-radius:8px;padding:9px;font-size:15px;font-weight:700;text-align:center}
 .mphotos{display:flex;flex-wrap:wrap;gap:8px}.mph{position:relative;width:88px;height:88px;border-radius:12px;overflow:hidden;background:#f6f2ea;border:1px solid var(--line)}
-.mph img{width:100%;height:100%;object-fit:cover}.mph.add{display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;color:var(--green);cursor:pointer;border-style:dashed}
-.mphx{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(15,30,54,.8);color:#fff;font-size:15px;line-height:1;cursor:pointer}
-.mph1{position:absolute;left:0;right:0;bottom:0;border:0;background:rgba(15,30,54,.7);color:#fff;font-size:10.5px;font-weight:700;padding:3px 0;cursor:pointer;text-align:center}.mph1.on{background:#057A44;cursor:default}
-.bzp{display:flex;gap:10px;align-items:center;justify-content:space-between;border-radius:12px;padding:11px 12px;font-size:14px;line-height:1.4}
+.mph img{width:100%;height:100%;object-fit:cover}.mph.add{display:flex;align-items:center;justify-content:center;text-align:center;font-size:14px;font-weight:700;color:var(--green);cursor:pointer;border-style:dashed}
+.mphx{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(15,30,54,.8);color:#fff;font-size:16.5px;line-height:1;cursor:pointer}
+.mph1{position:absolute;left:0;right:0;bottom:0;border:0;background:rgba(15,30,54,.7);color:#fff;font-size:12.5px;font-weight:700;padding:3px 0;cursor:pointer;text-align:center}.mph1.on{background:#057A44;cursor:default}
+.bzp{display:flex;gap:10px;align-items:center;justify-content:space-between;border-radius:12px;padding:11px 12px;font-size:15.5px;line-height:1.4}
 .bzp-on{background:#E7F5EE;border:1.5px solid #9ED7B8}.bzp-on b{color:#04603a}.bzp-none{background:#F6F2EA;border:1.5px dashed #E0D6C2;color:#5B6475}
-.bzp-m{color:#6B7280}.bzp-act{display:flex;gap:12px;align-items:center;flex-shrink:0}.bzp-act a{color:#057A44;font-weight:700;font-size:13px}
-.bzp-link{background:none;border:0;color:#057A44;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.bzp-m{color:#6B7280}.bzp-act{display:flex;gap:12px;align-items:center;flex-shrink:0}.bzp-act a{color:#057A44;font-weight:700;font-size:15px}
+.bzp-link{background:none;border:0;color:#057A44;font:inherit;font-size:15px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
 .bzp-s{display:flex;flex-direction:column;gap:8px}.bzp-s .bzp-link{align-self:flex-start}
 .bzp-res{display:flex;flex-direction:column;gap:6px}.bzp-r{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #E6E1D6;border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer;color:#0F1E36}
-.bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
+.bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:16px}.bzp-r span{font-size:14.5px;color:#6B7280}.bzp-empty{font-size:15px;color:#6B7280}
 .chbox{background:#EEF6FD;border:1px solid #CFE4F7;border-radius:12px;padding:12px}.chbox .hint{margin-bottom:0}
 .mktgrid{display:grid;gap:16px}@media(min-width:760px){.mktgrid{grid-template-columns:1fr 280px;align-items:start}}
-.clubticks{list-style:none;margin:4px 0 6px;padding:0;text-align:left}.clubticks li{position:relative;padding:4px 0 4px 24px;font-size:14.5px;line-height:1.45}.clubticks li::before{content:'✓';position:absolute;left:2px;color:var(--green);font-weight:800}
+.clubticks{list-style:none;margin:4px 0 6px;padding:0;text-align:left}.clubticks li{position:relative;padding:4px 0 4px 24px;font-size:16px;line-height:1.45}.clubticks li::before{content:'✓';position:absolute;left:2px;color:var(--green);font-weight:800}
 .mtcard{margin-bottom:14px}.mt{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #EEF3EF}.mt:last-of-type{border-bottom:0}
 .mt-check{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:2px solid var(--green);background:#fff;color:#fff;font-weight:800;cursor:pointer;margin-top:1px}
-.mt-done .mt-check{background:var(--green)}.mt-done .mt-t{text-decoration:line-through;color:var(--muted)}.mt-t{font-size:15px;font-weight:600;line-height:1.35}
-.mt-late{background:#FFF6F5;margin:0 -14px;padding:9px 14px}.mt-od{color:var(--danger);font-weight:700}.mt-h{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:6px}
-.mt .btn.link{font-size:13px;padding:0;min-height:0}.mt-day{font-size:13px;font-weight:700;color:var(--navy);margin-top:8px}.mt-soon{border:2px dashed #C9D3CC!important;cursor:default;display:grid;place-items:center;color:var(--muted);font-size:13px}.mt-add summary{cursor:pointer;color:var(--green);font-weight:700;font-size:14px;margin-top:4px}
+.mt-done .mt-check{background:var(--green)}.mt-done .mt-t{text-decoration:line-through;color:var(--muted)}.mt-t{font-size:16.5px;font-weight:600;line-height:1.35}
+.mt-late{background:#FFF6F5;margin:0 -14px;padding:9px 14px}.mt-od{color:var(--danger);font-weight:700}.mt-h{font-size:14px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.mt .btn.link{font-size:15px;padding:0;min-height:0}.mt-day{font-size:15px;font-weight:700;color:var(--navy);margin-top:8px}.mt-soon{border:2px dashed #C9D3CC!important;cursor:default;display:grid;place-items:center;color:var(--muted);font-size:15px}.mt-add summary{cursor:pointer;color:var(--green);font-weight:700;font-size:15.5px;margin-top:4px}
 .shared{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .prio{margin-bottom:14px;border-color:#CFEBDB;background:#F2FBF6}
 .benrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF3EF}.benrow:last-child{border-bottom:0}
-.benico{font-size:20px;width:28px;text-align:center;flex:none}
-@media(max-width:440px){.top .brand small{letter-spacing:.5px;font-size:10px;white-space:nowrap}.top{gap:8px}}
-.msgbtn{position:relative}.mdot{position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#E5484D;color:#fff;font-size:10.5px;font-weight:800;display:grid;place-items:center;border:2px solid var(--navy)}
+.benico{font-size:21.5px;width:28px;text-align:center;flex:none}
+@media(max-width:440px){.top .brand{font-size:18px}.top .brand small{letter-spacing:.2px;font-size:10px;white-space:nowrap}.top{gap:6px;padding-left:12px;padding-right:12px}.top .brand{min-width:0;overflow:hidden}}
+.msgbtn{position:relative}.mdot{position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#E5484D;color:#fff;font-size:12.5px;font-weight:800;display:grid;place-items:center;border:2px solid var(--navy)}
 .msgs{display:flex;flex-direction:column;height:calc(100vh - 62px - env(safe-area-inset-top));height:calc(100dvh - 62px - env(safe-area-inset-top));padding-bottom:0!important}
 .mhead{display:flex;gap:10px;align-items:center;padding:4px 2px 12px;border-bottom:1px solid var(--line)}.mhead img{width:42px;height:42px;border-radius:50%;border:2px solid var(--gold)}
 .mlist{flex:1;overflow:auto;padding:14px 2px;display:flex;flex-direction:column;gap:8px}
-.bub{max-width:82%;padding:9px 13px;border-radius:16px;font-size:15px;line-height:1.45;word-wrap:break-word}
-.bub .bt{white-space:pre-wrap}.bub .bm{font-size:11px;opacity:.7;margin-top:3px;text-align:right}
+.bub{max-width:82%;padding:9px 13px;border-radius:16px;font-size:16.5px;line-height:1.45;word-wrap:break-word}
+.bub .bt{white-space:pre-wrap}.bub .bm{font-size:13px;opacity:.7;margin-top:3px;text-align:right}
 .bub.me{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:5px}.bub.me a{color:#fff}
 .bub.them{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px}
-.bub.ann{background:var(--gold-l,#FFF1CF);border-color:#F3DC9C}.annl{font-size:11.5px;font-weight:800;letter-spacing:.3px;margin-bottom:2px}
+.bub.ann{background:var(--gold-l,#FFF1CF);border-color:#F3DC9C}.annl{font-size:13.5px;font-weight:800;letter-spacing:.3px;margin-bottom:2px}
 .bub.pend{opacity:.6}
 .mcomp{display:flex;gap:8px;align-items:flex-end;padding:10px 0 calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--cream)}
 .mcomp textarea{flex:1;resize:none;min-height:44px;max-height:140px;border-radius:22px;padding:11px 16px}
 .mcomp .btn{border-radius:22px;min-height:44px}
 .qhero{width:100%;display:flex;align-items:center;gap:14px;text-align:left;background:linear-gradient(135deg,var(--navy) 0%,#1C3A5E 100%);color:var(--cream);border-radius:18px;padding:16px;margin-bottom:8px;box-shadow:0 6px 18px rgba(15,30,54,.18)}
-.qhero b{display:block;font-family:var(--display);font-size:20px;line-height:1.15}.qhero small{display:block;color:#D5DCE8;font-size:13px;margin-top:3px}
+.qhero b{display:block;font-family:var(--display);font-size:21.5px;line-height:1.15}.qhero small{display:block;color:#D5DCE8;font-size:15px;margin-top:3px}
 .qhi{width:46px;height:46px;border-radius:14px;background:var(--gold);color:var(--navy);display:grid;place-items:center;flex:none}.qhi.sm{width:38px;height:38px;border-radius:12px}
 .qgo{color:var(--gold)}
-.qgrid button{align-items:flex-start;padding:12px}.qgrid button b{display:block;font-size:14px}.qgrid button small{display:block;font-weight:500;font-size:12px;color:#C9D2E0;margin-top:2px;line-height:1.25}
+.qgrid button{align-items:flex-start;padding:12px}.qgrid button b{display:block;font-size:15.5px}.qgrid button small{display:block;font-weight:500;font-size:14px;color:#C9D2E0;margin-top:2px;line-height:1.25}
 .qgrid button:last-child:nth-child(odd){grid-column:1/-1}
-.idea{margin-top:14px;border-left:5px solid var(--gold)}.ideah{font-weight:800;font-size:14px}.ideah span{color:var(--green-d)}
+.idea{margin-top:14px;border-left:5px solid var(--gold)}.ideah{font-weight:800;font-size:15.5px}.ideah span{color:var(--green-d)}
 .qtweak{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
-.qtweak .free{font-size:10.5px;font-weight:800;color:var(--green-d);background:var(--green-l);border-radius:6px;padding:1px 5px;margin-left:3px}
+.qtweak .free{font-size:12.5px;font-weight:800;color:var(--green-d);background:var(--green-l);border-radius:6px;padding:1px 5px;margin-left:3px}
 
-.tlh{display:flex;align-items:center;gap:8px;font-size:15px;margin:16px 0 8px;color:var(--navy)}.tlh svg{color:var(--green)}.tlh span{font-size:12px;color:var(--muted);font-weight:600}
+.tlh{display:flex;align-items:center;gap:8px;font-size:16.5px;margin:16px 0 8px;color:var(--navy)}.tlh svg{color:var(--green)}.tlh span{font-size:14px;color:var(--muted);font-weight:600}
 .whatnext{margin-top:12px;background:var(--green-l);border-radius:14px;padding:12px 14px}.whatnext .btn{background:#fff}
 .cattiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .cattile{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;text-align:left;display:flex;flex-direction:column;gap:5px;box-shadow:var(--shadow);min-height:132px}
 .cattile .ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--green-l);color:var(--green);margin-bottom:2px}
 .cattile:nth-child(2) .ico,.cattile:nth-child(5) .ico{background:var(--gold-l);color:#7A5300}.cattile:nth-child(3) .ico,.cattile:nth-child(6) .ico{background:#E8ECF4;color:var(--navy)}
-.cattile b{font-size:15px;line-height:1.25}.cattile span{font-size:12.5px;color:var(--muted);line-height:1.35}.cattile em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--green-d);margin-top:auto}
-.catback{padding:0;margin:0 0 4px;font-size:14px}
-.tlcats{flex-wrap:wrap;gap:6px;margin-bottom:6px}.tlcats .chip{padding:7px 12px;font-size:13.5px}.tlcats .chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cattile b{font-size:16.5px;line-height:1.25}.cattile span{font-size:14.5px;color:var(--muted);line-height:1.35}.cattile em{font-style:normal;font-size:14.5px;font-weight:700;color:var(--green-d);margin-top:auto}
+.catback{padding:0;margin:0 0 4px;font-size:15.5px}
+.tlcats{flex-wrap:wrap;gap:6px;margin-bottom:6px}.tlcats .chip{padding:7px 12px;font-size:15px}.tlcats .chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
 .savebtn{border:1.5px solid var(--gold);background:#fff;color:var(--navy);font-weight:800}.savebtn.on{background:var(--gold-l);border-color:var(--gold)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ── tablet & laptop ── phones are unchanged */
 nav.tabs button.deskonly{display:none}
 .pcolsel{margin:0 0 10px}
 .pboard{display:block}.pcol{display:none}.pcol.sel{display:block}
-.pcol-h{display:flex;align-items:center;gap:8px;margin:2px 0 8px}.pcol-h b{font-size:15px}.pcol-h span{font-size:12px;font-weight:700;color:var(--muted);background:#ECEDF0;border-radius:999px;padding:1px 8px}.pcol-h .btn{margin-left:auto;padding:0;min-height:0;font-size:14px}
+.pcol-h{display:flex;align-items:center;gap:8px;margin:2px 0 8px}.pcol-h b{font-size:16.5px}.pcol-h span{font-size:14px;font-weight:700;color:var(--muted);background:#ECEDF0;border-radius:999px;padding:1px 8px}.pcol-h .btn{margin-left:auto;padding:0;min-height:0;font-size:15.5px}
 .pcard{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;box-shadow:var(--shadow);cursor:pointer}
-.pcard b{font-size:15px;line-height:1.3}.pc-top{display:flex;justify-content:space-between;align-items:center;gap:6px}.pc-type{font-size:12px;font-weight:700;color:var(--muted)}
-.pc-date{font-size:12.5px;font-weight:700;color:var(--green-d)}.pc-snip{font-size:13px;color:var(--muted);line-height:1.4}.pc-link{font-size:13px;font-weight:700}
-.pempty{font-size:13px;color:var(--muted);padding:14px;border:1.5px dashed var(--line);border-radius:12px;text-align:center}
-.pcal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.pcal-h b{font-family:var(--display);font-size:20px}
+.pcard b{font-size:16.5px;line-height:1.3}.pc-top{display:flex;justify-content:space-between;align-items:center;gap:6px}.pc-type{font-size:14px;font-weight:700;color:var(--muted)}
+.pc-date{font-size:14.5px;font-weight:700;color:var(--green-d)}.pc-snip{font-size:15px;color:var(--muted);line-height:1.4}.pc-link{font-size:15px;font-weight:700}
+.pempty{font-size:15px;color:var(--muted);padding:14px;border:1.5px dashed var(--line);border-radius:12px;text-align:center}
+.pcal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.pcal-h b{font-family:var(--display);font-size:21.5px}
 .pgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.pwd{font-size:11px;font-weight:700;color:var(--muted);text-align:center;padding:2px 0}
+.pwd{font-size:13px;font-weight:700;color:var(--muted);text-align:center;padding:2px 0}
 .pday{min-height:58px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;overflow:hidden}
 .pday.off{background:transparent;border:0}.pday.past{opacity:.6}.pday.today{border-color:var(--gold);border-width:2px}.pday.sel{background:var(--navy);border-color:var(--navy)}.pday.sel .pdn,.pday.sel .pdc em{color:#fff}
-.pdn{font-size:12px;font-weight:800}.pdc{font-size:12px;line-height:1.2;display:flex;gap:3px;max-width:100%}.pdc em{font-style:normal;display:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pdc.done{opacity:.55}.pdm{font-size:11px;color:var(--muted);font-weight:700}
+.pdn{font-size:14px;font-weight:800}.pdc{font-size:14px;line-height:1.2;display:flex;gap:3px;max-width:100%}.pdc em{font-style:normal;display:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pdc.done{opacity:.55}.pdm{font-size:13px;color:var(--muted);font-weight:700}
 .pdaylist .pcard{margin-bottom:8px}
 .cimg img{max-width:100%;max-height:320px;border-radius:12px;display:block}
 @media (min-width:700px){.pdc em{display:inline}.pday{min-height:84px}}
@@ -391,20 +391,20 @@ nav.tabs button.deskonly{display:none}
   main.cardpage{max-width:760px}}
 .pipe{display:flex;align-items:stretch;gap:4px;overflow-x:auto;padding-bottom:2px}
 .pipe .pstage{flex:1;min-width:62px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
-.pipe .pstage b{font-size:20px;line-height:1.1;font-family:var(--display)}.pipe .pstage span{font-size:11.5px;font-weight:700;color:var(--muted)}
+.pipe .pstage b{font-size:21.5px;line-height:1.1;font-family:var(--display)}.pipe .pstage span{font-size:12.5px;font-weight:700;color:var(--muted)}
 .pipe .pstage.on{background:var(--navy);border-color:var(--navy)}.pipe .pstage.on b,.pipe .pstage.on span{color:#fff}
 .pipe .parr{align-self:center;color:var(--muted);font-weight:700}
 .pipe.mini .pstage{padding:5px 4px;min-width:0}.pipe.mini .pstage.on{background:var(--green);border-color:var(--green)}
 .dash{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:2px 0 14px}
 .dash button{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:2px}
-.dash b{font-family:var(--display);font-size:26px;line-height:1.05}.dash span{font-size:12px;font-weight:600;color:var(--muted);line-height:1.25}
+.dash b{font-family:var(--display);font-size:28px;line-height:1.05}.dash span{font-size:14px;font-weight:600;color:var(--muted);line-height:1.25}
 .dash button.hot b{color:var(--danger)}
-@media (max-width:480px){.dash{grid-template-columns:repeat(2,1fr)}.pipe{gap:3px}.pipe .parr{display:none}.pipe .pstage{min-width:0;padding:7px 2px}.pipe .pstage span{font-size:10.5px}.pipe.mini .pstage span{font-size:10px}}
+@media (max-width:480px){.dash{grid-template-columns:repeat(2,1fr)}.pipe{gap:3px}.pipe .parr{display:none}.pipe .pstage{min-width:0;padding:7px 2px}.pipe .pstage span{font-size:12.5px}.pipe.mini .pstage span{font-size:12px}}
 .btools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.btools button{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;font-weight:700;text-align:center;line-height:1.2}
-.btools .bi{font-size:22px;line-height:1}
-.mt-star{font-size:16px;line-height:1;padding:2px 4px;color:#C9CDD5}.mt-star.on{color:var(--gold)}
-.quickadd{width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:24px;font-weight:700;line-height:1}
+.btools button{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:14.5px;font-weight:700;text-align:center;line-height:1.2}
+.btools .bi{font-size:23px;line-height:1}
+.mt-star{font-size:17.5px;line-height:1;padding:2px 4px;color:#C9CDD5}.mt-star.on{color:var(--gold)}
+.quickadd{width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:25px;font-weight:700;line-height:1}
 @media (min-width:700px){
   main{max-width:780px;padding:20px 24px}
   .tools{grid-template-columns:repeat(3,1fr)}
@@ -414,7 +414,7 @@ nav.tabs button.deskonly{display:none}
   body:not(.no-nav) .top{margin-left:-232px;padding-left:24px;padding-right:24px}
   .hgrid .quick{grid-template-columns:1fr 1fr}
   nav.tabs{top:0;bottom:0;right:auto;width:232px;flex-direction:column;justify-content:flex-start;gap:4px;padding:84px 14px 20px;border-top:0;border-right:1px solid var(--line);z-index:15}
-  nav.tabs button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:10px 12px;font-size:15px;text-align:left}
+  nav.tabs button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:10px 12px;font-size:16.5px;text-align:left}
   nav.tabs button svg{width:22px;height:22px;padding:0;border-radius:0;flex:none}
   nav.tabs button[aria-current=page]{background:var(--green-l);color:var(--green-d)}
   nav.tabs button[aria-current=page] svg{background:none}
@@ -619,7 +619,7 @@ nav.tabs .navsep{display:none}
   function showMessages() {
     setChrome({ back: function () { stopMsgPoll(); showHome(); }, tab: 'messages' });
     S.msgView = true;
-    app.innerHTML = '<main class="msgs"><div class="mhead"><img src="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><div class="sub" style="margin:0;font-size:13px">Usually replies within a day</div></div></div>' +
+    app.innerHTML = '<main class="msgs"><div class="mhead"><img src="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><div class="sub" style="margin:0;font-size:15px">Usually replies within a day</div></div></div>' +
       '<div class="mlist" id="msgList"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div>' +
       '<form class="mcomp" id="msgForm"><label class="sr" for="msgIn">Message</label><textarea id="msgIn" rows="1" maxlength="2000" placeholder="Type a message…"></textarea><button class="btn primary" id="msgSend" type="submit" aria-label="Send">Send</button></form></main>';
     var inp = $('#msgIn');
@@ -796,8 +796,8 @@ nav.tabs .navsep{display:none}
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="bcT"><h2 id="bcT" style="margin:0">Buy extra credits</h2>' +
       '<p class="sub" style="margin:0">1 credit = 1 AI generation. Your daily generations are used first, then your credits.' + (creditBal() ? ' You have <b>' + creditBal() + '</b> now.' : '') + '</p>' +
       '<div class="stack" style="gap:8px">' + packs.map(function (p, i) {
-        return '<button class="card plan cpack" data-pack="' + esc(p.id) + '"><div class="row" style="justify-content:space-between;align-items:center"><div><b style="font-size:18px">' + p.credits.toLocaleString('en-GB') + ' credits</b>' +
-          '<div class="sub" style="margin:0">' + (p.pence / p.credits).toFixed(1) + 'p per generation</div></div><b style="font-size:20px">£' + (p.pence % 100 ? (p.pence / 100).toFixed(2) : p.pence / 100) + '</b></div>' +
+        return '<button class="card plan cpack" data-pack="' + esc(p.id) + '"><div class="row" style="justify-content:space-between;align-items:center"><div><b style="font-size:19.5px">' + p.credits.toLocaleString('en-GB') + ' credits</b>' +
+          '<div class="sub" style="margin:0">' + (p.pence / p.credits).toFixed(1) + 'p per generation</div></div><b style="font-size:21.5px">£' + (p.pence % 100 ? (p.pence / 100).toFixed(2) : p.pence / 100) + '</b></div>' +
           (i === 1 ? '<span class="pill green" style="align-self:flex-start;margin-top:6px">Popular</span>' : '') + '</button>';
       }).join('') + '</div>' +
       '<p class="hint" style="margin:0">One-off payment by Stripe — no subscription, nothing renews. Credits last 12 months. They add AI generations; advanced tools come with the Club or Plus.</p>' + nudge +
@@ -834,7 +834,7 @@ nav.tabs .navsep{display:none}
       $('#idMine', scrim).innerHTML = list && list.length ? '<b style="display:block;margin-top:6px">Your ideas</b>' + list.map(function (x) {
         var st = IDEA_STATUS[x.status] || IDEA_STATUS.new;
         return '<div style="border-top:1px solid var(--line);padding:8px 0"><div class="row" style="justify-content:space-between;gap:8px"><span class="sub" style="margin:0">' + esc(fmtDate(x.at, { day: 'numeric', month: 'short' })) + '</span><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
-          '<div style="font-size:14.5px;white-space:pre-wrap">' + esc(x.text) + '</div>' + (x.reply ? '<div class="note" style="margin-top:6px;font-size:14px"><b>Auntie Tobi:</b> ' + esc(x.reply) + '</div>' : '') + '</div>';
+          '<div style="font-size:16px;white-space:pre-wrap">' + esc(x.text) + '</div>' + (x.reply ? '<div class="note" style="margin-top:6px;font-size:15.5px"><b>Auntie Tobi:</b> ' + esc(x.reply) + '</div>' : '') + '</div>';
       }).join('') : '';
     }
     api('studio-extras', 'ideas-mine').then(function (r) { drawMine(r.ideas); }).catch(function () {});
@@ -930,14 +930,14 @@ nav.tabs .navsep{display:none}
     var card = function (t) {
       var lim = tierLimit(t);
       return '<button class="card plan stack" data-buy="' + t + '"><div class="row" style="justify-content:space-between"><b>' + TIER_NAME[t] + '</b>' + (t === 'plus' ? '<span class="pill gold">Software + learning</span>' : '<span class="pill green">Best value</span>') + '</div>' +
-        '<div class="price"><span class="ivm">' + TIER_PRICE[t].month + '<span style="font-size:15px;font-weight:500"> /month</span></span><span class="ivy">' + TIER_PRICE[t].year + '<span style="font-size:15px;font-weight:500"> /year</span></span></div>' +
+        '<div class="price"><span class="ivm">' + TIER_PRICE[t].month + '<span style="font-size:16.5px;font-weight:500"> /month</span></span><span class="ivy">' + TIER_PRICE[t].year + '<span style="font-size:16.5px;font-weight:500"> /year</span></span></div>' +
         '<div class="sub" style="margin:0"><b>' + lim + ' AI generations a day</b> · every tool, including the advanced ones</div>' +
         '<div class="hint" style="margin:0"><span class="ivm">Renews automatically every month</span><span class="ivy">Renews automatically every year</span> · we remind you before each payment · cancel any time in 2 taps</div></button>';
     };
     return '<div class="stack plch" data-iv="' + iv + '">' +
       (hasMonth && hasYear ? '<div class="chips" role="group" aria-label="Billing"><button type="button" class="chip" data-iv="month" aria-pressed="' + (iv === 'month') + '">Monthly</button><button type="button" class="chip" data-iv="year" aria-pressed="' + (iv === 'year') + '">Yearly · 2 months free</button></div>' : '') +
       '<div class="tiers' + (iv === 'year' ? ' year' : '') + '">' + tiers.map(card).join('') + '</div>' +
-      '<ul style="margin:0 0 0 18px;font-size:14.5px"><li>Every Business Studio tool, in your brand voice — including the 30-day growth plan, business check-up and full launch campaigns</li><li>Resources — lessons, templates, checklists and tools</li><li>One payment a year — we remind you before it renews</li><li>Need more on a busy day? Top up with extra credits</li></ul>' +
+      '<ul style="margin:0 0 0 18px;font-size:16px"><li>Every Business Studio tool, in your brand voice — including the 30-day growth plan, business check-up and full launch campaigns</li><li>Resources — lessons, templates, checklists and tools</li><li>One payment a year — we remind you before it renews</li><li>Need more on a busy day? Top up with extra credits</li></ul>' +
       (S.boot && S.boot.access && S.boot.access.membershipActive ? '' : '<p class="hint" style="margin:0">Plus is the tools and learning. Promotion by Auntie Tobi (Spotlight, Featured Business, Marketplace, reposts) is part of the <a href="/business-club">Business Club</a>.</p>') +
       '<p class="hint" style="text-align:center;margin:0">Secure payment by Stripe. Cancel any time.</p></div>';
   }
@@ -1007,22 +1007,22 @@ nav.tabs .navsep{display:none}
     if (type === 'area') return '<div>' + lab + '<textarea id="pf_' + name + '" name="' + name + '" maxlength="' + max + '" placeholder="' + esc(ph) + '">' + esc(p[name] || '') + '</textarea></div>';
     if (type === 'listing') {
       var L = p._listing;
-      return '<div id="listingBox"><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + ' <span class="opt">(optional)</span></span>' +
-        (L ? '<div class="note" style="display:flex;gap:10px;align-items:center"><div style="flex:1;min-width:0;overflow-wrap:anywhere">✅ <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '') + '<br><a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:13px">' + esc(L.url.replace('https://www.', '')) + '</a></div><button type="button" class="btn link danger" id="unlinkL" style="flex:none">Remove</button></div>'
+      return '<div id="listingBox"><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">' + esc(label) + ' <span class="opt">(optional)</span></span>' +
+        (L ? '<div class="note" style="display:flex;gap:10px;align-items:center"><div style="flex:1;min-width:0;overflow-wrap:anywhere">✅ <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '') + '<br><a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:15px">' + esc(L.url.replace('https://www.', '')) + '</a></div><button type="button" class="btn link danger" id="unlinkL" style="flex:none">Remove</button></div>'
           : '<div class="row"><input type="text" id="pf_listingLink" placeholder="auntietobi.co.uk/biz/your-business" style="flex:1"><button type="button" class="btn ghost small" id="checkL" style="min-height:46px">Check</button></div>' +
             '<div class="hint">Paste the link to your page on Auntie Tobi. We’ll use it in your posts and can fill in your details.</div><div id="lres"></div>') + '</div>';
     }
     if (type === 'channels') {
       var on = p.channels && p.channels.length ? p.channels : ['instagram'];
-      return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-multi="channels">' +
+      return '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-multi="channels">' +
         CHANNELS.map(function (c) { return '<button type="button" class="chip" data-val="' + c[0] + '" aria-pressed="' + (on.indexOf(c[0]) > -1) + '">' + esc(c[1]) + '</button>'; }).join('') + '</div><div class="hint">Tick all that apply.</div></div>';
     }
     if (type === 'main') {
-      return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-single="mainChannel" id="mainChips"></div><div class="hint">Your posts’ calls to action will point here.</div></div>';
+      return '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-single="mainChannel" id="mainChips"></div><div class="hint">Your posts’ calls to action will point here.</div></div>';
     }
     if (type === 'tone') {
       var cur = p.tone || 'warm';
-      return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-single="tone">' +
+      return '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-single="tone">' +
         S.boot.tones.map(function (t) { return '<button type="button" class="chip" data-val="' + t + '" aria-pressed="' + (t === cur) + '">' + esc(TONE_LABELS[t] || t) + '</button>'; }).join('') + '</div></div>';
     }
     if (type === 'ctas') {
@@ -1076,11 +1076,11 @@ nav.tabs .navsep{display:none}
       var results = null, lastQ = '', showLink = false;
       function confirmListing(L, check) {
         app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>Is this your business? Please check carefully — I’ll use these details in everything I write for you.</p></div>' +
-          '<div class="card stack" style="margin-top:12px"><div><div style="font-size:21px;font-weight:800;line-height:1.25">' + esc(L.name) + '</div>' +
+          '<div class="card stack" style="margin-top:12px"><div><div style="font-size:22.5px;font-weight:800;line-height:1.25">' + esc(L.name) + '</div>' +
           '<div class="sub" style="margin:4px 0 0">' + esc([L.cat, L.loc].filter(Boolean).join(' · ')) + '</div></div>' +
-          (L.desc ? '<p style="font-size:14.5px;margin:0">' + esc(L.desc.length > 220 ? L.desc.slice(0, 220) + '…' : L.desc) + '</p>' : '') +
-          '<a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:14px">View the listing ↗</a>' +
-          (check === 'email_match' ? '' : '<div class="note" style="font-size:13.5px">Auntie Tobi will quickly check this business is yours. You can use everything straight away.</div>') +
+          (L.desc ? '<p style="font-size:16px;margin:0">' + esc(L.desc.length > 220 ? L.desc.slice(0, 220) + '…' : L.desc) + '</p>' : '') +
+          '<a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:15.5px">View the listing ↗</a>' +
+          (check === 'email_match' ? '' : '<div class="note" style="font-size:15px">Auntie Tobi will quickly check this business is yours. You can use everything straight away.</div>') +
           '<button class="btn primary block" id="fbYes">Yes, this is my business</button><button class="btn ghost block" id="fbNo">No — choose another</button></div></main>';
         $('#fbYes').onclick = function () { p._preListing = snapshot(p); prefillFromListing(p, L); p._filledFrom = 'listing'; draw('Found you! ✅ <b>' + esc(L.name) + '</b>. Add your website too if you have one, or carry on.'); };
         $('#fbNo').onclick = function () { draw(); };
@@ -1096,9 +1096,9 @@ nav.tabs .navsep{display:none}
         var host = (site.url || url).replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '');
         var name = d.businessName || site.name || '';
         app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>I’ve read the website. Is this yours? I’ll use it to fill in your details and in links I give customers.</p></div>' +
-          '<div class="card stack" style="margin-top:12px"><div><div class="sub" style="margin:0">We read</div><div style="font-size:21px;font-weight:800;line-height:1.25;word-break:break-word">' + esc(host) + '</div></div>' +
+          '<div class="card stack" style="margin-top:12px"><div><div class="sub" style="margin:0">We read</div><div style="font-size:22.5px;font-weight:800;line-height:1.25;word-break:break-word">' + esc(host) + '</div></div>' +
           (name || d.location ? '<div><b>' + esc(name) + '</b>' + (d.location ? '<div class="sub" style="margin:0">' + esc(d.location) + '</div>' : '') + '</div>' : '') +
-          (site.description || d.description ? '<p style="font-size:14.5px;margin:0">' + esc(String(d.description || site.description).slice(0, 200)) + '</p>' : '') +
+          (site.description || d.description ? '<p style="font-size:16px;margin:0">' + esc(String(d.description || site.description).slice(0, 200)) + '</p>' : '') +
           '<button class="btn primary block" id="fbWYes">Yes, this is my website</button><button class="btn ghost block" id="fbWNo">No — choose another</button></div></main>';
         $('#fbWYes').onclick = function () {
           p._preWeb = snapshot(p); if (site.url || url) p.website = String(site.url || url).replace(/\/$/, ''); prefillFromWebsite(p, r); p._webRead = host; p._filledFrom = p._filledFrom || 'website';
@@ -1110,7 +1110,7 @@ nav.tabs .navsep{display:none}
         if (!results) return '';
         if (!results.length) return '<p class="hint" style="margin:6px 0 0">No business called “' + esc(lastQ) + '” on Auntie Tobi. Try a shorter name — or skip this and add your website or type your details.</p>';
         return '<div class="stack" style="gap:8px;margin-top:8px">' + results.map(function (b) {
-          return '<div class="fbres"><div style="min-width:0"><b>' + esc(b.name) + '</b><div class="sub" style="margin:0;font-size:13px">' + esc([b.cat, b.loc].filter(Boolean).join(' · ')) + ' · <a href="' + esc(b.url) + '" target="_blank" rel="noopener">View ↗</a></div></div>' +
+          return '<div class="fbres"><div style="min-width:0"><b>' + esc(b.name) + '</b><div class="sub" style="margin:0;font-size:15px">' + esc([b.cat, b.loc].filter(Boolean).join(' · ')) + ' · <a href="' + esc(b.url) + '" target="_blank" rel="noopener">View ↗</a></div></div>' +
             (b.taken ? '<span class="saved-tag" style="white-space:nowrap">Already linked</span>' : '<button type="button" class="btn ghost small" data-pick="' + esc(b.slug) + '">This is mine</button>') + '</div>';
         }).join('') + '</div>' + (results.some(function (b) { return b.taken; }) ? '<p class="hint" style="margin-top:6px">“Already linked” means another account uses it. If it’s yours, message Auntie Tobi.</p>' : '');
       }
@@ -1124,7 +1124,7 @@ nav.tabs .navsep{display:none}
               : '<form id="fbSF" class="row" role="search"><input type="search" id="fb_q" placeholder="e.g. Ada Cakes" maxlength="80" style="flex:1" value="' + esc(lastQ) + '"><button class="btn ghost small" id="fbSearch" style="min-height:46px">Search</button></form>' + resultsHtml() +
                 (showLink ? '<div class="row" style="margin-top:10px"><input type="text" id="fb_listing" placeholder="auntietobi.co.uk/biz/your-business" style="flex:1"><button type="button" class="btn ghost small" id="fbFindL" style="min-height:46px">Find</button></div>'
                   : '<button type="button" class="btn link small" id="fbShowLink" style="margin-top:6px;padding-left:0">I have my listing link</button>')) + '</div>' +
-            '<div style="text-align:center;color:var(--muted);font-size:13px;font-weight:700">AND / OR</div>' +
+            '<div style="text-align:center;color:var(--muted);font-size:15px;font-weight:700">AND / OR</div>' +
             '<div><label class="f" for="fb_web">Your website</label>' +
             (p._webRead ? '<div class="note">✅ Read <b>' + esc(p._webRead) + '</b> <button type="button" class="btn link small" id="fbWebChange">Change</button></div>'
               : '<div class="row"><input type="text" id="fb_web" placeholder="yourbusiness.co.uk" inputmode="url" style="flex:1" value="' + esc(p.website || '') + '"><button type="button" class="btn ghost small" id="fbReadW" style="min-height:46px">Read</button></div>' +
@@ -1177,9 +1177,9 @@ nav.tabs .navsep{display:none}
     return new Promise(function (resolve) {
       setChrome({ tabs: false });
       app.innerHTML = '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt=""><div class="kicker">We found you on Auntie Tobi</div><h1>Is this your business?</h1></div>' +
-        '<div class="card stack"><div><b style="font-size:18px">' + esc(L.name) + '</b><div class="sub">' + esc([L.cat, L.loc].filter(Boolean).join(' · ')) + '</div></div>' +
-        (L.desc ? '<p style="font-size:14.5px">' + esc(L.desc) + '</p>' : '') +
-        '<a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:14px">View listing ↗</a>' +
+        '<div class="card stack"><div><b style="font-size:19.5px">' + esc(L.name) + '</b><div class="sub">' + esc([L.cat, L.loc].filter(Boolean).join(' · ')) + '</div></div>' +
+        (L.desc ? '<p style="font-size:16px">' + esc(L.desc) + '</p>' : '') +
+        '<a href="' + esc(L.url) + '" target="_blank" rel="noopener" style="font-size:15.5px">View listing ↗</a>' +
         '<button class="btn primary block" id="yesL">Yes, this is my business</button><button class="btn ghost block" id="noL">No, it’s not</button>' +
         '<p class="hint" style="text-align:center">If yes, we’ll fill in your details from your listing — you can change anything.</p></div></div>';
       $('#yesL').onclick = async function () {
@@ -1441,7 +1441,7 @@ nav.tabs .navsep{display:none}
       // Each day's action can go to the to-do list on its own, or all at once.
       var wk = planTasks(item, labelledText());
       if (wk.length) html += '<div class="card stack wktasks" style="margin-top:10px;gap:8px"><b>📋 Add to your to-do list</b>' + wk.map(function (t, i) {
-        return '<div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding-top:8px"><div style="min-width:0"><div class="sub" style="margin:0;font-weight:700">' + esc(new Date(t.date + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })) + '</div><div style="font-size:14.5px">' + esc(t.title) + '</div></div>' +
+        return '<div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding-top:8px"><div style="min-width:0"><div class="sub" style="margin:0;font-weight:700">' + esc(new Date(t.date + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })) + '</div><div style="font-size:16px">' + esc(t.title) + '</div></div>' +
           '<button class="btn ghost small" data-wkt="' + i + '" style="white-space:nowrap">＋ Add to tasks</button></div>';
       }).join('') + '<button class="btn gold small" id="toTodo" style="align-self:flex-start">📋 Add all to my to-do list</button></div>';
     }
@@ -1498,7 +1498,7 @@ nav.tabs .navsep{display:none}
   function ideaCard() {
     var d = S.today && S.today.idea; if (!d) return '';
     return '<div class="card idea"><div class="ideah">💡 Need inspiration? <span>Try today’s content idea</span></div>' +
-      '<div class="row" style="gap:8px;margin:8px 0 4px;align-items:center"><b style="font-size:16px;flex:1">' + esc(d.title) + '</b><span class="pill goldl">' + esc(d.format) + '</span></div>' +
+      '<div class="row" style="gap:8px;margin:8px 0 4px;align-items:center"><b style="font-size:17.5px;flex:1">' + esc(d.title) + '</b><span class="pill goldl">' + esc(d.format) + '</span></div>' +
       (d.hook ? '<p style="margin:0 0 6px;font-style:italic">“' + esc(d.hook) + '”</p>' : '') + '<p class="sub" style="margin:0 0 10px">' + esc(d.show) + '</p>' +
       '<div class="row" style="gap:8px"><button class="btn primary small" id="ideaGo">✨ Create this</button><button class="btn ghost small" id="ideaPlan">📅 Add to Plan</button></div></div>';
   }
@@ -1551,7 +1551,7 @@ nav.tabs .navsep{display:none}
     $$('.toast').forEach(function (x) { x.remove(); });
     var q = QC[goal], back = opts.back || showCreate;
     setChrome({ tabs: true, tab: back === showHome ? 'home' : 'create', back: back });
-    app.innerHTML = '<main><div class="row" style="gap:10px;align-items:center;margin-bottom:12px"><span class="qhi sm">' + icon(q.icon, 20) + '</span><h1 style="font-size:22px;margin:0">' + esc(goal === 'post' ? 'What should I post?' : q.label) + '</h1></div>' +
+    app.innerHTML = '<main><div class="row" style="gap:10px;align-items:center;margin-bottom:12px"><span class="qhi sm">' + icon(q.icon, 20) + '</span><h1 style="font-size:23px;margin:0">' + esc(goal === 'post' ? 'What should I post?' : q.label) + '</h1></div>' +
       (opts.source ? '<p class="sub" style="margin:-4px 0 12px">Made from your post</p>' : about ? '<p class="sub" style="margin:-4px 0 12px">' + esc(about.length > 140 ? about.slice(0, 137) + '…' : about) + '</p>' : '') +
       '<div class="err hidden" id="qErr" role="alert"></div><div id="result"></div></main>';
     var inp = { goal: goal, about: about || '', source: opts.source || '', platform: defaultPlatform() };
@@ -1792,7 +1792,7 @@ nav.tabs .navsep{display:none}
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="gT"><h2 id="gT" style="margin:0">What’s your goal this week?</h2><p class="sub">Your daily Business Tips will focus on it. You can change it any time.</p>' +
       Object.keys(goals).map(function (k) { return '<button class="btn ' + (k === cur ? 'primary' : 'ghost') + ' block" data-goal="' + k + '">' + esc(goals[k]) + '</button>'; }).join('') +
-      '<div style="text-align:center;color:var(--muted);font-size:13px;font-weight:700">OR WRITE YOUR OWN</div>' +
+      '<div style="text-align:center;color:var(--muted);font-size:15px;font-weight:700">OR WRITE YOUR OWN</div>' +
       '<form id="gOwnF" class="stack" style="gap:8px"><input id="gOwn" maxlength="120" placeholder="e.g. Get 5 cake orders for half-term" value="' + esc(curText) + '" aria-label="Your own goal for the week"><button class="btn ' + (cur === 'custom' ? 'primary' : 'gold') + ' block">Set my own goal</button></form>' +
       '<button class="btn link" id="gClose">Cancel</button></div>';
     document.body.appendChild(scrim);
@@ -1938,15 +1938,15 @@ nav.tabs .navsep{display:none}
     var back = function () { showPlan(); };
     setChrome({ tabs: true, tab: 'plan', back: back });
     var posted = c.status === 'posted';
-    app.innerHTML = '<main class="cardpage"><div class="row" style="justify-content:space-between;align-items:center"><h1 style="font-size:22px">' + (id ? 'Content card' : 'New card') + '</h1>' + (posted ? '<span class="pill green">Posted</span>' : id ? '<span class="pill goldl">' + esc((PCOLS.filter(function (k) { return k[0] === c.status; })[0] || ['', c.status])[1]) + '</span>' : '') + '</div>' +
+    app.innerHTML = '<main class="cardpage"><div class="row" style="justify-content:space-between;align-items:center"><h1 style="font-size:23px">' + (id ? 'Content card' : 'New card') + '</h1>' + (posted ? '<span class="pill green">Posted</span>' : id ? '<span class="pill goldl">' + esc((PCOLS.filter(function (k) { return k[0] === c.status; })[0] || ['', c.status])[1]) + '</span>' : '') + '</div>' +
       '<div class="card stack" style="margin-top:12px"><div><label class="f" for="cT">Title</label><input id="cT" maxlength="140" value="' + esc(c.title) + '" placeholder="e.g. Behind the scenes: Saturday’s orders"></div>' +
-      '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Type</span><div class="chips" id="cTy">' + Object.keys(PT).map(function (k) { return '<button type="button" class="chip" data-v="' + k + '" aria-pressed="' + (c.type === k) + '">' + PT[k][0] + ' ' + PT[k][1] + '</button>'; }).join('') + '</div></div>' +
-      (posted ? '' : '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Stage</span><div class="chips" id="cSt">' + [['idea', 'Idea'], ['drafting', 'Drafting'], ['ready', 'Ready']].map(function (k) { return '<button type="button" class="chip" data-v="' + k[0] + '" aria-pressed="' + (c.status === k[0] || (c.status === 'scheduled' && k[0] === 'ready')) + '">' + k[1] + '</button>'; }).join('') + '</div></div>') +
+      '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Type</span><div class="chips" id="cTy">' + Object.keys(PT).map(function (k) { return '<button type="button" class="chip" data-v="' + k + '" aria-pressed="' + (c.type === k) + '">' + PT[k][0] + ' ' + PT[k][1] + '</button>'; }).join('') + '</div></div>' +
+      (posted ? '' : '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Stage</span><div class="chips" id="cSt">' + [['idea', 'Idea'], ['drafting', 'Drafting'], ['ready', 'Ready']].map(function (k) { return '<button type="button" class="chip" data-v="' + k[0] + '" aria-pressed="' + (c.status === k[0] || (c.status === 'scheduled' && k[0] === 'ready')) + '">' + k[1] + '</button>'; }).join('') + '</div></div>') +
       '<div class="row"><div style="flex:1"><label class="f" for="cD">Date <span class="opt">(adds it to your calendar)</span></label><input type="date" id="cD" value="' + esc(c.date || '') + '"></div><div style="width:120px"><label class="f" for="cTm">Time</label><input type="time" id="cTm" value="' + esc(c.time || '') + '"></div></div>' +
       '<div><label class="f" for="cC">Caption / script</label><textarea id="cC" rows="7" maxlength="4000" placeholder="Write it here — or tap ✨ Write with AI">' + esc(c.caption) + '</textarea></div>' +
       '<div><label class="f" for="cH">Hashtags <span class="opt">(optional)</span></label><input id="cH" maxlength="600" value="' + esc(c.hashtags) + '" placeholder="#smallbusiness #londonbakery"></div>' +
       '<div><label class="f" for="cN">Notes <span class="opt">(what to film, props, ideas)</span></label><textarea id="cN" rows="3" maxlength="1500">' + esc(c.notes) + '</textarea></div>' +
-      (id ? '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Photo <span class="opt">(optional)</span></span><div id="cImg" class="cimg">' + (c.hasImg ? '<span class="hint">Loading photo…</span>' : '') + '</div><label class="btn small ghost" style="cursor:pointer;margin-top:6px">' + (c.hasImg ? 'Change photo' : '📷 Add a photo') + '<input type="file" id="cFile" accept="image/*" class="hidden"></label>' + (c.hasImg ? ' <button class="btn link danger" id="cImgDel" style="font-size:13px">Remove photo</button>' : '') + '</div>' : '<p class="hint" style="margin:0">You can add a photo after saving.</p>') +
+      (id ? '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Photo <span class="opt">(optional)</span></span><div id="cImg" class="cimg">' + (c.hasImg ? '<span class="hint">Loading photo…</span>' : '') + '</div><label class="btn small ghost" style="cursor:pointer;margin-top:6px">' + (c.hasImg ? 'Change photo' : '📷 Add a photo') + '<input type="file" id="cFile" accept="image/*" class="hidden"></label>' + (c.hasImg ? ' <button class="btn link danger" id="cImgDel" style="font-size:15px">Remove photo</button>' : '') + '</div>' : '<p class="hint" style="margin:0">You can add a photo after saving.</p>') +
       (posted ? '<div><label class="f" for="cL">Link to the post <span class="opt">(optional)</span></label><input id="cL" maxlength="500" value="' + esc(c.postLink || '') + '" placeholder="https://instagram.com/p/…"></div>' : '') +
       '<div class="err hidden" id="cE"></div>' +
       '<div class="row wrap"><button class="btn primary" id="cSave" style="flex:1">Save</button><button class="btn gold" id="cAi" style="flex:1">✨ Write with AI</button></div>' +
@@ -2059,7 +2059,7 @@ nav.tabs .navsep{display:none}
       $('#trBox').innerHTML =
         '<div class="card stack"><div class="chips" id="dsel"><button class="chip" data-d="' + today + '" aria-pressed="' + (date === today) + '">Today</button><button class="chip" data-d="' + yday + '" aria-pressed="' + (date === yday) + '">Yesterday</button></div>' +
         '<div>' + TRACK_FIELDS.map(function (f) {
-          return '<div class="num"><label for="n_' + f[0] + '"><b style="display:block;font-size:15px">' + esc(f[1]) + '</b><span class="hint" style="margin:0">' + esc(f[2]) + '</span></label><div class="step">' +
+          return '<div class="num"><label for="n_' + f[0] + '"><b style="display:block;font-size:16.5px">' + esc(f[1]) + '</b><span class="hint" style="margin:0">' + esc(f[2]) + '</span></label><div class="step">' +
             (f[0] === 'salesGbp' ? '' : '<button type="button" data-dec="' + f[0] + '" aria-label="Less">−</button>') +
             '<input id="n_' + f[0] + '" type="number" inputmode="' + (f[0] === 'salesGbp' ? 'decimal' : 'numeric') + '" min="0" step="' + (f[0] === 'salesGbp' ? '0.01' : '1') + '" value="' + (e[f[0]] || 0) + '">' +
             (f[0] === 'salesGbp' ? '' : '<button type="button" data-inc="' + f[0] + '" aria-label="More">+</button>') + '</div></div>';
@@ -2087,7 +2087,7 @@ nav.tabs .navsep{display:none}
 
   function summaryHtml(s) {
     var t = s.thisWeek, l = s.lastWeek;
-    function cmp(k) { if (!l) return ''; var d = t[k] - l[k]; return '<span style="display:block;font-size:11.5px;color:' + (d > 0 ? 'var(--green)' : d < 0 ? 'var(--danger)' : 'var(--muted)') + '">' + (d > 0 ? '▲ ' + d : d < 0 ? '▼ ' + Math.abs(d) : 'same') + ' vs last week</span>'; }
+    function cmp(k) { if (!l) return ''; var d = t[k] - l[k]; return '<span style="display:block;font-size:13.5px;color:' + (d > 0 ? 'var(--green)' : d < 0 ? 'var(--danger)' : 'var(--muted)') + '">' + (d > 0 ? '▲ ' + d : d < 0 ? '▼ ' + Math.abs(d) : 'same') + ' vs last week</span>'; }
     return '<h2>This week</h2><div class="card stack"><div class="wk">' +
       '<div><b>' + t.enquiries + '</b><span>Enquiries</span>' + cmp('enquiries') + '</div>' +
       '<div><b>' + t.bookings + '</b><span>Bookings</span>' + cmp('bookings') + '</div>' +
@@ -2095,7 +2095,7 @@ nav.tabs .navsep{display:none}
       '<div><b>' + t.posts + '</b><span>Posts recorded</span></div>' +
       '<div><b>' + s.postedThisWeek + '</b><span>Calendar posts done</span></div>' +
       '<div><b>' + s.actionsDone + '</b><span>Daily actions done</span></div></div>' +
-      (s.tips.length ? '<div><b style="display:block;margin-bottom:6px">Ideas for this week</b><ul style="margin-left:18px;font-size:14.5px">' + s.tips.map(function (x) { return '<li style="margin-bottom:4px">' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '') +
+      (s.tips.length ? '<div><b style="display:block;margin-bottom:6px">Ideas for this week</b><ul style="margin-left:18px;font-size:16px">' + s.tips.map(function (x) { return '<li style="margin-bottom:4px">' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '') +
       '<p class="hint">' + esc(s.note) + ' Week starts Monday.</p></div>';
   }
 
@@ -2107,7 +2107,7 @@ nav.tabs .navsep{display:none}
   function showLockedTool(t, m, opts) {
     setChrome({ tabs: true, tab: opts.tab || 'create', back: opts.back || showCreate });
     var name = t.name.charAt(0).toUpperCase() + t.name.slice(1);
-    app.innerHTML = '<main><h1 style="font-size:22px;margin-bottom:12px">' + esc(name) + ' <span class="free lock" style="background:#ECEDF0;color:var(--navy)">🔒 CLUB · PRO</span></h1>' +
+    app.innerHTML = '<main><h1 style="font-size:23px;margin-bottom:12px">' + esc(name) + ' <span class="free lock" style="background:#ECEDF0;color:var(--navy)">🔒 CLUB · PRO</span></h1>' +
       '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(m.hello || t.hello || m.blurb || t.blurb || '') + '</p></div>' +
       '<section class="card plan stack"><b>This is an advanced tool</b><div class="sub" style="margin:0">It comes with the Business Club and Business Studio Plus. Your Free plan includes all the everyday tools.</div>' +
       '<button class="btn gold block" id="lkUp">See how to unlock it</button><button class="btn ghost block" id="lkBack">Back to all tools</button></section></main>';
@@ -2125,11 +2125,11 @@ nav.tabs .navsep{display:none}
     t.fields.forEach(function (f) { input[f.name] = prefill && prefill[f.name] !== undefined ? prefill[f.name] : (f.name === 'platform' ? defaultPlatform() : f.type === 'text' ? '' : f.default); });
     if (po && po.values.indexOf(input[po.field]) > -1) input[po.field] = po.free;
     setChrome({ tabs: true, tab: opts.tab || 'create', back: opts.back || showCreate });
-    app.innerHTML = '<main class="toolpage"><h1 style="font-size:22px;margin-bottom:12px">' + esc(t.name.charAt(0).toUpperCase() + t.name.slice(1)) + '</h1>' +
+    app.innerHTML = '<main class="toolpage"><h1 style="font-size:23px;margin-bottom:12px">' + esc(t.name.charAt(0).toUpperCase() + t.name.slice(1)) + '</h1>' +
       '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(opts.intro || m.hello || t.hello || '') + '</p></div>' +
       '<form class="card stack" id="tform" novalidate>' + t.fields.map(function (f) {
         if (f.type === 'text') return '<div><label class="f" for="tf_' + f.name + '">' + esc(f.label) + (f.required ? '' : ' <span class="opt">(optional)</span>') + '</label><textarea id="tf_' + f.name + '" data-field="' + f.name + '" maxlength="' + f.max + '" rows="' + (f.max > 600 ? 4 : 2) + '"' + (f.required ? ' required' : '') + '>' + esc(input[f.name]) + '</textarea></div>';
-        if (f.type === 'choice') return '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">' + esc(f.label) + '</span><div class="chips" data-choice="' + f.name + '">' + f.options.map(function (o) { var lk = po && po.field === f.name && po.values.indexOf(o) > -1; return '<button type="button" class="chip" data-val="' + esc(o) + '"' + (lk ? ' data-locked="1"' : '') + ' aria-pressed="' + (o === input[f.name]) + '">' + esc(CHOICE_LABELS[o] || (o === '7' || o === '30' ? o + ' days' : o.charAt(0).toUpperCase() + o.slice(1))) + (lk ? ' 🔒' : '') + '</button>'; }).join('') + '</div></div>';
+        if (f.type === 'choice') return '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">' + esc(f.label) + '</span><div class="chips" data-choice="' + f.name + '">' + f.options.map(function (o) { var lk = po && po.field === f.name && po.values.indexOf(o) > -1; return '<button type="button" class="chip" data-val="' + esc(o) + '"' + (lk ? ' data-locked="1"' : '') + ' aria-pressed="' + (o === input[f.name]) + '">' + esc(CHOICE_LABELS[o] || (o === '7' || o === '30' ? o + ' days' : o.charAt(0).toUpperCase() + o.slice(1))) + (lk ? ' 🔒' : '') + '</button>'; }).join('') + '</div></div>';
         if (f.type === 'bool') return '<div class="toggle"><span id="lb_' + f.name + '">' + esc(f.label) + '</span><button type="button" class="switch" role="switch" aria-labelledby="lb_' + f.name + '" data-bool="' + f.name + '" aria-checked="' + !!input[f.name] + '"></button></div>';
         return '';
       }).join('') +
@@ -2312,7 +2312,7 @@ nav.tabs .navsep{display:none}
     catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
     var item = r.item, t = toolDef(item.tool) || { name: item.tool };
     app.innerHTML = '<main><p class="sub">' + esc(t.name) + ' · ' + fmtDate(item.createdAt, { day: 'numeric', month: 'long', year: 'numeric' }) + '</p>' +
-      '<h1 style="font-size:20px;margin:4px 0 14px">' + esc(item.title) + '</h1><div id="res"></div>' +
+      '<h1 style="font-size:21.5px;margin:4px 0 14px">' + esc(item.title) + '</h1><div id="res"></div>' +
       '<div class="row wrap" style="margin-top:18px;gap:14px"><button class="btn link" id="again">Use these settings again</button><button class="btn link danger" id="del">Delete</button></div></main>';
     renderResult($('#res'), item, null);
     $('#again').onclick = function () { showTool(item.tool, item.input); };
@@ -2468,7 +2468,7 @@ nav.tabs .navsep{display:none}
         '<h2>Extras</h2><div class="card stack"><div class="row"><div style="flex:1"><label class="f" for="de_delivery">Delivery (£)</label><input id="de_delivery" inputmode="decimal" value="' + (d.deliveryPence ? (d.deliveryPence / 100).toFixed(2) : '') + '" placeholder="0.00"></div><div style="flex:1"><label class="f" for="de_discount">Discount (£)</label><input id="de_discount" inputmode="decimal" value="' + (d.discountPence ? (d.discountPence / 100).toFixed(2) : '') + '" placeholder="0.00"></div></div>' +
         (d.type === 'invoice' ? '<div><label class="f" for="de_due">Due date <span class="opt">(blank = your usual terms)</span></label><input id="de_due" type="date" value="' + esc(d.dueDate || '') + '"></div>' : '') +
         '<div><label class="f" for="de_notes">Notes <span class="opt">(optional)</span></label><textarea id="de_notes" rows="2" placeholder="' + (d.type === 'quote' ? 'e.g. Valid for 14 days. 50% deposit to confirm.' : 'e.g. Collection on Saturday 2pm') + '">' + esc(d.notes) + '</textarea></div></div>' +
-        '<div class="card" style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b>Total</b><b id="deTotal" style="font-family:var(--display);font-size:24px">£0.00</b></div>' +
+        '<div class="card" style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b>Total</b><b id="deTotal" style="font-family:var(--display);font-size:25px">£0.00</b></div>' +
         '<div class="err hidden" id="deErr" style="margin-top:12px"></div><button class="btn primary block" id="deSave" style="margin-top:14px">Save and preview</button></main>';
       $$('[data-row] input').forEach(function (inp) { inp.oninput = function () { items[Number(inp.closest('[data-row]').dataset.row)][inp.dataset.k] = inp.value; recalc(); }; });
       $$('[data-rm]').forEach(function (b) { b.onclick = function () { keepCustomer(); items.splice(Number(b.dataset.rm), 1); draw(); }; });
@@ -2494,19 +2494,19 @@ nav.tabs .navsep{display:none}
 
   function docHtml(d, s, logo) {
     var b = brand(), light = luminance(b.color1) > 0.6, fg = light ? '#0F1E36' : '#fff';
-    var row = function (l, v, strong) { return '<tr><td style="padding:6px 0;color:#5B6475">' + esc(l) + '</td><td style="padding:6px 0;text-align:right;' + (strong ? 'font-weight:800;font-size:18px' : '') + '">' + v + '</td></tr>'; };
-    return '<div class="docpaper" style="background:#fff;color:#0F1E36;border-radius:14px;overflow:hidden;border:1px solid var(--line);font-size:14px">' +
+    var row = function (l, v, strong) { return '<tr><td style="padding:6px 0;color:#5B6475">' + esc(l) + '</td><td style="padding:6px 0;text-align:right;' + (strong ? 'font-weight:800;font-size:19.5px' : '') + '">' + v + '</td></tr>'; };
+    return '<div class="docpaper" style="background:#fff;color:#0F1E36;border-radius:14px;overflow:hidden;border:1px solid var(--line);font-size:15.5px">' +
       '<div style="background:' + b.color1 + ';color:' + fg + ';padding:18px 18px 14px;display:flex;gap:12px;align-items:center">' + (logo ? '<img src="' + logo.src + '" alt="" style="width:52px;height:52px;object-fit:contain;border-radius:10px;background:#fff">' : '') +
-        '<div style="flex:1"><div style="font-weight:800;font-size:18px">' + esc(s.displayName || (S.boot.profile && S.boot.profile.businessName) || '') + '</div><div style="opacity:.85;font-size:12.5px">' + esc([s.phone, s.email].filter(Boolean).join(' · ')) + '</div></div>' +
-        '<div style="text-align:right"><div style="font-weight:800;letter-spacing:1px;text-transform:uppercase">' + esc(DOC_NAMES[d.type]) + '</div><div style="font-size:12.5px;opacity:.85">' + esc(d.number) + '</div></div></div>' +
-      '<div style="padding:16px 18px" class="stack"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#5B6475">FOR</div><b>' + esc(d.customer.name) + '</b>' + (d.customer.phone ? '<div style="font-size:12.5px;color:#5B6475">' + esc(d.customer.phone) + '</div>' : '') + '</div>' +
-        '<div style="text-align:right;font-size:12.5px;color:#5B6475">Date: ' + dmy(d.issueDate) + (d.type === 'invoice' && d.dueDate ? '<br><b style="color:#0F1E36">Due: ' + dmy(d.dueDate) + '</b>' : '') + (d.type === 'receipt' ? '<br>Paid by ' + esc(d.paidMethod || 'bank transfer') : '') + '</div></div>' +
-        '<table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr style="border-bottom:2px solid ' + b.color1 + '"><th style="text-align:left;padding:6px 0;font-size:11px;letter-spacing:.8px;color:#5B6475">ITEM</th><th style="text-align:right;padding:6px 0;font-size:11px;color:#5B6475">QTY</th><th style="text-align:right;padding:6px 0;font-size:11px;color:#5B6475">AMOUNT</th></tr></thead><tbody>' +
-          d.items.map(function (it) { return '<tr style="border-bottom:1px solid #EEE6D3"><td style="padding:8px 0">' + esc(it.desc) + '<div style="font-size:12px;color:#5B6475">' + gbp(it.pricePence) + ' each</div></td><td style="text-align:right;padding-left:10px">' + esc(it.qty) + '</td><td style="text-align:right;padding-left:14px;white-space:nowrap">' + gbp(Math.round(it.qty * it.pricePence)) + '</td></tr>'; }).join('') + '</tbody></table>' +
+        '<div style="flex:1"><div style="font-weight:800;font-size:19.5px">' + esc(s.displayName || (S.boot.profile && S.boot.profile.businessName) || '') + '</div><div style="opacity:.85;font-size:14.5px">' + esc([s.phone, s.email].filter(Boolean).join(' · ')) + '</div></div>' +
+        '<div style="text-align:right"><div style="font-weight:800;letter-spacing:1px;text-transform:uppercase">' + esc(DOC_NAMES[d.type]) + '</div><div style="font-size:14.5px;opacity:.85">' + esc(d.number) + '</div></div></div>' +
+      '<div style="padding:16px 18px" class="stack"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div style="font-size:13px;font-weight:700;letter-spacing:1px;color:#5B6475">FOR</div><b>' + esc(d.customer.name) + '</b>' + (d.customer.phone ? '<div style="font-size:14.5px;color:#5B6475">' + esc(d.customer.phone) + '</div>' : '') + '</div>' +
+        '<div style="text-align:right;font-size:14.5px;color:#5B6475">Date: ' + dmy(d.issueDate) + (d.type === 'invoice' && d.dueDate ? '<br><b style="color:#0F1E36">Due: ' + dmy(d.dueDate) + '</b>' : '') + (d.type === 'receipt' ? '<br>Paid by ' + esc(d.paidMethod || 'bank transfer') : '') + '</div></div>' +
+        '<table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr style="border-bottom:2px solid ' + b.color1 + '"><th style="text-align:left;padding:6px 0;font-size:13px;letter-spacing:.8px;color:#5B6475">ITEM</th><th style="text-align:right;padding:6px 0;font-size:13px;color:#5B6475">QTY</th><th style="text-align:right;padding:6px 0;font-size:13px;color:#5B6475">AMOUNT</th></tr></thead><tbody>' +
+          d.items.map(function (it) { return '<tr style="border-bottom:1px solid #EEE6D3"><td style="padding:8px 0">' + esc(it.desc) + '<div style="font-size:14px;color:#5B6475">' + gbp(it.pricePence) + ' each</div></td><td style="text-align:right;padding-left:10px">' + esc(it.qty) + '</td><td style="text-align:right;padding-left:14px;white-space:nowrap">' + gbp(Math.round(it.qty * it.pricePence)) + '</td></tr>'; }).join('') + '</tbody></table>' +
         '<table style="width:100%;max-width:260px;margin-left:auto">' + row('Subtotal', gbp(d.subtotalPence)) + (d.deliveryPence ? row('Delivery', gbp(d.deliveryPence)) : '') + (d.discountPence ? row('Discount', '−' + gbp(d.discountPence)) : '') + row(d.type === 'receipt' ? 'Paid' : 'Total', gbp(d.totalPence), true) + '</table>' +
-        (d.type !== 'receipt' && (s.bankAccountName || s.sortCode) ? '<div style="background:#F7F1E3;border-radius:10px;padding:10px 12px;font-size:13px"><b>Pay by bank transfer</b><br>' + esc(s.bankAccountName || '') + (s.sortCode ? '<br>Sort code ' + esc(s.sortCode) : '') + (s.accountNumber ? ' · Account ' + esc(s.accountNumber) : '') + '<br>Reference: ' + esc(d.number) + '</div>' : '') +
-        (d.notes ? '<div style="font-size:13px;white-space:pre-wrap">' + esc(d.notes) + '</div>' : '') +
-        '<div style="font-size:12px;color:#5B6475;border-top:1px solid #EEE6D3;padding-top:8px">' + esc([s.footerNote, s.vatNumber ? 'VAT no. ' + s.vatNumber : '', s.address].filter(Boolean).join(' · ')) + '</div></div></div>';
+        (d.type !== 'receipt' && (s.bankAccountName || s.sortCode) ? '<div style="background:#F7F1E3;border-radius:10px;padding:10px 12px;font-size:15px"><b>Pay by bank transfer</b><br>' + esc(s.bankAccountName || '') + (s.sortCode ? '<br>Sort code ' + esc(s.sortCode) : '') + (s.accountNumber ? ' · Account ' + esc(s.accountNumber) : '') + '<br>Reference: ' + esc(d.number) + '</div>' : '') +
+        (d.notes ? '<div style="font-size:15px;white-space:pre-wrap">' + esc(d.notes) + '</div>' : '') +
+        '<div style="font-size:14px;color:#5B6475;border-top:1px solid #EEE6D3;padding-top:8px">' + esc([s.footerNote, s.vatNumber ? 'VAT no. ' + s.vatNumber : '', s.address].filter(Boolean).join(' · ')) + '</div></div></div>';
   }
 
   // Draws the document onto a canvas (A4 proportions) for a shareable image.
@@ -2582,7 +2582,7 @@ nav.tabs .navsep{display:none}
     var d = r.doc, s = r.settings || {}, logo = await loadLogo();
     var st = d.displayStatus, msg = reminderText(d, s);
     var next = d.type === 'quote' ? 'Turn into invoice' : d.type === 'invoice' && st !== 'paid' && st !== 'void' ? 'Mark paid & make receipt' : '';
-    app.innerHTML = '<main><div class="row" style="justify-content:space-between;margin-bottom:10px"><h1 style="font-size:22px">' + esc(d.number) + '</h1>' + statusPill(st) + '</div>' +
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between;margin-bottom:10px"><h1 style="font-size:23px">' + esc(d.number) + '</h1>' + statusPill(st) + '</div>' +
       '<div id="printArea">' + docHtml(d, s, logo) + '</div>' +
       '<div class="stack" style="margin-top:14px">' +
         '<a class="btn primary block" id="dvWa" href="' + esc(waLink(d.customer.phone, msg)) + '" target="_blank" rel="noopener">' + icon('<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>', 18) + ' ' + (st === 'overdue' ? 'Send payment reminder on WhatsApp' : 'Send on WhatsApp') + '</a>' +
@@ -2609,7 +2609,7 @@ nav.tabs .navsep{display:none}
         '<label class="btn ghost small" style="cursor:pointer;text-align:center">' + (p.hasLogo ? 'Change logo' : 'Upload logo') + '<input type="file" id="bkFile" accept="image/png,image/jpeg,image/webp" class="sr-only"></label>' +
         (p.hasLogo ? '<button class="btn link danger" id="bkDel" style="align-self:flex-start">Remove logo</button>' : '') + '</div></div>' +
       '<div class="row" style="gap:12px"><label class="colour"><input type="color" id="bkC1" value="' + b.color1 + '"><span>Main colour</span></label><label class="colour"><input type="color" id="bkC2" value="' + b.color2 + '"><span>Accent colour</span></label></div>' +
-      '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Font style</span><div class="chips" id="bkFont">' +
+      '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Font style</span><div class="chips" id="bkFont">' +
         [['modern', 'Modern'], ['elegant', 'Elegant'], ['bold', 'Bold']].map(function (o) { return '<button type="button" class="chip" data-font="' + o[0] + '" aria-pressed="' + (b.font === o[0]) + '" style="font-family:' + (o[0] === 'elegant' ? 'Fraunces,serif' : 'inherit') + ';font-weight:' + (o[0] === 'bold' ? 800 : 500) + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
       '<button class="btn primary block" id="bkSave">Save brand kit</button></div>';
   }
@@ -2742,11 +2742,11 @@ nav.tabs .navsep{display:none}
     var p = S.boot.profile || {};
     var st = { template: pickTemplate(item), size: 'square', headline: cleanHeadline(text), sub: '', photo: null, name: p.businessName || '', contact: p.instagram || (S.boot.listing ? 'Find us on Auntie Tobi' : '') };
     setChrome({ tabs: true, tab: 'create', back: back });
-    app.innerHTML = '<main><h1 style="font-size:22px">Make an image</h1><p class="sub" style="margin:6px 0 12px">Uses your brand colours and logo. Free — doesn’t use a generation.</p>' +
+    app.innerHTML = '<main><h1 style="font-size:23px">Make an image</h1><p class="sub" style="margin:6px 0 12px">Uses your brand colours and logo. Free — doesn’t use a generation.</p>' +
       '<div class="imgprev" id="ipWrap"><canvas id="ipCanvas" aria-label="Preview of your image"></canvas></div>' +
-      '<div class="card stack" style="margin-top:12px"><div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Style</span><div class="chips" id="ipTpl">' +
+      '<div class="card stack" style="margin-top:12px"><div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Style</span><div class="chips" id="ipTpl">' +
         IMG_TEMPLATES.map(function (t) { return '<button type="button" class="chip" data-t="' + t[0] + '" aria-pressed="' + (t[0] === st.template) + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
-      '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Size</span><div class="chips" id="ipSize"><button type="button" class="chip" data-s="square" aria-pressed="true">Post (square)</button><button type="button" class="chip" data-s="story" aria-pressed="false">Story / Status</button></div></div>' +
+      '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Size</span><div class="chips" id="ipSize"><button type="button" class="chip" data-s="square" aria-pressed="true">Post (square)</button><button type="button" class="chip" data-s="story" aria-pressed="false">Story / Status</button></div></div>' +
       '<div><label class="f" for="ipHead">Headline</label><textarea id="ipHead" rows="2" maxlength="120">' + esc(st.headline) + '</textarea></div>' +
       '<div><label class="f" for="ipSub">Small text <span class="opt">(optional)</span></label><input id="ipSub" maxlength="90" placeholder="e.g. This weekend only · DM to order"></div>' +
       '<div class="row"><div style="flex:1"><label class="f" for="ipName">Business name</label><input id="ipName" maxlength="40" value="' + esc(st.name) + '"></div><div style="flex:1"><label class="f" for="ipContact">Contact line</label><input id="ipContact" maxlength="40" value="' + esc(st.contact) + '"></div></div>' +
@@ -2836,7 +2836,7 @@ nav.tabs .navsep{display:none}
   }
 
   function resLocked() {
-    return '<section class="card stack" style="text-align:center;padding:24px 18px"><div style="font-size:34px">📖</div><h2 style="margin:0">Lessons to grow your business</h2>' +
+    return '<section class="card stack" style="text-align:center;padding:24px 18px"><div style="font-size:36px">📖</div><h2 style="margin:0">Lessons to grow your business</h2>' +
       '<p class="sub">Short, practical lessons on Instagram, content, sales and growth come with the <b>Business Club</b> and <b>Business Studio Plus</b>.</p>' +
       '<button class="btn primary block" id="rlTools">Try the free templates</button><button class="btn ghost block" id="rlUp">See plans</button></section>';
   }
@@ -2875,7 +2875,7 @@ nav.tabs .navsep{display:none}
     function row(t) {
       var sub = [TOOL_WORD[t.type], t.lessonTitle || t.moduleTitle].filter(Boolean).join(' · ');
       var prog = !t.locked && t.progress ? (t.type === 'checklist' ? ' · ' + t.progress + ' of ' + t.items + ' ticked' : ' · started') : '';
-      var tag = t.locked ? (t.clubOnly ? '<span class="pill green" style="font-size:11px;white-space:nowrap">💚 Club</span>' : '<span class="tlk" aria-label="Locked">🔒</span>') : t.free ? '<span class="pill green" style="font-size:11px">Free</span>' : t.saved ? '<span class="star" aria-label="Saved">★</span>' : '';
+      var tag = t.locked ? (t.clubOnly ? '<span class="pill green" style="font-size:13px;white-space:nowrap">💚 Club</span>' : '<span class="tlk" aria-label="Locked">🔒</span>') : t.free ? '<span class="pill green" style="font-size:13px">Free</span>' : t.saved ? '<span class="star" aria-label="Saved">★</span>' : '';
       return '<button class="li tl' + (t.locked ? ' locked' : '') + '" data-rt="' + esc(t.id) + '"><span class="tli" aria-hidden="true">' + (TOOL_ICO[t.type] || '📄') + '</span><div class="t"><b>' + esc(t.title) + '</b><small>' + esc(sub) + prog + '</small>' +
         (t.preview ? '<small class="snip">' + esc(t.preview) + '</small>' : '') + '</div>' + tag + '</button>';
     }
@@ -2907,8 +2907,8 @@ nav.tabs .navsep{display:none}
     var meta = S.rtools && S.rtools.tools.filter(function (t) { return t.id === tid; })[0];
     if (meta && meta.locked) {
       app.innerHTML = '<main class="lesson"><div class="lmeta">' + esc(TOOL_WORD[meta.type] || '') + '</div><h1>' + esc(meta.title) + '</h1>' + (meta.preview ? '<p class="sub" style="margin-top:6px">' + esc(meta.preview) + '…</p>' : '') +
-        (meta.clubOnly ? '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">💚</div><b>This is part of the Business Club toolkit</b><div class="sub" style="margin:0">It helps Business Club members get the most from their Spotlight, Marketplace listing and reposts.</div><a class="btn primary block" href="/business-club" style="text-align:center">See the Business Club</a></section></main>'
-        : '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">🔒</div><b>This comes with the Business Club and Business Studio Plus</b><div class="sub" style="margin:0">Your Free plan includes ' + S.rtools.tools.filter(function (t) { return t.free; }).length + ' free templates and tools to try.</div>' +
+        (meta.clubOnly ? '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:32px">💚</div><b>This is part of the Business Club toolkit</b><div class="sub" style="margin:0">It helps Business Club members get the most from their Spotlight, Marketplace listing and reposts.</div><a class="btn primary block" href="/business-club" style="text-align:center">See the Business Club</a></section></main>'
+        : '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:32px">🔒</div><b>This comes with the Business Club and Business Studio Plus</b><div class="sub" style="margin:0">Your Free plan includes ' + S.rtools.tools.filter(function (t) { return t.free; }).length + ' free templates and tools to try.</div>' +
         '<button class="btn gold block" id="ltUp">See plans</button><button class="btn ghost block" id="ltFree">Show me the free ones</button></section></main>');
       var lu = $('#ltUp'); if (lu) lu.onclick = function () { showUpgrade('every template and lesson'); };
       var lf = $('#ltFree'); if (lf) lf.onclick = function () { S.rtGroup = 'all'; S.rtType = 'all'; S.rtQ = ''; showResTools({ reload: false }); };
@@ -3005,7 +3005,7 @@ nav.tabs .navsep{display:none}
       (cont.length ? '<h2>Continue learning</h2><div class="list">' + cont.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       Object.keys(cols).map(function (c) { return '<h2>' + esc(c) + '</h2><div class="list">' + cols[c].sort(function (a, b) { return (a.collectionOrder || 0) - (b.collectionOrder || 0); }).map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>'; }).join('') +
       (fresh.length ? '<h2>New this month</h2><div class="list">' + fresh.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
-      (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:13px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       (saved.length ? '<h2>My saved lessons</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       '<h2>My learning progress</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>' + doneN + ' of ' + live.length + ' lessons completed</b><span class="sub">' + pct + '%</span></div><div class="pbar"><span style="width:' + pct + '%"></span></div></div>' +
       '<h2>Explore lessons</h2><div class="modgrid">' + r.modules.filter(function (m) { return r.lessons.some(function (l) { return l.module === m.id; }); }).map(function (m) {
@@ -3177,7 +3177,7 @@ nav.tabs .navsep{display:none}
     $$('[data-calc]').forEach(function (box) {
       var bi = box.dataset.calc;
       var draw = function () { var res = calcRun(bi), o = $('#ccOut' + bi); if (!o) return;
-        o.innerHTML = res && res.out ? res.out.map(function (r) { return '<div class="row" style="justify-content:space-between;gap:10px' + (r[2] ? ';font-size:18px;margin-bottom:4px' : '') + '"><span>' + esc(r[0]) + '</span><b' + (r[3] === 'text' ? ' style="color:var(--danger)"' : '') + '>' + fmtCalc(r) + '</b></div>'; }).join('') : '<b>Fill in the boxes to see the result</b>'; };
+        o.innerHTML = res && res.out ? res.out.map(function (r) { return '<div class="row" style="justify-content:space-between;gap:10px' + (r[2] ? ';font-size:19.5px;margin-bottom:4px' : '') + '"><span>' + esc(r[0]) + '</span><b' + (r[3] === 'text' ? ' style="color:var(--danger)"' : '') + '>' + fmtCalc(r) + '</b></div>'; }).join('') : '<b>Fill in the boxes to see the result</b>'; };
       $$('[data-cin="' + bi + '"]', box).forEach(function (i) { i.oninput = draw; });
     });
   }
@@ -3284,7 +3284,7 @@ nav.tabs .navsep{display:none}
       var full = cost + labour + over, price = full * (1 + n('margin') / 100);
       $('#pcOut').innerHTML = full ? '<div class="row" style="justify-content:space-between"><span>Direct costs</span><b>' + gbp(Math.round(cost * 100)) + '</b></div><div class="row" style="justify-content:space-between"><span>Your time</span><b>' + gbp(Math.round(labour * 100)) + '</b></div>' +
         '<div class="row" style="justify-content:space-between"><span>Share of running costs</span><b>' + gbp(Math.round(over * 100)) + '</b></div><div class="row" style="justify-content:space-between"><span>Break-even price</span><b>' + gbp(Math.round(full * 100)) + '</b></div>' +
-        '<div class="row" style="justify-content:space-between;font-size:18px;margin-top:6px"><span>Suggested price</span><b>' + gbp(Math.round(price * 100)) + '</b></div>' : '<b>Fill in the boxes to see your price</b>';
+        '<div class="row" style="justify-content:space-between;font-size:19.5px;margin-top:6px"><span>Suggested price</span><b>' + gbp(Math.round(price * 100)) + '</b></div>' : '<b>Fill in the boxes to see your price</b>';
     }
     $$('[data-pc]').forEach(function (i) { i.oninput = calc; });
   }
@@ -3412,7 +3412,7 @@ nav.tabs .navsep{display:none}
     var html = '';
     // Set-up checklist
     if (!n.setup.hidden) {
-      html += '<section class="card stack setup"><div class="row" style="justify-content:space-between;align-items:baseline"><b>Get set up — ' + n.setup.done + ' of ' + n.setup.total + ' done</b><button class="btn link" id="setupHide" style="font-size:13px">Hide</button></div>' +
+      html += '<section class="card stack setup"><div class="row" style="justify-content:space-between;align-items:baseline"><b>Get set up — ' + n.setup.done + ' of ' + n.setup.total + ' done</b><button class="btn link" id="setupHide" style="font-size:15px">Hide</button></div>' +
         '<div class="pbar"><span style="width:' + Math.round(n.setup.done / n.setup.total * 100) + '%"></span></div><div class="checks">' + n.setup.steps.map(function (s) {
           return '<button class="setstep' + (s.done ? ' done' : '') + '" data-step="' + s.go + '"' + (s.done ? ' disabled' : '') + '><span class="ldot' + (s.done ? ' done' : '') + '">' + (s.done ? '✓' : '') + '</span><span style="flex:1;text-align:left">' + esc(s.label) + (s.note ? ' <small class="hint" style="margin:0;display:block">⏳ ' + esc(s.note) + '</small>' : '') + '</span>' + (s.done ? '' : '<span aria-hidden="true">→</span>') + '</button>';
         }).join('') + '</div></section>';
@@ -3422,7 +3422,7 @@ nav.tabs .navsep{display:none}
     html += prioritiesCard(n.priorities);
     // Install as an app
     if (!isStandalone() && !n.installDone && !lsGet('studioInstallDone') && !lsGet('studioInstallHidden') && !(Number(lsGet('studioInstallLater')) > Date.now()) && (deferredInstall || isIOS() || /android/i.test(navigator.userAgent))) {
-      html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Business Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn small ghost" id="instDone" title="I’ve already added it">✓ Done</button><button class="btn link" id="instHide" style="font-size:13px">Not now</button></div></section>';
+      html += '<section class="note stack installcard"><div class="row" style="gap:10px"><img src="/tobi-face-128.png" alt="" width="40" height="40" style="border-radius:10px"><div style="flex:1"><b>Add Business Studio to your home screen</b><div class="hint" style="margin:0">Open it in one tap, like an app.</div></div></div><div class="row"><button class="btn small primary" id="instBtn">Add to home screen</button><button class="btn small ghost" id="instDone" title="I’ve already added it">✓ Done</button><button class="btn link" id="instHide" style="font-size:15px">Not now</button></div></section>';
     }
     // Money reminders
     var fus = n.followups || [];
@@ -3435,7 +3435,7 @@ nav.tabs .navsep{display:none}
         var msg = r.kind === 'quote' ? quoteFollowUp(d, n.moneySettings) : reminderText(d, n.moneySettings || {});
         return '<div class="act chase ' + r.kind + '"><div style="flex:1;min-width:0"><b>' + esc(label) + '</b><p>' + esc(d.customer.name) + ' · ' + gbp(d.totalPence) + (r.kind === 'overdue' ? ' · was due ' + dmy(d.dueDate) : '') + '</p><div class="row" style="margin-top:8px">' +
           (d.customer.phone ? '<a class="btn small primary" href="' + esc(waLink(d.customer.phone, msg)) + '" target="_blank" rel="noopener" data-sent="' + esc(d.id) + '">' + (r.kind === 'quote' ? 'Follow up on WhatsApp' : 'Send reminder') + '</a>' : '<button class="btn small primary" data-copymsg="' + esc(d.id) + '">Copy message</button>') +
-          '<button class="btn small ghost" data-open="' + esc(d.id) + '">Open</button><button class="btn link" data-later="' + esc(d.id) + '" style="font-size:13px">Later</button></div></div></div>';
+          '<button class="btn small ghost" data-open="' + esc(d.id) + '">Open</button><button class="btn link" data-later="' + esc(d.id) + '" style="font-size:15px">Later</button></div></div></div>';
       }).join('') + '</div>';
     }
     top.innerHTML = html;
@@ -3581,7 +3581,7 @@ nav.tabs .navsep{display:none}
     }
     $('#cuBox').innerHTML = '<p class="sub" style="margin:0 0 12px">Built automatically from your quotes, invoices and receipts. Only you can see it.</p>' +
       (list.length > 5 ? '<input type="search" id="cuQ" placeholder="Search customers" aria-label="Search customers" style="margin-bottom:12px">' : '') +
-      '<div class="row" style="margin-bottom:12px;gap:16px"><div><b style="font-size:22px;font-family:var(--display)">' + list.length + '</b><div class="hint" style="margin:0">customers</div></div><div><b style="font-size:22px;font-family:var(--display)">' + list.filter(function (c) { return c.orders > 1; }).length + '</b><div class="hint" style="margin:0">came back</div></div></div>' +
+      '<div class="row" style="margin-bottom:12px;gap:16px"><div><b style="font-size:23px;font-family:var(--display)">' + list.length + '</b><div class="hint" style="margin:0">customers</div></div><div><b style="font-size:23px;font-family:var(--display)">' + list.filter(function (c) { return c.orders > 1; }).length + '</b><div class="hint" style="margin:0">came back</div></div></div>' +
       '<div class="stack" id="cuList"></div>';
     var cq = $('#cuQ'); if (cq) cq.oninput = function () { draw(cq.value); };
     draw('');
@@ -3616,7 +3616,7 @@ nav.tabs .navsep{display:none}
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
     var p; try { p = (await api('studio-extras', 'prefs-get')).prefs; } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
     var listing = S.boot.listing;
-    app.innerHTML = '<main><h1 style="font-size:22px">Review link &amp; QR code</h1><p class="sub" style="margin:6px 0 14px">Make it easy for happy customers to leave a review. Free.</p>' +
+    app.innerHTML = '<main><h1 style="font-size:23px">Review link &amp; QR code</h1><p class="sub" style="margin:6px 0 14px">Make it easy for happy customers to leave a review. Free.</p>' +
       '<div class="card stack"><div><label class="f" for="rvL">Where should reviews go?</label><select id="rvL">' + ['Google', 'Auntie Tobi listing', 'Facebook', 'Trustpilot', 'Website', 'Other'].map(function (o) { return '<option' + (o === (p.reviewLabel || 'Google') ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div>' +
         '<div><label class="f" for="rvU">Review link</label><input id="rvU" type="url" inputmode="url" placeholder="https://g.page/r/…/review" value="' + esc(p.reviewLink || '') + '"><div class="hint" id="rvHint"></div></div>' +
         (listing ? '<button class="btn small ghost" id="rvUseL" style="align-self:flex-start">Use my Auntie Tobi listing</button>' : '') +
@@ -3658,7 +3658,7 @@ nav.tabs .navsep{display:none}
     var sh = r.shop, base = r.base, items = (sh.items || []).map(function (i) { return Object.assign({}, i); });
     function draw() {
       var url = sh.slug ? base + sh.slug : '';
-      app.innerHTML = '<main><h1 style="font-size:22px">Price list page</h1><p class="sub" style="margin:6px 0 14px">A simple page with your products, prices and a WhatsApp order button. Share it in your bio, Status and messages. Free.</p>' +
+      app.innerHTML = '<main><h1 style="font-size:23px">Price list page</h1><p class="sub" style="margin:6px 0 14px">A simple page with your products, prices and a WhatsApp order button. Share it in your bio, Status and messages. Free.</p>' +
         (sh.slug && !sh.isNew ? '<div class="card stack" style="margin-bottom:14px;' + (sh.published ? 'border-color:#CFEBDB;background:#F2FBF6' : '') + '"><div class="row" style="justify-content:space-between"><b>' + (sh.published ? '🟢 Live' : 'Not published yet') + '</b>' + (sh.published ? '<a class="btn small ghost" href="' + esc(url) + '" target="_blank" rel="noopener">View page</a>' : '') + '</div>' +
           '<div class="hint" style="margin:0;word-break:break-all">' + esc(url) + '</div><div class="row wrap">' + (sh.published ? '<button class="btn small primary" id="shShare">Share link</button><button class="btn small ghost" id="shCopy">Copy link</button><button class="btn small ghost" id="shQr">QR code</button><button class="btn link danger" id="shOff">Unpublish</button>' : '<button class="btn small primary" id="shOn">Publish my page</button>') + '</div></div>' : '') +
         '<div class="card stack"><div><label class="f" for="shSlug">Page link</label><div class="slugrow"><span>' + esc(base.replace(/^https?:\/\//, '')) + '</span><input id="shSlug" value="' + esc(sh.slug || sh.suggestedSlug || '') + '" maxlength="40" autocapitalize="off" spellcheck="false"></div><div class="hint">Letters, numbers and dashes, e.g. ada-cakes-croydon.</div></div>' +
@@ -3771,7 +3771,7 @@ nav.tabs .navsep{display:none}
     back = back || showAccount;
     setChrome({ tabs: true, tab: 'home', back: back });
     var biz = (S.boot.profile && S.boot.profile.businessName) || '';
-    app.innerHTML = '<main><h1 style="font-size:22px">Verify your Business</h1><p class="sub" style="margin:6px 0 14px">Verified businesses get the blue tick on their Auntie Tobi business listing, so customers know they’re dealing with a registered business.</p>' +
+    app.innerHTML = '<main><h1 style="font-size:23px">Verify your Business</h1><p class="sub" style="margin:6px 0 14px">Verified businesses get the blue tick on their Auntie Tobi business listing, so customers know they’re dealing with a registered business.</p>' +
       '<div class="card stack chbox"><label class="f" for="vCh">🏛️ Registered with Companies House?</label><input id="vCh" maxlength="200" placeholder="Company number or GOV.UK link" autocapitalize="characters">' +
       '<div class="hint">Paste your company’s page from GOV.UK, or just your company number. It shows customers you’re a registered business. Find it at <a href="https://find-and-update.company-information.service.gov.uk" target="_blank" rel="noopener">find-and-update.company-information.service.gov.uk</a>.</div>' +
       '<div class="err hidden" id="vErr"></div><button class="btn primary block" id="vSend">Send for verification</button></div>' +
@@ -3787,9 +3787,9 @@ nav.tabs .navsep{display:none}
     back = back || showAccount;
     setChrome({ tabs: true, tab: 'home', back: back });
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
-    var r; try { r = await api('studio-market', 'mine'); } catch (x) { app.innerHTML = '<main><h1 style="font-size:22px">Marketplace listing</h1><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var r; try { r = await api('studio-market', 'mine'); } catch (x) { app.innerHTML = '<main><h1 style="font-size:23px">Marketplace listing</h1><div class="err">' + esc(x.message) + '</div></main>'; return; }
     var used = r.used, allow = r.allowance;
-    app.innerHTML = '<main><h1 style="font-size:22px">Marketplace listing</h1><p class="sub" style="margin:6px 0 14px">Show your product or service on the <a href="/marketplace" target="_blank" rel="noopener">Auntie Tobi Marketplace</a> and in the Auntie Tobi app. Auntie Tobi checks every listing and change before it goes live.</p>' +
+    app.innerHTML = '<main><h1 style="font-size:23px">Marketplace listing</h1><p class="sub" style="margin:6px 0 14px">Show your product or service on the <a href="/marketplace" target="_blank" rel="noopener">Auntie Tobi Marketplace</a> and in the Auntie Tobi app. Auntie Tobi checks every listing and change before it goes live.</p>' +
       '<p class="hint" style="margin:0 0 12px">Your Business Club membership includes <b>' + allow + ' listing' + (allow === 1 ? '' : 's') + '</b> · ' + used + ' used</p>' +
       (r.listings.length ? r.listings.map(function (l) {
         var st = MKT_STATUS[l.status] || [l.status, 'grey'], show = l.draft && /pending|changes/.test(l.status) ? l.draft : l.live || l.draft;
@@ -3818,18 +3818,18 @@ nav.tabs .navsep{display:none}
     var bizSel = l ? (l.link && l.link.slug ? l.link : (f.bizSlug ? { slug: f.bizSlug, name: f.business } : 'none')) : (S.boot.listing ? S.boot.listing : null);
     if (bizSel && bizSel.slug) f.bizSlug = bizSel.slug;
     function draw() {
-      app.innerHTML = '<main><h1 style="font-size:22px">' + (l ? 'Edit your listing' : 'Add your product or service') + '</h1><p class="sub" style="margin:6px 0 14px">' + (l && l.live ? 'Your live listing stays up while Auntie Tobi reviews your change.' : 'Auntie Tobi will review it and let you know when it’s live.') + '</p>' +
+      app.innerHTML = '<main><h1 style="font-size:23px">' + (l ? 'Edit your listing' : 'Add your product or service') + '</h1><p class="sub" style="margin:6px 0 14px">' + (l && l.live ? 'Your live listing stays up while Auntie Tobi reviews your change.' : 'Auntie Tobi will review it and let you know when it’s live.') + '</p>' +
         '<div class="mktgrid"><div class="card stack">' +
-        '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Photos <span class="opt">(up to 4 — the first is the main photo)</span></span><div class="mphotos">' +
+        '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Photos <span class="opt">(up to 4 — the first is the main photo)</span></span><div class="mphotos">' +
           f.imgs.map(function (ref, i) { return '<div class="mph"><img src="' + esc(mktImgSrc(ref)) + '" alt="Photo ' + (i + 1) + '"><button type="button" class="mphx" data-phx="' + i + '" aria-label="Remove photo ' + (i + 1) + '">×</button>' + (i ? '<button type="button" class="mph1" data-ph1="' + i + '">Make main</button>' : '<span class="mph1 on">Main</span>') + '</div>'; }).join('') +
           (f.imgs.length < 4 ? '<label class="mph add"><span>＋<br>Add photo</span><input type="file" accept="image/*" class="sr-only" id="mPh" multiple></label>' : '') + '</div></div>' +
         '<div><label class="f" for="mName">Product or service name</label><input id="mName" maxlength="100" value="' + esc(f.name) + '" placeholder="e.g. Red velvet celebration cake"></div>' +
         '<div class="row"><div style="flex:1"><label class="f" for="mCat">Category</label><select id="mCat"><option value="">Choose…</option>' + MKT_CATS.map(function (c) { return '<option value="' + esc(c) + '"' + (f.category === c ? ' selected' : '') + '>' + esc(MKT_EMOJI[c] + ' ' + (MKT_CAT_LABEL[c] || c)) + '</option>'; }).join('') + '</select></div>' +
           '<div style="flex:1"><label class="f" for="mPrice">Price <span class="opt">(optional)</span></label><input id="mPrice" maxlength="24" value="' + esc(f.price) + '" placeholder="£45 / from £30"></div></div>' +
         '<div><label class="f" for="mDesc">Short description</label><textarea id="mDesc" rows="3" maxlength="600" placeholder="What it is, who it’s for, sizes or options, where you deliver.">' + esc(f.desc) + '</textarea></div>' +
-        '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Your business on Auntie Tobi</span><div id="mBizPick"></div><div class="hint">Your product links to your Auntie Tobi business page.</div></div>' +
+        '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Your business on Auntie Tobi</span><div id="mBizPick"></div><div class="hint">Your product links to your Auntie Tobi business page.</div></div>' +
         '<div><label class="f" for="mBiz">Business name</label><input id="mBiz" maxlength="80" value="' + esc(f.business) + '"></div>' +
-        '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">When customers tap the button…</span><div class="chips"><button type="button" class="chip" data-how="wa" aria-pressed="' + (how === 'wa') + '">💬 Message me on WhatsApp</button><button type="button" class="chip" data-how="link" aria-pressed="' + (how === 'link') + '">🔗 Go to my website or booking link</button></div></div>' +
+        '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">When customers tap the button…</span><div class="chips"><button type="button" class="chip" data-how="wa" aria-pressed="' + (how === 'wa') + '">💬 Message me on WhatsApp</button><button type="button" class="chip" data-how="link" aria-pressed="' + (how === 'link') + '">🔗 Go to my website or booking link</button></div></div>' +
         (how === 'wa' ? '<div><label class="f" for="mWa">WhatsApp number</label><input id="mWa" inputmode="tel" maxlength="20" value="' + esc(f.wa) + '" placeholder="07700 900123"></div>' : '<div><label class="f" for="mLink">Web link</label><input id="mLink" inputmode="url" maxlength="500" value="' + esc(f.link) + '" placeholder="https://…"></div>') +
         '<div class="row"><div style="flex:1"><label class="f" for="mBtn">Button text</label><select id="mBtn">' + MKT_BTNS.map(function (b) { return '<option' + (f.btnText === b ? ' selected' : '') + '>' + esc(b) + '</option>'; }).join('') + '</select></div>' +
           '<div style="flex:1"><label class="f" for="mEnd">End date <span class="opt">(optional — e.g. events)</span></label><input type="date" id="mEnd" value="' + esc(f.endsAt) + '"></div></div>' +
@@ -3942,7 +3942,7 @@ nav.tabs .navsep{display:none}
       '<div><label class="f" for="lgN">Name</label><input id="lgN" maxlength="80" value="' + esc(p.name || '') + '" placeholder="e.g. Tolu"></div>' +
       '<div><label class="f" for="lgP">WhatsApp / phone <span class="opt">(optional)</span></label><input id="lgP" inputmode="tel" maxlength="20" value="' + esc(p.phone || '') + '" placeholder="07700 900123"></div>' +
       '<div><label class="f" for="lgA">What did they ask about?</label><input id="lgA" maxlength="140" placeholder="e.g. a 40th birthday cake for 12 Nov"></div>' +
-      '<div><span class="f" style="display:block;font-weight:700;font-size:14px;margin-bottom:6px">Where did they find you?</span><div class="chips" id="lgS">' + FU_SOURCES.map(function (s, i) { return '<button type="button" class="chip" data-v="' + esc(s) + '" aria-pressed="' + (i === 0) + '">' + esc(s) + '</button>'; }).join('') + '</div></div>' +
+      '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">Where did they find you?</span><div class="chips" id="lgS">' + FU_SOURCES.map(function (s, i) { return '<button type="button" class="chip" data-v="' + esc(s) + '" aria-pressed="' + (i === 0) + '">' + esc(s) + '</button>'; }).join('') + '</div></div>' +
       '<div><label class="f" for="lgV">Rough value <span class="opt">(optional, £)</span></label><input id="lgV" inputmode="decimal" maxlength="10" placeholder="e.g. 120"></div>' +
       '<div class="err hidden" id="lgE"></div><button class="btn primary block" id="lgSave">Save &amp; remind me</button><button class="btn link" id="lgX">Cancel</button></div>';
     document.body.appendChild(scrim);
@@ -3965,7 +3965,7 @@ nav.tabs .navsep{display:none}
     return '<div class="act chase fu" data-fu="' + esc(it.id) + '"><div style="flex:1;min-width:0"><b>' + esc(label) + '</b><p>' + esc((it.about ? it.about + ' · ' : '') + sub + (it.source ? ' · ' + it.source : '')) + '</p>' +
       '<div class="row wrap" style="margin-top:8px"><button class="btn small primary" data-fumsg="' + esc(it.id) + '">' + (it.dueKind === 'thanks' ? 'Write thank-you' : 'Write message') + '</button>' +
       (it.dueKind === 'fu1' || it.dueKind === 'fu2' || it.dueKind === 'checkback' ? '<button class="btn small ghost" data-fubook="' + esc(it.id) + '">Booked 🎉</button><button class="btn small ghost" data-funo="' + esc(it.id) + '">Not now</button>' : '') +
-      '<button class="btn link" data-fusnz="' + esc(it.id) + '" style="font-size:13px">Tomorrow</button></div></div></div>';
+      '<button class="btn link" data-fusnz="' + esc(it.id) + '" style="font-size:15px">Tomorrow</button></div></div></div>';
   }
   function bindFuCards(root, list, reviewLink, refresh) {
     var find = function (id) { return list.filter(function (x) { return x.id === id; })[0]; };
@@ -4053,7 +4053,7 @@ nav.tabs .navsep{display:none}
     var r = S.fuData; if (!r) { try { r = S.fuData = await api('studio-extras', 'fu-list'); S.fuToday = r.today; } catch (x) { return showFollowups(); } }
     var it = r.items.filter(function (x) { return x.id === id; })[0]; if (!it) return showFollowups();
     function refresh() { S.fuData = null; api('studio-extras', 'fu-list').then(function (x) { S.fuData = x; S.fuToday = x.today; showFollowup(id); }).catch(function () { showFollowups(); }); }
-    app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1 style="font-size:24px">' + esc(it.name) + '</h1><p class="sub" style="margin:2px 0 0">' + esc(it.source) + ' · asked ' + fuAgo(it.createdAt) + '</p></div>' + fuPill(it.stage) + '</div>' +
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1 style="font-size:25px">' + esc(it.name) + '</h1><p class="sub" style="margin:2px 0 0">' + esc(it.source) + ' · asked ' + fuAgo(it.createdAt) + '</p></div>' + fuPill(it.stage) + '</div>' +
       '<div class="note" style="margin:12px 0">' + esc(fuNextText(it)) + (it.nextAt && it.nextAt <= r.today ? ' <button class="btn small primary" id="fdMsg" style="margin-left:6px">Write message</button>' : '') + '</div>' +
       '<div class="pipe mini" aria-label="Stage">' + ['new', 'contacted', 'quoted', 'booked', 'completed'].map(function (k) { var order = ['new', 'contacted', 'quoted', 'booked', 'completed'], cur = order.indexOf(it.display || it.stage); return '<span class="pstage' + (order.indexOf(k) <= cur ? ' on' : '') + '"><span>' + esc(FU_STAGE[k][0]) + '</span></span>'; }).join('<span class="parr" aria-hidden="true">›</span>') + '</div>' +
       '<div class="row wrap" style="margin:10px 0 6px">' + (it.phone ? '<a class="btn small ghost" target="_blank" rel="noopener" href="' + esc(waLink(it.phone, 'Hi ' + fuFirst(it.name) + ', ')) + '">WhatsApp</a>' : '') +
@@ -4125,16 +4125,16 @@ nav.tabs .navsep{display:none}
     function row(ico, title, status, ok, action) {
       return '<div class="benrow"><span class="benico">' + ico + '</span><div style="flex:1;min-width:0"><b>' + esc(title) + '</b><div class="hint" style="margin:0">' + status + '</div>' + (action || '') + '</div>' + (ok ? '<span class="pill green">✓</span>' : '') + '</div>';
     }
-    var ask = function (label, text) { return '<a class="btn link" style="font-size:13px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(atWa(text)) + '">' + esc(label) + ' →</a>'; };
+    var ask = function (label, text) { return '<a class="btn link" style="font-size:15px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(atWa(text)) + '">' + esc(label) + ' →</a>'; };
     var sp = b.spotlight;
     card.innerHTML = '<p class="hint" style="margin:0">Membership year ends <b>' + esc(dmy(b.yearKey)) + '</b>.</p>' +
       row('📣', 'Business Spotlight', sp.status === 'done' ? 'Done ' + esc(dmy(sp.date)) + (sp.link ? ' · <a href="' + esc(sp.link) + '" target="_blank" rel="noopener">View</a>' : '') : sp.status === 'scheduled' ? 'Scheduled' + (sp.date ? ' for ' + esc(dmy(sp.date)) : '') : 'Not yet', sp.status === 'done',
         '') +
       row('⭐', 'Featured Business (app & website)', b.featured.done ? 'Live since ' + esc(dmy(b.featured.date)) : 'Being set up', b.featured.done) +
       row('🛍️', 'Marketplace listing', b.marketplace.done ? 'Live since ' + esc(dmy(b.marketplace.date)) : 'Not listed yet', b.marketplace.done,
-        b.marketplace.done ? '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-gomkt="1">Manage my listing →</button>' : '<a class="btn link" style="font-size:13px;padding:0;min-height:0" href="/marketplace/list" target="_blank" rel="noopener">Add my product or service →</a>') +
+        b.marketplace.done ? '<button class="btn link" style="font-size:15px;padding:0;min-height:0" data-gomkt="1">Manage my listing →</button>' : '<a class="btn link" style="font-size:15px;padding:0;min-height:0" href="/marketplace/list" target="_blank" rel="noopener">Add my product or service →</a>') +
       row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.verify && b.verify.status === 'pending' ? '⏳ Verification requested (Companies House ' + esc(b.verify.number) + ') — Auntie Tobi will check' : b.badge === 'not_eligible' || (b.verify && b.verify.status === 'not_eligible') ? 'Not verified at the moment' + (b.verify && b.verify.note ? ' — ' + esc(b.verify.note) : '') : 'Not verified yet', b.badge === 'yes',
-        b.badge === 'yes' || (b.verify && b.verify.status === 'pending') ? '' : '<button class="btn link" style="font-size:13px;padding:0;min-height:0" data-goverify="1">Verify your Business →</button>') +
+        b.badge === 'yes' || (b.verify && b.verify.status === 'pending') ? '' : '<button class="btn link" style="font-size:15px;padding:0;min-height:0" data-goverify="1">Verify your Business →</button>') +
       row('📲', 'Shared by Auntie Tobi this year', b.counts.stories + ' Story share' + (b.counts.stories === 1 ? '' : 's') + ' · ' + b.counts.reposts + ' repost' + (b.counts.reposts === 1 ? '' : 's') + ' · ' + b.counts.discovery + ' discovery feature' + (b.counts.discovery === 1 ? '' : 's') + ' · ' + (b.counts.collabs || 0) + ' collab' + (b.counts.collabs === 1 ? '' : 's') + '<br>Auntie Tobi chooses whose content to share — keep posting your best work.', false) +
       row('🧭', 'Business Check-Up with Accountability', b.checkup.done ? 'Done ' + esc(dmy(b.checkup.date)) + (b.checkup.priorities.length ? ' · ' + b.prioritiesDone.length + ' of ' + b.checkup.priorities.length + ' priorities done' : '') : 'Not booked yet', b.checkup.done,
         b.checkup.done ? '' : ask('Book my Check-Up', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to book my Business Check-Up. The main thing I’d like help with is: ')) +
@@ -4147,7 +4147,7 @@ nav.tabs .navsep{display:none}
   var BEN_ICO = { verified: '✅', stories: '📲', reposts: '🔁', discovery: '🔎', collabs: '🤝', spotlight: '📣', featured: '⭐', marketplace: '🛍️' };
   function benFeedItem(e) {
     return '<div class="benrow" style="padding:6px 0"><span class="benico">' + (BEN_ICO[e.kind] || '💚') + '</span><div style="flex:1;min-width:0"><b>' + esc(e.label) + '</b> <span class="hint" style="margin:0">' + esc(dmy(e.at)) + '</span>' +
-      (e.note ? '<div class="hint" style="margin:0">' + esc(e.note) + '</div>' : '') + (e.link ? '<div><a class="btn link" style="font-size:13px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(e.link) + '">View →</a></div>' : '') + '</div></div>';
+      (e.note ? '<div class="hint" style="margin:0">' + esc(e.note) + '</div>' : '') + (e.link ? '<div><a class="btn link" style="font-size:15px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(e.link) + '">View →</a></div>' : '') + '</div></div>';
   }
   function benFeedHtml(feed) {
     if (!feed.length) return '<div style="border-top:1px solid var(--line);padding-top:10px"><b>What Auntie Tobi has done for you</b><p class="hint" style="margin:4px 0 0">Nothing yet this membership year — it’ll appear here, with dates, as soon as it happens.</p></div>';
@@ -4159,7 +4159,7 @@ nav.tabs .navsep{display:none}
     if (!items || !items.length) return '';
     return '<section class="card stack shared" id="sharedCard"><b>' + (items.every(function (i) { return /stories|reposts|discovery|collabs|spotlight/.test(i.kind); }) ? '💚 Auntie Tobi shared your business' : '💚 News from Auntie Tobi') + '</b>' + items.slice(0, 4).map(benFeedItem).join('') +
       (items.length > 4 ? '<p class="hint" style="margin:0">…and ' + (items.length - 4) + ' more in Account → My benefits.</p>' : '') +
-      '<div class="row"><button class="btn small primary" id="sharedOk">Thank you 💚</button><button class="btn link" id="sharedAll" style="font-size:13px">See all my benefits</button></div></section>';
+      '<div class="row"><button class="btn small primary" id="sharedOk">Thank you 💚</button><button class="btn link" id="sharedAll" style="font-size:15px">See all my benefits</button></div></section>';
   }
   function bindShared(root) {
     var ok = $('#sharedOk', root), all = $('#sharedAll', root);
@@ -4282,7 +4282,7 @@ nav.tabs .navsep{display:none}
     }
     if (creditsOn() || creditBal()) {
       var uu = S.boot.usage || {};
-      html += '<h2>Extra AI credits</h2><div class="card stack"><div><b style="font-size:22px">' + creditBal().toLocaleString('en-GB') + ' credits</b>' +
+      html += '<h2>Extra AI credits</h2><div class="card stack"><div><b style="font-size:23px">' + creditBal().toLocaleString('en-GB') + ' credits</b>' +
         (uu.creditsExpiry ? '<div class="sub" style="margin:0">First ones expire ' + d(uu.creditsExpiry, 1) + '</div>' : '') + '</div>' +
         '<div class="sub" style="margin:0">Used after your daily generations. One-off top-ups — nothing renews. Credits last 12 months.</div>' +
         (creditsOn() ? '<button class="btn primary block" data-buycredits>Buy credits</button>' : '') +

@@ -15,75 +15,75 @@
 <style>
 :root{--green:#057A44;--green-d:#04613A;--green-l:#E3F2EA;--gold:#FFB81C;--gold-l:#FFF1CF;--navy:#0F1E36;--navy-2:#1C2E4D;--cream:#FBF6EC;--line:#EADFC8;--muted:#5B6475;--danger:#B3261E;--danger-l:#FCE8E6;--font:'DM Sans',-apple-system,Segoe UI,Roboto,sans-serif;--display:'Fraunces',Georgia,serif}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--cream);color:var(--navy);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+body{background:var(--cream);color:var(--navy);font:16.5px/1.5 var(--font);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
 .hidden,[hidden]{display:none!important}
 header{background:var(--navy);color:var(--cream);padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
-header b{font-family:var(--display);font-size:18px}
-header small{color:var(--gold);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700}
+header b{font-family:var(--display);font-size:19.5px}
+header small{color:var(--gold);font-size:13px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700}
 header .sp{flex:1}
-header button{color:var(--cream);font-size:13px;opacity:.85}
+header button{color:var(--cream);font-size:15px;opacity:.85}
 nav{display:flex;gap:4px;overflow-x:auto;background:#fff;border-bottom:1px solid var(--line);padding:6px 10px;position:sticky;top:52px;z-index:9}
-nav button{padding:8px 12px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);white-space:nowrap}
+nav button{padding:8px 12px;border-radius:999px;font-weight:700;font-size:15.5px;color:var(--muted);white-space:nowrap}
 nav button[aria-current=page]{background:var(--navy);color:var(--cream)}
 main{max-width:1100px;margin:0 auto;padding:16px}
-h1{font-family:var(--display);font-size:24px;margin-bottom:12px}
-h2{font-family:var(--display);font-size:18px;margin:20px 0 10px}
+h1{font-family:var(--display);font-size:25px;margin-bottom:12px}
+h2{font-family:var(--display);font-size:19.5px;margin:20px 0 10px}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-.stat b{display:block;font-family:var(--display);font-size:28px;line-height:1.1}
-.stat span{color:var(--muted);font-size:13px}
+.stat b{display:block;font-family:var(--display);font-size:30px;line-height:1.1}
+.stat span{color:var(--muted);font-size:15px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:10px 14px;font-weight:700;min-height:42px}
 .btn.primary{background:var(--green);color:#fff}.btn.gold{background:var(--gold);color:var(--navy)}
-.btn.ghost{border:1.5px solid var(--line);background:#fff}.btn.small{min-height:32px;padding:5px 10px;font-size:13px}
+.btn.ghost{border:1.5px solid var(--line);background:#fff}.btn.small{min-height:32px;padding:5px 10px;font-size:15px}
 .btn.danger{color:var(--danger)}
 .btn:disabled{opacity:.5}
-input,select,textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;font-size:15px}
+input,select,textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;font-size:16.5px}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(5,122,68,.15)}
-label{display:block;font-weight:700;font-size:13px;margin-bottom:4px}
+label{display:block;font-weight:700;font-size:15px;margin-bottom:4px}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:560px){.f2{grid-template-columns:1fr}}
 .stack>*+*{margin-top:10px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:14px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:15.5px}
 th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{background:#F7F1E3;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+th{background:#F7F1E3;font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 tr:last-child td{border-bottom:0}
 tbody tr:hover{background:#FFFCF5}
 .tw{overflow-x:auto;border-radius:14px}
-.bzp{display:flex;gap:10px;align-items:center;justify-content:space-between;border-radius:12px;padding:11px 12px;font-size:14px;line-height:1.4}
+.bzp{display:flex;gap:10px;align-items:center;justify-content:space-between;border-radius:12px;padding:11px 12px;font-size:15.5px;line-height:1.4}
 .bzp-on{background:#E7F5EE;border:1.5px solid #9ED7B8}.bzp-on b{color:#04603a}.bzp-none{background:#F6F2EA;border:1.5px dashed #E0D6C2;color:#5B6475}
-.bzp-m{color:#6B7280}.bzp-act{display:flex;gap:12px;align-items:center;flex-shrink:0}.bzp-act a{color:#057A44;font-weight:700;font-size:13px}
-.bzp-link{background:none;border:0;color:#057A44;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.bzp-m{color:#6B7280}.bzp-act{display:flex;gap:12px;align-items:center;flex-shrink:0}.bzp-act a{color:#057A44;font-weight:700;font-size:15px}
+.bzp-link{background:none;border:0;color:#057A44;font:inherit;font-size:15px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
 .bzp-s{display:flex;flex-direction:column;gap:8px}.bzp-s .bzp-link{align-self:flex-start}
 .bzp-res{display:flex;flex-direction:column;gap:6px}.bzp-r{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid #E6E1D6;border-radius:10px;padding:9px 12px;font:inherit;cursor:pointer;color:#0F1E36}
-.bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
+.bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:16px}.bzp-r span{font-size:14.5px;color:#6B7280}.bzp-empty{font-size:15px;color:#6B7280}
 .mkc{width:250px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
 .mkc-img{position:relative;height:160px;background:#f8f8f8;display:flex;align-items:center;justify-content:center}.mkc-img img{width:100%;height:100%;object-fit:contain;padding:6px}
-.mkc-cat{position:absolute;top:0;left:0;background:#057A44;color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:0 0 10px 0;text-transform:uppercase}
-.mkc-n{position:absolute;top:6px;right:6px;background:rgba(15,30,54,.75);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px}
-.mkc-b{padding:10px 12px 12px;font-size:13px;display:flex;flex-direction:column;gap:3px}.mkc-d{color:#555;font-size:12.5px;line-height:1.45}.mkc-p{font-weight:800;font-size:15px}
-.mkc-btn{margin-top:4px;background:#057A44;color:#fff;border-radius:8px;padding:8px;font-weight:700;text-align:center;font-size:12.5px}
+.mkc-cat{position:absolute;top:0;left:0;background:#057A44;color:#fff;font-size:12px;font-weight:700;padding:4px 9px;border-radius:0 0 10px 0;text-transform:uppercase}
+.mkc-n{position:absolute;top:6px;right:6px;background:rgba(15,30,54,.75);color:#fff;font-size:12px;font-weight:700;padding:2px 7px;border-radius:9px}
+.mkc-b{padding:10px 12px 12px;font-size:15px;display:flex;flex-direction:column;gap:3px}.mkc-d{color:#555;font-size:14.5px;line-height:1.45}.mkc-p{font-weight:800;font-size:16.5px}
+.mkc-btn{margin-top:4px;background:#057A44;color:#fff;border-radius:8px;padding:8px;font-weight:700;text-align:center;font-size:14.5px}
 .td-list{padding:4px 14px}.td{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}.td:last-child{border-bottom:0}
 .td-check{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:2px solid var(--green);background:#fff;color:#fff;font-weight:800;cursor:pointer;margin-top:1px}
 a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:center}
-.td-check.td-share{width:auto;min-width:38px;padding:0 8px;border-radius:14px;color:var(--green);font-size:13px}.td-check.td-share:hover{background:var(--green);color:#fff}
+.td-check.td-share{width:auto;min-width:38px;padding:0 8px;border-radius:14px;color:var(--green);font-size:15px}.td-check.td-share:hover{background:var(--green);color:#fff}
 .td-done .td-check{background:var(--green)}.td-done .td-b b{text-decoration:line-through;color:var(--muted)}.td-late{background:#FFF7F6;margin:0 -14px;padding:11px 14px}
-.td-b{flex:1;min-width:0}.td-m{font-size:12.5px;margin-top:2px}.tdbar{height:8px;background:#E7EDE9;border-radius:99px;overflow:hidden;margin:10px 0 4px}.tdbar span{display:block;height:100%;background:var(--green)}
+.td-b{flex:1;min-width:0}.td-m{font-size:14.5px;margin-top:2px}.tdbar{height:8px;background:#E7EDE9;border-radius:99px;overflow:hidden;margin:10px 0 4px}.tdbar span{display:block;height:100%;background:var(--green)}
 .note{background:var(--green-l);border:1px solid #CFEBDB;border-radius:14px;padding:12px 14px;line-height:1.5}
 .iv{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}.iv:last-child{border-bottom:0}
-.iv-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.iv-h b{font-size:16px}
-.iv-next{font-size:13px;color:var(--muted)}.iv-next.due{color:var(--danger);font-weight:700}
+.iv-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.iv-h b{font-size:17.5px}
+.iv-next{font-size:15px;color:var(--muted)}.iv-next.due{color:var(--danger);font-weight:700}
 .iv a.btn{text-decoration:none;color:var(--navy)}.iv a.btn.primary{color:#fff}
-.iv-em{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;margin:0 0 8px}.iv-em .iv-addr{font-weight:600;word-break:break-all}
-.iv-bulk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0 0 10px;font-size:14px}.iv-bulk>span{flex:1;min-width:200px}
+.iv-em{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:15.5px;margin:0 0 8px}.iv-em .iv-addr{font-weight:600;word-break:break-all}
+.iv-bulk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0 0 10px;font-size:15.5px}.iv-bulk>span{flex:1;min-width:200px}
 .iv-sent{background:var(--gold-l);border-radius:10px;padding:8px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--navy)}.chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
-.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;color:var(--navy)}.chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:14px;font-weight:700}
 .p-active{background:var(--green-l);color:var(--green-d)}.p-pending{background:var(--gold-l);color:#7A5300}.p-inactive,.p-expired{background:#ECEDF0;color:var(--muted)}
-.p-power{background:var(--gold);color:var(--navy)}.pill .over{background:var(--green-d);color:#fff;border-radius:999px;padding:0 5px;margin-left:2px;font-size:11px}.p-warn{background:var(--danger-l);color:var(--danger)}
-.muted{color:var(--muted);font-size:13px}
+.p-power{background:var(--gold);color:var(--navy)}.pill .over{background:var(--green-d);color:#fff;border-radius:999px;padding:0 5px;margin-left:2px;font-size:13px}.p-warn{background:var(--danger-l);color:var(--danger)}
+.muted{color:var(--muted);font-size:15px}
 .err{background:var(--danger-l);color:var(--danger);border-radius:10px;padding:9px 11px;font-weight:500}
 .warn{background:var(--gold-l);border-radius:10px;padding:10px 12px}
 .bar{height:6px;background:#EEE6D3;border-radius:999px;overflow:hidden;min-width:70px}
@@ -92,17 +92,17 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 .sheet{background:var(--cream);border-radius:16px;padding:18px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
 .login{max-width:380px;margin:60px auto;padding:0 16px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--cream);padding:10px 16px;border-radius:10px;z-index:40}
-.nbadge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#E5484D;color:#fff;font-size:11.5px;font-weight:800;margin-left:4px}
+.nbadge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#E5484D;color:#fff;font-size:13.5px;font-weight:800;margin-left:4px}
 .mwrap{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:12px;height:calc(100vh - 210px);min-height:460px}
 .mside{display:flex;flex-direction:column;min-height:0}.mrows{overflow:auto;flex:1;margin:0 -6px}
 .mrow{display:block;width:100%;text-align:left;padding:10px;border-radius:10px;border:0;background:none;font:inherit;color:inherit;cursor:pointer}.mrow:hover{background:var(--cream)}.mrow.on{background:var(--green-l)}
 .mrow.un .mname,.mrow.un .mprev{font-weight:800;color:var(--navy)}
-.mname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mprev{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.mname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mprev{font-size:15px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .mpane{display:flex;flex-direction:column;min-height:0;padding:0}
 .mempty{margin:auto;text-align:center;padding:30px}
 .mph{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
 .mpane .mlist{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:var(--cream)}
-.bub{max-width:75%;padding:9px 13px;border-radius:16px;font-size:14.5px;line-height:1.45;word-wrap:break-word}.bub .bt{white-space:pre-wrap}.bub .bm{font-size:11px;opacity:.7;margin-top:3px;text-align:right}
+.bub{max-width:75%;padding:9px 13px;border-radius:16px;font-size:16px;line-height:1.45;word-wrap:break-word}.bub .bt{white-space:pre-wrap}.bub .bm{font-size:13px;opacity:.7;margin-top:3px;text-align:right}
 .bub.me{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:5px}.bub.me a{color:#fff}
 .bub.them{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px}
 .mqr{display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;border-top:1px solid var(--line)}
@@ -226,11 +226,11 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     app.innerHTML = '<main class="msgmain"><div class="row" style="justify-content:space-between;margin-bottom:12px"><h1 style="margin:0">Messages</h1><div class="row"><button class="btn small ghost" id="mNew">✏️ New message</button><button class="btn small gold" id="mAnn">📣 Announcement</button><button class="btn small ghost" id="mWel">👋 Welcome series</button><button class="btn small ghost" id="mQuick">⚡ Quick replies</button></div></div>' +
       '<div class="mwrap"><div class="mside card"><input id="mQ" placeholder="Search members…" value="' + esc(S.msgQ || '') + '"><div class="chips" style="margin:8px 0">' + MSG_F.map(function (x) { return '<button class="chip" data-mf="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + x[1] + ' (' + cnt(x[0]) + ')</button>'; }).join('') + '</div>' +
         '<div class="mrows">' + (rows.length ? rows.map(function (x) {
-          return '<button class="mrow' + (S.msgOpen === x.email ? ' on' : '') + (x.unreadAdmin ? ' un' : '') + '" data-mo="' + esc(x.email) + '"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b class="mname">' + esc(x.name || x.email) + '</b><span class="muted" style="font-size:12px;white-space:nowrap">' + esc(mTime(x.updatedAt)) + '</span></div>' +
-            '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;margin-top:2px"><span class="mprev">' + (x.lastFrom === 'admin' ? 'You: ' : '') + esc(x.lastText) + '</span>' + (x.unreadAdmin ? '<span class="nbadge">' + x.unreadAdmin + '</span>' : x.done ? '<span class="muted" style="font-size:12px">✓ Done</span>' : '') + '</div>' +
-            '<div class="muted" style="font-size:12px;margin-top:2px">' + esc(x.plan) + (x.name ? ' · ' + esc(x.email) : '') + '</div></button>';
+          return '<button class="mrow' + (S.msgOpen === x.email ? ' on' : '') + (x.unreadAdmin ? ' un' : '') + '" data-mo="' + esc(x.email) + '"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b class="mname">' + esc(x.name || x.email) + '</b><span class="muted" style="font-size:14px;white-space:nowrap">' + esc(mTime(x.updatedAt)) + '</span></div>' +
+            '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;margin-top:2px"><span class="mprev">' + (x.lastFrom === 'admin' ? 'You: ' : '') + esc(x.lastText) + '</span>' + (x.unreadAdmin ? '<span class="nbadge">' + x.unreadAdmin + '</span>' : x.done ? '<span class="muted" style="font-size:14px">✓ Done</span>' : '') + '</div>' +
+            '<div class="muted" style="font-size:14px;margin-top:2px">' + esc(x.plan) + (x.name ? ' · ' + esc(x.email) : '') + '</div></button>';
         }).join('') : '<p class="muted" style="padding:10px 4px">' + (f === 'inbox' && !q ? 'No messages yet. When members message you, they show up here.' : 'Nothing here.') + '</p>') + '</div></div>' +
-        '<div class="mpane card" id="mPane"><div class="mempty"><div style="font-size:34px">💬</div><p><b>Pick a conversation</b></p><p class="muted">or start one with <b>✏️ New message</b>.</p></div></div></div></main>';
+        '<div class="mpane card" id="mPane"><div class="mempty"><div style="font-size:36px">💬</div><p><b>Pick a conversation</b></p><p class="muted">or start one with <b>✏️ New message</b>.</p></div></div></div></main>';
     $$('[data-mf]').forEach(function (b) { b.onclick = function () { S.msgF = b.dataset.mf; vMessages(); }; });
     var qi = $('#mQ'), qt; qi.oninput = function () { clearTimeout(qt); qt = setTimeout(function () { S.msgQ = qi.value.trim(); vMessages(); setTimeout(function () { var n = $('#mQ'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 0); }, 350); };
     $$('[data-mo]').forEach(function (b) { b.onclick = function () { $$('.mrow').forEach(function (x) { x.classList.toggle('on', x === b); }); b.classList.remove('un'); var nb = $('.nbadge', b); if (nb) nb.remove(); openThread(b.dataset.mo); }; });
@@ -256,7 +256,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       list.innerHTML = bubbles(t); list.dataset.n = t.messages.length; list.dataset.seen = t.memberReadAt; if (near) list.scrollTop = list.scrollHeight; return;
     }
     var draft = (S.msgDrafts || {})[email] || '';
-    pane.innerHTML = '<div class="mph"><div><b style="font-size:17px">' + esc(t.name || email) + '</b> <span class="pill p-' + (/^(Pro|Plus)/.test(t.plan) ? 'power' : t.plan === 'Club' ? 'active' : t.plan === 'Free' ? 'pending' : 'inactive') + '">' + esc(t.plan) + '</span><div class="muted" style="font-size:13px">' + esc(email) + '</div></div>' +
+    pane.innerHTML = '<div class="mph"><div><b style="font-size:18.5px">' + esc(t.name || email) + '</b> <span class="pill p-' + (/^(Pro|Plus)/.test(t.plan) ? 'power' : t.plan === 'Club' ? 'active' : t.plan === 'Free' ? 'pending' : 'inactive') + '">' + esc(t.plan) + '</span><div class="muted" style="font-size:15px">' + esc(email) + '</div></div>' +
       '<div class="row">' + (t.isMember ? '<button class="btn small ghost" id="mRec">Open record</button>' : '') + (t.messages.length ? '<button class="btn small ghost" id="mDone">' + (t.done ? '↩ Move to inbox' : '✓ Done') + '</button>' : '') + '</div></div>' +
       '<div class="mlist" id="mList" data-email="' + esc(email) + '" data-n="' + t.messages.length + '" data-seen="' + esc(t.memberReadAt) + '">' + bubbles(t) + '</div>' +
       '<div class="mqr hidden" id="mQr">' + (S.msg.quick || []).map(function (x, i) { return '<button class="chip" data-qr="' + i + '">' + esc(x.length > 60 ? x.slice(0, 57) + '…' : x) + '</button>'; }).join('') + '</div>' +
@@ -288,7 +288,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var c = S.msg.contacts || [];
     var s2 = sheet('<h2 style="margin:0">✏️ New message</h2><p class="muted">Start a private chat with a member.</p><input id="nmQ" placeholder="Search by business or email…"><div id="nmL" class="stack" style="max-height:50vh;overflow:auto;gap:4px"></div><button class="btn ghost" id="nmX">Cancel</button>');
     var draw = function () { var q = $('#nmQ', s2).value.toLowerCase(); var l = c.filter(function (x) { return !q || (x.name + ' ' + x.email).toLowerCase().indexOf(q) > -1; }).slice(0, 60);
-      $('#nmL', s2).innerHTML = l.length ? l.map(function (x) { return '<button class="mrow" data-nm="' + esc(x.email) + '"><b>' + esc(x.name || x.email) + '</b><div class="muted" style="font-size:12px">' + esc(x.plan) + (x.name ? ' · ' + esc(x.email) : '') + '</div></button>'; }).join('') : '<p class="muted">No members match.</p>';
+      $('#nmL', s2).innerHTML = l.length ? l.map(function (x) { return '<button class="mrow" data-nm="' + esc(x.email) + '"><b>' + esc(x.name || x.email) + '</b><div class="muted" style="font-size:14px">' + esc(x.plan) + (x.name ? ' · ' + esc(x.email) : '') + '</div></button>'; }).join('') : '<p class="muted">No members match.</p>';
       $$('[data-nm]', s2).forEach(function (b) { b.onclick = function () { s2.remove(); S.msgF = 'all'; S.msgQ = ''; S.msgOpen = b.dataset.nm; vMessages(); }; }); };
     $('#nmQ', s2).oninput = draw; draw(); $('#nmQ', s2).focus();
     $('#nmX', s2).onclick = function () { s2.remove(); };
@@ -297,11 +297,11 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var anns = S.msg.announcements || [];
     var saved = S.msg.annSaved || [];
     var s2 = sheet('<h2 style="margin:0">📣 Announcement</h2><p class="muted">Goes into every chosen member’s chat as an announcement, with a push notification. Members can reply to you privately.</p>' +
-      '<div><b>💾 Saved messages</b><div class="stack" id="anSv" style="gap:6px;margin-top:6px">' + (saved.length ? saved.map(function (x) { return '<div class="row" style="flex-wrap:nowrap;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 8px"><button class="btn small ghost" data-anuse="' + esc(x.id) + '" style="flex:1;justify-content:flex-start;text-align:left;border:0;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.title) + '</span><span class="muted" style="font-weight:500;font-size:12px;margin-left:6px;white-space:nowrap">· ' + esc(MSG_AUD[x.audience]) + '</span></button><button class="btn small ghost danger" data-andel="' + esc(x.id) + '" aria-label="Delete saved message">✕</button></div>'; }).join('') : '<p class="muted" style="margin:0">No saved messages yet.</p>') + '</div></div>' +
+      '<div><b>💾 Saved messages</b><div class="stack" id="anSv" style="gap:6px;margin-top:6px">' + (saved.length ? saved.map(function (x) { return '<div class="row" style="flex-wrap:nowrap;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 8px"><button class="btn small ghost" data-anuse="' + esc(x.id) + '" style="flex:1;justify-content:flex-start;text-align:left;border:0;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.title) + '</span><span class="muted" style="font-weight:500;font-size:14px;margin-left:6px;white-space:nowrap">· ' + esc(MSG_AUD[x.audience]) + '</span></button><button class="btn small ghost danger" data-andel="' + esc(x.id) + '" aria-label="Delete saved message">✕</button></div>'; }).join('') : '<p class="muted" style="margin:0">No saved messages yet.</p>') + '</div></div>' +
       '<div><label for="anA">Send to</label><select id="anA">' + Object.keys(MSG_AUD).map(function (k) { return '<option value="' + k + '">' + MSG_AUD[k] + '</option>'; }).join('') + '</select></div>' +
       '<div><label for="anT">Message</label><textarea id="anT" rows="6" maxlength="' + (S.msg.max || 2000) + '" placeholder="e.g. Our next Business Club live session is on Thursday at 7pm…"></textarea></div><div class="err hidden" id="anE"></div>' +
       '<div class="row"><button class="btn primary" id="anS">Send announcement</button><button class="btn ghost" id="anSave">💾 Save for later</button><button class="btn ghost" id="anX">Close</button></div>' +
-      '<div><b>Sent</b>' + (anns.length ? '<div class="stack" style="gap:6px;margin-top:6px">' + anns.map(function (a) { return '<div class="card" style="padding:10px 12px"><div class="row" style="justify-content:space-between"><span class="muted" style="font-size:12.5px">' + esc(mTime(a.at)) + ' · ' + esc(MSG_AUD[a.audience]) + '</span><button class="btn small ghost danger" data-and="' + esc(a.id) + '">Delete</button></div><div style="white-space:pre-wrap;margin-top:4px">' + esc(a.text) + '</div></div>'; }).join('') + '</div>' : '<p class="muted" style="margin:4px 0">None yet.</p>') + '</div>');
+      '<div><b>Sent</b>' + (anns.length ? '<div class="stack" style="gap:6px;margin-top:6px">' + anns.map(function (a) { return '<div class="card" style="padding:10px 12px"><div class="row" style="justify-content:space-between"><span class="muted" style="font-size:14.5px">' + esc(mTime(a.at)) + ' · ' + esc(MSG_AUD[a.audience]) + '</span><button class="btn small ghost danger" data-and="' + esc(a.id) + '">Delete</button></div><div style="white-space:pre-wrap;margin-top:4px">' + esc(a.text) + '</div></div>'; }).join('') + '</div>' : '<p class="muted" style="margin:4px 0">None yet.</p>') + '</div>');
     $('#anX', s2).onclick = function () { s2.remove(); };
     var using = null;
     $$('[data-anuse]', s2).forEach(function (b) { b.onclick = function () { var x = saved.filter(function (y) { return y.id === b.dataset.anuse; })[0]; using = x.id; $('#anT', s2).value = x.text; $('#anA', s2).value = x.audience; $('#anT', s2).focus(); toast('Loaded “' + x.title + '” — edit it if you like, then send'); }; });
@@ -332,18 +332,18 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       '<p class="muted" style="margin:0">Messages go into each <b>new</b> member’s private chat from Auntie Tobi, with a push notification — between 9am and 7pm UK time. Only members who join ' + (w.since ? 'after <b>' + esc(d(w.since)) + '</b>' : 'after you switch it on') + ' get them. <b>{business}</b> = their business name. Replies come to your inbox.</p>' +
       w.steps.map(function (st, i) {
         return '<div class="card stack wstep" data-wid="' + esc(st.id) + '" style="padding:12px;gap:8px"><div class="row" style="justify-content:space-between;align-items:center"><b>Message ' + (i + 1) + '</b>' +
-          '<span class="muted" style="font-size:12.5px">Sent to ' + ((w.stats || {})[st.id] || 0) + ' member' + (((w.stats || {})[st.id] || 0) === 1 ? '' : 's') + '</span></div>' +
+          '<span class="muted" style="font-size:14.5px">Sent to ' + ((w.stats || {})[st.id] || 0) + ' member' + (((w.stats || {})[st.id] || 0) === 1 ? '' : 's') + '</span></div>' +
           '<div class="row" style="gap:8px;align-items:center"><label style="margin:0;font-weight:600">Send</label><input type="number" min="0" max="90" class="wDays" value="' + st.days + '" style="width:80px"><span class="muted wLab">' + (st.days === 0 ? 'day(s) after joining · straight away' : 'day(s) after joining') + '</span>' +
           '<label class="row" style="gap:6px;margin:0 0 0 auto;font-weight:600"><input type="checkbox" class="wOnStep"' + (st.on ? ' checked' : '') + '> Send this one</label></div>' +
           '<textarea class="wText" rows="4" maxlength="2000">' + esc(st.text) + '</textarea></div>';
       }).join('') +
-      '<div class="card stack" style="padding:12px;gap:8px"><b>➕ Add a member to the series</b><p class="muted" style="margin:0;font-size:13.5px">For members who joined before it was switched on. Their series starts today — Message 1 within the hour (9am–7pm), then the rest on their days. Nobody gets the same message twice.</p>' +
+      '<div class="card stack" style="padding:12px;gap:8px"><b>➕ Add a member to the series</b><p class="muted" style="margin:0;font-size:15px">For members who joined before it was switched on. Their series starts today — Message 1 within the hour (9am–7pm), then the rest on their days. Nobody gets the same message twice.</p>' +
       '<div class="row" style="flex-wrap:nowrap"><input type="email" id="wAddE" placeholder="member@email.com" style="flex:1"><button class="btn small" id="wAdd">Add</button></div><div id="wMan"></div></div>' +
       '<div class="err hidden" id="wErr"></div><div class="row"><button class="btn primary" id="wSave">Save</button><button class="btn ghost" id="wX">Close</button></div>');
     $$('.wDays', s2).forEach(function (inp) { inp.oninput = function () { var lab = inp.parentNode.querySelector('.wLab'); lab.textContent = Number(inp.value) === 0 ? 'day(s) after joining · straight away' : 'day(s) after joining'; }; });
     var drawMan = function () {
       var em = Object.keys(w.manual || {}).sort(function (a, b) { return (w.manual[b].at || '').localeCompare(w.manual[a].at || ''); });
-      $('#wMan', s2).innerHTML = em.length ? '<div class="muted" style="font-size:12.5px;font-weight:700;margin-bottom:4px">Added by you</div>' + em.map(function (e) { return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;padding:4px 0"><span>' + esc(e) + ' <span class="muted" style="font-size:12.5px">· added ' + esc(d(w.manual[e].at)) + '</span></span><button class="btn small ghost danger" data-wrm="' + esc(e) + '" aria-label="Stop the series for ' + esc(e) + '">✕</button></div>'; }).join('') : '';
+      $('#wMan', s2).innerHTML = em.length ? '<div class="muted" style="font-size:14.5px;font-weight:700;margin-bottom:4px">Added by you</div>' + em.map(function (e) { return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;padding:4px 0"><span>' + esc(e) + ' <span class="muted" style="font-size:14.5px">· added ' + esc(d(w.manual[e].at)) + '</span></span><button class="btn small ghost danger" data-wrm="' + esc(e) + '" aria-label="Stop the series for ' + esc(e) + '">✕</button></div>'; }).join('') : '';
       $$('[data-wrm]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop the welcome series for ' + b.dataset.wrm + '?')) return; try { w.manual = (await api('msg-welcome-remove', { email: b.dataset.wrm })).welcome.manual; drawMan(); toast('Stopped for ' + b.dataset.wrm); } catch (x) { toast(x.message); } }; });
     };
     drawMan();
@@ -704,7 +704,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var hl = function (k) { return changed[k] ? ' style="background:#FFF4D6;border-radius:4px"' : ''; };
     return '<div class="mkc"><div class="mkc-img"' + (changed.imgs ? ' style="outline:3px solid #FFB81C"' : '') + '>' + (f.imgs && f.imgs.length ? '<img src="' + esc(mkImg(f.imgs[0])) + '" alt="">' : '<span class="muted">No photo</span>') + (f.imgs && f.imgs.length > 1 ? '<span class="mkc-n">1/' + f.imgs.length + '</span>' : '') + '<span class="mkc-cat"' + hl('category') + '>' + (MK_EMOJI[f.category] || '🛍️') + ' ' + esc(f.category) + '</span></div>' +
       '<div class="mkc-b"><b' + hl('name') + '>' + esc(f.name) + '</b><div class="muted"' + hl('business') + '>' + esc(f.business) + '</div><div class="mkc-d"' + hl('desc') + '>' + esc(f.desc) + '</div>' + (f.price ? '<div class="mkc-p"' + hl('price') + '>' + esc(f.price) + '</div>' : '') +
-      '<div class="mkc-btn"' + hl('btnText') + '>' + esc(f.btnText) + '</div><div class="muted" style="font-size:11.5px;margin-top:6px;word-break:break-all"' + hl(f.link ? 'link' : 'wa') + '>' + (f.link ? '🔗 ' + esc(f.link) : f.wa ? '💬 WhatsApp +' + esc(f.wa) : '') + (f.endsAt ? '<br>Ends ' + esc(d(f.endsAt)) : '') + '</div></div></div>';
+      '<div class="mkc-btn"' + hl('btnText') + '>' + esc(f.btnText) + '</div><div class="muted" style="font-size:13.5px;margin-top:6px;word-break:break-all"' + hl(f.link ? 'link' : 'wa') + '>' + (f.link ? '🔗 ' + esc(f.link) : f.wa ? '💬 WhatsApp +' + esc(f.wa) : '') + (f.endsAt ? '<br>Ends ' + esc(d(f.endsAt)) : '') + '</div></div></div>';
   }
   function mkDiff(a, b) {
     var out = {}; if (!a || !b) return out;
@@ -844,7 +844,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     function draw() {
       if (s) s.remove();
       s = sheet('<h2 style="margin:0">' + (x ? 'Edit listing' : 'Add a listing') + '</h2>' + (x ? '<div class="muted">' + (editingDraft ? 'You’re editing the version waiting for review — approve it afterwards to publish.' : 'Changes go live straight away.') + '</div>' + mkWho(x) : '<div class="muted">Listings you add go live straight away.</div>') +
-        '<div><b>Photos</b> <span class="muted">(up to 4, first is the main photo)</span><div class="row" style="gap:8px;margin-top:6px">' + f.imgs.map(function (ref, i) { return '<div style="position:relative"><img src="' + esc(mkImg(ref)) + '" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><button class="btn small ghost danger" data-phx="' + i + '" style="position:absolute;top:2px;right:2px;min-height:22px;padding:0 6px">×</button>' + (i ? '<button class="btn small ghost" data-ph1="' + i + '" style="position:absolute;bottom:2px;left:2px;min-height:20px;padding:0 5px;font-size:11px">Make main</button>' : '<span class="pill p-active" style="position:absolute;bottom:3px;left:3px">Main</span>') + '</div>'; }).join('') +
+        '<div><b>Photos</b> <span class="muted">(up to 4, first is the main photo)</span><div class="row" style="gap:8px;margin-top:6px">' + f.imgs.map(function (ref, i) { return '<div style="position:relative"><img src="' + esc(mkImg(ref)) + '" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><button class="btn small ghost danger" data-phx="' + i + '" style="position:absolute;top:2px;right:2px;min-height:22px;padding:0 6px">×</button>' + (i ? '<button class="btn small ghost" data-ph1="' + i + '" style="position:absolute;bottom:2px;left:2px;min-height:20px;padding:0 5px;font-size:13px">Make main</button>' : '<span class="pill p-active" style="position:absolute;bottom:3px;left:3px">Main</span>') + '</div>'; }).join('') +
           (f.imgs.length < 4 ? '<label class="btn small ghost" style="cursor:pointer;height:84px;display:flex;align-items:center">+ Add photo<input type="file" accept="image/*" id="mkPh" multiple style="display:none"></label>' : '') + '</div></div>' +
         '<div class="f2"><div><label for="mkN">Name</label><input id="mkN" value="' + esc(f.name) + '"></div><div><label for="mkB">Business</label><input id="mkB" value="' + esc(f.business) + '"></div></div>' +
         '<div class="f2"><div><label for="mkC">Category</label><select id="mkC">' + cats.map(function (c) { return '<option' + (f.category === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></div><div><label for="mkP">Price</label><input id="mkP" value="' + esc(f.price) + '"></div></div>' +
@@ -894,13 +894,13 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     if (x.email) ch.push('<a class="btn small ghost" data-ivvia="email" data-s="' + esc(x.slug) + '" href="mailto:' + esc(x.email) + '?subject=' + encodeURIComponent('Join the Auntie Tobi Business Club') + '&body=' + enc + '">Email</a>');
     ch.push('<button class="btn small ghost" data-ivcopy="' + esc(x.slug) + '">Copy message</button>');
     return '<div class="iv" data-row="' + esc(x.slug) + '">' +
-      '<div class="iv-h"><b>' + esc(x.name) + '</b><span class="muted" style="font-size:13px">' + esc([x.cat, x.loc].filter(Boolean).join(' · ')) + '</span><span class="pill ' + (IV_PILL[x.status] || '') + '">' + esc(x.label) + '</span>' + (isNewToday ? '<span class="pill p-pending">New today</span>' : '') + ivNext(x, today) +
-        '<a href="' + esc(x.listing) + '" target="_blank" rel="noopener" style="margin-left:auto;font-size:13px">Listing ↗</a></div>' +
+      '<div class="iv-h"><b>' + esc(x.name) + '</b><span class="muted" style="font-size:15px">' + esc([x.cat, x.loc].filter(Boolean).join(' · ')) + '</span><span class="pill ' + (IV_PILL[x.status] || '') + '">' + esc(x.label) + '</span>' + (isNewToday ? '<span class="pill p-pending">New today</span>' : '') + ivNext(x, today) +
+        '<a href="' + esc(x.listing) + '" target="_blank" rel="noopener" style="margin-left:auto;font-size:15px">Listing ↗</a></div>' +
       '<div class="iv-em">' + (x.email
-        ? '✉️ <span class="iv-addr">' + esc(x.email) + '</span>' + (x.emailAdded ? '<span class="muted" style="font-size:12px">(added by you)</span>' : '') +
+        ? '✉️ <span class="iv-addr">' + esc(x.email) + '</span>' + (x.emailAdded ? '<span class="muted" style="font-size:14px">(added by you)</span>' : '') +
           '<button class="btn small ghost" data-ivcem="' + esc(x.slug) + '">📋 Copy</button><button class="btn small ghost" data-ivem="' + esc(x.slug) + '" title="Change email" style="color:var(--muted)">✎</button>'
         : '<span class="muted">✉️ No email</span><button class="btn small ghost" data-ivem="' + esc(x.slug) + '">+ Add email</button>') + '</div>' +
-      (canSend ? '<div class="row" style="gap:6px;align-items:center"><span style="font-size:13px;font-weight:700;margin-right:2px">' + IV_KIND[x.nextKind] + ':</span>' + ch.join('') + (!x.wa && !x.ig && !x.email ? '<span class="muted" style="font-size:13px">No WhatsApp, Instagram or email on the listing' + (x.phone ? ' — phone ' + esc(x.phone) : '') + '</span>' : '') + '</div>' : '') +
+      (canSend ? '<div class="row" style="gap:6px;align-items:center"><span style="font-size:15px;font-weight:700;margin-right:2px">' + IV_KIND[x.nextKind] + ':</span>' + ch.join('') + (!x.wa && !x.ig && !x.email ? '<span class="muted" style="font-size:15px">No WhatsApp, Instagram or email on the listing' + (x.phone ? ' — phone ' + esc(x.phone) : '') + '</span>' : '') + '</div>' : '') +
       '<div class="iv-sent hidden" data-sent="' + esc(x.slug) + '"><span>Sent it?</span><button class="btn small primary" data-ivact="sent" data-s="' + esc(x.slug) + '">✓ Mark as sent</button><button class="btn small ghost" data-ivhide="' + esc(x.slug) + '">Not yet</button></div>' +
       '<div class="row" style="gap:6px">' + (x.status === 'joined' ? '' :
         (canSend ? '<button class="btn small ghost" data-ivact="sent" data-s="' + esc(x.slug) + '" title="Mark as sent without opening">✓ Sent</button>' : '') +
@@ -959,7 +959,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
         var x = byS(b.dataset.ivem);
         var s2 = sheet('<h2 style="margin:0">' + (x.email ? 'Change email' : 'Add email') + ' — ' + esc(x.name) + '</h2><p class="muted">Saved in Admin for copying and the GHL download. It doesn’t change their public listing.</p>' +
           '<div><label for="ivE">Email</label><input id="ivE" type="email" value="' + esc(x.email) + '" placeholder="hello@business.co.uk" autocomplete="off"></div>' +
-          (x.listingEmail && x.emailAdded ? '<p class="muted" style="font-size:13px;margin:0">Listing email: ' + esc(x.listingEmail) + '</p>' : '') +
+          (x.listingEmail && x.emailAdded ? '<p class="muted" style="font-size:15px;margin:0">Listing email: ' + esc(x.listingEmail) + '</p>' : '') +
           '<div class="err hidden" id="ivEe"></div>' +
           '<div class="row"><button class="btn primary" id="ivEs">Save email</button><button class="btn ghost" id="ivEx">Cancel</button>' + (x.emailAdded ? '<button class="btn link" id="ivEr" style="margin-left:auto">Use the listing’s email' + (x.listingEmail ? '' : ' (none)') + '</button>' : '') + '</div>');
         var inp = $('#ivE', s2); inp.focus();
@@ -1001,7 +1001,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       b.onclick = function () {
         var x = byS(b.dataset.ivmore);
         var s2 = sheet('<h2 style="margin:0">' + esc(x.name) + '</h2><div class="muted">' + esc([x.cat, x.loc].filter(Boolean).join(' · ')) + '</div>' +
-          '<div class="muted" style="font-size:13px">' + [x.wa ? 'WhatsApp ' + esc(x.wa) : '', x.phone ? 'Phone ' + esc(x.phone) : '', x.ig ? '@' + esc(x.ig) : '', x.email ? esc(x.email) : '', x.website ? '<a href="' + esc(x.website) + '" target="_blank" rel="noopener">Website ↗</a>' : ''].filter(Boolean).join(' · ') + '</div>' +
+          '<div class="muted" style="font-size:15px">' + [x.wa ? 'WhatsApp ' + esc(x.wa) : '', x.phone ? 'Phone ' + esc(x.phone) : '', x.ig ? '@' + esc(x.ig) : '', x.email ? esc(x.email) : '', x.website ? '<a href="' + esc(x.website) + '" target="_blank" rel="noopener">Website ↗</a>' : ''].filter(Boolean).join(' · ') + '</div>' +
           '<div><label for="ivN">Notes</label><textarea id="ivN" rows="3" placeholder="e.g. Spoke to Tolu — wants to join after Christmas">' + esc(x.notes) + '</textarea></div>' +
           '<div><b>History</b>' + (x.history.length ? '<ul style="margin:6px 0 0 18px">' + x.history.map(function (h) { return '<li>' + esc(new Date(h.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + ' — ' + esc(h.what) + '</li>'; }).join('') + '</ul>' : '<p class="muted" style="margin:4px 0">Not contacted yet.</p>') + '</div>' +
           '<div class="row"><button class="btn primary" id="ivNs">Save notes</button><button class="btn ghost" id="ivNx">Close</button>' + (x.status !== 'new' ? '<button class="btn ghost danger" id="ivR" style="margin-left:auto">Reset to not contacted</button>' : '') + '</div>');
@@ -1014,7 +1014,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     $('#ivMsgs').onclick = function () {
       var t = r.templates, L = { invite: '1. First invite', fu1: '2. Follow-up (3 days later)', fu2: '3. Last check-in (7 days after that)' };
       var s2 = sheet('<h2 style="margin:0">Invite messages</h2><p class="muted">Use <b>{name}</b> for the business name, <b>{listing}</b> for their Auntie Tobi listing link and <b>{club}</b> for the Business Club link.</p>' +
-        Object.keys(L).map(function (k) { return '<div><label for="ivT_' + k + '">' + L[k] + '</label><textarea id="ivT_' + k + '" rows="9">' + esc(t[k]) + '</textarea><button class="btn link" data-ivdef="' + k + '" style="font-size:13px">Reset to original</button></div>'; }).join('') +
+        Object.keys(L).map(function (k) { return '<div><label for="ivT_' + k + '">' + L[k] + '</label><textarea id="ivT_' + k + '" rows="9">' + esc(t[k]) + '</textarea><button class="btn link" data-ivdef="' + k + '" style="font-size:15px">Reset to original</button></div>'; }).join('') +
         '<div class="row"><button class="btn primary" id="ivTs">Save messages</button><button class="btn ghost" id="ivTx">Close</button></div>');
       $$('[data-ivdef]', s2).forEach(function (b) { b.onclick = function () { $('#ivT_' + b.dataset.ivdef, s2).value = r.defaults[b.dataset.ivdef]; }; });
       $('#ivTx', s2).onclick = function () { s2.remove(); };
@@ -1034,7 +1034,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     if (g.handle) return '<a class="btn small ghost ig" target="_blank" rel="noopener" href="https://www.instagram.com/' + encodeURIComponent(g.handle) + '/" title="Open their Instagram">📷 @' + esc(g.handle) + ' ↗</a>' +
       (g.source === 'admin' ? '<button class="btn small ghost" data-tig="' + esc((it.meta && it.meta.email) || g.email || '') + '" data-cur="' + esc(g.handle) + '" title="Change Instagram" style="color:var(--muted)">✎</button>' : '');
     var em = (it.meta && it.meta.email) || g.email;
-    return em ? '<span class="muted" style="font-size:13px;align-self:center">No Instagram on file</span><button class="btn small ghost" data-tig="' + esc(em) + '">+ Add Instagram</button>' : '';
+    return em ? '<span class="muted" style="font-size:15px;align-self:center">No Instagram on file</span><button class="btn small ghost" data-tig="' + esc(em) + '">+ Add Instagram</button>' : '';
   }
   function tdActions(it) {
     var m = it.meta || {}, out = [tdIg(it)];
