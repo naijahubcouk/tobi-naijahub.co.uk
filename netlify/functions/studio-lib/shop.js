@@ -35,7 +35,7 @@ async function save(email, raw) {
     const old = cur && cur.items.find(o => o.id === it.id);
     return {
       id: old ? old.id : newId(),
-      name: cleanText(it && it.name, 70), price: cleanText(it && it.price, 30), desc: cleanText(it && it.desc, 260),
+      name: cleanText(it && it.name, 70), price: (v => (/^\d+(\.\d{1,2})?$/.test(v) ? `£${v}` : v))(cleanText(it && it.price, 30)), desc: cleanText(it && it.desc, 260),
       hasImg: old ? !!old.hasImg : false, imgV: old ? old.imgV || 0 : 0,
     };
   }).filter(it => it.name);
