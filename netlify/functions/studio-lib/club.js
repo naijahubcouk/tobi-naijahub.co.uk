@@ -1,7 +1,7 @@
 'use strict';
 /*
  * Business Club payments through the Stripe Payment Link → automatic Business Studio access.
- *   STUDIO_CLUB_PAYMENT_LINK = plink_… (the ID of your £50 Business Club payment link)
+ *   STUDIO_CLUB_PAYMENT_LINK = plink_… (the ID of your £50 Business Club payment link; several allowed, comma-separated)
  * When that link is paid, the email used at checkout becomes an active Business Club member
  * for 12 months (renewals add 12 months to the current expiry, so no days are lost).
  * Refunds and disputes only alert the admin — access is never removed automatically.
@@ -13,10 +13,11 @@ function addYear(day) { const d = new Date(`${day}T12:00:00Z`); d.setUTCFullYear
 function siteUrl() { return String(core.env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
 
 function isClubSession(session) {
-  const link = core.env('STUDIO_CLUB_PAYMENT_LINK');
-  if (!link || !session || session.object !== 'checkout.session') return false;
+  // One or more link IDs, comma-separated (e.g. a new link plus the old one while it's still in use).
+  const links = String(core.env('STUDIO_CLUB_PAYMENT_LINK') || '').split(',').map(x => x.trim()).filter(Boolean);
+  if (!links.length || !session || session.object !== 'checkout.session') return false;
   const pl = typeof session.payment_link === 'string' ? session.payment_link : session.payment_link && session.payment_link.id;
-  return pl === link && session.payment_status === 'paid';
+  return links.includes(pl) && session.payment_status === 'paid';
 }
 
 function businessNameFrom(session) {
