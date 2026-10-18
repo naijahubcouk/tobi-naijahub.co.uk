@@ -10,7 +10,8 @@
  * Members whose account was created after the series was switched on ("since") get it,
  * plus anyone added by hand. A member never gets the same message twice.
  *
- * Two series: 'club' (Business Club and paid plans — keys above) and 'free' (Free plan accounts):
+ * Three series: 'club' (Business Club — keys above), 'plus' (Business Studio Plus/Pro without the Club) and 'free' (Free plan):
+ *   msg/welcome-plus / msg/welp/<email>   (Plus)
  *   msg/welcome-free       same shape, plus email: true|false (also send each message as a short email)
  *   msg/welf/<email>       per member
  * The Free series stops as soon as someone upgrades.
@@ -20,10 +21,10 @@ const { HttpError, cas, getJson, setJson } = core;
 const messages = require('./messages');
 const notify = require('./notify');
 
-const SERIES = ['club', 'free'];
-const ser = x => (x === 'free' ? 'free' : 'club');
-const cfgKey = x => (ser(x) === 'free' ? 'msg/welcome-free' : 'msg/welcome');
-const progKeyS = (x, e) => (ser(x) === 'free' ? `msg/welf/${core.enc(e)}` : `msg/wel/${core.enc(e)}`);
+const SERIES = ['club', 'plus', 'free'];
+const ser = x => (x === 'free' || x === 'plus' ? x : 'club');
+const cfgKey = x => ({ free: 'msg/welcome-free', plus: 'msg/welcome-plus', club: 'msg/welcome' })[ser(x)];
+const progKeyS = (x, e) => `${({ free: 'msg/welf/', plus: 'msg/welp/', club: 'msg/wel/' })[ser(x)]}${core.enc(e)}`;
 const KEY = cfgKey('club');
 const progKey = e => progKeyS('club', e);
 const DEFAULT_STEPS = [
@@ -41,8 +42,17 @@ const FREE_STEPS = [
   { id: 'f5', days: 9, on: true, subject: 'Free tools you might have missed', text: 'Free tools you might have missed: a price list page with WhatsApp ordering, a review link & QR code, and quotes & invoices with your bank details. Find them in Account → Your links.' },
   { id: 'f6', days: 14, on: true, subject: 'Two weeks in 🎉', text: 'Two weeks in 🎉 How’s it going, {business}? If you’d like more help, Business Studio Plus (£50/year) adds 50 daily AI credits, every lesson and the full template library — and the Business Club (£50/year) adds promotion by Auntie Tobi too. Any questions, just reply — I read every message 💚' },
 ];
-const defaultsFor = x => (ser(x) === 'free' ? FREE_STEPS : DEFAULT_STEPS);
-const empty = (x) => ({ on: false, since: '', steps: defaultsFor(x).map(s => ({ ...s })), stats: {}, manual: {}, ...(ser(x) === 'free' ? { email: false } : {}) });
+const PLUS_STEPS = [
+  { id: 'p1', days: 0, on: true, subject: 'Welcome to Business Studio Plus ⭐', text: 'Welcome to Business Studio Plus, {business} ⭐ You now have 50 daily AI credits, every tool (including the advanced ones), all the Growth Lessons and the full Templates & Tools library. A good first step: Resources → Start Here.' },
+  { id: 'p2', days: 1, on: true, subject: 'Plan a whole month in one go', text: 'Plan a whole month in one go: in Plan, tap ✨ Plan 7 or 30 days with AI. A 30-day plan uses 3 of your 50 daily AI credits — put the posts on your calendar, or add them to Ideas and choose the dates yourself.' },
+  { id: 'p3', days: 3, on: true, subject: 'Your Templates & Tools library', text: 'Your Templates & Tools library has customer message scripts, pricing calculators, checklists and planners, grouped by what your business needs. Tap ☆ Save on the ones you’ll use again.' },
+  { id: 'p4', days: 5, on: true, subject: 'Lessons picked for {business}', text: 'Do the Business Basics Health Check (5 minutes), then look at Recommended for {business} in Resources → Continue — lessons picked from your gaps and your goals.' },
+  { id: 'p5', days: 10, on: true, subject: 'Get paid faster', text: 'Get paid faster: send quotes and invoices with your bank details, and share your price list page with WhatsApp ordering. Find them in Account → Your links.' },
+  { id: 'p6', days: 21, on: true, subject: 'Three weeks in 🎉', text: 'Three weeks in 🎉 How is Plus working for you, {business}? Tell me one thing you’d love Business Studio to do for your business — just reply, I read every message 💚' },
+];
+const defaultsFor = x => ({ free: FREE_STEPS, plus: PLUS_STEPS, club: DEFAULT_STEPS })[ser(x)];
+const hasEmail = x => ser(x) !== 'club';
+const empty = (x) => ({ on: false, since: '', steps: defaultsFor(x).map(s => ({ ...s })), stats: {}, manual: {}, ...(hasEmail(x) ? { email: false } : {}) });
 
 async function get(x) { const c = await getJson(cfgKey(x)); return c ? { ...empty(x), ...c, stats: c.stats || {}, manual: c.manual || {} } : empty(x); }
 
@@ -65,7 +75,7 @@ async function save(raw, x) {
         return { id: s.id, days, text: text || s.text, on: r.on !== false, ...(subject ? { subject } : {}) };
       });
     }
-    if (x === 'free' && typeof raw.email === 'boolean') c.email = raw.email;
+    if (hasEmail(x) && typeof raw.email === 'boolean') c.email = raw.email;
     if (typeof raw.on === 'boolean') {
       // First switch-on decides who counts as "new". Optionally include people who joined in the last 14 days.
       if (raw.on && !c.on && !c.since) c.since = raw.includeRecent ? new Date(Date.now() - 14 * core.DAY).toISOString() : core.nowIso();
@@ -125,7 +135,9 @@ async function runSeries(opts, x) {
     const manual = !!cfg.manual[core.normalizeEmail(m.email)];
     if (!manual && (!m.createdAt || m.createdAt < cfg.since)) continue;
     const acc = core.access(m, opts.settings);
-    if (x === 'free' ? !acc.free : (!acc.canView || acc.free)) continue;   // each plan gets its own series; Free stops on upgrade
+    // Each plan gets its own series: Club (incl. Club + Plus), Plus/Pro without the Club, Free. A series stops when the plan changes.
+    const plan = acc.membershipActive ? 'club' : acc.powerActive ? 'plus' : acc.free ? 'free' : '';
+    if (plan !== x) continue;
     report.checked++;
     const p = (await getJson(progKeyS(x, m.email))) || { startedAt: now.toISOString(), sent: {} };
     if (p.stopped) continue;
@@ -142,7 +154,7 @@ async function runSeries(opts, x) {
       await setJson(progKeyS(x, m.email), p);
       await cas(cfgKey(x), cur => (cur ? { ...cur, stats: { ...(cur.stats || {}), [next.id]: ((cur.stats || {})[next.id] || 0) + 1 } } : undefined));
       await notify.pushToMember(m.email, 'Message from Auntie Tobi 💚', text.length > 120 ? text.slice(0, 117) + '…' : text, { always: true, path: '/studio#messages' });
-      if (x === 'free' && cfg.email) await sendWelcomeEmail(m.email, next, text, biz).catch(e => console.error('[studio] welcome email failed', e && e.message));
+      if (hasEmail(x) && cfg.email) await sendWelcomeEmail(m.email, next, text, biz).catch(e => console.error('[studio] welcome email failed', e && e.message));
       report.sent++;
     } catch (e) { console.error('[studio] welcome send failed', e && e.message); }
   }
@@ -151,8 +163,9 @@ async function runSeries(opts, x) {
 
 async function run(opts) {
   const club = await runSeries(opts, 'club');
+  const plus = await runSeries(opts, 'plus');
   const free = await runSeries(opts, 'free');
-  return { ...club, free };
+  return { ...club, plus, free };
 }
 
 // Free series email: short, with a one-click unsubscribe (the chat message is still sent).
@@ -171,4 +184,4 @@ async function sendWelcomeEmail(email, step, text, biz) {
   return true;
 }
 
-module.exports = { get, save, run, runSeries, addMember, removeMember, DEFAULT_STEPS, FREE_STEPS, SERIES };
+module.exports = { get, save, run, runSeries, addMember, removeMember, DEFAULT_STEPS, FREE_STEPS, PLUS_STEPS, SERIES };

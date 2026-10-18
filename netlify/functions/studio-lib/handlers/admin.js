@@ -577,7 +577,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'msg-welcome-save': {
       const w = await require('../welcome').save(body.welcome, body.series);
-      await core.audit(actor, 'msg_welcome', { on: w.on, series: body.series === 'free' ? 'free' : 'club' });
+      await core.audit(actor, 'msg_welcome', { on: w.on, series: ['free', 'plus'].includes(body.series) ? body.series : 'club' });
       return { welcome: w };
     }
     case 'msg-ann-save': return { annSaved: await messages.saveAnnouncementDraft(body.item) };
