@@ -57,7 +57,7 @@ async function onSync(email, prev, next) {
     const isNewSub = !prev || prev.subscriptionId !== next.subscriptionId || !LIVE.includes(prev.status);
     if (LIVE.includes(next.status) && isNewSub && !next.cancelAtPeriodEnd) {
       const m = mail(`Welcome to ${t.name} 💚`, [
-        `Thank you! Your <b>${esc(t.name)}</b> is active — <b>${lim} AI generations a day</b> and every Business Studio tool, including the advanced ones.`,
+        `Thank you! Your <b>${esc(t.name)}</b> is active — <b>${lim} daily AI credits</b> and every Business Studio tool, including the advanced ones.`,
         next.currentPeriodEnd ? `Your next payment is <b>${gbp(amountOf(next))} on ${esc(longDate(next.currentPeriodEnd))}</b>. It renews automatically every ${periodWord(next)} — we’ll remind you before each payment${next.interval === 'year' ? ' (7 days and 1 day before)' : ' (3 days before)'}.` : `It renews automatically every ${periodWord(next)} — we’ll remind you before each payment.`,
         'You can cancel any time in two taps: Business Studio → Account → Cancel subscription — or use the button below.',
       ], [['Open Business Studio', `${siteUrl()}/studio`], ['Cancel subscription', cancelLink(email, next.subscriptionId)]]);
