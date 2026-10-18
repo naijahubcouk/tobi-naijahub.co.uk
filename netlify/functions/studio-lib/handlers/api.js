@@ -81,6 +81,7 @@ exports.handler = handler(async (ctx) => {
         tools: tools.publicToolList(),
         tones: Object.keys(tools.TONES),
         limits: { free: auth.settings.freeLimit, standard: auth.settings.standardLimit, pro: auth.settings.proLimit, power: auth.settings.powerLimit },
+        credits: require('../credits').enabled(auth.settings) ? { packs: require('../credits').packs(auth.settings), validMonths: 12 } : null,
         billing: { enabled: stripe.billingEnabled(), intervals: stripe.billingEnabled() ? stripe.availableIntervals() : [], plans: stripe.billingEnabled() ? stripe.availablePlans() : {} },
       };
       if (!m || !auth.access.canView) {

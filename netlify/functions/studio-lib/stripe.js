@@ -29,16 +29,18 @@ function prices() {
     pro: { month: env('STRIPE_PRICE_PRO_MONTHLY') || null, year: env('STRIPE_PRICE_PRO_YEARLY') || null },
   };
 }
-function availablePlans() {   // { pro: ['month','year'], plus: [...] } — only what's configured
+// Plans for sale. Plus is no longer sold (existing Plus subscribers keep it — prices() still recognises them).
+const FOR_SALE = ['pro'];
+function availablePlans() {   // { pro: ['month','year'] } — only what's configured and for sale
   const p = prices(), out = {};
-  for (const t of TIERS) { const iv = ['month', 'year'].filter(i => p[t][i]); if (iv.length) out[t] = iv; }
+  for (const t of FOR_SALE) { const iv = ['month', 'year'].filter(i => p[t][i]); if (iv.length) out[t] = iv; }
   return out;
 }
 function billingEnabled() {
   return !!(env('STRIPE_SECRET_KEY') && env('STRIPE_WEBHOOK_SECRET') && Object.keys(availablePlans()).length);
 }
-function availableIntervals() {   // kept for older callers: intervals of Plus
-  return availablePlans().plus || [];
+function availableIntervals() {   // kept for older callers
+  return availablePlans().pro || [];
 }
 
 function formEncode(obj, prefix, out) {
@@ -221,20 +223,20 @@ function siteUrl(event) {
 }
 
 async function startCheckout(email, interval, event, tier) {
-  tier = tier === 'pro' ? 'pro' : 'plus';
+  tier = 'pro';
   const priceId = prices()[tier][interval];
   if (!priceId) throw new HttpError(400, 'invalid_plan', 'That plan is not available.');
   const member = await core.getMember(email);
   if (member && member.blocked) throw new HttpError(403, 'account_blocked', 'This account has been suspended.');
   if (member && member.addon && core.LIVE_SUB_STATUSES.includes(member.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio add-on. Use "Switch plan, manage or cancel" to move between Pro and Plus.');
+    throw new HttpError(409, 'already_subscribed', 'You already have Business Studio Pro. Use "Manage or cancel" in your Account.');
   }
 
   // Re-check with Stripe in case a webhook hasn't arrived yet.
   const customerId = await ensureCustomer(email);
   const synced = await syncCustomer(customerId);
   if (synced && synced.addon && core.LIVE_SUB_STATUSES.includes(synced.addon.status)) {
-    throw new HttpError(409, 'already_subscribed', 'You already have a Business Studio add-on. Use "Switch plan, manage or cancel" to move between Pro and Plus.');
+    throw new HttpError(409, 'already_subscribed', 'You already have Business Studio Pro. Use "Manage or cancel" in your Account.');
   }
 
   // One open checkout per plan at a time: reuse it rather than creating another.
@@ -283,6 +285,6 @@ async function portalUrl(email, event) {
 }
 
 module.exports = {
-  api, verifyWebhook, syncCustomer, startCheckout, portalUrl, emailForCustomer,
+  api, verifyWebhook, syncCustomer, startCheckout, portalUrl, emailForCustomer, ensureCustomer, siteUrl,
   billingEnabled, availableIntervals, availablePlans, prices, planOf, API_VERSION, TIERS,
 };

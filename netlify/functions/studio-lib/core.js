@@ -25,6 +25,8 @@ const DEFAULT_SETTINGS = {
   inputPricePerMUsd: 0.15,      // used only when the provider does not report cost
   outputPricePerMUsd: 0.60,
   usdToGbp: 0.79,
+  creditsOn: true,              // AI credit top-ups (one-off Stripe payments)
+  creditPacks: [{ id: 'p300', credits: 300, pence: 500 }, { id: 'p750', credits: 750, pence: 1000 }, { id: 'p1600', credits: 1600, pence: 2000 }],
 };
 
 const SESSION = {

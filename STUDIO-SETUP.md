@@ -487,3 +487,12 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - **Templates & Tools** are grouped by business need (Planning & Goals, Social Media & Content, Customers & Follow-ups, Pricing/Sales & Money, Marketing & Promotions, Productivity & Operations, Business Club Toolkit), with a Type filter. New: 4 calculators (product pricing, service pricing, profit margin, promotion profit) and links to the Business Studio tools (Plan, Customers, Track, Quotes & invoices, To-do, Weekly goal, Marketplace).
 - **Send to a Studio tool:** checklists → "Add unticked items to my to-do list"; worksheets → "Turn my answers into tasks"; content templates → "Send to Plan ideas"; customer scripts → "Use with a customer". Checklists print to PDF; worksheets and calculators download as CSV.
 - **Admin → Resources:** each resource has a group, a "Send to" button choice, Free plan and show/hide switches; calculators have a type; "+ Link to a Studio tool"; published lessons have an **Unpublish** button.
+
+## 7af. Plans: Free, Business Club, Pro + AI credit top-ups
+
+- **For sale:** Free (5 a day), Business Club (£50/year, 20 a day + promotion), **Business Studio Pro** (£3/month or £30/year, 50 a day). **Plus is no longer sold** — existing Plus subscribers keep it (100 a day) until they cancel. In Stripe → Settings → Billing → **Customer portal → Switch plans**, remove the Plus prices so nobody can switch to it.
+- **AI credit top-ups** (any plan, including Free): £5 for 300 · £10 for 750 · £20 for 1,600. One-off payment through Stripe Checkout — nothing renews. **No Stripe products to create**: the app sends the pack name and price. Set packs or switch top-ups off in Admin → Allowances & limits.
+- Daily generations are used first, then credits (oldest first). Credits last 12 months. A failed generation costs nothing. Credits add generations only — advanced tools still need the Club or Pro.
+- The Stripe webhook already listens to `checkout.session.completed` (adds the credits once) and `charge.refunded` (removes the unused credits from that purchase and alerts you).
+- **Admin:** Overview shows credit sales this month and the average AI cost per generation; Members → Manage → **AI credits** to gift (e.g. 50) or remove (e.g. -50).
+- Out of generations, members see **Buy credits** or **Upgrade** (Free → Club or Pro; Club → Pro).

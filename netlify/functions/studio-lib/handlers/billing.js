@@ -8,6 +8,7 @@
 const core = require('../core');
 const stripe = require('../stripe');
 const subcare = require('../subcare');
+const credits = require('../credits');
 const { HttpError, handler } = core;
 
 exports.handler = handler(async (ctx) => {
@@ -28,11 +29,20 @@ exports.handler = handler(async (ctx) => {
     case 'checkout': {
       if (!stripe.billingEnabled()) throw new HttpError(503, 'billing_not_configured', 'Business Studio Pro isn\'t available to buy just yet.');
       const interval = ctx.body.interval === 'year' ? 'year' : 'month';
-      const tier = ctx.body.tier === 'pro' ? 'pro' : 'plus';
+      const tier = 'pro';   // Plus is no longer sold
       if (!(stripe.availablePlans()[tier] || []).includes(interval)) throw new HttpError(400, 'invalid_plan', 'That plan is not available.');
       core.requireFresh(auth, core.SESSION.freshBillingMs);
       await core.rateLimit('checkout', email, 10, 60 * 60 * 1000);
       return { url: await stripe.startCheckout(email, interval, ctx.event, tier) };
+    }
+    // AI credit top-ups: one-off payment, no renewal. Any Business Studio account (Free, Club, Pro).
+    case 'credits': {
+      return { enabled: credits.enabled(auth.settings), packs: credits.packs(auth.settings), validMonths: 12, ...(await credits.summary(email)) };
+    }
+    case 'credits-checkout': {
+      if (!auth.member || !auth.access.canCreate) throw new HttpError(403, 'no_access', 'You need a Business Studio account to buy credits.');
+      await core.rateLimit('credits-checkout', email, 15, 60 * 60 * 1000);
+      return { url: await credits.startCheckout(email, String(ctx.body.pack || ''), ctx.event, auth.settings) };
     }
     case 'portal': {
       core.requireFresh(auth, core.SESSION.freshBillingMs);

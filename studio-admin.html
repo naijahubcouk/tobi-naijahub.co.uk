@@ -1108,7 +1108,9 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     if (/log/.test(c.email)) issues.push('STUDIO_EMAIL_MODE=log is on: codes go to function logs, not email. Testing only — never in production.');
     if (!c.ai) issues.push('No AI key found (OPENROUTER_API_KEY / STUDIO_OPENROUTER_API_KEY).');
     if (!c.stripe) issues.push('Stripe isn\u2019t fully configured \u2014 Business Studio Pro can\u2019t be bought yet.');
-    else if (!(c.stripeTiers || {}).pro) issues.push('Pro (\u00a33/month) isn\u2019t set up in Stripe yet \u2014 only Plus can be bought. See the setup guide, section 5.');
+    else if (!(c.stripeTiers || {}).pro) issues.push('Pro (\u00a33/month) isn\u2019t set up in Stripe yet. See the setup guide, section 5.');
+    var cs = o.credits || { month: { pence: 0, count: 0 }, lastMonth: { pence: 0, count: 0 } };
+    var perGen = m.count ? (m.costUsd || 0) / m.count : 0;
     app.innerHTML = '<main><h1 id="ovH1">Overview · ' + esc(o.month) + '</h1>' +
       (issues.length ? '<div class="warn stack" style="margin-bottom:14px">' + issues.map(function (i) { return '<div>⚠️ ' + esc(i) + '</div>'; }).join('') + '</div>' : '') +
       (o.alertCount ? '<div class="warn" style="margin-bottom:14px">You have <b>' + o.alertCount + '</b> alert(s). <button class="btn small ghost" id="toAlerts">View</button></div>' : '') +
@@ -1117,6 +1119,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       stat(power, 'Pro add-ons: ' + pros + ' Pro, ' + pluses + ' Plus (' + (power - yearly) + ' monthly, ' + yearly + ' yearly)') +
       stat(m.count || 0, 'Generations this month') + stat(gbp(m.costUsd || 0), 'Estimated AI cost this month') +
       stat('\u00a3' + revenue.toFixed(2), 'Pro + Plus revenue / month (gross, yearly spread over 12)') +
+      stat('\u00a3' + (cs.month.pence / 100).toFixed(2), 'Credit top-ups this month (' + cs.month.count + ' pack' + (cs.month.count === 1 ? '' : 's') + ') \u00b7 last month \u00a3' + (cs.lastMonth.pence / 100).toFixed(2)) +
+      stat(perGen ? gbp(perGen) : '\u2014', 'Average AI cost per generation this month (1 credit = 1 generation)') +
       stat('\u00a3' + o.settings.spendWarnGbp, 'Spend warning amount (never blocks)') +
       '</div><h2>Pilot \u00b7 last 7 days</h2><div class="grid">' +
       stat(o.pilot.activeMembers, 'Members using daily actions or tracking') + stat(o.pilot.actionsDone, 'Daily actions completed') +
@@ -1125,7 +1129,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       '<h2>Setup</h2><div class="card"><table style="border:0"><tbody>' +
       row('Email codes', c.email) + row('AI model', c.model + (c.ai ? '' : ' (no key)')) + row('Stripe', c.stripe ? 'configured (' + c.stripeMode + ' mode)' : 'not configured') +
       row('Pro plans (£3 / £30)', ((c.stripeTiers || {}).pro || []).map(function (i) { return i === 'year' ? 'Yearly \u00a330' : 'Monthly \u00a33'; }).join(', ') || 'not set up yet — add STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_PRO_YEARLY') +
-      row('Plus plans (£5 / £50)', ((c.stripeTiers || {}).plus || []).map(function (i) { return i === 'year' ? 'Yearly \u00a350' : 'Monthly \u00a35'; }).join(', ') || 'none configured') +
+      row('Plus (£5 / £50)', 'No longer sold \u2014 existing Plus subscribers keep it (' + pluses + ' now). Remove Plus from Stripe \u2192 Customer portal \u2192 Switch plans.') +
+      row('Credit top-ups', o.credits && o.credits.enabled ? 'On \u2014 ' + o.credits.packs.map(function (p) { return '\u00a3' + (p.pence / 100) + ' for ' + p.credits; }).join(' \u00b7 ') + ' (Allowances & limits)' : 'Off') +
       row('Business Club auto-access', c.clubLink && c.webhook ? 'On \u2014 paying the Club link gives Business Studio access automatically' : 'Off \u2014 set STUDIO_CLUB_PAYMENT_LINK and the Stripe webhook (see setup guide); add members manually until then') +
       row('Spend warning', 'Email + alert at \u00a3' + o.settings.spendWarnGbp + ' and \u00a3' + (o.settings.spendWarnGbp * 2) + ' a month. The Business Studio never stops for spending.') + '</tbody></table></div></main>';
     var ta = $('#toAlerts'); if (ta) ta.onclick = function () { go('alerts'); };
@@ -1222,6 +1227,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       '<label style="display:flex;gap:8px;align-items:center;font-weight:500"><input id="mb" type="checkbox" style="width:auto"' + (m.blocked ? ' checked' : '') + '> Block account (no access at all, signs out all devices, Business Studio Pro stops renewing)</label>' +
       '<div><label for="mo">Custom daily allowance <span class="muted">(blank = plan default)</span></label><input id="mo" type="number" min="0" max="5000" value="' + (m.allowanceOverride == null ? '' : m.allowanceOverride) + '"></div>' +
       '<div><label for="mt">Private notes</label><textarea id="mt" rows="2">' + esc(m.notes) + '</textarea></div>' +
+      (email ? '<div class="card stack"><b>AI credits</b><div><span id="crBal">' + (m.credits || 0) + '</span> extra credits (used after the daily allowance)</div>' +
+        '<div class="row"><input id="crN" type="number" placeholder="e.g. 50 or -50" style="max-width:150px"><input id="crNote" placeholder="Note (optional), e.g. Sorry for the outage" style="flex:1"><button class="btn small" id="crGo">Gift / remove</button></div></div>' : '') +
       (email ? (function () {
         var biz = m.business || {};
         return '<div class="card stack"><b>Business &amp; links</b><div>' + (biz.name ? esc(biz.name) : '<span class="muted">No business profile yet</span>') + '</div>' +
@@ -1248,6 +1255,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     };
     if (email) {
       $('#mrev', s).onclick = async function () { if (!confirm('Sign this member out on every device?')) return; try { await api('member-revoke-sessions', { email: email }); toast('Signed out everywhere'); } catch (x) { toast(x.message); } };
+      var crg = $('#crGo', s); if (crg) crg.onclick = async function () { var n = Number($('#crN', s).value); if (!n) return toast('Enter a number, e.g. 50 or -50'); try { var r = await api('member-credits', { email: email, n: n, note: $('#crNote', s).value }); $('#crBal', s).textContent = r.balance; $('#crN', s).value = ''; toast(r.changed > 0 ? r.changed + ' credits added' : (-r.changed) + ' credits removed'); } catch (x) { toast(x.message); } };
       var cfw = $('#confirmW', s); if (cfw) cfw.onclick = async function () { try { await api('member-confirm-website', { email: email }); toast('Website confirmed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       var cfl = $('#confirmL', s); if (cfl) cfl.onclick = async function () { try { await api('member-confirm-listing', { email: email }); toast('Listing confirmed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
       var ulk = $('#unlinkL', s); if (ulk) ulk.onclick = async function () { if (!confirm('Remove this listing link? The member can add the right one in their profile.')) return; try { await api('member-unlink-listing', { email: email }); toast('Listing link removed'); s.remove(); vMembers(); } catch (x) { toast(x.message); } };
@@ -1316,7 +1324,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     function f(k, l, hint, step) { return '<div><label for="s_' + k + '">' + esc(l) + '</label><input id="s_' + k + '" type="number" step="' + (step || 1) + '" value="' + esc(st[k]) + '">' + (hint ? '<div class="muted">' + esc(hint) + '</div>' : '') + '</div>'; }
     app.innerHTML = '<main><h1>Allowances &amp; limits</h1><div class="card stack"><h2 style="margin:0">Daily allowances</h2><div class="f2">' +
       f('freeLimit', 'Free plan', 'Generations per day — everyday tools only. 0 = Free plan off (new sign-ups need to pay)') + f('standardLimit', 'Business Club', 'Generations per day — every tool') +
-      f('proLimit', 'Pro (£3/month · £30/year)', 'Generations per day — every tool') + f('powerLimit', 'Plus (£5/month · £50/year)', 'Generations per day — every tool') + '</div>' +
+      f('proLimit', 'Pro (£3/month · £30/year)', 'Generations per day — every tool') + f('powerLimit', 'Plus (no longer sold)', 'Existing Plus subscribers only') + '</div>' +
       '<p class="muted">Someone with more than one plan (e.g. Club + Pro) gets the highest. A 30-day content plan uses 3 generations; everything else uses 1. Allowances reset at midnight UK time.</p>' +
       '<p class="muted">Advanced tools (Club, Pro and Plus only): Repurpose, Ideal customer finder, Business SEO keywords, Sales improvement ideas, 30-day growth plan, Collaboration ideas, Business check-up — plus the 30-day content plan, full launch campaign and advanced weekly plan.</p>' +
       '<p class="muted">Changes apply immediately. Per-person custom limits (Members \u2192 Manage) override these.</p></div>' +
@@ -1325,10 +1333,21 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       f('perMinuteLimit', 'Max generations per member per minute', 'Stops bursts and scripts') + '</div></div>' +
       '<div class="card stack" style="margin-top:12px"><h2 style="margin:0">AI model &amp; pricing</h2><div><label for="s_model">Model</label><input id="s_model" value="' + esc(st.model) + '" placeholder="' + esc(o.config.model) + '"><div class="muted">Leave blank for the default (' + esc(o.config.model) + ').</div></div><div class="f2">' +
       f('inputPricePerMUsd', 'Input price ($ per 1M tokens)', 'Fallback for cost estimates', 0.01) + f('outputPricePerMUsd', 'Output price ($ per 1M tokens)', '', 0.01) + f('usdToGbp', 'USD → GBP rate', '', 0.01) + '</div></div>' +
+      '<div class="card stack" style="margin-top:12px"><h2 style="margin:0">AI credit top-ups</h2>' +
+        '<label style="font-weight:500"><input type="checkbox" id="s_creditsOn" style="width:auto"' + (st.creditsOn !== false ? ' checked' : '') + '> Let members buy extra credits (one-off payment, no renewal)</label>' +
+        '<div class="muted">Any plan can buy them, including Free. Credits only add AI generations — advanced tools still need Club or Pro. Daily generations are used first; credits last 12 months.</div>' +
+        '<table style="border:0"><thead><tr><th>Credits</th><th>Price (£)</th><th></th></tr></thead><tbody id="packRows">' + (st.creditPacks || []).map(function (p) { return '<tr><td><input type="number" min="10" data-pc="c" value="' + p.credits + '"></td><td><input type="number" min="1" step="0.01" data-pc="p" value="' + (p.pence / 100).toFixed(2) + '"></td><td><button class="btn small ghost danger" data-pcx>Remove</button></td></tr>'; }).join('') + '</tbody></table>' +
+        '<div><button class="btn small ghost" id="packAdd">+ Add a pack</button> <span class="muted">Up to 4 packs.</span></div>' +
+        (S.overview && S.overview.months ? (function () { var mm = S.overview.months.filter(function (x) { return x.month === S.overview.month; })[0]; return mm && mm.count ? '<div class="muted">This month an average generation cost <b>' + gbp(mm.costUsd / mm.count) + '</b> in AI fees.</div>' : ''; })() : '') + '</div>' +
       '<div class="err hidden" id="serr" style="margin-top:12px"></div><button class="btn primary" id="ssave" style="margin-top:12px">Save settings</button></main>';
+    function bindPackRows() { $$('[data-pcx]').forEach(function (b) { b.onclick = function () { b.closest('tr').remove(); }; }); }
+    bindPackRows();
+    $('#packAdd').onclick = function () { if ($$('#packRows tr').length >= 4) return toast('Up to 4 packs'); var tr = document.createElement('tr'); tr.innerHTML = '<td><input type="number" min="10" data-pc="c"></td><td><input type="number" min="1" step="0.01" data-pc="p"></td><td><button class="btn small ghost danger" data-pcx>Remove</button></td>'; $('#packRows').appendChild(tr); bindPackRows(); };
     $('#ssave').onclick = async function () {
       var keys = ['freeLimit', 'standardLimit', 'proLimit', 'powerLimit', 'spendWarnGbp', 'perMinuteLimit', 'inputPricePerMUsd', 'outputPricePerMUsd', 'usdToGbp'];
-      var settings = { model: $('#s_model').value.trim() }; keys.forEach(function (k) { settings[k] = $('#s_' + k).value; });
+      var settings = { model: $('#s_model').value.trim(), creditsOn: $('#s_creditsOn').checked,
+        creditPacks: $$('#packRows tr').map(function (tr) { return { credits: Number($('[data-pc=c]', tr).value), pence: Math.round(Number($('[data-pc=p]', tr).value) * 100) }; }).filter(function (p) { return p.credits || p.pence; }) };
+      keys.forEach(function (k) { settings[k] = $('#s_' + k).value; });
       try { await api('settings-save', { settings: settings }); toast('Settings saved'); } catch (x) { $('#serr').textContent = x.message; $('#serr').classList.remove('hidden'); }
     };
   }

@@ -48,6 +48,17 @@ async function mapLimit(items, n, fn) {
   return out;
 }
 
+// Credit packs from Admin: up to 4, each £1–£500 for 10–100,000 credits.
+function cleanPacks(raw) {
+  const list = (Array.isArray(raw) ? raw : []).slice(0, 4).map((p, i) => ({ id: `p${Math.round(Number(p && p.credits))}`, credits: Math.round(Number(p && p.credits)), pence: Math.round(Number(p && p.pence)) }));
+  for (const p of list) if (!(p.credits >= 10 && p.credits <= 100000 && p.pence >= 100 && p.pence <= 50000)) throw new HttpError(400, 'invalid', 'Each pack needs 10–100,000 credits and a price from £1 to £500.');
+  if (new Set(list.map(p => p.id)).size !== list.length) throw new HttpError(400, 'invalid', 'Two packs have the same number of credits.');
+  if (!list.length) throw new HttpError(400, 'invalid', 'Add at least one pack (or switch top-ups off).');
+  return list;
+}
+
+function prevMonth(m) { const [y, mo] = m.split('-').map(Number); return mo === 1 ? `${y - 1}-12` : `${y}-${String(mo - 1).padStart(2, '0')}`; }
+
 async function allMembers() {
   const keys = await core.listKeys('members/');
   const list = await mapLimit(keys, 10, k => getJson(k));
@@ -183,6 +194,7 @@ exports.handler = handler(async (ctx) => {
           stripeMode: (core.env('STRIPE_SECRET_KEY') || '').startsWith('sk_live') ? 'live' : 'test',
         },
         alertCount: alerts,
+        credits: { enabled: require('../credits').enabled(settings), packs: require('../credits').packs(settings), month: await require('../credits').salesFor(month), lastMonth: await require('../credits').salesFor(prevMonth(month)) },
         pilot: await growth.pilotSummary(7),
       };
     }
@@ -195,9 +207,11 @@ exports.handler = handler(async (ctx) => {
       const days = await mapLimit(members, 10, m => getJson(gen.usageKey(m.email, day)));
       const profiles = await mapLimit(members, 10, m => getJson(`profiles/${enc(m.email)}`));
       const shops = await mapLimit(members, 10, m => getJson(`shop/${enc(m.email)}`));
+      const creditBals = await mapLimit(members, 10, m => require('../credits').get(m.email).then(c => require('../credits').balanceOf(c)).catch(() => 0));
       return { month, day, members: members.map((m, i) => {
         const out = summarizeMember(m, settings, months[i], days[i]);
         const p = profiles[i] || {};
+        out.credits = creditBals[i] || 0;
         out.business = { name: p.businessName || '', listingSlug: p.listingSlug || '', listingUrl: p.listingSlug ? `https://www.auntietobi.co.uk/biz/${p.listingSlug}` : '',
           listingCheck: p.listingCheck || '', listingConfirmed: !!p.listingConfirmed, listingTrusted: links.trusted(p),
           websiteCheck: p.websiteCheck || '', websiteConfirmed: !!p.websiteConfirmed, websiteTrusted: webcheck.trusted(p),
@@ -241,6 +255,19 @@ exports.handler = handler(async (ctx) => {
       });
       await core.audit(actor, 'member_revoke_sessions', { email });
       return { ok: true };
+    }
+
+    case 'member-credits': {
+      // Gift (+) or remove (−) AI credits for a member.
+      const email = requireEmail(body.email);
+      const n = Math.round(Number(body.n));
+      if (!n || Math.abs(n) > 100000) throw new HttpError(400, 'invalid', 'Enter a number of credits, e.g. 50 or -50.');
+      if (!(await core.getMember(email))) throw new HttpError(404, 'not_found', 'Member not found.');
+      const cr = require('../credits');
+      const note = cleanText(body.note, 120);
+      const changed = n > 0 ? ((await cr.add(email, n, 'gift', '', { note: note || 'Added by Auntie Tobi' })) ? n : 0) : -(await cr.remove(email, -n, note || 'Removed by Auntie Tobi'));
+      await core.audit(actor, 'member_credits', { email, n: changed, note });
+      return { changed, balance: cr.balanceOf(await cr.get(email)) };
     }
 
     case 'member-confirm-website': {
@@ -315,6 +342,8 @@ exports.handler = handler(async (ctx) => {
         outputPricePerMUsd: num('outputPricePerMUsd', 0, 500, false),
         usdToGbp: num('usdToGbp', 0.1, 5, false),
         model: s.model === undefined ? settings.model : cleanText(s.model, 80),
+        creditsOn: s.creditsOn === undefined ? settings.creditsOn !== false : !!s.creditsOn,
+        creditPacks: s.creditPacks === undefined ? settings.creditPacks : cleanPacks(s.creditPacks),
       };
       if (next.model && !/^[A-Za-z0-9._:/-]+$/.test(next.model)) throw new HttpError(400, 'invalid', 'Invalid model name.');
       await core.setJson('config/settings', next);

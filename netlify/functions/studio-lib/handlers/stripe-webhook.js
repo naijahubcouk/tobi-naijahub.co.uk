@@ -8,6 +8,7 @@
 const core = require('../core');
 const stripe = require('../stripe');
 const club = require('../club');
+const credits = require('../credits');
 const { HttpError, handler } = core;
 
 const HANDLED = new Set([
@@ -31,6 +32,15 @@ exports.handler = handler(async (ctx) => {
   const obj = (event.data && event.data.object) || {};
   const done = async (out) => { await core.setJson(`stripe-events/${event.id}`, { type: event.type, at: Date.now() }); return out; };
 
+  // AI credit top-up (one-off payment) → add the credits once.
+  if (event.type === 'checkout.session.completed' && credits.isCreditSession(obj)) {
+    const r = await credits.fromSession(obj);
+    return done({ received: true, credits: r.ok ? (r.duplicate ? 'duplicate' : 'added') : r.reason });
+  }
+  if (event.type === 'charge.refunded') {
+    const r = await credits.onRefund(obj).catch(e => { console.error('[studio] credit refund handling failed', e && e.message); return null; });
+    if (r) return done({ received: true, creditsRemoved: r.removed });
+  }
   // Business Club payment link → automatic Business Studio access.
   if (event.type === 'checkout.session.completed' && club.isClubSession(obj)) {
     const r = await club.activateFromSession(obj);
