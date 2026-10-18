@@ -455,9 +455,9 @@ nav.tabs .navsep{display:none}
   <button data-tab="customers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2"/></svg>Customers</button>
   <button data-tab="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/></svg>Create</button>
   <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Plan</button>
-  <button data-tab="track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Track</button>
+  <button data-tab="track" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Track</button>
   <span class="navsep" aria-hidden="true"></span>
-  <button data-tab="library" id="libTabBtn" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Resources</button>
+  <button data-tab="library" id="libTabBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Resources</button>
   <button data-tab="messages" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>Messages</button>
   <button data-tab="account" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Account</button>
 </nav>
@@ -814,6 +814,38 @@ nav.tabs .navsep{display:none}
   // "Upgrade" takes people to the plans they can buy: Free → Club or Plus; Club → Plus.
   function upgradeGo() { if (isFree() || !S.boot.access.paidTools) showUpgrade('more AI generations and every tool'); else showRenew(); }
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-buycredits]'); if (b) { e.preventDefault(); buyCreditsSheet(); } });
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-idea]'); if (b) { e.preventDefault(); ideaSheet(b.dataset.idea); } });
+  // Ideas from members → Admin → Ideas. They see their own ideas, the status and Auntie Tobi's reply.
+  var IDEA_KINDS = [['tool', '🛠️ A new tool or feature'], ['resource', '📚 A lesson or template'], ['improve', '✨ Make something better'], ['other', '💬 Something else']];
+  var IDEA_STATUS = { new: ['Sent', 'grey'], planned: ['Planned', 'goldl'], done: ['Done ✓', 'green'], declined: ['Not now', 'grey'] };
+  function ideaSheet(kind) {
+    var k = kind || 'tool';
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="idT"><h2 id="idT" style="margin:0">💡 Share an idea</h2>' +
+      '<p class="sub" style="margin:0">What would make Business Studio more useful for your business?</p>' +
+      '<div class="chips" id="idK">' + IDEA_KINDS.map(function (x) { return '<button type="button" class="chip" data-k="' + x[0] + '" aria-pressed="' + (x[0] === k) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<textarea id="idTx" rows="4" maxlength="1500" placeholder="e.g. A template for confirming wedding cake orders, with the deposit and delivery details" aria-label="Your idea"></textarea>' +
+      '<button class="btn primary block" id="idGo">Send my idea</button><div id="idMine"></div><button class="btn link" id="idX">Close</button></div>';
+    document.body.appendChild(scrim);
+    $('#idX', scrim).onclick = function () { scrim.remove(); };
+    $$('#idK .chip', scrim).forEach(function (c) { c.onclick = function () { k = c.dataset.k; $$('#idK .chip', scrim).forEach(function (x) { x.setAttribute('aria-pressed', String(x === c)); }); }; });
+    function drawMine(list) {
+      $('#idMine', scrim).innerHTML = list && list.length ? '<b style="display:block;margin-top:6px">Your ideas</b>' + list.map(function (x) {
+        var st = IDEA_STATUS[x.status] || IDEA_STATUS.new;
+        return '<div style="border-top:1px solid var(--line);padding:8px 0"><div class="row" style="justify-content:space-between;gap:8px"><span class="sub" style="margin:0">' + esc(fmtDate(x.at, { day: 'numeric', month: 'short' })) + '</span><span class="pill ' + st[1] + '">' + st[0] + '</span></div>' +
+          '<div style="font-size:14.5px;white-space:pre-wrap">' + esc(x.text) + '</div>' + (x.reply ? '<div class="note" style="margin-top:6px;font-size:14px"><b>Auntie Tobi:</b> ' + esc(x.reply) + '</div>' : '') + '</div>';
+      }).join('') : '';
+    }
+    api('studio-extras', 'ideas-mine').then(function (r) { drawMine(r.ideas); }).catch(function () {});
+    $('#idGo', scrim).onclick = async function () {
+      var t = $('#idTx', scrim).value.trim(); if (t.length < 5) return toast('Tell us your idea in a sentence or two');
+      var b = this; b.disabled = true; b.textContent = 'Sending…';
+      try { await api('studio-extras', 'idea-add', { idea: { kind: k, text: t } }); $('#idTx', scrim).value = ''; toast('Thank you! Your idea has been sent to Auntie Tobi 💚'); b.textContent = 'Send another idea';
+        var r = await api('studio-extras', 'ideas-mine'); drawMine(r.ideas); }
+      catch (x) { toast(x.message); b.textContent = 'Send my idea'; }
+      b.disabled = false;
+    };
+  }
   document.addEventListener('click', async function (e) {
     var h = e.target.closest && e.target.closest('#crHist'); if (!h) return;
     var box = $('#crHistBox'); if (!box) return; h.disabled = true;
@@ -1392,6 +1424,8 @@ nav.tabs .navsep{display:none}
   function resultExtras(el, item, regen, back) {
     var tool = item.tool, g = item.input && item.input.goal;
     var text = function () { return $$('textarea[data-opt]', el).map(function (t) { return t.value; }).join('\n\n'); };
+    // Day-by-day plans show each day as its own box ("Monday", "Tuesday"…): put the labels back so the days can be read.
+    var labelledText = function () { return $$('.option', el).map(function (o) { var h = o.querySelector('.oh span'), ta = o.querySelector('textarea[data-opt]'); return ta ? ((h ? h.textContent.toUpperCase() + ': ' : '') + ta.value) : ''; }).join('\n'); };
     var refine = tool === 'quick' ? (g === 'post' ? [] : ['shorter', 'conversational']) : (REFINE_SETS[tool] || ['shorter', 'conversational']);
     var turn = tool === 'quick' ? (g === 'post' ? [] : ['reel', 'stories'].filter(function (x) { return x !== g; })) : NO_TURN[tool] ? [] : ['reel', 'stories'];
     var nexts = (NEXT[tool] || []).filter(function (id) { return toolDef(id) && id !== tool; }).slice(0, 3);
@@ -1402,7 +1436,15 @@ nav.tabs .navsep{display:none}
     var planType = { reel: 'reel', carousel: 'carousel', stories: 'story' }[tool] || (tool === 'quick' ? ({ reel: 'reel', stories: 'story' }[g] || 'post') : 'post');
     var nOpts = $$('textarea[data-opt]', el).length;
     if (!NOT_POST[tool] && tool !== 'planner' && !item.calendarId) html += '<div class="qtweak">' + (nOpts > 1 && (tool === 'ideas' || (tool === 'quick' && g === 'post')) ? '<button class="btn gold small" id="allIdeas">💡 Send all ' + nOpts + ' ideas to Plan</button>' : '') + '<button class="btn ghost small" id="toPlan">📅 Add to Plan</button><span class="saved-tag">As an idea, ready to post, or on a date</span></div>';
-    if (tool === 'growth30' || tool === 'weekly') html += '<div class="qtweak"><button class="btn gold small" id="toTodo">📋 Add these actions to my to-do list</button><span class="saved-tag">Free</span></div>';
+    if (tool === 'weekly') {
+      // Each day's action can go to the to-do list on its own, or all at once.
+      var wk = planTasks(item, labelledText());
+      if (wk.length) html += '<div class="card stack wktasks" style="margin-top:10px;gap:8px"><b>📋 Add to your to-do list</b>' + wk.map(function (t, i) {
+        return '<div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding-top:8px"><div style="min-width:0"><div class="sub" style="margin:0;font-weight:700">' + esc(new Date(t.date + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })) + '</div><div style="font-size:14.5px">' + esc(t.title) + '</div></div>' +
+          '<button class="btn ghost small" data-wkt="' + i + '" style="white-space:nowrap">＋ Add to tasks</button></div>';
+      }).join('') + '<button class="btn gold small" id="toTodo" style="align-self:flex-start">📋 Add all to my to-do list</button></div>';
+    }
+    if (tool === 'growth30') html += '<div class="qtweak"><button class="btn gold small" id="toTodo">📋 Add these actions to my to-do list</button><span class="saved-tag">Free</span></div>';
     if (nexts.length) html += '<div class="whatnext"><b>➡️ What should I do next?</b><div class="row wrap" style="gap:6px;margin-top:8px">' + nexts.map(function (id) { return '<button class="btn ghost small" data-next="' + id + '">' + icon((TOOL_META[id] || {}).icon || CAT_ICON[toolDef(id).cat] || '', 16) + ' ' + esc(NEXT_WHY[id] || toolDef(id).name) + '</button>'; }).join('') + '</div></div>';
     if (!html) return;
     box.innerHTML = html; el.appendChild(box);
@@ -1425,11 +1467,20 @@ nav.tabs .navsep{display:none}
     var tp = $('#toPlan', box); if (tp) tp.onclick = function () { var c = nOpts === 1 ? planCardFrom(item, text(), 0) : { title: item.title || ((toolDef(tool) || {}).name || 'Content'), type: planType, caption: text().slice(0, 4000), contentId: item.id }; c.status = 'idea'; addToPlanSheet(c); };
     var ai = $('#allIdeas', box); if (ai) ai.onclick = function () { var cards = []; $$('textarea[data-opt]', el).forEach(function (t, i) { var b1 = $('[data-toidea="' + i + '"]', el); if (b1 && b1.disabled) return; cards.push(planCardFrom(item, t.value, i + 1)); if (b1) { b1.disabled = true; b1.innerHTML = '✓ In Plan ideas'; } });
       if (!cards.length) return toast('These ideas are already in your Plan'); sendToIdeas(cards, ai); };
+    $$('[data-wkt]', box).forEach(function (b) { b.onclick = async function () {
+      var t = planTasks(item, labelledText())[Number(b.dataset.wkt)]; if (!t) return;
+      b.disabled = true;
+      try { await api('studio-extras', 'todo-add-many', { tasks: [t] }); b.textContent = '✓ Added'; toast('Added to your to-do list ✅'); }
+      catch (x) { toast(x.message); b.disabled = false; }
+    }; });
     var td = $('#toTodo', box); if (td) td.onclick = async function () {
-      var tasks = planTasks(item, text());
-      if (!tasks.length) return toast('Couldn’t find the daily actions — add them by hand from the plan.');
+      var tasks = planTasks(item, tool === 'weekly' ? labelledText() : text());
+      // Skip the ones already added one by one.
+      var done = {}; $$('[data-wkt]', box).forEach(function (b) { if (b.disabled) done[b.dataset.wkt] = 1; });
+      tasks = tasks.filter(function (t, i) { return !done[i]; });
+      if (!tasks.length) return toast(Object.keys(done).length ? 'They’re all in your to-do list already' : 'Couldn’t find the daily actions — add them by hand from the plan.');
       this.disabled = true;
-      try { var r = await api('studio-extras', 'todo-add-many', { tasks: tasks }); toast(r.n + ' actions added to your to-do list ✅'); this.textContent = '✓ Added to my to-do list'; }
+      try { var r = await api('studio-extras', 'todo-add-many', { tasks: tasks }); toast(r.n + ' actions added to your to-do list ✅'); this.textContent = '✓ Added to my to-do list'; $$('[data-wkt]', box).forEach(function (b) { b.disabled = true; b.textContent = '✓ Added'; }); }
       catch (x) { toast(x.message); this.disabled = false; }
     };
   }
@@ -1702,7 +1753,7 @@ nav.tabs .navsep{display:none}
     var ib = $('#ideaBox'); if (ib && !ib.innerHTML) { ib.innerHTML = ideaCard(); bindQuick(showHome); }
     var r = S.today, t = r.tip;
     box.innerHTML =
-      (r.goal ? '<div class="goalbar">🎯 <b>This week: ' + esc(r.goals[r.goal.goal]) + '</b><button class="btn link" id="chgGoal" style="padding:0">Change</button></div>'
+      (r.goal ? '<div class="goalbar">🎯 <b>This week: ' + esc(goalText(r.goal, r.goals)) + '</b><button class="btn link" id="chgGoal" style="padding:0">Change</button></div>'
         : '<div class="goalbar">🎯 <b>Set your goal for the week</b><button class="btn small gold" id="chgGoal">Set goal</button></div>') +
       '<div style="margin-top:14px">' + (t ? tipCard(t) : '') + '</div>' +
       (r.savedCount ? '<div style="text-align:center;margin-top:6px"><button class="btn link" id="savedTips">⭐ Your saved tips (' + r.savedCount + ')</button></div>' : '') +
@@ -1733,15 +1784,23 @@ nav.tabs .navsep{display:none}
     draw();
   }
 
+  function goalText(g, goals) { return !g ? '' : g.goal === 'custom' ? g.text : ((goals || {})[g.goal] || ''); }
   function pickGoal(after) {
     var goals = (S.today && S.today.goals) || { enquiries: 'Get more enquiries', bookings: 'Get more bookings or orders', new_product: 'Promote a new product or service', visibility: 'Get seen by more people' };
-    var cur = S.today && S.today.goal ? S.today.goal.goal : '';
+    var cur = S.today && S.today.goal ? S.today.goal.goal : '', curText = cur === 'custom' ? S.today.goal.text : '';
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="gT"><h2 id="gT" style="margin:0">What’s your goal this week?</h2><p class="sub">Your daily Business Tips will focus on it. You can change it any time.</p>' +
       Object.keys(goals).map(function (k) { return '<button class="btn ' + (k === cur ? 'primary' : 'ghost') + ' block" data-goal="' + k + '">' + esc(goals[k]) + '</button>'; }).join('') +
+      '<div style="text-align:center;color:var(--muted);font-size:13px;font-weight:700">OR WRITE YOUR OWN</div>' +
+      '<form id="gOwnF" class="stack" style="gap:8px"><input id="gOwn" maxlength="120" placeholder="e.g. Get 5 cake orders for half-term" value="' + esc(curText) + '" aria-label="Your own goal for the week"><button class="btn ' + (cur === 'custom' ? 'primary' : 'gold') + ' block">Set my own goal</button></form>' +
       '<button class="btn link" id="gClose">Cancel</button></div>';
     document.body.appendChild(scrim);
     $('#gClose', scrim).onclick = function () { scrim.remove(); };
+    $('#gOwnF', scrim).onsubmit = async function (e) {
+      e.preventDefault(); var t = $('#gOwn', scrim).value.trim(); if (t.length < 3) return toast('Write your goal for the week');
+      try { var r = await api('studio-growth', 'goal-set', { goal: 'custom', text: t }); if (S.today) S.today.goal = r.goal; scrim.remove(); toast('Goal set \u2014 your tips will focus on it'); if (after) after(); }
+      catch (x) { toast(x.message); }
+    };
     $$('[data-goal]', scrim).forEach(function (b) {
       b.onclick = async function () {
         try { var r = await api('studio-growth', 'goal-set', { goal: b.dataset.goal }); if (S.today) S.today.goal = r.goal; scrim.remove(); toast('Goal set \u2014 your tips will focus on it'); if (after) after(); }
@@ -1754,7 +1813,8 @@ nav.tabs .navsep{display:none}
     setChrome({ tabs: true, tab: 'create' });
     if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Create</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
     app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:center"><h1>Create</h1><button class="btn ghost small" id="crSaved">★ Saved &amp; history</button></div><p class="sub" style="margin:6px 0 14px">You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' +
-      '<h2 id="allTools" style="margin-top:0">All tools</h2>' + toolGrid() + '</main>';
+      '<h2 id="allTools" style="margin-top:0">All tools</h2>' + toolGrid() +
+      '<p class="hint" style="text-align:center;margin-top:16px">Missing a tool? <button class="btn link" data-idea="tool" style="padding:0;min-height:0">Suggest one</button></p></main>';
     bindToolDir();
     $('#crSaved').onclick = function () { showLibrary(); };
   }
@@ -1802,7 +1862,7 @@ nav.tabs .navsep{display:none}
       if (!S.today) S.today = await api('studio-growth', 'home');
       if (!$('#goalBox')) return;
       var g = S.today.goal;
-      $('#goalBox').innerHTML = '<div class="goalbar">🎯 <b>' + (g ? 'This week: ' + esc(S.today.goals[g.goal]) : 'No weekly goal yet') + '</b><button class="btn small ' + (g ? 'ghost' : 'gold') + '" id="pg">' + (g ? 'Change' : 'Set goal') + '</button></div>';
+      $('#goalBox').innerHTML = '<div class="goalbar">🎯 <b>' + (g ? 'This week: ' + esc(goalText(g, S.today.goals)) : 'No weekly goal yet') + '</b><button class="btn small ' + (g ? 'ghost' : 'gold') + '" id="pg">' + (g ? 'Change' : 'Set goal') + '</button></div>';
       $('#pg').onclick = function () { pickGoal(function () { showPlan(); }); };
       var r = await api('studio-growth', 'plan-list');
       S.planCards = r.cards; S.planToday = r.today;
@@ -2817,7 +2877,8 @@ nav.tabs .navsep{display:none}
         (savedN ? '<button class="chip" data-tg="saved" aria-pressed="' + (g === 'saved') + '">★ Saved ' + savedN + '</button>' : '') + '</div>' +
       '<div class="row" style="margin-bottom:12px;gap:8px;align-items:center"><label for="tlT" class="sub" style="margin:0;white-space:nowrap">Type</label><select id="tlT" style="max-width:260px"><option value="all">All types</option>' +
         r.types.filter(function (x) { return tcounts[x.id]; }).map(function (x) { return '<option value="' + x.id + '"' + (ty === x.id ? ' selected' : '') + '>' + (TOOL_ICO[x.id] || '') + ' ' + esc(x.label) + ' (' + tcounts[x.id] + ')</option>'; }).join('') + '</select></div>' +
-      '<div id="tlList">' + body + '</div>';
+      '<div id="tlList">' + body + '</div>' +
+      '<p class="hint" style="text-align:center;margin-top:16px">Can’t find what you need? <button class="btn link" data-idea="resource" style="padding:0;min-height:0">Suggest a template or tool</button></p>';
     $$('[data-tg]').forEach(function (c) { c.onclick = function () { S.rtGroup = c.dataset.tg; S.rtType = 'all'; drawResTools(); }; });
     $('#tlT').onchange = function () { S.rtType = this.value; drawResTools(); };
     $('#tlForm').onsubmit = function (e) { e.preventDefault(); S.rtQ = $('#tlQ').value; drawResTools(); };
@@ -2944,6 +3005,7 @@ nav.tabs .navsep{display:none}
           '<span class="mgo">' + (started && dn < lv.length ? 'Continue' : dn && dn === lv.length ? 'Review' : 'Explore') + ' →</span></button>';
       }).join('') + '</div>' +
       (p.hideRecs ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
+      '<p class="hint" style="text-align:center;margin-top:16px">Want a lesson on something else? <button class="btn link" data-idea="resource" style="padding:0;min-height:0">Suggest a lesson</button></p>' +
       '</div>';
     bindLessonRows($('#resBox'), showResources);
     var tt = $('#toTools'); if (tt) tt.onclick = function () { S.libView = 'tools'; showResTools(); };
@@ -4228,6 +4290,7 @@ nav.tabs .navsep{display:none}
         '<button class="btn ghost block" style="margin-top:12px" id="editP">Edit business profile</button></div>' : '') +
       benefitsAccountHtml() + (p ? brandKitHtml() : '') + extrasAccountHtml() +
       '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation.</li><li>A <b>30-day content plan uses 3</b>. Everything else uses 1.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset at midnight (UK time). Unused generations don’t carry over.</li></ul></details>' +
+      '<h2>Ideas for Business Studio</h2><div class="card stack"><p class="sub" style="margin:0">Missing a tool, a lesson or a template? Tell Auntie Tobi — every idea is read.</p><button class="btn ghost block" data-idea="">💡 Share an idea</button></div>' +
       '<h2>Your data</h2><div class="card stack"><p class="sub" style="margin:0">Your Business Studio is private to your account — your customers, tasks, quotes, invoices and content aren’t shown to anyone else. Business Studio stores them so it can remind you and keep your records; requests you make in Create are sent to our AI provider to write the content.</p>' +
         '<button class="btn ghost block" id="myData">⬇️ Download my data</button><button class="btn link danger" id="delAcct">Delete my account</button></div>' +
       '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code once a month and before any payment.</p>' +

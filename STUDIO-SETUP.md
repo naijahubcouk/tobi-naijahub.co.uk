@@ -496,3 +496,10 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - The Stripe webhook already listens to `checkout.session.completed` (adds the credits once) and `charge.refunded` (removes the unused credits from that purchase and alerts you).
 - **Admin:** Overview shows credit sales this month and the average AI cost per generation; Members → Manage → **AI credits** to gift (e.g. 50) or remove (e.g. -50).
 - Out of generations, members see **Buy credits** or **Upgrade** (Free → Club or Pro; Club → Pro).
+
+## 7ag. Ideas, own weekly goal, weekly plan tasks, mobile menu
+
+- **Ideas from members:** "💡 Share an idea" in Account, at the bottom of Create ("Missing a tool?") and Resources ("Suggest a lesson / template"). Any plan, up to 10 a day. You're emailed each one; see them in **Admin → Ideas** (badge shows new ones). Set New / Planned / Done / Not now and reply — the reply is emailed to the member and shown under "Your ideas".
+- **Weekly goal:** members can pick a preset goal or **write their own** (e.g. "Get 5 cake orders for half-term"); their daily Business Tips and actions use it.
+- **Weekly marketing plan:** each day's action has **＋ Add to tasks**, plus **Add all to my to-do list** (skips the ones already added).
+- **Mobile menu:** Today · Customers · Create · Plan · **Resources**. Track is still in the Today tools grid and the laptop sidebar.

@@ -106,9 +106,18 @@ function addDays(day, n) {
 
 // ───────────── goal ─────────────
 async function getGoal(email) { return getJson(`goals/${enc(email)}`); }
-async function setGoal(email, goal) {
-  if (!GOALS[goal]) throw new HttpError(400, 'invalid', 'Please choose a goal.');
-  const v = { goal, setAt: core.nowIso() };
+// A preset goal, or the member's own words (goal 'custom' + text).
+function goalLabel(g) { return !g ? '' : g.goal === 'custom' ? (g.text || '') : (GOALS[g.goal] || ''); }
+async function setGoal(email, goal, text) {
+  let v;
+  if (goal === 'custom') {
+    const t = core.cleanText(text, 120);
+    if (t.length < 3) throw new HttpError(400, 'invalid', 'Write your goal for the week, e.g. “Get 5 cake orders for half-term”.');
+    v = { goal: 'custom', text: t, setAt: core.nowIso() };
+  } else {
+    if (!GOALS[goal]) throw new HttpError(400, 'invalid', 'Please choose a goal.');
+    v = { goal, setAt: core.nowIso() };
+  }
   await core.setJson(`goals/${enc(email)}`, v);
   return v;
 }
@@ -284,7 +293,7 @@ async function aiActions(profile, day, goal, kinds, avoidTitles, ai) {
 - About: ${String(profile.description || '').slice(0, 600)}
 - Where customers find them: ${channels}${profile.mainChannel ? ` (main: ${profile.mainChannel})` : ''}
 - Auntie Tobi listing linked: ${profile.listingSlug ? 'yes' : 'no'}
-- This week's goal: ${goal ? GOALS[goal.goal] : 'not set'}
+- This week's goal: ${goal ? goalLabel(goal) : 'not set'}
 - Today: ${ukDateLong(day)} (UK)
 
 Write ${kinds.length} action${kinds.length > 1 ? 's' : ''} for today, one for each of these types, in this order:
@@ -555,6 +564,7 @@ async function pilotSummary(days) {
 }
 
 module.exports = {
+  goalLabel,
   GOALS, getGoal, setGoal, parsePlan, savePlanToCalendar, listCalendar, updateCalendarItem, deleteCalendarItem,
   recentTopics, today, home, setActionDone, getProgress, saveProgress, addPost, bump, summary, pilotBump, pilotSummary, addDays, TEMPLATES: T,
 };

@@ -2,6 +2,7 @@
 /*
  * Free member extras (no AI):
  * POST /.netlify/functions/studio-extras  { action, ... }
+ *   idea-add { idea: { kind, text } } / ideas-mine   — members send ideas for Business Studio
  *   nudges                      set-up checklist, lesson for you, money reminders (Today)
  *   prefs-get / prefs-save      weekly email, review link, reminders, hide set-up
  *   reminded { id }             hide a money reminder for 3 days
@@ -18,7 +19,7 @@ const fu = require('../followups');
 const benefits = require('../benefits');
 const memtodo = require('../memtodo');
 
-const VIEW = new Set(['dashboard', 'my-data', 'account-delete', 'nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine', 'benefits-seen', 'todo-today', 'todo-mark', 'todo-add', 'todo-def-delete']);
+const VIEW = new Set(['idea-add', 'ideas-mine', 'dashboard', 'my-data', 'account-delete', 'nudges', 'prefs-get', 'customers', 'shop-get', 'fu-list', 'benefits-mine', 'benefits-seen', 'todo-today', 'todo-mark', 'todo-add', 'todo-def-delete']);
 const idOf = v => { const s = String(v || ''); if (!/^[A-Za-z0-9_-]{4,20}$/.test(s)) throw new HttpError(400, 'bad_id', 'Invalid item.'); return s; };
 
 exports.handler = handler(async (ctx) => {
@@ -28,6 +29,12 @@ exports.handler = handler(async (ctx) => {
   await core.rateLimit('extras', email, 600, 60 * 60 * 1000);
   switch (body.action) {
     case 'nudges': return nudges.forMember(email, auth.access);
+    // Ideas for Business Studio (any member, any plan).
+    case 'idea-add': {
+      await core.rateLimit('idea-add', email, 10, 24 * 60 * 60 * 1000, 'Thank you for all your ideas! Please send more tomorrow.');
+      return { idea: await require('../suggestions').add(email, body.idea) };
+    }
+    case 'ideas-mine': return { ideas: await require('../suggestions').mine(email), kinds: require('../suggestions').KINDS, statuses: require('../suggestions').STATUSES };
     case 'prefs-get': return { prefs: await prefs.get(email), pushId: prefs.pushId(email) };
     case 'prefs-save': return { prefs: await prefs.update(email, body.prefs) };
     case 'reminded': return money.markReminded(email, idOf(body.id));

@@ -257,6 +257,14 @@ exports.handler = handler(async (ctx) => {
       return { ok: true };
     }
 
+    case 'ideas-list': return require('../suggestions').adminList();
+    case 'idea-update': {
+      const idea = await require('../suggestions').adminUpdate(actor, String(body.id || '').slice(0, 30), { status: body.status, reply: body.reply });
+      await core.audit(actor, 'idea_update', { id: idea.id, status: idea.status });
+      return { idea };
+    }
+    case 'idea-delete': await require('../suggestions').adminDelete(String(body.id || '').slice(0, 30)); return { ok: true };
+
     case 'member-credits': {
       // Gift (+) or remove (−) AI credits for a member.
       const email = requireEmail(body.email);
