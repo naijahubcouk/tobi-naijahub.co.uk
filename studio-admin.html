@@ -325,17 +325,23 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     };
     $$('[data-and]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this announcement? It disappears from members’ chats.')) return; try { var r = await api('msg-announce-delete', { id: b.dataset.and }); S.msg.announcements = r.announcements; s2.remove(); annSheet(); toast('Announcement deleted'); } catch (x) { toast(x.message); } }; });
   }
-  async function welcomeSheet() {
-    var w; try { w = (await api('msg-welcome-get')).welcome; } catch (x) { toast(x.message); return; }
+  async function welcomeSheet(series) {
+    series = series === 'free' ? 'free' : 'club';
+    var free = series === 'free';
+    var w; try { w = (await api('msg-welcome-get', { series: series })).welcome; } catch (x) { toast(x.message); return; }
     var dayLabel = function (n) { return n === 0 ? 'Straight away' : 'Day ' + n; };
-    var s2 = sheet('<div class="row" style="justify-content:space-between"><h2 style="margin:0">👋 Welcome series</h2>' +
+    var s2 = sheet('<div class="row" style="gap:6px;margin-bottom:2px"><button class="btn small ' + (free ? 'ghost' : 'primary') + '" data-wser="club">💚 Club &amp; paid plans</button><button class="btn small ' + (free ? 'primary' : 'ghost') + '" data-wser="free">🆓 Free plan</button></div>' +
+      '<div class="row" style="justify-content:space-between"><h2 style="margin:0">👋 ' + (free ? 'Free plan welcome series' : 'Welcome series') + '</h2>' +
       '<label class="row" style="gap:8px;font-weight:700;margin:0"><input type="checkbox" id="wOn"' + (w.on ? ' checked' : '') + ' style="width:20px;height:20px"> ' + (w.on ? '<span class="pill p-active">On</span>' : '<span class="pill p-inactive">Off</span>') + '</label></div>' +
-      '<p class="muted" style="margin:0">Messages go into each <b>new</b> member’s private chat from Auntie Tobi, with a push notification — between 9am and 7pm UK time. Only members who join ' + (w.since ? 'after <b>' + esc(d(w.since)) + '</b>' : 'after you switch it on') + ' get them. <b>{business}</b> = their business name. Replies come to your inbox.</p>' +
+      '<p class="muted" style="margin:0">Messages go into each <b>new</b> member’s private chat from Auntie Tobi, with a push notification — between 9am and 7pm UK time. Only ' + (free ? 'Free plan accounts' : 'Business Club and paid members') + ' who join ' + (w.since ? 'after <b>' + esc(d(w.since)) + '</b>' : 'after you switch it on') + ' get them' + (free ? ' — it stops as soon as they upgrade' : '') + '. <b>{business}</b> = their business name. Replies come to your inbox.</p>' +
+      (free ? '<label class="row" style="gap:8px;margin:0;font-weight:600;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="wEmail"' + (w.email ? ' checked' : '') + ' style="width:20px;height:20px;flex:0 0 auto"> Also send each message as a short email (with an unsubscribe link)</label>' : '') +
+      (!w.on && !w.since ? '<label class="row" style="gap:8px;margin:0;font-weight:500;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="wRecent" style="width:20px;height:20px;flex:0 0 auto"> When I switch it on, also include ' + (free ? 'Free members' : 'members') + ' who joined in the last 14 days</label>' : '') +
       w.steps.map(function (st, i) {
         return '<div class="card stack wstep" data-wid="' + esc(st.id) + '" style="padding:12px;gap:8px"><div class="row" style="justify-content:space-between;align-items:center"><b>Message ' + (i + 1) + '</b>' +
           '<span class="muted" style="font-size:14.5px">Sent to ' + ((w.stats || {})[st.id] || 0) + ' member' + (((w.stats || {})[st.id] || 0) === 1 ? '' : 's') + '</span></div>' +
           '<div class="row" style="gap:8px;align-items:center"><label style="margin:0;font-weight:600">Send</label><input type="number" min="0" max="90" class="wDays" value="' + st.days + '" style="width:80px"><span class="muted wLab">' + (st.days === 0 ? 'day(s) after joining · straight away' : 'day(s) after joining') + '</span>' +
           '<label class="row" style="gap:6px;margin:0 0 0 auto;font-weight:600"><input type="checkbox" class="wOnStep"' + (st.on ? ' checked' : '') + '> Send this one</label></div>' +
+          (free ? '<label style="margin:0;font-weight:600;font-size:14.5px">Email subject <span class="muted" style="font-weight:400">(used when emails are on)</span><input class="wSubj" maxlength="120" placeholder="Email subject" value="' + esc(st.subject || '') + '" style="margin-top:4px"></label>' : '') +
           '<textarea class="wText" rows="4" maxlength="2000">' + esc(st.text) + '</textarea></div>';
       }).join('') +
       '<div class="card stack" style="padding:12px;gap:8px"><b>➕ Add a member to the series</b><p class="muted" style="margin:0;font-size:15px">For members who joined before it was switched on. Their series starts today — Message 1 within the hour (9am–7pm), then the rest on their days. Nobody gets the same message twice.</p>' +
@@ -345,22 +351,24 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var drawMan = function () {
       var em = Object.keys(w.manual || {}).sort(function (a, b) { return (w.manual[b].at || '').localeCompare(w.manual[a].at || ''); });
       $('#wMan', s2).innerHTML = em.length ? '<div class="muted" style="font-size:14.5px;font-weight:700;margin-bottom:4px">Added by you</div>' + em.map(function (e) { return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;padding:4px 0"><span>' + esc(e) + ' <span class="muted" style="font-size:14.5px">· added ' + esc(d(w.manual[e].at)) + '</span></span><button class="btn small ghost danger" data-wrm="' + esc(e) + '" aria-label="Stop the series for ' + esc(e) + '">✕</button></div>'; }).join('') : '';
-      $$('[data-wrm]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop the welcome series for ' + b.dataset.wrm + '?')) return; try { w.manual = (await api('msg-welcome-remove', { email: b.dataset.wrm })).welcome.manual; drawMan(); toast('Stopped for ' + b.dataset.wrm); } catch (x) { toast(x.message); } }; });
+      $$('[data-wrm]', s2).forEach(function (b) { b.onclick = async function () { if (!confirm('Stop the welcome series for ' + b.dataset.wrm + '?')) return; try { w.manual = (await api('msg-welcome-remove', { email: b.dataset.wrm, series: series })).welcome.manual; drawMan(); toast('Stopped for ' + b.dataset.wrm); } catch (x) { toast(x.message); } }; });
     };
     drawMan();
     $('#wAdd', s2).onclick = async function () {
       var inp = $('#wAddE', s2), e = inp.value.trim(); if (!e) { inp.focus(); return; }
-      try { var r = await api('msg-welcome-add', { email: e }); w.manual = r.welcome.manual; inp.value = ''; drawMan();
+      try { var r = await api('msg-welcome-add', { email: e, series: series }); w.manual = r.welcome.manual; inp.value = ''; drawMan();
         toast(!r.welcome.on ? 'Added — switch the series On and Save so it sends' : r.already ? 'Added — they’ll get the messages they haven’t had yet' : 'Added — Message 1 goes out within the hour (9am–7pm) 👋'); }
       catch (x) { toast(x.message); }
     };
     $('#wAddE', s2).onkeydown = function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); $('#wAdd', s2).click(); } };
     $('#wX', s2).onclick = function () { s2.remove(); };
+    $$('[data-wser]', s2).forEach(function (b) { b.onclick = function () { if (b.dataset.wser === series) return; s2.remove(); welcomeSheet(b.dataset.wser); }; });
     $('#wSave', s2).onclick = async function () {
-      var steps = $$('.wstep', s2).map(function (c) { return { id: c.dataset.wid, days: Number($('.wDays', c).value), on: $('.wOnStep', c).checked, text: $('.wText', c).value }; });
-      var on = $('#wOn', s2).checked;
-      if (on && !w.on && !confirm('Switch on the welcome series? Members who join from now on will get these messages automatically.')) return;
-      try { var r = await api('msg-welcome-save', { welcome: { on: on, steps: steps } }); s2.remove(); toast(r.welcome.on ? 'Welcome series saved — it’s on 👋' : 'Welcome series saved (off)'); }
+      var steps = $$('.wstep', s2).map(function (c) { var o = { id: c.dataset.wid, days: Number($('.wDays', c).value), on: $('.wOnStep', c).checked, text: $('.wText', c).value }; var sj = $('.wSubj', c); if (sj) o.subject = sj.value; return o; });
+      var on = $('#wOn', s2).checked, rc = $('#wRecent', s2), em = $('#wEmail', s2);
+      if (on && !w.on && !confirm('Switch on the ' + (free ? 'Free plan ' : '') + 'welcome series? ' + (free ? 'Free members' : 'Members') + ' who join from now on' + (rc && rc.checked ? ' (and those who joined in the last 14 days)' : '') + ' will get these messages automatically.')) return;
+      var body = { on: on, steps: steps, includeRecent: !!(rc && rc.checked) }; if (em) body.email = em.checked;
+      try { var r = await api('msg-welcome-save', { welcome: body, series: series }); s2.remove(); toast(r.welcome.on ? 'Welcome series saved — it’s on 👋' : 'Welcome series saved (off)'); }
       catch (x) { var e = $('#wErr', s2); e.textContent = x.message; e.classList.remove('hidden'); }
     };
   }

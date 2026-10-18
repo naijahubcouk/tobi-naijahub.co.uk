@@ -6,7 +6,7 @@
 const core = require('./core');
 const { HttpError, cas, getJson, enc, cleanText } = core;
 
-const DEFAULTS = { setupHidden: false, installDone: false, weeklyEmail: true, renewalReminders: true, reviewLink: '', reviewLabel: '', remindersOn: false, lastDigestAt: '' };
+const DEFAULTS = { setupHidden: false, installDone: false, weeklyEmail: true, welcomeEmail: true, renewalReminders: true, reviewLink: '', reviewLabel: '', remindersOn: false, lastDigestAt: '' };
 const REVIEW_LABELS = ['Google', 'Auntie Tobi listing', 'Facebook', 'Trustpilot', 'Website', 'Other'];
 const key = email => `prefs/${enc(email)}`;
 
@@ -25,6 +25,7 @@ async function update(email, raw) {
   const patch = {};
   if ('setupHidden' in raw) patch.setupHidden = !!raw.setupHidden;
   if ('weeklyEmail' in raw) patch.weeklyEmail = !!raw.weeklyEmail;
+  if ('welcomeEmail' in raw) patch.welcomeEmail = !!raw.welcomeEmail;
   if ('remindersOn' in raw) patch.remindersOn = !!raw.remindersOn;
   if ('renewalReminders' in raw) patch.renewalReminders = !!raw.renewalReminders;
   if ('installDone' in raw) patch.installDone = !!raw.installDone; // added Business Studio to the home screen — stop asking on every device
