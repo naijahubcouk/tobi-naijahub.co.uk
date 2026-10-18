@@ -385,8 +385,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var mods = {}; r.modules.forEach(function (m) { mods[m.id] = m; });
     var list = r.lessons.filter(function (m) { return filter === 'all' || (filter === 'review' ? dash.needsReview.some(function (x) { return x.id === m.id; }) : m.status === filter); });
     var views = r.stats.all.views || {}, comps = r.stats.all.completes || {};
-    app.innerHTML = '<main><div class="row" style="justify-content:space-between"><h1 style="margin:0">Resources</h1><button class="btn primary" id="rNew">+ New lesson</button></div>' +
-      '<p class="muted" style="margin:6px 0 14px">Your Business Growth Library for Business Club members. Members only see <b>Published</b> lessons (from their publish date). <b>Coming soon</b> shows the title only; <b>Draft</b> is hidden.</p>' +
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between"><h1 style="margin:0">Resources</h1><div class="row"><button class="btn ghost" id="rNewT">+ New template or tool</button><button class="btn primary" id="rNew">+ New lesson</button></div></div>' +
+      '<p class="muted" style="margin:6px 0 14px">Members see two areas: <b>📖 Learn</b> (lessons) and <b>🧰 Templates &amp; Tools</b> — every checklist, template, worksheet, file and calculator in a published lesson appears there too (switch one off in the lesson). Free plan members can use the ones marked <b>Free</b>. Members only see <b>Published</b> lessons (from their publish date). <b>Coming soon</b> shows the title only; <b>Draft</b> is hidden.</p>' +
       '<div class="grid">' + stat(dash.published, 'Published') + stat(dash.drafts, 'Drafts') + stat(dash.scheduled, 'Scheduled') + stat(dash.planned, 'Coming soon') + stat(dash.newThisMonth, 'New this month') + stat(dash.viewsMonth, 'Views this month') + stat(dash.completionsMonth, 'Completions this month') + '</div>' +
       (dash.readyToPublish.length ? '<div class="card stack" style="margin-top:14px;border-color:var(--gold)"><div class="row" style="justify-content:space-between;align-items:center"><b>📝 ' + dash.readyToPublish.length + ' lesson' + (dash.readyToPublish.length > 1 ? 's are' : ' is') + ' written and waiting for your approval</b>' + (dash.readyToPublish.length > 1 ? '<button class="btn small primary" id="apAll">✓ Approve all ' + dash.readyToPublish.length + '</button>' : '') + '</div>' +
         '<div class="muted">Members see these as “Coming soon” until you approve them. Preview, then approve — they go live for members straight away.</div>' +
@@ -398,10 +398,12 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       '<div class="tw"><table><thead><tr><th>Lesson</th><th>Status</th><th>Featured</th><th>Views</th><th>Done</th><th>Reviewed</th><th></th></tr></thead><tbody>' +
       (list.length ? list.map(function (m) {
         var mm = mods[m.module] || { n: '', title: '' };
-        return '<tr><td><b>' + esc(m.title) + '</b><div class="muted">Module ' + esc(mm.n) + ' · ' + esc(mm.title) + (m.month ? ' · ' + esc(m.month) : '') + '</div></td><td>' + resPill(m, r.today) + '</td><td class="muted">' + (m.featured ? '⭐ ' + esc(m.collection || 'Featured') : '') + '</td>' +
+        var tl = (m.tools || []).filter(function (t) { return !t.hide; }), fr = tl.filter(function (t) { return t.free; }).length;
+        return '<tr><td><b>' + esc(m.title) + '</b>' + (m.toolOnly ? ' <span class="pill p-power">Template / tool only</span>' : '') + '<div class="muted">' + (tl.length ? '🧰 ' + tl.length + ' in Templates &amp; Tools' + (fr ? ' · ' + fr + ' free' : '') + ' · ' : '') + 'Module ' + esc(mm.n) + ' · ' + esc(mm.title) + (m.month ? ' · ' + esc(m.month) : '') + '</div></td><td>' + resPill(m, r.today) + '</td><td class="muted">' + (m.featured ? '⭐ ' + esc(m.collection || 'Featured') : '') + '</td>' +
           '<td>' + (views[m.id] || 0) + '</td><td>' + (comps[m.id] || 0) + '</td><td class="muted">' + (m.reviewedAt ? d(m.reviewedAt) : '—') + '</td><td><button class="btn small ghost" data-edit="' + esc(m.id) + '">Edit</button></td></tr>';
       }).join('') : '<tr><td colspan="7" class="muted">Nothing here.</td></tr>') + '</tbody></table></div></main>';
     $('#rNew').onclick = function () { editLesson(null); };
+    $('#rNewT').onclick = function () { editLesson(null, { toolOnly: true }); };
     $$('[data-rf]').forEach(function (b) { b.onclick = function () { vResources(b.dataset.rf); }; });
     $$('[data-edit]').forEach(function (b) { b.onclick = function () { editLesson(b.dataset.edit); }; });
     $$('[data-prev]').forEach(function (b) { b.onclick = async function () { try { previewLesson((await api('res-get', { id: b.dataset.prev })).lesson); } catch (x) { toast(x.message); } }; });
@@ -409,10 +411,11 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var apAll = $('#apAll'); if (apAll) apAll.onclick = async function () { var ids = $$('[data-appr]').map(function (b) { return b.dataset.appr; }); if (!confirm('Publish all ' + ids.length + ' lessons to Business Club members now?')) return; apAll.disabled = true; try { await api('res-approve', { ids: ids }); toast(ids.length + ' lessons approved — live for members 🎉'); S.resData = null; vResources(); } catch (x) { toast(x.message); apAll.disabled = false; } };
   }
 
-  async function editLesson(id) {
+  async function editLesson(id, opts) {
+    opts = opts || {};
     loading();
     var L;
-    try { L = id ? (await api('res-get', { id: id })).lesson : { module: 'm01', order: 99, title: '', summary: '', status: 'draft', publishAt: '', featured: false, collection: '', collectionOrder: 0, month: '', tags: ['all'], readMins: 0, learn: '', seeTitle: 'Fictional example: ', see: '', do: '', use: [], studio: null, sources: [], reviewedAt: '', reviewMonths: 12, disclaimer: '', image: '' }; }
+    try { L = id ? (await api('res-get', { id: id })).lesson : { module: 'm01', order: 99, title: '', summary: '', status: 'draft', publishAt: '', featured: false, collection: '', collectionOrder: 0, month: '', tags: ['all'], readMins: 0, learn: '', seeTitle: 'Fictional example: ', see: '', do: '', use: [], toolOnly: !!opts.toolOnly, studio: null, sources: [], reviewedAt: '', reviewMonths: 12, disclaimer: '', image: '' }; }
     catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
     if (!S.resData) S.resData = await api('res-list');
     var blocks = JSON.parse(JSON.stringify(L.use || []));
@@ -422,7 +425,9 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     function blockHtml(b, i) {
       var head = '<div class="row" style="justify-content:space-between"><b>' + ({ checklist: '☑️ Checklist', template: '📄 Copyable template', worksheet: '✍️ Worksheet', file: '📎 Downloadable file', calculator: '🧮 Pricing calculator' }[b.type]) + '</b><div class="row">' +
         '<button class="btn small ghost" data-bup="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="Move up">↑</button><button class="btn small ghost danger" data-brm="' + i + '">Remove</button></div></div>' +
-        '<div><label>Title</label><input data-b="' + i + '" data-k="title" value="' + esc(b.title || '') + '"></div>';
+        '<div><label>Title</label><input data-b="' + i + '" data-k="title" value="' + esc(b.title || '') + '"></div>' +
+        '<div class="row" style="gap:16px"><label style="font-weight:500;margin:0"><input type="checkbox" data-bshow="' + i + '" style="width:auto"' + (b.hide ? '' : ' checked') + '> Show in Templates &amp; Tools</label>' +
+        '<label style="font-weight:500;margin:0"><input type="checkbox" data-bfree="' + i + '" style="width:auto"' + (b.free ? ' checked' : '') + '> Free on the Free plan</label></div>';
       if (b.type === 'checklist') return head + '<div><label>Items (one per line)</label><textarea data-b="' + i + '" data-k="items" rows="6">' + esc((b.items || []).join('\n')) + '</textarea></div>';
       if (b.type === 'template') return head + '<div><label>Template text (members can copy and download it)</label><textarea data-b="' + i + '" data-k="text" rows="6">' + esc(b.text || '') + '</textarea></div><div><label>Note under it (optional)</label><input data-b="' + i + '" data-k="note" value="' + esc(b.note || '') + '"></div>';
       if (b.type === 'worksheet') return head + '<div><label>Questions (one per line). Add a hint after | and put [big] at the end for a larger box</label><textarea data-b="' + i + '" data-k="fields" rows="6" placeholder="My main goal | e.g. 10 new enquiries\nWeek 1 actions [big]">' + esc((b.fields || []).map(function (f) { return f.label + (f.hint ? ' | ' + f.hint : '') + (f.long ? ' [big]' : ''); }).join('\n')) + '</textarea></div>';
@@ -431,6 +436,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       return head;
     }
     function readBlocks() {
+      $$('[data-bshow]').forEach(function (el) { var b = blocks[Number(el.dataset.bshow)]; if (b) { if (el.checked) delete b.hide; else b.hide = true; } });
+      $$('[data-bfree]').forEach(function (el) { var b = blocks[Number(el.dataset.bfree)]; if (b) b.free = el.checked; });
       $$('[data-b]').forEach(function (el) {
         var b = blocks[Number(el.dataset.b)], k = el.dataset.k; if (!b) return;
         if (k === 'items') b.items = el.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
@@ -452,7 +459,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     }
     var mods = S.resData.modules;
     app.innerHTML = '<main style="max-width:860px"><div class="row" style="justify-content:space-between"><button class="btn small ghost" id="eBack">← All resources</button><div class="row">' + (id ? '<button class="btn small ghost danger" id="eDel">Delete</button>' : '') + '<button class="btn small ghost" id="ePrev">Preview</button></div></div>' +
-      '<h1 style="margin-top:12px">' + (id ? 'Edit lesson' : 'New lesson') + '</h1>' +
+      '<h1 style="margin-top:12px">' + (L.toolOnly ? (id ? 'Edit template or tool' : 'New template or tool') : (id ? 'Edit lesson' : 'New lesson')) + '</h1>' +
+      '<label style="font-weight:500;margin:6px 0 10px;display:block"><input type="checkbox" id="eToolOnly" style="width:auto"' + (L.toolOnly ? ' checked' : '') + '> Templates &amp; Tools only — no lesson (members see just the resources below, under 🧰 Templates &amp; Tools)</label>' +
       (id && L.status === 'planned' && (L.learn || '').trim() ? '<div class="card stack" style="border-color:var(--gold);background:#FFF8E6;margin-bottom:12px"><b>📝 Ready — waiting for your approval</b><div class="muted">Members see this as “Coming soon”. Read it, make any changes, then approve to publish it for members today.</div><div class="row"><button class="btn primary" id="eApprove">✓ Approve &amp; publish</button><button class="btn ghost" id="ePrev2">Preview</button></div></div>' : '') +
       '<div class="card stack"><div class="f2"><div><label for="eMod">Module</label><select id="eMod">' + mods.map(function (m) { return opt(m.id, L.module, m.n + ' — ' + m.title); }).join('') + '</select></div><div><label for="eOrder">Order in module</label><input id="eOrder" type="number" min="0" max="999" value="' + esc(L.order) + '"></div></div>' +
         '<div><label for="eTitle">Title</label><input id="eTitle" maxlength="140" value="' + esc(L.title) + '"></div>' +
@@ -487,7 +495,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
         tags: $$('[data-tag]').filter(function (c) { return c.checked; }).map(function (c) { return c.dataset.tag; }), image: image,
         learn: $('#eLearn').value, seeTitle: $('#eSeeT').value, see: $('#eSee').value, do: $('#eDo').value, studio: st, use: blocks,
         sources: $('#eSrc').value.split('\n').map(function (x) { var p = x.split('|'); return p[0].trim() ? { title: p[0].trim(), url: (p[1] || '').trim() } : null; }).filter(Boolean),
-        reviewedAt: $('#eRev').value, reviewMonths: $('#eRevM').value, disclaimer: $('#eDisc').value };
+        reviewedAt: $('#eRev').value, reviewMonths: $('#eRevM').value, disclaimer: $('#eDisc').value, toolOnly: $('#eToolOnly').checked };
     }
     async function save(statusOverride) {
       var e = $('#eErr'); e.classList.add('hidden');

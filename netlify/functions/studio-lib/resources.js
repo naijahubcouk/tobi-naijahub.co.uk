@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Resources — Your Business Growth Library (Business Club only, free: no AI).
+ * Resources — Learn (lessons) + Templates & Tools (Club, Pro and Plus; Free plan gets sample templates; no AI).
  *
  * Storage (Netlify Blobs, same store as the rest of Studio):
  *   res/index              { seedVersion, deletedSeeds: [], lessons: [meta…] }   one blob → simple, atomic
@@ -52,8 +52,31 @@ function requireId(id) { if (!idOk(id)) throw new HttpError(400, 'bad_id', 'Inva
 // Plain text for search (strip the light formatting used in lessons).
 function plain(s) { return String(s || '').replace(/\*\*|__|^#+\s|^>\s|^-\s|\[([^\]]+)\]\([^)]+\)/gm, '$1').replace(/\s+/g, ' ').trim(); }
 
+// Templates & Tools: every resource block becomes a tool you can open on its own. id = <lessonId>~<blockIndex>
+const TOOL_TYPES = [
+  { id: 'checklist', label: 'Checklists' }, { id: 'template', label: 'Messages & scripts' },
+  { id: 'worksheet', label: 'Worksheets & planners' }, { id: 'calculator', label: 'Calculators' }, { id: 'file', label: 'Downloads' },
+];
+// Free plan samples (until you choose others in Admin).
+const DEFAULT_FREE = new Set([
+  'm04-following-up-without-being-pushy~0', 'm04-following-up-without-being-pushy~1', 'm02-optimising-your-instagram-bio~0',
+  'm04-encouraging-repeat-purchases-and-referrals~0', 'm01-create-your-30-day-business-action-plan~1',
+]);
+function previewOf(b) {
+  if (b.type === 'checklist') return (b.items || []).slice(0, 2).join(' · ').slice(0, 140);
+  if (b.type === 'template') return String(b.text || '').replace(/\s+/g, ' ').slice(0, 140);
+  if (b.type === 'worksheet') return (b.fields || []).slice(0, 3).map(f => f.label).join(' · ').slice(0, 140);
+  if (b.type === 'file') return [b.name, b.note].filter(Boolean).join(' — ').slice(0, 140);
+  if (b.type === 'calculator') return 'Work out a price from materials, time, running costs and profit.';
+  return '';
+}
+function toolsOf(l) {
+  return (l.use || []).map((b, i) => ({ i, type: b.type, title: b.title || '', hide: !!b.hide, free: typeof b.free === 'boolean' ? b.free : DEFAULT_FREE.has(`${l.id}~${i}`), items: (b.items || b.fields || []).length, preview: previewOf(b) }));
+}
+
 function metaOf(l) {
   return {
+    toolOnly: !!l.toolOnly, tools: toolsOf(l), studio: l.studio || null,
     id: l.id, module: l.module, order: l.order, title: l.title, summary: l.summary, status: l.status,
     publishAt: l.publishAt || '', featured: !!l.featured, collection: l.collection || '', collectionOrder: l.collectionOrder || 0,
     month: l.month || '', tags: l.tags || ['all'], readMins: l.readMins || 0,
@@ -100,12 +123,27 @@ async function ensureSeeded() {
   });
   return idx || (await getJson(INDEX_KEY));
 }
-async function index() { return (await ensureSeeded()) || { lessons: [] }; }
+async function index() {
+  const idx = (await ensureSeeded()) || { lessons: [] };
+  // Older index entries (before Templates & Tools) are refreshed from the lesson once.
+  if (idx.lessons.some(m => !Array.isArray(m.tools))) {
+    const fresh = {};
+    for (const m of idx.lessons.filter(x => !Array.isArray(x.tools))) { const l = await getJson(lessonKey(m.id)).catch(() => null); if (l) fresh[m.id] = metaOf({ ...l, id: m.id }); }
+    const out = await cas(INDEX_KEY, cur => {
+      if (!cur) return undefined;
+      let changed = false;
+      cur.lessons = cur.lessons.map(m => (!Array.isArray(m.tools) && fresh[m.id] ? (changed = true, { ...m, ...fresh[m.id] }) : m));
+      return changed ? cur : undefined;
+    });
+    return out || idx;
+  }
+  return idx;
+}
 
 // ───────────── member side ─────────────
 function memberMeta(m) {
   if (m.status === 'planned') return { id: m.id, module: m.module, order: m.order, title: m.title, status: 'planned', month: m.month };
-  const { text, source, adminEdited, seedRev, reviewMonths, ...rest } = m;
+  const { text, source, adminEdited, seedRev, reviewMonths, tools, studio, ...rest } = m;
   return rest;
 }
 
@@ -130,7 +168,7 @@ async function getProgress(email) { return (await getJson(progressKey(email))) |
 async function home(email, profile) {
   const idx = await index();
   const day = today();
-  const visible = idx.lessons.filter(m => isLive(m, day) || (m.status === 'planned' && MODULE_IDS.includes(m.module)));
+  const visible = idx.lessons.filter(m => !m.toolOnly && (isLive(m, day) || (m.status === 'planned' && MODULE_IDS.includes(m.module))));
   const p = await getProgress(email);
   const tag = recommendTag(profile);
   return {
@@ -160,7 +198,7 @@ async function lessonFor(email, id) {
   });
   if (firstToday) await bumpStat('views', id);
   // Neighbours in the module (published only), for "Next lesson".
-  const siblings = idx.lessons.filter(m => m.module === l.module && isLive(m)).sort(sortLessons);
+  const siblings = idx.lessons.filter(m => m.module === l.module && isLive(m) && !m.toolOnly).sort(sortLessons);
   const i = siblings.findIndex(m => m.id === id);
   return {
     lesson: publicLesson(l),
@@ -258,7 +296,7 @@ async function search(q) {
   if (!words.length) return { results: [] };
   const idx = await index();
   const day = today();
-  const results = idx.lessons.filter(m => isLive(m, day)).map(m => {
+  const results = idx.lessons.filter(m => isLive(m, day) && !m.toolOnly).map(m => {
     let score = 0;
     const low = m.text.toLowerCase();
     for (const w of words) {
@@ -282,6 +320,82 @@ async function memberFile(lessonId, fileId) {
   return { name: f.name, mime: f.mime, dataUrl: f.dataUrl };
 }
 
+// ───────────── Templates & Tools (member side) ─────────────
+function parseToolId(id) {
+  const m = String(id || '').match(/^([a-z0-9][a-z0-9-]{1,60})~(\d{1,2})$/);
+  if (!m) throw new HttpError(400, 'bad_id', 'Invalid resource.');
+  return { lessonId: m[1], i: Number(m[2]) };
+}
+async function toolsList(email, full) {
+  const idx = await index(), day = today();
+  const p = await getProgress(email);
+  const mods = Object.fromEntries(MODULES.map(m => [m.id, m]));
+  const tools = [];
+  for (const m of idx.lessons.filter(x => isLive(x, day)).sort(sortLessons)) {
+    for (const t of m.tools || []) {
+      if (t.hide) continue;
+      const id = `${m.id}~${t.i}`;
+      const done = ((p.checks || {})[m.id] || []).filter(k => k.startsWith(`${t.i}:`)).length;
+      const filled = Object.keys(((p.answers || {})[m.id]) || {}).filter(k => k.startsWith(`${t.i}:`)).length;
+      tools.push({ id, type: t.type, title: t.title, preview: t.preview, items: t.items, module: m.module, moduleTitle: (mods[m.module] || {}).title || '',
+        lessonId: m.toolOnly ? '' : m.id, lessonTitle: m.toolOnly ? '' : m.title, free: !!t.free, locked: !full && !t.free,
+        progress: t.type === 'checklist' ? done : t.type === 'worksheet' ? filled : 0, saved: !!(p.savedTools || {})[id] });
+    }
+  }
+  return { types: TOOL_TYPES, modules: MODULES, tools, full: !!full };
+}
+// Resolve a tool and check the member may open it (Free plan: samples only).
+async function toolAccess(lessonId, i, full) {
+  const idx = await index();
+  const meta = idx.lessons.find(m => m.id === lessonId);
+  if (!meta || !isLive(meta)) throw new HttpError(404, 'not_found', 'That resource isn\u2019t available.');
+  const t = (meta.tools || []).find(x => x.i === i);
+  if (!t || t.hide) throw new HttpError(404, 'not_found', 'That resource isn\u2019t available.');
+  if (!full && !t.free) throw new HttpError(403, 'locked', 'This resource comes with the Business Club, Business Studio Pro and Plus.');
+  return { meta, t };
+}
+async function toolFor(email, id, full) {
+  const { lessonId, i } = parseToolId(id);
+  const { meta } = await toolAccess(lessonId, i, full);
+  const l = await getJson(lessonKey(lessonId));
+  const b = l && (l.use || [])[i];
+  if (!b) throw new HttpError(404, 'not_found', 'That resource isn\u2019t available.');
+  const p = await getProgress(email);
+  const own = k => k.startsWith(`${i}:`);
+  const answers = {}; Object.entries(((p.answers || {})[lessonId]) || {}).forEach(([k, v]) => { if (own(k)) answers[k] = v; });
+  await bumpStat('tools', id);
+  const { hide, free, ...block } = b;
+  return {
+    tool: { id, i, ...block }, lesson: { id: lessonId, title: l.title, toolOnly: !!l.toolOnly, module: l.module, summary: l.toolOnly ? l.summary : '' },
+    studio: l.studio || null, mine: { checks: ((p.checks || {})[lessonId] || []).filter(own), answers, saved: !!(p.savedTools || {})[id] },
+  };
+}
+async function setToolSaved(email, id, on, full) {
+  const { lessonId, i } = parseToolId(id);
+  await toolAccess(lessonId, i, full);
+  await cas(progressKey(email), cur => {
+    const d = cur || { completed: {}, saved: {}, opened: {}, checks: {}, answers: {} };
+    d.savedTools = d.savedTools || {};
+    if (on) d.savedTools[id] = core.nowIso(); else delete d.savedTools[id];
+    if (Object.keys(d.savedTools).length > 300) throw new HttpError(409, 'too_many', 'You\u2019ve saved a lot \u2014 unsave a few first.');
+    return d;
+  });
+  return { saved: !!on };
+}
+// Free plan: ticking, typing and downloading only on the sample resources.
+async function assertToolKey(lessonId, key, full) {
+  if (full) return;
+  const i = Number(String(key || '').split(':')[0]);
+  await toolAccess(String(lessonId || ''), i, false);
+}
+async function assertToolFile(lessonId, fileId, full) {
+  if (full) return;
+  const l = await getJson(lessonKey(String(lessonId || '')));
+  const i = l ? (l.use || []).findIndex(b => b.type === 'file' && b.fileId === fileId) : -1;
+  if (i < 0) throw new HttpError(404, 'not_found', 'That file isn\u2019t available.');
+  await toolAccess(lessonId, i, false);
+}
+
 // ───────────── admin side ─────────────
 function cleanBlocks(raw) {
   return (Array.isArray(raw) ? raw : []).slice(0, 12).map(b => {
@@ -293,6 +407,8 @@ function cleanBlocks(raw) {
     if (type === 'worksheet') out.fields = (Array.isArray(b.fields) ? b.fields : []).map(f => ({ label: cleanText(f && f.label, 200), hint: cleanText(f && f.hint, 200), long: !!(f && f.long) })).filter(f => f.label).slice(0, 30);
     if (type === 'file') { out.fileId = /^[A-Za-z0-9]{8,24}$/.test(String(b.fileId || '')) ? b.fileId : ''; out.name = cleanText(b.name, 120); out.size = Number(b.size) || 0; out.mime = cleanText(b.mime, 120); out.note = cleanText(b.note, 300); if (!out.fileId) return null; }
     if (type === 'calculator') out.kind = b.kind === 'pricing' ? 'pricing' : 'pricing';
+    if (b.hide) out.hide = true;
+    if (typeof b.free === 'boolean') out.free = b.free;
     if ((type === 'checklist' && !out.items.length) || (type === 'template' && !out.text.trim()) || (type === 'worksheet' && !out.fields.length)) return null;
     return out;
   }).filter(Boolean);
@@ -324,7 +440,9 @@ function cleanLesson(raw, existing) {
     reviewMonths: [3, 6, 12, 24].includes(Number(raw.reviewMonths)) ? Number(raw.reviewMonths) : 12,
     disclaimer: cleanText(raw.disclaimer, 400),
     image: /^[A-Za-z0-9]{8,24}$/.test(String(raw.image || '')) ? raw.image : '',
+    toolOnly: !!raw.toolOnly,
   };
+  if (l.toolOnly && status === 'published' && !l.use.length) throw new HttpError(400, 'missing_field', 'Add at least one template, checklist, worksheet, file or calculator.');
   if (!l.tags.length) l.tags = ['all'];
   if (raw.studio && raw.studio.label) {
     const s = raw.studio;
@@ -349,7 +467,7 @@ async function adminGet(id) {
   requireId(id);
   const l = await getJson(lessonKey(id));
   if (!l) throw new HttpError(404, 'not_found', 'Lesson not found.');
-  return l;
+  return { ...l, use: (l.use || []).map((b, i) => ({ ...b, free: typeof b.free === 'boolean' ? b.free : DEFAULT_FREE.has(`${l.id}~${i}`) })) };
 }
 
 async function adminSave(actor, raw) {
@@ -457,7 +575,7 @@ async function adminDashboard() {
 async function suggestLesson(email, profile, summary) {
   const idx = await index();
   const day = today();
-  const live = idx.lessons.filter(m => isLive(m, day)).sort(sortLessons);
+  const live = idx.lessons.filter(m => isLive(m, day) && !m.toolOnly).sort(sortLessons);
   if (!live.length) return null;
   const p = await getProgress(email);
   const open = id => { const m = live.find(x => x.id === id); return m && !p.completed[id] ? m : null; };
@@ -492,6 +610,7 @@ async function suggestLesson(email, profile, summary) {
 module.exports = {
   suggestLesson, getProgress,
   MODULES, TAGS, STATUSES, isLive, recommendTag, ensureSeeded,
+  toolsList, toolFor, setToolSaved, assertToolKey, assertToolFile, TOOL_TYPES, DEFAULT_FREE,
   home, lessonFor, setComplete, setSaved, setCheck, setAnswer, setPrefs, search, memberFile,
   adminList, adminGet, adminSave, adminApprove, adminDelete, adminUpload, adminFile, adminDashboard, needsReview,
 };
