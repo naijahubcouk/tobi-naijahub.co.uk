@@ -51,6 +51,7 @@ a{color:var(--green)}
 .pill.grey{background:#ECEDF0;color:var(--muted)}
 .pill.goldl{background:var(--gold-l);color:#7A5300}
 .opt{font-weight:400;color:var(--muted)}
+.acctags{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.acctag{display:inline-block;align-self:flex-start;font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;background:#ECEDF0;color:var(--navy);white-space:nowrap}.acctag.club{background:#E3F4EA;color:#05663A}.acctag.free{background:#FFF1C9;color:#7A5300}.modcard .acctag{margin:6px 0 2px;justify-self:start;width:max-content;max-width:100%}.ldot.tnum{font-weight:800;font-size:14px;color:var(--muted)}
 .aiopt{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line,#e5e7eb);border-radius:14px;padding:12px 14px;font:inherit;cursor:pointer}.aiopt b{display:block;font-size:16.5px}.aiopt span{display:block;color:var(--muted);font-size:15px;margin-top:2px}.aiopt[aria-pressed=true]{border-color:#16a34a;background:#f0fdf4}
 .pill.cream{background:rgba(251,246,236,.12);color:var(--cream)}
 
@@ -2795,6 +2796,7 @@ nav.tabs .navsep{display:none}
     growth: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
     monthly: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     visibility: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    tutorial: '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 8.5l4 2-4 2z"/>',
     mind: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/>'
   };
 
@@ -2822,17 +2824,20 @@ nav.tabs .navsep{display:none}
   function clubOnly() { return !(S.boot && S.boot.access && (S.boot.access.membershipActive || S.boot.access.powerActive)); } // = no Library resources
   // Resources = 📖 Learn (lessons) + 🧰 Templates & Tools (every checklist, script, worksheet, calculator and download).
   function libHeader(active) {
-    return '<h1>Resources</h1><p class="sub" style="margin:4px 0 0">Learn how to run your business better — and use ready-made templates and tools.</p>' +
-      '<div class="chips" style="margin:12px 0 14px"><button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📖 Learn</button><button class="chip" id="libTools" aria-pressed="' + (active === 'tools') + '">🧰 Templates &amp; Tools</button></div>';
+    var hideTut = S.res && !tutLessons().length && active !== 'tut';
+    return '<h1>Resources</h1><p class="sub" style="margin:4px 0 0">Guides to Business Studio, practical lessons and ready-made templates and tools.</p>' +
+      '<div class="chips" style="margin:12px 0 14px">' + (hideTut ? '' : '<button class="chip" id="libTut" aria-pressed="' + (active === 'tut') + '">🎓 Tutorials</button>') +
+      '<button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📚 Growth Lessons</button><button class="chip" id="libTools" aria-pressed="' + (active === 'tools') + '">🧰 Templates &amp; Tools</button></div>';
   }
   function bindLibHeader() {
-    var a = $('#libRes'), b = $('#libTools');
+    var a = $('#libRes'), b = $('#libTools'), c = $('#libTut');
     if (a) a.onclick = function () { S.libView = 'res'; showResources(); };
+    if (c) c.onclick = function () { S.libView = 'tut'; showTutorials(); };
     if (b) b.onclick = function () { S.libView = 'tools'; showResTools(); };
   }
   function openLibraryTab() {
-    var v = S.libView === 'tools' || S.libView === 'res' ? S.libView : (clubOnly() ? 'tools' : 'res');
-    if (v === 'res') showResources(); else showResTools();
+    var v = S.libView === 'tools' || S.libView === 'res' || S.libView === 'tut' ? S.libView : (clubOnly() ? 'tools' : 'res');
+    if (v === 'res') showResources(); else if (v === 'tut') showTutorials(); else showResTools();
   }
 
   function resLocked() {
@@ -2853,6 +2858,7 @@ nav.tabs .navsep{display:none}
     setChrome({ tabs: true, tab: 'library' });
     app.innerHTML = '<main>' + libHeader('tools') + '<div id="tlBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
     bindLibHeader();
+    if (!S.res) api('studio-resources', 'home').then(function (h) { S.res = h; if (!tutLessons().length) { var c = $('#libTut'); if (c) c.remove(); } }).catch(function () {});
     try { if (!S.rtools || opts.reload !== false) S.rtools = await api('studio-resources', 'tools'); }
     catch (x) { if ($('#tlBox')) $('#tlBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     if (!$('#tlBox')) return;
@@ -2884,6 +2890,7 @@ nav.tabs .navsep{display:none}
     else if (g === 'all' && ty === 'all' && !q) body = r.groups.filter(function (x) { return gcounts[x.id]; }).map(function (x) { return '<h2>' + x.icon + ' ' + esc(x.label) + '</h2><div class="list">' + list.filter(function (t) { return t.group === x.id; }).map(row).join('') + '</div>'; }).join('');
     else body = '<div class="list">' + list.map(row).join('') + '</div>';
     $('#tlBox').innerHTML =
+      '<section class="reswelcome" style="margin-bottom:14px"><h2>Templates &amp; Tools</h2><div class="acctags"><span class="acctag club">💚 Business Club premium library</span><span class="acctag">+ Business Studio Plus</span></div><p>Customer message scripts, planners, pricing calculators, worksheets, checklists and marketing templates. Starter resources marked <b>Free</b> are open to everyone.</p></section>' +
       (!r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 ' + freeN + ' free on your Free plan</b><div class="sub" style="margin:0">Unlock all ' + r.tools.length + ' templates and tools — plus every lesson — with the Business Club or Business Studio Plus.</div><button class="btn gold small" id="tlUp" style="align-self:flex-start">See plans</button></section>' : '') +
       '<form id="tlForm" role="search" class="rsearch" style="margin-bottom:10px"><input type="search" id="tlQ" placeholder="Search, e.g. follow-up, bio, pricing" aria-label="Search templates and tools" maxlength="80" value="' + esc(S.rtQ || '') + '"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form>' +
       '<div class="chips" id="tlG" style="margin-bottom:8px"><button class="chip" data-tg="all" aria-pressed="' + (g === 'all') + '">All ' + r.tools.length + '</button>' +
@@ -2942,8 +2949,11 @@ nav.tabs .navsep{display:none}
   }
 
   function lessonById(id) { return (S.res && S.res.lessons.filter(function (l) { return l.id === id; })[0]) || null; }
-  function liveLessons() { return S.res.lessons.filter(function (l) { return l.status === 'published'; }); }
   function modById(id) { return (S.res && S.res.modules.filter(function (m) { return m.id === id; })[0]) || null; }
+  function isTutMod(id) { var m = modById(id); return !!(m && m.kind === 'tutorial'); }
+  function liveLessons() { return S.res.lessons.filter(function (l) { return l.status === 'published' && !isTutMod(l.module); }); }
+  function tutLessons() { return S.res ? S.res.lessons.filter(function (l) { return l.status === 'published' && isTutMod(l.module); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); }) : []; }
+  function accessTag(m) { return m.access === 'all' ? '<span class="acctag free">Free</span>' : m.access === 'club' ? '<span class="acctag club">💚 Business Club</span>' : '<span class="acctag">Business Club &amp; Plus</span>'; }
   function isClubMod(id) { var m = modById(id); return !!(m && m.access === 'club'); }
   // Locked module or lesson: explain who it's for.
   function lockedLessonSheet(modId) {
@@ -2979,13 +2989,15 @@ nav.tabs .navsep{display:none}
     try { S.res = await api('studio-resources', 'home'); }
     catch (x) { if ($('#resBox')) $('#resBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     if (!$('#resBox')) return;
+    if (!tutLessons().length) { var tc = $('#libTut'); if (tc) tc.remove(); }
     drawResources();
   }
 
   function drawResources() {
     var r = S.res, p = r.progress, live = liveLessons();
     var byRecent = function (obj) { return Object.keys(obj).filter(function (id) { return lessonById(id); }).sort(function (a, b) { return obj[b].localeCompare(obj[a]); }); };
-    var cont = byRecent(p.opened).filter(function (id) { return !p.completed[id]; }).slice(0, 3).map(lessonById);
+    var notTut = function (id) { var l = lessonById(id); return l && !isTutMod(l.module); };
+    var cont = byRecent(p.opened).filter(function (id) { return !p.completed[id] && notTut(id); }).slice(0, 3).map(lessonById);
     var month = r.today.slice(0, 7);
     var fresh = live.filter(function (l) { return (l.publishAt || '').slice(0, 7) === month && !(l.featured && l.collection); }).sort(function (a, b) { return (b.publishAt || '').localeCompare(a.publishAt || ''); }).slice(0, 4);
     var cols = {}; live.filter(function (l) { return l.featured && l.collection; }).forEach(function (l) { (cols[l.collection] = cols[l.collection] || []).push(l); });
@@ -2995,11 +3007,11 @@ nav.tabs .navsep{display:none}
       if (rec.length < 2) rec = rec.concat(live.filter(function (l) { return l.module === 'm01' && !p.completed[l.id] && rec.indexOf(l) < 0; }));
       rec = rec.slice(0, 4);
     }
-    var saved = byRecent(p.saved).map(lessonById).filter(Boolean);
+    var saved = byRecent(p.saved).filter(notTut).map(lessonById);
     var doneN = live.filter(function (l) { return p.completed[l.id]; }).length, pct = live.length ? Math.round(doneN / live.length * 100) : 0;
-    var freeBanner = !r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 Free on your plan: the Business Mindset lessons and free templates</b><div class="sub" style="margin:0">Unlock every lesson with the Business Club or Business Studio Plus.</div><button class="btn gold small" id="rfUp" style="align-self:flex-start">See plans</button></section>' : '';
+    var freeBanner = !r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 Free on your plan: the Business Mindset lessons, the tutorials and the starter templates</b><div class="sub" style="margin:0">Unlock every lesson with the Business Club or Business Studio Plus.</div><button class="btn gold small" id="rfUp" style="align-self:flex-start">See plans</button></section>' : '';
     $('#resBox').innerHTML = freeBanner +
-      '<section class="reswelcome"><h2>Learn 💚</h2><p>Short, practical lessons to help you build a stronger business, attract customers and keep moving forward. Need a template straight away? Open <button type="button" class="btn link" id="toTools" style="padding:0;min-height:0;font-size:inherit">Templates &amp; Tools</button>.</p>' +
+      '<section class="reswelcome"><h2>Business Growth Lessons 💚</h2><div class="acctags"><span class="acctag club">💚 Business Club</span><span class="acctag">+ Business Studio Plus</span></div><p>Eight learning modules covering Instagram, content, sales, customer experience, business tools, planning, growth and Auntie Tobi visibility opportunities — plus Business Mindset, free for everyone. Need a template straight away? Open <button type="button" class="btn link" id="toTools" style="padding:0;min-height:0;font-size:inherit">Templates &amp; Tools</button>.</p>' +
         '<form id="rsForm" role="search" class="rsearch"><input type="search" id="rsQ" placeholder="Search lessons, e.g. bio, pricing, reviews" aria-label="Search lessons" maxlength="100"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form></section>' +
       '<div id="rsResults"></div><div id="rsMain">' +
       (cont.length ? '<h2>Continue learning</h2><div class="list">' + cont.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
@@ -3008,14 +3020,14 @@ nav.tabs .navsep{display:none}
       (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       (saved.length ? '<h2>My saved lessons</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       '<h2>My learning progress</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>' + doneN + ' of ' + live.length + ' lessons completed</b><span class="sub">' + pct + '%</span></div><div class="pbar"><span style="width:' + pct + '%"></span></div></div>' +
-      '<h2>Explore lessons</h2><div class="modgrid">' + r.modules.filter(function (m) { return r.lessons.some(function (l) { return l.module === m.id; }); }).map(function (m) {
+      '<h2>Explore lessons</h2><div class="modgrid">' + r.modules.filter(function (m) { return m.kind !== 'tutorial' && r.lessons.some(function (l) { return l.module === m.id; }); }).map(function (m) {
         var ls = r.lessons.filter(function (l) { return l.module === m.id; }), lv = ls.filter(function (l) { return l.status === 'published'; });
         var dn = lv.filter(function (l) { return p.completed[l.id]; }).length, started = lv.some(function (l) { return p.opened[l.id]; });
         var count = ls.length + ' lesson' + (ls.length === 1 ? '' : 's');
         if (m.locked) return '<button class="modcard locked" data-lockmod="' + m.id + '"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 22) + '</span><span class="mn">MODULE ' + esc(m.n) + '</span><b>' + esc(m.title) + '</b><span class="md">' + esc(m.desc) + '</span>' +
-          '<span class="mc">' + esc(count) + '</span><span class="mgo">' + (m.access === 'club' ? '💚 Business Club' : '🔒 Club &amp; Plus') + '</span></button>';
+          '<span class="mc">' + esc(count) + '</span>' + accessTag(m) + '<span class="mgo">🔒 Locked</span></button>';
         return '<button class="modcard" data-mod="' + m.id + '"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 22) + '</span><span class="mn">MODULE ' + esc(m.n) + '</span><b>' + esc(m.title) + '</b><span class="md">' + esc(m.desc) + '</span>' +
-          '<span class="mc">' + esc(count) + '</span>' + (lv.length ? '<span class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></span>' : '') +
+          '<span class="mc">' + esc(count) + '</span>' + accessTag(m) + (lv.length ? '<span class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></span>' : '') +
           '<span class="mgo">' + (started && dn < lv.length ? 'Continue' : dn && dn === lv.length ? 'Review' : 'Explore') + ' →</span></button>';
       }).join('') + '</div>' +
       (p.hideRecs ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
@@ -3043,6 +3055,27 @@ nav.tabs .navsep{display:none}
     };
   }
 
+  async function showTutorials() {
+    S.libView = 'tut';
+    setChrome({ tabs: true, tab: 'library' });
+    app.innerHTML = '<main>' + libHeader('tut') + '<div id="tutBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindLibHeader();
+    try { S.res = await api('studio-resources', 'home'); }
+    catch (x) { if ($('#tutBox')) $('#tutBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#tutBox')) return;
+    var ts = tutLessons(), p = S.res.progress;
+    if (!ts.length) { S.libView = 'res'; return showResources(); }
+    var dn = ts.filter(function (l) { return p.completed[l.id]; }).length;
+    $('#tutBox').innerHTML = '<section class="reswelcome"><h2>Business Studio Tutorials</h2><div class="acctags"><span class="acctag free">Free for all users</span></div><p>Step-by-step guides to using the Business Studio dashboard, content calendar, customer follow-ups, AI tools and other features.</p></section>' +
+      '<div class="card stack" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><b>' + dn + ' of ' + ts.length + ' done</b><span class="sub">' + Math.round(dn / ts.length * 100) + '%</span></div><div class="pbar"><span style="width:' + Math.round(dn / ts.length * 100) + '%"></span></div></div>' +
+      '<div class="list">' + ts.map(function (l, i) {
+        var done = !!p.completed[l.id];
+        return '<button class="li" data-lesson="' + esc(l.id) + '"><span class="ldot tnum' + (done ? ' done' : '') + '" aria-hidden="true">' + (done ? '✓' : (i + 1)) + '</span><div class="t"><b>' + esc(l.title) + '</b><small>' + esc(l.summary || '') + '</small></div></button>';
+      }).join('') + '</div>' +
+      '<p class="hint" style="text-align:center;margin-top:16px">Stuck on something? <button class="btn link" data-idea="improve" style="padding:0;min-height:0">Ask for a tutorial</button></p>';
+    bindLessonRows($('#tutBox'), showTutorials);
+  }
+
   async function showModule(id) {
     if (!S.res) { try { S.res = await api('studio-resources', 'home'); } catch (x) { return showResources(); } }
     var m = S.res.modules.filter(function (x) { return x.id === id; })[0]; if (!m) return showResources();
@@ -3068,7 +3101,7 @@ nav.tabs .navsep{display:none}
     if (st.tool) return showTool(st.tool, st.input || {}, { back: back, tab: 'library', intro: 'From your lesson — I’ve set this up for you. Change anything you like, then tap Create.' });
     var map = { goal: showHome, plan: showPlan, money: showMoney, track: function () { showTrack(); }, profile: function () { showProfileForm(false); }, brand: function () { showAccount('brand'); },
       review: function () { showReview(back); }, customers: showCustomers, followups: function () { showFollowups(); }, image: function () { showMakeImage('', null, back); },
-      todo: function () { showTodoAll(); }, market: function () { showMarket(back || showHome); } };
+      todo: function () { showTodoAll(); }, market: function () { showMarket(back || showHome); }, home: showHome, create: showCreate, library: function () { S.libView = 'tools'; showResTools(); } };
     (map[st.screen] || showHome)();
   }
 
@@ -3085,19 +3118,21 @@ nav.tabs .navsep{display:none}
     var checks = {}; (mine.checks || []).forEach(function (k) { checks[k] = true; });
     var self = function () { showLesson(id, back); };
     function block(b, bi) { return useBlockHtml(b, bi, checks, mine.answers || {}); }
-    app.innerHTML = '<main class="lesson"><div class="lmeta">Module ' + esc(mod.n) + (mod.title ? ' · ' + esc(mod.title) : '') + (l.readMins ? ' · ' + l.readMins + ' min read' : '') + '</div>' +
+    var tut = mod.kind === 'tutorial' || l.module === 't01';
+    if (tut && back === showResources) back = showTutorials;
+    app.innerHTML = '<main class="lesson"><div class="lmeta">' + (tut ? '🎓 Tutorial · Business Studio' : 'Module ' + esc(mod.n) + (mod.title ? ' · ' + esc(mod.title) : '')) + (l.readMins ? ' · ' + l.readMins + ' min read' : '') + '</div>' +
       '<h1>' + esc(l.title) + '</h1>' + (l.summary ? '<p class="sub" style="margin-top:6px">' + esc(l.summary) + '</p>' : '') +
       '<div class="row" style="margin:12px 0 4px"><button class="btn small ' + (mine.saved ? 'gold' : 'ghost') + '" id="lsSave">' + (mine.saved ? '★ Saved' : '☆ Save') + '</button>' + (mine.completed ? '<span class="pill green">✓ Completed</span>' : '') + '</div>' +
       (l.image ? '<div id="lsImg" class="lsimg"></div>' : '') +
-      (l.learn ? '<section class="lsec learn"><div class="lh"><span>LEARN</span>Understand the topic</div><div class="rt">' + rt(l.learn) + '</div></section>' : '') +
+      (l.learn ? '<section class="lsec learn"><div class="lh"><span>' + (tut ? 'HOW TO' : 'LEARN') + '</span>' + (tut ? 'Step by step' : 'Understand the topic') + '</div><div class="rt">' + rt(l.learn) + '</div></section>' : '') +
       (l.see ? '<section class="lsec see"><div class="lh"><span>SEE</span>' + esc(l.seeTitle || 'Example') + '</div><div class="rt">' + rt(l.see) + '</div></section>' : '') +
-      (l.do ? '<section class="lsec do"><div class="lh"><span>DO</span>Take action</div><div class="rt">' + rt(l.do) + '</div>' + (l.studio ? '<button class="btn gold block" id="lsStudio" style="margin-top:10px">' + esc(l.studio.label) + '</button>' + (l.studio.tool ? '<p class="hint" style="text-align:center">Uses ' + (l.studio.tool === 'planner' && l.studio.input && l.studio.input.days === '30' ? '3 generations' : '1 generation') + ' if you tap Create</p>' : '') : '') + '</section>' : '') +
+      (l.do ? '<section class="lsec do"><div class="lh"><span>' + (tut ? 'TRY IT' : 'DO') + '</span>' + (tut ? 'Try it now' : 'Take action') + '</div><div class="rt">' + rt(l.do) + '</div>' + (l.studio ? '<button class="btn gold block" id="lsStudio" style="margin-top:10px">' + esc(l.studio.label) + '</button>' + (l.studio.tool ? '<p class="hint" style="text-align:center">Uses ' + (l.studio.tool === 'planner' && l.studio.input && l.studio.input.days === '30' ? '3 generations' : '1 generation') + ' if you tap Create</p>' : '') : '') + '</section>' : '') +
       ((l.use || []).length ? '<section class="lsec use"><div class="lh"><span>USE</span>Practical resources</div>' + l.use.map(block).join('') + '</section>' : '') +
       ((l.sources || []).length || l.reviewedAt || l.disclaimer ? '<div class="lfoot">' + (l.disclaimer ? '<p>' + esc(l.disclaimer) + '</p>' : '') +
         ((l.sources || []).length ? '<p><b>Sources:</b> ' + l.sources.map(function (s) { return s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.title) + '</a>' : esc(s.title); }).join(' · ') + '</p>' : '') +
         (l.reviewedAt ? '<p>Last reviewed: ' + esc(dmy(l.reviewedAt)) + '</p>' : '') + '</div>' : '') +
-      '<button class="btn ' + (mine.completed ? 'ghost' : 'primary') + ' block" id="lsDone" style="margin-top:18px">' + (mine.completed ? '✓ Completed — mark as not done' : 'Mark lesson as complete') + '</button>' +
-      (r.next ? '<button class="btn ghost block" id="lsNext" style="margin-top:10px">Next: ' + esc(r.next.title) + ' →</button>' : '<button class="btn ghost block" id="lsMod" style="margin-top:10px">Back to module</button>') +
+      '<button class="btn ' + (mine.completed ? 'ghost' : 'primary') + ' block" id="lsDone" style="margin-top:18px">' + (mine.completed ? '✓ Completed — mark as not done' : tut ? 'Mark tutorial as done' : 'Mark lesson as complete') + '</button>' +
+      (r.next ? '<button class="btn ghost block" id="lsNext" style="margin-top:10px">Next: ' + esc(r.next.title) + ' →</button>' : '<button class="btn ghost block" id="lsMod" style="margin-top:10px">' + (tut ? 'All tutorials' : 'Back to module') + '</button>') +
       '</main>';
     if (l.image) api('studio-resources', 'file', { id: id, fileId: l.image }).then(function (f) { var d = $('#lsImg'); if (d) d.innerHTML = '<img src="' + f.dataUrl + '" alt="">'; }).catch(function () {});
     $('#lsSave').onclick = async function () {
@@ -3113,7 +3148,7 @@ nav.tabs .navsep{display:none}
         toast(done ? 'Lesson completed — well done! 🎉' : 'Marked as not done'); self(); } catch (x) { toast(x.message); b.disabled = false; }
     };
     var nx = $('#lsNext'); if (nx) nx.onclick = function () { showLesson(r.next.id, back); };
-    var md = $('#lsMod'); if (md) md.onclick = function () { showModule(l.module); };
+    var md = $('#lsMod'); if (md) md.onclick = function () { if (tut) showTutorials(); else showModule(l.module); };
     var stb = $('#lsStudio'); if (stb) stb.onclick = function () { studioGo(l.studio, self); };
     bindUseBlocks(l, id, mine, checks);
   }
