@@ -48,6 +48,14 @@
 /marketplace  /marketplace.html  200
 /business-club  /business-club.html  200
 # ── Business Studio (members-only) ──
+# The app's own address. Only matches studio.auntietobi.co.uk (does nothing until that domain is added in Netlify).
+https://studio.auntietobi.co.uk/                    /studio.html  200!
+https://studio.auntietobi.co.uk/business-studio     https://www.auntietobi.co.uk/business-studio  301!
+https://studio.auntietobi.co.uk/business-club       https://www.auntietobi.co.uk/business-club    301!
+https://studio.auntietobi.co.uk/studio-admin        https://www.auntietobi.co.uk/studio-admin     301!
+https://studio.auntietobi.co.uk/hq                  https://www.auntietobi.co.uk/hq               301!
+https://studio.auntietobi.co.uk/marketplace         https://www.auntietobi.co.uk/marketplace      301!
+https://studio.auntietobi.co.uk/index.html          https://www.auntietobi.co.uk/                 301!
 /studio          /studio.html        200
 /studio-admin    /studio-admin.html  200
 /p/:slug         /.netlify/functions/studio-page?s=:slug  200

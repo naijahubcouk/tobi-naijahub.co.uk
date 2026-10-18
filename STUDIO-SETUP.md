@@ -503,3 +503,14 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - **Weekly goal:** members can pick a preset goal or **write their own** (e.g. "Get 5 cake orders for half-term"); their daily Business Tips and actions use it.
 - **Weekly marketing plan:** each day's action has **＋ Add to tasks**, plus **Add all to my to-do list** (skips the ones already added).
 - **Mobile menu:** Today · Customers · Create · Plan · **Resources**. Track is still in the Today tools grid and the laptop sidebar.
+
+## 7ah. The app's own address — studio.auntietobi.co.uk
+
+The Business Studio page stays at `auntietobi.co.uk/business-studio` and Admin at `auntietobi.co.uk/studio-admin`. The app and price list pages can move to `studio.auntietobi.co.uk`.
+
+1. Netlify → Domain management → **Add domain alias** `studio.auntietobi.co.uk`, add the DNS record Netlify shows, and wait until it is active with HTTPS.
+2. Netlify → Environment variables → add `STUDIO_APP_URL` = `https://studio.auntietobi.co.uk` and redeploy (Deploys → Trigger deploy).
+   - Emails, push notifications and Stripe pages link to the new address; `auntietobi.co.uk/studio` forwards there; `auntietobi.co.uk/p/<link>` forwards to `studio.auntietobi.co.uk/p/<link>`.
+   - Members sign in once more on the new address; home-screen apps need adding again.
+   - Remove the variable (and redeploy) to switch everything back.
+3. Daily reminders (OneSignal allows one web address per app): create a second OneSignal web app for `https://studio.auntietobi.co.uk` and add `STUDIO_ONESIGNAL_APP_ID` and `STUDIO_ONESIGNAL_API_KEY`. Pushes are sent through both apps.

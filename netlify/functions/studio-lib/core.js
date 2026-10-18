@@ -43,6 +43,13 @@ const COOKIE_MEMBER = '__Host-studio_sid';
 const COOKIE_ADMIN = '__Host-studio_admin';
 const COOKIE_HQ = '__Host-studio_hq';   // HQ-only sign-in (Content Hub team, e.g. an assistant) — never admin
 
+// Where members open the app. STUDIO_APP_URL (e.g. https://studio.auntietobi.co.uk) switches it to its own address;
+// without it the app stays at <site>/studio. appUrl() + '?x=1' / '#account' works for both.
+function siteBase() { return String(env('STUDIO_SITE_URL', process.env.URL || 'https://www.auntietobi.co.uk')).replace(/\/$/, ''); }
+function appOrigin() { const a = String(env('STUDIO_APP_URL', '') || '').trim().replace(/\/$/, ''); return /^https:\/\/[a-z0-9.-]+$/i.test(a) ? a : ''; }
+function appUrl() { const a = appOrigin(); return a ? `${a}/` : `${siteBase()}/studio`; }
+// Public price list pages live on the app's address when it has one.
+function pagesBase() { return `${appOrigin() || siteBase()}/p/`; }
 function env(name, fallback) {
   const v = process.env[name];
   return v === undefined || v === '' ? fallback : v;
@@ -540,6 +547,7 @@ async function alert(kind, message, detail) {
 }
 
 module.exports = {
+  siteBase, appOrigin, appUrl, pagesBase,
   STORE_NAME, DAY, MIN, SESSION, DEFAULT_SETTINGS, LIVE_SUB_STATUSES,
   COOKIE_MEMBER, COOKIE_ADMIN, COOKIE_HQ,
   env, adminEmails, HttpError, Abort, respond, handler, header,

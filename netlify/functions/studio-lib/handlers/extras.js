@@ -41,9 +41,10 @@ exports.handler = handler(async (ctx) => {
     case 'customers': return { customers: await money.customers(email), reviewLink: (await prefs.get(email)).reviewLink };
     case 'shop-get': {
       const s = await shop.get(email);
-      return { shop: s, url: s.slug ? `${siteUrl()}/p/${s.slug}` : '', base: `${siteUrl()}/p/` };
+      const pb = core.appOrigin() ? core.pagesBase() : `${siteUrl()}/p/`;
+      return { shop: s, url: s.slug ? `${pb}${s.slug}` : '', base: pb };
     }
-    case 'shop-save': { const s = await shop.save(email, body.shop); return { shop: s, url: `${siteUrl()}/p/${s.slug}` }; }
+    case 'shop-save': { const s = await shop.save(email, body.shop); return { shop: s, url: `${core.appOrigin() ? core.pagesBase() : `${siteUrl()}/p/`}${s.slug}` }; }
     case 'shop-img': return { shop: await shop.setImage(email, idOf(body.itemId), body.dataUrl) };
     case 'shop-img-delete': return { shop: await shop.deleteImage(email, idOf(body.itemId)) };
     case 'shop-publish': { const s = await shop.publish(email, !!body.on); return { shop: s, url: `${siteUrl()}/p/${s.slug}` }; }

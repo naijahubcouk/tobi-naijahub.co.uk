@@ -72,7 +72,7 @@ async function activateFromSession(session) {
 }
 
 async function sendWelcome(email, name, expires, isNew) {
-  const studio = `${siteUrl()}/studio`;
+  const studio = `${core.appUrl()}`;
   const until = new Date(`${expires}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const hi = name ? `Hi ${name.split(' ')[0]},` : 'Hello,';
   const subject = isNew ? 'Welcome to the Auntie Tobi Business Club 💚' : 'Your Auntie Tobi Business Club membership is renewed 💚';

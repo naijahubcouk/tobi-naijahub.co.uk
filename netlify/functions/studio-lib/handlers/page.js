@@ -34,6 +34,9 @@ exports.handler = core.handler(async (ctx) => {
     const m = img.dataUrl.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
     return { statusCode: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'public, max-age=86400', 'Netlify-CDN-Cache-Control': 'public, max-age=86400, durable', 'X-Content-Type-Options': 'nosniff' }, body: m[2], isBase64Encoded: true };
   }
+  // Price list pages live on the app's own address once STUDIO_APP_URL is set; old links forward there.
+  const app = core.appOrigin(), host = String(core.header(ctx.event, 'host') || '').toLowerCase();
+  if (app && host && host !== new URL(app).host && /^[a-z0-9-]{1,60}$/.test(slug)) return { statusCode: 301, headers: { Location: `${app}/p/${slug}`, 'Cache-Control': 'public, max-age=3600' }, body: '' };
   await core.rateLimit('page-ip', ctx.ip || 'x', 600, 60 * 60 * 1000);
   const page = await shop.publicPage(slug);
   if (!page) return notFound();

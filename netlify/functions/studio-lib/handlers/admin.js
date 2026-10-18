@@ -409,7 +409,7 @@ exports.handler = handler(async (ctx) => {
         const ok = v.status === 'verified';
         try {
           await core.sendEmail([email], ok ? 'Your business is verified on Auntie Tobi ✅' : 'About your verification request',
-            ok ? `Good news — Auntie Tobi has checked your Companies House registration (${v.number}) and your business is now verified.\n\nSee it in your Business Studio: ${siteUrl()}/studio\n\nAuntie Tobi 💚`
+            ok ? `Good news — Auntie Tobi has checked your Companies House registration (${v.number}) and your business is now verified.\n\nSee it in your Business Studio: ${core.appUrl()}\n\nAuntie Tobi 💚`
                : `Thank you for your verification request. We weren’t able to verify your business at the moment.${v.note ? `\n\n${v.note}` : ''}\n\nAny questions? Message us on WhatsApp: https://wa.me/447594674940\n\nAuntie Tobi 💚`);
         } catch (e) { console.error('[studio] verify email failed', e && e.message); }
       }
@@ -678,7 +678,7 @@ exports.handler = handler(async (ctx) => {
       const f = r.live && decision === 'approve' ? r.live : (r.draft || r.live || {});
       const to = r.owner || (r.contact && r.contact.email);
       const first = (r.contact && r.contact.name ? r.contact.name.split(' ')[0] : '') || '';
-      const where = r.source === 'member' ? `${siteUrl()}/studio` : `${siteUrl()}/marketplace`;
+      const where = r.source === 'member' ? `${core.appUrl()}` : `${siteUrl()}/marketplace`;
       const note = String(body.note || '').trim();
       const msg = {
         approve: [`Your listing is live on the Auntie Tobi Marketplace 🎉`, `${first ? `Hi ${first},` : 'Hello,'}\n\nGood news — “${f.name}” is ${wasLive ? 'updated and ' : ''}live on the Auntie Tobi Marketplace.\n\nSee it here: ${siteUrl()}/marketplace\n\nShare the link with your customers too!\n\nAuntie Tobi 💚`],

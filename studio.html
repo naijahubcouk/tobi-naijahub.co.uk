@@ -11,7 +11,8 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/studio-icon-16.png?v=1">
 <link rel="icon" type="image/png" sizes="48x48" href="/icons/studio-icon-48.png?v=1">
 <link rel="apple-touch-icon" href="/icons/studio-icon-180.png?v=1">
-<link rel="manifest" href="/studio-manifest.json">
+<link rel="manifest" id="mfLink" href="/studio-manifest.json">
+<script>/* The app's own address uses its own home-screen settings. */ if (/^studio\./i.test(location.host)) document.getElementById('mfLink').href = '/studio-app-manifest.json';</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Business Studio">
 <script src="/studio-qr.js" defer></script>
@@ -872,7 +873,22 @@ nav.tabs .navsep{display:none}
     scrim.addEventListener('click', function (e) { if (e.target === scrim) scrim.remove(); });
   }
 
+  // The app can live on its own address (STUDIO_APP_URL, e.g. https://studio.auntietobi.co.uk). The old /studio address forwards there.
+  async function appHome() {
+    if (/^studio\./i.test(location.host)) {
+      if (/^\/studio(\.html)?$/.test(location.pathname)) history.replaceState(null, '', '/' + location.search + location.hash);
+      try { var r0 = await fetch('/.netlify/functions/studio-auth', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'app-url' }) }); S.appCfg = r0.ok ? await r0.json() : {}; } catch (e) { S.appCfg = {}; }
+      return false;
+    }
+    try {
+      var r = await fetch('/.netlify/functions/studio-auth', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'app-url' }) });
+      var j = r.ok ? await r.json() : null; S.appCfg = j || {};
+      if (j && j.appUrl && new URL(j.appUrl).host !== location.host) { location.replace(j.appUrl + '/' + location.search + location.hash); return true; }
+    } catch (e) {}
+    return false;
+  }
   async function start() {
+    if (await appHome()) return;
     var cq = new URLSearchParams(location.search);
     if (cq.get('cancel') === '1' && cq.get('e') && cq.get('t')) { var ce = cq.get('e'), ct = cq.get('t'); history.replaceState(null, '', location.pathname); return showCancelLink(ce, ct); }
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
@@ -3596,6 +3612,8 @@ nav.tabs .navsep{display:none}
   var ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
   function loadOneSignal() {
     if (S.osPromise) return S.osPromise;
+    // On the app's own address, reminders use its own OneSignal app (set in Netlify as STUDIO_ONESIGNAL_APP_ID).
+    if (/^studio\./i.test(location.host)) { var sid = S.appCfg && S.appCfg.pushApp; if (!sid) return Promise.reject(new Error('Reminders are being set up for the new Business Studio address — please try again soon.')); ONESIGNAL_APP_ID = sid; }
     S.osPromise = new Promise(function (resolve, reject) {
       var done = false, timer = setTimeout(function () { if (!done) { S.osPromise = null; reject(new Error('Reminders couldn’t start. They only work on the live Auntie Tobi site, in a browser that supports notifications.')); } }, 15000);
       window.OneSignalDeferred = window.OneSignalDeferred || [];
