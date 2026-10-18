@@ -453,7 +453,7 @@ nav.tabs .navsep{display:none}
   <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Plan</button>
   <button data-tab="track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Track</button>
   <span class="navsep" aria-hidden="true"></span>
-  <button data-tab="library" id="libTabBtn" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Library</button>
+  <button data-tab="library" id="libTabBtn" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Growth Library</button>
   <button data-tab="messages" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>Messages</button>
   <button data-tab="account" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Account</button>
 </nav>
@@ -1277,7 +1277,8 @@ nav.tabs .navsep{display:none}
     if (refine.length || turn.length) html += '<div class="qtweak"><span class="saved-tag">Quick changes:</span>' + refine.map(function (k) { return '<button class="btn ghost small" data-rf="' + k + '">' + REFINE_LABEL[k] + ' <span class="free">free</span></button>'; }).join('') +
       turn.map(function (k) { return '<button class="btn ghost small" data-turn="' + k + '">' + (k === 'reel' ? '🎬 Turn into a Reel' : '📱 Turn into Stories') + '</button>'; }).join('') + '</div>';
     var planType = { reel: 'reel', carousel: 'carousel', stories: 'story' }[tool] || (tool === 'quick' ? ({ reel: 'reel', stories: 'story' }[g] || 'post') : 'post');
-    if (!NOT_POST[tool] && tool !== 'planner' && !item.calendarId) html += '<div class="qtweak"><button class="btn ghost small" id="toPlan">📅 Add to Plan</button><span class="saved-tag">Schedule it on your calendar</span></div>';
+    var nOpts = $$('textarea[data-opt]', el).length;
+    if (!NOT_POST[tool] && tool !== 'planner' && !item.calendarId) html += '<div class="qtweak">' + (nOpts > 1 && (tool === 'ideas' || (tool === 'quick' && g === 'post')) ? '<button class="btn gold small" id="allIdeas">💡 Send all ' + nOpts + ' ideas to Plan</button>' : '') + '<button class="btn ghost small" id="toPlan">📅 Add to Plan</button><span class="saved-tag">As an idea, ready to post, or on a date</span></div>';
     if (tool === 'growth30' || tool === 'weekly') html += '<div class="qtweak"><button class="btn gold small" id="toTodo">📋 Add these actions to my to-do list</button><span class="saved-tag">Free</span></div>';
     if (nexts.length) html += '<div class="whatnext"><b>➡️ What should I do next?</b><div class="row wrap" style="gap:6px;margin-top:8px">' + nexts.map(function (id) { return '<button class="btn ghost small" data-next="' + id + '">' + icon((TOOL_META[id] || {}).icon || CAT_ICON[toolDef(id).cat] || '', 16) + ' ' + esc(NEXT_WHY[id] || toolDef(id).name) + '</button>'; }).join('') + '</div></div>';
     if (!html) return;
@@ -1298,7 +1299,9 @@ nav.tabs .navsep{display:none}
     });
     $$('[data-turn]', box).forEach(function (b) { b.onclick = function () { runQuick(b.dataset.turn, '', { source: text().slice(0, 2000), back: back }); }; });
     $$('[data-next]', box).forEach(function (b) { b.onclick = function () { var id = b.dataset.next; showTool(id, nextPrefill(id, item, text()), { back: back, intro: 'Next step from your ' + ((toolDef(tool) || {}).name || 'result').toLowerCase() + '. Check the details, then tap Create.' }); }; });
-    var tp = $('#toPlan', box); if (tp) tp.onclick = function () { addToPlanSheet({ title: item.title || ((toolDef(tool) || {}).name || 'Content'), type: planType, caption: text().slice(0, 4000), status: 'ready', contentId: item.id }); };
+    var tp = $('#toPlan', box); if (tp) tp.onclick = function () { var c = nOpts === 1 ? planCardFrom(item, text(), 0) : { title: item.title || ((toolDef(tool) || {}).name || 'Content'), type: planType, caption: text().slice(0, 4000), contentId: item.id }; c.status = 'idea'; addToPlanSheet(c); };
+    var ai = $('#allIdeas', box); if (ai) ai.onclick = function () { var cards = []; $$('textarea[data-opt]', el).forEach(function (t, i) { var b1 = $('[data-toidea="' + i + '"]', el); if (b1 && b1.disabled) return; cards.push(planCardFrom(item, t.value, i + 1)); if (b1) { b1.disabled = true; b1.innerHTML = '✓ In Plan ideas'; } });
+      if (!cards.length) return toast('These ideas are already in your Plan'); sendToIdeas(cards, ai); };
     var td = $('#toTodo', box); if (td) td.onclick = async function () {
       var tasks = planTasks(item, text());
       if (!tasks.length) return toast('Couldn’t find the daily actions — add them by hand from the plan.');
@@ -1481,7 +1484,7 @@ nav.tabs .navsep{display:none}
     var b = $('#dashBox'); if (b) { b.innerHTML = dashTiles(S.dash); bindDash(); }
   }
   var BIZ_TOOLS = [['customers', '👥', 'Customers'], ['todo', '📋', 'To-do list'], ['create', '✨', 'Create'], ['plan', '📅', 'Content calendar'],
-    ['track', '📊', 'Tracker'], ['goal', '🎯', 'Planner'], ['money', '🧾', 'Quotes &amp; invoices'], ['library', '📚', 'Library']];
+    ['track', '📊', 'Tracker'], ['goal', '🎯', 'Planner'], ['money', '🧾', 'Quotes &amp; invoices'], ['library', '📚', 'Growth Library']];
   function bizTools() { return '<div class="btools">' + BIZ_TOOLS.map(function (t) { return '<button data-bt="' + t[0] + '"><span class="bi">' + t[1] + '</span>' + t[2] + '</button>'; }).join('') + '</div>'; }
   function bindBizTools() {
     $$('[data-bt]').forEach(function (b) { b.onclick = function () {
@@ -1493,7 +1496,7 @@ nav.tabs .navsep{display:none}
       if (k === 'goal') return pickGoal(function () { showHome(); });
       if (k === 'money') return showMoney();
       if (k === 'create') return showCreate();
-      openLibraryTab();
+      S.libView = 'res'; showResources();
     }; });
   }
   // ＋ in the header: add something from any screen
@@ -1804,15 +1807,44 @@ nav.tabs .navsep{display:none}
   }
   function upsertCard(cd) { S.planCards = S.planCards || []; var i = S.planCards.findIndex(function (x) { return x.id === cd.id; }); if (i > -1) S.planCards[i] = Object.assign({}, S.planCards[i], cd); else S.planCards.push(cd); }
   // "📅 Add to Plan" from a Create result or today's content idea
+  // Turn generated text into a Plan card (used by "Send to Plan ideas").
+  function planCardFrom(item, txt, num) {
+    var tool = item.tool, g = item.input && item.input.goal, def = toolDef(tool) || {};
+    var lines = String(txt || '').split('\n').map(function (l) { return l.replace(/[*_#]+/g, '').trim(); }).filter(Boolean);
+    var fm = String(txt || '').match(/^\s*\**\s*format\s*\**\s*:\s*(.+)$/im);
+    var type = fm ? (/reel|video|tiktok/i.test(fm[1]) ? 'reel' : /carousel/i.test(fm[1]) ? 'carousel' : /stor/i.test(fm[1]) ? 'story' : /whatsapp/i.test(fm[1]) ? 'whatsapp' : 'post')
+      : ({ reel: 'reel', carousel: 'carousel', stories: 'story' }[tool] || (tool === 'quick' ? ({ reel: 'reel', stories: 'story' }[g] || 'post') : 'post'));
+    var first = (lines[0] || '').replace(/^(title|idea)\s*\d*\s*:\s*/i, '');
+    var title = (tool === 'ideas' || (tool === 'quick' && g === 'post')) && first && first.length <= 120 && !/:$/.test(first) ? first
+      : (item.title || def.name || 'Content') + (num ? ' — option ' + num : '');
+    var body = String(txt || '').trim();
+    if (title === first) body = body.split('\n').slice(1).join('\n').trim() || body;
+    return { title: title.slice(0, 140), type: type, caption: body.slice(0, 4000), status: 'idea', contentId: item.id };
+  }
+  async function sendToIdeas(cards, btn) {
+    if (btn) { btn.disabled = true; var old = btn.innerHTML; btn.textContent = 'Sending…'; }
+    var done = 0;
+    try {
+      for (var i = 0; i < cards.length; i++) { var r = await api('studio-growth', 'plan-save', { card: cards[i] }); upsertCard(r.card); done++; }
+      if (btn) btn.innerHTML = '✓ In Plan ideas';
+      actionToast(done === 1 ? 'Sent to your Plan ideas 💡' : done + ' ideas sent to your Plan 💡', 'View', function () { showPlan('board'); });
+    } catch (x) { toast(x.message); if (btn) { btn.disabled = false; btn.innerHTML = old; } }
+  }
   function addToPlanSheet(card) {
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true"><h2 style="margin:0">📅 Add to Plan</h2><div><label class="f" for="apT">Title</label><input id="apT" maxlength="140" value="' + esc(card.title || '') + '"></div>' +
-      '<div><label class="f" for="apD">Date <span class="opt">(optional — leave empty to keep it in Ready)</span></label><input type="date" id="apD"></div>' +
+      '<div><span class="f">Put it in</span><div class="chips" id="apS" style="margin-top:6px"><button class="chip" data-s="idea" aria-pressed="' + (card.status !== 'ready') + '">💡 Ideas</button><button class="chip" data-s="ready" aria-pressed="' + (card.status === 'ready') + '">✅ Ready</button><button class="chip" data-s="date" aria-pressed="false">📅 Pick a date</button></div></div>' +
+      '<div id="apDW" class="hidden"><label class="f" for="apD">Date</label><input type="date" id="apD"></div>' +
       '<button class="btn primary block" id="apGo">Add card</button><button class="btn link" id="apX">Cancel</button></div>';
     document.body.appendChild(scrim);
     $('#apX', scrim).onclick = function () { scrim.remove(); };
+    var stage = card.status === 'ready' ? 'ready' : 'idea';
+    $$('#apS .chip', scrim).forEach(function (c) { c.onclick = function () { stage = c.dataset.s; $$('#apS .chip', scrim).forEach(function (x) { x.setAttribute('aria-pressed', String(x === c)); }); $('#apDW', scrim).classList.toggle('hidden', stage !== 'date'); }; });
     $('#apGo', scrim).onclick = async function () {
-      try { var r = await api('studio-growth', 'plan-save', { card: Object.assign({}, card, { title: $('#apT', scrim).value, date: $('#apD', scrim).value }) }); upsertCard(r.card); scrim.remove(); toast('Added to your Plan 📅'); }
+      var d = stage === 'date' ? $('#apD', scrim).value : '';
+      if (stage === 'date' && !d) return toast('Choose a date');
+      try { var r = await api('studio-growth', 'plan-save', { card: Object.assign({}, card, { title: $('#apT', scrim).value, date: d, status: stage === 'date' ? 'scheduled' : stage }) }); upsertCard(r.card); scrim.remove();
+        actionToast(stage === 'idea' ? 'Added to your Plan ideas 💡' : stage === 'ready' ? 'Added to Ready in your Plan' : 'Scheduled in your Plan 📅', 'View', function () { showPlan('board'); }); }
       catch (x) { toast(x.message); }
     };
   }
@@ -1993,7 +2025,7 @@ nav.tabs .navsep{display:none}
       '<div class="stack" id="opts">' + parts.map(function (p, i) {
         return '<div class="option"><div class="oh"><span>' + (labelled ? labels[i].charAt(0) + labels[i].slice(1).toLowerCase() : many ? word + ' ' + (i + 1) : 'Your content') + '</span><button class="btn small ghost" data-copy="' + i + '">' + icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 011-1h10"/>', 16) + ' Copy</button></div>' +
           '<textarea data-opt="' + i + '" aria-label="' + (many ? word + ' ' + (i + 1) : 'Content') + '">' + esc(p) + '</textarea>' +
-          (labelled && /^(HASHTAGS|KEYWORDS)$/.test(labels[i]) ? '' : '<div class="optact"><button class="btn small ghost" data-share="' + i + '">' + icon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>', 16) + ' Share</button>' + (postable ? '<button class="btn small ghost" data-img="' + i + '">' + icon('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>', 16) + ' Make image</button>' : '') + '</div>')+'</div>';
+          (labelled && /^(HASHTAGS|KEYWORDS)$/.test(labels[i]) ? '' : '<div class="optact"><button class="btn small ghost" data-share="' + i + '">' + icon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>', 16) + ' Share</button>' + (postable ? '<button class="btn small ghost" data-img="' + i + '">' + icon('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>', 16) + ' Make image</button>' : '') + (postable && !labelled ? '<button class="btn small ghost" data-toidea="' + i + '">💡 Send to Plan ideas</button>' : '') + '</div>')+'</div>';
       }).join('') + '</div>' +
       '<div class="row wrap" style="margin-top:12px">' +
       (postable ? '<button class="btn ' + (item.posted ? 'ghost' : 'gold') + ' small" id="postedBtn"' + (item.posted ? ' disabled' : '') + '>' + (item.posted ? '\u2713 Posted' : '\u2713 I posted this') + '</button>' : '') +
@@ -2029,6 +2061,10 @@ nav.tabs .navsep{display:none}
     };
     var rg = $('#regen', el); if (rg) rg.onclick = onRegenerate;
     $$('[data-share]', el).forEach(function (b) { b.onclick = function () { shareText($('textarea[data-opt="' + b.dataset.share + '"]', el).value); }; });
+    $$('[data-toidea]', el).forEach(function (b) { b.onclick = function () {
+      var n = Number(b.dataset.toidea), t = $('textarea[data-opt="' + n + '"]', el).value;
+      sendToIdeas([planCardFrom(item, t, many ? n + 1 : 0)], b);
+    }; });
     $$('[data-img]', el).forEach(function (b) { b.onclick = function () { showMakeImage($('textarea[data-opt="' + b.dataset.img + '"]', el).value, item, function () { showItem(item.id); }); }; });
     var pbtn = $('#postedBtn', el); if (pbtn) pbtn.onclick = async function () {
       var b = this; b.disabled = true;
@@ -2587,7 +2623,7 @@ nav.tabs .navsep{display:none}
 
   function clubOnly() { return !(S.boot && S.boot.access && (S.boot.access.membershipActive || S.boot.access.powerActive)); } // = no Library resources
   function libHeader(active) {
-    return '<h1>Library</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📚 Resources</button><button class="chip" id="libMine" aria-pressed="' + (active === 'mine') + '">My content</button></div>';
+    return '<h1>Business Growth Library</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📚 Resources</button><button class="chip" id="libMine" aria-pressed="' + (active === 'mine') + '">My saved content</button></div>';
   }
   function bindLibHeader() {
     var a = $('#libRes'), b = $('#libMine');

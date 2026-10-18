@@ -643,7 +643,7 @@ First message: a short, friendly DM to start the conversation
 Separate the 5 ideas with a line containing only ---. Do not number them.`,
   },
   checkup: {
-    name: 'Business check-up', cat: 'growth', blurb: 'Spot gaps in your customer journey',
+    name: 'Business Check-Up & Accountability', cat: 'growth', blurb: 'Spot gaps in your customer journey',
     hello: 'Let’s look at your customer journey — from finding you to coming back — and spot the easy wins.',
     maxTokens: 1200,
     fields: [text('issues', 'Anything not working right now? (optional)', 500)],
