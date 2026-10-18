@@ -180,7 +180,7 @@ async function callModel(messages, maxTokens, settings, opts) {
   const costUsd = typeof usage.cost === 'number'
     ? usage.cost
     : (inTok * settings.inputPricePerMUsd + outTok * settings.outputPricePerMUsd) / 1e6;
-  return { text: tidy(content), inTok, outTok, costUsd, model };
+  return { text: opts && opts.raw ? String(content).trim() : tidy(content), inTok, outTok, costUsd, model };
 }
 
 function tidy(s) {

@@ -88,6 +88,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 .warn{background:var(--gold-l);border-radius:10px;padding:10px 12px}
 .bar{height:6px;background:#EEE6D3;border-radius:999px;overflow:hidden;min-width:70px}
 .bar span{display:block;height:100%;background:var(--green)}
+.rsbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}.rsbar input{flex:2 1 260px}.rsbar select{flex:1 1 180px;width:auto}mark{background:#FFE58A;color:inherit;border-radius:3px;padding:0 1px}.aibar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.aibar .muted{margin-right:2px}
 .scrim{position:fixed;inset:0;background:rgba(15,30,54,.55);display:flex;align-items:center;justify-content:center;z-index:30;padding:12px}
 .sheet{background:var(--cream);border-radius:16px;padding:18px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
 .login{max-width:380px;margin:60px auto;padding:0 16px}
@@ -412,8 +413,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var mods = {}; r.modules.forEach(function (m) { mods[m.id] = m; });
     var list = r.lessons.filter(function (m) { return filter === 'all' || (filter === 'review' ? dash.needsReview.some(function (x) { return x.id === m.id; }) : m.status === filter); });
     var views = r.stats.all.views || {}, comps = r.stats.all.completes || {};
-    app.innerHTML = '<main><div class="row" style="justify-content:space-between"><h1 style="margin:0">Resources</h1><div class="row"><button class="btn ghost" id="rNewT">+ New template or tool</button><button class="btn primary" id="rNew">+ New lesson</button></div></div>' +
-      '<p class="muted" style="margin:6px 0 14px">Members see two areas: <b>📖 Learn</b> (lessons) and <b>🧰 Templates &amp; Tools</b> — every checklist, template, worksheet, file and calculator in a published lesson appears there too (switch one off in the lesson). Free plan members can use the ones marked <b>Free</b>. Members only see <b>Published</b> lessons (from their publish date). <b>Coming soon</b> shows the title only; <b>Draft</b> is hidden.</p>' +
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between"><h1 style="margin:0">Resources</h1><div class="row"><button class="btn gold" id="rAi">✨ Create with AI</button><button class="btn ghost" id="rNewT">+ New template or tool</button><button class="btn primary" id="rNew">+ New lesson</button></div></div>' +
+      '<p class="muted" style="margin:6px 0 14px">Members see three areas: <b>🎓 Tutorials</b> (free for everyone), <b>📚 Growth Lessons</b> and <b>🧰 Templates &amp; Tools</b> — every checklist, template, worksheet, file and calculator in a published lesson appears there too (switch one off in the lesson). Free plan members can use the ones marked <b>Free</b>. Members only see <b>Published</b> lessons (from their publish date). <b>Coming soon</b> shows the title only; <b>Draft</b> is hidden.</p>' +
       '<div class="grid">' + stat(dash.published, 'Published') + stat(dash.drafts, 'Drafts') + stat(dash.scheduled, 'Scheduled') + stat(dash.planned, 'Coming soon') + stat(dash.newThisMonth, 'New this month') + stat(dash.viewsMonth, 'Views this month') + stat(dash.completionsMonth, 'Completions this month') + '</div>' +
       (dash.readyToPublish.length ? '<div class="card stack" style="margin-top:14px;border-color:var(--gold)"><div class="row" style="justify-content:space-between;align-items:center"><b>📝 ' + dash.readyToPublish.length + ' lesson' + (dash.readyToPublish.length > 1 ? 's are' : ' is') + ' written and waiting for your approval</b>' + (dash.readyToPublish.length > 1 ? '<button class="btn small primary" id="apAll">✓ Approve all ' + dash.readyToPublish.length + '</button>' : '') + '</div>' +
         '<div class="muted">Members see these as “Coming soon” until you approve them. Preview, then approve — they go live for members straight away.</div>' +
@@ -422,13 +423,42 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       '<div class="f2" style="margin-top:14px"><div class="card"><b>Most viewed (all time)</b>' + (dash.mostViewed.length ? '<ol style="margin:8px 0 0 18px">' + dash.mostViewed.map(function (x) { return '<li>' + esc(x.title) + ' <span class="muted">· ' + x.count + '</span></li>'; }).join('') + '</ol>' : '<p class="muted">No views yet.</p>') + '</div>' +
         '<div class="card"><b>Most completed (all time)</b>' + (dash.completions.length ? '<ol style="margin:8px 0 0 18px">' + dash.completions.map(function (x) { return '<li>' + esc(x.title) + ' <span class="muted">· ' + x.count + '</span></li>'; }).join('') + '</ol>' : '<p class="muted">No completions yet.</p>') + '</div></div>' +
       '<div class="row" style="margin:16px 0 10px">' + [['all', 'All'], ['published', 'Published'], ['draft', 'Drafts'], ['planned', 'Coming soon'], ['review', 'Needs review']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-rf="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
-      '<div class="tw"><table><thead><tr><th>Lesson</th><th>Status</th><th>Featured</th><th>Views</th><th>Done</th><th>Reviewed</th><th></th></tr></thead><tbody>' +
-      (list.length ? list.map(function (m) {
+      '<div class="rsbar"><input type="search" id="rQ" placeholder="Search titles, lesson text and templates…" aria-label="Search resources" value="' + esc(S.resQ || '') + '">' +
+        '<select id="rSec" aria-label="Section">' + [['all', 'All sections'], ['tut', '🎓 Tutorials'], ['lessons', '📚 Growth Lessons'], ['tools', '🧰 Templates & Tools only']].map(function (o) { return '<option value="' + o[0] + '"' + ((S.resSec || 'all') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
+        '<select id="rMod" aria-label="Module"><option value="">All modules</option>' + r.modules.map(function (m) { return '<option value="' + m.id + '"' + (S.resMod === m.id ? ' selected' : '') + '>' + esc((m.kind === 'tutorial' ? '' : m.n + ' ') + m.title) + '</option>'; }).join('') + '</select></div>' +
+      '<div id="rCount" class="muted" style="margin:0 0 6px"></div><div id="rTable"></div></main>';
+    function hl(t, words) { var h = esc(t); words.forEach(function (w) { if (w.length < 2) return; h = h.replace(new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig'), '<mark>$1</mark>'); }); return h; }
+    function drawResTable() {
+      var q = (S.resQ || '').toLowerCase().trim(), words = q ? q.split(/\s+/) : [], sec = S.resSec || 'all', md = S.resMod || '';
+      var rows = list.filter(function (m) {
+        var mm = mods[m.module] || {};
+        if (sec === 'tut' && mm.kind !== 'tutorial') return false;
+        if (sec === 'lessons' && (mm.kind === 'tutorial' || m.toolOnly)) return false;
+        if (sec === 'tools' && !m.toolOnly) return false;
+        if (md && m.module !== md) return false;
+        if (!words.length) return true;
+        var hay = [m.title, m.summary, m.text, mm.title, m.collection, (m.tools || []).map(function (t) { return t.title + ' ' + (t.preview || ''); }).join(' ')].join(' ').toLowerCase();
+        return words.every(function (w) { return hay.indexOf(w) > -1; });
+      });
+      $('#rCount').textContent = rows.length + ' of ' + r.lessons.length + ' resources' + (q ? ' matching “' + S.resQ.trim() + '”' : '');
+      $('#rTable').innerHTML = '<div class="tw"><table><thead><tr><th>Resource</th><th>Status</th><th>Featured</th><th>Views</th><th>Done</th><th>Reviewed</th><th></th></tr></thead><tbody>' +
+      (rows.length ? rows.map(function (m) {
         var mm = mods[m.module] || { n: '', title: '' };
         var tl = (m.tools || []).filter(function (t) { return !t.hide; }), fr = tl.filter(function (t) { return t.free; }).length;
-        return '<tr><td><b>' + esc(m.title) + '</b>' + (m.toolOnly ? ' <span class="pill p-power">Template / tool only</span>' : '') + '<div class="muted">' + (tl.length ? '🧰 ' + tl.length + ' in Templates &amp; Tools' + (fr ? ' · ' + fr + ' free' : '') + ' · ' : '') + 'Module ' + esc(mm.n) + ' · ' + esc(mm.title) + (m.month ? ' · ' + esc(m.month) : '') + '</div></td><td>' + resPill(m, r.today) + '</td><td class="muted">' + (m.featured ? '⭐ ' + esc(m.collection || 'Featured') : '') + '</td>' +
-          '<td>' + (views[m.id] || 0) + '</td><td>' + (comps[m.id] || 0) + '</td><td class="muted">' + (m.reviewedAt ? d(m.reviewedAt) : '—') + '</td><td><button class="btn small ghost" data-edit="' + esc(m.id) + '">Edit</button></td></tr>';
-      }).join('') : '<tr><td colspan="7" class="muted">Nothing here.</td></tr>') + '</tbody></table></div></main>';
+        var toolHit = words.length ? tl.filter(function (t) { var h = (t.title + ' ' + (t.preview || '')).toLowerCase(); return words.some(function (w) { return h.indexOf(w) > -1; }); }).slice(0, 3) : [];
+        return '<tr><td><b>' + hl(m.title, words) + '</b>' + (m.toolOnly ? ' <span class="pill p-power">Template / tool only</span>' : '') + (mm.kind === 'tutorial' ? ' <span class="pill">🎓 Tutorial</span>' : '') +
+          '<div class="muted">' + (tl.length ? '🧰 ' + tl.length + ' in Templates &amp; Tools' + (fr ? ' · ' + fr + ' free' : '') + ' · ' : '') + (mm.kind === 'tutorial' ? 'Tutorials' : 'Module ' + esc(mm.n) + ' · ' + esc(mm.title)) + (m.month ? ' · ' + esc(m.month) : '') + '</div>' +
+          (toolHit.length ? '<div class="muted">Includes: ' + toolHit.map(function (t) { return hl(t.title, words); }).join(' · ') + '</div>' : '') + '</td><td>' + resPill(m, r.today) + '</td><td class="muted">' + (m.featured ? '⭐ ' + esc(m.collection || 'Featured') : '') + '</td>' +
+          '<td>' + (views[m.id] || 0) + '</td><td>' + (comps[m.id] || 0) + '</td><td class="muted">' + (m.reviewedAt ? d(m.reviewedAt) : '—') + '</td><td style="white-space:nowrap"><button class="btn small ghost" data-prev="' + esc(m.id) + '">Preview</button> <button class="btn small ghost" data-edit="' + esc(m.id) + '">Edit</button></td></tr>';
+      }).join('') : '<tr><td colspan="7" class="muted">' + (q ? 'Nothing matches “' + esc(S.resQ.trim()) + '”.' : 'Nothing here.') + '</td></tr>') + '</tbody></table></div>';
+      $$('#rTable [data-edit]').forEach(function (b) { b.onclick = function () { editLesson(b.dataset.edit); }; });
+      $$('#rTable [data-prev]').forEach(function (b) { b.onclick = async function () { try { previewLesson((await api('res-get', { id: b.dataset.prev })).lesson); } catch (x) { toast(x.message); } }; });
+    }
+    drawResTable();
+    $('#rQ').oninput = function () { S.resQ = this.value; clearTimeout(S.resQT); S.resQT = setTimeout(drawResTable, 150); };
+    $('#rSec').onchange = function () { S.resSec = this.value; drawResTable(); };
+    $('#rMod').onchange = function () { S.resMod = this.value; drawResTable(); };
+    $('#rAi').onclick = aiCreateSheet;
     $('#rNew').onclick = function () { editLesson(null); };
     $('#rNewT').onclick = function () { editLesson(null, { toolOnly: true }); };
     $$('[data-rf]').forEach(function (b) { b.onclick = function () { vResources(b.dataset.rf); }; });
@@ -438,11 +468,38 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var apAll = $('#apAll'); if (apAll) apAll.onclick = async function () { var ids = $$('[data-appr]').map(function (b) { return b.dataset.appr; }); if (!confirm('Publish all ' + ids.length + ' lessons to Business Club members now?')) return; apAll.disabled = true; try { await api('res-approve', { ids: ids }); toast(ids.length + ' lessons approved — live for members 🎉'); S.resData = null; vResources(); } catch (x) { toast(x.message); apAll.disabled = false; } };
   }
 
+  function aiBar(field) {
+    return '<div class="aibar"><span class="muted">✨ AI:</span><button type="button" class="btn small ghost" data-aia="improve" data-aif="' + field + '">Improve wording</button><button type="button" class="btn small ghost" data-aia="shorter" data-aif="' + field + '">Make shorter</button>' +
+      (field === 'see' ? '<button type="button" class="btn small ghost" data-aia="example" data-aif="see">Write an example</button>' : '') + '</div>';
+  }
+  function rtA(t) { return String(t || '').split(/\n{2,}/).map(function (b) { return '<p style="white-space:pre-wrap;margin:0 0 8px">' + esc(b) + '</p>'; }).join(''); }
+  function aiCreateSheet() {
+    var mods = (S.resData && S.resData.modules) || [];
+    var s = sheet('<h2 style="margin:0">✨ Create with AI</h2><p class="muted" style="margin:0">Auntie Tobi AI writes a first draft in the house style. It opens in the editor — nothing is saved or shown to members until you save and publish.</p>' +
+      '<div><label>What would you like to create?</label><div class="row" id="aiKind" style="gap:6px">' + [['lesson', '📚 Growth lesson'], ['tutorial', '🎓 Tutorial'], ['template', '🧰 Template or tool']].map(function (k, i) { return '<button type="button" class="btn small ' + (i ? 'ghost' : 'primary') + '" data-k="' + k[0] + '">' + k[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div><label for="aiTopic">Topic</label><input id="aiTopic" maxlength="300" placeholder="e.g. How to price wedding cakes"></div>' +
+      '<div id="aiModW"><label for="aiMod">Module</label><select id="aiMod">' + mods.filter(function (m) { return m.kind !== 'tutorial'; }).map(function (m) { return '<option value="' + m.id + '">' + esc(m.n + ' — ' + m.title) + '</option>'; }).join('') + '</select></div>' +
+      '<div id="aiTypeW" class="hidden"><label for="aiType">Type</label><select id="aiType"><option value="checklist">☑️ Checklist</option><option value="template">💬 Message template / script</option><option value="worksheet">✍️ Worksheet / planner</option></select></div>' +
+      '<div><label for="aiNotes">Notes for the AI (optional)</label><textarea id="aiNotes" rows="3" maxlength="1500" placeholder="Who it’s for, points to include, examples to use…"></textarea></div>' +
+      '<div class="err hidden" id="aiErr"></div><div class="row"><button class="btn primary" id="aiGo">✨ Write the draft</button><button class="btn link" id="aiX">Cancel</button></div>');
+    var kind = 'lesson';
+    $$('#aiKind [data-k]', s).forEach(function (b) { b.onclick = function () { kind = b.dataset.k; $$('#aiKind [data-k]', s).forEach(function (x) { x.className = 'btn small ' + (x === b ? 'primary' : 'ghost'); }); $('#aiModW', s).classList.toggle('hidden', kind === 'tutorial'); $('#aiTypeW', s).classList.toggle('hidden', kind !== 'template'); $('#aiTopic', s).placeholder = kind === 'tutorial' ? 'e.g. How to send an invoice' : kind === 'template' ? 'e.g. Reply to a customer who says it’s too expensive' : 'e.g. How to price wedding cakes'; }; });
+    $('#aiX', s).onclick = function () { s.remove(); };
+    $('#aiGo', s).onclick = async function () {
+      var b = this, e = $('#aiErr', s); e.classList.add('hidden');
+      b.disabled = true; b.textContent = 'Writing… (up to 30 seconds)';
+      try {
+        var r = await api('res-ai-draft', { kind: kind, topic: $('#aiTopic', s).value, module: $('#aiMod', s).value, blockType: $('#aiType', s).value, notes: $('#aiNotes', s).value });
+        s.remove(); editLesson(null, { preset: r.lesson, toolOnly: r.lesson.toolOnly });
+      } catch (x) { e.textContent = x.message; e.classList.remove('hidden'); b.disabled = false; b.textContent = '✨ Write the draft'; }
+    };
+  }
+
   async function editLesson(id, opts) {
     opts = opts || {};
     loading();
     var L;
-    try { L = id ? (await api('res-get', { id: id })).lesson : { module: 'm01', order: 99, title: '', summary: '', status: 'draft', publishAt: '', featured: false, collection: '', collectionOrder: 0, month: '', tags: ['all'], readMins: 0, learn: '', seeTitle: 'Fictional example: ', see: '', do: '', use: [], toolOnly: !!opts.toolOnly, studio: null, sources: [], reviewedAt: '', reviewMonths: 12, disclaimer: '', image: '' }; }
+    try { L = id ? (await api('res-get', { id: id })).lesson : opts.preset ? Object.assign({ order: 99, publishAt: '', featured: false, collection: '', collectionOrder: 0, month: '', readMins: 0, sources: [], reviewedAt: '', reviewMonths: 12 }, opts.preset) : { module: 'm01', order: 99, title: '', summary: '', status: 'draft', publishAt: '', featured: false, collection: '', collectionOrder: 0, month: '', tags: ['all'], readMins: 0, learn: '', seeTitle: 'Fictional example: ', see: '', do: '', use: [], toolOnly: !!opts.toolOnly, studio: null, sources: [], reviewedAt: '', reviewMonths: 12, disclaimer: '', image: '' }; }
     catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
     if (!S.resData) S.resData = await api('res-list');
     var blocks = JSON.parse(JSON.stringify(L.use || []));
@@ -492,6 +549,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     var mods = S.resData.modules;
     app.innerHTML = '<main style="max-width:860px"><div class="row" style="justify-content:space-between"><button class="btn small ghost" id="eBack">← All resources</button><div class="row">' + (id ? '<button class="btn small ghost danger" id="eDel">Delete</button>' : '') + '<button class="btn small ghost" id="ePrev">Preview</button></div></div>' +
       '<h1 style="margin-top:12px">' + (L.toolOnly ? (id ? 'Edit template or tool' : 'New template or tool') : (id ? 'Edit lesson' : 'New lesson')) + '</h1>' +
+      (opts.preset && opts.preset.aiDraft ? '<div class="card stack" style="border-color:var(--gold);background:#FFF8E6;margin:0 0 12px"><b>✨ Written by AI — not saved yet</b><div class="muted">Read it carefully and check every fact' + (L.module === 't01' ? ' and every step against the app' : '') + '. Change anything you like, then <b>Save as draft</b> or publish. Members see nothing until you publish.</div></div>' : '') +
       '<label style="font-weight:500;margin:6px 0 10px;display:block"><input type="checkbox" id="eToolOnly" style="width:auto"' + (L.toolOnly ? ' checked' : '') + '> Templates &amp; Tools only — no lesson (members see just the resources below, under 🧰 Templates &amp; Tools)</label>' +
       (id && L.status === 'planned' && (L.learn || '').trim() ? '<div class="card stack" style="border-color:var(--gold);background:#FFF8E6;margin-bottom:12px"><b>📝 Ready — waiting for your approval</b><div class="muted">Members see this as “Coming soon”. Read it, make any changes, then approve to publish it for members today.</div><div class="row"><button class="btn primary" id="eApprove">✓ Approve &amp; publish</button><button class="btn ghost" id="ePrev2">Preview</button></div></div>' : '') +
       '<div class="card stack"><div class="f2"><div><label for="eMod">Module</label><select id="eMod">' + mods.map(function (m) { return opt(m.id, L.module, m.n + ' — ' + m.title); }).join('') + '</select></div><div><label for="eOrder">Order in module</label><input id="eOrder" type="number" min="0" max="999" value="' + esc(L.order) + '"></div></div>' +
@@ -503,16 +561,37 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
         '<div><label>Recommend to</label><div class="row">' + Object.keys(RES_TAGS).map(function (t) { return '<label style="font-weight:500;margin:0"><input type="checkbox" data-tag="' + t + '" style="width:auto"' + ((L.tags || []).indexOf(t) > -1 ? ' checked' : '') + '> ' + esc(RES_TAGS[t]) + '</label>'; }).join('') + '</div><div class="muted">Based on the industry in the member’s business profile. Everyone can still open every lesson.</div></div>' +
         '<div><label>Cover image (optional)</label><div class="row"><span class="muted" id="eImgN">' + (image ? 'Image attached' : 'None') + '</span><label class="btn small ghost" style="margin:0;cursor:pointer">Upload image<input type="file" id="eImg" class="hidden" accept=".png,.jpg,.jpeg,.webp"></label>' + '<button class="btn small ghost danger" id="eImgX"' + (image ? '' : ' hidden') + '>Remove</button></div></div></div>' +
       '<h2>Lesson content</h2><div class="muted" style="margin-bottom:8px">Formatting: <code>## Heading</code> · <code>- bullet</code> · <code>1. numbered</code> · <code>**bold**</code> · <code>&gt; Tip box</code> · <code>[link text](https://…)</code>. Leave a blank line between paragraphs.</div>' +
-      '<div class="card stack"><div><label for="eLearn">LEARN — Understand the topic (3–5 minute read)</label><textarea id="eLearn" rows="16">' + esc(L.learn || '') + '</textarea></div>' +
-        '<div><label for="eSeeT">SEE — Example heading (label fictional examples clearly)</label><input id="eSeeT" maxlength="160" value="' + esc(L.seeTitle || '') + '"></div><div><label for="eSee">SEE — Realistic business example</label><textarea id="eSee" rows="8">' + esc(L.see || '') + '</textarea></div>' +
-        '<div><label for="eDo">DO — One practical activity</label><textarea id="eDo" rows="5">' + esc(L.do || '') + '</textarea></div>' +
+      '<div class="card stack"><div><label for="eLearn">LEARN — Understand the topic (3–5 minute read)</label><textarea id="eLearn" rows="16">' + esc(L.learn || '') + '</textarea>' + aiBar('learn') + '</div>' +
+        '<div><label for="eSeeT">SEE — Example heading (label fictional examples clearly)</label><input id="eSeeT" maxlength="160" value="' + esc(L.seeTitle || '') + '"></div><div><label for="eSee">SEE — Realistic business example</label><textarea id="eSee" rows="8">' + esc(L.see || '') + '</textarea>' + aiBar('see') + '</div>' +
+        '<div><label for="eDo">DO — One practical activity</label><textarea id="eDo" rows="5">' + esc(L.do || '') + '</textarea>' + aiBar('do') + '</div>' +
         '<div class="f2"><div><label for="eStudio">Button to open in Business Studio (optional)</label><select id="eStudio">' + RES_STUDIO.map(function (o) { return opt(o[0], studioVal, o[1]); }).join('') + '</select></div><div><label for="eStudioL">Button text</label><input id="eStudioL" maxlength="60" value="' + esc(L.studio ? L.studio.label : '') + '" placeholder="e.g. Write 3 bio options in Business Studio"></div></div></div>' +
-      '<h2>USE — Practical resources</h2><div id="bList" class="stack"></div><div class="row" style="margin-top:10px">' + [['checklist', '+ Checklist'], ['template', '+ Template'], ['worksheet', '+ Worksheet'], ['file', '+ File'], ['calculator', '+ Calculator'], ['link', '+ Link to a Studio tool']].map(function (b) { return '<button class="btn small ghost" data-badd="' + b[0] + '">' + b[1] + '</button>'; }).join('') + '</div>' +
+      '<h2>USE — Practical resources</h2><div id="bList" class="stack"></div><div class="row" style="margin-top:10px">' + [['checklist', '+ Checklist'], ['template', '+ Template'], ['worksheet', '+ Worksheet'], ['file', '+ File'], ['calculator', '+ Calculator'], ['link', '+ Link to a Studio tool']].map(function (b) { return '<button class="btn small ghost" data-badd="' + b[0] + '">' + b[1] + '</button>'; }).join('') + '</div><div class="aibar"><span class="muted">✨ AI:</span><button type="button" class="btn small ghost" data-aib="checklist">Suggest a checklist</button><button type="button" class="btn small ghost" data-aib="template">Suggest a message template</button><button type="button" class="btn small ghost" data-aib="worksheet">Suggest a worksheet</button></div>' +
       '<h2>Accuracy</h2><div class="card stack"><div><label for="eSrc">Sources (one per line: Title | https://link)</label><textarea id="eSrc" rows="3">' + esc((L.sources || []).map(function (s) { return s.title + (s.url ? ' | ' + s.url : ''); }).join('\n')) + '</textarea></div>' +
         '<div class="f2"><div><label for="eRev">Last reviewed</label><div class="row"><input id="eRev" type="date" value="' + esc(L.reviewedAt || '') + '" style="flex:1"><button class="btn small ghost" id="eRevT">Mark reviewed today</button></div></div><div><label for="eRevM">Review again after</label><select id="eRevM">' + [3, 6, 12, 24].map(function (n) { return opt(String(n), String(L.reviewMonths || 12), n + ' months'); }).join('') + '</select><div class="muted">Use 6 months for Instagram, WhatsApp and other apps that change often.</div></div></div>' +
         '<div><label for="eDisc">Note at the bottom (e.g. “General guidance, not legal or tax advice”)</label><input id="eDisc" maxlength="400" value="' + esc(L.disclaimer || '') + '"></div></div>' +
       '<div class="err hidden" id="eErr" style="margin-top:12px"></div><div class="row" style="margin-top:14px;position:sticky;bottom:0;background:var(--cream);padding:10px 0"><button class="btn primary" id="eSave">Save</button><button class="btn ghost" id="eSaveD">Save as draft</button>' + (id && L.status === 'published' ? '<button class="btn ghost danger" id="eUnpub">Unpublish</button>' : '') + '<button class="btn ghost" id="ePrev2">Preview</button></div></main>';
     drawBlocks();
+    $$('[data-aif]').forEach(function (b) { b.onclick = function () { aiAssist(b.dataset.aia, b.dataset.aif); }; });
+    $$('[data-aib]').forEach(function (b) { b.onclick = function () { aiAssist(b.dataset.aib, ''); }; });
+    async function aiAssist(action, field) {
+      var cur = collect();
+      var s2 = sheet('<h2 style="margin:0">✨ Auntie Tobi AI</h2><div class="empty"><span class="muted">Writing… this can take up to 30 seconds.</span></div>');
+      var res;
+      try { res = await api('res-ai-assist', { task: action, field: field, lesson: { title: cur.title, summary: cur.summary, module: cur.module, learn: cur.learn, see: cur.see, do: cur.do } }); }
+      catch (x) { s2.querySelector('.sheet').innerHTML = '<h2 style="margin:0">✨ Auntie Tobi AI</h2><div class="err">' + esc(x.message) + '</div><button class="btn ghost" id="aiX">Close</button>'; $('#aiX', s2).onclick = function () { s2.remove(); }; return; }
+      var LABEL = { learn: 'LEARN', see: 'SEE — example', do: 'DO' };
+      var body = res.block ? '<b>' + esc(res.block.title || '') + '</b>' + (res.block.items ? '<ul>' + res.block.items.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : res.block.fields ? '<ol>' + res.block.fields.map(function (f) { return '<li>' + esc(f.label) + (f.hint ? ' <span class="muted">' + esc(f.hint) + '</span>' : '') + '</li>'; }).join('') + '</ol>' : '<div style="white-space:pre-wrap">' + esc(res.block.text || '') + '</div>')
+        : (res.seeTitle ? '<b>' + esc(res.seeTitle) + '</b>' : '') + '<div class="rtprev">' + rtA(res.text) + '</div>';
+      s2.querySelector('.sheet').innerHTML = '<h2 style="margin:0">✨ ' + (res.block ? 'Suggested ' + action : 'Suggested ' + LABEL[res.field]) + '</h2><div class="muted">Nothing changes until you tap <b>Use this</b>. You can still edit it afterwards.</div>' +
+        '<div class="card" style="max-height:52vh;overflow:auto">' + body + '</div><div class="row"><button class="btn primary" id="aiUse">Use this</button><button class="btn ghost" id="aiAgain">Try again</button><button class="btn link" id="aiX">Cancel</button></div>';
+      $('#aiX', s2).onclick = function () { s2.remove(); };
+      $('#aiAgain', s2).onclick = function () { s2.remove(); aiAssist(action, field); };
+      $('#aiUse', s2).onclick = function () {
+        if (res.block) { readBlocks(); blocks.push(res.block); drawBlocks(); toast('Added to USE — remember to save'); }
+        else { var el = { learn: '#eLearn', see: '#eSee', do: '#eDo' }[res.field]; $(el).value = res.text; if (res.seeTitle && !$('#eSeeT').value.trim()) $('#eSeeT').value = res.seeTitle; if (res.seeTitle && action === 'example') $('#eSeeT').value = res.seeTitle; toast('Updated — remember to save'); }
+        s2.remove();
+      };
+    }
     $$('[data-badd]').forEach(function (b) { b.onclick = function () { readBlocks(); var t = b.dataset.badd; blocks.push(t === 'checklist' ? { type: t, title: '', items: [] } : t === 'template' ? { type: t, title: '', text: '' } : t === 'worksheet' ? { type: t, title: '', fields: [] } : t === 'calculator' ? { type: t, title: 'Pricing calculator', kind: 'product' } : t === 'link' ? { type: t, title: '', screen: 'plan', label: 'Open my Plan', text: '' } : { type: t, title: '' }); drawBlocks(); }; });
     $('#eRevT').onclick = function () { $('#eRev').value = today(); };
     $('#eImg').onchange = async function () { var f = this.files[0]; if (!f) return; try { var up = await uploadFile(f); image = up.fileId; $('#eImgN').textContent = up.name; $('#eImgX').hidden = false; toast('Image uploaded'); } catch (x) { toast(x.message); } };

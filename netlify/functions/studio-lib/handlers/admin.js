@@ -701,6 +701,8 @@ exports.handler = handler(async (ctx) => {
 
     // ── Resources (content manager) ──
     case 'res-list': return resources.adminList();
+    case 'res-ai-draft': return require('../resources-ai').draft(body, actor);
+    case 'res-ai-assist': return require('../resources-ai').assist(body, actor);
     case 'res-dashboard': return resources.adminDashboard();
     case 'res-get': return { lesson: await resources.adminGet(String(body.id || '')) };
     case 'res-approve': {
