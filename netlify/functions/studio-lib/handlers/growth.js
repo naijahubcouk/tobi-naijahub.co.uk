@@ -47,7 +47,7 @@ exports.handler = handler(async (ctx) => {
       const o = aiOpts(auth, false);
       const [t, idea] = await Promise.all([
         tips.today(email, profile, {
-          ai: o.ai, goal: h.goal, goalLabel: h.goal ? growth.GOALS[h.goal.goal] : '', progress: h.progress,
+          ai: o.ai, goal: h.goal, goalLabel: growth.goalLabel(h.goal), progress: h.progress,
           track: usage => gen.addGlobal(core.monthKey(), { id: 'daily-tip', tool: 'daily-tip', cost: 0, inTok: usage.inTok, outTok: usage.outTok, costUsd: usage.costUsd }, auth.settings),
         }),
         dailyidea.today(email, profile, {
@@ -70,7 +70,7 @@ exports.handler = handler(async (ctx) => {
     case 'action-done':
       return growth.setActionDone(email, String(body.id || '').slice(0, 80), !!body.done);
     case 'goal-set':
-      return { goal: await growth.setGoal(email, body.goal) };
+      return { goal: await growth.setGoal(email, body.goal, body.text) };
     case 'calendar-list':
       return { items: await growth.listCalendar(email), today: core.dayKey() };
     case 'calendar-update':

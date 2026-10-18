@@ -360,7 +360,7 @@ async function usageSummary(email, access) {
     period: 'day', day, used: u.used, limit: access.limit,
     remaining: Math.max(0, access.limit - u.used - inFlight),
     resetsAt: 'midnight',
-    credits: c.balance, creditsExpiry: c.nextExpiry,
+    credits: c.balance, creditsExpiry: c.nextExpiry, creditsSpentYear: c.spentYearPence || 0,
   };
 }
 

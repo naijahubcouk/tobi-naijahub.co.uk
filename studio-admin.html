@@ -113,7 +113,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
 <body>
 <header><div><b>Business Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="overview">Overview</button><button data-v="today">Today</button><button data-v="messages">Messages <span class="nbadge hidden" id="msgBadge"></span></button><button data-v="members">Members</button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites</button><button data-v="subs">Pro &amp; Plus</button>
+  <button data-v="overview">Overview</button><button data-v="today">Today</button><button data-v="messages">Messages <span class="nbadge hidden" id="msgBadge"></span></button><button data-v="members">Members</button><button data-v="ideas">Ideas <span class="nbadge hidden" id="ideaBadge"></span></button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites</button><button data-v="subs">Pro &amp; Plus</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -169,12 +169,36 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   function go(v) {
     clearInterval(S.msgTimer);
     $$('#nav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
-    ({ today: vToday, overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket, invites: vInvites, messages: vMessages })[v]();
+    ({ today: vToday, overview: vOverview, members: vMembers, subs: vSubs, usage: vUsage, settings: vSettings, alerts: vAlerts, audit: vAudit, resources: vResources, benefits: vBenefits, market: vMarket, invites: vInvites, messages: vMessages, ideas: vIdeas })[v]();
   }
+  // ── Ideas from members ──
+  async function vIdeas(filter) {
+    loading();
+    var r = await api('ideas-list'); filter = filter || S.ideaFilter || 'new'; S.ideaFilter = filter;
+    ideaBadge(r.counts.new || 0);
+    var list = r.items.filter(function (x) { return filter === 'all' || x.status === filter; });
+    app.innerHTML = '<main><h1>Ideas from members</h1><p class="muted" style="margin:6px 0 12px">Ideas members send from Business Studio (Account, Create and Resources). Set a status and reply — your reply is emailed to them and shown in the app.</p>' +
+      '<div class="row" style="margin-bottom:12px">' + [['new', 'New'], ['planned', 'Planned'], ['done', 'Done'], ['declined', 'Not now'], ['all', 'All']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-if="' + f[0] + '">' + f[1] + (f[0] !== 'all' ? ' (' + (r.counts[f[0]] || 0) + ')' : '') + '</button>'; }).join('') + '</div>' +
+      (list.length ? '<div class="stack">' + list.map(function (x) {
+        return '<div class="card stack" data-idea="' + esc(x.id) + '"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><b>' + esc(r.kinds[x.kind] || x.kind) + '</b><div class="muted">' + esc(x.business || '') + (x.business ? ' · ' : '') + esc(x.email) + ' · ' + d(x.at) + '</div></div>' +
+          '<select data-ist style="max-width:160px">' + Object.keys(r.statuses).map(function (k) { return '<option value="' + k + '"' + (k === x.status ? ' selected' : '') + '>' + esc(r.statuses[k]) + '</option>'; }).join('') + '</select></div>' +
+          '<div style="white-space:pre-wrap">' + esc(x.text) + '</div>' +
+          '<div><label>Reply to the member (optional — emailed to them)</label><textarea data-irp rows="2" maxlength="1500">' + esc(x.reply || '') + '</textarea></div>' +
+          '<div class="row"><button class="btn small primary" data-isave>Save</button><button class="btn small ghost danger" data-idel>Delete</button>' + (x.repliedAt ? '<span class="muted">Replied ' + d(x.repliedAt) + '</span>' : '') + '</div></div>';
+      }).join('') + '</div>' : '<p class="muted">No ideas here yet.</p>') + '</main>';
+    $$('[data-if]').forEach(function (b) { b.onclick = function () { vIdeas(b.dataset.if); }; });
+    $$('[data-idea]').forEach(function (card) {
+      var id = card.dataset.idea;
+      $('[data-isave]', card).onclick = async function () { try { await api('idea-update', { id: id, status: $('[data-ist]', card).value, reply: $('[data-irp]', card).value }); toast('Saved'); vIdeas(filter); } catch (x) { toast(x.message); } };
+      $('[data-idel]', card).onclick = async function () { if (!confirm('Delete this idea?')) return; try { await api('idea-delete', { id: id }); toast('Deleted'); vIdeas(filter); } catch (x) { toast(x.message); } };
+    });
+  }
+  function ideaBadge(n) { var b = $('#ideaBadge'); if (!b) return; b.textContent = n > 99 ? '99+' : n; b.classList.toggle('hidden', !n); }
+
   async function boot() {
     try { S.overview = await api('overview'); } catch (e) { return; }
     $('#nav').classList.remove('hidden'); $('#logout').classList.remove('hidden'); $('#who').textContent = S.overview.admin;
-    msgBadge(); clearInterval(S.badgeTimer); S.badgeTimer = setInterval(function () { if (!document.hidden) msgBadge(); }, 60000);
+    msgBadge(); api('ideas-list').then(function (r) { ideaBadge(r.counts.new || 0); }).catch(function () {}); clearInterval(S.badgeTimer); S.badgeTimer = setInterval(function () { if (!document.hidden) msgBadge(); }, 60000);
     if (location.hash === '#messages') { history.replaceState(null, '', location.pathname); go('messages'); } else go('overview');
   }
   async function msgBadge() {

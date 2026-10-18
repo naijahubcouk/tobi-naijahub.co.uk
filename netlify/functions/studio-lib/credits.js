@@ -53,6 +53,7 @@ async function summary(email) {
     nextExpiryCredits: live.length ? live[0].left : 0,
     lots: live.map(l => ({ credits: l.credits, left: l.left, at: l.at, exp: new Date(l.exp).toISOString().slice(0, 10), src: l.src })),
     log: (c.log || []).slice(0, 20),
+    spentYearPence: (c.spend || []).filter(x => Date.parse(x.at) > now - VALID_MS).reduce((a, x) => a + x.pence, 0),
   };
 }
 
@@ -99,6 +100,7 @@ async function add(email, n, src, ref, extra) {
     if (ref && (c.lots || []).some(l => l.ref === ref)) return undefined;
     const now = Date.now();
     c.lots = [...(c.lots || []).filter(l => l.left > 0 && l.exp > now - 30 * 24 * 3600 * 1000), { id: core.randomToken(6).replace(/[^A-Za-z0-9]/g, ''), credits: n, left: n, at: core.nowIso(), exp: now + VALID_MS, src, ref: ref || '', pi: (extra && extra.pi) || '' }];
+    if (extra && extra.pence > 0) c.spend = [{ at: core.nowIso(), pence: Math.round(extra.pence) }, ...(c.spend || [])].slice(0, 50);
     pushLog(c, { n, what: src === 'gift' ? ((extra && extra.note) || 'Added by Auntie Tobi') : `Bought ${n} credits`, ref: ref || '' });
     added = true;
     return c;
@@ -157,7 +159,7 @@ async function fromSession(s) {
   const n = Math.round(Number(s.metadata.credits));
   if (!email || !(n > 0)) { await core.alert('credits_bad_session', 'Credit purchase without a member — add the credits by hand', { session: s.id }); return { ok: false, reason: 'no_member' }; }
   const pi = typeof s.payment_intent === 'string' ? s.payment_intent : (s.payment_intent && s.payment_intent.id) || '';
-  const added = await add(email, n, 'stripe', s.id, { pi });
+  const added = await add(email, n, 'stripe', s.id, { pi, pence: Number(s.amount_total) || 0 });
   if (!added) return { ok: true, duplicate: true };
   const pence = Number(s.amount_total) || 0;
   await cas(`credit-sales/${core.monthKey()}`, cur => {
