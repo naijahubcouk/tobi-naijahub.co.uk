@@ -238,7 +238,7 @@ async function home(email, profile, acc) {
 function lockedErr(mod) {
   return MODULE_ACCESS[mod] === 'club'
     ? new HttpError(403, 'club_module', 'This lesson is for Auntie Tobi Business Club members.')
-    : new HttpError(403, 'club_only', 'Lessons are part of the Auntie Tobi Business Club, Business Studio Pro and Plus.');
+    : new HttpError(403, 'club_only', 'Lessons are part of the Auntie Tobi Business Club and Business Studio Plus.');
 }
 async function lessonFor(email, id, acc) {
   acc = acc || FULL_ACC;
@@ -422,7 +422,7 @@ async function toolAccess(lessonId, i, acc) {
   if (!meta || !isLive(meta)) throw new HttpError(404, 'not_found', 'That resource isn\u2019t available.');
   const t = (meta.tools || []).find(x => x.i === i);
   if (!t || t.hide) throw new HttpError(404, 'not_found', 'That resource isn\u2019t available.');
-  if (toolLocked(meta, t, acc)) throw new HttpError(403, 'locked', MODULE_ACCESS[meta.module] === 'club' ? 'This resource is for Auntie Tobi Business Club members.' : 'This resource comes with the Business Club, Business Studio Pro and Plus.');
+  if (toolLocked(meta, t, acc)) throw new HttpError(403, 'locked', MODULE_ACCESS[meta.module] === 'club' ? 'This resource is for Auntie Tobi Business Club members.' : 'This resource comes with the Business Club and Business Studio Plus.');
   return { meta, t };
 }
 async function toolFor(email, id, acc) {

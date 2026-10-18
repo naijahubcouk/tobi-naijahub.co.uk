@@ -18,6 +18,7 @@ const core = require('./core');
 const { HttpError, Abort, cas, getJson, setJson, del, enc, dayKey, monthKey, randomToken, env } = core;
 const tools = require('./tools');
 const growth = require('./growth');
+const credits = require('./credits');
 
 const PENDING_STALE_MS = 3 * 60 * 1000;
 const MAX_IN_FLIGHT = 2;
@@ -36,9 +37,11 @@ function pendingUnits(u, now) {
   return n;
 }
 
-async function reserve(email, idemKey, limit, day, cost) {
+// creditsAvail: purchased credits that can cover what today's allowance can't. Returns { replay } or { daily, fromCredits }.
+async function reserve(email, idemKey, limit, day, cost, creditsAvail) {
   const now = Date.now();
-  let replay = null;
+  let replay = null, split = { daily: cost, fromCredits: 0 };
+  creditsAvail = Math.max(0, Number(creditsAvail) || 0);
   try {
     await cas(usageKey(email, day), cur => {
       const u = cur || emptyUsage();
@@ -46,21 +49,25 @@ async function reserve(email, idemKey, limit, day, cost) {
       if (u.done[idemKey]) throw new Abort(u.done[idemKey]);
       if (u.pending[idemKey]) throw new HttpError(409, 'in_progress', 'That request is already being created — hang on a moment.');
       if (Object.keys(u.pending).length >= MAX_IN_FLIGHT) throw new HttpError(429, 'one_at_a_time', 'Please wait for your current request to finish.');
-      const remaining = limit - u.used - inFlight;
+      const remaining = Math.max(0, limit - u.used - inFlight);
       if (remaining < cost) {
-        if (remaining > 0) {
-          throw new HttpError(402, 'not_enough', `This needs ${cost} generations and you have ${remaining} left today. Your allowance resets at midnight.`, { used: u.used, limit, remaining });
+        const need = cost - remaining;
+        if (creditsAvail >= need) {
+          split = { daily: remaining, fromCredits: need };
+        } else if (remaining > 0) {
+          throw new HttpError(402, 'not_enough', `This needs ${cost} generations and you have ${remaining} left today${creditsAvail ? ` plus ${creditsAvail} credits` : ''}. Buy credits or upgrade to keep going.`, { used: u.used, limit, remaining, credits: creditsAvail });
+        } else {
+          throw new HttpError(402, 'limit_reached', 'You\'ve used all your AI generations for today. Buy credits or upgrade to keep going — or come back after midnight.', { used: u.used, limit, remaining: 0, credits: creditsAvail });
         }
-        throw new HttpError(402, 'limit_reached', 'You\'ve used all your AI generations for today. Your allowance resets at midnight.', { used: u.used, limit, remaining: 0 });
-      }
-      u.pending[idemKey] = { t: now, n: cost };
+      } else split = { daily: cost, fromCredits: 0 };
+      u.pending[idemKey] = { t: now, n: split.daily, c: split.fromCredits };
       return u;
     });
   } catch (e) {
     if (e instanceof Abort) replay = e.value;
     else throw e;
   }
-  return replay;
+  return replay ? { replay } : split;
 }
 
 async function release(email, idemKey, day) {
@@ -81,8 +88,10 @@ function addStats(u, info) {
 async function commit(email, idemKey, day, info) {
   await cas(usageKey(email, day), cur => {
     const u = cur || emptyUsage();
+    const p = u.pending[idemKey];
     delete u.pending[idemKey];
-    u.used += info.cost;
+    u.used += p ? p.n : info.cost;          // the part paid from today's allowance
+    if (p && p.c) u.creditsUsed = (u.creditsUsed || 0) + p.c;
     u.done[idemKey] = { id: info.id, at: Date.now() };
     const doneKeys = Object.keys(u.done);
     if (doneKeys.length > 40) {
@@ -280,7 +289,7 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   if (!paidOk && po && rawInput[po.field] === undefined) rawInput[po.field] = po.free;   // Free plan: the basic version by default
   const input = tools.validateInput(toolId, rawInput);
   if (!paidOk && tools.needsPaid(toolId, input)) {
-    throw new HttpError(403, 'paid_only', (po && !tools.PAID_TOOLS.includes(toolId) ? po.label + ' is' : `${tool.name} is`) + ' part of the Business Club, Pro and Plus. Upgrade to unlock it.', { tool: toolId });
+    throw new HttpError(403, 'paid_only', (po && !tools.PAID_TOOLS.includes(toolId) ? po.label + ' is' : `${tool.name} is`) + ' part of the Business Club and Business Studio Plus. Upgrade to unlock it.', { tool: toolId });
   }
   if (toolId === 'quick' && input.goal === 'offer' && !input.about && !input.source) throw new HttpError(400, 'missing_field', 'Please tell us the offer (for example “10% off all cakes until Friday”).');
   let quickExtra = null;
@@ -299,11 +308,16 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
 
   await core.rateLimit('gen', email, settings.perMinuteLimit, 60 * 1000, 'You\'re going a bit fast — please wait a minute.');
 
-  const replay = await reserve(email, idemKey, access.limit, day, cost);
-  if (replay) {
-    const item = await getJson(itemKey(email, replay.id));
+  const creditBal = credits.balanceOf(await credits.get(email));
+  const res = await reserve(email, idemKey, access.limit, day, cost, creditBal);
+  if (res.replay) {
+    const item = await getJson(itemKey(email, res.replay.id));
     if (item) return { item, replayed: true };
     throw new HttpError(409, 'duplicate', 'This request was already completed.');
+  }
+  if (res.fromCredits) {
+    try { await credits.hold(email, idemKey, res.fromCredits); }
+    catch (e) { await release(email, idemKey, day); throw e; }
   }
 
   let result;
@@ -313,6 +327,7 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
     result = await callModel(tools.buildMessages(toolId, input, profile, extra), tool.maxTokensFor ? tool.maxTokensFor(input) : tool.maxTokens, settings);
   } catch (e) {
     await release(email, idemKey, day);
+    if (res.fromCredits) await credits.release(email, idemKey);
     throw e;
   }
 
@@ -325,6 +340,7 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   };
   const info = { id, tool: toolId, cost, inTok: result.inTok, outTok: result.outTok, costUsd: result.costUsd };
   await commit(email, idemKey, day, info);
+  if (res.fromCredits) await credits.commit(email, idemKey, info);
   await addGlobal(monthKey(), info, settings);
   await addToHistory(email, item);
   let calendarAdded = 0;
@@ -339,10 +355,12 @@ async function usageSummary(email, access) {
   const day = dayKey();
   const u = (await getJson(usageKey(email, day))) || emptyUsage();
   const inFlight = pendingUnits(u, Date.now());
+  const c = await credits.summary(email).catch(() => ({ balance: 0, nextExpiry: null }));
   return {
     period: 'day', day, used: u.used, limit: access.limit,
     remaining: Math.max(0, access.limit - u.used - inFlight),
     resetsAt: 'midnight',
+    credits: c.balance, creditsExpiry: c.nextExpiry,
   };
 }
 

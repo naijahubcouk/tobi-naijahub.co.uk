@@ -96,6 +96,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0
 .note{background:var(--gold-l);border-radius:12px;padding:12px;font-size:14px}
 .li.tl{align-items:flex-start}.li.tl .t small{display:block;line-height:1.4}.li.tl .snip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.li.tl .t{min-width:0}.li.tl .tli{font-size:20px;line-height:1.2;margin-top:1px}.li.tl.locked{opacity:.78}.li.tl .tlk{font-size:16px}
 .rtool .useblock .ubh{display:none}.rtool .useblock{background:#fff;padding:14px}
+.cpack{text-align:left;width:100%;cursor:pointer}
 .fbres{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line,#EEE6D3);border-radius:12px;padding:10px 12px}
 
 /* sign in */
@@ -638,7 +639,7 @@ nav.tabs .navsep{display:none}
   }
 
   // ───────────── sign in ─────────────
-  // mode: 'signin' (members), 'free' (Start free) or 'signup' (Get Business Studio Pro) — anyone can verify their email
+  // mode: 'signin' (members), 'free' (Start free) or 'signup' (Get Business Studio Plus) — anyone can verify their email
   function showSignIn(prefill, mode) {
     mode = mode || 'signin';
     var up = mode === 'signup' || mode === 'free', fr = mode === 'free';
@@ -647,8 +648,8 @@ nav.tabs .navsep{display:none}
       '<div class="auth-wrap"><div class="auth-hero"><img src="/tobi-face-256.png" alt="Auntie Tobi">' +
       (fr ? '<div class="kicker">Free plan</div><h1>Start free</h1>' +
         '<p class="sub" style="margin-top:8px">Keep track of enquiries and follow-ups, plan your content, manage your daily tasks and quotes — free. Plus 5 AI generations a day for captions, Reels and customer replies. No card needed. First, confirm your email.</p></div>'
-      : up ? '<div class="kicker">Business Studio Pro</div><h1>Get Business Studio Pro</h1>' +
-        '<p class="sub" style="margin-top:8px">Every Business Studio tool, including the advanced ones, and all Resources — lessons, templates and tools. <b>Pro</b>: 50 AI generations a day for £3 a month. <b>Plus</b>: 100 a day for £5 a month. First, confirm your email.</p></div>'
+      : up ? '<div class="kicker">Business Studio Plus</div><h1>Get Business Studio Plus</h1>' +
+        '<p class="sub" style="margin-top:8px">Every Business Studio tool, including the advanced ones, and all Resources — lessons, templates and tools. <b>Business Studio Plus</b>: 50 AI generations a day for £50 a year. Need more some days? Buy extra credits any time. First, confirm your email.</p></div>'
         : '<div class="kicker">Auntie Tobi Business Studio</div><h1>One Place to Plan, Manage &amp; Grow Your Business.</h1>' +
         '<p class="sub" style="margin-top:8px">Your everyday workspace for customers, content, planning and business growth. Sign in with your email.</p></div>') +
       (!up && /[?&]welcome=1/.test(location.search) ? '<div class="note stack" style="margin-bottom:12px"><b>\ud83c\udf89 Welcome to the Business Club!</b><span>Sign in with the <b>email you used to pay</b>. We\u2019ll send you a 6-digit code. If it says you don\u2019t have access yet, wait a minute and try again \u2014 it can take a moment after payment.</span></div>' : '') +
@@ -770,13 +771,52 @@ nav.tabs .navsep{display:none}
   }
   function canUpgrade() { var a = S.boot.access; return S.boot.billing.enabled && !a.addonLive && a.plan !== 'plus'; }
 
-  // Advanced tools on the Free plan: what you get with the Business Club or Pro.
+  // Advanced tools on the Free plan: what you get with the Business Club or Plus.
+  // AI credit top-ups: one-off packs, used after the daily allowance. Credits last 12 months.
+  function creditsOn() { return !!(S.boot && S.boot.credits && S.boot.credits.packs && S.boot.credits.packs.length); }
+  function avail() { var u = (S.boot && S.boot.usage) || {}; return (u.remaining || 0) + (u.credits || 0); }
+  function creditBal() { return ((S.boot && S.boot.usage) || {}).credits || 0; }
+  function buyCreditsSheet() {
+    if (!creditsOn()) return toast('Credit top-ups aren’t available just now.');
+    var packs = S.boot.credits.packs;
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="bcT"><h2 id="bcT" style="margin:0">Buy extra credits</h2>' +
+      '<p class="sub" style="margin:0">1 credit = 1 AI generation. Your daily generations are used first, then your credits.' + (creditBal() ? ' You have <b>' + creditBal() + '</b> now.' : '') + '</p>' +
+      '<div class="stack" style="gap:8px">' + packs.map(function (p, i) {
+        return '<button class="card plan cpack" data-pack="' + esc(p.id) + '"><div class="row" style="justify-content:space-between;align-items:center"><div><b style="font-size:18px">' + p.credits.toLocaleString('en-GB') + ' credits</b>' +
+          '<div class="sub" style="margin:0">' + (p.pence / p.credits).toFixed(1) + 'p per generation</div></div><b style="font-size:20px">£' + (p.pence % 100 ? (p.pence / 100).toFixed(2) : p.pence / 100) + '</b></div>' +
+          (i === 1 ? '<span class="pill green" style="align-self:flex-start;margin-top:6px">Popular</span>' : '') + '</button>';
+      }).join('') + '</div>' +
+      '<p class="hint" style="margin:0">One-off payment by Stripe — no subscription, nothing renews. Credits last 12 months. They add AI generations; advanced tools come with the Club or Plus.</p>' +
+      '<button class="btn ghost block" id="bcX">Not now</button></div>';
+    document.body.appendChild(scrim);
+    $('#bcX', scrim).onclick = function () { scrim.remove(); };
+    scrim.addEventListener('click', function (e) { if (e.target === scrim) scrim.remove(); });
+    $$('[data-pack]', scrim).forEach(function (b) { b.onclick = async function () {
+      $$('[data-pack]', scrim).forEach(function (x) { x.disabled = true; }); var old = b.innerHTML; b.querySelector('b').textContent = 'Opening secure checkout…';
+      try { var r = await api('studio-billing', 'credits-checkout', { pack: b.dataset.pack }); location.href = r.url; }
+      catch (x) { toast(x.message); b.innerHTML = old; $$('[data-pack]', scrim).forEach(function (y) { y.disabled = false; }); }
+    }; });
+  }
+  // "Upgrade" takes people to the plans they can buy: Free → Club or Plus; Club → Plus.
+  function upgradeGo() { if (isFree() || !S.boot.access.paidTools) showUpgrade('more AI generations and every tool'); else showRenew(); }
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-buycredits]'); if (b) { e.preventDefault(); buyCreditsSheet(); } });
+  document.addEventListener('click', async function (e) {
+    var h = e.target.closest && e.target.closest('#crHist'); if (!h) return;
+    var box = $('#crHistBox'); if (!box) return; h.disabled = true;
+    try {
+      var r = await api('studio-billing', 'credits');
+      box.innerHTML = r.log && r.log.length ? '<div class="list">' + r.log.map(function (x) { return '<div class="row" style="justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)"><span>' + esc(x.what) + '<small class="sub" style="display:block;margin:0">' + esc(fmtDate(x.at, { day: 'numeric', month: 'short', year: 'numeric' })) + '</small></span><b>' + (x.n > 0 ? '+' : '') + x.n + '</b></div>'; }).join('') + '</div>' : '<p class="sub">No credit activity yet.</p>';
+      h.remove();
+    } catch (x) { toast(x.message); h.disabled = false; }
+  });
+
   function showUpgrade(what) {
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="ugT"><h2 id="ugT" style="margin:0">🔒 Unlock ' + esc(what || 'the advanced tools') + '</h2>' +
-      '<p class="sub" style="margin:0">Advanced tools — like the 30-day growth plan, business check-up, repurposing and full launch campaigns — come with the Business Club and Business Studio Pro.</p>' +
+      '<p class="sub" style="margin:0">Advanced tools — like the 30-day growth plan, business check-up, repurposing and full launch campaigns — come with the Business Club and Business Studio Plus.</p>' +
       '<div class="card stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b>Business Club</b><b>£50/year</b></div><div class="sub" style="margin:0">Every tool and ' + S.boot.limits.standard + ' AI generations a day — plus promotion by Auntie Tobi, the directory, your Verified badge, the Marketplace and Resources.</div><a class="btn primary block" href="/business-club" style="text-align:center">Join the Business Club</a></div>' +
-      (S.boot.billing.enabled ? '<div class="card plan stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b>Business Studio Pro</b><b>from £3/month</b></div><div class="sub" style="margin:0">Every tool, all Resources and ' + S.boot.limits.pro + ' or ' + S.boot.limits.power + ' AI generations a day. Cancel any time.</div><button class="btn gold block" id="ugPro">See Pro plans</button></div>' : '') +
+      (S.boot.billing.enabled ? '<div class="card plan stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b>Business Studio Plus</b><b>£50/year</b></div><div class="sub" style="margin:0">Every tool, all Resources and ' + S.boot.limits.power + ' AI generations a day. Cancel any time.</div><button class="btn gold block" id="ugPro">Get Plus</button></div>' : '') +
       '<button class="btn ghost block" id="ugX">Not now</button></div>';
     document.body.appendChild(scrim);
     $('#ugX', scrim).onclick = function () { scrim.remove(); };
@@ -797,10 +837,19 @@ nav.tabs .navsep{display:none}
     }
     S.history = S.boot.recent || [];
     var q = new URLSearchParams(location.search);
+    if (q.get('credits')) {
+      history.replaceState(null, '', location.pathname);
+      if (q.get('credits') === 'success') {
+        toast('Payment received — adding your credits…');
+        var before = creditBal();
+        for (var ci = 0; ci < 6; ci++) { await new Promise(function (r) { setTimeout(r, ci ? 2000 : 800); }); try { S.boot = await api('studio-api', 'bootstrap'); S.history = S.boot.recent || []; } catch (e) {} if (creditBal() > before) break; }
+        toast(creditBal() > before ? '✅ ' + (creditBal() - before) + ' credits added — you have ' + creditBal() + ' extra credits' : creditBal() ? '✅ Payment received — you have ' + creditBal() + ' extra credits' : 'Payment received — your credits will appear in a minute');
+      }
+    }
     if (q.get('billing')) {
       history.replaceState(null, '', location.pathname);
       if (q.get('billing') === 'success' || q.get('billing') === 'managed') {
-        if (q.get('billing') === 'success') toast('Payment received — setting up Business Studio Pro…');
+        if (q.get('billing') === 'success') toast('Payment received — setting up Business Studio Plus…');
         try { await api('studio-billing', 'refresh'); S.boot = await api('studio-api', 'bootstrap'); S.history = S.boot.recent || []; } catch (e) {}
         if (q.get('billing') === 'success' && S.boot.access.powerActive) toast(TIER_NAME[S.boot.access.tier] + ' is active — ' + tierLimit(S.boot.access.tier) + ' generations a day!');
       }
@@ -826,12 +875,12 @@ nav.tabs .navsep{display:none}
   function planChoices() {
     var plans = (S.boot.billing && S.boot.billing.plans) || {};
     var tiers = ['pro', 'plus'].filter(function (t) { return plans[t] && plans[t].length; });
-    if (!tiers.length) return '<div class="note">Business Studio Pro isn’t available to buy just yet. Please check back soon.</div>';
+    if (!tiers.length) return '<div class="note">Business Studio Plus isn’t available to buy just yet. Please check back soon.</div>';
     var hasYear = tiers.some(function (t) { return plans[t].indexOf('year') > -1; }), hasMonth = tiers.some(function (t) { return plans[t].indexOf('month') > -1; });
     var iv = S.planIv && (S.planIv === 'year' ? hasYear : hasMonth) ? S.planIv : (hasMonth ? 'month' : 'year');
     var card = function (t) {
       var lim = tierLimit(t);
-      return '<button class="card plan stack" data-buy="' + t + '"><div class="row" style="justify-content:space-between"><b>' + TIER_NAME[t] + '</b>' + (t === 'plus' ? '<span class="pill gold">Most generations</span>' : '<span class="pill green">Best value</span>') + '</div>' +
+      return '<button class="card plan stack" data-buy="' + t + '"><div class="row" style="justify-content:space-between"><b>' + TIER_NAME[t] + '</b>' + (t === 'plus' ? '<span class="pill gold">Software + learning</span>' : '<span class="pill green">Best value</span>') + '</div>' +
         '<div class="price"><span class="ivm">' + TIER_PRICE[t].month + '<span style="font-size:15px;font-weight:500"> /month</span></span><span class="ivy">' + TIER_PRICE[t].year + '<span style="font-size:15px;font-weight:500"> /year</span></span></div>' +
         '<div class="sub" style="margin:0"><b>' + lim + ' AI generations a day</b> · every tool, including the advanced ones</div>' +
         '<div class="hint" style="margin:0"><span class="ivm">Renews automatically every month</span><span class="ivy">Renews automatically every year</span> · we remind you before each payment · cancel any time in 2 taps</div></button>';
@@ -839,8 +888,8 @@ nav.tabs .navsep{display:none}
     return '<div class="stack plch" data-iv="' + iv + '">' +
       (hasMonth && hasYear ? '<div class="chips" role="group" aria-label="Billing"><button type="button" class="chip" data-iv="month" aria-pressed="' + (iv === 'month') + '">Monthly</button><button type="button" class="chip" data-iv="year" aria-pressed="' + (iv === 'year') + '">Yearly · 2 months free</button></div>' : '') +
       '<div class="tiers' + (iv === 'year' ? ' year' : '') + '">' + tiers.map(card).join('') + '</div>' +
-      '<ul style="margin:0 0 0 18px;font-size:14.5px"><li>Every Business Studio tool, in your brand voice — including the 30-day growth plan, business check-up and full launch campaigns</li><li>Resources — lessons, templates, checklists and tools</li><li>Switch between Pro and Plus, or monthly and yearly, any time</li></ul>' +
-      (S.boot && S.boot.access && S.boot.access.membershipActive ? '' : '<p class="hint" style="margin:0">Pro and Plus are the tools only. Promotion by Auntie Tobi (Spotlight, Featured Business, Marketplace, reposts) is part of the <a href="/business-club">Business Club</a>.</p>') +
+      '<ul style="margin:0 0 0 18px;font-size:14.5px"><li>Every Business Studio tool, in your brand voice — including the 30-day growth plan, business check-up and full launch campaigns</li><li>Resources — lessons, templates, checklists and tools</li><li>One payment a year — we remind you before it renews</li><li>Need more on a busy day? Top up with extra credits</li></ul>' +
+      (S.boot && S.boot.access && S.boot.access.membershipActive ? '' : '<p class="hint" style="margin:0">Plus is the tools and learning. Promotion by Auntie Tobi (Spotlight, Featured Business, Marketplace, reposts) is part of the <a href="/business-club">Business Club</a>.</p>') +
       '<p class="hint" style="text-align:center;margin:0">Secure payment by Stripe. Cancel any time.</p></div>';
   }
   function bindPlanChoices(root) {
@@ -859,19 +908,19 @@ nav.tabs .navsep{display:none}
     setChrome({ tabs: false });
     var m = S.boot.member || {};
     app.innerHTML = '<main><div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' +
-      (m.isClub ? 'Your Business Club membership isn’t active right now, but you can still use the Business Studio with Business Studio Pro.' : 'Email confirmed! Choose Pro or Plus and you’ll be creating in a minute.') +
-      '</p></div><h1 style="margin-bottom:12px">Get Business Studio Pro</h1>' + planChoices() +
+      (m.isClub ? 'Your Business Club membership isn’t active right now, but you can still use the Business Studio with Business Studio Plus.' : 'Email confirmed! Get Plus and you’ll be creating in a minute.') +
+      '</p></div><h1 style="margin-bottom:12px">Get Business Studio Plus</h1>' + planChoices() +
       '<p class="hint" style="text-align:center;margin-top:16px">Signed in as ' + esc(m.email || '') + ' · <button class="btn link" id="out" style="font-size:inherit">Sign out</button></p></main>';
     bindPlanChoices(); $('#out').onclick = signOut;
   }
 
   function readOnlyBanner() {
-    return '<section class="card plan stack" style="margin-bottom:6px"><b>Your Business Studio Pro has ended</b><div class="sub">You can still view, edit and copy everything in your library. Renew to create new content.</div><button class="btn gold block" id="renewBtn">Renew Business Studio Pro</button></section>';
+    return '<section class="card plan stack" style="margin-bottom:6px"><b>Your Business Studio plan has ended</b><div class="sub">You can still view, edit and copy everything in your library. Renew to create new content.</div><button class="btn gold block" id="renewBtn">Get Business Studio Plus</button></section>';
   }
   function bindRenew() { var r = $('#renewBtn'); if (r) r.onclick = showRenew; }
   function showRenew() {
     var scrim = document.createElement('div'); scrim.className = 'scrim';
-    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="rnT"><h2 id="rnT" style="margin:0">Choose Pro or Plus</h2>' + planChoices() + '<button class="btn ghost block" id="rnClose">Not now</button></div>';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="rnT"><h2 id="rnT" style="margin:0">Business Studio Plus</h2>' + planChoices() + '<button class="btn ghost block" id="rnClose">Not now</button></div>';
     document.body.appendChild(scrim);
     bindPlanChoices(scrim);
     $('#rnClose', scrim).onclick = function () { scrim.remove(); };
@@ -1177,8 +1226,9 @@ nav.tabs .navsep{display:none}
       '<span class="pill ' + (S.boot.access.powerActive ? 'gold' : 'cream') + '">' + esc(planLabel()) + '</span></div>' +
       '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + u.limit + '" aria-valuenow="' + (u.limit - u.remaining) + '"><span style="width:' + pct + '%"></span></div>' +
       '<div class="meta">' + (u.limit - u.remaining) + ' of ' + u.limit + ' used today · resets at midnight</div>' +
-      '<div class="row" style="margin-top:10px;justify-content:space-between"><button class="link" id="whatCounts">What counts as a generation?</button>' +
-      (canUp ? '<button class="btn gold small" id="upBtn">' + (isFree() ? 'Upgrade' : 'Get more') + '</button>' : '') + '</div></section>';
+      '<div class="row" style="margin-top:10px;justify-content:space-between;flex-wrap:wrap;gap:8px"><button class="link" id="whatCounts">What counts as a generation?</button><div class="row" style="gap:6px">' +
+      (creditsOn() ? '<button class="btn small" data-buycredits style="background:#fff;color:var(--navy);border-color:#fff">Buy credits</button>' : '') +
+      (canUp ? '<button class="btn gold small" id="upBtn">Upgrade</button>' : '') + '</div></div></section>';
   }
 
   function whatCounts() {
@@ -1188,7 +1238,8 @@ nav.tabs .navsep{display:none}
       '<p>Each time you tap <b>Create</b> or <b>Regenerate</b> and get a result, that’s <b>one generation</b> — even when you get several options (like 3 captions or 6 content ideas).</p>' +
       '<p><b>One exception:</b> a <b>30-day content plan uses 3 generations</b>, because it’s a much bigger piece of work. A 7-day plan uses 1.</p>' +
       '<p><b>Free — never counted:</b> editing, copying, saving, viewing your library and updating your profile. If something goes wrong and you don’t get a result, you’re not charged.</p>' +
-      '<p><b>Your daily allowance:</b> Free plan ' + l.free + ' a day (everyday tools) · Business Club ' + l.standard + ' a day · Pro ' + l.pro + ' a day (£3/month or £30/year) · Plus ' + l.power + ' a day (£5/month or £50/year). The Club, Pro and Plus include the advanced tools. If you have more than one, you get the highest. Allowances reset every night at midnight (UK time) and unused generations don’t carry over.</p>' +
+      '<p><b>Your daily allowance:</b> Free plan ' + l.free + ' a day (everyday tools) · Business Club ' + l.standard + ' a day · Business Studio Plus ' + l.power + ' a day (£50/year). The Club and Plus include the advanced tools. If you have more than one, you get the highest. Allowances reset every night at midnight (UK time) and unused generations don’t carry over.</p>' +
+      '<p><b>Extra credits:</b> one-off top-ups for any plan — £5 for 300, £10 for 750 or £20 for 1,600. Your daily generations are used first, then your credits. Credits last 12 months and never renew.</p>' +
       '<button class="btn primary block" id="wcOk">Got it</button></div>';
     document.body.appendChild(scrim);
     $('#wcOk', scrim).onclick = function () { scrim.remove(); };
@@ -1438,7 +1489,7 @@ nav.tabs .navsep{display:none}
     var inp = { goal: goal, about: about || '', source: opts.source || '', platform: defaultPlatform() };
     async function run() {
       var resEl = $('#result'), err = $('#qErr'); if (!resEl) return; err.classList.add('hidden');
-      if (S.boot.usage.remaining <= 0) return showLimitReached();
+      if (avail() <= 0) return showLimitReached();
       resEl.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Writing"><i></i><i></i><i></i></span> ' + esc(q.writing) + '</p></div>';
       var reqId = uuid(), r;
       try {
@@ -1508,7 +1559,7 @@ nav.tabs .navsep{display:none}
       (S.history.length ? '<button class="btn link" id="allBtn" style="margin-top:6px">See everything you’ve created →</button>' : '') + '</div></div></main>';
     bindHistoryRows(); bindQuick(showHome);
     var wc = $('#whatCounts'); if (wc) wc.onclick = whatCounts;
-    var up = $('#upBtn'); if (up) up.onclick = function () { isFree() ? showUpgrade() : showRenew(); };
+    var up = $('#upBtn'); if (up) up.onclick = upgradeGo;
     var all = $('#allBtn'); if (all) all.onclick = showLibrary;
     loadNudges();
     bindBizTools(); loadDash();
@@ -1975,7 +2026,7 @@ nav.tabs .navsep{display:none}
     var name = t.name.charAt(0).toUpperCase() + t.name.slice(1);
     app.innerHTML = '<main><h1 style="font-size:22px;margin-bottom:12px">' + esc(name) + ' <span class="free lock" style="background:#ECEDF0;color:var(--navy)">🔒 CLUB · PRO</span></h1>' +
       '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p>' + esc(m.hello || t.hello || m.blurb || t.blurb || '') + '</p></div>' +
-      '<section class="card plan stack"><b>This is an advanced tool</b><div class="sub" style="margin:0">It comes with the Business Club, Business Studio Pro and Plus. Your Free plan includes all the everyday tools.</div>' +
+      '<section class="card plan stack"><b>This is an advanced tool</b><div class="sub" style="margin:0">It comes with the Business Club and Business Studio Plus. Your Free plan includes all the everyday tools.</div>' +
       '<button class="btn gold block" id="lkUp">See how to unlock it</button><button class="btn ghost block" id="lkBack">Back to all tools</button></section></main>';
     $('#lkUp').onclick = function () { showUpgrade(name); };
     $('#lkBack').onclick = function () { (opts.back || showCreate)(); };
@@ -2021,7 +2072,7 @@ nav.tabs .navsep{display:none}
     function costFor(inp) { return (t.cost && t.cost.values[inp[t.cost.field]]) || 1; }
     function updateCost() {
       var c = costFor(readInput());
-      $('#cost').textContent = 'Uses ' + c + ' generation' + (c > 1 ? 's' : '') + ' \u00b7 ' + S.boot.usage.remaining + ' left today';
+      $('#cost').textContent = 'Uses ' + c + ' generation' + (c > 1 ? 's' : '') + ' \u00b7 ' + S.boot.usage.remaining + ' left today' + (creditBal() ? ' + ' + creditBal() + ' credits' : '');
     }
     $$('.chip', app).forEach(function (c) { c.addEventListener('click', updateCost); });
     updateCost();
@@ -2031,8 +2082,8 @@ nav.tabs .navsep{display:none}
       var err = $('#terr'); err.classList.add('hidden');
       var miss = t.fields.filter(function (f) { return f.required && !String(inp[f.name] || '').trim(); });
       if (miss.length) { err.textContent = 'Please fill in: ' + miss[0].label; err.classList.remove('hidden'); return; }
-      if (S.boot.usage.remaining <= 0) return showLimitReached();
-      if (S.boot.usage.remaining < costFor(inp)) { err.textContent = 'This needs ' + costFor(inp) + ' generations and you have ' + S.boot.usage.remaining + ' left today. Your allowance resets at midnight.'; err.classList.remove('hidden'); return; }
+      if (avail() <= 0) return showLimitReached();
+      if (avail() < costFor(inp)) { err.innerHTML = 'This needs ' + costFor(inp) + ' generations and you have ' + avail() + ' left. ' + (creditsOn() ? '<button type="button" class="btn link" data-buycredits style="padding:0;min-height:0">Buy credits</button>' : 'Your allowance resets at midnight.'); err.classList.remove('hidden'); return; }
       var btn = $('#go'); btn.disabled = true;
       var resEl = $('#result');
       resEl.innerHTML = '<div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Writing"><i></i><i></i><i></i></span> Writing in your brand voice…</p></div>';
@@ -2135,16 +2186,17 @@ nav.tabs .navsep{display:none}
   }
 
   function showLimitReached() {
-    var canUp = canUpgrade(), l = S.boot.limits;
+    var canUp = canUpgrade();
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="lrT"><h2 id="lrT" style="margin:0">You’ve used today’s generations</h2>' +
-      '<p>Your allowance resets at <b>midnight</b>. You can still view, edit and copy everything in your library.</p>' +
-      (canUp ? '<p><b>Want more?</b> ' + (isFree() ? 'The Business Club gives you ' + l.standard + ' a day plus promotion. Pro gives you ' + l.pro + ' a day and Plus ' + l.power + ' a day.' : S.boot.access.membershipActive ? 'Add Pro for ' + l.pro + ' a day or Plus for ' + l.power + ' a day.' : 'Pro gives you ' + l.pro + ' a day and Plus ' + l.power + ' a day.') + '</p>' +
-        (isFree() ? '<a class="btn primary block" href="/business-club" style="text-align:center">Join the Business Club</a>' : '') + '<button class="btn gold block" id="lrUp">See Pro plans</button>' : '') +
+      '<p style="margin:0">Your allowance resets at <b>midnight</b>. You can still view, edit and copy everything you’ve made.</p>' +
+      (creditsOn() ? '<button class="btn primary block" id="lrBuy">Buy credits</button>' : '') +
+      (canUp ? '<button class="btn gold block" id="lrUp">Upgrade</button>' : '') +
       '<button class="btn ghost block" id="lrOk">OK</button></div>';
     document.body.appendChild(scrim);
     $('#lrOk', scrim).onclick = function () { scrim.remove(); };
-    var up = $('#lrUp', scrim); if (up) up.onclick = function () { scrim.remove(); showRenew(); };
+    var b = $('#lrBuy', scrim); if (b) b.onclick = function () { scrim.remove(); buyCreditsSheet(); };
+    var up = $('#lrUp', scrim); if (up) up.onclick = function () { scrim.remove(); upgradeGo(); };
   }
 
   // ───────────── library ─────────────
@@ -2695,7 +2747,7 @@ nav.tabs .navsep{display:none}
 
   function resLocked() {
     return '<section class="card stack" style="text-align:center;padding:24px 18px"><div style="font-size:34px">📖</div><h2 style="margin:0">Lessons to grow your business</h2>' +
-      '<p class="sub">Short, practical lessons on Instagram, content, sales and growth come with the <b>Business Club</b>, <b>Business Studio Pro</b> and <b>Plus</b>.</p>' +
+      '<p class="sub">Short, practical lessons on Instagram, content, sales and growth come with the <b>Business Club</b> and <b>Business Studio Plus</b>.</p>' +
       '<button class="btn primary block" id="rlTools">Try the free templates</button><button class="btn ghost block" id="rlUp">See plans</button></section>';
   }
   function bindResLocked() {
@@ -2742,7 +2794,7 @@ nav.tabs .navsep{display:none}
     else if (g === 'all' && ty === 'all' && !q) body = r.groups.filter(function (x) { return gcounts[x.id]; }).map(function (x) { return '<h2>' + x.icon + ' ' + esc(x.label) + '</h2><div class="list">' + list.filter(function (t) { return t.group === x.id; }).map(row).join('') + '</div>'; }).join('');
     else body = '<div class="list">' + list.map(row).join('') + '</div>';
     $('#tlBox').innerHTML =
-      (!r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 ' + freeN + ' free on your Free plan</b><div class="sub" style="margin:0">Unlock all ' + r.tools.length + ' templates and tools — plus every lesson — with the Business Club, Business Studio Pro or Plus.</div><button class="btn gold small" id="tlUp" style="align-self:flex-start">See plans</button></section>' : '') +
+      (!r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 ' + freeN + ' free on your Free plan</b><div class="sub" style="margin:0">Unlock all ' + r.tools.length + ' templates and tools — plus every lesson — with the Business Club or Business Studio Plus.</div><button class="btn gold small" id="tlUp" style="align-self:flex-start">See plans</button></section>' : '') +
       '<form id="tlForm" role="search" class="rsearch" style="margin-bottom:10px"><input type="search" id="tlQ" placeholder="Search, e.g. follow-up, bio, pricing" aria-label="Search templates and tools" maxlength="80" value="' + esc(S.rtQ || '') + '"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form>' +
       '<div class="chips" id="tlG" style="margin-bottom:8px"><button class="chip" data-tg="all" aria-pressed="' + (g === 'all') + '">All ' + r.tools.length + '</button>' +
         r.groups.filter(function (x) { return gcounts[x.id]; }).map(function (x) { return '<button class="chip" data-tg="' + x.id + '" aria-pressed="' + (g === x.id) + '">' + x.icon + ' ' + esc(x.label) + ' ' + gcounts[x.id] + '</button>'; }).join('') +
@@ -2765,7 +2817,7 @@ nav.tabs .navsep{display:none}
     if (meta && meta.locked) {
       app.innerHTML = '<main class="lesson"><div class="lmeta">' + esc(TOOL_WORD[meta.type] || '') + '</div><h1>' + esc(meta.title) + '</h1>' + (meta.preview ? '<p class="sub" style="margin-top:6px">' + esc(meta.preview) + '…</p>' : '') +
         (meta.clubOnly ? '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">💚</div><b>This is part of the Business Club toolkit</b><div class="sub" style="margin:0">It helps Business Club members get the most from their Spotlight, Marketplace listing and reposts.</div><a class="btn primary block" href="/business-club" style="text-align:center">See the Business Club</a></section></main>'
-        : '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">🔒</div><b>This comes with the Business Club, Business Studio Pro and Plus</b><div class="sub" style="margin:0">Your Free plan includes ' + S.rtools.tools.filter(function (t) { return t.free; }).length + ' free templates and tools to try.</div>' +
+        : '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">🔒</div><b>This comes with the Business Club and Business Studio Plus</b><div class="sub" style="margin:0">Your Free plan includes ' + S.rtools.tools.filter(function (t) { return t.free; }).length + ' free templates and tools to try.</div>' +
         '<button class="btn gold block" id="ltUp">See plans</button><button class="btn ghost block" id="ltFree">Show me the free ones</button></section></main>');
       var lu = $('#ltUp'); if (lu) lu.onclick = function () { showUpgrade('every template and lesson'); };
       var lf = $('#ltFree'); if (lf) lf.onclick = function () { S.rtGroup = 'all'; S.rtType = 'all'; S.rtQ = ''; showResTools({ reload: false }); };
@@ -2806,8 +2858,8 @@ nav.tabs .navsep{display:none}
   function lockedLessonSheet(modId) {
     var club = isClubMod(modId);
     var scrim = document.createElement('div'); scrim.className = 'scrim';
-    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true"><h2 style="margin:0">' + (club ? '💚 For Business Club members' : '🔒 Lessons come with Club, Pro and Plus') + '</h2>' +
-      '<p class="sub" style="margin:0">' + (club ? 'This module helps Business Club members make the most of their Spotlight, Marketplace listing, reposts and Business Check-Up.' : 'Short, practical lessons on Instagram, content, sales and growth come with the Business Club, Business Studio Pro and Plus. The Business Mindset lessons are free for everyone.') + '</p>' +
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true"><h2 style="margin:0">' + (club ? '💚 For Business Club members' : '🔒 Lessons come with the Club and Plus') + '</h2>' +
+      '<p class="sub" style="margin:0">' + (club ? 'This module helps Business Club members make the most of their Spotlight, Marketplace listing, reposts and Business Check-Up.' : 'Short, practical lessons on Instagram, content, sales and growth come with the Business Club and Business Studio Plus. The Business Mindset lessons are free for everyone.') + '</p>' +
       (club ? '<a class="btn primary block" href="/business-club" style="text-align:center">See the Business Club</a>' : '<button class="btn gold block" id="llUp">See plans</button>') + '<button class="btn link" id="llX">Close</button></div>';
     document.body.appendChild(scrim);
     $('#llX', scrim).onclick = function () { scrim.remove(); };
@@ -2817,7 +2869,7 @@ nav.tabs .navsep{display:none}
     opts = opts || {};
     var p = S.res.progress, done = !!p.completed[l.id], saved = !!p.saved[l.id];
     if (l.status === 'planned') return '';
-    if (l.locked) return '<button class="li locked" data-lockmod="' + esc(l.module) + '"><span class="ldot" aria-hidden="true">🔒</span><div class="t"><b>' + esc(l.title) + '</b><small>' + (isClubMod(l.module) ? '💚 Business Club members' : 'Club, Pro &amp; Plus') + (l.readMins ? ' · ' + l.readMins + ' min read' : '') + '</small></div></button>';
+    if (l.locked) return '<button class="li locked" data-lockmod="' + esc(l.module) + '"><span class="ldot" aria-hidden="true">🔒</span><div class="t"><b>' + esc(l.title) + '</b><small>' + (isClubMod(l.module) ? '💚 Business Club members' : 'Club &amp; Plus') + (l.readMins ? ' · ' + l.readMins + ' min read' : '') + '</small></div></button>';
     var mod = S.res.modules.filter(function (m) { return m.id === l.module; })[0];
     return '<button class="li" data-lesson="' + esc(l.id) + '"><span class="ldot' + (done ? ' done' : '') + '" aria-hidden="true">' + (done ? '✓' : '') + '</span><div class="t"><b>' + esc(l.title) + '</b><small>' +
       (opts.module && mod ? esc(mod.title) + ' · ' : '') + (l.readMins ? l.readMins + ' min read' : 'Resource') + (done ? ' · Completed' : p.opened[l.id] ? ' · Started' : '') + '</small>' +
@@ -2854,7 +2906,7 @@ nav.tabs .navsep{display:none}
     }
     var saved = byRecent(p.saved).map(lessonById).filter(Boolean);
     var doneN = live.filter(function (l) { return p.completed[l.id]; }).length, pct = live.length ? Math.round(doneN / live.length * 100) : 0;
-    var freeBanner = !r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 Free on your plan: the Business Mindset lessons and free templates</b><div class="sub" style="margin:0">Unlock every lesson with the Business Club, Business Studio Pro or Plus.</div><button class="btn gold small" id="rfUp" style="align-self:flex-start">See plans</button></section>' : '';
+    var freeBanner = !r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 Free on your plan: the Business Mindset lessons and free templates</b><div class="sub" style="margin:0">Unlock every lesson with the Business Club or Business Studio Plus.</div><button class="btn gold small" id="rfUp" style="align-self:flex-start">See plans</button></section>' : '';
     $('#resBox').innerHTML = freeBanner +
       '<section class="reswelcome"><h2>Learn 💚</h2><p>Short, practical lessons to help you build a stronger business, attract customers and keep moving forward. Need a template straight away? Open <button type="button" class="btn link" id="toTools" style="padding:0;min-height:0;font-size:inherit">Templates &amp; Tools</button>.</p>' +
         '<form id="rsForm" role="search" class="rsearch"><input type="search" id="rsQ" placeholder="Search lessons, e.g. bio, pricing, reviews" aria-label="Search lessons" maxlength="100"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form></section>' +
@@ -2870,7 +2922,7 @@ nav.tabs .navsep{display:none}
         var dn = lv.filter(function (l) { return p.completed[l.id]; }).length, started = lv.some(function (l) { return p.opened[l.id]; });
         var count = ls.length + ' lesson' + (ls.length === 1 ? '' : 's');
         if (m.locked) return '<button class="modcard locked" data-lockmod="' + m.id + '"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 22) + '</span><span class="mn">MODULE ' + esc(m.n) + '</span><b>' + esc(m.title) + '</b><span class="md">' + esc(m.desc) + '</span>' +
-          '<span class="mc">' + esc(count) + '</span><span class="mgo">' + (m.access === 'club' ? '💚 Business Club' : '🔒 Club, Pro &amp; Plus') + '</span></button>';
+          '<span class="mc">' + esc(count) + '</span><span class="mgo">' + (m.access === 'club' ? '💚 Business Club' : '🔒 Club &amp; Plus') + '</span></button>';
         return '<button class="modcard" data-mod="' + m.id + '"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 22) + '</span><span class="mn">MODULE ' + esc(m.n) + '</span><b>' + esc(m.title) + '</b><span class="md">' + esc(m.desc) + '</span>' +
           '<span class="mc">' + esc(count) + '</span>' + (lv.length ? '<span class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></span>' : '') +
           '<span class="mgo">' + (started && dn < lv.length ? 'Continue' : dn && dn === lv.length ? 'Review' : 'Explore') + ' →</span></button>';
@@ -3379,7 +3431,7 @@ nav.tabs .navsep{display:none}
   // ───────────── Account: app, reminders, weekly email ─────────────
   function extrasAccountHtml() {
     return '<h2>Phone app &amp; reminders</h2><div class="card stack" id="exCard"><div class="toggle"><span id="lb_wk">Weekly round-up email (Monday morning)</span><button type="button" class="switch" role="switch" aria-labelledby="lb_wk" id="wkSw" aria-checked="false" disabled></button></div>' +
-      (S.boot.addon ? '<div class="toggle"><span id="lb_rr">Remind me before each Pro / Plus payment</span><button type="button" class="switch" role="switch" aria-labelledby="lb_rr" id="rrSw" aria-checked="true" disabled></button></div>' : '') +
+      (S.boot.addon ? '<div class="toggle"><span id="lb_rr">Remind me before each payment</span><button type="button" class="switch" role="switch" aria-labelledby="lb_rr" id="rrSw" aria-checked="true" disabled></button></div>' : '') +
       '<div class="toggle"><span id="lb_rm">Daily reminder notification (about 8am)</span><button type="button" class="switch" role="switch" aria-labelledby="lb_rm" id="rmSw" aria-checked="false" disabled></button></div>' +
       '<p class="hint" style="margin:0">The reminder is sent to this phone or computer. On iPhone, add Business Studio to your home screen first.</p>' +
       (isStandalone() ? '' : '<button class="btn ghost block" id="acInst">Add Business Studio to my home screen</button>') + '</div>' +
@@ -4081,7 +4133,7 @@ nav.tabs .navsep{display:none}
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="daT"><h2 id="daT" style="margin:0">Delete my account?</h2>' +
       '<p style="margin:0">This permanently deletes your business profile, customers and follow-ups, to-do list, calendar, quotes and invoices, saved content and your price list page. <b>It can’t be undone.</b></p>' +
-      (a.addonLive ? '<p class="err" style="margin:0">Your Pro / Plus subscription will be cancelled straight away (no refund for the rest of this period).</p>' : '') +
+      (a.addonLive ? '<p class="err" style="margin:0">Your subscription will be cancelled straight away (no refund for the rest of this period).</p>' : '') +
       (a.membershipActive ? '<p class="err" style="margin:0">You’ll lose access to your Business Club membership and its benefits.</p>' : '') +
       '<p class="hint" style="margin:0">Tip: download your data first. Payment records stay with Stripe as the law requires.</p>' +
       '<div><label class="f" for="daC">Type DELETE to confirm</label><input id="daC" autocomplete="off" autocapitalize="characters"></div>' +
@@ -4116,7 +4168,7 @@ nav.tabs .navsep{display:none}
         (m.isClub ? '' : '<div class="card stack"><div class="row" style="justify-content:space-between"><b>Business Club</b><b>£50/year</b></div><div class="sub" style="margin:0">Every tool and ' + l.standard + ' AI generations a day — plus promotion by Auntie Tobi, the directory, your Verified badge, the Marketplace and Resources.</div><a class="btn primary block" href="/business-club" style="text-align:center">Join the Business Club</a></div>');
     }
     // Add-ons: Pro / Plus
-    html += '<h2>Business Studio Pro</h2>';
+    html += '<h2>' + (ad && ad.tier === 'pro' ? 'Business Studio Plus' : 'Business Studio Plus') + '</h2>';
     var tier = ad && ad.tier === 'pro' ? 'pro' : 'plus';
     var period = ad ? TIER_PRICE[tier][ad.interval === 'year' ? 'year' : 'month'] + (ad.interval === 'year' ? '/year' : '/month') : '';
     var after = a.membershipActive ? ' You’ll go back to ' + l.standard + ' a day with your Business Club membership.' : l.free > 0 ? ' You’ll go back to the Free plan (' + l.free + ' a day).' : ' After that you can still view your library.';
@@ -4124,7 +4176,7 @@ nav.tabs .navsep{display:none}
       html += '<div class="card plan stack"><div class="row" style="justify-content:space-between"><b>' + TIER_NAME[tier] + ' · ' + (ad.interval === 'year' ? 'Yearly' : 'Monthly') + '</b><span class="pill gold">' + (ad.cancelAtPeriodEnd ? 'Ending' : 'Active') + '</span></div>' +
         '<div class="sub">' + tierLimit(tier) + ' generations a day · ' + period + '</div>' +
         '<div>' + (ad.cancelAtPeriodEnd ? 'Ends on <b>' + d(ad.currentPeriodEnd, 1) + '</b>.' + after : 'Renews on <b>' + d(ad.currentPeriodEnd, 1) + '</b>' + (ad.amount ? ' (£' + (ad.amount % 100 ? (ad.amount / 100).toFixed(2) : ad.amount / 100) + ')' : '') + '. We’ll remind you before then.') + '</div>' +
-        (tier === 'pro' && !ad.cancelAtPeriodEnd ? '<p class="hint" style="margin:0">Want ' + l.power + ' a day? Choose <b>Plus</b> under “Switch plan”.</p>' : '') +
+        (!ad.cancelAtPeriodEnd ? '<p class="hint" style="margin:0">Need more on a busy day? <button class="btn link" data-buycredits style="padding:0;min-height:0">Buy extra credits</button>.</p>' : '') +
         (ad.cancelAtPeriodEnd ? '<button class="btn gold block" id="resumeSub">Keep my plan</button>' : '') +
         '<button class="btn ghost block" id="manage">' + (ad.cancelAtPeriodEnd ? 'Payment details & invoices' : 'Switch plan, payment details & invoices') + '</button>' +
         (ad.cancelAtPeriodEnd ? '' : '<button class="btn link" id="cancelSub" style="color:var(--danger);font-weight:700">Cancel subscription</button>') + '</div>';
@@ -4132,9 +4184,17 @@ nav.tabs .navsep{display:none}
       html += '<div class="card stack" style="border-color:var(--danger)"><b>' + TIER_NAME[tier] + ' is paused</b><div class="err">Your last payment didn’t go through. Update your card to get your ' + tierLimit(tier) + ' generations a day back.' + (a.membershipActive ? ' Your Business Club membership is not affected.' : '') + '</div>' +
         '<button class="btn primary block" id="manage">Update payment details</button></div>';
     } else if (S.boot.billing.enabled) {
-      html += '<div class="card stack">' + (a.membershipActive ? '<p class="sub" style="margin:0">You have ' + l.standard + ' a day with Business Club. Add Pro for ' + l.pro + ' a day or Plus for ' + l.power + ' a day.</p>' : '') + planChoices() + '</div>';
+      html += '<div class="card stack">' + (a.membershipActive ? '<p class="sub" style="margin:0">You have ' + l.standard + ' a day with Business Club. Add Plus for ' + l.power + ' a day.</p>' : '') + planChoices() + '</div>';
     } else if (!m.isClub) {
-      html += '<div class="note">Business Studio Pro isn’t available right now.</div>';
+      html += '<div class="note">Business Studio Plus isn’t available right now.</div>';
+    }
+    if (creditsOn() || creditBal()) {
+      var uu = S.boot.usage || {};
+      html += '<h2>Extra AI credits</h2><div class="card stack"><div><b style="font-size:22px">' + creditBal().toLocaleString('en-GB') + ' credits</b>' +
+        (uu.creditsExpiry ? '<div class="sub" style="margin:0">First ones expire ' + d(uu.creditsExpiry, 1) + '</div>' : '') + '</div>' +
+        '<div class="sub" style="margin:0">Used after your daily generations. One-off top-ups — nothing renews. Credits last 12 months.</div>' +
+        (creditsOn() ? '<button class="btn primary block" data-buycredits>Buy credits</button>' : '') +
+        '<button class="btn link" id="crHist">See credit history</button><div id="crHistBox"></div></div>';
     }
     return html;
   }
@@ -4154,7 +4214,7 @@ nav.tabs .navsep{display:none}
       '<h2>Help</h2><details class="faq"><summary>What counts as a generation?</summary><ul><li>Every <b>Create</b> or <b>Regenerate</b> that gives you a result = 1 generation.</li><li>A <b>30-day content plan uses 3</b>. Everything else uses 1.</li><li>Editing, copying, saving and browsing your library are free.</li><li>If it fails, you’re not charged.</li><li>Allowances reset at midnight (UK time). Unused generations don’t carry over.</li></ul></details>' +
       '<h2>Your data</h2><div class="card stack"><p class="sub" style="margin:0">Your Business Studio is private to your account — your customers, tasks, quotes, invoices and content aren’t shown to anyone else. Business Studio stores them so it can remind you and keep your records; requests you make in Create are sent to our AI provider to write the content.</p>' +
         '<button class="btn ghost block" id="myData">⬇️ Download my data</button><button class="btn link danger" id="delAcct">Delete my account</button></div>' +
-      '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code at least every 90 days and before any payment.</p>' +
+      '<h2>Security</h2><div class="card stack"><p class="sub">You stay signed in on this device for up to 30 days of inactivity, and we’ll ask for a fresh email code once a month and before any payment.</p>' +
       '<button class="btn ghost block" id="out">Sign out</button><button class="btn link danger" id="outAll">Sign out on all devices</button></div></main>';
     var ep = $('#editP'); if (ep) ep.onclick = function () { showProfileForm(false); };
     $('#myData').onclick = downloadMyData;

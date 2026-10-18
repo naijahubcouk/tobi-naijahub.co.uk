@@ -17,23 +17,26 @@ const MIN = 60 * 1000;
 const DEFAULT_SETTINGS = {
   freeLimit: 5,                 // generations per DAY on the Free plan (0 = Free plan switched off)
   standardLimit: 20,            // generations per DAY, Business Club
-  proLimit: 50,                 // generations per DAY with Business Studio Pro (£3/month)
-  powerLimit: 100,              // generations per DAY with Business Studio Plus (£5/month)
+  proLimit: 50,                 // generations per DAY with Business Studio Pro (no longer sold; existing subscribers)
+  powerLimit: 50,               // generations per DAY with Business Studio Plus (£50/year)
   perMinuteLimit: 6,            // burst protection per member
   spendWarnGbp: 30,             // email + admin alert when monthly AI spend passes this (and 2x). Never blocks.
   model: '',                    // blank = STUDIO_MODEL env or openai/gpt-4o-mini
   inputPricePerMUsd: 0.15,      // used only when the provider does not report cost
   outputPricePerMUsd: 0.60,
   usdToGbp: 0.79,
+  creditsOn: true,              // AI credit top-ups (one-off Stripe payments)
+  creditPacks: [{ id: 'p300', credits: 300, pence: 500 }, { id: 'p750', credits: 750, pence: 1000 }, { id: 'p1600', credits: 1600, pence: 2000 }],
 };
 
 const SESSION = {
   idleMs: 30 * DAY,        // signed out after 30 days without use
-  absoluteMs: 90 * DAY,    // always re-verify by email at least every 90 days
+  absoluteMs: 30 * DAY,    // members re-verify by email once a month
   rotateMs: 7 * DAY,       // session token is replaced weekly
   renewEveryMs: 12 * 60 * MIN,
   freshBillingMs: 24 * 60 * MIN, // billing needs an email code from the last 24h
-  adminMs: 12 * 60 * MIN,  // admin sessions last 12 hours, no renewal
+  adminMs: 90 * DAY,       // admin stays signed in on that device for 90 days (sign out any time)
+  hqMs: 30 * DAY,          // HQ team sign-in lasts a month
 };
 
 const COOKIE_MEMBER = '__Host-studio_sid';
@@ -355,8 +358,8 @@ async function createSession(email, role, event) {
   const sess = {
     email, role,
     createdAt: now, lastSeen: now, verifiedAt: now,
-    expiresAt: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + 7 * DAY : now + SESSION.idleMs,
-    absoluteExpiry: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + 7 * DAY : now + SESSION.absoluteMs,
+    expiresAt: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + SESSION.hqMs : now + SESSION.idleMs,
+    absoluteExpiry: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + SESSION.hqMs : now + SESSION.absoluteMs,
     epoch: member ? (member.sessionEpoch || 0) : 0,
     device: cleanText(header(event, 'user-agent'), 160),
   };
@@ -396,7 +399,7 @@ async function requireMember(ctx, opts) {
   const allowed = level === 'buyer' ? true : level === 'view' ? acc.canView : acc.canCreate;
   if (!allowed) {
     throw new HttpError(403, acc.readOnly ? 'read_only' : 'no_access',
-      acc.readOnly ? 'Your Business Studio Pro has ended. Renew it to create new content — your library is still here.'
+      acc.readOnly ? 'Your Business Studio plan has ended. Renew it to create new content — your library is still here.'
         : 'You need a Business Studio account to use this. Sign in or start free.');
   }
   // Renew / rotate
