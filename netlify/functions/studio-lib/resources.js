@@ -215,20 +215,87 @@ function memberMeta(m) {
   return rest;
 }
 
-function recommendTag(profile) {
-  const s = `${(profile && profile.industry) || ''} ${(profile && profile.products) || ''}`.toLowerCase();
-  if (!s.trim()) return null;
-  const rules = [
-    ['food', /cater|food|cake|bak|chef|restaurant|kitchen|chops|jollof|meal|grill|suya|pastr|dessert|drink|grocer/],
-    ['beauty', /hair|beauty|nail|lash|brow|make-?up|skin|salon|barber|braid|wig|spa|aesthetic|cosmetic/],
-    ['fashion', /fashion|tailor|cloth|aso|fabric|boutique|wear|ankara|bespoke|garment|bridal/],
-    ['events', /event|planner|decor|party|wedding|dj\b|\bmc\b|balloon|hire|venue/],
-    ['photo', /photo|video|film|media|content creat|design/],
-    ['retail', /shop|store|retail|import|seller|hamper|gift|marketplace/],
-    ['services', /consult|account|clean|tutor|coach|law|legal|solicitor|immigration|estate|property|agent|repair|it\b|tech|care|training|education|service|mortgage|insurance|travel|logistic|courier/],
-  ];
-  for (const [tag, re] of rules) if (re.test(s)) return tag;
+// Business type from the profile. The Industry field counts most; the description and products only break ties.
+// Words that mislead on their own (wedding, party, hire, planner, it) never decide the type.
+const TYPE_RULES = {
+  food: /\b(cater\w*|food|cakes?|cupcakes?|bak\w*|chef|restaurant|kitchen|chops|jollof|meals?|grill\w*|suya|pastr\w*|desserts?|drinks?|grocer\w*|takeaway|puff[- ]?puff)\b/,
+  beauty: /\b(hair\w*|beauty|nails?|lash\w*|brows?|make-?up|mua|skin\w*|salon|barber\w*|braid\w*|wigs?|spa|aesthetic\w*|cosmetic\w*|gele)\b/,
+  fashion: /\b(fashion|tailor\w*|cloth\w*|aso[- ]?ebi|aso[- ]?oke|fabrics?|boutique|ankara|garments?|dresses|jewel\w*|accessor\w*)\b/,
+  events: /\b(event planner|event planning|events? (company|management|styling|decor)|events|decor(ator|ation)s?|balloon\w*|venue|dj|mc|event)\b/,
+  photo: /\b(photograph\w*|videograph\w*|photo ?shoots?|film\w*|content creat\w*|graphic design\w*)\b/,
+  retail: /\b(shop|store|retail\w*|import\w*|wholesale|hampers?|gift\w*)\b/,
+  services: /\b(consult\w*|accountan\w*|bookkeep\w*|tax|cleaning|cleaners?|tutor\w*|tuition|coach\w*|solicitors?|legal|law|immigration|estate agen\w*|property|letting|repairs?|it support|tech\w*|software|web design|care|carers?|training|mortgages?|insurance|travel|logistic\w*|courier\w*|haulage|recruit\w*)\b/,
+};
+function businessType(profile) {
+  if (!profile) return null;
+  const ind = String(profile.industry || '').toLowerCase();
+  const rest = `${profile.products || ''} ${profile.description || ''}`.toLowerCase();
+  const scores = Object.entries(TYPE_RULES).map(([tag, re]) => {
+    let n = re.test(ind) ? 3 : 0;
+    const g = new RegExp(re.source, 'g'); const hits = new Set((rest.match(g) || []).map(x => x.trim()));
+    n += Math.min(2, hits.size);
+    return [tag, n];
+  }).sort((a, b) => b[1] - a[1]);
+  if (scores[0][1] >= 2 && scores[0][1] > scores[1][1]) return scores[0][0];
   return null;
+}
+function recommendTag(profile) { return businessType(profile); }
+
+// Health Check areas (same order as the checklist) → the lessons that help.
+const AREAS = [
+  ['Business clarity', /clarity|clear/i, 'm02', /bio|profile/i],
+  ['Knowing your customer', /\bcustomers?\b(?! journey)|audience|ideal/i, 'm04', /journey|present/i],
+  ['Your offer', /\boffers?\b/i, 'm04', /offer|present/i],
+  ['Pricing', /pric/i, 'm06', /pric/i],
+  ['Instagram', /instagram|\binsta\b/i, 'm02', /./],
+  ['Content', /content|posting|posts?\b/i, 'm03', /./],
+  ['Customer journey', /journey|easy to buy|ordering/i, 'm04', /journey/i],
+  ['Sales', /\bsales?\b|selling|convert/i, 'm04', /enquir|follow/i],
+  ['Trust', /trust|reviews?/i, 'm04', /review|present/i],
+  ['Repeat business', /repeat|referr|loyal/i, 'm04', /repeat/i],
+  ['Organisation', /organis|systems?|admin/i, 'm05', /./],
+  ['Money', /money|numbers|profit|cash/i, 'm06', /cost|profit|cash|pric/i],
+  ['Goals', /goals?\b/i, 'm01', /90-day|goal/i],
+];
+const GOAL_RULES = [
+  [/enquir|visib|seen|follower|reach|aware|discover/i, [['m02', /enquir|follower|bio/i], ['m03', /./]]],
+  [/repeat|review|referr|loyal/i, [['m04', /repeat|review/i]]],
+  [/sale|sell|order|booking|revenue|income|customer/i, [['m04', /follow|enquir|offer|present/i]]],
+  [/consist|post|content|reel/i, [['m03', /./], ['m02', /reel|stor/i]]],
+  [/pric|profit|money|cash/i, [['m06', /pric|cost|profit/i]]],
+  [/launch|new product|new service|offer|promot/i, [['m04', /offer|present/i], ['m07', /launch|campaign|promot/i]]],
+];
+const HC_ID = 'm01-business-basics-health-check', GOAL_ID = 'm01-set-your-90-day-business-goal';
+
+// Personal recommendations: Health Check gaps → goals → business type → Start Here. Each has a reason.
+function personalRecs(live, p, profile, weekly, acc) {
+  const out = [], seen = new Set();
+  const ok = m => m && !seen.has(m.id) && !p.completed[m.id] && canModule(m.module, acc) && m.id !== HC_ID;
+  const pickIn = (mod, kw) => live.filter(m => m.module === mod).sort((a, b) => (a.order || 0) - (b.order || 0)).find(m => ok(m) && kw.test(m.title)) || live.filter(m => m.module === mod).sort((a, b) => (a.order || 0) - (b.order || 0)).find(ok);
+  const add = (m, reason) => { if (ok(m) && out.length < 4) { seen.add(m.id); out.push({ id: m.id, reason }); } };
+  // 1. Health Check: the gaps they wrote down first, then the areas they left unticked.
+  const hcAns = (p.answers || {})[HC_ID] || {};
+  for (const k of ['1:3', '1:0', '1:1', '1:2']) {
+    const t = hcAns[k]; if (!t) continue;
+    const a = AREAS.find(x => x[1].test(t) || t.toLowerCase().includes(x[0].toLowerCase()));
+    if (a) add(pickIn(a[2], a[3]), `You chose ${a[0].toLowerCase()} as a gap to work on`);
+  }
+  const ticks = ((p.checks || {})[HC_ID] || []).filter(k => k.startsWith('0:'));
+  // At most 2 from unticked areas, so goals and business type still get a say.
+  if (ticks.length) { let n = 0; AREAS.forEach((a, i) => { if (n < 2 && !ticks.includes(`0:${i}`)) { const before = out.length; add(pickIn(a[2], a[3]), `${a[0]} was a gap in your Health Check`); if (out.length > before) n++; } }); }
+  // 2. Goals: the 90-day goal, then this week's goal.
+  const g90 = ((p.answers || {})[GOAL_ID] || {});
+  for (const [text, label] of [[g90['0:1'] || g90['0:0'], 'your 90-day goal'], [weekly, 'this week’s goal']]) {
+    if (!text) continue;
+    const rule = GOAL_RULES.find(r => r[0].test(text));
+    if (rule) rule[1].forEach(([mod, kw]) => add(pickIn(mod, kw), `Helps with ${label}: “${String(text).slice(0, 60)}${String(text).length > 60 ? '…' : ''}”`));
+  }
+  // 3. Their type of business (only when it's a clear match).
+  const type = businessType(profile);
+  if (type) live.filter(m => (m.tags || []).includes(type) && m.module !== 'm01' && m.module !== 'm08').forEach(m => add(m, `Suited to ${TAG_LABELS[type]} like ${profile.businessName || 'yours'}`));
+  // 4. Start Here.
+  live.filter(m => m.module === 'm01').sort((a, b) => (a.order || 0) - (b.order || 0)).forEach(m => add(m, 'Next in Start Here'));
+  return out;
 }
 
 async function getProgress(email) { return (await getJson(progressKey(email))) || { completed: {}, saved: {}, opened: {}, checks: {}, answers: {}, last: '', lastAt: '', hideRecs: false }; }
@@ -240,8 +307,12 @@ async function home(email, profile, acc) {
   // Only published lessons (no "coming soon" placeholders). Locked modules show titles only.
   const visible = idx.lessons.filter(m => !m.toolOnly && isLive(m, day)).map(m => (canModule(m.module, acc) ? m : { id: m.id, module: m.module, order: m.order, title: m.title, summary: m.summary, readMins: m.readMins, status: 'locked', locked: true }));
   const p = await getProgress(email);
-  const tag = recommendTag(profile);
+  const tag = businessType(profile);
+  const wk = await getJson(`goals/${enc(email)}`).catch(() => null);
+  const weekly = !wk ? '' : wk.goal === 'custom' ? (wk.text || '') : ({ enquiries: 'Get more enquiries', bookings: 'Get more bookings or orders', new_product: 'Promote a new product or service', visibility: 'Get seen by more people' }[wk.goal] || '');
+  const liveMeta = idx.lessons.filter(m => !m.toolOnly && isLive(m, day) && m.module !== 't01');
   return {
+    recs: personalRecs(liveMeta, p, profile, weekly, acc), recName: (profile && profile.businessName) || '',
     modules: MODULES.map(m => ({ ...m, locked: !canModule(m.id, acc) })),
     lessons: visible.map(m => (m.locked ? m : memberMeta(m))),
     full: !!acc.full, club: !!acc.club,
@@ -740,7 +811,7 @@ async function suggestLesson(email, profile, summary, acc) {
   }
   const tag = recommendTag(profile);
   const tagged = tag ? live.find(m => (m.tags || []).includes(tag) && !p.completed[m.id] && m.module !== 'm01' && m.module !== 'm08') : null;
-  if (tagged) return pick(tagged, `Recommended for ${TAG_LABELS[tag]}`);
+  if (tagged) return pick(tagged, `Suited to ${(profile && profile.businessName) || 'your business'}`);
   const next = live.find(m => !p.completed[m.id]);
   return next ? pick(next, 'Your next lesson') : null;
 }

@@ -2960,6 +2960,11 @@ nav.tabs .navsep{display:none}
 
   function lessonById(id) { return (S.res && S.res.lessons.filter(function (l) { return l.id === id; })[0]) || null; }
   function modById(id) { return (S.res && S.res.modules.filter(function (m) { return m.id === id; })[0]) || null; }
+  // Server-picked recommendations for this business (Health Check gaps, goals, business type, Start Here), each with a reason.
+  function personalRecs(r, n, skip) {
+    return (r.recs || []).map(function (x) { return { l: lessonById(x.id), reason: x.reason }; }).filter(function (x) { return x.l && !x.l.locked && !(skip || []).some(function (c) { return c && c.id === x.l.id; }); }).slice(0, n);
+  }
+  function recHeading(r) { return 'Recommended for ' + esc(r.recName || 'your business'); }
   function isTutMod(id) { var m = modById(id); return !!(m && m.kind === 'tutorial'); }
   function liveLessons() { return S.res.lessons.filter(function (l) { return l.status === 'published' && !isTutMod(l.module); }); }
   function tutLessons() { return S.res ? S.res.lessons.filter(function (l) { return l.status === 'published' && isTutMod(l.module); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); }) : []; }
@@ -3011,12 +3016,7 @@ nav.tabs .navsep{display:none}
     var month = r.today.slice(0, 7);
     var fresh = live.filter(function (l) { return (l.publishAt || '').slice(0, 7) === month && !(l.featured && l.collection); }).sort(function (a, b) { return (b.publishAt || '').localeCompare(a.publishAt || ''); }).slice(0, 4);
     var cols = {}; live.filter(function (l) { return l.featured && l.collection; }).forEach(function (l) { (cols[l.collection] = cols[l.collection] || []).push(l); });
-    var rec = [];
-    if (!p.hideRecs) {
-      if (r.recTag) rec = live.filter(function (l) { return (l.tags || []).indexOf(r.recTag) > -1 && !p.completed[l.id]; });
-      if (rec.length < 2) rec = rec.concat(live.filter(function (l) { return l.module === 'm01' && !p.completed[l.id] && rec.indexOf(l) < 0; }));
-      rec = rec.slice(0, 4);
-    }
+    var rec = p.hideRecs ? [] : personalRecs(r, 4);
     var saved = byRecent(p.saved).filter(notTut).map(lessonById);
     var doneN = live.filter(function (l) { return p.completed[l.id]; }).length, pct = live.length ? Math.round(doneN / live.length * 100) : 0;
     var freeBanner = !r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 Free on your plan: Start Here, the tutorials and the starter templates</b><div class="sub" style="margin:0">Unlock every lesson with the Business Club or Business Studio Plus.</div><button class="btn gold small" id="rfUp" style="align-self:flex-start">See plans</button></section>' : '';
@@ -3039,7 +3039,7 @@ nav.tabs .navsep{display:none}
       '<div id="rsResults"></div><div id="rsMain">' +
       Object.keys(cols).map(function (c) { return '<h2>' + esc(c) + '</h2><div class="list">' + cols[c].sort(function (a, b) { return (a.collectionOrder || 0) - (b.collectionOrder || 0); }).map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>'; }).join('') +
       (fresh.length ? '<h2>New this month</h2><div class="list">' + fresh.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
-      (!returning() && rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (!returning() && rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + recHeading(r) + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (x) { return lessonRow(x.l, { module: true, snippet: '💡 ' + x.reason }); }).join('') + '</div>' : '') +
             (p.hideRecs && !returning() ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
       '<p class="hint" style="text-align:center;margin-top:16px">Want a lesson on something else? <button class="btn link" data-idea="resource" style="padding:0;min-height:0">Suggest a lesson</button></p>' +
       '</div>';
@@ -3105,19 +3105,14 @@ nav.tabs .navsep{display:none}
     var byRecent = function (obj) { return Object.keys(obj).filter(function (id) { var l = lessonById(id); return l && l.status === 'published' && !l.locked; }).sort(function (a, b) { return obj[b].localeCompare(obj[a]); }); };
     var cont = byRecent(p.opened).filter(function (id) { return !p.completed[id]; }).slice(0, 5).map(lessonById);
     var saved = byRecent(p.saved).map(lessonById);
-    var live = liveLessons(), rec = [];
-    if (!p.hideRecs) {
-      if (r.recTag) rec = live.filter(function (l) { return (l.tags || []).indexOf(r.recTag) > -1 && !p.completed[l.id] && !l.locked && cont.indexOf(l) < 0; });
-      if (rec.length < 2) rec = rec.concat(live.filter(function (l) { return l.module === 'm01' && !p.completed[l.id] && rec.indexOf(l) < 0 && cont.indexOf(l) < 0; }));
-      rec = rec.slice(0, 3);
-    }
+    var rec = p.hideRecs ? [] : personalRecs(r, 3, cont);
     var last = cont[0];
     $('#coBox').innerHTML = '<section class="reswelcome"><h2>Welcome back 💚</h2><p>' + (last ? 'Pick up where you left off.' : 'Your saved lessons, worksheets and what to do next.') + '</p>' +
         (last ? '<button class="btn primary" id="coLast" style="margin-top:4px">Continue: ' + esc(last.title) + ' →</button>' : '') + '</section>' +
       (cont.length ? '<h2>Continue learning</h2><div class="list">' + cont.map(function (l) { return isTutMod(l.module) ? lessonRow(l).replace('<small>', '<small>🎓 Tutorial · ') : lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       (w.items.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>My worksheets</h2>' + (w.items.length > 3 ? '<button class="btn link" id="coAllW" style="font-size:15px">See all ' + w.items.length + '</button>' : '') + '</div><div class="list">' + w.items.slice(0, 3).map(workRow).join('') + '</div>' : '') +
       (saved.length ? '<h2>My saved lessons</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
-      (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended next') + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + recHeading(r) + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (x) { return lessonRow(x.l, { module: true, snippet: '💡 ' + x.reason }); }).join('') + '</div>' : '') +
       (p.hideRecs ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
       (!cont.length && !w.items.length && !saved.length ? '<div class="empty">You’re all caught up. Explore <button class="btn link" id="coRes" style="padding:0;min-height:0">Growth Lessons</button> for something new.</div>' : '');
     bindLessonRows($('#coBox'), showContinue);
