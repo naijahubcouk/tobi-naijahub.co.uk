@@ -226,7 +226,7 @@ When someone pays your **£50 Business Club Stripe payment link**, the Studio au
 Refunds and disputes only **alert you** — access is never removed automatically. A blocked account that pays gets no access and you're warned.
 
 **One-time Stripe setup (live mode):**
-1. Stripe → **Payment Links** → open the £50 Business Club link → copy its ID (starts `plink_`). In Netlify add `STUDIO_CLUB_PAYMENT_LINK` = that ID (Production).
+1. Stripe → **Payment Links** → open the £50 Business Club link → copy its ID (starts `plink_`). In Netlify add `STUDIO_CLUB_PAYMENT_LINK` = that ID (Production). If you replace the link with a new one, put both IDs separated by a comma (e.g. `plink_new,plink_old`) so payments from either still activate members.
 2. On the same link → **After payment** → "Don't show confirmation page" → redirect to `https://www.auntietobi.co.uk/studio?welcome=1`. (Optional: add a custom text field "Business name".)
 3. Stripe → **Developers → Webhooks → Add endpoint**: `https://www.auntietobi.co.uk/.netlify/functions/studio-stripe-webhook`. Events: `checkout.session.completed`, `charge.refunded`, `charge.dispute.created` (plus the Business Studio Pro events in section 5 if you sell Business Studio Pro). Copy the signing secret into Netlify as `STRIPE_WEBHOOK_SECRET` (Production).
 4. Admin → Overview shows **Business Club auto-access: On** when both are set.
