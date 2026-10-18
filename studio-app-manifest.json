@@ -1,0 +1,33 @@
+{
+  "name": "Auntie Tobi Business Studio",
+  "short_name": "Business Studio",
+  "description": "Plan, create and grow your business with Auntie Tobi Business Club.",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF6EC",
+  "theme_color": "#0F1E36",
+  "orientation": "portrait",
+  "lang": "en-GB",
+  "icons": [
+    {
+      "src": "/icons/studio-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/studio-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/studio-icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

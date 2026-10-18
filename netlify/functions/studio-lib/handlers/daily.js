@@ -20,22 +20,17 @@ const { siteUrl } = require('./extras');
 const ONESIGNAL_APP_ID = '34d14bd0-a5fe-40c4-9b8e-56c1f178cebe';
 
 async function sendReminderPush() {
-  const key = core.env('ONESIGNAL_API_KEY');
-  if (!key) return 'skipped (no ONESIGNAL_API_KEY)';
-  const res = await fetch('https://onesignal.com/api/v1/notifications', {
-    method: 'POST',
-    headers: { Authorization: `Key ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      app_id: ONESIGNAL_APP_ID,
-      filters: [{ field: 'tag', key: 'studio_reminder', relation: '=', value: '1' }],
-      headings: { en: 'Auntie Tobi Business Studio' },
-      contents: { en: 'Your Business Tip for today is ready 💡 Open your Business Studio to read it.' },
-      web_url: `${siteUrl()}/studio`,
-      chrome_web_icon: 'https://www.auntietobi.co.uk/tobi-face-256.png',
-    }),
+  if (!notify.apps().length) return 'skipped (no ONESIGNAL_API_KEY)';
+  const out = await notify.sendAll({
+    filters: [{ field: 'tag', key: 'studio_reminder', relation: '=', value: '1' }],
+    headings: { en: 'Auntie Tobi Business Studio' },
+    contents: { en: 'Your Business Tip for today is ready 💡 Open your Business Studio to read it.' },
+    web_url: `${core.appUrl()}`,
+    chrome_web_icon: 'https://www.auntietobi.co.uk/tobi-face-256.png',
   });
-  const data = await res.json().catch(() => ({}));
-  return `${res.status} recipients=${data.recipients || 0}`;
+  const parts = [];
+  for (const r of out) { const d = await r.json().catch(() => ({})); parts.push(`${r.status} recipients=${d.recipients || 0}`); }
+  return parts.join(' · ');
 }
 
 const gbp = p => `£${(p / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -49,7 +44,7 @@ async function buildDigest(member, acc) {
   const lw = sum.lastWeek || { enquiries: 0, bookings: 0, salesCount: 0, salesGbp: 0, posts: 0, days: 0 };
   const lesson = acc.resources ? await resources.suggestLesson(email, profile, { thisWeek: sum.lastWeek || {}, lastWeek: {} }, { full: true, club: !!acc.membershipActive }).catch(() => null) : null;
   const name = (profile && profile.businessName) || 'your business';
-  const studio = `${siteUrl()}/studio`;
+  const studio = `${core.appUrl()}`;
   const unsub = `${siteUrl()}/.netlify/functions/studio-unsubscribe?e=${encodeURIComponent(email)}&t=${prefs.unsubToken(email)}`;
   const lines = [];
   const html = [];

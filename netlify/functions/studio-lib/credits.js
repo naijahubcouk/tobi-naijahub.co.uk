@@ -143,8 +143,8 @@ async function startCheckout(email, packId, event, settings) {
     line_items: { 0: { quantity: 1, price_data: { currency: 'gbp', unit_amount: pack.pence, product_data: { name: `${pack.credits} AI credits — Auntie Tobi Business Studio`, description: 'One-off top-up. No subscription. Credits last 12 months.' } } } },
     metadata: meta,
     payment_intent_data: { metadata: meta, description: `${pack.credits} AI credits` },
-    success_url: `${base}/studio?credits=success`,
-    cancel_url: `${base}/studio?credits=cancelled`,
+    success_url: `${core.appUrl()}?credits=success`,
+    cancel_url: `${core.appUrl()}?credits=cancelled`,
     expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
   }, `studio-credits-${core.sha256(email).slice(0, 20)}-${pack.id}-${core.randomToken(6).replace(/[^A-Za-z0-9]/g, '')}`);
   return session.url;

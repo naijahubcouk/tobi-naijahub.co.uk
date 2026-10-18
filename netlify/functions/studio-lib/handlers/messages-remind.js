@@ -22,7 +22,7 @@ async function run() {
     report.checked++;
     const st = await messages.staleUnread(email, AFTER_MS);
     if (!st) continue;
-    const link = `${siteUrl()}/studio#messages`;
+    const link = `${core.appUrl()}#messages`;
     const preview = st.last.text.length > 400 ? st.last.text.slice(0, 400) + '…' : st.last.text;
     const text = `Hi,\n\nAuntie Tobi replied to your message in Business Studio:\n\n“${preview}”\n\nRead and reply: ${link}\n\n— Auntie Tobi Business Studio`;
     const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#0F1E36;max-width:520px">

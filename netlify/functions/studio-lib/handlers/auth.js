@@ -44,6 +44,8 @@ async function markLogin(email) {
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   switch (body.action) {
+    // Public: where the app lives (so the old /studio address can forward to it).
+    case 'app-url': return { appUrl: core.appOrigin(), pushApp: core.env('STUDIO_ONESIGNAL_APP_ID', '') };
     case 'request-code': {
       const email = requireEmail(body.email);
       await rateLimit('otp-ip', ctx.ip, 20, 60 * 60 * 1000);

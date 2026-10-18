@@ -266,8 +266,8 @@ async function startCheckout(email, interval, event, tier) {
       metadata: { studio_member: email, interval, tier },
       subscription_data: { metadata: { studio_member: email } },
       custom_text: { submit: { message: `Renews automatically every ${interval === 'year' ? 'year' : 'month'} until you cancel. We’ll remind you before each payment, and you can cancel any time in 2 taps in your Business Studio Account.` } },
-      success_url: `${base}/studio?billing=success`,
-      cancel_url: `${base}/studio?billing=cancelled`,
+      success_url: `${core.appUrl()}?billing=success`,
+      cancel_url: `${core.appUrl()}?billing=cancelled`,
       expires_at: expiresAt,
     }, `studio-checkout-${sha256(email).slice(0, 24)}-${nonce}`);
   } catch (e) {
@@ -281,7 +281,7 @@ async function startCheckout(email, interval, event, tier) {
 async function portalUrl(email, event) {
   const member = await core.getMember(email);
   if (!member || !member.stripeCustomerId) throw new HttpError(404, 'no_subscription', 'There is no subscription to manage yet.');
-  const s = await api('POST', '/billing_portal/sessions', { customer: member.stripeCustomerId, return_url: `${siteUrl(event)}/studio?billing=managed` });
+  const s = await api('POST', '/billing_portal/sessions', { customer: member.stripeCustomerId, return_url: `${core.appUrl()}?billing=managed` });
   return s.url;
 }
 

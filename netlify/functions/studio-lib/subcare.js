@@ -25,7 +25,7 @@ function periodWord(ad) { return ad.interval === 'year' ? 'year' : 'month'; }
 
 // Secure cancel link: tied to the email and the current subscription, so it stops working once that subscription is gone.
 function linkToken(email, subId) { return core.hmac(`cancel:${core.normalizeEmail(email)}:${subId}`).slice(0, 40); }
-function cancelLink(email, subId) { return `${siteUrl()}/studio?cancel=1&e=${encodeURIComponent(email)}&t=${linkToken(email, subId)}`; }
+function cancelLink(email, subId) { return `${core.appUrl()}?cancel=1&e=${encodeURIComponent(email)}&t=${linkToken(email, subId)}`; }
 function checkLink(email, token, member) {
   const ad = member && member.addon;
   if (!ad || !ad.subscriptionId || typeof token !== 'string' || token.length !== 40) return false;
@@ -60,7 +60,7 @@ async function onSync(email, prev, next) {
         `Thank you! Your <b>${esc(t.name)}</b> is active — <b>${lim} daily AI credits</b> and every Business Studio tool, including the advanced ones.`,
         next.currentPeriodEnd ? `Your next payment is <b>${gbp(amountOf(next))} on ${esc(longDate(next.currentPeriodEnd))}</b>. It renews automatically every ${periodWord(next)} — we’ll remind you before each payment${next.interval === 'year' ? ' (7 days and 1 day before)' : ' (3 days before)'}.` : `It renews automatically every ${periodWord(next)} — we’ll remind you before each payment.`,
         'You can cancel any time in two taps: Business Studio → Account → Cancel subscription — or use the button below.',
-      ], [['Open Business Studio', `${siteUrl()}/studio`], ['Cancel subscription', cancelLink(email, next.subscriptionId)]]);
+      ], [['Open Business Studio', `${core.appUrl()}`], ['Cancel subscription', cancelLink(email, next.subscriptionId)]]);
       await sendOnce(`billing/mail/${next.subscriptionId}/welcome`, email, `Welcome to ${t.name} 💚`, m);
     }
     const endKey = `billing/mail/${next.subscriptionId}/cancel-${String(next.currentPeriodEnd || '').slice(0, 10)}`;
@@ -68,7 +68,7 @@ async function onSync(email, prev, next) {
       const m = mail(`Your ${t.name} has been cancelled`, [
         `You won’t be charged again. Your ${esc(t.name)} stays on until <b>${esc(longDate(next.currentPeriodEnd))}</b>, then you’ll go back to ${(await core.getMember(email) || {}).status === 'active' ? 'your Business Club allowance' : 'the Free plan'}. Everything in your library stays.`,
         'Changed your mind? You can keep your plan any time before then — Account → Keep my plan.',
-      ], [['Keep my plan', `${siteUrl()}/studio#account`]]);
+      ], [['Keep my plan', `${core.appUrl()}#account`]]);
       await sendOnce(endKey, email, `Your ${t.name} has been cancelled`, m);
     } else if (prev && prev.cancelAtPeriodEnd && !next.cancelAtPeriodEnd) {
       await del(endKey).catch(() => {});   // resumed — a later cancel gets its own confirmation
@@ -121,7 +121,7 @@ async function runReminders(opts) {
     const msg = mail(`Your ${t.name} renews on ${when}`, [
       `Just a reminder: your <b>${esc(t.name)}</b> renews on <b>${esc(when)}</b> and <b>${amt}</b> will be taken for the next ${periodWord(ad)}.`,
       'Happy to keep it? There’s nothing to do. Want to stop? Cancel in one tap below — you keep your plan until that date.',
-    ], [['Keep it', `${siteUrl()}/studio`], ['Cancel subscription', cancelLink(m.email, ad.subscriptionId)]], 'You can turn these reminders off in Business Studio → Account.');
+    ], [['Keep it', `${core.appUrl()}`], ['Cancel subscription', cancelLink(m.email, ad.subscriptionId)]], 'You can turn these reminders off in Business Studio → Account.');
     const ok = await core.sendEmail([m.email], `Your ${t.name} renews on ${when} (${amt})`, msg.text, msg.html).catch(e => { console.error('[studio] renewal reminder failed', e && e.message); return false; });
     await notify.pushToMember(m.email, `${t.name} renews on ${when}`, `${amt} will be taken. Tap to keep it or cancel.`, { always: true, path: '/studio#account' }).catch(() => {});
     if (ok) { rec.sent[k] = core.nowIso(); await setJson(rk, rec); report.sent++; }
