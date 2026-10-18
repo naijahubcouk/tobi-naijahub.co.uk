@@ -29,11 +29,12 @@ const DEFAULT_SETTINGS = {
 
 const SESSION = {
   idleMs: 30 * DAY,        // signed out after 30 days without use
-  absoluteMs: 90 * DAY,    // always re-verify by email at least every 90 days
+  absoluteMs: 30 * DAY,    // members re-verify by email once a month
   rotateMs: 7 * DAY,       // session token is replaced weekly
   renewEveryMs: 12 * 60 * MIN,
   freshBillingMs: 24 * 60 * MIN, // billing needs an email code from the last 24h
-  adminMs: 12 * 60 * MIN,  // admin sessions last 12 hours, no renewal
+  adminMs: 90 * DAY,       // admin stays signed in on that device for 90 days (sign out any time)
+  hqMs: 30 * DAY,          // HQ team sign-in lasts a month
 };
 
 const COOKIE_MEMBER = '__Host-studio_sid';
@@ -355,8 +356,8 @@ async function createSession(email, role, event) {
   const sess = {
     email, role,
     createdAt: now, lastSeen: now, verifiedAt: now,
-    expiresAt: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + 7 * DAY : now + SESSION.idleMs,
-    absoluteExpiry: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + 7 * DAY : now + SESSION.absoluteMs,
+    expiresAt: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + SESSION.hqMs : now + SESSION.idleMs,
+    absoluteExpiry: role === 'admin' ? now + SESSION.adminMs : role === 'hq' ? now + SESSION.hqMs : now + SESSION.absoluteMs,
     epoch: member ? (member.sessionEpoch || 0) : 0,
     device: cleanText(header(event, 'user-agent'), 160),
   };

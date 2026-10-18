@@ -137,7 +137,7 @@ When happy: merge `studio` into `main` (keeping the latest `_redirects` from `ma
 - **Buying Business Studio Pro**: on the sign-in page, "Get Business Studio Pro" → confirm email with a code → choose monthly (£5) or yearly (£50) → pay on Stripe. Their Studio account is created only after payment succeeds.
 - **When Business Studio Pro ends** (and they're not a Club member): they can still sign in to view, edit and copy their library, with a "Renew Business Studio Pro" button. No new content.
 - **What counts as a generation**: every Create or Regenerate that returns a result = 1, for every tool (including Content ideas, which gives 6 ideas). **A 30-day plan = 3.** Editing, copying, saving, browsing and profile changes are free. Failed requests are not charged. Allowances reset at **midnight UK time**; unused generations don't carry over.
-- **Sign-in**: email + 6-digit code (10-minute expiry, single use, 5 wrong tries max, rate-limited). Device stays signed in up to 30 days of inactivity; fresh code at least every 90 days and before any payment action.
+- **Sign-in**: email + 6-digit code (10-minute expiry, single use, 5 wrong tries max, rate-limited). Device stays signed in up to 30 days of inactivity; fresh code once a month and before any payment action. Admin stays signed in for 90 days on a device (sign out any time); HQ team sign-in lasts 30 days.
 - **Abuse protection**: allowance checked and reserved atomically on the server; double-clicks replay the first result; max 2 requests in flight and 6 per minute per person; output-length caps per tool. Content ideas avoid repeating the person's recent ideas.
 - **Spending**: never blocked. You get an **email and an admin alert when monthly AI spend passes £30**, and again at £60. Change the amount in Admin → Allowances & limits.
 - **Payments**: every subscription is tied to a verified email's Stripe customer. Stripe is re-checked on every webhook, so missed or repeated events self-correct. A second subscription is blocked, and one that slips through is cancelled and refunded automatically. Failed payment → Business Studio Pro paused until paid (Club members keep their 20 a day). **Block account** in the admin removes all access, signs them out everywhere and stops Business Studio Pro renewing.
@@ -430,7 +430,7 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 
 ### HQ team access (assistant sign-in)
 - HQ → **👥 Team access** (only Auntie Tobi sees it): add a name + email. They go to **/hq**, enter their email and get an "Auntie Tobi HQ code".
-- Team members can paste, edit, plan, mark posted and delete in HQ only. Their session cannot open Business Studio Admin (separate `__Host-studio_hq` cookie, role `hq`, 7 days).
+- Team members can paste, edit, plan, mark posted and delete in HQ only. Their session cannot open Business Studio Admin (separate `__Host-studio_hq` cookie, role `hq`, 30 days).
 - Remove someone and they're signed out immediately (the team list is checked on every request). Stored in blob `hq/team`. Starts with Favour (hellofavouradentan@gmail.com).
 - Cards show "Added by … · Last edited by …".
 
