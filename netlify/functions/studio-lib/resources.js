@@ -21,6 +21,7 @@ const seed = require('./resources-seed');
 
 // Display order = this list. access: 'club' = Business Club members only; 'all' = every plan, including Free.
 const MODULES = [
+  { id: 't01', n: 'T', title: 'Business Studio Tutorials', desc: 'Step-by-step guides to using Business Studio.', icon: 'tutorial', access: 'all', kind: 'tutorial' },
   { id: 'm01', n: '01', title: 'Start Here: Build Your Business Foundation', desc: 'Get organised, understand your customers and decide what to focus on.', icon: 'start' },
   { id: 'm09', n: '02', title: 'Business Mindset', desc: 'Ownership, focus and consistency — the habits behind a steady business.', icon: 'mind', access: 'all' },
   { id: 'm02', n: '03', title: 'Instagram for Business', desc: 'Turn your profile into a clearer, more trustworthy business presence.', icon: 'insta' },
@@ -47,7 +48,7 @@ const STATUSES = ['planned', 'draft', 'published'];
 const TAGS = ['all', 'food', 'beauty', 'fashion', 'events', 'photo', 'services', 'retail'];
 const TAG_LABELS = { food: 'food businesses', beauty: 'beauty and hair businesses', fashion: 'fashion businesses', events: 'event businesses', photo: 'photographers and creatives', services: 'service businesses', retail: 'product sellers' };
 const BLOCK_TYPES = ['checklist', 'template', 'worksheet', 'file', 'calculator', 'link'];
-const STUDIO_LINKS = { tools: ['oneclick', 'ideas', 'caption', 'reel', 'promo', 'planner', 'bio', 'message'], screens: ['goal', 'plan', 'money', 'track', 'profile', 'brand', 'review', 'customers', 'image', 'followups', 'todo', 'market'] };
+const STUDIO_LINKS = { tools: ['oneclick', 'ideas', 'caption', 'reel', 'promo', 'planner', 'bio', 'message'], screens: ['goal', 'plan', 'money', 'track', 'profile', 'brand', 'review', 'customers', 'image', 'followups', 'todo', 'market', 'home', 'create', 'library'] };
 const CALC_KINDS = ['pricing', 'product', 'service', 'margin', 'promo'];
 const SEND_TO = ['todo', 'plan', 'customers'];
 // Templates & Tools groups (by business need).
@@ -61,7 +62,7 @@ const GROUPS = [
   { id: 'club', label: 'Business Club Toolkit', icon: '💚' },
 ];
 const GROUP_IDS = GROUPS.map(g => g.id);
-const MODULE_GROUP = { m01: 'planning', m09: 'planning', m02: 'content', m03: 'content', m04: 'customers', m05: 'operations', m06: 'money', m07: 'marketing', m08: 'club' };
+const MODULE_GROUP = { t01: 'operations', m01: 'planning', m09: 'planning', m02: 'content', m03: 'content', m04: 'customers', m05: 'operations', m06: 'money', m07: 'marketing', m08: 'club' };
 function groupOf(b, module) { return GROUP_IDS.includes(b.group) ? b.group : b.type === 'calculator' ? 'money' : MODULE_GROUP[module] || 'planning'; }
 function sendOf(b, group) {
   if (b.send === 'none') return '';
