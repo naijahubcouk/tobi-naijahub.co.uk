@@ -246,6 +246,7 @@ async function home(email, profile, acc) {
     lessons: visible.map(m => (m.locked ? m : memberMeta(m))),
     full: !!acc.full, club: !!acc.club,
     progress: { completed: p.completed, saved: p.saved, opened: p.opened, last: p.last, lastAt: p.lastAt, hideRecs: !!p.hideRecs },
+    workN: new Set([...Object.keys(p.answers || {}).filter(k => Object.keys(p.answers[k] || {}).length), ...Object.keys(p.checks || {}).filter(k => (p.checks[k] || []).length)]).size,
     recTag: tag, recLabel: tag ? TAG_LABELS[tag] : null, today: day,
   };
 }
@@ -344,6 +345,7 @@ async function setCheck(email, id, key, on) {
     const set = new Set(d.checks[id] || []);
     if (on) set.add(key); else set.delete(key);
     d.checks[id] = [...set].slice(0, 300);
+    touchWork(d, id, key);
     return d;
   });
   return { ok: true };
@@ -358,11 +360,43 @@ async function setAnswer(email, id, key, text) {
     d.answers = d.answers || {};
     d.answers[id] = d.answers[id] || {};
     if (val) d.answers[id][key] = val; else delete d.answers[id][key];
+    touchWork(d, id, key);
     const size = JSON.stringify(d.answers).length;
     if (size > 200000) throw new HttpError(409, 'too_large', 'Your worksheet answers are very long — please shorten some.');
     return d;
   });
   return { ok: true };
+}
+
+// When each worksheet / checklist was last changed — for My Worksheets.
+function touchWork(d, id, key) {
+  d.workAt = d.workAt || {};
+  d.workAt[`${id}~${String(key).split(':')[0]}`] = core.nowIso();
+  const ks = Object.keys(d.workAt);
+  if (ks.length > 300) ks.sort((a, b) => d.workAt[a].localeCompare(d.workAt[b])).slice(0, ks.length - 300).forEach(k => delete d.workAt[k]);
+}
+
+// My Worksheets: every worksheet and checklist the member has started, newest first.
+async function myWork(email, acc) {
+  acc = acc || FULL_ACC;
+  const idx = await index(), day = today();
+  const p = await getProgress(email);
+  const mods = Object.fromEntries(MODULES.map(m => [m.id, m]));
+  const counts = {};
+  for (const [lid, ans] of Object.entries(p.answers || {})) for (const k of Object.keys(ans || {})) { const t = `${lid}~${k.split(':')[0]}`; counts[t] = (counts[t] || 0) + 1; }
+  for (const [lid, ks] of Object.entries(p.checks || {})) for (const k of ks || []) { const t = `${lid}~${k.split(':')[0]}`; counts[t] = (counts[t] || 0) + 1; }
+  const items = [];
+  for (const [id, done] of Object.entries(counts)) {
+    const [lid, si] = id.split('~'); const i = Number(si);
+    const m = idx.lessons.find(x => x.id === lid);
+    if (!m || !isLive(m, day)) continue;
+    const t = (m.tools || []).find(x => x.i === i);
+    if (!t || (t.type !== 'worksheet' && t.type !== 'checklist')) continue;
+    items.push({ id, type: t.type, title: t.title || m.title, lessonId: m.toolOnly ? '' : m.id, lessonTitle: m.toolOnly ? '' : m.title, module: m.module, moduleTitle: (mods[m.module] || {}).title || '',
+      done: Math.min(done, t.items || done), total: t.items || 0, at: (p.workAt || {})[id] || (p.opened || {})[lid] || '', locked: toolLocked(m, t, acc) });
+  }
+  items.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  return { items };
 }
 
 async function setPrefs(email, prefs) {
@@ -715,6 +749,6 @@ module.exports = {
   suggestLesson, getProgress,
   MODULES, TAGS, STATUSES, isLive, recommendTag, ensureSeeded,
   toolsList, toolFor, setToolSaved, assertToolKey, assertToolFile, TOOL_TYPES, DEFAULT_FREE, GROUPS, CALC_KINDS, canModule, MODULE_ACCESS,
-  home, lessonFor, setComplete, setSaved, setCheck, setAnswer, setPrefs, search, memberFile,
+  myWork, home, lessonFor, setComplete, setSaved, setCheck, setAnswer, setPrefs, search, memberFile,
   adminList, adminGet, adminSave, adminApprove, adminUnpublish, adminDelete, adminUpload, adminFile, adminDashboard, needsReview,
 };

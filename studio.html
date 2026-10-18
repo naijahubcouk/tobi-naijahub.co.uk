@@ -51,6 +51,7 @@ a{color:var(--green)}
 .pill.grey{background:#ECEDF0;color:var(--muted)}
 .pill.goldl{background:var(--gold-l);color:#7A5300}
 .opt{font-weight:400;color:var(--muted)}
+.chips.libtabs{flex-wrap:nowrap !important;overflow-x:auto;scrollbar-width:none;margin-left:-16px !important;margin-right:-16px !important;padding:2px 16px}.libtabs::-webkit-scrollbar{display:none}.libtabs .chip{flex:0 0 auto}
 .acctags{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.acctag{display:inline-block;align-self:flex-start;font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;background:#ECEDF0;color:var(--navy);white-space:nowrap}.acctag.club{background:#E3F4EA;color:#05663A}.acctag.free{background:#FFF1C9;color:#7A5300}.modcard .acctag{margin:6px 0 2px;justify-self:start;width:max-content;max-width:100%}.ldot.tnum{font-weight:800;font-size:14px;color:var(--muted)}
 .aiopt{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line,#e5e7eb);border-radius:14px;padding:12px 14px;font:inherit;cursor:pointer}.aiopt b{display:block;font-size:16.5px}.aiopt span{display:block;color:var(--muted);font-size:15px;margin-top:2px}.aiopt[aria-pressed=true]{border-color:#16a34a;background:#f0fdf4}
 .pill.cream{background:rgba(251,246,236,.12);color:var(--cream)}
@@ -2825,19 +2826,28 @@ nav.tabs .navsep{display:none}
   // Resources = 📖 Learn (lessons) + 🧰 Templates & Tools (every checklist, script, worksheet, calculator and download).
   function libHeader(active) {
     var hideTut = S.res && !tutLessons().length && active !== 'tut';
+    var showCont = active === 'cont' || returning();
     return '<h1>Resources</h1><p class="sub" style="margin:4px 0 0">Guides to Business Studio, practical lessons and ready-made templates and tools.</p>' +
-      '<div class="chips" style="margin:12px 0 14px">' + (hideTut ? '' : '<button class="chip" id="libTut" aria-pressed="' + (active === 'tut') + '">🎓 Tutorials</button>') +
-      '<button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📚 Growth Lessons</button><button class="chip" id="libTools" aria-pressed="' + (active === 'tools') + '">🧰 Templates &amp; Tools</button></div>';
+      '<div class="chips libtabs" style="margin:12px 0 14px">' + (showCont ? '<button class="chip" id="libCont" aria-pressed="' + (active === 'cont') + '">▶️ Continue</button>' : '') + (hideTut ? '' : '<button class="chip" id="libTut" aria-pressed="' + (active === 'tut') + '">🎓 Tutorials</button>') +
+      '<button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📚 Growth Lessons</button><button class="chip" id="libTools" aria-pressed="' + (active === 'tools') + '">🧰 Templates &amp; Tools</button>' +
+      '<button class="chip" id="libWork" aria-pressed="' + (active === 'work') + '">📝 My Worksheets</button></div>';
   }
   function bindLibHeader() {
-    var a = $('#libRes'), b = $('#libTools'), c = $('#libTut');
+    var a = $('#libRes'), b = $('#libTools'), c = $('#libTut'), w = $('#libWork'), co = $('#libCont');
+    var on = $('.libtabs [aria-pressed=true]'); if (on && on.parentNode.scrollTo) { var row = on.parentNode; row.scrollLeft = Math.max(0, on.offsetLeft - row.offsetLeft - 16 - (row.clientWidth - on.offsetWidth) / 2); }
+    if (w) w.onclick = function () { S.libView = 'work'; showMyWork(); };
+    if (co) co.onclick = function () { S.libView = 'cont'; showContinue(); };
     if (a) a.onclick = function () { S.libView = 'res'; showResources(); };
     if (c) c.onclick = function () { S.libView = 'tut'; showTutorials(); };
     if (b) b.onclick = function () { S.libView = 'tools'; showResTools(); };
   }
-  function openLibraryTab() {
-    var v = S.libView === 'tools' || S.libView === 'res' || S.libView === 'tut' ? S.libView : (clubOnly() ? 'tools' : 'res');
-    if (v === 'res') showResources(); else if (v === 'tut') showTutorials(); else showResTools();
+  // Returning members (opened a lesson or started a worksheet) land on ▶️ Continue.
+  function returning() { return !!(S.res && (Object.keys(S.res.progress.opened || {}).length || S.res.workN)); }
+  async function openLibraryTab() {
+    if (['tools', 'res', 'tut', 'work', 'cont'].indexOf(S.libView) > -1) return ({ tools: showResTools, res: showResources, tut: showTutorials, work: showMyWork, cont: showContinue })[S.libView]();
+    if (!S.res) { try { S.res = await api('studio-resources', 'home'); } catch (x) {} }
+    if (returning()) return showContinue();
+    if (clubOnly()) showResTools(); else showResources();
   }
 
   function resLocked() {
@@ -3011,14 +3021,7 @@ nav.tabs .navsep{display:none}
     var doneN = live.filter(function (l) { return p.completed[l.id]; }).length, pct = live.length ? Math.round(doneN / live.length * 100) : 0;
     var freeBanner = !r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 Free on your plan: Start Here, the tutorials and the starter templates</b><div class="sub" style="margin:0">Unlock every lesson with the Business Club or Business Studio Plus.</div><button class="btn gold small" id="rfUp" style="align-self:flex-start">See plans</button></section>' : '';
     $('#resBox').innerHTML = freeBanner +
-      '<section class="reswelcome"><h2>Business Growth Lessons 💚</h2><div class="acctags"><span class="acctag club">💚 Business Club</span><span class="acctag">+ Business Studio Plus</span></div><p>Eight learning modules covering Instagram, content, sales, customer experience, business tools, planning, growth and Auntie Tobi visibility opportunities — <b>Start Here</b> is free for everyone. Need a template straight away? Open <button type="button" class="btn link" id="toTools" style="padding:0;min-height:0;font-size:inherit">Templates &amp; Tools</button>.</p>' +
-        '<form id="rsForm" role="search" class="rsearch"><input type="search" id="rsQ" placeholder="Search lessons, e.g. bio, pricing, reviews" aria-label="Search lessons" maxlength="100"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form></section>' +
-      '<div id="rsResults"></div><div id="rsMain">' +
-      (cont.length ? '<h2>Continue learning</h2><div class="list">' + cont.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
-      Object.keys(cols).map(function (c) { return '<h2>' + esc(c) + '</h2><div class="list">' + cols[c].sort(function (a, b) { return (a.collectionOrder || 0) - (b.collectionOrder || 0); }).map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>'; }).join('') +
-      (fresh.length ? '<h2>New this month</h2><div class="list">' + fresh.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
-      (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
-      (saved.length ? '<h2>My saved lessons</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      '<div id="rsTop">' +
       '<h2>My learning progress</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>' + doneN + ' of ' + live.length + ' lessons completed</b><span class="sub">' + pct + '%</span></div><div class="pbar"><span style="width:' + pct + '%"></span></div></div>' +
       '<h2>Explore lessons</h2><div class="modgrid">' + r.modules.filter(function (m) { return m.kind !== 'tutorial' && r.lessons.some(function (l) { return l.module === m.id; }); }).map(function (m) {
         var ls = r.lessons.filter(function (l) { return l.module === m.id; }), lv = ls.filter(function (l) { return l.status === 'published'; });
@@ -3030,7 +3033,14 @@ nav.tabs .navsep{display:none}
           '<span class="mc">' + esc(count) + '</span>' + accessTag(m) + (lv.length ? '<span class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></span>' : '') +
           '<span class="mgo">' + (started && dn < lv.length ? 'Continue' : dn && dn === lv.length ? 'Review' : 'Explore') + ' →</span></button>';
       }).join('') + '</div>' +
-      (p.hideRecs ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
+      '</div>' +
+      '<section class="reswelcome" style="margin-top:18px"><h2>Business Growth Lessons 💚</h2><div class="acctags"><span class="acctag club">💚 Business Club</span><span class="acctag">+ Business Studio Plus</span></div><p>Eight learning modules covering Instagram, content, sales, customer experience, business tools, planning, growth and Auntie Tobi visibility opportunities — <b>Start Here</b> is free for everyone. Need a template straight away? Open <button type="button" class="btn link" id="toTools" style="padding:0;min-height:0;font-size:inherit">Templates &amp; Tools</button>.</p>' +
+        '<form id="rsForm" role="search" class="rsearch"><input type="search" id="rsQ" placeholder="Search lessons, e.g. bio, pricing, reviews" aria-label="Search lessons" maxlength="100"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form></section>' +
+      '<div id="rsResults"></div><div id="rsMain">' +
+      Object.keys(cols).map(function (c) { return '<h2>' + esc(c) + '</h2><div class="list">' + cols[c].sort(function (a, b) { return (a.collectionOrder || 0) - (b.collectionOrder || 0); }).map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>'; }).join('') +
+      (fresh.length ? '<h2>New this month</h2><div class="list">' + fresh.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (!returning() && rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+            (p.hideRecs && !returning() ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
       '<p class="hint" style="text-align:center;margin-top:16px">Want a lesson on something else? <button class="btn link" data-idea="resource" style="padding:0;min-height:0">Suggest a lesson</button></p>' +
       '</div>';
     bindLessonRows($('#resBox'), showResources);
@@ -3042,17 +3052,81 @@ nav.tabs .navsep{display:none}
     $('#rsForm').onsubmit = async function (e) {
       e.preventDefault();
       var q = $('#rsQ').value.trim(), out = $('#rsResults');
-      if (!q) { out.innerHTML = ''; $('#rsMain').classList.remove('hidden'); return; }
+      if (!q) { out.innerHTML = ''; $('#rsMain').classList.remove('hidden'); $('#rsTop').classList.remove('hidden'); return; }
       out.innerHTML = '<div class="empty"><div class="typing"><i></i><i></i><i></i></div></div>';
       try {
         var s = await api('studio-resources', 'search', { q: q });
-        $('#rsMain').classList.add('hidden');
+        $('#rsMain').classList.add('hidden'); $('#rsTop').classList.add('hidden');
         out.innerHTML = '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + s.results.length + ' result' + (s.results.length === 1 ? '' : 's') + ' for “' + esc(q) + '”</h2><button class="btn link" id="rsClear">Clear</button></div>' +
           (s.results.length ? '<div class="list">' + s.results.map(function (x) { return lessonRow(x.meta, { module: true, snippet: x.snippet }); }).join('') + '</div>' : '<div class="empty">Nothing found. Try a different word, like “Instagram” or “enquiries”.</div>');
         bindLessonRows(out, showResources);
-        $('#rsClear').onclick = function () { $('#rsQ').value = ''; out.innerHTML = ''; $('#rsMain').classList.remove('hidden'); };
+        $('#rsClear').onclick = function () { $('#rsQ').value = ''; out.innerHTML = ''; $('#rsMain').classList.remove('hidden'); $('#rsTop').classList.remove('hidden'); };
       } catch (x) { out.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; }
     };
+  }
+
+  var WORK_ICO = { worksheet: '✍️', checklist: '☑️' };
+  function workRow(w) {
+    var prog = w.total ? w.done + ' of ' + w.total + (w.type === 'checklist' ? ' ticked' : ' answered') : 'Started';
+    var sub = [w.lessonTitle || w.moduleTitle, w.at ? 'Last edited ' + fmtDate(w.at, { day: 'numeric', month: 'short' }) : ''].filter(Boolean).join(' · ');
+    return '<button class="li tl' + (w.locked ? ' locked' : '') + '" data-work="' + esc(w.id) + '"><span class="tli" aria-hidden="true">' + (WORK_ICO[w.type] || '📄') + '</span><div class="t"><b>' + esc(w.title) + '</b><small>' + esc(sub) + '</small>' +
+      (w.total ? '<span class="pbar" style="margin-top:6px"><span style="width:' + Math.round(w.done / w.total * 100) + '%"></span></span>' : '') + '<small>' + esc(prog) + '</small></div>' + (w.locked ? '<span class="tlk" aria-label="Locked">🔒</span>' : '') + '</button>';
+  }
+  function bindWorkRows(root, back) { $$('[data-work]', root).forEach(function (b) { b.onclick = function () { showResTool(b.dataset.work, back); }; }); }
+
+  async function showMyWork() {
+    S.libView = 'work';
+    setChrome({ tabs: true, tab: 'library' });
+    app.innerHTML = '<main>' + libHeader('work') + '<div id="wkBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindLibHeader();
+    var r;
+    try { r = await api('studio-resources', 'my-work'); if (!S.res) S.res = await api('studio-resources', 'home'); }
+    catch (x) { if ($('#wkBox')) $('#wkBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#wkBox')) return;
+    S.myWork = r.items;
+    $('#wkBox').innerHTML = '<section class="reswelcome"><h2>📝 My Worksheets</h2><p>Every worksheet and checklist you’ve started — your answers are saved, so you can come back and carry on any time.</p></section>' +
+      (r.items.length ? '<div class="list">' + r.items.map(workRow).join('') + '</div>'
+        : '<div class="empty" style="text-align:center">You haven’t started a worksheet yet.<br><button class="btn primary" id="wkStart" style="margin-top:12px">Start with the 90-day goal worksheet</button></div>');
+    bindWorkRows($('#wkBox'), showMyWork);
+    var ws = $('#wkStart'); if (ws) ws.onclick = function () { showLesson('m01-set-your-90-day-business-goal', showMyWork); };
+  }
+
+  async function showContinue() {
+    S.libView = 'cont';
+    setChrome({ tabs: true, tab: 'library' });
+    app.innerHTML = '<main>' + libHeader('cont') + '<div id="coBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindLibHeader();
+    var w;
+    try { S.res = await api('studio-resources', 'home'); w = await api('studio-resources', 'my-work'); }
+    catch (x) { if ($('#coBox')) $('#coBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#coBox')) return;
+    if (!tutLessons().length) { var tc = $('#libTut'); if (tc) tc.remove(); }
+    var r = S.res, p = r.progress;
+    var byRecent = function (obj) { return Object.keys(obj).filter(function (id) { var l = lessonById(id); return l && l.status === 'published' && !l.locked; }).sort(function (a, b) { return obj[b].localeCompare(obj[a]); }); };
+    var cont = byRecent(p.opened).filter(function (id) { return !p.completed[id]; }).slice(0, 5).map(lessonById);
+    var saved = byRecent(p.saved).map(lessonById);
+    var live = liveLessons(), rec = [];
+    if (!p.hideRecs) {
+      if (r.recTag) rec = live.filter(function (l) { return (l.tags || []).indexOf(r.recTag) > -1 && !p.completed[l.id] && !l.locked && cont.indexOf(l) < 0; });
+      if (rec.length < 2) rec = rec.concat(live.filter(function (l) { return l.module === 'm01' && !p.completed[l.id] && rec.indexOf(l) < 0 && cont.indexOf(l) < 0; }));
+      rec = rec.slice(0, 3);
+    }
+    var last = cont[0];
+    $('#coBox').innerHTML = '<section class="reswelcome"><h2>Welcome back 💚</h2><p>' + (last ? 'Pick up where you left off.' : 'Your saved lessons, worksheets and what to do next.') + '</p>' +
+        (last ? '<button class="btn primary" id="coLast" style="margin-top:4px">Continue: ' + esc(last.title) + ' →</button>' : '') + '</section>' +
+      (cont.length ? '<h2>Continue learning</h2><div class="list">' + cont.map(function (l) { return isTutMod(l.module) ? lessonRow(l).replace('<small>', '<small>🎓 Tutorial · ') : lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (w.items.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>My worksheets</h2>' + (w.items.length > 3 ? '<button class="btn link" id="coAllW" style="font-size:15px">See all ' + w.items.length + '</button>' : '') + '</div><div class="list">' + w.items.slice(0, 3).map(workRow).join('') + '</div>' : '') +
+      (saved.length ? '<h2>My saved lessons</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended next') + '</h2><button class="btn link" id="recHide" style="font-size:15px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (p.hideRecs ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
+      (!cont.length && !w.items.length && !saved.length ? '<div class="empty">You’re all caught up. Explore <button class="btn link" id="coRes" style="padding:0;min-height:0">Growth Lessons</button> for something new.</div>' : '');
+    bindLessonRows($('#coBox'), showContinue);
+    bindWorkRows($('#coBox'), showContinue);
+    var cl = $('#coLast'); if (cl) cl.onclick = function () { showLesson(last.id, showContinue); };
+    var aw = $('#coAllW'); if (aw) aw.onclick = function () { showMyWork(); };
+    var cr = $('#coRes'); if (cr) cr.onclick = function () { showResources(); };
+    var rh = $('#recHide'); if (rh) rh.onclick = function () { p.hideRecs = true; api('studio-resources', 'prefs', { hideRecs: true }).catch(function () {}); showContinue(); };
+    var rs = $('#recShow'); if (rs) rs.onclick = function () { p.hideRecs = false; api('studio-resources', 'prefs', { hideRecs: false }).catch(function () {}); showContinue(); };
   }
 
   async function showTutorials() {
@@ -3161,7 +3235,7 @@ nav.tabs .navsep{display:none}
       h += '<pre class="tpl">' + esc(b.text) + '</pre>' + (b.note ? '<p class="hint">' + esc(b.note) + '</p>' : '') + '<div class="row" style="margin-top:8px"><button class="btn small ghost" data-tcopy="' + bi + '">Copy</button><button class="btn small ghost" data-tdl="' + bi + '">Download</button></div>';
     } else if (b.type === 'worksheet') {
       h += '<div class="stack">' + b.fields.map(function (f, fi) { var k = bi + ':' + fi; return '<div><label class="f" for="ws_' + bi + '_' + fi + '">' + esc(f.label) + '</label>' + (f.hint ? '<div class="hint" style="margin:0 0 4px">' + esc(f.hint) + '</div>' : '') + '<textarea id="ws_' + bi + '_' + fi + '" data-ws="' + k + '" rows="' + (f.long ? 3 : 1) + '" maxlength="2000">' + esc(ans[k] || '') + '</textarea></div>'; }).join('') + '</div>' +
-        '<div class="row" style="margin-top:10px"><span class="saved-tag" data-wst="' + bi + '">Your answers save automatically</span></div><div class="row" style="margin-top:6px"><button class="btn small ghost" data-wprint="' + bi + '">Print / save as PDF</button><button class="btn small ghost" data-wdl="' + bi + '">Download</button></div>';
+        '<div class="row" style="margin-top:10px"><span class="saved-tag" data-wst="' + bi + '">✓ Your answers save automatically to 📝 My Worksheets</span></div><div class="row" style="margin-top:6px"><button class="btn small ghost" data-wprint="' + bi + '">Print / save as PDF</button><button class="btn small ghost" data-wdl="' + bi + '">Download</button></div>';
     } else if (b.type === 'file') {
       h += (b.note ? '<p class="hint" style="margin:0 0 8px">' + esc(b.note) + '</p>' : '') + '<button class="btn small primary" data-file="' + esc(b.fileId) + '" data-fname="' + esc(b.name) + '">Download ' + esc(b.name) + (b.size ? ' (' + fileSize(b.size) + ')' : '') + '</button>';
     } else if (b.type === 'calculator') {
