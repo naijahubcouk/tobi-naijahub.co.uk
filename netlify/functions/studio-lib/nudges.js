@@ -41,7 +41,7 @@ async function forMember(email, access) {
   }
   const doneN = steps.filter(s => s.done).length;
   let lesson = null;
-  if (lib) { try { lesson = await resources.suggestLesson(email, profile, summary); } catch (e) { console.error('[studio] lesson suggestion failed', e && e.message); } }
+  if (lib) { try { lesson = await resources.suggestLesson(email, profile, summary, { full: true, club: !!club }); } catch (e) { console.error('[studio] lesson suggestion failed', e && e.message); } }
   let priorities = null, shared = [];
   if (club) {
     const member = await core.getMember(email);

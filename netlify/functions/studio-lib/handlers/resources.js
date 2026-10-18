@@ -14,30 +14,26 @@ const { HttpError, handler } = core;
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const auth = await core.requireMember(ctx, { level: 'view' });
-  const full = !!auth.access.resources;
+  // Club, Pro and Plus: every module except Club-only ones (Business Club). Free: the Mindset module and sample templates.
+  const acc = { full: !!auth.access.resources, club: !!auth.access.membershipActive };
   const email = auth.sess.email;
   await core.rateLimit('resources', email, 600, 60 * 60 * 1000);
-  // Free plan: Templates & Tools samples only (everything else is listed but locked).
-  const FREE_OK = ['tools', 'tool', 'tool-save', 'check', 'answer', 'file'];
-  if (!full && !FREE_OK.includes(body.action)) {
-    throw new HttpError(403, 'club_only', 'Lessons are part of the Auntie Tobi Business Club, Business Studio Pro and Plus.');
-  }
-  if (!full && (body.action === 'check' || body.action === 'answer')) await res.assertToolKey(String(body.id || ''), body.key, false);
-  if (!full && body.action === 'file') await res.assertToolFile(String(body.id || ''), String(body.fileId || ''), false);
+  if (body.action === 'check' || body.action === 'answer') await res.assertToolKey(String(body.id || ''), body.key, acc);
+  if (body.action === 'file') await res.assertToolFile(String(body.id || ''), String(body.fileId || ''), acc);
   switch (body.action) {
-    case 'tools': return res.toolsList(email, full);
-    case 'tool': return res.toolFor(email, String(body.id || ''), full);
-    case 'tool-save': return res.setToolSaved(email, String(body.id || ''), !!body.on, full);
+    case 'tools': return res.toolsList(email, acc);
+    case 'tool': return res.toolFor(email, String(body.id || ''), acc);
+    case 'tool-save': return res.setToolSaved(email, String(body.id || ''), !!body.on, acc);
     case 'home': {
       const profile = await core.getJson(`profiles/${core.enc(email)}`);
-      return res.home(email, profile);
+      return res.home(email, profile, acc);
     }
-    case 'lesson': return res.lessonFor(email, body.id);
-    case 'complete': return res.setComplete(email, String(body.id || ''), !!body.done);
-    case 'save': return res.setSaved(email, String(body.id || ''), !!body.on);
+    case 'lesson': return res.lessonFor(email, body.id, acc);
+    case 'complete': return res.setComplete(email, String(body.id || ''), !!body.done, acc);
+    case 'save': return res.setSaved(email, String(body.id || ''), !!body.on, acc);
     case 'check': return res.setCheck(email, String(body.id || ''), body.key, !!body.on);
     case 'answer': return res.setAnswer(email, String(body.id || ''), body.key, body.text);
-    case 'search': return res.search(String(body.q || '').slice(0, 100));
+    case 'search': return res.search(String(body.q || '').slice(0, 100), acc);
     case 'file': return res.memberFile(String(body.id || ''), String(body.fileId || ''));
     case 'prefs': return res.setPrefs(email, { hideRecs: body.hideRecs });
     default: throw new HttpError(400, 'unknown_action', 'Unknown action.');

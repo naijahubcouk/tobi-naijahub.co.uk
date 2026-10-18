@@ -2652,7 +2652,8 @@ nav.tabs .navsep{display:none}
     tools: '<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
     growth: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
     monthly: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
-    visibility: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+    visibility: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    mind: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/>'
   };
 
   // Light lesson formatting: ## heading, - bullets, 1. numbers, **bold**, > tip, [link](https://…)
@@ -2702,8 +2703,8 @@ nav.tabs .navsep{display:none}
     var u = $('#rlUp'); if (u) u.onclick = function () { showUpgrade('every lesson and template'); };
   }
 
-  var TOOL_ICO = { checklist: '☑️', template: '💬', worksheet: '✍️', calculator: '🧮', file: '📎' };
-  var TOOL_WORD = { checklist: 'Checklist', template: 'Message / script', worksheet: 'Worksheet', calculator: 'Calculator', file: 'Download' };
+  var TOOL_ICO = { checklist: '☑️', template: '💬', worksheet: '✍️', calculator: '🧮', file: '📎', link: '🔗' };
+  var TOOL_WORD = { checklist: 'Checklist', template: 'Message / script', worksheet: 'Worksheet', calculator: 'Calculator', file: 'Download', link: 'Business Studio tool' };
   async function showResTools(opts) {
     opts = opts || {};
     S.libView = 'tools';
@@ -2717,35 +2718,40 @@ nav.tabs .navsep{display:none}
     drawResTools();
   }
   function drawResTools() {
-    var r = S.rtools, f = S.rtFilter, q = (S.rtQ || '').toLowerCase().trim();
-    var counts = {}; r.tools.forEach(function (t) { counts[t.type] = (counts[t.type] || 0) + 1; });
+    var r = S.rtools, g = S.rtGroup || 'all', ty = S.rtType || 'all', q = (S.rtQ || '').toLowerCase().trim();
+    var inGroup = function (t) { return g === 'all' || (g === 'saved' ? t.saved : t.group === g); };
+    var gcounts = {}; r.tools.forEach(function (t) { gcounts[t.group] = (gcounts[t.group] || 0) + 1; });
+    var tcounts = {}; r.tools.filter(inGroup).forEach(function (t) { tcounts[t.type] = (tcounts[t.type] || 0) + 1; });
     var savedN = r.tools.filter(function (t) { return t.saved; }).length, freeN = r.tools.filter(function (t) { return t.free; }).length;
     var list = r.tools.filter(function (t) {
-      if (f === 'saved' && !t.saved) return false;
-      if (f !== 'all' && f !== 'saved' && t.type !== f) return false;
+      if (!inGroup(t)) return false;
+      if (ty !== 'all' && t.type !== ty) return false;
       if (q) { var hay = (t.title + ' ' + t.preview + ' ' + t.lessonTitle + ' ' + t.moduleTitle + ' ' + (TOOL_WORD[t.type] || '')).toLowerCase(); return q.split(/\s+/).every(function (w) { return hay.indexOf(w) > -1; }); }
       return true;
     });
-    if (!r.full) list = list.slice().sort(function (a, b) { return (b.free ? 1 : 0) - (a.free ? 1 : 0); });
+    if (!r.full) list = list.slice().sort(function (a, b) { return (a.locked ? 1 : 0) - (b.locked ? 1 : 0); });
     function row(t) {
       var sub = [TOOL_WORD[t.type], t.lessonTitle || t.moduleTitle].filter(Boolean).join(' · ');
       var prog = !t.locked && t.progress ? (t.type === 'checklist' ? ' · ' + t.progress + ' of ' + t.items + ' ticked' : ' · started') : '';
+      var tag = t.locked ? (t.clubOnly ? '<span class="pill green" style="font-size:11px;white-space:nowrap">💚 Club</span>' : '<span class="tlk" aria-label="Locked">🔒</span>') : t.free ? '<span class="pill green" style="font-size:11px">Free</span>' : t.saved ? '<span class="star" aria-label="Saved">★</span>' : '';
       return '<button class="li tl' + (t.locked ? ' locked' : '') + '" data-rt="' + esc(t.id) + '"><span class="tli" aria-hidden="true">' + (TOOL_ICO[t.type] || '📄') + '</span><div class="t"><b>' + esc(t.title) + '</b><small>' + esc(sub) + prog + '</small>' +
-        (t.preview ? '<small class="snip">' + esc(t.preview) + '</small>' : '') + '</div>' +
-        (t.locked ? '<span class="tlk" aria-label="Locked">🔒</span>' : !r.full && t.free ? '<span class="pill green" style="font-size:11px">Free</span>' : t.saved ? '<span class="star" aria-label="Saved">★</span>' : '') + '</button>';
+        (t.preview ? '<small class="snip">' + esc(t.preview) + '</small>' : '') + '</div>' + tag + '</button>';
     }
     var body;
-    if (!list.length) body = '<div class="empty">' + (q ? 'Nothing found for “' + esc(S.rtQ) + '”. Try “follow-up”, “bio” or “pricing”.' : f === 'saved' ? 'Tap ☆ Save on a template to keep it here.' : 'Nothing here yet.') + '</div>';
-    else if (f === 'all' && !q && r.full) body = r.types.filter(function (ty) { return counts[ty.id]; }).map(function (ty) { return '<h2>' + esc(ty.label) + '</h2><div class="list">' + list.filter(function (t) { return t.type === ty.id; }).map(row).join('') + '</div>'; }).join('');
+    if (!list.length) body = '<div class="empty">' + (q ? 'Nothing found for “' + esc(S.rtQ) + '”. Try “follow-up”, “bio” or “pricing”.' : g === 'saved' ? 'Tap ☆ Save on a template to keep it here.' : 'Nothing here yet.') + '</div>';
+    else if (g === 'all' && ty === 'all' && !q) body = r.groups.filter(function (x) { return gcounts[x.id]; }).map(function (x) { return '<h2>' + x.icon + ' ' + esc(x.label) + '</h2><div class="list">' + list.filter(function (t) { return t.group === x.id; }).map(row).join('') + '</div>'; }).join('');
     else body = '<div class="list">' + list.map(row).join('') + '</div>';
     $('#tlBox').innerHTML =
-      (!r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 ' + freeN + ' free templates on your Free plan</b><div class="sub" style="margin:0">Unlock all ' + r.tools.length + ' — plus every lesson — with the Business Club, Business Studio Pro or Plus.</div><button class="btn gold small" id="tlUp" style="align-self:flex-start">See plans</button></section>' : '') +
+      (!r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 ' + freeN + ' free on your Free plan</b><div class="sub" style="margin:0">Unlock all ' + r.tools.length + ' templates and tools — plus every lesson — with the Business Club, Business Studio Pro or Plus.</div><button class="btn gold small" id="tlUp" style="align-self:flex-start">See plans</button></section>' : '') +
       '<form id="tlForm" role="search" class="rsearch" style="margin-bottom:10px"><input type="search" id="tlQ" placeholder="Search, e.g. follow-up, bio, pricing" aria-label="Search templates and tools" maxlength="80" value="' + esc(S.rtQ || '') + '"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form>' +
-      '<div class="chips" id="tlF" style="margin-bottom:12px"><button class="chip" data-tf="all" aria-pressed="' + (f === 'all') + '">All ' + r.tools.length + '</button>' +
-        r.types.filter(function (ty) { return counts[ty.id]; }).map(function (ty) { return '<button class="chip" data-tf="' + ty.id + '" aria-pressed="' + (f === ty.id) + '">' + (TOOL_ICO[ty.id] || '') + ' ' + esc(ty.label) + ' ' + counts[ty.id] + '</button>'; }).join('') +
-        (savedN ? '<button class="chip" data-tf="saved" aria-pressed="' + (f === 'saved') + '">★ Saved ' + savedN + '</button>' : '') + '</div>' +
+      '<div class="chips" id="tlG" style="margin-bottom:8px"><button class="chip" data-tg="all" aria-pressed="' + (g === 'all') + '">All ' + r.tools.length + '</button>' +
+        r.groups.filter(function (x) { return gcounts[x.id]; }).map(function (x) { return '<button class="chip" data-tg="' + x.id + '" aria-pressed="' + (g === x.id) + '">' + x.icon + ' ' + esc(x.label) + ' ' + gcounts[x.id] + '</button>'; }).join('') +
+        (savedN ? '<button class="chip" data-tg="saved" aria-pressed="' + (g === 'saved') + '">★ Saved ' + savedN + '</button>' : '') + '</div>' +
+      '<div class="row" style="margin-bottom:12px;gap:8px;align-items:center"><label for="tlT" class="sub" style="margin:0;white-space:nowrap">Type</label><select id="tlT" style="max-width:260px"><option value="all">All types</option>' +
+        r.types.filter(function (x) { return tcounts[x.id]; }).map(function (x) { return '<option value="' + x.id + '"' + (ty === x.id ? ' selected' : '') + '>' + (TOOL_ICO[x.id] || '') + ' ' + esc(x.label) + ' (' + tcounts[x.id] + ')</option>'; }).join('') + '</select></div>' +
       '<div id="tlList">' + body + '</div>';
-    $$('[data-tf]').forEach(function (c) { c.onclick = function () { S.rtFilter = c.dataset.tf; drawResTools(); }; });
+    $$('[data-tg]').forEach(function (c) { c.onclick = function () { S.rtGroup = c.dataset.tg; S.rtType = 'all'; drawResTools(); }; });
+    $('#tlT').onchange = function () { S.rtType = this.value; drawResTools(); };
     $('#tlForm').onsubmit = function (e) { e.preventDefault(); S.rtQ = $('#tlQ').value; drawResTools(); };
     $('#tlQ').oninput = function () { var v = this.value; clearTimeout(S.rtT); S.rtT = setTimeout(function () { S.rtQ = v; var pos = v.length; drawResTools(); var i = $('#tlQ'); if (i) { i.focus(); i.setSelectionRange(pos, pos); } }, 350); };
     var up = $('#tlUp'); if (up) up.onclick = function () { showUpgrade('every template and lesson'); };
@@ -2758,10 +2764,11 @@ nav.tabs .navsep{display:none}
     var meta = S.rtools && S.rtools.tools.filter(function (t) { return t.id === tid; })[0];
     if (meta && meta.locked) {
       app.innerHTML = '<main class="lesson"><div class="lmeta">' + esc(TOOL_WORD[meta.type] || '') + '</div><h1>' + esc(meta.title) + '</h1>' + (meta.preview ? '<p class="sub" style="margin-top:6px">' + esc(meta.preview) + '…</p>' : '') +
-        '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">🔒</div><b>This template comes with the Business Club, Business Studio Pro and Plus</b><div class="sub" style="margin:0">Your Free plan includes ' + S.rtools.tools.filter(function (t) { return t.free; }).length + ' free templates to try.</div>' +
-        '<button class="btn gold block" id="ltUp">See plans</button><button class="btn ghost block" id="ltFree">Show me the free ones</button></section></main>';
-      $('#ltUp').onclick = function () { showUpgrade('every template and lesson'); };
-      $('#ltFree').onclick = function () { S.rtFilter = 'all'; S.rtQ = ''; showResTools({ reload: false }); };
+        (meta.clubOnly ? '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">💚</div><b>This is part of the Business Club toolkit</b><div class="sub" style="margin:0">It helps Business Club members get the most from their Spotlight, Marketplace listing and reposts.</div><a class="btn primary block" href="/business-club" style="text-align:center">See the Business Club</a></section></main>'
+        : '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">🔒</div><b>This comes with the Business Club, Business Studio Pro and Plus</b><div class="sub" style="margin:0">Your Free plan includes ' + S.rtools.tools.filter(function (t) { return t.free; }).length + ' free templates and tools to try.</div>' +
+        '<button class="btn gold block" id="ltUp">See plans</button><button class="btn ghost block" id="ltFree">Show me the free ones</button></section></main>');
+      var lu = $('#ltUp'); if (lu) lu.onclick = function () { showUpgrade('every template and lesson'); };
+      var lf = $('#ltFree'); if (lf) lf.onclick = function () { S.rtGroup = 'all'; S.rtType = 'all'; S.rtQ = ''; showResTools({ reload: false }); };
       return;
     }
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
@@ -2787,31 +2794,47 @@ nav.tabs .navsep{display:none}
       b.disabled = false;
     };
     var sb = $('#rtStudio'); if (sb) sb.onclick = function () { studioGo(st, self); };
-    var lb = $('#rtLesson'); if (lb) lb.onclick = function () { if (clubOnly()) return showUpgrade('every lesson and template'); showLesson(r.lesson.id, self); };
+    var lb = $('#rtLesson'); if (lb) lb.onclick = function () { if (!r.lesson.open) return lockedLessonSheet(r.lesson.module); showLesson(r.lesson.id, self); };
     if (meta && t.type === 'checklist') $$('[data-ck]').forEach(function (c) { c.addEventListener('change', function () { meta.progress = $$('[data-ck]').filter(function (x) { return x.checked; }).length; }); });
   }
 
   function lessonById(id) { return (S.res && S.res.lessons.filter(function (l) { return l.id === id; })[0]) || null; }
-  function liveLessons() { return S.res.lessons.filter(function (l) { return l.status !== 'planned'; }); }
+  function liveLessons() { return S.res.lessons.filter(function (l) { return l.status === 'published'; }); }
+  function modById(id) { return (S.res && S.res.modules.filter(function (m) { return m.id === id; })[0]) || null; }
+  function isClubMod(id) { var m = modById(id); return !!(m && m.access === 'club'); }
+  // Locked module or lesson: explain who it's for.
+  function lockedLessonSheet(modId) {
+    var club = isClubMod(modId);
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true"><h2 style="margin:0">' + (club ? '💚 For Business Club members' : '🔒 Lessons come with Club, Pro and Plus') + '</h2>' +
+      '<p class="sub" style="margin:0">' + (club ? 'This module helps Business Club members make the most of their Spotlight, Marketplace listing, reposts and Business Check-Up.' : 'Short, practical lessons on Instagram, content, sales and growth come with the Business Club, Business Studio Pro and Plus. The Business Mindset lessons are free for everyone.') + '</p>' +
+      (club ? '<a class="btn primary block" href="/business-club" style="text-align:center">See the Business Club</a>' : '<button class="btn gold block" id="llUp">See plans</button>') + '<button class="btn link" id="llX">Close</button></div>';
+    document.body.appendChild(scrim);
+    $('#llX', scrim).onclick = function () { scrim.remove(); };
+    var u = $('#llUp', scrim); if (u) u.onclick = function () { scrim.remove(); showUpgrade('every lesson and template'); };
+  }
   function lessonRow(l, opts) {
     opts = opts || {};
     var p = S.res.progress, done = !!p.completed[l.id], saved = !!p.saved[l.id];
-    if (l.status === 'planned') return '<div class="li soon"><div class="t"><b>' + esc(l.title) + '</b><small>Coming soon</small></div></div>';
+    if (l.status === 'planned') return '';
+    if (l.locked) return '<button class="li locked" data-lockmod="' + esc(l.module) + '"><span class="ldot" aria-hidden="true">🔒</span><div class="t"><b>' + esc(l.title) + '</b><small>' + (isClubMod(l.module) ? '💚 Business Club members' : 'Club, Pro &amp; Plus') + (l.readMins ? ' · ' + l.readMins + ' min read' : '') + '</small></div></button>';
     var mod = S.res.modules.filter(function (m) { return m.id === l.module; })[0];
     return '<button class="li" data-lesson="' + esc(l.id) + '"><span class="ldot' + (done ? ' done' : '') + '" aria-hidden="true">' + (done ? '✓' : '') + '</span><div class="t"><b>' + esc(l.title) + '</b><small>' +
       (opts.module && mod ? esc(mod.title) + ' · ' : '') + (l.readMins ? l.readMins + ' min read' : 'Resource') + (done ? ' · Completed' : p.opened[l.id] ? ' · Started' : '') + '</small>' +
       (opts.snippet ? '<small class="snip">' + esc(opts.snippet) + '</small>' : '') + '</div>' + (saved ? '<span class="star" aria-label="Saved">★</span>' : '') + '</button>';
   }
-  function bindLessonRows(root, back) { $$('[data-lesson]', root).forEach(function (b) { b.onclick = function () { showLesson(b.dataset.lesson, back); }; }); }
+  function bindLessonRows(root, back) {
+    $$('[data-lesson]', root).forEach(function (b) { b.onclick = function () { showLesson(b.dataset.lesson, back); }; });
+    $$('[data-lockmod]', root).forEach(function (b) { b.onclick = function () { lockedLessonSheet(b.dataset.lockmod); }; });
+  }
 
   async function showResources() {
     S.libView = 'res';
     setChrome({ tabs: true, tab: 'library' });
-    if (clubOnly()) { app.innerHTML = '<main>' + libHeader('res') + resLocked() + '</main>'; bindLibHeader(); bindResLocked(); return; }
     app.innerHTML = '<main>' + libHeader('res') + '<div id="resBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
     bindLibHeader();
     try { S.res = await api('studio-resources', 'home'); }
-    catch (x) { $('#resBox').innerHTML = x.code === 'club_only' ? resLocked() : '<div class="err">' + esc(x.message) + '</div>'; bindResLocked(); return; }
+    catch (x) { if ($('#resBox')) $('#resBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     if (!$('#resBox')) return;
     drawResources();
   }
@@ -2831,7 +2854,8 @@ nav.tabs .navsep{display:none}
     }
     var saved = byRecent(p.saved).map(lessonById).filter(Boolean);
     var doneN = live.filter(function (l) { return p.completed[l.id]; }).length, pct = live.length ? Math.round(doneN / live.length * 100) : 0;
-    $('#resBox').innerHTML =
+    var freeBanner = !r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 Free on your plan: the Business Mindset lessons and free templates</b><div class="sub" style="margin:0">Unlock every lesson with the Business Club, Business Studio Pro or Plus.</div><button class="btn gold small" id="rfUp" style="align-self:flex-start">See plans</button></section>' : '';
+    $('#resBox').innerHTML = freeBanner +
       '<section class="reswelcome"><h2>Learn 💚</h2><p>Short, practical lessons to help you build a stronger business, attract customers and keep moving forward. Need a template straight away? Open <button type="button" class="btn link" id="toTools" style="padding:0;min-height:0;font-size:inherit">Templates &amp; Tools</button>.</p>' +
         '<form id="rsForm" role="search" class="rsearch"><input type="search" id="rsQ" placeholder="Search lessons, e.g. bio, pricing, reviews" aria-label="Search lessons" maxlength="100"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form></section>' +
       '<div id="rsResults"></div><div id="rsMain">' +
@@ -2841,10 +2865,12 @@ nav.tabs .navsep{display:none}
       (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:13px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       (saved.length ? '<h2>My saved lessons</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       '<h2>My learning progress</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>' + doneN + ' of ' + live.length + ' lessons completed</b><span class="sub">' + pct + '%</span></div><div class="pbar"><span style="width:' + pct + '%"></span></div></div>' +
-      '<h2>Explore lessons</h2><div class="modgrid">' + r.modules.map(function (m) {
-        var ls = r.lessons.filter(function (l) { return l.module === m.id; }), lv = ls.filter(function (l) { return l.status !== 'planned'; });
+      '<h2>Explore lessons</h2><div class="modgrid">' + r.modules.filter(function (m) { return r.lessons.some(function (l) { return l.module === m.id; }); }).map(function (m) {
+        var ls = r.lessons.filter(function (l) { return l.module === m.id; }), lv = ls.filter(function (l) { return l.status === 'published'; });
         var dn = lv.filter(function (l) { return p.completed[l.id]; }).length, started = lv.some(function (l) { return p.opened[l.id]; });
-        var count = lv.length + ' lesson' + (lv.length === 1 ? '' : 's') + (ls.length > lv.length ? ' · ' + (ls.length - lv.length) + ' coming soon' : '');
+        var count = ls.length + ' lesson' + (ls.length === 1 ? '' : 's');
+        if (m.locked) return '<button class="modcard locked" data-lockmod="' + m.id + '"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 22) + '</span><span class="mn">MODULE ' + esc(m.n) + '</span><b>' + esc(m.title) + '</b><span class="md">' + esc(m.desc) + '</span>' +
+          '<span class="mc">' + esc(count) + '</span><span class="mgo">' + (m.access === 'club' ? '💚 Business Club' : '🔒 Club, Pro &amp; Plus') + '</span></button>';
         return '<button class="modcard" data-mod="' + m.id + '"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 22) + '</span><span class="mn">MODULE ' + esc(m.n) + '</span><b>' + esc(m.title) + '</b><span class="md">' + esc(m.desc) + '</span>' +
           '<span class="mc">' + esc(count) + '</span>' + (lv.length ? '<span class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></span>' : '') +
           '<span class="mgo">' + (started && dn < lv.length ? 'Continue' : dn && dn === lv.length ? 'Review' : 'Explore') + ' →</span></button>';
@@ -2853,6 +2879,7 @@ nav.tabs .navsep{display:none}
       '</div>';
     bindLessonRows($('#resBox'), showResources);
     var tt = $('#toTools'); if (tt) tt.onclick = function () { S.libView = 'tools'; showResTools(); };
+    var rf = $('#rfUp'); if (rf) rf.onclick = function () { showUpgrade('every lesson and template'); };
     $$('[data-mod]').forEach(function (b) { b.onclick = function () { showModule(b.dataset.mod); }; });
     var rh = $('#recHide'); if (rh) rh.onclick = function () { p.hideRecs = true; api('studio-resources', 'prefs', { hideRecs: true }).catch(function () {}); drawResources(); };
     var rs = $('#recShow'); if (rs) rs.onclick = function () { p.hideRecs = false; api('studio-resources', 'prefs', { hideRecs: false }).catch(function () {}); drawResources(); };
@@ -2875,10 +2902,11 @@ nav.tabs .navsep{display:none}
   async function showModule(id) {
     if (!S.res) { try { S.res = await api('studio-resources', 'home'); } catch (x) { return showResources(); } }
     var m = S.res.modules.filter(function (x) { return x.id === id; })[0]; if (!m) return showResources();
+    if (m.locked) return lockedLessonSheet(id);
     setChrome({ tabs: true, tab: 'library', back: showResources });
     var ls = S.res.lessons.filter(function (l) { return l.module === id; }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
     var body = '<div class="list">' + ls.map(function (l) { return lessonRow(l); }).join('') + '</div>';
-    var lv = ls.filter(function (l) { return l.status !== 'planned'; }), dn = lv.filter(function (l) { return S.res.progress.completed[l.id]; }).length;
+    var lv = ls.filter(function (l) { return l.status === 'published'; }), dn = lv.filter(function (l) { return S.res.progress.completed[l.id]; }).length;
     app.innerHTML = '<main><div class="modhead"><span class="mi">' + icon(MOD_ICONS[m.icon] || '', 26) + '</span><div><span class="mn">MODULE ' + esc(m.n) + '</span><h1>' + esc(m.title) + '</h1></div></div><p class="sub" style="margin:6px 0 12px">' + esc(m.desc) + '</p>' +
       (lv.length ? '<div class="card stack" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><b>' + dn + ' of ' + lv.length + ' completed</b></div><div class="pbar"><span style="width:' + Math.round(dn / lv.length * 100) + '%"></span></div></div>' : '') +
       body + '</main>';
@@ -2895,7 +2923,8 @@ nav.tabs .navsep{display:none}
   function studioGo(st, back) {
     if (st.tool) return showTool(st.tool, st.input || {}, { back: back, tab: 'library', intro: 'From your lesson — I’ve set this up for you. Change anything you like, then tap Create.' });
     var map = { goal: showHome, plan: showPlan, money: showMoney, track: function () { showTrack(); }, profile: function () { showProfileForm(false); }, brand: function () { showAccount('brand'); },
-      review: function () { showReview(back); }, customers: showCustomers, followups: function () { showFollowups(); }, image: function () { showMakeImage('', null, back); } };
+      review: function () { showReview(back); }, customers: showCustomers, followups: function () { showFollowups(); }, image: function () { showMakeImage('', null, back); },
+      todo: function () { showTodoAll(); }, market: function () { showMarket(back || showHome); } };
     (map[st.screen] || showHome)();
   }
 
@@ -2957,12 +2986,99 @@ nav.tabs .navsep{display:none}
     } else if (b.type === 'file') {
       h += (b.note ? '<p class="hint" style="margin:0 0 8px">' + esc(b.note) + '</p>' : '') + '<button class="btn small primary" data-file="' + esc(b.fileId) + '" data-fname="' + esc(b.name) + '">Download ' + esc(b.name) + (b.size ? ' (' + fileSize(b.size) + ')' : '') + '</button>';
     } else if (b.type === 'calculator') {
-      h += pricingCalcHtml(bi);
+      h += CALCS[b.kind] ? calcHtml(b.kind, bi) : pricingCalcHtml(bi);
+    } else if (b.type === 'link') {
+      h += (b.text ? '<p style="margin:0 0 10px">' + esc(b.text) + '</p>' : '') + '<button class="btn gold block" data-golink="' + bi + '">' + esc(b.label || 'Open') + ' →</button>';
     }
+    // Send to a Business Studio tool, print and spreadsheet downloads.
+    var acts = [];
+    if (b.type === 'checklist') { if (b.send === 'todo') acts.push('<button class="btn small ghost" data-sendtodo="' + bi + '">📋 Add unticked items to my to-do list</button>'); acts.push('<button class="btn small ghost" data-cprint="' + bi + '">Print / save as PDF</button>'); }
+    if (b.type === 'worksheet') { if (b.send === 'todo') acts.push('<button class="btn small ghost" data-wtodo="' + bi + '">📋 Turn my answers into tasks</button>'); acts.push('<button class="btn small ghost" data-wcsv="' + bi + '">Spreadsheet (CSV)</button>'); }
+    if (b.type === 'template') { if (b.send === 'plan') acts.push('<button class="btn small ghost" data-tplan="' + bi + '">💡 Send to Plan ideas</button>'); if (b.send === 'customers') acts.push('<button class="btn small ghost" data-tcust="' + bi + '">👥 Use with a customer</button>'); }
+    if (b.type === 'calculator' && CALCS[b.kind]) acts.push('<button class="btn small ghost" data-ccsv="' + bi + '">Spreadsheet (CSV)</button>');
+    if (acts.length) h += '<div class="row wrap" style="margin-top:8px;gap:6px">' + acts.join('') + '</div>';
     return h + '</div>';
+
   }
-  // Checklists, templates, worksheets, files and the calculator — used in lessons and in Templates & Tools.
+  // Calculators that run on the phone (nothing is saved or sent).
+  var CALCS = {
+    product: { fields: [['cost', 'Direct cost per item (£)', 'Materials, ingredients and packaging'], ['over', 'Allocated overhead per item (£)', 'Your share of rent, apps, equipment and fees'], ['margin', 'Target gross margin (%)', 'e.g. 40']],
+      run: function (v) { var total = v.cost + v.over, m = v.margin / 100; if (!total || m >= 1) return null; var price = total / (1 - m); return [['Illustrative selling price (before VAT, where applicable)', price, 1], ['Total allocated cost', total], ['Gross profit per item', price - total]]; },
+      note: 'This is a simplified cost-plus pricing example, not a complete pricing recommendation. Actual pricing may also need to account for fees, taxes, market demand and other costs.' },
+    service: { fields: [['hours', 'Time for the job (hours)', 'Include preparation, travel and clean-up'], ['rate', 'What you want to pay yourself per hour (£)'], ['mat', 'Materials and products used (£)'], ['travel', 'Travel and other costs (£)'], ['margin', 'Profit margin you want (%)', 'e.g. 20']],
+      run: function (v) { var time = v.hours * v.rate, cost = time + v.mat + v.travel, m = v.margin / 100; if (!cost || m >= 1) return null; var price = cost / (1 - m); return [['Illustrative price for the job', price, 1], ['Your time', time], ['Materials, travel and other costs', v.mat + v.travel], ['Profit on top', price - cost]]; },
+      note: 'A starting point only. Also check what customers expect to pay, what similar businesses charge, and any fees or taxes.' },
+    margin: { fields: [['price', 'Selling price (£)'], ['cost', 'Total cost per item (£)', 'Materials, packaging, your share of running costs']],
+      run: function (v) { if (!v.price) return null; var p = v.price - v.cost; return [['Profit per item', p, 1], ['Profit margin', p / v.price * 100, 0, '%'], ['Markup on cost', v.cost ? p / v.cost * 100 : 0, 0, '%']]; },
+      note: 'Margin = profit as a share of the price. Markup = profit as a share of the cost.' },
+    promo: { fields: [['price', 'Normal price (£)'], ['cost', 'Cost per item (£)'], ['disc', 'Discount (%)', 'e.g. 20'], ['sales', 'Sales you’d normally make in that period', 'e.g. 10']],
+      run: function (v) { if (!v.price) return null; var np = v.price * (1 - v.disc / 100), op = v.price - v.cost, pp = np - v.cost; var out = [['Discounted price', np, 1], ['Profit per sale before', op], ['Profit per sale with the discount', pp]];
+        if (pp <= 0) out.push(['Warning', 'You’d lose money on every sale at this discount', 0, 'text']); else if (op > 0 && v.sales) out.push(['Sales needed to make the same profit', Math.ceil(v.sales * op / pp), 0, 'n']);
+        return out; },
+      note: 'Simplified example. A discount can still be worthwhile to win new customers — but know what it costs you.' },
+  };
+  function calcHtml(kind, bi) {
+    var c = CALCS[kind];
+    return '<div class="stack pcalc" data-calc="' + bi + '" data-kind="' + kind + '">' + c.fields.map(function (f) { return '<div><label class="f" for="cc' + bi + '_' + f[0] + '">' + esc(f[1]) + '</label>' + (f[2] ? '<div class="hint" style="margin:0 0 4px">' + esc(f[2]) + '</div>' : '') + '<input type="number" inputmode="decimal" min="0" step="any" id="cc' + bi + '_' + f[0] + '" data-cin="' + bi + '"></div>'; }).join('') +
+      '<div class="pcout" id="ccOut' + bi + '"><b>Fill in the boxes to see the result</b></div><p class="hint">' + esc(c.note) + '</p></div>';
+  }
+  function calcRun(bi) {
+    var box = $('[data-calc="' + bi + '"]'); if (!box) return null;
+    var c = CALCS[box.dataset.kind], v = {};
+    c.fields.forEach(function (f) { var x = Number(($('#cc' + bi + '_' + f[0]) || {}).value); v[f[0]] = isFinite(x) && x > 0 ? x : 0; });
+    return { c: c, v: v, out: c.run(v) };
+  }
+  function fmtCalc(r) { return r[3] === 'text' ? esc(r[1]) : r[3] === '%' ? (Math.round(r[1] * 10) / 10) + '%' : r[3] === 'n' ? String(r[1]) : gbp(Math.round(r[1] * 100)); }
+  function bindCalcs() {
+    $$('[data-calc]').forEach(function (box) {
+      var bi = box.dataset.calc;
+      var draw = function () { var res = calcRun(bi), o = $('#ccOut' + bi); if (!o) return;
+        o.innerHTML = res && res.out ? res.out.map(function (r) { return '<div class="row" style="justify-content:space-between;gap:10px' + (r[2] ? ';font-size:18px;margin-bottom:4px' : '') + '"><span>' + esc(r[0]) + '</span><b' + (r[3] === 'text' ? ' style="color:var(--danger)"' : '') + '>' + fmtCalc(r) + '</b></div>'; }).join('') : '<b>Fill in the boxes to see the result</b>'; };
+      $$('[data-cin="' + bi + '"]', box).forEach(function (i) { i.oninput = draw; });
+    });
+  }
+  function csvCell(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function downloadCsv(name, rows) { downloadText(name + '.csv', rows.map(function (r) { return r.map(csvCell).join(','); }).join('\n') + '\n'); }
+
+  // Checklists, templates, worksheets, files and calculators — used in lessons and in Templates & Tools.
   function bindUseBlocks(l, id, mine, checks) {
+    bindCalcs();
+    var back = function () { if (!l.title && S.rtools) showResTools({ reload: false }); else showResources(); };
+    $$('[data-golink]').forEach(function (b) { b.onclick = function () { var u = l.use[Number(b.dataset.golink)]; studioGo({ screen: u.screen }, back); }; });
+    $$('[data-sendtodo]').forEach(function (b) { b.onclick = async function () {
+      var bi = b.dataset.sendtodo, u = l.use[Number(bi)];
+      var tasks = u.items.filter(function (x, ii) { var c = $('[data-ck="' + bi + ':' + ii + '"]'); return !(c && c.checked); }).map(function (x) { return { title: x.slice(0, 160) }; });
+      if (!tasks.length) return toast('Everything is ticked already 🎉');
+      b.disabled = true;
+      try { var r = await api('studio-extras', 'todo-add-many', { tasks: tasks.slice(0, 35) }); b.textContent = '✓ ' + r.n + ' added to my to-do list'; actionToast(r.n + ' tasks added to your to-do list ✅', 'View', function () { showTodoAll(); }); }
+      catch (x) { toast(x.message); b.disabled = false; }
+    }; });
+    $$('[data-wtodo]').forEach(function (b) { b.onclick = async function () {
+      var bi = b.dataset.wtodo, u = l.use[Number(bi)];
+      var tasks = u.fields.map(function (f, fi) { var el = $('#ws_' + bi + '_' + fi), v = el ? el.value.trim().replace(/\s+/g, ' ') : ''; return v ? { title: (f.label + ': ' + v).slice(0, 160) } : null; }).filter(Boolean);
+      if (!tasks.length) return toast('Fill in some answers first');
+      b.disabled = true;
+      try { var r = await api('studio-extras', 'todo-add-many', { tasks: tasks.slice(0, 35) }); b.textContent = '✓ ' + r.n + ' tasks added'; actionToast(r.n + ' tasks added to your to-do list ✅', 'View', function () { showTodoAll(); }); }
+      catch (x) { toast(x.message); b.disabled = false; }
+    }; });
+    $$('[data-tplan]').forEach(function (b) { b.onclick = async function () {
+      var u = l.use[Number(b.dataset.tplan)]; b.disabled = true;
+      try { var r = await api('studio-growth', 'plan-save', { card: { title: u.title, type: 'post', caption: u.text, status: 'idea' } }); upsertCard(r.card); b.textContent = '✓ In Plan ideas'; actionToast('Sent to your Plan ideas 💡', 'View', function () { showPlan('board'); }); }
+      catch (x) { toast(x.message); b.disabled = false; }
+    }; });
+    $$('[data-tcust]').forEach(function (b) { b.onclick = function () { var u = l.use[Number(b.dataset.tcust)]; copyText(u.text); toast('Message copied — choose a customer and paste it into WhatsApp'); showFollowups(); }; });
+    $$('[data-cprint]').forEach(function (b) { b.onclick = function () {
+      var bi = b.dataset.cprint, u = l.use[Number(bi)], pa = document.createElement('div'); pa.id = 'printArea'; pa.className = 'ponly';
+      pa.innerHTML = '<div class="wsprint"><div class="wsp-brand">Auntie Tobi Business Studio · Resources</div><h1>' + esc(u.title) + '</h1>' + (l.title ? '<p>' + esc(l.title) + '</p>' : '') +
+        u.items.map(function (it, ii) { var c = $('[data-ck="' + bi + ':' + ii + '"]'); return '<h3 style="font-weight:500">' + (c && c.checked ? '☑' : '☐') + ' ' + esc(it) + '</h3>'; }).join('') + '</div>';
+      $('main').appendChild(pa); document.body.classList.add('printing'); window.print();
+      setTimeout(function () { document.body.classList.remove('printing'); pa.remove(); }, 600);
+    }; });
+    $$('[data-wcsv]').forEach(function (b) { b.onclick = function () { var bi = b.dataset.wcsv, u = l.use[Number(bi)];
+      downloadCsv(slugName(u.title), [['Question', 'My answer']].concat(u.fields.map(function (f, fi) { var el = $('#ws_' + bi + '_' + fi); return [f.label, el ? el.value.trim() : '']; }))); }; });
+    $$('[data-ccsv]').forEach(function (b) { b.onclick = function () { var bi = b.dataset.ccsv, u = l.use[Number(bi)], res = calcRun(bi); if (!res || !res.out) return toast('Fill in the boxes first');
+      downloadCsv(slugName(u.title), [['Item', 'Value']].concat(res.c.fields.map(function (f) { return [f[1], res.v[f[0]]]; }), res.out.map(function (r) { return [r[0], r[3] === 'text' ? r[1] : r[3] === '%' ? (Math.round(r[1] * 10) / 10) + '%' : r[3] === 'n' ? r[1] : (Math.round(r[1] * 100) / 100).toFixed(2)]; }))); }; });
+
     $$('[data-ck]').forEach(function (c) {
       c.onchange = async function () {
         var bi = c.dataset.ck.split(':')[0], on = c.checked;
