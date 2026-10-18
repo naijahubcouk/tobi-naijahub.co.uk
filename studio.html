@@ -94,6 +94,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0
 .row.wrap{flex-wrap:wrap}
 .err{background:var(--danger-l);color:var(--danger);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:500}
 .note{background:var(--gold-l);border-radius:12px;padding:12px;font-size:14px}
+.li.tl{align-items:flex-start}.li.tl .t small{display:block;line-height:1.4}.li.tl .snip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.li.tl .t{min-width:0}.li.tl .tli{font-size:20px;line-height:1.2;margin-top:1px}.li.tl.locked{opacity:.78}.li.tl .tlk{font-size:16px}
+.rtool .useblock .ubh{display:none}.rtool .useblock{background:#fff;padding:14px}
 .fbres{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line,#EEE6D3);border-radius:12px;padding:10px 12px}
 
 /* sign in */
@@ -454,7 +456,7 @@ nav.tabs .navsep{display:none}
   <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Plan</button>
   <button data-tab="track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Track</button>
   <span class="navsep" aria-hidden="true"></span>
-  <button data-tab="library" id="libTabBtn" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Growth Library</button>
+  <button data-tab="library" id="libTabBtn" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Resources</button>
   <button data-tab="messages" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>Messages</button>
   <button data-tab="account" class="deskonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Account</button>
 </nav>
@@ -646,7 +648,7 @@ nav.tabs .navsep{display:none}
       (fr ? '<div class="kicker">Free plan</div><h1>Start free</h1>' +
         '<p class="sub" style="margin-top:8px">Keep track of enquiries and follow-ups, plan your content, manage your daily tasks and quotes — free. Plus 5 AI generations a day for captions, Reels and customer replies. No card needed. First, confirm your email.</p></div>'
       : up ? '<div class="kicker">Business Studio Pro</div><h1>Get Business Studio Pro</h1>' +
-        '<p class="sub" style="margin-top:8px">Every Business Studio tool, including the advanced ones, and the Business Growth Library. <b>Pro</b>: 50 AI generations a day for £3 a month. <b>Plus</b>: 100 a day for £5 a month. First, confirm your email.</p></div>'
+        '<p class="sub" style="margin-top:8px">Every Business Studio tool, including the advanced ones, and all Resources — lessons, templates and tools. <b>Pro</b>: 50 AI generations a day for £3 a month. <b>Plus</b>: 100 a day for £5 a month. First, confirm your email.</p></div>'
         : '<div class="kicker">Auntie Tobi Business Studio</div><h1>One Place to Plan, Manage &amp; Grow Your Business.</h1>' +
         '<p class="sub" style="margin-top:8px">Your everyday workspace for customers, content, planning and business growth. Sign in with your email.</p></div>') +
       (!up && /[?&]welcome=1/.test(location.search) ? '<div class="note stack" style="margin-bottom:12px"><b>\ud83c\udf89 Welcome to the Business Club!</b><span>Sign in with the <b>email you used to pay</b>. We\u2019ll send you a 6-digit code. If it says you don\u2019t have access yet, wait a minute and try again \u2014 it can take a moment after payment.</span></div>' : '') +
@@ -773,8 +775,8 @@ nav.tabs .navsep{display:none}
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="ugT"><h2 id="ugT" style="margin:0">🔒 Unlock ' + esc(what || 'the advanced tools') + '</h2>' +
       '<p class="sub" style="margin:0">Advanced tools — like the 30-day growth plan, business check-up, repurposing and full launch campaigns — come with the Business Club and Business Studio Pro.</p>' +
-      '<div class="card stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b>Business Club</b><b>£50/year</b></div><div class="sub" style="margin:0">Every tool and ' + S.boot.limits.standard + ' AI generations a day — plus promotion by Auntie Tobi, the directory, your Verified badge, the Marketplace and the Growth Library.</div><a class="btn primary block" href="/business-club" style="text-align:center">Join the Business Club</a></div>' +
-      (S.boot.billing.enabled ? '<div class="card plan stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b>Business Studio Pro</b><b>from £3/month</b></div><div class="sub" style="margin:0">Every tool, the Growth Library and ' + S.boot.limits.pro + ' or ' + S.boot.limits.power + ' AI generations a day. Cancel any time.</div><button class="btn gold block" id="ugPro">See Pro plans</button></div>' : '') +
+      '<div class="card stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b>Business Club</b><b>£50/year</b></div><div class="sub" style="margin:0">Every tool and ' + S.boot.limits.standard + ' AI generations a day — plus promotion by Auntie Tobi, the directory, your Verified badge, the Marketplace and Resources.</div><a class="btn primary block" href="/business-club" style="text-align:center">Join the Business Club</a></div>' +
+      (S.boot.billing.enabled ? '<div class="card plan stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b>Business Studio Pro</b><b>from £3/month</b></div><div class="sub" style="margin:0">Every tool, all Resources and ' + S.boot.limits.pro + ' or ' + S.boot.limits.power + ' AI generations a day. Cancel any time.</div><button class="btn gold block" id="ugPro">See Pro plans</button></div>' : '') +
       '<button class="btn ghost block" id="ugX">Not now</button></div>';
     document.body.appendChild(scrim);
     $('#ugX', scrim).onclick = function () { scrim.remove(); };
@@ -837,7 +839,7 @@ nav.tabs .navsep{display:none}
     return '<div class="stack plch" data-iv="' + iv + '">' +
       (hasMonth && hasYear ? '<div class="chips" role="group" aria-label="Billing"><button type="button" class="chip" data-iv="month" aria-pressed="' + (iv === 'month') + '">Monthly</button><button type="button" class="chip" data-iv="year" aria-pressed="' + (iv === 'year') + '">Yearly · 2 months free</button></div>' : '') +
       '<div class="tiers' + (iv === 'year' ? ' year' : '') + '">' + tiers.map(card).join('') + '</div>' +
-      '<ul style="margin:0 0 0 18px;font-size:14.5px"><li>Every Business Studio tool, in your brand voice — including the 30-day growth plan, business check-up and full launch campaigns</li><li>The Business Growth Library — lessons, templates and checklists</li><li>Switch between Pro and Plus, or monthly and yearly, any time</li></ul>' +
+      '<ul style="margin:0 0 0 18px;font-size:14.5px"><li>Every Business Studio tool, in your brand voice — including the 30-day growth plan, business check-up and full launch campaigns</li><li>Resources — lessons, templates, checklists and tools</li><li>Switch between Pro and Plus, or monthly and yearly, any time</li></ul>' +
       (S.boot && S.boot.access && S.boot.access.membershipActive ? '' : '<p class="hint" style="margin:0">Pro and Plus are the tools only. Promotion by Auntie Tobi (Spotlight, Featured Business, Marketplace, reposts) is part of the <a href="/business-club">Business Club</a>.</p>') +
       '<p class="hint" style="text-align:center;margin:0">Secure payment by Stripe. Cancel any time.</p></div>';
   }
@@ -1503,7 +1505,7 @@ nav.tabs .navsep{display:none}
       '<h2>Quick create</h2>' + quickRow() +
       '<div style="margin-top:18px">' + allowanceCard() + '</div>' +
       '<h2>Recent</h2>' + historyRows(S.history.slice(0, 3)) +
-      (S.history.length ? '<button class="btn link" id="allBtn" style="margin-top:6px">See your full library →</button>' : '') + '</div></div></main>';
+      (S.history.length ? '<button class="btn link" id="allBtn" style="margin-top:6px">See everything you’ve created →</button>' : '') + '</div></div></main>';
     bindHistoryRows(); bindQuick(showHome);
     var wc = $('#whatCounts'); if (wc) wc.onclick = whatCounts;
     var up = $('#upBtn'); if (up) up.onclick = function () { isFree() ? showUpgrade() : showRenew(); };
@@ -1538,7 +1540,7 @@ nav.tabs .navsep{display:none}
     var b = $('#dashBox'); if (b) { b.innerHTML = dashTiles(S.dash); bindDash(); }
   }
   var BIZ_TOOLS = [['customers', '👥', 'Customers'], ['todo', '📋', 'To-do list'], ['create', '✨', 'Create'], ['plan', '📅', 'Content calendar'],
-    ['track', '📊', 'Tracker'], ['goal', '🎯', 'Planner'], ['money', '🧾', 'Quotes &amp; invoices'], ['library', '📚', 'Growth Library']];
+    ['track', '📊', 'Tracker'], ['goal', '🎯', 'Planner'], ['money', '🧾', 'Quotes &amp; invoices'], ['library', '📚', 'Resources']];
   function bizTools() { return '<div class="btools">' + BIZ_TOOLS.map(function (t) { return '<button data-bt="' + t[0] + '"><span class="bi">' + t[1] + '</span>' + t[2] + '</button>'; }).join('') + '</div>'; }
   function bindBizTools() {
     $$('[data-bt]').forEach(function (b) { b.onclick = function () {
@@ -1550,7 +1552,7 @@ nav.tabs .navsep{display:none}
       if (k === 'goal') return pickGoal(function () { showHome(); });
       if (k === 'money') return showMoney();
       if (k === 'create') return showCreate();
-      S.libView = 'res'; showResources();
+      openLibraryTab();
     }; });
   }
   // ＋ in the header: add something from any screen
@@ -1684,9 +1686,10 @@ nav.tabs .navsep{display:none}
   function showCreate() {
     setChrome({ tabs: true, tab: 'create' });
     if (S.boot.access.readOnly) { app.innerHTML = '<main><h1 style="margin-bottom:14px">Create</h1>' + readOnlyBanner() + '</main>'; bindRenew(); return; }
-    app.innerHTML = '<main><h1>Create</h1><p class="sub" style="margin:6px 0 14px">You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' +
+    app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:center"><h1>Create</h1><button class="btn ghost small" id="crSaved">★ Saved &amp; history</button></div><p class="sub" style="margin:6px 0 14px">You have <b>' + S.boot.usage.remaining + '</b> generations left today.</p>' +
       '<h2 id="allTools" style="margin-top:0">All tools</h2>' + toolGrid() + '</main>';
     bindToolDir();
+    $('#crSaved').onclick = function () { showLibrary(); };
   }
 
   // ───────────── Plan: goal + content calendar ─────────────
@@ -2083,7 +2086,7 @@ nav.tabs .navsep{display:none}
       }).join('') + '</div>' +
       '<div class="row wrap" style="margin-top:12px">' +
       (postable ? '<button class="btn ' + (item.posted ? 'ghost' : 'gold') + ' small" id="postedBtn"' + (item.posted ? ' disabled' : '') + '>' + (item.posted ? '\u2713 Posted' : '\u2713 I posted this') + '</button>' : '') +
-      '<button class="btn small savebtn' + (item.saved ? ' on' : '') + '" id="saveBtn">' + (item.saved ? '★ Saved in Library' : '☆ Save to Library') + '</button>' +
+      '<button class="btn small savebtn' + (item.saved ? ' on' : '') + '" id="saveBtn">' + (item.saved ? '★ Saved' : '☆ Save') + '</button>' +
       (many ? '<button class="btn ghost small" id="copyAll">Copy all</button>' : '') +
       (onRegenerate ? '<button class="btn ghost small" id="regen">\u21bb Regenerate <span class="saved-tag">(' + (item.cost || 1) + ' generation' + ((item.cost || 1) > 1 ? 's' : '') + ')</span></button>' : '') +
       '<span class="saved-tag" id="editState" style="margin-left:auto"></span></div>';
@@ -2106,9 +2109,9 @@ nav.tabs .navsep{display:none}
       var b = this; b.disabled = true;
       try {
         var r = await api('studio-api', 'item-update', { id: item.id, saved: !item.saved });
-        item.saved = r.item.saved; b.textContent = item.saved ? '★ Saved in Library' : '☆ Save to Library'; b.classList.toggle('on', item.saved);
+        item.saved = r.item.saved; b.textContent = item.saved ? '★ Saved' : '☆ Save'; b.classList.toggle('on', item.saved);
         S.history = S.history.map(function (h) { return h.id === item.id ? Object.assign({}, h, { saved: item.saved }) : h; });
-        if (item.saved) actionToast('Saved to your Library ★', 'View', function () { S.libView = 'mine'; showLibrary('saved'); });
+        if (item.saved) actionToast('Saved — find it in Create → Saved ★', 'View', function () { showLibrary('saved'); });
         else toast('Removed from your saved items');
       } catch (x) { toast(x.message); }
       b.disabled = false;
@@ -2147,12 +2150,10 @@ nav.tabs .navsep{display:none}
   // ───────────── library ─────────────
   function showLibrary(filter) {
     filter = filter || 'all';
-    setChrome({ tabs: true, tab: 'library' });
-    S.libView = 'mine';
-    app.innerHTML = '<main>' + libHeader('mine') + '<p class="sub" style="margin:0 0 12px">Everything you’ve created. Viewing, editing and copying are free.</p>' +
+    setChrome({ tabs: true, tab: 'create', back: showCreate });
+    app.innerHTML = '<main><h1>Saved &amp; history</h1><p class="sub" style="margin:6px 0 12px">Everything you’ve created. Viewing, editing and copying are free.</p>' +
       '<div class="chips" id="lf" style="margin-bottom:14px">' + [['all', 'All'], ['saved', '★ Saved']].concat(S.boot.tools.filter(function (t) { return t.id === filter || S.history.some(function (h) { return h.tool === t.id; }); }).map(function (t) { return [t.id, t.name.charAt(0).toUpperCase() + t.name.slice(1)]; })).map(function (o) { return '<button class="chip" data-f="' + o[0] + '" aria-pressed="' + (o[0] === filter) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>' +
       '<div id="lbody"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
-    bindLibHeader();
     $$('#lf .chip', app).forEach(function (c) { c.onclick = function () { showLibrary(c.dataset.f); }; });
     var payload = filter === 'saved' ? { savedOnly: true } : filter === 'all' ? {} : { tool: filter };
     api('studio-api', 'history-list', payload).then(function (r) {
@@ -2162,7 +2163,7 @@ nav.tabs .navsep{display:none}
   }
 
   async function showItem(id) {
-    setChrome({ tabs: true, tab: 'library', back: function () { showLibrary(); } });
+    setChrome({ tabs: true, tab: 'create', back: function () { showLibrary(); } });
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
     var r;
     try { r = await api('studio-api', 'item-get', { id: id }); }
@@ -2642,7 +2643,7 @@ nav.tabs .navsep{display:none}
     redraw();
   }
 
-  // ───────────── Resources — Your Business Growth Library (Business Club) ─────────────
+  // ───────────── Resources — Learn (lessons) + Templates & Tools ─────────────
   var MOD_ICONS = {
     start: '<path d="M5 21V4l7 3 7-3v17l-7-3-7 3z"/>',
     insta: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
@@ -2676,23 +2677,118 @@ nav.tabs .navsep{display:none}
   }
 
   function clubOnly() { return !(S.boot && S.boot.access && (S.boot.access.membershipActive || S.boot.access.powerActive)); } // = no Library resources
+  // Resources = 📖 Learn (lessons) + 🧰 Templates & Tools (every checklist, script, worksheet, calculator and download).
   function libHeader(active) {
-    return '<h1>Business Growth Library</h1><div class="chips" style="margin:10px 0 14px"><button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📚 Resources</button><button class="chip" id="libMine" aria-pressed="' + (active === 'mine') + '">My saved content</button></div>';
+    return '<h1>Resources</h1><p class="sub" style="margin:4px 0 0">Learn how to run your business better — and use ready-made templates and tools.</p>' +
+      '<div class="chips" style="margin:12px 0 14px"><button class="chip" id="libRes" aria-pressed="' + (active === 'res') + '">📖 Learn</button><button class="chip" id="libTools" aria-pressed="' + (active === 'tools') + '">🧰 Templates &amp; Tools</button></div>';
   }
   function bindLibHeader() {
-    var a = $('#libRes'), b = $('#libMine');
+    var a = $('#libRes'), b = $('#libTools');
     if (a) a.onclick = function () { S.libView = 'res'; showResources(); };
-    if (b) b.onclick = function () { S.libView = 'mine'; showLibrary(); };
+    if (b) b.onclick = function () { S.libView = 'tools'; showResTools(); };
   }
   function openLibraryTab() {
-    var v = S.libView || (clubOnly() ? 'mine' : 'res');
-    if (v === 'res') showResources(); else showLibrary();
+    var v = S.libView === 'tools' || S.libView === 'res' ? S.libView : (clubOnly() ? 'tools' : 'res');
+    if (v === 'res') showResources(); else showResTools();
   }
 
   function resLocked() {
-    return '<section class="card stack" style="text-align:center;padding:24px 18px"><div style="font-size:34px">📚</div><h2 style="margin:0">Your Business Growth Library</h2>' +
-      '<p class="sub">Practical lessons, templates and monthly marketing ideas are part of <b>Auntie Tobi Business Club</b> and <b>Business Studio Pro</b>.</p>' +
-      '<a class="btn primary block" href="/business-club">See Business Club</a><p class="hint" style="margin:0">Already a member? Contact Auntie Tobi if this doesn’t look right.</p></section>';
+    return '<section class="card stack" style="text-align:center;padding:24px 18px"><div style="font-size:34px">📖</div><h2 style="margin:0">Lessons to grow your business</h2>' +
+      '<p class="sub">Short, practical lessons on Instagram, content, sales and growth come with the <b>Business Club</b>, <b>Business Studio Pro</b> and <b>Plus</b>.</p>' +
+      '<button class="btn primary block" id="rlTools">Try the free templates</button><button class="btn ghost block" id="rlUp">See plans</button></section>';
+  }
+  function bindResLocked() {
+    var t = $('#rlTools'); if (t) t.onclick = function () { S.libView = 'tools'; showResTools(); };
+    var u = $('#rlUp'); if (u) u.onclick = function () { showUpgrade('every lesson and template'); };
+  }
+
+  var TOOL_ICO = { checklist: '☑️', template: '💬', worksheet: '✍️', calculator: '🧮', file: '📎' };
+  var TOOL_WORD = { checklist: 'Checklist', template: 'Message / script', worksheet: 'Worksheet', calculator: 'Calculator', file: 'Download' };
+  async function showResTools(opts) {
+    opts = opts || {};
+    S.libView = 'tools';
+    setChrome({ tabs: true, tab: 'library' });
+    app.innerHTML = '<main>' + libHeader('tools') + '<div id="tlBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
+    bindLibHeader();
+    try { if (!S.rtools || opts.reload !== false) S.rtools = await api('studio-resources', 'tools'); }
+    catch (x) { if ($('#tlBox')) $('#tlBox').innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
+    if (!$('#tlBox')) return;
+    S.rtFilter = S.rtFilter || 'all';
+    drawResTools();
+  }
+  function drawResTools() {
+    var r = S.rtools, f = S.rtFilter, q = (S.rtQ || '').toLowerCase().trim();
+    var counts = {}; r.tools.forEach(function (t) { counts[t.type] = (counts[t.type] || 0) + 1; });
+    var savedN = r.tools.filter(function (t) { return t.saved; }).length, freeN = r.tools.filter(function (t) { return t.free; }).length;
+    var list = r.tools.filter(function (t) {
+      if (f === 'saved' && !t.saved) return false;
+      if (f !== 'all' && f !== 'saved' && t.type !== f) return false;
+      if (q) { var hay = (t.title + ' ' + t.preview + ' ' + t.lessonTitle + ' ' + t.moduleTitle + ' ' + (TOOL_WORD[t.type] || '')).toLowerCase(); return q.split(/\s+/).every(function (w) { return hay.indexOf(w) > -1; }); }
+      return true;
+    });
+    if (!r.full) list = list.slice().sort(function (a, b) { return (b.free ? 1 : 0) - (a.free ? 1 : 0); });
+    function row(t) {
+      var sub = [TOOL_WORD[t.type], t.lessonTitle || t.moduleTitle].filter(Boolean).join(' · ');
+      var prog = !t.locked && t.progress ? (t.type === 'checklist' ? ' · ' + t.progress + ' of ' + t.items + ' ticked' : ' · started') : '';
+      return '<button class="li tl' + (t.locked ? ' locked' : '') + '" data-rt="' + esc(t.id) + '"><span class="tli" aria-hidden="true">' + (TOOL_ICO[t.type] || '📄') + '</span><div class="t"><b>' + esc(t.title) + '</b><small>' + esc(sub) + prog + '</small>' +
+        (t.preview ? '<small class="snip">' + esc(t.preview) + '</small>' : '') + '</div>' +
+        (t.locked ? '<span class="tlk" aria-label="Locked">🔒</span>' : !r.full && t.free ? '<span class="pill green" style="font-size:11px">Free</span>' : t.saved ? '<span class="star" aria-label="Saved">★</span>' : '') + '</button>';
+    }
+    var body;
+    if (!list.length) body = '<div class="empty">' + (q ? 'Nothing found for “' + esc(S.rtQ) + '”. Try “follow-up”, “bio” or “pricing”.' : f === 'saved' ? 'Tap ☆ Save on a template to keep it here.' : 'Nothing here yet.') + '</div>';
+    else if (f === 'all' && !q && r.full) body = r.types.filter(function (ty) { return counts[ty.id]; }).map(function (ty) { return '<h2>' + esc(ty.label) + '</h2><div class="list">' + list.filter(function (t) { return t.type === ty.id; }).map(row).join('') + '</div>'; }).join('');
+    else body = '<div class="list">' + list.map(row).join('') + '</div>';
+    $('#tlBox').innerHTML =
+      (!r.full ? '<section class="card stack plan" style="margin-bottom:14px"><b>🎁 ' + freeN + ' free templates on your Free plan</b><div class="sub" style="margin:0">Unlock all ' + r.tools.length + ' — plus every lesson — with the Business Club, Business Studio Pro or Plus.</div><button class="btn gold small" id="tlUp" style="align-self:flex-start">See plans</button></section>' : '') +
+      '<form id="tlForm" role="search" class="rsearch" style="margin-bottom:10px"><input type="search" id="tlQ" placeholder="Search, e.g. follow-up, bio, pricing" aria-label="Search templates and tools" maxlength="80" value="' + esc(S.rtQ || '') + '"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form>' +
+      '<div class="chips" id="tlF" style="margin-bottom:12px"><button class="chip" data-tf="all" aria-pressed="' + (f === 'all') + '">All ' + r.tools.length + '</button>' +
+        r.types.filter(function (ty) { return counts[ty.id]; }).map(function (ty) { return '<button class="chip" data-tf="' + ty.id + '" aria-pressed="' + (f === ty.id) + '">' + (TOOL_ICO[ty.id] || '') + ' ' + esc(ty.label) + ' ' + counts[ty.id] + '</button>'; }).join('') +
+        (savedN ? '<button class="chip" data-tf="saved" aria-pressed="' + (f === 'saved') + '">★ Saved ' + savedN + '</button>' : '') + '</div>' +
+      '<div id="tlList">' + body + '</div>';
+    $$('[data-tf]').forEach(function (c) { c.onclick = function () { S.rtFilter = c.dataset.tf; drawResTools(); }; });
+    $('#tlForm').onsubmit = function (e) { e.preventDefault(); S.rtQ = $('#tlQ').value; drawResTools(); };
+    $('#tlQ').oninput = function () { var v = this.value; clearTimeout(S.rtT); S.rtT = setTimeout(function () { S.rtQ = v; var pos = v.length; drawResTools(); var i = $('#tlQ'); if (i) { i.focus(); i.setSelectionRange(pos, pos); } }, 350); };
+    var up = $('#tlUp'); if (up) up.onclick = function () { showUpgrade('every template and lesson'); };
+    $$('[data-rt]').forEach(function (b) { b.onclick = function () { showResTool(b.dataset.rt, function () { showResTools({ reload: false }); }); }; });
+  }
+
+  async function showResTool(tid, back) {
+    back = back || function () { showResTools(); };
+    setChrome({ tabs: true, tab: 'library', back: back });
+    var meta = S.rtools && S.rtools.tools.filter(function (t) { return t.id === tid; })[0];
+    if (meta && meta.locked) {
+      app.innerHTML = '<main class="lesson"><div class="lmeta">' + esc(TOOL_WORD[meta.type] || '') + '</div><h1>' + esc(meta.title) + '</h1>' + (meta.preview ? '<p class="sub" style="margin-top:6px">' + esc(meta.preview) + '…</p>' : '') +
+        '<section class="card stack plan" style="margin-top:14px;text-align:center"><div style="font-size:30px">🔒</div><b>This template comes with the Business Club, Business Studio Pro and Plus</b><div class="sub" style="margin:0">Your Free plan includes ' + S.rtools.tools.filter(function (t) { return t.free; }).length + ' free templates to try.</div>' +
+        '<button class="btn gold block" id="ltUp">See plans</button><button class="btn ghost block" id="ltFree">Show me the free ones</button></section></main>';
+      $('#ltUp').onclick = function () { showUpgrade('every template and lesson'); };
+      $('#ltFree').onclick = function () { S.rtFilter = 'all'; S.rtQ = ''; showResTools({ reload: false }); };
+      return;
+    }
+    app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    var r;
+    try { r = await api('studio-resources', 'tool', { id: tid }); }
+    catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    var t = r.tool, mine = r.mine, self = function () { showResTool(tid, back); };
+    var l = { id: r.lesson.id, title: r.lesson.toolOnly ? '' : r.lesson.title, use: [] }; l.use[t.i] = t;
+    var checks = {}; (mine.checks || []).forEach(function (k) { checks[k] = true; });
+    var mod = (S.rtools && S.rtools.modules.filter(function (m) { return m.id === r.lesson.module; })[0]) || null;
+    var st = r.studio;
+    app.innerHTML = '<main class="lesson rtool"><div class="lmeta">' + esc(TOOL_WORD[t.type] || '') + (mod ? ' · ' + esc(mod.title) : '') + '</div>' +
+      '<h1>' + esc(t.title) + '</h1>' + (r.lesson.summary ? '<p class="sub" style="margin-top:6px">' + esc(r.lesson.summary) + '</p>' : '') +
+      '<div class="row" style="margin:12px 0 8px"><button class="btn small ' + (mine.saved ? 'gold' : 'ghost') + '" id="rtSave">' + (mine.saved ? '★ Saved' : '☆ Save') + '</button></div>' +
+      useBlockHtml(t, t.i, checks, mine.answers || {}) +
+      (st ? '<button class="btn gold block" id="rtStudio" style="margin-top:14px">' + esc(st.label) + '</button>' : '') +
+      (!r.lesson.toolOnly ? '<button class="btn ghost block" id="rtLesson" style="margin-top:10px">📖 From the lesson: ' + esc(r.lesson.title) + ' →</button>' : '') + '</main>';
+    bindUseBlocks(l, r.lesson.id, mine, checks);
+    $('#rtSave').onclick = async function () {
+      var b = this, on = !mine.saved; b.disabled = true;
+      try { await api('studio-resources', 'tool-save', { id: tid, on: on }); mine.saved = on; if (meta) meta.saved = on; b.textContent = on ? '★ Saved' : '☆ Save'; b.className = 'btn small ' + (on ? 'gold' : 'ghost'); toast(on ? 'Saved — find it under ★ Saved' : 'Removed from saved'); }
+      catch (x) { toast(x.message); }
+      b.disabled = false;
+    };
+    var sb = $('#rtStudio'); if (sb) sb.onclick = function () { studioGo(st, self); };
+    var lb = $('#rtLesson'); if (lb) lb.onclick = function () { if (clubOnly()) return showUpgrade('every lesson and template'); showLesson(r.lesson.id, self); };
+    if (meta && t.type === 'checklist') $$('[data-ck]').forEach(function (c) { c.addEventListener('change', function () { meta.progress = $$('[data-ck]').filter(function (x) { return x.checked; }).length; }); });
   }
 
   function lessonById(id) { return (S.res && S.res.lessons.filter(function (l) { return l.id === id; })[0]) || null; }
@@ -2711,11 +2807,11 @@ nav.tabs .navsep{display:none}
   async function showResources() {
     S.libView = 'res';
     setChrome({ tabs: true, tab: 'library' });
-    if (clubOnly()) { app.innerHTML = '<main>' + libHeader('res') + resLocked() + '</main>'; bindLibHeader(); return; }
+    if (clubOnly()) { app.innerHTML = '<main>' + libHeader('res') + resLocked() + '</main>'; bindLibHeader(); bindResLocked(); return; }
     app.innerHTML = '<main>' + libHeader('res') + '<div id="resBox"><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></div></main>';
     bindLibHeader();
     try { S.res = await api('studio-resources', 'home'); }
-    catch (x) { $('#resBox').innerHTML = x.code === 'club_only' ? resLocked() : '<div class="err">' + esc(x.message) + '</div>'; return; }
+    catch (x) { $('#resBox').innerHTML = x.code === 'club_only' ? resLocked() : '<div class="err">' + esc(x.message) + '</div>'; bindResLocked(); return; }
     if (!$('#resBox')) return;
     drawResources();
   }
@@ -2736,16 +2832,16 @@ nav.tabs .navsep{display:none}
     var saved = byRecent(p.saved).map(lessonById).filter(Boolean);
     var doneN = live.filter(function (l) { return p.completed[l.id]; }).length, pct = live.length ? Math.round(doneN / live.length * 100) : 0;
     $('#resBox').innerHTML =
-      '<section class="reswelcome"><h2>Welcome to Your Business Growth Library 💚</h2><p>Practical resources, business tips and growth strategies to help you build a stronger business, attract customers and keep moving forward.</p>' +
-        '<form id="rsForm" role="search" class="rsearch"><input type="search" id="rsQ" placeholder="Search lessons, e.g. bio, pricing, reviews" aria-label="Search resources" maxlength="100"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form></section>' +
+      '<section class="reswelcome"><h2>Learn 💚</h2><p>Short, practical lessons to help you build a stronger business, attract customers and keep moving forward. Need a template straight away? Open <button type="button" class="btn link" id="toTools" style="padding:0;min-height:0;font-size:inherit">Templates &amp; Tools</button>.</p>' +
+        '<form id="rsForm" role="search" class="rsearch"><input type="search" id="rsQ" placeholder="Search lessons, e.g. bio, pricing, reviews" aria-label="Search lessons" maxlength="100"><button class="btn primary small" aria-label="Search">' + icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18) + '</button></form></section>' +
       '<div id="rsResults"></div><div id="rsMain">' +
       (cont.length ? '<h2>Continue learning</h2><div class="list">' + cont.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       Object.keys(cols).map(function (c) { return '<h2>' + esc(c) + '</h2><div class="list">' + cols[c].sort(function (a, b) { return (a.collectionOrder || 0) - (b.collectionOrder || 0); }).map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>'; }).join('') +
       (fresh.length ? '<h2>New this month</h2><div class="list">' + fresh.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       (rec.length ? '<div class="row" style="justify-content:space-between;align-items:baseline"><h2>' + (r.recTag ? 'Recommended for ' + esc(r.recLabel) : 'Recommended to start') + '</h2><button class="btn link" id="recHide" style="font-size:13px">Hide</button></div><div class="list">' + rec.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
-      (saved.length ? '<h2>My saved resources</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
+      (saved.length ? '<h2>My saved lessons</h2><div class="list">' + saved.map(function (l) { return lessonRow(l, { module: true }); }).join('') + '</div>' : '') +
       '<h2>My learning progress</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>' + doneN + ' of ' + live.length + ' lessons completed</b><span class="sub">' + pct + '%</span></div><div class="pbar"><span style="width:' + pct + '%"></span></div></div>' +
-      '<h2>Explore resources</h2><div class="modgrid">' + r.modules.map(function (m) {
+      '<h2>Explore lessons</h2><div class="modgrid">' + r.modules.map(function (m) {
         var ls = r.lessons.filter(function (l) { return l.module === m.id; }), lv = ls.filter(function (l) { return l.status !== 'planned'; });
         var dn = lv.filter(function (l) { return p.completed[l.id]; }).length, started = lv.some(function (l) { return p.opened[l.id]; });
         var count = lv.length + ' lesson' + (lv.length === 1 ? '' : 's') + (ls.length > lv.length ? ' · ' + (ls.length - lv.length) + ' coming soon' : '');
@@ -2756,6 +2852,7 @@ nav.tabs .navsep{display:none}
       (p.hideRecs ? '<p class="hint" style="text-align:center;margin-top:16px"><button class="btn link" id="recShow">Show recommendations for my business</button></p>' : '') +
       '</div>';
     bindLessonRows($('#resBox'), showResources);
+    var tt = $('#toTools'); if (tt) tt.onclick = function () { S.libView = 'tools'; showResTools(); };
     $$('[data-mod]').forEach(function (b) { b.onclick = function () { showModule(b.dataset.mod); }; });
     var rh = $('#recHide'); if (rh) rh.onclick = function () { p.hideRecs = true; api('studio-resources', 'prefs', { hideRecs: true }).catch(function () {}); drawResources(); };
     var rs = $('#recShow'); if (rs) rs.onclick = function () { p.hideRecs = false; api('studio-resources', 'prefs', { hideRecs: false }).catch(function () {}); drawResources(); };
@@ -2814,24 +2911,7 @@ nav.tabs .navsep{display:none}
     var mod = (S.res && S.res.modules.filter(function (m) { return m.id === l.module; })[0]) || { n: l.module.slice(1), title: '' };
     var checks = {}; (mine.checks || []).forEach(function (k) { checks[k] = true; });
     var self = function () { showLesson(id, back); };
-    function block(b, bi) {
-      var h = '<div class="useblock" data-bi="' + bi + '"><div class="ubh"><span>' + esc({ checklist: 'Checklist', template: 'Template', worksheet: 'Worksheet', file: 'Download', calculator: 'Calculator' }[b.type] || '') + '</span><b>' + esc(b.title) + '</b></div>';
-      if (b.type === 'checklist') {
-        var n = b.items.filter(function (x, ii) { return checks[bi + ':' + ii]; }).length;
-        h += '<div class="checks">' + b.items.map(function (it, ii) { var k = bi + ':' + ii; return '<label class="chk"><input type="checkbox" data-ck="' + k + '"' + (checks[k] ? ' checked' : '') + '><span>' + esc(it) + '</span></label>'; }).join('') + '</div><div class="hint" data-cc="' + bi + '">' + n + ' of ' + b.items.length + ' done</div>';
-      } else if (b.type === 'template') {
-        h += '<pre class="tpl">' + esc(b.text) + '</pre>' + (b.note ? '<p class="hint">' + esc(b.note) + '</p>' : '') + '<div class="row" style="margin-top:8px"><button class="btn small ghost" data-tcopy="' + bi + '">Copy</button><button class="btn small ghost" data-tdl="' + bi + '">Download</button></div>';
-      } else if (b.type === 'worksheet') {
-        var ans = mine.answers || {};
-        h += '<div class="stack">' + b.fields.map(function (f, fi) { var k = bi + ':' + fi; return '<div><label class="f" for="ws_' + bi + '_' + fi + '">' + esc(f.label) + '</label>' + (f.hint ? '<div class="hint" style="margin:0 0 4px">' + esc(f.hint) + '</div>' : '') + '<textarea id="ws_' + bi + '_' + fi + '" data-ws="' + k + '" rows="' + (f.long ? 3 : 1) + '" maxlength="2000">' + esc(ans[k] || '') + '</textarea></div>'; }).join('') + '</div>' +
-          '<div class="row" style="margin-top:10px"><span class="saved-tag" data-wst="' + bi + '">Your answers save automatically</span></div><div class="row" style="margin-top:6px"><button class="btn small ghost" data-wprint="' + bi + '">Print / save as PDF</button><button class="btn small ghost" data-wdl="' + bi + '">Download</button></div>';
-      } else if (b.type === 'file') {
-        h += (b.note ? '<p class="hint" style="margin:0 0 8px">' + esc(b.note) + '</p>' : '') + '<button class="btn small primary" data-file="' + esc(b.fileId) + '" data-fname="' + esc(b.name) + '">Download ' + esc(b.name) + (b.size ? ' (' + fileSize(b.size) + ')' : '') + '</button>';
-      } else if (b.type === 'calculator') {
-        h += pricingCalcHtml(bi);
-      }
-      return h + '</div>';
-    }
+    function block(b, bi) { return useBlockHtml(b, bi, checks, mine.answers || {}); }
     app.innerHTML = '<main class="lesson"><div class="lmeta">Module ' + esc(mod.n) + (mod.title ? ' · ' + esc(mod.title) : '') + (l.readMins ? ' · ' + l.readMins + ' min read' : '') + '</div>' +
       '<h1>' + esc(l.title) + '</h1>' + (l.summary ? '<p class="sub" style="margin-top:6px">' + esc(l.summary) + '</p>' : '') +
       '<div class="row" style="margin:12px 0 4px"><button class="btn small ' + (mine.saved ? 'gold' : 'ghost') + '" id="lsSave">' + (mine.saved ? '★ Saved' : '☆ Save') + '</button>' + (mine.completed ? '<span class="pill green">✓ Completed</span>' : '') + '</div>' +
@@ -2862,6 +2942,27 @@ nav.tabs .navsep{display:none}
     var nx = $('#lsNext'); if (nx) nx.onclick = function () { showLesson(r.next.id, back); };
     var md = $('#lsMod'); if (md) md.onclick = function () { showModule(l.module); };
     var stb = $('#lsStudio'); if (stb) stb.onclick = function () { studioGo(l.studio, self); };
+    bindUseBlocks(l, id, mine, checks);
+  }
+  function useBlockHtml(b, bi, checks, ans) {
+    var h = '<div class="useblock" data-bi="' + bi + '"><div class="ubh"><span>' + esc({ checklist: 'Checklist', template: 'Template', worksheet: 'Worksheet', file: 'Download', calculator: 'Calculator' }[b.type] || '') + '</span><b>' + esc(b.title) + '</b></div>';
+    if (b.type === 'checklist') {
+      var n = b.items.filter(function (x, ii) { return checks[bi + ':' + ii]; }).length;
+      h += '<div class="checks">' + b.items.map(function (it, ii) { var k = bi + ':' + ii; return '<label class="chk"><input type="checkbox" data-ck="' + k + '"' + (checks[k] ? ' checked' : '') + '><span>' + esc(it) + '</span></label>'; }).join('') + '</div><div class="hint" data-cc="' + bi + '">' + n + ' of ' + b.items.length + ' done</div>';
+    } else if (b.type === 'template') {
+      h += '<pre class="tpl">' + esc(b.text) + '</pre>' + (b.note ? '<p class="hint">' + esc(b.note) + '</p>' : '') + '<div class="row" style="margin-top:8px"><button class="btn small ghost" data-tcopy="' + bi + '">Copy</button><button class="btn small ghost" data-tdl="' + bi + '">Download</button></div>';
+    } else if (b.type === 'worksheet') {
+      h += '<div class="stack">' + b.fields.map(function (f, fi) { var k = bi + ':' + fi; return '<div><label class="f" for="ws_' + bi + '_' + fi + '">' + esc(f.label) + '</label>' + (f.hint ? '<div class="hint" style="margin:0 0 4px">' + esc(f.hint) + '</div>' : '') + '<textarea id="ws_' + bi + '_' + fi + '" data-ws="' + k + '" rows="' + (f.long ? 3 : 1) + '" maxlength="2000">' + esc(ans[k] || '') + '</textarea></div>'; }).join('') + '</div>' +
+        '<div class="row" style="margin-top:10px"><span class="saved-tag" data-wst="' + bi + '">Your answers save automatically</span></div><div class="row" style="margin-top:6px"><button class="btn small ghost" data-wprint="' + bi + '">Print / save as PDF</button><button class="btn small ghost" data-wdl="' + bi + '">Download</button></div>';
+    } else if (b.type === 'file') {
+      h += (b.note ? '<p class="hint" style="margin:0 0 8px">' + esc(b.note) + '</p>' : '') + '<button class="btn small primary" data-file="' + esc(b.fileId) + '" data-fname="' + esc(b.name) + '">Download ' + esc(b.name) + (b.size ? ' (' + fileSize(b.size) + ')' : '') + '</button>';
+    } else if (b.type === 'calculator') {
+      h += pricingCalcHtml(bi);
+    }
+    return h + '</div>';
+  }
+  // Checklists, templates, worksheets, files and the calculator — used in lessons and in Templates & Tools.
+  function bindUseBlocks(l, id, mine, checks) {
     $$('[data-ck]').forEach(function (c) {
       c.onchange = async function () {
         var bi = c.dataset.ck.split(':')[0], on = c.checked;
@@ -2889,7 +2990,7 @@ nav.tabs .navsep{display:none}
     $$('[data-wprint]').forEach(function (b) {
       b.onclick = function () {
         var bi = b.dataset.wprint, u = l.use[Number(bi)], pa = document.createElement('div'); pa.id = 'printArea'; pa.className = 'ponly';
-        pa.innerHTML = '<div class="wsprint"><div class="wsp-brand">Auntie Tobi Business Club · Resources</div><h1>' + esc(u.title) + '</h1><p>' + esc(l.title) + '</p>' +
+        pa.innerHTML = '<div class="wsprint"><div class="wsp-brand">Auntie Tobi Business Studio · Resources</div><h1>' + esc(u.title) + '</h1><p>' + esc(l.title || '') + '</p>' +
           u.fields.map(function (f, fi) { var el = $('#ws_' + bi + '_' + fi), v = el ? el.value.trim() : ''; return '<h3>' + esc(f.label) + '</h3><div class="wsp-ans' + (v ? '' : ' blank') + '">' + (v ? esc(v).replace(/\n/g, '<br>') : '&nbsp;') + '</div>'; }).join('') + '</div>';
         $('main').appendChild(pa); document.body.classList.add('printing'); window.print();
         setTimeout(function () { document.body.classList.remove('printing'); pa.remove(); }, 600);
@@ -3896,7 +3997,7 @@ nav.tabs .navsep{display:none}
     if (a.free) {
       html += '<h2>Your plan</h2><div class="card stack"><div class="row" style="justify-content:space-between"><b>Free plan</b><span class="pill green">Active</span></div>' +
         '<div class="sub" style="margin:0">' + l.free + ' AI generations a day with the everyday tools — captions, Reels, Stories, offers, customer replies and more.</div></div>' +
-        (m.isClub ? '' : '<div class="card stack"><div class="row" style="justify-content:space-between"><b>Business Club</b><b>£50/year</b></div><div class="sub" style="margin:0">Every tool and ' + l.standard + ' AI generations a day — plus promotion by Auntie Tobi, the directory, your Verified badge, the Marketplace and the Growth Library.</div><a class="btn primary block" href="/business-club" style="text-align:center">Join the Business Club</a></div>');
+        (m.isClub ? '' : '<div class="card stack"><div class="row" style="justify-content:space-between"><b>Business Club</b><b>£50/year</b></div><div class="sub" style="margin:0">Every tool and ' + l.standard + ' AI generations a day — plus promotion by Auntie Tobi, the directory, your Verified badge, the Marketplace and Resources.</div><a class="btn primary block" href="/business-club" style="text-align:center">Join the Business Club</a></div>');
     }
     // Add-ons: Pro / Plus
     html += '<h2>Business Studio Pro</h2>';

@@ -1,9 +1,10 @@
 'use strict';
 /*
- * Resources — Your Business Growth Library (Business Club members only; free, no AI).
+ * Resources — Learn + Templates & Tools (Club, Pro and Plus; Free plan: sample templates; no AI).
  * POST /.netlify/functions/studio-resources  { action, ... }
  *   home / lesson { id } / complete { id, done } / save { id, on } / check { id, key, on }
  *   answer { id, key, text } / search { q } / file { id, fileId } / prefs { hideRecs }
+ *   tools / tool { id: lessonId~blockIndex } / tool-save { id, on }   — Templates & Tools (Free plan: samples only)
  * Content is managed in Studio Admin → Resources.
  */
 const core = require('../core');
@@ -13,12 +14,20 @@ const { HttpError, handler } = core;
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const auth = await core.requireMember(ctx, { level: 'view' });
-  if (!auth.access.resources) {
-    throw new HttpError(403, 'club_only', 'Resources are part of Auntie Tobi Business Club and Business Studio Pro.');
-  }
+  const full = !!auth.access.resources;
   const email = auth.sess.email;
   await core.rateLimit('resources', email, 600, 60 * 60 * 1000);
+  // Free plan: Templates & Tools samples only (everything else is listed but locked).
+  const FREE_OK = ['tools', 'tool', 'tool-save', 'check', 'answer', 'file'];
+  if (!full && !FREE_OK.includes(body.action)) {
+    throw new HttpError(403, 'club_only', 'Lessons are part of the Auntie Tobi Business Club, Business Studio Pro and Plus.');
+  }
+  if (!full && (body.action === 'check' || body.action === 'answer')) await res.assertToolKey(String(body.id || ''), body.key, false);
+  if (!full && body.action === 'file') await res.assertToolFile(String(body.id || ''), String(body.fileId || ''), false);
   switch (body.action) {
+    case 'tools': return res.toolsList(email, full);
+    case 'tool': return res.toolFor(email, String(body.id || ''), full);
+    case 'tool-save': return res.setToolSaved(email, String(body.id || ''), !!body.on, full);
     case 'home': {
       const profile = await core.getJson(`profiles/${core.enc(email)}`);
       return res.home(email, profile);

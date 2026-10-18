@@ -468,3 +468,11 @@ Auntie Tobi's private content organiser (chatting stays in ChatGPT Plus). Sign i
 - **One business per member:** a listing linked to one account shows "Already linked" to everyone else and can't be linked twice. Unlinking (by the member, in Admin, or by deleting the account) frees it.
 - **Listing check (Admin → Members):** ✓ Email matches (listing email = sign-in email), or "Email differs" / "Listing has no email — check it's theirs" with a **Confirm it's theirs** button. Until confirmed, HQ doesn't use that listing's Instagram and Club invites don't count the business as joined. Links made before this check stay trusted.
 - **Website check:** flagged if the business name doesn't match the website they read ("name differs") or another member uses the same website ("also used by another member"). Nothing is blocked; HQ won't use an Instagram that came from a flagged website until you **Confirm it's theirs**. A new website is checked again.
+
+## 7ad. Resources — Learn + Templates & Tools
+
+- **Resources** (Today tools grid, laptop sidebar) has two tabs: **📖 Learn** (the lessons, as before) and **🧰 Templates & Tools**.
+- **Templates & Tools** lists every checklist, message/script, worksheet, calculator and download inside a published lesson, filtered by type, with search and ★ Save. Each opens on its own, with "Open my …" (the lesson's Studio button) and "From the lesson: … →". Ticks and worksheet answers are shared with the lesson.
+- **Free plan:** sees everything in Templates & Tools but can only open the ones marked **Free** (5 to start: Follow-up 1 and 2, Instagram Bio Checklist, Thank-you after an order, Weekly review). Lessons stay locked.
+- **Admin → Resources:** each resource in a lesson has **Show in Templates & Tools** and **Free on the Free plan** switches. **+ New template or tool** makes a resource without a lesson (shows only in Templates & Tools).
+- **Saved & history** (everything members created with AI) moved to **Create → ★ Saved & history**.
