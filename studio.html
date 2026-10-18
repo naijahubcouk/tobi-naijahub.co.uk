@@ -778,7 +778,19 @@ nav.tabs .navsep{display:none}
   function creditBal() { return ((S.boot && S.boot.usage) || {}).credits || 0; }
   function buyCreditsSheet() {
     if (!creditsOn()) return toast('Credit top-ups aren’t available just now.');
-    var packs = S.boot.credits.packs;
+    var packs = S.boot.credits.packs, a = S.boot.access || {}, l = S.boot.limits || {};
+    // Nudge towards Plus when it's better value: not on Plus/Pro yet and Plus is for sale.
+    var plusOn = !!((S.boot.billing && S.boot.billing.plans) || {}).plus;
+    var showPlus = plusOn && !a.addonLive && !a.powerActive;
+    var spent = ((S.boot.usage || {}).creditsSpentYear) || 0;
+    var cheapest = packs.reduce(function (m, p) { return Math.min(m, p.pence / p.credits); }, 99);
+    var plusPerGen = l.power ? 5000 / (l.power * 365) : 0;
+    var nudge = !showPlus ? '' :
+      '<div class="card stack plan" style="gap:6px">' +
+        (spent >= 1000 ? '<b>You’ve spent £' + (spent % 100 ? (spent / 100).toFixed(2) : spent / 100) + ' on credits this year</b><div class="sub" style="margin:0">Business Studio Plus gives you ' + l.power + ' a day for £50 a year.</div>'
+          : '<b>Better value: Business Studio Plus</b><div class="sub" style="margin:0">' + l.power + ' AI generations every day for £50 a year — about ' + plusPerGen.toFixed(1) + 'p each, versus ' + cheapest.toFixed(1) + 'p or more with credits.</div>') +
+        (a.free ? '<div class="sub" style="margin:0">Credits don’t unlock the advanced tools or lessons — Plus does.</div>' : '') +
+        '<button class="btn gold small" id="bcPlus" style="align-self:flex-start">See Plus</button></div>';
     var scrim = document.createElement('div'); scrim.className = 'scrim';
     scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="bcT"><h2 id="bcT" style="margin:0">Buy extra credits</h2>' +
       '<p class="sub" style="margin:0">1 credit = 1 AI generation. Your daily generations are used first, then your credits.' + (creditBal() ? ' You have <b>' + creditBal() + '</b> now.' : '') + '</p>' +
@@ -787,10 +799,11 @@ nav.tabs .navsep{display:none}
           '<div class="sub" style="margin:0">' + (p.pence / p.credits).toFixed(1) + 'p per generation</div></div><b style="font-size:20px">£' + (p.pence % 100 ? (p.pence / 100).toFixed(2) : p.pence / 100) + '</b></div>' +
           (i === 1 ? '<span class="pill green" style="align-self:flex-start;margin-top:6px">Popular</span>' : '') + '</button>';
       }).join('') + '</div>' +
-      '<p class="hint" style="margin:0">One-off payment by Stripe — no subscription, nothing renews. Credits last 12 months. They add AI generations; advanced tools come with the Club or Plus.</p>' +
+      '<p class="hint" style="margin:0">One-off payment by Stripe — no subscription, nothing renews. Credits last 12 months. They add AI generations; advanced tools come with the Club or Plus.</p>' + nudge +
       '<button class="btn ghost block" id="bcX">Not now</button></div>';
     document.body.appendChild(scrim);
     $('#bcX', scrim).onclick = function () { scrim.remove(); };
+    var bp = $('#bcPlus', scrim); if (bp) bp.onclick = function () { scrim.remove(); showRenew(); };
     scrim.addEventListener('click', function (e) { if (e.target === scrim) scrim.remove(); });
     $$('[data-pack]', scrim).forEach(function (b) { b.onclick = async function () {
       $$('[data-pack]', scrim).forEach(function (x) { x.disabled = true; }); var old = b.innerHTML; b.querySelector('b').textContent = 'Opening secure checkout…';
@@ -843,7 +856,10 @@ nav.tabs .navsep{display:none}
         toast('Payment received — adding your credits…');
         var before = creditBal();
         for (var ci = 0; ci < 6; ci++) { await new Promise(function (r) { setTimeout(r, ci ? 2000 : 800); }); try { S.boot = await api('studio-api', 'bootstrap'); S.history = S.boot.recent || []; } catch (e) {} if (creditBal() > before) break; }
-        toast(creditBal() > before ? '✅ ' + (creditBal() - before) + ' credits added — you have ' + creditBal() + ' extra credits' : creditBal() ? '✅ Payment received — you have ' + creditBal() + ' extra credits' : 'Payment received — your credits will appear in a minute');
+        var msg = creditBal() > before ? '✅ ' + (creditBal() - before) + ' credits added — you have ' + creditBal() + ' extra credits' : creditBal() ? '✅ Payment received — you have ' + creditBal() + ' extra credits' : 'Payment received — your credits will appear in a minute';
+        var sp = (S.boot.usage || {}).creditsSpentYear || 0, ac = S.boot.access || {};
+        if (sp >= 1000 && !ac.addonLive && !ac.powerActive && ((S.boot.billing || {}).plans || {}).plus) actionToast(msg + '. You’ve spent £' + (sp % 100 ? (sp / 100).toFixed(2) : sp / 100) + ' on credits this year — Plus gives you ' + S.boot.limits.power + ' a day for £50.', 'See Plus', function () { showRenew(); });
+        else toast(msg);
       }
     }
     if (q.get('billing')) {
