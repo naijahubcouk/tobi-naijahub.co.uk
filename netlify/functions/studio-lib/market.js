@@ -123,8 +123,17 @@ async function ensureSeed() {
   await setJson('market/seeded', { at: core.nowIso(), count: seed.length });
 }
 
+// One-off removals of past seeded listings (e.g. the Mamaki 3.0 event, Oct 2026).
+const RETIRED = ['mp10'];
+async function retireOld() {
+  if (await getJson('market/retired-v1')) return;
+  for (const id of RETIRED) await core.del(lkey(id)).catch(() => {});
+  await setJson('market/retired-v1', { at: core.nowIso(), ids: RETIRED });
+}
+
 async function all() {
   await ensureSeed();
+  await retireOld();
   const keys = await core.listKeys('market/listing/');
   const out = [];
   for (let i = 0; i < keys.length; i += 10) out.push(...(await Promise.all(keys.slice(i, i + 10).map(k => getJson(k)))));

@@ -21,22 +21,6 @@ module.exports = [
   "expires": ""
  },
  {
-  "id": "mp10",
-  "business": "Mamaki",
-  "bizSlug": "",
-  "name": "A Night with Mamaki 3.0",
-  "category": "Events",
-  "price": "",
-  "desc": "An unforgettable evening of food, music, comedy & networking. 📅 18 Oct · 📍 Dagenham, London",
-  "imgs": [
-   "https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2014%2C%202026%2C%2007_36_13%20PM.png"
-  ],
-  "link": "https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi",
-  "wa": "",
-  "btnText": "🎟️ Get Tickets",
-  "expires": ""
- },
- {
   "id": "mp9",
   "business": "GlamwtJade",
   "bizSlug": "glamwtjade-northeast-mua",
