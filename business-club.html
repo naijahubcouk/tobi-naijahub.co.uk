@@ -121,6 +121,24 @@ ul.ticks li:before{content:"";position:absolute;left:2px;top:6px;width:16px;heig
 .price .btn{margin-top:20px}
 .price .small{margin-top:12px;font-size:13.5px;color:rgba(255,255,255,.6);text-align:center}
 
+/* start free */
+.freec{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px;display:grid;gap:22px}
+.freec .ftop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.freec h3{font-size:24px;line-height:1.25}
+.freec .f0{background:var(--gold-l);color:#7A5300;font-weight:800;font-size:14px;padding:4px 12px;border-radius:999px}
+.freec .btn{margin-top:16px}
+.freec .up{margin-top:14px;font-size:14.5px;color:var(--muted)}
+.freec .up a{color:var(--green);font-weight:700}
+.fxlab{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;font-weight:850;color:var(--green);margin-bottom:10px}
+.fxg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fx{background:var(--green-l);border-radius:12px;padding:10px 12px;line-height:1.35}
+.fx b{display:block;font-size:14.5px}
+.fx span{font-size:13px;color:#3D4A5C}
+.hfree{margin-top:14px;font-size:15px}
+.hfree a{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.endfree{margin-top:14px;font-size:15px}
+.endfree a{color:rgba(255,255,255,.85);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
 /* faq */
 .faq{max-width:820px;margin:0 auto}
 .faq details{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px}
@@ -153,6 +171,7 @@ footer a{color:rgba(255,255,255,.75)}
   .step{padding:70px 22px 22px}
   .step:before{top:22px}
   .split{grid-template-columns:1.1fr .9fr}
+  .freec{grid-template-columns:1fr 1fr;padding:34px;gap:34px;align-items:start}
   h2{font-size:34px}
   .sbar{display:none}
 }
@@ -186,6 +205,7 @@ footer a{color:rgba(255,255,255,.75)}
       <a class="btn gold" href="https://buy.stripe.com/8x2eVccnf1U3a287SR4Ni0e" target="_blank" rel="noopener">Join the Business Club →</a>
       <a class="btn ghost" href="#included">See what’s included</a>
     </div>
+    <div class="hfree">Not ready yet? <a href="/studio?start=free">Start free with Business Studio →</a></div>
     <div class="trust"><span>🔒 Secure payment by Stripe</span><span>📅 12 months’ membership</span><span>💬 Questions? We’re on WhatsApp</span></div>
   </div>
   <div class="mcard" aria-hidden="true">
@@ -276,6 +296,32 @@ footer a{color:rgba(255,255,255,.75)}
   </div>
 </div></section>
 
+<!-- START FREE -->
+<section style="padding-top:0" id="free"><div class="wrap">
+  <div class="freec">
+    <div>
+      <div class="eyebrow">Not ready to join?</div>
+      <div class="ftop"><h3>Start free with Business Studio</h3><span class="f0">£0 · No card needed</span></div>
+      <ul class="ticks"><li>5 daily AI credits</li><li>Customers &amp; follow-ups, to-do list, content calendar, tracker, quotes &amp; invoices — unlimited</li><li>The everyday AI tools</li><li>Business Studio Tutorials, Start Here lessons and starter templates</li></ul>
+      <a class="btn gold" href="/studio?start=free">Start free →</a>
+      <p class="up">Upgrade to the Business Club any time for promotion by Auntie Tobi, 20 daily AI credits and the full lessons and templates library. <a href="/business-studio">More about Business Studio →</a></p>
+    </div>
+    <div>
+      <div class="fxlab">Included on every plan</div>
+      <div class="fxg">
+        <div class="fx"><b>💡 Daily content idea</b><span>A fresh idea for your business every day</span></div>
+        <div class="fx"><b>🔔 Follow-up reminders</b><span>Never forget an enquiry again</span></div>
+        <div class="fx"><b>🧾 Quotes &amp; invoices</b><span>With your bank details, ready to send</span></div>
+        <div class="fx"><b>🛍️ Price list page</b><span>Your prices + WhatsApp ordering link</span></div>
+        <div class="fx"><b>🖼️ Branded images</b><span>Post and Story graphics in your colours</span></div>
+        <div class="fx"><b>⭐ Review link &amp; QR</b><span>Make it easy for customers to review you</span></div>
+        <div class="fx"><b>📊 Results tracker</b><span>Enquiries, bookings and sales in one place</span></div>
+        <div class="fx"><b>✅ To-do list</b><span>Your business tasks in one list</span></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
 <!-- FAQ -->
 <section style="padding-top:0"><div class="wrap">
   <div class="head center"><div class="eyebrow">Questions</div><h2>Good to know</h2></div>
@@ -294,6 +340,7 @@ footer a{color:rgba(255,255,255,.75)}
   <h2>Let’s grow your business together 💚</h2>
   <p class="sub">One membership. Promotion, tools and support — all year round. <b style="color:var(--gold)">£50 a year.</b></p>
   <a class="btn gold" href="https://buy.stripe.com/8x2eVccnf1U3a287SR4Ni0e" target="_blank" rel="noopener">Join the Business Club →</a>
+  <div class="endfree">or <a href="/studio?start=free">start free with Business Studio</a></div>
   <p class="disc">Our goal is to help expose your business to more potential customers and support your growth. We do not guarantee views, enquiries, bookings or sales.</p>
 </div></div>
 <footer>Auntie Tobi · <a href="/">auntietobi.co.uk</a> · <a href="/business-studio">Business Studio</a></footer>
