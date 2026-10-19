@@ -5065,6 +5065,12 @@ function showLinksPage() {
       <span style="color:rgba(255,255,255,0.8);">&#8250;</span>
     </a>
 
+    <a href="/business-studio" style="display:flex;align-items:center;gap:12px;background:#0F1E36;color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #0F1E36;font-size:14px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+      <span style="font-size:20px;">&#128640;</span>
+      <span style="flex:1;text-align:left;">Business Studio<span style="display:block;font-size:11px;color:rgba(255,255,255,0.8);font-weight:400;margin-top:1px;">Free tools to manage customers, plan content and grow your business</span></span>
+      <span style="color:rgba(255,255,255,0.7);">&#8250;</span>
+    </a>
+
     <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
       <div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector('img').src)">
         <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>
@@ -8776,14 +8782,15 @@ function resetToWelcome() {
       addTipMessage('<div data-club-card="1" style="background:linear-gradient(135deg,#057A44,#04603a);border-radius:12px;padding:14px 16px;color:white;">'
         + '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💚 Own a business? Join the Auntie Tobi Business Club</div>'
         + '<div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.9);margin-bottom:10px;">Get seen by more Nigerians in the UK — Spotlight, Featured Business, Marketplace &amp; your own Business Studio.</div>'
-        + '<a href="/business-club" style="display:inline-block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:800;padding:9px 16px;border-radius:20px;">Join the Business Club →</a></div>');
+        + '<a href="/business-club" style="display:inline-block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:800;padding:9px 16px;border-radius:20px;">Join the Business Club →</a>'
+        + '<div style="margin-top:10px;"><a href="/business-studio" style="color:white;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px;">Or try Business Studio free →</a></div></div>');
       showSponsoredAd();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
