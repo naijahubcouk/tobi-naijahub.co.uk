@@ -1526,7 +1526,7 @@ A: Yes. If you earn over £12,570/year (personal allowance 2026), you pay income
 
 === EVENTS (2026) ===
 
-1. A Night with Mamaki 3.0 – Food, Music, Comedy & Networking in Dagenham | Sunday 18 October 2026 | auntietobi.com/blog/A-Night-with-Mamaki-3.0-Food-Music-Comedy-and-Networking-in-Dagenham
+No upcoming events are listed right now. If asked about events, suggest checking the Events section on Auntie Tobi for the latest.
 
 === BLOG ARTICLES ON AUNTIE TOBI ===
 
@@ -5066,23 +5066,6 @@ function showLinksPage() {
     </a>
 
     <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-      <div style="position:relative;background:#0F1E36;">
-        <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Event</div>
-        <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2014%2C%202026%2C%2007_36_13%20PM.png" style="width:100%;display:block;object-fit:contain;">
-      </div>
-      <div style="background:white;padding:14px 16px 16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#127869;&#65039;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">&#127881; Event</span></div>
-        <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">A Night with Mamaki 3.0 &mdash; Dagenham</div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">
-          <div style="font-size:12px;color:#555;">&#128197; Sunday 18 October 2026 &middot; 5pm&ndash;10pm</div>
-          <div style="font-size:12px;color:#555;">&#128205; Dagenham, London</div>
-          <div style="font-size:12px;color:#555;">&#127858; Food &middot; Music &middot; Comedy &middot; Networking</div>
-        </div>
-        <a href="https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#127903;&#65039; Get Tickets</a>
-      </div>
-    </div>
-
-    <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
       <div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector('img').src)">
         <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>
         <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png" style="width:100%;display:block;object-fit:contain;">
@@ -5415,21 +5398,6 @@ var MARKETPLACE_PRODUCTS = [
     link: '',
     btnText: 'Buy Now',
     wa: '447774150323',
-  },
-  {
-    id: 'mp10',
-    name: 'A Night with Mamaki 3.0',
-    shortName: 'A Night with Mamaki 3.0',
-    business: 'Mamaki',
-    bizSlug: '',
-    category: 'Events',
-    emoji: '🎉',
-    img: 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2014%2C%202026%2C%2007_36_13%20PM.png',
-    price: '',
-    desc: 'An unforgettable evening of food, music, comedy & networking. 📅 18 Oct · 📍 Dagenham, London',
-    link: 'https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi',
-    btnText: '🎟️ Get Tickets',
-    wa: '',
   },
   {
     id: 'mp9',
@@ -5806,27 +5774,6 @@ function showFeaturedBusinesses() {
 }
 
 
-
-function showFeaturedEventCard() {
-  var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2014%2C%202026%2C%2007_36_13%20PM.png';
-  var ticketUrl = 'https://www.eventbrite.com/e/a-night-with-mamaki-30-tickets-1998216584595?utm_source=auntietobi';
-  var html = '<div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
-    + '<div style="position:relative;cursor:pointer;background:#0F1E36;" onclick="tobi_imgZoom(this.querySelector(\'img\').src)">'
-    + '<div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Event</div>'
-    + '<img src="' + imgUrl + '" style="width:100%;display:block;object-fit:contain;">'
-    + '</div>'
-    + '<div style="background:white;padding:14px 16px 16px;">'
-    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#127869;&#65039;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">&#127881; Event</span></div>'
-    + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">A Night with Mamaki 3.0 &mdash; Dagenham</div>'
-    + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">'
-    + '<div style="font-size:12px;color:#555;">&#128197; Sunday 18 October 2026 &middot; 5pm&ndash;10pm</div>'
-    + '<div style="font-size:12px;color:#555;">&#128205; Dagenham, London</div>'
-    + '<div style="font-size:12px;color:#555;">&#127858; Food &middot; Music &middot; Comedy &middot; Networking</div>'
-    + '</div>'
-    + '<a href="' + ticketUrl + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#127903;&#65039; Get Tickets</a>'
-    + '</div></div>';
-  addTipMessage(html);
-}
 
 function showXanderFeatureCard() {
   var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png';
@@ -7698,7 +7645,6 @@ function _renderNotifBanner(notif) {
 const ALL_EVENTS = [
   { emoji:'😂', title:"Nigerian Comedy in Belfast: MC Casino's Funny By Nature", summary:"Nigerian comedy, music, food and entertainment at Botanic Inn Belfast.", date:'6 Sep 2026', dateObj:new Date(2026,8,6), loc:'Belfast', time:'Sun 6 Sep, 5pm–11pm', url:'https://auntietobi.com/blog/Nigerian-Comedy-Comes-to-Belfast:-MC-Casino\'s-Funny-By-Nature-Live-This-September' },
   { emoji:'🎓', title:'Free Nigerian Student Welcome Workshop — Glasgow', summary:'University of Strathclyde Nigeria Society Welcome Workshop for new Nigerian students.', date:'21 Sep 2026', dateObj:new Date(2026,8,21), loc:'Glasgow', time:'Mon 21 Sep, 4pm–7pm', url:'https://auntietobi.com/blog/New-Nigerian-Student-in-Glasgow-This-Free-Welcome-Workshop-Could-Help-You-Settle-In' },
-  { emoji:'🍽️', title:'A Night with Mamaki 3.0 — Dagenham', summary:'Food, drinks, music, comedy, dancing and networking.', date:'18 Oct 2026', dateObj:new Date(2026,9,18), loc:'Dagenham', time:'Sun 18 Oct, 5pm–10pm', url:'https://auntietobi.com/blog/A-Night-with-Mamaki-3.0-Food-Music-Comedy-and-Networking-in-Dagenham' },
 ];
 
 function showUpcomingEventCard() {
@@ -8826,7 +8772,6 @@ function resetToWelcome() {
       console.log('tipHtml built');
       addTipMessage(tipHtml);
       console.log('message added');
-      showFeaturedEventCard();
       showXanderFeatureCard();
       addTipMessage('<div data-club-card="1" style="background:linear-gradient(135deg,#057A44,#04603a);border-radius:12px;padding:14px 16px;color:white;">'
         + '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💚 Own a business? Join the Auntie Tobi Business Club</div>'
