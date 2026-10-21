@@ -261,6 +261,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       '<div class="row">' + (t.isMember ? '<button class="btn small ghost" id="mRec">Open record</button>' : '') + (t.messages.length ? '<button class="btn small ghost" id="mDone">' + (t.done ? '↩ Move to inbox' : '✓ Done') + '</button>' : '') + '</div></div>' +
       '<div class="mlist" id="mList" data-email="' + esc(email) + '" data-n="' + t.messages.length + '" data-seen="' + esc(t.memberReadAt) + '">' + bubbles(t) + '</div>' +
       '<div class="mqr hidden" id="mQr">' + (S.msg.quick || []).map(function (x, i) { return '<button class="chip" data-qr="' + i + '">' + esc(x.length > 60 ? x.slice(0, 57) + '…' : x) + '</button>'; }).join('') + '</div>' +
+      (t.isMember ? '<label class="row mmail" style="gap:8px;margin:0;padding:8px 14px 0;font-weight:600;font-size:15px;flex-wrap:nowrap;align-items:center"><input type="checkbox" id="mEmail" style="width:18px;height:18px;flex:0 0 auto;margin:0"> 📧 Also send as email <span class="muted" style="font-weight:400">— they get it in their inbox straight away</span></label>' : '') +
       '<form class="mcomp" id="mForm"><button type="button" class="btn small ghost" id="mQrBtn" title="Quick replies">⚡</button><textarea id="mIn" rows="2" maxlength="' + (S.msg.max || 2000) + '" placeholder="Reply to ' + esc(t.name || email) + '… (Enter to send, Shift+Enter for a new line)">' + esc(draft) + '</textarea><button class="btn primary" id="mSend">Send</button></form>';
     var ml = $('#mList'); ml.scrollTop = ml.scrollHeight;
     var inp = $('#mIn'); inp.focus();
@@ -271,7 +272,8 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     $('#mForm').onsubmit = async function (e) {
       e.preventDefault(); var text = inp.value.trim(); if (!text) return;
       $('#mSend').disabled = true;
-      try { await api('msg-send', { email: email, text: text }); inp.value = ''; if (S.msgDrafts) delete S.msgDrafts[email]; await openThread(email, true); var l = $('#mList'); if (l) l.scrollTop = l.scrollHeight; }
+      var me2 = $('#mEmail'), wantMail = !!(me2 && me2.checked);
+      try { var sr = await api('msg-send', { email: email, text: text, alsoEmail: wantMail }); if (wantMail) { toast(sr.emailed ? 'Sent ✓ and emailed 📧' : 'Sent ✓ — but the email couldn’t be sent'); me2.checked = false; } inp.value = ''; if (S.msgDrafts) delete S.msgDrafts[email]; await openThread(email, true); var l = $('#mList'); if (l) l.scrollTop = l.scrollHeight; }
       catch (x) { toast(x.message); }
       var sb = $('#mSend'); if (sb) sb.disabled = false;
     };
@@ -282,7 +284,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     if (!t.messages.length) return '<p class="muted" style="text-align:center;margin:30px 0">No messages yet — say hello 👋</p>';
     return t.messages.map(function (m) {
       var me = m.from === 'admin';
-      return '<div class="bub ' + (me ? 'me' : 'them') + '"><div class="bt">' + mLink(m.text) + '</div><div class="bm">' + esc(mTime(m.at)) + (me ? (m.seen ? ' · Seen' : ' · Sent ✓') : '') + '</div></div>';
+      return '<div class="bub ' + (me ? 'me' : 'them') + '"><div class="bt">' + mLink(m.text) + '</div><div class="bm">' + esc(mTime(m.at)) + (me ? (m.seen ? ' · Seen' : ' · Sent ✓') + (m.emailed ? ' · 📧 Emailed' : '') : '') + '</div></div>';
     }).join('');
   }
   function newMsgSheet() {
@@ -327,7 +329,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   }
   async function welcomeSheet(series) {
     series = series === 'free' || series === 'plus' ? series : 'club';
-    var free = series === 'free', plus = series === 'plus', mail = free || plus;
+    var free = series === 'free', plus = series === 'plus';
     var WHO = { club: 'Business Club members', plus: 'Business Studio Plus members (without the Club)', free: 'Free plan accounts' };
     var w; try { w = (await api('msg-welcome-get', { series: series })).welcome; } catch (x) { toast(x.message); return; }
     var dayLabel = function (n) { return n === 0 ? 'Straight away' : 'Day ' + n; };
@@ -335,19 +337,37 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
       '<div class="row" style="justify-content:space-between"><h2 style="margin:0">👋 ' + ({ club: 'Business Club welcome series', plus: 'Plus welcome series', free: 'Free plan welcome series' })[series] + '</h2>' +
       '<label class="row" style="gap:8px;font-weight:700;margin:0"><input type="checkbox" id="wOn"' + (w.on ? ' checked' : '') + ' style="width:20px;height:20px"> ' + (w.on ? '<span class="pill p-active">On</span>' : '<span class="pill p-inactive">Off</span>') + '</label></div>' +
       '<p class="muted" style="margin:0">Messages go into each <b>new</b> member’s private chat from Auntie Tobi, with a push notification — between 9am and 7pm UK time. Only ' + WHO[series] + ' who join ' + (w.since ? 'after <b>' + esc(d(w.since)) + '</b>' : 'after you switch it on') + ' get them — it stops if their plan changes (they move to that plan’s series). <b>{business}</b> = their business name. Replies come to your inbox.</p>' +
-      (mail ? '<label class="row" style="gap:8px;margin:0;font-weight:600;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="wEmail"' + (w.email ? ' checked' : '') + ' style="width:20px;height:20px;flex:0 0 auto"> Also send each message as a short email (with an unsubscribe link)</label>' : '') +
+      '<div class="card stack" style="padding:12px;gap:6px;background:#F4FAF6;border-color:#CFEBDB"><label class="row" style="gap:8px;margin:0;font-weight:700;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="wEmail"' + (w.email ? ' checked' : '') + ' style="width:20px;height:20px;flex:0 0 auto"> 📧 Also send messages as a short email (with an unsubscribe link)</label>' +
+      '<span class="muted" style="font-size:14.5px">Choose which ones with the <b>📧 Email this one</b> tick on each message. The email looks like the chat message, with an Open Business Studio button. <button type="button" class="btn link" id="wPrev" style="padding:0;min-height:0;font-size:14.5px">Preview the email →</button></span></div>' +
       (!w.on && !w.since ? '<label class="row" style="gap:8px;margin:0;font-weight:500;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="wRecent" style="width:20px;height:20px;flex:0 0 auto"> When I switch it on, also include ' + ({ club: 'Club members', plus: 'Plus members', free: 'Free members' })[series] + ' who joined in the last 14 days</label>' : '') +
       w.steps.map(function (st, i) {
         return '<div class="card stack wstep" data-wid="' + esc(st.id) + '" style="padding:12px;gap:8px"><div class="row" style="justify-content:space-between;align-items:center"><b>Message ' + (i + 1) + '</b>' +
           '<span class="muted" style="font-size:14.5px">Sent to ' + ((w.stats || {})[st.id] || 0) + ' member' + (((w.stats || {})[st.id] || 0) === 1 ? '' : 's') + '</span></div>' +
           '<div class="row" style="gap:8px;align-items:center"><label style="margin:0;font-weight:600">Send</label><input type="number" min="0" max="90" class="wDays" value="' + st.days + '" style="width:80px"><span class="muted wLab">' + (st.days === 0 ? 'day(s) after joining · straight away' : 'day(s) after joining') + '</span>' +
-          '<label class="row" style="gap:6px;margin:0 0 0 auto;font-weight:600"><input type="checkbox" class="wOnStep"' + (st.on ? ' checked' : '') + '> Send this one</label></div>' +
-          (mail ? '<label style="margin:0;font-weight:600;font-size:14.5px">Email subject <span class="muted" style="font-weight:400">(used when emails are on)</span><input class="wSubj" maxlength="120" placeholder="Email subject" value="' + esc(st.subject || '') + '" style="margin-top:4px"></label>' : '') +
+          '<label class="row" style="gap:8px;margin:0 0 0 auto;font-weight:600;flex-wrap:nowrap;align-items:center"><input type="checkbox" class="wOnStep"' + (st.on ? ' checked' : '') + ' style="width:20px;height:20px;flex:0 0 auto;margin:0"> Send this one</label></div>' +
+          '<div class="wMail stack" style="gap:6px;background:#F4FAF6;border:1px solid #CFEBDB;border-radius:10px;padding:8px 10px"><label class="row" style="gap:8px;margin:0;font-weight:600;flex-wrap:nowrap;align-items:center"><input type="checkbox" class="wEm"' + (st.email !== false ? ' checked' : '') + ' style="width:20px;height:20px;flex:0 0 auto;margin:0"> 📧 Email this one too</label>' +
+          '<label class="wSubjL" style="margin:0;font-weight:600;font-size:14.5px">Email subject<input class="wSubj" maxlength="120" placeholder="Email subject" value="' + esc(st.subject || '') + '" style="margin-top:4px"></label></div>' +
           '<textarea class="wText" rows="4" maxlength="2000">' + esc(st.text) + '</textarea></div>';
       }).join('') +
       '<div class="card stack" style="padding:12px;gap:8px"><b>➕ Add a member to the series</b><p class="muted" style="margin:0;font-size:15px">For members who joined before it was switched on. Their series starts today — Message 1 within the hour (9am–7pm), then the rest on their days. Nobody gets the same message twice.</p>' +
       '<div class="row" style="flex-wrap:nowrap"><input type="email" id="wAddE" placeholder="member@email.com" style="flex:1"><button class="btn small" id="wAdd">Add</button></div><div id="wMan"></div></div>' +
       '<div class="err hidden" id="wErr"></div><div class="row"><button class="btn primary" id="wSave">Save</button><button class="btn ghost" id="wX">Close</button></div>');
+    // Email choices: the main tick turns email on/off for the series (ticking it ticks every message); each message can be unticked.
+    var mailUi = function () {
+      var on = $('#wEmail', s2).checked;
+      $$('.wMail', s2).forEach(function (m) { m.classList.toggle('hidden', !on); var sl = $('.wSubjL', m); sl.classList.toggle('hidden', !$('.wEm', m).checked); });
+    };
+    $('#wEmail', s2).onchange = function () { if (this.checked && !$$('.wEm', s2).some(function (c) { return c.checked; })) $$('.wEm', s2).forEach(function (c) { c.checked = true; }); mailUi(); };
+    $$('.wEm', s2).forEach(function (c) { c.onchange = mailUi; });
+    mailUi();
+    $('#wPrev', s2).onclick = function () {
+      var first = $$('.wstep', s2).filter(function (c) { return $('.wEm', c).checked; })[0] || $$('.wstep', s2)[0];
+      var t = $('.wText', first).value.replace(/\{business\}/g, 'Ada Cakes'), sj = $('.wSubj', first).value.replace(/\{business\}/g, 'Ada Cakes');
+      api('msg-email-preview', { text: t, kind: 'welcome', series: series }).then(function (r) {
+        var p2 = sheet('<h2 style="margin:0">📧 Email preview</h2><p class="muted" style="margin:0">Subject: <b>' + esc(sj || 'A message from Auntie Tobi 💚') + '</b> · shown for “Ada Cakes”</p><iframe id="wPf" style="width:100%;height:60vh;border:1px solid #E5E7EB;border-radius:12px;background:#fff"></iframe><button class="btn ghost" id="wPx">Close</button>');
+        $('#wPf', p2).srcdoc = r.html; $('#wPx', p2).onclick = function () { p2.remove(); };
+      }).catch(function (x) { toast(x.message); });
+    };
     $$('.wDays', s2).forEach(function (inp) { inp.oninput = function () { var lab = inp.parentNode.querySelector('.wLab'); lab.textContent = Number(inp.value) === 0 ? 'day(s) after joining · straight away' : 'day(s) after joining'; }; });
     var drawMan = function () {
       var em = Object.keys(w.manual || {}).sort(function (a, b) { return (w.manual[b].at || '').localeCompare(w.manual[a].at || ''); });
@@ -365,7 +385,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
     $('#wX', s2).onclick = function () { s2.remove(); };
     $$('[data-wser]', s2).forEach(function (b) { b.onclick = function () { if (b.dataset.wser === series) return; s2.remove(); welcomeSheet(b.dataset.wser); }; });
     $('#wSave', s2).onclick = async function () {
-      var steps = $$('.wstep', s2).map(function (c) { var o = { id: c.dataset.wid, days: Number($('.wDays', c).value), on: $('.wOnStep', c).checked, text: $('.wText', c).value }; var sj = $('.wSubj', c); if (sj) o.subject = sj.value; return o; });
+      var steps = $$('.wstep', s2).map(function (c) { var o = { id: c.dataset.wid, days: Number($('.wDays', c).value), on: $('.wOnStep', c).checked, text: $('.wText', c).value, email: $('.wEm', c).checked }; var sj = $('.wSubj', c); if (sj) o.subject = sj.value; return o; });
       var on = $('#wOn', s2).checked, rc = $('#wRecent', s2), em = $('#wEmail', s2);
       if (on && !w.on && !confirm('Switch on the ' + ({ club: 'Business Club', plus: 'Plus', free: 'Free plan' })[series] + ' welcome series? ' + WHO[series] + ' who join from now on' + (rc && rc.checked ? ' (and those who joined in the last 14 days)' : '') + ' will get these messages automatically.')) return;
       var body = { on: on, steps: steps, includeRecent: !!(rc && rc.checked) }; if (em) body.email = em.checked;

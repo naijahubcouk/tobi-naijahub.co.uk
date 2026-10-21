@@ -548,8 +548,15 @@ exports.handler = handler(async (ctx) => {
       if (!m) throw new HttpError(404, 'not_found', 'That person isn’t a Business Studio member.');
       const { msg } = await messages.addMessage(email, 'admin', body.text);
       await notify.pushToMember(email, 'Auntie Tobi replied 💬', msg.text.length > 120 ? msg.text.slice(0, 117) + '…' : msg.text, { always: true, path: '/studio#messages' });
-      await core.audit(actor, 'msg_send', { email });
-      return { msg };
+      // Optional: also email this reply now (chat-style email). The hourly unread reminder then skips it.
+      let emailed = false;
+      if (body.alsoEmail === true) {
+        const mail = require('../msg-email').build({ text: msg.text, intro: 'Auntie Tobi replied to you in Business Studio:', button: 'Open Business Studio to reply →' });
+        emailed = !!(await core.sendEmail([email], 'Auntie Tobi replied to your message 💬', mail.text, mail.html).catch(e => { console.error('[studio] reply email failed', e && e.message); return false; }));
+        if (emailed) { await messages.markEmailed(email, msg.id); msg.emailed = true; }
+      }
+      await core.audit(actor, 'msg_send', { email, emailed });
+      return { msg, emailed };
     }
     case 'msg-done': {
       await messages.setDone(requireEmail(body.email), !!body.done);
@@ -563,6 +570,14 @@ exports.handler = handler(async (ctx) => {
       await notify.pushToMany(to, 'Message from Auntie Tobi 📣', item.text.length > 120 ? item.text.slice(0, 117) + '…' : item.text);
       await core.audit(actor, 'msg_announce', { audience: item.audience, n: to.length });
       return { item, reached: to.length, announcements: await messages.announcements() };
+    }
+    case 'msg-email-preview': {
+      const text = core.cleanText(String(body.text || '').replace(/\r/g, ''), 2000) ? String(body.text).slice(0, 2000) : 'Hello 👋';
+      const reason = { club: 'You’re getting this because you joined the Auntie Tobi Business Club.', plus: 'You’re getting this because you joined Auntie Tobi Business Studio Plus.', free: 'You’re getting this because you joined Auntie Tobi Business Studio.' }[body.series] || '';
+      const mail = require('../msg-email').build(body.kind === 'reply'
+        ? { text, intro: 'Auntie Tobi replied to you in Business Studio:', button: 'Open Business Studio to reply →' }
+        : { text, link: core.appUrl(), reason, unsub: '#', unsubLabel: 'Stop these welcome emails' });
+      return { html: mail.html };
     }
     case 'msg-welcome-get': return { welcome: await require('../welcome').get(body.series) };
     case 'msg-welcome-add': {

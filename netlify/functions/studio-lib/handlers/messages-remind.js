@@ -24,12 +24,8 @@ async function run() {
     if (!st) continue;
     const link = `${core.appUrl()}#messages`;
     const preview = st.last.text.length > 400 ? st.last.text.slice(0, 400) + '…' : st.last.text;
-    const text = `Hi,\n\nAuntie Tobi replied to your message in Business Studio:\n\n“${preview}”\n\nRead and reply: ${link}\n\n— Auntie Tobi Business Studio`;
-    const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#0F1E36;max-width:520px">
-<p>Hi,</p><p>Auntie Tobi replied to your message in Business Studio:</p>
-<blockquote style="margin:0 0 16px;padding:10px 14px;background:#FBF6EC;border-left:4px solid #FFB81C;border-radius:6px;white-space:pre-wrap">${esc(preview)}</blockquote>
-<p><a href="${link}" style="display:inline-block;background:#057A44;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:700">Read and reply</a></p>
-<p style="font-size:12px;color:#5B6475">— Auntie Tobi Business Studio</p></div>`;
+    const mail = require('../msg-email').build({ text: preview, intro: 'Auntie Tobi replied to your message in Business Studio:', link, button: 'Read and reply →' });
+    const text = mail.text, html = mail.html;
     try {
       const ok = await core.sendEmail([email], 'Auntie Tobi replied to your message 💬', text, html);
       if (ok) { await messages.markEmailed(email, st.last.id); report.emailed++; }
