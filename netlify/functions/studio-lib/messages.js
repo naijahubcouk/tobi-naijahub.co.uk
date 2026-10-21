@@ -191,6 +191,9 @@ async function staleUnread(email, olderThanMs) {
   if (t.emailedFor && t.emailedFor >= last.id) return null;
   return { last, count: pending.length };
 }
-async function markEmailed(email, id) { await cas(tKey(email), cur => (cur ? { ...cur, emailedFor: id } : undefined)); }
+// Remember that a reply was emailed (so the unread reminder doesn't email it again) and flag the message for Admin.
+async function markEmailed(email, id) {
+  await cas(tKey(email), cur => (cur ? { ...cur, emailedFor: cur.emailedFor && cur.emailedFor > id ? cur.emailedFor : id, messages: cur.messages.map(m => (m.id === id ? { ...m, emailed: true } : m)) } : undefined));
+}
 
 module.exports = { savedAnnouncements, saveAnnouncementDraft, deleteAnnouncementDraft, memberView, memberUnread, addMessage, inbox, adminThread, setDone, unreadForAdmin, quick, saveQuick, announcements, announce, deleteAnnouncement, inAudience, staleUnread, markEmailed, AUDIENCES, MAX_TEXT };

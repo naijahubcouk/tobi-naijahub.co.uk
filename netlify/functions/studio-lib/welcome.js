@@ -12,7 +12,9 @@
  *
  * Three series: 'club' (Business Club — keys above), 'plus' (Business Studio Plus/Pro without the Club) and 'free' (Free plan):
  *   msg/welcome-plus / msg/welp/<email>   (Plus)
- *   msg/welcome-free       same shape, plus email: true|false (also send each message as a short email)
+ *   msg/welcome-free       same shape
+ * Every series also has email: true|false (also send messages as a short chat-style email) and each step
+ * has email: true|false (which messages go by email; missing = true).
  *   msg/welf/<email>       per member
  * The Free series stops as soon as someone upgrades.
  */
@@ -28,11 +30,11 @@ const progKeyS = (x, e) => `${({ free: 'msg/welf/', plus: 'msg/welp/', club: 'ms
 const KEY = cfgKey('club');
 const progKey = e => progKeyS('club', e);
 const DEFAULT_STEPS = [
-  { id: 'w1', days: 0, on: true, text: 'Welcome to the Business Club, {business} 💚 I’m so glad you’re here! Start with Today → ⭐ What should I post? for ready-to-use ideas made for your business. Any questions, just reply here.' },
-  { id: 'w2', days: 1, on: true, text: 'Quick tip: everything you create can be saved — tap ☆ Save to Library and find it later in Library → ★ Saved. Also try Today’s content idea: a fresh idea every day.' },
-  { id: 'w3', days: 3, on: true, text: 'Have you claimed your member benefits? Get your ✅ Verified badge (Account → My benefits → Verify your Business) and add your product to the Auntie Tobi Marketplace — both help customers trust and find you.' },
-  { id: 'w4', days: 7, on: true, text: 'One week in 🎉 Explore Create → All tools: 29 tools for posts, offers, customer messages and growth plans. Try the 30-day growth plan and add the actions straight to your to-do list.' },
-  { id: 'w5', days: 14, on: true, text: 'How’s Business Studio working for you so far, {business}? What’s one thing you’d love it to do for your business? Just reply — I read every message 💚' },
+  { id: 'w1', subject: 'Welcome to the Business Club 💚', days: 0, on: true, text: 'Welcome to the Business Club, {business} 💚 I’m so glad you’re here! Start with Today → ⭐ What should I post? for ready-to-use ideas made for your business. Any questions, just reply here.' },
+  { id: 'w2', subject: 'Save everything you create', days: 1, on: true, text: 'Quick tip: everything you create can be saved — tap ☆ Save to Library and find it later in Library → ★ Saved. Also try Today’s content idea: a fresh idea every day.' },
+  { id: 'w3', subject: 'Claim your member benefits', days: 3, on: true, text: 'Have you claimed your member benefits? Get your ✅ Verified badge (Account → My benefits → Verify your Business) and add your product to the Auntie Tobi Marketplace — both help customers trust and find you.' },
+  { id: 'w4', subject: 'One week in 🎉', days: 7, on: true, text: 'One week in 🎉 Explore Create → All tools: 29 tools for posts, offers, customer messages and growth plans. Try the 30-day growth plan and add the actions straight to your to-do list.' },
+  { id: 'w5', subject: 'How’s it going, {business}?', days: 14, on: true, text: 'How’s Business Studio working for you so far, {business}? What’s one thing you’d love it to do for your business? Just reply — I read every message 💚' },
 ];
 const FREE_STEPS = [
   { id: 'f1', days: 0, on: true, subject: 'Welcome to Auntie Tobi Business Studio 💚', text: 'Welcome to Auntie Tobi Business Studio, {business} 💚 Start with Resources → Start Here — five short, free lessons that help you see where your business is now and what to focus on first. Any questions, just reply here.' },
@@ -51,10 +53,11 @@ const PLUS_STEPS = [
   { id: 'p6', days: 21, on: true, subject: 'Three weeks in 🎉', text: 'Three weeks in 🎉 How is Plus working for you, {business}? Tell me one thing you’d love Business Studio to do for your business — just reply, I read every message 💚' },
 ];
 const defaultsFor = x => ({ free: FREE_STEPS, plus: PLUS_STEPS, club: DEFAULT_STEPS })[ser(x)];
-const hasEmail = x => ser(x) !== 'club';
-const empty = (x) => ({ on: false, since: '', steps: defaultsFor(x).map(s => ({ ...s })), stats: {}, manual: {}, ...(hasEmail(x) ? { email: false } : {}) });
+const empty = (x) => ({ on: false, since: '', steps: defaultsFor(x).map(s => ({ ...s, email: true })), stats: {}, manual: {}, email: false });
+// Steps saved before per-message email choices existed count as "email this one".
+const withStepEmail = st => st.map(s => ({ ...s, email: s.email !== false }));
 
-async function get(x) { const c = await getJson(cfgKey(x)); return c ? { ...empty(x), ...c, stats: c.stats || {}, manual: c.manual || {} } : empty(x); }
+async function get(x) { const c = await getJson(cfgKey(x)); return c ? { ...empty(x), ...c, steps: withStepEmail(c.steps || empty(x).steps), stats: c.stats || {}, manual: c.manual || {} } : empty(x); }
 
 async function save(raw, x) {
   raw = raw && typeof raw === 'object' ? raw : {};
@@ -72,10 +75,11 @@ async function save(raw, x) {
         if (r.on !== false && text.length < 5) throw new HttpError(400, 'invalid', 'Each message that is switched on needs some text.');
         if (text.length > 2000) throw new HttpError(400, 'too_long', 'Please keep each message under 2000 characters.');
         const subject = r.subject !== undefined ? core.cleanText(r.subject, 120) : s.subject;
-        return { id: s.id, days, text: text || s.text, on: r.on !== false, ...(subject ? { subject } : {}) };
+        const email = typeof r.email === 'boolean' ? r.email : s.email !== false;
+        return { id: s.id, days, text: text || s.text, on: r.on !== false, email, ...(subject ? { subject } : {}) };
       });
     }
-    if (hasEmail(x) && typeof raw.email === 'boolean') c.email = raw.email;
+    if (typeof raw.email === 'boolean') c.email = raw.email;
     if (typeof raw.on === 'boolean') {
       // First switch-on decides who counts as "new". Optionally include people who joined in the last 14 days.
       if (raw.on && !c.on && !c.since) c.since = raw.includeRecent ? new Date(Date.now() - 14 * core.DAY).toISOString() : core.nowIso();
@@ -149,12 +153,15 @@ async function runSeries(opts, x) {
     const biz = (prof && prof.businessName) || 'there';
     const text = next.text.replace(/\{business\}/g, biz);
     try {
-      await messages.addMessage(m.email, 'admin', text);
+      const { msg } = await messages.addMessage(m.email, 'admin', text);
       p.sent[next.id] = now.toISOString();
       await setJson(progKeyS(x, m.email), p);
       await cas(cfgKey(x), cur => (cur ? { ...cur, stats: { ...(cur.stats || {}), [next.id]: ((cur.stats || {})[next.id] || 0) + 1 } } : undefined));
       await notify.pushToMember(m.email, 'Message from Auntie Tobi 💚', text.length > 120 ? text.slice(0, 117) + '…' : text, { always: true, path: '/studio#messages' });
-      if (hasEmail(x) && cfg.email) await sendWelcomeEmail(m.email, next, text, biz).catch(e => console.error('[studio] welcome email failed', e && e.message));
+      if (cfg.email && next.email !== false) {
+        const ok = await sendWelcomeEmail(m.email, next, text, biz, x).catch(e => { console.error('[studio] welcome email failed', e && e.message); return false; });
+        if (ok) await messages.markEmailed(m.email, msg.id, true).catch(() => {});
+      }
       report.sent++;
     } catch (e) { console.error('[studio] welcome send failed', e && e.message); }
   }
@@ -168,20 +175,20 @@ async function run(opts) {
   return { ...club, plus, free };
 }
 
-// Free series email: short, with a one-click unsubscribe (the chat message is still sent).
-async function sendWelcomeEmail(email, step, text, biz) {
+// Welcome email: short, chat-style, with a one-click unsubscribe (the chat message is still sent).
+const REASON = {
+  club: 'You’re getting this because you joined the Auntie Tobi Business Club.',
+  plus: 'You’re getting this because you joined Auntie Tobi Business Studio Plus.',
+  free: 'You’re getting this because you joined Auntie Tobi Business Studio.',
+};
+async function sendWelcomeEmail(email, step, text, biz, x) {
   const prefs = require('./prefs');
   const pr = await prefs.get(email);
   if (pr.welcomeEmail === false) return false;
   const unsub = `${core.siteBase()}/.netlify/functions/studio-unsubscribe?e=${encodeURIComponent(email)}&t=${prefs.unsubToken(email)}&k=welcome`;
-  const open = core.appUrl();
-  const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const html = `<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;color:#0F1E36;font-size:16px;line-height:1.55">
-<p>${esc(text)}</p><p><a href="${open}" style="display:inline-block;background:#057A44;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:10px">Open Business Studio</a></p>
-<p>Auntie Tobi 💚</p><p style="font-size:12px;color:#6B7280">You’re getting this because you joined Auntie Tobi Business Studio. <a href="${unsub}" style="color:#6B7280">Stop these welcome emails</a></p></div>`;
-  await core.sendEmail([email], (step.subject || 'A tip from Auntie Tobi 💚').replace(/\{business\}/g, biz), `${text}\n\nOpen Business Studio: ${open}\n\nAuntie Tobi 💚\n\nStop these welcome emails: ${unsub}`, html,
-    { 'List-Unsubscribe': `<${unsub}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' });
-  return true;
+  const mail = require('./msg-email').build({ text, link: core.appUrl(), button: 'Open Business Studio →', reason: REASON[ser(x)], unsub, unsubLabel: 'Stop these welcome emails' });
+  return !!(await core.sendEmail([email], (step.subject || 'A message from Auntie Tobi 💚').replace(/\{business\}/g, biz), mail.text, mail.html,
+    { 'List-Unsubscribe': `<${unsub}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }));
 }
 
 module.exports = { get, save, run, runSeries, addMember, removeMember, DEFAULT_STEPS, FREE_STEPS, PLUS_STEPS, SERIES };
