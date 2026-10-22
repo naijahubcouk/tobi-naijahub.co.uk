@@ -4250,9 +4250,8 @@ nav.tabs .navsep{display:none}
     var b = r.benefits, biz = (S.boot.profile && S.boot.profile.businessName) || '[business name]';
     if (!b) { card.innerHTML = '<p class="hint" style="margin:0">Your benefits will show here once your membership dates are set.</p>'; return; }
     function row(ico, title, status, ok, action) {
-      return '<div class="benrow"><span class="benico">' + ico + '</span><div style="flex:1;min-width:0"><b>' + esc(title) + '</b><div class="hint" style="margin:0">' + status + '</div>' + (action || '') + '</div>' + (ok ? '<span class="pill green">✓</span>' : '') + '</div>';
+      return '<div class="benrow"><span class="benico">' + ico + '</span><div style="flex:1;min-width:0"><b>' + esc(title) + '</b>' + (status ? '<div class="hint" style="margin:0">' + status + '</div>' : '') + (action || '') + '</div>' + (ok ? '<span class="pill green">✓</span>' : '') + '</div>';
     }
-    var ask = function (label, text) { return '<a class="btn link" style="font-size:15px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(atWa(text)) + '">' + esc(label) + ' →</a>'; };
     var sp = b.spotlight;
     card.innerHTML = '<p class="hint" style="margin:0">Membership year ends <b>' + esc(dmy(b.yearKey)) + '</b>.' + (b.board ? ' <b>' + b.board.done + ' of ' + b.board.of + '</b> benefits delivered so far.' : '') + '</p>' +
       row('📣', 'Business Spotlight', sp.status === 'done' ? 'Done ' + esc(dmy(sp.date)) + (sp.link ? ' · <a href="' + esc(sp.link) + '" target="_blank" rel="noopener">View</a>' : '') : sp.status === 'scheduled' ? 'Scheduled' + (sp.date ? ' for ' + esc(dmy(sp.date)) : '') : 'Not yet', sp.status === 'done',
@@ -4267,8 +4266,7 @@ nav.tabs .navsep{display:none}
         var n = (b.counts || {})[c[0]] || 0;
         return row(c[1], c[2], n ? n + ' ' + c[3] + (n === 1 ? '' : 's') + ' this membership year' : 'Not yet — they happen through the year', n > 0);
       }).join('') +
-      row('🧭', 'Business Check-Up with Accountability', b.checkup.done ? 'Done ' + esc(dmy(b.checkup.date)) + (b.checkup.priorities.length ? ' · ' + b.prioritiesDone.length + ' of ' + b.checkup.priorities.length + ' priorities done' : '') : 'Not booked yet', b.checkup.done,
-        b.checkup.done ? '' : ask('Book my Check-Up', 'Hi Auntie Tobi, I’m a Business Club member — ' + biz + '. I’d like to book my Business Check-Up. The main thing I’d like help with is: ')) +
+      row('🧭', 'Business Check-Up/Accountability', b.checkup.done ? 'Done ' + esc(dmy(b.checkup.date)) + (b.checkup.priorities.length ? ' · ' + b.prioritiesDone.length + ' of ' + b.checkup.priorities.length + ' priorities done' : '') : '', b.checkup.done) +
       benFeedHtml(b.feed || []);
     $$('[data-gomkt]', card).forEach(function (x) { x.onclick = function () { showMarket(showAccount); }; });
     $$('[data-goverify]', card).forEach(function (x) { x.onclick = function () { showVerify(showAccount); }; });
