@@ -5074,6 +5074,22 @@ function showLinksPage() {
     <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
       <div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector('img').src)">
         <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>
+        <img src="https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805" alt="Abbystoreltd" onerror="this.parentNode.style.display='none'" style="width:100%;display:block;object-fit:contain;max-height:420px;">
+      </div>
+      <div style="background:white;padding:14px 16px 16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#127859;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">Featured Business</span></div>
+        <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">Abbystoreltd</div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">
+          <div style="font-size:12px;color:#555;">&#127859; Household items, cookware, food flasks &amp; kids&#8217; school bags</div>
+          <div style="font-size:12px;color:#555;">&#127881; Party packs &amp; souvenirs &middot; &#128205; Derby</div>
+        </div>
+        <a href="https://abbystoreltd.com/" target="_blank" rel="noopener" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#128717;&#65039; Shop Now</a>
+      </div>
+    </div>
+
+    <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector('img').src)">
+        <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>
         <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png" style="width:100%;display:block;object-fit:contain;">
       </div>
       <div style="background:white;padding:14px 16px 16px;">
@@ -5780,6 +5796,26 @@ function showFeaturedBusinesses() {
 }
 
 
+
+function showAbbyFeatureCard() {
+  var imgUrl = 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805';
+  var shopUrl = 'https://abbystoreltd.com/';
+  var html = '<div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
+    + '<div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector(\'img\').src)">'
+    + '<div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>'
+    + '<img src="' + imgUrl + '" alt="Abbystoreltd" onerror="this.parentNode.style.display=\'none\'" style="width:100%;display:block;object-fit:contain;max-height:420px;">'
+    + '</div>'
+    + '<div style="background:white;padding:14px 16px 16px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#127859;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">Featured Business</span></div>'
+    + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">Abbystoreltd</div>'
+    + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">'
+    + '<div style="font-size:12px;color:#555;">&#127859; Household items, cookware, food flasks &amp; kids&#8217; school bags</div>'
+    + '<div style="font-size:12px;color:#555;">&#127881; Party packs &amp; souvenirs &middot; &#128205; Derby</div>'
+    + '</div>'
+    + '<a href="' + shopUrl + '" target="_blank" rel="noopener" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#128717;&#65039; Shop Now</a>'
+    + '</div></div>';
+  addTipMessage(html);
+}
 
 function showXanderFeatureCard() {
   var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png';
@@ -6494,7 +6530,7 @@ function getRandomSuggestionStr() {
 
 const AUNTIE_TOBI_DIRECTORY = [
   {name:'Hilltoprise Kitchen', slug:'hilltoprise-kitchen', cat:'caterers', loc:'Livingston', desc:'Hilltoprise Kitchen offers delicious meals, catering services, custom food boxes, and personalized gift boxes for different occasions. We focus on quality, care and topnotch customer experience.', wa:'447553880536', ig:'hilltoprisekiitchen'},
-  {name:'Abbystoreltd', slug:'abbystoreltd', cat:'home & kitchen', loc:'Derby', desc:'We deal in household items, cookwares ,food flask, kids school bags, party packs/ souvenir etc.', wa:'447761572072', ig:'abbystore_uk'},
+  {name:'Abbystoreltd', slug:'abbystoreltd', featured:true, cat:'home & kitchen', loc:'Derby', desc:'We deal in household items, cookwares ,food flask, kids school bags, party packs/ souvenir etc.', wa:'447761572072', ig:'abbystore_uk'},
   {name:'Eventsbykklargesse', slug:'eventsbykklargesse', cat:'event planners', loc:'Suffolk', desc:'Tailored Moments, Timeless Memories. We create beautiful celebrations through curated gifting and thoughtfully executed events.', wa:'447467587855'},
   {name:'GFL BEAUTY HOME', slug:'gfl-beauty-home', cat:'wig vendors', loc:'United Kingdom', desc:'Uncompromising quality. Seamless blending. Flawless installations. We curate the finest virgin and raw hair to give you the ultimate luxury experience.', wa:'447477194811', ig:'hairbygfl_'},
   {name:'Autogelebysunshine_uk', slug:'autogelebysunshine-uk', cat:'gele stylists', loc:'Liverpool', desc:'Autogelesunshine_uk specializes in beautifully crafted Auto Gele, stylish men\'s caps, and elegant turbans for all occasions.', wa:'447760694051', ig:'autogelebysunshine_uk'},
@@ -8778,6 +8814,7 @@ function resetToWelcome() {
       console.log('tipHtml built');
       addTipMessage(tipHtml);
       console.log('message added');
+      showAbbyFeatureCard();
       showXanderFeatureCard();
       addTipMessage('<div data-club-card="1" style="background:linear-gradient(135deg,#057A44,#04603a);border-radius:12px;padding:14px 16px;color:white;">'
         + '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💚 Own a business? Join the Auntie Tobi Business Club</div>'
