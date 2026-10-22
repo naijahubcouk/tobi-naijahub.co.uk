@@ -81,7 +81,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
     <h2 style="margin-top:6px">Your product or service</h2>
     <div><label>Photos <span class="opt">(1 to 4 — the first is the main photo)</span></label><div class="photos" id="photos"></div></div>
     <div><label for="pn">Product or service name</label><input id="pn" maxlength="100" placeholder="e.g. Ankara two-piece set" required></div>
-    <div class="row"><div><label for="cat">Category</label><select id="cat" required><option value="">Choose…</option><option value="Fashion">👗 Fashion</option><option value="Food">🍲 Food</option><option value="Beauty">💄 Beauty</option><option value="Hair">💇🏾‍♀️ Hair</option><option value="Events">🎉 Events</option><option value="Gift Hamper">🎁 Gift Hampers</option><option value="Digital Product">💻 Digital product</option><option value="Other">🛍️ Other</option></select></div>
+    <div class="row"><div><label for="cat">Category</label><select id="cat" required><option value="">Choose…</option><option value="Fashion">👗 Fashion</option><option value="Food">🍲 Food</option><option value="Beauty">💄 Beauty</option><option value="Hair">💇🏾‍♀️ Hair</option><option value="Events">🎉 Events</option><option value="Gift Hamper">🎁 Gift Hampers</option><option value="Digital Product">💻 Digital product</option><option value="Services">🛠️ Services</option><option value="Other">🛍️ Other</option></select></div>
       <div><label for="pr">Price <span class="opt">(optional)</span></label><input id="pr" maxlength="24" placeholder="£45 / from £30"></div></div>
     <div><label for="ds">Short description</label><textarea id="ds" rows="3" maxlength="600" placeholder="What it is, who it’s for, sizes or options, where you deliver." required></textarea></div>
     <div><label>When customers tap the button…</label><div class="chips"><button type="button" class="chip" data-how="wa" aria-pressed="true">💬 Message me on WhatsApp</button><button type="button" class="chip" data-how="link" aria-pressed="false">🔗 Go to my website or booking link</button></div></div>
@@ -108,7 +108,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
 (function () {
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var EMOJI = { Events: '🎉', Hair: '💇🏾‍♀️', 'Gift Hamper': '🎁', 'Digital Product': '💻', Food: '🍲', Beauty: '💄', Fashion: '👗', Other: '🛍️' };
+  var EMOJI = { Events: '🎉', Hair: '💇🏾‍♀️', 'Gift Hamper': '🎁', 'Digital Product': '💻', Food: '🍲', Beauty: '💄', Fashion: '👗', Services: '🛠️', Other: '🛍️' };
   var photos = [], how = 'wa', bizChoice = null;
   // ── "Find your business on Auntie Tobi" picker (links a Marketplace product to the business listing) ──
   function bizPicker(box, initial, onChange, opts) {

@@ -802,7 +802,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   }
 
   // ── Marketplace: review & manage listings ──
-  var MK_EMOJI = { Events: '🎉', Hair: '💇🏾‍♀️', 'Gift Hamper': '🎁', 'Digital Product': '💻', Food: '🍲', Beauty: '💄', Fashion: '👗', Other: '🛍️' };
+  var MK_EMOJI = { Events: '🎉', Hair: '💇🏾‍♀️', 'Gift Hamper': '🎁', 'Digital Product': '💻', Food: '🍲', Beauty: '💄', Fashion: '👗', Services: '🛠️', Other: '🛍️' };
   var MK_ST = { pending: ['New — to review', 'p-pending'], live: ['Live', 'p-active'], live_change_pending: ['Live · change to review', 'p-pending'], live_changes_requested: ['Live · waiting for their edit', 'p-inactive'],
     changes: ['Waiting for their edit', 'p-inactive'], rejected: ['Rejected', 'p-inactive'], hidden: ['Hidden', 'p-inactive'], ended: ['Ended', 'p-inactive'], draft: ['Draft', 'p-inactive'] };
   var MK_SRC = { member: '💚 Club member', public: '🌍 Public form', admin: '🛠️ Added by admin' };
@@ -942,7 +942,7 @@ a.btn.ig{text-decoration:none;color:var(--navy);display:inline-flex;align-items:
   }
 
   async function editMarket(id) {
-    var x = null, cats = ['Fashion', 'Food', 'Beauty', 'Hair', 'Events', 'Gift Hamper', 'Digital Product', 'Other'], btns = ['Buy Now', 'Book Now', '🎟️ Get Tickets', 'Enquire', 'Learn More'], allowance = null;
+    var x = null, cats = ['Fashion', 'Food', 'Beauty', 'Hair', 'Events', 'Gift Hamper', 'Digital Product', 'Services', 'Other'], btns = ['Buy Now', 'Book Now', '🎟️ Get Tickets', 'Enquire', 'Learn More'], allowance = null;
     if (id) { try { var r = await api('market-get', { id: id }); x = r.listing; allowance = r.allowance; } catch (e) { toast(e.message); return; } }
     var editingDraft = !!(x && x.draft && /pending|changes/.test(x.status));
     var f = x ? Object.assign({}, editingDraft ? x.draft : x.live) : { business: '', name: '', category: 'Other', price: '', desc: '', btnText: 'Enquire', link: '', wa: '', endsAt: '', bizSlug: '', imgs: [] };
