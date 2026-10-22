@@ -89,7 +89,7 @@ async function refresh(data) {
     const left = daysBetween(day, m.membershipExpiresAt);
     if (left >= 0 && left <= RENEW_DAYS) add(`renew:${m.email}:${m.membershipExpiresAt}`, 'renew', `${name}’s membership ends ${m.membershipExpiresAt} — send a renewal message`, { email: m.email, expires: m.membershipExpiresAt, whatsapp: p && p.whatsapp });
     const pr = benefits.progress(y, targets, day);
-    const due = { stories: pr.stories.due, reposts: pr.reposts.due, reels: pr.reels.due, discovery: pr.discovery.due };
+    const due = { stories: pr.stories.due, reposts: pr.reposts.due, discovery: pr.discovery.due };
     const types = {};
     for (const t of SHARE_TYPES) if (pr[t].due) types[t] = { n: pr[t].n, target: pr[t].target, period: t === 'discovery' ? day.slice(0, 7) : pr.weekStart };
     if (Object.keys(types).length) owed.push({ email: m.email, name, due, types, lastShared: y ? benefits.lastShared(y) : '', weekStart: pr.weekStart, month: day.slice(0, 7) });
@@ -190,16 +190,15 @@ async function refresh(data) {
   return view;
 }
 
-const SHARE_TYPES = ['stories', 'reposts', 'reels', 'discovery'];
-const SHARE_WORD = { stories: 'Story', reposts: 'Post repost', reels: 'Reel repost', discovery: 'discovery feature' };
+const SHARE_TYPES = ['stories', 'reposts', 'discovery'];
+const SHARE_WORD = { stories: 'Story', reposts: 'Post/Reel repost', discovery: 'discovery feature' };
 function shareRowTitle(name, type, ty) {
   return `Share ${name}: ${SHARE_WORD[type]} (${ty.n} of ${ty.target} done this ${type === 'discovery' ? 'month' : 'week'})`;
 }
 function shareTitle(o) {
   const parts = [];
   if (o.due.stories) parts.push(`${o.due.stories} Stor${o.due.stories === 1 ? 'y' : 'ies'}`);
-  if (o.due.reposts) parts.push(`${o.due.reposts} Post repost${o.due.reposts === 1 ? '' : 's'}`);
-  if (o.due.reels) parts.push(`${o.due.reels} Reel repost${o.due.reels === 1 ? '' : 's'}`);
+  if (o.due.reposts) parts.push(`${o.due.reposts} Post/Reel repost${o.due.reposts === 1 ? '' : 's'}`);
   if (o.due.discovery) parts.push(`${o.due.discovery} discovery feature${o.due.discovery === 1 ? '' : 's'} this month`);
   return `Share ${o.name}: ${parts.join(', ')} still due`;
 }
