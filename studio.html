@@ -4262,7 +4262,7 @@ nav.tabs .navsep{display:none}
       row('✅', 'Verification badge', b.badge === 'yes' ? 'Verified' : b.verify && b.verify.status === 'pending' ? '⏳ Verification requested (Companies House ' + esc(b.verify.number) + ') — Auntie Tobi will check' : b.badge === 'not_eligible' || (b.verify && b.verify.status === 'not_eligible') ? 'Not verified at the moment' + (b.verify && b.verify.note ? ' — ' + esc(b.verify.note) : '') : 'Not verified yet', b.badge === 'yes',
         b.badge === 'yes' || (b.verify && b.verify.status === 'pending') ? '' : '<button class="btn link" style="font-size:15px;padding:0;min-height:0" data-goverify="1">Verify your Business →</button>') +
       [
-      ['discovery', '💚', 'Discovery features', 'feature'], ['stories', '📲', 'Instagram Story reposts', 'repost'], ['reposts', '🖼️', 'Instagram Post reposts', 'repost'], ['reels', '🎬', 'Instagram Reel reposts', 'repost'], ['collabs', '🤝', 'Collabs', 'collab']].map(function (c) {
+      ['discovery', '💚', 'Discovery features', 'feature'], ['stories', '📲', 'Instagram Story reposts', 'repost'], ['reposts', '🖼️', 'Instagram Post/Reel reposts', 'repost'], ['collabs', '🤝', 'Collabs', 'collab']].map(function (c) {
         var n = (b.counts || {})[c[0]] || 0;
         return row(c[1], c[2], n ? n + ' ' + c[3] + (n === 1 ? '' : 's') + ' this membership year' : 'Not yet — they happen through the year', n > 0);
       }).join('') +

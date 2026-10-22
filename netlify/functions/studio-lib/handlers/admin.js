@@ -138,7 +138,7 @@ async function saveMember(actor, raw, isNew) {
 }
 
 async function notifyBenefit(email, kind) {
-  const what = { stories: 'shared your business on her Story', reposts: 'reposted your post', reels: 'reposted your Reel', discovery: 'featured your business', collabs: 'did a collab with you' }[kind];
+  const what = { stories: 'shared your business on her Story', reposts: 'reposted your post/Reel', reels: 'reposted your post/Reel', discovery: 'featured your business', collabs: 'did a collab with you' }[kind];
   if (what) await notify.pushToMember(email, 'Auntie Tobi 💚', `Auntie Tobi ${what}! See it in your Business Studio.`);
 }
 
@@ -439,8 +439,8 @@ exports.handler = handler(async (ctx) => {
         let verifyRequests = 0;
         const progs = await mapLimit(members, 8, async m => { const y = (await benefits.getYear(m.email, m)).year; if (y && y.verify && y.verify.status === 'pending') verifyRequests++; return benefits.progress(y, targets, day); });
         const sum = k => progs.reduce((a, p) => a + p[k].due, 0);
-        return { verifyRequests, members: members.length, stories: sum('stories'), reposts: sum('reposts'), reels: sum('reels'), discovery: sum('discovery'),
-          weekMembers: progs.filter(p => p.stories.due || p.reposts.due || p.reels.due).length, monthMembers: progs.filter(p => p.discovery.due).length, targets };
+        return { verifyRequests, members: members.length, stories: sum('stories'), reposts: sum('reposts'), discovery: sum('discovery'),
+          weekMembers: progs.filter(p => p.stories.due || p.reposts.due).length, monthMembers: progs.filter(p => p.discovery.due).length, targets };
       }
       const since = growth.addDays(day, -30);
       const rows = await mapLimit(members, 8, async m => {
@@ -451,7 +451,7 @@ exports.handler = handler(async (ctx) => {
         return {
           email: m.email, name: m.name || '', business: (p && p.businessName) || '', expires: m.membershipExpiresAt, daysLeft,
           spotlight: y.spotlight.status, spotlightDate: y.spotlight.date, featured: y.featured.done, marketplace: y.marketplace.done, badge: y.badge,
-          stories: y.stories.length, reposts: y.reposts.length, reels: (y.reels || []).length, discovery: y.discovery.length, collabs: (y.collabs || []).length, lastShared: benefits.lastShared(y),
+          stories: y.stories.length, reposts: y.reposts.length, discovery: y.discovery.length, collabs: (y.collabs || []).length, lastShared: benefits.lastShared(y),
           prog: benefits.progress(y, targets, day), board: benefits.board(y, targets, day, daysLeft),
           checkup: y.checkup.done, checkupDate: y.checkup.date, priorities: y.checkup.priorities.length, prioritiesDone: (y.prioritiesDone || []).length,
           verify: y.verify && y.verify.status === 'pending' ? { number: y.verify.number, at: y.verify.at } : null,
