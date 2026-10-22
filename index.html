@@ -5071,37 +5071,7 @@ function showLinksPage() {
       <span style="color:rgba(255,255,255,0.7);">&#8250;</span>
     </a>
 
-    <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-      <div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector('img').src)">
-        <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>
-        <img src="https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805" alt="Abbystoreltd" onerror="this.parentNode.style.display='none'" style="width:100%;display:block;object-fit:contain;max-height:420px;">
-      </div>
-      <div style="background:white;padding:14px 16px 16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#127859;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">Featured Business</span></div>
-        <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">Abbystoreltd</div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">
-          <div style="font-size:12px;color:#555;">&#127859; Household items, cookware, food flasks &amp; kids&#8217; school bags</div>
-          <div style="font-size:12px;color:#555;">&#127881; Party packs &amp; souvenirs &middot; &#128205; Derby</div>
-        </div>
-        <a href="https://abbystoreltd.com/" target="_blank" rel="noopener" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#128717;&#65039; Shop Now</a>
-      </div>
-    </div>
-
-    <div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-      <div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector('img').src)">
-        <div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>
-        <img src="https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png" style="width:100%;display:block;object-fit:contain;">
-      </div>
-      <div style="background:white;padding:14px 16px 16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#128722;&#65039;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">Featured Business</span></div>
-        <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">Xander Afritrade Ltd</div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">
-          <div style="font-size:12px;color:#555;">&#128722;&#65039; Authentic African food, beauty, fashion &amp; lifestyle</div>
-          <div style="font-size:12px;color:#555;">&#128666; UK-wide delivery</div>
-        </div>
-        <a href="https://xandertrade.com/" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#128722;&#65039; Shop Now</a>
-      </div>
-    </div>
+    <div id="links-feat"></div>
     <div id="links-mp-wrap" style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
         <span style="color:white;font-size:14px;font-weight:700;">&#128722;&#65039; Marketplace</span>
@@ -5160,6 +5130,7 @@ function showLinksPage() {
   </div>`;
 
   addTipMessage(html);
+  mountFeaturedBiz('links-feat');
   setTimeout(initLinksMarketplace, 100);
 
 
@@ -5797,44 +5768,67 @@ function showFeaturedBusinesses() {
 
 
 
-function showAbbyFeatureCard() {
-  var imgUrl = 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805';
-  var shopUrl = 'https://abbystoreltd.com/';
-  var html = '<div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
-    + '<div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector(\'img\').src)">'
-    + '<div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>'
-    + '<img src="' + imgUrl + '" alt="Abbystoreltd" onerror="this.parentNode.style.display=\'none\'" style="width:100%;display:block;object-fit:contain;max-height:420px;">'
-    + '</div>'
-    + '<div style="background:white;padding:14px 16px 16px;">'
-    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#127859;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">Featured Business</span></div>'
-    + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">Abbystoreltd</div>'
-    + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">'
-    + '<div style="font-size:12px;color:#555;">&#127859; Household items, cookware, food flasks &amp; kids&#8217; school bags</div>'
-    + '<div style="font-size:12px;color:#555;">&#127881; Party packs &amp; souvenirs &middot; &#128205; Derby</div>'
-    + '</div>'
-    + '<a href="' + shopUrl + '" target="_blank" rel="noopener" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#128717;&#65039; Shop Now</a>'
-    + '</div></div>';
-  addTipMessage(html);
+// ===== FEATURED BUSINESSES CAROUSEL (Home + Links) =====
+// Every directory business with featured:true. Optional fields: img (photo), shop (website → "Shop Now"), lines (short highlights).
+var FEAT_EMOJI = [['food',"🛒"],['grocer',"🛒"],['kitchen',"🍳"],['home',"🏠"],['educat',"🎓"],['fashion',"👗"],['hair',"💇🏾‍♀️"],['wig',"💇🏾‍♀️"],['beauty',"💄"],['makeup',"💄"],['cake',"🎂"],['cater',"🍲"],['event',"🎉"],['travel',"✈️"],['photo',"📸"],['jewel',"💍"],['drink',"🥤"]];
+function featEmoji(b){ var c=(b.cat||'').toLowerCase(); for (var i=0;i<FEAT_EMOJI.length;i++) if (c.indexOf(FEAT_EMOJI[i][0])>-1) return FEAT_EMOJI[i][1]; return "🏪"; }
+function featEsc(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function featuredBizList(){
+  var f = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured; });
+  for (var i=f.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; }
+  return f;
 }
-
-function showXanderFeatureCard() {
-  var imgUrl = 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png';
-  var shopUrl = 'https://xandertrade.com/';
-  var html = '<div style="border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
-    + '<div style="position:relative;background:#0F1E36;cursor:pointer;" onclick="tobi_imgZoom(this.querySelector(\'img\').src)">'
-    + '<div style="position:absolute;top:10px;left:10px;background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:1;">&#11088; Featured Business</div>'
-    + '<img src="' + imgUrl + '" style="width:100%;display:block;object-fit:contain;">'
-    + '</div>'
-    + '<div style="background:white;padding:14px 16px 16px;">'
-    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:22px;">&#128722;&#65039;</span><span style="font-size:10px;font-weight:700;color:#057A44;background:#e8f5ee;padding:2px 8px;border-radius:20px;">Featured Business</span></div>'
-    + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;margin-bottom:8px;">Xander Afritrade Ltd</div>'
-    + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">'
-    + '<div style="font-size:12px;color:#555;">&#128722;&#65039; Authentic African food, beauty, fashion &amp; lifestyle</div>'
-    + '<div style="font-size:12px;color:#555;">&#128666; UK-wide delivery</div>'
-    + '</div>'
-    + '<a href="' + shopUrl + '" target="_blank" style="display:block;width:100%;background:#057A44;color:white;border-radius:10px;padding:12px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;">&#128722;&#65039; Shop Now</a>'
-    + '</div></div>';
-  addTipMessage(html);
+function featSlide(b){
+  var banner = '<div class="feat-ban" style="position:absolute;inset:0;display:'+(b.img?'none':'flex')+';flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,#0F1E36,#18294A);color:white;text-align:center;padding:0 18px;">'
+    + '<div style="font-size:46px;line-height:1;">'+featEmoji(b)+'</div><div style="font-size:16px;font-weight:800;">'+featEsc(b.name)+'</div><div style="font-size:12px;color:#FFB81C;font-weight:700;text-transform:capitalize;">'+featEsc(b.cat||'')+'</div></div>';
+  var top = '<div style="position:relative;height:210px;background:#0F1E36;overflow:hidden;">'
+    + (b.img ? '<img src="'+featEsc(b.img)+'" alt="'+featEsc(b.name)+'" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.feat-ban\').style.display=\'flex\'" style="width:100%;height:210px;display:block;object-fit:contain;cursor:zoom-in;">' : '')
+    + banner
+    + '<div style="position:absolute;top:10px;left:10px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;">⭐ Featured Business</div>'
+    + '</div>';
+  var lines = (b.lines && b.lines.length) ? b.lines : [ (b.desc||'').length > 110 ? b.desc.slice(0,107)+'…' : (b.desc||'') ];
+  var btnCss = 'margin-top:auto;display:block;background:#057A44;color:white;border-radius:10px;padding:11px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;';
+  var body = '<div style="padding:12px 14px 14px;display:flex;flex-direction:column;flex:1;">'
+    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="font-size:15px;font-weight:800;color:#0F1E36;line-height:1.3;">'+featEsc(b.name)+'</div>'+(b.verified && typeof tobiTick==='function' ? tobiTick(15) : '')+'</div>'
+    + '<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px;min-height:36px;">'+lines.map(function(l){return '<div style="font-size:12px;color:#555;line-height:1.45;">'+featEsc(l)+'</div>';}).join('')+'</div>'
+    + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+featEsc((b.loc||'').split(',')[0])+'</div>'
+    + (b.shop
+        ? '<a href="'+featEsc(b.shop)+'" target="_blank" rel="noopener" style="'+btnCss+'">🛍️ Shop Now</a>'
+        : '<a href="javascript:void(0)" onclick="tobiOpenBiz(\''+featEsc(b.slug)+'\')" style="'+btnCss+'">View Details</a>')
+    + '</div>';
+  return '<div class="feat-slide" style="flex:0 0 100%;width:100%;display:flex;flex-direction:column;background:white;">'+top+body+'</div>';
+}
+// Builds the carousel inside the element with this id.
+function mountFeaturedBiz(id){
+  var host = document.getElementById(id); if (!host) return;
+  var list = featuredBizList(); if (!list.length) { host.style.display='none'; return; }
+  var n = list.length;
+  host.innerHTML = '<div style="background:white;border-radius:14px;overflow:hidden;border:1.5px solid #FFB81C;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
+    + '<div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">'
+    +   '<span style="color:white;font-size:14px;font-weight:700;">⭐ Featured Businesses</span>'
+    +   '<a href="javascript:void(0)" onclick="showFeaturedBusinesses()" style="color:#057A44;font-size:11px;font-weight:700;background:white;padding:3px 8px;border-radius:10px;text-decoration:none;">See all &#8594;</a></div>'
+    + '<div class="feat-vp" style="overflow:hidden;width:100%;touch-action:pan-y;"><div class="feat-track" style="display:flex;transition:transform .35s ease;">'+list.map(featSlide).join('')+'</div></div>'
+    + (n>1 ? '<div style="display:flex;justify-content:center;gap:6px;padding:10px 14px;">'+list.map(function(_,i){return '<button type="button" aria-label="Show business '+(i+1)+'" data-fi="'+i+'" style="height:8px;min-height:0;border:0;padding:0;border-radius:4px;background:#FFB81C;transition:all .3s;cursor:pointer;width:8px;opacity:.35;"></button>';}).join('')+'</div>' : '')
+    + '</div>';
+  if (n < 2) return;
+  var vp = host.querySelector('.feat-vp'), track = host.querySelector('.feat-track'), dots = host.querySelectorAll('[data-fi]'), cur = 0, paused = false;
+  function goTo(i){ cur = ((i % n) + n) % n; track.style.transform = 'translateX(-'+(cur*100)+'%)';
+    for (var j=0;j<dots.length;j++){ dots[j].style.width = j===cur?'20px':'8px'; dots[j].style.opacity = j===cur?'1':'.35'; } }
+  goTo(0);
+  for (var k=0;k<dots.length;k++) dots[k].onclick = function(){ goTo(Number(this.getAttribute('data-fi'))); };
+  var timer = setInterval(function(){ if (!document.body.contains(track)) { clearInterval(timer); return; } if (!paused) goTo(cur+1); }, 6000);
+  var sx = 0, sy = 0, moved = false;
+  vp.addEventListener('touchstart', function(e){ paused = true; sx = e.touches[0].clientX; sy = e.touches[0].clientY; moved = false; }, {passive:true});
+  vp.addEventListener('touchmove', function(){ moved = true; }, {passive:true});
+  vp.addEventListener('touchend', function(e){ setTimeout(function(){ paused = false; }, 4000); if (!moved) return;
+    var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) goTo(cur + (dx < 0 ? 1 : -1)); }, {passive:true});
+  vp.addEventListener('mouseenter', function(){ paused = true; }); vp.addEventListener('mouseleave', function(){ paused = false; });
+}
+function showFeaturedBizCarousel(){
+  var id = 'home-feat-' + Date.now();
+  addTipMessage('<div id="'+id+'"></div>');
+  mountFeaturedBiz(id);
 }
 
 function showMarketplaceCarousel() {
@@ -6530,7 +6524,7 @@ function getRandomSuggestionStr() {
 
 const AUNTIE_TOBI_DIRECTORY = [
   {name:'Hilltoprise Kitchen', slug:'hilltoprise-kitchen', cat:'caterers', loc:'Livingston', desc:'Hilltoprise Kitchen offers delicious meals, catering services, custom food boxes, and personalized gift boxes for different occasions. We focus on quality, care and topnotch customer experience.', wa:'447553880536', ig:'hilltoprisekiitchen'},
-  {name:'Abbystoreltd', slug:'abbystoreltd', featured:true, cat:'home & kitchen', loc:'Derby', desc:'We deal in household items, cookwares ,food flask, kids school bags, party packs/ souvenir etc.', wa:'447761572072', ig:'abbystore_uk'},
+  {name:'Abbystoreltd', slug:'abbystoreltd', featured:true, img:'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805', shop:'https://abbystoreltd.com/', lines:['🍳 Household items, cookware, food flasks & kids’ school bags','🎉 Party packs & souvenirs'], cat:'home & kitchen', loc:'Derby', desc:'We deal in household items, cookwares ,food flask, kids school bags, party packs/ souvenir etc.', wa:'447761572072', ig:'abbystore_uk'},
   {name:'Eventsbykklargesse', slug:'eventsbykklargesse', cat:'event planners', loc:'Suffolk', desc:'Tailored Moments, Timeless Memories. We create beautiful celebrations through curated gifting and thoughtfully executed events.', wa:'447467587855'},
   {name:'GFL BEAUTY HOME', slug:'gfl-beauty-home', cat:'wig vendors', loc:'United Kingdom', desc:'Uncompromising quality. Seamless blending. Flawless installations. We curate the finest virgin and raw hair to give you the ultimate luxury experience.', wa:'447477194811', ig:'hairbygfl_'},
   {name:'Autogelebysunshine_uk', slug:'autogelebysunshine-uk', cat:'gele stylists', loc:'Liverpool', desc:'Autogelesunshine_uk specializes in beautifully crafted Auto Gele, stylish men\'s caps, and elegant turbans for all occasions.', wa:'447760694051', ig:'autogelebysunshine_uk'},
@@ -6746,7 +6740,7 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'FavouredSzn – Affordable African Fashion & Ready-to-Wear UK', slug:'favouredszn-affordable-african-fashion-and-ready-to-wear-uk', cat:'ankara & traditional wears', loc:'Leicester', desc:'Shop FavouredSzn Apparels for stylish Ankara, Adire, Aso-Oke and Nigerian-inspired ready-to-wear fashion for women in the UK.', wa:'447774150323', ig:'favouredszn_apparels'},
   {name:'Jola Signature Hibiscus Drink (zobo)', slug:'jola-signature-hibiscus-drink-zobo', cat:'drinks', loc:'UK', desc:'Discover Jola Signature Zobo in Preston for fresh Zobo hibiscus drinks with no added sugar, personalised bottles and bulk orders for all occasions.', wa:'447985023045', ig:'jola_signature_zobo_drink'},
   {name:'Oma’s Touch Aesthetics', slug:'omas-touch-aesthetics', cat:'aesthetics', loc:'Manchester', desc:'Discover Oma’s Touch Aesthetics in Salford, Manchester for massage, waxing, skincare, brows, semi-permanent makeup and luxury beauty treatments.', wa:'447958710495', ig:'omas_touch7'},
-  {name:'Xander Afritrade Ltd', slug:'xander-afritrade-ltd', featured:true, cat:'foodstores & groceries', loc:'United Kingdom', desc:'Shop authentic African food, beauty products, fashion, and lifestyle essentials at Xander Afritrade Ltd. Enjoy secure shopping, special offers, fast delivery, and quality products sourced from Africa.', wa:'447346124351', ig:'shop_xander', featured:true, verified:true},
+  {name:'Xander Afritrade Ltd', slug:'xander-afritrade-ltd', featured:true, img:'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png', shop:'https://xandertrade.com/', lines:['🛒 Authentic African food, beauty, fashion & lifestyle','🚚 UK-wide delivery'], cat:'foodstores & groceries', loc:'United Kingdom', desc:'Shop authentic African food, beauty products, fashion, and lifestyle essentials at Xander Afritrade Ltd. Enjoy secure shopping, special offers, fast delivery, and quality products sourced from Africa.', wa:'447346124351', ig:'shop_xander', featured:true, verified:true},
   {name:'Aryana | Pantry essentials delivered to you', slug:'aryana-pantry-essentials-delivered-to-you', cat:'foodstores & groceries', loc:'UK', desc:'Aryana offers quality African pantry essentials at affordable prices. Shop gari, beans, flour, fufu and everyday West African food staples with UK-wide delivery. Enjoy great value, reliable quality.', ig:'aryanafoodsuk'},
   {name:'AnibeautyHairs', slug:'anibeautyhairs', cat:'wig vendors', loc:'Birmingham', desc:'Shop human hair and realistic braided wigs from Ani Beauty Hairs in Birmingham, with hair revamp services and nationwide UK delivery available.', wa:'447440595143', ig:'anibeautyhairs'},
   {name:'Stainless Did It Hair', slug:'stainless-did-it-hair', cat:'hair stylists/braiders', loc:'Crawley', desc:'We specialise in wig making, frontal install, sew ins and wig revamp service.', wa:'447493665222', ig:'stainlessdidit'},
@@ -8814,8 +8808,7 @@ function resetToWelcome() {
       console.log('tipHtml built');
       addTipMessage(tipHtml);
       console.log('message added');
-      showAbbyFeatureCard();
-      showXanderFeatureCard();
+      showFeaturedBizCarousel();
       addTipMessage('<div data-club-card="1" style="background:linear-gradient(135deg,#057A44,#04603a);border-radius:12px;padding:14px 16px;color:white;">'
         + '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💚 Own a business? Join the Auntie Tobi Business Club</div>'
         + '<div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.9);margin-bottom:10px;">Get seen by more Nigerians in the UK — Spotlight, Featured Business, Marketplace &amp; your own Business Studio.</div>'
