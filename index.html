@@ -5795,6 +5795,8 @@ function featSlide(b){
     + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+featEsc((b.loc||'').split(',')[0])+'</div>'
     + (b.shop
         ? '<a href="'+featEsc(b.shop)+'" target="_blank" rel="noopener" style="'+btnCss+'">🛍️ Shop Now</a>'
+        : b.book && b.book.wa
+        ? '<a href="https://wa.me/'+featEsc(String(b.book.wa).replace(/[^0-9]/g,''))+'?text='+encodeURIComponent(b.book.text||'')+'" target="_blank" rel="noopener" style="'+btnCss+'">'+featEsc(b.book.label||'Book Now')+'</a>'
         : '<a href="javascript:void(0)" onclick="tobiOpenBiz(\''+featEsc(b.slug)+'\')" style="'+btnCss+'">View Details</a>')
     + '</div>';
   return '<div class="feat-slide" style="flex:0 0 100%;width:100%;display:flex;flex-direction:column;background:white;">'+top+body+'</div>';
@@ -6732,7 +6734,7 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'Hairbywade', slug:'hairbywade', cat:'wig vendors', loc:'Mexborough', desc:'HairbyWade is a luxury hair brand specialising in premium quality human hair wigs, bundles and bespoke wig services. From custom wig making and styling to revamping, colouring and installations.', wa:'447508881820', ig:'hairby_wade'},
   {name:'BNM Jewels', slug:'bnmjewels', cat:'jewelry', loc:'United Kingdom', desc:'Discover high-quality, unique & timeless jewellery designed to make you feel effortlessly elegant and confident. Perfect for everyday wear, gifting or special occasions. Shop our collection today! 💎', ig:'bnmjewels_uk'},
   {name:'Relish Indelight', slug:'relish-indelight', cat:'cakes & desert', loc:'UK', desc:'Discover Relish Indelight in Aberdeen, Scotland, offering cakes, desserts, pastries, small chops, canapés and healthy drinks. Order via DM or WhatsApp.', wa:'447780395685', ig:'relish_indelight'},
-  {name:'Buchis Photography', slug:'buchis-photography', cat:'photography', loc:'Milton Keynes', desc:'Buchis Photography offers event and portrait photography and videography services and is available to travel for bookings.', wa:'447513969028', ig:'buchis_photography'},
+  {name:'Buchis Photography', slug:'buchis-photography', featured:true, img:'https://naijabiz.b-cdn.net/Marketplace%20products/ChatGPT%20Image%20Sep%202%2C%202026%2C%2002_33_05%20AM.png', book:{ label:'📸 Book Now', wa:'447513969028', text:'Hi Buchis Photography, I found you on Auntie Tobi and I’d like to ask about a booking.' }, lines:['📸 Event & portrait photography and videography','✈️ Available to travel for bookings'], cat:'photography', loc:'Milton Keynes', desc:'Buchis Photography offers event and portrait photography and videography services and is available to travel for bookings.', wa:'447513969028', ig:'buchis_photography'},
   {name:'Debstecottage Cakes and More', slug:'debstecottage-cakes-and-more', cat:'cakes & desert', loc:'Wrexham', desc:'Discover Debstecottage Cakes & More in Wrexham for Nigerian food and cakes, with small and bulk orders available and delivery across the UK.', wa:'447776620962', ig:'debstecottage_cakes_more'},
   {name:'Amakas Bites', slug:'amakas-bites', cat:'small chops', loc:'United Kingdom', desc:'Order meat pies, puff puff, Zobo and parfait from Amaka’s Bites in Manchester, with individual and event orders available.', ig:'amakas.bites'},
   {name:'CakesbyChemie', slug:'cakesbychemie', cat:'cakes & desert', loc:'Buntingford', desc:'Discover CakesbyChemie in Buntingford, Hertfordshire, for professionally made cakes for weddings, birthdays, graduations, baby celebrations and special occasions.', ig:'cakesbychemie'},
