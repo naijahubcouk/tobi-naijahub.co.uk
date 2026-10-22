@@ -5774,15 +5774,16 @@ var FEAT_EMOJI = [['food',"🛒"],['grocer',"🛒"],['kitchen',"🍳"],['home',"
 function featEmoji(b){ var c=(b.cat||'').toLowerCase(); for (var i=0;i<FEAT_EMOJI.length;i++) if (c.indexOf(FEAT_EMOJI[i][0])>-1) return FEAT_EMOJI[i][1]; return "🏪"; }
 function featEsc(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function featuredBizList(){
-  var f = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured; });
+  // Carousel shows featured businesses that have a photo.
+  var f = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured && b.img; });
   for (var i=f.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; }
   return f;
 }
 function featSlide(b){
-  var banner = '<div class="feat-ban" style="position:absolute;inset:0;display:'+(b.img?'none':'flex')+';flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,#0F1E36,#18294A);color:white;text-align:center;padding:0 18px;">'
+  var banner = '<div class="feat-ban" style="min-height:190px;display:'+(b.img?'none':'flex')+';flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,#0F1E36,#18294A);color:white;text-align:center;padding:0 18px;">'
     + '<div style="font-size:46px;line-height:1;">'+featEmoji(b)+'</div><div style="font-size:16px;font-weight:800;">'+featEsc(b.name)+'</div><div style="font-size:12px;color:#FFB81C;font-weight:700;text-transform:capitalize;">'+featEsc(b.cat||'')+'</div></div>';
-  var top = '<div style="position:relative;height:210px;background:#0F1E36;overflow:hidden;">'
-    + (b.img ? '<img src="'+featEsc(b.img)+'" alt="'+featEsc(b.name)+'" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.feat-ban\').style.display=\'flex\'" style="width:100%;height:210px;display:block;object-fit:contain;cursor:zoom-in;">' : '')
+  var top = '<div style="position:relative;background:#0F1E36;">'
+    + (b.img ? '<img src="'+featEsc(b.img)+'" alt="'+featEsc(b.name)+'" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.feat-ban\').style.display=\'flex\'" style="width:100%;height:auto;display:block;cursor:zoom-in;">' : '')
     + banner
     + '<div style="position:absolute;top:10px;left:10px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;">⭐ Featured Business</div>'
     + '</div>';
@@ -5807,12 +5808,16 @@ function mountFeaturedBiz(id){
     + '<div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">'
     +   '<span style="color:white;font-size:14px;font-weight:700;">⭐ Featured Businesses</span>'
     +   '<a href="javascript:void(0)" onclick="showFeaturedBusinesses()" style="color:#057A44;font-size:11px;font-weight:700;background:white;padding:3px 8px;border-radius:10px;text-decoration:none;">See all &#8594;</a></div>'
-    + '<div class="feat-vp" style="overflow:hidden;width:100%;touch-action:pan-y;"><div class="feat-track" style="display:flex;transition:transform .35s ease;">'+list.map(featSlide).join('')+'</div></div>'
+    + '<div class="feat-vp" style="overflow:hidden;width:100%;touch-action:pan-y;transition:height .35s ease;"><div class="feat-track" style="display:flex;align-items:flex-start;transition:transform .35s ease;">'+list.map(featSlide).join('')+'</div></div>'
     + (n>1 ? '<div style="display:flex;justify-content:center;gap:6px;padding:10px 14px;">'+list.map(function(_,i){return '<button type="button" aria-label="Show business '+(i+1)+'" data-fi="'+i+'" style="height:8px;min-height:0;border:0;padding:0;border-radius:4px;background:#FFB81C;transition:all .3s;cursor:pointer;width:8px;opacity:.35;"></button>';}).join('')+'</div>' : '')
     + '</div>';
   if (n < 2) return;
-  var vp = host.querySelector('.feat-vp'), track = host.querySelector('.feat-track'), dots = host.querySelectorAll('[data-fi]'), cur = 0, paused = false;
-  function goTo(i){ cur = ((i % n) + n) % n; track.style.transform = 'translateX(-'+(cur*100)+'%)';
+  var vp = host.querySelector('.feat-vp'), track = host.querySelector('.feat-track'), dots = host.querySelectorAll('[data-fi]'), slides = host.querySelectorAll('.feat-slide'), cur = 0, paused = false;
+  // Each photo shows in full, so slides can differ in height: the window follows the current slide.
+  function fit(){ var h = slides[cur] && slides[cur].offsetHeight; if (h) vp.style.height = h + 'px'; }
+  var imgs = host.querySelectorAll('.feat-slide img'); for (var m=0;m<imgs.length;m++){ imgs[m].addEventListener('load', fit); imgs[m].addEventListener('error', function(){ setTimeout(fit, 0); }); }
+  window.addEventListener('resize', fit);
+  function goTo(i){ cur = ((i % n) + n) % n; track.style.transform = 'translateX(-'+(cur*100)+'%)'; fit();
     for (var j=0;j<dots.length;j++){ dots[j].style.width = j===cur?'20px':'8px'; dots[j].style.opacity = j===cur?'1':'.35'; } }
   goTo(0);
   for (var k=0;k<dots.length;k++) dots[k].onclick = function(){ goTo(Number(this.getAttribute('data-fi'))); };
