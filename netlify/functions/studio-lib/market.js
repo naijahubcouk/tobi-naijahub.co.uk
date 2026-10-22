@@ -13,8 +13,8 @@ const crypto = require('crypto');
 const core = require('./core');
 const { HttpError, cas, getJson, setJson, enc, cleanText } = core;
 
-const CATS = ['Events', 'Hair', 'Gift Hamper', 'Digital Product', 'Food', 'Beauty', 'Fashion', 'Other'];
-const EMOJI = { Events: '🎉', Hair: '💇🏾‍♀️', 'Gift Hamper': '🎁', 'Digital Product': '💻', Food: '🍲', Beauty: '💄', Fashion: '👗', Other: '🛍️' };
+const CATS = ['Events', 'Hair', 'Gift Hamper', 'Digital Product', 'Food', 'Beauty', 'Fashion', 'Services', 'Other'];
+const EMOJI = { Events: '🎉', Hair: '💇🏾‍♀️', 'Gift Hamper': '🎁', 'Digital Product': '💻', Food: '🍲', Beauty: '💄', Fashion: '👗', Services: '🛠️', Other: '🛍️' };
 const BUTTONS = ['Buy Now', 'Book Now', '🎟️ Get Tickets', 'Enquire', 'Learn More'];
 const MAX_IMGS = 4;
 const lkey = id => `market/listing/${id}`;
@@ -130,10 +130,27 @@ async function retireOld() {
   for (const id of RETIRED) await core.del(lkey(id)).catch(() => {});
   await setJson('market/retired-v1', { at: core.nowIso(), ids: RETIRED });
 }
+// One-off: when the Services category was added (Oct 2026), move the web design listing into it.
+const WEB_DESIGN = /\bweb\s*(site\s*)?design/i;
+async function recatServices() {
+  if (await getJson('market/recat-services-v1')) return;
+  const moved = [];
+  for (const k of await core.listKeys('market/listing/')) {
+    await cas(k, cur => {
+      if (!cur) return undefined;
+      const hit = x => x && (WEB_DESIGN.test(x.name || '') || WEB_DESIGN.test(x.business || ''));
+      if (!hit(cur.live) && !hit(cur.draft)) return undefined;
+      moved.push(cur.id);
+      return { ...cur, ...(cur.live ? { live: { ...cur.live, category: 'Services' } } : {}), ...(cur.draft ? { draft: { ...cur.draft, category: 'Services' } } : {}) };
+    });
+  }
+  await setJson('market/recat-services-v1', { at: core.nowIso(), ids: moved });
+}
 
 async function all() {
   await ensureSeed();
   await retireOld();
+  await recatServices();
   const keys = await core.listKeys('market/listing/');
   const out = [];
   for (let i = 0; i < keys.length; i += 10) out.push(...(await Promise.all(keys.slice(i, i + 10).map(k => getJson(k)))));
