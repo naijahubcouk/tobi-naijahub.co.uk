@@ -9,18 +9,23 @@ const core = require('./core');
 const { HttpError, cas, getJson, enc, cleanText } = core;
 
 const key = email => `benefits/${enc(email)}`;
-const LOG_KINDS = ['stories', 'reposts', 'discovery', 'collabs'];
-const LABELS = { verified: 'Verification badge', stories: 'Story share', reposts: 'Post/Reel repost', discovery: 'Discovery feature', collabs: 'Collab', spotlight: 'Business Spotlight', featured: 'Featured Business', marketplace: 'Marketplace listing' };
+const LOG_KINDS = ['stories', 'reposts', 'reels', 'discovery', 'collabs'];  // 'reposts' = Post reposts (entries from before the Reel split count as Posts)
+const LABELS = { verified: 'Verification badge', stories: 'Story repost', reposts: 'Post repost', reels: 'Reel repost', checkup: 'Business Check-Up', discovery: 'Discovery feature', collabs: 'Collab', spotlight: 'Business Spotlight', featured: 'Featured Business', marketplace: 'Marketplace listing' };
 
 // Minimum targets per member (the aim is to over-deliver). Admin-only; members never see these.
-const DEFAULT_TARGETS = { storiesWeek: 2, repostsWeek: 2, discoveryMonth: 2, collabsYear: 2, spotlightYear: 1 };
+const DEFAULT_TARGETS = { storiesWeek: 2, repostsWeek: 2, reelsWeek: 2, discoveryMonth: 2, collabsYear: 2, spotlightYear: 1 };
 const TARGETS_KEY = 'config/benefit-targets';
-async function getTargets() { return { ...DEFAULT_TARGETS, ...((await getJson(TARGETS_KEY)) || {}) }; }
+async function getTargets() {
+  const saved = (await getJson(TARGETS_KEY)) || {};
+  // Reels got their own target later: until it's set, it starts at the Post repost target.
+  return { ...DEFAULT_TARGETS, ...saved, reelsWeek: Number.isInteger(saved.reelsWeek) ? saved.reelsWeek : (Number.isInteger(saved.repostsWeek) ? saved.repostsWeek : DEFAULT_TARGETS.reelsWeek) };
+}
 async function saveTargets(raw) {
   raw = raw && typeof raw === 'object' ? raw : {};
   const next = {};
+  const cur = await getTargets();
   for (const k of Object.keys(DEFAULT_TARGETS)) {
-    const v = Number(raw[k]);
+    const v = raw[k] === undefined ? cur[k] : Number(raw[k]);
     if (!Number.isInteger(v) || v < 0 || v > 50) throw new HttpError(400, 'invalid', 'Targets must be whole numbers between 0 and 50.');
     next[k] = v;
   }
@@ -38,7 +43,7 @@ function emptyYear() {
     featured: { done: false, date: '' },
     marketplace: { done: false, date: '' },
     badge: 'unknown',
-    stories: [], reposts: [], discovery: [], collabs: [],
+    stories: [], reposts: [], reels: [], discovery: [], collabs: [],
     checkup: { done: false, date: '', notes: '', priorities: [] },
     prioritiesDone: [],
   };
@@ -142,7 +147,7 @@ async function setPriorityDone(email, member, index, done) {
 }
 
 function lastShared(y) {
-  const all = [...(y.stories || []), ...(y.reposts || []), ...(y.discovery || []), ...(y.collabs || [])].map(e => e.at);
+  const all = LOG_KINDS.flatMap(k => y[k] || []).map(e => e.at);
   if (y.spotlight && y.spotlight.status === 'done' && y.spotlight.date) all.push(y.spotlight.date);
   return all.sort().pop() || '';
 }
@@ -160,10 +165,57 @@ function progress(y, t, day) {
     weekStart: ws,
     stories: one(cnt(y.stories, a => a >= ws && a <= day), t.storiesWeek, 'week'),
     reposts: one(cnt(y.reposts, a => a >= ws && a <= day), t.repostsWeek, 'week'),
+    reels: one(cnt(y.reels, a => a >= ws && a <= day), t.reelsWeek, 'week'),
     discovery: one(cnt(y.discovery, a => a.slice(0, 7) === month), t.discoveryMonth, 'month'),
     collabs: one((y.collabs || []).length, t.collabsYear, 'year'),
     spotlight: one(y.spotlight && y.spotlight.status === 'done' ? 1 : 0, t.spotlightYear, 'year'),
   };
+}
+
+/*
+ * One entry per Club benefit — never grouped. state: done | part | due | todo | na
+ *   done = delivered / met for this period · part = started · due = owed now · todo = still to do this year · na = not applicable
+ * forMember=true drops targets (members only see what's been done).
+ */
+const BOARD = [
+  ['spotlight', '📣', 'Spotlight'], ['collabs', '🤝', 'Collab'], ['discovery', '💚', 'Discovery'], ['featured', '⭐', 'Featured'],
+  ['marketplace', '🛍️', 'Marketplace'], ['verified', '✅', 'Verified'], ['stories', '📲', 'Story reposts'], ['reposts', '🖼️', 'Post reposts'],
+  ['reels', '🎬', 'Reel reposts'], ['checkup', '📊', 'Check-Up'],
+];
+function board(y, t, day, daysLeft, forMember) {
+  y = { ...emptyYear(), ...(y || {}) };
+  const late = Number.isFinite(daysLeft) && daysLeft <= 60;
+  const p = t ? progress(y, t, day) : null;
+  const yearCount = k => (y[k] || []).length;
+  const items = BOARD.map(([key, icon, label]) => {
+    let state = 'todo', text = '';
+    if (key === 'spotlight') {
+      const s = y.spotlight || {};
+      if (s.status === 'done') { state = 'done'; text = s.date ? 'Done ' + s.date : 'Done'; }
+      else if (s.status === 'scheduled') { state = 'part'; text = s.date ? 'Booked ' + s.date : 'Booked'; }
+      else { state = late ? 'due' : 'todo'; text = 'Not yet'; }
+    } else if (key === 'collabs') {
+      const n = yearCount('collabs'), tg = t ? t.collabsYear : 0;
+      if (forMember) { state = n ? 'done' : 'todo'; text = n ? n + ' this year' : 'Not yet'; }
+      else { state = n >= tg ? 'done' : n ? 'part' : (late ? 'due' : 'todo'); text = n + '/' + tg + ' this year'; }
+    } else if (key === 'featured' || key === 'marketplace') {
+      const done = !!(y[key] && y[key].done);
+      state = done ? 'done' : 'due'; text = done ? 'Live' : 'Set up';
+    } else if (key === 'verified') {
+      if (y.badge === 'yes') { state = 'done'; text = 'Verified'; }
+      else if (y.badge === 'not_eligible') { state = 'na'; text = 'Not eligible'; }
+      else if (y.verify && y.verify.status === 'pending') { state = forMember ? 'part' : 'due'; text = 'Request waiting'; }
+      else { state = 'todo'; text = forMember ? 'Not yet' : 'Not requested'; }
+    } else if (key === 'checkup') {
+      state = y.checkup && y.checkup.done ? 'done' : (late ? 'due' : 'todo'); text = y.checkup && y.checkup.done ? 'Done' : 'Not yet';
+    } else {  // stories / reposts / reels (week) and discovery (month)
+      if (forMember) { const n = yearCount(key); state = n ? 'done' : 'todo'; text = n ? n + ' this year' : 'Not yet'; }
+      else { const q = p[key]; state = q.met ? 'done' : q.n ? 'part' : 'due'; text = q.n + '/' + q.target + (q.period === 'week' ? ' this week' : ' this month'); }
+    }
+    return { key, icon, label, state, text, total: ['stories', 'reposts', 'reels', 'discovery', 'collabs'].includes(key) ? yearCount(key) : undefined };
+  });
+  const counted = items.filter(i => i.state !== 'na');
+  return { items, done: counted.filter(i => i.state === 'done').length, of: counted.length };
 }
 
 // Everything done for the member this year, newest first (what they see in Account).
@@ -173,6 +225,7 @@ function feed(y) {
   for (const k of LOG_KINDS) for (const e of y[k] || []) out.push({ kind: k, label: LABELS[k], at: e.at, note: e.note || '', link: e.link || '', loggedAt: e.loggedAt || '', notify: e.notify !== false && !!e.loggedAt });
   for (const k of ['featured', 'marketplace']) if (y[k] && y[k].done) out.push({ kind: k, label: LABELS[k], at: y[k].date, note: 'Now live', link: '', loggedAt: y[k].loggedAt || '', notify: y[k].notify !== false && !!y[k].loggedAt });
   if (y.badge === 'yes' && y.badgeLoggedAt) out.push({ kind: 'verified', label: LABELS.verified, at: y.badgeDate || y.badgeLoggedAt.slice(0, 10), note: 'Your business is verified ✓', link: '', loggedAt: y.badgeLoggedAt, notify: y.badgeNotify !== false });
+  if (y.checkup && y.checkup.done) out.push({ kind: 'checkup', label: LABELS.checkup, at: y.checkup.date, note: 'Done', link: '', loggedAt: '', notify: false });
   if (y.spotlight && y.spotlight.status === 'done') out.push({ kind: 'spotlight', label: LABELS.spotlight, at: y.spotlight.date, note: '', link: y.spotlight.link || '', loggedAt: y.spotlight.loggedAt || '', notify: y.spotlight.notify !== false && !!y.spotlight.loggedAt });
   return out.sort((a, b) => (b.at || '').localeCompare(a.at || '') || (b.loggedAt || '').localeCompare(a.loggedAt || ''));
 }
@@ -184,7 +237,8 @@ function forMember(yearKey, y) {
     yearKey,
     spotlight: { status: y.spotlight.status, date: y.spotlight.date, link: y.spotlight.link },
     featured: y.featured, marketplace: y.marketplace, badge: y.badge,
-    counts: { stories: (y.stories || []).length, reposts: (y.reposts || []).length, discovery: (y.discovery || []).length, collabs: (y.collabs || []).length },
+    counts: { stories: (y.stories || []).length, reposts: (y.reposts || []).length, reels: (y.reels || []).length, discovery: (y.discovery || []).length, collabs: (y.collabs || []).length },
+    board: board(y, null, null, null, true),
     feed: feed(y).map(({ kind, label, at, note, link }) => ({ kind, label, at, note, link })),
     checkup: { done: y.checkup.done, date: y.checkup.date, priorities: y.checkup.priorities || [] },
     verify: y.verify ? { status: y.verify.status, number: y.verify.number, at: y.verify.at, note: y.verify.note || '' } : null,
@@ -192,4 +246,4 @@ function forMember(yearKey, y) {
   };
 }
 
-module.exports = { getYear, update, log, unlog, setPriorityDone, requestVerify, forMember, lastShared, yearKeyOf, emptyYear, LOG_KINDS, LABELS, DEFAULT_TARGETS, getTargets, saveTargets, progress, feed, weekStart };
+module.exports = { board, BOARD, getYear, update, log, unlog, setPriorityDone, requestVerify, forMember, lastShared, yearKeyOf, emptyYear, LOG_KINDS, LABELS, DEFAULT_TARGETS, getTargets, saveTargets, progress, feed, weekStart };

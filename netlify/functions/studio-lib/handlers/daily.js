@@ -72,7 +72,7 @@ async function buildDigest(member, acc) {
   if (acc.membershipActive) {
     const b = await benefits.getYear(email, member).catch(() => null);
     const since = growth.addDays(core.dayKey(), -7);
-    const recent = b ? benefits.feed(b.year).filter(e => e.at >= since && ['stories', 'reposts', 'discovery', 'collabs', 'spotlight'].includes(e.kind)) : [];
+    const recent = b ? benefits.feed(b.year).filter(e => e.at >= since && ['stories', 'reposts', 'reels', 'discovery', 'collabs', 'spotlight'].includes(e.kind)) : [];
     if (recent.length) {
       const by = {}; for (const e of recent) by[e.label] = (by[e.label] || 0) + 1;
       const parts = Object.entries(by).map(([l, n]) => `${n} ${l.toLowerCase()}${n > 1 ? 's' : ''}`).join(', ');
