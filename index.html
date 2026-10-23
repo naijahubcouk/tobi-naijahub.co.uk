@@ -1194,7 +1194,7 @@ CRITICAL RULES:
       <span style="color:rgba(255,255,255,0.7);font-size:20px;">›</span>
     </a> "
 
-4. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on Auntie Tobi and Auntie Tobi will tell everyone! <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">Submit your event here</a> "
+4. When users ask about events with limited results add: "🎉 Got a Nigerian event coming up? List it on Auntie Tobi and Auntie Tobi will tell everyone! <a href="https://auntietobi.co.uk/add-event" target="_blank" style="color:#057A44;font-weight:700;">Submit your event here</a> "
 
 6. NEVER mention specific business names, phone numbers or addresses that are not in the Auntie Tobi business data. If asked for a specific type of business not in the data, redirect to Google search or Auntie Tobi listing.
 
@@ -4047,7 +4047,7 @@ function showEventsFromNews() {
   messages.innerHTML = '';
 
   if (upcomingEvents.length === 0) {
-    addTipMessage('<div style="font-size:14px;color:#555;padding:10px;">No upcoming events right now — check back soon! 💚 <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">Submit your event →</a></div>');
+    addTipMessage('<div style="font-size:14px;color:#555;padding:10px;">No upcoming events right now — check back soon! 💚 <a href="https://auntietobi.co.uk/add-event" target="_blank" style="color:#057A44;font-weight:700;">Add your event →</a></div>');
     return;
   }
 
@@ -5053,6 +5053,12 @@ function showLinksPage() {
     <a href="javascript:void(0)" onclick="showFAQCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">&#10067;</span>
       <span style="flex:1;text-align:left;">FAQ<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Common questions about Auntie Tobi</span></span>
+      <span style="color:#ccc;">&#8250;</span>
+    </a>
+
+    <a href="https://auntietobi.co.uk/add-event" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">&#127881;</span>
+      <span style="flex:1;text-align:left;">Add Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing &mdash; upload your flyer and we&rsquo;ll do the rest</span></span>
       <span style="color:#ccc;">&#8250;</span>
     </a>
 
@@ -6873,6 +6879,9 @@ function handleDeepLink() {
     } else {
       resolveAndShow(fallbackContent);
     }
+  } else if (action === 'events') {
+    // Wait (briefly) for events added in Auntie Tobi HQ so they show on the first open
+    Promise.race([tobiHqFeed(), new Promise(r => setTimeout(r, 2500))]).then(() => { showEventsFromNews(); window.history.replaceState({}, '', window.location.pathname); });
   } else if (action === 'links') {
     setTimeout(() => { showLinksPage(); window.history.replaceState({}, '', window.location.pathname); }, 300);
   } else if (action === 'guardianews' || action === 'news') {
@@ -7816,11 +7825,11 @@ function showEventsCard() {
     if (nextFrom < window._eventsData.length) {
       addTipMessage(`<div id="events-more-btn" class="suggestions" style="margin-top:4px;">
         <button class="suggestion-btn" onclick="window._renderEventsBatch(${nextFrom})">🎉 More Events (${window._eventsData.length - nextFrom} left)</button>
-        <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">📣 Post Your Event</button>
+        <button class="suggestion-btn" onclick="window.open('https://auntietobi.co.uk/add-event','_blank')">📣 Add Your Event</button>
       </div>`);
     } else {
       addTipMessage(`<div class="suggestions" style="margin-top:8px;">
-        <button class="suggestion-btn" onclick="window.open('https://wa.me/447594674940','_blank')">📣 Post Your Event</button>
+        <button class="suggestion-btn" onclick="window.open('https://auntietobi.co.uk/add-event','_blank')">📣 Add Your Event</button>
         <button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button>
         
       </div>`);
@@ -7884,7 +7893,7 @@ window.onload = () => {
     return;
   }
   if (_urlPathname === '/events') {
-    setTimeout(() => { showEventsFromNews(); window.history.replaceState({}, '', '/'); }, 300);
+    Promise.race([tobiHqFeed(), new Promise(r => setTimeout(r, 2500))]).then(() => { showEventsFromNews(); window.history.replaceState({}, '', '/'); });
     setTimeout(() => { loadLiveFeeds(); }, 2000);
     return;
   }
@@ -8499,7 +8508,7 @@ function tobiApplyHqFeed(f) {
       var t = tobiSplitEmoji(e.title), d = new Date(e.eventDate + 'T00:00:00');
       ALL_EVENTS.push({ emoji: t.emoji || '🎉', title: t.title, summary: e.summary, date: tobiShortDate(e.eventDate), dateObj: d,
         loc: e.location || 'UK', time: e.eventTime || d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }),
-        url: TOBI_APP_SITE + '/blog/' + e.slug, appUrl: TOBI_APP_SITE + '/blog/' + e.slug, _hq: true });
+        url: TOBI_APP_SITE + '/blog/' + e.slug, appUrl: TOBI_APP_SITE + '/blog/' + e.slug, imgId: e.imgId || '', _hq: true });
     });
   }
 }
@@ -8526,7 +8535,9 @@ function tobiShowHqInSheet(url) {
       : '<div style="font-size:12px;color:#9CA3AF;margin-bottom:10px;">' + esc(item.category ? item.category + ' · ' : '') + esc(tobiShortDate(item.publishedAt)) + '</div>';
     var btn = item.link ? '<a href="' + esc(item.link) + '" target="_blank" rel="noopener" style="display:block;margin-top:14px;background:#057A44;color:white;text-decoration:none;text-align:center;padding:12px;border-radius:10px;font-weight:700;">' + (item.kind === 'event' ? '🎟️ Get tickets / book' : '🔗 Read more') + '</a>' : '';
     document.getElementById('blogSheetTitle').textContent = item.title;
-    document.getElementById('blogSheetImage').style.display = 'none';
+    var im = document.getElementById('blogSheetImage');
+    if (item.imgId) { im.src = '/.netlify/functions/app-content?img=' + encodeURIComponent(item.imgId); im.style.display = 'block'; im.style.maxHeight = '420px'; im.style.objectFit = 'contain'; im.style.background = '#0F1E36'; im.style.cursor = 'zoom-in'; im.onclick = function () { if (typeof tobi_imgZoom === 'function') tobi_imgZoom(im.src); }; }
+    else { im.style.display = 'none'; im.onclick = null; im.style.maxHeight = '200px'; im.style.objectFit = 'cover'; im.style.background = ''; im.style.cursor = ''; }
     document.getElementById('blogSheetContentInner').innerHTML = '<h2 style="margin-top:0">' + esc(item.title) + '</h2>' + meta + (item.html || '') + btn;
     document.getElementById('blogSheetContent').style.display = 'block';
     var open = document.getElementById('blogSheetOpenBtn');

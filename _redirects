@@ -14,6 +14,9 @@
 /tip            /?action=tip            301
 /premium        /?action=premium        301
 
+# Public "Add your event" page
+/add-event      /add-event.html         200
+
 # Blog deep links
 
 # Business deep links

@@ -5,7 +5,7 @@
  *
  *   hq/app-posts   { items: { <id>: post } }
  *
- * post: { id, kind, title, emoji, body, html, summary, category, link, linkText,
+ * post: { id, kind, title, emoji, body, html, summary, category, link, linkText, imgId (flyer, from event submissions),
  *         showUntil, eventDate, eventTime, location, status, slug, publishedAt, createdAt, updatedAt, by }
  * kind:   update | article | event
  * status: live | hidden
@@ -73,6 +73,7 @@ function clean(raw, prev) {
     eventTime: has('eventTime') ? cleanText(raw.eventTime, 60) : (p.eventTime || ''),
     location: has('location') ? cleanText(raw.location, 120) : (p.location || ''),
     status: has('status') ? (raw.status === 'hidden' ? 'hidden' : 'live') : (p.status || 'live'),
+    imgId: has('imgId') ? (/^e[a-z0-9]{6,30}$/.test(String(raw.imgId)) ? String(raw.imgId) : '') : (p.imgId || ''),
   };
   if (!out.title) throw new HttpError(400, 'title_required', 'Please add a title.');
   if (!out.body && kind !== 'event') throw new HttpError(400, 'body_required', 'Please add the message.');
@@ -122,7 +123,7 @@ async function publicFeed() {
   const all = (await list()).filter(p => p.status === 'live');
   const pick = p => ({ id: p.id, kind: p.kind, slug: p.slug, title: p.title, emoji: p.emoji, html: p.html, summary: p.summary,
     category: p.category, link: p.link, linkText: p.linkText, showUntil: p.showUntil, eventDate: p.eventDate,
-    eventTime: p.eventTime, location: p.location, publishedAt: p.publishedAt, updatedAt: p.updatedAt });
+    eventTime: p.eventTime, location: p.location, imgId: p.imgId || '', publishedAt: p.publishedAt, updatedAt: p.updatedAt });
   return {
     updates: all.filter(p => p.kind === 'update' && (!p.showUntil || p.showUntil >= today)).map(pick),
     articles: all.filter(p => p.kind === 'article').map(pick),

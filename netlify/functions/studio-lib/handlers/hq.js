@@ -8,6 +8,8 @@
  *   POST { action: 'team-save', emails: [] }                                      (admins only)
  *   POST { action: 'app-save' | 'app-delete' }   Publish to App (updates, articles, events shown in the main app)
  *   POST { action: 'app-ai', notes, kind, category }   ✨ Write with AI — returns a draft only, never publishes
+ *   POST { action: 'subs' | 'sub-approve' | 'sub-decline' | 'sub-delete' }   public event submissions (review queue)
+ *   GET  ?subimg=<id>  a submitted event flyer
  *   GET  ?img=<id>     a card image
  */
 const core = require('../core');
@@ -15,6 +17,7 @@ const { HttpError, handler } = core;
 const hq = require('../hq');
 const apppub = require('../apppub');
 const appai = require('../appai');
+const eventsub = require('../eventsub');
 
 function requireEmail(e) {
   const email = core.normalizeEmail(e);
@@ -41,7 +44,8 @@ exports.handler = handler(async (ctx) => {
   const { event, body } = ctx;
   if (event.httpMethod === 'GET') {
     await requireHq(ctx);
-    const img = await hq.getImage((event.queryStringParameters || {}).img);
+    const q = event.queryStringParameters || {};
+    const img = q.subimg ? await eventsub.getImage(q.subimg) : await hq.getImage(q.img);
     if (!img) throw new HttpError(404, 'not_found', 'Not found.');
     const m = /^data:([^;]+);base64,(.*)$/.exec(img.dataUrl);
     return { statusCode: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'private, max-age=86400' }, body: m[2], isBase64Encoded: true };
@@ -78,7 +82,7 @@ exports.handler = handler(async (ctx) => {
   const who = await requireHq(ctx);
   await core.rateLimit('hq', who.email, 1200, 60 * 60 * 1000);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: await apppub.list(), appCategories: apppub.CATEGORIES };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: await apppub.list(), appCategories: apppub.CATEGORIES, subs: await eventsub.list() };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -101,6 +105,21 @@ exports.handler = handler(async (ctx) => {
       const draft = await appai.write(body.notes, body.kind, body.category);
       await core.audit(who.email, 'hq_app_ai', { kind: body.kind });
       return { draft };
+    }
+    case 'subs': return { subs: await eventsub.list() };
+    case 'sub-approve': {
+      const post = await eventsub.approve(String(body.id || ''), body.item, who.email);
+      await core.audit(who.email, 'hq_sub_approve', { id: body.id, post: post.id });
+      return { post, subs: await eventsub.list(), app: await apppub.list() };
+    }
+    case 'sub-decline': {
+      await eventsub.decline(String(body.id || ''), who.email);
+      await core.audit(who.email, 'hq_sub_decline', { id: body.id });
+      return { subs: await eventsub.list() };
+    }
+    case 'sub-delete': {
+      await eventsub.remove(String(body.id || ''));
+      return { subs: await eventsub.list() };
     }
     case 'app-delete': {
       await apppub.remove(String(body.id || ''));

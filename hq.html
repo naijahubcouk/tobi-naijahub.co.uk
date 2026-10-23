@@ -150,6 +150,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 .apb{padding:12px 14px}.apt{font-size:15px;font-weight:700;line-height:1.35;margin-bottom:6px}.apm{font-size:12.5px;color:#555;margin-bottom:6px;line-height:1.6}
 .aptx{font-size:13.5px;color:#444;line-height:1.65}.aptx h3{font-size:14px;margin:10px 0 2px;color:var(--navy)}.aptx ul{padding-left:18px;margin:4px 0}.aptx p{margin:0 0 6px}
 .apl{margin-top:8px;font-size:13px;color:#057A44;font-weight:700}
+.subc{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.subimg{width:130px;max-height:180px;object-fit:cover;border-radius:10px;cursor:zoom-in;flex:none;background:#eee}.subimg.none{height:90px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);cursor:default}.side-nav .n.gold:not(:empty){background:var(--gold);color:var(--navy)}
+@media (max-width:600px){.subc{flex-direction:column}.subimg{width:100%;max-height:260px;object-fit:contain}}
 @media (max-width:900px){.apgrid{grid-template-columns:1fr}.appv{position:static}.aprow{flex-direction:column;align-items:stretch;gap:8px}}
 </style>
 </head>
@@ -179,6 +181,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="calendar">📅 Calendar</button>
       <button data-nav="posted">📲 Posted</button>
       <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
+      <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
       <button data-nav="bin">🗑 Bin <span class="n" id="nBin"></span></button>
       <button id="teamBtn" class="hidden">👥 Team access</button>
       <a href="/studio-admin" id="adminLink" class="hidden">📋 Admin ↗</a>
@@ -242,20 +245,21 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || [];
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || [];
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
   function go(v) {
-    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'bin'].indexOf(v) >= 0 ? v : 'today';
+    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'bin'].indexOf(v) >= 0 ? v : 'today';
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
     var n = S.items.filter(function (c) { return c.status === 'idea'; }).length; $('#nIdeas').textContent = n || '';
     $('#nBin').textContent = (S.bin || []).length || '';
     $('#nApp').textContent = (S.app || []).filter(function (p) { return appState(p) === 'live'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, bin: vBin })[S.view]();
+    $('#nSubs').textContent = subsNew().length || '';
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
@@ -789,6 +793,51 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = '✨ Write it for me'; }
     };
   }
+  // ── 📥 Event submissions (public "Add your event" page → review here → live in the app) ──
+  function subsNew() { return (S.subs || []).filter(function (x) { return x.status === 'new'; }); }
+  function contactLink(c) {
+    c = String(c || '').trim();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) return '<a href="mailto:' + esc(c) + '">' + esc(c) + '</a>';
+    var d = c.replace(/[^\d+]/g, '');
+    if (d.replace(/\D/g, '').length >= 10) { var w = d.replace(/^\+/, '').replace(/^0/, '44'); return esc(c) + ' · <a href="https://wa.me/' + esc(w) + '" target="_blank" rel="noopener">WhatsApp</a>'; }
+    return esc(c);
+  }
+  function vSubs() {
+    $('#ttl').textContent = 'Event submissions';
+    $('#topRight').innerHTML = '<a class="btn ghost" href="/add-event" target="_blank" rel="noopener">Open the public page ↗</a>';
+    S.subTab = S.subTab || 'new';
+    var all = S.subs || [];
+    var tabs = { new: '📥 To review', approved: '✅ Approved', declined: '✖ Declined' };
+    var list = all.filter(function (x) { return x.status === S.subTab; });
+    var VIA = { flyer: '🖼️ from a flyer', notes: '✨ from pasted details', manual: '✍️ written by them' };
+    $('#view').innerHTML = '<div class="wrap">' +
+      '<div class="note" style="margin-bottom:12px">People add events at <b>auntietobi.co.uk/add-event</b> (no sign-in). Nothing goes in the app until you approve it. Approved events show in Events with their flyer and disappear after the date.</div>' +
+      '<div class="chipbar" style="margin-bottom:12px">' + Object.keys(tabs).map(function (k) { var n = all.filter(function (x) { return x.status === k; }).length; return '<button class="chip" data-stab="' + k + '" aria-pressed="' + (S.subTab === k) + '">' + tabs[k] + ' (' + n + ')</button>'; }).join('') + '</div>' +
+      (list.length ? list.map(function (x) {
+        var past = x.eventDate && x.eventDate < today();
+        return '<div class="card subc">' +
+          (x.imgId ? '<img class="subimg" src="/.netlify/functions/studio-hq?subimg=' + esc(x.imgId) + '" alt="Flyer" data-zoom>' : '<div class="subimg none">No flyer</div>') +
+          '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:800;font-size:16px">' + esc(x.title) + '</div>' +
+          '<div class="muted" style="font-size:13.5px;margin:2px 0 6px">🗓 ' + esc(fmtLong(x.eventDate)) + (x.eventTime ? ' · ' + esc(x.eventTime) : '') + (past ? ' <b style="color:var(--danger)">· date has passed</b>' : '') + '<br>📍 ' + esc(x.location) + '</div>' +
+          (x.body ? '<details><summary style="cursor:pointer;font-size:13.5px;font-weight:700;color:var(--green-d)">Read the write-up</summary><div class="aptx" style="margin-top:6px">' + appHtml(x.body) + '</div></details>' : '<div class="muted" style="font-size:13px">No write-up</div>') +
+          (x.link ? '<div style="font-size:13px;margin-top:6px">🔗 <a href="' + esc(x.link) + '" target="_blank" rel="noopener">' + esc(x.link.replace(/^https?:\/\//, '').slice(0, 60)) + '</a></div>' : '') +
+          '<div style="font-size:13px;margin-top:8px;background:#F7F2E7;border-radius:8px;padding:6px 10px">👤 <b>' + esc(x.contactName) + '</b> · ' + contactLink(x.contact) + '<br><span class="muted">Sent ' + esc(new Date(x.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + ' · ' + (VIA[x.via] || '') + (x.reviewedBy ? ' · reviewed by ' + esc((S.names && S.names[x.reviewedBy]) || x.reviewedBy) : '') + '</span></div>' +
+          '<div class="apact" style="margin-top:10px">' +
+          (x.status === 'new' ? '<button class="btn primary sm" data-sappr="' + x.id + '">✅ Approve</button><button class="btn ghost sm" data-sedit="' + x.id + '">✏️ Edit, then approve</button><button class="btn ghost sm" data-sdecl="' + x.id + '">✖ Decline</button>' : '') +
+          (x.status === 'approved' ? '<span class="as live" style="align-self:center">● Live in the app</span>' + (x.appId && appById(x.appId) ? '<button class="btn ghost sm" data-sopen="' + x.appId + '">✏️ Edit in Publish to App</button>' : '') : '') +
+          (x.status === 'declined' ? '<button class="btn ghost sm" data-sedit="' + x.id + '">✏️ Edit, then approve</button><button class="btn ghost sm" data-sdel="' + x.id + '">🗑 Delete</button>' : '') +
+          '</div></div></div>';
+      }).join('') : '<div class="card"><p class="muted">' + (S.subTab === 'new' ? 'No new events to review. Share auntietobi.co.uk/add-event so people can send theirs.' : 'Nothing here yet.') + '</p></div>') + '</div>';
+    $$('[data-stab]').forEach(function (b) { b.onclick = function () { S.subTab = b.dataset.stab; vSubs(); }; });
+    $$('[data-zoom]').forEach(function (im) { im.onclick = function () { window.open(im.src, '_blank'); }; });
+    $$('[data-sappr]').forEach(function (b) { b.onclick = async function () { var x = subById(b.dataset.sappr); if (x.eventDate < today() && !confirm('This date has already passed. Approve anyway?')) return; b.disabled = true; try { var r = await api('sub-approve', { id: x.id }); S.subs = r.subs; S.app = r.app; toast('Approved — it’s in the app’s Events within a minute 🎉'); rerender(); } catch (e) { toast(e.message); b.disabled = false; } }; });
+    $$('[data-sedit]').forEach(function (b) { b.onclick = function () { var x = subById(b.dataset.sedit); appEditor({ kind: 'event', title: x.title, body: x.body, eventDate: x.eventDate, eventTime: x.eventTime, location: x.location, link: x.link }, null, null, x); }; });
+    $$('[data-sdecl]').forEach(function (b) { b.onclick = async function () { if (!confirm('Decline this event? It won’t go in the app. (They are not told automatically.)')) return; try { var r = await api('sub-decline', { id: b.dataset.sdecl }); S.subs = r.subs; toast('Declined'); rerender(); } catch (e) { toast(e.message); } }; });
+    $$('[data-sdel]').forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this submission for good?')) return; try { var r = await api('sub-delete', { id: b.dataset.sdel }); S.subs = r.subs; toast('Deleted'); rerender(); } catch (e) { toast(e.message); } }; });
+    $$('[data-sopen]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.sopen)); }; });
+  }
+  function subById(id) { return (S.subs || []).filter(function (x) { return x.id === id; })[0]; }
   function appById(id) { return (S.app || []).filter(function (x) { return x.id === id; })[0]; }
   function appPasteSheet() {
     var s = sheet('<h2>📋 Paste to publish</h2><p class="muted" style="margin:4px 0 10px">Paste one update — or a whole numbered list from ChatGPT. Each item becomes a ready-filled post you can check and publish. Lines like “Priority:” and “Content angle:” are left out automatically.</p>' +
@@ -809,13 +858,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (it.kind === 'event') p.eventDate = it.day; else if (it.day) p.showUntil = addDays(it.day, 1);
     return p;
   }
-  function appEditor(p, onDone, ai) {
+  function appEditor(p, onDone, ai, sub) {
     p = Object.assign({ kind: 'update', category: 'News' }, p || {});
     var isNew = !p.id;
     var cats = S.appCats || ['News'];
-    var s = sheet('<h2>' + (isNew ? 'Publish to App' : 'Edit app post') + '</h2>' +
+    var s = sheet('<h2>' + (sub ? 'Check, then approve' : isNew ? 'Publish to App' : 'Edit app post') + '</h2>' + (sub ? '<p class="muted" style="margin:4px 0 0;font-size:13.5px">Sent by ' + esc(sub.contactName) + '. Change anything you like — their flyer stays attached.</p>' : '') +
       (ai ? '<div class="note" style="margin:8px 0">✨ Written by AI from your notes — please check every fact, date and link before publishing. <button class="btn link" id="aeAgain" style="font-size:13.5px">Try again</button> · <button class="btn link" id="aeNotes" style="font-size:13.5px">Edit my notes</button></div>' : '') +
-      '<div class="chipbar" style="margin:10px 0" id="aeK">' + ['update', 'article', 'event'].map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (p.kind === k) + '"' + (isNew ? '' : ' disabled') + '>' + KIND[k] + '</button>'; }).join('') + '</div>' +
+      '<div class="chipbar" style="margin:10px 0" id="aeK">' + ['update', 'article', 'event'].map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (p.kind === k) + '"' + (isNew && !sub ? '' : ' disabled') + '>' + KIND[k] + '</button>'; }).join('') + '</div>' +
       '<div class="apgrid"><div class="stack">' +
       '<div><label for="aeT">Title</label><input id="aeT" maxlength="160" value="' + esc(p.title || '') + '"></div>' +
       '<div data-for="article"><label for="aeC">Category</label><select id="aeC">' + cats.map(function (c) { return '<option' + (c === p.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
@@ -827,7 +876,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div data-for="update"><label for="aeU">Show until</label><input type="date" id="aeU" value="' + esc(p.showUntil || '') + '"></div></div>' +
       '</div><div><div class="lbl">Preview in the app</div><div id="aePv" class="appv"></div></div></div>' +
       '<div class="err hidden" id="aeErr"></div>' +
-      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="aeX">Cancel</button>' + (isNew ? '<button class="btn ghost" id="aeH">Save hidden</button>' : '') + '<button class="btn primary" id="aeP">' + (isNew ? 'Publish to app' : 'Save changes') + '</button></div>');
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="aeX">Cancel</button>' + (isNew && !sub ? '<button class="btn ghost" id="aeH">Save hidden</button>' : '') + '<button class="btn primary" id="aeP">' + (sub ? '✅ Approve & publish' : isNew ? 'Publish to app' : 'Save changes') + '</button></div>');
     function kind() { var b = $('#aeK [aria-pressed=true]', s); return b ? b.dataset.k : p.kind; }
     function vals() {
       var k = kind();
@@ -861,6 +910,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       if (item.kind === 'update' && !item.showUntil && isNew && !confirm('No “show until” date — this update will stay in the app until you hide it. Publish anyway?')) return;
       $$('button', s).forEach(function (b) { b.disabled = true; });
       try {
+        if (sub) { var ra = await api('sub-approve', { id: sub.id, item: item }); S.subs = ra.subs; S.app = ra.app; s.remove(); toast('Approved — it’s in the app’s Events within a minute 🎉'); rerender(); return; }
         var r = await api('app-save', { item: item }); upsertApp(r.item); s.remove();
         toast(isNew ? (status === 'hidden' ? 'Saved (hidden)' : 'Published — it’s in the app within a minute 🎉') : 'Saved');
         if (onDone) onDone(r.item);
@@ -869,7 +919,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     }
     function go2app() { if (S.view !== 'app') go('app'); }
     $('#aeP', s).onclick = function () { submit(isNew ? 'live' : (p.status || 'live')); };
-    if (isNew) $('#aeH', s).onclick = function () { submit('hidden'); };
+    if (isNew && !sub) $('#aeH', s).onclick = function () { submit('hidden'); };
   }
 
   function sheet(html) { var s = document.createElement('div'); s.className = 'scrim'; s.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>'; document.body.appendChild(s); s.addEventListener('click', function (e) { if (e.target === s) s.remove(); }); return s; }
