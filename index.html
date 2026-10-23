@@ -5045,6 +5045,12 @@ function showLinksPage() {
 
   const html = `<div data-links-page="1" style="display:flex;flex-direction:column;gap:10px;">
 
+    <a href="https://auntietobi.co.uk/add-event" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">&#127881;</span>
+      <span style="flex:1;text-align:left;">Submit Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing &mdash; paste your event link or upload your flyer</span></span>
+      <span style="color:#ccc;">&#8250;</span>
+    </a>
+
     <a href="javascript:void(0)" onclick="showAboutTobi();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">&#8505;&#65039;</span>
       <span style="flex:1;text-align:left;">About Auntie Tobi<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Who is Auntie Tobi and what can she do?</span></span>
@@ -5054,12 +5060,6 @@ function showLinksPage() {
     <a href="javascript:void(0)" onclick="showFAQCard();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">&#10067;</span>
       <span style="flex:1;text-align:left;">FAQ<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Common questions about Auntie Tobi</span></span>
-      <span style="color:#ccc;">&#8250;</span>
-    </a>
-
-    <a href="https://auntietobi.co.uk/add-event" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">&#127881;</span>
-      <span style="flex:1;text-align:left;">Add Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing &mdash; upload your flyer and we&rsquo;ll do the rest</span></span>
       <span style="color:#ccc;">&#8250;</span>
     </a>
 
@@ -5260,6 +5260,7 @@ function showWelcomeCard() {
       <div style="font-size:16px;font-weight:700;color:#057A44;text-align:center;margin-bottom:10px;">So… wetin you need today? 😄</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
         📢 Own a business? <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">List it here 👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here</a></a>
+        <div style="margin-top:6px;">🎉 Hosting an event? Submit it free 👉 <a href="https://auntietobi.co.uk/add-event" target="_blank" style="color:#057A44;font-weight:700;text-decoration:none;">Click here</a></div>
       </div>
     </div>
   </div>`;
@@ -5269,7 +5270,7 @@ function showWelcomeCard() {
   // Add suggestion bubbles
   const suggStr = getRandomSuggestionStr();
   const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/add-event\',\'_blank\')">📣 Submit Event</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
   const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">${rotatingBtns}${fixedBtns}</div>`);
 }
@@ -8935,7 +8936,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/add-event\',\'_blank\')">📣 Submit Event</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
