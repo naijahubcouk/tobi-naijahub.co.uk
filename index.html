@@ -4006,7 +4006,7 @@ function tobiEventsPaint() {
   var chip = function (on, label, onclick) {
     return '<button onclick="' + onclick + '" style="flex-shrink:0;border:1.5px solid ' + (on ? '#057A44' : '#e0e0e0') + ';background:' + (on ? '#057A44' : 'white') + ';color:' + (on ? 'white' : '#0F1E36') + ';border-radius:20px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">' + label + '</button>';
   };
-  var row = function (title, html) { return '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;margin:2px 0 6px;">' + title + '</div><div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;">' + html + '</div>'; };
+  var row = function (title, html) { return '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;margin:2px 0 6px;">' + title + '</div><div style="display:flex;flex-wrap:wrap;gap:6px;">' + html + '</div>'; };
   var mk = Object.keys(months).sort();
   var ck = Object.keys(cities).sort(function (a, b) { return (a === 'Other UK') - (b === 'Other UK') || cities[b] - cities[a] || a.localeCompare(b); });
   var esc = function (x) { return String(x).replace(/'/g, "\\'"); };
