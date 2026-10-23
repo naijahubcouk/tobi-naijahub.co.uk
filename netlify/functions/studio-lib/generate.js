@@ -326,7 +326,7 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
       : toolId === 'planner' ? { avoid: await growth.recentTopics(email) } : {};
     result = await callModel(tools.buildMessages(toolId, input, profile, extra), tool.maxTokensFor ? tool.maxTokensFor(input) : tool.maxTokens, settings, tool.json ? { json: true, raw: true } : undefined);
     if (toolId === 'carouselmaker') {
-      const car = tools.parseCarousel(result.text, input.slides);
+      const car = tools.parseCarousel(result.text, tools.slideCountFor(input));
       if (!car) throw new HttpError(502, 'ai_error', 'The AI couldn\u2019t write that carousel just now. You have not been charged \u2014 please try again.');
       result.text = JSON.stringify(car);
     }
@@ -358,6 +358,51 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   return { item, replayed: false, calendarAdded, ideasAdded };
 }
 
+// Design maker with the member's own words (no AI). A carousel uses 1 AI credit; a single post or story is free.
+async function createOwn({ email, profile, settings, access, raw, idemKey }) {
+  if (!/^[A-Za-z0-9-]{16,64}$/.test(String(idemKey || ''))) throw new HttpError(400, 'bad_request', 'Missing request id.');
+  await core.rateLimit('design-own', email, 60, 60 * 60 * 1000, 'You\u2019re going a bit fast \u2014 please wait a few minutes.');
+  raw = raw && typeof raw === 'object' ? raw : {};
+  const format = ['carousel', 'post', 'story'].includes(raw.format) ? raw.format : 'carousel';
+  const max = format === 'post' ? 1 : format === 'story' ? 5 : 10;
+  const slides = (Array.isArray(raw.slides) ? raw.slides : []).map(x => ({ headline: core.cleanText(x && x.headline, 160), body: core.cleanText(x && x.body, 400) }))
+    .filter(x => x.headline || x.body).slice(0, max);
+  if (!slides.length) throw new HttpError(400, 'missing_field', 'Please add the words for at least one slide.');
+  if (format === 'carousel' && slides.length < 2) throw new HttpError(400, 'missing_field', 'A carousel needs at least 2 slides. For one slide, choose Post.');
+  slides.forEach((x, k) => { x.role = slides.length === 1 ? 'single' : k === 0 ? 'hook' : k === slides.length - 1 ? 'cta' : 'point'; });
+  const cost = format === 'carousel' ? 1 : 0;
+  const title = core.cleanText(raw.title, 90) || slides[0].headline || 'My design';
+  const day = dayKey();
+  let res = { fromCredits: 0 };
+  if (cost) {
+    const creditBal = credits.balanceOf(await credits.get(email));
+    res = await reserve(email, idemKey, access.limit, day, cost, creditBal);
+    if (res.replay) {
+      const item = await getJson(itemKey(email, res.replay.id));
+      if (item) return { item, replayed: true };
+      throw new HttpError(409, 'duplicate', 'This request was already completed.');
+    }
+    if (res.fromCredits) {
+      try { await credits.hold(email, idemKey, res.fromCredits); }
+      catch (e) { await release(email, idemKey, day); throw e; }
+    }
+  }
+  const id = `${Date.now().toString(36)}${randomToken(6).replace(/[^A-Za-z0-9]/g, '')}`.slice(0, 24);
+  const item = {
+    id, tool: 'carouselmaker', title: `Design maker: ${title}`.slice(0, 90), input: { topic: title, format, own: true, slides: String(slides.length) }, cost,
+    output: JSON.stringify({ slides, caption: '', hashtags: [] }), edited: null, saved: false, posted: false, calendarId: '',
+    createdAt: new Date().toISOString(), updatedAt: null, model: 'own-words',
+  };
+  if (cost) {
+    const info = { id, tool: 'carouselmaker-own', cost, inTok: 0, outTok: 0, costUsd: 0 };
+    await commit(email, idemKey, day, info);
+    if (res.fromCredits) await credits.commit(email, idemKey, info);
+    await addGlobal(monthKey(), info, settings);
+  }
+  await addToHistory(email, item);
+  return { item, replayed: false };
+}
+
 async function usageSummary(email, access) {
   const day = dayKey();
   const u = (await getJson(usageKey(email, day))) || emptyUsage();
@@ -372,6 +417,6 @@ async function usageSummary(email, access) {
 }
 
 module.exports = {
-  generate, refine, usageSummary, getItem, itemKey, historyIndexKey, usageKey, monthUsageKey, globalKey,
+  createOwn, generate, refine, usageSummary, getItem, itemKey, historyIndexKey, usageKey, monthUsageKey, globalKey,
   reserve, commit, release, callModel, emptyUsage, addGlobal,
 };
