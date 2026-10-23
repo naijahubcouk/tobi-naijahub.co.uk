@@ -147,10 +147,51 @@ async function recatServices() {
   await setJson('market/recat-services-v1', { at: core.nowIso(), ids: moved });
 }
 
+// One-off listings added for the admin by the developer (the photo is fetched from the seller's own site once and stored here).
+const ADDED = [
+  { id: 'l_abbycookware1', key: 'market/added-abby-cookware',
+    live: { business: 'Abbystore', name: 'MGC Ceramic Coating Cookware Set', category: 'Other', price: '£115',
+      desc: 'A stylish non-stick ceramic coating cookware set for everyday cooking — food doesn’t stick and cleaning up is easy. Durable, with comfortable handles. Great for frying eggs and fish, soups, sauces, stews, pasta and noodles.',
+      btnText: 'Buy Now', link: 'https://abbystoreltd.com/product/mgc-ceramic-coating-cookware-set/', wa: '447761572072', endsAt: '', bizSlug: 'abbystoreltd', imgs: [] },
+    photos: ['https://abbystoreltd.com/wp-content/uploads/2026/10/IMG_20261011_065730_514-1-600x600.jpg',
+      'https://abbystoreltd.com/wp-content/uploads/2026/10/IMG_20261011_065730_514-1-768x768.jpg',
+      'https://abbystoreltd.com/wp-content/uploads/2026/10/IMG_20261011_065730_514-1.jpg',
+      'https://abbystoreltd.com/wp-content/uploads/2026/10/IMG_20261011_065730_514-1-300x300.jpg'] },
+];
+async function fetchPhoto(url) {
+  try {
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 6000);
+    const r = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'AuntieTobiBot/1.0 (+https://auntietobi.co.uk)' } }).finally(() => clearTimeout(t));
+    const type = ((r.headers.get('content-type') || '').match(/image\/(jpeg|png|webp)/) || [])[1];
+    if (!r.ok || !type) return '';
+    const buf = Buffer.from(await r.arrayBuffer());
+    const dataUrl = `data:image/${type};base64,${buf.toString('base64')}`;
+    return dataUrl.length <= 380000 ? dataUrl : '';
+  } catch (_) { return ''; }
+}
+async function addListings() {
+  for (const a of ADDED) {
+    const done = await getJson(a.key);
+    if (done && done.ok) continue;
+    const tries = (done && done.tries) || 0;
+    if (done && done.at && Date.now() - Date.parse(done.at) < 10 * 60 * 1000) continue; // wait 10 minutes between tries
+    let img = '';
+    for (const u of a.photos) { img = await fetchPhoto(u); if (img) break; }
+    if (!img && tries < 5) { await setJson(a.key, { tries: tries + 1, at: core.nowIso() }); continue; } // try again later
+    const imgs = img ? [await saveImage(img, 'admin:seed')] : [];
+    await cas(lkey(a.id), cur => {
+      if (cur) return undefined;
+      return { id: a.id, source: 'admin', owner: '', contact: {}, live: { ...a.live, imgs }, draft: null, link: null, state: '', note: '', pinned: false, hidden: false, createdAt: core.nowIso(), approvedAt: core.nowIso(), updatedAt: core.nowIso() };
+    });
+    await setJson(a.key, { ok: true, at: core.nowIso(), photo: !!img });
+  }
+}
+
 async function all() {
   await ensureSeed();
   await retireOld();
   await recatServices();
+  await addListings();
   const keys = await core.listKeys('market/listing/');
   const out = [];
   for (let i = 0; i < keys.length; i += 10) out.push(...(await Promise.all(keys.slice(i, i + 10).map(k => getJson(k)))));
