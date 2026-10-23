@@ -3616,6 +3616,14 @@ window._renderAllNewsBatch = function(from) {
   const existingBtn = document.getElementById('all-news-more-btn');
   if (existingBtn) existingBtn.remove();
 
+  if (isEvents) {
+    const evBtn = '<button class="suggestion-btn" onclick="window.open(\'https://auntietobi.co.uk/add-event\',\'_blank\')">📣 Add Your Event</button>';
+    addTipMessage(hasMore
+      ? `<div id="all-news-more-btn" class="suggestions" style="margin-top:4px;"><button class="suggestion-btn" onclick="window._renderAllNewsBatch(${window._allNewsShownCount})">🎉 More Events (${news.length - window._allNewsShownCount} left)</button>${evBtn}</div>`
+      : `<div id="all-news-more-btn" class="suggestions" style="margin-top:8px;">${evBtn}<button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button></div>`);
+    tobiEventsBarToEnd();
+    return;
+  }
   if (hasMore) {
     const nextFrom = window._allNewsShownCount;
     const moreLabel = isEvents ? '🎉 More Events' : '📰 More News';
@@ -4002,19 +4010,29 @@ function tobiEventsPaint() {
   var mk = Object.keys(months).sort();
   var ck = Object.keys(cities).sort(function (a, b) { return (a === 'Other UK') - (b === 'Other UK') || cities[b] - cities[a] || a.localeCompare(b); });
   var esc = function (x) { return String(x).replace(/'/g, "\\'"); };
-  var bar = '<div data-events-filter="1" style="background:white;border-radius:12px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">'
+  var bar = '<div data-events-filter="1" style="background:white;border-radius:12px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:90px;">'
     + row('📅 MONTH', chip(!f.m, 'All (' + Object.keys(months).reduce(function (n, k) { return n + months[k]; }, 0) + ')', "tobiEventsFilter('m','')") + mk.map(function (k) { return chip(f.m === k, mLabel(k) + ' (' + months[k] + ')', "tobiEventsFilter('m','" + k + "')"); }).join(''))
     + '<div style="height:10px"></div>'
     + row('📍 CITY', chip(!f.c, 'All (' + Object.keys(cities).reduce(function (n, k) { return n + cities[k]; }, 0) + ')', "tobiEventsFilter('c','')") + ck.map(function (k) { return chip(f.c === k, k + ' (' + cities[k] + ')', "tobiEventsFilter('c','" + esc(k) + "')"); }).join(''))
     + '</div>';
   var messages = document.getElementById('messages');
   messages.innerHTML = '';
-  addTipMessage(bar);
   if (!list.length) {
     addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:16px;text-align:center;font-size:15px;color:#0F1E36;">No events match — try another month or city.<br><a href="https://auntietobi.co.uk/add-event" target="_blank" style="color:#057A44;font-weight:700;">📣 Submit your event →</a></div>');
+    addTipMessage(bar);
     return;
   }
+  window._evBarHtml = bar;
   window._evRender(list);
+  tobiEventsBarToEnd();
+}
+// Keeps the month/city filters at the bottom, after the event cards and the Add Your Event bubbles.
+function tobiEventsBarToEnd() {
+  var messages = document.getElementById('messages'); if (!messages || !window._evBarHtml) return;
+  var el = messages.querySelector('[data-events-filter]');
+  if (!el) { addTipMessage(window._evBarHtml); return; }
+  var wrap = el; while (wrap.parentElement && wrap.parentElement !== messages) wrap = wrap.parentElement;
+  messages.appendChild(wrap);
 }
 
 // Works out the actual EVENT date of a live feed post (not the date the post was published).
@@ -7837,7 +7855,7 @@ function showEventsCard() {
   } else {
   window._eventsData = upcoming;
   window._renderEventsBatch = function(from) {
-    const BATCH = 5;
+    const BATCH = 6;
     const batch = window._eventsData.slice(from, from + BATCH);
     batch.forEach(e => {
       const safeTitle = (e.title||'').replace(/"/g,'&quot;');
@@ -7880,6 +7898,7 @@ function showEventsCard() {
         
       </div>`);
     }
+    tobiEventsBarToEnd();
   };
   tobiEventsShow(upcoming, function (list) { window._eventsData = list; window._renderEventsBatch(0); });
   return;
