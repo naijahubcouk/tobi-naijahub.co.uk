@@ -3969,6 +3969,54 @@ function showAllNews() {
   setTimeout(showNewsArchive, 100);
 }
 
+// ── Events page: filter by month and city ──
+var TOBI_CITIES = ['London','Manchester','Birmingham','Leeds','Liverpool','Sheffield','Bristol','Nottingham','Leicester','Coventry','Bradford','Newcastle','Sunderland','Middlesbrough','Hull','Derby','Stoke','Wolverhampton','Reading','Milton Keynes','Luton','Northampton','Peterborough','Cambridge','Oxford','Southampton','Portsmouth','Brighton','Plymouth','Exeter','Norwich','Ipswich','Chelmsford','Colchester','Basildon','Southend','Croydon','Slough','Watford','Swindon','Gloucester','Cheltenham','Bath','Bournemouth','York','Preston','Bolton','Wigan','Warrington','Oldham','Rochdale','Salford','Stockport','Huddersfield','Wakefield','Doncaster','Rotherham','Lincoln','Leamington','Telford','Dudley','Walsall','West Bromwich','Oxted','Guildford','Crawley','Maidstone','Canterbury','Dartford','Gravesend','Medway','Chatham','Glasgow','Edinburgh','Aberdeen','Dundee','Cardiff','Swansea','Newport','Belfast'];
+var TOBI_LONDON_AREAS = /\b(Peckham|Brixton|Lewisham|Woolwich|Thamesmead|Dagenham|Barking|Ilford|Romford|Stratford|Hackney|Tottenham|Edmonton|Enfield|Wembley|Harrow|Ealing|Hounslow|Greenwich|Bexley|Bromley|Southwark|Camden|Islington|Westminster|Shoreditch|Canary Wharf|Walthamstow|Leyton|Catford|Deptford|Elephant|Kensington|Hammersmith|Wandsworth|Clapham|Lambeth|Erith|Abbey Wood|Plumstead|Charlton|Eltham|Sidcup|Upminster|Hornchurch|Barnet|Haringey|Newham|Redbridge|Havering|Merton|Sutton|Kingston)\b|\b(E|EC|N|NW|SE|SW|W|WC)\d{1,2}[A-Z]?\s*\d[A-Z]{2}\b/i;
+function tobiEventCity(e) {
+  var txt = [e.loc, e.location, e.title, e.summary].filter(function (x) { return x && x !== 'UK'; }).join(' | ');
+  for (var i = 0; i < TOBI_CITIES.length; i++) { if (new RegExp('\\b' + TOBI_CITIES[i] + '\\b', 'i').test(txt)) return TOBI_CITIES[i]; }
+  if (TOBI_LONDON_AREAS.test(txt)) return 'London';
+  return 'Other UK';
+}
+function tobiEventsShow(all, render) {
+  window._evAll = all || []; window._evRender = render; window._evF = { m: '', c: '' };
+  tobiEventsPaint();
+}
+function tobiEventsFilter(kind, val) { window._evF[kind] = (window._evF[kind] === val ? '' : val); tobiEventsPaint(); scrollToTop(); }
+function tobiEventsPaint() {
+  var all = window._evAll || [], f = window._evF || { m: '', c: '' };
+  var mKey = function (e) { var d = e.dateObj; return d ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') : ''; };
+  var mLabel = function (k) { var p = k.split('-'); return new Date(+p[0], +p[1] - 1, 1).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }); };
+  all.forEach(function (e) { if (!e._city) e._city = tobiEventCity(e); });
+  // counts respect the other filter, so the numbers always match what you'll see
+  var months = {}, cities = {};
+  all.forEach(function (e) {
+    if (!f.c || e._city === f.c) { var k = mKey(e); if (k) months[k] = (months[k] || 0) + 1; }
+    if (!f.m || mKey(e) === f.m) cities[e._city] = (cities[e._city] || 0) + 1;
+  });
+  var list = all.filter(function (e) { return (!f.m || mKey(e) === f.m) && (!f.c || e._city === f.c); });
+  var chip = function (on, label, onclick) {
+    return '<button onclick="' + onclick + '" style="flex-shrink:0;border:1.5px solid ' + (on ? '#057A44' : '#e0e0e0') + ';background:' + (on ? '#057A44' : 'white') + ';color:' + (on ? 'white' : '#0F1E36') + ';border-radius:20px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">' + label + '</button>';
+  };
+  var row = function (title, html) { return '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;margin:2px 0 6px;">' + title + '</div><div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;">' + html + '</div>'; };
+  var mk = Object.keys(months).sort();
+  var ck = Object.keys(cities).sort(function (a, b) { return (a === 'Other UK') - (b === 'Other UK') || cities[b] - cities[a] || a.localeCompare(b); });
+  var esc = function (x) { return String(x).replace(/'/g, "\\'"); };
+  var bar = '<div data-events-filter="1" style="background:white;border-radius:12px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">'
+    + row('📅 MONTH', chip(!f.m, 'All (' + Object.keys(months).reduce(function (n, k) { return n + months[k]; }, 0) + ')', "tobiEventsFilter('m','')") + mk.map(function (k) { return chip(f.m === k, mLabel(k) + ' (' + months[k] + ')', "tobiEventsFilter('m','" + k + "')"); }).join(''))
+    + '<div style="height:10px"></div>'
+    + row('📍 CITY', chip(!f.c, 'All (' + Object.keys(cities).reduce(function (n, k) { return n + cities[k]; }, 0) + ')', "tobiEventsFilter('c','')") + ck.map(function (k) { return chip(f.c === k, k + ' (' + cities[k] + ')', "tobiEventsFilter('c','" + esc(k) + "')"); }).join(''))
+    + '</div>';
+  var messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  addTipMessage(bar);
+  if (!list.length) {
+    addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:8px;padding:16px;text-align:center;font-size:15px;color:#0F1E36;">No events match — try another month or city.<br><a href="https://auntietobi.co.uk/add-event" target="_blank" style="color:#057A44;font-weight:700;">📣 Submit your event →</a></div>');
+    return;
+  }
+  window._evRender(list);
+}
+
 // Works out the actual EVENT date of a live feed post (not the date the post was published).
 // Looks in eventDate, date, title and summary for things like "18 Oct 2026", "Sat 6th September", "6/9/2026".
 // Returns null when no event date can be found, so undated posts never show as "upcoming".
@@ -4052,9 +4100,7 @@ function showEventsFromNews() {
     return;
   }
 
-  window._allNewsData = upcomingEvents;
-  window._allNewsShownCount = 0;
-  window._renderAllNewsBatch(0);
+  tobiEventsShow(upcomingEvents, function (list) { window._allNewsData = list; window._allNewsShownCount = 0; window._renderAllNewsBatch(0); });
 }
 function buildLiveNewsHTML(articles, showAll) {
   const displayArticles = showAll ? articles : articles.slice(0, 2);
@@ -7835,7 +7881,7 @@ function showEventsCard() {
       </div>`);
     }
   };
-  window._renderEventsBatch(0);
+  tobiEventsShow(upcoming, function (list) { window._eventsData = list; window._renderEventsBatch(0); });
   return;
   }
 }
