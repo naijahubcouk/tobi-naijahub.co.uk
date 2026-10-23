@@ -154,7 +154,9 @@ async function fetchImage(u) {
 
 // ── Creating an event image with AI ──
 async function makePicture(info) {
-  const title = core.cleanText(info && info.title, 120).replace(/^[^\p{L}\p{N}]+/u, '');
+  const fullTitle = core.cleanText(info && info.title, 120);
+  const emoji = (fullTitle.match(/^[^\p{L}\p{N}\s]+/u) || [''])[0].trim();
+  const title = fullTitle.replace(/^[^\p{L}\p{N}]+/u, '');
   if (!title) throw new HttpError(400, 'title_required', 'Add the title first.');
   const day = !info || !info.eventDate ? '' : /^\d{4}-\d{2}-\d{2}$/.test(String(info.eventDate || '')) ? new Date(info.eventDate + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
   const town = core.cleanText(info.location, 120).split(',').map(s => s.trim()).filter(s => s && !/\d/.test(s)).pop() || '';
@@ -163,10 +165,16 @@ async function makePicture(info) {
   if (!key) throw new HttpError(500, 'ai_not_configured', 'Creating images needs the AI to be set up.');
   const article = info.kind === 'article' || info.kind === 'news';
   const prompt = article ?
-`Create a wide (16:9) header illustration for a post in the Auntie Tobi app — a warm, trusted UK guide for Nigerians living in the UK.
-Post: "${title}"${about ? `\nAbout: ${about}` : ''}
-Style: modern flat editorial illustration, warm rich colours with green and gold accents, friendly and clear; show simple objects or scenes that represent the topic (e.g. a pound coin and calculator for money, a house for housing, a clock for time changes). Uncluttered, plenty of space.
-Do NOT include: any words, letters or numbers; photos or faces of real people; logos, brand names, flags of political parties or QR codes.` :
+`Create a square (1:1) social-media style image for this post: "${title}"${about ? `\nWhat the post is about: ${about}` : ''}
+
+LAYOUT
+- Top third: a large rounded off-white/cream banner (soft rounded corners) holding the title in a heavy, rounded, modern sans-serif font (like Montserrat/Poppins ExtraBold), big and very readable, on 2–3 lines.
+- Title colours: dark navy (#0F1E36), with the 2–3 most important words in deep green (#0B5D3B).
+- ${emoji ? `On the left of the banner, a glossy 3D icon version of this emoji: ${emoji}.` : 'On the left of the banner, a small glossy 3D icon that fits the topic.'}
+- Below the banner: a bright, realistic photo-style scene that shows the topic using objects in a warm UK home or office setting (e.g. a desk calendar with a date circled, a calculator, papers and a laptop for tax; keys and a small house model for housing; a passport and boarding pass for travel). Soft natural daylight, shallow depth of field, clean and uncluttered; a subtle Union Jack in the blurred background is fine.
+
+TEXT — the ONLY words in the image are the title, spelled EXACTLY: "${title}". No other readable words anywhere (papers and screens can show blurred or unreadable lines).
+Do NOT include: any brand name, app name or logo (no "Auntie Tobi", no HMRC/GOV.UK/NHS or company logos); faces of real people; QR codes; watermarks.` :
 `Design an eye-catching portrait event poster (4:5) for a UK community event aimed at Nigerians in the UK.
 Event: "${title}"${about ? `\nAbout: ${about}` : ''}
 Style: bold, modern, joyful graphic design; warm rich colours; subtle African/Ankara-inspired pattern accents; a simple illustrated motif that fits the event type (e.g. music, food, career, faith, family). Clean layout with plenty of space.
@@ -179,7 +187,7 @@ Do NOT include: photos of real people, faces of performers, logos, brand names, 
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST', signal: ctrl.signal,
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://auntietobi.co.uk', 'X-Title': 'Auntie Tobi Events' },
-      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: article ? '16:9' : '4:5' }, usage: { include: true } }),
+      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: article ? '1:1' : '4:5' }, usage: { include: true } }),
     });
     data = await res.json().catch(() => null);
   } catch (_) {
