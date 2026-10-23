@@ -324,7 +324,12 @@ async function generate({ email, profile, settings, access, toolId, rawInput, id
   try {
     const extra = quickExtra ? quickExtra : toolId === 'ideas' ? { avoid: (await recentIdeas(email)).concat(await growth.recentTopics(email)).slice(0, 40) }
       : toolId === 'planner' ? { avoid: await growth.recentTopics(email) } : {};
-    result = await callModel(tools.buildMessages(toolId, input, profile, extra), tool.maxTokensFor ? tool.maxTokensFor(input) : tool.maxTokens, settings);
+    result = await callModel(tools.buildMessages(toolId, input, profile, extra), tool.maxTokensFor ? tool.maxTokensFor(input) : tool.maxTokens, settings, tool.json ? { json: true, raw: true } : undefined);
+    if (toolId === 'carouselmaker') {
+      const car = tools.parseCarousel(result.text, input.slides);
+      if (!car) throw new HttpError(502, 'ai_error', 'The AI couldn\u2019t write that carousel just now. You have not been charged \u2014 please try again.');
+      result.text = JSON.stringify(car);
+    }
   } catch (e) {
     await release(email, idemKey, day);
     if (res.fromCredits) await credits.release(email, idemKey);

@@ -4,7 +4,7 @@
  * POST /.netlify/functions/studio-api  { action, ... }
  */
 const core = require('../core');
-const { HttpError, handler, cleanText, enc, cas } = core;
+const { HttpError, handler, cleanText, enc, cas, randomToken } = core;
 const tools = require('../tools');
 const gen = require('../generate');
 const stripe = require('../stripe');
@@ -66,6 +66,26 @@ async function cleanProfile(raw, existing, event, email) {
 }
 
 async function getProfile(email) { return core.getJson(`profiles/${enc(email)}`); }
+
+// ── Carousel maker design (what the member edited) ──
+const CAR_TEMPLATES = ['bold', 'minimal', 'split', 'notebook', 'chat', 'gradient', 'magazine', 'ankara', 'checklist', 'photo'];
+const carImgKey = (email, ref) => `carimg/${enc(email)}/${ref}`;
+function cleanCarouselDesign(d) {
+  d = d && typeof d === 'object' ? d : {};
+  const hex = v => /^#[0-9a-fA-F]{6}$/.test(String(v || '')) ? String(v).toUpperCase() : null;
+  const slides = (Array.isArray(d.slides) ? d.slides : []).slice(0, 10).map(x => ({
+    headline: cleanText(x && x.headline, 160), body: cleanText(x && x.body, 400),
+    img: /^c[A-Za-z0-9]{6,20}$/.test(String(x && x.img || '')) ? x.img : '',
+  }));
+  if (slides.length < 1) throw new HttpError(400, 'invalid', 'A carousel needs at least one slide.');
+  return {
+    template: CAR_TEMPLATES.includes(d.template) ? d.template : 'bold',
+    color1: hex(d.color1) || '#057A44', color2: hex(d.color2) || '#FFB81C',
+    font: ['modern', 'elegant', 'bold'].includes(d.font) ? d.font : 'modern',
+    logo: d.logo !== false, handle: cleanText(d.handle, 60), cta: cleanText(d.cta, 60), slides,
+    caption: cleanText(d.caption, 2200), hashtags: (Array.isArray(d.hashtags) ? d.hashtags : []).map(t => cleanText(t, 40)).filter(Boolean).slice(0, 30),
+  };
+}
 
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
@@ -264,8 +284,41 @@ exports.handler = handler(async (ctx) => {
       return { item: updated };
     }
 
+    // ── Carousel maker: save the design (text edits, template, colours, photos). Drawing happens on the device. ──
+    case 'carousel-save': {
+      const item = await gen.getItem(email, body.id);
+      if (item.tool !== 'carouselmaker') throw new HttpError(400, 'invalid', 'That isn’t a carousel.');
+      const design = cleanCarouselDesign(body.design);
+      const updated = { ...item, design, updatedAt: core.nowIso() };
+      await core.setJson(gen.itemKey(email, item.id), updated);
+      const old = (item.design && item.design.slides || []).map(x => x.img).filter(Boolean);
+      const keep = new Set(design.slides.map(x => x.img).filter(Boolean));
+      for (const r of old) if (!keep.has(r)) await core.del(carImgKey(email, r)).catch(() => {});
+      return { item: updated };
+    }
+    case 'carousel-img-save': {
+      // A photo for one slide, resized on the phone first (max ~1080px, JPEG/PNG/WebP, ~400 KB).
+      const url = String(body.dataUrl || '');
+      const m = url.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/);
+      if (!m || url.length > 560000) throw new HttpError(400, 'invalid_image', 'Please choose a PNG or JPG photo (it’s resized automatically).');
+      const bytes = Buffer.from(m[2], 'base64');
+      const magic = { png: [0x89, 0x50, 0x4E, 0x47], jpeg: [0xFF, 0xD8, 0xFF], webp: [0x52, 0x49, 0x46, 0x46] }[m[1]];
+      if (!magic.every((b, i) => bytes[i] === b)) throw new HttpError(400, 'invalid_image', 'That file doesn’t look like an image.');
+      if ((await core.listKeys(`carimg/${enc(email)}/`)).length >= 120) throw new HttpError(409, 'too_many', 'You have a lot of carousel photos saved. Delete some older carousels from your Library to add more.');
+      await core.rateLimit('carimg', email, 60, 60 * 60 * 1000);
+      const ref = 'c' + randomToken(12).replace(/[^A-Za-z0-9]/g, '').slice(0, 14);
+      await core.setJson(carImgKey(email, ref), { dataUrl: url, at: core.nowIso() });
+      return { ref };
+    }
+    case 'carousel-img-get': {
+      if (!/^c[A-Za-z0-9]{6,20}$/.test(String(body.ref || ''))) throw new HttpError(400, 'invalid', 'Invalid photo.');
+      const x = await core.getJson(carImgKey(email, body.ref));
+      return { dataUrl: x ? x.dataUrl : null };
+    }
+
     case 'item-delete': {
       const item = await gen.getItem(email, body.id);
+      for (const x of (item.design && item.design.slides) || []) if (x.img) await core.del(carImgKey(email, x.img)).catch(() => {});
       await core.del(gen.itemKey(email, item.id));
       await cas(gen.historyIndexKey(email), cur => cur ? { items: cur.items.filter(i => i.id !== item.id) } : undefined);
       return { ok: true };
