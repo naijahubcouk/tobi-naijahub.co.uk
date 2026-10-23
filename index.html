@@ -3586,7 +3586,7 @@ window._renderAllNewsBatch = function(from) {
     const badgeColor = _allNewsCategoryColors[item.label] || '#057A44';
     const catEmojis = _allNewsCategoryEmojis;
     const catEmoji = catEmojis[item.label] || '📌';
-    const categoryBadge = `<span style="background:${badgeColor};color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${catEmoji} ${item.label}</span>`;
+    const categoryBadge = `<span style="background:${badgeColor};color:white;font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;">${catEmoji} ${item.label}</span>`;
     const headerLabel = isEvents ? '🎉 UPCOMING EVENTS' : '📰 NEWS/ARTICLES';
     const headerIcon = isEvents ? '🎉' : '📰';
     const stripColor = isEvents ? '#057A44' : badgeColor;
@@ -3597,14 +3597,14 @@ window._renderAllNewsBatch = function(from) {
       <div style="padding:10px 12px 8px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
           ${isEvents ? categoryBadge : ''}
-          ${item.date ? `<span style="font-size:10px;color:#9CA3AF;">${isEvents ? '📅 ' : ''}${item.date}</span>` : ''}
+          ${item.date ? `<span style="font-size:12px;color:#9CA3AF;">${isEvents ? '📅 ' : ''}${item.date}</span>` : ''}
         </div>
         ${item.imgId ? `<img src="/.netlify/functions/app-content?img=${encodeURIComponent(item.imgId)}" alt="" loading="lazy" style="float:right;width:84px;height:84px;object-fit:cover;border-radius:8px;margin:0 0 6px 10px;background:#f0f2f5;">` : ''}
-        <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
-        <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
+        <div style="font-size:17px;font-weight:700;color:#0F1E36;line-height:1.35;margin-bottom:6px;">${item.emoji} ${item.title}</div>
+        <div style="font-size:15px;color:#444;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="clear:both;border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-          <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" data-title="${(item.title||'').replace(/"/g,'&quot;')}" data-summary="${(item.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
-          <button data-share-title="${(item.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl || 'https://auntietobi.co.uk/blog/' + (item.key||item.slug||'')).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
+          <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" data-title="${(item.title||'').replace(/"/g,'&quot;')}" data-summary="${(item.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:14px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
+          <button data-share-title="${(item.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl || 'https://auntietobi.co.uk/blog/' + (item.key||item.slug||'')).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
       </div>
     </div>`;
@@ -3883,19 +3883,19 @@ function showNewsAndUpdates(activeTab) {
         var color = typeColors[u.type] || '#057A44';
         var date = u.date ? new Date(u.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
         var msgHtml = formatMsg(u.message);
-        var srcLink = u.sourceUrl ? '<a href="' + u.sourceUrl + '" target="_blank" style="display:inline-block;margin-top:10px;font-size:13px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>' : '';
+        var srcLink = u.sourceUrl ? '<a href="' + u.sourceUrl + '" target="_blank" style="display:inline-block;margin-top:10px;font-size:14px;color:#057A44;font-weight:600;text-decoration:none;">🔗 Read more</a>' : '';
         var uid = 'upd-' + (_uid++);
         var card = document.createElement('div');
         card.style.cssText = 'background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0e0e0;cursor:pointer;';
         card.innerHTML = '<div style="background:' + color + ';padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">'
           + '<span style="color:white;font-weight:700;font-size:13px;">' + label + '</span>'
-          + '<span style="color:rgba(255,255,255,0.7);font-size:11px;">' + date + '</span>'
+          + '<span style="color:rgba(255,255,255,0.8);font-size:12px;">' + date + '</span>'
           + '</div>'
           + '<div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">'
-          + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.4;flex:1;">' + (u.title || label) + '</div>'
+          + '<div style="font-size:17px;font-weight:700;color:#0F1E36;line-height:1.4;flex:1;">' + (u.title || label) + '</div>'
           + '<span id="' + uid + '-arr" style="color:#9CA3AF;font-size:20px;margin-left:10px;flex-shrink:0;">›</span>'
           + '</div>'
-          + '<div id="' + uid + '-body" style="display:none;padding:0 14px 14px;font-size:15px;color:#444;line-height:1.75;border-top:0.5px solid #f0f0f0;padding-top:12px;">'
+          + '<div id="' + uid + '-body" style="display:none;padding:0 14px 14px;font-size:17px;color:#333;line-height:1.75;border-top:0.5px solid #f0f0f0;padding-top:12px;">'
           + msgHtml + srcLink + '</div>';
         card.addEventListener('click', function() {
           var body = document.getElementById(uid + '-body');
@@ -7805,14 +7805,14 @@ function showEventsCard() {
         </div>
         <div style="padding:10px 12px 8px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="background:#6B21A8;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Events</span>
-            <span style="font-size:10px;color:#9CA3AF;">${e.date}</span>
+            <span style="background:#6B21A8;color:white;font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;">Events</span>
+            <span style="font-size:12px;color:#9CA3AF;">${e.date}</span>
           </div>
-          <div style="font-size:15px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.3;">${e.emoji} ${e.title}</div>
-          <div style="font-size:12px;color:#555;margin-bottom:2px;">📍 ${e.loc}</div>
-          <div style="font-size:12px;color:#555;margin-bottom:8px;">🕐 ${e.time}</div>
+          <div style="font-size:17px;font-weight:700;color:#0F1E36;margin-bottom:4px;line-height:1.35;">${e.emoji} ${e.title}</div>
+          <div style="font-size:14px;color:#444;margin-bottom:2px;">📍 ${e.loc}</div>
+          <div style="font-size:14px;color:#444;margin-bottom:8px;">🕐 ${e.time}</div>
           <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
-            <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" data-title="${safeTitle}" data-summary="${safeSummary}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Event Details</a>
+            <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" data-title="${safeTitle}" data-summary="${safeSummary}" class="blog-read-more" style="font-size:14px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Event Details</a>
             <button data-share-title="${safeTitle.substring(0,60)}" data-share-desc="${e.date}${e.loc ? ' • ' + e.loc : ''}" data-share-url="${shareUrl}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
           </div>
         </div>
@@ -8531,8 +8531,8 @@ function tobiShowHqInSheet(url) {
     }
     var esc = function (x) { return String(x || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
     var meta = item.kind === 'event'
-      ? '<div style="background:#F5F3FF;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#0F1E36;line-height:1.7;">📅 ' + esc(new Date(item.eventDate + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + (item.eventTime ? '<br>🕐 ' + esc(item.eventTime) : '') + (item.location ? '<br>📍 ' + esc(item.location) : '') + '</div>'
-      : '<div style="font-size:12px;color:#9CA3AF;margin-bottom:10px;">' + esc(item.category ? item.category + ' · ' : '') + esc(tobiShortDate(item.publishedAt)) + '</div>';
+      ? '<div style="background:#F5F3FF;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:15px;color:#0F1E36;line-height:1.7;">📅 ' + esc(new Date(item.eventDate + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + (item.eventTime ? '<br>🕐 ' + esc(item.eventTime) : '') + (item.location ? '<br>📍 ' + esc(item.location) : '') + '</div>'
+      : '<div style="font-size:14px;color:#6B7280;margin-bottom:12px;">' + esc(item.category ? item.category + ' · ' : '') + esc(tobiShortDate(item.publishedAt)) + '</div>';
     var btn = item.link ? '<a href="' + esc(item.link) + '" target="_blank" rel="noopener" style="display:block;margin-top:14px;background:#057A44;color:white;text-decoration:none;text-align:center;padding:12px;border-radius:10px;font-weight:700;">' + (item.kind === 'event' ? '🎟️ Get tickets / book' : '🔗 Read more') + '</a>' : '';
     document.getElementById('blogSheetTitle').textContent = item.title;
     var im = document.getElementById('blogSheetImage');
@@ -9794,7 +9794,7 @@ window.addEventListener('pageshow', function(e) {
     </div>
     <!-- Fallback (if fetch fails) -->
     <div id="blogSheetFallback" style="display:none;padding:20px;flex:1;overflow-y:auto;">
-      <p id="blogSheetSummary" style="font-size:14px;color:#444;line-height:1.7;margin-bottom:16px;font-family:inherit;"></p>
+      <p id="blogSheetSummary" style="font-size:16px;color:#444;line-height:1.7;margin-bottom:16px;font-family:inherit;"></p>
       <a id="blogSheetExternal" href="#" target="_blank" onclick="closeBlogSheet()" style="display:block;background:#057A44;color:white;text-decoration:none;font-size:14px;font-weight:700;padding:12px;border-radius:10px;text-align:center;font-family:inherit;">📖 View Full Page</a>
     </div>
     <!-- Full Article Content -->
@@ -9813,12 +9813,14 @@ window.addEventListener('pageshow', function(e) {
 #blogSheetContentInner h1, #blogSheetContentInner h2, #blogSheetContentInner h3 {
   color:#0F1E36;font-weight:700;margin:16px 0 8px;line-height:1.3;
 }
-#blogSheetContentInner h1 { font-size:20px; }
-#blogSheetContentInner h2 { font-size:17px; }
-#blogSheetContentInner h3 { font-size:15px; }
-#blogSheetContentInner p { margin-bottom:12px; }
+#blogSheetContentInner { font-size:17px !important; line-height:1.75 !important; color:#2B2B2B !important; }
+#blogSheetContentInner h1 { font-size:22px; }
+#blogSheetContentInner h2 { font-size:19px; }
+#blogSheetContentInner > h2:first-child { font-size:22px; line-height:1.3; }
+#blogSheetContentInner h3 { font-size:19px; }
+#blogSheetContentInner p { margin-bottom:14px; }
 #blogSheetContentInner ul, #blogSheetContentInner ol { padding-left:20px;margin-bottom:12px; }
-#blogSheetContentInner li { margin-bottom:6px; }
+#blogSheetContentInner li { margin-bottom:9px; }
 #blogSheetContentInner img { max-width:100%;border-radius:8px;margin:8px 0; }
 #blogSheetContentInner a { color:#057A44;font-weight:600; }
 #blogSheetContentInner strong, #blogSheetContentInner b { color:#0F1E36; }
