@@ -153,6 +153,27 @@ async function fetchImage(u) {
 }
 
 // ── Creating an event image with AI ──
+// ── A fresh, topic-specific scene for each news/article image (so images don't all look the same) ──
+const SETTINGS = ['a busy UK high street', 'a bright modern kitchen in a UK home', 'a cosy living room in the evening', 'a London bus stop or train platform', 'a park on a crisp autumn day', 'a school gate at pick-up time', 'a GP surgery or pharmacy', 'a community hall', 'a small business shopfront', 'a front door and doorstep of a UK terraced house', 'an airport arrivals hall', 'a supermarket aisle', 'a city skyline at golden hour', 'a church or community gathering outside', 'a workplace break room'];
+const SHOTS = ['close-up with shallow depth of field', 'wide establishing shot', 'top-down flat lay', 'eye-level candid shot', 'low angle looking up', 'over-the-shoulder shot'];
+const MOODS = ['soft morning light', 'warm golden-hour light', 'bright clear daylight', 'cosy warm indoor lighting', 'cool blue-hour city light', 'rainy-day British light with reflections'];
+const POSTER_STYLES = ['bold modern graphic design with a big photo-real hero image and Ankara-pattern border', 'vibrant flat illustration with confetti and warm sunset colours', 'elegant dark background with gold accents and spotlight glow', 'bright playful collage with cut-out shapes and stickers', 'retro 70s Afrobeat poster style with grainy texture', 'minimal Swiss-style layout with one striking image and bold type', 'lush tropical greenery and rich jewel tones', 'neon nightlife style with glowing lights'];
+const pickOne = a => a[Math.floor(Math.random() * a.length)];
+async function sceneIdea(title, about) {
+  const hint = `${pickOne(SHOTS)}, ${pickOne(MOODS)}`;
+  try {
+    const settings = await core.getSettings();
+    const out = await gen.callModel([
+      { role: 'system', content: 'You are a creative art director for a UK lifestyle app for Nigerians living in the UK. You invent ONE vivid, specific photo scene that instantly tells the story of a topic. Avoid clichés: do NOT default to a desk with a laptop, calculator, calendar or papers unless the topic is literally about paperwork — find a more human, surprising angle (people living the situation, the place where it happens, a telling detail). People may appear (e.g. a Black British / Nigerian family, a young professional, an older auntie) — natural, warm and respectful, never celebrities. No words, signs, screens or documents with readable text. Reply with the scene in 2–3 sentences only.' },
+      { role: 'user', content: `Topic: ${title}${about ? `\nAbout: ${about}` : ''}\nPhotographic style to use: ${hint}. A possible setting if it fits (ignore it if it doesn't): ${pickOne(SETTINGS)}.` },
+    ], 200, settings, { raw: true });
+    gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
+    const t = String(out.text || '').replace(/\s+/g, ' ').trim().slice(0, 700);
+    if (t.length > 30) return `${t} Style: ${hint}, realistic, uncluttered.`;
+  } catch (_) { /* fall back below */ }
+  return `a creative, realistic scene that clearly shows "${title}" in everyday UK life for Nigerians in the UK (not a desk with a laptop). Style: ${hint}, uncluttered.`;
+}
+
 async function makePicture(info) {
   const fullTitle = core.cleanText(info && info.title, 120);
   const emoji = (fullTitle.match(/^[^\p{L}\p{N}\s]+/u) || [''])[0].trim();
@@ -164,6 +185,7 @@ async function makePicture(info) {
   const key = env('STUDIO_OPENROUTER_API_KEY') || env('OPENROUTER_API_KEY');
   if (!key) throw new HttpError(500, 'ai_not_configured', 'Creating images needs the AI to be set up.');
   const article = info.kind === 'article' || info.kind === 'news';
+  const scene = article ? await sceneIdea(title, about) : '';
   const prompt = article ?
 `Create a square (1:1) social-media style image for this post: "${title}"${about ? `\nWhat the post is about: ${about}` : ''}
 
@@ -171,13 +193,13 @@ LAYOUT
 - Top third: a large rounded off-white/cream banner (soft rounded corners) holding the title in a heavy, rounded, modern sans-serif font (like Montserrat/Poppins ExtraBold), big and very readable, on 2–3 lines.
 - Title colours: dark navy (#0F1E36), with the 2–3 most important words in deep green (#0B5D3B).
 - ${emoji ? `On the left of the banner, a glossy 3D icon version of this emoji: ${emoji}.` : 'On the left of the banner, a small glossy 3D icon that fits the topic.'}
-- Below the banner: a bright, realistic photo-style scene that shows the topic using objects in a warm UK home or office setting (e.g. a desk calendar with a date circled, a calculator, papers and a laptop for tax; keys and a small house model for housing; a passport and boarding pass for travel). Soft natural daylight, shallow depth of field, clean and uncluttered; a subtle Union Jack in the blurred background is fine.
+- Below the banner, filling the rest of the image: a bright, realistic, high-quality photo-style scene — ${scene}
 
 TEXT — the ONLY words in the image are the title, spelled EXACTLY: "${title}". No other readable words anywhere (papers and screens can show blurred or unreadable lines).
-Do NOT include: any brand name, app name or logo (no "Auntie Tobi", no HMRC/GOV.UK/NHS or company logos); faces of real people; QR codes; watermarks.` :
+Do NOT include: any brand name, app name or logo (no "Auntie Tobi", no HMRC/GOV.UK/NHS or company logos); celebrities or real, identifiable people; QR codes; watermarks.` :
 `Design an eye-catching portrait event poster (4:5) for a UK community event aimed at Nigerians in the UK.
 Event: "${title}"${about ? `\nAbout: ${about}` : ''}
-Style: bold, modern, joyful graphic design; warm rich colours; subtle African/Ankara-inspired pattern accents; a simple illustrated motif that fits the event type (e.g. music, food, career, faith, family). Clean layout with plenty of space.
+Style: ${pickOne(POSTER_STYLES)}. Make the main visual specific to THIS event (what people will actually see, do, eat or hear there) — not a generic motif. Clean layout with plenty of space.
 Text on the poster — spell it EXACTLY and include nothing else: the title "${title}"${day ? `, the date "${day}"` : ''}${town ? `, and the place "${town}"` : ''}.
 Do NOT include: photos of real people, faces of performers, logos, brand names, QR codes, prices, websites or any other words.`;
   const ctrl = new AbortController();
