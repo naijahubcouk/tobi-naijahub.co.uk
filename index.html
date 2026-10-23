@@ -1869,6 +1869,8 @@ async function loadLiveFeeds() {
       fetch('/.netlify/functions/fetch-listings-feed').then(r => r.json()),
       fetch('/tobi-updates.json?v=' + Date.now()).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
+    _tobiHqFeedPromise = null; // always refresh HQ posts when feeds reload
+    tobiHqFeed();
 
     // Update blog feed
     if (blogRes.status === 'fulfilled' && blogRes.value.posts?.length) {
@@ -1906,7 +1908,7 @@ async function loadLiveFeeds() {
 
     // Handle tobi-updates.json
     if (updatesRes && updatesRes.status === 'fulfilled' && Array.isArray(updatesRes.value) && updatesRes.value.length) {
-      window._tobiUpdates = updatesRes.value;
+      window._tobiUpdates = tobiMergeUpdates(updatesRes.value);
       console.log(`[Feed] Tobi updates: ${updatesRes.value.length} loaded`);
     }
   } catch (err) {
@@ -2333,9 +2335,10 @@ function tobiBuiltinAsPosts() {
 }
 
 function getLiveBlogPosts() {
+  var hqA = window._hqArticles || [];
   var live = window._liveBlogPosts || [];
   var builtin = tobiBuiltinAsPosts();
-  if (!live.length) return builtin.length ? builtin : null;
+  if (!live.length) return (hqA.length || builtin.length) ? hqA.concat(builtin) : null;
   var seenSlug = {}, seenTitle = {};
   live.forEach(function(x){ var k = tobiNewsKey(x); if (k.slug) seenSlug[k.slug] = 1; if (k.title) seenTitle[k.title] = 1; });
   var bySlug = {}, byTitle = {};
@@ -2346,7 +2349,7 @@ function getLiveBlogPosts() {
     return b ? Object.assign({}, x, { title: b.title, label: b.label, isEvent: false, emoji: b.emoji || x.emoji }) : x;
   });
   var extra = builtin.filter(function(x){ var k = tobiNewsKey(x); return !(k.slug && seenSlug[k.slug]) && !(k.title && seenTitle[k.title]); });
-  return live.concat(extra);
+  return hqA.concat(live, extra);
 }
 
 // Load feeds in background on startup — called from window.onload after all variables are defined
@@ -6851,8 +6854,11 @@ function handleDeepLink() {
       fetch('/tobi-updates.json?v=' + Date.now())
         .then(function(r){ return r.ok ? r.json() : []; })
         .then(function(updates){
-          window._tobiUpdates = updates;
-          var match = updates.find(function(u){ return u.slug === slug; });
+          return tobiHqFeed().then(function(){ return updates; });
+        })
+        .then(function(updates){
+          window._tobiUpdates = tobiMergeUpdates(updates);
+          var match = window._tobiUpdates.find(function(u){ return u.slug === slug; });
           if (match && match.message) {
             resolveAndShow(match.message);
           } else if (match && match.title) {
@@ -8255,6 +8261,7 @@ function shareBlogUrl(title, text, blogComUrl, appUrl) {
 }
 function shareBlogPost() {
   const slug = _blogUrl.split('/blog/')[1] || '';
+  if (/^at-[a-z0-9-]+/.test(slug)) { tobiShare(_blogTitle, _blogTitle, TOBI_APP_SITE + '/blog/' + slug); return; }
   const deepLinks = {'auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation':'starmerresigns','auntietobi.com/blog/AfroMic-Night-Afrobeats-Karaoke':'afrominight','auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026':'naijafoodfest','auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns':'suyafest','auntietobi.com/blog/UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know':'hc259immigration','auntietobi.com/blog/20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026':'20placeskids'};
   const key = Object.keys(deepLinks).find(k => _blogUrl.includes(k.split('/blog/')[1]));
   const shareUrl = key ? 'https://auntietobi.co.uk/blog/' + deepLinks[key] : 'https://auntietobi.co.uk';
@@ -8445,6 +8452,90 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll, featured
 let _blogUrl = '', _blogTitle = '', _blogSummary = '';
 let _blogFrameTimer = null;
 
+
+// ===== AUNTIE TOBI HQ → APP ("Publish to App") =====
+// Updates, articles and events published in Auntie Tobi HQ come from /.netlify/functions/app-content
+// and are added alongside the blog feed, tobi-updates.json and the built-in events.
+var TOBI_APP_SITE = 'https://auntietobi.co.uk';
+var _tobiHqFeedPromise = null;
+function tobiHqFeed() {
+  if (!_tobiHqFeedPromise) {
+    _tobiHqFeedPromise = fetch('/.netlify/functions/app-content')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (f) { if (f) tobiApplyHqFeed(f); return f || { updates: [], articles: [], events: [] }; })
+      .catch(function () { _tobiHqFeedPromise = null; return { updates: [], articles: [], events: [] }; });
+  }
+  return _tobiHqFeedPromise;
+}
+function tobiSplitEmoji(t) {
+  var m = /^((?:[☀-➿⬀-⯿️‍]|[\uD83C-\uDBFF][\uDC00-\uDFFF])+)\s*/.exec(String(t || ''));
+  return m ? { emoji: m[1], title: String(t).slice(m[0].length) } : { emoji: '', title: String(t || '') };
+}
+function tobiShortDate(iso) {
+  var d = new Date(iso.length === 10 ? iso + 'T12:00:00' : iso);
+  return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function tobiMergeUpdates(fileUpdates) {
+  var hq = window._hqUpdates || [];
+  var seen = {}; var out = [];
+  hq.concat(fileUpdates || []).forEach(function (u) { if (u && u.slug && !seen[u.slug]) { seen[u.slug] = 1; out.push(u); } });
+  return out.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+}
+function tobiApplyHqFeed(f) {
+  window._hqFeed = f;
+  window._hqUpdates = (f.updates || []).map(function (u) {
+    return { id: u.id, title: u.title, message: u.html, type: 'update', sourceUrl: u.link || null, date: u.publishedAt, slug: u.slug, _hq: true };
+  });
+  window._tobiUpdates = tobiMergeUpdates((window._tobiUpdates || []).filter(function (u) { return !u._hq; }));
+  window._hqArticles = (f.articles || []).map(function (a) {
+    var t = tobiSplitEmoji(a.title);
+    var url = TOBI_APP_SITE + '/blog/' + a.slug;
+    return { emoji: t.emoji || (typeof _allNewsCategoryEmojis !== 'undefined' && _allNewsCategoryEmojis[a.category]) || '📰', title: t.title, summary: a.summary,
+      url: url, appUrl: url, slug: a.slug, label: a.category || 'News', date: tobiShortDate(a.publishedAt), pubDate: a.publishedAt, _hq: true };
+  });
+  if (typeof ALL_EVENTS !== 'undefined') {
+    for (var i = ALL_EVENTS.length - 1; i >= 0; i--) if (ALL_EVENTS[i]._hq) ALL_EVENTS.splice(i, 1);
+    (f.events || []).forEach(function (e) {
+      var t = tobiSplitEmoji(e.title), d = new Date(e.eventDate + 'T00:00:00');
+      ALL_EVENTS.push({ emoji: t.emoji || '🎉', title: t.title, summary: e.summary, date: tobiShortDate(e.eventDate), dateObj: d,
+        loc: e.location || 'UK', time: e.eventTime || d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }),
+        url: TOBI_APP_SITE + '/blog/' + e.slug, appUrl: TOBI_APP_SITE + '/blog/' + e.slug, _hq: true });
+    });
+  }
+}
+function tobiHqItemBySlug(slug) {
+  var f = window._hqFeed; if (!f || !slug) return null;
+  var all = [].concat(f.articles || [], f.events || [], f.updates || []);
+  return all.filter(function (x) { return x.slug === slug; })[0] || null;
+}
+// Shows an HQ article or event inside the article sheet (no blog page to fetch).
+function tobiShowHqInSheet(url) {
+  var slug = (String(url).split('/blog/')[1] || '').split(/[?#]/)[0];
+  function render(item) {
+    var loading = document.getElementById('blogSheetLoading');
+    if (loading) loading.style.display = 'none';
+    if (!item) {
+      document.getElementById('blogSheetSummary').textContent = 'This post is no longer available.';
+      document.getElementById('blogSheetExternal').style.display = 'none';
+      document.getElementById('blogSheetFallback').style.display = 'flex';
+      return;
+    }
+    var esc = function (x) { return String(x || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var meta = item.kind === 'event'
+      ? '<div style="background:#F5F3FF;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#0F1E36;line-height:1.7;">📅 ' + esc(new Date(item.eventDate + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + (item.eventTime ? '<br>🕐 ' + esc(item.eventTime) : '') + (item.location ? '<br>📍 ' + esc(item.location) : '') + '</div>'
+      : '<div style="font-size:12px;color:#9CA3AF;margin-bottom:10px;">' + esc(item.category ? item.category + ' · ' : '') + esc(tobiShortDate(item.publishedAt)) + '</div>';
+    var btn = item.link ? '<a href="' + esc(item.link) + '" target="_blank" rel="noopener" style="display:block;margin-top:14px;background:#057A44;color:white;text-decoration:none;text-align:center;padding:12px;border-radius:10px;font-weight:700;">' + (item.kind === 'event' ? '🎟️ Get tickets / book' : '🔗 Read more') + '</a>' : '';
+    document.getElementById('blogSheetTitle').textContent = item.title;
+    document.getElementById('blogSheetImage').style.display = 'none';
+    document.getElementById('blogSheetContentInner').innerHTML = '<h2 style="margin-top:0">' + esc(item.title) + '</h2>' + meta + (item.html || '') + btn;
+    document.getElementById('blogSheetContent').style.display = 'block';
+    var open = document.getElementById('blogSheetOpenBtn');
+    if (open) { if (item.link) { open.href = item.link; open.style.display = ''; } else open.style.display = 'none'; }
+  }
+  var hit = tobiHqItemBySlug(slug);
+  if (hit) render(hit); else tobiHqFeed().then(function () { render(tobiHqItemBySlug(slug)); });
+}
+
 function openBlogSheet(url, title, summary) {
   _blogUrl = url;
   _blogTitle = title || 'Article';
@@ -8461,9 +8552,14 @@ function openBlogSheet(url, title, summary) {
   document.getElementById('blogSheetFallback').style.display = 'none';
   document.getElementById('blogSheetContent').style.display = 'none';
   document.getElementById('blogSheetOpenBtn').href = url;
+  document.getElementById('blogSheetOpenBtn').style.display = '';
   document.getElementById('blogSheetExternal').href = url;
+  document.getElementById('blogSheetExternal').style.display = '';
   sheet.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+
+  // Posts published from Auntie Tobi HQ live in the app itself, not on the blog
+  if (/\/blog\/at-[a-z0-9-]+/.test(url)) { tobiShowHqInSheet(url); return; }
 
   // Fetch article via proxy
   fetch('/.netlify/functions/fetch-blog?url=' + encodeURIComponent(url))

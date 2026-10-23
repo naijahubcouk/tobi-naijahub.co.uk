@@ -138,6 +138,19 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 }
 .lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}.sctag{font-size:13px}.note{background:var(--gold-l);border-radius:10px;padding:8px 12px;font-size:13.5px}
 .binrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.binrow:last-child{border-bottom:0}
+/* Publish to App */
+.aprow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.aprow:last-child{border-bottom:0}
+.apact{display:flex;gap:6px;flex-wrap:wrap}.btn.sm{min-height:32px;padding:5px 10px;font-size:13px}
+.ak{color:#fff;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;white-space:nowrap}.as{white-space:nowrap}
+.as{font-size:12px;font-weight:700}.as.live{color:var(--green-d)}.as.ended{color:var(--muted)}.as.hidden{color:#9B6B00}
+.apgrid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:start}
+.appv{background:#f0f2f5;border-radius:12px;padding:10px;position:sticky;top:0}
+.apcard{background:#fff;border-radius:12px;overflow:hidden;border:.5px solid #e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.aph{color:#fff;padding:7px 12px;display:flex;justify-content:space-between;font-size:12px;font-weight:700}
+.apb{padding:12px 14px}.apt{font-size:15px;font-weight:700;line-height:1.35;margin-bottom:6px}.apm{font-size:12.5px;color:#555;margin-bottom:6px;line-height:1.6}
+.aptx{font-size:13.5px;color:#444;line-height:1.65}.aptx h3{font-size:14px;margin:10px 0 2px;color:var(--navy)}.aptx ul{padding-left:18px;margin:4px 0}.aptx p{margin:0 0 6px}
+.apl{margin-top:8px;font-size:13px;color:#057A44;font-weight:700}
+@media (max-width:900px){.apgrid{grid-template-columns:1fr}.appv{position:static}.aprow{flex-direction:column;align-items:stretch;gap:8px}}
 </style>
 </head>
 <body>
@@ -165,6 +178,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="board">🗂️ Board <span class="n" id="nIdeas"></span></button>
       <button data-nav="calendar">📅 Calendar</button>
       <button data-nav="posted">📲 Posted</button>
+      <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
       <button data-nav="bin">🗑 Bin <span class="n" id="nBin"></span></button>
       <button id="teamBtn" class="hidden">👥 Team access</button>
       <a href="/studio-admin" id="adminLink" class="hidden">📋 Admin ↗</a>
@@ -228,19 +242,20 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {};
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || [];
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
   function go(v) {
-    S.view = ['today', 'board', 'calendar', 'posted', 'bin'].indexOf(v) >= 0 ? v : 'today';
+    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'bin'].indexOf(v) >= 0 ? v : 'today';
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
     var n = S.items.filter(function (c) { return c.status === 'idea'; }).length; $('#nIdeas').textContent = n || '';
     $('#nBin').textContent = (S.bin || []).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, bin: vBin })[S.view]();
+    $('#nApp').textContent = (S.app || []).filter(function (p) { return appState(p) === 'live'; }).length || '';
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
@@ -619,6 +634,204 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#tmX', s).onclick = function () { s.remove(); };
     $('#tmSave', s).onclick = async function () { add(); try { var r = await api('team-save', { emails: list, names: nm }); S.team = r.team; Object.assign(S.names, r.team.names); s.remove(); toast('Team access saved'); } catch (x) { var e = $('#tmErr', s); e.textContent = x.message; e.classList.remove('hidden'); } };
   };
+  // ── Publish to App (updates, articles, events shown in the main Auntie Tobi app) ──
+  var KIND = { update: '📢 Update', article: '📰 Article', event: '🎉 Event' };
+  var KIND_COLOR = { update: '#057A44', article: '#1D4ED8', event: '#7C3AED' };
+  var APP_SITE = 'https://auntietobi.co.uk';
+  function appLink(p) { return p.kind === 'update' ? APP_SITE + '/?action=update&slug=' + encodeURIComponent(p.slug) : APP_SITE + '/blog/' + p.slug; }
+  function appState(p) {
+    if (p.status === 'hidden') return 'hidden';
+    if (p.kind === 'update' && p.showUntil && p.showUntil < today()) return 'ended';
+    if (p.kind === 'event' && p.eventDate && p.eventDate < today()) return 'ended';
+    return 'live';
+  }
+  function upsertApp(p) { var i = (S.app || []).findIndex(function (x) { return x.id === p.id; }); if (i >= 0) S.app[i] = p; else S.app.unshift(p); }
+  function fmtLong(day) { return day ? new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : ''; }
+  // Same plain-text formatting the server uses, so the preview matches the app.
+  function appHtml(text) {
+    var link = function (s) { return s.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, function (u) { return '<a href="' + u + '" target="_blank" rel="noopener">' + u.replace(/^https?:\/\//, '') + '</a>'; }); };
+    var inline = function (s) { return link(esc(s)).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); };
+    var out = [], list = null;
+    var flush = function () { if (list) { out.push('<ul>' + list.map(function (li) { return '<li>' + inline(li) + '</li>'; }).join('') + '</ul>'); list = null; } };
+    String(text || '').split('\n').forEach(function (raw) {
+      var line = raw.trim();
+      if (!line) { flush(); return; }
+      var b = /^(?:[•\-*–]|\d+[.)])\s+(.*)$/.exec(line);
+      if (b) { (list = list || []).push(b[1]); return; }
+      flush();
+      if (line.length <= 60 && /[?:]$/.test(line) && !/https?:/.test(line)) out.push('<h3>' + inline(line.replace(/:$/, '')) + '</h3>');
+      else out.push('<p>' + inline(line) + '</p>');
+    });
+    flush();
+    return out.join('');
+  }
+  // ── paste: split a ChatGPT news digest into ready-filled posts (no AI — plain text rules) ──
+  var MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, sept: 8, oct: 9, nov: 10, dec: 11 };
+  function parseDay(s) {
+    var m = /(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sept?|oct|nov|dec)[a-z]*\.?,?\s*(\d{4})?/i.exec(s || '') ||
+            /(jan|feb|mar|apr|may|jun|jul|aug|sept?|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})?/i.exec(s || '');
+    if (!m) return '';
+    var d, mo, y;
+    if (/^\d/.test(m[1])) { d = +m[1]; mo = MONTHS[m[2].toLowerCase()]; y = m[3]; } else { mo = MONTHS[m[1].toLowerCase()]; d = +m[2]; y = m[3]; }
+    y = +(y || today().slice(0, 4));
+    var iso = y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    if (!m[3] && iso < addDays(today(), -60)) iso = (y + 1) + iso.slice(4);
+    return iso;
+  }
+  var SMALL = /^(a|an|and|as|at|but|by|for|in|of|on|or|the|to|vs?|via|with|is|are)$/i;
+  function niceTitle(t) {
+    var letters = t.replace(/[^A-Za-z]/g, ''); if (!letters || letters.replace(/[^A-Z]/g, '').length / letters.length < 0.7) return t;
+    return t.toLowerCase().split(/(\s+)/).map(function (w, i) {
+      if (/^\s+$/.test(w)) return w;
+      if (i > 0 && SMALL.test(w)) return w;
+      if (/^(uk|nhs|hmrc|dvla|bst|gmt|ilr|brp|evisa|ni|gp|tv|bbc|eu|usa|uae)$/i.test(w.replace(/[^a-z]/gi, ''))) return w.toUpperCase();
+      return w.replace(/[a-z]/, function (c) { return c.toUpperCase(); });
+    }).join('').replace(/\bNigerians?\b/gi, function (x) { return x[0].toUpperCase() + x.slice(1); }).replace(/\b(Here|What|It|You|We|They|That|There)'S\b/g, "$1's");
+  }
+  function parseAppPaste(text) {
+    var lines = String(text || '').replace(/\r/g, '').split('\n');
+    // A new item starts at a numbered title line that is followed by a "Priority:" / "Date:" line.
+    var starts = [];
+    lines.forEach(function (l, i) {
+      if (!/^\s*\d{1,2}[.)]\s+\S/.test(l)) return;
+      var next = lines.slice(i + 1).find(function (x) { return x.trim(); }) || '';
+      if (/^\s*(priority|date)\s*:/i.test(next)) starts.push(i);
+    });
+    var chunks = starts.length ? starts.map(function (s, k) { return lines.slice(s, k + 1 < starts.length ? starts[k + 1] : lines.length); }) : [lines];
+    return chunks.map(function (ch) {
+      ch = ch.slice(); while (ch.length && !ch[0].trim()) ch.shift();
+      var title = niceTitle((ch.shift() || '').trim().replace(/^\d{1,2}[.)]\s+/, '').replace(/^#+\s*/, '').replace(/\*\*/g, ''));
+      var day = '', link = '', body = [];
+      ch.forEach(function (l) {
+        var t = l.trim();
+        if (/^(priority|date)\s*:/i.test(t)) { var dm = /date\s*:\s*(.+)$/i.exec(t); if (dm) day = parseDay(dm[1]) || day; return; }
+        if (/^(content angle|caption idea|hashtags?|visual idea|cta)\s*:/i.test(t)) return;
+        var sm = /^(source|link)s?\s*:\s*(https?:\/\/\S+)/i.exec(t); if (sm) { link = sm[2]; return; }
+        var lab = /^([A-Z][A-Za-z'’ ]{2,40}):\s+(.+)$/.exec(t);
+        if (lab && lab[1].split(' ').length <= 5) { body.push(''); body.push(lab[1] + ':'); body.push(lab[2]); body.push(''); return; }
+        if (/\?$/.test(t) && t.length <= 60) { body.push(''); body.push(t); return; }
+        body.push(l.replace(/^\s+/, ''));
+      });
+      var b = body.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+      // short "fact" lines under a heading read better as bullets
+      b = b.split('\n\n').map(function (para) {
+        var ls = para.split('\n');
+        var head = /[?:]$/.test(ls[0]) && ls[0].length <= 60 ? ls.shift() : null;
+        if (ls.length >= 2 && ls.every(function (x) { return x.length <= 140 && !/^[•\-*]/.test(x); })) ls = ls.map(function (x) { return '• ' + x; });
+        return (head ? [head] : []).concat(ls).join('\n');
+      }).join('\n\n');
+      var looksEvent = /\b(tickets?|venue|doors open|rsvp|book your (place|spot))\b/i.test(b);
+      return { kind: looksEvent ? 'event' : 'update', title: title, body: b, link: link, day: day };
+    }).filter(function (x) { return x.title; });
+  }
+  function vApp() {
+    $('#ttl').textContent = 'Publish to App';
+    $('#topRight').innerHTML = '<button class="btn gold" id="apPaste">📋 Paste</button>';
+    var all = S.app || [];
+    var live = all.filter(function (p) { return appState(p) === 'live'; });
+    var ended = all.filter(function (p) { return appState(p) === 'ended'; });
+    var hidden = all.filter(function (p) { return appState(p) === 'hidden'; });
+    var row = function (p) {
+      var st = appState(p);
+      var when = p.kind === 'event' ? '🗓 ' + fmtLong(p.eventDate) + (p.eventTime ? ' · ' + esc(p.eventTime) : '') :
+                 p.kind === 'update' ? (p.showUntil ? 'Shows until ' + fmtLong(p.showUntil) : 'No end date') : esc(p.category || 'News');
+      return '<div class="aprow"><div style="flex:1;min-width:0">' +
+        '<div class="row" style="gap:6px;flex-wrap:wrap"><span class="ak" style="background:' + KIND_COLOR[p.kind] + '">' + KIND[p.kind] + '</span>' +
+        '<span class="as ' + st + '">' + ({ live: '● Live', ended: 'Ended', hidden: 'Hidden' })[st] + '</span><span class="muted" style="font-size:12.5px">' + when + '</span></div>' +
+        '<div style="font-weight:700;margin-top:4px">' + esc(p.title) + '</div>' +
+        '<div class="muted" style="font-size:12.5px">Published ' + esc(new Date(p.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + (S.names && S.names[p.by] ? ' by ' + esc(S.names[p.by]) : '') + '</div></div>' +
+        '<div class="apact"><button class="btn ghost sm" data-aedit="' + p.id + '">✏️ Edit</button>' +
+        '<button class="btn ghost sm" data-acopy="' + p.id + '">🔗 Link</button>' +
+        '<button class="btn ghost sm" data-ahide="' + p.id + '">' + (p.status === 'hidden' ? '👁 Show' : '🙈 Hide') + '</button>' +
+        '<button class="btn ghost sm" data-adel="' + p.id + '" title="Delete">🗑</button></div></div>';
+    };
+    var block = function (title, list, empty) { return '<div class="h2">' + title + ' <span class="muted" style="font-size:15px">(' + list.length + ')</span></div><div class="card" style="padding:4px 14px">' + (list.length ? list.map(row).join('') : '<p class="muted" style="padding:10px 0">' + empty + '</p>') + '</div>'; };
+    $('#view').innerHTML = '<div class="wrap">' +
+      '<div class="note" style="margin-bottom:12px">Anything you publish here shows in the Auntie Tobi app within about a minute — no GitHub needed. Updates disappear after their “show until” date, and events disappear once they’ve happened. No notification is sent.</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary" data-anew="update">＋ Update</button><button class="btn primary" data-anew="article">＋ Article</button><button class="btn primary" data-anew="event">＋ Event</button></div>' +
+      block('Live in the app', live, 'Nothing published yet. Tap ＋ Update, or 📋 Paste something from ChatGPT.') +
+      (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
+    $('#apPaste').onclick = function () { appPasteSheet(); };
+    $$('[data-anew]').forEach(function (b) { b.onclick = function () { appEditor({ kind: b.dataset.anew }); }; });
+    $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
+    $$('[data-acopy]').forEach(function (b) { b.onclick = function () { var u = appLink(appById(b.dataset.acopy)); (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { toast('Link copied — paste it anywhere'); }, function () { prompt('Copy this link:', u); }); }; });
+    $$('[data-ahide]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.ahide); try { var r = await api('app-save', { item: { id: p.id, status: p.status === 'hidden' ? 'live' : 'hidden' } }); upsertApp(r.item); toast(r.item.status === 'hidden' ? 'Hidden from the app' : 'Showing in the app again'); rerender(); } catch (x) { toast(x.message); } }; });
+    $$('[data-adel]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.adel); if (!confirm('Delete “' + p.title + '” for good? It will disappear from the app.')) return; try { var r = await api('app-delete', { id: p.id }); S.app = r.app; toast('Deleted'); rerender(); } catch (x) { toast(x.message); } }; });
+  }
+  function appById(id) { return (S.app || []).filter(function (x) { return x.id === id; })[0]; }
+  function appPasteSheet() {
+    var s = sheet('<h2>📋 Paste to publish</h2><p class="muted" style="margin:4px 0 10px">Paste one update — or a whole numbered list from ChatGPT. Each item becomes a ready-filled post you can check and publish. Lines like “Priority:” and “Content angle:” are left out automatically.</p>' +
+      '<textarea id="apt" rows="12" placeholder="6. ⏰ UK CLOCKS GO BACK THIS SUNDAY…&#10;Priority: 9.5/10 | DATE: Sunday, 25 October 2026&#10;What’s happening?&#10;…"></textarea>' +
+      '<div id="apFound" style="margin-top:10px"></div><div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="apX">Cancel</button><button class="btn primary" id="apGo">Split it</button></div>');
+    $('#apX', s).onclick = function () { s.remove(); };
+    $('#apt', s).focus();
+    $('#apGo', s).onclick = function () {
+      var items = parseAppPaste($('#apt', s).value);
+      if (!items.length) { toast('Nothing found — paste some text first.'); return; }
+      if (items.length === 1) { s.remove(); appEditor(fromPaste(items[0])); return; }
+      $('#apFound', s).innerHTML = '<div class="lbl">Found ' + items.length + ' items — pick one to open</div>' + items.map(function (it, i) { return '<button class="btn ghost" style="display:block;width:100%;text-align:left;margin-top:6px" data-pick="' + i + '">' + KIND[it.kind] + ' · ' + esc(it.title) + '</button>'; }).join('');
+      $$('[data-pick]', s).forEach(function (b) { b.onclick = function () { appEditor(fromPaste(items[+b.dataset.pick]), function () { b.disabled = true; b.textContent = '✅ ' + b.textContent; }); }; });
+    };
+  }
+  function fromPaste(it) {
+    var p = { kind: it.kind, title: it.title, body: it.body, link: it.link };
+    if (it.kind === 'event') p.eventDate = it.day; else if (it.day) p.showUntil = addDays(it.day, 1);
+    return p;
+  }
+  function appEditor(p, onDone) {
+    p = Object.assign({ kind: 'update', category: 'News' }, p || {});
+    var isNew = !p.id;
+    var cats = S.appCats || ['News'];
+    var s = sheet('<h2>' + (isNew ? 'Publish to App' : 'Edit app post') + '</h2>' +
+      '<div class="chipbar" style="margin:10px 0" id="aeK">' + ['update', 'article', 'event'].map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (p.kind === k) + '"' + (isNew ? '' : ' disabled') + '>' + KIND[k] + '</button>'; }).join('') + '</div>' +
+      '<div class="apgrid"><div class="stack">' +
+      '<div><label for="aeT">Title</label><input id="aeT" maxlength="160" value="' + esc(p.title || '') + '"></div>' +
+      '<div data-for="article"><label for="aeC">Category</label><select id="aeC">' + cats.map(function (c) { return '<option' + (c === p.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
+      '<div data-for="event" class="f2"><div><label for="aeD">Event date</label><input type="date" id="aeD" value="' + esc(p.eventDate || '') + '"></div><div><label for="aeTm">Time</label><input id="aeTm" placeholder="6pm – 11pm" value="' + esc(p.eventTime || '') + '"></div></div>' +
+      '<div data-for="event"><label for="aeL">Place</label><input id="aeL" placeholder="Venue, City" value="' + esc(p.location || '') + '"></div>' +
+      '<div><label for="aeB"><span data-for="update article">Message</span><span data-for="event">About the event</span> <span class="muted" style="font-weight:400">— **bold**, start a line with • for bullets, a short line ending in ? or : becomes a heading</span></label><textarea id="aeB" rows="11">' + esc(p.body || '') + '</textarea></div>' +
+      '<div data-for="article"><label for="aeS">Short summary <span class="muted" style="font-weight:400">(shown in the list — leave blank to use the start of the message)</span></label><input id="aeS" maxlength="400" value="' + esc(p.summary || '') + '"></div>' +
+      '<div class="f2"><div><label for="aeLk"><span data-for="update article">Link</span><span data-for="event">Tickets / booking link</span> <span class="muted" style="font-weight:400">(optional)</span></label><input id="aeLk" placeholder="https://" value="' + esc(p.link || '') + '"></div>' +
+      '<div data-for="update"><label for="aeU">Show until</label><input type="date" id="aeU" value="' + esc(p.showUntil || '') + '"></div></div>' +
+      '</div><div><div class="lbl">Preview in the app</div><div id="aePv" class="appv"></div></div></div>' +
+      '<div class="err hidden" id="aeErr"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="aeX">Cancel</button>' + (isNew ? '<button class="btn ghost" id="aeH">Save hidden</button>' : '') + '<button class="btn primary" id="aeP">' + (isNew ? 'Publish to app' : 'Save changes') + '</button></div>');
+    function kind() { var b = $('#aeK [aria-pressed=true]', s); return b ? b.dataset.k : p.kind; }
+    function vals() {
+      var k = kind();
+      return { kind: k, title: $('#aeT', s).value.trim(), body: $('#aeB', s).value, link: $('#aeLk', s).value.trim(), category: $('#aeC', s).value,
+        summary: $('#aeS', s).value.trim(), showUntil: $('#aeU', s).value, eventDate: $('#aeD', s).value, eventTime: $('#aeTm', s).value.trim(), location: $('#aeL', s).value.trim() };
+    }
+    function paint() {
+      var v = vals(), k = v.kind;
+      $$('[data-for]', s).forEach(function (el) { el.classList.toggle('hidden', el.dataset.for.split(' ').indexOf(k) < 0); });
+      var label = k === 'article' ? '📰 ' + esc(v.category).toUpperCase() : KIND[k];
+      var meta = k === 'event' ? '<div class="apm">📅 ' + esc(fmtLong(v.eventDate) || 'Pick a date') + (v.eventTime ? ' · ' + esc(v.eventTime) : '') + (v.location ? '<br>📍 ' + esc(v.location) : '') + '</div>' : '';
+      $('#aePv', s).innerHTML = '<div class="apcard"><div class="aph" style="background:' + KIND_COLOR[k] + '"><span>' + label + '</span><span>' + esc(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })) + '</span></div>' +
+        '<div class="apb"><div class="apt">' + esc(v.title || 'Your title') + '</div>' + meta + '<div class="aptx">' + (appHtml(v.body) || '<p class="muted">Your message…</p>') + '</div>' +
+        (v.link ? '<div class="apl">🔗 ' + (k === 'event' ? 'Get tickets' : 'Read more') + '</div>' : '') + '</div></div>';
+    }
+    $$('#aeK [data-k]', s).forEach(function (b) { b.onclick = function () { $$('#aeK [data-k]', s).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); paint(); }; });
+    $$('input,textarea,select', s).forEach(function (el) { el.addEventListener('input', paint); el.addEventListener('change', paint); });
+    paint();
+    $('#aeX', s).onclick = function () { s.remove(); };
+    async function submit(status) {
+      var err = $('#aeErr', s); err.classList.add('hidden');
+      var item = Object.assign(vals(), { status: status }); if (!isNew) item.id = p.id;
+      if (item.kind === 'update' && !item.showUntil && isNew && !confirm('No “show until” date — this update will stay in the app until you hide it. Publish anyway?')) return;
+      $$('button', s).forEach(function (b) { b.disabled = true; });
+      try {
+        var r = await api('app-save', { item: item }); upsertApp(r.item); s.remove();
+        toast(isNew ? (status === 'hidden' ? 'Saved (hidden)' : 'Published — it’s in the app within a minute 🎉') : 'Saved');
+        if (onDone) onDone(r.item);
+        if (S.view === 'app') rerender(); else go2app();
+      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); $$('button', s).forEach(function (b) { b.disabled = false; }); $$('#aeK [data-k]', s).forEach(function (b) { b.disabled = !isNew; }); }
+    }
+    function go2app() { if (S.view !== 'app') go('app'); }
+    $('#aeP', s).onclick = function () { submit(isNew ? 'live' : (p.status || 'live')); };
+    if (isNew) $('#aeH', s).onclick = function () { submit('hidden'); };
+  }
+
   function sheet(html) { var s = document.createElement('div'); s.className = 'scrim'; s.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>'; document.body.appendChild(s); s.addEventListener('click', function (e) { if (e.target === s) s.remove(); }); return s; }
   boot();
 })();

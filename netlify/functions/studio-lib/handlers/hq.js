@@ -6,11 +6,13 @@
  *   POST { action: 'login-request' | 'login-verify' | 'logout' }                 (no session needed)
  *   POST { action: 'boot' | 'save' | 'save-many' | 'delete' | 'restore' | 'img' }
  *   POST { action: 'team-save', emails: [] }                                      (admins only)
+ *   POST { action: 'app-save' | 'app-delete' }   Publish to App (updates, articles, events shown in the main app)
  *   GET  ?img=<id>     a card image
  */
 const core = require('../core');
 const { HttpError, handler } = core;
 const hq = require('../hq');
+const apppub = require('../apppub');
 
 function requireEmail(e) {
   const email = core.normalizeEmail(e);
@@ -74,7 +76,7 @@ exports.handler = handler(async (ctx) => {
   const who = await requireHq(ctx);
   await core.rateLimit('hq', who.email, 1200, 60 * 60 * 1000);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: await apppub.list(), appCategories: apppub.CATEGORIES };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -87,6 +89,16 @@ exports.handler = handler(async (ctx) => {
       return { n, bin: await hq.bin() };
     }
     case 'img': return { id: await hq.saveImage(body.dataUrl) };
+    case 'app-save': {
+      const item = await apppub.save(body.item, who.email);
+      await core.audit(who.email, 'hq_app_save', { id: item.id, kind: item.kind, status: item.status });
+      return { item };
+    }
+    case 'app-delete': {
+      await apppub.remove(String(body.id || ''));
+      await core.audit(who.email, 'hq_app_delete', { id: String(body.id || '') });
+      return { ok: true, app: await apppub.list() };
+    }
     case 'team-save': {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change who has access.');
       const t = await hq.setTeam(body.emails, body.names);
