@@ -16,10 +16,12 @@ const { HttpError, cas, getJson, setJson, cleanText } = core;
 const apppub = require('./apppub');
 const appai = require('./appai');
 const gen = require('./generate');
+const media = require('./eventmedia');
 
 const KEY = 'hq/event-subs';
 const MAX_ITEMS = 1500;
 const AI_PER_IP_HOUR = 6, AI_SITE_PER_DAY = 150;
+const PIC_PER_IP_DAY = 3, PIC_SITE_PER_DAY = 40;
 const SUBMIT_PER_IP_HOUR = 5, SUBMIT_PER_IP_DAY = 15, SUBMIT_SITE_PER_DAY = 100;
 const IMG_MAX = 1.8 * 1024 * 1024; // data URL length
 const isDay = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
@@ -62,10 +64,36 @@ async function aiFromNotes(notes, ip) {
   return pickDraft(d);
 }
 
+// 🔗 From an event link — Auntie Tobi opens the page, writes the listing and takes the page's own image.
+async function fromLink(url, extraNotes) {
+  const page = await media.readLink(url);
+  const notes = page.notes + (extraNotes ? `\n\nExtra notes:\n${String(extraNotes).slice(0, 2000)}` : '');
+  const [d, image] = await Promise.all([appai.write(notes, 'event', ''), media.fetchImage(page.imageUrl)]);
+  const draft = pickDraft(d);
+  if (!draft.link) draft.link = appai.cleanLink(page.link);
+  return { draft, image };
+}
+async function aiFromLink(url, ip) {
+  await media.checkUrl(url);
+  await aiAllowed(ip);
+  return fromLink(url, '');
+}
+
+// 🎨 No flyer? Create one (public page: small daily limits because images cost more).
+async function aiPicture(info, ip) {
+  await core.rateLimit('evsub-pic', ip, PIC_PER_IP_DAY, 24 * 60 * 60 * 1000, 'You’ve created a few images already today — please upload your own, or send it without an image.');
+  await siteCap(`hq/evsub-pic/${core.dayKey()}`, PIC_SITE_PER_DAY, 'Image creation is resting for today — please upload your own, or send it without an image.');
+  return media.makePicture(info);
+}
+
 // 🖼️ From a flyer — the AI reads the image and writes the event.
 async function aiFromImage(dataUrl, ip) {
   checkImage(dataUrl);
   await aiAllowed(ip);
+  return readFlyer(dataUrl);
+}
+async function readFlyer(dataUrl) {
+  checkImage(dataUrl);
   const settings = await core.getSettings();
   const today = core.dayKey();
   const messages = [
@@ -104,7 +132,7 @@ function cleanSub(raw) {
     link: appai.cleanLink(raw.link),
     contactName: cleanText(raw.contactName, 80),
     contact: cleanText(raw.contact, 120),
-    via: ['flyer', 'notes', 'manual'].includes(raw.via) ? raw.via : 'manual',
+    via: ['flyer', 'link', 'notes', 'manual'].includes(raw.via) ? raw.via : 'manual',
   };
   if (!out.title) throw new HttpError(400, 'title_required', 'Please add the event name.');
   if (!out.eventDate) throw new HttpError(400, 'date_required', 'Please add the event date.');
@@ -171,9 +199,9 @@ async function approve(id, item, by) {
   const post = await apppub.save({
     id: s.appId || undefined, kind: 'event', status: 'live',
     title: src.title, body: src.body || '', link: src.link || '', eventDate: src.eventDate, eventTime: src.eventTime || '', location: src.location || '',
-    summary: src.summary || '', imgId: s.imgId || '',
+    summary: src.summary || '', imgId: src.imgId !== undefined && item ? src.imgId : (s.imgId || ''),
   }, by);
-  await review(id, 'approved', by, { appId: post.id, title: post.title, eventDate: post.eventDate, eventTime: post.eventTime, location: post.location, body: post.body, link: post.link });
+  await review(id, 'approved', by, { appId: post.id, imgId: post.imgId || '', title: post.title, eventDate: post.eventDate, eventTime: post.eventTime, location: post.location, body: post.body, link: post.link });
   return post;
 }
 
@@ -194,4 +222,4 @@ async function remove(id) {
   return true;
 }
 
-module.exports = { aiFromNotes, aiFromImage, submit, list, approve, decline, remove, getImage };
+module.exports = { aiFromNotes, aiFromImage, aiFromLink, aiPicture, fromLink, readFlyer, saveImage, checkImage, submit, list, approve, decline, remove, getImage };

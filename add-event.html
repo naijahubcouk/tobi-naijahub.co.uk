@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Add Your Event — Auntie Tobi</title>
-<meta name="description" content="Add your event to Auntie Tobi for free. Upload your flyer, paste the details or write it yourself — reviewed before it goes live for Nigerians across the UK.">
+<meta name="description" content="Add your event to Auntie Tobi for free. Paste your event link or upload your flyer and Auntie Tobi writes it up, image included — reviewed before it goes live for Nigerians across the UK.">
 <meta property="og:title" content="Add your event to Auntie Tobi 🎉">
-<meta property="og:description" content="Free event listings for the Nigerian community in the UK. Upload your flyer and we’ll do the rest.">
+<meta property="og:description" content="Free event listings for the Nigerian community in the UK. Paste your event link or upload your flyer and we’ll do the rest.">
 <link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -28,6 +28,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .panel{margin-top:12px}
 .drop{border:2px dashed #057A44;border-radius:12px;padding:20px 12px;text-align:center;background:#F6FBF8;color:#04613A;font-size:14px;font-weight:600;cursor:pointer;display:block}
 .drop input{display:none}
+.imgbox{display:flex;gap:14px;align-items:flex-start;margin-top:4px}
+.imgbox .pic{width:120px;height:150px;border-radius:10px;border:1px solid #e0e0e0;background:#F6FBF8 center/cover no-repeat;flex:none;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:#6B7280;padding:6px;overflow:hidden}
+.imgbox .pic img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.imgbtns{display:flex;flex-direction:column;gap:6px;flex:1}
+.sbtn{border:1.5px solid #e0e0e0;background:#fff;border-radius:10px;padding:9px 10px;font-weight:600;font-size:14px;line-height:1.2;font-family:inherit;color:#0F1E36;cursor:pointer;text-align:left}
+.sbtn.go{background:#057A44;border-color:#057A44;color:#fff}.sbtn:disabled{opacity:.6;cursor:wait}
+.spin{display:inline-block;width:22px;height:22px;border:3px solid #CDE8D9;border-top-color:#057A44;border-radius:50%;animation:sp 0.9s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
 .flyer{display:flex;gap:12px;align-items:center;margin-top:10px}.flyer img{width:76px;height:96px;object-fit:cover;border-radius:8px;border:1px solid #e0e0e0}
 label{display:block;font-size:13px;font-weight:700;margin:12px 0 4px}
 label small{font-weight:400;color:#6B7280}
@@ -58,32 +65,50 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
   <div class="hero">
     <div class="badge">🎉 Free event listing</div>
     <h1>Add your event to Auntie Tobi</h1>
-    <p>Reach Nigerians across the UK. Upload your flyer and Auntie Tobi will write it up for you — you can change anything before you send it. Every event is checked before it goes live.</p>
+    <p>Reach Nigerians across the UK. Just paste your event link or upload your flyer — Auntie Tobi will write up your event and sort out the image. You can change anything before you send it. Every event is checked before it goes live.</p>
   </div>
 
   <div class="card">
     <div class="step">1 · How do you want to start?</div>
     <div class="opts" role="group" aria-label="How to start">
-      <button class="opt" data-m="flyer" aria-pressed="true"><span>🖼️</span>Upload your flyer</button>
-      <button class="opt" data-m="notes" aria-pressed="false"><span>✨</span>Paste the details</button>
-      <button class="opt" data-m="manual" aria-pressed="false"><span>✍️</span>Write it myself</button>
+      <button class="opt" data-m="link" aria-pressed="true"><span>🔗</span>Paste your event link</button>
+      <button class="opt" data-m="flyer" aria-pressed="false"><span>🖼️</span>Upload your flyer</button>
+      <button class="opt" data-m="write" aria-pressed="false"><span>✍️</span>Write or paste details</button>
     </div>
 
-    <div class="panel" data-p="flyer">
+    <div class="panel" data-p="link">
+      <input id="url" type="url" inputmode="url" placeholder="https://www.eventbrite.co.uk/e/…" autocomplete="off">
+      <p class="hint">Eventbrite, your website, a ticket page… Auntie Tobi will read it and write up your event, image included.</p>
+      <button class="btn gold" id="urlBtn" style="margin-top:10px">✨ Get my event details</button>
+    </div>
+
+    <div class="panel hidden" data-p="flyer">
       <label class="drop" id="drop">📷 Tap to choose your flyer<br><small style="font-weight:400">JPG or PNG</small><input type="file" id="file" accept="image/jpeg,image/png,image/webp"></label>
       <div class="flyer hidden" id="flyerBox"><img id="flyerImg" alt="Your flyer"><div style="flex:1"><div style="font-weight:700;font-size:14px">Flyer added</div><div class="hint" style="margin-top:2px">It will show with your event.</div><button class="btn gold" id="readBtn" style="margin-top:8px;padding:11px;font-size:14px">✨ Fill in the details from my flyer</button></div></div>
     </div>
-    <div class="panel hidden" data-p="notes">
-      <textarea id="notes" rows="7" placeholder="Paste or type the event details — name, date, time, place, what's on, ticket price, booking link…"></textarea>
+    <div class="panel hidden" data-p="write">
+      <textarea id="notes" rows="6" placeholder="Paste or type the event details — name, date, time, place, what's on, ticket price, booking link…"></textarea>
       <button class="btn gold" id="notesBtn" style="margin-top:10px">✨ Write it up for me</button>
+      <p class="hint" style="text-align:center">Or just fill in the form below yourself.</p>
     </div>
-    <div class="panel hidden" data-p="manual"><p class="hint">Fill in the form below.</p></div>
     <div class="err hidden" id="aiErr"></div>
     <div class="note ok hidden" id="aiOk">✨ Done! Check the details below and change anything you like.</div>
   </div>
 
   <div class="card" id="formCard">
     <div class="step">2 · Check and edit your event</div>
+    <label style="margin-top:0">Event image <small>(shows with your event)</small></label>
+    <div class="imgbox">
+      <div class="pic" id="pic">No image yet</div>
+      <div class="imgbtns">
+        <div class="hint hidden" id="picNote" style="margin:0 0 2px"></div>
+        <button class="sbtn go hidden" id="picOk">👍 Use this image</button>
+        <button class="sbtn" id="picMake">✨ Create an image for me</button>
+        <label class="sbtn" style="margin:0;display:block">📷 Upload my own<input type="file" id="ownFile" accept="image/jpeg,image/png,image/webp" style="display:none"></label>
+        <button class="sbtn hidden" id="picNone">✖ No image</button>
+      </div>
+    </div>
+    <div class="err hidden" id="picErr"></div>
     <label for="title">Event name</label><input id="title" maxlength="160" placeholder="e.g. Naija Food & Owambe Night — Leeds">
     <div class="two">
       <div><label for="date">Date</label><input type="date" id="date"></div>
@@ -121,7 +146,7 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
   'use strict';
   var $ = function (s) { return document.querySelector(s); };
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
-  var mode = 'flyer', image = '';
+  var mode = 'link', image = '', imgFrom = '', usedNotes = false;
   function show(el, on) { el.classList.toggle('hidden', !on); }
   function err(el, msg) { el.textContent = msg; show(el, !!msg); }
 
@@ -131,7 +156,7 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
       $$('.opt').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
       $$('.panel').forEach(function (p) { show(p, p.dataset.p === mode); });
       err($('#aiErr'), ''); show($('#aiOk'), false);
-      if (mode === 'manual') $('#title').focus();
+      if (mode === 'link') $('#url').focus();
     };
   });
 
@@ -148,17 +173,17 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
   // Shrink the flyer on the phone before uploading (max 1600px, JPEG).
   function resize(file) {
     return new Promise(function (resolve, reject) {
-      var img = new Image(), url = URL.createObjectURL(file);
+      var img = new Image(), url = typeof file === 'string' ? file : URL.createObjectURL(file);
       img.onload = function () {
         var max = 1600, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, max / Math.max(w, h));
         var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
         var ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(url);
+        if (typeof file !== 'string') URL.revokeObjectURL(url);
         var q = 0.85, out = c.toDataURL('image/jpeg', q);
         while (out.length > 1500000 && q > 0.4) { q -= 0.15; out = c.toDataURL('image/jpeg', q); }
         resolve(out);
       };
-      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('We couldn’t open that image — please try another.')); };
+      img.onerror = function () { if (typeof file !== 'string') URL.revokeObjectURL(url); reject(new Error('We couldn’t open that image — please try another.')); };
       img.src = url;
     });
   }
@@ -167,7 +192,7 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
     var f = this.files && this.files[0]; if (!f) return;
     err($('#aiErr'), '');
     try {
-      image = await resize(f);
+      image = await resize(f); setImage(image, 'flyer');
       $('#flyerImg').src = image; show($('#flyerBox'), true);
       $('#drop').firstChild.textContent = '📷 Choose a different flyer';
       $('#readBtn').click();
@@ -187,14 +212,55 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
   async function ai(btn, action, payload, busyText) {
     var label = btn.textContent; btn.disabled = true; btn.textContent = busyText;
     err($('#aiErr'), ''); show($('#aiOk'), false);
-    try { var r = await call(action, payload); fill(r.draft); }
-    catch (e) { err($('#aiErr'), e.message); }
+    try {
+      var r = await call(action, payload); fill(r.draft);
+      if (r.image) { try { setImage(await resize(r.image), 'link'); } catch (_) { /* fall through to creating one */ } }
+      if (!image && action !== 'ai-image') makePicture(true);
+    } catch (e) { err($('#aiErr'), e.message); }
     btn.disabled = false; btn.textContent = label;
   }
+
+  // ── Event image: from the flyer, from the link, created by AI, their own, or none ──
+  function setImage(src, from) {
+    image = src || ''; imgFrom = image ? from : '';
+    var pic = $('#pic'), note = $('#picNote');
+    pic.innerHTML = image ? '<img alt="Event image">' : 'No image yet';
+    if (image) { pic.firstChild.src = image; pic.firstChild.onclick = function () { var w = window.open(); if (w) w.document.write('<img src="' + image + '" style="max-width:100%">'); }; }
+    var notes = { flyer: 'Your flyer.', link: 'Taken from your event page.', ai: 'Auntie Tobi made this for you — are you happy with it?', own: 'Your image.' };
+    note.textContent = notes[imgFrom] || ''; show(note, !!image);
+    show($('#picOk'), imgFrom === 'ai');
+    $('#picMake').textContent = imgFrom === 'ai' ? '🔄 Make another one' : '✨ Create an image for me';
+    show($('#picNone'), !!image);
+  }
+  async function makePicture(auto) {
+    var b = $('#picMake'), e = $('#picErr'); err(e, '');
+    var v = { title: $('#title').value.trim(), eventDate: $('#date').value, location: $('#place').value.trim(), body: $('#body').value.trim().slice(0, 400) };
+    if (!v.title) { if (!auto) err(e, 'Add the event name first, then Auntie Tobi can make an image.'); return; }
+    b.disabled = true; var keep = b.textContent; b.textContent = '🎨 Creating… (about 20 seconds)';
+    $('#pic').innerHTML = '<span class="spin"></span>';
+    try { var r = await call('ai-picture', v); setImage(await resize(r.image), 'ai'); }
+    catch (x) { setImage(image, imgFrom); err(e, x.message); b.textContent = keep; }
+    b.disabled = false;
+  }
+  $('#picMake').onclick = function () { makePicture(false); };
+  $('#picOk').onclick = function () { show(this, false); $('#picNote').textContent = 'Great — this image will show with your event.'; };
+  $('#picNone').onclick = function () { setImage('', ''); err($('#picErr'), ''); };
+  $('#ownFile').onchange = async function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    try { setImage(await resize(f), 'own'); err($('#picErr'), ''); } catch (x) { err($('#picErr'), x.message); }
+    this.value = '';
+  };
+  $('#urlBtn').onclick = function () {
+    var u = $('#url').value.trim();
+    if (!u) { err($('#aiErr'), 'Please paste your event link first.'); return; }
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    ai(this, 'ai-link', { url: u }, '✨ Reading your event page… (about 20 seconds)');
+  };
   $('#readBtn').onclick = function () { if (image) ai(this, 'ai-image', { image: image }, '✨ Reading your flyer… (about 15 seconds)'); };
   $('#notesBtn').onclick = function () {
     var n = $('#notes').value.trim();
     if (n.length < 15) { err($('#aiErr'), 'Please paste a bit more about your event first.'); return; }
+    usedNotes = true;
     ai(this, 'ai-notes', { notes: n }, '✨ Writing… (about 10 seconds)');
   };
 
@@ -202,7 +268,7 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
     var b = this, e = $('#sendErr'); err(e, '');
     var v = { title: $('#title').value.trim(), eventDate: $('#date').value, eventTime: $('#time').value.trim(), location: $('#place').value.trim(),
       body: $('#body').value.trim(), link: $('#link').value.trim(), contactName: $('#cname').value.trim(), contact: $('#contact').value.trim(),
-      website: $('#website').value, via: mode, image: image };
+      website: $('#website').value, via: mode === 'write' ? (usedNotes ? 'notes' : 'manual') : mode, image: image };
     if (!v.title) return err(e, 'Please add the event name.');
     if (!v.eventDate) return err(e, 'Please add the event date.');
     if (!v.location) return err(e, 'Please add where the event is.');

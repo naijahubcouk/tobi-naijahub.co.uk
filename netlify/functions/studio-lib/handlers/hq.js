@@ -100,6 +100,20 @@ exports.handler = handler(async (ctx) => {
       await core.audit(who.email, 'hq_app_save', { id: item.id, kind: item.kind, status: item.status });
       return { item };
     }
+    case 'app-link': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
+      const r = await eventsub.fromLink(body.url, body.notes);
+      return { draft: { kind: 'event', ...r.draft }, image: r.image };
+    }
+    case 'app-flyer': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
+      return { draft: { kind: 'event', ...(await eventsub.readFlyer(body.image)) } };
+    }
+    case 'app-picture': {
+      await core.rateLimit('hq-pic', who.email, 40, 60 * 60 * 1000, 'That\u2019s a lot of images this hour — please wait a little.');
+      return { image: await require('../eventmedia').makePicture(body) };
+    }
+    case 'app-img': return { imgId: await eventsub.saveImage(body.image) };
     case 'app-ai': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
       const draft = await appai.write(body.notes, body.kind, body.category);
