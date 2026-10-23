@@ -2581,10 +2581,11 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
           '<div class="f2"><div><label class="f" for="cHandle">Handle on ' + word + 's <span class="opt">(empty = none)</span></label><input id="cHandle" maxlength="60" placeholder="@yourbusiness"></div><div><label class="f" for="cCta">' + (maxSlides > 1 ? 'Last-' + word + ' button' : 'Button') + ' <span class="opt">(empty = none)</span></label><input id="cCta" maxlength="60" placeholder="e.g. DM us to order"></div></div>' +
         '</div></details>' +
         '<details class="card"><summary style="cursor:pointer;font-weight:700">✍️ Caption &amp; hashtags</summary><div class="stack" style="gap:8px;margin-top:10px"><textarea id="cCap" rows="5" maxlength="2200" placeholder="Write your caption here"></textarea><textarea id="cTags" rows="2" placeholder="#hashtags"></textarea><button class="btn ghost small" id="cCopy">Copy caption &amp; hashtags</button></div></details>' +
-        '<section class="card stack cexp" style="gap:8px"><b>⬇️ Save</b>' +
-          '<button class="btn primary block" id="cAll">' + (DEV === 'computer' ? 'Save to computer' : 'Save to gallery') + '</button>' +
+        '<section class="card stack cexp" style="gap:8px"><b>⬇️ Save &amp; share</b>' +
+          '<div class="row" style="gap:8px"><button class="btn primary" id="cAll" style="flex:1.3">' + (DEV === 'computer' ? 'Save to computer' : 'Save to gallery') + '</button><button class="btn ghost" id="cShare" style="flex:1">↗ Share</button></div>' +
           '<p class="hint" style="margin:0" id="cSaveHint">' + ({ ios: 'Opens your share menu — tap <b>Save ' + (maxSlides > 1 ? 'Images' : 'Image') + '</b> to add ' + (maxSlides > 1 ? 'them' : 'it') + ' to Photos.', android: 'Saves straight to your phone — find ' + (maxSlides > 1 ? 'them' : 'it') + ' in Gallery or Google Photos (Downloads).', computer: 'Each image saves to your Downloads folder.' })[DEV] + '</p>' +
-          (maxSlides > 1 ? '<div class="row wrap" style="gap:8px"><button class="btn ghost small" id="cOne">This ' + word + ' only</button><button class="btn ghost small" id="cZip">Download as ZIP</button></div>' : '') +
+          (maxSlides > 1 ? '<div class="row wrap" style="gap:8px"><button class="btn ghost small" id="cOne">Save this ' + word + '</button><button class="btn ghost small" id="cShareOne">Share this ' + word + '</button><button class="btn ghost small" id="cZip">Download as ZIP</button></div>' : '') +
+          '<p class="hint" style="margin:0">Share sends ' + (maxSlides > 1 ? 'them' : 'it') + ' to WhatsApp, Instagram, Facebook and more — your caption is copied for you to paste.</p>' +
           '<p class="hint" style="margin:0" id="cSizeNote"></p></section>' +
         '<button class="btn link danger" id="cDelAll" style="align-self:flex-start">Delete this design</button>' +
       '</div></div></main>';
@@ -2742,15 +2743,66 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       var many = files.length > 1;
       toast(DEV === 'computer' ? (many ? files.length + ' images saved to Downloads' : 'Image saved to Downloads') : (many ? files.length + ' images saved to your gallery' : 'Saved to your gallery') + (DEV === 'android' ? ' (Downloads)' : ''));
     }
+    // ready-made image files (made in the background after edits) so Share/Save open straight from the tap
+    var fileCache = {}, warmT = null;
+    function slideKey(i) { var x = Object.assign({}, d, { caption: '', hashtags: [] }); return i + '|' + JSON.stringify(x) + '|' + Object.keys(A.images || {}).length + '|' + (A.logo ? 1 : 0); }
+    function cachedFiles(idx) { var out = []; for (var i = 0; i < idx.length; i++) { var c = fileCache[idx[i]]; if (!c || c.key !== slideKey(idx[i])) return null; out.push(c.file); } return out; }
+    async function makeFiles(idx) {
+      var out = [];
+      for (var i = 0; i < idx.length; i++) { var k = slideKey(idx[i]), c = fileCache[idx[i]]; if (!c || c.key !== k) { c = fileCache[idx[i]] = { key: k, file: new File([await slideBlob(idx[i])], slideName(idx[i]), { type: 'image/png' }) }; } out.push(c.file); }
+      return out;
+    }
+    function warmSoon() { if (DEV === 'computer') return; clearTimeout(warmT); warmT = setTimeout(function () { makeFiles(d.slides.map(function (_, i) { return i; })).catch(function () {}); }, 1500); }
+    var _drawBig = drawBig; drawBig = function () { _drawBig(); warmSoon(); };
+    warmSoon();
     async function runSave(btn, idx) {
       if (!okOver()) return;
-      var label = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing…';
-      try { var files = []; for (var i = 0; i < idx.length; i++) files.push(new File([await slideBlob(idx[i])], slideName(idx[i]), { type: 'image/png' })); drawBig(); await saveFiles(files); }
-      catch (x) { toast('Couldn’t save the images — please try again'); }
+      var label = btn.textContent, files = cachedFiles(idx);
+      try {
+        if (!files) { btn.disabled = true; btn.textContent = 'Preparing…'; files = await makeFiles(idx); }
+        await saveFiles(files);
+      } catch (x) { toast('Couldn’t save the images — please try again'); }
       btn.disabled = false; btn.textContent = label;
     }
     $('#cAll').onclick = function () { runSave(this, d.slides.map(function (_, i) { return i; })); };
     if ($('#cOne')) $('#cOne').onclick = function () { runSave(this, [cur]); };
+    // Share: the phone's own share menu (WhatsApp, Instagram, Facebook, TikTok, email…); caption copied first
+    function captionText() { return (d.caption || '').trim() + (d.hashtags && d.hashtags.length ? '\n\n' + d.hashtags.join(' ') : ''); }
+    function copyCaption() { var t = captionText(); if (!t || !navigator.clipboard) return; navigator.clipboard.writeText(t).then(function () { toast('Caption copied ✓ — paste it in'); }, function () {}); }
+    async function runShare(btn, idx) {
+      if (DEV === 'computer' || !navigator.canShare) return computerShare(idx);
+      if (!okOver()) return;
+      var label = btn.dataset.label || (btn.dataset.label = btn.textContent), files = cachedFiles(idx);
+      if (!files) {
+        btn.disabled = true; btn.textContent = 'Preparing…';
+        try { files = await makeFiles(idx); } catch (x) { toast('Couldn’t prepare the images — please try again'); btn.disabled = false; btn.textContent = label; return; }
+        btn.disabled = false;
+      }
+      if (!navigator.canShare({ files: files })) { btn.textContent = label; toast(files.length > 1 ? 'Your phone can only share one picture at a time — use “Share this ' + word.toLowerCase() + '”' : 'Your phone can’t share pictures — use Save to gallery'); return; }
+      copyCaption();
+      try { await navigator.share({ files: files }); btn.textContent = label; }
+      catch (e) {
+        if (e && e.name === 'AbortError') { btn.textContent = label; return; }
+        if (e && e.name === 'NotAllowedError') { btn.textContent = 'Tap again to share'; return; }
+        btn.textContent = label; toast('Couldn’t open sharing — use Save to gallery instead');
+      }
+    }
+    function computerShare(idx) {
+      var cap = captionText(), scrim = document.createElement('div'); scrim.className = 'scrim';
+      scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="shT2"><h2 id="shT2" style="margin:0">Share</h2>' +
+        '<p style="margin:0">Sharing pictures to WhatsApp or Instagram works from your phone. On a computer you can:</p>' +
+        (cap ? '<button class="btn ghost block" id="shCap">Copy caption &amp; hashtags</button>' : '') +
+        '<button class="btn primary block" id="shSave">Save ' + (idx.length > 1 ? idx.length + ' images' : 'image') + ' to computer</button>' +
+        '<p class="hint" style="margin:0">Then upload them on instagram.com, facebook.com or WhatsApp Web — or open this design in the Auntie Tobi app on your phone and tap Share.</p>' +
+        '<button class="btn link" id="shX2">Close</button></div>';
+      document.body.appendChild(scrim);
+      function close() { scrim.remove(); }
+      $('#shX2', scrim).onclick = close; scrim.onclick = function (e) { if (e.target === scrim) close(); };
+      if (cap) $('#shCap', scrim).onclick = function () { copyText(cap); };
+      $('#shSave', scrim).onclick = function () { close(); runSave($('#cAll'), idx); };
+    }
+    $('#cShare').onclick = function () { runShare(this, d.slides.map(function (_, i) { return i; })); };
+    if ($('#cShareOne')) $('#cShareOne').onclick = function () { runShare(this, [cur]); };
     if ($('#cZip')) $('#cZip').onclick = async function () {
       if (!okOver()) return;
       var btn = this; btn.disabled = true; btn.textContent = 'Preparing…';
