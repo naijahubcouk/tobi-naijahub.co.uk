@@ -8,6 +8,7 @@
  *   POST { action: 'team-save', emails: [] }                                      (admins only)
  *   POST { action: 'app-save' | 'app-delete' }   Publish to App (updates, articles, events shown in the main app)
  *   POST { action: 'app-ai', notes, kind, category }   ✨ Write with AI — returns a draft only, never publishes
+ *   POST { action: 'igc-gen' | 'igc-posted' | 'igc-delete' }   💬 Comment Assistant — drafts Instagram comments, never posts them
  *   POST { action: 'subs' | 'sub-approve' | 'sub-decline' | 'sub-delete' }   public event submissions (review queue)
  *   GET  ?subimg=<id>  a submitted event flyer
  *   GET  ?img=<id>     a card image
@@ -18,6 +19,7 @@ const hq = require('../hq');
 const apppub = require('../apppub');
 const appai = require('../appai');
 const eventsub = require('../eventsub');
+const igcomment = require('../igcomment');
 
 function requireEmail(e) {
   const email = core.normalizeEmail(e);
@@ -82,7 +84,7 @@ exports.handler = handler(async (ctx) => {
   const who = await requireHq(ctx);
   await core.rateLimit('hq', who.email, 1200, 60 * 60 * 1000);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: await apppub.list(), appCategories: apppub.CATEGORIES, subs: await eventsub.list() };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: await apppub.list(), appCategories: apppub.CATEGORIES, subs: await eventsub.list(), igc: await igcomment.list(), igcTarget: igcomment.DAILY_TARGET };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -129,6 +131,14 @@ exports.handler = handler(async (ctx) => {
       await core.audit(who.email, 'hq_app_ai', { kind: body.kind });
       return { draft };
     }
+    case 'igc-gen': {
+      await core.rateLimit('hq-igc', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of comment ideas this hour — please wait a little.');
+      const entry = await igcomment.generate(body, who.email);
+      await core.audit(who.email, 'hq_igc', { style: entry.style, goal: entry.goal });
+      return { entry };
+    }
+    case 'igc-posted': return { entry: await igcomment.markPosted(body.id, body.i, body.text, who.email) };
+    case 'igc-delete': { await igcomment.remove(body.id); return { ok: true }; }
     case 'subs': return { subs: await eventsub.list() };
     case 'sub-approve': {
       const post = await eventsub.approve(String(body.id || ''), body.item, who.email);

@@ -152,6 +152,27 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 .apl{margin-top:8px;font-size:13px;color:#057A44;font-weight:700}
 .aeimg{display:flex;gap:12px;align-items:flex-start}.aepic{width:110px;height:138px;border-radius:10px;border:1px solid var(--line);background:#F7F2E7;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}.aepic.wide{width:150px;height:150px}.aepic img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}.aeibtn{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .subc{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.subimg{width:130px;max-height:180px;object-fit:cover;border-radius:10px;cursor:zoom-in;flex:none;background:#eee}.subimg.none{height:90px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);cursor:default}.side-nav .n.gold:not(:empty){background:var(--gold);color:var(--navy)}
+/* Comment Assistant */
+.side-sec{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;color:var(--gold);padding:12px 12px 2px}
+.igwrap{max-width:780px}
+.igprog{display:flex;align-items:center;gap:14px}.igprog b{font-family:var(--display);font-size:26px;line-height:1}
+.igbar{flex:1;height:10px;background:#F1ECE1;border-radius:999px;overflow:hidden}.igbar i{display:block;height:100%;background:var(--green);border-radius:999px;transition:width .3s}
+.igprog.done .igbar i{background:var(--gold)}
+.igdrop{border:2px dashed #D9CCAE;border-radius:12px;background:#FFFCF5;padding:16px;text-align:center;cursor:pointer;display:block;font-weight:400}
+.igdrop:hover,.igdrop.over{border-color:var(--green);background:var(--green-l)}
+.igdrop b{display:block;font-size:15px}.igdrop span{font-size:13px;color:var(--muted)}
+.igshot{display:flex;gap:12px;align-items:flex-start}.igshot img{width:92px;max-height:160px;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line)}
+.igres{display:flex;flex-direction:column;gap:10px}
+.igc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.igc.best{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+.igc.done{background:var(--green-l)}
+.igk{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.igc.best .igk{color:var(--green-d)}
+.igc textarea{border:0;padding:0;font-size:15.5px;line-height:1.45;background:transparent;resize:none;overflow:hidden}
+.igc textarea:focus{outline:none}
+.igc .igcnt{font-size:12px;color:var(--muted);margin-left:auto}
+.ighrow{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}.ighrow:last-child{border-bottom:0}
+.ighrow .tx{flex:1;min-width:0;font-size:14px}.ighrow .tx q{display:block;quotes:none;margin-top:2px}
+.ighrow .ok{color:var(--green-d);font-weight:700;font-size:12px}.ighrow .no{color:var(--muted);font-size:12px}
 @media (max-width:600px){.subc{flex-direction:column}.subimg{width:100%;max-height:260px;object-fit:contain}}
 @media (max-width:900px){.apgrid{grid-template-columns:1fr}.appv{position:static}.aprow{flex-direction:column;align-items:stretch;gap:8px}}
 </style>
@@ -183,6 +204,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="posted">📲 Posted</button>
       <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
       <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
+      <div class="side-sec">Instagram Growth</div>
+      <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
       <button data-nav="bin">🗑 Bin <span class="n" id="nBin"></span></button>
       <button id="teamBtn" class="hidden">👥 Team access</button>
       <a href="/studio-admin" id="adminLink" class="hidden">📋 Admin ↗</a>
@@ -246,13 +269,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || [];
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10;
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
   function go(v) {
-    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'bin'].indexOf(v) >= 0 ? v : 'today';
+    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'bin'].indexOf(v) >= 0 ? v : 'today';
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -260,7 +283,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nBin').textContent = (S.bin || []).length || '';
     $('#nApp').textContent = (S.app || []).filter(function (p) { return appState(p) === 'live'; }).length || '';
     $('#nSubs').textContent = subsNew().length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, bin: vBin })[S.view]();
+    $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10);
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, igc: vIgc, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
@@ -1005,6 +1029,160 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     function go2app() { if (S.view !== 'app') go('app'); }
     $('#aeP', s).onclick = function () { submit(isNew ? 'live' : (p.status || 'live')); };
     if (isNew && !sub) $('#aeH', s).onclick = function () { submit('hidden'); };
+  }
+
+
+  // ── 💬 Comment Assistant (Instagram Growth) ──
+  var IGK = { recommended: '⭐ Recommended', conversation: '💬 Conversation starter', standout: '✨ Standout' };
+  var IGSTYLE = [['friendly', '😊 Friendly'], ['helpful', '💡 Helpful'], ['playful', '😄 Playful'], ['supportive', '💚 Supportive']];
+  var IGGOAL = [['visits', 'Profile visits & followers'], ['conversation', 'Start a conversation'], ['relationships', 'Build business relationships']];
+  var IG = { shot: '', link: '', context: '', style: 'friendly', goal: 'visits', cur: null, busy: false, hist: 'all', more: false };
+  try { var igp = JSON.parse(localStorage.getItem('hq-igc') || '{}'); if (igp.style) IG.style = igp.style; if (igp.goal) IG.goal = igp.goal; } catch (e) {}
+  function igcToday() { return (S.igc || []).filter(function (e) { return e.posted && e.posted.day === today(); }).length; }
+  function igUpsert(e) { var i = (S.igc || []).findIndex(function (x) { return x.id === e.id; }); if (i >= 0) S.igc[i] = e; else S.igc.unshift(e); }
+  function igAgo(iso) {
+    var d = new Date(iso), day = d.toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+    var t = d.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: 'numeric', minute: '2-digit' });
+    return (day === today() ? 'Today' : fmtDay(day)) + ' ' + t;
+  }
+  function igFit(t) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
+
+  function vIgc() {
+    $('#ttl').textContent = 'Comment Assistant'; $('#topRight').innerHTML = '';
+    var n = igcToday(), goal = S.igcTarget || 10, pct = Math.min(100, Math.round(n / goal * 100));
+    $('#view').innerHTML = '<div class="wrap igwrap stack">' +
+      '<div class="card igprog' + (n >= goal ? ' done' : '') + '"><b>' + n + '<span class="muted" style="font-size:16px">/' + goal + '</span></b><div style="flex:1"><div style="font-weight:700;font-size:14px;margin-bottom:5px">' + (n >= goal ? 'Daily target done — well done! 🎉' : 'Meaningful comments posted today') + '</div><div class="igbar"><i style="width:' + pct + '%"></i></div></div></div>' +
+      '<div class="card stack" id="igForm">' +
+        '<div><label>Screenshot of the post</label><div id="igShot"></div></div>' +
+        '<div><label for="igLink">Instagram link <span class="muted" style="font-weight:500">(optional — saved with the history)</span></label><input id="igLink" type="url" inputmode="url" placeholder="https://www.instagram.com/p/…" value="' + esc(IG.link) + '"></div>' +
+        '<div><label>Comment style</label><div class="chipbar" id="igStyle">' + IGSTYLE.map(function (o) { return '<button class="chip" data-v="' + o[0] + '" aria-pressed="' + (IG.style === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
+        '<div><label>What should this comment achieve?</label><div class="chipbar" id="igGoal">' + IGGOAL.map(function (o) { return '<button class="chip" data-v="' + o[0] + '" aria-pressed="' + (IG.goal === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
+        '<div><label for="igCtx">Caption or context <span class="muted" style="font-weight:500">(optional)</span></label><textarea id="igCtx" rows="3" placeholder="Paste the caption, or add a note — e.g. “she’s a Leeds caterer who just opened her first shop”">' + esc(IG.context) + '</textarea></div>' +
+        '<div class="err hidden" id="igErr"></div>' +
+        '<button class="btn primary" id="igGo" style="width:100%">✨ Generate comment ideas</button>' +
+      '</div>' +
+      '<div id="igOut"></div>' +
+      '<h2 class="h2">History</h2><div id="igHist"></div>' +
+    '</div>';
+    drawShot(); drawOut(); drawHist();
+
+    $('#igLink').oninput = function () { IG.link = this.value.trim(); };
+    $('#igCtx').oninput = function () { IG.context = this.value; };
+    var remember = function () { try { localStorage.setItem('hq-igc', JSON.stringify({ style: IG.style, goal: IG.goal })); } catch (e) {} };
+    $$('#igStyle .chip').forEach(function (b) { b.onclick = function () { IG.style = b.dataset.v; remember(); $$('#igStyle .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }; });
+    $$('#igGoal .chip').forEach(function (b) { b.onclick = function () { IG.goal = b.dataset.v; remember(); $$('#igGoal .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }; });
+    $('#igGo').onclick = function () { igGenerate(false); };
+  }
+
+  function drawShot() {
+    var box = $('#igShot'); if (!box) return;
+    if (IG.shot) {
+      box.innerHTML = '<div class="igshot"><img src="' + IG.shot + '" alt="Screenshot"><div class="stack" style="margin:0"><span class="muted" style="font-size:13px">Screenshot added ✓<br>It’s only used to write the comments — it isn’t saved.</span><div class="row"><label class="btn small ghost" style="margin:0">Change<input type="file" accept="image/*" id="igFile" hidden></label><button class="btn small ghost danger" id="igRm">Remove</button></div></div></div>';
+      $('#igRm').onclick = function () { IG.shot = ''; drawShot(); };
+    } else {
+      box.innerHTML = '<label class="igdrop" id="igDrop"><b>📸 Upload a screenshot</b><span>The post, caption or comment thread. On a computer you can also paste (Ctrl/⌘+V) or drop it here.</span><input type="file" accept="image/*" id="igFile" hidden></label>';
+      var d = $('#igDrop');
+      d.ondragover = function (e) { e.preventDefault(); d.classList.add('over'); };
+      d.ondragleave = function () { d.classList.remove('over'); };
+      d.ondrop = function (e) { e.preventDefault(); d.classList.remove('over'); if (e.dataTransfer.files[0]) takeShot(e.dataTransfer.files[0]); };
+    }
+    $('#igFile').onchange = function () { if (this.files[0]) takeShot(this.files[0]); };
+  }
+  async function takeShot(file) {
+    if (!/^image\//.test(file.type)) { toast('Please choose an image'); return; }
+    try { IG.shot = await resize(file, 1800); drawShot(); } catch (x) { toast('Couldn’t read that image — try another'); }
+  }
+  document.addEventListener('paste', function (e) {
+    if (S.view !== 'igc' || !e.clipboardData) return;
+    var f = Array.prototype.slice.call(e.clipboardData.files || []).filter(function (x) { return /^image\//.test(x.type); })[0];
+    if (f) { e.preventDefault(); takeShot(f); }
+  });
+
+  async function igGenerate(again) {
+    if (IG.busy) return;
+    var err = $('#igErr'); err.classList.add('hidden');
+    if (!IG.shot && IG.context.trim().length < 15) {
+      err.textContent = IG.link ? 'Instagram doesn’t let us read post links — please add a screenshot of the post (or paste its caption).' : 'Add a screenshot of the post, or paste its caption.';
+      err.classList.remove('hidden'); return;
+    }
+    IG.busy = true;
+    var btns = [$('#igGo'), $('#igAgain')].filter(Boolean);
+    btns.forEach(function (b) { b.disabled = true; }); $('#igGo').textContent = '✍️ Auntie Tobi is thinking…';
+    try {
+      var avoid = again && IG.cur ? IG.cur.comments.map(function (c) { return c.text; }) : [];
+      var r = await api('igc-gen', { image: IG.shot, link: IG.link, context: IG.context, style: IG.style, goal: IG.goal, avoid: avoid });
+      IG.cur = r.entry; igUpsert(r.entry);
+      $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10);
+      drawOut(); drawHist();
+      var o = $('#igOut'); if (o) o.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); }
+    IG.busy = false;
+    var g = $('#igGo'); if (g) { g.disabled = false; g.textContent = '✨ Generate comment ideas'; }
+    var a = $('#igAgain'); if (a) a.disabled = false;
+  }
+
+  function drawOut() {
+    var o = $('#igOut'); if (!o) return;
+    var e = IG.cur;
+    if (!e) { o.innerHTML = ''; return; }
+    var posted = e.posted;
+    o.innerHTML = '<div class="stack">' +
+      '<div class="row" style="justify-content:space-between"><div style="min-width:0"><div style="font-weight:700">' + esc(e.about || 'Comment ideas') + '</div>' + (e.account ? '<div class="muted" style="font-size:13px">' + esc(e.account) + '</div>' : '') + '</div>' +
+        '<button class="btn small ghost" id="igAgain">🔄 New ideas</button></div>' +
+      (e.sensitive ? '<div class="note">💚 This looks like a serious post, so all three are kept sincere — no jokes.</div>' : '') +
+      '<div class="igres">' + e.comments.map(function (c, i) {
+        var done = posted && posted.i === i;
+        return '<div class="igc' + (i === 0 ? ' best' : '') + (done ? ' done' : '') + '"><div class="row"><span class="igk">' + (IGK[c.kind] || '') + '</span><span class="igcnt" data-cnt="' + i + '"></span></div>' +
+          '<textarea rows="1" data-t="' + i + '" aria-label="' + esc(IGK[c.kind] || 'Comment') + ' — you can edit it">' + esc(done ? posted.text : c.text) + '</textarea>' +
+          '<div class="row"><button class="btn small primary" data-cp="' + i + '">📋 Copy comment</button>' +
+          (done ? '<span class="ok" style="color:var(--green-d);font-weight:700;font-size:13px">✅ Posted</span><button class="btn small link" data-un="' + i + '" style="margin-left:auto;font-size:13px">Undo</button>'
+                : '<button class="btn small ghost" data-po="' + i + '">✅ I posted this</button>') + '</div></div>';
+      }).join('') + '</div>' +
+      '<p class="muted" style="font-size:13px;margin:0">Tap a comment to tweak it, copy it, post it on Instagram yourself, then tap “I posted this” so it counts towards today’s ' + (S.igcTarget || 10) + '.</p></div>';
+    $$('#igOut textarea').forEach(function (t) {
+      var cnt = function () { var w = t.value.trim().split(/\s+/).filter(Boolean).length; $('[data-cnt="' + t.dataset.t + '"]').textContent = w + ' words'; };
+      igFit(t); cnt(); t.oninput = function () { igFit(t); cnt(); };
+    });
+    var text = function (i) { return $('#igOut [data-t="' + i + '"]').value.trim(); };
+    $$('#igOut [data-cp]').forEach(function (b) { b.onclick = function () { copy(text(b.dataset.cp), 'Copied — paste it into Instagram'); }; });
+    $$('#igOut [data-po]').forEach(function (b) { b.onclick = function () { igPosted(e.id, Number(b.dataset.po), text(b.dataset.po)); }; });
+    $$('#igOut [data-un]').forEach(function (b) { b.onclick = function () { igPosted(e.id, null); }; });
+    $('#igAgain').onclick = function () { igGenerate(true); };
+  }
+
+  async function igPosted(id, i, txt) {
+    try {
+      var r = await api('igc-posted', { id: id, i: i, text: txt });
+      igUpsert(r.entry); if (IG.cur && IG.cur.id === id) IG.cur = r.entry;
+      var n = igcToday(), goal = S.igcTarget || 10;
+      toast(i === null ? 'Un-marked' : n === goal ? 'That’s ' + goal + ' today — target done! 🎉' : 'Nice one — ' + n + '/' + goal + ' today');
+      if (i !== null) { IG.shot = ''; IG.link = ''; IG.context = ''; }
+      var keep = IG.cur; vIgc(); IG.cur = keep; drawOut();
+      $('#nIgc').textContent = n + '/' + goal;
+    } catch (x) { toast(x.message); }
+  }
+
+  function drawHist() {
+    var h = $('#igHist'); if (!h) return;
+    var all = S.igc || [];
+    var list = all.filter(function (e) { return IG.hist === 'all' || (IG.hist === 'posted' ? !!e.posted : !e.posted); });
+    var shown = IG.more ? list : list.slice(0, 25);
+    h.innerHTML = (all.length ? '<div class="chipbar" style="margin-bottom:10px">' + [['all', 'All'], ['posted', '✅ Posted'], ['open', 'Not posted']].map(function (o) { return '<button class="chip" data-hf="' + o[0] + '" aria-pressed="' + (IG.hist === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>' : '') +
+      (shown.length ? '<div class="card ighist" style="padding:2px 14px">' + shown.map(function (e) {
+        var p = e.posted;
+        return '<div class="ighrow"><div class="tx"><div style="font-weight:700">' + esc(e.about || 'Comment ideas') + (e.account ? ' <span class="muted" style="font-weight:500">' + esc(e.account) + '</span>' : '') + '</div>' +
+          '<div class="muted" style="font-size:12px">' + esc(igAgo(e.createdAt)) + (e.by && e.by !== S.me ? ' · ' + esc(who(e.by)) : '') + (e.link ? ' · <a href="' + esc(e.link) + '" target="_blank" rel="noopener">Open post ↗</a>' : '') + '</div>' +
+          (p ? '<q>“' + esc(p.text) + '”</q><span class="ok">✅ Posted ' + esc(igAgo(p.at)) + (p.by && p.by !== S.me ? ' by ' + esc(who(p.by)) : '') + '</span>' : '<span class="no">Not posted yet</span>') + '</div>' +
+          '<div class="row" style="gap:4px;flex:none"><button class="btn small ghost" data-ho="' + e.id + '">Open</button><button class="btn small ghost danger" data-hd="' + e.id + '" title="Delete" aria-label="Delete">🗑</button></div></div>';
+      }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">' + (all.length ? 'Nothing here yet.' : 'Your comment ideas will show here, so you can see what you’ve posted and where.') + '</p></div>') +
+      (list.length > shown.length ? '<button class="btn small ghost" id="igMore" style="margin-top:10px">Show all ' + list.length + '</button>' : '');
+    $$('[data-hf]', h).forEach(function (b) { b.onclick = function () { IG.hist = b.dataset.hf; IG.more = false; drawHist(); }; });
+    $$('[data-ho]', h).forEach(function (b) { b.onclick = function () { IG.cur = S.igc.filter(function (x) { return x.id === b.dataset.ho; })[0]; drawOut(); $('#igOut').scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
+    $$('[data-hd]', h).forEach(function (b) { b.onclick = async function () {
+      if (!confirm('Delete this from the history?')) return;
+      try { await api('igc-delete', { id: b.dataset.hd }); S.igc = S.igc.filter(function (x) { return x.id !== b.dataset.hd; }); if (IG.cur && IG.cur.id === b.dataset.hd) { IG.cur = null; drawOut(); } drawHist(); $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10); toast('Deleted'); } catch (x) { toast(x.message); }
+    }; });
+    var m = $('#igMore'); if (m) m.onclick = function () { IG.more = true; drawHist(); };
   }
 
   function sheet(html) { var s = document.createElement('div'); s.className = 'scrim'; s.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>'; document.body.appendChild(s); s.addEventListener('click', function (e) { if (e.target === s) s.remove(); }); return s; }
