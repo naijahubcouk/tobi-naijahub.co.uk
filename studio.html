@@ -17,6 +17,8 @@
 <meta name="apple-mobile-web-app-title" content="Business Studio">
 <script src="/studio-qr.js" defer></script>
 <script src="/studio-carousel.js" defer></script>
+<script src="/vendor/mp4-muxer-5.2.2.js" defer></script>
+<script src="/studio-animate.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -447,6 +449,7 @@ nav.tabs .navsep{display:none}
 .dmfmt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.dmfmt.two{grid-template-columns:1fr 1fr}
 .dmopt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;font:inherit;color:inherit}
 .dmopt span{font-size:22px}.dmopt b{font-size:15px}.dmopt small{font-size:12.5px;color:var(--muted);line-height:1.3}
+.canprev{background:#1b1b1b;border-radius:12px;padding:8px}.canprev canvas{display:block;width:100%;max-width:300px;height:auto;margin:0 auto;border-radius:8px}
 .dmopt[aria-pressed=true]{border-color:var(--green);background:#F2FBF6;box-shadow:0 0 0 3px rgba(5,122,68,.15)}
 .dmown{background:#F7F5EF;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
 .swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
@@ -2580,6 +2583,16 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
           (maxSlides > 1 ? toggle('cNums', 'Show ' + word + ' numbers') : '') + (d.format === 'carousel' ? toggle('cSwipe', 'Show “Swipe →” on the first slide') : '') +
           '<div class="f2"><div><label class="f" for="cHandle">Handle on ' + word + 's <span class="opt">(empty = none)</span></label><input id="cHandle" maxlength="60" placeholder="@yourbusiness"></div><div><label class="f" for="cCta">' + (maxSlides > 1 ? 'Last-' + word + ' button' : 'Button') + ' <span class="opt">(empty = none)</span></label><input id="cCta" maxlength="60" placeholder="e.g. DM us to order"></div></div>' +
         '</div></details>' +
+        '<details class="card" id="cAnimBox"><summary style="cursor:pointer;font-weight:700">🎬 Animate it <span class="opt" style="font-weight:400">— free, no credits</span></summary><div class="stack" style="gap:12px;margin-top:10px">' +
+          '<div><span class="f" style="display:block;font-weight:700;margin-bottom:6px">Animation</span><div class="chips" id="cAnS">' + (window.TobiAnimate ? TobiAnimate.STYLES : [['none', 'No animation']]).map(function (x) { return '<button type="button" class="chip" data-an="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +
+          toggle('cAnZ', 'Slow zoom on photos') + toggle('cAnL', 'Moving light (a soft shine)') +
+          '<div class="canprev"><canvas id="cAnim" width="1080" height="1350" aria-label="Animation preview"></canvas></div>' +
+          '<div class="row" style="justify-content:center"><button type="button" class="btn ghost small" id="cAnRe">↺ Replay</button></div>' +
+          '<button class="btn primary" id="cAnDl">🎬 Download ' + (maxSlides > 1 ? 'videos (MP4, zipped)' : 'video (MP4)') + '</button>' +
+          (d.format === 'carousel' ? '<button class="btn ghost" id="cAnReel">📱 Download one Reel video (9:16)</button>' : '') +
+          '<div id="cAnProg" class="hidden"><div class="hint" id="cAnProgT" style="margin:0"></div><div style="height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;margin-top:4px"><div id="cAnProgB" style="height:100%;width:0;background:#057A44"></div></div></div>' +
+          '<p class="hint" style="margin:0">Made on this device — free. Each ' + word.toLowerCase() + ' becomes a 5-second video' + (maxSlides > 1 ? '; post them together as a carousel on Instagram, Facebook or TikTok' : '') + '. Works best in Chrome or Edge, or on an iPhone with iOS 17 or newer. Add music in the app you post to.</p>' +
+        '</div></details>' +
         '<details class="card"><summary style="cursor:pointer;font-weight:700">✍️ Caption &amp; hashtags</summary><div class="stack" style="gap:8px;margin-top:10px"><textarea id="cCap" rows="5" maxlength="2200" placeholder="Write your caption here"></textarea><textarea id="cTags" rows="2" placeholder="#hashtags"></textarea><button class="btn ghost small" id="cCopy">Copy caption &amp; hashtags</button></div></details>' +
         '<section class="card stack cexp" style="gap:8px"><b>⬇️ Save &amp; share</b>' +
           '<div class="row" style="gap:8px"><button class="btn primary" id="cAll" style="flex:1.3">' + (DEV === 'computer' ? 'Save to computer' : 'Save to gallery') + '</button><button class="btn ghost" id="cShare" style="flex:1">↗ Share</button></div>' +
@@ -2754,6 +2767,40 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     }
     function warmSoon() { if (DEV === 'computer') return; clearTimeout(warmT); warmT = setTimeout(function () { makeFiles(d.slides.map(function (_, i) { return i; })).catch(function () {}); }, 1500); }
     var _drawBig = drawBig; drawBig = function () { _drawBig(); warmSoon(); };
+    // 🎬 animation (studio-animate.js): live preview of the current slide + video downloads
+    d.anim = d.anim || { style: 'none', zoom: true, light: false };
+    var anCv = $('#cAnim'), anT0 = performance.now();
+    function anFill() { $$('#cAnS [data-an]').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.an === d.anim.style); }); setToggle('cAnZ', d.anim.zoom !== false); setToggle('cAnL', !!d.anim.light); }
+    function anLoop() {
+      if (!anCv || !document.body.contains(anCv)) return;
+      var box = $('#cAnimBox');
+      if (box && box.open && window.TobiAnimate && A) {
+        var z = dims(); if (anCv.width !== z.w || anCv.height !== z.h) { anCv.width = z.w; anCv.height = z.h; }
+        var t = ((performance.now() - anT0) / 1000) % (TobiAnimate.DUR + 0.8);
+        try { var cx = anCv.getContext('2d'); cx.clearRect(0, 0, anCv.width, anCv.height); TobiAnimate.frame(cx, d, cur, A, Math.min(t, TobiAnimate.DUR)); } catch (e) { /* drawn next frame */ }
+      }
+      requestAnimationFrame(anLoop);
+    }
+    $$('#cAnS [data-an]').forEach(function (x) { x.onclick = function () { d.anim.style = x.dataset.an; anFill(); anT0 = performance.now(); changed(false); }; });
+    $('#cAnZ').onclick = function () { d.anim.zoom = this.getAttribute('aria-checked') !== 'true'; anFill(); anT0 = performance.now(); changed(false); };
+    $('#cAnL').onclick = function () { d.anim.light = this.getAttribute('aria-checked') !== 'true'; anFill(); anT0 = performance.now(); changed(false); };
+    $('#cAnRe').onclick = function () { anT0 = performance.now(); };
+    $('#cAnimBox').addEventListener('toggle', function () { anT0 = performance.now(); });
+    function anProg(p, label) { $('#cAnProg').classList.remove('hidden'); $('#cAnProgT').textContent = label; $('#cAnProgB').style.width = Math.round(p * 100) + '%'; }
+    async function anRun(fn) {
+      if (!window.TobiAnimate || !TobiAnimate.canVideo()) { toast('This browser can’t make videos — please use Chrome or Edge, or a recent iPhone'); return; }
+      if (!okOver()) return;
+      var btns = $$('#cAnDl,#cAnReel'); btns.forEach(function (b) { b.disabled = true; });
+      try {
+        var base = slideName(0).replace(/(-01)?\.png$/, '');
+        var r = await fn(d, A, base, anProg);
+        anProg(1, r.ok ? 'Done ✅ — saved to your Downloads.' : 'Done — but this browser made a video type Instagram may not accept. For Instagram-ready MP4s use Chrome or Edge, or an iPhone with iOS 17+.');
+      } catch (x) { anProg(0, '⚠️ ' + (x && x.message ? x.message : 'Couldn’t make the video — please try again.')); }
+      btns.forEach(function (b) { b.disabled = false; });
+    }
+    $('#cAnDl').onclick = function () { anRun(TobiAnimate.exportVideos); };
+    if ($('#cAnReel')) $('#cAnReel').onclick = function () { anRun(TobiAnimate.exportReel); };
+    anFill(); requestAnimationFrame(anLoop);
     warmSoon();
     async function runSave(btn, idx) {
       if (!okOver()) return;

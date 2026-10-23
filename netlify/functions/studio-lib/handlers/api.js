@@ -91,6 +91,7 @@ function cleanCarouselDesign(d) {
     color1: hex(d.color1) || '#057A44', color2: hex(d.color2) || '#FFB81C',
     font: ['modern', 'elegant', 'bold'].includes(d.font) ? d.font : 'modern',
     logo: d.logo !== false, handle: cleanText(d.handle, 60), cta: cleanText(d.cta, 60), slides,
+    anim: (a => ({ style: ['none', 'pop', 'wipe', 'lines', 'fade'].includes(a.style) ? a.style : 'none', zoom: a.zoom !== false, light: !!a.light }))(d.anim && typeof d.anim === 'object' ? d.anim : {}),
     caption: cleanText(d.caption, 2200), hashtags: (Array.isArray(d.hashtags) ? d.hashtags : []).map(t => cleanText(t, 40)).filter(Boolean).slice(0, 30),
   };
 }

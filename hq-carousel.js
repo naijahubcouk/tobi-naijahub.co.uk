@@ -14,6 +14,7 @@
   var THEMES = {
     green:  { name: 'Green',  bg: '#057A44', bg2: '#03532E', ink: '#FFFFFF', sub: 'rgba(255,255,255,.88)', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36', card: 'rgba(255,255,255,.12)', shape: 'rgba(255,255,255,.07)', shape2: 'rgba(255,184,28,.16)' },
     navy:   { name: 'Navy',   bg: '#0F1E36', bg2: '#1F3560', ink: '#FFFFFF', sub: 'rgba(255,255,255,.85)', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36', card: 'rgba(255,255,255,.09)', shape: 'rgba(255,255,255,.05)', shape2: 'rgba(5,122,68,.35)' },
+    white:  { name: 'White',  bg: '#FFFFFF', bg2: '#F3F5F7', ink: '#0F1E36', sub: '#4B5563', accent: '#057A44', hl: '#FFD25E', hlInk: '#0F1E36', card: 'rgba(15,30,54,.05)', shape: 'rgba(15,30,54,.045)', shape2: 'rgba(5,122,68,.10)' },
     cream:  { name: 'Cream',  bg: '#FBF6EC', bg2: '#F1E4C8', ink: '#0F1E36', sub: '#3F4A5C', accent: '#057A44', hl: '#FFD25E', hlInk: '#0F1E36', card: 'rgba(5,122,68,.08)', shape: 'rgba(5,122,68,.07)', shape2: 'rgba(255,184,28,.25)' },
     gold:   { name: 'Gold',   bg: '#FFB81C', bg2: '#F08C00', ink: '#0F1E36', sub: '#1F2937', accent: '#057A44', hl: '#FFFFFF', hlInk: '#0F1E36', card: 'rgba(255,255,255,.35)', shape: 'rgba(15,30,54,.07)', shape2: 'rgba(5,122,68,.18)' },
     purple: { name: 'Purple', bg: '#4C1D95', bg2: '#2E1065', ink: '#FFFFFF', sub: 'rgba(255,255,255,.88)', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#2E1065', card: 'rgba(255,255,255,.1)', shape: 'rgba(255,255,255,.06)', shape2: 'rgba(255,184,28,.18)' },

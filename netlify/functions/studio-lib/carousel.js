@@ -17,7 +17,7 @@ const gen = require('./generate');
 const KEY = 'hq/carousels';
 const MAX = 300;
 const LAYOUTS = ['cover', 'points', 'fact', 'steps', 'stat', 'quote', 'cta'];
-const THEMES = ['green', 'navy', 'cream', 'gold', 'purple'];
+const THEMES = ['green', 'navy', 'white', 'cream', 'gold', 'purple'];
 const ANIMS = ['pop', 'type', 'highlight', 'calm'];
 const multi = (s, n) => String(s == null ? '' : s).replace(/\r/g, '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, n);
 
