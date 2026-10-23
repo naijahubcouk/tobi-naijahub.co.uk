@@ -7,12 +7,14 @@
  *   POST { action: 'boot' | 'save' | 'save-many' | 'delete' | 'restore' | 'img' }
  *   POST { action: 'team-save', emails: [] }                                      (admins only)
  *   POST { action: 'app-save' | 'app-delete' }   Publish to App (updates, articles, events shown in the main app)
+ *   POST { action: 'app-ai', notes, kind, category }   ✨ Write with AI — returns a draft only, never publishes
  *   GET  ?img=<id>     a card image
  */
 const core = require('../core');
 const { HttpError, handler } = core;
 const hq = require('../hq');
 const apppub = require('../apppub');
+const appai = require('../appai');
 
 function requireEmail(e) {
   const email = core.normalizeEmail(e);
@@ -93,6 +95,12 @@ exports.handler = handler(async (ctx) => {
       const item = await apppub.save(body.item, who.email);
       await core.audit(who.email, 'hq_app_save', { id: item.id, kind: item.kind, status: item.status });
       return { item };
+    }
+    case 'app-ai': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
+      const draft = await appai.write(body.notes, body.kind, body.category);
+      await core.audit(who.email, 'hq_app_ai', { kind: body.kind });
+      return { draft };
     }
     case 'app-delete': {
       await apppub.remove(String(body.id || ''));

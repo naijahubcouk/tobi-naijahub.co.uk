@@ -726,7 +726,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   }
   function vApp() {
     $('#ttl').textContent = 'Publish to App';
-    $('#topRight').innerHTML = '<button class="btn gold" id="apPaste">📋 Paste</button>';
+    $('#topRight').innerHTML = '<button class="btn ghost" id="apPaste">📋 Paste</button>';
     var all = S.app || [];
     var live = all.filter(function (p) { return appState(p) === 'live'; });
     var ended = all.filter(function (p) { return appState(p) === 'ended'; });
@@ -748,15 +748,46 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var block = function (title, list, empty) { return '<div class="h2">' + title + ' <span class="muted" style="font-size:15px">(' + list.length + ')</span></div><div class="card" style="padding:4px 14px">' + (list.length ? list.map(row).join('') : '<p class="muted" style="padding:10px 0">' + empty + '</p>') + '</div>'; };
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="note" style="margin-bottom:12px">Anything you publish here shows in the Auntie Tobi app within about a minute — no GitHub needed. Updates disappear after their “show until” date, and events disappear once they’ve happened. No notification is sent.</div>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary" data-anew="update">＋ Update</button><button class="btn primary" data-anew="article">＋ Article</button><button class="btn primary" data-anew="event">＋ Event</button></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn primary" data-anew="update">＋ Update</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button><button class="btn primary" data-anew="event">＋ Event</button></div>' +
       block('Live in the app', live, 'Nothing published yet. Tap ＋ Update, or 📋 Paste something from ChatGPT.') +
       (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
     $('#apPaste').onclick = function () { appPasteSheet(); };
-    $$('[data-anew]').forEach(function (b) { b.onclick = function () { appEditor({ kind: b.dataset.anew }); }; });
+    $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : { kind: k }); }; });
+    $('#apAi').onclick = function () { appAiSheet(); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
     $$('[data-acopy]').forEach(function (b) { b.onclick = function () { var u = appLink(appById(b.dataset.acopy)); (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { toast('Link copied — paste it anywhere'); }, function () { prompt('Copy this link:', u); }); }; });
     $$('[data-ahide]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.ahide); try { var r = await api('app-save', { item: { id: p.id, status: p.status === 'hidden' ? 'live' : 'hidden' } }); upsertApp(r.item); toast(r.item.status === 'hidden' ? 'Hidden from the app' : 'Showing in the app again'); rerender(); } catch (x) { toast(x.message); } }; });
     $$('[data-adel]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.adel); if (!confirm('Delete “' + p.title + '” for good? It will disappear from the app.')) return; try { var r = await api('app-delete', { id: p.id }); S.app = r.app; toast('Deleted'); rerender(); } catch (x) { toast(x.message); } }; });
+  }
+
+  // ── ✨ Write with AI: notes in, a draft out (opens in the editor to check — never publishes by itself) ──
+  var AI_KIND = { update: '📢 Update', news: '📰 News', article: '📝 Article', event: '🎉 Event' };
+  function appAiSheet(prefill) {
+    prefill = prefill || {};
+    var k0 = prefill.kind || 'update';
+    var s = sheet('<h2>✨ Write with AI</h2><p class="muted" style="margin:4px 0 10px">Paste the information — rough notes are fine. AI writes the post in Auntie Tobi’s voice using <b>only</b> the facts you give it. You’ll check it before anything goes in the app.</p>' +
+      '<div class="lbl">What is it?</div><div class="chipbar" id="aiK">' + Object.keys(AI_KIND).map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (k === k0) + '">' + AI_KIND[k] + '</button>'; }).join('') + '</div>' +
+      '<div id="aiCatBox" style="margin-top:10px"><label for="aiCat">Article category</label><select id="aiCat"><option value="">✨ Let AI choose</option>' + (S.appCats || []).map(function (c) { return '<option' + (c === prefill.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
+      '<div style="margin-top:10px"><label for="aiN">The information</label><textarea id="aiN" rows="11" placeholder="Paste the details here — title, date, time, place, what it is, the official link…">' + esc(prefill.notes || '') + '</textarea></div>' +
+      '<div class="err hidden" id="aiErr"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="aiX">Cancel</button><button class="btn primary" id="aiGo">✨ Write it for me</button></div>');
+    function kind() { var b = $('#aiK [aria-pressed=true]', s); return b ? b.dataset.k : 'update'; }
+    function paint() { $('#aiCatBox', s).classList.toggle('hidden', kind() !== 'article'); }
+    $$('#aiK [data-k]', s).forEach(function (b) { b.onclick = function () { $$('#aiK [data-k]', s).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); paint(); }; });
+    paint();
+    $('#aiX', s).onclick = function () { s.remove(); };
+    $('#aiN', s).focus();
+    $('#aiGo', s).onclick = async function () {
+      var btn = this, err = $('#aiErr', s), notes = $('#aiN', s).value.trim(), k = kind(), cat = k === 'article' ? $('#aiCat', s).value : '';
+      err.classList.add('hidden');
+      if (notes.length < 15) { err.textContent = 'Paste a bit more information first.'; err.classList.remove('hidden'); return; }
+      btn.disabled = true; btn.textContent = '✨ Writing… (about 10 seconds)';
+      try {
+        var r = await api('app-ai', { notes: notes, kind: k, category: cat });
+        s.remove();
+        appEditor(r.draft, null, { notes: notes, kind: k, category: cat });
+      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = '✨ Write it for me'; }
+    };
   }
   function appById(id) { return (S.app || []).filter(function (x) { return x.id === id; })[0]; }
   function appPasteSheet() {
@@ -778,11 +809,12 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (it.kind === 'event') p.eventDate = it.day; else if (it.day) p.showUntil = addDays(it.day, 1);
     return p;
   }
-  function appEditor(p, onDone) {
+  function appEditor(p, onDone, ai) {
     p = Object.assign({ kind: 'update', category: 'News' }, p || {});
     var isNew = !p.id;
     var cats = S.appCats || ['News'];
     var s = sheet('<h2>' + (isNew ? 'Publish to App' : 'Edit app post') + '</h2>' +
+      (ai ? '<div class="note" style="margin:8px 0">✨ Written by AI from your notes — please check every fact, date and link before publishing. <button class="btn link" id="aeAgain" style="font-size:13.5px">Try again</button> · <button class="btn link" id="aeNotes" style="font-size:13.5px">Edit my notes</button></div>' : '') +
       '<div class="chipbar" style="margin:10px 0" id="aeK">' + ['update', 'article', 'event'].map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (p.kind === k) + '"' + (isNew ? '' : ' disabled') + '>' + KIND[k] + '</button>'; }).join('') + '</div>' +
       '<div class="apgrid"><div class="stack">' +
       '<div><label for="aeT">Title</label><input id="aeT" maxlength="160" value="' + esc(p.title || '') + '"></div>' +
@@ -815,6 +847,14 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('input,textarea,select', s).forEach(function (el) { el.addEventListener('input', paint); el.addEventListener('change', paint); });
     paint();
     $('#aeX', s).onclick = function () { s.remove(); };
+    if (ai) {
+      $('#aeNotes', s).onclick = function () { s.remove(); appAiSheet(ai); };
+      $('#aeAgain', s).onclick = async function () {
+        var b = this; b.disabled = true; b.textContent = 'Writing…';
+        try { var r = await api('app-ai', { notes: ai.notes, kind: ai.kind, category: ai.category }); s.remove(); appEditor(r.draft, onDone, ai); }
+        catch (x) { toast(x.message); b.disabled = false; b.textContent = 'Try again'; }
+      };
+    }
     async function submit(status) {
       var err = $('#aeErr', s); err.classList.add('hidden');
       var item = Object.assign(vals(), { status: status }); if (!isNew) item.id = p.id;
