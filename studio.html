@@ -162,10 +162,6 @@ nav.tabs button[aria-current=page] svg{background:var(--green-l)}
 nav.tabs svg{width:40px;height:28px;padding:4px 10px;border-radius:999px}
 
 /* modal & toast */
-.igbtn{background:linear-gradient(90deg,#f58529,#dd2a7b 45%,#8134af 75%,#515bd4);color:#fff;border:0;font-weight:700}
-.igopt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;padding:14px;border:1.5px solid var(--line,#e3dccf);border-radius:14px;background:#fff;font:inherit;color:inherit;cursor:pointer}
-.igopt b{display:block}.igopt span.e{font-size:26px;line-height:1}.igopt small{color:var(--muted,#5b6475)}
-.igsteps{margin:0;padding-left:20px;line-height:1.6}
 .scrim{position:fixed;inset:0;background:rgba(15,30,54,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--cream);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
 @media(min-width:600px){.scrim{align-items:center}.sheet{border-radius:20px}}
@@ -2585,9 +2581,9 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
           '<div class="f2"><div><label class="f" for="cHandle">Handle on ' + word + 's <span class="opt">(empty = none)</span></label><input id="cHandle" maxlength="60" placeholder="@yourbusiness"></div><div><label class="f" for="cCta">' + (maxSlides > 1 ? 'Last-' + word + ' button' : 'Button') + ' <span class="opt">(empty = none)</span></label><input id="cCta" maxlength="60" placeholder="e.g. DM us to order"></div></div>' +
         '</div></details>' +
         '<details class="card"><summary style="cursor:pointer;font-weight:700">✍️ Caption &amp; hashtags</summary><div class="stack" style="gap:8px;margin-top:10px"><textarea id="cCap" rows="5" maxlength="2200" placeholder="Write your caption here"></textarea><textarea id="cTags" rows="2" placeholder="#hashtags"></textarea><button class="btn ghost small" id="cCopy">Copy caption &amp; hashtags</button></div></details>' +
-        '<section class="card stack cexp" style="gap:8px"><b>📲 Post it</b><button class="btn block igbtn" id="cIg">Share to Instagram</button><p class="hint" style="margin:0">Feed, Story or a DM — free.</p></section>' +
-        '<section class="card stack cexp" style="gap:8px"><b>⬇️ Download</b>' +
-          '<button class="btn primary block" id="cAll">' + (maxSlides > 1 ? 'Save all images' : 'Save image') + '</button>' +
+        '<section class="card stack cexp" style="gap:8px"><b>⬇️ Save</b>' +
+          '<button class="btn primary block" id="cAll">' + (DEV === 'computer' ? 'Save to computer' : 'Save to gallery') + '</button>' +
+          '<p class="hint" style="margin:0" id="cSaveHint">' + ({ ios: 'Opens your share menu — tap <b>Save ' + (maxSlides > 1 ? 'Images' : 'Image') + '</b> to add ' + (maxSlides > 1 ? 'them' : 'it') + ' to Photos.', android: 'Saves straight to your phone — find ' + (maxSlides > 1 ? 'them' : 'it') + ' in Gallery or Google Photos (Downloads).', computer: 'Each image saves to your Downloads folder.' })[DEV] + '</p>' +
           (maxSlides > 1 ? '<div class="row wrap" style="gap:8px"><button class="btn ghost small" id="cOne">This ' + word + ' only</button><button class="btn ghost small" id="cZip">Download as ZIP</button></div>' : '') +
           '<p class="hint" style="margin:0" id="cSizeNote"></p></section>' +
         '<button class="btn link danger" id="cDelAll" style="align-self:flex-start">Delete this design</button>' +
@@ -2641,7 +2637,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       setToggle('cNums', d.numbers !== false); setToggle('cSwipe', d.swipe !== false);
       $('#cHandle').value = d.handle || ''; $('#cCta').value = d.cta || '';
       $('#cCap').value = d.caption || ''; $('#cTags').value = (d.hashtags || []).join(' ');
-      var z = dims(); $('#cSizeNote').textContent = z.label + ' · ' + z.sub + ' PNG. Downloading is free.';
+      var z = dims(); $('#cSizeNote').textContent = z.label + ' · ' + z.sub + ' PNG. Saving is free.';
     }
     function changed(all) { dirty = true; $('#cSaved').textContent = 'Saving…'; if (all) drawThumbs(); drawBig(); clearTimeout(saveT); saveT = setTimeout(save, 1200); }
     async function save() {
@@ -2736,23 +2732,25 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     function slideName(i) { var t = (item.title || 'design').replace(/^(Carousel|Design) maker: /, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'design'; return t + (d.slides.length > 1 ? '-' + ('0' + (i + 1)).slice(-2) : '') + '.png'; }
     async function slideBlob(i) { TobiCarousel.draw(work, d, i, A); return await canvasBlob(work); }
     function okOver() { var bad = d.slides.map(function (s, i) { return TobiCarousel.draw(work, d, i, A).overflow ? i + 1 : 0; }).filter(Boolean); return bad.length ? confirm(Word + (bad.length > 1 ? 's ' : ' ') + bad.join(', ') + (bad.length > 1 ? ' have' : ' has') + ' text that was shortened with “…”. Download anyway?') : true; }
-    var phone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
     function dl(blob, name) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
-    $('#cAll').onclick = async function () {
+    // Save to gallery: iPhone/iPad → share menu (Save Images → Photos); Android → straight download (shows in Gallery/Photos under Downloads); computer → one file each
+    async function saveFiles(files) {
+      if (DEV === 'ios' && navigator.canShare && navigator.canShare({ files: files })) {
+        try { await navigator.share({ files: files }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      }
+      for (var k = 0; k < files.length; k++) { dl(files[k], files[k].name); if (k < files.length - 1) await new Promise(function (r) { setTimeout(r, 350); }); }
+      var many = files.length > 1;
+      toast(DEV === 'computer' ? (many ? files.length + ' images saved to Downloads' : 'Image saved to Downloads') : (many ? files.length + ' images saved to your gallery' : 'Saved to your gallery') + (DEV === 'android' ? ' (Downloads)' : ''));
+    }
+    async function runSave(btn, idx) {
       if (!okOver()) return;
-      var btn = this, label = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing…';
-      try {
-        var blobs = []; for (var i = 0; i < d.slides.length; i++) blobs.push(await slideBlob(i));
-        var files = blobs.map(function (bl, i) { return new File([bl], slideName(i), { type: 'image/png' }); });
-        var shared = false;
-        if (phone && navigator.canShare && navigator.canShare({ files: files })) {
-          try { await navigator.share({ files: files }); shared = true; } catch (e) { if (e && e.name === 'AbortError') shared = true; }
-        }
-        if (!shared) { for (var k = 0; k < blobs.length; k++) { dl(blobs[k], slideName(k)); await new Promise(function (r) { setTimeout(r, 350); }); } toast(blobs.length > 1 ? blobs.length + ' images downloaded' : 'Image downloaded'); }
-      } catch (x) { toast('Couldn’t save the images — please try again'); }
+      var label = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing…';
+      try { var files = []; for (var i = 0; i < idx.length; i++) files.push(new File([await slideBlob(idx[i])], slideName(idx[i]), { type: 'image/png' })); drawBig(); await saveFiles(files); }
+      catch (x) { toast('Couldn’t save the images — please try again'); }
       btn.disabled = false; btn.textContent = label;
-    };
-    if ($('#cOne')) $('#cOne').onclick = async function () { this.disabled = true; try { TobiCarousel.draw(work, d, cur, A); await shareOrDownload(work, slideName(cur), ''); } finally { this.disabled = false; } };
+    }
+    $('#cAll').onclick = function () { runSave(this, d.slides.map(function (_, i) { return i; })); };
+    if ($('#cOne')) $('#cOne').onclick = function () { runSave(this, [cur]); };
     if ($('#cZip')) $('#cZip').onclick = async function () {
       if (!okOver()) return;
       var btn = this; btn.disabled = true; btn.textContent = 'Preparing…';
@@ -2762,104 +2760,6 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       } catch (x) { toast('Couldn’t make the download — please try again'); }
       btn.disabled = false; btn.textContent = 'Download as ZIP';
     };
-    // Share to Instagram: phones use the share menu (Instagram offers Feed, Stories and Messages there); computers save + open instagram.com
-    function captionText() { return (d.caption || '').trim() + (d.hashtags && d.hashtags.length ? '\n\n' + d.hashtags.join(' ') : ''); }
-    function copyCaption() { var t = captionText(); if (!t || !navigator.clipboard) return false; navigator.clipboard.writeText(t).then(function () { toast('Caption copied ✓ — paste it in Instagram'); }, function () {}); return true; }
-    $('#cIg').onclick = function () { if (okOver()) showInstagramShare(); };
-    async function showInstagramShare() {
-      var scrim = document.createElement('div'); scrim.className = 'scrim';
-      scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="igT" style="gap:12px"><h2 id="igT" style="margin:0">Share to Instagram</h2><div id="igBody"><p class="hint" style="margin:0">Getting your images ready…</p></div><button class="btn link" id="igX">Close</button></div>';
-      document.body.appendChild(scrim);
-      function close() { scrim.remove(); }
-      $('#igX', scrim).onclick = close; scrim.onclick = function (e) { if (e.target === scrim) close(); };
-      var body = $('#igBody', scrim), files = [];
-      try { for (var i = 0; i < d.slides.length; i++) files.push(new File([await slideBlob(i)], slideName(i), { type: 'image/png' })); }
-      catch (x) { body.innerHTML = '<p class="hint" style="margin:0">Couldn’t prepare the images — please try again.</p>'; return; }
-      drawBig();
-      var n = files.length, many = n > 1, hasCap = !!captionText();
-      var canOne = phone && navigator.canShare && navigator.canShare({ files: [files[0]] });
-      var canAll = canOne && navigator.canShare({ files: files });
-      if (!canOne) return computerView();
-      menu();
-
-      function menu() {
-        body.innerHTML = '<div class="stack" style="gap:10px">' +
-          '<button class="igopt" data-ig="feed"><span class="e">📷</span><span><b>Feed post</b><small>' + (many ? 'All ' + n + ' ' + word + 's as one carousel' : 'Post it on your page') + (hasCap ? ' · caption copied for you' : '') + '</small></span></button>' +
-          '<button class="igopt" data-ig="story"><span class="e">⭕</span><span><b>Story</b><small>' + (many ? 'One ' + word + ' at a time' : 'Share it to your Story') + '</small></span></button>' +
-          '<button class="igopt" data-ig="dm"><span class="e">💬</span><span><b>Direct message</b><small>Send it to someone</small></span></button>' +
-          '</div>';
-        $$('[data-ig]', body).forEach(function (b) { b.onclick = function () { ({ feed: feed, story: story, dm: dm })[b.dataset.ig](); }; });
-      }
-      function back() { return '<div><button class="btn link" id="igBack" style="padding:0;min-height:0">← Feed, Story or DM</button></div>'; }
-      // share inside the tap; if the phone refuses (rare), ask for one more tap
-      async function share(list, btn, after) {
-        try { await navigator.share({ files: list }); after && after(); return true; }
-        catch (e) {
-          if (e && e.name === 'AbortError') return false;
-          if (e && e.name === 'NotAllowedError' && btn && !btn.dataset.retry) { btn.dataset.retry = '1'; btn.textContent = 'Tap again to open Instagram'; return false; }
-          toast('Your phone couldn’t share these — use Save all images, then post from your gallery'); return false;
-        }
-      }
-      function guide(title, steps, label, run) {
-        body.innerHTML = '<div class="stack" style="gap:12px">' + back() + '<div style="font-weight:700;font-size:1.05em">' + title + '</div><ol class="igsteps">' + steps.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol>' +
-          '<button class="btn block igbtn" id="igGo">' + label + '</button><p class="hint hidden" id="igDone" style="margin:0"></p></div>';
-        $('#igBack', body).onclick = menu;
-        $('#igGo', body).onclick = function () { run(this); };
-      }
-      function feed() {
-        if (!canAll && many) return stepper('feed');
-        guide('Feed post', [
-          'Tap the button below' + (hasCap ? ' — your caption is copied at the same time' : ''),
-          'In the menu, choose <b>Instagram</b>, then <b>Feed</b>',
-          many ? 'Your ' + n + ' ' + word + 's arrive as one carousel — check the order' : 'Crop if you like, then tap Next',
-          hasCap ? 'Long-press the caption box and tap <b>Paste</b>' : 'Write your caption, then Share',
-        ], 'Open Instagram', function (btn) { copyCaption(); share(files, btn, function () { done('Posted? Lovely. If only one picture arrived, your phone saved the rest — add them from your gallery.'); }); });
-      }
-      function dm() {
-        if (!canAll && many) return stepper('dm');
-        guide('Direct message', [
-          'Tap the button below',
-          'In the menu, choose <b>Instagram</b>, then <b>Messages</b> (some phones say <b>Direct</b> or <b>Chats</b>)',
-          'Pick who to send it to, then Send',
-        ], 'Open Instagram', function (btn) { share(files, btn, function () { done('Sent ✓'); }); });
-      }
-      function story() {
-        if (!many) return guide('Story', [
-          'Tap the button below',
-          'In the menu, choose <b>Instagram</b>, then <b>Stories</b>',
-          'Add stickers or a link if you like, then <b>Your story</b>',
-        ].concat(d.format === 'story' ? [] : ['Tip: the Story size fills the whole screen — this size shows with a border']), 'Open Instagram', function (btn) { share(files, btn, function () { done('Shared ✓'); }); });
-        stepper('story');
-      }
-      // one picture per share (Stories always; Feed/DM only on phones that can't send several at once)
-      function stepper(kind) {
-        var at = 0, where = kind === 'story' ? '<b>Stories</b>' : kind === 'dm' ? '<b>Messages</b>' : '<b>Feed</b>';
-        body.innerHTML = '<div class="stack" style="gap:12px">' + back() + '<div style="font-weight:700;font-size:1.05em">' + (kind === 'story' ? 'Story' : kind === 'dm' ? 'Direct message' : 'Feed post') + ' — one ' + word + ' at a time</div>' +
-          '<ol class="igsteps"><li>Tap the button — choose <b>Instagram</b>, then ' + where + '</li><li>Post it, come back here and tap the next one</li>' +
-          (kind === 'story' && d.format !== 'story' ? '<li>Tip: the Story size fills the whole screen — this size shows with a border</li>' : '') +
-          (kind !== 'story' ? '<li>Your phone can only send one picture at a time to Instagram — for a carousel, use <b>Save all images</b> and pick them all in Instagram</li>' : '') + '</ol>' +
-          '<canvas id="igPrev" style="width:120px;border-radius:10px;align-self:center;box-shadow:0 2px 10px rgba(0,0,0,.12)"></canvas>' +
-          '<button class="btn block igbtn" id="igGo"></button><p class="hint hidden" id="igDone" style="margin:0"></p></div>';
-        $('#igBack', body).onclick = menu;
-        var btn = $('#igGo', body);
-        function label() { delete btn.dataset.retry; btn.textContent = at >= n ? 'All ' + n + ' shared ✓' : (at === 0 ? 'Share ' : 'Next: share ') + word + ' ' + (at + 1) + ' of ' + n + (at ? ' →' : ''); btn.disabled = at >= n; if (at < n) { TobiCarousel.draw($('#igPrev', body), d, at, A); } }
-        label();
-        btn.onclick = function () { if (at === 0 && kind === 'feed') copyCaption(); share([files[at]], btn, function () { at++; label(); if (at >= n) done(kind === 'story' ? 'All done — your Story is up ✓' : 'All shared ✓'); }); };
-      }
-      function done(msg) { var p = $('#igDone', body); if (p) { p.textContent = msg; p.classList.remove('hidden'); } }
-      function computerView() {
-        body.innerHTML = '<div class="stack" style="gap:12px"><p style="margin:0">Instagram only lets you post from a computer on instagram.com — it’s easiest from your phone.</p>' +
-          '<ol class="igsteps"><li>Click <b>Save</b> — your ' + (many ? n + ' images download' : 'image downloads') + (hasCap ? ' and your caption is copied' : '') + '</li><li>Click <b>Open Instagram</b></li><li>On Instagram, click <b>Create</b> (the ＋), then choose the downloaded image' + (many ? 's (pick them in order)' : '') + '</li>' + (hasCap ? '<li>Paste your caption, then Share</li>' : '') + '</ol>' +
-          '<button class="btn block igbtn" id="igPc">1. Save ' + (many ? 'images' : 'image') + (hasCap ? ' &amp; copy caption' : '') + '</button>' +
-          '<a class="btn ghost block" id="igOpen" href="https://www.instagram.com/" target="_blank" rel="noopener">2. Open Instagram ↗</a>' +
-          '<p class="hint" style="margin:0">On your phone? Open this design in the Auntie Tobi app there and tap Share to Instagram to post to your Feed, Story or a DM in a few taps.</p></div>';
-        $('#igPc', body).onclick = async function () {
-          copyCaption();
-          for (var k = 0; k < files.length; k++) { dl(files[k], files[k].name); await new Promise(function (r) { setTimeout(r, 350); }); }
-          toast(many ? n + ' images downloaded' : 'Image downloaded');
-        };
-      }
-    }
     $('#cDelAll').onclick = async function () {
       if (!confirm('Delete this design?')) return;
       try { await api('studio-api', 'item-delete', { id: item.id }); S.history = S.history.filter(function (h) { return h.id !== item.id; }); toast('Deleted'); showLibrary('carouselmaker'); } catch (x) { toast(x.message); }
@@ -2917,6 +2817,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
   function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  var DEV = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)) ? 'ios' : /Android/i.test(navigator.userAgent) ? 'android' : 'computer';
   function canvasBlob(canvas) { return new Promise(function (res) { canvas.toBlob(function (b) { res(b); }, 'image/png'); }); }
   async function shareOrDownload(canvas, filename, text) {
     var blob = await canvasBlob(canvas);
