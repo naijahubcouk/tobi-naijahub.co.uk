@@ -150,7 +150,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 .apb{padding:12px 14px}.apt{font-size:15px;font-weight:700;line-height:1.35;margin-bottom:6px}.apm{font-size:12.5px;color:#555;margin-bottom:6px;line-height:1.6}
 .aptx{font-size:13.5px;color:#444;line-height:1.65}.aptx h3{font-size:14px;margin:10px 0 2px;color:var(--navy)}.aptx ul{padding-left:18px;margin:4px 0}.aptx p{margin:0 0 6px}
 .apl{margin-top:8px;font-size:13px;color:#057A44;font-weight:700}
-.aeimg{display:flex;gap:12px;align-items:flex-start}.aepic{width:110px;height:138px;border-radius:10px;border:1px solid var(--line);background:#F7F2E7;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}.aepic img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}.aeibtn{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.aeimg{display:flex;gap:12px;align-items:flex-start}.aepic{width:110px;height:138px;border-radius:10px;border:1px solid var(--line);background:#F7F2E7;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}.aepic.wide{width:200px;height:113px}.aepic img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}.aeibtn{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .subc{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.subimg{width:130px;max-height:180px;object-fit:cover;border-radius:10px;cursor:zoom-in;flex:none;background:#eee}.subimg.none{height:90px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);cursor:default}.side-nav .n.gold:not(:empty){background:var(--gold);color:var(--navy)}
 @media (max-width:600px){.subc{flex-direction:column}.subimg{width:100%;max-height:260px;object-fit:contain}}
 @media (max-width:900px){.apgrid{grid-template-columns:1fr}.appv{position:static}.aprow{flex-direction:column;align-items:stretch;gap:8px}}
@@ -773,16 +773,20 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var s = sheet('<h2>✨ Write with AI</h2><p class="muted" style="margin:4px 0 10px">Paste the information — rough notes are fine. AI writes the post in Auntie Tobi’s voice using <b>only</b> the facts you give it. You’ll check it before anything goes in the app.</p>' +
       '<div class="lbl">What is it?</div><div class="chipbar" id="aiK">' + Object.keys(AI_KIND).map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (k === k0) + '">' + AI_KIND[k] + '</button>'; }).join('') + '</div>' +
       '<div id="aiCatBox" style="margin-top:10px"><label for="aiCat">Article category</label><select id="aiCat"><option value="">✨ Let AI choose</option>' + (S.appCats || []).map(function (c) { return '<option' + (c === prefill.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
-      '<div id="aiEvBox" style="margin-top:10px"><div class="f2"><div><label for="aiU">🔗 Event link <span class="muted" style="font-weight:400">(Eventbrite, website…)</span></label><input id="aiU" placeholder="https://" value="' + esc(prefill.url || '') + '"></div>' +
-      '<div><label>🖼️ Flyer <span class="muted" style="font-weight:400">(optional — AI reads it)</span></label><div class="row" style="gap:8px;align-items:center"><label class="btn ghost sm" style="margin:0">📷 Upload flyer<input type="file" id="aiF" accept="image/jpeg,image/png,image/webp" hidden></label><img id="aiFi" alt="" style="height:44px;border-radius:6px;display:none"><button class="btn link hidden" id="aiFx" style="font-size:13px">remove</button></div></div></div>' +
-      '<p class="muted" style="font-size:13px;margin-top:6px">Give a link or a flyer and AI does the rest — notes below are optional. No image? HQ will create one and ask if you’re happy with it.</p></div>' +
+      '<div id="aiLinkBox" style="margin-top:10px"><div class="f2"><div><label for="aiU">🔗 <span id="aiUl">Link</span> <span class="muted" id="aiUh" style="font-weight:400"></span></label><input id="aiU" placeholder="https://" value="' + esc(prefill.url || '') + '"></div>' +
+      '<div id="aiFBox"><label>🖼️ Flyer <span class="muted" style="font-weight:400">(optional — AI reads it)</span></label><div class="row" style="gap:8px;align-items:center"><label class="btn ghost sm" style="margin:0">📷 Upload flyer<input type="file" id="aiF" accept="image/jpeg,image/png,image/webp" hidden></label><img id="aiFi" alt="" style="height:44px;border-radius:6px;display:none"><button class="btn link hidden" id="aiFx" style="font-size:13px">remove</button></div></div></div>' +
+      '<p class="muted" style="font-size:13px;margin-top:6px" id="aiLh"></p></div>' +
       '<div style="margin-top:10px"><label for="aiN">The information <span class="muted" id="aiNopt" style="font-weight:400"></span></label><textarea id="aiN" rows="9" placeholder="Paste the details here — title, date, time, place, what it is, the official link…">' + esc(prefill.notes || '') + '</textarea></div>' +
       '<div class="err hidden" id="aiErr"></div>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="aiX">Cancel</button><button class="btn primary" id="aiGo">✨ Write it for me</button></div>');
     function kind() { var b = $('#aiK [aria-pressed=true]', s); return b ? b.dataset.k : 'update'; }
     var flyer = prefill.flyer || '';
     function showFlyer() { var i = $('#aiFi', s); i.src = flyer || ''; i.style.display = flyer ? '' : 'none'; $('#aiFx', s).classList.toggle('hidden', !flyer); }
-    function paint() { $('#aiCatBox', s).classList.toggle('hidden', kind() !== 'article'); $('#aiEvBox', s).classList.toggle('hidden', kind() !== 'event'); $('#aiNopt', s).textContent = kind() === 'event' ? '(optional if you gave a link or flyer)' : ''; }
+    function paint() { $('#aiCatBox', s).classList.toggle('hidden', kind() !== 'article'); var k = kind(), ev = k === 'event';
+      $('#aiLinkBox', s).classList.toggle('hidden', k === 'update'); $('#aiFBox', s).classList.toggle('hidden', !ev);
+      $('#aiUl', s).textContent = ev ? 'Event link' : 'Link to the source'; $('#aiUh', s).textContent = ev ? '(Eventbrite, website…)' : '(gov.uk, council, news story…)';
+      $('#aiLh', s).textContent = ev ? 'Give a link or a flyer and AI does the rest — notes below are optional. No image? HQ will create one and ask if you’re happy with it.' : 'Give a link and AI reads the page and writes it up — notes below are optional. It uses the page’s picture, or creates one and asks if you’re happy with it.';
+      $('#aiNopt', s).textContent = k === 'update' ? '' : ev ? '(optional if you gave a link or flyer)' : '(optional if you gave a link)'; }
     showFlyer();
     $('#aiF', s).onchange = async function () { var f = this.files && this.files[0]; if (!f) return; try { flyer = await imgShrink(f); showFlyer(); } catch (x) { toast(x.message); } this.value = ''; };
     $('#aiFx', s).onclick = function () { flyer = ''; showFlyer(); };
@@ -792,11 +796,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#aiN', s).focus();
     $('#aiGo', s).onclick = async function () {
       var btn = this, err = $('#aiErr', s), notes = $('#aiN', s).value.trim(), k = kind(), cat = k === 'article' ? $('#aiCat', s).value : '';
-      var url = k === 'event' ? $('#aiU', s).value.trim() : '', fl = k === 'event' ? flyer : '';
+      var url = k !== 'update' ? $('#aiU', s).value.trim() : '', fl = k === 'event' ? flyer : '';
       if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
       err.classList.add('hidden');
-      if (!url && !fl && notes.length < 15) { err.textContent = k === 'event' ? 'Add the event link, a flyer, or some details first.' : 'Paste a bit more information first.'; err.classList.remove('hidden'); return; }
-      btn.disabled = true; btn.textContent = fl ? '✨ Reading the flyer… (about 15 seconds)' : url ? '✨ Reading the event page… (about 20 seconds)' : '✨ Writing… (about 10 seconds)';
+      if (!url && !fl && notes.length < 15) { err.textContent = k === 'event' ? 'Add the event link, a flyer, or some details first.' : k === 'update' ? 'Paste a bit more information first.' : 'Add a link or paste some information first.'; err.classList.remove('hidden'); return; }
+      btn.disabled = true; btn.textContent = fl ? '✨ Reading the flyer… (about 15 seconds)' : url ? '✨ Reading the page… (about 20 seconds)' : '✨ Writing… (about 10 seconds)';
       try {
         var a = { notes: notes, kind: k, category: cat, url: url, flyer: fl };
         var d = await aiDraft(a);
@@ -812,7 +816,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       var d1 = r1.draft; if (!d1.link && a.url) d1.link = a.url; d1._img = a.flyer; d1._imgFrom = 'flyer'; return d1;
     }
     if (a.url) {
-      var r2 = await api('app-link', { url: a.url, notes: a.notes });
+      var r2 = await api('app-link', { url: a.url, notes: a.notes, kind: a.kind, category: a.category });
       var d2 = r2.draft;
       if (r2.image) { try { d2._img = await imgShrink(r2.image); d2._imgFrom = 'link'; } catch (_) { /* no image */ } }
       return d2;
@@ -911,7 +915,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div><label for="aeT">Title</label><input id="aeT" maxlength="160" value="' + esc(p.title || '') + '"></div>' +
       '<div data-for="article"><label for="aeC">Category</label><select id="aeC">' + cats.map(function (c) { return '<option' + (c === p.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
       '<div data-for="event" class="f2"><div><label for="aeD">Event date</label><input type="date" id="aeD" value="' + esc(p.eventDate || '') + '"></div><div><label for="aeTm">Time</label><input id="aeTm" placeholder="6pm – 11pm" value="' + esc(p.eventTime || '') + '"></div></div>' +
-      '<div data-for="event"><label>Event image</label><div class="aeimg"><div class="aepic" id="aePic"></div><div class="aeibtn"><div class="muted" id="aeImgNote" style="font-size:13px"></div>' +
+      '<div data-for="event article"><label><span data-for="event">Event image</span><span data-for="article">Image <span class="muted" style="font-weight:400">(shows at the top of the post and in the News list)</span></span></label><div class="aeimg"><div class="aepic" id="aePic"></div><div class="aeibtn"><div class="muted" id="aeImgNote" style="font-size:13px"></div>' +
       '<button class="btn primary sm hidden" id="aeImgOk">👍 Use this image</button><button class="btn ghost sm" id="aeImgMake">✨ Create an image</button>' +
       '<label class="btn ghost sm" style="margin:0">📷 Upload image<input type="file" id="aeImgFile" accept="image/jpeg,image/png,image/webp" hidden></label><button class="btn ghost sm hidden" id="aeImgNone">✖ No image</button></div></div></div>' +
       '<div data-for="event"><label for="aeL">Place</label><input id="aeL" placeholder="Venue, City" value="' + esc(p.location || '') + '"></div>' +
@@ -927,20 +931,23 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var img = { id: p.imgId || (sub && sub.imgId) || '', data: p._img || '', from: p._img ? (p._imgFrom || 'own') : (p.imgId || (sub && sub.imgId) ? 'saved' : '') };
     function imgSrc() { return img.data || (img.id ? '/.netlify/functions/studio-hq?subimg=' + encodeURIComponent(img.id) : ''); }
     function paintImg() {
-      var src = imgSrc(), notes = { flyer: 'From the flyer.', link: 'Taken from the event page.', ai: 'Created by AI — happy with it?', own: 'Your upload.', saved: sub ? 'Sent by the organiser.' : 'Current image.' };
+      var art = kind() === 'article';
+      $('#aePic', s).classList.toggle('wide', art);
+      var src = imgSrc(), notes = { flyer: 'From the flyer.', link: art ? '⚠️ Taken from the page. Photos from news sites are usually copyrighted — only keep it if it’s from an official source (e.g. gov.uk, a council) or you have permission. Otherwise tap 🔄 to create one.' : 'Taken from the event page.', ai: 'Created by AI — happy with it?', own: 'Your upload.', saved: sub ? 'Sent by the organiser.' : 'Current image.' };
       $('#aePic', s).innerHTML = src ? '<img alt="Event image">' : '<span class="muted" style="font-size:12px">No image</span>';
       if (src) { var im = $('#aePic img', s); im.src = src; im.onclick = function () { window.open(src, '_blank'); }; }
-      $('#aeImgNote', s).textContent = src ? (notes[img.from] || '') : 'No image — the event will show without one.';
+      $('#aeImgNote', s).textContent = src ? (notes[img.from] || '') : (art ? 'No image — the post will show without one.' : 'No image — the event will show without one.');
       $('#aeImgOk', s).classList.toggle('hidden', img.from !== 'ai');
-      $('#aeImgMake', s).textContent = img.from === 'ai' ? '🔄 Make another one' : '✨ Create an image';
+      $('#aeImgMake', s).textContent = img.from === 'ai' || img.from === 'link' ? '🔄 ' + (img.from === 'ai' ? 'Make another one' : 'Create one instead') : '✨ Create an image';
       $('#aeImgNone', s).classList.toggle('hidden', !src);
-      paint();
+      if (!painting) paint();
     }
+    var painting = false;
     async function makeImg() {
       var v = vals(), b = $('#aeImgMake', s);
       if (!v.title) { toast('Add the title first'); return; }
       b.disabled = true; b.textContent = '🎨 Creating… (about 20 seconds)'; $('#aePic', s).innerHTML = '<span class="muted" style="font-size:12px">Creating…</span>';
-      try { var r = await api('app-picture', { title: v.title, eventDate: v.eventDate, location: v.location, body: v.body.slice(0, 400) }); img = { id: '', data: await imgShrink(r.image), from: 'ai' }; }
+      try { var r = await api('app-picture', { kind: v.kind, title: v.title, eventDate: v.kind === 'event' ? v.eventDate : '', location: v.kind === 'event' ? v.location : '', body: v.body.slice(0, 400) }); img = { id: '', data: await imgShrink(r.image), from: 'ai' }; }
       catch (x) { toast(x.message); }
       b.disabled = false; paintImg();
     }
@@ -954,7 +961,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       $$('[data-for]', s).forEach(function (el) { el.classList.toggle('hidden', el.dataset.for.split(' ').indexOf(k) < 0); });
       var label = k === 'article' ? '📰 ' + esc(v.category).toUpperCase() : KIND[k];
       var meta = k === 'event' ? '<div class="apm">📅 ' + esc(fmtLong(v.eventDate) || 'Pick a date') + (v.eventTime ? ' · ' + esc(v.eventTime) : '') + (v.location ? '<br>📍 ' + esc(v.location) : '') + '</div>' : '';
-      var pv = k === 'event' && imgSrc() ? '<img src="' + esc(imgSrc()) + '" alt="" style="display:block;width:100%;max-height:260px;object-fit:contain;background:#0F1E36">' : '';
+      if (!painting) { painting = true; try { paintImg(); } finally { painting = false; } }
+      var pv = k === 'article' && imgSrc() ? '<img src="' + esc(imgSrc()) + '" alt="" style="display:block;width:100%;aspect-ratio:16/9;object-fit:cover">' : k === 'event' && imgSrc() ? '<img src="' + esc(imgSrc()) + '" alt="" style="display:block;width:100%;max-height:260px;object-fit:contain;background:#0F1E36">' : '';
       $('#aePv', s).innerHTML = '<div class="apcard"><div class="aph" style="background:' + KIND_COLOR[k] + '"><span>' + label + '</span><span>' + esc(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })) + '</span></div>' + pv +
         '<div class="apb"><div class="apt">' + esc(v.title || 'Your title') + '</div>' + meta + '<div class="aptx">' + (appHtml(v.body) || '<p class="muted">Your message…</p>') + '</div>' +
         (v.link ? '<div class="apl">🔗 ' + (k === 'event' ? 'Get tickets' : 'Read more') + '</div>' : '') + '</div></div>';
@@ -967,7 +975,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#aeImgNone', s).onclick = function () { img = { id: '', data: '', from: '' }; paintImg(); };
     $('#aeImgFile', s).onchange = async function () { var f = this.files && this.files[0]; if (!f) return; try { img = { id: '', data: await imgShrink(f), from: 'own' }; paintImg(); } catch (x) { toast(x.message); } this.value = ''; };
     // AI draft with no image → create one straight away, then ask
-    if (ai && p.kind === 'event' && !imgSrc() && p.title) makeImg();
+    if (ai && (p.kind === 'event' || p.kind === 'article') && !imgSrc() && p.title) makeImg();
     $('#aeX', s).onclick = function () { s.remove(); };
     if (ai) {
       $('#aeNotes', s).onclick = function () { s.remove(); appAiSheet(ai); };
@@ -983,7 +991,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       if (item.kind === 'update' && !item.showUntil && isNew && !confirm('No “show until” date — this update will stay in the app until you hide it. Publish anyway?')) return;
       $$('button', s).forEach(function (b) { b.disabled = true; });
       try {
-        if (item.kind === 'event') {
+        if (item.kind === 'event' || item.kind === 'article') {
           if (img.data) { var ri = await api('app-img', { image: img.data }); img = { id: ri.imgId, data: '', from: img.from }; }
           item.imgId = img.id;
         }

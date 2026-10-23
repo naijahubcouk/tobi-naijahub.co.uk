@@ -3599,9 +3599,10 @@ window._renderAllNewsBatch = function(from) {
           ${isEvents ? categoryBadge : ''}
           ${item.date ? `<span style="font-size:10px;color:#9CA3AF;">${isEvents ? '📅 ' : ''}${item.date}</span>` : ''}
         </div>
+        ${item.imgId ? `<img src="/.netlify/functions/app-content?img=${encodeURIComponent(item.imgId)}" alt="" loading="lazy" style="float:right;width:92px;height:68px;object-fit:cover;border-radius:8px;margin:0 0 6px 10px;background:#f0f2f5;">` : ''}
         <div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;margin-bottom:6px;">${item.emoji} ${item.title}</div>
         <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
-        <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
+        <div style="clear:both;border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
           <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" data-title="${(item.title||'').replace(/"/g,'&quot;')}" data-summary="${(item.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
           <button data-share-title="${(item.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl || 'https://auntietobi.co.uk/blog/' + (item.key||item.slug||'')).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
         </div>
@@ -8500,7 +8501,7 @@ function tobiApplyHqFeed(f) {
     var t = tobiSplitEmoji(a.title);
     var url = TOBI_APP_SITE + '/blog/' + a.slug;
     return { emoji: t.emoji || (typeof _allNewsCategoryEmojis !== 'undefined' && _allNewsCategoryEmojis[a.category]) || '📰', title: t.title, summary: a.summary,
-      url: url, appUrl: url, slug: a.slug, label: a.category || 'News', date: tobiShortDate(a.publishedAt), pubDate: a.publishedAt, _hq: true };
+      url: url, appUrl: url, slug: a.slug, label: a.category || 'News', date: tobiShortDate(a.publishedAt), pubDate: a.publishedAt, imgId: a.imgId || '', _hq: true };
   });
   if (typeof ALL_EVENTS !== 'undefined') {
     for (var i = ALL_EVENTS.length - 1; i >= 0; i--) if (ALL_EVENTS[i]._hq) ALL_EVENTS.splice(i, 1);
@@ -8536,7 +8537,7 @@ function tobiShowHqInSheet(url) {
     var btn = item.link ? '<a href="' + esc(item.link) + '" target="_blank" rel="noopener" style="display:block;margin-top:14px;background:#057A44;color:white;text-decoration:none;text-align:center;padding:12px;border-radius:10px;font-weight:700;">' + (item.kind === 'event' ? '🎟️ Get tickets / book' : '🔗 Read more') + '</a>' : '';
     document.getElementById('blogSheetTitle').textContent = item.title;
     var im = document.getElementById('blogSheetImage');
-    if (item.imgId) { im.src = '/.netlify/functions/app-content?img=' + encodeURIComponent(item.imgId); im.style.display = 'block'; im.style.maxHeight = '420px'; im.style.objectFit = 'contain'; im.style.background = '#0F1E36'; im.style.cursor = 'zoom-in'; im.onclick = function () { if (typeof tobi_imgZoom === 'function') tobi_imgZoom(im.src); }; }
+    if (item.imgId) { var wide = item.kind !== 'event'; im.src = '/.netlify/functions/app-content?img=' + encodeURIComponent(item.imgId); im.style.display = 'block'; im.style.maxHeight = wide ? '240px' : '420px'; im.style.objectFit = wide ? 'cover' : 'contain'; im.style.background = wide ? '#f0f2f5' : '#0F1E36'; im.style.cursor = 'zoom-in'; im.onclick = function () { if (typeof tobi_imgZoom === 'function') tobi_imgZoom(im.src); }; }
     else { im.style.display = 'none'; im.onclick = null; im.style.maxHeight = '200px'; im.style.objectFit = 'cover'; im.style.background = ''; im.style.cursor = ''; }
     document.getElementById('blogSheetContentInner').innerHTML = '<h2 style="margin-top:0">' + esc(item.title) + '</h2>' + meta + (item.html || '') + btn;
     document.getElementById('blogSheetContent').style.display = 'block';

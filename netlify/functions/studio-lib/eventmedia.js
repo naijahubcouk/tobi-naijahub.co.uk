@@ -109,7 +109,7 @@ function pageText(html) {
 }
 
 // Returns { notes, link, imageUrl } — notes are fed to the AI writer.
-async function readLink(rawUrl) {
+async function readLink(rawUrl, forPost) {
   const page = await safeFetch(rawUrl, 'text/html,application/xhtml+xml', PAGE_MAX);
   if (!/html|xml|text/.test(page.type)) throw new HttpError(400, 'not_page', 'That link isn’t a web page — if it’s a flyer, please upload it instead.');
   const html = page.buf.toString('utf8');
@@ -118,9 +118,9 @@ async function readLink(rawUrl) {
   const desc = meta(html, ['og:description', 'description', 'twitter:description']);
   const text = pageText(html).slice(0, 5000);
   if (!ev && text.length < 120 && desc.length < 40) {
-    throw new HttpError(422, 'link_blocked', 'We couldn’t read that page (Instagram and Facebook often block this). Please upload the flyer or paste the details instead.');
+    throw new HttpError(422, 'link_blocked', forPost ? 'We couldn’t read that page — please paste the information instead.' : 'We couldn’t read that page (Instagram and Facebook often block this). Please upload the flyer or paste the details instead.');
   }
-  const lines = [`Event page: ${page.url}`];
+  const lines = [`${forPost ? 'Source page' : 'Event page'}: ${page.url}`];
   if (title) lines.push(`Page title: ${title}`);
   if (desc) lines.push(`Page description: ${desc}`);
   if (ev) {
@@ -134,7 +134,7 @@ async function readLink(rawUrl) {
     if (offer && (offer.price || offer.lowPrice)) lines.push(`• Price: ${offer.lowPrice || offer.price} ${offer.priceCurrency || ''}`);
   }
   lines.push('', 'Page text:', text);
-  lines.push('', `Booking / tickets link: ${page.url}`);
+  lines.push('', forPost ? `Official source link: ${page.url}` : `Booking / tickets link: ${page.url}`);
   const img = ldImage(ev) || meta(html, ['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src']);
   let imageUrl = '';
   try { imageUrl = img ? new URL(decode(img), page.url).toString() : ''; } catch (_) { imageUrl = ''; }
@@ -155,13 +155,18 @@ async function fetchImage(u) {
 // ── Creating an event image with AI ──
 async function makePicture(info) {
   const title = core.cleanText(info && info.title, 120).replace(/^[^\p{L}\p{N}]+/u, '');
-  if (!title) throw new HttpError(400, 'title_required', 'Add the event name first.');
-  const day = /^\d{4}-\d{2}-\d{2}$/.test(String(info.eventDate || '')) ? new Date(info.eventDate + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+  if (!title) throw new HttpError(400, 'title_required', 'Add the title first.');
+  const day = !info || !info.eventDate ? '' : /^\d{4}-\d{2}-\d{2}$/.test(String(info.eventDate || '')) ? new Date(info.eventDate + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
   const town = core.cleanText(info.location, 120).split(',').map(s => s.trim()).filter(s => s && !/\d/.test(s)).pop() || '';
   const about = core.cleanText(String(info.body || '').replace(/\s+/g, ' '), 300);
   const key = env('STUDIO_OPENROUTER_API_KEY') || env('OPENROUTER_API_KEY');
   if (!key) throw new HttpError(500, 'ai_not_configured', 'Creating images needs the AI to be set up.');
-  const prompt =
+  const article = info.kind === 'article' || info.kind === 'news';
+  const prompt = article ?
+`Create a wide (16:9) header illustration for a post in the Auntie Tobi app — a warm, trusted UK guide for Nigerians living in the UK.
+Post: "${title}"${about ? `\nAbout: ${about}` : ''}
+Style: modern flat editorial illustration, warm rich colours with green and gold accents, friendly and clear; show simple objects or scenes that represent the topic (e.g. a pound coin and calculator for money, a house for housing, a clock for time changes). Uncluttered, plenty of space.
+Do NOT include: any words, letters or numbers; photos or faces of real people; logos, brand names, flags of political parties or QR codes.` :
 `Design an eye-catching portrait event poster (4:5) for a UK community event aimed at Nigerians in the UK.
 Event: "${title}"${about ? `\nAbout: ${about}` : ''}
 Style: bold, modern, joyful graphic design; warm rich colours; subtle African/Ankara-inspired pattern accents; a simple illustrated motif that fits the event type (e.g. music, food, career, faith, family). Clean layout with plenty of space.
@@ -174,7 +179,7 @@ Do NOT include: photos of real people, faces of performers, logos, brand names, 
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST', signal: ctrl.signal,
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://auntietobi.co.uk', 'X-Title': 'Auntie Tobi Events' },
-      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: '4:5' }, usage: { include: true } }),
+      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: article ? '16:9' : '4:5' }, usage: { include: true } }),
     });
     data = await res.json().catch(() => null);
   } catch (_) {

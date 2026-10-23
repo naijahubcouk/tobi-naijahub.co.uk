@@ -5,7 +5,7 @@
  *
  *   hq/app-posts   { items: { <id>: post } }
  *
- * post: { id, kind, title, emoji, body, html, summary, category, link, linkText, imgId (flyer, from event submissions),
+ * post: { id, kind, title, emoji, body, html, summary, category, link, linkText, imgId (event flyer or post image),
  *         showUntil, eventDate, eventTime, location, status, slug, publishedAt, createdAt, updatedAt, by }
  * kind:   update | article | event
  * status: live | hidden

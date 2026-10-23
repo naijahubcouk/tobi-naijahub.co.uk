@@ -102,6 +102,15 @@ exports.handler = handler(async (ctx) => {
     }
     case 'app-link': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
+      if (body.kind && body.kind !== 'event') { // 📰 News / 📝 Article from a link
+        const media = require('../eventmedia');
+        const page = await media.readLink(body.url, true);
+        const notes = page.notes + (body.notes ? `\n\nExtra notes:\n${String(body.notes).slice(0, 2000)}` : '');
+        const [draft, image] = await Promise.all([appai.write(notes, body.kind, body.category), media.fetchImage(page.imageUrl)]);
+        if (!draft.link) draft.link = appai.cleanLink(page.link);
+        await core.audit(who.email, 'hq_app_ai', { kind: body.kind, from: 'link' });
+        return { draft, image };
+      }
       const r = await eventsub.fromLink(body.url, body.notes);
       return { draft: { kind: 'event', ...r.draft }, image: r.image };
     }
