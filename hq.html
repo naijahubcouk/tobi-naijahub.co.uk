@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/hq-icon-16.png?v=1">
 <link rel="icon" type="image/png" sizes="48x48" href="/icons/hq-icon-48.png?v=1">
 <link rel="apple-touch-icon" href="/icons/hq-icon-180.png?v=1">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--green:#057A44;--green-d:#04613A;--green-l:#E3F2EA;--gold:#FFB81C;--gold-l:#FFF1CF;--navy:#0F1E36;--navy-2:#1C2E4D;--navy-3:#2A3D60;--cream:#FBF6EC;--line:#EADFC8;--muted:#5B6475;--danger:#B3261E;--danger-l:#FCE8E6;--font:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--display:'Fraunces',Georgia,serif;--side:260px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -151,6 +151,19 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 .aptx{font-size:13.5px;color:#444;line-height:1.65}.aptx h3{font-size:14px;margin:10px 0 2px;color:var(--navy)}.aptx ul{padding-left:18px;margin:4px 0}.aptx p{margin:0 0 6px}
 .apl{margin-top:8px;font-size:13px;color:#057A44;font-weight:700}
 .aeimg{display:flex;gap:12px;align-items:flex-start}.aepic{width:110px;height:138px;border-radius:10px;border:1px solid var(--line);background:#F7F2E7;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}.aepic.wide{width:150px;height:150px}.aepic img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}.aeibtn{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.carx{position:fixed;inset:0;z-index:60;background:var(--cream);display:flex;flex-direction:column}
+.carbar{display:flex;gap:10px;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.cartitle{flex:1;font-weight:800;font-size:16px;border:1px solid transparent;background:transparent}.cartitle:focus{border-color:var(--line);background:#fff}
+.carbody{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:16px;padding:16px;overflow:hidden}
+.carleft{overflow:auto;padding-right:4px}.carright{overflow:auto}
+.carstage{background:#1b1b1b;border-radius:14px;padding:10px;display:flex;justify-content:center}
+.carstage canvas{width:100%;max-width:400px;height:auto;border-radius:8px;display:block}
+.carthumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.carthumbs canvas{width:54px;height:67px;border-radius:6px;cursor:pointer;border:2px solid transparent}.carthumbs canvas.on{border-color:var(--gold)}
+.cslide{margin-top:10px;border:2px solid transparent}.cslide.on{border-color:var(--green)}.cslide .cbtns{display:flex;gap:2px}.cslide label{margin-top:8px}
+.chk{display:flex;gap:6px;align-items:center;font-weight:600;font-size:14px}.chk input{width:auto}
+.cargrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.carcard{display:flex;gap:12px;align-items:flex-start;cursor:pointer}.carthumb{width:96px;height:120px;border-radius:8px;flex:none;background:#eee}
+@media (max-width:900px){.carbody{overflow:auto;display:flex;flex-direction:column}.carright{order:-1;margin-bottom:12px}.carleft,.carright{overflow:visible}.carstage canvas{max-width:300px}}
 .subc{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.subimg{width:130px;max-height:180px;object-fit:cover;border-radius:10px;cursor:zoom-in;flex:none;background:#eee}.subimg.none{height:90px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);cursor:default}.side-nav .n.gold:not(:empty){background:var(--gold);color:var(--navy)}
 /* Comment Assistant */
 .side-sec{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;color:var(--gold);padding:12px 12px 2px}
@@ -206,6 +219,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
+      <button data-nav="cars">🎬 Animated Carousels <span class="n" id="nCars"></span></button>
       <button data-nav="bin">🗑 Bin <span class="n" id="nBin"></span></button>
       <button id="teamBtn" class="hidden">👥 Team access</button>
       <a href="/studio-admin" id="adminLink" class="hidden">📋 Admin ↗</a>
@@ -219,6 +233,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 </div>
 
 <script src="/hq-split.js"></script>
+<script src="/vendor/mp4-muxer-5.2.2.js"></script>
+<script src="/vendor/jszip-3.10.2.min.js"></script>
+<script src="/hq-carousel.js"></script>
 <script>
 (function () {
   'use strict';
@@ -269,13 +286,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10;
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || [];
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
   function go(v) {
-    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'bin'].indexOf(v) >= 0 ? v : 'today';
+    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'bin'].indexOf(v) >= 0 ? v : 'today';
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -284,9 +301,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nApp').textContent = (S.app || []).filter(function (p) { return appState(p) === 'live'; }).length || '';
     $('#nSubs').textContent = subsNew().length || '';
     $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10);
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, igc: vIgc, bin: vBin })[S.view]();
+    $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, igc: vIgc, cars: function () { window.HQCar.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
+  if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
   $$('.side-nav [data-nav]').forEach(function (b) { b.onclick = function () { go(b.dataset.nav); }; });
   $('#menuBtn').onclick = function (e) { e.stopPropagation(); $('#side').classList.toggle('open'); };

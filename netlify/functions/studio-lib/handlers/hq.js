@@ -20,6 +20,7 @@ const apppub = require('../apppub');
 const appai = require('../appai');
 const eventsub = require('../eventsub');
 const igcomment = require('../igcomment');
+const carousel = require('../carousel');
 
 function requireEmail(e) {
   const email = core.normalizeEmail(e);
@@ -84,7 +85,7 @@ exports.handler = handler(async (ctx) => {
   const who = await requireHq(ctx);
   await core.rateLimit('hq', who.email, 1200, 60 * 60 * 1000);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: await apppub.list(), appCategories: apppub.CATEGORIES, subs: await eventsub.list(), igc: await igcomment.list(), igcTarget: igcomment.DAILY_TARGET };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: await apppub.list(), appCategories: apppub.CATEGORIES, subs: await eventsub.list(), igc: await igcomment.list(), igcTarget: igcomment.DAILY_TARGET, cars: await carousel.list() };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -138,6 +139,14 @@ exports.handler = handler(async (ctx) => {
       return { entry };
     }
     case 'igc-posted': return { entry: await igcomment.markPosted(body.id, body.i, body.text, who.email) };
+    case 'car-ai': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
+      let notes = String(body.notes || '');
+      if (body.url) { const page = await require('../eventmedia').readLink(body.url, true); notes = page.notes + (notes ? `\n\nExtra notes:\n${notes.slice(0, 2000)}` : ''); }
+      return { draft: await carousel.write(notes, { count: body.count }) };
+    }
+    case 'car-save': return { item: await carousel.save(body.item, who.email) };
+    case 'car-delete': { await carousel.remove(String(body.id || '')); return { ok: true }; }
     case 'igc-delete': { await igcomment.remove(body.id); return { ok: true }; }
     case 'subs': return { subs: await eventsub.list() };
     case 'sub-approve': {

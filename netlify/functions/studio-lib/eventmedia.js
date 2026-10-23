@@ -185,8 +185,13 @@ async function makePicture(info) {
   const key = env('STUDIO_OPENROUTER_API_KEY') || env('OPENROUTER_API_KEY');
   if (!key) throw new HttpError(500, 'ai_not_configured', 'Creating images needs the AI to be set up.');
   const article = info.kind === 'article' || info.kind === 'news';
-  const scene = article ? await sceneIdea(title, about) : '';
-  const prompt = article ?
+  const bg = info.kind === 'carousel';
+  const scene = article || bg ? await sceneIdea(title, about) : '';
+  const prompt = bg ?
+`Create a portrait (4:5) background photo for the cover of an Instagram carousel about: "${title}".
+Scene: ${scene}
+It is a BACKGROUND: keep the top half calmer and simpler (big text will sit on top of it). Realistic, high quality, warm and inviting.
+Do NOT include any words, letters, numbers, signs, logos, watermarks, QR codes, celebrities or real identifiable people.` : article ?
 `Create a square (1:1) social-media style image for this post: "${title}"${about ? `\nWhat the post is about: ${about}` : ''}
 
 LAYOUT
