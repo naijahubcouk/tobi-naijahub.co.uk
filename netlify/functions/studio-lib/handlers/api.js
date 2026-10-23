@@ -76,9 +76,17 @@ function cleanCarouselDesign(d) {
   const slides = (Array.isArray(d.slides) ? d.slides : []).slice(0, 10).map(x => ({
     headline: cleanText(x && x.headline, 160), body: cleanText(x && x.body, 400),
     img: /^c[A-Za-z0-9]{6,20}$/.test(String(x && x.img || '')) ? x.img : '',
+    scale: (v => (Number.isFinite(v) ? Math.max(0.6, Math.min(1.6, Math.round(v * 100) / 100)) : 1))(Number(x && x.scale)),
+    photo: (p => ({ mode: ['small', 'medium', 'large', 'full'].includes(p.mode) ? p.mode : 'medium', fit: p.fit === 'fit' ? 'fit' : 'fill',
+      zoom: Math.max(1, Math.min(4, Number(p.zoom) || 1)), x: Math.max(-1, Math.min(1, Number(p.x) || 0)), y: Math.max(-1, Math.min(1, Number(p.y) || 0)) }))((x && x.photo && typeof x.photo === 'object') ? x.photo : {}),
   }));
   if (slides.length < 1) throw new HttpError(400, 'invalid', 'A carousel needs at least one slide.');
+  const num = (v, lo, hi, def) => { v = Number(v); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v * 100) / 100)) : def; };
   return {
+    format: ['carousel', 'post', 'story'].includes(d.format) ? d.format : 'carousel',
+    size: ['portrait', 'square', 'story'].includes(d.size) ? d.size : 'portrait',
+    numbers: d.numbers !== false, swipe: d.swipe !== false,
+    headScale: num(d.headScale, 0.6, 1.8, 1), bodyScale: num(d.bodyScale, 0.6, 1.8, 1),
     template: CAR_TEMPLATES.includes(d.template) ? d.template : 'bold',
     color1: hex(d.color1) || '#057A44', color2: hex(d.color2) || '#FFB81C',
     font: ['modern', 'elegant', 'bold'].includes(d.font) ? d.font : 'modern',
@@ -90,7 +98,7 @@ function cleanCarouselDesign(d) {
 exports.handler = handler(async (ctx) => {
   const { body } = ctx;
   const action = body.action;
-  const level = action === 'bootstrap' ? 'buyer' : action === 'generate' || action === 'refine' ? 'create' : 'view';
+  const level = action === 'bootstrap' ? 'buyer' : action === 'generate' || action === 'refine' || action === 'design-create' ? 'create' : 'view';
   const auth = await core.requireMember(ctx, { level });
   const email = auth.sess.email;
 
@@ -252,6 +260,12 @@ exports.handler = handler(async (ctx) => {
       return { item: out.item, replayed: out.replayed, calendarAdded: out.calendarAdded || 0, ideasAdded: out.ideasAdded || 0, usage: await gen.usageSummary(email, auth.access) };
     }
 
+    case 'design-create': {
+      // Design maker with the member's own words (carousel = 1 AI credit; post or story = free).
+      const profile = await getProfile(email);
+      const out = await gen.createOwn({ email, profile, settings: auth.settings, access: auth.access, raw: body.design, idemKey: body.requestId });
+      return { item: out.item, replayed: out.replayed, usage: await gen.usageSummary(email, auth.access) };
+    }
     case 'refine': {
       const profile = await getProfile(email);
       return gen.refine({ email, profile, settings: auth.settings, id: body.id, how: String(body.how || '') });
