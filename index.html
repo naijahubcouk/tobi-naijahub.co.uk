@@ -1024,7 +1024,6 @@
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="showBusinesses(undefined,null,null,true,true)">🏢 Businesses</div>
     <div class="pill" onclick="window.open('https://auntietobi.co.uk/marketplace','_blank')">🛍️ Marketplace</div>
-    <div class="pill" onclick="window.open('https://auntietobi.co.uk/add-event','_blank')">📣 Submit Event</div>
     <div class="pill" onclick="showNewsAndUpdates()">📰 News & Updates</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="showMoreSheet()" style="background:#0F1E36;color:white;border-color:#0F1E36;">More ›</div>
@@ -8930,6 +8929,8 @@ function resetToWelcome() {
         + '<a href="/business-club" style="display:inline-block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:800;padding:9px 16px;border-radius:20px;">Join the Business Club →</a>'
         + '<div style="margin-top:10px;"><a href="/business-studio" style="color:white;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px;">Or try Business Studio free →</a></div></div>');
       showSponsoredAd();
+      addTipMessage('<a href="https://auntietobi.co.uk/add-event" target="_blank" data-submit-event="1" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">'
+        + '<span style="font-size:20px;">🎉</span><span style="flex:1;text-align:left;">Submit Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing — paste your event link or upload your flyer</span></span><span style="color:#ccc;">›</span></a>');
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
