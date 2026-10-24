@@ -8,6 +8,10 @@
   'use strict';
   var FPS = 30, END = 2.5;
   var ST = null; // cached settings
+  var VOICE_INFO = { Aria: 'warm, confident woman (American)', Sarah: 'soft, reassuring young woman', Laura: 'upbeat, friendly young woman', Charlotte: 'smooth, elegant British woman', Alice: 'clear, professional British woman', Matilda: 'warm, friendly woman', Jessica: 'bright, expressive young woman', Lily: 'gentle, warm British woman', Roger: 'confident, easy-going man', Charlie: 'natural, casual young man (Australian)', George: 'warm, rich British man — great storyteller', Callum: 'intense, gravelly man', River: 'calm, relaxed neutral voice', Liam: 'energetic young man', Will: 'friendly, chilled young man', Eric: 'smooth, trustworthy man', Chris: 'casual, down-to-earth man', Brian: 'deep, resonant man — great for adverts', Daniel: 'calm, authoritative British man — newsreader feel', Bill: 'older, wise and trustworthy man' };
+  var previews = {};
+  function voUrl(v) { return v ? (v.aid ? '/.netlify/functions/studio-hq?vaudio=' + encodeURIComponent(v.aid) : v.url) : ''; }
+  function fileToDataUrl(blob) { return new Promise(function (ok, bad) { var r = new FileReader(); r.onload = function () { ok(String(r.result)); }; r.onerror = function () { bad(new Error('Couldn’t read that file.')); }; r.readAsDataURL(blob); }); }
   function $(q, r) { return (r || document).querySelector(q); }
   function $$(q, r) { return Array.prototype.slice.call((r || document).querySelectorAll(q)); }
   function gbp(n) { return '£' + (Math.round(n * 100) / 100).toFixed(2); }
@@ -16,7 +20,7 @@
   function needsChar(p) { return p.plan.scenes.some(function (s) { return s.character; }); }
   function estimate(p, tier) {
     var m = p.make || {}, clips = 0, vo = 0;
-    p.plan.scenes.forEach(function (s, i) { if (!(m.clips && m.clips[i] && m.clips[i].url)) clips += clipLen(tier, s.seconds) * rate(tier); if (s.vo && !(m.vo && m.vo[i])) vo += s.vo.length / 1000 * 0.1 * 0.79; });
+    p.plan.scenes.forEach(function (s, i) { if (!(m.clips && m.clips[i] && m.clips[i].url)) clips += clipLen(tier, s.seconds) * rate(tier); if (m.voSource !== 'own' && s.vo && !(m.vo && m.vo[i] && m.vo[i].url)) vo += s.vo.length / 1000 * 0.1 * 0.79; });
     var total = p.plan.scenes.reduce(function (n, s) { return n + (Number(s.seconds) || 0); }, 0) + END;
     var music = m.music !== false && !(m.musicJob && m.musicJob.url) ? Math.max(10, total) / 60 * 0.8 * 0.79 : 0;
     var pics = p.plan.scenes.filter(function (s, i) { return !(p.frames && p.frames[String(i)]); }).length * 0.04 + (needsChar(p) && !m.charImg ? 0.04 : 0);
@@ -55,7 +59,7 @@
   function wire(pane, p, X) {
     var root = $('#vmRoot', pane), polling = 0, busy = false;
     p.make = p.make || {}; var m = p.make;
-    m.tier = m.tier || 'budget'; m.clips = m.clips || {}; m.vo = m.vo || {}; if (m.music === undefined) m.music = true;
+    m.tier = m.tier || 'budget'; m.clips = m.clips || {}; m.vo = m.vo || {}; if (m.music === undefined) m.music = true; m.voSource = m.voSource || 'ai'; m.customVoices = m.customVoices || [];
     if (!m.musicPrompt) m.musicPrompt = [p.plan.music.mood, p.plan.music.bpm ? p.plan.music.bpm + ' BPM' : '', (p.plan.music.search || [])[0]].filter(Boolean).join(', ');
     if (m.musicVol == null) m.musicVol = 0.22; if (m.captions === undefined) m.captions = true; if (m.endCard === undefined) m.endCard = true;
     loadSettings(X.api).then(function () { m.voice = m.voice || ST.voice; paint(); }, function (x) { root.innerHTML = '<div class="err">' + X.esc(x.message) + '</div>'; });
@@ -65,7 +69,7 @@
     function stepState() {
       var n = scenes().length, pics = scenes().filter(function (_, i) { return frame(i); }).length;
       var clips = scenes().filter(function (_, i) { return m.clips[i] && m.clips[i].url; }).length, pending = scenes().filter(function (_, i) { return m.clips[i] && !m.clips[i].url && !m.clips[i].error && m.clips[i].statusUrl; }).length;
-      var voNeed = scenes().filter(function (s) { return s.vo; }).length, vo = scenes().filter(function (s, i) { return s.vo && m.vo[i]; }).length;
+      var own = m.voSource === 'own', voNeed = scenes().filter(function (s) { return s.vo; }).length, vo = own && m.voFull ? voNeed : scenes().filter(function (s, i) { return s.vo && m.vo[i] && (own ? m.vo[i].aid : m.vo[i].url); }).length;
       return { n: n, pics: pics, clips: clips, pending: pending, voNeed: voNeed, vo: vo, music: !m.music || !!(m.musicJob && m.musicJob.url), musicPending: m.music && m.musicJob && !m.musicJob.url && !m.musicJob.error, char: !needsChar(p) || !!m.charImg };
     }
     function tick(ok, pending) { return ok ? '✅' : pending ? '⏳' : '◻️'; }
@@ -79,7 +83,14 @@
       root.innerHTML =
         '<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><b>🎬 Make the whole video</b><button class="btn link" id="vmSet">⚙️ Settings</button></div>' +
         '<div class="lbl">Quality</div><div class="chipbar" id="vmTier">' + s.tiers.map(function (t) { return '<button class="chip" data-v="' + t.id + '" aria-pressed="' + (t.id === m.tier) + '">' + esc(t.label) + '</button>'; }).join('') + '</div>' +
-        '<div class="f2" style="margin-top:8px"><div><label for="vmVoice">Voice</label><select id="vmVoice">' + s.voices.map(function (v) { return '<option' + (v === m.voice ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div>' +
+        '<div class="lbl">Voiceover</div><div class="chipbar" id="vmSrc"><button class="chip" data-v="ai" aria-pressed="' + (m.voSource !== 'own') + '">🤖 AI voice</button><button class="chip" data-v="own" aria-pressed="' + (m.voSource === 'own') + '">🎤 My own voice</button></div>' +
+        (m.voSource !== 'own' ? '<div class="row" style="gap:8px;align-items:flex-end;margin-top:6px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><label for="vmVoice">Voice</label><select id="vmVoice">' +
+            m.customVoices.map(function (v) { return '<option value="' + v + '"' + (v === m.voice ? ' selected' : '') + '>⭐ My ElevenLabs voice (' + v.slice(0, 6) + '…)</option>'; }).join('') +
+            s.voices.map(function (v) { return '<option value="' + v + '"' + (v === m.voice ? ' selected' : '') + '>' + v + (VOICE_INFO[v] ? ' — ' + VOICE_INFO[v] : '') + '</option>'; }).join('') + '</select></div>' +
+            '<button class="btn ghost sm" id="vmPrev">▶ Preview</button></div>' +
+            '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:13.5px;font-weight:700">⭐ Use a voice from the ElevenLabs Voice Library (e.g. a Nigerian accent)</summary><p class="muted" style="font-size:13px;margin:6px 0">On elevenlabs.io → Voices → Voice Library, find a voice you like → “Copy voice ID” → paste it here and tap Test.</p><div class="row" style="gap:8px"><input id="vmVid" placeholder="Voice ID, e.g. 21m00Tcm4TlvDq8ikWAM" style="flex:1"><button class="btn ghost sm" id="vmVidTest">Test</button></div><div class="muted" id="vmVidMsg" style="font-size:13px;margin-top:4px"></div></details>'
+          : '<p class="muted" style="font-size:13px;margin:6px 0 0">Record or upload your own voiceover in step 4 — one clip per scene (best for timing) or one file for the whole ad. Free.</p>') +
+        '<div style="margin-top:8px">' +
         '<div><label>Music</label><div class="chipbar" id="vmMus"><button class="chip" data-v="1" aria-pressed="' + !!m.music + '">🎵 AI music</button><button class="chip" data-v="0" aria-pressed="' + !m.music + '">🔇 No music</button></div></div></div>' +
         (m.music ? '<label for="vmMP" style="margin-top:6px">Music style</label><input id="vmMP" value="' + esc(m.musicPrompt) + '"><label for="vmMV">Music volume</label><input type="range" id="vmMV" min="5" max="60" value="' + Math.round(m.musicVol * 100) + '">' : '') +
         '<div class="row" style="gap:16px;margin-top:8px;flex-wrap:wrap"><label class="chk"><input type="checkbox" id="vmCap"' + (m.captions ? ' checked' : '') + '> Subtitles</label><label class="chk"><input type="checkbox" id="vmEnd"' + (m.endCard ? ' checked' : '') + '> End card with call to action</label></div>' +
@@ -98,8 +109,16 @@
               '<div style="flex:1;min-width:0"><b>' + (i + 1) + '. ' + esc(sc.title) + '</b> <span class="muted">· ' + sc.seconds + 's</span><div class="muted" style="font-size:13px">' + state + '</div></div>' +
               '<button class="btn ghost sm" data-redo="' + i + '"' + (frame(i) ? '' : ' disabled') + '>' + (c.url || c.error ? '🔄 Redo' : '🎬 Make') + '</button></div>';
           }).join('') + '</div>' +
-        '<div class="card vmstep"><div class="row" style="justify-content:space-between"><b>' + tick(st.vo === st.voNeed) + ' 4 · Voiceover (' + st.vo + '/' + st.voNeed + ')</b><button class="btn ghost sm" id="vmVo">🎙️ Make voiceover</button></div>' +
-          scenes().map(function (sc, i) { if (!sc.vo) return ''; var v = m.vo[i]; return '<div class="vmrow"><div style="flex:1;font-size:13.5px"><b>' + (i + 1) + '.</b> ' + esc(sc.vo) + (v && v.text !== sc.vo ? ' <span class="muted">(text changed — remake)</span>' : '') + '</div>' + (v ? '<audio controls preload="none" src="' + esc(v.url) + '" crossorigin="anonymous"></audio>' : '') + '</div>'; }).join('') + '</div>' +
+        (m.voSource === 'own'
+          ? '<div class="card vmstep"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:6px"><b>' + tick(st.vo === st.voNeed) + ' 4 · Your voiceover' + (m.voFull ? ' (one file)' : ' (' + st.vo + '/' + st.voNeed + ')') + '</b><span class="apact"><label class="btn ghost sm" style="margin:0">📁 One file for the whole ad<input type="file" accept="audio/*" id="vmFull" hidden></label></span></div>' +
+            (m.voFull ? '<div class="vmrow"><div style="flex:1;font-size:13.5px">🎧 One recording for the whole ad — it starts at the beginning of the video.</div><audio controls preload="none" src="' + voUrl({ aid: m.voFull }) + '"></audio><button class="btn link" id="vmFullX">✖</button></div>'
+              : '<p class="muted" style="font-size:13px;margin:4px 0">Tap 🎙️ Record and read the line (keep it about the scene length), or upload a file.</p>' + scenes().map(function (sc, i) {
+                if (!sc.vo) return ''; var v = m.vo[i] && m.vo[i].aid ? m.vo[i] : null;
+                return '<div class="vmrow"><div style="flex:1;font-size:13.5px"><b>' + (i + 1) + '.</b> ' + esc(sc.vo) + ' <span class="muted">· ' + sc.seconds + 's</span></div>' + (v ? '<audio controls preload="none" src="' + voUrl(v) + '"></audio>' : '') +
+                  '<button class="btn ghost sm" data-rec="' + i + '">🎙️ ' + (v ? 'Re-record' : 'Record') + '</button><label class="btn ghost sm" style="margin:0">📁<input type="file" accept="audio/*" data-upa="' + i + '" hidden></label></div>';
+              }).join('')) + '</div>'
+          : '<div class="card vmstep"><div class="row" style="justify-content:space-between"><b>' + tick(st.vo === st.voNeed) + ' 4 · Voiceover (' + st.vo + '/' + st.voNeed + ')</b><button class="btn ghost sm" id="vmVo">🎙️ Make voiceover</button></div>' +
+            scenes().map(function (sc, i) { if (!sc.vo) return ''; var v = m.vo[i] && m.vo[i].url ? m.vo[i] : null; return '<div class="vmrow"><div style="flex:1;font-size:13.5px"><b>' + (i + 1) + '.</b> ' + esc(sc.vo) + (v && v.text !== sc.vo ? ' <span class="muted">(text changed — remake)</span>' : '') + '</div>' + (v ? '<audio controls preload="none" src="' + esc(v.url) + '" crossorigin="anonymous"></audio>' : '') + '</div>'; }).join('') + '</div>') +
         (m.music ? '<div class="card vmstep"><div class="row" style="justify-content:space-between"><b>' + tick(st.music, st.musicPending) + ' 5 · Background music</b><button class="btn ghost sm" id="vmMusic">' + (m.musicJob && (m.musicJob.url || m.musicJob.error) ? '🔄 Redo' : '🎵 Make music') + '</button></div>' +
           (m.musicJob && m.musicJob.url ? '<audio controls preload="none" src="' + esc(m.musicJob.url) + '" crossorigin="anonymous" style="width:100%"></audio>' : m.musicJob && m.musicJob.error ? '<div class="muted">⚠️ ' + esc(m.musicJob.error) + '</div>' : m.musicJob ? '<div class="muted">⏳ Making the music…</div>' : '') + '</div>' : '') +
         '<div class="card vmstep"><b>' + (m.music ? '6' : '5') + ' · ✂️ Edit & export</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Joins the clips, trims each to its scene, adds transitions, on-screen text' + (m.captions ? ', subtitles' : '') + (m.endCard ? ', the end card' : '') + ', voice' + (m.music ? ' and music' : '') + ' — then saves an MP4. Scenes without a clip use their start picture with a slow zoom.</p>' +
@@ -109,7 +128,21 @@
       // wiring
       $('#vmSet', root).onclick = function () { settingsSheet(X, function () { loadSettings(X.api, true).then(paint); }); };
       $$('#vmTier [data-v]', root).forEach(function (b) { b.onclick = function () { m.tier = b.dataset.v; X.mark(); paint(); }; });
-      $('#vmVoice', root).onchange = function () { m.voice = this.value; X.mark(); };
+      $$('#vmSrc [data-v]', root).forEach(function (b) { b.onclick = function () { m.voSource = b.dataset.v; X.mark(); paint(); }; });
+      if ($('#vmVoice', root)) $('#vmVoice', root).onchange = function () { m.voice = this.value; X.mark(); };
+      if ($('#vmPrev', root)) $('#vmPrev', root).onclick = function () { preview(this, $('#vmVoice', root).value); };
+      if ($('#vmVidTest', root)) $('#vmVidTest', root).onclick = async function () {
+        var id = $('#vmVid', root).value.trim(), msg = $('#vmVidMsg', root);
+        if (!/^[A-Za-z0-9]{16,40}$/.test(id)) { msg.textContent = 'That doesn’t look like a voice ID — it’s about 20 letters and numbers.'; return; }
+        this.disabled = true; msg.textContent = '⏳ Testing…';
+        try { var url = await sample(id); msg.textContent = '✅ It works — now selected.'; new Audio(url).play().catch(function () {}); if (m.customVoices.indexOf(id) < 0) m.customVoices.unshift(id); m.voice = id; X.mark(); setTimeout(paint, 1200); }
+        catch (x) { msg.textContent = '⚠️ ' + x.message + ' — this voice may not be available through fal.ai. Try another, or use your own voice.'; }
+        this.disabled = false;
+      };
+      $$('[data-rec]', root).forEach(function (b) { b.onclick = function () { record(+b.dataset.rec, b); }; });
+      $$('[data-upa]', root).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { var aid = await saveAudio(f); m.vo[+inp.dataset.upa] = { aid: aid, text: scenes()[+inp.dataset.upa].vo }; X.mark(); paint(); } catch (x) { X.toast(x.message); } }; });
+      if ($('#vmFull', root)) $('#vmFull', root).onchange = async function () { var f = this.files && this.files[0]; if (!f) return; try { m.voFull = await saveAudio(f); X.mark(); paint(); } catch (x) { X.toast(x.message); } };
+      if ($('#vmFullX', root)) $('#vmFullX', root).onclick = function () { m.voFull = ''; X.mark(); paint(); };
       $$('#vmMus [data-v]', root).forEach(function (b) { b.onclick = function () { m.music = b.dataset.v === '1'; X.mark(); paint(); }; });
       if ($('#vmMP', root)) $('#vmMP', root).oninput = function () { m.musicPrompt = this.value; X.mark(); };
       if ($('#vmMV', root)) $('#vmMV', root).oninput = function () { m.musicVol = this.value / 100; X.mark(); };
@@ -120,7 +153,7 @@
       $('#vmPics', root).onclick = function () { run(this, makePics); };
       $('#vmClips', root).onclick = function () { run(this, function () { return makeClips(false); }); };
       $$('[data-redo]', root).forEach(function (b) { b.onclick = function () { var i = +b.dataset.redo; if ((m.clips[i] && m.clips[i].url) && !confirm('Make scene ' + (i + 1) + ' again? (costs about ' + gbp(clipLen(m.tier, scenes()[i].seconds) * rate(m.tier)) + ')')) return; run(b, function () { return makeClip(i); }); }; });
-      $('#vmVo', root).onclick = function () { run(this, makeVoice); };
+      if ($('#vmVo', root)) $('#vmVo', root).onclick = function () { run(this, makeVoice); };
       if ($('#vmMusic', root)) $('#vmMusic', root).onclick = function () { run(this, makeMusic); };
       $('#vmRender', root).onclick = function () { render(this); };
       $('#vmAll', root).onclick = function () { run(this, everything); };
@@ -131,6 +164,45 @@
       if (busy) return; busy = true; var keep = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Working…';
       try { await fn(); } catch (x) { X.toast(x.message); }
       busy = false; await X.save(); await loadSettings(X.api, true).catch(function () {}); if (document.body.contains(root)) paint();
+    }
+    function sampleText() {
+      var first = (scenes().filter(function (sc) { return sc.vo; })[0] || {}).vo || '';
+      return ('Hi! This is how I sound for ' + (p.brief.forWho === 'auntietobi' ? 'Auntie Tobi' : (p.brief.business || 'your advert')) + '. ' + first).slice(0, 220);
+    }
+    async function sample(voice) {
+      if (previews[voice]) return previews[voice];
+      var r = await X.api('vm-tts', { text: sampleText(), voice: voice }); previews[voice] = r.url; return r.url;
+    }
+    async function preview(btn, voice) {
+      var keep = btn.textContent; btn.disabled = true; btn.textContent = '⏳';
+      try { var a = new Audio(await sample(voice)); a.play().catch(function () {}); } catch (x) { X.toast(x.message); }
+      btn.disabled = false; btn.textContent = keep; loadSettings(X.api, true).catch(function () {});
+    }
+    async function saveAudio(blob) {
+      if (blob.size > 1700000) throw new Error('That file is too big — keep recordings under about 2 minutes.');
+      var d = await fileToDataUrl(blob);
+      if (/^data:audio\/x-m4a|^data:audio\/mp4a/.test(d)) d = d.replace(/^data:audio\/[^;]+/, 'data:audio/mp4');
+      return (await X.api('vm-audio-save', { dataUrl: d })).aid;
+    }
+    var rec = null;
+    async function record(i, btn) {
+      if (rec) { rec.stop(); return; }
+      if (!navigator.mediaDevices || typeof MediaRecorder !== 'function') return X.toast('This browser can’t record — upload a file instead.');
+      var stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (x) { return X.toast('Please allow the microphone to record.'); }
+      var mime = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].filter(function (t) { return MediaRecorder.isTypeSupported(t); })[0] || '';
+      var chunks = [], r = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined), t0 = Date.now(), timer;
+      rec = r; btn.textContent = '⏹ Stop (0s)'; btn.classList.add('primary');
+      timer = setInterval(function () { btn.textContent = '⏹ Stop (' + Math.round((Date.now() - t0) / 1000) + 's)'; }, 500);
+      r.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      r.onstop = async function () {
+        clearInterval(timer); stream.getTracks().forEach(function (tr) { tr.stop(); }); rec = null;
+        btn.textContent = '⏳ Saving…';
+        try { var aid = await saveAudio(new Blob(chunks, { type: (mime || 'audio/webm').split(';')[0] })); m.vo[i] = { aid: aid, text: scenes()[i].vo }; X.mark(); X.toast('Recording saved ✅'); }
+        catch (x) { X.toast(x.message); }
+        paint();
+      };
+      r.start();
     }
     async function makeChar() {
       var lb = p.plan.lookbook, prompt = (lb.characterSheetPrompt || ('Full-body portrait of ' + lb.character)) + '. Wardrobe: ' + lb.wardrobe + '. Single person, full body, facing camera, plain light-grey studio background, ' + (lb.style || 'photorealistic');
@@ -165,7 +237,7 @@
       var r = await X.api('vm-music', { prompt: m.musicPrompt, seconds: Math.ceil(total) + 2 }); m.musicJob = Object.assign({}, r.job, { status: 'IN_QUEUE', url: '', error: '' }); X.mark(); paint(); poll();
     }
     async function everything() {
-      await makePics(); await makeClips(true); await makeVoice();
+      await makePics(); await makeClips(true); if (m.voSource !== 'own') await makeVoice();
       if (m.music && !(m.musicJob && (m.musicJob.url || (m.musicJob.statusUrl && !m.musicJob.error)))) await makeMusic();
       X.toast('Clips are being made — the final video can be made when they’re ready ✅');
     }
@@ -249,17 +321,26 @@
     c.restore();
   }
   async function mixAudio(p, m, total, prog) {
+    function voUrl(v) { return v ? (v.aid ? '/.netlify/functions/studio-hq?vaudio=' + encodeURIComponent(v.aid) : v.url) : ''; }
     var AC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!AC) return null;
     var rateHz = 48000, ctx = new AC(2, Math.ceil(total * rateHz), rateHz), starts = [], t = 0;
     p.plan.scenes.forEach(function (s) { starts.push(t); t += Number(s.seconds) || 0; });
     async function buf(url) { var r = await fetch(url); if (!r.ok) throw new Error('Audio couldn’t be loaded — it may have expired. Remake it.'); return ctx.decodeAudioData(await r.arrayBuffer()); }
     var voWindows = [];
-    var keys = Object.keys(m.vo || {});
-    for (var k = 0; k < keys.length; k++) {
-      var i = +keys[k], v = m.vo[keys[k]]; if (!v || !v.url || !p.plan.scenes[i]) continue;
-      prog && prog(0.02 + 0.03 * k / keys.length, 'Loading the voiceover…');
-      var b = await buf(v.url), src = ctx.createBufferSource(); src.buffer = b; var gn = ctx.createGain(); gn.gain.value = 1; src.connect(gn).connect(ctx.destination);
-      var at = starts[i] + 0.1; src.start(at); voWindows.push([at, at + b.duration]);
+    // gentle limiter so loud recordings never distort
+    var out = ctx.createDynamicsCompressor(); out.threshold.value = -6; out.knee.value = 6; out.ratio.value = 12; out.attack.value = 0.003; out.release.value = 0.2; out.connect(ctx.destination);
+    var own = m.voSource === 'own';
+    if (own && m.voFull) {
+      prog && prog(0.03, 'Loading your voiceover…');
+      var fb = await buf(voUrl({ aid: m.voFull })), fs = ctx.createBufferSource(); fs.buffer = fb; fs.connect(out); fs.start(0.1); voWindows.push([0.1, 0.1 + fb.duration]);
+    } else {
+      var keys = Object.keys(m.vo || {});
+      for (var k = 0; k < keys.length; k++) {
+        var i = +keys[k], v = m.vo[keys[k]]; if (!v || !p.plan.scenes[i] || (own ? !v.aid : !v.url)) continue;
+        prog && prog(0.02 + 0.03 * k / keys.length, 'Loading the voiceover…');
+        var b = await buf(voUrl(v)), src = ctx.createBufferSource(); src.buffer = b; var gn = ctx.createGain(); gn.gain.value = own ? 1.15 : 1; src.connect(gn).connect(out);
+        var at = starts[i] + 0.1; src.start(at); voWindows.push([at, at + b.duration]);
+      }
     }
     if (m.music && m.musicJob && m.musicJob.url) {
       prog && prog(0.06, 'Loading the music…');
@@ -267,7 +348,7 @@
       mg.gain.setValueAtTime(0, 0); mg.gain.linearRampToValueAtTime(vol, 0.6);
       voWindows.forEach(function (w) { mg.gain.setValueAtTime(vol, Math.max(0.6, w[0] - 0.15)); mg.gain.linearRampToValueAtTime(vol * 0.45, w[0]); mg.gain.setValueAtTime(vol * 0.45, w[1]); mg.gain.linearRampToValueAtTime(vol, w[1] + 0.3); });
       mg.gain.setValueAtTime(vol, Math.max(0, total - 1.2)); mg.gain.linearRampToValueAtTime(0, total);
-      ms.connect(mg).connect(ctx.destination); ms.start(0);
+      ms.connect(mg).connect(out); ms.start(0);
     }
     if (!voWindows.length && !(m.music && m.musicJob && m.musicJob.url)) return null;
     return ctx.startRendering();

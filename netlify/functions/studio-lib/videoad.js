@@ -98,6 +98,7 @@ function cleanPlan(p) {
 function cleanMake(m) {
   m = m && typeof m === 'object' ? m : {};
   const url = v => /^https:\/\/[A-Za-z0-9.\-]+\.(fal\.media|fal\.run|googleapis\.com)\/[^\s"'<>]{3,600}$/.test(String(v || '')) ? String(v) : '';
+  const aid = v => /^a[a-z0-9]{8,30}$/.test(String(v || '')) ? String(v) : '';
   const q = v => /^https:\/\/queue\.fal\.run\/[A-Za-z0-9._\-/]+$/.test(String(v || '')) ? String(v) : '';
   const job = j => j && typeof j === 'object' ? { requestId: cleanText(j.requestId, 80), statusUrl: q(j.statusUrl), responseUrl: q(j.responseUrl), model: cleanText(j.model, 120), seconds: Number(j.seconds) || 0, gbp: Number(j.gbp) || 0, status: cleanText(j.status, 20), url: url(j.url), error: cleanText(j.error, 200), prompt: str(j.prompt, 200) } : null;
   const map = (o, fn) => { const out = {}; Object.entries(o && typeof o === 'object' ? o : {}).forEach(([k, v]) => { if (/^\d{1,2}$/.test(k)) { const x = fn(v); if (x) out[k] = x; } }); return out; };
@@ -105,7 +106,8 @@ function cleanMake(m) {
     tier: ['budget', 'premium', 'top'].includes(m.tier) ? m.tier : 'budget',
     voice: cleanText(m.voice, 40), music: m.music !== false, musicPrompt: str(m.musicPrompt, 300), musicVol: Math.max(0, Math.min(1, Number(m.musicVol) || 0.22)),
     charImg: /^e[a-z0-9]{6,30}$/.test(String(m.charImg || '')) ? m.charImg : '',
-    clips: map(m.clips, job), vo: map(m.vo, v => v && url(v.url) ? { url: url(v.url), text: str(v.text, 600) } : null), musicJob: job(m.musicJob),
+    clips: map(m.clips, job), vo: map(m.vo, v => v && (url(v.url) || aid(v.aid)) ? { url: url(v.url), aid: aid(v.aid), text: str(v.text, 600) } : null), musicJob: job(m.musicJob),
+    voSource: m.voSource === 'own' ? 'own' : 'ai', voFull: aid(m.voFull), customVoices: (Array.isArray(m.customVoices) ? m.customVoices : []).filter(v => /^[A-Za-z0-9]{16,40}$/.test(String(v))).slice(0, 10),
     endCard: m.endCard !== false, captions: m.captions !== false,
   };
 }

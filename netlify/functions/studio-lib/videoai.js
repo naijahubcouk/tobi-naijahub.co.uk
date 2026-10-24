@@ -153,4 +153,16 @@ async function tts({ text, voice }) {
   } catch (e) { await refund(gbp); throw e; }
 }
 
-module.exports = { publicSettings, saveSettings, submitClip, submitMusic, status, tts, spent, TIERS, VOICES, clipLength };
+// 🎤 Your own voice recordings (one per scene, or one for the whole ad)
+const crypto = require('crypto');
+async function saveAudio(dataUrl, by) {
+  const m = /^data:(audio\/(?:webm|ogg|mpeg|mp3|mp4|wav|x-wav|x-m4a|aac|m4a))(?:;codecs=[^;,]+)?;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
+  if (!m) throw new HttpError(400, 'bad_audio', 'Please use an MP3, M4A, WAV or WebM sound file.');
+  if (dataUrl.length > 2300000) throw new HttpError(413, 'too_large', 'That recording is too long — keep it under about 2 minutes (or 1.6 MB).');
+  const id = 'a' + Date.now().toString(36) + crypto.randomBytes(4).toString('hex');
+  await setJson(`hq/vaudio/${id}`, { dataUrl: `data:${m[1]};base64,${m[2]}`, by, at: core.nowIso() });
+  return id;
+}
+async function getAudio(id) { return /^a[a-z0-9]{8,30}$/.test(String(id || '')) ? getJson(`hq/vaudio/${id}`) : null; }
+
+module.exports = { saveAudio, getAudio, publicSettings, saveSettings, submitClip, submitMusic, status, tts, spent, TIERS, VOICES, clipLength };

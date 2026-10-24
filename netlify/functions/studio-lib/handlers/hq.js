@@ -51,7 +51,7 @@ exports.handler = handler(async (ctx) => {
   if (event.httpMethod === 'GET') {
     await requireHq(ctx);
     const q = event.queryStringParameters || {};
-    const img = q.subimg ? await eventsub.getImage(q.subimg) : await hq.getImage(q.img);
+    const img = q.vaudio ? await videoai.getAudio(q.vaudio) : q.subimg ? await eventsub.getImage(q.subimg) : await hq.getImage(q.img);
     if (!img) throw new HttpError(404, 'not_found', 'Not found.');
     const m = /^data:([^;]+);base64,(.*)$/.exec(img.dataUrl);
     return { statusCode: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'private, max-age=86400' }, body: m[2], isBase64Encoded: true };
@@ -174,6 +174,7 @@ exports.handler = handler(async (ctx) => {
       await core.rateLimit('hq-vclip', who.email, 120, 60 * 60 * 1000, 'That\u2019s a lot of clips this hour — please wait a little.');
       return { job: await videoai.submitClip(body) };
     }
+    case 'vm-audio-save': return { aid: await videoai.saveAudio(body.dataUrl, who.email) };
     case 'vm-music': return { job: await videoai.submitMusic(body) };
     case 'vm-status': return { results: await videoai.status(body.jobs), spentGbp: await videoai.spent() };
     case 'vm-tts': {
