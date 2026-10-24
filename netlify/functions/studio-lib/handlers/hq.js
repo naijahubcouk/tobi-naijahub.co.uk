@@ -223,6 +223,8 @@ exports.handler = handler(async (ctx) => {
       return { style: await videoad.analyseReference(body.frames, body.seconds, body.notes) };
     }
     case 'vm-check': return { check: await videoad.checkClip(body.frame, body.refs, body.scene) };
+    case 'vm-voice-save': return { voices: await videoai.saveVoice(String(body.id || ''), body.label) };
+    case 'vm-voice-del': return { voices: await videoai.deleteVoice(String(body.id || '')) };
     case 'vm-lipsync': return { job: await videoai.submitLipsync(body) };
     case 'vm-sfx': return { job: await videoai.submitSfx(body) };
     case 'vm-final-part': return { ok: await videoai.saveFinalPart(body.fid, Number(body.idx), body.b64) };

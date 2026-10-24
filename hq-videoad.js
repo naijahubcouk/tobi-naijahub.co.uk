@@ -385,7 +385,7 @@
             cast.map(function (c, k) {
               return '<div class="vscene" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div class="row" style="gap:10px;align-items:flex-start"><div style="flex:none;text-align:center">' + (ci[k] ? '<img src="' + frameSrc(ci[k]) + '" style="width:72px;height:96px;object-fit:cover;border-radius:8px;display:block" alt="">' : '<div style="width:72px;height:96px;border-radius:8px;background:#0F1E36;color:#cbd5e1;display:flex;align-items:center;justify-content:center;font-size:26px">👤</div>') +
                 '<div class="apact" style="margin-top:4px;justify-content:center"><button class="btn ghost sm" data-castpic="' + k + '" title="Create">' + (ci[k] ? '🔄' : '🎨') + '</button><label class="btn ghost sm" style="margin:0" title="Upload">📷<input type="file" accept="image/*" data-castup="' + k + '" hidden></label></div></div>' +
-                '<div style="flex:1;min-width:0"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role in the story', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Personality & way of talking', 'plan.cast.' + k + '.personality', c.personality, 2) + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 2) + field('👗 Outfit (kept the same in every scene)', 'plan.cast.' + k + '.outfit', c.outfit, 0) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 2) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '</div></div></div>';
+                '<div style="flex:1;min-width:0"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role in the story', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Personality & way of talking', 'plan.cast.' + k + '.personality', c.personality, 2) + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 2) + field('👗 Outfit (kept the same in every scene)', 'plan.cast.' + k + '.outfit', c.outfit, 0) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 2) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '<div class="row" style="gap:8px;align-items:center;margin-top:4px;font-size:13.5px"><span>🎙️ Voice: <b>' + esc((window.HQVmake && HQVmake.voiceLabel(p, c.name)) || 'picked automatically') + '</b></span><button class="btn ghost sm" data-castvid="' + esc(c.name) + '">⭐ ElevenLabs voice ID</button></div></div></div></div>';
             }).join('') + '</div>' +
           locCard() +
           '<div class="card" style="margin-top:10px">' + field('✨ Brand reveal tagline (final title card)', 'plan.reveal.tagline', (p.plan.reveal || {}).tagline, 0, true) + '</div>';
@@ -481,7 +481,7 @@
     };
     function paintPane() {
       $$('#veTabs [data-tab]', ov).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.tab === tab); });
-      var pane = q('#vePane'); pane.innerHTML = PANES[tab](); wireFields(pane);
+      var pane = q('#vePane'); pane.innerHTML = PANES[tab](); if (tab === 'screenplay' || tab === 'script' || tab === 'board') addSceneTools(pane); wireFields(pane);
       if (tab === 'make' && window.HQVmake) HQVmake.wire(pane, p, { api: X.api, toast: X.toast, esc: X.esc, sheet: X.sheet, mark: mark, save: save, frameSrc: frameSrc, aspect: aspect, shrink: shrink, slug: slug });
       $$('[data-lines]', pane).forEach(function (ta) {
         ta.addEventListener('input', function () {
@@ -499,6 +499,7 @@
       });
       $$('[data-castpic]', pane).forEach(function (b) { b.onclick = function () { busyBtn(b, '⏳', async function () { await castPic(+b.dataset.castpic); paintPane(); }); }; });
       $$('[data-castup]', pane).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { p.make.castImgs[inp.dataset.castup] = (await X.api('app-img', { image: await shrink(f) })).imgId; mark(); paintPane(); } catch (x) { X.toast(x.message); } }; });
+      $$('[data-castvid]', pane).forEach(function (b) { b.onclick = function () { HQVmake.voiceIdSheet({ api: X.api, sheet: X.sheet, esc: X.esc, toast: X.toast }, p, b.dataset.castvid, function () { mark(); paintPane(); }); }; });
       $$('[data-locpic]', pane).forEach(function (b) { b.onclick = function () { busyBtn(b, '⏳', async function () { await locPic(+b.dataset.locpic); paintPane(); }); }; });
       $$('[data-locup]', pane).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { p.make.locImgs[inp.dataset.locup] = (await X.api('app-img', { image: await shrink(f) })).imgId; mark(); paintPane(); } catch (x) { X.toast(x.message); } }; });
       $$('[data-locname]', pane).forEach(function (inp) { inp.oninput = function () { var l = p.plan.locations[+inp.dataset.locname], old = l.name, nw = inp.value.trim(); if (!nw) return; p.plan.scenes.forEach(function (sc) { if (sc.location === old) sc.location = nw; }); l.name = nw; mark(); }; });
@@ -568,13 +569,87 @@
       }
     }
     async function busyBtn(btn, label, fn) { var keep = btn.textContent; btn.disabled = true; btn.textContent = label; try { await fn(); } catch (x) { X.toast(x.message); } btn.disabled = false; btn.textContent = keep; }
+    // ── add / delete / move / duplicate scenes (pictures, clips, voices… move with their scene) ──
+    var SCENE_MAPS = ['clips', 'vo', 'lines', 'sfx', 'lipsync', 'checks'];
+    function blankScene(near) {
+      var nb = p.plan.scenes[near] || p.plan.scenes[near - 1] || {};
+      return { n: 0, title: 'New scene', seconds: 4, heading: nb.heading || '', location: nb.location || '', beat: nb.beat || '', cast: [], lines: [], vo: '', visual: '', shot: 'medium', camera: 'static', onScreen: '', sfx: '', transition: 'cut', imagePrompt: '', videoPrompt: '', model: 'Kling', clipSeconds: 5, lipSync: false, character: false, product: false, purpose: '' };
+    }
+    function reorder(order, at) {
+      var old = p.plan.scenes, fr = p.frames, mk = p.make, out = [], frames = {}, maps = {}, sigs = mk.approved && mk.approved.sigs, ns = {}, renum = {};
+      SCENE_MAPS.forEach(function (k) { maps[k] = {}; });
+      order.forEach(function (o, j) {
+        var sc;
+        if (o === null) sc = blankScene(at);
+        else if (typeof o === 'object') { sc = JSON.parse(JSON.stringify(old[o.copyOf])); sc.script = []; if (fr[String(o.copyOf)]) frames[String(j)] = fr[String(o.copyOf)]; }
+        else {
+          sc = old[o]; renum[o + 1] = j + 1; if (fr[String(o)]) frames[String(j)] = fr[String(o)];
+          SCENE_MAPS.forEach(function (k) { if (mk[k] && mk[k][o] != null) maps[k][j] = mk[k][o]; });
+          if (sigs && sigs[o]) ns[j] = sigs[o];
+        }
+        sc.n = j + 1; out.push(sc);
+      });
+      p.plan.scenes = out; p.frames = frames;
+      SCENE_MAPS.forEach(function (k) { if (mk[k]) mk[k] = maps[k]; });
+      if (sigs) mk.approved.sigs = ns;
+      if (p.plan.storyCheck && p.plan.storyCheck.issues) p.plan.storyCheck.issues = p.plan.storyCheck.issues.filter(function (x) { return !x.n || renum[x.n]; }).map(function (x) { return Object.assign({}, x, { n: x.n ? renum[x.n] : 0 }); });
+      mark(); paintLen(); loadImgs(); paintPane();
+    }
+    function idx() { return p.plan.scenes.map(function (_, i) { return i; }); }
+    function sceneOp(op, i) {
+      var o = idx();
+      if (op === 'up' && i > 0) { o.splice(i - 1, 2, i, i - 1); reorder(o); }
+      else if (op === 'down' && i < o.length - 1) { o.splice(i, 2, i + 1, i); reorder(o); }
+      else if (op === 'dup') { o.splice(i + 1, 0, { copyOf: i }); reorder(o); X.toast('Scene ' + (i + 1) + ' copied ✅'); }
+      else if (op === 'del') {
+        if (p.plan.scenes.length <= 1) return X.toast('A video needs at least one scene');
+        if (!confirm('Delete scene ' + (i + 1) + ' (“' + p.plan.scenes[i].title + '”)? Its picture, clip and voices go too.')) return;
+        o.splice(i, 1); reorder(o);
+      }
+      else if (op === 'add') addSheet(i + 1);
+    }
+    function addSheet(at) {
+      var sh = X.sheet('<h2>＋ Add a scene' + (at < p.plan.scenes.length ? ' before scene ' + (at + 1) : ' at the end') + '</h2>' +
+        '<label for="adWhat">What happens in this scene?</label><textarea id="adWhat" rows="4" placeholder="e.g. The husband sneaks a taste from the pot and gets caught"></textarea>' +
+        '<p class="muted" style="font-size:13px;margin:6px 0 0">✨ AI writes it to fit the scenes around it — same characters, voices and place — and adds its picture prompt. Or add a blank scene and fill it in yourself.</p>' +
+        '<div class="err hidden" id="adErr"></div><div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="adX">Cancel</button><button class="btn ghost" id="adBlank">Blank scene</button><button class="btn primary" id="adAi">✨ AI writes it</button></div>');
+      $('#adX', sh).onclick = function () { sh.remove(); };
+      $('#adBlank', sh).onclick = function () { var o = idx(); o.splice(at, 0, null); var t = $('#adWhat', sh).value.trim(); sh.remove(); reorder(o, at); if (t) { p.plan.scenes[at].visual = t; mark(); paintPane(); } X.toast('Scene ' + (at + 1) + ' added — fill it in'); };
+      $('#adAi', sh).onclick = async function () {
+        var t = $('#adWhat', sh).value.trim(), err = $('#adErr', sh); if (!t) { err.textContent = 'Say what happens first.'; err.classList.remove('hidden'); return; }
+        var btn = this; btn.disabled = true; btn.textContent = '✨ Writing…';
+        var o = idx(); o.splice(at, 0, null); reorder(o, at); p.plan.scenes[at].visual = t; p.plan.scenes[at].title = t.split(/\s+/).slice(0, 4).join(' ');
+        try {
+          var how = (D ? '' : 'This is a short video ADVERT (a Narrator voiceover and on-screen text are fine). ') + 'This is a NEW scene the team is adding. Write it so it fits naturally between the scene before and after it (same characters, personalities, place and story). What happens: ' + t;
+          mergeInto(p.plan, (await X.api('md-fix', { brief: p.brief, plan: p.plan, nums: [at + 1], how: how })).scenes);
+          await refreshPrompts([at + 1]); mark(); sh.remove(); paintLen(); paintPane(); X.toast('Scene ' + (at + 1) + ' written ✅ — make its picture in 🖼️ Storyboard');
+        } catch (x) { err.textContent = x.message + ' — a blank scene was added instead; you can fill it in.'; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = '✨ AI writes it'; paintPane(); }
+      };
+      setTimeout(function () { $('#adWhat', sh).focus(); }, 50);
+    }
+    function addSceneTools(pane) {
+      var cards = tab === 'board' ? $$('.vboard > .vbcard', pane) : $$(':scope > .card.vscene', pane);
+      if (cards.length !== p.plan.scenes.length) return;
+      cards.forEach(function (card, i) {
+        var bar = document.createElement('div'); bar.className = 'sctools';
+        bar.innerHTML = '<button class="btn link" data-sop="up" data-si="' + i + '" title="Move earlier"' + (i ? '' : ' disabled') + '>↑</button><button class="btn link" data-sop="down" data-si="' + i + '" title="Move later"' + (i < cards.length - 1 ? '' : ' disabled') + '>↓</button><button class="btn link" data-sop="dup" data-si="' + i + '" title="Duplicate">⧉</button><button class="btn link" data-sop="add" data-si="' + i + '" title="Add a scene after this one">＋</button><button class="btn link" data-sop="del" data-si="' + i + '" title="Delete" style="color:var(--danger)">🗑</button>';
+        card.insertBefore(bar, card.firstChild);
+      });
+      var last = cards[cards.length - 1], add = document.createElement(tab === 'board' ? 'div' : 'button');
+      if (tab === 'board') { add.className = 'card vbcard vbadd'; add.innerHTML = '<button class="btn ghost" data-sop="add" data-si="' + (cards.length - 1) + '">＋ Add scene</button>'; }
+      else { add.className = 'btn ghost'; add.style.cssText = 'width:100%;margin-top:10px'; add.dataset.sop = 'add'; add.dataset.si = String(cards.length - 1); add.textContent = '＋ Add scene at the end'; }
+      last.parentNode.insertBefore(add, last.nextSibling);
+      if (tab !== 'board') { var top = document.createElement('button'); top.className = 'btn link'; top.style.cssText = 'margin:0 0 6px'; top.dataset.sop = 'add'; top.dataset.si = '-1'; top.textContent = '＋ Add a scene at the start'; cards[0].parentNode.insertBefore(top, cards[0]); }
+      $$('[data-sop]', pane).forEach(function (b) { b.onclick = function () { sceneOp(b.dataset.sop, +b.dataset.si); }; });
+    }
     async function setPic(i, dataUrl) {
       var r = await X.api('app-img', { image: dataUrl });
       p.frames[String(i)] = r.imgId; imgs[r.imgId] = null; mark(); if (tab === 'board') paintPane(); loadImgs();
     }
     async function makePic(i, btn) {
-      var s = p.plan.scenes[i]; if (!s || !s.imagePrompt) { X.toast('This scene has no start-frame prompt yet'); return; }
+      var s = p.plan.scenes[i]; if (!s) return;
       if (btn) { btn.disabled = true; btn.textContent = '🎨 Creating…'; }
+      if (!s.imagePrompt) { if (!s.visual) { X.toast('Describe what we see in this scene first'); if (btn) { btn.disabled = false; btn.textContent = '🎨 Create'; } return; } try { await refreshPrompts([i + 1]); } catch (x) { X.toast(x.message); if (btn) { btn.disabled = false; btn.textContent = '🎨 Create'; } return; } }
       try { var rf = await HQVmake.sceneRefs(p, s, X.api); var r = await X.api('app-picture', { kind: 'frame', prompt: s.imagePrompt + ' ' + rf.words + (p.plan.lookbook.style ? ' Style: ' + p.plan.lookbook.style + '.' : ''), aspect: aspect(p), refImgIds: rf.ids, refLabels: rf.labels }); await setPic(i, await shrink(r.image)); }
       catch (x) { if (btn) { X.toast(x.message); btn.disabled = false; btn.textContent = '🎨 Create'; } else throw x; }
     }

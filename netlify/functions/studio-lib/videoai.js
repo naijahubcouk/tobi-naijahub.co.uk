@@ -36,12 +36,22 @@ async function settings() {
 }
 function monthKey() { return `hq/videoai-spend/${core.monthKey()}`; }
 async function spent() { const s = (await getJson(monthKey())) || {}; return Math.round((Number(s.gbp) || 0) * 100) / 100; }
+// ⭐ ElevenLabs voice IDs saved for the whole HQ (reused across films)
+const VOICES_KEY = 'hq/videoai-voices';
+async function savedVoices() { const v = (await getJson(VOICES_KEY)) || {}; return Array.isArray(v.items) ? v.items : []; }
+async function saveVoice(id, label) {
+  if (!/^[A-Za-z0-9]{16,40}$/.test(String(id || ''))) throw new HttpError(400, 'bad_voice', 'That doesn’t look like a voice ID.');
+  const lb = String(label || '').replace(/[^\w\s'’\-]/g, '').trim().slice(0, 40);
+  await cas(VOICES_KEY, cur => { const items = (cur && Array.isArray(cur.items) ? cur.items : []).filter(x => x.id !== id); items.unshift({ id, label: lb || 'My voice' }); return { items: items.slice(0, 30) }; });
+  return savedVoices();
+}
+async function deleteVoice(id) { await cas(VOICES_KEY, cur => ({ items: (cur && Array.isArray(cur.items) ? cur.items : []).filter(x => x.id !== id) })); return savedVoices(); }
 async function publicSettings(isAdmin) {
   const s = await settings();
   return {
     ready: !!s.falKey, keyHint: s.falKey ? '••••' + s.falKey.slice(-4) : '', capGbp: s.capGbp, spentGbp: await spent(), models: s.models, voice: s.voice, voices: VOICES,
     tiers: Object.keys(TIERS).map(k => ({ id: k, label: TIERS[k].label, gbpPerSec: Math.round(TIERS[k].usdPerSec * USD_GBP * 1000) / 1000 })), isAdmin: !!isAdmin,
-    extraModels: Object.keys(EXTRA), claude: { ready: !!s.anthropicKey, keyHint: s.anthropicKey ? '••••' + s.anthropicKey.slice(-4) : '', model: s.claudeModel, on: s.writer === 'claude' && !!s.anthropicKey }, dramaModel: s.dramaModel, lipsyncGbpPer5s: Math.round(LIPSYNC_USD_PER_5S * USD_GBP * 100) / 100, sfxGbp: Math.round(SFX_USD * USD_GBP * 100) / 100,
+    extraModels: Object.keys(EXTRA), claude: { ready: !!s.anthropicKey, keyHint: s.anthropicKey ? '••••' + s.anthropicKey.slice(-4) : '', model: s.claudeModel, on: s.writer === 'claude' && !!s.anthropicKey }, dramaModel: s.dramaModel, savedVoices: await savedVoices(), lipsyncGbpPer5s: Math.round(LIPSYNC_USD_PER_5S * USD_GBP * 100) / 100, sfxGbp: Math.round(SFX_USD * USD_GBP * 100) / 100,
   };
 }
 async function saveSettings(raw) {
@@ -220,4 +230,4 @@ async function saveFinalPart(fid, idx, b64) {
 async function getFinalPart(fid, idx) { return /^f[a-z0-9]{8,30}$/.test(String(fid)) && /^\d{1,2}$/.test(String(idx)) ? getJson(`hq/vfinal/${fid}/${idx}`) : null; }
 async function deleteFinal(fid, parts) { if (!/^f[a-z0-9]{8,30}$/.test(String(fid))) return; for (let i = 0; i < Math.min(80, Number(parts) || 0); i++) await core.del(`hq/vfinal/${fid}/${i}`).catch(() => {}); }
 
-module.exports = { settings, DRAMA_MODEL, claudeConfig, addCost, submitLipsync, submitSfx, saveFinalPart, getFinalPart, deleteFinal, saveAudio, getAudio, publicSettings, saveSettings, submitClip, submitMusic, status, tts, spent, TIERS, VOICES, clipLength };
+module.exports = { savedVoices, saveVoice, deleteVoice, settings, DRAMA_MODEL, claudeConfig, addCost, submitLipsync, submitSfx, saveFinalPart, getFinalPart, deleteFinal, saveAudio, getAudio, publicSettings, saveSettings, submitClip, submitMusic, status, tts, spent, TIERS, VOICES, clipLength };

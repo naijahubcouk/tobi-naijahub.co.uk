@@ -84,6 +84,37 @@
     return { ids: ids.slice(0, 4), labels: labels.slice(0, 4), words: words.join(' ') };
   }
 
+  // ⭐ paste an ElevenLabs voice ID for one character (or the narrator), test it with their own line, save it for HQ
+  function voiceIdSheet(X, p, who, onDone) {
+    p.make = p.make || {}; var m = p.make; m.castVoices = m.castVoices || {}; m.customVoices = m.customVoices || [];
+    var line = ''; (p.plan.scenes || []).some(function (sc) { return (sc.lines || []).some(function (l) { if (l.who === who && l.text) { line = l.text; return true; } return false; }); });
+    var text = (line || ('Hello, I am ' + who + '. This is how I sound.')).slice(0, 200), ok = '';
+    var sh = X.sheet('<h2>⭐ ElevenLabs voice for ' + X.esc(who) + '</h2><p class="muted" style="font-size:13.5px;margin:4px 0 10px">On elevenlabs.io → Voices → Voice Library, find a voice → <b>Copy voice ID</b> → paste it here and tap Test. You’ll hear ' + X.esc(who) + ' say: “' + X.esc(text) + '”</p>' +
+      ((ST && ST.savedVoices || []).length ? '<div class="lbl">Your saved voices</div><div class="chipbar" id="viSaved">' + ST.savedVoices.map(function (v) { return '<button class="chip" data-vid="' + v.id + '">⭐ ' + X.esc(v.label) + '</button>'; }).join('') + '</div>' : '') +
+      '<label for="viId" style="margin-top:8px">Voice ID</label><div class="row" style="gap:8px"><input id="viId" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" style="flex:1"><button class="btn ghost" id="viTest">▶ Test</button></div>' +
+      '<div class="muted" id="viMsg" style="font-size:13px;margin-top:6px"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="viX">Cancel</button><button class="btn primary" id="viUse" disabled>✅ Use for ' + X.esc(who) + '</button></div>');
+    var msg = $('#viMsg', sh);
+    $('#viX', sh).onclick = function () { sh.remove(); };
+    $$('[data-vid]', sh).forEach(function (b) { b.onclick = function () { $('#viId', sh).value = b.dataset.vid; $('#viTest', sh).click(); }; });
+    $('#viId', sh).oninput = function () { ok = ''; $('#viUse', sh).disabled = true; };
+    $('#viTest', sh).onclick = async function () {
+      var id = $('#viId', sh).value.trim(), btn = this;
+      if (!/^[A-Za-z0-9]{16,40}$/.test(id)) { msg.textContent = 'That doesn’t look like a voice ID — it’s about 20 letters and numbers.'; return; }
+      btn.disabled = true; msg.textContent = '⏳ Testing…';
+      try { var r = await X.api('vm-tts', { text: text, voice: id }); new Audio(r.url).play().catch(function () {}); ok = id; msg.textContent = '✅ It works — tap “Use for ' + who + '” to keep it.'; $('#viUse', sh).disabled = false; }
+      catch (x) { msg.textContent = '⚠️ ' + x.message + ' — this voice may not be available through fal.ai. Try another one.'; }
+      btn.disabled = false;
+    };
+    $('#viUse', sh).onclick = async function () {
+      if (!ok) return;
+      if (/^narrator$/i.test(who)) m.voice = ok; else m.castVoices[who] = ok;
+      if (m.customVoices.indexOf(ok) < 0) m.customVoices.unshift(ok);
+      try { var r = await X.api('vm-voice-save', { id: ok, label: who }); if (ST) ST.savedVoices = r.voices; } catch (x) { /* still used for this film */ }
+      sh.remove(); X.toast('⭐ ' + who + ' now uses that voice — tap “Make voices” to redo their lines'); if (onDone) onDone();
+    };
+  }
+
   async function loadSettings(api, force) { if (!ST || force) ST = (await api('vm-settings')).settings; return ST; }
 
   // ════════ ⚙️ settings ════════
@@ -213,7 +244,9 @@
     }
     function tick(ok, pending) { return ok ? '✅' : pending ? '⏳' : '◻️'; }
     function voiceOptions(sel) {
-      return m.customVoices.map(function (v) { return '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>⭐ My ElevenLabs voice (' + v.slice(0, 6) + '…)</option>'; }).join('') +
+      var saved = (ST.savedVoices || []), ids = saved.map(function (v) { return v.id; });
+      return saved.map(function (v) { return '<option value="' + v.id + '"' + (v.id === sel ? ' selected' : '') + '>⭐ ' + X.esc(v.label) + ' (' + v.id.slice(0, 6) + '…)</option>'; }).join('') +
+        m.customVoices.filter(function (v) { return ids.indexOf(v) < 0; }).map(function (v) { return '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>⭐ My ElevenLabs voice (' + v.slice(0, 6) + '…)</option>'; }).join('') +
         ST.voices.map(function (v) { return '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + v + (VOICE_INFO[v] ? ' — ' + VOICE_INFO[v] : '') + '</option>'; }).join('');
     }
     function checkHtml(i) {
@@ -304,7 +337,7 @@
       } else {
         html += '<div class="card vmstep"><div class="row" style="justify-content:space-between"><b>' + tick(st.vo === st.voNeed) + ' ' + n + ' · Voices (' + st.vo + '/' + st.voNeed + ' scenes)</b><button class="btn ghost sm" id="vmVo">🎙️ Make voices</button></div>' +
           (sp.filter(function (w) { return w !== 'Narrator'; }).length ? '<div class="lbl">Who sounds like who</div>' + sp.filter(function (w) { return w !== 'Narrator'; }).map(function (w) {
-            return '<div class="row" style="gap:8px;align-items:center;margin-top:4px"><b style="min-width:80px">' + esc(w) + '</b><select data-cv="' + esc(w) + '" style="flex:1">' + voiceOptions(m.castVoices[w] || m.voice) + '</select><button class="btn ghost sm" data-cvp="' + esc(w) + '">▶</button></div>';
+            return '<div class="row" style="gap:8px;align-items:center;margin-top:4px"><b style="min-width:80px">' + esc(w) + '</b><select data-cv="' + esc(w) + '" style="flex:1">' + voiceOptions(m.castVoices[w] || m.voice) + '</select><button class="btn ghost sm" data-cvid="' + esc(w) + '" title="Use an ElevenLabs voice ID">⭐ Voice ID</button><button class="btn ghost sm" data-cvp="' + esc(w) + '">▶</button></div>';
           }).join('') + '<p class="muted" style="font-size:12.5px;margin:4px 0 6px">The narrator uses the voice chosen above. Change a voice and tap “Make voices” to redo only those lines.</p>' : '') +
           scenes().map(function (sc, i) {
             var ls = sceneLines(sc); if (!ls.length) return '';
@@ -364,6 +397,7 @@
       if ($('#vmVoice', root)) $('#vmVoice', root).onchange = function () { m.voice = this.value; X.mark(); paint(); };
       on('#vmPrev', function () { preview(this, $('#vmVoice', root).value); });
       $$('[data-cv]', root).forEach(function (sel) { sel.onchange = function () { m.castVoices[sel.dataset.cv] = sel.value; X.mark(); paint(); }; });
+      $$('[data-cvid]', root).forEach(function (b) { b.onclick = function () { voiceIdSheet(X, p, b.dataset.cvid, function () { X.mark(); paint(); }); }; });
       $$('[data-cvp]', root).forEach(function (b) { b.onclick = function () { preview(b, m.castVoices[b.dataset.cvp] || m.voice); }; });
       $$('[data-play]', root).forEach(function (b) { b.onclick = function () { new Audio(b.dataset.play).play().catch(function () {}); }; });
       on('#vmVidTest', async function () {
@@ -860,5 +894,7 @@
     return { blob: new Blob([muxer.target.buffer], { type: 'video/mp4' }), ext: 'mp4', ok: vpick.mux === 'avc' && (!audio || (apick && apick.mux === 'aac')) };
   }
 
-  window.HQVmake = { html: html, wire: wire, settingsSheet: settingsSheet, composeVideo: composeVideo, sceneRefs: sceneRefs, ensureLocations: ensureLocations, locPrompt: locPrompt, castPrompt: castPrompt };
+  window.HQVmake = { voiceIdSheet: function (X, p, who, done) { loadSettings(X.api).then(function () { voiceIdSheet(X, p, who, done); }, function (x) { X.toast(x.message); }); },
+    voiceLabel: function (p, who) { var v = p.make && p.make.castVoices && p.make.castVoices[who]; if (!v) return ''; var s = ST && (ST.savedVoices || []).filter(function (x) { return x.id === v; })[0]; return s ? '⭐ ' + s.label : /^[A-Za-z0-9]{16,40}$/.test(v) ? '⭐ ElevenLabs voice' : v; },
+    html: html, wire: wire, settingsSheet: settingsSheet, composeVideo: composeVideo, sceneRefs: sceneRefs, ensureLocations: ensureLocations, locPrompt: locPrompt, castPrompt: castPrompt };
 })();
