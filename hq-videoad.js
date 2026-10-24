@@ -129,9 +129,12 @@
       '<div class="lbl">🏷️ Logo <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional — shown in the corner and on the end card)</span></div><div class="row" style="gap:8px;align-items:center"><span id="vbLogoBox"></span><label class="btn ghost sm" style="margin:0">＋ Add logo<input type="file" accept="image/*" id="vbLogo" hidden></label></div>' +
       '<div class="lbl">🎞️ Reference video <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional — AI learns its ' + (D ? 'storytelling, pacing, character interaction, camera angles and editing' : 'style') + ', never copies it)</span></div><label class="btn ghost sm" style="margin:0">＋ Upload a video you like<input type="file" accept="video/*" id="vbRef" hidden></label><div id="vbRefMsg" class="muted" style="font-size:13px;margin-top:4px"></div><textarea id="vbRefStyle" rows="4" class="' + (b.refStyle ? '' : 'hidden') + '" style="margin-top:6px">' + esc(b.refStyle || '') + '</textarea>' +
       '<label for="vbNotes">Anything else? <span class="muted" style="font-weight:400">(ideas, must-say lines, things to avoid)</span></label><textarea id="vbNotes" rows="3">' + esc(b.notes || '') + '</textarea>' +
+      '<div id="vbScriptBox" class="card' + (b.script ? '' : ' hidden') + '" style="margin-top:12px"><b>📋 Your own script</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Paste a finished script or story from ChatGPT, a writer or your notes — any format (screenplay, “Name: line” dialogue, a scene list or paragraphs). AI keeps your story and words and turns it into ' + (D ? 'characters, scenes, a storyboard and the film' : 'scenes, a storyboard and the video') + '. The business details above are still used.</p>' +
+        '<textarea id="vbScript" rows="12" placeholder="' + (D ? 'MUMMY’S SECRET POT\n\nINT. KITCHEN – NIGHT\nTolu tastes the jollof and freezes.\nTOLU: Wait. WAIT. Who made this?\n…' : 'Hook: Still no wedding cake?\nVO: Planning your wedding and still no cake?\nOn screen: Still no cake? 😩\n…') + '">' + esc(b.script || '') + '</textarea><div class="muted" id="vbScriptN" style="font-size:12.5px;margin-top:4px"></div>' +
+        '<button class="btn primary" id="vbFromScript" style="width:100%;margin-top:8px">🎬 Turn my script into ' + (D ? 'a film' : 'a video ad') + '</button></div>' +
       '<div id="vbIdeas"></div>' +
       '<div class="err hidden" id="vbErr"></div><div id="vbProg" class="hidden" style="margin-top:10px"></div>' +
-      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="vbX">Cancel</button><button class="btn ghost' + (D ? ' hidden' : '') + '" id="vbSkip">Skip ideas — plan now</button><button class="btn primary" id="vbGo">💡 Get 3 story ' + (D ? 'pitches' : 'ideas') + '</button></div>');
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="vbX">Cancel</button><button class="btn ghost" id="vbScriptBtn">📋 Use my own script</button><button class="btn ghost' + (D ? ' hidden' : '') + '" id="vbSkip">Skip ideas — plan now</button><button class="btn primary" id="vbGo">💡 Get 3 story ' + (D ? 'pitches' : 'ideas') + '</button></div>');
     ['vbFor', 'vbLen', 'vbTone', 'vbSize', 'vbGenre'].forEach(function (id) { if ($('#' + id, s)) chipWire(s, id); });
     var products = (b.products || []).slice(), logo = b.logo || '';
     function paintAssets() {
@@ -181,8 +184,12 @@
       }, 300);
     };
     $('#vbX', s).onclick = function () { s.remove(); };
+    function countScript() { var t = $('#vbScript', s).value.trim(), w = t ? t.split(/\s+/).length : 0; $('#vbScriptN', s).textContent = w ? w + ' words · ' + t.length + ' / 12000 characters' : ''; }
+    $('#vbScript', s).oninput = countScript; countScript();
+    $('#vbScriptBtn', s).onclick = function () { var bx = $('#vbScriptBox', s); bx.classList.remove('hidden'); bx.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(function () { $('#vbScript', s).focus(); }, 300); };
     $('#vbGo', s).onclick = async function () {
       var btn = this, err = $('#vbErr', s); err.classList.add('hidden');
+      var fromScript = btn.id === 'vbFromScript';
       var brief = {
         forWho: chipVal(s, 'vbFor'), bizSlug: slug, business: $('#vbName', s).value.trim(), location: $('#vbLoc', s).value.trim(), about: $('#vbAbout', s).value.trim(),
         offer: $('#vbOffer', s).value.trim(), audience: $('#vbAud', s).value.trim(), contact: $('#vbContact', s).value.trim(), link: $('#vbLink', s).value.trim(),
@@ -190,15 +197,17 @@
         size: D ? '9:16' : chipVal(s, 'vbSize'), mode: D ? 'drama' : 'ad', genre: D ? chipVal(s, 'vbGenre') : '', humour: D ? +$('#vbHum', s).value : 60, brandPush: D ? +$('#vbBrand', s).value : 25, castNotes: $('#vbCast', s).value.trim(), products: products, productNote: $('#vbProdNote', s).value.trim(), logo: logo, refStyle: $('#vbRefStyle', s).value.trim(),
       };
       if (brief.link && !/^https?:\/\//i.test(brief.link)) brief.link = 'https://' + brief.link;
+      brief.script = fromScript ? $('#vbScript', s).value.trim().slice(0, 12000) : '';
+      if (fromScript && brief.script.length < 40) { err.textContent = 'Paste your script first (a few lines at least).'; err.classList.remove('hidden'); return; }
       if (brief.forWho === 'business' && !brief.business && brief.about.length < 10) { err.textContent = 'Pick a business or describe it first.'; err.classList.remove('hidden'); return; }
       var skip = btn.id === 'vbSkip';
       async function plan(withConcept) {
-        $$('#vbGo,#vbSkip,[data-concept]', s).forEach(function (x) { x.disabled = true; });
+        $$('#vbGo,#vbSkip,#vbFromScript,[data-concept]', s).forEach(function (x) { x.disabled = true; });
         brief.concept = withConcept || null;
         try { var proj = D ? await runDrama(brief, '', $('#vbProg', s), $('#vbRead', s).checked) : await runPlan(brief, '', $('#vbProg', s), $('#vbRead', s).checked); s.remove(); editor(proj, true); }
-        catch (x) { err.textContent = x.message; err.classList.remove('hidden'); $$('#vbGo,#vbSkip,[data-concept]', s).forEach(function (y) { y.disabled = false; }); $('#vbProg', s).classList.add('hidden'); }
+        catch (x) { err.textContent = x.message; err.classList.remove('hidden'); $$('#vbGo,#vbSkip,#vbFromScript,[data-concept]', s).forEach(function (y) { y.disabled = false; }); $('#vbProg', s).classList.add('hidden'); }
       }
-      if (skip) return plan(null);
+      if (skip || fromScript) return plan(null);
       btn.disabled = true; btn.textContent = D ? '✍️ Writing 3 story pitches…' : '💡 Thinking of ideas…';
       try {
         var r = await X.api(D ? 'md-concepts' : 'va-concepts', { brief: brief });
@@ -213,6 +222,7 @@
       } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = D ? '💡 Get 3 story pitches' : '💡 Get 3 story ideas'; }
     };
     $('#vbSkip', s).onclick = $('#vbGo', s).onclick;
+    $('#vbFromScript', s).onclick = $('#vbGo', s).onclick;
   }
   // runs the 3 AI steps with a progress list; returns an unsaved project
   async function runPlan(brief, extra, progEl, readLink, keep) {
@@ -236,19 +246,21 @@
 
   // 🎭 mini-drama: outline → screenplay (3 scenes at a time) → story check (+ fixes) → prompts → caption & music
   async function runDrama(brief, extra, progEl, readLink, keep) {
-    var steps = ['📖 Outlining the story and characters…', '📝 Writing the screenplay…', '🔍 Checking the story…', '🖼️ Writing picture and motion prompts…', '📣 Music and caption…'];
+    var imp = !!(brief.script && brief.script.trim());
+    var steps = imp ? ['📖 Reading your script and characters…', '🎬 Breaking it into scenes (your words kept)…', '🔍 Checking timing and story (suggestions only)…', '🖼️ Writing picture and motion prompts…', '📣 Music and caption…']
+      : ['📖 Outlining the story and characters…', '📝 Writing the screenplay…', '🔍 Checking the story…', '🖼️ Writing picture and motion prompts…', '📣 Music and caption…'];
     function show(k, note) { progEl.classList.remove('hidden'); progEl.innerHTML = steps.map(function (t, i) { return '<div style="font-size:14px;margin:3px 0;' + (i > k ? 'opacity:.45' : '') + '">' + (i < k ? '✅ ' : i === k ? '⏳ ' : '◻️ ') + esc(t) + (i === k && note ? ' <span class="muted">' + esc(note) + '</span>' : '') + '</div>'; }).join(''); }
     var b0 = Object.assign({}, brief); if (extra) b0.notes = (b0.notes ? b0.notes + '\n' : '') + 'DIRECTION FOR THIS VERSION: ' + extra;
     show(0);
-    var r1 = await X.api('md-outline', { brief: b0 }), plan = r1.plan, b = r1.brief, n = plan.scenes.length;
+    var r1 = await X.api(imp ? 'md-import' : 'md-outline', { brief: b0 }), plan = r1.plan, b = r1.brief, n = plan.scenes.length;
     for (var from = 0; from < n; from += 3) {
       show(1, 'scenes ' + (from + 1) + '–' + Math.min(n, from + 3) + ' of ' + n);
-      var r2 = await X.api('md-scenes', { brief: b, plan: plan, from: from, to: from + 3 });
+      var r2 = await X.api(imp ? 'md-import-scenes' : 'md-scenes', { brief: b, plan: plan, from: from, to: from + 3 });
       mergeInto(plan, r2.scenes);
     }
     show(2); plan.storyCheck = (await X.api('md-check', { brief: b, plan: plan })).storyCheck;
     var flagged = uniq((plan.storyCheck.issues || []).map(function (x) { return x.n; }).filter(function (v) { return v > 0; }));
-    if (flagged.length) {
+    if (flagged.length && !imp) {
       for (var k = 0; k < flagged.length && k < 6; k += 3) { show(2, 'fixing scenes ' + flagged.slice(k, k + 3).join(', ')); mergeInto(plan, (await X.api('md-fix', { brief: b, plan: plan, nums: flagged.slice(k, k + 3) })).scenes); }
       show(2, 'checking again'); plan.storyCheck = (await X.api('md-check', { brief: b, plan: plan })).storyCheck;
     }
@@ -348,7 +360,11 @@
       story: function () {
         var cc = p.plan.concept || {}, chk = p.plan.storyCheck, cast = p.plan.cast || [], ci = p.make.castImgs;
         var issues = chk ? chk.issues || [] : [];
-        return '<div class="card"><b>🎬 ' + esc(cc.title || p.plan.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0">' + esc(cc.logline || '') + '</p>' +
+        var tot = totalSecs(p), len = p.brief.length, fromS = !!p.brief.script;
+        return (fromS ? '<div class="card" style="margin-bottom:10px"><b>📋 Made from your script</b> <span class="muted" style="font-size:13px">— your story and dialogue were kept; the story check below only suggests changes.</span>' +
+            (tot > len * 1.15 ? '<div class="note" style="margin-top:8px">⏱️ Your script runs about <b>' + tot + 's</b> but you chose <b>' + len + 's</b>.<div class="apact" style="margin-top:6px"><button class="btn ghost sm" id="mdKeepLong">Keep it ' + tot + 's long</button><button class="btn primary sm" id="mdTrim">✨ Trim it to ' + len + 's</button></div></div>' : '') +
+            '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13.5px;font-weight:700">📄 Your original script</summary><pre style="white-space:pre-wrap;font-family:inherit;font-size:13.5px;margin:6px 0 0;max-height:320px;overflow:auto">' + esc(p.brief.script) + '</pre></details></div>' : '') +
+          '<div class="card"><b>🎬 ' + esc(cc.title || p.plan.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0">' + esc(cc.logline || '') + '</p>' +
             ((cc.beats || []).length ? '<ol class="vlist" style="font-size:13.5px">' + cc.beats.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '') +
             (cc.productMoment ? '<div class="muted" style="font-size:13px">📦 ' + esc(cc.productMoment) + '</div>' : '') + '</div>' +
           '<div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>🔍 Story check' + (chk && chk.score ? ' — ' + chk.score + '/10' : '') + '</b><span class="apact">' + (issues.some(function (x) { return x.n > 0; }) ? '<button class="btn primary sm" id="mdFix">✨ Fix flagged scenes</button>' : '') + '<button class="btn ghost sm" id="mdCheck">🔍 Check again</button></span></div>' +
@@ -488,6 +504,15 @@
           busyBtn(b, '✨ Rewriting…', async function () { mergeInto(p.plan, (await X.api('md-fix', { brief: p.brief, plan: p.plan, nums: [i + 1], how: how })).scenes); await refreshPrompts([i + 1]); mark(); paintPane(); X.toast('Scene ' + (i + 1) + ' rewritten ✅ — make a new storyboard picture for it'); });
         };
       });
+      var mkl = q('#mdKeepLong'); if (mkl) mkl.onclick = function () { var t = totalSecs(p), opts2 = [30, 45, 60, 90, 120].filter(function (x) { return x >= t; }); p.brief.length = opts2.length ? opts2[0] : 120; mark(); paintLen(); paintPane(); };
+      var mtr = q('#mdTrim'); if (mtr) mtr.onclick = function () {
+        if (!confirm('Trim the dialogue so the film fits ' + p.brief.length + ' seconds? Your story is kept; some lines get shorter or cut. You can edit it afterwards.')) return;
+        busyBtn(mtr, '✨ Trimming…', async function () {
+          var nums = p.plan.scenes.map(function (x) { return x.n; }), how = 'Trim this so the WHOLE film (now ' + totalSecs(p) + 's) fits about ' + p.brief.length + ' seconds: keep the story and the writer’s wording, shorten or drop the least important lines and lower the scene seconds proportionally (min 3s each).';
+          for (var k = 0; k < nums.length; k += 3) mergeInto(p.plan, (await X.api('md-fix', { brief: p.brief, plan: p.plan, nums: nums.slice(k, k + 3), how: how })).scenes);
+          mark(); paintLen(); paintPane(); X.toast('Trimmed to about ' + totalSecs(p) + 's ✅');
+        });
+      };
       var mcp = q('#mdCopy'); if (mcp) mcp.onclick = function () { copy(screenplayText()); };
       $$('[data-incast]', pane).forEach(function (cb) { cb.onchange = function () { var sc = p.plan.scenes[+cb.dataset.incast]; sc.cast = $$('[data-incast="' + cb.dataset.incast + '"]', pane).filter(function (x) { return x.checked; }).map(function (x) { return x.value; }); sc.character = sc.cast.length > 0; mark(); }; });
       $$('[data-flag]', pane).forEach(function (cb) { cb.onchange = function () { var a = cb.dataset.flag.split('.'); p.plan.scenes[+a[0]][a[1]] = cb.checked; mark(); }; });

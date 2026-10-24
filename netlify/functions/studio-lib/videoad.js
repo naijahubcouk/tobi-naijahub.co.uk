@@ -57,6 +57,7 @@ function cleanBrief(b) {
     logo: /^e[a-z0-9]{6,30}$/.test(String(b.logo || '')) ? b.logo : '',
     castNotes: str(b.castNotes, 300),
     refStyle: str(b.refStyle, 2500),
+    script: multi(b.script, 12000),
     concept: b.concept && typeof b.concept === 'object' ? { title: str(b.concept.title, 120), genre: str(b.concept.genre, 80), logline: str(b.concept.logline, 400), beats: arr(b.concept.beats, 8, 200), characters: str(b.concept.characters, 300), productMoment: str(b.concept.productMoment, 300) } : null,
   };
 }
@@ -256,7 +257,7 @@ async function checkClip(frame, refIds, scene) {
 async function planStep1(brief, extra) {
   const b = cleanBrief(brief);
   if (b.forWho === 'business' && !b.business && !b.about) throw new HttpError(400, 'too_short', 'Pick a business or describe it first.');
-  const scenesN = b.length === 15 ? '4–5' : b.length === 30 ? '6–8' : '9–11';
+  const scenesN = b.script ? 'as many as the script needs (max 14)' : b.length === 15 ? '4–5' : b.length === 30 ? '6–8' : '9–11';
   const j = await ask(`${ROLE}
 ${DZINE}
 Plan the advert. Hook in the first 1–2 seconds. One idea per scene. Show, don't tell. End with a clear CTA matching the goal. Use ${scenesN} scenes whose seconds add up to about ${b.length}. Spoken words must fit each scene (about 2.5 words per second; some scenes can have none). On-screen text max 6 words.
@@ -270,7 +271,7 @@ Return ONLY JSON:
  "cast": [{"name", "role", "description": detailed look (age, skin tone, hair, face, build, outfit), "sheetPrompt": text-to-image prompt for a full-body reference photo of this person (plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style (e.g. warm Nigerian-British woman, 30s)}],
  "lookbook": {"character": detailed description of the main character (age, skin tone, hair, face, build, vibe), "characterSheetPrompt": a Dzine text-to-image prompt for a character reference sheet (front, 3/4 and side views, full body, plain light-grey studio background, same outfit, photorealistic), "wardrobe": string, "setting": string, "palette": string, "lighting": string, "style": e.g. "photorealistic, cinematic, shallow depth of field", "negative": negative prompt},
  "scenes": [{"title","seconds","purpose","visual","shot","camera","cast": [names],"lines": [{"who","text"}],"vo","onScreen","sfx": one short sound effect description or "","transition","character": true if any cast member appears,"product": boolean,"lipSync": boolean}]}`,
-    briefText(b) + (extra ? `\n\nDIRECTION FOR THIS VERSION: ${String(extra).slice(0, 500)}` : ''), 3000);
+    briefText(b) + (b.script ? `\n\nTHE TEAM'S OWN SCRIPT — they have already written the story. Keep its story, order, spoken words and on-screen text EXACTLY as written (do not rewrite or add lines); only split it into scenes, set realistic seconds per scene (about 2.5 spoken words per second) and fill in the other fields (visuals, shots, cast, hooks, lookbook). If the script has no named characters, use a Narrator:\n<<<\n${b.script}\n>>>` : '') + (extra ? `\n\nDIRECTION FOR THIS VERSION: ${String(extra).slice(0, 500)}` : ''), 3000);
   const p = cleanPlan(j);
   p.scenes.forEach(sc => { if (!sc.vo && sc.lines.length) sc.vo = sc.lines.map(l => l.text).join(' ').slice(0, 400); if (sc.lipSync && !(sc.lines.length === 1 && sc.lines[0].who !== 'Narrator')) sc.lipSync = false; });
   if (b.concept) p.concept = { title: b.concept.title, genre: b.concept.genre, logline: b.concept.logline };

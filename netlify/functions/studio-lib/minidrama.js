@@ -184,4 +184,43 @@ Return: {"scenes": [${SCENE_FIELDS}]}`, 1300, 0.75);
   return { scenes: plan.scenes.filter(s => set.includes(s.n)) };
 }
 
-module.exports = { concepts, outline, scenes, check, fix, ruleIssues };
+// 📋 The team's own ready script → the same outline + screenplay shape, keeping their story and words
+const KEEP = `The team has ALREADY WRITTEN this story. Respect it: keep the plot, the order of events, the characters and every line of dialogue EXACTLY as written (fix only obvious typos). Do not add jokes, lines or plot. You only structure it for production and fill in what the script doesn't say (looks, camera, sound, timings).`;
+function scriptBlock(b) { return `THE SCRIPT:\n<<<\n${b.script}\n>>>`; }
+async function importOutline(brief) {
+  const b = va.cleanBrief(Object.assign({}, brief, { mode: 'drama' }));
+  if (String(b.script || '').trim().length < 40) throw new HttpError(400, 'too_short', 'Paste the script first (a few lines at least).');
+  const j = await write(ROLE + '\n' + KEEP, `${dramaBrief(b)}
+
+${scriptBlock(b)}
+
+Break the script into scenes in story order (3–7 seconds each — split long moments into several shots; seconds must fit the dialogue at about 2.5 words per second). Give every scene a beat: ${BEATS.join(', ')}. If the script has no ending with the product, still mark the scene that best shows the product as "reveal" — do not invent new story.
+Return: {"title": the script's title (or a short one), "logline": 1–2 sentences,
+ "cast": [{"name": as in the script, "role", "personality": from how they talk and act, "description": detailed consistent look (age, skin tone, hair, face, build, outfit) — from the script, else a fitting choice, "sheetPrompt": text-to-image prompt for a full-body reference photo (single person, plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style}],
+ "lookbook": {"setting", "wardrobe", "palette", "lighting", "style", "negative"},
+ "reveal": {"tagline": short brand line for the final title card (from the script if it has one, max 8 words)},
+ "music": {"mood", "bpm"},
+ "scenes": [{"heading": e.g. "INT. KITCHEN – NIGHT", "beat", "title": 2–4 words, "summary": what happens (max 25 words), "seconds", "cast": [names], "product": boolean, "shot", "camera"}]}`, 2600, 0.3);
+  const plan = va.cleanPlan({ title: j.title, cast: j.cast, lookbook: j.lookbook, reveal: j.reveal, music: j.music, scenes: (Array.isArray(j.scenes) ? j.scenes : []).map(x => Object.assign({}, x, { visual: x && x.summary })) });
+  if (plan.scenes.length < 2) throw new HttpError(502, 'ai_error', 'Couldn’t break that script into scenes — check it pasted fully and try again.');
+  plan.concept = { title: plan.title, genre: GENRES[b.genre], logline: str(j.logline, 400), beats: [], productMoment: '' };
+  plan.post.endCard = plan.reveal.tagline;
+  plan.lookbook.character = plan.cast.map(c => `${c.name}: ${c.description}`).join('\n').slice(0, 700);
+  return { brief: b, plan };
+}
+async function importScenes(brief, rawPlan, from, to) {
+  const b = va.cleanBrief(Object.assign({}, brief, { mode: 'drama' })), plan = va.cleanPlan(rawPlan);
+  const want = plan.scenes.slice(from, to); if (!want.length) return { scenes: [] };
+  const j = await write(ROLE + '\n' + KEEP, `${scriptBlock(b)}
+
+CAST: ${JSON.stringify(plan.cast.map(c => ({ name: c.name, personality: c.personality })))}
+SCENE LIST: ${JSON.stringify(plan.scenes.map(s => ({ n: s.n, heading: s.heading, beat: s.beat, seconds: s.seconds, summary: s.visual, cast: s.cast })))}
+
+For scenes ${want.map(s => s.n).join(', ')} only: copy the dialogue that belongs to each scene WORD FOR WORD from the script (split long speeches across the scenes they cover), add the emotion from the script's directions (or a fitting one), and describe what we see.
+Return: {"scenes": [${SCENE_FIELDS}]}`, 1500, 0.2);
+  mergeScenes(plan, j.scenes);
+  return { scenes: plan.scenes.slice(from, to) };
+}
+
+module.exports = { concepts, outline, scenes, check, fix, ruleIssues, importOutline, importScenes };
+
