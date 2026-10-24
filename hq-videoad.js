@@ -375,7 +375,7 @@
         var tot = totalSecs(p), len = p.brief.length, fromS = !!p.brief.script;
         return (fromS ? '<div class="card" style="margin-bottom:10px"><b>📋 Made from your script</b> <span class="muted" style="font-size:13px">— every moment and line of your script is in the scenes, in order and word for word (see “📋 Script” on each scene). The story check below only suggests changes.</span>' +
             (tot > len * 1.15 ? '<div class="note" style="margin-top:8px">⏱️ Your script runs about <b>' + tot + 's</b> but you chose <b>' + len + 's</b>.<div class="apact" style="margin-top:6px"><button class="btn ghost sm" id="mdKeepLong">Keep it ' + tot + 's long</button><button class="btn primary sm" id="mdTrim">✨ Trim it to ' + len + 's</button></div></div>' : '') +
-            '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13.5px;font-weight:700">📄 Your original script</summary><pre style="white-space:pre-wrap;font-family:inherit;font-size:13.5px;margin:6px 0 0;max-height:320px;overflow:auto">' + esc(p.brief.script) + '</pre></details></div>' : '') +
+            '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13.5px;font-weight:700">📄 Your original script</summary><pre style="white-space:pre-wrap;font-family:inherit;font-size:13.5px;margin:6px 0 0;max-height:320px;overflow:auto">' + esc(p.brief.script) + '</pre></details>' + scriptCardBtns() + '</div>' : '<div class="card" style="margin-bottom:10px"><b>📋 Have your own script?</b> <span class="muted" style="font-size:13px">— paste it and the scenes are rebuilt from it, keeping the character and place photos.</span>' + scriptCardBtns() + '</div>') +
           '<div class="card"><b>🎬 ' + esc(cc.title || p.plan.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0">' + esc(cc.logline || '') + '</p>' +
             ((cc.beats || []).length ? '<ol class="vlist" style="font-size:13.5px">' + cc.beats.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '') +
             (cc.productMoment ? '<div class="muted" style="font-size:13px">📦 ' + esc(cc.productMoment) + '</div>' : '') + '</div>' +
@@ -405,7 +405,7 @@
       },
       strategy: function () {
         var st = p.plan.strategy, cast = p.plan.cast || [], cc = p.plan.concept;
-        return (cc && cc.title ? '<div class="card" style="margin-bottom:10px"><b>🎬 Story: ' + esc(cc.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0 0">' + esc(cc.logline || '') + '</p></div>' : '') +
+        return '<div class="card" style="margin-bottom:10px"><b>' + (p.brief.script ? '📋 Made from your script' : '📋 Have your own script?') + '</b> <span class="muted" style="font-size:13px">— ' + (p.brief.script ? 'edit it any time; unchanged scenes keep their pictures and clips.' : 'paste it and the scenes are rebuilt from it.') + '</span>' + scriptCardBtns() + '</div>' + (cc && cc.title ? '<div class="card" style="margin-bottom:10px"><b>🎬 Story: ' + esc(cc.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0 0">' + esc(cc.logline || '') + '</p></div>' : '') +
           (cast.length ? '<div class="card" style="margin-bottom:10px"><b>👥 Cast</b>' + cast.map(function (c, k) {
             return '<div class="vscene" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 3) + field('👗 Outfit (kept the same in every scene)', 'plan.cast.' + k + '.outfit', c.outfit, 0) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 3) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '</div>';
           }).join('') + '</div>' : '') + (locCard() ? locCard().replace('margin-top:10px', 'margin-bottom:10px') : '') +
@@ -522,6 +522,8 @@
           busyBtn(b, '✨ Rewriting…', async function () { mergeInto(p.plan, (await X.api('md-fix', { brief: p.brief, plan: p.plan, nums: [i + 1], how: how })).scenes); await refreshPrompts([i + 1]); mark(); paintPane(); X.toast('Scene ' + (i + 1) + ' rewritten ✅ — make a new storyboard picture for it'); });
         };
       });
+      var seo = q('#seOpen'); if (seo) seo.onclick = scriptEditor;
+      var seu = q('#seUndo'); if (seu) seu.onclick = undoScript;
       var mkl = q('#mdKeepLong'); if (mkl) mkl.onclick = function () { var t = totalSecs(p), opts2 = [30, 45, 60, 90, 120].filter(function (x) { return x >= t; }); p.brief.length = opts2.length ? opts2[0] : 120; mark(); paintLen(); paintPane(); };
       var mtr = q('#mdTrim'); if (mtr) mtr.onclick = function () {
         if (!confirm('Trim the dialogue so the film fits ' + p.brief.length + ' seconds? Your story is kept; some lines get shorter or cut. You can edit it afterwards.')) return;
@@ -641,6 +643,110 @@
       last.parentNode.insertBefore(add, last.nextSibling);
       if (tab !== 'board') { var top = document.createElement('button'); top.className = 'btn link'; top.style.cssText = 'margin:0 0 6px'; top.dataset.sop = 'add'; top.dataset.si = '-1'; top.textContent = '＋ Add a scene at the start'; cards[0].parentNode.insertBefore(top, cards[0]); }
       $$('[data-sop]', pane).forEach(function (b) { b.onclick = function () { sceneOp(b.dataset.sop, +b.dataset.si); }; });
+    }
+    // ── ✏️ edit the team's own script any time: rebuild the scenes, keeping everything that didn't change ──
+    function undoKey() { return 'vaUndo:' + (p.id || 'new'); }
+    function hasUndo() { try { return !!localStorage.getItem(undoKey()); } catch (e) { return false; } }
+    function scriptCardBtns() {
+      return '<div class="apact" style="margin-top:8px"><button class="btn primary sm" id="seOpen">' + (p.brief.script ? '✏️ Edit script' : '📋 Add my own script') + '</button>' + (hasUndo() ? '<button class="btn ghost sm" id="seUndo">↩ Undo last script update</button>' : '') + '</div>';
+    }
+    function sceneSig(sc) { return ((sc.lines || []).map(function (l) { return String(l.text).toLowerCase().replace(/\s+/g, ' ').trim(); }).join('|') + '#' + String(sc.visual || '').split(' — ')[0].toLowerCase().replace(/\s+/g, ' ').trim()).slice(0, 600); }
+    function scriptEditor() {
+      var sh = X.sheet('<h2>' + (p.brief.script ? '✏️ Edit your script' : '📋 Add your own script') + '</h2><p class="muted" style="font-size:13px;margin:4px 0 8px">Change anything — lines, moments, characters, the final text. When you update, scenes you didn’t change keep their pictures, clips and voices.</p>' +
+        '<textarea id="seText" rows="18" style="font-size:14px">' + esc(p.brief.script || '') + '</textarea><div class="muted" id="seN" style="font-size:12.5px;margin-top:4px"></div>' +
+        '<div id="seProg" class="muted hidden" style="font-size:13.5px;margin-top:8px"></div><div class="err hidden" id="seErr"></div>' +
+        '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="seX">Cancel</button>' + (p.brief.script ? '<button class="btn ghost" id="seSave">💾 Just save the text</button>' : '') + '<button class="btn primary" id="seGo">🔄 Update the scenes to match</button></div>');
+      var ta = $('#seText', sh), err = $('#seErr', sh), prog = $('#seProg', sh);
+      function cnt() { var t = ta.value.trim(); $('#seN', sh).textContent = t ? t.split(/\s+/).length + ' words · ' + t.length + ' / 12000 characters' : ''; }
+      ta.oninput = cnt; cnt();
+      $('#seX', sh).onclick = function () { sh.remove(); };
+      if ($('#seSave', sh)) $('#seSave', sh).onclick = function () { p.brief.script = ta.value.slice(0, 12000); mark(); sh.remove(); paintPane(); X.toast('Script saved — the scenes are unchanged'); };
+      $('#seGo', sh).onclick = async function () {
+        var text = ta.value.trim().slice(0, 12000); err.classList.add('hidden');
+        if (text.length < 40) { err.textContent = 'Paste the script first (a few lines at least).'; err.classList.remove('hidden'); return; }
+        var btns = $$('button', sh); btns.forEach(function (b) { b.disabled = true; }); prog.classList.remove('hidden'); prog.textContent = '⏳ Reading your script…';
+        try {
+          var nb = Object.assign({}, p.brief, { script: text }), np;
+          if (D) np = (await X.api('md-import', { brief: nb, prev: p.brief.script ? { script: p.brief.script, groups: p.plan.scenes.map(function (sc) { return sc.script || []; }) } : null })).plan;
+          else np = (await X.api('va-plan', { brief: nb, extra: '', readLink: false })).plan;
+          prog.textContent = '⏳ Comparing with your current scenes…';
+          var plan = await mergeScript(np, text);
+          if (!plan) { btns.forEach(function (b) { b.disabled = false; }); prog.classList.add('hidden'); return; }
+          sh.remove();
+        } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btns.forEach(function (b) { b.disabled = false; }); prog.classList.add('hidden'); }
+      };
+      setTimeout(function () { ta.focus(); }, 50);
+    }
+    async function mergeScript(np, text) {
+      var old = p.plan.scenes, used = {}, order = [], kept = 0, fresh = [];
+      // characters: keep photos and voices by name; ask about renames
+      var oldCast = p.plan.cast || [], newCast = np.cast || [], oldNames = oldCast.map(function (c) { return c.name; }), rename = {};
+      var spare = oldNames.filter(function (n) { return !newCast.some(function (c) { return c.name.toLowerCase() === n.toLowerCase(); }); });
+      newCast.forEach(function (c) {
+        if (oldNames.some(function (n) { return n.toLowerCase() === c.name.toLowerCase(); }) || !spare.length) return;
+        for (var k = 0; k < spare.length; k++) if (confirm('Is “' + c.name + '” the same character as “' + spare[k] + '”? (OK keeps ' + spare[k] + '’s photo and voice)')) { rename[c.name] = spare[k]; spare.splice(k, 1); break; }
+      });
+      var castOut = [], castImgs = {}, castVoices = {};
+      newCast.forEach(function (c, j) {
+        var was = rename[c.name] || c.name, ok = -1;
+        for (var k = 0; k < oldCast.length; k++) if (oldCast[k].name.toLowerCase() === was.toLowerCase()) ok = k;
+        if (ok >= 0) { castOut.push(Object.assign({}, oldCast[ok], { name: c.name })); if (p.make.castImgs[ok]) castImgs[j] = p.make.castImgs[ok]; } else castOut.push(c);
+        var v = p.make.castVoices && (p.make.castVoices[was] || p.make.castVoices[c.name]); if (v) castVoices[c.name] = v;
+      });
+      // places: keep by name
+      var oldLoc = p.plan.locations || [], locOut = [], locImgs = {};
+      (np.locations || []).concat(oldLoc).forEach(function (l) {
+        if (locOut.some(function (x) { return x.name.toLowerCase() === l.name.toLowerCase(); })) return;
+        var ok = -1; for (var k = 0; k < oldLoc.length; k++) if (oldLoc[k].name.toLowerCase() === l.name.toLowerCase()) ok = k;
+        locOut.push(ok >= 0 ? oldLoc[ok] : l); if (ok >= 0 && p.make.locImgs && p.make.locImgs[ok]) locImgs[locOut.length - 1] = p.make.locImgs[ok];
+      });
+      // scenes: an unchanged scene (same lines and moment) keeps everything it had
+      var oldSig = old.map(function (sc) { return sceneSig(Object.assign({}, sc, { lines: (sc.lines || []).map(function (l) { return { who: l.who, text: l.text }; }) })); });
+      np.scenes.forEach(function (ns) {
+        var sg = sceneSig(Object.assign({}, ns, { lines: (ns.lines || []).map(function (l) { return { who: rename[l.who] ? l.who : l.who, text: l.text }; }) }));
+        var hit = ns.keep != null && old[ns.keep] && !used[ns.keep] ? ns.keep : -1;
+        if (hit < 0) for (var k = 0; k < old.length; k++) if (!used[k] && oldSig[k] === sg) { hit = k; break; }
+        if (hit < 0) { for (var k2 = 0; k2 < old.length; k2++) if (!used[k2] && (old[k2].lines || []).length && sceneSig({ lines: old[k2].lines, visual: '' }) === sceneSig({ lines: ns.lines, visual: '' })) { hit = k2; break; } }
+        if (hit >= 0) { used[hit] = 1; kept++; order.push({ old: hit, script: ns.script }); } else { fresh.push(order.length); order.push({ scene: ns }); }
+      });
+      var removed = old.length - kept;
+      var ok = await new Promise(function (res) {
+        var s2 = X.sheet('<h2>🔄 Update the scenes?</h2><div class="card"><div>✅ <b>' + kept + '</b> scene' + (kept === 1 ? '' : 's') + ' kept as they are (pictures, clips and voices stay)</div><div style="margin-top:4px">✨ <b>' + fresh.length + '</b> new or changed scene' + (fresh.length === 1 ? '' : 's') + ' — will need a picture' + (p.make.approved ? ' and a clip (you’ll approve the cost)' : '') + '</div><div style="margin-top:4px">🗑 <b>' + removed + '</b> old scene' + (removed === 1 ? '' : 's') + ' removed</div>' +
+          (Object.keys(rename).length ? '<div style="margin-top:4px">👥 Renamed: ' + Object.keys(rename).map(function (n) { return esc(rename[n]) + ' → ' + esc(n); }).join(', ') + '</div>' : '') + '</div><p class="muted" style="font-size:13px">You can undo this with “↩ Undo last script update”.</p>' +
+          '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="mgX">Cancel</button><button class="btn primary" id="mgGo">✅ Update the scenes</button></div>');
+        $('#mgX', s2).onclick = function () { s2.remove(); res(false); };
+        $('#mgGo', s2).onclick = function () { s2.remove(); res(true); };
+      });
+      if (!ok) return null;
+      try { localStorage.setItem(undoKey(), JSON.stringify({ brief: p.brief, plan: p.plan, frames: p.frames, make: p.make })); } catch (e) { /* undo not available in this browser */ }
+      // rebuild
+      var fr = p.frames, mk = p.make, out = [], frames = {}, maps = {}, sigs = mk.approved && mk.approved.sigs, ns2 = {};
+      SCENE_MAPS.forEach(function (k) { maps[k] = {}; });
+      order.forEach(function (o, j) {
+        var sc;
+        if (o.scene) sc = o.scene;
+        else { sc = old[o.old]; sc.script = o.script || sc.script; if (fr[String(o.old)]) frames[String(j)] = fr[String(o.old)]; SCENE_MAPS.forEach(function (k) { if (mk[k] && mk[k][o.old] != null) maps[k][j] = mk[k][o.old]; }); if (sigs && sigs[o.old]) ns2[j] = sigs[o.old]; }
+        (sc.lines || []).forEach(function (l) { Object.keys(rename).forEach(function (n) { if (l.who === rename[n]) l.who = n; }); });
+        sc.cast = (sc.cast || []).map(function (n) { var back = Object.keys(rename).filter(function (k) { return rename[k] === n; })[0]; return back || n; });
+        sc.n = j + 1; out.push(sc);
+      });
+      p.brief.script = text; p.plan.scenes = out; p.plan.cast = castOut; p.plan.locations = locOut; p.frames = frames;
+      if (np.reveal && np.reveal.tagline) p.plan.reveal = np.reveal;
+      mk.castImgs = castImgs; mk.castVoices = Object.assign({}, castVoices); mk.locImgs = locImgs; mk.groupImgs = {};
+      SCENE_MAPS.forEach(function (k) { if (mk[k]) mk[k] = maps[k]; }); if (sigs) mk.approved.sigs = ns2;
+      p.plan.storyCheck = null;
+      mark(); paintLen(); loadImgs(); paintPane();
+      if (fresh.length) { X.toast('⏳ Writing picture prompts for ' + fresh.length + ' new scene' + (fresh.length === 1 ? '' : 's') + '…'); try { await refreshPrompts(fresh.map(function (i) { return i + 1; })); mark(); } catch (x) { X.toast(x.message); } }
+      X.toast('Scenes updated ✅ — ' + kept + ' kept, ' + fresh.length + ' new'); paintPane();
+      return true;
+    }
+    function undoScript() {
+      var snap; try { snap = JSON.parse(localStorage.getItem(undoKey()) || 'null'); } catch (e) { snap = null; }
+      if (!snap) return X.toast('Nothing to undo');
+      if (!confirm('Put the script and scenes back to how they were before the last update?')) return;
+      p.brief = snap.brief; p.plan = snap.plan; p.frames = snap.frames; p.make = snap.make;
+      try { localStorage.removeItem(undoKey()); } catch (e) { /* ignore */ }
+      mark(); paintLen(); loadImgs(); paintPane(); X.toast('↩ Back to the previous version');
     }
     async function setPic(i, dataUrl) {
       var r = await X.api('app-img', { image: dataUrl });

@@ -220,7 +220,7 @@ function splitScript(text) {
 }
 function scriptBlock(b) { return `THE SCRIPT:\n<<<\n${b.script}\n>>>`; }
 function wordsOf(t) { return String(t || '').split(/\s+/).filter(Boolean).length; }
-async function importOutline(brief) {
+async function importOutline(brief, prev) {
   const b = va.cleanBrief(Object.assign({}, brief, { mode: 'drama' }));
   if (String(b.script || '').trim().length < 40) throw new HttpError(400, 'too_short', 'Paste the script first (a few lines at least).');
   const sp = splitScript(b.script);
@@ -244,7 +244,18 @@ Return: {"title": the script's title, "logline": 1 sentence,
   // rebuild the scenes from the pieces — the AI only chose the grouping
   const got = (Array.isArray(j.scenes) ? j.scenes : []).map(s => s && typeof s === 'object' ? s : null).filter(Boolean);
   const owner = new Array(sp.units.length + 1).fill(-1);
-  got.forEach((s, k) => { const a = Math.max(1, Number(s.from) || 0), z = Math.min(sp.units.length, Number(s.to) || a); for (let i = a; i <= z; i++) if (owner[i] < 0) owner[i] = k; });
+  // editing an existing script: scenes whose pieces are still there, unchanged and in a row, stay exactly as they were
+  if (prev && prev.script && Array.isArray(prev.groups)) {
+    const norm = u => u ? `${u.type}|${String(u.who || '').toLowerCase()}|${String(u.text).toLowerCase().replace(/\s+/g, ' ').trim()}` : '';
+    const oldSp = splitScript(String(prev.script).slice(0, 12000)), cur = sp.units.map(norm);
+    prev.groups.slice(0, 40).forEach((ids, g) => {
+      const want = (Array.isArray(ids) ? ids : []).map(id => norm(oldSp.units[Number(id) - 1])).filter(Boolean); if (!want.length) return;
+      for (let i = 0; i + want.length <= cur.length; i++) {
+        if (want.every((w, k) => cur[i + k] === w && owner[i + k + 1] === -1)) { for (let k = 0; k < want.length; k++) owner[i + k + 1] = 'K' + g; break; }
+      }
+    });
+  }
+  got.forEach((s, k) => { const a = Math.max(1, Number(s.from) || 0), z = Math.min(sp.units.length, Number(s.to) || a); for (let i = a; i <= z; i++) if (owner[i] === -1) owner[i] = k; });
   const groups = []; let cur = null;
   for (let i = 1; i <= sp.units.length; i++) {
     const k = owner[i];
@@ -253,12 +264,12 @@ Return: {"title": the script's title, "logline": 1 sentence,
   }
   // a scene never holds more than 2 spoken lines — split if the AI grouped too much
   const final = [];
-  groups.forEach(g => { let part = { k: g.k, ids: [], lines: 0 }; g.ids.forEach(id => { const u = sp.units[id - 1]; if ((u.type === 'line' && part.lines >= 2) || part.ids.length >= 3) { final.push(part); part = { k: g.k, ids: [], lines: 0, cont: true }; } part.ids.push(id); if (u.type === 'line') part.lines++; }); final.push(part); });
+  groups.forEach(g => { if (typeof g.k === 'string') { final.push(g); return; } let part = { k: g.k, ids: [], lines: 0 }; g.ids.forEach(id => { const u = sp.units[id - 1]; if ((u.type === 'line' && part.lines >= 2) || part.ids.length >= 3) { final.push(part); part = { k: g.k, ids: [], lines: 0, cont: true }; } part.ids.push(id); if (u.type === 'line') part.lines++; }); final.push(part); });
   const castNames = (Array.isArray(j.cast) ? j.cast : []).map(c => c && c.name).filter(Boolean);
   const nameFor = who => castNames.find(n => n.toLowerCase() === String(who).toLowerCase()) || who;
   let lastHeading = '', lastLoc = '';
   const scenesOut = final.map((g, idx) => {
-    const prev = final[idx - 1], s = g.k >= 0 ? got[g.k] : { heading: lastHeading, beat: prev && prev.k >= 0 ? got[prev.k].beat : '', cast: [] }, us = g.ids.map(id => sp.units[id - 1]), emo = s.emotions && typeof s.emotions === 'object' ? s.emotions : {};
+    const prev = final[idx - 1], s = typeof g.k === 'string' ? { heading: lastHeading, cast: [], location: lastLoc } : g.k >= 0 ? got[g.k] : { heading: lastHeading, beat: prev && prev.k >= 0 ? got[prev.k].beat : '', cast: [] }, us = g.ids.map(id => sp.units[id - 1]), emo = s.emotions && typeof s.emotions === 'object' ? s.emotions : {};
     const head = us.find(u => u.type === 'heading'); if (head) lastHeading = head.text;
     const lines = us.filter(u => u.type === 'line').map(u => ({ who: nameFor(u.who), emotion: u.emotion || str(emo[u.id] || emo[String(u.id)] || '', 40), text: u.text }));
     const acts = us.filter(u => u.type === 'action').map(u => u.text).join(' ');
@@ -272,7 +283,7 @@ Return: {"title": the script's title, "logline": 1 sentence,
       seconds: secs, cast: castIn, product: !!s.product, shot: s.shot, camera: s.camera, sfx: s.sfx || '', transition: 'cut', lines, lipSync: lines.length === 1 && words >= 3 && words <= 20, script: us.map(u => u.id) };
   });
   const plan = va.cleanPlan({ title: j.title || (sp.meta.find(m => /^Title:/.test(m)) || '').replace(/^Title:\s*/, ''), cast: j.cast, locations: j.locations, lookbook: j.lookbook, music: j.music, scenes: scenesOut });
-  plan.scenes.forEach((sc, i) => { sc.vo = sc.lines.map(l => l.text).join(' ').slice(0, 400); if (!sc.beat) sc.beat = i === plan.scenes.length - 1 ? 'reveal' : ''; });
+  plan.scenes.forEach((sc, i) => { const gk = final[i] && final[i].k; if (typeof gk === 'string') sc.keep = Number(gk.slice(1)); sc.vo = sc.lines.map(l => l.text).join(' ').slice(0, 400); if (!sc.beat) sc.beat = i === plan.scenes.length - 1 ? 'reveal' : ''; });
   if (plan.scenes.length < 2) throw new HttpError(502, 'ai_error', 'Couldn’t break that script into scenes — check it pasted fully and try again.');
   plan.reveal = { tagline: str(sp.card[0] || '', 120), sub: str(sp.card.slice(1).join(' · '), 160) };
   plan.concept = { title: plan.title, genre: GENRES[b.genre], logline: str(j.logline, 400), beats: [], productMoment: '' };

@@ -210,7 +210,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'md-outline') return md.outline(body.brief);
       if (body.action === 'md-scenes') return md.scenes(body.brief, body.plan, Number(body.from) || 0, Number(body.to) || 3);
       if (body.action === 'md-check') return { storyCheck: await md.check(body.brief, body.plan) };
-      if (body.action === 'md-import') return md.importOutline(body.brief);
+      if (body.action === 'md-import') return md.importOutline(body.brief, body.prev && typeof body.prev === 'object' ? body.prev : null);
       if (body.action === 'md-import-scenes') return md.importScenes(body.brief, body.plan, Number(body.from) || 0, Number(body.to) || 3);
       return md.fix(body.brief, body.plan, body.nums, body.how);
     }
