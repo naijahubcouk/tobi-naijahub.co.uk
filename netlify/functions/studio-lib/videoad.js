@@ -200,10 +200,22 @@ const ROLE = 'You are an award-winning short-form video ad creative director and
 async function ask(system, user, maxTokens) {
   const claude = await require('./videoai').claudeConfig();
   if (claude) return askClaude(claude, system, user, maxTokens);
+  return askLoose(system, user, maxTokens);
+}
+// ask the AI for JSON; repair small slips and try once more (with more room) if the reply can't be read
+async function askLoose(system, user, maxTokens) {
   const settings = await core.getSettings();
-  const out = await gen.callModel([{ role: 'system', content: system }, { role: 'user', content: user }], maxTokens, settings, { json: true, raw: true });
-  gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
-  try { return JSON.parse(String(out.text).replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (_) { throw new HttpError(502, 'ai_error', 'The AI reply came back garbled — please try again.'); }
+  let out, partial = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    out = await gen.callModel([{ role: 'system', content: system + (attempt ? '\nYOUR LAST REPLY WAS CUT OFF OR NOT VALID JSON. Keep every text shorter and reply with ONE complete JSON object.' : '') }, { role: 'user', content: user }], Math.round(maxTokens * (attempt ? 1.6 : 1)), settings, { json: true, raw: true });
+    gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
+    const j = require('./jsonfix').parseLoose(out.text);
+    if (j && (out.finish !== 'length' || attempt)) return j;
+    if (j) { partial = j; continue; } // cut short — try once more with more room, keep this as a fallback
+    console.error('[videoad] unreadable reply', out.model, out.finish, out.outTok, JSON.stringify(String(out.text).slice(0, 200)), '…', JSON.stringify(String(out.text).slice(-150)));
+  }
+  if (partial) return partial;
+  throw new HttpError(502, 'ai_error', 'The AI reply came back garbled twice — please try again.');
 }
 async function askClaude(c, system, user, maxTokens) {
   const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 24000);
@@ -218,14 +230,10 @@ async function askClaude(c, system, user, maxTokens) {
   const text = (data.content || []).map(x => x.text || '').join('');
   const u = data.usage || {};
   require('./videoai').addCost(((u.input_tokens || 0) * c.inUsdPerM + (u.output_tokens || 0) * c.outUsdPerM) / 1e6, 'claude writing').catch(() => {});
+  const fixed = require('./jsonfix').parseLoose(text); if (fixed) return fixed;
   try { return JSON.parse(text.replace(/^[\s\S]*?(\{)/, '$1').replace(/\}[^}]*$/, '}')); } catch (_) { throw new HttpError(502, 'ai_error', 'The AI reply came back garbled — please try again.'); }
 }
-async function visionAsk(system, content, maxTokens) {
-  const settings = await core.getSettings();
-  const out = await gen.callModel([{ role: 'system', content: system }, { role: 'user', content }], maxTokens, settings, { json: true, raw: true });
-  gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
-  try { return JSON.parse(String(out.text).replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (_) { throw new HttpError(502, 'ai_error', 'The AI reply came back garbled — please try again.'); }
-}
+async function visionAsk(system, content, maxTokens) { return askLoose(system, content, maxTokens); }
 function aspectOf(b) { return b.size || (b.platform === 'feed' ? '4:5' : '9:16'); }
 
 // 💡 Three different story ideas to pick from
@@ -296,8 +304,9 @@ Write Dzine prompts for the scenes given.
 - "videoPrompt" (image-to-video): MOTION only — what moves, camera movement, speed, expression change; 1–2 actions; natural physics; no cuts. Mention duration.
 - "model": best Dzine video model for the scene: Kling (realistic people & hands), Veo 3.1 (cinematic, native sound), Hailuo (expressive faces, dynamic), Sora 2 (complex scenes), Wan or Seedance (budget, simple motion).
 - "clipSeconds": 5 or 10 (enough to cover the scene seconds).
+Keep each imagePrompt under 170 words and each videoPrompt under 50 words.
 Return ONLY JSON: {"scenes": [{"n","imagePrompt","videoPrompt","model","clipSeconds"}]}`,
-    `${briefText(b)}\n\nCAST: ${JSON.stringify(p.cast.map(c => ({ name: c.name, look: c.description, outfit: c.outfit })))}\n\nLOCATIONS: ${JSON.stringify(p.locations.map(l => ({ name: l.name, description: l.description })))}\n\nLOOKBOOK: ${JSON.stringify(p.lookbook)}\n\nSCENES:\n${JSON.stringify(scenes.map(s => ({ n: s.n, title: s.title, seconds: s.seconds, location: s.location, heading: s.heading, visual: s.visual, shot: s.shot, camera: s.camera, cast: s.cast, product: s.product, lines: s.lines, lipSync: s.lipSync })))}`, 2600);
+    `${briefText(b)}\n\nCAST: ${JSON.stringify(p.cast.map(c => ({ name: c.name, look: c.description, outfit: c.outfit })))}\n\nLOCATIONS: ${JSON.stringify(p.locations.map(l => ({ name: l.name, description: l.description })))}\n\nLOOKBOOK: ${JSON.stringify(p.lookbook)}\n\nSCENES:\n${JSON.stringify(scenes.map(s => ({ n: s.n, title: s.title, seconds: s.seconds, location: s.location, heading: s.heading, visual: s.visual, shot: s.shot, camera: s.camera, cast: s.cast, product: s.product, lines: s.lines, lipSync: s.lipSync })))}`, 3400);
   const got = Array.isArray(j.scenes) ? j.scenes : [];
   return { scenes: scenes.map((s, k) => { const g = got.find(x => Number(x && x.n) === s.n) || got[k] || {}; return { n: s.n, imagePrompt: str(g.imagePrompt, 1200), videoPrompt: str(g.videoPrompt, 1200), model: str(g.model, 40), clipSeconds: [5, 10].includes(Number(g.clipSeconds)) ? Number(g.clipSeconds) : (s.seconds > 5 ? 10 : 5) }; }) };
 }

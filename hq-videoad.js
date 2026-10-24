@@ -264,9 +264,9 @@
       for (var k = 0; k < flagged.length && k < 6; k += 3) { show(2, 'fixing scenes ' + flagged.slice(k, k + 3).join(', ')); mergeInto(plan, (await X.api('md-fix', { brief: b, plan: plan, nums: flagged.slice(k, k + 3) })).scenes); }
       show(2, 'checking again'); plan.storyCheck = (await X.api('md-check', { brief: b, plan: plan })).storyCheck;
     }
-    for (var f2 = 0; f2 < n; f2 += 4) {
-      show(3, 'scenes ' + (f2 + 1) + '–' + Math.min(n, f2 + 4) + ' of ' + n);
-      var r3 = await X.api('va-prompts', { brief: b, plan: plan, from: f2, to: f2 + 4 });
+    for (var f2 = 0; f2 < n; f2 += 3) {
+      show(3, 'scenes ' + (f2 + 1) + '–' + Math.min(n, f2 + 3) + ' of ' + n);
+      var r3 = await X.api('va-prompts', { brief: b, plan: plan, from: f2, to: f2 + 3 });
       (r3.scenes || []).forEach(function (g) { var sc = plan.scenes.filter(function (x) { return x.n === g.n; })[0]; if (sc) { sc.imagePrompt = g.imagePrompt; sc.videoPrompt = g.videoPrompt; sc.model = g.model; sc.clipSeconds = g.clipSeconds; } });
     }
     show(4);

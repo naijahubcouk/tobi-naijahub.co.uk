@@ -25,29 +25,22 @@ Reply with ONE JSON object only — no markdown, no commentary. Keep every text 
 
 async function writerModel() { try { return (await require('./videoai').settings()).dramaModel; } catch (_) { return require('./videoai').DRAMA_MODEL; } }
 // Claude sometimes wraps the JSON in words, leaves a quote unescaped or runs out of room — repair it.
-function parseJson(text) {
-  let jsonrepair = x => x; try { jsonrepair = require('jsonrepair').jsonrepair; } catch (_) { /* repair not installed — plain parsing only */ }
-  const t = String(text || '').replace(/```(?:json)?/gi, '');
-  const a = t.indexOf('{'); if (a < 0) return null;
-  try { return JSON.parse(t.slice(a, t.lastIndexOf('}') + 1)); } catch (_) { /* repair below */ }
-  const ends = []; for (let i = t.length - 1; i > a && ends.length < 25; i--) if (t[i] === '}') ends.push(i);
-  for (const e of ends) { try { const o = JSON.parse(jsonrepair(t.slice(a, e + 1))); if (o && typeof o === 'object') return o; } catch (_) { /* next */ } }
-  try { const o = JSON.parse(jsonrepair(t.slice(a))); if (o && typeof o === 'object') return o; } catch (_) { /* give up */ }
-  return null;
-}
+function parseJson(text) { return require('./jsonfix').parseLoose(text); }
 async function write(system, user, maxTokens, temperature) {
   const settings = await core.getSettings();
   const model = await writerModel();
   const sys = system + '\nReply with valid JSON only: no markdown, no notes. Inside text values never use the " character — use ‘single quotes’ or “curly quotes” for speech.';
-  let last = null;
+  let last = null, partial = null;
   for (let attempt = 0; attempt < 2; attempt++) {
     const out = await gen.callModel([{ role: 'system', content: sys + (attempt ? '\nYOUR LAST REPLY WAS NOT VALID JSON. Keep every text short and reply with ONE valid JSON object.' : '') }, { role: 'user', content: user }], Math.round(maxTokens * (attempt ? 1.4 : 1)), Object.assign({}, settings, { model }), { raw: true, temperature: temperature == null ? 0.8 : temperature, timeoutMs: 55000, detail: true });
     gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
     const j = parseJson(out.text);
-    if (j) return j;
+    if (j && (out.finish !== 'length' || attempt)) return j;
+    if (j) { partial = j; last = out; continue; } // cut short — once more with more room
     last = out;
     console.error('[minidrama] unreadable reply', model, out.finish, out.outTok, JSON.stringify(String(out.text).slice(0, 300)), '…', JSON.stringify(String(out.text).slice(-200)));
   }
+  if (partial) return partial;
   throw new HttpError(502, 'ai_error', last && last.finish === 'length' ? 'The story was too long for one reply — try a shorter length, or switch the writer in ⚙️ Video AI settings.' : 'The writer’s reply came back garbled twice — please try again (or switch the writer in ⚙️ Video AI settings).');
 }
 
