@@ -57,6 +57,7 @@
             '<label for="vsAk">Anthropic API key ' + (cl.ready ? '<span class="muted">(✅ ' + X.esc(cl.keyHint) + ')</span>' : '') + '</label><input id="vsAk" type="password" autocomplete="off" placeholder="' + (cl.ready ? 'Leave empty to keep the current key' : 'sk-ant-…') + '">' +
             '<label for="vsCm">Claude model</label><input id="vsCm" value="' + X.esc(cl.model || 'claude-haiku-5-5') + '"><p class="muted" style="font-size:12.5px;margin:4px 0 0">claude-haiku-5-5 is quick and cheap; claude-sonnet-5-5 writes better but costs more.</p>' +
             (cl.ready ? '<button class="btn link" id="vsAkRm" style="color:var(--danger)">Remove Anthropic key</button>' : '') + '</div>' +
+          '<div class="card" style="margin-top:10px;background:var(--bg,#f8fafc)"><b>🎭 Mini-drama writer</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Writes the story pitches and screenplays, through your OpenRouter account. Claude Sonnet writes the best stories; anthropic/claude-haiku-5.5 is faster and cheaper.</p><label for="vsDm">OpenRouter model</label><input id="vsDm" value="' + X.esc(s.dramaModel || 'anthropic/claude-sonnet-5.5') + '"></div>' +
           '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">Advanced — model names on fal.ai</summary>' + tiers.map(function (t) { return '<label for="vsM' + t.id + '">' + X.esc(t.label) + '</label><input id="vsM' + t.id + '" value="' + X.esc(s.models[t.id] || '') + '">'; }).join('') +
             '<label for="vsMlipsync">👄 Lip sync</label><input id="vsMlipsync" value="' + X.esc(s.models.lipsync || '') + '"><label for="vsMsfx">🔊 Sound effects</label><input id="vsMsfx" value="' + X.esc(s.models.sfx || '') + '">' +
             '<p class="muted" style="font-size:12.5px">Only change these if fal.ai renames a model.</p></details>' +
@@ -74,7 +75,7 @@
         var models = {}; tiers.forEach(function (t) { models[t.id] = $('#vsM' + t.id, sh).value.trim(); }); models.lipsync = $('#vsMlipsync', sh).value.trim(); models.sfx = $('#vsMsfx', sh).value.trim();
         var ak = $('#vsAk', sh).value.trim(), err = $('#vsErr', sh);
         if (writer === 'claude' && !cl.ready && !ak) { err.textContent = 'Paste an Anthropic API key to use Claude.'; err.classList.remove('hidden'); return; }
-        try { ST = (await X.api('vm-settings-save', { settings: { falKey: $('#vsKey', sh).value.trim(), capGbp: +$('#vsCap', sh).value, voice: $('#vsVoice', sh).value, models: models, anthropicKey: ak, claudeModel: $('#vsCm', sh).value.trim(), writer: writer } })).settings; X.toast('Saved ✅'); sh.remove(); if (onDone) onDone(); }
+        try { ST = (await X.api('vm-settings-save', { settings: { falKey: $('#vsKey', sh).value.trim(), capGbp: +$('#vsCap', sh).value, voice: $('#vsVoice', sh).value, models: models, anthropicKey: ak, claudeModel: $('#vsCm', sh).value.trim(), writer: writer, dramaModel: $('#vsDm', sh).value.trim() } })).settings; X.toast('Saved ✅'); sh.remove(); if (onDone) onDone(); }
         catch (x) { err.textContent = x.message; err.classList.remove('hidden'); }
       };
     }, function (x) { X.toast(x.message); });
@@ -85,7 +86,7 @@
     return '<div id="vmRoot"><div class="card"><p class="muted">Loading…</p></div></div>';
   }
   function wire(pane, p, X) {
-    var root = $('#vmRoot', pane), polling = 0, busy = false, autoLip = false, checking = {};
+    var root = $('#vmRoot', pane), polling = 0, busy = false, autoLip = false, checking = {}, DR = p.brief.mode === 'drama', remakeStale = false, lastOut = null;
     p.make = p.make || {}; var m = p.make;
     m.tier = m.tier || 'budget'; ['clips', 'vo', 'lines', 'castImgs', 'castVoices', 'sfx', 'lipsync', 'checks'].forEach(function (k) { m[k] = m[k] || {}; });
     m.finals = m.finals || []; if (m.music === undefined) m.music = true; m.voSource = m.voSource || 'ai'; m.customVoices = m.customVoices || [];
@@ -95,6 +96,41 @@
     loadSettings(X.api).then(function () { m.voice = m.voice || ST.voice; autoVoices(); paint(); }, function (x) { root.innerHTML = '<div class="err">' + X.esc(x.message) + '</div>'; });
 
     function scenes() { return p.plan.scenes; }
+    // 🎭 approval: every scene's script/picture gets a short signature; clips need an approved signature
+    function hash(t) { var h = 5381; for (var k = 0; k < t.length; k++) h = ((h << 5) + h + t.charCodeAt(k)) >>> 0; return h.toString(36); }
+    function sig(i, withPic) { var sc = scenes()[i]; return hash(JSON.stringify([sc.videoPrompt || sc.visual, sc.seconds, withPic ? frame(i) || '' : '', (sc.lines || []).map(function (l) { return l.who + l.text; }), sc.sfx || ''])); }
+    function approvedFor(i) { return !!(m.approved && m.approved.sigs && m.approved.sigs[i] === sig(i)); }
+    function needApproval() { return DR && scenes().some(function (_, i) { return !approvedFor(i); }); }
+    function staleClip(i) { var c = m.clips[i]; return !!(DR && c && c.url && c.prompt && c.prompt !== sig(i, true)); }
+    function staleList() { return scenes().map(function (_, i) { return i; }).filter(staleClip); }
+    function gated(fn) {
+      return async function () {
+        if (needApproval()) await approveSheet();
+        return fn();
+      };
+    }
+    function approveSheet() {
+      return new Promise(function (ok, bad) {
+        var e = estimate(p, m), st = staleList(), stGbp = draft() ? 0 : st.reduce(function (n, i) { return n + clipLen(m.tier, scenes()[i].seconds) * rate(m.tier); }, 0), left = Math.max(0, ST.capGbp - ST.spentGbp);
+        var tierLabel = (ST.tiers.filter(function (t) { return t.id === m.tier; })[0] || {}).label || m.tier;
+        var sh = X.sheet('<h2>✅ Approve the film budget</h2><p class="muted" style="margin:4px 0 10px">Nothing costly is made until you approve. Check the screenplay and storyboard first — changes later mean remaking those scenes.</p>' +
+          '<div class="card"><div class="row" style="justify-content:space-between"><span>Quality</span><b>' + X.esc(tierLabel) + '</b></div>' +
+          [[draft() ? '' : '🎬 Video clips (' + scenes().filter(function (_, i) { return !(m.clips[i] && m.clips[i].url); }).length + ')', e.clips], ['🖼️ Pictures', e.pics], ['🎙️ Voices', e.vo], ['👄 Lip sync', e.lip], ['🔊 Sound effects', e.sfx], ['🎵 Music', e.music]].filter(function (r) { return r[0] && r[1] > 0.004; }).map(function (r) { return '<div class="row" style="justify-content:space-between;margin-top:6px"><span>' + r[0] + '</span><span>' + gbp(r[1]) + '</span></div>'; }).join('') +
+          (st.length ? '<label class="chk" style="margin-top:10px"><input type="checkbox" id="apStale" checked> Also remake ' + st.length + ' scene' + (st.length > 1 ? 's' : '') + ' whose script changed (' + st.map(function (i) { return i + 1; }).join(', ') + ') — ' + gbp(stGbp) + '</label>' : '') +
+          '<div class="row" style="justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:17px"><b>Total</b><b id="apTotal"></b></div></div>' +
+          '<p class="muted" style="font-size:13px;margin:8px 0 0">This month: ' + gbp(ST.spentGbp) + ' of £' + ST.capGbp + ' used — ' + gbp(left) + ' left. Estimates — fal.ai charges the real amount.</p>' +
+          '<div class="err hidden" id="apErr"></div><div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="apX">Not yet</button><button class="btn primary" id="apGo"></button></div>');
+        function total() { return e.total + ($('#apStale', sh) && $('#apStale', sh).checked ? stGbp : 0); }
+        function paintT() { var t = total(); $('#apTotal', sh).textContent = gbp(t); $('#apGo', sh).textContent = '✅ Approve & make (' + gbp(t) + ')'; var over = t > left; $('#apErr', sh).textContent = over ? 'This is more than what’s left of the monthly cap — an admin can raise it in ⚙️ Settings.' : ''; $('#apErr', sh).classList.toggle('hidden', !over); $('#apGo', sh).disabled = over; }
+        if ($('#apStale', sh)) $('#apStale', sh).onchange = paintT; paintT();
+        $('#apX', sh).onclick = function () { sh.remove(); bad(new Error('Not started — nothing was spent.')); };
+        $('#apGo', sh).onclick = async function () {
+          remakeStale = !!($('#apStale', sh) && $('#apStale', sh).checked);
+          var sigs = {}; scenes().forEach(function (_, i) { sigs[i] = sig(i); });
+          m.approved = { gbp: Math.round(total() * 100) / 100, at: new Date().toISOString(), sigs: sigs }; X.mark(); await X.save(); sh.remove(); ok();
+        };
+      });
+    }
     function frame(i) { return p.frames && p.frames[String(i)]; }
     function draft() { return m.tier === 'draft'; }
     function ratio() { var a = sizeOf(p, X).split(':'); return a[0] + '/' + a[1]; }
@@ -156,7 +192,9 @@
       }
       var left = Math.max(0, s.capGbp - s.spentGbp), logo = p.brief.logo, sp = speakers();
       var html =
-        '<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><b>🎬 Make the whole video</b><button class="btn link" id="vmSet">⚙️ Settings</button></div>' +
+        '<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><b>' + (DR ? '🎬 Make the film' : '🎬 Make the whole video') + '</b><button class="btn link" id="vmSet">⚙️ Settings</button></div>' +
+        (DR ? (needApproval() ? '<div class="note" style="margin:8px 0 0">🔒 <b>Approval needed.</b> Check the 📝 Screenplay and 🖼️ Storyboard, create the pictures (cheap), then “Make everything” shows the budget for you to approve before any clips are made.' + (m.approved ? ' <span class="muted">(Approved ' + gbp(m.approved.gbp) + ' earlier — ' + scenes().filter(function (_, i) { return !approvedFor(i); }).length + ' scene(s) changed since.)</span>' : '') + '</div>'
+          : '<div class="note" style="margin:8px 0 0;background:#E8F5EE;border-color:#BFE3CF">✅ Budget approved — ' + gbp(m.approved.gbp) + ' on ' + X.esc(new Date(m.approved.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + '.</div>') : '') +
         '<div class="lbl">Quality</div><div class="chipbar" id="vmTier">' + s.tiers.map(function (t) { return '<button class="chip" data-v="' + t.id + '" aria-pressed="' + (t.id === m.tier) + '">' + esc(t.label) + '</button>'; }).join('') + '</div>' +
         (draft() ? '<p class="muted" style="font-size:13px;margin:6px 0 0">📝 Draft makes the whole ad from the start pictures with gentle camera moves — check the story, timing and voices cheaply, then switch to Budget/Premium for real clips.</p>' : '') +
         '<div class="lbl">Voices</div><div class="chipbar" id="vmSrc"><button class="chip" data-v="ai" aria-pressed="' + (m.voSource !== 'own') + '">🤖 AI voices</button><button class="chip" data-v="own" aria-pressed="' + (m.voSource === 'own') + '">🎤 My own voice</button></div>' +
@@ -166,7 +204,7 @@
           : '<p class="muted" style="font-size:13px;margin:6px 0 0">Record or upload your own voice in the voices step — one clip per scene (best for timing) or one file for the whole ad. Free. (Lip sync needs AI voices.)</p>') +
         '<div style="margin-top:8px"><label>Music</label><div class="chipbar" id="vmMus"><button class="chip" data-v="1" aria-pressed="' + !!m.music + '">🎵 AI music</button><button class="chip" data-v="0" aria-pressed="' + !m.music + '">🔇 No music</button></div></div>' +
         (m.music ? '<label for="vmMP" style="margin-top:6px">Music style</label><input id="vmMP" value="' + esc(m.musicPrompt) + '"><label for="vmMV">Music volume</label><input type="range" id="vmMV" min="5" max="60" value="' + Math.round(m.musicVol * 100) + '">' : '') +
-        '<div class="row" style="gap:16px;margin-top:8px;flex-wrap:wrap"><label class="chk"><input type="checkbox" id="vmCap"' + (m.captions ? ' checked' : '') + '> Subtitles</label><label class="chk"><input type="checkbox" id="vmEnd"' + (m.endCard ? ' checked' : '') + '> End card with call to action</label>' +
+        '<div class="row" style="gap:16px;margin-top:8px;flex-wrap:wrap"><label class="chk"><input type="checkbox" id="vmCap"' + (m.captions ? ' checked' : '') + '> Subtitles</label><label class="chk"><input type="checkbox" id="vmEnd"' + (m.endCard ? ' checked' : '') + '> ' + (DR ? 'Brand reveal title card' : 'End card with call to action') + '</label>' +
           (st.sfxNeed.length ? '<label class="chk"><input type="checkbox" id="vmSfxOn"' + (m.sfxOn ? ' checked' : '') + '> Sound effects</label>' : '') +
           (logo ? '<label class="chk"><input type="checkbox" id="vmLogo"' + (m.logoOn ? ' checked' : '') + '> Logo on the video</label>' : '') + '</div>' +
         '<div class="note" style="margin-top:10px">Size: <b>' + sizeOf(p, X) + '</b> · Estimated cost still to spend: <b>' + gbp(e.total) + '</b> <span class="muted">(' + [draft() ? '' : 'clips ' + gbp(e.clips), 'pictures ' + gbp(e.pics), 'voices ' + gbp(e.vo), e.lip ? 'lip sync ' + gbp(e.lip) : '', e.sfx ? 'sound effects ' + gbp(e.sfx) : '', 'music ' + gbp(e.music)].filter(Boolean).join(' · ') + ')</span><br>This month: ' + gbp(s.spentGbp) + ' of £' + s.capGbp + ' — ' + gbp(left) + ' left.</div>' +
@@ -198,7 +236,7 @@
         html += '<div class="card vmstep"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:6px"><b>' + tick(st.clips === st.n, st.pending) + ' ' + n + ' · Video clips (' + st.clips + '/' + st.n + ')</b><span class="apact"><button class="btn ghost sm" id="vmChkAll">🔍 Check all</button><button class="btn ghost sm" id="vmClips">🎬 Make missing</button></span></div>' +
           scenes().map(function (sc, i) {
             var c = m.clips[i] || {};
-            var state = c.url ? '✅ Ready' : c.error ? '⚠️ ' + esc(c.error) : c.statusUrl ? '⏳ ' + (c.status === 'IN_PROGRESS' ? 'Making…' : 'Waiting in line…') : frame(i) ? '◻️ Not started' : '◻️ Needs a start picture';
+            var state = staleClip(i) ? '📝 Script or picture changed since this clip — 🔄 Redo to match' : c.url ? '✅ Ready' : c.error ? '⚠️ ' + esc(c.error) : c.statusUrl ? '⏳ ' + (c.status === 'IN_PROGRESS' ? 'Making…' : 'Waiting in line…') : frame(i) ? '◻️ Not started' : '◻️ Needs a start picture';
             return '<div class="vmrow"><div class="vmthumb">' + (c.url ? '<video src="' + esc(c.url) + '" muted loop playsinline preload="metadata" crossorigin="anonymous"></video>' : frame(i) ? '<img src="' + X.frameSrc(frame(i)) + '" alt="">' : '') + '</div>' +
               '<div style="flex:1;min-width:0"><b>' + (i + 1) + '. ' + esc(sc.title) + '</b> <span class="muted">· ' + sc.seconds + 's' + (sc.product ? ' · 📦' : '') + (sc.lipSync ? ' · 👄' : '') + '</span><div class="muted" style="font-size:13px">' + state + '</div>' + checkHtml(i) + '</div>' +
               (c.url ? '<button class="btn ghost sm" data-chk="' + i + '" title="Check it matches the characters / product">🔍</button>' : '') +
@@ -260,14 +298,15 @@
       }
       // 8 · edit & export
       n++;
-      html += '<div class="card vmstep"><b>' + n + ' · ✂️ Edit & export</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Joins the ' + (draft() ? 'pictures with gentle camera moves' : 'clips') + ', trims each to its scene, adds transitions, on-screen text' + (m.captions ? ', subtitles' : '') + (logo && m.logoOn ? ', your logo' : '') + (m.endCard ? ', the end card' : '') + ', voices' + (st.sfxNeed.length && m.sfxOn ? ', sound effects' : '') + (m.music ? ' and music' : '') + ' — then saves an MP4' + (draft() ? '' : '. Scenes without a clip use their start picture') + '.</p>' +
-        '<button class="btn primary" id="vmRender" style="width:100%">🎬 Make the ' + (draft() ? 'draft' : 'final') + ' video</button>' +
+      html += '<div class="card vmstep"><b>' + n + ' · ✂️ Edit & export</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Joins the ' + (draft() ? 'pictures with gentle camera moves' : 'clips') + ', trims each to its scene, adds transitions, on-screen text' + (m.captions ? ', subtitles' : '') + (logo && m.logoOn ? ', your logo' : '') + (m.endCard ? (DR ? ', the brand reveal' : ', the end card') : '') + ', voices' + (st.sfxNeed.length && m.sfxOn ? ', sound effects' : '') + (m.music ? ' and music' : '') + ' — then saves an MP4' + (draft() ? '' : '. Scenes without a clip use their start picture') + '.</p>' +
+        '<button class="btn primary" id="vmRender" style="width:100%">🎬 Make the ' + (draft() ? 'draft' : 'final') + ' ' + (DR ? 'film' : 'video') + '</button>' +
         '<div id="vmProg" class="hidden" style="margin-top:10px"><div class="muted" id="vmProgT" style="font-size:13px"></div><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:4px"><div id="vmProgB" style="height:100%;width:0;background:var(--green)"></div></div></div>' +
         '<div id="vmOut"></div>' +
         (m.finals.length ? '<div class="lbl" style="margin-top:12px">📼 Saved videos (last 3)</div>' + m.finals.map(function (f, k) {
           return '<div class="vmrow"><div style="flex:1;font-size:13.5px">🎬 ' + esc(new Date(f.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + ' <span class="muted">· ' + (f.size / 1048576).toFixed(1) + ' MB</span></div><button class="btn ghost sm" data-fdl="' + k + '">⬇️ Download</button><button class="btn link" data-frm="' + k + '" style="color:var(--danger)">🗑️</button></div>';
         }).join('') : '') + '</div>';
       root.innerHTML = html;
+      if (lastOut) { $('#vmOut', root).innerHTML = lastOut.html; $('#vmProg', root).classList.remove('hidden'); $('#vmProgT', root).textContent = lastOut.msg; $('#vmProgB', root).style.width = '100%'; }
       wireUi(st);
     }
     function wireUi(st) {
@@ -306,18 +345,18 @@
       $$('[data-castup]', root).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { var d = await X.shrink(f); m.castImgs[inp.dataset.castup] = (await X.api('app-img', { image: d })).imgId; X.mark(); paint(); } catch (x) { X.toast(x.message); } }; });
       on('#vmPics', function () { run(this, makePics); });
       $$('[data-repic]', root).forEach(function (b) { b.onclick = function (ev) { ev.stopPropagation(); var i = +b.dataset.repic; if (m.clips[i] && m.clips[i].url && !confirm('Make a new start picture for scene ' + (i + 1) + '? Its clip will need remaking.')) return; run(b, function () { return makePic(i); }); }; });
-      on('#vmClips', function () { run(this, makeClips); });
+      on('#vmClips', function () { run(this, gated(makeClips)); });
       $$('[data-redo]', root).forEach(function (b) { b.onclick = function () { var i = +b.dataset.redo; if ((m.clips[i] && m.clips[i].url) && !confirm('Make scene ' + (i + 1) + ' again? (costs about ' + gbp(clipLen(m.tier, scenes()[i].seconds) * rate(m.tier)) + ')')) return; run(b, function () { return makeClip(i); }); }; });
       $$('[data-chk]', root).forEach(function (b) { b.onclick = function () { checkScene(+b.dataset.chk, true); }; });
       on('#vmChkAll', function () { scenes().forEach(function (_, i) { if ((m.clips[i] && m.clips[i].url) || (draft() && frame(i))) checkScene(i, true); }); });
       on('#vmVo', function () { run(this, makeVoices); });
-      on('#vmLip', function () { run(this, function () { return makeLips(false); }); });
+      on('#vmLip', function () { run(this, gated(function () { return makeLips(false); })); });
       $$('[data-lip]', root).forEach(function (b) { b.onclick = function () { run(b, function () { return makeLip(+b.dataset.lip); }); }; });
-      on('#vmSfx', function () { run(this, function () { return makeSfxAll(false); }); });
+      on('#vmSfx', function () { run(this, gated(function () { return makeSfxAll(false); })); });
       $$('[data-sfx]', root).forEach(function (b) { b.onclick = function () { run(b, function () { return makeSfx(+b.dataset.sfx); }); }; });
-      on('#vmMusic', function () { run(this, makeMusic); });
+      on('#vmMusic', function () { run(this, DR && !(m.musicJob && (m.musicJob.url || m.musicJob.error)) ? gated(makeMusic) : makeMusic); });
       on('#vmRender', function () { render(this); });
-      on('#vmAll', function () { run(this, everything); });
+      on('#vmAll', function () { run(this, DR ? gated(everything) : everything); });
       $$('[data-fdl]', root).forEach(function (b) { b.onclick = function () { downloadFinal(m.finals[+b.dataset.fdl], b); }; });
       $$('[data-frm]', root).forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this saved video?')) return; var f = m.finals.splice(+b.dataset.frm, 1)[0]; X.mark(); await X.save(); X.api('vm-final-delete', { fid: f.fid, parts: f.parts }).catch(function () {}); paint(); }; });
       $$('.vmthumb video', root).forEach(function (v) { v.onmouseenter = function () { v.play().catch(function () {}); }; v.onmouseleave = function () { v.pause(); }; v.onclick = function () { v.paused ? v.play() : v.pause(); }; });
@@ -398,11 +437,12 @@
     async function makeClip(i) {
       var sc = scenes()[i]; if (!frame(i)) throw new Error('Scene ' + (i + 1) + ' needs a start picture first.');
       var r = await X.api('vm-clip', { tier: m.tier, imgId: frame(i), prompt: sc.videoPrompt || sc.visual, seconds: sc.seconds, negative: p.plan.lookbook.negative, aspect: sizeOf(p, X) });
-      m.clips[i] = Object.assign({}, r.job, { status: 'IN_QUEUE', url: '', error: '' }); delete m.lipsync[i]; delete m.checks[i]; X.mark(); paint(); poll();
+      m.clips[i] = Object.assign({}, r.job, { status: 'IN_QUEUE', url: '', error: '', prompt: sig(i, true) }); delete m.lipsync[i]; delete m.checks[i]; X.mark(); paint(); poll();
     }
     async function makeClips() {
       if (draft()) return;
-      for (var i = 0; i < scenes().length; i++) { var c = m.clips[i]; if (c && (c.url || pend(c))) continue; if (!frame(i)) continue; await makeClip(i); }
+      for (var i = 0; i < scenes().length; i++) { var c = m.clips[i]; if (c && (c.url || pend(c)) && !(remakeStale && staleClip(i))) continue; if (!frame(i)) continue; await makeClip(i); }
+      remakeStale = false;
     }
     // ── consistency check: one frame from the middle of the clip vs the reference photos ──
     async function grabFrame(i) {
@@ -506,13 +546,14 @@
       try {
         var out = await composeVideo(p, m, X, prog);
         var url = URL.createObjectURL(out.blob);
-        $('#vmOut', root).innerHTML = '<video src="' + url + '" controls playsinline style="width:100%;max-width:' + (sizeOf(p, X) === '16:9' ? 560 : 320) + 'px;display:block;margin:10px auto;border-radius:10px"></video><a class="btn primary" style="width:100%;text-align:center" href="' + url + '" download="' + X.slug() + '.' + out.ext + '">⬇️ Download the video</a>';
+        var outHtml = '<video src="' + url + '" controls playsinline style="width:100%;max-width:' + (sizeOf(p, X) === '16:9' ? 560 : 320) + 'px;display:block;margin:10px auto;border-radius:10px"></video><a class="btn primary" style="width:100%;text-align:center" href="' + url + '" download="' + X.slug() + '.' + out.ext + '">⬇️ Download the ' + (DR ? 'film' : 'video') + '</a>';
+        lastOut = { html: outHtml, msg: 'Saving a copy in HQ…' }; $('#vmOut', root).innerHTML = outHtml;
         prog(1, out.ok ? 'Done ✅ — saving a copy in HQ…' : 'Done — but this browser made a format Instagram may not accept. For Instagram-ready MP4 use Chrome or Edge on a laptop.');
         if (p.status === 'scripted' || p.status === 'generating' || p.status === 'idea') { p.status = 'editing'; X.mark(); }
         var msg;
         try { await saveFinal(out, prog); msg = (out.ok ? 'Done ✅ — your video is ready' : 'Done — but this browser made a format Instagram may not accept (use Chrome or Edge on a laptop)') + ' and a copy is saved in HQ (📼 below).'; }
         catch (x) { msg = 'Done ✅ — download it now (couldn’t save a copy in HQ: ' + x.message + ')'; }
-        var keepOut = $('#vmOut', root).innerHTML; paint(); $('#vmOut', root).innerHTML = keepOut; prog(1, msg);
+        lastOut = { html: outHtml, msg: msg }; paint();
       } catch (x) { prog(0, '⚠️ ' + (x.message || 'Couldn’t make the video.')); }
       btn.disabled = false;
     }
@@ -603,6 +644,28 @@
     var lines = wrap(c, cta, w * 0.8), y = h * 0.54; lines.forEach(function (ln, k) { c.fillText(ln, w / 2, y + k * fs * 1.3); });
     var contact = p.brief.forWho === 'auntietobi' ? 'auntietobi.co.uk · @auntietobi_uk' : (p.brief.contact || p.brief.link || '');
     if (contact) { c.font = '600 ' + Math.round(S * 0.036) + 'px "DM Sans",sans-serif'; c.fillStyle = 'rgba(255,255,255,.9)'; wrap(c, contact, w * 0.84).forEach(function (ln, k) { c.fillText(ln, w / 2, h * 0.72 + k * S * 0.05); }); }
+    c.restore();
+  }
+  // 🎭 mini-drama ending: a short, elegant brand reveal (logo, name, tagline)
+  function revealCard(c, w, h, p, t, logo) {
+    var S = Math.min(w, h), g = c.createRadialGradient(w / 2, h * 0.42, S * 0.05, w / 2, h * 0.42, Math.max(w, h) * 0.75);
+    g.addColorStop(0, '#12352A'); g.addColorStop(1, '#05070B'); c.fillStyle = g; c.fillRect(0, 0, w, h);
+    var ease = function (x) { x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); };
+    c.save(); c.textAlign = 'center';
+    var y = h * 0.4;
+    if (logo) {
+      var a = ease(t / 0.6), k = Math.min(S * 0.3 / logo.naturalWidth, S * 0.3 / logo.naturalHeight) * (0.85 + 0.15 * a), lw = logo.naturalWidth * k, lh = logo.naturalHeight * k;
+      c.globalAlpha = a; c.fillStyle = 'rgba(255,255,255,.96)'; rr(c, (w - lw) / 2 - S * 0.03, y - lh - S * 0.03, lw + S * 0.06, lh + S * 0.06, S * 0.03); c.fill(); c.drawImage(logo, (w - lw) / 2, y - lh, lw, lh);
+      y += S * 0.12;
+    }
+    var name = p.brief.forWho === 'auntietobi' ? 'Auntie Tobi' : (p.brief.business || ''), sz = Math.round(S * 0.085);
+    c.globalAlpha = ease((t - 0.3) / 0.5); c.fillStyle = '#FFFFFF'; c.font = '800 ' + sz + 'px "Poppins","DM Sans",sans-serif';
+    wrap(c, name, w * 0.84).forEach(function (ln, k) { c.fillText(ln, w / 2, y + k * sz * 1.12); }); y += sz * 1.4;
+    var tag = (p.plan.reveal && p.plan.reveal.tagline) || p.plan.post.endCard || '', fs = Math.round(S * 0.048);
+    c.globalAlpha = ease((t - 0.7) / 0.5); c.fillStyle = '#FFB81C'; c.font = 'italic 600 ' + fs + 'px "DM Sans",sans-serif';
+    wrap(c, tag, w * 0.8).forEach(function (ln, k) { c.fillText(ln, w / 2, y + k * fs * 1.3); });
+    var contact = p.brief.forWho === 'auntietobi' ? 'auntietobi.co.uk · @auntietobi_uk' : (p.brief.contact || p.brief.link || '');
+    if (contact) { c.globalAlpha = ease((t - 1.1) / 0.5) * 0.85; c.fillStyle = '#FFFFFF'; c.font = '600 ' + Math.round(S * 0.034) + 'px "DM Sans",sans-serif'; wrap(c, contact, w * 0.84).forEach(function (ln, k) { c.fillText(ln, w / 2, h * 0.8 + k * S * 0.048); }); }
     c.restore();
   }
   function useLip(m, i) { return m.tier !== 'draft' && m.voSource !== 'own' && m.lipsync && m.lipsync[i] && m.lipsync[i].url; }
@@ -709,7 +772,7 @@
     for (var fI = 0; fI < frames; fI++) {
       if (failed) throw failed;
       var T = fI / FPS;
-      if (T >= tt) endCard(cx, W, H, p, T - tt, logo);
+      if (T >= tt) (p.brief.mode === 'drama' ? revealCard : endCard)(cx, W, H, p, T - tt, logo);
       else {
         var si = 0; while (si < scenes.length - 1 && T >= starts[si + 1]) si++;
         var lt = T - starts[si];

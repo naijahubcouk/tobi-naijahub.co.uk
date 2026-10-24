@@ -16,6 +16,9 @@ const KEY = 'hq/videoads';
 const MAX = 300;
 const STATUSES = ['idea', 'scripted', 'generating', 'editing', 'ready', 'posted'];
 const LENGTHS = [15, 30, 60];
+const DRAMA_LENGTHS = [30, 45, 60, 90, 120];
+const GENRES = { family: 'Nigerian family comedy', romcom: 'Romantic comedy', drama: 'Emotional drama', suspense: 'Suspense', mystery: 'Mystery', action: 'Action', everyday: 'Everyday UK-Nigerian life' };
+const BEATS = ['hook', 'setup', 'conflict', 'twist', 'resolution', 'reveal'];
 const PLATFORMS = { reels: 'Instagram Reels (9:16)', tiktok: 'TikTok (9:16)', stories: 'Instagram/WhatsApp Stories (9:16)', shorts: 'YouTube Shorts (9:16)', feed: 'Instagram/Facebook feed (4:5)' };
 const TONES = ['warm', 'funny', 'premium', 'urgent', 'inspiring', 'friendly'];
 const LANGS = { english: 'British English', pidgin: 'British English with a light touch of Nigerian Pidgin', yoruba: 'British English with a few Yoruba phrases', igbo: 'British English with a few Igbo phrases' };
@@ -39,18 +42,22 @@ function cleanBrief(b) {
     contact: cleanText(b.contact, 120),
     link: cleanText(b.link, 300),
     goal: GOALS.includes(b.goal) ? b.goal : 'enquiries',
-    length: LENGTHS.includes(Number(b.length)) ? Number(b.length) : 30,
+    mode: b.mode === 'drama' ? 'drama' : 'ad',
+    length: (b.mode === 'drama' ? DRAMA_LENGTHS : LENGTHS).includes(Number(b.length)) ? Number(b.length) : (b.mode === 'drama' ? 60 : 30),
+    genre: GENRES[b.genre] ? b.genre : 'family',
+    humour: Math.max(0, Math.min(100, Number(b.humour) >= 0 ? Number(b.humour) : 60)),
+    brandPush: Math.max(0, Math.min(100, Number(b.brandPush) >= 0 ? Number(b.brandPush) : 25)),
     platform: PLATFORMS[b.platform] ? b.platform : 'reels',
     tone: TONES.includes(b.tone) ? b.tone : 'warm',
     lang: LANGS[b.lang] ? b.lang : 'english',
     notes: str(b.notes, 2000),
-    size: SIZES.includes(b.size) ? b.size : (b.platform === 'feed' ? '4:5' : '9:16'),
+    size: b.mode === 'drama' ? '9:16' : SIZES.includes(b.size) ? b.size : (b.platform === 'feed' ? '4:5' : '9:16'),
     products: (Array.isArray(b.products) ? b.products : []).filter(v => /^e[a-z0-9]{6,30}$/.test(String(v))).slice(0, 4),
     productNote: str(b.productNote, 300),
     logo: /^e[a-z0-9]{6,30}$/.test(String(b.logo || '')) ? b.logo : '',
     castNotes: str(b.castNotes, 300),
     refStyle: str(b.refStyle, 2500),
-    concept: b.concept && typeof b.concept === 'object' ? { title: str(b.concept.title, 120), genre: str(b.concept.genre, 80), logline: str(b.concept.logline, 400), beats: arr(b.concept.beats, 8, 200) } : null,
+    concept: b.concept && typeof b.concept === 'object' ? { title: str(b.concept.title, 120), genre: str(b.concept.genre, 80), logline: str(b.concept.logline, 400), beats: arr(b.concept.beats, 8, 200), characters: str(b.concept.characters, 300), productMoment: str(b.concept.productMoment, 300) } : null,
   };
 }
 function cleanScene(s, i) {
@@ -75,7 +82,9 @@ function cleanScene(s, i) {
     character: !!s.character || (Array.isArray(s.cast) && s.cast.length > 0),
     cast: arr(s.cast, 3, 40),
     product: !!s.product,
-    lines: (Array.isArray(s.lines) ? s.lines : []).map(l => l && typeof l === 'object' ? { who: str(l.who, 40) || 'Narrator', text: str(l.text, 300) } : null).filter(l => l && l.text).slice(0, 4),
+    heading: str(s.heading, 100),
+    beat: BEATS.includes(s.beat) ? s.beat : '',
+    lines: (Array.isArray(s.lines) ? s.lines : []).map(l => l && typeof l === 'object' ? { who: str(l.who, 40) || 'Narrator', text: str(l.text, 300), emotion: str(l.emotion, 40) } : null).filter(l => l && l.text).slice(0, 4),
   };
 }
 function cleanPlan(p) {
@@ -96,9 +105,11 @@ function cleanPlan(p) {
       character: str(lb.character, 700), characterSheetPrompt: str(lb.characterSheetPrompt, 1200), wardrobe: str(lb.wardrobe, 300),
       setting: str(lb.setting, 400), palette: str(lb.palette, 200), lighting: str(lb.lighting, 200), style: str(lb.style, 300), negative: str(lb.negative, 400),
     },
-    scenes: (Array.isArray(p.scenes) ? p.scenes : []).slice(0, 14).map(cleanScene),
-    cast: (Array.isArray(p.cast) ? p.cast : []).slice(0, 3).map(c => c && typeof c === 'object' ? { name: str(c.name, 40), role: str(c.role, 120), description: str(c.description, 600), sheetPrompt: str(c.sheetPrompt, 1200), gender: ['female', 'male'].includes(c.gender) ? c.gender : '', voiceHint: str(c.voiceHint, 160) } : null).filter(c => c && c.name),
-    concept: p.concept && typeof p.concept === 'object' ? { title: str(p.concept.title, 120), genre: str(p.concept.genre, 80), logline: str(p.concept.logline, 400) } : null,
+    scenes: (Array.isArray(p.scenes) ? p.scenes : []).slice(0, 24).map(cleanScene),
+    cast: (Array.isArray(p.cast) ? p.cast : []).slice(0, 3).map(c => c && typeof c === 'object' ? { name: str(c.name, 40), role: str(c.role, 120), personality: str(c.personality, 300), description: str(c.description, 600), sheetPrompt: str(c.sheetPrompt, 1200), gender: ['female', 'male'].includes(c.gender) ? c.gender : '', voiceHint: str(c.voiceHint, 160) } : null).filter(c => c && c.name),
+    concept: p.concept && typeof p.concept === 'object' ? { title: str(p.concept.title, 120), genre: str(p.concept.genre, 80), logline: str(p.concept.logline, 400), beats: arr(p.concept.beats, 8, 200), productMoment: str(p.concept.productMoment, 300) } : null,
+    reveal: { tagline: str(p.reveal && p.reveal.tagline, 120) },
+    storyCheck: p.storyCheck && typeof p.storyCheck === 'object' ? { score: Math.max(0, Math.min(10, Number(p.storyCheck.score) || 0)), at: cleanText(p.storyCheck.at, 40), issues: (Array.isArray(p.storyCheck.issues) ? p.storyCheck.issues : []).slice(0, 12).map(x => x && typeof x === 'object' ? { n: Math.max(0, Math.min(24, Number(x.n) || 0)), problem: str(x.problem, 240), fix: str(x.fix, 240) } : null).filter(x => x && x.problem) } : null,
     voice: { direction: str(vo.direction, 500), script: str(vo.script, 2000), elevenlabs: str(vo.elevenlabs, 400) },
     music: { mood: str(mu.mood, 200), bpm: str(mu.bpm, 40), search: arr(mu.search, 6, 80), trending: str(mu.trending, 300), sfx: arr(mu.sfx, 10, 80) },
     editing: arr(p.editing, 20, 300),
@@ -127,6 +138,7 @@ function cleanMake(m) {
     lines: map(m.lines, a => Array.isArray(a) ? a.slice(0, 4).map(l => l && url(l.url) ? { url: url(l.url), who: str(l.who, 40), text: str(l.text, 300), voice: cleanText(l.voice, 40) } : null).filter(Boolean) : null),
     sfx: map(m.sfx, job), lipsync: map(m.lipsync, job),
     checks: map(m.checks, c => c && typeof c === 'object' ? { ok: !!c.ok, issues: arr(c.issues, 5, 160), clip: url(c.clip) } : null),
+    approved: m.approved && typeof m.approved === 'object' ? { gbp: Number(m.approved.gbp) || 0, at: cleanText(m.approved.at, 40), sigs: (o => { const out = {}; Object.entries(o && typeof o === 'object' ? o : {}).forEach(([k, v]) => { if (/^\d{1,2}$/.test(k) && /^[a-z0-9]{1,16}$/.test(String(v))) out[k] = String(v); }); return out; })(m.approved.sigs) } : null,
     finals: (Array.isArray(m.finals) ? m.finals : []).map(f => f && /^f[a-z0-9]{8,30}$/.test(String(f.fid)) ? { fid: f.fid, parts: Math.max(1, Math.min(80, Number(f.parts) || 1)), size: Number(f.size) || 0, at: cleanText(f.at, 40), ext: f.ext === 'webm' ? 'webm' : 'mp4' } : null).filter(Boolean).slice(0, 3),
   };
 }
@@ -310,4 +322,4 @@ async function rewrite(brief, field, text, how, context) {
   return String(out.text || '').replace(/^["“]|["”]$/g, '').trim().slice(0, 1500);
 }
 
-module.exports = { list, save, remove, concepts, analyseReference, checkClip, planStep1, planPrompts, planFinish, rewrite, STATUSES, PLATFORMS, TONES, LANGS, GOALS, DZINE_VIDEO };
+module.exports = { cleanBrief, cleanPlan, cleanScene, briefText, ask, str, arr, GENRES, BEATS, DRAMA_LENGTHS, list, save, remove, concepts, analyseReference, checkClip, planStep1, planPrompts, planFinish, rewrite, STATUSES, PLATFORMS, TONES, LANGS, GOALS, DZINE_VIDEO };

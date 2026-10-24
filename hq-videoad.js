@@ -14,6 +14,12 @@
   var TONES = { warm: '🤗 Warm', funny: '😂 Funny', premium: '✨ Premium', urgent: '⏰ Urgent', inspiring: '🌟 Inspiring', friendly: '😊 Friendly' };
   var LANGS = { english: 'British English', pidgin: 'English + a touch of Pidgin', yoruba: 'English + Yoruba phrases', igbo: 'English + Igbo phrases' };
   var MODELS = ['Kling', 'Veo 3.1', 'Hailuo', 'Sora 2', 'Wan', 'Seedance'];
+  var GENRES = { family: '👨‍👩‍👧 Nigerian family comedy', romcom: '💘 Romantic comedy', drama: '😢 Emotional drama', suspense: '😰 Suspense', mystery: '🕵🏾 Mystery', action: '💥 Action', everyday: '🇬🇧 Everyday UK-Naija life' };
+  var DLENS = { 30: '30s', 45: '45s', 60: '60s', 90: '90s (beta)', 120: '2 min (beta)' };
+  var BEATS = { hook: '🪝 Hook', setup: '🏠 Setup', conflict: '⚡ Conflict', twist: '🌀 Twist', resolution: '🤝 Resolution', reveal: '✨ Brand reveal' };
+  var DTABS = [['story', '🎭 Story'], ['screenplay', '📝 Screenplay'], ['board', '🖼️ Storyboard'], ['dzine', '🤖 Prompts'], ['voice', '🎙️ Voice & music'], ['post', '📣 Post'], ['make', '🎬 Make the film']];
+  var filter = 'all';
+  function isDrama(p) { return p && p.brief && p.brief.mode === 'drama'; }
   var TABS = [['strategy', '🎯 Strategy'], ['script', '📝 Script'], ['board', '🎬 Storyboard'], ['dzine', '🤖 Dzine prompts'], ['voice', '🎙️ Voice & music'], ['edit', '✂️ Edit guide'], ['post', '📣 Post'], ['check', '✅ Checklist'], ['make', '🎬 Make the video']];
 
   function init(ctx) { X = ctx; }
@@ -71,19 +77,22 @@
   // ════════ list ════════
   function view() {
     $('#ttl').textContent = 'Video Ad Studio';
-    $('#topRight').innerHTML = '<button class="btn primary" id="vaNew">＋ New video ad</button>';
-    var items = list();
+    $('#topRight').innerHTML = '<span class="row" style="gap:8px"><button class="btn ghost" id="mdNew">🎭 New mini-drama</button><button class="btn primary" id="vaNew">＋ New video ad</button></span>';
+    var all = list(), items = all.filter(function (p) { return filter === 'all' || (filter === 'drama') === isDrama(p); });
     $('#view').innerHTML = '<div class="wrap">' +
-      '<div class="note" style="margin-bottom:12px">Plan scroll-stopping video adverts for businesses (or for Auntie Tobi). AI writes the story, script, storyboard and <b>Dzine</b> prompts, plus the voiceover, music and CapCut guide. Preview it as an animatic, then make the clips in Dzine.</div>' +
+      '<div class="note" style="margin-bottom:12px">Plan scroll-stopping video adverts for businesses (or for Auntie Tobi) — or a <b>🎭 mini-drama</b>: an original short film where the product is part of the story. AI writes the story, screenplay, storyboard and prompts, then makes the whole video.</div>' +
+      (all.some(isDrama) ? '<div class="chipbar" id="vaFilter" style="margin-bottom:10px">' + [['all', 'All'], ['ad', '🎥 Ads'], ['drama', '🎭 Mini-dramas']].map(function (f) { return '<button class="chip" data-f="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + '</button>'; }).join('') + '</div>' : '') +
       (items.length ? '<div class="cargrid">' + items.map(function (p) {
         var f = p.frames && (p.frames['0'] || p.frames[Object.keys(p.frames)[0]]);
         return '<div class="card carcard" data-vopen="' + p.id + '">' + (f ? '<img class="carthumb" style="object-fit:cover" src="' + frameSrc(f) + '" alt="">' : '<div class="carthumb" style="display:flex;align-items:center;justify-content:center;font-size:34px;background:#0F1E36">🎥</div>') +
-          '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15.5px;line-height:1.3">' + esc(p.plan.title || 'Untitled ad') + '</div>' +
-          '<div class="muted" style="font-size:13px;margin-top:4px">' + esc(p.brief.forWho === 'auntietobi' ? 'Auntie Tobi' : (p.brief.business || 'Business')) + ' · ' + p.brief.length + 's · ' + esc(PLATFORMS[p.brief.platform] || '') + '</div>' +
+          '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15.5px;line-height:1.3">' + (isDrama(p) ? '🎭 ' : '') + esc(p.plan.title || 'Untitled ad') + '</div>' +
+          '<div class="muted" style="font-size:13px;margin-top:4px">' + esc(p.brief.forWho === 'auntietobi' ? 'Auntie Tobi' : (p.brief.business || 'Business')) + ' · ' + p.brief.length + 's · ' + esc(isDrama(p) ? (GENRES[p.brief.genre] || 'Mini-drama').replace(/^\S+\s/, '') : (PLATFORMS[p.brief.platform] || '')) + '</div>' +
           '<div style="font-size:13px;margin-top:6px"><b>' + esc(STATUS[p.status] || '') + '</b> <span class="muted">· edited ' + esc(fmt(p.updatedAt)) + '</span></div>' +
           '<div class="apact" style="margin-top:10px"><button class="btn primary sm" data-vopen="' + p.id + '">✏️ Open</button><button class="btn ghost sm" data-vdel="' + p.id + '">🗑 Delete</button></div></div></div>';
-      }).join('') + '</div>' : '<div class="card"><p class="muted">No video ads yet. Tap <b>＋ New video ad</b> to plan your first one.</p></div>') + '</div>';
+      }).join('') + '</div>' : '<div class="card"><p class="muted">Nothing here yet. Tap <b>＋ New video ad</b> or <b>🎭 New mini-drama</b> to start.</p></div>') + '</div>';
     $('#vaNew').onclick = function () { briefSheet(); };
+    $('#mdNew').onclick = function () { briefSheet(null, 'drama'); };
+    $$('#vaFilter [data-f]').forEach(function (b) { b.onclick = function () { filter = b.dataset.f; view(); }; });
     $$('[data-vopen]').forEach(function (b) { b.onclick = function (e) { if (e.target.closest('[data-vdel]')) return; var p = list().filter(function (x) { return x.id === b.dataset.vopen; })[0]; if (p) editor(JSON.parse(JSON.stringify(p))); }; });
     $$('[data-vdel]').forEach(function (b) {
       b.onclick = async function (e) {
@@ -94,31 +103,36 @@
   }
 
   // ════════ brief ════════
-  function briefSheet(prev) {
-    var b = Object.assign({ forWho: 'business', goal: 'enquiries', length: 30, platform: 'reels', tone: 'warm', lang: 'english' }, prev || {});
-    var s = X.sheet('<h2>🎥 New video ad</h2><p class="muted" style="margin:4px 0 10px">Tell AI about the business and what the ad should do. It plans everything for Dzine.</p>' +
+  function briefSheet(prev, mode) {
+    var D = mode === 'drama' || (prev && prev.mode === 'drama');
+    var b = Object.assign({ forWho: 'business', goal: 'enquiries', length: D ? 60 : 30, platform: 'reels', tone: 'warm', lang: 'english', genre: 'family', humour: 60, brandPush: 25 }, prev || {});
+    var s = X.sheet((D ? '<h2>🎭 New mini-drama</h2><p class="muted" style="margin:4px 0 10px">An original short film (9:16) where the business’s product is part of the story — not an advert. Tell AI about the business, pick a genre, then choose one of 3 story pitches.</p>'
+        : '<h2>🎥 New video ad</h2><p class="muted" style="margin:4px 0 10px">Tell AI about the business and what the ad should do. It plans everything for Dzine.</p>') +
       '<div class="lbl">Who is the ad for?</div>' + chips('vbFor', { business: '🏪 A business', auntietobi: '💚 Auntie Tobi' }, b.forWho) +
       '<div id="vbBiz"><label for="vbQ" style="margin-top:10px">Find a business in the Auntie Tobi directory <span class="muted" style="font-weight:400">(optional)</span></label><input id="vbQ" placeholder="Type a name, e.g. cakes Manchester" autocomplete="off"><div id="vbRes"></div>' +
       '<div class="f2"><div><label for="vbName">Business name</label><input id="vbName" value="' + esc(b.business || '') + '"></div><div><label for="vbLoc">Location</label><input id="vbLoc" value="' + esc(b.location || '') + '" placeholder="City / area"></div></div>' +
       '<label for="vbAbout">What they do</label><textarea id="vbAbout" rows="3" placeholder="What they sell or offer, what makes them special">' + esc(b.about || '') + '</textarea></div>' +
-      '<label for="vbOffer">What should the ad push? <span class="muted" style="font-weight:400">(offer, product, event, price — only real facts)</span></label><textarea id="vbOffer" rows="2">' + esc(b.offer || '') + '</textarea>' +
+      '<label for="vbOffer">' + (D ? 'Product or service to feature' : 'What should the ad push?') + ' <span class="muted" style="font-weight:400">(' + (D ? 'what it is, what makes it special — only real facts' : 'offer, product, event, price — only real facts') + ')</span></label><textarea id="vbOffer" rows="2">' + esc(b.offer || '') + '</textarea>' +
       '<div class="f2"><div><label for="vbAud">Who is it for?</label><input id="vbAud" value="' + esc(b.audience || '') + '" placeholder="e.g. Nigerian brides in the North West"></div><div><label for="vbContact">How to book / contact</label><input id="vbContact" value="' + esc(b.contact || '') + '" placeholder="WhatsApp, DM, website…"></div></div>' +
       '<label for="vbLink">Website / Instagram link <span class="muted" style="font-weight:400">(optional)</span></label><input id="vbLink" value="' + esc(b.link || '') + '" placeholder="https://"><label class="chk" style="margin-top:6px"><input type="checkbox" id="vbRead" checked> Let AI read this page for extra details</label>' +
-      '<div class="f2" style="margin-top:6px"><div><label for="vbGoal">Goal</label><select id="vbGoal">' + opts(GOALS, b.goal) + '</select></div><div><label for="vbPlat">Platform</label><select id="vbPlat">' + opts(PLATFORMS, b.platform) + '</select></div></div>' +
-      '<div class="lbl">Length</div>' + chips('vbLen', { 15: '15 seconds', 30: '30 seconds', 60: '60 seconds' }, b.length) +
-      '<div class="lbl">Tone</div>' + chips('vbTone', TONES, b.tone) +
+      (D ? '<div class="lbl">Genre</div>' + chips('vbGenre', GENRES, b.genre) +
+          '<div class="lbl">Length</div>' + chips('vbLen', DLENS, b.length) + '<p class="muted" style="font-size:12.5px;margin:4px 0 0">30–60 seconds is the most reliable. Always 9:16 vertical.</p>' +
+          '<div class="f2" style="margin-top:8px"><div><label for="vbHum">Tense ↔ Funny</label><input type="range" id="vbHum" min="0" max="100" value="' + b.humour + '"></div><div><label for="vbBrand">Brand presence: soft ↔ strong</label><input type="range" id="vbBrand" min="0" max="100" value="' + b.brandPush + '"></div></div>'
+        : '<div class="f2" style="margin-top:6px"><div><label for="vbGoal">Goal</label><select id="vbGoal">' + opts(GOALS, b.goal) + '</select></div><div><label for="vbPlat">Platform</label><select id="vbPlat">' + opts(PLATFORMS, b.platform) + '</select></div></div>' +
+          '<div class="lbl">Length</div>' + chips('vbLen', { 15: '15 seconds', 30: '30 seconds', 60: '60 seconds' }, b.length) +
+          '<div class="lbl">Tone</div>' + chips('vbTone', TONES, b.tone)) +
       '<label for="vbLang" style="margin-top:8px">Language</label><select id="vbLang">' + opts(LANGS, b.lang) + '</select>' +
-      '<div class="lbl">Video size</div>' + chips('vbSize', SIZES, b.size || '9:16') +
+      (D ? '' : '<div class="lbl">Video size</div>' + chips('vbSize', SIZES, b.size || '9:16')) +
       '<label for="vbCast" style="margin-top:8px">Characters <span class="muted" style="font-weight:400">(optional — e.g. “Nigerian woman in her 30s and her husband”)</span></label><input id="vbCast" value="' + esc(b.castNotes || '') + '">' +
       '<div class="lbl">📦 Product photos <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional, up to 4 — keeps the real product looking right)</span></div><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><span id="vbProdList" class="row" style="gap:6px"></span><label class="btn ghost sm" style="margin:0">＋ Add photos<input type="file" accept="image/*" multiple id="vbProd" hidden></label></div>' +
       '<input id="vbProdNote" style="margin-top:6px" placeholder="What is the product? e.g. MGC ceramic cookware set, cream and gold" value="' + esc(b.productNote || '') + '">' +
       '<div class="lbl">🏷️ Logo <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional — shown in the corner and on the end card)</span></div><div class="row" style="gap:8px;align-items:center"><span id="vbLogoBox"></span><label class="btn ghost sm" style="margin:0">＋ Add logo<input type="file" accept="image/*" id="vbLogo" hidden></label></div>' +
-      '<div class="lbl">🎞️ Reference video <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional — AI learns its style, never copies it)</span></div><label class="btn ghost sm" style="margin:0">＋ Upload a video you like<input type="file" accept="video/*" id="vbRef" hidden></label><div id="vbRefMsg" class="muted" style="font-size:13px;margin-top:4px"></div><textarea id="vbRefStyle" rows="4" class="' + (b.refStyle ? '' : 'hidden') + '" style="margin-top:6px">' + esc(b.refStyle || '') + '</textarea>' +
+      '<div class="lbl">🎞️ Reference video <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional — AI learns its ' + (D ? 'storytelling, pacing, character interaction, camera angles and editing' : 'style') + ', never copies it)</span></div><label class="btn ghost sm" style="margin:0">＋ Upload a video you like<input type="file" accept="video/*" id="vbRef" hidden></label><div id="vbRefMsg" class="muted" style="font-size:13px;margin-top:4px"></div><textarea id="vbRefStyle" rows="4" class="' + (b.refStyle ? '' : 'hidden') + '" style="margin-top:6px">' + esc(b.refStyle || '') + '</textarea>' +
       '<label for="vbNotes">Anything else? <span class="muted" style="font-weight:400">(ideas, must-say lines, things to avoid)</span></label><textarea id="vbNotes" rows="3">' + esc(b.notes || '') + '</textarea>' +
       '<div id="vbIdeas"></div>' +
       '<div class="err hidden" id="vbErr"></div><div id="vbProg" class="hidden" style="margin-top:10px"></div>' +
-      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="vbX">Cancel</button><button class="btn ghost" id="vbSkip">Skip ideas — plan now</button><button class="btn primary" id="vbGo">💡 Get 3 story ideas</button></div>');
-    chipWire(s, 'vbFor'); chipWire(s, 'vbLen'); chipWire(s, 'vbTone'); chipWire(s, 'vbSize');
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="vbX">Cancel</button><button class="btn ghost' + (D ? ' hidden' : '') + '" id="vbSkip">Skip ideas — plan now</button><button class="btn primary" id="vbGo">💡 Get 3 story ' + (D ? 'pitches' : 'ideas') + '</button></div>');
+    ['vbFor', 'vbLen', 'vbTone', 'vbSize', 'vbGenre'].forEach(function (id) { if ($('#' + id, s)) chipWire(s, id); });
     var products = (b.products || []).slice(), logo = b.logo || '';
     function paintAssets() {
       $('#vbProdList', s).innerHTML = products.map(function (id, k) { return '<span class="vasset"><img src="' + frameSrc(id) + '" alt=""><button type="button" data-rmp="' + k + '">✖</button></span>'; }).join('');
@@ -172,8 +186,8 @@
       var brief = {
         forWho: chipVal(s, 'vbFor'), bizSlug: slug, business: $('#vbName', s).value.trim(), location: $('#vbLoc', s).value.trim(), about: $('#vbAbout', s).value.trim(),
         offer: $('#vbOffer', s).value.trim(), audience: $('#vbAud', s).value.trim(), contact: $('#vbContact', s).value.trim(), link: $('#vbLink', s).value.trim(),
-        goal: $('#vbGoal', s).value, platform: $('#vbPlat', s).value, length: +chipVal(s, 'vbLen'), tone: chipVal(s, 'vbTone'), lang: $('#vbLang', s).value, notes: $('#vbNotes', s).value.trim(),
-        size: chipVal(s, 'vbSize'), castNotes: $('#vbCast', s).value.trim(), products: products, productNote: $('#vbProdNote', s).value.trim(), logo: logo, refStyle: $('#vbRefStyle', s).value.trim(),
+        goal: D ? 'awareness' : $('#vbGoal', s).value, platform: D ? 'reels' : $('#vbPlat', s).value, length: +chipVal(s, 'vbLen'), tone: D ? 'funny' : chipVal(s, 'vbTone'), lang: $('#vbLang', s).value, notes: $('#vbNotes', s).value.trim(),
+        size: D ? '9:16' : chipVal(s, 'vbSize'), mode: D ? 'drama' : 'ad', genre: D ? chipVal(s, 'vbGenre') : '', humour: D ? +$('#vbHum', s).value : 60, brandPush: D ? +$('#vbBrand', s).value : 25, castNotes: $('#vbCast', s).value.trim(), products: products, productNote: $('#vbProdNote', s).value.trim(), logo: logo, refStyle: $('#vbRefStyle', s).value.trim(),
       };
       if (brief.link && !/^https?:\/\//i.test(brief.link)) brief.link = 'https://' + brief.link;
       if (brief.forWho === 'business' && !brief.business && brief.about.length < 10) { err.textContent = 'Pick a business or describe it first.'; err.classList.remove('hidden'); return; }
@@ -181,22 +195,22 @@
       async function plan(withConcept) {
         $$('#vbGo,#vbSkip,[data-concept]', s).forEach(function (x) { x.disabled = true; });
         brief.concept = withConcept || null;
-        try { var proj = await runPlan(brief, '', $('#vbProg', s), $('#vbRead', s).checked); s.remove(); editor(proj, true); }
+        try { var proj = D ? await runDrama(brief, '', $('#vbProg', s), $('#vbRead', s).checked) : await runPlan(brief, '', $('#vbProg', s), $('#vbRead', s).checked); s.remove(); editor(proj, true); }
         catch (x) { err.textContent = x.message; err.classList.remove('hidden'); $$('#vbGo,#vbSkip,[data-concept]', s).forEach(function (y) { y.disabled = false; }); $('#vbProg', s).classList.add('hidden'); }
       }
       if (skip) return plan(null);
-      btn.disabled = true; btn.textContent = '💡 Thinking of ideas…';
+      btn.disabled = true; btn.textContent = D ? '✍️ Writing 3 story pitches…' : '💡 Thinking of ideas…';
       try {
-        var r = await X.api('va-concepts', { brief: brief });
+        var r = await X.api(D ? 'md-concepts' : 'va-concepts', { brief: brief });
         $('#vbIdeas', s).innerHTML = '<div class="lbl">Pick a story</div>' + r.concepts.map(function (c, k) {
           return '<div class="card vconcept"><div style="font-weight:800">' + esc(c.title) + ' <span class="vtag">' + esc(c.genre) + '</span></div><p style="margin:6px 0">' + esc(c.logline) + '</p>' +
             (c.beats.length ? '<ol class="vlist" style="font-size:13.5px">' + c.beats.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '') +
-            '<div class="muted" style="font-size:13px">👥 ' + esc(c.characters) + '<br>💡 ' + esc(c.why) + '</div><button class="btn primary sm" data-concept="' + k + '" style="margin-top:8px">🎬 Use this story</button></div>';
+            '<div class="muted" style="font-size:13px">👥 ' + esc(c.characters) + (c.productMoment ? '<br>📦 ' + esc(c.productMoment) : '') + '<br>💡 ' + esc(c.why) + '</div><button class="btn primary sm" data-concept="' + k + '" style="margin-top:8px">' + (D ? '🎬 Write this film' : '🎬 Use this story') + '</button></div>';
         }).join('');
         $$('[data-concept]', s).forEach(function (bt) { bt.onclick = function () { plan(r.concepts[+bt.dataset.concept]); }; });
         $('#vbIdeas', s).scrollIntoView({ behavior: 'smooth', block: 'start' });
-        btn.disabled = false; btn.textContent = '🔄 3 new ideas';
-      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = '💡 Get 3 story ideas'; }
+        btn.disabled = false; btn.textContent = D ? '🔄 3 new pitches' : '🔄 3 new ideas';
+      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = D ? '💡 Get 3 story pitches' : '💡 Get 3 story ideas'; }
     };
     $('#vbSkip', s).onclick = $('#vbGo', s).onclick;
   }
@@ -220,13 +234,50 @@
     return proj;
   }
 
+  // 🎭 mini-drama: outline → screenplay (3 scenes at a time) → story check (+ fixes) → prompts → caption & music
+  async function runDrama(brief, extra, progEl, readLink, keep) {
+    var steps = ['📖 Outlining the story and characters…', '📝 Writing the screenplay…', '🔍 Checking the story…', '🖼️ Writing picture and motion prompts…', '📣 Music and caption…'];
+    function show(k, note) { progEl.classList.remove('hidden'); progEl.innerHTML = steps.map(function (t, i) { return '<div style="font-size:14px;margin:3px 0;' + (i > k ? 'opacity:.45' : '') + '">' + (i < k ? '✅ ' : i === k ? '⏳ ' : '◻️ ') + esc(t) + (i === k && note ? ' <span class="muted">' + esc(note) + '</span>' : '') + '</div>'; }).join(''); }
+    var b0 = Object.assign({}, brief); if (extra) b0.notes = (b0.notes ? b0.notes + '\n' : '') + 'DIRECTION FOR THIS VERSION: ' + extra;
+    show(0);
+    var r1 = await X.api('md-outline', { brief: b0 }), plan = r1.plan, b = r1.brief, n = plan.scenes.length;
+    for (var from = 0; from < n; from += 3) {
+      show(1, 'scenes ' + (from + 1) + '–' + Math.min(n, from + 3) + ' of ' + n);
+      var r2 = await X.api('md-scenes', { brief: b, plan: plan, from: from, to: from + 3 });
+      mergeInto(plan, r2.scenes);
+    }
+    show(2); plan.storyCheck = (await X.api('md-check', { brief: b, plan: plan })).storyCheck;
+    var flagged = uniq((plan.storyCheck.issues || []).map(function (x) { return x.n; }).filter(function (v) { return v > 0; }));
+    if (flagged.length) {
+      for (var k = 0; k < flagged.length && k < 6; k += 3) { show(2, 'fixing scenes ' + flagged.slice(k, k + 3).join(', ')); mergeInto(plan, (await X.api('md-fix', { brief: b, plan: plan, nums: flagged.slice(k, k + 3) })).scenes); }
+      show(2, 'checking again'); plan.storyCheck = (await X.api('md-check', { brief: b, plan: plan })).storyCheck;
+    }
+    for (var f2 = 0; f2 < n; f2 += 4) {
+      show(3, 'scenes ' + (f2 + 1) + '–' + Math.min(n, f2 + 4) + ' of ' + n);
+      var r3 = await X.api('va-prompts', { brief: b, plan: plan, from: f2, to: f2 + 4 });
+      (r3.scenes || []).forEach(function (g) { var sc = plan.scenes.filter(function (x) { return x.n === g.n; })[0]; if (sc) { sc.imagePrompt = g.imagePrompt; sc.videoPrompt = g.videoPrompt; sc.model = g.model; sc.clipSeconds = g.clipSeconds; } });
+    }
+    show(4);
+    var r4 = await X.api('va-finish', { brief: b, plan: plan }), keepMusic = plan.music;
+    Object.assign(plan, r4); plan.music = Object.assign({}, r4.music || {}, keepMusic && keepMusic.mood ? { mood: keepMusic.mood, bpm: keepMusic.bpm || (r4.music || {}).bpm } : {});
+    plan.post.endCard = plan.reveal && plan.reveal.tagline || plan.post.endCard;
+    var proj = Object.assign({ status: 'scripted', frames: {}, done: [] }, keep || {}, { brief: b, plan: plan });
+    if (keep) { proj.frames = {}; var om = keep.make || {}; proj.make = { tier: om.tier, voice: om.voice, music: om.music, musicVol: om.musicVol, captions: om.captions, endCard: om.endCard, clips: {}, vo: {} }; }
+    return proj;
+  }
+  function uniq(a) { return a.filter(function (v, i) { return a.indexOf(v) === i; }); }
+  function mergeInto(plan, scenes) {
+    (scenes || []).forEach(function (g) { var i = plan.scenes.findIndex(function (x) { return x.n === g.n; }); if (i >= 0) { var keep = plan.scenes[i]; plan.scenes[i] = Object.assign({}, g, { imagePrompt: keep.imagePrompt || g.imagePrompt, videoPrompt: keep.videoPrompt || g.videoPrompt, model: keep.model || g.model, clipSeconds: keep.clipSeconds || g.clipSeconds }); } });
+  }
+
   // ════════ editor ════════
   function editor(p, fresh) {
     p.frames = p.frames || {}; p.done = p.done || []; p.plan.scenes = p.plan.scenes || [];
-    var tab = 'strategy', saveT = 0, dirty = false, closed = false, imgs = {}, t0 = performance.now(), playing = false, raf = 0;
+    var D = isDrama(p), T = D ? DTABS : TABS; p.make = p.make || {}; p.make.castImgs = p.make.castImgs || {};
+    var tab = D ? 'story' : 'strategy', saveT = 0, dirty = false, closed = false, imgs = {}, t0 = performance.now(), playing = false, raf = 0;
     var ov = document.createElement('div'); ov.className = 'carx';
     ov.innerHTML = '<div class="carbar"><button class="btn ghost sm" id="veX">← Back</button><input id="veTitle" class="cartitle" maxlength="120"><select id="veStatus" style="width:auto">' + opts(STATUS, p.status) + '</select><span class="muted" id="veSaved" style="font-size:13px;white-space:nowrap"></span></div>' +
-      '<div class="carbody"><div class="carleft"><div class="chipbar" id="veTabs" style="margin-bottom:10px">' + TABS.map(function (t) { return '<button class="chip" data-tab="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="vePane"></div></div>' +
+      '<div class="carbody"><div class="carleft"><div class="chipbar" id="veTabs" style="margin-bottom:10px">' + T.map(function (t) { return '<button class="chip" data-tab="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="vePane"></div></div>' +
       '<div class="carright"><div class="card" style="padding:12px"><div class="row" style="justify-content:space-between;align-items:center"><b>▶ Animatic</b><span class="muted" id="veLen" style="font-size:13px"></span></div>' +
       '<div class="carstage" style="margin-top:8px"><canvas id="veCv"></canvas></div>' +
       '<div class="row" style="justify-content:center;gap:8px;margin-top:8px"><button class="btn primary sm" id="vePlay">▶ Play</button><button class="btn ghost sm" id="veMp4">🎞 Download animatic (MP4)</button></div>' +
@@ -234,7 +285,7 @@
       '<div class="card" style="margin-top:10px"><b>⬇️ Production pack</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Script, storyboard pictures, every Dzine prompt, voiceover, captions file (.srt), music, CapCut guide and caption — in one zip.</p>' +
       '<button class="btn primary" id="vePack" style="width:100%">📦 Download production pack</button>' +
       '<div id="veProg" class="hidden" style="margin-top:10px"><div class="muted" id="veProgT" style="font-size:13px"></div><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:4px"><div id="veProgB" style="height:100%;width:0;background:var(--green)"></div></div></div>' +
-      '<button class="btn ghost sm" id="veReplan" style="margin-top:10px">🔄 Re-plan with new direction</button></div></div></div>';
+      '<button class="btn ghost sm" id="veReplan" style="margin-top:10px">' + (D ? '🔄 Rewrite the whole story' : '🔄 Re-plan with new direction') + '</button></div></div></div>';
     document.body.appendChild(ov); document.body.style.overflow = 'hidden';
     var q = function (sel) { return $(sel, ov); };
     var cv = q('#veCv'), ctx = cv.getContext('2d');
@@ -291,7 +342,38 @@
     function copyAllBtn(id, label) { return '<button class="btn ghost sm" id="' + id + '">📋 ' + label + '</button>'; }
 
     // ── panes ──
+    function beatOpts(cur) { return '<option value="">—</option>' + Object.keys(BEATS).map(function (k) { return '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + BEATS[k] + '</option>'; }).join(''); }
+    function lineStr(l) { return l.who + (l.emotion ? ' (' + l.emotion + ')' : '') + ': ' + l.text; }
     var PANES = {
+      story: function () {
+        var cc = p.plan.concept || {}, chk = p.plan.storyCheck, cast = p.plan.cast || [], ci = p.make.castImgs;
+        var issues = chk ? chk.issues || [] : [];
+        return '<div class="card"><b>🎬 ' + esc(cc.title || p.plan.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0">' + esc(cc.logline || '') + '</p>' +
+            ((cc.beats || []).length ? '<ol class="vlist" style="font-size:13.5px">' + cc.beats.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '') +
+            (cc.productMoment ? '<div class="muted" style="font-size:13px">📦 ' + esc(cc.productMoment) + '</div>' : '') + '</div>' +
+          '<div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>🔍 Story check' + (chk && chk.score ? ' — ' + chk.score + '/10' : '') + '</b><span class="apact">' + (issues.some(function (x) { return x.n > 0; }) ? '<button class="btn primary sm" id="mdFix">✨ Fix flagged scenes</button>' : '') + '<button class="btn ghost sm" id="mdCheck">🔍 Check again</button></span></div>' +
+            (chk ? (issues.length ? '<ul style="margin:8px 0 0;padding-left:18px;font-size:13.5px">' + issues.map(function (x) { return '<li style="margin:4px 0">' + (x.n ? '<b>Scene ' + x.n + ':</b> ' : '<b>Whole film:</b> ') + esc(x.problem) + (x.fix ? ' <span class="muted">→ ' + esc(x.fix) + '</span>' : '') + '</li>'; }).join('') + '</ul>' : '<p style="margin:6px 0 0">✅ Connected story, natural dialogue and a clear reveal — nothing to fix.</p>') : '<p class="muted" style="margin:6px 0 0">Not checked yet.</p>') + '</div>' +
+          '<div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between;align-items:center"><b>👥 Characters</b><button class="btn ghost sm" id="mdCastAll">🎨 Create missing photos</button></div><p class="muted" style="font-size:13px;margin:4px 0">Each character gets one reference photo (about 4p) — every storyboard picture and clip uses it so they look the same all the way through.</p>' +
+            cast.map(function (c, k) {
+              return '<div class="vscene" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div class="row" style="gap:10px;align-items:flex-start"><div style="flex:none;text-align:center">' + (ci[k] ? '<img src="' + frameSrc(ci[k]) + '" style="width:72px;height:96px;object-fit:cover;border-radius:8px;display:block" alt="">' : '<div style="width:72px;height:96px;border-radius:8px;background:#0F1E36;color:#cbd5e1;display:flex;align-items:center;justify-content:center;font-size:26px">👤</div>') +
+                '<div class="apact" style="margin-top:4px;justify-content:center"><button class="btn ghost sm" data-castpic="' + k + '" title="Create">' + (ci[k] ? '🔄' : '🎨') + '</button><label class="btn ghost sm" style="margin:0" title="Upload">📷<input type="file" accept="image/*" data-castup="' + k + '" hidden></label></div></div>' +
+                '<div style="flex:1;min-width:0"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role in the story', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Personality & way of talking', 'plan.cast.' + k + '.personality', c.personality, 2) + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 2) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 2) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '</div></div></div>';
+            }).join('') + '</div>' +
+          '<div class="card" style="margin-top:10px">' + field('✨ Brand reveal tagline (final title card)', 'plan.reveal.tagline', (p.plan.reveal || {}).tagline, 0, true) + '</div>';
+      },
+      screenplay: function () {
+        return '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px"><span class="muted" style="font-size:13px">Edit anything. Dialogue: one line each as “Name (emotion): words”. ≈ 2.5 words per second.</span>' + copyAllBtn('mdCopy', 'Copy screenplay') + '</div>' +
+          p.plan.scenes.map(function (s, i) {
+            return '<div class="card vscene"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>Scene ' + (i + 1) + '</b><select data-path="plan.scenes.' + i + '.beat" style="width:auto">' + beatOpts(s.beat) + '</select><input data-path="plan.scenes.' + i + '.heading" value="' + esc(s.heading || '') + '" placeholder="INT. KITCHEN – NIGHT" style="flex:1;min-width:180px;font-weight:700;text-transform:uppercase"><input type="number" min="1" max="15" data-path="plan.scenes.' + i + '.seconds" value="' + s.seconds + '" style="width:72px"> <span class="muted">sec</span></div>' +
+              '<div class="row" style="gap:12px;flex-wrap:wrap;margin-top:6px;font-size:13.5px">' + ((p.plan.cast || []).length ? '<span class="muted">In scene:</span>' + p.plan.cast.map(function (c) { return '<label class="chk"><input type="checkbox" data-incast="' + i + '" value="' + esc(c.name) + '"' + ((s.cast || []).indexOf(c.name) >= 0 ? ' checked' : '') + '> ' + esc(c.name) + '</label>'; }).join('') : '') +
+                '<label class="chk"><input type="checkbox" data-flag="' + i + '.product"' + (s.product ? ' checked' : '') + '> 📦 Product</label><label class="chk"><input type="checkbox" data-flag="' + i + '.lipSync"' + (s.lipSync ? ' checked' : '') + '> 👄 Lip sync</label></div>' +
+              field('🎬 Action — what we see', 'plan.scenes.' + i + '.visual', s.visual, 3) +
+              '<div class="vf"><label>🗣️ Dialogue</label><textarea rows="3" data-dlines="' + i + '" placeholder="Mama Tunde (shocked): Ehen! Who bought this?">' + esc((s.lines || []).map(lineStr).join('\n')) + '</textarea></div>' +
+              '<div class="f2">' + field('📹 Camera', 'plan.scenes.' + i + '.camera', s.camera) + field('🎥 Shot', 'plan.scenes.' + i + '.shot', s.shot) + '</div>' +
+              '<div class="f2">' + field('🔊 Sound effect', 'plan.scenes.' + i + '.sfx', s.sfx) + field('↪️ Transition', 'plan.scenes.' + i + '.transition', s.transition) + '</div>' +
+              '<div class="row" style="justify-content:space-between;align-items:flex-end;gap:8px"><div style="flex:1">' + field('🔤 Title card (optional)', 'plan.scenes.' + i + '.onScreen', s.onScreen) + '</div><button class="btn ghost sm" data-mdrw="' + i + '" style="margin-bottom:8px">✨ Rewrite this scene</button></div></div>';
+          }).join('');
+      },
       strategy: function () {
         var st = p.plan.strategy, cast = p.plan.cast || [], cc = p.plan.concept;
         return (cc && cc.title ? '<div class="card" style="margin-bottom:10px"><b>🎬 Story: ' + esc(cc.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0 0">' + esc(cc.logline || '') + '</p></div>' : '') +
@@ -315,7 +397,9 @@
           }).join('');
       },
       board: function () {
-        return '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Storyboard pictures use each scene’s Dzine start-frame prompt (about 4p each).</span><button class="btn primary sm" id="veAllPics">🎨 Create all missing pictures</button></div>' +
+        var missingCast = (p.plan.cast || []).filter(function (c, k) { return !p.make.castImgs[k]; }).length;
+        return (missingCast ? '<div class="note" style="margin-bottom:8px">👥 Create the character photos first (' + (D ? '🎭 Story' : '🎬 Make the video') + ' tab) so everyone looks the same in every picture.</div>' : '') +
+          '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Storyboard pictures use each scene’s start-frame prompt' + ((p.brief.products || []).length ? ', the character photos and your product photos' : ' and the character photos') + ' (about 4p each).</span><button class="btn primary sm" id="veAllPics">🎨 Create all missing pictures</button></div>' +
           '<div class="vboard">' + p.plan.scenes.map(function (s, i) {
             var f = p.frames[String(i)];
             return '<div class="card vbcard"><div class="vbimg' + (aspect(p) === '4:5' ? ' feed' : '') + '">' + (f ? '<img src="' + frameSrc(f) + '" alt="Scene ' + (i + 1) + '">' : '<span>Scene ' + (i + 1) + '<br><small>No picture yet</small></span>') + '</div>' +
@@ -377,6 +461,34 @@
           sc.vo = sc.lines.map(function (l) { return l.text; }).join(' ').slice(0, 400); mark();
         });
       });
+      $$('[data-dlines]', pane).forEach(function (ta) {
+        ta.addEventListener('input', function () {
+          var sc = p.plan.scenes[+ta.dataset.dlines];
+          sc.lines = ta.value.split('\n').map(function (ln) { var m2 = /^\s*([^:(]{1,40}?)\s*(?:\(([^)]{1,40})\))?\s*:\s*(.+)$/.exec(ln); return m2 ? { who: m2[1].trim(), emotion: (m2[2] || '').trim(), text: m2[3].trim() } : (ln.trim() ? { who: 'Narrator', emotion: '', text: ln.trim() } : null); }).filter(Boolean).slice(0, 4);
+          sc.vo = sc.lines.map(function (l) { return l.text; }).join(' ').slice(0, 400); mark();
+        });
+      });
+      $$('[data-castpic]', pane).forEach(function (b) { b.onclick = function () { busyBtn(b, '⏳', async function () { await castPic(+b.dataset.castpic); paintPane(); }); }; });
+      $$('[data-castup]', pane).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { p.make.castImgs[inp.dataset.castup] = (await X.api('app-img', { image: await shrink(f) })).imgId; mark(); paintPane(); } catch (x) { X.toast(x.message); } }; });
+      var mca = q('#mdCastAll'); if (mca) mca.onclick = function () { busyBtn(mca, '🎨 Creating…', async function () { for (var k = 0; k < (p.plan.cast || []).length; k++) if (!p.make.castImgs[k]) await castPic(k); paintPane(); }); };
+      var mck = q('#mdCheck'); if (mck) mck.onclick = function () { busyBtn(mck, '🔍 Checking…', async function () { p.plan.storyCheck = (await X.api('md-check', { brief: p.brief, plan: p.plan })).storyCheck; mark(); paintPane(); }); };
+      var mfx = q('#mdFix'); if (mfx) mfx.onclick = function () {
+        busyBtn(mfx, '✨ Fixing…', async function () {
+          var nums = uniq((p.plan.storyCheck.issues || []).map(function (x) { return x.n; }).filter(function (v) { return v > 0; })).slice(0, 6);
+          for (var k = 0; k < nums.length; k += 3) mergeInto(p.plan, (await X.api('md-fix', { brief: p.brief, plan: p.plan, nums: nums.slice(k, k + 3) })).scenes);
+          await refreshPrompts(nums);
+          p.plan.storyCheck = (await X.api('md-check', { brief: p.brief, plan: p.plan })).storyCheck; mark(); paintPane();
+          X.toast('Fixed ✅ — make new storyboard pictures for scenes ' + nums.join(', '));
+        });
+      };
+      $$('[data-mdrw]', pane).forEach(function (b) {
+        b.onclick = function () {
+          var i = +b.dataset.mdrw, how = prompt('How should scene ' + (i + 1) + ' change?', 'Make it funnier and the reactions bigger');
+          if (how == null) return;
+          busyBtn(b, '✨ Rewriting…', async function () { mergeInto(p.plan, (await X.api('md-fix', { brief: p.brief, plan: p.plan, nums: [i + 1], how: how })).scenes); await refreshPrompts([i + 1]); mark(); paintPane(); X.toast('Scene ' + (i + 1) + ' rewritten ✅ — make a new storyboard picture for it'); });
+        };
+      });
+      var mcp = q('#mdCopy'); if (mcp) mcp.onclick = function () { copy(screenplayText()); };
       $$('[data-incast]', pane).forEach(function (cb) { cb.onchange = function () { var sc = p.plan.scenes[+cb.dataset.incast]; sc.cast = $$('[data-incast="' + cb.dataset.incast + '"]', pane).filter(function (x) { return x.checked; }).map(function (x) { return x.value; }); sc.character = sc.cast.length > 0; mark(); }; });
       $$('[data-flag]', pane).forEach(function (cb) { cb.onchange = function () { var a = cb.dataset.flag.split('.'); p.plan.scenes[+a[0]][a[1]] = cb.checked; mark(); }; });
       $$('input[name=vhook]', pane).forEach(function (r) { r.onchange = function () { p.plan.strategy.chosenHook = +r.value; mark(); }; });
@@ -397,6 +509,26 @@
       var ce = q('#veCopyEdit'); if (ce) ce.onclick = function () { copy((p.plan.editing || []).map(function (x, i) { return (i + 1) + '. ' + x; }).join('\n')); };
       var cpo = q('#veCopyPost'); if (cpo) cpo.onclick = function () { copy(p.plan.post.caption + '\n\n' + p.plan.post.hashtags); };
     }
+    function sceneRefs(sc) {
+      var refs = [], cast = p.plan.cast || [];
+      (sc.cast || []).forEach(function (nm) { for (var k = 0; k < cast.length; k++) if (cast[k].name === nm && p.make.castImgs[k]) refs.push(p.make.castImgs[k]); });
+      if (!refs.length && sc.character && p.make.charImg) refs.push(p.make.charImg);
+      if (sc.product) (p.brief.products || []).slice(0, 2).forEach(function (id) { refs.push(id); });
+      return refs.slice(0, 4);
+    }
+    async function castPic(k) {
+      var c = (p.plan.cast || [])[k]; if (!c) return;
+      var r = await X.api('app-picture', { kind: 'frame', prompt: (c.sheetPrompt || ('Full-body reference photo of ' + c.description)) + '. Single person only, full body, facing camera, neutral expression, plain light-grey studio background, soft even light, ' + (p.plan.lookbook.style || 'photorealistic'), aspect: '9:16' });
+      p.make.castImgs[k] = (await X.api('app-img', { image: await shrink(r.image) })).imgId; mark();
+    }
+    async function refreshPrompts(nums) {
+      for (var k = 0; k < nums.length; k++) {
+        var i = nums[k] - 1; if (i < 0) continue;
+        var r = await X.api('va-prompts', { brief: p.brief, plan: p.plan, from: i, to: i + 1 });
+        (r.scenes || []).forEach(function (g) { var sc = p.plan.scenes[g.n - 1]; if (sc) { sc.imagePrompt = g.imagePrompt; sc.videoPrompt = g.videoPrompt; sc.model = g.model; sc.clipSeconds = g.clipSeconds; } });
+      }
+    }
+    async function busyBtn(btn, label, fn) { var keep = btn.textContent; btn.disabled = true; btn.textContent = label; try { await fn(); } catch (x) { X.toast(x.message); } btn.disabled = false; btn.textContent = keep; }
     async function setPic(i, dataUrl) {
       var r = await X.api('app-img', { image: dataUrl });
       p.frames[String(i)] = r.imgId; imgs[r.imgId] = null; mark(); if (tab === 'board') paintPane(); loadImgs();
@@ -404,7 +536,7 @@
     async function makePic(i, btn) {
       var s = p.plan.scenes[i]; if (!s || !s.imagePrompt) { X.toast('This scene has no start-frame prompt yet'); return; }
       if (btn) { btn.disabled = true; btn.textContent = '🎨 Creating…'; }
-      try { var r = await X.api('app-picture', { kind: 'frame', prompt: s.imagePrompt + (p.plan.lookbook.style ? ' Style: ' + p.plan.lookbook.style + '.' : ''), aspect: aspect(p) }); await setPic(i, await shrink(r.image)); }
+      try { var r = await X.api('app-picture', { kind: 'frame', prompt: s.imagePrompt + (p.plan.lookbook.style ? ' Style: ' + p.plan.lookbook.style + '.' : ''), aspect: aspect(p), refImgIds: sceneRefs(s) }); await setPic(i, await shrink(r.image)); }
       catch (x) { if (btn) { X.toast(x.message); btn.disabled = false; btn.textContent = '🎨 Create'; } else throw x; }
     }
 
@@ -416,6 +548,13 @@
         var a = t; t += Number(s.seconds) || 0;
         return 'SCENE ' + (i + 1) + ' — ' + s.title + ' (' + a + 's–' + t + 's)\n  VO: ' + (s.vo || '—') + '\n  On screen: ' + (s.onScreen || '—') + '\n  SFX: ' + (s.sfx || '—') + '\n  Transition: ' + (s.transition || '—');
       })).join('\n');
+    }
+    function screenplayText() {
+      var cast = p.plan.cast || [];
+      return [p.plan.title.toUpperCase(), (p.plan.concept && p.plan.concept.logline) || '', '', 'CAST'].concat(cast.map(function (c) { return '  ' + c.name + ' — ' + c.role + (c.personality ? ' (' + c.personality + ')' : ''); })).concat(['']).concat(p.plan.scenes.map(function (s, i) {
+        return (i + 1) + '. ' + (s.heading || s.title).toUpperCase() + '   [' + (BEATS[s.beat] || '').replace(/^\S+\s/, '') + ' · ' + s.seconds + 's]\n' + s.visual + (s.camera ? '\n(' + s.camera + (s.shot ? ', ' + s.shot : '') + ')' : '') + '\n' +
+          (s.lines || []).map(function (l) { return '\n          ' + l.who.toUpperCase() + (l.emotion ? '\n        (' + l.emotion + ')' : '') + '\n    ' + l.text; }).join('') + (s.sfx ? '\n\nSFX: ' + s.sfx : '') + '\n';
+      })).concat(['', 'BRAND REVEAL: ' + ((p.plan.reveal || {}).tagline || '')]).join('\n');
     }
     function promptsText() {
       var lb = p.plan.lookbook;
@@ -536,10 +675,10 @@
     q('#veReplan').onclick = function () {
       var dir = prompt('What should change? (e.g. "make it funnier", "focus on wedding cakes", "use a man as the main character")', '');
       if (dir == null) return;
-      if (!confirm('Re-plan the whole ad? Your current script, prompts and storyboard pictures will be replaced.')) return;
+      if (!confirm(D ? 'Rewrite the whole story? The screenplay, prompts, character photos and storyboard pictures will be replaced.' : 'Re-plan the whole ad? Your current script, prompts and storyboard pictures will be replaced.')) return;
       var s = X.sheet('<h2>🔄 Re-planning…</h2><div id="rpProg" style="margin-top:10px"></div><div class="err hidden" id="rpErr"></div><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="rpX">Close</button></div>');
       $('#rpX', s).onclick = function () { s.remove(); };
-      runPlan(p.brief, dir, $('#rpProg', s), false, { id: p.id, status: p.status, make: p.make }).then(function (np) {
+      (D ? runDrama(p.brief, dir, $('#rpProg', s), false, { id: p.id, status: p.status, make: p.make }) : runPlan(p.brief, dir, $('#rpProg', s), false, { id: p.id, status: p.status, make: p.make })).then(function (np) {
         s.remove(); closed = true; cancelAnimationFrame(raf); ov.remove(); document.body.style.overflow = ''; editor(np, true);
       }, function (x) { $('#rpErr', s).textContent = x.message; $('#rpErr', s).classList.remove('hidden'); });
     };

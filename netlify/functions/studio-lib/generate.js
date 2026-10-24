@@ -149,12 +149,12 @@ async function callModel(messages, maxTokens, settings, opts) {
   }
   if (!key) throw new HttpError(500, 'ai_not_configured', 'AI is not configured yet.');
 
-  const body = { model, messages, max_tokens: maxTokens, temperature: opts && opts.json ? 0.2 : 0.85 };
+  const body = { model, messages, max_tokens: maxTokens, temperature: opts && typeof opts.temperature === 'number' ? opts.temperature : opts && opts.json ? 0.2 : 0.85 };
   if (opts && opts.json) body.response_format = { type: 'json_object' };
   if (provider === 'openrouter') body.usage = { include: true };
 
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 50000);
+  const timer = setTimeout(() => ctrl.abort(), (opts && opts.timeoutMs) || 50000);
   let res;
   try {
     res = await fetch(url, {

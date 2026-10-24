@@ -59,7 +59,7 @@ function sectionsOf(action) {
   if (/^sub-/.test(action)) return ['subs'];
   if (/^igc-/.test(action)) return ['igc'];
   if (/^car-/.test(action)) return ['cars'];
-  if (/^(va|vm)-/.test(action)) return ['vads'];
+  if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
 function can(who, list) { return who.isAdmin || !who.sections || list.some(x => who.sections.includes(x)); }
@@ -203,6 +203,15 @@ exports.handler = handler(async (ctx) => {
       return { job: await videoai.submitClip(body) };
     }
     case 'vm-audio-save': return { aid: await videoai.saveAudio(body.dataUrl, who.email) };
+    case 'md-concepts': case 'md-outline': case 'md-scenes': case 'md-check': case 'md-fix': {
+      await core.rateLimit('hq-ai', who.email, 120, 60 * 60 * 1000, 'That\u2019s a lot of AI writing this hour — please wait a little.');
+      const md = require('../minidrama');
+      if (body.action === 'md-concepts') return { concepts: await md.concepts(body.brief) };
+      if (body.action === 'md-outline') return md.outline(body.brief);
+      if (body.action === 'md-scenes') return md.scenes(body.brief, body.plan, Number(body.from) || 0, Number(body.to) || 3);
+      if (body.action === 'md-check') return { storyCheck: await md.check(body.brief, body.plan) };
+      return md.fix(body.brief, body.plan, body.nums, body.how);
+    }
     case 'va-concepts': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
       return { concepts: await videoad.concepts(body.brief) };
