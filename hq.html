@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F1E36">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; media-src 'self' blob: https://*.fal.media https://fal.media https://storage.googleapis.com; connect-src 'self' https://*.fal.media https://fal.media https://storage.googleapis.com; form-action 'self'; base-uri 'none'">
 <title>Auntie Tobi HQ — Content Hub</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/hq-icon-32.png?v=1">
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/hq-icon-16.png?v=1">
@@ -164,6 +164,10 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 .cargrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 .carcard{display:flex;gap:12px;align-items:flex-start;cursor:pointer}.carthumb{width:96px;height:120px;border-radius:8px;flex:none;background:#eee}
 @media (max-width:900px){.carbody{overflow:auto;display:flex;flex-direction:column}.carright{order:-1;margin-bottom:12px}.carleft,.carright{overflow:visible}.carstage canvas{max-width:300px}}
+.vmstep{margin-top:10px}.vmchar{height:140px;border-radius:10px;margin-top:8px;display:block}
+.vmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin-top:8px}.vmcell{aspect-ratio:9/16;background:#0F1E36;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-weight:700}.vmcell img{width:100%;height:100%;object-fit:cover}
+.vmrow{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.vmrow:last-child{border-bottom:0}.vmrow audio{height:34px;max-width:220px}
+.vmthumb{width:54px;height:96px;border-radius:6px;overflow:hidden;background:#0F1E36;flex:none}.vmthumb img,.vmthumb video{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer}
 .vf{margin-top:8px}.vf label{margin:0}.vfbtn{display:flex;gap:2px}.vfbtn .btn.link{font-size:12.5px;padding:0 4px}
 .vscene{margin-top:10px}.vtag{font-size:12px;font-weight:700;background:var(--green-l);color:var(--green-d);border-radius:999px;padding:2px 8px}.vtag.gold{background:var(--gold-l);color:#7A5300}
 .vboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.vbcard{padding:10px}
@@ -245,6 +249,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <script src="/vendor/jszip-3.10.2.min.js"></script>
 <script src="/hq-carousel.js"></script>
 <script src="/hq-videoad.js"></script>
+<script src="/hq-videomake.js"></script>
 <script>
 (function () {
   'use strict';

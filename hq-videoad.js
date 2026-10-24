@@ -14,7 +14,7 @@
   var TONES = { warm: '🤗 Warm', funny: '😂 Funny', premium: '✨ Premium', urgent: '⏰ Urgent', inspiring: '🌟 Inspiring', friendly: '😊 Friendly' };
   var LANGS = { english: 'British English', pidgin: 'English + a touch of Pidgin', yoruba: 'English + Yoruba phrases', igbo: 'English + Igbo phrases' };
   var MODELS = ['Kling', 'Veo 3.1', 'Hailuo', 'Sora 2', 'Wan', 'Seedance'];
-  var TABS = [['strategy', '🎯 Strategy'], ['script', '📝 Script'], ['board', '🎬 Storyboard'], ['dzine', '🤖 Dzine prompts'], ['voice', '🎙️ Voice & music'], ['edit', '✂️ Edit guide'], ['post', '📣 Post'], ['check', '✅ Checklist']];
+  var TABS = [['strategy', '🎯 Strategy'], ['script', '📝 Script'], ['board', '🎬 Storyboard'], ['dzine', '🤖 Dzine prompts'], ['voice', '🎙️ Voice & music'], ['edit', '✂️ Edit guide'], ['post', '📣 Post'], ['check', '✅ Checklist'], ['make', '🎬 Make the video']];
 
   function init(ctx) { X = ctx; }
   function list() { return X.S.vads || (X.S.vads = []); }
@@ -145,7 +145,7 @@
     var r3 = await X.api('va-finish', { brief: b, plan: plan });
     Object.assign(plan, r3);
     var proj = Object.assign({ status: 'scripted', frames: {}, done: [] }, keep || {}, { brief: b, plan: plan });
-    if (keep) proj.frames = {}; // scenes changed, old pictures no longer match
+    if (keep) { proj.frames = {}; var om = keep.make || {}; proj.make = { tier: om.tier, voice: om.voice, music: om.music, musicPrompt: '', musicVol: om.musicVol, charImg: '', captions: om.captions, endCard: om.endCard, clips: {}, vo: {} }; } // scenes changed, old pictures and clips no longer match
     return proj;
   }
 
@@ -175,9 +175,10 @@
     async function save() {
       clearTimeout(saveT);
       try {
-        var r = await X.api('va-save', { item: { id: p.id, status: p.status, brief: p.brief, plan: p.plan, frames: p.frames, done: p.done } });
+        var r = await X.api('va-save', { item: { id: p.id, status: p.status, brief: p.brief, plan: p.plan, frames: p.frames, done: p.done, make: p.make } });
         p.id = r.item.id; p.updatedAt = r.item.updatedAt;
         var l = list(), k = l.findIndex(function (x) { return x.id === p.id; }); var copyP = JSON.parse(JSON.stringify(Object.assign({}, r.item, { done: p.done })));
+        if (r.item.make) { var keepMake = p.make || {}; p.make = Object.assign(keepMake, { tier: r.item.make.tier }); }
         if (k >= 0) l[k] = copyP; else l.unshift(copyP);
         dirty = false; q('#veSaved').textContent = 'Saved ✓'; return true;
       } catch (x) { q('#veSaved').textContent = 'Not saved — ' + x.message; return false; }
@@ -281,6 +282,7 @@
           '<div class="f2">' + field('End-card text', 'plan.post.endCard', o.endCard, 0, true) + field('Best time to post', 'plan.post.bestTime', o.bestTime) + '</div>' + field('Pinned comment', 'plan.post.pinnedComment', o.pinnedComment, 2, true) +
           copyAllBtn('veCopyPost', 'Copy caption + hashtags') + '</div>';
       },
+      make: function () { return window.HQVmake ? HQVmake.html(p) : '<div class="card">Video maker not loaded.</div>'; },
       check: function () {
         return '<div class="card"><b>✅ Production checklist</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Tick things off as you go — saved for the team.</p>' +
           (p.plan.checklist || []).map(function (x, i) { return '<label class="chk vcheck"><input type="checkbox" data-done="' + i + '"' + (p.done.indexOf(i) >= 0 ? ' checked' : '') + '> <span>' + esc(x) + '</span></label>'; }).join('') + '</div>';
@@ -289,6 +291,7 @@
     function paintPane() {
       $$('#veTabs [data-tab]', ov).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.tab === tab); });
       var pane = q('#vePane'); pane.innerHTML = PANES[tab](); wireFields(pane);
+      if (tab === 'make' && window.HQVmake) HQVmake.wire(pane, p, { api: X.api, toast: X.toast, esc: X.esc, sheet: X.sheet, mark: mark, save: save, frameSrc: frameSrc, aspect: aspect, shrink: shrink, slug: slug });
       $$('input[name=vhook]', pane).forEach(function (r) { r.onchange = function () { p.plan.strategy.chosenHook = +r.value; mark(); }; });
       $$('[data-done]', pane).forEach(function (c) { c.onchange = function () { var i = +c.dataset.done; p.done = p.done.filter(function (x) { return x !== i; }); if (c.checked) p.done.push(i); mark(); }; });
       $$('[data-pic]', pane).forEach(function (b) { b.onclick = function () { makePic(+b.dataset.pic, b); }; });
@@ -372,6 +375,7 @@
     function drawScene(c, w, h, i, t) {
       var s = p.plan.scenes[i]; if (!s) return;
       var f = p.frames[String(i)], im = f && imgs[f];
+      if (f && !(f in imgs)) loadImgs();
       if (im) { var z = 1 + 0.06 * Math.min(1, t / Math.max(1, s.seconds)), k = Math.max(w / im.naturalWidth, h / im.naturalHeight) * z; c.drawImage(im, (w - im.naturalWidth * k) / 2, (h - im.naturalHeight * k) / 2, im.naturalWidth * k, im.naturalHeight * k); }
       else {
         var g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1C2E4D'); g.addColorStop(1, '#0F1E36'); c.fillStyle = g; c.fillRect(0, 0, w, h);
@@ -448,7 +452,7 @@
       if (!confirm('Re-plan the whole ad? Your current script, prompts and storyboard pictures will be replaced.')) return;
       var s = X.sheet('<h2>🔄 Re-planning…</h2><div id="rpProg" style="margin-top:10px"></div><div class="err hidden" id="rpErr"></div><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="rpX">Close</button></div>');
       $('#rpX', s).onclick = function () { s.remove(); };
-      runPlan(p.brief, dir, $('#rpProg', s), false, { id: p.id, status: p.status }).then(function (np) {
+      runPlan(p.brief, dir, $('#rpProg', s), false, { id: p.id, status: p.status, make: p.make }).then(function (np) {
         s.remove(); closed = true; cancelAnimationFrame(raf); ov.remove(); document.body.style.overflow = ''; editor(np, true);
       }, function (x) { $('#rpErr', s).textContent = x.message; $('#rpErr', s).classList.remove('hidden'); });
     };

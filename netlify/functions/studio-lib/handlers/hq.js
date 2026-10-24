@@ -22,6 +22,7 @@ const eventsub = require('../eventsub');
 const igcomment = require('../igcomment');
 const carousel = require('../carousel');
 const videoad = require('../videoad');
+const videoai = require('../videoai');
 const directory = require('../directory');
 
 function requireEmail(e) {
@@ -162,6 +163,22 @@ exports.handler = handler(async (ctx) => {
     case 'va-rewrite': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
       return { text: await videoad.rewrite(body.brief, body.field, body.text, body.how, body.context) };
+    }
+    case 'vm-settings': return { settings: await videoai.publicSettings(who.isAdmin) };
+    case 'vm-settings-save': {
+      if (!who.isAdmin) throw new core.HttpError(403, 'admin_only', 'Only an admin can change the video AI settings.');
+      await videoai.saveSettings(body.settings); await core.audit(who.email, 'hq_videoai_settings', {});
+      return { settings: await videoai.publicSettings(true) };
+    }
+    case 'vm-clip': {
+      await core.rateLimit('hq-vclip', who.email, 120, 60 * 60 * 1000, 'That\u2019s a lot of clips this hour — please wait a little.');
+      return { job: await videoai.submitClip(body) };
+    }
+    case 'vm-music': return { job: await videoai.submitMusic(body) };
+    case 'vm-status': return { results: await videoai.status(body.jobs), spentGbp: await videoai.spent() };
+    case 'vm-tts': {
+      await core.rateLimit('hq-vtts', who.email, 200, 60 * 60 * 1000, 'That\u2019s a lot of voiceovers this hour — please wait a little.');
+      return videoai.tts(body);
     }
     case 'va-save': return { item: await videoad.save(body.item, who.email) };
     case 'va-delete': { await videoad.remove(String(body.id || '')); return { ok: true }; }

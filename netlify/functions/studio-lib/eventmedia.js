@@ -179,6 +179,9 @@ async function makeFrame(info) {
   const prompt = String(info.prompt || '').replace(/\s+/g, ' ').trim().slice(0, 1500);
   if (prompt.length < 20) throw new HttpError(400, 'no_prompt', 'This scene has no image prompt yet.');
   const ar = ['9:16', '4:5', '1:1', '16:9'].includes(info.aspect) ? info.aspect : '9:16';
+  let refs = [];
+  if (info.refImgId) { const r = await require('./eventsub').getImage(info.refImgId); if (r && r.dataUrl) refs = [r.dataUrl]; }
+  if (refs.length) return generateImage(`Use the person in the reference image as the SAME character (same face, skin tone, hair, build and outfit unless the scene says otherwise).\n\n${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names.`, ar, refs);
   return generateImage(`${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names. No celebrities or real identifiable people.`, ar);
 }
 
@@ -219,7 +222,7 @@ Do NOT include: photos of real people, faces of performers, logos, brand names, 
   return generateImage(prompt, article ? '1:1' : '4:5');
 }
 
-async function generateImage(prompt, aspect) {
+async function generateImage(prompt, aspect, refs) {
   const key = env('STUDIO_OPENROUTER_API_KEY') || env('OPENROUTER_API_KEY');
   if (!key) throw new HttpError(500, 'ai_not_configured', 'Creating images needs the AI to be set up.');
   const ctrl = new AbortController();
@@ -229,7 +232,7 @@ async function generateImage(prompt, aspect) {
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST', signal: ctrl.signal,
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://auntietobi.co.uk', 'X-Title': 'Auntie Tobi Events' },
-      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: aspect }, usage: { include: true } }),
+      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: refs && refs.length ? [{ type: 'text', text: prompt }].concat(refs.map(u => ({ type: 'image_url', image_url: { url: u } }))) : prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: aspect }, usage: { include: true } }),
     });
     data = await res.json().catch(() => null);
   } catch (_) {
