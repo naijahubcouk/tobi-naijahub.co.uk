@@ -21,21 +21,34 @@ Rules you always follow:
 - Culturally true UK-Nigerian life (Naija warmth, family, banter, light Pidgin where natural, UK settings) — never stereotyped, mocking or cringe. Family-friendly.
 - Use ONLY facts from the brief for prices, offers, addresses and claims — never invent awards, reviews or numbers.
 - Filmable with AI video: short scenes (3–7 seconds), 1–3 characters per scene, simple real locations, one clear action per scene, varied shots and camera moves (never the same camera move twice in a row).
-Reply with ONE JSON object only — no markdown, no commentary.`;
+Reply with ONE JSON object only — no markdown, no commentary. Keep every text value concise.`;
 
 async function writerModel() { try { return (await require('./videoai').settings()).dramaModel; } catch (_) { return require('./videoai').DRAMA_MODEL; } }
+// Claude sometimes wraps the JSON in words, leaves a quote unescaped or runs out of room — repair it.
 function parseJson(text) {
-  const t = String(text || '').replace(/^```(?:json)?\s*|\s*```$/g, '');
-  const a = t.indexOf('{'), b = t.lastIndexOf('}');
-  if (a < 0 || b <= a) throw new HttpError(502, 'ai_error', 'The writer’s reply came back garbled — please try again.');
-  try { return JSON.parse(t.slice(a, b + 1)); } catch (_) { throw new HttpError(502, 'ai_error', 'The writer’s reply came back garbled — please try again.'); }
+  const { jsonrepair } = require('jsonrepair');
+  const t = String(text || '').replace(/```(?:json)?/gi, '');
+  const a = t.indexOf('{'); if (a < 0) return null;
+  try { return JSON.parse(t.slice(a, t.lastIndexOf('}') + 1)); } catch (_) { /* repair below */ }
+  const ends = []; for (let i = t.length - 1; i > a && ends.length < 25; i--) if (t[i] === '}') ends.push(i);
+  for (const e of ends) { try { const o = JSON.parse(jsonrepair(t.slice(a, e + 1))); if (o && typeof o === 'object') return o; } catch (_) { /* next */ } }
+  try { const o = JSON.parse(jsonrepair(t.slice(a))); if (o && typeof o === 'object') return o; } catch (_) { /* give up */ }
+  return null;
 }
 async function write(system, user, maxTokens, temperature) {
   const settings = await core.getSettings();
   const model = await writerModel();
-  const out = await gen.callModel([{ role: 'system', content: system }, { role: 'user', content: user }], maxTokens, Object.assign({}, settings, { model }), { raw: true, temperature: temperature == null ? 0.8 : temperature, timeoutMs: 55000 });
-  gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
-  return parseJson(out.text);
+  const sys = system + '\nReply with valid JSON only: no markdown, no notes. Inside text values never use the " character — use ‘single quotes’ or “curly quotes” for speech.';
+  let last = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const out = await gen.callModel([{ role: 'system', content: sys + (attempt ? '\nYOUR LAST REPLY WAS NOT VALID JSON. Keep every text short and reply with ONE valid JSON object.' : '') }, { role: 'user', content: user }], Math.round(maxTokens * (attempt ? 1.4 : 1)), Object.assign({}, settings, { model }), { raw: true, temperature: temperature == null ? 0.8 : temperature, timeoutMs: 55000 });
+    gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
+    const j = parseJson(out.text);
+    if (j) return j;
+    last = out;
+    console.error('[minidrama] unreadable reply', model, out.finish, out.outTok, JSON.stringify(String(out.text).slice(0, 300)), '…', JSON.stringify(String(out.text).slice(-200)));
+  }
+  throw new HttpError(502, 'ai_error', last && last.finish === 'length' ? 'The story was too long for one reply — try a shorter length, or switch the writer in ⚙️ Video AI settings.' : 'The writer’s reply came back garbled twice — please try again (or switch the writer in ⚙️ Video AI settings).');
 }
 
 function dramaBrief(b) {
@@ -65,7 +78,7 @@ async function concepts(brief) {
   const j = await write(ROLE, `${dramaBrief(b)}
 
 Pitch THREE clearly different, original mini-drama stories for this brand (different situations, characters and twists; at least one should be in the chosen genre, the others can surprise).
-Return: {"concepts": [{"title": catchy film title, "genre": short genre label, "logline": 1–2 sentences, "cast": [{"name": Nigerian/UK name, "age": number, "personality": a few words}], "beats": {"hook": opening moment, "conflict": the problem, "twist": the turn, "resolution": how it ends, "reveal": the brand reveal moment}, "productMoment": how the product enters the story naturally, "why": why viewers will watch to the end}]}`, 1700, 0.95);
+Return: {"concepts": [{"title": catchy film title, "genre": short genre label, "logline": 1–2 sentences, "cast": [{"name": Nigerian/UK name, "age": number, "personality": a few words}], "beats": {"hook": opening moment, "conflict": the problem, "twist": the turn, "resolution": how it ends, "reveal": the brand reveal moment}, "productMoment": how the product enters the story naturally, "why": why viewers will watch to the end}]}`, 2400, 0.95);
   const list = (Array.isArray(j.concepts) ? j.concepts : []).slice(0, 3).map(c => {
     c = c && typeof c === 'object' ? c : {}; const be = c.beats && typeof c.beats === 'object' ? c.beats : {};
     const cast = (Array.isArray(c.cast) ? c.cast : []).slice(0, 4).map(x => x && x.name ? `${str(x.name, 30)}${x.age ? ` (${Number(x.age) || ''})` : ''}${x.personality ? ` — ${str(x.personality, 80)}` : ''}` : '').filter(Boolean);
@@ -92,7 +105,7 @@ Return: {"title": film title,
  "lookbook": {"setting": main locations, "wardrobe": string, "palette": string, "lighting": string, "style": e.g. "cinematic, photorealistic, shallow depth of field, film grain", "negative": negative prompt},
  "reveal": {"tagline": a short memorable brand line for the final title card (max 8 words)},
  "music": {"mood": music style that fits the story, "bpm": e.g. "90–100"},
- "scenes": [{"heading": e.g. "INT. MUM'S KITCHEN – NIGHT", "beat", "title": 2–4 words, "summary": what happens (max 25 words), "seconds": 3–7, "cast": [names in the scene], "product": boolean, "shot": e.g. "close-up", "camera": camera move}]}`, 2300, 0.8);
+ "scenes": [{"heading": e.g. "INT. MUM'S KITCHEN – NIGHT", "beat", "title": 2–4 words, "summary": what happens (max 25 words), "seconds": 3–7, "cast": [names in the scene], "product": boolean, "shot": e.g. "close-up", "camera": camera move}]}`, 3000, 0.8);
   const plan = va.cleanPlan({ title: j.title, cast: j.cast, lookbook: j.lookbook, reveal: j.reveal, music: j.music, scenes: (Array.isArray(j.scenes) ? j.scenes : []).map(s => Object.assign({}, s, { visual: s && s.summary })) });
   if (plan.scenes.length < 3) throw new HttpError(502, 'ai_error', 'The writer couldn’t outline that story just now — please try again.');
   plan.concept = b.concept ? { title: b.concept.title, genre: b.concept.genre, logline: str(j.logline, 400) || b.concept.logline, beats: b.concept.beats, productMoment: b.concept.productMoment } : { title: plan.title, genre: GENRES[b.genre], logline: str(j.logline, 400), beats: [], productMoment: '' };
@@ -132,7 +145,7 @@ FULL OUTLINE: ${JSON.stringify(plan.scenes.map(s => ({ n: s.n, heading: s.headin
 ${before.length ? `THE SCENES JUST BEFORE (continue naturally from them): ${JSON.stringify(compact({ scenes: before }))}` : 'These are the opening scenes — grab attention in the first 2 seconds.'}
 
 Write the full screenplay for scenes ${want.map(s => s.n).join(', ')} only. Keep each character's personality and voice consistent; they must respond to each other.
-Return: {"scenes": [${SCENE_FIELDS}]}`, 1500, 0.8);
+Return: {"scenes": [${SCENE_FIELDS}]}`, 2000, 0.8);
   mergeScenes(plan, j.scenes);
   return { scenes: plan.scenes.slice(from, to) };
 }
@@ -158,7 +171,7 @@ async function check(brief, rawPlan) {
 SCREENPLAY: ${JSON.stringify({ title: plan.title, cast: plan.cast.map(c => ({ name: c.name, personality: c.personality })), scenes: compact(plan) })}
 
 Check: a strong opening hook; connected scenes with clear cause and effect (beginning, middle, end); a clear conflict; humour, suspense or a twist that lands; characters with distinct voices who really respond to each other (no random or repeated lines); the product appears naturally (not too often, no hard sell); a satisfying ending and a short brand reveal; dialogue that fits the scene length; varied camera moves; nothing culturally off or cringe.
-Return: {"score": 1–10, "issues": [{"n": scene number (0 for the whole film), "problem": short, "fix": a concrete fix}]} — only real problems, max 8, empty list if it's great.`, 900, 0.3);
+Return: {"score": 1–10, "issues": [{"n": scene number (0 for the whole film), "problem": short, "fix": a concrete fix}]} — only real problems, max 8, empty list if it's great.`, 1200, 0.3);
   const ai = (Array.isArray(j.issues) ? j.issues : []).slice(0, 8);
   const issues = va.cleanPlan({ storyCheck: { score: j.score, issues: ai.concat(ruleIssues(plan)) } }).storyCheck;
   issues.at = core.nowIso();
@@ -179,7 +192,7 @@ WHOLE SCREENPLAY: ${JSON.stringify(compact(plan))}
 ${how ? `INSTRUCTION FROM THE TEAM: ${String(how).slice(0, 400)}` : `PROBLEMS TO FIX: ${JSON.stringify(issues)}`}
 
 Rewrite scenes ${set.join(', ')} only, so they fit perfectly with the scenes around them (same characters, continuity, story beats). Keep each scene's number.
-Return: {"scenes": [${SCENE_FIELDS}]}`, 1300, 0.75);
+Return: {"scenes": [${SCENE_FIELDS}]}`, 1800, 0.75);
   mergeScenes(plan, j.scenes);
   return { scenes: plan.scenes.filter(s => set.includes(s.n)) };
 }
@@ -200,7 +213,7 @@ Return: {"title": the script's title (or a short one), "logline": 1–2 sentence
  "lookbook": {"setting", "wardrobe", "palette", "lighting", "style", "negative"},
  "reveal": {"tagline": short brand line for the final title card (from the script if it has one, max 8 words)},
  "music": {"mood", "bpm"},
- "scenes": [{"heading": e.g. "INT. KITCHEN – NIGHT", "beat", "title": 2–4 words, "summary": what happens (max 25 words), "seconds", "cast": [names], "product": boolean, "shot", "camera"}]}`, 2600, 0.3);
+ "scenes": [{"heading": e.g. "INT. KITCHEN – NIGHT", "beat", "title": 2–4 words, "summary": what happens (max 25 words), "seconds", "cast": [names], "product": boolean, "shot", "camera"}]}`, 3200, 0.3);
   const plan = va.cleanPlan({ title: j.title, cast: j.cast, lookbook: j.lookbook, reveal: j.reveal, music: j.music, scenes: (Array.isArray(j.scenes) ? j.scenes : []).map(x => Object.assign({}, x, { visual: x && x.summary })) });
   if (plan.scenes.length < 2) throw new HttpError(502, 'ai_error', 'Couldn’t break that script into scenes — check it pasted fully and try again.');
   plan.concept = { title: plan.title, genre: GENRES[b.genre], logline: str(j.logline, 400), beats: [], productMoment: '' };
@@ -217,7 +230,7 @@ CAST: ${JSON.stringify(plan.cast.map(c => ({ name: c.name, personality: c.person
 SCENE LIST: ${JSON.stringify(plan.scenes.map(s => ({ n: s.n, heading: s.heading, beat: s.beat, seconds: s.seconds, summary: s.visual, cast: s.cast })))}
 
 For scenes ${want.map(s => s.n).join(', ')} only: copy the dialogue that belongs to each scene WORD FOR WORD from the script (split long speeches across the scenes they cover), add the emotion from the script's directions (or a fitting one), and describe what we see.
-Return: {"scenes": [${SCENE_FIELDS}]}`, 1500, 0.2);
+Return: {"scenes": [${SCENE_FIELDS}]}`, 2000, 0.2);
   mergeScenes(plan, j.scenes);
   return { scenes: plan.scenes.slice(from, to) };
 }
