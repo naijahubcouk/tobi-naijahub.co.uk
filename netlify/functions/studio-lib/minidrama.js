@@ -41,7 +41,7 @@ async function write(system, user, maxTokens, temperature) {
   const sys = system + '\nReply with valid JSON only: no markdown, no notes. Inside text values never use the " character — use ‘single quotes’ or “curly quotes” for speech.';
   let last = null;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const out = await gen.callModel([{ role: 'system', content: sys + (attempt ? '\nYOUR LAST REPLY WAS NOT VALID JSON. Keep every text short and reply with ONE valid JSON object.' : '') }, { role: 'user', content: user }], Math.round(maxTokens * (attempt ? 1.4 : 1)), Object.assign({}, settings, { model }), { raw: true, temperature: temperature == null ? 0.8 : temperature, timeoutMs: 55000 });
+    const out = await gen.callModel([{ role: 'system', content: sys + (attempt ? '\nYOUR LAST REPLY WAS NOT VALID JSON. Keep every text short and reply with ONE valid JSON object.' : '') }, { role: 'user', content: user }], Math.round(maxTokens * (attempt ? 1.4 : 1)), Object.assign({}, settings, { model }), { raw: true, temperature: temperature == null ? 0.8 : temperature, timeoutMs: 55000, detail: true });
     gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
     const j = parseJson(out.text);
     if (j) return j;

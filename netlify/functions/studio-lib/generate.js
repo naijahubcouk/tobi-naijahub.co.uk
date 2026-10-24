@@ -152,6 +152,9 @@ async function callModel(messages, maxTokens, settings, opts) {
   const body = { model, messages, max_tokens: maxTokens, temperature: opts && typeof opts.temperature === 'number' ? opts.temperature : opts && opts.json ? 0.2 : 0.85 };
   if (opts && opts.json) body.response_format = { type: 'json_object' };
   if (provider === 'openrouter') body.usage = { include: true };
+  // Claude models on OpenRouter always "think": they reject a custom temperature and the thinking uses part of
+  // max_tokens — so keep the default temperature, ask for light thinking, hide it, and give it room.
+  if (/^anthropic\//.test(model)) { delete body.temperature; delete body.response_format; body.reasoning = { effort: (opts && opts.effort) || 'low', exclude: true }; body.max_tokens = Math.round(maxTokens * 1.5) + 1024; }
 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), (opts && opts.timeoutMs) || 50000);
@@ -173,7 +176,8 @@ async function callModel(messages, maxTokens, settings, opts) {
   const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
   if (!res.ok || !content) {
     console.error('[studio] AI error', res.status, JSON.stringify(data || {}).slice(0, 400));
-    throw new HttpError(502, 'ai_error', 'The AI couldn\'t create that just now. You have not been charged — please try again.');
+    const why = data && data.error && (data.error.message || data.error.code) ? String(data.error.message || data.error.code).slice(0, 160) : (res.ok ? 'empty reply' : `status ${res.status}`);
+    throw new HttpError(502, 'ai_error', 'The AI couldn\'t create that just now. You have not been charged — please try again.' + (opts && opts.detail ? ` (${model}: ${why})` : ''));
   }
   const usage = data.usage || {};
   const inTok = usage.prompt_tokens || 0, outTok = usage.completion_tokens || 0;
