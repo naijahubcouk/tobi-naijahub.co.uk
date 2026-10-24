@@ -115,6 +115,46 @@
     };
   }
 
+  // 🎙️ voice files only (no clips): one AI voice file per spoken line, saved on the project for the pack / Make tab
+  function castVoiceFor(p, who) {
+    var m = p.make, c = (p.plan.cast || []).filter(function (x) { return x.name.toLowerCase() === String(who || '').toLowerCase(); })[0];
+    return !who || /^narrator$/i.test(who) || !c ? m.voice : (m.castVoices[c.name] || m.voice);
+  }
+  function prepVoices(p) {
+    p.make = p.make || {}; var m = p.make; m.lines = m.lines || {}; m.castVoices = m.castVoices || {}; m.voice = m.voice || (ST && ST.voice) || 'Aria';
+    var usedF = 0, usedM = 0;
+    (p.plan.cast || []).forEach(function (c, k) {
+      if (m.castVoices[c.name]) return;
+      var list = c.gender === 'male' ? MALE : c.gender === 'female' ? FEMALE : (k % 2 ? MALE : FEMALE);
+      m.castVoices[c.name] = list === MALE ? MALE[usedM++ % MALE.length] : FEMALE[usedF++ % FEMALE.length];
+    });
+  }
+  function voiceFilesTodo(p) {
+    prepVoices(p); var m = p.make, todo = [];
+    p.plan.scenes.forEach(function (sc, i) {
+      sceneLines(sc).forEach(function (l, k) { var h = (m.lines[i] || [])[k], text = lineText(l.text), v = castVoiceFor(p, l.who); if (!(h && h.url && h.text === text && (h.voice || m.voice) === v)) todo.push({ i: i, k: k, who: l.who, text: text, voice: v }); });
+    });
+    return { todo: todo, gbp: todo.reduce(function (n, x) { return n + Math.max(0.01, x.text.length / 1000 * 0.1 * 0.79); }, 0) };
+  }
+  async function makeVoiceFiles(X, p, prog) {
+    await loadSettings(X.api); prepVoices(p);
+    var m = p.make, t = voiceFilesTodo(p).todo, n = 0;
+    for (var s = 0; s < p.plan.scenes.length; s++) {
+      var want = sceneLines(p.plan.scenes[s]); if (!want.length) continue;
+      var have = m.lines[s] || [], out = [];
+      for (var k = 0; k < want.length; k++) {
+        var text = lineText(want[k].text), voice = castVoiceFor(p, want[k].who), h = have[k];
+        if (h && h.url && h.text === text && (h.voice || m.voice) === voice) { out.push(h); continue; }
+        if (prog) prog(n / Math.max(1, t.length), 'Making voice ' + (n + 1) + ' of ' + t.length + '…');
+        var r = await X.api('vm-tts', { text: text, voice: voice }); n++;
+        out.push({ url: r.url, who: want[k].who, text: text, voice: voice });
+      }
+      m.lines[s] = out;
+    }
+    return n;
+  }
+  function voiceName(p, v) { var s = ST && (ST.savedVoices || []).filter(function (x) { return x.id === v; })[0]; return s ? s.label + ' (ElevenLabs ID ' + v + ')' : /^[A-Za-z0-9]{16,40}$/.test(v) ? 'ElevenLabs voice ID ' + v : v + (VOICE_INFO[v] ? ' — ' + VOICE_INFO[v] : ''); }
+
   async function loadSettings(api, force) { if (!ST || force) ST = (await api('vm-settings')).settings; return ST; }
 
   // ════════ ⚙️ settings ════════
@@ -894,7 +934,7 @@
     return { blob: new Blob([muxer.target.buffer], { type: 'video/mp4' }), ext: 'mp4', ok: vpick.mux === 'avc' && (!audio || (apick && apick.mux === 'aac')) };
   }
 
-  window.HQVmake = { voiceIdSheet: function (X, p, who, done) { loadSettings(X.api).then(function () { voiceIdSheet(X, p, who, done); }, function (x) { X.toast(x.message); }); },
+  window.HQVmake = { voiceFilesTodo: voiceFilesTodo, makeVoiceFiles: makeVoiceFiles, castVoiceFor: castVoiceFor, voiceName: voiceName, sceneLines: sceneLines, loadSettings: loadSettings, voiceIdSheet: function (X, p, who, done) { loadSettings(X.api).then(function () { voiceIdSheet(X, p, who, done); }, function (x) { X.toast(x.message); }); },
     voiceLabel: function (p, who) { var v = p.make && p.make.castVoices && p.make.castVoices[who]; if (!v) return ''; var s = ST && (ST.savedVoices || []).filter(function (x) { return x.id === v; })[0]; return s ? '⭐ ' + s.label : /^[A-Za-z0-9]{16,40}$/.test(v) ? '⭐ ElevenLabs voice' : v; },
     html: html, wire: wire, settingsSheet: settingsSheet, composeVideo: composeVideo, sceneRefs: sceneRefs, ensureLocations: ensureLocations, locPrompt: locPrompt, castPrompt: castPrompt };
 })();

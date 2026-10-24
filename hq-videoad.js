@@ -17,7 +17,7 @@
   var GENRES = { family: '👨‍👩‍👧 Nigerian family comedy', romcom: '💘 Romantic comedy', drama: '😢 Emotional drama', suspense: '😰 Suspense', mystery: '🕵🏾 Mystery', action: '💥 Action', everyday: '🇬🇧 Everyday UK-Naija life' };
   var DLENS = { 30: '30s', 45: '45s', 60: '60s', 90: '90s (beta)', 120: '2 min (beta)' };
   var BEATS = { hook: '🪝 Hook', setup: '🏠 Setup', conflict: '⚡ Conflict', twist: '🌀 Twist', resolution: '🤝 Resolution', reveal: '✨ Brand reveal' };
-  var DTABS = [['story', '🎭 Story'], ['screenplay', '📝 Screenplay'], ['board', '🖼️ Storyboard'], ['dzine', '🤖 Prompts'], ['voice', '🎙️ Voice & music'], ['post', '📣 Post'], ['make', '🎬 Make the film']];
+  var DTABS = [['story', '🎭 Story'], ['screenplay', '📝 Screenplay'], ['board', '🖼️ Storyboard'], ['dzine', '🤖 Prompts'], ['voice', '🎙️ Voice & music'], ['post', '📣 Post'], ['check', '✅ Checklist'], ['make', '🎬 Make the film (fal.ai)']];
   var filter = 'all';
   function isDrama(p) { return p && p.brief && p.brief.mode === 'drama'; }
   var TABS = [['strategy', '🎯 Strategy'], ['script', '📝 Script'], ['board', '🎬 Storyboard'], ['dzine', '🤖 Dzine prompts'], ['voice', '🎙️ Voice & music'], ['edit', '✂️ Edit guide'], ['post', '📣 Post'], ['check', '✅ Checklist'], ['make', '🎬 Make the video']];
@@ -295,8 +295,9 @@
       '<div class="carstage" style="margin-top:8px"><canvas id="veCv"></canvas></div>' +
       '<div class="row" style="justify-content:center;gap:8px;margin-top:8px"><button class="btn primary sm" id="vePlay">▶ Play</button><button class="btn ghost sm" id="veMp4">🎞 Download animatic (MP4)</button></div>' +
       '<p class="muted" style="font-size:12.5px;margin:6px 0 0">A rough preview using the storyboard pictures, on-screen text and timings — great for client approval before making the clips.</p></div>' +
-      '<div class="card" style="margin-top:10px"><b>⬇️ Production pack</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Script, storyboard pictures, every Dzine prompt, voiceover, captions file (.srt), music, CapCut guide and caption — in one zip.</p>' +
-      '<button class="btn primary" id="vePack" style="width:100%">📦 Download production pack</button>' +
+      '<div class="card" style="margin-top:10px"><b>⬇️ Dzine + CapCut pack</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Everything to make it yourself in Dzine and CapCut: character and place photos, a sheet for every scene (start-frame and motion prompts, dialogue, lip sync), labelled voice lines, storyboard pictures, captions (.srt), music ideas and the CapCut guide.</p>' +
+      '<button class="btn ghost" id="veVoices" style="width:100%;margin-bottom:6px">🎙️ Make the voice files</button><p class="muted" style="font-size:12px;margin:0 0 8px">Optional — an AI voice file for every line (about 1p each), named to match the scenes. Skip it if you’ll use ElevenLabs yourself.</p>' +
+      '<button class="btn primary" id="vePack" style="width:100%">📦 Download Dzine + CapCut pack</button>' +
       '<div id="veProg" class="hidden" style="margin-top:10px"><div class="muted" id="veProgT" style="font-size:13px"></div><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:4px"><div id="veProgB" style="height:100%;width:0;background:var(--green)"></div></div></div>' +
       '<button class="btn ghost sm" id="veReplan" style="margin-top:10px">' + (D ? '🔄 Rewrite the whole story' : '🔄 Re-plan with new direction') + '</button></div></div></div>';
     document.body.appendChild(ov); document.body.style.overflow = 'hidden';
@@ -475,6 +476,7 @@
       },
       make: function () { return window.HQVmake ? HQVmake.html(p) : '<div class="card">Video maker not loaded.</div>'; },
       check: function () {
+        if (!(p.plan.checklist || []).length || D) p.plan.checklist = checklistItems();
         return '<div class="card"><b>✅ Production checklist</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Tick things off as you go — saved for the team.</p>' +
           (p.plan.checklist || []).map(function (x, i) { return '<label class="chk vcheck"><input type="checkbox" data-done="' + i + '"' + (p.done.indexOf(i) >= 0 ? ' checked' : '') + '> <span>' + esc(x) + '</span></label>'; }).join('') + '</div>';
       },
@@ -789,6 +791,57 @@
       p.plan.scenes.forEach(function (s) { var a = t; t += Number(s.seconds) || 0; if (s.vo) { n++; out.push(n + '\n' + ts(a) + ' --> ' + ts(t - 0.05) + '\n' + s.vo.replace(/\[pause\]/gi, '').trim() + '\n'); } });
       return out.join('\n');
     }
+    // ── 🎬 Dzine + CapCut pack: one folder per character / place, one sheet per scene, labelled voice lines ──
+    function safe(n) { return String(n || 'x').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'x'; }
+    function nn(i) { return String(i + 1).padStart(2, '0'); }
+    function castFile(k) { return nn(k) + '-' + safe(p.plan.cast[k].name); }
+    function locFile(k) { return nn(k) + '-' + safe(p.plan.locations[k].name); }
+    function lineId(i, who, k) { return nn(i) + '-' + String(k + 1).padStart(2, '0') + '-' + safe(who); }
+    function vName(v) { return window.HQVmake && HQVmake.voiceName ? HQVmake.voiceName(p, v) : v; }
+    function dzinePack() {
+      var files = {}, cast = p.plan.cast || [], locs = p.plan.locations || [], prods = p.brief.products || [], mk = p.make || {};
+      var name = p.brief.forWho === 'auntietobi' ? 'Auntie Tobi' : (p.brief.business || 'the business');
+      files['00-START-HERE.txt'] = ['🎬 ' + p.plan.title + ' — Dzine + CapCut pack', 'For: ' + name + ' · ' + totalSecs(p) + 's · ' + p.plan.scenes.length + ' scenes · ' + aspect(p), '',
+        'HOW TO MAKE IT (in this order)',
+        '1. DZINE · Characters — for each person in /characters: upload their photo (or use the prompt in their .txt) and save them as a Consistent Character with the same name.',
+        '2. DZINE · Places — /places has one photo per place. Add the matching one as an image reference for every scene there (or paste its description) so the room always looks the same.',
+        '3. DZINE · Start frames — open /scenes/scene-01.txt etc. Use the storyboard picture (storyboard/scene-NN.jpg) as the start frame, or make one with the START FRAME prompt and the right characters selected.',
+        '4. DZINE · Clips — Image to Video with the MOTION prompt and the model shown. Save each clip as scene-NN.mp4 (the name is on each sheet).',
+        '5. VOICES — ' + (Object.keys(mk.lines || {}).length ? '/voices has an AI voice file for every line, named like 03-01-Wife (scene 3, line 1).' : 'make each line in 05-voice-lines.txt in ElevenLabs (voice IDs are listed) and name the files exactly as shown, e.g. 03-01-Wife (scene 3, line 1).'),
+        '6. DZINE · Lip sync — scenes marked LIP SYNC: lip sync that clip with its voice file.',
+        '7. CAPCUT — follow 07-editing-guide.txt: clips in order, trim each to the scene seconds, add the voice files under their scene, import captions.srt, add music low under the voices, end with the brand card. Export 1080×1920, 30fps.',
+        '', 'Tick things off in 10-checklist.txt (or the ✅ Checklist tab in HQ).'].join('\n');
+      if (D) files['02-screenplay.txt'] = screenplayText();
+      cast.forEach(function (c, k) {
+        var lines = []; p.plan.scenes.forEach(function (sc, i) { (sc.lines || []).forEach(function (l) { if (l.who === c.name) lines.push('Scene ' + (i + 1) + ': ' + l.text); }); });
+        files['characters/' + castFile(k) + '.txt'] = [c.name.toUpperCase() + ' — ' + c.role, 'Personality: ' + (c.personality || ''), 'Look: ' + c.description, 'Outfit (same in every scene): ' + (c.outfit || ''), 'Voice: ' + vName(window.HQVmake ? HQVmake.castVoiceFor(p, c.name) : '') + (c.voiceHint ? ' — ' + c.voiceHint : ''), '', 'DZINE character prompt:', c.sheetPrompt || '', '', 'Photo: ' + (mk.castImgs && mk.castImgs[k] ? castFile(k) + '.jpg' : '(none yet — make one in HQ 🎭 Story or use the prompt)'), '', 'Their lines:'].concat(lines).join('\n');
+      });
+      locs.forEach(function (l, k) { files['places/' + locFile(k) + '.txt'] = [l.name.toUpperCase(), 'Fixed look: ' + l.description, '', 'Prompt for an empty establishing shot:', l.sheetPrompt || '', '', 'Scenes here: ' + p.plan.scenes.map(function (sc, i) { return sc.location === l.name ? i + 1 : null; }).filter(Boolean).join(', ')].join('\n'); });
+      var voiceTxt = ['VOICE LINES — make one file per line, named exactly as the label', '', 'VOICES:'].concat(['Narrator'].concat(cast.map(function (c) { return c.name; })).map(function (w) { return '  ' + w + ': ' + vName(window.HQVmake ? HQVmake.castVoiceFor(p, w) : ''); })).concat(['']);
+      p.plan.scenes.forEach(function (sc, i) {
+        var ci = (sc.cast || []).map(function (n2) { for (var k = 0; k < cast.length; k++) if (cast[k].name === n2) return n2 + ' → characters/' + castFile(k) + '.jpg'; return n2; });
+        var lk = -1; for (var k2 = 0; k2 < locs.length; k2++) if (locs[k2].name === sc.location) lk = k2;
+        var lines = (sc.lines || []).map(function (l, k) { var id = lineId(i, l.who, k); voiceTxt.push(id + '  ' + l.who + (l.emotion ? ' (' + l.emotion + ')' : '') + ': ' + l.text); return '  ' + id + '  ' + l.who + (l.emotion ? ' (' + l.emotion + ')' : '') + ': “' + l.text + '”'; });
+        var look = (sc.cast || []).map(function (n2) { var c = cast.filter(function (x) { return x.name === n2; })[0]; return c ? c.name + ': ' + c.description + (c.outfit ? ', wearing ' + c.outfit : '') + '.' : ''; }).join(' ');
+        var place = lk >= 0 ? 'Place: the same ' + locs[lk].name + ' — ' + locs[lk].description + '.' : '';
+        files['scenes/scene-' + nn(i) + '.txt'] = ['SCENE ' + nn(i) + ' of ' + p.plan.scenes.length + ' — ' + (sc.heading || sc.title) + ' (' + sc.seconds + 's)' + (sc.beat ? '  [' + sc.beat + ']' : ''),
+          'Place: ' + (sc.location || '—') + (lk >= 0 ? ' → places/' + locFile(lk) + '.jpg' : ''), 'Characters: ' + (ci.join(', ') || '—'), 'Product shown: ' + (sc.product ? 'yes → products/' : 'no'),
+          'Storyboard picture: ' + (p.frames[String(i)] ? 'storyboard/scene-' + nn(i) + '.jpg (use as the start frame)' : '(none — make it in Dzine with the prompt below)'), '',
+          'WHAT WE SEE: ' + (sc.visual || ''), 'SHOT / CAMERA: ' + [sc.shot, sc.camera].filter(Boolean).join(' · '), '', 'DIALOGUE:', lines.length ? lines.join('\n') : '  (no dialogue)',
+          'LIP SYNC: ' + (sc.lipSync && lines.length ? 'yes — lip sync this clip with ' + lineId(i, sc.lines[0].who, 0) : 'no'), 'SOUND EFFECT: ' + (sc.sfx || '—'), 'ON-SCREEN TEXT: ' + (sc.onScreen || '—'), '',
+          'DZINE — START FRAME (Text to Image, select the consistent characters' + (lk >= 0 ? ' and add the place photo' : '') + '):', [sc.imagePrompt || sc.visual, place, look].filter(Boolean).join(' '), '',
+          'DZINE — MOTION (Image to Video · ' + (sc.model || 'Kling') + ' · ' + (sc.clipSeconds || 5) + 's clip):', sc.videoPrompt || '', '', 'SAVE THE CLIP AS: scene-' + nn(i) + '.mp4'].join('\n');
+      });
+      files['05-voice-lines.txt'] = voiceTxt.join('\n');
+      files['10-checklist.txt'] = checklistItems().map(function (x, i) { return (p.done.indexOf(i) >= 0 ? '[x] ' : '[ ] ') + x; }).join('\n');
+      return files;
+    }
+    function checklistItems() {
+      if (D || !(p.plan.checklist || []).length) return ['HQ: screenplay checked and final', 'HQ: character photos made (🎭 Story)', 'HQ: place photos made (🎭 Story)', 'HQ: storyboard pictures made', 'HQ: pack downloaded',
+        'Dzine: consistent characters saved', 'Dzine: start frames ready for every scene', 'Dzine: every clip made and saved as scene-NN.mp4', 'Voices: every line made and named (03-01-Wife…)', 'Dzine: lip sync done for LIP SYNC scenes',
+        'CapCut: clips in order and trimmed', 'CapCut: voices placed under their scenes', 'CapCut: captions.srt imported', 'CapCut: music and sound effects added', 'CapCut: brand reveal / end card', 'Exported 1080×1920 30fps', 'Posted with the caption from 08-post.txt'];
+      return p.plan.checklist;
+    }
     function packText() {
       var b = p.brief, st = p.plan.strategy, v = p.plan.voice, m = p.plan.music, o = p.plan.post;
       return {
@@ -801,7 +854,6 @@
         '06-music.txt': ['Mood: ' + m.mood, 'Tempo: ' + m.bpm, 'Search terms:\n- ' + (m.search || []).join('\n- '), 'Trending sound: ' + m.trending, 'Sound effects:\n- ' + (m.sfx || []).join('\n- ')].join('\n\n'),
         '07-editing-guide.txt': (p.plan.editing || []).map(function (x, i) { return (i + 1) + '. ' + x; }).join('\n'),
         '08-post.txt': [o.caption, '', o.hashtags, '', 'End card: ' + o.endCard, 'Pinned comment: ' + o.pinnedComment, 'Best time: ' + o.bestTime].join('\n'),
-        '09-checklist.txt': (p.plan.checklist || []).map(function (x, i) { return (p.done.indexOf(i) >= 0 ? '[x] ' : '[ ] ') + x; }).join('\n'),
         'captions.srt': srt(),
       };
     }
@@ -874,16 +926,39 @@
       } catch (x) { progress(0, '⚠️ ' + (x.message || 'Couldn’t make the video')); }
       btn.disabled = false;
     };
+    async function addFile(zip, url, name) {
+      var r = await fetch(url, url.indexOf('/') === 0 ? { credentials: 'same-origin' } : {}); if (!r.ok) return;
+      var bl = await r.blob(), ty = bl.type || '', ext = /png/.test(ty) ? 'png' : /webp/.test(ty) ? 'webp' : /jpe?g/.test(ty) ? 'jpg' : /mpeg|mp3/.test(ty) ? 'mp3' : /wav/.test(ty) ? 'wav' : /ogg|opus/.test(ty) ? 'ogg' : /mp4|m4a|aac/.test(ty) ? 'm4a' : (String(url).split('?')[0].split('.').pop() || 'bin').slice(0, 4);
+      zip.file(name + '.' + ext, bl);
+    }
+    async function refreshVoiceBtn() {
+      var b = q('#veVoices'); if (!b || !window.HQVmake) return;
+      try { await HQVmake.loadSettings(X.api); var t = HQVmake.voiceFilesTodo(p); b.textContent = t.todo.length ? '🎙️ Make the voice files (' + t.todo.length + ' lines, about £' + t.gbp.toFixed(2) + ')' : '✅ Voice files ready (' + Object.keys(p.make.lines || {}).reduce(function (n, k) { return n + (p.make.lines[k] || []).length; }, 0) + ' lines)'; b.disabled = !t.todo.length; } catch (x) { b.textContent = '🎙️ Make the voice files'; }
+    }
+    q('#veVoices').onclick = async function () {
+      var btn = this; btn.disabled = true;
+      try { var n = await HQVmake.makeVoiceFiles(X, p, function (f, t) { progress(f, t); }); mark(); await save(); progress(1, '✅ ' + n + ' voice file' + (n === 1 ? '' : 's') + ' made — they’re in the pack (/voices) and in Make the film.'); }
+      catch (x) { progress(0, '⚠️ ' + x.message); }
+      refreshVoiceBtn();
+    };
+    refreshVoiceBtn();
     q('#vePack').onclick = async function () {
       if (!window.JSZip) return X.toast('Zip maker not loaded');
       var btn = this; btn.disabled = true;
       try {
         if (dirty) await save();
-        var zip = new JSZip(), t = packText();
+        var zip = new JSZip(), t = Object.assign(packText(), dzinePack()); delete t['00-README.txt'];
         Object.keys(t).forEach(function (k) { zip.file(k, t[k]); });
+        var mk = p.make || {}, jobs = [];
+        (p.plan.cast || []).forEach(function (c, k) { if (mk.castImgs && mk.castImgs[k]) jobs.push([frameSrc(mk.castImgs[k]), 'characters/' + castFile(k)]); });
+        (p.plan.locations || []).forEach(function (l, k) { if (mk.locImgs && mk.locImgs[k]) jobs.push([frameSrc(mk.locImgs[k]), 'places/' + locFile(k)]); });
+        (p.brief.products || []).forEach(function (id, k) { jobs.push([frameSrc(id), 'products/product-' + (k + 1)]); });
+        if (p.brief.logo) jobs.push([frameSrc(p.brief.logo), 'logo']);
+        p.plan.scenes.forEach(function (sc, i) { ((mk.lines || {})[i] || []).forEach(function (l, k) { if (l.url) jobs.push([l.url, 'voices/' + lineId(i, l.who, k)]); }); });
+        for (var j = 0; j < jobs.length; j++) { progress(j / (jobs.length + 1) * 0.5, 'Adding photos and voices… ' + (j + 1) + ' of ' + jobs.length); try { await addFile(zip, jobs[j][0], jobs[j][1]); } catch (e) { /* skip one that won’t load */ } }
         var ks = Object.keys(p.frames);
         for (var k = 0; k < ks.length; k++) {
-          progress(k / (ks.length + 1), 'Adding storyboard pictures…');
+          progress(0.5 + k / (ks.length + 1) * 0.45, 'Adding storyboard pictures…');
           var r = await fetch(frameSrc(p.frames[ks[k]]), { credentials: 'same-origin' }); if (r.ok) zip.file('storyboard/scene-' + String(+ks[k] + 1).padStart(2, '0') + '.jpg', await r.blob());
         }
         progress(0.95, 'Zipping…');
