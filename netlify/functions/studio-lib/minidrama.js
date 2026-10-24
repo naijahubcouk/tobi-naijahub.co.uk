@@ -101,12 +101,14 @@ ${conceptText(b.concept)}
 Write the OUTLINE of the film: ${SCENES_FOR[b.length] || '9–11'} scenes whose seconds add up to about ${b.length}. Every scene has a beat: ${BEATS.join(', ')} (in that order overall; several scenes can share a beat; the LAST scene is the "reveal": the product in a beautiful hero moment that pays off the story).
 Return: {"title": film title,
  "logline": 1–2 sentences,
- "cast": [{"name", "role" (their part in the story), "personality": how they act and talk, "description": detailed consistent look (age, skin tone, hair, face, build, outfit), "sheetPrompt": text-to-image prompt for a full-body reference photo of this person (single person, plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style}],
+ "cast": [{"name", "role" (their part in the story), "personality": how they act and talk, "description": detailed consistent look (age, skin tone, hair, face, build), "outfit": the ONE outfit they wear all through (unless the story changes it), "sheetPrompt": text-to-image prompt for a full-body reference photo of this person (single person, plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style}],
  "lookbook": {"setting": main locations, "wardrobe": string, "palette": string, "lighting": string, "style": e.g. "cinematic, photorealistic, shallow depth of field, film grain", "negative": negative prompt},
+ "locations": [{"name": short place name e.g. "Living room", "description": detailed fixed look so every shot matches (layout, wall colour, flooring, furniture, key props, windows, light), "sheetPrompt": text-to-image prompt for an EMPTY wide establishing shot of this set (no people, eye level, photorealistic)}],
  "reveal": {"tagline": a short memorable brand line for the final title card (max 8 words)},
  "music": {"mood": music style that fits the story, "bpm": e.g. "90–100"},
- "scenes": [{"heading": e.g. "INT. MUM'S KITCHEN – NIGHT", "beat", "title": 2–4 words, "summary": what happens (max 25 words), "seconds": 3–7, "cast": [names in the scene], "product": boolean, "shot": e.g. "close-up", "camera": camera move}]}`, 3000, 0.8);
-  const plan = va.cleanPlan({ title: j.title, cast: j.cast, lookbook: j.lookbook, reveal: j.reveal, music: j.music, scenes: (Array.isArray(j.scenes) ? j.scenes : []).map(s => Object.assign({}, s, { visual: s && s.summary })) });
+ "scenes": [{"heading": e.g. "INT. MUM'S KITCHEN – NIGHT", "beat", "title": 2–4 words, "summary": what happens (max 25 words), "seconds": 3–7, "cast": [names in the scene], "location": one of the location names, "product": boolean, "shot": e.g. "close-up", "camera": camera move}]}
+LOCATIONS: as few places as the story needs (1–4), reused — every scene in the same place must look identical.`, 3000, 0.8);
+  const plan = va.cleanPlan({ title: j.title, cast: j.cast, locations: j.locations, lookbook: j.lookbook, reveal: j.reveal, music: j.music, scenes: (Array.isArray(j.scenes) ? j.scenes : []).map(s => Object.assign({}, s, { visual: s && s.summary })) });
   if (plan.scenes.length < 3) throw new HttpError(502, 'ai_error', 'The writer couldn’t outline that story just now — please try again.');
   plan.concept = b.concept ? { title: b.concept.title, genre: b.concept.genre, logline: str(j.logline, 400) || b.concept.logline, beats: b.concept.beats, productMoment: b.concept.productMoment } : { title: plan.title, genre: GENRES[b.genre], logline: str(j.logline, 400), beats: [], productMoment: '' };
   plan.strategy.cta = b.contact ? `Find ${b.business || 'us'}: ${b.contact}` : '';
@@ -241,10 +243,11 @@ ${sp.card.length ? `\nFINAL TEXT CARD (shown at the very end, not a scene): ${sp
 Plan the shots. Group the pieces into scenes IN ORDER: every piece from 1 to ${sp.units.length} must be in exactly one scene, no gaps, no reordering. A scene is one shot of 3–7 seconds: usually 1–2 pieces (a spoken line and the reaction/action next to it); never more than 2 spoken lines in a scene. Each action piece becomes something we SEE.
 The speakers are: ${speakers.join(', ') || '(no dialogue)'} — keep these exact names for the cast. Add any non-speaking characters the script mentions.
 Return: {"title": the script's title, "logline": 1 sentence,
- "cast": [{"name": exact speaker name from the script, "role", "personality", "description": detailed consistent look (age, skin tone, hair, face, build, outfit) — from the script, else a fitting choice, "sheetPrompt": text-to-image prompt for a full-body reference photo (single person, plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style}],
+ "cast": [{"name": exact speaker name from the script, "role", "personality", "description": detailed consistent look (age, skin tone, hair, face, build), "outfit": the ONE outfit they wear all through (unless the story changes it) — from the script, else a fitting choice, "sheetPrompt": text-to-image prompt for a full-body reference photo (single person, plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style}],
  "lookbook": {"setting", "wardrobe", "palette", "lighting", "style", "negative"},
+ "locations": [{"name": short place name e.g. "Living room", "description": detailed fixed look so every shot matches (layout, wall colour, flooring, furniture, key props, windows, light), "sheetPrompt": text-to-image prompt for an EMPTY wide establishing shot of this set (no people, eye level, photorealistic)}] — the places in the script (e.g. living room, kitchen), reused across scenes,
  "music": {"mood", "bpm"},
- "scenes": [{"from": first piece number, "to": last piece number, "heading": e.g. "INT. KITCHEN – DAY", "beat": one of ${BEATS.join('/')}, "title": 2–4 words, "visual": what we SEE — 1–2 sentences that show exactly these pieces, "emotions": {"piece number": emotion for each spoken line}, "cast": [names in shot], "product": true if the cookware/product is visible, "shot", "camera" (vary them), "sfx": one sound or ""}]}`, 3600, 0.3);
+ "scenes": [{"from": first piece number, "location": one of the location names, "to": last piece number, "heading": e.g. "INT. KITCHEN – DAY", "beat": one of ${BEATS.join('/')}, "title": 2–4 words, "visual": what we SEE — 1–2 sentences that show exactly these pieces, "emotions": {"piece number": emotion for each spoken line}, "cast": [names in shot], "product": true if the cookware/product is visible, "shot", "camera" (vary them), "sfx": one sound or ""}]}`, 3600, 0.3);
   // rebuild the scenes from the pieces — the AI only chose the grouping
   const got = (Array.isArray(j.scenes) ? j.scenes : []).map(s => s && typeof s === 'object' ? s : null).filter(Boolean);
   const owner = new Array(sp.units.length + 1).fill(-1);
@@ -260,7 +263,7 @@ Return: {"title": the script's title, "logline": 1 sentence,
   groups.forEach(g => { let part = { k: g.k, ids: [], lines: 0 }; g.ids.forEach(id => { const u = sp.units[id - 1]; if ((u.type === 'line' && part.lines >= 2) || part.ids.length >= 3) { final.push(part); part = { k: g.k, ids: [], lines: 0, cont: true }; } part.ids.push(id); if (u.type === 'line') part.lines++; }); final.push(part); });
   const castNames = (Array.isArray(j.cast) ? j.cast : []).map(c => c && c.name).filter(Boolean);
   const nameFor = who => castNames.find(n => n.toLowerCase() === String(who).toLowerCase()) || who;
-  let lastHeading = '';
+  let lastHeading = '', lastLoc = '';
   const scenesOut = final.map((g, idx) => {
     const prev = final[idx - 1], s = g.k >= 0 ? got[g.k] : { heading: lastHeading, beat: prev && prev.k >= 0 ? got[prev.k].beat : '', cast: [] }, us = g.ids.map(id => sp.units[id - 1]), emo = s.emotions && typeof s.emotions === 'object' ? s.emotions : {};
     const head = us.find(u => u.type === 'heading'); if (head) lastHeading = head.text;
@@ -270,11 +273,12 @@ Return: {"title": the script's title, "logline": 1 sentence,
     const nActs = us.filter(u => u.type === 'action').length;
     const secs = Math.max(3, Math.min(8, Math.round(words / 2.5 + 1.5 * nActs + (lines.length ? 1 : 0))));
     const castIn = [...new Set((Array.isArray(s.cast) ? s.cast : []).map(nameFor).concat(lines.map(l => l.who)))];
-    return { heading: str(s.heading, 100) || (head ? head.text : lastHeading), beat: s.beat, title: g.cont ? (str(s.title, 60) || 'Scene') + ' (cont.)' : (s.title || `Scene ${idx + 1}`),
+    if (s.location) lastLoc = s.location;
+    return { location: s.location || lastLoc, heading: str(s.heading, 100) || (head ? head.text : lastHeading), beat: s.beat, title: g.cont ? (str(s.title, 60) || 'Scene') + ' (cont.)' : (s.title || `Scene ${idx + 1}`),
       visual: acts ? (acts + (!g.cont && s.visual ? ` — ${s.visual}` : '')) : (!g.cont && s.visual ? s.visual : `${lines.map(l => l.who).join(' and ')} talking.`),
       seconds: secs, cast: castIn, product: !!s.product, shot: s.shot, camera: s.camera, sfx: s.sfx || '', transition: 'cut', lines, lipSync: lines.length === 1 && words >= 3 && words <= 20, script: us.map(u => u.id) };
   });
-  const plan = va.cleanPlan({ title: j.title || (sp.meta.find(m => /^Title:/.test(m)) || '').replace(/^Title:\s*/, ''), cast: j.cast, lookbook: j.lookbook, music: j.music, scenes: scenesOut });
+  const plan = va.cleanPlan({ title: j.title || (sp.meta.find(m => /^Title:/.test(m)) || '').replace(/^Title:\s*/, ''), cast: j.cast, locations: j.locations, lookbook: j.lookbook, music: j.music, scenes: scenesOut });
   plan.scenes.forEach((sc, i) => { sc.vo = sc.lines.map(l => l.text).join(' ').slice(0, 400); if (!sc.beat) sc.beat = i === plan.scenes.length - 1 ? 'reveal' : ''; });
   if (plan.scenes.length < 2) throw new HttpError(502, 'ai_error', 'Couldn’t break that script into scenes — check it pasted fully and try again.');
   plan.reveal = { tagline: str(sp.card[0] || '', 120), sub: str(sp.card.slice(1).join(' · '), 160) };

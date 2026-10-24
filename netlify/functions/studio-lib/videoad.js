@@ -84,6 +84,7 @@ function cleanScene(s, i) {
     cast: arr(s.cast, 3, 40),
     product: !!s.product,
     heading: str(s.heading, 100),
+    location: str(s.location, 60),
     script: (Array.isArray(s.script) ? s.script : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n < 1000).slice(0, 16),
     beat: BEATS.includes(s.beat) ? s.beat : '',
     lines: (Array.isArray(s.lines) ? s.lines : []).map(l => l && typeof l === 'object' ? { who: str(l.who, 40) || 'Narrator', text: str(l.text, 300), emotion: str(l.emotion, 40) } : null).filter(l => l && l.text).slice(0, 4),
@@ -108,8 +109,9 @@ function cleanPlan(p) {
       setting: str(lb.setting, 400), palette: str(lb.palette, 200), lighting: str(lb.lighting, 200), style: str(lb.style, 300), negative: str(lb.negative, 400),
     },
     scenes: (Array.isArray(p.scenes) ? p.scenes : []).slice(0, 24).map(cleanScene),
-    cast: (Array.isArray(p.cast) ? p.cast : []).slice(0, 3).map(c => c && typeof c === 'object' ? { name: str(c.name, 40), role: str(c.role, 120), personality: str(c.personality, 300), description: str(c.description, 600), sheetPrompt: str(c.sheetPrompt, 1200), gender: ['female', 'male'].includes(c.gender) ? c.gender : '', voiceHint: str(c.voiceHint, 160) } : null).filter(c => c && c.name),
+    cast: (Array.isArray(p.cast) ? p.cast : []).slice(0, 3).map(c => c && typeof c === 'object' ? { name: str(c.name, 40), role: str(c.role, 120), personality: str(c.personality, 300), outfit: str(c.outfit, 300), description: str(c.description, 600), sheetPrompt: str(c.sheetPrompt, 1200), gender: ['female', 'male'].includes(c.gender) ? c.gender : '', voiceHint: str(c.voiceHint, 160) } : null).filter(c => c && c.name),
     concept: p.concept && typeof p.concept === 'object' ? { title: str(p.concept.title, 120), genre: str(p.concept.genre, 80), logline: str(p.concept.logline, 400), beats: arr(p.concept.beats, 8, 200), productMoment: str(p.concept.productMoment, 300) } : null,
+    locations: (Array.isArray(p.locations) ? p.locations : []).slice(0, 8).map(l => l && typeof l === 'object' ? { name: str(l.name, 60), description: str(l.description, 700), sheetPrompt: str(l.sheetPrompt, 1000) } : null).filter(l => l && l.name),
     reveal: { tagline: str(p.reveal && p.reveal.tagline, 120), sub: str(p.reveal && p.reveal.sub, 160) },
     storyCheck: p.storyCheck && typeof p.storyCheck === 'object' ? { score: Math.max(0, Math.min(10, Number(p.storyCheck.score) || 0)), at: cleanText(p.storyCheck.at, 40), issues: (Array.isArray(p.storyCheck.issues) ? p.storyCheck.issues : []).slice(0, 12).map(x => x && typeof x === 'object' ? { n: Math.max(0, Math.min(24, Number(x.n) || 0)), problem: str(x.problem, 240), fix: str(x.fix, 240) } : null).filter(x => x && x.problem) } : null,
     voice: { direction: str(vo.direction, 500), script: str(vo.script, 2000), elevenlabs: str(vo.elevenlabs, 400) },
@@ -135,6 +137,8 @@ function cleanMake(m) {
     clips: map(m.clips, job), vo: map(m.vo, v => v && (url(v.url) || aid(v.aid)) ? { url: url(v.url), aid: aid(v.aid), text: str(v.text, 600) } : null), musicJob: job(m.musicJob),
     voSource: m.voSource === 'own' ? 'own' : 'ai', voFull: aid(m.voFull), customVoices: (Array.isArray(m.customVoices) ? m.customVoices : []).filter(v => /^[A-Za-z0-9]{16,40}$/.test(String(v))).slice(0, 10),
     endCard: m.endCard !== false, captions: m.captions !== false, sfxOn: m.sfxOn !== false, logoOn: m.logoOn !== false,
+    locImgs: (o => { const out = {}; Object.entries(o && typeof o === 'object' ? o : {}).forEach(([k, v]) => { if (/^\d$/.test(k) && /^e[a-z0-9]{6,30}$/.test(String(v))) out[k] = v; }); return out; })(m.locImgs),
+    groupImgs: (o => { const out = {}; Object.entries(o && typeof o === 'object' ? o : {}).slice(0, 8).forEach(([k, v]) => { if (/^[0-9]{2,4}$/.test(k) && /^e[a-z0-9]{6,30}$/.test(String(v))) out[k] = v; }); return out; })(m.groupImgs),
     castImgs: (o => { const out = {}; Object.entries(o && typeof o === 'object' ? o : {}).forEach(([k, v]) => { if (/^\d$/.test(k) && /^e[a-z0-9]{6,30}$/.test(String(v))) out[k] = v; }); return out; })(m.castImgs),
     castVoices: (o => { const out = {}; Object.entries(o && typeof o === 'object' ? o : {}).slice(0, 4).forEach(([k, v]) => { const n = cleanText(k, 40); if (n && /^[A-Za-z0-9 ]{2,40}$/.test(String(v))) out[n] = String(v); }); return out; })(m.castVoices),
     lines: map(m.lines, a => Array.isArray(a) ? a.slice(0, 4).map(l => l && url(l.url) ? { url: url(l.url), who: str(l.who, 40), text: str(l.text, 300), voice: cleanText(l.voice, 40) } : null).filter(Boolean) : null),
@@ -249,8 +253,8 @@ async function checkClip(frame, refIds, scene) {
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(String(frame || '')) || frame.length > 300000) throw new HttpError(400, 'bad_frame', 'Couldn’t read that clip.');
   const es = require('./eventsub'), refs = [];
   for (const id of (Array.isArray(refIds) ? refIds : []).slice(0, 4)) { const r = await es.getImage(id); if (r && r.dataUrl) refs.push(r.dataUrl); }
-  const j = await visionAsk('You check AI-generated video frames for continuity errors against reference photos. Be practical: small lighting or angle differences are fine; flag a different-looking face, skin tone, hairstyle, outfit, a changed/wrong product, extra fingers/limbs, garbled text or anything that would look wrong in an advert.',
-    [{ type: 'text', text: `The FIRST image is a frame from the clip for this scene: ${String(scene || '').slice(0, 300)}. The other images are the reference photos (characters / product). Return ONLY JSON: {"ok": true/false, "issues": [short issues, empty if ok]}` }, { type: 'image_url', image_url: { url: frame } }]
+  const j = await visionAsk('You check AI-generated video frames for continuity errors against reference photos. Be practical: small lighting or angle differences are fine; flag a different-looking face, skin tone, hairstyle, outfit, a different-looking room or place (layout, colours, furniture), a changed/wrong product, extra fingers/limbs, garbled text or anything that would look wrong in an advert.',
+    [{ type: 'text', text: `The FIRST image is a frame from the clip for this scene: ${String(scene || '').slice(0, 300)}. The other images are the reference photos (location / characters / product). Return ONLY JSON: {"ok": true/false, "issues": [short issues, empty if ok]}` }, { type: 'image_url', image_url: { url: frame } }]
       .concat(refs.map(u => ({ type: 'image_url', image_url: { url: u } }))), 300);
   return { ok: !!j.ok, issues: arr(j.issues, 5, 160) };
 }
@@ -269,9 +273,11 @@ PRODUCT: set "product": true for scenes that clearly show the product.
 Return ONLY JSON:
 {"title": string,
  "strategy": {"hooks": [3 short alternative hook lines], "chosenHook": 0, "framework": e.g. "Problem → Solution", "angle": string, "emotion": string, "whyItWorks": 1–2 sentences, "cta": string},
- "cast": [{"name", "role", "description": detailed look (age, skin tone, hair, face, build, outfit), "sheetPrompt": text-to-image prompt for a full-body reference photo of this person (plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style (e.g. warm Nigerian-British woman, 30s)}],
+ "cast": [{"name", "role", "description": detailed look (age, skin tone, hair, face, build), "outfit": the ONE outfit they wear all through (unless the story changes it), "sheetPrompt": text-to-image prompt for a full-body reference photo of this person (plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style (e.g. warm Nigerian-British woman, 30s)}],
  "lookbook": {"character": detailed description of the main character (age, skin tone, hair, face, build, vibe), "characterSheetPrompt": a Dzine text-to-image prompt for a character reference sheet (front, 3/4 and side views, full body, plain light-grey studio background, same outfit, photorealistic), "wardrobe": string, "setting": string, "palette": string, "lighting": string, "style": e.g. "photorealistic, cinematic, shallow depth of field", "negative": negative prompt},
- "scenes": [{"title","seconds","purpose","visual","shot","camera","cast": [names],"lines": [{"who","text"}],"vo","onScreen","sfx": one short sound effect description or "","transition","character": true if any cast member appears,"product": boolean,"lipSync": boolean}]}`,
+ "scenes": [{"title","seconds","purpose","visual","shot","camera","cast": [names],"lines": [{"who","text"}],"vo","onScreen","sfx": one short sound effect description or "","transition","location": one of the location names,"character": true if any cast member appears,"product": boolean,"lipSync": boolean}],
+ "locations": [{"name": short place name e.g. "Living room", "description": detailed fixed look so every shot matches (layout, wall colour, flooring, furniture, key props, windows, light), "sheetPrompt": text-to-image prompt for an EMPTY wide establishing shot of this set (no people, eye level, photorealistic)}]}
+LOCATIONS: use as few places as the story needs (1–4) and reuse them — every scene in the same place must look identical.`,
     briefText(b) + (b.script ? `\n\nTHE TEAM'S OWN SCRIPT — they have already written the story. Keep its story, order, spoken words and on-screen text EXACTLY as written (do not rewrite or add lines); only split it into scenes, set realistic seconds per scene (about 2.5 spoken words per second) and fill in the other fields (visuals, shots, cast, hooks, lookbook). If the script has no named characters, use a Narrator:\n<<<\n${b.script}\n>>>` : '') + (extra ? `\n\nDIRECTION FOR THIS VERSION: ${String(extra).slice(0, 500)}` : ''), 3000);
   const p = cleanPlan(j);
   p.scenes.forEach(sc => { if (!sc.vo && sc.lines.length) sc.vo = sc.lines.map(l => l.text).join(' ').slice(0, 400); if (sc.lipSync && !(sc.lines.length === 1 && sc.lines[0].who !== 'Narrator')) sc.lipSync = false; });
@@ -286,12 +292,12 @@ async function planPrompts(brief, plan, from, to) {
   const j = await ask(`${ROLE}
 ${DZINE}
 Write Dzine prompts for the scenes given.
-- "imagePrompt" (start frame, text-to-image): ONE rich paragraph — subject + action + setting + composition + camera/lens + lighting + mood + colour palette + style + "${aspect} ${aspect === '16:9' ? 'landscape' : aspect === '1:1' ? 'square' : 'vertical'}". Reuse the LOOKBOOK so every scene matches. For each cast member in the scene write "the same <Name> from the reference photo" plus their look and outfit. If the scene shows the product write "the exact product from the product reference photo". NO text, words, signs, logos or brand names in the image.
+- "imagePrompt" (start frame, text-to-image): ONE rich paragraph — subject + action + setting + composition + camera/lens + lighting + mood + colour palette + style + "${aspect} ${aspect === '16:9' ? 'landscape' : aspect === '1:1' ? 'square' : 'vertical'}". Reuse the LOOKBOOK so every scene matches. For each cast member in the scene write "the same <Name> from the reference photo" plus their LOOK and OUTFIT copied word for word from CAST. Start the setting with "the same <location> from the location reference photo" plus its description copied word for word from LOCATIONS — never change a room's colours, furniture or props between scenes. If the scene shows the product write "the exact product from the product reference photo". NO text, words, signs, logos or brand names in the image.
 - "videoPrompt" (image-to-video): MOTION only — what moves, camera movement, speed, expression change; 1–2 actions; natural physics; no cuts. Mention duration.
 - "model": best Dzine video model for the scene: Kling (realistic people & hands), Veo 3.1 (cinematic, native sound), Hailuo (expressive faces, dynamic), Sora 2 (complex scenes), Wan or Seedance (budget, simple motion).
 - "clipSeconds": 5 or 10 (enough to cover the scene seconds).
 Return ONLY JSON: {"scenes": [{"n","imagePrompt","videoPrompt","model","clipSeconds"}]}`,
-    `${briefText(b)}\n\nCAST: ${JSON.stringify(p.cast.map(c => ({ name: c.name, description: c.description })))}\n\nLOOKBOOK: ${JSON.stringify(p.lookbook)}\n\nSCENES:\n${JSON.stringify(scenes.map(s => ({ n: s.n, title: s.title, seconds: s.seconds, visual: s.visual, shot: s.shot, camera: s.camera, cast: s.cast, product: s.product, lines: s.lines, lipSync: s.lipSync })))}`, 2600);
+    `${briefText(b)}\n\nCAST: ${JSON.stringify(p.cast.map(c => ({ name: c.name, look: c.description, outfit: c.outfit })))}\n\nLOCATIONS: ${JSON.stringify(p.locations.map(l => ({ name: l.name, description: l.description })))}\n\nLOOKBOOK: ${JSON.stringify(p.lookbook)}\n\nSCENES:\n${JSON.stringify(scenes.map(s => ({ n: s.n, title: s.title, seconds: s.seconds, location: s.location, heading: s.heading, visual: s.visual, shot: s.shot, camera: s.camera, cast: s.cast, product: s.product, lines: s.lines, lipSync: s.lipSync })))}`, 2600);
   const got = Array.isArray(j.scenes) ? j.scenes : [];
   return { scenes: scenes.map((s, k) => { const g = got.find(x => Number(x && x.n) === s.n) || got[k] || {}; return { n: s.n, imagePrompt: str(g.imagePrompt, 1200), videoPrompt: str(g.videoPrompt, 1200), model: str(g.model, 40), clipSeconds: [5, 10].includes(Number(g.clipSeconds)) ? Number(g.clipSeconds) : (s.seconds > 5 ? 10 : 5) }; }) };
 }

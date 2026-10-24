@@ -182,7 +182,9 @@ async function makeFrame(info) {
   let refs = [];
   const ids = (Array.isArray(info.refImgIds) ? info.refImgIds : []).concat(info.refImgId ? [info.refImgId] : []).filter(v => /^e[a-z0-9]{6,30}$/.test(String(v))).slice(0, 4);
   for (const id of ids) { const r = await require('./eventsub').getImage(id); if (r && r.dataUrl) refs.push(r.dataUrl); }
-  if (refs.length) return generateImage(`The reference images show the people (characters) and/or the real product for this ad. Keep every person EXACTLY the same as in their reference photo (same face, skin tone, hair, build and outfit unless the scene says otherwise) and show any product EXACTLY as in its photo (shape, colours, details).\n\n${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names.`, ar, refs);
+  const labels = (Array.isArray(info.refLabels) ? info.refLabels : []).map(x => String(x || '').replace(/\s+/g, ' ').slice(0, 200));
+  const legend = refs.length && labels.length === refs.length ? `Reference images, in order:\n${labels.map((l, i) => `${i + 1}. ${l}`).join('\n')}\n` : 'The reference images show the place, the people (characters) and/or the real product for this ad.\n';
+  if (refs.length) return generateImage(`${legend}Keep the PLACE exactly as in its reference (same room layout, colours, furniture and props — just from this scene’s camera angle), keep every person EXACTLY the same as in their reference photo (same face, skin tone, hair, build and outfit unless the scene says otherwise) and show any product EXACTLY as in its photo (shape, colours, details).\n\n${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names.`, ar, refs);
   return generateImage(`${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names. No celebrities or real identifiable people.`, ar);
 }
 

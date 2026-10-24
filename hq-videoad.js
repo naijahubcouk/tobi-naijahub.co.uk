@@ -286,6 +286,7 @@
   function editor(p, fresh) {
     p.frames = p.frames || {}; p.done = p.done || []; p.plan.scenes = p.plan.scenes || [];
     var D = isDrama(p), T = D ? DTABS : TABS; p.make = p.make || {}; p.make.castImgs = p.make.castImgs || {};
+    if (window.HQVmake && HQVmake.ensureLocations) HQVmake.ensureLocations(p);
     var tab = D ? 'story' : 'strategy', saveT = 0, dirty = false, closed = false, imgs = {}, t0 = performance.now(), playing = false, raf = 0;
     var ov = document.createElement('div'); ov.className = 'carx';
     ov.innerHTML = '<div class="carbar"><button class="btn ghost sm" id="veX">← Back</button><input id="veTitle" class="cartitle" maxlength="120"><select id="veStatus" style="width:auto">' + opts(STATUS, p.status) + '</select><span class="muted" id="veSaved" style="font-size:13px;white-space:nowrap"></span></div>' +
@@ -355,6 +356,17 @@
 
     // ── panes ──
     function beatOpts(cur) { return '<option value="">—</option>' + Object.keys(BEATS).map(function (k) { return '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + BEATS[k] + '</option>'; }).join(''); }
+    function locSelect(i, cur) { var L = p.plan.locations || []; if (!L.length) return ''; return '<select data-path="plan.scenes.' + i + '.location" style="width:auto" title="Place">' + L.map(function (l) { return '<option' + (l.name === cur ? ' selected' : '') + '>' + esc(l.name) + '</option>'; }).join('') + '</select>'; }
+    function locCard() {
+      var L = p.plan.locations || [], li = p.make.locImgs || (p.make.locImgs = {});
+      if (!L.length) return '';
+      return '<div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between;align-items:center"><b>📍 Places</b><button class="btn ghost sm" id="mdLocAll">🎨 Create missing photos</button></div><p class="muted" style="font-size:13px;margin:4px 0">Each place gets one reference photo (about 4p) — every scene there uses it, so the living room, kitchen etc. look the same in every shot. Upload a real room photo if you like.</p>' +
+        L.map(function (l, k) {
+          return '<div class="vscene" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div class="row" style="gap:10px;align-items:flex-start"><div style="flex:none;text-align:center">' + (li[k] ? '<img src="' + frameSrc(li[k]) + '" style="width:96px;height:' + (aspect(p) === '16:9' ? 54 : aspect(p) === '1:1' ? 96 : 128) + 'px;object-fit:cover;border-radius:8px;display:block" alt="">' : '<div style="width:96px;height:96px;border-radius:8px;background:#0F1E36;color:#cbd5e1;display:flex;align-items:center;justify-content:center;font-size:28px">🏠</div>') +
+            '<div class="apact" style="margin-top:4px;justify-content:center"><button class="btn ghost sm" data-locpic="' + k + '" title="Create">' + (li[k] ? '🔄' : '🎨') + '</button><label class="btn ghost sm" style="margin:0" title="Upload a photo">📷<input type="file" accept="image/*" data-locup="' + k + '" hidden></label></div></div>' +
+            '<div style="flex:1;min-width:0"><div class="vf"><label>Place name <span class="muted" style="font-weight:400">· ' + p.plan.scenes.filter(function (sc) { return sc.location === l.name; }).length + ' scenes</span></label><input data-locname="' + k + '" value="' + esc(l.name) + '"></div>' + field('Fixed look (layout, colours, furniture, props)', 'plan.locations.' + k + '.description', l.description, 3) + field('Reference photo prompt', 'plan.locations.' + k + '.sheetPrompt', l.sheetPrompt, 2) + '</div></div></div>';
+        }).join('') + '</div>';
+    }
     function lineStr(l) { return l.who + (l.emotion ? ' (' + l.emotion + ')' : '') + ': ' + l.text; }
     var PANES = {
       story: function () {
@@ -373,14 +385,15 @@
             cast.map(function (c, k) {
               return '<div class="vscene" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div class="row" style="gap:10px;align-items:flex-start"><div style="flex:none;text-align:center">' + (ci[k] ? '<img src="' + frameSrc(ci[k]) + '" style="width:72px;height:96px;object-fit:cover;border-radius:8px;display:block" alt="">' : '<div style="width:72px;height:96px;border-radius:8px;background:#0F1E36;color:#cbd5e1;display:flex;align-items:center;justify-content:center;font-size:26px">👤</div>') +
                 '<div class="apact" style="margin-top:4px;justify-content:center"><button class="btn ghost sm" data-castpic="' + k + '" title="Create">' + (ci[k] ? '🔄' : '🎨') + '</button><label class="btn ghost sm" style="margin:0" title="Upload">📷<input type="file" accept="image/*" data-castup="' + k + '" hidden></label></div></div>' +
-                '<div style="flex:1;min-width:0"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role in the story', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Personality & way of talking', 'plan.cast.' + k + '.personality', c.personality, 2) + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 2) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 2) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '</div></div></div>';
+                '<div style="flex:1;min-width:0"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role in the story', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Personality & way of talking', 'plan.cast.' + k + '.personality', c.personality, 2) + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 2) + field('👗 Outfit (kept the same in every scene)', 'plan.cast.' + k + '.outfit', c.outfit, 0) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 2) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '</div></div></div>';
             }).join('') + '</div>' +
+          locCard() +
           '<div class="card" style="margin-top:10px">' + field('✨ Brand reveal tagline (final title card)', 'plan.reveal.tagline', (p.plan.reveal || {}).tagline, 0, true) + '</div>';
       },
       screenplay: function () {
         return '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px"><span class="muted" style="font-size:13px">Edit anything. Dialogue: one line each as “Name (emotion): words”. ≈ 2.5 words per second.</span>' + copyAllBtn('mdCopy', 'Copy screenplay') + '</div>' +
           p.plan.scenes.map(function (s, i) {
-            return '<div class="card vscene"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>Scene ' + (i + 1) + '</b>' + ((s.script || []).length ? '<span class="vtag" title="Which parts of your script this scene shows">📋 Script ' + (s.script.length > 1 ? s.script[0] + '–' + s.script[s.script.length - 1] : s.script[0]) + '</span>' : '') + '<select data-path="plan.scenes.' + i + '.beat" style="width:auto">' + beatOpts(s.beat) + '</select><input data-path="plan.scenes.' + i + '.heading" value="' + esc(s.heading || '') + '" placeholder="INT. KITCHEN – NIGHT" style="flex:1;min-width:180px;font-weight:700;text-transform:uppercase"><input type="number" min="1" max="15" data-path="plan.scenes.' + i + '.seconds" value="' + s.seconds + '" style="width:72px"> <span class="muted">sec</span></div>' +
+            return '<div class="card vscene"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>Scene ' + (i + 1) + '</b>' + ((s.script || []).length ? '<span class="vtag" title="Which parts of your script this scene shows">📋 Script ' + (s.script.length > 1 ? s.script[0] + '–' + s.script[s.script.length - 1] : s.script[0]) + '</span>' : '') + '<select data-path="plan.scenes.' + i + '.beat" style="width:auto">' + beatOpts(s.beat) + '</select>' + locSelect(i, s.location) + '<input data-path="plan.scenes.' + i + '.heading" value="' + esc(s.heading || '') + '" placeholder="INT. KITCHEN – NIGHT" style="flex:1;min-width:180px;font-weight:700;text-transform:uppercase"><input type="number" min="1" max="15" data-path="plan.scenes.' + i + '.seconds" value="' + s.seconds + '" style="width:72px"> <span class="muted">sec</span></div>' +
               '<div class="row" style="gap:12px;flex-wrap:wrap;margin-top:6px;font-size:13.5px">' + ((p.plan.cast || []).length ? '<span class="muted">In scene:</span>' + p.plan.cast.map(function (c) { return '<label class="chk"><input type="checkbox" data-incast="' + i + '" value="' + esc(c.name) + '"' + ((s.cast || []).indexOf(c.name) >= 0 ? ' checked' : '') + '> ' + esc(c.name) + '</label>'; }).join('') : '') +
                 '<label class="chk"><input type="checkbox" data-flag="' + i + '.product"' + (s.product ? ' checked' : '') + '> 📦 Product</label><label class="chk"><input type="checkbox" data-flag="' + i + '.lipSync"' + (s.lipSync ? ' checked' : '') + '> 👄 Lip sync</label></div>' +
               field('🎬 Action — what we see', 'plan.scenes.' + i + '.visual', s.visual, 3) +
@@ -394,8 +407,8 @@
         var st = p.plan.strategy, cast = p.plan.cast || [], cc = p.plan.concept;
         return (cc && cc.title ? '<div class="card" style="margin-bottom:10px"><b>🎬 Story: ' + esc(cc.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0 0">' + esc(cc.logline || '') + '</p></div>' : '') +
           (cast.length ? '<div class="card" style="margin-bottom:10px"><b>👥 Cast</b>' + cast.map(function (c, k) {
-            return '<div class="vscene" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 3) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 3) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '</div>';
-          }).join('') + '</div>' : '') +
+            return '<div class="vscene" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 3) + field('👗 Outfit (kept the same in every scene)', 'plan.cast.' + k + '.outfit', c.outfit, 0) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 3) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '</div>';
+          }).join('') + '</div>' : '') + (locCard() ? locCard().replace('margin-top:10px', 'margin-bottom:10px') : '') +
           '<div class="card"><div class="lbl" style="margin-top:0">Pick your hook (first 1–2 seconds)</div>' +
           st.hooks.map(function (h, i) { return '<div class="row" style="gap:8px;align-items:flex-start;margin-top:6px"><input type="radio" name="vhook" value="' + i + '"' + (i === st.chosenHook ? ' checked' : '') + ' style="width:auto;margin-top:12px">' + '<div style="flex:1">' + field('Hook ' + (i + 1), 'plan.strategy.hooks.' + i, h, 2, true) + '</div></div>'; }).join('') +
           '</div><div class="card" style="margin-top:10px">' + field('Story framework', 'plan.strategy.framework', st.framework) + field('The angle', 'plan.strategy.angle', st.angle, 3, true) +
@@ -404,7 +417,7 @@
       script: function () {
         return '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><span class="muted" style="font-size:13px">Voiceover ≈ 2.5 words per second. Edit freely — the animatic updates.</span>' + copyAllBtn('veCopyScript', 'Copy script') + '</div>' +
           p.plan.scenes.map(function (s, i) {
-            return '<div class="card vscene"><div class="row" style="gap:8px;align-items:center"><b>Scene ' + (i + 1) + '</b><input data-path="plan.scenes.' + i + '.title" value="' + esc(s.title) + '" style="flex:1"><input type="number" min="1" max="15" data-path="plan.scenes.' + i + '.seconds" value="' + s.seconds + '" style="width:72px"> <span class="muted">sec</span></div>' +
+            return '<div class="card vscene"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>Scene ' + (i + 1) + '</b>' + locSelect(i, s.location) + '<input data-path="plan.scenes.' + i + '.title" value="' + esc(s.title) + '" style="flex:1;min-width:160px"><input type="number" min="1" max="15" data-path="plan.scenes.' + i + '.seconds" value="' + s.seconds + '" style="width:72px"> <span class="muted">sec</span></div>' +
               '<div class="row" style="gap:12px;flex-wrap:wrap;margin-top:6px;font-size:13.5px">' + ((p.plan.cast || []).length ? '<span class="muted">In scene:</span>' + p.plan.cast.map(function (c) { return '<label class="chk"><input type="checkbox" data-incast="' + i + '" value="' + esc(c.name) + '"' + ((s.cast || []).indexOf(c.name) >= 0 ? ' checked' : '') + '> ' + esc(c.name) + '</label>'; }).join('') : '') +
                 '<label class="chk"><input type="checkbox" data-flag="' + i + '.product"' + (s.product ? ' checked' : '') + '> 📦 Shows product</label><label class="chk"><input type="checkbox" data-flag="' + i + '.lipSync"' + (s.lipSync ? ' checked' : '') + '> 👄 Lip sync</label></div>' +
               '<div class="vf"><div class="row" style="justify-content:space-between"><label>🗣️ Spoken lines <span class="muted" style="font-weight:400">— one per line as “Name: words” (or “Narrator: words”)</span></label></div><textarea rows="3" data-lines="' + i + '">' + esc((s.lines && s.lines.length ? s.lines : (s.vo ? [{ who: 'Narrator', text: s.vo }] : [])).map(function (l) { return l.who + ': ' + l.text; }).join('\n')) + '</textarea></div>' +
@@ -413,8 +426,8 @@
           }).join('');
       },
       board: function () {
-        var missingCast = (p.plan.cast || []).filter(function (c, k) { return !p.make.castImgs[k]; }).length;
-        return (missingCast ? '<div class="note" style="margin-bottom:8px">👥 Create the character photos first (' + (D ? '🎭 Story' : '🎬 Make the video') + ' tab) so everyone looks the same in every picture.</div>' : '') +
+        var missingCast = (p.plan.cast || []).filter(function (c, k) { return !p.make.castImgs[k]; }).length + (p.plan.locations || []).filter(function (l, k) { return !(p.make.locImgs || {})[k]; }).length;
+        return (missingCast ? '<div class="note" style="margin-bottom:8px">👥📍 Create the character and place photos first (' + (D ? '🎭 Story' : '🎯 Strategy') + ' tab) so everyone and every room look the same in every picture.</div>' : '') +
           '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Storyboard pictures use each scene’s start-frame prompt' + ((p.brief.products || []).length ? ', the character photos and your product photos' : ' and the character photos') + ' (about 4p each).</span><button class="btn primary sm" id="veAllPics">🎨 Create all missing pictures</button></div>' +
           '<div class="vboard">' + p.plan.scenes.map(function (s, i) {
             var f = p.frames[String(i)];
@@ -486,6 +499,10 @@
       });
       $$('[data-castpic]', pane).forEach(function (b) { b.onclick = function () { busyBtn(b, '⏳', async function () { await castPic(+b.dataset.castpic); paintPane(); }); }; });
       $$('[data-castup]', pane).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { p.make.castImgs[inp.dataset.castup] = (await X.api('app-img', { image: await shrink(f) })).imgId; mark(); paintPane(); } catch (x) { X.toast(x.message); } }; });
+      $$('[data-locpic]', pane).forEach(function (b) { b.onclick = function () { busyBtn(b, '⏳', async function () { await locPic(+b.dataset.locpic); paintPane(); }); }; });
+      $$('[data-locup]', pane).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { p.make.locImgs[inp.dataset.locup] = (await X.api('app-img', { image: await shrink(f) })).imgId; mark(); paintPane(); } catch (x) { X.toast(x.message); } }; });
+      $$('[data-locname]', pane).forEach(function (inp) { inp.oninput = function () { var l = p.plan.locations[+inp.dataset.locname], old = l.name, nw = inp.value.trim(); if (!nw) return; p.plan.scenes.forEach(function (sc) { if (sc.location === old) sc.location = nw; }); l.name = nw; mark(); }; });
+      var mla = q('#mdLocAll'); if (mla) mla.onclick = function () { busyBtn(mla, '🎨 Creating…', async function () { for (var k = 0; k < (p.plan.locations || []).length; k++) if (!p.make.locImgs[k]) await locPic(k); paintPane(); }); };
       var mca = q('#mdCastAll'); if (mca) mca.onclick = function () { busyBtn(mca, '🎨 Creating…', async function () { for (var k = 0; k < (p.plan.cast || []).length; k++) if (!p.make.castImgs[k]) await castPic(k); paintPane(); }); };
       var mck = q('#mdCheck'); if (mck) mck.onclick = function () { busyBtn(mck, '🔍 Checking…', async function () { p.plan.storyCheck = (await X.api('md-check', { brief: p.brief, plan: p.plan })).storyCheck; mark(); paintPane(); }); };
       var mfx = q('#mdFix'); if (mfx) mfx.onclick = function () {
@@ -534,16 +551,13 @@
       var ce = q('#veCopyEdit'); if (ce) ce.onclick = function () { copy((p.plan.editing || []).map(function (x, i) { return (i + 1) + '. ' + x; }).join('\n')); };
       var cpo = q('#veCopyPost'); if (cpo) cpo.onclick = function () { copy(p.plan.post.caption + '\n\n' + p.plan.post.hashtags); };
     }
-    function sceneRefs(sc) {
-      var refs = [], cast = p.plan.cast || [];
-      (sc.cast || []).forEach(function (nm) { for (var k = 0; k < cast.length; k++) if (cast[k].name === nm && p.make.castImgs[k]) refs.push(p.make.castImgs[k]); });
-      if (!refs.length && sc.character && p.make.charImg) refs.push(p.make.charImg);
-      if (sc.product) (p.brief.products || []).slice(0, 2).forEach(function (id) { refs.push(id); });
-      return refs.slice(0, 4);
+    async function locPic(k) {
+      var r = await X.api('app-picture', { kind: 'frame', prompt: HQVmake.locPrompt(p, p.plan.locations[k]), aspect: aspect(p) });
+      p.make.locImgs[k] = (await X.api('app-img', { image: await shrink(r.image) })).imgId; mark();
     }
     async function castPic(k) {
       var c = (p.plan.cast || [])[k]; if (!c) return;
-      var r = await X.api('app-picture', { kind: 'frame', prompt: (c.sheetPrompt || ('Full-body reference photo of ' + c.description)) + '. Single person only, full body, facing camera, neutral expression, plain light-grey studio background, soft even light, ' + (p.plan.lookbook.style || 'photorealistic'), aspect: '9:16' });
+      var r = await X.api('app-picture', { kind: 'frame', prompt: HQVmake.castPrompt(p, c), aspect: '9:16' });
       p.make.castImgs[k] = (await X.api('app-img', { image: await shrink(r.image) })).imgId; mark();
     }
     async function refreshPrompts(nums) {
@@ -561,7 +575,7 @@
     async function makePic(i, btn) {
       var s = p.plan.scenes[i]; if (!s || !s.imagePrompt) { X.toast('This scene has no start-frame prompt yet'); return; }
       if (btn) { btn.disabled = true; btn.textContent = '🎨 Creating…'; }
-      try { var r = await X.api('app-picture', { kind: 'frame', prompt: s.imagePrompt + (p.plan.lookbook.style ? ' Style: ' + p.plan.lookbook.style + '.' : ''), aspect: aspect(p), refImgIds: sceneRefs(s) }); await setPic(i, await shrink(r.image)); }
+      try { var rf = await HQVmake.sceneRefs(p, s, X.api); var r = await X.api('app-picture', { kind: 'frame', prompt: s.imagePrompt + ' ' + rf.words + (p.plan.lookbook.style ? ' Style: ' + p.plan.lookbook.style + '.' : ''), aspect: aspect(p), refImgIds: rf.ids, refLabels: rf.labels }); await setPic(i, await shrink(r.image)); }
       catch (x) { if (btn) { X.toast(x.message); btn.disabled = false; btn.textContent = '🎨 Create'; } else throw x; }
     }
 

@@ -36,9 +36,52 @@
     });
     var total = p.plan.scenes.reduce(function (n, s) { return n + (Number(s.seconds) || 0); }, 0) + END;
     var music = m.music && !paid(m.musicJob) ? Math.max(10, total) / 60 * 0.8 * 0.79 : 0;
-    var castPics = cast(p).filter(function (c, k) { return !m.castImgs[k]; }).length + (needsChar(p) && !m.charImg ? 1 : 0);
+    var castPics = cast(p).filter(function (c, k) { return !m.castImgs[k]; }).length + (needsChar(p) && !m.charImg ? 1 : 0) + (p.plan.locations || []).filter(function (l, k) { return !(m.locImgs && m.locImgs[k]); }).length;
     var pics = (p.plan.scenes.filter(function (s, i) { return !(p.frames && p.frames[String(i)]); }).length + castPics) * 0.04;
     return { clips: clips, vo: vo, lip: lip, sfx: sfx, music: music, pics: pics, total: clips + vo + lip + sfx + music + pics };
+  }
+
+  // ════════ consistency: places + people + product as labelled reference photos ════════
+  function placeName(h) { return String(h || '').replace(/^\s*(INT|EXT|INT\/EXT|I\/E)[.\s\/]+/i, '').replace(/\s*[–—-]\s*(DAY|NIGHT|MORNING|EVENING|AFTERNOON|LATER|CONTINUOUS|DAWN|DUSK|MOMENTS LATER)\b.*$/i, '').trim().toLowerCase().replace(/(^|\s)\S/g, function (c) { return c.toUpperCase(); }); }
+  // older projects (or a plan without places): make the list from the scene headings
+  function ensureLocations(p) {
+    var pl = p.plan; pl.locations = pl.locations || [];
+    p.make = p.make || {}; p.make.locImgs = p.make.locImgs || {}; p.make.groupImgs = p.make.groupImgs || {};
+    var find = function (n) { n = String(n || '').toLowerCase().trim(); for (var k = 0; k < pl.locations.length; k++) { var ln = pl.locations[k].name.toLowerCase(); if (ln === n || (n && (n.indexOf(ln) >= 0 || ln.indexOf(n) >= 0))) return k; } return -1; };
+    pl.scenes.forEach(function (sc) {
+      var k = find(sc.location); if (k < 0) k = find(placeName(sc.heading));
+      if (k < 0 && (sc.location || placeName(sc.heading))) { pl.locations.push({ name: sc.location || placeName(sc.heading), description: '', sheetPrompt: '' }); k = pl.locations.length - 1; }
+      if (k >= 0) sc.location = pl.locations[k].name;
+    });
+    if (!pl.locations.length && pl.lookbook && pl.lookbook.setting) { pl.locations.push({ name: 'Main set', description: pl.lookbook.setting, sheetPrompt: '' }); pl.scenes.forEach(function (sc) { sc.location = 'Main set'; }); }
+    return pl.locations;
+  }
+  function locIndex(p, sc) { var n = String(sc.location || '').toLowerCase(); for (var k = 0; k < (p.plan.locations || []).length; k++) if (p.plan.locations[k].name.toLowerCase() === n) return k; return -1; }
+  function locPrompt(p, l) { var lb = p.plan.lookbook || {}; return (l.sheetPrompt || ('Empty wide establishing shot of ' + l.name + (l.description ? ': ' + l.description : ''))) + '. No people at all. Eye-level wide shot that shows the whole space and its key furniture and props. ' + [lb.lighting, lb.palette, lb.style || 'photorealistic, cinematic'].filter(Boolean).join(', '); }
+  function castPrompt(p, c) { var lb = p.plan.lookbook || {}; return (c.sheetPrompt || ('Full-body reference photo of ' + c.description)) + (c.outfit ? '. Wearing: ' + c.outfit : '') + '. Single person only, full body, facing camera, neutral expression, plain light-grey studio background, soft even light, ' + (lb.style || 'photorealistic'); }
+  // the reference photos for one scene (max 4): place → people (or one group photo) → product; plus exact words for the prompt
+  async function sceneRefs(p, sc, api) {
+    ensureLocations(p);
+    var m = p.make, cast = p.plan.cast || [], ids = [], labels = [], words = [];
+    var lk = locIndex(p, sc), loc = lk >= 0 ? p.plan.locations[lk] : null;
+    if (loc && m.locImgs[lk]) { ids.push(m.locImgs[lk]); labels.push('the location “' + loc.name + '” — keep this exact place: same layout, wall colours, furniture and props'); }
+    if (loc) words.push('Place: the same ' + loc.name + (loc.description ? ' — ' + loc.description : '') + '.');
+    var who = []; (sc.cast || []).forEach(function (nm) { for (var k = 0; k < cast.length; k++) if (cast[k].name === nm && who.indexOf(k) < 0) who.push(k); });
+    who.forEach(function (k) { var c = cast[k]; words.push(c.name + ': ' + c.description + (c.outfit ? ', wearing ' + c.outfit : '') + '.'); });
+    var prod = sc.product ? (p.brief.products || []).slice(0, 1) : [];
+    var withImg = who.filter(function (k) { return m.castImgs && m.castImgs[k]; }), room = 4 - ids.length - prod.length;
+    if (withImg.length && withImg.length <= room) withImg.forEach(function (k) { ids.push(m.castImgs[k]); labels.push('the character ' + cast[k].name + ' — keep the same face, skin tone, hair, build and outfit'); });
+    else if (withImg.length > room && room > 0) {
+      var key = withImg.slice().sort().join('') + (withImg.length < 2 ? '0' : '');
+      if (!m.groupImgs[key] && api) {
+        var r = await api('app-picture', { kind: 'frame', prompt: 'The ' + withImg.length + ' people from the reference photos standing together side by side, full body, facing camera, plain light-grey studio background, photorealistic. Each person must look EXACTLY like their own reference photo (face, skin tone, hair, build, outfit).', aspect: '16:9', refImgIds: withImg.map(function (k) { return m.castImgs[k]; }), refLabels: withImg.map(function (k) { return 'the character ' + cast[k].name; }) });
+        m.groupImgs[key] = (await api('app-img', { image: r.image })).imgId;
+      }
+      if (m.groupImgs[key]) { ids.push(m.groupImgs[key]); labels.push('the characters ' + withImg.map(function (k) { return cast[k].name; }).join(', ') + ' (left to right) — keep each person exactly the same'); }
+    }
+    if (!withImg.length && sc.character && m.charImg && ids.length + prod.length < 4) { ids.push(m.charImg); labels.push('the main character — keep the same face, skin tone, hair, build and outfit'); }
+    prod.forEach(function (id) { ids.push(id); labels.push('the real product — show it exactly as in this photo (shape, colours, details)'); });
+    return { ids: ids.slice(0, 4), labels: labels.slice(0, 4), words: words.join(' ') };
   }
 
   async function loadSettings(api, force) { if (!ST || force) ST = (await api('vm-settings')).settings; return ST; }
@@ -88,7 +131,7 @@
   function wire(pane, p, X) {
     var root = $('#vmRoot', pane), polling = 0, busy = false, autoLip = false, checking = {}, DR = p.brief.mode === 'drama', remakeStale = false, lastOut = null;
     p.make = p.make || {}; var m = p.make;
-    m.tier = m.tier || 'budget'; ['clips', 'vo', 'lines', 'castImgs', 'castVoices', 'sfx', 'lipsync', 'checks'].forEach(function (k) { m[k] = m[k] || {}; });
+    m.tier = m.tier || 'budget'; ['clips', 'vo', 'lines', 'castImgs', 'castVoices', 'sfx', 'lipsync', 'checks', 'locImgs', 'groupImgs'].forEach(function (k) { m[k] = m[k] || {}; });
     m.finals = m.finals || []; if (m.music === undefined) m.music = true; m.voSource = m.voSource || 'ai'; m.customVoices = m.customVoices || [];
     if (m.sfxOn === undefined) m.sfxOn = true; if (m.logoOn === undefined) m.logoOn = true;
     if (!m.musicPrompt) m.musicPrompt = [p.plan.music.mood, p.plan.music.bpm ? p.plan.music.bpm + ' BPM' : '', (p.plan.music.search || [])[0]].filter(Boolean).join(', ');
@@ -135,13 +178,7 @@
     function draft() { return m.tier === 'draft'; }
     function ratio() { var a = sizeOf(p, X).split(':'); return a[0] + '/' + a[1]; }
     function castIdx(name) { var n = String(name || '').toLowerCase().trim(); for (var k = 0; k < cast(p).length; k++) if (cast(p)[k].name.toLowerCase() === n) return k; return -1; }
-    function sceneRefs(sc) {
-      var refs = [];
-      (sc.cast || []).forEach(function (n) { var k = castIdx(n); if (k >= 0 && m.castImgs[k]) refs.push(m.castImgs[k]); });
-      if (!refs.length && sc.character && m.charImg) refs.push(m.charImg);
-      if (sc.product) (p.brief.products || []).slice(0, 2).forEach(function (id) { refs.push(id); });
-      return refs.slice(0, 4);
-    }
+    ensureLocations(p);
     // every speaker gets a voice; cast members get one that suits them
     function autoVoices() {
       var usedF = 0, usedM = 0;
@@ -223,6 +260,16 @@
       } else {
         html += '<div class="card vmstep"><div class="row" style="justify-content:space-between"><b>' + tick(st.cast) + ' ' + n + ' · Main character</b>' + (needsChar(p) ? '<span class="apact"><button class="btn ghost sm" id="vmChar">' + (m.charImg ? '🔄 Redo' : '🎨 Create') + '</button><label class="btn ghost sm" style="margin:0">📷 Upload<input type="file" accept="image/*" id="vmCharUp" hidden></label></span>' : '<span class="muted">Not needed</span>') + '</div>' +
           (m.charImg ? '<img src="' + X.frameSrc(m.charImg) + '" class="vmchar" alt="Character">' : (needsChar(p) ? '<p class="muted" style="font-size:13px">Made from the character-sheet prompt, then used in every scene so the person looks the same.</p>' : '')) + '</div>';
+      }
+      var locs = p.plan.locations || [];
+      if (locs.length) {
+        html += '<div class="card vmstep"><div class="row" style="justify-content:space-between"><b>' + tick(locs.every(function (l, k) { return m.locImgs[k]; })) + ' 📍 Places (' + locs.filter(function (l, k) { return m.locImgs[k]; }).length + '/' + locs.length + ')</b><button class="btn ghost sm" id="vmLocAll">🎨 Create missing</button></div>' +
+          '<p class="muted" style="font-size:13px;margin:4px 0">Each place gets one reference photo — every scene there uses it, so the room looks the same in every shot.</p>' +
+          locs.map(function (l, k) {
+            var img = m.locImgs[k];
+            return '<div class="vmcast">' + (img ? '<img src="' + X.frameSrc(img) + '" alt="">' : '<div class="ph">🏠</div>') + '<div style="flex:1;min-width:0"><b>' + esc(l.name) + '</b> <span class="muted">· ' + scenes().filter(function (sc) { return sc.location === l.name; }).length + ' scenes</span><div class="muted" style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + esc(l.description) + '</div></div>' +
+              '<span class="apact"><button class="btn ghost sm" data-locmk="' + k + '">' + (img ? '🔄' : '🎨') + '</button><label class="btn ghost sm" style="margin:0">📷<input type="file" accept="image/*" data-locup="' + k + '" hidden></label></span></div>';
+          }).join('') + '</div>';
       }
       // 2 · start pictures
       n++;
@@ -344,6 +391,9 @@
       $$('[data-castmk]', root).forEach(function (b) { b.onclick = function () { run(b, function () { return makeCastOne(+b.dataset.castmk); }); }; });
       $$('[data-castup]', root).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { var d = await X.shrink(f); m.castImgs[inp.dataset.castup] = (await X.api('app-img', { image: d })).imgId; X.mark(); paint(); } catch (x) { X.toast(x.message); } }; });
       on('#vmPics', function () { run(this, makePics); });
+      on('#vmLocAll', function () { run(this, async function () { for (var l = 0; l < (p.plan.locations || []).length; l++) if (!m.locImgs[l]) await makeLocOne(l); }); });
+      $$('[data-locmk]', root).forEach(function (b) { b.onclick = function () { run(b, function () { return makeLocOne(+b.dataset.locmk); }); }; });
+      $$('[data-locup]', root).forEach(function (inp) { inp.onchange = async function () { var f = inp.files && inp.files[0]; if (!f) return; try { m.locImgs[inp.dataset.locup] = (await X.api('app-img', { image: await X.shrink(f) })).imgId; X.mark(); paint(); } catch (x) { X.toast(x.message); } }; });
       $$('[data-repic]', root).forEach(function (b) { b.onclick = function (ev) { ev.stopPropagation(); var i = +b.dataset.repic; if (m.clips[i] && m.clips[i].url && !confirm('Make a new start picture for scene ' + (i + 1) + '? Its clip will need remaking.')) return; run(b, function () { return makePic(i); }); }; });
       on('#vmClips', function () { run(this, gated(makeClips)); });
       $$('[data-redo]', root).forEach(function (b) { b.onclick = function () { var i = +b.dataset.redo; if ((m.clips[i] && m.clips[i].url) && !confirm('Make scene ' + (i + 1) + ' again? (costs about ' + gbp(clipLen(m.tier, scenes()[i].seconds) * rate(m.tier)) + ')')) return; run(b, function () { return makeClip(i); }); }; });
@@ -414,18 +464,23 @@
       m.charImg = await saveImg(r.image); X.mark();
     }
     async function makeCastOne(k) {
-      var c = cast(p)[k], lb = p.plan.lookbook || {};
-      var prompt = (c.sheetPrompt || ('Full-body reference photo of ' + c.description)) + '. Single person only, full body, facing camera, neutral expression, plain light-grey studio background, soft even light, ' + (lb.style || 'photorealistic');
-      var r = await X.api('app-picture', { kind: 'frame', prompt: prompt, aspect: '9:16' });
+      var c = cast(p)[k];
+      var r = await X.api('app-picture', { kind: 'frame', prompt: castPrompt(p, c), aspect: '9:16' });
       m.castImgs[k] = await saveImg(r.image); X.mark(); paint();
     }
+    async function makeLocOne(k) {
+      var r = await X.api('app-picture', { kind: 'frame', prompt: locPrompt(p, p.plan.locations[k]), aspect: sizeOf(p, X) });
+      m.locImgs[k] = await saveImg(r.image); X.mark(); paint();
+    }
     async function makeCast() {
-      if (!cast(p).length) { if (needsChar(p) && !m.charImg) await makeChar(); return; }
-      for (var k = 0; k < cast(p).length; k++) if (!m.castImgs[k]) await makeCastOne(k);
+      if (!cast(p).length) { if (needsChar(p) && !m.charImg) await makeChar(); }
+      else for (var k = 0; k < cast(p).length; k++) if (!m.castImgs[k]) await makeCastOne(k);
+      for (var l = 0; l < (p.plan.locations || []).length; l++) if (!m.locImgs[l]) await makeLocOne(l);
     }
     async function makePic(i) {
       var sc = scenes()[i]; if (!sc.imagePrompt) throw new Error('Scene ' + (i + 1) + ' has no picture prompt yet — open the Dzine prompts tab first.');
-      var r = await X.api('app-picture', { kind: 'frame', prompt: sc.imagePrompt + (p.plan.lookbook.style ? ' Style: ' + p.plan.lookbook.style + '.' : ''), aspect: sizeOf(p, X), refImgIds: sceneRefs(sc) });
+      var rf = await sceneRefs(p, sc, X.api);
+      var r = await X.api('app-picture', { kind: 'frame', prompt: sc.imagePrompt + ' ' + rf.words + (p.plan.lookbook.style ? ' Style: ' + p.plan.lookbook.style + '.' : ''), aspect: sizeOf(p, X), refImgIds: rf.ids, refLabels: rf.labels });
       p.frames[String(i)] = await saveImg(r.image);
       delete m.clips[i]; delete m.lipsync[i]; delete m.checks[i]; X.mark(); paint();
     }
@@ -458,7 +513,7 @@
       if (checking[i]) return; checking[i] = true; if (show) paint();
       try {
         var sc = scenes()[i], img = await grabFrame(i);
-        var r = await X.api('vm-check', { frame: img, refs: sceneRefs(sc), scene: sc.visual || sc.title });
+        var r = await X.api('vm-check', { frame: img, refs: (await sceneRefs(p, sc, null)).ids, scene: (sc.location ? sc.location + ': ' : '') + (sc.visual || sc.title) });
         m.checks[i] = { ok: r.check.ok, issues: r.check.issues, clip: (m.clips[i] && m.clips[i].url) || '' }; X.mark(); X.save().catch(function () {});
       } catch (x) { if (show) X.toast('Check: ' + x.message); }
       delete checking[i]; if (document.body.contains(root) && !busy) paint();
@@ -805,5 +860,5 @@
     return { blob: new Blob([muxer.target.buffer], { type: 'video/mp4' }), ext: 'mp4', ok: vpick.mux === 'avc' && (!audio || (apick && apick.mux === 'aac')) };
   }
 
-  window.HQVmake = { html: html, wire: wire, settingsSheet: settingsSheet, composeVideo: composeVideo };
+  window.HQVmake = { html: html, wire: wire, settingsSheet: settingsSheet, composeVideo: composeVideo, sceneRefs: sceneRefs, ensureLocations: ensureLocations, locPrompt: locPrompt, castPrompt: castPrompt };
 })();
