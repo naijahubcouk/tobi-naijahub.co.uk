@@ -26,7 +26,7 @@ Reply with ONE JSON object only — no markdown, no commentary. Keep every text 
 async function writerModel() { try { return (await require('./videoai').settings()).dramaModel; } catch (_) { return require('./videoai').DRAMA_MODEL; } }
 // Claude sometimes wraps the JSON in words, leaves a quote unescaped or runs out of room — repair it.
 function parseJson(text) {
-  const { jsonrepair } = require('jsonrepair');
+  let jsonrepair = x => x; try { jsonrepair = require('jsonrepair').jsonrepair; } catch (_) { /* repair not installed — plain parsing only */ }
   const t = String(text || '').replace(/```(?:json)?/gi, '');
   const a = t.indexOf('{'); if (a < 0) return null;
   try { return JSON.parse(t.slice(a, t.lastIndexOf('}') + 1)); } catch (_) { /* repair below */ }
@@ -197,43 +197,93 @@ Return: {"scenes": [${SCENE_FIELDS}]}`, 1800, 0.75);
   return { scenes: plan.scenes.filter(s => set.includes(s.n)) };
 }
 
-// 📋 The team's own ready script → the same outline + screenplay shape, keeping their story and words
-const KEEP = `The team has ALREADY WRITTEN this story. Respect it: keep the plot, the order of events, the characters and every line of dialogue EXACTLY as written (fix only obvious typos). Do not add jokes, lines or plot. You only structure it for production and fill in what the script doesn't say (looks, camera, sound, timings).`;
+// 📋 The team's own ready script. The script is split into numbered pieces HERE (not by AI): every action line,
+// every spoken line and the final text card. AI only groups the pieces into scenes (in order, none skipped) and adds
+// looks, camera and timings — the dialogue in each scene is copied from the script word for word by this code.
+const KEEP = `The team has ALREADY WRITTEN this story. Respect it completely: same plot, same order, same characters, same words. Do not add, remove, merge-away or reorder story moments; do not invent dialogue. You only plan the production.`;
+const META = /^(business|brand|product|products|genre|duration|length|characters?|cast|locations?|setting|settings|title|music|style|tone|platform|cta|call to action|audience|goal|format|note|notes)$/i;
+const SPEECH = /^\s*(?:[-*•]\s*)?([A-Za-zÀ-ÿ][\wÀ-ÿ .'’\-]{0,34}?)\s*(\([^)]{1,40}\))?\s*:\s*(.+)$/;
+function unquote(t) { return String(t).trim().replace(/^[“"‘']+|[”"’']+$/g, '').trim(); }
+function splitScript(text) {
+  const units = [], meta = [], card = []; let inCard = false;
+  String(text || '').replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean).forEach((line, idx) => {
+    const clean = line.replace(/^[-*•]\s*/, '');
+    if (/^the storyline\b|^storyline\b|^story\b:?$|^script\b:?$/i.test(clean)) return;
+    const m = SPEECH.exec(clean), key = m ? m[1].trim() : '';
+    if (/^final (text|card|title|caption)s?$/i.test(key) || /^(end card|end text|final text|closing text)\s*:?\s*$/i.test(clean)) { inCard = true; if (m && m[3].trim()) card.push(unquote(m[3])); return; }
+    if (inCard) { card.push(unquote(clean)); return; }
+    if (m && META.test(key)) { meta.push(clean); return; }
+    if (!units.length && idx === 0 && !m && clean.length < 90 && /—|–|-|“|"/.test(clean) && !/[.!?]$/.test(clean)) { meta.push('Title: ' + clean); return; }
+    if (/^(INT|EXT|INT\/EXT)[.\s]/i.test(clean)) { units.push({ type: 'heading', text: clean }); return; }
+    if (m && !/^(final scene|scene \d+|scene|shot \d+|cut to|fade (in|out))$/i.test(key) && key.split(/\s+/).length <= 4 && !/[.!?]$/.test(key)) {
+      units.push({ type: 'line', who: key, emotion: m[2] ? m[2].replace(/[()]/g, '').trim() : '', text: unquote(m[3]) }); return;
+    }
+    units.push({ type: 'action', text: m && /^final scene$/i.test(key) ? 'FINAL SCENE: ' + m[3].trim() : clean });
+  });
+  units.forEach((u, i) => { u.id = i + 1; });
+  return { units, meta, card };
+}
 function scriptBlock(b) { return `THE SCRIPT:\n<<<\n${b.script}\n>>>`; }
+function wordsOf(t) { return String(t || '').split(/\s+/).filter(Boolean).length; }
 async function importOutline(brief) {
   const b = va.cleanBrief(Object.assign({}, brief, { mode: 'drama' }));
   if (String(b.script || '').trim().length < 40) throw new HttpError(400, 'too_short', 'Paste the script first (a few lines at least).');
-  const j = await write(ROLE + '\n' + KEEP, `${dramaBrief(b)}
+  const sp = splitScript(b.script);
+  if (sp.units.length < 2) throw new HttpError(400, 'too_short', 'Couldn’t find the story in that script — paste the scenes and dialogue too.');
+  const speakers = [...new Set(sp.units.filter(u => u.type === 'line').map(u => u.who))];
+  const list = sp.units.map(u => `${u.id}. ${u.type === 'line' ? `${u.who}${u.emotion ? ` (${u.emotion})` : ''}: ${u.text}` : u.type === 'heading' ? `[HEADING] ${u.text}` : `[ACTION] ${u.text}`}`).join('\n');
+  const j = await write(ROLE + '\n' + KEEP, `${dramaBrief(Object.assign({}, b, { notes: [b.notes, sp.meta.join('\n')].filter(Boolean).join('\n') }))}
 
-${scriptBlock(b)}
+THE SCRIPT, split into ${sp.units.length} numbered pieces in story order:
+${list}
+${sp.card.length ? `\nFINAL TEXT CARD (shown at the very end, not a scene): ${sp.card.join(' / ')}` : ''}
 
-Break the script into scenes in story order (3–7 seconds each — split long moments into several shots; seconds must fit the dialogue at about 2.5 words per second). Give every scene a beat: ${BEATS.join(', ')}. If the script has no ending with the product, still mark the scene that best shows the product as "reveal" — do not invent new story.
-Return: {"title": the script's title (or a short one), "logline": 1–2 sentences,
- "cast": [{"name": as in the script, "role", "personality": from how they talk and act, "description": detailed consistent look (age, skin tone, hair, face, build, outfit) — from the script, else a fitting choice, "sheetPrompt": text-to-image prompt for a full-body reference photo (single person, plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style}],
+Plan the shots. Group the pieces into scenes IN ORDER: every piece from 1 to ${sp.units.length} must be in exactly one scene, no gaps, no reordering. A scene is one shot of 3–7 seconds: usually 1–2 pieces (a spoken line and the reaction/action next to it); never more than 2 spoken lines in a scene. Each action piece becomes something we SEE.
+The speakers are: ${speakers.join(', ') || '(no dialogue)'} — keep these exact names for the cast. Add any non-speaking characters the script mentions.
+Return: {"title": the script's title, "logline": 1 sentence,
+ "cast": [{"name": exact speaker name from the script, "role", "personality", "description": detailed consistent look (age, skin tone, hair, face, build, outfit) — from the script, else a fitting choice, "sheetPrompt": text-to-image prompt for a full-body reference photo (single person, plain light-grey studio background, photorealistic), "gender": "female" or "male", "voiceHint": voice style}],
  "lookbook": {"setting", "wardrobe", "palette", "lighting", "style", "negative"},
- "reveal": {"tagline": short brand line for the final title card (from the script if it has one, max 8 words)},
  "music": {"mood", "bpm"},
- "scenes": [{"heading": e.g. "INT. KITCHEN – NIGHT", "beat", "title": 2–4 words, "summary": what happens (max 25 words), "seconds", "cast": [names], "product": boolean, "shot", "camera"}]}`, 3200, 0.3);
-  const plan = va.cleanPlan({ title: j.title, cast: j.cast, lookbook: j.lookbook, reveal: j.reveal, music: j.music, scenes: (Array.isArray(j.scenes) ? j.scenes : []).map(x => Object.assign({}, x, { visual: x && x.summary })) });
+ "scenes": [{"from": first piece number, "to": last piece number, "heading": e.g. "INT. KITCHEN – DAY", "beat": one of ${BEATS.join('/')}, "title": 2–4 words, "visual": what we SEE — 1–2 sentences that show exactly these pieces, "emotions": {"piece number": emotion for each spoken line}, "cast": [names in shot], "product": true if the cookware/product is visible, "shot", "camera" (vary them), "sfx": one sound or ""}]}`, 3600, 0.3);
+  // rebuild the scenes from the pieces — the AI only chose the grouping
+  const got = (Array.isArray(j.scenes) ? j.scenes : []).map(s => s && typeof s === 'object' ? s : null).filter(Boolean);
+  const owner = new Array(sp.units.length + 1).fill(-1);
+  got.forEach((s, k) => { const a = Math.max(1, Number(s.from) || 0), z = Math.min(sp.units.length, Number(s.to) || a); for (let i = a; i <= z; i++) if (owner[i] < 0) owner[i] = k; });
+  const groups = []; let cur = null;
+  for (let i = 1; i <= sp.units.length; i++) {
+    const k = owner[i];
+    if (!cur || k !== cur.k) { cur = { k, ids: [], lines: 0 }; groups.push(cur); }
+    cur.ids.push(i); if (sp.units[i - 1].type === 'line') cur.lines++;
+  }
+  // a scene never holds more than 2 spoken lines — split if the AI grouped too much
+  const final = [];
+  groups.forEach(g => { let part = { k: g.k, ids: [], lines: 0 }; g.ids.forEach(id => { const u = sp.units[id - 1]; if ((u.type === 'line' && part.lines >= 2) || part.ids.length >= 3) { final.push(part); part = { k: g.k, ids: [], lines: 0, cont: true }; } part.ids.push(id); if (u.type === 'line') part.lines++; }); final.push(part); });
+  const castNames = (Array.isArray(j.cast) ? j.cast : []).map(c => c && c.name).filter(Boolean);
+  const nameFor = who => castNames.find(n => n.toLowerCase() === String(who).toLowerCase()) || who;
+  let lastHeading = '';
+  const scenesOut = final.map((g, idx) => {
+    const prev = final[idx - 1], s = g.k >= 0 ? got[g.k] : { heading: lastHeading, beat: prev && prev.k >= 0 ? got[prev.k].beat : '', cast: [] }, us = g.ids.map(id => sp.units[id - 1]), emo = s.emotions && typeof s.emotions === 'object' ? s.emotions : {};
+    const head = us.find(u => u.type === 'heading'); if (head) lastHeading = head.text;
+    const lines = us.filter(u => u.type === 'line').map(u => ({ who: nameFor(u.who), emotion: u.emotion || str(emo[u.id] || emo[String(u.id)] || '', 40), text: u.text }));
+    const acts = us.filter(u => u.type === 'action').map(u => u.text).join(' ');
+    const words = lines.reduce((n, l) => n + wordsOf(l.text), 0);
+    const nActs = us.filter(u => u.type === 'action').length;
+    const secs = Math.max(3, Math.min(8, Math.round(words / 2.5 + 1.5 * nActs + (lines.length ? 1 : 0))));
+    const castIn = [...new Set((Array.isArray(s.cast) ? s.cast : []).map(nameFor).concat(lines.map(l => l.who)))];
+    return { heading: str(s.heading, 100) || (head ? head.text : lastHeading), beat: s.beat, title: g.cont ? (str(s.title, 60) || 'Scene') + ' (cont.)' : (s.title || `Scene ${idx + 1}`),
+      visual: acts ? (acts + (!g.cont && s.visual ? ` — ${s.visual}` : '')) : (!g.cont && s.visual ? s.visual : `${lines.map(l => l.who).join(' and ')} talking.`),
+      seconds: secs, cast: castIn, product: !!s.product, shot: s.shot, camera: s.camera, sfx: s.sfx || '', transition: 'cut', lines, lipSync: lines.length === 1 && words >= 3 && words <= 20, script: us.map(u => u.id) };
+  });
+  const plan = va.cleanPlan({ title: j.title || (sp.meta.find(m => /^Title:/.test(m)) || '').replace(/^Title:\s*/, ''), cast: j.cast, lookbook: j.lookbook, music: j.music, scenes: scenesOut });
+  plan.scenes.forEach((sc, i) => { sc.vo = sc.lines.map(l => l.text).join(' ').slice(0, 400); if (!sc.beat) sc.beat = i === plan.scenes.length - 1 ? 'reveal' : ''; });
   if (plan.scenes.length < 2) throw new HttpError(502, 'ai_error', 'Couldn’t break that script into scenes — check it pasted fully and try again.');
+  plan.reveal = { tagline: str(sp.card[0] || '', 120), sub: str(sp.card.slice(1).join(' · '), 160) };
   plan.concept = { title: plan.title, genre: GENRES[b.genre], logline: str(j.logline, 400), beats: [], productMoment: '' };
   plan.post.endCard = plan.reveal.tagline;
   plan.lookbook.character = plan.cast.map(c => `${c.name}: ${c.description}`).join('\n').slice(0, 700);
-  return { brief: b, plan };
+  return { brief: b, plan, complete: true, pieces: sp.units.length };
 }
-async function importScenes(brief, rawPlan, from, to) {
-  const b = va.cleanBrief(Object.assign({}, brief, { mode: 'drama' })), plan = va.cleanPlan(rawPlan);
-  const want = plan.scenes.slice(from, to); if (!want.length) return { scenes: [] };
-  const j = await write(ROLE + '\n' + KEEP, `${scriptBlock(b)}
+// kept for older pages that still call it: the scenes are already complete
+async function importScenes(brief, rawPlan, from, to) { const plan = va.cleanPlan(rawPlan); return { scenes: plan.scenes.slice(from, to) }; }
 
-CAST: ${JSON.stringify(plan.cast.map(c => ({ name: c.name, personality: c.personality })))}
-SCENE LIST: ${JSON.stringify(plan.scenes.map(s => ({ n: s.n, heading: s.heading, beat: s.beat, seconds: s.seconds, summary: s.visual, cast: s.cast })))}
-
-For scenes ${want.map(s => s.n).join(', ')} only: copy the dialogue that belongs to each scene WORD FOR WORD from the script (split long speeches across the scenes they cover), add the emotion from the script's directions (or a fitting one), and describe what we see.
-Return: {"scenes": [${SCENE_FIELDS}]}`, 2000, 0.2);
-  mergeScenes(plan, j.scenes);
-  return { scenes: plan.scenes.slice(from, to) };
-}
-
-module.exports = { concepts, outline, scenes, check, fix, ruleIssues, importOutline, importScenes };
-
+module.exports = { concepts, outline, scenes, check, fix, ruleIssues, importOutline, importScenes, splitScript };

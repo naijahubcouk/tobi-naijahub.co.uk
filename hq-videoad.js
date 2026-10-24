@@ -253,7 +253,7 @@
     var b0 = Object.assign({}, brief); if (extra) b0.notes = (b0.notes ? b0.notes + '\n' : '') + 'DIRECTION FOR THIS VERSION: ' + extra;
     show(0);
     var r1 = await X.api(imp ? 'md-import' : 'md-outline', { brief: b0 }), plan = r1.plan, b = r1.brief, n = plan.scenes.length;
-    for (var from = 0; from < n; from += 3) {
+    for (var from = 0; from < n && !r1.complete; from += 3) {
       show(1, 'scenes ' + (from + 1) + '–' + Math.min(n, from + 3) + ' of ' + n);
       var r2 = await X.api(imp ? 'md-import-scenes' : 'md-scenes', { brief: b, plan: plan, from: from, to: from + 3 });
       mergeInto(plan, r2.scenes);
@@ -361,7 +361,7 @@
         var cc = p.plan.concept || {}, chk = p.plan.storyCheck, cast = p.plan.cast || [], ci = p.make.castImgs;
         var issues = chk ? chk.issues || [] : [];
         var tot = totalSecs(p), len = p.brief.length, fromS = !!p.brief.script;
-        return (fromS ? '<div class="card" style="margin-bottom:10px"><b>📋 Made from your script</b> <span class="muted" style="font-size:13px">— your story and dialogue were kept; the story check below only suggests changes.</span>' +
+        return (fromS ? '<div class="card" style="margin-bottom:10px"><b>📋 Made from your script</b> <span class="muted" style="font-size:13px">— every moment and line of your script is in the scenes, in order and word for word (see “📋 Script” on each scene). The story check below only suggests changes.</span>' +
             (tot > len * 1.15 ? '<div class="note" style="margin-top:8px">⏱️ Your script runs about <b>' + tot + 's</b> but you chose <b>' + len + 's</b>.<div class="apact" style="margin-top:6px"><button class="btn ghost sm" id="mdKeepLong">Keep it ' + tot + 's long</button><button class="btn primary sm" id="mdTrim">✨ Trim it to ' + len + 's</button></div></div>' : '') +
             '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13.5px;font-weight:700">📄 Your original script</summary><pre style="white-space:pre-wrap;font-family:inherit;font-size:13.5px;margin:6px 0 0;max-height:320px;overflow:auto">' + esc(p.brief.script) + '</pre></details></div>' : '') +
           '<div class="card"><b>🎬 ' + esc(cc.title || p.plan.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0">' + esc(cc.logline || '') + '</p>' +
@@ -380,7 +380,7 @@
       screenplay: function () {
         return '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px"><span class="muted" style="font-size:13px">Edit anything. Dialogue: one line each as “Name (emotion): words”. ≈ 2.5 words per second.</span>' + copyAllBtn('mdCopy', 'Copy screenplay') + '</div>' +
           p.plan.scenes.map(function (s, i) {
-            return '<div class="card vscene"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>Scene ' + (i + 1) + '</b><select data-path="plan.scenes.' + i + '.beat" style="width:auto">' + beatOpts(s.beat) + '</select><input data-path="plan.scenes.' + i + '.heading" value="' + esc(s.heading || '') + '" placeholder="INT. KITCHEN – NIGHT" style="flex:1;min-width:180px;font-weight:700;text-transform:uppercase"><input type="number" min="1" max="15" data-path="plan.scenes.' + i + '.seconds" value="' + s.seconds + '" style="width:72px"> <span class="muted">sec</span></div>' +
+            return '<div class="card vscene"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>Scene ' + (i + 1) + '</b>' + ((s.script || []).length ? '<span class="vtag" title="Which parts of your script this scene shows">📋 Script ' + (s.script.length > 1 ? s.script[0] + '–' + s.script[s.script.length - 1] : s.script[0]) + '</span>' : '') + '<select data-path="plan.scenes.' + i + '.beat" style="width:auto">' + beatOpts(s.beat) + '</select><input data-path="plan.scenes.' + i + '.heading" value="' + esc(s.heading || '') + '" placeholder="INT. KITCHEN – NIGHT" style="flex:1;min-width:180px;font-weight:700;text-transform:uppercase"><input type="number" min="1" max="15" data-path="plan.scenes.' + i + '.seconds" value="' + s.seconds + '" style="width:72px"> <span class="muted">sec</span></div>' +
               '<div class="row" style="gap:12px;flex-wrap:wrap;margin-top:6px;font-size:13.5px">' + ((p.plan.cast || []).length ? '<span class="muted">In scene:</span>' + p.plan.cast.map(function (c) { return '<label class="chk"><input type="checkbox" data-incast="' + i + '" value="' + esc(c.name) + '"' + ((s.cast || []).indexOf(c.name) >= 0 ? ' checked' : '') + '> ' + esc(c.name) + '</label>'; }).join('') : '') +
                 '<label class="chk"><input type="checkbox" data-flag="' + i + '.product"' + (s.product ? ' checked' : '') + '> 📦 Product</label><label class="chk"><input type="checkbox" data-flag="' + i + '.lipSync"' + (s.lipSync ? ' checked' : '') + '> 👄 Lip sync</label></div>' +
               field('🎬 Action — what we see', 'plan.scenes.' + i + '.visual', s.visual, 3) +

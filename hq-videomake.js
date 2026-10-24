@@ -664,7 +664,7 @@
     var tag = (p.plan.reveal && p.plan.reveal.tagline) || p.plan.post.endCard || '', fs = Math.round(S * 0.048);
     c.globalAlpha = ease((t - 0.7) / 0.5); c.fillStyle = '#FFB81C'; c.font = 'italic 600 ' + fs + 'px "DM Sans",sans-serif';
     wrap(c, tag, w * 0.8).forEach(function (ln, k) { c.fillText(ln, w / 2, y + k * fs * 1.3); });
-    var contact = p.brief.forWho === 'auntietobi' ? 'auntietobi.co.uk · @auntietobi_uk' : (p.brief.contact || p.brief.link || '');
+    var contact = (p.plan.reveal && p.plan.reveal.sub) || (p.brief.forWho === 'auntietobi' ? 'auntietobi.co.uk · @auntietobi_uk' : (p.brief.contact || p.brief.link || ''));
     if (contact) { c.globalAlpha = ease((t - 1.1) / 0.5) * 0.85; c.fillStyle = '#FFFFFF'; c.font = '600 ' + Math.round(S * 0.034) + 'px "DM Sans",sans-serif'; wrap(c, contact, w * 0.84).forEach(function (ln, k) { c.fillText(ln, w / 2, h * 0.8 + k * S * 0.048); }); }
     c.restore();
   }

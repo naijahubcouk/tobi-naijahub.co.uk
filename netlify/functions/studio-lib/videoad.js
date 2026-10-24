@@ -84,6 +84,7 @@ function cleanScene(s, i) {
     cast: arr(s.cast, 3, 40),
     product: !!s.product,
     heading: str(s.heading, 100),
+    script: (Array.isArray(s.script) ? s.script : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n < 1000).slice(0, 16),
     beat: BEATS.includes(s.beat) ? s.beat : '',
     lines: (Array.isArray(s.lines) ? s.lines : []).map(l => l && typeof l === 'object' ? { who: str(l.who, 40) || 'Narrator', text: str(l.text, 300), emotion: str(l.emotion, 40) } : null).filter(l => l && l.text).slice(0, 4),
   };
@@ -109,7 +110,7 @@ function cleanPlan(p) {
     scenes: (Array.isArray(p.scenes) ? p.scenes : []).slice(0, 24).map(cleanScene),
     cast: (Array.isArray(p.cast) ? p.cast : []).slice(0, 3).map(c => c && typeof c === 'object' ? { name: str(c.name, 40), role: str(c.role, 120), personality: str(c.personality, 300), description: str(c.description, 600), sheetPrompt: str(c.sheetPrompt, 1200), gender: ['female', 'male'].includes(c.gender) ? c.gender : '', voiceHint: str(c.voiceHint, 160) } : null).filter(c => c && c.name),
     concept: p.concept && typeof p.concept === 'object' ? { title: str(p.concept.title, 120), genre: str(p.concept.genre, 80), logline: str(p.concept.logline, 400), beats: arr(p.concept.beats, 8, 200), productMoment: str(p.concept.productMoment, 300) } : null,
-    reveal: { tagline: str(p.reveal && p.reveal.tagline, 120) },
+    reveal: { tagline: str(p.reveal && p.reveal.tagline, 120), sub: str(p.reveal && p.reveal.sub, 160) },
     storyCheck: p.storyCheck && typeof p.storyCheck === 'object' ? { score: Math.max(0, Math.min(10, Number(p.storyCheck.score) || 0)), at: cleanText(p.storyCheck.at, 40), issues: (Array.isArray(p.storyCheck.issues) ? p.storyCheck.issues : []).slice(0, 12).map(x => x && typeof x === 'object' ? { n: Math.max(0, Math.min(24, Number(x.n) || 0)), problem: str(x.problem, 240), fix: str(x.fix, 240) } : null).filter(x => x && x.problem) } : null,
     voice: { direction: str(vo.direction, 500), script: str(vo.script, 2000), elevenlabs: str(vo.elevenlabs, 400) },
     music: { mood: str(mu.mood, 200), bpm: str(mu.bpm, 40), search: arr(mu.search, 6, 80), trending: str(mu.trending, 300), sfx: arr(mu.sfx, 10, 80) },
