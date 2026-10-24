@@ -164,6 +164,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 .cargrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 .carcard{display:flex;gap:12px;align-items:flex-start;cursor:pointer}.carthumb{width:96px;height:120px;border-radius:8px;flex:none;background:#eee}
 @media (max-width:900px){.carbody{overflow:auto;display:flex;flex-direction:column}.carright{order:-1;margin-bottom:12px}.carleft,.carright{overflow:visible}.carstage canvas{max-width:300px}}
+.vf{margin-top:8px}.vf label{margin:0}.vfbtn{display:flex;gap:2px}.vfbtn .btn.link{font-size:12.5px;padding:0 4px}
+.vscene{margin-top:10px}.vtag{font-size:12px;font-weight:700;background:var(--green-l);color:var(--green-d);border-radius:999px;padding:2px 8px}.vtag.gold{background:var(--gold-l);color:#7A5300}
+.vboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.vbcard{padding:10px}
+.vbimg{aspect-ratio:9/16;background:#0F1E36;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#cbd5e1;text-align:center;font-weight:700}.vbimg.feed{aspect-ratio:4/5}.vbimg img{width:100%;height:100%;object-fit:cover}
+.vlist{padding-left:20px;margin:8px 0}.vlist li{margin:4px 0}.vcheck{padding:6px 0;border-bottom:1px solid var(--line);align-items:flex-start}.vcheck input{margin-top:3px}
+.vres{display:flex;flex-direction:column;gap:4px;margin-top:6px}.vres .btn{justify-content:flex-start;text-align:left}
+#veCv{width:100%;max-width:300px;height:auto;display:block;border-radius:8px}
 .subc{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.subimg{width:130px;max-height:180px;object-fit:cover;border-radius:10px;cursor:zoom-in;flex:none;background:#eee}.subimg.none{height:90px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);cursor:default}.side-nav .n.gold:not(:empty){background:var(--gold);color:var(--navy)}
 /* Comment Assistant */
 .side-sec{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;color:var(--gold);padding:12px 12px 2px}
@@ -220,6 +227,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
       <button data-nav="cars">🎬 Animated Carousels <span class="n" id="nCars"></span></button>
+      <button data-nav="vads">🎥 Video Ad Studio <span class="n" id="nVads"></span></button>
       <button data-nav="bin">🗑 Bin <span class="n" id="nBin"></span></button>
       <button id="teamBtn" class="hidden">👥 Team access</button>
       <a href="/studio-admin" id="adminLink" class="hidden">📋 Admin ↗</a>
@@ -236,6 +244,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <script src="/vendor/mp4-muxer-5.2.2.js"></script>
 <script src="/vendor/jszip-3.10.2.min.js"></script>
 <script src="/hq-carousel.js"></script>
+<script src="/hq-videoad.js"></script>
 <script>
 (function () {
   'use strict';
@@ -286,13 +295,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || [];
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || []; S.vads = r.vads || [];
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
   function go(v) {
-    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'bin'].indexOf(v) >= 0 ? v : 'today';
+    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'].indexOf(v) >= 0 ? v : 'today';
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -301,11 +310,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nApp').textContent = (S.app || []).filter(function (p) { return appState(p) === 'live'; }).length || '';
     $('#nSubs').textContent = subsNew().length || '';
     $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10);
+    $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, igc: vIgc, cars: function () { window.HQCar.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, igc: vIgc, cars: function () { window.HQCar.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
+  if (window.HQVad) window.HQVad.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
   $$('.side-nav [data-nav]').forEach(function (b) { b.onclick = function () { go(b.dataset.nav); }; });
   $('#menuBtn').onclick = function (e) { e.stopPropagation(); $('#side').classList.toggle('open'); };

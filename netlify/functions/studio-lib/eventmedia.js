@@ -174,7 +174,16 @@ async function sceneIdea(title, about) {
   return `a creative, realistic scene that clearly shows "${title}" in everyday UK life for Nigerians in the UK (not a desk with a laptop). Style: ${hint}, uncluttered.`;
 }
 
+// 🎬 A storyboard start frame for the Video Ad Studio — the prompt is written by the planner.
+async function makeFrame(info) {
+  const prompt = String(info.prompt || '').replace(/\s+/g, ' ').trim().slice(0, 1500);
+  if (prompt.length < 20) throw new HttpError(400, 'no_prompt', 'This scene has no image prompt yet.');
+  const ar = ['9:16', '4:5', '1:1', '16:9'].includes(info.aspect) ? info.aspect : '9:16';
+  return generateImage(`${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names. No celebrities or real identifiable people.`, ar);
+}
+
 async function makePicture(info) {
+  if (info && info.kind === 'frame') return makeFrame(info);
   const fullTitle = core.cleanText(info && info.title, 120);
   const emoji = (fullTitle.match(/^[^\p{L}\p{N}\s]+/u) || [''])[0].trim();
   const title = fullTitle.replace(/^[^\p{L}\p{N}]+/u, '');
@@ -207,6 +216,12 @@ Event: "${title}"${about ? `\nAbout: ${about}` : ''}
 Style: ${pickOne(POSTER_STYLES)}. Make the main visual specific to THIS event (what people will actually see, do, eat or hear there) — not a generic motif. Clean layout with plenty of space.
 Text on the poster — spell it EXACTLY and include nothing else: the title "${title}"${day ? `, the date "${day}"` : ''}${town ? `, and the place "${town}"` : ''}.
 Do NOT include: photos of real people, faces of performers, logos, brand names, QR codes, prices, websites or any other words.`;
+  return generateImage(prompt, article ? '1:1' : '4:5');
+}
+
+async function generateImage(prompt, aspect) {
+  const key = env('STUDIO_OPENROUTER_API_KEY') || env('OPENROUTER_API_KEY');
+  if (!key) throw new HttpError(500, 'ai_not_configured', 'Creating images needs the AI to be set up.');
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 55000);
   let res, data;
@@ -214,7 +229,7 @@ Do NOT include: photos of real people, faces of performers, logos, brand names, 
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST', signal: ctrl.signal,
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://auntietobi.co.uk', 'X-Title': 'Auntie Tobi Events' },
-      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: article ? '1:1' : '4:5' }, usage: { include: true } }),
+      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: aspect }, usage: { include: true } }),
     });
     data = await res.json().catch(() => null);
   } catch (_) {
