@@ -183,19 +183,34 @@ async function plannedToday() {
 }
 
 // ── HQ team (sign in to HQ only) ──
-async function teamFull() { const t = await getJson(TEAM_KEY); return t && Array.isArray(t.emails) ? { emails: t.emails, names: t.names || {} } : { emails: DEFAULT_TEAM.slice(), names: { ...DEFAULT_NAMES } }; }
+// Sections of HQ a team member can open. No entry (or 'all') = everything.
+const SECTIONS = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
+// Until the team is saved with per-person access, Favour sees Today, Board and Calendar only.
+const DEFAULT_ACCESS = { 'hellofavouradentan@gmail.com': ['today', 'board', 'calendar'] };
+function cleanAccess(v) { if (!Array.isArray(v)) return null; const out = SECTIONS.filter(x => v.includes(x)); return out.length && out.length < SECTIONS.length ? out : null; }
+async function teamFull() {
+  const t = await getJson(TEAM_KEY);
+  const base = t && Array.isArray(t.emails) ? { emails: t.emails, names: t.names || {} } : { emails: DEFAULT_TEAM.slice(), names: { ...DEFAULT_NAMES } };
+  const src = t && t.access && typeof t.access === 'object' ? t.access : DEFAULT_ACCESS, access = {};
+  base.emails.forEach(e => { const a = cleanAccess(src[e]); if (a) access[e] = a; });
+  return { ...base, access };
+}
+// The sections one person may open (null = everything).
+async function sectionsFor(email) { return (await teamFull()).access[email] || null; }
 async function team() { return (await teamFull()).emails; }
 // Display names: team names + "Auntie Tobi" for admins.
 async function names() { const t = await teamFull(); const out = { ...t.names }; for (const e of core.adminEmails()) out[e] = 'Auntie Tobi'; return out; }
-async function setTeam(emails, nameMap) {
+async function setTeam(emails, nameMap, accessMap) {
   const raw = (Array.isArray(emails) ? emails : []).map(e => String(e || '').trim()).filter(Boolean);
   for (const e of raw) if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) || !core.normalizeEmail(e)) throw new HttpError(400, 'invalid', `“${e.slice(0, 80)}” doesn’t look like an email address.`);
   const list = [...new Set(raw.map(e => core.normalizeEmail(e)))];
   const nm = {}; const given = nameMap && typeof nameMap === 'object' ? nameMap : {};
   for (const [k, v] of Object.entries(given)) { const e = core.normalizeEmail(k); const n = cleanText(v, 40); if (e && list.includes(e) && n) nm[e] = n; }
   if (list.length > 20) throw new HttpError(400, 'invalid', 'Up to 20 people.');
-  await setJson(TEAM_KEY, { emails: list, names: nm, updatedAt: core.nowIso() });
-  return { emails: list, names: nm };
+  const ac = {}; const givenA = accessMap && typeof accessMap === 'object' ? accessMap : {};
+  for (const [k, v] of Object.entries(givenA)) { const e = core.normalizeEmail(k); const a = cleanAccess(v); if (e && list.includes(e) && a) ac[e] = a; }
+  await setJson(TEAM_KEY, { emails: list, names: nm, access: ac, updatedAt: core.nowIso() });
+  return { emails: list, names: nm, access: ac };
 }
 
-module.exports = { team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };
+module.exports = { SECTIONS, sectionsFor, team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };

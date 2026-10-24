@@ -40,17 +40,38 @@ async function requireHq(ctx) {
   const token = cookies[core.COOKIE_HQ];
   if (token && token.length <= 100) {
     const sess = await core.getJson(`sess/${core.sha256(token)}`);
-    if (sess && sess.role === 'hq' && sess.expiresAt > Date.now() && (await hq.team()).includes(sess.email)) return { email: sess.email, isAdmin: false };
+    if (sess && sess.role === 'hq' && sess.expiresAt > Date.now() && (await hq.team()).includes(sess.email)) return { email: sess.email, isAdmin: false, sections: await hq.sectionsFor(sess.email) };
     ctx.cookiesOut.push(core.clearCookie(core.COOKIE_HQ));
   }
   throw new HttpError(401, 'signed_out', 'Please sign in.');
 }
 
+// Per-person access: which section(s) each action belongs to. Admins and "everything" members pass.
+const CARDS = ['today', 'board', 'calendar', 'posted'];
+const ACTION_SECTIONS = {
+  save: CARDS, 'save-many': CARDS, delete: CARDS, img: CARDS, bin: ['bin'], restore: ['bin'],
+  'app-picture': ['app', 'subs', 'cars', 'vads'], 'app-img': ['app', 'subs', 'cars', 'vads'],
+  subs: ['subs'], 'team-save': [],
+};
+function sectionsOf(action) {
+  if (ACTION_SECTIONS[action]) return ACTION_SECTIONS[action];
+  if (/^app-/.test(action)) return ['app'];
+  if (/^sub-/.test(action)) return ['subs'];
+  if (/^igc-/.test(action)) return ['igc'];
+  if (/^car-/.test(action)) return ['cars'];
+  if (/^(va|vm)-/.test(action)) return ['vads'];
+  return null; // boot, purge (admin-only) etc. are checked where they run
+}
+function can(who, list) { return who.isAdmin || !who.sections || list.some(x => who.sections.includes(x)); }
+function mustAllow(who, list) { if (!can(who, list)) throw new HttpError(403, 'no_access', 'You don’t have access to this part of HQ — ask Auntie Tobi.'); }
+
 exports.handler = handler(async (ctx) => {
   const { event, body } = ctx;
   if (event.httpMethod === 'GET') {
-    await requireHq(ctx);
+    const whoG = await requireHq(ctx);
     const q = event.queryStringParameters || {};
+    if (q.vfinal || q.vaudio) mustAllow(whoG, ['vads']);
+    else if (q.subimg) mustAllow(whoG, ['app', 'subs', 'cars', 'vads']);
     if (q.vfinal) {
       const part = await videoai.getFinalPart(q.vfinal, q.part || '0');
       if (!part) throw new HttpError(404, 'not_found', 'Not found.');
@@ -92,8 +113,10 @@ exports.handler = handler(async (ctx) => {
 
   const who = await requireHq(ctx);
   await core.rateLimit('hq', who.email, 1200, 60 * 60 * 1000);
+  { const need = sectionsOf(String(body.action || '')); if (need) mustAllow(who, need); }
+  const has = list => can(who, list);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, items: await hq.list(), bin: await hq.bin(), trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: await apppub.list(), appCategories: apppub.CATEGORIES, subs: await eventsub.list(), igc: await igcomment.list(), igcTarget: igcomment.DAILY_TARGET, cars: await carousel.list(), vads: await videoad.list() };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? await apppub.list() : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], vads: has(['vads']) ? await videoad.list() : [] };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -226,7 +249,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'team-save': {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change who has access.');
-      const t = await hq.setTeam(body.emails, body.names);
+      const t = await hq.setTeam(body.emails, body.names, body.access);
       await core.audit(who.email, 'hq_team', { n: t.emails.length });
       return { team: t };
     }

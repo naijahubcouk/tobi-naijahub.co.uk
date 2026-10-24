@@ -304,13 +304,19 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || []; S.vads = r.vads || [];
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || []; S.vads = r.vads || []; S.sections = r.sections || null;
+    $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
+    $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
+    var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
+  var SECTIONS = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
+  var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
+  function allowed(v) { return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'].indexOf(v) >= 0 ? v : 'today';
+    S.view = SECTIONS.indexOf(v) >= 0 && allowed(v) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -688,19 +694,29 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   function who(e) { return e === S.me ? 'you' : S.names[e] || String(e || '').split('@')[0]; }
   $('#teamBtn').onclick = function () {
     $('#side').classList.remove('open');
-    var s = sheet('<h2>👥 Team access</h2><p class="muted" style="margin:6px 0 12px">People here can sign in to <b>HQ only</b> with their email and a code — paste, edit, plan and mark posts. They can’t open Business Studio Admin. Remove someone and they’re signed out straight away.</p>' +
+    var s = sheet('<h2>👥 Team access</h2><p class="muted" style="margin:6px 0 12px">People here can sign in to <b>HQ only</b> with their email and a code. Tick what each person can open — everything else is hidden and locked for them. They can’t open Business Studio Admin. Remove someone and they’re signed out straight away.</p>' +
       '<div id="tmList" class="stack" style="gap:6px"></div>' +
       '<div class="row" style="margin-top:12px;gap:6px"><input id="tmNm" placeholder="Name" style="width:130px"><input id="tmNew" type="email" placeholder="assistant@email.com" style="flex:1;min-width:180px"><button class="btn ghost" id="tmAdd">Add</button></div>' +
       '<div class="err hidden" id="tmErr"></div>' +
       '<div class="row" style="margin-top:14px"><button class="btn primary" id="tmSave">Save</button><button class="btn ghost" id="tmX">Close</button></div>' +
       '<p class="muted" style="font-size:12.5px;margin-top:10px">Send them this link: <b>' + esc(location.origin) + '/hq</b></p>');
-    var list = S.team.emails.slice(), nm = Object.assign({}, S.team.names);
-    var draw = function () { $('#tmList', s).innerHTML = list.length ? list.map(function (e, i) { return '<div class="row" style="justify-content:space-between;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px"><span><b>' + esc(nm[e] || '') + '</b>' + (nm[e] ? ' · ' : '') + esc(e) + '</span><button class="btn small ghost danger" data-rm="' + i + '">Remove</button></div>'; }).join('') : '<p class="muted" style="margin:0">Only you have access.</p>'; $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { list.splice(Number(b.dataset.rm), 1); draw(); }; }); };
+    var list = S.team.emails.slice(), nm = Object.assign({}, S.team.names), ac = JSON.parse(JSON.stringify(S.team.access || {}));
+    var draw = function () {
+      $('#tmList', s).innerHTML = list.length ? list.map(function (e, i) {
+        var a = ac[e], all = !a;
+        return '<div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px"><div class="row" style="justify-content:space-between;gap:8px"><span><b>' + esc(nm[e] || '') + '</b>' + (nm[e] ? ' · ' : '') + esc(e) + '</span><button class="btn small ghost danger" data-rm="' + i + '">Remove</button></div>' +
+          '<div class="muted" style="font-size:12.5px;margin:6px 0 4px">Can open:</div><div class="row" style="gap:6px;flex-wrap:wrap"><label class="chk" style="font-size:13.5px;font-weight:700"><input type="checkbox" data-all="' + i + '"' + (all ? ' checked' : '') + '> Everything</label>' +
+          (all ? '' : SECTIONS.map(function (k) { return '<label class="chk" style="font-size:13.5px"><input type="checkbox" data-sec="' + i + '" value="' + k + '"' + (a.indexOf(k) >= 0 ? ' checked' : '') + '> ' + SECTION_NAMES[k] + '</label>'; }).join('')) + '</div></div>';
+      }).join('') : '<p class="muted" style="margin:0">Only you have access.</p>';
+      $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { var e = list.splice(Number(b.dataset.rm), 1)[0]; delete ac[e]; draw(); }; });
+      $$('[data-all]', s).forEach(function (b) { b.onchange = function () { var e = list[+b.dataset.all]; if (b.checked) delete ac[e]; else ac[e] = ['today', 'board', 'calendar']; draw(); }; });
+      $$('[data-sec]', s).forEach(function (b) { b.onchange = function () { var e = list[+b.dataset.sec]; ac[e] = $$('[data-sec="' + b.dataset.sec + '"]', s).filter(function (x) { return x.checked; }).map(function (x) { return x.value; }); if (!ac[e].length) { ac[e] = [b.value]; b.checked = true; toast('Leave at least one section ticked'); } }; });
+    };
     draw();
     var add = function () { var v = $('#tmNew', s).value.trim().toLowerCase(), n = $('#tmNm', s).value.trim(); if (!v) return; if (list.indexOf(v) < 0) list.push(v); if (n) nm[v] = n; $('#tmNew', s).value = ''; $('#tmNm', s).value = ''; draw(); };
     $('#tmAdd', s).onclick = add; $('#tmNew', s).onkeydown = function (e) { if (e.key === 'Enter') add(); };
     $('#tmX', s).onclick = function () { s.remove(); };
-    $('#tmSave', s).onclick = async function () { add(); try { var r = await api('team-save', { emails: list, names: nm }); S.team = r.team; Object.assign(S.names, r.team.names); s.remove(); toast('Team access saved'); } catch (x) { var e = $('#tmErr', s); e.textContent = x.message; e.classList.remove('hidden'); } };
+    $('#tmSave', s).onclick = async function () { add(); try { var r = await api('team-save', { emails: list, names: nm, access: ac }); S.team = r.team; Object.assign(S.names, r.team.names); s.remove(); toast('Team access saved'); } catch (x) { var e = $('#tmErr', s); e.textContent = x.message; e.classList.remove('hidden'); } };
   };
   // ── Publish to App (updates, articles, events shown in the main Auntie Tobi app) ──
   var KIND = { update: '📢 Update', article: '📰 Article', event: '🎉 Event' };
