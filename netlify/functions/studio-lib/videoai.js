@@ -13,11 +13,14 @@ const { HttpError, cas, getJson, setJson, env } = core;
 const KEY = 'hq/videoai';
 const USD_GBP = 0.79;
 const TIERS = {
+  draft:   { label: '📝 Draft — pictures with motion (no clip cost)', model: '', family: 'none', usdPerSec: 0 },
   budget:  { label: '💚 Budget — Kling 2.6 Pro', model: 'fal-ai/kling-video/v2.6/pro/image-to-video', family: 'kling', usdPerSec: 0.07 },
   premium: { label: '⭐ Premium — Veo 3.1 Fast', model: 'fal-ai/veo3.1/fast/image-to-video', family: 'veo', usdPerSec: 0.10 },
   top:     { label: '💎 Top — Veo 3.1', model: 'fal-ai/veo3.1/image-to-video', family: 'veo', usdPerSec: 0.20 },
 };
 const TTS_MODEL = 'fal-ai/elevenlabs/tts/multilingual-v2', TTS_USD_PER_1K = 0.10;
+const EXTRA = { lipsync: 'fal-ai/kling-video/lipsync/audio-to-video', sfx: 'fal-ai/elevenlabs/sound-effects/v2' };
+const LIPSYNC_USD_PER_5S = 0.07, SFX_USD = 0.03;
 const MUSIC_MODEL = 'fal-ai/elevenlabs/music', MUSIC_USD_PER_MIN = 0.80;
 const VOICES = ['Aria', 'Sarah', 'Laura', 'Charlotte', 'Alice', 'Matilda', 'Jessica', 'Lily', 'Roger', 'Charlie', 'George', 'Callum', 'River', 'Liam', 'Will', 'Eric', 'Chris', 'Brian', 'Daniel', 'Bill'];
 const isModelId = v => /^[a-z0-9][a-z0-9._\-/]{3,120}$/i.test(String(v || ''));
@@ -26,8 +29,9 @@ const isQueueUrl = v => /^https:\/\/queue\.fal\.run\/[A-Za-z0-9._\-/]+$/.test(St
 async function settings() {
   const s = (await getJson(KEY)) || {};
   const models = {};
-  Object.keys(TIERS).forEach(k => { models[k] = isModelId(s.models && s.models[k]) ? s.models[k] : TIERS[k].model; });
-  return { falKey: s.falKey || env('FAL_KEY', ''), capGbp: Number(s.capGbp) > 0 ? Number(s.capGbp) : 50, models, voice: VOICES.includes(s.voice) || /^[A-Za-z0-9]{16,40}$/.test(String(s.voice || '')) ? s.voice : 'Aria' };
+  Object.keys(TIERS).forEach(k => { if (k !== 'draft') models[k] = isModelId(s.models && s.models[k]) ? s.models[k] : TIERS[k].model; });
+  Object.keys(EXTRA).forEach(k => { models[k] = isModelId(s.models && s.models[k]) ? s.models[k] : EXTRA[k]; });
+  return { falKey: s.falKey || env('FAL_KEY', ''), capGbp: Number(s.capGbp) > 0 ? Number(s.capGbp) : 50, models, voice: VOICES.includes(s.voice) || /^[A-Za-z0-9]{16,40}$/.test(String(s.voice || '')) ? s.voice : 'Aria', anthropicKey: s.anthropicKey || '', claudeModel: s.claudeModel || 'claude-haiku-5-5', writer: s.writer === 'claude' ? 'claude' : 'standard' };
 }
 function monthKey() { return `hq/videoai-spend/${core.monthKey()}`; }
 async function spent() { const s = (await getJson(monthKey())) || {}; return Math.round((Number(s.gbp) || 0) * 100) / 100; }
@@ -36,6 +40,7 @@ async function publicSettings(isAdmin) {
   return {
     ready: !!s.falKey, keyHint: s.falKey ? '••••' + s.falKey.slice(-4) : '', capGbp: s.capGbp, spentGbp: await spent(), models: s.models, voice: s.voice, voices: VOICES,
     tiers: Object.keys(TIERS).map(k => ({ id: k, label: TIERS[k].label, gbpPerSec: Math.round(TIERS[k].usdPerSec * USD_GBP * 1000) / 1000 })), isAdmin: !!isAdmin,
+    extraModels: Object.keys(EXTRA), claude: { ready: !!s.anthropicKey, keyHint: s.anthropicKey ? '••••' + s.anthropicKey.slice(-4) : '', model: s.claudeModel, on: s.writer === 'claude' && !!s.anthropicKey }, lipsyncGbpPer5s: Math.round(LIPSYNC_USD_PER_5S * USD_GBP * 100) / 100, sfxGbp: Math.round(SFX_USD * USD_GBP * 100) / 100,
   };
 }
 async function saveSettings(raw) {
@@ -50,7 +55,11 @@ async function saveSettings(raw) {
     }
     if (raw.removeKey) delete out.falKey;
     if (raw.capGbp != null) out.capGbp = Math.max(1, Math.min(2000, Math.round(Number(raw.capGbp) || 50)));
-    if (raw.models && typeof raw.models === 'object') { out.models = { ...(cur.models || {}) }; Object.keys(TIERS).forEach(k => { if (isModelId(raw.models[k])) out.models[k] = raw.models[k]; }); }
+    if (raw.models && typeof raw.models === 'object') { out.models = { ...(cur.models || {}) }; Object.keys(TIERS).concat(Object.keys(EXTRA)).forEach(k => { if (isModelId(raw.models[k])) out.models[k] = raw.models[k]; }); }
+    if (typeof raw.anthropicKey === 'string' && raw.anthropicKey.trim()) { const k = raw.anthropicKey.trim(); if (!/^sk-ant-[A-Za-z0-9_\-]{20,200}$/.test(k)) throw new HttpError(400, 'bad_key', 'That doesn’t look like an Anthropic API key (it starts with sk-ant-).'); out.anthropicKey = k; }
+    if (raw.removeAnthropic) { delete out.anthropicKey; out.writer = 'standard'; }
+    if (raw.writer) out.writer = raw.writer === 'claude' ? 'claude' : 'standard';
+    if (raw.claudeModel && /^claude-[a-z0-9.\-]{3,60}$/.test(raw.claudeModel)) out.claudeModel = raw.claudeModel;
     if (raw.voice && (VOICES.includes(raw.voice) || /^[A-Za-z0-9]{16,40}$/.test(raw.voice))) out.voice = raw.voice;
     return out;
   });
@@ -96,12 +105,12 @@ function clipLength(family, seconds) {
 async function submitClip({ tier, imgId, prompt, seconds, negative, aspect }) {
   const s = await needKey();
   const img = await require('./eventsub').getImage(imgId), image = img && img.dataUrl;
-  const t = TIERS[tier] ? tier : 'budget', T = TIERS[t], model = s.models[t];
+  const t = TIERS[tier] && tier !== 'draft' ? tier : 'budget', T = TIERS[t], model = s.models[t];
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(String(image || ''))) throw new HttpError(400, 'no_frame', 'This scene needs a start picture first.');
   const len = clipLength(T.family, seconds), gbp = Math.round(len * T.usdPerSec * USD_GBP * 100) / 100;
   const p = String(prompt || '').slice(0, 2400);
   const body = T.family === 'veo'
-    ? { prompt: p, image_url: image, aspect_ratio: aspect === '4:5' ? 'auto' : '9:16', duration: `${len}s`, resolution: '720p', generate_audio: false, negative_prompt: String(negative || '').slice(0, 500) || undefined }
+    ? { prompt: p, image_url: image, aspect_ratio: aspect === '16:9' ? '16:9' : aspect === '9:16' || !aspect ? '9:16' : 'auto', duration: `${len}s`, resolution: '720p', generate_audio: false, negative_prompt: String(negative || '').slice(0, 500) || undefined }
     : { prompt: p, start_image_url: image, duration: String(len), generate_audio: false, negative_prompt: String(negative || 'blur, distort, low quality, text, watermark').slice(0, 500) };
   await charge(gbp, `clip ${model}`);
   try {
@@ -165,4 +174,48 @@ async function saveAudio(dataUrl, by) {
 }
 async function getAudio(id) { return /^a[a-z0-9]{8,30}$/.test(String(id || '')) ? getJson(`hq/vaudio/${id}`) : null; }
 
-module.exports = { saveAudio, getAudio, publicSettings, saveSettings, submitClip, submitMusic, status, tts, spent, TIERS, VOICES, clipLength };
+// Writer: Claude (optional) — used by videoad.ask when switched on
+async function claudeConfig() {
+  const s = await settings();
+  if (s.writer !== 'claude' || !s.anthropicKey) return null;
+  const haiku = /haiku/.test(s.claudeModel);
+  return { key: s.anthropicKey, model: s.claudeModel, inUsdPerM: haiku ? 1 : 3, outUsdPerM: haiku ? 5 : 15 };
+}
+async function addCost(usd, what) { const gbp = Math.max(0, Number(usd) || 0) * USD_GBP; if (gbp > 0) await cas(monthKey(), cur => { cur = cur || { gbp: 0, items: 0 }; return { ...cur, gbp: Math.round(((cur.gbp || 0) + gbp) * 1000) / 1000, last: what }; }); }
+
+// 👄 Lip sync one clip to one voice line (Kling LipSync)
+async function submitLipsync({ videoUrl, audioUrl, seconds }) {
+  const s = await needKey();
+  const ok = u => /^https:\/\/[A-Za-z0-9.\-]+\.(fal\.media|googleapis\.com)\/[^\s"'<>]{3,600}$/.test(String(u || ''));
+  if (!ok(videoUrl) || !ok(audioUrl)) throw new HttpError(400, 'bad_media', 'Lip sync needs the AI clip and an AI voice line for this scene.');
+  const gbp = Math.round(Math.ceil(Math.max(2, Number(seconds) || 5) / 5) * LIPSYNC_USD_PER_5S * USD_GBP * 100) / 100;
+  await charge(gbp, 'lip sync');
+  try {
+    const r = await falFetch(`https://queue.fal.run/${s.models.lipsync}`, { method: 'POST', body: { video_url: videoUrl, audio_url: audioUrl } }, s.falKey);
+    if (!r || !isQueueUrl(r.status_url) || !isQueueUrl(r.response_url)) throw new HttpError(502, 'fal_error', 'fal.ai didn’t start the lip sync — please try again.');
+    return { requestId: r.request_id, statusUrl: r.status_url, responseUrl: r.response_url, model: s.models.lipsync, gbp };
+  } catch (e) { await refund(gbp); throw e; }
+}
+// 🔊 One sound effect
+async function submitSfx({ text, seconds }) {
+  const s = await needKey();
+  const t = String(text || '').trim().slice(0, 300); if (!t) throw new HttpError(400, 'empty', 'No sound effect described.');
+  const gbp = Math.round(SFX_USD * USD_GBP * 100) / 100;
+  await charge(gbp, 'sound effect');
+  try {
+    const r = await falFetch(`https://queue.fal.run/${s.models.sfx}`, { method: 'POST', body: { text: t, duration_seconds: Math.max(0.5, Math.min(10, Number(seconds) || 3)), prompt_influence: 0.4 } }, s.falKey);
+    if (!r || !isQueueUrl(r.status_url) || !isQueueUrl(r.response_url)) throw new HttpError(502, 'fal_error', 'fal.ai didn’t start the sound effect — please try again.');
+    return { requestId: r.request_id, statusUrl: r.status_url, responseUrl: r.response_url, model: s.models.sfx, gbp };
+  } catch (e) { await refund(gbp); throw e; }
+}
+// 💾 Finished videos are kept in HQ in pieces (each under the function size limit)
+async function saveFinalPart(fid, idx, b64) {
+  if (!/^f[a-z0-9]{8,30}$/.test(String(fid)) || !(idx >= 0 && idx < 80)) throw new HttpError(400, 'bad_part', 'Bad file part.');
+  if (!/^[A-Za-z0-9+/=]+$/.test(String(b64 || '')) || b64.length > 2000000) throw new HttpError(400, 'bad_part', 'Bad file part.');
+  await setJson(`hq/vfinal/${fid}/${idx}`, { b64 });
+  return true;
+}
+async function getFinalPart(fid, idx) { return /^f[a-z0-9]{8,30}$/.test(String(fid)) && /^\d{1,2}$/.test(String(idx)) ? getJson(`hq/vfinal/${fid}/${idx}`) : null; }
+async function deleteFinal(fid, parts) { if (!/^f[a-z0-9]{8,30}$/.test(String(fid))) return; for (let i = 0; i < Math.min(80, Number(parts) || 0); i++) await core.del(`hq/vfinal/${fid}/${i}`).catch(() => {}); }
+
+module.exports = { claudeConfig, addCost, submitLipsync, submitSfx, saveFinalPart, getFinalPart, deleteFinal, saveAudio, getAudio, publicSettings, saveSettings, submitClip, submitMusic, status, tts, spent, TIERS, VOICES, clipLength };

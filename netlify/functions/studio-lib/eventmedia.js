@@ -180,8 +180,9 @@ async function makeFrame(info) {
   if (prompt.length < 20) throw new HttpError(400, 'no_prompt', 'This scene has no image prompt yet.');
   const ar = ['9:16', '4:5', '1:1', '16:9'].includes(info.aspect) ? info.aspect : '9:16';
   let refs = [];
-  if (info.refImgId) { const r = await require('./eventsub').getImage(info.refImgId); if (r && r.dataUrl) refs = [r.dataUrl]; }
-  if (refs.length) return generateImage(`Use the person in the reference image as the SAME character (same face, skin tone, hair, build and outfit unless the scene says otherwise).\n\n${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names.`, ar, refs);
+  const ids = (Array.isArray(info.refImgIds) ? info.refImgIds : []).concat(info.refImgId ? [info.refImgId] : []).filter(v => /^e[a-z0-9]{6,30}$/.test(String(v))).slice(0, 4);
+  for (const id of ids) { const r = await require('./eventsub').getImage(id); if (r && r.dataUrl) refs.push(r.dataUrl); }
+  if (refs.length) return generateImage(`The reference images show the people (characters) and/or the real product for this ad. Keep every person EXACTLY the same as in their reference photo (same face, skin tone, hair, build and outfit unless the scene says otherwise) and show any product EXACTLY as in its photo (shape, colours, details).\n\n${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names.`, ar, refs);
   return generateImage(`${prompt}\n\nPhotorealistic storyboard frame. Do NOT include any text, words, captions, signs, logos, watermarks or brand names. No celebrities or real identifiable people.`, ar);
 }
 

@@ -51,6 +51,11 @@ exports.handler = handler(async (ctx) => {
   if (event.httpMethod === 'GET') {
     await requireHq(ctx);
     const q = event.queryStringParameters || {};
+    if (q.vfinal) {
+      const part = await videoai.getFinalPart(q.vfinal, q.part || '0');
+      if (!part) throw new HttpError(404, 'not_found', 'Not found.');
+      return { statusCode: 200, headers: { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'private, max-age=86400' }, body: part.b64, isBase64Encoded: true };
+    }
     const img = q.vaudio ? await videoai.getAudio(q.vaudio) : q.subimg ? await eventsub.getImage(q.subimg) : await hq.getImage(q.img);
     if (!img) throw new HttpError(404, 'not_found', 'Not found.');
     const m = /^data:([^;]+);base64,(.*)$/.exec(img.dataUrl);
@@ -125,7 +130,7 @@ exports.handler = handler(async (ctx) => {
       return { draft: { kind: 'event', ...(await eventsub.readFlyer(body.image)) } };
     }
     case 'app-picture': {
-      await core.rateLimit('hq-pic', who.email, 40, 60 * 60 * 1000, 'That\u2019s a lot of images this hour — please wait a little.');
+      await core.rateLimit('hq-pic', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of images this hour — please wait a little.');
       return { image: await require('../eventmedia').makePicture(body) };
     }
     case 'app-img': return { imgId: await eventsub.saveImage(body.image) };
@@ -175,6 +180,19 @@ exports.handler = handler(async (ctx) => {
       return { job: await videoai.submitClip(body) };
     }
     case 'vm-audio-save': return { aid: await videoai.saveAudio(body.dataUrl, who.email) };
+    case 'va-concepts': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
+      return { concepts: await videoad.concepts(body.brief) };
+    }
+    case 'va-refvideo': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
+      return { style: await videoad.analyseReference(body.frames, body.seconds, body.notes) };
+    }
+    case 'vm-check': return { check: await videoad.checkClip(body.frame, body.refs, body.scene) };
+    case 'vm-lipsync': return { job: await videoai.submitLipsync(body) };
+    case 'vm-sfx': return { job: await videoai.submitSfx(body) };
+    case 'vm-final-part': return { ok: await videoai.saveFinalPart(body.fid, Number(body.idx), body.b64) };
+    case 'vm-final-delete': { await videoai.deleteFinal(body.fid, body.parts); return { ok: true }; }
     case 'vm-music': return { job: await videoai.submitMusic(body) };
     case 'vm-status': return { results: await videoai.status(body.jobs), spentGbp: await videoai.spent() };
     case 'vm-tts': {

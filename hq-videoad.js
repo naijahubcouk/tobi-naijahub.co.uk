@@ -23,7 +23,8 @@
   function esc(s) { return X.esc(s); }
   function fmt(iso) { try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); } catch (e) { return ''; } }
   function frameSrc(id) { return id ? '/.netlify/functions/studio-hq?subimg=' + encodeURIComponent(id) : ''; }
-  function aspect(p) { return p.brief && p.brief.platform === 'feed' ? '4:5' : '9:16'; }
+  function aspect(p) { return p.brief && p.brief.size ? p.brief.size : (p.brief && p.brief.platform === 'feed' ? '4:5' : '9:16'); }
+  var SIZES = { '9:16': '📱 9:16 Reels/TikTok', '4:5': '🖼️ 4:5 Feed', '1:1': '⬜ 1:1 Square', '16:9': '🖥️ 16:9 YouTube' };
   function totalSecs(p) { return (p.plan.scenes || []).reduce(function (n, s) { return n + (Number(s.seconds) || 0); }, 0); }
   function copy(txt) { (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { X.toast('Copied ✅'); }, function () { X.toast('Couldn’t copy — select the text and copy it'); }); }
   function shrink(src) {
@@ -38,6 +39,28 @@
       };
       im.onerror = function () { bad(new Error('Couldn’t open that image — try another.')); };
       im.src = url;
+    });
+  }
+  function shrinkPng(file) {
+    return new Promise(function (ok, bad) {
+      var im = new Image(), url = URL.createObjectURL(file);
+      im.onload = function () { var k = Math.min(1, 600 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL('image/png')); };
+      im.onerror = function () { bad(new Error('Couldn’t open that image.')); }; im.src = url;
+    });
+  }
+  // a few evenly spaced small frames from a local video file (nothing is uploaded except these stills)
+  function videoFrames(file, n) {
+    return new Promise(function (ok, bad) {
+      var v = document.createElement('video'), url = URL.createObjectURL(file), out = [], k = 0;
+      v.muted = true; v.playsInline = true; v.preload = 'auto';
+      v.onerror = function () { URL.revokeObjectURL(url); bad(new Error('Couldn’t open that video — try an MP4.')); };
+      v.onloadedmetadata = function () {
+        var d = v.duration || 1, c = document.createElement('canvas'), w = 360, h = Math.round(360 * (v.videoHeight || 640) / (v.videoWidth || 360)); c.width = w; c.height = h;
+        function next() { if (k >= n) { URL.revokeObjectURL(url); return ok({ frames: out, seconds: d }); } v.currentTime = Math.min(d - 0.1, (k + 0.5) * d / n); }
+        v.onseeked = function () { c.getContext('2d').drawImage(v, 0, 0, w, h); out.push(c.toDataURL('image/jpeg', 0.7)); k++; next(); };
+        next();
+      };
+      v.src = url;
     });
   }
   function opts(map, cur) { return Object.keys(map).map(function (k) { return '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + esc(map[k]) + '</option>'; }).join(''); }
@@ -85,10 +108,41 @@
       '<div class="lbl">Length</div>' + chips('vbLen', { 15: '15 seconds', 30: '30 seconds', 60: '60 seconds' }, b.length) +
       '<div class="lbl">Tone</div>' + chips('vbTone', TONES, b.tone) +
       '<label for="vbLang" style="margin-top:8px">Language</label><select id="vbLang">' + opts(LANGS, b.lang) + '</select>' +
+      '<div class="lbl">Video size</div>' + chips('vbSize', SIZES, b.size || '9:16') +
+      '<label for="vbCast" style="margin-top:8px">Characters <span class="muted" style="font-weight:400">(optional — e.g. “Nigerian woman in her 30s and her husband”)</span></label><input id="vbCast" value="' + esc(b.castNotes || '') + '">' +
+      '<div class="lbl">📦 Product photos <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional, up to 4 — keeps the real product looking right)</span></div><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><span id="vbProdList" class="row" style="gap:6px"></span><label class="btn ghost sm" style="margin:0">＋ Add photos<input type="file" accept="image/*" multiple id="vbProd" hidden></label></div>' +
+      '<input id="vbProdNote" style="margin-top:6px" placeholder="What is the product? e.g. MGC ceramic cookware set, cream and gold" value="' + esc(b.productNote || '') + '">' +
+      '<div class="lbl">🏷️ Logo <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional — shown in the corner and on the end card)</span></div><div class="row" style="gap:8px;align-items:center"><span id="vbLogoBox"></span><label class="btn ghost sm" style="margin:0">＋ Add logo<input type="file" accept="image/*" id="vbLogo" hidden></label></div>' +
+      '<div class="lbl">🎞️ Reference video <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">(optional — AI learns its style, never copies it)</span></div><label class="btn ghost sm" style="margin:0">＋ Upload a video you like<input type="file" accept="video/*" id="vbRef" hidden></label><div id="vbRefMsg" class="muted" style="font-size:13px;margin-top:4px"></div><textarea id="vbRefStyle" rows="4" class="' + (b.refStyle ? '' : 'hidden') + '" style="margin-top:6px">' + esc(b.refStyle || '') + '</textarea>' +
       '<label for="vbNotes">Anything else? <span class="muted" style="font-weight:400">(ideas, must-say lines, things to avoid)</span></label><textarea id="vbNotes" rows="3">' + esc(b.notes || '') + '</textarea>' +
+      '<div id="vbIdeas"></div>' +
       '<div class="err hidden" id="vbErr"></div><div id="vbProg" class="hidden" style="margin-top:10px"></div>' +
-      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="vbX">Cancel</button><button class="btn primary" id="vbGo">✨ Plan my video ad</button></div>');
-    chipWire(s, 'vbFor'); chipWire(s, 'vbLen'); chipWire(s, 'vbTone');
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="vbX">Cancel</button><button class="btn ghost" id="vbSkip">Skip ideas — plan now</button><button class="btn primary" id="vbGo">💡 Get 3 story ideas</button></div>');
+    chipWire(s, 'vbFor'); chipWire(s, 'vbLen'); chipWire(s, 'vbTone'); chipWire(s, 'vbSize');
+    var products = (b.products || []).slice(), logo = b.logo || '';
+    function paintAssets() {
+      $('#vbProdList', s).innerHTML = products.map(function (id, k) { return '<span class="vasset"><img src="' + frameSrc(id) + '" alt=""><button type="button" data-rmp="' + k + '">✖</button></span>'; }).join('');
+      $$('[data-rmp]', s).forEach(function (bt) { bt.onclick = function () { products.splice(+bt.dataset.rmp, 1); paintAssets(); }; });
+      $('#vbLogoBox', s).innerHTML = logo ? '<span class="vasset"><img src="' + frameSrc(logo) + '" alt="Logo" style="object-fit:contain;background:#fff"><button type="button" id="vbLogoX">✖</button></span>' : '';
+      if ($('#vbLogoX', s)) $('#vbLogoX', s).onclick = function () { logo = ''; paintAssets(); };
+    }
+    paintAssets();
+    $('#vbProd', s).onchange = async function () {
+      var files = Array.prototype.slice.call(this.files || []).slice(0, 4 - products.length);
+      for (var k = 0; k < files.length; k++) { try { products.push((await X.api('app-img', { image: await shrink(files[k]) })).imgId); paintAssets(); } catch (x) { X.toast(x.message); } }
+      this.value = '';
+    };
+    $('#vbLogo', s).onchange = async function () { var f = this.files && this.files[0]; if (!f) return; try { logo = (await X.api('app-img', { image: await shrinkPng(f) })).imgId; paintAssets(); } catch (x) { X.toast(x.message); } this.value = ''; };
+    $('#vbRef', s).onchange = async function () {
+      var f = this.files && this.files[0]; if (!f) return; var msg = $('#vbRefMsg', s);
+      msg.textContent = '⏳ Watching the video…';
+      try {
+        var fr = await videoFrames(f, 8); msg.textContent = '⏳ Learning its style…';
+        var r = await X.api('va-refvideo', { frames: fr.frames, seconds: fr.seconds });
+        $('#vbRefStyle', s).value = r.style; $('#vbRefStyle', s).classList.remove('hidden'); msg.textContent = '✅ Style learned (' + Math.round(fr.seconds) + 's video) — edit it if you like. The video itself isn’t saved.';
+      } catch (x) { msg.textContent = '⚠️ ' + x.message; }
+      this.value = '';
+    };
     function paintFor() { $('#vbBiz', s).classList.toggle('hidden', chipVal(s, 'vbFor') === 'auntietobi'); }
     $$('#vbFor [data-v]', s).forEach(function (x) { x.addEventListener('click', paintFor); }); paintFor();
     var slug = b.bizSlug || '', qT = 0;
@@ -119,15 +173,32 @@
         forWho: chipVal(s, 'vbFor'), bizSlug: slug, business: $('#vbName', s).value.trim(), location: $('#vbLoc', s).value.trim(), about: $('#vbAbout', s).value.trim(),
         offer: $('#vbOffer', s).value.trim(), audience: $('#vbAud', s).value.trim(), contact: $('#vbContact', s).value.trim(), link: $('#vbLink', s).value.trim(),
         goal: $('#vbGoal', s).value, platform: $('#vbPlat', s).value, length: +chipVal(s, 'vbLen'), tone: chipVal(s, 'vbTone'), lang: $('#vbLang', s).value, notes: $('#vbNotes', s).value.trim(),
+        size: chipVal(s, 'vbSize'), castNotes: $('#vbCast', s).value.trim(), products: products, productNote: $('#vbProdNote', s).value.trim(), logo: logo, refStyle: $('#vbRefStyle', s).value.trim(),
       };
       if (brief.link && !/^https?:\/\//i.test(brief.link)) brief.link = 'https://' + brief.link;
       if (brief.forWho === 'business' && !brief.business && brief.about.length < 10) { err.textContent = 'Pick a business or describe it first.'; err.classList.remove('hidden'); return; }
-      btn.disabled = true;
+      var skip = btn.id === 'vbSkip';
+      async function plan(withConcept) {
+        $$('#vbGo,#vbSkip,[data-concept]', s).forEach(function (x) { x.disabled = true; });
+        brief.concept = withConcept || null;
+        try { var proj = await runPlan(brief, '', $('#vbProg', s), $('#vbRead', s).checked); s.remove(); editor(proj, true); }
+        catch (x) { err.textContent = x.message; err.classList.remove('hidden'); $$('#vbGo,#vbSkip,[data-concept]', s).forEach(function (y) { y.disabled = false; }); $('#vbProg', s).classList.add('hidden'); }
+      }
+      if (skip) return plan(null);
+      btn.disabled = true; btn.textContent = '💡 Thinking of ideas…';
       try {
-        var proj = await runPlan(brief, '', $('#vbProg', s), $('#vbRead', s).checked);
-        s.remove(); editor(proj, true);
-      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; $('#vbProg', s).classList.add('hidden'); }
+        var r = await X.api('va-concepts', { brief: brief });
+        $('#vbIdeas', s).innerHTML = '<div class="lbl">Pick a story</div>' + r.concepts.map(function (c, k) {
+          return '<div class="card vconcept"><div style="font-weight:800">' + esc(c.title) + ' <span class="vtag">' + esc(c.genre) + '</span></div><p style="margin:6px 0">' + esc(c.logline) + '</p>' +
+            (c.beats.length ? '<ol class="vlist" style="font-size:13.5px">' + c.beats.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '') +
+            '<div class="muted" style="font-size:13px">👥 ' + esc(c.characters) + '<br>💡 ' + esc(c.why) + '</div><button class="btn primary sm" data-concept="' + k + '" style="margin-top:8px">🎬 Use this story</button></div>';
+        }).join('');
+        $$('[data-concept]', s).forEach(function (bt) { bt.onclick = function () { plan(r.concepts[+bt.dataset.concept]); }; });
+        $('#vbIdeas', s).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        btn.disabled = false; btn.textContent = '🔄 3 new ideas';
+      } catch (x) { err.textContent = x.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = '💡 Get 3 story ideas'; }
     };
+    $('#vbSkip', s).onclick = $('#vbGo', s).onclick;
   }
   // runs the 3 AI steps with a progress list; returns an unsaved project
   async function runPlan(brief, extra, progEl, readLink, keep) {
@@ -222,8 +293,12 @@
     // ── panes ──
     var PANES = {
       strategy: function () {
-        var st = p.plan.strategy;
-        return '<div class="card"><div class="lbl" style="margin-top:0">Pick your hook (first 1–2 seconds)</div>' +
+        var st = p.plan.strategy, cast = p.plan.cast || [], cc = p.plan.concept;
+        return (cc && cc.title ? '<div class="card" style="margin-bottom:10px"><b>🎬 Story: ' + esc(cc.title) + '</b> <span class="vtag">' + esc(cc.genre || '') + '</span><p style="margin:6px 0 0">' + esc(cc.logline || '') + '</p></div>' : '') +
+          (cast.length ? '<div class="card" style="margin-bottom:10px"><b>👥 Cast</b>' + cast.map(function (c, k) {
+            return '<div class="vscene" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div class="f2">' + field('Name', 'plan.cast.' + k + '.name', c.name) + field('Role', 'plan.cast.' + k + '.role', c.role) + '</div>' + field('Look (keep detailed for consistency)', 'plan.cast.' + k + '.description', c.description, 3) + field('Reference photo prompt', 'plan.cast.' + k + '.sheetPrompt', c.sheetPrompt, 3) + field('Voice style', 'plan.cast.' + k + '.voiceHint', c.voiceHint) + '</div>';
+          }).join('') + '</div>' : '') +
+          '<div class="card"><div class="lbl" style="margin-top:0">Pick your hook (first 1–2 seconds)</div>' +
           st.hooks.map(function (h, i) { return '<div class="row" style="gap:8px;align-items:flex-start;margin-top:6px"><input type="radio" name="vhook" value="' + i + '"' + (i === st.chosenHook ? ' checked' : '') + ' style="width:auto;margin-top:12px">' + '<div style="flex:1">' + field('Hook ' + (i + 1), 'plan.strategy.hooks.' + i, h, 2, true) + '</div></div>'; }).join('') +
           '</div><div class="card" style="margin-top:10px">' + field('Story framework', 'plan.strategy.framework', st.framework) + field('The angle', 'plan.strategy.angle', st.angle, 3, true) +
           '<div class="f2">' + field('Emotion to aim for', 'plan.strategy.emotion', st.emotion) + field('Call to action', 'plan.strategy.cta', st.cta, 0, true) + '</div>' + field('Why it works', 'plan.strategy.whyItWorks', st.whyItWorks, 3) + '</div>';
@@ -232,7 +307,10 @@
         return '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><span class="muted" style="font-size:13px">Voiceover ≈ 2.5 words per second. Edit freely — the animatic updates.</span>' + copyAllBtn('veCopyScript', 'Copy script') + '</div>' +
           p.plan.scenes.map(function (s, i) {
             return '<div class="card vscene"><div class="row" style="gap:8px;align-items:center"><b>Scene ' + (i + 1) + '</b><input data-path="plan.scenes.' + i + '.title" value="' + esc(s.title) + '" style="flex:1"><input type="number" min="1" max="15" data-path="plan.scenes.' + i + '.seconds" value="' + s.seconds + '" style="width:72px"> <span class="muted">sec</span></div>' +
-              field('🎙️ Voiceover', 'plan.scenes.' + i + '.vo', s.vo, 2, true) + '<div class="f2">' + field('🔤 On-screen text', 'plan.scenes.' + i + '.onScreen', s.onScreen, 0, true) + field('🔊 Sound effect', 'plan.scenes.' + i + '.sfx', s.sfx) + '</div>' +
+              '<div class="row" style="gap:12px;flex-wrap:wrap;margin-top:6px;font-size:13.5px">' + ((p.plan.cast || []).length ? '<span class="muted">In scene:</span>' + p.plan.cast.map(function (c) { return '<label class="chk"><input type="checkbox" data-incast="' + i + '" value="' + esc(c.name) + '"' + ((s.cast || []).indexOf(c.name) >= 0 ? ' checked' : '') + '> ' + esc(c.name) + '</label>'; }).join('') : '') +
+                '<label class="chk"><input type="checkbox" data-flag="' + i + '.product"' + (s.product ? ' checked' : '') + '> 📦 Shows product</label><label class="chk"><input type="checkbox" data-flag="' + i + '.lipSync"' + (s.lipSync ? ' checked' : '') + '> 👄 Lip sync</label></div>' +
+              '<div class="vf"><div class="row" style="justify-content:space-between"><label>🗣️ Spoken lines <span class="muted" style="font-weight:400">— one per line as “Name: words” (or “Narrator: words”)</span></label></div><textarea rows="3" data-lines="' + i + '">' + esc((s.lines && s.lines.length ? s.lines : (s.vo ? [{ who: 'Narrator', text: s.vo }] : [])).map(function (l) { return l.who + ': ' + l.text; }).join('\n')) + '</textarea></div>' +
+              '<div class="f2">' + field('🔤 On-screen text', 'plan.scenes.' + i + '.onScreen', s.onScreen, 0, true) + field('🔊 Sound effect', 'plan.scenes.' + i + '.sfx', s.sfx) + '</div>' +
               '<div class="f2">' + field('🎯 Purpose', 'plan.scenes.' + i + '.purpose', s.purpose) + field('↪️ Transition', 'plan.scenes.' + i + '.transition', s.transition) + '</div></div>';
           }).join('');
       },
@@ -292,6 +370,15 @@
       $$('#veTabs [data-tab]', ov).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.tab === tab); });
       var pane = q('#vePane'); pane.innerHTML = PANES[tab](); wireFields(pane);
       if (tab === 'make' && window.HQVmake) HQVmake.wire(pane, p, { api: X.api, toast: X.toast, esc: X.esc, sheet: X.sheet, mark: mark, save: save, frameSrc: frameSrc, aspect: aspect, shrink: shrink, slug: slug });
+      $$('[data-lines]', pane).forEach(function (ta) {
+        ta.addEventListener('input', function () {
+          var sc = p.plan.scenes[+ta.dataset.lines];
+          sc.lines = ta.value.split('\n').map(function (ln) { var m2 = /^\s*([^:]{1,40}):\s*(.+)$/.exec(ln); return m2 ? { who: m2[1].trim(), text: m2[2].trim() } : (ln.trim() ? { who: 'Narrator', text: ln.trim() } : null); }).filter(Boolean).slice(0, 4);
+          sc.vo = sc.lines.map(function (l) { return l.text; }).join(' ').slice(0, 400); mark();
+        });
+      });
+      $$('[data-incast]', pane).forEach(function (cb) { cb.onchange = function () { var sc = p.plan.scenes[+cb.dataset.incast]; sc.cast = $$('[data-incast="' + cb.dataset.incast + '"]', pane).filter(function (x) { return x.checked; }).map(function (x) { return x.value; }); sc.character = sc.cast.length > 0; mark(); }; });
+      $$('[data-flag]', pane).forEach(function (cb) { cb.onchange = function () { var a = cb.dataset.flag.split('.'); p.plan.scenes[+a[0]][a[1]] = cb.checked; mark(); }; });
       $$('input[name=vhook]', pane).forEach(function (r) { r.onchange = function () { p.plan.strategy.chosenHook = +r.value; mark(); }; });
       $$('[data-done]', pane).forEach(function (c) { c.onchange = function () { var i = +c.dataset.done; p.done = p.done.filter(function (x) { return x !== i; }); if (c.checked) p.done.push(i); mark(); }; });
       $$('[data-pic]', pane).forEach(function (b) { b.onclick = function () { makePic(+b.dataset.pic, b); }; });
