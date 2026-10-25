@@ -2442,7 +2442,7 @@ function formatResponse(text) {
             ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
             : '';
 
-                    const viewBtn = '<a href="https://auntietobi.com/listing/' + business.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>';
+                    const viewBtn = '<a href="https://auntietobi.co.uk/biz/' + b.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>';
 
           const shareBtn = '<button data-share-title="' + safeName.replace(/"/g,'&quot;') + '" data-share-desc="' + shareMsg.replace(/"/g,'&quot;') + '" data-share-url="' + shareUrl + '" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">\uD83D\uDCE4 Share</button>';
 
@@ -2799,6 +2799,14 @@ function removeTyping() {
   if (t) t.remove();
 }
 
+// Show one business as a full card (WhatsApp, View, Share) — used by the quick search results
+function tobiShowBizCard(slug) {
+  var b = getLiveDirectory().find(function (x) { return x.slug === slug; });
+  if (!b) { showBusinesses(undefined, null, null, true); return; }
+  addTipMessage(formatResponse('<<<BIZ_JSON:' + JSON.stringify([{ slug: b.slug, name: b.name, cat: b.cat || b.category || '', loc: b.loc || 'UK', desc: b.desc ? b.desc.substring(0, 140) : '', verified: b.verified || false, featured: b.featured || false, wa: b.wa || '', phone: b.phone || '' }]) + '>>>'));
+  setTimeout(function () { var m = document.getElementById('messages'); if (m && m.lastElementChild) m.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+}
+
 function tobiIsBusinessSearch(t){
   var s=String(t||'').toLowerCase();
   var BIZ=/\b(business(es)?|shops?|stores?|restaurants?|caterers?|catering|chefs?|nigerian food|african food|food (shops?|stores?|delivery|vendors?)|grocer(y|ies)|suya|cakes?|bakers?|bakery|hair ?(stylists?|dressers?|salons?)|hairstylists?|braid(s|ers?|ing)?|wigs?|stylists?|barbers?|make-?up( artists?)?|mua|photographers?|photography|videographers?|tailors?|seamstress(es)?|aso[- ]?oke|ankara|jewell?ery|djs?|event planners?|decorators?|printing|printers?|lawyers?|solicitors?|accountants?|cleaners?|tutors?|nail (techs?|salons?)|lashes|beauty salons?|salons?|plumbers?|electricians?|mechanics?|driving instructors?|removals?|cargo|shipping|logistics|venues?|vendors?)\b/;
@@ -3005,21 +3013,24 @@ let _searchTimer = null;
         html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">🏢 Businesses</div>`;
         bizMatches.forEach(b => {
           const wa = b.wa ? `<a href="https://wa.me/${b.wa.replace(/\D/g,'')}?text=${encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚')}" target="_blank" style="color:#25D366;font-weight:700;text-decoration:none;font-size:11px;">💬 WhatsApp</a>` : '';
-          html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${b.name}</div><div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${b.cat||b.category||''} · ${b.loc||b.location||''}</div>${wa}</div>`;
+          html += `<div onclick="if(!event.target.closest('a'))tobiShowBizCard('${String(b.slug||'').replace(/'/g,'')}')" style="cursor:pointer;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;display:flex;justify-content:space-between;gap:8px;"><span>${b.name}</span><span style="color:#057A44;font-size:12px;white-space:nowrap;">View ›</span></div><div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${b.cat||b.category||''} · ${b.loc||b.location||''}</div>${wa}</div>`;
         });
       }
 
       if (eventMatches.length > 0) {
         html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;margin-top:4px;">🎉 Events</div>`;
         eventMatches.forEach(e => {
-          html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji} ${e.title}</div><div style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</div></div>`;
+          const evUrl = e.appUrl || e.url || e.link || '';
+          html += evUrl
+            ? `<div class="blog-read-more" data-blogurl="${encodeURIComponent(evUrl)}" data-title="${(e.title||'').replace(/"/g,'&quot;')}" data-summary="${(e.summary||'').replace(/"/g,'&quot;')}" style="cursor:pointer;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji} ${e.title}</div><div style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</div><div style="font-size:12px;color:#057A44;font-weight:700;margin-top:6px;">🎉 Event details ›</div></div>`
+            : `<div onclick="showEventsCard()" style="cursor:pointer;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${e.emoji} ${e.title}</div><div style="font-size:11px;color:#9CA3AF;">📅 ${e.date} · 📍 ${e.loc}</div><div style="font-size:12px;color:#057A44;font-weight:700;margin-top:6px;">🎉 See all events ›</div></div>`;
         });
       }
 
       if (articleMatches.length > 0) {
         html += `<div style="font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;margin-top:4px;">📰 Articles</div>`;
         articleMatches.forEach(p => {
-          html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${p.title}</div><div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${p.label||'News'} · ${p.date||''}</div><a href="javascript:void(0)" data-blogurl="${encodeURIComponent(p.url)}" data-title="${(p.title||'').replace(/"/g,'&quot;')}" data-summary="${(p.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:11px;color:#057A44;font-weight:700;text-decoration:none;">🔗 Read More</a></div>`;
+          html += `<div class="blog-read-more" data-blogurl="${encodeURIComponent(p.url)}" data-title="${(p.title||'').replace(/"/g,'&quot;')}" data-summary="${(p.summary||'').replace(/"/g,'&quot;')}" style="cursor:pointer;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:6px;"><div style="font-size:13px;font-weight:700;color:#0F1E36;">${p.title}</div><div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${p.label||'News'} · ${p.date||''}</div><div style="font-size:12px;color:#057A44;font-weight:700;">🔗 Read More ›</div></div>`;
         });
       }
 
