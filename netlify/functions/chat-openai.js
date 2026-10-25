@@ -19,7 +19,7 @@ var INTENT_GROUPS = {
 };
 
 var INTENT_KEYWORDS = {
-  food:      /caterer|catering|food|cook|meal|jollof|rice|suya|restaurant|bukka|kitchen|small.?chop|puff.?puff|chin.?chin|snack|cake|baker|grocery|groceries|foodstore|african.?store/i,
+  food:      /hungry|hunger|starving|something to eat|caterer|catering|food|cook|meal|jollof|rice|suya|restaurant|bukka|kitchen|small.?chop|puff.?puff|chin.?chin|snack|cake|baker|grocery|groceries|foodstore|african.?store/i,
   hair:      /hair|braid|wig|locs|loc |weave|extension|gele|natural hair|hair stylist|hairdress/i,
   beauty:    /makeup|mua|glam|lash|brow|microblade|skin.?care|beauty studio|semi.?perm/i,
   fashion:   /fashion|cloth|outfit|dress|ankara|fabric|tailor|wear|jewel|accessory|accessories/i,
@@ -209,6 +209,12 @@ exports.handler=async function(event){
     var showMeAll=/^show\s+(me\s+)?(all\s+)?/i.test(lastMessage.trim());
     var shouldSearch=!isShortGreeting&&(!isGenericQuestion||showMeAll)&&(bizKeywords.test(lastMessage)||isNounSearch||showMeAll||(lastMessage.trim().split(/\s+/).length>=2&&lastMessage.trim().split(/\s+/).length<=8));
     var searchMsg=lastMessage.replace(/\bcaterer\b/gi,'caterers').replace(/\bphotographer\b/gi,'photographers').replace(/\bplanner\b/gi,'planners').replace(/\bhairdresser\b/gi,'hairdressers').replace(/\bsolicitor\b/gi,'solicitors').replace(/\baccountant\b/gi,'accountants').replace(/\btutor\b/gi,'tutors').replace(/\bwig vendor\b/gi,'wig vendors').replace(/\bgele stylist\b/gi,'gele stylists');
+    // "Yes" / "yes please" after Auntie Tobi offered to find something: search using the conversation, not just "yes"
+    var allMsgs=body.messages||[];
+    var prevBot=''; for(var pb=allMsgs.length-2;pb>=0;pb--){ if(allMsgs[pb]&&allMsgs[pb].role==='assistant'){ prevBot=String(allMsgs[pb].content||''); break; } }
+    var isFollowUp=/^(y(es|ea|eah|ep|up)?|sure|ok(ay)?|please|go on|go ahead|do it|show me|definitely|of course|absolutely)\b[\w\s,!.']{0,30}$/i.test(lastMessage.trim())&&/\b(find|search|show|recommend|businesses|options|near(by| you)?|food|restaurant|caterer|shop|store|places|spots|vendors?)\b/i.test(prevBot)&&prevBot.indexOf('?')!==-1;
+    function contextQuery(){ var us=allMsgs.filter(function(m){return m&&m.role==='user';}).slice(-3).map(function(m){return String(m.content||'');}); return (us.join(' ')+' '+prevBot).slice(0,600); }
+    if(isFollowUp){ shouldSearch=true; searchMsg=contextQuery(); isNounSearch=false; }
     var _isNounSearch=isNounSearch;var businessContext='';
     if(shouldSearch){
       var directory=await getDirectory();
@@ -231,7 +237,7 @@ exports.handler=async function(event){
       }
       if(sr.results.length>0)businessContext=formatBusinessContext(sr.results,sr.scope,sr.city);
     }
-    var systemContent=SYSTEM_PROMPT+(businessContext||'');
+    var systemContent=SYSTEM_PROMPT+(businessContext||'\n\nIMPORTANT FOR THIS REPLY: no business listings were looked up for this message. Do NOT say "here are" businesses, options, places or food spots, and never pretend to show listings. If the user seems to want a business, ask what they want (e.g. jollof, suya, a caterer, groceries) and their town, and say you will show them.');
     var messages=[{role:'system',content:systemContent}].concat(recentMessages);
     var requestBody={model:'openai/gpt-4o-mini',max_tokens:600,temperature:0.7,messages:messages};
     var responseText=await new Promise(function(resolve,reject){
@@ -253,6 +259,13 @@ exports.handler=async function(event){
     reply=reply.replace(/\[SEARCH_SCOPE:[^\]]*\]/g,'').trim();
     reply=reply.replace(/\[SUGGESTIONS:[\s\S]*?\]/g,'').trim();
     reply=reply.replace(/\[OPTION_[A-E]:[\s\S]*?\]/g,'').trim();
+    // safety net: the reply claims to show businesses but none were looked up — look them up from the conversation
+    if(!businessContext&&/\b(here are|here's|here is|i found|check out these|take a look at)\b[^.!?]{0,80}\b(food|businesses|business|places|spots|caterers?|restaurants?|shops?|stores?|vendors?|listings?|kitchens?|bukkas?|chefs?)\b/i.test(reply)){
+      var dir2=await getDirectory(), sr2=searchBusinessesByIntent(contextQuery(),6,dir2,userCity,0);
+      if(sr2.results.length>0&&getIntentGroup(contextQuery())){businessContext=formatBusinessContext(sr2.results,sr2.scope,sr2.city);}
+      else if(getIntentGroup(contextQuery())){reply='Tell me a bit more — what you fancy (jollof, suya, a caterer, African groceries…) and your town — and I’ll show you Nigerian businesses near you 💚';}
+
+    }
     if(businessContext){reply=reply.replace(/\[SHOW_BIZ_CARDS\]/,'').replace(/IF YOU CANT FIND.*?SEARCH\)/gi,'').trim();reply=reply+'\n'+businessContext.trim();}
     return{statusCode:200,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({content:[{type:'text',text:reply}]})};
   }catch(err){

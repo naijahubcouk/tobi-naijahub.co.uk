@@ -3245,12 +3245,9 @@ When you cannot find a business, event, or answer in the Auntie Tobi data, alway
           if (cm.keys.some(k => userLower2.includes(k))) { matchedCat = cm; break; }
         }
 
-        var bizBtns = '';
-        if (matchedCat) {
-          bizBtns += `<button class="suggestion-btn" onclick="showBusinesses(undefined,'${matchedCat.cat}',null,true)">🏢 All ${matchedCat.label}</button>`;
-        }
-        bizBtns += '<button class="suggestion-btn" onclick="showBusinesses(undefined,null,null,true)">🏢 All Businesses</button>';
-
+        // only offer business buttons when the chat is actually about a kind of business
+        if (!matchedCat) return;
+        var bizBtns = `<button class="suggestion-btn" onclick="showBusinesses(undefined,'${matchedCat.cat}',null,true)">🏢 All ${matchedCat.label}</button>`;
         addTipMessage(`<div class="suggestions" style="margin-top:8px;">${bizBtns}</div>`);
       }, 400);
     }
