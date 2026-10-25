@@ -1218,7 +1218,7 @@ Upgrade in your dashboard to unlock:
 🔍 Better Search Visibility — Your business appears higher when users search for services like yours.
 🤖 Active AI Recommendations — Auntie Tobi actively suggests your business to users looking for your services.
 💬 Instant WhatsApp / Website Button — Customers can message you directly in one click from Auntie Tobi.
-📣 Community Spotlight Post — Get featured on Auntie Tobi's Instagram page and Telegram group.
+📣 Community Spotlight Post — Get featured on Auntie Tobi's Instagram page.
 
 Ready to get started? 👉 <a href="https://auntietobi.com/new-listing" target="_blank" style="color:#057A44;font-weight:700;">List your business here</a> or <a href="https://wa.me/447594674940" target="_blank" style="color:#057A44;font-weight:700;">message our team on WhatsApp</a> 💬
 
@@ -1238,7 +1238,7 @@ When users ask "Why should I join the Auntie Tobi Business Club?" respond with E
 
 💬 One-click WhatsApp button — customers can message you instantly. No friction, no searching for your number. Just tap and message.
 
-📣 Community Spotlight — we shout you out on our Instagram and Telegram group, putting your business in front of the whole Nigerian UK community.
+📣 Community Spotlight — we shout you out on our Instagram, putting your business in front of the whole Nigerian UK community.
 
 All of this for just £49.99/yr — that's less than £1 a week to be seen by thousands of Nigerians across the UK who are actively looking for your services! 
 
@@ -3792,7 +3792,6 @@ function showMoreSheet() {
 
   var items = [
     {ico:'💼', label:'Jobs', fn: function(){ resetAndShowJobs(); }},
-    {ico:'👥', label:'Telegram Group', fn: function(){ overlay.remove(); window.open('https://t.me/auntietobi_uk','_blank'); }},
     {ico:'🚗', label:'Driving Theory', fn: function(){ clearExamState();quickAsk('Help me prepare for my UK driving theory test'); }},
     {ico:'📋', label:'Life in UK Test', fn: function(){ clearExamState();quickAsk('Help me prepare for my Life in UK test'); }},
     {ico:'🇬🇧', label:'Japa Guide', fn: function(){ showJapaGuide(); }},
@@ -5133,12 +5132,6 @@ function showLinksPage() {
       <span style="color:rgba(255,255,255,0.8);">&#8250;</span>
     </a>
 
-    <a href="/business-studio" style="display:flex;align-items:center;gap:12px;background:#0F1E36;color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #0F1E36;font-size:14px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
-      <span style="font-size:20px;">&#128640;</span>
-      <span style="flex:1;text-align:left;">Business Studio<span style="display:block;font-size:11px;color:rgba(255,255,255,0.8);font-weight:400;margin-top:1px;">Free tools to manage customers, plan content and grow your business</span></span>
-      <span style="color:rgba(255,255,255,0.7);">&#8250;</span>
-    </a>
-
     <div id="links-feat"></div>
     <div id="links-mp-wrap" style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
@@ -5148,6 +5141,11 @@ function showLinksPage() {
       <div id="links-mp-viewport" style="overflow:hidden;width:100%;"></div>
       <div id="links-mp-dots" style="display:flex;justify-content:center;gap:6px;padding:8px 14px;"></div>
     </div>
+    <a href="/business-studio" style="display:flex;align-items:center;gap:12px;background:#0F1E36;color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #0F1E36;font-size:14px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+      <span style="font-size:20px;">&#128640;</span>
+      <span style="flex:1;text-align:left;">Business Studio<span style="display:block;font-size:11px;color:rgba(255,255,255,0.8);font-weight:400;margin-top:1px;">Free tools to manage customers, plan content and grow your business</span></span>
+      <span style="color:rgba(255,255,255,0.7);">&#8250;</span>
+    </a>
     <a href="https://auntietobi.co.uk/add-event" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">&#127881;</span>
       <span style="flex:1;text-align:left;">Submit Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing &mdash; paste your event link or upload your flyer</span></span>
@@ -5160,11 +5158,6 @@ function showLinksPage() {
         <div style="color:rgba(255,255,255,0.85);font-size:12px;line-height:1.4;">Add to your home screen &mdash; works like an app, no App Store needed!</div>
       </div>
       <span style="color:rgba(255,255,255,0.7);font-size:20px;">&#8250;</span>
-    </a>
-    <a href="https://t.me/auntietobi_uk" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
-      <span style="font-size:20px;">&#128101;</span>
-      <span style="flex:1;text-align:left;">Join Our Telegram Group<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Stay connected with the community</span></span>
-      <span style="color:#ccc;">&#8250;</span>
     </a>
 
     <a href="javascript:void(0)" onclick="showBusinesses(undefined,null,null,true);setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
@@ -8994,6 +8987,8 @@ function resetToWelcome() {
         + '<a href="/business-club" style="display:inline-block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:800;padding:9px 16px;border-radius:20px;">Join the Business Club →</a>'
         + '<div style="margin-top:10px;"><a href="/business-studio" style="color:white;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px;">Or try Business Studio free →</a></div></div>');
       showSponsoredAd();
+      addTipMessage('<a href="/business-studio" data-studio-card="1" style="display:flex;align-items:center;gap:12px;background:#0F1E36;color:white;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:700;font-size:14px;">'
+        + '<span style="font-size:20px;">🚀</span><span style="flex:1;text-align:left;">Business Studio<span style="display:block;font-size:11px;color:rgba(255,255,255,0.8);font-weight:400;margin-top:1px;">Free tools to manage customers, plan content and grow your business</span></span><span style="color:rgba(255,255,255,0.7);">›</span></a>');
       addTipMessage('<a href="https://auntietobi.co.uk/add-event" target="_blank" data-submit-event="1" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">'
         + '<span style="font-size:20px;">🎉</span><span style="flex:1;text-align:left;">Submit Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing — paste your event link or upload your flyer</span></span><span style="color:#ccc;">›</span></a>');
       // Rotating first, then fixed quick action bubbles below

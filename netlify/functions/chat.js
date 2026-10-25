@@ -679,7 +679,7 @@ Now — can I ask what your current immigration status is? That will help me poi
 STARTING A BUSINESS: Register at companieshouse.gov.uk for £12. Open business bank account. List your business with us!
 
 PREMIUM MEMBERSHIP — £49.99/yr:
-Benefits: ✅ Verified Member Badge | 🌟 Featured on Auntie Tobi website and app | 🔍 Better search visibility | 🤖 Active AI recommendations by Auntie Tobi | 💬 Instant WhatsApp/Website button | 📣 Community Spotlight Post on Instagram and Telegram
+Benefits: ✅ Verified Member Badge | 🌟 Featured on Auntie Tobi website and app | 🔍 Better search visibility | 🤖 Active AI recommendations by Auntie Tobi | 💬 Instant WhatsApp/Website button | 📣 Community Spotlight Post on Instagram
 How to join: List your business free at auntietobi.com/new-listing → claim your listing → upgrade to Premium in your dashboard. Having issues? Contact team on WhatsApp wa.me/447594674940
 NEVER invent other pricing tiers — only £49.99/yr Premium Membership exists
 
