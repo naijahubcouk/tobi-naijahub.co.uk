@@ -3991,8 +3991,13 @@ function tobiEventCity(e) {
   var txt = [e.loc, e.location, e.title, e.summary].filter(function (x) { return x && x !== 'UK'; }).join(' | ');
   for (var i = 0; i < TOBI_CITIES.length; i++) { if (new RegExp('\\b' + TOBI_CITIES[i] + '\\b', 'i').test(txt)) return TOBI_CITIES[i]; }
   if (TOBI_LONDON_AREAS.test(txt)) return 'London';
-  return 'Other UK';
+  // not in the list: use the event's own location (e.g. "The Hall, Swindon, SN1 2AB" → Swindon)
+  var own = String(e.loc || e.location || '').split(/[,|\n]/).map(function (x) { return x.replace(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/gi, '').replace(/\b(UK|United Kingdom|England|Scotland|Wales|Northern Ireland|GB|Great Britain|Online|TBC|TBA)\b/gi, '').replace(/\s+/g, ' ').trim(); }).filter(function (x) { return x && !/\d/.test(x) && x.length <= 30; });
+  for (var j = 0; j < TOBI_COUNTIES.length; j++) { if (new RegExp('\\b' + TOBI_COUNTIES[j] + '\\b', 'i').test(txt)) return own.length ? own[own.length - 1] : TOBI_COUNTIES[j]; }
+  if (own.length) { var c = own[own.length - 1]; return c.charAt(0).toUpperCase() + c.slice(1); }
+  return '';
 }
+var TOBI_COUNTIES = ['Kent','Essex','Surrey','Sussex','Hertfordshire','Berkshire','Buckinghamshire','Bedfordshire','Hampshire','Suffolk','Norfolk','Cambridgeshire','Oxfordshire','Northamptonshire','Leicestershire','Nottinghamshire','Derbyshire','Staffordshire','Warwickshire','West Midlands','Lancashire','Merseyside','Greater Manchester','Yorkshire','Cheshire','Cumbria','Durham','Northumberland','Lincolnshire','Shropshire','Worcestershire','Gloucestershire','Wiltshire','Somerset','Dorset','Devon','Cornwall'];
 function tobiEventsShow(all, render) {
   window._evAll = all || []; window._evRender = render; window._evF = { m: '', c: '' };
   tobiEventsPaint();
@@ -4002,12 +4007,12 @@ function tobiEventsPaint() {
   var all = window._evAll || [], f = window._evF || { m: '', c: '' };
   var mKey = function (e) { var d = e.dateObj; return d ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') : ''; };
   var mLabel = function (k) { var p = k.split('-'); return new Date(+p[0], +p[1] - 1, 1).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }); };
-  all.forEach(function (e) { if (!e._city) e._city = tobiEventCity(e); });
+  all.forEach(function (e) { if (e._city === undefined) e._city = tobiEventCity(e); });
   // counts respect the other filter, so the numbers always match what you'll see
   var months = {}, cities = {};
   all.forEach(function (e) {
     if (!f.c || e._city === f.c) { var k = mKey(e); if (k) months[k] = (months[k] || 0) + 1; }
-    if (!f.m || mKey(e) === f.m) cities[e._city] = (cities[e._city] || 0) + 1;
+    if (e._city && (!f.m || mKey(e) === f.m)) cities[e._city] = (cities[e._city] || 0) + 1;
   });
   var list = all.filter(function (e) { return (!f.m || mKey(e) === f.m) && (!f.c || e._city === f.c); });
   var chip = function (on, label, onclick) {
@@ -4015,12 +4020,12 @@ function tobiEventsPaint() {
   };
   var row = function (title, html) { return '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;margin:2px 0 6px;">' + title + '</div><div style="display:flex;flex-wrap:wrap;gap:6px;">' + html + '</div>'; };
   var mk = Object.keys(months).sort();
-  var ck = Object.keys(cities).sort(function (a, b) { return (a === 'Other UK') - (b === 'Other UK') || cities[b] - cities[a] || a.localeCompare(b); });
+  var ck = Object.keys(cities).sort(function (a, b) { return cities[b] - cities[a] || a.localeCompare(b); });
   var esc = function (x) { return String(x).replace(/'/g, "\\'"); };
   var bar = '<div data-events-filter="1" style="background:white;border-radius:12px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:90px;">'
     + row('📅 MONTH', chip(!f.m, 'All (' + Object.keys(months).reduce(function (n, k) { return n + months[k]; }, 0) + ')', "tobiEventsFilter('m','')") + mk.map(function (k) { return chip(f.m === k, mLabel(k) + ' (' + months[k] + ')', "tobiEventsFilter('m','" + k + "')"); }).join(''))
     + '<div style="height:10px"></div>'
-    + row('📍 CITY', chip(!f.c, 'All (' + Object.keys(cities).reduce(function (n, k) { return n + cities[k]; }, 0) + ')', "tobiEventsFilter('c','')") + ck.map(function (k) { return chip(f.c === k, k + ' (' + cities[k] + ')', "tobiEventsFilter('c','" + esc(k) + "')"); }).join(''))
+    + row('📍 CITY', chip(!f.c, 'All (' + all.filter(function (e) { return !f.m || mKey(e) === f.m; }).length + ')', "tobiEventsFilter('c','')") + ck.map(function (k) { return chip(f.c === k, k + ' (' + cities[k] + ')', "tobiEventsFilter('c','" + esc(k) + "')"); }).join(''))
     + '</div>';
   var messages = document.getElementById('messages');
   messages.innerHTML = '';
