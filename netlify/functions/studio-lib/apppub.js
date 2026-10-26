@@ -17,7 +17,7 @@ const { HttpError, cas, getJson, cleanText } = core;
 const KEY = 'hq/app-posts';
 const KINDS = ['update', 'article', 'event'];
 // Article categories — must match the blog's own categories exactly (never invent new ones).
-const CATEGORIES = ['News', 'Money', 'Housing', 'Lifestyle', 'Business', 'Did You Know', 'Travel', 'Family', 'Health', 'Education', 'Food'];
+const CATEGORIES = ['News', 'Money', 'Housing', 'Lifestyle', 'Business', 'Did You Know', 'Travel', 'Family', 'Health', 'Education', 'Food', 'Jobs'];
 const MAX_ITEMS = 500;
 const isDay = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
 const newId = () => `a${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
