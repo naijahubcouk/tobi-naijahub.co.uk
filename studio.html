@@ -2596,7 +2596,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
         '<details class="card"><summary style="cursor:pointer;font-weight:700">✍️ Caption &amp; hashtags</summary><div class="stack" style="gap:8px;margin-top:10px"><textarea id="cCap" rows="5" maxlength="2200" placeholder="Write your caption here"></textarea><textarea id="cTags" rows="2" placeholder="#hashtags"></textarea><button class="btn ghost small" id="cCopy">Copy caption &amp; hashtags</button></div></details>' +
         '<section class="card stack cexp" style="gap:8px"><b>⬇️ Save &amp; share</b>' +
           '<div class="row" style="gap:8px"><button class="btn primary" id="cAll" style="flex:1.3">' + (DEV === 'computer' ? 'Save to computer' : 'Save to gallery') + '</button><button class="btn ghost" id="cShare" style="flex:1">↗ Share</button></div>' +
-          '<p class="hint" style="margin:0" id="cSaveHint">' + ({ ios: 'Opens your share menu — tap <b>Save ' + (maxSlides > 1 ? 'Images' : 'Image') + '</b> to add ' + (maxSlides > 1 ? 'them' : 'it') + ' to Photos.', android: 'Saves straight to your phone — find ' + (maxSlides > 1 ? 'them' : 'it') + ' in Gallery or Google Photos (Downloads).', computer: 'Each image saves to your Downloads folder.' })[DEV] + '</p>' +
+          '<p class="hint" style="margin:0" id="cSaveHint">' + ({ ios: 'Opens your share menu — tap <b>Save ' + (maxSlides > 1 ? 'Images' : 'Image') + '</b> to add ' + (maxSlides > 1 ? 'them' : 'it') + ' to Photos.', android: 'Opens your share menu — choose <b>Photos</b> or <b>Gallery</b> to save ' + (maxSlides > 1 ? 'them' : 'it') + '.', computer: 'Each image saves to your Downloads folder.' })[DEV] + '</p>' +
           (maxSlides > 1 ? '<div class="row wrap" style="gap:8px"><button class="btn ghost small" id="cOne">Save this ' + word + '</button><button class="btn ghost small" id="cShareOne">Share this ' + word + '</button><button class="btn ghost small" id="cZip">Download as ZIP</button></div>' : '') +
           '<p class="hint" style="margin:0">Share sends ' + (maxSlides > 1 ? 'them' : 'it') + ' to WhatsApp, Instagram, Facebook and more — your caption is copied for you to paste.</p>' +
           '<p class="hint" style="margin:0" id="cSizeNote"></p></section>' +
@@ -2747,14 +2747,45 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     async function slideBlob(i) { TobiCarousel.draw(work, d, i, A); return await canvasBlob(work); }
     function okOver() { var bad = d.slides.map(function (s, i) { return TobiCarousel.draw(work, d, i, A).overflow ? i + 1 : 0; }).filter(Boolean); return bad.length ? confirm(Word + (bad.length > 1 ? 's ' : ' ') + bad.join(', ') + (bad.length > 1 ? ' have' : ' has') + ' text that was shortened with “…”. Download anyway?') : true; }
     function dl(blob, name) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
-    // Save to gallery: iPhone/iPad → share menu (Save Images → Photos); Android → straight download (shows in Gallery/Photos under Downloads); computer → one file each
-    async function saveFiles(files) {
-      if (DEV === 'ios' && navigator.canShare && navigator.canShare({ files: files })) {
-        try { await navigator.share({ files: files }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
-      }
-      for (var k = 0; k < files.length; k++) { dl(files[k], files[k].name); if (k < files.length - 1) await new Promise(function (r) { setTimeout(r, 350); }); }
+    // Save to gallery — phones: the share menu (iPhone "Save Images" → Photos; Android "Save to Photos/Gallery");
+    // if the phone blocks it because preparing took too long, the button asks for one more tap (never a silent download).
+    // If sharing pictures isn't possible: one button per image, so every tap really saves. Computer: one file each.
+    async function saveFiles(files, btn) {
       var many = files.length > 1;
-      toast(DEV === 'computer' ? (many ? files.length + ' images saved to Downloads' : 'Image saved to Downloads') : (many ? files.length + ' images saved to your gallery' : 'Saved to your gallery') + (DEV === 'android' ? ' (Downloads)' : ''));
+      if (DEV !== 'computer' && navigator.canShare && navigator.canShare({ files: files })) {
+        try { await navigator.share({ files: files }); return 'ok'; }
+        catch (e) {
+          if (e && e.name === 'AbortError') return 'ok';
+          if (e && e.name === 'NotAllowedError' && btn) { btn.textContent = 'Tap again to save'; return 'again'; }
+        }
+      }
+      if (DEV === 'computer') {
+        for (var k = 0; k < files.length; k++) { dl(files[k], files[k].name); if (k < files.length - 1) await new Promise(function (r) { setTimeout(r, 350); }); }
+        toast(many ? files.length + ' images saved to Downloads' : 'Image saved to Downloads');
+        return 'ok';
+      }
+      if (!many) { saveOne(files[0]); return 'ok'; }
+      saveSheet(files);
+      return 'ok';
+    }
+    async function saveOne(file) {
+      if (DEV === 'ios' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file] }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      }
+      dl(file, file.name);
+      toast(DEV === 'ios' ? 'Saved to Files → Downloads (not Photos)' : 'Saved to Downloads — open Gallery → Download album');
+    }
+    function saveSheet(files) {
+      var scrim = document.createElement('div'); scrim.className = 'scrim';
+      scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="svT"><h2 id="svT" style="margin:0">Save your images</h2>' +
+        '<p style="margin:0">Your phone saves one picture at a time — tap each one:</p>' +
+        '<div class="row wrap" style="gap:8px">' + files.map(function (f, i) { return '<button class="btn ghost" data-sv="' + i + '">Save ' + word.toLowerCase() + ' ' + (i + 1) + '</button>'; }).join('') + '</div>' +
+        '<p class="hint" style="margin:0">' + (DEV === 'ios' ? 'If the share menu opens, tap <b>Save Image</b> to add it to Photos.' : 'They go to your Downloads — open Gallery or Google Photos → <b>Download</b> album.') + '</p>' +
+        '<button class="btn link" id="svX">Done</button></div>';
+      document.body.appendChild(scrim);
+      function close() { scrim.remove(); }
+      $('#svX', scrim).onclick = close; scrim.onclick = function (e) { if (e.target === scrim) close(); };
+      $$('[data-sv]', scrim).forEach(function (b) { b.onclick = function () { saveOne(files[Number(b.dataset.sv)]); b.textContent = '✓ ' + b.textContent.replace(/^✓ /, ''); }; });
     }
     // ready-made image files (made in the background after edits) so Share/Save open straight from the tap
     var fileCache = {}, warmT = null;
@@ -2804,12 +2835,13 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     warmSoon();
     async function runSave(btn, idx) {
       if (!okOver()) return;
-      var label = btn.textContent, files = cachedFiles(idx);
+      var label = btn.dataset.label || (btn.dataset.label = btn.textContent), files = cachedFiles(idx), res = 'ok';
       try {
         if (!files) { btn.disabled = true; btn.textContent = 'Preparing…'; files = await makeFiles(idx); }
-        await saveFiles(files);
+        btn.disabled = false;
+        res = await saveFiles(files, btn);
       } catch (x) { toast('Couldn’t save the images — please try again'); }
-      btn.disabled = false; btn.textContent = label;
+      btn.disabled = false; if (res !== 'again') btn.textContent = label;
     }
     $('#cAll').onclick = function () { runSave(this, d.slides.map(function (_, i) { return i; })); };
     if ($('#cOne')) $('#cOne').onclick = function () { runSave(this, [cur]); };
