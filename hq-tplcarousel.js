@@ -1,7 +1,7 @@
 /*
  * Auntie Tobi HQ — 📝 Template Carousel.
  * The white "bold headline" template: thin green frame, big black capitals with **green** words,
- * an optional gold brush stroke and the 🇬🇧 flag. AI (or a quick paste) makes every slide at once,
+ * and an optional gold brush stroke. AI (or a quick paste) makes every slide at once,
  * then each slide can be edited with a live preview and downloaded as 1080×1350 PNGs (ZIP).
  *
  * HQ calls HQTpl.init({ api, sheet, toast, esc, S }) once, then HQTpl.view() for the #tcars page.
@@ -131,20 +131,12 @@
     }
     ctx.restore();
   }
-  function flagUK(ctx, x, y, w, h) {
-    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
-    ctx.fillStyle = '#012169'; ctx.fillRect(x, y, w, h);
-    function diag(col, lw) { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h); ctx.stroke(); }
-    diag('#FFFFFF', h * 0.2); diag('#C8102E', h * 0.07);
-    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(x + w / 2 - h * 0.17, y, h * 0.34, h); ctx.fillRect(x, y + h / 2 - h * 0.17, w, h * 0.34);
-    ctx.fillStyle = '#C8102E'; ctx.fillRect(x + w / 2 - h * 0.1, y, h * 0.2, h); ctx.fillRect(x, y + h / 2 - h * 0.1, w, h * 0.2);
-    ctx.restore();
-  }
-  var DECO_H = 58;
-  function deco(ctx, right, y, left, withBrush) {
-    var fw = 82, fh = 56, ukx = right - fw;
-    flagUK(ctx, ukx, y, fw, fh);
-    if (withBrush) { var bw = Math.min(480, ukx - 28 - left); if (bw > 120) brush(ctx, ukx - 28 - bw, y + fh / 2 - 6, bw); }
+  // gold brush under the heading (optional) — centred, or from the left edge for left-aligned slides
+  function decoH(car) { return car.brush !== false ? 30 : 0; }
+  function deco(ctx, car, y, align) {
+    if (car.brush === false) return;
+    var bw = 480, x = align === 'left' ? L : (W - bw) / 2;
+    brush(ctx, x, y + 8, bw);
   }
 
   // ── one slide ──
@@ -161,23 +153,23 @@
     if (sl.kind === 'tip') {
       var num = car.numbers !== false ? pad(tipNumber(car, i)) : '', numSize = 180;
       var bodyMax = sl.body ? 380 : 0;
-      hr = fitHeading(ctx, sl.heading, CW, availH - (num ? numSize + 20 : 0) - (bodyMax ? bodyMax + 34 : 0) - DECO_H - 44, 118, 54);
+      hr = fitHeading(ctx, sl.heading, CW, availH - (num ? numSize + 20 : 0) - (bodyMax ? bodyMax + 34 : 0) - decoH(car) - 44, 118, 54);
       br = sl.body ? fitBody(ctx, sl.body, CW, bodyMax, 500) : null;
-      blockH = (num ? numSize * 0.86 + 22 : 0) + hr.h + (br ? 34 + br.h : 0) + 44 + DECO_H;
+      blockH = (num ? numSize * 0.86 + 22 : 0) + hr.h + (br ? 34 + br.h : 0) + (decoH(car) ? 44 + decoH(car) : 0);
       y = TOP + Math.max(0, (availH - blockH) / 2);
       if (num) { setH(ctx, numSize); ctx.fillStyle = GREEN; var nw = ctx.measureText(num).width; ctx.fillText(num, align === 'left' ? L - 6 : L + (CW - nw) / 2, y + numSize * 0.8); y += numSize * 0.86 + 22; }
       right = drawHeading(ctx, hr, L, y, align, CW); y += hr.h;
       if (br) { y += 34; setB(ctx, br.size, 500); ctx.fillStyle = BODY; br.lines.forEach(function (ln, k) { var lw = ctx.measureText(ln).width; ctx.fillText(ln, align === 'left' ? L : L + (CW - lw) / 2, y + k * br.lh + br.size); }); y += br.h; over = over || br.over; }
-      deco(ctx, align === 'left' ? R : Math.max(right, L + CW / 2 + 240), y + 44, L, car.brush !== false);
+      deco(ctx, car, y + 44, align);
     } else {
       var isEnd = sl.kind === 'end';
       br = sl.body ? fitBody(ctx, sl.body, CW, 200, 700) : null;
       var WL = 74, WCW = W - 2 * WL;
-      hr = fitHeading(ctx, sl.heading, WCW, availH - DECO_H - 40 - (br ? br.h + 40 : 0) - 40, isEnd ? 132 : 140, 60, true);
-      blockH = hr.h + 40 + DECO_H + (br ? 40 + br.h : 0);
+      hr = fitHeading(ctx, sl.heading, WCW, availH - decoH(car) - 40 - (br ? br.h + 40 : 0) - 40, isEnd ? 132 : 140, 60, true);
+      blockH = hr.h + (decoH(car) ? 40 + decoH(car) : 0) + (br ? 40 + br.h : 0);
       y = TOP + Math.max(0, (availH - blockH) / 2) - (isEnd ? 0 : 20);
       right = drawHeading(ctx, hr, align === 'left' ? L : WL, y, align, align === 'left' ? CW : WCW); y += hr.h;
-      deco(ctx, align === 'left' ? R : Math.min(W - WL, right), y + 40, L, car.brush !== false); y += 40 + DECO_H;
+      if (decoH(car)) { deco(ctx, car, y + 40, align); y += 40 + decoH(car); }
       if (br) { y += 40; setB(ctx, br.size, 700); ctx.fillStyle = isEnd ? GREEN : BODY; br.lines.forEach(function (ln, k) { var lw = ctx.measureText(ln).width; ctx.fillText(ln, align === 'left' ? L : L + (CW - lw) / 2, y + k * br.lh + br.size); }); over = over || br.over; }
     }
     over = over || hr.over;
@@ -229,7 +221,7 @@
     document.getElementById('topRight').innerHTML = '<button class="btn primary" id="tcNew">＋ New carousel</button>';
     var items = list();
     document.getElementById('view').innerHTML = '<div class="wrap">' +
-      '<div class="note" style="margin-bottom:12px">Make carousels in the Auntie Tobi bold headline template: white page, green frame, big capitals with green words, gold brush (optional) and the 🇬🇧 flag. AI (or a quick paste) makes all the slides at once — then edit any slide and download them as images.</div>' +
+      '<div class="note" style="margin-bottom:12px">Make carousels in the Auntie Tobi bold headline template: white page, green frame, big capitals with green words, and an optional gold brush stroke. AI (or a quick paste) makes all the slides at once — then edit any slide and download them as images.</div>' +
       (items.length ? '<div class="cargrid">' + items.map(function (c) {
         return '<div class="card carcard" data-topen="' + c.id + '"><canvas class="carthumb" width="216" height="270" data-tthumb="' + c.id + '"></canvas>' +
           '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15.5px;line-height:1.3">' + esc(c.title) + '</div>' +

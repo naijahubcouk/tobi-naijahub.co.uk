@@ -1,7 +1,7 @@
 'use strict';
 /*
  * Auntie Tobi HQ — 📝 Template Carousel.
- * White "bold headline" carousels (green frame, black capitals, green highlight, optional gold brush + 🇬🇧 flag).
+ * White "bold headline" carousels (green frame, black capitals, green highlight, optional gold brush).
  * The slides are drawn and downloaded in the browser (hq-tplcarousel.js); this file only stores them
  * and asks the AI to write the slides.
  *
