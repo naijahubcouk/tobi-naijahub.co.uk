@@ -1,7 +1,7 @@
 /*
  * Auntie Tobi HQ — 📝 Template Carousel.
  * The white "bold headline" template: thin green frame, big black capitals with **green** words,
- * a gold brush stroke and the 🇳🇬🇬🇧 flags. AI (or a quick paste) makes every slide at once,
+ * an optional gold brush stroke and the 🇬🇧 flag. AI (or a quick paste) makes every slide at once,
  * then each slide can be edited with a live preview and downloaded as 1080×1350 PNGs (ZIP).
  *
  * HQ calls HQTpl.init({ api, sheet, toast, esc, S }) once, then HQTpl.view() for the #tcars page.
@@ -131,10 +131,6 @@
     }
     ctx.restore();
   }
-  function flagNG(ctx, x, y, w, h) {
-    ctx.fillStyle = '#008751'; ctx.fillRect(x, y, w / 3, h); ctx.fillRect(x + 2 * w / 3, y, w / 3, h);
-    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(x + w / 3, y, w / 3, h);
-  }
   function flagUK(ctx, x, y, w, h) {
     ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
     ctx.fillStyle = '#012169'; ctx.fillRect(x, y, w, h);
@@ -145,11 +141,10 @@
     ctx.restore();
   }
   var DECO_H = 58;
-  function deco(ctx, right, y, left) {
-    var fw = 82, fh = 56, gap = 16;
-    var ukx = right - fw, ngx = ukx - gap - fw;
-    flagUK(ctx, ukx, y, fw, fh); flagNG(ctx, ngx, y, fw, fh);
-    var bw = Math.min(480, ngx - 28 - left); if (bw > 120) brush(ctx, ngx - 28 - bw, y + fh / 2 - 6, bw);
+  function deco(ctx, right, y, left, withBrush) {
+    var fw = 82, fh = 56, ukx = right - fw;
+    flagUK(ctx, ukx, y, fw, fh);
+    if (withBrush) { var bw = Math.min(480, ukx - 28 - left); if (bw > 120) brush(ctx, ukx - 28 - bw, y + fh / 2 - 6, bw); }
   }
 
   // ── one slide ──
@@ -173,7 +168,7 @@
       if (num) { setH(ctx, numSize); ctx.fillStyle = GREEN; var nw = ctx.measureText(num).width; ctx.fillText(num, align === 'left' ? L - 6 : L + (CW - nw) / 2, y + numSize * 0.8); y += numSize * 0.86 + 22; }
       right = drawHeading(ctx, hr, L, y, align, CW); y += hr.h;
       if (br) { y += 34; setB(ctx, br.size, 500); ctx.fillStyle = BODY; br.lines.forEach(function (ln, k) { var lw = ctx.measureText(ln).width; ctx.fillText(ln, align === 'left' ? L : L + (CW - lw) / 2, y + k * br.lh + br.size); }); y += br.h; over = over || br.over; }
-      deco(ctx, align === 'left' ? R : Math.max(right, L + CW / 2 + 240), y + 44, L);
+      deco(ctx, align === 'left' ? R : Math.max(right, L + CW / 2 + 240), y + 44, L, car.brush !== false);
     } else {
       var isEnd = sl.kind === 'end';
       br = sl.body ? fitBody(ctx, sl.body, CW, 200, 700) : null;
@@ -182,7 +177,7 @@
       blockH = hr.h + 40 + DECO_H + (br ? 40 + br.h : 0);
       y = TOP + Math.max(0, (availH - blockH) / 2) - (isEnd ? 0 : 20);
       right = drawHeading(ctx, hr, align === 'left' ? L : WL, y, align, align === 'left' ? CW : WCW); y += hr.h;
-      deco(ctx, align === 'left' ? R : Math.min(W - WL, right), y + 40, L); y += 40 + DECO_H;
+      deco(ctx, align === 'left' ? R : Math.min(W - WL, right), y + 40, L, car.brush !== false); y += 40 + DECO_H;
       if (br) { y += 40; setB(ctx, br.size, 700); ctx.fillStyle = isEnd ? GREEN : BODY; br.lines.forEach(function (ln, k) { var lw = ctx.measureText(ln).width; ctx.fillText(ln, align === 'left' ? L : L + (CW - lw) / 2, y + k * br.lh + br.size); }); over = over || br.over; }
     }
     over = over || hr.over;
@@ -234,7 +229,7 @@
     document.getElementById('topRight').innerHTML = '<button class="btn primary" id="tcNew">＋ New carousel</button>';
     var items = list();
     document.getElementById('view').innerHTML = '<div class="wrap">' +
-      '<div class="note" style="margin-bottom:12px">Make carousels in the Auntie Tobi bold headline template: white page, green frame, big capitals with green words, gold brush and the 🇳🇬🇬🇧 flags. AI (or a quick paste) makes all the slides at once — then edit any slide and download them as images.</div>' +
+      '<div class="note" style="margin-bottom:12px">Make carousels in the Auntie Tobi bold headline template: white page, green frame, big capitals with green words, gold brush (optional) and the 🇬🇧 flag. AI (or a quick paste) makes all the slides at once — then edit any slide and download them as images.</div>' +
       (items.length ? '<div class="cargrid">' + items.map(function (c) {
         return '<div class="card carcard" data-topen="' + c.id + '"><canvas class="carthumb" width="216" height="270" data-tthumb="' + c.id + '"></canvas>' +
           '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15.5px;line-height:1.3">' + esc(c.title) + '</div>' +
@@ -319,7 +314,8 @@
       '<div class="carbody"><div class="carleft">' +
       '<div class="card"><div class="row" style="gap:16px;flex-wrap:wrap"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the tips (01, 02…)</label>' +
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
-        '<label class="chk"><input type="checkbox" id="teS"' + (car.swipe !== false ? ' checked' : '') + '> “Swipe →” on the cover</label></div>' +
+        '<label class="chk"><input type="checkbox" id="teS"' + (car.swipe !== false ? ' checked' : '') + '> “Swipe →” on the cover</label>' +
+        '<label class="chk"><input type="checkbox" id="teB"' + (car.brush !== false ? ' checked' : '') + '> Gold brush stroke</label></div>' +
         '<div class="muted" style="font-size:12.5px;margin-top:8px">Put green words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div></div>' +
       '<div id="teSlides"></div><button class="btn ghost" id="teAdd" style="width:100%;margin-top:8px">＋ Add a slide</button>' +
       '<div class="card" style="margin-top:12px"><div class="lbl" style="margin-top:0">Caption</div><textarea id="teCap" rows="6"></textarea><div class="lbl">Hashtags</div><textarea id="teTags" rows="2"></textarea><button class="btn ghost sm" id="teCopy" style="margin-top:8px">📋 Copy caption &amp; hashtags</button></div>' +
@@ -388,6 +384,7 @@
     $('#teN').onchange = function () { car.numbers = this.checked; mark(); paint(); paintThumbs(); };
     $('#teH').onchange = function () { car.handle = this.checked; mark(); paint(); paintThumbs(); };
     $('#teS').onchange = function () { car.swipe = this.checked; mark(); paint(); paintThumbs(); };
+    $('#teB').onchange = function () { car.brush = this.checked; mark(); paint(); paintThumbs(); };
     $('#teTitle').oninput = function () { car.title = this.value; mark(); };
     $('#teCap').oninput = function () { car.caption = this.value; mark(); };
     $('#teTags').oninput = function () { car.hashtags = this.value; mark(); };
@@ -403,7 +400,7 @@
     function paintPosted() { $('#tePosted').textContent = car.status === 'posted' ? '↩ Mark as not posted' : '✅ Mark as posted'; }
     $('#tePosted').onclick = async function () { car.status = car.status === 'posted' ? 'draft' : 'posted'; paintPosted(); await save(); };
     async function save() {
-      var payload = { id: car.id, title: car.title, slides: car.slides, numbers: car.numbers, handle: car.handle, swipe: car.swipe, caption: car.caption, hashtags: car.hashtags, status: car.status };
+      var payload = { id: car.id, title: car.title, slides: car.slides, numbers: car.numbers, handle: car.handle, swipe: car.swipe, brush: car.brush, caption: car.caption, hashtags: car.hashtags, status: car.status };
       try {
         var r = await X.api('tc-save', { item: payload });
         car.id = r.item.id; car.updatedAt = r.item.updatedAt; car.postedAt = r.item.postedAt;

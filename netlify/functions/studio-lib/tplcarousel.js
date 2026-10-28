@@ -1,12 +1,12 @@
 'use strict';
 /*
  * Auntie Tobi HQ — 📝 Template Carousel.
- * White "bold headline" carousels (green frame, black capitals, green highlight, gold brush + 🇳🇬🇬🇧 flags).
+ * White "bold headline" carousels (green frame, black capitals, green highlight, optional gold brush + 🇬🇧 flag).
  * The slides are drawn and downloaded in the browser (hq-tplcarousel.js); this file only stores them
  * and asks the AI to write the slides.
  *
  *   hq/tplcars   { items: { <id>: tcar } }
- *   tcar:  { id, title, slides: [slide], numbers, handle, swipe, caption, hashtags, status: draft|posted,
+ *   tcar:  { id, title, slides: [slide], numbers, handle, swipe, brush, caption, hashtags, status: draft|posted,
  *            createdBy, createdAt, updatedAt, postedAt? }
  *   slide: { kind: cover|tip|end, heading, body, align: center|left }
  */
@@ -39,6 +39,7 @@ function clean(raw, prev) {
     numbers: raw.numbers !== false,
     handle: raw.handle !== false,
     swipe: raw.swipe !== false,
+    brush: raw.brush !== false,
     caption: multi(raw.caption, 2200),
     hashtags: multi(raw.hashtags, 600),
     status: raw.status === 'posted' ? 'posted' : 'draft',
