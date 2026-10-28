@@ -8,7 +8,8 @@
  *   hq/tplcars   { items: { <id>: tcar } }
  *   tcar:  { id, title, slides: [slide], numbers, handle, swipe, brush, caption, hashtags, status: draft|posted,
  *            createdBy, createdAt, updatedAt, postedAt? }
- *   slide: { kind: cover|tip|end, heading, body, align: center|left }
+ *   slide: { kind: cover|tip|end, heading, body, align: center|left, style, hs, bs, brush: ''|on|off, num: ''|on|off }
+ *   carousel also has style (classic|condensed|friendly|elegant|hand), hs / bs (heading / body size, 0.6–1.4)
  */
 const crypto = require('crypto');
 const core = require('./core');
@@ -18,6 +19,8 @@ const gen = require('./generate');
 const KEY = 'hq/tplcars';
 const MAX = 300;
 const KINDS = ['cover', 'tip', 'end'];
+const STYLES = ['classic', 'condensed', 'friendly', 'elegant', 'hand'];
+const scale = (v, lo, hi) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.round(Math.min(hi, Math.max(lo, n)) * 100) / 100 : 1; };
 const multi = (s, n) => String(s == null ? '' : s).replace(/\r/g, '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, n);
 
 function cleanSlide(x) {
@@ -27,6 +30,12 @@ function cleanSlide(x) {
     heading: multi(x.heading, 160),
     body: multi(x.body, 400),
     align: x.align === 'left' ? 'left' : 'center',
+    // per-slide options ('' / 1 = same as the carousel)
+    style: STYLES.includes(x.style) ? x.style : '',
+    hs: scale(x.hs, 0.5, 1.6),
+    bs: scale(x.bs, 0.5, 1.6),
+    brush: ['on', 'off'].includes(x.brush) ? x.brush : '',
+    num: ['on', 'off'].includes(x.num) ? x.num : '',
   };
 }
 function clean(raw, prev) {
@@ -40,6 +49,9 @@ function clean(raw, prev) {
     handle: raw.handle !== false,
     swipe: raw.swipe !== false,
     brush: raw.brush !== false,
+    style: STYLES.includes(raw.style) ? raw.style : 'classic',
+    hs: scale(raw.hs, 0.6, 1.4),
+    bs: scale(raw.bs, 0.6, 1.4),
     caption: multi(raw.caption, 2200),
     hashtags: multi(raw.hashtags, 600),
     status: raw.status === 'posted' ? 'posted' : 'draft',

@@ -1,7 +1,7 @@
 /*
  * Auntie Tobi HQ — 📝 Template Carousel.
  * The white "bold headline" template: thin green frame, big black capitals with **green** words,
- * and an optional gold brush stroke. AI (or a quick paste) makes every slide at once,
+ * and an optional gold brush stroke, in 5 text styles with size controls (whole carousel or per slide). AI (or a quick paste) makes every slide at once,
  * then each slide can be edited with a live preview and downloaded as 1080×1350 PNGs (ZIP).
  *
  * HQ calls HQTpl.init({ api, sheet, toast, esc, S }) once, then HQTpl.view() for the #tcars page.
@@ -19,74 +19,101 @@
   function rnd(seed) { var x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); }
   function pad(n) { return n < 10 ? '0' + n : String(n); }
 
-  // ── heading text: CAPITALS, **green** words, line breaks kept ──
+  // ── text styles (fonts come from Google Fonts in hq.html) ──
+  // k = size factor vs Bold Classic; gf/gw/gs = a different font for the **green** words; gi = green words in italics
+  var STYLES = {
+    classic:   { name: 'Bold Classic',     f: "'Inter Tight', 'Inter', Arial, sans-serif", w: 900, caps: true,  ls: -0.03, lh: 0.98, k: 1 },
+    condensed: { name: 'Tall & Condensed', f: "'Anton', 'Inter Tight', Arial, sans-serif", w: 400, caps: true,  ls: 0.004, lh: 1.04, k: 1.12 },
+    friendly:  { name: 'Friendly',         f: "'Poppins', Arial, sans-serif",              w: 800, caps: false, ls: -0.02, lh: 1.12, k: 0.92 },
+    elegant:   { name: 'Elegant',          f: "'Playfair Display', Georgia, serif",        w: 900, caps: false, ls: 0,     lh: 1.08, k: 0.96, gi: true },
+    hand:      { name: 'Handwritten Pop',  f: "'Archivo Black', Arial, sans-serif",        w: 400, caps: true,  ls: -0.01, lh: 1.04, k: 0.84, gf: "'Caveat', cursive", gw: 700, gs: 1.6 }
+  };
+  function eff(car, sl) {
+    var pick = function (v, base) { return v === 'on' ? true : v === 'off' ? false : base; };
+    return {
+      st: STYLES[sl.style] || STYLES[car.style] || STYLES.classic,
+      hs: clamp((Number(car.hs) || 1) * (Number(sl.hs) || 1), 0.4, 2),
+      bs: clamp((Number(car.bs) || 1) * (Number(sl.bs) || 1), 0.4, 2),
+      brush: pick(sl.brush, car.brush !== false),
+      num: pick(sl.num, car.numbers !== false),
+    };
+  }
+
+  // ── heading text: **green** words, line breaks kept ──
   function richWords(text, greenLine) {
     text = String(text || '');
     if (greenLine && text.indexOf('\n') < 0) { var gi = text.indexOf('**'); if (gi > 0) text = text.slice(0, gi).replace(/\s+$/, '') + '\n' + text.slice(gi); }
-    var paras = text.toUpperCase().split('\n'), out = [];
-    paras.forEach(function (p, pi) {
+    return text.split('\n').map(function (p) {
       var words = [];
       p.split(/(\*\*[^*]+\*\*)/).forEach(function (part) {
         if (!part) return;
         var g = /^\*\*[^*]+\*\*$/.test(part); if (g) part = part.slice(2, -2);
         part.split(/\s+/).forEach(function (w) { if (w) words.push({ w: w, g: g }); });
       });
-      out.push(words);
+      return words;
     });
-    return out;
   }
-  function setH(ctx, size) {
-    ctx.font = '900 ' + size + 'px ' + FH;
-    if ('letterSpacing' in ctx) ctx.letterSpacing = (-size * 0.03).toFixed(1) + 'px';
+  function wordFont(ctx, st, size, g) {
+    if (g && st.gf) { ctx.font = st.gw + ' ' + Math.round(size * st.gs) + 'px ' + st.gf; if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'; return; }
+    ctx.font = (g && st.gi ? 'italic ' : '') + st.w + ' ' + size + 'px ' + st.f;
+    if ('letterSpacing' in ctx) ctx.letterSpacing = (size * st.ls).toFixed(1) + 'px';
+  }
+  function wtext(st, t) { return st.caps && !(t.g && st.gf) ? t.w.toUpperCase() : t.w; }
+  function lineH(st, size, words) {
+    var h = size * st.lh;
+    if (st.gf && words.some(function (t) { return t.g; })) h = Math.max(h, size * st.gs * 0.86);
+    return h;
   }
   function setB(ctx, size, weight) {
     ctx.font = (weight || 500) + ' ' + size + 'px ' + FB;
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
   }
   // lines carry their own size: a short green last line (cover / end) may shrink a little to stay on one line
-  function wrapPara(ctx, words, maxW, size) {
-    setH(ctx, size);
+  function wrapPara(ctx, st, words, maxW, size) {
+    wordFont(ctx, st, size, false);
     var sp = ctx.measureText(' ').width, lines = [], line = [], lw = 0, tooWide = false;
+    function push() { lines.push({ words: line, w: lw, size: size, sp: sp, lh: lineH(st, size, line) }); }
     words.forEach(function (t) {
-      var ww = ctx.measureText(t.w).width; if (ww > maxW) tooWide = true;
-      if (line.length && lw + sp + ww > maxW) { lines.push({ words: line, w: lw, size: size, sp: sp }); line = []; lw = 0; }
-      line.push({ w: t.w, g: t.g, width: ww }); lw += (line.length > 1 ? sp : 0) + ww;
+      wordFont(ctx, st, size, t.g);
+      var tx = wtext(st, t), ww = ctx.measureText(tx).width; if (ww > maxW) tooWide = true;
+      if (line.length && lw + sp + ww > maxW) { push(); line = []; lw = 0; }
+      line.push({ w: tx, g: t.g, width: ww }); lw += (line.length > 1 ? sp : 0) + ww;
     });
-    if (line.length) lines.push({ words: line, w: lw, size: size, sp: sp });
+    if (line.length) push();
     return { lines: lines, tooWide: tooWide };
   }
-  function layout(ctx, paras, maxW, size, greenLine) {
+  function layout(ctx, st, paras, maxW, size, greenLine) {
     var lines = [], tooWide = false;
     paras.forEach(function (words, pi) {
-      var r = wrapPara(ctx, words, maxW, size);
+      var r = wrapPara(ctx, st, words, maxW, size);
       var shortGreen = greenLine && pi === paras.length - 1 && paras.length > 1 && words.length <= 4 && words.every(function (t) { return t.g; });
       if (shortGreen && r.lines.length > 1) {
-        for (var s2 = size - 2; s2 >= size * 0.72; s2 -= 2) { var r2 = wrapPara(ctx, words, maxW, s2); if (r2.lines.length === 1) { r = r2; break; } }
+        for (var s2 = size - 2; s2 >= size * 0.72; s2 -= 2) { var r2 = wrapPara(ctx, st, words, maxW, s2); if (r2.lines.length === 1) { r = r2; break; } }
       }
       if (words.length > 2 && r.lines.length > 1 && r.lines[r.lines.length - 1].words.length === 1) {
         // avoid one lonely word on the last line: try a slightly smaller size
-        for (var s3 = size - 2; s3 >= size * 0.8; s3 -= 2) { var r3 = wrapPara(ctx, words, maxW, s3); if (r3.lines[r3.lines.length - 1].words.length > 1) { r = r3; break; } }
+        for (var s3 = size - 2; s3 >= size * 0.8; s3 -= 2) { var r3 = wrapPara(ctx, st, words, maxW, s3); if (r3.lines[r3.lines.length - 1].words.length > 1) { r = r3; break; } }
       }
       tooWide = tooWide || r.tooWide; lines = lines.concat(r.lines);
     });
-    var h = lines.reduce(function (n, ln) { return n + ln.size * 0.98; }, 0);
+    var h = lines.reduce(function (n, ln) { return n + ln.lh; }, 0);
     return { lines: lines, tooWide: tooWide, h: h };
   }
-  function fitHeading(ctx, text, maxW, maxH, maxSize, minSize, greenLine) {
-    var paras = richWords(text, greenLine), size = maxSize, r;
-    for (; size >= minSize; size -= 3) { r = layout(ctx, paras, maxW, size, greenLine); if (!r.tooWide && r.h <= maxH) break; }
-    size = Math.max(size, minSize); r = layout(ctx, paras, maxW, size, greenLine);
+  function fitHeading(ctx, st, text, maxW, maxH, maxSize, minSize, greenLine) {
+    var paras = richWords(text, greenLine), size = Math.round(maxSize), r;
+    minSize = Math.min(minSize, size);
+    for (; size >= minSize; size -= 3) { r = layout(ctx, st, paras, maxW, size, greenLine); if (!r.tooWide && r.h <= maxH) break; }
+    size = Math.max(size, minSize); r = layout(ctx, st, paras, maxW, size, greenLine);
     r.size = size; r.over = r.tooWide || r.h > maxH + 1;
     return r;
   }
-  function drawHeading(ctx, r, x, y, align, maxW) {
+  function drawHeading(ctx, st, r, x, y, align, maxW) {
     ctx.textBaseline = 'alphabetic';
     var right = x, yy = y;
     r.lines.forEach(function (ln) {
-      setH(ctx, ln.size);
-      var lx = align === 'left' ? x : x + (maxW - ln.w) / 2, by = yy + ln.size * 0.8;
-      ln.words.forEach(function (t, k) { ctx.fillStyle = t.g ? GREEN : INK; ctx.fillText(t.w, lx, by); lx += t.width + (k < ln.words.length - 1 ? ln.sp : 0); });
-      right = Math.max(right, lx); yy += ln.size * 0.98;
+      var lx = align === 'left' ? x : x + (maxW - ln.w) / 2, by = yy + ln.lh * 0.5 + ln.size * 0.36;
+      ln.words.forEach(function (t, k) { wordFont(ctx, st, ln.size, t.g); ctx.fillStyle = t.g ? GREEN : INK; ctx.fillText(t.w, lx, by); lx += t.width + (k < ln.words.length - 1 ? ln.sp : 0); });
+      right = Math.max(right, lx); yy += ln.lh;
     });
     return right;
   }
@@ -103,11 +130,11 @@
     while (lines.length && !lines[lines.length - 1]) lines.pop();
     return lines;
   }
-  function fitBody(ctx, text, maxW, maxH, weight) {
-    var size = 46, lines;
-    for (; size >= 28; size -= 2) { setB(ctx, size, weight); lines = wrapPlain(ctx, text, maxW); if (lines.length * size * 1.42 <= maxH) break; }
-    size = Math.max(size, 28); setB(ctx, size, weight); lines = wrapPlain(ctx, text, maxW);
-    return { size: size, lines: lines, lh: size * 1.42, h: lines.length * size * 1.42, over: lines.length * size * 1.42 > maxH + 1 };
+  function fitBody(ctx, text, maxW, maxH, weight, start) {
+    var size = Math.round(start), min = Math.min(24, size), lines;
+    for (; size >= min; size -= 2) { setB(ctx, size, weight); lines = wrapPlain(ctx, text, maxW); if (lines.length * size * 1.42 <= maxH) break; }
+    size = Math.max(size, min); setB(ctx, size, weight); lines = wrapPlain(ctx, text, maxW);
+    return { size: size, lines: lines, lh: size * 1.42, h: lines.length * size * 1.42, over: lines.length * size * 1.42 > maxH + 1, shrunk: size < start - 2 };
   }
 
   // ── decorations ──
@@ -132,9 +159,9 @@
     ctx.restore();
   }
   // gold brush under the heading (optional) — centred, or from the left edge for left-aligned slides
-  function decoH(car) { return car.brush !== false ? 30 : 0; }
-  function deco(ctx, car, y, align) {
-    if (car.brush === false) return;
+  function decoH(on) { return on ? 30 : 0; }
+  function deco(ctx, on, y, align) {
+    if (!on) return;
     var bw = 480, x = align === 'left' ? L : (W - bw) / 2;
     brush(ctx, x, y + 8, bw);
   }
@@ -143,47 +170,51 @@
   var L = 112, R = W - 112, CW = R - L, TOP = 120, BOT = H - 150;
   function tipNumber(car, i) { var n = 0; for (var k = 0; k <= i; k++) if (car.slides[k].kind === 'tip') n++; return n; }
   function draw(ctx, car, i) {
-    var sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, over = false;
+    var sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, over = false, shrunk = false;
+    var e = eff(car, sl), st = e.st, dh = decoH(e.brush);
     var align = sl.align === 'left' ? 'left' : 'center';
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
     ctx.strokeStyle = FRAME; ctx.lineWidth = 6; ctx.strokeRect(37, 37, W - 74, H - 74);
     ctx.textAlign = 'left';
-    var availH = BOT - TOP, blockH, y, hr, br, right;
+    var availH = BOT - TOP, blockH, y, hr, br, maxS;
     if (sl.kind === 'tip') {
-      var num = car.numbers !== false ? pad(tipNumber(car, i)) : '', numSize = 180;
+      var num = e.num ? pad(tipNumber(car, i)) : '', numSize = Math.round(180 * clamp(e.hs, 0.6, 1.3));
       var bodyMax = sl.body ? 380 : 0;
-      hr = fitHeading(ctx, sl.heading, CW, availH - (num ? numSize + 20 : 0) - (bodyMax ? bodyMax + 34 : 0) - decoH(car) - 44, 118, 54);
-      br = sl.body ? fitBody(ctx, sl.body, CW, bodyMax, 500) : null;
-      blockH = (num ? numSize * 0.86 + 22 : 0) + hr.h + (br ? 34 + br.h : 0) + (decoH(car) ? 44 + decoH(car) : 0);
+      maxS = 118 * st.k * e.hs;
+      hr = fitHeading(ctx, st, sl.heading, CW, availH - (num ? numSize + 20 : 0) - (bodyMax ? bodyMax + 34 : 0) - dh - 44, maxS, 40);
+      br = sl.body ? fitBody(ctx, sl.body, CW, bodyMax, 500, 46 * e.bs) : null;
+      blockH = (num ? numSize * 0.86 + 22 : 0) + hr.h + (br ? 34 + br.h : 0) + (dh ? 44 + dh : 0);
       y = TOP + Math.max(0, (availH - blockH) / 2);
-      if (num) { setH(ctx, numSize); ctx.fillStyle = GREEN; var nw = ctx.measureText(num).width; ctx.fillText(num, align === 'left' ? L - 6 : L + (CW - nw) / 2, y + numSize * 0.8); y += numSize * 0.86 + 22; }
-      right = drawHeading(ctx, hr, L, y, align, CW); y += hr.h;
+      if (num) { wordFont(ctx, st.gf ? Object.assign({}, st, { gf: null }) : st, numSize, false); ctx.fillStyle = GREEN; var nw = ctx.measureText(num).width; ctx.fillText(num, align === 'left' ? L - 6 : L + (CW - nw) / 2, y + numSize * 0.8); y += numSize * 0.86 + 22; }
+      drawHeading(ctx, st, hr, L, y, align, CW); y += hr.h;
       if (br) { y += 34; setB(ctx, br.size, 500); ctx.fillStyle = BODY; br.lines.forEach(function (ln, k) { var lw = ctx.measureText(ln).width; ctx.fillText(ln, align === 'left' ? L : L + (CW - lw) / 2, y + k * br.lh + br.size); }); y += br.h; over = over || br.over; }
-      deco(ctx, car, y + 44, align);
+      deco(ctx, e.brush, y + 44, align);
     } else {
       var isEnd = sl.kind === 'end';
-      br = sl.body ? fitBody(ctx, sl.body, CW, 200, 700) : null;
+      br = sl.body ? fitBody(ctx, sl.body, CW, 200, 700, 40 * e.bs) : null;
       var WL = 74, WCW = W - 2 * WL;
-      hr = fitHeading(ctx, sl.heading, WCW, availH - decoH(car) - 40 - (br ? br.h + 40 : 0) - 40, isEnd ? 132 : 140, 60, true);
-      blockH = hr.h + (decoH(car) ? 40 + decoH(car) : 0) + (br ? 40 + br.h : 0);
+      maxS = (isEnd ? 132 : 140) * st.k * e.hs;
+      hr = fitHeading(ctx, st, sl.heading, align === 'left' ? CW : WCW, availH - dh - 40 - (br ? br.h + 40 : 0) - 40, maxS, 44, true);
+      blockH = hr.h + (dh ? 40 + dh : 0) + (br ? 40 + br.h : 0);
       y = TOP + Math.max(0, (availH - blockH) / 2) - (isEnd ? 0 : 20);
-      right = drawHeading(ctx, hr, align === 'left' ? L : WL, y, align, align === 'left' ? CW : WCW); y += hr.h;
-      if (decoH(car)) { deco(ctx, car, y + 40, align); y += 40 + decoH(car); }
+      drawHeading(ctx, st, hr, align === 'left' ? L : WL, y, align, align === 'left' ? CW : WCW); y += hr.h;
+      if (dh) { deco(ctx, e.brush, y + 40, align); y += 40 + dh; }
       if (br) { y += 40; setB(ctx, br.size, 700); ctx.fillStyle = isEnd ? GREEN : BODY; br.lines.forEach(function (ln, k) { var lw = ctx.measureText(ln).width; ctx.fillText(ln, align === 'left' ? L : L + (CW - lw) / 2, y + k * br.lh + br.size); }); over = over || br.over; }
     }
     over = over || hr.over;
+    shrunk = (e.hs > 1.02 && hr.size < maxS * 0.97) || (e.bs > 1.02 && br && br.shrunk);
     // footer
     setB(ctx, 30, 700);
     if (sl.kind === 'cover' && car.swipe !== false && car.slides.length > 1) { ctx.fillStyle = GREY; var sw = 'Swipe →', swW = ctx.measureText(sw).width; ctx.fillText(sw, R - swW, H - 84); }
     else if (sl.kind === 'tip' && car.handle !== false) { ctx.fillStyle = GREEN; var hd = '@auntietobi_uk', hw = ctx.measureText(hd).width; ctx.fillText(hd, (W - hw) / 2, H - 84); }
     ctx.restore();
-    return { over: over };
+    return { over: over, shrunk: !!shrunk };
   }
 
   function fontsReady() {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
-    return Promise.all(['900 100px "Inter Tight"', '500 40px Inter', '700 30px Inter'].map(function (f) { return document.fonts.load(f).catch(function () {}); }));
+    return Promise.all(['900 100px "Inter Tight"', '500 40px Inter', '700 30px Inter', '400 100px Anton', '800 100px Poppins', '900 100px "Playfair Display"', 'italic 900 100px "Playfair Display"', '400 100px "Archivo Black"', '700 100px Caveat'].map(function (f) { return document.fonts.load(f).catch(function () {}); }));
   }
   function pngOf(car, i) {
     var c = document.createElement('canvas'); c.width = W; c.height = H; draw(c.getContext('2d'), car, i);
@@ -308,12 +339,16 @@
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
         '<label class="chk"><input type="checkbox" id="teS"' + (car.swipe !== false ? ' checked' : '') + '> “Swipe →” on the cover</label>' +
         '<label class="chk"><input type="checkbox" id="teB"' + (car.brush !== false ? ' checked' : '') + '> Gold brush stroke</label></div>' +
+        '<div class="lbl">Text style</div><div class="chipbar" id="teSt">' + Object.keys(STYLES).map(function (k) { return '<button class="chip" data-v="' + k + '" aria-pressed="' + ((car.style || 'classic') === k) + '">' + STYLES[k].name + '</button>'; }).join('') + '</div>' +
+        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div>' +
+        '<div><div class="lbl">Body text size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div>' +
         '<div class="muted" style="font-size:12.5px;margin-top:8px">Put green words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div></div>' +
       '<div id="teSlides"></div><button class="btn ghost" id="teAdd" style="width:100%;margin-top:8px">＋ Add a slide</button>' +
       '<div class="card" style="margin-top:12px"><div class="lbl" style="margin-top:0">Caption</div><textarea id="teCap" rows="6"></textarea><div class="lbl">Hashtags</div><textarea id="teTags" rows="2"></textarea><button class="btn ghost sm" id="teCopy" style="margin-top:8px">📋 Copy caption &amp; hashtags</button></div>' +
       '</div><div class="carright"><div class="carstage"><canvas id="teCv" width="1080" height="1350"></canvas></div>' +
       '<div class="row" style="justify-content:center;gap:8px;margin-top:8px"><button class="btn ghost sm" id="tePrev">◀</button><span id="teNum" style="font-weight:700;min-width:60px;text-align:center"></span><button class="btn ghost sm" id="teNext">▶</button></div>' +
       '<div class="err hidden" id="teOver" style="margin-top:8px">This slide has too much text to fit — shorten it a little.</div>' +
+      '<div class="note hidden" id="teShrunk" style="margin-top:8px">Some text on this slide was made a little smaller so it fits inside the frame.</div>' +
       '<div class="carthumbs" id="teThumbs"></div>' +
       '<div class="card" style="margin-top:10px"><div style="font-weight:800;margin-bottom:6px">⬇️ Download</div>' +
       '<button class="btn primary" id="teDl" style="width:100%">🖼️ All slides as images (.zip)</button><button class="btn ghost" id="teOne" style="width:100%;margin-top:8px">⬇️ Just this slide (PNG)</button>' +
@@ -323,7 +358,18 @@
     var $ = function (q) { return ov.querySelector(q); }, cv = $('#teCv'), ctx = cv.getContext('2d');
     $('#teTitle').value = car.title || ''; $('#teCap').value = car.caption || ''; $('#teTags').value = car.hashtags || '';
     function mark() { dirty = true; $('#teSaved').textContent = 'Unsaved changes'; }
-    function paint() { var r = draw(ctx, car, sel); $('#teOver').classList.toggle('hidden', !r.over); }
+    function paint() { var r = draw(ctx, car, sel); $('#teOver').classList.toggle('hidden', !r.over); $('#teShrunk').classList.toggle('hidden', r.over || !r.shrunk); }
+    var openOpts = {};
+    function pct(v) { return Math.round((Number(v) || 1) * 100) + '%'; }
+    function optSummary(sl) {
+      var out = [];
+      if (sl.style && STYLES[sl.style]) out.push(STYLES[sl.style].name);
+      if (sl.hs && sl.hs !== 1) out.push('heading ' + pct(sl.hs));
+      if (sl.bs && sl.bs !== 1) out.push('body ' + pct(sl.bs));
+      if (sl.brush) out.push('brush ' + sl.brush);
+      if (sl.num && sl.kind === 'tip') out.push('number ' + sl.num);
+      return out.length ? out.join(' · ') : 'same as the carousel';
+    }
     function setSel(i) {
       sel = clamp(i, 0, car.slides.length - 1); $('#teNum').textContent = (sel + 1) + ' / ' + car.slides.length;
       Array.prototype.forEach.call(ov.querySelectorAll('.cslide'), function (el, k) { el.classList.toggle('on', k === sel); });
@@ -352,7 +398,14 @@
         '<select data-f="align" style="width:auto"><option value="center"' + (sl.align !== 'left' ? ' selected' : '') + '>Centre</option><option value="left"' + (sl.align === 'left' ? ' selected' : '') + '>Left</option></select>' +
         '<span class="cbtns"><button class="btn link" data-mv="-1" title="Move up">▲</button><button class="btn link" data-mv="1" title="Move down">▼</button><button class="btn link" data-dup title="Duplicate">⧉</button><button class="btn link" data-del title="Delete" style="color:#B42318">✕</button></span></div>' +
         '<label>Heading</label><textarea data-f="heading" rows="2" maxlength="160">' + esc(sl.heading) + '</textarea>' +
-        '<label>' + (sl.kind === 'tip' ? 'Body text' : 'Small text under it <span class="muted" style="font-weight:400">(optional)</span>') + '</label><textarea data-f="body" rows="3" maxlength="400">' + esc(sl.body) + '</textarea></div>';
+        '<label>' + (sl.kind === 'tip' ? 'Body text' : 'Small text under it <span class="muted" style="font-weight:400">(optional)</span>') + '</label><textarea data-f="body" rows="3" maxlength="400">' + esc(sl.body) + '</textarea>' +
+        '<details class="sopts" data-i="' + i + '"' + (openOpts[i] ? ' open' : '') + ' style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">⚙️ Slide options <span class="muted" style="font-weight:400">— ' + esc(optSummary(sl)) + '</span></summary>' +
+          '<div class="f2" style="margin-top:6px"><div><label>Text style</label><select data-f="style"><option value="">Same as carousel</option>' + Object.keys(STYLES).map(function (k) { return '<option value="' + k + '"' + (sl.style === k ? ' selected' : '') + '>' + STYLES[k].name + '</option>'; }).join('') + '</select></div>' +
+          '<div><label>Gold brush</label><select data-f="brush"><option value="">Same as carousel</option><option value="on"' + (sl.brush === 'on' ? ' selected' : '') + '>On</option><option value="off"' + (sl.brush === 'off' ? ' selected' : '') + '>Off</option></select></div></div>' +
+          (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div><div></div></div>' : '') +
+          '<div class="f2"><div><label>Heading size <span class="muted" data-pv="hs">' + pct(sl.hs) + '</span></label><input type="range" data-f="hs" min="50" max="160" step="5" value="' + Math.round((sl.hs || 1) * 100) + '"></div>' +
+          '<div><label>Body text size <span class="muted" data-pv="bs">' + pct(sl.bs) + '</span></label><input type="range" data-f="bs" min="50" max="160" step="5" value="' + Math.round((sl.bs || 1) * 100) + '"></div></div>' +
+          '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details></div>';
     }
     function paintSlides() {
       $('#teSlides').innerHTML = car.slides.map(slideHtml).join('');
@@ -362,13 +415,18 @@
         el.addEventListener('click', function (e) { if (!e.target.closest('button') && sel !== i) setSel(i); });
         Array.prototype.forEach.call(el.querySelectorAll('[data-f]'), function (f) {
           f.addEventListener(f.tagName === 'SELECT' ? 'change' : 'input', function () {
-            var k = f.dataset.f, sl = car.slides[i]; sl[k] = f.value;
+            var k = f.dataset.f, sl = car.slides[i];
+            if (k === 'hs' || k === 'bs') { sl[k] = Number(f.value) / 100; var pv = el.querySelector('[data-pv="' + k + '"]'); if (pv) pv.textContent = pct(sl[k]); }
+            else sl[k] = f.value;
+            if (/^(style|brush|num|hs|bs)$/.test(k)) { var sm = el.querySelector('.sopts summary .muted'); if (sm) sm.textContent = '— ' + optSummary(sl); }
             if (k === 'kind') { sl.align = sl.kind === 'tip' ? 'left' : 'center'; if (sl.kind === 'end' && !sl.heading) Object.assign(sl, endSlide()); paintSlides(); setSel(i); }
             mark(); paint(); paintThumbs();
           });
         });
         el.querySelector('[data-mv="-1"]').onclick = function () { if (i > 0) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i - 1, 0, a); sel = i - 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
         el.querySelector('[data-mv="1"]').onclick = function () { if (i < car.slides.length - 1) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i + 1, 0, a); sel = i + 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
+        var det = el.querySelector('.sopts'); det.addEventListener('toggle', function () { openOpts[i] = det.open; });
+        el.querySelector('[data-reset]').onclick = function () { var sl = car.slides[i]; delete sl.style; delete sl.hs; delete sl.bs; delete sl.brush; delete sl.num; mark(); paintSlides(); setSel(i); paintThumbs(); };
         el.querySelector('[data-dup]').onclick = function () { if (car.slides.length >= 10) return X.toast('Instagram allows up to 10 slides'); car.slides.splice(i + 1, 0, JSON.parse(JSON.stringify(car.slides[i]))); mark(); paintSlides(); setSel(i + 1); paintThumbs(); };
         el.querySelector('[data-del]').onclick = function () { if (car.slides.length <= 1) return; if (!confirm('Delete slide ' + (i + 1) + '?')) return; car.slides.splice(i, 1); mark(); paintSlides(); setSel(Math.min(i, car.slides.length - 1)); paintThumbs(); };
       });
@@ -377,6 +435,13 @@
     $('#teH').onchange = function () { car.handle = this.checked; mark(); paint(); paintThumbs(); };
     $('#teS').onchange = function () { car.swipe = this.checked; mark(); paint(); paintThumbs(); };
     $('#teB').onchange = function () { car.brush = this.checked; mark(); paint(); paintThumbs(); };
+    Array.prototype.forEach.call(ov.querySelectorAll('#teSt [data-v]'), function (b) {
+      b.onclick = function () { car.style = b.dataset.v; Array.prototype.forEach.call(ov.querySelectorAll('#teSt [data-v]'), function (x) { x.setAttribute('aria-pressed', x === b); }); mark(); paint(); paintThumbs(); };
+    });
+    function sizeUi() { $('#teHs').value = Math.round((car.hs || 1) * 100); $('#teBs').value = Math.round((car.bs || 1) * 100); $('#teHsV').textContent = pct(car.hs); $('#teBsV').textContent = pct(car.bs); }
+    $('#teHs').oninput = function () { car.hs = Number(this.value) / 100; sizeUi(); mark(); paint(); paintThumbs(); };
+    $('#teBs').oninput = function () { car.bs = Number(this.value) / 100; sizeUi(); mark(); paint(); paintThumbs(); };
+    sizeUi();
     $('#teTitle').oninput = function () { car.title = this.value; mark(); };
     $('#teCap').oninput = function () { car.caption = this.value; mark(); };
     $('#teTags').oninput = function () { car.hashtags = this.value; mark(); };
@@ -392,7 +457,7 @@
     function paintPosted() { $('#tePosted').textContent = car.status === 'posted' ? '↩ Mark as not posted' : '✅ Mark as posted'; }
     $('#tePosted').onclick = async function () { car.status = car.status === 'posted' ? 'draft' : 'posted'; paintPosted(); await save(); };
     async function save() {
-      var payload = { id: car.id, title: car.title, slides: car.slides, numbers: car.numbers, handle: car.handle, swipe: car.swipe, brush: car.brush, caption: car.caption, hashtags: car.hashtags, status: car.status };
+      var payload = { id: car.id, title: car.title, slides: car.slides, numbers: car.numbers, handle: car.handle, swipe: car.swipe, brush: car.brush, style: car.style || 'classic', hs: car.hs || 1, bs: car.bs || 1, caption: car.caption, hashtags: car.hashtags, status: car.status };
       try {
         var r = await X.api('tc-save', { item: payload });
         car.id = r.item.id; car.updatedAt = r.item.updatedAt; car.postedAt = r.item.postedAt;
