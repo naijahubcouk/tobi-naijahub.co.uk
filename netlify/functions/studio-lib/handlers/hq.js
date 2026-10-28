@@ -21,6 +21,7 @@ const appai = require('../appai');
 const eventsub = require('../eventsub');
 const igcomment = require('../igcomment');
 const carousel = require('../carousel');
+const tplcar = require('../tplcarousel');
 const videoad = require('../videoad');
 const videoai = require('../videoai');
 const directory = require('../directory');
@@ -59,6 +60,7 @@ function sectionsOf(action) {
   if (/^sub-/.test(action)) return ['subs'];
   if (/^igc-/.test(action)) return ['igc'];
   if (/^car-/.test(action)) return ['cars'];
+  if (/^tc-/.test(action)) return ['cars'];
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
@@ -116,7 +118,7 @@ exports.handler = handler(async (ctx) => {
   { const need = sectionsOf(String(body.action || '')); if (need) mustAllow(who, need); }
   const has = list => can(who, list);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? await apppub.list() : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], vads: has(['vads']) ? await videoad.list() : [] };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? await apppub.list() : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], tcars: has(['cars']) ? await tplcar.list() : [], vads: has(['vads']) ? await videoad.list() : [] };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -239,6 +241,14 @@ exports.handler = handler(async (ctx) => {
     case 'va-delete': { await videoad.remove(String(body.id || '')); return { ok: true }; }
     case 'car-save': return { item: await carousel.save(body.item, who.email) };
     case 'car-delete': { await carousel.remove(String(body.id || '')); return { ok: true }; }
+    case 'tc-ai': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
+      let notes = String(body.notes || '');
+      if (body.url) { const page = await require('../eventmedia').readLink(body.url, true); notes = page.notes + (notes ? `\n\nExtra notes:\n${notes.slice(0, 2000)}` : ''); }
+      return { draft: await tplcar.write(notes, { count: body.count, end: body.end !== false }) };
+    }
+    case 'tc-save': return { item: await tplcar.save(body.item, who.email) };
+    case 'tc-delete': { await tplcar.remove(String(body.id || '')); return { ok: true }; }
     case 'igc-delete': { await igcomment.remove(body.id); return { ok: true }; }
     case 'subs': return { subs: await eventsub.list() };
     case 'sub-approve': {

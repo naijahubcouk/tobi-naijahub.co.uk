@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/hq-icon-16.png?v=1">
 <link rel="icon" type="image/png" sizes="48x48" href="/icons/hq-icon-48.png?v=1">
 <link rel="apple-touch-icon" href="/icons/hq-icon-180.png?v=1">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@600;700;800&family=Inter+Tight:wght@900&family=Inter:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--green:#057A44;--green-d:#04613A;--green-l:#E3F2EA;--gold:#FFB81C;--gold-l:#FFF1CF;--navy:#0F1E36;--navy-2:#1C2E4D;--navy-3:#2A3D60;--cream:#FBF6EC;--line:#EADFC8;--muted:#5B6475;--danger:#B3261E;--danger-l:#FCE8E6;--font:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--display:'Fraunces',Georgia,serif;--side:260px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -235,6 +235,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
+      <button data-nav="tcars">📝 Template Carousel <span class="n" id="nTcars"></span></button>
       <button data-nav="cars">🎬 Animated Carousels <span class="n" id="nCars"></span></button>
       <button data-nav="vads">🎥 Video Ad Studio <span class="n" id="nVads"></span></button>
       <button data-nav="bin">🗑 Bin <span class="n" id="nBin"></span></button>
@@ -253,6 +254,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <script src="/vendor/mp4-muxer-5.2.2.js"></script>
 <script src="/vendor/jszip-3.10.2.min.js"></script>
 <script src="/hq-carousel.js"></script>
+<script src="/hq-tplcarousel.js"></script>
 <script src="/hq-videoad.js"></script>
 <script src="/hq-videomake.js"></script>
 <script>
@@ -305,7 +307,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || []; S.vads = r.vads || []; S.sections = r.sections || null;
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || []; S.tcars = r.tcars || []; S.vads = r.vads || []; S.sections = r.sections || null;
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
@@ -315,9 +317,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   }
   var SECTIONS = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
   var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
-  function allowed(v) { return !S.sections || S.sections.indexOf(v) >= 0; }
+  function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = SECTIONS.indexOf(v) >= 0 && allowed(v) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
+    S.view = (SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -327,11 +329,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nSubs').textContent = subsNew().length || '';
     $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10);
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
+    $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, igc: vIgc, cars: function () { window.HQCar.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
+  if (window.HQTpl) window.HQTpl.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQVad) window.HQVad.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
   $$('.side-nav [data-nav]').forEach(function (b) { b.onclick = function () { go(b.dataset.nav); }; });
