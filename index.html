@@ -5218,6 +5218,10 @@ function initLinksMarketplace() {
   var vp = document.getElementById('links-mp-viewport');
   var dotsEl = document.getElementById('links-mp-dots');
   if (!vp || !dotsEl) return;
+  // show every live Marketplace product: rebuild once the live list has loaded
+  if (!window._mpLive && !initLinksMarketplace._wait) { initLinksMarketplace._wait = true; window.addEventListener('tobi-mp-live', function () { initLinksMarketplace._wait = false; initLinksMarketplace(); }, { once: true }); }
+  if (window._linksMpTimer) clearInterval(window._linksMpTimer);
+  vp.innerHTML = ''; dotsEl.innerHTML = '';
   var now = new Date();
   var products = MARKETPLACE_PRODUCTS.filter(function(p){ return !p.expires || new Date(p.expires) > now; });
   if (!products.length) return;
@@ -5261,7 +5265,7 @@ function initLinksMarketplace() {
   });
   function goTo(i){ i=((i%count)+count)%count; cur=i; track.style.transform='translateX(-'+(i*W)+'px)';
     for(var j=0;j<count;j++){var d=document.getElementById('lmp-dot-'+j);if(d){d.style.width=j===i?'20px':'8px';d.style.opacity=j===i?'1':'0.3';}} }
-  var timer = setInterval(function(){ if(!document.getElementById('links-mp-viewport')){clearInterval(timer);return;} goTo(cur+1); }, 7000);
+  var timer = setInterval(function(){ if(!document.getElementById('links-mp-viewport')){clearInterval(timer);return;} goTo(cur+1); }, 7000); window._linksMpTimer = timer;
   var sx=0,mv=false;
   vp.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;mv=false;},{passive:true});
   vp.addEventListener('touchmove',function(){mv=true;},{passive:true});
@@ -5612,6 +5616,8 @@ var MARKETPLACE_PRODUCTS = [
         ['name', 'shortName', 'business', 'price', 'desc', 'btnText'].forEach(function (k) { p[k] = un(p[k]); });
         MARKETPLACE_PRODUCTS.push(p);
       });
+      window._mpLive = true;
+      try { window.dispatchEvent(new Event('tobi-mp-live')); } catch (e) {}
     }).catch(function () {});
   } catch (e) {}
 })();
@@ -5918,6 +5924,14 @@ function showFeaturedBizCarousel(){
 }
 
 function showMarketplaceCarousel() {
+  addTipMessage('<div id="mp-home-wrap"></div>');
+  renderHomeMarketplace();
+  if (!window._mpLive) window.addEventListener('tobi-mp-live', renderHomeMarketplace, { once: true });
+}
+function renderHomeMarketplace() {
+  var wrap = document.getElementById('mp-home-wrap');
+  if (!wrap) return;
+  if (window._homeMpTimer) clearInterval(window._homeMpTimer);
   var now = new Date();
   var activeProducts = MARKETPLACE_PRODUCTS.filter(function(p) {
     return !p.expires || new Date(p.expires) > now;
@@ -5948,7 +5962,7 @@ function showMarketplaceCarousel() {
     + '<div style="display:flex;justify-content:center;gap:6px;padding:8px 14px;">' + dots + '</div>'
     + '</div>';
 
-  addTipMessage(carouselHtml);
+  wrap.innerHTML = carouselHtml;
 
   setTimeout(function() {
     var vp = document.getElementById('mp-viewport');
@@ -6053,6 +6067,7 @@ function showMarketplaceCarousel() {
       if (!document.getElementById('mp-track')) { clearInterval(timer); return; }
       goTo(cur + 1);
     }, 7000);
+    window._homeMpTimer = timer;
 
     var sx = 0, moved = false;
     vp.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; moved = false; }, {passive:true});
