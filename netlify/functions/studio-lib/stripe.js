@@ -149,7 +149,15 @@ function isOurs(sub) { return !!planOf(sub); }
 async function syncCustomer(customerId) {
   const email = await emailForCustomer(customerId);
   if (!email) {
-    await core.alert('stripe_unlinked', 'Stripe customer not linked to any Business Studio account', { customerId });
+    // Business Club payment-link buyers and credit top-ups also send customer events (e.g. invoice.paid)
+    // but are never in the Business Studio Plus customer list. Only alert if this customer
+    // actually has a Business Studio Plus/Pro subscription we can't match to an account.
+    let hasOurs = true;
+    try {
+      const subs = await api('GET', '/subscriptions', { customer: customerId, status: 'all', limit: 20 });
+      hasOurs = (subs.data || []).some(isOurs);
+    } catch (e) { /* if Stripe can't be checked, keep the alert */ }
+    if (hasOurs) await core.alert('stripe_unlinked', 'Stripe customer with a Business Studio Plus subscription is not linked to any Business Studio account', { customerId });
     return null;
   }
   const subs = await api('GET', '/subscriptions', { customer: customerId, status: 'all', limit: 20 });
