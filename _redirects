@@ -62,6 +62,10 @@ https://studio.auntietobi.co.uk/index.html          https://www.auntietobi.co.uk
 /studio          /studio.html        200
 /studio-admin    /studio-admin.html  200
 /p/:slug         /.netlify/functions/studio-page?s=:slug  200
+# ── Website articles (from Auntie Tobi HQ "Publish to App") ──
+/articles        /.netlify/functions/articles  200
+/articles/       /.netlify/functions/articles  200
+/articles/:slug  /.netlify/functions/articles?s=:slug  200
 /netlify/functions/studio-lib/*  /404  404!
 /group-advertising  /group-advertising.html  200
 /n/update-working-parents-31-august   https://auntietobi.co.uk/?action=update&slug=update-working-parents-31-august   301
