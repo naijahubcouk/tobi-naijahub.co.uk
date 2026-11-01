@@ -5870,7 +5870,6 @@ function featSlide(b){
   var top = '<div style="position:relative;background:#0F1E36;">'
     + (b.img ? '<img src="'+featEsc(b.img)+'" alt="'+featEsc(b.name)+'" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.feat-ban\').style.display=\'flex\'" style="width:100%;height:auto;display:block;cursor:zoom-in;">' : '')
     + banner
-    + '<div style="position:absolute;top:10px;left:10px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;">⭐ Featured Business</div>'
     + '</div>';
   var lines = (b.lines && b.lines.length) ? b.lines : [ (b.desc||'').length > 110 ? b.desc.slice(0,107)+'…' : (b.desc||'') ];
   var btnCss = 'margin-top:auto;display:block;background:#057A44;color:white;border-radius:10px;padding:11px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;';
