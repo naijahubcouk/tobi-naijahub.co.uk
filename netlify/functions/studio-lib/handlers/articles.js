@@ -9,20 +9,37 @@
  */
 const core = require('../core');
 const apppub = require('../apppub');
+// Older posts from the directory blog (directory.auntietobi.co.uk/blog) — listed here and linked to their existing pages.
+let OLD = [];
+try { OLD = require('../../../../blog-posts.json'); } catch (_) { OLD = []; }
 
 const SITE = 'https://www.auntietobi.co.uk';
 const DIRECTORY = 'https://directory.auntietobi.co.uk';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const CSP = "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+const CSP = "default-src 'none'; img-src 'self' data: https:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 const CAT_EMOJI = { News: '📰', Money: '💷', Housing: '🏠', Lifestyle: '✨', Business: '💼', 'Did You Know': '💡', Travel: '✈️', Family: '👨‍👩‍👧', Health: '🩺', Education: '🎓', Food: '🍲', Jobs: '🧑🏾‍💼' };
 const TINTS = ['#E8F5EE', '#FFF4D6', '#E6ECF5', '#FDE8E1'];
 
 function tint(slug) { let h = 0; for (const ch of String(slug)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return TINTS[h % TINTS.length]; }
 function day(iso) { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/London' }); }
 function readMins(html) { const w = String(html || '').replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length; return Math.max(1, Math.round(w / 200)); }
-function imgUrl(a) { return a.imgId ? `/.netlify/functions/app-content?img=${encodeURIComponent(a.imgId)}` : ''; }
+function imgUrl(a) { return a.img || (a.imgId ? `/.netlify/functions/app-content?img=${encodeURIComponent(a.imgId)}` : ''); }
 function emojiOf(a) { return a.emoji || CAT_EMOJI[a.category] || '📰'; }
-function href(a) { return `/articles/${encodeURIComponent(a.slug)}`; }
+function href(a) { return a.href || `/articles/${encodeURIComponent(a.slug)}`; }
+const OLD_CAT = { 'Food & Lifestyle': 'Food' };
+const FILTERS = [...apppub.CATEGORIES.slice(0, 1), 'Events', ...apppub.CATEGORIES.slice(1)];
+function oldPosts() {
+  return (Array.isArray(OLD) ? OLD : []).filter(p => p && p.slug && p.title).map(p => {
+    const d = new Date(`${p.date} 12:00 UTC`);
+    return {
+      old: true, slug: `old-${p.slug}`, title: String(p.title), summary: String(p.summary || ''),
+      category: OLD_CAT[p.label] || p.label || 'News', emoji: p.emoji || '',
+      publishedAt: isNaN(d) ? '2026-01-01T12:00:00.000Z' : d.toISOString(),
+      img: /^https:\/\/[^\s"'<>]+$/.test(String(p.image || '')) ? p.image : '',
+      href: `${DIRECTORY}/blog/${encodeURIComponent(p.slug).replace(/%2C/g, ',').replace(/%26/g, '&')}`,
+    };
+  });
+}
 
 function respond(status, body) {
   return {
@@ -147,7 +164,7 @@ function card(a) {
 function home(articles, cat) {
   const list = cat ? articles.filter(a => a.category === cat) : articles;
   const used = new Set(articles.map(a => a.category));
-  const cats = ['All', ...apppub.CATEGORIES.filter(c => used.has(c))];
+  const cats = ['All', ...FILTERS.filter(c => used.has(c))];
   const chips = cats.map(c => {
     const on = c === 'All' ? !cat : c === cat;
     return `<a class="${on ? 'on' : ''}" href="/articles${c === 'All' ? '' : '?c=' + encodeURIComponent(c)}">${esc(c)}</a>`;
@@ -157,7 +174,7 @@ function home(articles, cat) {
   else {
     const [f, ...rest] = cat ? [null, ...list] : list;
     body = (f ? `<a class="feat" href="${href(f)}">${thumb(f)}<div class="tx"><span class="chip gold">Latest</span><h2>${esc(f.title)}</h2><p class="ex">${esc(f.summary)}</p><span class="meta">${day(f.publishedAt)} · Auntie Tobi</span></div></a>` : '')
-      + (rest.length ? `<div class="grid">${rest.slice(0, 90).map(card).join('')}</div>` : '');
+      + (rest.length ? `<div class="grid">${rest.slice(0, 150).map(card).join('')}</div>` : '');
   }
   const title = cat ? `${cat} articles — Auntie Tobi` : 'Articles — News, guides and stories for Nigerians in the UK | Auntie Tobi';
   const desc = 'Practical help with money, housing, jobs and everyday life in the UK — plus the latest events and businesses in the Nigerian community.';
@@ -208,10 +225,13 @@ exports.handler = core.handler(async (ctx) => {
   const articles = feed.articles || [];
   if (slug) {
     const a = articles.find(x => x.slug === slug);
-    return a ? respond(200, article(a, articles)) : notFound();
+    if (!a) return notFound();
+    const all = [...articles, ...oldPosts()].sort((x, y) => String(y.publishedAt).localeCompare(String(x.publishedAt)));
+    return respond(200, article(a, all));
   }
-  const cat = apppub.CATEGORIES.includes(q.c) ? q.c : '';
-  return respond(200, home(articles, cat));
+  const cat = FILTERS.includes(q.c) ? q.c : '';
+  const all = [...articles, ...oldPosts()].sort((x, y) => String(y.publishedAt).localeCompare(String(x.publishedAt)));
+  return respond(200, home(all, cat));
 }, { allowGet: true });
 
 // for tests
