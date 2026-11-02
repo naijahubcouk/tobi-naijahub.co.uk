@@ -52,18 +52,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .gift b{font-size:14px;padding:6px 8px 0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .gift i{font-style:normal;font-size:13px;font-weight:800;color:#057A44;padding:2px 8px 8px}
 .hidden{display:none!important}
-.gboxes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.gbox{border:0;border-radius:16px;padding:16px 4px 10px;cursor:pointer;font-family:inherit;color:#fff;box-shadow:0 4px 12px rgba(15,30,54,.18);transition:transform .15s}
-.gbox:active{transform:scale(.96)}.gbox .gem{display:block;font-size:46px;line-height:1.1}.gbox .gl{display:block;font-size:13px;font-weight:800;margin-top:6px}
-.gb0{background:linear-gradient(135deg,#E8456B,#B0244A)}.gb1{background:linear-gradient(135deg,#7B4FA0,#4B2470)}.gb2{background:linear-gradient(135deg,#057A44,#04603a)}
-.gbox.opened{opacity:.8}.gbox.shake{animation:gshake .65s}
-@keyframes gshake{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg) scale(1.05)}40%{transform:rotate(10deg) scale(1.08)}60%{transform:rotate(-8deg) scale(1.1)}80%{transform:rotate(6deg) scale(1.12)}}
-.gmodal{position:fixed;inset:0;z-index:650;background:rgba(5,10,20,.85);display:flex;align-items:center;justify-content:center;padding:14px;animation:zin .2s ease-out}
-.gpanel{background:#fff;border-radius:18px;padding:16px;width:100%;max-width:440px;max-height:calc(100vh - 28px);overflow:auto;position:relative}
-.gpanel .zx{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;border:0;background:#f0f2f5;color:#0F1E36;font-size:17px;cursor:pointer}
-.gtitle{font-size:18px;font-weight:800;margin:4px 40px 10px 4px}
-.gimg canvas{width:100%;height:auto;max-height:60vh;object-fit:contain;display:block;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.15);margin:0 auto}
-.gmonth{margin-bottom:10px}.gmonth label{margin:0 0 4px}.gmonth select{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:10px 12px;font-size:16px;font-family:inherit;background:#fff}
 #cvR{cursor:zoom-in}
 .zoom{position:fixed;inset:0;z-index:700;background:rgba(5,10,20,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;animation:zin .2s ease-out}
 .zoom canvas{max-width:100%;max-height:calc(100vh - 110px);width:auto;height:auto;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
@@ -76,7 +64,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .gift u{text-decoration:none;font-size:12px;color:#6B7280;padding:2px 8px 0;display:block;line-height:1.35;flex:1}
 .gift a{text-decoration:none}
 .gift .gbtn{margin:8px;background:#057A44;color:#fff;border-radius:8px;padding:7px 4px;font-size:12px;font-weight:800;text-align:center;text-decoration:none}
-#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:660}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:500}
 .cover{position:fixed;inset:0;z-index:600;background:radial-gradient(circle at 50% 40%,#0B6B40,#062a1b);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;cursor:pointer;border:0;width:100%;font-family:inherit}
 .cover .gb{font-size:110px;animation:bob 1.4s ease-in-out infinite;filter:drop-shadow(0 10px 20px rgba(0,0,0,.35))}
 .cover h2{font-size:24px;margin-top:14px}.cover p{font-size:15px;opacity:.9;margin-top:6px}
@@ -103,11 +91,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       <div class="btns"><button class="btn dl" id="rDl">⬇️ Save the card</button><button class="btn wa" id="rThanks">💬 Say thank you</button></div>
       <div class="recvbar"><button class="btn ghost" id="again">🎉 Celebrate again</button><button class="btn ghost" id="mute" style="flex:.6;white-space:nowrap"></button></div>
       <a class="btn gold" href="/cards" style="margin-top:8px">🎉 Make your own free card</a>
-    </div>
-    <div class="card hidden" id="bgift" style="margin-top:12px;text-align:center">
-      <div style="font-size:19px;font-weight:800">🎁 Gift for you</div>
-      <p class="muted" style="margin:2px 0 12px">Pick a box to open your birthday gift. You can pick again!</p>
-      <div class="gboxes"></div>
     </div>
   </section>
   <button type="button" class="cover hidden" id="cover"><div class="gb">🎁</div><h2 id="coverT">You’ve got a card!</h2><p id="coverF"></p><div class="tap">Tap to open 🎉</div></button>
@@ -862,98 +845,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     [].forEach.call(document.querySelectorAll('[data-fb]'), function (cvs) { var k = cvs.dataset.fb, c = cvs.getContext('2d'); c.scale(160 / 1080, 160 / 1080); if (P[k]) { lin(c, 1080, 1080, P[k].fb); c.font = '400 190px "Great Vibes", cursive'; c.textAlign = 'center'; c.fillStyle = P[k].head; var hw = headFor({ occ: st.occ }).split(' '), h1 = hw.slice(0, Math.ceil(hw.length / 2)).join(' '), h2 = hw.slice(Math.ceil(hw.length / 2)).join(' '); c.font = '400 ' + (hw.join(' ').length > 16 ? 150 : 190) + 'px "Great Vibes", cursive'; c.fillText(h1, 540, h2 ? 520 : 600); if (h2) c.fillText(h2, 540, 720); } else BG[k](c, 1080, 1080); });
   }
 
-  // ── 🎁 Gift for you (birthday cards only): 3 boxes — a phone wallpaper, a birthday blessing, birthday secrets. Pick as many times as you like. ──
-  var GIFT_THEMES = [['#0B3D2A', '#062417', '#E6C068', '#FFFFFF'], ['#4B2470', '#1E0B33', '#F5D27A', '#FFFFFF'], ['#8E1B3A', '#3E0B1A', '#FFD1DC', '#FFFFFF'], ['#13203A', '#05080F', '#E6C068', '#FFFFFF'], ['#FDE2E4', '#F8C8D8', '#B0447A', '#3A2A2E'], ['#E3F2EA', '#BFE3CF', '#057A44', '#0F1E36'], ['#FFF1D6', '#FFD08A', '#A3262E', '#3B2414']];
-  var BLESSINGS = [
-    'This new year of your life, {n}, may doors open for you that no one can shut. Your joy will be full and your testimonies many.',
-    '{n}, may this year bring you good health, peace of mind and blessings that overflow. You will not lack any good thing.',
-    'Happy birthday, {n}! May God crown this year with His goodness. Everything you lay your hands on will prosper.',
-    'May favour find you everywhere you go this year, {n}. Your dreams will become stories of answered prayers.',
-    '{n}, may your new year be filled with laughter, love and lifting. Where others are going down, you will be going up.',
-    'May the Lord guide your steps, guard your heart and grant the desires of your heart this year, {n}.',
-    'This year, {n}, you will rise higher, shine brighter and smile wider. May your cup run over with blessings.',
-    'May every year of your life be sweeter than the last, {n}. You are blessed and highly favoured.',
-  ];
-  var MONTHS_GIFT = [
-    ['Carnation', 'love and admiration', 'Garnet', 'friendship and trust', 'January is named after Janus, the Roman god of doors and new beginnings.', '#B3203A'],
-    ['Violet', 'loyalty and faithfulness', 'Amethyst', 'peace and calm', 'February comes from Februa, an old Roman festival of cleansing.', '#7B4FA0'],
-    ['Daffodil', 'new beginnings', 'Aquamarine', 'courage and calm', 'March is named after Mars — it was once the first month of the Roman year.', '#2A9DB5'],
-    ['Daisy', 'joy and innocence', 'Diamond', 'strength and lasting love', 'April may come from the Latin word for “to open” — like spring flowers opening.', '#8A9BB0'],
-    ['Lily of the valley', 'sweetness and happiness', 'Emerald', 'hope and growth', 'May is named after Maia, the Roman goddess of growth.', '#1E8A55'],
-    ['Rose', 'love and beauty', 'Pearl', 'wisdom and purity', 'June is named after Juno, the Roman goddess of marriage.', '#C08AA0'],
-    ['Larkspur', 'an open, happy heart', 'Ruby', 'passion and courage', 'July is named after Julius Caesar, who was born in this month.', '#B0122E'],
-    ['Gladiolus', 'strength of character', 'Peridot', 'strength and good luck', 'August is named after Augustus, the first Roman emperor.', '#7DA52A'],
-    ['Aster', 'love and wisdom', 'Sapphire', 'wisdom and loyalty', 'September comes from “septem”, Latin for seven — it was once the 7th month.', '#1F4AA8'],
-    ['Marigold', 'warmth and creativity', 'Opal', 'hope and creativity', 'October comes from “octo”, Latin for eight — it was once the 8th month.', '#D9822B'],
-    ['Chrysanthemum', 'joy and long life', 'Topaz', 'friendship and strength', 'November comes from “novem”, Latin for nine — it was once the 9th month.', '#D9A02B'],
-    ['Narcissus', 'hope and good wishes', 'Turquoise', 'good fortune and protection', 'December comes from “decem”, Latin for ten — it was once the 10th month.', '#2AA6A0'],
-  ];
-  var GIFTS = [{ k: 'wall', t: '📱 Phone wallpaper' }, { k: 'bless', t: '🙏🏾 Birthday blessing' }, { k: 'secret', t: '🌸 Birthday secrets' }];
-  function gPick(a) { return a[Math.floor(Math.random() * a.length)]; }
-  function gBg(c, W, H, th) { var g = c.createLinearGradient(0, 0, W * .3, H); g.addColorStop(0, th[0]); g.addColorStop(1, th[1]); c.fillStyle = g; c.fillRect(0, 0, W, H); var r = Math.random; for (var i = 0; i < 70; i++) { c.globalAlpha = .15 + r() * .45; c.fillStyle = r() < .6 ? th[2] : '#FFFFFF'; var x = r() * W, y = r() * H, s = 2 + r() * 7; if (r() < .3) { c.save(); c.translate(x, y); c.rotate(r() * 3); c.fillRect(-s, -s / 3, s * 2, s * .7); c.restore(); } else { c.beginPath(); c.arc(x, y, s, 0, 7); c.fill(); } } c.globalAlpha = 1; }
-  function gText(c, text, x, y, maxW, font, color, lh) { c.font = font; c.fillStyle = color; var lines = wrap(c, text, maxW); lines.forEach(function (l, i) { c.fillText(l, x, y + i * lh); }); return y + lines.length * lh; }
-  function gFoot(c, W, H, th) { c.font = '600 26px "DM Sans", sans-serif'; c.fillStyle = th[3]; c.globalAlpha = .55; c.textAlign = 'center'; c.fillText('Made with love on Auntie Tobi 💚', W / 2, H - 48); c.globalAlpha = 1; }
-  function makeGift(kind, who, month) {
-    var name = (who.name || '').trim(), th = gPick(GIFT_THEMES), cv = document.createElement('canvas'), c, W = 1080, H;
-    if (kind === 'wall') {
-      H = 2340; cv.width = W; cv.height = H; c = cv.getContext('2d'); gBg(c, W, H, th); c.textAlign = 'center';
-      c.strokeStyle = th[2]; c.globalAlpha = .5; c.lineWidth = 3; c.beginPath(); c.arc(W / 2, H * .47, 380, 0, 7); c.stroke(); c.globalAlpha = .25; c.beginPath(); c.arc(W / 2, H * .47, 430, 0, 7); c.stroke(); c.globalAlpha = 1;
-      var age = ordinal(who.age);
-      c.font = '400 120px "Great Vibes", cursive'; c.fillStyle = th[2]; c.fillText(age ? 'Happy ' + age : 'Happy', W / 2, H * .41); c.fillText('Birthday', W / 2, H * .41 + 135);
-      if (name) { var fs = 150; c.font = '800 ' + fs + 'px "Playfair Display", serif'; while (c.measureText(name).width > W * .8 && fs > 70) { fs -= 8; c.font = '800 ' + fs + 'px "Playfair Display", serif'; } c.fillStyle = th[3]; c.fillText(name, W / 2, H * .41 + 135 + fs * 1.2); }
-      c.font = '500 40px "DM Sans", sans-serif'; c.fillStyle = th[3]; c.globalAlpha = .8; c.fillText(gPick(['This is your year ✨', 'Blessed and highly favoured 🙌🏾', 'Shine bright today and always 🌟', 'Your best year yet 💫']), W / 2, H * .7); c.globalAlpha = 1;
-      gFoot(c, W, H, th);
-    } else if (kind === 'bless') {
-      H = 1350; cv.width = W; cv.height = H; c = cv.getContext('2d'); gBg(c, W, H, th); c.textAlign = 'center';
-      c.font = '400 92px "Great Vibes", cursive'; c.fillStyle = th[2]; c.fillText('A Birthday Blessing', W / 2, 250);
-      c.fillStyle = th[2]; c.fillRect(W / 2 - 60, 300, 120, 5);
-      c.font = 'italic 600 62px "DM Sans", sans-serif'; var bt = gPick(BLESSINGS).replace(/\{n\}/g, name || 'my dear'), bl = wrap(c, bt, W * .8); gText(c, bt, W / 2, Math.max(430, 330 + (H - 330 - 260 - bl.length * 92) / 2 + 60), W * .8, 'italic 600 62px "DM Sans", sans-serif', th[3], 92);
-      c.font = '800 50px "Playfair Display", serif'; c.fillStyle = th[2]; c.fillText('Amen 🙏🏾', W / 2, H - 200);
-      gFoot(c, W, H, th);
-    } else {
-      var m = MONTHS_GIFT[month], MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][month];
-      H = 1350; cv.width = W; cv.height = H; c = cv.getContext('2d'); gBg(c, W, H, ['#FFFBF3', '#F6EAD8', m[5], '#2A2A2A']); c.textAlign = 'center';
-      c.font = '400 86px "Great Vibes", cursive'; c.fillStyle = m[5]; c.fillText('Your Birthday Secrets', W / 2, 190);
-      c.font = '700 40px "DM Sans", sans-serif'; c.fillStyle = '#2A2A2A'; c.fillText((name ? name + ' · ' : '') + 'born in ' + MN, W / 2, 260);
-      var box = function (y, emoji, label, title, meaning) { c.fillStyle = 'rgba(255,255,255,.85)'; rr(c, 110, y, W - 220, 250, 30); c.fill(); c.font = '90px serif'; c.fillText(emoji, 230, y + 155); c.textAlign = 'left'; c.font = '700 30px "DM Sans", sans-serif'; c.fillStyle = m[5]; c.fillText(label.toUpperCase(), 320, y + 80); var tf = 54; c.font = '800 54px "Playfair Display", serif'; while (c.measureText(title).width > W - 220 - 250 && tf > 30) { tf -= 3; c.font = '800 ' + tf + 'px "Playfair Display", serif'; } c.fillStyle = '#2A2A2A'; c.fillText(title, 320, y + 145); c.font = '500 34px "DM Sans", sans-serif'; c.fillStyle = '#555'; c.fillText('means ' + meaning, 320, y + 200); c.textAlign = 'center'; };
-      box(330, '🌸', 'Your birth flower', m[0], m[1]); box(610, '💎', 'Your birthstone', m[2], m[3]);
-      c.font = '700 30px "DM Sans", sans-serif'; c.fillStyle = m[5]; c.fillText('DID YOU KNOW?', W / 2, 960);
-      gText(c, m[4], W / 2, 1020, W * .76, '500 40px "DM Sans", sans-serif', '#2A2A2A', 56);
-      gFoot(c, W, H, ['', '', '', '#2A2A2A']);
-    }
-    return cv;
-  }
-  function giftSheet(kind, who) {
-    var g = GIFTS.filter(function (x) { return x.k === kind; })[0], m = new Date().getMonth();
-    var z = document.createElement('div'); z.className = 'gmodal';
-    z.innerHTML = '<div class="gpanel"><button class="zx" aria-label="Close">✕</button><div class="gtitle">🎉 ' + g.t + '</div>' +
-      (kind === 'secret' ? '<div class="gmonth"><label for="gMon">Which month were you born?</label><select id="gMon">' + ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(function (x, i) { return '<option value="' + i + '"' + (i === m ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></div>' : '') +
-      '<div class="gimg"></div><div class="btns"><button class="btn dl" id="gSave">⬇️ Save it</button><button class="btn wa" id="gShare">📤 Share</button></div>' +
-      '<button class="btn gold" id="gAgain" style="margin-top:8px">🎁 Pick another box</button></div>';
-    document.body.appendChild(z);
-    var cur = null, paint = function () { cur = makeGift(kind, who, +((z.querySelector('#gMon') || {}).value || m)); var box = z.querySelector('.gimg'); box.innerHTML = ''; box.appendChild(cur); };
-    paint(); if (z.querySelector('#gMon')) z.querySelector('#gMon').onchange = paint;
-    var close = function () { z.remove(); };
-    z.querySelector('.zx').onclick = close; z.onclick = function (e) { if (e.target === z) close(); };
-    z.querySelector('#gAgain').onclick = function () { close(); $('bgift').scrollIntoView({ behavior: 'smooth', block: 'center' }); };
-    var fname = function () { return 'birthday-' + kind + '-' + (who.name || 'gift').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; };
-    var getBlob = function () { return new Promise(function (ok) { cur.toBlob(ok, 'image/png'); }); };
-    z.querySelector('#gSave').onclick = async function () { var b = await getBlob(), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = fname(); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 3000); toast('Saved ✅'); track('gift_save_' + kind); };
-    z.querySelector('#gShare').onclick = async function () { var b = await getBlob(), f = new File([b], fname(), { type: 'image/png' }); try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f] }); track('gift_share_' + kind); return; } } catch (e) { if (e && e.name === 'AbortError') return; } z.querySelector('#gSave').click(); };
-  }
-  function showBirthdayGift(who) {
-    var el = $('bgift'); el.classList.remove('hidden');
-    var order = GIFTS.slice().sort(function () { return Math.random() - .5; });
-    el.querySelector('.gboxes').innerHTML = order.map(function (g, i) { return '<button type="button" class="gbox gb' + i + '" data-g="' + g.k + '" aria-label="Open gift box ' + (i + 1) + '"><span class="gem">🎁</span><span class="gl">Box ' + (i + 1) + '</span></button>'; }).join('');
-    [].forEach.call(el.querySelectorAll('.gbox'), function (b) {
-      b.onclick = function () {
-        if (b.classList.contains('shake')) return;
-        b.classList.add('shake');
-        setTimeout(function () { b.classList.remove('shake'); b.classList.add('opened'); b.querySelector('.gl').textContent = 'Opened ✓'; celebrate('confetti'); giftSheet(b.dataset.g, who); track('gift_open_' + b.dataset.g); }, 650);
-      };
-    });
-  }
-
   // ── receiver view ──
   var q = new URLSearchParams(location.search), got = window.__CARD || (q.get('c') ? dec(q.get('c')) : null);
   async function loadArt() { try { var r = await fetch('/.netlify/functions/bday?art=1'); if (r.ok) ART = (await r.json()).art || {}; } catch (e) {} }
@@ -981,7 +872,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       $('cover').onclick = function () { this.classList.add('hidden'); celebrate(pickFx()); playSong(); };
       $('again').onclick = function () { celebrate(pickFx()); playSong(); };
       paintMute(); $('mute').onclick = function () { try { localStorage.setItem('tobiMute', muted() ? '0' : '1'); } catch (e) {} paintMute(); if (muted()) stopSong(); else playSong(); };
-      if (ro === 'birthday') showBirthdayGift(rs);
       loadGifts(); $('installBox').classList.remove('hidden'); $('installBox').onclick = function () { track('card_install_click'); };
       $('rThanks').onclick = function () { window.open('https://wa.me/?text=' + encodeURIComponent('Thank you so much for my ' + OC.noun + (rs.from ? ', ' + rs.from : '') + '! 🥰💚'), '_blank'); };
       document.title = OC.label.split(' ')[0] + ' A ' + OC.noun + ' for ' + (rs.name || 'you') + ' — Auntie Tobi';
