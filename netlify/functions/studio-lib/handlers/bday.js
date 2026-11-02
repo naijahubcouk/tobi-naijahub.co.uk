@@ -5,6 +5,7 @@
  *   GET  ?artimg=<id>    → the artwork image (cached)
  *   GET  ?photo=<id>     → a loved-one photo added to a card (kept 60 days)
  *   POST { action: 'photo', image } → { id }   stores a photo so card links show it
+ *   POST { action: 'card', card }   → { id }   a short card link: /c/<id>
  */
 const core = require('../core');
 const bday = require('../bday');
@@ -24,5 +25,6 @@ exports.handler = core.handler(async (ctx) => {
     throw new core.HttpError(404, 'not_found', 'Not found.');
   }
   if (body.action === 'photo') return { id: await bday.savePhoto(body.image, ip) };
+  if (body.action === 'card') return { id: await bday.saveCard(body.card, ip) };
   throw new core.HttpError(400, 'unknown_action', 'Unknown action.');
 }, { allowGet: true, maxBody: 1024 * 1024 });

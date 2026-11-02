@@ -172,4 +172,28 @@ async function cleanPhotos() {
   for (const key of await core.listKeys('bday/photo/')) { const p = await getJson(key); if (!p || p.expiresAt < Date.now()) { await core.del(key).catch(() => {}); n++; } }
   return n;
 }
-module.exports = { ART, GROUPS, artIndex, makeArt, removeArt, getArt, savePhoto, getPhoto, cleanPhotos, PHOTO_DAYS };
+// 🔗 short card links — /c/<id>: the card's words + design are kept for a year (the photo itself is still deleted after 60 days)
+const CARD_DAYS = 365;
+const CARD_KEYS = { o: 20, n: 30, a: 3, m: 320, f: 40, s: 30, d: 20, z: 6, w: 12, p: 24, ps: 1, pp: 6, mn: 2, yr: 4, pz: 6, px: 6, py: 6 };
+async function saveCard(card, ip) {
+  if (!card || typeof card !== 'object') throw new HttpError(400, 'bad_card', 'That card couldn’t be saved.');
+  const d = {};
+  for (const [k, max] of Object.entries(CARD_KEYS)) if (card[k] != null && card[k] !== '') d[k] = typeof card[k] === 'number' ? card[k] : String(card[k]).slice(0, max);
+  if (!d.m && !d.n) throw new HttpError(400, 'bad_card', 'Add a name or a message first.');
+  await core.rateLimit('card-link', ip || 'x', 60, 60 * 60 * 1000, 'That’s a lot of card links this hour — please try again later.');
+  const A = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  for (let t = 0; t < 5; t++) {
+    const id = Array.from(crypto.randomBytes(7), b => A[b % A.length]).join('');
+    let made = false;
+    await cas(`card/${id}`, cur => { if (cur) return undefined; made = true; return { d, expiresAt: Date.now() + CARD_DAYS * 864e5 }; }).catch(() => {});
+    if (made) return id;
+  }
+  throw new HttpError(500, 'card_failed', 'That card link couldn’t be made — please try again.');
+}
+async function getCard(id) {
+  if (!/^[A-Za-z0-9]{5,12}$/.test(String(id))) return null;
+  const c = await getJson(`card/${id}`);
+  if (!c || c.expiresAt < Date.now()) return null;
+  return c.d;
+}
+module.exports = { saveCard, getCard, ART, GROUPS, artIndex, makeArt, removeArt, getArt, savePhoto, getPhoto, cleanPhotos, PHOTO_DAYS };

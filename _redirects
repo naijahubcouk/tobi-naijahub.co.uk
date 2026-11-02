@@ -18,6 +18,7 @@
 /add-event      /add-event.html         200
 # Celebration Cards (old /birthday links keep working)
 /cards          /cards.html             200
+/c/:id          /.netlify/functions/card-page?id=:id   200
 /birthday       /cards.html             200
 /birthday.html  /cards.html             200
 /birthday-card  /cards                  301

@@ -710,10 +710,19 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   // card link: the words and design live in the link; only the photo is stored (60 days)
   function enc(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function dec(s) { try { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch (e) { return null; } }
+  var shortLinks = {};
   async function cardLink() {
     var o = { o: st.occ, n: st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
     if (st.occ === 'newmonth') o.mn = st.mn; if (st.occ === 'newyear') o.yr = st.yr; if (st.occ === 'independence') o.yr = nowBits().indYr;
     if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; o.ps = st.ps; o.pp = st.pp; } catch (e) { toast(e.message); } }
+    // 🔗 a short link (auntietobi.co.uk/c/xxxxxxx); falls back to the long link if saving fails
+    var key = JSON.stringify(o);
+    if (shortLinks[key]) return shortLinks[key];
+    try {
+      var r = await fetch('/.netlify/functions/bday', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'card', card: o }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (r.ok && j.id) return (shortLinks[key] = location.origin + '/c/' + j.id);
+    } catch (e) {}
     return location.origin + '/cards?c=' + enc(o);
   }
   function fileName() { return st.occ + '-card-' + (st.name || 'for-you').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; }
@@ -827,7 +836,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   }
 
   // ── receiver view ──
-  var q = new URLSearchParams(location.search), got = q.get('c') ? dec(q.get('c')) : null;
+  var q = new URLSearchParams(location.search), got = window.__CARD || (q.get('c') ? dec(q.get('c')) : null);
   async function loadArt() { try { var r = await fetch('/.netlify/functions/bday?art=1'); if (r.ok) ART = (await r.json()).art || {}; } catch (e) {} }
   function start() {
     if (got && (got.m || got.n)) {
@@ -880,6 +889,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     $('link').onclick = async function () { var b = this; b.disabled = true; var l = await cardLink(); b.disabled = false; copyText(l, 'Card link copied 🔗'); track('bday_link'); showGifts(); };
     $('copy').onclick = function () { copyText(headFor(st) + (st.name ? ', ' + st.name : '') + '! ' + st.msg + (st.from ? '\n' + (st.sign ? st.sign + ', ' : '— ') + st.from : ''), 'Message copied 📋'); };
     suggest(true);
+    if (window.__CARD_MISSING) setTimeout(function () { toast('That card link has expired — but you can make your own below 💚'); }, 600);
   }
   var go = function () { loadArt().then(function () { start(); if (!got) render(); }); };
   if (document.fonts && document.fonts.load) Promise.all(['400 60px "Great Vibes"', '800 60px "Playfair Display"', '500 30px "DM Sans"', 'italic 700 30px "DM Sans"'].map(function (f) { return document.fonts.load(f).catch(function () {}); })).then(go, go);
