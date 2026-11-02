@@ -36,6 +36,23 @@ const OCC_ART = {
     nmgold: ['Gold Glam', 'Elegant new-month card background: deep navy with gold foil confetti, tiny gold stars and fine gold lines in the corners, luxury and modern.'],
     nmfloral: ['Fresh Blooms', 'New-month card background in watercolour: pink, peach and white flowers with eucalyptus leaves around the corners on cream paper, fresh and joyful.'],
     nmgreen: ['Naija Green', 'Cheerful card background: emerald green and white with gold sparkles, soft green leaves and gold confetti around the edges, fresh, clean and celebratory.'],
+    nmhydrangea: ['Pink Hydrangea', 'Clean card background: one beautiful pale pink hydrangea flower head with green leaves on a long stem rising from the BOTTOM CENTRE, soft white background, airy, fresh, photorealistic.', 'top'],
+    nmcoral: ['Coral Silk & Dahlias', 'Luxurious card background: coral-red satin drapes on the left, big coral and blush dahlias and soft baby’s breath along the right side and the bottom, warm coral backdrop, elegant, photorealistic.', 'centre'],
+    nmredgift: ['Red Rose Gift', 'Card background: a rich crimson-red flat backdrop, a white gift box with a red satin ribbon at the BOTTOM LEFT and fresh red roses at the BOTTOM RIGHT, clean and festive, photorealistic.', 'top'],
+    nmsunflower: ['Sunflower Note', 'Card background: a turquoise painted wooden plank wall, a bright yellow sunflower in a glossy white vase at the LEFT edge, and a large BLANK white paper note with a curled corner held by a silver paper clip, covering the RIGHT and centre of the image (completely empty, nothing written on it), photorealistic.', 'note'],
+    nmarch: ['Minimal Arch', 'Minimal interior card background: a warm beige wall with a soft arched alcove on the LEFT, a small wooden stool with a white vase and a green sprig at the bottom left, a pendant lamp edge, calm natural light, lots of empty wall space.', 'right'],
+    nmsplash: ['Blue Splash', 'Bold fun card background: a big royal-blue paint splash with drips and spatter around the edges on white, energetic and modern, three blank blue 3D ribbon banners stacked in the centre (with nothing written on them).', 'centre'],
+    nmbeach: ['Beach Sunset', 'Card background: a golden sunset over the sea, gentle waves, warm glowing light, smooth golden sand in the lower half with a pink seashell and a white shell, peaceful, photorealistic.', 'lower'],
+    nmqueen: ['New Month Queen', 'Card background: a warm cream backdrop with a stylish illustrated young Nigerian woman with a big curly afro and a black headband, gold hoop earrings, burgundy sweatshirt and joggers and white trainers, sitting on the RIGHT side, smiling and winking with a peace sign, small pink doodle hearts, modern 3D cartoon illustration style.', 'left'],
+    nmcity: ['Celebration City', 'Card background: a joyful young Black woman with short natural hair in a grey T-shirt, fists up, celebrating with a huge smile, in the BOTTOM HALF, with bright blurred city skyscrapers behind her and soft rainbow light flares, bright and airy, photorealistic.', 'top'],
+    nmbold: ['Bold Black & Orange', 'Modern graphic card background: clean light-grey silk texture, bold black and orange abstract geometric shapes and thin outline shapes along the LEFT edge and corners, stylish minimal design.', 'centre'],
+    nmredcal: ['Red Calendar', 'Card background: a glowing red and orange gradient, a 3D white desk calendar with silver rings tilted in the LOWER HALF (its page completely blank), soft rainbow light flares and a small red heart, modern and bold.', 'top'],
+    nmgreencal: ['Green Calendar', 'Card background: a rich green gradient with soft light streaks, a 3D white desk calendar with gold rings on a green stand in the LOWER HALF (its page completely blank), modern and premium.', 'top'],
+    nmmug: ['Cosy Pink Mug', 'Cosy card background: a warm beige wall with soft leaf shadows and dried flowers at the top right, at the BOTTOM a ribbed cream vase with green leaves, a blank cream card and a dusty-pink mug with a gold heart on a woven coaster, on a wooden table, photorealistic.', 'top'],
+    nmpurple: ['Purple Rose Frame', 'Card background: a square frame made of deep purple and cream roses with sparkling crystal embellishments all around the EDGES, a plain soft ivory centre, elegant.', 'centre'],
+    nmdried: ['Dried Flower Bouquet', 'Card background: a pastel pink dried flower bouquet tied with crumpled cream paper ribbon, lying diagonally in the TOP RIGHT, on a soft white background, minimal and airy, photorealistic.', 'lowerleft'],
+    nmgerbera: ['Gerbera Garden', 'Card background: a row of colourful gerbera daisies — yellow, orange, pink and magenta — with green stems along the BOTTOM, on a clean white background, bright and cheerful, photorealistic.', 'top'],
+    nmcandle: ['Pink Candle Desk', 'Card background: soft blush pink, at the BOTTOM a white vase of pink peonies, a lit pink candle in a glass, a pink notebook with a gold pen and a satin ribbon bow, gentle sparkles, dreamy and feminine, photorealistic.', 'top'],
   },
   christmas: {
     xmastree: ['Christmas Tree', 'Christmas card background: a deep green night scene, a beautiful decorated Christmas tree with warm fairy lights and gold baubles on the LEFT edge, gifts at the bottom, soft falling snow and warm golden bokeh, cosy and magical.'],
@@ -123,7 +140,10 @@ const OCC_ART = {
   },
 };
 const CENTRE = new Set();
-for (const o of Object.values(OCC_ART)) for (const [k, v] of Object.entries(o)) { ART[k] = v[1]; CENTRE.add(k); }
+const SPACE = {};
+for (const o of Object.values(OCC_ART)) for (const [k, v] of Object.entries(o)) { ART[k] = v[1]; CENTRE.add(k); if (v[2]) SPACE[k] = v[2]; }
+// where the empty space for the words must be, for designs that are not decorated all round
+const SPACE_TEXT = { top: 'TOP HALF', centre: 'CENTRE', note: 'blank white note (the note itself must stay completely empty)', right: 'RIGHT HALF', lower: 'LOWER HALF', left: 'LEFT HALF', lowerleft: 'LOWER LEFT area' };
 const BDAY_LABELS = { pinkballoons: 'Pink & Gold Balloons', blueballoons: 'Blue & Gold Balloons', purpleluxe: 'Purple Luxe', minimalgold: 'Minimal Gold', chocolate: 'Chocolate Cake', lilac: 'Lilac Celebration', glitter: 'Gold Glitter', love: 'Love', daughter: 'Daughter', sister: 'Sister', brother: 'Brother', wife: 'Wife', husband: 'Husband', mother: 'Mother', father: 'Father' };
 const OCC_NAMES = { birthday: '🎂 Birthday', newmonth: '🗓️ Happy New Month', christmas: '🎄 Christmas', newyear: '🎆 New Year', valentine: '💝 Valentine’s Day', anniversary: '💍 Anniversary', wedding: '👰🏾 Wedding', easter: '🐣 Easter', eid: '🌙 Eid Mubarak', mothers: '👩🏾 Mother’s Day', fathers: '👨🏾 Father’s Day', independence: '🇳🇬 Independence Day', graduation: '🎓 Graduation', newbaby: '👶🏾 New Baby', thanks: '🙏🏾 Thank You', congrats: '🎉 Congratulations' };
 // for HQ: [{ occ, name, designs: [[key, label]] }]
@@ -131,6 +151,7 @@ const GROUPS = [{ occ: 'birthday', name: OCC_NAMES.birthday, designs: Object.ent
   .concat(Object.entries(OCC_ART).map(([occ, o]) => ({ occ, name: OCC_NAMES[occ], designs: Object.entries(o).map(([k, v]) => [k, v[0]]) })));
 const SIZES = { sq: '1:1', st: '9:16' };
 function prompt(key, size) {
+  if (SPACE[key]) return `${ART[key]} ${SAFE} in the ${SPACE_TEXT[SPACE[key]]} of the image for a greeting to be added later — keep that area plain, soft and uncluttered (no objects, no patterns there). High quality, ${SIZES[size]} format.`;
   if (CENTRE.has(key)) return `${ART[key]} ${SAFE} in the CENTRE of the image (about the middle ${size === 'st' ? '60% of the height and 80% of the width' : '70%'}) for a greeting to be added later — keep all decoration to the edges and corners and the centre plain, soft and uncluttered. High quality, ${SIZES[size]} format.`;
   return `${ART[key]} ${SAFE} in the ${size === 'st' ? 'MIDDLE (from about 15% to 70% of the height)' : 'CENTRE and RIGHT (at least half of the card)'} for a greeting text to be added later — keep that area plain, light and uncluttered. High quality, ${SIZES[size]} format.`;
 }
@@ -180,7 +201,7 @@ async function cleanPhotos() {
 }
 // 🔗 short card links — /c/<id>: the card's words + design are kept for a year (the photo itself is still deleted after 60 days)
 const CARD_DAYS = 365;
-const CARD_KEYS = { o: 20, n: 30, a: 3, m: 320, f: 40, s: 30, d: 20, z: 6, w: 12, p: 24, ps: 1, pp: 6, mn: 2, yr: 4, pz: 6, px: 6, py: 6 };
+const CARD_KEYS = { o: 20, n: 30, a: 3, m: 320, f: 40, s: 30, d: 20, z: 6, w: 12, p: 24, ps: 1, pp: 6, mn: 2, yr: 4, g: 8, pz: 6, px: 6, py: 6 };
 async function saveCard(card, ip) {
   if (!card || typeof card !== 'object') throw new HttpError(400, 'bad_card', 'That card couldn’t be saved.');
   const d = {};

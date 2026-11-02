@@ -102,6 +102,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     <div class="card">
       <div class="step">1 · What are you celebrating?</div>
       <div class="chips" id="occ"></div>
+      <div id="nmgBox" class="hidden" style="margin-top:12px"><label style="margin-top:0">Greeting</label><div class="chips" id="nmg"></div></div>
     </div>
 
     <div class="card">
@@ -195,10 +196,11 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     var o = s.occ || 'birthday', n = ordinal(s.age);
     if (o === 'birthday') return n ? 'Happy ' + n + ' Birthday' : 'Happy Birthday';
     if (o === 'anniversary') return n ? 'Happy ' + n + ' Anniversary' : 'Happy Anniversary';
+    if (o === 'newmonth' && (s.nmg === 'welcome' || s.nmg === 'hello')) return (s.nmg === 'welcome' ? 'Welcome ' : 'Hello ') + MONTHS[(+s.mn || 0) % 12];
     return (OCC[o] || OCC.birthday).head;
   }
   function tagFor(s) {
-    if (s.occ === 'newmonth') return 'Welcome to ' + MONTHS[(+s.mn || 0) % 12];
+    if (s.occ === 'newmonth') return s.nmg === 'welcome' || s.nmg === 'hello' ? 'Happy New Month' : 'Welcome to ' + MONTHS[(+s.mn || 0) % 12];
     if (s.occ === 'newyear') return 'Welcome to ' + (s.yr || '');
     if (s.occ === 'independence' && s.yr) return 'Nigeria at ' + (s.yr - 1960);
     return '';
@@ -300,6 +302,16 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     { s: 'naija', w: 'daughter', t: 'Happy birthday, my princess! Big girl things only — the world is waiting for you! 👑' },
     { s: 'naija', w: 'colleague', t: 'Happy birthday! May promotion locate you and may the work stress run from you. 😂🙏🏾' },
     { o: "newmonth", s: "heartfelt", t: "Happy new month! May this month bring you peace, good health and beautiful surprises." },
+    { o: "newmonth", s: "prayer", t: "The works of your hands are established this month. Every day will be a blessing. Happy new month! 🙏🏾" },
+    { o: "newmonth", s: "prayer", t: "This month, you will walk into unexpected favours. Doors will open for you. Happy new month!" },
+    { o: "newmonth", s: "prayer", t: "May God crown this month with His goodness, and may your paths overflow with abundance. Amen." },
+    { o: "newmonth", s: "heartfelt", t: "New month. New beginnings. New blessings. New you. 💫 Happy new month!" },
+    { o: "newmonth", s: "heartfelt", t: "A new month, a fresh start, a new mindset. Wishing you joy, peace and lovely surprises this month." },
+    { o: "newmonth", s: "heartfelt", t: "May this month bring you new opportunities, endless joy and beautiful moments with the people you love." },
+    { o: "newmonth", s: "funny", t: "Happy new month! May your salary arrive early and your bills arrive late. 😂" },
+    { o: "newmonth", s: "funny", t: "New month loading… 100% blessings, 0% stress. Let’s go! 😅" },
+    { o: "newmonth", s: "naija", t: "Happy new month! This month, na only good news go locate you. 🙌🏾" },
+    { o: "newmonth", s: "naija", t: "New month don land! Your matter go settle, your pocket go full. Amen! 💚" },
     { o: "newmonth", s: "heartfelt", t: "Welcome to a brand-new month! May every day bring you closer to your dreams." },
     { o: "newmonth", s: "heartfelt", t: "New month, new blessings. Wishing you joy, favour and lots of reasons to smile." },
     { o: "newmonth", s: "heartfelt", w: "partner", t: "Happy new month, my love. Another month to love you more and build our dreams together. 💕" },
@@ -564,7 +576,23 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   var ART = {}, IMGS = {};
   // occasion designs: [key, label, panel L/D, heading colour, accent, background top, background bottom, photo frame]
   var OP = {
-    newmonth: [['nmsun', 'Sunrise', 'L', '#C2563A', '#D4A24C', '#FFE9D6', '#FFC9A8'], ['nmgold', 'Gold Glam', 'D', '#E6C068', '#E6C068', '#13203A', '#070B14'], ['nmfloral', 'Fresh Blooms', 'L', '#B4446A', '#9DBF9E', '#FFF8F2', '#FBE3E6', 'arch'], ['nmgreen', 'Naija Green', 'L', '#057A44', '#C9A04E', '#F2FBF5', '#D3EEDD']],
+    newmonth: [['nmsun', 'Sunrise', 'L', '#C2563A', '#D4A24C', '#FFE9D6', '#FFC9A8'], ['nmgold', 'Gold Glam', 'D', '#E6C068', '#E6C068', '#13203A', '#070B14'], ['nmfloral', 'Fresh Blooms', 'L', '#B4446A', '#9DBF9E', '#FFF8F2', '#FBE3E6', 'arch'], ['nmgreen', 'Naija Green', 'L', '#057A44', '#C9A04E', '#F2FBF5', '#D3EEDD'], ['nmhydrangea', 'Pink Hydrangea', 'N', '#4E7D2E', '#C77D9A', '#FFFFFF', '#F3F1F2', 0, { sq: [.1, .05, .8, .48], st: [.08, .07, .84, .42] }, '#2A2A2A'],
+      ['nmcoral', 'Coral Silk & Dahlias', 'D', '#FFF4EE', '#FFD1C4', '#E8695C', '#B83A3A', 0, { sq: [.2, .24, .6, .46], st: [.14, .26, .72, .4] }],
+      ['nmredgift', 'Red Rose Gift', 'N', '#FFFFFF', '#FFD1DC', '#D10A3C', '#9E0730', 0, { sq: [.1, .05, .8, .48], st: [.08, .07, .84, .42] }, '#FFFFFF'],
+      ['nmsunflower', 'Sunflower Note', 'N', '#1E1E1E', '#C99A1E', '#E6F5F6', '#C4E6EA', 0, { sq: [.42, .2, .46, .48], st: [.2, .26, .62, .36] }, '#2A2A2A'],
+      ['nmarch', 'Minimal Arch', 'N', '#3B1E14', '#B98A5E', '#F5E3D3', '#EBD3BE', 0, { sq: [.34, .24, .58, .46], st: [.12, .24, .76, .38] }, '#3B2A22'],
+      ['nmsplash', 'Blue Splash', 'L', '#1F5FBF', '#1F5FBF', '#FFFFFF', '#D6E6FA'],
+      ['nmbeach', 'Beach Sunset', 'D', '#FFE29A', '#FFD27A', '#F6A945', '#B8652A', 0, { sq: [.1, .44, .8, .5], st: [.08, .5, .84, .42] }],
+      ['nmqueen', 'New Month Queen', 'N', '#6B1730', '#D9707E', '#FBF1E6', '#F5E4D3', 0, { sq: [.04, .18, .5, .64], st: [.08, .05, .84, .4] }, '#3A2A2E'],
+      ['nmcity', 'Celebration City', 'L', '#13203A', '#E8456B', '#F4F6FA', '#D9DEE8', 0, { sq: [.08, .04, .84, .4], st: [.08, .05, .84, .34] }],
+      ['nmbold', 'Bold Black & Orange', 'N', '#111111', '#F26B1D', '#F4F4F4', '#E2E2E2', 0, { sq: [.3, .14, .64, .72], st: [.14, .2, .76, .6] }, '#222222'],
+      ['nmredcal', 'Red Calendar', 'N', '#FFFFFF', '#FFD27A', '#E43A1F', '#A3150E', 0, { sq: [.08, .04, .84, .42], st: [.08, .06, .84, .36] }, '#FFFFFF'],
+      ['nmgreencal', 'Green Calendar', 'N', '#FFFFFF', '#E3F24A', '#2E7D1F', '#123F0C', 0, { sq: [.08, .04, .84, .42], st: [.08, .06, .84, .36] }, '#FFFFFF'],
+      ['nmmug', 'Cosy Pink Mug', 'N', '#4A2C20', '#C27A85', '#F3E6DA', '#E5D2C0', 0, { sq: [.1, .05, .8, .48], st: [.08, .07, .84, .42] }, '#3B2A22'],
+      ['nmpurple', 'Purple Rose Frame', 'N', '#4B1F6F', '#7B4FA0', '#F7F2EA', '#EDE4D6', 0, { sq: [.2, .2, .6, .6], st: [.16, .22, .68, .56] }, '#3A2550'],
+      ['nmdried', 'Dried Flower Bouquet', 'N', '#1E1E1E', '#C98F8A', '#FAFAFA', '#EEEDEE', 0, { sq: [.05, .5, .56, .44], st: [.06, .56, .88, .36] }, '#2A2A2A'],
+      ['nmgerbera', 'Gerbera Garden', 'N', '#6A1B9A', '#E0855A', '#FFFFFF', '#F4F4F4', 0, { sq: [.1, .05, .8, .48], st: [.08, .07, .84, .42] }, '#4A2560'],
+      ['nmcandle', 'Pink Candle Desk', 'N', '#8A3B57', '#C77D9A', '#FBE7EC', '#F2D3DC', 0, { sq: [.1, .05, .8, .48], st: [.08, .07, .84, .42] }, '#5A3040']],
     christmas: [['xmastree', 'Christmas Tree', 'D', '#F5D27A', '#E6C068', '#0F3D2A', '#05180F'], ['xmasred', 'Red & Gold', 'D', '#F5D27A', '#E6C068', '#8E1B26', '#4A0A10'], ['xmassnow', 'Winter Snow', 'L', '#1F4E79', '#9DB4C8', '#F4F8FC', '#D9E6F2'], ['xmascosy', 'Cosy Christmas', 'L', '#A3262E', '#2F6B45', '#FFF8EE', '#F1E2CC', 'arch']],
     newyear: [['nyfire', 'Fireworks', 'D', '#F5D27A', '#E6C068', '#101A3A', '#04060F'], ['nygold', 'Gold Glam', 'D', '#E6C068', '#E6C068', '#1A1A1A', '#000000'], ['nysilver', 'Silver Sparkle', 'L', '#4B5563', '#A3A9B3', '#FFFFFF', '#E5E7EB'], ['nynaija', 'Naija Party', 'L', '#057A44', '#C9A04E', '#FFFFFF', '#E3F2EA']],
     valentine: [['valroses', 'Red Roses', 'D', '#FFD1DC', '#FFD1DC', '#8E1B3A', '#3E0B1A', 'heart'], ['valpink', 'Pink Hearts', 'L', '#C2185B', '#E91E63', '#FFF0F5', '#F8C8D8', 'heart'], ['valgold', 'Love & Gold', 'L', '#A9832F', '#C9A04E', '#FFF7F2', '#F3DCD2', 'heart'], ['valnight', 'Candlelight', 'D', '#FFD9A0', '#E6C068', '#4A0D1E', '#1C0409', 'heart']],
@@ -581,7 +609,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     congrats: [['conconf', 'Confetti Pop', 'L', '#13203A', '#E8456B', '#FFFFFF', '#FFF1E6'], ['congold', 'Gold Stars', 'D', '#E6C068', '#E6C068', '#1A1A1A', '#000000'], ['controphy', 'Trophy', 'D', '#F5D27A', '#E6C068', '#2A1E0E', '#0E0904'], ['conballoons', 'Balloons', 'L', '#0F6E6E', '#F2A541', '#F4FBFB', '#D5F0EE']],
   };
   Object.keys(P).forEach(function (k) { P[k].o = 'birthday'; });
-  Object.keys(OP).forEach(function (o) { OP[o].forEach(function (x) { P[x[0]] = { o: o, label: x[1], panel: x[2] === 'D' ? 'dark' : 'light', head: x[3], fg: x[2] === 'D' ? '#FFFFFF' : '#2A2A2A', accent: x[4], fb: [x[5], x[6]], photo: x[7], sq: [.14, .15, .72, .7], st: [.1, .2, .8, .56] }; }); });
+  Object.keys(OP).forEach(function (o) { OP[o].forEach(function (x) { var bx = x[8] || {}; P[x[0]] = { o: o, label: x[1], panel: x[2] === 'D' ? 'dark' : x[2] === 'N' ? '' : 'light', head: x[3], fg: x[9] || (x[2] === 'D' ? '#FFFFFF' : '#2A2A2A'), accent: x[4], fb: [x[5], x[6]], photo: x[7] || undefined, sq: bx.sq || [.14, .15, .72, .7], st: bx.st || [.1, .2, .8, .56] }; }); });
   function artUrl(key, size) { var id = key + '-' + (size === 'story' ? 'st' : 'sq'); return ART[id] ? '/.netlify/functions/bday?artimg=' + id + '&v=' + ART[id] : ''; }
   function loadImg(url, cb) {
     if (!url) return null; var im = IMGS[url];
@@ -666,7 +694,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
   // ── state ──
   var NB = nowBits(), Q0 = new URLSearchParams(location.search).get('o');
-  var st = { occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'square', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
+  var st = { nmg: 'happy', occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'square', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
   var ALIAS = { wife: 'partner', husband: 'partner', daughter: 'child', son: 'child', grandma: 'mum', grandpa: 'dad' };
   function fits(m) { return !m.w || m.w === st.who || m.w === ALIAS[st.who]; }
   function pool() { return MSG.filter(function (m) { return (m.o || 'birthday') === st.occ && m.s === st.style && fits(m); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who) || (!!b.w - !!a.w); }); }
@@ -685,7 +713,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2400); }
   function whoMap() { var m = {}; OCC[st.occ].who.forEach(function (k) { m[k] = WHO[k]; }); return m; }
   function setOcc(o, keep) {
-    st.occ = o; var oc = OCC[o]; st.yr = o === 'independence' ? NB.indYr : NB.yr;
+    st.occ = o; var oc = OCC[o]; $('nmgBox').classList.toggle('hidden', o !== 'newmonth'); st.yr = o === 'independence' ? NB.indYr : NB.yr;
     if (oc.who.indexOf(st.who) < 0) st.who = oc.who[0];
     chips('who', whoMap(), 'who');
     $('numBox').classList.toggle('hidden', !oc.num); $('numL').innerHTML = (oc.num || 'Age') + ' <small>(optional)</small>'; $('age').placeholder = o === 'anniversary' ? 'e.g. 10' : 'e.g. 40'; if (!oc.num) { st.age = ''; $('age').value = ''; }
@@ -723,7 +751,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   var shortLinks = {};
   async function cardLink() {
     var o = { o: st.occ, n: st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
-    if (st.occ === 'newmonth') o.mn = st.mn; if (st.occ === 'newyear') o.yr = st.yr; if (st.occ === 'independence') o.yr = nowBits().indYr;
+    if (st.occ === 'newmonth') { o.mn = st.mn; if (st.nmg !== 'happy') o.g = st.nmg; } if (st.occ === 'newyear') o.yr = st.yr; if (st.occ === 'independence') o.yr = nowBits().indYr;
     if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; o.ps = st.ps; o.pp = st.pp; } catch (e) { toast(e.message); } }
     // 🔗 a short link (auntietobi.co.uk/c/xxxxxxx); falls back to the long link if saving fails
     var key = JSON.stringify(o);
@@ -852,7 +880,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     if (got && (got.m || got.n)) {
       $('maker').classList.add('hidden'); $('recv').classList.remove('hidden');
       var ro = OCC[got.o] ? got.o : 'birthday', OC = OCC[ro]; curFx = OC.fx || FX; curCols = OC.cols || null; curSong = OC.song || 'chime';
-      var rs = { occ: ro, mn: got.mn, yr: got.yr, name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), sign: got.s == null ? 'With love' : String(got.s).slice(0, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
+      var rs = { occ: ro, mn: got.mn, yr: got.yr, nmg: got.g === 'welcome' || got.g === 'hello' ? got.g : 'happy', name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), sign: got.s == null ? 'With love' : String(got.s).slice(0, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
       $('recvTitle').textContent = OC.label.split(' ')[0] + ' ' + headFor(rs) + (rs.name ? ', ' + rs.name : '') + '!';
       $('recvFrom').textContent = (rs.from ? rs.from : 'Someone') + ' made you a ' + OC.noun + ' 💚';
       var cvR = $('cvR');
@@ -878,7 +906,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       return;
     }
     try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (typeof sv.sign === 'string') st.sign = sv.sign; if (SIZES[sv.size]) st.size = sv.size; } catch (e) {}
-    var occM = {}; occOrder().forEach(function (o) { occM[o] = OCC[o].label; }); chips('occ', occM, 'occ'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
+    var occM = {}; occOrder().forEach(function (o) { occM[o] = OCC[o].label; }); chips('occ', occM, 'occ'); var MNn = MONTHS[st.mn]; chips('nmg', { happy: 'Happy New Month', welcome: 'Welcome ' + MNn, hello: 'Hello ' + MNn }, 'nmg'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
     setOcc(st.occ, false);
     document.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (b) pickDesign(b.dataset.d); });
     $('from').value = st.from;
