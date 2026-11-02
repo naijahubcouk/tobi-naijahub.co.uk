@@ -54,9 +54,9 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .hidden{display:none!important}
 #cv.adjust{touch-action:none;cursor:grab;outline:3px dashed #057A44;outline-offset:3px}
 .adjhint{background:#E3F2EA;color:#04613A;border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700;margin-top:8px}
-.gifts{display:flex;overflow-x:auto;gap:10px;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
-.gift{flex:0 0 150px;scroll-snap-align:start}
-.gift u{text-decoration:none;font-size:11.5px;color:#6B7280;padding:0 8px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gifts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gift u{text-decoration:none;font-size:11.5px;color:#6B7280;padding:2px 8px 0;display:block;line-height:1.35;flex:1}
+.gift .gbtn{margin:8px;background:#057A44;color:#fff;border-radius:8px;padding:7px 4px;font-size:11.5px;font-weight:800;text-align:center;text-decoration:none}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:500}
 .cover{position:fixed;inset:0;z-index:600;background:radial-gradient(circle at 50% 40%,#0B6B40,#062a1b);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;cursor:pointer;border:0;width:100%;font-family:inherit}
 .cover .gb{font-size:110px;animation:bob 1.4s ease-in-out infinite;filter:drop-shadow(0 10px 20px rgba(0,0,0,.35))}
@@ -140,7 +140,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
     <div class="card hidden" id="giftsBox">
       <div class="step">🎁 Gift Ideas from Nigerian Business Owners in the UK</div>
-      <p class="muted" style="margin-bottom:8px">Make their day even sweeter — real businesses from the Auntie Tobi Marketplace.</p>
+      <p class="muted" style="margin-bottom:8px">Make their day even sweeter with a gift from these trusted Auntie Tobi businesses.</p>
       <div class="gifts" id="gifts"></div>
       <a class="btn ghost" href="/marketplace" style="margin-top:10px">🛍️ See all on the Marketplace</a>
     </div>
@@ -451,17 +451,16 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
   // 🎁 gift ideas from Nigerian business owners (Marketplace) — always shown under the card
   function showGifts() {}
+  var GIFT_BIZ = [
+    { name: 'Abbystore', slug: 'abbystoreltd', img: 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805', line: '🎉 Party packs, souvenirs & lovely home gifts', btn: '🛍️ Shop now', link: 'https://abbystoreltd.com/' },
+    { name: 'Buchis Photography', slug: 'buchis-photography', img: '/biz-img/buchis-photography.jpg', line: '📸 A birthday photoshoot they’ll never forget', btn: '📸 Book a shoot', link: 'https://wa.me/447513969028?text=' + encodeURIComponent('Hi Buchis Photography, I found you on Auntie Tobi and I’d like to book a birthday shoot.') },
+    { name: 'Saamipeniel Fragrance', slug: 'saamipeniel-fragrance', img: 'https://naijabiz.b-cdn.net/03607764-14b3-4dfc-88ff-e89f4544c03a-1793528251057.jpeg', line: '🌸 Luxury oil perfumes — UK-wide delivery', btn: '💬 Order a perfume', link: 'https://wa.me/447724748976?text=' + encodeURIComponent('Hi Saamipeniel Fragrance, I found you on Auntie Tobi and I’d like to order a perfume as a birthday gift.') },
+  ];
   function loadGifts() {
-    fetch('/.netlify/functions/studio-market?feed=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-      var items = (d && d.items || []).slice(); if (!items.length) return;
-      for (var i = items.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = items[i]; items[i] = items[j]; items[j] = t; }
-      var esc = function (s) { var e = document.createElement('div'); e.textContent = s == null ? '' : String(s); return e.innerHTML; };
-      $('gifts').innerHTML = items.slice(0, 12).map(function (p) {
-        var link = p.link || (p.wa ? 'https://wa.me/' + String(p.wa).replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi, I saw ' + p.name + ' on Auntie Tobi') : '/marketplace');
-        return '<a class="gift" href="' + esc(link) + '" target="_blank" rel="noopener">' + (p.img ? '<img src="' + esc(p.img) + '" alt="" loading="lazy">' : '<div class="ph">' + esc(p.emoji || '🎁') + '</div>') + '<b>' + esc(p.name) + '</b>' + (p.business ? '<u>' + esc(p.business) + '</u>' : '') + '<i>' + esc(p.price || '') + '</i></a>';
-      }).join('');
-      $('giftsBox').classList.remove('hidden');
-    }).catch(function () {});
+    $('gifts').innerHTML = GIFT_BIZ.map(function (g) {
+      return '<div class="gift"><a href="/biz/' + g.slug + '"><img src="' + g.img + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=ph>🎁</div>\'"></a><b>' + g.name + '</b><u>' + g.line + '</u><a class="gbtn" href="' + g.link + '" target="_blank" rel="noopener">' + g.btn + '</a></div>';
+    }).join('');
+    $('giftsBox').classList.remove('hidden');
   }
 
   // 🎉 celebrations — 5 effects, a different one each time the card is opened
