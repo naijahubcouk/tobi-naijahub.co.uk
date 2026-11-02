@@ -50,7 +50,7 @@ const ARTICLE_LAYOUT = `ARTICLE LAYOUT (use these short headings, each on its ow
 6. "How much and how long?" — ONLY with confirmed figures (see FACTS). If none are confirmed, say they can change and point to the official page instead — or leave this section out.
 7. "Mistakes to avoid:" — 3–4 bullets.
 8. "Questions people ask:" — 3–4 short questions, each as its own line ending with "?", each followed by a short answer paragraph.
-9. "💚 **Auntie Tobi Tip:**" — one practical tip.
+9. an OPTIONAL line "💚 **Auntie Tobi Tip:** …" — ONE short sentence (max 25 words) with a practical tip directly about this topic that the reader has not already been told. If you do not have a genuinely useful, specific tip, leave the tip out completely — never add a generic one.
 10. A short line encouraging people to share it with someone it would help.
 11. "Sources:" — bullet lines "• <site name> — <full URL>" for the official pages you used (only real URLs from the notes or official results).`;
 
@@ -78,7 +78,7 @@ BODY FORMAT (plain text, not markdown headings):
 - A short heading is its own line ending with "?" or ":" (max 60 characters).
 - Bullet lines start with "• ". Numbered steps start with "1. ", "2. ". Use **bold** sparingly for key facts.
 - One or two relevant emojis at most per section.
-${kind === 'article' ? ARTICLE_LAYOUT : `- End with a line starting "💚 **Auntie Tobi Tip:**" and then a short line encouraging people to share it with someone it would help.${long ? '\n- Then "Sources:" with bullet lines "• <site name> — <full URL>" for any official pages you used.' : ''}`}
+${kind === 'article' ? ARTICLE_LAYOUT : `- Near the end, an OPTIONAL line "💚 **Auntie Tobi Tip:** …" — ONE short sentence (max 25 words) with a practical tip directly about this topic that the reader has not already been told. If you do not have a genuinely useful, specific tip, leave the tip out completely — never add a generic one. Then a short line encouraging people to share it with someone it would help.${long ? '\n- Then "Sources:" with bullet lines "• <site name> — <full URL>" for any official pages you used.' : ''}`}
 - For events, do NOT repeat date/time/place lines at the top — the app shows them separately.
 
 Return ONLY a JSON object with these keys:
