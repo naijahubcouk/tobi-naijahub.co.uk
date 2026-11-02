@@ -52,6 +52,12 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .gift b{font-size:13px;padding:6px 8px 0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .gift i{font-style:normal;font-size:13px;font-weight:800;color:#057A44;padding:2px 8px 8px}
 .hidden{display:none!important}
+#cvR{cursor:zoom-in}
+.zoom{position:fixed;inset:0;z-index:700;background:rgba(5,10,20,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;animation:zin .2s ease-out}
+.zoom canvas{max-width:100%;max-height:calc(100vh - 110px);width:auto;height:auto;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.zoom .zx{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:20px;cursor:pointer}
+.zoom .zh{color:rgba(255,255,255,.75);font-size:13px;margin-top:12px}
+@keyframes zin{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 #cv.adjust{touch-action:none;cursor:grab;outline:3px dashed #057A44;outline-offset:3px}
 .adjhint{background:#E3F2EA;color:#04613A;border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700;margin-top:8px}
 .gifts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -80,7 +86,8 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   <!-- receiver view -->
   <section id="recv" class="hidden">
     <div class="card recv"><h1 id="recvTitle">🎉 You’ve got a card!</h1><p class="muted" id="recvFrom"></p></div>
-    <div class="card" style="margin-top:12px"><canvas id="cvR" style="width:100%;display:block;border-radius:12px"></canvas>
+    <div class="card" style="margin-top:12px"><canvas id="cvR" style="width:100%;display:block;border-radius:12px" title="Tap to see it bigger"></canvas>
+      <p class="muted" style="text-align:center;font-size:12px;margin-top:6px">👆 Tap the card to see it bigger</p>
       <div class="btns"><button class="btn dl" id="rDl">⬇️ Save the card</button><button class="btn wa" id="rThanks">💬 Say thank you</button></div>
       <div class="recvbar"><button class="btn ghost" id="again">🎉 Celebrate again</button><button class="btn ghost" id="mute" style="flex:.6;white-space:nowrap"></button></div>
       <a class="btn gold" href="/cards" style="margin-top:8px">🎉 Make your own free card</a>
@@ -852,6 +859,13 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       var paintR = function () { draw(cvR, rs, 0.75, paintR); };
       if (got.p && /^p[a-z0-9]{6,20}$/.test(got.p)) { var pim = new Image(); pim.onload = function () { rs.photoImg = pim; paintR(); }; pim.src = '/.netlify/functions/bday?photo=' + got.p; }
       paintR();
+      // 👆 tap the card to see it full screen
+      cvR.onclick = function () {
+        var z = document.createElement('div'); z.className = 'zoom'; z.innerHTML = '<button class="zx" aria-label="Close">✕</button><canvas></canvas><div class="zh">Tap anywhere to close</div>';
+        var zc = z.querySelector('canvas'), paintZ = function () { draw(zc, rs, 1, paintZ); }; paintZ();
+        var close = function () { z.remove(); document.removeEventListener('keydown', esc); }, esc = function (e) { if (e.key === 'Escape') close(); };
+        z.onclick = close; document.addEventListener('keydown', esc); document.body.appendChild(z);
+      };
       $('rDl').onclick = function () { st.name = rs.name; download(rs); };
       $('coverT').textContent = 'You’ve got a ' + OC.noun + (rs.name ? ', ' + rs.name : '') + '!'; $('coverF').textContent = rs.from ? 'From ' + rs.from : 'Made with love';
       $('cover').classList.remove('hidden');
