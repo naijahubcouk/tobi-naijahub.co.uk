@@ -52,6 +52,10 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .gift b{font-size:14px;padding:6px 8px 0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .gift i{font-style:normal;font-size:13px;font-weight:800;color:#057A44;padding:2px 8px 8px}
 .hidden{display:none!important}
+.cvwrap{position:relative}
+.dnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(15,30,54,.72);color:#fff;font-size:30px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding-bottom:4px}
+.dnav.prev{left:8px}.dnav.next{right:8px}.dnav:active{transform:translateY(-50%) scale(.92)}
+.dname{text-align:center;font-size:13px;font-weight:700;color:#374151;margin-top:8px}
 #cvR{cursor:zoom-in}
 .zoom{position:fixed;inset:0;z-index:700;background:rgba(5,10,20,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;animation:zin .2s ease-out}
 .zoom canvas{max-width:100%;max-height:calc(100vh - 110px);width:auto;height:auto;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
@@ -142,7 +146,9 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
     <div class="card preview">
       <div class="step">Your card</div>
-      <canvas id="cv"></canvas>
+      <div class="cvwrap"><canvas id="cv"></canvas>
+        <button type="button" class="dnav prev" id="dPrev" aria-label="Previous design">‹</button><button type="button" class="dnav next" id="dNext" aria-label="Next design">›</button></div>
+      <div class="dname" id="dName"></div>
       <div id="adjBox" class="hidden"><div class="adjhint">✋ Drag the photo on the card to move it, and slide to zoom. Tap <b>Done</b> when it looks right.</div>
         <label for="pz">Zoom</label><input type="range" id="pz" min="100" max="300" value="100" style="padding:0">
         <button type="button" class="btn dl" id="pDone" style="margin-top:8px">✅ Done</button></div>
@@ -708,7 +714,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       if (key === 'who' || key === 'style') suggest(true); else render(); save();
     };
   }
-  var rT = 0; function render() { clearTimeout(rT); rT = setTimeout(function () { draw($('cv'), st, 0.75, render); }, 30); }
+  var rT = 0; function render() { clearTimeout(rT); rT = setTimeout(function () { draw($('cv'), st, 0.75, render); showDesignName(); }, 30); }
   function save() { try { localStorage.setItem('tobiBday', JSON.stringify({ from: st.from, sign: st.sign, size: st.size })); } catch (e) {} }
   function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2400); }
   function whoMap() { var m = {}; OCC[st.occ].who.forEach(function (k) { m[k] = WHO[k]; }); return m; }
@@ -721,6 +727,10 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     if (!keep) { designPicked = false; var first = Object.keys(P).filter(function (k) { return P[k].o === o; })[0]; st.design = (o === 'birthday' && SUGGEST[st.who]) || first || 'floral'; }
     paintDesigns(); suggest(true);
   }
+  // ‹ › next / previous design, right on the card preview
+  function designList() { return [].map.call(document.querySelectorAll('#designsP [data-d], #designs [data-d]'), function (b) { return b.dataset.d; }); }
+  function stepDesign(dir) { var l = designList(); if (!l.length) return; var i = l.indexOf(st.design); pickDesign(l[((i < 0 ? 0 : i) + dir + l.length) % l.length]); }
+  function showDesignName() { var l = designList(), i = l.indexOf(st.design), el = $('dName'); if (el) el.textContent = i < 0 ? '' : 'Design ' + (i + 1) + ' of ' + l.length + ' · ' + (P[st.design] ? P[st.design].label : D[st.design] ? D[st.design].label : ''); }
   function pickDesign(k, auto) { st.design = k; [].forEach.call(document.querySelectorAll('[data-d]'), function (x) { x.setAttribute('aria-pressed', x.dataset.d === k); }); if (!auto) designPicked = true; render(); }
 
   // 📷 their photo — resized on the phone; stored on Auntie Tobi only when a card link is made (deleted after 60 days)
@@ -915,6 +925,11 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     $('msg').oninput = function () { st.msg = this.value; render(); };
     $('from').oninput = function () { st.from = this.value; render(); save(); };
     $('suggest').onclick = function () { suggest(false); };
+    $('dPrev').onclick = function () { stepDesign(-1); };
+    $('dNext').onclick = function () { stepDesign(1); };
+    // swipe the card left / right for the next design (not while moving the photo)
+    var sx = null; $('cv').addEventListener('touchstart', function (e) { if (!$('cv').classList.contains('adjust')) sx = e.touches[0].clientX; }, { passive: true });
+    $('cv').addEventListener('touchend', function (e) { if (sx == null) return; var dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 50) stepDesign(dx < 0 ? 1 : -1); });
     $('photo').onchange = function () { var f = this.files && this.files[0]; if (f) addPhoto(f); this.value = ''; };
     $('pz').oninput = function () { st.pz = this.value / 100; render(); };
     $('pRm').onclick = function () { st.photoImg = null; st.photoData = ''; st.photoId = ''; $('photoBox').classList.add('hidden'); $('adjBox').classList.add('hidden'); $('cv').classList.remove('adjust'); render(); };
