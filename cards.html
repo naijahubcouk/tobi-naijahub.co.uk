@@ -52,7 +52,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .gift b{font-size:14px;padding:6px 8px 0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .gift i{font-style:normal;font-size:13px;font-weight:800;color:#057A44;padding:2px 8px 8px}
 .hidden{display:none!important}
-.dhide{display:none!important}
 #cvR{cursor:zoom-in}
 .zoom{position:fixed;inset:0;z-index:700;background:rgba(5,10,20,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;animation:zin .2s ease-out}
 .zoom canvas{max-width:100%;max-height:calc(100vh - 110px);width:auto;height:auto;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
@@ -125,10 +124,8 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
     <div class="card">
       <div class="step">4 · Choose a design</div>
-      <div class="muted" style="margin:-2px 0 6px" id="dpLabel">✨ Premium</div><div class="designs" id="designsP"></div>
-      <div class="muted" style="margin:12px 0 6px">✨ More designs</div><div class="designs" id="designsM"></div>
-      <div id="classicBox"><div class="muted" style="margin:12px 0 6px">🎨 Classic</div><div class="designs" id="designs"></div></div>
-      <button type="button" class="btn ghost" id="seeMore" style="margin-top:10px">➕ See more designs</button>
+      <div class="muted" style="margin:-2px 0 6px">✨ Premium</div><div class="designs" id="designsP"></div>
+      <div class="muted" style="margin:12px 0 6px">🎨 Classic</div><div class="designs" id="designs"></div>
       <div class="chips" id="size" style="margin-top:10px"></div>
     </div>
 
@@ -870,20 +867,9 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     var label = premium ? P[k].label : D[k].label, url = premium ? artUrl(k, 'square') : '';
     return '<button type="button" class="design" data-d="' + k + '" aria-pressed="' + (st.design === k) + '">' + (url ? '<img src="' + url + '" alt="" loading="lazy">' : '<canvas width="160" height="160" data-fb="' + k + '"></canvas>') + '<span>' + label + '</span></button>';
   }
-  var designsOpen = false;
   function paintDesigns() {
-    // every design works for every occasion: the ones made for this occasion first, then all the others
-    $('dpLabel').textContent = '✨ Made for ' + OCC[st.occ].label.replace(/^\S+\s/, '');
     $('designsP').innerHTML = Object.keys(P).filter(function (k) { return P[k].o === st.occ; }).map(function (k) { return designTile(k, true); }).join('');
-    $('designsM').innerHTML = occOrder().filter(function (o) { return o !== st.occ; }).map(function (o) { return Object.keys(P).filter(function (k) { return P[k].o === o; }).map(function (k) { return designTile(k, true); }).join(''); }).join('');
-    $('designs').innerHTML = Object.keys(D).map(function (k) { return designTile(k, false); }).join('');
-    // show the first 20 designs; the rest open with "See more designs" (or straight away if the chosen one is further down)
-    var all = [].slice.call(document.querySelectorAll('#designsP [data-d], #designsM [data-d], #designs [data-d]')), cut = all.findIndex(function (b) { return b.dataset.d === st.design; }) >= 20 || designsOpen ? all.length : 20;
-    all.forEach(function (b, n) { b.classList.toggle('dhide', n >= cut); });
-    $('designsM').previousElementSibling.classList.toggle('dhide', !all.some(function (b, n) { return n < cut && b.parentNode.id === 'designsM'; }));
-    $('classicBox').classList.toggle('dhide', cut < all.length);
-    $('seeMore').classList.toggle('hidden', cut >= all.length);
-    $('seeMore').textContent = '➕ See more designs (' + (all.length - cut) + ' more)';
+    $('designs').innerHTML = Object.keys(D).filter(function (k) { return st.occ === 'birthday' || k !== 'cake'; }).map(function (k) { return designTile(k, false); }).join('');
     [].forEach.call(document.querySelectorAll('[data-fb]'), function (cvs) { var k = cvs.dataset.fb, c = cvs.getContext('2d'); c.scale(160 / 1080, 160 / 1080); if (P[k]) { lin(c, 1080, 1080, P[k].fb); c.font = '400 190px "Great Vibes", cursive'; c.textAlign = 'center'; c.fillStyle = P[k].head; var hw = headFor({ occ: st.occ }).split(' '), h1 = hw.slice(0, Math.ceil(hw.length / 2)).join(' '), h2 = hw.slice(Math.ceil(hw.length / 2)).join(' '); c.font = '400 ' + (hw.join(' ').length > 16 ? 150 : 190) + 'px "Great Vibes", cursive'; c.fillText(h1, 540, h2 ? 520 : 600); if (h2) c.fillText(h2, 540, 720); } else BG[k](c, 1080, 1080); });
   }
 
@@ -929,7 +915,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     $('msg').oninput = function () { st.msg = this.value; render(); };
     $('from').oninput = function () { st.from = this.value; render(); save(); };
     $('suggest').onclick = function () { suggest(false); };
-    $('seeMore').onclick = function () { designsOpen = true; paintDesigns(); };
     $('photo').onchange = function () { var f = this.files && this.files[0]; if (f) addPhoto(f); this.value = ''; };
     $('pz').oninput = function () { st.pz = this.value / 100; render(); };
     $('pRm').onclick = function () { st.photoImg = null; st.photoData = ''; st.photoId = ''; $('photoBox').classList.add('hidden'); $('adjBox').classList.add('hidden'); $('cv').classList.remove('adjust'); render(); };
