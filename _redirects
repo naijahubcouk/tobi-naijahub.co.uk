@@ -16,6 +16,8 @@
 
 # Public "Add your event" page
 /add-event      /add-event.html         200
+/birthday       /birthday.html          200
+/birthday-card  /birthday               301
 
 # Blog deep links
 

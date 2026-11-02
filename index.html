@@ -3800,6 +3800,7 @@ function showMoreSheet() {
 
   var items = [
     {ico:'💼', label:'Jobs', fn: function(){ resetAndShowJobs(); }},
+    {ico:'🎂', label:'Birthday Cards', fn: function(){ overlay.remove(); window.location.href = '/birthday'; }},
     {ico:'🚗', label:'Driving Theory', fn: function(){ clearExamState();quickAsk('Help me prepare for my UK driving theory test'); }},
     {ico:'📋', label:'Life in UK Test', fn: function(){ clearExamState();quickAsk('Help me prepare for my Life in UK test'); }},
     {ico:'🇬🇧', label:'Japa Guide', fn: function(){ showJapaGuide(); }},
@@ -5162,6 +5163,11 @@ function showLinksPage() {
     <a href="https://auntietobi.co.uk/add-event" target="_blank" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">&#127881;</span>
       <span style="flex:1;text-align:left;">Submit Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing &mdash; paste your event link or upload your flyer</span></span>
+      <span style="color:#ccc;">&#8250;</span>
+    </a>
+    <a href="/birthday" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#FDE9EC,#FFF6F2);color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #F4A6B8;font-weight:700;font-size:14px;">
+      <span style="font-size:20px;">&#127874;</span>
+      <span style="flex:1;text-align:left;">Free Birthday Cards<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Make a personalised card in seconds &mdash; send it on WhatsApp</span></span>
       <span style="color:#ccc;">&#8250;</span>
     </a>
     <a href="javascript:void(0)" onclick="showInstallGuide();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#057A44 0%,#045e34 100%);text-decoration:none;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(5,122,68,0.3);">
@@ -9046,6 +9052,8 @@ function resetToWelcome() {
         + '<span style="font-size:20px;">🚀</span><span style="flex:1;text-align:left;">Business Studio<span style="display:block;font-size:11px;color:rgba(255,255,255,0.8);font-weight:400;margin-top:1px;">Free tools to manage customers, plan content and grow your business</span></span><span style="color:rgba(255,255,255,0.7);">›</span></a>');
       addTipMessage('<a href="https://auntietobi.co.uk/add-event" target="_blank" data-submit-event="1" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">'
         + '<span style="font-size:20px;">🎉</span><span style="flex:1;text-align:left;">Submit Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing — paste your event link or upload your flyer</span></span><span style="color:#ccc;">›</span></a>');
+      addTipMessage('<a href="/birthday" data-bday-card="1" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#FDE9EC,#FFF6F2);color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #F4A6B8;font-weight:700;font-size:14px;">'
+        + '<span style="font-size:20px;">🎂</span><span style="flex:1;text-align:left;">Free Birthday Cards<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Make a personalised card in seconds — send it on WhatsApp</span></span><span style="color:#ccc;">›</span></a>');
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);

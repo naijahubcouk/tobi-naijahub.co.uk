@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Birthday Cards — Auntie Tobi</title>
+<meta name="description" content="Make a beautiful personalised birthday card in seconds — free. Choose a design, add their name and a message, then download it or send it on WhatsApp.">
+<meta property="og:title" content="A birthday card for you 🎂💚">
+<meta property="og:description" content="Made with love on Auntie Tobi — make your own free birthday card in seconds.">
+<meta property="og:image" content="https://auntietobi.co.uk/tobi-face-512.png">
+<link rel="icon" href="/tobi-face-128.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@700;800&family=Poppins:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;min-height:100vh;padding-bottom:60px;line-height:1.5}
+.app-header{background:#0F1E36;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:560px;margin:0 auto}
+.app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0}.app-logo img{width:100%;height:100%;object-fit:cover}
+.app-header-text{flex:1;min-width:0}.app-header-title{font-size:16px;font-weight:700;color:#fff}.app-header-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.back-btn{color:rgba(255,255,255,.85);font-size:12px;text-decoration:none;font-weight:600;padding:7px 11px;border:1.5px solid rgba(255,255,255,.25);border-radius:20px;white-space:nowrap}
+.wrap{max-width:560px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.hero{background:linear-gradient(135deg,#057A44,#04603a);border-radius:14px;padding:20px 18px;color:#fff}
+.hero h1{font-size:23px;line-height:1.25;margin-bottom:6px}.hero p{font-size:14.5px;color:rgba(255,255,255,.9)}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.step{font-size:12px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid #e0e0e0;border-radius:20px;padding:7px 12px;font-size:13.5px;font-weight:700;background:#fff;color:#0F1E36;cursor:pointer;font-family:inherit}
+.chip[aria-pressed=true]{border-color:#057A44;background:#E3F2EA;color:#04613A}
+label{display:block;font-size:13px;font-weight:700;margin:12px 0 4px}label:first-child{margin-top:0}
+label small{font-weight:400;color:#6B7280}
+input,textarea{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;color:#0F1E36;background:#fff}
+input:focus,textarea:focus{outline:none;border-color:#057A44}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.designs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.design{border:2px solid transparent;border-radius:10px;padding:0;cursor:pointer;background:none;overflow:hidden;font-family:inherit}
+.design canvas{width:100%;display:block;border-radius:8px;aspect-ratio:1/1}
+.design span{display:block;font-size:11px;font-weight:700;color:#374151;padding:3px 0 1px;text-align:center}
+.design[aria-pressed=true]{border-color:#057A44}
+.preview{position:relative}
+#cv{width:100%;display:block;border-radius:12px;box-shadow:0 4px 18px rgba(15,30,54,.18);background:#fff}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none}
+.btn.wa{background:#25D366;color:#fff}.btn.dl{background:#057A44;color:#fff}.btn.ghost{background:#fff;color:#0F1E36;border:1.5px solid #e0e0e0}
+.btn.gold{background:#FFB81C;color:#0F1E36}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.smallbtn{border:1.5px solid #057A44;background:#fff;color:#057A44;border-radius:18px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.muted{color:#6B7280;font-size:13px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0F1E36;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.on{opacity:1}
+.gifts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.gift{border:1px solid #eee;border-radius:10px;overflow:hidden;text-decoration:none;color:#0F1E36;background:#fff;display:flex;flex-direction:column}
+.gift img,.gift .ph{width:100%;height:110px;object-fit:cover;background:#f8f8f8;display:flex;align-items:center;justify-content:center;font-size:34px}
+.gift b{font-size:13px;padding:6px 8px 0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gift i{font-style:normal;font-size:13px;font-weight:800;color:#057A44;padding:2px 8px 8px}
+.hidden{display:none!important}
+.recv h1{font-size:21px;margin-bottom:4px}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-header-text"><div class="app-header-title">🎂 Birthday Cards</div><div class="app-header-sub">Free · made with love on Auntie Tobi</div></div>
+  <a class="back-btn" href="/">← Auntie Tobi</a>
+</header>
+
+<main class="wrap">
+  <!-- receiver view -->
+  <section id="recv" class="hidden">
+    <div class="card recv"><h1 id="recvTitle">🎂 You’ve got a birthday card!</h1><p class="muted" id="recvFrom"></p></div>
+    <div class="card" style="margin-top:12px"><canvas id="cvR"></canvas>
+      <div class="btns"><button class="btn dl" id="rDl">⬇️ Save the card</button><button class="btn wa" id="rThanks">💬 Say thank you</button></div>
+      <a class="btn gold" href="/birthday" style="margin-top:8px">🎂 Make your own free card</a>
+    </div>
+  </section>
+
+  <!-- maker -->
+  <section id="maker" style="display:flex;flex-direction:column;gap:12px">
+    <div class="hero"><h1>Make someone smile today 💚</h1><p>Create a personalised birthday card in seconds — choose a design, add their name, pick a message and share the love. Free, no sign-up.</p></div>
+
+    <div class="card">
+      <div class="step">1 · Who is it for?</div>
+      <div class="chips" id="who"></div>
+      <div class="row" style="margin-top:4px">
+        <div><label for="name">Their name</label><input id="name" maxlength="30" placeholder="e.g. Amara"></div>
+        <div style="flex:.55"><label for="age">Age <small>(optional)</small></label><input id="age" inputmode="numeric" maxlength="3" placeholder="e.g. 40"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step">2 · Message</div>
+      <div class="chips" id="style"></div>
+      <label for="msg" style="display:flex;justify-content:space-between;align-items:center">Birthday message <button class="smallbtn" id="suggest" type="button">✨ Suggest another</button></label>
+      <textarea id="msg" rows="4" maxlength="320"></textarea>
+      <label for="from">From</label><input id="from" maxlength="40" placeholder="e.g. Seun">
+    </div>
+
+    <div class="card">
+      <div class="step">3 · Choose a design</div>
+      <div class="designs" id="designs"></div>
+      <div class="chips" id="size" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card preview">
+      <div class="step">Your card</div>
+      <canvas id="cv"></canvas>
+      <div class="btns"><button class="btn wa" id="share">💬 Send on WhatsApp</button><button class="btn dl" id="dl">⬇️ Download</button></div>
+      <div class="btns"><button class="btn ghost" id="link">🔗 Copy card link</button><button class="btn ghost" id="copy">📋 Copy message</button></div>
+    </div>
+
+    <div class="card hidden" id="giftsBox">
+      <div class="step">🎁 Gift ideas from Nigerian businesses</div>
+      <p class="muted">Make their day even sweeter — from the Auntie Tobi Marketplace.</p>
+      <div class="gifts" id="gifts"></div>
+      <a class="btn ghost" href="/marketplace" style="margin-top:10px">🛍️ See the whole Marketplace</a>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var WHO = { friend: '👯 Friend', partner: '💕 Partner', mum: '👩🏾 Mum', dad: '👨🏾 Dad', sister: '👭 Sister', brother: '👬 Brother', child: '🧒🏾 Child', colleague: '💼 Colleague', pastor: '⛪ Pastor' };
+  var STYLES = { heartfelt: '💖 Heartfelt', funny: '😂 Funny', prayer: '🙏 Prayer', naija: '🇳🇬 Naija vibes' };
+  var SIZES = { square: '⬜ Square', story: '📱 Story / Status' };
+
+  // ── message library: {s: style, w: who (omit = anyone), t: text} — {name} is replaced
+  var MSG = [
+    { s: 'heartfelt', t: 'May this new year of your life bring you happiness, beautiful memories and countless reasons to smile.' },
+    { s: 'heartfelt', t: 'Wishing you a birthday as warm and wonderful as you are. Here’s to love, laughter and big dreams coming true.' },
+    { s: 'heartfelt', t: 'Today we celebrate you — your kindness, your strength and the light you bring everywhere you go.' },
+    { s: 'heartfelt', t: 'Another year older, wiser and even more amazing. May this year be your best one yet.' },
+    { s: 'heartfelt', t: 'Thank you for being you. May your day be full of love and your year full of good news.' },
+    { s: 'heartfelt', w: 'friend', t: 'Friends like you are rare treasures. Thank you for every laugh, every chat and every time you showed up. Happy birthday!' },
+    { s: 'heartfelt', w: 'partner', t: 'Every day with you is a gift, but today is extra special. I love you more than words can say.' },
+    { s: 'heartfelt', w: 'partner', t: 'You are my favourite person and my safe place. Happy birthday, my love — here’s to forever with you.' },
+    { s: 'heartfelt', w: 'mum', t: 'Mum, your love is the foundation of everything I am. Thank you for every sacrifice and every prayer. I love you!' },
+    { s: 'heartfelt', w: 'mum', t: 'To the most beautiful soul I know — happy birthday, Mummy. May God keep you strong and smiling for many more years.' },
+    { s: 'heartfelt', w: 'dad', t: 'Daddy, thank you for your strength, your wisdom and your quiet love. Happy birthday to my hero.' },
+    { s: 'heartfelt', w: 'dad', t: 'You taught me to stand tall and work hard. Today I celebrate you — happy birthday, Dad!' },
+    { s: 'heartfelt', w: 'sister', t: 'Sister, friend, confidant — you are all of these and more. Happy birthday to my forever bestie.' },
+    { s: 'heartfelt', w: 'brother', t: 'Brother, you’ve always had my back. Wishing you a year of big wins and even bigger blessings.' },
+    { s: 'heartfelt', w: 'child', t: 'Watching you grow is the greatest joy of my life. Happy birthday, my darling — the world is yours!' },
+    { s: 'heartfelt', w: 'colleague', t: 'Working with you makes every day better. Wishing you a fantastic birthday and a year full of success.' },
+    { s: 'heartfelt', w: 'pastor', t: 'Thank you for your faithful leadership and loving care. May the Lord reward and renew you this new year, Pastor.' },
+    { s: 'funny', t: 'Happy birthday! Don’t worry about getting older — you still look young… from a distance. 😄' },
+    { s: 'funny', t: 'Another year of being fabulous. Honestly, how do you do it? Asking for a friend. 😂' },
+    { s: 'funny', t: 'Age is just a number — and yours is getting quite big! Enjoy the cake before the candles set off the fire alarm. 🎂' },
+    { s: 'funny', t: 'You’re not old, you’re vintage. Classic. Limited edition. Happy birthday!' },
+    { s: 'funny', t: 'Calories don’t count on your birthday. That’s science. Eat the whole cake. 🍰' },
+    { s: 'funny', w: 'friend', t: 'Happy birthday to the friend who knows all my secrets. Let’s keep it that way. 🤐😂' },
+    { s: 'funny', w: 'partner', t: 'Happy birthday to the person who steals my side of the bed and my heart. Mostly the bed. 😂💕' },
+    { s: 'funny', w: 'mum', t: 'Happy birthday, Mum! Thank you for not selling me when I was a teenager. 😂 I love you!' },
+    { s: 'funny', w: 'dad', t: 'Happy birthday, Dad! Thank you for the dad jokes — they’re so bad they’re good. 😂' },
+    { s: 'funny', w: 'sister', t: 'Happy birthday to my sister — the reason Mum and Dad have grey hair (not me, obviously). 😂' },
+    { s: 'funny', w: 'brother', t: 'Happy birthday, bro! You’re officially old enough to know better — but we both know you won’t. 😂' },
+    { s: 'funny', w: 'child', t: 'Happy birthday! You’re growing so fast, we might have to start charging rent. 😂💚' },
+    { s: 'funny', w: 'colleague', t: 'Happy birthday! Today the only meeting you need to attend is with a big slice of cake. 🎂' },
+    { s: 'prayer', t: 'May God bless you with good health, long life, peace and prosperity. Happy birthday!' },
+    { s: 'prayer', t: 'This new year, may doors open for you, may favour find you and may joy never leave your home. Amen.' },
+    { s: 'prayer', t: '“The Lord bless you and keep you; the Lord make His face shine on you.” Happy birthday! — Numbers 6:24–25' },
+    { s: 'prayer', t: 'May this year be your year of testimonies, overflow and answered prayers. Happy birthday!' },
+    { s: 'prayer', t: 'Thanking God for your life today. May His goodness and mercy follow you all the days of your life.' },
+    { s: 'prayer', t: 'May you never lack, may you never be stranded and may you celebrate many more years in good health.' },
+    { s: 'prayer', w: 'mum', t: 'Mummy, may God grant you long life in good health so you can eat the fruit of your labour. We love you!' },
+    { s: 'prayer', w: 'dad', t: 'Daddy, may the Lord renew your strength like the eagle’s and bless you with peace and long life.' },
+    { s: 'prayer', w: 'child', t: 'My child, may God guide your steps, guard your heart and make you a blessing to your generation.' },
+    { s: 'prayer', w: 'partner', t: 'My love, may God bless our home, keep us together and fill your new year with His favour.' },
+    { s: 'prayer', w: 'pastor', t: 'Pastor, may the God you serve uplift you, strengthen you and enlarge your coast. Happy birthday!' },
+    { s: 'naija', t: 'Happy birthday! Long life and prosperity — may this year na your year of plenty! 🙌🏾' },
+    { s: 'naija', t: 'Today na your day! Chop life, enjoy yourself, and may your enemies watch you shine. 😎🎉' },
+    { s: 'naija', t: 'Happy birthday! May your pocket be heavy, your plate be full and your year be sweet like puff-puff. 🍩' },
+    { s: 'naija', t: 'E go better, but today e don already sweet! Happy birthday — more life, more blessings! 🥳' },
+    { s: 'naija', t: 'Owambe-level birthday wishes to you! May the jollof be smoky and the vibes be correct. 🍛🎶' },
+    { s: 'naija', t: 'Happy birthday! May God butter your bread, both sides! 🙏🏾💚' },
+    { s: 'naija', w: 'mum', t: 'Mummy mi, happy birthday! Your prayers carry us — long life and plenty enjoyment for you. 💚' },
+    { s: 'naija', w: 'dad', t: 'Daddy, happy birthday! The original big man — may you continue to reign. 👑' },
+    { s: 'naija', w: 'friend', t: 'My guy / my babe — happy birthday! We go still chop this life together. 🥂😂' },
+    { s: 'naija', w: 'partner', t: 'My jewel of inestimable value — happy birthday! I go love you reach heaven. 💕' },
+    { s: 'naija', w: 'sister', t: 'Happy birthday, my sister! Correct babe, top-tier — the year is yours. 💅🏾' },
+    { s: 'naija', w: 'brother', t: 'Happy birthday, bros! Big boy things only — may this year bring the bag. 💰😎' },
+    { s: 'naija', w: 'child', t: 'Happy birthday, my pikin! Grow in wisdom and favour — you go do pass us! 🌟' },
+    { s: 'naija', w: 'colleague', t: 'Happy birthday! May promotion locate you and may the work stress run from you. 😂🙏🏾' },
+  ];
+
+  // ── designs ──
+  var D = {
+    floral: { label: 'Floral', fg: '#7A2E45', accent: '#C85B7C', head: '#B4446A' },
+    gold: { label: 'Elegant Gold', fg: '#FFFFFF', accent: '#E6C068', head: '#E6C068' },
+    navy: { label: 'Classic', fg: '#FFFFFF', accent: '#FFB81C', head: '#FFB81C' },
+    confetti: { label: 'Confetti', fg: '#0F1E36', accent: '#E8456B', head: '#E8456B' },
+    balloons: { label: 'Balloons', fg: '#0F1E36', accent: '#2563EB', head: '#2563EB' },
+    prayer: { label: 'Blessings', fg: '#3B2B5E', accent: '#B08D57', head: '#6D4FA1' },
+    ankara: { label: 'Ankara', fg: '#3A1F0B', accent: '#E3741D', head: '#0E7A4A' },
+    pinkgold: { label: 'Pink & Gold', fg: '#5A2A3A', accent: '#C9A04E', head: '#C9A04E' },
+    naija: { label: 'Naija Green', fg: '#0F1E36', accent: '#057A44', head: '#057A44' },
+    sunset: { label: 'Sunset', fg: '#FFFFFF', accent: '#FFE08A', head: '#FFFFFF' },
+    cake: { label: 'Cake', fg: '#4A2C2A', accent: '#E86A92', head: '#E86A92' },
+    stars: { label: 'Starry', fg: '#FFFFFF', accent: '#FFD86B', head: '#FFD86B' },
+  };
+  // seeded random so designs look the same every time
+  function rng(seed) { var s = seed; return function () { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+  function circle(c, x, y, r, col) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = col; c.fill(); }
+  function flower(c, x, y, r, petal, centre) {
+    for (var i = 0; i < 6; i++) { var a = i * Math.PI / 3; c.beginPath(); c.ellipse(x + Math.cos(a) * r * .55, y + Math.sin(a) * r * .55, r * .5, r * .3, a, 0, Math.PI * 2); c.fillStyle = petal; c.fill(); }
+    circle(c, x, y, r * .25, centre);
+  }
+  function leaf(c, x, y, r, a, col) { c.save(); c.translate(x, y); c.rotate(a); c.beginPath(); c.ellipse(0, 0, r, r * .38, 0, 0, Math.PI * 2); c.fillStyle = col; c.fill(); c.restore(); }
+  function lin(c, W, H, stops) { var g = c.createLinearGradient(0, 0, 0, H); stops.forEach(function (s, i) { g.addColorStop(i / (stops.length - 1), s); }); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+  function frame(c, W, H, inset, col, lw) { c.strokeStyle = col; c.lineWidth = lw; c.strokeRect(inset, inset, W - inset * 2, H - inset * 2); }
+  function star(c, x, y, r, col) { c.beginPath(); for (var i = 0; i < 10; i++) { var a = i * Math.PI / 5 - Math.PI / 2, rr = i % 2 ? r * .45 : r; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); c.fillStyle = col; c.fill(); }
+  var BG = {
+    floral: function (c, W, H) { lin(c, W, H, ['#FFF6F2', '#FDE9EC']); var S = W / 1080; [[0, 0], [W, 0], [0, H], [W, H]].forEach(function (p, k) { var sx = p[0] ? -1 : 1, sy = p[1] ? -1 : 1; leaf(c, p[0] + sx * 170 * S, p[1] + sy * 60 * S, 70 * S, sx * sy * .6, '#9DBF9E'); leaf(c, p[0] + sx * 60 * S, p[1] + sy * 170 * S, 70 * S, sx * sy * 1.1, '#B7D3B0'); flower(c, p[0] + sx * 90 * S, p[1] + sy * 90 * S, 95 * S, '#F4A6B8', '#F6D36B'); flower(c, p[0] + sx * 220 * S, p[1] + sy * 150 * S, 60 * S, '#F7C6A9', '#F6D36B'); flower(c, p[0] + sx * 150 * S, p[1] + sy * 230 * S, 50 * S, '#E58FA8', '#FFF1B5'); }); },
+    gold: function (c, W, H) { lin(c, W, H, ['#0B3D2A', '#062417']); var S = W / 1080; frame(c, W, H, 40 * S, '#E6C068', 6 * S); frame(c, W, H, 58 * S, 'rgba(230,192,104,.5)', 2 * S); var r = rng(7); for (var i = 0; i < 40; i++) star(c, r() * W, r() * H, (4 + r() * 8) * S, 'rgba(230,192,104,' + (.25 + r() * .5) + ')'); },
+    navy: function (c, W, H) { lin(c, W, H, ['#16294A', '#0F1E36']); var S = W / 1080; c.fillStyle = '#FFB81C'; c.fillRect(0, H * .12, W, 14 * S); c.fillRect(0, H * .88 - 14 * S, W, 14 * S); c.fillStyle = 'rgba(255,184,28,.35)'; c.fillRect(0, H * .12 + 22 * S, W, 4 * S); c.fillRect(0, H * .88 - 26 * S, W, 4 * S); },
+    confetti: function (c, W, H) { c.fillStyle = '#FFFDF8'; c.fillRect(0, 0, W, H); var r = rng(3), cols = ['#E8456B', '#FFB81C', '#2CB67D', '#3B82F6', '#A855F7', '#F97316'], S = W / 1080; for (var i = 0; i < 160; i++) { var x = r() * W, y = r() * H; if (x > W * .12 && x < W * .88 && y > H * .2 && y < H * .82) continue; c.save(); c.translate(x, y); c.rotate(r() * 6.3); c.fillStyle = cols[i % cols.length]; if (i % 3) c.fillRect(-12 * S, -5 * S, 24 * S, 10 * S); else { c.beginPath(); c.arc(0, 0, 8 * S, 0, 7); c.fill(); } c.restore(); } },
+    balloons: function (c, W, H) { lin(c, W, H, ['#E8F3FF', '#FFFFFF']); var S = W / 1080, cols = ['#3B82F6', '#F43F5E', '#FACC15', '#22C55E', '#A855F7']; [[110, 230], [230, 130], [870, 150], [980, 260], [160, 420], [930, 430]].forEach(function (p, i) { var x = p[0] * S, y = p[1] * S * (H / W > 1.3 ? 1 : 1); c.strokeStyle = 'rgba(15,30,54,.35)'; c.lineWidth = 2 * S; c.beginPath(); c.moveTo(x, y + 80 * S); c.quadraticCurveTo(x + 20 * S, y + 180 * S, x - 10 * S, y + 280 * S); c.stroke(); c.beginPath(); c.ellipse(x, y, 62 * S, 78 * S, 0, 0, 7); c.fillStyle = cols[i % 5]; c.fill(); c.beginPath(); c.ellipse(x - 20 * S, y - 28 * S, 12 * S, 20 * S, -.5, 0, 7); c.fillStyle = 'rgba(255,255,255,.45)'; c.fill(); }); },
+    prayer: function (c, W, H) { lin(c, W, H, ['#F5EFFF', '#EBE2FA', '#FFF8E8']); var S = W / 1080; c.save(); c.translate(W / 2, -60 * S); for (var i = 0; i < 18; i++) { c.rotate(Math.PI / 18 * (i ? 1 : 0)); c.beginPath(); c.moveTo(0, 0); c.lineTo(-40 * S, H * 1.2); c.lineTo(40 * S, H * 1.2); c.closePath(); c.fillStyle = 'rgba(255,240,200,.18)'; c.fill(); } c.restore(); frame(c, W, H, 36 * S, 'rgba(176,141,87,.6)', 3 * S); var r = rng(11); for (var k = 0; k < 24; k++) star(c, r() * W, r() * H * .3, (3 + r() * 6) * S, 'rgba(176,141,87,.5)'); },
+    ankara: function (c, W, H) { var S = W / 1080, b = 90 * S, cols = ['#E3741D', '#0E7A4A', '#7B2D8E', '#F2B705', '#C0392B']; c.fillStyle = '#F2B705'; c.fillRect(0, 0, W, H); for (var y = 0, j = 0; y < H; y += b, j++) for (var x = 0, i = 0; x < W; x += b, i++) { c.fillStyle = cols[(i + j) % 5]; c.beginPath(); c.moveTo(x, y); c.lineTo(x + b, y); c.lineTo(x + b / 2, y + b); c.closePath(); c.fill(); circle(c, x + b / 2, y + b * .32, b * .14, cols[(i + j + 2) % 5]); } c.fillStyle = '#FFF8EC'; var m = 70 * S; c.beginPath(); if (c.roundRect) c.roundRect(m, m, W - m * 2, H - m * 2, 30 * S); else c.rect(m, m, W - m * 2, H - m * 2); c.fill(); },
+    pinkgold: function (c, W, H) { lin(c, W, H, ['#FCE4EC', '#F8D7E3']); var r = rng(5), S = W / 1080; for (var i = 0; i < 90; i++) circle(c, r() * W, r() * H, (2 + r() * 7) * S, 'rgba(201,160,78,' + (.35 + r() * .5) + ')'); frame(c, W, H, 44 * S, '#C9A04E', 4 * S); },
+    naija: function (c, W, H) { c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, W, H); c.fillStyle = '#057A44'; c.fillRect(0, 0, W * .14, H); c.fillRect(W * .86, 0, W * .14, H); var S = W / 1080; c.fillStyle = '#FFB81C'; c.fillRect(W * .14, 0, 8 * S, H); c.fillRect(W * .86 - 8 * S, 0, 8 * S, H); },
+    sunset: function (c, W, H) { lin(c, W, H, ['#FF7E5F', '#FD5E7C', '#7B3FA0']); var S = W / 1080; circle(c, W * .82, H * .16, 140 * S, 'rgba(255,224,138,.35)'); circle(c, W * .82, H * .16, 90 * S, 'rgba(255,224,138,.55)'); circle(c, W * .12, H * .9, 200 * S, 'rgba(255,255,255,.08)'); },
+    cake: function (c, W, H) { lin(c, W, H, ['#FFF4F6', '#FFE9D6']); var S = W / 1080, cx = W / 2, by = H - 40 * S; c.fillStyle = '#F9C5D1'; c.fillRect(cx - 230 * S, by - 120 * S, 460 * S, 120 * S); c.fillStyle = '#FFE3A3'; c.fillRect(cx - 170 * S, by - 220 * S, 340 * S, 100 * S); c.fillStyle = '#E86A92'; for (var i = 0; i < 9; i++) circle(c, cx - 200 * S + i * 50 * S, by - 120 * S, 22 * S, '#FFFFFF'); for (var k = 0; k < 5; k++) { var x = cx - 120 * S + k * 60 * S; c.fillStyle = ['#3B82F6', '#22C55E', '#F43F5E', '#A855F7', '#FACC15'][k]; c.fillRect(x - 7 * S, by - 290 * S, 14 * S, 70 * S); c.beginPath(); c.ellipse(x, by - 305 * S, 9 * S, 16 * S, 0, 0, 7); c.fillStyle = '#FFB81C'; c.fill(); } var r = rng(9); for (var j = 0; j < 30; j++) circle(c, r() * W, r() * H * .25, (4 + r() * 8) * S, ['#F9C5D1', '#FFE3A3', '#C6E7FF'][j % 3]); },
+    stars: function (c, W, H) { lin(c, W, H, ['#1E1147', '#3A1C71', '#140B33']); var r = rng(13), S = W / 1080; for (var i = 0; i < 140; i++) circle(c, r() * W, r() * H, (1 + r() * 3) * S, 'rgba(255,255,255,' + (.3 + r() * .7) + ')'); for (var k = 0; k < 10; k++) star(c, r() * W, r() * H, (8 + r() * 14) * S, 'rgba(255,216,107,' + (.5 + r() * .5) + ')'); },
+  };
+  // where the text sits (as a fraction of the card) — the cake design keeps the bottom free
+  function area(id, W, H) { var p = id === 'ankara' ? .12 : id === 'naija' ? .19 : .1; return { x: W * p, w: W * (1 - p * 2), top: H * (id === 'navy' ? .19 : .14), bottom: H * (id === 'cake' ? .62 : id === 'navy' ? .8 : .86) }; }
+
+  function wrap(c, text, maxW) { var out = []; String(text || '').split('\n').forEach(function (para) { var words = para.split(/\s+/).filter(Boolean), l = ''; words.forEach(function (w) { var t = l ? l + ' ' + w : w; if (c.measureText(t).width > maxW && l) { out.push(l); l = w; } else l = t; }); out.push(l); }); return out; }
+  function ordinal(n) { n = parseInt(n, 10); if (!n) return ''; var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+
+  function draw(cv, st, scale) {
+    var W = 1080, H = st.size === 'story' ? 1920 : 1080; scale = scale || 1;
+    cv.width = W * scale; cv.height = H * scale; var c = cv.getContext('2d'); c.setTransform(scale, 0, 0, scale, 0, 0);
+    var d = D[st.design] || D.floral; BG[st.design] ? BG[st.design](c, W, H) : BG.floral(c, W, H);
+    var a = area(st.design, W, H), cx = W / 2; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    var age = ordinal(st.age), head = age ? 'Happy ' + age + ' Birthday' : 'Happy Birthday', name = (st.name || '').trim();
+    // fit everything into the text area: shrink until it fits
+    for (var k = st.size === 'story' ? 1.4 : 1; k >= .55; k -= .05) {
+      var hs = 120 * k, ns = 104 * k, ms = 42 * k, fs = 38 * k;
+      c.font = '400 ' + hs + 'px "Great Vibes", cursive'; var headL = wrap(c, head, a.w);
+      c.font = '800 ' + ns + 'px "Playfair Display", serif'; var nameL = name ? wrap(c, name + '!', a.w) : [];
+      c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; var msgL = wrap(c, st.msg, a.w * .92);
+      var total = headL.length * hs * 1.05 + nameL.length * ns * 1.1 + 40 * k + msgL.length * ms * 1.35 + (st.from ? 30 * k + fs * 1.3 : 0);
+      if (total <= a.bottom - a.top) break;
+    }
+    var y = a.top + Math.max(0, (a.bottom - a.top - total) / 2) + hs * .85;
+    c.fillStyle = d.head; c.font = '400 ' + hs + 'px "Great Vibes", cursive'; headL.forEach(function (l) { c.fillText(l, cx, y); y += hs * 1.05; });
+    y += ns * .05; c.fillStyle = d.fg; c.font = '800 ' + ns + 'px "Playfair Display", serif'; nameL.forEach(function (l) { c.fillText(l, cx, y); y += ns * 1.1; });
+    // little divider
+    y += 4 * k; c.fillStyle = d.accent; c.fillRect(cx - 50, y - ns * .45, 100, 5); y += 36 * k;
+    c.fillStyle = d.fg; c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; msgL.forEach(function (l) { c.fillText(l, cx, y); y += ms * 1.35; });
+    if (st.from) { y += 30 * k; c.fillStyle = d.accent; c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; c.fillText('With love, ' + st.from + ' 💚', cx, y); }
+    // attribution
+    var dark = ['gold', 'navy', 'sunset', 'stars'].indexOf(st.design) >= 0;
+    c.font = '600 24px "DM Sans", sans-serif'; c.fillStyle = dark ? 'rgba(255,255,255,.7)' : 'rgba(15,30,54,.55)';
+    c.fillText('Made with love on Auntie Tobi 💚 auntietobi.co.uk/birthday', cx, H - (st.design === 'cake' ? 14 : 30));
+  }
+
+  // ── state ──
+  var st = { who: 'friend', style: 'heartfelt', design: 'floral', size: 'square', name: '', age: '', msg: '', from: '' }, lastPick = -1;
+  function pool() { return MSG.filter(function (m) { return m.s === st.style && (!m.w || m.w === st.who); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who); }); }
+  function suggest(first) { var p = pool(); if (!p.length) return; var specific = p.filter(function (m) { return m.w; }); var i; if (first && specific.length) i = 0; else { i = Math.floor(Math.random() * p.length); if (p.length > 1 && i === lastPick) i = (i + 1) % p.length; } lastPick = i; st.msg = p[i].t; $('msg').value = st.msg; render(); }
+  function chips(id, map, key) {
+    var el = $(id); el.innerHTML = Object.keys(map).map(function (k) { return '<button type="button" class="chip" data-v="' + k + '" aria-pressed="' + (st[key] === k) + '">' + map[k] + '</button>'; }).join('');
+    el.onclick = function (e) { var b = e.target.closest('[data-v]'); if (!b) return; st[key] = b.dataset.v; [].forEach.call(el.children, function (x) { x.setAttribute('aria-pressed', x === b); }); if (key === 'who' || key === 'style') suggest(true); else render(); save(); };
+  }
+  var rT = 0; function render() { clearTimeout(rT); rT = setTimeout(function () { draw($('cv'), st, 0.75); }, 30); }
+  function save() { try { localStorage.setItem('tobiBday', JSON.stringify({ from: st.from, design: st.design, size: st.size })); } catch (e) {} }
+  function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2200); }
+
+  // card link: the whole card lives in the link — nothing is stored on a server
+  function enc(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function dec(s) { try { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch (e) { return null; } }
+  function cardLink() { return location.origin + '/birthday?c=' + enc({ n: st.name, a: st.age, m: st.msg, f: st.from, d: st.design, z: st.size }); }
+  function fileName() { return 'birthday-card-' + (st.name || 'for-you').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; }
+  function blob(state) { return new Promise(function (ok) { var cv = document.createElement('canvas'); draw(cv, state || st, 1); cv.toBlob(function (b) { ok(b); }, 'image/png'); }); }
+  async function download(state) { var b = await blob(state); var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = fileName(); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 3000); }
+  function track(ev) { try { if (window.gtag) gtag('event', ev, { event_category: 'birthday_card', event_label: st.design }); } catch (e) {} }
+
+  async function shareWa() {
+    var link = cardLink(), text = '🎂 Happy birthday' + (st.name ? ', ' + st.name : '') + '! I made you a card 💚\n' + link;
+    try {
+      var b = await blob(), f = new File([b], fileName(), { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: text }); track('bday_share_image'); showGifts(); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); track('bday_share_link'); showGifts();
+  }
+  function copyText(t, ok) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast(ok); }, function () { prompt('Copy this:', t); }); }
+
+  // 🎁 gift ideas from the Marketplace (after a card is made)
+  var giftsShown = false;
+  function showGifts() {
+    if (giftsShown) return; giftsShown = true;
+    fetch('/.netlify/functions/studio-market?feed=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      var items = (d && d.items || []).slice(); if (!items.length) return;
+      for (var i = items.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = items[i]; items[i] = items[j]; items[j] = t; }
+      var esc = function (s) { var e = document.createElement('div'); e.textContent = s == null ? '' : String(s); return e.innerHTML; };
+      $('gifts').innerHTML = items.slice(0, 4).map(function (p) {
+        var link = p.link || (p.wa ? 'https://wa.me/' + String(p.wa).replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi, I saw ' + p.name + ' on Auntie Tobi') : '/marketplace');
+        return '<a class="gift" href="' + esc(link) + '" target="_blank" rel="noopener">' + (p.img ? '<img src="' + esc(p.img) + '" alt="" loading="lazy">' : '<div class="ph">' + esc(p.emoji || '🎁') + '</div>') + '<b>' + esc(p.name) + '</b><i>' + esc(p.price || '') + '</i></a>';
+      }).join('');
+      $('giftsBox').classList.remove('hidden');
+    }).catch(function () {});
+  }
+
+  // ── receiver view ──
+  var q = new URLSearchParams(location.search), got = q.get('c') ? dec(q.get('c')) : null;
+  function start() {
+    if (got && (got.m || got.n)) {
+      $('maker').classList.add('hidden'); $('recv').classList.remove('hidden');
+      var rs = { name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), design: D[got.d] ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square' };
+      $('recvTitle').textContent = '🎂 Happy birthday' + (rs.name ? ', ' + rs.name : '') + '!';
+      $('recvFrom').textContent = rs.from ? rs.from + ' made you a birthday card 💚' : 'Someone made you a birthday card 💚';
+      var cvR = $('cvR'); cvR.style.width = '100%'; cvR.style.borderRadius = '12px'; draw(cvR, rs, 0.75);
+      $('rDl').onclick = function () { st.name = rs.name; download(rs); };
+      $('rThanks').onclick = function () { window.open('https://wa.me/?text=' + encodeURIComponent('Thank you so much for my birthday card' + (rs.from ? ', ' + rs.from : '') + '! 🥰💚'), '_blank'); };
+      document.title = '🎂 A birthday card for ' + (rs.name || 'you') + ' — Auntie Tobi';
+      return;
+    }
+    try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (D[sv.design]) st.design = sv.design; if (SIZES[sv.size]) st.size = sv.size; } catch (e) {}
+    chips('who', WHO, 'who'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
+    $('designs').innerHTML = Object.keys(D).map(function (k) { return '<button type="button" class="design" data-d="' + k + '" aria-pressed="' + (st.design === k) + '"><canvas width="160" height="160"></canvas><span>' + D[k].label + '</span></button>'; }).join('');
+    [].forEach.call($('designs').children, function (b) { var c = b.querySelector('canvas').getContext('2d'); c.scale(160 / 1080, 160 / 1080); BG[b.dataset.d](c, 1080, 1080); });
+    $('designs').onclick = function (e) { var b = e.target.closest('[data-d]'); if (!b) return; st.design = b.dataset.d; [].forEach.call($('designs').children, function (x) { x.setAttribute('aria-pressed', x === b); }); render(); save(); };
+    $('from').value = st.from;
+    $('name').oninput = function () { st.name = this.value; render(); };
+    $('age').oninput = function () { this.value = this.value.replace(/[^0-9]/g, ''); st.age = this.value; render(); };
+    $('msg').oninput = function () { st.msg = this.value; render(); };
+    $('from').oninput = function () { st.from = this.value; render(); save(); };
+    $('suggest').onclick = function () { suggest(false); };
+    $('dl').onclick = function () { download(); track('bday_download'); toast('Card saved ✅'); showGifts(); };
+    $('share').onclick = shareWa;
+    $('link').onclick = function () { copyText(cardLink(), 'Card link copied 🔗'); track('bday_link'); showGifts(); };
+    $('copy').onclick = function () { copyText((st.name ? 'Happy birthday, ' + st.name + '! ' : 'Happy birthday! ') + st.msg + (st.from ? '\n— ' + st.from : ''), 'Message copied 📋'); };
+    suggest(true);
+  }
+  var go = function () { start(); if (!got) render(); };
+  if (document.fonts && document.fonts.load) Promise.all(['400 60px "Great Vibes"', '800 60px "Playfair Display"', '500 30px "DM Sans"', 'italic 700 30px "DM Sans"'].map(function (f) { return document.fonts.load(f).catch(function () {}); })).then(go, go);
+  else go();
+})();
+</script>
+</body>
+</html>
