@@ -38,7 +38,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .design span{display:block;font-size:11px;font-weight:700;color:#374151;padding:3px 0 1px;text-align:center}
 .design[aria-pressed=true]{border-color:#057A44}
 .preview{position:relative}
-#cv{touch-action:none;width:100%;display:block;border-radius:12px;box-shadow:0 4px 18px rgba(15,30,54,.18);background:#fff}
+#cv{width:100%;display:block;border-radius:12px;box-shadow:0 4px 18px rgba(15,30,54,.18);background:#fff}
 .btn{display:block;width:100%;border:0;border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none}
 .btn.wa{background:#25D366;color:#fff}.btn.dl{background:#057A44;color:#fff}.btn.ghost{background:#fff;color:#0F1E36;border:1.5px solid #e0e0e0}
 .btn.gold{background:#FFB81C;color:#0F1E36}
@@ -47,12 +47,24 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .muted{color:#6B7280;font-size:13px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0F1E36;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.on{opacity:1}
-.gifts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
 .gift{border:1px solid #eee;border-radius:10px;overflow:hidden;text-decoration:none;color:#0F1E36;background:#fff;display:flex;flex-direction:column}
 .gift img,.gift .ph{width:100%;height:110px;object-fit:cover;background:#f8f8f8;display:flex;align-items:center;justify-content:center;font-size:34px}
 .gift b{font-size:13px;padding:6px 8px 0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .gift i{font-style:normal;font-size:13px;font-weight:800;color:#057A44;padding:2px 8px 8px}
 .hidden{display:none!important}
+#cv.adjust{touch-action:none;cursor:grab;outline:3px dashed #057A44;outline-offset:3px}
+.adjhint{background:#E3F2EA;color:#04613A;border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700;margin-top:8px}
+.gifts{display:flex;overflow-x:auto;gap:10px;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.gift{flex:0 0 150px;scroll-snap-align:start}
+.gift u{text-decoration:none;font-size:11.5px;color:#6B7280;padding:0 8px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:500}
+.cover{position:fixed;inset:0;z-index:600;background:radial-gradient(circle at 50% 40%,#0B6B40,#062a1b);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;cursor:pointer;border:0;width:100%;font-family:inherit}
+.cover .gb{font-size:110px;animation:bob 1.4s ease-in-out infinite;filter:drop-shadow(0 10px 20px rgba(0,0,0,.35))}
+.cover h2{font-size:24px;margin-top:14px}.cover p{font-size:15px;opacity:.9;margin-top:6px}
+.cover .tap{margin-top:22px;background:#FFB81C;color:#0F1E36;font-weight:800;border-radius:24px;padding:12px 22px;font-size:16px}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-14px) rotate(4deg)}}
+.recvbar{display:flex;gap:8px;margin-top:8px}.recvbar .btn{padding:10px}
+@media (prefers-reduced-motion:reduce){.cover .gb{animation:none}}
 .recv h1{font-size:21px;margin-bottom:4px}
 </style>
 </head>
@@ -67,11 +79,13 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   <!-- receiver view -->
   <section id="recv" class="hidden">
     <div class="card recv"><h1 id="recvTitle">🎂 You’ve got a birthday card!</h1><p class="muted" id="recvFrom"></p></div>
-    <div class="card" style="margin-top:12px"><canvas id="cvR"></canvas>
+    <div class="card" style="margin-top:12px"><canvas id="cvR" style="width:100%;display:block;border-radius:12px"></canvas>
       <div class="btns"><button class="btn dl" id="rDl">⬇️ Save the card</button><button class="btn wa" id="rThanks">💬 Say thank you</button></div>
+      <div class="recvbar"><button class="btn ghost" id="again">🎉 Celebrate again</button><button class="btn ghost" id="mute" style="flex:.6;white-space:nowrap"></button></div>
       <a class="btn gold" href="/birthday" style="margin-top:8px">🎂 Make your own free card</a>
     </div>
   </section>
+  <button type="button" class="cover hidden" id="cover"><div class="gb">🎁</div><h2 id="coverT">You’ve got a birthday card!</h2><p id="coverF"></p><div class="tap">Tap to open 🎉</div></button>
 
   <!-- maker -->
   <section id="maker" style="display:flex;flex-direction:column;gap:12px">
@@ -91,7 +105,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       <div class="chips" id="style"></div>
       <label for="msg" style="display:flex;justify-content:space-between;align-items:center">Birthday message <button class="smallbtn" id="suggest" type="button">✨ Suggest another</button></label>
       <textarea id="msg" rows="4" maxlength="320"></textarea>
-      <label for="from">From</label><input id="from" maxlength="40" placeholder="e.g. Seun">
+      <div class="row"><div style="flex:.8"><label for="sign">Sign-off</label><input id="sign" maxlength="30" placeholder="e.g. With love"></div><div><label for="from">From</label><input id="from" maxlength="40" placeholder="e.g. Seun"></div></div>
     </div>
 
     <div class="card">
@@ -104,25 +118,32 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     <div class="card">
       <div class="step">4 · Add their photo <small style="font-weight:400;text-transform:none;letter-spacing:0;color:#6B7280">(optional)</small></div>
       <label class="btn ghost" style="margin:0;text-align:center">📷 Choose a photo<input type="file" accept="image/*" id="photo" hidden></label>
-      <div id="photoBox" class="hidden" style="margin-top:10px"><label for="pz" style="margin-top:0">Zoom <small>— drag the photo on the card to move it</small></label><input type="range" id="pz" min="100" max="300" value="100" style="padding:0">
-        <button type="button" class="smallbtn" id="pRm" style="margin-top:8px">✖ Remove photo</button></div>
+      <div id="photoBox" class="hidden" style="margin-top:10px">
+        <label style="margin-top:0">Photo size</label><div class="chips" id="psz"></div>
+        <label>Photo position</label><div class="chips" id="ppos"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button type="button" class="smallbtn" id="pAdj">✋ Adjust photo</button><button type="button" class="smallbtn" id="pRm" style="border-color:#e0e0e0;color:#6B7280">✖ Remove photo</button></div>
+      </div>
       <p class="muted" style="font-size:12px;margin-top:8px">If you share a card link, the photo is kept on Auntie Tobi for 60 days so they can see it, then deleted automatically.</p>
     </div>
 
     <div class="card preview">
       <div class="step">Your card</div>
       <canvas id="cv"></canvas>
+      <div id="adjBox" class="hidden"><div class="adjhint">✋ Drag the photo on the card to move it, and slide to zoom. Tap <b>Done</b> when it looks right.</div>
+        <label for="pz">Zoom</label><input type="range" id="pz" min="100" max="300" value="100" style="padding:0">
+        <button type="button" class="btn dl" id="pDone" style="margin-top:8px">✅ Done</button></div>
       <div class="btns"><button class="btn wa" id="share">💬 Send on WhatsApp</button><button class="btn dl" id="dl">⬇️ Download</button></div>
       <div class="btns"><button class="btn ghost" id="link">🔗 Copy card link</button><button class="btn ghost" id="copy">📋 Copy message</button></div>
     </div>
 
-    <div class="card hidden" id="giftsBox">
-      <div class="step">🎁 Gift ideas from Nigerian businesses</div>
-      <p class="muted">Make their day even sweeter — from the Auntie Tobi Marketplace.</p>
-      <div class="gifts" id="gifts"></div>
-      <a class="btn ghost" href="/marketplace" style="margin-top:10px">🛍️ See the whole Marketplace</a>
-    </div>
   </section>
+
+    <div class="card hidden" id="giftsBox">
+      <div class="step">🎁 Gift Ideas from Nigerian Business Owners in the UK</div>
+      <p class="muted" style="margin-bottom:8px">Make their day even sweeter — real businesses from the Auntie Tobi Marketplace.</p>
+      <div class="gifts" id="gifts"></div>
+      <a class="btn ghost" href="/marketplace" style="margin-top:10px">🛍️ See all on the Marketplace</a>
+    </div>
 </main>
 <div class="toast" id="toast"></div>
 
@@ -300,39 +321,53 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       var bx = pd[st.size === 'story' ? 'st' : 'sq'];
       a = { x: W * bx[0], w: W * bx[2], top: H * bx[1], bottom: H * (bx[1] + bx[3]) };
     } else { BG[st.design] ? BG[st.design](c, W, H) : BG.floral(c, W, H); a = area(st.design, W, H); }
-    var cx = a.x + a.w / 2, pad = 34;
+    var pad = 34;
     var photo = st.photoImg && st.photoImg.complete && st.photoImg.naturalWidth ? st.photoImg : null;
     var rel = pd && pd.rel ? REL_LINE[pd.rel] || '' : '';
     var inner = { x: a.x + (pd ? pad : 0), w: a.w - (pd ? pad * 2 : 0), top: a.top + (pd ? pad : 0), bottom: a.bottom - (pd ? pad : 0) };
     var age = ordinal(st.age), head = age ? 'Happy ' + age + ' Birthday' : 'Happy Birthday', name = (st.name || '').trim();
-    var avail = inner.bottom - inner.top, ph = photo ? Math.min(inner.w * .5, avail * .34) : 0;
+    var sign = (st.sign == null ? 'With love' : String(st.sign)).trim(), fromL = st.from ? (sign ? sign + ', ' : '') + st.from + ' 💚' : '';
+    var avail = inner.bottom - inner.top, kind = (pd && pd.photo) || 'circle', sz = { s: 0, m: 1, l: 2 }[st.ps] != null ? st.ps : 'm', pos = st.pp === 'left' || st.pp === 'right' ? st.pp : 'center';
+    var side = !!photo && pos !== 'center' && st.size !== 'story';
+    // the photo: beside the words (square, left/right) or above them (centre, or any story card)
+    var pw = 0, ph = 0, tx = inner.x, tw = inner.w;
+    if (photo && side) { var col = inner.w * { s: .34, m: .43, l: .52 }[sz]; pw = col - 24; ph = Math.min(pw * (kind === 'arch' ? 1.25 : 1), avail); tw = inner.w - col; if (pos === 'left') tx = inner.x + col; }
+    else if (photo) { ph = Math.min(inner.w * { s: .3, m: .46, l: .66 }[sz], avail * { s: .24, m: .34, l: .46 }[sz]); pw = kind === 'arch' ? ph * .82 : ph; }
+    var cx = tx + tw / 2, stackPh = photo && !side ? ph + 26 : 0;
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    for (var k = st.size === 'story' ? 1.4 : 1; k >= .5; k -= .05) {
+    for (var k = st.size === 'story' ? 1.4 : 1; k >= .4; k -= .05) {
       var hs = 120 * k, ns = 100 * k, ms = 40 * k, fs = 36 * k, rs = 34 * k;
-      c.font = '400 ' + hs + 'px "Great Vibes", cursive'; var headL = wrap(c, head, inner.w);
-      c.font = '800 ' + ns + 'px "Playfair Display", serif'; var nameL = name ? wrap(c, name + '!', inner.w) : [];
-      c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; var msgL = wrap(c, st.msg, inner.w * .94);
-      var total = (rel ? rs * 1.6 : 0) + (photo ? ph + 26 : 0) + headL.length * hs * 1.02 + nameL.length * ns * 1.1 + 34 * k + msgL.length * ms * 1.35 + (st.from ? 26 * k + fs * 1.3 : 0);
+      c.font = '400 ' + hs + 'px "Great Vibes", cursive'; var headL = wrap(c, head, tw);
+      c.font = '800 ' + ns + 'px "Playfair Display", serif'; var nameL = name ? wrap(c, name + '!', tw) : [];
+      c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; var msgL = wrap(c, st.msg, tw * .94);
+      c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; var fromLs = fromL ? wrap(c, fromL, tw) : [];
+      
+      var total = (rel ? rs * 1.6 : 0) + stackPh + headL.length * hs * 1.02 + nameL.length * ns * 1.1 + 34 * k + msgL.length * ms * 1.35 + (fromLs.length ? 26 * k + fromLs.length * fs * 1.3 : 0);
       if (total <= avail) break;
     }
+    // the "For the best Mum" line: letter-spaced if it fits, otherwise plain, shrunk to fit the column
+    var relT = rel.toUpperCase().split('').join(' '); c.font = '700 ' + rs + 'px "DM Sans", sans-serif';
+    if (rel && c.measureText(relT).width > tw * .92) relT = rel.toUpperCase();
+    if (rel) { var rw = c.measureText(relT).width; if (rw > tw * .92) rs = rs * tw * .92 / rw; }
+    var block = Math.max(total, side ? ph : 0);
     if (pd && pd.panel) {
-      var ph2 = Math.min(a.bottom - a.top, total + pad * 2 + 10), py = a.top + (a.bottom - a.top - ph2) / 2;
+      var ph2 = Math.min(a.bottom - a.top, block + pad * 2 + 10), py = a.top + (a.bottom - a.top - ph2) / 2;
       c.save(); c.fillStyle = pd.panel === 'dark' ? 'rgba(22,10,34,.5)' : 'rgba(255,255,255,.78)'; c.shadowColor = 'rgba(0,0,0,.12)'; c.shadowBlur = 24; rr(c, a.x, py, a.w, ph2, 34); c.fill(); c.restore();
     }
+    var drawPhoto = function (x, y) {
+      c.save(); shapePath(c, kind, x, y, pw, ph); c.clip(); c.fillStyle = '#eee'; c.fillRect(x, y, pw, ph); coverDraw(c, photo, x, y, pw, ph, st.pz || 1, st.px || 0, st.py || 0); c.restore();
+      c.save(); shapePath(c, kind, x, y, pw, ph); c.lineWidth = 8; c.strokeStyle = d.accent; c.stroke(); c.restore();
+    };
     var y = inner.top + Math.max(0, (avail - total) / 2);
-    if (rel) { c.fillStyle = d.accent; c.font = '700 ' + rs + 'px "DM Sans", sans-serif'; c.fillText(rel.toUpperCase().split('').join(' '), cx, y + rs); y += rs * 1.6; }
-    if (photo) {
-      var kind = (pd && pd.photo) || 'circle', pw = kind === 'arch' ? ph * .82 : ph, px = cx - pw / 2;
-      c.save(); shapePath(c, kind, px, y, pw, ph); c.clip(); c.fillStyle = '#eee'; c.fillRect(px, y, pw, ph); coverDraw(c, photo, px, y, pw, ph, st.pz || 1, st.px || 0, st.py || 0); c.restore();
-      c.save(); shapePath(c, kind, px, y, pw, ph); c.lineWidth = 8; c.strokeStyle = d.accent; c.stroke(); c.restore();
-      y += ph + 26;
-    }
+    if (side) drawPhoto(pos === 'left' ? inner.x + 8 : inner.x + inner.w - pw - 8, inner.top + Math.max(0, (avail - ph) / 2));
+    if (rel) { c.fillStyle = d.accent; c.font = '700 ' + rs + 'px "DM Sans", sans-serif'; c.fillText(relT, cx, y + rs); y += rs * 1.6; }
+    if (photo && !side) { drawPhoto(pos === 'left' ? inner.x : pos === 'right' ? inner.x + inner.w - pw : cx - pw / 2, y); y += ph + 26; }
     y += hs * .85;
     c.fillStyle = d.head; c.font = '400 ' + hs + 'px "Great Vibes", cursive'; headL.forEach(function (l) { c.fillText(l, cx, y); y += hs * 1.02; });
     y += ns * .05; c.fillStyle = d.fg; c.font = '800 ' + ns + 'px "Playfair Display", serif'; nameL.forEach(function (l) { c.fillText(l, cx, y); y += ns * 1.1; });
     y += 4 * k; c.fillStyle = d.accent; c.fillRect(cx - 50, y - ns * .45, 100, 5); y += 34 * k;
     c.fillStyle = d.fg; c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; msgL.forEach(function (l) { c.fillText(l, cx, y); y += ms * 1.35; });
-    if (st.from) { y += 26 * k; c.fillStyle = d.accent; c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; c.fillText('With love, ' + st.from + ' 💚', cx, y); }
+    if (fromLs.length) { y += 26 * k; c.fillStyle = d.accent; c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; fromLs.forEach(function (l) { c.fillText(l, cx, y); y += fs * 1.3; }); }
     var dark = pd ? false : ['gold', 'navy', 'sunset', 'stars'].indexOf(st.design) >= 0;
     c.font = '600 24px "DM Sans", sans-serif'; c.textAlign = 'center';
     var att = 'Made with love on Auntie Tobi 💚 auntietobi.co.uk/birthday', aw = c.measureText(att).width;
@@ -341,7 +376,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   }
 
   // ── state ──
-  var st = { who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'square', name: '', age: '', msg: '', from: '', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
+  var st = { who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'square', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
   var ALIAS = { wife: 'partner', husband: 'partner', daughter: 'child', son: 'child' };
   function fits(m) { return !m.w || m.w === st.who || m.w === ALIAS[st.who]; }
   function pool() { return MSG.filter(function (m) { return m.s === st.style && fits(m); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who) || (!!b.w - !!a.w); }); }
@@ -355,7 +390,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     };
   }
   var rT = 0; function render() { clearTimeout(rT); rT = setTimeout(function () { draw($('cv'), st, 0.75, render); }, 30); }
-  function save() { try { localStorage.setItem('tobiBday', JSON.stringify({ from: st.from, size: st.size })); } catch (e) {} }
+  function save() { try { localStorage.setItem('tobiBday', JSON.stringify({ from: st.from, sign: st.sign, size: st.size })); } catch (e) {} }
   function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2400); }
   function pickDesign(k, auto) { st.design = k; [].forEach.call(document.querySelectorAll('[data-d]'), function (x) { x.setAttribute('aria-pressed', x.dataset.d === k); }); if (!auto) designPicked = true; render(); }
 
@@ -366,7 +401,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       var k = Math.min(1, 900 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
       c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
       var q = .86, d = c.toDataURL('image/jpeg', q); while (d.length > 850000 && q > .4) { q -= .12; d = c.toDataURL('image/jpeg', q); }
-      var out = new Image(); out.onload = function () { st.photoImg = out; st.photoData = d; st.photoId = ''; st.pz = 1; st.px = 0; st.py = 0; $('photoBox').classList.remove('hidden'); $('pz').value = 100; render(); toast('Photo added 📷 — drag it on the card to move it'); }; out.src = d;
+      var out = new Image(); out.onload = function () { st.photoImg = out; st.photoData = d; st.photoId = ''; st.pz = 1; st.px = 0; st.py = 0; $('photoBox').classList.remove('hidden'); $('pz').value = 100; render(); toast('Photo added 📷 — tap ✋ Adjust photo to move or zoom it'); }; out.src = d;
       URL.revokeObjectURL(url);
     };
     im.onerror = function () { toast('That photo couldn’t be opened — try another.'); };
@@ -385,8 +420,8 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function enc(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function dec(s) { try { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch (e) { return null; } }
   async function cardLink() {
-    var o = { n: st.name, a: st.age, m: st.msg, f: st.from, d: st.design, z: st.size, w: st.who };
-    if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; } catch (e) { toast(e.message); } }
+    var o = { n: st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
+    if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; o.ps = st.ps; o.pp = st.pp; } catch (e) { toast(e.message); } }
     return location.origin + '/birthday?c=' + enc(o);
   }
   function fileName() { return 'birthday-card-' + (st.name || 'for-you').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; }
@@ -414,21 +449,75 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   }
   function copyText(t, ok) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast(ok); }, function () { prompt('Copy this:', t); }); }
 
-  // 🎁 gift ideas from the Marketplace (after a card is made)
-  var giftsShown = false;
-  function showGifts() {
-    if (giftsShown) return; giftsShown = true;
+  // 🎁 gift ideas from Nigerian business owners (Marketplace) — always shown under the card
+  function showGifts() {}
+  function loadGifts() {
     fetch('/.netlify/functions/studio-market?feed=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
       var items = (d && d.items || []).slice(); if (!items.length) return;
       for (var i = items.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = items[i]; items[i] = items[j]; items[j] = t; }
       var esc = function (s) { var e = document.createElement('div'); e.textContent = s == null ? '' : String(s); return e.innerHTML; };
-      $('gifts').innerHTML = items.slice(0, 4).map(function (p) {
+      $('gifts').innerHTML = items.slice(0, 12).map(function (p) {
         var link = p.link || (p.wa ? 'https://wa.me/' + String(p.wa).replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi, I saw ' + p.name + ' on Auntie Tobi') : '/marketplace');
-        return '<a class="gift" href="' + esc(link) + '" target="_blank" rel="noopener">' + (p.img ? '<img src="' + esc(p.img) + '" alt="" loading="lazy">' : '<div class="ph">' + esc(p.emoji || '🎁') + '</div>') + '<b>' + esc(p.name) + '</b><i>' + esc(p.price || '') + '</i></a>';
+        return '<a class="gift" href="' + esc(link) + '" target="_blank" rel="noopener">' + (p.img ? '<img src="' + esc(p.img) + '" alt="" loading="lazy">' : '<div class="ph">' + esc(p.emoji || '🎁') + '</div>') + '<b>' + esc(p.name) + '</b>' + (p.business ? '<u>' + esc(p.business) + '</u>' : '') + '<i>' + esc(p.price || '') + '</i></a>';
       }).join('');
       $('giftsBox').classList.remove('hidden');
     }).catch(function () {});
   }
+
+  // 🎉 celebrations — 5 effects, a different one each time the card is opened
+  var FX = ['confetti', 'balloons', 'fireworks', 'sparkle', 'hearts'], fxRun = 0;
+  function pickFx() { var last = -1; try { last = +localStorage.getItem('tobiFx'); } catch (e) {} var i = Math.floor(Math.random() * FX.length); if (i === last) i = (i + 1 + Math.floor(Math.random() * (FX.length - 1))) % FX.length; try { localStorage.setItem('tobiFx', i); } catch (e) {} return FX[i]; }
+  function celebrate(kind) {
+    var cv = $('fx'); if (!cv) { cv = document.createElement('canvas'); cv.id = 'fx'; document.body.appendChild(cv); }
+    var dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, many = calm ? .35 : 1, dur = calm ? 3000 : 5500;
+    var COLS = ['#FFB81C', '#057A44', '#E11D74', '#3B82F6', '#A855F7', '#F97316', '#22C55E'], R = Math.random, parts = [], run = ++fxRun, t0 = performance.now(), bursts = 0;
+    function add(o) { parts.push(o); }
+    if (kind === 'confetti') for (var i = 0; i < 180 * many; i++) add({ t: 'conf', x: W * (R() < .5 ? .1 : .9), y: H + 10, vx: (R() - .5) * 9 + (i % 2 ? -3 : 3), vy: -(11 + R() * 9), g: .28, r: R() * 6, vr: (R() - .5) * .3, w: 6 + R() * 6, h: 10 + R() * 8, c: COLS[i % 7], d: R() * 300 });
+    if (kind === 'balloons') for (var i = 0; i < 22 * many; i++) add({ t: 'ball', x: R() * W, y: H + 60 + R() * H * .6, vy: -(1.6 + R() * 1.8), sw: R() * 6, s: 22 + R() * 16, c: COLS[i % 7] });
+    if (kind === 'sparkle') for (var i = 0; i < 140 * many; i++) add({ t: 'spk', x: R() * W, y: -R() * H, vy: 1.5 + R() * 2.5, vx: (R() - .5) * .6, s: 2 + R() * 5, ph: R() * 6, c: R() < .75 ? '#FFD36B' : '#FFFFFF' });
+    if (kind === 'hearts') for (var i = 0; i < 40 * many; i++) add({ t: 'hrt', x: R() * W, y: H + 30 + R() * H * .7, vy: -(1.4 + R() * 2), sw: R() * 6, s: 14 + R() * 18, c: ['#E11D48', '#F472B6', '#FB7185', '#FDA4AF'][i % 4] });
+    function boom() { var x = W * (.15 + R() * .7), y = H * (.12 + R() * .35), col = COLS[Math.floor(R() * 7)], n = Math.round(60 * many); for (var i = 0; i < n; i++) { var a = i / n * Math.PI * 2, sp = 2 + R() * 4.5; add({ t: 'fw', x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, c: col }); } }
+    function heart(x, y, s) { c.beginPath(); c.moveTo(x, y + s * .3); c.bezierCurveTo(x, y, x - s * .5, y, x - s * .5, y + s * .3); c.bezierCurveTo(x - s * .5, y + s * .6, x, y + s * .8, x, y + s); c.bezierCurveTo(x, y + s * .8, x + s * .5, y + s * .6, x + s * .5, y + s * .3); c.bezierCurveTo(x + s * .5, y, x, y, x, y + s * .3); c.fill(); }
+    function frame(now) {
+      if (run !== fxRun) return; var el = now - t0; c.clearRect(0, 0, W, H);
+      if (kind === 'fireworks' && el < dur - 1200 && el / 520 > bursts) { bursts++; boom(); if (!calm && R() < .5) boom(); }
+      var fade = el > dur - 900 ? Math.max(0, (dur - el) / 900) : 1;
+      parts.forEach(function (p) {
+        c.globalAlpha = fade;
+        if (p.t === 'conf') { if (p.d > 0) { p.d -= 16; return; } p.vy += p.g; p.vx *= .99; p.vy = Math.min(p.vy, 4.5); p.x += p.vx + Math.sin(el / 300 + p.r) * .6; p.y += p.vy; p.r += p.vr; c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.scale(1, Math.abs(Math.cos(el / 200 + p.r))); c.fillStyle = p.c; c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); c.restore(); }
+        else if (p.t === 'ball') { p.y += p.vy; var x = p.x + Math.sin(el / 700 + p.sw) * 14; c.strokeStyle = 'rgba(80,80,80,.45)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, p.y + p.s * 1.15); c.quadraticCurveTo(x + 8, p.y + p.s * 2, x, p.y + p.s * 2.8); c.stroke(); c.fillStyle = p.c; c.beginPath(); c.ellipse(x, p.y, p.s * .85, p.s, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(x - 5, p.y + p.s + 6); c.lineTo(x + 5, p.y + p.s + 6); c.lineTo(x, p.y + p.s - 2); c.fill(); c.fillStyle = 'rgba(255,255,255,.45)'; c.beginPath(); c.ellipse(x - p.s * .32, p.y - p.s * .35, p.s * .16, p.s * .28, -.5, 0, 7); c.fill(); }
+        else if (p.t === 'spk') { p.y += p.vy; p.x += p.vx; if (p.y > H + 10 && el < dur - 1500) p.y = -10; var tw = .4 + .6 * Math.abs(Math.sin(el / 180 + p.ph)); c.globalAlpha = fade * tw; c.fillStyle = p.c; c.beginPath(); for (var k = 0; k < 8; k++) { var rr2 = k % 2 ? p.s * .35 : p.s * 1.6, a = k / 8 * Math.PI * 2; c.lineTo(p.x + Math.cos(a) * rr2, p.y + Math.sin(a) * rr2); } c.fill(); }
+        else if (p.t === 'hrt') { p.y += p.vy; c.fillStyle = p.c; heart(p.x + Math.sin(el / 600 + p.sw) * 16, p.y, p.s); }
+        else if (p.t === 'fw') { p.vy += .05; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.life -= .012; if (p.life <= 0) return; c.globalAlpha = fade * p.life; c.fillStyle = p.c; c.beginPath(); c.arc(p.x, p.y, 2.4, 0, 7); c.fill(); }
+      });
+      c.globalAlpha = 1;
+      if (el < dur) requestAnimationFrame(frame); else c.clearRect(0, 0, W, H);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // 🎵 a music-box "Happy Birthday" (the tune is public domain) — made in the browser, no sound files
+  var AC = null, songStop = null;
+  function muted() { try { return localStorage.getItem('tobiMute') === '1'; } catch (e) { return false; } }
+  function playSong() {
+    stopSong(); if (muted()) return;
+    try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { return; }
+    var N = { G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99 };
+    var tune = [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2], ['G4', .75], ['G4', .25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2], ['F5', .75], ['F5', .25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 2.5]];
+    var beat = .42, t = AC.currentTime + .1, out = AC.createGain(); out.gain.value = .22; out.connect(AC.destination);
+    tune.forEach(function (n) {
+      [1, 2].forEach(function (h) {
+        var o = AC.createOscillator(), g = AC.createGain(); o.type = h === 1 ? 'triangle' : 'sine'; o.frequency.value = N[n[0]] * h;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(h === 1 ? .9 : .25, t + .015); g.gain.exponentialRampToValueAtTime(.001, t + Math.max(.5, n[1] * beat * 1.6));
+        o.connect(g); g.connect(out); o.start(t); o.stop(t + n[1] * beat * 1.7 + .05);
+      });
+      t += n[1] * beat;
+    });
+    songStop = function () { try { out.gain.cancelScheduledValues(AC.currentTime); out.gain.setTargetAtTime(0, AC.currentTime, .05); } catch (e) {} };
+  }
+  function stopSong() { if (songStop) { songStop(); songStop = null; } }
+  function paintMute() { var b = $('mute'); if (b) b.textContent = muted() ? '🔇 Sound off' : '🔊 Sound on'; }
 
   function designTile(k, premium) {
     var label = premium ? P[k].label : D[k].label, url = premium ? artUrl(k, 'square') : '';
@@ -446,19 +535,25 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function start() {
     if (got && (got.m || got.n)) {
       $('maker').classList.add('hidden'); $('recv').classList.remove('hidden');
-      var rs = { name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
+      var rs = { name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), sign: got.s == null ? 'With love' : String(got.s).slice(0, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
       $('recvTitle').textContent = '🎂 Happy birthday' + (rs.name ? ', ' + rs.name : '') + '!';
       $('recvFrom').textContent = rs.from ? rs.from + ' made you a birthday card 💚' : 'Someone made you a birthday card 💚';
-      var cvR = $('cvR'); cvR.style.width = '100%'; cvR.style.borderRadius = '12px';
+      var cvR = $('cvR');
       var paintR = function () { draw(cvR, rs, 0.75, paintR); };
       if (got.p && /^p[a-z0-9]{6,20}$/.test(got.p)) { var pim = new Image(); pim.onload = function () { rs.photoImg = pim; paintR(); }; pim.src = '/.netlify/functions/bday?photo=' + got.p; }
       paintR();
       $('rDl').onclick = function () { st.name = rs.name; download(rs); };
+      $('coverT').textContent = 'You’ve got a birthday card' + (rs.name ? ', ' + rs.name : '') + '!'; $('coverF').textContent = rs.from ? 'From ' + rs.from + ' 💚' : 'Made with love 💚';
+      $('cover').classList.remove('hidden');
+      $('cover').onclick = function () { this.classList.add('hidden'); celebrate(pickFx()); playSong(); };
+      $('again').onclick = function () { celebrate(pickFx()); playSong(); };
+      paintMute(); $('mute').onclick = function () { try { localStorage.setItem('tobiMute', muted() ? '0' : '1'); } catch (e) {} paintMute(); if (muted()) stopSong(); else playSong(); };
+      loadGifts();
       $('rThanks').onclick = function () { window.open('https://wa.me/?text=' + encodeURIComponent('Thank you so much for my birthday card' + (rs.from ? ', ' + rs.from : '') + '! 🥰💚'), '_blank'); };
       document.title = '🎂 A birthday card for ' + (rs.name || 'you') + ' — Auntie Tobi';
       return;
     }
-    try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (SIZES[sv.size]) st.size = sv.size; } catch (e) {}
+    try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (typeof sv.sign === 'string') st.sign = sv.sign; if (SIZES[sv.size]) st.size = sv.size; } catch (e) {}
     chips('who', WHO, 'who'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
     paintDesigns();
     document.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (b) pickDesign(b.dataset.d); });
@@ -470,16 +565,22 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     $('suggest').onclick = function () { suggest(false); };
     $('photo').onchange = function () { var f = this.files && this.files[0]; if (f) addPhoto(f); this.value = ''; };
     $('pz').oninput = function () { st.pz = this.value / 100; render(); };
-    $('pRm').onclick = function () { st.photoImg = null; st.photoData = ''; st.photoId = ''; $('photoBox').classList.add('hidden'); render(); };
-    // drag the photo on the preview to move it inside its frame
-    var cv = $('cv'), drag = null;
-    cv.addEventListener('pointerdown', function (e) { if (!st.photoImg) return; drag = { x: e.clientX, y: e.clientY, px: st.px, py: st.py }; cv.setPointerCapture(e.pointerId); });
-    cv.addEventListener('pointermove', function (e) { if (!drag) return; var r = cv.getBoundingClientRect(), s = 3.2 / r.width; st.px = Math.max(-.5, Math.min(.5, drag.px + (e.clientX - drag.x) * s)); st.py = Math.max(-.5, Math.min(.5, drag.py + (e.clientY - drag.y) * s)); render(); });
+    $('pRm').onclick = function () { st.photoImg = null; st.photoData = ''; st.photoId = ''; $('photoBox').classList.add('hidden'); $('adjBox').classList.add('hidden'); $('cv').classList.remove('adjust'); render(); };
+    chips('psz', { s: 'Small', m: 'Medium', l: 'Large' }, 'ps'); chips('ppos', { left: '⬅️ Left', center: '⏺️ Centre', right: '➡️ Right' }, 'pp');
+    $('sign').value = st.sign; $('sign').oninput = function () { st.sign = this.value; render(); save(); };
+    // the photo stays put — it only moves while "Adjust photo" is on
+    var cv = $('cv'), drag = null, adj = false;
+    function setAdj(on) { adj = on && !!st.photoImg; cv.classList.toggle('adjust', adj); $('adjBox').classList.toggle('hidden', !adj); if (adj) cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    $('pAdj').onclick = function () { setAdj(true); };
+    $('pDone').onclick = function () { setAdj(false); toast('Photo set ✅'); };
+    cv.addEventListener('pointerdown', function (e) { if (!adj) return; e.preventDefault(); drag = { x: e.clientX, y: e.clientY, px: st.px, py: st.py }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', function (e) { if (!drag || !adj) return; var r = cv.getBoundingClientRect(), s = 3.2 / r.width; st.px = Math.max(-.5, Math.min(.5, drag.px + (e.clientX - drag.x) * s)); st.py = Math.max(-.5, Math.min(.5, drag.py + (e.clientY - drag.y) * s)); render(); });
     ['pointerup', 'pointercancel'].forEach(function (ev) { cv.addEventListener(ev, function () { drag = null; }); });
+    loadGifts();
     $('dl').onclick = function () { download(); track('bday_download'); toast('Card saved ✅'); showGifts(); };
     $('share').onclick = shareWa;
     $('link').onclick = async function () { var b = this; b.disabled = true; var l = await cardLink(); b.disabled = false; copyText(l, 'Card link copied 🔗'); track('bday_link'); showGifts(); };
-    $('copy').onclick = function () { copyText((st.name ? 'Happy birthday, ' + st.name + '! ' : 'Happy birthday! ') + st.msg + (st.from ? '\n— ' + st.from : ''), 'Message copied 📋'); };
+    $('copy').onclick = function () { copyText((st.name ? 'Happy birthday, ' + st.name + '! ' : 'Happy birthday! ') + st.msg + (st.from ? '\n' + (st.sign ? st.sign + ', ' : '— ') + st.from : ''), 'Message copied 📋'); };
     suggest(true);
   }
   var go = function () { loadArt().then(function () { start(); if (!got) render(); }); };
