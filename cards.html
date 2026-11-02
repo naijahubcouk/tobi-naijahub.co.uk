@@ -52,6 +52,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .gift b{font-size:14px;padding:6px 8px 0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .gift i{font-style:normal;font-size:13px;font-weight:800;color:#057A44;padding:2px 8px 8px}
 .hidden{display:none!important}
+.txtbar{margin-top:12px;padding-top:12px;border-top:1px solid #eee}.tlabel{font-size:14px;font-weight:700;margin-bottom:6px}.txtbar .smallbtn{flex:0 0 auto;min-width:46px}
 .cvwrap{position:relative}
 .dnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(15,30,54,.72);color:#fff;font-size:30px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding-bottom:4px}
 .dnav.prev{left:8px}.dnav.next{right:8px}.dnav:active{transform:translateY(-50%) scale(.92)}
@@ -149,6 +150,10 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       <div class="cvwrap"><canvas id="cv"></canvas>
         <button type="button" class="dnav prev" id="dPrev" aria-label="Previous design">‹</button><button type="button" class="dnav next" id="dNext" aria-label="Next design">›</button></div>
       <div class="dname" id="dName"></div>
+      <div class="txtbar"><div class="tlabel">✍🏾 Text</div><div class="chips" id="tpos"></div>
+        <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button type="button" class="smallbtn" id="tSmall" aria-label="Smaller text">A−</button><button type="button" class="smallbtn" id="tBig" aria-label="Bigger text">A+</button><button type="button" class="smallbtn" id="tMove">✋ Move text</button><button type="button" class="smallbtn" id="tReset" style="border-color:#e0e0e0;color:#6B7280">↺ Reset</button></div></div>
+      <div id="txtBox" class="hidden"><div class="adjhint">✋ Drag the words on the card to where you want them. Tap <b>Done</b> when it looks right.</div>
+        <button type="button" class="btn dl" id="tDone" style="margin-top:8px">✅ Done</button></div>
       <div id="adjBox" class="hidden"><div class="adjhint">✋ Drag the photo on the card to move it, and slide to zoom. Tap <b>Done</b> when it looks right.</div>
         <label for="pz">Zoom</label><input type="range" id="pz" min="100" max="300" value="100" style="padding:0">
         <button type="button" class="btn dl" id="pDone" style="margin-top:8px">✅ Done</button></div>
@@ -644,6 +649,10 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       var bx = pd[st.size === 'story' ? 'st' : 'sq'];
       a = { x: W * bx[0], w: W * bx[2], top: H * bx[1], bottom: H * (bx[1] + bx[3]) };
     } else { BG[st.design] ? BG[st.design](c, W, H) : BG.floral(c, W, H); a = area(st.design, W, H); }
+    // ✍🏾 text position chosen by the person: Top / Middle / Bottom of the whole card, then a fine drag offset and a size
+    var tp = st.tp === 'top' || st.tp === 'middle' || st.tp === 'bottom' ? st.tp : '', ts = Math.max(.6, Math.min(1.5, +st.ts || 1));
+    if (tp) a = { x: W * .08, w: W * .84, top: H * .06, bottom: H * .92 };
+    var vOff = function (space, used) { return tp === 'top' ? 0 : tp === 'bottom' ? Math.max(0, space - used) : Math.max(0, (space - used) / 2); };
     var pad = 34;
     var photo = st.photoImg && st.photoImg.complete && st.photoImg.naturalWidth ? st.photoImg : null;
     var rel = pd && pd.rel && st.occ === 'birthday' ? REL_LINE[pd.rel] || '' : tagFor(st);
@@ -658,7 +667,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     else if (photo) { ph = Math.min(inner.w * { s: .3, m: .46, l: .66 }[sz], avail * { s: .24, m: .34, l: .46 }[sz]); pw = kind === 'arch' ? ph * .82 : ph; }
     var cx = tx + tw / 2, stackPh = photo && !side ? ph + 26 : 0;
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    for (var k = st.size === 'story' ? 1.4 : 1; k >= .4; k -= .05) {
+    for (var k = (st.size === 'story' ? 1.4 : 1) * ts; k >= .3; k -= .05) {
       var hs = 120 * k, ns = 100 * k, ms = 40 * k, fs = 36 * k, rs = 34 * k;
       c.font = '400 ' + hs + 'px "Great Vibes", cursive'; var headL = wrap(c, head, tw);
       c.font = '800 ' + ns + 'px "Playfair Display", serif'; var nameL = name ? wrap(c, name + '!', tw) : [];
@@ -666,22 +675,23 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; var fromLs = fromL ? wrap(c, fromL, tw) : [];
       
       var total = hs * .85 + ns * .05 + 4 * k - hs * .17 + (rel ? rs * 1.6 : 0) + stackPh + headL.length * hs * 1.02 + nameL.length * ns * 1.1 + 34 * k + msgL.length * ms * 1.35 + (fromLs.length ? 26 * k + fromLs.length * fs * 1.3 : 0);
-      if (total <= avail) break;
+      if (total <= avail * Math.max(1, ts)) break;
     }
     // the "For the best Mum" line: letter-spaced if it fits, otherwise plain, shrunk to fit the column
     var relT = rel.toUpperCase().split('').join(' '); c.font = '700 ' + rs + 'px "DM Sans", sans-serif';
     if (rel && c.measureText(relT).width > tw * .92) relT = rel.toUpperCase();
     if (rel) { var rw = c.measureText(relT).width; if (rw > tw * .92) rs = rs * tw * .92 / rw; }
     var block = Math.max(total, side ? ph : 0);
+    c.save(); c.translate((+st.tx || 0) * W, (+st.ty || 0) * H);
     if (pd && pd.panel) {
-      var ph2 = Math.min(a.bottom - a.top, block + pad * 2 + 10), py = a.top + (a.bottom - a.top - ph2) / 2;
+      var ph2 = block + pad * 2 + 10, py = a.top + vOff(a.bottom - a.top, ph2);
       c.save(); c.fillStyle = pd.panel === 'dark' ? 'rgba(22,10,34,.5)' : 'rgba(255,255,255,.78)'; c.shadowColor = 'rgba(0,0,0,.12)'; c.shadowBlur = 24; rr(c, a.x, py, a.w, ph2, 34); c.fill(); c.restore();
     }
     var drawPhoto = function (x, y) {
       c.save(); shapePath(c, kind, x, y, pw, ph); c.clip(); c.fillStyle = '#eee'; c.fillRect(x, y, pw, ph); coverDraw(c, photo, x, y, pw, ph, st.pz || 1, st.px || 0, st.py || 0); c.restore();
       c.save(); shapePath(c, kind, x, y, pw, ph); c.lineWidth = 8; c.strokeStyle = d.accent; c.stroke(); c.restore();
     };
-    var y = inner.top + Math.max(0, (avail - total) / 2);
+    var y = inner.top + vOff(avail, total);
     if (side) drawPhoto(pos === 'left' ? inner.x + 8 : inner.x + inner.w - pw - 8, inner.top + Math.max(0, (avail - ph) / 2));
     if (rel) { c.fillStyle = d.accent; c.font = '700 ' + rs + 'px "DM Sans", sans-serif'; c.fillText(relT, cx, y + rs); y += rs * 1.6; }
     if (photo && !side) { drawPhoto(pos === 'left' ? inner.x : pos === 'right' ? inner.x + inner.w - pw : cx - pw / 2, y); y += ph + 26; }
@@ -691,6 +701,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     y += 4 * k; c.fillStyle = d.accent; c.fillRect(cx - 50, y - ns * .45, 100, 5); y += 34 * k;
     c.fillStyle = d.fg; c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; msgL.forEach(function (l) { c.fillText(l, cx, y); y += ms * 1.35; });
     if (fromLs.length) { y += 26 * k; c.fillStyle = d.accent; c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; fromLs.forEach(function (l) { c.fillText(l, cx, y); y += fs * 1.3; }); }
+    c.restore();
     var dark = pd ? false : ['gold', 'navy', 'sunset', 'stars'].indexOf(st.design) >= 0;
     c.font = '600 24px "DM Sans", sans-serif'; c.textAlign = 'center';
     var att = 'Made with love on Auntie Tobi 💚 auntietobi.co.uk/cards', aw = c.measureText(att).width;
@@ -700,7 +711,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
   // ── state ──
   var NB = nowBits(), Q0 = new URLSearchParams(location.search).get('o');
-  var st = { nmg: 'happy', occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'story', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
+  var st = { tp: '', tx: 0, ty: 0, ts: 1, nmg: 'happy', occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'story', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
   var ALIAS = { wife: 'partner', husband: 'partner', daughter: 'child', son: 'child', grandma: 'mum', grandpa: 'dad' };
   function fits(m) { return !m.w || m.w === st.who || m.w === ALIAS[st.who]; }
   function pool() { return MSG.filter(function (m) { return (m.o || 'birthday') === st.occ && m.s === st.style && fits(m); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who) || (!!b.w - !!a.w); }); }
@@ -711,6 +722,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       var b = e.target.closest('[data-v]'); if (!b) return; st[key] = b.dataset.v; [].forEach.call(el.children, function (x) { x.setAttribute('aria-pressed', x === b); });
       if (key === 'who' && !designPicked && st.occ === 'birthday' && SUGGEST[st.who]) pickDesign(SUGGEST[st.who], true);
       if (key === 'occ') { setOcc(st.occ); return; }
+      if (key === 'tp') { st.tx = 0; st.ty = 0; }
       if (key === 'who' || key === 'style') suggest(true); else render(); save();
     };
   }
@@ -761,6 +773,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   var shortLinks = {};
   async function cardLink() {
     var o = { o: st.occ, n: st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
+    if (st.tp) o.tp = st.tp; if (st.tx || st.ty) { o.tx = Math.round(st.tx * 1000) / 1000; o.ty = Math.round(st.ty * 1000) / 1000; } if (st.ts !== 1) o.ts = st.ts;
     if (st.occ === 'newmonth') { o.mn = st.mn; if (st.nmg !== 'happy') o.g = st.nmg; } if (st.occ === 'newyear') o.yr = st.yr; if (st.occ === 'independence') o.yr = nowBits().indYr;
     if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; o.ps = st.ps; o.pp = st.pp; } catch (e) { toast(e.message); } }
     // 🔗 a short link (auntietobi.co.uk/c/xxxxxxx); falls back to the long link if saving fails
@@ -890,7 +903,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     if (got && (got.m || got.n)) {
       $('maker').classList.add('hidden'); $('recv').classList.remove('hidden');
       var ro = OCC[got.o] ? got.o : 'birthday', OC = OCC[ro]; curFx = OC.fx || FX; curCols = OC.cols || null; curSong = OC.song || 'chime';
-      var rs = { occ: ro, mn: got.mn, yr: got.yr, nmg: got.g === 'welcome' || got.g === 'hello' ? got.g : 'happy', name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), sign: got.s == null ? 'With love' : String(got.s).slice(0, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
+      var rs = { tp: got.tp, tx: +got.tx || 0, ty: +got.ty || 0, ts: +got.ts || 1, occ: ro, mn: got.mn, yr: got.yr, nmg: got.g === 'welcome' || got.g === 'hello' ? got.g : 'happy', name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), sign: got.s == null ? 'With love' : String(got.s).slice(0, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
       $('recvTitle').textContent = OC.label.split(' ')[0] + ' ' + headFor(rs) + (rs.name ? ', ' + rs.name : '') + '!';
       $('recvFrom').textContent = (rs.from ? rs.from : 'Someone') + ' made you a ' + OC.noun + ' 💚';
       var cvR = $('cvR');
@@ -936,12 +949,19 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     chips('psz', { s: 'Small', m: 'Medium', l: 'Large' }, 'ps'); chips('ppos', { left: '⬅️ Left', center: '⏺️ Centre', right: '➡️ Right' }, 'pp');
     $('sign').value = st.sign; $('sign').oninput = function () { st.sign = this.value; render(); save(); };
     // the photo stays put — it only moves while "Adjust photo" is on
-    var cv = $('cv'), drag = null, adj = false;
-    function setAdj(on) { adj = on && !!st.photoImg; cv.classList.toggle('adjust', adj); $('adjBox').classList.toggle('hidden', !adj); if (adj) cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    var cv = $('cv'), drag = null, adj = false, tadj = false;
+    function setTAdj(on) { tadj = !!on; if (tadj) { adj = false; $('adjBox').classList.add('hidden'); } cv.classList.toggle('adjust', tadj); $('txtBox').classList.toggle('hidden', !tadj); if (tadj) cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    function setAdj(on) { if (on) { tadj = false; $('txtBox').classList.add('hidden'); } adj = on && !!st.photoImg; cv.classList.toggle('adjust', adj); $('adjBox').classList.toggle('hidden', !adj); if (adj) cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     $('pAdj').onclick = function () { setAdj(true); };
+    chips('tpos', { top: '⬆️ Top', middle: '⏺️ Middle', bottom: '⬇️ Bottom' }, 'tp');
+    $('tMove').onclick = function () { setTAdj(true); };
+    $('tDone').onclick = function () { setTAdj(false); toast('Text set ✅'); };
+    $('tSmall').onclick = function () { st.ts = Math.max(.6, Math.round((st.ts - .1) * 10) / 10); render(); };
+    $('tBig').onclick = function () { st.ts = Math.min(1.5, Math.round((st.ts + .1) * 10) / 10); render(); };
+    $('tReset').onclick = function () { st.tp = ''; st.tx = 0; st.ty = 0; st.ts = 1; [].forEach.call($('tpos').children, function (x) { x.setAttribute('aria-pressed', 'false'); }); setTAdj(false); render(); };
     $('pDone').onclick = function () { setAdj(false); toast('Photo set ✅'); };
-    cv.addEventListener('pointerdown', function (e) { if (!adj) return; e.preventDefault(); drag = { x: e.clientX, y: e.clientY, px: st.px, py: st.py }; cv.setPointerCapture(e.pointerId); });
-    cv.addEventListener('pointermove', function (e) { if (!drag || !adj) return; var r = cv.getBoundingClientRect(), s = 3.2 / r.width; st.px = Math.max(-.5, Math.min(.5, drag.px + (e.clientX - drag.x) * s)); st.py = Math.max(-.5, Math.min(.5, drag.py + (e.clientY - drag.y) * s)); render(); });
+    cv.addEventListener('pointerdown', function (e) { if (!adj && !tadj) return; e.preventDefault(); drag = { x: e.clientX, y: e.clientY, px: st.px, py: st.py, tx: st.tx, ty: st.ty }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', function (e) { if (!drag) return; var r = cv.getBoundingClientRect(); if (tadj) { st.tx = Math.max(-.45, Math.min(.45, drag.tx + (e.clientX - drag.x) / r.width)); st.ty = Math.max(-.45, Math.min(.45, drag.ty + (e.clientY - drag.y) / r.height)); render(); return; } if (!adj) return; var s = 3.2 / r.width; st.px = Math.max(-.5, Math.min(.5, drag.px + (e.clientX - drag.x) * s)); st.py = Math.max(-.5, Math.min(.5, drag.py + (e.clientY - drag.y) * s)); render(); });
     ['pointerup', 'pointercancel'].forEach(function (ev) { cv.addEventListener(ev, function () { drag = null; }); });
     loadGifts();
     $('dl').onclick = function () { download(); track('bday_download'); toast('Card saved ✅'); showGifts(); };
