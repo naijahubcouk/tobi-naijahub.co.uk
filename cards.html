@@ -124,7 +124,8 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
     <div class="card">
       <div class="step">4 · Choose a design</div>
-      <div class="muted" style="margin:-2px 0 6px">✨ Premium</div><div class="designs" id="designsP"></div>
+      <div class="muted" style="margin:-2px 0 6px" id="dpLabel">✨ Premium</div><div class="designs" id="designsP"></div>
+      <div class="muted" style="margin:12px 0 6px">✨ More designs</div><div class="designs" id="designsM"></div>
       <div class="muted" style="margin:12px 0 6px">🎨 Classic</div><div class="designs" id="designs"></div>
       <div class="chips" id="size" style="margin-top:10px"></div>
     </div>
@@ -868,8 +869,11 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     return '<button type="button" class="design" data-d="' + k + '" aria-pressed="' + (st.design === k) + '">' + (url ? '<img src="' + url + '" alt="" loading="lazy">' : '<canvas width="160" height="160" data-fb="' + k + '"></canvas>') + '<span>' + label + '</span></button>';
   }
   function paintDesigns() {
+    // every design works for every occasion: the ones made for this occasion first, then all the others
+    $('dpLabel').textContent = '✨ Made for ' + OCC[st.occ].label.replace(/^\S+\s/, '');
     $('designsP').innerHTML = Object.keys(P).filter(function (k) { return P[k].o === st.occ; }).map(function (k) { return designTile(k, true); }).join('');
-    $('designs').innerHTML = Object.keys(D).filter(function (k) { return st.occ === 'birthday' || k !== 'cake'; }).map(function (k) { return designTile(k, false); }).join('');
+    $('designsM').innerHTML = occOrder().filter(function (o) { return o !== st.occ; }).map(function (o) { return Object.keys(P).filter(function (k) { return P[k].o === o; }).map(function (k) { return designTile(k, true); }).join(''); }).join('');
+    $('designs').innerHTML = Object.keys(D).map(function (k) { return designTile(k, false); }).join('');
     [].forEach.call(document.querySelectorAll('[data-fb]'), function (cvs) { var k = cvs.dataset.fb, c = cvs.getContext('2d'); c.scale(160 / 1080, 160 / 1080); if (P[k]) { lin(c, 1080, 1080, P[k].fb); c.font = '400 190px "Great Vibes", cursive'; c.textAlign = 'center'; c.fillStyle = P[k].head; var hw = headFor({ occ: st.occ }).split(' '), h1 = hw.slice(0, Math.ceil(hw.length / 2)).join(' '), h2 = hw.slice(Math.ceil(hw.length / 2)).join(' '); c.font = '400 ' + (hw.join(' ').length > 16 ? 150 : 190) + 'px "Great Vibes", cursive'; c.fillText(h1, 540, h2 ? 520 : 600); if (h2) c.fillText(h2, 540, 720); } else BG[k](c, 1080, 1080); });
   }
 
