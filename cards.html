@@ -151,14 +151,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       <a class="btn ghost" href="/marketplace" style="margin-top:10px">🛍️ See all on the Marketplace</a>
     </div>
 
-    <div class="card hidden" id="installBox" style="background:#0F1E36;color:#fff;display:flex;gap:12px;align-items:flex-start">
-      <img src="/tobi-face-128.png" alt="" style="width:52px;height:52px;border-radius:50%;flex-shrink:0;border:2px solid #FFB81C">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:800;font-size:16px;line-height:1.3">🇳🇬 Nigerians in the UK — get Auntie Tobi</div>
-        <p style="font-size:13.5px;color:rgba(255,255,255,.85);margin:4px 0 10px">Your free AI auntie for UK life 💚 Find trusted Nigerian businesses near you, events, jobs and news — and get quick answers on visas, NHS, money and more.</p>
-        <a class="btn gold" href="/install" id="installBtn">📲 Install Auntie Tobi — it’s free</a>
-      </div>
-    </div>
+    <a class="btn gold hidden" href="/about" id="installBox">🇳🇬 Nigerians in UK — Install Auntie Tobi <span style="font-weight:600;text-decoration:underline">(Learn More)</span></a>
 </main>
 <div class="toast" id="toast"></div>
 
@@ -615,7 +608,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     var rel = pd && pd.rel && st.occ === 'birthday' ? REL_LINE[pd.rel] || '' : tagFor(st);
     var inner = { x: a.x + (pd ? pad : 0), w: a.w - (pd ? pad * 2 : 0), top: a.top + (pd ? pad : 0), bottom: a.bottom - (pd ? pad : 0) };
     var head = headFor(st), name = (st.name || '').trim();
-    var sign = (st.sign == null ? 'With love' : String(st.sign)).trim(), fromL = st.from ? (sign ? sign + ', ' : '') + st.from + ' 💚' : '';
+    var sign = (st.sign == null ? 'With love' : String(st.sign)).trim(), fromL = st.from ? (sign ? sign + ', ' : '') + st.from : '';
     var avail = inner.bottom - inner.top, kind = (pd && pd.photo) || 'circle', sz = { s: 0, m: 1, l: 2 }[st.ps] != null ? st.ps : 'm', pos = st.pp === 'left' || st.pp === 'right' ? st.pp : 'center';
     var side = !!photo && pos !== 'center' && st.size !== 'story';
     // the photo: beside the words (square, left/right) or above them (centre, or any story card)
@@ -860,12 +853,12 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       if (got.p && /^p[a-z0-9]{6,20}$/.test(got.p)) { var pim = new Image(); pim.onload = function () { rs.photoImg = pim; paintR(); }; pim.src = '/.netlify/functions/bday?photo=' + got.p; }
       paintR();
       $('rDl').onclick = function () { st.name = rs.name; download(rs); };
-      $('coverT').textContent = 'You’ve got a ' + OC.noun + (rs.name ? ', ' + rs.name : '') + '!'; $('coverF').textContent = rs.from ? 'From ' + rs.from + ' 💚' : 'Made with love 💚';
+      $('coverT').textContent = 'You’ve got a ' + OC.noun + (rs.name ? ', ' + rs.name : '') + '!'; $('coverF').textContent = rs.from ? 'From ' + rs.from : 'Made with love';
       $('cover').classList.remove('hidden');
       $('cover').onclick = function () { this.classList.add('hidden'); celebrate(pickFx()); playSong(); };
       $('again').onclick = function () { celebrate(pickFx()); playSong(); };
       paintMute(); $('mute').onclick = function () { try { localStorage.setItem('tobiMute', muted() ? '0' : '1'); } catch (e) {} paintMute(); if (muted()) stopSong(); else playSong(); };
-      loadGifts(); $('installBox').classList.remove('hidden'); $('installBtn').onclick = function () { track('card_install_click'); };
+      loadGifts(); $('installBox').classList.remove('hidden'); $('installBox').onclick = function () { track('card_install_click'); };
       $('rThanks').onclick = function () { window.open('https://wa.me/?text=' + encodeURIComponent('Thank you so much for my ' + OC.noun + (rs.from ? ', ' + rs.from : '') + '! 🥰💚'), '_blank'); };
       document.title = OC.label.split(' ')[0] + ' A ' + OC.noun + ' for ' + (rs.name || 'you') + ' — Auntie Tobi';
       return;
