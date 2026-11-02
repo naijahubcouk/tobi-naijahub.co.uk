@@ -184,6 +184,33 @@ function formatBusinessContext(businesses, scope, city) {
   return '\n\n<<<BIZ_JSON:'+JSON.stringify(bizData)+'>>>'+scopeNote;
 }
 
+// ── ✅ fact checking ──────────────────────────────────────────────────────────
+// Facts that change (fees, visas, tax, benefits, rules) are never answered from the AI's memory:
+//   1) the HQ fact sheet (checked by Seun) is always given to the AI and wins over its memory,
+//   2) questions on those topics get a live search of official UK sites first,
+//   3) otherwise the AI must not state a figure and points to the official page instead.
+var FACT_TOPICS=/\b(fee|fees|cost|costs|price|prices|how much|charge|£\s?\d|visa|e-?visa|brp|ilr|indefinite leave|settle(d|ment)? status|citizenship|naturali[sz]|passport|home office|immigration|asylum|sponsor(ship)? licen|tax|hmrc|vat|national insurance|ni number|self.?assessment|utr|paye|benefit|universal credit|pip|child benefit|pension|nhs|gp|prescription|council tax|companies house|limited company|ltd|sole trader|register (a |my )?(business|company)|minimum wage|living wage|salary threshold|law|legal(ly)?|rule|rules|deadline|allowance|threshold|tenan(t|cy)|deposit|eviction|landlord|dvla|driving licen[cs]e|mot|tv licen[cs]e|student loan|student finance|tuition|right to work|maternity|paternity|sick pay|ssp|redundan)/i;
+var TRUSTED_SITES=['gov.uk','*.gov.uk','nhs.uk','*.nhs.uk','citizensadvice.org.uk','*.citizensadvice.org.uk','moneyhelper.org.uk','*.moneyhelper.org.uk'];
+var FACT_RULES='\n\nFACTS RULE (very important): fees, prices, costs, tax rates and allowances, benefit amounts, wage and salary thresholds, visa and immigration rules, laws and deadlines change often. NEVER state a specific amount, number or date for these from your own memory. Only give one if it appears in the TRUSTED FACTS below or in the official web results given for this message. If you do not have it from those, say it changes from time to time and point them to the official page (for example GOV.UK, with a link). Never guess.';
+var factsCache={at:0,text:''};
+async function loadFacts(){
+  if(Date.now()-factsCache.at<60000)return factsCache.text;
+  try{var f=await require('../core').getJson('app/facts');factsCache={at:Date.now(),text:(f&&f.text)||''};}
+  catch(e){console.log('[chat] facts unavailable:',e.message);factsCache={at:Date.now(),text:factsCache.text};}
+  return factsCache.text;
+}
+function callAI(apiKey,requestBody,timeoutMs){
+  return new Promise(function(resolve,reject){
+    var postData=JSON.stringify(requestBody);
+    var options={hostname:'openrouter.ai',path:'/api/v1/chat/completions',method:'POST',headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json','HTTP-Referer':'https://auntietobi.co.uk','X-Title':'Auntie Tobi','Content-Length':Buffer.byteLength(postData)}};
+    var req=https.request(options,function(res){var data='';res.on('data',function(c){data+=c;});res.on('end',function(){try{resolve(JSON.parse(data));}catch(e){reject(new Error('Bad AI reply'));}});});
+    req.on('error',reject);
+    req.setTimeout(timeoutMs,function(){req.destroy();reject(new Error('Timeout'));});
+    req.write(postData);req.end();
+  });
+}
+function siteName(u){try{var h=new URL(u).hostname.replace(/^www\./,'');return /gov\.uk$/.test(h)?'GOV.UK':/nhs\.uk$/.test(h)?'NHS':/citizensadvice/.test(h)?'Citizens Advice':/moneyhelper/.test(h)?'MoneyHelper':h;}catch(e){return 'Source';}}
+
 async function getDirectory() {
   console.log('[chat] Directory: ' + HARDCODED_DIRECTORY.length + ' businesses');
   return HARDCODED_DIRECTORY;
@@ -239,26 +266,28 @@ exports.handler=async function(event){
     }
     var systemContent=SYSTEM_PROMPT+(businessContext||'\n\nIMPORTANT FOR THIS REPLY: no business listings were looked up for this message. Do NOT say "here are" businesses, options, places or food spots, and never pretend to show listings. If the user seems to want a business, ask what they want (e.g. jollof, suya, a caterer, groceries) and their town, and say you will show them.');
     var messages=[{role:'system',content:systemContent}].concat(recentMessages);
-    var requestBody={model:'openai/gpt-4o-mini',max_tokens:600,temperature:0.7,messages:messages};
-    var responseText=await new Promise(function(resolve,reject){
-      var postData=JSON.stringify(requestBody);
-      var options={hostname:'openrouter.ai',path:'/api/v1/chat/completions',method:'POST',headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json','HTTP-Referer':'https://auntietobi.co.uk','X-Title':'Auntie Tobi','Content-Length':Buffer.byteLength(postData)}};
-      var req=https.request(options,function(res){
-        var data='';
-        res.on('data',function(chunk){data+=chunk;});
-        res.on('end',function(){resolve(data);});
-      });
-      req.on('error',reject);
-      req.setTimeout(20000,function(){req.destroy();reject(new Error('Timeout'));});
-      req.write(postData);
-      req.end();
-    });
-    var parsed=JSON.parse(responseText);
+    // ✅ facts: the HQ fact sheet always; a live search of official sites for questions on things that change
+    var facts=await loadFacts();
+    var factCheck=!businessContext&&!isShortGreeting&&FACT_TOPICS.test(lastMessage);
+    messages[0].content+=FACT_RULES+(facts?'\n\nTRUSTED FACTS (checked by the Auntie Tobi team — these are correct and override anything you remember):\n'+facts:'');
+    var parsed=null, sources=[];
+    if(factCheck){
+      try{
+        var sb={model:'openai/gpt-4o-mini',max_tokens:650,temperature:0.3,messages:messages.slice(0,1).concat([{role:'system',content:'OFFICIAL WEB RESULTS are attached for this message. Base any fee, amount, rule or date ONLY on them (or the TRUSTED FACTS). If they don’t answer it, say so and point to the official page. Keep your usual warm Auntie Tobi style. Do not add a sources list yourself — the app adds it.'}],messages.slice(1)),
+          plugins:[{id:'web',engine:'exa',max_results:4,include_domains:TRUSTED_SITES}]};
+        parsed=await callAI(apiKey,sb,6000);
+        var msg0=parsed&&parsed.choices&&parsed.choices[0]&&parsed.choices[0].message;
+        if(!msg0||!msg0.content)throw new Error((parsed&&parsed.error&&parsed.error.message)||'no reply');
+        (msg0.annotations||[]).forEach(function(a){var u=a&&a.url_citation&&a.url_citation.url;if(u&&sources.indexOf(u)<0&&/(gov|nhs|citizensadvice|moneyhelper)/.test(u))sources.push(u);});
+      }catch(e){console.log('[chat] fact check failed, answering without it:',e.message);parsed=null;sources=[];}
+    }
+    if(!parsed){parsed=await callAI(apiKey,{model:'openai/gpt-4o-mini',max_tokens:600,temperature:0.7,messages:messages},20000);}
     var reply=parsed.choices&&parsed.choices[0]&&parsed.choices[0].message?parsed.choices[0].message.content:'';
     if(!reply){return{statusCode:500,headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'},body:JSON.stringify({error:parsed.error&&parsed.error.message||'No reply'})};}
     reply=reply.replace(/\[SEARCH_SCOPE:[^\]]*\]/g,'').trim();
     reply=reply.replace(/\[SUGGESTIONS:[\s\S]*?\]/g,'').trim();
     reply=reply.replace(/\[OPTION_[A-E]:[\s\S]*?\]/g,'').trim();
+    if(sources.length){reply=reply.replace(/\s*(\*\*)?(sources?|references?)(\*\*)?:[\s\S]*$/i,'').replace(/\s*\[\d+\]/g,'').replace(/\s+([.,!?])/g,'$1').trim();reply+='\n\n🔎 Checked just now on '+sources.slice(0,2).map(function(u){return '['+siteName(u)+']('+u+')';}).join(' · ');}
     // safety net: the reply claims to show businesses but none were looked up — look them up from the conversation
     if(!businessContext&&/\b(here are|here's|here is|i found|check out these|take a look at)\b[^.!?]{0,80}\b(food|businesses|business|places|spots|caterers?|restaurants?|shops?|stores?|vendors?|listings?|kitchens?|bukkas?|chefs?)\b/i.test(reply)){
       var dir2=await getDirectory(), sr2=searchBusinessesByIntent(contextQuery(),6,dir2,userCity,0);

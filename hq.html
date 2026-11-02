@@ -852,9 +852,25 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#baAll', s).onclick = function () { var t = []; groups.forEach(function (g) { t = t.concat(missing(g)); }); run(t); };
     api('bday-art').then(function (r) { art = r.art || {}; groups = r.groups || []; groups.forEach(function (g) { g.designs.forEach(function (d) { names[d[0]] = g.name + ' · ' + d[1]; }); }); paint(); }, function (x) { $('#baList', s).textContent = x.message; });
   }
+  // ✅ Fact sheet — checked facts the app chat must use (fees, rules, prices that change)
+  function factsSheet() {
+    var s = sheet('<h2>✅ Auntie Tobi fact sheet</h2><p class="muted" style="margin:4px 0 10px">Auntie Tobi always uses these facts and they override her old memory. One fact per line — say what it is, the figure, and where/when you checked it. If you spot a wrong answer in the app, add the correct fact here.</p>' +
+      '<textarea id="fsText" rows="14" style="width:100%;font-size:14px;line-height:1.5" placeholder="e.g. Companies House — registering a limited company costs £100 online (GOV.UK, checked Nov 2026)"></textarea>' +
+      '<div class="muted" id="fsMeta" style="font-size:12px;margin-top:6px"></div>' +
+      '<div class="muted" style="font-size:12px;margin-top:6px">💡 For questions about fees, visas, tax, benefits, NHS and rules, Auntie Tobi also checks GOV.UK, NHS and Citizens Advice live before answering.</div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="fsX">Close</button><button class="btn primary" id="fsSave">💾 Save facts</button></div>');
+    $('#fsX', s).onclick = function () { s.remove(); };
+    function meta(f) { var n = (f.text || '').split('\n').filter(Boolean).length; $('#fsMeta', s).textContent = n + ' fact' + (n === 1 ? '' : 's') + (f.at ? ' · last saved ' + new Date(f.at).toLocaleString('en-GB') : ' · not saved yet'); }
+    api('facts-get').then(function (r) { $('#fsText', s).value = r.facts.text || ''; meta(r.facts); }, function (x) { toast(x.message); });
+    $('#fsSave', s).onclick = async function () {
+      var b = this; b.disabled = true;
+      try { var r = await api('facts-save', { text: $('#fsText', s).value }); meta(r.facts); toast('Facts saved ✅ — the app uses them within a minute'); } catch (x) { toast(x.message); }
+      b.disabled = false;
+    };
+  }
   function vApp() {
     $('#ttl').textContent = 'Publish to App';
-    $('#topRight').innerHTML = (S.isAdmin ? '<button class="btn ghost" id="apBday">🎉 Card art</button> ' : '') + '<button class="btn ghost" id="apPaste">📋 Paste</button>';
+    $('#topRight').innerHTML = (S.isAdmin ? '<button class="btn ghost" id="apFacts">✅ Facts</button> <button class="btn ghost" id="apBday">🎉 Card art</button> ' : '') + '<button class="btn ghost" id="apPaste">📋 Paste</button>';
     var all = S.app || [];
     var live = all.filter(function (p) { return appState(p) === 'live'; });
     var ended = all.filter(function (p) { return appState(p) === 'ended'; });
@@ -880,7 +896,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       block('Live in the app', live, 'Nothing published yet. Tap ＋ Update, or 📋 Paste something from ChatGPT.') +
       (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
     $('#apPaste').onclick = function () { appPasteSheet(); };
-    if ($('#apBday')) $('#apBday').onclick = bdayArtSheet;
+    if ($('#apBday')) $('#apBday').onclick = bdayArtSheet; if ($('#apFacts')) $('#apFacts').onclick = factsSheet;
     $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : { kind: k }); }; });
     $('#apAi').onclick = function () { appAiSheet(); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });

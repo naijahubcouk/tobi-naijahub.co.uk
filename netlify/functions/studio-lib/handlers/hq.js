@@ -277,6 +277,18 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'bday-art-del') return { art: await bday.removeArt(String(body.key || ''), String(body.size || '')), designs: Object.keys(bday.ART), groups: bday.GROUPS };
       return { art: await bday.artIndex(), designs: Object.keys(bday.ART), groups: bday.GROUPS };
     }
+    case 'facts-get': case 'facts-save': {
+      // ✅ the fact sheet the app chat always uses (it overrides the AI's out-of-date memory)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the fact sheet.');
+      if (body.action === 'facts-save') {
+        const text = String(body.text || '').replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean).join('\n');
+        if (text.length > 8000) throw new HttpError(400, 'too_long', 'The fact sheet is too long — keep it under 8,000 characters.');
+        await core.setJson('app/facts', { text, at: core.nowIso(), by: who.email });
+        await core.audit(who.email, 'hq_facts_save', { chars: text.length });
+      }
+      const f = (await core.getJson('app/facts')) || { text: 'Companies House — registering a private limited company costs £100 online or £124 by post (GOV.UK fees, checked November 2026).', at: '' };
+      return { facts: f };
+    }
     case 'team-save': {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change who has access.');
       const t = await hq.setTeam(body.emails, body.names, body.access);
