@@ -31,13 +31,13 @@ function toHtml(text) {
   const link = s => s.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, u => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\//, '')}</a>`);
   const inline = s => link(esc(s)).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   const out = [];
-  let list = null;
-  const flush = () => { if (list) { out.push(`<ul>${list.map(li => `<li>${inline(li)}</li>`).join('')}</ul>`); list = null; } };
+  let list = null, ordered = false;
+  const flush = () => { if (list) { const t = ordered ? 'ol' : 'ul'; out.push(`<${t}>${list.map(li => `<li>${inline(li)}</li>`).join('')}</${t}>`); list = null; } };
   for (const raw of String(text || '').split('\n')) {
     const line = raw.trim();
     if (!line) { flush(); continue; }
-    const b = /^(?:[•\-*–]|\d+[.)])\s+(.*)$/.exec(line);
-    if (b) { (list = list || []).push(b[1]); continue; }
+    const b = /^(?:([•\-*–])|(\d+)[.)])\s+(.*)$/.exec(line);
+    if (b) { const num = !!b[2]; if (list && num !== ordered) flush(); if (!list) ordered = num; (list = list || []).push(b[3]); continue; }
     flush();
     if (line.length <= 60 && /[?:]$/.test(line) && !/https?:/.test(line)) out.push(`<h3>${inline(line.replace(/:$/, ''))}</h3>`);
     else out.push(`<p>${inline(line)}</p>`);

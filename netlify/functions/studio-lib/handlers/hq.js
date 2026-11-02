@@ -161,8 +161,8 @@ exports.handler = handler(async (ctx) => {
     case 'app-img': return { imgId: await eventsub.saveImage(body.image) };
     case 'app-ai': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
-      const draft = await appai.write(body.notes, body.kind, body.category);
-      await core.audit(who.email, 'hq_app_ai', { kind: body.kind });
+      const draft = await appai.write(body.notes, body.kind, body.category, { rewrite: !!body.rewrite });
+      await core.audit(who.email, 'hq_app_ai', { kind: body.kind, rewrite: !!body.rewrite });
       return { draft };
     }
     case 'igc-gen': {

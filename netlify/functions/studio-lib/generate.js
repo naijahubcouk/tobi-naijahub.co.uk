@@ -152,6 +152,7 @@ async function callModel(messages, maxTokens, settings, opts) {
   const body = { model, messages, max_tokens: maxTokens, temperature: opts && typeof opts.temperature === 'number' ? opts.temperature : opts && opts.json ? 0.2 : 0.85 };
   if (opts && opts.json) body.response_format = { type: 'json_object' };
   if (provider === 'openrouter') body.usage = { include: true };
+  if (provider === 'openrouter' && opts && opts.plugins) body.plugins = opts.plugins; // e.g. a live web search of official sites
   // Claude models on OpenRouter always "think": they reject a custom temperature and the thinking uses part of
   // max_tokens — so keep the default temperature, ask for light thinking, hide it, and give it room.
   if (/^anthropic\//.test(model)) { delete body.temperature; delete body.response_format; body.reasoning = { effort: (opts && opts.effort) || 'low', exclude: true }; body.max_tokens = Math.round(maxTokens * 1.5) + 1024; }
@@ -184,7 +185,8 @@ async function callModel(messages, maxTokens, settings, opts) {
   const costUsd = typeof usage.cost === 'number'
     ? usage.cost
     : (inTok * settings.inputPricePerMUsd + outTok * settings.outputPricePerMUsd) / 1e6;
-  return { text: opts && opts.raw ? String(content).trim() : tidy(content), inTok, outTok, costUsd, model, finish: data.choices[0].finish_reason || '' };
+  const sources = (data.choices[0].message.annotations || []).map(a => a && a.url_citation && a.url_citation.url).filter(Boolean);
+  return { text: opts && opts.raw ? String(content).trim() : tidy(content), inTok, outTok, costUsd, model, finish: data.choices[0].finish_reason || '', sources };
 }
 
 function tidy(s) {

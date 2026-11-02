@@ -885,6 +885,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
         '<div style="font-weight:700;margin-top:4px">' + esc(p.title) + '</div>' +
         '<div class="muted" style="font-size:12.5px">Published ' + esc(new Date(p.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + (S.names && S.names[p.by] ? ' by ' + esc(S.names[p.by]) : '') + '</div></div>' +
         '<div class="apact"><button class="btn ghost sm" data-aedit="' + p.id + '">✏️ Edit</button>' +
+        (p.kind === 'article' ? '<button class="btn ghost sm" data-arew="' + p.id + '" title="Rewrite in Auntie Tobi style">✨ Rewrite</button>' : '') +
         '<button class="btn ghost sm" data-acopy="' + p.id + '">🔗 Link</button>' +
         '<button class="btn ghost sm" data-ahide="' + p.id + '">' + (p.status === 'hidden' ? '👁 Show' : '🙈 Hide') + '</button>' +
         '<button class="btn ghost sm" data-adel="' + p.id + '" title="Delete">🗑</button></div></div>';
@@ -900,6 +901,17 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : { kind: k }); }; });
     $('#apAi').onclick = function () { appAiSheet(); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
+    // ✨ Rewrite: turns a published article into a new draft in Auntie Tobi's style — nothing changes until you check it and save
+    $$('[data-arew]').forEach(function (b) { b.onclick = async function () {
+      var p = appById(b.dataset.arew); if (!p) return;
+      b.disabled = true; b.textContent = '✨ Rewriting… (about 30 seconds)';
+      var a = { notes: p.title + '\n\n' + (p.summary || '') + '\n\n' + (p.body || '') + (p.link ? '\n\nLink: ' + p.link : ''), kind: 'article', category: p.category, rewrite: true };
+      try {
+        var d = (await api('app-ai', a)).draft;
+        appEditor(Object.assign({}, p, { title: d.title, summary: d.summary, body: d.body, link: d.link || p.link }), null, a);
+      } catch (x) { toast(x.message); }
+      b.disabled = false; b.textContent = '✨ Rewrite';
+    }; });
     $$('[data-acopy]').forEach(function (b) { b.onclick = function () { var u = appLink(appById(b.dataset.acopy)); (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { toast('Link copied — paste it anywhere'); }, function () { prompt('Copy this link:', u); }); }; });
     $$('[data-ahide]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.ahide); try { var r = await api('app-save', { item: { id: p.id, status: p.status === 'hidden' ? 'live' : 'hidden' } }); upsertApp(r.item); toast(r.item.status === 'hidden' ? 'Hidden from the app' : 'Showing in the app again'); rerender(); } catch (x) { toast(x.message); } }; });
     $$('[data-adel]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.adel); if (!confirm('Delete “' + p.title + '” for good? It will disappear from the app.')) return; try { var r = await api('app-delete', { id: p.id }); S.app = r.app; toast('Deleted'); rerender(); } catch (x) { toast(x.message); } }; });
@@ -910,7 +922,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   function appAiSheet(prefill) {
     prefill = prefill || {};
     var k0 = prefill.kind || 'update';
-    var s = sheet('<h2>✨ Write with AI</h2><p class="muted" style="margin:4px 0 10px">Paste the information — rough notes are fine. AI writes the post in Auntie Tobi’s voice using <b>only</b> the facts you give it. You’ll check it before anything goes in the app.</p>' +
+    var s = sheet('<h2>✨ Write with AI</h2><p class="muted" style="margin:4px 0 10px">Paste the information — rough notes are fine. AI writes it in Auntie Tobi’s warm, simple English. For <b>articles and news</b> it also checks GOV.UK, NHS and Citizens Advice for extra detail and lists the sources — it never guesses fees or rules. You’ll check it before anything goes in the app.</p>' +
       '<div class="lbl">What is it?</div><div class="chipbar" id="aiK">' + Object.keys(AI_KIND).map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (k === k0) + '">' + AI_KIND[k] + '</button>'; }).join('') + '</div>' +
       '<div id="aiCatBox" style="margin-top:10px"><label for="aiCat">Article category</label><select id="aiCat"><option value="">✨ Let AI choose</option>' + (S.appCats || []).map(function (c) { return '<option' + (c === prefill.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
       '<div id="aiLinkBox" style="margin-top:10px"><div class="f2"><div><label for="aiU">🔗 <span id="aiUl">Link</span> <span class="muted" id="aiUh" style="font-weight:400"></span></label><input id="aiU" placeholder="https://" value="' + esc(prefill.url || '') + '"></div>' +
@@ -961,7 +973,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       if (r2.image) { try { d2._img = await imgShrink(r2.image); d2._imgFrom = 'link'; } catch (_) { /* no image */ } }
       return d2;
     }
-    return (await api('app-ai', { notes: a.notes, kind: a.kind, category: a.category })).draft;
+    return (await api('app-ai', { notes: a.notes, kind: a.kind, category: a.category, rewrite: !!a.rewrite })).draft;
   }
   // Shrinks a File or data URL to a JPEG (max 1600px, under ~1.5MB).
   function imgShrink(src) {
@@ -1121,7 +1133,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       $('#aeNotes', s).onclick = function () { s.remove(); appAiSheet(ai); };
       $('#aeAgain', s).onclick = async function () {
         var b = this; b.disabled = true; b.textContent = 'Writing…';
-        try { var d = await aiDraft(ai); if (!d._img && img.data) { d._img = img.data; d._imgFrom = img.from; } s.remove(); appEditor(d, onDone, ai); }
+        try { var d = await aiDraft(ai); if (ai.rewrite && p.id) d = Object.assign({}, p, { title: d.title, summary: d.summary, body: d.body, link: d.link || p.link }); if (!d._img && img.data) { d._img = img.data; d._imgFrom = img.from; } s.remove(); appEditor(d, onDone, ai); }
         catch (x) { toast(x.message); b.disabled = false; b.textContent = 'Try again'; }
       };
     }
