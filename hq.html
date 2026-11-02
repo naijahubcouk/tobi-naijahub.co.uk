@@ -813,9 +813,39 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       return { kind: looksEvent ? 'event' : 'update', title: title, body: b, link: link, day: day };
     }).filter(function (x) { return x.title; });
   }
+  // 🎂 Birthday card artwork (made once with the image AI; the text and photo are added on people's phones)
+  var BDAY_NAMES = { pinkballoons: 'Pink & Gold Balloons', blueballoons: 'Blue & Gold Balloons', purpleluxe: 'Purple Luxe', minimalgold: 'Minimal Gold', chocolate: 'Chocolate Cake', lilac: 'Lilac Celebration', glitter: 'Gold Glitter', love: 'Love', daughter: 'Daughter', sister: 'Sister', brother: 'Brother', wife: 'Wife', husband: 'Husband', mother: 'Mother', father: 'Father' };
+  function bdayArtSheet() {
+    var s = sheet('<h2>🎂 Birthday card art</h2><p class="muted" style="margin:4px 0 10px">Each premium design needs its artwork made once (square + story size, about 8p per design). Tap <b>Make all missing</b>, then 🔄 any you don’t like. People’s names, messages and photos are added on their phone — nothing per card.</p>' +
+      '<div class="row" style="gap:8px;margin-bottom:10px"><button class="btn primary" id="baAll">🎨 Make all missing</button><a class="btn ghost" href="/birthday" target="_blank">👀 Open the card maker</a></div><div class="muted" id="baMsg" style="font-size:13px;margin-bottom:6px"></div><div id="baList">Loading…</div>' +
+      '<div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="baX">Close</button></div>');
+    var art = {}, designs = Object.keys(BDAY_NAMES), busy = false;
+    function src(id) { return '/.netlify/functions/bday?artimg=' + id + '&v=' + art[id]; }
+    function paint() {
+      $('#baList', s).innerHTML = designs.map(function (k) {
+        return '<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)"><div style="flex:1;font-weight:700">' + esc(BDAY_NAMES[k] || k) + '</div>' +
+          ['sq', 'st'].map(function (z) { var id = k + '-' + z; return '<div style="text-align:center">' + (art[id] ? '<img src="' + src(id) + '" style="width:' + (z === 'sq' ? 56 : 34) + 'px;height:56px;object-fit:cover;border-radius:6px;display:block">' : '<div style="width:' + (z === 'sq' ? 56 : 34) + 'px;height:56px;border-radius:6px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:11px">' + (z === 'sq' ? '⬜' : '📱') + '</div>') + '<button class="btn link" data-mk="' + id + '" style="font-size:12px">' + (art[id] ? '🔄' : '🎨') + '</button></div>'; }).join('') + '</div>';
+      }).join('');
+      $$('[data-mk]', s).forEach(function (b) { b.onclick = function () { var a = b.dataset.mk.split('-'); make(a[0], a[1], b); }; });
+    }
+    async function make(k, z, b) {
+      if (busy) return; busy = true; if (b) b.textContent = '⏳';
+      try { var r = await api('bday-art-make', { key: k, size: z }); art = r.art; } catch (x) { toast(x.message); }
+      busy = false; paint();
+    }
+    $('#baX', s).onclick = function () { s.remove(); };
+    $('#baAll', s).onclick = async function () {
+      var todo = []; designs.forEach(function (k) { ['sq', 'st'].forEach(function (z) { if (!art[k + '-' + z]) todo.push([k, z]); }); });
+      if (!todo.length) return toast('All designs have artwork ✅');
+      if (!confirm('Make ' + todo.length + ' pictures (about ' + (todo.length * 4) + 'p)? It takes a few minutes — keep this open.')) return;
+      for (var i = 0; i < todo.length; i++) { $('#baMsg', s).textContent = '⏳ Making ' + (i + 1) + ' of ' + todo.length + ' — ' + BDAY_NAMES[todo[i][0]] + (todo[i][1] === 'st' ? ' (story)' : ''); await make(todo[i][0], todo[i][1]); }
+      $('#baMsg', s).textContent = '✅ Done — open the card maker to see them.';
+    };
+    api('bday-art').then(function (r) { art = r.art || {}; paint(); }, function (x) { $('#baList', s).textContent = x.message; });
+  }
   function vApp() {
     $('#ttl').textContent = 'Publish to App';
-    $('#topRight').innerHTML = '<button class="btn ghost" id="apPaste">📋 Paste</button>';
+    $('#topRight').innerHTML = (S.isAdmin ? '<button class="btn ghost" id="apBday">🎂 Birthday card art</button> ' : '') + '<button class="btn ghost" id="apPaste">📋 Paste</button>';
     var all = S.app || [];
     var live = all.filter(function (p) { return appState(p) === 'live'; });
     var ended = all.filter(function (p) { return appState(p) === 'ended'; });
@@ -841,6 +871,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       block('Live in the app', live, 'Nothing published yet. Tap ＋ Update, or 📋 Paste something from ChatGPT.') +
       (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
     $('#apPaste').onclick = function () { appPasteSheet(); };
+    if ($('#apBday')) $('#apBday').onclick = bdayArtSheet;
     $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : { kind: k }); }; });
     $('#apAi').onclick = function () { appAiSheet(); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });

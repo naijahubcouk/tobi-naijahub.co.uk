@@ -254,4 +254,4 @@ async function generateImage(prompt, aspect, refs) {
   return url;
 }
 
-module.exports = { readLink, fetchImage, makePicture, checkUrl };
+module.exports = { readLink, fetchImage, makePicture, checkUrl, generateImage };

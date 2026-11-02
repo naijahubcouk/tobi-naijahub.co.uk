@@ -34,11 +34,11 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 .row{display:flex;gap:8px}.row>*{flex:1}
 .designs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .design{border:2px solid transparent;border-radius:10px;padding:0;cursor:pointer;background:none;overflow:hidden;font-family:inherit}
-.design canvas{width:100%;display:block;border-radius:8px;aspect-ratio:1/1}
+.design canvas,.design img{width:100%;display:block;border-radius:8px;aspect-ratio:1/1;object-fit:cover}
 .design span{display:block;font-size:11px;font-weight:700;color:#374151;padding:3px 0 1px;text-align:center}
 .design[aria-pressed=true]{border-color:#057A44}
 .preview{position:relative}
-#cv{width:100%;display:block;border-radius:12px;box-shadow:0 4px 18px rgba(15,30,54,.18);background:#fff}
+#cv{touch-action:none;width:100%;display:block;border-radius:12px;box-shadow:0 4px 18px rgba(15,30,54,.18);background:#fff}
 .btn{display:block;width:100%;border:0;border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none}
 .btn.wa{background:#25D366;color:#fff}.btn.dl{background:#057A44;color:#fff}.btn.ghost{background:#fff;color:#0F1E36;border:1.5px solid #e0e0e0}
 .btn.gold{background:#FFB81C;color:#0F1E36}
@@ -96,8 +96,17 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
     <div class="card">
       <div class="step">3 · Choose a design</div>
-      <div class="designs" id="designs"></div>
+      <div class="muted" style="margin:-2px 0 6px">✨ Premium</div><div class="designs" id="designsP"></div>
+      <div class="muted" style="margin:12px 0 6px">🎨 Classic</div><div class="designs" id="designs"></div>
       <div class="chips" id="size" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="step">4 · Add their photo <small style="font-weight:400;text-transform:none;letter-spacing:0;color:#6B7280">(optional)</small></div>
+      <label class="btn ghost" style="margin:0;text-align:center">📷 Choose a photo<input type="file" accept="image/*" id="photo" hidden></label>
+      <div id="photoBox" class="hidden" style="margin-top:10px"><label for="pz" style="margin-top:0">Zoom <small>— drag the photo on the card to move it</small></label><input type="range" id="pz" min="100" max="300" value="100" style="padding:0">
+        <button type="button" class="smallbtn" id="pRm" style="margin-top:8px">✖ Remove photo</button></div>
+      <p class="muted" style="font-size:12px;margin-top:8px">If you share a card link, the photo is kept on Auntie Tobi for 60 days so they can see it, then deleted automatically.</p>
     </div>
 
     <div class="card preview">
@@ -121,7 +130,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
-  var WHO = { friend: '👯 Friend', partner: '💕 Partner', mum: '👩🏾 Mum', dad: '👨🏾 Dad', sister: '👭 Sister', brother: '👬 Brother', child: '🧒🏾 Child', colleague: '💼 Colleague', pastor: '⛪ Pastor' };
+  var WHO = { friend: '👯 Friend', partner: '💕 Partner', wife: '👰🏾 Wife', husband: '🤵🏾 Husband', mum: '👩🏾 Mum', dad: '👨🏾 Dad', daughter: '👧🏾 Daughter', son: '👦🏾 Son', sister: '👭 Sister', brother: '👬 Brother', child: '🧒🏾 Child', colleague: '💼 Colleague', pastor: '⛪ Pastor' };
   var STYLES = { heartfelt: '💖 Heartfelt', funny: '😂 Funny', prayer: '🙏 Prayer', naija: '🇳🇬 Naija vibes' };
   var SIZES = { square: '⬜ Square', story: '📱 Story / Status' };
 
@@ -181,6 +190,17 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     { s: 'naija', w: 'sister', t: 'Happy birthday, my sister! Correct babe, top-tier — the year is yours. 💅🏾' },
     { s: 'naija', w: 'brother', t: 'Happy birthday, bros! Big boy things only — may this year bring the bag. 💰😎' },
     { s: 'naija', w: 'child', t: 'Happy birthday, my pikin! Grow in wisdom and favour — you go do pass us! 🌟' },
+    { s: 'heartfelt', w: 'wife', t: 'To my beautiful wife — you are my best friend, my peace and my greatest blessing. Happy birthday, my queen. 👑' },
+    { s: 'heartfelt', w: 'husband', t: 'To my wonderful husband — thank you for your love, your strength and for choosing me every day. Happy birthday, my king. 👑' },
+    { s: 'heartfelt', w: 'daughter', t: 'My beautiful daughter, you fill my heart with pride every single day. Happy birthday, my princess! 💖' },
+    { s: 'heartfelt', w: 'son', t: 'My amazing son, watching you grow into who you are is my greatest joy. Happy birthday, champ! 💙' },
+    { s: 'prayer', w: 'wife', t: 'My wife, may God keep you in perfect health, crown your efforts with success and bless our home through you. Happy birthday!' },
+    { s: 'prayer', w: 'husband', t: 'My husband, may the Lord enlarge your coast, guard your going out and coming in, and keep you strong for our family.' },
+    { s: 'funny', w: 'wife', t: 'Happy birthday to my wife — the only person allowed to finish my food. 😂💕' },
+    { s: 'funny', w: 'husband', t: 'Happy birthday, husband! Thank you for always pretending I’m right. 😂💕' },
+    { s: 'naija', w: 'wife', t: 'My Olólùfẹ́, my sugar, my everything — happy birthday! I go love you die. 😍' },
+    { s: 'naija', w: 'husband', t: 'My Oko mi, my odogwu — happy birthday! May your bag be heavy and your joy be full. 💰💚' },
+    { s: 'naija', w: 'daughter', t: 'Happy birthday, my princess! Big girl things only — the world is waiting for you! 👑' },
     { s: 'naija', w: 'colleague', t: 'Happy birthday! May promotion locate you and may the work stress run from you. 😂🙏🏾' },
   ];
 
@@ -230,62 +250,167 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function wrap(c, text, maxW) { var out = []; String(text || '').split('\n').forEach(function (para) { var words = para.split(/\s+/).filter(Boolean), l = ''; words.forEach(function (w) { var t = l ? l + ' ' + w : w; if (c.measureText(t).width > maxW && l) { out.push(l); l = w; } else l = t; }); out.push(l); }); return out; }
   function ordinal(n) { n = parseInt(n, 10); if (!n) return ''; var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
 
-  function draw(cv, st, scale) {
+  // ── ✨ premium designs: AI-made artwork (made once in HQ) + where the words and photo go ──
+  // box = [x, y, w, h] as fractions of the card for square / story; panel = soft backing so text is always readable
+  var P = {
+    pinkballoons: { label: 'Pink Balloons', head: '#2B1B1F', fg: '#3A2A2E', accent: '#C9A04E', panel: 'light', sq: [.38, .07, .58, .86], st: [.1, .14, .8, .58], fb: ['#FFF4F2', '#F8D3DA'] },
+    blueballoons: { label: 'Blue Balloons', head: '#13203A', fg: '#1F2D45', accent: '#C9A04E', panel: 'light', sq: [.38, .07, .58, .86], st: [.1, .14, .8, .58], fb: ['#F4F8FF', '#CFE0F7'] },
+    purpleluxe: { label: 'Purple Luxe', head: '#F5E3B3', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', photo: 'circle', sq: [.2, .16, .6, .46], st: [.14, .16, .72, .46], fb: ['#4B2470', '#24103A'] },
+    minimalgold: { label: 'Minimal Gold', head: '#9A7A3E', fg: '#1E1E1E', accent: '#9A7A3E', panel: 'light', photo: 'arch', sq: [.05, .07, .55, .86], st: [.08, .06, .84, .54], fb: ['#F7F1E8', '#EADFCB'] },
+    chocolate: { label: 'Chocolate Cake', head: '#2A1A12', fg: '#2F2620', accent: '#B8892E', panel: 'light', sq: [.05, .05, .56, .62], st: [.08, .05, .84, .5], fb: ['#F1EEEA', '#D9D2C8'] },
+    lilac: { label: 'Lilac Party', head: '#FBEFFF', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', sq: [.2, .12, .6, .48], st: [.14, .16, .72, .44], fb: ['#7A55A8', '#3C2463'] },
+    glitter: { label: 'Gold Glitter', head: '#A9832F', fg: '#2A2A2A', accent: '#A9832F', panel: 'light', photo: 'arch', sq: [.12, .09, .76, .4], st: [.12, .08, .76, .36], fb: ['#FFFFFF', '#F3E7C6'] },
+    love: { label: '❤️ Love', head: '#FFFFFF', fg: '#FFFFFF', accent: '#FFD1DC', panel: 'dark', photo: 'heart', rel: 'love', sq: [.16, .14, .68, .72], st: [.12, .16, .76, .64], fb: ['#8E1B3A', '#3E0B1A'] },
+    daughter: { label: 'Daughter', head: '#B0447A', fg: '#4A2340', accent: '#C77DFF', panel: 'light', rel: 'daughter', sq: [.15, .13, .7, .74], st: [.12, .14, .76, .66], fb: ['#FFF0F7', '#EBDDFC'] },
+    sister: { label: 'Sister', head: '#C2563A', fg: '#4A2A22', accent: '#D4A24C', panel: 'light', rel: 'sister', sq: [.15, .13, .7, .74], st: [.12, .14, .76, .66], fb: ['#FFF3EC', '#FBD9C6'] },
+    brother: { label: 'Brother', head: '#0F2A4A', fg: '#13253F', accent: '#C9A04E', panel: 'light', rel: 'brother', sq: [.15, .12, .7, .62], st: [.12, .12, .76, .56], fb: ['#EEF5FA', '#C9DDEB'] },
+    wife: { label: 'Wife', head: '#9C6B3C', fg: '#3A2A22', accent: '#C9A04E', panel: 'light', photo: 'heart', rel: 'wife', sq: [.15, .1, .7, .58], st: [.12, .1, .76, .54], fb: ['#FBF2EC', '#EED9CC'] },
+    husband: { label: 'Husband', head: '#E6C068', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', rel: 'husband', sq: [.15, .1, .7, .56], st: [.12, .1, .76, .52], fb: ['#16233D', '#070B14'] },
+    mother: { label: 'Mother', head: '#B24A6E', fg: '#3E2A33', accent: '#C9A04E', panel: 'light', rel: 'mum', sq: [.15, .12, .7, .58], st: [.12, .12, .76, .54], fb: ['#FFF5F7', '#F6D9E2'] },
+    father: { label: 'Father', head: '#E6C068', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', rel: 'dad', sq: [.15, .1, .7, .56], st: [.12, .1, .76, .52], fb: ['#1E3B2C', '#0B1A12'] },
+  };
+  var REL_LINE = { love: 'To the love of my life', daughter: 'For my beautiful Daughter', sister: 'For my amazing Sister', brother: 'For my awesome Brother', wife: 'For my wonderful Wife', husband: 'For my amazing Husband', mum: 'For the best Mum in the world', dad: 'For the best Dad in the world' };
+  var SUGGEST = { mum: 'mother', dad: 'father', wife: 'wife', husband: 'husband', daughter: 'daughter', sister: 'sister', brother: 'brother', partner: 'love' };
+  var ART = {}, IMGS = {};
+  function artUrl(key, size) { var id = key + '-' + (size === 'story' ? 'st' : 'sq'); return ART[id] ? '/.netlify/functions/bday?artimg=' + id + '&v=' + ART[id] : ''; }
+  function loadImg(url, cb) {
+    if (!url) return null; var im = IMGS[url];
+    if (im) return im.complete && im.naturalWidth ? im : null;
+    im = IMGS[url] = new Image(); im.onload = function () { if (cb) cb(); }; im.src = url; return null;
+  }
+  function coverDraw(c, im, x, y, w, h, zoom, ox, oy) {
+    var k = Math.max(w / im.naturalWidth, h / im.naturalHeight) * (zoom || 1), dw = im.naturalWidth * k, dh = im.naturalHeight * k;
+    c.drawImage(im, x + (w - dw) / 2 + (ox || 0) * w, y + (h - dh) / 2 + (oy || 0) * h, dw, dh);
+  }
+  function rr(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+  function shapePath(c, kind, x, y, w, h) {
+    c.beginPath();
+    if (kind === 'heart') { var cx = x + w / 2; c.moveTo(cx, y + h * .28); c.bezierCurveTo(cx, y, x, y, x, y + h * .32); c.bezierCurveTo(x, y + h * .62, cx, y + h * .8, cx, y + h); c.bezierCurveTo(cx, y + h * .8, x + w, y + h * .62, x + w, y + h * .32); c.bezierCurveTo(x + w, y, cx, y, cx, y + h * .28); c.closePath(); }
+    else if (kind === 'arch') { c.moveTo(x, y + h); c.lineTo(x, y + w / 2); c.arc(x + w / 2, y + w / 2, w / 2, Math.PI, 0); c.lineTo(x + w, y + h); c.closePath(); }
+    else c.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+  }
+
+  function draw(cv, st, scale, onReady) {
     var W = 1080, H = st.size === 'story' ? 1920 : 1080; scale = scale || 1;
     cv.width = W * scale; cv.height = H * scale; var c = cv.getContext('2d'); c.setTransform(scale, 0, 0, scale, 0, 0);
-    var d = D[st.design] || D.floral; BG[st.design] ? BG[st.design](c, W, H) : BG.floral(c, W, H);
-    var a = area(st.design, W, H), cx = W / 2; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    var pd = P[st.design], d = pd || D[st.design] || D.floral, a;
+    if (pd) {
+      var im = loadImg(artUrl(st.design, st.size), onReady);
+      if (im) coverDraw(c, im, 0, 0, W, H); else lin(c, W, H, pd.fb);
+      var bx = pd[st.size === 'story' ? 'st' : 'sq'];
+      a = { x: W * bx[0], w: W * bx[2], top: H * bx[1], bottom: H * (bx[1] + bx[3]) };
+    } else { BG[st.design] ? BG[st.design](c, W, H) : BG.floral(c, W, H); a = area(st.design, W, H); }
+    var cx = a.x + a.w / 2, pad = 34;
+    var photo = st.photoImg && st.photoImg.complete && st.photoImg.naturalWidth ? st.photoImg : null;
+    var rel = pd && pd.rel ? REL_LINE[pd.rel] || '' : '';
+    var inner = { x: a.x + (pd ? pad : 0), w: a.w - (pd ? pad * 2 : 0), top: a.top + (pd ? pad : 0), bottom: a.bottom - (pd ? pad : 0) };
     var age = ordinal(st.age), head = age ? 'Happy ' + age + ' Birthday' : 'Happy Birthday', name = (st.name || '').trim();
-    // fit everything into the text area: shrink until it fits
-    for (var k = st.size === 'story' ? 1.4 : 1; k >= .55; k -= .05) {
-      var hs = 120 * k, ns = 104 * k, ms = 42 * k, fs = 38 * k;
-      c.font = '400 ' + hs + 'px "Great Vibes", cursive'; var headL = wrap(c, head, a.w);
-      c.font = '800 ' + ns + 'px "Playfair Display", serif'; var nameL = name ? wrap(c, name + '!', a.w) : [];
-      c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; var msgL = wrap(c, st.msg, a.w * .92);
-      var total = headL.length * hs * 1.05 + nameL.length * ns * 1.1 + 40 * k + msgL.length * ms * 1.35 + (st.from ? 30 * k + fs * 1.3 : 0);
-      if (total <= a.bottom - a.top) break;
+    var avail = inner.bottom - inner.top, ph = photo ? Math.min(inner.w * .5, avail * .34) : 0;
+    c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    for (var k = st.size === 'story' ? 1.4 : 1; k >= .5; k -= .05) {
+      var hs = 120 * k, ns = 100 * k, ms = 40 * k, fs = 36 * k, rs = 34 * k;
+      c.font = '400 ' + hs + 'px "Great Vibes", cursive'; var headL = wrap(c, head, inner.w);
+      c.font = '800 ' + ns + 'px "Playfair Display", serif'; var nameL = name ? wrap(c, name + '!', inner.w) : [];
+      c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; var msgL = wrap(c, st.msg, inner.w * .94);
+      var total = (rel ? rs * 1.6 : 0) + (photo ? ph + 26 : 0) + headL.length * hs * 1.02 + nameL.length * ns * 1.1 + 34 * k + msgL.length * ms * 1.35 + (st.from ? 26 * k + fs * 1.3 : 0);
+      if (total <= avail) break;
     }
-    var y = a.top + Math.max(0, (a.bottom - a.top - total) / 2) + hs * .85;
-    c.fillStyle = d.head; c.font = '400 ' + hs + 'px "Great Vibes", cursive'; headL.forEach(function (l) { c.fillText(l, cx, y); y += hs * 1.05; });
+    if (pd && pd.panel) {
+      var ph2 = Math.min(a.bottom - a.top, total + pad * 2 + 10), py = a.top + (a.bottom - a.top - ph2) / 2;
+      c.save(); c.fillStyle = pd.panel === 'dark' ? 'rgba(22,10,34,.5)' : 'rgba(255,255,255,.78)'; c.shadowColor = 'rgba(0,0,0,.12)'; c.shadowBlur = 24; rr(c, a.x, py, a.w, ph2, 34); c.fill(); c.restore();
+    }
+    var y = inner.top + Math.max(0, (avail - total) / 2);
+    if (rel) { c.fillStyle = d.accent; c.font = '700 ' + rs + 'px "DM Sans", sans-serif'; c.fillText(rel.toUpperCase().split('').join(' '), cx, y + rs); y += rs * 1.6; }
+    if (photo) {
+      var kind = (pd && pd.photo) || 'circle', pw = kind === 'arch' ? ph * .82 : ph, px = cx - pw / 2;
+      c.save(); shapePath(c, kind, px, y, pw, ph); c.clip(); c.fillStyle = '#eee'; c.fillRect(px, y, pw, ph); coverDraw(c, photo, px, y, pw, ph, st.pz || 1, st.px || 0, st.py || 0); c.restore();
+      c.save(); shapePath(c, kind, px, y, pw, ph); c.lineWidth = 8; c.strokeStyle = d.accent; c.stroke(); c.restore();
+      y += ph + 26;
+    }
+    y += hs * .85;
+    c.fillStyle = d.head; c.font = '400 ' + hs + 'px "Great Vibes", cursive'; headL.forEach(function (l) { c.fillText(l, cx, y); y += hs * 1.02; });
     y += ns * .05; c.fillStyle = d.fg; c.font = '800 ' + ns + 'px "Playfair Display", serif'; nameL.forEach(function (l) { c.fillText(l, cx, y); y += ns * 1.1; });
-    // little divider
-    y += 4 * k; c.fillStyle = d.accent; c.fillRect(cx - 50, y - ns * .45, 100, 5); y += 36 * k;
+    y += 4 * k; c.fillStyle = d.accent; c.fillRect(cx - 50, y - ns * .45, 100, 5); y += 34 * k;
     c.fillStyle = d.fg; c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; msgL.forEach(function (l) { c.fillText(l, cx, y); y += ms * 1.35; });
-    if (st.from) { y += 30 * k; c.fillStyle = d.accent; c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; c.fillText('With love, ' + st.from + ' 💚', cx, y); }
-    // attribution
-    var dark = ['gold', 'navy', 'sunset', 'stars'].indexOf(st.design) >= 0;
-    c.font = '600 24px "DM Sans", sans-serif'; c.fillStyle = dark ? 'rgba(255,255,255,.7)' : 'rgba(15,30,54,.55)';
-    c.fillText('Made with love on Auntie Tobi 💚 auntietobi.co.uk/birthday', cx, H - (st.design === 'cake' ? 14 : 30));
+    if (st.from) { y += 26 * k; c.fillStyle = d.accent; c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; c.fillText('With love, ' + st.from + ' 💚', cx, y); }
+    var dark = pd ? false : ['gold', 'navy', 'sunset', 'stars'].indexOf(st.design) >= 0;
+    c.font = '600 24px "DM Sans", sans-serif'; c.textAlign = 'center';
+    var att = 'Made with love on Auntie Tobi 💚 auntietobi.co.uk/birthday', aw = c.measureText(att).width;
+    if (pd) { c.fillStyle = 'rgba(255,255,255,.82)'; rr(c, W / 2 - aw / 2 - 16, H - 58, aw + 32, 38, 19); c.fill(); c.fillStyle = 'rgba(15,30,54,.75)'; c.fillText(att, W / 2, H - 31); }
+    else { c.fillStyle = dark ? 'rgba(255,255,255,.7)' : 'rgba(15,30,54,.55)'; c.fillText(att, cx === W / 2 ? cx : W / 2, H - (st.design === 'cake' ? 14 : 30)); }
   }
 
   // ── state ──
-  var st = { who: 'friend', style: 'heartfelt', design: 'floral', size: 'square', name: '', age: '', msg: '', from: '' }, lastPick = -1;
-  function pool() { return MSG.filter(function (m) { return m.s === st.style && (!m.w || m.w === st.who); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who); }); }
+  var st = { who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'square', name: '', age: '', msg: '', from: '', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
+  var ALIAS = { wife: 'partner', husband: 'partner', daughter: 'child', son: 'child' };
+  function fits(m) { return !m.w || m.w === st.who || m.w === ALIAS[st.who]; }
+  function pool() { return MSG.filter(function (m) { return m.s === st.style && fits(m); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who) || (!!b.w - !!a.w); }); }
   function suggest(first) { var p = pool(); if (!p.length) return; var specific = p.filter(function (m) { return m.w; }); var i; if (first && specific.length) i = 0; else { i = Math.floor(Math.random() * p.length); if (p.length > 1 && i === lastPick) i = (i + 1) % p.length; } lastPick = i; st.msg = p[i].t; $('msg').value = st.msg; render(); }
   function chips(id, map, key) {
     var el = $(id); el.innerHTML = Object.keys(map).map(function (k) { return '<button type="button" class="chip" data-v="' + k + '" aria-pressed="' + (st[key] === k) + '">' + map[k] + '</button>'; }).join('');
-    el.onclick = function (e) { var b = e.target.closest('[data-v]'); if (!b) return; st[key] = b.dataset.v; [].forEach.call(el.children, function (x) { x.setAttribute('aria-pressed', x === b); }); if (key === 'who' || key === 'style') suggest(true); else render(); save(); };
+    el.onclick = function (e) {
+      var b = e.target.closest('[data-v]'); if (!b) return; st[key] = b.dataset.v; [].forEach.call(el.children, function (x) { x.setAttribute('aria-pressed', x === b); });
+      if (key === 'who' && !designPicked && SUGGEST[st.who]) pickDesign(SUGGEST[st.who], true);
+      if (key === 'who' || key === 'style') suggest(true); else render(); save();
+    };
   }
-  var rT = 0; function render() { clearTimeout(rT); rT = setTimeout(function () { draw($('cv'), st, 0.75); }, 30); }
-  function save() { try { localStorage.setItem('tobiBday', JSON.stringify({ from: st.from, design: st.design, size: st.size })); } catch (e) {} }
-  function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2200); }
+  var rT = 0; function render() { clearTimeout(rT); rT = setTimeout(function () { draw($('cv'), st, 0.75, render); }, 30); }
+  function save() { try { localStorage.setItem('tobiBday', JSON.stringify({ from: st.from, size: st.size })); } catch (e) {} }
+  function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2400); }
+  function pickDesign(k, auto) { st.design = k; [].forEach.call(document.querySelectorAll('[data-d]'), function (x) { x.setAttribute('aria-pressed', x.dataset.d === k); }); if (!auto) designPicked = true; render(); }
 
-  // card link: the whole card lives in the link — nothing is stored on a server
+  // 📷 their photo — resized on the phone; stored on Auntie Tobi only when a card link is made (deleted after 60 days)
+  function addPhoto(file) {
+    var url = URL.createObjectURL(file), im = new Image();
+    im.onload = function () {
+      var k = Math.min(1, 900 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+      c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      var q = .86, d = c.toDataURL('image/jpeg', q); while (d.length > 850000 && q > .4) { q -= .12; d = c.toDataURL('image/jpeg', q); }
+      var out = new Image(); out.onload = function () { st.photoImg = out; st.photoData = d; st.photoId = ''; st.pz = 1; st.px = 0; st.py = 0; $('photoBox').classList.remove('hidden'); $('pz').value = 100; render(); toast('Photo added 📷 — drag it on the card to move it'); }; out.src = d;
+      URL.revokeObjectURL(url);
+    };
+    im.onerror = function () { toast('That photo couldn’t be opened — try another.'); };
+    im.src = url;
+  }
+  async function photoId() {
+    if (!st.photoData) return '';
+    if (st.photoId) return st.photoId;
+    var r = await fetch('/.netlify/functions/bday', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'photo', image: st.photoData }) });
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok || !j.id) throw new Error(j.message || 'The photo couldn’t be saved — the link will show the card without it.');
+    st.photoId = j.id; return j.id;
+  }
+
+  // card link: the words and design live in the link; only the photo is stored (60 days)
   function enc(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function dec(s) { try { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch (e) { return null; } }
-  function cardLink() { return location.origin + '/birthday?c=' + enc({ n: st.name, a: st.age, m: st.msg, f: st.from, d: st.design, z: st.size }); }
+  async function cardLink() {
+    var o = { n: st.name, a: st.age, m: st.msg, f: st.from, d: st.design, z: st.size, w: st.who };
+    if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; } catch (e) { toast(e.message); } }
+    return location.origin + '/birthday?c=' + enc(o);
+  }
   function fileName() { return 'birthday-card-' + (st.name || 'for-you').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; }
-  function blob(state) { return new Promise(function (ok) { var cv = document.createElement('canvas'); draw(cv, state || st, 1); cv.toBlob(function (b) { ok(b); }, 'image/png'); }); }
+  function blob(state) {
+    state = state || st;
+    return new Promise(function (ok) {
+      var url = P[state.design] ? artUrl(state.design, state.size) : '', done = false;
+      var fin = function () { if (done) return; done = true; var cv = document.createElement('canvas'); draw(cv, state, 1); cv.toBlob(function (b) { ok(b); }, 'image/png'); };
+      if (url && !loadImg(url, fin)) setTimeout(fin, 6000); else fin();
+    });
+  }
   async function download(state) { var b = await blob(state); var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = fileName(); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 3000); }
   function track(ev) { try { if (window.gtag) gtag('event', ev, { event_category: 'birthday_card', event_label: st.design }); } catch (e) {} }
 
   async function shareWa() {
-    var link = cardLink(), text = '🎂 Happy birthday' + (st.name ? ', ' + st.name : '') + '! I made you a card 💚\n' + link;
+    var btn = $('share'), keep = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Getting it ready…';
     try {
-      var b = await blob(), f = new File([b], fileName(), { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: text }); track('bday_share_image'); showGifts(); return; }
-    } catch (e) { if (e && e.name === 'AbortError') return; }
-    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); track('bday_share_link'); showGifts();
+      var link = await cardLink(), text = '🎂 Happy birthday' + (st.name ? ', ' + st.name : '') + '! I made you a card 💚\n' + link;
+      try {
+        var b = await blob(), f = new File([b], fileName(), { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: text }); track('bday_share_image'); showGifts(); return; }
+      } catch (e) { if (e && e.name === 'AbortError') return; }
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); track('bday_share_link'); showGifts();
+    } finally { btn.disabled = false; btn.textContent = keep; }
   }
   function copyText(t, ok) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast(ok); }, function () { prompt('Copy this:', t); }); }
 
@@ -305,38 +430,59 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     }).catch(function () {});
   }
 
+  function designTile(k, premium) {
+    var label = premium ? P[k].label : D[k].label, url = premium ? artUrl(k, 'square') : '';
+    return '<button type="button" class="design" data-d="' + k + '" aria-pressed="' + (st.design === k) + '">' + (url ? '<img src="' + url + '" alt="" loading="lazy">' : '<canvas width="160" height="160" data-fb="' + k + '"></canvas>') + '<span>' + label + '</span></button>';
+  }
+  function paintDesigns() {
+    $('designsP').innerHTML = Object.keys(P).map(function (k) { return designTile(k, true); }).join('');
+    $('designs').innerHTML = Object.keys(D).map(function (k) { return designTile(k, false); }).join('');
+    [].forEach.call(document.querySelectorAll('[data-fb]'), function (cvs) { var k = cvs.dataset.fb, c = cvs.getContext('2d'); c.scale(160 / 1080, 160 / 1080); if (P[k]) { lin(c, 1080, 1080, P[k].fb); c.font = '400 190px "Great Vibes", cursive'; c.textAlign = 'center'; c.fillStyle = P[k].head; c.fillText('Happy', 540, 520); c.fillText('Birthday', 540, 720); } else BG[k](c, 1080, 1080); });
+  }
+
   // ── receiver view ──
   var q = new URLSearchParams(location.search), got = q.get('c') ? dec(q.get('c')) : null;
+  async function loadArt() { try { var r = await fetch('/.netlify/functions/bday?art=1'); if (r.ok) ART = (await r.json()).art || {}; } catch (e) {} }
   function start() {
     if (got && (got.m || got.n)) {
       $('maker').classList.add('hidden'); $('recv').classList.remove('hidden');
-      var rs = { name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), design: D[got.d] ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square' };
+      var rs = { name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
       $('recvTitle').textContent = '🎂 Happy birthday' + (rs.name ? ', ' + rs.name : '') + '!';
       $('recvFrom').textContent = rs.from ? rs.from + ' made you a birthday card 💚' : 'Someone made you a birthday card 💚';
-      var cvR = $('cvR'); cvR.style.width = '100%'; cvR.style.borderRadius = '12px'; draw(cvR, rs, 0.75);
+      var cvR = $('cvR'); cvR.style.width = '100%'; cvR.style.borderRadius = '12px';
+      var paintR = function () { draw(cvR, rs, 0.75, paintR); };
+      if (got.p && /^p[a-z0-9]{6,20}$/.test(got.p)) { var pim = new Image(); pim.onload = function () { rs.photoImg = pim; paintR(); }; pim.src = '/.netlify/functions/bday?photo=' + got.p; }
+      paintR();
       $('rDl').onclick = function () { st.name = rs.name; download(rs); };
       $('rThanks').onclick = function () { window.open('https://wa.me/?text=' + encodeURIComponent('Thank you so much for my birthday card' + (rs.from ? ', ' + rs.from : '') + '! 🥰💚'), '_blank'); };
       document.title = '🎂 A birthday card for ' + (rs.name || 'you') + ' — Auntie Tobi';
       return;
     }
-    try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (D[sv.design]) st.design = sv.design; if (SIZES[sv.size]) st.size = sv.size; } catch (e) {}
+    try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (SIZES[sv.size]) st.size = sv.size; } catch (e) {}
     chips('who', WHO, 'who'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
-    $('designs').innerHTML = Object.keys(D).map(function (k) { return '<button type="button" class="design" data-d="' + k + '" aria-pressed="' + (st.design === k) + '"><canvas width="160" height="160"></canvas><span>' + D[k].label + '</span></button>'; }).join('');
-    [].forEach.call($('designs').children, function (b) { var c = b.querySelector('canvas').getContext('2d'); c.scale(160 / 1080, 160 / 1080); BG[b.dataset.d](c, 1080, 1080); });
-    $('designs').onclick = function (e) { var b = e.target.closest('[data-d]'); if (!b) return; st.design = b.dataset.d; [].forEach.call($('designs').children, function (x) { x.setAttribute('aria-pressed', x === b); }); render(); save(); };
+    paintDesigns();
+    document.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (b) pickDesign(b.dataset.d); });
     $('from').value = st.from;
     $('name').oninput = function () { st.name = this.value; render(); };
     $('age').oninput = function () { this.value = this.value.replace(/[^0-9]/g, ''); st.age = this.value; render(); };
     $('msg').oninput = function () { st.msg = this.value; render(); };
     $('from').oninput = function () { st.from = this.value; render(); save(); };
     $('suggest').onclick = function () { suggest(false); };
+    $('photo').onchange = function () { var f = this.files && this.files[0]; if (f) addPhoto(f); this.value = ''; };
+    $('pz').oninput = function () { st.pz = this.value / 100; render(); };
+    $('pRm').onclick = function () { st.photoImg = null; st.photoData = ''; st.photoId = ''; $('photoBox').classList.add('hidden'); render(); };
+    // drag the photo on the preview to move it inside its frame
+    var cv = $('cv'), drag = null;
+    cv.addEventListener('pointerdown', function (e) { if (!st.photoImg) return; drag = { x: e.clientX, y: e.clientY, px: st.px, py: st.py }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', function (e) { if (!drag) return; var r = cv.getBoundingClientRect(), s = 3.2 / r.width; st.px = Math.max(-.5, Math.min(.5, drag.px + (e.clientX - drag.x) * s)); st.py = Math.max(-.5, Math.min(.5, drag.py + (e.clientY - drag.y) * s)); render(); });
+    ['pointerup', 'pointercancel'].forEach(function (ev) { cv.addEventListener(ev, function () { drag = null; }); });
     $('dl').onclick = function () { download(); track('bday_download'); toast('Card saved ✅'); showGifts(); };
     $('share').onclick = shareWa;
-    $('link').onclick = function () { copyText(cardLink(), 'Card link copied 🔗'); track('bday_link'); showGifts(); };
+    $('link').onclick = async function () { var b = this; b.disabled = true; var l = await cardLink(); b.disabled = false; copyText(l, 'Card link copied 🔗'); track('bday_link'); showGifts(); };
     $('copy').onclick = function () { copyText((st.name ? 'Happy birthday, ' + st.name + '! ' : 'Happy birthday! ') + st.msg + (st.from ? '\n— ' + st.from : ''), 'Message copied 📋'); };
     suggest(true);
   }
-  var go = function () { start(); if (!got) render(); };
+  var go = function () { loadArt().then(function () { start(); if (!got) render(); }); };
   if (document.fonts && document.fonts.load) Promise.all(['400 60px "Great Vibes"', '800 60px "Playfair Display"', '500 30px "DM Sans"', 'italic 700 30px "DM Sans"'].map(function (f) { return document.fonts.load(f).catch(function () {}); })).then(go, go);
   else go();
 })();
