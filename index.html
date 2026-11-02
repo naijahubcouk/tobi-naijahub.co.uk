@@ -971,6 +971,40 @@
     padding: 6px 0 0;
     letter-spacing: 0.03em;
   }
+
+/* One text scale across the app, matched to the home page (Nov 2026): tiny 9–10px → 12px labels, 11–12px → 13px text, 17px → 16px titles. Home stays as designed. */
+#messages .msg:not(.home-msg) [style*="font-size:9.5px"],
+#more-sheet-overlay [style*="font-size:9.5px"],
+#messages .msg:not(.home-msg) [style*="font-size: 9.5px"],
+#more-sheet-overlay [style*="font-size: 9.5px"],
+#messages .msg:not(.home-msg) [style*="font-size:10px"],
+#more-sheet-overlay [style*="font-size:10px"],
+#messages .msg:not(.home-msg) [style*="font-size: 10px"],
+#more-sheet-overlay [style*="font-size: 10px"],
+#messages .msg:not(.home-msg) [style*="font-size:10.5px"],
+#more-sheet-overlay [style*="font-size:10.5px"],
+#messages .msg:not(.home-msg) [style*="font-size: 10.5px"],
+#more-sheet-overlay [style*="font-size: 10.5px"] { font-size:12px !important; }
+#messages .msg:not(.home-msg) [style*="font-size:11px"],
+#more-sheet-overlay [style*="font-size:11px"],
+#messages .msg:not(.home-msg) [style*="font-size: 11px"],
+#more-sheet-overlay [style*="font-size: 11px"],
+#messages .msg:not(.home-msg) [style*="font-size:11.5px"],
+#more-sheet-overlay [style*="font-size:11.5px"],
+#messages .msg:not(.home-msg) [style*="font-size: 11.5px"],
+#more-sheet-overlay [style*="font-size: 11.5px"],
+#messages .msg:not(.home-msg) [style*="font-size:12px"],
+#more-sheet-overlay [style*="font-size:12px"],
+#messages .msg:not(.home-msg) [style*="font-size: 12px"],
+#more-sheet-overlay [style*="font-size: 12px"],
+#messages .msg:not(.home-msg) [style*="font-size:12.5px"],
+#more-sheet-overlay [style*="font-size:12.5px"],
+#messages .msg:not(.home-msg) [style*="font-size: 12.5px"],
+#more-sheet-overlay [style*="font-size: 12.5px"] { font-size:13px !important; }
+#messages .msg:not(.home-msg) [style*="font-size:17px"],
+#more-sheet-overlay [style*="font-size:17px"],
+#messages .msg:not(.home-msg) [style*="font-size: 17px"],
+#more-sheet-overlay [style*="font-size: 17px"] { font-size:16px !important; }
 </style>
   <!-- OneSignal Push Notifications -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
@@ -2672,7 +2706,7 @@ function formatResponse(text) {
 function addMessage(role, content, isHTML = false, showFeedback = false) {
   const container = document.getElementById('messages');
   const div = document.createElement('div');
-  div.className = `msg ${role}`;
+  div.className = `msg ${role}` + (window.__homeRender ? ' home-msg' : '');
   const msgId = 'msg_' + Date.now();
 
   if (role === 'bot') {
@@ -2726,10 +2760,14 @@ function addFullWidthMessage(html) {
   return div;
 }
 
+// Any tap after the home screen is drawn means the next messages belong to another screen (they get the shared text scale)
+document.addEventListener('click', function () { window.__homeRender = false; }, true);
+document.addEventListener('keydown', function (e) { if (e.key === 'Enter') window.__homeRender = false; }, true);
+
 function addTipMessage(html) {
   const container = document.getElementById('messages');
   const div = document.createElement('div');
-  div.className = 'msg bot';
+  div.className = 'msg bot' + (window.__homeRender ? ' home-msg' : '');
   div.style.alignItems = 'flex-start';
 
   // Extract and render [SUGGESTIONS:] tags
@@ -3609,7 +3647,7 @@ window._renderAllNewsBatch = function(from) {
         </div>
         ${item.imgId ? `<img src="/.netlify/functions/app-content?img=${encodeURIComponent(item.imgId)}" alt="" loading="lazy" style="float:right;width:84px;height:84px;object-fit:cover;border-radius:8px;margin:0 0 6px 10px;background:#f0f2f5;">` : ''}
         <div style="font-size:17px;font-weight:700;color:#0F1E36;line-height:1.35;margin-bottom:6px;">${item.emoji} ${item.title}</div>
-        <div style="font-size:15px;color:#444;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
+        <div style="font-size:14px;color:#444;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
         <div style="clear:both;border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
           <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(item.url)}" data-title="${(item.title||'').replace(/"/g,'&quot;')}" data-summary="${(item.summary||'').replace(/"/g,'&quot;')}" class="blog-read-more" style="font-size:14px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 ${isEvents ? 'Event Details' : 'Read More'}</a>
           <button data-share-title="${(item.title||'').replace(/"/g,'&quot;').substring(0,80)}" data-share-desc="${(item.summary||'').replace(/"/g,'&quot;').substring(0,120)}" data-share-url="${(item.appUrl || 'https://auntietobi.co.uk/blog/' + (item.key||item.slug||'')).replace(/"/g,'&quot;')}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
@@ -3909,7 +3947,7 @@ function showNewsAndUpdates(activeTab) {
           + '<div style="font-size:17px;font-weight:700;color:#0F1E36;line-height:1.4;flex:1;">' + (u.title || label) + '</div>'
           + '<span id="' + uid + '-arr" style="color:#9CA3AF;font-size:20px;margin-left:10px;flex-shrink:0;">›</span>'
           + '</div>'
-          + '<div id="' + uid + '-body" style="display:none;padding:0 14px 14px;font-size:17px;color:#333;line-height:1.75;border-top:0.5px solid #f0f0f0;padding-top:12px;">'
+          + '<div id="' + uid + '-body" style="display:none;padding:0 14px 14px;font-size:14px;color:#333;line-height:1.7;border-top:0.5px solid #f0f0f0;padding-top:12px;">'
           + msgHtml + srcLink + '</div>';
         card.addEventListener('click', function() {
           var body = document.getElementById(uid + '-body');
@@ -4683,7 +4721,7 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
       <span style="color:white;font-weight:700;font-size:13px;">${categoryLabel}</span>
     </div>
     <div style="padding:14px;">
-      <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-weight:500;font-family:inherit;">${tipTextSafe}</div>
+      <div style="font-size:14px;color:#0F1E36;line-height:1.7;font-weight:500;font-family:inherit;">${tipTextSafe}</div>
       <div style="border-top:1px solid #f0f0f0;padding-top:10px;margin-top:12px;display:flex;align-items:center;gap:8px;">
         <a href="${resolvedSourceUrl}" target="_blank" style="font-size:13px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Learn More</a>
       </div>
@@ -4733,7 +4771,7 @@ function showMotivationLanding(quote, b1, b2, b3) {
       <span style="color:white;font-weight:700;font-size:13px;">Motivation</span>
     </div>
     <div style="padding:14px;">
-      <div style="font-size:15px;color:#0F1E36;line-height:1.7;font-style:italic;">"${quote}"</div>
+      <div style="font-size:14px;color:#0F1E36;line-height:1.7;font-style:italic;">"${quote}"</div>
     </div>
   </div>`;
 
@@ -4781,7 +4819,7 @@ function showPrayerLanding(prayer, b1, b2) {
       <span style="color:white;font-weight:700;font-size:13px;">Morning Prayer</span>
     </div>
     <div style="padding:14px;">
-      <div style="font-size:15px;color:#0F1E36;line-height:1.8;font-style:italic;">${prayer}</div>
+      <div style="font-size:14px;color:#0F1E36;line-height:1.8;font-style:italic;">${prayer}</div>
     </div>
   </div>`;
 
@@ -4884,65 +4922,65 @@ function showAboutTobi() {
 
     <div style="background:#0F1E36;border-radius:14px;padding:22px;text-align:center;">
       <img src="https://naijabiz.b-cdn.net/81bbdd6f-9c9e-4b09-b39c-ec75f6472dc2-1782778813115.png" alt="Auntie Tobi" style="width:80px;height:80px;border-radius:50%;border:3px solid #FFB81C;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;">
-      <div style="color:white;font-size:18px;font-weight:800;margin-bottom:8px;">Meet Auntie Tobi <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1f3-1f1ec.png" style="width:18px;height:18px;vertical-align:middle;display:inline-block;" alt="🇳🇬"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1ec-1f1e7.png" style="width:18px;height:18px;vertical-align:middle;display:inline-block;" alt="🇬🇧"></div>
-      <div style="color:rgba(255,255,255,0.85);font-size:13px;line-height:1.7;margin-bottom:10px;">Your trusted AI companion for life in the UK.</div>
-      <div style="color:rgba(255,255,255,0.7);font-size:12px;line-height:1.8;">Built for Nigerians, Auntie Tobi helps you discover trusted businesses, stay updated with UK news, find community events, get instant answers to your UK questions, prepare for important exams, and access practical guidance whenever you need it.</div>
+      <div style="color:white;font-size:22px;font-weight:800;margin-bottom:8px;">Meet Auntie Tobi <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1f3-1f1ec.png" style="width:22px;height:22px;vertical-align:middle;display:inline-block;" alt="🇳🇬"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1ec-1f1e7.png" style="width:22px;height:22px;vertical-align:middle;display:inline-block;" alt="🇬🇧"></div>
+      <div style="color:rgba(255,255,255,0.85);font-size:16px;line-height:1.6;margin-bottom:10px;">Your trusted AI companion for life in the UK.</div>
+      <div style="color:rgba(255,255,255,0.8);font-size:15px;line-height:1.7;">Built for Nigerians, Auntie Tobi helps you discover trusted businesses, stay updated with UK news, find community events, get instant answers to your UK questions, prepare for important exams, and access practical guidance whenever you need it.</div>
       <div style="margin-top:14px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">
-        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">Free</span>
-        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">Smart</span>
-        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">Always here for you 💚</span>
+        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:13px;font-weight:700;padding:4px 10px;border-radius:20px;">Free</span>
+        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:13px;font-weight:700;padding:4px 10px;border-radius:20px;">Smart</span>
+        <span style="background:rgba(5,122,68,0.35);color:#4ade80;font-size:13px;font-weight:700;padding:4px 10px;border-radius:20px;">Always here for you 💚</span>
       </div>
     </div>
 
     <div style="background:white;border:1.5px solid #ebebeb;border-radius:12px;padding:16px;">
-      <div style="font-size:11px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;">What Auntie Tobi can help you with</div>
+      <div style="font-size:13px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;">What Auntie Tobi can help you with</div>
       <div style="display:flex;flex-direction:column;gap:14px;">
 
         <div style="display:flex;align-items:flex-start;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🏢</div>
+          <div style="width:42px;height:42px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;">🏢</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Discover Nigerian Businesses</div>
-            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Find trusted Nigerian-owned restaurants, shops, beauty services, professionals, churches and more across the UK.</div>
+            <div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Discover Nigerian Businesses</div>
+            <div style="font-size:15px;color:#4B5563;line-height:1.55;">Find trusted Nigerian-owned restaurants, shops, beauty services, professionals, churches and more across the UK.</div>
           </div>
         </div>
 
         <div style="display:flex;align-items:flex-start;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">📰</div>
+          <div style="width:42px;height:42px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;">📰</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Stay Updated</div>
-            <div style="font-size:12px;color:#6B7280;line-height:1.5;">UK news that matters to Nigerians — immigration, jobs, housing, money, education and everyday life.</div>
+            <div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Stay Updated</div>
+            <div style="font-size:15px;color:#4B5563;line-height:1.55;">UK news that matters to Nigerians — immigration, jobs, housing, money, education and everyday life.</div>
           </div>
         </div>
 
         <div style="display:flex;align-items:flex-start;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🎉</div>
+          <div style="width:42px;height:42px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;">🎉</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Find Events Near You</div>
-            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Nigerian community events, concerts, festivals, networking and family activities across the UK.</div>
+            <div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Find Events Near You</div>
+            <div style="font-size:15px;color:#4B5563;line-height:1.55;">Nigerian community events, concerts, festivals, networking and family activities across the UK.</div>
           </div>
         </div>
 
         <div style="display:flex;align-items:flex-start;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🤖</div>
+          <div style="width:42px;height:42px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;">🤖</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Ask UK Questions</div>
-            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Instant answers about visas, NHS, driving, benefits, taxes, schools, banking and much more.</div>
+            <div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Ask UK Questions</div>
+            <div style="font-size:15px;color:#4B5563;line-height:1.55;">Instant answers about visas, NHS, driving, benefits, taxes, schools, banking and much more.</div>
           </div>
         </div>
 
         <div style="display:flex;align-items:flex-start;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🚗</div>
+          <div style="width:42px;height:42px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;">🚗</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Prepare for UK Tests</div>
-            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Practice for your UK Driving Theory Test and the Life in the UK Test with easy revision tools.</div>
+            <div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Prepare for UK Tests</div>
+            <div style="font-size:15px;color:#4B5563;line-height:1.55;">Practice for your UK Driving Theory Test and the Life in the UK Test with easy revision tools.</div>
           </div>
         </div>
 
         <div style="display:flex;align-items:flex-start;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">💼</div>
+          <div style="width:42px;height:42px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;">💼</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:#0F1E36;margin-bottom:2px;">Discover Opportunities</div>
-            <div style="font-size:12px;color:#6B7280;line-height:1.5;">Jobs, guides, money-saving tips and resources to help Nigerians thrive in the UK.</div>
+            <div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Discover Opportunities</div>
+            <div style="font-size:15px;color:#4B5563;line-height:1.55;">Jobs, guides, money-saving tips and resources to help Nigerians thrive in the UK.</div>
           </div>
         </div>
 
@@ -4952,11 +4990,11 @@ function showAboutTobi() {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div style="background:#f0faf5;border:1.5px solid #b8e0cb;border-radius:12px;padding:14px;text-align:center;">
         <div style="font-size:22px;font-weight:800;color:#057A44;">🏢</div>
-        <div style="font-size:11px;color:#057A44;margin-top:2px;">Nigerian businesses</div>
+        <div style="font-size:13px;color:#057A44;margin-top:2px;">Nigerian businesses</div>
       </div>
       <div style="background:#f0faf5;border:1.5px solid #b8e0cb;border-radius:12px;padding:14px;text-align:center;">
         <div style="font-size:22px;font-weight:800;color:#057A44;">FREE</div>
-        <div style="font-size:11px;color:#057A44;margin-top:2px;">Always free to use</div>
+        <div style="font-size:13px;color:#057A44;margin-top:2px;">Always free to use</div>
       </div>
     </div>
 
@@ -8130,7 +8168,7 @@ window.onload = () => {
   }
 
   // On fresh load/refresh with no deep link, always go home
-  window._currentPage = 'home';
+  window._currentPage = 'home'; window.__homeRender = true;
 
   // Request location on load to update city
   requestLocation();
@@ -8970,7 +9008,7 @@ function resetAndShow(fn) {
 }
 
 function resetToWelcome() {
-  window._currentPage = 'home';
+  window._currentPage = 'home'; window.__homeRender = true;
   nhsMode = false;
   // Reset exam state variables without clearing DOM
   examState.active = false; document.body.classList.remove('exam-mode');
@@ -9934,7 +9972,7 @@ window.addEventListener('pageshow', function(e) {
 #blogSheetContentInner h1, #blogSheetContentInner h2, #blogSheetContentInner h3 {
   color:#0F1E36;font-weight:700;margin:16px 0 8px;line-height:1.3;
 }
-#blogSheetContentInner { font-size:17px !important; line-height:1.75 !important; color:#2B2B2B !important; }
+#blogSheetContentInner { font-size:15px !important; line-height:1.7 !important; color:#2B2B2B !important; }
 #blogSheetContentInner h1 { font-size:22px; }
 #blogSheetContentInner h2 { font-size:19px; }
 #blogSheetContentInner > h2:first-child { font-size:22px; line-height:1.3; }
