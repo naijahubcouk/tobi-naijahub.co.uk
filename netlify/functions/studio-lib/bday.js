@@ -168,8 +168,14 @@ async function getPhoto(id) {
   return p;
 }
 async function cleanPhotos() {
-  let n = 0;
-  for (const key of await core.listKeys('bday/photo/')) { const p = await getJson(key); if (!p || p.expiresAt < Date.now()) { await core.del(key).catch(() => {}); n++; } }
+  // daily: photos older than 60 days and card links older than a year are deleted
+  let n = 0; const stopAt = Date.now() + 24000; // stay inside the scheduled-function time limit; carries on tomorrow
+  for (const prefix of ['bday/photo/', 'card/']) {
+    for (const key of await core.listKeys(prefix)) {
+      if (Date.now() > stopAt) return n;
+      const p = await getJson(key); if (!p || p.expiresAt < Date.now()) { await core.del(key).catch(() => {}); n++; }
+    }
+  }
   return n;
 }
 // 🔗 short card links — /c/<id>: the card's words + design are kept for a year (the photo itself is still deleted after 60 days)
