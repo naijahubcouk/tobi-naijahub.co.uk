@@ -172,7 +172,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   var $ = function (id) { return document.getElementById(id); };
   var WHO = { friend: '👯 Friend', partner: '💕 Partner', wife: '👰🏾 Wife', husband: '🤵🏾 Husband', mum: '👩🏾 Mum', dad: '👨🏾 Dad', daughter: '👧🏾 Daughter', son: '👦🏾 Son', sister: '👭 Sister', brother: '👬 Brother', child: '🧒🏾 Child', colleague: '💼 Colleague', pastor: '⛪ Pastor', everyone: '🌍 Everyone', family: '👨🏾‍👩🏾‍👧🏾 Family', couple: '💑 Couple', parents: '👪 Parents', grandma: '👵🏾 Grandma', grandpa: '👴🏾 Grandpa', teacher: '🍎 Teacher' };
   var STYLES = { heartfelt: '💖 Heartfelt', funny: '😂 Funny', prayer: '🙏 Prayer', naija: '🇳🇬 Naija vibes' };
-  var SIZES = { square: '⬜ Square', story: '📱 Story / Status' };
+  var SIZES = { story: '📱 Story / Status', square: '⬜ Square' };
 
   // ── 🎉 occasions ──
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -697,7 +697,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
   // ── state ──
   var NB = nowBits(), Q0 = new URLSearchParams(location.search).get('o');
-  var st = { nmg: 'happy', occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'square', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
+  var st = { nmg: 'happy', occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'story', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
   var ALIAS = { wife: 'partner', husband: 'partner', daughter: 'child', son: 'child', grandma: 'mum', grandpa: 'dad' };
   function fits(m) { return !m.w || m.w === st.who || m.w === ALIAS[st.who]; }
   function pool() { return MSG.filter(function (m) { return (m.o || 'birthday') === st.occ && m.s === st.style && fits(m); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who) || (!!b.w - !!a.w); }); }
@@ -919,7 +919,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       document.title = OC.label.split(' ')[0] + ' A ' + OC.noun + ' for ' + (rs.name || 'you') + ' — Auntie Tobi';
       return;
     }
-    try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (typeof sv.sign === 'string') st.sign = sv.sign; if (SIZES[sv.size]) st.size = sv.size; } catch (e) {}
+    try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (typeof sv.sign === 'string') st.sign = sv.sign; } catch (e) {}
     var occM = {}; occOrder().forEach(function (o) { occM[o] = OCC[o].label; }); chips('occ', occM, 'occ'); var MNn = MONTHS[st.mn]; chips('nmg', { happy: 'Happy New Month', welcome: 'Welcome ' + MNn, hello: 'Hello ' + MNn }, 'nmg'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
     setOcc(st.occ, false);
     document.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (b) pickDesign(b.dataset.d); });
