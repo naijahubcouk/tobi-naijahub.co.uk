@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free Birthday Cards — Auntie Tobi</title>
-<meta name="description" content="Make a beautiful personalised birthday card in seconds — free. Choose a design, add their name and a message, then download it or send it on WhatsApp.">
-<meta property="og:title" content="A birthday card for you 🎂💚">
-<meta property="og:description" content="Made with love on Auntie Tobi — make your own free birthday card in seconds.">
+<title>Free Celebration Cards — Auntie Tobi</title>
+<meta name="description" content="Make a beautiful personalised card in seconds — free. Birthday, Christmas, New Month, Valentine’s, Anniversary, Eid, Easter and more. Download it or send it on WhatsApp.">
+<meta property="og:title" content="A card for you 🎉💚">
+<meta property="og:description" content="Made with love on Auntie Tobi — make your own free card in seconds.">
 <meta property="og:image" content="https://auntietobi.co.uk/tobi-face-512.png">
 <link rel="icon" href="/tobi-face-128.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,52 +71,57 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 <body>
 <header class="app-header">
   <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
-  <div class="app-header-text"><div class="app-header-title">🎂 Birthday Cards</div><div class="app-header-sub">Free · made with love on Auntie Tobi</div></div>
+  <div class="app-header-text"><div class="app-header-title">🎉 Celebration Cards</div><div class="app-header-sub">Free · made with love on Auntie Tobi</div></div>
   <a class="back-btn" href="/">← Auntie Tobi</a>
 </header>
 
 <main class="wrap">
   <!-- receiver view -->
   <section id="recv" class="hidden">
-    <div class="card recv"><h1 id="recvTitle">🎂 You’ve got a birthday card!</h1><p class="muted" id="recvFrom"></p></div>
+    <div class="card recv"><h1 id="recvTitle">🎉 You’ve got a card!</h1><p class="muted" id="recvFrom"></p></div>
     <div class="card" style="margin-top:12px"><canvas id="cvR" style="width:100%;display:block;border-radius:12px"></canvas>
       <div class="btns"><button class="btn dl" id="rDl">⬇️ Save the card</button><button class="btn wa" id="rThanks">💬 Say thank you</button></div>
       <div class="recvbar"><button class="btn ghost" id="again">🎉 Celebrate again</button><button class="btn ghost" id="mute" style="flex:.6;white-space:nowrap"></button></div>
-      <a class="btn gold" href="/birthday" style="margin-top:8px">🎂 Make your own free card</a>
+      <a class="btn gold" href="/cards" style="margin-top:8px">🎉 Make your own free card</a>
     </div>
   </section>
-  <button type="button" class="cover hidden" id="cover"><div class="gb">🎁</div><h2 id="coverT">You’ve got a birthday card!</h2><p id="coverF"></p><div class="tap">Tap to open 🎉</div></button>
+  <button type="button" class="cover hidden" id="cover"><div class="gb">🎁</div><h2 id="coverT">You’ve got a card!</h2><p id="coverF"></p><div class="tap">Tap to open 🎉</div></button>
 
   <!-- maker -->
   <section id="maker" style="display:flex;flex-direction:column;gap:12px">
-    <div class="hero"><h1>Make someone smile today 💚</h1><p>Create a personalised birthday card in seconds — choose a design, add their name, pick a message and share the love. Free, no sign-up.</p></div>
+    <div class="hero"><h1>Make someone smile today 💚</h1><p>Birthday, Christmas, New Month, Valentine’s and more — create a personalised card in seconds, add their photo and share the love. Free, no sign-up.</p></div>
 
     <div class="card">
-      <div class="step">1 · Who is it for?</div>
+      <div class="step">1 · What are you celebrating?</div>
+      <div class="chips" id="occ"></div>
+    </div>
+
+    <div class="card">
+      <div class="step">2 · Who is it for?</div>
       <div class="chips" id="who"></div>
       <div class="row" style="margin-top:4px">
-        <div><label for="name">Their name</label><input id="name" maxlength="30" placeholder="e.g. Amara"></div>
-        <div style="flex:.55"><label for="age">Age <small>(optional)</small></label><input id="age" inputmode="numeric" maxlength="3" placeholder="e.g. 40"></div>
+        <div><label for="name" id="nameL">Their name</label><input id="name" maxlength="30" placeholder="e.g. Amara"></div>
+        <div style="flex:.55" id="numBox"><label for="age" id="numL">Age <small>(optional)</small></label><input id="age" inputmode="numeric" maxlength="3" placeholder="e.g. 40"></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="step">2 · Message</div>
+      <div class="step">3 · Message</div>
       <div class="chips" id="style"></div>
-      <label for="msg" style="display:flex;justify-content:space-between;align-items:center">Birthday message <button class="smallbtn" id="suggest" type="button">✨ Suggest another</button></label>
+      <label for="msg" style="display:flex;justify-content:space-between;align-items:center">Your message <button class="smallbtn" id="suggest" type="button">✨ Suggest another</button></label>
       <textarea id="msg" rows="4" maxlength="320"></textarea>
       <div class="row"><div style="flex:.8"><label for="sign">Sign-off</label><input id="sign" maxlength="30" placeholder="e.g. With love"></div><div><label for="from">From</label><input id="from" maxlength="40" placeholder="e.g. Seun"></div></div>
     </div>
 
     <div class="card">
-      <div class="step">3 · Choose a design</div>
+      <div class="step">4 · Choose a design</div>
       <div class="muted" style="margin:-2px 0 6px">✨ Premium</div><div class="designs" id="designsP"></div>
       <div class="muted" style="margin:12px 0 6px">🎨 Classic</div><div class="designs" id="designs"></div>
       <div class="chips" id="size" style="margin-top:10px"></div>
     </div>
 
     <div class="card">
-      <div class="step">4 · Add their photo <small style="font-weight:400;text-transform:none;letter-spacing:0;color:#6B7280">(optional)</small></div>
+      <div class="step">5 · Add a photo <small style="font-weight:400;text-transform:none;letter-spacing:0;color:#6B7280">(optional)</small></div>
       <label class="btn ghost" style="margin:0;text-align:center">📷 Choose a photo<input type="file" accept="image/*" id="photo" hidden></label>
       <div id="photoBox" class="hidden" style="margin-top:10px">
         <label style="margin-top:0">Photo size</label><div class="chips" id="psz"></div>
@@ -151,9 +156,70 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
-  var WHO = { friend: '👯 Friend', partner: '💕 Partner', wife: '👰🏾 Wife', husband: '🤵🏾 Husband', mum: '👩🏾 Mum', dad: '👨🏾 Dad', daughter: '👧🏾 Daughter', son: '👦🏾 Son', sister: '👭 Sister', brother: '👬 Brother', child: '🧒🏾 Child', colleague: '💼 Colleague', pastor: '⛪ Pastor' };
+  var WHO = { friend: '👯 Friend', partner: '💕 Partner', wife: '👰🏾 Wife', husband: '🤵🏾 Husband', mum: '👩🏾 Mum', dad: '👨🏾 Dad', daughter: '👧🏾 Daughter', son: '👦🏾 Son', sister: '👭 Sister', brother: '👬 Brother', child: '🧒🏾 Child', colleague: '💼 Colleague', pastor: '⛪ Pastor', everyone: '🌍 Everyone', family: '👨🏾‍👩🏾‍👧🏾 Family', couple: '💑 Couple', parents: '👪 Parents', grandma: '👵🏾 Grandma', grandpa: '👴🏾 Grandpa', teacher: '🍎 Teacher' };
   var STYLES = { heartfelt: '💖 Heartfelt', funny: '😂 Funny', prayer: '🙏 Prayer', naija: '🇳🇬 Naija vibes' };
   var SIZES = { square: '⬜ Square', story: '📱 Story / Status' };
+
+  // ── 🎉 occasions ──
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var EVERY = ['everyone', 'friend', 'family', 'partner', 'mum', 'dad', 'sister', 'brother', 'colleague', 'pastor'];
+  var OCC = {
+    birthday: { label: '🎂 Birthday', noun: 'birthday card', num: 'Age', who: ['friend', 'partner', 'wife', 'husband', 'mum', 'dad', 'daughter', 'son', 'sister', 'brother', 'child', 'colleague', 'pastor'], song: 'bday' },
+    newmonth: { label: '🗓️ New Month', noun: 'New Month card', who: EVERY, head: 'Happy New Month', song: 'chime' },
+    christmas: { label: '🎄 Christmas', noun: 'Christmas card', who: EVERY, head: 'Merry Christmas', song: 'xmas', fx: ['snow', 'sparkle'] },
+    newyear: { label: '🎆 New Year', noun: 'New Year card', who: EVERY, head: 'Happy New Year', song: 'chime', fx: ['fireworks'] },
+    valentine: { label: '💝 Valentine’s', noun: 'Valentine’s card', who: ['partner', 'wife', 'husband', 'friend'], head: 'Happy Valentine’s Day', song: 'chime', fx: ['hearts'] },
+    anniversary: { label: '💍 Anniversary', noun: 'anniversary card', num: 'Years', who: ['partner', 'wife', 'husband', 'couple', 'parents', 'friend'], song: 'chime', fx: ['hearts', 'sparkle'] },
+    wedding: { label: '👰🏾 Wedding', noun: 'wedding card', who: ['couple', 'friend', 'sister', 'brother', 'family', 'colleague'], head: 'Happy Wedding Day', song: 'chime', fx: ['hearts', 'confetti', 'sparkle'] },
+    easter: { label: '🐣 Easter', noun: 'Easter card', who: EVERY, head: 'Happy Easter', song: 'chime' },
+    eid: { label: '🌙 Eid', noun: 'Eid card', who: ['everyone', 'friend', 'family', 'partner', 'mum', 'dad', 'colleague'], head: 'Eid Mubarak', song: 'chime', fx: ['sparkle', 'fireworks'] },
+    mothers: { label: '👩🏾 Mother’s Day', noun: 'Mother’s Day card', who: ['mum', 'wife', 'grandma', 'sister', 'friend'], head: 'Happy Mother’s Day', song: 'chime' },
+    fathers: { label: '👨🏾 Father’s Day', noun: 'Father’s Day card', who: ['dad', 'husband', 'grandpa', 'brother', 'friend'], head: 'Happy Father’s Day', song: 'chime' },
+    independence: { label: '🇳🇬 Independence', noun: 'Independence Day card', who: EVERY, head: 'Happy Independence Day', song: 'chime', fx: ['fireworks', 'confetti'], cols: ['#008751', '#FFFFFF', '#00A862', '#E6C068'] },
+    graduation: { label: '🎓 Graduation', noun: 'graduation card', who: ['friend', 'child', 'daughter', 'son', 'sister', 'brother', 'partner', 'colleague'], head: 'Congratulations Graduate', song: 'chime' },
+    newbaby: { label: '👶🏾 New Baby', noun: 'new baby card', who: ['parents', 'friend', 'sister', 'brother', 'colleague', 'family'], head: 'Welcome Little One', song: 'chime' },
+    thanks: { label: '🙏🏾 Thank You', noun: 'thank-you card', who: ['friend', 'family', 'colleague', 'pastor', 'teacher', 'mum', 'dad', 'partner'], head: 'Thank You', song: 'chime' },
+    congrats: { label: '🎉 Congratulations', noun: 'congratulations card', who: ['friend', 'family', 'colleague', 'partner', 'sister', 'brother', 'child'], head: 'Congratulations', song: 'chime' },
+  };
+  function headFor(s) {
+    var o = s.occ || 'birthday', n = ordinal(s.age);
+    if (o === 'birthday') return n ? 'Happy ' + n + ' Birthday' : 'Happy Birthday';
+    if (o === 'anniversary') return n ? 'Happy ' + n + ' Anniversary' : 'Happy Anniversary';
+    return (OCC[o] || OCC.birthday).head;
+  }
+  function tagFor(s) {
+    if (s.occ === 'newmonth') return 'Welcome to ' + MONTHS[(+s.mn || 0) % 12];
+    if (s.occ === 'newyear') return 'Welcome to ' + (s.yr || '');
+    if (s.occ === 'independence' && s.yr) return 'Nigeria at ' + (s.yr - 1960);
+    return '';
+  }
+  // which month / year the card is for (saved in the link so it never changes)
+  function nowBits() { var d = new Date(), m = d.getMonth(), day = d.getDate(); return { mn: day <= 15 ? m : (m + 1) % 12, yr: m >= 6 ? d.getFullYear() + 1 : d.getFullYear(), indYr: m >= 10 ? d.getFullYear() + 1 : d.getFullYear() }; }
+  // upcoming occasions first
+  function easter(y) { var a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = (h + l - 7 * m + 114) % 31 + 1; return new Date(y, mo - 1, da); }
+  var EID = ['2026-03-20', '2026-05-27', '2027-03-10', '2027-05-17', '2028-02-27', '2028-05-05', '2029-02-14', '2029-04-24', '2030-02-04', '2030-04-13'];
+  function nextDate(o, now) {
+    var y = now.getFullYear(), t0 = new Date(y, now.getMonth(), now.getDate()), pick = function (fn) { var d = fn(y); if (d < t0) d = fn(y + 1); return d; };
+    switch (o) {
+      case 'newmonth': return now.getDate() <= 5 ? t0 : new Date(y, now.getMonth() + 1, 1);
+      case 'christmas': return pick(function (yy) { return new Date(yy, 11, 25); });
+      case 'newyear': return now.getMonth() === 0 && now.getDate() <= 7 ? t0 : new Date(y + 1, 0, 1);
+      case 'valentine': return pick(function (yy) { return new Date(yy, 1, 14); });
+      case 'easter': return pick(easter);
+      case 'mothers': return pick(function (yy) { var e = easter(yy); return new Date(e.getFullYear(), e.getMonth(), e.getDate() - 21); });
+      case 'fathers': return pick(function (yy) { var d = new Date(yy, 5, 1); d.setDate(1 + (7 - d.getDay()) % 7 + 14); return d; });
+      case 'independence': return pick(function (yy) { return new Date(yy, 9, 1); });
+      case 'eid': for (var i = 0; i < EID.length; i++) { var p = EID[i].split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); if (d >= new Date(t0 - 3 * 864e5)) return d; } return null;
+    }
+    return null;
+  }
+  function occOrder() {
+    var now = new Date(), soon = [];
+    Object.keys(OCC).forEach(function (o) { var d = nextDate(o, now); if (d && (d - now) / 864e5 <= 60) soon.push([o, d]); });
+    soon.sort(function (a, b) { return a[1] - b[1]; });
+    var first = soon.map(function (x) { return x[0]; });
+    return first.concat(['birthday'].filter(function (o) { return first.indexOf(o) < 0; }), Object.keys(OCC).filter(function (o) { return o !== 'birthday' && first.indexOf(o) < 0; }));
+  }
 
   // ── message library: {s: style, w: who (omit = anyone), t: text} — {name} is replaced
   var MSG = [
@@ -223,6 +289,199 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     { s: 'naija', w: 'husband', t: 'My Oko mi, my odogwu — happy birthday! May your bag be heavy and your joy be full. 💰💚' },
     { s: 'naija', w: 'daughter', t: 'Happy birthday, my princess! Big girl things only — the world is waiting for you! 👑' },
     { s: 'naija', w: 'colleague', t: 'Happy birthday! May promotion locate you and may the work stress run from you. 😂🙏🏾' },
+    { o: "newmonth", s: "heartfelt", t: "Happy new month! May this month bring you peace, good health and beautiful surprises." },
+    { o: "newmonth", s: "heartfelt", t: "Welcome to a brand-new month! May every day bring you closer to your dreams." },
+    { o: "newmonth", s: "heartfelt", t: "New month, new blessings. Wishing you joy, favour and lots of reasons to smile." },
+    { o: "newmonth", s: "heartfelt", w: "partner", t: "Happy new month, my love. Another month to love you more and build our dreams together. 💕" },
+    { o: "newmonth", s: "heartfelt", w: "colleague", t: "Happy new month to an amazing colleague — may this month bring you success in everything you do." },
+    { o: "newmonth", s: "funny", t: "Happy new month! May your money multiply faster than your WhatsApp notifications. 😂" },
+    { o: "newmonth", s: "funny", t: "New month, same me — but with better vibes and a bigger account balance, by God’s grace. 😅" },
+    { o: "newmonth", s: "funny", t: "Happy new month! May this month treat you better than the last one treated my data bundle. 😂" },
+    { o: "newmonth", s: "prayer", t: "This new month, may God open doors no man can shut, and may His favour follow you everywhere. Amen." },
+    { o: "newmonth", s: "prayer", t: "In this new month, you will not lack, you will not be stranded, and you will testify. Happy new month!" },
+    { o: "newmonth", s: "prayer", t: "May the Lord order your steps this month and surround you with His peace and provision. Amen 🙏🏾" },
+    { o: "newmonth", s: "naija", t: "Happy new month! E go better, e go sweet, e go pay — this month na your month! 💚" },
+    { o: "newmonth", s: "naija", t: "New month don land! May this month bring you sweet sweet testimonies. 🙌🏾" },
+    { o: "newmonth", s: "naija", t: "Happy new month, my person! Na celebration we dey enter this month — no shaking! 🔥" },
+    { o: "christmas", s: "heartfelt", t: "Merry Christmas! May the joy, peace and love of this season fill your heart and home." },
+    { o: "christmas", s: "heartfelt", t: "Wishing you a Christmas full of warmth, laughter and the people you love most." },
+    { o: "christmas", s: "heartfelt", t: "May the light of Christmas shine on you and your family today and always." },
+    { o: "christmas", s: "heartfelt", w: "partner", t: "Merry Christmas, my love. Having you is the best gift I could ever ask for. 🎄💕" },
+    { o: "christmas", s: "heartfelt", w: "mum", t: "Merry Christmas, Mummy! Thank you for making every Christmas feel like home. 🎄" },
+    { o: "christmas", s: "funny", t: "Merry Christmas! May your jollof be smoky, your chicken be big and your relatives ask fewer questions. 😂" },
+    { o: "christmas", s: "funny", t: "Merry Christmas! Calories don’t count today — everybody knows that. 😅" },
+    { o: "christmas", s: "funny", t: "Merry Christmas! I was going to get you a gift, then I realised my presence is the present. 🎁😂" },
+    { o: "christmas", s: "prayer", t: "This Christmas, may the Prince of Peace fill your home with His peace, joy and abundant blessings." },
+    { o: "christmas", s: "prayer", t: "As we celebrate the birth of Jesus, may His love guide you and His grace surround you all year round." },
+    { o: "christmas", s: "prayer", t: "May the joy of Christ’s birth bring new hope, new strength and new testimonies into your life. Merry Christmas!" },
+    { o: "christmas", s: "naija", t: "Merry Christmas! Make the rice plenty, make the chicken big, make the joy full ground! 🎄🍗" },
+    { o: "christmas", s: "naija", t: "Compliments of the season! May this Christmas be sweet like Mama’s fried rice. 💚" },
+    { o: "christmas", s: "naija", t: "Merry Christmas, my people! Owambe mode activated — no dulling this season! 🎉" },
+    { o: "newyear", s: "heartfelt", t: "Happy New Year! May this year bring you good health, great joy and dreams come true." },
+    { o: "newyear", s: "heartfelt", t: "Cheers to a fresh start! Wishing you a year full of love, growth and wonderful moments." },
+    { o: "newyear", s: "heartfelt", t: "New year, new chapter. May every page be filled with happiness and success." },
+    { o: "newyear", s: "funny", t: "Happy New Year! May your resolutions last longer than the fireworks. 😂" },
+    { o: "newyear", s: "funny", t: "New year, new me — same appetite for jollof though. 😅🎆" },
+    { o: "newyear", s: "funny", t: "Happy New Year! May your bank account and your joy both overflow this year. 💰😂" },
+    { o: "newyear", s: "prayer", t: "In this new year, may God enlarge your coast, bless the work of your hands and crown the year with His goodness." },
+    { o: "newyear", s: "prayer", t: "This year, you will not lack any good thing. Your joy will be full and your testimonies many. Happy New Year!" },
+    { o: "newyear", s: "prayer", t: "May the Lord go before you into this new year and make every crooked path straight. Amen 🙏🏾" },
+    { o: "newyear", s: "naija", t: "Happy New Year! This year na our year — e go sweet pass last year! 🎆" },
+    { o: "newyear", s: "naija", t: "Happy New Year! Na upgrade season — new levels, new blessings, no shaking! 🙌🏾" },
+    { o: "newyear", s: "naija", t: "Compliments of the season! May this year bring plenty enjoyment and plenty alerts! 💰" },
+    { o: "valentine", s: "heartfelt", t: "Happy Valentine’s Day to the one who makes my heart smile every single day. 💕" },
+    { o: "valentine", s: "heartfelt", t: "You are my favourite hello and my hardest goodbye. Happy Valentine’s Day, my love." },
+    { o: "valentine", s: "heartfelt", t: "Every love story is beautiful, but ours is my favourite. Happy Valentine’s Day! ❤️" },
+    { o: "valentine", s: "heartfelt", w: "friend", t: "Happy Valentine’s Day, bestie! Thank you for loving me like family. 💖" },
+    { o: "valentine", s: "funny", t: "Happy Valentine’s Day! I love you more than jollof — and that’s saying a lot. 😂❤️" },
+    { o: "valentine", s: "funny", t: "You still put up with me — that’s true love. Happy Valentine’s Day! 😅💕" },
+    { o: "valentine", s: "funny", t: "Roses are red, chocolate is sweet, you’re my Valentine — now where’s my treat? 😂🍫" },
+    { o: "valentine", s: "prayer", t: "May God bless our love, keep us united and fill our home with His peace. Happy Valentine’s Day. ❤️" },
+    { o: "valentine", s: "prayer", t: "Thank God for bringing you into my life. May our love grow stronger every day. Amen 🙏🏾" },
+    { o: "valentine", s: "prayer", t: "May the love of God be the foundation of our love — today, tomorrow and forever." },
+    { o: "valentine", s: "naija", t: "My Olólùfẹ́, my sugar, my honey — happy Valentine’s Day! I go love you die. 😍" },
+    { o: "valentine", s: "naija", t: "Na you be my person, my padi, my everything. Happy Val’s! ❤️" },
+    { o: "valentine", s: "naija", t: "Happy Valentine’s Day, my baby! You sweet pass chin-chin. 😘" },
+    { o: "anniversary", s: "heartfelt", t: "Happy anniversary! Thank you for every laugh, every lesson and every moment of love. Here’s to many more years together. 💍" },
+    { o: "anniversary", s: "heartfelt", w: "partner", t: "Another year of loving you, and I’d choose you all over again. Happy anniversary, my love." },
+    { o: "anniversary", s: "heartfelt", w: "couple", t: "Wishing you both a beautiful anniversary — may your love keep growing stronger every year." },
+    { o: "anniversary", s: "heartfelt", w: "parents", t: "Happy anniversary, Mum and Dad! Thank you for showing us what real love looks like. 💕" },
+    { o: "anniversary", s: "funny", w: "partner", t: "Happy anniversary! Thank you for putting up with me for another whole year. You deserve an award. 😂🏆" },
+    { o: "anniversary", s: "funny", t: "Happy anniversary! Still together, still in love, still arguing about the remote. 😅" },
+    { o: "anniversary", s: "funny", w: "partner", t: "Happy anniversary to us — proof that love really can survive my snoring. 😂" },
+    { o: "anniversary", s: "funny", w: "couple", t: "Happy anniversary! Another year of finishing each other’s sentences… and food. 😂" },
+    { o: "anniversary", s: "prayer", w: "partner", t: "May God continue to bless our union, strengthen our love and keep our home in His peace. Happy anniversary!" },
+    { o: "anniversary", s: "prayer", w: "partner", t: "Thank God for another year of grace in our marriage. May the best years be ahead of us. Amen 🙏🏾" },
+    { o: "anniversary", s: "prayer", t: "May the Lord keep your marriage, multiply your joy and crown your home with love. Happy anniversary!" },
+    { o: "anniversary", s: "naija", w: "partner", t: "Happy anniversary, my person! We still dey together, we still dey sweet — na God o! 💍" },
+    { o: "anniversary", s: "naija", w: "couple", t: "Happy anniversary to the sweetest couple! Una love dey give us hope! 😍" },
+    { o: "anniversary", s: "naija", t: "Happy anniversary! Another year of enjoyment, testimonies and plenty love. 🥂" },
+    { o: "wedding", s: "heartfelt", t: "Congratulations on your wedding day! Wishing you a lifetime of love, laughter and happiness together." },
+    { o: "wedding", s: "heartfelt", t: "Two hearts, one love, one beautiful journey. May your marriage be blessed in every way." },
+    { o: "wedding", s: "heartfelt", t: "Today is the start of your greatest adventure. Wishing you both endless love and joy." },
+    { o: "wedding", s: "funny", t: "Congratulations! Remember — the secret to a happy marriage is two words: “Yes, dear.” 😂" },
+    { o: "wedding", s: "funny", t: "Happy wedding day! May your love be modern enough to survive the times and old-fashioned enough to last forever. 😅💍" },
+    { o: "wedding", s: "funny", t: "Congratulations! May you always share the remote and the last piece of meat. 😂🍗" },
+    { o: "wedding", s: "prayer", t: "May God bless your union, guide your home and fill your marriage with His love, peace and joy. Amen." },
+    { o: "wedding", s: "prayer", t: "May your home be built on the solid rock of Christ and may your love never run dry." },
+    { o: "wedding", s: "prayer", t: "May the Lord who brought you together keep you together, in good times and bad, all the days of your life." },
+    { o: "wedding", s: "naija", t: "Congratulations! Na owambe we dey — may your marriage sweet like small chops! 🎉" },
+    { o: "wedding", s: "naija", t: "Happy married life! Una go enjoy, una go multiply, una go testify! 💍🙌🏾" },
+    { o: "wedding", s: "naija", t: "Congrats to the new Mr & Mrs! E don happen — e go sweet forever! ❤️" },
+    { o: "easter", s: "heartfelt", t: "Happy Easter! May the hope and joy of this season fill your heart and home." },
+    { o: "easter", s: "heartfelt", t: "Wishing you a beautiful Easter full of peace, love and new beginnings." },
+    { o: "easter", s: "heartfelt", t: "He is risen! May the joy of Easter bring you hope and light today and always." },
+    { o: "easter", s: "funny", t: "Happy Easter! May your chocolate eggs be many and your diet start next week. 😂🍫" },
+    { o: "easter", s: "funny", t: "Happy Easter! The bunny brought eggs — I brought good vibes. 🐣😅" },
+    { o: "easter", s: "funny", t: "Happy Easter! Rice and chicken again? No complaints here! 😂🍗" },
+    { o: "easter", s: "prayer", t: "As Christ rose from the dead, may every good thing in your life rise again. Happy Easter!" },
+    { o: "easter", s: "prayer", t: "May the power of the resurrection bring new life, new strength and new testimonies to you and your family." },
+    { o: "easter", s: "prayer", t: "Because He lives, you can face tomorrow. Wishing you a blessed Easter. 🙏🏾" },
+    { o: "easter", s: "naija", t: "Happy Easter! Jesus don rise — and so shall all your matters! 🙌🏾" },
+    { o: "easter", s: "naija", t: "Happy Easter! Make your rice plenty and your joy overflow this season. 🐣💚" },
+    { o: "easter", s: "naija", t: "Happy Easter, my people! New life, new levels, new blessings! 🔥" },
+    { o: "eid", s: "heartfelt", t: "Eid Mubarak! May this blessed day bring you peace, happiness and prosperity." },
+    { o: "eid", s: "heartfelt", t: "Wishing you and your family a joyful Eid full of love, laughter and delicious food." },
+    { o: "eid", s: "heartfelt", t: "Eid Mubarak! May your home be filled with light, love and countless blessings." },
+    { o: "eid", s: "funny", t: "Eid Mubarak! May your plate be full, your heart be happy and your waistline be forgiving. 😂" },
+    { o: "eid", s: "funny", t: "Eid Mubarak! Sallah meat is ready — I hope my portion is reserved! 😅🍖" },
+    { o: "eid", s: "funny", t: "Eid Mubarak! May your new clothes fit and your relatives be generous. 😂" },
+    { o: "eid", s: "prayer", t: "May Allah accept your prayers and good deeds and shower you with His mercy and blessings. Eid Mubarak." },
+    { o: "eid", s: "prayer", t: "May this Eid bring peace to your heart, joy to your home and barakah to everything you do." },
+    { o: "eid", s: "prayer", t: "May Allah bless you and your family with health, happiness and success. Eid Mubarak! 🤲🏾" },
+    { o: "eid", s: "naija", t: "Barka da Sallah! Eid Mubarak to you and your family! 🌙" },
+    { o: "eid", s: "naija", t: "Happy Sallah! Make the ram meat plenty and the joy full ground! 🎉" },
+    { o: "eid", s: "naija", t: "Eid Mubarak, my person! May this Sallah bring you sweet testimonies! 💚" },
+    { o: "mothers", s: "heartfelt", t: "Happy Mother’s Day! Thank you for your endless love, your prayers and your sacrifices. You mean the world to me." },
+    { o: "mothers", s: "heartfelt", t: "To the woman who gave me everything — happy Mother’s Day. I love you more than words can say. 💐" },
+    { o: "mothers", s: "heartfelt", t: "A mother’s love is the heart of the family. Thank you for being ours. Happy Mother’s Day!" },
+    { o: "mothers", s: "heartfelt", w: "wife", t: "Happy Mother’s Day to the most amazing mum to our children. We are so blessed to have you. 💐" },
+    { o: "mothers", s: "heartfelt", w: "friend", t: "Happy Mother’s Day to a wonderful mum and an even better friend! 💐" },
+    { o: "mothers", s: "funny", t: "Happy Mother’s Day! Thank you for not selling me when I was a teenager. 😂💐" },
+    { o: "mothers", s: "funny", t: "Happy Mother’s Day to the woman who always knows when I’m lying — even over the phone. 😅" },
+    { o: "mothers", s: "funny", t: "Happy Mother’s Day! I’m your favourite child — let’s just agree on that today. 😂" },
+    { o: "mothers", s: "prayer", t: "May God bless you with long life, good health and joy that never ends. Happy Mother’s Day!" },
+    { o: "mothers", s: "prayer", t: "May every prayer you have ever prayed for us come back to you as blessings. Happy Mother’s Day. 🙏🏾" },
+    { o: "mothers", s: "prayer", t: "May the Lord renew your strength and reward your labour of love a hundredfold. Amen." },
+    { o: "mothers", s: "naija", t: "Happy Mother’s Day, Mama mi! You be my number one supporter forever! 💐" },
+    { o: "mothers", s: "naija", t: "Happy Mother’s Day to the queen of jollof and wise counsel! 👑" },
+    { o: "mothers", s: "naija", t: "Mummy, your prayers dey work! Happy Mother’s Day — we love you die! 💚" },
+    { o: "fathers", s: "heartfelt", t: "Happy Father’s Day! Thank you for your strength, your wisdom and your love. You are my hero." },
+    { o: "fathers", s: "heartfelt", t: "To the man who taught me how to stand tall — happy Father’s Day. 💙" },
+    { o: "fathers", s: "heartfelt", t: "Thank you for always being there. Happy Father’s Day to the best dad in the world!" },
+    { o: "fathers", s: "heartfelt", w: "husband", t: "Happy Father’s Day to an amazing husband and the best daddy our children could ask for. 💙" },
+    { o: "fathers", s: "funny", t: "Happy Father’s Day! Thank you for all your dad jokes — even the ones that weren’t funny. 😂" },
+    { o: "fathers", s: "funny", t: "Happy Father’s Day! Your remote control is safe today — we promise. 😅📺" },
+    { o: "fathers", s: "funny", t: "Happy Father’s Day to the man who still thinks he can fix everything with a screwdriver. 😂🔧" },
+    { o: "fathers", s: "prayer", t: "May God bless you with long life, good health and peace. Happy Father’s Day!" },
+    { o: "fathers", s: "prayer", t: "May the Lord reward every sacrifice you have made for our family. Happy Father’s Day 🙏🏾" },
+    { o: "fathers", s: "prayer", t: "May your strength never fail and your joy never end. Happy Father’s Day!" },
+    { o: "fathers", s: "naija", t: "Happy Father’s Day, Baba! Odogwu of the family! 👑" },
+    { o: "fathers", s: "naija", t: "Happy Father’s Day to the original Oga at the top! 💪🏾" },
+    { o: "fathers", s: "naija", t: "Daddy, na you be our pillar! Happy Father’s Day — we love you die! 💙" },
+    { o: "independence", s: "heartfelt", t: "Happy Independence Day, Nigeria! Proud of our roots, our culture and our people. 💚🤍💚" },
+    { o: "independence", s: "heartfelt", t: "Happy Independence Day! Wherever we are in the world, Naija is in our hearts." },
+    { o: "independence", s: "heartfelt", t: "Celebrating our beautiful country today — the land of great people and great dreams. 🇳🇬" },
+    { o: "independence", s: "funny", t: "Happy Independence Day! Today we celebrate with jollof — no debate about whose own sweet pass. 😂🇳🇬" },
+    { o: "independence", s: "funny", t: "Happy Independence Day! Green, white, green — and plenty jollof in between. 😅" },
+    { o: "independence", s: "funny", t: "Happy Independence Day! May our light never take light today. 😂💡" },
+    { o: "independence", s: "prayer", t: "May God bless Nigeria with peace, unity and progress. Happy Independence Day! 🙏🏾" },
+    { o: "independence", s: "prayer", t: "May our nation rise, our leaders be wise and our people prosper. Happy Independence Day!" },
+    { o: "independence", s: "prayer", t: "God bless Nigeria and every Nigerian at home and abroad. 🇳🇬" },
+    { o: "independence", s: "naija", t: "Happy Independence Day! Naija no dey carry last! 💚🤍💚" },
+    { o: "independence", s: "naija", t: "Naija to the world! Happy Independence Day, my people! 🇳🇬🔥" },
+    { o: "independence", s: "naija", t: "One Nigeria! Happy Independence Day from the UK with love! 💚" },
+    { o: "graduation", s: "heartfelt", t: "Congratulations on your graduation! Your hard work has paid off — the future is bright." },
+    { o: "graduation", s: "heartfelt", t: "So proud of you! Wishing you success in every new chapter ahead. 🎓" },
+    { o: "graduation", s: "heartfelt", t: "You did it! Here’s to your dreams, your hustle and everything still to come." },
+    { o: "graduation", s: "heartfelt", w: "child", t: "We are so proud of you! You make our hearts full. Congratulations, our graduate! 🎓" },
+    { o: "graduation", s: "funny", t: "Congratulations, graduate! Now you can finally sleep… until the job search starts. 😂🎓" },
+    { o: "graduation", s: "funny", t: "Congratulations! All those late-night study sessions (and snacks) finally paid off. 😅" },
+    { o: "graduation", s: "funny", t: "You graduated! Now the real question — when are you paying back the snack money? 😂" },
+    { o: "graduation", s: "prayer", t: "May God open doors of great opportunities for you and crown your efforts with success. Congratulations!" },
+    { o: "graduation", s: "prayer", t: "May the wisdom and knowledge you have gained take you to places beyond your imagination. Amen 🙏🏾" },
+    { o: "graduation", s: "prayer", t: "May the Lord establish the work of your hands. Congratulations, graduate!" },
+    { o: "graduation", s: "naija", t: "Congrats, graduate! Your certificate don land — na big job next! 🎓🔥" },
+    { o: "graduation", s: "naija", t: "Omo, you don graduate! E sweet us die — the sky is your starting point! 🙌🏾" },
+    { o: "graduation", s: "naija", t: "Congrats! Naija pikin no dey carry last! 💚🎓" },
+    { o: "newbaby", s: "heartfelt", t: "Congratulations on your beautiful new baby! Wishing your family a lifetime of love and joy." },
+    { o: "newbaby", s: "heartfelt", t: "A tiny miracle has arrived! May your little one grow in health, love and happiness." },
+    { o: "newbaby", s: "heartfelt", t: "Welcome to the world, little one! You are so loved already. 💕" },
+    { o: "newbaby", s: "funny", t: "Congratulations on your new baby! Say goodbye to sleep — and hello to the best kind of tired. 😂👶🏾" },
+    { o: "newbaby", s: "funny", t: "Congrats! The new boss of the house has arrived. 😅" },
+    { o: "newbaby", s: "funny", t: "Congratulations! May your baby sleep through the night… eventually. 😂" },
+    { o: "newbaby", s: "prayer", t: "May God bless this precious baby with good health, wisdom and favour all the days of their life." },
+    { o: "newbaby", s: "prayer", t: "Thank God for safe delivery! May the child be a source of joy and pride to your family. Amen 🙏🏾" },
+    { o: "newbaby", s: "prayer", t: "May the Lord keep mother and baby strong and healthy. Congratulations!" },
+    { o: "newbaby", s: "naija", t: "Congrats on your bundle of joy! Omugwo don start! 👶🏾🎉" },
+    { o: "newbaby", s: "naija", t: "E don happen! Welcome to the world, little champion! 💚" },
+    { o: "newbaby", s: "naija", t: "Congratulations! Na naming ceremony we dey wait for now! 🎉" },
+    { o: "thanks", s: "heartfelt", t: "Thank you so much for your kindness. It meant more to me than you know." },
+    { o: "thanks", s: "heartfelt", t: "Thank you for always being there for me. I am truly grateful for you. 💚" },
+    { o: "thanks", s: "heartfelt", t: "Your support made all the difference. Thank you from the bottom of my heart." },
+    { o: "thanks", s: "heartfelt", w: "pastor", t: "Thank you, Pastor, for your prayers, guidance and love. May God keep strengthening you. 🙏🏾" },
+    { o: "thanks", s: "heartfelt", w: "teacher", t: "Thank you for teaching with so much patience and care. You make a real difference! 🍎" },
+    { o: "thanks", s: "funny", t: "Thank you! I owe you one — or maybe two. Let’s not count. 😂" },
+    { o: "thanks", s: "funny", t: "Thank you! You’re officially on my “favourite people” list. 😅" },
+    { o: "thanks", s: "funny", t: "Thanks a million — if only I could pay you in jollof. 😂🍛" },
+    { o: "thanks", s: "prayer", t: "Thank you so much. May God reward your kindness and bless you abundantly." },
+    { o: "thanks", s: "prayer", t: "May the Lord remember you for good and repay your kindness a hundredfold. Thank you! 🙏🏾" },
+    { o: "thanks", s: "prayer", t: "Thank you! May doors of blessing open for you everywhere you go." },
+    { o: "thanks", s: "naija", t: "Thank you die! God go bless you plenty! 🙏🏾" },
+    { o: "thanks", s: "naija", t: "You too much! Thank you for everything — I appreciate you! 💚" },
+    { o: "thanks", s: "naija", t: "E se gan! Thank you so much — you be correct person! 🙌🏾" },
+    { o: "congrats", s: "heartfelt", t: "Congratulations! You worked so hard for this and you deserve every bit of it." },
+    { o: "congrats", s: "heartfelt", t: "So proud of you! Wishing you even more success ahead." },
+    { o: "congrats", s: "heartfelt", t: "Congratulations on this amazing achievement — this is just the beginning!" },
+    { o: "congrats", s: "funny", t: "Congratulations! Now that you’re a big deal, don’t forget us small people. 😂" },
+    { o: "congrats", s: "funny", t: "Congrats! Drinks are on you — that’s how it works. 😅🥂" },
+    { o: "congrats", s: "funny", t: "Congratulations! I always knew you were great — I just didn’t want it to go to your head. 😂" },
+    { o: "congrats", s: "prayer", t: "Congratulations! May God take you from glory to glory and bless the work of your hands." },
+    { o: "congrats", s: "prayer", t: "May this success be the first of many. The Lord is lifting you higher! 🙏🏾" },
+    { o: "congrats", s: "prayer", t: "May your joy be full and your testimonies never end. Congratulations!" },
+    { o: "congrats", s: "naija", t: "Congrats! Na you dey run am — e choke! 🔥" },
+    { o: "congrats", s: "naija", t: "Omo! You don do am! Big congratulations! 🙌🏾" },
+    { o: "congrats", s: "naija", t: "Congrats, my person! Na up you dey go! 🚀" },
   ];
 
   // ── designs ──
@@ -293,6 +552,26 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   var REL_LINE = { love: 'To the love of my life', daughter: 'For my beautiful Daughter', sister: 'For my amazing Sister', brother: 'For my awesome Brother', wife: 'For my wonderful Wife', husband: 'For my amazing Husband', mum: 'For the best Mum in the world', dad: 'For the best Dad in the world' };
   var SUGGEST = { mum: 'mother', dad: 'father', wife: 'wife', husband: 'husband', daughter: 'daughter', sister: 'sister', brother: 'brother', partner: 'love' };
   var ART = {}, IMGS = {};
+  // occasion designs: [key, label, panel L/D, heading colour, accent, background top, background bottom, photo frame]
+  var OP = {
+    newmonth: [['nmsun', 'Sunrise', 'L', '#C2563A', '#D4A24C', '#FFE9D6', '#FFC9A8'], ['nmgold', 'Gold Glam', 'D', '#E6C068', '#E6C068', '#13203A', '#070B14'], ['nmfloral', 'Fresh Blooms', 'L', '#B4446A', '#9DBF9E', '#FFF8F2', '#FBE3E6', 'arch'], ['nmgreen', 'Naija Green', 'L', '#057A44', '#C9A04E', '#F2FBF5', '#D3EEDD']],
+    christmas: [['xmastree', 'Christmas Tree', 'D', '#F5D27A', '#E6C068', '#0F3D2A', '#05180F'], ['xmasred', 'Red & Gold', 'D', '#F5D27A', '#E6C068', '#8E1B26', '#4A0A10'], ['xmassnow', 'Winter Snow', 'L', '#1F4E79', '#9DB4C8', '#F4F8FC', '#D9E6F2'], ['xmascosy', 'Cosy Christmas', 'L', '#A3262E', '#2F6B45', '#FFF8EE', '#F1E2CC', 'arch']],
+    newyear: [['nyfire', 'Fireworks', 'D', '#F5D27A', '#E6C068', '#101A3A', '#04060F'], ['nygold', 'Gold Glam', 'D', '#E6C068', '#E6C068', '#1A1A1A', '#000000'], ['nysilver', 'Silver Sparkle', 'L', '#4B5563', '#A3A9B3', '#FFFFFF', '#E5E7EB'], ['nynaija', 'Naija Party', 'L', '#057A44', '#C9A04E', '#FFFFFF', '#E3F2EA']],
+    valentine: [['valroses', 'Red Roses', 'D', '#FFD1DC', '#FFD1DC', '#8E1B3A', '#3E0B1A', 'heart'], ['valpink', 'Pink Hearts', 'L', '#C2185B', '#E91E63', '#FFF0F5', '#F8C8D8', 'heart'], ['valgold', 'Love & Gold', 'L', '#A9832F', '#C9A04E', '#FFF7F2', '#F3DCD2', 'heart'], ['valnight', 'Candlelight', 'D', '#FFD9A0', '#E6C068', '#4A0D1E', '#1C0409', 'heart']],
+    anniversary: [['annrings', 'Golden Rings', 'L', '#9A7A3E', '#C9A04E', '#FBF6EE', '#EFE2CC', 'heart'], ['annroses', 'Roses & Champagne', 'D', '#F5D27A', '#E6C068', '#5A0F22', '#26050E', 'heart'], ['annclassic', 'Classic Ivory', 'L', '#7A5C2E', '#C9A04E', '#FFFDF7', '#F1EADB', 'arch'], ['annnight', 'Starry Night', 'D', '#F5E3B3', '#E6C068', '#14204A', '#060A1C', 'heart']],
+    wedding: [['wedwhite', 'White Florals', 'L', '#7A6A4F', '#B9A27A', '#FFFFFF', '#F2EFE9', 'arch'], ['wedgold', 'Gold Elegance', 'L', '#9A7A3E', '#C9A04E', '#FFFCF5', '#F0E4C8', 'arch'], ['wedaso', 'Aso-Oke', 'L', '#8E1B3A', '#C9A04E', '#FFF6EF', '#F6D9C4', 'arch'], ['wedblush', 'Blush & Greenery', 'L', '#A8566B', '#7FA585', '#FFF8F6', '#F7E1E1', 'heart']],
+    easter: [['eastflowers', 'Spring Flowers', 'L', '#2F7A3E', '#E8B923', '#FFFDF0', '#E8F4D8'], ['eastcross', 'He Is Risen', 'L', '#7A5C2E', '#D4A24C', '#FFF4E0', '#FAD9A8'], ['easteggs', 'Easter Eggs', 'L', '#7B4FA0', '#F2A541', '#FBF7FF', '#E7F6EC'], ['eastlily', 'White Lilies', 'L', '#5F7A4E', '#C9A04E', '#FFFFFF', '#F3EEDF', 'arch']],
+    eid: [['eidmoon', 'Crescent Moon', 'D', '#F5D27A', '#E6C068', '#121D45', '#050A1E'], ['eidlantern', 'Lanterns', 'D', '#F5D27A', '#E6C068', '#0B4A3A', '#032019'], ['eidgold', 'Gold Pattern', 'L', '#8A6A2E', '#C9A04E', '#FFFBF2', '#F1E5C8', 'arch'], ['eidteal', 'Teal & Gold', 'D', '#F5D27A', '#E6C068', '#0E4D5A', '#04222A', 'arch']],
+    mothers: [['mumflowers', 'Flowers for Mum', 'L', '#B24A6E', '#C9A04E', '#FFF5F7', '#F6D9E2'], ['mumpink', 'Pink & Gold', 'L', '#B0447A', '#C9A04E', '#FFF2F6', '#F5D3DF', 'heart'], ['mumtea', 'Tea & Roses', 'L', '#9C4A5E', '#C9A04E', '#FFFAF4', '#F2E1D6'], ['mumgele', 'Naija Queen', 'L', '#8E1B3A', '#C9A04E', '#FFF7EE', '#F6DCC2', 'arch']],
+    fathers: [['dadnavy', 'Classic Navy', 'D', '#E6C068', '#E6C068', '#16233D', '#070B14'], ['dadwood', 'Gentleman', 'D', '#F0C987', '#E6C068', '#3B2414', '#160C05'], ['dadgreen', 'Agbada Green', 'D', '#E6C068', '#E6C068', '#0F4A2E', '#04190F'], ['dadblue', 'Sky Blue', 'L', '#1F4E79', '#C9A04E', '#F2F8FF', '#CFE3F7']],
+    independence: [['indflag', 'Green White Green', 'L', '#008751', '#C9A04E', '#FFFFFF', '#E3F2EA'], ['indgold', 'Green & Gold', 'D', '#E6C068', '#E6C068', '#0B5A36', '#032414'], ['indfire', 'Celebration', 'D', '#FFFFFF', '#3DDC84', '#0A1F17', '#020806'], ['indankara', 'Ankara Pride', 'L', '#008751', '#C9A04E', '#FFFFFF', '#EAF6EF']],
+    graduation: [['gradcap', 'Caps in the Air', 'L', '#13203A', '#C9A04E', '#F1F7FF', '#CFE0F7'], ['gradnavy', 'Navy & Gold', 'D', '#E6C068', '#E6C068', '#13203A', '#060B16'], ['gradscroll', 'Diploma', 'L', '#7A2E2E', '#C9A04E', '#FFFBF2', '#EFE3CC'], ['gradconf', 'Confetti', 'L', '#13203A', '#E8456B', '#FFFFFF', '#F3F4F6']],
+    newbaby: [['babyblue', 'Baby Blue', 'L', '#2F5D8A', '#8EC5E8', '#F3F9FF', '#D6EAF8'], ['babypink', 'Baby Pink', 'L', '#C2557A', '#F4A6B8', '#FFF5F8', '#FAD9E3', 'heart'], ['babyneutral', 'Little Star', 'L', '#8A6A44', '#D4B483', '#FFFBF4', '#EFE4D2'], ['babyclouds', 'Clouds', 'L', '#5B6CA8', '#F2B5C8', '#F7FBFF', '#E5F0FB']],
+    thanks: [['thxflowers', 'Flowers', 'L', '#B4446A', '#9DBF9E', '#FFF9F5', '#F7E3E3'], ['thxgold', 'Gold Gratitude', 'L', '#9A7A3E', '#C9A04E', '#FFFFFF', '#F1E8D3'], ['thxgreen', 'Green Leaves', 'L', '#2F6B45', '#9DBF9E', '#FAFDF8', '#E1EFE0'], ['thxnight', 'Navy & Gold', 'D', '#E6C068', '#E6C068', '#13203A', '#060B16']],
+    congrats: [['conconf', 'Confetti Pop', 'L', '#13203A', '#E8456B', '#FFFFFF', '#FFF1E6'], ['congold', 'Gold Stars', 'D', '#E6C068', '#E6C068', '#1A1A1A', '#000000'], ['controphy', 'Trophy', 'D', '#F5D27A', '#E6C068', '#2A1E0E', '#0E0904'], ['conballoons', 'Balloons', 'L', '#0F6E6E', '#F2A541', '#F4FBFB', '#D5F0EE']],
+  };
+  Object.keys(P).forEach(function (k) { P[k].o = 'birthday'; });
+  Object.keys(OP).forEach(function (o) { OP[o].forEach(function (x) { P[x[0]] = { o: o, label: x[1], panel: x[2] === 'D' ? 'dark' : 'light', head: x[3], fg: x[2] === 'D' ? '#FFFFFF' : '#2A2A2A', accent: x[4], fb: [x[5], x[6]], photo: x[7], sq: [.14, .15, .72, .7], st: [.1, .2, .8, .56] }; }); });
   function artUrl(key, size) { var id = key + '-' + (size === 'story' ? 'st' : 'sq'); return ART[id] ? '/.netlify/functions/bday?artimg=' + id + '&v=' + ART[id] : ''; }
   function loadImg(url, cb) {
     if (!url) return null; var im = IMGS[url];
@@ -323,9 +602,9 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     } else { BG[st.design] ? BG[st.design](c, W, H) : BG.floral(c, W, H); a = area(st.design, W, H); }
     var pad = 34;
     var photo = st.photoImg && st.photoImg.complete && st.photoImg.naturalWidth ? st.photoImg : null;
-    var rel = pd && pd.rel ? REL_LINE[pd.rel] || '' : '';
+    var rel = pd && pd.rel && st.occ === 'birthday' ? REL_LINE[pd.rel] || '' : tagFor(st);
     var inner = { x: a.x + (pd ? pad : 0), w: a.w - (pd ? pad * 2 : 0), top: a.top + (pd ? pad : 0), bottom: a.bottom - (pd ? pad : 0) };
-    var age = ordinal(st.age), head = age ? 'Happy ' + age + ' Birthday' : 'Happy Birthday', name = (st.name || '').trim();
+    var head = headFor(st), name = (st.name || '').trim();
     var sign = (st.sign == null ? 'With love' : String(st.sign)).trim(), fromL = st.from ? (sign ? sign + ', ' : '') + st.from + ' 💚' : '';
     var avail = inner.bottom - inner.top, kind = (pd && pd.photo) || 'circle', sz = { s: 0, m: 1, l: 2 }[st.ps] != null ? st.ps : 'm', pos = st.pp === 'left' || st.pp === 'right' ? st.pp : 'center';
     var side = !!photo && pos !== 'center' && st.size !== 'story';
@@ -342,7 +621,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; var msgL = wrap(c, st.msg, tw * .94);
       c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; var fromLs = fromL ? wrap(c, fromL, tw) : [];
       
-      var total = (rel ? rs * 1.6 : 0) + stackPh + headL.length * hs * 1.02 + nameL.length * ns * 1.1 + 34 * k + msgL.length * ms * 1.35 + (fromLs.length ? 26 * k + fromLs.length * fs * 1.3 : 0);
+      var total = hs * .85 + ns * .05 + 4 * k - hs * .17 + (rel ? rs * 1.6 : 0) + stackPh + headL.length * hs * 1.02 + nameL.length * ns * 1.1 + 34 * k + msgL.length * ms * 1.35 + (fromLs.length ? 26 * k + fromLs.length * fs * 1.3 : 0);
       if (total <= avail) break;
     }
     // the "For the best Mum" line: letter-spaced if it fits, otherwise plain, shrunk to fit the column
@@ -370,28 +649,40 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     if (fromLs.length) { y += 26 * k; c.fillStyle = d.accent; c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; fromLs.forEach(function (l) { c.fillText(l, cx, y); y += fs * 1.3; }); }
     var dark = pd ? false : ['gold', 'navy', 'sunset', 'stars'].indexOf(st.design) >= 0;
     c.font = '600 24px "DM Sans", sans-serif'; c.textAlign = 'center';
-    var att = 'Made with love on Auntie Tobi 💚 auntietobi.co.uk/birthday', aw = c.measureText(att).width;
+    var att = 'Made with love on Auntie Tobi 💚 auntietobi.co.uk/cards', aw = c.measureText(att).width;
     if (pd) { c.fillStyle = 'rgba(255,255,255,.82)'; rr(c, W / 2 - aw / 2 - 16, H - 58, aw + 32, 38, 19); c.fill(); c.fillStyle = 'rgba(15,30,54,.75)'; c.fillText(att, W / 2, H - 31); }
     else { c.fillStyle = dark ? 'rgba(255,255,255,.7)' : 'rgba(15,30,54,.55)'; c.fillText(att, cx === W / 2 ? cx : W / 2, H - (st.design === 'cake' ? 14 : 30)); }
   }
 
   // ── state ──
-  var st = { who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'square', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
-  var ALIAS = { wife: 'partner', husband: 'partner', daughter: 'child', son: 'child' };
+  var NB = nowBits(), Q0 = new URLSearchParams(location.search).get('o');
+  var st = { occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'square', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
+  var ALIAS = { wife: 'partner', husband: 'partner', daughter: 'child', son: 'child', grandma: 'mum', grandpa: 'dad' };
   function fits(m) { return !m.w || m.w === st.who || m.w === ALIAS[st.who]; }
-  function pool() { return MSG.filter(function (m) { return m.s === st.style && fits(m); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who) || (!!b.w - !!a.w); }); }
+  function pool() { return MSG.filter(function (m) { return (m.o || 'birthday') === st.occ && m.s === st.style && fits(m); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who) || (!!b.w - !!a.w); }); }
   function suggest(first) { var p = pool(); if (!p.length) return; var specific = p.filter(function (m) { return m.w; }); var i; if (first && specific.length) i = 0; else { i = Math.floor(Math.random() * p.length); if (p.length > 1 && i === lastPick) i = (i + 1) % p.length; } lastPick = i; st.msg = p[i].t; $('msg').value = st.msg; render(); }
   function chips(id, map, key) {
     var el = $(id); el.innerHTML = Object.keys(map).map(function (k) { return '<button type="button" class="chip" data-v="' + k + '" aria-pressed="' + (st[key] === k) + '">' + map[k] + '</button>'; }).join('');
     el.onclick = function (e) {
       var b = e.target.closest('[data-v]'); if (!b) return; st[key] = b.dataset.v; [].forEach.call(el.children, function (x) { x.setAttribute('aria-pressed', x === b); });
-      if (key === 'who' && !designPicked && SUGGEST[st.who]) pickDesign(SUGGEST[st.who], true);
+      if (key === 'who' && !designPicked && st.occ === 'birthday' && SUGGEST[st.who]) pickDesign(SUGGEST[st.who], true);
+      if (key === 'occ') { setOcc(st.occ); return; }
       if (key === 'who' || key === 'style') suggest(true); else render(); save();
     };
   }
   var rT = 0; function render() { clearTimeout(rT); rT = setTimeout(function () { draw($('cv'), st, 0.75, render); }, 30); }
   function save() { try { localStorage.setItem('tobiBday', JSON.stringify({ from: st.from, sign: st.sign, size: st.size })); } catch (e) {} }
   function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2400); }
+  function whoMap() { var m = {}; OCC[st.occ].who.forEach(function (k) { m[k] = WHO[k]; }); return m; }
+  function setOcc(o, keep) {
+    st.occ = o; var oc = OCC[o]; st.yr = o === 'independence' ? NB.indYr : NB.yr;
+    if (oc.who.indexOf(st.who) < 0) st.who = oc.who[0];
+    chips('who', whoMap(), 'who');
+    $('numBox').classList.toggle('hidden', !oc.num); $('numL').innerHTML = (oc.num || 'Age') + ' <small>(optional)</small>'; $('age').placeholder = o === 'anniversary' ? 'e.g. 10' : 'e.g. 40'; if (!oc.num) { st.age = ''; $('age').value = ''; }
+    $('nameL').textContent = o === 'newbaby' ? 'Baby’s name (or the parents’)' : 'Their name'; $('name').placeholder = st.who === 'everyone' ? 'Optional — leave blank for everyone' : 'e.g. Amara';
+    if (!keep) { designPicked = false; var first = Object.keys(P).filter(function (k) { return P[k].o === o; })[0]; st.design = (o === 'birthday' && SUGGEST[st.who]) || first || 'floral'; }
+    paintDesigns(); suggest(true);
+  }
   function pickDesign(k, auto) { st.design = k; [].forEach.call(document.querySelectorAll('[data-d]'), function (x) { x.setAttribute('aria-pressed', x.dataset.d === k); }); if (!auto) designPicked = true; render(); }
 
   // 📷 their photo — resized on the phone; stored on Auntie Tobi only when a card link is made (deleted after 60 days)
@@ -420,11 +711,12 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function enc(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function dec(s) { try { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch (e) { return null; } }
   async function cardLink() {
-    var o = { n: st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
+    var o = { o: st.occ, n: st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
+    if (st.occ === 'newmonth') o.mn = st.mn; if (st.occ === 'newyear') o.yr = st.yr; if (st.occ === 'independence') o.yr = nowBits().indYr;
     if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; o.ps = st.ps; o.pp = st.pp; } catch (e) { toast(e.message); } }
-    return location.origin + '/birthday?c=' + enc(o);
+    return location.origin + '/cards?c=' + enc(o);
   }
-  function fileName() { return 'birthday-card-' + (st.name || 'for-you').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; }
+  function fileName() { return st.occ + '-card-' + (st.name || 'for-you').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; }
   function blob(state) {
     state = state || st;
     return new Promise(function (ok) {
@@ -434,12 +726,12 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     });
   }
   async function download(state) { var b = await blob(state); var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = fileName(); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 3000); }
-  function track(ev) { try { if (window.gtag) gtag('event', ev, { event_category: 'birthday_card', event_label: st.design }); } catch (e) {} }
+  function track(ev) { try { if (window.gtag) gtag('event', ev, { event_category: 'celebration_card', event_label: st.occ + ':' + st.design }); } catch (e) {} }
 
   async function shareWa() {
     var btn = $('share'), keep = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Getting it ready…';
     try {
-      var link = await cardLink(), text = '🎂 Happy birthday' + (st.name ? ', ' + st.name : '') + '! I made you a card 💚\n' + link;
+      var link = await cardLink(), text = OCC[st.occ].label.split(' ')[0] + ' ' + headFor(st) + (st.name ? ', ' + st.name : '') + '! I made you a card 💚\n' + link;
       try {
         var b = await blob(), f = new File([b], fileName(), { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: text }); track('bday_share_image'); showGifts(); return; }
@@ -453,8 +745,8 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function showGifts() {}
   var GIFT_BIZ = [
     { name: 'Abbystore', slug: 'abbystoreltd', img: 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805', line: '🎉 Party packs, souvenirs & lovely home gifts', btn: '🛍️ Shop now', link: 'https://abbystoreltd.com/' },
-    { name: 'Buchis Photography', slug: 'buchis-photography', img: '/biz-img/buchis-photography.jpg', line: '📸 A birthday photoshoot they’ll never forget', btn: '📸 Book a shoot', link: 'https://wa.me/447513969028?text=' + encodeURIComponent('Hi Buchis Photography, I found you on Auntie Tobi and I’d like to book a birthday shoot.') },
-    { name: 'Saamipeniel Fragrance', slug: 'saamipeniel-fragrance', img: 'https://naijabiz.b-cdn.net/03607764-14b3-4dfc-88ff-e89f4544c03a-1793528251057.jpeg', line: '🌸 Luxury oil perfumes — UK-wide delivery', btn: '💬 Order a perfume', link: 'https://wa.me/447724748976?text=' + encodeURIComponent('Hi Saamipeniel Fragrance, I found you on Auntie Tobi and I’d like to order a perfume as a birthday gift.') },
+    { name: 'Buchis Photography', slug: 'buchis-photography', img: '/biz-img/buchis-photography.jpg', line: '📸 A photoshoot they’ll never forget', btn: '📸 Book a shoot', link: 'https://wa.me/447513969028?text=' + encodeURIComponent('Hi Buchis Photography, I found you on Auntie Tobi and I’d like to book a photoshoot.') },
+    { name: 'Saamipeniel Fragrance', slug: 'saamipeniel-fragrance', img: 'https://naijabiz.b-cdn.net/03607764-14b3-4dfc-88ff-e89f4544c03a-1793528251057.jpeg', line: '🌸 Luxury oil perfumes — UK-wide delivery', btn: '💬 Order a perfume', link: 'https://wa.me/447724748976?text=' + encodeURIComponent('Hi Saamipeniel Fragrance, I found you on Auntie Tobi and I’d like to order a perfume as a gift.') },
   ];
   function loadGifts() {
     $('gifts').innerHTML = GIFT_BIZ.map(function (g) {
@@ -465,16 +757,18 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
   // 🎉 celebrations — 5 effects, a different one each time the card is opened
   var FX = ['confetti', 'balloons', 'fireworks', 'sparkle', 'hearts'], fxRun = 0;
-  function pickFx() { var last = -1; try { last = +localStorage.getItem('tobiFx'); } catch (e) {} var i = Math.floor(Math.random() * FX.length); if (i === last) i = (i + 1 + Math.floor(Math.random() * (FX.length - 1))) % FX.length; try { localStorage.setItem('tobiFx', i); } catch (e) {} return FX[i]; }
+  var curFx = FX, curCols = null;
+  function pickFx() { var FX = curFx; if (FX.length === 1) return FX[0]; var last = -1; try { last = localStorage.getItem('tobiFx'); } catch (e) {} var i = Math.floor(Math.random() * FX.length); if (FX[i] === last) i = (i + 1 + Math.floor(Math.random() * (FX.length - 1))) % FX.length; try { localStorage.setItem('tobiFx', FX[i]); } catch (e) {} return FX[i]; }
   function celebrate(kind) {
     var cv = $('fx'); if (!cv) { cv = document.createElement('canvas'); cv.id = 'fx'; document.body.appendChild(cv); }
     var dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
     var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, many = calm ? .35 : 1, dur = calm ? 3000 : 5500;
-    var COLS = ['#FFB81C', '#057A44', '#E11D74', '#3B82F6', '#A855F7', '#F97316', '#22C55E'], R = Math.random, parts = [], run = ++fxRun, t0 = performance.now(), bursts = 0;
+    var COLS = curCols || ['#FFB81C', '#057A44', '#E11D74', '#3B82F6', '#A855F7', '#F97316', '#22C55E'], R = Math.random, parts = [], run = ++fxRun, t0 = performance.now(), bursts = 0;
     function add(o) { parts.push(o); }
     if (kind === 'confetti') for (var i = 0; i < 180 * many; i++) add({ t: 'conf', x: W * (R() < .5 ? .1 : .9), y: H + 10, vx: (R() - .5) * 9 + (i % 2 ? -3 : 3), vy: -(11 + R() * 9), g: .28, r: R() * 6, vr: (R() - .5) * .3, w: 6 + R() * 6, h: 10 + R() * 8, c: COLS[i % 7], d: R() * 300 });
     if (kind === 'balloons') for (var i = 0; i < 22 * many; i++) add({ t: 'ball', x: R() * W, y: H + 60 + R() * H * .6, vy: -(1.6 + R() * 1.8), sw: R() * 6, s: 22 + R() * 16, c: COLS[i % 7] });
     if (kind === 'sparkle') for (var i = 0; i < 140 * many; i++) add({ t: 'spk', x: R() * W, y: -R() * H, vy: 1.5 + R() * 2.5, vx: (R() - .5) * .6, s: 2 + R() * 5, ph: R() * 6, c: R() < .75 ? '#FFD36B' : '#FFFFFF' });
+    if (kind === 'snow') for (var i = 0; i < 160 * many; i++) add({ t: 'snow', x: R() * W, y: -R() * H, vy: .8 + R() * 1.8, sw: R() * 6, s: 1.5 + R() * 4.5, a: .55 + R() * .45 });
     if (kind === 'hearts') for (var i = 0; i < 40 * many; i++) add({ t: 'hrt', x: R() * W, y: H + 30 + R() * H * .7, vy: -(1.4 + R() * 2), sw: R() * 6, s: 14 + R() * 18, c: ['#E11D48', '#F472B6', '#FB7185', '#FDA4AF'][i % 4] });
     function boom() { var x = W * (.15 + R() * .7), y = H * (.12 + R() * .35), col = COLS[Math.floor(R() * 7)], n = Math.round(60 * many); for (var i = 0; i < n; i++) { var a = i / n * Math.PI * 2, sp = 2 + R() * 4.5; add({ t: 'fw', x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, c: col }); } }
     function heart(x, y, s) { c.beginPath(); c.moveTo(x, y + s * .3); c.bezierCurveTo(x, y, x - s * .5, y, x - s * .5, y + s * .3); c.bezierCurveTo(x - s * .5, y + s * .6, x, y + s * .8, x, y + s); c.bezierCurveTo(x, y + s * .8, x + s * .5, y + s * .6, x + s * .5, y + s * .3); c.bezierCurveTo(x + s * .5, y, x, y, x, y + s * .3); c.fill(); }
@@ -487,6 +781,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
         if (p.t === 'conf') { if (p.d > 0) { p.d -= 16; return; } p.vy += p.g; p.vx *= .99; p.vy = Math.min(p.vy, 4.5); p.x += p.vx + Math.sin(el / 300 + p.r) * .6; p.y += p.vy; p.r += p.vr; c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.scale(1, Math.abs(Math.cos(el / 200 + p.r))); c.fillStyle = p.c; c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); c.restore(); }
         else if (p.t === 'ball') { p.y += p.vy; var x = p.x + Math.sin(el / 700 + p.sw) * 14; c.strokeStyle = 'rgba(80,80,80,.45)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, p.y + p.s * 1.15); c.quadraticCurveTo(x + 8, p.y + p.s * 2, x, p.y + p.s * 2.8); c.stroke(); c.fillStyle = p.c; c.beginPath(); c.ellipse(x, p.y, p.s * .85, p.s, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(x - 5, p.y + p.s + 6); c.lineTo(x + 5, p.y + p.s + 6); c.lineTo(x, p.y + p.s - 2); c.fill(); c.fillStyle = 'rgba(255,255,255,.45)'; c.beginPath(); c.ellipse(x - p.s * .32, p.y - p.s * .35, p.s * .16, p.s * .28, -.5, 0, 7); c.fill(); }
         else if (p.t === 'spk') { p.y += p.vy; p.x += p.vx; if (p.y > H + 10 && el < dur - 1500) p.y = -10; var tw = .4 + .6 * Math.abs(Math.sin(el / 180 + p.ph)); c.globalAlpha = fade * tw; c.fillStyle = p.c; c.beginPath(); for (var k = 0; k < 8; k++) { var rr2 = k % 2 ? p.s * .35 : p.s * 1.6, a = k / 8 * Math.PI * 2; c.lineTo(p.x + Math.cos(a) * rr2, p.y + Math.sin(a) * rr2); } c.fill(); }
+        else if (p.t === 'snow') { p.y += p.vy; if (p.y > H + 10 && el < dur - 1500) p.y = -10; c.globalAlpha = fade * p.a; c.fillStyle = '#FFFFFF'; c.shadowColor = 'rgba(120,150,190,.6)'; c.shadowBlur = 4; c.beginPath(); c.arc(p.x + Math.sin(el / 900 + p.sw) * 18, p.y, p.s, 0, 7); c.fill(); c.shadowBlur = 0; }
         else if (p.t === 'hrt') { p.y += p.vy; c.fillStyle = p.c; heart(p.x + Math.sin(el / 600 + p.sw) * 16, p.y, p.s); }
         else if (p.t === 'fw') { p.vy += .05; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.life -= .012; if (p.life <= 0) return; c.globalAlpha = fade * p.life; c.fillStyle = p.c; c.beginPath(); c.arc(p.x, p.y, 2.4, 0, 7); c.fill(); }
       });
@@ -497,14 +792,17 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   }
 
   // 🎵 a music-box "Happy Birthday" (the tune is public domain) — made in the browser, no sound files
-  var AC = null, songStop = null;
+  var AC = null, songStop = null, curSong = 'bday';
   function muted() { try { return localStorage.getItem('tobiMute') === '1'; } catch (e) { return false; } }
   function playSong() {
     stopSong(); if (muted()) return;
     try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { return; }
-    var N = { G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99 };
-    var tune = [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2], ['G4', .75], ['G4', .25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2], ['F5', .75], ['F5', .25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 2.5]];
-    var beat = .42, t = AC.currentTime + .1, out = AC.createGain(); out.gain.value = .22; out.connect(AC.destination);
+    var N = { D4: 293.66, E4: 329.63, 'F#4': 369.99, G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, C6: 1046.5 };
+    var SONGS = { bday: [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2], ['G4', .75], ['G4', .25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2], ['F5', .75], ['F5', .25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 2.5]],
+      xmas: [['D4', 1], ['G4', 1], ['G4', .5], ['A4', .5], ['G4', .5], ['F#4', .5], ['E4', 1], ['E4', 1], ['E4', 1], ['A4', 1], ['A4', .5], ['B4', .5], ['A4', .5], ['G4', .5], ['F#4', 1], ['D4', 1], ['D4', 1], ['B4', 1], ['B4', .5], ['C5', .5], ['B4', .5], ['A4', .5], ['G4', 1], ['E4', 1], ['D4', .5], ['D4', .5], ['E4', 1], ['A4', 1], ['F#4', 1], ['G4', 3]],
+      chime: [['C5', .5], ['E5', .5], ['G5', .5], ['C6', 1], ['G5', .5], ['C6', 2], ['E5', .5], ['G5', .5], ['C6', 2.5]] };
+    var tune = SONGS[curSong] || SONGS.bday;
+    var beat = curSong === 'xmas' ? .36 : curSong === 'chime' ? .3 : .42, t = AC.currentTime + .1, out = AC.createGain(); out.gain.value = .22; out.connect(AC.destination);
     tune.forEach(function (n) {
       [1, 2].forEach(function (h) {
         var o = AC.createOscillator(), g = AC.createGain(); o.type = h === 1 ? 'triangle' : 'sine'; o.frequency.value = N[n[0]] * h;
@@ -523,9 +821,9 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     return '<button type="button" class="design" data-d="' + k + '" aria-pressed="' + (st.design === k) + '">' + (url ? '<img src="' + url + '" alt="" loading="lazy">' : '<canvas width="160" height="160" data-fb="' + k + '"></canvas>') + '<span>' + label + '</span></button>';
   }
   function paintDesigns() {
-    $('designsP').innerHTML = Object.keys(P).map(function (k) { return designTile(k, true); }).join('');
-    $('designs').innerHTML = Object.keys(D).map(function (k) { return designTile(k, false); }).join('');
-    [].forEach.call(document.querySelectorAll('[data-fb]'), function (cvs) { var k = cvs.dataset.fb, c = cvs.getContext('2d'); c.scale(160 / 1080, 160 / 1080); if (P[k]) { lin(c, 1080, 1080, P[k].fb); c.font = '400 190px "Great Vibes", cursive'; c.textAlign = 'center'; c.fillStyle = P[k].head; c.fillText('Happy', 540, 520); c.fillText('Birthday', 540, 720); } else BG[k](c, 1080, 1080); });
+    $('designsP').innerHTML = Object.keys(P).filter(function (k) { return P[k].o === st.occ; }).map(function (k) { return designTile(k, true); }).join('');
+    $('designs').innerHTML = Object.keys(D).filter(function (k) { return st.occ === 'birthday' || k !== 'cake'; }).map(function (k) { return designTile(k, false); }).join('');
+    [].forEach.call(document.querySelectorAll('[data-fb]'), function (cvs) { var k = cvs.dataset.fb, c = cvs.getContext('2d'); c.scale(160 / 1080, 160 / 1080); if (P[k]) { lin(c, 1080, 1080, P[k].fb); c.font = '400 190px "Great Vibes", cursive'; c.textAlign = 'center'; c.fillStyle = P[k].head; var hw = headFor({ occ: st.occ }).split(' '), h1 = hw.slice(0, Math.ceil(hw.length / 2)).join(' '), h2 = hw.slice(Math.ceil(hw.length / 2)).join(' '); c.font = '400 ' + (hw.join(' ').length > 16 ? 150 : 190) + 'px "Great Vibes", cursive'; c.fillText(h1, 540, h2 ? 520 : 600); if (h2) c.fillText(h2, 540, 720); } else BG[k](c, 1080, 1080); });
   }
 
   // ── receiver view ──
@@ -534,27 +832,28 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function start() {
     if (got && (got.m || got.n)) {
       $('maker').classList.add('hidden'); $('recv').classList.remove('hidden');
-      var rs = { name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), sign: got.s == null ? 'With love' : String(got.s).slice(0, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
-      $('recvTitle').textContent = '🎂 Happy birthday' + (rs.name ? ', ' + rs.name : '') + '!';
-      $('recvFrom').textContent = rs.from ? rs.from + ' made you a birthday card 💚' : 'Someone made you a birthday card 💚';
+      var ro = OCC[got.o] ? got.o : 'birthday', OC = OCC[ro]; curFx = OC.fx || FX; curCols = OC.cols || null; curSong = OC.song || 'chime';
+      var rs = { occ: ro, mn: got.mn, yr: got.yr, name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), sign: got.s == null ? 'With love' : String(got.s).slice(0, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
+      $('recvTitle').textContent = OC.label.split(' ')[0] + ' ' + headFor(rs) + (rs.name ? ', ' + rs.name : '') + '!';
+      $('recvFrom').textContent = (rs.from ? rs.from : 'Someone') + ' made you a ' + OC.noun + ' 💚';
       var cvR = $('cvR');
       var paintR = function () { draw(cvR, rs, 0.75, paintR); };
       if (got.p && /^p[a-z0-9]{6,20}$/.test(got.p)) { var pim = new Image(); pim.onload = function () { rs.photoImg = pim; paintR(); }; pim.src = '/.netlify/functions/bday?photo=' + got.p; }
       paintR();
       $('rDl').onclick = function () { st.name = rs.name; download(rs); };
-      $('coverT').textContent = 'You’ve got a birthday card' + (rs.name ? ', ' + rs.name : '') + '!'; $('coverF').textContent = rs.from ? 'From ' + rs.from + ' 💚' : 'Made with love 💚';
+      $('coverT').textContent = 'You’ve got a ' + OC.noun + (rs.name ? ', ' + rs.name : '') + '!'; $('coverF').textContent = rs.from ? 'From ' + rs.from + ' 💚' : 'Made with love 💚';
       $('cover').classList.remove('hidden');
       $('cover').onclick = function () { this.classList.add('hidden'); celebrate(pickFx()); playSong(); };
       $('again').onclick = function () { celebrate(pickFx()); playSong(); };
       paintMute(); $('mute').onclick = function () { try { localStorage.setItem('tobiMute', muted() ? '0' : '1'); } catch (e) {} paintMute(); if (muted()) stopSong(); else playSong(); };
       loadGifts();
-      $('rThanks').onclick = function () { window.open('https://wa.me/?text=' + encodeURIComponent('Thank you so much for my birthday card' + (rs.from ? ', ' + rs.from : '') + '! 🥰💚'), '_blank'); };
-      document.title = '🎂 A birthday card for ' + (rs.name || 'you') + ' — Auntie Tobi';
+      $('rThanks').onclick = function () { window.open('https://wa.me/?text=' + encodeURIComponent('Thank you so much for my ' + OC.noun + (rs.from ? ', ' + rs.from : '') + '! 🥰💚'), '_blank'); };
+      document.title = OC.label.split(' ')[0] + ' A ' + OC.noun + ' for ' + (rs.name || 'you') + ' — Auntie Tobi';
       return;
     }
     try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (typeof sv.sign === 'string') st.sign = sv.sign; if (SIZES[sv.size]) st.size = sv.size; } catch (e) {}
-    chips('who', WHO, 'who'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
-    paintDesigns();
+    var occM = {}; occOrder().forEach(function (o) { occM[o] = OCC[o].label; }); chips('occ', occM, 'occ'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
+    setOcc(st.occ, false);
     document.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (b) pickDesign(b.dataset.d); });
     $('from').value = st.from;
     $('name').oninput = function () { st.name = this.value; render(); };
@@ -579,7 +878,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     $('dl').onclick = function () { download(); track('bday_download'); toast('Card saved ✅'); showGifts(); };
     $('share').onclick = shareWa;
     $('link').onclick = async function () { var b = this; b.disabled = true; var l = await cardLink(); b.disabled = false; copyText(l, 'Card link copied 🔗'); track('bday_link'); showGifts(); };
-    $('copy').onclick = function () { copyText((st.name ? 'Happy birthday, ' + st.name + '! ' : 'Happy birthday! ') + st.msg + (st.from ? '\n' + (st.sign ? st.sign + ', ' : '— ') + st.from : ''), 'Message copied 📋'); };
+    $('copy').onclick = function () { copyText(headFor(st) + (st.name ? ', ' + st.name : '') + '! ' + st.msg + (st.from ? '\n' + (st.sign ? st.sign + ', ' : '— ') + st.from : ''), 'Message copied 📋'); };
     suggest(true);
   }
   var go = function () { loadArt().then(function () { start(); if (!got) render(); }); };

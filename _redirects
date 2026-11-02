@@ -16,8 +16,11 @@
 
 # Public "Add your event" page
 /add-event      /add-event.html         200
-/birthday       /birthday.html          200
-/birthday-card  /birthday               301
+# Celebration Cards (old /birthday links keep working)
+/cards          /cards.html             200
+/birthday       /cards.html             200
+/birthday.html  /cards.html             200
+/birthday-card  /cards                  301
 
 # Blog deep links
 

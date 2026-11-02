@@ -273,9 +273,9 @@ exports.handler = handler(async (ctx) => {
     case 'bday-art': case 'bday-art-make': case 'bday-art-del': {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the birthday card art.');
       const bday = require('../bday');
-      if (body.action === 'bday-art-make') { await core.rateLimit('hq-pic', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of images this hour — please wait a little.'); return { art: await bday.makeArt(String(body.key || ''), String(body.size || '')), designs: Object.keys(bday.ART) }; }
-      if (body.action === 'bday-art-del') return { art: await bday.removeArt(String(body.key || ''), String(body.size || '')), designs: Object.keys(bday.ART) };
-      return { art: await bday.artIndex(), designs: Object.keys(bday.ART) };
+      if (body.action === 'bday-art-make') { await core.rateLimit('hq-pic', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of images this hour — please wait a little.'); return { art: await bday.makeArt(String(body.key || ''), String(body.size || '')), designs: Object.keys(bday.ART), groups: bday.GROUPS }; }
+      if (body.action === 'bday-art-del') return { art: await bday.removeArt(String(body.key || ''), String(body.size || '')), designs: Object.keys(bday.ART), groups: bday.GROUPS };
+      return { art: await bday.artIndex(), designs: Object.keys(bday.ART), groups: bday.GROUPS };
     }
     case 'team-save': {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change who has access.');
