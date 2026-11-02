@@ -573,14 +573,14 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     chocolate: { label: 'Chocolate Cake', head: '#2A1A12', fg: '#2F2620', accent: '#B8892E', panel: 'light', sq: [.05, .05, .56, .62], st: [.08, .05, .84, .5], fb: ['#F1EEEA', '#D9D2C8'] },
     lilac: { label: 'Lilac Party', head: '#FBEFFF', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', sq: [.2, .12, .6, .48], st: [.14, .16, .72, .44], fb: ['#7A55A8', '#3C2463'] },
     glitter: { label: 'Gold Glitter', head: '#A9832F', fg: '#2A2A2A', accent: '#A9832F', panel: 'light', photo: 'arch', sq: [.12, .09, .76, .4], st: [.12, .08, .76, .36], fb: ['#FFFFFF', '#F3E7C6'] },
-    love: { label: '❤️ Love', head: '#FFFFFF', fg: '#FFFFFF', accent: '#FFD1DC', panel: 'dark', photo: 'heart', rel: 'love', sq: [.16, .14, .68, .72], st: [.12, .16, .76, .64], fb: ['#8E1B3A', '#3E0B1A'] },
-    daughter: { label: 'Daughter', head: '#B0447A', fg: '#4A2340', accent: '#C77DFF', panel: 'light', rel: 'daughter', sq: [.15, .13, .7, .74], st: [.12, .14, .76, .66], fb: ['#FFF0F7', '#EBDDFC'] },
-    sister: { label: 'Sister', head: '#C2563A', fg: '#4A2A22', accent: '#D4A24C', panel: 'light', rel: 'sister', sq: [.15, .13, .7, .74], st: [.12, .14, .76, .66], fb: ['#FFF3EC', '#FBD9C6'] },
-    brother: { label: 'Brother', head: '#0F2A4A', fg: '#13253F', accent: '#C9A04E', panel: 'light', rel: 'brother', sq: [.15, .12, .7, .62], st: [.12, .12, .76, .56], fb: ['#EEF5FA', '#C9DDEB'] },
-    wife: { label: 'Wife', head: '#9C6B3C', fg: '#3A2A22', accent: '#C9A04E', panel: 'light', photo: 'heart', rel: 'wife', sq: [.15, .1, .7, .58], st: [.12, .1, .76, .54], fb: ['#FBF2EC', '#EED9CC'] },
-    husband: { label: 'Husband', head: '#E6C068', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', rel: 'husband', sq: [.15, .1, .7, .56], st: [.12, .1, .76, .52], fb: ['#16233D', '#070B14'] },
-    mother: { label: 'Mother', head: '#B24A6E', fg: '#3E2A33', accent: '#C9A04E', panel: 'light', rel: 'mum', sq: [.15, .12, .7, .58], st: [.12, .12, .76, .54], fb: ['#FFF5F7', '#F6D9E2'] },
-    father: { label: 'Father', head: '#E6C068', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', rel: 'dad', sq: [.15, .1, .7, .56], st: [.12, .1, .76, .52], fb: ['#1E3B2C', '#0B1A12'] },
+    love: { label: 'Romantic Red', head: '#FFFFFF', fg: '#FFFFFF', accent: '#FFD1DC', panel: 'dark', photo: 'heart', sq: [.16, .14, .68, .72], st: [.12, .16, .76, .64], fb: ['#8E1B3A', '#3E0B1A'] },
+    daughter: { label: 'Pastel Dream', head: '#B0447A', fg: '#4A2340', accent: '#C77DFF', panel: 'light', sq: [.15, .13, .7, .74], st: [.12, .14, .76, .66], fb: ['#FFF0F7', '#EBDDFC'] },
+    sister: { label: 'Coral Glow', head: '#C2563A', fg: '#4A2A22', accent: '#D4A24C', panel: 'light', sq: [.15, .13, .7, .74], st: [.12, .14, .76, .66], fb: ['#FFF3EC', '#FBD9C6'] },
+    brother: { label: 'Navy Star', head: '#0F2A4A', fg: '#13253F', accent: '#C9A04E', panel: 'light', sq: [.15, .12, .7, .62], st: [.12, .12, .76, .56], fb: ['#EEF5FA', '#C9DDEB'] },
+    wife: { label: 'Champagne Roses', head: '#9C6B3C', fg: '#3A2A22', accent: '#C9A04E', panel: 'light', photo: 'heart', sq: [.15, .1, .7, .58], st: [.12, .1, .76, .54], fb: ['#FBF2EC', '#EED9CC'] },
+    husband: { label: 'Midnight Gold', head: '#E6C068', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', sq: [.15, .1, .7, .56], st: [.12, .1, .76, .52], fb: ['#16233D', '#070B14'] },
+    mother: { label: 'Peony Garden', head: '#B24A6E', fg: '#3E2A33', accent: '#C9A04E', panel: 'light', sq: [.15, .12, .7, .58], st: [.12, .12, .76, .54], fb: ['#FFF5F7', '#F6D9E2'] },
+    father: { label: 'Emerald Gold', head: '#E6C068', fg: '#FFFFFF', accent: '#E6C068', panel: 'dark', sq: [.15, .1, .7, .56], st: [.12, .1, .76, .52], fb: ['#1E3B2C', '#0B1A12'] },
   };
   var REL_LINE = { love: 'To the love of my life', daughter: 'For my beautiful Daughter', sister: 'For my amazing Sister', brother: 'For my awesome Brother', wife: 'For my wonderful Wife', husband: 'For my amazing Husband', mum: 'For the best Mum in the world', dad: 'For the best Dad in the world' };
   var SUGGEST = { mum: 'mother', dad: 'father', wife: 'wife', husband: 'husband', daughter: 'daughter', sister: 'sister', brother: 'brother', partner: 'love' };
@@ -655,7 +655,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     var vOff = function (space, used) { return tp === 'top' ? 0 : tp === 'bottom' ? Math.max(0, space - used) : Math.max(0, (space - used) / 2); };
     var pad = 34;
     var photo = st.photoImg && st.photoImg.complete && st.photoImg.naturalWidth ? st.photoImg : null;
-    var rel = pd && pd.rel && st.occ === 'birthday' ? REL_LINE[pd.rel] || '' : tagFor(st);
+    var rel = tagFor(st);
     var inner = { x: a.x + (pd ? pad : 0), w: a.w - (pd ? pad * 2 : 0), top: a.top + (pd ? pad : 0), bottom: a.bottom - (pd ? pad : 0) };
     var head = headFor(st), name = (st.name || '').trim();
     var sign = (st.sign == null ? 'With love' : String(st.sign)).trim(), fromL = st.from ? (sign ? sign + ', ' : '') + st.from : '';
