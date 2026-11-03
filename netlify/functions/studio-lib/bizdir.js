@@ -69,6 +69,7 @@ function normalise(b) {
   if (typeof b.claimedSet === 'boolean') out.claimedSet = b.claimedSet;
   out.claimed = typeof out.claimedSet === 'boolean' ? out.claimedSet : (out.contact ? !OURS.test(out.contact) : b.claimed !== false);
   if (b.notes) out.notes = str(b.notes, 1000);
+  if (b.uploadedAt) out.uploadedAt = str(b.uploadedAt, 40);   // HQ-added business already put in a website CSV
   return out;
 }
 
@@ -107,6 +108,9 @@ function fromCsvRow(r) {
   });
 }
 
+// A business added in HQ (e.g. by the Finder) and then uploaded to the website may come back with a different slug: match it by name.
+const nameKey = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function hqTwin(items, n) { const k = nameKey(n.name); return k ? items.find(b => b.src === 'hq' && nameKey(b.name) === k) : undefined; }
 function same(a, b) { return JSON.stringify(a == null ? '' : a) === JSON.stringify(b == null ? '' : b); }
 // Works out what an import would change. Nothing is saved here.
 async function previewImport(csvText) {
@@ -117,7 +121,7 @@ async function previewImport(csvText) {
   const add = [], change = [], pending = [], seen = new Set();
   for (const n of incoming) {
     seen.add(n.slug);
-    const o = bySlug.get(n.slug);
+    const o = bySlug.get(n.slug) || hqTwin(cur, n);
     if (n.status === 'pending') { pending.push({ slug: n.slug, name: n.name }); if (!o) continue; }
     if (!o) { add.push({ slug: n.slug, name: n.name, cat: n.cat, loc: n.loc, claimed: n.claimed }); continue; }
     const merged = mergeOne(o, n), diffs = COMPARE.filter(k => !same(o[k], merged[k]));
@@ -144,6 +148,7 @@ async function applyImport(csvText, hideGone, who) {
     stats = { added: 0, changed: 0, hidden: 0 };
     for (const n of rows) {
       seen.add(n.slug);
+      if (!idx.has(n.slug)) { const twin = hqTwin(items, n); if (twin) { const i = items.indexOf(twin); n.slug = twin.slug; idx.set(n.slug, i); seen.add(n.slug); } }
       if (idx.has(n.slug)) { const i = idx.get(n.slug), m = mergeOne(items[i], n); if (COMPARE.some(k => !same(items[i][k], m[k])) || items[i].status !== m.status) { m.updatedAt = now; stats.changed++; } items[i] = m; }
       else if (n.status !== 'pending') { n.updatedAt = now; items.push(n); idx.set(n.slug, items.length - 1); stats.added++; }
     }
@@ -175,6 +180,12 @@ async function remove(slug, who) {
   });
   forget();
 }
+// HQ-added businesses that have gone into a website CSV (so they're not exported twice)
+async function markUploaded(slugs, at) {
+  const set = new Set(slugs);
+  await cas(KEY, cur => { if (!cur || !Array.isArray(cur.items)) return undefined; cur.items = cur.items.map(b => set.has(b.slug) ? Object.assign({}, b, { uploadedAt: at }) : b); return cur; });
+  forget();
+}
 async function info() { const rec = await getJson(KEY).catch(() => null); return { saved: !!(rec && rec.items), at: rec && rec.at || '', lastImport: rec && rec.lastImport || '' }; }
 
-module.exports = { all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
+module.exports = { markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };

@@ -234,6 +234,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
       <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
       <button data-nav="dir" id="navDir" class="hidden">🏢 Business directory</button>
+      <button data-nav="find" id="navFind" class="hidden">🔎 Business Finder</button>
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
       <button data-nav="tcars">📝 Template Carousel <span class="n" id="nTcars"></span></button>
@@ -312,7 +313,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
-    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
+    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -320,7 +321,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
   function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = (v === 'dir' && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
+    S.view = ((v === 'dir' || v === 'find') && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -332,7 +333,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
@@ -911,7 +912,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var isNew = !b; b = b || { claimedSet: false, src: 'hq' };
     var cl = typeof b.claimedSet === 'boolean' ? (b.claimedSet ? 'yes' : 'no') : 'auto';
     var s = sheet('<h2>' + (isNew ? '＋ Add a business' : '✏️ ' + esc(b.name)) + '</h2>' +
-      (isNew ? '<p class="muted" style="margin:4px 0 8px;font-size:13.5px">Added here = shows in the app straight away, marked unclaimed. (Stage 2 adds it to the weekly website CSV.)</p>' : '<p class="muted" style="margin:4px 0 8px;font-size:13px">' + (b.src === 'website' ? 'From the website directory — the next website import updates name, category, contacts and Featured. Your notes, hidden and claimed tick are kept.' : 'Added in HQ.') + (b.contact ? ' Website contact name: <b>' + esc(b.contact) + '</b>.' : '') + '</p>') +
+      (isNew ? '<p class="muted" style="margin:4px 0 8px;font-size:13.5px">Added here = shows in the app straight away, marked unclaimed. It also goes into your next ⬇️ website CSV in 🔎 Business Finder.</p>' : '<p class="muted" style="margin:4px 0 8px;font-size:13px">' + (b.src === 'website' ? 'From the website directory — the next website import updates name, category, contacts and Featured. Your notes, hidden and claimed tick are kept.' : 'Added in HQ.') + (b.contact ? ' Website contact name: <b>' + esc(b.contact) + '</b>.' : '') + '</p>') +
       '<div class="stack">' +
       '<div><label for="deN">Business name</label><input id="deN" maxlength="120" value="' + esc(b.name || '') + '"></div>' +
       '<div class="f2"><div><label for="deC">Category</label><input id="deC" list="deCl" value="' + esc(b.cat || '') + '"><datalist id="deCl">' + dirCats().map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist></div><div><label for="deL">Town</label><input id="deL" value="' + esc(b.loc || '') + '"></div></div>' +
@@ -923,11 +924,15 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div><label>Show in app</label><label class="chk"><input type="checkbox" id="deF"' + (b.featured ? ' checked' : '') + '> ⭐ Featured</label><label class="chk"><input type="checkbox" id="deV"' + (b.verified ? ' checked' : '') + '> ✅ Verified</label><label class="chk"><input type="checkbox" id="deH"' + (b.hidden ? ' checked' : '') + '> 🙈 Hidden</label></div></div>' +
       '<div><label for="deNo">Notes (only you see these)</label><textarea id="deNo" rows="2">' + esc(b.notes || '') + '</textarea></div>' +
       '</div><div class="err hidden" id="deErr"></div>' +
-      '<div class="row" style="justify-content:space-between;gap:8px;margin-top:12px">' + (isNew ? '<span></span>' : '<button class="btn ghost" id="deDel" style="color:#B42318">🗑 Delete</button>') + '<div class="row" style="gap:8px"><button class="btn ghost" id="deX">Cancel</button><button class="btn primary" id="deOk">💾 Save</button></div></div>');
+      '<div class="row" style="justify-content:space-between;gap:8px;margin-top:12px">' + (isNew ? '<span></span>' : '<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn ghost" id="deDel" style="color:#B42318">🗑 Delete</button><button class="btn ghost" id="deNever" style="color:#B42318" title="For businesses that asked not to be listed">🚫 Remove &amp; never add again</button></div>') + '<div class="row" style="gap:8px"><button class="btn ghost" id="deX">Cancel</button><button class="btn primary" id="deOk">💾 Save</button></div></div>');
     $('#deX', s).onclick = function () { s.remove(); };
     if ($('#deDel', s)) $('#deDel', s).onclick = async function () {
       if (!confirm('Delete ' + b.name + ' from the app? (It stays on the website directory — to stop it coming back on the next import, tick Hidden instead.)')) return;
       try { S.dir = await api('dir-delete', { slug: b.slug }); s.remove(); toast('Deleted'); vDir(); } catch (x) { toast(x.message); }
+    };
+    if ($('#deNever', s)) $('#deNever', s).onclick = async function () {
+      if (!confirm('Remove ' + b.name + ' from the app and never suggest it again?\n\nUse this when a business asks not to be listed. Remember to delete it on the directory website too.')) return;
+      try { S.dir = await api('dir-delete', { slug: b.slug, never: true }); s.remove(); toast('Removed 🚫 — the Finder won’t suggest it again'); vDir(); } catch (x) { toast(x.message); }
     };
     $('#deOk', s).onclick = async function () {
       var v = function (id) { return $('#' + id, s).value.trim(); }, c = v('deCl2');
@@ -965,6 +970,98 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       this.disabled = true; this.textContent = 'Saving…';
       try { var r = await api('dir-apply', { csv: csv, hideGone: !!($('#diH', s) && $('#diH', s).checked) }); S.dir = { items: r.items, info: r.info }; s.remove(); toast('Imported ✅ ' + r.stats.added + ' new · ' + r.stats.changed + ' updated' + (r.stats.hidden ? ' · ' + r.stats.hidden + ' hidden' : '')); vDir(); }
       catch (x) { this.disabled = false; this.textContent = '✅ Apply'; $('#diErr', s).textContent = x.message; $('#diErr', s).classList.remove('hidden'); }
+    };
+  }
+  // 🔎 Business Finder — weekly search for Nigerian businesses in the UK; approve → app + website CSV
+  var FIND_TABS = { 'new': 'To review', approved: 'Approved', skipped: 'Skipped', uploaded: 'On the website' };
+  function findAgo(iso) { if (!iso) return 'not yet'; var m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+  function vFind() {
+    $('#ttl').textContent = 'Business Finder';
+    $('#topRight').innerHTML = '<button class="btn ghost" id="fQuick">⚡ Quick add</button> <button class="btn primary" id="fCsv">⬇️ Website CSV</button>';
+    $('#fQuick').onclick = findQuick; $('#fCsv').onclick = findCsv;
+    if (!S.find) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading the Finder…</p></div>'; api('find-list').then(function (r) { S.find = r.finder; if (S.view === 'find') vFind(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
+    var F = S.find, tab = S.findTab || 'new', items = F.items || [];
+    var n = function (st) { return items.filter(function (x) { return x.status === st; }).length; };
+    var list = items.filter(function (x) { return x.status === tab; });
+    if (tab === 'new') list.sort(function (a, b) { return (b.confidence || 0) - (a.confidence || 0); });
+    var pct = Math.min(100, Math.round(100 * F.approvedThisWeek / F.target));
+    $('#view').innerHTML = '<div class="wrap">' +
+      '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px"><div><b style="font-size:20px">' + F.approvedThisWeek + ' / ' + F.target + '</b> <span class="muted">approved this week</span></div>' +
+      '<div class="muted" style="font-size:13px">' + n('new') + ' waiting · ' + F.queue + ' searches left this week · last search ' + esc(findAgo(F.lastRun)) + '</div></div>' +
+      '<div style="height:10px;background:#EEF0F3;border-radius:6px;margin:10px 0 12px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#057A44"></div></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn ghost" id="fMore">▶️ Find more now</button><span class="muted" style="font-size:12.5px">Searches also run by themselves every Monday morning. Each search costs about 1p.</span></div>' +
+      (F.toUpload ? '<div class="note" style="margin-top:12px">⬇️ <b>' + F.toUpload + '</b> approved business' + (F.toUpload === 1 ? ' is' : 'es are') + ' in the app but not on the website yet — tap <b>Website CSV</b> to download them.</div>' : '') + '</div>' +
+      '<div class="chipbar" id="fTabs" style="margin-bottom:8px">' + Object.keys(FIND_TABS).map(function (k) { return '<button class="chip" data-t="' + k + '" aria-pressed="' + (k === tab) + '">' + FIND_TABS[k] + ' (' + n(k) + ')</button>'; }).join('') + '</div>' +
+      (list.length ? list.slice(0, 200).map(findCard).join('') : '<div class="card"><p class="muted" style="padding:6px 0">' + (tab === 'new' ? 'Nothing waiting. Tap <b>▶️ Find more now</b> or <b>⚡ Quick add</b>.' : 'Nothing here yet.') + '</p></div>') + '</div>';
+    $$('#fTabs [data-t]').forEach(function (b) { b.onclick = function () { S.findTab = b.dataset.t; vFind(); }; });
+    $('#fMore').onclick = async function () {
+      this.disabled = true; this.textContent = '🔎 Searching… (up to 30s)';
+      try { var r = await api('find-more'); S.find = r.finder; var got = (r.ran || []).reduce(function (a, x) { return a + (x.added || 0); }, 0); toast(r.ran && r.ran.length ? (got ? '🆕 ' + got + ' new to review' : 'No new businesses in that search — try again') + ' · ' + r.ran[0].query : 'Nothing left to search'); vFind(); }
+      catch (x) { this.disabled = false; this.textContent = '▶️ Find more now'; toast(x.message); }
+    };
+    $$('[data-fa]').forEach(function (b) { b.onclick = function () { var c = findById(b.dataset.id); if (b.dataset.fa === 'edit') findEdit(c); else findDecide(c, b.dataset.fa, null, b); }; });
+  }
+  function findById(id) { return (S.find.items || []).filter(function (x) { return x.id === id; })[0]; }
+  function findCard(c) {
+    var conf = Math.round((c.confidence || 0) * 100), cat = String(c.cat || '').split('>').pop().trim();
+    var link = function (href, label) { return href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + label + '</a>' : ''; };
+    var web = c.website && !/instagram\.com/i.test(c.website) ? (/^https?:/i.test(c.website) ? c.website : 'https://' + c.website) : '';
+    return '<div class="card" style="padding:12px 16px;margin-bottom:10px"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b style="font-size:16px">' + esc(c.name) + '</b>' +
+      (cat ? dirPill(esc(cat), '#0F1E36') : dirPill('No category', '#B42318')) + (c.loc ? dirPill('📍 ' + esc(c.loc), '#EEF0F3', '#333') : '') +
+      (c.status === 'new' ? dirPill(conf + '% sure', conf >= 75 ? '#057A44' : conf >= 50 ? '#FFE7A3' : '#FDE2E1', conf >= 75 ? '#fff' : '#5A3A00') : '') + '</div>' +
+      (c.desc ? '<div style="margin-top:6px;font-size:14px">' + esc(c.desc) + '</div>' : '') +
+      (c.why ? '<div class="muted" style="margin-top:4px;font-size:13px">🇳🇬 ' + esc(c.why) + '</div>' : '') +
+      '<div style="margin-top:6px;font-size:13px;display:flex;gap:12px;flex-wrap:wrap">' + link(web, '🌐 Website') + link(c.ig ? 'https://www.instagram.com/' + c.ig + '/' : '', '📸 @' + esc(c.ig)) +
+      (c.email ? '<span>📧 ' + esc(c.email) + '</span>' : '<span class="muted">no email found</span>') + (c.wa ? '<span>💬 ' + esc(c.wa) + '</span>' : '') + (c.phone && !c.wa ? '<span>📞 ' + esc(c.phone) + '</span>' : '') + '</div>' +
+      '<div class="muted" style="font-size:12px;margin-top:4px">Found by: ' + esc(c.query || '') + (c.slug ? ' · <a href="/biz/' + encodeURIComponent(c.slug) + '" target="_blank" rel="noopener">see in app ↗</a>' : '') + '</div>' +
+      (c.status === 'new' ? '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn primary sm" data-fa="approve" data-id="' + c.id + '">✅ Approve</button><button class="btn ghost sm" data-fa="edit" data-id="' + c.id + '">✏️ Edit</button><button class="btn ghost sm" data-fa="skip" data-id="' + c.id + '">✖ Skip</button><button class="btn ghost sm" data-fa="never" data-id="' + c.id + '" style="color:#B42318">🚫 Never</button></div>'
+        : c.status === 'skipped' ? '<div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost sm" data-fa="edit" data-id="' + c.id + '">↩️ Look again</button></div>' : '') + '</div>';
+  }
+  async function findDecide(c, decision, edits, btn) {
+    if (decision === 'never' && !confirm('Never suggest ' + c.name + ' again?')) return;
+    if (btn) btn.disabled = true;
+    try { var r = await api('find-decide', { id: c.id, decision: decision, edits: edits }); S.find = r.finder; S.dir = null; toast(decision === 'approve' ? '✅ ' + c.name + ' is now in the app (unclaimed)' : decision === 'edit' ? 'Saved' : 'Skipped'); vFind(); return true; }
+    catch (x) { if (btn) btn.disabled = false; toast(x.message); return false; }
+  }
+  function findEdit(c) {
+    var cats = S.find.cats || [];
+    var s = sheet('<h2>✏️ ' + esc(c.name) + '</h2><p class="muted" style="margin:4px 0 8px;font-size:13px">Check the details (open their website or Instagram). Approve = it shows in the app straight away, marked unclaimed, and goes into your next website CSV.</p><div class="stack">' +
+      '<div><label for="feN">Business name</label><input id="feN" maxlength="120" value="' + esc(c.name || '') + '"></div>' +
+      '<div class="f2"><div><label for="feC">Category</label><select id="feC"><option value="">Choose…</option>' + cats.map(function (k) { return '<option' + (k === c.cat ? ' selected' : '') + ' value="' + esc(k) + '">' + esc(k.replace(' > ', ' › ')) + '</option>'; }).join('') + '</select></div><div><label for="feL">Town</label><input id="feL" value="' + esc(c.loc || '') + '"></div></div>' +
+      '<div><label for="feD">Description</label><textarea id="feD" rows="3">' + esc(c.desc || '') + '</textarea></div>' +
+      '<div class="f2"><div><label for="feI">Instagram</label><input id="feI" placeholder="handle" value="' + esc(c.ig || '') + '"></div><div><label for="feW">WhatsApp</label><input id="feW" placeholder="447…" value="' + esc(c.wa || '') + '"></div></div>' +
+      '<div class="f2"><div><label for="feE">Email</label><input id="feE" type="email" value="' + esc(c.email || '') + '"></div><div><label for="feP">Phone</label><input id="feP" value="' + esc(c.phone || '') + '"></div></div>' +
+      '<div><label for="feS">Website</label><input id="feS" placeholder="https://" value="' + esc(c.website || '') + '"></div></div><div class="err hidden" id="feErr"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="feX">Cancel</button><button class="btn ghost" id="feSave">💾 Save</button><button class="btn primary" id="feOk">✅ Save &amp; approve</button></div>');
+    var vals = function () { var v = function (id) { return $('#' + id, s).value.trim(); }; return { name: v('feN'), cat: v('feC'), loc: v('feL'), desc: v('feD'), ig: v('feI').replace(/^@/, ''), wa: v('feW').replace(/\D/g, ''), email: v('feE'), phone: v('feP'), website: v('feS') }; };
+    $('#feX', s).onclick = function () { s.remove(); };
+    $('#feSave', s).onclick = async function () { var e = vals(); e.status = 'new'; if (await findDecide(c, 'edit', e, this)) s.remove(); };
+    $('#feOk', s).onclick = async function () { var e = vals(); if (!e.name || !e.cat) { $('#feErr', s).textContent = 'Add a name and choose a category.'; $('#feErr', s).classList.remove('hidden'); return; } if (await findDecide(c, 'approve', e, this)) s.remove(); };
+  }
+  function findQuick() {
+    var s = sheet('<h2>⚡ Quick add</h2><p class="muted" style="margin:4px 0 10px">Paste an Instagram link, a website or just the business name. Auntie Tobi looks it up and puts it in <b>To review</b> for you to check.</p>' +
+      '<input id="fqI" placeholder="e.g. instagram.com/mamaskitchenuk  or  Mama’s Kitchen Leeds"><div class="err hidden" id="fqErr"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="fqX">Cancel</button><button class="btn primary" id="fqOk">🔎 Look it up</button></div>');
+    $('#fqX', s).onclick = function () { s.remove(); }; $('#fqI', s).focus();
+    $('#fqOk', s).onclick = async function () {
+      var v = $('#fqI', s).value.trim(); if (v.length < 3) return;
+      this.disabled = true; this.textContent = 'Looking… (up to 30s)';
+      try { var r = await api('find-quick', { input: v }); S.find = r.finder; S.findTab = 'new'; s.remove(); toast('Added to To review ✅'); vFind(); }
+      catch (x) { this.disabled = false; this.textContent = '🔎 Look it up'; $('#fqErr', s).textContent = x.message; $('#fqErr', s).classList.remove('hidden'); }
+    };
+  }
+  async function findCsv() {
+    var r; try { r = await api('find-csv'); } catch (x) { toast(x.message); return; }
+    if (!r.count) { sheet('<h2>⬇️ Website CSV</h2><p class="muted" style="margin:6px 0 12px">Nothing new to upload — every business you’ve approved is already on the website.</p><div class="row" style="justify-content:flex-end"><button class="btn primary" onclick="this.closest(\'.scrim\').remove()">OK</button></div>'); return; }
+    var name = 'auntie-tobi-new-listings-' + new Date().toISOString().slice(0, 10) + '.csv';
+    var s = sheet('<h2>⬇️ Website CSV</h2><p style="margin:6px 0 10px"><b>' + r.count + '</b> new business' + (r.count === 1 ? '' : 'es') + ' ready for the directory website, in its own import columns (created by <b>Auntie Tobi</b>, so they show as unclaimed).</p>' +
+      '<ol style="margin:0 0 12px 18px;padding:0;font-size:14px;line-height:1.6"><li>Download the file.</li><li>On the directory website, go to your listings and <b>Import CSV</b>, then choose this file.</li><li>Come back and tap <b>I’ve uploaded it</b> so they’re not in next week’s file again.</li></ol>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;flex-wrap:wrap"><button class="btn ghost" id="fcX">Close</button><button class="btn ghost" id="fcDl">⬇️ Download file</button><button class="btn primary" id="fcUp">✅ I’ve uploaded it</button></div>');
+    $('#fcX', s).onclick = function () { s.remove(); };
+    $('#fcDl', s).onclick = function () { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([r.csv], { type: 'text/csv;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); };
+    $('#fcUp', s).onclick = async function () {
+      if (!confirm('Mark these ' + r.count + ' as uploaded to the website?')) return;
+      try { var x = await api('find-uploaded'); S.find = x.finder; s.remove(); toast('Marked as on the website ✅'); vFind(); } catch (e) { toast(e.message); }
     };
   }
   function vApp() {
