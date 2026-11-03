@@ -6976,7 +6976,10 @@ function tobiBizPage(b) {
     + (b.img ? '<img src="' + E(own(b.img)) + '" alt="' + E(b.name) + '" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\'" style="width:100%;max-height:340px;object-fit:cover;display:block;border-radius:14px 14px 0 0;cursor:zoom-in">' : '')
     + '<div style="padding:' + (b.img ? '14px' : '20px') + ' 16px 16px">' + head
     + (b.desc && full !== b.desc ? '<div style="font-size:14.5px;font-weight:600;color:#0F1E36;line-height:1.55;margin-bottom:8px">' + E(b.desc) + '</div>' : '')
-    + (full ? '<div style="font-size:14px;color:#444;line-height:1.65;margin-bottom:14px;white-space:pre-line">' + E(full) + '</div>' : '')
+    + (full ? (full.length > 260
+        // long text: show the first few lines, tap "Read more" for the rest
+        ? '<div style="margin-bottom:14px"><div class="tbz-more" style="font-size:14px;color:#444;line-height:1.65;white-space:pre-line;max-height:4.95em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)">' + E(full) + '</div><button onclick="var d=this.previousElementSibling,o=d.style.maxHeight===\'none\';d.style.maxHeight=o?\'4.95em\':\'none\';d.style.webkitMaskImage=d.style.maskImage=o?\'linear-gradient(#000 55%,transparent)\':\'none\';this.textContent=o?\'Read more ▾\':\'Show less ▴\'" style="background:none;border:0;padding:6px 0 0;color:#057A44;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit">Read more ▾</button></div>'
+        : '<div style="font-size:14px;color:#444;line-height:1.65;margin-bottom:14px;white-space:pre-line">' + E(full) + '</div>') : '')
     + (b.lines && b.lines.length ? '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">' + b.lines.map(function (l) { return '<div style="font-size:13.5px;color:#333">' + E(l) + '</div>'; }).join('') + '</div>' : '')
     + (contacts.length ? '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">Get in touch</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' + contacts.join('') + '</div>' : '')
     + (b.shop ? '<div style="margin-bottom:14px">' + btn(b.shop, '🛍️ Shop Now', '#057A44') + '</div>' : '')
