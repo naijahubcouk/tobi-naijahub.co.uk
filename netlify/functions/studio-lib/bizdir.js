@@ -25,11 +25,16 @@ const COMPARE = ['name', 'cat', 'loc', 'desc', 'ig', 'wa', 'phone', 'email', 'we
 const FIELD_NAMES = { name: 'name', cat: 'category', loc: 'town', desc: 'description', ig: 'Instagram', wa: 'WhatsApp', phone: 'phone', email: 'email', website: 'website', featured: 'Featured', verified: 'Verified', claimed: 'claimed' };
 
 let memo = null;
+// New featured pictures sent in (kept in /biz-img): replace the old picture, but never one chosen later in HQ
+const IMG_UPDATES = {
+  abbystoreltd: { from: 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805', to: '/biz-img/abbystoreltd.jpg' },
+};
 async function all() {
   if (memo && Date.now() - memo.at < 30000) return memo.items;
   const rec = await getJson(KEY).catch(() => null);
   const items = (rec && Array.isArray(rec.items) && rec.items.length ? rec.items : seed.map(normalise))
-    .map(b => (typeof b.claimedSet === 'boolean' || !b.contact ? b : Object.assign({}, b, { claimed: ownerContact(b) })));   // the claimed rule always applies, also to saved listings
+    .map(b => (typeof b.claimedSet === 'boolean' || !b.contact ? b : Object.assign({}, b, { claimed: ownerContact(b) })))
+    .map(b => (IMG_UPDATES[b.slug] && (!b.img || b.img === IMG_UPDATES[b.slug].from) ? Object.assign({}, b, { img: IMG_UPDATES[b.slug].to }) : b));   // the claimed rule always applies, also to saved listings
   memo = { at: Date.now(), items };
   return items;
 }
