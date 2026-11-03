@@ -233,6 +233,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="posted">📲 Posted</button>
       <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
       <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
+      <button data-nav="dir" id="navDir" class="hidden">🏢 Business directory</button>
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
       <button data-nav="tcars">📝 Template Carousel <span class="n" id="nTcars"></span></button>
@@ -311,7 +312,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
-    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
+    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -319,7 +320,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
   function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = (SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
+    S.view = (v === 'dir' && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -331,7 +332,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
@@ -866,6 +867,104 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       var b = this; b.disabled = true;
       try { var r = await api('facts-save', { text: $('#fsText', s).value }); meta(r.facts); toast('Facts saved ✅ — the app uses them within a minute'); } catch (x) { toast(x.message); }
       b.disabled = false;
+    };
+  }
+  // ── 🏢 Business directory (admin only): the one list the app, the chat and Business Studio use ──
+  var DIR_F = { all: 'All', claimed: '✅ Claimed', unclaimed: '🕓 Unclaimed', featured: '⭐ Featured', hq: '➕ Added in HQ', hidden: '🙈 Hidden' };
+  function dirPill(t, bg, fg) { return '<span class="ak" style="background:' + bg + ';color:' + (fg || '#fff') + '">' + t + '</span>'; }
+  function vDir() {
+    $('#ttl').textContent = 'Business directory';
+    $('#topRight').innerHTML = '<button class="btn ghost" id="dImp">📥 Import website export</button> <button class="btn primary" id="dAdd">＋ Add business</button>';
+    $('#dImp').onclick = dirImportSheet; $('#dAdd').onclick = function () { dirEdit(null); };
+    S.dirF = S.dirF || 'all'; S.dirQ = S.dirQ || '';
+    if (!S.dir) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading the directory…</p></div>'; api('dir-list').then(function (r) { S.dir = r; if (S.view === 'dir') vDir(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
+    var items = S.dir.items || [], info = S.dir.info || {};
+    var live = items.filter(function (b) { return !b.hidden && b.status !== 'pending'; });
+    var count = function (f) { return items.filter(f).length; };
+    var stats = [['In the app', live.length], ['Claimed', live.filter(function (b) { return b.claimed; }).length], ['Unclaimed', live.filter(function (b) { return !b.claimed; }).length], ['Featured', live.filter(function (b) { return b.featured; }).length], ['With email', live.filter(function (b) { return b.email; }).length], ['Hidden', count(function (b) { return b.hidden; })]];
+    var q = S.dirQ.toLowerCase(), f = S.dirF;
+    var list = items.filter(function (b) {
+      if (f === 'claimed' && !(b.claimed && !b.hidden)) return false; if (f === 'unclaimed' && !(!b.claimed && !b.hidden)) return false;
+      if (f === 'featured' && !b.featured) return false; if (f === 'hq' && b.src !== 'hq') return false; if (f === 'hidden' && !b.hidden) return false;
+      if (f === 'all' && b.hidden) return false;
+      return !q || (b.name + ' ' + b.cat + ' ' + b.loc + ' ' + (b.ig || '') + ' ' + (b.email || '')).toLowerCase().indexOf(q) >= 0;
+    }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+    $('#view').innerHTML = '<div class="wrap">' +
+      (info.saved ? '' : '<div class="note" style="margin-bottom:12px">The app is still using its built-in list. Tap <b>📥 Import website export</b> and choose your latest directory CSV to bring in emails, phones and claimed / unclaimed for every business.</div>') +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px">' + stats.map(function (x) { return '<div class="card" style="padding:10px 14px;min-width:110px"><div style="font-size:22px;font-weight:800">' + x[1] + '</div><div class="muted" style="font-size:12.5px">' + x[0] + '</div></div>'; }).join('') + '</div>' +
+      '<div class="muted" style="font-size:12.5px;margin-bottom:10px">' + (info.lastImport ? 'Last website import: ' + esc(new Date(info.lastImport).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) : 'No website import yet') + ' · Unclaimed = created by Favour Adentan or Auntie Tobi on the website.</div>' +
+      '<input id="dQ" placeholder="🔎 Search name, category, town, Instagram or email" value="' + esc(S.dirQ) + '" style="margin-bottom:8px">' +
+      '<div class="chipbar" id="dF" style="margin-bottom:8px">' + Object.keys(DIR_F).map(function (k) { return '<button class="chip" data-f="' + k + '" aria-pressed="' + (k === f) + '">' + DIR_F[k] + '</button>'; }).join('') + '</div>' +
+      '<div class="muted" style="font-size:12.5px;margin-bottom:4px">' + list.length + ' shown</div>' +
+      '<div class="card" style="padding:4px 14px">' + (list.length ? list.slice(0, 400).map(function (b) {
+        return '<div class="aprow" style="cursor:pointer" data-slug="' + esc(b.slug) + '"><div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b>' + esc(b.name) + '</b>' +
+          (b.claimed ? dirPill('Claimed', '#057A44') : dirPill('Unclaimed', '#FFE7A3', '#6B4A00')) + (b.featured ? dirPill('⭐ Featured', '#0F1E36') : '') + (b.verified ? dirPill('✅ Verified', '#1D4ED8') : '') + (b.hidden ? dirPill('Hidden', '#9CA3AF') : '') + (b.src === 'hq' ? dirPill('Added in HQ', '#7C3AED') : '') + '</div>' +
+          '<div class="muted" style="font-size:13px;margin-top:2px">' + esc(b.cat || '—') + ' · ' + esc(b.loc || 'UK') + ' · ' + (b.email ? '📧 ' : '') + (b.wa ? '💬 ' : '') + (b.ig ? '📸 @' + esc(b.ig) : '') + '</div></div>' +
+          '<div class="apact"><button class="btn ghost sm" data-ed="' + esc(b.slug) + '">✏️ Edit</button><a class="btn ghost sm" href="/biz/' + encodeURIComponent(b.slug) + '" target="_blank" rel="noopener">↗</a></div></div>';
+      }).join('') : '<p class="muted" style="padding:14px 0">No businesses match.</p>') + '</div></div>';
+    $('#dQ').oninput = function () { S.dirQ = this.value; var pos = this.selectionStart; vDir(); var el = $('#dQ'); el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} };
+    $$('#dF [data-f]').forEach(function (b) { b.onclick = function () { S.dirF = b.dataset.f; vDir(); }; });
+    $$('[data-slug]').forEach(function (row) { row.onclick = function (e) { if (e.target.closest('a')) return; dirEdit(items.filter(function (b) { return b.slug === row.dataset.slug; })[0]); }; });
+  }
+  function dirCats() { var set = {}; (S.dir.items || []).forEach(function (b) { if (b.cat) set[b.cat] = 1; }); return Object.keys(set).sort(); }
+  function dirEdit(b) {
+    var isNew = !b; b = b || { claimedSet: false, src: 'hq' };
+    var cl = typeof b.claimedSet === 'boolean' ? (b.claimedSet ? 'yes' : 'no') : 'auto';
+    var s = sheet('<h2>' + (isNew ? '＋ Add a business' : '✏️ ' + esc(b.name)) + '</h2>' +
+      (isNew ? '<p class="muted" style="margin:4px 0 8px;font-size:13.5px">Added here = shows in the app straight away, marked unclaimed. (Stage 2 adds it to the weekly website CSV.)</p>' : '<p class="muted" style="margin:4px 0 8px;font-size:13px">' + (b.src === 'website' ? 'From the website directory — the next website import updates name, category, contacts and Featured. Your notes, hidden and claimed tick are kept.' : 'Added in HQ.') + (b.contact ? ' Website contact name: <b>' + esc(b.contact) + '</b>.' : '') + '</p>') +
+      '<div class="stack">' +
+      '<div><label for="deN">Business name</label><input id="deN" maxlength="120" value="' + esc(b.name || '') + '"></div>' +
+      '<div class="f2"><div><label for="deC">Category</label><input id="deC" list="deCl" value="' + esc(b.cat || '') + '"><datalist id="deCl">' + dirCats().map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist></div><div><label for="deL">Town</label><input id="deL" value="' + esc(b.loc || '') + '"></div></div>' +
+      '<div><label for="deD">Description</label><textarea id="deD" rows="4">' + esc(b.desc || '') + '</textarea></div>' +
+      '<div class="f2"><div><label for="deI">Instagram</label><input id="deI" placeholder="handle" value="' + esc(b.ig || '') + '"></div><div><label for="deW">WhatsApp</label><input id="deW" placeholder="447…" value="' + esc(b.wa || '') + '"></div></div>' +
+      '<div class="f2"><div><label for="deE">Email</label><input id="deE" type="email" value="' + esc(b.email || '') + '"></div><div><label for="deP">Phone</label><input id="deP" value="' + esc(b.phone || '') + '"></div></div>' +
+      '<div><label for="deS">Website</label><input id="deS" placeholder="https://" value="' + esc(b.website || '') + '"></div>' +
+      '<div class="f2"><div><label for="deCl2">Claimed?</label><select id="deCl2"><option value="auto"' + (cl === 'auto' ? ' selected' : '') + '>Automatic (from website contact name)</option><option value="yes"' + (cl === 'yes' ? ' selected' : '') + '>✅ Claimed</option><option value="no"' + (cl === 'no' ? ' selected' : '') + '>🕓 Unclaimed</option></select></div>' +
+      '<div><label>Show in app</label><label class="chk"><input type="checkbox" id="deF"' + (b.featured ? ' checked' : '') + '> ⭐ Featured</label><label class="chk"><input type="checkbox" id="deV"' + (b.verified ? ' checked' : '') + '> ✅ Verified</label><label class="chk"><input type="checkbox" id="deH"' + (b.hidden ? ' checked' : '') + '> 🙈 Hidden</label></div></div>' +
+      '<div><label for="deNo">Notes (only you see these)</label><textarea id="deNo" rows="2">' + esc(b.notes || '') + '</textarea></div>' +
+      '</div><div class="err hidden" id="deErr"></div>' +
+      '<div class="row" style="justify-content:space-between;gap:8px;margin-top:12px">' + (isNew ? '<span></span>' : '<button class="btn ghost" id="deDel" style="color:#B42318">🗑 Delete</button>') + '<div class="row" style="gap:8px"><button class="btn ghost" id="deX">Cancel</button><button class="btn primary" id="deOk">💾 Save</button></div></div>');
+    $('#deX', s).onclick = function () { s.remove(); };
+    if ($('#deDel', s)) $('#deDel', s).onclick = async function () {
+      if (!confirm('Delete ' + b.name + ' from the app? (It stays on the website directory — to stop it coming back on the next import, tick Hidden instead.)')) return;
+      try { S.dir = await api('dir-delete', { slug: b.slug }); s.remove(); toast('Deleted'); vDir(); } catch (x) { toast(x.message); }
+    };
+    $('#deOk', s).onclick = async function () {
+      var v = function (id) { return $('#' + id, s).value.trim(); }, c = v('deCl2');
+      var item = Object.assign({}, b, { origSlug: b.slug, name: v('deN'), cat: v('deC'), loc: v('deL'), desc: v('deD'), ig: v('deI'), wa: v('deW'), email: v('deE'), phone: v('deP'), website: v('deS'), notes: v('deNo'),
+        featured: $('#deF', s).checked, verified: $('#deV', s).checked, hidden: $('#deH', s).checked });
+      if (c === 'auto') delete item.claimedSet; else item.claimedSet = c === 'yes';
+      if (!item.name) { $('#deErr', s).textContent = 'Add the business name.'; $('#deErr', s).classList.remove('hidden'); return; }
+      this.disabled = true;
+      try { S.dir = await api('dir-save', { item: item }); s.remove(); toast('Saved ✅ — the app updates within a minute'); vDir(); } catch (x) { this.disabled = false; $('#deErr', s).textContent = x.message; $('#deErr', s).classList.remove('hidden'); }
+    };
+  }
+  function dirImportSheet() {
+    var csv = '';
+    var s = sheet('<h2>📥 Import website export</h2><p class="muted" style="margin:4px 0 10px">Export your listings from the directory website (CSV), then choose the file here. You’ll see what changes before anything is saved.</p>' +
+      '<label class="btn ghost" style="margin:0">📄 Choose CSV file<input type="file" id="diF" accept=".csv,text/csv" hidden></label> <span class="muted" id="diN" style="font-size:13px"></span>' +
+      '<div id="diP" style="margin-top:12px"></div><div class="err hidden" id="diErr"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="diX">Cancel</button><button class="btn primary hidden" id="diOk">✅ Apply</button></div>');
+    $('#diX', s).onclick = function () { s.remove(); };
+    var listOf = function (arr, fmt) { return arr.length ? '<details style="margin:4px 0 8px"><summary class="muted" style="cursor:pointer;font-size:13px">Show ' + arr.length + '</summary><div style="max-height:180px;overflow:auto;font-size:13px;padding:4px 0">' + arr.map(fmt).join('<br>') + '</div></details>' : ''; };
+    $('#diF', s).onchange = async function () {
+      var file = this.files && this.files[0]; if (!file) return; this.value = '';
+      $('#diN', s).textContent = file.name; $('#diErr', s).classList.add('hidden'); $('#diP', s).innerHTML = '<p class="muted">Checking…</p>'; $('#diOk', s).classList.add('hidden');
+      try {
+        csv = await file.text();
+        var p = (await api('dir-preview', { csv: csv })).preview;
+        $('#diP', s).innerHTML = '<div class="note">' + p.total + ' businesses in the file: <b>' + p.claimed + ' claimed</b> · <b>' + p.unclaimed + ' unclaimed</b>' + (p.pending.length ? ' · ' + p.pending.length + ' pending on the website (not shown in the app)' : '') + '</div>' +
+          '<div style="margin-top:10px"><b>🆕 ' + p.add.length + ' new</b>' + listOf(p.add, function (x) { return esc(x.name) + ' <span class="muted">· ' + esc(x.cat) + ' · ' + esc(x.loc) + '</span>'; }) + '</div>' +
+          '<div><b>✏️ ' + p.change.length + ' updated</b>' + listOf(p.change, function (x) { return esc(x.name) + ' <span class="muted">· ' + esc(x.fields.join(', ')) + '</span>'; }) + '</div>' +
+          '<div><b>❓ ' + p.gone.length + ' in the app but not in this file</b>' + listOf(p.gone, function (x) { return esc(x.name); }) + '</div>' +
+          (p.gone.length ? '<label class="chk" style="margin-top:6px"><input type="checkbox" id="diH"> Hide these ' + p.gone.length + ' from the app (you can show them again any time)</label>' : '');
+        $('#diOk', s).classList.remove('hidden');
+      } catch (x) { $('#diP', s).innerHTML = ''; $('#diErr', s).textContent = x.message; $('#diErr', s).classList.remove('hidden'); }
+    };
+    $('#diOk', s).onclick = async function () {
+      this.disabled = true; this.textContent = 'Saving…';
+      try { var r = await api('dir-apply', { csv: csv, hideGone: !!($('#diH', s) && $('#diH', s).checked) }); S.dir = { items: r.items, info: r.info }; s.remove(); toast('Imported ✅ ' + r.stats.added + ' new · ' + r.stats.changed + ' updated' + (r.stats.hidden ? ' · ' + r.stats.hidden + ' hidden' : '')); vDir(); }
+      catch (x) { this.disabled = false; this.textContent = '✅ Apply'; $('#diErr', s).textContent = x.message; $('#diErr', s).classList.remove('hidden'); }
     };
   }
   function vApp() {

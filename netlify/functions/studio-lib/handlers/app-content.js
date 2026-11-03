@@ -11,7 +11,13 @@ const eventsub = require('../eventsub');
 
 exports.handler = core.handler(async (ctx) => {
   if (ctx.event.httpMethod !== 'GET') throw new core.HttpError(405, 'method_not_allowed');
-  const img = (ctx.event.queryStringParameters || {}).img;
+  const q = ctx.event.queryStringParameters || {};
+  if (q.dir) {
+    // 🏢 the business directory (managed in HQ) — public fields only
+    const items = await require('../bizdir').publicList();
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=60, s-maxage=60', 'X-Content-Type-Options': 'nosniff' }, body: JSON.stringify({ items, n: items.length }) };
+  }
+  const img = q.img;
   if (img) {
     // Event flyers — only for events that are live in the app
     const feed = await apppub.publicFeed();

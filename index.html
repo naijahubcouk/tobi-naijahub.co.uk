@@ -6921,6 +6921,21 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'Hypersanni Studios', slug:'hypersanni-studios', cat:'photography', loc:'Newcastle', desc:'Professional photography for individuals and couples, capturing beautiful, memorable moments across North East England. Trusted by over 500 clients.', ig:'hypersannistudios'},
   {name:'Perfection Reloaded Studio', slug:'perfection-reloaded-studio', cat:'photography', loc:'Leeds', desc:'Perfection Reloaded offers professional photography and videography services in Leeds. Available for global bookings. Book via Auntie Tobi.', wa:'447760958735', ig:'perfectionreloaded_'},
 ];
+// 🏢 The live directory is managed in Auntie Tobi HQ. The list above is only a fallback; the latest copy is kept on the phone too.
+(function () {
+  function applyDir(items) {
+    if (!Array.isArray(items) || items.length < 50) return false;
+    AUNTIE_TOBI_DIRECTORY.length = 0;
+    items.forEach(function (b) { if (b && b.slug && b.name) AUNTIE_TOBI_DIRECTORY.push(b); });
+    window._dirLive = true;
+    return true;
+  }
+  try { var c = JSON.parse(localStorage.getItem('tobiDir') || 'null'); if (c && c.items) applyDir(c.items); } catch (e) {}
+  fetch('/.netlify/functions/app-content?dir=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (d && applyDir(d.items)) { try { localStorage.setItem('tobiDir', JSON.stringify({ items: d.items, at: Date.now() })); } catch (e) {} }
+  }).catch(function () {});
+})();
+
 
 
 function handleDeepLink() {

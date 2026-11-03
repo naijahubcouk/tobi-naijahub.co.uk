@@ -277,6 +277,16 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'bday-art-del') return { art: await bday.removeArt(String(body.key || ''), String(body.size || '')), designs: Object.keys(bday.ART), groups: bday.GROUPS };
       return { art: await bday.artIndex(), designs: Object.keys(bday.ART), groups: bday.GROUPS };
     }
+    case 'dir-list': case 'dir-save': case 'dir-delete': case 'dir-preview': case 'dir-apply': {
+      // 🏢 the business directory (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
+      const bizdir = require('../bizdir');
+      if (body.action === 'dir-preview') return { preview: await bizdir.previewImport(String(body.csv || '')) };
+      if (body.action === 'dir-apply') { const stats = await bizdir.applyImport(String(body.csv || ''), !!body.hideGone, who.email); await core.audit(who.email, 'hq_dir_import', stats); return { stats, items: await bizdir.all(), info: await bizdir.info() }; }
+      if (body.action === 'dir-save') { const item = await bizdir.save(body.item || {}, who.email); await core.audit(who.email, 'hq_dir_save', { slug: item.slug }); }
+      if (body.action === 'dir-delete') { await bizdir.remove(String(body.slug || ''), who.email); await core.audit(who.email, 'hq_dir_delete', { slug: String(body.slug || '') }); }
+      return { items: await bizdir.all(), info: await bizdir.info() };
+    }
     case 'facts-get': case 'facts-save': {
       // ✅ the fact sheet the app chat always uses (it overrides the AI's out-of-date memory)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the fact sheet.');

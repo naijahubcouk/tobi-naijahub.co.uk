@@ -212,6 +212,7 @@ function callAI(apiKey,requestBody,timeoutMs){
 function siteName(u){try{var h=new URL(u).hostname.replace(/^www\./,'');return /gov\.uk$/.test(h)?'GOV.UK':/nhs\.uk$/.test(h)?'NHS':/citizensadvice/.test(h)?'Citizens Advice':/moneyhelper/.test(h)?'MoneyHelper':h;}catch(e){return 'Source';}}
 
 async function getDirectory() {
+  try { const live = await require('../bizdir').publicList(); if (live.length > 50) return live; } catch (e) { console.log('[chat] directory from HQ unavailable:', e.message); }
   console.log('[chat] Directory: ' + HARDCODED_DIRECTORY.length + ' businesses');
   return HARDCODED_DIRECTORY;
 }

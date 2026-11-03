@@ -3,8 +3,7 @@
  * Auntie Tobi business directory lookup for the Studio.
  *
  * Two sources are merged:
- *  1. The live list in the app (AUNTIE_TOBI_DIRECTORY inside /index.html) — all current listings,
- *     read from this site and cached for 6 hours.
+ *  1. The live directory managed in Auntie Tobi HQ (bizdir.js) — all current listings, with emails from the website export.
  *  2. netlify/functions/directory.json — older list, but it holds email addresses and websites.
  * Email matching ("Is this your business?") only works for listings that have an email in source 2.
  */
@@ -74,15 +73,10 @@ function merge(live) {
 
 async function load(event) {
   const now = Date.now();
-  if (memo && now - memo.at < 10 * 60 * 1000) return memo.list;
-  const cached = await getJson(CACHE_KEY).catch(() => null);
-  if (cached && now - cached.at < CACHE_MS && Array.isArray(cached.list) && cached.list.length) {
-    memo = cached; return cached.list;
-  }
-  const live = await fetchLive(event);
+  if (memo && now - memo.at < 60 * 1000) return memo.list;   // the HQ directory is the live list now
+  const live = (await require('./bizdir').all()).filter(b => !b.hidden && b.status !== 'pending');
   const list = merge(live);
   memo = { at: now, list, liveCount: live.length };
-  if (live.length) await setJson(CACHE_KEY, memo).catch(() => {});
   return list;
 }
 
