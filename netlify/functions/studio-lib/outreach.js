@@ -66,17 +66,18 @@ async function journeys() {
   return out;
 }
 async function plan() {
+  const inv = await require('./invites').load().catch(() => ({ items: {} }));
   const JJ = await journeys();
   const [st, dir, set, unsub, mi] = [await state(), await bizdir.all(), await settings(), ((await getJson('out/unsub').catch(() => null)) || { items: [] }).items, await memberInfo()];
   const unsubbed = new Set(unsub.map(x => x.email)), now = Date.now();
   const due = [], fresh = [], stops = [], waiting = [];
   for (const b of dir) {
-    const r = st.biz[b.slug], email = (b.email || '').toLowerCase();
+    const r = st.biz[b.slug], email = (b.email || '').toLowerCase(), sEmail = String(((inv.items || {})[b.slug] || {}).studioEmail || email).toLowerCase();
     if (r && r.stop) continue;
     if (!eligible(b)) { if (r && (b.featured || b.hidden)) stops.push({ slug: b.slug, why: b.featured ? 'featured' : 'hidden' }); continue; }
     if (email && unsubbed.has(email)) { if (r) stops.push({ slug: b.slug, why: 'unsubscribed' }); continue; }
-    if (email && await mi.club(email)) { if (r) stops.push({ slug: b.slug, why: 'joined' }); continue; }
-    const hasStudio = !!email && mi.studio.has(email);
+    if (sEmail && await mi.club(sEmail)) { if (r) stops.push({ slug: b.slug, why: 'joined' }); continue; }
+    const hasStudio = !!sEmail && mi.studio.has(sEmail);
     let j = r ? r.j : (b.claimed ? 'c' : 'u');
     const sentTopics = new Set((r ? r.sent : []).map(s => TOPIC[s.id] || s.id));
     if (j === 'u' && b.claimed) j = 'c';                         // claimed since: carry on the claimed journey, no repeats

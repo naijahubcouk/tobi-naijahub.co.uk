@@ -45,7 +45,7 @@ async function list() {
   const clubCache = {};
   const rows = [];
   for (const b of dir) {
-    const r = inv.items[b.slug], o = out.biz[b.slug], e = ev[b.slug], email = String(b.email || '').toLowerCase();
+    const r = inv.items[b.slug], o = out.biz[b.slug], e = ev[b.slug], email = String((r && r.studioEmail) || b.email || '').toLowerCase();
     let member = null;
     if (email && studio.has(email)) { member = clubCache[email] || (clubCache[email] = await memberFor(email)); }
     const stage = stageOf(b, r, o, member);
@@ -86,7 +86,7 @@ async function detail(slug) {
   if (!b) throw new core.HttpError(404, 'not_found', 'Business not found.');
   const [inv, out, e, finder] = [await invites.load(), (await getJson('out/state').catch(() => null)) || { biz: {} }, await emailev.get(slug), (await getJson('finder/state').catch(() => null)) || { items: [] }];
   const r = inv.items[slug] || { status: 'new', history: [] }, o = out.biz[slug];
-  const email = String(b.email || '').toLowerCase(), member = email ? await memberFor(email) : null;
+  const email = String(r.studioEmail || b.email || '').toLowerCase(), member = email ? await memberFor(email) : null;
   const tl = [];
   const add = (at, icon, text, kind) => { if (at) tl.push({ at, icon, text, kind: kind || 'log' }); };
   const f = (finder.items || []).find(x => x.slug === slug);
@@ -106,7 +106,7 @@ async function detail(slug) {
   const tpl = invites.templates(inv), kind = invites.nextKind(r);
   const fill = t => invites.fill(t, b);
   return {
-    biz: b, stage: stageOf(b, r, o, member), stageLabel: STAGE_LABEL, rec: { status: r.status, step: r.step || 0, notes: r.notes || '', followUpAt: r.followUpAt || '', checkBackAt: r.checkBackAt || '', nextAt: r.nextAt || '', email: r.email || '', repliedAt: r.repliedAt || '' },
+    biz: b, stage: stageOf(b, r, o, member), stageLabel: STAGE_LABEL, rec: { status: r.status, step: r.step || 0, notes: r.notes || '', followUpAt: r.followUpAt || '', checkBackAt: r.checkBackAt || '', nextAt: r.nextAt || '', email: r.email || '', repliedAt: r.repliedAt || '', studioEmail: r.studioEmail || '' },
     timeline: tl.slice(0, 120), engage: { opens: e.opens || 0, clicks: e.clicks || 0, lastOpenAt: e.lastOpenAt || '', lastClickAt: e.lastClickAt || '', bounced: e.bounced || '', complained: e.complained || '' },
     studio: member ? { since: member.createdAt || '', club: core.access(member).membershipActive, until: member.membershipExpiresAt || '' } : null,
     journey: o ? { j: o.j, sent: o.sent.length, stop: o.stop || '' } : null,

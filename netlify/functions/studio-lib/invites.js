@@ -201,6 +201,12 @@ function apply(s, slug, action, opts, day) {
       if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new HttpError(400, 'invalid', 'Choose a date.');
       rec.followUpAt = d; log(rec, d ? `📅 Follow up on ${d}` : '📅 Follow-up date cleared');
     }
+    else if (action === 'studioemail') {
+      // the email this business uses for Business Studio (when it's not the one on their listing)
+      const e = String(opts.email || '').trim().toLowerCase();
+      if (e && (!EMAIL_RE.test(e) || e.length > 200)) throw new HttpError(400, 'invalid', 'That doesn’t look like an email address.');
+      if (e) { if (rec.studioEmail !== e) log(rec, `🧰 Business Studio email: ${e}`); rec.studioEmail = e; } else if (rec.studioEmail) { delete rec.studioEmail; log(rec, '🧰 Business Studio email removed'); }
+    }
     else if (action === 'log') { const t = cleanText(opts.text, 300); if (!t) throw new HttpError(400, 'invalid', 'Write what happened.'); log(rec, t); }
     else if (action === 'email') {
       // Admin-added or corrected email (used for copying and the GHL export). Empty = go back to the listing's email.
@@ -210,7 +216,7 @@ function apply(s, slug, action, opts, day) {
       else if (rec.email) { delete rec.email; log(rec, 'Email reset to the listing'); }
     }
     else throw new HttpError(400, 'invalid', 'Invalid action.');
-    if (!['note', 'followup', 'email', 'log'].includes(action)) delete rec.followUpAt;   // something happened: the chosen follow-up date is done
+    if (!['note', 'followup', 'email', 'log', 'studioemail'].includes(action)) delete rec.followUpAt;   // something happened: the chosen follow-up date is done
     s.items[slug] = rec;
     return rec;
   }
