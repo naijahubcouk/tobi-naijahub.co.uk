@@ -11,6 +11,8 @@ const core = require('./core');
 const { HttpError, getJson, cas } = core;
 const gen = require('./generate');
 const bizdir = require('./bizdir');
+const bizimg = require('./bizimg');
+const eventmedia = require('./eventmedia');
 
 const CATS = ['Beauty & Fashion > Aesthetics', 'Beauty & Fashion > Ankara & Traditional Wears', 'Beauty & Fashion > Fashion & Accessories', 'Beauty & Fashion > Fashion Designers', 'Beauty & Fashion > Gele Stylists', 'Beauty & Fashion > Hair Care', 'Beauty & Fashion > Hair Stylists/Braiders', 'Beauty & Fashion > Jewelry', 'Beauty & Fashion > Makeup Artists', 'Beauty & Fashion > Microblading', 'Beauty & Fashion > Perfumes & Fragrances', 'Beauty & Fashion > Skincare', 'Beauty & Fashion > Spa & Massage', 'Beauty & Fashion > Wig Vendors', 'Events & Entertainment > Alaga', 'Events & Entertainment > DJs', 'Events & Entertainment > Decorators', 'Events & Entertainment > Event Planners', 'Events & Entertainment > MCs', 'Events & Entertainment > Photography', 'Events & Entertainment > Videography', 'Food Dining & Grocieries > Cakes & Desert', 'Food Dining & Grocieries > Caterers', 'Food Dining & Grocieries > Drinks', 'Food Dining & Grocieries > Foodstores & Groceries', 'Food Dining & Grocieries > Nigerian Snacks', 'Food Dining & Grocieries > Private Chef', 'Food Dining & Grocieries > Restaurants', 'Food Dining & Grocieries > Small Chops', 'Food Dining & Grocieries > Suya Spot', 'Home & Services > Baby Essentials', 'Home & Services > Gifts & Hampers', 'Home & Services > Home & Kitchen', 'Professional Services & Communities > Education Consultancy', 'Professional Services & Communities > Printing Services', 'Professional Services & Communities > Shipping & Logistics', 'Professional Services & Communities > Tutors'];
 // search words per category (what people would type), most popular first
@@ -50,7 +52,11 @@ async function readSite(url) {
     const wa = (html.match(/(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\+?\d{10,15})/i) || [])[1] || '';
     const phone = (html.match(/tel:(\+?[\d ()-]{10,18})/i) || [])[1] || '';
     const ig = igOf((html.match(/instagram\.com\/[A-Za-z0-9._]{2,40}/i) || [])[0]);
-    return { email: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(email) || /example|sentry|wixpress|domain/i.test(email) ? '' : email.toLowerCase(), wa: wa.replace(/\D/g, ''), phone: phone.trim(), ig };
+    // the picture the site uses for link previews (usually a logo or shop photo)
+    const og = (html.match(/<meta[^>]+(?:property|name)=["'](?:og:image(?::secure_url)?|twitter:image)["'][^>]*content=["']([^"']+)["']/i) || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["'](?:og:image|twitter:image)["']/i) || [])[1] || '';
+    let imgUrl = ''; try { imgUrl = og ? new URL(og.replace(/&amp;/g, '&'), r.url || url).toString() : ''; } catch (_) { imgUrl = ''; }
+    if (!/^https:/i.test(imgUrl) || /\.svg(\?|$)/i.test(imgUrl)) imgUrl = '';
+    return { imgUrl, email: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(email) || /example|sentry|wixpress|domain/i.test(email) ? '' : email.toLowerCase(), wa: wa.replace(/\D/g, ''), phone: phone.trim(), ig };
   } catch (_) { return {}; } finally { clearTimeout(t); }
 }
 
@@ -84,7 +90,7 @@ async function runOne(query) {
   }
   const sites = await Promise.all(fresh.map(c => readSite(c.website)));
   const now = core.nowIso();
-  const items = fresh.map((c, i) => Object.assign(c, { id: 'f' + Date.now().toString(36) + i, email: sites[i].email || '', wa: sites[i].wa || '', phone: sites[i].phone || '', ig: c.ig || sites[i].ig || '', query, foundAt: now, status: 'new' }));
+  const items = fresh.map((c, i) => Object.assign(c, { id: 'f' + Date.now().toString(36) + i, imgUrl: sites[i].imgUrl || '', email: sites[i].email || '', wa: sites[i].wa || '', phone: sites[i].phone || '', ig: c.ig || sites[i].ig || '', query, foundAt: now, status: 'new' }));
   await cas('finder/state', cur => { cur = cur || { items: [], queue: [], cursor: 0, week: '' }; cur.items = items.concat(cur.items).slice(0, 600); cur.lastRun = now; return cur; });
   return { query, found: list.length, added: items.length };
 }
@@ -134,7 +140,7 @@ async function quickAdd(input) {
     const known = await knownKeys(), c = { name: handle || input.replace(/^https?:\/\/(www\.)?/, '').split(/[/?#]/)[0], ig: handle, website: /^https?:/.test(input) && !handle ? input : '', loc: '', cat: '', desc: '', why: 'Added by you', confidence: 1 };
     if (isKnown(known, c)) throw new HttpError(409, 'exists', 'That business is already in your directory or review list.');
     const site = await readSite(c.website);
-    const item = Object.assign(c, { id: 'f' + Date.now().toString(36), email: site.email || '', wa: site.wa || '', phone: site.phone || '', query: 'Quick add', foundAt: core.nowIso(), status: 'new' });
+    const item = Object.assign(c, { id: 'f' + Date.now().toString(36), imgUrl: site.imgUrl || '', email: site.email || '', wa: site.wa || '', phone: site.phone || '', query: 'Quick add', foundAt: core.nowIso(), status: 'new' });
     await cas('finder/state', cur => { cur = cur || { items: [], queue: [] }; cur.items = [item].concat(cur.items); return cur; });
   }
   return r;
@@ -148,20 +154,47 @@ async function decide(id, decision, edits, who) {
   const e = {}; for (const k of ['name', 'cat', 'loc', 'desc', 'ig', 'wa', 'email', 'phone', 'website']) if (edits && typeof edits[k] === 'string') e[k] = core.cleanText(edits[k], k === 'desc' ? 400 : 300);
   if (e.cat && !CATS.includes(e.cat)) delete e.cat;
   if (edits && edits.status === 'new' && cand.status === 'skipped') e.status = 'new';
+  if (edits && edits.imgNone === true) { e.imgNone = true; e.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); }
+  if (edits && edits.imgData) { if (!bizimg.parse(edits.imgData)) throw new HttpError(400, 'bad_image', 'That picture couldn’t be used — please try a JPG or PNG under 2.5MB.'); await core.setJson('finder/img/' + id, { dataUrl: edits.imgData, src: 'upload' }); e.imgUp = true; e.imgNone = false; }
   const c = Object.assign({}, cand, e);
   const now = core.nowIso();
   if (decision === 'approve') {
     if (!c.name || !c.cat) throw new HttpError(400, 'invalid', 'Add a name and a category first.');
     const dir = await bizdir.all(), taken = new Set(dir.map(b => b.slug));
     let slug = bizdir.slugify(c.name), n = 2; while (taken.has(slug)) slug = bizdir.slugify(c.name) + '-' + n++;
-    await bizdir.save({ slug, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
+    // picture: your upload → their website picture → the Auntie Tobi card made in HQ
+    let pic = null;
+    if (!c.imgNone) pic = await picture(c);
+    if (!pic && edits && bizimg.parse(edits.fallbackImg)) pic = { dataUrl: edits.fallbackImg, src: 'card' };
+    c.img = pic ? await bizimg.put(slug, pic.dataUrl, pic.src) : '';
+    await core.del('finder/img/' + id).catch(() => {});
+    await bizdir.save({ slug, img: c.img, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
     c.slug = slug; c.status = 'approved'; c.approvedAt = now;
-  } else if (decision === 'skip') { c.status = 'skipped'; }
-  else if (decision === 'never') { c.status = 'skipped'; await neverAdd(c, 'Skipped for good in the Finder'); }
+  } else if (decision === 'skip') { c.status = 'skipped'; c.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); }
+  else if (decision === 'never') { c.status = 'skipped'; c.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); await neverAdd(c, 'Skipped for good in the Finder'); }
   else if (decision === 'edit') { /* save edits only */ }
   else throw new HttpError(400, 'invalid', 'Unknown choice.');
   await cas('finder/state', cur => { cur.items = cur.items.map(x => x.id === id ? c : x); return cur; });
   return c;
+}
+// The candidate's picture as a data URL: uploaded in HQ, or downloaded from their website (kept for next time).
+async function picture(c) {
+  const rec = await core.getJson('finder/img/' + c.id).catch(() => null);
+  if (rec && rec.dataUrl) return rec;
+  if (!c.imgUrl) return null;
+  const dataUrl = await eventmedia.fetchImage(c.imgUrl).catch(() => '');
+  if (!dataUrl || !bizimg.parse(dataUrl)) return null;
+  const pic = { dataUrl, src: 'site' };
+  await core.setJson('finder/img/' + c.id, pic).catch(() => {});
+  return pic;
+}
+// For the review card in HQ (HQ can't show outside pictures directly).
+async function pictureFor(id) {
+  const s = await state(), c = s.items.find(x => x.id === id);
+  if (!c || c.imgNone) return { dataUrl: '', src: '' };
+  const pic = await picture(c);
+  if (!pic && c.imgUrl) await cas('finder/state', cur => { const x = cur.items.find(y => y.id === id); if (!x) return undefined; x.imgUrl = ''; return cur; });
+  return pic ? { dataUrl: pic.dataUrl, src: pic.src } : { dataUrl: '', src: '' };
 }
 async function neverAdd(b, reason) {
   const keys = ['n:' + key(b.name)].concat(b.ig ? ['i:' + String(b.ig).toLowerCase()] : [], domain(b.website) ? ['d:' + domain(b.website)] : []);
@@ -176,7 +209,7 @@ async function toUpload() { return (await bizdir.all()).filter(b => b.src === 'h
 async function exportCsv() {
   const rows = (await toUpload()).map(b => {
     const short = String(b.desc || '').slice(0, 160), cat = (b.cats && b.cats[0]) || CATS.find(c => childCat(c) === String(b.cat || '').toLowerCase()) || '';
-    const v = { name: b.name, slug: b.slug, description: short, detailedDescription: b.desc, categories: cat, mainLink: b.website, status: 'PUBLISHED', isFeatured: 'false',
+    const v = { name: b.name, slug: b.slug, images: b.img || '', description: short, detailedDescription: b.desc, categories: cat, mainLink: b.website, status: 'PUBLISHED', isFeatured: 'false',
       exemptFromAutomation: 'false', contact_name: 'Auntie Tobi', location_address: b.addr || ((b.loc && b.loc !== 'UK' ? b.loc + ', ' : '') + 'UK'),
       business_phone: b.phone, business_email: b.email, socialMedia_instagram: b.ig ? 'https://www.instagram.com/' + b.ig + '/' : '', seoTitle: b.name, seoDescription: short, focusKeyword: b.name.toLowerCase(),
       ogTitle: b.name, ogDescription: short, twitterTitle: b.name, twitterDescription: short, twitterCard: 'summary_large_image', noIndex: 'false', noFollow: 'true', schemaType: 'LocalBusiness', 'custom_Whatsapp Link': b.wa ? 'https://wa.me/' + b.wa : '' };
@@ -196,4 +229,4 @@ async function summary() {
   return { items: s.items, queue: (s.queue || []).length, lastRun: s.lastRun || '', approvedThisWeek, target: 50, cats: CATS, toUpload: (await toUpload()).length };
 }
 
-module.exports = { CATS, runOne, work, more, ensureWeek, quickAdd, decide, neverAdd, exportCsv, markUploaded, summary, weekOf };
+module.exports = { pictureFor, CATS, runOne, work, more, ensureWeek, quickAdd, decide, neverAdd, exportCsv, markUploaded, summary, weekOf };

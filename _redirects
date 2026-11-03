@@ -29,6 +29,9 @@
 
 # SPA catch-all — must be last
 
+# 🖼 Business pictures kept by Auntie Tobi (Business Finder / HQ)
+/bimg/:file   /.netlify/functions/app-content?bimg=:file   200
+
 # Business directory page
 /biz            /?action=businesses     301
 

@@ -915,6 +915,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (isNew ? '<p class="muted" style="margin:4px 0 8px;font-size:13.5px">Added here = shows in the app straight away, marked unclaimed. It also goes into your next ⬇️ website CSV in 🔎 Business Finder.</p>' : '<p class="muted" style="margin:4px 0 8px;font-size:13px">' + (b.src === 'website' ? 'From the website directory — the next website import updates name, category, contacts and Featured. Your notes, hidden and claimed tick are kept.' : 'Added in HQ.') + (b.contact ? ' Website contact name: <b>' + esc(b.contact) + '</b>.' : '') + '</p>') +
       '<div class="stack">' +
       '<div><label for="deN">Business name</label><input id="deN" maxlength="120" value="' + esc(b.name || '') + '"></div>' +
+      '<div><label>Picture</label><div class="row" style="gap:12px;align-items:center"><img id="dePic" alt="" style="width:96px;height:96px;border-radius:12px;object-fit:cover;background:#EEF0F3;flex:none"><div class="stack" style="gap:6px"><div class="muted" id="dePicL" style="font-size:13px"></div><label class="btn ghost sm" style="margin:0">📷 Upload photo<input type="file" id="dePicF" accept="image/*" hidden></label></div></div></div>' +
       '<div class="f2"><div><label for="deC">Category</label><input id="deC" list="deCl" value="' + esc(b.cat || '') + '"><datalist id="deCl">' + dirCats().map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist></div><div><label for="deL">Town</label><input id="deL" value="' + esc(b.loc || '') + '"></div></div>' +
       '<div><label for="deD">Description</label><textarea id="deD" rows="4">' + esc(b.desc || '') + '</textarea></div>' +
       '<div class="f2"><div><label for="deI">Instagram</label><input id="deI" placeholder="handle" value="' + esc(b.ig || '') + '"></div><div><label for="deW">WhatsApp</label><input id="deW" placeholder="447…" value="' + esc(b.wa || '') + '"></div></div>' +
@@ -925,6 +926,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div><label for="deNo">Notes (only you see these)</label><textarea id="deNo" rows="2">' + esc(b.notes || '') + '</textarea></div>' +
       '</div><div class="err hidden" id="deErr"></div>' +
       '<div class="row" style="justify-content:space-between;gap:8px;margin-top:12px">' + (isNew ? '<span></span>' : '<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn ghost" id="deDel" style="color:#B42318">🗑 Delete</button><button class="btn ghost" id="deNever" style="color:#B42318" title="For businesses that asked not to be listed">🚫 Remove &amp; never add again</button></div>') + '<div class="row" style="gap:8px"><button class="btn ghost" id="deX">Cancel</button><button class="btn primary" id="deOk">💾 Save</button></div></div>');
+    var dpic = '';
+    if (b.img && ownPic(b.img)) { $('#dePic', s).src = ownPic(b.img); $('#dePicL', s).textContent = '🖼 Kept by Auntie Tobi'; }
+    else if (b.img) { $('#dePic', s).style.display = 'none'; $('#dePicL', s).textContent = '🖼 Has a picture from the website'; }
+    else { $('#dePic', s).src = bizCard(b.name ? b : { name: 'Your business', cat: b.cat, loc: b.loc }); $('#dePicL', s).textContent = isNew ? '🎨 An Auntie Tobi card is made from the name unless you upload a photo' : 'No picture yet'; }
+    $('#dePicF', s).onchange = async function () { var f = this.files && this.files[0]; this.value = ''; try { dpic = await shrinkImg(f, 1200); $('#dePic', s).style.display = ''; $('#dePic', s).src = dpic; $('#dePicL', s).textContent = '📷 Your photo'; } catch (x) { toast(x.message); } };
     $('#deX', s).onclick = function () { s.remove(); };
     if ($('#deDel', s)) $('#deDel', s).onclick = async function () {
       if (!confirm('Delete ' + b.name + ' from the app? (It stays on the website directory — to stop it coming back on the next import, tick Hidden instead.)')) return;
@@ -940,6 +946,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
         featured: $('#deF', s).checked, verified: $('#deV', s).checked, hidden: $('#deH', s).checked });
       if (c === 'auto') delete item.claimedSet; else item.claimedSet = c === 'yes';
       if (!item.name) { $('#deErr', s).textContent = 'Add the business name.'; $('#deErr', s).classList.remove('hidden'); return; }
+      if (dpic) item.imgData = dpic; else if (isNew && !b.img) { item.imgData = bizCard(item); item.imgSrc = 'card'; }
       this.disabled = true;
       try { S.dir = await api('dir-save', { item: item }); s.remove(); toast('Saved ✅ — the app updates within a minute'); vDir(); } catch (x) { this.disabled = false; $('#deErr', s).textContent = x.message; $('#deErr', s).classList.remove('hidden'); }
     };
@@ -972,6 +979,59 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       catch (x) { this.disabled = false; this.textContent = '✅ Apply'; $('#diErr', s).textContent = x.message; $('#diErr', s).classList.remove('hidden'); }
     };
   }
+  // 🖼 business pictures: shrink an upload, draw the Auntie Tobi stand-in card, show our own picture links
+  function shrinkImg(file, max) {
+    return new Promise(function (ok, bad) {
+      if (!file || !/^image\//.test(file.type)) return bad(new Error('Please choose a photo (JPG or PNG).'));
+      var u = URL.createObjectURL(file), im = new Image();
+      im.onload = function () { var k = Math.min(1, (max || 1200) / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.86)); };
+      im.onerror = function () { URL.revokeObjectURL(u); bad(new Error('That photo couldn’t be opened — try another one.')); };
+      im.src = u;
+    });
+  }
+  var CARD_CACHE = {};
+  function bizCard(b) {
+    var cat = String(b.cat || '').split('>').pop().trim().replace(/(^|[\s/])([a-z])/g, function (m, a, l) { return a + l.toUpperCase(); }).replace(/ And /g, ' & '), loc = String(b.loc || '').trim(), name = String(b.name || '').trim();
+    var k = name + '|' + cat + '|' + loc; if (CARD_CACHE[k]) return CARD_CACHE[k];
+    var W = 1080, c = document.createElement('canvas'); c.width = W; c.height = W; var g = c.getContext('2d');
+    var bg = g.createLinearGradient(0, 0, W, W); bg.addColorStop(0, '#0F1E36'); bg.addColorStop(1, '#1D3557'); g.fillStyle = bg; g.fillRect(0, 0, W, W);
+    g.globalAlpha = 0.07; g.fillStyle = '#F2C14E'; for (var i = 0; i < 7; i++) { g.beginPath(); g.arc(W - 60, 80, 140 + i * 90, 0, Math.PI * 2); g.lineWidth = 14; g.strokeStyle = '#F2C14E'; g.stroke(); } g.globalAlpha = 1;
+    g.fillStyle = '#008751'; g.fillRect(0, 0, W / 3, 18); g.fillStyle = '#FFFFFF'; g.fillRect(W / 3, 0, W / 3, 18); g.fillStyle = '#008751'; g.fillRect(2 * W / 3, 0, W / 3, 18);
+    var F = 'Inter, "Segoe UI", system-ui, -apple-system, Arial, sans-serif';
+    g.fillStyle = '#F2C14E'; g.font = '700 30px ' + F; g.textBaseline = 'alphabetic'; g.fillText('NIGERIANS IN UK  ·  BUSINESS DIRECTORY', 90, 150);
+    var size = 120, lines;
+    var wrap = function (sz) { g.font = '800 ' + sz + 'px ' + F; var words = name.split(/\s+/), out = [], cur = ''; words.forEach(function (w) { var t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > W - 180 && cur) { out.push(cur); cur = w; } else cur = t; }); if (cur) out.push(cur); return out; };
+    for (;;) { lines = wrap(size); var widest = Math.max.apply(null, lines.map(function (l) { return g.measureText(l).width; })); if ((lines.length <= 3 && widest <= W - 180) || size <= 56) break; size -= 6; }
+    lines = lines.slice(0, 4);
+    var blockH = lines.length * size * 1.1 + 30 + (cat ? 108 : 0) + (loc && loc !== 'UK' ? 50 : 0);
+    var y = 200 + Math.max(0, (640 - blockH) / 2) + size * 0.85; g.fillStyle = '#FFFFFF';
+    lines.forEach(function (l) { g.fillText(l, 90, y); y += size * 1.1; });
+    y += 30;
+    if (cat) { g.font = '700 40px ' + F; var tw = g.measureText(cat).width; g.fillStyle = '#F2C14E'; var r = 34, x = 90, h = 68; g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + tw + 60, y, x + tw + 60, y + h, r); g.arcTo(x + tw + 60, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + tw + 60, y, r); g.fill(); g.fillStyle = '#0F1E36'; g.fillText(cat, x + 30, y + 47); y += h + 40; }
+    if (loc && loc !== 'UK') { g.fillStyle = '#C9D3E3'; g.font = '600 42px ' + F; g.fillText(loc + ', UK', 90, y + 30); }
+    g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(90, W - 170, W - 180, 2);
+    g.fillStyle = '#FFFFFF'; g.font = '700 38px ' + F; g.fillText('Auntie Tobi', 90, W - 100); g.fillStyle = '#C9D3E3'; g.font = '500 32px ' + F; g.fillText('auntietobi.co.uk', W - 90 - g.measureText('auntietobi.co.uk').width, W - 100);
+    return (CARD_CACHE[k] = c.toDataURL('image/jpeg', 0.88));
+  }
+  function ownPic(u) { try { var x = new URL(u, location.href); return /^\/bimg\//.test(x.pathname) ? x.pathname : ''; } catch (e) { return ''; } }
+  S.findPics = {};
+  function findPicHtml(c, size) {
+    var st = 'width:' + size + 'px;height:' + size + 'px;border-radius:12px;object-fit:cover;flex:none;background:#EEF0F3;display:block';
+    if (c.img && ownPic(c.img)) return '<img src="' + esc(ownPic(c.img)) + '" alt="" style="' + st + '">';
+    return '<img data-pic="' + c.id + '" alt="" style="' + st + '">';
+  }
+  async function loadFindPics() {
+    var els = $$('[data-pic]');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i], c = findById(el.dataset.pic); if (!c) continue;
+      var lab = el.parentNode.querySelector('[data-piclab]');
+      var setCard = function () { el.src = bizCard(c); if (lab) lab.textContent = '🎨 Auntie Tobi card'; };
+      if (c.imgNone || (!c.imgUp && !c.imgUrl)) { setCard(); continue; }
+      if (!S.findPics[c.id]) { el.src = bizCard(c); try { S.findPics[c.id] = await api('find-img', { id: c.id }); } catch (e) { S.findPics[c.id] = { dataUrl: '' }; } }
+      var p = S.findPics[c.id];
+      if (p.dataUrl) { el.src = p.dataUrl; if (lab) lab.textContent = p.src === 'upload' ? '📷 Your photo' : '🌐 From their website'; } else setCard();
+    }
+  }
   // 🔎 Business Finder — weekly search for Nigerian businesses in the UK; approve → app + website CSV
   var FIND_TABS = { 'new': 'To review', approved: 'Approved', skipped: 'Skipped', uploaded: 'On the website' };
   function findAgo(iso) { if (!iso) return 'not yet'; var m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
@@ -1000,13 +1060,14 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       catch (x) { this.disabled = false; this.textContent = '▶️ Find more now'; toast(x.message); }
     };
     $$('[data-fa]').forEach(function (b) { b.onclick = function () { var c = findById(b.dataset.id); if (b.dataset.fa === 'edit') findEdit(c); else findDecide(c, b.dataset.fa, null, b); }; });
+    loadFindPics();
   }
   function findById(id) { return (S.find.items || []).filter(function (x) { return x.id === id; })[0]; }
   function findCard(c) {
     var conf = Math.round((c.confidence || 0) * 100), cat = String(c.cat || '').split('>').pop().trim();
     var link = function (href, label) { return href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + label + '</a>' : ''; };
     var web = c.website && !/instagram\.com/i.test(c.website) ? (/^https?:/i.test(c.website) ? c.website : 'https://' + c.website) : '';
-    return '<div class="card" style="padding:12px 16px;margin-bottom:10px"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b style="font-size:16px">' + esc(c.name) + '</b>' +
+    return '<div class="card" style="padding:12px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start"><div style="text-align:center;flex:none">' + findPicHtml(c, 92) + '<div class="muted" data-piclab style="font-size:10.5px;margin-top:3px;max-width:92px">' + (c.img ? '🖼 Picture' : '') + '</div></div><div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b style="font-size:16px">' + esc(c.name) + '</b>' +
       (cat ? dirPill(esc(cat), '#0F1E36') : dirPill('No category', '#B42318')) + (c.loc ? dirPill('📍 ' + esc(c.loc), '#EEF0F3', '#333') : '') +
       (c.status === 'new' ? dirPill(conf + '% sure', conf >= 75 ? '#057A44' : conf >= 50 ? '#FFE7A3' : '#FDE2E1', conf >= 75 ? '#fff' : '#5A3A00') : '') + '</div>' +
       (c.desc ? '<div style="margin-top:6px;font-size:14px">' + esc(c.desc) + '</div>' : '') +
@@ -1015,17 +1076,20 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (c.email ? '<span>📧 ' + esc(c.email) + '</span>' : '<span class="muted">no email found</span>') + (c.wa ? '<span>💬 ' + esc(c.wa) + '</span>' : '') + (c.phone && !c.wa ? '<span>📞 ' + esc(c.phone) + '</span>' : '') + '</div>' +
       '<div class="muted" style="font-size:12px;margin-top:4px">Found by: ' + esc(c.query || '') + (c.slug ? ' · <a href="/biz/' + encodeURIComponent(c.slug) + '" target="_blank" rel="noopener">see in app ↗</a>' : '') + '</div>' +
       (c.status === 'new' ? '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn primary sm" data-fa="approve" data-id="' + c.id + '">✅ Approve</button><button class="btn ghost sm" data-fa="edit" data-id="' + c.id + '">✏️ Edit</button><button class="btn ghost sm" data-fa="skip" data-id="' + c.id + '">✖ Skip</button><button class="btn ghost sm" data-fa="never" data-id="' + c.id + '" style="color:#B42318">🚫 Never</button></div>'
-        : c.status === 'skipped' ? '<div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost sm" data-fa="edit" data-id="' + c.id + '">↩️ Look again</button></div>' : '') + '</div>';
+        : c.status === 'skipped' ? '<div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost sm" data-fa="edit" data-id="' + c.id + '">↩️ Look again</button></div>' : '') + '</div></div>';
   }
   async function findDecide(c, decision, edits, btn) {
     if (decision === 'never' && !confirm('Never suggest ' + c.name + ' again?')) return;
     if (btn) btn.disabled = true;
+    if (decision === 'approve') edits = Object.assign({}, edits || {}, { fallbackImg: bizCard(Object.assign({}, c, edits || {})) });
+    if (edits && (edits.imgData || edits.imgNone)) delete S.findPics[c.id];
     try { var r = await api('find-decide', { id: c.id, decision: decision, edits: edits }); S.find = r.finder; S.dir = null; toast(decision === 'approve' ? '✅ ' + c.name + ' is now in the app (unclaimed)' : decision === 'edit' ? 'Saved' : 'Skipped'); vFind(); return true; }
     catch (x) { if (btn) btn.disabled = false; toast(x.message); return false; }
   }
   function findEdit(c) {
     var cats = S.find.cats || [];
     var s = sheet('<h2>✏️ ' + esc(c.name) + '</h2><p class="muted" style="margin:4px 0 8px;font-size:13px">Check the details (open their website or Instagram). Approve = it shows in the app straight away, marked unclaimed, and goes into your next website CSV.</p><div class="stack">' +
+      '<div><label>Picture</label><div class="row" style="gap:12px;align-items:center"><img id="fePic" alt="" style="width:110px;height:110px;border-radius:12px;object-fit:cover;background:#EEF0F3;flex:none"><div class="stack" style="gap:6px"><div class="muted" id="fePicL" style="font-size:13px"></div><label class="btn ghost sm" style="margin:0">📷 Upload photo<input type="file" id="fePicF" accept="image/*" hidden></label><button class="btn ghost sm" id="fePicC" type="button">🎨 Use Auntie Tobi card</button></div></div><div class="muted" style="font-size:12px;margin-top:4px">Tip: a screenshot of their Instagram profile picture or a product photo works well.</div></div>' +
       '<div><label for="feN">Business name</label><input id="feN" maxlength="120" value="' + esc(c.name || '') + '"></div>' +
       '<div class="f2"><div><label for="feC">Category</label><select id="feC"><option value="">Choose…</option>' + cats.map(function (k) { return '<option' + (k === c.cat ? ' selected' : '') + ' value="' + esc(k) + '">' + esc(k.replace(' > ', ' › ')) + '</option>'; }).join('') + '</select></div><div><label for="feL">Town</label><input id="feL" value="' + esc(c.loc || '') + '"></div></div>' +
       '<div><label for="feD">Description</label><textarea id="feD" rows="3">' + esc(c.desc || '') + '</textarea></div>' +
@@ -1033,7 +1097,14 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="f2"><div><label for="feE">Email</label><input id="feE" type="email" value="' + esc(c.email || '') + '"></div><div><label for="feP">Phone</label><input id="feP" value="' + esc(c.phone || '') + '"></div></div>' +
       '<div><label for="feS">Website</label><input id="feS" placeholder="https://" value="' + esc(c.website || '') + '"></div></div><div class="err hidden" id="feErr"></div>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="feX">Cancel</button><button class="btn ghost" id="feSave">💾 Save</button><button class="btn primary" id="feOk">✅ Save &amp; approve</button></div>');
-    var vals = function () { var v = function (id) { return $('#' + id, s).value.trim(); }; return { name: v('feN'), cat: v('feC'), loc: v('feL'), desc: v('feD'), ig: v('feI').replace(/^@/, ''), wa: v('feW').replace(/\D/g, ''), email: v('feE'), phone: v('feP'), website: v('feS') }; };
+    var pic = { data: '', none: false };
+    var vals = function () { var v = function (id) { return $('#' + id, s).value.trim(); }; var e = { name: v('feN'), cat: v('feC'), loc: v('feL'), desc: v('feD'), ig: v('feI').replace(/^@/, ''), wa: v('feW').replace(/\D/g, ''), email: v('feE'), phone: v('feP'), website: v('feS') }; if (pic.data) e.imgData = pic.data; else if (pic.none) e.imgNone = true; return e; };
+    var showCard = function () { $('#fePic', s).src = bizCard(Object.assign({}, c, { name: $('#feN', s).value, cat: $('#feC', s).value, loc: $('#feL', s).value })); $('#fePicL', s).textContent = '🎨 Auntie Tobi card (used when there’s no photo)'; };
+    var have = S.findPics[c.id];
+    if (!c.imgNone && have && have.dataUrl) { $('#fePic', s).src = have.dataUrl; $('#fePicL', s).textContent = have.src === 'upload' ? '📷 Your photo' : '🌐 From their website'; } else showCard();
+    ['feN', 'feC', 'feL'].forEach(function (id) { $('#' + id, s).addEventListener('change', function () { if (!pic.data && (pic.none || c.imgNone || !(have && have.dataUrl))) showCard(); }); });
+    $('#fePicF', s).onchange = async function () { var f = this.files && this.files[0]; this.value = ''; try { pic.data = await shrinkImg(f, 1200); pic.none = false; $('#fePic', s).src = pic.data; $('#fePicL', s).textContent = '📷 Your photo'; } catch (x) { toast(x.message); } };
+    $('#fePicC', s).onclick = function () { pic.data = ''; pic.none = true; showCard(); };
     $('#feX', s).onclick = function () { s.remove(); };
     $('#feSave', s).onclick = async function () { var e = vals(); e.status = 'new'; if (await findDecide(c, 'edit', e, this)) s.remove(); };
     $('#feOk', s).onclick = async function () { var e = vals(); if (!e.name || !e.cat) { $('#feErr', s).textContent = 'Add a name and choose a category.'; $('#feErr', s).classList.remove('hidden'); return; } if (await findDecide(c, 'approve', e, this)) s.remove(); };

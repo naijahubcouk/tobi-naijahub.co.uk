@@ -283,19 +283,24 @@ exports.handler = handler(async (ctx) => {
       const bizdir = require('../bizdir');
       if (body.action === 'dir-preview') return { preview: await bizdir.previewImport(String(body.csv || '')) };
       if (body.action === 'dir-apply') { const stats = await bizdir.applyImport(String(body.csv || ''), !!body.hideGone, who.email); await core.audit(who.email, 'hq_dir_import', stats); return { stats, items: await bizdir.all(), info: await bizdir.info() }; }
-      if (body.action === 'dir-save') { const item = await bizdir.save(body.item || {}, who.email); await core.audit(who.email, 'hq_dir_save', { slug: item.slug }); }
+      if (body.action === 'dir-save') {
+        const raw = Object.assign({}, body.item || {}); const data = raw.imgData; delete raw.imgData;
+        if (data) { const slug = raw.origSlug || raw.slug || bizdir.slugify(raw.name); raw.slug = raw.slug || slug; raw.img = await require('../bizimg').put(slug, data, raw.imgSrc === 'card' ? 'card' : 'upload'); }
+        delete raw.imgSrc;
+        const item = await bizdir.save(raw, who.email); await core.audit(who.email, 'hq_dir_save', { slug: item.slug }); }
       if (body.action === 'dir-delete') {
         const slug = String(body.slug || ''), b = (await bizdir.all()).find(x => x.slug === slug);
         if (b && body.never) await require('../finder').neverAdd(b, 'Removed from the directory (asked not to be listed)');
-        await bizdir.remove(slug, who.email); await core.audit(who.email, 'hq_dir_delete', { slug, never: !!body.never });
+        await bizdir.remove(slug, who.email); await require('../bizimg').remove(slug); await core.audit(who.email, 'hq_dir_delete', { slug, never: !!body.never });
       }
       return { items: await bizdir.all(), info: await bizdir.info() };
     }
-    case 'find-list': case 'find-more': case 'find-quick': case 'find-decide': case 'find-csv': case 'find-uploaded': {
+    case 'find-img': case 'find-list': case 'find-more': case 'find-quick': case 'find-decide': case 'find-csv': case 'find-uploaded': {
       // 🔎 Business Finder (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use the Business Finder.');
       const finder = require('../finder');
       let note = null;
+      if (body.action === 'find-img') return await finder.pictureFor(String(body.id || ''));
       if (body.action === 'find-more') note = { ran: await finder.more() };
       if (body.action === 'find-quick') { await core.rateLimit('hq-findq', who.email, 40, 3600000, 'That’s a lot of quick adds — try again in an hour.'); note = { ran: [await finder.quickAdd(String(body.input || ''))] }; }
       if (body.action === 'find-decide') { const c = await finder.decide(String(body.id || ''), String(body.decision || ''), body.edits || null, who.email); await core.audit(who.email, 'hq_find_' + body.decision, { name: c.name }); }
