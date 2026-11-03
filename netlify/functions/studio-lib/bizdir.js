@@ -63,6 +63,15 @@ function ttUrl(v) {
   const m = String(v || '').match(/tiktok\.com\/@([A-Za-z0-9._]{2,40})/i) || String(v || '').trim().match(/^@([A-Za-z0-9._]{2,40})$/);
   return m ? 'https://www.tiktok.com/@' + m[1].replace(/\.$/, '') : '';
 }
+// Claimed = the website contact is a person (the owner), not Favour / Auntie Tobi and not just the business's own name or handle
+// (listings our team created often have the business name as the contact). A tick in HQ (claimedSet) always wins.
+const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function ownerContact(b) {
+  if (OURS.test(String(b.contact).trim())) return false;
+  const c = nk(b.contact); if (!c) return false;
+  for (const x of [nk(b.name), nk(b.slug), nk(b.ig)]) if (x && (c === x || (c.length >= 4 && x.includes(c)) || (x.length >= 4 && c.includes(x)))) return false;
+  return true;
+}
 function normalise(b) {
   b = Object.assign({}, b || {});
   const out = {
@@ -77,7 +86,7 @@ function normalise(b) {
   if (Array.isArray(b.lines) && b.lines.length) out.lines = b.lines.map(l => str(l, 200)).slice(0, 6);
   if (b.book && typeof b.book === 'object') out.book = b.book;
   if (typeof b.claimedSet === 'boolean') out.claimedSet = b.claimedSet;
-  out.claimed = typeof out.claimedSet === 'boolean' ? out.claimedSet : (out.contact ? !OURS.test(out.contact) : b.claimed !== false);
+  out.claimed = typeof out.claimedSet === 'boolean' ? out.claimedSet : (out.contact ? ownerContact(out) : b.claimed === true);
   if (b.notes) out.notes = str(b.notes, 1000);
   if (fbUrl(b.fb)) out.fb = fbUrl(b.fb);
   if (ttUrl(b.tt)) out.tt = ttUrl(b.tt);
