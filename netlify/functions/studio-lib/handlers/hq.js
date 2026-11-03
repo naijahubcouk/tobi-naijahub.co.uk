@@ -287,6 +287,17 @@ exports.handler = handler(async (ctx) => {
         const raw = Object.assign({}, body.item || {}); const data = raw.imgData; delete raw.imgData;
         if (data) { const slug = raw.origSlug || raw.slug || bizdir.slugify(raw.name); raw.slug = raw.slug || slug; raw.img = await require('../bizimg').put(slug, data, raw.imgSrc === 'card' ? 'card' : 'upload'); }
         delete raw.imgSrc;
+        // 📸 gallery (up to 6 photos, shown on Featured business pages): keep the ones still listed, add new uploads, delete removed ones
+        if (Array.isArray(raw.galleryAdd) || Array.isArray(raw.gallery)) {
+          const bizimg = require('../bizimg'), slug = raw.origSlug || raw.slug || bizdir.slugify(raw.name);
+          const old = ((await bizdir.all()).find(x => x.slug === slug) || {}).gallery || [];
+          const keep = (Array.isArray(raw.gallery) ? raw.gallery : old).filter(u => old.includes(u));
+          const add = (Array.isArray(raw.galleryAdd) ? raw.galleryAdd : []).slice(0, Math.max(0, 6 - keep.length));
+          const added = []; for (const d of add) added.push(await bizimg.put(slug + '~g' + Date.now().toString(36) + added.length, d, 'upload'));
+          for (const u of old.filter(u => !keep.includes(u))) { const m = String(u).match(/\/bimg\/([^/]+)-[a-z0-9]{1,8}\.(jpg|png|webp)$/i); if (m) await bizimg.remove(decodeURIComponent(m[1])); }
+          raw.gallery = keep.concat(added);
+        }
+        delete raw.galleryAdd;
         const item = await bizdir.save(raw, who.email); await core.audit(who.email, 'hq_dir_save', { slug: item.slug }); }
       if (body.action === 'dir-delete') {
         const slug = String(body.slug || ''), b = (await bizdir.all()).find(x => x.slug === slug);

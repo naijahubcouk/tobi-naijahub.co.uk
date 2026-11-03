@@ -2846,7 +2846,7 @@ function removeTyping() {
 function tobiShowBizCard(slug) {
   var b = getLiveDirectory().find(function (x) { return x.slug === slug; });
   if (!b) { showBusinesses(undefined, null, null, true); return; }
-  addTipMessage(formatResponse('<<<BIZ_JSON:' + JSON.stringify([{ slug: b.slug, name: b.name, cat: b.cat || b.category || '', loc: b.loc || 'UK', desc: b.desc ? b.desc.substring(0, 140) : '', verified: b.verified || false, featured: b.featured || false, wa: b.wa || '', phone: b.phone || '' }]) + '>>>'));
+  addTipMessage(formatResponse('<<<BIZ_JSON:' + JSON.stringify([{ slug: b.slug, name: b.name, cat: b.cat || b.category || '', loc: b.loc || 'UK', desc: b.desc || '', verified: b.verified || false, featured: b.featured || false, wa: b.wa || '', phone: b.phone || '' }]) + '>>>'));
   setTimeout(function () { var m = document.getElementById('messages'); if (m && m.lastElementChild) m.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 }
 
@@ -2975,7 +2975,7 @@ let _searchTimer = null;
 
       const fakeText = '<<<BIZ_JSON:' + JSON.stringify(bizResults.map(b => ({
         slug: b.slug, name: b.name, cat: b.cat||'', loc: b.loc||'UK',
-        desc: b.desc ? b.desc.substring(0,100) : '', verified: b.verified||false, wa: b.wa||'', phone: b.phone||''
+        desc: b.desc || '', verified: b.verified||false, wa: b.wa||'', phone: b.phone||''
       }))) + '>>>';
 
       // Save context for "show more" button
@@ -5753,7 +5753,7 @@ function buildFeaturedCard(b, compact) {
   var viewBtn = '<button onclick="tobiOpenBiz(\'' + b.slug + '\')" style="flex:1;padding:8px;background:#057A44;color:white;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">View Details</button>';
   var minW = compact ? 'min-width:220px;flex-shrink:0;scroll-snap-align:start;' : '';
   var descLen = compact ? 80 : 200;
-  var desc = (b.desc||'').length > descLen ? b.desc.substring(0,descLen) + '...' : (b.desc||'');
+  var desc = b.desc || '';   // always the full short description
   return '<div style="' + minW + 'border:2px solid #FFB81C;border-radius:14px;position:relative;background:white;margin-top:10px;">'
     + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;">⭐ Featured Business</div>'
     + '<div style="padding:20px 12px 12px;">'
@@ -5788,11 +5788,11 @@ function showFeaturedCarousel() {
       + '<div style="font-size:16px;font-weight:700;color:#0F1E36;line-height:1.3;">' + b.name + (b.verified ? tobiTick(17) : '') + '</div>'
       + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + (b.cat||'Business') + '</span>'
       + '</div>' + verHtml
-      + '<p style="font-size:13px;color:#444;line-height:1.6;margin-bottom:8px;height:42px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;">' + (b.desc ? b.desc.substring(0,120) + (b.desc.length > 120 ? '...' : '') : '') + '</p>'
+      + '<p style="font-size:13px;color:#444;line-height:1.6;margin-bottom:8px;">' + (b.desc || '') + '</p>'
       + '<p style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + (b.loc||'').split(',')[0] + '</p>'
       + '</div>'
       + '<div style="display:flex;gap:8px;padding:0 14px 14px;pointer-events:auto;">'
-      + '<a href="https://auntietobi.com/listing/'+b.slug+'" target="_blank" style="flex:1;padding:10px;background:#057A44;color:white;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>' + waBtn
+      + '<button onclick="tobiOpenBiz(\'' + b.slug + '\')" style="flex:1;padding:10px;background:#057A44;color:white;border:0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">View Details</button>' + waBtn
       + '<button onclick="shareBiz(\'' + b.slug + '\')" style="flex:1;padding:10px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#0F1E36;">📤 Share</button>' + '</div></div></div>';
   }).join('');
 
@@ -5918,7 +5918,7 @@ function featSlide(b){
     + (b.img ? '<img src="'+featEsc(b.img)+'" alt="'+featEsc(b.name)+'" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.feat-ban\').style.display=\'flex\'" style="width:100%;height:auto;display:block;cursor:zoom-in;">' : '')
     + banner
     + '</div>';
-  var lines = (b.lines && b.lines.length) ? b.lines : [ (b.desc||'').length > 110 ? b.desc.slice(0,107)+'…' : (b.desc||'') ];
+  var lines = (b.lines && b.lines.length) ? b.lines : [ b.desc || '' ];
   var btnCss = 'margin-top:auto;display:block;background:#057A44;color:white;border-radius:10px;padding:11px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;';
   var body = '<div style="padding:12px 14px 14px;display:flex;flex-direction:column;flex:1;">'
     + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="font-size:15px;font-weight:800;color:#0F1E36;line-height:1.3;">'+featEsc(b.name)+'</div>'+(b.verified && typeof tobiTick==='function' ? tobiTick(15) : '')+'</div>'
@@ -6938,6 +6938,52 @@ const AUNTIE_TOBI_DIRECTORY = [
 
 
 
+// 🏢 A business's page in the app. Featured businesses (Business Club) show everything: photos, full description and every way to reach them.
+function tobiBizPage(b) {
+  var E = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  var cat = b.cat ? b.cat.charAt(0).toUpperCase() + b.cat.slice(1) : '';
+  var loc = (b.loc || 'UK').split(',')[0];
+  var dirUrl = 'https://directory.auntietobi.co.uk/' + encodeURIComponent(b.slug);
+  var shareUrl = 'https://auntietobi.co.uk/biz/' + b.slug, safeName = String(b.name).replace(/['"\\]/g, '');
+  var shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:10px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
+  var badge = b.featured || b.verified ? '<div style="position:absolute;top:-12px;left:14px;background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:3px 11px;border-radius:10px;z-index:1">' + (b.featured ? '⭐ Featured Business' : '✅ Verified Business') + '</div>' : '';
+  var head = '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">'
+    + '<div style="font-size:' + (b.featured ? 18 : 15) + 'px;font-weight:800;color:#0F1E36;line-height:1.3">' + E(b.name) + (b.verified && typeof tobiTick === 'function' ? tobiTick(16) : '') + '</div>'
+    + (cat ? '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0">' + E(cat) + '</span>' : '') + '</div>'
+    + '<div style="font-size:12.5px;color:#6B7280;margin-bottom:10px">📍 ' + E(b.featured && b.addr ? b.addr : loc) + '</div>';
+  if (!b.featured) {
+    var wa = b.wa ? '<a href="https://wa.me/' + String(b.wa).replace(/\D/g, '') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" rel="noopener" style="flex:1;padding:10px 8px;background:#25D366;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">💬 WhatsApp</a>' : '';
+    return '<div style="background:white;border:' + (b.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:14px;padding:16px;margin:' + (badge ? '12px' : '0') + ' 0 8px;position:relative">' + badge + head
+      + (b.desc ? '<div style="font-size:14px;color:#444;line-height:1.6;margin-bottom:12px;white-space:pre-line">' + E(b.desc) + '</div>' : '')
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap"><a href="' + dirUrl + '" target="_blank" rel="noopener" style="flex:1;padding:10px 8px;background:#057A44;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">View Details</a>' + wa + shareBtn + '</div></div>';
+  }
+  // ⭐ Featured: photo, full description, every contact, photo gallery, then "see more on the directory"
+  var btn = function (href, label, bg, fg, border) { return '<a href="' + E(href) + '" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:' + bg + ';color:' + (fg || 'white') + ';border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center;' + (border ? 'border:1.5px solid ' + border + ';' : '') + '">' + label + '</a>'; };
+  var waNum = String(b.wa || '').replace(/\D/g, ''), site = b.website ? (/^https?:/i.test(b.website) ? b.website : 'https://' + b.website) : (b.shop || '');
+  var contacts = [
+    waNum && btn('https://wa.me/' + waNum + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚'), '💬 WhatsApp', '#25D366'),
+    b.phone && btn('tel:' + String(b.phone).replace(/[^\d+]/g, ''), '📞 Call', '#0F1E36'),
+    b.email && btn('mailto:' + b.email + '?subject=' + encodeURIComponent('Enquiry from Auntie Tobi'), '📧 Email', '#FFFFFF', '#0F1E36', '#D5D9E0'),
+    site && btn(site, '🌐 Website', '#FFFFFF', '#0F1E36', '#D5D9E0'),
+    b.ig && btn('https://www.instagram.com/' + b.ig + '/', '📸 Instagram', 'linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)'),
+    b.fb && btn(b.fb, '📘 Facebook', '#1877F2'),
+    b.tt && btn(b.tt, '🎵 TikTok', '#111111')
+  ].filter(Boolean);
+  var full = b.long && b.long.length > (b.desc || '').length ? b.long : (b.desc || '');
+  var own = function (u) { return String(u || '').replace(/^https:\/\/(www\.)?auntietobi\.co\.uk(?=\/bimg\/)/, ''); };   // our own pictures load from this site
+  var photos = (b.gallery || []).slice(0, 6).map(own);
+  return '<div style="background:white;border:2px solid #FFB81C;border-radius:16px;margin:12px 0 8px;position:relative;overflow:visible">' + badge
+    + (b.img ? '<img src="' + E(own(b.img)) + '" alt="' + E(b.name) + '" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\'" style="width:100%;max-height:340px;object-fit:cover;display:block;border-radius:14px 14px 0 0;cursor:zoom-in">' : '')
+    + '<div style="padding:' + (b.img ? '14px' : '20px') + ' 16px 16px">' + head
+    + (b.desc && full !== b.desc ? '<div style="font-size:14.5px;font-weight:600;color:#0F1E36;line-height:1.55;margin-bottom:8px">' + E(b.desc) + '</div>' : '')
+    + (full ? '<div style="font-size:14px;color:#444;line-height:1.65;margin-bottom:14px;white-space:pre-line">' + E(full) + '</div>' : '')
+    + (b.lines && b.lines.length ? '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">' + b.lines.map(function (l) { return '<div style="font-size:13.5px;color:#333">' + E(l) + '</div>'; }).join('') + '</div>' : '')
+    + (contacts.length ? '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">Get in touch</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' + contacts.join('') + '</div>' : '')
+    + (b.shop ? '<div style="margin-bottom:14px">' + btn(b.shop, '🛍️ Shop Now', '#057A44') + '</div>' : '')
+    + (photos.length ? '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">Photos</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">' + photos.map(function (u) { return '<img src="' + E(u) + '" alt="" loading="lazy" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\'" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;cursor:zoom-in;display:block">'; }).join('') + '</div>' : '')
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap"><a href="' + dirUrl + '" target="_blank" rel="noopener" style="flex:2;padding:11px 8px;background:#057A44;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">See more on the directory →</a>' + shareBtn + '</div>'
+    + '</div></div>';
+}
 function handleDeepLink() {
   const params = new URLSearchParams(window.location.search);
   const action = params.get('action');
@@ -6952,26 +6998,7 @@ function handleDeepLink() {
       messages.innerHTML = '';
       const business = getLiveDirectory().find(b => b.slug === biz);
       if (business) {
-        const cat = business.cat ? business.cat.charAt(0).toUpperCase() + business.cat.slice(1) : '';
-        const loc = (business.loc || 'UK').split(',')[0];
-        const desc = business.desc ? business.desc.substring(0,100) + (business.desc.length > 100 ? '...' : '') : '';
-        const shareUrl = 'https://auntietobi.co.uk?biz=' + business.slug;
-        const safeName = business.name.replace(/['"]/g,'');
-        const verifiedBadge = business.verified ? '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:10px;">' + (business.featured ? '⭐ Featured Business' : '✅ Verified Business') + '</div>' : '';
-        const waBtn = (business.wa) ? '<a href="https://wa.me/' + business.wa.replace(/\D/g,'') + '" target="_blank" style="flex:1;padding:8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">💬 WhatsApp</a>' : '';
-        const shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-                const viewBtn = '<a href="https://auntietobi.com/listing/' + business.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>';
-        const cardHTML = '<div style="background:white;border:' + (business.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:12px;padding:14px;margin-bottom:8px;position:relative;">'
-          + verifiedBadge
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;' + (business.verified ? 'margin-top:6px;' : '') + '">'
-          + '<div style="font-size:15px;font-weight:700;color:#0F1E36;">' + business.name + (business.verified ? tobiTick(16) : '') + '</div>'
-          + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + cat + '</span>'
-          + '</div>'
-          + '<div style="font-size:13px;color:#555;margin-bottom:6px;">' + desc + '</div>'
-          + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 ' + loc + '</div>'
-          + '<div style="display:flex;gap:6px;">' + viewBtn + waBtn + shareBtn + '</div>'
-          + '</div>';
-        addTipMessage(cardHTML);
+        addTipMessage(tobiBizPage(business));
         const _bizSugg = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
         addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 More businesses</button>${_bizSugg.map(s=>`<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\'")}')">${s}</button>`).join('')}</div>`);
         window.history.replaceState({}, '', window.location.pathname);
@@ -8579,7 +8606,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll, featured
       +'</div>'+vl+dd
       +'<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+(b.loc||'UK').split(',')[0]+'</div>'
       +'<div style="display:flex;gap:8px;">'
-      +'<a href="https://auntietobi.com/listing/'+b.slug+'" target="_blank" style="flex:1;padding:10px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>'
+      +'<button onclick="tobiOpenBiz(\''+b.slug+'\')" style="flex:1;padding:10px 8px;background:#057A44;color:white;border:0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">View Details</button>'
       +'<button onclick="shareBiz(\''+b.slug+'\')" style="flex:1;padding:10px 8px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:#0F1E36;">📤 Share</button>'
       +'</div></div>');
   });

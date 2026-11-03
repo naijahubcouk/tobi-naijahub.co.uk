@@ -921,6 +921,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="f2"><div><label for="deC">Category</label><input id="deC" list="deCl" value="' + esc(b.cat || '') + '"><datalist id="deCl">' + dirCats().map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist></div><div><label for="deL">Town</label><input id="deL" value="' + esc(b.loc || '') + '"></div></div>' +
       '<div><label for="deSh">Short description <span class="muted" style="font-weight:400">(one line — website “description”)</span></label><input id="deSh" maxlength="160" value="' + esc(b.short || '') + '"></div>' +
       '<div><label for="deD">Description <span class="muted" style="font-weight:400">(full)</span></label><textarea id="deD" rows="5">' + esc(b.desc || '') + '</textarea></div>' +
+      '<div><label for="deLg">Long description <span class="muted" style="font-weight:400">(shown in full on Featured business pages)</span></label><textarea id="deLg" rows="5">' + esc(b.long || '') + '</textarea></div>' +
+      '<div><label>📸 Photos <span class="muted" style="font-weight:400">(up to 6 — shown on Featured business pages)</span></label><div id="deGal" class="row" style="gap:8px;flex-wrap:wrap"></div><label class="btn ghost sm" style="margin:6px 0 0">＋ Add photos<input type="file" id="deGalF" accept="image/*" multiple hidden></label></div>' +
       '<div><label for="deT">Tags <span class="muted" style="font-weight:400">(comma between each)</span></label><input id="deT" placeholder="e.g. jollof, small chops, party trays" value="' + esc((b.tags || []).join(', ')) + '"></div>' +
       '<div class="f2"><div><label for="deI">Instagram</label><input id="deI" placeholder="handle" value="' + esc(b.ig || '') + '"></div><div><label for="deW">WhatsApp</label><input id="deW" placeholder="447…" value="' + esc(b.wa || '') + '"></div></div>' +
       '<div class="f2"><div><label for="deFb">Facebook</label><input id="deFb" placeholder="facebook.com/…" value="' + esc(b.fb || '') + '"></div><div><label for="deTt">TikTok</label><input id="deTt" placeholder="@handle" value="' + esc(b.tt || '') + '"></div></div>' +
@@ -935,6 +937,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (b.img && ownPic(b.img)) { $('#dePic', s).src = ownPic(b.img); $('#dePicL', s).textContent = '🖼 Kept by Auntie Tobi'; }
     else if (b.img) { $('#dePic', s).style.display = 'none'; $('#dePicL', s).textContent = '🖼 Has a picture from the website'; }
     else { $('#dePic', s).src = bizCard(b.name ? b : { name: 'Your business', cat: b.cat, loc: b.loc }); $('#dePicL', s).textContent = isNew ? '🎨 An Auntie Tobi card is made from the name unless you upload a photo' : 'No picture yet'; }
+    var gal = (b.gallery || []).filter(function (u) { return ownPic(u); }).map(function (u) { return { url: u }; });
+    var drawGal = function () {
+      $('#deGal', s).innerHTML = gal.length ? gal.map(function (g, i) { return '<div style="position:relative"><img src="' + esc(g.data || ownPic(g.url)) + '" alt="" style="width:76px;height:76px;object-fit:cover;border-radius:10px;display:block"><button type="button" data-gx="' + i + '" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:#B42318;color:#fff;font-weight:800;cursor:pointer">×</button></div>'; }).join('') : '<span class="muted" style="font-size:13px">No photos yet.</span>';
+      $$('[data-gx]', s).forEach(function (x) { x.onclick = function () { gal.splice(+x.dataset.gx, 1); drawGal(); }; });
+    };
+    drawGal();
+    $('#deGalF', s).onchange = async function () { var fs = Array.prototype.slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && gal.length < 6; i++) { try { gal.push({ data: await shrinkImg(fs[i], 1000) }); } catch (x) { toast(x.message); } } if (fs.length && gal.length >= 6) toast('Up to 6 photos'); drawGal(); };
     $('#dePicF', s).onchange = async function () { var f = this.files && this.files[0]; this.value = ''; try { dpic = await shrinkImg(f, 1200); $('#dePic', s).style.display = ''; $('#dePic', s).src = dpic; $('#dePicL', s).textContent = '📷 Your photo'; } catch (x) { toast(x.message); } };
     $('#deX', s).onclick = function () { s.remove(); };
     if ($('#deDel', s)) $('#deDel', s).onclick = async function () {
@@ -947,10 +956,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     };
     $('#deOk', s).onclick = async function () {
       var v = function (id) { return $('#' + id, s).value.trim(); }, c = v('deCl2');
-      var item = Object.assign({}, b, { origSlug: b.slug, name: v('deN'), cat: v('deC'), loc: v('deL'), desc: v('deD'), short: v('deSh'), tags: v('deT').split(',').map(function (t) { return t.trim(); }).filter(Boolean), ig: v('deI'), wa: v('deW'), email: v('deE'), phone: v('deP'), website: v('deS'), fb: v('deFb'), tt: v('deTt'), notes: v('deNo'),
+      var item = Object.assign({}, b, { origSlug: b.slug, name: v('deN'), cat: v('deC'), loc: v('deL'), desc: v('deD'), long: v('deLg'), short: v('deSh'), tags: v('deT').split(',').map(function (t) { return t.trim(); }).filter(Boolean), ig: v('deI'), wa: v('deW'), email: v('deE'), phone: v('deP'), website: v('deS'), fb: v('deFb'), tt: v('deTt'), notes: v('deNo'),
         featured: $('#deF', s).checked, verified: $('#deV', s).checked, hidden: $('#deH', s).checked });
       if (c === 'auto') delete item.claimedSet; else item.claimedSet = c === 'yes';
       if (!item.name) { $('#deErr', s).textContent = 'Add the business name.'; $('#deErr', s).classList.remove('hidden'); return; }
+      item.gallery = gal.filter(function (g) { return g.url; }).map(function (g) { return g.url; }); item.galleryAdd = gal.filter(function (g) { return g.data; }).map(function (g) { return g.data; });
       if (dpic) item.imgData = dpic; else if (isNew && !b.img) { item.imgData = bizCard(item); item.imgSrc = 'card'; }
       this.disabled = true;
       try { S.dir = await api('dir-save', { item: item }); s.remove(); toast('Saved ✅ — the app updates within a minute'); vDir(); } catch (x) { this.disabled = false; $('#deErr', s).textContent = x.message; $('#deErr', s).classList.remove('hidden'); }

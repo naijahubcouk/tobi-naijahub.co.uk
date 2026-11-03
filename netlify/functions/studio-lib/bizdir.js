@@ -18,6 +18,8 @@ try { seed = require('../dir-seed.json'); } catch (_) { seed = []; }
 
 const KEY = 'dir/list';
 const OURS = /^(favour adentan|auntie tobi)$/i;           // listings we created = unclaimed
+// Featured businesses (Business Club) also show every way to reach them, the full description and their photos
+const FEATURED_EXTRA = ['email', 'phone', 'website', 'fb', 'tt', 'long', 'gallery', 'addr'];
 const PUBLIC = ['name', 'slug', 'cat', 'loc', 'desc', 'ig', 'wa', 'featured', 'verified', 'img', 'lines', 'shop', 'book', 'label', 'text'];
 const COMPARE = ['name', 'cat', 'loc', 'desc', 'ig', 'wa', 'phone', 'email', 'website', 'featured', 'verified', 'claimed'];
 const FIELD_NAMES = { name: 'name', cat: 'category', loc: 'town', desc: 'description', ig: 'Instagram', wa: 'WhatsApp', phone: 'phone', email: 'email', website: 'website', featured: 'Featured', verified: 'Verified', claimed: 'claimed' };
@@ -91,7 +93,9 @@ function normalise(b) {
   if (b.notes) out.notes = str(b.notes, 1000);
   if (fbUrl(b.fb)) out.fb = fbUrl(b.fb);
   if (ttUrl(b.tt)) out.tt = ttUrl(b.tt);
-  if (b.short) out.short = str(b.short, 200);                    // one-line description (website "description")
+  if (b.short) out.short = str(b.short, 200);
+  if (b.long) out.long = String(b.long).replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 4000);   // full description (website "detailed description")
+  if (Array.isArray(b.gallery) && b.gallery.length) out.gallery = b.gallery.map(u => str(u, 300)).filter(u => /^https:\/\//.test(u)).slice(0, 6);                    // one-line description (website "description")
   if (Array.isArray(b.tags) && b.tags.length) out.tags = b.tags.map(t => str(t, 40)).filter(Boolean).slice(0, 10);
   if (isFinite(+b.lat) && isFinite(+b.lng) && b.lat !== '' && b.lat != null && +b.lat !== 0) { out.lat = +b.lat; out.lng = +b.lng; }
   if (b.uploadedAt) out.uploadedAt = str(b.uploadedAt, 40);   // HQ-added business already put in a website CSV
@@ -101,7 +105,7 @@ function normalise(b) {
 // ── public list for the app and the chat (no emails, no admin details) ──
 async function publicList() {
   return (await all()).filter(b => !b.hidden && b.status !== 'pending').map(b => {
-    const o = {}; for (const k of PUBLIC) if (b[k] !== undefined && b[k] !== '' && b[k] !== false) o[k] = b[k]; return o;
+    const o = {}; for (const k of PUBLIC.concat(b.featured ? FEATURED_EXTRA : [])) if (b[k] !== undefined && b[k] !== '' && b[k] !== false && !(Array.isArray(b[k]) && !b[k].length)) o[k] = b[k]; return o;
   });
 }
 
@@ -128,7 +132,7 @@ function fromCsvRow(r) {
   return normalise({
     slug: r.slug, name: r.name, cats, cat: first.split('>').pop().trim(), addr: r.location_address, loc: townFrom(r.location_address) || 'UK',
     desc: r.description, ig: r.socialMedia_instagram, fb: r.socialMedia_facebook, tt: r.socialMedia_tiktok, wa: waNumber(r['custom_Whatsapp Link'], r.business_phone), phone: r.business_phone,
-    email: r.business_email, website: r.mainLink, featured: String(r.isFeatured).toLowerCase() === 'true',
+    email: r.business_email, website: r.mainLink, long: r.detailedDescription, featured: String(r.isFeatured).toLowerCase() === 'true',
     verified: !!(verifiedCol && String(r[verifiedCol]).trim()), contact: r.contact_name, status: String(r.status).toUpperCase() === 'PENDING' ? 'pending' : 'published', src: 'website',
   });
 }
@@ -158,7 +162,7 @@ async function previewImport(csvText) {
 }
 // Website fields win; app-only extras (photos for featured cards, booking buttons…), HQ notes, hidden and Seun's claimed tick are kept.
 function mergeOne(o, n) {
-  const keep = {}; for (const k of ['img', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden', 'short', 'tags', 'lat', 'lng']) if (o[k] !== undefined) keep[k] = o[k];
+  const keep = {}; for (const k of ['img', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden', 'short', 'tags', 'lat', 'lng', 'gallery']) if (o[k] !== undefined) keep[k] = o[k];
   const m = normalise(Object.assign({}, o, n, keep, { wa: n.wa || o.wa, ig: n.ig || o.ig, fb: n.fb || o.fb, tt: n.tt || o.tt, loc: n.loc && n.loc !== 'UK' ? n.loc : (o.loc || 'UK') }));
   return m;
 }

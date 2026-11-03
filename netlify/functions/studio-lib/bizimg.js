@@ -32,7 +32,8 @@ const slugOf = file => String(file || '').replace(/-[a-z0-9]{1,8}\.(jpg|png|webp
 // GET /bimg/<file> → the picture
 async function serve(file) {
   const slug = slugOf(file);
-  const b = slug && (await require('./bizdir').all()).find(x => x.slug === slug && !x.hidden);
+  const base = slug.split('~')[0];   // gallery pictures are <slug>~g<id>
+  const b = base && (await require('./bizdir').all()).find(x => x.slug === base && !x.hidden);
   const rec = b ? await getJson('bizimg/' + slug).catch(() => null) : null;
   const m = rec && /^data:([^;]+);base64,(.*)$/.exec(rec.dataUrl);
   if (!m) throw new HttpError(404, 'not_found', 'Not found.');
