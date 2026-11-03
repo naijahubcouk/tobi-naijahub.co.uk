@@ -16,12 +16,17 @@ async function run() {
   const started = Date.now();
   const report = { checked: 0, emailed: 0 };
   const threads = await messages.inbox();
+  // Welcome-series messages sent before they were marked as automatic: never email those as "Auntie Tobi replied"
+  const welcome = require('../welcome'), esc = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), wel = [];
+  for (const x of welcome.SERIES) for (const st of (await welcome.get(x)).steps) wel.push(new RegExp('^' + esc(String(st.text || '').trim()).replace(/\\\{business\\\}/g, '[\\s\\S]*') + '$'));
+  const isWelcome = t => wel.some(r => r.test(String(t || '').trim()));
   for (const [email, x] of Object.entries(threads)) {
     if (Date.now() - started > 20000 || report.emailed >= MAX_PER_RUN) break;
     if (x.lastFrom !== 'admin' && !(x.updatedAt && Date.now() - Date.parse(x.updatedAt) < 7 * core.DAY)) continue;
     report.checked++;
     const st = await messages.staleUnread(email, AFTER_MS);
     if (!st) continue;
+    if (st.last.auto || isWelcome(st.last.text)) { await messages.markEmailed(email, st.last.id).catch(() => {}); continue; }
     const link = `${core.appUrl()}#messages`;
     const preview = st.last.text.length > 400 ? st.last.text.slice(0, 400) + '…' : st.last.text;
     const mail = require('../msg-email').build({ text: preview, intro: 'Auntie Tobi replied to your message in Business Studio:', link, button: 'Read and reply →' });

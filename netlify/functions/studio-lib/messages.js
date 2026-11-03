@@ -65,10 +65,11 @@ async function memberUnread(email, acc) {
   return t.messages.concat(ann).filter(m => m.from === 'admin' && m.at > (t.memberReadAt || '')).length;
 }
 
-async function addMessage(email, from, text) {
+// opts.auto: an automatic message (welcome series) — never followed by a "Auntie Tobi replied to your message" email
+async function addMessage(email, from, text, opts) {
   email = core.normalizeEmail(email);
   text = checkText(text);
-  const msg = { id: newId(), from, text, at: core.nowIso() };
+  const msg = { id: newId(), from, text, at: core.nowIso(), ...(opts && opts.auto ? { auto: true } : {}) };
   let firstUnread = false;
   await cas(tKey(email), cur => {
     const t = cur ? { ...cur, messages: [...cur.messages] } : emptyThread(email);
@@ -185,7 +186,7 @@ async function staleUnread(email, olderThanMs) {
   const t = await getJson(tKey(email));
   if (!t) return null;
   const cutoff = new Date(Date.now() - olderThanMs).toISOString();
-  const pending = t.messages.filter(m => m.from === 'admin' && m.at > (t.memberReadAt || '') && m.at <= cutoff);
+  const pending = t.messages.filter(m => m.from === 'admin' && !m.auto && m.at > (t.memberReadAt || '') && m.at <= cutoff);
   if (!pending.length) return null;
   const last = pending[pending.length - 1];
   if (t.emailedFor && t.emailedFor >= last.id) return null;

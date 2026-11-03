@@ -162,7 +162,7 @@ async function runSeries(opts, x) {
     const biz = (prof && prof.businessName) || 'there';
     const text = next.text.replace(/\{business\}/g, biz);
     try {
-      const { msg } = await messages.addMessage(m.email, 'admin', text);
+      const { msg } = await messages.addMessage(m.email, 'admin', text, { auto: true });
       p.sent[next.id] = now.toISOString();
       await setJson(progKeyS(x, m.email), p);
       await cas(cfgKey(x), cur => (cur ? { ...cur, stats: { ...(cur.stats || {}), [next.id]: ((cur.stats || {})[next.id] || 0) + 1 } } : undefined));
