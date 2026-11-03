@@ -26,7 +26,8 @@ let memo = null;
 async function all() {
   if (memo && Date.now() - memo.at < 30000) return memo.items;
   const rec = await getJson(KEY).catch(() => null);
-  const items = rec && Array.isArray(rec.items) && rec.items.length ? rec.items : seed.map(normalise);
+  const items = (rec && Array.isArray(rec.items) && rec.items.length ? rec.items : seed.map(normalise))
+    .map(b => (typeof b.claimedSet === 'boolean' || !b.contact ? b : Object.assign({}, b, { claimed: ownerContact(b) })));   // the claimed rule always applies, also to saved listings
   memo = { at: Date.now(), items };
   return items;
 }
