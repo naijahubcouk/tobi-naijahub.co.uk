@@ -205,7 +205,7 @@ const CARD_KEYS = { ask: 1, o: 20, n: 30, a: 3, m: 320, f: 40, s: 30, d: 20, z: 
 async function saveCard(card, ip) {
   if (!card || typeof card !== 'object') throw new HttpError(400, 'bad_card', 'That card couldn’t be saved.');
   const d = {};
-  for (const [k, max] of Object.entries(CARD_KEYS)) if (card[k] != null && card[k] !== '') d[k] = typeof card[k] === 'number' ? card[k] : String(card[k]).slice(0, max);
+  for (const [k, max] of Object.entries(CARD_KEYS)) if (card[k] != null && card[k] !== '') d[k] = typeof card[k] === 'number' ? card[k] : Array.from(String(card[k]).replace(/\uFFFD/g, '')).slice(0, max).join('');   // never cut an emoji in half
   if (!d.m && !d.n) throw new HttpError(400, 'bad_card', 'Add a name or a message first.');
   await core.rateLimit('card-link', ip || 'x', 60, 60 * 60 * 1000, 'That’s a lot of card links this hour — please try again later.');
   const A = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';

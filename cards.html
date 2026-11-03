@@ -809,7 +809,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
         var b = await blob(), f = new File([b], fileName(), { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: text }); track('bday_share_image'); showGifts(); return; }
       } catch (e) { if (e && e.name === 'AbortError') return; }
-      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); track('bday_share_link'); showGifts();
+      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(fixU(text)), '_blank'); track('bday_share_link'); showGifts();
     } finally { btn.disabled = false; btn.textContent = keep; }
   }
   function copyText(t, ok) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast(ok); }, function () { prompt('Copy this:', t); }); }
@@ -920,6 +920,9 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     [].forEach.call(document.querySelectorAll('[data-fb]'), function (cvs) { var k = cvs.dataset.fb, c = cvs.getContext('2d'); c.scale(160 / 1080, 160 / 1080); if (P[k]) { lin(c, 1080, 1080, P[k].fb); c.font = '400 190px "Great Vibes", cursive'; c.textAlign = 'center'; c.fillStyle = P[k].head; var hw = headFor({ occ: st.occ }).split(' '), h1 = hw.slice(0, Math.ceil(hw.length / 2)).join(' '), h2 = hw.slice(Math.ceil(hw.length / 2)).join(' '); c.font = '400 ' + (hw.join(' ').length > 16 ? 150 : 190) + 'px "Great Vibes", cursive'; c.fillText(h1, 540, h2 ? 520 : 600); if (h2) c.fillText(h2, 540, 720); } else BG[k](c, 1080, 1080); });
   }
 
+  // emoji-safe text: never cut an emoji in half, and drop broken halves (they show as � in WhatsApp)
+  function fixU(t) { return String(t == null ? '' : t).replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '').replace(/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '$1').replace(/\uFFFD/g, ''); }
+  function cut(t, n) { return fixU(Array.from(fixU(t)).slice(0, n).join('')); }
   // ── receiver view ──
   var q = new URLSearchParams(location.search), got = window.__CARD || (q.get('c') ? dec(q.get('c')) : null);
   async function loadArt() { try { var r = await fetch('/.netlify/functions/bday?art=1'); if (r.ok) ART = (await r.json()).art || {}; } catch (e) {} }
@@ -927,7 +930,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     if (got && (got.m || got.n)) {
       $('maker').classList.add('hidden'); $('recv').classList.remove('hidden');
       var ro = OCC[got.o] ? got.o : 'birthday', OC = OCC[ro]; curFx = OC.fx || FX; curCols = OC.cols || null; curSong = OC.song || 'chime';
-      var rs = { tp: got.tp, tx: +got.tx || 0, ty: +got.ty || 0, ts: +got.ts || 1, occ: ro, mn: got.mn, yr: got.yr, nmg: got.g === 'welcome' || got.g === 'hello' ? got.g : 'happy', name: String(got.n || '').slice(0, 30), age: String(got.a || '').slice(0, 3), msg: String(got.m || '').slice(0, 320), from: String(got.f || '').slice(0, 40), sign: got.s == null ? 'With love' : String(got.s).slice(0, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
+      var rs = { tp: got.tp, tx: +got.tx || 0, ty: +got.ty || 0, ts: +got.ts || 1, occ: ro, mn: got.mn, yr: got.yr, nmg: got.g === 'welcome' || got.g === 'hello' ? got.g : 'happy', name: cut(got.n, 30), age: String(got.a || '').slice(0, 3), msg: cut(got.m, 320), from: cut(got.f, 40), sign: got.s == null ? 'With love' : cut(got.s, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
       $('recvTitle').textContent = OC.label.split(' ')[0] + ' ' + headFor(rs) + (rs.name ? ', ' + rs.name : '') + '!';
       $('recvFrom').textContent = (rs.from ? rs.from : 'Someone') + ' made you a ' + OC.noun + ' 💚';
       var cvR = $('cvR');
@@ -945,7 +948,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       $('coverT').textContent = 'You’ve got a ' + OC.noun + (rs.name ? ', ' + rs.name : '') + '!'; $('coverF').textContent = rs.from ? 'From ' + rs.from : 'Made with love';
       // 🎁 gift link: they type their own name first, then the card opens with it
       var applyName = function (nm) {
-        rs.name = nm; rs.msg = String(got.m || '').replace(/\{name\}/gi, nm || 'you').slice(0, 320);
+        rs.name = nm; rs.msg = cut(String(got.m || '').replace(/\{name\}/gi, nm || 'you'), 320);
         $('recvTitle').textContent = OC.label.split(' ')[0] + ' ' + headFor(rs) + (rs.name ? ', ' + rs.name : '') + '!';
         document.title = OC.label.split(' ')[0] + ' A ' + OC.noun + ' for ' + (rs.name || 'you') + ' — Auntie Tobi'; paintR();
       };
@@ -964,7 +967,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       $('again').onclick = function () { celebrate(pickFx()); playSong(); };
       paintMute(); $('mute').onclick = function () { try { localStorage.setItem('tobiMute', muted() ? '0' : '1'); } catch (e) {} paintMute(); if (muted()) stopSong(); else playSong(); };
       loadGifts(); $('installBox').classList.remove('hidden'); $('installBox').onclick = function () { track('card_install_click'); };
-      $('rThanks').onclick = function () { window.open('https://wa.me/?text=' + encodeURIComponent('Thank you so much for my ' + OC.noun + (rs.from ? ', ' + rs.from : '') + '! 🥰💚'), '_blank'); };
+      $('rThanks').onclick = function () { window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(fixU('Thank you so much for my ' + OC.noun + (rs.from ? ', ' + rs.from : '') + '! 🥰💚')), '_blank'); };
       document.title = OC.label.split(' ')[0] + ' A ' + OC.noun + ' for ' + (rs.name || 'you') + ' — Auntie Tobi';
       return;
     }
