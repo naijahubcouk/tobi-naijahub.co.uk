@@ -6983,10 +6983,25 @@ function tobiBizPage(b) {
     + (b.lines && b.lines.length ? '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">' + b.lines.map(function (l) { return '<div style="font-size:13.5px;color:#333">' + E(l) + '</div>'; }).join('') + '</div>' : '')
     + (contacts.length ? '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">Get in touch</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' + contacts.join('') + '</div>' : '')
     + (b.shop ? '<div style="margin-bottom:14px">' + btn(b.shop, '🛍️ Shop Now', '#057A44') + '</div>' : '')
+    + '<div class="bizmp" data-slug="' + E(b.slug) + '" data-name="' + E(b.name) + '"></div>'
     + (photos.length ? '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">Photos</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">' + photos.map(function (u) { return '<img src="' + E(u) + '" alt="" loading="lazy" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\'" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;cursor:zoom-in;display:block">'; }).join('') + '</div>' : '')
     + '<div style="display:flex;gap:6px;flex-wrap:wrap"><a href="' + dirUrl + '" target="_blank" rel="noopener" style="flex:2;padding:11px 8px;background:#057A44;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">See more on the directory →</a>' + shareBtn + '</div>'
     + '</div></div>';
 }
+// 🛍️ A Featured business's Marketplace products, shown on its page (filled in once the live Marketplace has loaded)
+function tobiFillBizMarketplace() {
+  var now = new Date(), norm = function (v) { return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); };
+  document.querySelectorAll('.bizmp').forEach(function (el) {
+    if (el.dataset.done || typeof MARKETPLACE_PRODUCTS === 'undefined') return;
+    var slug = el.dataset.slug, nm = norm(el.dataset.name);
+    var list = MARKETPLACE_PRODUCTS.filter(function (p) { return (!p.expires || new Date(p.expires) > now) && (p.bizSlug === slug || (!p.bizSlug && nm && norm(p.business) === nm)); });
+    if (!list.length) { if (window._mpLive) el.dataset.done = '1'; return; }
+    el.dataset.done = '1';
+    el.innerHTML = '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">🛍️ On the Auntie Tobi Marketplace</div>'
+      + '<div style="display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;margin-bottom:12px;-webkit-overflow-scrolling:touch">' + list.map(function (p) { return '<div style="flex:0 0 170px;width:170px;display:flex">' + buildProductCard(p, true).replace('min-width:155px;', 'width:100%;') + '</div>'; }).join('') + '</div>';
+  });
+}
+window.addEventListener('tobi-mp-live', function () { tobiFillBizMarketplace(); });
 function handleDeepLink() {
   const params = new URLSearchParams(window.location.search);
   const action = params.get('action');
@@ -7002,6 +7017,7 @@ function handleDeepLink() {
       const business = getLiveDirectory().find(b => b.slug === biz);
       if (business) {
         addTipMessage(tobiBizPage(business));
+        setTimeout(tobiFillBizMarketplace, 50);
         if (!business.featured && typeof showFeaturedBizCarousel === 'function') showFeaturedBizCarousel();   // ⭐ Featured businesses under every non-featured business
         // only business-related bubbles on a business page
         const _cat = business.cat || '', _town = ((business.loc || '').split(',')[0] || '').trim(), _q = v => String(v).replace(/\\/g, '').replace(/'/g, "\\'");
