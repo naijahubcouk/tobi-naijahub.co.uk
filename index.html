@@ -7002,6 +7002,7 @@ function handleDeepLink() {
       const business = getLiveDirectory().find(b => b.slug === biz);
       if (business) {
         addTipMessage(tobiBizPage(business));
+        if (!business.featured && typeof showFeaturedBizCarousel === 'function') showFeaturedBizCarousel();   // ⭐ Featured businesses under every non-featured business
         // only business-related bubbles on a business page
         const _cat = business.cat || '', _town = ((business.loc || '').split(',')[0] || '').trim(), _q = v => String(v).replace(/\\/g, '').replace(/'/g, "\\'");
         const _catLabel = _cat ? _cat.charAt(0).toUpperCase() + _cat.slice(1) : '';
