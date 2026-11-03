@@ -7002,8 +7002,17 @@ function handleDeepLink() {
       const business = getLiveDirectory().find(b => b.slug === biz);
       if (business) {
         addTipMessage(tobiBizPage(business));
-        const _bizSugg = getRandomSuggestionStr().split('|').map(x=>x.trim()).filter(Boolean).slice(0,2);
-        addTipMessage(`<div class="suggestions" style="margin-top:8px;"><button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 More businesses</button>${_bizSugg.map(s=>`<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g,"\'")}')">${s}</button>`).join('')}</div>`);
+        // only business-related bubbles on a business page
+        const _cat = business.cat || '', _town = ((business.loc || '').split(',')[0] || '').trim(), _q = v => String(v).replace(/\\/g, '').replace(/'/g, "\\'");
+        const _catLabel = _cat ? _cat.charAt(0).toUpperCase() + _cat.slice(1) : '';
+        const _sameCat = _cat && getLiveDirectory().filter(x => x.cat === _cat && x.slug !== business.slug).length;
+        const _sameTown = _town && _town !== 'UK' && getLiveDirectory().filter(x => ((x.loc || '').split(',')[0] || '').toLowerCase().indexOf(_town.toLowerCase()) !== -1 && x.slug !== business.slug).length;
+        addTipMessage('<div class="suggestions" style="margin-top:8px;">'
+          + (_sameCat ? '<button class="suggestion-btn" onclick="resetAndShow(function(){showBusinesses(undefined,\'' + _q(_cat) + '\',null,true)})">🔎 More ' + _catLabel + '</button>' : '')
+          + (_sameTown ? '<button class="suggestion-btn" onclick="resetAndShow(function(){showBusinesses(undefined,null,\'' + _q(_town.toLowerCase()) + '\',true)})">📍 Businesses in ' + _town + '</button>' : '')
+          + '<button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 More businesses</button>'
+          + '<button class="suggestion-btn" onclick="resetAndShow(function(){showBusinesses(undefined,null,null,true,true)})">⭐ Featured businesses</button>'
+          + '</div>');
         window.history.replaceState({}, '', window.location.pathname);
       } else {
         addTipMessage('Business not found.');
