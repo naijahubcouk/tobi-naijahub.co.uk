@@ -875,39 +875,118 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   // ── 🏢 Business directory (admin only): the one list the app, the chat and Business Studio use ──
   var DIR_F = { all: 'All', claimed: '✅ Claimed', unclaimed: '🕓 Unclaimed', featured: '⭐ Featured', hq: '➕ Added in HQ', hidden: '🙈 Hidden' };
   function dirPill(t, bg, fg) { return '<span class="ak" style="background:' + bg + ';color:' + (fg || '#fff') + '">' + t + '</span>'; }
+  // 🏢 Business directory: every business, its stage, follow-ups, emails, engagement and notes in one place
+  function crmAgo(iso) { if (!iso) return ''; var d = Math.floor((Date.now() - Date.parse(iso)) / 864e5); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d < 30 ? d + ' days ago' : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+  function crmDate(iso) { return iso ? new Date(iso.length === 10 ? iso + 'T12:00:00Z' : iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : ''; }
+  var CRM_STAGE_COLOR = { joined: ['#057A44', '#fff'], interested: ['#D1FAE5', '#065F46'], replied: ['#DBEAFE', '#1E3A8A'], notnow: ['#FEF3C7', '#92400E'], waiting: ['#EEF0F3', '#333'], emailing: ['#E0E7FF', '#3730A3'], 'new': ['#F3F4F6', '#6B7280'], declined: ['#FDE2E1', '#991B1B'], unsub: ['#F3F4F6', '#9CA3AF'] };
+  function crmPill(st) { var c = CRM_STAGE_COLOR[st] || ['#EEF0F3', '#333']; return dirPill(esc((S.crm && S.crm.stageLabel[st]) || st), c[0], c[1]); }
+  function loadDirData() { return Promise.all([api('crm-list'), S.dir ? Promise.resolve(S.dir) : api('dir-list')]).then(function (r) { S.crm = r[0]; S.dir = r[1]; }); }
   function vDir() {
     $('#ttl').textContent = 'Business directory';
-    $('#topRight').innerHTML = '<button class="btn ghost" id="dImp">📥 Import website export</button> <button class="btn primary" id="dAdd">＋ Add business</button>';
-    $('#dImp').onclick = dirImportSheet; $('#dAdd').onclick = function () { dirEdit(null); };
-    S.dirF = S.dirF || 'all'; S.dirQ = S.dirQ || '';
-    if (!S.dir) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading the directory…</p></div>'; api('dir-list').then(function (r) { S.dir = r; if (S.view === 'dir') vDir(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
-    var items = S.dir.items || [], info = S.dir.info || {};
-    var live = items.filter(function (b) { return !b.hidden && b.status !== 'pending'; });
-    var count = function (f) { return items.filter(f).length; };
-    var stats = [['In the app', live.length], ['Claimed', live.filter(function (b) { return b.claimed; }).length], ['Unclaimed', live.filter(function (b) { return !b.claimed; }).length], ['Featured', live.filter(function (b) { return b.featured; }).length], ['With email', live.filter(function (b) { return b.email; }).length], ['Hidden', count(function (b) { return b.hidden; })]];
-    var q = S.dirQ.toLowerCase(), f = S.dirF;
-    var list = items.filter(function (b) {
-      if (f === 'claimed' && !(b.claimed && !b.hidden)) return false; if (f === 'unclaimed' && !(!b.claimed && !b.hidden)) return false;
-      if (f === 'featured' && !b.featured) return false; if (f === 'hq' && b.src !== 'hq') return false; if (f === 'hidden' && !b.hidden) return false;
-      if (f === 'all' && b.hidden) return false;
-      return !q || (b.name + ' ' + b.cat + ' ' + b.loc + ' ' + (b.ig || '') + ' ' + (b.email || '')).toLowerCase().indexOf(q) >= 0;
-    }).sort(function (a, b) { return a.name.localeCompare(b.name); });
-    $('#view').innerHTML = '<div class="wrap">' +
-      (info.saved ? '' : '<div class="note" style="margin-bottom:12px">The app is still using its built-in list. Tap <b>📥 Import website export</b> and choose your latest directory CSV to bring in emails, phones and claimed / unclaimed for every business.</div>') +
-      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px">' + stats.map(function (x) { return '<div class="card" style="padding:10px 14px;min-width:110px"><div style="font-size:22px;font-weight:800">' + x[1] + '</div><div class="muted" style="font-size:12.5px">' + x[0] + '</div></div>'; }).join('') + '</div>' +
-      '<div class="muted" style="font-size:12.5px;margin-bottom:10px">' + (info.lastImport ? 'Last website import: ' + esc(new Date(info.lastImport).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) : 'No website import yet') + ' · Unclaimed = created by Favour Adentan or Auntie Tobi on the website.</div>' +
+    $('#topRight').innerHTML = '<button class="btn ghost" id="dImp">📥 Import</button> <button class="btn ghost" id="dWa">💬 WhatsApp messages</button> <button class="btn primary" id="dAdd">＋ Add</button>';
+    $('#dImp').onclick = dirImportSheet; $('#dAdd').onclick = function () { dirEdit(null); }; $('#dWa').onclick = crmWaTemplates;
+    if (!S.crm || !S.dir) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading your businesses…</p></div>'; loadDirData().then(function () { if (S.view === 'dir') vDir(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
+    var C = S.crm, info = S.dir.info || {}, rows = C.rows;
+    S.dirF = S.dirF || 'today'; S.dirQ = S.dirQ || ''; S.dirKind = S.dirKind || ''; S.dirCat = S.dirCat || ''; S.dirTown = S.dirTown || ''; S.dirHas = S.dirHas || '';
+    var due = rows.filter(function (r) { return r.due && !r.hidden; }), hot = C.hot.map(function (sl) { return rows.filter(function (r) { return r.slug === sl; })[0]; }).filter(Boolean);
+    var m = C.month;
+    var stat = function (n, l) { return '<div style="background:#F6F4EE;border-radius:10px;padding:8px 12px;min-width:84px"><div style="font-size:19px;font-weight:800">' + n + '</div><div class="muted" style="font-size:12px">' + l + '</div></div>'; };
+    var head = '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-weight:800;margin-bottom:8px">📅 Today</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap">' + stat(due.length, 'follow-ups due') + stat(hot.length, '🔥 clicked recently') + stat(C.newToday + ' / ' + C.perDay, 'new WhatsApp invites') + stat(C.counts.interested, 'interested') + '</div>' +
+      (hot.length ? '<div style="margin-top:10px;font-size:13.5px"><b>🔥 Engaging with your emails:</b> ' + hot.slice(0, 6).map(function (r) { return '<a href="javascript:void(0)" data-open="' + esc(r.slug) + '" style="color:#057A44;font-weight:700">' + esc(r.name) + '</a>'; }).join(' · ') + '</div>' : '') +
+      '<div style="font-weight:800;margin:14px 0 8px">This month</div><div class="row" style="gap:8px;flex-wrap:wrap">' + stat(m.contacted, 'contacted') + stat(m.opened, 'opened an email') + stat(m.clicked, 'clicked a link') + stat(m.replied, 'replied') + stat(m.joined, 'joined') + stat('£' + m.money, 'from joins') + '</div>' +
+      (info.saved ? '<div class="muted" style="font-size:12px;margin-top:10px">' + (info.lastImport ? 'Last website import: ' + esc(crmDate(info.lastImport)) : '') + '</div>' : '<div class="note" style="margin-top:10px">Tap <b>📥 Import</b> and choose your latest directory CSV to bring in emails, phones and claimed / unclaimed.</div>') + '</div>';
+    var F = { today: '📅 Due today (' + due.length + ')', hot: '🔥 Hot (' + hot.length + ')', all: 'All (' + rows.filter(function (r) { return !r.hidden; }).length + ')' };
+    C.stages.forEach(function (st) { F[st] = C.stageLabel[st] + ' (' + C.counts[st] + ')'; });
+    var cats = {}, towns = {}; rows.forEach(function (r) { if (r.cat) cats[r.cat] = 1; var t = (r.loc || '').split(',')[0].trim(); if (t && t !== 'UK') towns[t] = (towns[t] || 0) + 1; });
+    var opt = function (v, l, cur) { return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(l) + '</option>'; };
+    var f = S.dirF, q = S.dirQ.toLowerCase();
+    var list = rows.filter(function (r) {
+      if (f === 'today') { if (!r.due || r.hidden) return false; }
+      else if (f === 'hot') { if (C.hot.indexOf(r.slug) < 0) return false; }
+      else if (f === 'all') { if (r.hidden) return false; }
+      else if (r.stage !== f || (r.hidden && f !== 'unsub')) return false;
+      if (S.dirKind === 'claimed' && !r.claimed) return false; if (S.dirKind === 'unclaimed' && r.claimed) return false; if (S.dirKind === 'featured' && !r.featured) return false; if (S.dirKind === 'hq' && r.src !== 'hq') return false; if (S.dirKind === 'studio' && !r.studio) return false;
+      if (S.dirCat && r.cat !== S.dirCat) return false;
+      if (S.dirTown && (r.loc || '').split(',')[0].trim() !== S.dirTown) return false;
+      if (S.dirHas === 'email' && !r.email) return false; if (S.dirHas === 'wa' && !r.wa) return false; if (S.dirHas === 'none' && (r.email || r.wa)) return false;
+      return !q || (r.name + ' ' + r.cat + ' ' + r.loc + ' ' + r.ig + ' ' + r.email).toLowerCase().indexOf(q) >= 0;
+    }).sort(function (a, b) { return f === 'hot' ? b.lastClickAt.localeCompare(a.lastClickAt) : ((b.last && b.last.at) || '').localeCompare((a.last && a.last.at) || '') || a.name.localeCompare(b.name); });
+    $('#view').innerHTML = '<div class="wrap">' + head +
+      '<div class="chipbar" id="dF" style="margin-bottom:8px;flex-wrap:wrap">' + Object.keys(F).map(function (k) { return '<button class="chip" data-f="' + k + '" aria-pressed="' + (k === f) + '">' + F[k] + '</button>'; }).join('') + '</div>' +
       '<input id="dQ" placeholder="🔎 Search name, category, town, Instagram or email" value="' + esc(S.dirQ) + '" style="margin-bottom:8px">' +
-      '<div class="chipbar" id="dF" style="margin-bottom:8px">' + Object.keys(DIR_F).map(function (k) { return '<button class="chip" data-f="' + k + '" aria-pressed="' + (k === f) + '">' + DIR_F[k] + '</button>'; }).join('') + '</div>' +
+      '<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px"><select id="dKind" style="flex:1;min-width:130px">' + opt('', 'Any listing', S.dirKind) + opt('claimed', '✅ Claimed', S.dirKind) + opt('unclaimed', '🕓 Unclaimed', S.dirKind) + opt('featured', '⭐ Featured', S.dirKind) + opt('studio', '🧰 Uses Business Studio', S.dirKind) + opt('hq', '➕ Added in HQ', S.dirKind) + '</select>' +
+      '<select id="dCat" style="flex:1;min-width:130px">' + opt('', 'Any category', S.dirCat) + Object.keys(cats).sort().map(function (c) { return opt(c, c, S.dirCat); }).join('') + '</select>' +
+      '<select id="dTown" style="flex:1;min-width:120px">' + opt('', 'Any town', S.dirTown) + Object.keys(towns).sort().map(function (t) { return opt(t, t + ' (' + towns[t] + ')', S.dirTown); }).join('') + '</select>' +
+      '<select id="dHas" style="flex:1;min-width:120px">' + opt('', 'Any contact', S.dirHas) + opt('email', '📧 Has email', S.dirHas) + opt('wa', '💬 Has WhatsApp', S.dirHas) + opt('none', 'No email or WhatsApp', S.dirHas) + '</select></div>' +
       '<div class="muted" style="font-size:12.5px;margin-bottom:4px">' + list.length + ' shown</div>' +
-      '<div class="card" style="padding:4px 14px">' + (list.length ? list.slice(0, 400).map(function (b) {
-        return '<div class="aprow" style="cursor:pointer" data-slug="' + esc(b.slug) + '"><div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b>' + esc(b.name) + '</b>' +
-          (b.claimed ? dirPill('Claimed', '#057A44') : dirPill('Unclaimed', '#FFE7A3', '#6B4A00')) + (b.featured ? dirPill('⭐ Featured', '#0F1E36') : '') + (b.verified ? dirPill('✅ Verified', '#1D4ED8') : '') + (b.hidden ? dirPill('Hidden', '#9CA3AF') : '') + (b.src === 'hq' ? dirPill('Added in HQ', '#7C3AED') : '') + '</div>' +
-          '<div class="muted" style="font-size:13px;margin-top:2px">' + esc(b.cat || '—') + ' · ' + esc(b.loc || 'UK') + ' · ' + (b.email ? '📧 ' : '') + (b.wa ? '💬 ' : '') + (b.ig ? '📸 @' + esc(b.ig) : '') + '</div></div>' +
-          '<div class="apact"><button class="btn ghost sm" data-ed="' + esc(b.slug) + '">✏️ Edit</button><a class="btn ghost sm" href="/biz/' + encodeURIComponent(b.slug) + '" target="_blank" rel="noopener">↗</a></div></div>';
-      }).join('') : '<p class="muted" style="padding:14px 0">No businesses match.</p>') + '</div></div>';
+      '<div class="card" style="padding:4px 14px">' + (list.length ? list.slice(0, 400).map(function (r) {
+        return '<div class="aprow" style="cursor:pointer" data-open="' + esc(r.slug) + '"><div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b>' + esc(r.name) + '</b>' + crmPill(r.stage) +
+          (r.due ? dirPill('📅 Due', '#B45309') : '') + (r.claimed ? dirPill('Claimed', '#057A44') : dirPill('Unclaimed', '#FFE7A3', '#6B4A00')) + (r.featured ? dirPill('⭐', '#0F1E36') : '') + (r.studio ? dirPill('🧰 Studio', '#1D4ED8') : '') + '</div>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:2px">' + (r.last ? esc(r.last.what).slice(0, 90) + ' · ' + esc(crmAgo(r.last.at)) : esc(r.cat || '—') + ' · ' + esc((r.loc || 'UK').split(',')[0])) +
+          (r.opens || r.clicks ? ' · 👁 ' + r.opens + (r.clicks ? ' · 🔗 ' + r.clicks : '') : '') + (r.followUpAt ? ' · 📅 ' + esc(crmDate(r.followUpAt)) : r.checkBackAt && r.stage === 'notnow' ? ' · ⏸ back ' + esc(crmDate(r.checkBackAt)) : '') + '</div></div><div class="apact">›</div></div>';
+      }).join('') : '<p class="muted" style="padding:14px 0">' + (f === 'today' ? 'Nothing due today 🎉' : 'No businesses here.') + '</p>') + '</div></div>';
     $('#dQ').oninput = function () { S.dirQ = this.value; var pos = this.selectionStart; vDir(); var el = $('#dQ'); el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} };
     $$('#dF [data-f]').forEach(function (b) { b.onclick = function () { S.dirF = b.dataset.f; vDir(); }; });
-    $$('[data-slug]').forEach(function (row) { row.onclick = function (e) { if (e.target.closest('a')) return; dirEdit(items.filter(function (b) { return b.slug === row.dataset.slug; })[0]); }; });
+    [['#dKind', 'dirKind'], ['#dCat', 'dirCat'], ['#dTown', 'dirTown'], ['#dHas', 'dirHas']].forEach(function (x) { $(x[0]).onchange = function () { S[x[1]] = this.value; vDir(); }; });
+    $$('[data-open]').forEach(function (el) { el.onclick = function (e) { if (e.target.closest('a[href^="http"]')) return; crmOpen(el.dataset.open); }; });
+  }
+  // One business: timeline, follow-up, messages, details
+  async function crmOpen(slug, tab) {
+    var D; try { D = await api('crm-detail', { slug: slug }); } catch (x) { toast(x.message); return; }
+    var s = sheet('<div id="crmBox"></div>'); s.querySelector('.sheet').style.maxWidth = '680px';
+    var draw = function () {
+      var b = D.biz, r = D.rec, en = D.engage, t = tab || 'timeline';
+      var wa = String(b.wa || '').replace(/\D/g, ''), em = r.email || b.email;
+      var quick = [wa && '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://wa.me/' + wa + '">💬 WhatsApp</a>', em && '<a class="btn ghost sm" href="mailto:' + esc(em) + '">📧 ' + esc(em) + '</a>', b.phone && '<a class="btn ghost sm" href="tel:' + esc(String(b.phone).replace(/[^\d+]/g, '')) + '">📞 ' + esc(b.phone) + '</a>', b.ig && '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://www.instagram.com/' + esc(b.ig) + '/">📸 @' + esc(b.ig) + '</a>', '<a class="btn ghost sm" target="_blank" rel="noopener" href="/biz/' + encodeURIComponent(b.slug) + '">📱 App page</a>', '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://directory.auntietobi.co.uk/' + encodeURIComponent(b.slug) + '">🌐 Directory</a>'].filter(Boolean).join('');
+      var tabs = [['timeline', '🕑 Timeline'], ['follow', '📌 Follow-up'], ['message', '✉️ Message'], ['details', '📝 Details']];
+      var body = '';
+      if (t === 'timeline') body = (D.timeline.length ? D.timeline.map(function (x) { return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #F0ECE2"><div style="font-size:18px;width:24px;text-align:center">' + x.icon + '</div><div style="flex:1;min-width:0"><div style="font-size:14px">' + esc(x.text) + '</div><div class="muted" style="font-size:12px">' + esc(new Date(x.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })) + '</div></div></div>'; }).join('') : '<p class="muted">Nothing has happened with this business yet.</p>');
+      if (t === 'follow') body =
+        '<div style="font-weight:700;margin-bottom:6px">What happened?</div><div class="row" style="gap:6px;flex-wrap:wrap">' + [['called', '📞 Called'], ['messaged', '💬 Messaged'], ['replied', '↩️ They replied'], ['interested', '👍 Interested'], ['declined', '👎 Not interested'], ['joined', '💚 Joined']].map(function (x) { return '<button class="btn ghost sm" data-ca="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+        '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><span class="muted" style="font-size:13px;align-self:center">⏸ Not now — check back in</span>' + [30, 60, 90].map(function (d) { return '<button class="btn ghost sm" data-cnn="' + d + '">' + d + ' days</button>'; }).join('') + '<button class="btn ghost sm" data-ca="reset" style="margin-left:auto">↺ Reset</button></div>' +
+        '<div style="margin-top:14px"><label for="cLog">Add to the timeline <span class="muted" style="font-weight:400">(optional details for the buttons above, or anything else)</span></label><input id="cLog" maxlength="300" placeholder="e.g. Asked about the price, will decide next week"></div>' +
+        '<div class="f2" style="margin-top:12px"><div><label for="cNext">📅 Next follow-up</label><input id="cNext" type="date" value="' + esc(r.followUpAt) + '"></div><div style="align-self:end"><button class="btn ghost" id="cNextOk">Save date</button></div></div>' +
+        '<div style="margin-top:12px"><label for="cNotes">Notes (only you see these)</label><textarea id="cNotes" rows="4">' + esc(r.notes) + '</textarea><button class="btn ghost sm" id="cNotesOk" style="margin-top:6px">💾 Save notes</button></div>';
+      if (t === 'message') {
+        var lab = { invite: 'Invite', fu1: 'Follow-up', fu2: 'Last check-in' };
+        body = '<div style="font-weight:700;margin-bottom:6px">💬 WhatsApp / Instagram</div><div class="row" style="gap:6px;margin-bottom:6px">' + ['invite', 'fu1', 'fu2'].map(function (k) { return '<button class="chip" data-wk="' + k + '" aria-pressed="' + (k === (S.crmWk || D.wa.next)) + '">' + lab[k] + (k === D.wa.next ? ' (next)' : '') + '</button>'; }).join('') + '</div>' +
+          '<textarea id="cWa" rows="8" style="font-size:14px">' + esc(D.wa[S.crmWk || D.wa.next]) + '</textarea><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">' + (wa ? '<button class="btn primary sm" id="cWaGo">💬 Send on WhatsApp</button>' : '') + (b.ig ? '<button class="btn ghost sm" id="cIgGo">📸 Copy &amp; open Instagram</button>' : '') + (!wa && !b.ig ? '<span class="muted" style="font-size:13px">No WhatsApp or Instagram for this business.</span>' : '') + '</div>' +
+          '<div class="muted" style="font-size:12px;margin-top:4px">Tapping a button marks it as sent and schedules the next follow-up.</div>' +
+          '<div style="font-weight:700;margin:18px 0 6px">📧 Email' + (em ? ' to ' + esc(em) : '') + '</div>' + (em ? '<input id="cSub" placeholder="Subject" maxlength="200" style="margin-bottom:6px">' + mailTools('cBody', ['business_name', 'listing_link', 'claim_link', 'club_link', 'studio_link']) + '<textarea id="cBody" rows="7" style="font-size:14px">Hi {business_name},\n\n\n\nAuntie Tobi</textarea><button class="btn primary sm" id="cMail" style="margin-top:6px">📨 Send email</button><div class="muted" style="font-size:12px;margin-top:4px">Sent from Auntie Tobi &lt;hello@mail.auntietobi.co.uk&gt;, with opens and clicks tracked.</div>' : '<p class="muted" style="font-size:13px">No email address — add one in Details.</p>');
+      }
+      if (t === 'details') body = '<div style="font-size:14px;line-height:1.7">' + [['Category', b.cat], ['Town', b.loc], ['Email', b.email], ['Phone', b.phone], ['WhatsApp', b.wa], ['Instagram', b.ig && '@' + b.ig], ['Facebook', b.fb], ['TikTok', b.tt], ['Website', b.website], ['Website contact name', b.contact]].filter(function (x) { return x[1]; }).map(function (x) { return '<div><span class="muted">' + x[0] + ':</span> ' + esc(x[1]) + '</div>'; }).join('') + '</div>' +
+        (b.desc ? '<p style="font-size:14px;margin-top:10px">' + esc(b.desc) + '</p>' : '') + (b.notes ? '<p class="muted" style="font-size:13px">📝 ' + esc(b.notes) + '</p>' : '') + '<button class="btn primary" id="cEdit" style="margin-top:8px">✏️ Edit details</button>';
+      $('#crmBox', s).innerHTML = '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px"><div><h2 style="margin:0">' + esc(b.name) + '</h2><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">' + crmPill(D.stage) + (b.claimed ? dirPill('Claimed', '#057A44') : dirPill('Unclaimed', '#FFE7A3', '#6B4A00')) + (b.featured ? dirPill('⭐ Featured', '#0F1E36') : '') + (D.studio ? dirPill(D.studio.club ? '💚 Club member' : '🧰 Business Studio', '#1D4ED8') : '') + (D.journey ? dirPill('📧 ' + D.journey.sent + ' email' + (D.journey.sent === 1 ? '' : 's') + (D.journey.stop ? '' : ' · journey on'), '#E0E7FF', '#3730A3') : '') + (en.opens ? dirPill('👁 ' + en.opens + ' open' + (en.opens === 1 ? '' : 's'), '#EEF0F3', '#333') : '') + (en.clicks ? dirPill('🔗 ' + en.clicks + ' click' + (en.clicks === 1 ? '' : 's'), '#FEF3C7', '#92400E') : '') + (en.bounced ? dirPill('⚠️ Email bounced', '#FDE2E1', '#991B1B') : '') + '</div>' +
+        '<div class="muted" style="font-size:13px;margin-top:6px">' + esc(b.cat || '') + ' · ' + esc(b.loc || 'UK') + (r.followUpAt ? ' · 📅 follow up ' + esc(crmDate(r.followUpAt)) : '') + (r.checkBackAt && D.stage === 'notnow' ? ' · ⏸ check back ' + esc(crmDate(r.checkBackAt)) : '') + '</div></div><button class="btn ghost sm" id="cX">✕</button></div>' +
+        '<div class="row" style="gap:6px;flex-wrap:wrap;margin:10px 0">' + quick + '</div>' +
+        '<div class="chipbar" style="margin:6px 0 10px">' + tabs.map(function (x) { return '<button class="chip" data-ct="' + x[0] + '" aria-pressed="' + (x[0] === t) + '">' + x[1] + '</button>'; }).join('') + '</div><div>' + body + '</div>';
+      $('#cX', s).onclick = function () { s.remove(); if (S.view === 'dir') loadDirData().then(vDir); };
+      $$('[data-ct]', s).forEach(function (x) { x.onclick = function () { tab = x.dataset.ct; draw(); }; });
+      var act = async function (a, extra) { try { D = await api('crm-act', Object.assign({ slug: b.slug, act: a }, extra || {})); toast({ called: 'Logged 📞', messaged: 'Logged 💬', replied: 'Logged ↩️', interested: 'Marked interested 👍', declined: 'Marked not interested', joined: 'Marked as joined 💚 — emails stopped', notnow: 'We’ll remind you to check back', reset: 'Reset', note: 'Notes saved', followup: 'Follow-up date saved', log: 'Added', sent: 'Marked as sent — next follow-up scheduled' }[a] || 'Saved'); draw(); } catch (x) { toast(x.message); } };
+      $$('[data-ca]', s).forEach(function (x) { x.onclick = function () { if (x.dataset.ca === 'reset' && !confirm('Reset this business to “not contacted”?')) return; var txt = $('#cLog', s) ? $('#cLog', s).value.trim() : ''; act(x.dataset.ca, { text: txt }); }; });
+      $$('[data-cnn]', s).forEach(function (x) { x.onclick = function () { act('notnow', { days: +x.dataset.cnn }); }; });
+      if ($('#cNextOk', s)) $('#cNextOk', s).onclick = function () { act('followup', { date: $('#cNext', s).value }); };
+      if ($('#cNotesOk', s)) $('#cNotesOk', s).onclick = function () { act('note', { notes: $('#cNotes', s).value }); };
+      if ($('#cLog', s)) $('#cLog', s).onkeydown = function (e) { if (e.key === 'Enter' && this.value.trim()) act('log', { text: this.value.trim() }); };
+      $$('[data-wk]', s).forEach(function (x) { x.onclick = function () { S.crmWk = x.dataset.wk; draw(); }; });
+      if ($('#cWaGo', s)) $('#cWaGo', s).onclick = function () { window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent($('#cWa', s).value), '_blank', 'noopener'); S.crmWk = ''; act('sent', { via: 'WhatsApp' }); };
+      if ($('#cIgGo', s)) $('#cIgGo', s).onclick = async function () { try { await navigator.clipboard.writeText($('#cWa', s).value); toast('Copied — paste it in the DM'); } catch (e) {} window.open('https://ig.me/m/' + b.ig, '_blank', 'noopener'); S.crmWk = ''; act('sent', { via: 'Instagram' }); };
+      if ($('#cBody', s)) wireTools(s, 'cBody');
+      if ($('#cMail', s)) $('#cMail', s).onclick = async function () { var btn = this; if (!$('#cSub', s).value.trim()) { toast('Add a subject'); return; } if (!confirm('Send this email to ' + em + '?')) return; btn.disabled = true; try { D = await api('crm-email', { slug: b.slug, subject: $('#cSub', s).value, body: $('#cBody', s).value }); toast('📨 Sent to ' + D.sentTo); tab = 'timeline'; draw(); } catch (x) { btn.disabled = false; toast(x.message); } };
+      if ($('#cEdit', s)) $('#cEdit', s).onclick = function () { var it = (S.dir.items || []).filter(function (x) { return x.slug === b.slug; })[0] || b; s.remove(); dirEdit(it); };
+    };
+    draw();
+  }
+  function crmWaTemplates() {
+    var keys = [['invite', 'Invite'], ['fu1', 'Follow-up (3 days later)'], ['fu2', 'Last check-in (7 days after that)']];
+    api('crm-tpl').then(function (T) {
+      var s = sheet('<h2>💬 WhatsApp messages</h2><p class="muted" style="font-size:13px;margin:2px 0 10px">Used for WhatsApp and Instagram invites. {name} = business name · {listing} = their app page · {club} = Business Club page.</p><div class="stack">' +
+        keys.map(function (k) { return '<div><label for="wt_' + k[0] + '">' + k[1] + '</label><textarea id="wt_' + k[0] + '" rows="7" style="font-size:14px">' + esc(T.templates[k[0]]) + '</textarea></div>'; }).join('') +
+        '<div><label for="wtPer">New WhatsApp invites a day (target)</label><input id="wtPer" type="number" min="0" max="50" value="' + T.perDay + '"></div></div><div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="wtX">Cancel</button><button class="btn primary" id="wtOk">💾 Save</button></div>');
+      $('#wtX', s).onclick = function () { s.remove(); };
+      $('#wtOk', s).onclick = async function () { var t = {}; keys.forEach(function (k) { t[k[0]] = $('#wt_' + k[0], s).value; }); try { S.crm = await api('crm-settings', { settings: { templates: t, perDay: Number($('#wtPer', s).value) } }); s.remove(); toast('Saved'); vDir(); } catch (x) { toast(x.message); } };
+    }, function (x) { toast(x.message); });
   }
   function dirCats() { var set = {}; (S.dir.items || []).forEach(function (b) { if (b.cat) set[b.cat] = 1; }); return Object.keys(set).sort(); }
   function dirEdit(b) {
@@ -948,11 +1027,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#deX', s).onclick = function () { s.remove(); };
     if ($('#deDel', s)) $('#deDel', s).onclick = async function () {
       if (!confirm('Delete ' + b.name + ' from the app? (It stays on the website directory — to stop it coming back on the next import, tick Hidden instead.)')) return;
-      try { S.dir = await api('dir-delete', { slug: b.slug }); s.remove(); toast('Deleted'); vDir(); } catch (x) { toast(x.message); }
+      try { S.dir = await api('dir-delete', { slug: b.slug }); s.remove(); toast('Deleted'); S.crm = null; vDir(); } catch (x) { toast(x.message); }
     };
     if ($('#deNever', s)) $('#deNever', s).onclick = async function () {
       if (!confirm('Remove ' + b.name + ' from the app and never suggest it again?\n\nUse this when a business asks not to be listed. Remember to delete it on the directory website too.')) return;
-      try { S.dir = await api('dir-delete', { slug: b.slug, never: true }); s.remove(); toast('Removed 🚫 — the Finder won’t suggest it again'); vDir(); } catch (x) { toast(x.message); }
+      try { S.dir = await api('dir-delete', { slug: b.slug, never: true }); s.remove(); toast('Removed 🚫 — the Finder won’t suggest it again'); S.crm = null; vDir(); } catch (x) { toast(x.message); }
     };
     $('#deOk', s).onclick = async function () {
       var v = function (id) { return $('#' + id, s).value.trim(); }, c = v('deCl2');
@@ -963,7 +1042,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       item.gallery = gal.filter(function (g) { return g.url; }).map(function (g) { return g.url; }); item.galleryAdd = gal.filter(function (g) { return g.data; }).map(function (g) { return g.data; });
       if (dpic) item.imgData = dpic; else if (isNew && !b.img) { item.imgData = bizCard(item); item.imgSrc = 'card'; }
       this.disabled = true;
-      try { S.dir = await api('dir-save', { item: item }); s.remove(); toast('Saved ✅ — the app updates within a minute'); vDir(); } catch (x) { this.disabled = false; $('#deErr', s).textContent = x.message; $('#deErr', s).classList.remove('hidden'); }
+      try { S.dir = await api('dir-save', { item: item }); s.remove(); toast('Saved ✅ — the app updates within a minute'); S.crm = null; vDir(); } catch (x) { this.disabled = false; $('#deErr', s).textContent = x.message; $('#deErr', s).classList.remove('hidden'); }
     };
   }
   function dirImportSheet() {
@@ -990,7 +1069,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     };
     $('#diOk', s).onclick = async function () {
       this.disabled = true; this.textContent = 'Saving…';
-      try { var r = await api('dir-apply', { csv: csv, hideGone: !!($('#diH', s) && $('#diH', s).checked) }); S.dir = { items: r.items, info: r.info }; s.remove(); toast('Imported ✅ ' + r.stats.added + ' new · ' + r.stats.changed + ' updated' + (r.stats.hidden ? ' · ' + r.stats.hidden + ' hidden' : '')); vDir(); }
+      try { var r = await api('dir-apply', { csv: csv, hideGone: !!($('#diH', s) && $('#diH', s).checked) }); S.dir = { items: r.items, info: r.info }; s.remove(); toast('Imported ✅ ' + r.stats.added + ' new · ' + r.stats.changed + ' updated' + (r.stats.hidden ? ' · ' + r.stats.hidden + ' hidden' : '')); S.crm = null; vDir(); }
       catch (x) { this.disabled = false; this.textContent = '✅ Apply'; $('#diErr', s).textContent = x.message; $('#diErr', s).classList.remove('hidden'); }
     };
   }

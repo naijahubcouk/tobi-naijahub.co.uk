@@ -122,7 +122,7 @@ main.wide{max-width:1480px}
 <body>
 <header><div><b>Business Studio Admin</b><br><small>Auntie Tobi Business Club</small></div><div class="sp"></div><span id="who" class="muted" style="color:#cfd6e2"></span><button id="logout" class="hidden">Sign out</button></header>
 <nav id="nav" class="hidden">
-  <button data-v="overview">Overview</button><button data-v="today">Today</button><button data-v="messages">Messages <span class="nbadge hidden" id="msgBadge"></span></button><button data-v="members">Members</button><button data-v="ideas">Ideas <span class="nbadge hidden" id="ideaBadge"></span></button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites</button><button data-v="subs">Pro &amp; Plus</button>
+  <button data-v="overview">Overview</button><button data-v="today">Today</button><button data-v="messages">Messages <span class="nbadge hidden" id="msgBadge"></span></button><button data-v="members">Members</button><button data-v="ideas">Ideas <span class="nbadge hidden" id="ideaBadge"></span></button><button data-v="benefits">Benefits</button><button data-v="market">Marketplace</button><button data-v="invites">Club invites ↗</button><button data-v="subs">Pro &amp; Plus</button>
   <button data-v="usage">Usage &amp; costs</button><button data-v="settings">Allowances &amp; limits</button><button data-v="alerts">Alerts</button><button data-v="audit">Activity log</button><button data-v="resources">Resources</button>
 </nav>
 <div id="app"></div>
@@ -1110,6 +1110,9 @@ main.wide{max-width:1480px}
         '<button class="btn small ghost" data-ivmore="' + esc(x.slug) + '">Notes &amp; history' + (x.notes ? ' 📝' : '') + '</button></div></div>';
   }
   async function vInvites() {
+    // Club invites have moved to Auntie Tobi HQ → 🏢 Business directory (same businesses, notes and follow-ups)
+    app.innerHTML = '<main><h1>Business Club invites</h1><div class="card" style="padding:20px"><p style="margin:0 0 12px;font-size:15px">Club invites have moved to <b>Auntie Tobi HQ → 🏢 Business directory</b>. Everything you logged here — statuses, notes, follow-ups — is there, together with the email journeys, opens and clicks, and a timeline for every business.</p><a class="btn" href="/hq#dir" style="text-decoration:none">Open Business directory in HQ →</a></div></main>';
+    return;
     loading();
     var r; try { r = S.iv = await api('invites-view'); } catch (x) { app.innerHTML = '<main><div class="err">' + esc(x.message) + '</div></main>'; return; }
     var f = S.ivFilter || 'today', q = (S.ivQ || '').toLowerCase(), st = r.stats;
@@ -1242,7 +1245,7 @@ main.wide{max-width:1480px}
     if (it.kind === 'verify' || it.kind === 'spotlight') out.push('<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>' + (m.number ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://find-and-update.company-information.service.gov.uk/company/' + encodeURIComponent(m.number) + '">GOV.UK</a>' : ''));
     if (it.kind === 'renew') out.push((m.whatsapp ? '<a class="btn small ghost" target="_blank" rel="noopener" href="https://wa.me/' + esc(String(m.whatsapp).replace(/\D/g, '').replace(/^0/, '44')) + '?text=' + encodeURIComponent('Hi! Your Auntie Tobi Business Club membership ends on ' + d(m.expires) + '. Renew here to keep your benefits: https://auntietobi.co.uk/business-club 💚') + '">WhatsApp</a>' : '') + '<button class="btn small ghost" data-tben="' + esc(m.email) + '">Open</button>');
     if (it.kind === 'lesson') out.push('<button class="btn small ghost" data-tgo="resources">Open</button>');
-    if (it.kind === 'invites') out.push('<button class="btn small ghost" data-tgo="invites">Open Club invites</button>');
+    if (it.kind === 'invites') out.push('<a class="btn small ghost" href="/hq#dir" style="text-decoration:none;color:var(--navy)">Open in HQ ↗</a>');
     if (it.kind === 'messages') out.push('<button class="btn small ghost" data-tgo="messages">Open Messages</button>');
     if (it.kind === 'posts') out.push('<a class="btn small ghost" href="/hq" style="text-decoration:none;color:var(--navy)">Open Content Hub ↗</a>');
     if (it.kind === 'alert') out.push('<button class="btn small ghost" data-tgo="alerts">Alerts</button>');

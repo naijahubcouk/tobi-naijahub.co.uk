@@ -68,6 +68,7 @@ function nextKind(rec) {
 }
 function isDue(rec, day) {
   if (!rec) return false;
+  if (rec.followUpAt && rec.followUpAt <= day && !['joined', 'declined'].includes(rec.status)) return true;
   if (rec.status === 'waiting') return !!rec.nextAt && rec.nextAt <= day;
   if (rec.status === 'notnow') return !!rec.checkBackAt && rec.checkBackAt <= day;
   return false;
@@ -128,10 +129,10 @@ async function summary(event, ctx) {
   return { due: v.stats.due, newTodo: v.newTodo, perDay: v.perDay };
 }
 
-const log = (rec, what) => { rec.history = [{ at: core.nowIso(), what }, ...(rec.history || [])].slice(0, 30); rec.lastAt = core.nowIso(); };
+const log = (rec, what) => { rec.history = [{ at: core.nowIso(), what }, ...(rec.history || [])].slice(0, 80); rec.lastAt = core.nowIso(); };
 
 // action: sent | interested | notnow | declined | joined | reset | note
-const okSlug = slug => { slug = String(slug || '').toLowerCase(); if (!/^[a-z0-9-]{1,120}$/.test(slug)) throw new HttpError(400, 'invalid', 'Invalid business.'); return slug; };
+const okSlug = slug => { slug = String(slug || '').trim(); if (!/^[A-Za-z0-9._~-]{1,120}$/.test(slug)) throw new HttpError(400, 'invalid', 'Invalid business.'); return slug; };
 const EMAIL_RE = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
 
 async function act(slug, action, opts) {
@@ -186,7 +187,21 @@ function apply(s, slug, action, opts, day) {
     } else if (action === 'declined') { rec.status = 'declined'; rec.nextAt = ''; log(rec, 'Not interested'); }
     else if (action === 'joined') { rec.status = 'joined'; rec.nextAt = ''; log(rec, 'Joined the Business Club 🎉'); }
     else if (action === 'reset') { rec.status = 'new'; rec.step = 0; rec.nextAt = ''; delete rec.checkBackAt; delete rec.firstAt; rec.sentDays = []; log(rec, 'Reset to not contacted'); }
-    else if (action === 'note') { rec.notes = cleanText(opts.notes, 600); }
+    else if (action === 'note') { rec.notes = String(opts.notes || '').replace(/\r/g, '').trim().slice(0, 3000); }
+    // ── HQ Business directory: more ways to log what happened ──
+    else if (action === 'called' || action === 'messaged') {
+      if (rec.status === 'new') { rec.status = 'waiting'; rec.step = Math.max(rec.step || 0, 1); rec.firstAt = rec.firstAt || core.nowIso(); }
+      if (!rec.nextAt && rec.status === 'waiting') rec.nextAt = addDays(day, GAP1);
+      log(rec, (action === 'called' ? '📞 Called' : '💬 Messaged') + via + (opts.text ? ` — ${cleanText(opts.text, 200)}` : ''));
+      if (!rec.sentDays.includes(day)) rec.sentDays = [day, ...rec.sentDays].slice(0, 20);
+    }
+    else if (action === 'replied') { rec.repliedAt = core.nowIso(); if (rec.status === 'waiting' || rec.status === 'new') rec.nextAt = ''; log(rec, '↩️ They replied' + (opts.text ? ` — ${cleanText(opts.text, 300)}` : '')); }
+    else if (action === 'followup') {
+      const d = String(opts.date || '');
+      if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new HttpError(400, 'invalid', 'Choose a date.');
+      rec.followUpAt = d; log(rec, d ? `📅 Follow up on ${d}` : '📅 Follow-up date cleared');
+    }
+    else if (action === 'log') { const t = cleanText(opts.text, 300); if (!t) throw new HttpError(400, 'invalid', 'Write what happened.'); log(rec, t); }
     else if (action === 'email') {
       // Admin-added or corrected email (used for copying and the GHL export). Empty = go back to the listing's email.
       const e = String(opts.email || '').trim().toLowerCase();
@@ -195,6 +210,7 @@ function apply(s, slug, action, opts, day) {
       else if (rec.email) { delete rec.email; log(rec, 'Email reset to the listing'); }
     }
     else throw new HttpError(400, 'invalid', 'Invalid action.');
+    if (!['note', 'followup', 'email', 'log'].includes(action)) delete rec.followUpAt;   // something happened: the chosen follow-up date is done
     s.items[slug] = rec;
     return rec;
   }
@@ -221,4 +237,4 @@ async function saveSettings(raw) {
   return saved;
 }
 
-module.exports = { view, summary, act, actMany, saveSettings, DEFAULT_TEMPLATES, STATUSES, GAP1, GAP2 };
+module.exports = { load, templates, fill, nextKind, isDue, STATUS_LABEL, addDays, view, summary, act, actMany, saveSettings, DEFAULT_TEMPLATES, STATUSES, GAP1, GAP2 };

@@ -124,14 +124,19 @@ async function personalLine(b) {
   } catch (_) { return ''; }
 }
 // Resend accepts about 2 emails a second: if it says "slow down" (429), wait and try again (up to 3 times)
-async function sendOne(to, msg, slug) {
+async function sendOne(to, msg, slug, step) {
   const key = core.env('RESEND_API_KEY');
   if (!key) { if (core.env('STUDIO_EMAIL_MODE') === 'log') { console.log('[outreach] (log) to', to, msg.subject); return true; } throw new HttpError(500, 'email_not_configured', 'Email sending is not set up (RESEND_API_KEY).'); }
   const unsub = `${core.siteBase()}/u/${token(slug)}`;
   for (let attempt = 0; attempt < 4; attempt++) {
     const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: FROM(), to: [to], reply_to: REPLY_TO(), subject: msg.subject, text: msg.text, html: msg.html, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${REPLY_TO()}?subject=unsubscribe>` } }) });
-    if (r.ok) return true;
+    if (r.ok) {
+      // remember which business this email was for, so opens / clicks from Resend land on its timeline
+      const id = ((await r.json().catch(() => ({}))) || {}).id;
+      if (id) await core.setJson('out/rid/' + id, { slug, step: step || '', subject: msg.subject, at: core.nowIso() }).catch(() => {});
+      return id || true;
+    }
     const t = (await r.text()).slice(0, 300);
     if (r.status === 429 && attempt < 3) {
       if (/quota|daily|monthly/i.test(t)) throw new HttpError(429, 'limit', 'Your email plan’s limit is reached — the rest will go when it resets.');
@@ -160,7 +165,7 @@ async function sendBatch(max) {
       if (Date.now() > stopAt) break;
       const x = chunk[k], started = Date.now();
       const msg = await emails.render(x.step, Object.assign(vars(dir.get(x.slug)), { personal_line: lines[k] }));
-      if (await sendOne(x.email, msg, x.slug)) { await record(x, 'email'); sent++; } else failed++;
+      if (await sendOne(x.email, msg, x.slug, x.step)) { await record(x, 'email'); sent++; } else failed++;
       await new Promise(res => setTimeout(res, Math.max(500, 550 - (Date.now() - started))));   // never two emails within half a second
     }
   }
@@ -239,4 +244,4 @@ async function publicPage(q) {
   return page('Listing removed', `<h1 style="font-size:22px">Done — ${name} has been removed</h1><p>It’s off the Auntie Tobi app now and will be off the directory website within a few days. Sorry for any bother, and all the best with your business.</p>`);
 }
 
-module.exports = { settings, saveSettings, plan, sendBatch, handMessage, markHand, mark, overview, previewFor, sendTest, publicPage, token, J };
+module.exports = { sendOne, vars, settings, saveSettings, plan, sendBatch, handMessage, markHand, mark, overview, previewFor, sendTest, publicPage, token, J };

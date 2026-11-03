@@ -306,6 +306,23 @@ exports.handler = handler(async (ctx) => {
       }
       return { items: await bizdir.all(), info: await bizdir.info() };
     }
+    case 'crm-tpl': case 'crm-list': case 'crm-detail': case 'crm-act': case 'crm-email': case 'crm-settings': {
+      // 🏢 Business directory tracking (admin only) — Club invites moved here from Business Studio Admin
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const crm = require('../crm'), invites = require('../invites');
+      const slug = String(body.slug || '');
+      if (body.action === 'crm-detail') return await crm.detail(slug);
+      if (body.action === 'crm-tpl') { const st = await invites.load(); return { templates: invites.templates(st), perDay: st.settings.perDay }; }
+      if (body.action === 'crm-act') {
+        await invites.act(slug, String(body.act || ''), { days: body.days, notes: body.notes, via: body.via, email: body.email, date: body.date, text: body.text });
+        if (body.act === 'joined') await require('../outreach').mark(slug, 'joined').catch(() => {});
+        await core.audit(who.email, 'hq_crm_' + body.act, { slug });
+        return await crm.detail(slug);
+      }
+      if (body.action === 'crm-email') { const r = await crm.sendEmail(slug, body.subject, body.body, who.email); await core.audit(who.email, 'hq_crm_email', { slug }); return Object.assign(await crm.detail(slug), { sentTo: r.to }); }
+      if (body.action === 'crm-settings') { await invites.saveSettings(body.settings || {}); await core.audit(who.email, 'hq_crm_settings', {}); }
+      return await crm.list();
+    }
     case 'out-overview': case 'out-settings': case 'out-send': case 'out-hand': case 'out-hand-done': case 'out-mark': case 'out-preview': {
       // 📧 business email journeys (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can send outreach emails.');
