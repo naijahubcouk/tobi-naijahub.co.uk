@@ -24,10 +24,10 @@ const FROM = () => core.env('OUTREACH_EMAIL_FROM', 'Auntie Tobi <hello@mail.aunt
 const REPLY_TO = () => core.env('OUTREACH_REPLY_TO', 'info@auntietobi.co.uk');
 const DAY = 864e5;
 
-async function settings() { return Object.assign({ on: false, cap: 60, manualCap: 20, aiLine: false }, (await getJson('out/settings').catch(() => null)) || {}); }
+async function settings() { return Object.assign({ on: false, cap: 50, manualCap: 20, aiLine: false }, (await getJson('out/settings').catch(() => null)) || {}); }
 async function saveSettings(s) {
   const cur = await settings();
-  const next = { on: typeof s.on === 'boolean' ? s.on : cur.on, cap: Math.max(1, Math.min(95, parseInt(s.cap, 10) || cur.cap)), manualCap: Math.max(0, Math.min(60, parseInt(s.manualCap, 10) >= 0 ? parseInt(s.manualCap, 10) : cur.manualCap)), aiLine: typeof s.aiLine === 'boolean' ? s.aiLine : cur.aiLine };
+  const next = { on: typeof s.on === 'boolean' ? s.on : cur.on, cap: Math.max(1, Math.min(300, parseInt(s.cap, 10) || cur.cap)), manualCap: Math.max(0, Math.min(60, parseInt(s.manualCap, 10) >= 0 ? parseInt(s.manualCap, 10) : cur.manualCap)), aiLine: typeof s.aiLine === 'boolean' ? s.aiLine : cur.aiLine };
   await core.setJson('out/settings', next); return next;
 }
 async function state() { return (await getJson('out/state').catch(() => null)) || { biz: {} }; }
@@ -123,33 +123,46 @@ async function personalLine(b) {
     return t.length > 10 && t.length < 200 ? t : '';
   } catch (_) { return ''; }
 }
+// Resend accepts about 2 emails a second: if it says "slow down" (429), wait and try again (up to 3 times)
 async function sendOne(to, msg, slug) {
   const key = core.env('RESEND_API_KEY');
   if (!key) { if (core.env('STUDIO_EMAIL_MODE') === 'log') { console.log('[outreach] (log) to', to, msg.subject); return true; } throw new HttpError(500, 'email_not_configured', 'Email sending is not set up (RESEND_API_KEY).'); }
   const unsub = `${core.siteBase()}/u/${token(slug)}`;
-  const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM(), to: [to], reply_to: REPLY_TO(), subject: msg.subject, text: msg.text, html: msg.html, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${REPLY_TO()}?subject=unsubscribe>` } }) });
-  if (!r.ok) { const t = (await r.text()).slice(0, 300); console.error('[outreach] send failed', r.status, t); if (r.status === 429) throw new HttpError(429, 'limit', 'The email service’s daily limit is reached — the rest will go tomorrow.'); }
-  return r.ok;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: FROM(), to: [to], reply_to: REPLY_TO(), subject: msg.subject, text: msg.text, html: msg.html, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${REPLY_TO()}?subject=unsubscribe>` } }) });
+    if (r.ok) return true;
+    const t = (await r.text()).slice(0, 300);
+    if (r.status === 429 && attempt < 3) {
+      if (/quota|daily|monthly/i.test(t)) throw new HttpError(429, 'limit', 'Your email plan’s limit is reached — the rest will go when it resets.');
+      const wait = Math.min(4000, (parseFloat(r.headers.get('retry-after')) || 1) * 1000);
+      await new Promise(res => setTimeout(res, wait)); continue;
+    }
+    console.error('[outreach] send failed', r.status, t);
+    return false;
+  }
+  return false;
 }
 
-// Sends the next few of today's emails (call again until left = 0). Stays well inside the function time limit.
+// Sends the next part of today's emails at a steady pace (about 2 a second). HQ calls again until left = 0.
 async function sendBatch(max) {
   const p = await plan();
   await applyStops(p.stops);
   if (!p.set.on) throw new HttpError(400, 'off', 'Turn the journeys on first.');
   const dir = new Map((await bizdir.all()).map(b => [b.slug, b]));
-  const batch = p.todayEmail.slice(0, max || 10), stopAt = Date.now() + 18000;
+  const batch = p.todayEmail.slice(0, max || 25), stopAt = Date.now() + 17000;
   let sent = 0, failed = 0;
   for (let i = 0; i < batch.length; i += 5) {
     if (Date.now() > stopAt) break;
     const chunk = batch.slice(i, i + 5);
     const lines = p.set.aiLine ? await Promise.all(chunk.map(x => ['u1', 'u2', 'u3', 'c1', 'c2'].includes(x.step) || /^x/.test(x.step) ? personalLine(dir.get(x.slug)) : '')) : chunk.map(() => '');
-    await Promise.all(chunk.map(async (x, k) => {
-      const v = Object.assign(vars(dir.get(x.slug)), { personal_line: lines[k] });
-      const msg = await emails.render(x.step, v);
+    for (let k = 0; k < chunk.length; k++) {
+      if (Date.now() > stopAt) break;
+      const x = chunk[k], started = Date.now();
+      const msg = await emails.render(x.step, Object.assign(vars(dir.get(x.slug)), { personal_line: lines[k] }));
       if (await sendOne(x.email, msg, x.slug)) { await record(x, 'email'); sent++; } else failed++;
-    }));
+      await new Promise(res => setTimeout(res, Math.max(500, 550 - (Date.now() - started))));   // never two emails within half a second
+    }
   }
   const left = Math.max(0, p.todayEmail.length - sent - failed);
   return { sent, failed, left };
