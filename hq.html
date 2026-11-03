@@ -1103,6 +1103,36 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#mpX', s).onclick = function () { s.remove(); };
   }
   // 📝 Emails — edit every email template
+  // ✏️ Email text tools: bold, link, button, lists, placeholders + a live preview
+  function mailTools(id, vars) {
+    return '<div class="row" data-tools="' + id + '" style="gap:6px;flex-wrap:wrap;margin:6px 0 4px">' +
+      '<button type="button" class="btn ghost sm" data-tl="b" title="Bold"><b>B</b></button><button type="button" class="btn ghost sm" data-tl="link">🔗 Link</button><button type="button" class="btn ghost sm" data-tl="btn">🟩 Button</button><button type="button" class="btn ghost sm" data-tl="ul">• List</button><button type="button" class="btn ghost sm" data-tl="ol">1. List</button></div>' +
+      (vars && vars.length ? '<div class="muted" style="font-size:12.5px">Add: ' + vars.map(function (v) { return '<button type="button" class="chip" data-mv="' + v + '" data-for="' + id + '" style="margin:2px">{' + v + '}</button>'; }).join('') + '</div>' : '');
+  }
+  function wireTools(s, id) {
+    var ta = $('#' + id, s);
+    var put = function (before, after, fallback) { var a = ta.selectionStart, z = ta.selectionEnd, sel = ta.value.slice(a, z) || fallback || ''; ta.value = ta.value.slice(0, a) + before + sel + after + ta.value.slice(z); ta.focus(); ta.setSelectionRange(a + before.length, a + before.length + sel.length); ta.dispatchEvent(new Event('input')); };
+    $$('[data-tools="' + id + '"] [data-tl]', s).forEach(function (b) { b.onclick = function () {
+      var k = b.dataset.tl, a = ta.selectionStart, z = ta.selectionEnd, sel = ta.value.slice(a, z);
+      if (k === 'b') return put('**', '**', 'bold words');
+      if (k === 'link' || k === 'btn') {
+        var label = sel || prompt(k === 'btn' ? 'Button words (e.g. Join the Business Club)' : 'Words to show as the link', ''); if (!label) return;
+        var url = prompt('Web address (starting https://) — or a placeholder like {club_link}', 'https://'); if (!url || url === 'https://') return;
+        if (!/^https?:\/\/|^\{[a-z_]+\}$/.test(url)) url = 'https://' + url.replace(/^\/+/, '');
+        var t = k === 'btn' ? '\n\n[[' + label + '|' + url + ']]\n\n' : '[' + label + '](' + url + ')';
+        ta.value = ta.value.slice(0, a) + t + ta.value.slice(z); ta.focus(); ta.setSelectionRange(a + t.length, a + t.length); ta.dispatchEvent(new Event('input')); return;
+      }
+      var lines = (sel || 'First point\nSecond point').split('\n').map(function (l, i) { return (k === 'ul' ? '- ' : (i + 1) + '. ') + l.replace(/^(- |\d+\. )/, ''); }).join('\n');
+      put('\n\n' + lines + '\n\n', '', ''); ta.value = ta.value.replace(/\n{3,}/g, '\n\n'); ta.dispatchEvent(new Event('input'));
+    }; });
+    $$('[data-mv][data-for="' + id + '"]', s).forEach(function (b) { b.onclick = function () { var v = '{' + b.dataset.mv + '}', a = ta.selectionStart, z = ta.selectionEnd; ta.value = ta.value.slice(0, a) + v + ta.value.slice(z); ta.focus(); ta.setSelectionRange(a + v.length, a + v.length); ta.dispatchEvent(new Event('input')); }; });
+  }
+  function livePreview(host, fetcher, inputs) {
+    var sh = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host, timer = 0, n = 0;
+    var run = async function () { var my = ++n; try { var m = await fetcher(); if (my !== n) return; sh.innerHTML = '<div style="font:600 13px Arial;color:#6B7280;padding:8px 10px;border-bottom:1px solid #ECE6D6">Subject: ' + String(m.subject).replace(/</g, '&lt;') + '</div>' + String(m.html).replace(/^[\s\S]*?<body[^>]*>|<\/body>[\s\S]*$/g, ''); } catch (e) { sh.innerHTML = '<div style="padding:10px;color:#B42318;font:13px Arial">' + String(e.message).replace(/</g, '&lt;') + '</div>'; } };
+    inputs.forEach(function (el) { el.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 700); }); });
+    run();
+  }
   function vMail() {
     $('#ttl').textContent = 'Emails';
     $('#topRight').innerHTML = '<button class="btn ghost" id="mOut">📧 Outreach</button>';
@@ -1115,7 +1145,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       if (g.welcome) {
         var W = M.welcome[g.welcome], steps = W.steps.slice().sort(function (a, b) { return a.days - b.days; });
         body = '<div class="muted" style="font-size:12.5px;margin:0 0 6px">' + (W.on ? '🟢 This series is on' : '⚪ This series is off') + (W.on ? (W.email ? ' · also sent by email' : ' · chat only (email off)') : '') + ' — switch it on or off in Business Studio Admin → Messages.</div><div class="card" style="padding:4px 14px">' +
-          steps.map(function (st) { return row('data-wid="' + st.id + '" data-ws="' + g.welcome + '"', st.subject || 'Message', (st.on ? '' : ' ' + dirPill('Off', '#9CA3AF')) + (/^x/.test(st.id) ? ' ' + dirPill('Added by you', '#7C3AED') : ''), 'Day ' + st.days + (st.email === false ? ' · chat only' : ''), String(st.text).slice(0, 110)); }).join('') + '</div><button class="btn ghost sm" data-wadd="' + g.welcome + '" style="margin-top:6px">＋ Add a message</button>';
+          steps.map(function (st) { return row('data-wid="' + st.id + '" data-ws="' + g.welcome + '"', st.subject || 'Message', (st.on ? '' : ' ' + dirPill('Off', '#9CA3AF')) + (/^x/.test(st.id) ? ' ' + dirPill('Added by you', '#7C3AED') : '') + (st.emailBody ? ' ' + dirPill('📧 Own email', '#1D4ED8') : ''), 'Day ' + st.days + (st.email === false ? ' · chat only' : ''), String(st.text).slice(0, 110)); }).join('') + '</div><button class="btn ghost sm" data-wadd="' + g.welcome + '" style="margin-top:6px">＋ Add a message</button>';
       } else {
         var items = M.items.filter(function (t) { return t.group === g.id; });
         body = '<div class="card" style="padding:4px 14px">' + items.map(function (t) { return row('data-mid="' + t.id + '"', t.name, (t.edited ? ' ' + dirPill('Edited', '#7C3AED') : '') + (t.extra ? ' ' + dirPill('Added by you', '#7C3AED') : '') + (t.must && t.must.length ? ' ' + dirPill('🔒 Some words locked', '#EEF0F3', '#333') : ''), t.when, t.subject); }).join('') + '</div>' + (g.canAdd ? '<button class="btn ghost sm" data-madd="' + g.canAdd + '" style="margin-top:6px">＋ Add an email to this journey</button>' : '');
@@ -1144,26 +1174,33 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     };
   }
   function welEdit(series, st) {
-    var s = sheet('<h2>✏️ ' + esc(st.subject || 'Welcome message') + '</h2><p class="muted" style="margin:2px 0 10px;font-size:13px">A chat message in Business Studio' + (S.mail.welcome[series].email ? ', also sent as an email' : '') + '. {business} becomes their business name.</p><div class="stack">' +
+    var s = sheet('<h2>✏️ ' + esc(st.subject || 'Welcome message') + '</h2><p class="muted" style="margin:2px 0 10px;font-size:13px">A chat message in Business Studio, and an email when email is on for this series' + (S.mail.welcome[series].email ? ' (it is)' : ' (it’s off now — switch it on in Business Studio Admin → Messages)') + '. {business} becomes their business name.</p><div class="stack">' +
       '<div><label for="weS">Subject (for the email)</label><input id="weS" maxlength="120" value="' + esc(st.subject || '') + '"></div>' +
-      '<div><label for="weT">Message</label><textarea id="weT" rows="8" style="font-size:14px;line-height:1.5">' + esc(st.text || '') + '</textarea></div>' +
+      '<div><label for="weT">💬 Chat message (in Business Studio)</label><textarea id="weT" rows="5" style="font-size:14px;line-height:1.5">' + esc(st.text || '') + '</textarea></div>' +
+      '<div><label for="weB">📧 Email words <span class="muted" style="font-weight:400">(leave empty to email the chat message)</span></label>' + mailTools('weB', ['business']) + '<textarea id="weB" rows="9" style="font-size:14px;line-height:1.5" placeholder="Write the email here — it can be longer than the chat message, with links and buttons.">' + esc(st.emailBody || '') + '</textarea></div>' +
+      '<div><label>Email preview</label><div id="weLive" style="border:1px solid #ECE6D6;border-radius:12px;max-height:340px;overflow:auto;background:#F2EFE8"></div><button type="button" class="btn ghost sm" id="weTest" style="margin-top:6px">📨 Send me a test email</button></div>' +
       '<div class="f2"><div><label for="weD">Day</label><input id="weD" type="number" min="0" max="90" value="' + st.days + '"></div><div><label>Send</label><label class="chk"><input type="checkbox" id="weOn"' + (st.on ? ' checked' : '') + '> Switched on</label><label class="chk"><input type="checkbox" id="weE"' + (st.email !== false ? ' checked' : '') + '> Also by email</label></div></div></div>' +
       '<div class="err hidden" id="weErr"></div><div class="row" style="justify-content:space-between;gap:8px;margin-top:12px;flex-wrap:wrap"><div class="row" style="gap:6px">' + (/^x/.test(st.id) ? '<button class="btn ghost" id="weR" style="color:#B42318">🗑 Remove</button>' : (S.mail.welcome[series].defaults.filter(function (d) { return d.id === st.id; }).length ? '<button class="btn ghost" id="weO">↩️ Original words</button>' : '')) + '</div><div class="row" style="gap:8px"><button class="btn ghost" id="weX">Cancel</button><button class="btn primary" id="weOk">💾 Save</button></div></div>');
     var err = function (m) { $('#weErr', s).textContent = m; $('#weErr', s).classList.remove('hidden'); };
+    var wstep = function () { return { id: st.id, subject: $('#weS', s).value, text: $('#weT', s).value, emailBody: $('#weB', s).value }; };
+    wireTools(s, 'weB');
+    livePreview($('#weLive', s), function () { return api('mail-wel-preview', { series: series, step: wstep() }); }, [$('#weB', s), $('#weT', s), $('#weS', s)]);
+    $('#weTest', s).onclick = async function () { this.disabled = true; try { var r = await api('mail-wel-test', { series: series, step: wstep() }); toast('📨 Test sent to ' + r.to); } catch (x) { err(x.message); } this.disabled = false; };
     $('#weX', s).onclick = function () { s.remove(); };
     if ($('#weO', s)) $('#weO', s).onclick = function () { var d = S.mail.welcome[series].defaults.filter(function (x) { return x.id === st.id; })[0]; $('#weS', s).value = d.subject || ''; $('#weT', s).value = d.text; $('#weD', s).value = d.days; toast('Original words put back — tap Save to keep them'); };
     if ($('#weR', s)) $('#weR', s).onclick = async function () { if (!confirm('Remove this message?')) return; try { S.mail = await api('mail-remove', { id: st.id, series: series }); s.remove(); vMail(); toast('Removed'); } catch (x) { err(x.message); } };
-    $('#weOk', s).onclick = async function () { this.disabled = true; try { S.mail = await api('mail-wel', { series: series, step: { id: st.id, subject: $('#weS', s).value, text: $('#weT', s).value, days: parseInt($('#weD', s).value, 10), on: $('#weOn', s).checked, email: $('#weE', s).checked } }); s.remove(); vMail(); toast('Saved ✅'); } catch (x) { this.disabled = false; err(x.message); } };
+    $('#weOk', s).onclick = async function () { this.disabled = true; try { S.mail = await api('mail-wel', { series: series, step: { id: st.id, subject: $('#weS', s).value, text: $('#weT', s).value, emailBody: $('#weB', s).value, days: parseInt($('#weD', s).value, 10), on: $('#weOn', s).checked, email: $('#weE', s).checked } }); s.remove(); vMail(); toast('Saved ✅'); } catch (x) { this.disabled = false; err(x.message); } };
   }
   function mailEdit(t) {
     var s = sheet('<h2>✏️ ' + esc(t.name) + '</h2><p class="muted" style="margin:2px 0 10px;font-size:13px">' + esc(t.when) + '</p><div class="stack">' +
       '<div><label for="meS">Subject</label><input id="meS" maxlength="200" value="' + esc(t.subject) + '"></div>' +
-      '<div><label for="meB">Email</label><textarea id="meB" rows="14" style="font-size:14px;line-height:1.5">' + esc(t.body) + '</textarea></div>' +
-      '<div class="muted" style="font-size:12.5px">Tap to add: ' + t.vars.map(function (v) { return '<button type="button" class="chip" data-mv="' + v + '" style="margin:2px">{' + v + '}</button>'; }).join('') + '<br>Blank line = new paragraph · “- ” = bullet · “1. ” = numbered · **bold** · links become buttons-style links automatically.</div></div>' +
+      '<div><label for="meB">Email</label>' + mailTools('meB', t.vars) + '<textarea id="meB" rows="12" style="font-size:14px;line-height:1.5">' + esc(t.body) + '</textarea><div class="muted" style="font-size:12px;margin-top:4px">Blank line = new paragraph. Select words, then tap 🔗 Link or <b>B</b>. 🟩 Button adds a big green button.</div></div>' +
+      '<div><label>Live preview</label><div id="meLive" style="border:1px solid #ECE6D6;border-radius:12px;max-height:340px;overflow:auto;background:#F6F4EE"></div></div></div>' +
       (t.must && t.must.length ? '<div class="note" style="margin-top:8px;font-size:13px">🔒 This email must always include ' + t.must.map(function (v) { return '{' + v + '}'; }).join(', ') + '.</div>' : '') +
       '<div class="err hidden" id="meErr"></div><div class="row" style="justify-content:space-between;gap:8px;margin-top:12px;flex-wrap:wrap"><div class="row" style="gap:6px;flex-wrap:wrap">' + (t.extra ? '<button class="btn ghost" id="meDel" style="color:#B42318">🗑 Remove</button>' : '') + (t.edited && !t.extra ? '<button class="btn ghost" id="meR">↩️ Restore original</button>' : '') + '<button class="btn ghost" id="meP">👁 Preview</button><button class="btn ghost" id="meT">📨 Send me a test</button></div><div class="row" style="gap:8px"><button class="btn ghost" id="meX">Cancel</button><button class="btn primary" id="meOk">💾 Save</button></div></div>');
     var ta = $('#meB', s), err = function (m) { $('#meErr', s).textContent = m; $('#meErr', s).classList.remove('hidden'); };
-    $$('[data-mv]', s).forEach(function (b) { b.onclick = function () { var v = '{' + b.dataset.mv + '}', a = ta.selectionStart, z = ta.selectionEnd; ta.value = ta.value.slice(0, a) + v + ta.value.slice(z); ta.focus(); ta.setSelectionRange(a + v.length, a + v.length); }; });
+    wireTools(s, 'meB');
+    livePreview($('#meLive', s), function () { return api('mail-preview', { id: t.id, subject: $('#meS', s).value, body: ta.value }); }, [ta, $('#meS', s)]);
     $('#meX', s).onclick = function () { s.remove(); };
     $('#meP', s).onclick = async function () { try { mailPreviewSheet(await api('mail-preview', { id: t.id, subject: $('#meS', s).value, body: ta.value })); } catch (x) { err(x.message); } };
     $('#meT', s).onclick = async function () { this.disabled = true; try { var r = await api('mail-test', { id: t.id, subject: $('#meS', s).value, body: ta.value }); toast('📨 Test sent to ' + r.to + ' (using ' + r.business + ')'); } catch (x) { err(x.message); } this.disabled = false; };

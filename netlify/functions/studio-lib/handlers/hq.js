@@ -307,7 +307,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'out-preview') return await out.previewFor(String(body.slug || ''), String(body.step || ''));
       return await out.overview();
     }
-    case 'mail-list': case 'mail-save': case 'mail-restore': case 'mail-test': case 'mail-preview': case 'mail-add': case 'mail-remove': case 'mail-wel': {
+    case 'mail-list': case 'mail-save': case 'mail-restore': case 'mail-test': case 'mail-preview': case 'mail-add': case 'mail-remove': case 'mail-wel': case 'mail-wel-preview': case 'mail-wel-test': {
       // 📝 email templates (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the emails.');
       const emails = require('../emails');
@@ -324,10 +324,17 @@ exports.handler = handler(async (ctx) => {
         await core.audit(who.email, 'hq_mail_remove', { id, series: body.series || '' });
         return await emails.list();
       }
+      if (body.action === 'mail-wel-preview' || body.action === 'mail-wel-test') {
+        const st = body.step || {}, pv = require('../welcome').welcomeEmailPreview({ subject: String(st.subject || ''), text: String(st.text || ''), emailBody: String(st.emailBody || '') }, 'Ada’s Kitchen', String(body.series || 'free'));
+        if (body.action === 'mail-wel-preview') return Object.assign(pv, { business: 'Ada’s Kitchen (sample)' });
+        await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.');
+        if (!(await core.sendEmail([who.email], '[TEST] ' + pv.subject, pv.text, pv.html))) throw new HttpError(502, 'send_failed', 'The test email didn’t send.');
+        return { to: who.email, business: 'Ada’s Kitchen (sample)' };
+      }
       if (body.action === 'mail-wel') {
         // a Business Studio welcome message (same settings as Business Studio Admin → Messages)
         const st = body.step || {};
-        await require('../welcome').save({ steps: [{ id: String(st.id || ''), days: st.days, text: st.text, subject: st.subject, on: st.on !== false, email: st.email !== false }] }, String(body.series || ''));
+        await require('../welcome').save({ steps: [{ id: String(st.id || ''), days: st.days, text: st.text, subject: st.subject, on: st.on !== false, email: st.email !== false, emailBody: typeof st.emailBody === 'string' ? st.emailBody : undefined }] }, String(body.series || ''));
         await core.audit(who.email, 'hq_mail_wel', { series: body.series, id: st.id });
         return await emails.list();
       }

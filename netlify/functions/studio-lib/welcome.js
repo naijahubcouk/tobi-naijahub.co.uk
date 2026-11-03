@@ -76,7 +76,9 @@ async function save(raw, x) {
         if (text.length > 2000) throw new HttpError(400, 'too_long', 'Please keep each message under 2000 characters.');
         const subject = r.subject !== undefined ? core.cleanText(r.subject, 120) : s.subject;
         const email = typeof r.email === 'boolean' ? r.email : s.email !== false;
-        return { id: s.id, days, text: text || s.text, on: r.on !== false, email, ...(subject ? { subject } : {}) };
+        // emailBody: the email's own words (blank = the email uses the chat message)
+        const emailBody = r.emailBody !== undefined ? String(r.emailBody || '').replace(/\r/g, '').trim().slice(0, 6000) : (s.emailBody || '');
+        return { id: s.id, days, text: text || s.text, on: r.on !== false, email, ...(subject ? { subject } : {}), ...(emailBody ? { emailBody } : {}) };
       });
     }
     // Extra messages added in HQ → Emails (ids start with "x"); built-in ones can't be removed, only switched off.
@@ -168,7 +170,7 @@ async function runSeries(opts, x) {
       await cas(cfgKey(x), cur => (cur ? { ...cur, stats: { ...(cur.stats || {}), [next.id]: ((cur.stats || {})[next.id] || 0) + 1 } } : undefined));
       await notify.pushToMember(m.email, 'Message from Auntie Tobi 💚', text.length > 120 ? text.slice(0, 117) + '…' : text, { always: true, path: '/studio#messages' });
       if (cfg.email && next.email !== false) {
-        const ok = await sendWelcomeEmail(m.email, next, text, biz, x).catch(e => { console.error('[studio] welcome email failed', e && e.message); return false; });
+        const ok = await sendWelcomeEmail(m.email, next, next.emailBody ? next.emailBody.replace(/\{business\}/g, biz) : text, biz, x).catch(e => { console.error('[studio] welcome email failed', e && e.message); return false; });
         if (ok) await messages.markEmailed(m.email, msg.id, true).catch(() => {});
       }
       report.sent++;
@@ -190,6 +192,12 @@ const REASON = {
   plus: 'You’re getting this because you joined Auntie Tobi Business Studio Plus.',
   free: 'You’re getting this because you joined Auntie Tobi Business Studio.',
 };
+// The welcome email as it would be sent (for previews and tests in HQ)
+function welcomeEmailPreview(step, biz, x) {
+  const text = String(step.emailBody || step.text || '').replace(/\{business\}/g, biz);
+  const mail = require('./msg-email').build({ text, link: core.appUrl(), button: 'Open Business Studio →', reason: REASON[ser(x)], unsub: '#', unsubLabel: 'Stop these welcome emails' });
+  return { subject: (step.subject || 'A message from Auntie Tobi 💚').replace(/\{business\}/g, biz), text: mail.text, html: mail.html };
+}
 async function sendWelcomeEmail(email, step, text, biz, x) {
   const prefs = require('./prefs');
   const pr = await prefs.get(email);
@@ -200,4 +208,4 @@ async function sendWelcomeEmail(email, step, text, biz, x) {
     { 'List-Unsubscribe': `<${unsub}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }));
 }
 
-module.exports = { defaultsFor, get, save, run, runSeries, addMember, removeMember, DEFAULT_STEPS, FREE_STEPS, PLUS_STEPS, SERIES };
+module.exports = { welcomeEmailPreview, defaultsFor, get, save, run, runSeries, addMember, removeMember, DEFAULT_STEPS, FREE_STEPS, PLUS_STEPS, SERIES };

@@ -312,9 +312,15 @@ async function restore(id) { await del('mail/tpl/' + id).catch(() => {}); return
 // ── rendering ──
 const escH = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const fill = (s, v) => String(s).replace(/\{([a-z_]+)\}/g, (m, k) => (k in v ? String(v[k] == null ? '' : v[k]) : m));
+// [[Button text|https://…]] = a green button · [link text](https://…) = a link · **bold** · bare web addresses become links
 function inline(s) {
-  return escH(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-    .replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)’”])/g, u => `<a href="${u}" style="color:#057A44;font-weight:bold">${u.replace(/^https?:\/\/(www\.)?/, '').replace(/\?.*$/, '').slice(0, 60)}</a>`);
+  const keep = [], hold = h => '\u0000' + (keep.push(h) - 1) + '\u0000';
+  let t = escH(s)
+    .replace(/\[\[([^|\]]+)\|(https?:\/\/[^\]\s]+)\]\]/g, (m, label, u) => hold(`<a href="${u}" style="display:inline-block;background:#057A44;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:10px;margin:4px 0">${label.trim()}</a>`))
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (m, label, u) => hold(`<a href="${u}" style="color:#057A44;font-weight:bold">${label}</a>`));
+  t = t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/(https?:\/\/[^\s<\u0000]+[^\s<.,;:!?)’”\u0000])/g, u => `<a href="${u}" style="color:#057A44;font-weight:bold">${u.replace(/^https?:\/\/(www\.)?/, '').replace(/\?.*$/, '').slice(0, 60)}</a>`);
+  return t.replace(/\u0000(\d+)\u0000/g, (m, i) => keep[+i]);
 }
 function toHtml(text) {
   return text.split(/\n{2,}/).map(par => {
@@ -324,7 +330,7 @@ function toHtml(text) {
     return `<p style="margin:0 0 14px">${lines.map(inline).join('<br>')}</p>`;
   }).join('');
 }
-const toText = t => t.replace(/\*\*(.+?)\*\*/g, '$1');
+const toText = t => t.replace(/\[\[([^|\]]+)\|(https?:\/\/[^\]\s]+)\]\]/g, '$1: $2').replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '$1 ($2)').replace(/\*\*(.+?)\*\*/g, '$1');
 // → { subject, text, html } with the outreach footer
 function renderWith(tpl, vars, footer) {
   const v = Object.assign({}, vars);
@@ -350,4 +356,4 @@ async function override(id) { return getJson('mail/tpl/' + id).catch(() => null)
 // Plain message for WhatsApp / Instagram (no footer, links kept)
 async function plain(id, vars) { const t = await get(id); const v = Object.assign({}, vars, { personal_line: vars.personal_line ? '\n\n' + vars.personal_line : '' }); return toText(fill(t.body, v)).replace(/\n{3,}/g, '\n\n').trim(); }
 
-module.exports = { system, override, extras, addExtra, removeExtra, def, T, GROUPS, get, list, save, restore, render, renderWith, plain, FOOTER_OUT, OUT_VARS };
+module.exports = { toHtml, toText, inline, system, override, extras, addExtra, removeExtra, def, T, GROUPS, get, list, save, restore, render, renderWith, plain, FOOTER_OUT, OUT_VARS };

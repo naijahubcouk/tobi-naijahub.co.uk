@@ -37,7 +37,7 @@ function build(opts) {
 </td></tr>
 <tr><td style="padding:22px 18px 6px;background:#F7F8FA">
   ${intro}
-  <div style="background:#E8F5EE;border:1px solid #CFEBDB;border-radius:4px 18px 18px 18px;padding:14px 16px;font-size:16px;line-height:1.6;color:#0F1E36">${bodyHtml(opts.text)}</div>
+  <div style="background:#E8F5EE;border:1px solid #CFEBDB;border-radius:4px 18px 18px 18px;padding:14px 16px;font-size:16px;line-height:1.6;color:#0F1E36">${require('./emails').toHtml(String(opts.text || '').replace(/\r/g, '').trim()).replace(/<p style="margin:0 0 14px">/g, '<p style="margin:0 0 12px">')}</div>
   <div style="font-size:12.5px;color:#8A93A3;margin:6px 0 0 4px">Auntie Tobi 💚</div>
 </td></tr>
 <tr><td style="padding:18px 18px 22px;background:#F7F8FA">
@@ -46,7 +46,7 @@ function build(opts) {
 </td></tr>
 ${foot ? `<tr><td style="padding:14px 18px 18px;font-size:12px;line-height:1.5;color:#6B7280;border-top:1px solid #ECEEF2">${foot}</td></tr>` : ''}
 </table></td></tr></table></body></html>`;
-  const text = [opts.intro || '', String(opts.text || '').trim(), '— Auntie Tobi 💚', `${button.replace(/\s*→$/, '')}: ${link}`,
+  const text = [opts.intro || '', require('./emails').toText(String(opts.text || '').trim()), '— Auntie Tobi 💚', `${button.replace(/\s*→$/, '')}: ${link}`,
     opts.reason || '', opts.unsub ? `${opts.unsubLabel || 'Unsubscribe'}: ${opts.unsub}` : ''].filter(Boolean).join('\n\n');
   return { html, text };
 }
