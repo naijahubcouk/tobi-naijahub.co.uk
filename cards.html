@@ -95,7 +95,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       <p class="muted" style="text-align:center;font-size:12px;margin-top:6px">👆 Tap the card to see it bigger</p>
       <div class="btns"><button class="btn dl" id="rDl">⬇️ Save the card</button><button class="btn wa" id="rThanks">💬 Say thank you</button></div>
       <div class="recvbar"><button class="btn ghost" id="again">🎉 Celebrate again</button><button class="btn ghost" id="mute" style="flex:.6;white-space:nowrap"></button></div>
-      <button class="btn wa hidden" id="rGift" style="margin-top:8px">🎁 Send this gift to a friend</button>
       <a class="btn gold" href="/cards" style="margin-top:8px">🎉 Make your own free card</a>
     </div>
   </section>
@@ -951,8 +950,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
         document.title = OC.label.split(' ')[0] + ' A ' + OC.noun + ' for ' + (rs.name || 'you') + ' — Auntie Tobi'; paintR();
       };
       if (got.ask) {
-        $('rGift').classList.remove('hidden');
-        $('rGift').onclick = function () { var t = '🎁 You have a ' + (String(OC.noun).replace(/\s*card$/i, '') || 'special') + ' gift from ' + (rs.from || 'Auntie Tobi') + '! Open it and add your name 💚\n' + location.href.replace(/[?#].*$/, '') + (location.search.indexOf('c=') >= 0 ? location.search : ''); window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); track('gift_forward'); };
         var keyN = 'giftName:' + location.pathname + location.search, saved = ''; try { saved = sessionStorage.getItem(keyN) || ''; } catch (e) {}
         $('askT').textContent = 'You have a ' + (String(OC.noun).replace(/\s*card$/i, '') || 'special') + ' gift from ' + (rs.from || 'Auntie Tobi') + '!';
         if (saved) { applyName(saved); $('cover').classList.remove('hidden'); }
