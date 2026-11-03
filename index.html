@@ -7012,7 +7012,7 @@ function handleDeepLink() {
           + (_sameCat ? '<button class="suggestion-btn" onclick="resetAndShow(function(){showBusinesses(undefined,\'' + _q(_cat) + '\',null,true)})">🔎 More ' + _catLabel + '</button>' : '')
           + (_sameTown ? '<button class="suggestion-btn" onclick="resetAndShow(function(){showBusinesses(undefined,null,\'' + _q(_town.toLowerCase()) + '\',true)})">📍 Businesses in ' + _town + '</button>' : '')
           + '<button class="suggestion-btn" onclick="resetAndShow(showBusinesses)">🏢 More businesses</button>'
-          + '<button class="suggestion-btn" onclick="resetAndShow(function(){showBusinesses(undefined,null,null,true,true)})">⭐ Featured businesses</button>'
+          + '<button class="suggestion-btn" onclick="window.open(\'/business-club\',\'_blank\',\'noopener\')">💚 Join Business Club</button>'
           + '</div>');
         window.history.replaceState({}, '', window.location.pathname);
       } else {
