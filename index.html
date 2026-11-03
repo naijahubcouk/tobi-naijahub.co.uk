@@ -2481,7 +2481,7 @@ function formatResponse(text) {
             ? '<a href="https://wa.me/' + b.wa.replace(/\D/g,'') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" style="flex:1;padding:9px 8px;background:#25D366;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">\uD83D\uDCAC WhatsApp</a>'
             : '';
 
-                    const viewBtn = '<a href="https://auntietobi.co.uk/biz/' + b.slug + '" target="_blank" style="flex:1;padding:9px 8px;background:#057A44;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;text-align:center;display:block;">View Details</a>';
+                    const viewBtn = '<button onclick="tobiOpenBiz(\'' + b.slug + '\')" style="flex:1;padding:9px 8px;background:#057A44;color:white;border:0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;display:block;">View Details</button>';
 
           const shareBtn = '<button data-share-title="' + safeName.replace(/"/g,'&quot;') + '" data-share-desc="' + shareMsg.replace(/"/g,'&quot;') + '" data-share-url="' + shareUrl + '" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="flex:1;padding:9px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">\uD83D\uDCE4 Share</button>';
 
@@ -5901,7 +5901,7 @@ function showFeaturedBusinesses() {
 
 
 // ===== FEATURED BUSINESSES CAROUSEL (Home + Links) =====
-// Every directory business with featured:true. Optional fields: img (photo), shop (website → "Shop Now"), lines (short highlights).
+// Every directory business with featured:true. Optional fields: img (photo), lines (short highlights). The button always opens their page in the app.
 var FEAT_EMOJI = [['food',"🛒"],['grocer',"🛒"],['kitchen',"🍳"],['home',"🏠"],['educat',"🎓"],['fashion',"👗"],['hair',"💇🏾‍♀️"],['wig',"💇🏾‍♀️"],['beauty',"💄"],['makeup',"💄"],['cake',"🎂"],['cater',"🍲"],['event',"🎉"],['travel',"✈️"],['photo',"📸"],['jewel',"💍"],['drink',"🥤"]];
 function featEmoji(b){ var c=(b.cat||'').toLowerCase(); for (var i=0;i<FEAT_EMOJI.length;i++) if (c.indexOf(FEAT_EMOJI[i][0])>-1) return FEAT_EMOJI[i][1]; return "🏪"; }
 function featEsc(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -5924,11 +5924,8 @@ function featSlide(b){
     + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="font-size:15px;font-weight:800;color:#0F1E36;line-height:1.3;">'+featEsc(b.name)+'</div>'+(b.verified && typeof tobiTick==='function' ? tobiTick(15) : '')+'</div>'
     + '<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px;min-height:36px;">'+lines.map(function(l){return '<div style="font-size:12px;color:#555;line-height:1.45;">'+featEsc(l)+'</div>';}).join('')+'</div>'
     + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+featEsc((b.loc||'').split(',')[0])+'</div>'
-    + (b.shop
-        ? '<a href="'+featEsc(b.shop)+'" target="_blank" rel="noopener" style="'+btnCss+'">🛍️ Shop Now</a>'
-        : b.book && b.book.wa
-        ? '<a href="https://wa.me/'+featEsc(String(b.book.wa).replace(/[^0-9]/g,''))+'?text='+encodeURIComponent(b.book.text||'')+'" target="_blank" rel="noopener" style="'+btnCss+'">'+featEsc(b.book.label||'Book Now')+'</a>'
-        : '<a href="javascript:void(0)" onclick="tobiOpenBiz(\''+featEsc(b.slug)+'\')" style="'+btnCss+'">View Details</a>')
+    // first stop is always the business's own page in the app
+    + '<a href="javascript:void(0)" onclick="tobiOpenBiz(\''+featEsc(b.slug)+'\')" style="'+btnCss+'">View Details</a>'
     + '</div>';
   return '<div class="feat-slide" style="flex:0 0 100%;width:100%;display:flex;flex-direction:column;background:white;">'+top+body+'</div>';
 }
@@ -6982,7 +6979,6 @@ function tobiBizPage(b) {
         : '<div style="font-size:14px;color:#444;line-height:1.65;margin-bottom:14px;white-space:pre-line">' + E(full) + '</div>') : '')
     + (b.lines && b.lines.length ? '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">' + b.lines.map(function (l) { return '<div style="font-size:13.5px;color:#333">' + E(l) + '</div>'; }).join('') + '</div>' : '')
     + (contacts.length ? '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">Get in touch</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' + contacts.join('') + '</div>' : '')
-    + (b.shop ? '<div style="margin-bottom:14px">' + btn(b.shop, '🛍️ Shop Now', '#057A44') + '</div>' : '')
     + '<div class="bizmp" data-slug="' + E(b.slug) + '" data-name="' + E(b.name) + '"></div>'
     + (photos.length ? '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">Photos</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">' + photos.map(function (u) { return '<img src="' + E(u) + '" alt="" loading="lazy" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\'" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;cursor:zoom-in;display:block">'; }).join('') + '</div>' : '')
     + '<div style="display:flex;gap:6px;flex-wrap:wrap"><a href="' + dirUrl + '" target="_blank" rel="noopener" style="flex:2;padding:11px 8px;background:#057A44;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">See more on the directory →</a>' + shareBtn + '</div>'
