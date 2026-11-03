@@ -239,6 +239,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="mail" id="navMail" class="hidden">📝 Emails</button>
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
+      <button data-nav="igu" id="navIgu" class="hidden">👥 Comment usernames</button>
       <button data-nav="tcars">📝 Template Carousel <span class="n" id="nTcars"></span></button>
       <button data-nav="cars">🎬 Animated Carousels <span class="n" id="nCars"></span></button>
       <button data-nav="vads">🎥 Video Ad Studio <span class="n" id="nVads"></span></button>
@@ -315,7 +316,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
-    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
+    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#navIgu').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -323,7 +324,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
   function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = (['dir', 'find', 'out', 'mail'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
+    S.view = (['dir', 'find', 'out', 'mail', 'igu'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -335,7 +336,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igu: vIgu, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
@@ -1411,6 +1412,45 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       if (!confirm('Mark these ' + r.count + ' as uploaded to the website?')) return;
       try { var x = await api('find-uploaded'); S.find = x.finder; s.remove(); toast('Marked as on the website ✅'); vFind(); } catch (e) { toast(e.message); }
     };
+  }
+  // 👥 Instagram usernames from a post's comments: screenshots (any post), pasted text (any post), or a link to your own post
+  function vIgu() {
+    $('#ttl').textContent = 'Comment usernames'; $('#topRight').innerHTML = '';
+    var tab = S.iguTab || 'shots', R = S.iguRes;
+    if (S.iguConn === undefined) { S.iguConn = null; api('igu-status').then(function (r) { S.iguConn = r.connected; if (S.view === 'igu') vIgu(); }, function () { S.iguConn = false; }); }
+    var tabs = [['shots', '📸 Screenshots'], ['paste', '📋 Paste comments'], ['link', '🔗 My post link']];
+    var body = '';
+    if (tab === 'shots') body = '<p class="muted" style="margin:0 0 10px;font-size:14px">Works for <b>any</b> post. Open the comments, take screenshots (scroll and take more for long threads), then add them here — up to 8 at a time.</p><label class="btn ghost" style="margin:0">📸 Choose screenshots<input type="file" id="iguF" accept="image/*" multiple hidden></label> <span class="muted" id="iguN" style="font-size:13px"></span><div id="iguTh" class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"></div><button class="btn primary" id="iguGo" style="margin-top:10px">✨ Get usernames</button>';
+    if (tab === 'paste') body = '<p class="muted" style="margin:0 0 10px;font-size:14px">Works for <b>any</b> post. On a computer, open the post, select all the comments, copy and paste them here. Free — no AI.</p><textarea id="iguT" rows="10" placeholder="Paste the comments here"></textarea><button class="btn primary" id="iguGo" style="margin-top:10px">Get usernames</button>';
+    if (tab === 'link') body = S.iguConn === null ? '<p class="muted">Checking your Instagram connection…</p>' : S.iguConn
+      ? '<p class="muted" style="margin:0 0 10px;font-size:14px">Paste a link to one of <b>your own</b> @auntietobi_uk posts or Reels. HQ reads every comment and reply through Instagram’s official connection.</p><input id="iguL" placeholder="https://www.instagram.com/p/…"><button class="btn primary" id="iguGo" style="margin-top:10px">Get usernames</button>'
+      : '<div class="note" style="font-size:14px;line-height:1.6"><b>Connect your Instagram first (one time, about 20 minutes):</b><ol style="margin:8px 0 0 18px;padding:0"><li>Make sure @auntietobi_uk is a <b>Business</b> or <b>Creator</b> account (Instagram → Settings → Account type).</li><li>Go to <b>developers.facebook.com</b> → My Apps → <b>Create app</b> → choose <b>Other</b> → <b>Business</b>.</li><li>In the app, add the <b>Instagram</b> product → <b>API setup with Instagram login</b>.</li><li>Under <b>Generate access tokens</b>, add @auntietobi_uk, log in, and tap <b>Generate token</b>. Copy the token.</li><li>In <b>Netlify → Site configuration → Environment variables</b>, add <code>IG_ACCESS_TOKEN</code> with that token, then <b>Deploys → Trigger deploy</b>.</li></ol><p style="margin:8px 0 0">HQ keeps the token fresh by itself after that.</p></div>';
+    var res = '';
+    if (R) {
+      var inDir = R.inDirectory || {};
+      res = '<div class="card" style="padding:14px 16px;margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>👥 ' + R.usernames.length + ' username' + (R.usernames.length === 1 ? '' : 's') + (R.total ? ' <span class="muted" style="font-weight:400">(' + R.total + ' comments on the post)</span>' : '') + '</b><div class="row" style="gap:6px"><button class="btn ghost sm" id="iguCopy">📋 Copy all</button><button class="btn ghost sm" id="iguCsv">⬇️ CSV</button></div></div>' +
+        (R.caption ? '<div class="muted" style="font-size:12.5px;margin-top:4px">Post: “' + esc(R.caption) + '…”</div>' : '') +
+        '<div style="margin-top:8px">' + (R.usernames.length ? R.usernames.map(function (u) { var d = inDir[u]; return '<div class="aprow"><div style="flex:1;min-width:0"><a href="https://www.instagram.com/' + esc(u) + '/" target="_blank" rel="noopener" style="font-weight:700;color:#0F1E36">@' + esc(u) + '</a>' + (d ? ' ' + dirPill('In your directory', '#057A44') : '') + '</div><div class="apact">' + (d ? '<button class="btn ghost sm" data-iguo="' + esc(d.slug) + '">Open</button>' : '<button class="btn ghost sm" data-iguf="' + esc(u) + '">🔎 Add to Finder</button>') + '</div></div>'; }).join('') : '<p class="muted">No usernames found.</p>') + '</div></div>';
+    }
+    $('#view').innerHTML = '<div class="wrap"><div class="chipbar" id="iguTabs" style="margin-bottom:12px">' + tabs.map(function (x) { return '<button class="chip" data-t="' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div><div class="card" style="padding:14px 16px">' + body + '<div class="err hidden" id="iguErr"></div></div>' + res + '</div>';
+    $$('#iguTabs [data-t]').forEach(function (b) { b.onclick = function () { S.iguTab = b.dataset.t; vIgu(); }; });
+    var err = function (m) { $('#iguErr').textContent = m; $('#iguErr').classList.remove('hidden'); };
+    var shots = S.iguShots || (S.iguShots = []);
+    var drawTh = function () { if (!$('#iguTh')) return; $('#iguTh').innerHTML = shots.map(function (d, i) { return '<div style="position:relative"><img src="' + d + '" style="width:60px;height:90px;object-fit:cover;border-radius:8px;display:block"><button data-ix="' + i + '" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#B42318;color:#fff;cursor:pointer">×</button></div>'; }).join(''); $('#iguN').textContent = shots.length ? shots.length + ' added' : ''; $$('[data-ix]').forEach(function (x) { x.onclick = function () { shots.splice(+x.dataset.ix, 1); drawTh(); }; }); };
+    drawTh();
+    if ($('#iguF')) $('#iguF').onchange = async function () { var fs = Array.prototype.slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && shots.length < 8; i++) { try { shots.push(await shrinkImg(fs[i], 1100)); } catch (x) { toast(x.message); } } drawTh(); };
+    var run = async function (btn, action, payload) { btn.disabled = true; var t = btn.textContent; btn.textContent = 'Reading…'; try { S.iguRes = await api(action, payload); vIgu(); } catch (x) { btn.disabled = false; btn.textContent = t; err(x.message); } };
+    if ($('#iguGo')) $('#iguGo').onclick = function () {
+      if (tab === 'shots') { if (!shots.length) return err('Add at least one screenshot.'); run(this, 'igu-img', { images: shots }); }
+      if (tab === 'paste') { var v = $('#iguT').value; if (v.trim().length < 3) return err('Paste the comments first.'); run(this, 'igu-text', { text: v }); }
+      if (tab === 'link') { var l = $('#iguL').value.trim(); if (!l) return err('Paste the post link.'); run(this, 'igu-post', { link: l }); }
+    };
+    if (R) {
+      $('#iguCopy').onclick = async function () { try { await navigator.clipboard.writeText(R.usernames.map(function (u) { return '@' + u; }).join('\n')); toast('Copied ' + R.usernames.length); } catch (e) { toast('Copy failed'); } };
+      $('#iguCsv').onclick = function () { var csv = 'username,profile,in_directory\n' + R.usernames.map(function (u) { return u + ',https://www.instagram.com/' + u + '/,' + ((R.inDirectory || {})[u] ? 'yes' : 'no'); }).join('\n'); var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'instagram-usernames-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); };
+      $$('[data-iguo]').forEach(function (b) { b.onclick = function () { go('dir'); setTimeout(function () { crmOpen(b.dataset.iguo); }, 500); }; });
+      $$('[data-iguf]').forEach(function (b) { b.onclick = async function () { b.disabled = true; b.textContent = 'Looking…'; try { await api('find-quick', { input: 'instagram.com/' + b.dataset.iguf }); S.find = null; b.textContent = '✅ In Finder'; } catch (x) { b.textContent = x.message.length < 40 ? x.message : '⚠️ Not added'; } }; });
+    }
   }
   function vApp() {
     $('#ttl').textContent = 'Publish to App';

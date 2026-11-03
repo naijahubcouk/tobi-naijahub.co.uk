@@ -306,6 +306,18 @@ exports.handler = handler(async (ctx) => {
       }
       return { items: await bizdir.all(), info: await bizdir.info() };
     }
+    case 'igu-status': case 'igu-text': case 'igu-img': case 'igu-post': {
+      // 👥 Instagram usernames from a post's comments (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const igu = require('../igusers');
+      if (body.action === 'igu-status') return { connected: await igu.connected() };
+      let r;
+      if (body.action === 'igu-text') r = { usernames: igu.fromText(body.text) };
+      if (body.action === 'igu-img') { await core.rateLimit('hq-igu', who.email, 60, 3600000, 'That’s a lot of screenshots — try again in an hour.'); r = { usernames: await igu.fromImages(body.images) }; }
+      if (body.action === 'igu-post') { await core.rateLimit('hq-igu-post', who.email, 60, 3600000, 'Try again in a little while.'); r = await igu.fromOwnPost(String(body.link || '')); }
+      r.inDirectory = await igu.matchDirectory(r.usernames);
+      return r;
+    }
     case 'crm-tpl': case 'crm-list': case 'crm-detail': case 'crm-act': case 'crm-email': case 'crm-settings': {
       // 🏢 Business directory tracking (admin only) — Club invites moved here from Business Studio Admin
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
