@@ -60,7 +60,7 @@ function vars(b) {
 // Works out each business's next email. Returns { due:[...], fresh:[...], stops:[{slug, why}], switches:[{slug}] } without saving.
 // the built-in steps plus any emails you added in HQ → Emails, in day order
 async function journeys() {
-  const ex = await emails.extras(), out = { u: J.u.slice(), c: J.c.slice() };
+  const ex = await emails.extras(), gone = await emails.removedIds(), out = { u: J.u.filter(x => !gone.includes(x.id)), c: J.c.filter(x => !gone.includes(x.id)) };
   for (const x of ex) { out[x.j].push({ id: x.id, day: x.day, topic: x.id }); TOPIC[x.id] = x.id; }
   out.u.sort((a, b) => a.day - b.day); out.c.sort((a, b) => a.day - b.day);
   return out;

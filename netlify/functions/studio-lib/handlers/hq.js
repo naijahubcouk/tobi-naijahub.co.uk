@@ -321,6 +321,7 @@ exports.handler = handler(async (ctx) => {
       }
       if (body.action === 'mail-remove') {
         if (body.series) await require('../welcome').save({ remove: id }, String(body.series)); else if (/^x/.test(id)) await emails.removeExtra(id);
+        else if (body.undo) await emails.restoreBuiltIn(id); else await emails.removeBuiltIn(id);
         await core.audit(who.email, 'hq_mail_remove', { id, series: body.series || '' });
         return await emails.list();
       }

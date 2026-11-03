@@ -288,9 +288,13 @@ async function get(id) {
   const o = await getJson('mail/tpl/' + id).catch(() => null);
   return { id, group: d.group, name: d.name, when: d.when, vars: d.vars, must: d.must || [], sys: !!d.sys, extra: !!d.extra, day: d.day, subject: (o && o.subject) || d.subject, body: (o && o.body) || d.body, edited: !!o, at: (o && o.at) || '', original: { subject: d.subject, body: d.body } };
 }
+// Built-in outreach emails you deleted from a journey (can be brought back): mail/removed { ids: [] }
+async function removedIds() { return ((await getJson('mail/removed').catch(() => null)) || { ids: [] }).ids; }
+async function removeBuiltIn(id) { if (!T[id] || !/^out-/.test(T[id].group)) throw new core.HttpError(400, 'invalid', 'Only outreach emails can be deleted.'); await core.cas('mail/removed', cur => { cur = cur || { ids: [] }; if (!cur.ids.includes(id)) cur.ids.push(id); return cur; }); }
+async function restoreBuiltIn(id) { await core.cas('mail/removed', cur => { if (!cur) return undefined; cur.ids = cur.ids.filter(x => x !== id); return cur; }); }
 async function list() {
-  const ids = Object.keys(T).concat((await extras()).map(x => x.id));
-  const items = (await Promise.all(ids.map(get))).filter(Boolean);
+  const ids = Object.keys(T).concat((await extras()).map(x => x.id)), gone = await removedIds();
+  const items = (await Promise.all(ids.map(get))).filter(Boolean).map(t => Object.assign(t, { removed: gone.includes(t.id) }));
   const welcome = require('./welcome'), wel = {};
   for (const x of ['free', 'club', 'plus']) { const c = await welcome.get(x); wel[x] = { on: c.on, email: c.email, steps: c.steps, defaults: welcome.defaultsFor(x) }; }
   return { groups: GROUPS, items, welcome: wel };
@@ -356,4 +360,4 @@ async function override(id) { return getJson('mail/tpl/' + id).catch(() => null)
 // Plain message for WhatsApp / Instagram (no footer, links kept)
 async function plain(id, vars) { const t = await get(id); const v = Object.assign({}, vars, { personal_line: vars.personal_line ? '\n\n' + vars.personal_line : '' }); return toText(fill(t.body, v)).replace(/\n{3,}/g, '\n\n').trim(); }
 
-module.exports = { toHtml, toText, inline, system, override, extras, addExtra, removeExtra, def, T, GROUPS, get, list, save, restore, render, renderWith, plain, FOOTER_OUT, OUT_VARS };
+module.exports = { removedIds, removeBuiltIn, restoreBuiltIn, toHtml, toText, inline, system, override, extras, addExtra, removeExtra, def, T, GROUPS, get, list, save, restore, render, renderWith, plain, FOOTER_OUT, OUT_VARS };
