@@ -41,17 +41,18 @@ async function knownKeys() {
 function isKnown(set, b) { return set.has('n:' + key(b.name)) || (b.ig && set.has('i:' + b.ig.toLowerCase())) || (domain(b.website) && set.has('d:' + domain(b.website))); }
 
 // Reads a business's own website for public contact details (email, phone, WhatsApp, Instagram).
-async function readSite(url) {
+async function readSite(url, ms) {
   if (!url || /instagram\.com|facebook\.com|tiktok\.com/i.test(url)) return {};
-  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 4000);
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), ms || 4000);
   try {
     const r = await fetch(/^https?:/i.test(url) ? url : 'https://' + url, { signal: ctrl.signal, redirect: 'follow', headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AuntieTobiDirectory/1.0; +https://www.auntietobi.co.uk)' } });
     if (!r.ok) return {};
-    const html = (await r.text()).slice(0, 400000);
+    // Many site builders (Wix, Squarespace…) put links inside scripts as "instagram.com\/name" or encoded — undo that, and read the whole page (footers are at the end)
+    const html = (await r.text()).slice(0, 2500000).replace(/\\\//g, '/').replace(/%2F/gi, '/').replace(/&#x2F;|&#47;/gi, '/').replace(/\\u002F/gi, '/');
     const email = (html.match(/mailto:([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i) || html.match(/\b([A-Z0-9._%+-]+@[A-Z0-9.-]+\.(?:co\.uk|com|uk|org|net|io|biz))\b/i) || [])[1] || '';
     const wa = (html.match(/(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\+?\d{10,15})/i) || [])[1] || '';
     const phone = (html.match(/tel:(\+?[\d ()-]{10,18})/i) || [])[1] || '';
-    const ig = igOf((html.match(/instagram\.com\/[A-Za-z0-9._]{2,40}/i) || [])[0]);
+    const ig = ((html.match(/instagram\.com\/(?:_u\/)?[A-Za-z0-9._]{2,40}/gi) || []).map(x => igOf(x.replace(/\/_u\//i, '/'))).filter(h => h && !/^(instagram|p|reel|reels|explore|stories|accounts|about|developer|legal)$/i.test(h))[0]) || '';
     const fb = ((html.match(/https?:\/\/(?:www\.|m\.|en-gb\.)?(?:facebook|fb)\.com\/[^"'\s<>]+/gi) || []).map(bizdir.fbUrl).filter(Boolean)[0]) || '';
     const tt = bizdir.ttUrl((html.match(/tiktok\.com\/@[A-Za-z0-9._]{2,40}/i) || [])[0]);
     // the picture the site uses for link previews (usually a logo or shop photo)
@@ -165,6 +166,13 @@ async function decide(id, decision, edits, who) {
   const c = Object.assign({}, cand, e);
   const now = core.nowIso();
   if (decision === 'approve') {
+    // socials missing? read their website once more (slower sites often time out during the weekly search)
+    if (c.website && !/instagram\.com|facebook\.com|tiktok\.com/i.test(c.website) && (!c.ig || !c.fb || !c.tt || !c.email)) {
+      const again = await readSite(c.website, 7000);
+      for (const k of ['ig', 'fb', 'tt', 'email', 'wa', 'phone']) if (!c[k] && again[k]) c[k] = again[k];
+      if (!c.siteText && again.siteText) c.siteText = again.siteText;
+      if (!c.imgUrl && again.imgUrl) c.imgUrl = again.imgUrl;
+    }
     if (!c.name || !c.cat) throw new HttpError(400, 'invalid', 'Add a name and a category first.');
     const dir = await bizdir.all(), taken = new Set(dir.map(b => b.slug));
     let slug = bizdir.slugify(c.name), n = 2; while (taken.has(slug)) slug = bizdir.slugify(c.name) + '-' + n++;
@@ -264,4 +272,4 @@ async function summary() {
   return { items: s.items, queue: (s.queue || []).length, lastRun: s.lastRun || '', approvedThisWeek, target: 50, cats: CATS, toUpload: (await toUpload()).length };
 }
 
-module.exports = { pictureFor, CATS, runOne, work, more, ensureWeek, quickAdd, decide, neverAdd, exportCsv, markUploaded, summary, weekOf };
+module.exports = { readSite, pictureFor, CATS, runOne, work, more, ensureWeek, quickAdd, decide, neverAdd, exportCsv, markUploaded, summary, weekOf };
