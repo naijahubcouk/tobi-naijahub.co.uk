@@ -814,15 +814,36 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   // 🎁 gift ideas from Nigerian business owners (Marketplace) — always shown under the card
   function showGifts() {}
   var GIFT_BIZ = [
-    { name: 'Abbystore', slug: 'abbystoreltd', img: 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805', line: '🎉 Party packs, souvenirs & lovely home gifts', btn: '🛍️ Shop now', link: 'https://abbystoreltd.com/' },
+    { name: 'Abbystore', slug: 'abbystoreltd', img: '/biz-img/abbystoreltd.jpg', line: '🎉 Party packs, souvenirs & lovely home gifts', btn: '🛍️ Shop now', link: 'https://abbystoreltd.com/' },
     { name: 'Buchis Photography', slug: 'buchis-photography', img: '/biz-img/buchis-photography.jpg', line: '📸 A photoshoot they’ll never forget', btn: '📸 Book a shoot', link: 'https://wa.me/447513969028?text=' + encodeURIComponent('Hi Buchis Photography, I found you on Auntie Tobi and I’d like to book a photoshoot.') },
     { name: 'Saamipeniel Fragrance', slug: 'saamipeniel-fragrance', img: 'https://naijabiz.b-cdn.net/03607764-14b3-4dfc-88ff-e89f4544c03a-1793528251057.jpeg', line: '🌸 Luxury oil perfumes — UK-wide delivery', btn: '💬 Order a perfume', link: 'https://wa.me/447724748976?text=' + encodeURIComponent('Hi Saamipeniel Fragrance, I found you on Auntie Tobi and I’d like to order a perfume as a gift.') },
   ];
-  function loadGifts() {
+  // Businesses whose live Marketplace products are shown instead of a single tile (falls back to the tile when they have none)
+  var GIFT_PRODUCTS = { abbystoreltd: 1, 'saamipeniel-fragrance': 1 };
+  var giftFeed = null;
+  function giftEsc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function giftUn(v) { var t = document.createElement('textarea'); t.innerHTML = v == null ? '' : String(v); return t.value; }
+  function giftTile(g) { return '<div class="gift"><a href="/biz/' + g.slug + '"><img src="' + g.img + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=ph>🎁</div>\'"></a><b>' + g.name + '</b><u>' + g.line + '</u><a class="gbtn" href="' + g.link + '" target="_blank" rel="noopener">' + g.btn + '</a></div>'; }
+  function productTile(p, g) {
+    var img = p.img ? '<img src="' + giftEsc(p.img) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=ph>🎁</div>\'">' : '<div class="ph">' + (p.emoji || '🎁') + '</div>';
+    var link = p.link || (p.wa ? 'https://wa.me/' + String(p.wa).replace(/\D/g, '') + '?text=' + encodeURIComponent('Hi ' + g.name + ', I found “' + giftUn(p.name) + '” on Auntie Tobi and I’d like to order it as a gift.') : g.link);
+    return '<div class="gift"><a href="/biz/' + g.slug + '">' + img + '</a><b>' + giftEsc(giftUn(p.name)) + '</b><u>' + giftEsc(g.name) + '</u>' + (p.price ? '<i>' + giftEsc(giftUn(p.price)) + '</i>' : '') + '<a class="gbtn" href="' + giftEsc(link) + '" target="_blank" rel="noopener">' + giftEsc(giftUn(p.btnText) || 'Buy now') + '</a></div>';
+  }
+  function renderGifts() {
+    var now = new Date(), norm = function (v) { return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); };
     $('gifts').innerHTML = GIFT_BIZ.map(function (g) {
-      return '<div class="gift"><a href="/biz/' + g.slug + '"><img src="' + g.img + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=ph>🎁</div>\'"></a><b>' + g.name + '</b><u>' + g.line + '</u><a class="gbtn" href="' + g.link + '" target="_blank" rel="noopener">' + g.btn + '</a></div>';
+      if (GIFT_PRODUCTS[g.slug] && giftFeed) {
+        var list = giftFeed.filter(function (p) { return (!p.expires || new Date(p.expires) > now) && (p.bizSlug === g.slug || (!p.bizSlug && norm(giftUn(p.business)).indexOf(norm(g.name)) === 0)); }).slice(0, 4);
+        if (list.length) return list.map(function (p) { return productTile(p, g); }).join('');
+      }
+      return giftTile(g);
     }).join('');
     $('giftsBox').classList.remove('hidden');
+  }
+  function loadGifts() {
+    renderGifts();
+    if (giftFeed) return;
+    fetch('/.netlify/functions/studio-market?feed=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { if (d && Array.isArray(d.items)) { giftFeed = d.items; renderGifts(); } }).catch(function () {});
   }
 
   // 🎉 celebrations — 5 effects, a different one each time the card is opened
