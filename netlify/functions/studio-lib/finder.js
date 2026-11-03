@@ -248,17 +248,21 @@ async function neverAdd(b, reason) {
 const HEAD = ['name', 'slug', 'description', 'detailedDescription', 'images', 'video', 'categories', 'tags', 'mainLink', 'status', 'isFeatured', 'rejectionReasons', 'modificationsMade', 'exemptFromAutomation', 'adminNote', 'contact_name', 'location_address', 'location_latitude', 'location_longitude', 'operating_hours', 'business_phone', 'business_email', 'socialMedia_x', 'socialMedia_facebook', 'socialMedia_instagram', 'socialMedia_linkedin', 'socialMedia_youtube', 'socialMedia_github', 'socialMedia_tiktok', 'socialMedia_pinterest', 'socialMedia_snapchat', 'socialMedia_reddit', 'socialMedia_medium', 'socialMedia_telegram', 'socialMedia_discord', 'seoTitle', 'seoDescription', 'seoKeywords', 'focusKeyword', 'ogTitle', 'ogDescription', 'twitterTitle', 'twitterDescription', 'twitterCard', 'canonicalUrl', 'noIndex', 'noFollow', 'schemaType', 'custom_Whatsapp Link', 'custom_💙 Companies House registration verified by Auntie Tobi.'];
 const cell = v => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 // Every business added in HQ (by the Finder or by hand) that isn't on the website yet.
-async function toUpload() { return (await bizdir.all()).filter(b => b.src === 'hq' && !b.hidden && !b.uploadedAt); }
+async function waiting() { return (await bizdir.all()).filter(b => b.src === 'hq' && !b.hidden && !b.uploadedAt); }
+// The website's CSV import needs a phone number: use their phone, or their WhatsApp number when there's no phone
+const phoneFor = b => b.phone || (b.wa ? '+' + String(b.wa).replace(/\D/g, '') : '');
+async function toUpload() { return (await waiting()).filter(b => phoneFor(b)); }
+async function needPhone() { return (await waiting()).filter(b => !phoneFor(b)).map(b => ({ slug: b.slug, name: b.name })); }
 async function exportCsv() {
   const rows = (await toUpload()).map(b => {
     const short = b.short || String(b.desc || '').slice(0, 160), tags = (b.tags || []).join(', '), cat = (b.cats && b.cats[0]) || CATS.find(c => childCat(c) === String(b.cat || '').toLowerCase()) || '';
     const v = { name: b.name, slug: b.slug, images: b.img || '', tags, seoKeywords: tags, location_latitude: b.lat != null ? b.lat : '', location_longitude: b.lng != null ? b.lng : '', description: short, detailedDescription: b.desc, categories: cat, mainLink: b.website, status: 'PUBLISHED', isFeatured: 'false',
       exemptFromAutomation: 'false', contact_name: 'Auntie Tobi', location_address: b.addr || ((b.loc && b.loc !== 'UK' ? b.loc + ', ' : '') + 'UK'),
-      business_phone: b.phone, business_email: b.email, socialMedia_instagram: b.ig ? 'https://www.instagram.com/' + b.ig + '/' : '', socialMedia_facebook: b.fb || '', socialMedia_tiktok: b.tt || '', seoTitle: b.name, seoDescription: short, focusKeyword: b.name.toLowerCase(),
+      business_phone: phoneFor(b), business_email: b.email, socialMedia_instagram: b.ig ? 'https://www.instagram.com/' + b.ig + '/' : '', socialMedia_facebook: b.fb || '', socialMedia_tiktok: b.tt || '', seoTitle: b.name, seoDescription: short, focusKeyword: b.name.toLowerCase(),
       ogTitle: b.name, ogDescription: short, twitterTitle: b.name, twitterDescription: short, twitterCard: 'summary_large_image', noIndex: 'false', noFollow: 'true', schemaType: 'LocalBusiness', 'custom_Whatsapp Link': b.wa ? 'https://wa.me/' + b.wa : '' };
     return HEAD.map(h => cell(v[h] || '')).join(',');
   });
-  return { csv: '\uFEFF' + HEAD.join(',') + '\n' + rows.join('\n') + (rows.length ? '\n' : ''), count: rows.length };
+  return { csv: '\uFEFF' + HEAD.join(',') + '\n' + rows.join('\n') + (rows.length ? '\n' : ''), count: rows.length, needPhone: await needPhone() };
 }
 async function markUploaded() {
   const list = await toUpload(), now = core.nowIso(), slugs = new Set(list.map(b => b.slug));
@@ -269,7 +273,7 @@ async function markUploaded() {
 async function summary() {
   const s = await state(), wk = weekOf();
   const approvedThisWeek = s.items.filter(x => (x.status === 'approved' || x.status === 'uploaded') && x.approvedAt && weekOf(x.approvedAt) === wk).length;
-  return { items: s.items, queue: (s.queue || []).length, lastRun: s.lastRun || '', approvedThisWeek, target: 50, cats: CATS, toUpload: (await toUpload()).length };
+  return { items: s.items, queue: (s.queue || []).length, lastRun: s.lastRun || '', approvedThisWeek, target: 50, cats: CATS, toUpload: (await toUpload()).length, needPhone: (await needPhone()).length };
 }
 
 module.exports = { readSite, pictureFor, CATS, runOne, work, more, ensureWeek, quickAdd, decide, neverAdd, exportCsv, markUploaded, summary, weekOf };
