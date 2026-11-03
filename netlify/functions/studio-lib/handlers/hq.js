@@ -295,6 +295,34 @@ exports.handler = handler(async (ctx) => {
       }
       return { items: await bizdir.all(), info: await bizdir.info() };
     }
+    case 'out-overview': case 'out-settings': case 'out-send': case 'out-hand': case 'out-hand-done': case 'out-mark': case 'out-preview': {
+      // 📧 business email journeys (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can send outreach emails.');
+      const out = require('../outreach');
+      if (body.action === 'out-settings') { await out.saveSettings(body.settings || {}); await core.audit(who.email, 'hq_out_settings', body.settings || {}); }
+      if (body.action === 'out-send') { const r = await out.sendBatch(10); await core.audit(who.email, 'hq_out_send', r); return r; }
+      if (body.action === 'out-hand') return await out.handMessage(String(body.slug || ''));
+      if (body.action === 'out-hand-done') await out.markHand(String(body.slug || ''));
+      if (body.action === 'out-mark') { await out.mark(String(body.slug || ''), ['joined', 'stop', 'restart'].includes(body.what) ? body.what : 'stop'); await core.audit(who.email, 'hq_out_mark', { slug: body.slug, what: body.what }); }
+      if (body.action === 'out-preview') return await out.previewFor(String(body.slug || ''), String(body.step || ''));
+      return await out.overview();
+    }
+    case 'mail-list': case 'mail-save': case 'mail-restore': case 'mail-test': case 'mail-preview': {
+      // 📝 email templates (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the emails.');
+      const emails = require('../emails');
+      const id = String(body.id || '');
+      if (body.action === 'mail-save') { const t = await emails.save(id, body.subject, body.body, who.email); await core.audit(who.email, 'hq_mail_save', { id }); return { item: t }; }
+      if (body.action === 'mail-restore') { const t = await emails.restore(id); await core.audit(who.email, 'hq_mail_restore', { id }); return { item: t }; }
+      if (body.action === 'mail-preview') {
+        const t = emails.T[id]; if (!t) throw new HttpError(404, 'not_found', 'Unknown email.');
+        const dir = await require('../bizdir').all(), b = dir.find(x => !x.featured && !x.hidden && x.email && x.desc) || dir[0];
+        const v = { business_name: b.name, category: String((b.cats && b.cats[0]) || b.cat || '').split('>').pop().trim(), town: b.loc || 'the UK', listing_link: core.siteBase() + '/biz/' + b.slug, claim_link: 'https://directory.auntietobi.co.uk/' + b.slug, remove_link: core.siteBase() + '/remove/…', unsubscribe_link: core.siteBase() + '/u/…', studio_link: core.siteBase() + '/business-studio', club_link: core.siteBase() + '/business-club', personal_line: body.personal ? 'Your ' + (b.cat || 'work') + ' looks lovely.' : '' };
+        return Object.assign(emails.renderWith({ subject: String(body.subject || t.subject), body: String(body.body || t.body) }, v, emails.FOOTER_OUT), { business: b.name });
+      }
+      if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
+      return await emails.list();
+    }
     case 'find-img': case 'find-list': case 'find-more': case 'find-quick': case 'find-decide': case 'find-csv': case 'find-uploaded': {
       // 🔎 Business Finder (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use the Business Finder.');

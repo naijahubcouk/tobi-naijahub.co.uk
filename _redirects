@@ -31,6 +31,9 @@
 
 # 🖼 Business pictures kept by Auntie Tobi (Business Finder / HQ)
 /bimg/:file   /.netlify/functions/app-content?bimg=:file   200
+# 📧 Outreach email links: unsubscribe, and "remove my listing"
+/u/:t         /.netlify/functions/app-content?unsub=:t   200
+/remove/:t    /.netlify/functions/app-content?gone=:t    200
 
 # Business directory page
 /biz            /?action=businesses     301

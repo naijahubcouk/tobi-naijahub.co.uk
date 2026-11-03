@@ -235,6 +235,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
       <button data-nav="dir" id="navDir" class="hidden">🏢 Business directory</button>
       <button data-nav="find" id="navFind" class="hidden">🔎 Business Finder</button>
+      <button data-nav="out" id="navOut" class="hidden">📧 Outreach</button>
+      <button data-nav="mail" id="navMail" class="hidden">📝 Emails</button>
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
       <button data-nav="tcars">📝 Template Carousel <span class="n" id="nTcars"></span></button>
@@ -313,7 +315,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
-    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
+    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -321,7 +323,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
   function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = ((v === 'dir' || v === 'find') && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
+    S.view = (['dir', 'find', 'out', 'mail'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -333,7 +335,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
@@ -1034,6 +1036,99 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       var p = S.findPics[c.id];
       if (p.dataUrl) { el.src = p.dataUrl; if (lab) lab.textContent = p.src === 'upload' ? '📷 Your photo' : '🌐 From their website'; } else setCard();
     }
+  }
+  // 📧 Outreach — business email journeys (unclaimed / claimed), sent only when Auntie Tobi taps Send
+  var OUT_STEP = { u1: 'You’re listed', u2: 'Free Business Studio', u3: 'Club invite', u4: 'Club benefits + last note', c1: 'Thank you + Business Studio', c2: 'Club invite', c3: 'Club benefits', c4: 'Last note' };
+  var OUT_STOP = { joined: '💚 Joined', finished: '✔ Finished', unsubscribed: '🔕 Unsubscribed', removed: '🚫 Removed', stopped: '⏹ Stopped', featured: '⭐ Featured', hidden: '🙈 Hidden' };
+  function outDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''; }
+  function vOut() {
+    $('#ttl').textContent = 'Outreach';
+    $('#topRight').innerHTML = '<button class="btn ghost" id="oMail">📝 Edit emails</button>';
+    $('#oMail').onclick = function () { go('mail'); };
+    if (!S.out) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Working out today’s emails…</p></div>'; api('out-overview').then(function (r) { S.out = r; if (S.view === 'out') vOut(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
+    var O = S.out, st = O.settings, c = O.counts, tab = S.outTab || 'today';
+    var head = '<div class="card" style="padding:14px 16px;margin-bottom:12px">' +
+      '<div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><b style="font-size:17px">' + (st.on ? '🟢 Journeys are on' : '⚪ Journeys are off') + '</b><div class="muted" style="font-size:13px">' + (st.on ? 'Nothing is sent until you tap Send.' : 'Turn on to start the day 0, 2, 5 and 12 emails.') + '</div></div>' +
+      '<button class="btn ' + (st.on ? 'ghost' : 'primary') + '" id="oOn">' + (st.on ? 'Turn off' : 'Turn on') + '</button></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:12px">' + [['Emails sent today', O.sentToday + ' / ' + st.cap], ['In a journey', c.inJourney], ['Waiting to start', c.waitingToStart], ['Joined', c.joined], ['Finished', c.finished]].map(function (x) { return '<div style="background:#F6F4EE;border-radius:10px;padding:8px 12px;min-width:96px"><div style="font-size:19px;font-weight:800">' + x[1] + '</div><div class="muted" style="font-size:12px">' + x[0] + '</div></div>'; }).join('') + '</div>' +
+      '<details style="margin-top:10px"><summary class="muted" style="cursor:pointer;font-size:13px">⚙️ Settings</summary><div class="f2" style="margin-top:8px"><div><label for="oCap">Emails a day (max 95)</label><input id="oCap" type="number" min="1" max="95" value="' + st.cap + '"></div><div><label for="oHand">WhatsApp/Instagram a day</label><input id="oHand" type="number" min="0" max="60" value="' + st.manualCap + '"></div></div>' +
+      '<label class="chk" style="margin-top:6px"><input type="checkbox" id="oAi"' + (st.aiLine ? ' checked' : '') + '> ✨ Add a short personal line written by AI (about what they sell)</label><div class="muted" style="font-size:12px">The free email plan allows 100 a day, shared with Business Studio sign-in codes — keep it at 60 or less.</div><button class="btn ghost sm" id="oSave" style="margin-top:8px">💾 Save settings</button></div></details></div>';
+    var tabs = '<div class="chipbar" id="oTabs" style="margin-bottom:10px">' + [['today', 'Today (' + (O.todayEmail.length + O.todayHand.length) + ')'], ['all', 'All businesses (' + O.rows.length + ')']].map(function (t) { return '<button class="chip" data-t="' + t[0] + '" aria-pressed="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    var body = '';
+    if (tab === 'today') {
+      body = '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><b>📧 ' + O.todayEmail.length + ' emails ready</b><div class="muted" style="font-size:13px">From Auntie Tobi &lt;hello@mail.auntietobi.co.uk&gt; · replies go to info@auntietobi.co.uk</div></div>' +
+        (O.todayEmail.length ? '<button class="btn primary" id="oSend"' + (st.on ? '' : ' disabled title="Turn the journeys on first"') + '>✅ Send ' + O.todayEmail.length + ' emails</button>' : '') + '</div>' +
+        (O.todayEmail.length ? O.todayEmail.map(function (x) { return '<div class="aprow"><div style="flex:1;min-width:0"><b>' + esc(x.name) + '</b> ' + (x.j === 'u' ? dirPill('Unclaimed', '#FFE7A3', '#6B4A00') : dirPill('Claimed', '#057A44')) + (x.isNew ? ' ' + dirPill('New', '#7C3AED') : '') + '<div class="muted" style="font-size:13px">' + esc(OUT_STEP[x.step]) + ' · ' + esc(x.subject) + '</div><div class="muted" style="font-size:12px">' + esc(x.email) + '</div></div><div class="apact"><button class="btn ghost sm" data-opv="' + esc(x.slug) + '" data-step="' + x.step + '">👁 Preview</button></div></div>'; }).join('') : '<p class="muted" style="margin:10px 0 0">Nothing to send today' + (O.laterThisWeek ? ' — ' + O.laterThisWeek + ' follow-ups are due later this week' : '') + '.</p>') + '</div>' +
+        '<div class="card" style="padding:14px 16px"><b>📱 ' + O.todayHand.length + ' without email — send by hand</b><div class="muted" style="font-size:13px;margin-bottom:6px">Tap WhatsApp or Instagram: the message is ready, you press send. Then tap ✓ Sent.</div>' +
+        (O.todayHand.length ? O.todayHand.map(function (x) { return '<div class="aprow"><div style="flex:1;min-width:0"><b>' + esc(x.name) + '</b><div class="muted" style="font-size:13px">' + esc(OUT_STEP[x.step]) + '</div></div><div class="apact" style="flex-wrap:wrap">' + (x.wa ? '<button class="btn ghost sm" data-ohw="' + esc(x.slug) + '">💬 WhatsApp</button>' : '') + (x.ig ? '<button class="btn ghost sm" data-ohi="' + esc(x.slug) + '">📸 Instagram</button>' : '') + '<button class="btn ghost sm" data-ohd="' + esc(x.slug) + '">✓ Sent</button></div></div>'; }).join('') : '<p class="muted" style="margin:6px 0 0">None today.</p>') + '</div>';
+    } else {
+      var q = (S.outQ || '').toLowerCase(), rows = O.rows.filter(function (r) { return !q || (r.name + ' ' + (r.email || '')).toLowerCase().indexOf(q) >= 0; }).sort(function (a, b) { return (b.sent.length ? b.sent[b.sent.length - 1].at : '').localeCompare(a.sent.length ? a.sent[a.sent.length - 1].at : ''); });
+      body = '<input id="oQ" placeholder="🔎 Search" value="' + esc(S.outQ || '') + '" style="margin-bottom:8px"><div class="card" style="padding:4px 14px">' + (rows.length ? rows.slice(0, 300).map(function (r) {
+        var last = r.sent[r.sent.length - 1];
+        return '<div class="aprow"><div style="flex:1;min-width:0"><b>' + esc(r.name) + '</b> ' + (r.j === 'u' ? dirPill('Unclaimed', '#FFE7A3', '#6B4A00') : dirPill('Claimed', '#057A44')) + (r.stop ? ' ' + dirPill(OUT_STOP[r.stop] || r.stop, '#EEF0F3', '#333') : '') +
+          '<div class="muted" style="font-size:12.5px">' + r.sent.map(function (x) { return esc(OUT_STEP[x.id] || x.id) + ' ' + (x.ch === 'email' ? '📧' : '📱') + ' ' + outDate(x.at); }).join(' → ') + '</div></div>' +
+          '<div class="apact">' + (r.stop ? '<button class="btn ghost sm" data-om="restart" data-slug="' + esc(r.slug) + '">↩️ Start again</button>' : '<button class="btn ghost sm" data-om="joined" data-slug="' + esc(r.slug) + '">💚 Joined</button><button class="btn ghost sm" data-om="stop" data-slug="' + esc(r.slug) + '">⏹ Stop</button>') + '</div></div>';
+      }).join('') : '<p class="muted" style="padding:12px 0">No one has been emailed yet.</p>') + '</div>';
+    }
+    $('#view').innerHTML = '<div class="wrap">' + head + tabs + body + '</div>';
+    $$('#oTabs [data-t]').forEach(function (b) { b.onclick = function () { S.outTab = b.dataset.t; vOut(); }; });
+    var reload = async function (r) { S.out = r || await api('out-overview'); vOut(); };
+    $('#oOn').onclick = async function () { if (!st.on && !confirm('Turn on the email journeys?\n\nNothing is sent until you tap Send each day.')) return; try { await reload(await api('out-settings', { settings: { on: !st.on } })); } catch (x) { toast(x.message); } };
+    $('#oSave').onclick = async function () { try { await reload(await api('out-settings', { settings: { cap: $('#oCap').value, manualCap: $('#oHand').value, aiLine: $('#oAi').checked } })); toast('Saved'); } catch (x) { toast(x.message); } };
+    if ($('#oQ')) $('#oQ').oninput = function () { S.outQ = this.value; var pos = this.selectionStart; vOut(); var el = $('#oQ'); el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} };
+    if ($('#oSend')) $('#oSend').onclick = async function () {
+      if (!confirm('Send ' + O.todayEmail.length + ' emails now?')) return;
+      var btn = this, total = 0, fails = 0; btn.disabled = true;
+      try { for (var i = 0; i < 20; i++) { btn.textContent = 'Sending… ' + total + ' sent'; var r = await api('out-send'); total += r.sent; fails += r.failed; if (!r.left || (!r.sent && !r.failed)) break; } toast('✅ ' + total + ' emails sent' + (fails ? ' · ' + fails + ' didn’t send' : '')); }
+      catch (x) { toast((total ? total + ' sent, then: ' : '') + x.message); }
+      reload();
+    };
+    $$('[data-opv]').forEach(function (b) { b.onclick = async function () { try { var m = await api('out-preview', { slug: b.dataset.opv, step: b.dataset.step }); mailPreviewSheet(m); } catch (x) { toast(x.message); } }; });
+    var hand = async function (slug, how) {
+      try {
+        var m = await api('out-hand', { slug: slug });
+        if (how === 'wa') window.open('https://wa.me/' + m.wa + '?text=' + encodeURIComponent(m.text), '_blank', 'noopener');
+        else { try { await navigator.clipboard.writeText(m.text); toast('Message copied — paste it in the DM'); } catch (e) { toast('Copy failed — long-press to copy'); } window.open('https://ig.me/m/' + m.ig, '_blank', 'noopener'); }
+      } catch (x) { toast(x.message); }
+    };
+    $$('[data-ohw]').forEach(function (b) { b.onclick = function () { hand(b.dataset.ohw, 'wa'); }; });
+    $$('[data-ohi]').forEach(function (b) { b.onclick = function () { hand(b.dataset.ohi, 'ig'); }; });
+    $$('[data-ohd]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { await api('out-hand-done', { slug: b.dataset.ohd }); toast('Marked as sent'); reload(); } catch (x) { b.disabled = false; toast(x.message); } }; });
+    $$('[data-om]').forEach(function (b) { b.onclick = async function () { if (b.dataset.om === 'stop' && !confirm('Stop all emails to this business?')) return; try { await reload(await api('out-mark', { slug: b.dataset.slug, what: b.dataset.om })); toast('Updated'); } catch (x) { toast(x.message); } }; });
+  }
+  function mailPreviewSheet(m) {
+    var s = sheet('<h2 style="font-size:17px">' + esc(m.subject) + '</h2>' + (m.business ? '<p class="muted" style="font-size:12.5px;margin:2px 0 8px">Preview with ' + esc(m.business) + '</p>' : '') + '<div id="mpv" style="border:1px solid #ECE6D6;border-radius:12px;overflow:hidden;max-height:62vh;overflow-y:auto"></div><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn primary" id="mpX">Close</button></div>');
+    var host = $('#mpv', s), sh = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
+    sh.innerHTML = String(m.html).replace(/^[\s\S]*?<body[^>]*>|<\/body>[\s\S]*$/g, '');
+    $('#mpX', s).onclick = function () { s.remove(); };
+  }
+  // 📝 Emails — edit every email template
+  function vMail() {
+    $('#ttl').textContent = 'Emails';
+    $('#topRight').innerHTML = '<button class="btn ghost" id="mOut">📧 Outreach</button>';
+    $('#mOut').onclick = function () { go('out'); };
+    if (!S.mail) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading emails…</p></div>'; api('mail-list').then(function (r) { S.mail = r; if (S.view === 'mail') vMail(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
+    $('#view').innerHTML = '<div class="wrap"><p class="muted" style="margin:0 0 12px;font-size:14px">Tap an email to change its words. You can preview it, send yourself a test and restore the original any time.</p>' + S.mail.groups.map(function (g) {
+      var items = S.mail.items.filter(function (t) { return t.group === g.id; });
+      return '<h3 style="margin:16px 0 4px;font-size:16px">' + esc(g.name) + '</h3><div class="muted" style="font-size:12.5px;margin-bottom:6px">' + esc(g.note || '') + '</div><div class="card" style="padding:4px 14px">' + items.map(function (t) {
+        return '<div class="aprow" style="cursor:pointer" data-mid="' + t.id + '"><div style="flex:1;min-width:0"><b>' + esc(t.name) + '</b>' + (t.edited ? ' ' + dirPill('Edited', '#7C3AED') : '') + (t.locked ? ' ' + dirPill('🔒 Parts locked', '#EEF0F3', '#333') : '') + '<div class="muted" style="font-size:12.5px">' + esc(t.when) + '</div><div style="font-size:13px;margin-top:2px">' + esc(t.subject) + '</div></div><div class="apact"><button class="btn ghost sm">✏️ Edit</button></div></div>';
+      }).join('') + '</div>';
+    }).join('') + '</div>';
+    $$('[data-mid]').forEach(function (r) { r.onclick = function () { mailEdit(S.mail.items.filter(function (t) { return t.id === r.dataset.mid; })[0]); }; });
+  }
+  function mailEdit(t) {
+    var s = sheet('<h2>✏️ ' + esc(t.name) + '</h2><p class="muted" style="margin:2px 0 10px;font-size:13px">' + esc(t.when) + '</p><div class="stack">' +
+      '<div><label for="meS">Subject</label><input id="meS" maxlength="200" value="' + esc(t.subject) + '"></div>' +
+      '<div><label for="meB">Email</label><textarea id="meB" rows="14" style="font-size:14px;line-height:1.5">' + esc(t.body) + '</textarea></div>' +
+      '<div class="muted" style="font-size:12.5px">Tap to add: ' + t.vars.map(function (v) { return '<button type="button" class="chip" data-mv="' + v + '" style="margin:2px">{' + v + '}</button>'; }).join('') + '<br>Blank line = new paragraph · “- ” = bullet · “1. ” = numbered · **bold** · links become buttons-style links automatically.</div></div>' +
+      '<div class="err hidden" id="meErr"></div><div class="row" style="justify-content:space-between;gap:8px;margin-top:12px;flex-wrap:wrap"><div class="row" style="gap:6px;flex-wrap:wrap">' + (t.edited ? '<button class="btn ghost" id="meR">↩️ Restore original</button>' : '') + '<button class="btn ghost" id="meP">👁 Preview</button><button class="btn ghost" id="meT">📨 Send me a test</button></div><div class="row" style="gap:8px"><button class="btn ghost" id="meX">Cancel</button><button class="btn primary" id="meOk">💾 Save</button></div></div>');
+    var ta = $('#meB', s), err = function (m) { $('#meErr', s).textContent = m; $('#meErr', s).classList.remove('hidden'); };
+    $$('[data-mv]', s).forEach(function (b) { b.onclick = function () { var v = '{' + b.dataset.mv + '}', a = ta.selectionStart, z = ta.selectionEnd; ta.value = ta.value.slice(0, a) + v + ta.value.slice(z); ta.focus(); ta.setSelectionRange(a + v.length, a + v.length); }; });
+    $('#meX', s).onclick = function () { s.remove(); };
+    $('#meP', s).onclick = async function () { try { mailPreviewSheet(await api('mail-preview', { id: t.id, subject: $('#meS', s).value, body: ta.value })); } catch (x) { err(x.message); } };
+    $('#meT', s).onclick = async function () { this.disabled = true; try { var r = await api('mail-test', { id: t.id, subject: $('#meS', s).value, body: ta.value }); toast('📨 Test sent to ' + r.to + ' (using ' + r.business + ')'); } catch (x) { err(x.message); } this.disabled = false; };
+    if ($('#meR', s)) $('#meR', s).onclick = async function () { if (!confirm('Go back to the original words for this email?')) return; try { var r = await api('mail-restore', { id: t.id }); S.mail = null; s.remove(); toast('Restored'); vMail(); } catch (x) { err(x.message); } };
+    $('#meOk', s).onclick = async function () { this.disabled = true; try { await api('mail-save', { id: t.id, subject: $('#meS', s).value, body: ta.value }); S.mail = null; s.remove(); toast('Saved ✅'); vMail(); } catch (x) { this.disabled = false; err(x.message); } };
   }
   // 🔎 Business Finder — weekly search for Nigerian businesses in the UK; approve → app + website CSV
   var FIND_TABS = { 'new': 'To review', approved: 'Approved', skipped: 'Skipped', uploaded: 'On the website' };
