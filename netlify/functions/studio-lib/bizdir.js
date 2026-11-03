@@ -69,6 +69,9 @@ function normalise(b) {
   if (typeof b.claimedSet === 'boolean') out.claimedSet = b.claimedSet;
   out.claimed = typeof out.claimedSet === 'boolean' ? out.claimedSet : (out.contact ? !OURS.test(out.contact) : b.claimed !== false);
   if (b.notes) out.notes = str(b.notes, 1000);
+  if (b.short) out.short = str(b.short, 200);                    // one-line description (website "description")
+  if (Array.isArray(b.tags) && b.tags.length) out.tags = b.tags.map(t => str(t, 40)).filter(Boolean).slice(0, 10);
+  if (isFinite(+b.lat) && isFinite(+b.lng) && b.lat !== '' && b.lat != null && +b.lat !== 0) { out.lat = +b.lat; out.lng = +b.lng; }
   if (b.uploadedAt) out.uploadedAt = str(b.uploadedAt, 40);   // HQ-added business already put in a website CSV
   return out;
 }

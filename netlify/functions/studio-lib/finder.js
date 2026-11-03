@@ -56,7 +56,11 @@ async function readSite(url) {
     const og = (html.match(/<meta[^>]+(?:property|name)=["'](?:og:image(?::secure_url)?|twitter:image)["'][^>]*content=["']([^"']+)["']/i) || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["'](?:og:image|twitter:image)["']/i) || [])[1] || '';
     let imgUrl = ''; try { imgUrl = og ? new URL(og.replace(/&amp;/g, '&'), r.url || url).toString() : ''; } catch (_) { imgUrl = ''; }
     if (!/^https:/i.test(imgUrl) || /\.svg(\?|$)/i.test(imgUrl)) imgUrl = '';
-    return { imgUrl, email: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(email) || /example|sentry|wixpress|domain/i.test(email) ? '' : email.toLowerCase(), wa: wa.replace(/\D/g, ''), phone: phone.trim(), ig };
+    // their own words about the business (meta description + the start of the page text) — used to write the listing
+    const metaDesc = (html.match(/<meta[^>]+(?:name|property)=["'](?:description|og:description)["'][^>]*content=["']([^"']{20,600})["']/i) || [])[1] || '';
+    const body = html.replace(/<(script|style|noscript|svg|nav|footer|header)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/&#0?39;|&rsquo;/g, '’').replace(/\s+/g, ' ').trim();
+    const siteText = (metaDesc ? metaDesc.replace(/&amp;/g, '&') + ' — ' : '') + body.slice(0, 1400);
+    return { siteText: siteText.slice(0, 1600), imgUrl, email: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(email) || /example|sentry|wixpress|domain/i.test(email) ? '' : email.toLowerCase(), wa: wa.replace(/\D/g, ''), phone: phone.trim(), ig };
   } catch (_) { return {}; } finally { clearTimeout(t); }
 }
 
@@ -90,7 +94,7 @@ async function runOne(query) {
   }
   const sites = await Promise.all(fresh.map(c => readSite(c.website)));
   const now = core.nowIso();
-  const items = fresh.map((c, i) => Object.assign(c, { id: 'f' + Date.now().toString(36) + i, imgUrl: sites[i].imgUrl || '', email: sites[i].email || '', wa: sites[i].wa || '', phone: sites[i].phone || '', ig: c.ig || sites[i].ig || '', query, foundAt: now, status: 'new' }));
+  const items = fresh.map((c, i) => Object.assign(c, { id: 'f' + Date.now().toString(36) + i, siteText: sites[i].siteText || '', imgUrl: sites[i].imgUrl || '', email: sites[i].email || '', wa: sites[i].wa || '', phone: sites[i].phone || '', ig: c.ig || sites[i].ig || '', query, foundAt: now, status: 'new' }));
   await cas('finder/state', cur => { cur = cur || { items: [], queue: [], cursor: 0, week: '' }; cur.items = items.concat(cur.items).slice(0, 600); cur.lastRun = now; return cur; });
   return { query, found: list.length, added: items.length };
 }
@@ -140,7 +144,7 @@ async function quickAdd(input) {
     const known = await knownKeys(), c = { name: handle || input.replace(/^https?:\/\/(www\.)?/, '').split(/[/?#]/)[0], ig: handle, website: /^https?:/.test(input) && !handle ? input : '', loc: '', cat: '', desc: '', why: 'Added by you', confidence: 1 };
     if (isKnown(known, c)) throw new HttpError(409, 'exists', 'That business is already in your directory or review list.');
     const site = await readSite(c.website);
-    const item = Object.assign(c, { id: 'f' + Date.now().toString(36), imgUrl: site.imgUrl || '', email: site.email || '', wa: site.wa || '', phone: site.phone || '', query: 'Quick add', foundAt: core.nowIso(), status: 'new' });
+    const item = Object.assign(c, { id: 'f' + Date.now().toString(36), siteText: site.siteText || '', imgUrl: site.imgUrl || '', email: site.email || '', wa: site.wa || '', phone: site.phone || '', query: 'Quick add', foundAt: core.nowIso(), status: 'new' });
     await cas('finder/state', cur => { cur = cur || { items: [], queue: [] }; cur.items = [item].concat(cur.items); return cur; });
   }
   return r;
@@ -167,16 +171,45 @@ async function decide(id, decision, edits, who) {
     if (!c.imgNone) pic = await picture(c);
     if (!pic && edits && bizimg.parse(edits.fallbackImg)) pic = { dataUrl: edits.fallbackImg, src: 'card' };
     c.img = pic ? await bizimg.put(slug, pic.dataUrl, pic.src) : '';
+    const w = await writeUp(c, e.desc && e.desc !== cand.desc ? e.desc : '');
+    c.desc = w.long; c.short = w.short; c.tags = w.tags; delete c.siteText;
     await core.del('finder/img/' + id).catch(() => {});
-    await bizdir.save({ slug, img: c.img, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
+    await bizdir.save({ slug, img: c.img, short: w.short, tags: w.tags, lat: w.lat, lng: w.lng, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
     c.slug = slug; c.status = 'approved'; c.approvedAt = now;
-  } else if (decision === 'skip') { c.status = 'skipped'; c.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); }
+  } else if (decision === 'skip') { c.status = 'skipped'; c.imgUp = false; delete c.siteText; await core.del('finder/img/' + id).catch(() => {}); }
   else if (decision === 'never') { c.status = 'skipped'; c.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); await neverAdd(c, 'Skipped for good in the Finder'); }
   else if (decision === 'edit') { /* save edits only */ }
   else throw new HttpError(400, 'invalid', 'Unknown choice.');
   await cas('finder/state', cur => { cur.items = cur.items.map(x => x.id === id ? c : x); return cur; });
   return c;
 }
+// ✍️ The listing words: a one-line short description, a fuller description, tags and the map point for the town.
+// Their own website text is the main source; nothing is made up.
+const TOWNS = {"livingston":[55.9007,-3.5181],"liverpool":[53.4084,-2.9916],"birmingham":[52.4823,-1.89],"norwich":[52.6293,1.2979],"london":[51.5072,-0.1276],"tilbury":[51.4671,0.3939],"manchester":[53.4808,-2.2426],"sunderland":[54.9044,-1.3812],"glasgow":[55.8617,-4.2583],"bradford":[53.7938,-1.7564],"colchester":[51.8959,0.8919],"kent":[51.0928,0.8392],"southampton":[50.9105,-1.4049],"rainham":[51.3629,0.6113],"middlesbrough":[54.5742,-1.235],"dudley":[52.5107,-2.0866],"plymouth":[50.3755,-4.1427],"cambridgeshire":[52.2762,-0.0965],"doncaster":[53.5228,-1.1323],"coventry":[52.4128,-1.509],"derbyshire":[53.1223,-1.5137],"newcastle":[54.9783,-1.6178],"maidstone":[51.2704,0.5227],"huddersfield":[53.6458,-1.785],"bolton":[53.5769,-2.4282],"aberdeen":[57.1499,-2.0938],"milton keynes":[52.0406,-0.7594],"edinburgh":[55.9533,-3.1883],"scarborough":[54.2831,-0.3998],"aylesbury":[51.8177,-0.8192],"east london":[51.5563,0.0655],"suffolk":[52.2714,1.0721],"newport":[51.5842,-2.9977],"sheffield":[53.3811,-1.4701],"dartford":[51.4462,0.2169],"camberley":[51.3354,-0.7429],"bexleyheath":[51.4533,0.1382],"northampton":[52.2371,-0.8944],"nottingham":[52.954,-1.155],"witham":[51.7978,0.6372],"warwickshire":[52.2671,-1.4675],"hertfordshire":[51.8098,-0.2377],"aldershot":[51.2484,-0.7558],"wrexham":[53.043,-2.9925],"mansfield":[53.1472,-1.1987],"wolverhampton":[52.5868,-2.1257],"leicester":[52.6369,-1.1398],"leeds":[53.8008,-1.5491],"essex":[51.7668,0.4758],"derby":[52.9225,-1.4746],"bristol":[51.4545,-2.5879],"reading":[51.4543,-0.9781],"luton":[51.8787,-0.42],"peterborough":[52.5695,-0.2405],"cardiff":[51.4816,-3.1791],"croydon":[51.3762,-0.0982],"peckham":[51.474,-0.069],"woolwich":[51.4892,0.0648],"ipswich":[52.0567,1.1482],"cambridge":[52.2053,0.1218],"oxford":[51.752,-1.2577],"swindon":[51.5558,-1.7797],"portsmouth":[50.8198,-1.088],"hull":[53.7676,-0.3274],"stoke-on-trent":[53.0027,-2.1794],"belfast":[54.5973,-5.9301],"salford":[53.4875,-2.2901],"bournemouth":[50.7192,-1.8808],"brighton":[50.8225,-0.1372],"slough":[51.5105,-0.5950],"watford":[51.6565,-0.3903],"chelmsford":[51.7356,0.4685],"basildon":[51.5761,0.4887],"gravesend":[51.4416,0.3702],"lewisham":[51.4452,-0.0209],"ilford":[51.559,0.0741],"barking":[51.5362,0.0798],"romford":[51.5751,0.1858],"stratford":[51.5419,-0.0034],"tottenham":[51.5975,-0.0681],"enfield":[51.6523,-0.0807],"harrow":[51.5806,-0.3420],"wembley":[51.5588,-0.2817],"thamesmead":[51.5037,0.1170],"erith":[51.4800,0.1778],"stockport":[53.4106,-2.1575],"oldham":[53.5409,-2.1114],"rochdale":[53.6097,-2.1561],"wigan":[53.5450,-2.6318],"preston":[53.7632,-2.7031],"blackburn":[53.7486,-2.4875],"york":[53.9600,-1.0873],"wakefield":[53.6830,-1.4977],"walsall":[52.5862,-1.9829],"west bromwich":[52.5187,-1.9945],"telford":[52.6784,-2.4453],"gloucester":[51.8642,-2.2382],"exeter":[50.7184,-3.5339],"dundee":[56.4620,-2.9707],"swansea":[51.6214,-3.9436],"bedford":[52.1356,-0.4685],"stevenage":[51.9038,-0.1966],"chatham":[51.3800,0.5290],"gillingham":[51.3890,0.5486]};
+function townPoint(loc) { const k = String(loc || '').toLowerCase().replace(/,?\s*uk$/, '').trim(); return TOWNS[k] || null; }
+const inUk = (lat, lng) => lat > 49.8 && lat < 60.95 && lng > -8.7 && lng < 1.8;
+async function writeUp(c, keepDesc) {
+  const fallback = { short: String(c.desc || '').slice(0, 150), long: c.desc || '', tags: [] };
+  let out = fallback, aiPoint = null;
+  try {
+    const settings = await core.getSettings();
+    const r = await gen.callModel([{ role: 'system', content:
+`You write business listings for the Auntie Tobi directory of Nigerian and African businesses in the UK.
+Use ONLY the facts given (their own website text first, then the notes). Never invent prices, awards, years, products, areas covered or claims. Plain, warm British English, third person, no hype words ("best", "No.1", "amazing"), no emojis, no contact details in the text.
+Return ONLY JSON: {"short":"one sentence, max 150 characters, what they offer and where","long":"60–120 words in 1–2 short paragraphs: what they offer, who it is for, what makes them handy, where they are based / cover — only if stated","tags":["3–6 short search words people would type, e.g. jollof, small chops, party trays"],"lat":0,"lng":0}
+lat/lng = the approximate centre of their UK town or area (0 if unsure).` },
+    { role: 'user', content: `Business: ${c.name}\nCategory: ${c.cat}\nTown: ${c.loc || 'UK'}\nNotes: ${c.desc || ''}\nTheir website text: ${c.siteText || '(none)'}` }], 700, settings, { json: true, raw: true, timeoutMs: 15000 });
+    gen.addGlobal(core.monthKey(), { cost: 0, inTok: r.inTok, outTok: r.outTok, costUsd: r.costUsd }, settings).catch(() => {});
+    const j = JSON.parse(String(r.text).replace(/^```(?:json)?\s*|\s*```$/g, ''));
+    out = { short: core.cleanText(j.short, 160) || fallback.short, long: String(j.long || '').replace(/\r/g, '').trim().slice(0, 1200) || fallback.long,
+      tags: (Array.isArray(j.tags) ? j.tags : []).map(t => core.cleanText(t, 40).replace(/,/g, '')).filter(Boolean).slice(0, 6) };
+    if (inUk(+j.lat, +j.lng)) aiPoint = [Math.round(+j.lat * 1e4) / 1e4, Math.round(+j.lng * 1e4) / 1e4];
+  } catch (_) { out = fallback; }
+  if (keepDesc) out.long = keepDesc;   // you rewrote the description yourself: keep your words
+  const pt = townPoint(c.loc) || aiPoint;
+  return Object.assign(out, pt ? { lat: pt[0], lng: pt[1] } : {});
+}
+
 // The candidate's picture as a data URL: uploaded in HQ, or downloaded from their website (kept for next time).
 async function picture(c) {
   const rec = await core.getJson('finder/img/' + c.id).catch(() => null);
@@ -208,8 +241,8 @@ const cell = v => { const s = String(v == null ? '' : v); return /[",\n\r]/.test
 async function toUpload() { return (await bizdir.all()).filter(b => b.src === 'hq' && !b.hidden && !b.uploadedAt); }
 async function exportCsv() {
   const rows = (await toUpload()).map(b => {
-    const short = String(b.desc || '').slice(0, 160), cat = (b.cats && b.cats[0]) || CATS.find(c => childCat(c) === String(b.cat || '').toLowerCase()) || '';
-    const v = { name: b.name, slug: b.slug, images: b.img || '', description: short, detailedDescription: b.desc, categories: cat, mainLink: b.website, status: 'PUBLISHED', isFeatured: 'false',
+    const short = b.short || String(b.desc || '').slice(0, 160), tags = (b.tags || []).join(', '), cat = (b.cats && b.cats[0]) || CATS.find(c => childCat(c) === String(b.cat || '').toLowerCase()) || '';
+    const v = { name: b.name, slug: b.slug, images: b.img || '', tags, seoKeywords: tags, location_latitude: b.lat != null ? b.lat : '', location_longitude: b.lng != null ? b.lng : '', description: short, detailedDescription: b.desc, categories: cat, mainLink: b.website, status: 'PUBLISHED', isFeatured: 'false',
       exemptFromAutomation: 'false', contact_name: 'Auntie Tobi', location_address: b.addr || ((b.loc && b.loc !== 'UK' ? b.loc + ', ' : '') + 'UK'),
       business_phone: b.phone, business_email: b.email, socialMedia_instagram: b.ig ? 'https://www.instagram.com/' + b.ig + '/' : '', seoTitle: b.name, seoDescription: short, focusKeyword: b.name.toLowerCase(),
       ogTitle: b.name, ogDescription: short, twitterTitle: b.name, twitterDescription: short, twitterCard: 'summary_large_image', noIndex: 'false', noFollow: 'true', schemaType: 'LocalBusiness', 'custom_Whatsapp Link': b.wa ? 'https://wa.me/' + b.wa : '' };

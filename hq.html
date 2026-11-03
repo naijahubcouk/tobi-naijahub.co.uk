@@ -917,7 +917,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div><label for="deN">Business name</label><input id="deN" maxlength="120" value="' + esc(b.name || '') + '"></div>' +
       '<div><label>Picture</label><div class="row" style="gap:12px;align-items:center"><img id="dePic" alt="" style="width:96px;height:96px;border-radius:12px;object-fit:cover;background:#EEF0F3;flex:none"><div class="stack" style="gap:6px"><div class="muted" id="dePicL" style="font-size:13px"></div><label class="btn ghost sm" style="margin:0">📷 Upload photo<input type="file" id="dePicF" accept="image/*" hidden></label></div></div></div>' +
       '<div class="f2"><div><label for="deC">Category</label><input id="deC" list="deCl" value="' + esc(b.cat || '') + '"><datalist id="deCl">' + dirCats().map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist></div><div><label for="deL">Town</label><input id="deL" value="' + esc(b.loc || '') + '"></div></div>' +
-      '<div><label for="deD">Description</label><textarea id="deD" rows="4">' + esc(b.desc || '') + '</textarea></div>' +
+      '<div><label for="deSh">Short description <span class="muted" style="font-weight:400">(one line — website “description”)</span></label><input id="deSh" maxlength="160" value="' + esc(b.short || '') + '"></div>' +
+      '<div><label for="deD">Description <span class="muted" style="font-weight:400">(full)</span></label><textarea id="deD" rows="5">' + esc(b.desc || '') + '</textarea></div>' +
+      '<div><label for="deT">Tags <span class="muted" style="font-weight:400">(comma between each)</span></label><input id="deT" placeholder="e.g. jollof, small chops, party trays" value="' + esc((b.tags || []).join(', ')) + '"></div>' +
       '<div class="f2"><div><label for="deI">Instagram</label><input id="deI" placeholder="handle" value="' + esc(b.ig || '') + '"></div><div><label for="deW">WhatsApp</label><input id="deW" placeholder="447…" value="' + esc(b.wa || '') + '"></div></div>' +
       '<div class="f2"><div><label for="deE">Email</label><input id="deE" type="email" value="' + esc(b.email || '') + '"></div><div><label for="deP">Phone</label><input id="deP" value="' + esc(b.phone || '') + '"></div></div>' +
       '<div><label for="deS">Website</label><input id="deS" placeholder="https://" value="' + esc(b.website || '') + '"></div>' +
@@ -942,7 +944,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     };
     $('#deOk', s).onclick = async function () {
       var v = function (id) { return $('#' + id, s).value.trim(); }, c = v('deCl2');
-      var item = Object.assign({}, b, { origSlug: b.slug, name: v('deN'), cat: v('deC'), loc: v('deL'), desc: v('deD'), ig: v('deI'), wa: v('deW'), email: v('deE'), phone: v('deP'), website: v('deS'), notes: v('deNo'),
+      var item = Object.assign({}, b, { origSlug: b.slug, name: v('deN'), cat: v('deC'), loc: v('deL'), desc: v('deD'), short: v('deSh'), tags: v('deT').split(',').map(function (t) { return t.trim(); }).filter(Boolean), ig: v('deI'), wa: v('deW'), email: v('deE'), phone: v('deP'), website: v('deS'), notes: v('deNo'),
         featured: $('#deF', s).checked, verified: $('#deV', s).checked, hidden: $('#deH', s).checked });
       if (c === 'auto') delete item.claimedSet; else item.claimedSet = c === 'yes';
       if (!item.name) { $('#deErr', s).textContent = 'Add the business name.'; $('#deErr', s).classList.remove('hidden'); return; }
@@ -1070,7 +1072,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     return '<div class="card" style="padding:12px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start"><div style="text-align:center;flex:none">' + findPicHtml(c, 92) + '<div class="muted" data-piclab style="font-size:10.5px;margin-top:3px;max-width:92px">' + (c.img ? '🖼 Picture' : '') + '</div></div><div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b style="font-size:16px">' + esc(c.name) + '</b>' +
       (cat ? dirPill(esc(cat), '#0F1E36') : dirPill('No category', '#B42318')) + (c.loc ? dirPill('📍 ' + esc(c.loc), '#EEF0F3', '#333') : '') +
       (c.status === 'new' ? dirPill(conf + '% sure', conf >= 75 ? '#057A44' : conf >= 50 ? '#FFE7A3' : '#FDE2E1', conf >= 75 ? '#fff' : '#5A3A00') : '') + '</div>' +
-      (c.desc ? '<div style="margin-top:6px;font-size:14px">' + esc(c.desc) + '</div>' : '') +
+      (c.short ? '<div style="margin-top:6px;font-size:14px;font-weight:600">' + esc(c.short) + '</div>' : '') +
+      (c.desc ? '<div style="margin-top:6px;font-size:14px;white-space:pre-line">' + esc(c.desc) + '</div>' : '') +
+      (c.tags && c.tags.length ? '<div class="muted" style="margin-top:4px;font-size:12.5px">🏷 ' + esc(c.tags.join(' · ')) + '</div>' : '') +
       (c.why ? '<div class="muted" style="margin-top:4px;font-size:13px">🇳🇬 ' + esc(c.why) + '</div>' : '') +
       '<div style="margin-top:6px;font-size:13px;display:flex;gap:12px;flex-wrap:wrap">' + link(web, '🌐 Website') + link(c.ig ? 'https://www.instagram.com/' + c.ig + '/' : '', '📸 @' + esc(c.ig)) +
       (c.email ? '<span>📧 ' + esc(c.email) + '</span>' : '<span class="muted">no email found</span>') + (c.wa ? '<span>💬 ' + esc(c.wa) + '</span>' : '') + (c.phone && !c.wa ? '<span>📞 ' + esc(c.phone) + '</span>' : '') + '</div>' +
@@ -1082,13 +1086,14 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (decision === 'never' && !confirm('Never suggest ' + c.name + ' again?')) return;
     if (btn) btn.disabled = true;
     if (decision === 'approve') edits = Object.assign({}, edits || {}, { fallbackImg: bizCard(Object.assign({}, c, edits || {})) });
+    var btnTxt = btn && btn.textContent; if (btn && decision === 'approve') btn.textContent = '✍️ Writing the listing…';
     if (edits && (edits.imgData || edits.imgNone)) delete S.findPics[c.id];
     try { var r = await api('find-decide', { id: c.id, decision: decision, edits: edits }); S.find = r.finder; S.dir = null; toast(decision === 'approve' ? '✅ ' + c.name + ' is now in the app (unclaimed)' : decision === 'edit' ? 'Saved' : 'Skipped'); vFind(); return true; }
-    catch (x) { if (btn) btn.disabled = false; toast(x.message); return false; }
+    catch (x) { if (btn) { btn.disabled = false; btn.textContent = btnTxt; } toast(x.message); return false; }
   }
   function findEdit(c) {
     var cats = S.find.cats || [];
-    var s = sheet('<h2>✏️ ' + esc(c.name) + '</h2><p class="muted" style="margin:4px 0 8px;font-size:13px">Check the details (open their website or Instagram). Approve = it shows in the app straight away, marked unclaimed, and goes into your next website CSV.</p><div class="stack">' +
+    var s = sheet('<h2>✏️ ' + esc(c.name) + '</h2><p class="muted" style="margin:4px 0 8px;font-size:13px">Check the details (open their website or Instagram). Approve = it shows in the app straight away, marked unclaimed, and goes into your next website CSV. On approve, Auntie Tobi writes the short and full descriptions and tags from their own website (you can change them later in 🏢 Business directory).</p><div class="stack">' +
       '<div><label>Picture</label><div class="row" style="gap:12px;align-items:center"><img id="fePic" alt="" style="width:110px;height:110px;border-radius:12px;object-fit:cover;background:#EEF0F3;flex:none"><div class="stack" style="gap:6px"><div class="muted" id="fePicL" style="font-size:13px"></div><label class="btn ghost sm" style="margin:0">📷 Upload photo<input type="file" id="fePicF" accept="image/*" hidden></label><button class="btn ghost sm" id="fePicC" type="button">🎨 Use Auntie Tobi card</button></div></div><div class="muted" style="font-size:12px;margin-top:4px">Tip: a screenshot of their Instagram profile picture or a product photo works well.</div></div>' +
       '<div><label for="feN">Business name</label><input id="feN" maxlength="120" value="' + esc(c.name || '') + '"></div>' +
       '<div class="f2"><div><label for="feC">Category</label><select id="feC"><option value="">Choose…</option>' + cats.map(function (k) { return '<option' + (k === c.cat ? ' selected' : '') + ' value="' + esc(k) + '">' + esc(k.replace(' > ', ' › ')) + '</option>'; }).join('') + '</select></div><div><label for="feL">Town</label><input id="feL" value="' + esc(c.loc || '') + '"></div></div>' +
