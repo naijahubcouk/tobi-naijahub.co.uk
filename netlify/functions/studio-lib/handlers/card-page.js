@@ -36,6 +36,8 @@ exports.handler = async (event) => {
         .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escA(desc)}">`);
       inject = 'window.__CARD=' + JSON.stringify(card).replace(/</g, '\\u003c') + ';';
     } else inject = 'window.__CARD_MISSING=true;';
+    // shared card links carry no picture in the WhatsApp / social preview — just the link and its words
+    out = out.replace(/<meta property="og:image"[^>]*>\n?/g, '').replace(/<link rel="icon"[^>]*>\n?/g, '');
     out = out.replace('<script>\n(function () {', `<script>${inject}</script>\n<script>\n(function () {`);
     return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': card ? 'public, max-age=300' : 'no-store' }, body: out };
   } catch (e) {
