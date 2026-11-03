@@ -95,9 +95,11 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       <p class="muted" style="text-align:center;font-size:12px;margin-top:6px">👆 Tap the card to see it bigger</p>
       <div class="btns"><button class="btn dl" id="rDl">⬇️ Save the card</button><button class="btn wa" id="rThanks">💬 Say thank you</button></div>
       <div class="recvbar"><button class="btn ghost" id="again">🎉 Celebrate again</button><button class="btn ghost" id="mute" style="flex:.6;white-space:nowrap"></button></div>
+      <button class="btn wa hidden" id="rGift" style="margin-top:8px">🎁 Send this gift to a friend</button>
       <a class="btn gold" href="/cards" style="margin-top:8px">🎉 Make your own free card</a>
     </div>
   </section>
+  <div class="cover hidden" id="askCover" style="cursor:default"><div class="gb">🎁</div><h2 id="askT">You have a gift from Auntie Tobi!</h2><p>Type your name to open it 💚</p><form id="askF" style="display:flex;flex-direction:column;gap:10px;margin-top:18px;width:100%;max-width:320px"><input id="askN" maxlength="30" autocomplete="given-name" placeholder="Your first name" style="padding:14px 16px;border-radius:14px;border:0;font-size:18px;text-align:center;font-family:inherit"><button type="submit" class="tap" style="border:0;cursor:pointer;font-family:inherit;margin-top:0">Open my gift 🎉</button></form></div>
   <button type="button" class="cover hidden" id="cover"><div class="gb">🎁</div><h2 id="coverT">You’ve got a card!</h2><p id="coverF"></p><div class="tap">Tap to open 🎉</div></button>
 
   <!-- maker -->
@@ -117,6 +119,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
         <div><label for="name" id="nameL">Their name</label><input id="name" maxlength="30" placeholder="e.g. Amara"></div>
         <div style="flex:.55" id="numBox"><label for="age" id="numL">Age <small>(optional)</small></label><input id="age" inputmode="numeric" maxlength="3" placeholder="e.g. 40"></div>
       </div>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-weight:600;cursor:pointer"><input type="checkbox" id="ask" style="width:20px;height:20px;margin-top:2px;flex:none"> <span>🎁 Gift link — they type their own name when they open it <small style="display:block;font-weight:400;color:#6B7280">Great for followers whose names you don’t know. Tip: write {name} in your message and it becomes their name.</small></span></label>
     </div>
 
     <div class="card">
@@ -671,7 +674,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       var hs = 120 * k, ns = 100 * k, ms = 40 * k, fs = 36 * k, rs = 34 * k;
       c.font = '400 ' + hs + 'px "Great Vibes", cursive'; var headL = wrap(c, head, tw);
       c.font = '800 ' + ns + 'px "Playfair Display", serif'; var nameL = name ? wrap(c, name + '!', tw) : [];
-      c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; var msgL = wrap(c, st.msg, tw * .94);
+      c.font = '500 ' + ms + 'px "DM Sans", sans-serif'; var msgL = wrap(c, String(st.msg || '').replace(/\{name\}/gi, st.name || 'you'), tw * .94);
       c.font = 'italic 700 ' + fs + 'px "DM Sans", sans-serif'; var fromLs = fromL ? wrap(c, fromL, tw) : [];
       
       var total = hs * .85 + ns * .05 + 4 * k - hs * .17 + (rel ? rs * 1.6 : 0) + stackPh + headL.length * hs * 1.02 + nameL.length * ns * 1.1 + 34 * k + msgL.length * ms * 1.35 + (fromLs.length ? 26 * k + fromLs.length * fs * 1.3 : 0);
@@ -772,7 +775,8 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function dec(s) { try { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch (e) { return null; } }
   var shortLinks = {};
   async function cardLink() {
-    var o = { o: st.occ, n: st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
+    var o = { o: st.occ, n: st.ask ? '' : st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
+    if (st.ask) o.ask = 1;
     if (st.tp) o.tp = st.tp; if (st.tx || st.ty) { o.tx = Math.round(st.tx * 1000) / 1000; o.ty = Math.round(st.ty * 1000) / 1000; } if (st.ts !== 1) o.ts = st.ts;
     if (st.occ === 'newmonth') { o.mn = st.mn; if (st.nmg !== 'happy') o.g = st.nmg; } if (st.occ === 'newyear') o.yr = st.yr; if (st.occ === 'independence') o.yr = nowBits().indYr;
     if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; o.ps = st.ps; o.pp = st.pp; } catch (e) { toast(e.message); } }
@@ -801,7 +805,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   async function shareWa() {
     var btn = $('share'), keep = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Getting it ready…';
     try {
-      var link = await cardLink(), text = OCC[st.occ].label.split(' ')[0] + ' ' + headFor(st) + (st.name ? ', ' + st.name : '') + '! I made you a card 💚\n' + link;
+      var link = await cardLink(), text = st.ask ? '🎁 You have a ' + (String(OCC[st.occ].noun).replace(/\s*card$/i, '') || 'special') + ' gift from ' + (st.from || 'Auntie Tobi') + '! Open it and add your name 💚\n' + link : OCC[st.occ].label.split(' ')[0] + ' ' + headFor(st) + (st.name ? ', ' + st.name : '') + '! I made you a card 💚\n' + link;
       try {
         var b = await blob(), f = new File([b], fileName(), { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: text }); track('bday_share_image'); showGifts(); return; }
@@ -940,7 +944,25 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       };
       $('rDl').onclick = function () { st.name = rs.name; download(rs); };
       $('coverT').textContent = 'You’ve got a ' + OC.noun + (rs.name ? ', ' + rs.name : '') + '!'; $('coverF').textContent = rs.from ? 'From ' + rs.from : 'Made with love';
-      $('cover').classList.remove('hidden');
+      // 🎁 gift link: they type their own name first, then the card opens with it
+      var applyName = function (nm) {
+        rs.name = nm; rs.msg = String(got.m || '').replace(/\{name\}/gi, nm || 'you').slice(0, 320);
+        $('recvTitle').textContent = OC.label.split(' ')[0] + ' ' + headFor(rs) + (rs.name ? ', ' + rs.name : '') + '!';
+        document.title = OC.label.split(' ')[0] + ' A ' + OC.noun + ' for ' + (rs.name || 'you') + ' — Auntie Tobi'; paintR();
+      };
+      if (got.ask) {
+        $('rGift').classList.remove('hidden');
+        $('rGift').onclick = function () { var t = '🎁 You have a ' + (String(OC.noun).replace(/\s*card$/i, '') || 'special') + ' gift from ' + (rs.from || 'Auntie Tobi') + '! Open it and add your name 💚\n' + location.href.replace(/[?#].*$/, '') + (location.search.indexOf('c=') >= 0 ? location.search : ''); window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); track('gift_forward'); };
+        var keyN = 'giftName:' + location.pathname + location.search, saved = ''; try { saved = sessionStorage.getItem(keyN) || ''; } catch (e) {}
+        $('askT').textContent = 'You have a ' + (String(OC.noun).replace(/\s*card$/i, '') || 'special') + ' gift from ' + (rs.from || 'Auntie Tobi') + '!';
+        if (saved) { applyName(saved); $('cover').classList.remove('hidden'); }
+        else { applyName(''); $('askCover').classList.remove('hidden'); setTimeout(function () { try { $('askN').focus(); } catch (e) {} }, 300); }
+        $('askF').onsubmit = function (e) {
+          e.preventDefault(); var nm = $('askN').value.replace(/[<>{}]/g, '').trim().slice(0, 30); if (!nm) { $('askN').focus(); return; }
+          nm = nm.charAt(0).toUpperCase() + nm.slice(1); try { sessionStorage.setItem(keyN, nm); } catch (e2) {}
+          applyName(nm); $('askCover').classList.add('hidden'); celebrate(pickFx()); playSong(); track('gift_opened');
+        };
+      } else { applyName(rs.name); $('cover').classList.remove('hidden'); }
       $('cover').onclick = function () { this.classList.add('hidden'); celebrate(pickFx()); playSong(); };
       $('again').onclick = function () { celebrate(pickFx()); playSong(); };
       paintMute(); $('mute').onclick = function () { try { localStorage.setItem('tobiMute', muted() ? '0' : '1'); } catch (e) {} paintMute(); if (muted()) stopSong(); else playSong(); };
@@ -955,6 +977,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     document.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (b) pickDesign(b.dataset.d); });
     $('from').value = st.from;
     $('name').oninput = function () { st.name = this.value; render(); };
+    $('ask').onchange = function () { st.ask = this.checked; $('name').disabled = st.ask; $('name').placeholder = st.ask ? 'They’ll type it' : 'e.g. Amara'; if (st.ask) { st.name = ''; $('name').value = ''; } render(); };
     $('age').oninput = function () { this.value = this.value.replace(/[^0-9]/g, ''); st.age = this.value; render(); };
     $('msg').oninput = function () { st.msg = this.value; render(); };
     $('from').oninput = function () { st.from = this.value; render(); save(); };
