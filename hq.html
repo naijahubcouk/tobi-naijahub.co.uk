@@ -921,6 +921,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div><label for="deD">Description <span class="muted" style="font-weight:400">(full)</span></label><textarea id="deD" rows="5">' + esc(b.desc || '') + '</textarea></div>' +
       '<div><label for="deT">Tags <span class="muted" style="font-weight:400">(comma between each)</span></label><input id="deT" placeholder="e.g. jollof, small chops, party trays" value="' + esc((b.tags || []).join(', ')) + '"></div>' +
       '<div class="f2"><div><label for="deI">Instagram</label><input id="deI" placeholder="handle" value="' + esc(b.ig || '') + '"></div><div><label for="deW">WhatsApp</label><input id="deW" placeholder="447…" value="' + esc(b.wa || '') + '"></div></div>' +
+      '<div class="f2"><div><label for="deFb">Facebook</label><input id="deFb" placeholder="facebook.com/…" value="' + esc(b.fb || '') + '"></div><div><label for="deTt">TikTok</label><input id="deTt" placeholder="@handle" value="' + esc(b.tt || '') + '"></div></div>' +
       '<div class="f2"><div><label for="deE">Email</label><input id="deE" type="email" value="' + esc(b.email || '') + '"></div><div><label for="deP">Phone</label><input id="deP" value="' + esc(b.phone || '') + '"></div></div>' +
       '<div><label for="deS">Website</label><input id="deS" placeholder="https://" value="' + esc(b.website || '') + '"></div>' +
       '<div class="f2"><div><label for="deCl2">Claimed?</label><select id="deCl2"><option value="auto"' + (cl === 'auto' ? ' selected' : '') + '>Automatic (from website contact name)</option><option value="yes"' + (cl === 'yes' ? ' selected' : '') + '>✅ Claimed</option><option value="no"' + (cl === 'no' ? ' selected' : '') + '>🕓 Unclaimed</option></select></div>' +
@@ -944,7 +945,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     };
     $('#deOk', s).onclick = async function () {
       var v = function (id) { return $('#' + id, s).value.trim(); }, c = v('deCl2');
-      var item = Object.assign({}, b, { origSlug: b.slug, name: v('deN'), cat: v('deC'), loc: v('deL'), desc: v('deD'), short: v('deSh'), tags: v('deT').split(',').map(function (t) { return t.trim(); }).filter(Boolean), ig: v('deI'), wa: v('deW'), email: v('deE'), phone: v('deP'), website: v('deS'), notes: v('deNo'),
+      var item = Object.assign({}, b, { origSlug: b.slug, name: v('deN'), cat: v('deC'), loc: v('deL'), desc: v('deD'), short: v('deSh'), tags: v('deT').split(',').map(function (t) { return t.trim(); }).filter(Boolean), ig: v('deI'), wa: v('deW'), email: v('deE'), phone: v('deP'), website: v('deS'), fb: v('deFb'), tt: v('deTt'), notes: v('deNo'),
         featured: $('#deF', s).checked, verified: $('#deV', s).checked, hidden: $('#deH', s).checked });
       if (c === 'auto') delete item.claimedSet; else item.claimedSet = c === 'yes';
       if (!item.name) { $('#deErr', s).textContent = 'Add the business name.'; $('#deErr', s).classList.remove('hidden'); return; }
@@ -1076,7 +1077,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (c.desc ? '<div style="margin-top:6px;font-size:14px;white-space:pre-line">' + esc(c.desc) + '</div>' : '') +
       (c.tags && c.tags.length ? '<div class="muted" style="margin-top:4px;font-size:12.5px">🏷 ' + esc(c.tags.join(' · ')) + '</div>' : '') +
       (c.why ? '<div class="muted" style="margin-top:4px;font-size:13px">🇳🇬 ' + esc(c.why) + '</div>' : '') +
-      '<div style="margin-top:6px;font-size:13px;display:flex;gap:12px;flex-wrap:wrap">' + link(web, '🌐 Website') + link(c.ig ? 'https://www.instagram.com/' + c.ig + '/' : '', '📸 @' + esc(c.ig)) +
+      '<div style="margin-top:6px;font-size:13px;display:flex;gap:12px;flex-wrap:wrap">' + link(web, '🌐 Website') + link(c.ig ? 'https://www.instagram.com/' + c.ig + '/' : '', '📸 @' + esc(c.ig)) + link(c.fb, '📘 Facebook') + link(c.tt, '🎵 TikTok') +
       (c.email ? '<span>📧 ' + esc(c.email) + '</span>' : '<span class="muted">no email found</span>') + (c.wa ? '<span>💬 ' + esc(c.wa) + '</span>' : '') + (c.phone && !c.wa ? '<span>📞 ' + esc(c.phone) + '</span>' : '') + '</div>' +
       '<div class="muted" style="font-size:12px;margin-top:4px">Found by: ' + esc(c.query || '') + (c.slug ? ' · <a href="/biz/' + encodeURIComponent(c.slug) + '" target="_blank" rel="noopener">see in app ↗</a>' : '') + '</div>' +
       (c.status === 'new' ? '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn primary sm" data-fa="approve" data-id="' + c.id + '">✅ Approve</button><button class="btn ghost sm" data-fa="edit" data-id="' + c.id + '">✏️ Edit</button><button class="btn ghost sm" data-fa="skip" data-id="' + c.id + '">✖ Skip</button><button class="btn ghost sm" data-fa="never" data-id="' + c.id + '" style="color:#B42318">🚫 Never</button></div>'
@@ -1099,11 +1100,12 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="f2"><div><label for="feC">Category</label><select id="feC"><option value="">Choose…</option>' + cats.map(function (k) { return '<option' + (k === c.cat ? ' selected' : '') + ' value="' + esc(k) + '">' + esc(k.replace(' > ', ' › ')) + '</option>'; }).join('') + '</select></div><div><label for="feL">Town</label><input id="feL" value="' + esc(c.loc || '') + '"></div></div>' +
       '<div><label for="feD">Description</label><textarea id="feD" rows="3">' + esc(c.desc || '') + '</textarea></div>' +
       '<div class="f2"><div><label for="feI">Instagram</label><input id="feI" placeholder="handle" value="' + esc(c.ig || '') + '"></div><div><label for="feW">WhatsApp</label><input id="feW" placeholder="447…" value="' + esc(c.wa || '') + '"></div></div>' +
+      '<div class="f2"><div><label for="feF">Facebook</label><input id="feF" placeholder="facebook.com/…" value="' + esc(c.fb || '') + '"></div><div><label for="feT">TikTok</label><input id="feT" placeholder="@handle" value="' + esc(c.tt || '') + '"></div></div>' +
       '<div class="f2"><div><label for="feE">Email</label><input id="feE" type="email" value="' + esc(c.email || '') + '"></div><div><label for="feP">Phone</label><input id="feP" value="' + esc(c.phone || '') + '"></div></div>' +
       '<div><label for="feS">Website</label><input id="feS" placeholder="https://" value="' + esc(c.website || '') + '"></div></div><div class="err hidden" id="feErr"></div>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="feX">Cancel</button><button class="btn ghost" id="feSave">💾 Save</button><button class="btn primary" id="feOk">✅ Save &amp; approve</button></div>');
     var pic = { data: '', none: false };
-    var vals = function () { var v = function (id) { return $('#' + id, s).value.trim(); }; var e = { name: v('feN'), cat: v('feC'), loc: v('feL'), desc: v('feD'), ig: v('feI').replace(/^@/, ''), wa: v('feW').replace(/\D/g, ''), email: v('feE'), phone: v('feP'), website: v('feS') }; if (pic.data) e.imgData = pic.data; else if (pic.none) e.imgNone = true; return e; };
+    var vals = function () { var v = function (id) { return $('#' + id, s).value.trim(); }; var e = { name: v('feN'), cat: v('feC'), loc: v('feL'), desc: v('feD'), ig: v('feI').replace(/^@/, ''), wa: v('feW').replace(/\D/g, ''), email: v('feE'), phone: v('feP'), website: v('feS'), fb: v('feF'), tt: v('feT') }; if (pic.data) e.imgData = pic.data; else if (pic.none) e.imgNone = true; return e; };
     var showCard = function () { $('#fePic', s).src = bizCard(Object.assign({}, c, { name: $('#feN', s).value, cat: $('#feC', s).value, loc: $('#feL', s).value })); $('#fePicL', s).textContent = '🎨 Auntie Tobi card (used when there’s no photo)'; };
     var have = S.findPics[c.id];
     if (!c.imgNone && have && have.dataUrl) { $('#fePic', s).src = have.dataUrl; $('#fePicL', s).textContent = have.src === 'upload' ? '📷 Your photo' : '🌐 From their website'; } else showCard();

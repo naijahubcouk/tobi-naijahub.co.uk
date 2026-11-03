@@ -52,6 +52,8 @@ async function readSite(url) {
     const wa = (html.match(/(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\+?\d{10,15})/i) || [])[1] || '';
     const phone = (html.match(/tel:(\+?[\d ()-]{10,18})/i) || [])[1] || '';
     const ig = igOf((html.match(/instagram\.com\/[A-Za-z0-9._]{2,40}/i) || [])[0]);
+    const fb = ((html.match(/https?:\/\/(?:www\.|m\.|en-gb\.)?(?:facebook|fb)\.com\/[^"'\s<>]+/gi) || []).map(bizdir.fbUrl).filter(Boolean)[0]) || '';
+    const tt = bizdir.ttUrl((html.match(/tiktok\.com\/@[A-Za-z0-9._]{2,40}/i) || [])[0]);
     // the picture the site uses for link previews (usually a logo or shop photo)
     const og = (html.match(/<meta[^>]+(?:property|name)=["'](?:og:image(?::secure_url)?|twitter:image)["'][^>]*content=["']([^"']+)["']/i) || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["'](?:og:image|twitter:image)["']/i) || [])[1] || '';
     let imgUrl = ''; try { imgUrl = og ? new URL(og.replace(/&amp;/g, '&'), r.url || url).toString() : ''; } catch (_) { imgUrl = ''; }
@@ -60,7 +62,7 @@ async function readSite(url) {
     const metaDesc = (html.match(/<meta[^>]+(?:name|property)=["'](?:description|og:description)["'][^>]*content=["']([^"']{20,600})["']/i) || [])[1] || '';
     const body = html.replace(/<(script|style|noscript|svg|nav|footer|header)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/&#0?39;|&rsquo;/g, '’').replace(/\s+/g, ' ').trim();
     const siteText = (metaDesc ? metaDesc.replace(/&amp;/g, '&') + ' — ' : '') + body.slice(0, 1400);
-    return { siteText: siteText.slice(0, 1600), imgUrl, email: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(email) || /example|sentry|wixpress|domain/i.test(email) ? '' : email.toLowerCase(), wa: wa.replace(/\D/g, ''), phone: phone.trim(), ig };
+    return { siteText: siteText.slice(0, 1600), imgUrl, email: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(email) || /example|sentry|wixpress|domain/i.test(email) ? '' : email.toLowerCase(), wa: wa.replace(/\D/g, ''), phone: phone.trim(), ig, fb, tt };
   } catch (_) { return {}; } finally { clearTimeout(t); }
 }
 
@@ -71,7 +73,7 @@ From those results ONLY, list real businesses that:
 - operate in the UK, and
 - appear Nigerian or African owned or focused (Nigerian/African food, fashion, beauty, events, culture, names, or they say so).
 Skip directories, listing sites, articles, job ads, marketplaces, and anything outside the UK. Never invent a business, link or detail — every field must come from the results (leave it "" if not there).
-Return ONLY JSON: {"businesses":[{"name":"","website":"their own website or main social profile URL","instagram":"handle or URL or \\"\\"","town":"UK town/city","category":"exactly one of the CATEGORIES","description":"1–2 plain sentences: what they offer (no hype)","why":"short reason you think they are Nigerian/African","confidence":0.0}]}
+Return ONLY JSON: {"businesses":[{"name":"","website":"their own website or main social profile URL","instagram":"handle or URL or \\"\\"","facebook":"their Facebook page URL or \\"\\"","tiktok":"their TikTok @handle or URL or \\"\\"","town":"UK town/city","category":"exactly one of the CATEGORIES","description":"1–2 plain sentences: what they offer (no hype)","why":"short reason you think they are Nigerian/African","confidence":0.0}]}
 CATEGORIES: ${JSON.stringify(CATS)}` },
   { role: 'user', content: `SEARCH: ${query}` }];
 }
@@ -86,7 +88,7 @@ async function runOne(query) {
   const known = await knownKeys(), fresh = [];
   for (const x of list.slice(0, 15)) {
     const c = {
-      name: core.cleanText(x.name, 120), website: core.cleanText(x.website, 300), ig: igOf(x.instagram) || igOf(x.website), loc: core.cleanText(x.town, 60),
+      name: core.cleanText(x.name, 120), website: core.cleanText(x.website, 300), ig: igOf(x.instagram) || igOf(x.website), fb: bizdir.fbUrl(x.facebook) || bizdir.fbUrl(x.website), tt: bizdir.ttUrl(x.tiktok) || bizdir.ttUrl(x.website), loc: core.cleanText(x.town, 60),
       cat: CATS.includes(x.category) ? x.category : '', desc: core.cleanText(x.description, 400), why: core.cleanText(x.why, 200), confidence: Math.max(0, Math.min(1, +x.confidence || 0)),
     };
     if (!c.name || !c.cat || TRUST_SKIP.test(c.website) || isKnown(known, c)) continue;
@@ -94,7 +96,7 @@ async function runOne(query) {
   }
   const sites = await Promise.all(fresh.map(c => readSite(c.website)));
   const now = core.nowIso();
-  const items = fresh.map((c, i) => Object.assign(c, { id: 'f' + Date.now().toString(36) + i, siteText: sites[i].siteText || '', imgUrl: sites[i].imgUrl || '', email: sites[i].email || '', wa: sites[i].wa || '', phone: sites[i].phone || '', ig: c.ig || sites[i].ig || '', query, foundAt: now, status: 'new' }));
+  const items = fresh.map((c, i) => Object.assign(c, { id: 'f' + Date.now().toString(36) + i, siteText: sites[i].siteText || '', imgUrl: sites[i].imgUrl || '', email: sites[i].email || '', wa: sites[i].wa || '', phone: sites[i].phone || '', ig: c.ig || sites[i].ig || '', fb: c.fb || sites[i].fb || '', tt: c.tt || sites[i].tt || '', query, foundAt: now, status: 'new' }));
   await cas('finder/state', cur => { cur = cur || { items: [], queue: [], cursor: 0, week: '' }; cur.items = items.concat(cur.items).slice(0, 600); cur.lastRun = now; return cur; });
   return { query, found: list.length, added: items.length };
 }
@@ -141,10 +143,10 @@ async function quickAdd(input) {
   const r = await runOne(q);
   if (!r.added) {
     // nothing new found by search: still add a bare card from what was pasted, for Seun to fill in
-    const known = await knownKeys(), c = { name: handle || input.replace(/^https?:\/\/(www\.)?/, '').split(/[/?#]/)[0], ig: handle, website: /^https?:/.test(input) && !handle ? input : '', loc: '', cat: '', desc: '', why: 'Added by you', confidence: 1 };
+    const known = await knownKeys(), c = { name: handle || input.replace(/^https?:\/\/(www\.)?/, '').split(/[/?#]/)[0], ig: handle, fb: bizdir.fbUrl(input), tt: bizdir.ttUrl(input), website: /^https?:/.test(input) && !handle && !bizdir.fbUrl(input) && !bizdir.ttUrl(input) ? input : '', loc: '', cat: '', desc: '', why: 'Added by you', confidence: 1 };
     if (isKnown(known, c)) throw new HttpError(409, 'exists', 'That business is already in your directory or review list.');
     const site = await readSite(c.website);
-    const item = Object.assign(c, { id: 'f' + Date.now().toString(36), siteText: site.siteText || '', imgUrl: site.imgUrl || '', email: site.email || '', wa: site.wa || '', phone: site.phone || '', query: 'Quick add', foundAt: core.nowIso(), status: 'new' });
+    const item = Object.assign(c, { id: 'f' + Date.now().toString(36), siteText: site.siteText || '', imgUrl: site.imgUrl || '', email: site.email || '', wa: site.wa || '', phone: site.phone || '', fb: c.fb || site.fb || '', tt: c.tt || site.tt || '', query: 'Quick add', foundAt: core.nowIso(), status: 'new' });
     await cas('finder/state', cur => { cur = cur || { items: [], queue: [] }; cur.items = [item].concat(cur.items); return cur; });
   }
   return r;
@@ -155,7 +157,7 @@ async function decide(id, decision, edits, who) {
   let cand;
   await cas('finder/state', cur => { cand = cur && cur.items.find(x => x.id === id); return undefined; });
   if (!cand) throw new HttpError(404, 'not_found', 'That suggestion is no longer in the list.');
-  const e = {}; for (const k of ['name', 'cat', 'loc', 'desc', 'ig', 'wa', 'email', 'phone', 'website']) if (edits && typeof edits[k] === 'string') e[k] = core.cleanText(edits[k], k === 'desc' ? 400 : 300);
+  const e = {}; for (const k of ['name', 'cat', 'loc', 'desc', 'ig', 'fb', 'tt', 'wa', 'email', 'phone', 'website']) if (edits && typeof edits[k] === 'string') e[k] = core.cleanText(edits[k], k === 'desc' ? 400 : 300);
   if (e.cat && !CATS.includes(e.cat)) delete e.cat;
   if (edits && edits.status === 'new' && cand.status === 'skipped') e.status = 'new';
   if (edits && edits.imgNone === true) { e.imgNone = true; e.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); }
@@ -174,7 +176,7 @@ async function decide(id, decision, edits, who) {
     const w = await writeUp(c, e.desc && e.desc !== cand.desc ? e.desc : '');
     c.desc = w.long; c.short = w.short; c.tags = w.tags; delete c.siteText;
     await core.del('finder/img/' + id).catch(() => {});
-    await bizdir.save({ slug, img: c.img, short: w.short, tags: w.tags, lat: w.lat, lng: w.lng, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
+    await bizdir.save({ slug, img: c.img, short: w.short, tags: w.tags, lat: w.lat, lng: w.lng, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, fb: c.fb, tt: c.tt, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com|facebook\.com|fb\.com|tiktok\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
     c.slug = slug; c.status = 'approved'; c.approvedAt = now;
   } else if (decision === 'skip') { c.status = 'skipped'; c.imgUp = false; delete c.siteText; await core.del('finder/img/' + id).catch(() => {}); }
   else if (decision === 'never') { c.status = 'skipped'; c.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); await neverAdd(c, 'Skipped for good in the Finder'); }
@@ -244,7 +246,7 @@ async function exportCsv() {
     const short = b.short || String(b.desc || '').slice(0, 160), tags = (b.tags || []).join(', '), cat = (b.cats && b.cats[0]) || CATS.find(c => childCat(c) === String(b.cat || '').toLowerCase()) || '';
     const v = { name: b.name, slug: b.slug, images: b.img || '', tags, seoKeywords: tags, location_latitude: b.lat != null ? b.lat : '', location_longitude: b.lng != null ? b.lng : '', description: short, detailedDescription: b.desc, categories: cat, mainLink: b.website, status: 'PUBLISHED', isFeatured: 'false',
       exemptFromAutomation: 'false', contact_name: 'Auntie Tobi', location_address: b.addr || ((b.loc && b.loc !== 'UK' ? b.loc + ', ' : '') + 'UK'),
-      business_phone: b.phone, business_email: b.email, socialMedia_instagram: b.ig ? 'https://www.instagram.com/' + b.ig + '/' : '', seoTitle: b.name, seoDescription: short, focusKeyword: b.name.toLowerCase(),
+      business_phone: b.phone, business_email: b.email, socialMedia_instagram: b.ig ? 'https://www.instagram.com/' + b.ig + '/' : '', socialMedia_facebook: b.fb || '', socialMedia_tiktok: b.tt || '', seoTitle: b.name, seoDescription: short, focusKeyword: b.name.toLowerCase(),
       ogTitle: b.name, ogDescription: short, twitterTitle: b.name, twitterDescription: short, twitterCard: 'summary_large_image', noIndex: 'false', noFollow: 'true', schemaType: 'LocalBusiness', 'custom_Whatsapp Link': b.wa ? 'https://wa.me/' + b.wa : '' };
     return HEAD.map(h => cell(v[h] || '')).join(',');
   });

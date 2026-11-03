@@ -53,6 +53,16 @@ function townFrom(addr) {
   const towns = parts.filter(p => !STREETY.test(p) && !/^\d/.test(p));
   return (towns.length ? towns[towns.length - 1] : parts[parts.length - 1] || '').slice(0, 60);
 }
+// Facebook page / TikTok profile → a clean link ('' if it isn't one)
+function fbUrl(v) {
+  const m = String(v || '').match(/(?:^|\/\/|\.)(?:facebook|fb)\.com\/((?:profile\.php\?id=\d+)|(?:people\/[^?#\s"']+)|[A-Za-z0-9.\-]{3,80})/i);
+  if (!m || /^(sharer|share|plugins|tr|dialog|groups|events|login|watch|photo|photos|hashtag|policies|privacy|help|pages|home\.php|l\.php)(\b|\.php)/i.test(m[1])) return '';
+  return 'https://www.facebook.com/' + m[1].replace(/\/+$/, '');
+}
+function ttUrl(v) {
+  const m = String(v || '').match(/tiktok\.com\/@([A-Za-z0-9._]{2,40})/i) || String(v || '').trim().match(/^@([A-Za-z0-9._]{2,40})$/);
+  return m ? 'https://www.tiktok.com/@' + m[1].replace(/\.$/, '') : '';
+}
 function normalise(b) {
   b = Object.assign({}, b || {});
   const out = {
@@ -69,6 +79,8 @@ function normalise(b) {
   if (typeof b.claimedSet === 'boolean') out.claimedSet = b.claimedSet;
   out.claimed = typeof out.claimedSet === 'boolean' ? out.claimedSet : (out.contact ? !OURS.test(out.contact) : b.claimed !== false);
   if (b.notes) out.notes = str(b.notes, 1000);
+  if (fbUrl(b.fb)) out.fb = fbUrl(b.fb);
+  if (ttUrl(b.tt)) out.tt = ttUrl(b.tt);
   if (b.short) out.short = str(b.short, 200);                    // one-line description (website "description")
   if (Array.isArray(b.tags) && b.tags.length) out.tags = b.tags.map(t => str(t, 40)).filter(Boolean).slice(0, 10);
   if (isFinite(+b.lat) && isFinite(+b.lng) && b.lat !== '' && b.lat != null && +b.lat !== 0) { out.lat = +b.lat; out.lng = +b.lng; }
@@ -105,7 +117,7 @@ function fromCsvRow(r) {
   const verifiedCol = Object.keys(r).find(k => /verified by auntie tobi/i.test(k));
   return normalise({
     slug: r.slug, name: r.name, cats, cat: first.split('>').pop().trim(), addr: r.location_address, loc: townFrom(r.location_address) || 'UK',
-    desc: r.description, ig: r.socialMedia_instagram, wa: waNumber(r['custom_Whatsapp Link'], r.business_phone), phone: r.business_phone,
+    desc: r.description, ig: r.socialMedia_instagram, fb: r.socialMedia_facebook, tt: r.socialMedia_tiktok, wa: waNumber(r['custom_Whatsapp Link'], r.business_phone), phone: r.business_phone,
     email: r.business_email, website: r.mainLink, featured: String(r.isFeatured).toLowerCase() === 'true',
     verified: !!(verifiedCol && String(r[verifiedCol]).trim()), contact: r.contact_name, status: String(r.status).toUpperCase() === 'PENDING' ? 'pending' : 'published', src: 'website',
   });
@@ -136,8 +148,8 @@ async function previewImport(csvText) {
 }
 // Website fields win; app-only extras (photos for featured cards, booking buttons…), HQ notes, hidden and Seun's claimed tick are kept.
 function mergeOne(o, n) {
-  const keep = {}; for (const k of ['img', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden']) if (o[k] !== undefined) keep[k] = o[k];
-  const m = normalise(Object.assign({}, o, n, keep, { wa: n.wa || o.wa, ig: n.ig || o.ig, loc: n.loc && n.loc !== 'UK' ? n.loc : (o.loc || 'UK') }));
+  const keep = {}; for (const k of ['img', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden', 'short', 'tags', 'lat', 'lng']) if (o[k] !== undefined) keep[k] = o[k];
+  const m = normalise(Object.assign({}, o, n, keep, { wa: n.wa || o.wa, ig: n.ig || o.ig, fb: n.fb || o.fb, tt: n.tt || o.tt, loc: n.loc && n.loc !== 'UK' ? n.loc : (o.loc || 'UK') }));
   return m;
 }
 async function applyImport(csvText, hideGone, who) {
@@ -191,4 +203,4 @@ async function markUploaded(slugs, at) {
 }
 async function info() { const rec = await getJson(KEY).catch(() => null); return { saved: !!(rec && rec.items), at: rec && rec.at || '', lastImport: rec && rec.lastImport || '' }; }
 
-module.exports = { markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
+module.exports = { fbUrl, ttUrl, markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
