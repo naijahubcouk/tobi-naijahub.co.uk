@@ -56,8 +56,9 @@ async function adminUpdate(actor, id, raw) {
     return { items };
   });
   if (emailReply && out.reply) {
-    await core.sendEmail([out.email], 'Auntie Tobi replied to your idea',
-      `Thank you for your idea for Business Studio:\n\n“${out.text.slice(0, 300)}”\n\nAuntie Tobi says:\n${out.reply}\n\nStatus: ${STATUSES[out.status]}\n\nAuntie Tobi 💚`).catch(() => {});
+    const im = await require('./emails').system('idea.reply', { idea: out.text.slice(0, 300), reply: out.reply, status: STATUSES[out.status] }, { subject: 'Auntie Tobi replied to your idea',
+      text: `Thank you for your idea for Business Studio:\n\n“${out.text.slice(0, 300)}”\n\nAuntie Tobi says:\n${out.reply}\n\nStatus: ${STATUSES[out.status]}\n\nAuntie Tobi 💚` });
+    await core.sendEmail([out.email], im.subject, im.text, im.html).catch(() => {});
   }
   return out;
 }

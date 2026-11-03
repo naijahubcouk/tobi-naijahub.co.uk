@@ -307,18 +307,49 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'out-preview') return await out.previewFor(String(body.slug || ''), String(body.step || ''));
       return await out.overview();
     }
-    case 'mail-list': case 'mail-save': case 'mail-restore': case 'mail-test': case 'mail-preview': {
+    case 'mail-list': case 'mail-save': case 'mail-restore': case 'mail-test': case 'mail-preview': case 'mail-add': case 'mail-remove': case 'mail-wel': {
       // 📝 email templates (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the emails.');
       const emails = require('../emails');
       const id = String(body.id || '');
       if (body.action === 'mail-save') { const t = await emails.save(id, body.subject, body.body, who.email); await core.audit(who.email, 'hq_mail_save', { id }); return { item: t }; }
       if (body.action === 'mail-restore') { const t = await emails.restore(id); await core.audit(who.email, 'hq_mail_restore', { id }); return { item: t }; }
+      if (body.action === 'mail-add') {
+        if (body.series) { await require('../welcome').save({ add: { days: body.day, subject: body.name, text: '' } }, String(body.series)); await core.audit(who.email, 'hq_mail_add', { series: body.series }); }
+        else { const nid = await emails.addExtra(String(body.j || ''), body.day, body.name, who.email); await core.audit(who.email, 'hq_mail_add', { id: nid }); }
+        return await emails.list();
+      }
+      if (body.action === 'mail-remove') {
+        if (body.series) await require('../welcome').save({ remove: id }, String(body.series)); else if (/^x/.test(id)) await emails.removeExtra(id);
+        await core.audit(who.email, 'hq_mail_remove', { id, series: body.series || '' });
+        return await emails.list();
+      }
+      if (body.action === 'mail-wel') {
+        // a Business Studio welcome message (same settings as Business Studio Admin → Messages)
+        const st = body.step || {};
+        await require('../welcome').save({ steps: [{ id: String(st.id || ''), days: st.days, text: st.text, subject: st.subject, on: st.on !== false, email: st.email !== false }] }, String(body.series || ''));
+        await core.audit(who.email, 'hq_mail_wel', { series: body.series, id: st.id });
+        return await emails.list();
+      }
+      if (body.action === 'mail-preview' && emails.T[id] && emails.T[id].sys) {
+        const SAMPLE = { name: 'Ada', until: '3 November 2027', studio_link: core.appUrl(), email: 'ada@example.com', marketplace_link: core.siteBase() + '/marketplace/list', code: '482913', brand: 'Auntie Tobi Business Studio', credits: 300, expires: '3 November 2027', plan: 'Business Studio Plus', credits_per_day: 50, price: '£50', date: '10 November 2026', period: 'year', cancel_link: core.appUrl() + '?cancel=1', keep_link: core.appUrl(), after_plan: 'the Free plan', number: '12345678', note: 'Your note appears here.', message: 'Thank you for your message! Here is my reply…', idea: 'Please add a stock list', reply: 'Great idea — it’s on our list.', status: 'Planned', listing: 'Party jollof tray', link: core.siteBase() + '/marketplace', how_to_update: 'Update it in your Business Studio.', outcome: 'We’re not able to list it at the moment.' };
+        return Object.assign(emails.renderWith({ subject: String(body.subject || emails.T[id].subject), body: String(body.body || emails.T[id].body) }, SAMPLE, ''), { business: 'sample details' });
+      }
+      if (body.action === 'mail-test' && emails.T[id] && emails.T[id].sys) {
+        await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.');
+        const pv = await handlerSelf({ action: 'mail-preview', id, subject: body.subject, body: body.body });
+        if (!(await core.sendEmail([who.email], '[TEST] ' + pv.subject, pv.text, pv.html))) throw new HttpError(502, 'send_failed', 'The test email didn’t send.');
+        return { to: who.email, business: 'sample details' };
+      }
       if (body.action === 'mail-preview') {
-        const t = emails.T[id]; if (!t) throw new HttpError(404, 'not_found', 'Unknown email.');
+        const t = await emails.def(id); if (!t) throw new HttpError(404, 'not_found', 'Unknown email.');
         const dir = await require('../bizdir').all(), b = dir.find(x => !x.featured && !x.hidden && x.email && x.desc) || dir[0];
         const v = { business_name: b.name, category: String((b.cats && b.cats[0]) || b.cat || '').split('>').pop().trim(), town: b.loc || 'the UK', listing_link: core.siteBase() + '/biz/' + b.slug, claim_link: 'https://directory.auntietobi.co.uk/' + b.slug, remove_link: core.siteBase() + '/remove/…', unsubscribe_link: core.siteBase() + '/u/…', studio_link: core.siteBase() + '/business-studio', club_link: core.siteBase() + '/business-club', personal_line: body.personal ? 'Your ' + (b.cat || 'work') + ' looks lovely.' : '' };
         return Object.assign(emails.renderWith({ subject: String(body.subject || t.subject), body: String(body.body || t.body) }, v, emails.FOOTER_OUT), { business: b.name });
+      }
+      async function handlerSelf(b2) {
+        const SAMPLE = { name: 'Ada', until: '3 November 2027', studio_link: core.appUrl(), email: 'ada@example.com', marketplace_link: core.siteBase() + '/marketplace/list', code: '482913', brand: 'Auntie Tobi Business Studio', credits: 300, expires: '3 November 2027', plan: 'Business Studio Plus', credits_per_day: 50, price: '£50', date: '10 November 2026', period: 'year', cancel_link: core.appUrl() + '?cancel=1', keep_link: core.appUrl(), after_plan: 'the Free plan', number: '12345678', note: 'Your note appears here.', message: 'Thank you for your message! Here is my reply…', idea: 'Please add a stock list', reply: 'Great idea — it’s on our list.', status: 'Planned', listing: 'Party jollof tray', link: core.siteBase() + '/marketplace', how_to_update: 'Update it in your Business Studio.', outcome: 'We’re not able to list it at the moment.' };
+        return emails.renderWith({ subject: String(b2.subject || emails.T[b2.id].subject), body: String(b2.body || emails.T[b2.id].body) }, SAMPLE, '');
       }
       if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
       return await emails.list();

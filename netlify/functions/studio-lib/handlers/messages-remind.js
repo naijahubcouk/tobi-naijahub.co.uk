@@ -27,7 +27,8 @@ async function run() {
     const mail = require('../msg-email').build({ text: preview, intro: 'Auntie Tobi replied to your message in Business Studio:', link, button: 'Read and reply →' });
     const text = mail.text, html = mail.html;
     try {
-      const ok = await core.sendEmail([email], 'Auntie Tobi replied to your message 💬', text, html);
+      const rm = await require('../emails').system('msg.reply', { message: preview, studio_link: link }, { subject: 'Auntie Tobi replied to your message 💬', text, html });
+      const ok = await core.sendEmail([email], rm.subject, rm.text, rm.html);
       if (ok) { await messages.markEmailed(email, st.last.id); report.emailed++; }
     } catch (e) { console.error('[studio] message reminder failed', e && e.message); }
   }

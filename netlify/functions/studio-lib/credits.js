@@ -169,8 +169,9 @@ async function fromSession(s) {
   }).catch(() => {});
   await core.audit(email, 'credits_bought', { credits: n, pence, session: s.id });
   const exp = new Date(Date.now() + VALID_MS).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' });
-  await core.sendEmail([email], `${n} AI credits added to your Business Studio`,
-    `Thank you! ${n} AI credits have been added to your Auntie Tobi Business Studio.\n\nYour daily AI credits are used first; your extra credits are used when you need more. They last until ${exp}.\n\nThis was a one-off payment — nothing will renew.\n\nAuntie Tobi 💚`).catch(() => {});
+  const cm = await require('./emails').system('credits.added', { credits: n, expires: exp }, { subject: `${n} AI credits added to your Business Studio`,
+    text: `Thank you! ${n} AI credits have been added to your Auntie Tobi Business Studio.\n\nYour daily AI credits are used first; your extra credits are used when you need more. They last until ${exp}.\n\nThis was a one-off payment — nothing will renew.\n\nAuntie Tobi 💚` });
+  await core.sendEmail([email], cm.subject, cm.text, cm.html).catch(() => {});
   return { ok: true, email, credits: n };
 }
 

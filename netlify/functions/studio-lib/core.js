@@ -504,7 +504,8 @@ async function sendCodeEmail(email, code, purpose) {
     console.log(`[studio] EMAIL_MODE=log — code for ${email} (${purpose}): ${code}`);
     return;
   }
-  const ok = await sendEmail([email], subject, text, html);
+  const m = await require('./emails').system('code', { code, brand }, { subject, text, html });
+  const ok = await sendEmail([email], m.subject, m.text, m.html);
   if (!ok) throw new HttpError(502, 'email_failed', 'We couldn\'t send your code just now. Please try again shortly.');
 }
 

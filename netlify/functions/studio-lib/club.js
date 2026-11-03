@@ -84,7 +84,8 @@ async function sendWelcome(email, name, expires, isNew) {
 <p>Sign in with <b>${email}</b> — we’ll email you a 6-digit code. No password needed.</p>
 <p><b>Good first steps</b></p><ul style="padding-left:18px"><li>Complete your business profile</li><li><a href="${siteUrl()}/marketplace/list" style="color:#057A44">Add your product or service to the Marketplace</a></li><li>Read “Welcome to Auntie Tobi Business Club” in Library → Resources</li></ul>
 <p style="color:#5B6475;font-size:13px">Auntie Tobi 💚</p></div>`;
-  await core.sendEmail([email], subject, text, html);
+  const m = await require('./emails').system(isNew ? 'club.welcome' : 'club.renewed', { name: name ? name.split(' ')[0] : 'there', until, studio_link: studio, email, marketplace_link: `${siteUrl()}/marketplace/list` }, { subject, text, html });
+  await core.sendEmail([email], m.subject, m.text, m.html);
 }
 
 // Refunds / disputes on the Club link: tell the admin, never remove access automatically.

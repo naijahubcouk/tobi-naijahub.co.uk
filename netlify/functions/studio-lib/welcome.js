@@ -79,6 +79,15 @@ async function save(raw, x) {
         return { id: s.id, days, text: text || s.text, on: r.on !== false, email, ...(subject ? { subject } : {}) };
       });
     }
+    // Extra messages added in HQ → Emails (ids start with "x"); built-in ones can't be removed, only switched off.
+    if (raw.add && typeof raw.add === 'object') {
+      if (c.steps.length >= 20) throw new HttpError(400, 'too_many', 'That’s 20 messages — remove one first.');
+      const days = Number(raw.add.days);
+      if (!Number.isInteger(days) || days < 0 || days > 90) throw new HttpError(400, 'invalid', 'Days must be between 0 and 90.');
+      const text = String(raw.add.text || '').replace(/\r/g, '').trim().slice(0, 2000);
+      c.steps = c.steps.concat([{ id: 'x' + Date.now().toString(36), days, on: false, email: true, subject: core.cleanText(raw.add.subject, 120) || 'A message from Auntie Tobi 💚', text: text.length >= 5 ? text : 'Hi {business} 💚 …' }]);
+    }
+    if (typeof raw.remove === 'string' && /^x[a-z0-9]+$/.test(raw.remove)) c.steps = c.steps.filter(x => x.id !== raw.remove);
     if (typeof raw.email === 'boolean') c.email = raw.email;
     if (typeof raw.on === 'boolean') {
       // First switch-on decides who counts as "new". Optionally include people who joined in the last 14 days.
@@ -191,4 +200,4 @@ async function sendWelcomeEmail(email, step, text, biz, x) {
     { 'List-Unsubscribe': `<${unsub}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }));
 }
 
-module.exports = { get, save, run, runSeries, addMember, removeMember, DEFAULT_STEPS, FREE_STEPS, PLUS_STEPS, SERIES };
+module.exports = { defaultsFor, get, save, run, runSeries, addMember, removeMember, DEFAULT_STEPS, FREE_STEPS, PLUS_STEPS, SERIES };

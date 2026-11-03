@@ -85,7 +85,10 @@ async function buildDigest(member, acc) {
   ]);
   if (lesson) sec('A lesson for you', [`${lesson.title} (${lesson.readMins || 3} min read) — ${lesson.reason}`]);
 
-  const subject = `Your week ahead, ${name} 💚`;
+  let subject = `Your week ahead, ${name} 💚`;
+  // 📝 edited in HQ → Emails: your subject and opening note (the numbers below are always filled in automatically)
+  const ov = await require('../emails').override('weekly');
+  if (ov) { subject = String(ov.subject).replace(/\{name\}/g, name); const note = String(ov.body).replace(/\{name\}/g, name).replace(/\*\*(.+?)\*\*/g, '$1'); lines.unshift('', note); html.unshift(`<p style="margin:16px 0 0;white-space:pre-line">${escHtml(note)}</p>`); }
   const text = `Good morning from Auntie Tobi Business Studio!\n${lines.join('\n')}\n\nOpen Business Studio: ${studio}\n\nYou get this weekly round-up because you have a Business Studio account. Turn it off in Business Studio → Account, or unsubscribe: ${unsub}`;
   const htmlBody = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#0F1E36;max-width:560px;margin:0 auto;padding:8px">
 <div style="background:#0F1E36;color:#FBF6EC;border-radius:14px;padding:18px 18px 16px"><div style="font-family:Georgia,serif;font-size:20px;font-weight:bold">Your week ahead 💚</div><div style="color:#FFB81C;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px">${escHtml(name)}</div></div>

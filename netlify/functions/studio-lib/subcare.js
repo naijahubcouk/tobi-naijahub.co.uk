@@ -61,7 +61,8 @@ async function onSync(email, prev, next) {
         next.currentPeriodEnd ? `Your next payment is <b>${gbp(amountOf(next))} on ${esc(longDate(next.currentPeriodEnd))}</b>. It renews automatically every ${periodWord(next)} — we’ll remind you before each payment${next.interval === 'year' ? ' (7 days and 1 day before)' : ' (3 days before)'}.` : `It renews automatically every ${periodWord(next)} — we’ll remind you before each payment.`,
         'You can cancel any time in two taps: Business Studio → Account → Cancel subscription — or use the button below.',
       ], [['Open Business Studio', `${core.appUrl()}`], ['Cancel subscription', cancelLink(email, next.subscriptionId)]]);
-      await sendOnce(`billing/mail/${next.subscriptionId}/welcome`, email, `Welcome to ${t.name} 💚`, m);
+      const mw = await require('./emails').system('sub.welcome', { plan: t.name, credits_per_day: lim, price: gbp(amountOf(next)), date: next.currentPeriodEnd ? longDate(next.currentPeriodEnd) : '', cancel_link: cancelLink(email, next.subscriptionId), studio_link: core.appUrl() }, Object.assign({ subject: `Welcome to ${t.name} 💚` }, m));
+      await sendOnce(`billing/mail/${next.subscriptionId}/welcome`, email, mw.subject, mw);
     }
     const endKey = `billing/mail/${next.subscriptionId}/cancel-${String(next.currentPeriodEnd || '').slice(0, 10)}`;
     if (next.cancelAtPeriodEnd && LIVE.includes(next.status)) {
@@ -69,7 +70,8 @@ async function onSync(email, prev, next) {
         `You won’t be charged again. Your ${esc(t.name)} stays on until <b>${esc(longDate(next.currentPeriodEnd))}</b>, then you’ll go back to ${(await core.getMember(email) || {}).status === 'active' ? 'your Business Club allowance' : 'the Free plan'}. Everything in your library stays.`,
         'Changed your mind? You can keep your plan any time before then — Account → Keep my plan.',
       ], [['Keep my plan', `${core.appUrl()}#account`]]);
-      await sendOnce(endKey, email, `Your ${t.name} has been cancelled`, m);
+      const mc = await require('./emails').system('sub.cancelled', { plan: t.name, date: longDate(next.currentPeriodEnd), after_plan: (await core.getMember(email) || {}).status === 'active' ? 'your Business Club allowance' : 'the Free plan', keep_link: `${core.appUrl()}#account` }, Object.assign({ subject: `Your ${t.name} has been cancelled` }, m));
+      await sendOnce(endKey, email, mc.subject, mc);
     } else if (prev && prev.cancelAtPeriodEnd && !next.cancelAtPeriodEnd) {
       await del(endKey).catch(() => {});   // resumed — a later cancel gets its own confirmation
     }
@@ -122,7 +124,8 @@ async function runReminders(opts) {
       `Just a reminder: your <b>${esc(t.name)}</b> renews on <b>${esc(when)}</b> and <b>${amt}</b> will be taken for the next ${periodWord(ad)}.`,
       'Happy to keep it? There’s nothing to do. Want to stop? Cancel in one tap below — you keep your plan until that date.',
     ], [['Keep it', `${core.appUrl()}`], ['Cancel subscription', cancelLink(m.email, ad.subscriptionId)]], 'You can turn these reminders off in Business Studio → Account.');
-    const ok = await core.sendEmail([m.email], `Your ${t.name} renews on ${when} (${amt})`, msg.text, msg.html).catch(e => { console.error('[studio] renewal reminder failed', e && e.message); return false; });
+    const mr = await require('./emails').system('sub.renew', { plan: t.name, date: when, price: amt, period: periodWord(ad), cancel_link: cancelLink(m.email, ad.subscriptionId), keep_link: core.appUrl() }, Object.assign({ subject: `Your ${t.name} renews on ${when} (${amt})` }, msg));
+    const ok = await core.sendEmail([m.email], mr.subject, mr.text, mr.html).catch(e => { console.error('[studio] renewal reminder failed', e && e.message); return false; });
     await notify.pushToMember(m.email, `${t.name} renews on ${when}`, `${amt} will be taken. Tap to keep it or cancel.`, { always: true, path: '/studio#account' }).catch(() => {});
     if (ok) { rec.sent[k] = core.nowIso(); await setJson(rk, rec); report.sent++; }
   }

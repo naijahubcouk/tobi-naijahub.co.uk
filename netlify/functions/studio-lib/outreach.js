@@ -58,7 +58,15 @@ function vars(b) {
 }
 
 // Works out each business's next email. Returns { due:[...], fresh:[...], stops:[{slug, why}], switches:[{slug}] } without saving.
+// the built-in steps plus any emails you added in HQ → Emails, in day order
+async function journeys() {
+  const ex = await emails.extras(), out = { u: J.u.slice(), c: J.c.slice() };
+  for (const x of ex) { out[x.j].push({ id: x.id, day: x.day, topic: x.id }); TOPIC[x.id] = x.id; }
+  out.u.sort((a, b) => a.day - b.day); out.c.sort((a, b) => a.day - b.day);
+  return out;
+}
 async function plan() {
+  const JJ = await journeys();
   const [st, dir, set, unsub, mi] = [await state(), await bizdir.all(), await settings(), ((await getJson('out/unsub').catch(() => null)) || { items: [] }).items, await memberInfo()];
   const unsubbed = new Set(unsub.map(x => x.email)), now = Date.now();
   const due = [], fresh = [], stops = [], waiting = [];
@@ -70,11 +78,11 @@ async function plan() {
     if (email && await mi.club(email)) { if (r) stops.push({ slug: b.slug, why: 'joined' }); continue; }
     const hasStudio = !!email && mi.studio.has(email);
     let j = r ? r.j : (b.claimed ? 'c' : 'u');
-    const sentTopics = new Set((r ? r.sent : []).map(s => TOPIC[s.id]));
+    const sentTopics = new Set((r ? r.sent : []).map(s => TOPIC[s.id] || s.id));
     if (j === 'u' && b.claimed) j = 'c';                         // claimed since: carry on the claimed journey, no repeats
     if (sentTopics.has('benefits') && j === 'c' && r && r.j === 'u') sentTopics.add('last');
     const start = r ? r.start : now;
-    const step = J[j].find(s => !sentTopics.has(s.topic) && !(s.topic === 'studio' && hasStudio));
+    const step = JJ[j].find(s => !sentTopics.has(s.topic) && !(s.topic === 'studio' && hasStudio));
     if (!step) { if (r) stops.push({ slug: b.slug, why: 'finished' }); continue; }
     const item = { slug: b.slug, name: b.name, email: b.email, wa: b.wa, ig: b.ig, j, step: step.id, claimed: !!b.claimed, src: b.src, dueAt: new Date(start + step.day * DAY).toISOString(), isNew: !r };
     if (!r) fresh.push(item); else if (start + step.day * DAY <= now + 6 * 3600e3) due.push(item); else waiting.push(item);
@@ -136,7 +144,7 @@ async function sendBatch(max) {
   for (let i = 0; i < batch.length; i += 5) {
     if (Date.now() > stopAt) break;
     const chunk = batch.slice(i, i + 5);
-    const lines = p.set.aiLine ? await Promise.all(chunk.map(x => ['u1', 'u2', 'u3', 'c1', 'c2'].includes(x.step) ? personalLine(dir.get(x.slug)) : '')) : chunk.map(() => '');
+    const lines = p.set.aiLine ? await Promise.all(chunk.map(x => ['u1', 'u2', 'u3', 'c1', 'c2'].includes(x.step) || /^x/.test(x.step) ? personalLine(dir.get(x.slug)) : '')) : chunk.map(() => '');
     await Promise.all(chunk.map(async (x, k) => {
       const v = Object.assign(vars(dir.get(x.slug)), { personal_line: lines[k] });
       const msg = await emails.render(x.step, v);

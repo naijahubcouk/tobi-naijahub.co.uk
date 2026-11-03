@@ -410,9 +410,10 @@ exports.handler = handler(async (ctx) => {
       if (v && v.answeredAt && Date.now() - Date.parse(v.answeredAt) < 60000 && wasPending) {
         const ok = v.status === 'verified';
         try {
-          await core.sendEmail([email], ok ? 'Your business is verified on Auntie Tobi ✅' : 'About your verification request',
-            ok ? `Good news — Auntie Tobi has checked your Companies House registration (${v.number}) and your business is now verified.\n\nSee it in your Business Studio: ${core.appUrl()}\n\nAuntie Tobi 💚`
-               : `Thank you for your verification request. We weren’t able to verify your business at the moment.${v.note ? `\n\n${v.note}` : ''}\n\nAny questions? Message us on WhatsApp: https://wa.me/447594674940\n\nAuntie Tobi 💚`);
+          const vm = await require('../emails').system(ok ? 'verify.ok' : 'verify.no', { number: v.number || '', studio_link: core.appUrl(), note: v.note || '' }, { subject: ok ? 'Your business is verified on Auntie Tobi ✅' : 'About your verification request',
+            text: ok ? `Good news — Auntie Tobi has checked your Companies House registration (${v.number}) and your business is now verified.\n\nSee it in your Business Studio: ${core.appUrl()}\n\nAuntie Tobi 💚`
+               : `Thank you for your verification request. We weren’t able to verify your business at the moment.${v.note ? `\n\n${v.note}` : ''}\n\nAny questions? Message us on WhatsApp: https://wa.me/447594674940\n\nAuntie Tobi 💚` });
+          await core.sendEmail([email], vm.subject, vm.text, vm.html);
         } catch (e) { console.error('[studio] verify email failed', e && e.message); }
       }
       return r;
@@ -554,7 +555,8 @@ exports.handler = handler(async (ctx) => {
       let emailed = false;
       if (body.alsoEmail === true) {
         const mail = require('../msg-email').build({ text: msg.text, intro: 'Auntie Tobi replied to you in Business Studio:', button: 'Open Business Studio to reply →' });
-        emailed = !!(await core.sendEmail([email], 'Auntie Tobi replied to your message 💬', mail.text, mail.html).catch(e => { console.error('[studio] reply email failed', e && e.message); return false; }));
+        const rm = await require('../emails').system('msg.reply', { message: msg.text, studio_link: `${core.appUrl()}#messages` }, { subject: 'Auntie Tobi replied to your message 💬', text: mail.text, html: mail.html });
+        emailed = !!(await core.sendEmail([email], rm.subject, rm.text, rm.html).catch(e => { console.error('[studio] reply email failed', e && e.message); return false; }));
         if (emailed) { await messages.markEmailed(email, msg.id); msg.emailed = true; }
       }
       await core.audit(actor, 'msg_send', { email, emailed });
@@ -702,7 +704,7 @@ exports.handler = handler(async (ctx) => {
         changes: [`A small change is needed on your Marketplace listing`, `${first ? `Hi ${first},` : 'Hello,'}\n\nThank you for “${f.name}”. Before it goes live, Auntie Tobi has asked for a change:\n\n${note || '(see Business Studio)'}\n\n${r.source === 'member' ? `Update it in your Business Studio: ${where}` : 'Reply to this email or message us on WhatsApp (https://wa.me/447594674940) with the update.'}\n\nAuntie Tobi 💚`],
         reject: [`About your Marketplace listing`, `${first ? `Hi ${first},` : 'Hello,'}\n\nThank you for sending “${f.name}” to the Auntie Tobi Marketplace. ${wasLive ? 'Your latest change wasn’t accepted, so your listing stays as it was.' : 'We’re not able to list it at the moment.'}${note ? `\n\n${note}` : ''}\n\nAny questions? Message us on WhatsApp: https://wa.me/447594674940\n\nAuntie Tobi 💚`],
       }[decision];
-      if (to && msg) { try { await core.sendEmail([to], msg[0], msg[1]); } catch (e) { console.error('[studio] market email failed', e && e.message); } }
+      if (to && msg) { try { const mm = await require('../emails').system('market.' + decision, { name: first || 'there', listing: f.name, link: `${siteUrl()}/marketplace`, note, how_to_update: r.source === 'member' ? `Update it in your Business Studio: ${where}` : 'Reply to this email or message us on WhatsApp (https://wa.me/447594674940) with the update.', outcome: wasLive ? 'Your latest change wasn’t accepted, so your listing stays as it was.' : 'We’re not able to list it at the moment.' }, { subject: msg[0], text: msg[1] }); await core.sendEmail([to], mm.subject, mm.text, mm.html); } catch (e) { console.error('[studio] market email failed', e && e.message); } }
       if (r.owner && decision === 'approve') {
         await notify.pushToMember(r.owner, 'Auntie Tobi 💚', `“${f.name}” is live on the Marketplace!`);
         const member = await core.getMember(r.owner);

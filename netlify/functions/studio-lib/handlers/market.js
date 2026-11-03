@@ -80,8 +80,10 @@ exports.handler = handler(async (ctx) => {
       if (isClub) await core.audit(email, 'market_submit', { id: rec.id, via: 'form' });
       await tellAdmins(rec, 'new');
       try {
-        await core.sendEmail([email], 'We’ve received your Marketplace listing 💚',
-          `Hi ${(rec.contact.name || cleanName(body.contact) || 'there').split(' ')[0]},\n\nThank you for sending “${rec.draft.name}” to the Auntie Tobi Marketplace. Auntie Tobi will review it and email you as soon as it’s live (or if anything needs changing).\n\nAuntie Tobi 💚\nhttps://www.auntietobi.co.uk/marketplace`);
+        const first = (rec.contact.name || cleanName(body.contact) || 'there').split(' ')[0];
+        const rm = await require('../emails').system('market.received', { name: first, listing: rec.draft.name }, { subject: 'We’ve received your Marketplace listing 💚',
+          text: `Hi ${first},\n\nThank you for sending “${rec.draft.name}” to the Auntie Tobi Marketplace. Auntie Tobi will review it and email you as soon as it’s live (or if anything needs changing).\n\nAuntie Tobi 💚\nhttps://www.auntietobi.co.uk/marketplace` });
+        await core.sendEmail([email], rm.subject, rm.text, rm.html);
       } catch (e) { console.error('[studio] market confirmation email failed', e && e.message); }
       return { ok: true, id: rec.id };
     }
