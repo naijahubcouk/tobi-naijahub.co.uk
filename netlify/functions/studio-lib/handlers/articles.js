@@ -147,16 +147,16 @@ a{color:inherit}
 .sheet{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(15,30,54,.08);border:1px solid var(--line)}
 .sheet-img img{display:block;width:100%;max-height:520px;object-fit:contain;background:#EEF0F3}
 .sheet-in{padding:26px 32px 28px}
-.sheet h1{font-size:30px;line-height:1.3;font-weight:700;color:#0F1E36;margin:0 0 8px;letter-spacing:0}
-.sheet-meta{font-size:15px;color:#6B7280;margin-bottom:18px}
+.sheet h1{font-size:34px;line-height:1.3;font-weight:700;color:#0F1E36;margin:0 0 8px;letter-spacing:0}
+.sheet-meta{font-size:16px;color:#6B7280;margin-bottom:18px}
 .sheet .body{color:#2B2B2B}
-.sheet .body p,.sheet .body li{font-size:17px;line-height:1.7}
+.sheet .body p,.sheet .body li{font-size:19.5px;line-height:1.7}
 .sheet .body p{margin-bottom:15px}
-.sheet .body h3{font-size:22px;font-weight:700;color:#0F1E36;margin:24px 0 8px;line-height:1.3}
+.sheet .body h3{font-size:25px;font-weight:700;color:#0F1E36;margin:24px 0 8px;line-height:1.3}
 .sheet .body ul,.sheet .body ol{padding-left:22px;margin-bottom:14px}
 .sheet .body li{margin-bottom:9px}
 .sheet .body a{color:#057A44;font-weight:600}
-.sheet .body .at-call,.sheet .body .at-cta{font-size:17px}.sheet .body .at-kicker{font-size:17.5px}.sheet .body .at-tbl table{font-size:16px}
+.sheet .body .at-call,.sheet .body .at-cta{font-size:19px}.sheet .body .at-kicker{font-size:20px}.sheet .body .at-tbl table{font-size:18px}.sheet .body h4.at-q{font-size:20.5px}.sheet .body .at-fact{font-size:16px}
 .sheet-link{display:block;margin-top:16px;background:#057A44;color:#fff;text-decoration:none;text-align:center;padding:13px;border-radius:12px;font-weight:700}
 .sheet-btns{display:flex;gap:10px;margin-top:22px}
 .sheet-btns a{flex:1;text-align:center;text-decoration:none;font-weight:700;font-size:15px;padding:13px;border-radius:12px}
@@ -172,7 +172,7 @@ a{color:inherit}
   .grid{grid-template-columns:1fr;gap:16px}.feat .tx{padding:22px}.feat h2{font-size:23px}
   .cta{flex-direction:column;align-items:flex-start;padding:24px}
   .art{padding:24px 16px 10px}.art h1{font-size:29px}.art .lead{font-size:18px}
-  .art{padding:18px 12px 10px}.sheet-in{padding:20px 18px 22px}.sheet h1{font-size:23px}.sheet .body p,.sheet .body li{font-size:16px}.sheet .body h3{font-size:19.5px}.sheet .body .at-call,.sheet .body .at-cta,.sheet .body .at-kicker{font-size:16px}.sheet .body h4.at-q{font-size:17px}
+  .art{padding:18px 12px 10px}.sheet-in{padding:20px 18px 22px}.sheet h1{font-size:26px}.sheet .body p,.sheet .body li{font-size:18px}.sheet .body h3{font-size:22px}.sheet .body .at-call,.sheet .body .at-cta,.sheet .body .at-kicker{font-size:17.5px}.sheet .body h4.at-q{font-size:19px}.sheet .body .at-tbl table{font-size:16.5px}.sheet .body .at-fact{font-size:15px}
   .body p,.body li{font-size:17.5px}.byline .share a span{display:none}
 }`;
 
