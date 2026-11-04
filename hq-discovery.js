@@ -108,7 +108,7 @@
     var text = ([p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }).join(' ') + ' - Part ' + roman(p.part)).toUpperCase();
     var bw = W * 0.92, bx = (W - bw) / 2, inner = bw - 110, s = 70, lines;
     do { ctx.font = '700 ' + s + 'px ' + FT; lines = wrap(ctx, text.split(/\s+/), inner); s -= 2; } while ((lines.length > 3 || lines.some(function (l) { return ctx.measureText(l).width > inner; })) && s > 30);
-    s += 2; var lh = s * 1.42, bh = lines.length * lh + 96, by = H * 0.87 - bh;
+    s += 2; var lh = s * 1.42, bh = lines.length * lh + 96, by = H - bh - 56;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.14)'; ctx.shadowBlur = 20; ctx.fillStyle = '#fff'; ctx.fillRect(bx, by, bw, bh); ctx.restore();
     ctx.lineWidth = 6; ctx.strokeStyle = GREEN; ctx.strokeRect(bx + 3, by + 3, bw - 6, bh - 6);
     ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '700 ' + s + 'px ' + FT;
