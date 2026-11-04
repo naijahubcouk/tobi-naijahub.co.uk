@@ -16,7 +16,7 @@ try { OLD = require('../../../../blog-posts.json'); } catch (_) { OLD = []; }
 const SITE = 'https://www.auntietobi.co.uk';
 const DIRECTORY = 'https://directory.auntietobi.co.uk';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const CSP = "default-src 'none'; img-src 'self' data: https:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+const CSP = "default-src 'none'; img-src 'self' data: https:; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 const CAT_EMOJI = { News: '📰', Money: '💷', Housing: '🏠', Lifestyle: '✨', Business: '💼', 'Did You Know': '💡', Travel: '✈️', Family: '👨‍👩‍👧', Health: '🩺', Education: '🎓', Food: '🍲', Jobs: '🧑🏾‍💼' };
 const TINTS = ['#E8F5EE', '#FFF4D6', '#E6ECF5', '#FDE8E1'];
 
@@ -57,7 +57,7 @@ function respond(status, body) {
 const CSS = `
 :root{--green:#057A44;--green-l:#E8F5EE;--gold:#FFB81C;--gold-l:#FFF4D6;--navy:#0F1E36;--ink:#0F1E36;--muted:#5B6474;--line:#E6E2D8;--bg:#F7F5EF}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
 a{color:inherit}
 .wrap{max-width:1160px;margin:0 auto;padding:0 20px}
 .hdr{background:var(--navy);color:#fff;position:sticky;top:0;z-index:5}
@@ -144,6 +144,23 @@ a{color:inherit}
 .body .at-fact{font-size:15.0px;color:#6B7280;border-top:1px solid #E5E0D2;padding-top:12px;margin-top:20px;font-style:italic}
 .body hr{border:0;border-top:1px dashed #D8D2C2;margin:22px 0}
 .body ol li{font-size:18.5px;line-height:1.65;margin-bottom:10px}
+.sheet{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 28px rgba(15,30,54,.08);border:1px solid var(--line)}
+.sheet-img img{display:block;width:100%;max-height:520px;object-fit:contain;background:#EEF0F3}
+.sheet-in{padding:26px 32px 28px}
+.sheet h1{font-size:30px;line-height:1.3;font-weight:700;color:#0F1E36;margin:0 0 8px;letter-spacing:0}
+.sheet-meta{font-size:15px;color:#6B7280;margin-bottom:18px}
+.sheet .body{color:#2B2B2B}
+.sheet .body p,.sheet .body li{font-size:17px;line-height:1.7}
+.sheet .body p{margin-bottom:15px}
+.sheet .body h3{font-size:22px;font-weight:700;color:#0F1E36;margin:24px 0 8px;line-height:1.3}
+.sheet .body ul,.sheet .body ol{padding-left:22px;margin-bottom:14px}
+.sheet .body li{margin-bottom:9px}
+.sheet .body a{color:#057A44;font-weight:600}
+.sheet .body .at-call,.sheet .body .at-cta{font-size:17px}.sheet .body .at-kicker{font-size:17.5px}.sheet .body .at-tbl table{font-size:16px}
+.sheet-link{display:block;margin-top:16px;background:#057A44;color:#fff;text-decoration:none;text-align:center;padding:13px;border-radius:12px;font-weight:700}
+.sheet-btns{display:flex;gap:10px;margin-top:22px}
+.sheet-btns a{flex:1;text-align:center;text-decoration:none;font-weight:700;font-size:15px;padding:13px;border-radius:12px}
+.b-share{background:#FFB81C;color:#0F1E36}.b-app{background:#f0faf5;color:#057A44}
 .more-link{margin:6px 0 26px}
 .more-link a{display:inline-flex;text-decoration:none;font-weight:800;border-radius:12px;padding:12px 18px;background:var(--green);color:#fff}
 .more{max-width:1160px;margin:20px auto 0;padding:0 20px}
@@ -155,6 +172,7 @@ a{color:inherit}
   .grid{grid-template-columns:1fr;gap:16px}.feat .tx{padding:22px}.feat h2{font-size:23px}
   .cta{flex-direction:column;align-items:flex-start;padding:24px}
   .art{padding:24px 16px 10px}.art h1{font-size:29px}.art .lead{font-size:18px}
+  .art{padding:18px 12px 10px}.sheet-in{padding:20px 18px 22px}.sheet h1{font-size:23px}.sheet .body p,.sheet .body li{font-size:16px}.sheet .body h3{font-size:19.5px}.sheet .body .at-call,.sheet .body .at-cta,.sheet .body .at-kicker{font-size:16px}.sheet .body h4.at-q{font-size:17px}
   .body p,.body li{font-size:17.5px}.byline .share a span{display:none}
 }`;
 
@@ -163,7 +181,7 @@ function page({ title, desc, canonical, image, jsonld, main }) {
   return `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${esc(canonical)}">
 <meta property="og:type" content="${jsonld ? 'article' : 'website'}"><meta property="og:site_name" content="Auntie Tobi"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${esc(canonical)}"><meta property="og:image" content="${esc(og)}">
-<meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}"><meta name="theme-color" content="#0F1E36"><link rel="icon" href="/favicon-32x32.png">
+<meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}"><meta name="theme-color" content="#0F1E36"><link rel="icon" href="/favicon-32x32.png"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>` : ''}
 <style>${CSS}</style></head><body>
 <header class="hdr"><div class="wrap"><a class="brand" href="/articles"><img src="/icon-192.png" alt="">Auntie Tobi</a>
@@ -221,13 +239,15 @@ function article(a, articles) {
     title: `${a.title} — Auntie Tobi`, desc: a.summary, canonical: url, image: img, jsonld,
     main: `<article class="art">
 <div class="crumb"><a href="/articles">Articles</a> › <a href="/articles?c=${encodeURIComponent(a.category || 'News')}">${esc(a.category || 'News')}</a></div>
-<span class="chip">${esc(a.category || 'News')}</span>
+<div class="sheet">
+${img ? `<div class="sheet-img"><img src="${esc(img)}" alt=""></div>` : ''}
+<div class="sheet-in">
 <h1>${esc(a.title)}</h1>
-${a.summary ? `<p class="lead">${esc(a.summary)}</p>` : ''}
-<div class="byline"><img src="/icon-192.png" alt=""><div><b>Auntie Tobi</b><span class="meta">${day(a.publishedAt)} · ${readMins(a.html)} min read</span></div><div class="share"><a href="${esc(wa)}" target="_blank" rel="noopener">🟢 <span>Share on WhatsApp</span></a><a href="/blog/${encodeURIComponent(a.slug)}">📱 <span>Open in app</span></a></div></div>
-<div class="hero-img">${thumb(a, img ? 'photo' : '')}</div>
+<div class="sheet-meta">${esc(a.category || 'News')} · ${day(a.publishedAt)} · ${readMins(a.html)} min read</div>
 <div class="body">${a.html || ''}</div>
-${a.link ? `<p class="more-link"><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.linkText || 'Find out more')} →</a></p>` : ''}
+${a.link ? `<a class="sheet-link" href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.linkText || 'Find out more')} →</a>` : ''}
+<div class="sheet-btns"><a class="b-share" href="${esc(wa)}" target="_blank" rel="noopener">📤 Share</a><a class="b-app" href="/blog/${encodeURIComponent(a.slug)}">📱 Open in app</a></div>
+</div></div>
 </article>
 <section class="more">${related.length ? `<h2>More from Auntie Tobi</h2><div class="grid">${related.map(card).join('')}</div>` : ''}${CTA}</section>`,
   });
