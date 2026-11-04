@@ -1,6 +1,6 @@
 /*
  * Auntie Tobi HQ — 📣 Discovery posts (Instagram Growth, admin only).
- * "Nigerian Caterers in UK – Pt 1": pick ~10 businesses from a directory category (claimed first, different towns),
+ * "Nigerian Caterers in UK – Part I": pick ~10 businesses from a directory category (claimed first, different towns),
  * then HQ draws the cover (your photo + white box with green border, title and gold brush) and one slide per business
  * (their photo + "@handle / 📍 Town" box), writes the caption with every @handle, and downloads it all (ZIP).
  * Marking a post as posted adds "📣 Featured in …" to each business's timeline in the Business directory.
@@ -16,6 +16,8 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   function esc(s) { return X.esc(s); }
   function rnd(seed) { var x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); }
+  // Part numbers as Roman numerals: 1 → I, 2 → II, 4 → IV
+  function roman(n) { n = Math.max(1, Math.min(99, n | 0)); var r = '', v = [[90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]; v.forEach(function (x) { while (n >= x[0]) { r += x[1]; n -= x[0]; } }); return r; }
   function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
   function title(s) { return String(s || '').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
   function town(b) { var t = String(b.loc || '').split(',')[0].trim(); return t && t !== 'UK' ? t : ''; }
@@ -101,7 +103,7 @@
   function fit(ctx, txt, weight, start, maxW) { var s = start; ctx.font = weight + ' ' + s + 'px ' + FT; while (s > 24 && ctx.measureText(txt).width > maxW) { s -= 2; ctx.font = weight + ' ' + s + 'px ' + FT; } return s; }
   function drawCover(ctx, p, im) {
     drawPhoto(ctx, im, p.coverPos);
-    var lines = [p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }), pt = 'Pt' + p.part;
+    var lines = [p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }), pt = 'Part ' + roman(p.part);
     var bw = W * 0.88, bx = (W - bw) / 2, inner = bw - 90;
     var s = Math.min.apply(null, lines.map(function (l) { return fit(ctx, l, '700', 86, inner); }).concat([86]));
     var lh = s * 1.22, bh = 60 + lines.length * lh + s * 1.25, by = H - bh - 92;
@@ -141,7 +143,7 @@
   }
   function caption(p) {
     var what = String(p.cat || 'businesses').toLowerCase(), head = [p.l1, p.l2].filter(Boolean).join(' ');
-    return '🇳🇬 ' + head + ' – Part ' + p.part + ' 💚\n\n' +
+    return '🇳🇬 ' + head + ' – Part ' + roman(p.part) + ' 💚\n\n' +
       'Looking for Nigerian ' + what + ' near you? Here are ' + p.items.length + ' amazing businesses across the UK 👇🏾\n\n' +
       p.items.map(function (x, i) { return (i + 1) + '. @' + x.handle + (x.town ? ' — 📍 ' + x.town : ''); }).join('\n') +
       '\n\nKnow a great Nigerian ' + what.replace(/s$/, '') + ' we should feature next? Tag them in the comments 👇🏾\n\n' +
@@ -159,13 +161,13 @@
     var C = cats(), P = X.S.disc || [];
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>＋ New discovery post</b><p class="muted" style="font-size:13px;margin:4px 0 8px">Choose a category from your Business directory. HQ picks 10 businesses with Instagram — claimed first, from different towns, not featured before — and you can change any of them.</p>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap"><select id="dcCat" style="flex:1;min-width:200px">' + C.filter(function (c) { return c.ig; }).map(function (c) { var n = partsOf(c.cat).length; return '<option value="' + esc(c.cat) + '">' + esc(title(c.cat)) + ' — ' + c.ig + ' with Instagram' + (n ? ' · ' + n + ' post' + (n > 1 ? 's' : '') + ' so far' : '') + '</option>'; }).join('') + '</select><button class="btn primary" id="dcNew">✨ Start Pt ' + '…</button></div></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><select id="dcCat" style="flex:1;min-width:200px">' + C.filter(function (c) { return c.ig; }).map(function (c) { var n = partsOf(c.cat).length; return '<option value="' + esc(c.cat) + '">' + esc(title(c.cat)) + ' — ' + c.ig + ' with Instagram' + (n ? ' · ' + n + ' post' + (n > 1 ? 's' : '') + ' so far' : '') + '</option>'; }).join('') + '</select><button class="btn primary" id="dcNew">✨ Start Part …</button></div></div>' +
       '<div class="card" style="padding:4px 14px">' + (P.length ? P.map(function (p) {
-        return '<div class="aprow" style="cursor:pointer;flex-direction:row;align-items:center;flex-wrap:nowrap" data-dp="' + p.id + '"><div style="flex:1;min-width:0"><b>' + esc([p.l1, p.l2].filter(Boolean).join(' ')) + ' – Pt ' + p.part + '</b> ' +
+        return '<div class="aprow" style="cursor:pointer;flex-direction:row;align-items:center;flex-wrap:nowrap" data-dp="' + p.id + '"><div style="flex:1;min-width:0"><b>' + esc([p.l1, p.l2].filter(Boolean).join(' ')) + ' – Part ' + roman(p.part) + '</b> ' +
           (p.status === 'posted' ? '<span class="ak" style="background:#057A44">✅ Posted ' + esc(fmt(p.postedAt)) + '</span>' : '<span class="ak" style="background:#EEF0F3;color:#6B7280">Draft</span>') +
           '<div class="muted" style="font-size:12.5px">' + p.items.length + ' businesses · ' + esc(p.items.map(function (x) { return x.town; }).filter(Boolean).filter(function (t, i, a) { return a.indexOf(t) === i; }).slice(0, 5).join(', ')) + '</div></div><span style="font-size:20px;color:#9CA3AF">›</span></div>';
       }).join('') : '<p class="muted" style="padding:12px 0">No discovery posts yet.</p>') + '</div></div>';
-    var sync = function () { var c = $('#dcCat').value, n = 0; partsOf(c).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNew').textContent = '✨ Start Pt ' + (n + 1); };
+    var sync = function () { var c = $('#dcCat').value, n = 0; partsOf(c).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNew').textContent = '✨ Start Part ' + roman(n + 1); };
     if ($('#dcCat')) { $('#dcCat').onchange = sync; sync(); }
     $('#dcNew').onclick = function () { var c = $('#dcCat').value; if (!c) return; var p = blank(c), n = autoPick(p); p.caption = caption(p); X.S.discEdit = p; X.toast(n ? 'Picked ' + n + ' businesses — change anything you like' : 'No new businesses with Instagram in this category — add some by hand'); view(); };
     $$('[data-dp]').forEach(function (r) { r.onclick = function () { var p = (X.S.disc || []).filter(function (q) { return q.id === r.dataset.dp; })[0]; if (p) { X.S.discEdit = JSON.parse(JSON.stringify(p)); view(); } }; });
@@ -183,13 +185,13 @@
   }
   function editor() {
     var p = X.S.discEdit, posted = p.status === 'posted';
-    $('#ttl').textContent = [p.l1, p.l2].filter(Boolean).join(' ') + ' – Pt ' + p.part;
+    $('#ttl').textContent = [p.l1, p.l2].filter(Boolean).join(' ') + ' – Part ' + roman(p.part);
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn ghost" id="deBack">‹ All posts</button><button class="btn primary" id="deSave">💾 Save</button><button class="btn gold" id="deZip">⬇️ Download slides</button>' + (navigator.canShare ? '<button class="btn ghost" id="deShare">📲 Save to phone</button>' : '') + (posted ? '<button class="btn ghost" id="deTell">🎉 Tell the businesses</button>' : '<button class="btn ghost" id="dePost">✅ Mark as posted</button>') + (p.id ? '<button class="btn ghost" id="deDel" style="color:#B42318">🗑</button>' : '') + '</div>' +
       (posted ? '<div class="note" style="margin-bottom:12px">✅ Posted ' + esc(fmt(p.postedAt)) + (p.postUrl ? ' · <a href="' + esc(p.postUrl) + '" target="_blank" rel="noopener">View on Instagram</a>' : '') + ' — each business’s timeline in Business directory shows it. <button class="btn link" id="deUnpost" style="font-size:13px">Undo</button></div>' : '') +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>🎯 Cover</b><div class="row" style="gap:12px;align-items:flex-start;margin-top:8px;flex-wrap:wrap"><div data-th="-1" data-open="-1" style="width:150px;cursor:pointer;background:#EEE;border-radius:8px;aspect-ratio:4/5"></div><div style="flex:1;min-width:200px" class="stack">' +
       '<div><label>Title</label><input id="deL1" value="' + esc(p.l1) + '" placeholder="Nigerian Caterers"><input id="deL2" value="' + esc(p.l2) + '" placeholder="in UK" style="margin-top:6px"></div>' +
-      '<div class="row" style="gap:8px;align-items:center"><label style="margin:0">Part</label><input id="dePt" type="number" min="1" max="99" value="' + p.part + '" style="width:80px"></div>' +
+      '<div class="row" style="gap:8px;align-items:center"><label style="margin:0">Part</label><input id="dePt" type="number" min="1" max="99" value="' + p.part + '" style="width:80px"><span class="muted" id="dePtR">= Part ' + roman(p.part) + '</span></div>' +
       '<button class="btn ghost sm" data-open="-1">📷 Cover photo &amp; position</button></div></div></div>' +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>🏪 Businesses (' + p.items.length + ')</b><div class="row" style="gap:6px"><button class="btn ghost sm" id="deAuto">✨ Fill to 10</button><button class="btn ghost sm" id="deAdd">＋ Add</button></div></div>' +
       '<p class="muted" style="font-size:12.5px;margin:4px 0 10px">Tap a slide to change the photo, @handle or town. For the best slides, upload a photo from their Instagram.</p>' +
@@ -200,7 +202,7 @@
     var read = function () { p.l1 = $('#deL1').value; p.l2 = $('#deL2').value; p.part = Math.max(1, parseInt($('#dePt').value, 10) || 1); p.caption = $('#deCap').value; };
     var capN = function () { $('#deCapN').textContent = $('#deCap').value.length + ' / 2,200 characters'; }; $('#deCap').oninput = capN; capN();
     var auto = caption(p);   // the caption follows the title while you haven't changed it yourself
-    var tm; ['#deL1', '#deL2', '#dePt'].forEach(function (id) { $(id).oninput = function () { clearTimeout(tm); tm = setTimeout(function () { var was = $('#deCap').value === auto; read(); if (was) { auto = caption(p); $('#deCap').value = p.caption = auto; capN(); } paintThumbs(p); }, 300); }; });
+    var tm; ['#deL1', '#deL2', '#dePt'].forEach(function (id) { $(id).oninput = function () { clearTimeout(tm); tm = setTimeout(function () { var was = $('#deCap').value === auto; read(); if ($('#dePtR')) $('#dePtR').textContent = '= Part ' + roman(p.part); if (was) { auto = caption(p); $('#deCap').value = p.caption = auto; capN(); } paintThumbs(p); }, 300); }; });
     $('#deBack').onclick = function () { X.S.discEdit = null; view(); };
     $('#deSave').onclick = function () { read(); save(p).then(function () { X.toast('Saved'); }); };
     $('#deAuto').onclick = function () { read(); var n = autoPick(p); X.toast(n ? 'Added ' + n : 'No more new businesses with Instagram in this category'); if (n) p.caption = caption(p); editor(); };
@@ -271,7 +273,7 @@
       $('#pkL', s).innerHTML = rows.length ? rows.map(function (r) { var b = r.b, on = p.items.some(function (x) { return x.slug === b.slug; });
         return '<label class="aprow" style="flex-direction:row;align-items:center;flex-wrap:nowrap;cursor:pointer;gap:10px"><input type="checkbox" data-pk="' + esc(b.slug) + '"' + (on ? ' checked' : '') + ' style="width:20px;height:20px;flex:none"><div style="flex:1;min-width:0"><b>' + esc(b.name) + '</b> <span class="muted">@' + esc(b.ig) + '</span><div style="margin-top:2px">' +
           (b.claimed ? '<span class="ak" style="background:#057A44">Claimed</span> ' : '<span class="ak" style="background:#FFE7A3;color:#6B4A00">Unclaimed</span> ') + (b.featured ? '<span class="ak" style="background:#0F1E36">⭐ Club</span> ' : '') + (town(b) ? '<span class="muted" style="font-size:12.5px">📍 ' + esc(town(b)) + '</span> ' : '') +
-          r.used.map(function (u) { return '<span class="ak" style="background:#EEF0F3;color:#6B7280">In Pt ' + u.part + '</span>'; }).join(' ') + '</div></div></label>'; }).join('') : '<p class="muted">No businesses found.</p>';
+          r.used.map(function (u) { return '<span class="ak" style="background:#EEF0F3;color:#6B7280">In Part ' + roman(u.part) + '</span>'; }).join(' ') + '</div></div></label>'; }).join('') : '<p class="muted">No businesses found.</p>';
       $$('[data-pk]', s).forEach(function (cb) { cb.onchange = function () { var slug = cb.dataset.pk, b = L.filter(function (r) { return r.b.slug === slug; })[0].b;
         if (cb.checked) { if (p.items.length >= 12) { cb.checked = false; X.toast('Up to 12 businesses'); return; } p.items.push(itemOf(b)); } else p.items = p.items.filter(function (x) { return x.slug !== slug; }); }; });
     };
@@ -327,7 +329,7 @@
   }
   function tellSheet(p) {
     var D = {}; dir().forEach(function (b) { D[b.slug] = b; });
-    var head = [p.l1, p.l2].filter(Boolean).join(' ') + ' – Pt ' + p.part;
+    var head = [p.l1, p.l2].filter(Boolean).join(' ') + ' – Part ' + roman(p.part);
     var msg = function (x) { return 'Hi ' + (D[x.slug] ? D[x.slug].name : '@' + x.handle) + ' 👋🏾 Auntie Tobi here! We’ve just featured you in our “' + head + '” post on Instagram 🎉' + (p.postUrl ? '\n' + p.postUrl : '') + '\nFeel free to share it to your story and tag @auntietobi_uk 💚'; };
     var s = X.sheet('<h2>🎉 Tell the businesses</h2><p class="muted" style="font-size:13.5px;margin:4px 0 10px">One tap opens WhatsApp with the message ready, or copies it for an Instagram DM. Nothing is sent until you press send.</p><div style="max-height:56vh;overflow:auto">' +
       p.items.map(function (x, i) { var b = D[x.slug] || {}; return '<div class="aprow" style="flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px"><div style="flex:1;min-width:140px"><b>@' + esc(x.handle) + '</b><div class="muted" style="font-size:12.5px">' + esc(b.name || '') + '</div></div><div class="row" style="gap:6px">' +

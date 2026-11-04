@@ -1,7 +1,7 @@
 'use strict';
 /*
  * 📣 Business discovery posts (HQ → Instagram Growth → Discovery posts), admin only.
- * "Nigerian Caterers in UK – Pt 1": a cover + one slide per business (their photo, @handle and town), drawn in HQ.
+ * "Nigerian Caterers in UK – Part I": a cover + one slide per business (their photo, @handle and town), drawn in HQ.
  *   disc/parts       { items: [part] }
  *   disc/img/<id>    { dataUrl }      photos you upload (resized in HQ, ≤ ~400 KB)
  * part: { id, cat, part, l1, l2, coverImg, items: [{ slug, name, handle, town, img, pos: {x,y,z} }], caption,
@@ -14,6 +14,7 @@ const { HttpError, cas, getJson, setJson, cleanText } = core;
 
 const KEY = 'disc/parts';
 const MAX_PARTS = 400, MAX_ITEMS = 12;
+const roman = n => { let r = ''; n = Math.max(1, Math.min(99, n | 0)); for (const [v, s] of [[90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]) while (n >= v) { r += s; n -= v; } return r; };
 const okId = id => /^[a-z0-9]{6,40}$/.test(String(id || ''));
 const newId = () => Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
 
@@ -77,7 +78,7 @@ async function posted(id, url, who) {
   let p = null;
   await cas(KEY, cur => { if (!cur) return undefined; const x = cur.items.find(q => q.id === id); if (!x) return undefined; x.status = 'posted'; x.postedAt = x.postedAt || core.nowIso(); x.postUrl = u.slice(0, 300); p = x; return cur; });
   if (!p) throw new HttpError(404, 'not_found', 'That post is no longer saved.');
-  const title = `${[p.l1, p.l2].filter(Boolean).join(' ')} – Pt ${p.part}`;
+  const title = `${[p.l1, p.l2].filter(Boolean).join(' ')} – Part ${roman(p.part)}`;
   const invites = require('./invites');
   for (const x of p.items) if (x.slug) await invites.act(x.slug, 'log', { text: `📣 Featured in the discovery post "${title}"${u ? ' — ' + u : ''}` }).catch(() => {});
   await core.audit(who, 'hq_disc_posted', { id, n: p.items.length });
