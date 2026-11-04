@@ -925,7 +925,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="muted" style="font-size:12.5px;margin-bottom:4px">' + list.length + ' shown</div>' +
       '<div class="card" style="padding:4px 14px">' + (list.length ? list.slice(0, 400).map(function (r) {
         return '<div class="aprow" style="cursor:pointer" data-open="' + esc(r.slug) + '"><div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b>' + esc(r.name) + '</b>' + crmPill(r.stage) +
-          (r.due ? dirPill('📅 Due', '#B45309') : '') + (r.claimed ? dirPill('Claimed', '#057A44') : dirPill('Unclaimed', '#FFE7A3', '#6B4A00')) + (r.featured ? dirPill('⭐', '#0F1E36') : '') + (r.studio ? dirPill('🧰 Studio', '#1D4ED8') : '') + '</div>' +
+          (r.due ? dirPill('📅 Due', '#B45309') : '') + (r.claimed ? dirPill('Claimed', '#057A44') : dirPill('Unclaimed', '#FFE7A3', '#6B4A00')) + (r.featured ? dirPill('⭐', '#0F1E36') : '') + (r.studio ? dirPill('🧰 Studio', '#1D4ED8') : '') + (r.waitSite ? dirPill('⏳ Not in app yet', '#EEF0F3', '#6B7280') : '') + '</div>' +
           '<div class="muted" style="font-size:12.5px;margin-top:2px">' + (r.last ? esc(r.last.what).slice(0, 90) + ' · ' + esc(crmAgo(r.last.at)) : esc(r.cat || '—') + ' · ' + esc((r.loc || 'UK').split(',')[0])) +
           (r.opens || r.clicks ? ' · 👁 ' + r.opens + (r.clicks ? ' · 🔗 ' + r.clicks : '') : '') + (r.followUpAt ? ' · 📅 ' + esc(crmDate(r.followUpAt)) : r.checkBackAt && r.stage === 'notnow' ? ' · ⏸ back ' + esc(crmDate(r.checkBackAt)) : '') + '</div></div><div class="apact">›</div></div>';
       }).join('') : '<p class="muted" style="padding:14px 0">' + (f === 'today' ? 'Nothing due today 🎉' : 'No businesses here.') + '</p>') + '</div></div>';
@@ -1014,7 +1014,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="f2"><div><label for="deE">Email</label><input id="deE" type="email" value="' + esc(b.email || '') + '"></div><div><label for="deP">Phone</label><input id="deP" value="' + esc(b.phone || '') + '"></div></div>' +
       '<div><label for="deS">Website</label><input id="deS" placeholder="https://" value="' + esc(b.website || '') + '"></div>' +
       '<div class="f2"><div><label for="deCl2">Claimed?</label><select id="deCl2"><option value="auto"' + (cl === 'auto' ? ' selected' : '') + '>Automatic (from website contact name)</option><option value="yes"' + (cl === 'yes' ? ' selected' : '') + '>✅ Claimed</option><option value="no"' + (cl === 'no' ? ' selected' : '') + '>🕓 Unclaimed</option></select></div>' +
-      '<div><label>Show in app</label><label class="chk"><input type="checkbox" id="deF"' + (b.featured ? ' checked' : '') + '> ⭐ Featured</label><label class="chk"><input type="checkbox" id="deV"' + (b.verified ? ' checked' : '') + '> ✅ Verified</label><label class="chk"><input type="checkbox" id="deH"' + (b.hidden ? ' checked' : '') + '> 🙈 Hidden</label></div></div>' +
+      '<div><label>Show in app</label><label class="chk"><input type="checkbox" id="deF"' + (b.featured ? ' checked' : '') + '> ⭐ Featured</label><label class="chk"><input type="checkbox" id="deV"' + (b.verified ? ' checked' : '') + '> ✅ Verified</label><label class="chk"><input type="checkbox" id="deH"' + (b.hidden ? ' checked' : '') + '> 🙈 Hidden</label>' + (b.src === 'hq' && !b.uploadedAt && (b.awaitSite || /Found by the Business Finder/.test(b.notes || '')) ? '<label class="chk"><input type="checkbox" id="deA"' + (b.appNow ? ' checked' : '') + '> 📲 Show in app now <span class="muted" style="font-weight:400">(it’s not on the website yet — otherwise it shows once you mark the website CSV uploaded)</span></label>' : '') + '</div></div>' +
       '<div><label for="deNo">Notes (only you see these)</label><textarea id="deNo" rows="2">' + esc(b.notes || '') + '</textarea></div>' +
       '</div><div class="err hidden" id="deErr"></div>' +
       '<div class="row" style="justify-content:space-between;gap:8px;margin-top:12px">' + (isNew ? '<span></span>' : '<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn ghost" id="deDel" style="color:#B42318">🗑 Delete</button><button class="btn ghost" id="deNever" style="color:#B42318" title="For businesses that asked not to be listed">🚫 Remove &amp; never add again</button></div>') + '<div class="row" style="gap:8px"><button class="btn ghost" id="deX">Cancel</button><button class="btn primary" id="deOk">💾 Save</button></div></div>');
@@ -1043,6 +1043,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       var v = function (id) { return $('#' + id, s).value.trim(); }, c = v('deCl2');
       var item = Object.assign({}, b, { origSlug: b.slug, name: v('deN'), cat: v('deC'), loc: v('deL'), desc: v('deD'), long: v('deLg'), short: v('deSh'), tags: v('deT').split(',').map(function (t) { return t.trim(); }).filter(Boolean), ig: v('deI'), wa: v('deW'), email: v('deE'), phone: v('deP'), website: v('deS'), fb: v('deFb'), tt: v('deTt'), notes: v('deNo'),
         featured: $('#deF', s).checked, verified: $('#deV', s).checked, hidden: $('#deH', s).checked });
+      if ($('#deA', s)) item.appNow = $('#deA', s).checked;
       if (c === 'auto') delete item.claimedSet; else item.claimedSet = c === 'yes';
       if (!item.name) { $('#deErr', s).textContent = 'Add the business name.'; $('#deErr', s).classList.remove('hidden'); return; }
       item.gallery = gal.filter(function (g) { return g.url; }).map(function (g) { return g.url; }); item.galleryAdd = gal.filter(function (g) { return g.data; }).map(function (g) { return g.data; });
@@ -1323,7 +1324,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="muted" style="font-size:13px">' + n('new') + ' waiting · ' + F.queue + ' searches left this week · last search ' + esc(findAgo(F.lastRun)) + '</div></div>' +
       '<div style="height:10px;background:#EEF0F3;border-radius:6px;margin:10px 0 12px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#057A44"></div></div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn ghost" id="fMore">▶️ Find more now</button><span class="muted" style="font-size:12.5px">Searches also run by themselves every Monday morning. Each search costs about 1p.</span></div>' +
-      (F.toUpload ? '<div class="note" style="margin-top:12px">⬇️ <b>' + F.toUpload + '</b> approved business' + (F.toUpload === 1 ? ' is' : 'es are') + ' in the app but not on the website yet — tap <b>Website CSV</b> to download them.</div>' : '') + '</div>' +
+      (F.toUpload ? '<div class="note" style="margin-top:12px">⬇️ <b>' + F.toUpload + '</b> approved business' + (F.toUpload === 1 ? ' is' : 'es are') + ' waiting for the website (hidden from the app until then) — tap <b>Website CSV</b> to download them, upload them to the website, then mark them uploaded.</div>' : '') + '</div>' +
       '<div class="chipbar" id="fTabs" style="margin-bottom:8px">' + Object.keys(FIND_TABS).map(function (k) { return '<button class="chip" data-t="' + k + '" aria-pressed="' + (k === tab) + '">' + FIND_TABS[k] + ' (' + n(k) + ')</button>'; }).join('') + '</div>' +
       (list.length ? list.slice(0, 200).map(findCard).join('') : '<div class="card"><p class="muted" style="padding:6px 0">' + (tab === 'new' ? 'Nothing waiting. Tap <b>▶️ Find more now</b> or <b>⚡ Quick add</b>.' : 'Nothing here yet.') + '</p></div>') + '</div>';
     $$('#fTabs [data-t]').forEach(function (b) { b.onclick = function () { S.findTab = b.dataset.t; vFind(); }; });
@@ -1359,7 +1360,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (decision === 'approve') edits = Object.assign({}, edits || {}, { fallbackImg: bizCard(Object.assign({}, c, edits || {})) });
     var btnTxt = btn && btn.textContent; if (btn && decision === 'approve') btn.textContent = '✍️ Writing the listing…';
     if (edits && (edits.imgData || edits.imgNone)) delete S.findPics[c.id];
-    try { var r = await api('find-decide', { id: c.id, decision: decision, edits: edits }); S.find = r.finder; S.dir = null; toast(decision === 'approve' ? '✅ ' + c.name + ' is now in the app (unclaimed)' : decision === 'edit' ? 'Saved' : 'Skipped'); vFind(); return true; }
+    try { var r = await api('find-decide', { id: c.id, decision: decision, edits: edits }); S.find = r.finder; S.dir = null; toast(decision === 'approve' ? '✅ ' + c.name + ' approved — it shows in the app once it’s on the website' : decision === 'edit' ? 'Saved' : 'Skipped'); vFind(); return true; }
     catch (x) { if (btn) { btn.disabled = false; btn.textContent = btnTxt; } toast(x.message); return false; }
   }
   function findEdit(c) {
@@ -1412,7 +1413,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#fcDl', s).onclick = function () { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([r.csv], { type: 'text/csv;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); };
     $('#fcUp', s).onclick = async function () {
       if (!confirm('Mark these ' + r.count + ' as uploaded to the website?')) return;
-      try { var x = await api('find-uploaded'); S.find = x.finder; s.remove(); toast('Marked as on the website ✅'); vFind(); } catch (e) { toast(e.message); }
+      try { var x = await api('find-uploaded'); S.find = x.finder; s.remove(); toast('Marked as on the website ✅ — they now show in the app'); vFind(); } catch (e) { toast(e.message); }
     };
   }
   // 👥 Instagram usernames from a post's comments: screenshots (any post), pasted text (any post), or a link to your own post

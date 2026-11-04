@@ -184,7 +184,7 @@ async function decide(id, decision, edits, who) {
     const w = await writeUp(c, e.desc && e.desc !== cand.desc ? e.desc : '');
     c.desc = w.long; c.short = w.short; c.tags = w.tags; delete c.siteText;
     await core.del('finder/img/' + id).catch(() => {});
-    await bizdir.save({ slug, img: c.img, short: w.short, tags: w.tags, lat: w.lat, lng: w.lng, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, fb: c.fb, tt: c.tt, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com|facebook\.com|fb\.com|tiktok\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
+    await bizdir.save({ slug, img: c.img, short: w.short, tags: w.tags, lat: w.lat, lng: w.lng, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, fb: c.fb, tt: c.tt, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com|facebook\.com|fb\.com|tiktok\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', awaitSite: true, notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
     c.slug = slug; c.status = 'approved'; c.approvedAt = now;
   } else if (decision === 'skip') { c.status = 'skipped'; c.imgUp = false; delete c.siteText; await core.del('finder/img/' + id).catch(() => {}); }
   else if (decision === 'never') { c.status = 'skipped'; c.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); await neverAdd(c, 'Skipped for good in the Finder'); }

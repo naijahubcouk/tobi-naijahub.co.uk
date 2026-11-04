@@ -96,6 +96,8 @@ function normalise(b) {
   if (typeof b.claimedSet === 'boolean') out.claimedSet = b.claimedSet;
   out.claimed = typeof out.claimedSet === 'boolean' ? out.claimedSet : (out.contact ? ownerContact(out) : b.claimed === true);
   if (b.notes) out.notes = str(b.notes, 1000);
+  if (b.awaitSite) out.awaitSite = true;          // found by the Business Finder: kept out of the app until it's on the website
+  if (typeof b.appNow === 'boolean') out.appNow = b.appNow; else if (b.appNow) out.appNow = true;                // Seun chose to show it in the app before that
   if (fbUrl(b.fb)) out.fb = fbUrl(b.fb);
   if (ttUrl(b.tt)) out.tt = ttUrl(b.tt);
   if (b.short) out.short = str(b.short, 200);
@@ -107,9 +109,12 @@ function normalise(b) {
   return out;
 }
 
+// Finder businesses stay out of the app and the chat until they're on the website (CSV marked uploaded, or the
+// website export brings them back in) — unless "Show in app now" was ticked. Older Finder ones are recognised by their note.
+function waitingSite(b) { return b.src === 'hq' && !b.uploadedAt && !b.appNow && (!!b.awaitSite || /Found by the Business Finder/.test(b.notes || '')); }
 // ── public list for the app and the chat (no emails, no admin details) ──
 async function publicList() {
-  return (await all()).filter(b => !b.hidden && b.status !== 'pending').map(b => {
+  return (await all()).filter(b => !b.hidden && b.status !== 'pending' && !waitingSite(b)).map(b => {
     const o = {}; for (const k of PUBLIC.concat(b.featured ? FEATURED_EXTRA : [])) if (b[k] !== undefined && b[k] !== '' && b[k] !== false && !(Array.isArray(b[k]) && !b[k].length)) o[k] = b[k]; return o;
   });
 }
@@ -222,4 +227,4 @@ async function markUploaded(slugs, at) {
 }
 async function info() { const rec = await getJson(KEY).catch(() => null); return { saved: !!(rec && rec.items), at: rec && rec.at || '', lastImport: rec && rec.lastImport || '' }; }
 
-module.exports = { fbUrl, ttUrl, markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
+module.exports = { waitingSite, fbUrl, ttUrl, markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
