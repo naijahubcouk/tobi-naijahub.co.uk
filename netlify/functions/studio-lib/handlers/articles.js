@@ -133,7 +133,7 @@ a{color:inherit}
 .body .at-tbl th{background:#0F1E36;color:#fff;text-align:left;padding:10px 12px;font-weight:700}
 .body .at-tbl td{padding:10px 12px;border-top:1px solid #EFEAE0;vertical-align:top}
 .body .at-tbl tr:nth-child(even) td{background:#FAF8F3}
-.body .at-tbl td:first-child{font-weight:700;color:#057A44;white-space:nowrap}
+.body .at-tbl td:first-child{font-weight:700;color:#057A44;width:34%;min-width:96px}
 .body ol{padding-left:22px}
 .body ol li::marker{font-weight:800;color:#057A44}
 .body h4.at-q{font-size:18.5px;font-weight:800;color:#0F1E36;margin:18px 0 4px;line-height:1.4}
