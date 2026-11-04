@@ -63,7 +63,7 @@
   function itemOf(b) { return { slug: b.slug, name: b.name, handle: b.ig, town: town(b), img: '', pos: { x: 0, y: 0, z: 1 } }; }
   function blank(cat) {
     var max = 0; partsOf(cat).forEach(function (p) { max = Math.max(max, p.part); });
-    return { cat: cat, part: max + 1, l1: 'Nigerian ' + title(cat), l2: 'in UK', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
+    return { cat: cat, part: max + 1, l1: 'Nigerian ' + title(cat), l2: 'in the UK', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
   }
 
   // ── pictures ──
@@ -101,19 +101,19 @@
     ctx.restore();
   }
   function fit(ctx, txt, weight, start, maxW) { var s = start; ctx.font = weight + ' ' + s + 'px ' + FT; while (s > 24 && ctx.measureText(txt).width > maxW) { s -= 2; ctx.font = weight + ' ' + s + 'px ' + FT; } return s; }
+  // cover: one capitals headline "NIGERIAN BAKERS IN THE UK - PART I" in a wide white box with a green border, gold brush below it
+  function wrap(ctx, words, maxW) { var out = [], line = ''; words.forEach(function (w) { var t = line ? line + ' ' + w : w; if (line && ctx.measureText(t).width > maxW) { out.push(line); line = w; } else line = t; }); if (line) out.push(line); return out; }
   function drawCover(ctx, p, im) {
     drawPhoto(ctx, im, p.coverPos);
-    var lines = [p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }), pt = 'Part ' + roman(p.part);
-    var bw = W * 0.88, bx = (W - bw) / 2, inner = bw - 90;
-    var s = Math.min.apply(null, lines.map(function (l) { return fit(ctx, l, '700', 86, inner); }).concat([86]));
-    var lh = s * 1.22, bh = 60 + lines.length * lh + s * 1.25, by = H - bh - 92;
-    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.18)'; ctx.shadowBlur = 24; ctx.fillStyle = '#fff'; ctx.fillRect(bx, by, bw, bh); ctx.restore();
-    ctx.lineWidth = 8; ctx.strokeStyle = GREEN; ctx.strokeRect(bx + 4, by + 4, bw - 8, bh - 8);
-    ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    lines.forEach(function (l, i) { ctx.font = '700 ' + s + 'px ' + FT; ctx.fillText(l, W / 2, by + 34 + lh * (i + 0.5)); });
-    var py = by + 34 + lh * lines.length + s * 0.5;
-    brush(ctx, -20, py - 12, W * 0.97);
-    ctx.fillStyle = INK; ctx.font = '700 ' + s + 'px ' + FT; ctx.fillText(pt, W / 2, py);
+    var text = ([p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }).join(' ') + ' - Part ' + roman(p.part)).toUpperCase();
+    var bw = W * 0.92, bx = (W - bw) / 2, inner = bw - 110, s = 70, lines;
+    do { ctx.font = '700 ' + s + 'px ' + FT; lines = wrap(ctx, text.split(/\s+/), inner); s -= 2; } while ((lines.length > 3 || lines.some(function (l) { return ctx.measureText(l).width > inner; })) && s > 30);
+    s += 2; var lh = s * 1.42, bh = lines.length * lh + 96, by = H * 0.87 - bh;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.14)'; ctx.shadowBlur = 20; ctx.fillStyle = '#fff'; ctx.fillRect(bx, by, bw, bh); ctx.restore();
+    ctx.lineWidth = 6; ctx.strokeStyle = GREEN; ctx.strokeRect(bx + 3, by + 3, bw - 6, bh - 6);
+    ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '700 ' + s + 'px ' + FT;
+    lines.forEach(function (l, i) { ctx.fillText(l, W / 2, by + 48 + lh * (i + 0.5)); });
+    brush(ctx, -30, by + bh + 52, W + 20);
     ctx.textAlign = 'left';
   }
   function drawBiz(ctx, it, im) {
@@ -190,7 +190,7 @@
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn ghost" id="deBack">‹ All posts</button><button class="btn primary" id="deSave">💾 Save</button><button class="btn gold" id="deZip">⬇️ Download slides</button>' + (navigator.canShare ? '<button class="btn ghost" id="deShare">📲 Save to phone</button>' : '') + (posted ? '<button class="btn ghost" id="deTell">🎉 Tell the businesses</button>' : '<button class="btn ghost" id="dePost">✅ Mark as posted</button>') + (p.id ? '<button class="btn ghost" id="deDel" style="color:#B42318">🗑</button>' : '') + '</div>' +
       (posted ? '<div class="note" style="margin-bottom:12px">✅ Posted ' + esc(fmt(p.postedAt)) + (p.postUrl ? ' · <a href="' + esc(p.postUrl) + '" target="_blank" rel="noopener">View on Instagram</a>' : '') + ' — each business’s timeline in Business directory shows it. <button class="btn link" id="deUnpost" style="font-size:13px">Undo</button></div>' : '') +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>🎯 Cover</b><div class="row" style="gap:12px;align-items:flex-start;margin-top:8px;flex-wrap:wrap"><div data-th="-1" data-open="-1" style="width:150px;cursor:pointer;background:#EEE;border-radius:8px;aspect-ratio:4/5"></div><div style="flex:1;min-width:200px" class="stack">' +
-      '<div><label>Title</label><input id="deL1" value="' + esc(p.l1) + '" placeholder="Nigerian Caterers"><input id="deL2" value="' + esc(p.l2) + '" placeholder="in UK" style="margin-top:6px"></div>' +
+      '<div><label>Title</label><input id="deL1" value="' + esc(p.l1) + '" placeholder="Nigerian Caterers"><input id="deL2" value="' + esc(p.l2) + '" placeholder="in the UK" style="margin-top:6px"></div>' +
       '<div class="row" style="gap:8px;align-items:center"><label style="margin:0">Part</label><input id="dePt" type="number" min="1" max="99" value="' + p.part + '" style="width:80px"><span class="muted" id="dePtR">= Part ' + roman(p.part) + '</span></div>' +
       '<button class="btn ghost sm" data-open="-1">📷 Cover photo &amp; position</button></div></div></div>' +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>🏪 Businesses (' + p.items.length + ')</b><div class="row" style="gap:6px"><button class="btn ghost sm" id="deAuto">✨ Fill to 10</button><button class="btn ghost sm" id="deAdd">＋ Add</button></div></div>' +
