@@ -321,6 +321,19 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dm-search') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return { accounts: await dm.searchPages(body.q) }; }
       return await dm.overview();
     }
+    case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': {
+      // 📣 Business discovery posts (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const disc = require('../discovery');
+      if (body.action === 'disc-img-put') return { id: await disc.putImg(body.dataUrl) };
+      if (body.action === 'disc-img') return { dataUrl: await disc.getImg(body.id) };
+      if (body.action === 'disc-dirpic') return { dataUrl: await disc.dirPic(String(body.slug || '')) };
+      if (body.action === 'disc-save') return { part: await disc.save(body.part || {}), items: await disc.list() };
+      if (body.action === 'disc-del') await disc.remove(String(body.id || ''));
+      if (body.action === 'disc-posted') await disc.posted(String(body.id || ''), body.url, who.email);
+      if (body.action === 'disc-unpost') await disc.unpost(String(body.id || ''));
+      return { items: await disc.list() };
+    }
     case 'iga-all': case 'iga-rules': case 'iga-connect': case 'iga-disconnect': case 'iga-ice': {
       // ⚡ Auto-replies (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
