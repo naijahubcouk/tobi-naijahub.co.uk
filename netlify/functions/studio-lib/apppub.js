@@ -25,24 +25,71 @@ const multi = (s, n) => String(s || '').replace(/\r/g, '').replace(/[\u0000-\u00
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cleanUrl = u => { u = String(u || '').trim(); return /^https?:\/\/[^\s"'<>]{3,500}$/i.test(u) ? u : ''; };
 
-// Plain text → safe HTML. **bold**, "• " / "- " bullet lines, links, blank line = new paragraph,
-// a short line ending in "?" or ":" on its own = a small heading.
+// Plain text → safe HTML (articles, news, updates). Written to work with how Auntie Tobi articles are laid out:
+//  • **bold**, links, blank line = new paragraph
+//  • "• " / "- " bullets; "1. " numbered steps (a step's first sentence is shown in bold)
+//  • headings: a short line ending in "?" or ":", or an emoji + number line like "🛂 1. What Is Earned Settlement?"
+//  • a longer single-sentence line ending in "?" = an FAQ question
+//  • an ALL-CAPS line = a bold subtitle
+//  • table: 2+ lines with "|" between the columns (first line = headings)
+//  • boxes: "Important:", "Please note:", "Note:", "Warning:", "Auntie Tobi reminder:", "Auntie Tobi Tip:", "The key change:", "Key point:"
+//  • "💚 Auntie Tobi Says" … a green box (until "---", the 📌/📤/📲/👇🏾 lines or the end)
+//  • "📌 / 📤 / 📲 / 👇🏾 …" lines = the closing call-to-action; "Last fact-checked…" = small grey note; "---" = a line
+//  • "Label: text" (a label of up to 5 words) = bold label
+const BOXES = [[/^(important|warning)$/i, 'warn'], [/^(please note|note)$/i, 'note'], [/^auntie tobi (reminder|tip)$/i, 'tobi'], [/^(the key change|key change|key point|in short)$/i, 'key']];
+const EMOJI_START = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[#*0-9]️?⃣)/u;
+const CTA = /^(?:📌|📤|📲|👇|🔔|📣|💬)/u;
 function toHtml(text) {
   const link = s => s.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, u => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\//, '')}</a>`);
   const inline = s => link(esc(s)).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const plain = s => s.replace(/\*\*/g, '').trim();
   const out = [];
-  let list = null, ordered = false;
-  const flush = () => { if (list) { const t = ordered ? 'ol' : 'ul'; out.push(`<${t}>${list.map(li => `<li>${inline(li)}</li>`).join('')}</${t}>`); list = null; } };
+  let list = null, ordered = false, start = 1, table = null, says = null, faq = false;
+  const LEADIN = /\b(includes?|including|are|is|was|were|for|between|who|which|that|to|of|as|like|following|these|this|below|here|such as|with|by|from|need|needs|said|says)\s*:$/i;
+  const push = h => (says ? says : out).push(h);
+  const step = li => { const m = /^(?:\*\*)?([^.!?]{3,70}[.!?:])(?:\*\*)?\s+(\S.*)$/.exec(li); return m && !/\*\*/.test(m[1]) ? `<strong>${inline(m[1])}</strong> ${inline(m[2])}` : inline(li); };
+  const flushList = () => { if (list) { push(ordered ? `<ol${start > 1 ? ` start="${start}"` : ''}>${list.map(li => `<li>${step(li)}</li>`).join('')}</ol>` : `<ul>${list.map(li => `<li>${inline(li)}</li>`).join('')}</ul>`); list = null; } };
+  const flushTable = () => {
+    if (!table) return;
+    if (table.length < 2) { table.forEach(l => push(`<p>${inline(l)}</p>`)); table = null; return; }
+    const rows = table.map(l => l.replace(/^\||\|$/g, '').split('|').map(c => c.trim())).filter(r => !r.every(c => /^:?-{2,}:?$/.test(c) || !c));
+    const n = Math.max(...rows.map(r => r.length));
+    const cell = (t, c) => `<${t}>${inline(c || '')}</${t}>`;
+    push(`<div class="at-tbl"><table><thead><tr>${Array.from({ length: n }, (_, i) => cell('th', rows[0][i])).join('')}</tr></thead><tbody>${rows.slice(1).map(r => `<tr>${Array.from({ length: n }, (_, i) => cell('td', r[i])).join('')}</tr>`).join('')}</tbody></table></div>`);
+    table = null;
+  };
+  const flush = () => { flushList(); flushTable(); };
+  const endSays = () => { if (says) { flush(); out.push(`<div class="at-says">${says.join('')}</div>`); says = null; } };
   for (const raw of String(text || '').split('\n')) {
     const line = raw.trim();
-    if (!line) { flush(); continue; }
+    if (!line) { flushTable(); continue; }   // a blank line between numbered steps keeps them in one list
+    if (/\|/.test(line) && !/https?:\/\/\S*\|/.test(line) && line.split('|').filter(c => c.trim()).length >= 2) { flushList(); (table = table || []).push(line); continue; }
+    flushTable();
     const b = /^(?:([•\-*–])|(\d+)[.)])\s+(.*)$/.exec(line);
-    if (b) { const num = !!b[2]; if (list && num !== ordered) flush(); if (!list) ordered = num; (list = list || []).push(b[3]); continue; }
-    flush();
-    if (line.length <= 60 && /[?:]$/.test(line) && !/https?:/.test(line)) out.push(`<h3>${inline(line.replace(/:$/, ''))}</h3>`);
-    else out.push(`<p>${inline(line)}</p>`);
+    if (b && !/^[-–]{3,}$/.test(line)) { const num = !!b[2]; if (list && num !== ordered) flushList(); if (!list) { ordered = num; start = num ? parseInt(b[2], 10) || 1 : 1; } (list = list || []).push(b[3]); continue; }
+    flushList();
+    const t = plain(line);
+    if (/^[-–—_*]{3,}$/.test(t)) { faq = false; if (says) endSays(); else out.push('<hr>'); continue; }
+    if (/^💚\s*Auntie Tobi Says:?$/iu.test(t)) { endSays(); faq = false; says = [`<h3>${inline(t.replace(/:$/, ''))}</h3>`]; continue; }
+    if (CTA.test(t)) { endSays(); out.push(`<p class="at-cta">${inline(line)}</p>`); continue; }
+    if (/^(last (fact-)?checked|last updated|this (article|post|guide) (provides|gives|is) general information)/i.test(t)) { endSays(); out.push(`<p class="at-fact">${inline(line)}</p>`); continue; }
+    if (/^sources?:$/i.test(t)) { endSays(); }
+    const box = /^(?:💚\s*|⚠️\s*|📝\s*)?([A-Za-z][A-Za-z ]{2,24}):\s+(\S.*)$/u.exec(t);
+    const kind = box && (BOXES.find(([re]) => re.test(box[1].trim())) || [])[1];
+    if (kind) { push(`<div class="at-call at-${kind}"><strong>${inline(line.replace(/\*\*/g, '').slice(0, line.replace(/\*\*/g, '').indexOf(':') + 1))}</strong> ${inline(box[2])}</div>`); continue; }
+    const words = t.replace(/[^\p{L}\p{N}\s]/gu, '').trim();
+    if (t.length >= 12 && t.length <= 140 && /\p{L}/u.test(t) && words === words.toUpperCase() && /[A-Z]{3}/.test(words)) { push(`<p class="at-kicker">${inline(t)}</p>`); continue; }
+    const question = t.length <= 140 && /\?$/.test(t) && !/[.!?]\s/.test(t.slice(0, -1)) && !/https?:/.test(t);
+    if (faq && question) { push(`<h4 class="at-q">${inline(t)}</h4>`); continue; }
+    const heading = (t.length <= 110 && EMOJI_START.test(t) && /^\S+\s*\d{1,2}[.)]\s+\S/u.test(t)) || (t.length <= 60 && /[?:]$/.test(t) && !/https?:/.test(t) && !LEADIN.test(t));
+    if (heading) { faq = /question|faq/i.test(t); push(`<h3>${inline(t.replace(/:$/, ''))}</h3>`); continue; }
+    if (question) { push(`<h4 class="at-q">${inline(t)}</h4>`); continue; }
+    if (/:$/.test(t) && t.length <= 160) { push(`<p class="at-lead">${inline(line)}</p>`); continue; }
+    const lab = /^([A-Z][\p{L}'’ -]{1,40}):\s+(\S.*)$/u.exec(t);
+    if (lab && lab[1].trim().split(/\s+/).length <= 5 && !/https?$/i.test(lab[1])) { push(`<p><strong>${inline(lab[1])}:</strong> ${inline(lab[2])}</p>`); continue; }
+    push(`<p>${inline(line)}</p>`);
   }
-  flush();
+  flush(); endSays();
   return out.join('');
 }
 
@@ -63,7 +110,7 @@ function clean(raw, prev) {
     kind,
     title: has('title') ? cleanText(raw.title, 160) : (p.title || ''),
     emoji: has('emoji') ? cleanText(raw.emoji, 8) : (p.emoji || ''),
-    body: has('body') ? multi(raw.body, 12000) : (p.body || ''),
+    body: has('body') ? multi(raw.body, 20000) : (p.body || ''),
     summary: has('summary') ? cleanText(raw.summary, 400) : (p.summary || ''),
     category: has('category') ? (CATEGORIES.includes(raw.category) ? raw.category : 'News') : (p.category || 'News'),
     link: has('link') ? cleanUrl(raw.link) : (p.link || ''),

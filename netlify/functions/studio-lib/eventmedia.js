@@ -202,6 +202,15 @@ async function makePicture(info) {
   const article = info.kind === 'article' || info.kind === 'news';
   const bg = info.kind === 'carousel';
   const scene = article || bg ? await sceneIdea(title, about) : '';
+  // 📰 Blog header photo: wide, people/things that tell the story on the left, calm space on the right where HQ adds the headline
+  if (info.style === 'blog') {
+    return generateImage(`Create a bright, realistic, high-quality WIDE (16:9) blog header photo for an article titled: "${title}"${about ? `\nWhat the article is about: ${about}` : ''}
+Scene: ${scene}
+Choose the people or objects that best tell THIS story — men, women, children, a family, an older person, or simply the key objects (e.g. a passport and suitcase, a piggy bank, a school bag) — whatever fits the title. People should look like Black British / Nigerian people living in the UK, natural, warm and respectful, never celebrities.
+COMPOSITION (very important): the main subject sits in the LEFT 40% of the frame. The RIGHT 60% is a softer, less busy background that fits the topic — a recognisable UK setting where it suits (e.g. Big Ben and the Thames, a British high street, a red-brick school, a hospital entrance, a UK home), with clear bright sky in the upper right, because a large headline will be placed over the right side.
+Look: sunny daylight, vivid but natural colours, sharp focus on the subject, shallow depth of field, magazine quality.
+Do NOT include any words, letters, numbers, signs, logos, watermarks, QR codes or documents with readable text.`, '16:9');
+  }
   const prompt = bg ?
 `Create a portrait (4:5) background photo for the cover of an Instagram carousel about: "${title}".
 Scene: ${scene}

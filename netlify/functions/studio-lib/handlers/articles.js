@@ -121,6 +121,29 @@ a{color:inherit}
 .body li{margin-bottom:8px;font-size:18.5px;line-height:1.65}
 .body strong{color:var(--navy)}
 .body a{color:var(--green);font-weight:700;word-break:break-word}
+.body .at-kicker{font-weight:800;color:#0F1E36;background:#FFF4D6;border-left:5px solid #E0A100;border-radius:10px;padding:12px 14px;line-height:1.45;font-size:18.0px}
+.body .at-call{border-radius:12px;padding:12px 14px;margin:14px 0 18px;border-left:5px solid;line-height:1.6;font-size:17.5px}
+.body .at-warn{background:#FFF4D6;border-color:#E0A100}
+.body .at-note{background:#EEF2F7;border-color:#64748B}
+.body .at-tobi{background:#E8F5EE;border-color:#057A44}
+.body .at-key{background:#FDE8E1;border-color:#C2410C}
+.body .at-lead{font-weight:700;color:#0F1E36}
+.body .at-tbl{overflow-x:auto;margin:12px 0 18px;border:1px solid #E5E0D2;border-radius:12px}
+.body .at-tbl table{width:100%;border-collapse:collapse;font-size:16.5px;line-height:1.5}
+.body .at-tbl th{background:#0F1E36;color:#fff;text-align:left;padding:10px 12px;font-weight:700}
+.body .at-tbl td{padding:10px 12px;border-top:1px solid #EFEAE0;vertical-align:top}
+.body .at-tbl tr:nth-child(even) td{background:#FAF8F3}
+.body .at-tbl td:first-child{font-weight:700;color:#057A44;white-space:nowrap}
+.body ol{padding-left:22px}
+.body ol li::marker{font-weight:800;color:#057A44}
+.body h4.at-q{font-size:18.5px;font-weight:800;color:#0F1E36;margin:18px 0 4px;line-height:1.4}
+.body h4.at-q::before{content:"Q. ";color:#057A44}
+.body .at-says{background:#E8F5EE;border:1px solid #CFEBDB;border-radius:16px;padding:6px 16px 4px;margin:20px 0}
+.body .at-says h3{color:#057A44;margin-top:12px}
+.body .at-cta{background:#F6F4EE;border-radius:12px;padding:10px 14px;margin:8px 0;font-weight:600;font-size:17.5px}
+.body .at-fact{font-size:15.0px;color:#6B7280;border-top:1px solid #E5E0D2;padding-top:12px;margin-top:20px;font-style:italic}
+.body hr{border:0;border-top:1px dashed #D8D2C2;margin:22px 0}
+.body ol li{font-size:18.5px;line-height:1.65;margin-bottom:10px}
 .more-link{margin:6px 0 26px}
 .more-link a{display:inline-flex;text-decoration:none;font-weight:800;border-radius:12px;padding:12px 18px;background:var(--green);color:#fff}
 .more{max-width:1160px;margin:20px auto 0;padding:0 20px}

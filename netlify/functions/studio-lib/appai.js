@@ -26,8 +26,8 @@ function cleanLinksIn(text) { return String(text || '').replace(/https?:\/\/[^\s
 
 const STYLE = {
   update: 'a short, urgent community update (about 80–150 words): what is happening, who it affects, what to do.',
-  news: 'a news post (about 350–550 words) in simple English: what happened or is changing, when, who it affects, what it means for Nigerians in the UK, and what to do now.',
-  article: 'a detailed, helpful guide article (about 700–1,000 words) in simple English, following the ARTICLE LAYOUT.',
+  news: 'a news explainer (about 700–1,100 words) in simple English, following the ARTICLE LAYOUT (6–8 numbered sections): what happened or is changing, when, who it affects, what it means for Nigerians in the UK, and what to do now.',
+  article: 'a detailed, helpful guide article (about 1,000–1,500 words) in simple English, following the ARTICLE LAYOUT.',
   event: 'an event write-up (about 120–250 words): what it is, what is on, who it is for and how to book.',
 };
 const LONG = { article: true, news: true };
@@ -41,21 +41,39 @@ const VOICE = `VOICE — this is Auntie Tobi talking:
 - Warm and caring, like a trusted auntie who has been in the UK for years. Speak to the reader as "you". A light touch of Naija warmth now and then ("My dear,", "Don't worry —", "No wahala,") — at most two or three in the whole piece. Never slang-heavy, never preachy.
 - Be practical: tell people exactly what to do, where to go and what to have ready.`;
 
-const ARTICLE_LAYOUT = `ARTICLE LAYOUT (use these short headings, each on its own line ending with ":" or "?"):
-1. A warm opening of 2–3 sentences saying why this matters.
-2. "In short:" — 3 bullet points with the most important things to know.
-3. "What is it?" — explain it simply.
-4. "Who is it for?" — who it applies to (and who it doesn't).
-5. "Step by step:" — numbered lines "1. ", "2. "… with clear actions.
-6. "How much and how long?" — ONLY with confirmed figures (see FACTS). If none are confirmed, say they can change and point to the official page instead — or leave this section out.
-7. "Mistakes to avoid:" — 3–4 bullets.
-8. "Questions people ask:" — 3–4 short questions, each as its own line ending with "?", each followed by a short answer paragraph.
-9. an OPTIONAL line "💚 **Auntie Tobi Tip:** …" — ONE short sentence (max 25 words) with a practical tip directly about this topic that the reader has not already been told. If you do not have a genuinely useful, specific tip, leave the tip out completely — never add a generic one.
-10. A short line encouraging people to share it with someone it would help.
-11. "Sources:" — bullet lines "• <site name> — <full URL>" for the official pages you used (only real URLs from the notes or official results).`;
+// Long posts (articles + news) follow the Auntie Tobi explainer style — calm, clear, answer-first.
+const VOICE_LONG = `VOICE — this is Auntie Tobi explaining something clearly:
+- Simple, plain English. Short sentences (mostly under 20 words). Short paragraphs — usually ONE or two sentences each.
+- Calm, balanced and reassuring. Correct scary headlines and myths without being dramatic. Never hype, never preachy.
+- Explain every UK term the first time, e.g. "Indefinite Leave to Remain (ILR)", "HMRC (the UK tax office)".
+- Answer first, then explain: if a section asks a question, its first line is the direct answer ("No.", "Yes — but only if…", "Not necessarily.").
+- Be precise: say who it applies to and who it doesn't. Separate what has been ANNOUNCED or proposed from what is actually IN FORCE now, and say "As of <date>" for anything that could change.
+- Speak to the reader as "you". At most one light touch of Naija warmth in the whole piece (in "Auntie Tobi Says"). No slang.`;
+
+const ARTICLE_LAYOUT = `ARTICLE LAYOUT — follow this shape (it is how every Auntie Tobi article reads):
+1. FIRST LINE: a hook in CAPITALS that names the reader's real question, starting with one flag/emoji — e.g. "🇬🇧 UK ILR UPDATE: WILL YOU STILL QUALIFY FOR SETTLEMENT AFTER FIVE YEARS?"
+2. Opening (4–6 very short paragraphs): who this matters to ("If you're a Nigerian living in the UK, especially…"); what happened and when; what it changes in one sentence; then calm the worry ("But before you start worrying about…, there's something important to understand."); end with "Here's what … and what it could mean for Nigerians in the UK."
+3. 6–10 numbered sections. Each heading is its own line: ONE fitting emoji, the number, a full stop, then a Title Case heading — usually the question the reader is asking. e.g. "⏳ 2. Will Everyone Have to Wait Ten Years?". Sections cover, as relevant: what it is; who it affects / does it affect everyone; the groups most relevant to Nigerians in the UK (care workers, nurses, students, families, renters, drivers…); requirements or costs; what doesn't change; when it starts; what to do now; FAQ.
+4. Inside sections use, where they help:
+   • a lead-in line ending with ":" then "• " bullets
+   • a comparison TABLE when there are options, groups, amounts or timelines: one line per row, columns separated by " | ", first line = column headings, e.g. "Settlement period | Who may qualify" then "5 years | People earning above £…"
+   • "Label: explanation" lines for lists of requirements or definitions (e.g. "English language: …")
+   • ONE short box line where it matters, starting with exactly one of: "The key change: …", "Important: …", "Please note: …"
+   • a balancing "Auntie Tobi reminder: …" line, e.g. "Don't assume X. Equally, don't assume Y."
+5. A "What Should Nigerians in the UK Do Now?" section (with its emoji and number) — numbered steps "1. ", "2. "…; each step starts with a short action sentence ending in a full stop (e.g. "1. Keep your employment records. Payslips, contracts…").
+6. A "❓ <n>. Frequently Asked Questions" section — 4–5 questions, each its own line ending with "?", each followed by a short answer that starts "Yes.", "No.", "Some can…" or "Not necessarily."
+7. A line "---", then "💚 Auntie Tobi Says" on its own line, then 4–5 warm, short paragraphs: acknowledge the feeling, correct the misleading headline, give the balanced picture, end with encouragement.
+8. Then these closing lines, each on its own line:
+   "📌 SAVE this guide for future reference."
+   "📤 SHARE it with a Nigerian living in the UK." (adjust to the topic, e.g. "…working in social care")
+   "📲 For more <topic> updates, practical guides and community information, visit the Auntie Tobi App and check our Instagram Stories regularly."
+   "👇🏾 <a question inviting comments about the reader's own situation>"
+9. "Last fact-checked: <today's date, e.g. 4 November 2026>. This article provides general information, not personalised <legal/immigration/financial/medical> advice. Rules may change after publication." (fit the advice type to the topic)
+10. "Sources:" — bullet lines "• <site name> — <full URL>" for the official pages you used (only real URLs from the notes or official results).`;
 
 function prompt(notes, kind, category, today, facts, rewrite) {
   const long = LONG[kind];
+  const longDay = new Date(today + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' });
   const factRules = long
     ? `FACTS (very important)
 - Use facts from: the NOTES, the OFFICIAL WEB RESULTS attached to this message (GOV.UK, NHS, Citizens Advice, MoneyHelper) and the TRUSTED FACTS below. Use those to add helpful detail.
@@ -67,18 +85,16 @@ function prompt(notes, kind, category, today, facts, rewrite) {
     { role: 'system', content:
 `You write posts for the Auntie Tobi app — a warm, trusted UK guide for Nigerians living in the UK. Write as "Auntie Tobi", in British English. Never mention any person behind Auntie Tobi.
 
-${VOICE}
+${long ? VOICE_LONG : VOICE}
 
 ${factRules}
 - Ignore working notes such as "Priority:", "Content angle:", "Caption idea:", hashtags or instructions to the writer.
 - Today is ${today}. Dates without a year are the next upcoming date.
 ${facts ? `\nTRUSTED FACTS (checked by the Auntie Tobi team — correct, and they override anything you remember):\n${facts}\n` : ''}
-BODY FORMAT (plain text, not markdown headings):
-- Short paragraphs (1–3 sentences) separated by a blank line.
-- A short heading is its own line ending with "?" or ":" (max 60 characters).
-- Bullet lines start with "• ". Numbered steps start with "1. ", "2. ". Use **bold** sparingly for key facts.
-- One or two relevant emojis at most per section.
-${kind === 'article' ? ARTICLE_LAYOUT : `- Near the end, an OPTIONAL line "💚 **Auntie Tobi Tip:** …" — ONE short sentence (max 25 words) with a practical tip directly about this topic that the reader has not already been told. If you do not have a genuinely useful, specific tip, leave the tip out completely — never add a generic one. Then a short line encouraging people to share it with someone it would help.${long ? '\n- Then "Sources:" with bullet lines "• <site name> — <full URL>" for any official pages you used.' : ''}`}
+BODY FORMAT (plain text — no markdown "#" headings, no "**" around headings):
+- Short paragraphs separated by a blank line.
+${long ? '- Headings exactly as in the ARTICLE LAYOUT. Bullet lines start with "• ". Numbered steps start with "1. ". Tables use " | " between columns. Use **bold** only for a few key facts inside sentences.' : '- A short heading is its own line ending with "?" or ":" (max 60 characters).\n- Bullet lines start with "• ". Numbered steps start with "1. ", "2. ". Use **bold** sparingly for key facts.\n- One or two relevant emojis at most per section.'}
+${long ? ARTICLE_LAYOUT.replace('<today\'s date, e.g. 4 November 2026>', longDay) : `- Near the end, an OPTIONAL line "💚 **Auntie Tobi Tip:** …" — ONE short sentence (max 25 words) with a practical tip directly about this topic that the reader has not already been told. If you do not have a genuinely useful, specific tip, leave the tip out completely — never add a generic one. Then a short line encouraging people to share it with someone it would help.${long ? '\n- Then "Sources:" with bullet lines "• <site name> — <full URL>" for any official pages you used.' : ''}`}
 - For events, do NOT repeat date/time/place lines at the top — the app shows them separately.
 
 Return ONLY a JSON object with these keys:
@@ -107,7 +123,7 @@ async function write(notes, kind, category, opts) {
   const today = core.dayKey();
   const factsRec = await core.getJson('app/facts').catch(() => null);
   const msgs = prompt(notes, kind, category, today, (factsRec && factsRec.text) || '', !!opts.rewrite);
-  const maxTok = LONG[kind] ? (kind === 'article' ? 3600 : 2000) : 1400;
+  const maxTok = LONG[kind] ? (kind === 'article' ? 6000 : 4500) : 1400;
   let out;
   if (LONG[kind]) {
     // live check of official UK sites first; if the search is down, write without it (the no-guessing rules still apply)
@@ -130,7 +146,7 @@ async function write(notes, kind, category, opts) {
     kind: kind === 'news' ? 'article' : kind,
     title: core.cleanText(j.title, 160),
     summary: core.cleanText(j.summary, 400),
-    body: body.slice(0, 12000),
+    body: body.slice(0, 20000),
     category: kind === 'news' ? 'News' : (category || (apppub.CATEGORIES.includes(j.category) ? j.category : 'News')),
     link: cleanLink(j.link),
     eventDate: kind === 'event' && isDay(j.eventDate) ? j.eventDate : '',

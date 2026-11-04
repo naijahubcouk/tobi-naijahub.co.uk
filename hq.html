@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/hq-icon-16.png?v=1">
 <link rel="icon" type="image/png" sizes="48x48" href="/icons/hq-icon-48.png?v=1">
 <link rel="apple-touch-icon" href="/icons/hq-icon-180.png?v=1">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@600;700;800&family=Inter+Tight:wght@900&family=Inter:wght@500;700&family=Anton&family=Playfair+Display:ital,wght@0,900;1,900&family=Archivo+Black&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&family=Poppins:ital,wght@0,600;0,700;0,800;0,900;1,900&family=Inter+Tight:wght@900&family=Inter:wght@500;700&family=Anton&family=Playfair+Display:ital,wght@0,900;1,900&family=Archivo+Black&family=Caveat:wght@700&display=swap" rel="stylesheet">
 <style>
 :root{--green:#057A44;--green-d:#04613A;--green-l:#E3F2EA;--gold:#FFB81C;--gold-l:#FFF1CF;--navy:#0F1E36;--navy-2:#1C2E4D;--navy-3:#2A3D60;--cream:#FBF6EC;--line:#EADFC8;--muted:#5B6475;--danger:#B3261E;--danger-l:#FCE8E6;--font:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--display:'Fraunces',Georgia,serif;--side:260px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1736,6 +1736,86 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     return (await api('app-ai', { notes: a.notes, kind: a.kind, category: a.category, rewrite: !!a.rewrite })).draft;
   }
   // Shrinks a File or data URL to a JPEG (max 1600px, under ~1.5MB).
+  // 📰 Blog header image: the AI photo + the headline in red / yellow / green brush-stroke bands (drawn here, so it's always spelled right)
+  function blogLines(title) {
+    var t = String(title || '').replace(/^[^\p{L}\p{N}]+/u, '').replace(/\s+/g, ' ').trim(), head = t, tail = '';
+    var c = t.indexOf(':'); if (c > 4 && c < t.length - 4) { head = t.slice(0, c + 1); tail = t.slice(c + 1).trim(); }
+    var w = head.split(' ');
+    if (!tail) { // no colon: about a quarter / half / quarter of the words
+      if (w.length < 4) return ['', head, ''];
+      var a = Math.max(1, Math.round(w.length * 0.25)), b = Math.max(a + 1, Math.round(w.length * 0.75));
+      return [w.slice(0, a).join(' '), w.slice(a, b).join(' '), w.slice(b).join(' ')];
+    }
+    if (w.length < 4) return ['', head, tail];
+    var n = 1, len = 0; while (n < w.length - 2 && len + w[n - 1].length < 12) { len += w[n - 1].length + 1; n++; }
+    return [w.slice(0, n).join(' '), w.slice(n).join(' '), tail];
+  }
+  var BLOG_FONT = 'Poppins, "Arial Black", Arial, sans-serif';
+  function blogArt(photo, lines) {
+    return new Promise(function (ok, bad) {
+      var im = new Image();
+      im.onload = function () {
+        var go = function () {
+          var W = 1600, H = 838, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+          var x = cv.getContext('2d');
+          var k = Math.max(W / im.naturalWidth, H / im.naturalHeight), dw = im.naturalWidth * k, dh = im.naturalHeight * k;
+          x.drawImage(im, (W - dw) / 2, (H - dh) / 2, dw, dh);
+          var seed = 7; String(lines.join('|')).split('').forEach(function (ch) { seed = (seed * 31 + ch.charCodeAt(0)) % 2147483647; });
+          var rnd = function () { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+          var L = lines.map(function (s) { return String(s || '').trim(); });
+          var left = W * 0.40, right = W * 0.975, maxW = right - left - 70, cx = (left + right) / 2;
+          var fit = function (txt, font, start, min) { var sz = start; x.font = font.replace('{s}', sz); while (sz > min && x.measureText(txt).width > maxW) { sz -= 2; x.font = font.replace('{s}', sz); } return sz; };
+          // middle line: biggest; wraps onto two lines if it's long
+          var F2 = '900 {s}px ' + BLOG_FONT, F13 = 'italic 900 {s}px ' + BLOG_FONT;
+          var mid = L[1] ? [L[1]] : [], s2 = mid.length ? fit(mid[0], F2, 104, 40) : 0;
+          if (mid.length && s2 < 74) { var ww = L[1].split(' '), best = 1, bd = 1e9; for (var i = 1; i < ww.length; i++) { x.font = F2.replace('{s}', 80); var d = Math.abs(x.measureText(ww.slice(0, i).join(' ')).width - x.measureText(ww.slice(i).join(' ')).width); if (d < bd) { bd = d; best = i; } } mid = ww.length > 1 ? [ww.slice(0, best).join(' '), ww.slice(best).join(' ')] : mid; s2 = Math.min.apply(null, mid.map(function (m) { return fit(m, F2, 100, 34); })); }
+          var s1 = L[0] ? fit(L[0], F13, Math.round(Math.max(s2, 70) * 0.78), 30) : 0, s3 = L[2] ? fit(L[2], F13, Math.round(Math.max(s2, 70) * 0.6), 26) : 0;
+          var rows = []; if (L[0]) rows.push({ t: L[0], s: s1, f: F13, bg: '#C8102E', fg: '#fff', rot: -2.2, pad: 34 });
+          mid.forEach(function (m, i) { rows.push({ t: m, s: s2, f: F2, bg: '#FFD43B', fg: '#0B2E1C', rot: i ? 0.6 : -0.8, pad: 30, join: i > 0 }); });
+          if (L[2]) rows.push({ t: L[2], s: s3, f: F13, bg: '#0B4D2C', fg: '#fff', rot: -1.4, pad: 40 });
+          var total = rows.reduce(function (a, r) { return a + r.s * (r.join ? 1.08 : 1.45); }, 0), y = Math.max(40, H * 0.43 - total / 2);
+          var brush = function (bx, by, bw, bh, col) { // a rough painted band
+            x.fillStyle = col; x.beginPath(); var j = bh * 0.12;
+            x.moveTo(bx + rnd() * j * 2, by + rnd() * j);
+            for (var t = 1; t <= 10; t++) x.lineTo(bx + bw * t / 10, by + (rnd() - 0.5) * j);
+            for (t = 0; t <= 6; t++) x.lineTo(bx + bw + (rnd() - 0.3) * bh * 0.35, by + bh * t / 6);
+            for (t = 10; t >= 0; t--) x.lineTo(bx + bw * t / 10, by + bh + (rnd() - 0.5) * j);
+            for (t = 6; t >= 0; t--) x.lineTo(bx - (rnd() - 0.3) * bh * 0.35, by + bh * t / 6);
+            x.closePath(); x.fill();
+            x.globalAlpha = 0.18; for (t = 0; t < 5; t++) { x.fillRect(bx - bh * 0.25 - rnd() * bh * 0.3, by + bh * (0.15 + rnd() * 0.7), bh * 0.3 + rnd() * bh * 0.3, 3 + rnd() * 5); x.fillRect(bx + bw + rnd() * bh * 0.2, by + bh * (0.15 + rnd() * 0.7), bh * 0.25 + rnd() * bh * 0.35, 3 + rnd() * 5); } x.globalAlpha = 1;
+          };
+          rows.forEach(function (r, i) {
+            x.font = r.f.replace('{s}', r.s); var tw = x.measureText(r.t).width, bh = r.s * (r.join ? 1.08 : 1.3), bw = tw + r.pad * 2, by = y + (r.join ? 0 : r.s * 0.08);
+            x.save(); x.translate(cx, by + bh / 2); x.rotate(r.rot * Math.PI / 180);
+            x.shadowColor = 'rgba(0,0,0,.28)'; x.shadowBlur = 18; x.shadowOffsetY = 6; brush(-bw / 2, -bh / 2, bw, bh, r.bg); x.shadowColor = 'transparent';
+            x.fillStyle = r.fg; x.textAlign = 'center'; x.textBaseline = 'middle';
+            if (r.fg === '#fff') { x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 6; x.shadowOffsetY = 3; }
+            x.fillText(r.t, 0, r.s * 0.04); x.restore();
+            y += bh + (rows[i + 1] && rows[i + 1].join ? -r.s * 0.12 : r.s * 0.2);
+          });
+          // green and gold sweep along the bottom right
+          x.beginPath(); x.moveTo(W * 0.43, H); x.quadraticCurveTo(W * 0.72, H - 120, W, H - 96); x.lineTo(W, H); x.closePath(); x.fillStyle = '#E9B525'; x.fill();
+          x.beginPath(); x.moveTo(W * 0.46, H); x.quadraticCurveTo(W * 0.73, H - 104, W, H - 80); x.lineTo(W, H); x.closePath(); x.fillStyle = '#0B4D2C'; x.fill();
+          ok(cv.toDataURL('image/jpeg', 0.9));
+        };
+        try { document.fonts.load('italic 900 60px Poppins').then(function () { return document.fonts.load('900 60px Poppins'); }).then(go, go); } catch (e) { go(); }
+      };
+      im.onerror = function () { bad(new Error('Couldn’t read the photo')); };
+      im.src = photo;
+    });
+  }
+  function blogHeadSheet(photo, lines, done) {
+    var s = sheet('<h2>✏️ Headline on the image</h2><p class="muted" style="margin:4px 0 10px;font-size:13.5px">Three lines: <b style="color:#C8102E">red</b>, <b style="color:#9A7B00">yellow</b> (biggest) and <b style="color:#0B4D2C">green</b>. Leave a line empty to drop it.</p>' +
+      '<input id="bh1" value="' + esc(lines[0]) + '" placeholder="Red line (short)"><input id="bh2" value="' + esc(lines[1]) + '" placeholder="Yellow line (main)" style="margin-top:6px"><input id="bh3" value="' + esc(lines[2]) + '" placeholder="Green line" style="margin-top:6px">' +
+      '<div style="margin-top:10px;border-radius:10px;overflow:hidden;background:#EEF0F3"><img id="bhPv" alt="Preview" style="display:block;width:100%"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="bhX">Cancel</button><button class="btn primary" id="bhOk">Use this</button></div>');
+    var cur = lines.slice(), last = '', tmr;
+    var draw = function () { cur = [$('#bh1', s).value, $('#bh2', s).value, $('#bh3', s).value]; blogArt(photo, cur).then(function (d) { last = d; $('#bhPv', s).src = d; }); };
+    ['#bh1', '#bh2', '#bh3'].forEach(function (id) { $(id, s).oninput = function () { clearTimeout(tmr); tmr = setTimeout(draw, 250); }; });
+    draw();
+    $('#bhX', s).onclick = function () { s.remove(); };
+    $('#bhOk', s).onclick = function () { if (!last) return; s.remove(); done(last, cur); };
+  }
   function imgShrink(src) {
     return new Promise(function (ok, bad) {
       var img = new Image(), url = typeof src === 'string' ? src : URL.createObjectURL(src);
@@ -1828,10 +1908,10 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div data-for="article"><label for="aeC">Category</label><select id="aeC">' + cats.map(function (c) { return '<option' + (c === p.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
       '<div data-for="event" class="f2"><div><label for="aeD">Event date</label><input type="date" id="aeD" value="' + esc(p.eventDate || '') + '"></div><div><label for="aeTm">Time</label><input id="aeTm" placeholder="6pm – 11pm" value="' + esc(p.eventTime || '') + '"></div></div>' +
       '<div data-for="event article"><label><span data-for="event">Event image</span><span data-for="article">Image <span class="muted" style="font-weight:400">(shows at the top of the post and in the News list)</span></span></label><div class="aeimg"><div class="aepic" id="aePic"></div><div class="aeibtn"><div class="muted" id="aeImgNote" style="font-size:13px"></div>' +
-      '<button class="btn primary sm hidden" id="aeImgOk">👍 Use this image</button><button class="btn ghost sm" id="aeImgMake">✨ Create an image</button>' +
+      '<button class="btn primary sm hidden" id="aeImgOk">👍 Use this image</button><button class="btn ghost sm" id="aeImgMake">✨ Create an image</button><button class="btn ghost sm hidden" id="aeImgHead">✏️ Edit headline</button>' +
       '<label class="btn ghost sm" style="margin:0">📷 Upload image<input type="file" id="aeImgFile" accept="image/jpeg,image/png,image/webp" hidden></label><button class="btn ghost sm hidden" id="aeImgNone">✖ No image</button></div></div></div>' +
       '<div data-for="event"><label for="aeL">Place</label><input id="aeL" placeholder="Venue, City" value="' + esc(p.location || '') + '"></div>' +
-      '<div><label for="aeB"><span data-for="update article">Message</span><span data-for="event">About the event</span> <span class="muted" style="font-weight:400">— **bold**, start a line with • for bullets, a short line ending in ? or : becomes a heading</span></label><textarea id="aeB" rows="11">' + esc(p.body || '') + '</textarea></div>' +
+      '<div><label for="aeB"><span data-for="update article">Message</span><span data-for="event">About the event</span> <span class="muted" style="font-weight:400">— **bold**, • bullets, 1. steps, a short line ending in ? or : = heading, “Important:” / “Auntie Tobi reminder:” = box, columns with | = table, “💚 Auntie Tobi Says” = green box</span></label><textarea id="aeB" rows="11">' + esc(p.body || '') + '</textarea></div>' +
       '<div data-for="article"><label for="aeS">Short summary <span class="muted" style="font-weight:400">(shown in the list — leave blank to use the start of the message)</span></label><input id="aeS" maxlength="400" value="' + esc(p.summary || '') + '"></div>' +
       '<div class="f2"><div><label for="aeLk"><span data-for="update article">Link</span><span data-for="event">Tickets / booking link</span> <span class="muted" style="font-weight:400">(optional)</span></label><input id="aeLk" placeholder="https://" value="' + esc(p.link || '') + '"></div>' +
       '<div data-for="update"><label for="aeU">Show until</label><input type="date" id="aeU" value="' + esc(p.showUntil || '') + '"></div></div>' +
@@ -1852,6 +1932,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       $('#aeImgOk', s).classList.toggle('hidden', img.from !== 'ai');
       $('#aeImgMake', s).textContent = img.from === 'ai' || img.from === 'link' ? '🔄 ' + (img.from === 'ai' ? 'Make another one' : 'Create one instead') : '✨ Create an image';
       $('#aeImgNone', s).classList.toggle('hidden', !src);
+      $('#aeImgHead', s).classList.toggle('hidden', !img.photo);
       if (!painting) paint();
     }
     var painting = false;
@@ -1859,7 +1940,10 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       var v = vals(), b = $('#aeImgMake', s);
       if (!v.title) { toast('Add the title first'); return; }
       b.disabled = true; b.textContent = '🎨 Creating… (about 20 seconds)'; $('#aePic', s).innerHTML = '<span class="muted" style="font-size:12px">Creating…</span>';
-      try { var r = await api('app-picture', { kind: v.kind, title: v.title, eventDate: v.kind === 'event' ? v.eventDate : '', location: v.kind === 'event' ? v.location : '', body: v.body.slice(0, 400) }); img = { id: '', data: await imgShrink(r.image), from: 'ai' }; }
+      try {
+        if (v.kind === 'article') { var r = await api('app-picture', { kind: 'article', style: 'blog', title: v.title, body: (v.summary || v.body).slice(0, 400) }); var lines = blogLines(v.title); img = { id: '', data: await blogArt(r.image, lines), from: 'ai', photo: r.image, lines: lines }; }
+        else { var r = await api('app-picture', { kind: v.kind, title: v.title, eventDate: v.kind === 'event' ? v.eventDate : '', location: v.kind === 'event' ? v.location : '', body: v.body.slice(0, 400) }); img = { id: '', data: await imgShrink(r.image), from: 'ai' }; }
+      }
       catch (x) { toast(x.message); }
       b.disabled = false; paintImg();
     }
@@ -1883,6 +1967,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('input,textarea,select', s).forEach(function (el) { el.addEventListener('input', paint); el.addEventListener('change', paint); });
     paintImg();
     $('#aeImgMake', s).onclick = makeImg;
+    $('#aeImgHead', s).onclick = function () { if (!img.photo) return; blogHeadSheet(img.photo, img.lines || blogLines(vals().title), function (d, l) { img.data = d; img.lines = l; paintImg(); }); };
     $('#aeImgOk', s).onclick = function () { img.from = 'own'; paintImg(); $('#aeImgNote', s).textContent = 'Great — this image will be used.'; };
     $('#aeImgNone', s).onclick = function () { img = { id: '', data: '', from: '' }; paintImg(); };
     $('#aeImgFile', s).onchange = async function () { var f = this.files && this.files[0]; if (!f) return; try { img = { id: '', data: await imgShrink(f), from: 'own' }; paintImg(); } catch (x) { toast(x.message); } this.value = ''; };
