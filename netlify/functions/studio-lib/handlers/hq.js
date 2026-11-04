@@ -306,6 +306,31 @@ exports.handler = handler(async (ctx) => {
       }
       return { items: await bizdir.all(), info: await bizdir.info() };
     }
+    case 'dm-today': case 'dm-all': case 'dm-add': case 'dm-act': case 'dm-pages': case 'dm-tpl': case 'dm-ideas': case 'dm-search': case 'dm-shots': case 'dm-detail': {
+      // 📨 DM Outreach — cold DMs sent by hand from your marketing pages, tracked here (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const dm = require('../igdm');
+      if (body.action === 'dm-today') return await dm.today();
+      if (body.action === 'dm-detail') return { rec: await dm.detail(body.u) };
+      if (body.action === 'dm-add') return Object.assign(await dm.add(body.usernames, body.source), await dm.overview());
+      if (body.action === 'dm-shots') { await core.rateLimit('hq-igu', who.email, 60, 3600000, 'That’s a lot of screenshots — try again in an hour.'); return { usernames: await require('../igusers').fromImages(body.images) }; }
+      if (body.action === 'dm-act') { const r = await dm.act(body.u, String(body.what || ''), { page: body.page, pageName: body.pageName, ver: body.ver, notes: body.notes }); return { rec: r }; }
+      if (body.action === 'dm-pages') { await dm.savePages(body.pages); await core.audit(who.email, 'hq_dm_pages', {}); }
+      if (body.action === 'dm-tpl') { await dm.saveTpl(body.tpl || {}); await core.audit(who.email, 'hq_dm_tpl', {}); }
+      if (body.action === 'dm-ideas') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return await dm.ideas(body.city, body.interest); }
+      if (body.action === 'dm-search') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return { accounts: await dm.searchPages(body.q) }; }
+      return await dm.overview();
+    }
+    case 'iga-all': case 'iga-rules': case 'iga-connect': case 'iga-disconnect': case 'iga-ice': {
+      // ⚡ Auto-replies (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const ig = require('../igauto');
+      if (body.action === 'iga-connect') { const ts = String(Date.now()); return { url: ig.connectUrl(ts + '.' + core.hmac('igconnect:' + ts).slice(0, 32)) }; }
+      if (body.action === 'iga-disconnect') { await ig.disconnect(String(body.id || '')); await core.audit(who.email, 'hq_iga_disconnect', { id: body.id }); }
+      if (body.action === 'iga-rules') { await ig.saveRules(body.rules || {}); await core.audit(who.email, 'hq_iga_rules', {}); }
+      if (body.action === 'iga-ice') { await ig.saveRules(Object.assign(await ig.rules(), { ice: body.ice || [] })); return Object.assign(await ig.overview(), { iceResult: await ig.applyIce() }); }
+      return await ig.overview();
+    }
     case 'igu-status': case 'igu-text': case 'igu-img': case 'igu-post': {
       // 👥 Instagram usernames from a post's comments (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
