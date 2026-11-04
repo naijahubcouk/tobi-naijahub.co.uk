@@ -101,7 +101,7 @@
     ctx.restore();
   }
   function fit(ctx, txt, weight, start, maxW) { var s = start; ctx.font = weight + ' ' + s + 'px ' + FT; while (s > 24 && ctx.measureText(txt).width > maxW) { s -= 2; ctx.font = weight + ' ' + s + 'px ' + FT; } return s; }
-  // cover: one capitals headline "NIGERIAN BAKERS IN THE UK - PART I" in a wide white box with a green border, gold brush below it
+  // cover: one capitals headline "NIGERIAN BAKERS IN THE UK - PART I" in a wide white box with a green border
   function wrap(ctx, words, maxW) { var out = [], line = ''; words.forEach(function (w) { var t = line ? line + ' ' + w : w; if (line && ctx.measureText(t).width > maxW) { out.push(line); line = w; } else line = t; }); if (line) out.push(line); return out; }
   function drawCover(ctx, p, im) {
     drawPhoto(ctx, im, p.coverPos);
@@ -113,7 +113,6 @@
     ctx.lineWidth = 6; ctx.strokeStyle = GREEN; ctx.strokeRect(bx + 3, by + 3, bw - 6, bh - 6);
     ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '700 ' + s + 'px ' + FT;
     lines.forEach(function (l, i) { ctx.fillText(l, W / 2, by + 48 + lh * (i + 0.5)); });
-    brush(ctx, -30, by + bh + 52, W + 20);
     ctx.textAlign = 'left';
   }
   function drawBiz(ctx, it, im) {
