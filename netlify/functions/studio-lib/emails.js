@@ -15,13 +15,15 @@ const STUDIO_LIST = `- Log every enquiry and get reminded who to follow up with
 - Get help writing captions and customer replies`;
 const CLUB_LIST = `- Featured Business on the Auntie Tobi app and website for 12 months
 - At least one Business Spotlight on the Auntie Tobi Instagram and blog
+- ONE paid Instagram group advert
 - Your product or service on the Auntie Tobi Marketplace for 12 months
 - Full Business Studio, with 20 AI credits a day`;
 const BENEFITS = `1. **Featured in the app and on the website.** When people look for {category} on Auntie Tobi, Featured businesses are shown first, with your photo and a WhatsApp button.
 2. **Your own Spotlight.** A dedicated post on @auntietobi_uk and the Auntie Tobi blog about your business, your story or a new offer.
-3. **Discovery features.** Chances to be included in our promotional campaigns through the year.
-4. **Marketplace.** Your product or service listed for 12 months.
-5. **Business Growth Library.** Practical lessons, templates and tools to use at your own pace.`;
+3. **ONE paid Instagram group advert.** Your business in a group carousel on the Auntie Tobi Instagram, promoted with paid Instagram advertising to reach more Nigerians across the UK.
+4. **Discovery features.** Chances to be included in our promotional campaigns through the year.
+5. **Marketplace.** Your product or service listed for 12 months.
+6. **Business Growth Library.** Practical lessons, templates and tools to use at your own pace.`;
 
 const OUT_VARS = ['business_name', 'category', 'town', 'listing_link', 'claim_link', 'remove_link', 'studio_link', 'club_link', 'personal_line'];
 const T = {

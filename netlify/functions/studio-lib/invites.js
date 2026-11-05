@@ -26,6 +26,7 @@ I’d love to invite you to the Auntie Tobi Business Club. Members get:
 • Your business shared on Auntie Tobi’s Instagram Stories, posts and Reels every week
 • Featured in our business discovery series and promotional campaigns
 • A dedicated Business Spotlight or collaboration post
+• ONE paid Instagram group advert — your business promoted with paid Instagram advertising
 • Your product on the Auntie Tobi Marketplace for 12 months
 • A verified badge on your listing
 • Auntie Tobi Business Studio — AI tools for captions, Reels, promos and customer messages, plus a follow-up tool, tracker and business resources
@@ -36,7 +37,7 @@ Find out more and join here: {club}
 Any questions, just reply here 💚`,
   fu1: `Hi {name}, just following up on my message about the Auntie Tobi Business Club 😊
 
-Members get weekly shares on Auntie Tobi’s Stories and posts, a Business Spotlight, a Marketplace listing, a verified badge and the Business Studio tools.
+Members get weekly shares on Auntie Tobi’s Stories and posts, a Business Spotlight, one paid Instagram group advert, a Marketplace listing, a verified badge and the Business Studio tools.
 
 Your listing: {listing}
 Join here: {club}
