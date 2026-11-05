@@ -14,6 +14,7 @@ const { cas, getJson } = core;
 const KEY = 'dirhook/log';
 const urlKey = () => core.hmac('dirhook-url').slice(0, 24);
 const address = () => `${core.siteBase()}/.netlify/functions/dir-hook?key=${urlKey()}`;
+const address2 = () => `${core.siteBase()}/hooks/directory/${urlKey()}`;   // same, for sites that don't accept ?key= in the URL
 const safeEq = (a, b) => { a = Buffer.from(String(a)); b = Buffer.from(String(b)); return a.length === b.length && crypto.timingSafeEqual(a, b); };
 
 // We don't know DirectoryEasy's exact signing scheme yet, so try the common ones and record which header matched.
@@ -45,6 +46,6 @@ async function record(headers, body) {
 }
 async function status() {
   const log = ((await getJson(KEY).catch(() => null)) || { items: [] }).items;
-  return { address: address(), secretSet: !!core.env('DIRECTORY_WEBHOOK_SECRET'), mode: 'listening', log };
+  return { address: address(), address2: address2(), secretSet: !!core.env('DIRECTORY_WEBHOOK_SECRET'), mode: 'listening', log };
 }
 module.exports = { record, status, urlKey, verify };
