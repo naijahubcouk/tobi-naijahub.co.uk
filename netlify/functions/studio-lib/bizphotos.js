@@ -15,6 +15,7 @@ const { getJson, cas } = core;
 const SITE = () => String(core.env('DIRECTORY_SITE', 'https://directory.auntietobi.co.uk')).replace(/\/$/, '');
 const KEY = 'bizphotos/state';
 const MAX_TRIES = 3;
+const SERVE_MAX = 4 * 1024 * 1024;   // a copied photo must stay under this to be sent to phones
 const UA = 'Mozilla/5.0 (compatible; AuntieTobiBot/1.0; +https://www.auntietobi.co.uk)';
 
 const ours = u => /^\/(bimg|biz-img)\//.test(String(u || '')) || /^https:\/\/(www\.)?auntietobi\.co\.uk\/(bimg|biz-img)\//.test(String(u || ''));
@@ -39,13 +40,13 @@ async function grab(url, ms) {
 }
 // The website's Next.js image service gives a resized copy (small enough to keep); the original is the fallback.
 async function download(url) {
-  const tries = [`${SITE()}/_next/image?url=${encodeURIComponent(url)}&w=1080&q=80`, `${SITE()}/_next/image?url=${encodeURIComponent(url)}&w=640&q=75`, url];
+  const tries = [`${SITE()}/_next/image?url=${encodeURIComponent(url)}&w=828&q=78`, `${SITE()}/_next/image?url=${encodeURIComponent(url)}&w=640&q=75`, url];
   let last = null;
   for (const u of tries) {
     try {
       const { type, buf } = await grab(u);
       if (buf.length < 1500) throw new Error('too small');
-      if (buf.length > 5.5 * 1024 * 1024) throw new Error('too large (' + Math.round(buf.length / 1024) + ' KB)');
+      if (buf.length > SERVE_MAX) throw new Error('too large to show (' + Math.round(buf.length / 1024) + ' KB) — ask the business for a smaller photo');
       return `data:${type};base64,${buf.toString('base64')}`;
     } catch (e) { last = e; }
   }
@@ -95,6 +96,23 @@ async function summary() {
   const gaveUp = waiting.filter(b => (st.failed[b.slug] || {}).url === b.img && st.failed[b.slug].n >= MAX_TRIES);
   return { total: all.length, withPhoto: withPhoto.length, copied, left: waiting.length - gaveUp.length, gaveUp: gaveUp.map(b => ({ slug: b.slug, name: b.name, why: st.failed[b.slug].why, url: b.img })).slice(0, 40), trying: waiting.filter(b => st.failed[b.slug] && !gaveUp.includes(b)).map(b => ({ name: b.name, why: st.failed[b.slug].why })).slice(0, 40), noPhoto: all.length - withPhoto.length, lastRun: st.lastRun || '' };
 }
+// 🔍 Checks the copies already made: anything that isn't really a photo, or is too big to send, is copied again.
+async function check(budgetMs) {
+  const end = Date.now() + (budgetMs || 12000), bizdir = require('./bizdir');
+  const st = await state(); let cursor = st.checkCursor || 0, fixed = 0, checked = 0;
+  const list = (await bizdir.all()).filter(b => !b.hidden && b.imgFrom && ours(b.img));
+  if (cursor >= list.length) cursor = 0;
+  for (; cursor < list.length && Date.now() < end; cursor++) {
+    const b = list[cursor]; checked++;
+    const rec = await getJson('bizimg/' + b.slug).catch(() => null);
+    const m = rec && /^data:image\/(jpeg|png|webp);base64,(.*)$/.exec(rec.dataUrl || '');
+    let bad = !m;
+    if (m) { const head = Buffer.from(m[2].slice(0, 24), 'base64'); const real = head[0] === 0xFF && head[1] === 0xD8 || head[0] === 0x89 && head[1] === 0x50 || head.slice(0, 4).toString() === 'RIFF'; bad = !real || m[2].length * 3 / 4 > SERVE_MAX; }
+    if (bad) { await bizdir.save(Object.assign({}, b, { origSlug: b.slug, img: b.imgFrom, imgFrom: null }), 'photo check'); fixed++; }
+  }
+  await cas(KEY, s2 => Object.assign(s2 || { failed: {} }, { checkCursor: cursor >= list.length ? 0 : cursor, checkedAt: cursor >= list.length ? core.nowIso() : (s2 && s2.checkedAt) || '' }));
+  return { checked, fixed, done: cursor >= list.length, total: list.length };
+}
 async function retry() { await cas(KEY, s => Object.assign(s || {}, { failed: {} })); }
 
-module.exports = { run, summary, retry, external, ours };
+module.exports = { run, summary, retry, check, external, ours };

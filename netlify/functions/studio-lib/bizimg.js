@@ -20,7 +20,7 @@ function parse(dataUrl, max) {
 }
 // Saves a picture for a business and returns its public link.
 async function put(slug, dataUrl, src) {
-  const p = parse(dataUrl, src === 'site' ? 5.6 * 1024 * 1024 : 0);   // website photos may be bigger originals
+  const p = parse(dataUrl, src === 'site' ? 4.1 * 1024 * 1024 : 0);   // website photos may be bigger originals
   if (!p) throw new HttpError(400, 'bad_image', 'That picture couldn’t be used — please try a JPG or PNG under 2.5MB.');
   const ver = Date.now().toString(36).slice(-6);
   await setJson('bizimg/' + slug, { dataUrl, at: core.nowIso(), src: src || 'upload', ver });

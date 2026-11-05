@@ -896,11 +896,22 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var busy = S.photoBusy;
     return '<div id="phLine" style="margin-top:12px;background:#F6FBF8;border:1px solid #CDE8D9;border-radius:10px;padding:10px 12px;font-size:13.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
       '<span>📷 <b>Business photos:</b> ' + p.copied + ' of ' + p.withPhoto + ' copied to Auntie Tobi' + (p.left ? ' · <b>' + p.left + ' to copy</b>' : ' ✅') + (p.noPhoto ? ' · ' + p.noPhoto + ' have no photo on the website' : '') + '</span>' +
-      (busy ? '<span class="muted">Copying… ' + esc(busy) + '</span>' : (p.left ? '<button class="btn primary sm" id="phGo">📷 Copy photos now</button>' : '') + (p.gaveUp && p.gaveUp.length ? '<button class="btn ghost sm" id="phRetry">Try the failed ones again</button>' : '')) +
+      (busy ? '<span class="muted">Copying… ' + esc(busy) + '</span>' : (p.left ? '<button class="btn primary sm" id="phGo">📷 Copy photos now</button>' : '') + (p.gaveUp && p.gaveUp.length ? '<button class="btn ghost sm" id="phRetry">Try the failed ones again</button>' : '') + (p.copied ? '<button class="btn ghost sm" id="phCheck">🔍 Check copied photos</button>' : '')) +
       ((p.gaveUp && p.gaveUp.length) || (p.trying && p.trying.length) ? '<details style="width:100%"><summary style="cursor:pointer;color:#B45309;font-weight:700">⚠️ ' + ((p.gaveUp || []).length + (p.trying || []).length) + ' photo' + ((p.gaveUp || []).length + (p.trying || []).length === 1 ? '' : 's') + ' couldn’t be copied — see which</summary><div style="margin-top:6px;max-height:220px;overflow:auto">' +
         (p.gaveUp || []).concat(p.trying || []).map(function (g) { return '<div style="padding:3px 0">• <b>' + esc(g.name) + '</b> — <span class="muted">' + esc(g.why) + '</span>' + (g.url ? ' · <a href="' + esc(g.url) + '" target="_blank" rel="noopener">open photo</a>' : '') + '</div>'; }).join('') + '</div></details>' : '') + '</div>';
   }
-  function bindPhotoLine() { var g = $('#phGo'); if (g) g.onclick = function () { copyPhotos(false); }; var r = $('#phRetry'); if (r) r.onclick = function () { copyPhotos(true); }; }
+  function bindPhotoLine() { var g = $('#phGo'); if (g) g.onclick = function () { copyPhotos(false); }; var r = $('#phRetry'); if (r) r.onclick = function () { copyPhotos(true); }; var c = $('#phCheck'); if (c) c.onclick = checkPhotos; }
+  // 🔍 finds copies that are broken or too big to show, then copies those again
+  async function checkPhotos() {
+    if (S.photoBusy) return; var redraw = function () { var l = $('#phLine'); if (l) { l.outerHTML = photoLine(); bindPhotoLine(); } };
+    var fixed = 0, checked = 0;
+    try {
+      for (var i = 0; i < 40; i++) { S.photoBusy = 'checked ' + checked; redraw(); var r = await api('photos-check'); S.photos = r; fixed += r.check.fixed; checked += r.check.checked; if (r.check.done) break; }
+      S.photoBusy = ''; redraw();
+      toast('🔍 Checked ' + checked + ' photos · ' + (fixed ? fixed + ' need copying again' : 'all fine ✅'));
+      if (fixed) copyPhotos(false);
+    } catch (e) { S.photoBusy = ''; redraw(); toast(e.message); }
+  }
   async function copyPhotos(retry) {
     if (S.photoBusy) return; S.photoBusy = 'starting'; var redraw = function () { var l = $('#phLine'); if (l) { l.outerHTML = photoLine(); bindPhotoLine(); } };
     redraw(); var total = 0;

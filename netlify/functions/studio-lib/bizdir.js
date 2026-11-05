@@ -234,7 +234,7 @@ async function save(raw, who) {
   await cas(KEY, cur => {
     const items = cur && Array.isArray(cur.items) && cur.items.length ? cur.items.slice() : seed.map(normalise);
     const i = items.findIndex(x => x.slug === (raw.origSlug || b.slug));
-    if (i >= 0) { items[i] = Object.assign({}, items[i], b); if (raw.ownerEd === null) delete items[i].ownerEd; } else items.push(b);
+    if (i >= 0) { items[i] = Object.assign({}, items[i], b); if (raw.ownerEd === null) delete items[i].ownerEd; if (raw.imgFrom === null) delete items[i].imgFrom; } else items.push(b);
     return { items, at: b.updatedAt, by: who, lastImport: cur && cur.lastImport };
   });
   forget();
