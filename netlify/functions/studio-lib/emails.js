@@ -442,9 +442,12 @@ function renderWith(tpl, vars, footer) {
   const v = Object.assign({}, vars);
   if (v.personal_line) v.personal_line = '\n\n' + v.personal_line; else v.personal_line = '';
   const body = fill(tpl.body, v).replace(/\n{3,}/g, '\n\n').trim(), foot = footer ? fill(footer, v) : '';
-  const html = `<!doctype html><html><body style="margin:0;background:#F6F4EE"><div style="font-family:Arial,Helvetica,sans-serif;font-size:15.5px;line-height:1.6;color:#0F1E36;max-width:560px;margin:0 auto;padding:20px 16px">
-<div style="background:#fff;border-radius:14px;padding:22px 22px 8px;border:1px solid #ECE6D6"><div style="height:5px;background:linear-gradient(90deg,#057A44 33%,#fff 33%,#fff 66%,#057A44 66%);border-radius:3px;margin:-8px 0 18px"></div>${toHtml(body)}</div>
-${foot ? `<p style="font-size:12px;color:#6B7280;margin:14px 6px">${inline(foot)}</p>` : ''}</div></body></html>`;
+  // Design "A · Classic Green" (chosen Nov 2026): white card, gold buttons, navy footer with links
+  const btn = h => h.replace(/background:#057A44;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:10px;margin:4px 0/g, 'background:#FFB81C;color:#0F1E36;text-decoration:none;font-weight:bold;padding:13px 22px;border-radius:10px;margin:6px 0');
+  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#F4F1EA"><div style="max-width:600px;margin:0 auto;padding:24px 14px;font-family:Arial,Helvetica,sans-serif;color:#0F1E36">
+<div style="background:#ffffff;padding:26px 24px 12px;font-size:16px;line-height:1.65;border:1px solid #E7E1D2;border-bottom:0;border-radius:16px 16px 0 0;border-top:5px solid #057A44">${btn(toHtml(body))}</div>
+<div style="background:#0F1E36;color:#ffffff;border-radius:0 0 16px 16px;padding:16px 22px;font-size:13px;text-align:center">📱 <a href="https://www.auntietobi.co.uk" style="color:#FFB81C;font-weight:bold;text-decoration:none">auntietobi.co.uk</a> &nbsp;·&nbsp; 📸 <a href="https://www.instagram.com/auntietobi_uk/" style="color:#FFB81C;font-weight:bold;text-decoration:none">@auntietobi_uk</a> &nbsp;·&nbsp; 💬 <a href="https://wa.me/447594674940" style="color:#FFB81C;font-weight:bold;text-decoration:none">WhatsApp</a></div>
+${foot ? `<p style="font-size:12px;color:#6B7280;margin:14px 8px;text-align:center">${inline(foot)}</p>` : ''}</div></body></html>`;
   return { subject: fill(tpl.subject, v).replace(/\s+/g, ' ').trim(), text: toText(body) + (foot ? '\n\n—\n' + foot : ''), html };
 }
 async function render(id, vars) { const t = await get(id); return renderWith(t, vars, t.group.startsWith('out-') ? FOOTER_OUT : ''); }
