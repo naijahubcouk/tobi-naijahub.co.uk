@@ -1701,6 +1701,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
         (x.siteMatch ? ' · <b style="color:var(--green-d)">✓ Email matches website</b>' : '') + (x.hasStudio ? ' · <b style="color:var(--green-d)">Has Business Studio ✓</b>' : '') +
         '<br><span class="muted">' + esc(when(x.createdAt)) + (x.how && AB_HOW[x.how] ? ' · ' + AB_HOW[x.how] : '') + (x.reviewedBy ? ' · ' + (x.status === 'approved' ? 'approved' : 'declined') + ' by ' + esc((S.names && S.names[x.reviewedBy]) || x.reviewedBy) : '') + '</span></div>' +
         '<div class="apact" style="margin-top:10px">' +
+        (x.status === 'new' && x.kind === 'claim' ? abAsk(x, b) : '') +
         (x.status === 'new' ? '<button class="btn primary sm" data-abok="' + x.id + '">✅ Approve</button>' + (x.kind !== 'claim' ? '<button class="btn ghost sm" data-abed="' + x.id + '">✏️ Edit, then approve</button>' : '') + '<button class="btn ghost sm" data-abno="' + x.id + '">✖ Decline</button>'
           : '<span class="as ' + (x.status === 'approved' ? 'live' : 'ended') + '" style="align-self:center">' + (x.status === 'approved' ? '● Approved' : '✖ Declined') + '</span>' + (b.slug && x.status === 'approved' ? '<a class="btn ghost sm" href="/biz/' + esc(b.slug) + '" target="_blank" rel="noopener">View in app ↗</a>' : '') + '<button class="btn ghost sm" data-abdel="' + x.id + '">🗑 Remove from list</button>') +
         '</div></div></div>';
@@ -1720,6 +1721,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="chipbar" style="margin-bottom:12px"><button class="chip" data-abtab="new" aria-pressed="' + (S.abTab === 'new') + '">📥 To review (' + a.subs.filter(function (x) { return x.status === 'new'; }).length + ')</button><button class="chip" data-abtab="done" aria-pressed="' + (S.abTab === 'done') + '">✅ Done (' + a.subs.filter(function (x) { return x.status !== 'new'; }).length + ')</button></div>' +
       (list.length ? list.map(card).join('') : '<div class="card"><p class="muted">' + (S.abTab === 'new' ? 'Nothing to review. Share auntietobi.co.uk/add-business so businesses can add themselves.' : 'Nothing here yet.') + '</p></div>') + '</div>';
     $$('[data-abtab]').forEach(function (b) { b.onclick = function () { S.abTab = b.dataset.abtab; drawAbiz(); }; });
+    $$('[data-copy]').forEach(function (a) { a.addEventListener('click', function () { try { navigator.clipboard.writeText(a.dataset.copy); toast('Message copied — paste it in the Instagram chat'); } catch (e) {} }); });
     $$('[data-zoom]').forEach(function (im) { im.onclick = function () { window.open(im.src, '_blank'); }; });
     var byId = function (id) { return a.subs.filter(function (x) { return x.id === id; })[0]; };
     var review = async function (id, decision, edits, btn) {
@@ -1743,6 +1745,14 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       catch (e) { toast(e.message); }
       drawAbiz();
     };
+  }
+  // 💬 check a claim with the business itself (WhatsApp / Instagram on the listing), message ready to send
+  function abAsk(x, b) {
+    var msg = 'Hi! It’s Auntie Tobi 💚 Someone has asked to manage the ' + b.name + ' listing on Auntie Tobi, using the email ' + x.email + (x.ownerName ? ' (' + x.ownerName + ')' : '') + '. Was this you? Just reply yes or no 🙏🏾';
+    var out = '';
+    if (b.wa) out += '<a class="btn ghost sm" href="https://wa.me/' + esc(b.wa) + '?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener">💬 Ask them on WhatsApp</a>';
+    if (b.ig) out += '<a class="btn ghost sm" href="https://ig.me/m/' + esc(b.ig) + '" target="_blank" rel="noopener" data-copy="' + esc(msg) + '">📸 Ask on Instagram</a>';
+    return out || '<span class="muted" style="font-size:13px;align-self:center">No WhatsApp or Instagram on this listing to check with.</span>';
   }
   function abEdit(x, review) {
     var b = x.biz || {};

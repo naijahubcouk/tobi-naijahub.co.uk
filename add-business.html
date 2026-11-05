@@ -144,15 +144,47 @@ input:focus,textarea:focus,select:focus{outline:2px solid #057A44;outline-offset
   }
 
   // ───── Claim: "This is my business" ─────
-  function showClaim(b) {
+  async function showClaim(b, own) {
     S.claim = b; top();
+    if (b.mail === undefined && !b.owned) { try { var ci = await api('claim-info', { slug: b.slug }); b = S.claim = ci.biz; } catch (e) { b.mail = ''; } }
+    var useListing = b.mail && !own;
     root.innerHTML = '<div class="hero"><div class="badge">🏪 Claim your business</div><h1>Is this your business?</h1><p>Claim it for free to update it yourself — and get your own free Business Studio.</p></div>' +
       '<div class="card">' + bizRow(b, '') +
-      (b.owned ? '<div class="err">This business has already been claimed. If that wasn’t you, message Auntie Tobi on WhatsApp: 07594 674940.</div>' :
-      '<div class="step" style="margin-top:16px">Confirm it’s you</div>' + youHtml('claim') ) + '</div>' +
+      (b.owned ? '<div class="err">This business has already been claimed. If that wasn’t you, message Auntie Tobi on WhatsApp: 07594 674940.</div>'
+      : useListing ? '<div class="step" style="margin-top:16px">Confirm it’s yours</div>' +
+        '<p style="font-size:15px">We’ll send a 6-digit code to the business email on this listing:</p><p style="font-size:18px;font-weight:800;margin:6px 0 4px">📧 ' + esc(b.mail) + '</p>' +
+        '<label for="oName">Your name</label><input id="oName" autocomplete="name" placeholder="e.g. Tolu Adeyemi">' +
+        '<label class="tick"><input type="checkbox" id="oOk"><span>I own or run this business.</span></label>' +
+        '<div class="trap" aria-hidden="true"><input id="hp" tabindex="-1" autocomplete="off"></div>' +
+        '<button class="btn primary" id="lSend" style="margin-top:14px">Send the code</button>' +
+        '<div class="hidden" id="lBox"><div class="note ok" id="lMsg"></div><label for="lCode">Enter the 6-digit code</label><input id="lCode" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">' +
+        '<button class="btn primary" id="lFinish" style="margin-top:12px">Claim my business</button><button class="btn link" id="lResend">Send a new code</button></div>' +
+        '<div class="err hidden" id="yErr"></div>' +
+        '<button class="btn link" id="ownMail" style="margin-top:8px">I don’t use this email any more</button><p class="hint" style="text-align:center;margin-top:0">Your Business Studio will sign in with this business email.</p>'
+      : '<div class="step" style="margin-top:16px">Confirm it’s you</div>' + (own ? '<p class="hint" style="margin-top:0">Auntie Tobi will check it’s yours before you can edit it — usually by messaging the business on WhatsApp or Instagram.</p>' : '') + youHtml('claim')) + '</div>' +
       '<button class="btn link" id="back">← Search again</button>';
     $('#back').onclick = function () { if (CLAIM) { CLAIM = ''; history.replaceState(null, '', '/add-business'); } showSearch(); };
-    if (!b.owned) bindYou('claim');
+    if (b.owned) return;
+    if (!useListing) return bindYou('claim');
+    $('#ownMail').onclick = function () { showClaim(b, true); };
+    var send = async function (btn) {
+      showErr('#yErr', '');
+      if (!$('#oName').value.trim()) return showErr('#yErr', 'Please add your name.');
+      if (!$('#oOk').checked) return showErr('#yErr', 'Please tick the box to confirm.');
+      busy(btn, true, 'Sending…');
+      try { var r = await api('claim-code', { slug: b.slug }); busy(btn, false); $('#lSend').classList.add('hidden'); $('#lBox').classList.remove('hidden'); $('#lMsg').textContent = '📧 ' + r.message; $('#lCode').focus(); }
+      catch (e) { busy(btn, false); showErr('#yErr', e.message); }
+    };
+    $('#lSend').onclick = function () { send(this); };
+    $('#lResend').onclick = function () { $('#lBox').classList.add('hidden'); $('#lSend').classList.remove('hidden'); send($('#lSend')); };
+    $('#lCode').oninput = function () { this.value = this.value.replace(/\D/g, '').slice(0, 6); };
+    $('#lFinish').onclick = async function () {
+      var btn = this, code = $('#lCode').value.trim(); showErr('#yErr', '');
+      if (code.length !== 6) return showErr('#yErr', 'Enter the 6-digit code from the email.');
+      busy(btn, true, 'Claiming…');
+      try { showDone(await api('submit', { mode: 'claim', slug: b.slug, ownerName: $('#oName').value.trim(), listingCode: code, hp: $('#hp').value })); }
+      catch (e) { busy(btn, false); showErr('#yErr', e.message); }
+    };
   }
 
   // ───── 2 · How do you want to start? ─────

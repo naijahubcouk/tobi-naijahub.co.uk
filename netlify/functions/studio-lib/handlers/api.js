@@ -190,6 +190,8 @@ exports.handler = handler(async (ctx) => {
       delete out.studioUrl;
       return Object.assign(out, out.dupes ? {} : await require('../addbiz').mine(email));
     }
+    case 'mylisting-claim-code': return require('../addbiz').claimCode(String(body.slug || '').slice(0, 120), 'm:' + email);
+    case 'mylisting-claim-info': return { biz: await require('../addbiz').claimInfo(String(body.slug || '').slice(0, 120)) };
     case 'mylisting-lookup': return require('../addbiz').lookup(String(body.kind || ''), body.value, 'm:' + email);
     case 'mylisting-search': {
       await core.rateLimit('listing-search', email, 120, 60 * 60 * 1000);

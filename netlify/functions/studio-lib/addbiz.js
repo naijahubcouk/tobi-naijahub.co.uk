@@ -70,7 +70,29 @@ function publicCard(b, owners) {
 async function claimInfo(slug) {
   const b = (await bizdir.all()).find(x => x.slug === slug && !x.hidden && x.status !== 'pending');
   if (!b) throw new HttpError(404, 'not_found', 'We couldn’t find that business. Search for it by name instead.');
-  return publicCard(b, await links.owners());
+  const e = await listingEmail(b);
+  return Object.assign(publicCard(b, await links.owners()), { mail: e ? mask(e) : '' });
+}
+// The business's own email we can send a claim code to: the listing's business email, else the email of the
+// website account that listed it (only when the owner listed it themselves), else the older directory file's email.
+// Never one of Auntie Tobi's own addresses (the team created most unclaimed listings).
+const OURS_MAIL = e => /@auntietobi\.(co\.uk|com)$/i.test(e) || core.adminEmails().includes(e) || /favour/i.test(e.split('@')[0]);
+async function listingEmail(b) {
+  const dir = await require('./directory').bySlug(null, b.slug).catch(() => null);
+  for (const e of [b.email, b.claimed ? b.contactEmail : '', dir && dir.email].map(x => core.normalizeEmail(x || ''))) if (e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && !OURS_MAIL(e)) return e;
+  return '';
+}
+function mask(e) { const [u, d] = e.split('@'); return (u.length <= 2 ? u[0] : u.slice(0, 2)) + '•••@' + d; }
+// "Send the code to the business email" — the code goes to the listing's own email (shown partly hidden)
+async function claimCode(slug, ip) {
+  const b = (await bizdir.all()).find(x => x.slug === slug && !x.hidden && x.status !== 'pending');
+  if (!b) throw new HttpError(404, 'not_found', 'We couldn’t find that business.');
+  const e = await listingEmail(b);
+  if (!e) throw new HttpError(400, 'no_email', 'This listing has no business email — use your own email instead.');
+  await core.rateLimit('otp-ip', ip, 20, 60 * 60 * 1000);
+  await core.rateLimit('claim-code', slug, 5, 60 * 60 * 1000, 'A few codes have been sent for this business already — please try again in an hour.');
+  await core.issueOtp(e, 'addbiz');
+  return { ok: true, mail: mask(e), message: `We’ve sent a 6-digit code to ${mask(e)}. It expires in 10 minutes.` };
 }
 
 // Businesses that look like this one (same Instagram, website, WhatsApp or name)
@@ -319,6 +341,16 @@ async function submit(raw, opts) {
     b = (await bizdir.all()).find(x => x.slug === String(raw.slug || '') && !x.hidden && x.status !== 'pending');
     if (!b) throw new HttpError(404, 'not_found', 'We couldn’t find that business.');
   }
+  let viaListing = false;
+  if (mode === 'claim' && raw.listingCode) {
+    // the code was sent to the business's own email → whoever has it owns the listing
+    const le = await listingEmail(b);
+    if (!le) throw new HttpError(400, 'no_email', 'This listing has no business email — use your own email instead.');
+    await core.rateLimit('verify-email', le, 12, 60 * 60 * 1000, 'Too many attempts. Please request a new code later.');
+    if (!(await core.checkOtp(le, 'addbiz', raw.listingCode))) throw new HttpError(400, 'invalid_code', 'That code is incorrect or has expired. Please check it or ask for a new one.');
+    viaListing = true;
+    if (!email) email = le;     // from the app: their Business Studio signs in with the business email
+  }
   if (!email) {
     email = core.requireEmail(raw.ownerEmail);
     await core.rateLimit('addbiz-sub', opts.ip, SUBMIT_PER_IP_DAY, 24 * 60 * 60 * 1000, 'You’ve sent a few businesses today — please try again tomorrow.');
@@ -335,12 +367,12 @@ async function submit(raw, opts) {
     const taken = await links.takenBy(b.slug, email);
     if (taken || (b.ownerEmail && b.ownerEmail !== email)) throw new HttpError(409, 'listing_taken', links.TAKEN_MSG);
     const dir = await require('./directory').bySlug(null, b.slug).catch(() => null);
-    const match = emailsOf(b).concat(dir ? [dir.email].concat(dir.alt || []) : []).includes(email);
+    const match = viaListing || emailsOf(b).concat(dir ? [dir.email].concat(dir.alt || []) : []).includes(email);
     const sub = { id: newId(), kind: 'claim', slug: b.slug, name: b.name, email, ownerName, via, createdAt: now, auto: match, status: match ? 'approved' : 'new', hadListing: already && already !== b.slug ? already : '' };
     if (match) {
       await linkProfile(email, b, true);
       await bizdir.save(Object.assign({}, b, { origSlug: b.slug, claimedSet: true, ownerEmail: email, ownerName: ownerName || b.ownerName || '' }), 'owner claim');
-      sub.reviewedAt = now; sub.reviewedBy = 'automatic (email matched)';
+      sub.reviewedAt = now; sub.reviewedBy = viaListing ? 'automatic (code sent to the business email)' : 'automatic (email matched)';
     } else {
       await cas(`profiles/${core.enc(email)}`, cur => Object.assign({}, cur || { createdAt: now }, { pendingClaim: b.slug, updatedAt: now }));
       notifyHq(`${ownerName || email} says “${b.name}” is their business, but their email doesn’t match the listing.\nEmail: ${email}`, `Claim to check: ${b.name}`).catch(() => {});
@@ -533,4 +565,4 @@ async function saveMine(email, raw, image) {
 // "This is my business" from Business Studio when the email doesn't match → Auntie Tobi checks
 async function studioClaim(email, slug) { return submit({ mode: 'claim', slug }, { studioEmail: email }); }
 
-module.exports = { search, claimInfo, dupes, lookup, requestCode, submit, studioClaim, signinLink, useSignin, hqList, review, removeSub, sendListed, previewEmail, announceSend, announceInfo, mine, saveMine, canEditP, CATS: () => CATS().map(child) };
+module.exports = { claimCode, search, claimInfo, dupes, lookup, requestCode, submit, studioClaim, signinLink, useSignin, hqList, review, removeSub, sendListed, previewEmail, announceSend, announceInfo, mine, saveMine, canEditP, CATS: () => CATS().map(child) };

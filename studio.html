@@ -4976,11 +4976,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       (r.canEdit ? '<h2>Edit your listing</h2>' + (r.siteWaiting.length && r.onSite ? '<div class="note" style="margin-bottom:10px">✅ Your changes are live in the app. The website copy updates at Auntie Tobi’s next website update.</div>' : '') +
         (r.nameRequest ? '<div class="note" style="margin-bottom:10px">⏳ You asked to change your name to <b>' + esc(r.nameRequest) + '</b> — Auntie Tobi will check it soon.</div>' : '') +
         mlForm(L, { nameNote: r.state !== 'review' }) + '<div id="mlErr"></div><button class="btn primary block" id="mlSave" style="margin-top:14px">Save changes</button>' : '') + '</main>';
-    var c = $('#mlClaim'); if (c) c.onclick = async function () {
-      c.disabled = true;
-      try { var x = await api('studio-api', 'mylisting-add', { mode: 'claim', slug: L.slug }); toast(x.result === 'claimed' ? '🎉 It’s yours — you can edit it now' : 'Thanks! Auntie Tobi will check it’s yours'); showMyListing(back); }
-      catch (e) { $('#mlCErr').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; c.disabled = false; }
-    };
+    var c = $('#mlClaim'); if (c) c.onclick = function () { studioClaim(L.slug, back, c); };
     if (r.canEdit) {
       bindMlForm();
       $('#mlSave').onclick = async function () {
@@ -5034,7 +5030,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
         } catch (e) { $('#mlRes').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
       }, 350);
     };
-    function bindClaims() { $$('[data-mlc]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { var x = await api('studio-api', 'mylisting-add', { mode: 'claim', slug: b.dataset.mlc }); toast(x.result === 'claimed' ? '🎉 It’s yours — you can edit it now' : 'Thanks! Auntie Tobi will check it’s yours'); S.boot.myListing = { slug: b.dataset.mlc }; showMyListing(back); } catch (e) { toast(e.message); b.disabled = false; } }; }); }
+    function bindClaims() { $$('[data-mlc]').forEach(function (b) { b.onclick = function () { studioClaim(b.dataset.mlc, back, b); }; }); }
     bindClaims();
     $('#mlNew').onclick = function () { showNewListing(back, {}); };
   }
@@ -5068,7 +5064,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     }
     $$('[data-af]').forEach(function (b) { b.onclick = function () { mode = b.dataset.af; af(); }; });
     af();
-    $$('[data-mlc]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { var x = await api('studio-api', 'mylisting-add', { mode: 'claim', slug: b.dataset.mlc }); toast(x.result === 'claimed' ? '🎉 It’s yours' : 'Thanks! Auntie Tobi will check it’s yours'); showMyListing(back); } catch (e) { toast(e.message); b.disabled = false; } }; });
+    $$('[data-mlc]').forEach(function (b) { b.onclick = function () { studioClaim(b.dataset.mlc, back, b); }; });
     var send = async function (force, btn) {
       btn.disabled = true; $('#mlErr').innerHTML = '';
       try {
@@ -5080,6 +5076,27 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     };
     $('#mlAdd').onclick = function () { send(false, this); };
     var fo = $('#mlForce'); if (fo) fo.onclick = function () { send(true, this); };
+  }
+  // "This is my business" in Business Studio: send a code to the business's own email when we have one (instant),
+  // otherwise Auntie Tobi checks.
+  async function studioClaim(slug, back, btn) {
+    if (btn) btn.disabled = true;
+    var info = null; try { info = (await api('studio-api', 'mylisting-claim-info', { slug: slug })).biz; } catch (e) {}
+    var done = function (x) { toast(x.result === 'claimed' ? '🎉 It’s yours — you can edit it now' : 'Thanks! Auntie Tobi will check it’s yours'); S.boot.myListing = { slug: slug }; showMyListing(back); };
+    var plain = async function () { try { done(await api('studio-api', 'mylisting-add', { mode: 'claim', slug: slug })); } catch (e) { toast(e.message); if (btn) btn.disabled = false; } };
+    if (!info || !info.mail) return plain();
+    if (btn) btn.disabled = false;
+    var scrim = document.createElement('div'); scrim.className = 'scrim';
+    scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="clT"><h2 id="clT" style="margin:0">Claim ' + esc(info.name) + '</h2>' +
+      '<p class="sub" style="margin:0">We’ll send a 6-digit code to the business email on this listing:</p><p style="font-size:18px;font-weight:800;margin:0">📧 ' + esc(info.mail) + '</p>' +
+      '<button class="btn primary block" id="clSend">Send the code</button><div class="stack hidden" id="clBox"><input type="text" id="clCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" class="code-input"><button class="btn primary block" id="clGo">Claim my business</button></div><div id="clErr"></div>' +
+      '<button class="btn link" id="clOwn">I don’t use this email any more — ask Auntie Tobi to check</button><button class="btn link" id="clX">Cancel</button></div>';
+    document.body.appendChild(scrim);
+    var err = function (m) { $('#clErr', scrim).innerHTML = m ? '<div class="err">' + esc(m) + '</div>' : ''; };
+    $('#clX', scrim).onclick = function () { scrim.remove(); };
+    $('#clOwn', scrim).onclick = function () { scrim.remove(); plain(); };
+    $('#clSend', scrim).onclick = async function () { var b = this; b.disabled = true; err(''); try { var r = await api('studio-api', 'mylisting-claim-code', { slug: slug }); b.classList.add('hidden'); $('#clBox', scrim).classList.remove('hidden'); toast(r.message); $('#clCode', scrim).focus(); } catch (e) { err(e.message); b.disabled = false; } };
+    $('#clGo', scrim).onclick = async function () { var b = this; b.disabled = true; err(''); try { var x = await api('studio-api', 'mylisting-add', { mode: 'claim', slug: slug, listingCode: $('#clCode', scrim).value.trim() }); scrim.remove(); done(x); } catch (e) { err(e.message); b.disabled = false; } };
   }
   async function loadMlCats() { if (ML.cats.length) return; try { var r = await api('studio-api', 'mylisting-get'); ML.cats = r.cats || []; } catch (e) {} }
 
