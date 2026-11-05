@@ -8,6 +8,7 @@
  */
 (function () {
   'use strict';
+  var START = { search: location.search, path: location.pathname };   // the app tidies the address bar on load, so remember how we were opened
   var WIDE = 1100, LAPW = 980, KEY = 'tobi_view';   // side panels need 1100px; laptop view works from 980px
   var isApp = !!(document.querySelector('.app') && document.getElementById('messages'));
   var wide = function () { return window.innerWidth >= WIDE; };
@@ -111,8 +112,34 @@
   }
   // Hand over to the app (stretched) for everything that isn't a laptop page yet
   function inApp(fn) { cur = 'app'; if (page) page.style.display = 'none'; nav(); try { fn && fn(); } catch (e) { console.error(e); } }
-  function bindCards(root) { root.querySelectorAll('[data-biz]').forEach(function (el) { el.onclick = function () { var s = el.getAttribute('data-biz'); inApp(function () { tobiOpenBiz(s); }); }; }); }
-  var NAV = [['home', '🏠 Home'], ['biz', '🏢 Businesses'], ['mkt', '🛍️ Marketplace'], ['news', '📰 News & Updates'], ['events', '🎉 Events'], ['jobs', '💼 Jobs']];
+  function bindCards(root) { root.querySelectorAll('[data-biz]').forEach(function (el) { el.onclick = function () { showBizPage(el.getAttribute('data-biz')); }; }); }
+  // 🏢 one business: the app's own business page on the left, related businesses and "claim it" on the right
+  function mini(b) { return '<div class="mini" data-biz="' + esc(b.slug) + '"><i style="' + (b.img ? 'background:#E3F2EA url(&quot;' + esc(b.img) + '&quot;) center/cover' : '') + '">' + (b.img ? '' : esc((b.name || '?').charAt(0))) + '</i><div><b>' + esc(b.name) + '</b><span>' + esc(cap(b.cat)) + (b.loc ? ' · ' + esc(b.loc) : '') + '</span></div></div>'; }
+  function showBizPage(slug, noPush) {
+    var all = dir(), b = all.filter(function (x) { return x.slug === slug; })[0];
+    if (!b) { if (window._dirFetch && !showBizPage._w) { showBizPage._w = 1; window._dirFetch.then(function () { showBizPage(slug, noPush); }); return; } return inApp(function () { tobiOpenBiz0(slug); }); }
+    showBizPage._w = 0;
+    if (cur !== 'bizd' && cur !== 'app') showBizPage._prev = cur;
+    if (!noPush) { try { history.pushState({ lapBiz: slug }, '', '/?biz=' + encodeURIComponent(slug)); showBizPage._pushed = (showBizPage._pushed || 0) + 1; } catch (e) {} }
+    cur = 'bizd'; top._last = 'biz'; page.style.display = 'block'; page.scrollTop = 0; nav();
+    var town = String(b.loc || '').split(',')[0].trim().toLowerCase();
+    var same = all.filter(function (x) { return x.slug !== b.slug && x.cat && x.cat === b.cat; }).sort(function (a, c) { return (c.featured ? 1 : 0) - (a.featured ? 1 : 0) || (c.img ? 1 : 0) - (a.img ? 1 : 0); }).slice(0, 5);
+    var near = town && town !== 'uk' ? all.filter(function (x) { return x.slug !== b.slug && String(x.loc || '').toLowerCase().indexOf(town) === 0 && same.indexOf(x) < 0; }).slice(0, 5) : [];
+    var inner = ''; try { inner = typeof tobiBizPage === 'function' ? tobiBizPage(b) : ''; } catch (e) { inner = ''; }
+    page.innerHTML = '<div class="wrap"><div><button class="chip" id="lapBack">← All businesses</button></div><div class="cols"><div class="card" style="padding:22px;overflow:hidden" id="lapBizBox">' + (inner || card(b)) + '</div>' +
+      '<div class="rail">' + (!b.featured ? '<div class="card cta"><b>🏪 Is this your business?</b><div style="font-size:14px;margin-top:6px;opacity:.9">Claim it free to update your photo, description and contacts — and get your own Business Studio.</div><a href="/claim/' + encodeURIComponent(b.slug) + '">Claim this business</a></div>' : '') +
+      (same.length ? '<div class="card"><h2>More ' + esc(cap(b.cat)) + '</h2>' + same.map(mini).join('') + '<div class="mini" data-cat="' + esc(b.cat) + '"><i>➡️</i><div><b>See all ' + esc(cap(b.cat)) + '</b></div></div></div>' : '') +
+      (near.length ? '<div class="card"><h2>📍 More in ' + esc(cap(town)) + '</h2>' + near.map(mini).join('') + '</div>' : '') +
+      '<div class="card"><h2>💚 Get Featured</h2><div class="sub" style="font-size:14px">Featured businesses show first, with photos and every way to reach them.</div><a href="/business-club" class="chip" style="display:inline-block;margin-top:10px;text-decoration:none">See the Business Club</a></div></div></div></div>';
+    document.getElementById('lapBack').onclick = function () { if (showBizPage._pushed) { showBizPage._pushed--; history.back(); } else { try { history.replaceState({}, '', '/'); } catch (e) {} go('biz'); } };
+    page.querySelectorAll('.rail [data-biz]').forEach(function (el) { el.onclick = function () { showBizPage(el.getAttribute('data-biz')); }; });
+    var sc = page.querySelector('[data-cat]'); if (sc) sc.onclick = function () { BZ.cat = sc.getAttribute('data-cat'); BZ.q = ''; BZ.n = 24; go('biz'); };
+    try { if (typeof tobiFillBizMarketplace === 'function') setTimeout(tobiFillBizMarketplace, 50); } catch (e) {}
+  }
+  // "View details" anywhere in the app opens the laptop business page while in laptop view
+  var tobiOpenBiz0 = function (s) { window.history.pushState({}, '', '/?biz=' + s); handleDeepLink(); };
+  if (isApp) { try { var orig = window.tobiOpenBiz; if (typeof orig === 'function') tobiOpenBiz0 = orig; window.tobiOpenBiz = function (s) { if (lapOn() && page) return showBizPage(s); return tobiOpenBiz0(s); }; } catch (e) {} }
+  var NAV = [['home', '🏠 Home'], ['biz', '🏢 Businesses'], ['mkt', '🛍️ Marketplace'], ['news', '📰 News & Updates'], ['events', '🎉 Events'], ['cards', '💌 Cards']];
   function nav() { if (!top) return; top.querySelectorAll('nav button').forEach(function (b) { b.classList.toggle('on', b.dataset.n === cur || (cur === 'app' && b.dataset.n === top._last)); }); }
   function go(n) {
     top._last = n;
@@ -121,7 +148,7 @@
     if (n === 'mkt') return showMkt();
     if (n === 'news') return showNews();
     if (n === 'events') return showEvents();
-    if (n === 'jobs') return inApp(function () { showJobsHubCard(); });
+    if (n === 'cards') { location.href = '/cards'; return; }
   }
   function shell() {
     addCss();
@@ -140,7 +167,7 @@
     var all = dir(), feat = all.filter(function (b) { return b.featured; }).slice(0, 6);
     if (feat.length < 3) feat = feat.concat(all.filter(function (b) { return !b.featured && b.img; }).slice(0, 3 - feat.length));
     var h = new Date().getHours(), hi = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    var TILES = [['💼', 'Find jobs', function () { showJobsHubCard(); }], ['🎉', 'Events', 'events'], ['📰', 'News & articles', 'news'], ['🏢', 'All businesses', 'biz'],
+    var TILES = [['💌', 'Celebration cards', '/cards'], ['🎉', 'Events', 'events'], ['📰', 'News & articles', 'news'], ['🏢', 'All businesses', 'biz'],
       ['🛍️', 'Marketplace', 'mkt'], ['🏠', 'Renting a house', 'How do I rent a house in the UK?'], ['🚗', 'UK driving licence', 'How do I get my UK driving licence?'], ['➕', 'Add your business', '/add-business']];
     page.innerHTML = '<div class="wrap"><div class="cols"><div>' +
       '<div class="bub"><img src="/tobi-face-128.png" alt=""><div><b>' + hi + '! 👋🏾 I’m Auntie Tobi.</b><br>Ask me anything about life in the UK — jobs, housing, visas, the NHS, schools — or find Nigerian businesses and events near you. So… wetin you need today? 😄</div></div>' +
@@ -297,7 +324,9 @@
       if (!started) {
         started = true;
         // opened from a link (a business, an article…): show it in the app, not the laptop Home page
-        if (/[?&](biz|action|article|blog|event|post)=/.test(location.search) || /\/(biz|blog)\//.test(location.pathname)) inApp(null);
+        var bz = (START.search.match(/[?&]biz=([^&#]+)/) || START.path.match(/^\/biz\/([^\/?#]+)/) || [])[1];
+        if (bz) { showBizPage(decodeURIComponent(bz), true); try { history.replaceState({ lapBiz: bz }, '', '/?biz=' + bz); } catch (e) {} }
+        else if (/[?&](action|article|blog|event|post)=/.test(START.search) || /\/blog\//.test(START.path)) inApp(null);
         else { showHome(); if (window._dirFetch && window._dirFetch.then) window._dirFetch.then(function () { if (cur === 'home') showHome(); else if (cur === 'biz') grid(); }); }
       } else if (cur && cur !== 'app') { page.style.display = 'block'; } else if (!cur) showHome();
       nav();
@@ -308,7 +337,12 @@
   }
   var rt = null;
   window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(apply, 120); });
-  window.addEventListener('popstate', function () { if (lapOn() && cur !== 'app') inApp(null); });
+  window.addEventListener('popstate', function () {
+    if (!lapOn() || !page) return;
+    var bz = (location.search.match(/[?&]biz=([^&#]+)/) || [])[1];
+    if (bz) return showBizPage(decodeURIComponent(bz), true);
+    if (cur === 'bizd') go(showBizPage._prev || 'biz');
+  });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(apply, 50); }); else setTimeout(apply, 50);
   window.tobiDesk = { apply: apply, isLap: lapOn, go: function (n) { if (lapOn()) go(n); } };
 })();
