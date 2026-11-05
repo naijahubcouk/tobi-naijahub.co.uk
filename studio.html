@@ -930,6 +930,12 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
   async function start() {
     if (await appHome()) return;
     var cq = new URLSearchParams(location.search);
+    if (cq.get('signin') || cq.get('then')) {
+      // one-time sign-in from "Add your business" (the app) → straight into Business Studio
+      S.then = cq.get('then') || '';
+      if (cq.get('signin')) { try { await api('studio-auth', 'token-signin', { token: cq.get('signin') }, { quiet401: true }); S.fromSignin = true; } catch (e) { S.signinErr = e.message; } }
+      history.replaceState(null, '', location.pathname + location.hash); cq = new URLSearchParams('');
+    }
     if (cq.get('cancel') === '1' && cq.get('e') && cq.get('t')) { var ce = cq.get('e'), ct = cq.get('t'); history.replaceState(null, '', location.pathname); return showCancelLink(ce, ct); }
     app.innerHTML = '<main><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
     S.today = null;
@@ -969,6 +975,11 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     checkUnread();
     if (location.hash === '#messages' && S.boot.access && S.boot.access.canView) { history.replaceState(null, '', location.pathname + location.search); return showMessages(); }
     if (location.hash === '#account' && S.boot.state === 'active') { history.replaceState(null, '', location.pathname + location.search); return showAccount(); }
+    var goListing = S.then === 'listing' && S.boot.state === 'active'; S.then = '';
+    if (S.boot.state === 'active' && !S.boot.tourDone && (S.fromSignin || S.boot.member.source === 'addbiz')) {
+      showHome(); return welcomeTour(function () { if (goListing || S.boot.myListing) showMyListing(showHome); });
+    }
+    if (goListing) return showMyListing(showHome);
     showHome();
   }
 
@@ -1677,7 +1688,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       bindHistoryRows(); bindRenew(); return;
     }
     app.innerHTML = '<main><div class="hgrid"><div class="hl"><p class="sub">' + greeting() + ' 👋🏾</p><h1>' + esc(name) + '</h1>' +
-      '<p class="sub" style="margin:2px 0 12px">Here’s what needs your attention today.</p><div class="dash" id="dashBox">' + dashTiles(S.dash) + '</div><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Auntie Tobi is writing today\u2019s Business Tip for you\u2026</p></div></div><div id="nudgeTop" style="margin-top:14px"></div>' +
+      '<p class="sub" style="margin:2px 0 12px">Here’s what needs your attention today.</p>' + homeListingRow() + '<div class="dash" id="dashBox">' + dashTiles(S.dash) + '</div><div id="todayBox"><div class="bubble"><img src="/tobi-face-128.png" alt=""><p><span class="typing" aria-label="Planning"><i></i><i></i><i></i></span> Auntie Tobi is writing today\u2019s Business Tip for you\u2026</p></div></div><div id="nudgeTop" style="margin-top:14px"></div>' +
       '<div id="nudgeLesson"></div></div><div class="hr">' +
       '<h2>Your business tools</h2>' + bizTools() +
       '<h2>Quick create</h2>' + quickRow() +
@@ -1689,7 +1700,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     var up = $('#upBtn'); if (up) up.onclick = upgradeGo;
     var all = $('#allBtn'); if (all) all.onclick = showLibrary;
     loadNudges();
-    bindBizTools(); loadDash();
+    bindBizTools(); loadDash(); bindListingLinks(showHome);
     var r;
     try { r = await api('studio-growth', 'home'); } catch (x) { var tb = $('#todayBox'); if (tb) tb.innerHTML = '<div class="err">' + esc(x.message) + '</div>'; return; }
     S.today = r; renderToday();
@@ -4888,7 +4899,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     setChrome({ tabs: true, tab: 'account' });
     var p = S.boot.profile;
     app.innerHTML = '<main><h1>Account</h1><p class="sub" style="margin-top:4px">' + esc(S.boot.member.email) + '</p>' +
-      planSection() +
+      accountListingHtml() + planSection() +
       (p ? '<h2>Business profile</h2><div class="card"><b>' + esc(p.businessName) + '</b><div class="sub">' + esc(p.industry) + ' · ' + esc(p.location) + '</div>' +
         '<div class="sub" style="margin-top:4px">Tone: ' + esc(TONE_LABELS[p.tone] || p.tone) + (p.instagram ? ' · ' + esc(p.instagram) : '') + '</div>' +
         '<div class="sub" style="margin-top:4px">Customers find you on: ' + esc((p.channels || ['instagram']).map(channelName).join(', ')) + (p.mainChannel ? ' \u00b7 posts point to ' + esc(channelName(p.mainChannel)) : '') + '</div>' +
@@ -4911,6 +4922,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       S.boot = null; showSignIn();
     };
     bindPlanChoices();
+    bindListingLinks(showAccount);
     bindBrandKit();
     bindExtrasAccount();
     bindBenefitsAccount();
@@ -4922,6 +4934,173 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       try { var r = await api('studio-billing', 'resume'); S.boot.addon = Object.assign({}, S.boot.addon, r.addon); toast('Great — your plan carries on 💚'); showAccount(); }
       catch (x) { toast(x.message); rs.disabled = false; }
     };
+  }
+
+  // ───────────── 🏪 My Listing: the member's Auntie Tobi directory listing (add, claim, edit) ─────────────
+  var ML = { cats: [] };
+  var ML_STATE = { review: ['goldl', '⏳ Being reviewed by Auntie Tobi'], app: ['green', '● Live in the app'], live: ['green', '● Live in the app and on the website'], hidden: ['grey', 'Hidden'] };
+  function mlPic(src, big) { return '<div style="width:' + (big ? 96 : 52) + 'px;height:' + (big ? 96 : 52) + 'px;border-radius:12px;flex:none;background:var(--green-l) center/cover no-repeat' + (src ? ';background-image:url(&quot;' + esc(src) + '&quot;)' : '') + ';display:flex;align-items:center;justify-content:center;font-size:' + (big ? 34 : 22) + 'px">' + (src ? '' : '🏪') + '</div>'; }
+  function mlCap(s) { return String(s || '').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+  function homeListingRow() {
+    var m = S.boot.myListing; if (!m) return '';
+    var n = 0; try { n = +localStorage.getItem('ml_seen') || 0; localStorage.setItem('ml_seen', n + 1); } catch (e) {}
+    return '<button class="li" id="hmML" style="margin:0 0 12px;width:100%"><div class="t"><b>🏪 Your Auntie Tobi listing ' + (n < 4 ? '<span class="pill gold" style="font-size:11.5px;padding:2px 8px;margin-left:4px">🆕 New</span>' : '') + '</b><small>' + (n < 4 ? 'New: manage your listing here — photo, description, WhatsApp and more' : 'See and edit how customers find you') + '</small></div><span aria-hidden="true">→</span></button>';
+  }
+  function accountListingHtml() {
+    if (S.boot.myListing) return '<h2>Your Auntie Tobi listing</h2><div class="list"><button class="li" id="acML"><div class="t"><b>🏪 My Listing</b><small>See and edit how customers find you on Auntie Tobi</small></div><span aria-hidden="true">→</span></button></div>';
+    return '<div class="card stack" style="margin-top:14px;border:1.5px solid var(--gold);background:#FFFBF0"><b style="font-size:16.5px">🇳🇬 Nigerian business owner in the UK?</b><p class="sub" style="margin:0">Get your business seen by thousands on the Auntie Tobi app and website — free.</p><button class="btn primary block" id="acAddBiz">Add your business</button></div>';
+  }
+  function bindListingLinks(back) {
+    var a = $('#acML'), h = $('#hmML'), ad = $('#acAddBiz');
+    if (a) a.onclick = function () { showMyListing(back); };
+    if (h) h.onclick = function () { showMyListing(showHome); };
+    if (ad) ad.onclick = function () { showMyListing(back); };
+  }
+  async function showMyListing(back) {
+    back = back || showAccount;
+    setChrome({ tabs: false, back: back });
+    app.innerHTML = '<main><h1>🏪 My Listing</h1><div class="empty"><div class="typing"><i></i><i></i><i></i></div></div></main>';
+    var r; try { r = await api('studio-api', 'mylisting-get'); } catch (x) { app.innerHTML = '<main><h1>🏪 My Listing</h1><div class="err">' + esc(x.message) + '</div></main>'; return; }
+    if (r.cats) ML.cats = r.cats;
+    if (!r.listing) return showAddListing(back, r.suggest);
+    var L = r.listing, st = ML_STATE[r.state] || ML_STATE.app;
+    S.boot.myListing = { slug: L.slug, canEdit: r.canEdit };
+    app.innerHTML = '<main><h1>🏪 My Listing</h1><p class="sub" style="margin:4px 0 12px">How customers find you on the Auntie Tobi app' + (r.onSite ? ' and website' : '') + '.</p>' +
+      '<div class="card stack"><div class="row" style="gap:12px;align-items:center">' + mlPic(L.img) + '<div style="flex:1;min-width:0"><b style="font-size:17px">' + esc(L.name) + '</b><div class="sub" style="margin:0">' + esc(mlCap(L.cat)) + (L.loc ? ' · ' + esc(L.loc) : '') + '</div></div></div>' +
+      '<div><span class="pill ' + st[0] + '">' + st[1] + '</span></div>' +
+      (r.state === 'review' ? '<p class="hint" style="margin:0">Auntie Tobi checks every new business. We’ll email you when it’s live — you can still edit it below.</p>' : '') +
+      (r.state === 'app' ? '<p class="hint" style="margin:0">It joins the Auntie Tobi website at the next website update.</p>' : '') +
+      (r.state !== 'review' && r.state !== 'hidden' ? '<a class="btn ghost block" href="' + esc(L.url) + '" target="_blank" rel="noopener">View my listing ↗</a>' : '') + '</div>' +
+      (r.claimPending ? '<div class="note" style="margin-top:12px">⏳ Auntie Tobi is checking this business is yours. You’ll be able to edit it as soon as it’s confirmed.</div>' : '') +
+      (!r.canEdit && !r.claimPending ? '<div class="card stack" style="margin-top:12px"><b>Is this your business?</b><p class="sub" style="margin:0">To edit it, confirm it’s yours. If your email matches our records it’s instant — otherwise Auntie Tobi checks first.</p><button class="btn primary block" id="mlClaim">This is my business</button><div id="mlCErr"></div></div>' : '') +
+      (r.canEdit ? '<h2>Edit your listing</h2>' + (r.siteWaiting.length && r.onSite ? '<div class="note" style="margin-bottom:10px">✅ Your changes are live in the app. The website copy updates at Auntie Tobi’s next website update.</div>' : '') +
+        (r.nameRequest ? '<div class="note" style="margin-bottom:10px">⏳ You asked to change your name to <b>' + esc(r.nameRequest) + '</b> — Auntie Tobi will check it soon.</div>' : '') +
+        mlForm(L, { nameNote: r.state !== 'review' }) + '<div id="mlErr"></div><button class="btn primary block" id="mlSave" style="margin-top:14px">Save changes</button>' : '') + '</main>';
+    var c = $('#mlClaim'); if (c) c.onclick = async function () {
+      c.disabled = true;
+      try { var x = await api('studio-api', 'mylisting-add', { mode: 'claim', slug: L.slug }); toast(x.result === 'claimed' ? '🎉 It’s yours — you can edit it now' : 'Thanks! Auntie Tobi will check it’s yours'); showMyListing(back); }
+      catch (e) { $('#mlCErr').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; c.disabled = false; }
+    };
+    if (r.canEdit) {
+      bindMlForm();
+      $('#mlSave').onclick = async function () {
+        var b = this; b.disabled = true; $('#mlErr').innerHTML = '';
+        try {
+          var x = await api('studio-api', 'mylisting-save', { fields: mlCollect(), image: ML.newImg || '' });
+          ML.newImg = '';
+          toast(x.nameRequested ? 'Saved ✅ Your new name will be checked by Auntie Tobi' : x.changed && x.changed.length ? 'Saved ✅ It’s live in the app' : 'No changes to save');
+          showMyListing(back);
+        } catch (e) { $('#mlErr').innerHTML = '<div class="err" style="margin-top:10px">' + esc(e.message) + '</div>'; b.disabled = false; }
+      };
+    }
+  }
+  function mlForm(L, o) {
+    o = o || {};
+    var f = function (k, label, ph, extra) { return '<div><label class="f" for="ml_' + k + '">' + label + (extra || '') + '</label><input type="text" id="ml_' + k + '" value="' + esc(L[k] ? (k === 'ig' ? '@' + L[k] : k === 'wa' && /^44/.test(L[k]) ? '0' + String(L[k]).slice(2) : L[k]) : '') + '" placeholder="' + esc(ph || '') + '"></div>'; };
+    return '<div class="card stack">' +
+      '<div class="row" style="gap:12px;align-items:center"><div id="mlPic">' + mlPic(ML.newImg || L.img, true) + '</div><div class="stack" style="flex:1;gap:6px"><label class="btn ghost small" style="margin:0;text-align:center;display:block">📷 ' + (L.img ? 'Change photo' : 'Add a photo') + '<input type="file" id="mlFile" accept="image/jpeg,image/png,image/webp" style="display:none"></label><span class="hint" style="margin:0">Your logo, shop or best product</span></div></div>' +
+      f('name', 'Business name', '', o.nameNote ? ' <span class="opt">(changes are checked by Auntie Tobi)</span>' : '') +
+      '<div><label class="f" for="ml_cat">Category</label><select id="ml_cat"><option value="">Choose…</option>' + ML.cats.map(function (c) { return '<option' + (c.toLowerCase() === String(L.cat || '').toLowerCase() ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
+      f('loc', 'Town or city', 'e.g. Leeds') +
+      '<div><label class="f" for="ml_desc">What you offer</label><textarea id="ml_desc" rows="4" maxlength="1200" placeholder="What you sell or do, and who for">' + esc(L.desc || '') + '</textarea></div>' +
+      f('wa', 'WhatsApp number', '07700 900123') + f('phone', 'Phone', 'optional') + f('ig', 'Instagram', '@yourbusiness') + f('website', 'Website', 'optional') +
+      '<details><summary style="cursor:pointer;font-weight:700;color:var(--green-d)">More (business email, address, Facebook, TikTok)</summary><div class="stack" style="margin-top:8px">' + f('email', 'Business email', 'shown on your listing') + f('addr', 'Address', 'only if customers visit you') + f('fb', 'Facebook page', '') + f('tt', 'TikTok', '') + '</div></details></div>';
+  }
+  function bindMlForm() {
+    var fl = $('#mlFile'); if (fl) fl.onchange = async function () {
+      var file = this.files[0]; if (!file) return;
+      try { ML.newImg = await resizeImage(file, 1200, 'image/jpeg'); $('#mlPic').innerHTML = mlPic(ML.newImg, true); toast('Photo ready — tap Save to use it'); } catch (e) { toast(e.message); }
+    };
+  }
+  function mlCollect() {
+    var o = {}; ['name', 'cat', 'loc', 'desc', 'wa', 'phone', 'ig', 'website', 'email', 'addr', 'fb', 'tt'].forEach(function (k) { var el = $('#ml_' + k); if (el) o[k] = el.value.trim(); });
+    o.ig = String(o.ig || '').replace(/^@/, ''); return o;
+  }
+  // No listing yet: link one we found, search, or add a new business (with auto-fill)
+  function showAddListing(back, suggest) {
+    setChrome({ tabs: false, back: back });
+    app.innerHTML = '<main><h1>Add your business</h1><p class="sub" style="margin:4px 0 12px">Get your business seen by thousands of Nigerians on the Auntie Tobi app and website — free.</p>' +
+      (suggest ? '<div class="card stack" style="border:1.5px solid var(--gold)"><b>👀 We found a business with your email</b><div class="row" style="gap:12px;align-items:center">' + mlPic('') + '<div><b>' + esc(suggest.name) + '</b><div class="sub" style="margin:0">' + esc(mlCap(suggest.cat)) + (suggest.loc ? ' · ' + esc(suggest.loc) : '') + '</div></div></div><button class="btn primary block" data-mlc="' + esc(suggest.slug) + '">Yes, this is mine</button></div>' : '') +
+      '<div class="card stack" style="margin-top:12px"><b>Is your business already on Auntie Tobi?</b><input type="search" id="mlQ" placeholder="🔍 Your business name or @instagram"><div id="mlRes" class="stack"></div></div>' +
+      '<button class="btn ghost block" id="mlNew" style="margin-top:12px">No, add my business →</button></main>';
+    var t = null;
+    $('#mlQ').oninput = function () {
+      var v = this.value.trim(); clearTimeout(t); if (v.length < 2) { $('#mlRes').innerHTML = ''; return; }
+      t = setTimeout(async function () {
+        try {
+          var x = await api('studio-api', 'mylisting-search', { q: v });
+          $('#mlRes').innerHTML = x.results.length ? x.results.map(function (b) { return '<div class="row" style="gap:10px;align-items:center">' + mlPic(b.img) + '<div style="flex:1;min-width:0"><b>' + esc(b.name) + '</b><div class="sub" style="margin:0">' + esc(mlCap(b.cat)) + (b.loc ? ' · ' + esc(b.loc) : '') + '</div></div>' + (b.owned ? '<span class="pill grey">Claimed</span>' : '<button class="btn primary small" data-mlc="' + esc(b.slug) + '">This is mine</button>') + '</div>'; }).join('') : '<p class="hint" style="margin:0">Not found — tap <b>No, add my business</b>.</p>';
+          bindClaims();
+        } catch (e) { $('#mlRes').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
+      }, 350);
+    };
+    function bindClaims() { $$('[data-mlc]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { var x = await api('studio-api', 'mylisting-add', { mode: 'claim', slug: b.dataset.mlc }); toast(x.result === 'claimed' ? '🎉 It’s yours — you can edit it now' : 'Thanks! Auntie Tobi will check it’s yours'); S.boot.myListing = { slug: b.dataset.mlc }; showMyListing(back); } catch (e) { toast(e.message); b.disabled = false; } }; }); }
+    bindClaims();
+    $('#mlNew').onclick = function () { showNewListing(back, {}); };
+  }
+  function showNewListing(back, L, msg, dupes) {
+    setChrome({ tabs: false, back: function () { showAddListing(back); } });
+    app.innerHTML = '<main><h1>Add your business</h1>' +
+      '<div class="card stack"><b>✨ Fill it in for me</b><div class="chips" role="group"><button type="button" class="chip" data-af="web" aria-pressed="true">🌐 Website</button><button type="button" class="chip" data-af="ig" aria-pressed="false">📸 Instagram</button><button type="button" class="chip" data-af="shot" aria-pressed="false">🖼️ Screenshot</button></div>' +
+      '<div id="afBox"></div><div id="afMsg"></div></div>' +
+      (msg ? '<div class="note" style="margin-top:12px">' + msg + '</div>' : '') +
+      (dupes && dupes.length ? '<div class="card stack" style="margin-top:12px;border:1.5px solid var(--gold)"><b>👀 Is this your business?</b><p class="sub" style="margin:0">It might already be on Auntie Tobi — claim it instead of adding it again.</p>' + dupes.map(function (b) { return '<div class="row" style="gap:10px;align-items:center">' + mlPic(b.img) + '<div style="flex:1"><b>' + esc(b.name) + '</b><div class="sub" style="margin:0">Same ' + esc(b.why) + '</div></div>' + (b.owned ? '<span class="pill grey">Claimed</span>' : '<button class="btn primary small" data-mlc="' + esc(b.slug) + '">Claim it</button>') + '</div>'; }).join('') + '</div>' : '') +
+      '<h2>Your business</h2>' + mlForm(L) + '<div id="mlErr"></div><button class="btn primary block" id="mlAdd" style="margin-top:14px">Send to Auntie Tobi</button>' +
+      (dupes && dupes.length ? '<button class="btn ghost block" id="mlForce" style="margin-top:8px">It’s a different business — send it anyway</button>' : '') + '<p class="hint" style="text-align:center">Auntie Tobi checks every new business before it goes live.</p></main>';
+    bindMlForm();
+    var mode = 'web';
+    function af() {
+      $$('[data-af]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.af === mode); });
+      $('#afBox').innerHTML = mode === 'shot' ? '<label class="btn ghost block" style="margin:0">📷 Upload a screenshot of your Instagram profile<input type="file" id="afFile" accept="image/jpeg,image/png,image/webp" style="display:none"></label>'
+        : '<div class="row"><input type="text" id="afIn" placeholder="' + (mode === 'web' ? 'www.yourbusiness.co.uk' : '@yourbusiness') + '" style="flex:1"><button class="btn gold small" id="afGo" style="min-height:46px">Fill in</button></div>';
+      var go = $('#afGo'); if (go) go.onclick = function () { var v = $('#afIn').value.trim(); if (v) run(mode, v, go); };
+      var fi = $('#afFile'); if (fi) fi.onchange = async function () { var file = this.files[0]; if (!file) return; try { run('shot', await resizeImage(file, 1400, 'image/jpeg')); } catch (e) { toast(e.message); } };
+    }
+    async function run(kind, value, btn) {
+      if (btn) btn.disabled = true; $('#afMsg').innerHTML = '<p class="hint"><span class="typing"><i></i><i></i><i></i></span> Reading…</p>';
+      try {
+        var x = await api('studio-api', 'mylisting-lookup', { kind: kind, value: value });
+        if (x.needShot) { mode = 'shot'; af(); $('#afMsg').innerHTML = '<div class="note">📸 Instagram didn’t let us read that profile — upload a screenshot of it instead.</div>'; return; }
+        var d = Object.assign({}, mlCollect(), x.draft || {}); Object.keys(x.draft || {}).forEach(function (k) { if (!x.draft[k]) d[k] = mlCollect()[k]; });
+        if (x.draft && x.draft.imgData) { try { ML.newImg = await new Promise(function (ok) { var im = new Image(); im.onload = function () { var k = Math.min(1, 1200 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL('image/jpeg', 0.85)); }; im.onerror = function () { ok(''); }; im.src = x.draft.imgData; }); } catch (e) {} }
+        showNewListing(back, d, '✨ We’ve filled in what we could — check it and change anything you like.' + (x.draft && x.draft.missing && x.draft.missing.length ? ' Still to add: <b>' + x.draft.missing.map(function (k) { return { name: 'name', cat: 'category', loc: 'town', desc: 'description', wa: 'WhatsApp or phone' }[k]; }).join(', ') + '</b>.' : ''), x.dupes);
+      } catch (e) { $('#afMsg').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; if (btn) btn.disabled = false; }
+    }
+    $$('[data-af]').forEach(function (b) { b.onclick = function () { mode = b.dataset.af; af(); }; });
+    af();
+    $$('[data-mlc]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { var x = await api('studio-api', 'mylisting-add', { mode: 'claim', slug: b.dataset.mlc }); toast(x.result === 'claimed' ? '🎉 It’s yours' : 'Thanks! Auntie Tobi will check it’s yours'); showMyListing(back); } catch (e) { toast(e.message); b.disabled = false; } }; });
+    var send = async function (force, btn) {
+      btn.disabled = true; $('#mlErr').innerHTML = '';
+      try {
+        var x = await api('studio-api', 'mylisting-add', { mode: 'new', fields: mlCollect(), image: ML.newImg || '', force: !!force });
+        if (x.dupes) { btn.disabled = false; return showNewListing(back, mlCollect(), '', x.dupes); }
+        ML.newImg = ''; S.boot.myListing = { slug: x.slug, canEdit: true };
+        toast('🎉 Sent! Auntie Tobi will check it soon'); showMyListing(back);
+      } catch (e) { $('#mlErr').innerHTML = '<div class="err" style="margin-top:10px">' + esc(e.message) + '</div>'; btn.disabled = false; }
+    };
+    $('#mlAdd').onclick = function () { send(false, this); };
+    var fo = $('#mlForce'); if (fo) fo.onclick = function () { send(true, this); };
+  }
+  async function loadMlCats() { if (ML.cats.length) return; try { var r = await api('studio-api', 'mylisting-get'); ML.cats = r.cats || []; } catch (e) {} }
+
+  // ───────────── 👋 First-time welcome tour (3 steps) ─────────────
+  function welcomeTour(done) {
+    var steps = [
+      ['🏪', 'This is My Listing', 'It’s how customers see you on the Auntie Tobi app and website. Change your photo, description or WhatsApp any time.'],
+      ['✨', 'Create', 'Make a post, caption or design for Instagram in one tap — in your brand’s voice.'],
+      ['🏠', 'Today', 'Your daily business tip and to-dos, so you always know what to do next.'],
+    ];
+    var i = 0, scrim = document.createElement('div'); scrim.className = 'scrim';
+    function draw() {
+      var s = steps[i];
+      scrim.innerHTML = '<div class="sheet stack" role="dialog" aria-modal="true" aria-labelledby="twT" style="text-align:center"><div style="font-size:44px;line-height:1">' + s[0] + '</div><h2 id="twT" style="margin:0">' + esc(s[1]) + '</h2><p class="sub" style="margin:0">' + esc(s[2]) + '</p>' +
+        '<div style="display:flex;justify-content:center;gap:6px">' + steps.map(function (x, j) { return '<span style="width:8px;height:8px;border-radius:50%;background:' + (j === i ? 'var(--green)' : 'var(--line)') + '"></span>'; }).join('') + '</div>' +
+        '<button class="btn primary block" id="twNext">' + (i < steps.length - 1 ? 'Next' : 'Let’s go') + '</button>' + (i < steps.length - 1 ? '<button class="btn link" id="twSkip">Skip</button>' : '') + '</div>';
+      $('#twNext', scrim).onclick = function () { if (i < steps.length - 1) { i++; draw(); } else finish(); };
+      var sk = $('#twSkip', scrim); if (sk) sk.onclick = finish;
+    }
+    function finish() { scrim.remove(); S.boot.tourDone = true; api('studio-api', 'tour-done').catch(function () {}); if (done) done(); }
+    document.body.appendChild(scrim); draw();
   }
 
   start();

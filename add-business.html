@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Your Business — Auntie Tobi</title>
+<meta name="description" content="List your business on Auntie Tobi for free and reach Nigerians across the UK. Paste your website or Instagram and we fill in the details for you. You also get your own free Business Studio.">
+<meta property="og:title" content="Add your business to Auntie Tobi 💚">
+<meta property="og:description" content="Free listing for Nigerian businesses in the UK — plus your own free Business Studio to run and grow your business.">
+<meta property="og:image" content="https://www.auntietobi.co.uk/tobi-face-512.png">
+<link rel="icon" href="/tobi-face-128.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;min-height:100vh;padding-bottom:60px;line-height:1.5}
+.app-header{background:#0F1E36;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:560px;margin:0 auto}
+.app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0}.app-logo img{width:100%;height:100%;object-fit:cover}
+.app-header-text{flex:1;min-width:0}.app-header-title{font-size:16px;font-weight:700;color:#fff}.app-header-sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+.back-btn{color:rgba(255,255,255,.85);font-size:12px;text-decoration:none;font-weight:600;padding:7px 11px;border:1.5px solid rgba(255,255,255,.25);border-radius:20px;white-space:nowrap}
+.wrap{max-width:560px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.hero{background:#0F1E36;border-radius:14px;padding:22px 18px;color:#fff}
+.badge{display:inline-block;background:rgba(255,184,28,.25);color:#FFB81C;font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:10px}
+.hero h1{font-size:24px;line-height:1.25;margin-bottom:8px}.hero p{font-size:15px;color:rgba(255,255,255,.85)}
+.perk{margin-top:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,184,28,.45);border-radius:12px;padding:10px 12px;font-size:14.5px;color:#fff}
+.perk b{color:#FFB81C}
+.card{background:#fff;border-radius:14px;padding:18px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.step{font-size:12px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+h2{font-size:19px;line-height:1.3;margin-bottom:6px}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opt{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 6px;text-align:center;font-size:13px;font-weight:700;background:#fff;color:#0F1E36;cursor:pointer;font-family:inherit;line-height:1.35}
+.opt span{display:block;font-size:22px;margin-bottom:4px}
+.opt[aria-pressed=true]{border-color:#057A44;background:#E3F2EA;color:#04613A}
+.panel{margin-top:12px}
+.drop{border:2px dashed #057A44;border-radius:12px;padding:20px 12px;text-align:center;background:#F6FBF8;color:#04613A;font-size:14px;font-weight:600;cursor:pointer;display:block}
+.drop input{display:none}
+label{display:block;font-size:13.5px;font-weight:700;margin:12px 0 4px}
+label small{font-weight:400;color:#6B7280}
+.need{display:inline-block;background:#FFF1DB;color:#B45309;border-radius:20px;font-size:11.5px;font-weight:800;padding:1px 8px;margin-left:6px;vertical-align:1px}
+input,textarea,select{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 12px;font:16px/1.45 inherit;font-family:inherit;color:#0F1E36;background:#fff}
+input.miss,textarea.miss,select.miss{border-color:#F59E0B;background:#FFFCF5}
+textarea{resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid #057A44;outline-offset:1px;border-color:#057A44}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none}
+.btn.primary{background:#057A44;color:#fff}.btn.gold{background:#FFB81C;color:#0F1E36}.btn.ghost{background:#fff;color:#0F1E36;border:1.5px solid #e0e0e0}.btn:disabled{opacity:.6;cursor:wait}
+.btn.link{background:none;color:#057A44;padding:10px;font-size:15px}
+.hint{font-size:13px;color:#6B7280;margin-top:6px}
+.note{background:#FFF8E7;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px;color:#0F1E36}
+.ok{background:#E3F2EA;color:#04613A}
+.err{background:#FDECEC;color:#B42318;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px}
+.hidden{display:none!important}
+.trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.res{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.biz{display:flex;gap:12px;align-items:center;border:1.5px solid #e8e8e8;border-radius:12px;padding:10px}
+.biz .im{width:52px;height:52px;border-radius:10px;background:#E3F2EA center/cover no-repeat;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px}
+.biz .t{flex:1;min-width:0}.biz .t b{display:block;font-size:15px;line-height:1.3}.biz .t span{font-size:13px;color:#6B7280}
+.biz button{border:none;background:#057A44;color:#fff;font-weight:700;font-size:13px;border-radius:10px;padding:9px 11px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.biz button.taken{background:#e5e7eb;color:#6B7280;cursor:default}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid #CDE8D9;border-top-color:#057A44;border-radius:50%;animation:sp .9s linear infinite;vertical-align:-4px;margin-right:6px}@keyframes sp{to{transform:rotate(360deg)}}
+.imgbox{display:flex;gap:14px;align-items:flex-start}
+.pic{width:110px;height:110px;border-radius:12px;border:1px solid #e0e0e0;background:#F6FBF8 center/cover no-repeat;flex:none;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:#6B7280;padding:6px}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.thumbs img{width:54px;height:54px;object-fit:cover;border-radius:8px;border:2px solid transparent;cursor:pointer}.thumbs img.on{border-color:#057A44}
+.sbtn{border:1.5px solid #e0e0e0;background:#fff;border-radius:10px;padding:9px 10px;font-weight:600;font-size:14px;font-family:inherit;color:#0F1E36;cursor:pointer;text-align:left;display:block;width:100%;margin-bottom:6px}
+.code{font-size:26px;letter-spacing:8px;text-align:center;font-weight:800}
+.tick{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;margin-top:14px}.tick input{width:20px;height:20px;flex:none;margin-top:2px}
+.done{text-align:center}.done .big{font-size:46px}.done h2{font-size:22px;margin:6px 0}
+.what{text-align:left;background:#F6FBF8;border:1px solid #CDE8D9;border-radius:12px;padding:14px;margin:14px 0}
+.what ul{list-style:none;margin-top:8px}.what li{padding:5px 0;font-size:15px}
+.dup{border:1.5px solid #FFB81C;background:#FFFBF0;border-radius:12px;padding:12px;margin-top:12px}
+@media (max-width:420px){.two{grid-template-columns:1fr}.opt{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-header-text"><div class="app-header-title">Auntie Tobi</div><div class="app-header-sub">Add your business</div></div>
+  <a href="/" class="back-btn">🏠 App</a>
+</div>
+
+<div class="wrap" id="root"></div>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.getElementById('root');
+  var S = { f: {}, img: '', photos: [], cats: [], how: 'manual', missing: [] };
+  var CLAIM = (location.pathname.match(/^\/claim\/([^\/?#]+)/) || [])[1] || new URLSearchParams(location.search).get('claim') || '';
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(s) { return root.querySelector(s); }
+  function cap(s) { return String(s || '').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+  async function api(action, payload) {
+    var res, j;
+    try { res = await fetch('/.netlify/functions/add-biz', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify(Object.assign({ action: action }, payload || {})) }); }
+    catch (e) { throw new Error('No connection — please check your internet and try again.'); }
+    try { j = await res.json(); } catch (e) { j = {}; }
+    if (!res.ok) { var er = new Error(j.message || 'Something went wrong. Please try again.'); er.code = j.error; throw er; }
+    return j;
+  }
+  function busy(btn, on, label) { if (!btn) return; if (on) { btn._t = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + (label || 'Please wait…'); } else { btn.disabled = false; if (btn._t) btn.innerHTML = btn._t; } }
+  function showErr(id, msg) { var e = $(id); if (!e) return; e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
+  function top() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  function bizRow(b, btn) {
+    return '<div class="biz"><div class="im" style="' + (b.img ? 'background-image:url(&quot;' + esc(b.img) + '&quot;)' : '') + '">' + (b.img ? '' : '🏪') + '</div><div class="t"><b>' + esc(b.name) + '</b><span>' + esc(cap(b.cat)) + (b.loc ? ' · ' + esc(b.loc) : '') + '</span></div>' + btn + '</div>';
+  }
+  // Pictures are shrunk here before they're sent (JPEG, max 1200px)
+  function shrink(src, max, crop) {
+    return new Promise(function (ok, bad) {
+      var im = new Image(); im.onload = function () {
+        var sx = 0, sy = 0, sw = im.width, sh = im.height;
+        if (crop) { sx = Math.max(0, crop.x * im.width); sy = Math.max(0, crop.y * im.height); sw = Math.min(im.width - sx, crop.w * im.width); sh = Math.min(im.height - sy, crop.h * im.height); var m = Math.min(sw, sh); sw = sh = m; }
+        var k = Math.min(1, (max || 1200) / Math.max(sw, sh)), c = document.createElement('canvas');
+        c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+        var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, sx, sy, sw, sh, 0, 0, c.width, c.height);
+        ok(c.toDataURL('image/jpeg', 0.85));
+      }; im.onerror = function () { bad(new Error('That picture couldn’t be opened — try a JPG or PNG.')); }; im.src = src;
+    });
+  }
+  function readFile(file) { return new Promise(function (ok, bad) { var r = new FileReader(); r.onload = function () { ok(r.result); }; r.onerror = bad; r.readAsDataURL(file); }); }
+
+  // ───── 1 · Is your business already on Auntie Tobi? ─────
+  function showSearch() {
+    root.innerHTML = '<div class="hero"><div class="badge">💚 Free business listing</div><h1>Add your business to Auntie Tobi</h1>' +
+      '<p>Get found by Nigerians across the UK on the Auntie Tobi app and website. Paste your website or Instagram and we’ll fill in the details for you. Every listing is checked by Auntie Tobi before it goes live.</p>' +
+      '<div class="perk">✨ <b>Free when you list:</b> your own Business Studio — simple tools to run and grow your business.</div></div>' +
+      '<div class="card"><div class="step">Step 1</div><h2>Is your business already on Auntie Tobi?</h2><p class="hint" style="margin-top:0">We’ve listed lots of businesses already, so check first.</p>' +
+      '<input id="q" type="search" placeholder="🔍 Type your business name or @instagram" autocomplete="off" style="margin-top:10px"><div class="res" id="res"></div>' +
+      '<button class="btn ghost" id="notThere" style="margin-top:14px">No, add my business →</button></div>';
+    var t = null, last = '';
+    $('#q').oninput = function () {
+      var v = this.value.trim(); clearTimeout(t);
+      if (v.length < 2) { $('#res').innerHTML = ''; return; }
+      t = setTimeout(async function () {
+        if (v === last) return; last = v; $('#res').innerHTML = '<p class="hint"><span class="spin"></span>Looking…</p>';
+        try { var r = await api('search', { q: v }); drawResults(r.results, v); } catch (e) { $('#res').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
+      }, 350);
+    };
+    $('#notThere').onclick = showStart;
+  }
+  function drawResults(list, q) {
+    var box = $('#res'); if (!box) return;
+    if (!list.length) { box.innerHTML = '<p class="hint">No business called “' + esc(q) + '” yet — tap <b>No, add my business</b> below.</p>'; return; }
+    box.innerHTML = list.map(function (b) { return bizRow(b, b.owned ? '<button class="taken" disabled>Already claimed</button>' : '<button data-mine="' + esc(b.slug) + '">This is mine</button>'); }).join('') +
+      '<p class="hint">Is yours <b>already claimed</b>? If that wasn’t you, message Auntie Tobi on WhatsApp: <a href="https://wa.me/447594674940">07594 674940</a></p>';
+    box.querySelectorAll('[data-mine]').forEach(function (b) { b.onclick = function () { var x = list.filter(function (y) { return y.slug === b.dataset.mine; })[0]; showClaim(x); }; });
+  }
+
+  // ───── Claim: "This is my business" ─────
+  function showClaim(b) {
+    S.claim = b; top();
+    root.innerHTML = '<div class="hero"><div class="badge">🏪 Claim your business</div><h1>Is this your business?</h1><p>Claim it for free to update it yourself — and get your own free Business Studio.</p></div>' +
+      '<div class="card">' + bizRow(b, '') +
+      (b.owned ? '<div class="err">This business has already been claimed. If that wasn’t you, message Auntie Tobi on WhatsApp: 07594 674940.</div>' :
+      '<div class="step" style="margin-top:16px">Confirm it’s you</div>' + youHtml('claim') ) + '</div>' +
+      '<button class="btn link" id="back">← Search again</button>';
+    $('#back').onclick = function () { if (CLAIM) { CLAIM = ''; history.replaceState(null, '', '/add-business'); } showSearch(); };
+    if (!b.owned) bindYou('claim');
+  }
+
+  // ───── 2 · How do you want to start? ─────
+  function showStart() {
+    top();
+    root.innerHTML = '<div class="hero"><div class="badge">💚 Free business listing</div><h1>Let’s add your business</h1><p>Start with your website or Instagram and we’ll fill in what we can. You can change anything before you send it.</p>' +
+      '<div class="perk">✨ <b>Free when you list:</b> your own Business Studio — simple tools to run and grow your business.</div></div>' +
+      '<div class="card"><div class="step">Step 2 · Fill it in for me</div>' +
+      '<div class="opts" role="group" aria-label="How to start"><button class="opt" data-m="web" aria-pressed="true"><span>🌐</span>My website</button><button class="opt" data-m="ig" aria-pressed="false"><span>📸</span>My Instagram</button><button class="opt" data-m="shot" aria-pressed="false"><span>🖼️</span>Instagram screenshot</button></div>' +
+      '<div class="panel" data-p="web"><input id="web" type="url" inputmode="url" placeholder="www.yourbusiness.co.uk" autocomplete="url"><button class="btn gold" id="webBtn" style="margin-top:10px">✨ Fill in from my website</button></div>' +
+      '<div class="panel hidden" data-p="ig"><input id="ig" placeholder="@yourbusiness" autocomplete="off" autocapitalize="off"><p class="hint">Works best for Instagram Business or Creator accounts.</p><button class="btn gold" id="igBtn" style="margin-top:10px">✨ Fill in from my Instagram</button></div>' +
+      '<div class="panel hidden" data-p="shot"><label class="drop">📷 Upload a screenshot of your Instagram profile<br><small style="font-weight:400">Make sure your name, bio and link are showing</small><input type="file" id="shot" accept="image/jpeg,image/png,image/webp"></label><p class="hint">Works for any Instagram account. The screenshot is only read to fill in the form — it isn’t kept.</p></div>' +
+      '<div class="err hidden" id="aiErr"></div><div class="note hidden" id="aiNote"></div>' +
+      '<button class="btn link" id="manual" style="margin-top:6px">I’ll fill it in myself →</button></div>' +
+      '<button class="btn link" id="back">← Back</button>';
+    var opts = root.querySelectorAll('.opt');
+    function pick(m) { opts.forEach(function (o) { o.setAttribute('aria-pressed', o.dataset.m === m); }); root.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('hidden', p.dataset.p !== m); }); showErr('#aiErr', ''); }
+    opts.forEach(function (o) { o.onclick = function () { pick(o.dataset.m); }; });
+    $('#back').onclick = showSearch;
+    $('#manual').onclick = function () { S.how = 'manual'; showForm(); };
+    $('#webBtn').onclick = function () { var v = $('#web').value.trim(); if (!v) return showErr('#aiErr', 'Paste your website address first.'); lookup('web', v, this); };
+    $('#igBtn').onclick = function () { var v = $('#ig').value.trim(); if (!v) return showErr('#aiErr', 'Type your Instagram handle first.'); lookup('ig', v, this, function () { pick('shot'); var n = $('#aiNote'); n.className = 'note'; n.innerHTML = '📸 Instagram didn’t let us read that profile. <b>Upload a screenshot of your profile instead</b> and we’ll read it for you.'; }); };
+    async function onShot() {
+      var f = this.files[0]; if (!f) return;
+      var lab = root.querySelector('.drop'); lab.innerHTML = '<span class="spin"></span>Reading your screenshot…';
+      try { var raw = await readFile(f); S.shot = await shrink(raw, 1400); await lookup('shot', S.shot, null); }
+      catch (e) { showErr('#aiErr', e.message); }
+      lab = root.querySelector('.drop'); if (!lab) return;   // the form is showing now
+      lab.innerHTML = '📷 Upload another screenshot<input type="file" id="shot" accept="image/jpeg,image/png,image/webp">'; $('#shot').onchange = onShot;
+    }
+    $('#shot').onchange = onShot;
+  }
+  async function lookup(kind, value, btn, onNeedShot) {
+    showErr('#aiErr', ''); busy(btn, true, 'Reading…');
+    try {
+      var r = await api('lookup', { kind: kind, value: value });
+      if (r.needShot) { busy(btn, false); if (onNeedShot) onNeedShot(); return; }
+      S.f = r.draft || {}; S.how = { web: 'website', ig: 'instagram', shot: 'screenshot' }[kind];
+      S.photos = r.photos || []; S.img = '';
+      if (S.f.imgData) { try { S.img = await shrink(S.f.imgData, 1200); } catch (e) {} }
+      if (!S.img && kind === 'shot' && r.avatar && S.shot) { try { S.img = await shrink(S.shot, 600, r.avatar); S.smallPic = true; } catch (e) {} }
+      if (!S.img && S.photos[0]) { try { S.img = await shrink(S.photos[0], 1200); } catch (e) {} }
+      S.dupes = r.dupes || [];
+      showForm();
+    } catch (e) { showErr('#aiErr', e.message); busy(btn, false); }
+  }
+
+  // ───── 3 · Check and edit ─────
+  var FIELDS = [['name', 'Business name', 'e.g. Tolu’s Kitchen'], ['cat', 'Category'], ['loc', 'Town or city', 'e.g. Leeds'], ['desc', 'What you offer', 'One or two sentences — what you sell or do, and who for'],
+    ['wa', 'WhatsApp number', '07700 900123'], ['phone', 'Phone', 'optional'], ['ig', 'Instagram', '@yourbusiness'], ['website', 'Website', 'optional'], ['email', 'Business email', 'shown on your listing — optional'], ['addr', 'Address', 'only if customers visit you — optional'], ['fb', 'Facebook page', 'optional'], ['tt', 'TikTok', 'optional']];
+  async function loadCats() { if (S.cats.length) return; try { S.cats = (await api('cats')).cats; } catch (e) { S.cats = []; } }
+  async function showForm() {
+    await loadCats(); top();
+    var f = S.f, miss = f.missing || [];
+    var filled = S.how !== 'manual';
+    var field = function (k, label, ph) {
+      var v = f[k] || '', need = filled && (miss.indexOf(k) > -1 || (k === 'wa' && miss.indexOf('wa') > -1));
+      var cls = need ? ' class="miss"' : '';
+      var tag = need ? '<span class="need">please add</span>' : '';
+      if (k === 'cat') return '<label for="f_cat">' + label + tag + '</label><select id="f_cat"' + cls + '><option value="">Choose a category…</option>' + S.cats.map(function (c) { return '<option' + (c.toLowerCase() === String(v).toLowerCase() ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select>';
+      if (k === 'desc') return '<label for="f_desc">' + label + tag + '</label><textarea id="f_desc" rows="3" maxlength="1200" placeholder="' + esc(ph) + '"' + cls + '>' + esc(v) + '</textarea>';
+      if (k === 'wa' && /^44\d{10}$/.test(v)) v = '0' + v.slice(2);
+      return '<label for="f_' + k + '">' + label + tag + '</label><input id="f_' + k + '" value="' + esc(k === 'ig' && v ? '@' + v : v) + '" placeholder="' + esc(ph || '') + '"' + cls + (k === 'wa' || k === 'phone' ? ' inputmode="tel"' : k === 'website' ? ' inputmode="url"' : k === 'email' ? ' inputmode="email"' : '') + '>';
+    };
+    root.innerHTML = '<div class="card"><div class="step">Step 3 · Check your details</div>' +
+      (filled ? '<div class="note ok" style="margin-top:0">✨ We’ve filled in what we could' + (S.how === 'screenshot' ? ' from your screenshot' : S.how === 'instagram' ? ' from your Instagram' : ' from your website') + '. Check it and change anything you like.' + (miss.length ? ' Anything marked <b>please add</b> still needs filling in.' : '') + '</div>' : '<h2>Tell us about your business</h2>') +
+      (S.dupes && S.dupes.length ? dupHtml(S.dupes) : '') +
+      '<label>Photo <small>(your logo, shop or best product)</small></label><div class="imgbox"><div class="pic" id="pic">' + (S.img ? '' : 'No photo yet') + '</div><div style="flex:1">' +
+      '<label class="sbtn" style="margin:0 0 6px">📷 ' + (S.img ? 'Choose a different photo' : 'Upload a photo') + '<input type="file" id="own" accept="image/jpeg,image/png,image/webp" style="display:none"></label>' +
+      (S.img ? '<button class="sbtn" id="noPic">✖ Remove photo</button>' : '') + (S.smallPic ? '<p class="hint" style="margin:0">This is your profile picture from the screenshot — a bigger, clearer photo looks much better.</p>' : '') + '</div></div>' +
+      (S.photos.length ? '<div class="hint">Or pick one of your Instagram photos:</div><div class="thumbs">' + S.photos.map(function (p, i) { return '<img src="' + p + '" data-ph="' + i + '" alt="">'; }).join('') + '</div>' : '') +
+      FIELDS.slice(0, 4).map(function (x) { return field(x[0], x[1], x[2]); }).join('') +
+      '<div class="step" style="margin-top:18px">How customers reach you</div>' +
+      '<div class="two"><div>' + field('wa', 'WhatsApp number', '07700 900123') + '</div><div>' + field('phone', 'Phone', 'optional') + '</div></div>' +
+      '<div class="two"><div>' + field('ig', 'Instagram', '@yourbusiness') + '</div><div>' + field('website', 'Website', 'optional') + '</div></div>' +
+      '<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;font-size:14px;color:#057A44">More (business email, address, Facebook, TikTok)</summary>' + FIELDS.slice(8).map(function (x) { return field(x[0], x[1], x[2]); }).join('') + '</details>' +
+      '<div class="err hidden" id="fErr"></div><button class="btn primary" id="next" style="margin-top:16px">Next: confirm it’s you →</button></div>' +
+      '<button class="btn link" id="back">← Start again</button>';
+    drawPic();
+    $('#back').onclick = showStart;
+    $('#own').onchange = async function () { var fl = this.files[0]; if (!fl) return; try { S.img = await shrink(await readFile(fl), 1200); S.smallPic = false; collect(); showForm(); } catch (e) { showErr('#fErr', e.message); } };
+    var np = $('#noPic'); if (np) np.onclick = function () { S.img = ''; S.smallPic = false; collect(); showForm(); };
+    root.querySelectorAll('[data-ph]').forEach(function (im) { im.onclick = async function () { try { S.img = await shrink(S.photos[+im.dataset.ph], 1200); S.smallPic = false; drawPic(); } catch (e) {} }; });
+    root.querySelectorAll('input.miss,textarea.miss,select.miss').forEach(function (el) { el.addEventListener('input', function () { el.classList.remove('miss'); var l = root.querySelector('label[for="' + el.id + '"] .need'); if (l) l.remove(); }); el.addEventListener('change', function () { el.classList.remove('miss'); }); });
+    bindDup();
+    $('#next').onclick = function () {
+      collect(); var f2 = S.f;
+      var bad = !f2.name ? 'Please add your business name.' : !f2.cat ? 'Please choose a category.' : !f2.loc ? 'Please add your town or city.' : (!f2.desc || f2.desc.length < 15) ? 'Please add a short description of what you offer.' : (!f2.wa && !f2.phone && !f2.ig) ? 'Please add a WhatsApp number, phone or Instagram so customers can reach you.' : '';
+      if (bad) return showErr('#fErr', bad);
+      showYou();
+    };
+  }
+  function drawPic() { var p = $('#pic'); if (!p) return; p.style.backgroundImage = S.img ? 'url("' + S.img + '")' : ''; p.textContent = S.img ? '' : 'No photo yet'; }
+  function collect() { FIELDS.forEach(function (x) { var el = $('#f_' + x[0]); if (el) S.f[x[0]] = el.value.trim(); }); S.f.ig = String(S.f.ig || '').replace(/^@/, ''); }
+  function dupHtml(list) {
+    return '<div class="dup"><b>👀 Is this your business?</b><p class="hint" style="margin:2px 0 8px">It looks like it might already be on Auntie Tobi. If it’s yours, claim it instead of adding it again.</p>' +
+      list.map(function (b) { return bizRow(b, b.owned ? '<button class="taken" disabled>Claimed</button>' : '<button data-dclaim="' + esc(b.slug) + '">Claim it</button>'); }).join('') +
+      '<p class="hint" style="margin-top:6px">Not yours? Just carry on.</p></div>';
+  }
+  function bindDup() { root.querySelectorAll('[data-dclaim]').forEach(function (b) { b.onclick = function () { var x = (S.dupes || []).filter(function (y) { return y.slug === b.dataset.dclaim; })[0]; if (x) showClaim(x); }; }); }
+
+  // ───── 4 · Confirm it's you (email code) ─────
+  function youHtml(mode) {
+    return '<label for="oName">Your name</label><input id="oName" autocomplete="name" placeholder="e.g. Tolu Adeyemi">' +
+      '<label for="oEmail">Your email <small>(private — never shown on your listing)</small></label><input id="oEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com">' +
+      (mode === 'claim' ? '<p class="hint">Use the email your business uses if you can — if it matches our records, your claim is instant.</p>' : '<p class="hint">We’ll send you a 6-digit code. This email also signs you in to your free Business Studio.</p>') +
+      '<label class="tick"><input type="checkbox" id="oOk"><span>I own or run this business' + (mode === 'claim' ? '' : ' and I’m happy for it to be listed on Auntie Tobi') + '.</span></label>' +
+      '<div class="trap" aria-hidden="true"><input id="hp" tabindex="-1" autocomplete="off"></div>' +
+      '<button class="btn primary" id="sendCode" style="margin-top:14px">Send my code</button>' +
+      '<div class="hidden" id="codeBox"><label for="code">Enter the 6-digit code we emailed you</label><input id="code" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">' +
+      '<button class="btn primary" id="finish" style="margin-top:12px">' + (mode === 'claim' ? 'Claim my business' : 'Send my business to Auntie Tobi') + '</button><button class="btn link" id="resend">Send a new code</button></div>' +
+      '<div class="err hidden" id="yErr"></div><div id="dupBox"></div>';
+  }
+  function showYou() {
+    top();
+    root.innerHTML = '<div class="card"><div class="step">Step 4 · Confirm it’s you</div><h2>Nearly done!</h2>' +
+      '<div class="note ok" style="margin:0 0 4px">' + bizRow({ name: S.f.name, cat: S.f.cat, loc: S.f.loc, img: S.img }, '') + '</div>' + youHtml('new') + '</div><button class="btn link" id="back">← Back to my details</button>';
+    $('#back').onclick = showForm;
+    bindYou('new');
+  }
+  function bindYou(mode) {
+    var send = async function (btn) {
+      showErr('#yErr', '');
+      var name = $('#oName').value.trim(), email = $('#oEmail').value.trim();
+      if (!name) return showErr('#yErr', 'Please add your name.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('#yErr', 'Please enter a valid email address.');
+      if (!$('#oOk').checked) return showErr('#yErr', 'Please tick the box to confirm.');
+      busy(btn, true, 'Sending…');
+      try { var r = await api('code', { email: email }); busy(btn, false); $('#codeBox').classList.remove('hidden'); $('#sendCode').classList.add('hidden'); var n = document.createElement('div'); n.className = 'note ok'; n.textContent = '📧 ' + r.message; $('#codeBox').prepend(n); $('#code').focus(); }
+      catch (e) { busy(btn, false); showErr('#yErr', e.message); }
+    };
+    $('#sendCode').onclick = function () { send(this); };
+    $('#resend').onclick = function () { $('#codeBox').classList.add('hidden'); $('#sendCode').classList.remove('hidden'); var n = $('#codeBox .note'); if (n) n.remove(); send($('#sendCode')); };
+    $('#code').oninput = function () { this.value = this.value.replace(/\D/g, '').slice(0, 6); };
+    $('#finish').onclick = function () { finish(mode, this, false); };
+  }
+  async function finish(mode, btn, force) {
+    showErr('#yErr', '');
+    var code = $('#code').value.trim(); if (code.length !== 6) return showErr('#yErr', 'Enter the 6-digit code from your email.');
+    busy(btn, true, mode === 'claim' ? 'Claiming…' : 'Sending…');
+    var payload = { mode: mode, ownerName: $('#oName').value.trim(), ownerEmail: $('#oEmail').value.trim(), code: code, hp: $('#hp').value };
+    if (mode === 'claim') payload.slug = S.claim.slug;
+    else { payload.fields = S.f; payload.image = S.img || ''; payload.force = force; payload.how = S.how; }
+    try {
+      var r = await api('submit', payload);
+      if (r.dupes) { busy(btn, false); $('#dupBox').innerHTML = dupHtml(r.dupes) + '<button class="btn ghost" id="force" style="margin-top:8px">No — mine is a different business, send it</button>'; S.dupes = r.dupes; bindDup(); $('#force').onclick = function () { finish(mode, btn, true); }; return; }
+      showDone(r);
+    } catch (e) { busy(btn, false); showErr('#yErr', e.message); }
+  }
+
+  // ───── 🎉 Done: what's Business Studio? ─────
+  function showDone(r) {
+    top();
+    var head = r.result === 'claimed' ? '<div class="big">🎉</div><h2>You’re in! ' + esc(r.name) + ' is yours</h2><p>You can now update your listing yourself, any time.</p>'
+      : r.result === 'claim-review' ? '<div class="big">🙌</div><h2>Thanks! Auntie Tobi will check it</h2><p>Your email doesn’t match our records for ' + esc(r.name) + ', so Auntie Tobi will confirm it’s yours first. Your Business Studio is ready now.</p>'
+      : '<div class="big">🎉</div><h2>You’re in!</h2><p><b>' + esc(r.name) + '</b> is being reviewed by Auntie Tobi. We’ll email you when it’s live.</p>';
+    root.innerHTML = '<div class="card done">' + head +
+      '<div class="what"><b style="font-size:16.5px">What’s Business Studio?</b><div class="hint" style="margin-top:2px;color:#0F1E36">Your free business workspace from Auntie Tobi:</div><ul>' +
+      '<li>✏️ Edit your listing any time</li><li>📱 Make posts and designs for Instagram in minutes</li><li>👥 Keep track of customers and follow-ups</li><li>📅 Plan your content for the week</li></ul></div>' +
+      '<a class="btn primary" href="' + esc(r.studioUrl) + '">Take a quick look →</a><a class="btn link" href="/">Maybe later</a>' +
+      '<p class="hint">Later, sign in at Business Studio with your email — we’ll send you a code, no password needed.</p></div>';
+  }
+
+  async function startClaimLink() {
+    root.innerHTML = '<div class="card"><p class="hint"><span class="spin"></span>Loading…</p></div>';
+    try { var r = await api('claim-info', { slug: decodeURIComponent(CLAIM) }); showClaim(r.biz); }
+    catch (e) { CLAIM = ''; showSearch(); var n = document.createElement('div'); n.className = 'err'; n.textContent = e.message; root.prepend(n); }
+  }
+  if (CLAIM) startClaimLink(); else showSearch();
+})();
+</script>
+</body>
+</html>

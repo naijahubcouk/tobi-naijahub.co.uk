@@ -68,6 +68,7 @@ function merge(live) {
     name: norm(b.name), slug: norm(b.slug), cat: norm(b.cat), loc: norm(b.loc), desc: norm(b.desc),
     wa: norm(b.wa), ig: norm(b.ig).replace(/^@/, ''), website: norm(b.website), email: core.normalizeEmail(b.email), phone: norm(b.phone),
     verified: !!b.verified,
+    alt: [b.contactEmail, b.ownerEmail].map(e => core.normalizeEmail(e || '')).filter(Boolean),   // website account / owner emails (private)
   }));
 }
 
@@ -97,7 +98,8 @@ async function bySlug(event, slug) {
 async function byEmail(event, email) {
   email = core.normalizeEmail(email);
   if (!email) return null;
-  return (await load(event)).find(b => b.email && b.email === email) || null;
+  const list = await load(event);
+  return list.find(b => b.email && b.email === email) || list.find(b => (b.alt || []).includes(email)) || null;
 }
 
 // Accepts "auntietobi.co.uk/biz/slug", a full URL, "/biz/slug" or just "slug".

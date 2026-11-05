@@ -53,7 +53,7 @@ function eligible(b) {
 function vars(b) {
   const site = core.siteBase();
   return { business_name: b.name, category: pretty((b.cats && b.cats[0]) || b.cat) || 'businesses', town: b.loc && b.loc !== 'UK' ? b.loc : 'the UK',
-    listing_link: `${site}/biz/${encodeURIComponent(b.slug)}`, claim_link: `${DIR_SITE}/${encodeURIComponent(b.slug)}`,
+    listing_link: `${site}/biz/${encodeURIComponent(b.slug)}`, claim_link: `${site}/claim/${encodeURIComponent(b.slug)}`,
     remove_link: `${site}/remove/${token(b.slug)}`, unsubscribe_link: `${site}/u/${token(b.slug)}`, studio_link: `${site}/business-studio`, club_link: `${site}/business-club`, personal_line: '' };
 }
 

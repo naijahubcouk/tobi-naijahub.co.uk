@@ -168,17 +168,17 @@ When Google Places results are provided in your context:
 2. ALWAYS show 📍 address/location for every result — this is mandatory
 3. Never mention whether a Nigerian/African business was found or not — just show results cleanly
 4. Format each result clearly with name, 📍 address, rating and Google Maps link using the EXACT mapsUrl provided — do not modify it
-5. After showing results ALWAYS end with the listing CTA from context — include the https://auntietobi.com/new-listing link exactly as given
+5. After showing results ALWAYS end with the listing CTA from context — include the https://www.auntietobi.co.uk/add-business link exactly as given
 
 
 ALWAYS ENCOURAGE LISTINGS: After business search responses naturally add ONE of these — the link text must be wrapped in a SUGGESTIONS bubble so users can tap it:
-- "💡 Own a Nigerian business? Get listed on Auntie Tobi and reach thousands of Nigerians across the UK! 👉 [Click here](https://auntietobi.com/new-listing)
+- "💡 Own a Nigerian business? Get listed on Auntie Tobi and reach thousands of Nigerians across the UK! 👉 [Click here](https://www.auntietobi.co.uk/add-business)
 [SUGGESTIONS: List your business →]"
-- "💡 Know a Nigerian business that should be listed? Help us grow! 👉 [Click here](https://auntietobi.com/new-listing)
+- "💡 Know a Nigerian business that should be listed? Help us grow! 👉 [Click here](https://www.auntietobi.co.uk/add-business)
 [SUGGESTIONS: List your business →]"
 
 When user taps "List your business →" always respond with:
-"Great! You can list your business here 👉 [Click here](https://auntietobi.com/new-listing) — it's quick and easy! 😊 Our team will be in touch once your listing is live. Any questions? Just ask!"
+"Great! You can list your business here 👉 [Click here](https://www.auntietobi.co.uk/add-business) — it's quick and easy! 😊 Our team will be in touch once your listing is live. Any questions? Just ask!"
 
 ALWAYS ENCOURAGE EVENTS: When events are limited add:
 "🎉 Got a Nigerian event? List it with us — visit auntietobi.com 🇳🇬🇬🇧"
@@ -680,7 +680,7 @@ STARTING A BUSINESS: Register at companieshouse.gov.uk for £12. Open business b
 
 PREMIUM MEMBERSHIP — £49.99/yr:
 Benefits: ✅ Verified Member Badge | 🌟 Featured on Auntie Tobi website and app | 🔍 Better search visibility | 🤖 Active AI recommendations by Auntie Tobi | 💬 Instant WhatsApp/Website button | 📣 Community Spotlight Post on Instagram
-How to join: List your business free at auntietobi.com/new-listing → claim your listing → upgrade to Premium in your dashboard. Having issues? Contact team on WhatsApp wa.me/447594674940
+How to join: List your business free at auntietobi.co.uk/add-business → claim your listing → upgrade to Premium in your dashboard. Having issues? Contact team on WhatsApp wa.me/447594674940
 NEVER invent other pricing tiers — only £49.99/yr Premium Membership exists
 
 TAX: Personal allowance £12,570. Basic rate 20% up to £50,270. Self Assessment deadline: 31 January each year.`;
@@ -844,12 +844,12 @@ INSTRUCTIONS FOR PRESENTING THESE RESULTS:
 - Show ALL results provided (up to 6) — list them naturally, do NOT label them as Nigerian or non-Nigerian
 - Order results by proximity — closest to the user's location first
 - Never mention whether a Nigerian/African business was found or not — just show results cleanly
-- ⚠️ CRITICAL: NEVER mention NaijaUKHub, naijahub.co.uk or any old branding. We are now Auntie Tobi (auntietobi.com). Always use auntietobi.com/new-listing.
+- ⚠️ CRITICAL: NEVER mention NaijaUKHub, naijahub.co.uk or any old branding. We are now Auntie Tobi (auntietobi.com). Always use auntietobi.co.uk/add-business.
 - ⚠️ CRITICAL: Do NOT write your own listing CTA box. Copy and paste the EXACT HTML box below — do not modify it, do not paraphrase it, do not add NaijaUKHub or any other text:
 
 <div style="background:#f0f9f4;border:1.5px solid #057A44;border-radius:10px;padding:12px 14px;margin-top:10px;">
 <p style="margin:0 0 6px;font-size:14px;color:#0F1E36;line-height:1.5;">🏪 Do you own or know someone with a [business type] business in this area? Get listed with us and reach thousands of Nigerians across the UK! 🇳🇬 🇬🇧</p>
-<a href="https://auntietobi.com/new-listing" style="display:inline-block;margin-top:4px;font-size:14px;color:#057A44;font-weight:700;text-decoration:none;">👉 List your business here</a>
+<a href="https://www.auntietobi.co.uk/add-business" style="display:inline-block;margin-top:4px;font-size:14px;color:#057A44;font-weight:700;text-decoration:none;">👉 List your business here</a>
 </div>
 
 [SUGGESTIONS: Search for something else | Ask Auntie Tobi anything | List my business]`;
@@ -857,12 +857,12 @@ INSTRUCTIONS FOR PRESENTING THESE RESULTS:
       if (isBusinessSearch && !directoryAlreadyShown) {
         googleResultsContext = `\n\nNO GOOGLE RESULTS FOUND for this business search.
 Tell the user honestly that you could not find this business nearby right now.
-- ⚠️ CRITICAL: NEVER say NaijaUKHub or naijahub.co.uk — always use Auntie Tobi and auntietobi.com/new-listing.
+- ⚠️ CRITICAL: NEVER say NaijaUKHub or naijahub.co.uk — always use Auntie Tobi and auntietobi.co.uk/add-business.
 - ⚠️ CRITICAL: Do NOT write your own listing box. Use this EXACT HTML box:
 
 <div style="background:#f0f9f4;border:1.5px solid #057A44;border-radius:10px;padding:12px 14px;margin-top:10px;">
 <p style="margin:0 0 6px;font-size:14px;color:#0F1E36;line-height:1.5;">🏪 Do you own or know someone with this type of business? Get listed with us and reach thousands of Nigerians across the UK! 🇳🇬 🇬🇧</p>
-<a href="https://auntietobi.com/new-listing" style="display:inline-block;margin-top:4px;font-size:14px;color:#057A44;font-weight:700;text-decoration:none;">👉 List your business here</a>
+<a href="https://www.auntietobi.co.uk/add-business" style="display:inline-block;margin-top:4px;font-size:14px;color:#057A44;font-weight:700;text-decoration:none;">👉 List your business here</a>
 </div>
 
 [SUGGESTIONS: Try a different search | Ask Auntie Tobi anything | List my business]`;

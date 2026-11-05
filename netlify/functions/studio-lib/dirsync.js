@@ -98,7 +98,7 @@ async function apply(msg) {
   if (!st.live) { await logSync(Object.assign(base, { action: 'skipped', why: 'live updates are switched off' })); return { action: 'skipped' }; }
   const status = String(d.status || '').toUpperCase();
   const now = core.nowIso(), who = 'website sync';
-  const save = async (rec, extra) => { await bizdir.save(Object.assign({}, rec, extra, { origSlug: rec.slug, src: rec.src, siteAt: now }), who); };
+  const save = async (rec, extra) => { await bizdir.save(bizdir.protectOwner(rec, Object.assign({}, rec, extra, { origSlug: rec.slug, src: rec.src, siteAt: now })), who); };
 
   // rejected / deleted → hidden (only ones we hid can be shown again automatically)
   if (ev === 'listing.rejected' || ev === 'listing.deleted' || status === 'REJECTED') {

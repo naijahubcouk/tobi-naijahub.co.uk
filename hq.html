@@ -234,6 +234,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
       <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
       <button data-nav="dir" id="navDir" class="hidden">🏢 Business directory</button>
+      <button data-nav="abiz" id="navAbiz" class="hidden">➕ Add your business <span class="n gold" id="nAbiz"></span></button>
       <button data-nav="find" id="navFind" class="hidden">🔎 Business Finder</button>
       <button data-nav="out" id="navOut" class="hidden">📧 Outreach</button>
       <button data-nav="mail" id="navMail" class="hidden">📝 Emails</button>
@@ -317,11 +318,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 
   async function boot() {
     var r; try { r = await api('boot'); } catch (x) { return; }
-    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || []; S.tcars = r.tcars || []; S.vads = r.vads || []; S.sections = r.sections || null;
+    S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.abizNew = r.abizNew || 0; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || []; S.tcars = r.tcars || []; S.vads = r.vads || []; S.sections = r.sections || null;
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
-    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#navImgm').classList.toggle('hidden', !S.isAdmin); $('#navIgu').classList.toggle('hidden', !S.isAdmin); $('#navDisc').classList.toggle('hidden', !S.isAdmin); $('#navDm').classList.toggle('hidden', !S.isAdmin); $('#navIga').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
+    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navAbiz').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#navImgm').classList.toggle('hidden', !S.isAdmin); $('#navIgu').classList.toggle('hidden', !S.isAdmin); $('#navDisc').classList.toggle('hidden', !S.isAdmin); $('#navDm').classList.toggle('hidden', !S.isAdmin); $('#navIga').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -329,7 +330,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
   function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = (['dir', 'find', 'out', 'mail', 'igu', 'dm', 'iga', 'disc', 'imgm'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
+    S.view = (['dir', 'abiz', 'find', 'out', 'mail', 'igu', 'dm', 'iga', 'disc', 'imgm'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -337,11 +338,12 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nBin').textContent = (S.bin || []).length || '';
     $('#nApp').textContent = (S.app || []).filter(function (p) { return appState(p) === 'live'; }).length || '';
     $('#nSubs').textContent = subsNew().length || '';
+    $('#nAbiz').textContent = abizCount() || '';
     $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10);
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
@@ -1666,6 +1668,96 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   // 🎨 Image model — which AI makes HQ's pictures, with a side-by-side test (same prompt, cost of each)
   var IMG_MODELS = [['google/gemini-2.5-flash-image', 'Nano Banana (current default)', '~$0.039'], ['openai/gpt-image-2', 'GPT Image 2', '~$0.006–0.014'], ['openai/gpt-image-2.6-flare', 'GPT Image 2.6 Flare (fast)', 'by tokens'], ['openai/gpt-image-2.6-sunburst', 'GPT Image 2.6 Sunburst (detail)', 'by tokens'], ['bytedance-seed/seedream-5-0-flash', 'Seedream 5.0 Flash', '~$0.018']];
   function imgName(m) { var x = IMG_MODELS.filter(function (y) { return y[0] === m; })[0]; return x ? x[1] : m; }
+  // ── ➕ Add your business: owners' new businesses, claims and name changes (admin only) ──
+  function cap(t) { return String(t || '').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+  var AB_KIND = { new: ['🆕', 'New business'], claim: ['🏪', 'Claim'], name: ['✏️', 'Name change'] };
+  var AB_HOW = { website: '🌐 filled in from their website', instagram: '📸 filled in from their Instagram', screenshot: '🖼️ filled in from an Instagram screenshot', manual: '✍️ typed by them' };
+  async function vAbiz() {
+    $('#ttl').textContent = 'Add your business';
+    $('#topRight').innerHTML = '<a class="btn ghost" href="/add-business" target="_blank" rel="noopener">Open the public page ↗</a>';
+    if (!S.abiz) $('#view').innerHTML = '<div class="wrap"><div class="card"><p class="muted">Loading…</p></div></div>';
+    try { S.abiz = await api('abiz-list'); } catch (e) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(e.message) + '</div></div>'; return; }
+    drawAbiz();
+  }
+  function abizCount() { var a = S.abiz; return a ? a.subs.filter(function (x) { return x.status === 'new'; }).length + a.listed.length : (S.abizNew || 0); }
+  function drawAbiz() {
+    var a = S.abiz; S.abTab = S.abTab || 'new';
+    var nb = $('#nAbiz'); if (nb) nb.textContent = abizCount() || '';
+    var list = a.subs.filter(function (x) { return S.abTab === 'new' ? x.status === 'new' : x.status !== 'new'; });
+    var when = function (t) { return t ? new Date(t).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''; };
+    var contact = function (b) { return [b.wa ? '💬 <a href="https://wa.me/' + esc(b.wa) + '" target="_blank" rel="noopener">WhatsApp</a>' : '', b.phone ? '📞 ' + esc(b.phone) : '', b.ig ? '📸 <a href="https://instagram.com/' + esc(b.ig) + '" target="_blank" rel="noopener">@' + esc(b.ig) + '</a>' : '', b.website ? '🌐 <a href="' + esc(b.website) + '" target="_blank" rel="noopener">' + esc(b.website.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40)) + '</a>' : '', b.email ? '✉️ ' + esc(b.email) : ''].filter(Boolean).join(' · '); };
+    var card = function (x) {
+      var b = x.biz || { name: x.name }, k = AB_KIND[x.kind] || ['', x.kind];
+      return '<div class="card subc">' + (b.img ? '<img class="subimg" src="' + esc(b.img) + '" alt="" data-zoom>' : '<div class="subimg none">No photo</div>') +
+        '<div style="flex:1;min-width:0"><div class="muted" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px">' + k[0] + ' ' + k[1] + ' · ' + (x.via === 'studio' ? 'from Business Studio' : 'from the app') + '</div>' +
+        '<div style="font-weight:800;font-size:16px">' + esc(b.name) + '</div>' +
+        (x.kind === 'name' ? '<div style="margin:4px 0">Wants to be called <b>“' + esc(x.newName) + '”</b></div>' : '') +
+        '<div class="muted" style="font-size:13.5px;margin:2px 0 6px">' + esc(cap(b.cat || '')) + (b.loc ? ' · 📍 ' + esc(b.loc) : '') + '</div>' +
+        (x.kind === 'new' && b.desc ? '<div style="font-size:14px;margin-bottom:6px">' + esc(b.desc) + '</div>' : '') +
+        (x.kind === 'new' ? '<div style="font-size:13px">' + contact(b) + '</div>' : '') +
+        (x.kind === 'claim' ? '<div style="font-size:13px;margin-top:4px">Emails on the listing: <b>' + esc([b.email, b.contactEmail].filter(Boolean).join(', ') || 'none') + '</b> — they used <b>' + esc(x.email) + '</b>' + (x.auto ? ' ✅ matched, claimed automatically' : '') + '</div>' : '') +
+        (x.dupes && x.dupes.length ? '<div class="err" style="margin-top:8px;font-size:13px">⚠️ Looks like: ' + x.dupes.map(function (d) { return esc(d.name) + ' (same ' + esc(d.why) + ')'; }).join(', ') + '</div>' : '') +
+        '<div style="font-size:13px;margin-top:8px;background:#F7F2E7;border-radius:8px;padding:6px 10px">👤 <b>' + esc(x.ownerName || '—') + '</b> · ' + esc(x.email) +
+        (x.siteMatch ? ' · <b style="color:var(--green-d)">✓ Email matches website</b>' : '') + (x.hasStudio ? ' · <b style="color:var(--green-d)">Has Business Studio ✓</b>' : '') +
+        '<br><span class="muted">' + esc(when(x.createdAt)) + (x.how && AB_HOW[x.how] ? ' · ' + AB_HOW[x.how] : '') + (x.reviewedBy ? ' · ' + (x.status === 'approved' ? 'approved' : 'declined') + ' by ' + esc((S.names && S.names[x.reviewedBy]) || x.reviewedBy) : '') + '</span></div>' +
+        '<div class="apact" style="margin-top:10px">' +
+        (x.status === 'new' ? '<button class="btn primary sm" data-abok="' + x.id + '">✅ Approve</button>' + (x.kind !== 'claim' ? '<button class="btn ghost sm" data-abed="' + x.id + '">✏️ Edit, then approve</button>' : '') + '<button class="btn ghost sm" data-abno="' + x.id + '">✖ Decline</button>'
+          : '<span class="as ' + (x.status === 'approved' ? 'live' : 'ended') + '" style="align-self:center">' + (x.status === 'approved' ? '● Approved' : '✖ Declined') + '</span>' + (b.slug && x.status === 'approved' ? '<a class="btn ghost sm" href="/biz/' + esc(b.slug) + '" target="_blank" rel="noopener">View in app ↗</a>' : '') + '<button class="btn ghost sm" data-abdel="' + x.id + '">🗑 Remove from list</button>') +
+        '</div></div></div>';
+    };
+    var an = a.announce || { total: 0, left: 0, sent: 0 };
+    $('#view').innerHTML = '<div class="wrap">' +
+      '<div class="note" style="margin-bottom:12px">Owners add their business at <b>auntietobi.co.uk/add-business</b> (or in Business Studio) and confirm their email with a code — that also gives them a free Business Studio. New businesses show in the app when you approve them, then go in your next <b>Website CSV</b> (Business Finder). After you’ve uploaded that CSV, send their “You’re listed” email from here.</div>' +
+      (a.listed.length ? '<div class="card" style="margin-bottom:12px;border:2px solid var(--gold)"><b>📧 Ready for the “You’re listed” email (' + a.listed.length + ')</b><div class="muted" style="font-size:13px;margin:2px 0 8px">These are now on the website. Nothing is sent until you press send.</div>' +
+        a.listed.map(function (b) { return '<div style="font-size:14px;padding:3px 0">• <b>' + esc(b.name) + '</b> — ' + esc(b.ownerName || '') + ' ' + esc(b.email) + '</div>'; }).join('') +
+        '<div class="apact" style="margin-top:10px"><button class="btn ghost sm" data-abpv="biz.listed" data-slug="' + esc(a.listed[0].slug) + '">👀 Preview the email</button><button class="btn primary sm" id="abSendListed">📧 Send ' + a.listed.length + ' email' + (a.listed.length === 1 ? '' : 's') + '</button></div></div>' : '') +
+      (a.waitingCsv.length ? '<div class="card" style="margin-bottom:12px"><b>⏳ In the app, waiting for your Website CSV (' + a.waitingCsv.length + ')</b><div class="muted" style="font-size:13px;margin-top:2px">' + a.waitingCsv.map(function (b) { return esc(b.name); }).join(', ') + '</div><div class="muted" style="font-size:13px;margin-top:6px">Download the CSV in 🔎 Business Finder, upload it to your directory website, then tap “Mark as uploaded”.</div></div>' : '') +
+      (a.ownerEdits.length ? '<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer"><b>✏️ Owner changes to copy to the website (' + a.ownerEdits.length + ')</b> <span class="muted" style="font-size:13px">— live in the app already</span></summary>' +
+        a.ownerEdits.map(function (b) { return '<div style="font-size:13.5px;margin-top:10px"><b>' + esc(b.name) + '</b> <a href="https://directory.auntietobi.co.uk/' + esc(b.slug) + '" target="_blank" rel="noopener">website ↗</a>' + Object.keys(b.values).map(function (k) { return '<div class="muted">• ' + esc({ desc: 'Description', wa: 'WhatsApp', img: 'Photo', ig: 'Instagram', loc: 'Town', addr: 'Address', cat: 'Category', fb: 'Facebook', tt: 'TikTok', email: 'Email', phone: 'Phone', website: 'Website' }[k] || k) + ': ' + (k === 'img' ? '<a href="' + esc(b.values[k]) + '" target="_blank" rel="noopener">new photo</a>' : esc(String(b.values[k]).slice(0, 200))) + '</div>'; }).join('') + '</div>'; }).join('') +
+        '<div class="muted" style="font-size:12.5px;margin-top:10px">Each one disappears from here by itself once the website shows the same thing.</div></details>' : '') +
+      '<details class="card" style="margin-bottom:12px"' + (an.left && !an.sent ? ' open' : '') + '><summary style="cursor:pointer"><b>📣 One-off email: “You can now edit your listing in Business Studio”</b></summary><div class="muted" style="font-size:13.5px;margin:6px 0">For Business Studio members who already linked their listing (' + an.total + ' member' + (an.total === 1 ? '' : 's') + ' · ' + an.sent + ' sent · ' + an.left + ' still to send). You can change the wording in 📝 Emails → Add your business.</div>' +
+        '<div class="apact"><button class="btn ghost sm" data-abpv="biz.announce">👀 Preview</button><button class="btn ghost sm" id="abTest">📧 Send a test to me</button>' + (an.left ? '<button class="btn primary sm" id="abAnn">📣 Send to ' + an.left + ' member' + (an.left === 1 ? '' : 's') + '</button>' : '<span class="as live" style="align-self:center">✓ All sent</span>') + '</div></details>' +
+      '<div class="chipbar" style="margin-bottom:12px"><button class="chip" data-abtab="new" aria-pressed="' + (S.abTab === 'new') + '">📥 To review (' + a.subs.filter(function (x) { return x.status === 'new'; }).length + ')</button><button class="chip" data-abtab="done" aria-pressed="' + (S.abTab === 'done') + '">✅ Done (' + a.subs.filter(function (x) { return x.status !== 'new'; }).length + ')</button></div>' +
+      (list.length ? list.map(card).join('') : '<div class="card"><p class="muted">' + (S.abTab === 'new' ? 'Nothing to review. Share auntietobi.co.uk/add-business so businesses can add themselves.' : 'Nothing here yet.') + '</p></div>') + '</div>';
+    $$('[data-abtab]').forEach(function (b) { b.onclick = function () { S.abTab = b.dataset.abtab; drawAbiz(); }; });
+    $$('[data-zoom]').forEach(function (im) { im.onclick = function () { window.open(im.src, '_blank'); }; });
+    var byId = function (id) { return a.subs.filter(function (x) { return x.id === id; })[0]; };
+    var review = async function (id, decision, edits, btn) {
+      if (btn) btn.disabled = true;
+      try { await api('abiz-review', { id: id, decision: decision, edits: edits }); var x = byId(id);
+        toast(decision !== 'approve' ? 'Declined' : x.kind === 'new' ? 'Approved ✅ It’s in the app now and goes in your next Website CSV' : x.kind === 'claim' ? 'Approved ✅ It’s linked to their Business Studio' : 'Approved ✅ New name is live in the app');
+        vAbiz();
+      } catch (e) { toast(e.message); if (btn) btn.disabled = false; }
+    };
+    $$('[data-abok]').forEach(function (b) { b.onclick = function () { review(b.dataset.abok, 'approve', null, b); }; });
+    $$('[data-abno]').forEach(function (b) { b.onclick = function () { var x = byId(b.dataset.abno); if (!confirm(x.kind === 'new' ? 'Decline “' + x.name + '”? It’s removed and won’t go in the app. (They are not told automatically.)' : 'Decline this ' + (x.kind === 'claim' ? 'claim' : 'name change') + '? (They are not told automatically.)')) return; review(x.id, 'decline', null, b); }; });
+    $$('[data-abdel]').forEach(function (b) { b.onclick = async function () { try { await api('abiz-delete', { id: b.dataset.abdel }); vAbiz(); } catch (e) { toast(e.message); } }; });
+    $$('[data-abed]').forEach(function (b) { b.onclick = function () { abEdit(byId(b.dataset.abed), review); }; });
+    $$('[data-abpv]').forEach(function (b) { b.onclick = async function () { try { var r = await api('abiz-preview', { id: b.dataset.abpv, slug: b.dataset.slug || '' }); var s = sheet('<h2 style="margin:0 0 4px">👀 ' + esc(r.mail.subject) + '</h2><iframe style="width:100%;height:60vh;border:1px solid var(--line);border-radius:10px;background:#fff" sandbox></iframe><button class="btn ghost" style="margin-top:10px" data-x>Close</button>'); s.querySelector('iframe').srcdoc = r.mail.html; s.querySelector('[data-x]').onclick = function () { s.remove(); }; } catch (e) { toast(e.message); } }; });
+    var sl = $('#abSendListed'); if (sl) sl.onclick = async function () { if (!confirm('Send the “You’re listed” email to ' + a.listed.length + ' owner' + (a.listed.length === 1 ? '' : 's') + ' now?')) return; sl.disabled = true; try { var r = await api('abiz-listed'); S.abiz = r; toast('📧 Sent ' + r.sentNow); drawAbiz(); } catch (e) { toast(e.message); sl.disabled = false; } };
+    var tb = $('#abTest'); if (tb) tb.onclick = async function () { tb.disabled = true; try { await api('abiz-announce', { test: true }); toast('📧 Test sent to you'); } catch (e) { toast(e.message); } tb.disabled = false; };
+    var ab = $('#abAnn'); if (ab) ab.onclick = async function () {
+      if (!confirm('Send “You can now edit your listing” to ' + an.left + ' member' + (an.left === 1 ? '' : 's') + '? Each person only ever gets it once.')) return;
+      ab.disabled = true; var total = 0;
+      try { for (var i = 0; i < 40; i++) { ab.textContent = 'Sending… ' + total; var r = await api('abiz-announce'); total += r.announceNow.sentNow; S.abiz = r; if (!r.announceNow.left || !r.announceNow.sentNow) break; } toast('📣 Sent to ' + total + ' member' + (total === 1 ? '' : 's')); }
+      catch (e) { toast(e.message); }
+      drawAbiz();
+    };
+  }
+  function abEdit(x, review) {
+    var b = x.biz || {};
+    if (x.kind === 'name') {
+      var s0 = sheet('<h2>✏️ Name change</h2><p class="muted">Was “' + esc(b.name) + '”</p><label>New name</label><input id="abN" value="' + esc(x.newName) + '"><div class="apact" style="margin-top:12px"><button class="btn primary" id="abGo">✅ Approve</button><button class="btn ghost" data-x>Cancel</button></div>');
+      s0.querySelector('[data-x]').onclick = function () { s0.remove(); };
+      s0.querySelector('#abGo').onclick = function () { review(x.id, 'approve', { name: s0.querySelector('#abN').value.trim() }); s0.remove(); };
+      return;
+    }
+    var f = function (k, l, ta) { return '<label>' + l + '</label>' + (ta ? '<textarea id="abf_' + k + '" rows="4">' + esc(b[k] || '') + '</textarea>' : '<input id="abf_' + k + '" value="' + esc(b[k] || '') + '">'); };
+    var s = sheet('<h2>✏️ Check “' + esc(b.name) + '”</h2>' + f('name', 'Business name') + f('cat', 'Category (as on the website, e.g. Caterers)') + f('loc', 'Town') + f('desc', 'Description', true) + f('wa', 'WhatsApp') + f('phone', 'Phone') + f('ig', 'Instagram') + f('website', 'Website') + f('email', 'Business email') + f('addr', 'Address') +
+      '<div class="apact" style="margin-top:12px"><button class="btn primary" id="abGo">✅ Save and approve</button><button class="btn ghost" data-x>Cancel</button></div>');
+    s.querySelector('[data-x]').onclick = function () { s.remove(); };
+    s.querySelector('#abGo').onclick = function () { var e = {}; ['name', 'cat', 'loc', 'desc', 'wa', 'phone', 'ig', 'website', 'email', 'addr'].forEach(function (k) { e[k] = s.querySelector('#abf_' + k).value.trim(); }); review(x.id, 'approve', e); s.remove(); };
+  }
   function vImgm() {
     $('#ttl').textContent = 'Image model'; $('#topRight').innerHTML = '';
     if (!S.imgm) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading…</p></div>'; api('img-settings').then(function (r) { S.imgm = r; if (S.view === 'imgm') vImgm(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }

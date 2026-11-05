@@ -159,4 +159,4 @@ async function read(rawUrl, settings, callModel) {
   return { site: publicSite, draft, usage, hadText: (text || '').length >= 120 };
 }
 
-module.exports = { read, normalizeUrl, isPrivateIp, extract, assertPublicHost };
+module.exports = { read, normalizeUrl, isPrivateIp, extract, assertPublicHost, safeFetch, meta, decodeEntities };

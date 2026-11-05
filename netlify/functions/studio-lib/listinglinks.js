@@ -26,7 +26,7 @@ async function ownerOf(slug) { return (await owners())[slug] || ''; }
 // The listing is free for this member (not linked by someone else).
 async function takenBy(slug, email) { const o = await ownerOf(slug); return o && o !== core.normalizeEmail(email) ? o : ''; }
 
-function checkFor(b, email) { return !b.email ? 'no_email' : b.email === core.normalizeEmail(email) ? 'email_match' : 'email_differs'; }
+function checkFor(b, email) { const e = core.normalizeEmail(email); return (b.email === e || (b.alt || []).includes(e)) ? 'email_match' : !b.email ? 'no_email' : 'email_differs'; }
 // Trusted = HQ may use its Instagram and invites count it as joined. Older links (before checks existed) stay trusted.
 function trusted(p) { return !!(p && p.listingSlug && (p.listingConfirmed || p.listingCheck === 'email_match' || !p.listingCheck)); }
 

@@ -16,6 +16,9 @@
 
 # Public "Add your event" page
 /add-event      /add-event.html         200
+# Public "Add your business" page (and claim links from outreach emails)
+/add-business   /add-business.html      200
+/claim/:slug    /add-business.html      200
 # Celebration Cards (old /birthday links keep working)
 /cards          /cards.html             200
 /c/:id          /.netlify/functions/card-page?id=:id   200

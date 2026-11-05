@@ -121,13 +121,15 @@ exports.handler = handler(async (ctx) => {
       return {
         ...base,
         state: auth.access.canCreate ? 'active' : 'readonly',
-        member: { email, name: m.name || '', isClub: m.status !== 'none', membershipExpiresAt: m.membershipExpiresAt },
+        member: { email, name: m.name || '', isClub: m.status !== 'none', membershipExpiresAt: m.membershipExpiresAt, source: m.source || '' },
         access: auth.access,
         addon: m.addon ? { status: m.addon.status, interval: m.addon.interval, tier: m.addon.tier === 'pro' ? 'pro' : 'plus', amount: m.addon.amount || null, currentPeriodEnd: m.addon.currentPeriodEnd, cancelAtPeriodEnd: m.addon.cancelAtPeriodEnd } : null,
         usage: auth.access.canCreate ? await gen.usageSummary(email, auth.access) : null,
         profile: profile && profile.businessName ? profile : null,
         listing: profile && profile.listingSlug ? directory.publicListing(await directory.bySlug(ctx.event, profile.listingSlug)) : null,
         recent: ((history && history.items) || []).slice(0, 5),
+        tourDone: !!(profile && profile.tourDoneAt),
+        myListing: profile && (profile.listingSlug || profile.pendingClaim) ? { slug: profile.listingSlug || profile.pendingClaim, canEdit: require('../addbiz').canEditP(profile) } : null,
       };
     }
 
@@ -174,6 +176,28 @@ exports.handler = handler(async (ctx) => {
       if (old && old !== b.slug) await links.release(email, old);
       await core.audit(email, 'listing_linked', { slug: b.slug, check: fields.listingCheck });
       return { listing: directory.publicListing(b), profile: saved.businessName ? saved : null };
+    }
+
+    case 'mylisting-get': return require('../addbiz').mine(email);
+    case 'mylisting-save': {
+      await core.rateLimit('mylisting-save', email, 40, 60 * 60 * 1000, 'That’s a lot of changes — please try again in a little while.');
+      return require('../addbiz').saveMine(email, body.fields || {}, body.image || '');
+    }
+    case 'mylisting-add': {
+      // ➕ Add your business from Business Studio (already signed in, so no email code)
+      await core.rateLimit('mylisting-add', email, 6, 24 * 60 * 60 * 1000, 'You’ve sent a few businesses today — please try again tomorrow.');
+      const out = await require('../addbiz').submit(Object.assign({}, body, { mode: body.mode === 'claim' ? 'claim' : 'new' }), { studioEmail: email });
+      delete out.studioUrl;
+      return Object.assign(out, out.dupes ? {} : await require('../addbiz').mine(email));
+    }
+    case 'mylisting-lookup': return require('../addbiz').lookup(String(body.kind || ''), body.value, 'm:' + email);
+    case 'mylisting-search': {
+      await core.rateLimit('listing-search', email, 120, 60 * 60 * 1000);
+      return { results: await require('../addbiz').search(cleanText(body.q, 80)) };
+    }
+    case 'tour-done': {
+      await cas(`profiles/${enc(email)}`, cur => Object.assign({}, cur || { createdAt: core.nowIso() }, { tourDoneAt: core.nowIso() }));
+      return { ok: true };
     }
 
     case 'website-read': {
@@ -342,6 +366,6 @@ exports.handler = handler(async (ctx) => {
     default:
       throw new HttpError(400, 'unknown_action', 'Unknown action.');
   }
-}, { maxBody: 300 * 1024 }); // room for a resized logo
+}, { maxBody: 3.2 * 1024 * 1024 }); // room for a resized logo, a listing photo or an Instagram screenshot
 
 exports._cleanProfile = cleanProfile;

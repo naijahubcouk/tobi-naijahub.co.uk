@@ -36,21 +36,24 @@ Here’s your listing: {listing_link}
 Please take a quick look:
 
 - **All correct?** You don’t need to do anything.
-- **Want to manage it yourself?** Claim it for free on the Auntie Tobi directory: {claim_link} and tap “Claim this listing”. You can then update your photos, description and contact details.
+- **Want to manage it yourself?** Claim it for free here: {claim_link}. It takes a minute, and you’ll also get your own free Business Studio, where you can update your photo, description and contact details any time.
 - **Something wrong, or you’d rather not be listed?** Reply to this email or tap here: {remove_link} and I’ll take it down.
 
 Wishing you lots of customers,
 Auntie Tobi` },
-  u2: { group: 'out-u', name: 'Free Business Studio', when: 'Unclaimed · day 2 (skipped if they already use Business Studio)', subject: 'A free place to keep {business_name} organised', body:
+  u2: { group: 'out-u', name: 'Claim reminder + free Business Studio', when: 'Unclaimed · day 2 (skipped if they already use Business Studio or have claimed)', subject: 'Your free Business Studio is waiting, {business_name}', body:
 `Hi {business_name},{personal_line}
 
-Running a business often means juggling enquiries, orders, posts and follow-ups, all from your WhatsApp.
+A quick reminder: {business_name} is listed on Auntie Tobi, but it hasn’t been claimed yet.
 
-Auntie Tobi Business Studio is a free workspace that keeps it all in one place:
+When you claim it, you also get **Auntie Tobi Business Studio**, a free workspace for your business:
 
+- Update your Auntie Tobi listing yourself (photo, description, WhatsApp and more)
 ${STUDIO_LIST}
 
-It’s free to start, and no card is needed: {studio_link}${SIGN}` },
+[[Claim my business|{claim_link}]]
+
+It takes a minute and it’s free. No card is needed.${SIGN}` },
   u3: { group: 'out-u', name: 'Business Club invite', when: 'Unclaimed · day 5', subject: 'Help more Nigerians in the UK find {business_name}', body:
 `Hi {business_name},{personal_line}
 
@@ -83,6 +86,7 @@ Thank you for listing your business on Auntie Tobi 💚
 
 I’d love to help you stay organised too. Auntie Tobi Business Studio is a free workspace for your business:
 
+- Update your Auntie Tobi listing yourself, any time (photo, description, WhatsApp and more)
 ${STUDIO_LIST}
 
 It’s free to start, and no card is needed: {studio_link}${SIGN}` },
@@ -256,6 +260,45 @@ Any questions? Message us on WhatsApp: https://wa.me/447594674940
 
 Auntie Tobi 💚`, ['name', 'listing', 'outcome', 'note']),
 });
+// ── ➕ Add your business ──
+const BIZ_VARS = ['name', 'business_name', 'listing_link', 'studio_link', 'email'];
+Object.assign(T, {
+  'biz.listed': S('sys-biz', 'You’re listed + Business Studio', 'When a business added in the app is on the website (sent from HQ → Add your business, after your Website CSV upload)', '🎉 {business_name} is live on Auntie Tobi, and your Business Studio is ready',
+`Hi {name},
+
+Good news! **{business_name}** is now listed on the Auntie Tobi app and website, where Nigerians across the UK look for businesses like yours.
+
+[[View my listing|{listing_link}]]
+
+**Your free Business Studio is ready too.** It’s your business workspace from Auntie Tobi:
+
+- ✏️ Edit your listing any time (photo, description, WhatsApp and more)
+- 📱 Make posts and designs for Instagram in minutes
+- 👥 Keep track of customers and follow-ups
+- 📅 Plan your content for the week
+
+[[Open Business Studio|{studio_link}]]
+
+Sign in with this email address ({email}). We’ll send you a 6-digit code, no password needed.
+
+Want even more people to find you? The Auntie Tobi Business Club puts you at the top as a Featured Business: https://www.auntietobi.co.uk/business-club
+
+Auntie Tobi 💚`, BIZ_VARS),
+  'biz.announce': S('sys-biz', 'New: edit your listing in Business Studio', 'One-off email to Business Studio members who already linked their listing (sent from HQ → Add your business)', '✏️ You can now update your Auntie Tobi listing yourself',
+`Hi {name},
+
+Something new in your Business Studio: you can now update **{business_name}** on Auntie Tobi yourself, any time.
+
+- Change your photo, description, phone, WhatsApp, Instagram and more
+- Changes show in the Auntie Tobi app straight away
+- Business name changes are checked by Auntie Tobi first
+
+[[Edit my listing|{studio_link}]]
+
+Sign in with this email address ({email}). We’ll send you a 6-digit code, no password needed.
+
+Auntie Tobi 💚`, BIZ_VARS),
+});
 const FOOTER_OUT = 'You’re receiving this because {business_name} is listed in the Auntie Tobi business directory. Don’t want these emails? Unsubscribe: {unsubscribe_link}';
 const GROUPS = [
   { id: 'out-u', name: 'Outreach · Unclaimed businesses', note: 'Businesses Auntie Tobi listed. Sent on day 0, 2, 5 and 12; stops when they join the Business Club.', canAdd: 'u' },
@@ -263,6 +306,7 @@ const GROUPS = [
   { id: 'wel-free', name: 'Business Studio welcome · Free plan', note: 'Chat messages in Business Studio (and by email when switched on), from the day someone joins.', welcome: 'free' },
   { id: 'wel-club', name: 'Business Studio welcome · Business Club', note: 'For new Business Club members, from the day they join.', welcome: 'club' },
   { id: 'wel-plus', name: 'Business Studio welcome · Plus', note: 'For new Business Studio Plus subscribers.', welcome: 'plus' },
+  { id: 'sys-biz', name: 'Add your business', note: 'Emails to owners who add or manage their business. Sent from HQ → Add your business when you press send.' },
   { id: 'sys-club', name: 'Business Club', note: 'Sent straight after a Business Club payment.' },
   { id: 'sys-acc', name: 'Account & payments', note: 'Sign-in codes, credits and subscriptions. 🔒 Some words must stay (e.g. the code, the price, date and cancel link).' },
   { id: 'sys-week', name: 'Weekly email', note: 'The Monday “Your week ahead” round-up.' },

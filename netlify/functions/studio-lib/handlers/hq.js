@@ -118,7 +118,7 @@ exports.handler = handler(async (ctx) => {
   { const need = sectionsOf(String(body.action || '')); if (need) mustAllow(who, need); }
   const has = list => can(who, list);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? await apppub.list() : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], tcars: has(['cars']) ? await tplcar.list() : [], vads: has(['vads']) ? await videoad.list() : [] };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? await apppub.list() : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], tcars: has(['cars']) ? await tplcar.list() : [], vads: has(['vads']) ? await videoad.list() : [], abizNew: who.isAdmin ? await require('../addbiz').hqList().then(r => r.subs.filter(x => x.status === 'new').length + r.listed.length).catch(() => 0) : 0 };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -320,6 +320,17 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dm-ideas') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return await dm.ideas(body.city, body.interest); }
       if (body.action === 'dm-search') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return { accounts: await dm.searchPages(body.q) }; }
       return await dm.overview();
+    }
+    case 'abiz-list': case 'abiz-review': case 'abiz-delete': case 'abiz-listed': case 'abiz-preview': case 'abiz-announce': {
+      // ➕ Add your business — owners' new listings, claims and name changes (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const ab = require('../addbiz');
+      if (body.action === 'abiz-review') await ab.review(String(body.id || ''), body.decision === 'approve' ? 'approve' : 'decline', body.edits || null, who.email);
+      if (body.action === 'abiz-delete') await ab.removeSub(String(body.id || ''));
+      if (body.action === 'abiz-listed') { const r = await ab.sendListed(Array.isArray(body.slugs) ? body.slugs : null, who.email); await core.audit(who.email, 'hq_addbiz_listed', r); return Object.assign(await ab.hqList(), { sentNow: r.sent }); }
+      if (body.action === 'abiz-preview') return { mail: await ab.previewEmail(String(body.id || ''), String(body.slug || '')) };
+      if (body.action === 'abiz-announce') { const r = await ab.announceSend(who.email, body.test ? who.email : ''); return Object.assign(await ab.hqList(), { announceNow: r }); }
+      return await ab.hqList();
     }
     case 'dirhook-status': case 'dirsync-test': case 'dirsync-live': case 'dirsync-retry': case 'dirsync-dismiss': {
       // 🔄 live sync from the directory website (admin only)

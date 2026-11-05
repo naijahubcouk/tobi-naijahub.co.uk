@@ -97,6 +97,19 @@ exports.handler = handler(async (ctx) => {
       return { ok: true, created: isNew };
     }
 
+    case 'token-signin': {
+      // One-time sign-in from "Add your business" (the app and Business Studio live on different addresses)
+      await rateLimit('verify-ip', ctx.ip, 40, 60 * 60 * 1000);
+      const email = await require('../addbiz').useSignin(body.token);
+      if (!email) throw new HttpError(400, 'link_expired', 'That sign-in link has expired. Sign in with your email instead — we’ll send you a code.');
+      const member = await getMember(email);
+      if (!member || member.blocked || !access(member, await getSettings()).canView) throw new HttpError(403, 'no_access', 'Please sign in with your email.');
+      const s = await core.createSession(email, 'member', ctx.event);
+      ctx.cookiesOut.push(s.cookie);
+      await markLogin(email);
+      return { ok: true };
+    }
+
     case 'stepup-request': {
       const auth = await core.requireMember(ctx, { level: 'buyer' });
       await rateLimit('otp-email', auth.sess.email, 6, 60 * 60 * 1000, 'Too many codes requested. Please try again in an hour.');

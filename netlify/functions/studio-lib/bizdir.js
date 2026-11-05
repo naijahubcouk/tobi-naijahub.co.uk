@@ -110,9 +110,26 @@ function normalise(b) {
   if (Array.isArray(b.tags) && b.tags.length) out.tags = b.tags.map(t => str(t, 40)).filter(Boolean).slice(0, 10);
   if (isFinite(+b.lat) && isFinite(+b.lng) && b.lat !== '' && b.lat != null && +b.lat !== 0) { out.lat = +b.lat; out.lng = +b.lng; }
   if (b.uploadedAt) out.uploadedAt = str(b.uploadedAt, 40);   // HQ-added business already put in a website CSV
+  // ➕ added / claimed by the owner (app "Add your business" or Business Studio) — private, never in the public list
+  if (b.ownerEmail) out.ownerEmail = str(b.ownerEmail, 120).toLowerCase();
+  if (b.ownerName) out.ownerName = str(b.ownerName, 80);
+  if (b.via === 'app' || b.via === 'studio') out.via = b.via;
+  if (b.listedMailAt) out.listedMailAt = str(b.listedMailAt, 40);   // "You're listed" email sent
+  if (b.ownerEdAt) out.ownerEdAt = str(b.ownerEdAt, 40);            // last change by the owner in Business Studio
+  if (b.ownerEd && typeof b.ownerEd === 'object' && Object.keys(b.ownerEd).length) { const e = {}; for (const k of OWNER_FIELDS) if (b.ownerEd[k] !== undefined) e[k] = b.ownerEd[k]; if (Object.keys(e).length) out.ownerEd = e; }
   return out;
 }
 
+// Owner changes made in Business Studio win over the website until the website shows the same value
+// (i.e. until the change has gone up in a website CSV), so a website update never undoes an owner's edit.
+const OWNER_FIELDS = ['desc', 'img', 'phone', 'wa', 'ig', 'website', 'email', 'loc', 'addr', 'fb', 'tt', 'cat'];
+function protectOwner(o, m) {
+  if (!o || !o.ownerEd) return m;
+  const ed = Object.assign({}, o.ownerEd);
+  for (const k of Object.keys(ed)) { if (same(m[k], ed[k])) delete ed[k]; else m[k] = ed[k]; }
+  m.ownerEd = Object.keys(ed).length ? ed : null;   // null = all caught up (cleared on save)
+  return m;
+}
 // Finder businesses stay out of the app and the chat until they're on the website (CSV marked uploaded, or the
 // website export brings them back in) — unless "Show in app now" was ticked. Older Finder ones are recognised by their note.
 function waitingSite(b) { return b.src === 'hq' && !b.uploadedAt && !b.appNow && (!!b.awaitSite || /Found by the Business Finder/.test(b.notes || '')); }
@@ -179,7 +196,8 @@ function mergeOne(o, n) {
   const keep = {}; for (const k of ['img', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden', 'short', 'tags', 'lat', 'lng', 'gallery']) if (o[k] !== undefined) keep[k] = o[k];
   const m = normalise(Object.assign({}, o, n, keep, { wa: n.wa || o.wa, ig: n.ig || o.ig, fb: n.fb || o.fb, tt: n.tt || o.tt, loc: n.loc && n.loc !== 'UK' ? n.loc : (o.loc || 'UK') }));
   if (o.siteHidden && n.status !== 'pending') { m.hidden = false; delete m.siteHidden; }   // hidden by the website sync, back on the website now
-  return m;
+  for (const k of ['ownerEmail', 'ownerName', 'via', 'listedMailAt', 'ownerEdAt']) if (o[k] !== undefined) m[k] = o[k];
+  return protectOwner(o, m);
 }
 async function applyImport(csvText, hideGone, who) {
   const rows = parseCsv(csvText).map(fromCsvRow).filter(b => b.slug && b.name);
@@ -211,7 +229,7 @@ async function save(raw, who) {
   await cas(KEY, cur => {
     const items = cur && Array.isArray(cur.items) && cur.items.length ? cur.items.slice() : seed.map(normalise);
     const i = items.findIndex(x => x.slug === (raw.origSlug || b.slug));
-    if (i >= 0) items[i] = Object.assign({}, items[i], b); else items.push(b);
+    if (i >= 0) { items[i] = Object.assign({}, items[i], b); if (raw.ownerEd === null) delete items[i].ownerEd; } else items.push(b);
     return { items, at: b.updatedAt, by: who, lastImport: cur && cur.lastImport };
   });
   forget();
@@ -232,4 +250,4 @@ async function markUploaded(slugs, at) {
 }
 async function info() { const rec = await getJson(KEY).catch(() => null); return { saved: !!(rec && rec.items), at: rec && rec.at || '', lastImport: rec && rec.lastImport || '' }; }
 
-module.exports = { nameKey, townFrom, waNumber, igHandle, waitingSite, fbUrl, ttUrl, markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
+module.exports = { protectOwner, OWNER_FIELDS, nameKey, townFrom, waNumber, igHandle, waitingSite, fbUrl, ttUrl, markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
