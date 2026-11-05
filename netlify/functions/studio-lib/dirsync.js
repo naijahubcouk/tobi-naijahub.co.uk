@@ -64,7 +64,7 @@ function parse(html) {
   if (out.addr) out.loc = bizdir.townFrom(out.addr) || '';
   // photos: the page's main image, then any listing pictures (skip TikTok/Instagram links and the site logo)
   const imgs = [meta(html, 'og:image')].concat([...main.matchAll(/_next\/image\?url=([^&"'\s]+)/gi)].map(m => decodeURIComponent(decode(m[1])))).filter(okImage);
-  const ff = html.search(/<footer[\s>]/i), foot = ff > 0 ? html.slice(ff) : '';   // pictures that are also in the footer = the site logo
+  const ff = html.search(/<footer[\s>]/i), fe = ff > 0 ? html.indexOf('</footer>', ff) : -1, foot = ff > 0 ? html.slice(ff, fe > ff ? fe : undefined) : '';   // pictures that are also in the footer = the site logo
   out.images = [...new Set(imgs)].filter(u => !foot.includes(encodeURIComponent(u)) && !foot.includes(u)).slice(0, 6);
   out.featured = />\s*Featured\s*</.test(main); out.claimed = />\s*Claimed\s*</.test(main);
   return out;
