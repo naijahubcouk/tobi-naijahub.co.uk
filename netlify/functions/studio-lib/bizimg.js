@@ -11,16 +11,16 @@ const { HttpError, getJson, setJson, del } = core;
 const TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const MAX = 2.6 * 1024 * 1024;
 
-function parse(dataUrl) {
+function parse(dataUrl, max) {
   const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
   if (!m) return null;
   const size = Math.floor(m[2].length * 3 / 4);
-  if (size < 1500 || size > MAX) return null;
+  if (size < 1500 || size > (max || MAX)) return null;
   return { type: m[1], ext: TYPES[m[1]] };
 }
 // Saves a picture for a business and returns its public link.
 async function put(slug, dataUrl, src) {
-  const p = parse(dataUrl);
+  const p = parse(dataUrl, src === 'site' ? 5.6 * 1024 * 1024 : 0);   // website photos may be bigger originals
   if (!p) throw new HttpError(400, 'bad_image', 'That picture couldn’t be used — please try a JPG or PNG under 2.5MB.');
   const ver = Date.now().toString(36).slice(-6);
   await setJson('bizimg/' + slug, { dataUrl, at: core.nowIso(), src: src || 'upload', ver });

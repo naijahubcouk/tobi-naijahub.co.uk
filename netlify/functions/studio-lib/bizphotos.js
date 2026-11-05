@@ -28,21 +28,24 @@ async function grab(url, ms) {
   try {
     const r = await fetch(url, { signal: ctrl.signal, redirect: 'follow', headers: { 'User-Agent': UA, Accept: 'image/jpeg,image/png,image/webp;q=0.9,*/*;q=0.5', Referer: SITE() + '/' } });
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    const type = String(r.headers.get('content-type') || '').toLowerCase().split(';')[0];
-    if (!/^image\/(jpeg|png|webp)$/.test(type)) throw new Error('not a photo (' + (type || 'unknown') + ')');
+    let type = String(r.headers.get('content-type') || '').toLowerCase().split(';')[0];
     const buf = Buffer.from(await r.arrayBuffer());
+    // some photo hosts (e.g. uploads without a file ending) don't say what they are — look at the file itself
+    const sniff = buf[0] === 0xFF && buf[1] === 0xD8 ? 'image/jpeg' : buf[0] === 0x89 && buf[1] === 0x50 ? 'image/png' : buf.slice(0, 4).toString() === 'RIFF' && buf.slice(8, 12).toString() === 'WEBP' ? 'image/webp' : '';
+    if (!/^image\/(jpeg|png|webp)$/.test(type) || (sniff && sniff !== type)) type = sniff;
+    if (!type) throw new Error('not a JPG, PNG or WebP photo');
     return { type, buf };
   } finally { clearTimeout(t); }
 }
 // The website's Next.js image service gives a resized copy (small enough to keep); the original is the fallback.
 async function download(url) {
-  const tries = [`${SITE()}/_next/image?url=${encodeURIComponent(url)}&w=1080&q=80`, url];
+  const tries = [`${SITE()}/_next/image?url=${encodeURIComponent(url)}&w=1080&q=80`, `${SITE()}/_next/image?url=${encodeURIComponent(url)}&w=640&q=75`, url];
   let last = null;
   for (const u of tries) {
     try {
       const { type, buf } = await grab(u);
       if (buf.length < 1500) throw new Error('too small');
-      if (buf.length > 2.5 * 1024 * 1024) throw new Error('too large (' + Math.round(buf.length / 1024) + ' KB)');
+      if (buf.length > 5.5 * 1024 * 1024) throw new Error('too large (' + Math.round(buf.length / 1024) + ' KB)');
       return `data:${type};base64,${buf.toString('base64')}`;
     } catch (e) { last = e; }
   }
@@ -90,7 +93,7 @@ async function summary() {
   const withPhoto = all.filter(b => b.img), copied = withPhoto.filter(b => ours(b.img)).length;
   const waiting = all.filter(b => external(b.img));
   const gaveUp = waiting.filter(b => (st.failed[b.slug] || {}).url === b.img && st.failed[b.slug].n >= MAX_TRIES);
-  return { total: all.length, withPhoto: withPhoto.length, copied, left: waiting.length - gaveUp.length, gaveUp: gaveUp.map(b => ({ slug: b.slug, name: b.name, why: st.failed[b.slug].why })).slice(0, 30), noPhoto: all.length - withPhoto.length, lastRun: st.lastRun || '' };
+  return { total: all.length, withPhoto: withPhoto.length, copied, left: waiting.length - gaveUp.length, gaveUp: gaveUp.map(b => ({ slug: b.slug, name: b.name, why: st.failed[b.slug].why, url: b.img })).slice(0, 40), trying: waiting.filter(b => st.failed[b.slug] && !gaveUp.includes(b)).map(b => ({ name: b.name, why: st.failed[b.slug].why })).slice(0, 40), noPhoto: all.length - withPhoto.length, lastRun: st.lastRun || '' };
 }
 async function retry() { await cas(KEY, s => Object.assign(s || {}, { failed: {} })); }
 
