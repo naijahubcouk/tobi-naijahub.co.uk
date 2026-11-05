@@ -66,12 +66,16 @@
 /marketplace  /marketplace.html  200
 /business-club  /business-club.html  200
 # ── 🎒 School Tracker (separate app). Only matches schooltracker.auntietobi.co.uk once that domain is added in Netlify. ──
-https://schooltracker.auntietobi.co.uk/              /school.html  200!
+https://schooltracker.auntietobi.co.uk/              /school-landing.html  200!
+https://schooltracker.auntietobi.co.uk/app           /school.html  200!
 https://schooltracker.auntietobi.co.uk/join          /school.html  200!
-https://schooltracker.auntietobi.co.uk/index.html    /school.html  200!
+https://schooltracker.auntietobi.co.uk/privacy       /school-privacy.html  200!
+https://schooltracker.auntietobi.co.uk/index.html    /school-landing.html  200!
 https://schooltracker.auntietobi.co.uk/manifest.json /school-manifest.json  200!
 https://schooltracker.auntietobi.co.uk/sw.js         /school-sw.js  200!
 /school-tracker  /school.html  200
+/school-tracker/home  /school-landing.html  200
+/school-tracker/privacy  /school-privacy.html  200
 # ── Business Studio (members-only) ──
 # The app's own address. Only matches studio.auntietobi.co.uk (does nothing until that domain is added in Netlify).
 https://studio.auntietobi.co.uk/                    /studio.html  200!

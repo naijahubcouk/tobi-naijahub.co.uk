@@ -119,7 +119,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
       '<h2>Sign in or start free</h2><p class="sub" style="margin:0 0 4px">We’ll email you a 6-digit code — no password needed.</p>' +
       '<label for="em">Your email</label><input type="email" id="em" autocomplete="email" placeholder="you@example.com" value="' + esc(store.get('st_email') || '') + '">' +
       '<button class="btn block" id="go" style="margin-top:14px">Send my code</button></div>' +
-      '<p class="sub" style="text-align:center;font-size:13px">Your school emails stay private to your family.</p></main>';
+      '<p class="sub" style="text-align:center;font-size:13px">Your school emails stay private to your family. <a href="' + (location.pathname.indexOf('/school-tracker') === 0 ? '/school-tracker/privacy' : '/privacy') + '">Our privacy promise</a></p></main>';
     $('#go').onclick = async function () {
       var b = this, em = $('#em').value.trim(); if (!em) return toast('Enter your email');
       b.disabled = true; b.textContent = 'Sending…';
@@ -417,7 +417,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
   async function load() { S.boot = await api('boot'); return S.boot; }
   async function start() {
     var t = (location.search.match(/[?&]t=([^&]+)/) || [])[1];
-    if (t) { store.set('st_join', decodeURIComponent(t)); try { history.replaceState({}, '', '/' + (location.pathname.indexOf('school-tracker') >= 0 ? 'school-tracker' : '')); } catch (e) {} }
+    if (t) { store.set('st_join', decodeURIComponent(t)); try { history.replaceState({}, '', location.pathname.indexOf('school-tracker') >= 0 ? '/school-tracker' : '/app'); } catch (e) {} }
     try { await load(); } catch (e) { if (!S.boot) { signIn(store.get('st_join') ? 'You’ve been invited to School Tracker. Sign in with the email address the invitation was sent to.' : ''); } return; }
     var jt = store.get('st_join');
     if (jt) {
