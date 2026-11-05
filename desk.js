@@ -208,7 +208,7 @@
     all.forEach(function (b) { if (b.cat && b.cat !== 'nigerian business') counts[b.cat] = (counts[b.cat] || 0) + 1; });
     var cats = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
     page.innerHTML = '<div class="wrap"><div><h1>Nigerian businesses in the UK</h1><div class="sub" id="lapCount"></div></div>' +
-      '<div class="search"><input id="lapS" placeholder="🔍 Search a business, category or town…" value="' + esc(BZ.q) + '" autocomplete="off"><a class="chip" href="/add-business" style="padding:13px 18px;text-decoration:none;background:#FFF4D6;border-color:#FFB81C">➕ Add your business</a></div>' +
+      '<div class="search"><input id="lapS" placeholder="🔍 Find a business — name, what you need or a town…" value="' + esc(BZ.q) + '" autocomplete="off"><a class="chip" href="/add-business" style="padding:13px 18px;text-decoration:none;background:#FFF4D6;border-color:#FFB81C">➕ Add your business</a></div>' +
       '<div class="chips"><button class="chip' + (BZ.cat ? '' : ' on') + '" data-c="">All</button>' + cats.slice(0, 12).map(function (c) { return '<button class="chip' + (BZ.cat === c ? ' on' : '') + '" data-c="' + esc(c) + '">' + esc(cap(c)) + '</button>'; }).join('') +
       (cats.length > 12 ? '<select class="chip" id="lapMore"><option value="">More…</option>' + cats.slice(12).map(function (c) { return '<option' + (BZ.cat === c ? ' selected' : '') + ' value="' + esc(c) + '">' + esc(cap(c)) + ' (' + counts[c] + ')</option>'; }).join('') + '</select>' : '') + '</div>' +
       '<div id="lapGrid"></div></div>';
@@ -219,11 +219,15 @@
     grid();
   }
   function grid() {
-    var q = BZ.q.toLowerCase(), list = dir().filter(function (b) {
+    // same matching as the app's "Find a business": every word must match the name, category, town or description; best name matches first
+    var q = BZ.q.toLowerCase().trim(), words = q.split(/\s+/).filter(Boolean);
+    var rank = function (b) { var n = String(b.name).toLowerCase(); return !q ? 0 : n.indexOf(q) === 0 ? 0 : n.indexOf(q) > -1 ? 1 : String(b.cat || '').toLowerCase().indexOf(q) > -1 ? 2 : String(b.loc || '').toLowerCase().indexOf(q) > -1 ? 3 : 4; };
+    var list = dir().filter(function (b) {
       if (BZ.cat && b.cat !== BZ.cat) return false;
-      return !q || (b.name + ' ' + (b.cat || '') + ' ' + (b.loc || '') + ' ' + (b.ig || '')).toLowerCase().indexOf(q) > -1;
-    }).sort(function (a, b) { return (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || (b.img ? 1 : 0) - (a.img ? 1 : 0); });
-    document.getElementById('lapCount').textContent = list.length + ' business' + (list.length === 1 ? '' : 'es') + ' · Featured businesses first';
+      var all = (b.name + ' ' + (b.cat || '') + ' ' + (b.loc || '') + ' ' + (b.ig || '') + ' ' + (b.desc || '')).toLowerCase();
+      return words.every(function (w) { return all.indexOf(w) > -1; });
+    }).sort(function (a, b) { return rank(a) - rank(b) || (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || (b.img ? 1 : 0) - (a.img ? 1 : 0); });
+    document.getElementById('lapCount').innerHTML = q ? list.length + ' result' + (list.length === 1 ? '' : 's') + ' for “' + esc(BZ.q) + '” · Can’t find it? <a href="/add-business" style="color:#057A44;font-weight:800;text-decoration:none">➕ Add your business</a>' : list.length + ' business' + (list.length === 1 ? '' : 'es') + ' · Featured businesses first';
     var g = document.getElementById('lapGrid');
     g.innerHTML = list.length ? '<div class="grid">' + list.slice(0, BZ.n).map(card).join('') + '</div>' + (list.length > BZ.n ? '<button class="more" id="lapMoreBiz">Show more (' + (list.length - BZ.n) + ' more)</button>' : '')
       : '<div class="card empty">No businesses match — try another search, or <a href="/add-business" style="color:#057A44;font-weight:700">add your business</a>.</div>';
