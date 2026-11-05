@@ -4,11 +4,11 @@
  *    screens: "Best on your phone" with a QR code for this page, and quick links.
  *  - The app also gets "View in laptop format": a wide layout with a top menu, a Home page and a Businesses grid.
  *    Other screens (News, Events, Jobs, chat answers…) open in the app stretched to the full width.
- *    The choice is remembered on this computer (📱 Phone view switches back). Phones never see any of this.
+ *    Computers open in laptop view; 📱 Phone view switches back and is remembered on that computer. Phones never see any of this.
  */
 (function () {
   'use strict';
-  var WIDE = 1100, KEY = 'tobi_view';
+  var WIDE = 1100, LAPW = 980, KEY = 'tobi_view';   // side panels need 1100px; laptop view works from 980px
   var isApp = !!(document.querySelector('.app') && document.getElementById('messages'));
   var wide = function () { return window.innerWidth >= WIDE; };
   var get = function () { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
@@ -63,7 +63,7 @@
     '#lapPage .tile:hover{box-shadow:0 0 0 2px #057A44}#lapPage .tile span{display:block;font-size:26px;margin-bottom:6px}' +
     '#lapPage .more{display:block;margin:6px auto 0;background:#fff;border:1.5px solid #057A44;color:#057A44;border-radius:12px;padding:12px 26px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}' +
     '#lapPage .empty{padding:30px;text-align:center;color:#6B7280}' +
-    '@media (max-width:1240px){#lapPage .cols{grid-template-columns:1fr 300px}}';
+    '@media (max-width:1240px){#lapPage .cols{grid-template-columns:1fr 290px}#lapPage .tiles{grid-template-columns:repeat(2,1fr)}}@media (max-width:1180px){#lapPage .cols .grid{grid-template-columns:repeat(2,1fr)}#lapTop nav button{padding:8px 9px;font-size:13px}#lapTop .br span{display:none}}';
 
   function addCss() { if (document.getElementById('dskCss')) return; var st = document.createElement('style'); st.id = 'dskCss'; st.textContent = CSS; document.head.appendChild(st); }
   var qrLoad = null;
@@ -100,7 +100,7 @@
 
   // ───── laptop format (the app only) ─────
   var top, page, cur = '';
-  function lapOn() { return isApp && wide() && get() === 'laptop'; }
+  function lapOn() { return isApp && window.innerWidth >= LAPW && get() !== 'phone'; }   // computers open in laptop view unless they chose phone view
   function dir() { try { return (typeof getLiveDirectory === 'function' ? getLiveDirectory() : []).filter(function (b) { return b && b.slug && b.name; }); } catch (e) { return []; } }
   function card(b) {
     return '<div class="card bz"><div class="im" data-biz="' + esc(b.slug) + '">' + esc((b.name || '?').charAt(0).toUpperCase()) + (b.img ? '<img src="' + esc(b.img) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + (b.featured ? '<span class="ft">⭐ Featured</span>' : '') + '</div>' +
@@ -200,7 +200,7 @@
   // ───── switching ─────
   var started = false;
   function apply() {
-    if (!wide()) { document.body.classList.remove('lapv'); if (top) top.style.display = 'none'; if (page) page.style.display = 'none'; if (L) L.style.display = R.style.display = 'none'; return; }
+    if (!wide() && !lapOn()) { document.body.classList.remove('lapv'); if (top) top.style.display = 'none'; if (page) page.style.display = 'none'; if (L) L.style.display = R.style.display = 'none'; return; }
     if (lapOn()) {
       document.body.classList.add('lapv'); shell(); top.style.display = 'block';
       if (L) L.style.display = R.style.display = 'none';
