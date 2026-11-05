@@ -1719,7 +1719,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
         (x.kind === 'new' && b.desc ? '<div style="font-size:14px;margin-bottom:6px">' + esc(b.desc) + '</div>' : '') +
         (x.kind === 'new' ? '<div style="font-size:13px">' + contact(b) + '</div>' : '') +
         (x.kind === 'claim' ? '<div style="font-size:13px;margin-top:4px">Emails on the listing: <b>' + esc([b.email, b.contactEmail].filter(Boolean).join(', ') || 'none') + '</b> — they used <b>' + esc(x.email) + '</b>' + (x.auto ? ' ✅ matched, claimed automatically' : '') + '</div>' : '') +
-        (x.dupes && x.dupes.length ? '<div class="err" style="margin-top:8px;font-size:13px">⚠️ Looks like: ' + x.dupes.map(function (d) { return esc(d.name) + ' (same ' + esc(d.why) + ')'; }).join(', ') + '</div>' : '') +
+        (x.dupes && x.dupes.length ? '<div class="err" style="margin-top:8px;font-size:13px">⚠️ Looks like: ' + x.dupes.map(function (d) { return esc(d.name) + ' (' + esc(d.why) + ')'; }).join(', ') + '</div>' : '') +
         '<div style="font-size:13px;margin-top:8px;background:#F7F2E7;border-radius:8px;padding:6px 10px">👤 <b>' + esc(x.ownerName || '—') + '</b> · ' + esc(x.email) +
         (x.siteMatch ? ' · <b style="color:var(--green-d)">✓ Email matches website</b>' : '') + (x.hasStudio ? ' · <b style="color:var(--green-d)">Has Business Studio ✓</b>' : '') +
         '<br><span class="muted">' + esc(when(x.createdAt)) + (x.how && AB_HOW[x.how] ? ' · ' + AB_HOW[x.how] : '') + (x.reviewedBy ? ' · ' + (x.status === 'approved' ? 'approved' : 'declined') + ' by ' + esc((S.names && S.names[x.reviewedBy]) || x.reviewedBy) : '') + '</span></div>' +

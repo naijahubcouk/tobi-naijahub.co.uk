@@ -96,12 +96,22 @@ async function claimCode(slug, ip) {
 }
 
 // Businesses that look like this one (same Instagram, website, WhatsApp or name)
+// Shared addresses that many businesses use — never a sign two listings are the same business
+const SHARED_HOSTS = /^(wa\.me|api\.whatsapp\.com|linktr\.ee|linktree\.com|instagram\.com|facebook\.com|fb\.com|tiktok\.com|x\.com|twitter\.com|youtube\.com|google\.com|g\.page|maps\.app\.goo\.gl|goo\.gl|bit\.ly|selar\.com|selar\.co|beacons\.ai|paystack\.com|paystack\.shop|etsy\.com|amazon\.co\.uk|ebay\.co\.uk|calendly\.com|fresha\.com|booksy\.com|square\.site|business\.site|wixsite\.com|linkin\.bio|bio\.link|(directory\.)?auntietobi\.(co\.uk|com)|naijahub\.co\.uk)$/;
+const OUR_NUMBERS = ['447594674940'];
 async function dupes(f) {
   const ig = String(f.ig || '').replace(/^@/, '').toLowerCase(), dom = domain(f.website || ''), nk = key(f.name), wa = bizdir.waNumber('', f.wa || f.phone || '');
-  const owners = await links.owners(), out = [];
-  for (const b of await bizdir.all()) {
+  const all = await bizdir.all(), owners = await links.owners(), out = [];
+  // a number used by several listings is a team / agency number (e.g. Auntie Tobi's own), not this business's
+  const waCount = {}; all.forEach(b => { if (b.wa) waCount[b.wa] = (waCount[b.wa] || 0) + 1; });
+  const domOk = dom && !SHARED_HOSTS.test(dom) && !/\.(wixsite|godaddysites|square|myshopify|business)\./.test('.' + dom);
+  const waOk = wa && !OUR_NUMBERS.includes(wa) && (waCount[wa] || 0) <= 2;
+  for (const b of all) {
     if (b.hidden || (f.skipSlug && b.slug === f.skipSlug)) continue;
-    const why = (ig && String(b.ig || '').toLowerCase() === ig) ? 'Instagram' : (dom && domain(b.website || '') === dom && !/^(instagram|facebook|linktr|linktree|wa|tiktok)\./.test(dom)) ? 'website' : (wa && b.wa === wa) ? 'WhatsApp number' : (nk && nk.length > 3 && key(b.name) === nk) ? 'name' : '';
+    const why = (ig && String(b.ig || '').toLowerCase() === ig) ? 'same Instagram (@' + ig + ')'
+      : (domOk && domain(b.website || '') === dom) ? 'same website (' + dom + ')'
+      : (waOk && b.wa === wa) ? 'same WhatsApp number'
+      : (nk && nk.length > 3 && key(b.name) === nk) ? 'same name' : '';
     if (why) out.push(Object.assign(publicCard(b, owners), { why, pending: b.status === 'pending' }));
   }
   return out.slice(0, 5);

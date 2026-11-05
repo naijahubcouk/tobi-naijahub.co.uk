@@ -311,7 +311,7 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
     var ws = $('#waSame'); if (ws && ws.checked) S.f.wa = S.f.phone; }
   function dupHtml(list) {
     return '<div class="dup"><b>👀 Is this your business?</b><p class="hint" style="margin:2px 0 8px">It looks like it might already be on Auntie Tobi. If it’s yours, claim it instead of adding it again.</p>' +
-      list.map(function (b) { return bizRow(b, b.owned ? '<button class="taken" disabled>Claimed</button>' : '<button data-dclaim="' + esc(b.slug) + '">Claim it</button>'); }).join('') +
+      list.map(function (b) { return bizRow(b, b.owned ? '<button class="taken" disabled>Claimed</button>' : '<button data-dclaim="' + esc(b.slug) + '">Claim it</button>') + '<div class="hint" style="margin:-2px 0 8px 4px">Matched because of: <b>' + esc(b.why || 'similar details') + '</b>' + (b.pending ? '' : ' · <a href="/biz/' + encodeURIComponent(b.slug) + '" target="_blank" rel="noopener" style="color:#057A44;font-weight:700">View listing ↗</a>') + '</div>'; }).join('') +
       '<p class="hint" style="margin-top:6px">Not yours? Just carry on.</p></div>';
   }
   function bindDup() { root.querySelectorAll('[data-dclaim]').forEach(function (b) { b.onclick = function () { var x = (S.dupes || []).filter(function (y) { return y.slug === b.dataset.dclaim; })[0]; if (x) showClaim(x); }; }); }
