@@ -66,6 +66,7 @@ a.wa{display:inline-block;background:#25D366;color:#fff!important;font-weight:80
 .done{text-align:center}.done .big{font-size:46px}.done h2{font-size:22px;margin:6px 0}
 .what{text-align:left;background:#F6FBF8;border:1px solid #CDE8D9;border-radius:12px;padding:14px;margin:14px 0}
 .what ul{list-style:none;margin-top:8px}.what li{padding:6px 0;font-size:17px}
+.sec{font-size:14px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:.8px;margin:22px 0 2px;padding-top:14px;border-top:1px solid #eee}.req{color:#B42318;font-weight:800}
 .wr{background:#F6FBF8;border:1.5px dashed #9FD3B8;border-radius:12px;padding:12px;margin-top:12px}.wrh{font-size:15.5px;margin-bottom:8px;color:#0F1E36}.wr input{margin-bottom:8px}.wrb{background:#FFB81C!important;border-color:#FFB81C!important;font-weight:800!important;text-align:center!important;margin:0!important}
 textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#FFF4D6}100%{background:#fff}}
 .dup{border:1.5px solid #FFB81C;background:#FFFBF0;border-radius:12px;padding:12px;margin-top:12px}
@@ -259,16 +260,23 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
       '<label class="sbtn" style="margin:0 0 6px">📷 ' + (S.img ? 'Choose a different photo' : 'Upload a photo') + '<input type="file" id="own" accept="image/jpeg,image/png,image/webp" style="display:none"></label>' +
       (S.img ? '<button class="sbtn" id="noPic">✖ Remove photo</button>' : '') + (S.smallPic ? '<p class="hint" style="margin:0">This is your profile picture from the screenshot — a bigger, clearer photo looks much better.</p>' : '') + '</div></div>' +
       (S.photos.length ? '<div class="hint">Or pick one of your Instagram photos:</div><div class="thumbs">' + S.photos.map(function (p, i) { return '<img src="' + p + '" data-ph="' + i + '" alt="">'; }).join('') + '</div>' : '') +
-      FIELDS.slice(0, 3).map(function (x) { return field(x[0], x[1], x[2]); }).join('') +
-      '<div class="wr"><div class="wrh">✨ <b>Let Auntie Tobi write it for you</b> — add a few words if you like, e.g. <i>“jollof trays, small chops, weddings and birthdays”</i></div>' +
+      '<div class="sec">Business details</div>' +
+      field('name', 'Business name <b class="req">*</b>', 'e.g. Tolu’s Kitchen') + field('cat', 'Category <b class="req">*</b>') +
+      '<div class="wr"><div class="wrh">✨ <b>Let Auntie Tobi write your descriptions</b> — add a few words if you like, e.g. <i>“jollof trays, small chops, weddings and birthdays”</i></div>' +
       '<input id="f_notes" value="' + esc(S.notes || '') + '" placeholder="Optional: what you sell, who it’s for, anything special" maxlength="600">' +
-      '<button class="sbtn wrb" id="wrBtn">✨ ' + (f.long ? 'Write it again' : 'Write it for me') + '</button><div class="err hidden" id="wrErr"></div></div>' +
-      field('desc', 'What you offer', 'One or two sentences — what you sell or do, and who for') +
-      '<label for="f_long">Full description <small>(shown on your business page and the Auntie Tobi website — optional)</small></label><textarea id="f_long" rows="' + (f.long ? 8 : 3) + '" maxlength="4000" placeholder="A few short paragraphs about your business — or tap “Write it for me”">' + esc(f.long || '') + '</textarea>' +
-      '<div class="step" style="margin-top:18px">How customers reach you</div>' +
-      '<div class="two"><div>' + field('wa', 'WhatsApp number', '07700 900123') + '</div><div>' + field('phone', 'Phone', 'optional') + '</div></div>' +
-      '<div class="two"><div>' + field('ig', 'Instagram', '@yourbusiness') + '</div><div>' + field('website', 'Website', 'optional') + '</div></div>' +
-      '<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;font-size:14px;color:#057A44">More (business email, address, Facebook, TikTok)</summary>' + FIELDS.slice(8).map(function (x) { return field(x[0], x[1], x[2]); }).join('') + '</details>' +
+      '<button class="sbtn wrb" id="wrBtn">✨ ' + (f.long ? 'Write them again' : 'Write them for me') + '</button><div class="err hidden" id="wrErr"></div></div>' +
+      field('desc', 'Short description <b class="req">*</b> <small>(1–2 sentences, shown on your business card)</small>', 'What you sell or do, and who it’s for') +
+      '<label for="f_long">Full description <b class="req">*</b> <small>(shown on your business page and the Auntie Tobi website)</small>' + (filled && !f.long ? '<span class="need">please add</span>' : '') + '</label><textarea id="f_long" rows="' + (f.long ? 8 : 4) + '" maxlength="4000" placeholder="A few short paragraphs: what you offer, who it’s for, where you are and how to order or book"' + (filled && !f.long ? ' class="miss"' : '') + '>' + esc(f.long || '') + '</textarea>' +
+      '<div class="sec">Location</div>' +
+      field('loc', 'Town or city <b class="req">*</b>', 'e.g. Leeds') + field('addr', 'Full address <small>(only if customers visit you)</small>', 'e.g. 12 High Street, Leeds LS1 2AB') +
+      '<div class="sec">Contact details</div>' +
+      field('phone', 'Business phone <b class="req">*</b>', '07700 900123') +
+      '<label class="tick" style="margin-top:8px"><input type="checkbox" id="waSame"' + (!f.wa || bizWa(f.phone) === bizWa(f.wa) ? ' checked' : '') + '><span>This number is on <b>WhatsApp</b></span></label>' +
+      '<div id="waBox"' + (!f.wa || bizWa(f.phone) === bizWa(f.wa) ? ' class="hidden"' : '') + '>' + field('wa', 'WhatsApp number <small>(if different)</small>', '07700 900123') + '</div>' +
+      field('email', 'Business email <b class="req">*</b> <small>(shown on your listing so customers can email you)</small>', 'hello@yourbusiness.co.uk') +
+      field('website', 'Website', 'www.yourbusiness.co.uk') +
+      '<div class="sec">Social media</div>' +
+      '<div class="two"><div>' + field('ig', 'Instagram', '@yourbusiness') + '</div><div>' + field('tt', 'TikTok', '@yourbusiness') + '</div></div>' + field('fb', 'Facebook page', 'facebook.com/yourbusiness') +
       '<div class="err hidden" id="fErr"></div><button class="btn primary" id="next" style="margin-top:16px">Next: confirm it’s you →</button></div>' +
       '<button class="btn link" id="back">← Start again</button>';
     drawPic();
@@ -278,6 +286,7 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
     root.querySelectorAll('[data-ph]').forEach(function (im) { im.onclick = async function () { try { S.img = await shrink(S.photos[+im.dataset.ph], 1200); S.smallPic = false; drawPic(); } catch (e) {} }; });
     root.querySelectorAll('input.miss,textarea.miss,select.miss').forEach(function (el) { el.addEventListener('input', function () { el.classList.remove('miss'); var l = root.querySelector('label[for="' + el.id + '"] .need'); if (l) l.remove(); }); el.addEventListener('change', function () { el.classList.remove('miss'); }); });
     bindDup();
+    $('#waSame').onchange = function () { $('#waBox').classList.toggle('hidden', this.checked); };
     $('#wrBtn').onclick = async function () {
       var btn = this; collect(); showErr('#wrErr', '');
       if (!S.f.name || !S.f.cat) return showErr('#wrErr', 'Add your business name and category first.');
@@ -291,13 +300,15 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
     };
     $('#next').onclick = function () {
       collect(); var f2 = S.f;
-      var bad = !f2.name ? 'Please add your business name.' : !f2.cat ? 'Please choose a category.' : !f2.loc ? 'Please add your town or city.' : (!f2.desc || f2.desc.length < 15) ? 'Please add a short description of what you offer.' : (!f2.wa && !f2.phone && !f2.ig) ? 'Please add a WhatsApp number, phone or Instagram so customers can reach you.' : '';
+      var bad = !f2.name ? 'Please add your business name.' : !f2.cat ? 'Please choose a category.' : (!f2.desc || f2.desc.length < 15) ? 'Please add a short description — or tap “Write them for me”.' : (!f2.long || f2.long.length < 60) ? 'Please add a full description (a few sentences) — or tap “Write them for me”.' : !f2.loc ? 'Please add your town or city.' : bizWa(f2.phone).length < 10 ? 'Please add your business phone number.' : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f2.email || '') ? 'Please add your business email.' : '';
       if (bad) return showErr('#fErr', bad);
       showYou();
     };
   }
   function drawPic() { var p = $('#pic'); if (!p) return; p.style.backgroundImage = S.img ? 'url("' + S.img + '")' : ''; p.textContent = S.img ? '' : 'No photo yet'; }
-  function collect() { FIELDS.concat([['long']]).forEach(function (x) { var el = $('#f_' + x[0]); if (el) S.f[x[0]] = el.value.trim(); }); S.f.ig = String(S.f.ig || '').replace(/^@/, ''); var n = $('#f_notes'); if (n) S.notes = n.value.trim(); }
+  function bizWa(v) { var d = String(v || '').replace(/[^\d]/g, ''); if (/^0/.test(d)) d = '44' + d.slice(1); return d; }
+  function collect() { FIELDS.concat([['long']]).forEach(function (x) { var el = $('#f_' + x[0]); if (el) S.f[x[0]] = el.value.trim(); }); S.f.ig = String(S.f.ig || '').replace(/^@/, ''); var n = $('#f_notes'); if (n) S.notes = n.value.trim();
+    var ws = $('#waSame'); if (ws && ws.checked) S.f.wa = S.f.phone; }
   function dupHtml(list) {
     return '<div class="dup"><b>👀 Is this your business?</b><p class="hint" style="margin:2px 0 8px">It looks like it might already be on Auntie Tobi. If it’s yours, claim it instead of adding it again.</p>' +
       list.map(function (b) { return bizRow(b, b.owned ? '<button class="taken" disabled>Claimed</button>' : '<button data-dclaim="' + esc(b.slug) + '">Claim it</button>'); }).join('') +
@@ -322,6 +333,7 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
     root.innerHTML = '<div class="card"><div class="step">Step 4 · Confirm it’s you</div><h2>Nearly done!</h2>' +
       '<div class="note ok" style="margin:0 0 4px">' + bizRow({ name: S.f.name, cat: S.f.cat, loc: S.f.loc, img: S.img }, '') + '</div>' + youHtml('new') + '</div><button class="btn link" id="back">← Back to my details</button>';
     $('#back').onclick = showForm;
+    if (S.f.email && !$('#oEmail').value) $('#oEmail').value = S.f.email;
     bindYou('new');
   }
   function bindYou(mode) {
