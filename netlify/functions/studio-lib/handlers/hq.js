@@ -468,7 +468,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'mail-preview') {
         const t = await emails.def(id); if (!t) throw new HttpError(404, 'not_found', 'Unknown email.');
         const dir = await require('../bizdir').all(), b = dir.find(x => !x.featured && !x.hidden && x.email && x.desc) || dir[0];
-        const v = { business_name: b.name, category: String((b.cats && b.cats[0]) || b.cat || '').split('>').pop().trim(), town: b.loc || 'the UK', listing_link: core.siteBase() + '/biz/' + b.slug, claim_link: 'https://directory.auntietobi.co.uk/' + b.slug, remove_link: core.siteBase() + '/remove/…', unsubscribe_link: core.siteBase() + '/u/…', studio_link: core.siteBase() + '/business-studio', club_link: core.siteBase() + '/business-club', personal_line: body.personal ? 'Your ' + (b.cat || 'work') + ' looks lovely.' : '' };
+        const v = { business_name: b.name, category: String((b.cats && b.cats[0]) || b.cat || '').split('>').pop().trim(), town: b.loc || 'the UK', listing_link: core.siteBase() + '/biz/' + b.slug, claim_link: core.siteBase() + '/claim/' + encodeURIComponent(b.slug), remove_link: core.siteBase() + '/remove/…', unsubscribe_link: core.siteBase() + '/u/…', studio_link: core.siteBase() + '/business-studio', club_link: core.siteBase() + '/business-club', personal_line: body.personal ? 'Your ' + (b.cat || 'work') + ' looks lovely.' : '' };
         return Object.assign(emails.renderWith({ subject: String(body.subject || t.subject), body: String(body.body || t.body) }, v, emails.FOOTER_OUT), { business: b.name });
       }
       async function handlerSelf(b2) {

@@ -381,10 +381,14 @@ async function removeExtra(id) { await core.cas('mail/extra', cur => { if (!cur)
 function extraDef(x) { return { group: x.j === 'u' ? 'out-u' : 'out-c', name: x.name, when: (x.j === 'u' ? 'Unclaimed' : 'Claimed') + ' · day ' + x.day + ' (added by you)', subject: x.subject, body: x.body, vars: OUT_VARS, extra: true, day: x.day, j: x.j }; }
 
 async function def(id) { if (T[id]) return T[id]; if (/^x[a-z0-9]+$/.test(id)) { const x = (await extras()).find(y => y.id === id); if (x) return extraDef(x); } return null; }
+// Saved (edited) emails written before claiming moved into the app: point the old directory wording at the new claim page
+const OLD_CLAIM = /Claim it for free on the Auntie Tobi directory:\s*\{claim_link\}\s*and tap [“"]Claim this listing[”"]\.\s*You can then update your photos, description and contact details\./g;
+const NEW_CLAIM = 'Claim it for free here: {claim_link}. It takes a minute, and you’ll also get your own free Business Studio, where you can update your photo, description and contact details any time.';
+const freshClaim = t => String(t || '').replace(OLD_CLAIM, NEW_CLAIM).replace(/tap [“"]Claim this listing[”"]/g, 'tap “Yes, this is my business”');
 async function get(id) {
   const d = await def(id); if (!d) return null;
   const o = await getJson('mail/tpl/' + id).catch(() => null);
-  return { id, group: d.group, name: d.name, when: d.when, vars: d.vars, must: d.must || [], sys: !!d.sys, extra: !!d.extra, day: d.day, subject: (o && o.subject) || d.subject, body: (o && o.body) || d.body, edited: !!o, at: (o && o.at) || '', original: { subject: d.subject, body: d.body } };
+  return { id, group: d.group, name: d.name, when: d.when, vars: d.vars, must: d.must || [], sys: !!d.sys, extra: !!d.extra, day: d.day, subject: (o && o.subject) || d.subject, body: freshClaim((o && o.body) || d.body), edited: !!o, at: (o && o.at) || '', original: { subject: d.subject, body: d.body } };
 }
 // Built-in outreach emails you deleted from a journey (can be brought back): mail/removed { ids: [] }
 async function removedIds() { return ((await getJson('mail/removed').catch(() => null)) || { ids: [] }).ids; }
