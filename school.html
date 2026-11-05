@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>School Tracker</title>
+<meta name="description" content="School emails, sorted: what to do, by when, and the key dates — for each child.">
+<meta name="theme-color" content="#0F1E36">
+<link rel="manifest" href="/school-manifest.json">
+<link rel="icon" href="/school-icon-192.png">
+<link rel="apple-touch-icon" href="/school-icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="School Tracker">
+<style>
+:root{--navy:#0F1E36;--green:#057A44;--green2:#E3F2EA;--bg:#F6F3EC;--card:#fff;--line:#ECE6D8;--muted:#5B6475;--red:#B42318;--redbg:#FDECEA;--gold:#FFB81C;--amber:#8A5A00;--amberbg:#FFF4D6}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--navy);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--green)}
+.top{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20;padding:calc(env(safe-area-inset-top) + 12px) 16px 0}
+.top .in{max-width:640px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.brand b{font-size:19px;letter-spacing:-.2px}.brand span{font-size:13px;opacity:.7}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 0 10px;scrollbar-width:none;max-width:640px;margin:0 auto}.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;background:rgba(255,255,255,.1);border:0;color:#fff;border-radius:20px;padding:8px 15px;font-weight:700;font-size:14.5px;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tab.on{background:#fff;color:var(--navy)}.tab .dot{width:9px;height:9px;border-radius:50%}
+main{max-width:640px;margin:0 auto;padding:16px 14px calc(110px + env(safe-area-inset-bottom))}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,30,54,.06);border:1px solid var(--line)}
+.card h2{font-size:17px;margin:0 0 6px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.card h2 small{font-weight:600;color:var(--muted);font-size:13px}
+.hello{font-size:22px;font-weight:800;margin:4px 2px 2px}.sub{color:var(--muted);font-size:14.5px;margin:0 2px 14px}
+.row{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0}
+.chk{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid #B9C2CF;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;padding:0}
+.chk.on{background:var(--green);border-color:var(--green);color:#fff}
+.txt{flex:1;min-width:0}.txt b{display:block;font-size:15.5px;font-weight:650}.meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px;align-items:center}
+.done .txt b{text-decoration:line-through;color:#8A93A3;font-weight:500}
+.kid{display:inline-flex;align-items:center;gap:5px;font-weight:700}.kid i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.late{color:var(--red);font-weight:700}.soon{color:var(--amber);font-weight:700}
+.dt{flex:none;width:52px;text-align:center;border-radius:12px;background:var(--green2);color:var(--green);padding:6px 0;line-height:1.1}
+.dt b{display:block;font-size:20px}.dt span{font-size:11.5px;font-weight:800;text-transform:uppercase}
+.mail{display:block;width:100%;text-align:left;background:none;border:0;padding:12px 0;border-top:1px solid var(--line);cursor:pointer}.mail:first-of-type{border-top:0}
+.mail b{font-size:15.5px;display:block}.mail p{margin:3px 0 0;font-size:14px;color:#374151}
+.pill{display:inline-block;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--amberbg);color:var(--amber)}
+.pill.red{background:var(--redbg);color:var(--red)}.pill.g{background:var(--green2);color:var(--green)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:12px 18px;font-weight:800;font-size:15px;cursor:pointer;background:var(--green);color:#fff;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}.btn.small{padding:7px 12px;font-size:13.5px;border-radius:10px}.btn.block{width:100%}
+.btn.link{background:none;color:var(--green);padding:6px 0}.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.6}
+label{display:block;font-weight:700;font-size:14px;margin:10px 0 5px}
+input[type=text],input[type=email],input[type=date],input[type=time],textarea,select{width:100%;border:1.5px solid #DCD5C4;border-radius:12px;padding:12px;background:#fff;font-size:16px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-color:var(--green)}
+.addr{display:flex;gap:8px;align-items:center;background:var(--green2);border-radius:12px;padding:10px 12px;font-weight:800;word-break:break-all;font-size:15px}
+.note{background:var(--amberbg);border-radius:14px;padding:12px 14px;font-size:14.5px}
+.empty{color:var(--muted);font-size:14.5px;padding:6px 0}
+.fab{position:fixed;right:max(16px,calc(50% - 304px));bottom:calc(18px + env(safe-area-inset-bottom));width:60px;height:60px;border-radius:50%;background:var(--green);color:#fff;border:0;font-size:32px;box-shadow:0 6px 20px rgba(5,122,68,.4);cursor:pointer;z-index:25}
+.sheetbg{position:fixed;inset:0;background:rgba(15,30,54,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom))}
+@media(min-width:700px){.sheetbg{align-items:center}.sheet{border-radius:22px}}
+.sheet h3{margin:0 0 4px;font-size:19px}.x{float:right;background:#F1EEE6;border:0;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));background:var(--navy);color:#fff;padding:11px 18px;border-radius:12px;font-weight:700;z-index:60;font-size:14.5px;max-width:90%}
+.kidsel{display:flex;flex-wrap:wrap;gap:8px}.kidsel button{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:7px 13px;font-weight:700;cursor:pointer;display:flex;gap:6px;align-items:center}
+.kidsel button.on{border-color:var(--navy);background:var(--navy);color:#fff}
+.orig{white-space:pre-wrap;font-size:14px;background:#FAF8F3;border-radius:12px;padding:12px;max-height:50vh;overflow:auto;border:1px solid var(--line)}
+.hero{background:var(--navy);color:#fff;border-radius:22px;padding:26px 22px;margin:18px 0}
+.hero h1{margin:0 0 6px;font-size:28px;letter-spacing:-.4px}.hero p{margin:0;opacity:.8;font-size:16px}
+.steps{counter-reset:s;padding:0;margin:8px 0 0;list-style:none}.steps li{counter-increment:s;position:relative;padding:4px 0 10px 36px;font-size:15px}
+.steps li:before{content:counter(s);position:absolute;left:0;top:3px;width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.sw input{width:22px;height:22px;accent-color:var(--green)}
+.menu button{display:flex;width:100%;gap:12px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px;margin-top:10px;font-weight:700;font-size:15.5px;cursor:pointer;text-align:left}
+.menu button span{font-size:22px}
+.search{width:100%;border:1.5px solid #DCD5C4;border-radius:12px;padding:11px 12px;margin-bottom:10px;font-size:16px;background:#fff}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.chips button{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font-weight:700;font-size:13.5px;cursor:pointer}.chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function () {
+  'use strict';
+  var API = '/.netlify/functions/school-api';
+  var S = { tab: 'today', mailFilter: 'all', q: '' };
+  var app = document.getElementById('app');
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} } };
+  async function api(action, body) {
+    var r = await fetch(API, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify(Object.assign({ action: action }, body || {})) });
+    var d = await r.json().catch(function () { return {}; });
+    if (r.status === 401 && action !== 'auth-verify') { S.boot = null; signIn(); throw new Error(d.message || 'Please sign in.'); }
+    if (!r.ok) throw new Error(d.message || 'Something went wrong — please try again.');
+    return d;
+  }
+  function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
+  function sheet(html) { var bg = document.createElement('div'); bg.className = 'sheetbg'; bg.innerHTML = '<div class="sheet"><button class="x" aria-label="Close">×</button>' + html + '</div>'; document.body.appendChild(bg); bg.onclick = function (e) { if (e.target === bg) bg.remove(); }; $('.x', bg).onclick = function () { bg.remove(); }; return bg; }
+
+  // ── dates ──
+  var TODAY = function () { return (S.boot && S.boot.today) || new Date().toLocaleDateString('en-CA'); };
+  var ms = function (d) { return Date.parse(d + 'T12:00:00Z'); };
+  function rel(day) {
+    if (!day) return '';
+    var diff = Math.round((ms(day) - ms(TODAY())) / 864e5);
+    if (diff === 0) return 'today'; if (diff === 1) return 'tomorrow'; if (diff === -1) return 'yesterday';
+    if (diff < 0) return Math.abs(diff) + ' days ago';
+    if (diff < 7) return new Date(ms(day)).toLocaleDateString('en-GB', { weekday: 'long' });
+    return new Date(ms(day)).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function ago(iso) { var m = Math.round((Date.now() - Date.parse(iso)) / 60000); if (m < 2) return 'just now'; if (m < 60) return m + ' min ago'; var h = Math.round(m / 60); if (h < 24) return h + 'h ago'; var d = Math.round(h / 24); return d === 1 ? 'yesterday' : d < 7 ? d + ' days ago' : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+  function kids() { return (S.boot && S.boot.family && S.boot.family.children) || []; }
+  function kid(id) { return kids().filter(function (c) { return c.id === id; })[0]; }
+  function kidTags(ids) { return (ids || []).map(kid).filter(Boolean).map(function (c) { return '<span class="kid" style="color:' + c.color + '"><i style="background:' + c.color + '"></i>' + esc(c.name) + '</span>'; }).join(''); }
+  function forKid(x, id) { return !id || (x.childIds || []).indexOf(id) >= 0; }
+
+  // ── sign in ──
+  function signIn(msg) {
+    app.innerHTML = '<main style="padding-top:10px"><div class="hero"><div style="font-size:40px">🎒</div><h1>School Tracker</h1><p>School emails, sorted. What to do, by when, and the key dates — for each child, shared with the family.</p></div>' +
+      '<div class="card" id="sic">' + (msg ? '<div class="note" style="margin-bottom:10px">' + esc(msg) + '</div>' : '') +
+      '<h2>Sign in or start free</h2><p class="sub" style="margin:0 0 4px">We’ll email you a 6-digit code — no password needed.</p>' +
+      '<label for="em">Your email</label><input type="email" id="em" autocomplete="email" placeholder="you@example.com" value="' + esc(store.get('st_email') || '') + '">' +
+      '<button class="btn block" id="go" style="margin-top:14px">Send my code</button></div>' +
+      '<p class="sub" style="text-align:center;font-size:13px">Your school emails stay private to your family.</p></main>';
+    $('#go').onclick = async function () {
+      var b = this, em = $('#em').value.trim(); if (!em) return toast('Enter your email');
+      b.disabled = true; b.textContent = 'Sending…';
+      try { await api('auth-start', { email: em }); store.set('st_email', em); codeStep(em); } catch (e) { toast(e.message); b.disabled = false; b.textContent = 'Send my code'; }
+    };
+    $('#em').onkeydown = function (e) { if (e.key === 'Enter') $('#go').click(); };
+  }
+  function codeStep(em) {
+    $('#sic').innerHTML = '<h2>Check your email</h2><p class="sub" style="margin:0 0 4px">We sent a code to <b>' + esc(em) + '</b>. It can take a minute — check spam too.</p>' +
+      '<label for="cd">6-digit code</label><input type="text" id="cd" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="font-size:24px;letter-spacing:6px;text-align:center">' +
+      '<button class="btn block" id="vf" style="margin-top:14px">Sign in</button><button class="btn link" id="bk">Use a different email</button>';
+    $('#cd').focus();
+    $('#vf').onclick = async function () {
+      var b = this; b.disabled = true;
+      try { await api('auth-verify', { email: em, code: $('#cd').value }); start(); } catch (e) { toast(e.message); b.disabled = false; }
+    };
+    $('#cd').oninput = function () { if (this.value.replace(/\D/g, '').length === 6) $('#vf').click(); };
+    $('#bk').onclick = function () { signIn(); };
+  }
+
+  // ── first-time setup ──
+  function setupView() {
+    var u = S.boot.user, rows = [{ name: '', school: '' }, { name: '', school: '' }];
+    function draw() {
+      app.innerHTML = '<main style="padding-top:10px"><div class="hero" style="padding:20px"><div style="font-size:34px">🎒</div><h1 style="font-size:24px">Let’s set up your family</h1><p>Takes a minute. You can change everything later.</p></div>' +
+        '<div class="card"><label for="nm" style="margin-top:0">Your first name</label><input type="text" id="nm" value="' + esc(u.name || '') + '" placeholder="e.g. Seun">' +
+        '<label style="margin-top:16px">Your children</label><p class="sub" style="margin:0 0 6px;font-size:13.5px">Their school helps us match each email to the right child.</p>' +
+        rows.map(function (r, i) { return '<div style="display:grid;grid-template-columns:1fr 1.2fr;gap:8px;margin-bottom:8px"><input type="text" data-n="' + i + '" placeholder="Child’s name" value="' + esc(r.name) + '"><input type="text" data-s="' + i + '" placeholder="School" value="' + esc(r.school) + '"></div>'; }).join('') +
+        '<button class="btn link" id="more">＋ Add another child</button>' +
+        '<button class="btn block" id="mk" style="margin-top:10px">Create my family</button></div></main>';
+      $$('[data-n]').forEach(function (x) { x.oninput = function () { rows[+x.dataset.n].name = x.value; }; });
+      $$('[data-s]').forEach(function (x) { x.oninput = function () { rows[+x.dataset.s].school = x.value; }; });
+      $('#nm').oninput = function () { u.name = this.value; };
+      $('#more').onclick = function () { if (rows.length < 8) { rows.push({ name: '', school: '' }); draw(); } };
+      $('#mk').onclick = async function () {
+        var b = this; b.disabled = true; b.textContent = 'Creating…';
+        try { await api('setup', { name: $('#nm').value, children: rows.filter(function (r) { return r.name.trim(); }) }); await load(); S.tab = 'today'; render(); welcome(); }
+        catch (e) { toast(e.message); b.disabled = false; b.textContent = 'Create my family'; }
+      };
+    }
+    draw();
+  }
+  function welcome() {
+    var f = S.boot.family;
+    var s = sheet('<h3>🎉 You’re set up!</h3><p class="sub" style="margin:4px 0 12px">This is your family’s private School Tracker address. Anything sent here is read and sorted for you.</p>' + addrHtml(f.inbox) +
+      '<p style="margin:14px 0 6px;font-weight:800">Next: send your school emails here</p><p class="sub" style="margin:0 0 10px">Set up Gmail to forward school emails automatically, or forward a few by hand to try it.</p>' +
+      '<button class="btn block" id="hw">Show me how (Gmail)</button><button class="btn ghost block" id="ps" style="margin-top:8px">📋 Paste an email to try it now</button>');
+    bindAddr(s);
+    $('#hw', s).onclick = function () { s.remove(); howTo(); };
+    $('#ps', s).onclick = function () { s.remove(); pasteSheet(); };
+  }
+  function addrHtml(a) { return '<div class="addr"><span style="flex:1">' + esc(a) + '</span><button class="btn small" data-copy="' + esc(a) + '">Copy</button></div>'; }
+  function bindAddr(root) { $$('[data-copy]', root).forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); } catch (e) { toast('Press and hold to copy'); } }; }); }
+  function howTo() {
+    var f = S.boot.family, schools = kids().map(function (c) { return c.school; }).filter(Boolean);
+    var s = sheet('<h3>Forward school emails from Gmail</h3><p class="sub" style="margin:4px 0 10px">Do this once on a computer (Gmail’s settings aren’t in the phone app). Your emails still arrive in Gmail as normal — School Tracker just gets a copy.</p>' + addrHtml(f.inbox) +
+      '<ol class="steps" style="margin-top:14px"><li>In Gmail, click ⚙️ <b>Settings → See all settings → Forwarding and POP/IMAP</b>.</li>' +
+      '<li>Click <b>Add a forwarding address</b>, paste your School Tracker address above, then <b>Next → Proceed</b>.</li>' +
+      '<li>Gmail sends a confirmation code here. Come back to School Tracker — it shows on your <b>Today</b> screen. Type the code into Gmail and click <b>Verify</b>. (Leave “Disable forwarding” selected — you don’t want <i>all</i> your email forwarded.)</li>' +
+      '<li>In the Gmail search box, search for your school emails, e.g. <b>from:(' + esc(schools.length ? 'school address 1 OR school address 2' : 'the school’s email address') + ')</b>. Then click the <b>Show search options</b> icon → <b>Create filter</b>.</li>' +
+      '<li>Tick <b>Forward it to</b>, choose your School Tracker address, and click <b>Create filter</b>. Done! 🎉</li></ol>' +
+      '<div class="note">Not sure of the schools’ email addresses? Open a recent school email in Gmail and look at who it’s from. You can add more addresses to the filter later.</div>' +
+      '<p class="sub" style="margin:12px 0 0">You can also forward any email by hand to your School Tracker address — it works the same.</p>');
+    bindAddr(s);
+  }
+
+  // ── main screens ──
+  function render() {
+    var b = S.boot, f = b.family, me = b.user;
+    var tabs = [['today', '🏠 Today']].concat(kids().map(function (c) { return ['k:' + c.id, '<span class="dot" style="background:' + c.color + '"></span>' + esc(c.name)]; })).concat([['mails', '✉️ Emails'], ['family', '👪 Family']]);
+    if (!tabs.some(function (t) { return t[0] === S.tab; })) S.tab = 'today';
+    app.innerHTML = '<div class="top"><div class="in"><div class="brand"><b>🎒 School Tracker</b><span>' + esc(f.name) + '</span></div></div><div class="tabs">' +
+      tabs.map(function (t) { return '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div></div><main id="pg"></main>' + (S.tab === 'family' ? '' : '<button class="fab" id="fab" aria-label="Add">＋</button>');
+    $$('[data-t]').forEach(function (x) { x.onclick = function () { S.tab = x.dataset.t; render(); window.scrollTo(0, 0); }; });
+    if ($('#fab')) $('#fab').onclick = addMenu;
+    var pg = $('#pg');
+    if (S.tab === 'today') todayView(pg);
+    else if (S.tab.indexOf('k:') === 0) childView(pg, S.tab.slice(2));
+    else if (S.tab === 'mails') mailsView(pg);
+    else familyView(pg);
+  }
+  function confirmCard() {
+    var c = (S.boot.family.confirm || []).slice(-1)[0]; if (!c) return '';
+    return '<div class="card" style="border:2px solid var(--gold);background:#FFFBEF"><h2>📩 Confirm your email forwarding</h2>' +
+      '<p class="sub" style="margin:0 0 10px">' + esc(/google|gmail/i.test(c.from + c.subject) ? 'Gmail' : 'Your email provider') + ' sent this to check the address is yours.</p>' +
+      (c.code ? '<div class="addr" style="font-size:22px;letter-spacing:3px"><span style="flex:1">' + esc(c.code) + '</span><button class="btn small" data-copy="' + esc(c.code) + '">Copy code</button></div><p class="sub" style="margin:8px 0 0;font-size:13.5px">Type this code into Gmail’s forwarding settings and click <b>Verify</b>.</p>' : '') +
+      (c.link ? '<a class="btn ghost small" style="margin-top:10px" href="' + esc(c.link) + '" target="_blank" rel="noopener noreferrer">Or confirm with the link</a>' : '') +
+      '<div style="margin-top:6px"><button class="btn link" data-cfdone="' + esc(c.id) + '">Done — hide this</button></div></div>';
+  }
+  function bindConfirm(root) { bindAddr(root); $$('[data-cfdone]', root).forEach(function (b) { b.onclick = async function () { try { await api('mail-delete', { id: b.dataset.cfdone }); await load(); render(); } catch (e) { toast(e.message); } }; }); }
+
+  function todoHtml(list, opts) {
+    opts = opts || {};
+    var open = list.filter(function (a) { return !a.done; }).sort(function (a, b) { return (a.due || '9999').localeCompare(b.due || '9999'); });
+    var done = list.filter(function (a) { return a.done; }).sort(function (a, b) { return (b.doneAt || '').localeCompare(a.doneAt || ''); }).slice(0, 15);
+    var row = function (a) {
+      var t = TODAY(), cls = a.due && a.due < t ? 'late' : a.due && ms(a.due) - ms(t) <= 2 * 864e5 ? 'soon' : '';
+      return '<div class="row' + (a.done ? ' done' : '') + '"><button class="chk' + (a.done ? ' on' : '') + '" data-tick="' + a.id + '" aria-label="' + (a.done ? 'Mark not done' : 'Mark done') + '">' + (a.done ? '✓' : '') + '</button>' +
+        '<div class="txt"' + (a.mid ? ' data-mail="' + a.mid + '" style="cursor:pointer"' : '') + '><b>' + esc(a.text) + '</b><div class="meta">' + (opts.noKid ? '' : kidTags(a.childIds)) +
+        (a.done ? '<span>✓ Done by ' + esc(a.doneBy || '') + (a.doneAt ? ' · ' + ago(a.doneAt) : '') + '</span>' : a.due ? '<span class="' + cls + '">' + (a.due < t ? 'Overdue · was due ' : 'Due ') + rel(a.due) + '</span>' : '<span>No deadline</span>') + '</div></div></div>';
+    };
+    return '<div class="card"><h2>✅ To do <small>' + open.length + ' open</small></h2>' + (open.length ? open.map(row).join('') : '<div class="empty">Nothing to do right now 🎉</div>') +
+      (done.length ? '<details style="margin-top:6px"><summary class="sub" style="cursor:pointer;margin:6px 0 0">Done (' + done.length + ')</summary>' + done.map(row).join('') + '</details>' : '') + '</div>';
+  }
+  function datesHtml(list, opts) {
+    opts = opts || {}; var t = TODAY();
+    var up = list.filter(function (d) { return (d.end || d.date) >= t; }).sort(function (a, b) { return (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')); }).slice(0, opts.max || 40);
+    return '<div class="card"><h2>📅 Coming up <small>' + up.length + '</small></h2>' + (up.length ? up.map(function (d) {
+      var dd = new Date(ms(d.date));
+      return '<div class="row"><div class="dt"><b>' + dd.getUTCDate() + '</b><span>' + dd.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }) + '</span></div><div class="txt"' + (d.mid ? ' data-mail="' + d.mid + '" style="cursor:pointer"' : '') + '><b>' + esc(d.title) + '</b><div class="meta">' + (opts.noKid ? '' : kidTags(d.childIds)) + '<span>' + esc(rel(d.date)) + (d.time ? ' · ' + esc(d.time) : '') + (d.end && d.end !== d.date ? ' – ' + esc(rel(d.end)) : '') + '</span>' + (d.where ? '<span>📍 ' + esc(d.where) + '</span>' : '') + '</div></div>' +
+        '<button class="btn ghost small" data-cal="' + d.id + '" style="flex:none">＋ Calendar</button></div>';
+    }).join('') : '<div class="empty">No dates coming up.</div>') + '</div>';
+  }
+  function mailsHtml(list, title, max) {
+    return '<div class="card"><h2>' + title + '</h2>' + (list.length ? list.slice(0, max || 100).map(function (m) {
+      return '<button class="mail" data-mail="' + m.id + '"><div class="meta" style="margin:0 0 3px">' + kidTags(m.childIds) + '<span>' + esc(ago(m.at)) + '</span>' + (m.status === 'error' ? '<span class="pill red">Couldn’t read</span>' : m.kind === 'confirm' ? '<span class="pill">Forwarding</span>' : m.important ? '<span class="pill">Action needed</span>' : '') + '</div>' +
+        '<b>' + esc(m.title || m.subject || '(no subject)') + '</b>' + (m.summary ? '<p>' + esc(m.summary) + '</p>' : '') + '</button>';
+    }).join('') : '<div class="empty">No emails yet.</div>') + '</div>';
+  }
+  function bindLists(root) {
+    $$('[data-tick]', root).forEach(function (b) { b.onclick = async function (e) { e.stopPropagation(); var a = S.boot.board.actions.filter(function (x) { return x.id === b.dataset.tick; })[0]; if (!a) return; var on = !a.done; b.disabled = true;
+      try { var r = await api('tick', { id: a.id, done: on }); Object.assign(a, r.action); if (on) toast('Done ✓'); render(); } catch (x) { toast(x.message); b.disabled = false; } }; });
+    $$('[data-mail]', root).forEach(function (el) { el.onclick = function () { openMail(el.dataset.mail); }; });
+    $$('[data-cal]', root).forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); calSheet(S.boot.board.dates.filter(function (x) { return x.id === b.dataset.cal; })[0]); }; });
+    bindConfirm(root);
+  }
+  function startCard() {
+    var f = S.boot.family; if ((S.boot.mails || []).length || S.boot.user.role !== 'owner') return '';
+    return '<div class="card" style="border:2px solid var(--green)"><h2>👋 Get started</h2><p class="sub" style="margin:0 0 10px">Send school emails to your family’s private address and they’ll appear here as a to-do list and dates.</p>' + addrHtml(f.inbox) +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn small" id="hw2">Set up Gmail forwarding</button><button class="btn ghost small" id="ps2">📋 Paste an email</button></div></div>';
+  }
+  function todayView(pg) {
+    var b = S.boot, h = new Date().getHours(), hi = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    var t = TODAY(), wk = new Date(ms(t) + 14 * 864e5).toLocaleDateString('en-CA');
+    pg.innerHTML = '<div class="hello">' + hi + (b.user.name ? ', ' + esc(b.user.name) : '') + '</div><p class="sub">' + new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p>' +
+      confirmCard() + startCard() + todoHtml(b.board.actions) + datesHtml(b.board.dates.filter(function (d) { return d.date <= wk; }), { max: 12 }) +
+      mailsHtml(b.mails, '✉️ Latest emails', 5) + (b.mails.length > 5 ? '<button class="btn ghost block" id="allm">See all emails</button>' : '');
+    bindLists(pg);
+    var hw = $('#hw2', pg); if (hw) hw.onclick = howTo;
+    var ps = $('#ps2', pg); if (ps) ps.onclick = pasteSheet;
+    var am = $('#allm', pg); if (am) am.onclick = function () { S.tab = 'mails'; render(); };
+  }
+  function childView(pg, id) {
+    var c = kid(id), b = S.boot; if (!c) return todayView(pg);
+    pg.innerHTML = '<div class="card" style="background:' + c.color + ';color:#fff;border:0"><div style="font-size:22px;font-weight:800">' + esc(c.name) + '</div><div style="opacity:.85">' + esc(c.school || 'School not added') + '</div></div>' +
+      todoHtml(b.board.actions.filter(function (a) { return forKid(a, id); }), { noKid: true }) + datesHtml(b.board.dates.filter(function (d) { return forKid(d, id); }), { noKid: true }) +
+      mailsHtml(b.mails.filter(function (m) { return forKid(m, id); }), '✉️ ' + esc(c.name) + '’s emails', 30);
+    bindLists(pg);
+  }
+  function mailsView(pg) {
+    var b = S.boot, f = S.mailFilter, q = S.q.toLowerCase();
+    var list = b.mails.filter(function (m) { return (f === 'all' || (f === 'act' ? m.important : forKid(m, f))) && (!q || (m.title + ' ' + m.subject + ' ' + m.summary + ' ' + m.from).toLowerCase().indexOf(q) >= 0); });
+    pg.innerHTML = '<input class="search" id="sq" placeholder="🔍 Search emails" value="' + esc(S.q) + '"><div class="chips">' + [['all', 'All'], ['act', 'Action needed']].concat(kids().map(function (c) { return [c.id, c.name]; })).map(function (x) { return '<button data-f="' + x[0] + '" class="' + (f === x[0] ? 'on' : '') + '">' + esc(x[1]) + '</button>'; }).join('') + '</div>' + mailsHtml(list, '✉️ Emails <small>' + list.length + '</small>');
+    bindLists(pg);
+    $$('[data-f]', pg).forEach(function (x) { x.onclick = function () { S.mailFilter = x.dataset.f; render(); }; });
+    var t; $('#sq', pg).oninput = function () { var v = this.value; clearTimeout(t); t = setTimeout(function () { S.q = v; render(); var i = $('#sq'); i.focus(); i.setSelectionRange(v.length, v.length); }, 250); };
+  }
+  function familyView(pg) {
+    var b = S.boot, f = b.family, owner = b.user.role === 'owner';
+    var who = function (m) { return m.role === 'owner' ? 'Owner · sees everything' : 'Parent · sees ' + (m.children === 'all' ? 'all children' : (m.children || []).map(function (i) { return (kid(i) || {}).name; }).filter(Boolean).join(' & ')); };
+    pg.innerHTML = (owner ? '<div class="card"><h2>📮 Your School Tracker address</h2><p class="sub" style="margin:0 0 10px">Forward school emails here. Keep it private — anyone who has it can send emails to your tracker.</p>' + addrHtml(f.inbox) + '<button class="btn link" id="hw3">How to set up Gmail forwarding →</button></div>' : '') +
+      '<div class="card"><h2>🧒 Children</h2>' + kids().map(function (c) { return '<div class="row" style="align-items:center"><span class="dot" style="width:14px;height:14px;border-radius:50%;background:' + c.color + ';flex:none"></span><div class="txt"><b>' + esc(c.name) + '</b><div class="meta">' + esc(c.school || 'No school added') + '</div></div>' + (owner ? '<button class="btn ghost small" data-kid="' + c.id + '">Edit</button>' : '') + '</div>'; }).join('') +
+      (owner ? '<button class="btn link" id="addkid">＋ Add a child</button>' : '') + '</div>' +
+      '<div class="card"><h2>👪 Family members</h2>' + f.members.map(function (m) { return '<div class="row" style="align-items:center"><div class="txt"><b>' + esc(m.name || m.email) + (m.you ? ' (you)' : '') + '</b><div class="meta">' + esc(m.email) + ' · ' + esc(who(m)) + '</div></div>' + (owner && m.role !== 'owner' ? '<button class="btn ghost small" data-mem="' + esc(m.email) + '">Change</button>' : '') + '</div>'; }).join('') +
+      (f.invites || []).map(function (i) { return '<div class="row" style="align-items:center"><div class="txt"><b>' + esc(i.name || i.email) + ' <span class="pill">Invited</span></b><div class="meta">' + esc(i.email) + ' · sent ' + esc(ago(i.at)) + '</div></div><button class="btn ghost small danger" data-uninv="' + esc(i.email) + '">Cancel</button></div>'; }).join('') +
+      (owner ? '<button class="btn block" id="inv" style="margin-top:10px">＋ Invite a parent or carer</button><p class="sub" style="margin:8px 0 0;font-size:13px">They see the children you choose, tick things off, and get their own email updates — no setup needed.</p>' : '') + '</div>' +
+      '<div class="card"><h2>📬 Email updates (just for you)</h2><label for="myn" style="margin-top:4px">Your name</label><input type="text" id="myn" value="' + esc(b.user.name || '') + '">' +
+      '<div class="sw" style="margin-top:12px"><div><b>Morning email</b><div class="meta">7am — what’s due today and tomorrow (only when there’s something)</div></div><input type="checkbox" id="pm"' + (b.user.prefs.morning ? ' checked' : '') + '></div>' +
+      '<div class="sw"><div><b>Sunday email</b><div class="meta">6pm — the week ahead</div></div><input type="checkbox" id="pw"' + (b.user.prefs.sunday ? ' checked' : '') + '></div>' +
+      '<button class="btn ghost small" id="sv" style="margin-top:8px">Save</button></div>' +
+      '<div class="card"><h2>📲 Get the app</h2><p class="sub" style="margin:0">On iPhone: tap <b>Share → Add to Home Screen</b>. On Android: tap <b>⋮ → Install app</b>.</p></div>' +
+      '<p style="text-align:center"><span class="sub">Signed in as ' + esc(b.user.email) + '</span><br><button class="btn link" id="out">Sign out</button></p>';
+    bindAddr(pg);
+    var h = $('#hw3', pg); if (h) h.onclick = howTo;
+    var ak = $('#addkid', pg); if (ak) ak.onclick = function () { kidSheet(null); };
+    $$('[data-kid]', pg).forEach(function (x) { x.onclick = function () { kidSheet(kid(x.dataset.kid)); }; });
+    var iv = $('#inv', pg); if (iv) iv.onclick = function () { inviteSheet(); };
+    $$('[data-mem]', pg).forEach(function (x) { x.onclick = function () { memberSheet(f.members.filter(function (m) { return m.email === x.dataset.mem; })[0]); }; });
+    $$('[data-uninv]', pg).forEach(function (x) { x.onclick = async function () { try { await api('invite-cancel', { email: x.dataset.uninv }); await load(); render(); toast('Invitation cancelled'); } catch (e) { toast(e.message); } }; });
+    $('#sv', pg).onclick = async function () { try { await api('prefs', { name: $('#myn').value, morning: $('#pm').checked, sunday: $('#pw').checked }); await load(); toast('Saved'); render(); } catch (e) { toast(e.message); } };
+    $('#out', pg).onclick = async function () { await api('logout').catch(function () {}); S.boot = null; signIn(); };
+  }
+  function kidPicker(sel, all) {
+    return '<div class="kidsel">' + (all ? '<button data-ks="all" class="' + (sel === 'all' ? 'on' : '') + '">All children</button>' : '') + kids().map(function (c) { var on = sel !== 'all' && (sel || []).indexOf(c.id) >= 0; return '<button data-ks="' + c.id + '" class="' + (on ? 'on' : '') + '"><span class="dot" style="width:9px;height:9px;border-radius:50%;background:' + c.color + '"></span>' + esc(c.name) + '</button>'; }).join('') + '</div>';
+  }
+  function bindPicker(root, state, all) {
+    $$('[data-ks]', root).forEach(function (x) { x.onclick = function () {
+      var k = x.dataset.ks;
+      if (k === 'all') state.sel = 'all'; else { var s = state.sel === 'all' ? [] : (state.sel || []).slice(); var i = s.indexOf(k); if (i >= 0) s.splice(i, 1); else s.push(k); state.sel = s; }
+      $('.kidsel', root).outerHTML = kidPicker(state.sel, all); bindPicker(root, state, all);
+    }; });
+  }
+  function kidSheet(c) {
+    var s = sheet('<h3>' + (c ? 'Edit ' + esc(c.name) : 'Add a child') + '</h3><label for="kn">Name</label><input type="text" id="kn" value="' + esc(c ? c.name : '') + '"><label for="ks">School</label><input type="text" id="ks" value="' + esc(c ? c.school : '') + '" placeholder="e.g. Hurst">' +
+      '<button class="btn block" id="ksv" style="margin-top:14px">Save</button>' + (c ? '<button class="btn link danger" id="krm">Remove ' + esc(c.name) + '</button>' : ''));
+    $('#ksv', s).onclick = async function () { try { await api('child-save', { id: c && c.id, name: $('#kn', s).value, school: $('#ks', s).value }); s.remove(); await load(); render(); toast('Saved'); } catch (e) { toast(e.message); } };
+    var rm = $('#krm', s); if (rm) rm.onclick = async function () { if (!confirm('Remove ' + c.name + '? Their emails stay, but they won’t have their own tab.')) return; try { await api('child-remove', { id: c.id }); s.remove(); await load(); render(); } catch (e) { toast(e.message); } };
+  }
+  function inviteSheet() {
+    var st = { sel: 'all' };
+    var s = sheet('<h3>Invite a parent or carer</h3><p class="sub" style="margin:4px 0 0">They’ll get an email with a link to join. No setup for them.</p><label for="iname">Their name</label><input type="text" id="iname" placeholder="e.g. Tunde"><label for="iem">Their email</label><input type="email" id="iem"><label>Which children can they see?</label>' + kidPicker(st.sel, true) +
+      '<button class="btn block" id="isend" style="margin-top:16px">Send invitation</button>');
+    bindPicker(s, st, true);
+    $('#isend', s).onclick = async function () { var b = this; b.disabled = true; try { await api('invite', { name: $('#iname', s).value, email: $('#iem', s).value, children: st.sel }); s.remove(); await load(); render(); toast('Invitation sent ✉️'); } catch (e) { toast(e.message); b.disabled = false; } };
+  }
+  function memberSheet(m) {
+    var st = { sel: m.children };
+    var s = sheet('<h3>' + esc(m.name || m.email) + '</h3><p class="sub" style="margin:4px 0 0">' + esc(m.email) + '</p><label>Which children can they see?</label>' + kidPicker(st.sel, true) +
+      '<button class="btn block" id="msv" style="margin-top:16px">Save</button><button class="btn link danger" id="mrm">Remove from the family</button>');
+    bindPicker(s, st, true);
+    $('#msv', s).onclick = async function () { try { await api('member-update', { email: m.email, children: st.sel }); s.remove(); await load(); render(); toast('Saved'); } catch (e) { toast(e.message); } };
+    $('#mrm', s).onclick = async function () { if (!confirm('Remove ' + (m.name || m.email) + '? They won’t see the children’s school updates any more.')) return; try { await api('member-update', { email: m.email, remove: true }); s.remove(); await load(); render(); } catch (e) { toast(e.message); } };
+  }
+
+  // ── one email ──
+  async function openMail(id) {
+    var s = sheet('<div class="empty">Loading…</div>'), m;
+    try { m = (await api('mail-get', { id: id })).mail; } catch (e) { s.remove(); return toast(e.message); }
+    var acts = S.boot.board.actions.filter(function (a) { return a.mid === id; }), dts = S.boot.board.dates.filter(function (d) { return d.mid === id; });
+    var st = { sel: m.childIds || [] };
+    $('.sheet', s).innerHTML = '<button class="x" aria-label="Close">×</button><div class="meta" style="margin-bottom:4px"><span>' + esc(new Date(m.at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + '</span><span>' + esc(m.from) + '</span></div><h3>' + esc(m.title || m.subject) + '</h3>' +
+      (m.status === 'error' ? '<div class="note" style="margin:10px 0">' + esc(m.error || 'We couldn’t read this one automatically.') + ' <button class="btn small" id="retry">Try again</button></div>' : '') +
+      (m.summary ? '<p style="font-size:16px;margin:10px 0">' + esc(m.summary) + '</p>' : '') +
+      (acts.length ? '<div style="font-weight:800;margin-top:12px">To do</div>' + acts.map(function (a) { return '<div class="row' + (a.done ? ' done' : '') + '"><button class="chk' + (a.done ? ' on' : '') + '" data-tick="' + a.id + '">' + (a.done ? '✓' : '') + '</button><div class="txt"><b>' + esc(a.text) + '</b><div class="meta">' + (a.done ? '✓ Done by ' + esc(a.doneBy) : a.due ? 'Due ' + rel(a.due) : '') + '</div></div></div>'; }).join('') : '') +
+      (dts.length ? '<div style="font-weight:800;margin-top:12px">Dates</div>' + dts.map(function (d) { return '<div class="row" style="align-items:center"><div class="txt"><b>' + esc(d.title) + '</b><div class="meta">' + esc(rel(d.date)) + (d.time ? ' · ' + esc(d.time) : '') + '</div></div><button class="btn ghost small" data-cal="' + d.id + '">＋ Calendar</button></div>'; }).join('') : '') +
+      (m.kind !== 'confirm' && kids().length > 1 ? '<div style="font-weight:800;margin-top:14px">This is about</div><p class="sub" style="margin:0 0 6px;font-size:13px">Change it if we got it wrong — we’ll remember this sender.</p>' + kidPicker(st.sel, false) : '') +
+      '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Original email</summary><div class="orig" style="margin-top:8px">' + esc(m.text || '') + '</div></details>' +
+      '<button class="btn link danger" id="mdel" style="margin-top:8px">Delete this email</button>';
+    $('.x', s).onclick = function () { s.remove(); };
+    bindLists(s);
+    $$('[data-tick]', s).forEach(function (b) { var o = b.onclick; b.onclick = async function (e) { await o(e); s.remove(); openMail(id); }; });
+    if (kids().length > 1) bindPickerSave(s, st, id);
+    var rt = $('#retry', s); if (rt) rt.onclick = async function () { rt.disabled = true; rt.textContent = 'Reading…'; try { var r = await api('mail-retry', { id: id }); await load(); render(); s.remove(); openMail(r.id); } catch (e) { toast(e.message); rt.disabled = false; rt.textContent = 'Try again'; } };
+    $('#mdel', s).onclick = async function () { if (!confirm('Delete this email and its to-dos and dates?')) return; try { await api('mail-delete', { id: id }); s.remove(); await load(); render(); toast('Deleted'); } catch (e) { toast(e.message); } };
+  }
+  function bindPickerSave(root, st, id) {
+    $$('[data-ks]', root).forEach(function (x) { x.onclick = async function () {
+      var k = x.dataset.ks, sel = (st.sel || []).slice(), i = sel.indexOf(k); if (i >= 0) sel.splice(i, 1); else sel.push(k); st.sel = sel;
+      $('.kidsel', root).outerHTML = kidPicker(st.sel, false); bindPickerSave(root, st, id);
+      try { await api('mail-child', { id: id, childIds: sel }); await load(); render(); toast('Updated'); } catch (e) { toast(e.message); }
+    }; });
+  }
+
+  // ── calendar ──
+  function calSheet(d) {
+    if (!d) return;
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    var ymd = function (s) { return s.replace(/-/g, ''); };
+    var next = function (s) { var t = new Date(ms(s) + 864e5); return t.getUTCFullYear() + pad(t.getUTCMonth() + 1) + pad(t.getUTCDate()); };
+    var names = (d.childIds || []).map(function (i) { return (kid(i) || {}).name; }).filter(Boolean).join(' & ');
+    var title = d.title + (names ? ' (' + names + ')' : '');
+    var dates;
+    if (d.time) { var st = ymd(d.date) + 'T' + d.time.replace(':', '') + '00', h = +d.time.slice(0, 2) + 1; dates = st + '/' + ymd(d.date) + 'T' + pad(Math.min(h, 23)) + d.time.slice(3) + '00'; }
+    else dates = ymd(d.date) + '/' + next(d.end || d.date);
+    var g = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(title) + '&dates=' + dates + '&ctz=Europe/London' + (d.where ? '&location=' + encodeURIComponent(d.where) : '') + '&details=' + encodeURIComponent('Added from School Tracker');
+    var s = sheet('<h3>＋ Add to calendar</h3><p class="sub" style="margin:4px 0 6px">' + esc(title) + ' · ' + esc(rel(d.date)) + (d.time ? ' ' + esc(d.time) : '') + '</p><div class="menu"><button id="cg"><span>📆</span>Google Calendar</button><button id="ci"><span>🍏</span>Apple, Outlook or other calendar</button></div>');
+    $('#cg', s).onclick = function () { window.open(g, '_blank', 'noopener'); s.remove(); };
+    $('#ci', s).onclick = function () {
+      var stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+      var dt = d.time ? 'DTSTART;TZID=Europe/London:' + dates.split('/')[0] + '\r\nDTEND;TZID=Europe/London:' + dates.split('/')[1] : 'DTSTART;VALUE=DATE:' + ymd(d.date) + '\r\nDTEND;VALUE=DATE:' + next(d.end || d.date);
+      var esci = function (t) { return String(t).replace(/[\\;,]/g, function (c) { return '\\' + c; }).replace(/\n/g, '\\n'); };
+      var ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//School Tracker//EN\r\nBEGIN:VEVENT\r\nUID:' + d.id + '@schooltracker\r\nDTSTAMP:' + stamp + '\r\n' + dt + '\r\nSUMMARY:' + esci(title) + (d.where ? '\r\nLOCATION:' + esci(d.where) : '') + '\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); a.download = (d.title || 'event').replace(/[^a-z0-9]+/gi, '-').slice(0, 40) + '.ics'; document.body.appendChild(a); a.click(); a.remove(); s.remove();
+    };
+  }
+
+  // ── add things ──
+  function addMenu() {
+    var s = sheet('<h3>Add</h3><div class="menu"><button id="m1"><span>📋</span>Paste a school email</button><button id="m2"><span>✅</span>Add a to-do</button><button id="m3"><span>📅</span>Add a date</button></div>');
+    $('#m1', s).onclick = function () { s.remove(); pasteSheet(); };
+    $('#m2', s).onclick = function () { s.remove(); itemSheet('action'); };
+    $('#m3', s).onclick = function () { s.remove(); itemSheet('date'); };
+  }
+  function pasteSheet() {
+    var s = sheet('<h3>📋 Paste a school email</h3><p class="sub" style="margin:4px 0 0">Copy the whole email (or a letter from the school app) and paste it here. We’ll pull out what to do and the dates.</p><textarea id="pt" rows="10" style="margin-top:10px" placeholder="Paste the email here…"></textarea><button class="btn block" id="pgo" style="margin-top:12px">Read it for me</button>');
+    $('#pgo', s).onclick = async function () {
+      var b = this; b.disabled = true; b.textContent = 'Reading… (a few seconds)';
+      try { var r = await api('paste', { text: $('#pt', s).value }); s.remove(); await load(); render(); openMail(r.id); } catch (e) { toast(e.message); b.disabled = false; b.textContent = 'Read it for me'; }
+    };
+  }
+  function itemSheet(kind) {
+    var st = { sel: S.tab.indexOf('k:') === 0 ? [S.tab.slice(2)] : [] };
+    var s = sheet('<h3>' + (kind === 'date' ? '📅 Add a date' : '✅ Add a to-do') + '</h3>' +
+      (kind === 'date' ? '<label for="it">What’s happening?</label><input type="text" id="it" placeholder="e.g. Parents’ evening"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label for="id1">Date</label><input type="date" id="id1"></div><div><label for="itm">Time (optional)</label><input type="time" id="itm"></div></div><label for="iw">Where (optional)</label><input type="text" id="iw">'
+        : '<label for="it">What needs doing?</label><input type="text" id="it" placeholder="e.g. Return the trip form"><label for="id1">Due (optional)</label><input type="date" id="id1">') +
+      (kids().length ? '<label>For</label>' + kidPicker(st.sel, false) : '') + '<button class="btn block" id="isv" style="margin-top:16px">Add</button>');
+    bindPicker(s, st, false);
+    $('#isv', s).onclick = async function () {
+      var body = kind === 'date' ? { kind: 'date', title: $('#it', s).value, date: $('#id1', s).value, time: $('#itm', s).value, where: $('#iw', s).value, childIds: st.sel } : { kind: 'action', text: $('#it', s).value, due: $('#id1', s).value, childIds: st.sel };
+      try { await api('item-add', body); s.remove(); await load(); render(); toast('Added'); } catch (e) { toast(e.message); }
+    };
+  }
+
+  // ── start ──
+  async function load() { S.boot = await api('boot'); return S.boot; }
+  async function start() {
+    var t = (location.search.match(/[?&]t=([^&]+)/) || [])[1];
+    if (t) { store.set('st_join', decodeURIComponent(t)); try { history.replaceState({}, '', '/' + (location.pathname.indexOf('school-tracker') >= 0 ? 'school-tracker' : '')); } catch (e) {} }
+    try { await load(); } catch (e) { if (!S.boot) { signIn(store.get('st_join') ? 'You’ve been invited to School Tracker. Sign in with the email address the invitation was sent to.' : ''); } return; }
+    var jt = store.get('st_join');
+    if (jt) {
+      try { await api('join', { t: jt, name: S.boot.user.name }); store.set('st_join', null); await load(); toast('Welcome to the family 💚'); }
+      catch (e) { if (!S.boot.family) { app.innerHTML = '<main><div class="card"><h2>Invitation</h2><p>' + esc(e.message) + '</p><button class="btn" id="so">Sign in with a different email</button></div></main>'; $('#so').onclick = async function () { await api('logout').catch(function () {}); signIn(); }; return; } store.set('st_join', null); toast(e.message); }
+    }
+    if (!S.boot.family) return setupView();
+    render();
+  }
+  if ('serviceWorker' in navigator && /^schooltracker\./.test(location.hostname)) {   // only on its own address — never touch the Auntie Tobi app's offline helper
+    window.addEventListener('load', function () { navigator.serviceWorker.register('/school-sw.js', { scope: '/' }).catch(function () {}); }); }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.boot && S.boot.family && !document.querySelector('.sheetbg')) load().then(render).catch(function () {}); });
+  start();
+})();
+</script>
+</body>
+</html>
