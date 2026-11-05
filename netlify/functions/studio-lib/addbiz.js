@@ -65,7 +65,7 @@ async function search(q) {
   return out.slice(0, 8).map(([, b]) => publicCard(b, owners));
 }
 function publicCard(b, owners) {
-  return { slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, img: b.img || '', ig: b.ig || '', owned: !!((owners && owners[b.slug]) || b.ownerEmail) };
+  return { slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, img: b.imgFrom || b.img || '', img2: b.imgFrom ? b.img : '', ig: b.ig || '', owned: !!((owners && owners[b.slug]) || b.ownerEmail) };
 }
 async function claimInfo(slug) {
   const b = (await bizdir.all()).find(x => x.slug === slug && !x.hidden && x.status !== 'pending');

@@ -103,7 +103,7 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
   function showErr(id, msg) { var e = $(id); if (!e) return; e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
   function top() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
   function bizRow(b, btn) {
-    return '<div class="biz"><div class="im">' + esc(String(b.name || '?').charAt(0).toUpperCase()) + (b.img ? '<img src="' + esc(b.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">' : '') + '</div><div class="t"><b>' + esc(b.name) + '</b><span>' + esc(cap(b.cat)) + (b.loc ? ' · ' + esc(b.loc) : '') + '</span></div>' + btn + '</div>';
+    return '<div class="biz"><div class="im">' + esc(String(b.name || '?').charAt(0).toUpperCase()) + (b.img ? '<img src="' + esc(b.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + (b.img2 ? ' data-alt="' + esc(b.img2) + '"' : '') + ' onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.removeAttribute(\'data-alt\')}else{this.remove()}">' : '') + '</div><div class="t"><b>' + esc(b.name) + '</b><span>' + esc(cap(b.cat)) + (b.loc ? ' · ' + esc(b.loc) : '') + '</span></div>' + btn + '</div>';
   }
   // Pictures are shrunk here before they're sent (JPEG, max 1200px)
   function shrink(src, max, crop) {

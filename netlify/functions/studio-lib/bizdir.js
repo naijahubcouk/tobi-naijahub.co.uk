@@ -137,7 +137,9 @@ function waitingSite(b) { return b.src === 'hq' && !b.uploadedAt && !b.appNow &&
 // ── public list for the app and the chat (no emails, no admin details) ──
 async function publicList() {
   return (await all()).filter(b => !b.hidden && b.status !== 'pending' && !waitingSite(b)).map(b => {
-    const o = {}; for (const k of PUBLIC.concat(b.featured ? FEATURED_EXTRA : [])) if (b[k] !== undefined && b[k] !== '' && b[k] !== false && !(Array.isArray(b[k]) && !b[k].length)) o[k] = b[k]; return o;
+    const o = {}; for (const k of PUBLIC.concat(b.featured ? FEATURED_EXTRA : [])) if (b[k] !== undefined && b[k] !== '' && b[k] !== false && !(Array.isArray(b[k]) && !b[k].length)) o[k] = b[k];
+    if (b.imgFrom) { o.img = b.imgFrom; o.imgCopy = b.img; }   // the website's own photo first; Auntie Tobi's copy if it doesn't load
+    return o;
   });
 }
 

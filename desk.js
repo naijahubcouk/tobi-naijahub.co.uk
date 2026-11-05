@@ -106,7 +106,7 @@
   function lapOn() { return isApp && window.innerWidth >= LAPW && get() !== 'phone'; }   // computers open in laptop view unless they chose phone view
   function dir() { try { return (typeof getLiveDirectory === 'function' ? getLiveDirectory() : []).filter(function (b) { return b && b.slug && b.name; }); } catch (e) { return []; } }
   function card(b) {
-    return '<div class="card bz"><div class="im" data-biz="' + esc(b.slug) + '">' + esc((b.name || '?').charAt(0).toUpperCase()) + (b.img ? '<img src="' + esc(b.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">' : '') + (b.featured ? '<span class="ft">⭐ Featured</span>' : '') + '</div>' +
+    return '<div class="card bz"><div class="im" data-biz="' + esc(b.slug) + '">' + esc((b.name || '?').charAt(0).toUpperCase()) + (b.img ? '<img src="' + esc(b.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + (b.imgCopy ? ' data-alt="' + esc(b.imgCopy) + '"' : '') + ' onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.removeAttribute(\'data-alt\')}else{this.remove()}">' : '') + (b.featured ? '<span class="ft">⭐ Featured</span>' : '') + '</div>' +
       '<div class="bd"><b>' + esc(b.name) + '</b><div class="m">' + esc(cap(b.cat)) + (b.loc ? ' · 📍 ' + esc(b.loc) : '') + '</div><p>' + esc(b.desc || '') + '</p>' +
       '<div class="bt"><button class="v" data-biz="' + esc(b.slug) + '">View details</button>' + (b.wa ? '<a class="w" href="https://wa.me/' + esc(b.wa) + '" target="_blank" rel="noopener">💬 WhatsApp</a>' : '') + '</div></div></div>';
   }
