@@ -11,6 +11,7 @@
   var START = { search: location.search, path: location.pathname };   // the app tidies the address bar on load, so remember how we were opened
   var WIDE = 1100, LAPW = 980, KEY = 'tobi_view';   // side panels need 1100px; laptop view works from 980px
   var isApp = !!(document.querySelector('.app') && document.getElementById('messages'));
+  var ME = document.currentScript, LAPURL = (ME && ME.getAttribute('data-lap')) || '';   // a phone page with a laptop version (e.g. /marketplace)
   var wide = function () { return window.innerWidth >= WIDE; };
   var get = function () { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
   var put = function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} };
@@ -85,14 +86,14 @@
       L = document.createElement('div'); L.className = 'dsk'; L.id = 'dskL';
       L.innerHTML = '<div class="c"><div class="tag">📱 Best on your phone</div><h3>Open Auntie Tobi on your phone</h3><p>Scan with your phone camera — this page opens there, ready to use.</p><div class="qr"><img alt="QR code for this page" id="dskQr"></div>' +
         '<p style="margin:12px 0 0;font-size:13px">Then tap <b>Share → Add to Home Screen</b> to keep Auntie Tobi like an app. 💚</p>' +
-        (isApp ? '<button class="lap" id="dskLap">🖥️ View in laptop format</button>' : '') + '</div>';
+        (isApp || LAPURL ? '<button class="lap" id="dskLap">🖥️ View in laptop format</button>' : '') + '</div>';
       R = document.createElement('div'); R.className = 'dsk'; R.id = 'dskR';
       R.innerHTML = '<div class="c"><h3>Quick links</h3><p>Popular on Auntie Tobi</p>' +
         '<a class="lk" href="/add-business"><span>➕</span>Add your business</a><a class="lk" href="/add-event"><span>🎉</span>Add your event</a>' +
         '<a class="lk" href="/business-studio"><span>🚀</span>Business Studio</a><a class="lk" href="/cards"><span>💌</span>Celebration cards</a>' +
         '<a class="lk" href="https://wa.me/447594674940" target="_blank" rel="noopener"><span>💬</span>WhatsApp Auntie Tobi</a></div>';
       document.body.appendChild(L); document.body.appendChild(R);
-      var b = document.getElementById('dskLap'); if (b) b.onclick = function () { put('laptop'); apply(); };
+      var b = document.getElementById('dskLap'); if (b) b.onclick = function () { put('laptop'); if (LAPURL && !isApp) location.href = LAPURL; else apply(); };
     }
     var off = Math.max(24, (window.innerWidth - column()) / 2 - 270 - 40);
     L.style.left = off + 'px'; R.style.right = off + 'px';
@@ -265,7 +266,7 @@
       (list.length ? '<div class="grid">' + list.map(function (p, i) {
         var wa = p.wa ? 'https://wa.me/' + String(p.wa).replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi, I saw ' + p.name + ' on Auntie Tobi and I\'d like to enquire') : '';
         var link = p.link || wa || '';
-        return '<div class="card bz"><div class="im" style="font-size:46px;height:200px;background:#fff">' + esc(p.emoji || '🛍️') + (p.img ? '<img src="' + esc(p.img) + '" alt="" loading="lazy" onerror="this.remove()" style="object-fit:contain;background:#fff">' : '') + (p.category ? '<span class="ft">' + esc(p.category) + '</span>' : '') + '</div>' +
+        return '<div class="card bz"><div class="im" style="font-size:46px;height:200px;background:#fff">' + esc(p.emoji || '🛍️') + ((p.img || (p.imgs && p.imgs[0])) ? '<img src="' + esc(p.img || p.imgs[0]) + '" alt="" loading="lazy" onerror="this.remove()" style="object-fit:contain;background:#fff">' : '') + (p.category ? '<span class="ft">' + esc(p.category) + '</span>' : '') + '</div>' +
           '<div class="bd"><b>' + esc(p.name) + '</b><div class="m">' + esc(p.business || '') + '</div><p>' + esc(p.desc || '') + '</p>' + (p.price ? '<div style="font-weight:800;font-size:17px;color:#057A44;margin:-4px 0 10px">' + esc(p.price) + '</div>' : '') +
           '<div class="bt">' + (link ? '<a class="v" href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(p.btnText || 'Find out more') + '</a>' : '') + (wa && p.link ? '<a class="w" href="' + esc(wa) + '" target="_blank" rel="noopener">💬 WhatsApp</a>' : '') + (p.bizSlug ? '<button class="chip" data-biz="' + esc(p.bizSlug) + '" style="flex:none">Business</button>' : '') + '</div></div></div>';
       }).join('') + '</div>' : '<div class="card empty">No listings here yet.</div>') + '</div>';
@@ -334,6 +335,7 @@
         // opened from a link (a business, an article…): show it in the app, not the laptop Home page
         var bz = (START.search.match(/[?&]biz=([^&#]+)/) || START.path.match(/^\/biz\/([^\/?#]+)/) || [])[1];
         if (bz) { showBizPage(decodeURIComponent(bz), true); try { history.replaceState({ lapBiz: bz }, '', '/?biz=' + bz); } catch (e) {} }
+        else if (/[?&]lap=mkt\b/.test(START.search)) { go('mkt'); try { history.replaceState({}, '', '/marketplace'); } catch (e) {} }
         else if (/[?&](action|article|blog|event|post)=/.test(START.search) || /\/blog\//.test(START.path)) inApp(null);
         else { showHome(); if (window._dirFetch && window._dirFetch.then) window._dirFetch.then(function () { if (cur === 'home') showHome(); else if (cur === 'biz') grid(); }); }
       } else if (cur && cur !== 'app') { page.style.display = 'block'; } else if (!cur) showHome();

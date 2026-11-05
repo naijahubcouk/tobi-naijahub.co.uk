@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Marketplace — Auntie Tobi</title>
+<script>/* On a computer, open the laptop-format Marketplace (unless they chose Phone view) */try{if(window.innerWidth>=980&&localStorage.getItem('tobi_view')!=='phone')location.replace('/?lap=mkt');}catch(e){}</script>
 <link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -362,5 +363,6 @@ function tobi_imgZoom(src) {
 }
 </script>
 
+<script src="/desk.js" data-lap="/?lap=mkt" defer></script>
 </body>
 </html>
