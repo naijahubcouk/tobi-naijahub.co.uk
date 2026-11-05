@@ -129,13 +129,14 @@ Object.assign(T, {
 
 Thank you for joining the Auntie Tobi Business Club! Your membership is active until {until}.
 
-Open your Business Studio: {studio_link}
+[[Open your Business Studio|{studio_link}]]
+
 Sign in with this email address ({email}) — we’ll send you a 6-digit code, no password needed.
 
 **Good first steps**
 
 - Complete your business profile
-- Add your product or service to the Marketplace: {marketplace_link}
+- [Add your product or service to the Marketplace]({marketplace_link})
 - Read “Welcome to Auntie Tobi Business Club” in Library → Resources
 
 Auntie Tobi 💚`, ['name', 'until', 'studio_link', 'email', 'marketplace_link']),
@@ -452,9 +453,11 @@ ${foot ? `<p style="font-size:12px;color:#6B7280;margin:14px 8px;text-align:cent
 }
 async function render(id, vars) { const t = await get(id); return renderWith(t, vars, t.group.startsWith('out-') ? FOOTER_OUT : ''); }
 // For system emails: your edited version if there is one, otherwise the original email unchanged.
+const NEW_DESIGN = ['club.welcome'];   // system emails that use the new design (Seun's choice, Nov 2026); the rest keep their own look
 async function system(id, vars, fallback) {
   try {
-    const o = await getJson('mail/tpl/' + id).catch(() => null);
+    let o = await getJson('mail/tpl/' + id).catch(() => null);
+    if (!o && NEW_DESIGN.includes(id)) o = T[id];   // these use the new email design even when not edited
     if (!o || !T[id]) return fallback;
     const v = {}; for (const k of T[id].vars) v[k] = vars[k] == null ? '' : vars[k];
     const r = renderWith(o, v, '');
