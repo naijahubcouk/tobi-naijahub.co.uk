@@ -889,10 +889,33 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   function crmDate(iso) { return iso ? new Date(iso.length === 10 ? iso + 'T12:00:00Z' : iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : ''; }
   var CRM_STAGE_COLOR = { joined: ['#057A44', '#fff'], interested: ['#D1FAE5', '#065F46'], replied: ['#DBEAFE', '#1E3A8A'], notnow: ['#FEF3C7', '#92400E'], waiting: ['#EEF0F3', '#333'], emailing: ['#E0E7FF', '#3730A3'], 'new': ['#F3F4F6', '#6B7280'], declined: ['#FDE2E1', '#991B1B'], unsub: ['#F3F4F6', '#9CA3AF'] };
   function crmPill(st) { var c = CRM_STAGE_COLOR[st] || ['#EEF0F3', '#333']; return dirPill(esc((S.crm && S.crm.stageLabel[st]) || st), c[0], c[1]); }
-  function loadDirData() { return Promise.all([api('crm-list'), S.dir ? Promise.resolve(S.dir) : api('dir-list')]).then(function (r) { S.crm = r[0]; S.dir = r[1]; }); }
+  function loadDirData() { return Promise.all([api('crm-list'), S.dir ? Promise.resolve(S.dir) : api('dir-list'), api('photos-status').catch(function () { return null; })]).then(function (r) { S.crm = r[0]; S.dir = r[1]; S.photos = r[2]; }); }
+  // 📷 website photos copied to Auntie Tobi (so they always show in the app)
+  function photoLine() {
+    var p = S.photos; if (!p) return '';
+    var busy = S.photoBusy;
+    return '<div id="phLine" style="margin-top:12px;background:#F6FBF8;border:1px solid #CDE8D9;border-radius:10px;padding:10px 12px;font-size:13.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
+      '<span>📷 <b>Business photos:</b> ' + p.copied + ' of ' + p.withPhoto + ' copied to Auntie Tobi' + (p.left ? ' · <b>' + p.left + ' to copy</b>' : ' ✅') + (p.noPhoto ? ' · ' + p.noPhoto + ' have no photo on the website' : '') + (p.gaveUp && p.gaveUp.length ? ' · <span title="' + esc(p.gaveUp.map(function (g) { return g.name + ': ' + g.why; }).join('\n')) + '" style="color:#B45309;cursor:help">' + p.gaveUp.length + ' couldn’t be copied</span>' : '') + '</span>' +
+      (busy ? '<span class="muted">Copying… ' + esc(busy) + '</span>' : (p.left ? '<button class="btn primary sm" id="phGo">📷 Copy photos now</button>' : '') + (p.gaveUp && p.gaveUp.length ? '<button class="btn ghost sm" id="phRetry">Try the failed ones again</button>' : '')) + '</div>';
+  }
+  function bindPhotoLine() { var g = $('#phGo'); if (g) g.onclick = function () { copyPhotos(false); }; var r = $('#phRetry'); if (r) r.onclick = function () { copyPhotos(true); }; }
+  async function copyPhotos(retry) {
+    if (S.photoBusy) return; S.photoBusy = 'starting'; var redraw = function () { var l = $('#phLine'); if (l) { l.outerHTML = photoLine(); bindPhotoLine(); } };
+    redraw(); var total = 0;
+    try {
+      for (var i = 0; i < 60; i++) {
+        var r = await api(i === 0 && retry ? 'photos-retry' : 'photos-run');
+        S.photos = r; total += r.copiedNow; S.photoBusy = total + ' copied so far'; redraw();
+        if (!r.left || (!r.copiedNow && !r.failedNow)) break;
+      }
+      toast('📷 ' + total + ' photo' + (total === 1 ? '' : 's') + ' copied'); S.dir = null;
+    } catch (e) { toast(e.message); }
+    S.photoBusy = ''; redraw();
+  }
   function vDir() {
     $('#ttl').textContent = 'Business directory';
     $('#topRight').innerHTML = '<button class="btn ghost" id="dSync">🔄 Website sync</button> <button class="btn ghost" id="dImp">📥 Import</button> <button class="btn ghost" id="dWa">💬 WhatsApp messages</button> <button class="btn primary" id="dAdd">＋ Add</button>';
+    setTimeout(bindPhotoLine, 0);
     $('#dSync').onclick = dirSyncSheet; $('#dImp').onclick = dirImportSheet; $('#dAdd').onclick = function () { dirEdit(null); }; $('#dWa').onclick = crmWaTemplates;
     if (!S.crm || !S.dir) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading your businesses…</p></div>'; loadDirData().then(function () { if (S.view === 'dir') vDir(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
     var C = S.crm, info = S.dir.info || {}, rows = C.rows;
@@ -904,7 +927,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="row" style="gap:8px;flex-wrap:wrap">' + stat(due.length, 'follow-ups due') + stat(hot.length, '🔥 clicked recently') + stat(C.newToday + ' / ' + C.perDay, 'new WhatsApp invites') + stat(C.counts.interested, 'interested') + '</div>' +
       (hot.length ? '<div style="margin-top:10px;font-size:13.5px"><b>🔥 Engaging with your emails:</b> ' + hot.slice(0, 6).map(function (r) { return '<a href="javascript:void(0)" data-open="' + esc(r.slug) + '" style="color:#057A44;font-weight:700">' + esc(r.name) + '</a>'; }).join(' · ') + '</div>' : '') +
       '<div style="font-weight:800;margin:14px 0 8px">This month</div><div class="row" style="gap:8px;flex-wrap:wrap">' + stat(m.contacted, 'contacted') + stat(m.opened, 'opened an email') + stat(m.clicked, 'clicked a link') + stat(m.replied, 'replied') + stat(m.joined, 'joined') + stat('£' + m.money, 'from joins') + '</div>' +
-      (info.saved ? '<div class="muted" style="font-size:12px;margin-top:10px">' + (info.lastImport ? 'Last website import: ' + esc(crmDate(info.lastImport)) : '') + '</div>' : '<div class="note" style="margin-top:10px">Tap <b>📥 Import</b> and choose your latest directory CSV to bring in emails, phones and claimed / unclaimed.</div>') + '</div>';
+      photoLine() + (info.saved ? '<div class="muted" style="font-size:12px;margin-top:10px">' + (info.lastImport ? 'Last website import: ' + esc(crmDate(info.lastImport)) : '') + '</div>' : '<div class="note" style="margin-top:10px">Tap <b>📥 Import</b> and choose your latest directory CSV to bring in emails, phones and claimed / unclaimed.</div>') + '</div>';
     var F = { today: '📅 Due today (' + due.length + ')', hot: '🔥 Hot (' + hot.length + ')', all: 'All (' + rows.filter(function (r) { return !r.hidden; }).length + ')' };
     C.stages.forEach(function (st) { F[st] = C.stageLabel[st] + ' (' + C.counts[st] + ')'; });
     var cats = {}, towns = {}; rows.forEach(function (r) { if (r.cat) cats[r.cat] = 1; var t = (r.loc || '').split(',')[0].trim(); if (t && t !== 'UK') towns[t] = (towns[t] || 0) + 1; });
@@ -1112,7 +1135,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     };
     $('#diOk', s).onclick = async function () {
       this.disabled = true; this.textContent = 'Saving…';
-      try { var r = await api('dir-apply', { csv: csv, hideGone: !!($('#diH', s) && $('#diH', s).checked) }); S.dir = { items: r.items, info: r.info }; s.remove(); toast('Imported ✅ ' + r.stats.added + ' new · ' + r.stats.changed + ' updated' + (r.stats.hidden ? ' · ' + r.stats.hidden + ' hidden' : '')); S.crm = null; vDir(); }
+      try { var r = await api('dir-apply', { csv: csv, hideGone: !!($('#diH', s) && $('#diH', s).checked) }); S.dir = { items: r.items, info: r.info }; s.remove(); toast('Imported ✅ ' + r.stats.added + ' new · ' + r.stats.changed + ' updated' + (r.stats.hidden ? ' · ' + r.stats.hidden + ' hidden' : '')); S.crm = null; S.photos = null; loadDirData().then(function () { if (S.view === 'dir') vDir(); if (S.photos && S.photos.left) copyPhotos(false); }); }
       catch (x) { this.disabled = false; this.textContent = '✅ Apply'; $('#diErr', s).textContent = x.message; $('#diErr', s).classList.remove('hidden'); }
     };
   }

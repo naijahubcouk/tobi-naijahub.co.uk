@@ -111,6 +111,7 @@ function normalise(b) {
   if (isFinite(+b.lat) && isFinite(+b.lng) && b.lat !== '' && b.lat != null && +b.lat !== 0) { out.lat = +b.lat; out.lng = +b.lng; }
   if (b.uploadedAt) out.uploadedAt = str(b.uploadedAt, 40);   // HQ-added business already put in a website CSV
   // ➕ added / claimed by the owner (app "Add your business" or Business Studio) — private, never in the public list
+  if (b.imgFrom && /^https:\/\//.test(String(b.imgFrom))) out.imgFrom = str(b.imgFrom, 600);   // the website photo our copy (img) came from
   if (b.ownerEmail) out.ownerEmail = str(b.ownerEmail, 120).toLowerCase();
   if (b.ownerName) out.ownerName = str(b.ownerName, 80);
   if (b.via === 'app' || b.via === 'studio') out.via = b.via;
@@ -198,7 +199,9 @@ function mergeOne(o, n) {
   const keep = {}; for (const k of ['img', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden', 'short', 'tags', 'lat', 'lng', 'gallery']) if (o[k] !== undefined) keep[k] = o[k];
   const m = normalise(Object.assign({}, o, n, keep, { wa: n.wa || o.wa, ig: n.ig || o.ig, fb: n.fb || o.fb, tt: n.tt || o.tt, loc: n.loc && n.loc !== 'UK' ? n.loc : (o.loc || 'UK') }));
   if (o.siteHidden && n.status !== 'pending') { m.hidden = false; delete m.siteHidden; }   // hidden by the website sync, back on the website now
-  for (const k of ['ownerEmail', 'ownerName', 'via', 'listedMailAt', 'ownerEdAt']) if (o[k] !== undefined) m[k] = o[k];
+  for (const k of ['ownerEmail', 'ownerName', 'via', 'listedMailAt', 'ownerEdAt', 'imgFrom']) if (o[k] !== undefined) m[k] = o[k];
+  // our copy of the website photo: a different photo on the website replaces it (it's copied again later)
+  if (o.imgFrom && n.img && n.img !== o.imgFrom) { m.img = n.img; delete m.imgFrom; }
   return protectOwner(o, m);
 }
 async function applyImport(csvText, hideGone, who) {

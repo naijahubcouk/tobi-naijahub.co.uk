@@ -332,6 +332,14 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'abiz-announce') { const r = await ab.announceSend(who.email, body.test ? who.email : ''); return Object.assign(await ab.hqList(), { announceNow: r }); }
       return await ab.hqList();
     }
+    case 'photos-status': case 'photos-run': case 'photos-retry': {
+      // 📷 copy the website's business photos to Auntie Tobi (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const bp = require('../bizphotos');
+      if (body.action === 'photos-retry') { await bp.retry(); return await bp.run(14000); }
+      if (body.action === 'photos-run') return await bp.run(14000);
+      return await bp.summary();
+    }
     case 'dirhook-status': case 'dirsync-test': case 'dirsync-live': case 'dirsync-retry': case 'dirsync-dismiss': {
       // 🔄 live sync from the directory website (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');

@@ -30,6 +30,8 @@ exports.handler = async (event) => {
       if (k.split('/')[1] < cutoff) { await core.del(k).catch(() => {}); report.cleaned++; }
     }
     await sweep('buyers/', v => !v.stripeCustomerId && Date.parse(v.createdAt || 0) < now - 30 * core.DAY);
+    // 📷 copy any new website business photos (the website sync adds them during the day)
+    try { const left = 26000 - (Date.now() - started); if (left > 8000) report.photos = (await require('../bizphotos').run(left - 2000)).copiedNow; } catch (e) { console.error('[studio] photo copy', e && e.message); }
   } catch (e) {
     console.error('[studio] maintenance error', e);
   }
