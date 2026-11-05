@@ -5966,6 +5966,11 @@ function showFeaturedBizCarousel(){
   mountFeaturedBiz(id);
 }
 
+// 🛍️ Marketplace bubble / category links: the laptop Marketplace page on a computer, otherwise the Marketplace page
+function showMarketplace() {
+  if (window.tobiDesk && window.tobiDesk.isLap && window.tobiDesk.isLap()) return window.tobiDesk.go('mkt');
+  window.location.href = '/marketplace';
+}
 function showMarketplaceCarousel() {
   addTipMessage('<div id="mp-home-wrap"></div>');
   renderHomeMarketplace();

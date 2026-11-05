@@ -63,7 +63,9 @@
     '#lapPage .tile:hover{box-shadow:0 0 0 2px #057A44}#lapPage .tile span{display:block;font-size:26px;margin-bottom:6px}' +
     '#lapPage .more{display:block;margin:6px auto 0;background:#fff;border:1.5px solid #057A44;color:#057A44;border-radius:12px;padding:12px 26px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}' +
     '#lapPage .empty{padding:30px;text-align:center;color:#6B7280}' +
-    '@media (max-width:1240px){#lapPage .cols{grid-template-columns:1fr 290px}#lapPage .tiles{grid-template-columns:repeat(2,1fr)}}@media (max-width:1180px){#lapPage .cols .grid{grid-template-columns:repeat(2,1fr)}#lapTop nav button{padding:8px 9px;font-size:13px}#lapTop .br span{display:none}}';
+    'body.lapv #blogSheet{align-items:center;justify-content:center;background:rgba(15,30,54,.55)}body.lapv #blogSheet>div:first-child{position:absolute;inset:0;background:transparent!important}' +
+    'body.lapv #blogSheet>div:nth-child(2){position:relative;width:min(860px,94vw);height:calc(100vh - 80px)!important;border-radius:18px!important;box-shadow:0 20px 60px rgba(0,0,0,.35)}' +
+        '@media (max-width:1240px){#lapPage .cols{grid-template-columns:1fr 290px}#lapPage .tiles{grid-template-columns:repeat(2,1fr)}}@media (max-width:1180px){#lapPage .cols .grid{grid-template-columns:repeat(2,1fr)}#lapTop nav button{padding:8px 9px;font-size:13px}#lapTop .br span{display:none}}';
 
   function addCss() { if (document.getElementById('dskCss')) return; var st = document.createElement('style'); st.id = 'dskCss'; st.textContent = CSS; document.head.appendChild(st); }
   var qrLoad = null;
@@ -116,9 +118,9 @@
     top._last = n;
     if (n === 'home') return showHome();
     if (n === 'biz') return showBiz();
-    if (n === 'mkt') { window.location.href = '/marketplace'; return; }
-    if (n === 'news') return inApp(function () { showNewsAndUpdates(); });
-    if (n === 'events') return inApp(function () { showEventsCard(); });
+    if (n === 'mkt') return showMkt();
+    if (n === 'news') return showNews();
+    if (n === 'events') return showEvents();
     if (n === 'jobs') return inApp(function () { showJobsHubCard(); });
   }
   function shell() {
@@ -138,7 +140,7 @@
     var all = dir(), feat = all.filter(function (b) { return b.featured; }).slice(0, 6);
     if (feat.length < 3) feat = feat.concat(all.filter(function (b) { return !b.featured && b.img; }).slice(0, 3 - feat.length));
     var h = new Date().getHours(), hi = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    var TILES = [['💼', 'Find jobs', function () { showJobsHubCard(); }], ['🎉', 'Events', function () { showEventsCard(); }], ['📰', 'News & articles', function () { showAllNews(); }], ['🏢', 'All businesses', 'biz'],
+    var TILES = [['💼', 'Find jobs', function () { showJobsHubCard(); }], ['🎉', 'Events', 'events'], ['📰', 'News & articles', 'news'], ['🏢', 'All businesses', 'biz'],
       ['🛍️', 'Marketplace', 'mkt'], ['🏠', 'Renting a house', 'How do I rent a house in the UK?'], ['🚗', 'UK driving licence', 'How do I get my UK driving licence?'], ['➕', 'Add your business', '/add-business']];
     page.innerHTML = '<div class="wrap"><div class="cols"><div>' +
       '<div class="bub"><img src="/tobi-face-128.png" alt=""><div><b>' + hi + '! 👋🏾 I’m Auntie Tobi.</b><br>Ask me anything about life in the UK — jobs, housing, visas, the NHS, schools — or find Nigerian businesses and events near you. So… wetin you need today? 😄</div></div>' +
@@ -148,7 +150,7 @@
       '<div class="rail"><div class="card"><h2>🎉 Upcoming events</h2><div id="lapEv"></div></div><div class="card"><h2>📰 Latest news</h2><div id="lapNw"></div></div>' +
       '<div class="card cta"><b>🏪 Own a Nigerian business?</b><div style="font-size:14px;margin-top:6px;opacity:.9">List it free and get your own Business Studio.</div><a href="/add-business">➕ Add your business</a></div></div></div></div>';
     document.getElementById('lapAsk').onsubmit = function (e) { e.preventDefault(); var q = document.getElementById('lapQ').value.trim(); if (q) inApp(function () { quickAsk(q); }); };
-    page.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { var a = TILES[+b.dataset.t][2]; if (typeof a === 'function') return inApp(a); if (a === 'biz' || a === 'mkt') return go(a); if (a.charAt(0) === '/') { location.href = a; return; } inApp(function () { quickAsk(a); }); }; });
+    page.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { var a = TILES[+b.dataset.t][2]; if (typeof a === 'function') return inApp(a); if (a === 'biz' || a === 'mkt' || a === 'events' || a === 'news') return go(a); if (a.charAt(0) === '/') { location.href = a; return; } inApp(function () { quickAsk(a); }); }; });
     bindCards(page);
     rail();
   }
@@ -163,9 +165,10 @@
     E.innerHTML = ev.length ? ev.map(function (e, i) { return '<div class="mini" data-ev="' + i + '"><i>' + esc(e.emoji || '🎉') + '</i><div><b>' + esc(e.title) + '</b><span>' + esc(e.time || e.date || '') + (e.loc ? ' · ' + esc(e.loc) : '') + '</span></div></div>'; }).join('') : '<div class="sub" style="font-size:14px">New events are added every week.</div>';
     E.innerHTML += '<div class="mini" data-evall><i>➡️</i><div><b>See all events</b></div></div>';
     N.innerHTML = nw.map(function (n, i) { return '<div class="mini" data-nw="' + i + '"><i>' + esc(n.emoji || '📰') + '</i><div><b>' + esc(n.title) + '</b><span>' + esc(n.label || 'Auntie Tobi explains') + '</span></div></div>'; }).join('') + '<div class="mini" data-nwall><i>➡️</i><div><b>All news &amp; articles</b></div></div>';
-    E.querySelectorAll('[data-ev],[data-evall]').forEach(function (el) { el.onclick = function () { top._last = 'events'; inApp(function () { showEventsCard(); }); }; });
-    N.querySelectorAll('[data-nw]').forEach(function (el) { el.onclick = function () { var n = nw[+el.dataset.nw]; inApp(function () { openBlogSheet(n.appUrl || n.url, n.title, n.summary); }); }; });
-    N.querySelector('[data-nwall]').onclick = function () { top._last = 'news'; inApp(function () { showAllNews(); }); };
+    E.querySelectorAll('[data-ev]').forEach(function (el) { el.onclick = function () { openPost(ev[+el.dataset.ev]); }; });
+    E.querySelector('[data-evall]').onclick = function () { go('events'); };
+    N.querySelectorAll('[data-nw]').forEach(function (el) { el.onclick = function () { openPost(nw[+el.dataset.nw]); }; });
+    N.querySelector('[data-nwall]').onclick = function () { go('news'); };
   }
   var BZ = { q: '', cat: '', n: 24 };
   function showBiz() {
@@ -197,6 +200,93 @@
     var mb = document.getElementById('lapMoreBiz'); if (mb) mb.onclick = function () { BZ.n += 24; grid(); };
   }
 
+  // ── articles & events open in the app's article sheet, over the laptop page ──
+  function openPost(n) {
+    if (!n) return;
+    var u = n.appUrl || n.url || '';
+    if (!u) return;
+    try { if (typeof openBlogSheet === 'function' && /\/blog\//.test(u)) return openBlogSheet(u, n.title, n.summary); } catch (e) {}
+    window.open(u, '_blank', 'noopener');
+  }
+  function postImg(n) { return n.imgId ? '/.netlify/functions/app-content?img=' + encodeURIComponent(n.imgId) : (n.image || n.img || n.thumbnail || ''); }
+  function postCard(n, i, kind) {
+    var im = postImg(n), when = kind === 'ev' ? [n.time || n.date, n.loc].filter(Boolean).join(' · ') : [n.label, n.date].filter(Boolean).join(' · ');
+    return '<div class="card bz" data-p="' + i + '"><div class="im" style="font-size:46px;cursor:pointer">' + esc(n.emoji || (kind === 'ev' ? '🎉' : '📰')) + (im ? '<img src="' + esc(im) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + (kind === 'ev' && n.date ? '<span class="ft">🗓 ' + esc(n.date) + '</span>' : '') + '</div>' +
+      '<div class="bd" style="cursor:pointer"><b>' + esc(n.title) + '</b><div class="m">' + esc(when) + '</div><p>' + esc(n.summary || '') + '</p><div class="bt"><button class="v">' + (kind === 'ev' ? 'See the event' : 'Read') + '</button></div></div></div>';
+  }
+  function bindPosts(root, list) { root.querySelectorAll('[data-p]').forEach(function (el) { el.onclick = function () { openPost(list[+el.dataset.p]); }; }); }
+  function pageOn(n) { cur = n; page.style.display = 'block'; page.scrollTop = 0; nav(); }
+
+  // 🛍️ Marketplace
+  var MK = { cat: '' };
+  function showMkt() {
+    pageOn('mkt');
+    var now = new Date(), all = (typeof MARKETPLACE_PRODUCTS !== 'undefined' ? MARKETPLACE_PRODUCTS : []).filter(function (p) { return p && p.name && (!p.expires || new Date(p.expires) > now); });
+    var cats = []; all.forEach(function (p) { if (p.category && cats.indexOf(p.category) < 0) cats.push(p.category); });
+    var list = all.filter(function (p) { return !MK.cat || p.category === MK.cat; });
+    page.innerHTML = '<div class="wrap"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div><h1>Marketplace</h1><div class="sub">Products and services from Nigerian businesses in the UK · ' + all.length + ' listings</div></div>' +
+      '<a class="chip" href="/business-club" style="text-decoration:none;background:#FFF4D6;border-color:#FFB81C;padding:11px 16px">💚 Sell on the Marketplace</a></div>' +
+      (cats.length > 1 ? '<div class="chips"><button class="chip' + (MK.cat ? '' : ' on') + '" data-k="">All</button>' + cats.map(function (c) { return '<button class="chip' + (MK.cat === c ? ' on' : '') + '" data-k="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' : '') +
+      (list.length ? '<div class="grid">' + list.map(function (p, i) {
+        var wa = p.wa ? 'https://wa.me/' + String(p.wa).replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi, I saw ' + p.name + ' on Auntie Tobi and I\'d like to enquire') : '';
+        var link = p.link || wa || '';
+        return '<div class="card bz"><div class="im" style="font-size:46px;height:200px;background:#fff">' + esc(p.emoji || '🛍️') + (p.img ? '<img src="' + esc(p.img) + '" alt="" loading="lazy" onerror="this.remove()" style="object-fit:contain;background:#fff">' : '') + (p.category ? '<span class="ft">' + esc(p.category) + '</span>' : '') + '</div>' +
+          '<div class="bd"><b>' + esc(p.name) + '</b><div class="m">' + esc(p.business || '') + '</div><p>' + esc(p.desc || '') + '</p>' + (p.price ? '<div style="font-weight:800;font-size:17px;color:#057A44;margin:-4px 0 10px">' + esc(p.price) + '</div>' : '') +
+          '<div class="bt">' + (link ? '<a class="v" href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(p.btnText || 'Find out more') + '</a>' : '') + (wa && p.link ? '<a class="w" href="' + esc(wa) + '" target="_blank" rel="noopener">💬 WhatsApp</a>' : '') + (p.bizSlug ? '<button class="chip" data-biz="' + esc(p.bizSlug) + '" style="flex:none">Business</button>' : '') + '</div></div></div>';
+      }).join('') + '</div>' : '<div class="card empty">No listings here yet.</div>') + '</div>';
+    page.querySelectorAll('[data-k]').forEach(function (b) { b.onclick = function () { MK.cat = b.dataset.k; showMkt(); }; });
+    bindCards(page);
+    if (!window._mpLive) window.addEventListener('tobi-mp-live', function () { if (cur === 'mkt') showMkt(); }, { once: true });
+  }
+
+  // 🎉 Events
+  function eventsList() {
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var all = [], seen = {};
+    try { (typeof ALL_EVENTS !== 'undefined' ? ALL_EVENTS : []).forEach(function (e) { if (e && e.title && !seen[e.title]) { seen[e.title] = 1; all.push(e); } }); } catch (e) {}
+    try {
+      ((typeof getLiveBlogPosts === 'function' && getLiveBlogPosts()) || []).forEach(function (p) {
+        if (!(p.isEvent || String(p.label || '').toLowerCase() === 'events') || seen[p.title]) return;
+        var d = typeof tobiEventDate === 'function' ? tobiEventDate(p) : null; if (!d) return;
+        seen[p.title] = 1; all.push({ emoji: p.emoji || '🎉', title: p.title, summary: p.summary, url: p.url, appUrl: p.appUrl, date: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), dateObj: d, loc: p.loc || '', image: p.image || p.img || '' });
+      });
+    } catch (e) {}
+    return { up: all.filter(function (e) { return e.dateObj && e.dateObj >= today; }).sort(function (a, b) { return a.dateObj - b.dateObj; }),
+      past: all.filter(function (e) { return e.dateObj && e.dateObj < today; }).sort(function (a, b) { return b.dateObj - a.dateObj; }).slice(0, 6) };
+  }
+  function showEvents() {
+    pageOn('events');
+    var e = eventsList(), shown = e.up.concat(e.past);
+    page.innerHTML = '<div class="wrap"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div><h1>Nigerian events in the UK</h1><div class="sub">' + (e.up.length ? e.up.length + ' upcoming event' + (e.up.length === 1 ? '' : 's') : 'New events are added every week') + '</div></div>' +
+      '<a class="chip" href="/add-event" style="text-decoration:none;background:#FFF4D6;border-color:#FFB81C;padding:11px 16px">📣 Add your event</a></div>' +
+      (e.up.length ? '<div class="grid">' + e.up.map(function (x, i) { return postCard(x, i, 'ev'); }).join('') + '</div>' : '<div class="card empty">🎉 No upcoming events right now — check back soon, or <a href="/add-event" style="color:#057A44;font-weight:700">add your event</a>.</div>') +
+      (e.past.length ? '<h2 style="margin:10px 0 0">Recent events</h2><div class="grid" style="opacity:.85">' + e.past.map(function (x, i) { return postCard(x, e.up.length + i, 'ev'); }).join('') + '</div>' : '') + '</div>';
+    bindPosts(page, shown);
+  }
+
+  // 📰 News & articles
+  var NW = { cat: '', n: 12 };
+  function newsList() {
+    var out = [], seen = {};
+    try { [].concat(window._hqArticles || [], (typeof getLiveBlogPosts === 'function' && getLiveBlogPosts()) || [], typeof TOBI_BUILTIN_NEWS !== 'undefined' ? TOBI_BUILTIN_NEWS : [])
+      .forEach(function (n) { if (n && n.title && !n.isEvent && String(n.label || '').toLowerCase() !== 'events' && !seen[n.title]) { seen[n.title] = 1; out.push(n); } }); } catch (e) {}
+    return out;
+  }
+  function showNews() {
+    pageOn('news');
+    var all = newsList(), cats = [];
+    all.forEach(function (n) { if (n.label && cats.indexOf(n.label) < 0) cats.push(n.label); });
+    var list = all.filter(function (n) { return !NW.cat || n.label === NW.cat; });
+    page.innerHTML = '<div class="wrap"><div><h1>News &amp; articles</h1><div class="sub">UK news and guides for Nigerians, explained simply by Auntie Tobi</div></div>' +
+      '<div class="chips"><button class="chip' + (NW.cat ? '' : ' on') + '" data-k="">All</button>' + cats.slice(0, 14).map(function (c) { return '<button class="chip' + (NW.cat === c ? ' on' : '') + '" data-k="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' +
+      (list.length ? '<div class="grid">' + list.slice(0, NW.n).map(function (n, i) { return postCard(n, i, 'nw'); }).join('') + '</div>' + (list.length > NW.n ? '<button class="more" id="lapMoreNw">Show more (' + (list.length - NW.n) + ' more)</button>' : '') : '<div class="card empty">No articles here yet.</div>') +
+      '<div class="sub" style="text-align:center">Looking for today’s live headlines? <a href="#" id="lapLive" style="color:#057A44;font-weight:700">See all updates</a></div></div>';
+    page.querySelectorAll('[data-k]').forEach(function (b) { b.onclick = function () { NW.cat = b.dataset.k; NW.n = 12; showNews(); }; });
+    var m = document.getElementById('lapMoreNw'); if (m) m.onclick = function () { NW.n += 12; var y = page.scrollTop; showNews(); page.scrollTop = y; };
+    document.getElementById('lapLive').onclick = function (ev) { ev.preventDefault(); inApp(function () { showNewsAndUpdates(); }); };
+    bindPosts(page, list);
+  }
+
   // ───── switching ─────
   var started = false;
   function apply() {
@@ -209,7 +299,7 @@
         // opened from a link (a business, an article…): show it in the app, not the laptop Home page
         if (/[?&](biz|action|article|blog|event|post)=/.test(location.search) || /\/(biz|blog)\//.test(location.pathname)) inApp(null);
         else { showHome(); if (window._dirFetch && window._dirFetch.then) window._dirFetch.then(function () { if (cur === 'home') showHome(); else if (cur === 'biz') grid(); }); }
-      } else if (cur === 'home' || cur === 'biz' || !cur) { page.style.display = 'block'; if (!cur) showHome(); }
+      } else if (cur && cur !== 'app') { page.style.display = 'block'; } else if (!cur) showHome();
       nav();
     } else {
       document.body.classList.remove('lapv'); if (top) top.style.display = 'none'; if (page) page.style.display = 'none';
@@ -220,5 +310,5 @@
   window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(apply, 120); });
   window.addEventListener('popstate', function () { if (lapOn() && cur !== 'app') inApp(null); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(apply, 50); }); else setTimeout(apply, 50);
-  window.tobiDesk = { apply: apply, go: function (n) { if (lapOn()) go(n); } };
+  window.tobiDesk = { apply: apply, isLap: lapOn, go: function (n) { if (lapOn()) go(n); } };
 })();
