@@ -1,8 +1,8 @@
 'use strict';
 /*
  * 🔄 Live sync from the directory website (DirectoryEasy webhooks) → HQ business list.
- * STEP 1 (listening only): every message is checked and kept (last 20) so the format can be confirmed.
- * Nothing in the app changes yet.
+ * Every message is checked with the secret and kept (last 20). Checked listing messages are applied to the
+ * HQ business list by dirsync.js (live updates — can be switched off in HQ). Unchecked ones are only kept.
  *   POST /.netlify/functions/dir-hook?key=<key shown in HQ>
  *   Netlify env: DIRECTORY_WEBHOOK_SECRET = the "Webhook Secret" DirectoryEasy shows (used to check signatures)
  *   dirhook/log  { items: [{ at, event, verified, sigHeader, keys, headers, body }] }
@@ -42,10 +42,13 @@ async function record(headers, body) {
   const keep = {}; for (const [k, val] of Object.entries(headers)) if (!/cookie|authorization|x-nf-|x-forwarded|x-country|x-language|client-ip/i.test(k)) keep[k] = String(val).slice(0, 300);
   const entry = { at: core.nowIso(), event: String(event).slice(0, 60), verified: v.verified, why: v.why || '', sigHeader: v.sigHeader || '', keys: j && typeof j === 'object' ? Object.keys(j).slice(0, 30) : [], headers: keep, body: body.slice(0, 20000) };
   await cas(KEY, cur => { cur = cur || { items: [] }; cur.items = [entry].concat(cur.items).slice(0, 20); return cur; });
+  if (v.verified && j && /^listing\./.test(entry.event)) {
+    try { entry.result = await require('./dirsync').apply(j); } catch (e) { console.error('[dir-hook] sync', e && e.message); entry.result = { action: 'error', why: e.message }; }
+  }
   return entry;
 }
 async function status() {
   const log = ((await getJson(KEY).catch(() => null)) || { items: [] }).items;
-  return { address: address(), address2: address2(), secretSet: !!core.env('DIRECTORY_WEBHOOK_SECRET'), mode: 'listening', log };
+  return { address: address(), address2: address2(), secretSet: !!core.env('DIRECTORY_WEBHOOK_SECRET'), mode: 'live', log, sync: await require('./dirsync').overview() };
 }
 module.exports = { record, status, urlKey, verify };

@@ -96,6 +96,10 @@ function normalise(b) {
   if (typeof b.claimedSet === 'boolean') out.claimedSet = b.claimedSet;
   out.claimed = typeof out.claimedSet === 'boolean' ? out.claimedSet : (out.contact ? ownerContact(out) : b.claimed === true);
   if (b.notes) out.notes = str(b.notes, 1000);
+  if (b.deId) out.deId = str(b.deId, 60);                 // DirectoryEasy listing id (from the website sync)
+  if (typeof b.siteHidden === 'boolean') out.siteHidden = b.siteHidden; else if (b.siteHidden) out.siteHidden = true;   // hidden because the website rejected / deleted it
+  if (b.contactEmail) out.contactEmail = str(b.contactEmail, 120).toLowerCase();   // the website account's email
+  if (b.siteAt) out.siteAt = str(b.siteAt, 40);           // last live update from the website
   if (b.awaitSite) out.awaitSite = true;          // found by the Business Finder: kept out of the app until it's on the website
   if (typeof b.appNow === 'boolean') out.appNow = b.appNow; else if (b.appNow) out.appNow = true;                // Seun chose to show it in the app before that
   if (fbUrl(b.fb)) out.fb = fbUrl(b.fb);
@@ -174,6 +178,7 @@ async function previewImport(csvText) {
 function mergeOne(o, n) {
   const keep = {}; for (const k of ['img', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden', 'short', 'tags', 'lat', 'lng', 'gallery']) if (o[k] !== undefined) keep[k] = o[k];
   const m = normalise(Object.assign({}, o, n, keep, { wa: n.wa || o.wa, ig: n.ig || o.ig, fb: n.fb || o.fb, tt: n.tt || o.tt, loc: n.loc && n.loc !== 'UK' ? n.loc : (o.loc || 'UK') }));
+  if (o.siteHidden && n.status !== 'pending') { m.hidden = false; delete m.siteHidden; }   // hidden by the website sync, back on the website now
   return m;
 }
 async function applyImport(csvText, hideGone, who) {
@@ -227,4 +232,4 @@ async function markUploaded(slugs, at) {
 }
 async function info() { const rec = await getJson(KEY).catch(() => null); return { saved: !!(rec && rec.items), at: rec && rec.at || '', lastImport: rec && rec.lastImport || '' }; }
 
-module.exports = { waitingSite, fbUrl, ttUrl, markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
+module.exports = { nameKey, townFrom, waNumber, igHandle, waitingSite, fbUrl, ttUrl, markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };

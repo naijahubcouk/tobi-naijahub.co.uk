@@ -321,9 +321,14 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dm-search') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return { accounts: await dm.searchPages(body.q) }; }
       return await dm.overview();
     }
-    case 'dirhook-status': {
+    case 'dirhook-status': case 'dirsync-test': case 'dirsync-live': case 'dirsync-retry': case 'dirsync-dismiss': {
       // 🔄 live sync from the directory website (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const ds = require('../dirsync');
+      if (body.action === 'dirsync-test') return { read: await ds.testRead(body.url) };
+      if (body.action === 'dirsync-live') await ds.setLive(!!body.on);
+      if (body.action === 'dirsync-retry') { const r = await ds.retry(String(body.name || '')); const st = await require('../dirhook').status(); return Object.assign(st, { retried: r }); }
+      if (body.action === 'dirsync-dismiss') await ds.dismiss(String(body.name || ''));
       return await require('../dirhook').status();
     }
     case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': {
