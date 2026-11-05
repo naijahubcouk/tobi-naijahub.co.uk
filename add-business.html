@@ -11,7 +11,7 @@
 <link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;min-height:100vh;padding-bottom:60px;line-height:1.5}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;min-height:100vh;padding-bottom:60px;line-height:1.55;font-size:17px}
 .app-header{background:#0F1E36;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;max-width:560px;margin:0 auto}
 .app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0}.app-logo img{width:100%;height:100%;object-fit:cover}
 .app-header-text{flex:1;min-width:0}.app-header-title{font-size:16px;font-weight:700;color:#fff}.app-header-sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
@@ -19,53 +19,54 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .wrap{max-width:560px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
 .hero{background:#0F1E36;border-radius:14px;padding:22px 18px;color:#fff}
 .badge{display:inline-block;background:rgba(255,184,28,.25);color:#FFB81C;font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:10px}
-.hero h1{font-size:24px;line-height:1.25;margin-bottom:8px}.hero p{font-size:15px;color:rgba(255,255,255,.85)}
-.perk{margin-top:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,184,28,.45);border-radius:12px;padding:10px 12px;font-size:14.5px;color:#fff}
+.hero h1{font-size:27px;line-height:1.25;margin-bottom:8px}.hero p{font-size:17px;color:rgba(255,255,255,.88)}
+.perk{margin-top:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,184,28,.45);border-radius:12px;padding:11px 13px;font-size:16.5px;color:#fff}
 .perk b{color:#FFB81C}
 .card{background:#fff;border-radius:14px;padding:18px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.step{font-size:12px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
-h2{font-size:19px;line-height:1.3;margin-bottom:6px}
+.step{font-size:13.5px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+h2{font-size:22px;line-height:1.3;margin-bottom:6px}
 .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.opt{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 6px;text-align:center;font-size:13px;font-weight:700;background:#fff;color:#0F1E36;cursor:pointer;font-family:inherit;line-height:1.35}
+.opt{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 6px;text-align:center;font-size:15px;font-weight:700;background:#fff;color:#0F1E36;cursor:pointer;font-family:inherit;line-height:1.35}
 .opt span{display:block;font-size:22px;margin-bottom:4px}
 .opt[aria-pressed=true]{border-color:#057A44;background:#E3F2EA;color:#04613A}
 .panel{margin-top:12px}
 .drop{border:2px dashed #057A44;border-radius:12px;padding:20px 12px;text-align:center;background:#F6FBF8;color:#04613A;font-size:14px;font-weight:600;cursor:pointer;display:block}
 .drop input{display:none}
-label{display:block;font-size:13.5px;font-weight:700;margin:12px 0 4px}
-label small{font-weight:400;color:#6B7280}
-.need{display:inline-block;background:#FFF1DB;color:#B45309;border-radius:20px;font-size:11.5px;font-weight:800;padding:1px 8px;margin-left:6px;vertical-align:1px}
-input,textarea,select{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 12px;font:16px/1.45 inherit;font-family:inherit;color:#0F1E36;background:#fff}
+label{display:block;font-size:16px;font-weight:700;margin:14px 0 5px}
+label small{font-weight:400;color:#6B7280;font-size:14.5px}
+.need{display:inline-block;background:#FFF1DB;color:#B45309;border-radius:20px;font-size:13px;font-weight:800;padding:1px 8px;margin-left:6px;vertical-align:1px}
+input,textarea,select{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 13px;font:17px/1.5 inherit;font-size:17px;font-family:inherit;color:#0F1E36;background:#fff}
 input.miss,textarea.miss,select.miss{border-color:#F59E0B;background:#FFFCF5}
 textarea{resize:vertical}
 input:focus,textarea:focus,select:focus{outline:2px solid #057A44;outline-offset:1px;border-color:#057A44}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none}
+.btn{display:block;width:100%;border:none;border-radius:12px;padding:16px;font-size:17.5px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none}
 .btn.primary{background:#057A44;color:#fff}.btn.gold{background:#FFB81C;color:#0F1E36}.btn.ghost{background:#fff;color:#0F1E36;border:1.5px solid #e0e0e0}.btn:disabled{opacity:.6;cursor:wait}
 .btn.link{background:none;color:#057A44;padding:10px;font-size:15px}
-.hint{font-size:13px;color:#6B7280;margin-top:6px}
-.note{background:#FFF8E7;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px;color:#0F1E36}
+.hint{font-size:15px;color:#6B7280;margin-top:6px}
+.note{background:#FFF8E7;border-radius:10px;padding:11px 13px;font-size:16px;margin-top:12px;color:#0F1E36}
 .ok{background:#E3F2EA;color:#04613A}
-.err{background:#FDECEC;color:#B42318;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px}
+.err{background:#FDECEC;color:#B42318;border-radius:10px;padding:11px 13px;font-size:16px;margin-top:10px}
 .hidden{display:none!important}
 .trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .res{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .biz{display:flex;gap:12px;align-items:center;border:1.5px solid #e8e8e8;border-radius:12px;padding:10px}
-.biz .im{width:52px;height:52px;border-radius:10px;background:#E3F2EA center/cover no-repeat;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px}
-.biz .t{flex:1;min-width:0}.biz .t b{display:block;font-size:15px;line-height:1.3}.biz .t span{font-size:13px;color:#6B7280}
-.biz button{border:none;background:#057A44;color:#fff;font-weight:700;font-size:13px;border-radius:10px;padding:9px 11px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.biz .im{width:58px;height:58px;border-radius:10px;background:#E3F2EA;flex:none;display:flex;align-items:center;justify-content:center;font:700 24px Georgia,serif;color:#057A44;position:relative;overflow:hidden}.biz .im img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+a.wa{display:inline-block;background:#25D366;color:#fff!important;font-weight:800;text-decoration:none;padding:2px 10px;border-radius:20px}
+.biz .t{flex:1;min-width:0}.biz .t b{display:block;font-size:17px;line-height:1.3;overflow-wrap:anywhere}.biz .t span{font-size:15px;color:#6B7280}
+.biz button{border:none;background:#057A44;color:#fff;font-weight:700;font-size:15px;border-radius:10px;padding:9px 11px;cursor:pointer;font-family:inherit;white-space:nowrap}
 .biz button.taken{background:#e5e7eb;color:#6B7280;cursor:default}
 .spin{display:inline-block;width:18px;height:18px;border:3px solid #CDE8D9;border-top-color:#057A44;border-radius:50%;animation:sp .9s linear infinite;vertical-align:-4px;margin-right:6px}@keyframes sp{to{transform:rotate(360deg)}}
 .imgbox{display:flex;gap:14px;align-items:flex-start}
 .pic{width:110px;height:110px;border-radius:12px;border:1px solid #e0e0e0;background:#F6FBF8 center/cover no-repeat;flex:none;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:#6B7280;padding:6px}
 .thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.thumbs img{width:54px;height:54px;object-fit:cover;border-radius:8px;border:2px solid transparent;cursor:pointer}.thumbs img.on{border-color:#057A44}
-.sbtn{border:1.5px solid #e0e0e0;background:#fff;border-radius:10px;padding:9px 10px;font-weight:600;font-size:14px;font-family:inherit;color:#0F1E36;cursor:pointer;text-align:left;display:block;width:100%;margin-bottom:6px}
+.sbtn{border:1.5px solid #e0e0e0;background:#fff;border-radius:10px;padding:11px 12px;font-weight:600;font-size:16px;font-family:inherit;color:#0F1E36;cursor:pointer;text-align:left;display:block;width:100%;margin-bottom:6px}
 .code{font-size:26px;letter-spacing:8px;text-align:center;font-weight:800}
-.tick{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;margin-top:14px}.tick input{width:20px;height:20px;flex:none;margin-top:2px}
+.tick{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:16px;margin-top:14px}.tick input{width:20px;height:20px;flex:none;margin-top:2px}
 .done{text-align:center}.done .big{font-size:46px}.done h2{font-size:22px;margin:6px 0}
 .what{text-align:left;background:#F6FBF8;border:1px solid #CDE8D9;border-radius:12px;padding:14px;margin:14px 0}
-.what ul{list-style:none;margin-top:8px}.what li{padding:5px 0;font-size:15px}
-.wr{background:#F6FBF8;border:1.5px dashed #9FD3B8;border-radius:12px;padding:12px;margin-top:12px}.wrh{font-size:13.5px;margin-bottom:8px;color:#0F1E36}.wr input{margin-bottom:8px}.wrb{background:#FFB81C!important;border-color:#FFB81C!important;font-weight:800!important;text-align:center!important;margin:0!important}
+.what ul{list-style:none;margin-top:8px}.what li{padding:6px 0;font-size:17px}
+.wr{background:#F6FBF8;border:1.5px dashed #9FD3B8;border-radius:12px;padding:12px;margin-top:12px}.wrh{font-size:15.5px;margin-bottom:8px;color:#0F1E36}.wr input{margin-bottom:8px}.wrb{background:#FFB81C!important;border-color:#FFB81C!important;font-weight:800!important;text-align:center!important;margin:0!important}
 textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#FFF4D6}100%{background:#fff}}
 .dup{border:1.5px solid #FFB81C;background:#FFFBF0;border-radius:12px;padding:12px;margin-top:12px}
 @media (max-width:420px){.two{grid-template-columns:1fr}.opt{font-size:12px}}
@@ -101,7 +102,7 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
   function showErr(id, msg) { var e = $(id); if (!e) return; e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
   function top() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
   function bizRow(b, btn) {
-    return '<div class="biz"><div class="im" style="' + (b.img ? 'background-image:url(&quot;' + esc(b.img) + '&quot;)' : '') + '">' + (b.img ? '' : '🏪') + '</div><div class="t"><b>' + esc(b.name) + '</b><span>' + esc(cap(b.cat)) + (b.loc ? ' · ' + esc(b.loc) : '') + '</span></div>' + btn + '</div>';
+    return '<div class="biz"><div class="im">' + esc(String(b.name || '?').charAt(0).toUpperCase()) + (b.img ? '<img src="' + esc(b.img) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div><div class="t"><b>' + esc(b.name) + '</b><span>' + esc(cap(b.cat)) + (b.loc ? ' · ' + esc(b.loc) : '') + '</span></div>' + btn + '</div>';
   }
   // Pictures are shrunk here before they're sent (JPEG, max 1200px)
   function shrink(src, max, crop) {
@@ -141,7 +142,7 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
     var box = $('#res'); if (!box) return;
     if (!list.length) { box.innerHTML = '<p class="hint">No business called “' + esc(q) + '” yet — tap <b>No, add my business</b> below.</p>'; return; }
     box.innerHTML = list.map(function (b) { return bizRow(b, b.owned ? '<button class="taken" disabled>Already claimed</button>' : '<button data-mine="' + esc(b.slug) + '">This is mine</button>'); }).join('') +
-      '<p class="hint">Is yours <b>already claimed</b>? If that wasn’t you, message Auntie Tobi on WhatsApp: <a href="https://wa.me/447594674940">07594 674940</a></p>';
+      '<p class="hint">Is yours <b>already claimed</b>? If that wasn’t you, message Auntie Tobi on <a class="wa" href="https://wa.me/447594674940" target="_blank" rel="noopener">WhatsApp</a>.</p>';
     box.querySelectorAll('[data-mine]').forEach(function (b) { b.onclick = function () { var x = list.filter(function (y) { return y.slug === b.dataset.mine; })[0]; showClaim(x); }; });
   }
 
@@ -152,7 +153,7 @@ textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#F
     var useListing = b.mail && !own;
     root.innerHTML = '<div class="hero"><div class="badge">🏪 Claim your business</div><h1>Is this your business?</h1><p>Claim it for free to update it yourself — and get your own free Business Studio.</p></div>' +
       '<div class="card">' + bizRow(b, '') +
-      (b.owned ? '<div class="err">This business has already been claimed. If that wasn’t you, message Auntie Tobi on WhatsApp: 07594 674940.</div>'
+      (b.owned ? '<div class="err">This business has already been claimed. If that wasn’t you, message Auntie Tobi on <a class="wa" href="https://wa.me/447594674940" target="_blank" rel="noopener">WhatsApp</a>.</div>'
       : useListing ? '<div class="step" style="margin-top:16px">Confirm it’s yours</div>' +
         '<p style="font-size:15px">We’ll send a 6-digit code to the business email on this listing:</p><p style="font-size:18px;font-weight:800;margin:6px 0 4px">📧 ' + esc(b.mail) + '</p>' +
         '<label for="oName">Your name</label><input id="oName" autocomplete="name" placeholder="e.g. Tolu Adeyemi">' +

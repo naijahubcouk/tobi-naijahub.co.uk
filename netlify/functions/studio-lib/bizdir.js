@@ -160,11 +160,13 @@ function fromCsvRow(r) {
   const cats = String(r.categories || '').split(',').map(c => c.trim()).filter(Boolean);
   const first = cats[0] || '';
   const verifiedCol = Object.keys(r).find(k => /verified by auntie tobi/i.test(k));
+  const imgs = String(r.images || '').split(/[,\s]+/).map(u => u.trim()).filter(u => /^https:\/\//.test(u));   // the website's photos (first = main picture)
   return normalise({
     slug: r.slug, name: r.name, cats, cat: first.split('>').pop().trim(), addr: r.location_address, loc: townFrom(r.location_address) || 'UK',
     desc: r.description, ig: r.socialMedia_instagram, fb: r.socialMedia_facebook, tt: r.socialMedia_tiktok, wa: waNumber(r['custom_Whatsapp Link'], r.business_phone), phone: r.business_phone,
     email: r.business_email, website: r.mainLink, long: r.detailedDescription, featured: String(r.isFeatured).toLowerCase() === 'true',
     verified: !!(verifiedCol && String(r[verifiedCol]).trim()), contact: r.contact_name, status: String(r.status).toUpperCase() === 'PENDING' ? 'pending' : 'published', src: 'website',
+    img: imgs[0] || '', gallery: imgs.slice(1, 7),
   });
 }
 
