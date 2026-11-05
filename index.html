@@ -7029,6 +7029,7 @@ function handleDeepLink() {
         const _catLabel = _cat ? _cat.charAt(0).toUpperCase() + _cat.slice(1) : '';
         const _sameCat = _cat && getLiveDirectory().filter(x => x.cat === _cat && x.slug !== business.slug).length;
         const _sameTown = _town && _town !== 'UK' && getLiveDirectory().filter(x => ((x.loc || '').split(',')[0] || '').toLowerCase().indexOf(_town.toLowerCase()) !== -1 && x.slug !== business.slug).length;
+        if (business.featured) { window.history.replaceState({}, '', window.location.pathname); return; }   // ⭐ a Featured business's page shows no other businesses
         addTipMessage('<div class="suggestions" style="margin-top:8px;">'
           + (_sameCat ? '<button class="suggestion-btn" onclick="resetAndShow(function(){showBusinesses(undefined,\'' + _q(_cat) + '\',null,true)})">🔎 More ' + _catLabel + '</button>' : '')
           + (_sameTown ? '<button class="suggestion-btn" onclick="resetAndShow(function(){showBusinesses(undefined,null,\'' + _q(_town.toLowerCase()) + '\',true)})">📍 Businesses in ' + _town + '</button>' : '')
