@@ -68,7 +68,7 @@ async function cleanProfile(raw, existing, event, email) {
 async function getProfile(email) { return core.getJson(`profiles/${enc(email)}`); }
 
 // ── Carousel maker design (what the member edited) ──
-const CAR_TEMPLATES = ['bold', 'minimal', 'split', 'notebook', 'chat', 'gradient', 'magazine', 'ankara', 'checklist', 'photo'];
+const CAR_TEMPLATES = ['bold', 'minimal', 'split', 'notebook', 'chat', 'gradient', 'magazine', 'ankara', 'checklist', 'photo', 'question'];
 const carImgKey = (email, ref) => `carimg/${enc(email)}/${ref}`;
 function cleanCarouselDesign(d) {
   d = d && typeof d === 'object' ? d : {};
@@ -89,7 +89,7 @@ function cleanCarouselDesign(d) {
     headScale: num(d.headScale, 0.6, 1.8, 1), bodyScale: num(d.bodyScale, 0.6, 1.8, 1),
     template: CAR_TEMPLATES.includes(d.template) ? d.template : 'bold',
     color1: hex(d.color1) || '#057A44', color2: hex(d.color2) || '#FFB81C',
-    font: ['modern', 'elegant', 'bold'].includes(d.font) ? d.font : 'modern',
+    font: ['modern', 'elegant', 'bold', 'friendly', 'strong', 'hand'].includes(d.font) ? d.font : 'modern',
     logo: d.logo !== false, handle: cleanText(d.handle, 60), cta: cleanText(d.cta, 60), slides,
     anim: (a => ({ style: ['none', 'pop', 'wipe', 'lines', 'fade'].includes(a.style) ? a.style : 'none', zoom: a.zoom !== false, light: !!a.light }))(d.anim && typeof d.anim === 'object' ? d.anim : {}),
     caption: cleanText(d.caption, 2200), hashtags: (Array.isArray(d.hashtags) ? d.hashtags : []).map(t => cleanText(t, 40)).filter(Boolean).slice(0, 30),

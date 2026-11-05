@@ -31,8 +31,19 @@
   function accentOn(bg, c2, c1) { if (contrast(c2, bg) >= 2.2) return c2; if (contrast(c1, bg) >= 2.2) return c1; return on(bg); }
 
   // ── type ──
-  function headFont(d, size) { return d.font === 'elegant' ? '700 ' + size + 'px Fraunces, Georgia, serif' : (d.font === 'bold' ? '800 ' : '700 ') + size + 'px "DM Sans", Arial, sans-serif'; }
-  function bodyFont(d, size) { return '400 ' + size + 'px "DM Sans", Arial, sans-serif'; }
+  // Fonts: modern / bold / elegant, plus friendly (rounded), strong (heavy) and handwritten
+  function headFont(d, size) {
+    if (d.font === 'elegant') return '700 ' + size + 'px Fraunces, Georgia, serif';
+    if (d.font === 'friendly') return '600 ' + size + 'px Poppins, "DM Sans", Arial, sans-serif';
+    if (d.font === 'strong') return '400 ' + size + 'px "Archivo Black", "DM Sans", Arial, sans-serif';
+    if (d.font === 'hand') return '700 ' + Math.round(size * 1.18) + 'px Caveat, "Comic Sans MS", cursive';
+    return (d.font === 'bold' ? '800 ' : '700 ') + size + 'px "DM Sans", Arial, sans-serif';
+  }
+  function bodyFont(d, size) {
+    if (d.font === 'friendly') return '400 ' + size + 'px Poppins, "DM Sans", Arial, sans-serif';
+    if (d.font === 'hand') return '600 ' + Math.round(size * 1.22) + 'px Caveat, "Comic Sans MS", cursive';
+    return '400 ' + size + 'px "DM Sans", Arial, sans-serif';
+  }
   // Line breaks are kept and blank lines become space, so members can lay out their words.
   function wrap(ctx, text, maxW) {
     var out = [];
@@ -185,7 +196,17 @@
     var g = ctx.createLinearGradient(0, H * 0.25, 0, H); g.addColorStop(0, 'rgba(10,16,30,0)'); g.addColorStop(0.55, 'rgba(10,16,30,0.72)'); g.addColorStop(1, 'rgba(10,16,30,0.92)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     return { photoBg: true, bottom: true, box: { x: M, y: Y(560), w: W - 2 * M, h: H - Y(560) - Y(170) }, head: '#FFFFFF', body: 'rgba(255,255,255,0.88)', accent: accentOn('#141B2B', d.color2, d.color1), align: 'left', headSize: 90, plateLogo: true, bar: true };
   } };
-  var ORDER = ['bold', 'minimal', 'split', 'notebook', 'chat', 'gradient', 'magazine', 'ankara', 'checklist', 'photo'];
+  // ❓ Question Card — a colour header band with the question, the story centred on white (great for "What would you advise?")
+  T.question = { name: 'Question Card', desc: 'Colour header band, centred story', paint: function (ctx, d) {
+    var band = Y(200);
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = d.color1; ctx.fillRect(0, 0, W, band);
+    var text = contrast(d.color2, '#FFFFFF') >= 4.5 ? d.color2 : '#151515';
+    return { split: band, headBox: { x: M * 0.6, y: Y(28), w: W - 1.2 * M, h: band - Y(56) }, headAlign: 'center', centerBody: true, bodySize: 58,
+      box: { x: M, y: band + Y(80), w: W - 2 * M, h: H - band - Y(80) - Y(140) }, head: on(d.color1), body: text, accent: accentOn('#FFFFFF', d.color1, d.color2), align: 'center',
+      headSize: 84, noCounter: true, logo: { x: M, y: H - Y(130), size: 76 }, footerY: H - Y(70) };
+  } };
+  var ORDER = ['bold', 'minimal', 'split', 'notebook', 'chat', 'gradient', 'magazine', 'ankara', 'checklist', 'photo', 'question'];
   var PHOTO_SPACE = { small: 0.28, medium: 0.4, large: 0.56 };
 
   function clampScale(v, lo, hi, def) { v = Number(v); return isFinite(v) && v > 0 ? Math.max(lo, Math.min(hi, v)) : def; }
@@ -239,11 +260,12 @@
     if (L.split) {
       head = fit(ctx, s.headline, HF, L.headBox.w, L.headBox.h, role === 'hook' ? hsz + 12 * hs : hsz, Math.max(30, 44 * hs * 0.75), 1.12);
       var hy = L.headBox.y + Math.max(0, (L.headBox.h - head.height) / 2);
-      drawLines(ctx, head, HF, L.headBox.x, hy, L.head, 'left', L.headBox.w);
+      drawLines(ctx, head, HF, L.headBox.x, hy, L.head, L.headAlign || 'left', L.headBox.w);
       regions.head = { x: L.headBox.x, y: L.headBox.y, w: L.headBox.w, h: L.headBox.h };
-      body = fit(ctx, s.body, BF, box.w, box.h - btnH, 52 * bs, Math.max(26, 32 * bs), 1.36);
-      drawLines(ctx, body, BF, box.x, box.y, L.body, 'left', box.w);
-      regions.body = { x: box.x, y: box.y, w: box.w, h: Math.max(body.height, 80) };
+      body = fit(ctx, s.body, BF, box.w, box.h - btnH, (L.bodySize || 52) * bs, Math.max(26, 32 * bs), 1.36);
+      var by0 = L.centerBody ? box.y + Math.max(0, (box.h - btnH - body.height) / 2) : box.y;
+      drawLines(ctx, body, BF, box.x, by0, L.body, L.align === 'center' ? 'center' : 'left', box.w);
+      regions.body = { x: box.x, y: by0, w: box.w, h: Math.max(body.height, 80) };
       overflow = head.overflow || body.overflow;
     } else if (L.chat) {
       var bw = box.w * 0.86, y = box.y;

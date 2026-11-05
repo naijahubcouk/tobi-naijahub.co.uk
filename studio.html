@@ -21,7 +21,7 @@
 <script src="/studio-animate.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700;800&family=Poppins:wght@400;600&family=Archivo+Black&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --green:#057A44;--green-d:#04613A;--green-l:#E3F2EA;
@@ -2392,11 +2392,12 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
   // The images are drawn on this device by /studio-carousel.js — no AI, no paid images.
   var DM_FORMATS = [['post', '🖼️', 'Post', 'One image'], ['carousel', '🎠', 'Carousel', '2–10 slides'], ['story', '📱', 'Story', '9:16 — Stories, Status, Reel covers']];
   var CAR_PURPOSE = [['educational', '🎓 Educational'], ['promotional', '📣 Promotional'], ['tips', '💡 Tips']];
-  var CAR_FONTS = [['modern', 'Modern'], ['elegant', 'Elegant'], ['bold', 'Bold']];
+  var CAR_FONTS = [['modern', 'Modern'], ['elegant', 'Elegant'], ['bold', 'Bold'], ['friendly', 'Friendly'], ['strong', 'Strong'], ['hand', 'Handwritten']];
+  var CAR_FONT_CSS = { modern: '"DM Sans"', elegant: 'Fraunces, Georgia, serif', bold: '"DM Sans"', friendly: 'Poppins, sans-serif', strong: '"Archivo Black", sans-serif', hand: 'Caveat, cursive' };
   var DM_SWATCHES = ['#057A44', '#FFB81C', '#0F1E36', '#FFFFFF', '#000000', '#FBF8F2', '#7A1F5C', '#D6453F', '#1D6FD8', '#F2C6DE'];
   function carReady() { return !!window.TobiCarousel; }
   async function carFonts() {
-    try { await Promise.all(['400 40px "DM Sans"', '600 40px "DM Sans"', '700 40px "DM Sans"', '800 40px "DM Sans"', '700 40px Fraunces'].map(function (f) { return document.fonts.load(f); })); } catch (e) {}
+    try { await Promise.all(['400 40px "DM Sans"', '600 40px "DM Sans"', '700 40px "DM Sans"', '800 40px "DM Sans"', '700 40px Fraunces', '400 40px Poppins', '600 40px Poppins', '400 40px "Archivo Black"', '600 40px Caveat', '700 40px Caveat'].map(function (f) { return document.fonts.load(f); })); } catch (e) {}
   }
   function carHandle() {
     var p = S.boot.profile || {}, ig = String(p.instagram || '').trim();
@@ -2577,7 +2578,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
           (d.format === 'story' ? '' : '<div><span class="f" style="display:block;font-weight:700;margin-bottom:6px">Size</span><div class="chips" id="cSize"><button class="chip" data-s="portrait">Portrait 4:5</button><button class="chip" data-s="square">Square 1:1</button></div></div>') +
           '<div><span class="f" style="display:block;font-weight:700;margin-bottom:6px">Template</span><div class="chips" id="cTpl">' + TobiCarousel.TEMPLATES.map(function (t) { return '<button class="chip" data-t="' + t.id + '">' + esc(t.name) + '</button>'; }).join('') + '</div></div>' +
           colourRow('cC1', 'Main colour') + colourRow('cC2', 'Accent colour') + '<button class="btn link" id="cBrand" style="padding:0;min-height:0;align-self:flex-start">Use my brand colours &amp; font</button>' +
-          '<div><span class="f" style="display:block;font-weight:700;margin-bottom:6px">Font</span><div class="chips" id="cFont">' + CAR_FONTS.map(function (f) { return '<button class="chip" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div></div>' +
+          '<div><span class="f" style="display:block;font-weight:700;margin-bottom:6px">Font</span><div class="chips" id="cFont">' + CAR_FONTS.map(function (f) { return '<button class="chip" data-f="' + f[0] + '" style="font-family:' + CAR_FONT_CSS[f[0]].replace(/"/g, '&quot;') + (f[0] === 'bold' ? ';font-weight:800' : f[0] === 'hand' ? ';font-size:17px' : '') + '">' + f[1] + '</button>'; }).join('') + '</div></div>' +
           slider('cHS', 'Headline size', 60, 180) + slider('cBS', 'Text size', 60, 180) +
           toggle('cLogo', 'Show my logo') + '<div class="hint hidden" id="cNoLogo" style="margin:-8px 0 0">No logo yet — add one in <button class="btn link" id="cKit" style="padding:0;min-height:0;font-size:inherit">Account → Brand kit</button>.</div>' +
           (maxSlides > 1 ? toggle('cNums', 'Show ' + word + ' numbers') : '') + (d.format === 'carousel' ? toggle('cSwipe', 'Show “Swipe →” on the first slide') : '') +
