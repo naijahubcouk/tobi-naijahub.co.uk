@@ -86,6 +86,19 @@ function catFrom(slugs, items) {
 function findBiz(items, d) {
   return (d.id && items.find(b => b.deId === d.id)) || (d.slug && items.find(b => b.slug === d.slug)) || (d.name && items.find(b => bizdir.nameKey(b.name) === bizdir.nameKey(d.name))) || null;
 }
+// 🔁 Renamed on the website? Match a "new" listing to a business we already have by Instagram, WhatsApp/phone or email
+// (never by Auntie Tobi's own number, or a number several listings share). Only businesses not yet linked to another website listing.
+const OUR_NUMBERS = ['447594674940'];
+function sameBiz(items, info, deId, skip) {
+  const ig = bizdir.igHandle(info.ig || '').toLowerCase(), em = String(info.email || '').toLowerCase().trim();
+  const wa = String(info.wa || bizdir.waNumber('', info.phone || '') || '').replace(/\D/g, '');
+  const used = {}; items.forEach(x => { if (x.wa) used[x.wa] = (used[x.wa] || 0) + 1; });
+  const okWa = wa.length >= 10 && !OUR_NUMBERS.includes(wa) && (used[wa] || 0) <= 2;
+  const hits = items.filter(x => x !== skip && !x.hidden && (!x.deId || x.deId === deId) && (
+    (ig && bizdir.igHandle(x.ig || '').toLowerCase() === ig) || (okWa && x.wa === wa) || (em && String(x.email || '').toLowerCase() === em)));
+  return hits.length === 1 ? hits[0] : null;   // two or more possible matches → don't guess
+}
+const bySync = x => /Added by the website sync/.test(x && x.notes || '');
 // Only fill in what the page shows; never wipe a field because the page didn't show it.
 function fromPage(p) { const u = {}; for (const k of ['phone', 'wa', 'email', 'ig', 'fb', 'tt', 'website', 'addr', 'loc']) if (p[k]) u[k] = p[k]; if (p.desc) u.desc = p.desc; if (!u.wa && p.phone) u.wa = bizdir.waNumber('', p.phone); return u; }
 
@@ -123,6 +136,18 @@ async function apply(msg) {
     if (!b.img && page.ok && page.images[0]) upd.img = page.images[0];
     if (b.siteHidden) { upd.hidden = false; upd.siteHidden = false; }
     if (page.ok && b.src === 'hq' && !b.uploadedAt) upd.uploadedAt = now;   // a Finder business that's now on the website → shows in the app
+    // a copy made by an earlier rename now has the same name as the original → fold it back into the original
+    if (bySync(b)) {
+      const nm = upd.name || b.name;
+      const orig = items.find(x => x !== b && !x.hidden && !bySync(x) && bizdir.nameKey(x.name) === bizdir.nameKey(nm) && (!x.deId || x.deId === d.id));
+      if (orig) {
+        const keep = Object.assign({}, upd); delete keep.name; if (orig.img) delete keep.img; delete keep.uploadedAt;
+        await save(orig, Object.assign({ deId: d.id || b.deId }, keep));
+        await bizdir.remove(b.slug, who); try { await require('./bizimg').remove(b.slug); } catch (_) {}
+        await logSync(Object.assign(base, { slug: orig.slug, action: 'merged', why: 'duplicate from a rename removed — kept ' + orig.slug }));
+        return { action: 'merged' };
+      }
+    }
     await save(b, Object.assign({ deId: d.id || b.deId }, upd));
     if (page.ok) await needs(null, b.name);
     await logSync(Object.assign(base, { action: b.siteHidden ? 'shown' : 'updated', why: page.ok ? Object.keys(upd).filter(k => !/^(contact|contactEmail|deId|siteHidden|hidden|uploadedAt)$/.test(k) && String(upd[k]) !== String(b[k] == null ? '' : b[k])).join(', ') || 'no changes' : 'page not read: ' + page.why }));
@@ -134,6 +159,16 @@ async function apply(msg) {
     if (published) { await needs({ name, deId: d.id || '', url, why: page.why }); await logSync(Object.assign(base, { action: 'needs-import', why: page.why })); }
     else await logSync(Object.assign(base, { action: 'skipped', why: 'new listing not readable yet (' + page.why + ')' }));
     return { action: 'needs-import' };
+  }
+  const was = sameBiz(items, Object.assign({ email: contact.email || '' }, fromPage(page), { ig: page.ig || '' }), d.id || '', null);
+  if (was) {
+    const upd = fromPage(page); if (!was.img && page.images[0]) upd.img = page.images[0];
+    if (contact.name) upd.contact = contact.name;
+    if (was.siteHidden) { upd.hidden = false; upd.siteHidden = false; }
+    await save(was, Object.assign({ deId: d.id || was.deId, name }, upd));
+    await needs(null, name);
+    await logSync(Object.assign(base, { slug: was.slug, action: 'renamed', why: (was.name !== name ? '“' + was.name + '” → “' + name + '”' : 'linked to the website listing') }));
+    return { action: 'renamed' };
   }
   const nb = Object.assign({ name, slug: bizdir.slugify(name), src: 'website', status: 'published', cat: catFrom(d.categories, items), loc: page.loc || 'UK', img: page.images[0] || '', featured: !!page.featured,
     contact: contact.name || '', contactEmail: contact.email || '', deId: d.id || '', siteAt: now, notes: `Added by the website sync (${now.slice(0, 10)}).` }, fromPage(page));

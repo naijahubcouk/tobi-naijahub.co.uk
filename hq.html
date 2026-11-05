@@ -1051,7 +1051,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   async function dirSyncSheet() {
     var s = sheet('<h2>🔄 Website sync</h2><div id="dsB"><p class="muted">Loading…</p></div><div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="dsR">↻ Refresh</button><button class="btn primary" id="dsX">Close</button></div>');
     $('#dsX', s).onclick = function () { s.remove(); S.dir = null; S.crm = null; if (S.view === 'dir') vDir(); };
-    var ACT = { added: ['➕ Added', '#057A44'], updated: ['✏️ Updated', '#1D4ED8'], hidden: ['🙈 Hidden', '#B42318'], shown: ['👁 Shown again', '#057A44'], 'needs-import': ['⏳ Needs import', '#B45309'], skipped: ['· Skipped', '#9CA3AF'], error: ['⚠️ Error', '#B42318'] };
+    var ACT = { added: ['➕ Added', '#057A44'], updated: ['✏️ Updated', '#1D4ED8'], hidden: ['🙈 Hidden', '#B42318'], shown: ['👁 Shown again', '#057A44'], 'needs-import': ['⏳ Needs import', '#B45309'], skipped: ['· Skipped', '#9CA3AF'], error: ['⚠️ Error', '#B42318'], renamed: ['🔁 Renamed', '#7C3AED'], merged: ['🧩 Duplicate merged', '#7C3AED'] };
     var draw = async function (r) {
       try {
         r = r || await api('dirhook-status'); var Y = r.sync || { sync: [], needs: [], live: true };
