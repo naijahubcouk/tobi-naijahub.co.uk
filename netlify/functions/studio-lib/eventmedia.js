@@ -234,33 +234,71 @@ Do NOT include: photos of real people, faces of performers, logos, brand names, 
   return generateImage(prompt, article ? '1:1' : '4:5');
 }
 
-async function generateImage(prompt, aspect, refs) {
+// ── Making an image: the model is chosen in HQ (🎨 Image model) — Nano Banana unless changed.
+// Older "chat" image models (Gemini / GPT-5 image) use chat completions; the dedicated image models (GPT Image, Seedream,
+// FLUX…) use OpenRouter's Image API. If the chosen model fails, Nano Banana is tried once so HQ never gets stuck.
+const DEFAULT_IMAGE_MODEL = 'google/gemini-2.5-flash-image';
+const isChatImageModel = m => /^google\/gemini|^openai\/gpt-5/.test(m);
+async function imageSettings() { const r = (await core.getJson('hq/imagemodel').catch(() => null)) || {}; return { model: r.model || IMAGE_MODEL(), quality: r.quality || 'medium' }; }
+async function saveImageSettings(raw) {
+  const model = String(raw.model || '').trim(), quality = ['low', 'medium', 'high', 'auto'].includes(raw.quality) ? raw.quality : 'medium';
+  if (!/^[a-z0-9-]+\/[a-z0-9._:-]+$/i.test(model)) throw new HttpError(400, 'invalid', 'Choose an image model.');
+  await core.setJson('hq/imagemodel', { model, quality, at: core.nowIso() });
+  return { model, quality };
+}
+async function imageCall(model, prompt, aspect, refs, quality) {
   const key = env('STUDIO_OPENROUTER_API_KEY') || env('OPENROUTER_API_KEY');
   if (!key) throw new HttpError(500, 'ai_not_configured', 'Creating images needs the AI to be set up.');
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 55000);
-  let res, data;
+  const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 55000), t0 = Date.now();
+  const headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://auntietobi.co.uk', 'X-Title': 'Auntie Tobi HQ' };
+  let res, data, url = '';
   try {
-    res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST', signal: ctrl.signal,
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://auntietobi.co.uk', 'X-Title': 'Auntie Tobi Events' },
-      body: JSON.stringify({ model: IMAGE_MODEL(), messages: [{ role: 'user', content: refs && refs.length ? [{ type: 'text', text: prompt }].concat(refs.map(u => ({ type: 'image_url', image_url: { url: u } }))) : prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: aspect }, usage: { include: true } }),
-    });
-    data = await res.json().catch(() => null);
-  } catch (_) {
-    throw new HttpError(504, 'ai_timeout', 'Creating the image took too long — please try again.');
-  } finally { clearTimeout(timer); }
-  const msg = data && data.choices && data.choices[0] && data.choices[0].message;
-  const im = msg && msg.images && msg.images[0];
-  const url = im && (im.image_url && im.image_url.url || im.url);
-  if (!res.ok || !url || !/^data:image\//.test(url)) {
-    console.error('[eventmedia] image error', res && res.status, JSON.stringify(data || {}).slice(0, 400));
-    throw new HttpError(502, 'ai_error', 'We couldn’t create an image just now — please try again, or upload your own.');
+    if (isChatImageModel(model)) {
+      res = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', signal: ctrl.signal, headers,
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: refs && refs.length ? [{ type: 'text', text: prompt }].concat(refs.map(u => ({ type: 'image_url', image_url: { url: u } }))) : prompt }], modalities: ['image', 'text'], image_config: { aspect_ratio: aspect }, usage: { include: true } }) });
+      data = await res.json().catch(() => null);
+      const msg = data && data.choices && data.choices[0] && data.choices[0].message, im = msg && msg.images && msg.images[0];
+      url = (im && (im.image_url && im.image_url.url || im.url)) || '';
+    } else {
+      const body = { model, prompt, n: 1, aspect_ratio: aspect, resolution: '1K', quality: quality || 'medium', output_format: 'jpeg' };
+      if (refs && refs.length) body.input_references = refs.map(u => ({ type: 'image_url', image_url: { url: u } }));
+      res = await fetch('https://openrouter.ai/api/v1/images', { method: 'POST', signal: ctrl.signal, headers, body: JSON.stringify(body) });
+      data = await res.json().catch(() => null);
+      const d = data && data.data && data.data[0];
+      if (d && d.b64_json) url = `data:${d.media_type || 'image/jpeg'};base64,${d.b64_json}`;
+      else if (d && d.url) url = d.url;
+    }
+  } catch (_) { throw new HttpError(504, 'ai_timeout', 'Creating the image took too long — please try again.'); }
+  finally { clearTimeout(timer); }
+  if (url && /^https?:\/\//.test(url)) url = await fetchImage(url);
+  if (!res || !res.ok || !url || !/^data:image\//.test(url)) {
+    console.error('[eventmedia] image error', model, res && res.status, JSON.stringify(data || {}).slice(0, 400));
+    const why = data && data.error && (data.error.message || data.error.code);
+    throw new HttpError(502, 'ai_error', 'We couldn’t create an image just now — please try again, or upload your own.' + (why ? ` (${String(why).slice(0, 120)})` : ''));
   }
-  const u = (data && data.usage) || {};
+  const u = (data && data.usage) || {}, costUsd = typeof u.cost === 'number' ? u.cost : 0.04;
   const settings = await core.getSettings();
-  gen.addGlobal(core.monthKey(), { cost: 0, inTok: u.prompt_tokens || 0, outTok: u.completion_tokens || 0, costUsd: typeof u.cost === 'number' ? u.cost : 0.04 }, settings).catch(() => {});
-  return url;
+  gen.addGlobal(core.monthKey(), { cost: 0, inTok: u.prompt_tokens || 0, outTok: u.completion_tokens || 0, costUsd }, settings).catch(() => {});
+  return { url, costUsd, model, ms: Date.now() - t0 };
+}
+async function generateImage(prompt, aspect, refs) {
+  const st = await imageSettings();
+  try { return (await imageCall(st.model, prompt, aspect, refs, st.quality)).url; }
+  catch (e) {
+    if (st.model === DEFAULT_IMAGE_MODEL) throw e;
+    console.error('[eventmedia] falling back to Nano Banana after', st.model, e.message);
+    return (await imageCall(DEFAULT_IMAGE_MODEL, prompt, aspect, refs)).url;
+  }
+}
+// 🎨 HQ side-by-side test: the same prompt (and optional reference picture) on several models, with the cost of each
+async function compareImages(prompt, aspect, models, ref, quality) {
+  prompt = String(prompt || '').trim().slice(0, 3000);
+  if (prompt.length < 10) throw new HttpError(400, 'invalid', 'Describe the picture first.');
+  aspect = ['1:1', '4:5', '16:9', '9:16', '3:4'].includes(aspect) ? aspect : '1:1';
+  models = [...new Set((Array.isArray(models) ? models : []).filter(m => /^[a-z0-9-]+\/[a-z0-9._:-]+$/i.test(m)))].slice(0, 4);
+  if (!models.length) throw new HttpError(400, 'invalid', 'Choose at least one model.');
+  const refs = ref && /^data:image\/(png|jpe?g|webp);base64,/.test(ref) ? [ref] : [];
+  return Promise.all(models.map(m => imageCall(m, prompt, aspect, refs, quality).then(r => ({ model: m, image: r.url, costUsd: r.costUsd, ms: r.ms }), e => ({ model: m, error: e.message }))));
 }
 
-module.exports = { readLink, fetchImage, makePicture, checkUrl, generateImage };
+module.exports = { readLink, fetchImage, makePicture, checkUrl, generateImage, compareImages, imageSettings, saveImageSettings };

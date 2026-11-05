@@ -155,6 +155,8 @@ async function callModel(messages, maxTokens, settings, opts) {
   if (provider === 'openrouter' && opts && opts.plugins) body.plugins = opts.plugins; // e.g. a live web search of official sites
   // Claude models on OpenRouter always "think": they reject a custom temperature and the thinking uses part of
   // max_tokens — so keep the default temperature, ask for light thinking, hide it, and give it room.
+  // OpenAI's newer models (GPT-5 / GPT-6 / o-series) also think: no custom temperature, light hidden thinking, more room.
+  if (/^(openai\/)?(gpt-[5-9]|o\d)/.test(model)) { delete body.temperature; body.reasoning = { effort: (opts && opts.effort) || 'low', exclude: true }; body.max_tokens = Math.round(maxTokens * 1.5) + 1024; if (provider === 'openai') { delete body.reasoning; body.reasoning_effort = (opts && opts.effort) || 'low'; body.max_completion_tokens = body.max_tokens; delete body.max_tokens; } }
   if (/^anthropic\//.test(model)) { delete body.temperature; delete body.response_format; body.reasoning = { effort: (opts && opts.effort) || 'low', exclude: true }; body.max_tokens = Math.round(maxTokens * 1.5) + 1024; }
 
   const ctrl = new AbortController();

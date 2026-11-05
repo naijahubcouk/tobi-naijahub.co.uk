@@ -331,6 +331,14 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dirsync-dismiss') await ds.dismiss(String(body.name || ''));
       return await require('../dirhook').status();
     }
+    case 'img-settings': case 'img-compare': {
+      // 🎨 which AI makes HQ's pictures, and a side-by-side test (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const em = require('../eventmedia');
+      if (body.action === 'img-compare') { await core.rateLimit('hq-imgcmp', who.email, 30, 60 * 60 * 1000, 'That’s a lot of test images this hour — please wait a little.'); return { results: await em.compareImages(body.prompt, body.aspect, body.models, body.ref, body.quality) }; }
+      if (body.set) { const r = await em.saveImageSettings(body.set); await core.audit(who.email, 'hq_image_model', r); }
+      return await em.imageSettings();
+    }
     case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': {
       // 📣 Business discovery posts (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');

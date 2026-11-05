@@ -237,6 +237,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="find" id="navFind" class="hidden">🔎 Business Finder</button>
       <button data-nav="out" id="navOut" class="hidden">📧 Outreach</button>
       <button data-nav="mail" id="navMail" class="hidden">📝 Emails</button>
+      <button data-nav="imgm" id="navImgm" class="hidden">🎨 Image model</button>
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
       <button data-nav="disc" id="navDisc" class="hidden">📣 Discovery posts</button>
@@ -320,7 +321,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
-    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#navIgu').classList.toggle('hidden', !S.isAdmin); $('#navDisc').classList.toggle('hidden', !S.isAdmin); $('#navDm').classList.toggle('hidden', !S.isAdmin); $('#navIga').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
+    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#navImgm').classList.toggle('hidden', !S.isAdmin); $('#navIgu').classList.toggle('hidden', !S.isAdmin); $('#navDisc').classList.toggle('hidden', !S.isAdmin); $('#navDm').classList.toggle('hidden', !S.isAdmin); $('#navIga').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -328,7 +329,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
   function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = (['dir', 'find', 'out', 'mail', 'igu', 'dm', 'iga', 'disc'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
+    S.view = (['dir', 'find', 'out', 'mail', 'igu', 'dm', 'iga', 'disc', 'imgm'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -340,7 +341,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igu: vIgu, disc: function () { window.HQDisc.view(); }, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
@@ -1661,6 +1662,35 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       this.disabled = true;
       try { S.iga.rules = (await api('iga-rules', { rules: rules })).rules; s.remove(); toast('Saved'); vIga(); } catch (x) { toast(x.message); this.disabled = false; }
     };
+  }
+  // 🎨 Image model — which AI makes HQ's pictures, with a side-by-side test (same prompt, cost of each)
+  var IMG_MODELS = [['google/gemini-2.5-flash-image', 'Nano Banana (current default)', '~$0.039'], ['openai/gpt-image-2', 'GPT Image 2', '~$0.006–0.014'], ['openai/gpt-image-2.6-flare', 'GPT Image 2.6 Flare (fast)', 'by tokens'], ['openai/gpt-image-2.6-sunburst', 'GPT Image 2.6 Sunburst (detail)', 'by tokens'], ['bytedance-seed/seedream-5-0-flash', 'Seedream 5.0 Flash', '~$0.018']];
+  function imgName(m) { var x = IMG_MODELS.filter(function (y) { return y[0] === m; })[0]; return x ? x[1] : m; }
+  function vImgm() {
+    $('#ttl').textContent = 'Image model'; $('#topRight').innerHTML = '';
+    if (!S.imgm) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading…</p></div>'; api('img-settings').then(function (r) { S.imgm = r; if (S.view === 'imgm') vImgm(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
+    var M = S.imgm, T = S.imgT || { prompt: '', aspect: '16:9', models: ['google/gemini-2.5-flash-image', 'openai/gpt-image-2', 'openai/gpt-image-2.6-flare'], quality: 'medium' }, R = S.imgR;
+    S.imgT = T;
+    $('#view').innerHTML = '<div class="wrap">' +
+      '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>🎨 In use now:</b> ' + esc(imgName(M.model)) + (/^google\/|^openai\/gpt-5/.test(M.model) ? '' : ' · quality <b>' + esc(M.quality) + '</b>') + '<p class="muted" style="font-size:13px;margin:6px 0 0">Used for ✨ Create an image, blog images, event posters, birthday card art and storyboards. If the chosen model ever fails, HQ automatically tries Nano Banana so you’re never stuck.</p></div>' +
+      '<div class="card" style="padding:14px 16px"><b>🧪 Side-by-side test</b><p class="muted" style="font-size:13px;margin:4px 0 8px">The same description goes to each model you tick. You see every picture with what it cost, then choose the one to use.</p>' +
+      '<label for="imP">Describe the picture</label><textarea id="imP" rows="4" placeholder="e.g. A smiling young Nigerian woman in a green hoodie holding folders, Big Ben and the Thames behind her, bright sunny day, realistic photo">' + esc(T.prompt) + '</textarea>' +
+      '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><select id="imA" style="width:auto">' + [['16:9', 'Wide 16:9 (blog)'], ['4:5', 'Portrait 4:5 (post)'], ['1:1', 'Square 1:1'], ['9:16', 'Story 9:16']].map(function (a) { return '<option value="' + a[0] + '"' + (a[0] === T.aspect ? ' selected' : '') + '>' + a[1] + '</option>'; }).join('') + '</select>' +
+      '<select id="imQ" style="width:auto" title="Quality for GPT Image / Seedream">' + ['low', 'medium', 'high'].map(function (q) { return '<option' + (q === T.quality ? ' selected' : '') + '>' + q + '</option>'; }).join('') + '</select><span class="muted" style="font-size:12.5px">quality (GPT Image / Seedream; high costs much more)</span></div>' +
+      '<div style="margin-top:8px">' + IMG_MODELS.map(function (m) { return '<label class="chk"><input type="checkbox" data-imm="' + m[0] + '"' + (T.models.indexOf(m[0]) >= 0 ? ' checked' : '') + '> ' + esc(m[1]) + ' <span class="muted" style="font-size:12.5px">' + esc(m[2]) + '</span></label>'; }).join('') + '</div>' +
+      '<div class="row" style="gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><label class="btn ghost sm" style="margin:0">📎 Reference picture (optional)<input type="file" id="imF" accept="image/*" hidden></label><span class="muted" id="imFN" style="font-size:12.5px">' + (S.imgRef ? 'Reference added ✓ <button class="btn link" id="imFX" style="font-size:12.5px">remove</button>' : 'e.g. your gele character, so she looks the same') + '</span></div>' +
+      '<button class="btn primary" id="imGo" style="margin-top:10px">🧪 Make test pictures</button><span class="muted" style="font-size:12.5px;margin-left:8px">up to 4 models, about 20–40 seconds</span></div>' +
+      (R ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:12px">' + R.map(function (r, i) { return '<div class="card" style="padding:10px"><b style="font-size:14px">' + esc(imgName(r.model)) + '</b>' + (r.error ? '<div class="err" style="margin-top:6px">' + esc(r.error) + '</div>' : '<img src="' + r.image + '" style="width:100%;border-radius:8px;margin-top:6px;display:block;cursor:zoom-in" data-imz="' + i + '"><div class="muted" style="font-size:13px;margin-top:4px">💷 $' + (r.costUsd || 0).toFixed(4) + ' (about ' + Math.max(0.1, (r.costUsd || 0) * 77).toFixed(1) + 'p) · ' + Math.round((r.ms || 0) / 1000) + 's</div><button class="btn ' + (M.model === r.model ? 'ghost' : 'primary') + ' sm" data-imu="' + esc(r.model) + '" style="margin-top:6px"' + (M.model === r.model ? ' disabled' : '') + '>' + (M.model === r.model ? '✓ In use' : '✅ Use this model') + '</button>') + '</div>'; }).join('') + '</div>' : '') + '</div>';
+    var read = function () { T.prompt = $('#imP').value; T.aspect = $('#imA').value; T.quality = $('#imQ').value; T.models = $$('[data-imm]').filter(function (c) { return c.checked; }).map(function (c) { return c.dataset.imm; }); };
+    $('#imF').onchange = async function () { var f = this.files && this.files[0]; this.value = ''; if (!f) return; try { read(); S.imgRef = await imgShrink(f); vImgm(); } catch (x) { toast(x.message); } };
+    if ($('#imFX')) $('#imFX').onclick = function () { read(); S.imgRef = null; vImgm(); };
+    $('#imGo').onclick = async function () {
+      read(); if (T.prompt.trim().length < 10) return toast('Describe the picture first'); if (!T.models.length) return toast('Tick at least one model'); if (T.models.length > 4) return toast('Up to 4 models at a time');
+      this.disabled = true; this.textContent = '🎨 Making ' + T.models.length + ' pictures…';
+      try { S.imgR = (await api('img-compare', { prompt: T.prompt, aspect: T.aspect, models: T.models, quality: T.quality, ref: S.imgRef || '' })).results; vImgm(); } catch (x) { toast(x.message); this.disabled = false; this.textContent = '🧪 Make test pictures'; }
+    };
+    $$('[data-imu]').forEach(function (b) { b.onclick = async function () { read(); try { S.imgm = await api('img-settings', { set: { model: b.dataset.imu, quality: T.quality } }); toast('HQ now uses ' + imgName(S.imgm.model) + ' 🎨'); vImgm(); } catch (x) { toast(x.message); } }; });
+    $$('[data-imz]').forEach(function (im) { im.onclick = function () { var s = sheet('<img src="' + im.src + '" style="width:100%;border-radius:10px;display:block"><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn primary" id="izX">Close</button></div>'); $('#izX', s).onclick = function () { s.remove(); }; }; });
   }
   function vApp() {
     $('#ttl').textContent = 'Publish to App';

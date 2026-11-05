@@ -21,9 +21,9 @@ const DEFAULT_SETTINGS = {
   powerLimit: 50,               // generations per DAY with Business Studio Plus (£50/year)
   perMinuteLimit: 6,            // burst protection per member
   spendWarnGbp: 30,             // email + admin alert when monthly AI spend passes this (and 2x). Never blocks.
-  model: '',                    // blank = STUDIO_MODEL env or openai/gpt-4o-mini
-  inputPricePerMUsd: 0.15,      // used only when the provider does not report cost
-  outputPricePerMUsd: 0.60,
+  model: '',                    // blank = STUDIO_MODEL env or openai/gpt-6-luna
+  inputPricePerMUsd: 0.10,      // used only when the provider does not report cost (GPT-6 Luna prices)
+  outputPricePerMUsd: 0.50,
   usdToGbp: 0.79,
   creditsOn: true,              // AI credit top-ups (one-off Stripe payments)
   creditPacks: [{ id: 'p300', credits: 300, pence: 500 }, { id: 'p750', credits: 750, pence: 1000 }, { id: 'p1600', credits: 1600, pence: 2000 }],
@@ -276,7 +276,7 @@ async function getSettings() {
   return { ...DEFAULT_SETTINGS, ...(s || {}) };
 }
 function modelFor(settings) {
-  return settings.model || env('STUDIO_MODEL', 'openai/gpt-4o-mini');
+  return settings.model || env('STUDIO_MODEL', 'openai/gpt-6-luna');
 }
 
 // ───────────────────────── members & access ─────────────────────────
