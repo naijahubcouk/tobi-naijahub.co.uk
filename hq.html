@@ -1735,7 +1735,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
         (x.dupes && x.dupes.length ? '<div class="err" style="margin-top:8px;font-size:13px">⚠️ Looks like: ' + x.dupes.map(function (d) { return esc(d.name) + ' (' + esc(d.why) + ')'; }).join(', ') + '</div>' : '') +
         '<div style="font-size:13px;margin-top:8px;background:#F7F2E7;border-radius:8px;padding:6px 10px">👤 <b>' + esc(x.ownerName || '—') + '</b> · ' + esc(x.email) +
         (x.siteMatch ? ' · <b style="color:var(--green-d)">✓ Email matches website</b>' : '') + (x.hasStudio ? ' · <b style="color:var(--green-d)">Has Business Studio ✓</b>' : '') +
-        '<br><span class="muted">' + esc(when(x.createdAt)) + (x.how && AB_HOW[x.how] ? ' · ' + AB_HOW[x.how] : '') + (x.reviewedBy ? ' · ' + (x.status === 'approved' ? 'approved' : 'declined') + ' by ' + esc((S.names && S.names[x.reviewedBy]) || x.reviewedBy) : '') + '</span></div>' +
+        '<br><span class="muted">' + esc(when(x.createdAt)) + (x.how && AB_HOW[x.how] ? ' · ' + AB_HOW[x.how] : '') + (x.reviewedBy ? ' · ' + (x.status === 'approved' ? 'approved' : 'declined') + ' by ' + esc((S.names && S.names[x.reviewedBy]) || x.reviewedBy) : '') + (x.mailed ? ' · 📧 emailed' : '') + (x.note ? ' · reason: ' + esc(x.note) : '') + '</span></div>' +
         '<div class="apact" style="margin-top:10px">' +
         (x.status === 'new' && x.kind === 'claim' ? abAsk(x, b) : '') +
         (x.status === 'new' ? '<button class="btn primary sm" data-abok="' + x.id + '">✅ Approve</button>' + (x.kind !== 'claim' ? '<button class="btn ghost sm" data-abed="' + x.id + '">✏️ Edit, then approve</button>' : '') + '<button class="btn ghost sm" data-abno="' + x.id + '">✖ Decline</button>'
@@ -1763,12 +1763,23 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var review = async function (id, decision, edits, btn) {
       if (btn) btn.disabled = true;
       try { await api('abiz-review', { id: id, decision: decision, edits: edits }); var x = byId(id);
-        toast(decision !== 'approve' ? 'Declined' : x.kind === 'new' ? 'Approved ✅ It’s in the app now and goes in your next Website CSV' : x.kind === 'claim' ? 'Approved ✅ It’s linked to their Business Studio' : 'Approved ✅ New name is live in the app');
+        toast(decision !== 'approve' ? 'Declined' + (edits && edits.notify ? ' · they’ve been emailed' : '') : x.kind === 'new' ? 'Approved ✅ It’s in the app now and goes in your next Website CSV' : x.kind === 'claim' ? 'Approved ✅ Linked to their Business Studio · they’ve been emailed' : 'Approved ✅ New name is live in the app · they’ve been emailed');
         vAbiz();
       } catch (e) { toast(e.message); if (btn) btn.disabled = false; }
     };
     $$('[data-abok]').forEach(function (b) { b.onclick = function () { review(b.dataset.abok, 'approve', null, b); }; });
-    $$('[data-abno]').forEach(function (b) { b.onclick = function () { var x = byId(b.dataset.abno); if (!confirm(x.kind === 'new' ? 'Decline “' + x.name + '”? It’s removed and won’t go in the app. (They are not told automatically.)' : 'Decline this ' + (x.kind === 'claim' ? 'claim' : 'name change') + '? (They are not told automatically.)')) return; review(x.id, 'decline', null, b); }; });
+    $$('[data-abno]').forEach(function (b) { b.onclick = function () {
+      var x = byId(b.dataset.abno), what = x.kind === 'new' ? '“' + x.name + '”' : x.kind === 'claim' ? 'this claim' : 'this name change';
+      var REASONS = x.kind === 'new' ? ['Not a Nigerian or African-owned business', 'This business is already on Auntie Tobi', 'We couldn’t check the details — please add a working phone number or website', 'This isn’t a business we can list'] : x.kind === 'claim' ? ['The business told us it wasn’t them', 'We couldn’t reach the business to confirm'] : ['The new name doesn’t match the business'];
+      var sh = sheet('<h2>✖ Decline ' + esc(what) + '</h2>' + (x.kind === 'new' ? '<p class="muted">It’s removed and won’t go in the app.</p>' : '') +
+        '<label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-weight:700"><input type="checkbox" id="dnTell" checked style="width:20px;height:20px;flex:none;margin:0"> 📧 Tell them by email (' + esc(x.email) + ')</label>' +
+        '<label style="margin-top:10px">Reason <span class="muted">(optional — added to the email)</span></label><div class="chipbar" style="margin:6px 0">' + REASONS.map(function (r, i) { return '<button class="chip" data-rs="' + i + '">' + esc(r) + '</button>'; }).join('') + '</div>' +
+        '<textarea id="dnWhy" rows="3" placeholder="e.g. We could only find a personal Instagram for this business."></textarea>' +
+        '<div class="apact" style="margin-top:12px"><button class="btn primary" id="dnGo">✖ Decline</button><button class="btn ghost" data-x>Cancel</button></div>');
+      sh.querySelector('[data-x]').onclick = function () { sh.remove(); };
+      sh.querySelectorAll('[data-rs]').forEach(function (c) { c.onclick = function () { sh.querySelector('#dnWhy').value = REASONS[+c.dataset.rs] + '.'; }; });
+      sh.querySelector('#dnGo').onclick = function () { review(x.id, 'decline', { notify: sh.querySelector('#dnTell').checked, note: sh.querySelector('#dnWhy').value.trim() }, b); sh.remove(); };
+    }; });
     $$('[data-abdel]').forEach(function (b) { b.onclick = async function () { try { await api('abiz-delete', { id: b.dataset.abdel }); vAbiz(); } catch (e) { toast(e.message); } }; });
     $$('[data-abed]').forEach(function (b) { b.onclick = function () { abEdit(byId(b.dataset.abed), review); }; });
     $$('[data-abpv]').forEach(function (b) { b.onclick = async function () { try { var r = await api('abiz-preview', { id: b.dataset.abpv, slug: b.dataset.slug || '' }); var s = sheet('<h2 style="margin:0 0 4px">👀 ' + esc(r.mail.subject) + '</h2><iframe style="width:100%;height:60vh;border:1px solid var(--line);border-radius:10px;background:#fff" sandbox></iframe><button class="btn ghost" style="margin-top:10px" data-x>Close</button>'); s.querySelector('iframe').srcdoc = r.mail.html; s.querySelector('[data-x]').onclick = function () { s.remove(); }; } catch (e) { toast(e.message); } }; });

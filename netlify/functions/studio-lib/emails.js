@@ -261,7 +261,7 @@ Any questions? Message us on WhatsApp: https://wa.me/447594674940
 Auntie Tobi 💚`, ['name', 'listing', 'outcome', 'note']),
 });
 // ── ➕ Add your business ──
-const BIZ_VARS = ['name', 'business_name', 'listing_link', 'studio_link', 'email'];
+const BIZ_VARS = ['name', 'business_name', 'listing_link', 'studio_link', 'email', 'new_name', 'reason', 'whatsapp_link'];
 Object.assign(T, {
   'biz.listed': S('sys-biz', 'You’re listed + Business Studio', 'When a business added in the app is on the website (sent from HQ → Add your business, after your Website CSV upload)', '🎉 {business_name} is live on Auntie Tobi, and your Business Studio is ready',
 `Hi {name},
@@ -282,6 +282,60 @@ Good news! **{business_name}** is now listed on the Auntie Tobi app and website,
 Sign in with this email address ({email}). We’ll send you a 6-digit code, no password needed.
 
 Want even more people to find you? The Auntie Tobi Business Club puts you at the top as a Featured Business: https://www.auntietobi.co.uk/business-club
+
+Auntie Tobi 💚`, BIZ_VARS),
+  'biz.claimok': S('sys-biz', 'Claim approved', 'When you approve someone’s claim in HQ → Add your business', '✅ {business_name} is now yours on Auntie Tobi',
+`Hi {name},
+
+Good news: you can now manage **{business_name}** on Auntie Tobi yourself.
+
+[[Edit my listing|{studio_link}]]
+
+In your free Business Studio, go to **My Listing** to update your photo, description, WhatsApp and more. Changes show in the Auntie Tobi app straight away.
+
+Sign in with this email address ({email}). We’ll send you a 6-digit code, no password needed.
+
+Auntie Tobi 💚`, BIZ_VARS),
+  'biz.claimno': S('sys-biz', 'Claim not approved', 'When you decline a claim and tick “Tell them by email”', 'About your claim for {business_name}',
+`Hi {name},
+
+Thank you for asking to manage **{business_name}** on Auntie Tobi.
+
+We weren’t able to confirm that you own or run this business, so we haven’t linked it to your account.{reason}
+
+If this is a mistake, message Auntie Tobi on WhatsApp and we’ll sort it out: {whatsapp_link}
+
+Auntie Tobi 💚`, BIZ_VARS),
+  'biz.declined': S('sys-biz', 'New business not added', 'When you decline a new business and tick “Tell them by email”', 'About {business_name} on Auntie Tobi',
+`Hi {name},
+
+Thank you for adding **{business_name}** to Auntie Tobi.
+
+We’re sorry, but we haven’t been able to add it to the directory this time.{reason}
+
+If you think we’ve got this wrong, or you’d like to try again, message Auntie Tobi on WhatsApp: {whatsapp_link}
+
+Your free Business Studio is still yours to use: {studio_link}
+
+Auntie Tobi 💚`, BIZ_VARS),
+  'biz.nameok': S('sys-biz', 'Name change approved', 'When you approve a business name change', 'Your new business name is live on Auntie Tobi',
+`Hi {name},
+
+Your business is now called **{new_name}** on the Auntie Tobi app.
+
+[[View my listing|{listing_link}]]
+
+Our website will show the new name after our next website update.
+
+Auntie Tobi 💚`, BIZ_VARS),
+  'biz.nameno': S('sys-biz', 'Name change not approved', 'When you decline a name change and tick “Tell them by email”', 'About your business name change',
+`Hi {name},
+
+Thank you for asking to change **{business_name}** to “{new_name}”.
+
+We haven’t made this change.{reason}
+
+Any questions? Message Auntie Tobi on WhatsApp: {whatsapp_link}
 
 Auntie Tobi 💚`, BIZ_VARS),
   'biz.announce': S('sys-biz', 'New: edit your listing in Business Studio', 'One-off email to Business Studio members who already linked their listing (sent from HQ → Add your business)', '✏️ You can now update your Auntie Tobi listing yourself',

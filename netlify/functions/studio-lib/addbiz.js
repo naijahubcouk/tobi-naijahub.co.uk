@@ -485,7 +485,17 @@ async function review(id, decision, edits, who) {
     }
     if (s.kind === 'claim') await cas(`profiles/${core.enc(s.email)}`, cur => { if (!cur || cur.pendingClaim !== s.slug) return undefined; const p = Object.assign({}, cur); delete p.pendingClaim; return p; }).catch(() => {});
   }
-  await putSub({ id, status: decision === 'approve' ? 'approved' : 'declined', reviewedAt: now, reviewedBy: who, note: cleanText(edits && edits.note, 300) });
+  // 📧 tell them (approvals of claims and names always; declines only when "Tell them by email" was ticked)
+  const tpl = decision === 'approve' ? { claim: 'biz.claimok', name: 'biz.nameok' }[s.kind] : (edits && edits.notify) ? { claim: 'biz.claimno', new: 'biz.declined', name: 'biz.nameno' }[s.kind] : '';
+  let mailed = false;
+  if (tpl && s.email) {
+    try {
+      const reason = cleanText(edits && edits.note, 300);
+      const m = await require('./emails').render(tpl, { name: firstName(s.ownerName), business_name: s.name || (b && b.name) || '', new_name: (edits && edits.name) || s.newName || '', listing_link: listingUrl(s.slug), studio_link: tpl === 'biz.declined' ? core.appUrl() : core.appUrl() + '?then=listing', email: s.email, reason: reason ? '\n\n' + reason : '', whatsapp_link: 'https://wa.me/447594674940' });
+      mailed = !!(await core.sendEmail([s.email], m.subject, m.text, m.html));
+    } catch (e) { console.error('[addbiz] review email', e && e.message); }
+  }
+  await putSub({ id, status: decision === 'approve' ? 'approved' : 'declined', reviewedAt: now, reviewedBy: who, note: cleanText(edits && edits.note, 300), mailed: mailed ? tpl : '' });
   await core.audit(who, 'hq_addbiz_' + decision, { id, kind: s.kind, slug: s.slug });
 }
 async function removeSub(id) { await cas(KEY, cur => { if (!cur || !cur.items[id]) return undefined; delete cur.items[id]; return cur; }); }
