@@ -32,7 +32,7 @@ async function grab(url, ms) {
     const buf = Buffer.from(await r.arrayBuffer());
     // some photo hosts (e.g. uploads without a file ending) don't say what they are — look at the file itself
     const sniff = buf[0] === 0xFF && buf[1] === 0xD8 ? 'image/jpeg' : buf[0] === 0x89 && buf[1] === 0x50 ? 'image/png' : buf.slice(0, 4).toString() === 'RIFF' && buf.slice(8, 12).toString() === 'WEBP' ? 'image/webp' : '';
-    if (!/^image\/(jpeg|png|webp)$/.test(type) || (sniff && sniff !== type)) type = sniff;
+    type = sniff;   // trust the file itself, not what the server says (an error page can arrive labelled as a photo)
     if (!type) throw new Error('not a JPG, PNG or WebP photo');
     return { type, buf };
   } finally { clearTimeout(t); }
