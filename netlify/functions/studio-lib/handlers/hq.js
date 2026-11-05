@@ -321,6 +321,11 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dm-search') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return { accounts: await dm.searchPages(body.q) }; }
       return await dm.overview();
     }
+    case 'dirhook-status': {
+      // 🔄 live sync from the directory website (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      return await require('../dirhook').status();
+    }
     case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': {
       // 📣 Business discovery posts (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
