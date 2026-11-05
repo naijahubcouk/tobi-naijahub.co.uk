@@ -19,6 +19,7 @@ exports.handler = core.handler(async (ctx) => {
     case 'cats': return { cats: addbiz.CATS() };
     case 'lookup': return addbiz.lookup(String(body.kind || ''), body.value, ip);
     case 'code': return addbiz.requestCode(body.email, ip);
+    case 'write': return addbiz.writeDesc(body.fields || {}, body.notes, ip);
     case 'claim-code': return addbiz.claimCode(String(body.slug || '').slice(0, 120), ip);
     case 'submit': return addbiz.submit(body, { ip });
     default: throw new core.HttpError(400, 'unknown_action', 'Unknown action.');

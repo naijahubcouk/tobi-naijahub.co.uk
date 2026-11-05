@@ -122,7 +122,7 @@ function normalise(b) {
 
 // Owner changes made in Business Studio win over the website until the website shows the same value
 // (i.e. until the change has gone up in a website CSV), so a website update never undoes an owner's edit.
-const OWNER_FIELDS = ['desc', 'img', 'phone', 'wa', 'ig', 'website', 'email', 'loc', 'addr', 'fb', 'tt', 'cat'];
+const OWNER_FIELDS = ['desc', 'long', 'img', 'phone', 'wa', 'ig', 'website', 'email', 'loc', 'addr', 'fb', 'tt', 'cat'];
 function protectOwner(o, m) {
   if (!o || !o.ownerEd) return m;
   const ed = Object.assign({}, o.ownerEd);

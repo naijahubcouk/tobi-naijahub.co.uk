@@ -256,7 +256,7 @@ async function needPhone() { return (await waiting()).filter(b => !phoneFor(b)).
 async function exportCsv() {
   const rows = (await toUpload()).map(b => {
     const short = b.short || String(b.desc || '').slice(0, 160), tags = (b.tags || []).join(', '), cat = (b.cats && b.cats[0]) || CATS.find(c => childCat(c) === String(b.cat || '').toLowerCase()) || '';
-    const v = { name: b.name, slug: b.slug, images: b.img || '', tags, seoKeywords: tags, location_latitude: b.lat != null ? b.lat : '', location_longitude: b.lng != null ? b.lng : '', description: short, detailedDescription: b.desc, categories: cat, mainLink: b.website, status: 'PUBLISHED', isFeatured: 'false',
+    const v = { name: b.name, slug: b.slug, images: b.img || '', tags, seoKeywords: tags, location_latitude: b.lat != null ? b.lat : '', location_longitude: b.lng != null ? b.lng : '', description: short, detailedDescription: b.long || b.desc, categories: cat, mainLink: b.website, status: 'PUBLISHED', isFeatured: 'false',
       exemptFromAutomation: 'false', contact_name: b.ownerName || 'Auntie Tobi', location_address: b.addr || ((b.loc && b.loc !== 'UK' ? b.loc + ', ' : '') + 'UK'),
       business_phone: phoneFor(b), business_email: b.email, socialMedia_instagram: b.ig ? 'https://www.instagram.com/' + b.ig + '/' : '', socialMedia_facebook: b.fb || '', socialMedia_tiktok: b.tt || '', seoTitle: b.name, seoDescription: short, focusKeyword: b.name.toLowerCase(),
       ogTitle: b.name, ogDescription: short, twitterTitle: b.name, twitterDescription: short, twitterCard: 'summary_large_image', noIndex: 'false', noFollow: 'true', schemaType: 'LocalBusiness', 'custom_Whatsapp Link': b.wa ? 'https://wa.me/' + b.wa : '' };

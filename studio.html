@@ -4998,18 +4998,28 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       f('name', 'Business name', '', o.nameNote ? ' <span class="opt">(changes are checked by Auntie Tobi)</span>' : '') +
       '<div><label class="f" for="ml_cat">Category</label><select id="ml_cat"><option value="">Choose…</option>' + ML.cats.map(function (c) { return '<option' + (c.toLowerCase() === String(L.cat || '').toLowerCase() ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
       f('loc', 'Town or city', 'e.g. Leeds') +
-      '<div><label class="f" for="ml_desc">What you offer</label><textarea id="ml_desc" rows="4" maxlength="1200" placeholder="What you sell or do, and who for">' + esc(L.desc || '') + '</textarea></div>' +
+      '<div><label class="f" for="ml_desc">What you offer <span class="opt">(1–2 sentences, shown on your card)</span></label><textarea id="ml_desc" rows="3" maxlength="1200" placeholder="What you sell or do, and who for">' + esc(L.desc || '') + '</textarea></div>' +
+      '<div class="stack" style="background:var(--green-l);border-radius:12px;padding:12px;gap:8px"><b style="font-size:15px">✨ Let Auntie Tobi write it for you</b><input type="text" id="ml_notes" maxlength="600" placeholder="Optional: a few words, e.g. jollof trays, small chops, weddings"><button type="button" class="btn gold small block" id="mlWrite">✨ Write it for me</button><div id="mlWErr"></div><span class="hint" style="margin:0">Free — it doesn’t use your AI credits. You can change anything before you save.</span></div>' +
+      '<div><label class="f" for="ml_long">Full description <span class="opt">(shown on your business page and the website)</span></label><textarea id="ml_long" rows="7" maxlength="4000" placeholder="A few short paragraphs about your business">' + esc(L.long || '') + '</textarea></div>' +
       f('wa', 'WhatsApp number', '07700 900123') + f('phone', 'Phone', 'optional') + f('ig', 'Instagram', '@yourbusiness') + f('website', 'Website', 'optional') +
       '<details><summary style="cursor:pointer;font-weight:700;color:var(--green-d)">More (business email, address, Facebook, TikTok)</summary><div class="stack" style="margin-top:8px">' + f('email', 'Business email', 'shown on your listing') + f('addr', 'Address', 'only if customers visit you') + f('fb', 'Facebook page', '') + f('tt', 'TikTok', '') + '</div></details></div>';
   }
   function bindMlForm() {
+    var wb = $('#mlWrite'); if (wb) wb.onclick = async function () {
+      var f = mlCollect(); $('#mlWErr').innerHTML = '';
+      if (!f.name || !f.cat) { $('#mlWErr').innerHTML = '<div class="err">Add your business name and category first.</div>'; return; }
+      wb.disabled = true; var t = wb.textContent; wb.textContent = 'Auntie Tobi is writing…';
+      try { var r = await api('studio-api', 'mylisting-write', { fields: f, notes: $('#ml_notes').value.trim() }); if (r.short) $('#ml_desc').value = r.short; if (r.long) $('#ml_long').value = r.long; wb.textContent = '🔄 Write it again'; toast('✨ Done — check it, then tap Save'); }
+      catch (e) { $('#mlWErr').innerHTML = '<div class="err">' + esc(e.message) + '</div>'; wb.textContent = t; }
+      wb.disabled = false;
+    };
     var fl = $('#mlFile'); if (fl) fl.onchange = async function () {
       var file = this.files[0]; if (!file) return;
       try { ML.newImg = await resizeImage(file, 1200, 'image/jpeg'); $('#mlPic').innerHTML = mlPic(ML.newImg, true); toast('Photo ready — tap Save to use it'); } catch (e) { toast(e.message); }
     };
   }
   function mlCollect() {
-    var o = {}; ['name', 'cat', 'loc', 'desc', 'wa', 'phone', 'ig', 'website', 'email', 'addr', 'fb', 'tt'].forEach(function (k) { var el = $('#ml_' + k); if (el) o[k] = el.value.trim(); });
+    var o = {}; ['name', 'cat', 'loc', 'desc', 'long', 'wa', 'phone', 'ig', 'website', 'email', 'addr', 'fb', 'tt'].forEach(function (k) { var el = $('#ml_' + k); if (el) o[k] = el.value.trim(); });
     o.ig = String(o.ig || '').replace(/^@/, ''); return o;
   }
   // No listing yet: link one we found, search, or add a new business (with auto-fill)

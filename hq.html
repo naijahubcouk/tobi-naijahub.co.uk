@@ -1763,10 +1763,10 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       return;
     }
     var f = function (k, l, ta) { return '<label>' + l + '</label>' + (ta ? '<textarea id="abf_' + k + '" rows="4">' + esc(b[k] || '') + '</textarea>' : '<input id="abf_' + k + '" value="' + esc(b[k] || '') + '">'); };
-    var s = sheet('<h2>✏️ Check “' + esc(b.name) + '”</h2>' + f('name', 'Business name') + f('cat', 'Category (as on the website, e.g. Caterers)') + f('loc', 'Town') + f('desc', 'Description', true) + f('wa', 'WhatsApp') + f('phone', 'Phone') + f('ig', 'Instagram') + f('website', 'Website') + f('email', 'Business email') + f('addr', 'Address') +
+    var s = sheet('<h2>✏️ Check “' + esc(b.name) + '”</h2>' + f('name', 'Business name') + f('cat', 'Category (as on the website, e.g. Caterers)') + f('loc', 'Town') + f('desc', 'Short description', true) + f('long', 'Full description', true) + f('wa', 'WhatsApp') + f('phone', 'Phone') + f('ig', 'Instagram') + f('website', 'Website') + f('email', 'Business email') + f('addr', 'Address') +
       '<div class="apact" style="margin-top:12px"><button class="btn primary" id="abGo">✅ Save and approve</button><button class="btn ghost" data-x>Cancel</button></div>');
     s.querySelector('[data-x]').onclick = function () { s.remove(); };
-    s.querySelector('#abGo').onclick = function () { var e = {}; ['name', 'cat', 'loc', 'desc', 'wa', 'phone', 'ig', 'website', 'email', 'addr'].forEach(function (k) { e[k] = s.querySelector('#abf_' + k).value.trim(); }); review(x.id, 'approve', e); s.remove(); };
+    s.querySelector('#abGo').onclick = function () { var e = {}; ['name', 'cat', 'loc', 'desc', 'long', 'wa', 'phone', 'ig', 'website', 'email', 'addr'].forEach(function (k) { e[k] = s.querySelector('#abf_' + k).value.trim(); }); review(x.id, 'approve', e); s.remove(); };
   }
   function vImgm() {
     $('#ttl').textContent = 'Image model'; $('#topRight').innerHTML = '';

@@ -65,6 +65,8 @@ input:focus,textarea:focus,select:focus{outline:2px solid #057A44;outline-offset
 .done{text-align:center}.done .big{font-size:46px}.done h2{font-size:22px;margin:6px 0}
 .what{text-align:left;background:#F6FBF8;border:1px solid #CDE8D9;border-radius:12px;padding:14px;margin:14px 0}
 .what ul{list-style:none;margin-top:8px}.what li{padding:5px 0;font-size:15px}
+.wr{background:#F6FBF8;border:1.5px dashed #9FD3B8;border-radius:12px;padding:12px;margin-top:12px}.wrh{font-size:13.5px;margin-bottom:8px;color:#0F1E36}.wr input{margin-bottom:8px}.wrb{background:#FFB81C!important;border-color:#FFB81C!important;font-weight:800!important;text-align:center!important;margin:0!important}
+textarea.fresh,input.fresh{animation:fr 1.6s ease}@keyframes fr{0%{background:#FFF4D6}100%{background:#fff}}
 .dup{border:1.5px solid #FFB81C;background:#FFFBF0;border-radius:12px;padding:12px;margin-top:12px}
 @media (max-width:420px){.two{grid-template-columns:1fr}.opt{font-size:12px}}
 </style>
@@ -256,7 +258,12 @@ input:focus,textarea:focus,select:focus{outline:2px solid #057A44;outline-offset
       '<label class="sbtn" style="margin:0 0 6px">📷 ' + (S.img ? 'Choose a different photo' : 'Upload a photo') + '<input type="file" id="own" accept="image/jpeg,image/png,image/webp" style="display:none"></label>' +
       (S.img ? '<button class="sbtn" id="noPic">✖ Remove photo</button>' : '') + (S.smallPic ? '<p class="hint" style="margin:0">This is your profile picture from the screenshot — a bigger, clearer photo looks much better.</p>' : '') + '</div></div>' +
       (S.photos.length ? '<div class="hint">Or pick one of your Instagram photos:</div><div class="thumbs">' + S.photos.map(function (p, i) { return '<img src="' + p + '" data-ph="' + i + '" alt="">'; }).join('') + '</div>' : '') +
-      FIELDS.slice(0, 4).map(function (x) { return field(x[0], x[1], x[2]); }).join('') +
+      FIELDS.slice(0, 3).map(function (x) { return field(x[0], x[1], x[2]); }).join('') +
+      '<div class="wr"><div class="wrh">✨ <b>Let Auntie Tobi write it for you</b> — add a few words if you like, e.g. <i>“jollof trays, small chops, weddings and birthdays”</i></div>' +
+      '<input id="f_notes" value="' + esc(S.notes || '') + '" placeholder="Optional: what you sell, who it’s for, anything special" maxlength="600">' +
+      '<button class="sbtn wrb" id="wrBtn">✨ ' + (f.long ? 'Write it again' : 'Write it for me') + '</button><div class="err hidden" id="wrErr"></div></div>' +
+      field('desc', 'What you offer', 'One or two sentences — what you sell or do, and who for') +
+      '<label for="f_long">Full description <small>(shown on your business page and the Auntie Tobi website — optional)</small></label><textarea id="f_long" rows="' + (f.long ? 8 : 3) + '" maxlength="4000" placeholder="A few short paragraphs about your business — or tap “Write it for me”">' + esc(f.long || '') + '</textarea>' +
       '<div class="step" style="margin-top:18px">How customers reach you</div>' +
       '<div class="two"><div>' + field('wa', 'WhatsApp number', '07700 900123') + '</div><div>' + field('phone', 'Phone', 'optional') + '</div></div>' +
       '<div class="two"><div>' + field('ig', 'Instagram', '@yourbusiness') + '</div><div>' + field('website', 'Website', 'optional') + '</div></div>' +
@@ -270,6 +277,17 @@ input:focus,textarea:focus,select:focus{outline:2px solid #057A44;outline-offset
     root.querySelectorAll('[data-ph]').forEach(function (im) { im.onclick = async function () { try { S.img = await shrink(S.photos[+im.dataset.ph], 1200); S.smallPic = false; drawPic(); } catch (e) {} }; });
     root.querySelectorAll('input.miss,textarea.miss,select.miss').forEach(function (el) { el.addEventListener('input', function () { el.classList.remove('miss'); var l = root.querySelector('label[for="' + el.id + '"] .need'); if (l) l.remove(); }); el.addEventListener('change', function () { el.classList.remove('miss'); }); });
     bindDup();
+    $('#wrBtn').onclick = async function () {
+      var btn = this; collect(); showErr('#wrErr', '');
+      if (!S.f.name || !S.f.cat) return showErr('#wrErr', 'Add your business name and category first.');
+      busy(btn, true, 'Auntie Tobi is writing…');
+      try {
+        var r = await api('write', { fields: S.f, notes: S.notes || '' });
+        if (r.short) S.f.desc = r.short; if (r.long) S.f.long = r.long;
+        S.f.missing = (S.f.missing || []).filter(function (k) { return k !== 'desc'; });
+        var y = window.scrollY; showForm().then(function () { window.scrollTo(0, y); var d = $('#f_desc'); if (d) { d.classList.add('fresh'); } var l = $('#f_long'); if (l) l.classList.add('fresh'); var n = $('#wrNote'); });
+      } catch (e) { busy(btn, false); showErr('#wrErr', e.message); }
+    };
     $('#next').onclick = function () {
       collect(); var f2 = S.f;
       var bad = !f2.name ? 'Please add your business name.' : !f2.cat ? 'Please choose a category.' : !f2.loc ? 'Please add your town or city.' : (!f2.desc || f2.desc.length < 15) ? 'Please add a short description of what you offer.' : (!f2.wa && !f2.phone && !f2.ig) ? 'Please add a WhatsApp number, phone or Instagram so customers can reach you.' : '';
@@ -278,7 +296,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid #057A44;outline-offset
     };
   }
   function drawPic() { var p = $('#pic'); if (!p) return; p.style.backgroundImage = S.img ? 'url("' + S.img + '")' : ''; p.textContent = S.img ? '' : 'No photo yet'; }
-  function collect() { FIELDS.forEach(function (x) { var el = $('#f_' + x[0]); if (el) S.f[x[0]] = el.value.trim(); }); S.f.ig = String(S.f.ig || '').replace(/^@/, ''); }
+  function collect() { FIELDS.concat([['long']]).forEach(function (x) { var el = $('#f_' + x[0]); if (el) S.f[x[0]] = el.value.trim(); }); S.f.ig = String(S.f.ig || '').replace(/^@/, ''); var n = $('#f_notes'); if (n) S.notes = n.value.trim(); }
   function dupHtml(list) {
     return '<div class="dup"><b>👀 Is this your business?</b><p class="hint" style="margin:2px 0 8px">It looks like it might already be on Auntie Tobi. If it’s yours, claim it instead of adding it again.</p>' +
       list.map(function (b) { return bizRow(b, b.owned ? '<button class="taken" disabled>Claimed</button>' : '<button data-dclaim="' + esc(b.slug) + '">Claim it</button>'); }).join('') +

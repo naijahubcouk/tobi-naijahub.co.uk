@@ -192,6 +192,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'mylisting-claim-code': return require('../addbiz').claimCode(String(body.slug || '').slice(0, 120), 'm:' + email);
     case 'mylisting-claim-info': return { biz: await require('../addbiz').claimInfo(String(body.slug || '').slice(0, 120)) };
+    case 'mylisting-write': return require('../addbiz').writeDesc(body.fields || {}, body.notes, 'm:' + email);
     case 'mylisting-lookup': return require('../addbiz').lookup(String(body.kind || ''), body.value, 'm:' + email);
     case 'mylisting-search': {
       await core.rateLimit('listing-search', email, 120, 60 * 60 * 1000);
