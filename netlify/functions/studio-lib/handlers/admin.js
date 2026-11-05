@@ -451,7 +451,7 @@ exports.handler = handler(async (ctx) => {
         const daysLeft = Math.round((Date.parse(`${m.membershipExpiresAt}T12:00:00Z`) - Date.parse(`${day}T12:00:00Z`)) / 86400000);
         return {
           email: m.email, name: m.name || '', business: (p && p.businessName) || '', expires: m.membershipExpiresAt, daysLeft,
-          spotlight: y.spotlight.status, spotlightDate: y.spotlight.date, featured: y.featured.done, marketplace: y.marketplace.done, badge: y.badge,
+          spotlight: y.spotlight.status, spotlightDate: y.spotlight.date, groupad: (y.groupad || {}).status || 'none', groupadDate: (y.groupad || {}).date || '', featured: y.featured.done, marketplace: y.marketplace.done, badge: y.badge,
           stories: y.stories.length, reposts: y.reposts.length, discovery: y.discovery.length, collabs: (y.collabs || []).length, lastShared: benefits.lastShared(y),
           prog: benefits.progress(y, targets, day), board: benefits.board(y, targets, day, daysLeft),
           checkup: y.checkup.done, checkupDate: y.checkup.date, priorities: y.checkup.priorities.length, prioritiesDone: (y.prioritiesDone || []).length,

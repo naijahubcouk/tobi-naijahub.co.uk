@@ -4726,10 +4726,11 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     function row(ico, title, status, ok, action) {
       return '<div class="benrow"><span class="benico">' + ico + '</span><div style="flex:1;min-width:0"><b>' + esc(title) + '</b>' + (status ? '<div class="hint" style="margin:0">' + status + '</div>' : '') + (action || '') + '</div>' + (ok ? '<span class="pill green">✓</span>' : '') + '</div>';
     }
-    var sp = b.spotlight;
+    var sp = b.spotlight, ga = b.groupad || { status: 'none' };
     card.innerHTML = '<p class="hint" style="margin:0">Membership year ends <b>' + esc(dmy(b.yearKey)) + '</b>.' + (b.board ? ' <b>' + b.board.done + ' of ' + b.board.of + '</b> benefits delivered so far.' : '') + '</p>' +
       row('📣', 'Business Spotlight', sp.status === 'done' ? 'Done ' + esc(dmy(sp.date)) + (sp.link ? ' · <a href="' + esc(sp.link) + '" target="_blank" rel="noopener">View</a>' : '') : sp.status === 'scheduled' ? 'Scheduled' + (sp.date ? ' for ' + esc(dmy(sp.date)) : '') : 'Not yet', sp.status === 'done',
         '') +
+      row('🚀', 'Paid Instagram group advert', ga.status === 'done' ? 'Done ' + esc(dmy(ga.date)) + (ga.link ? ' · <a href="' + esc(ga.link) + '" target="_blank" rel="noopener">View</a>' : '') : ga.status === 'scheduled' ? 'Booked' + (ga.date ? ' for ' + esc(dmy(ga.date)) : '') : 'Not yet — one a year', ga.status === 'done') +
       row('⭐', 'Featured Business (app & website)', b.featured.done ? 'Live since ' + esc(dmy(b.featured.date)) : 'Being set up', b.featured.done) +
       row('🛍️', 'Marketplace listing', b.marketplace.done ? 'Live since ' + esc(dmy(b.marketplace.date)) : 'Not listed yet', b.marketplace.done,
         b.marketplace.done ? '<button class="btn link" style="font-size:15px;padding:0;min-height:0" data-gomkt="1">Manage my listing →</button>' : '<a class="btn link" style="font-size:15px;padding:0;min-height:0" href="/marketplace/list" target="_blank" rel="noopener">Add my product or service →</a>') +
@@ -4747,7 +4748,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     if (S.nudges) S.nudges.shared = [];
     var sc = $('#sharedCard'); if (sc) sc.remove();
   }
-  var BEN_ICO = { verified: '✅', stories: '📲', reposts: '🖼️', reels: '🎬', discovery: '💚', collabs: '🤝', spotlight: '📣', featured: '⭐', marketplace: '🛍️', checkup: '📊' };
+  var BEN_ICO = { verified: '✅', stories: '📲', reposts: '🖼️', reels: '🎬', discovery: '💚', collabs: '🤝', spotlight: '📣', groupad: '🚀', featured: '⭐', marketplace: '🛍️', checkup: '📊' };
   function benFeedItem(e) {
     return '<div class="benrow" style="padding:6px 0"><span class="benico">' + (BEN_ICO[e.kind] || '💚') + '</span><div style="flex:1;min-width:0"><b>' + esc(e.label) + '</b> <span class="hint" style="margin:0">' + esc(dmy(e.at)) + '</span>' +
       (e.note ? '<div class="hint" style="margin:0">' + esc(e.note) + '</div>' : '') + (e.link ? '<div><a class="btn link" style="font-size:15px;padding:0;min-height:0" target="_blank" rel="noopener" href="' + esc(e.link) + '">View →</a></div>' : '') + '</div></div>';
@@ -4760,7 +4761,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
   }
   function sharedCard(items) {
     if (!items || !items.length) return '';
-    return '<section class="card stack shared" id="sharedCard"><b>' + (items.every(function (i) { return /stories|reposts|reels|discovery|collabs|spotlight/.test(i.kind); }) ? '💚 Auntie Tobi shared your business' : '💚 News from Auntie Tobi') + '</b>' + items.slice(0, 4).map(benFeedItem).join('') +
+    return '<section class="card stack shared" id="sharedCard"><b>' + (items.every(function (i) { return /stories|reposts|reels|discovery|collabs|spotlight|groupad/.test(i.kind); }) ? '💚 Auntie Tobi shared your business' : '💚 News from Auntie Tobi') + '</b>' + items.slice(0, 4).map(benFeedItem).join('') +
       (items.length > 4 ? '<p class="hint" style="margin:0">…and ' + (items.length - 4) + ' more in Account → My benefits.</p>' : '') +
       '<div class="row"><button class="btn small primary" id="sharedOk">Thank you 💚</button><button class="btn link" id="sharedAll" style="font-size:15px">See all my benefits</button></div></section>';
   }

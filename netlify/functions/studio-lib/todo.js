@@ -86,6 +86,7 @@ async function refresh(data) {
     const name = (p && p.businessName) || m.name || m.email;
     if (y && y.verify && y.verify.status === 'pending') add(`verify:${m.email}:${y.verify.at}`, 'verify', `Check ${name} on Companies House (${y.verify.number})`, { email: m.email, number: y.verify.number });
     if (y && y.spotlight && y.spotlight.status === 'scheduled' && y.spotlight.date && y.spotlight.date <= day) add(`spotlight:${m.email}:${y.spotlight.date}`, 'spotlight', `Business Spotlight for ${name} (scheduled ${y.spotlight.date})`, { email: m.email });
+    if (y && y.groupad && y.groupad.status === 'scheduled' && y.groupad.date && y.groupad.date <= day) add(`groupad:${m.email}:${y.groupad.date}`, 'spotlight', `Paid Instagram group advert for ${name} (booked ${y.groupad.date})`, { email: m.email });
     const left = daysBetween(day, m.membershipExpiresAt);
     if (left >= 0 && left <= RENEW_DAYS) add(`renew:${m.email}:${m.membershipExpiresAt}`, 'renew', `${name}’s membership ends ${m.membershipExpiresAt} — send a renewal message`, { email: m.email, expires: m.membershipExpiresAt, whatsapp: p && p.whatsapp });
     const pr = benefits.progress(y, targets, day);
