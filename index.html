@@ -6928,7 +6928,7 @@ const AUNTIE_TOBI_DIRECTORY = [
     return true;
   }
   try { var c = JSON.parse(localStorage.getItem('tobiDir') || 'null'); if (c && c.items) applyDir(c.items); } catch (e) {}
-  fetch('/.netlify/functions/app-content?dir=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+  window._dirFetch = fetch('/.netlify/functions/app-content?dir=1').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     if (d && applyDir(d.items)) { try { localStorage.setItem('tobiDir', JSON.stringify({ items: d.items, at: Date.now() })); } catch (e) {} }
   }).catch(function () {});
 })();
@@ -7010,7 +7010,9 @@ function handleDeepLink() {
     setTimeout(() => {
       const messages = document.getElementById('messages');
       messages.innerHTML = '';
-      const business = getLiveDirectory().find(b => b.slug === biz);
+      let business = getLiveDirectory().find(b => b.slug === biz);
+      // a brand-new business isn't in the copy saved on the phone yet — wait for the fresh list, then look again
+      if (!business && window._dirFetch && !window._bizWaited) { window._bizWaited = true; messages.innerHTML = ''; window._dirFetch.then(function () { handleDeepLink(); }); return; }
       if (business) {
         addTipMessage(tobiBizPage(business));
         // open at the top of the business, not the bottom of the page
