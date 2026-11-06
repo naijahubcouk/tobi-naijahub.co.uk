@@ -323,9 +323,9 @@ async function takeMail(fam, raw) {
   const id = id8() + id8().slice(0, 3);
   const text = (raw.text && raw.text.trim()) || htmlToText(raw.html);
   const mail = { id, at: raw.at || nowIso(), from: cleanText(raw.from, 200), subject: cleanText(raw.subject, 200), text: String(text || '').slice(0, 40000), status: 'new', via: raw.via || 'email' };
-  if (FWD_CONFIRM.test(mail.subject) || /forwarding-noreply@google\.com/i.test(mail.from) || /To allow .* to automatically forward mail/i.test(text)) {
+  if (FWD_CONFIRM.test(mail.subject) || /forwarding-noreply@google\.com/i.test(mail.from) || /To allow .* to automatically forward mail/i.test(text) || (/yahoo/i.test(mail.from) && /forward/i.test(mail.subject + ' ' + String(text).slice(0, 800)))) {
     const code = (text.match(/Confirmation code:\s*(\d{6,12})/i) || [])[1] || '';
-    const link = (text.match(/https:\/\/mail(?:-settings)?\.google\.com\/mail\/[^\s)"'<>]+/i) || text.match(/https:\/\/[^\s)"'<>]*(?:verify|confirm)[^\s)"'<>]*/i) || [])[0] || '';
+    const link = (text.match(/https:\/\/mail(?:-settings)?\.google\.com\/mail\/[^\s)"'<>]+/i) || text.match(/https:\/\/[^\s)"'<>]*yahoo\.com[^\s)"'<>]*(?:verif|confirm|forward)[^\s)"'<>]*/i) || text.match(/https:\/\/[^\s)"'<>]*(?:verify|confirm)[^\s)"'<>]*/i) || [])[0] || '';
     await cas(famKey(fam.id), cur => { if (!cur) return undefined; cur.confirm = (cur.confirm || []).concat([{ id, at: mail.at, code, link, from: mail.from, subject: mail.subject }]).slice(-5); return cur; });
     mail.kind = 'confirm'; mail.status = 'confirm'; mail.title = 'Confirm email forwarding'; mail.summary = code ? `Your email provider wants you to confirm forwarding. Code: ${code}` : 'Your email provider wants you to confirm forwarding — open the link in this email.'; mail.childIds = [];
   } else {

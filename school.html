@@ -166,24 +166,33 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     var f = S.boot.family;
     var s = sheet('<h3>🎉 You’re set up!</h3><p class="sub" style="margin:4px 0 12px">This is your family’s private School Tracker address. Anything sent here is read and sorted for you.</p>' + addrHtml(f.inbox) +
       '<p style="margin:14px 0 6px;font-weight:800">Next: send your school emails here</p><p class="sub" style="margin:0 0 10px">Set up Gmail to forward school emails automatically, or forward a few by hand to try it.</p>' +
-      '<button class="btn block" id="hw">Show me how (Gmail)</button><button class="btn ghost block" id="ps" style="margin-top:8px">📋 Paste an email to try it now</button>');
+      '<button class="btn block" id="hw">Show me how (Gmail or Yahoo)</button><button class="btn ghost block" id="ps" style="margin-top:8px">📋 Paste an email to try it now</button>');
     bindAddr(s);
     $('#hw', s).onclick = function () { s.remove(); howTo(); };
     $('#ps', s).onclick = function () { s.remove(); pasteSheet(); };
   }
   function addrHtml(a) { return '<div class="addr"><span style="flex:1">' + esc(a) + '</span><button class="btn small" data-copy="' + esc(a) + '">Copy</button></div>'; }
   function bindAddr(root) { $$('[data-copy]', root).forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); } catch (e) { toast('Press and hold to copy'); } }; }); }
-  function howTo() {
+  function howTo(which) {
     var f = S.boot.family, schools = kids().map(function (c) { return c.school; }).filter(Boolean);
-    var s = sheet('<h3>Forward school emails from Gmail</h3><p class="sub" style="margin:4px 0 10px">Do this once on a computer (Gmail’s settings aren’t in the phone app). Your emails still arrive in Gmail as normal — School Tracker just gets a copy.</p>' + addrHtml(f.inbox) +
+    which = which || store.get('st_mailapp') || 'gmail'; store.set('st_mailapp', which);
+    var pick = '<div class="chips" style="margin:0 0 12px"><span class="sub" style="margin:6px 4px 0 0;font-size:14px">My school emails come to:</span>' + [['gmail', 'Gmail'], ['yahoo', 'Yahoo Mail']].map(function (x) { return '<button data-app="' + x[0] + '" class="' + (which === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    var gmail = '<h3>Forward school emails from Gmail</h3><p class="sub" style="margin:4px 0 10px">Do this once on a computer (Gmail’s settings aren’t in the phone app). Your emails still arrive in Gmail as normal — School Tracker just gets a copy.</p>' + addrHtml(f.inbox) +
       '<ol class="steps" style="margin-top:14px"><li>In Gmail, click ⚙️ <b>Settings → See all settings → Forwarding and POP/IMAP</b>.</li>' +
       '<li>Click <b>Add a forwarding address</b>, paste your School Tracker address above, then <b>Next → Proceed</b>.</li>' +
       '<li>Gmail sends a confirmation code here. Come back to School Tracker — it shows on your <b>Today</b> screen. Type the code into Gmail and click <b>Verify</b>. (Leave “Disable forwarding” selected — you don’t want <i>all</i> your email forwarded.)</li>' +
       '<li>In the Gmail search box, search for your school emails, e.g. <b>from:(' + esc(schools.length ? 'school address 1 OR school address 2' : 'the school’s email address') + ')</b>. Then click the <b>Show search options</b> icon → <b>Create filter</b>.</li>' +
       '<li>Tick <b>Forward it to</b>, choose your School Tracker address, and click <b>Create filter</b>. Done! 🎉</li></ol>' +
       '<div class="note">Not sure of the schools’ email addresses? Open a recent school email in Gmail and look at who it’s from. You can add more addresses to the filter later.</div>' +
-      '<p class="sub" style="margin:12px 0 0">You can also forward any email by hand to your School Tracker address — it works the same.</p>');
+      '<p class="sub" style="margin:12px 0 0">You can also forward any email by hand to your School Tracker address — it works the same.</p>';
+    var yahoo = '<h3>Send school emails from Yahoo Mail</h3><p class="sub" style="margin:4px 0 10px">Free Yahoo Mail accounts can’t forward emails automatically (Yahoo only allows it on its paid <b>Yahoo Mail Plus</b>). Here are the best ways to do it, easiest first.</p>' + addrHtml(f.inbox) +
+      '<div class="card" style="margin-top:14px"><h2 style="font-size:16px">⭐ Option 1: Forward each school email (free, works on any phone)</h2><ol class="steps"><li>Open the school email in the Yahoo Mail app.</li><li>Tap <b>Forward</b> (the arrow, or <b>⋯ → Forward</b>).</li><li>In <b>To</b>, paste your School Tracker address above. <b>Tip:</b> save it as a contact called <b>School Tracker</b> the first time — then you just type “School” next time.</li><li>Tap <b>Send</b>. It appears in School Tracker within a minute. 🎉</li></ol></div>' +
+      '<div class="card"><h2 style="font-size:16px">📨 Option 2: Use Gmail for school emails (free, fully automatic)</h2><p class="sub" style="margin:0">If you also have a Gmail address, ask each school office to send emails to your Gmail instead (or as well). Then follow the <b>Gmail</b> steps here once, and every school email reaches School Tracker by itself.</p></div>' +
+      '<div class="card"><h2 style="font-size:16px">💳 Option 3: Yahoo Mail Plus (paid) automatic forwarding</h2><ol class="steps"><li>On a computer, open Yahoo Mail and click ⚙️ <b>Settings → More Settings → Mailboxes</b>.</li><li>Click your Yahoo email address. Under <b>Forwarding</b>, paste your School Tracker address and click <b>Verify</b>.</li><li>Yahoo sends a confirmation email here — it shows on your School Tracker <b>Today</b> screen. Open the link in it to confirm.</li></ol>' +
+      '<div class="note">Yahoo forwards <b>all</b> your emails this way — it can’t pick out just the school ones. Only use this if this Yahoo address is mainly for school emails.</div></div>';
+    var s = sheet(pick + '<div id="howbody">' + (which === 'yahoo' ? yahoo : gmail) + '</div>');
     bindAddr(s);
+    $$('[data-app]', s).forEach(function (b) { b.onclick = function () { s.remove(); howTo(b.dataset.app); }; });
   }
 
   // ── main screens ──
@@ -249,7 +258,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
   function startCard() {
     var f = S.boot.family; if ((S.boot.mails || []).length || S.boot.user.role !== 'owner') return '';
     return '<div class="card" style="border:2px solid var(--green)"><h2>👋 Get started</h2><p class="sub" style="margin:0 0 10px">Send school emails to your family’s private address and they’ll appear here as a to-do list and dates.</p>' + addrHtml(f.inbox) +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn small" id="hw2">Set up Gmail forwarding</button><button class="btn ghost small" id="ps2">📋 Paste an email</button></div></div>';
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn small" id="hw2">Set up email forwarding</button><button class="btn ghost small" id="ps2">📋 Paste an email</button></div></div>';
   }
   function todayView(pg) {
     var b = S.boot, h = new Date().getHours(), hi = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
@@ -258,7 +267,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
       confirmCard() + startCard() + todoHtml(b.board.actions) + datesHtml(b.board.dates.filter(function (d) { return d.date <= wk; }), { max: 12 }) +
       mailsHtml(b.mails, '✉️ Latest emails', 5) + (b.mails.length > 5 ? '<button class="btn ghost block" id="allm">See all emails</button>' : '');
     bindLists(pg);
-    var hw = $('#hw2', pg); if (hw) hw.onclick = howTo;
+    var hw = $('#hw2', pg); if (hw) hw.onclick = function () { howTo(); };
     var ps = $('#ps2', pg); if (ps) ps.onclick = pasteSheet;
     var am = $('#allm', pg); if (am) am.onclick = function () { S.tab = 'mails'; render(); };
   }
@@ -280,7 +289,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
   function familyView(pg) {
     var b = S.boot, f = b.family, owner = b.user.role === 'owner';
     var who = function (m) { return m.role === 'owner' ? 'Owner · sees everything' : 'Parent · sees ' + (m.children === 'all' ? 'all children' : (m.children || []).map(function (i) { return (kid(i) || {}).name; }).filter(Boolean).join(' & ')); };
-    pg.innerHTML = (owner ? '<div class="card"><h2>📮 Your School Tracker address</h2><p class="sub" style="margin:0 0 10px">Forward school emails here. Keep it private — anyone who has it can send emails to your tracker.</p>' + addrHtml(f.inbox) + '<button class="btn link" id="hw3">How to set up Gmail forwarding →</button></div>' : '') +
+    pg.innerHTML = (owner ? '<div class="card"><h2>📮 Your School Tracker address</h2><p class="sub" style="margin:0 0 10px">Forward school emails here. Keep it private — anyone who has it can send emails to your tracker.</p>' + addrHtml(f.inbox) + '<button class="btn link" id="hw3">How to set up forwarding (Gmail or Yahoo) →</button></div>' : '') +
       '<div class="card"><h2>🧒 Children</h2>' + kids().map(function (c) { return '<div class="row" style="align-items:center"><span class="dot" style="width:14px;height:14px;border-radius:50%;background:' + c.color + ';flex:none"></span><div class="txt"><b>' + esc(c.name) + '</b><div class="meta">' + esc(c.school || 'No school added') + '</div></div>' + (owner ? '<button class="btn ghost small" data-kid="' + c.id + '">Edit</button>' : '') + '</div>'; }).join('') +
       (owner ? '<button class="btn link" id="addkid">＋ Add a child</button>' : '') + '</div>' +
       '<div class="card"><h2>👪 Family members</h2>' + f.members.map(function (m) { return '<div class="row" style="align-items:center"><div class="txt"><b>' + esc(m.name || m.email) + (m.you ? ' (you)' : '') + '</b><div class="meta">' + esc(m.email) + ' · ' + esc(who(m)) + '</div></div>' + (owner && m.role !== 'owner' ? '<button class="btn ghost small" data-mem="' + esc(m.email) + '">Change</button>' : '') + '</div>'; }).join('') +
@@ -293,7 +302,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
       '<div class="card"><h2>📲 Get the app</h2><p class="sub" style="margin:0">On iPhone: tap <b>Share → Add to Home Screen</b>. On Android: tap <b>⋮ → Install app</b>.</p></div>' +
       '<p style="text-align:center"><span class="sub">Signed in as ' + esc(b.user.email) + '</span><br><button class="btn link" id="out">Sign out</button></p>';
     bindAddr(pg);
-    var h = $('#hw3', pg); if (h) h.onclick = howTo;
+    var h = $('#hw3', pg); if (h) h.onclick = function () { howTo(); };
     var ak = $('#addkid', pg); if (ak) ak.onclick = function () { kidSheet(null); };
     $$('[data-kid]', pg).forEach(function (x) { x.onclick = function () { kidSheet(kid(x.dataset.kid)); }; });
     var iv = $('#inv', pg); if (iv) iv.onclick = function () { inviteSheet(); };
