@@ -120,6 +120,30 @@ Any questions? Just reply.${SIGN}` },
 Just a short last note. If you’d like {business_name} to be a Featured Business on Auntie Tobi and promoted to Nigerians across the UK, the Business Club is £50 for 12 months: {club_link}
 
 No pressure at all. This is my last email about it, and your listing stays just as it is.${SIGN}` },
+  n2: { group: 'out-n', name: 'Business Club invite', when: 'New business · 2 days after “You’re listed”', subject: 'Help more Nigerians in the UK find {business_name}', body:
+`Hi {business_name},
+
+Now that {business_name} is live on Auntie Tobi, here’s how to get it in front of even more Nigerians across the UK.
+
+The Auntie Tobi Business Club is our membership for Nigerian businesses in the UK. It’s £50 for the whole year, about £4 a month.
+
+Members get:
+
+${CLUB_LIST}
+
+See everything that’s included: {club_link}
+
+Any questions? Just reply. I read every message.${SIGN}` },
+  n3: { group: 'out-n', name: 'Business Club benefits', when: 'New business · 5 days after “You’re listed” (last email)', subject: 'What the Business Club would do for {business_name}', body:
+`Hi {business_name},
+
+Here’s what Business Club membership would look like for {business_name}:
+
+${BENEFITS}
+
+All of this is £50 for the year: {club_link}
+
+No pressure at all. This is my last email about it, and your listing stays just as it is.${SIGN}` },
 };
 for (const k of Object.keys(T)) T[k].vars = OUT_VARS;
 
@@ -266,7 +290,7 @@ Auntie Tobi 💚`, ['name', 'listing', 'outcome', 'note']),
 // ── ➕ Add your business ──
 const BIZ_VARS = ['name', 'business_name', 'listing_link', 'studio_link', 'email', 'new_name', 'reason', 'whatsapp_link'];
 Object.assign(T, {
-  'biz.listed': S('sys-biz', 'You’re listed + Business Studio', 'When a business added in the app is on the website (sent from HQ → Add your business, after your Website CSV upload)', '🎉 {business_name} is live on Auntie Tobi, and your Business Studio is ready',
+  'biz.listed': S('out-n', 'You’re listed + Business Studio', 'New business · email 1 — when their business is on the website (sent from HQ → Add your business)', '🎉 {business_name} is live on Auntie Tobi, and your Business Studio is ready',
 `Hi {name},
 
 Good news! **{business_name}** is now listed on the Auntie Tobi app and website, where Nigerians across the UK look for businesses like yours.
@@ -359,6 +383,7 @@ Auntie Tobi 💚`, BIZ_VARS),
 const FOOTER_OUT = 'You’re receiving this because {business_name} is listed in the Auntie Tobi business directory. Don’t want these emails? Unsubscribe: {unsubscribe_link}';
 const GROUPS = [
   { id: 'out-u', name: 'Outreach · Unclaimed businesses', note: 'Businesses Auntie Tobi listed. Sent on day 0, 2, 5 and 12; stops when they join the Business Club.', canAdd: 'u' },
+  { id: 'out-n', name: 'Outreach · New business (added it themselves)', note: 'Businesses added in the app by their owner. Email 1 “You’re listed” goes from HQ → Add your business; then the Club invite (2 days later) and Club benefits (day 5). Sent to the owner’s email; stops when they join the Business Club.', canAdd: 'n' },
   { id: 'out-c', name: 'Outreach · Claimed, not Featured', note: 'Businesses that listed themselves. Sent on day 0, 2, 5 and 12; stops when they join the Business Club.', canAdd: 'c' },
   { id: 'wel-free', name: 'Business Studio welcome · Free plan', note: 'Chat messages in Business Studio (and by email when switched on), from the day someone joins.', welcome: 'free' },
   { id: 'wel-club', name: 'Business Studio welcome · Business Club', note: 'For new Business Club members, from the day they join.', welcome: 'club' },
@@ -374,14 +399,14 @@ const GROUPS = [
 // Extra outreach emails you add in HQ: mail/extra { items: [{ id, j, day, name, subject, body }] }
 async function extras() { return ((await getJson('mail/extra').catch(() => null)) || { items: [] }).items; }
 async function addExtra(j, day, name, who) {
-  if (!['u', 'c'].includes(j)) throw new core.HttpError(400, 'invalid', 'Choose a journey.');
+  if (!['u', 'c', 'n'].includes(j)) throw new core.HttpError(400, 'invalid', 'Choose a journey.');
   day = parseInt(day, 10); if (!(day >= 0 && day <= 90)) throw new core.HttpError(400, 'invalid', 'Day must be between 0 and 90.');
   const id = 'x' + Date.now().toString(36);
   await core.cas('mail/extra', cur => { cur = cur || { items: [] }; if (cur.items.length >= 20) throw new core.HttpError(400, 'too_many', 'That’s 20 extra emails — remove one first.'); cur.items.push({ id, j, day, name: core.cleanText(name, 80) || 'New email', subject: 'A note from Auntie Tobi', body: 'Hi {business_name},\n\n…\n\nAuntie Tobi', at: core.nowIso(), by: who }); return cur; });
   return id;
 }
 async function removeExtra(id) { await core.cas('mail/extra', cur => { if (!cur) return undefined; cur.items = cur.items.filter(x => x.id !== id); return cur; }); await del('mail/tpl/' + id).catch(() => {}); }
-function extraDef(x) { return { group: x.j === 'u' ? 'out-u' : 'out-c', name: x.name, when: (x.j === 'u' ? 'Unclaimed' : 'Claimed') + ' · day ' + x.day + ' (added by you)', subject: x.subject, body: x.body, vars: OUT_VARS, extra: true, day: x.day, j: x.j }; }
+function extraDef(x) { return { group: 'out-' + x.j, name: x.name, when: ({ u: 'Unclaimed', c: 'Claimed', n: 'New business' })[x.j] + ' · day ' + x.day + ' (added by you)', subject: x.subject, body: x.body, vars: OUT_VARS, extra: true, day: x.day, j: x.j }; }
 
 async function def(id) { if (T[id]) return T[id]; if (/^x[a-z0-9]+$/.test(id)) { const x = (await extras()).find(y => y.id === id); if (x) return extraDef(x); } return null; }
 // Saved (edited) emails written before claiming moved into the app: point the old directory wording at the new claim page
@@ -395,11 +420,12 @@ async function get(id) {
 }
 // Built-in outreach emails you deleted from a journey (can be brought back): mail/removed { ids: [] }
 async function removedIds() { return ((await getJson('mail/removed').catch(() => null)) || { ids: [] }).ids; }
-async function removeBuiltIn(id) { if (!T[id] || !/^out-/.test(T[id].group)) throw new core.HttpError(400, 'invalid', 'Only outreach emails can be deleted.'); await core.cas('mail/removed', cur => { cur = cur || { ids: [] }; if (!cur.ids.includes(id)) cur.ids.push(id); return cur; }); }
+async function removeBuiltIn(id) { if (!T[id] || T[id].sys || !/^out-/.test(T[id].group)) throw new core.HttpError(400, 'invalid', 'Only outreach emails can be deleted.'); await core.cas('mail/removed', cur => { cur = cur || { ids: [] }; if (!cur.ids.includes(id)) cur.ids.push(id); return cur; }); }
 async function restoreBuiltIn(id) { await core.cas('mail/removed', cur => { if (!cur) return undefined; cur.ids = cur.ids.filter(x => x !== id); return cur; }); }
 async function list() {
   const ids = Object.keys(T).concat((await extras()).map(x => x.id)), gone = await removedIds();
   const items = (await Promise.all(ids.map(get))).filter(Boolean).map(t => Object.assign(t, { removed: gone.includes(t.id) }));
+  items.sort((a, b) => (a.id === 'biz.listed' ? -1 : 0) - (b.id === 'biz.listed' ? -1 : 0));   // “You’re listed” is email 1 of the New business series
   const welcome = require('./welcome'), wel = {};
   for (const x of ['free', 'club', 'plus']) { const c = await welcome.get(x); wel[x] = { on: c.on, email: c.email, steps: c.steps, defaults: welcome.defaultsFor(x) }; }
   return { groups: GROUPS, items, welcome: wel };
@@ -453,7 +479,7 @@ function renderWith(tpl, vars, footer) {
 ${foot ? `<p style="font-size:12px;color:#6B7280;margin:14px 8px;text-align:center">${inline(foot)}</p>` : ''}</div></body></html>`;
   return { subject: fill(tpl.subject, v).replace(/\s+/g, ' ').trim(), text: toText(body) + (foot ? '\n\n—\n' + foot : ''), html };
 }
-async function render(id, vars) { const t = await get(id); return renderWith(t, vars, t.group.startsWith('out-') ? FOOTER_OUT : ''); }
+async function render(id, vars) { const t = await get(id); return renderWith(t, vars, t.group.startsWith('out-') && !t.sys ? FOOTER_OUT : ''); }
 // For system emails: your edited version if there is one, otherwise the original email unchanged.
 const NEW_DESIGN = ['club.welcome'];   // system emails that use the new design (Seun's choice, Nov 2026); the rest keep their own look
 async function system(id, vars, fallback) {

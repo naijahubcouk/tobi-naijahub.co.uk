@@ -16,9 +16,10 @@ const emails = require('./emails');
 
 const J = {
   u: [{ id: 'u1', day: 0, topic: 'listed' }, { id: 'u2', day: 2, topic: 'studio' }, { id: 'u3', day: 5, topic: 'invite' }, { id: 'u4', day: 12, topic: 'benefits' }],
+  n: [{ id: 'n2', day: 2, topic: 'invite' }, { id: 'n3', day: 5, topic: 'benefits' }],
   c: [{ id: 'c1', day: 0, topic: 'studio' }, { id: 'c2', day: 2, topic: 'invite' }, { id: 'c3', day: 5, topic: 'benefits' }, { id: 'c4', day: 12, topic: 'last' }],
 };
-const TOPIC = { u1: 'listed', u2: 'studio', u3: 'invite', u4: 'benefits', c1: 'studio', c2: 'invite', c3: 'benefits', c4: 'last' };
+const TOPIC = { u1: 'listed', u2: 'studio', u3: 'invite', u4: 'benefits', c1: 'studio', c2: 'invite', c3: 'benefits', c4: 'last', n2: 'invite', n3: 'benefits' };
 const DIR_SITE = 'https://directory.auntietobi.co.uk';
 const FROM = () => core.env('OUTREACH_EMAIL_FROM', 'Auntie Tobi <hello@mail.auntietobi.co.uk>');
 const REPLY_TO = () => core.env('OUTREACH_REPLY_TO', 'info@auntietobi.co.uk');
@@ -60,9 +61,9 @@ function vars(b) {
 // Works out each business's next email. Returns { due:[...], fresh:[...], stops:[{slug, why}], switches:[{slug}] } without saving.
 // the built-in steps plus any emails you added in HQ → Emails, in day order
 async function journeys() {
-  const ex = await emails.extras(), gone = await emails.removedIds(), out = { u: J.u.filter(x => !gone.includes(x.id)), c: J.c.filter(x => !gone.includes(x.id)) };
+  const ex = await emails.extras(), gone = await emails.removedIds(), out = { u: J.u.filter(x => !gone.includes(x.id)), c: J.c.filter(x => !gone.includes(x.id)), n: J.n.filter(x => !gone.includes(x.id)) };
   for (const x of ex) { out[x.j].push({ id: x.id, day: x.day, topic: x.id }); TOPIC[x.id] = x.id; }
-  out.u.sort((a, b) => a.day - b.day); out.c.sort((a, b) => a.day - b.day);
+  out.u.sort((a, b) => a.day - b.day); out.c.sort((a, b) => a.day - b.day); out.n.sort((a, b) => a.day - b.day);
   return out;
 }
 async function plan() {
@@ -81,7 +82,7 @@ async function plan() {
     if ((email && unsubbed.has(email)) || (b.email && unsubbed.has(String(b.email).toLowerCase()))) { if (r) stops.push({ slug: b.slug, why: 'unsubscribed' }); continue; }
     if (sEmail && await mi.club(sEmail)) { if (r) stops.push({ slug: b.slug, why: 'joined' }); continue; }
     const hasStudio = !!sEmail && mi.studio.has(sEmail);
-    let j = r ? r.j : (b.claimed ? 'c' : 'u');
+    let j = r ? r.j : isApp ? 'n' : (b.claimed ? 'c' : 'u');
     const sentTopics = new Set((r ? r.sent : []).map(s => TOPIC[s.id] || s.id));
     if (j === 'u' && b.claimed) j = 'c';                         // claimed since: carry on the claimed journey, no repeats
     if (sentTopics.has('benefits') && j === 'c' && r && r.j === 'u') sentTopics.add('last');
@@ -198,7 +199,7 @@ async function mark(slug, what) {
     cur = cur || { biz: {} }; const r = cur.biz[slug] || (cur.biz[slug] = { j: 'u', start: Date.now(), sent: [] });
     if (what === 'restart') { delete r.stop; delete r.stopAt; }
     else if (/^start-(new|c|u)$/.test(what)) {   // 📧 Add to email series (from the business sheet): starts it from today, from the first email
-      cur.biz[slug] = { j: what === 'start-u' ? 'u' : 'c', start: Date.now(), sent: (r.sent || []).filter(x => x.ch === 'note'), manual: what, startedAt: core.nowIso(), history: (r.sent || []).length ? r.sent : undefined };
+      cur.biz[slug] = { j: what === 'start-u' ? 'u' : what === 'start-new' ? 'n' : 'c', start: Date.now(), sent: (r.sent || []).filter(x => x.ch === 'note'), manual: what, startedAt: core.nowIso(), history: (r.sent || []).length ? r.sent : undefined };
     }
     else Object.assign(r, { stop: what === 'joined' ? 'joined' : 'stopped', stopAt: core.nowIso() });
     return cur;
