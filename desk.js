@@ -91,7 +91,7 @@
       R.innerHTML = '<div class="c"><h3>Quick links</h3><p>Popular on Auntie Tobi</p>' +
         '<a class="lk" href="/add-business"><span>➕</span>Add your business</a><a class="lk" href="/add-event"><span>🎉</span>Add your event</a>' +
         '<a class="lk" href="/business-studio"><span>🚀</span>Business Studio</a><a class="lk" href="/cards"><span>💌</span>Celebration cards</a>' +
-        '<a class="lk" href="https://wa.me/447594674940" target="_blank" rel="noopener"><span>💬</span>WhatsApp Auntie Tobi</a></div>';
+        '<a class="lk" href="https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e" target="_blank" rel="noopener"><span>📣</span>Follow Auntie Tobi on WhatsApp Channel</a><a class="lk" href="https://wa.me/447594674940" target="_blank" rel="noopener"><span>💬</span>WhatsApp Auntie Tobi</a></div>';
       document.body.appendChild(L); document.body.appendChild(R);
       var b = document.getElementById('dskLap'); if (b) b.onclick = function () { put('laptop'); if (LAPURL && !isApp) location.href = LAPURL; else apply(); };
     }
@@ -180,7 +180,8 @@
       '<h2 style="margin-top:26px">Popular right now</h2><div class="tiles">' + TILES.map(function (t, i) { return '<button class="tile" data-t="' + i + '"><span>' + t[0] + '</span>' + t[1] + '</button>'; }).join('') + '</div>' +
       (feat.length ? '<h2 style="margin-top:26px">Featured businesses</h2><div class="grid">' + feat.slice(0, 6).map(card).join('') + '</div>' : '') + '</div>' +
       '<div class="rail"><div class="card"><h2>🎉 Upcoming events</h2><div id="lapEv"></div></div><div class="card"><h2>📰 Latest news</h2><div id="lapNw"></div></div>' +
-      '<div class="card cta"><b>🏪 Own a Nigerian business?</b><div style="font-size:14px;margin-top:6px;opacity:.9">List it free and get your own Business Studio.</div><a href="/add-business">➕ Add your business</a></div></div></div></div>';
+      '<div class="card cta"><b>🏪 Own a Nigerian business?</b><div style="font-size:14px;margin-top:6px;opacity:.9">List it free and get your own Business Studio.</div><a href="/add-business">➕ Add your business</a></div>' +
+      '<a class="card" href="https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e" target="_blank" rel="noopener" style="display:block;background:#E9FBEF;border:1px solid #BDEFD0;text-decoration:none;color:#0F1E36;margin-top:14px"><b style="color:#075E54">📣 Follow Auntie Tobi on WhatsApp Channel</b><div style="font-size:14px;margin-top:6px">News, events and opportunities for Naija in the UK — in your WhatsApp Updates tab.</div><span style="display:inline-block;margin-top:10px;background:#25D366;color:#fff;font-weight:800;padding:9px 14px;border-radius:10px">Follow the channel</span></a></div></div></div>';
     document.getElementById('lapAsk').onsubmit = function (e) { e.preventDefault(); var q = document.getElementById('lapQ').value.trim(); if (q) inApp(function () { quickAsk(q); }); };
     page.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { var a = TILES[+b.dataset.t][2]; if (typeof a === 'function') return inApp(a); if (a === 'biz' || a === 'mkt' || a === 'events' || a === 'news') return go(a); if (a.charAt(0) === '/') { location.href = a; return; } inApp(function () { quickAsk(a); }); }; });
     bindCards(page);

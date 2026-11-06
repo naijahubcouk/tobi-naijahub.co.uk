@@ -4735,7 +4735,6 @@ function showTipLanding(tip, b1, b2, b3, sourceUrl, actionType) {
 
   addTipMessage(html);
   addTipMessage(`<div style="margin-top:6px;"><button onclick="shareTipOfDay()" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share This Tip</button></div>`);
-  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="quickAsk('${bb1.replace(/'/g,"\'")}')">💬 ${bb1}</button>
     <button class="suggestion-btn" onclick="quickAsk('${bb2.replace(/'/g,"\'")}')">💬 ${bb2}</button>
@@ -4782,7 +4781,6 @@ function showMotivationLanding(quote, b1, b2, b3) {
 
   addTipMessage(html);
   addTipMessage(`<div style="margin-top:6px;"><button onclick="tobiShare('Daily Motivation from Auntie Tobi 💪',decodeURIComponent(this.dataset.q),'https://auntietobi.co.uk')" data-q="${encodeURIComponent(quote.substring(0,120))}" style="background:#0F1E36;color:white;border:none;border-radius:50px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share This</button></div>`);
-  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="quickAsk('${bb1.replace(/'/g,"\'")}')">💬 ${bb1}</button>
     <button class="suggestion-btn" onclick="quickAsk('${bb2.replace(/'/g,"\'")}')">💬 ${bb2}</button>
@@ -4830,7 +4828,6 @@ function showPrayerLanding(prayer, b1, b2) {
 
   addTipMessage(html);
   addTipMessage(`<div style="margin-top:6px;"><button onclick="tobiShare('Morning Prayer from Auntie Tobi 🕊️',decodeURIComponent(this.dataset.q),'https://auntietobi.co.uk')" data-q="${encodeURIComponent(prayer.substring(0,120))}" style="background:#057A44;color:white;border:none;border-radius:50px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share This Prayer</button></div>`);
-  addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
   addTipMessage(`<div class="suggestions" style="margin-top:8px;">
     <button class="suggestion-btn" onclick="quickAsk('${bb1.replace(/'/g,"\'")}')">💬 ${bb1}</button>
     <button class="suggestion-btn" onclick="quickAsk('${bb2.replace(/'/g,"\'")}')">💬 ${bb2}</button>
@@ -5367,14 +5364,10 @@ function showWelcomeCard() {
         </div>
       </div>
 
-      <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:14px;">
-        <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:6px;">🔔 Stay updated — Turn on Notifications</div>
-        <div style="font-size:13px;color:#333;line-height:2.0;">
-          • UK news affecting Nigerians 🇬🇧<br>
-          • Immigration & policy updates<br>
-          • Jobs, benefits & opportunities<br>
-          • Nigerian community events
-        </div>
+      <div style="background:#E9FBEF;border-radius:8px;padding:12px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:700;color:#075E54;margin-bottom:6px;">📣 Stay updated — Follow Auntie Tobi on WhatsApp Channel</div>
+        <div style="font-size:13px;color:#333;line-height:1.7;margin-bottom:10px;">UK news affecting Nigerians 🇬🇧, events, jobs and opportunities — straight to your WhatsApp Updates tab.</div>
+        <a href="https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e" target="_blank" rel="noopener" style="display:inline-block;background:#25D366;color:white;font-weight:700;font-size:13px;padding:9px 14px;border-radius:8px;text-decoration:none;">Follow the channel</a>
       </div>
 
       <div style="font-size:16px;font-weight:700;color:#057A44;text-align:center;margin-bottom:10px;">So… wetin you need today? 😄</div>
@@ -5389,7 +5382,7 @@ function showWelcomeCard() {
   // Add suggestion bubbles
   const suggStr = getRandomSuggestionStr();
   const suggList = suggStr.split('|').map(s => s.trim()).filter(Boolean);
-  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+  const fixedBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.open(\'https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e\',\'_blank\',\'noopener\')" style="background:#25D366;color:white;border-color:#25D366;">📣 Follow Auntie Tobi on WhatsApp Channel</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
   const rotatingBtns = suggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
   addTipMessage(`<div class="suggestions" style="margin-top:4px;">${rotatingBtns}${fixedBtns}</div>`);
 }
@@ -8266,7 +8259,7 @@ window.onload = () => {
   }, 1000);
 
   // Delay notification prompt to 30 seconds
-  setTimeout(() => { if (typeof showWeeklyNotificationPrompt === 'function' && !isLoading) showWeeklyNotificationPrompt(); }, 30000);
+  // Notifications paused (Nov 2026): no weekly pop-up. The 🔔 bell in the top bar is the only way in.
 
   // Clear badge when app comes to foreground (e.g. switching back from another app)
   document.addEventListener('visibilitychange', function() {
@@ -8893,7 +8886,6 @@ function closeBlogSheet() {
     if (!hasSeenPrompt) {
       localStorage.setItem('tobi_notif_prompt_seen', '1');
       setTimeout(() => {
-        addTipMessage('<div style="background:#f0faf5;border:1.5px solid #057A44;border-radius:10px;padding:11px 14px;display:flex;align-items:flex-start;gap:10px;margin-top:4px;"><span style="font-size:16px;flex-shrink:0;">💚</span><div style="font-size:12px;color:#0F1E36;line-height:1.6;"><strong>You are in control!</strong> Tap the 🔔 bell to choose exactly what Auntie Tobi sends you.</div></div>');
       }, 600);
     }
   } else if (isSubscribed && !hasSetPrefs && !hasSeenPrompt) {
@@ -9215,7 +9207,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.open(\'https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e\',\'_blank\',\'noopener\')" style="background:#25D366;color:white;border-color:#25D366;">📣 Follow Auntie Tobi on WhatsApp Channel</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
@@ -9231,7 +9223,7 @@ function resetToWelcome() {
         const m = document.getElementById('messages');
         if (m && m.innerHTML.trim() === '') {
           addTipMessage('<div style="padding:12px;font-size:14px;color:#555;text-align:center;">👋🏾 Welcome back! What can Auntie Tobi help you with today? 😊</div>');
-          const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+          const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.open(\'https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e\',\'_blank\',\'noopener\')" style="background:#25D366;color:white;border-color:#25D366;">📣 Follow Auntie Tobi on WhatsApp Channel</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
           addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fallbackBtns}</div>`);
         }
       }, 500);
@@ -9243,7 +9235,7 @@ function resetToWelcome() {
       if (m) {
         m.innerHTML = '';
         addTipMessage('<div style="padding:12px;font-size:14px;color:#555;text-align:center;">👋🏾 Welcome back! What can Auntie Tobi help you with today? 😊</div>');
-        const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
+        const fallbackBtns = '<button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.open(\'https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e\',\'_blank\',\'noopener\')" style="background:#25D366;color:white;border-color:#25D366;">📣 Follow Auntie Tobi on WhatsApp Channel</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button>';
         addTipMessage(`<div class="suggestions" style="margin-top:4px;">${fallbackBtns}</div>`);
       }
     }
@@ -9738,6 +9730,7 @@ function setDefaultNotifPrefs() {
 }
 
 function showNotifPrompt() {
+  return; // Notifications paused (Nov 2026): no 'Stay in the loop' banner — the 🔔 bell is the only way in.
   // Friendly prompt shown after first article read
   const existing = document.getElementById('notifPromptBanner');
   if (existing) return;
@@ -9957,7 +9950,7 @@ function checkInstallPrompt() {
   messageCount++;
 
   // Show notification opt-in after 3 messages
-  if (messageCount === 3 && typeof OneSignal !== 'undefined') {
+  if (false && messageCount === 3 && typeof OneSignal !== 'undefined') {   // notifications paused (Nov 2026)
     setTimeout(() => {
       addTipMessage(`<div style="background:white;border:1.5px solid #057A44;border-radius:8px;padding:12px;margin-top:8px;display:flex;align-items:center;gap:10px;">
         <span style="font-size:28px;">🔔</span>
