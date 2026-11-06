@@ -105,6 +105,8 @@
   // ───── laptop format (the app only) ─────
   var top, page, cur = '';
   function lapOn() { return isApp && window.innerWidth >= LAPW && get() !== 'phone'; }   // computers open in laptop view unless they chose phone view
+  // 🔀 Featured businesses in a new order on every visit (same as the phone app)
+  function mix(list, where) { if (typeof window.tobiFeatOrder === 'function') return window.tobiFeatOrder(list, where); var f = list.slice(); for (var i = f.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = f[i]; f[i] = f[j]; f[j] = t; } return f; }
   function dir() { try { return (typeof getLiveDirectory === 'function' ? getLiveDirectory() : []).filter(function (b) { return b && b.slug && b.name; }); } catch (e) { return []; } }
   function card(b) {
     return '<div class="card bz"><div class="im" data-biz="' + esc(b.slug) + '">' + esc((b.name || '?').charAt(0).toUpperCase()) + (b.img ? '<img src="' + esc(b.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + (b.imgCopy ? ' data-alt="' + esc(b.imgCopy) + '"' : '') + ' onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.removeAttribute(\'data-alt\')}else{this.remove()}">' : '') + (b.featured ? '<span class="ft">⭐ Featured</span>' : '') + '</div>' +
@@ -130,7 +132,7 @@
       page.innerHTML = '<div class="wrap" style="max-width:920px">' + back + '<div class="card" style="padding:22px;overflow:hidden" id="lapBizBox">' + (inner || card(b)) + '</div></div>';
     } else {
       // other businesses: Featured businesses underneath (same category first)
-      var feat = all.filter(function (x) { return x.featured && x.slug !== b.slug; }).sort(function (a, c) { return (c.cat === b.cat ? 1 : 0) - (a.cat === b.cat ? 1 : 0) || (c.img ? 1 : 0) - (a.img ? 1 : 0); }).slice(0, 6);
+      var feat = mix(all.filter(function (x) { return x.featured && x.slug !== b.slug; }), 'lapbiz').sort(function (a, c) { return (c.cat === b.cat ? 1 : 0) - (a.cat === b.cat ? 1 : 0) || (c.img ? 1 : 0) - (a.img ? 1 : 0); }).slice(0, 6);
       page.innerHTML = '<div class="wrap">' + back + '<div class="cols"><div><div class="card" style="padding:22px;overflow:hidden" id="lapBizBox">' + (inner || card(b)) + '</div>' +
         (feat.length ? '<h2 style="margin:26px 0 12px">⭐ Featured businesses</h2><div class="grid" style="grid-template-columns:repeat(2,1fr)">' + feat.map(card).join('') + '</div>' : '') + '</div>' +
         '<div class="rail"><div class="card cta"><b>🏪 Is this your business?</b><div style="font-size:14px;margin-top:6px;opacity:.9">Claim it free to update your photo, description and contacts — and get your own Business Studio.</div><a href="/claim/' + encodeURIComponent(b.slug) + '">Claim this business</a></div>' +
@@ -169,7 +171,7 @@
   }
   function showHome() {
     cur = 'home'; page.style.display = 'block'; page.scrollTop = 0; nav();
-    var all = dir(), feat = all.filter(function (b) { return b.featured; }).slice(0, 6);
+    var all = dir(), feat = mix(all.filter(function (b) { return b.featured; }), 'lap').slice(0, 6);
     if (feat.length < 3) feat = feat.concat(all.filter(function (b) { return !b.featured && b.img; }).slice(0, 3 - feat.length));
     var h = new Date().getHours(), hi = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
     var TILES = [['💌', 'Celebration cards', '/cards'], ['🎉', 'Events', 'events'], ['📰', 'News & articles', 'news'], ['🏢', 'All businesses', 'biz'],

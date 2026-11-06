@@ -1317,7 +1317,7 @@ Contact: info@auntietobi.co.uk | +447594674940
 Terms page: https://auntietobi.com/page/Terms%20and%20Conditions
 
 VERIFIED BUSINESSES — When recommending or mentioning any of these businesses in your response, ALWAYS show the ✅ Verified Member badge next to their name:
-- Funmis Treasure (Foodstores & Groceries, Basildon Essex) — ✅ Verified | ⭐ Featured
+- Funmis Treasure (Foodstores & Groceries, Basildon Essex) — ✅ Verified
 - Tombell Education Consultancy (Education Consultancy, Sittingbourne Kent) — ✅ Verified | ⭐ Featured
 
 Format: "**[Business Name]** ✅ Verified Member" — always include the badge when mentioning these businesses.
@@ -5886,7 +5886,7 @@ function showFeaturedBusinesses() {
   var messages = document.getElementById('messages');
   messages.innerHTML = '';
   scrollToTop();
-  var featured = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured; });
+  var featured = tobiFeatOrder(AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured; }), 'all');
   addTipMessage(
     '<div style="background:#0F1E36;border-radius:14px;padding:18px 16px;margin-bottom:4px;">'
     + '<div style="font-size:17px;font-weight:800;color:white;margin-bottom:4px;">⭐ Featured Businesses</div>'
@@ -5904,11 +5904,22 @@ function showFeaturedBusinesses() {
 var FEAT_EMOJI = [['food',"🛒"],['grocer',"🛒"],['kitchen',"🍳"],['home',"🏠"],['educat',"🎓"],['fashion',"👗"],['hair',"💇🏾‍♀️"],['wig',"💇🏾‍♀️"],['beauty',"💄"],['makeup',"💄"],['cake',"🎂"],['cater',"🍲"],['event',"🎉"],['travel',"✈️"],['photo',"📸"],['jewel',"💍"],['drink',"🥤"]];
 function featEmoji(b){ var c=(b.cat||'').toLowerCase(); for (var i=0;i<FEAT_EMOJI.length;i++) if (c.indexOf(FEAT_EMOJI[i][0])>-1) return FEAT_EMOJI[i][1]; return "🏪"; }
 function featEsc(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+// 🔀 Featured businesses take turns: a new random order on every opening and refresh, never starting with the business that led last time.
+function tobiFeatOrder(list, where){
+  var key = 'tobiFeatFirst' + (where ? '-' + where : '');
+  var f = list.slice();
+  for (var i=f.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; }
+  if (f.length > 1) {
+    var last = ''; try { last = localStorage.getItem(key) || ''; } catch (e) {}
+    if (f[0].slug === last) { var k = 1 + Math.floor(Math.random()*(f.length-1)); var t2=f[0]; f[0]=f[k]; f[k]=t2; }
+    try { localStorage.setItem(key, f[0].slug); } catch (e) {}
+  }
+  return f;
+}
+window.tobiFeatOrder = tobiFeatOrder;
 function featuredBizList(){
   // Carousel shows featured businesses that have a photo.
-  var f = AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured && b.img; });
-  for (var i=f.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; }
-  return f;
+  return tobiFeatOrder(AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured && b.img; }), 'carousel');
 }
 function featSlide(b){
   var banner = '<div class="feat-ban" style="min-height:190px;display:'+(b.img?'none':'flex')+';flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,#0F1E36,#18294A);color:white;text-align:center;padding:0 18px;">'
@@ -6728,7 +6739,7 @@ const AUNTIE_TOBI_DIRECTORY = [
   {name:'Laraskitchenuk', slug:'laraskitchenuk', cat:'caterers', loc:'Rainham', desc:'Experience authentic Nigerian home cooking delivered across the UK. Enjoy delicious, affordable meals that bring comfort, tradition, and the taste of home to busy families and professionals.', wa:'447970676572', ig:'laraskitchenuk'},
   {name:'Ojanaijafoods', slug:'ojanaijafoods', cat:'foodstores & groceries', loc:'UK', desc:'Shop premium Kpomo and smoky Panla Fish from Oja Naija Foods. Enjoy 100% natural, preservative-free Nigerian ingredients delivered across the UK for delicious, authentic meals.', wa:'447493733473', ig:'oja_naija_foods'},
   {name:'GlamwtJade | NORTHEAST MUA', slug:'glamwtjade-northeast-mua', cat:'makeup artists', loc:'Middlesbrough', desc:'At GlamwtJade, we create luxury, flawless, and long-lasting makeup tailored to enhance your natural beauty. Leave every appointment feeling confident, radiant, and camera-ready.', wa:'447916324103', ig:'glamwtjade'},
-  {name:'Funmis Treasure', slug:'funmis-treasure', featured:true, cat:'foodstores & groceries', loc:'Basildon', desc:'Funmi\'s Treasure is your go-to source for authentic African products and foods delivered throughout the UK with speed, reliability, and a personal touch.', wa:'447435844799', ig:'Funmistreasure', featured:true, verified:true},
+  {name:'Funmis Treasure', slug:'funmis-treasure', cat:'foodstores & groceries', loc:'Basildon', desc:'Funmi\'s Treasure is your go-to source for authentic African products and foods delivered throughout the UK with speed, reliability, and a personal touch.', wa:'447435844799', ig:'Funmistreasure', featured:true, verified:true},
   {name:'BranchNaijaUK', slug:'branchnaijauk', cat:'caterers', loc:'United Kingdom', desc:'We are Nigerian food brand bringing the rich glamour of Naija cuisine straight to the UK,From our hygienically rated 5 ⭐️ kitchen.', wa:'447498878750', ig:'branchnaijauk'},
   {name:'Ingenious Cookware UK', slug:'ingenious-cookware-uk', cat:'home & kitchen', loc:'Southend-on-Sea', desc:'Shop quality cookware and kitchen essentials in the UK. Registered UK brand with Klarna payments, nationwide delivery, and trusted products for every kitchen.', wa:'447777763899', ig:'ingenious_cookware_uk'},
   {name:'Ovenrush UK', slug:'ovenrush-uk', cat:'cakes & desert', loc:'United Kingdom', desc:'Order custom cakes, pastries, and small chops in the UK for birthdays, weddings, baby showers, and corporate events. Freshly made and beautifully crafted. 🎂', ig:'ovenrush_uk'},
@@ -8620,11 +8631,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll, featured
 
   // Render featured businesses first (after clear) — shuffle order each time
   if (startIndex === undefined) {
-    var fiShuffled = fi.slice();
-    for (var _k = fiShuffled.length-1; _k > 0; _k--) {
-      var _j = Math.floor(Math.random() * (_k+1));
-      var _t = fiShuffled[_k]; fiShuffled[_k] = fiShuffled[_j]; fiShuffled[_j] = _t;
-    }
+    var fiShuffled = tobiFeatOrder(fi.map(function(i){ return { slug: filtered[i].slug, i: i }; }), 'biz').map(function(x){ return x.i; });
     if (featuredOnly) addTipMessage('<div style="font-size:15px;color:#0F1E36;font-weight:700;margin-bottom:4px;">⭐ Featured Businesses on Auntie Tobi</div>');
     fiShuffled.forEach(function(i){ shownBusinessIndexes.push(i); addTipMessage(buildFeaturedCard(filtered[i], false)); });
   }
@@ -8657,7 +8664,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll, featured
   var catEmojis={'makeup artists':'💄','caterers':'🍛','ankara & traditional wears':'👘','skincare':'💆','foodstores & groceries':'🛒','restaurants':'🍽️','cakes & desert':'🎂','wig vendors':'💇','fashion designers':'👗','fashion & accessories':'👜','photography':'📸','nigerian snacks':'🍡','event planners':'🎉','gele stylists':'💃','hair stylists/braiders':'✂️','alaga':'🎤','microblading':'✏️','small chops':'🍢','tutors':'📚','hair care':'🌿','printing services':'🖨️','suya spot':'🔥','djs':'🎧','home & kitchen':'🏠','jewelry':'💍','education consultancy':'🎓','shipping & logistics':'🚢'};
   // On load more, show featured businesses as full-width cards at top
   if (startIndex !== undefined) {
-    var featBiz = filtered.filter(function(b){ return b.featured; });
+    var featBiz = tobiFeatOrder(filtered.filter(function(b){ return b.featured; }), 'more');
     featBiz.forEach(function(b){
       addTipMessage(buildFeaturedCard(b, false));
     });

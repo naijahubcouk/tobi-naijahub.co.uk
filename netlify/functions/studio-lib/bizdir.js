@@ -29,9 +29,21 @@ let memo = null;
 const IMG_UPDATES = {
   abbystoreltd: { from: 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805', to: '/biz-img/abbystoreltd.jpg' },
 };
+// One-off changes to the saved directory, each done once (Seun can change them back in HQ afterwards)
+const ONCE = [{ id: 'unfeature-funmis-2026-11', slug: 'funmis-treasure', set: { featured: false } }];
+async function runOnce(rec) {
+  if (!rec || !Array.isArray(rec.items)) return rec;
+  const done = (await getJson('dir/once').catch(() => null)) || {};
+  const todo = ONCE.filter(o => !done[o.id]);
+  if (!todo.length) return rec;
+  await cas(KEY, cur => { if (!cur || !Array.isArray(cur.items)) return undefined; cur.items = cur.items.map(b => { const o = todo.find(t => t.slug === b.slug); return o ? Object.assign({}, b, o.set) : b; }); return cur; });
+  for (const o of todo) done[o.id] = core.nowIso();
+  await core.setJson('dir/once', done);
+  return getJson(KEY).catch(() => rec);
+}
 async function all() {
   if (memo && Date.now() - memo.at < 30000) return memo.items;
-  const rec = await getJson(KEY).catch(() => null);
+  const rec = await runOnce(await getJson(KEY).catch(() => null)).catch(() => null);
   const items = (rec && Array.isArray(rec.items) && rec.items.length ? rec.items : seed.map(normalise))
     .map(b => (typeof b.claimedSet === 'boolean' || !b.contact ? b : Object.assign({}, b, { claimed: ownerContact(b) })))
     .map(b => (IMG_UPDATES[b.slug] && (!b.img || b.img === IMG_UPDATES[b.slug].from) ? Object.assign({}, b, { img: IMG_UPDATES[b.slug].to }) : b));   // the claimed rule always applies, also to saved listings
