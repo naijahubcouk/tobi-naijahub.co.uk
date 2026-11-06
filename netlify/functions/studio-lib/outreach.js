@@ -16,10 +16,12 @@ const emails = require('./emails');
 
 const J = {
   u: [{ id: 'u1', day: 0, topic: 'listed' }, { id: 'u2', day: 2, topic: 'studio' }, { id: 'u3', day: 5, topic: 'invite' }, { id: 'u4', day: 12, topic: 'benefits' }],
-  n: [{ id: 'n2', day: 2, topic: 'invite' }, { id: 'n3', day: 5, topic: 'benefits' }],
+  n: [{ id: 'biz.listed', day: 0, topic: 'listed' }, { id: 'n2', day: 2, topic: 'invite' }, { id: 'n3', day: 5, topic: 'benefits' }],
   c: [{ id: 'c1', day: 0, topic: 'studio' }, { id: 'c2', day: 2, topic: 'invite' }, { id: 'c3', day: 5, topic: 'benefits' }, { id: 'c4', day: 12, topic: 'last' }],
 };
-const TOPIC = { u1: 'listed', u2: 'studio', u3: 'invite', u4: 'benefits', c1: 'studio', c2: 'invite', c3: 'benefits', c4: 'last', n2: 'invite', n3: 'benefits' };
+const TOPIC = { u1: 'listed', u2: 'studio', u3: 'invite', u4: 'benefits', c1: 'studio', c2: 'invite', c3: 'benefits', c4: 'last', n2: 'invite', n3: 'benefits', 'biz.listed': 'listed' };
+const STEP_NAME = { u1: 'You’re listed', u2: 'Free Business Studio', u3: 'Club invite', u4: 'Club benefits + last note', c1: 'Thank you + Business Studio', c2: 'Club invite', c3: 'Club benefits', c4: 'Last note', 'biz.listed': 'You’re listed', n2: 'Club invite', n3: 'Club benefits' };
+const SERIES_NAME = { n: 'New business', c: 'Claimed', u: 'Unclaimed' };
 const DIR_SITE = 'https://directory.auntietobi.co.uk';
 const FROM = () => core.env('OUTREACH_EMAIL_FROM', 'Auntie Tobi <hello@mail.auntietobi.co.uk>');
 const REPLY_TO = () => core.env('OUTREACH_REPLY_TO', 'info@auntietobi.co.uk');
@@ -50,6 +52,28 @@ function eligible(b) {
   if (b.hidden || b.status === 'pending' || b.featured) return false;
   if (b.src === 'hq' && !b.uploadedAt) return false;          // not on the directory website yet
   return !!(b.email || b.ownerEmail || b.wa || b.ig);
+}
+// “You’re listed” uses the owner's first name and their Business Studio link
+async function stepVars(b, step) {
+  const v = vars(b);
+  if (step !== 'biz.listed') return v;
+  return Object.assign(v, { name: String(b.ownerName || '').trim().split(/\s+/)[0] || 'there', studio_link: core.appUrl(), email: b.ownerEmail || b.email || '' });
+}
+async function listedDone(b) {
+  await bizdir.save(Object.assign({}, b, { origSlug: b.slug, listedMailAt: core.nowIso() }), 'outreach').catch(() => {});
+  await require('./invites').act(b.slug, 'log', { text: '📧 “You’re listed” email sent to the owner' }).catch(() => {});
+}
+// Where a business is in the email series (for its sheet in HQ)
+async function status(slug) {
+  const p = await plan(), r = p.st.biz[slug], b = p.dir.find(x => x.slug === slug);
+  if (!b) return null;
+  const isApp = !!(b.via && b.ownerEmail), it = p.all.find(x => x.slug === slug);
+  const out = { j: r ? r.j : (isApp && b.listedMailAt ? 'n' : ''), series: '', inSeries: !!r || !!(isApp && b.listedMailAt), stop: r && r.stop || '', listedAt: b.listedMailAt || '', manual: r && r.manual || '', sent: (r ? r.sent : []).map(s => ({ name: STEP_NAME[s.id] || 'Email', at: s.at })), next: null, on: p.set.on, isApp };
+  if (b.listedMailAt && !out.sent.some(s => s.name === 'You’re listed')) out.sent.unshift({ name: 'You’re listed', at: b.listedMailAt });
+  if (it) { out.j = it.j; out.next = { name: STEP_NAME[it.step] || 'Email', dueAt: it.dueAt }; }
+  out.series = SERIES_NAME[out.j] || '';
+  if (out.inSeries && !out.stop && !it && isApp && b.src === 'hq' && !b.uploadedAt) out.waitWebsite = true;
+  return out;
 }
 function vars(b) {
   const site = core.siteBase();
@@ -84,6 +108,8 @@ async function plan() {
     const hasStudio = !!sEmail && mi.studio.has(sEmail);
     let j = r ? r.j : isApp ? 'n' : (b.claimed ? 'c' : 'u');
     const sentTopics = new Set((r ? r.sent : []).map(s => TOPIC[s.id] || s.id));
+    if (b.listedMailAt) sentTopics.add('listed');                // “You’re listed” already sent from Add your business: never again
+    if (j === 'n' && !isApp) sentTopics.add('listed');           // “You’re listed + Business Studio” is only for owners who added their business
     if (j === 'u' && b.claimed) j = 'c';                         // claimed since: carry on the claimed journey, no repeats
     if (sentTopics.has('benefits') && j === 'c' && r && r.j === 'u') sentTopics.add('last');
     const start = r ? r.start : isApp ? (Date.parse(b.listedMailAt) || now) : now;
@@ -101,7 +127,7 @@ async function plan() {
   const byEmail = x => !!x.email, byHand = x => !x.email;
   const todayEmail = due.filter(byEmail).concat(fresh.filter(byEmail)).slice(0, emailRoom);
   const todayHand = due.filter(byHand).concat(fresh.filter(byHand)).slice(0, handRoom);
-  return { set, sentToday, manualToday, todayEmail, todayHand, stops, waiting: waiting.length, freshLeft: fresh.length, st };
+  return { set, sentToday, manualToday, todayEmail, todayHand, stops, waiting: waiting.length, freshLeft: fresh.length, st, all: due.concat(fresh, waiting), dir };
 }
 
 async function applyStops(stops) {
@@ -171,8 +197,8 @@ async function sendBatch(max) {
     for (let k = 0; k < chunk.length; k++) {
       if (Date.now() > stopAt) break;
       const x = chunk[k], started = Date.now();
-      const msg = await emails.render(x.step, Object.assign(vars(dir.get(x.slug)), { personal_line: lines[k] }));
-      if (await sendOne(x.email, msg, x.slug, x.step)) { await record(x, 'email'); sent++; } else failed++;
+      const msg = await emails.render(x.step, Object.assign(await stepVars(dir.get(x.slug), x.step), { personal_line: lines[k] }));
+      if (await sendOne(x.email, msg, x.slug, x.step)) { await record(x, 'email'); if (x.step === 'biz.listed') await listedDone(dir.get(x.slug)); sent++; } else failed++;
       await new Promise(res => setTimeout(res, Math.max(500, 550 - (Date.now() - started))));   // never two emails within half a second
     }
   }
@@ -185,7 +211,7 @@ async function handMessage(slug) {
   const p = await plan(), x = p.todayHand.find(y => y.slug === slug) || p.todayEmail.find(y => y.slug === slug);
   if (!x) throw new HttpError(404, 'not_found', 'That business has nothing due today.');
   const b = (await bizdir.all()).find(y => y.slug === slug);
-  const text = (await emails.plain(x.step, vars(b))).replace(/\n\nAuntie Tobi$/, '\n\nAuntie Tobi 💚');
+  const text = (await emails.plain(x.step, await stepVars(b, x.step))).replace(/\n\nAuntie Tobi$/, '\n\nAuntie Tobi 💚');
   return { text, wa: b.wa, ig: b.ig, step: x.step, j: x.j };
 }
 async function markHand(slug) {
@@ -211,13 +237,13 @@ async function overview() {
   const p = await plan(), dir = await bizdir.all(), st = p.st;
   const rows = dir.filter(b => st.biz[b.slug]).map(b => { const r = st.biz[b.slug]; return { slug: b.slug, name: b.name, email: b.via && b.ownerEmail ? b.ownerEmail : b.email, app: !!(b.via && b.ownerEmail), j: r.j, sent: r.sent, stop: r.stop || '', start: new Date(r.start).toISOString() }; });
   const counts = { inJourney: rows.filter(r => !r.stop).length, finished: rows.filter(r => r.stop === 'finished').length, joined: rows.filter(r => r.stop === 'joined').length, stopped: rows.filter(r => r.stop && !['finished', 'joined'].includes(r.stop)).length, waitingToStart: p.freshLeft };
-  const preview = async x => { const b = dir.find(y => y.slug === x.slug); const m = await emails.render(x.step, vars(b)); return Object.assign({}, x, { subject: m.subject }); };
+  const preview = async x => { const b = dir.find(y => y.slug === x.slug); const m = await emails.render(x.step, await stepVars(b, x.step)); return Object.assign({}, x, { subject: m.subject }); };
   return { settings: p.set, sentToday: p.sentToday, manualToday: p.manualToday, todayEmail: await Promise.all(p.todayEmail.map(preview)), todayHand: p.todayHand, counts, rows, laterThisWeek: p.waiting };
 }
 async function previewFor(slug, step) {
   const b = (await bizdir.all()).find(y => y.slug === slug);
   if (!b) throw new HttpError(404, 'not_found', 'Business not found.');
-  return emails.render(step, vars(b));
+  return emails.render(step, await stepVars(b, step));
 }
 // Test email of any template to Auntie Tobi, using a real or sample business
 async function sendTest(id, to, slug, draft) {
@@ -255,4 +281,4 @@ async function publicPage(q) {
   return page('Listing removed', `<h1 style="font-size:22px">Done — ${name} has been removed</h1><p>It’s off the Auntie Tobi app now and will be off the directory website within a few days. Sorry for any bother, and all the best with your business.</p>`);
 }
 
-module.exports = { sendOne, vars, settings, saveSettings, plan, sendBatch, handMessage, markHand, mark, overview, previewFor, sendTest, publicPage, token, J };
+module.exports = { status, stepVars, listedDone, STEP_NAME, sendOne, vars, settings, saveSettings, plan, sendBatch, handMessage, markHand, mark, overview, previewFor, sendTest, publicPage, token, J };

@@ -10,7 +10,7 @@ const bizdir = require('./bizdir');
 const invites = require('./invites');
 const emailev = require('./emailev');
 
-const STEP_NAME = { u1: 'You’re listed', u2: 'Free Business Studio', u3: 'Club invite', u4: 'Club benefits + last note', c1: 'Thank you + Business Studio', c2: 'Club invite', c3: 'Club benefits', c4: 'Last note' };
+const STEP_NAME = { u1: 'You’re listed', u2: 'Free Business Studio', u3: 'Club invite', u4: 'Club benefits + last note', c1: 'Thank you + Business Studio', c2: 'Club invite', c3: 'Club benefits', c4: 'Last note', n2: 'Club invite', n3: 'Club benefits', 'biz.listed': 'You’re listed' };
 const STOP_NAME = { joined: 'Joined the Business Club', finished: 'Email journey finished', unsubscribed: 'Unsubscribed', removed: 'Asked to be removed', stopped: 'Emails stopped', featured: 'Became Featured', hidden: 'Hidden', bounced: 'Email bounced (address not working)' };
 // pipeline order (first match wins)
 const STAGES = ['joined', 'interested', 'replied', 'notnow', 'waiting', 'emailing', 'new', 'declined', 'unsub'];
@@ -110,6 +110,7 @@ async function detail(slug) {
     timeline: tl.slice(0, 120), engage: { opens: e.opens || 0, clicks: e.clicks || 0, lastOpenAt: e.lastOpenAt || '', lastClickAt: e.lastClickAt || '', bounced: e.bounced || '', complained: e.complained || '' },
     studio: member ? { since: member.createdAt || '', club: core.access(member).membershipActive, until: member.membershipExpiresAt || '' } : null,
     journey: o ? { j: o.j, sent: o.sent.length, stop: o.stop || '' } : null,
+    series: await require('./outreach').status(slug).catch(() => null),
     wa: { next: kind, invite: fill(tpl.invite), fu1: fill(tpl.fu1), fu2: fill(tpl.fu2) },
   };
 }
@@ -118,7 +119,7 @@ async function detail(slug) {
 async function sendEmail(slug, subject, body, who) {
   const b = (await bizdir.all()).find(x => x.slug === slug);
   if (!b) throw new core.HttpError(404, 'not_found', 'Business not found.');
-  const inv = await invites.load(), to = (inv.items[slug] && inv.items[slug].email) || b.email;
+  const inv = await invites.load(), to = (inv.items[slug] && inv.items[slug].email) || b.email || b.ownerEmail;
   if (!to) throw new core.HttpError(400, 'no_email', 'This business has no email address — add one in Details.');
   subject = core.cleanText(subject, 200); body = String(body || '').replace(/\r/g, '').trim().slice(0, 8000);
   if (!subject || body.length < 5) throw new core.HttpError(400, 'invalid', 'Add a subject and a message.');

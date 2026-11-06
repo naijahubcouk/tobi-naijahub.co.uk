@@ -448,7 +448,7 @@ async function hqList() {
   for (const s of items) if (s.status === 'new') { const m = await core.getMember(s.email).catch(() => null); if (m) members.add(s.email); }
   return {
     subs: items.slice(0, 300).map(s => Object.assign({}, s, { biz: bySlug.get(s.slug) ? hqBiz(bySlug.get(s.slug)) : null, hasStudio: members.has(s.email) || s.status !== 'new' })),
-    listed: listedQueue(all).map(b => ({ slug: b.slug, name: b.name, email: b.ownerEmail, ownerName: b.ownerName || '', uploadedAt: b.uploadedAt })),
+    listed: listedQueue(all, await seriesStarted()).map(b => ({ slug: b.slug, name: b.name, email: b.ownerEmail, ownerName: b.ownerName || '', uploadedAt: b.uploadedAt })),
     waitingCsv: all.filter(b => b.via && b.status === 'published' && !b.hidden && b.src === 'hq' && !b.uploadedAt).map(b => ({ slug: b.slug, name: b.name })),
     ownerEdits: all.filter(b => b.ownerEd && (b.src === 'website' || b.uploadedAt)).map(b => ({ slug: b.slug, name: b.name, at: b.ownerEdAt || '', fields: Object.keys(b.ownerEd), values: b.ownerEd })),
     announce: await announceInfo(),
@@ -501,14 +501,16 @@ async function review(id, decision, edits, who) {
 async function removeSub(id) { await cas(KEY, cur => { if (!cur || !cur.items[id]) return undefined; delete cur.items[id]; return cur; }); }
 
 // ── "You're listed" emails: owners' new listings that are now on the website (CSV uploaded) ──
-function listedQueue(all) { return all.filter(b => b.via && b.ownerEmail && b.status === 'published' && !b.hidden && b.uploadedAt && !b.listedMailAt); }
+function listedQueue(all, started) { return all.filter(b => b.via && b.ownerEmail && b.status === 'published' && !b.hidden && b.uploadedAt && !b.listedMailAt && !(started && started.has(b.slug))); }
+// businesses already put in an email series from their sheet: Outreach sends their “You’re listed” instead
+async function seriesStarted() { const st = (await getJson('out/state').catch(() => null)) || { biz: {} }; return new Set(Object.keys(st.biz || {}).filter(k => !st.biz[k].stop)); }
 function firstName(n) { return String(n || '').trim().split(/\s+/)[0] || 'there'; }
 async function listedVars(b) {
   return { name: firstName(b.ownerName), business_name: b.name, listing_link: listingUrl(b.slug), studio_link: core.appUrl(), email: b.ownerEmail };
 }
 async function sendListed(slugs, who) {
   const all = await bizdir.all(), want = new Set(slugs || []);
-  const list = listedQueue(all).filter(b => !slugs || want.has(b.slug)).slice(0, 25);
+  const list = listedQueue(all, await seriesStarted()).filter(b => !slugs || want.has(b.slug)).slice(0, 25);
   const emails = require('./emails'); let sent = 0;
   for (const b of list) {
     const m = await emails.render('biz.listed', await listedVars(b));
@@ -518,7 +520,7 @@ async function sendListed(slugs, who) {
       await require('./invites').act(b.slug, 'log', { text: '📧 “You’re listed” email sent to the owner' }).catch(() => {});
     }
   }
-  return { sent, left: listedQueue(await bizdir.all()).length };
+  return { sent, left: listedQueue(await bizdir.all(), await seriesStarted()).length };
 }
 async function previewEmail(id, slug) {
   const emails = require('./emails');
@@ -539,7 +541,7 @@ async function announceAudience() {
   }
   return out;
 }
-async function announceInfo() { const a = await announceAudience(); return { total: a.length, sent: a.filter(x => x.sent).length, left: a.filter(x => !x.sent).length }; }
+async function announceInfo() { const a = await announceAudience(); return { total: a.length, sent: a.filter(x => x.sent).length, left: a.filter(x => !x.sent).length, list: a.map(x => ({ slug: x.slug, name: x.name, email: x.email, sent: x.sent })) }; }
 async function announceSend(who, test) {
   const emails = require('./emails');
   if (test) { const m = await previewEmail('biz.announce'); await core.sendEmail([test], m.subject, m.text, m.html); return { test: true }; }
