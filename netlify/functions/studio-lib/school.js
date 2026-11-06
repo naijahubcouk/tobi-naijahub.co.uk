@@ -233,7 +233,7 @@ async function boot(auth) {
       inbox: me.role === 'owner' ? `${fam.inbox}@${inboxDomain()}` : '',
       members: fam.members.map(m => ({ email: m.email, name: m.name, role: m.role, children: m.children, you: m.email === auth.email })),
       invites: me.role === 'owner' ? (fam.invites || []).map(i => ({ email: i.email, name: i.name || '', children: i.children, at: i.at })) : [],
-      confirm: me.role === 'owner' ? (fam.confirm || []).slice(-3).map(c => Object.assign({}, c, { why: c.code || c.link ? '' : isAdmin(auth.email) ? c.why : FRIENDLY_CODE })) : [],
+      confirm: me.role === 'owner' ? (fam.confirm || []).slice(-3).map(c => Object.assign({}, c, { code: c.code || codeFrom(c.subject, ''), why: c.code || c.link ? '' : isAdmin(auth.email) ? c.why : FRIENDLY_CODE })) : [],
       inboundIssue: me.role === 'owner' && isAdmin(auth.email) ? fam.inboundIssue || null : null },
     mails: ((mails && mails.items) || []).filter(x => vis(x) && (x.kind !== 'confirm' || me.role === 'owner')).slice(0, 150),
     board: { actions: ((board && board.actions) || []).filter(vis), dates: ((board && board.dates) || []).filter(vis) },
@@ -319,13 +319,17 @@ async function readWithAI(fam, mail) {
     dates: (Array.isArray(j.dates) ? j.dates : []).slice(0, 10).map(d => ({ title: cleanText(d && d.title, 140), date: validDay(d && d.date) ? d.date : '', time: /^\d{2}:\d{2}$/.test(d && d.time || '') ? d.time : '', end: validDay(d && d.end) ? d.end : '', where: cleanText(d && d.where, 100), childIds: okKids(d && d.childIds).length ? okKids(d.childIds) : childIds })).filter(d => d.title && d.date),
   };
 }
+// Gmail puts the confirmation code in the subject — "(#123456789) Gmail Forwarding Confirmation…" — and in the email body.
+function codeFrom(subject, text) {
+  return (String(text || '').match(/confirmation code[^0-9]{0,20}(\d{6,12})/i) || String(subject || '').match(/\(#\s*(\d{6,12})\)/) || String(text || '').match(/\bcode[^0-9]{0,10}(\d{6,12})\b/i) || [])[1] || '';
+}
 // Saves one email for a family: Gmail/Outlook forwarding confirmations are shown to the owner; everything else is read by AI.
 async function takeMail(fam, raw) {
   const id = id8() + id8().slice(0, 3);
   const text = (raw.text && raw.text.trim()) || htmlToText(raw.html);
   const mail = { id, at: raw.at || nowIso(), from: cleanText(raw.from, 200), subject: cleanText(raw.subject, 200), text: String(text || '').slice(0, 40000), status: 'new', via: raw.via || 'email', rid: raw.rid || '', fetchErr: raw.fetchErr || '' };
   if (FWD_CONFIRM.test(mail.subject) || /forwarding-noreply@google\.com/i.test(mail.from) || /To allow .* to automatically forward mail/i.test(text) || (/yahoo/i.test(mail.from) && /forward/i.test(mail.subject + ' ' + String(text).slice(0, 800)))) {
-    const code = (text.match(/Confirmation code:\s*(\d{6,12})/i) || [])[1] || '';
+    const code = codeFrom(mail.subject, text);
     const link = (text.match(/https:\/\/mail(?:-settings)?\.google\.com\/mail\/[^\s)"'<>]+/i) || text.match(/https:\/\/[^\s)"'<>]*yahoo\.com[^\s)"'<>]*(?:verif|confirm|forward)[^\s)"'<>]*/i) || text.match(/https:\/\/[^\s)"'<>]*(?:verify|confirm)[^\s)"'<>]*/i) || [])[0] || '';
     await cas(famKey(fam.id), cur => { if (!cur) return undefined; cur.confirm = (cur.confirm || []).filter(c => c.id !== raw.replaces).concat([{ id, at: mail.at, code, link, from: mail.from, subject: mail.subject, why: code || link ? '' : (raw.fetchErr || 'The code wasn’t in the part of the email we could read.') }]).slice(-5); return cur; });
     mail.kind = 'confirm'; mail.status = 'confirm'; mail.title = 'Confirm email forwarding'; mail.summary = code ? `Your email provider wants you to confirm forwarding. Code: ${code}` : link ? 'Your email provider wants you to confirm forwarding — open the link in this email.' : 'Your email provider wants you to confirm forwarding. Check your email inbox for the message and copy the code from there.'; mail.childIds = [];
