@@ -233,7 +233,7 @@ async function boot(auth) {
       inbox: me.role === 'owner' ? `${fam.inbox}@${inboxDomain()}` : '',
       members: fam.members.map(m => ({ email: m.email, name: m.name, role: m.role, children: m.children, you: m.email === auth.email })),
       invites: me.role === 'owner' ? (fam.invites || []).map(i => ({ email: i.email, name: i.name || '', children: i.children, at: i.at })) : [],
-      confirm: me.role === 'owner' ? (fam.confirm || []).slice(-3) : [] },
+      confirm: me.role === 'owner' ? (fam.confirm || []).slice(-3) : [], inboundIssue: me.role === 'owner' ? fam.inboundIssue || null : null },
     mails: ((mails && mails.items) || []).filter(x => vis(x) && (x.kind !== 'confirm' || me.role === 'owner')).slice(0, 150),
     board: { actions: ((board && board.actions) || []).filter(vis), dates: ((board && board.dates) || []).filter(vis) },
     today: ukDay(),
@@ -243,7 +243,7 @@ async function mailGet(auth, b) {
   const fam = await family(auth.user.fid), me = memberOf(fam, auth.email); if (!me) throw new HttpError(403, 'not_member', 'Please sign in again.');
   const m = await getJson(`st/mail/${fam.id}/${String(b.id || '').replace(/[^A-Za-z0-9]/g, '')}`);
   if (!m || !canSee(fam, me, m.childIds) || (m.kind === 'confirm' && me.role !== 'owner')) throw new HttpError(404, 'not_found', 'That email isn’t available.');
-  return { mail: { id: m.id, at: m.at, from: m.from, subject: m.subject, title: m.title, summary: m.summary, childIds: m.childIds, text: m.text, kind: m.kind, status: m.status, error: m.error || '' } };
+  return { mail: { id: m.id, at: m.at, from: m.from, subject: m.subject, title: m.title, summary: m.summary, childIds: m.childIds, text: m.text, kind: m.kind, status: m.status, error: m.error || '', fetchErr: m.fetchErr || '', canRefetch: !!(m.rid && (!m.text || m.fetchErr)) } };
 }
 
 // ───────────── board (actions + dates) ─────────────
@@ -322,14 +322,15 @@ async function readWithAI(fam, mail) {
 async function takeMail(fam, raw) {
   const id = id8() + id8().slice(0, 3);
   const text = (raw.text && raw.text.trim()) || htmlToText(raw.html);
-  const mail = { id, at: raw.at || nowIso(), from: cleanText(raw.from, 200), subject: cleanText(raw.subject, 200), text: String(text || '').slice(0, 40000), status: 'new', via: raw.via || 'email' };
+  const mail = { id, at: raw.at || nowIso(), from: cleanText(raw.from, 200), subject: cleanText(raw.subject, 200), text: String(text || '').slice(0, 40000), status: 'new', via: raw.via || 'email', rid: raw.rid || '', fetchErr: raw.fetchErr || '' };
   if (FWD_CONFIRM.test(mail.subject) || /forwarding-noreply@google\.com/i.test(mail.from) || /To allow .* to automatically forward mail/i.test(text) || (/yahoo/i.test(mail.from) && /forward/i.test(mail.subject + ' ' + String(text).slice(0, 800)))) {
     const code = (text.match(/Confirmation code:\s*(\d{6,12})/i) || [])[1] || '';
     const link = (text.match(/https:\/\/mail(?:-settings)?\.google\.com\/mail\/[^\s)"'<>]+/i) || text.match(/https:\/\/[^\s)"'<>]*yahoo\.com[^\s)"'<>]*(?:verif|confirm|forward)[^\s)"'<>]*/i) || text.match(/https:\/\/[^\s)"'<>]*(?:verify|confirm)[^\s)"'<>]*/i) || [])[0] || '';
-    await cas(famKey(fam.id), cur => { if (!cur) return undefined; cur.confirm = (cur.confirm || []).concat([{ id, at: mail.at, code, link, from: mail.from, subject: mail.subject }]).slice(-5); return cur; });
-    mail.kind = 'confirm'; mail.status = 'confirm'; mail.title = 'Confirm email forwarding'; mail.summary = code ? `Your email provider wants you to confirm forwarding. Code: ${code}` : 'Your email provider wants you to confirm forwarding — open the link in this email.'; mail.childIds = [];
+    await cas(famKey(fam.id), cur => { if (!cur) return undefined; cur.confirm = (cur.confirm || []).filter(c => c.id !== raw.replaces).concat([{ id, at: mail.at, code, link, from: mail.from, subject: mail.subject, why: code || link ? '' : (raw.fetchErr || 'The code wasn’t in the part of the email we could read.') }]).slice(-5); return cur; });
+    mail.kind = 'confirm'; mail.status = 'confirm'; mail.title = 'Confirm email forwarding'; mail.summary = code ? `Your email provider wants you to confirm forwarding. Code: ${code}` : link ? 'Your email provider wants you to confirm forwarding — open the link in this email.' : 'Your email provider wants you to confirm forwarding, but we couldn’t read the code. Get it from the email in your inbox, or tap Try again.'; mail.childIds = [];
   } else {
     mail.from = cleanText(originalFrom(mail.text, mail.from), 200);
+    if (raw.fetchErr && !mail.text) { mail.text = ''; }
     try {
       const r = await readWithAI(fam, mail);
       Object.assign(mail, { title: r.title, summary: r.summary, childIds: r.childIds, important: r.important, kind: r.kind, status: 'done', isSchool: r.isSchool, actions: r.actions, dates: r.dates });
@@ -354,14 +355,27 @@ async function mailRetry(auth, b) {
   const mid = String(b.id || '').replace(/[^A-Za-z0-9]/g, ''), old = await getJson(`st/mail/${fam.id}/${mid}`);
   if (!old || !canSee(fam, me, old.childIds)) throw new HttpError(404, 'not_found', 'That email isn’t available.');
   await core.rateLimit('st-retry', fam.id, 40, DAYMS);
+  let raw = { from: old.from, subject: old.subject, text: old.text, at: old.at, via: old.via, rid: old.rid || '' };
+  if (!old.rid && !old.text && old.kind === 'confirm') throw new HttpError(400, 'too_old', 'This one arrived before School Tracker could re-open emails. Ask Gmail to send the confirmation again (Settings → Forwarding → Resend email).');
+  if (old.rid && (!old.text || old.fetchErr)) {   // couldn't open it before — ask Resend again
+    const got = await fetchReceived(old.rid);
+    if (got.err) { await noteInbound(fam.id, got.err); throw new HttpError(502, 'resend', got.err); }
+    await noteInbound(fam.id, '');
+    const em = got.em;
+    raw = { from: typeof em.from === 'object' && em.from ? `${em.from.name || ''} <${em.from.email || em.from.address || ''}>`.trim() : String(em.from || old.from), subject: em.subject || old.subject, text: em.text || '', html: em.html || '', at: old.at, via: old.via, rid: old.rid };
+  }
   await removeMail(fam, mid);
-  const m = await takeMail(fam, { from: old.from, subject: old.subject, text: old.text, at: old.at, via: old.via });
+  if (old.kind === 'confirm') raw.replaces = mid;
+  const m = await takeMail(fam, raw);
   return { id: m.id, status: m.status };
 }
 async function removeMail(fam, mid) {
   await del(`st/mail/${fam.id}/${mid}`).catch(() => {});
   await cas(`st/mails/${fam.id}`, cur => { if (!cur) return undefined; cur.items = cur.items.filter(x => x.id !== mid); return cur; });
   await changeBoard(fam.id, bd => { bd.actions = bd.actions.filter(a => a.mid !== mid || a.done); bd.dates = bd.dates.filter(d => d.mid !== mid); });
+}
+async function confirmHide(auth, b) {
+  return changeFam(auth, f => { f.confirm = (f.confirm || []).filter(c => c.id !== b.id); }, true);
 }
 async function mailDelete(auth, b) {
   const fam = await family(auth.user.fid), me = memberOf(fam, auth.email); if (!me) throw new HttpError(403, 'not_member', 'Please sign in again.');
@@ -393,16 +407,32 @@ async function paste(auth, b) {
 }
 
 // ───────────── inbound (Resend "email.received") ─────────────
+// Opens a received email from Resend (the webhook only says that one arrived). { em } or { err } in plain words.
+async function fetchReceived(eid) {
+  const key = env('RESEND_API_KEY');
+  if (!key) return { err: 'No Resend API key is set in Netlify (RESEND_API_KEY).' };
+  try {
+    const r = await fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(eid)}`, { headers: { Authorization: `Bearer ${key}` } });
+    const body = await r.text(); let j = null; try { j = JSON.parse(body); } catch (_) { j = null; }
+    if (r.ok && j) return { em: j.data && (j.data.text || j.data.html || j.data.subject) ? j.data : j };
+    const msg = String((j && (j.message || (j.error && j.error.message) || j.name)) || body || '').slice(0, 160);
+    console.error('[school] could not open received email', r.status, msg);
+    if (r.status === 401 || r.status === 403 || /restricted|permission|not allowed|sending access/i.test(msg)) return { err: `Resend wouldn’t let School Tracker open emails (${r.status}${msg ? ': ' + msg : ''}). The Resend API key in Netlify needs “Full access”.` };
+    if (r.status === 404) return { err: 'Resend couldn’t find this email any more.' };
+    return { err: `Resend answered ${r.status}${msg ? ': ' + msg : ''}.` };
+  } catch (e) { return { err: 'Couldn’t reach Resend just now (' + String(e && e.message || e).slice(0, 80) + ').' }; }
+}
+async function noteInbound(fid, why) {   // shown to the owner on the Family screen until an email opens fine again
+  await cas(famKey(fid), cur => { if (!cur) return undefined; const was = cur.inboundIssue || null; if (!why && !was) return undefined; cur.inboundIssue = why ? { at: nowIso(), why } : null; return cur; }).catch(() => {});
+}
 async function inbound(evt) {
   const d = (evt && evt.data) || {}, eid = String(d.email_id || d.id || '');
   if (!eid) return { ignored: 'no id' };
   let first = false;
   await cas(`st/seen/${eid}`, cur => { if (cur) return undefined; first = true; return { at: Date.now(), exp: Date.now() + 30 * DAYMS }; });
   if (!first) return { ignored: 'already done' };
-  const key = env('RESEND_API_KEY');
-  let em = null;
-  if (key) { const r = await fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(eid)}`, { headers: { Authorization: `Bearer ${key}` } }); em = r.ok ? await r.json() : null; if (!em) console.error('[school] could not fetch received email', r.status); }
-  em = em || d;
+  const got = await fetchReceived(eid);
+  const em = got.em || d;
   const tos = [].concat(em.received_for || [], em.to || [], d.to || []).map(x => String(typeof x === 'object' && x ? x.email || x.address || '' : x).toLowerCase());
   let fid = '';
   for (const t of tos) { const m = t.match(/([a-z0-9-]+)@([a-z0-9.-]+)/); if (!m) continue; const box = await getJson(`st/inbox/${m[1]}`); if (box && box.fid && box.fid !== 'pending') { fid = box.fid; break; } }
@@ -410,8 +440,9 @@ async function inbound(evt) {
   const fam = await family(fid); if (!fam) return { ignored: 'family gone' };
   try { await core.rateLimit('st-inbound', fid, 150, DAYMS); } catch (_) { return { ignored: 'daily limit' }; }
   const from = typeof em.from === 'object' && em.from ? `${em.from.name || ''} <${em.from.email || em.from.address || ''}>`.trim() : String(em.from || d.from || '');
-  const m = await takeMail(fam, { from, subject: em.subject || d.subject || '', text: em.text || '', html: em.html || '', at: em.created_at || nowIso(), via: 'email' });
-  return { saved: m.id, status: m.status };
+  await noteInbound(fid, got.err || '');
+  const m = await takeMail(fam, { from, subject: em.subject || d.subject || '', text: em.text || '', html: em.html || '', at: em.created_at || nowIso(), via: 'email', rid: eid, fetchErr: got.err || '' });
+  return { saved: m.id, status: m.status, opened: !got.err, why: got.err || undefined };
 }
 
 // ───────────── digests (morning + Sunday) ─────────────
@@ -465,4 +496,4 @@ async function runDigests(force) {
   return { kind, sent };
 }
 
-module.exports = { COOKIE, authStart, authVerify, signedIn, logout, setup, childSave, childRemove, invite, inviteCancel, memberUpdate, join, prefs, boot, mailGet, tick, itemAdd, itemDelete, mailRetry, mailDelete, mailChild, paste, inbound, takeMail, digestFor, runDigests, htmlToText, ukDay, inboxDomain };
+module.exports = { confirmHide, COOKIE, authStart, authVerify, signedIn, logout, setup, childSave, childRemove, invite, inviteCancel, memberUpdate, join, prefs, boot, mailGet, tick, itemAdd, itemDelete, mailRetry, mailDelete, mailChild, paste, inbound, takeMail, digestFor, runDigests, htmlToText, ukDay, inboxDomain };

@@ -7,7 +7,7 @@ const OPEN = { 'auth-start': st.authStart, 'auth-verify': st.authVerify, logout:
 const SIGNED = {
   boot: (a) => st.boot(a), setup: st.setup, 'child-save': st.childSave, 'child-remove': st.childRemove,
   invite: st.invite, 'invite-cancel': st.inviteCancel, 'member-update': st.memberUpdate, join: st.join, prefs: st.prefs,
-  'mail-get': st.mailGet, 'mail-retry': st.mailRetry, 'mail-delete': st.mailDelete, 'mail-child': st.mailChild, paste: st.paste,
+  'mail-get': st.mailGet, 'mail-retry': st.mailRetry, 'mail-delete': st.mailDelete, 'confirm-hide': st.confirmHide, 'mail-child': st.mailChild, paste: st.paste,
   tick: st.tick, 'item-add': st.itemAdd, 'item-delete': st.itemDelete,
 };
 exports.handler = core.handler(async (ctx) => {
