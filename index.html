@@ -5160,11 +5160,6 @@ function showLinksPage() {
 
   const html = `<div data-links-page="1" style="display:flex;flex-direction:column;gap:10px;">
 
-    <a href="https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:#25D366;color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #25D366;font-weight:700;font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
-      <span style="font-size:20px;">📣</span>
-      <span style="flex:1;text-align:left;">Follow Auntie Tobi on WhatsApp Channel<span style="display:block;font-size:11px;color:rgba(255,255,255,0.9);font-weight:400;margin-top:1px;">News, events and opportunities for Naija in the UK</span></span>
-      <span style="color:rgba(255,255,255,0.85);">&#8250;</span>
-    </a>
 
     <a href="javascript:void(0)" onclick="showAboutTobi();setTimeout(()=>addBackToLinksBtn(),100)" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">&#8505;&#65039;</span>
@@ -5199,6 +5194,11 @@ function showLinksPage() {
       <div id="links-mp-viewport" style="overflow:hidden;width:100%;"></div>
       <div id="links-mp-dots" style="display:flex;justify-content:center;gap:6px;padding:8px 14px;"></div>
     </div>
+    <a href="https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:#25D366;color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #25D366;font-weight:700;font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+      <span style="font-size:20px;">📣</span>
+      <span style="flex:1;text-align:left;">Follow Auntie Tobi on WhatsApp Channel<span style="display:block;font-size:11px;color:rgba(255,255,255,0.9);font-weight:400;margin-top:1px;">News, events and opportunities for Naija in the UK</span></span>
+      <span style="color:rgba(255,255,255,0.85);">&#8250;</span>
+    </a>
     <a href="/business-studio" style="display:flex;align-items:center;gap:12px;background:#0F1E36;color:white;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #0F1E36;font-size:14px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <span style="font-size:20px;">&#128640;</span>
       <span style="flex:1;text-align:left;">Business Studio<span style="display:block;font-size:11px;color:rgba(255,255,255,0.8);font-weight:400;margin-top:1px;">Free tools to manage customers, plan content and grow your business</span></span>
@@ -9213,7 +9213,7 @@ function resetToWelcome() {
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.open(\'https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e\',\'_blank\',\'noopener\')" style="background:#25D366;color:white;border-color:#25D366;">📣 Follow Auntie Tobi on WhatsApp Channel</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
+      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="window.open(\'https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e\',\'_blank\',\'noopener\')" style="background:#25D366;color:white;border-color:#25D366;">📣 Follow Auntie Tobi on WhatsApp Channel</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
 
