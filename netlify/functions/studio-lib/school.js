@@ -233,7 +233,8 @@ async function boot(auth) {
       inbox: me.role === 'owner' ? `${fam.inbox}@${inboxDomain()}` : '',
       members: fam.members.map(m => ({ email: m.email, name: m.name, role: m.role, children: m.children, you: m.email === auth.email })),
       invites: me.role === 'owner' ? (fam.invites || []).map(i => ({ email: i.email, name: i.name || '', children: i.children, at: i.at })) : [],
-      confirm: me.role === 'owner' ? (fam.confirm || []).slice(-3) : [], inboundIssue: me.role === 'owner' ? fam.inboundIssue || null : null },
+      confirm: me.role === 'owner' ? (fam.confirm || []).slice(-3).map(c => Object.assign({}, c, { why: c.code || c.link ? '' : isAdmin(auth.email) ? c.why : FRIENDLY_CODE })) : [],
+      inboundIssue: me.role === 'owner' && isAdmin(auth.email) ? fam.inboundIssue || null : null },
     mails: ((mails && mails.items) || []).filter(x => vis(x) && (x.kind !== 'confirm' || me.role === 'owner')).slice(0, 150),
     board: { actions: ((board && board.actions) || []).filter(vis), dates: ((board && board.dates) || []).filter(vis) },
     today: ukDay(),
@@ -243,7 +244,7 @@ async function mailGet(auth, b) {
   const fam = await family(auth.user.fid), me = memberOf(fam, auth.email); if (!me) throw new HttpError(403, 'not_member', 'Please sign in again.');
   const m = await getJson(`st/mail/${fam.id}/${String(b.id || '').replace(/[^A-Za-z0-9]/g, '')}`);
   if (!m || !canSee(fam, me, m.childIds) || (m.kind === 'confirm' && me.role !== 'owner')) throw new HttpError(404, 'not_found', 'That email isn’t available.');
-  return { mail: { id: m.id, at: m.at, from: m.from, subject: m.subject, title: m.title, summary: m.summary, childIds: m.childIds, text: m.text, kind: m.kind, status: m.status, error: m.error || '', fetchErr: m.fetchErr || '', canRefetch: !!(m.rid && (!m.text || m.fetchErr)) } };
+  return { mail: { id: m.id, at: m.at, from: m.from, subject: m.subject, title: m.title, summary: m.summary, childIds: m.childIds, text: m.text, kind: m.kind, status: m.status, error: m.error || '', fetchErr: m.fetchErr ? (isAdmin(auth.email) ? m.fetchErr : FRIENDLY_OPEN) : '', canRefetch: !!(m.rid && (!m.text || m.fetchErr)) } };
 }
 
 // ───────────── board (actions + dates) ─────────────
@@ -327,7 +328,7 @@ async function takeMail(fam, raw) {
     const code = (text.match(/Confirmation code:\s*(\d{6,12})/i) || [])[1] || '';
     const link = (text.match(/https:\/\/mail(?:-settings)?\.google\.com\/mail\/[^\s)"'<>]+/i) || text.match(/https:\/\/[^\s)"'<>]*yahoo\.com[^\s)"'<>]*(?:verif|confirm|forward)[^\s)"'<>]*/i) || text.match(/https:\/\/[^\s)"'<>]*(?:verify|confirm)[^\s)"'<>]*/i) || [])[0] || '';
     await cas(famKey(fam.id), cur => { if (!cur) return undefined; cur.confirm = (cur.confirm || []).filter(c => c.id !== raw.replaces).concat([{ id, at: mail.at, code, link, from: mail.from, subject: mail.subject, why: code || link ? '' : (raw.fetchErr || 'The code wasn’t in the part of the email we could read.') }]).slice(-5); return cur; });
-    mail.kind = 'confirm'; mail.status = 'confirm'; mail.title = 'Confirm email forwarding'; mail.summary = code ? `Your email provider wants you to confirm forwarding. Code: ${code}` : link ? 'Your email provider wants you to confirm forwarding — open the link in this email.' : 'Your email provider wants you to confirm forwarding, but we couldn’t read the code. Get it from the email in your inbox, or tap Try again.'; mail.childIds = [];
+    mail.kind = 'confirm'; mail.status = 'confirm'; mail.title = 'Confirm email forwarding'; mail.summary = code ? `Your email provider wants you to confirm forwarding. Code: ${code}` : link ? 'Your email provider wants you to confirm forwarding — open the link in this email.' : 'Your email provider wants you to confirm forwarding. Check your email inbox for the message and copy the code from there.'; mail.childIds = [];
   } else {
     mail.from = cleanText(originalFrom(mail.text, mail.from), 200);
     if (raw.fetchErr && !mail.text) { mail.text = ''; }
@@ -359,7 +360,7 @@ async function mailRetry(auth, b) {
   if (!old.rid && !old.text && old.kind === 'confirm') throw new HttpError(400, 'too_old', 'This one arrived before School Tracker could re-open emails. Ask Gmail to send the confirmation again (Settings → Forwarding → Resend email).');
   if (old.rid && (!old.text || old.fetchErr)) {   // couldn't open it before — ask Resend again
     const got = await fetchReceived(old.rid);
-    if (got.err) { await noteInbound(fam.id, got.err); throw new HttpError(502, 'resend', got.err); }
+    if (got.err) { await noteInbound(fam.id, got.err); await warnAdmins(got.err); throw new HttpError(502, 'resend', isAdmin(auth.email) ? got.err : FRIENDLY_OPEN.replace(' — tap Try again in a little while', '. Please try again in a little while')); }
     await noteInbound(fam.id, '');
     const em = got.em;
     raw = { from: typeof em.from === 'object' && em.from ? `${em.from.name || ''} <${em.from.email || em.from.address || ''}>`.trim() : String(em.from || old.from), subject: em.subject || old.subject, text: em.text || '', html: em.html || '', at: old.at, via: old.via, rid: old.rid };
@@ -422,6 +423,18 @@ async function fetchReceived(eid) {
     return { err: `Resend answered ${r.status}${msg ? ': ' + msg : ''}.` };
   } catch (e) { return { err: 'Couldn’t reach Resend just now (' + String(e && e.message || e).slice(0, 80) + ').' }; }
 }
+const isAdmin = email => { try { return core.adminEmails().includes(email); } catch (_) { return false; } };
+const FRIENDLY_CODE = 'Check your email inbox for the confirmation message (from Gmail or Yahoo) and copy the code from there.';
+const FRIENDLY_OPEN = 'We couldn’t open this email just now — tap Try again in a little while.';
+// A setup problem on our side (key / permissions): email the admins the details, at most once a day.
+async function warnAdmins(why) {
+  if (!/Full access|No Resend API key|wouldn’t let/.test(why || '')) return;
+  let first = false;
+  await cas(`st/adminwarn/${ukDay()}`, cur => { if (cur) return undefined; first = true; return { at: nowIso() }; }).catch(() => {});
+  if (!first) return;
+  await core.alert('school_inbound', 'School Tracker couldn’t open forwarded emails: ' + why).catch(() => {});
+  await core.emailAdmins('School Tracker: forwarded emails can’t be opened', `School Tracker received a forwarded email but couldn’t open it.\n\nReason: ${why}\n\nParents see a simple "try again" message, not these details. Once fixed, they can tap Try again on the email.`).catch(() => {});
+}
 async function noteInbound(fid, why) {   // shown to the owner on the Family screen until an email opens fine again
   await cas(famKey(fid), cur => { if (!cur) return undefined; const was = cur.inboundIssue || null; if (!why && !was) return undefined; cur.inboundIssue = why ? { at: nowIso(), why } : null; return cur; }).catch(() => {});
 }
@@ -441,6 +454,7 @@ async function inbound(evt) {
   try { await core.rateLimit('st-inbound', fid, 150, DAYMS); } catch (_) { return { ignored: 'daily limit' }; }
   const from = typeof em.from === 'object' && em.from ? `${em.from.name || ''} <${em.from.email || em.from.address || ''}>`.trim() : String(em.from || d.from || '');
   await noteInbound(fid, got.err || '');
+  if (got.err) await warnAdmins(got.err);
   const m = await takeMail(fam, { from, subject: em.subject || d.subject || '', text: em.text || '', html: em.html || '', at: em.created_at || nowIso(), via: 'email', rid: eid, fetchErr: got.err || '' });
   return { saved: m.id, status: m.status, opened: !got.err, why: got.err || undefined };
 }
