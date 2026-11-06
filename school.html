@@ -74,6 +74,8 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
 .aw-tot div{background:#FFF8E6;border:1px solid #F3E2B3;border-radius:14px;padding:10px 8px;text-align:center}.aw-tot b{display:block;font-size:24px;line-height:1.1}.aw-tot span{font-size:12.5px;font-weight:700;color:var(--amber)}
 .aw-sub{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.aw-sub span{background:#F4F1E9;border-radius:20px;padding:4px 10px;font-size:13px;font-weight:700}
 .aw-ico{flex:none;width:36px;height:36px;border-radius:50%;background:#FFF4D6;display:flex;align-items:center;justify-content:center;font-size:19px}
+.att{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1.5px solid var(--line);border-radius:14px;margin-top:8px;text-decoration:none;color:var(--navy);background:#fff}
+.att i{font-style:normal;font-size:24px;flex:none}.att b{display:block;font-size:14.5px;word-break:break-word}.att span{font-size:12.5px;color:var(--muted)}.att em{margin-left:auto;font-style:normal;font-weight:800;color:var(--green);font-size:14px;flex:none}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.chips button{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font-weight:700;font-size:13.5px;cursor:pointer}.chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 </style>
 </head>
@@ -330,7 +332,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
   function mailsHtml(list, title, max) {
     return '<div class="card"><h2>' + title + '</h2>' + (list.length ? list.slice(0, max || 100).map(function (m) {
       return '<button class="mail" data-mail="' + m.id + '"><div class="meta" style="margin:0 0 3px">' + kidTags(m.childIds) + '<span>' + esc(ago(m.at)) + '</span>' + (m.status === 'error' ? '<span class="pill red">Couldn’t read</span>' : m.kind === 'confirm' ? '<span class="pill">Forwarding</span>' : m.kind === 'award' ? '<span class="pill g">🏅 Award</span>' : m.important ? '<span class="pill">Action needed</span>' : '') + '</div>' +
-        '<b>' + esc(m.title || m.subject || '(no subject)') + '</b>' + (m.summary ? '<p>' + esc(m.summary) + '</p>' : '') + '</button>';
+        '<b>' + esc(m.title || m.subject || '(no subject)') + (m.nF ? ' <span style="font-weight:600;color:var(--muted);font-size:13px" title="Has attachments">📎' + (m.nF > 1 ? m.nF : '') + '</span>' : '') + '</b>' + (m.summary ? '<p>' + esc(m.summary) + '</p>' : '') + '</button>';
     }).join('') : '<div class="empty">No emails yet.</div>') + '</div>';
   }
   function bindLists(root) {
@@ -441,6 +443,12 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
       (dts.length ? '<div style="font-weight:800;margin-top:12px">Dates</div>' + dts.map(function (d) { return '<div class="row" style="align-items:center"><div class="txt"><b>' + esc(d.title) + '</b><div class="meta">' + esc(rel(d.date)) + (d.time ? ' · ' + esc(d.time) : '') + '</div></div><button class="btn ghost small" data-cal="' + d.id + '">＋ Calendar</button></div>'; }).join('') : '') +
       (aws.length ? '<div style="font-weight:800;margin-top:12px">🏅 Award' + (aws.length > 1 ? 's' : '') + '</div>' + aws.map(function (w) { return awardRow(w); }).join('') : '') +
       (m.kind !== 'confirm' && kids().length > 1 ? '<div style="font-weight:800;margin-top:14px">This is about</div><p class="sub" style="margin:0 0 6px;font-size:13px">Change it if we got it wrong — we’ll remember this sender.</p>' + kidPicker(st.sel, false) : '') +
+      ((m.atts || []).length ? '<div style="font-weight:800;margin-top:14px">📎 Attachments</div>' + (m.readAtts ? '<p class="sub" style="margin:2px 0 0;font-size:13px">We read the attached letter' + (m.atts.length > 1 ? 's' : '') + ' too, for to-dos and dates.</p>' : '') + m.atts.map(function (a) {
+        var ic = /pdf/i.test(a.type) || /\.pdf$/i.test(a.name) ? '📄' : /^image\//i.test(a.type) ? '🖼️' : /word|document/i.test(a.type) || /\.docx?$/i.test(a.name) ? '📝' : /sheet|excel/i.test(a.type) || /\.xlsx?$/i.test(a.name) ? '📊' : '📎';
+        var sz = a.size ? (a.size >= 1048576 ? (a.size / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(a.size / 1024)) + ' KB') : '';
+        var view = /^(application\/pdf|image\/(png|jpe?g|gif|webp|heic|heif)|text\/plain)$/i.test(a.type);
+        return '<a class="att" href="/.netlify/functions/school-file?m=' + encodeURIComponent(m.id) + '&a=' + encodeURIComponent(a.id) + '" target="_blank" rel="noopener"><i>' + ic + '</i><div style="min-width:0"><b>' + esc(a.name) + '</b><span>' + esc(sz) + '</span></div><em>' + (view ? 'Open' : 'Download') + '</em></a>';
+      }).join('') : '') +
       '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Original email</summary><div class="orig" style="margin-top:8px">' + esc(m.text || '') + '</div></details>' +
       '<button class="btn link danger" id="mdel" style="margin-top:8px">Delete this email</button>';
     $('.x', s).onclick = function () { s.remove(); };
