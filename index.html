@@ -5918,7 +5918,7 @@ function tobiFeatOrder(list, where){
 }
 window.tobiFeatOrder = tobiFeatOrder;
 // Featured businesses left out of the Home/Links carousel only (they still show everywhere else as Featured)
-var FEAT_CAROUSEL_SKIP = ['funmis-treasure'];
+var FEAT_CAROUSEL_SKIP = ['funmis-treasure', 'tombell-education-consultancy-ltd'];
 function featuredBizList(){
   // Carousel shows featured businesses that have a photo.
   return tobiFeatOrder(AUNTIE_TOBI_DIRECTORY.filter(function(b){ return b.featured && b.img && FEAT_CAROUSEL_SKIP.indexOf(b.slug) < 0; }), 'carousel');
