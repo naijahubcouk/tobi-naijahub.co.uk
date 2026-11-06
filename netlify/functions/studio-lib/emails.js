@@ -311,6 +311,26 @@ Sign in with this email address ({email}). We’ll send you a 6-digit code, no p
 Want even more people to find you? The Auntie Tobi Business Club puts you at the top as a Featured Business: https://www.auntietobi.co.uk/business-club
 
 Auntie Tobi 💚`, BIZ_VARS),
+  'biz.listed.site': S('out-n', 'You’re listed (signed up on the website)', 'New business · email 1 for owners who signed up on the directory website (sent from HQ → Add your business)', '🎉 {business_name} is live on Auntie Tobi',
+`Hi {name},
+
+Good news! **{business_name}** is now live on the Auntie Tobi website and app, where Nigerians across the UK look for businesses like yours.
+
+[[View my listing|{listing_link}]]
+
+**Want to do more with your listing?** Try Business Studio free. It’s your business workspace from Auntie Tobi:
+
+- 📱 Make posts and designs for Instagram in minutes
+- 👥 Keep track of customers and follow-ups
+- 📅 Plan your content for the week
+
+[[Try Business Studio free|{studio_link}]]
+
+Want even more people to find you? The Auntie Tobi Business Club puts you at the top as a Featured Business: https://www.auntietobi.co.uk/business-club
+
+Any questions? Message us on WhatsApp: {whatsapp_link}
+
+Auntie Tobi 💚`, BIZ_VARS),
   'biz.claimok': S('sys-biz', 'Claim approved', 'When you approve someone’s claim in HQ → Add your business', '✅ {business_name} is now yours on Auntie Tobi',
 `Hi {name},
 
@@ -425,7 +445,8 @@ async function restoreBuiltIn(id) { await core.cas('mail/removed', cur => { if (
 async function list() {
   const ids = Object.keys(T).concat((await extras()).map(x => x.id)), gone = await removedIds();
   const items = (await Promise.all(ids.map(get))).filter(Boolean).map(t => Object.assign(t, { removed: gone.includes(t.id) }));
-  items.sort((a, b) => (a.id === 'biz.listed' ? -1 : 0) - (b.id === 'biz.listed' ? -1 : 0));   // “You’re listed” is email 1 of the New business series
+  const first = id => id === 'biz.listed' ? -2 : id === 'biz.listed.site' ? -1 : 0;
+  items.sort((a, b) => first(a.id) - first(b.id));   // “You’re listed” is email 1 of the New business series
   const welcome = require('./welcome'), wel = {};
   for (const x of ['free', 'club', 'plus']) { const c = await welcome.get(x); wel[x] = { on: c.on, email: c.email, steps: c.steps, defaults: welcome.defaultsFor(x) }; }
   return { groups: GROUPS, items, welcome: wel };

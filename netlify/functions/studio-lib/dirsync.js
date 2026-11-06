@@ -172,6 +172,10 @@ async function apply(msg) {
   }
   const nb = Object.assign({ name, slug: bizdir.slugify(name), src: 'website', status: 'published', cat: catFrom(d.categories, items), loc: page.loc || 'UK', img: page.images[0] || '', featured: !!page.featured,
     contact: contact.name || '', contactEmail: contact.email || '', deId: d.id || '', siteAt: now, notes: `Added by the website sync (${now.slice(0, 10)}).` }, fromPage(page));
+  // 🆕 the owner signed up on the directory website → their “You’re listed” email + New business series (HQ → Add your business)
+  const ownerMail = String(contact.email || '').trim().toLowerCase();
+  if (published && ownerMail && !/^(favour adentan|auntie tobi)$/i.test(String(contact.name || '').trim()) && !/auntietobi|favouradentan/i.test(ownerMail))
+    Object.assign(nb, { via: 'website', ownerEmail: ownerMail, ownerName: bizdir.nameKey(contact.name || '') === bizdir.nameKey(name) ? '' : String(contact.name || '').trim(), uploadedAt: now });
   await bizdir.save(nb, who);
   await needs(null, name);
   await logSync(Object.assign(base, { slug: nb.slug, action: 'added' }));

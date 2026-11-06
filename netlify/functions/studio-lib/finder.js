@@ -158,7 +158,7 @@ async function decide(id, decision, edits, who) {
   let cand;
   await cas('finder/state', cur => { cand = cur && cur.items.find(x => x.id === id); return undefined; });
   if (!cand) throw new HttpError(404, 'not_found', 'That suggestion is no longer in the list.');
-  const e = {}; for (const k of ['name', 'cat', 'loc', 'desc', 'ig', 'fb', 'tt', 'wa', 'email', 'phone', 'website']) if (edits && typeof edits[k] === 'string') e[k] = core.cleanText(edits[k], k === 'desc' ? 400 : 300);
+  const e = {}; for (const k of ['name', 'cat', 'loc', 'desc', 'ig', 'fb', 'tt', 'wa', 'email', 'phone', 'website']) if (edits && typeof edits[k] === 'string') e[k] = k === 'desc' ? String(edits[k]).replace(/\r/g, '').trim().slice(0, 3000) : core.cleanText(edits[k], 300);
   if (e.cat && !CATS.includes(e.cat)) delete e.cat;
   if (edits && edits.status === 'new' && cand.status === 'skipped') e.status = 'new';
   if (edits && edits.imgNone === true) { e.imgNone = true; e.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); }
@@ -184,7 +184,7 @@ async function decide(id, decision, edits, who) {
     const w = await writeUp(c, e.desc && e.desc !== cand.desc ? e.desc : '');
     c.desc = w.long; c.short = w.short; c.tags = w.tags; delete c.siteText;
     await core.del('finder/img/' + id).catch(() => {});
-    await bizdir.save({ slug, img: c.img, short: w.short, tags: w.tags, lat: w.lat, lng: w.lng, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, ig: c.ig, fb: c.fb, tt: c.tt, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com|facebook\.com|fb\.com|tiktok\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', awaitSite: true, notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
+    await bizdir.save({ slug, img: c.img, short: w.short, tags: w.tags, lat: w.lat, lng: w.lng, name: c.name, cat: childCat(c.cat), cats: [c.cat], loc: c.loc || 'UK', addr: (c.loc || '') + (c.loc ? ', ' : '') + 'UK', desc: c.desc, long: c.desc.length > 300 ? c.desc : undefined, ig: c.ig, fb: c.fb, tt: c.tt, wa: c.wa, phone: c.phone, email: c.email, website: c.website && !/instagram\.com|facebook\.com|fb\.com|tiktok\.com/i.test(c.website) ? c.website : '', contact: 'Auntie Tobi', claimedSet: false, src: 'hq', awaitSite: true, notes: 'Found by the Business Finder (' + (c.query || '') + ').' }, who);
     c.slug = slug; c.status = 'approved'; c.approvedAt = now;
   } else if (decision === 'skip') { c.status = 'skipped'; c.imgUp = false; delete c.siteText; await core.del('finder/img/' + id).catch(() => {}); }
   else if (decision === 'never') { c.status = 'skipped'; c.imgUp = false; await core.del('finder/img/' + id).catch(() => {}); await neverAdd(c, 'Skipped for good in the Finder'); }

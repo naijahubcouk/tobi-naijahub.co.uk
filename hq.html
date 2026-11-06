@@ -1085,11 +1085,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var cl = typeof b.claimedSet === 'boolean' ? (b.claimedSet ? 'yes' : 'no') : 'auto';
     var s = sheet('<h2>' + (isNew ? '＋ Add a business' : '✏️ ' + esc(b.name)) + '</h2>' +
       (isNew ? '<p class="muted" style="margin:4px 0 8px;font-size:13.5px">Added here = shows in the app straight away, marked unclaimed. It also goes into your next ⬇️ website CSV in 🔎 Business Finder.</p>' : '<p class="muted" style="margin:4px 0 8px;font-size:13px">' + (b.src === 'website' ? 'From the website directory — the next website import updates name, category, contacts and Featured. Your notes, hidden and claimed tick are kept.' : 'Added in HQ.') + (b.contact ? ' Website contact name: <b>' + esc(b.contact) + '</b>.' : '') + '</p>') +
-      '<div class="stack">' +
+      '<div id="deFill"></div><div class="stack">' +
       '<div><label for="deN">Business name</label><input id="deN" maxlength="120" value="' + esc(b.name || '') + '"></div>' +
       '<div><label>Picture</label><div class="row" style="gap:12px;align-items:center"><img id="dePic" alt="" style="width:96px;height:96px;border-radius:12px;object-fit:cover;background:#EEF0F3;flex:none"><div class="stack" style="gap:6px"><div class="muted" id="dePicL" style="font-size:13px"></div><label class="btn ghost sm" style="margin:0">📷 Upload photo<input type="file" id="dePicF" accept="image/*" hidden></label></div></div></div>' +
       '<div class="f2"><div><label for="deC">Category</label><input id="deC" list="deCl" value="' + esc(b.cat || '') + '"><datalist id="deCl">' + dirCats().map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist></div><div><label for="deL">Town</label><input id="deL" value="' + esc(b.loc || '') + '"></div></div>' +
-      '<div><label for="deSh">Short description <span class="muted" style="font-weight:400">(one line — website “description”)</span></label><input id="deSh" maxlength="160" value="' + esc(b.short || '') + '"></div>' +
+      '<div><label for="deSh">Short description <span class="muted" style="font-weight:400">(one line — website “description”)</span></label><input id="deSh" maxlength="220" value="' + esc(b.short || '') + '"></div>' +
       '<div><label for="deD">Description <span class="muted" style="font-weight:400">(full)</span></label><textarea id="deD" rows="5">' + esc(b.desc || '') + '</textarea></div>' +
       '<div><label for="deLg">Long description <span class="muted" style="font-weight:400">(shown in full on Featured business pages)</span></label><textarea id="deLg" rows="5">' + esc(b.long || '') + '</textarea></div>' +
       '<div><label>📸 Photos <span class="muted" style="font-weight:400">(up to 6 — shown on Featured business pages)</span></label><div id="deGal" class="row" style="gap:8px;flex-wrap:wrap"></div><label class="btn ghost sm" style="margin:6px 0 0">＋ Add photos<input type="file" id="deGalF" accept="image/*" multiple hidden></label></div>' +
@@ -1113,6 +1113,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       $$('[data-gx]', s).forEach(function (x) { x.onclick = function () { gal.splice(+x.dataset.gx, 1); drawGal(); }; });
     };
     drawGal();
+    fillBar({ s: s, at: $('#deFill', s), get: function () { var v = function (id) { return $('#' + id, s).value.trim(); }; return { name: v('deN'), cat: v('deC'), loc: v('deL'), short: v('deSh'), desc: v('deD'), long: v('deLg'), tags: v('deT'), ig: v('deI').replace(/^@/, ''), wa: v('deW'), fb: v('deFb'), tt: v('deTt'), email: v('deE'), phone: v('deP'), website: v('deS') }; },
+      fields: [['name', 'deN', 'Name'], ['cat', 'deC', 'Category'], ['loc', 'deL', 'Town'], ['short', 'deSh', 'Short description'], ['desc', 'deD', 'Description (full + detailed)', 'long', 'deLg'], ['tags', 'deT', 'Tags'], ['ig', 'deI', 'Instagram'], ['wa', 'deW', 'WhatsApp'], ['phone', 'deP', 'Phone'], ['email', 'deE', 'Email'], ['website', 'deS', 'Website'], ['fb', 'deFb', 'Facebook'], ['tt', 'deTt', 'TikTok']],
+      pic: { has: function () { return !!(dpic || b.img); }, set: function (d) { dpic = d; $('#dePic', s).style.display = ''; $('#dePic', s).src = d; $('#dePicL', s).textContent = '✨ Photo found online'; } } });
     $('#deGalF', s).onchange = async function () { var fs = Array.prototype.slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && gal.length < 6; i++) { try { gal.push({ data: await shrinkImg(fs[i], 1000) }); } catch (x) { toast(x.message); } } if (fs.length && gal.length >= 6) toast('Up to 6 photos'); drawGal(); };
     $('#dePicF', s).onchange = async function () { var f = this.files && this.files[0]; this.value = ''; try { dpic = await shrinkImg(f, 1200); $('#dePic', s).style.display = ''; $('#dePic', s).src = dpic; $('#dePicL', s).textContent = '📷 Your photo'; } catch (x) { toast(x.message); } };
     $('#deX', s).onclick = function () { s.remove(); };
@@ -1135,6 +1138,60 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       if (dpic) item.imgData = dpic; else if (isNew && !b.img) { item.imgData = bizCard(item); item.imgSrc = 'card'; }
       this.disabled = true;
       try { S.dir = await api('dir-save', { item: item }); s.remove(); toast('Saved ✅ — the app updates within a minute'); S.crm = null; vDir(); } catch (x) { this.disabled = false; $('#deErr', s).textContent = x.message; $('#deErr', s).classList.remove('hidden'); }
+    };
+  }
+  // ✨ Fill a listing from their website, Instagram and/or screenshots, and write a detailed description (Business directory + Business Finder)
+  // o: { s: the sheet, at: element to put the bar in, fields: [[key, inputId, label]], get: () => current values, pic: { has: () => bool, set: fn(dataUrl) } }
+  function fillBar(o) {
+    var s = o.s, cur = o.get();
+    o.at.innerHTML = '<div style="background:#EEF7F1;border:1px solid #CFE7DA;border-radius:14px;padding:12px 14px;margin-bottom:12px">' +
+      '<div style="font-weight:800;margin-bottom:2px">✨ Fill from their website, Instagram or screenshots</div><div class="muted" style="font-size:12.5px;margin-bottom:8px">Use one or more. Auntie Tobi reads them, fills the form and writes a detailed description — only from what it finds. You check before saving.</div>' +
+      '<div class="f2"><div><input id="fbW" placeholder="🌐 Website link" value="' + esc(cur.website || '') + '"></div><div><input id="fbI" placeholder="📸 Instagram link or @handle" value="' + esc(cur.ig ? '@' + cur.ig : '') + '"></div></div>' +
+      '<div class="row" style="gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap"><label class="btn ghost sm" style="margin:0">🖼️ Add screenshots<input type="file" id="fbS" accept="image/*" multiple hidden></label><span class="muted" id="fbSn" style="font-size:12.5px">Instagram profile, flyer, price list, menu… (up to 4)</span></div>' +
+      '<textarea id="fbN" rows="2" placeholder="Anything else you know (optional) — e.g. does small chops for parties, delivers across London"></textarea>' +
+      '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn primary sm" id="fbGo">✨ Fill &amp; write description</button><button type="button" class="btn ghost sm" id="fbRw">✍️ Rewrite description only</button></div>' +
+      '<div id="fbOut"></div></div>';
+    var shots = [];
+    var drawShots = function () { $('#fbSn', s).innerHTML = shots.length ? shots.map(function (d, i) { return '<span style="position:relative;display:inline-block;margin-right:6px"><img src="' + d + '" style="width:44px;height:44px;object-fit:cover;border-radius:8px;vertical-align:middle"><button type="button" data-fbx="' + i + '" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:0;background:#B42318;color:#fff;font-size:11px;line-height:18px;padding:0;cursor:pointer">×</button></span>'; }).join('') : 'Instagram profile, flyer, price list, menu… (up to 4)'; $$('[data-fbx]', s).forEach(function (x) { x.onclick = function () { shots.splice(+x.dataset.fbx, 1); drawShots(); }; }); };
+    $('#fbS', s).onchange = async function () { var fs = Array.prototype.slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && shots.length < 4; i++) { try { shots.push(await shrinkImg(fs[i], 1400)); } catch (x) { toast(x.message); } } drawShots(); };
+    var show = function (r, onlyDesc) {
+      var d = r.draft || {}, now = o.get(), rows = [];
+      var DESC = { short: 1, desc: 1, long: 1, tags: 1 };
+      o.fields.forEach(function (f) {
+        var k = f[0], nv = d[f[3] || k]; if (k === 'tags' && Array.isArray(nv)) nv = nv.join(', ');
+        if (onlyDesc && !DESC[k]) return;
+        nv = String(nv == null ? '' : nv).trim(); var cv = String(now[k] == null ? '' : now[k]).trim();
+        if (!nv || nv === cv) return;
+        rows.push({ k: k, id: f[1], label: f[2], v: nv, cur: cv, on: !cv || !!DESC[k], also: f[4] });
+      });
+      var pic = r.imgData && o.pic ? r.imgData : '';
+      $('#fbOut', s).innerHTML = '<div style="margin-top:10px;border-top:1px solid #CFE7DA;padding-top:10px">' +
+        (r.unread && r.unread.length ? '<div class="muted" style="font-size:12.5px;margin-bottom:6px">⚠️ Couldn’t read ' + esc(r.unread.join(', ')) + '.</div>' : '') +
+        (rows.length || pic ? '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Found this — tick what to use:</div>' +
+          (pic ? '<label class="chk" style="align-items:center"><input type="checkbox" data-fbpic' + (o.pic.has() ? '' : ' checked') + '> <img src="' + pic + '" style="width:54px;height:54px;object-fit:cover;border-radius:8px;margin-right:6px"> Photo' + (o.pic.has() ? ' <span class="muted" style="font-size:12px">(replaces the current one)</span>' : '') + '</label>' : '') +
+          rows.map(function (x, i) { return '<label class="chk" style="align-items:flex-start;gap:8px;margin:6px 0"><input type="checkbox" data-fbr="' + i + '"' + (x.on ? ' checked' : '') + ' style="margin-top:3px"><span style="font-size:13.5px"><b>' + esc(x.label) + ':</b> <span style="white-space:pre-wrap">' + esc(x.v.length > 420 ? x.v.slice(0, 420) + '…' : x.v) + '</span>' + (x.cur ? '<br><span class="muted" style="font-size:12px">Now: ' + esc(x.cur.slice(0, 120)) + (x.cur.length > 120 ? '…' : '') + '</span>' : '') + '</span></label>'; }).join('') +
+          '<button type="button" class="btn primary sm" id="fbUse" style="margin-top:6px">✅ Use ticked</button>'
+          : '<div class="muted" style="font-size:13px">Nothing new found — the form already has it.</div>') + '</div>';
+      if ($('#fbUse', s)) $('#fbUse', s).onclick = function () {
+        var n = 0;
+        rows.forEach(function (x, i) { if (!$('[data-fbr="' + i + '"]', s).checked) return; var el = $('#' + x.id, s); if (!el) return; el.value = x.v; el.dispatchEvent(new Event('change')); if (x.also && $('#' + x.also, s)) $('#' + x.also, s).value = x.v; n++; });
+        var pc = $('[data-fbpic]', s); if (pc && pc.checked) { o.pic.set(pic); n++; }
+        $('#fbOut', s).innerHTML = '<div class="muted" style="font-size:13px;margin-top:8px">✅ Filled ' + n + ' thing' + (n === 1 ? '' : 's') + ' — check them, then save.</div>';
+      };
+    };
+    $('#fbGo', s).onclick = async function () {
+      var btn = this, web = $('#fbW', s).value.trim(), ig = $('#fbI', s).value.trim(), notes = $('#fbN', s).value.trim();
+      if (!web && !ig && !shots.length && !notes) { toast('Add a website, an Instagram link or a screenshot'); return; }
+      btn.disabled = true; btn.textContent = 'Reading… (up to a minute)';
+      try { show(await api('hq-fill', { web: web, ig: ig, shots: shots, notes: notes, current: o.get(), wantPic: !!o.pic })); }
+      catch (x) { toast(x.message); }
+      btn.disabled = false; btn.textContent = '✨ Fill & write description';
+    };
+    $('#fbRw', s).onclick = async function () {
+      var btn = this; btn.disabled = true; btn.textContent = 'Writing…';
+      try { show(await api('hq-write', { current: o.get(), notes: $('#fbN', s).value.trim() }), true); }
+      catch (x) { toast(x.message); }
+      btn.disabled = false; btn.textContent = '✍️ Rewrite description only';
     };
   }
   function dirImportSheet() {
@@ -1462,9 +1519,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var cats = S.find.cats || [];
     var s = sheet('<h2>✏️ ' + esc(c.name) + '</h2><p class="muted" style="margin:4px 0 8px;font-size:13px">Check the details (open their website or Instagram). Approve = it shows in the app straight away, marked unclaimed, and goes into your next website CSV. On approve, Auntie Tobi writes the short and full descriptions and tags from their own website (you can change them later in 🏢 Business directory).</p><div class="stack">' +
       '<div><label>Picture</label><div class="row" style="gap:12px;align-items:center"><img id="fePic" alt="" style="width:110px;height:110px;border-radius:12px;object-fit:cover;background:#EEF0F3;flex:none"><div class="stack" style="gap:6px"><div class="muted" id="fePicL" style="font-size:13px"></div><label class="btn ghost sm" style="margin:0">📷 Upload photo<input type="file" id="fePicF" accept="image/*" hidden></label><button class="btn ghost sm" id="fePicC" type="button">🎨 Use Auntie Tobi card</button></div></div><div class="muted" style="font-size:12px;margin-top:4px">Tip: a screenshot of their Instagram profile picture or a product photo works well.</div></div>' +
-      '<div><label for="feN">Business name</label><input id="feN" maxlength="120" value="' + esc(c.name || '') + '"></div>' +
+      '<div id="feFill"></div><div><label for="feN">Business name</label><input id="feN" maxlength="120" value="' + esc(c.name || '') + '"></div>' +
       '<div class="f2"><div><label for="feC">Category</label><select id="feC"><option value="">Choose…</option>' + cats.map(function (k) { return '<option' + (k === c.cat ? ' selected' : '') + ' value="' + esc(k) + '">' + esc(k.replace(' > ', ' › ')) + '</option>'; }).join('') + '</select></div><div><label for="feL">Town</label><input id="feL" value="' + esc(c.loc || '') + '"></div></div>' +
-      '<div><label for="feD">Description</label><textarea id="feD" rows="3">' + esc(c.desc || '') + '</textarea></div>' +
+      '<div><label for="feD">Description</label><textarea id="feD" rows="6">' + esc(c.desc || '') + '</textarea></div>' +
       '<div class="f2"><div><label for="feI">Instagram</label><input id="feI" placeholder="handle" value="' + esc(c.ig || '') + '"></div><div><label for="feW">WhatsApp</label><input id="feW" placeholder="447…" value="' + esc(c.wa || '') + '"></div></div>' +
       '<div class="f2"><div><label for="feF">Facebook</label><input id="feF" placeholder="facebook.com/…" value="' + esc(c.fb || '') + '"></div><div><label for="feT">TikTok</label><input id="feT" placeholder="@handle" value="' + esc(c.tt || '') + '"></div></div>' +
       '<div class="f2"><div><label for="feE">Email</label><input id="feE" type="email" value="' + esc(c.email || '') + '"></div><div><label for="feP">Phone</label><input id="feP" value="' + esc(c.phone || '') + '"></div></div>' +
@@ -1478,6 +1535,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     ['feN', 'feC', 'feL'].forEach(function (id) { $('#' + id, s).addEventListener('change', function () { if (!pic.data && (pic.none || c.imgNone || !(have && have.dataUrl))) showCard(); }); });
     $('#fePicF', s).onchange = async function () { var f = this.files && this.files[0]; this.value = ''; try { pic.data = await shrinkImg(f, 1200); pic.none = false; $('#fePic', s).src = pic.data; $('#fePicL', s).textContent = '📷 Your photo'; } catch (x) { toast(x.message); } };
     $('#fePicC', s).onclick = function () { pic.data = ''; pic.none = true; showCard(); };
+    fillBar({ s: s, at: $('#feFill', s), get: function () { var v = function (id) { return $('#' + id, s).value.trim(); }; return { name: v('feN'), cat: v('feC'), loc: v('feL'), desc: v('feD'), ig: v('feI').replace(/^@/, ''), wa: v('feW'), fb: v('feF'), tt: v('feT'), email: v('feE'), phone: v('feP'), website: v('feS') }; },
+      fields: [['name', 'feN', 'Name'], ['cat', 'feC', 'Category', 'catFull'], ['loc', 'feL', 'Town'], ['desc', 'feD', 'Description (detailed)', 'long'], ['ig', 'feI', 'Instagram'], ['wa', 'feW', 'WhatsApp'], ['phone', 'feP', 'Phone'], ['email', 'feE', 'Email'], ['website', 'feS', 'Website'], ['fb', 'feF', 'Facebook'], ['tt', 'feT', 'TikTok']],
+      pic: { has: function () { return !!pic.data || !!(!c.imgNone && have && have.dataUrl); }, set: function (d) { pic.data = d; pic.none = false; $('#fePic', s).src = d; $('#fePicL', s).textContent = '✨ Photo found online'; } } });
     $('#feX', s).onclick = function () { s.remove(); };
     $('#feSave', s).onclick = async function () { var e = vals(); e.status = 'new'; if (await findDecide(c, 'edit', e, this)) s.remove(); };
     $('#feOk', s).onclick = async function () { var e = vals(); if (!e.name || !e.cat) { $('#feErr', s).textContent = 'Add a name and choose a category.'; $('#feErr', s).classList.remove('hidden'); return; } if (await findDecide(c, 'approve', e, this)) s.remove(); };
@@ -1769,11 +1829,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="note" style="margin-bottom:12px">Owners add their business at <b>auntietobi.co.uk/add-business</b> (or in Business Studio) and confirm their email with a code — that also gives them a free Business Studio. New businesses show in the app when you approve them, then go in your next <b>Website CSV</b> (Business Finder). After you’ve uploaded that CSV, send their “You’re listed” email from here.</div>' +
       (a.listed.length ? '<div class="card" style="margin-bottom:12px;border:2px solid var(--gold)"><b>🆕 New business series — email 1 “You’re listed” (' + a.listed.length + ')</b><div class="muted" style="font-size:13px;margin:2px 0 8px">These are now on the website. Sending email 1 starts their <b>New business</b> series: <b>Club invite</b> 2 days later and <b>Club benefits</b> on day 5 (both wait in 📧 Outreach for you to tap Send). Nothing is sent until you press send.</div>' +
-        a.listed.map(function (b) { return '<div style="font-size:14px;padding:3px 0">• <b>' + esc(b.name) + '</b> — ' + esc(b.ownerName || '') + ' ' + esc(b.email) + '</div>'; }).join('') +
+        a.listed.map(function (b) { return '<div style="font-size:14px;padding:3px 0">• <b>' + esc(b.name) + '</b> — ' + esc(b.ownerName || '') + ' ' + esc(b.email) + ' <span class="muted" style="font-size:12px">' + (b.via === 'website' ? '· 🌐 signed up on the website' : '· 📱 added in the app') + '</span> <button class="btn ghost sm" data-abpv="biz.listed" data-slug="' + esc(b.slug) + '" style="padding:2px 8px;font-size:12px">👀</button></div>'; }).join('') +
         '<div class="apact" style="margin-top:10px"><button class="btn ghost sm" data-abpv="biz.listed" data-slug="' + esc(a.listed[0].slug) + '">👀 Preview the email</button><button class="btn primary sm" id="abSendListed">📧 Send email 1 & start series' + (a.listed.length > 1 ? ' (' + a.listed.length + ')' : '') + '</button></div></div>' : '') +
       (a.waitingCsv.length ? '<div class="card" style="margin-bottom:12px"><b>⏳ In the app, waiting for your Website CSV (' + a.waitingCsv.length + ')</b><div class="muted" style="font-size:13px;margin-top:2px">' + a.waitingCsv.map(function (b) { return esc(b.name); }).join(', ') + '</div><div class="muted" style="font-size:13px;margin-top:6px">Download the CSV in 🔎 Business Finder, upload it to your directory website, then tap “Mark as uploaded”.</div></div>' : '') +
-      (a.ownerEdits.length ? '<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer"><b>✏️ Owner changes to copy to the website (' + a.ownerEdits.length + ')</b> <span class="muted" style="font-size:13px">— live in the app already</span></summary>' +
-        a.ownerEdits.map(function (b) { return '<div style="font-size:13.5px;margin-top:10px"><b>' + esc(b.name) + '</b> <a href="https://directory.auntietobi.co.uk/' + esc(b.slug) + '" target="_blank" rel="noopener">website ↗</a>' + Object.keys(b.values).map(function (k) { return '<div class="muted">• ' + esc({ desc: 'Description', wa: 'WhatsApp', img: 'Photo', ig: 'Instagram', loc: 'Town', addr: 'Address', cat: 'Category', fb: 'Facebook', tt: 'TikTok', email: 'Email', phone: 'Phone', website: 'Website' }[k] || k) + ': ' + (k === 'img' ? '<a href="' + esc(b.values[k]) + '" target="_blank" rel="noopener">new photo</a>' : esc(String(b.values[k]).slice(0, 200))) + '</div>'; }).join('') + '</div>'; }).join('') +
+      (a.ownerEdits.length ? '<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer"><b>✏️ Changes to copy to the website (' + a.ownerEdits.length + ')</b> <span class="muted" style="font-size:13px">— live in the app already</span></summary>' +
+        a.ownerEdits.map(function (b) { return '<div style="font-size:13.5px;margin-top:10px"><b>' + esc(b.name) + '</b> <a href="https://directory.auntietobi.co.uk/' + esc(b.slug) + '" target="_blank" rel="noopener">website ↗</a>' + Object.keys(b.values).map(function (k) { return '<div class="muted">• ' + esc({ desc: 'Description', long: 'Detailed description', wa: 'WhatsApp', img: 'Photo', ig: 'Instagram', loc: 'Town', addr: 'Address', cat: 'Category', fb: 'Facebook', tt: 'TikTok', email: 'Email', phone: 'Phone', website: 'Website' }[k] || k) + ': ' + (k === 'img' ? '<a href="' + esc(b.values[k]) + '" target="_blank" rel="noopener">new photo</a>' : esc(String(b.values[k]).slice(0, 200)) + (String(b.values[k]).length > 200 ? '…' : '') + ' <button type="button" class="btn ghost sm" data-cpy="' + esc(String(b.values[k])) + '" style="padding:1px 8px;font-size:12px">📋 Copy</button>') + '</div>'; }).join('') + '</div>'; }).join('') +
         '<div class="muted" style="font-size:12.5px;margin-top:10px">Each one disappears from here by itself once the website shows the same thing.</div></details>' : '') +
       '<details class="card" style="margin-bottom:12px"' + (an.left && !an.sent ? ' open' : '') + '><summary style="cursor:pointer"><b>📣 One-off email: “You can now edit your listing in Business Studio”</b></summary><div class="muted" style="font-size:13.5px;margin:6px 0">For Business Studio members who already linked their listing (' + an.total + ' member' + (an.total === 1 ? '' : 's') + ' · ' + an.sent + ' sent · ' + an.left + ' still to send). You can change the wording in 📝 Emails → Add your business.</div>' +
         ((an.list || []).length ? '<div style="margin:4px 0 10px">' + an.list.map(function (m) { return '<div style="font-size:14px;padding:3px 0">• <b>' + esc(m.name) + '</b> — ' + esc(m.email) + ' ' + (m.sent ? '<span class="as live" style="font-size:11px">✓ Sent ' + esc(new Date(m.sent).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + '</span>' : '<span class="muted" style="font-size:12px">· to send</span>') + '</div>'; }).join('') + '</div>' : '') +
@@ -1782,6 +1842,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (list.length ? list.map(card).join('') : '<div class="card"><p class="muted">' + (S.abTab === 'new' ? 'Nothing to review. Share auntietobi.co.uk/add-business so businesses can add themselves.' : 'Nothing here yet.') + '</p></div>') + '</div>';
     $$('[data-abtab]').forEach(function (b) { b.onclick = function () { S.abTab = b.dataset.abtab; drawAbiz(); }; });
     $$('[data-copy]').forEach(function (a) { a.addEventListener('click', function () { try { navigator.clipboard.writeText(a.dataset.copy); toast('Message copied — paste it in the Instagram chat'); } catch (e) {} }); });
+    $$('[data-cpy]').forEach(function (a) { a.onclick = function () { try { navigator.clipboard.writeText(a.dataset.cpy); toast('📋 Copied — paste it on the website'); } catch (e) {} }; });
     $$('[data-zoom]').forEach(function (im) { im.onclick = function () { window.open(im.src, '_blank'); }; });
     var byId = function (id) { return a.subs.filter(function (x) { return x.id === id; })[0]; };
     var review = async function (id, decision, edits, btn) {

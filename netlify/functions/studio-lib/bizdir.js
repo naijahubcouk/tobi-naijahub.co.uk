@@ -97,7 +97,7 @@ function normalise(b) {
   const out = {
     // an existing link name (slug) is never changed
     slug: b.slug ? String(b.slug).trim().replace(/[^A-Za-z0-9._~-]/g, '').slice(0, 100) : slugify(b.name), name: str(b.name, 120), cat: str(b.cat, 60).toLowerCase(), cats: Array.isArray(b.cats) ? b.cats.map(c => str(c, 120)).filter(Boolean) : [],
-    loc: str(b.loc, 60), addr: str(b.addr, 200), desc: str(b.desc, 1200), ig: igHandle(b.ig), wa: String(b.wa || '').replace(/\D/g, '').slice(0, 15),
+    loc: str(b.loc, 60), addr: str(b.addr, 200), desc: String(b.desc || '').replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 3000), ig: igHandle(b.ig), wa: String(b.wa || '').replace(/\D/g, '').slice(0, 15),
     phone: str(b.phone, 30), email: str(b.email, 120).toLowerCase(), website: str(b.website, 300), featured: !!b.featured, verified: !!b.verified,
     contact: str(b.contact, 120), status: b.status === 'pending' ? 'pending' : 'published', hidden: !!b.hidden, src: b.src === 'hq' ? 'hq' : 'website',
     updatedAt: b.updatedAt || '',
@@ -126,7 +126,7 @@ function normalise(b) {
   if (b.imgFrom && /^https:\/\//.test(String(b.imgFrom))) out.imgFrom = str(b.imgFrom, 600);   // the website photo our copy (img) came from
   if (b.ownerEmail) out.ownerEmail = str(b.ownerEmail, 120).toLowerCase();
   if (b.ownerName) out.ownerName = str(b.ownerName, 80);
-  if (b.via === 'app' || b.via === 'studio') out.via = b.via;
+  if (b.via === 'app' || b.via === 'studio' || b.via === 'website') out.via = b.via;   // website = the owner signed up on the directory website
   if (b.listedMailAt) out.listedMailAt = str(b.listedMailAt, 40);   // "You're listed" email sent
   if (b.ownerEdAt) out.ownerEdAt = str(b.ownerEdAt, 40);            // last change by the owner in Business Studio
   if (b.ownerEd && typeof b.ownerEd === 'object' && Object.keys(b.ownerEd).length) { const e = {}; for (const k of OWNER_FIELDS) if (b.ownerEd[k] !== undefined) e[k] = b.ownerEd[k]; if (Object.keys(e).length) out.ownerEd = e; }

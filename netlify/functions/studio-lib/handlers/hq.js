@@ -298,6 +298,12 @@ exports.handler = handler(async (ctx) => {
           raw.gallery = keep.concat(added);
         }
         delete raw.galleryAdd;
+        // ✏️ changed a listing that's on the directory website → keep your words (the website sync won't overwrite them) and list them under “Changes to copy to the website”
+        { const old = (await bizdir.all()).find(x => x.slug === (raw.origSlug || raw.slug));
+          if (old && (old.src === 'website' || old.uploadedAt)) {
+            const ch = {}; for (const k of bizdir.OWNER_FIELDS) if (k !== 'img' && raw[k] !== undefined && String(raw[k] || '').trim() !== String(old[k] || '').trim() && String(raw[k] || '').trim()) ch[k] = raw[k];
+            if (Object.keys(ch).length) { raw.ownerEd = Object.assign({}, old.ownerEd || {}, ch); raw.ownerEdAt = core.nowIso(); }
+          } }
         const item = await bizdir.save(raw, who.email); await core.audit(who.email, 'hq_dir_save', { slug: item.slug }); }
       if (body.action === 'dir-delete') {
         const slug = String(body.slug || ''), b = (await bizdir.all()).find(x => x.slug === slug);
@@ -320,6 +326,12 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dm-ideas') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return await dm.ideas(body.city, body.interest); }
       if (body.action === 'dm-search') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return { accounts: await dm.searchPages(body.q) }; }
       return await dm.overview();
+    }
+    case 'hq-fill': case 'hq-write': {   // ✨ fill a listing from a website / Instagram / screenshots, ✍️ rewrite its descriptions (admin only, like the directory)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
+      const ab = require('../addbiz');
+      if (body.action === 'hq-fill') return await ab.hqFill({ web: body.web, ig: body.ig, shots: body.shots, notes: body.notes, current: body.current, wantPic: !!body.wantPic }, who.email);
+      return await ab.hqWrite(body.current, body.notes, who.email);
     }
     case 'abiz-list': case 'abiz-review': case 'abiz-delete': case 'abiz-listed': case 'abiz-preview': case 'abiz-announce': {
       // ➕ Add your business — owners' new listings, claims and name changes (admin only)

@@ -57,8 +57,9 @@ function eligible(b) {
 async function stepVars(b, step) {
   const v = vars(b);
   if (step !== 'biz.listed') return v;
-  return Object.assign(v, { name: String(b.ownerName || '').trim().split(/\s+/)[0] || 'there', studio_link: core.appUrl(), email: b.ownerEmail || b.email || '' });
+  return Object.assign(v, await require('./addbiz').listedVars(b));
 }
+function tplId(b, step) { return step === 'biz.listed' ? require('./addbiz').listedId(b) : step; }
 async function listedDone(b) {
   await bizdir.save(Object.assign({}, b, { origSlug: b.slug, listedMailAt: core.nowIso() }), 'outreach').catch(() => {});
   await require('./invites').act(b.slug, 'log', { text: '📧 “You’re listed” email sent to the owner' }).catch(() => {});
@@ -197,7 +198,7 @@ async function sendBatch(max) {
     for (let k = 0; k < chunk.length; k++) {
       if (Date.now() > stopAt) break;
       const x = chunk[k], started = Date.now();
-      const msg = await emails.render(x.step, Object.assign(await stepVars(dir.get(x.slug), x.step), { personal_line: lines[k] }));
+      const msg = await emails.render(tplId(dir.get(x.slug), x.step), Object.assign(await stepVars(dir.get(x.slug), x.step), { personal_line: lines[k] }));
       if (await sendOne(x.email, msg, x.slug, x.step)) { await record(x, 'email'); if (x.step === 'biz.listed') await listedDone(dir.get(x.slug)); sent++; } else failed++;
       await new Promise(res => setTimeout(res, Math.max(500, 550 - (Date.now() - started))));   // never two emails within half a second
     }
@@ -211,7 +212,7 @@ async function handMessage(slug) {
   const p = await plan(), x = p.todayHand.find(y => y.slug === slug) || p.todayEmail.find(y => y.slug === slug);
   if (!x) throw new HttpError(404, 'not_found', 'That business has nothing due today.');
   const b = (await bizdir.all()).find(y => y.slug === slug);
-  const text = (await emails.plain(x.step, await stepVars(b, x.step))).replace(/\n\nAuntie Tobi$/, '\n\nAuntie Tobi 💚');
+  const text = (await emails.plain(tplId(b, x.step), await stepVars(b, x.step))).replace(/\n\nAuntie Tobi$/, '\n\nAuntie Tobi 💚');
   return { text, wa: b.wa, ig: b.ig, step: x.step, j: x.j };
 }
 async function markHand(slug) {
@@ -237,13 +238,13 @@ async function overview() {
   const p = await plan(), dir = await bizdir.all(), st = p.st;
   const rows = dir.filter(b => st.biz[b.slug]).map(b => { const r = st.biz[b.slug]; return { slug: b.slug, name: b.name, email: b.via && b.ownerEmail ? b.ownerEmail : b.email, app: !!(b.via && b.ownerEmail), j: r.j, sent: r.sent, stop: r.stop || '', start: new Date(r.start).toISOString() }; });
   const counts = { inJourney: rows.filter(r => !r.stop).length, finished: rows.filter(r => r.stop === 'finished').length, joined: rows.filter(r => r.stop === 'joined').length, stopped: rows.filter(r => r.stop && !['finished', 'joined'].includes(r.stop)).length, waitingToStart: p.freshLeft };
-  const preview = async x => { const b = dir.find(y => y.slug === x.slug); const m = await emails.render(x.step, await stepVars(b, x.step)); return Object.assign({}, x, { subject: m.subject }); };
+  const preview = async x => { const b = dir.find(y => y.slug === x.slug); const m = await emails.render(tplId(b, x.step), await stepVars(b, x.step)); return Object.assign({}, x, { subject: m.subject }); };
   return { settings: p.set, sentToday: p.sentToday, manualToday: p.manualToday, todayEmail: await Promise.all(p.todayEmail.map(preview)), todayHand: p.todayHand, counts, rows, laterThisWeek: p.waiting };
 }
 async function previewFor(slug, step) {
   const b = (await bizdir.all()).find(y => y.slug === slug);
   if (!b) throw new HttpError(404, 'not_found', 'Business not found.');
-  return emails.render(step, await stepVars(b, step));
+  return emails.render(tplId(b, step), await stepVars(b, step));
 }
 // Test email of any template to Auntie Tobi, using a real or sample business
 async function sendTest(id, to, slug, draft) {
