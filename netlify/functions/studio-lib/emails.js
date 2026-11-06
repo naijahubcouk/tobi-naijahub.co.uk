@@ -25,7 +25,7 @@ const BENEFITS = `1. **Featured in the app and on the website.** When people loo
 5. **Marketplace.** Your product or service listed for 12 months.
 6. **Business Growth Library.** Practical lessons, templates and tools to use at your own pace.`;
 
-const OUT_VARS = ['business_name', 'category', 'town', 'listing_link', 'claim_link', 'remove_link', 'studio_link', 'club_link', 'personal_line'];
+const OUT_VARS = ['business_name', 'category', 'town', 'listing_link', 'claim_link', 'remove_link', 'studio_link', 'club_link', 'whatsapp_link', 'personal_line'];
 const T = {
   // ── Outreach: unclaimed (Auntie Tobi listed them) ──
   u1: { group: 'out-u', name: 'You’re listed', when: 'Unclaimed · day 0', subject: '{business_name} is now on Auntie Tobi 💚', body:
@@ -416,7 +416,7 @@ const freshClaim = t => String(t || '').replace(OLD_CLAIM, NEW_CLAIM).replace(/t
 async function get(id) {
   const d = await def(id); if (!d) return null;
   const o = await getJson('mail/tpl/' + id).catch(() => null);
-  return { id, group: d.group, name: d.name, when: d.when, vars: d.vars, must: d.must || [], sys: !!d.sys, extra: !!d.extra, day: d.day, subject: (o && o.subject) || d.subject, body: freshClaim((o && o.body) || d.body), edited: !!o, at: (o && o.at) || '', original: { subject: d.subject, body: d.body } };
+  return { id, group: d.group, name: d.name, when: d.when, vars: d.vars && d.vars.length && d.vars.indexOf('whatsapp_link') < 0 ? d.vars.concat('whatsapp_link') : d.vars, must: d.must || [], sys: !!d.sys, extra: !!d.extra, day: d.day, subject: (o && o.subject) || d.subject, body: freshClaim((o && o.body) || d.body), edited: !!o, at: (o && o.at) || '', original: { subject: d.subject, body: d.body } };
 }
 // Built-in outreach emails you deleted from a journey (can be brought back): mail/removed { ids: [] }
 async function removedIds() { return ((await getJson('mail/removed').catch(() => null)) || { ids: [] }).ids; }
@@ -446,7 +446,8 @@ async function restore(id) { await del('mail/tpl/' + id).catch(() => {}); return
 
 // ── rendering ──
 const escH = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const fill = (s, v) => String(s).replace(/\{([a-z_]+)\}/g, (m, k) => (k in v ? String(v[k] == null ? '' : v[k]) : m));
+const WA_LINK = 'https://wa.me/447594674940';
+const fill = (s, v) => String(s).replace(/\{([a-z_]+)\}/g, (m, k) => (k === 'whatsapp_link' && !(k in v) ? WA_LINK : k in v ? String(v[k] == null ? '' : v[k]) : m));
 // [[Button text|https://…]] = a green button · [link text](https://…) = a link · **bold** · bare web addresses become links
 function inline(s) {
   const keep = [], hold = h => '\u0000' + (keep.push(h) - 1) + '\u0000';
