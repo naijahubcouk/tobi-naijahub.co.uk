@@ -30,7 +30,7 @@ const IMG_UPDATES = {
   abbystoreltd: { from: 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805', to: '/biz-img/abbystoreltd.jpg' },
 };
 // One-off changes to the saved directory, each done once (Seun can change them back in HQ afterwards)
-const ONCE = [{ id: 'unfeature-funmis-2026-11', slug: 'funmis-treasure', set: { featured: false } }];
+const ONCE = [{ id: 'refeature-funmis-2026-11', slug: 'funmis-treasure', set: { featured: true } }];   // she stays Featured; only the app carousel leaves her out
 async function runOnce(rec) {
   if (!rec || !Array.isArray(rec.items)) return rec;
   const done = (await getJson('dir/once').catch(() => null)) || {};
