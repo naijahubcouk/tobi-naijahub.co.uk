@@ -123,7 +123,15 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
   function termStart() { var t = TODAY(), y = +t.slice(0, 4), m = +t.slice(5, 7); return m >= 9 ? y + '-09-01' : m <= 3 ? y + '-01-01' : y + '-04-01'; }
   function awards(id) { return ((S.boot.board.awards) || []).filter(function (w) { return forKid(w, id); }).sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); }); }
   function levelKey(l) { var t = String(l || 'Award').replace(/\s+award$/i, '').trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Award'; }
-  function countBy(list, f) { var o = {}; list.forEach(function (w) { var k = f(w); if (k) o[k] = (o[k] || 0) + 1; }); return Object.keys(o).map(function (k) { return [k, o[k]]; }).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }); }
+  // Counts by a label; "Drama", "drama " and "Drama:" are the same thing.
+  function countBy(list, f) { var o = {}, label = {}; list.forEach(function (w) { var v = f(w); if (!v) return; var k = String(v).toLowerCase().replace(/[^a-z0-9&]+/g, ' ').trim(); if (!k) return; o[k] = (o[k] || 0) + 1; if (!label[k]) label[k] = v; }); return Object.keys(o).map(function (k) { return [label[k], o[k]]; }).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }); }
+  // The subject for counting: "Maths homework", "Math" and "Mathematics" all count as Maths.
+  var SUBJ = { math: 'Maths', maths: 'Maths', mathematics: 'Maths', numeracy: 'Maths', sci: 'Science', science: 'Science', eng: 'English', english: 'English', 'english language': 'English', 'english literature': 'English', literacy: 'English', pe: 'PE', 'p e': 'PE', 'physical education': 'PE', sport: 'PE', ict: 'Computing', computing: 'Computing', 'computer science': 'Computing', dt: 'Design & Technology', 'd&t': 'Design & Technology', 'd & t': 'Design & Technology', 'design technology': 'Design & Technology', 'design and technology': 'Design & Technology', re: 'RE', 'r e': 'RE', 'religious education': 'RE', rs: 'RE', 'religious studies': 'RE', pshe: 'PSHE', mfl: 'Languages', languages: 'Languages', art: 'Art', 'art and design': 'Art', drama: 'Drama', music: 'Music', history: 'History', geography: 'Geography', french: 'French', spanish: 'Spanish', german: 'German' };
+  function subjectOf(t) {
+    var k = String(t || '').toLowerCase().replace(/[^a-z&\s]+/g, ' ').replace(/\b(homework|lessons?|class(es)?|classwork|work|project|in|for|the|subject)\b/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!k) return '';
+    return SUBJ[k] || k.replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); });
+  }
   function awardRow(w, opts) {
     opts = opts || {};
     return '<div class="row" style="align-items:center"><div class="aw-ico">' + medal(w.level) + '</div><div class="txt"' + (w.mid ? ' data-mail="' + w.mid + '" style="cursor:pointer"' : '') + '><b>' + esc(w.level || 'Award') + (w.what ? ' · ' + esc(w.what) : '') + '</b><div class="meta">' + (opts.noKid ? '' : kidTags(w.childIds)) + '<span>' + esc(rel(w.date)) + '</span>' + (w.manual ? '<span>Added by ' + esc(w.by || 'you') + '</span>' : '') + '</div></div>' +
@@ -135,7 +143,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     var scanning = S.awScan ? '<p class="sub" style="margin:0 0 6px;font-size:13px">🔎 Looking through older emails for awards…</p>' : '';
     if (!all.length) return '<div class="card"><h2>🏅 Awards</h2>' + scanning + '<div class="empty">No awards yet. When the school emails about an award, merit or certificate for ' + esc(c.name) + ', it’ll be counted here.</div><button class="btn link" data-awadd="' + id + '">＋ Add one from a paper certificate</button></div>';
     var byLevel = countBy(year.length ? year : all, function (w) { return levelKey(w.level); }).slice(0, 4);
-    var bySubj = countBy(year.length ? year : all, function (w) { return w.what; }).slice(0, 8);
+    var bySubj = countBy(year.length ? year : all, function (w) { return subjectOf(w.what); }).slice(0, 8);
     return '<div class="card" style="border:2px solid #F3E2B3"><h2>🏅 Awards <small>' + (term.length && term.length !== year.length ? term.length + ' this term · ' : '') + (year.length ? year.length + ' this school year' : all.length + ' in total') + '</small></h2>' + scanning +
       '<div class="aw-tot">' + byLevel.map(function (x) { return '<div><b>' + medal(x[0]) + ' ' + x[1] + '</b><span>' + esc(x[0]) + '</span></div>'; }).join('') + '</div>' +
       (bySubj.length ? '<div class="sub" style="margin:0 0 6px;font-size:13px;font-weight:700">By subject</div><div class="aw-sub">' + bySubj.map(function (x) { return '<span>' + esc(x[0]) + ' ×' + x[1] + '</span>'; }).join('') + '</div>' : '') +
@@ -145,7 +153,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
   function awardText(id) {
     var c = kid(id), all = awards(id), ys = yearStart(), year = all.filter(function (w) { return w.date >= ys; }), list = year.length ? year : all;
     var lv = countBy(list, function (w) { return levelKey(w.level); }).map(function (x) { return medal(x[0]) + ' ' + x[1] + ' ' + x[0]; }).join(', ');
-    var sj = countBy(list, function (w) { return w.what; }).slice(0, 6).map(function (x) { return x[0] + (x[1] > 1 ? ' ×' + x[1] : ''); }).join(', ');
+    var sj = countBy(list, function (w) { return subjectOf(w.what); }).slice(0, 6).map(function (x) { return x[0] + (x[1] > 1 ? ' ×' + x[1] : ''); }).join(', ');
     return 'So proud of ' + c.name + '! 🎉 ' + (year.length ? 'This school year' : 'So far') + ': ' + list.length + ' award' + (list.length === 1 ? '' : 's') + (lv ? ' — ' + lv : '') + '.' + (sj ? ' For ' + sj + '.' : '');
   }
   function shareAwards(id) {
