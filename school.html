@@ -118,6 +118,26 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
   function kidTags(ids) { return (ids || []).map(kid).filter(Boolean).map(function (c) { return '<span class="kid" style="color:' + c.color + '"><i style="background:' + c.color + '"></i>' + esc(c.name) + '</span>'; }).join(''); }
   function forKid(x, id) { return !id || (x.childIds || []).indexOf(id) >= 0; }
 
+  // ── 🎓 year groups ──
+  var YEARS = ['Nursery', 'Reception'].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(function (n) { return 'Year ' + n; }));
+  function yearSelect(idAttr, sel) { return '<select ' + idAttr + '><option value="">Year group (optional)</option>' + YEARS.map(function (y) { return '<option' + (y === sel ? ' selected' : '') + '>' + y + '</option>'; }).join('') + '</select>'; }
+  function shown(m) { return !m.hidden; }
+  function yearsCard() {
+    if (S.boot.user.role !== 'owner') return '';
+    var miss = kids().filter(function (c) { return !c.year; });
+    if (!miss.length) return '';
+    return '<div class="card" style="border:2px solid var(--gold)"><h2>🎓 Add year groups</h2><p class="sub" style="margin:0 0 10px">Tell us each child’s year so emails for other year groups (e.g. a Year 3 trip) are kept out of the way.</p>' +
+      miss.map(function (c) { return '<button class="btn ghost small" data-yr="' + c.id + '" style="margin:0 6px 6px 0">Set ' + esc(c.name) + '’s year</button>'; }).join('') + '</div>';
+  }
+  async function scanYears() {
+    if (S.yrScan || S.yrScanDone || !S.boot || !S.boot.yearPending) return;
+    S.yrScan = true;
+    var hid = 0;
+    try { for (var i = 0; i < 8; i++) { var r = await api('year-scan'); hid += r.hidden || 0; if (!r.left || !r.scanned) break; } } catch (e) {}
+    S.yrScan = false; S.yrScanDone = true;
+    try { await load(); if (!document.querySelector('.sheetbg')) render(); if (hid) toast(hid + ' email' + (hid === 1 ? '' : 's') + ' for other year groups moved to “Not for us”'); } catch (e) {}
+  }
+
   // ── 🏅 awards ──
   function medal(l) { return /gold|platinum|head ?teacher|principal/i.test(l || '') ? '🥇' : /silver/i.test(l || '') ? '🥈' : /bronze/i.test(l || '') ? '🥉' : '🏅'; }
   function yearStart() { var t = TODAY(), y = +t.slice(0, 4), m = +t.slice(5, 7); return (m >= 9 ? y : y - 1) + '-09-01'; }   // UK school year starts in September
@@ -227,18 +247,19 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
 
   // ── first-time setup ──
   function setupView() {
-    var u = S.boot.user, rows = [{ name: '', school: '' }, { name: '', school: '' }];
+    var u = S.boot.user, rows = [{ name: '', school: '', year: '' }, { name: '', school: '', year: '' }];
     function draw() {
       app.innerHTML = '<main style="padding-top:10px"><div class="hero" style="padding:20px"><div style="font-size:34px">🎒</div><h1 style="font-size:24px">Let’s set up your family</h1><p>Takes a minute. You can change everything later.</p></div>' +
         '<div class="card"><label for="nm" style="margin-top:0">Your first name</label><input type="text" id="nm" value="' + esc(u.name || '') + '" placeholder="e.g. Seun">' +
-        '<label style="margin-top:16px">Your children</label><p class="sub" style="margin:0 0 6px;font-size:13.5px">Their school helps us match each email to the right child.</p>' +
-        rows.map(function (r, i) { return '<div style="display:grid;grid-template-columns:1fr 1.2fr;gap:8px;margin-bottom:8px"><input type="text" data-n="' + i + '" placeholder="Child’s name" value="' + esc(r.name) + '"><input type="text" data-s="' + i + '" placeholder="School" value="' + esc(r.school) + '"></div>'; }).join('') +
+        '<label style="margin-top:16px">Your children</label><p class="sub" style="margin:0 0 6px;font-size:13.5px">Their school and year group help us match each email to the right child — and leave out emails for other year groups.</p>' +
+        rows.map(function (r, i) { return '<div style="display:grid;grid-template-columns:1fr 1.2fr;gap:8px;margin-bottom:8px"><input type="text" data-n="' + i + '" placeholder="Child’s name" value="' + esc(r.name) + '"><input type="text" data-s="' + i + '" placeholder="School" value="' + esc(r.school) + '"><div style="grid-column:1/-1">' + yearSelect('data-y="' + i + '" aria-label="Year group"', r.year) + '</div></div>'; }).join('') +
         '<button class="btn link" id="more">＋ Add another child</button>' +
         '<button class="btn block" id="mk" style="margin-top:10px">Create my family</button></div></main>';
       $$('[data-n]').forEach(function (x) { x.oninput = function () { rows[+x.dataset.n].name = x.value; }; });
       $$('[data-s]').forEach(function (x) { x.oninput = function () { rows[+x.dataset.s].school = x.value; }; });
+      $$('[data-y]').forEach(function (x) { x.onchange = function () { rows[+x.dataset.y].year = x.value; }; });
       $('#nm').oninput = function () { u.name = this.value; };
-      $('#more').onclick = function () { if (rows.length < 8) { rows.push({ name: '', school: '' }); draw(); } };
+      $('#more').onclick = function () { if (rows.length < 8) { rows.push({ name: '', school: '', year: '' }); draw(); } };
       $('#mk').onclick = async function () {
         var b = this; b.disabled = true; b.textContent = 'Creating…';
         try { await api('setup', { name: $('#nm').value, children: rows.filter(function (r) { return r.name.trim(); }) }); await load(); S.tab = 'today'; render(); welcome(); }
@@ -351,9 +372,10 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     var b = S.boot, h = new Date().getHours(), hi = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
     var t = TODAY(), wk = new Date(ms(t) + 14 * 864e5).toLocaleDateString('en-CA');
     pg.innerHTML = '<div class="hello">' + hi + (b.user.name ? ', ' + esc(b.user.name) : '') + '</div><p class="sub">' + new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p>' +
-      confirmCard() + startCard() + awardsWeekCard() + todoHtml(b.board.actions) + datesHtml(b.board.dates.filter(function (d) { return d.date <= wk; }), { max: 12 }) +
-      mailsHtml(b.mails, '✉️ Latest emails', 5) + (b.mails.length > 5 ? '<button class="btn ghost block" id="allm">See all emails</button>' : '');
+      confirmCard() + startCard() + yearsCard() + awardsWeekCard() + todoHtml(b.board.actions) + datesHtml(b.board.dates.filter(function (d) { return d.date <= wk; }), { max: 12 }) +
+      mailsHtml(b.mails.filter(shown), '✉️ Latest emails', 5) + (b.mails.filter(shown).length > 5 ? '<button class="btn ghost block" id="allm">See all emails</button>' : '');
     bindLists(pg); bindAwards(pg);
+    $$('[data-yr]', pg).forEach(function (x) { x.onclick = function () { kidSheet(kid(x.dataset.yr)); }; });
     var hw = $('#hw2', pg); if (hw) hw.onclick = function () { howTo(); };
     var ps = $('#ps2', pg); if (ps) ps.onclick = pasteSheet;
     var am = $('#allm', pg); if (am) am.onclick = function () { S.tab = 'mails'; render(); };
@@ -362,13 +384,14 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     var c = kid(id), b = S.boot; if (!c) return todayView(pg);
     pg.innerHTML = '<div class="card" style="background:' + c.color + ';color:#fff;border:0"><div style="font-size:22px;font-weight:800">' + esc(c.name) + '</div><div style="opacity:.85">' + esc(c.school || 'School not added') + '</div></div>' +
       todoHtml(b.board.actions.filter(function (a) { return forKid(a, id); }), { noKid: true }) + datesHtml(b.board.dates.filter(function (d) { return forKid(d, id); }), { noKid: true }) + awardsHtml(id) +
-      mailsHtml(b.mails.filter(function (m) { return forKid(m, id); }), '✉️ ' + esc(c.name) + '’s emails', 30);
+      mailsHtml(b.mails.filter(function (m) { return shown(m) && forKid(m, id); }), '✉️ ' + esc(c.name) + '’s emails', 30);
     bindLists(pg); bindAwards(pg, id);
   }
   function mailsView(pg) {
     var b = S.boot, f = S.mailFilter, q = S.q.toLowerCase();
-    var list = b.mails.filter(function (m) { return (f === 'all' || (f === 'act' ? m.important : f === 'aw' ? m.kind === 'award' : forKid(m, f))) && (!q || (m.title + ' ' + m.subject + ' ' + m.summary + ' ' + m.from).toLowerCase().indexOf(q) >= 0); });
-    pg.innerHTML = '<input class="search" id="sq" placeholder="🔍 Search emails" value="' + esc(S.q) + '"><div class="chips">' + [['all', 'All'], ['act', 'Action needed'], ['aw', '🏅 Awards']].concat(kids().map(function (c) { return [c.id, c.name]; })).map(function (x) { return '<button data-f="' + x[0] + '" class="' + (f === x[0] ? 'on' : '') + '">' + esc(x[1]) + '</button>'; }).join('') + '</div>' + mailsHtml(list, '✉️ Emails <small>' + list.length + '</small>');
+    var nHid = b.mails.filter(function (m) { return m.hidden; }).length; if (f === 'hid' && !nHid) f = 'all';
+    var list = b.mails.filter(function (m) { return (f === 'hid' ? m.hidden : shown(m)) && (f === 'all' || f === 'hid' || (f === 'act' ? m.important : f === 'aw' ? m.kind === 'award' : forKid(m, f))) && (!q || (m.title + ' ' + m.subject + ' ' + m.summary + ' ' + m.from).toLowerCase().indexOf(q) >= 0); });
+    pg.innerHTML = '<input class="search" id="sq" placeholder="🔍 Search emails" value="' + esc(S.q) + '"><div class="chips">' + [['all', 'All'], ['act', 'Action needed'], ['aw', '🏅 Awards']].concat(kids().map(function (c) { return [c.id, c.name]; })).concat(nHid ? [['hid', '🙈 Not for us (' + nHid + ')']] : []).map(function (x) { return '<button data-f="' + x[0] + '" class="' + (f === x[0] ? 'on' : '') + '">' + esc(x[1]) + '</button>'; }).join('') + '</div>' + (f === 'hid' ? '<p class="sub" style="margin:0 0 10px;font-size:13.5px">These look like they’re only for other year groups, so they don’t add to-dos or dates. Open one and tap <b>This is for us</b> if we got it wrong.</p>' : '') + mailsHtml(list, f === 'hid' ? '🙈 Not for us <small>' + list.length + '</small>' : '✉️ Emails <small>' + list.length + '</small>');
     bindLists(pg);
     $$('[data-f]', pg).forEach(function (x) { x.onclick = function () { S.mailFilter = x.dataset.f; render(); }; });
     var t; $('#sq', pg).oninput = function () { var v = this.value; clearTimeout(t); t = setTimeout(function () { S.q = v; render(); var i = $('#sq'); i.focus(); i.setSelectionRange(v.length, v.length); }, 250); };
@@ -377,7 +400,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     var b = S.boot, f = b.family, owner = b.user.role === 'owner';
     var who = function (m) { return m.role === 'owner' ? 'Owner · sees everything' : 'Parent · sees ' + (m.children === 'all' ? 'all children' : (m.children || []).map(function (i) { return (kid(i) || {}).name; }).filter(Boolean).join(' & ')); };
     pg.innerHTML = (owner && f.inboundIssue ? '<div class="card" style="border:2px solid var(--red);background:var(--redbg)"><h2>⚠️ School Tracker couldn’t open a forwarded email</h2><p style="margin:0 0 6px">' + esc(f.inboundIssue.why) + '</p><p class="sub" style="margin:0;font-size:13.5px">' + esc(ago(f.inboundIssue.at)) + ' · This message goes away by itself once an email opens fine again.</p></div>' : '') + (owner ? '<div class="card"><h2>📮 Your School Tracker address</h2><p class="sub" style="margin:0 0 10px">Forward school emails here. Keep it private — anyone who has it can send emails to your tracker.</p>' + addrHtml(f.inbox) + '<button class="btn link" id="hw3">How to set up forwarding (Gmail or Yahoo) →</button></div>' : '') +
-      '<div class="card"><h2>🧒 Children</h2>' + kids().map(function (c) { return '<div class="row" style="align-items:center"><span class="dot" style="width:14px;height:14px;border-radius:50%;background:' + c.color + ';flex:none"></span><div class="txt"><b>' + esc(c.name) + '</b><div class="meta">' + esc(c.school || 'No school added') + '</div></div>' + (owner ? '<button class="btn ghost small" data-kid="' + c.id + '">Edit</button>' : '') + '</div>'; }).join('') +
+      '<div class="card"><h2>🧒 Children</h2>' + kids().map(function (c) { return '<div class="row" style="align-items:center"><span class="dot" style="width:14px;height:14px;border-radius:50%;background:' + c.color + ';flex:none"></span><div class="txt"><b>' + esc(c.name) + '</b><div class="meta">' + esc([c.school || 'No school added', c.year || 'Year group not set'].join(' · ')) + '</div></div>' + (owner ? '<button class="btn ghost small" data-kid="' + c.id + '">Edit</button>' : '') + '</div>'; }).join('') +
       (owner ? '<button class="btn link" id="addkid">＋ Add a child</button>' : '') + '</div>' +
       '<div class="card"><h2>👪 Family members</h2>' + f.members.map(function (m) { return '<div class="row" style="align-items:center"><div class="txt"><b>' + esc(m.name || m.email) + (m.you ? ' (you)' : '') + '</b><div class="meta">' + esc(m.email) + ' · ' + esc(who(m)) + '</div></div>' + (owner && m.role !== 'owner' ? '<button class="btn ghost small" data-mem="' + esc(m.email) + '">Change</button>' : '') + '</div>'; }).join('') +
       (f.invites || []).map(function (i) { return '<div class="row" style="align-items:center"><div class="txt"><b>' + esc(i.name || i.email) + ' <span class="pill">Invited</span></b><div class="meta">' + esc(i.email) + ' · sent ' + esc(ago(i.at)) + '</div></div><button class="btn ghost small danger" data-uninv="' + esc(i.email) + '">Cancel</button></div>'; }).join('') +
@@ -409,9 +432,9 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     }; });
   }
   function kidSheet(c) {
-    var s = sheet('<h3>' + (c ? 'Edit ' + esc(c.name) : 'Add a child') + '</h3><label for="kn">Name</label><input type="text" id="kn" value="' + esc(c ? c.name : '') + '"><label for="ks">School</label><input type="text" id="ks" value="' + esc(c ? c.school : '') + '" placeholder="e.g. Hurst">' +
+    var s = sheet('<h3>' + (c ? 'Edit ' + esc(c.name) : 'Add a child') + '</h3><label for="kn">Name</label><input type="text" id="kn" value="' + esc(c ? c.name : '') + '"><label for="ks">School</label><input type="text" id="ks" value="' + esc(c ? c.school : '') + '" placeholder="e.g. Hurst"><label for="ky">Year group</label>' + yearSelect('id="ky"', c ? c.year : '') + '<p class="sub" style="margin:6px 0 0;font-size:13px">Emails only for other year groups go to “Not for us” in Emails.</p>' +
       '<button class="btn block" id="ksv" style="margin-top:14px">Save</button>' + (c ? '<button class="btn link danger" id="krm">Remove ' + esc(c.name) + '</button>' : ''));
-    $('#ksv', s).onclick = async function () { try { await api('child-save', { id: c && c.id, name: $('#kn', s).value, school: $('#ks', s).value }); s.remove(); await load(); render(); toast('Saved'); } catch (e) { toast(e.message); } };
+    $('#ksv', s).onclick = async function () { try { await api('child-save', { id: c && c.id, name: $('#kn', s).value, school: $('#ks', s).value, year: $('#ky', s).value }); S.yrScanDone = false; s.remove(); await load(); render(); toast('Saved'); scanYears(); } catch (e) { toast(e.message); } };
     var rm = $('#krm', s); if (rm) rm.onclick = async function () { if (!confirm('Remove ' + c.name + '? Their emails stay, but they won’t have their own tab.')) return; try { await api('child-remove', { id: c.id }); s.remove(); await load(); render(); } catch (e) { toast(e.message); } };
   }
   function inviteSheet() {
@@ -437,6 +460,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     var acts = S.boot.board.actions.filter(function (a) { return a.mid === id; }), dts = S.boot.board.dates.filter(function (d) { return d.mid === id; }), aws = (S.boot.board.awards || []).filter(function (w) { return w.mid === id; });
     var st = { sel: m.childIds || [] };
     $('.sheet', s).innerHTML = '<button class="x" aria-label="Close">×</button><div class="meta" style="margin-bottom:4px"><span>' + esc(new Date(m.at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + '</span><span>' + esc(m.from) + '</span></div><h3>' + esc(m.title || m.subject) + '</h3>' +
+      (m.hidden ? '<div class="note" style="margin:10px 0">🙈 <b>Not for us</b> — this looks like it’s only for another year group, so it hasn’t added to-dos or dates. <button class="btn small" id="forus" style="margin-top:8px">This is for us</button></div>' : '') +
       (m.status === 'error' || m.canRefetch ? '<div class="note" style="margin:10px 0">' + esc(m.fetchErr || m.error || 'We couldn’t read this one automatically — tap Try again.') + ' <button class="btn small" id="retry">Try again</button></div>' : '') +
       (m.summary ? '<p style="font-size:16px;margin:10px 0">' + esc(m.summary) + '</p>' : '') +
       (acts.length ? '<div style="font-weight:800;margin-top:12px">To do</div>' + acts.map(function (a) { return '<div class="row' + (a.done ? ' done' : '') + '"><button class="chk' + (a.done ? ' on' : '') + '" data-tick="' + a.id + '">' + (a.done ? '✓' : '') + '</button><div class="txt"><b>' + esc(a.text) + '</b><div class="meta">' + (a.done ? '✓ Done by ' + esc(a.doneBy) : a.due ? 'Due ' + rel(a.due) : '') + '</div></div></div>'; }).join('') : '') +
@@ -455,6 +479,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     bindLists(s);
     $$('[data-tick]', s).forEach(function (b) { var o = b.onclick; b.onclick = async function (e) { await o(e); s.remove(); openMail(id); }; });
     if (kids().length > 1) bindPickerSave(s, st, id);
+    var fu = $('#forus', s); if (fu) fu.onclick = async function () { fu.disabled = true; fu.textContent = 'Reading…'; try { var r = await api('mail-forus', { id: id }); await load(); s.remove(); render(); toast(r.added ? 'Done — added ' + r.added + ' item' + (r.added === 1 ? '' : 's') : 'Done — moved back to your emails'); } catch (e) { toast(e.message); fu.disabled = false; fu.textContent = 'This is for us'; } };
     var rt = $('#retry', s); if (rt) rt.onclick = async function () { rt.disabled = true; rt.textContent = 'Reading…'; try { var r = await api('mail-retry', { id: id }); await load(); render(); s.remove(); openMail(r.id); } catch (e) { toast(e.message); rt.disabled = false; rt.textContent = 'Try again'; } };
     $('#mdel', s).onclick = async function () { if (!confirm('Delete this email and its to-dos and dates?')) return; try { await api('mail-delete', { id: id }); s.remove(); await load(); render(); toast('Deleted'); } catch (e) { toast(e.message); } };
   }
@@ -531,7 +556,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     }
     if (!S.boot.family) return setupView();
     render();
-    scanAwards();
+    scanAwards().then(scanYears);
   }
   if ('serviceWorker' in navigator && /^schooltracker\./.test(location.hostname)) {   // only on its own address — never touch the Auntie Tobi app's offline helper
     window.addEventListener('load', function () { navigator.serviceWorker.register('/school-sw.js', { scope: '/' }).catch(function () {}); }); }
