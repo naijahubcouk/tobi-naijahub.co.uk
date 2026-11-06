@@ -8487,15 +8487,20 @@ function tobiShare(title, text, url, imageUrl) {
   }
 
   // Strip any existing URL from text to prevent duplication
-  const cleanText = (text || '')
+  let cleanText = (text || '')
     .replace(/https?:\/\/\S+/g, '')
     .replace(/👉\s*/g, '')
     .trim();
+  // never repeat the title as the "short information"
+  const _k = function (v) { return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); };
+  if (title && cleanText && (_k(cleanText) === _k(title) || _k(title).indexOf(_k(cleanText)) === 0)) cleanText = '';
+  else if (title && cleanText && _k(cleanText).indexOf(_k(title)) === 0) cleanText = cleanText.slice(title.length).replace(/^[\s:—–-]+/, '').trim();
+  if (cleanText && !/[.!?…]$/.test(cleanText) && cleanText.length >= 100) cleanText = cleanText.replace(/\s+\S*$/, '') + '…';
 
   const shareText = (title ? title + '\n\n' : '') + (cleanText ? cleanText + '\n\n' : '') + shareUrl;
 
   if (navigator.share) {
-    navigator.share({ title: title || 'Auntie Tobi', text: shareText }).catch(() => {});
+    navigator.share({ text: shareText }).catch(() => {});   // the title is already in the text — passing it too shows it twice in some apps
   } else {
     navigator.clipboard.writeText(shareText).then(() => {
       const toast = document.createElement('div');
@@ -8517,13 +8522,22 @@ function shareBlogUrl(title, text, blogComUrl, appUrl) {
   if (!shareUrl) shareUrl = 'https://auntietobi.co.uk';
   tobiShare(title, text, shareUrl);
 }
+// a short summary for sharing an open article: its summary, or the first sentences of the article itself
+function blogShareSummary() {
+  if (_blogSummary && _blogSummary.trim().length > 20) return _blogSummary.trim();
+  var el = document.getElementById('blogSheetContent'), t = '';
+  if (el) { var ps = el.querySelectorAll('p'); for (var i = 0; i < ps.length && t.length < 60; i++) { var x = (ps[i].textContent || '').replace(/\s+/g, ' ').trim(); if (x.length > 30 && x.toLowerCase() !== (_blogTitle || '').toLowerCase()) t += (t ? ' ' : '') + x; } if (!t) t = (el.textContent || '').replace(/\s+/g, ' ').trim(); }
+  t = t.replace(_blogTitle || '', '').trim();
+  if (t.length > 180) { var cut = t.slice(0, 180), end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? ')); t = end > 60 ? cut.slice(0, end + 1) : cut.replace(/\s+\S*$/, '') + '…'; }
+  return t;
+}
 function shareBlogPost() {
   const slug = _blogUrl.split('/blog/')[1] || '';
-  if (/^at-[a-z0-9-]+/.test(slug)) { tobiShare(_blogTitle, _blogTitle, TOBI_APP_SITE + '/blog/' + slug); return; }
+  if (/^at-[a-z0-9-]+/.test(slug)) { var hq = typeof tobiHqItemBySlug === 'function' ? tobiHqItemBySlug(slug) : null; tobiShare(_blogTitle, (hq && hq.summary) || blogShareSummary(), TOBI_APP_SITE + '/blog/' + slug); return; }
   const deepLinks = {'auntietobi.com/blog/BREAKING:-Prime-Minister-Keir-Starmer-Announces-Resignation':'starmerresigns','auntietobi.com/blog/AfroMic-Night-Afrobeats-Karaoke':'afrominight','auntietobi.com/blog/MY-TASTY-NAIJA-FOOD-FESTIVAL-UK-2026':'naijafoodfest','auntietobi.com/blog/Suya-Fest-Birmingham-2026:-The-Ultimate-Outdoor-Suya-Experience-Returns':'suyafest','auntietobi.com/blog/UK-Immigration-Rules-Updated-(HC-259):-What-Nigerians-in-the-UK-Need-to-Know':'hc259immigration','auntietobi.com/blog/20-Places-Where-Kids-Eat-FREE-or-for-pound1-During-the-UK-Summer-Holidays-2026':'20placeskids'};
   const key = Object.keys(deepLinks).find(k => _blogUrl.includes(k.split('/blog/')[1]));
   const shareUrl = key ? 'https://auntietobi.co.uk/blog/' + deepLinks[key] : 'https://auntietobi.co.uk';
-  tobiShare(_blogTitle, _blogTitle, shareUrl);
+  tobiShare(_blogTitle, blogShareSummary(), shareUrl);
 }
 
 // ===== BUSINESS PILL =====
