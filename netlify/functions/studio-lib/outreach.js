@@ -48,7 +48,7 @@ async function memberInfo() {
 function eligible(b) {
   if (b.hidden || b.status === 'pending' || b.featured) return false;
   if (b.src === 'hq' && !b.uploadedAt) return false;          // not on the directory website yet
-  return !!(b.email || b.wa || b.ig);
+  return !!(b.email || b.ownerEmail || b.wa || b.ig);
 }
 function vars(b) {
   const site = core.siteBase();
@@ -72,21 +72,26 @@ async function plan() {
   const unsubbed = new Set(unsub.map(x => x.email)), now = Date.now();
   const due = [], fresh = [], stops = [], waiting = [];
   for (const b of dir) {
-    const r = st.biz[b.slug], email = (b.email || '').toLowerCase(), sEmail = String(((inv.items || {})[b.slug] || {}).studioEmail || email).toLowerCase();
+    // 🆕 added in the app: the owner's own email is the one that matters (sending, Studio, Club); the series starts from the "You're listed" email
+    const isApp = !!(b.via && b.ownerEmail);
+    const r = st.biz[b.slug], email = String((isApp ? b.ownerEmail : b.email) || '').toLowerCase(), sEmail = isApp ? email : String(((inv.items || {})[b.slug] || {}).studioEmail || email).toLowerCase();
     if (r && r.stop) continue;
+    if (isApp && !r && !b.listedMailAt) continue;                 // wait for "You're listed" first
     if (!eligible(b)) { if (r && (b.featured || b.hidden)) stops.push({ slug: b.slug, why: b.featured ? 'featured' : 'hidden' }); continue; }
-    if (email && unsubbed.has(email)) { if (r) stops.push({ slug: b.slug, why: 'unsubscribed' }); continue; }
+    if ((email && unsubbed.has(email)) || (b.email && unsubbed.has(String(b.email).toLowerCase()))) { if (r) stops.push({ slug: b.slug, why: 'unsubscribed' }); continue; }
     if (sEmail && await mi.club(sEmail)) { if (r) stops.push({ slug: b.slug, why: 'joined' }); continue; }
     const hasStudio = !!sEmail && mi.studio.has(sEmail);
     let j = r ? r.j : (b.claimed ? 'c' : 'u');
     const sentTopics = new Set((r ? r.sent : []).map(s => TOPIC[s.id] || s.id));
     if (j === 'u' && b.claimed) j = 'c';                         // claimed since: carry on the claimed journey, no repeats
     if (sentTopics.has('benefits') && j === 'c' && r && r.j === 'u') sentTopics.add('last');
-    const start = r ? r.start : now;
-    const step = JJ[j].find(s => !sentTopics.has(s.topic) && !(s.topic === 'studio' && hasStudio));
+    const start = r ? r.start : isApp ? (Date.parse(b.listedMailAt) || now) : now;
+    const skipStudio = hasStudio || isApp || (r && r.manual === 'start-new');   // they already have Business Studio
+    const step = JJ[j].find(s => !sentTopics.has(s.topic) && !(s.topic === 'studio' && skipStudio));
     if (!step) { if (r) stops.push({ slug: b.slug, why: 'finished' }); continue; }
-    const item = { slug: b.slug, name: b.name, email: b.email, wa: b.wa, ig: b.ig, j, step: step.id, claimed: !!b.claimed, src: b.src, dueAt: new Date(start + step.day * DAY).toISOString(), isNew: !r };
-    if (!r) fresh.push(item); else if (start + step.day * DAY <= now + 6 * 3600e3) due.push(item); else waiting.push(item);
+    const item = { slug: b.slug, name: b.name, email: isApp ? b.ownerEmail : b.email, wa: b.wa, ig: b.ig, j, step: step.id, claimed: !!b.claimed, src: b.src, dueAt: new Date(start + step.day * DAY).toISOString(), isNew: !r, app: isApp, start };
+    if (!r && isApp && start + step.day * DAY > now + 6 * 3600e3) waiting.push(item);   // e.g. Club invite 2 days after "You're listed"
+    else if (!r) fresh.push(item); else if (start + step.day * DAY <= now + 6 * 3600e3) due.push(item); else waiting.push(item);
   }
   // newest website uploads first for new journeys (Finder listings), then everyone else
   fresh.sort((a, b) => (b.src === 'hq') - (a.src === 'hq'));
@@ -107,7 +112,7 @@ async function record(item, ch) {
   await cas('out/state', cur => {
     cur = cur || { biz: {} };
     if (cur.day !== today()) { cur.day = today(); cur.sentToday = 0; cur.manualToday = 0; }
-    const r = cur.biz[item.slug] || (cur.biz[item.slug] = { j: item.j, start: now, sent: [] });
+    const r = cur.biz[item.slug] || (cur.biz[item.slug] = { j: item.j, start: item.start || now, sent: [] });
     r.j = item.j; r.sent.push({ id: item.step, at: new Date(now).toISOString(), ch });
     if (ch === 'email') cur.sentToday = (cur.sentToday || 0) + 1; else cur.manualToday = (cur.manualToday || 0) + 1;
     return cur;
@@ -191,7 +196,11 @@ async function markHand(slug) {
 async function mark(slug, what) {
   await cas('out/state', cur => {
     cur = cur || { biz: {} }; const r = cur.biz[slug] || (cur.biz[slug] = { j: 'u', start: Date.now(), sent: [] });
-    if (what === 'restart') { delete r.stop; delete r.stopAt; } else Object.assign(r, { stop: what === 'joined' ? 'joined' : 'stopped', stopAt: core.nowIso() });
+    if (what === 'restart') { delete r.stop; delete r.stopAt; }
+    else if (/^start-(new|c|u)$/.test(what)) {   // 📧 Add to email series (from the business sheet): starts it from today, from the first email
+      cur.biz[slug] = { j: what === 'start-u' ? 'u' : 'c', start: Date.now(), sent: (r.sent || []).filter(x => x.ch === 'note'), manual: what, startedAt: core.nowIso(), history: (r.sent || []).length ? r.sent : undefined };
+    }
+    else Object.assign(r, { stop: what === 'joined' ? 'joined' : 'stopped', stopAt: core.nowIso() });
     return cur;
   });
 }
@@ -199,7 +208,7 @@ async function mark(slug, what) {
 // Overview for HQ
 async function overview() {
   const p = await plan(), dir = await bizdir.all(), st = p.st;
-  const rows = dir.filter(b => st.biz[b.slug]).map(b => { const r = st.biz[b.slug]; return { slug: b.slug, name: b.name, email: b.email, j: r.j, sent: r.sent, stop: r.stop || '', start: new Date(r.start).toISOString() }; });
+  const rows = dir.filter(b => st.biz[b.slug]).map(b => { const r = st.biz[b.slug]; return { slug: b.slug, name: b.name, email: b.via && b.ownerEmail ? b.ownerEmail : b.email, app: !!(b.via && b.ownerEmail), j: r.j, sent: r.sent, stop: r.stop || '', start: new Date(r.start).toISOString() }; });
   const counts = { inJourney: rows.filter(r => !r.stop).length, finished: rows.filter(r => r.stop === 'finished').length, joined: rows.filter(r => r.stop === 'joined').length, stopped: rows.filter(r => r.stop && !['finished', 'joined'].includes(r.stop)).length, waitingToStart: p.freshLeft };
   const preview = async x => { const b = dir.find(y => y.slug === x.slug); const m = await emails.render(x.step, vars(b)); return Object.assign({}, x, { subject: m.subject }); };
   return { settings: p.set, sentToday: p.sentToday, manualToday: p.manualToday, todayEmail: await Promise.all(p.todayEmail.map(preview)), todayHand: p.todayHand, counts, rows, laterThisWeek: p.waiting };
@@ -233,7 +242,7 @@ async function publicPage(q) {
   const name = escH(b.name), form = (label, red) => `<form method="get" action="/.netlify/functions/app-content"><input type="hidden" name="${kind}" value="${escH(t)}"><input type="hidden" name="yes" value="1">${btn(label, red)}</form>`;
   if (kind === 'unsub') {
     if (!q.yes) return page('Unsubscribe', `<h1 style="font-size:22px">Stop emails to ${name}?</h1><p style="margin:0 0 20px">You won’t get any more emails from Auntie Tobi about your listing or the Business Club.</p>${form('Yes, unsubscribe')}`);
-    await cas('out/unsub', cur => { cur = cur || { items: [] }; const e = (b.email || '').toLowerCase(); if (!cur.items.some(x => x.slug === slug)) cur.items.push({ email: e, slug, at: core.nowIso() }); return cur; });
+    await cas('out/unsub', cur => { cur = cur || { items: [] }; const e = ((b.via && b.ownerEmail) || b.email || '').toLowerCase(); if (!cur.items.some(x => x.slug === slug)) cur.items.push({ email: e, slug, at: core.nowIso() }); return cur; });
     await cas('out/state', cur => { cur = cur || { biz: {} }; const r = cur.biz[slug] || (cur.biz[slug] = { j: 'u', start: Date.now(), sent: [] }); r.stop = 'unsubscribed'; r.stopAt = core.nowIso(); return cur; });
     return page('Unsubscribed', `<h1 style="font-size:22px">You’re unsubscribed 💚</h1><p>No more emails will be sent to ${name}. Your listing stays on Auntie Tobi.</p>`);
   }

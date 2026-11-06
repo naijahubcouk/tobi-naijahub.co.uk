@@ -419,7 +419,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'out-send') { const r = await out.sendBatch(25); await core.audit(who.email, 'hq_out_send', r); return r; }
       if (body.action === 'out-hand') return await out.handMessage(String(body.slug || ''));
       if (body.action === 'out-hand-done') await out.markHand(String(body.slug || ''));
-      if (body.action === 'out-mark') { await out.mark(String(body.slug || ''), ['joined', 'stop', 'restart'].includes(body.what) ? body.what : 'stop'); await core.audit(who.email, 'hq_out_mark', { slug: body.slug, what: body.what }); }
+      if (body.action === 'out-mark') { await out.mark(String(body.slug || ''), ['joined', 'stop', 'restart', 'start-new', 'start-c', 'start-u'].includes(body.what) ? body.what : 'stop'); await core.audit(who.email, 'hq_out_mark', { slug: body.slug, what: body.what }); }
       if (body.action === 'out-preview') return await out.previewFor(String(body.slug || ''), String(body.step || ''));
       return await out.overview();
     }
