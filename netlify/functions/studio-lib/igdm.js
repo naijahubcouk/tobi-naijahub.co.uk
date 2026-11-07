@@ -6,6 +6,8 @@
  *   dm/tpl     { versions: [{ id, text, page }], followup, fuDays }
  *   dm/people  { items: { <username>: { stage, page, ver, source, addedAt, sentAt, fuAt, fuSent, repliedAt, followedAt, notes, log: [{ at, what }] } } }
  *   dm/day     { day, sent: { <pageId>: n } }
+ *   dm/share   { url, title, day, perPage }   📣 "share this post" for one day: each page messages up to perPage (10) people with the post link
+ * Messages can use {name}, and {post} / {title} for the post being shared (removed when nothing is being shared).
  * Stages: new → messaged → replied → followed | notinterested | dnc (do not contact — never added again)
  */
 const core = require('./core');
@@ -19,6 +21,14 @@ const DEF_VERSIONS = [
   'Hello {name} 👋🏾 Love your page! Thought you’d like @auntietobi_uk — our partner page with UK tips, Naija events and businesses for Nigerians here. Free to follow 💚',
   'Hey {name}! Looking for Nigerian food, hair, events or help with UK life? @auntietobi_uk puts it all in one place 🇳🇬 Give them a follow — you’ll love it 💚',
 ];
+// 📣 when a post is being shared: different wording for each page, so the messages don't all look the same
+const SHARE_VERSIONS = [
+  'Hi {name} 👋🏾 Thought you’d like this from @auntietobi_uk — {title} 💚 {post}',
+  'Hey {name}! Have you seen this? 🇳🇬 {title} 👉🏾 {post} (from @auntietobi_uk, a page for Nigerians in the UK)',
+  'Hello {name} 😊 Sharing this in case it’s useful: {title} {post}',
+  'Hi {name}! If you’re Naija in the UK, you’ll like this post from @auntietobi_uk 💚 {post}',
+  'Hey {name} 👋🏾 New from @auntietobi_uk: {title}. Have a look — and pass it on to a friend if you like it 💚 {post}',
+];
 const DEF_FU = 'Hi {name}, just checking you saw our message 😊 No pressure — @auntietobi_uk is there whenever you need UK tips. Have a lovely week! 💚';
 const clean = u => String(u || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[/?#].*$/, '').replace(/^@+/, '').toLowerCase();
 const valid = u => /^[a-z0-9._]{2,30}$/.test(u) && !/^\d+$/.test(u);
@@ -30,6 +40,16 @@ async function tpl() {
   const t = (await getJson('dm/tpl').catch(() => null)) || {};
   return { versions: t.versions && t.versions.length ? t.versions : DEF_VERSIONS.map((text, i) => ({ id: 'v' + (i + 1), text, page: '' })), followup: t.followup || DEF_FU, fuDays: t.fuDays || 3 };
 }
+async function share() { const x = await getJson('dm/share').catch(() => null); return x && x.day === day() && x.url ? x : null; }
+async function setShare(raw) {
+  const url = String((raw && raw.url) || '').trim().replace(/[?#].*$/, '');
+  if (!/^https:\/\/(www\.)?instagram\.com\//i.test(url)) throw new HttpError(400, 'invalid', 'Add the Instagram post link first.');
+  const x = { url, title: core.cleanText(raw.title, 120) || 'our new post', day: day(), perPage: Math.max(1, Math.min(20, parseInt(raw.perPage, 10) || 10)), at: core.nowIso() };
+  await core.setJson('dm/share', x);
+  return x;
+}
+async function stopShare() { await core.setJson('dm/share', { day: '' }); return null; }
+const fill = (t, u, sh) => String(t).replace(/\{name\}/g, u).replace(/\{post\}/g, sh ? sh.url : '').replace(/\{title\}/g, sh ? sh.title : '').replace(/[ \t]+\n/g, '\n').replace(/\s{2,}/g, ' ').trim();
 async function people() { return ((await getJson('dm/people').catch(() => null)) || { items: {} }).items; }
 async function sentToday() { const d = (await getJson('dm/day').catch(() => null)) || {}; return d.day === day() ? d.sent || {} : {}; }
 
@@ -65,11 +85,11 @@ async function add(usernames, source) {
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 // Today's work for every page: new people (up to its daily limit) + follow-ups that are due.
 async function today() {
-  const [P, T, items, sent] = [await pages(), await tpl(), await people(), await sentToday()];
+  const [P, T, items, sent, sh] = [await pages(), await tpl(), await people(), await sentToday(), await share()];
   const d = day(), live = P.filter(p => p.on);
   const fresh = Object.keys(items).filter(u => items[u].stage === 'new').sort((a, b) => String(items[a].addedAt).localeCompare(String(items[b].addedAt)));
   const out = {}; let k = 0;
-  for (const p of live) out[p.id] = { page: p, sent: sent[p.id] || 0, room: Math.max(0, p.perDay - (sent[p.id] || 0)), todo: [], followups: [] };
+  for (const p of live) out[p.id] = { page: p, sent: sent[p.id] || 0, room: Math.max(0, (sh ? Math.max(p.perDay, sh.perPage) : p.perDay) - (sent[p.id] || 0)), todo: [], followups: [] };
   // share new people across pages, in turn, each up to its room
   let progress = true;
   while (fresh[k] && progress) {
@@ -80,13 +100,21 @@ async function today() {
     const r = items[u];
     if (r.stage === 'messaged' && !r.fuSent && r.sentAt && addDays(r.sentAt.slice(0, 10), T.fuDays) <= d && out[r.page]) out[r.page].followups.push(u);
   }
-  const verFor = (p, u) => { const own = T.versions.filter(v => v.page === p.id), all = own.length ? own : T.versions.filter(v => !v.page); const v = pick(all.length ? all : T.versions); return { id: v.id, text: v.text.replace(/\{name\}/g, u) }; };
+  const pageNo = {}; live.forEach((p, i) => { pageNo[p.id] = i; });
+  const verFor = (p, u) => {
+    if (sh) {   // sharing a post: your messages that include {post}, else the built-in ones — each page gets its own wording
+      const mine = T.versions.filter(v => /\{post\}/.test(v.text) && (!v.page || v.page === p.id));
+      if (mine.length) { const v = pick(mine); return { id: v.id, text: fill(v.text, u, sh), post: true }; }
+      const i = (pageNo[p.id] || 0) % SHARE_VERSIONS.length; return { id: 'sh' + (i + 1), text: fill(SHARE_VERSIONS[i], u, sh), post: true };
+    }
+    const own = T.versions.filter(v => v.page === p.id && !/\{post\}/.test(v.text)), all = own.length ? own : T.versions.filter(v => !v.page && !/\{post\}/.test(v.text)); const v = pick(all.length ? all : T.versions); return { id: v.id, text: fill(v.text, u, null) };
+  };
   for (const id of Object.keys(out)) {
     const o = out[id];
     o.todo = o.todo.map(u => ({ u, msg: verFor(o.page, u), source: items[u].source || '' }));
     o.followups = o.followups.map(u => ({ u, msg: { id: 'fu', text: T.followup.replace(/\{name\}/g, u) }, sentAt: items[u].sentAt }));
   }
-  return { pages: Object.values(out), waiting: fresh.length - k };
+  return { pages: Object.values(out), waiting: fresh.length - k, share: sh };
 }
 async function act(u, what, opts) {
   u = clean(u); opts = opts || {};
@@ -148,4 +176,4 @@ async function searchPages(query) {
   return list.map(a => ({ u: clean(a.username), why: core.cleanText(a.why, 120) })).filter(a => valid(a.u) && !/^(p|reel|explore|stories)$/.test(a.u) && !seen.has(a.u) && seen.add(a.u)).map(a => Object.assign(a, { onList: !!items[a.u], stage: items[a.u] ? items[a.u].stage : '' }));
 }
 
-module.exports = { pages, savePages, tpl, saveTpl, add, today, act, overview, detail, ideas, searchPages, STAGES };
+module.exports = { share, setShare, stopShare, pages, savePages, tpl, saveTpl, add, today, act, overview, detail, ideas, searchPages, STAGES };

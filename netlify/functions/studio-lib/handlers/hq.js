@@ -312,10 +312,12 @@ exports.handler = handler(async (ctx) => {
       }
       return { items: await bizdir.all(), info: await bizdir.info() };
     }
-    case 'dm-today': case 'dm-all': case 'dm-add': case 'dm-act': case 'dm-pages': case 'dm-tpl': case 'dm-ideas': case 'dm-search': case 'dm-shots': case 'dm-detail': {
+    case 'dm-share': case 'dm-share-stop': case 'dm-today': case 'dm-all': case 'dm-add': case 'dm-act': case 'dm-pages': case 'dm-tpl': case 'dm-ideas': case 'dm-search': case 'dm-shots': case 'dm-detail': {
       // 📨 DM Outreach — cold DMs sent by hand from your marketing pages, tracked here (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const dm = require('../igdm');
+      if (body.action === 'dm-share') { await dm.setShare(body); return await dm.today(); }
+      if (body.action === 'dm-share-stop') { await dm.stopShare(); return await dm.today(); }
       if (body.action === 'dm-today') return await dm.today();
       if (body.action === 'dm-detail') return { rec: await dm.detail(body.u) };
       if (body.action === 'dm-add') return Object.assign(await dm.add(body.usernames, body.source), await dm.overview());

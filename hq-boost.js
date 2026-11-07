@@ -30,7 +30,7 @@
   var STEPS = [
     { id: 'story', at: 0, t: '📲 Share it to your Story', d: 'Tap the paper plane under the post → <b>Add to story</b>. Add a <b>“New post”</b> or poll sticker so people tap through.' },
     { id: 'dmbiz', at: 0, t: '💬 Send it to the businesses in it', d: 'Ask them to share it to their Story and send it to a few friends. Sends reach new people more than anything else.', disc: true },
-    { id: 'pages', at: 0, t: '📣 Ask your 5 marketing pages to share it', d: 'Each page shares it to its Story and sends it to 3 friends.' },
+    { id: 'pages', at: 0, t: '📣 Your marketing pages: send it to 10 people each', d: 'One tap sets up <b>📨 DM Outreach</b> so each page has 10 Nigerians in the UK to message today, with this post’s link in a different message for each page. Each page also shares it to its Story.' },
     { id: 'pin', at: 0, t: '📌 Pin a comment with a real question', d: 'Comment on your own post, then press and hold → <b>Pin</b>. A real question gets real replies.' },
     { id: 'wa', at: 10, t: '🟢 Share on WhatsApp (Status and groups)', d: 'People who don’t follow you yet can find it this way.' },
     { id: 'reply', at: 0, t: '🙌🏾 Reply to every comment in the first hour', d: 'A few real words or a question back — not just an emoji. Like the comments too. Don’t post anything else for a few hours, so this post gets the attention.' },
@@ -101,7 +101,7 @@
       var body = function (st) {
         if (st.id === 'story') return cp('story', m.story, 'Copy Story text') + open;
         if (st.id === 'dmbiz') return (info.biz || []).map(function (x, i) { return '<div class="row" style="gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap"><b style="min-width:140px">@' + esc(x.handle) + '</b>' + cp('biz' + i, m.biz(x), 'Copy message') + '<a class="btn ghost sm" href="https://ig.me/m/' + encodeURIComponent(x.handle) + '" target="_blank" rel="noopener">💬 Open DM</a></div>'; }).join('') || '<span class="muted">No businesses in this post.</span>';
-        if (st.id === 'pages') return cp('pages', m.pages, 'Copy message for your pages');
+        if (st.id === 'pages') return (X.go ? '<button class="btn primary sm" id="bsDm">📨 Send via DM Outreach (10 per page)</button> ' : '') + cp('pages', m.pages, 'Copy message for the pages’ Stories');
         if (st.id === 'pin') return m.pins.map(function (p, i) { return '<div class="row" style="gap:6px;align-items:center;margin-top:4px"><span style="flex:1">“' + esc(p) + '”</span>' + cp('pin' + i, p) + '</div>'; }).join('') + '<div style="margin-top:6px">' + open + '</div>';
         if (st.id === 'wa') return '<a class="btn ghost sm" href="https://wa.me/?text=' + encodeURIComponent(m.wa) + '" target="_blank" rel="noopener">🟢 Share on WhatsApp</a> ' + cp('wa', m.wa);
         if (st.id === 'reply') return open;
@@ -129,6 +129,20 @@
       $('#bsUrlS', s).onclick = async function () { try { b = await save({ key: b.key, url: $('#bsUrl', s).value.trim() }); info.url = b.url; if (info.onUrl) info.onUrl(b.url); X.toast(b.url ? 'Link saved — it’s in every message now' : 'Link removed'); draw(); } catch (e) { X.toast(e.message); } };
       $$('[data-st]', s).forEach(function (cb) { cb.onchange = async function () { var st = {}; st[cb.dataset.st] = cb.checked; try { b = await save({ key: b.key, steps: st }); draw(); } catch (e) { X.toast(e.message); cb.checked = !cb.checked; } }; });
       $$('[data-cp]', s).forEach(function (btn) { btn.onclick = function () { var t = copies[btn.dataset.cp]; try { navigator.clipboard.writeText(t); X.toast(b.url ? 'Copied' : 'Copied — add the post link above to include it'); } catch (e) { X.toast('Press and hold to copy'); } }; });
+      var bdm = $('#bsDm', s);
+      if (bdm) bdm.onclick = async function () {
+        var u = ($('#bsUrl', s).value || b.url || '').trim();
+        if (!u) { X.toast('Add the Instagram post link first'); $('#bsUrl', s).focus(); return; }
+        bdm.disabled = true;
+        try {
+          if (u !== b.url) b = await save({ key: b.key, url: u });
+          var r = await X.api('dm-share', { url: u, title: info.title, perPage: 10 });
+          X.S.dmToday = r; X.S.dmAll = null; X.S.dmTab = 'today';
+          var n = (r.pages || []).reduce(function (a, o) { return a + o.todo.length; }, 0);
+          b = await save({ key: b.key, steps: { pages: true } });
+          s.remove(); X.toast(n ? n + ' messages ready in DM Outreach — 10 per page' : 'Sharing set up — add people in DM Outreach first'); X.go('dm');
+        } catch (e) { X.toast(e.message); bdm.disabled = false; }
+      };
       var bst = $('#bsStat', s);
       if (bst) bst.onclick = async function () {
         var st = {}; ['views', 'likes', 'comments', 'shares', 'saves'].forEach(function (f) { st[f] = $('#bs_' + f, s).value; });
