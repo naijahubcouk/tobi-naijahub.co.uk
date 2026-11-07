@@ -73,6 +73,20 @@ async function dirPic(slug) {
   return require('./eventmedia').fetchImage(b.img);
 }
 
+// ⭐ Which directory listings belong to a current Business Club member (paid, active) — by the listing linked to
+// their Business Studio account, or else by the same email. "Featured" on the website is NOT the same thing.
+async function clubSlugs() {
+  const settings = await core.getSettings();
+  const members = (await Promise.all((await core.listKeys('members/')).map(k => getJson(k).catch(() => null)))).filter(m => m && m.email && core.access(m, settings).membershipActive);
+  if (!members.length) return [];
+  const dir = await require('./bizdir').all(), out = new Set();
+  await Promise.all(members.map(async m => {
+    const p = await getJson(`profiles/${core.enc(m.email)}`).catch(() => null);
+    if (p && p.listingSlug) { out.add(p.listingSlug); return; }
+    const em = String(m.email).toLowerCase(); dir.forEach(b => { if (b.email && String(b.email).toLowerCase() === em) out.add(b.slug); });
+  }));
+  return [...out];
+}
 async function posted(id, url, who) {
   const u = String(url || '').trim();
   if (u && !/^https:\/\/(www\.)?instagram\.com\//i.test(u)) throw new HttpError(400, 'invalid', 'Paste the Instagram post link (instagram.com/p/…), or leave it empty.');
@@ -87,4 +101,4 @@ async function posted(id, url, who) {
 }
 async function unpost(id) { await cas(KEY, cur => { if (!cur) return undefined; const x = cur.items.find(q => q.id === id); if (!x) return undefined; x.status = 'draft'; return cur; }); }
 
-module.exports = { list, save, remove, putImg, getImg, dirPic, posted, unpost };
+module.exports = { clubSlugs, list, save, remove, putImg, getImg, dirPic, posted, unpost };

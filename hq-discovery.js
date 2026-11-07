@@ -31,7 +31,10 @@
   async function load(force) {
     if (!X.S.disc || force) X.S.disc = (await X.api('disc-list')).items;
     if (!X.S.dir) X.S.dir = await X.api('dir-list');
+    if (!X.S.discClub || force) X.S.discClub = await X.api('disc-club').then(function (r) { var o = {}; (r.slugs || []).forEach(function (x) { o[x] = 1; }); return o; }, function () { return {}; });
   }
+  // ⭐ a current, paid Business Club member (not the website's "Featured" tick)
+  function club(b) { return !!(b && X.S.discClub && X.S.discClub[b.slug]); }
   function dir() { return ((X.S.dir && X.S.dir.items) || []).filter(function (b) { return !b.hidden; }); }
   function inCat(b, cat) { return String(b.cat || '').toLowerCase() === cat; }
   function cats() {
@@ -59,7 +62,7 @@
     return dir().filter(function (b) { return (isGen(p) ? true : isCity(p) ? inCity(b, p.city) : inCat(b, p.cat)) && b.ig && have.indexOf(b.slug) < 0; }).map(function (b) {
       return { b: b, used: isGen(p) ? everIn(b.slug, p.id) : usedIn(key, b.slug, p.id) };
     }).sort(function (a, c) {
-      return (a.used.length - c.used.length) || ((c.b.claimed ? 1 : 0) - (a.b.claimed ? 1 : 0)) || ((c.b.featured ? 1 : 0) - (a.b.featured ? 1 : 0)) || ((c.b.img ? 1 : 0) - (a.b.img ? 1 : 0)) || a.b.name.localeCompare(c.b.name);
+      return (a.used.length - c.used.length) || ((c.b.claimed ? 1 : 0) - (a.b.claimed ? 1 : 0)) || ((club(c.b) ? 1 : 0) - (club(a.b) ? 1 : 0)) || ((c.b.img ? 1 : 0) - (a.b.img ? 1 : 0)) || a.b.name.localeCompare(c.b.name);
     });
   }
   // ✨ fill up to 10: not featured before, claimed first, a different town each where possible
@@ -86,7 +89,7 @@
     p.items.forEach(function (x) { if (x.cat) cats[x.cat.toLowerCase()] = 1; });
     partsOf(keyOf(p)).forEach(function (q) { if (q.id !== p.id) q.items.forEach(function (x) { if (x.cat) seen[x.cat.toLowerCase()] = (seen[x.cat.toLowerCase()] || 0) + 1; }); });
     var L = rankList(p, have).filter(function (r) { return !r.used.length && r.b.cat; }).sort(function (a, c) {
-      return (seen[String(a.b.cat).toLowerCase()] || 0) - (seen[String(c.b.cat).toLowerCase()] || 0) || ((c.b.claimed ? 1 : 0) - (a.b.claimed ? 1 : 0)) || ((c.b.featured ? 1 : 0) - (a.b.featured ? 1 : 0)) || ((c.b.img ? 1 : 0) - (a.b.img ? 1 : 0)) || a.b.name.localeCompare(c.b.name);
+      return (seen[String(a.b.cat).toLowerCase()] || 0) - (seen[String(c.b.cat).toLowerCase()] || 0) || ((c.b.claimed ? 1 : 0) - (a.b.claimed ? 1 : 0)) || ((club(c.b) ? 1 : 0) - (club(a.b) ? 1 : 0)) || ((c.b.img ? 1 : 0) - (a.b.img ? 1 : 0)) || a.b.name.localeCompare(c.b.name);
     }), n = 0;
     L.forEach(function (r) { var k = String(r.b.cat).toLowerCase(); if (n >= room || cats[k]) return; cats[k] = 1; p.items.push(itemOf(r.b)); n++; });
     return n;
@@ -99,7 +102,7 @@
   // ✨ for adverts: Business Club members first (claimed, with a photo), not already in this post, up to 10
   function fillClub(p) {
     var have = p.items.map(function (x) { return x.slug; }), room = 10 - p.items.length, n = 0;
-    rankList(p, have).filter(function (r) { return r.b.featured; }).sort(function (a, c) { return (a.used.length - c.used.length) || ((c.b.img ? 1 : 0) - (a.b.img ? 1 : 0)) || a.b.name.localeCompare(c.b.name); })
+    rankList(p, have).filter(function (r) { return club(r.b); }).sort(function (a, c) { return (a.used.length - c.used.length) || ((c.b.img ? 1 : 0) - (a.b.img ? 1 : 0)) || a.b.name.localeCompare(c.b.name); })
       .forEach(function (r) { if (n < room) { p.items.push(itemOf(r.b)); n++; } });
     return n;
   }
@@ -355,7 +358,7 @@
       var taken = {}; if (isCity(p)) p.items.forEach(function (x) { if (x.cat) taken[x.cat.toLowerCase()] = x.slug || x.handle; });
       $('#pkL', s).innerHTML = rows.length ? rows.map(function (r) { var b = r.b, on = p.items.some(function (x) { return x.slug === b.slug; }), k = catOf(b).toLowerCase(), off = isCity(p) && !on && k && taken[k];
         return '<label class="aprow" style="flex-direction:row;align-items:center;flex-wrap:nowrap;cursor:pointer;gap:10px' + (off ? ';opacity:.5' : '') + '"><input type="checkbox" data-pk="' + esc(b.slug) + '"' + (on ? ' checked' : '') + (off ? ' disabled' : '') + ' style="width:20px;height:20px;flex:none"><div style="flex:1;min-width:0"><b>' + esc(b.name) + '</b> <span class="muted">@' + esc(b.ig) + '</span><div style="margin-top:2px">' +
-          (b.claimed ? '<span class="ak" style="background:#057A44">Claimed</span> ' : '<span class="ak" style="background:#FFE7A3;color:#6B4A00">Unclaimed</span> ') + (b.featured ? '<span class="ak" style="background:#0F1E36">⭐ Club</span> ' : '') + (isGen(p) ? '<span class="muted" style="font-size:12.5px">🏷️ ' + esc(catOf(b)) + (town(b) ? ' · 📍 ' + esc(town(b)) : '') + '</span> ' : isCity(p) ? '<span class="muted" style="font-size:12.5px">🏷️ ' + esc(catOf(b)) + (off ? ' — already in this post' : '') + '</span> ' : town(b) ? '<span class="muted" style="font-size:12.5px">📍 ' + esc(town(b)) + '</span> ' : '') +
+          (b.claimed ? '<span class="ak" style="background:#057A44">Claimed</span> ' : '<span class="ak" style="background:#FFE7A3;color:#6B4A00">Unclaimed</span> ') + (club(b) ? '<span class="ak" style="background:#0F1E36">⭐ Club</span> ' : '') + (isGen(p) ? '<span class="muted" style="font-size:12.5px">🏷️ ' + esc(catOf(b)) + (town(b) ? ' · 📍 ' + esc(town(b)) : '') + '</span> ' : isCity(p) ? '<span class="muted" style="font-size:12.5px">🏷️ ' + esc(catOf(b)) + (off ? ' — already in this post' : '') + '</span> ' : town(b) ? '<span class="muted" style="font-size:12.5px">📍 ' + esc(town(b)) + '</span> ' : '') +
           r.used.slice(0, 3).map(function (u) { return '<span class="ak" style="background:#EEF0F3;color:#6B7280">' + (isGen(p) ? 'In “' + esc(head(u)) + '”' : 'In Part ' + roman(u.part)) + '</span>'; }).join(' ') + '</div></div></label>'; }).join('') : '<p class="muted">No businesses found.</p>';
       $$('[data-pk]', s).forEach(function (cb) { cb.onchange = function () { var slug = cb.dataset.pk, b = L.filter(function (r) { return r.b.slug === slug; })[0].b;
         if (cb.checked) { if (p.items.length >= 12) { cb.checked = false; X.toast('Up to 12 businesses'); return; } p.items.push(itemOf(b)); } else p.items = p.items.filter(function (x) { return x.slug !== slug; }); if (isCity(p)) draw(); }; });

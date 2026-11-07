@@ -371,10 +371,11 @@ exports.handler = handler(async (ctx) => {
       if (body.set) { const r = await em.saveImageSettings(body.set); await core.audit(who.email, 'hq_image_model', r); }
       return await em.imageSettings();
     }
-    case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': {
+    case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': case 'disc-club': {
       // 📣 Business discovery posts (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const disc = require('../discovery');
+      if (body.action === 'disc-club') return { slugs: await disc.clubSlugs() };
       if (body.action === 'disc-img-put') return { id: await disc.putImg(body.dataUrl) };
       if (body.action === 'disc-img') return { dataUrl: await disc.getImg(body.id) };
       if (body.action === 'disc-dirpic') return { dataUrl: await disc.dirPic(String(body.slug || '')) };
