@@ -381,11 +381,13 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'boost-save') return { item: await boost.save(body.item) };
       return { items: await boost.list() };
     }
-    case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': case 'disc-club': {
+    case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': case 'disc-club': case 'disc-mkt': case 'disc-mktpic': {
       // 📣 Business discovery posts (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const disc = require('../discovery');
       if (body.action === 'disc-club') return { slugs: await disc.clubSlugs() };
+      if (body.action === 'disc-mkt') return { items: await disc.mktList() };
+      if (body.action === 'disc-mktpic') return { dataUrl: await disc.mktPic(body.id) };
       if (body.action === 'disc-img-put') return { id: await disc.putImg(body.dataUrl) };
       if (body.action === 'disc-img') return { dataUrl: await disc.getImg(body.id) };
       if (body.action === 'disc-dirpic') return { dataUrl: await disc.dirPic(String(body.slug || '')) };

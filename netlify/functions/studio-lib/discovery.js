@@ -6,6 +6,8 @@
  *   disc/img/<id>    { dataUrl }      photos you upload (resized in HQ, ≤ ~400 KB)
  * part: { id, kind ('' | 'city' | 'general'), noPart, line ('cat' | 'town' | 'both'), cat, city, part, l1, l2, coverImg, items: [{ slug, name, handle, town, img, pos: {x,y,z} }], caption,
  *         status: 'draft' | 'posted', createdAt, updatedAt, postedAt, postUrl }
+ * 🛍️ Marketplace posts (kind 'market'): one slide per Marketplace product — item.pid (product id), prod (product name), price;
+ *   part.showPrice, part.end { on, t1, t2, t3 } + endImg: the editable last slide ("Shop these and more on the Auntie Tobi Marketplace").
  * Marking a part as posted adds "📣 Featured in …" to each business's timeline in the Business directory.
  */
 const crypto = require('crypto');
@@ -24,14 +26,18 @@ function clean(raw, prev) {
   raw = raw || {}; prev = prev || {};
   const num = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
   const items = (Array.isArray(raw.items) ? raw.items : []).slice(0, MAX_ITEMS).map(x => ({
-    slug: cleanText(x.slug, 120), name: cleanText(x.name, 120), handle: cleanText(String(x.handle || '').replace(/^@+/, ''), 40), town: cleanText(x.town, 40), cat: cleanText(x.cat, 60),
+    slug: cleanText(x.slug, 120), name: cleanText(x.name, 120), pid: /^[A-Za-z0-9_]{2,40}$/.test(String(x.pid || '')) ? x.pid : '', prod: cleanText(x.prod, 120), price: cleanText(x.price, 30), handle: cleanText(String(x.handle || '').replace(/^@+/, ''), 40), town: cleanText(x.town, 40), cat: cleanText(x.cat, 60),
     img: okId(x.img) ? x.img : '', pos: { x: num(x.pos && x.pos.x, -1, 1, 0), y: num(x.pos && x.pos.y, -1, 1, 0), z: num(x.pos && x.pos.z, 1, 3, 1) },
-  })).filter(x => x.handle || x.name);
+  })).filter(x => x.handle || x.name || x.pid);
+  const mkt = raw.kind === 'market', e = raw.end || {};
   return {
-    id: prev.id || newId(), kind: raw.kind === 'city' || raw.kind === 'general' ? raw.kind : '', cat: cleanText(raw.cat, 60), city: raw.kind === 'city' ? cleanText(raw.city, 60) : '', part: Math.round(num(raw.part, 1, 99, 1)),
-    noPart: raw.kind === 'general' && !!raw.noPart, line: raw.kind === 'general' && /^(cat|town|both)$/.test(raw.line) ? raw.line : '',
-    l1: cleanText(raw.l1, raw.kind === 'city' || raw.kind === 'general' ? 90 : 50), l2: cleanText(raw.l2, 50), coverImg: okId(raw.coverImg) ? raw.coverImg : '',
+    id: prev.id || newId(), kind: raw.kind === 'city' || raw.kind === 'general' || mkt ? raw.kind : '', cat: cleanText(raw.cat, 60), city: raw.kind === 'city' ? cleanText(raw.city, 60) : '', part: Math.round(num(raw.part, 1, 99, 1)),
+    noPart: !!raw.noPart, line: raw.kind === 'general' && /^(cat|town|both)$/.test(raw.line) ? raw.line : '',
+    l1: cleanText(raw.l1, raw.kind === 'city' || raw.kind === 'general' || mkt ? 90 : 50), l2: cleanText(raw.l2, 50), coverImg: okId(raw.coverImg) ? raw.coverImg : '',
     coverPos: { x: num(raw.coverPos && raw.coverPos.x, -1, 1, 0), y: num(raw.coverPos && raw.coverPos.y, -1, 1, 0), z: num(raw.coverPos && raw.coverPos.z, 1, 3, 1) },
+    showPrice: mkt ? raw.showPrice !== false : undefined,
+    end: mkt ? { on: e.on !== false, t1: cleanText(e.t1, 60), t2: cleanText(e.t2, 70), t3: cleanText(e.t3, 70) } : undefined,
+    endImg: mkt && okId(raw.endImg) ? raw.endImg : '',
     items, caption: String(raw.caption || '').replace(/\r/g, '').slice(0, 2200),
     status: prev.status || 'draft', createdAt: prev.createdAt || core.nowIso(), updatedAt: core.nowIso(),
     postedAt: prev.postedAt || '', postUrl: prev.postUrl || '',
@@ -53,8 +59,8 @@ async function remove(id) {
   let gone = null;
   await cas(KEY, cur => { if (!cur) return undefined; gone = cur.items.find(p => p.id === id) || null; cur.items = cur.items.filter(p => p.id !== id); return cur; });
   // photos only used by this part
-  if (gone) { const keep = new Set(); for (const p of await list()) { if (p.coverImg) keep.add(p.coverImg); for (const x of p.items) if (x.img) keep.add(x.img); }
-    for (const im of [gone.coverImg].concat(gone.items.map(x => x.img))) if (im && !keep.has(im)) await core.del('disc/img/' + im).catch(() => {}); }
+  if (gone) { const keep = new Set(); for (const p of await list()) { if (p.coverImg) keep.add(p.coverImg); if (p.endImg) keep.add(p.endImg); for (const x of p.items) if (x.img) keep.add(x.img); }
+    for (const im of [gone.coverImg, gone.endImg].concat(gone.items.map(x => x.img))) if (im && !keep.has(im)) await core.del('disc/img/' + im).catch(() => {}); }
 }
 
 // photos
@@ -87,6 +93,24 @@ async function clubSlugs() {
   }));
   return [...out];
 }
+// 🛍️ live Marketplace products for Marketplace posts
+async function mktList() {
+  const market = require('./market'), out = [];
+  for (const r of await market.all()) {
+    if (market.status(r) !== 'live') continue;
+    const f = r.live;
+    out.push({ id: r.id, name: f.name, business: f.business, bizSlug: f.bizSlug || '', category: f.category, price: f.price || '', hasImg: !!(f.imgs && f.imgs.length), at: r.approvedAt || r.updatedAt || '' });
+  }
+  return out.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+}
+// a product's first photo, fetched here so HQ can draw it
+async function mktPic(id) {
+  const market = require('./market'), r = await market.get(String(id || ''));
+  const im = r && r.live && r.live.imgs && r.live.imgs[0];
+  if (!im) return '';
+  if (market.isImgId(im)) { const x = await market.getImage(im); return (x && x.dataUrl) || ''; }
+  return require('./eventmedia').fetchImage(im);
+}
 async function posted(id, url, who) {
   const u = String(url || '').trim();
   if (u && !/^https:\/\/(www\.)?instagram\.com\//i.test(u)) throw new HttpError(400, 'invalid', 'Paste the Instagram post link (instagram.com/p/…), or leave it empty.');
@@ -101,4 +125,4 @@ async function posted(id, url, who) {
 }
 async function unpost(id) { await cas(KEY, cur => { if (!cur) return undefined; const x = cur.items.find(q => q.id === id); if (!x) return undefined; x.status = 'draft'; return cur; }); }
 
-module.exports = { clubSlugs, list, save, remove, putImg, getImg, dirPic, posted, unpost };
+module.exports = { mktList, mktPic, clubSlugs, list, save, remove, putImg, getImg, dirPic, posted, unpost };
