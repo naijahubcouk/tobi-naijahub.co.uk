@@ -598,7 +598,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var wk = posted.filter(function (c) { return (c.postedAt || '').slice(0, 10) >= ws; }), mo = posted.filter(function (c) { return (c.postedAt || '').slice(0, 7) === ms; });
     var byType = {}; mo.forEach(function (c) { byType[c.type] = (byType[c.type] || 0) + 1; });
     var groups = {}; posted.forEach(function (c) { var k = (c.postedAt || '').slice(0, 7); (groups[k] = groups[k] || []).push(c); });
-    $('#view').innerHTML = '<div class="wrap">' + (window.HQBoost ? '<div id="bestPosts"></div>' : '') + '<div class="stats">' +
+    $('#view').innerHTML = '<div class="wrap">' +
+      '<div class="card" style="padding:12px 14px;margin-bottom:12px"><b>＋ Add a post you’ve already posted</b>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px;align-items:flex-end"><div style="flex:2;min-width:240px"><label for="qaL">Instagram link</label><input id="qaL" placeholder="https://www.instagram.com/p/…" inputmode="url"></div>' +
+      '<div style="flex:2;min-width:180px"><label for="qaT">Title <span class="muted" style="font-weight:400">(optional)</span></label><input id="qaT" placeholder="e.g. Jollof Friday Reel"></div></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px;align-items:flex-end"><div><label for="qaY">Type</label><select id="qaY"><option value="">From the link</option>' + ['post', 'reel', 'carousel', 'story'].map(function (k) { return '<option value="' + k + '">' + TYPE[k] + '</option>'; }).join('') + '</select></div>' +
+      '<div><label for="qaD">Posted on</label><input type="date" id="qaD" value="' + today() + '" max="' + today() + '"></div><button class="btn primary" id="qaAdd">＋ Add</button></div></div>' +
+      (window.HQBoost ? '<div id="bestPosts"></div>' : '') + '<div class="stats">' +
       '<div class="card"><b>' + wk.length + '</b><span>posted this week</span></div><div class="card"><b>' + mo.length + '</b><span>posted this month</span></div>' +
       '<div class="card"><b>' + posted.length + '</b><span>posted in total</span></div>' +
       '<div class="card"><span style="display:block;margin-bottom:4px">This month by type</span>' + (Object.keys(byType).length ? Object.keys(byType).map(function (k) { return '<span class="t ' + k + '" style="margin:2px 4px 0 0">' + TYPE[k] + ' ' + byType[k] + '</span>'; }).join('') : '<span>—</span>') + '</div></div>' +
@@ -609,6 +615,20 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       }).join('') : '<div class="card"><p class="muted">When you mark a post as posted, it shows here with its date and link.</p></div>') + '</div>';
     $$('[data-op]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); editCard(byId(a.dataset.op)); }; });
     $$('[data-cboost]').forEach(function (b) { b.onclick = function () { boostCard(byId(b.dataset.cboost)); }; });
+    // ＋ quick add straight into Posted, from the Instagram link
+    $('#qaAdd').onclick = async function () {
+      var link = $('#qaL').value.trim().replace(/[?#].*$/, ''), m = link.match(/^https:\/\/(www\.)?instagram\.com\/(?:[A-Za-z0-9_.]+\/)?(p|reel|reels|tv|stories)\/[A-Za-z0-9_.\-\/]+/i);
+      if (!m) { toast('Paste the Instagram link (instagram.com/p/… or /reel/…)'); $('#qaL').focus(); return; }
+      var norm = function (u) { return String(u || '').toLowerCase().replace(/[?#].*$/, '').replace(/\/+$/, '').replace('://instagram.com', '://www.instagram.com'); };
+      var dup = S.items.filter(function (c) { return c.postLink && norm(c.postLink) === norm(link); })[0];
+      if (dup && !confirm('“' + dup.title + '” already has this link. Add it again anyway?')) return;
+      var type = $('#qaY').value || (/reel|tv/i.test(m[2]) ? 'reel' : /stories/i.test(m[2]) ? 'story' : 'post');
+      var day = $('#qaD').value || today(), when = day === today() ? new Date().toISOString() : day + 'T12:00:00.000Z';
+      var title = $('#qaT').value.trim() || ('Instagram ' + (type === 'post' ? 'post' : TYPE[type].replace(/^\S+\s/, '').toLowerCase()) + ' · ' + new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+      $('#qaAdd').disabled = true;
+      var c = await quickSave({ title: title, type: type, topic: 'community', status: 'posted', postLink: link, postedAt: when }, 'Added to Posted 🎉');
+      if (c) boostCard(c, link); else $('#qaAdd').disabled = false;
+    };
     if (window.HQBoost) window.HQBoost.load(true).then(function () { var el = $('#bestPosts'); if (!el) return; el.innerHTML = window.HQBoost.bestHtml();
       window.HQBoost.bind(el, function (key) { var id = key.split(':')[1]; if (key.indexOf('hub:') === 0 && byId(id)) { var c = byId(id); return { key: key, kind: 'hub', title: c.title, url: c.postLink || '', postedAt: c.postedAt }; } return null; }); });
   }
