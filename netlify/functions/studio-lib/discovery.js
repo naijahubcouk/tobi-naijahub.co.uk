@@ -4,7 +4,7 @@
  * "Nigerian Caterers in UK – Part I": a cover + one slide per business (their photo, @handle and town), drawn in HQ.
  *   disc/parts       { items: [part] }
  *   disc/img/<id>    { dataUrl }      photos you upload (resized in HQ, ≤ ~400 KB)
- * part: { id, cat, part, l1, l2, coverImg, items: [{ slug, name, handle, town, img, pos: {x,y,z} }], caption,
+ * part: { id, kind ('' | 'city'), cat, city, part, l1, l2, coverImg, items: [{ slug, name, handle, town, img, pos: {x,y,z} }], caption,
  *         status: 'draft' | 'posted', createdAt, updatedAt, postedAt, postUrl }
  * Marking a part as posted adds "📣 Featured in …" to each business's timeline in the Business directory.
  */
@@ -24,12 +24,12 @@ function clean(raw, prev) {
   raw = raw || {}; prev = prev || {};
   const num = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
   const items = (Array.isArray(raw.items) ? raw.items : []).slice(0, MAX_ITEMS).map(x => ({
-    slug: cleanText(x.slug, 120), name: cleanText(x.name, 120), handle: cleanText(String(x.handle || '').replace(/^@+/, ''), 40), town: cleanText(x.town, 40),
+    slug: cleanText(x.slug, 120), name: cleanText(x.name, 120), handle: cleanText(String(x.handle || '').replace(/^@+/, ''), 40), town: cleanText(x.town, 40), cat: cleanText(x.cat, 60),
     img: okId(x.img) ? x.img : '', pos: { x: num(x.pos && x.pos.x, -1, 1, 0), y: num(x.pos && x.pos.y, -1, 1, 0), z: num(x.pos && x.pos.z, 1, 3, 1) },
   })).filter(x => x.handle || x.name);
   return {
-    id: prev.id || newId(), cat: cleanText(raw.cat, 60), part: Math.round(num(raw.part, 1, 99, 1)),
-    l1: cleanText(raw.l1, 50), l2: cleanText(raw.l2, 50), coverImg: okId(raw.coverImg) ? raw.coverImg : '',
+    id: prev.id || newId(), kind: raw.kind === 'city' ? 'city' : '', cat: cleanText(raw.cat, 60), city: raw.kind === 'city' ? cleanText(raw.city, 60) : '', part: Math.round(num(raw.part, 1, 99, 1)),
+    l1: cleanText(raw.l1, raw.kind === 'city' ? 90 : 50), l2: cleanText(raw.l2, 50), coverImg: okId(raw.coverImg) ? raw.coverImg : '',
     coverPos: { x: num(raw.coverPos && raw.coverPos.x, -1, 1, 0), y: num(raw.coverPos && raw.coverPos.y, -1, 1, 0), z: num(raw.coverPos && raw.coverPos.z, 1, 3, 1) },
     items, caption: String(raw.caption || '').replace(/\r/g, '').slice(0, 2200),
     status: prev.status || 'draft', createdAt: prev.createdAt || core.nowIso(), updatedAt: core.nowIso(),
