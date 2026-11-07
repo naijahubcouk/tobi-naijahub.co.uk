@@ -3,6 +3,8 @@
  * "Nigerian Caterers in UK – Part I": pick ~10 businesses from a directory category (claimed first, different towns),
  * then HQ draws the cover (your photo + white box with green border, title and gold brush) and one slide per business
  * (their photo + "@handle / 📍 Town" box), writes the caption with every @handle, and downloads it all (ZIP).
+ * ✨ General / Advert posts: any title (with or without "Part I"), any businesses from the whole directory (Club members first
+ *    if you like); each slide shows the category, the town or both.
  * 🏙️ City posts ("Nigerian Businesses in Manchester – Part I", any title you like): businesses from one town or city,
  * one business per category so each gets its moment; the slide shows their category instead of the town.
  * Marking a post as posted adds "📣 Featured in …" to each business's timeline in the Business directory.
@@ -37,7 +39,11 @@
     return Object.keys(c).sort().map(function (k) { return { cat: k, n: c[k].n, ig: c[k].ig }; });
   }
   // a series: one category ("caterers") or one city ("city:manchester"); parts are numbered within it
-  function keyOf(p) { return p.kind === 'city' ? 'city:' + String(p.city || '').toLowerCase() : p.cat; }
+  function keyOf(p) { return p.kind === 'city' ? 'city:' + String(p.city || '').toLowerCase() : p.kind === 'general' ? 'general' : p.cat; }
+  function isGen(p) { return p && p.kind === 'general'; }
+  // "Title – Part II", or just "Title" when Part is switched off
+  function head(p) { return [p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }).join(' ') + (p.noPart ? '' : ' – Part ' + roman(p.part)); }
+  function line(p, it) { var c = String(it.cat || '').trim(), t = String(it.town || '').trim(), w = p.line || 'both'; return w === 'cat' ? c : w === 'town' ? (t ? '📍 ' + t : '') : [c, t ? '📍 ' + t : ''].filter(Boolean).join(' · '); }
   function partsOf(key) { return (X.S.disc || []).filter(function (p) { return keyOf(p) === key; }); }
   function isCity(p) { return p && p.kind === 'city'; }
   function inCity(b, city) { return town(b).toLowerCase() === String(city || '').toLowerCase(); }
@@ -50,8 +56,8 @@
   function usedIn(key, slug, exceptId) { var out = []; partsOf(key).forEach(function (p) { if (p.id !== exceptId && p.items.some(function (x) { return x.slug === slug; })) out.push(p); }); return out; }
   function rankList(p, have) {
     var key = keyOf(p);
-    return dir().filter(function (b) { return (isCity(p) ? inCity(b, p.city) : inCat(b, p.cat)) && b.ig && have.indexOf(b.slug) < 0; }).map(function (b) {
-      return { b: b, used: usedIn(key, b.slug, p.id) };
+    return dir().filter(function (b) { return (isGen(p) ? true : isCity(p) ? inCity(b, p.city) : inCat(b, p.cat)) && b.ig && have.indexOf(b.slug) < 0; }).map(function (b) {
+      return { b: b, used: isGen(p) ? everIn(b.slug, p.id) : usedIn(key, b.slug, p.id) };
     }).sort(function (a, c) {
       return (a.used.length - c.used.length) || ((c.b.claimed ? 1 : 0) - (a.b.claimed ? 1 : 0)) || ((c.b.featured ? 1 : 0) - (a.b.featured ? 1 : 0)) || ((c.b.img ? 1 : 0) - (a.b.img ? 1 : 0)) || a.b.name.localeCompare(c.b.name);
     });
@@ -86,6 +92,19 @@
     return n;
   }
   function itemOf(b) { return { slug: b.slug, name: b.name, handle: b.ig, town: town(b), cat: catOf(b), img: '', pos: { x: 0, y: 0, z: 1 } }; }
+  function blankGen() {
+    var max = 0; partsOf('general').forEach(function (p) { max = Math.max(max, p.part); });
+    return { kind: 'general', city: '', cat: '', part: max + 1, noPart: false, line: 'both', l1: 'Nigerian Businesses You Should Know', l2: '', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
+  }
+  // ✨ for adverts: Business Club members first (claimed, with a photo), not already in this post, up to 10
+  function fillClub(p) {
+    var have = p.items.map(function (x) { return x.slug; }), room = 10 - p.items.length, n = 0;
+    rankList(p, have).filter(function (r) { return r.b.featured; }).sort(function (a, c) { return (a.used.length - c.used.length) || ((c.b.img ? 1 : 0) - (a.b.img ? 1 : 0)) || a.b.name.localeCompare(c.b.name); })
+      .forEach(function (r) { if (n < room) { p.items.push(itemOf(r.b)); n++; } });
+    return n;
+  }
+  // everything this business has been in (any kind of post) — shown, never blocking, in General posts
+  function everIn(slug, exceptId) { return (X.S.disc || []).filter(function (q) { return q.id !== exceptId && q.items.some(function (x) { return x.slug === slug; }); }); }
   function blankCity(city) {
     var max = 0; partsOf('city:' + city.toLowerCase()).forEach(function (p) { max = Math.max(max, p.part); });
     return { kind: 'city', city: city, cat: '', part: max + 1, l1: 'Nigerian Businesses in ' + city, l2: '', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
@@ -134,7 +153,7 @@
   function wrap(ctx, words, maxW) { var out = [], line = ''; words.forEach(function (w) { var t = line ? line + ' ' + w : w; if (line && ctx.measureText(t).width > maxW) { out.push(line); line = w; } else line = t; }); if (line) out.push(line); return out; }
   function drawCover(ctx, p, im) {
     drawPhoto(ctx, im, p.coverPos);
-    var text = ([p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }).join(' ') + ' - Part ' + roman(p.part)).toUpperCase();
+    var text = head(p).replace(' – Part ', ' - Part ').toUpperCase();
     var bw = W * 0.92, bx = (W - bw) / 2, inner = bw - 110, s = 70, lines;
     do { ctx.font = '700 ' + s + 'px ' + FT; lines = wrap(ctx, text.split(/\s+/), inner); s -= 2; } while ((lines.length > 3 || lines.some(function (l) { return ctx.measureText(l).width > inner; })) && s > 30);
     s += 2; var lh = s * 1.42, bh = lines.length * lh + 96, by = H - bh - 56;
@@ -144,9 +163,9 @@
     lines.forEach(function (l, i) { ctx.fillText(l, W / 2, by + 48 + lh * (i + 0.5)); });
     ctx.textAlign = 'left';
   }
-  function drawBiz(ctx, it, im, city) {
+  function drawBiz(ctx, it, im, city, gen) {
     drawPhoto(ctx, im, it.pos, it.name);
-    var a = '@' + String(it.handle || '').replace(/^@/, ''), b = city ? String(it.cat || '').trim() : it.town ? '📍 ' + it.town : '';
+    var a = '@' + String(it.handle || '').replace(/^@/, ''), b = gen ? line(gen, it) : city ? String(it.cat || '').trim() : it.town ? '📍 ' + it.town : '';
     var s = 50; ctx.font = '700 ' + s + 'px ' + FT;
     var tw = Math.max(ctx.measureText(a).width, b ? ctx.measureText(b).width : 0);
     if (tw > W - 140) { s = Math.floor(s * (W - 140) / tw); ctx.font = '700 ' + s + 'px ' + FT; tw = Math.max(ctx.measureText(a).width, b ? ctx.measureText(b).width : 0); }
@@ -159,7 +178,7 @@
   async function render(p, i, scale) {
     var c = document.createElement('canvas'); c.width = W * (scale || 1); c.height = H * (scale || 1);
     var ctx = c.getContext('2d'); ctx.scale(scale || 1, scale || 1);
-    if (i < 0) drawCover(ctx, p, await photo(p.coverImg)); else drawBiz(ctx, p.items[i], await itemPhoto(p.items[i]), isCity(p));
+    if (i < 0) drawCover(ctx, p, await photo(p.coverImg)); else drawBiz(ctx, p.items[i], await itemPhoto(p.items[i]), isCity(p), isGen(p) ? p : null);
     return c;
   }
   async function fontsReady() { try { await document.fonts.load('700 50px Inter'); } catch (e) {} }
@@ -174,16 +193,23 @@
     return ['#NigeriansIn' + t, '#' + t + 'Business', '#' + t + 'SmallBusiness', '#Naija' + t, '#NigerianBusinessesUK', '#SupportNigerianBusinesses', '#NigeriansInUK', '#BlackOwnedBusinessUK', '#AuntieTobi'].join(' ');
   }
   function caption(p) {
+    if (isGen(p)) {
+      return '🇳🇬 ' + head(p) + ' 💚\n\n' +
+        'Support these amazing Nigerian businesses in the UK 👇🏾\n\n' +
+        p.items.map(function (x, i) { var bits = [x.cat, x.town ? '📍 ' + x.town : ''].filter(Boolean).join(' · '); return (i + 1) + '. @' + x.handle + (bits ? ' — ' + bits : ''); }).join('\n') +
+        '\n\n💚 Follow, save and share to show them some love\n📌 Save this for later · 📤 Share with a friend\n💚 Find more Nigerian businesses near you on the Auntie Tobi app — link in bio\n\n' +
+        ['#NigerianBusinessesUK', '#SupportNigerianBusinesses', '#SupportSmallBusiness', '#NaijaInUK', '#NigeriansInUK', '#BlackOwnedBusinessUK', '#ShopSmallUK', '#AuntieTobi'].join(' ');
+    }
     if (isCity(p)) {
-      var c = p.city, h = [p.l1, p.l2].filter(Boolean).join(' ');
-      return '🇳🇬 ' + h + ' – Part ' + roman(p.part) + ' 💚\n\n' +
+      var c = p.city;
+      return '🇳🇬 ' + head(p) + ' 💚\n\n' +
         'Looking for Nigerian businesses in ' + c + '? Here are ' + p.items.length + ' amazing local businesses to support 👇🏾\n\n' +
         p.items.map(function (x, i) { return (i + 1) + '. @' + x.handle + (x.cat ? ' — ' + x.cat : ''); }).join('\n') +
         '\n\nKnow a great Nigerian business in ' + c + ' we should feature next? Tag them in the comments 👇🏾\n\n' +
         '📌 Save this for later · 📤 Share with a friend in ' + c + '\n💚 Find more Nigerian businesses near you on the Auntie Tobi app — link in bio\n\n' + cityTags(c);
     }
-    var what = String(p.cat || 'businesses').toLowerCase(), head = [p.l1, p.l2].filter(Boolean).join(' ');
-    return '🇳🇬 ' + head + ' – Part ' + roman(p.part) + ' 💚\n\n' +
+    var what = String(p.cat || 'businesses').toLowerCase();
+    return '🇳🇬 ' + head(p) + ' 💚\n\n' +
       'Looking for Nigerian ' + what + ' near you? Here are ' + p.items.length + ' amazing businesses across the UK 👇🏾\n\n' +
       p.items.map(function (x, i) { return (i + 1) + '. @' + x.handle + (x.town ? ' — 📍 ' + x.town : ''); }).join('\n') +
       '\n\nKnow a great Nigerian ' + what.replace(/s$/, '') + ' we should feature next? Tag them in the comments 👇🏾\n\n' +
@@ -201,17 +227,19 @@
     var C = cats(), P = X.S.disc || [];
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>＋ New discovery post</b>' +
-      '<div class="row" style="gap:6px;margin:8px 0 6px"><button class="btn sm ' + (X.S.discMode === 'city' ? 'ghost' : 'primary') + '" data-dm="cat">🏷️ By category</button><button class="btn sm ' + (X.S.discMode === 'city' ? 'primary' : 'ghost') + '" data-dm="city">🏙️ By city</button></div>' +
-      (X.S.discMode === 'city' ? '<p class="muted" style="font-size:13px;margin:4px 0 8px">Choose a town or city. HQ picks up to 10 businesses with Instagram — <b>one per category</b>, claimed first, not featured in this city before — and you can change any of them or the title.</p>' +
+      '<div class="row" style="gap:6px;margin:8px 0 6px"><button class="btn sm ' + (X.S.discMode === 'city' || X.S.discMode === 'gen' ? 'ghost' : 'primary') + '" data-dm="cat">🏷️ By category</button><button class="btn sm ' + (X.S.discMode === 'city' ? 'primary' : 'ghost') + '" data-dm="city">🏙️ By city</button><button class="btn sm ' + (X.S.discMode === 'gen' ? 'primary' : 'ghost') + '" data-dm="gen">✨ General / Advert</button></div>' +
+      (X.S.discMode === 'gen' ? '<p class="muted" style="font-size:13px;margin:4px 0 8px">For adverts and mixed posts: any title (with or without “Part”), any businesses from the whole directory — add them yourself, or fill with Business Club members.</p><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary" id="dcNewGen">✨ Start a general post</button></div></div>'
+      : X.S.discMode === 'city' ? '<p class="muted" style="font-size:13px;margin:4px 0 8px">Choose a town or city. HQ picks up to 10 businesses with Instagram — <b>one per category</b>, claimed first, not featured in this city before — and you can change any of them or the title.</p>' +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><select id="dcCity" style="flex:1;min-width:200px">' + cities().filter(function (c) { return c.ig; }).map(function (c) { var n = partsOf('city:' + c.city.toLowerCase()).length; return '<option value="' + esc(c.city) + '">' + esc(c.city) + ' — ' + c.ig + ' with Instagram · ' + c.nc + ' categor' + (c.nc === 1 ? 'y' : 'ies') + (n ? ' · ' + n + ' post' + (n > 1 ? 's' : '') + ' so far' : '') + '</option>'; }).join('') + '</select><button class="btn primary" id="dcNewCity">✨ Start Part …</button></div></div>'
       : '<p class="muted" style="font-size:13px;margin:4px 0 8px">Choose a category from your Business directory. HQ picks 10 businesses with Instagram — claimed first, from different towns, not featured before — and you can change any of them.</p>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap"><select id="dcCat" style="flex:1;min-width:200px">' + C.filter(function (c) { return c.ig; }).map(function (c) { var n = partsOf(c.cat).length; return '<option value="' + esc(c.cat) + '">' + esc(title(c.cat)) + ' — ' + c.ig + ' with Instagram' + (n ? ' · ' + n + ' post' + (n > 1 ? 's' : '') + ' so far' : '') + '</option>'; }).join('') + '</select><button class="btn primary" id="dcNew">✨ Start Part …</button></div></div>') +
       '<div class="card" style="padding:4px 14px">' + (P.length ? P.map(function (p) {
-        return '<div class="aprow" style="cursor:pointer;flex-direction:row;align-items:center;flex-wrap:nowrap" data-dp="' + p.id + '"><div style="flex:1;min-width:0">' + (isCity(p) ? '<span title="City post">🏙️</span> ' : '') + '<b>' + esc([p.l1, p.l2].filter(Boolean).join(' ')) + ' – Part ' + roman(p.part) + '</b> ' +
+        return '<div class="aprow" style="cursor:pointer;flex-direction:row;align-items:center;flex-wrap:nowrap" data-dp="' + p.id + '"><div style="flex:1;min-width:0">' + (isCity(p) ? '<span title="City post">🏙️</span> ' : isGen(p) ? '<span title="General / advert post">✨</span> ' : '') + '<b>' + esc(head(p)) + '</b> ' +
           (p.status === 'posted' ? '<span class="ak" style="background:#057A44">✅ Posted ' + esc(fmt(p.postedAt)) + '</span>' : '<span class="ak" style="background:#EEF0F3;color:#6B7280">Draft</span>') +
-          '<div class="muted" style="font-size:12.5px">' + p.items.length + ' businesses · ' + esc(p.items.map(function (x) { return isCity(p) ? x.cat : x.town; }).filter(Boolean).filter(function (t, i, a) { return a.indexOf(t) === i; }).slice(0, 5).join(', ')) + '</div></div><span style="font-size:20px;color:#9CA3AF">›</span></div>';
+          '<div class="muted" style="font-size:12.5px">' + p.items.length + ' businesses · ' + esc(p.items.map(function (x) { return isCity(p) || isGen(p) ? x.cat : x.town; }).filter(Boolean).filter(function (t, i, a) { return a.indexOf(t) === i; }).slice(0, 5).join(', ')) + '</div></div><span style="font-size:20px;color:#9CA3AF">›</span></div>';
       }).join('') : '<p class="muted" style="padding:12px 0">No discovery posts yet.</p>') + '</div></div>';
     $$('[data-dm]').forEach(function (b) { b.onclick = function () { X.S.discMode = b.dataset.dm; listPage(); }; });
+    if ($('#dcNewGen')) $('#dcNewGen').onclick = function () { var p = blankGen(); p.caption = caption(p); X.S.discEdit = p; view(); setTimeout(function () { picker(X.S.discEdit); }, 50); };
     if ($('#dcCity')) {
       var syncC = function () { var n = 0; partsOf('city:' + $('#dcCity').value.toLowerCase()).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNewCity').textContent = '✨ Start Part ' + roman(n + 1); };
       $('#dcCity').onchange = syncC; syncC();
@@ -236,28 +264,30 @@
   }
   function editor() {
     var p = X.S.discEdit, posted = p.status === 'posted';
-    $('#ttl').textContent = [p.l1, p.l2].filter(Boolean).join(' ') + ' – Part ' + roman(p.part);
+    $('#ttl').textContent = head(p);
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn ghost" id="deBack">‹ All posts</button><button class="btn primary" id="deSave">💾 Save</button><button class="btn gold" id="deZip">⬇️ Download slides</button>' + (navigator.canShare ? '<button class="btn ghost" id="deShare">📲 Save to phone</button>' : '') + (posted ? '<button class="btn ghost" id="deTell">🎉 Tell the businesses</button>' : '<button class="btn ghost" id="dePost">✅ Mark as posted</button>') + (p.id ? '<button class="btn ghost" id="deDel" style="color:#B42318">🗑</button>' : '') + '</div>' +
       (posted ? '<div class="note" style="margin-bottom:12px">✅ Posted ' + esc(fmt(p.postedAt)) + (p.postUrl ? ' · <a href="' + esc(p.postUrl) + '" target="_blank" rel="noopener">View on Instagram</a>' : '') + ' — each business’s timeline in Business directory shows it. <button class="btn link" id="deUnpost" style="font-size:13px">Undo</button></div>' : '') +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>🎯 Cover</b><div class="row" style="gap:12px;align-items:flex-start;margin-top:8px;flex-wrap:wrap"><div data-th="-1" data-open="-1" style="width:150px;cursor:pointer;background:#EEE;border-radius:8px;aspect-ratio:4/5"></div><div style="flex:1;min-width:200px" class="stack">' +
-      (isCity(p) ? '<div><label for="deL1">Title <span class="muted" style="font-weight:400">— write anything you like</span></label><input id="deL1" value="' + esc(p.l1) + '" maxlength="90" placeholder="Nigerian Businesses in ' + esc(p.city) + '"><input id="deL2" type="hidden" value=""></div>'
+      (isCity(p) || isGen(p) ? '<div><label for="deL1">Title <span class="muted" style="font-weight:400">— write anything you like</span></label><input id="deL1" value="' + esc(p.l1) + '" maxlength="90" placeholder="' + (isGen(p) ? 'Nigerian Businesses You Should Know' : 'Nigerian Businesses in ' + esc(p.city)) + '"><input id="deL2" type="hidden" value=""></div>'
         : '<div><label>Title</label><input id="deL1" value="' + esc(p.l1) + '" placeholder="Nigerian Caterers"><input id="deL2" value="' + esc(p.l2) + '" placeholder="in the UK" style="margin-top:6px"></div>') +
-      '<div class="row" style="gap:8px;align-items:center"><label style="margin:0">Part</label><input id="dePt" type="number" min="1" max="99" value="' + p.part + '" style="width:80px"><span class="muted" id="dePtR">= Part ' + roman(p.part) + '</span></div>' +
+      '<div class="row" style="gap:8px;align-items:center"><label style="margin:0">Part</label><input id="dePt" type="number" min="1" max="99" value="' + p.part + '" style="width:80px"><span class="muted" id="dePtR">= Part ' + roman(p.part) + '</span>' + (isGen(p) ? '<label style="margin:0 0 0 8px;display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" id="deNoPart"' + (p.noPart ? ' checked' : '') + ' style="width:18px;height:18px"> No “Part” on this post</label>' : '') + '</div>' +
+      (isGen(p) ? '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><label for="deLine" style="margin:0">Under each @handle</label><select id="deLine" style="width:auto">' + [['both', 'Category · 📍 Town'], ['cat', 'Category'], ['town', '📍 Town']].map(function (o) { return '<option value="' + o[0] + '"' + ((p.line || 'both') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '') +
       '<button class="btn ghost sm" data-open="-1">📷 Cover photo &amp; position</button></div></div></div>' +
-      '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>🏪 Businesses (' + p.items.length + ')</b><div class="row" style="gap:6px"><button class="btn ghost sm" id="deAuto">✨ Fill to 10</button><button class="btn ghost sm" id="deAdd">＋ Add</button></div></div>' +
-      '<p class="muted" style="font-size:12.5px;margin:4px 0 10px">' + (isCity(p) ? 'One business per category. Tap a slide to change the photo, @handle or category.' : 'Tap a slide to change the photo, @handle or town.') + ' For the best slides, upload a photo from their Instagram.</p>' +
+      '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>🏪 Businesses (' + p.items.length + ')</b><div class="row" style="gap:6px"><button class="btn ghost sm" id="deAuto">' + (isGen(p) ? '⭐ Fill with Club members' : '✨ Fill to 10') + '</button><button class="btn ghost sm" id="deAdd">＋ Add</button></div></div>' +
+      '<p class="muted" style="font-size:12.5px;margin:4px 0 10px">' + (isGen(p) ? 'Any businesses you like, up to 12. Tap a slide to change the photo, @handle, category or town.' : isCity(p) ? 'One business per category. Tap a slide to change the photo, @handle or category.' : 'Tap a slide to change the photo, @handle or town.') + ' For the best slides, upload a photo from their Instagram.</p>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">' + p.items.map(function (x, i) {
-        return '<div style="background:#fff;border:1px solid #ECE6D6;border-radius:10px;padding:6px"><div data-th="' + i + '" data-open="' + i + '" style="cursor:pointer;background:#EEE;border-radius:8px;aspect-ratio:4/5"></div><div style="font-size:12.5px;font-weight:700;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (i + 1) + '. @' + esc(x.handle) + '</div><div class="muted" style="font-size:12px">' + esc((isCity(p) ? x.cat : x.town) || '—') + '</div><div class="row" style="gap:4px;margin-top:4px"><button class="btn ghost sm" data-up="' + i + '" style="padding:4px 8px"' + (i ? '' : ' disabled') + '>↑</button><button class="btn ghost sm" data-dn="' + i + '" style="padding:4px 8px"' + (i < p.items.length - 1 ? '' : ' disabled') + '>↓</button><button class="btn ghost sm" data-rm="' + i + '" style="padding:4px 8px;margin-left:auto">✖</button></div></div>';
+        return '<div style="background:#fff;border:1px solid #ECE6D6;border-radius:10px;padding:6px"><div data-th="' + i + '" data-open="' + i + '" style="cursor:pointer;background:#EEE;border-radius:8px;aspect-ratio:4/5"></div><div style="font-size:12.5px;font-weight:700;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (i + 1) + '. @' + esc(x.handle) + '</div><div class="muted" style="font-size:12px">' + esc((isGen(p) ? line(p, x).replace('📍 ', '') : isCity(p) ? x.cat : x.town) || '—') + '</div><div class="row" style="gap:4px;margin-top:4px"><button class="btn ghost sm" data-up="' + i + '" style="padding:4px 8px"' + (i ? '' : ' disabled') + '>↑</button><button class="btn ghost sm" data-dn="' + i + '" style="padding:4px 8px"' + (i < p.items.length - 1 ? '' : ' disabled') + '>↓</button><button class="btn ghost sm" data-rm="' + i + '" style="padding:4px 8px;margin-left:auto">✖</button></div></div>';
       }).join('') + '</div></div>' +
       '<div class="card" style="padding:14px 16px"><div class="row" style="justify-content:space-between;align-items:center"><b>✍️ Caption</b><div class="row" style="gap:6px"><button class="btn ghost sm" id="deCapNew">↻ Rewrite from the list</button><button class="btn ghost sm" id="deCapCopy">📋 Copy</button></div></div><textarea id="deCap" rows="12" style="margin-top:8px;font-size:14px">' + esc(p.caption || caption(p)) + '</textarea><div class="muted" style="font-size:12px;margin-top:4px" id="deCapN"></div></div></div>';
-    var read = function () { p.l1 = $('#deL1').value; p.l2 = $('#deL2').value; p.part = Math.max(1, parseInt($('#dePt').value, 10) || 1); p.caption = $('#deCap').value; };
+    var read = function () { p.l1 = $('#deL1').value; p.l2 = $('#deL2').value; p.part = Math.max(1, parseInt($('#dePt').value, 10) || 1); p.caption = $('#deCap').value; if ($('#deNoPart')) p.noPart = $('#deNoPart').checked; if ($('#deLine')) p.line = $('#deLine').value; };
     var capN = function () { $('#deCapN').textContent = $('#deCap').value.length + ' / 2,200 characters'; }; $('#deCap').oninput = capN; capN();
     var auto = caption(p);   // the caption follows the title while you haven't changed it yourself
-    var tm; ['#deL1', '#deL2', '#dePt'].forEach(function (id) { $(id).oninput = function () { clearTimeout(tm); tm = setTimeout(function () { var was = $('#deCap').value === auto; read(); if ($('#dePtR')) $('#dePtR').textContent = '= Part ' + roman(p.part); if (was) { auto = caption(p); $('#deCap').value = p.caption = auto; capN(); } paintThumbs(p); }, 300); }; });
+    var tm; ['#deL1', '#deL2', '#dePt', '#deNoPart', '#deLine'].forEach(function (id) { if ($(id)) $(id).oninput = $(id).onchange = function () { clearTimeout(tm); tm = setTimeout(function () { var was = $('#deCap').value === auto; read(); if ($('#dePtR')) $('#dePtR').textContent = '= Part ' + roman(p.part); $('#ttl').textContent = head(p); if (was) { auto = caption(p); $('#deCap').value = p.caption = auto; capN(); } paintThumbs(p); }, 300); }; });
+    if ($('#deLine')) $('#deLine').onchange = function () { var was = $('#deCap').value === auto; read(); if (was) p.caption = caption(p); editor(); };
     $('#deBack').onclick = function () { X.S.discEdit = null; view(); };
     $('#deSave').onclick = function () { read(); save(p).then(function () { X.toast('Saved'); }); };
-    $('#deAuto').onclick = function () { read(); var n = autoPick(p); X.toast(n ? 'Added ' + n : isCity(p) ? 'No more new categories with Instagram in ' + p.city : 'No more new businesses with Instagram in this category'); if (n) p.caption = caption(p); editor(); };
+    $('#deAuto').onclick = function () { read(); if (isGen(p)) { var g = fillClub(p); X.toast(g ? 'Added ' + g + ' Club member' + (g === 1 ? '' : 's') : 'No more Club members with Instagram to add'); if (g) p.caption = caption(p); editor(); return; } var n = autoPick(p); X.toast(n ? 'Added ' + n : isCity(p) ? 'No more new categories with Instagram in ' + p.city : 'No more new businesses with Instagram in this category'); if (n) p.caption = caption(p); editor(); };
     $('#deAdd').onclick = function () { read(); picker(p); };
     $('#deCapNew').onclick = function () { read(); $('#deCap').value = p.caption = caption(p); capN(); };
     $('#deCapCopy').onclick = async function () { try { await navigator.clipboard.writeText($('#deCap').value); X.toast('Caption copied'); } catch (e) { X.toast('Copy failed — select the text and copy'); } };
@@ -286,15 +316,15 @@
       '<p class="muted" style="text-align:center;font-size:12.5px;margin:0 0 8px">Drag the photo to move it · use the slider to zoom</p>' +
       '<div class="row" style="gap:8px;align-items:center"><span class="muted" style="font-size:13px">Zoom</span><input type="range" id="ssZ" min="1" max="3" step="0.02" value="' + (pos.z || 1) + '" style="flex:1"></div>' +
       '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><label class="btn ghost sm" style="margin:0">📷 ' + (cover ? 'Cover photo' : 'Upload their photo') + '<input type="file" id="ssF" accept="image/*" hidden></label>' + (!cover && it.img ? '<button class="btn ghost sm" id="ssDir">↺ Use directory picture</button>' : '') + (!cover ? '<a class="btn ghost sm" href="https://www.instagram.com/' + esc(it.handle) + '/" target="_blank" rel="noopener">📸 Open their Instagram</a>' : '') + '</div>' +
-      (cover ? '' : '<div class="f2" style="margin-top:10px"><div><label for="ssH">Instagram</label><input id="ssH" value="@' + esc(it.handle) + '"></div><div><label for="ssT">' + (isCity(p) ? 'Category (on the slide)' : 'Town') + '</label><input id="ssT" value="' + esc(isCity(p) ? it.cat : it.town) + '"></div></div>') +
+      (cover ? '' : isGen(p) ? '<div class="f2" style="margin-top:10px"><div><label for="ssH">Instagram</label><input id="ssH" value="@' + esc(it.handle) + '"></div><div><label for="ssC2">Category</label><input id="ssC2" value="' + esc(it.cat || '') + '"></div></div><div style="margin-top:8px"><label for="ssT">Town</label><input id="ssT" value="' + esc(it.town || '') + '"></div>' : '<div class="f2" style="margin-top:10px"><div><label for="ssH">Instagram</label><input id="ssH" value="@' + esc(it.handle) + '"></div><div><label for="ssT">' + (isCity(p) ? 'Category (on the slide)' : 'Town') + '</label><input id="ssT" value="' + esc(isCity(p) ? it.cat : it.town) + '"></div></div>') +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="ssX">Cancel</button><button class="btn primary" id="ssOk">Done</button></div>');
     var tmp = cover ? { coverImg: p.coverImg } : { img: it.img }, c = $('#ssC', s), ctx = c.getContext('2d');
-    var cur = function () { var o = cover ? Object.assign({}, p, { coverImg: tmp.coverImg, coverPos: pos }) : Object.assign({}, it, { img: tmp.img, pos: pos, handle: $('#ssH', s).value.replace(/^@+/, '').trim() }, isCity(p) ? { cat: $('#ssT', s).value.trim() } : { town: $('#ssT', s).value.trim() }); return o; };
-    var im = null, paint = function () { ctx.setTransform(0.5, 0, 0, 0.5, 0, 0); if (cover) drawCover(ctx, cur(), im); else drawBiz(ctx, cur(), im, isCity(p)); };
+    var cur = function () { var o = cover ? Object.assign({}, p, { coverImg: tmp.coverImg, coverPos: pos }) : Object.assign({}, it, { img: tmp.img, pos: pos, handle: $('#ssH', s).value.replace(/^@+/, '').trim() }, isGen(p) ? { cat: $('#ssC2', s).value.trim(), town: $('#ssT', s).value.trim() } : isCity(p) ? { cat: $('#ssT', s).value.trim() } : { town: $('#ssT', s).value.trim() }); return o; };
+    var im = null, paint = function () { ctx.setTransform(0.5, 0, 0, 0.5, 0, 0); if (cover) drawCover(ctx, cur(), im); else drawBiz(ctx, cur(), im, isCity(p), isGen(p) ? p : null); };
     var reload = async function () { await fontsReady(); im = cover ? await photo(tmp.coverImg) : (tmp.img ? await photo(tmp.img) : await dirPhoto(it.slug)); paint(); };
     reload();
     $('#ssZ', s).oninput = function () { pos.z = +this.value; paint(); };
-    if (!cover) { $('#ssH', s).oninput = paint; $('#ssT', s).oninput = paint; }
+    if (!cover) { $('#ssH', s).oninput = paint; $('#ssT', s).oninput = paint; if ($('#ssC2', s)) $('#ssC2', s).oninput = paint; }
     // drag to move the photo
     var drag = null;
     c.onpointerdown = function (e) { if (!im) return; drag = { x: e.clientX, y: e.clientY, px: pos.x || 0, py: pos.y || 0 }; c.setPointerCapture(e.pointerId); };
@@ -317,22 +347,22 @@
   // add businesses by hand
   function picker(p) {
     var have = p.items.map(function (x) { return x.slug; }), L = rankList(p, have), q = '';
-    var s = X.sheet('<h2>＋ Add businesses</h2><p class="muted" style="font-size:13px;margin:4px 0 8px">' + (isCity(p) ? 'Businesses in ' + esc(p.city) + ' with Instagram — one per category, so a category already in this post is greyed out.' : esc(title(p.cat)) + ' with Instagram — claimed first.') + ' Businesses already in another part are at the bottom.</p><input id="pkQ" placeholder="🔎 Search name, @handle or town"><div id="pkL" style="max-height:52vh;overflow:auto;margin-top:8px"></div>' +
-      '<div class="row" style="gap:8px;margin-top:10px"><input id="pkHand" placeholder="Not in the directory? @handle" style="flex:1"><input id="pkTown" placeholder="' + (isCity(p) ? 'Category' : 'Town') + '" style="width:120px"><button class="btn ghost sm" id="pkHandGo">＋</button></div>' +
+    var s = X.sheet('<h2>＋ Add businesses</h2><p class="muted" style="font-size:13px;margin:4px 0 8px">' + (isGen(p) ? 'Any business in your directory with Instagram — search by name, @handle, category or town. ⭐ = Business Club. A tag shows if they were already in another post.</p>' : (isCity(p) ? 'Businesses in ' + esc(p.city) + ' with Instagram — one per category, so a category already in this post is greyed out.' : esc(title(p.cat)) + ' with Instagram — claimed first.') + ' Businesses already in another part are at the bottom.</p>') + '<input id="pkQ" placeholder="🔎 Search name, @handle, category or town"><div id="pkL" style="max-height:52vh;overflow:auto;margin-top:8px"></div>' +
+      '<div class="row" style="gap:8px;margin-top:10px"><input id="pkHand" placeholder="Not in the directory? @handle" style="flex:1"><input id="pkTown" placeholder="' + (isCity(p) ? 'Category' : 'Town') + '" style="width:120px">' + (isGen(p) ? '<input id="pkCat" placeholder="Category" style="width:120px">' : '') + '<button class="btn ghost sm" id="pkHandGo">＋</button></div>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn primary" id="pkOk">Done</button></div>');
     var draw = function () {
       var rows = L.filter(function (r) { var b = r.b; return !q || (b.name + ' ' + b.ig + ' ' + b.loc + ' ' + b.cat).toLowerCase().indexOf(q) >= 0; });
       var taken = {}; if (isCity(p)) p.items.forEach(function (x) { if (x.cat) taken[x.cat.toLowerCase()] = x.slug || x.handle; });
       $('#pkL', s).innerHTML = rows.length ? rows.map(function (r) { var b = r.b, on = p.items.some(function (x) { return x.slug === b.slug; }), k = catOf(b).toLowerCase(), off = isCity(p) && !on && k && taken[k];
         return '<label class="aprow" style="flex-direction:row;align-items:center;flex-wrap:nowrap;cursor:pointer;gap:10px' + (off ? ';opacity:.5' : '') + '"><input type="checkbox" data-pk="' + esc(b.slug) + '"' + (on ? ' checked' : '') + (off ? ' disabled' : '') + ' style="width:20px;height:20px;flex:none"><div style="flex:1;min-width:0"><b>' + esc(b.name) + '</b> <span class="muted">@' + esc(b.ig) + '</span><div style="margin-top:2px">' +
-          (b.claimed ? '<span class="ak" style="background:#057A44">Claimed</span> ' : '<span class="ak" style="background:#FFE7A3;color:#6B4A00">Unclaimed</span> ') + (b.featured ? '<span class="ak" style="background:#0F1E36">⭐ Club</span> ' : '') + (isCity(p) ? '<span class="muted" style="font-size:12.5px">🏷️ ' + esc(catOf(b)) + (off ? ' — already in this post' : '') + '</span> ' : town(b) ? '<span class="muted" style="font-size:12.5px">📍 ' + esc(town(b)) + '</span> ' : '') +
-          r.used.map(function (u) { return '<span class="ak" style="background:#EEF0F3;color:#6B7280">In Part ' + roman(u.part) + '</span>'; }).join(' ') + '</div></div></label>'; }).join('') : '<p class="muted">No businesses found.</p>';
+          (b.claimed ? '<span class="ak" style="background:#057A44">Claimed</span> ' : '<span class="ak" style="background:#FFE7A3;color:#6B4A00">Unclaimed</span> ') + (b.featured ? '<span class="ak" style="background:#0F1E36">⭐ Club</span> ' : '') + (isGen(p) ? '<span class="muted" style="font-size:12.5px">🏷️ ' + esc(catOf(b)) + (town(b) ? ' · 📍 ' + esc(town(b)) : '') + '</span> ' : isCity(p) ? '<span class="muted" style="font-size:12.5px">🏷️ ' + esc(catOf(b)) + (off ? ' — already in this post' : '') + '</span> ' : town(b) ? '<span class="muted" style="font-size:12.5px">📍 ' + esc(town(b)) + '</span> ' : '') +
+          r.used.slice(0, 3).map(function (u) { return '<span class="ak" style="background:#EEF0F3;color:#6B7280">' + (isGen(p) ? 'In “' + esc(head(u)) + '”' : 'In Part ' + roman(u.part)) + '</span>'; }).join(' ') + '</div></div></label>'; }).join('') : '<p class="muted">No businesses found.</p>';
       $$('[data-pk]', s).forEach(function (cb) { cb.onchange = function () { var slug = cb.dataset.pk, b = L.filter(function (r) { return r.b.slug === slug; })[0].b;
         if (cb.checked) { if (p.items.length >= 12) { cb.checked = false; X.toast('Up to 12 businesses'); return; } p.items.push(itemOf(b)); } else p.items = p.items.filter(function (x) { return x.slug !== slug; }); if (isCity(p)) draw(); }; });
     };
     draw();
     $('#pkQ', s).oninput = function () { q = this.value.toLowerCase(); draw(); };
-    $('#pkHandGo', s).onclick = function () { var h = $('#pkHand', s).value.replace(/^@+/, '').trim(); if (!/^[A-Za-z0-9._]{2,30}$/.test(h)) { X.toast('Type their Instagram @handle'); return; } var extra = $('#pkTown', s).value.trim(); if (isCity(p) && extra && p.items.some(function (x) { return String(x.cat || '').toLowerCase() === extra.toLowerCase(); })) { X.toast('There’s already a business in “' + extra + '” in this post'); return; } p.items.push(isCity(p) ? { slug: '', name: '@' + h, handle: h, town: p.city, cat: extra, img: '', pos: { x: 0, y: 0, z: 1 } } : { slug: '', name: '@' + h, handle: h, town: extra, img: '', pos: { x: 0, y: 0, z: 1 } }); $('#pkHand', s).value = ''; $('#pkTown', s).value = ''; X.toast('Added @' + h); };
+    $('#pkHandGo', s).onclick = function () { var h = $('#pkHand', s).value.replace(/^@+/, '').trim(); if (!/^[A-Za-z0-9._]{2,30}$/.test(h)) { X.toast('Type their Instagram @handle'); return; } var extra = $('#pkTown', s).value.trim(); if (isCity(p) && extra && p.items.some(function (x) { return String(x.cat || '').toLowerCase() === extra.toLowerCase(); })) { X.toast('There’s already a business in “' + extra + '” in this post'); return; } p.items.push(isGen(p) ? { slug: '', name: '@' + h, handle: h, town: extra, cat: $('#pkCat', s) ? $('#pkCat', s).value.trim() : '', img: '', pos: { x: 0, y: 0, z: 1 } } : isCity(p) ? { slug: '', name: '@' + h, handle: h, town: p.city, cat: extra, img: '', pos: { x: 0, y: 0, z: 1 } } : { slug: '', name: '@' + h, handle: h, town: extra, img: '', pos: { x: 0, y: 0, z: 1 } }); $('#pkHand', s).value = ''; $('#pkTown', s).value = ''; X.toast('Added @' + h); };
     $('#pkOk', s).onclick = function () { s.remove(); p.caption = caption(p); editor(); };
   }
 
@@ -345,7 +375,7 @@
     }
     return out;
   }
-  function name(p) { return ('discovery-' + (isCity(p) ? p.city : p.cat) + '-pt' + p.part).toLowerCase().replace(/[^a-z0-9]+/g, '-'); }
+  function name(p) { return ('discovery-' + (isGen(p) ? String(p.l1 || 'general').slice(0, 40) : isCity(p) ? p.city : p.cat) + (p.noPart ? '' : '-pt' + p.part)).toLowerCase().replace(/[^a-z0-9]+/g, '-'); }
   async function missing(p) { var n = []; if (!(await photo(p.coverImg))) n.push('the cover'); for (var i = 0; i < p.items.length; i++) if (!(await itemPhoto(p.items[i]))) n.push('@' + p.items[i].handle); return n; }
   async function okToExport(p) { var n = await missing(p); return !n.length || confirm('No photo yet for ' + n.slice(0, 4).join(', ') + (n.length > 4 ? ' and ' + (n.length - 4) + ' more' : '') + '. Download anyway?'); }
   async function download(p, btn) {
@@ -382,8 +412,8 @@
   }
   function tellSheet(p) {
     var D = {}; dir().forEach(function (b) { D[b.slug] = b; });
-    var head = [p.l1, p.l2].filter(Boolean).join(' ') + ' – Part ' + roman(p.part);
-    var msg = function (x) { return 'Hi ' + (D[x.slug] ? D[x.slug].name : '@' + x.handle) + ' 👋🏾 Auntie Tobi here! We’ve just featured you in our “' + head + '” post on Instagram 🎉' + (p.postUrl ? '\n' + p.postUrl : '') + '\nFeel free to share it to your story and tag @auntietobi_uk 💚'; };
+    var ttl = head(p);
+    var msg = function (x) { return 'Hi ' + (D[x.slug] ? D[x.slug].name : '@' + x.handle) + ' 👋🏾 Auntie Tobi here! We’ve just featured you in our “' + ttl + '” post on Instagram 🎉' + (p.postUrl ? '\n' + p.postUrl : '') + '\nFeel free to share it to your story and tag @auntietobi_uk 💚'; };
     var s = X.sheet('<h2>🎉 Tell the businesses</h2><p class="muted" style="font-size:13.5px;margin:4px 0 10px">One tap opens WhatsApp with the message ready, or copies it for an Instagram DM. Nothing is sent until you press send.</p><div style="max-height:56vh;overflow:auto">' +
       p.items.map(function (x, i) { var b = D[x.slug] || {}; return '<div class="aprow" style="flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px"><div style="flex:1;min-width:140px"><b>@' + esc(x.handle) + '</b><div class="muted" style="font-size:12.5px">' + esc(b.name || '') + '</div></div><div class="row" style="gap:6px">' +
         (b.wa ? '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://wa.me/' + esc(b.wa) + '?text=' + encodeURIComponent(msg(x)) + '">💬 WhatsApp</a>' : '') + '<button class="btn ghost sm" data-tdm="' + i + '">📸 Instagram DM</button></div></div>'; }).join('') +
