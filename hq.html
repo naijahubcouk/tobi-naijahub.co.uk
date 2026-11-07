@@ -242,7 +242,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <div class="side-sec">Instagram Growth</div>
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
       <button data-nav="disc" id="navDisc" class="hidden">📣 Discovery posts</button>
-      <button data-nav="igu" id="navIgu" class="hidden">👥 Comment usernames</button>
+      <button data-nav="igu" id="navIgu" class="hidden">👥 Comment &amp; like usernames</button>
       <button data-nav="dm" id="navDm" class="hidden">📨 DM Outreach</button>
       <button data-nav="iga" id="navIga" class="hidden">⚡ Auto-replies</button>
       <button data-nav="tcars">📝 Template Carousel <span class="n" id="nTcars"></span></button>
@@ -1604,13 +1604,14 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   }
   // 👥 Instagram usernames from a post's comments: screenshots (any post), pasted text (any post), or a link to your own post
   function vIgu() {
-    $('#ttl').textContent = 'Comment usernames'; $('#topRight').innerHTML = '';
+    $('#ttl').textContent = 'Comment & like usernames'; $('#topRight').innerHTML = '';
     var tab = S.iguTab || 'shots', R = S.iguRes;
     if (S.iguConn === undefined) { S.iguConn = null; api('igu-status').then(function (r) { S.iguConn = r.connected; if (S.view === 'igu') vIgu(); }, function () { S.iguConn = false; }); }
-    var tabs = [['shots', '📸 Screenshots'], ['paste', '📋 Paste comments'], ['link', '🔗 My post link']];
+    var tabs = [['shots', '📸 Screenshots'], ['paste', '📋 Paste comments'], ['likes', '❤️ Paste likes'], ['link', '🔗 My post link']];
     var body = '';
-    if (tab === 'shots') body = '<p class="muted" style="margin:0 0 10px;font-size:14px">Works for <b>any</b> post. Open the comments, take screenshots (scroll and take more for long threads), then add them here — up to 8 at a time.</p><label class="btn ghost" style="margin:0">📸 Choose screenshots<input type="file" id="iguF" accept="image/*" multiple hidden></label> <span class="muted" id="iguN" style="font-size:13px"></span><div id="iguTh" class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"></div><button class="btn primary" id="iguGo" style="margin-top:10px">✨ Get usernames</button>';
+    if (tab === 'shots') body = '<p class="muted" style="margin:0 0 10px;font-size:14px">Works for <b>any</b> post. Open the comments or the likes list, take screenshots (scroll and take more for long threads), then add them here — up to 8 at a time.</p><label class="btn ghost" style="margin:0">📸 Choose screenshots<input type="file" id="iguF" accept="image/*" multiple hidden></label> <span class="muted" id="iguN" style="font-size:13px"></span><div id="iguTh" class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"></div><button class="btn primary" id="iguGo" style="margin-top:10px">✨ Get usernames</button>';
     if (tab === 'paste') body = '<p class="muted" style="margin:0 0 10px;font-size:14px">Works for <b>any</b> post. On a computer, open the post, select all the comments, copy and paste them here. Free — no AI.</p><textarea id="iguT" rows="10" placeholder="Paste the comments here"></textarea><button class="btn primary" id="iguGo" style="margin-top:10px">Get usernames</button>';
+    if (tab === 'likes') body = '<p class="muted" style="margin:0 0 10px;font-size:14px">Works for <b>any</b> post. On a computer, open the post, click the <b>likes</b> (e.g. “Liked by ada_kitchen and 230 others”), scroll down the list so everyone loads, then select all, copy and paste here. Only real usernames are kept — not their full names or the Follow buttons. Free — no AI.</p><textarea id="iguT" rows="10" placeholder="Paste the likes list here"></textarea><button class="btn primary" id="iguGo" style="margin-top:10px">Get usernames</button>';
     if (tab === 'link') body = S.iguConn === null ? '<p class="muted">Checking your Instagram connection…</p>' : S.iguConn
       ? '<p class="muted" style="margin:0 0 10px;font-size:14px">Paste a link to one of <b>your own</b> @auntietobi_uk posts or Reels. HQ reads every comment and reply through Instagram’s official connection.</p><input id="iguL" placeholder="https://www.instagram.com/p/…"><button class="btn primary" id="iguGo" style="margin-top:10px">Get usernames</button>'
       : '<div class="note" style="font-size:14px;line-height:1.6"><b>Connect your Instagram first (one time, about 20 minutes):</b><ol style="margin:8px 0 0 18px;padding:0"><li>Make sure @auntietobi_uk is a <b>Business</b> or <b>Creator</b> account (Instagram → Settings → Account type).</li><li>Go to <b>developers.facebook.com</b> → My Apps → <b>Create app</b> → choose <b>Other</b> → <b>Business</b>.</li><li>In the app, add the <b>Instagram</b> product → <b>API setup with Instagram login</b>.</li><li>Under <b>Generate access tokens</b>, add @auntietobi_uk, log in, and tap <b>Generate token</b>. Copy the token.</li><li>In <b>Netlify → Site configuration → Environment variables</b>, add <code>IG_ACCESS_TOKEN</code> with that token, then <b>Deploys → Trigger deploy</b>.</li></ol><p style="margin:8px 0 0">HQ keeps the token fresh by itself after that.</p></div>';
@@ -1631,11 +1632,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var run = async function (btn, action, payload) { btn.disabled = true; var t = btn.textContent; btn.textContent = 'Reading…'; try { S.iguRes = await api(action, payload); vIgu(); } catch (x) { btn.disabled = false; btn.textContent = t; err(x.message); } };
     if ($('#iguGo')) $('#iguGo').onclick = function () {
       if (tab === 'shots') { if (!shots.length) return err('Add at least one screenshot.'); run(this, 'igu-img', { images: shots }); }
-      if (tab === 'paste') { var v = $('#iguT').value; if (v.trim().length < 3) return err('Paste the comments first.'); run(this, 'igu-text', { text: v }); }
+      if (tab === 'paste' || tab === 'likes') { var v = $('#iguT').value; if (v.trim().length < 3) return err(tab === 'likes' ? 'Paste the likes list first.' : 'Paste the comments first.'); run(this, 'igu-text', { text: v, likes: tab === 'likes' }); }
       if (tab === 'link') { var l = $('#iguL').value.trim(); if (!l) return err('Paste the post link.'); run(this, 'igu-post', { link: l }); }
     };
     if (R) {
-      $('#iguDm').onclick = async function () { this.disabled = true; try { var r = await api('dm-add', { usernames: R.usernames, source: R.caption ? 'Comments: ' + R.caption.slice(0, 50) : 'Comment usernames' }); S.dmAll = r; S.dmToday = null; toast('Added ' + r.added + ' to DM Outreach' + (r.already ? ' · ' + r.already + ' already there' : '')); } catch (x) { toast(x.message); } this.disabled = false; };
+      $('#iguDm').onclick = async function () { this.disabled = true; try { var r = await api('dm-add', { usernames: R.usernames, source: R.caption ? 'Comments: ' + R.caption.slice(0, 50) : (S.iguTab === 'likes' ? 'Post likes' : 'Comment usernames') }); S.dmAll = r; S.dmToday = null; toast('Added ' + r.added + ' to DM Outreach' + (r.already ? ' · ' + r.already + ' already there' : '')); } catch (x) { toast(x.message); } this.disabled = false; };
       $('#iguCopy').onclick = async function () { try { await navigator.clipboard.writeText(R.usernames.map(function (u) { return '@' + u; }).join('\n')); toast('Copied ' + R.usernames.length); } catch (e) { toast('Copy failed'); } };
       $('#iguCsv').onclick = function () { var csv = 'username,profile,in_directory\n' + R.usernames.map(function (u) { return u + ',https://www.instagram.com/' + u + '/,' + ((R.inDirectory || {})[u] ? 'yes' : 'no'); }).join('\n'); var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'instagram-usernames-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); };
       $$('[data-iguo]').forEach(function (b) { b.onclick = function () { go('dir'); setTimeout(function () { crmOpen(b.dataset.iguo); }, 500); }; });

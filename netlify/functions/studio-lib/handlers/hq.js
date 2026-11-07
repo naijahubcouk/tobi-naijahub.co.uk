@@ -411,7 +411,7 @@ exports.handler = handler(async (ctx) => {
       const igu = require('../igusers');
       if (body.action === 'igu-status') return { connected: await igu.connected() };
       let r;
-      if (body.action === 'igu-text') r = { usernames: igu.fromText(body.text) };
+      if (body.action === 'igu-text') r = { usernames: body.likes ? igu.fromLikes(body.text) : igu.fromText(body.text) };
       if (body.action === 'igu-img') { await core.rateLimit('hq-igu', who.email, 60, 3600000, 'That’s a lot of screenshots — try again in an hour.'); r = { usernames: await igu.fromImages(body.images) }; }
       if (body.action === 'igu-post') { await core.rateLimit('hq-igu-post', who.email, 60, 3600000, 'Try again in a little while.'); r = await igu.fromOwnPost(String(body.link || '')); }
       r.inDirectory = await igu.matchDirectory(r.usernames);

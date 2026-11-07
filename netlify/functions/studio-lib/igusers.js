@@ -32,13 +32,34 @@ function fromText(text) {
   return uniq(out);
 }
 
+// 2b. pasted LIKES list ("Liked by" / Likes page): each person shows as
+//   username ↵ Full Name (optional) ↵ Follow / Following / Remove …  (and sometimes "username's profile picture")
+// Only the username line is taken — never the display name or buttons.
+function fromLikes(text) {
+  text = String(text || '').slice(0, 300000);
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean), out = [];
+  const BTN = /^(follow|following|follow back|requested|remove|message|unfollow|verified|·|•)$/i;
+  const HANDLE = /^@?([A-Za-z0-9._]{2,30})(?:\s*(?:✓|✔️|Verified))?$/;
+  let lastTaken = -9;
+  lines.forEach((t, i) => {
+    const pic = t.match(/^@?([A-Za-z0-9._]{2,30})['’]s profile picture$/i);
+    if (pic) { out.push(pic[1]); lastTaken = i; return; }
+    const h = t.match(HANDLE); if (!h || BTN.test(t)) return;
+    const n1 = lines[i + 1] || '', n2 = lines[i + 2] || '';
+    if (BTN.test(n2) && !BTN.test(n1)) { out.push(h[1]); lastTaken = i; return; }             // username, display name, button
+    if (BTN.test(n1) && lastTaken !== i - 1) { out.push(h[1]); lastTaken = i; return; }      // username, button (no display name)
+    if (/[._\d]/.test(h[1]) && !/^[A-Z][a-z]+$/.test(t) && lastTaken !== i - 1 && !BTN.test(n1) && (!n1 || !HANDLE.test(n1) || /\s/.test(n1))) { out.push(h[1]); lastTaken = i; }   // a clear handle (dot/underscore/digit) followed by a display name
+  });
+  return uniq(out);
+}
+
 // 1. screenshots (data URLs) → usernames, read by AI
 async function fromImages(images) {
   images = (Array.isArray(images) ? images : []).filter(x => /^data:image\/(png|jpe?g|webp);base64,/.test(String(x))).slice(0, 8);
   if (!images.length) throw new HttpError(400, 'invalid', 'Add at least one screenshot.');
   const settings = await core.getSettings();
   const out = await gen.callModel([
-    { role: 'system', content: 'You read screenshots of Instagram comments. List EVERY commenter username exactly as shown (the bold name above or before each comment, including replies), plus any @mentions in the comments. Ignore the post author caption header, "Reply", "See translation", times like "2w", like counts and buttons. Return ONLY JSON: {"usernames":["name1","name2"]}. Never guess or invent a name you cannot read clearly.' },
+    { role: 'system', content: 'You read screenshots of Instagram comments or of a post\'s Likes list. For a Likes list, take ONLY the username line of each person (the handle above or beside their full name), never the full/display name or Follow buttons. For comments, list EVERY commenter username exactly as shown (the bold name above or before each comment, including replies), plus any @mentions in the comments. Ignore the post author caption header, "Reply", "See translation", times like "2w", like counts and buttons. Return ONLY JSON: {"usernames":["name1","name2"]}. Never guess or invent a name you cannot read clearly.' },
     { role: 'user', content: [{ type: 'text', text: 'Usernames in these comment screenshots:' }].concat(images.map(u => ({ type: 'image_url', image_url: { url: u } }))) },
   ], 1500, settings, { json: true, raw: true, timeoutMs: 24000 });
   gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
@@ -107,4 +128,4 @@ async function matchDirectory(usernames) {
   return out;
 }
 
-module.exports = { fromText, fromImages, fromOwnPost, connected, matchDirectory, shortcodeOf };
+module.exports = { fromLikes, fromText, fromImages, fromOwnPost, connected, matchDirectory, shortcodeOf };
