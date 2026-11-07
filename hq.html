@@ -1650,7 +1650,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var tab = S.dmTab || 'today';
     var tabs = [['today', '📅 Today'], ['people', '👥 People'], ['add', '➕ Add people'], ['find', '🔎 Find people'], ['nums', '📊 Numbers'], ['set', '⚙️ Pages & messages']];
     var bar = '<div class="chipbar" id="dmTabs" style="margin-bottom:12px;flex-wrap:wrap">' + tabs.map(function (x) { return '<button class="chip" data-t="' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div>';
-    var wrap = function (h) { $('#view').innerHTML = '<div class="wrap">' + bar + h + '</div>'; $$('#dmTabs [data-t]').forEach(function (b) { b.onclick = function () { S.dmTab = b.dataset.t; vDm(); }; }); };
+    var wrap = function (h) { $('#view').innerHTML = '<div class="wrap">' + bar + h + '</div>'; $$('#dmTabs [data-t]').forEach(function (b) { b.onclick = function () { S.dmTab = b.dataset.t; S.dmSel = null; vDm(); }; }); };
     var need = tab === 'today' ? 'dmToday' : 'dmAll';
     if (!S[need]) { wrap('<p class="muted">Loading…</p>'); api(tab === 'today' ? 'dm-today' : 'dm-all').then(function (r) { S[need] = r; if (S.view === 'dm') vDm(); }, function (x) { wrap('<div class="err">' + esc(x.message) + '</div>'); }); return; }
     var reload = function () { S.dmToday = null; S.dmAll = null; vDm(); };
@@ -1679,10 +1679,29 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       var f = S.dmF || 'all', q = (S.dmQ || '').toLowerCase(), pn = {}; A.pages.forEach(function (p) { pn[p.id] = p.name || '@' + p.handle; });
       var list = A.list.filter(function (x) { return (f === 'all' || x.stage === f) && (!q || x.u.indexOf(q) >= 0); }).sort(function (a, b) { return String((b.last && b.last.at) || b.addedAt).localeCompare(String((a.last && a.last.at) || a.addedAt)); });
       wrap('<div class="chipbar" id="dmF" style="margin-bottom:8px;flex-wrap:wrap"><button class="chip" data-f="all" aria-pressed="' + (f === 'all') + '">All (' + A.list.length + ')</button>' + A.stages.map(function (st) { return '<button class="chip" data-f="' + st + '" aria-pressed="' + (f === st) + '">' + DM_ST[st][0] + ' (' + A.counts[st] + ')</button>'; }).join('') + '</div>' +
-        '<input id="dmQ" placeholder="🔎 Search username" value="' + esc(S.dmQ || '') + '" style="margin-bottom:8px"><div class="card" style="padding:4px 14px">' + (list.length ? list.slice(0, 500).map(function (x) { return '<div class="aprow" style="cursor:pointer;flex-direction:row;align-items:center;flex-wrap:nowrap" data-dmp="' + esc(x.u) + '"><div style="flex:1;min-width:0"><b>@' + esc(x.u) + '</b> ' + dmPill(x.stage) + '<div class="muted" style="font-size:12.5px">' + (x.page ? esc(pn[x.page] || '') + ' · ' : '') + (x.last ? esc(x.last.what) + ' · ' + esc(crmAgo(x.last.at)) : 'Added ' + esc(crmAgo(x.addedAt)) + (x.source ? ' · ' + esc(x.source) : '')) + '</div></div><span style="font-size:20px;color:#9CA3AF;align-self:center">›</span></div>'; }).join('') : '<p class="muted" style="padding:12px 0">No one here yet.</p>') + '</div>');
+        '<input id="dmQ" placeholder="🔎 Search username" value="' + esc(S.dmQ || '') + '" style="margin-bottom:8px">' +
+        (S.dmSel ? '<div class="card" style="padding:10px 14px;margin-bottom:8px;border:2px solid #B42318;position:sticky;top:0;z-index:5"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><b id="dmSelN">' + Object.keys(S.dmSel).length + ' selected</b><button class="btn ghost sm" id="dmSelAll">☑️ Select all shown (' + Math.min(list.length, 500) + ')</button><button class="btn ghost sm" id="dmSelNone">Clear</button><span style="flex:1"></span><button class="btn sm" id="dmSelDel" style="background:#B42318;color:#fff">🗑 Delete selected</button><button class="btn ghost sm" id="dmSelX">Done</button></div><div class="muted" style="font-size:12px;margin-top:4px">Tap people to tick them. People marked 🚫 Do not contact are kept, so they’re never added again.</div></div>'
+          : '<div class="row" style="justify-content:flex-end;margin-bottom:6px"><button class="btn ghost sm" id="dmSelOn">🗑 Select people to delete</button></div>') +
+        '<div class="card" style="padding:4px 14px">' + (list.length ? list.slice(0, 500).map(function (x) { return '<div class="aprow" style="cursor:pointer;flex-direction:row;align-items:center;flex-wrap:nowrap' + (S.dmSel && S.dmSel[x.u] ? ';background:#FDECEA' : '') + '" data-dmp="' + esc(x.u) + '">' + (S.dmSel ? '<input type="checkbox" data-dmck="' + esc(x.u) + '"' + (S.dmSel[x.u] ? ' checked' : '') + ' style="width:20px;height:20px;margin-right:10px;flex:none;pointer-events:none">' : '') + '<div style="flex:1;min-width:0"><b>@' + esc(x.u) + '</b> ' + dmPill(x.stage) + '<div class="muted" style="font-size:12.5px">' + (x.page ? esc(pn[x.page] || '') + ' · ' : '') + (x.last ? esc(x.last.what) + ' · ' + esc(crmAgo(x.last.at)) : 'Added ' + esc(crmAgo(x.addedAt)) + (x.source ? ' · ' + esc(x.source) : '')) + '</div></div><span style="font-size:20px;color:#9CA3AF;align-self:center">›</span></div>'; }).join('') : '<p class="muted" style="padding:12px 0">No one here yet.</p>') + '</div>');
       $$('#dmF [data-f]').forEach(function (b) { b.onclick = function () { S.dmF = b.dataset.f; vDm(); }; });
       $('#dmQ').oninput = function () { S.dmQ = this.value; var pos = this.selectionStart; vDm(); var el = $('#dmQ'); el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} };
-      $$('[data-dmp]').forEach(function (r) { r.onclick = function () { dmPerson(r.dataset.dmp, pn); }; });
+      $$('[data-dmp]').forEach(function (r) { r.onclick = function () {
+        if (!S.dmSel) return dmPerson(r.dataset.dmp, pn);
+        var u = r.dataset.dmp, ck = $('[data-dmck]', r); if (S.dmSel[u]) delete S.dmSel[u]; else S.dmSel[u] = 1; ck.checked = !!S.dmSel[u]; r.style.background = S.dmSel[u] ? '#FDECEA' : ''; $('#dmSelN').textContent = Object.keys(S.dmSel).length + ' selected';
+      }; });
+      if ($('#dmSelOn')) $('#dmSelOn').onclick = function () { S.dmSel = {}; vDm(); };
+      if (S.dmSel) {
+        $('#dmSelX').onclick = function () { S.dmSel = null; vDm(); };
+        $('#dmSelNone').onclick = function () { S.dmSel = {}; vDm(); };
+        $('#dmSelAll').onclick = function () { list.slice(0, 500).forEach(function (x) { S.dmSel[x.u] = 1; }); vDm(); };
+        $('#dmSelDel').onclick = async function () {
+          var us = Object.keys(S.dmSel); if (!us.length) return toast('Tick the people to delete first');
+          if (!confirm('Delete ' + us.length + ' ' + (us.length === 1 ? 'person' : 'people') + ' from your DM list?\n\n' + us.slice(0, 8).map(function (u) { return '@' + u; }).join(', ') + (us.length > 8 ? ' … and ' + (us.length - 8) + ' more' : '') + '\n\nThis can’t be undone.')) return;
+          this.disabled = true;
+          try { var r = await api('dm-remove', { us: us }); S.dmAll = r; S.dmToday = null; S.dmSel = null; toast('🗑 Deleted ' + r.removed + (r.kept ? ' · kept ' + r.kept + ' marked Do not contact' : '')); vDm(); }
+          catch (x) { toast(x.message); this.disabled = false; }
+        };
+      }
       return;
     }
     if (tab === 'add') {

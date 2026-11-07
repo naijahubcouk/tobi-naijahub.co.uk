@@ -116,6 +116,13 @@ async function today() {
   }
   return { pages: Object.values(out), waiting: fresh.length - k, share: sh };
 }
+// 🗑 delete several people at once (anyone marked “Do not contact” is kept so they're never added again)
+async function removeMany(list) {
+  const us = [...new Set((Array.isArray(list) ? list : []).map(clean).filter(valid))].slice(0, 5000);
+  let removed = 0, kept = 0;
+  await cas('dm/people', cur => { cur = cur || { items: {} }; removed = 0; kept = 0; for (const u of us) { const r = cur.items[u]; if (!r) continue; if (r.stage === 'dnc') { kept++; continue; } delete cur.items[u]; removed++; } return cur; });
+  return { removed, kept };
+}
 async function act(u, what, opts) {
   u = clean(u); opts = opts || {};
   if (!valid(u)) throw new HttpError(400, 'invalid', 'Invalid username.');
@@ -176,4 +183,4 @@ async function searchPages(query) {
   return list.map(a => ({ u: clean(a.username), why: core.cleanText(a.why, 120) })).filter(a => valid(a.u) && !/^(p|reel|explore|stories)$/.test(a.u) && !seen.has(a.u) && seen.add(a.u)).map(a => Object.assign(a, { onList: !!items[a.u], stage: items[a.u] ? items[a.u].stage : '' }));
 }
 
-module.exports = { share, setShare, stopShare, pages, savePages, tpl, saveTpl, add, today, act, overview, detail, ideas, searchPages, STAGES };
+module.exports = { removeMany, share, setShare, stopShare, pages, savePages, tpl, saveTpl, add, today, act, overview, detail, ideas, searchPages, STAGES };

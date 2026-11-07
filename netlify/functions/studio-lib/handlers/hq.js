@@ -312,7 +312,7 @@ exports.handler = handler(async (ctx) => {
       }
       return { items: await bizdir.all(), info: await bizdir.info() };
     }
-    case 'dm-share': case 'dm-share-stop': case 'dm-today': case 'dm-all': case 'dm-add': case 'dm-act': case 'dm-pages': case 'dm-tpl': case 'dm-ideas': case 'dm-search': case 'dm-shots': case 'dm-detail': {
+    case 'dm-share': case 'dm-share-stop': case 'dm-today': case 'dm-all': case 'dm-add': case 'dm-act': case 'dm-pages': case 'dm-tpl': case 'dm-ideas': case 'dm-search': case 'dm-shots': case 'dm-detail': case 'dm-remove': {
       // 📨 DM Outreach — cold DMs sent by hand from your marketing pages, tracked here (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const dm = require('../igdm');
@@ -320,6 +320,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dm-share-stop') { await dm.stopShare(); return await dm.today(); }
       if (body.action === 'dm-today') return await dm.today();
       if (body.action === 'dm-detail') return { rec: await dm.detail(body.u) };
+      if (body.action === 'dm-remove') { const r = await dm.removeMany(body.us); await core.audit(who.email, 'hq_dm_remove', { n: r.removed }); return Object.assign(r, await dm.overview()); }
       if (body.action === 'dm-add') return Object.assign(await dm.add(body.usernames, body.source), await dm.overview());
       if (body.action === 'dm-shots') { await core.rateLimit('hq-igu', who.email, 60, 3600000, 'That’s a lot of screenshots — try again in an hour.'); return { usernames: await require('../igusers').fromImages(body.images) }; }
       if (body.action === 'dm-act') { const r = await dm.act(body.u, String(body.what || ''), { page: body.page, pageName: body.pageName, ver: body.ver, notes: body.notes }); return { rec: r }; }
