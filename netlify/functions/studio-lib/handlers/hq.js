@@ -330,6 +330,12 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dm-search') { await core.rateLimit('hq-dmai', who.email, 60, 3600000, 'Try again in a little while.'); return { accounts: await dm.searchPages(body.q) }; }
       return await dm.overview();
     }
+    case 'market-list': case 'market-get': case 'market-img': case 'market-save': case 'market-delete': case 'market-allowance': case 'market-review': case 'market-ai': {
+      // 🛍️ Marketplace (HQ), admin only — the same actions as Studio Admin, plus ✨ fill a product from photos + your words
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can manage the Marketplace.');
+      if (body.action === 'market-ai') return await require('../marketai').fill(body.images, body.text, who.email);
+      return await require('./admin').marketAction(body.action, body, ctx, who.email);
+    }
     case 'hq-fill': case 'hq-write': {   // ✨ fill a listing from a website / Instagram / screenshots, ✍️ rewrite its descriptions (admin only, like the directory)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
       const ab = require('../addbiz');
