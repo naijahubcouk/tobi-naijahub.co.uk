@@ -198,11 +198,11 @@
   // ── caption ──
   function hashtags(cat) {
     var t = title(cat).replace(/[^A-Za-z0-9]/g, '');
-    return ['#Nigerian' + t + 'UK', '#' + t + 'UK', '#NigerianBusinessesUK', '#SupportNigerianBusinesses', '#NaijaInUK', '#NigeriansInUK', '#BlackOwnedBusinessUK', '#AuntieTobi'].join(' ');
+    return ['#Nigerian' + t + 'UK', '#' + t + 'UK', '#NigerianBusinessesUK', '#SupportNigerianBusinesses', '#AuntieTobi'].join(' ');   // Instagram allows 5
   }
   function cityTags(city) {
     var t = title(city).replace(/[^A-Za-z0-9]/g, '');
-    return ['#NigeriansIn' + t, '#' + t + 'Business', '#' + t + 'SmallBusiness', '#Naija' + t, '#NigerianBusinessesUK', '#SupportNigerianBusinesses', '#NigeriansInUK', '#BlackOwnedBusinessUK', '#AuntieTobi'].join(' ');
+    return ['#NigeriansIn' + t, '#' + t + 'Business', '#NigerianBusinessesUK', '#SupportNigerianBusinesses', '#AuntieTobi'].join(' ');   // Instagram allows 5
   }
   function caption(p) {
     if (isGen(p)) {
@@ -210,22 +210,24 @@
         'Support these amazing Nigerian businesses in the UK 👇🏾\n\n' +
         p.items.map(function (x, i) { var bits = [x.cat, x.town ? '📍 ' + x.town : ''].filter(Boolean).join(' · '); return (i + 1) + '. @' + x.handle + (bits ? ' — ' + bits : ''); }).join('\n') +
         '\n\n💚 Follow, save and share to show them some love\n📌 Save this for later · 📤 Share with a friend\n💚 Find more Nigerian businesses near you on the Auntie Tobi app — link in bio\n\n' +
-        ['#NigerianBusinessesUK', '#SupportNigerianBusinesses', '#SupportSmallBusiness', '#NaijaInUK', '#NigeriansInUK', '#BlackOwnedBusinessUK', '#ShopSmallUK', '#AuntieTobi'].join(' ');
+        '🔎 Nigerian businesses UK · Nigerian-owned businesses near me\n\n' + ['#NigerianBusinessesUK', '#SupportNigerianBusinesses', '#SupportSmallBusiness', '#NigeriansInUK', '#AuntieTobi'].join(' ');
     }
     if (isCity(p)) {
       var c = p.city;
       return '🇳🇬 ' + head(p) + ' 💚\n\n' +
         'Looking for Nigerian businesses in ' + c + '? Here are ' + p.items.length + ' amazing local businesses to support 👇🏾\n\n' +
         p.items.map(function (x, i) { return (i + 1) + '. @' + x.handle + (x.cat ? ' — ' + x.cat : ''); }).join('\n') +
-        '\n\nKnow a great Nigerian business in ' + c + ' we should feature next? Tag them in the comments 👇🏾\n\n' +
-        '📌 Save this for later · 📤 Share with a friend in ' + c + '\n💚 Find more Nigerian businesses near you on the Auntie Tobi app — link in bio\n\n' + cityTags(c);
+        '\n\nKnow a great Nigerian business in ' + c + ' we should feature next? Tell us in the comments 👇🏾\n\n' +
+        '📌 Save this for later · 📤 Share with a friend in ' + c + '\n💚 Find more Nigerian businesses near you on the Auntie Tobi app — link in bio\n\n' +
+        '🔎 Nigerian businesses in ' + c + ' · Nigerian food, beauty and services in ' + c + '\n\n' + cityTags(c);
     }
     var what = String(p.cat || 'businesses').toLowerCase();
     return '🇳🇬 ' + head(p) + ' 💚\n\n' +
       'Looking for Nigerian ' + what + ' near you? Here are ' + p.items.length + ' amazing businesses across the UK 👇🏾\n\n' +
       p.items.map(function (x, i) { return (i + 1) + '. @' + x.handle + (x.town ? ' — 📍 ' + x.town : ''); }).join('\n') +
-      '\n\nKnow a great Nigerian ' + what.replace(/s$/, '') + ' we should feature next? Tag them in the comments 👇🏾\n\n' +
-      '📌 Save this for later · 📤 Share with a friend\n💚 Find more Nigerian businesses near you on the Auntie Tobi app — link in bio\n\n' + hashtags(p.cat);
+      '\n\nKnow a great Nigerian ' + what.replace(/s$/, '') + ' we should feature next? Tell us in the comments 👇🏾\n\n' +
+      '📌 Save this for later · 📤 Share with a friend\n💚 Find more Nigerian businesses near you on the Auntie Tobi app — link in bio\n\n' +
+      '🔎 Nigerian ' + what + ' in the UK · Nigerian ' + what + ' near me\n\n' + hashtags(p.cat);
   }
 
   // ── list page ──
@@ -248,9 +250,10 @@
       '<div class="card" style="padding:4px 14px">' + (P.length ? P.map(function (p) {
         return '<div class="aprow" style="cursor:pointer;flex-direction:row;align-items:center;flex-wrap:nowrap" data-dp="' + p.id + '"><div style="flex:1;min-width:0">' + (isCity(p) ? '<span title="City post">🏙️</span> ' : isGen(p) ? '<span title="General / advert post">✨</span> ' : '') + '<b>' + esc(head(p)) + '</b> ' +
           (p.status === 'posted' ? '<span class="ak" style="background:#057A44">✅ Posted ' + esc(fmt(p.postedAt)) + '</span>' : '<span class="ak" style="background:#EEF0F3;color:#6B7280">Draft</span>') +
-          '<div class="muted" style="font-size:12.5px">' + p.items.length + ' businesses · ' + esc(p.items.map(function (x) { return isCity(p) || isGen(p) ? x.cat : x.town; }).filter(Boolean).filter(function (t, i, a) { return a.indexOf(t) === i; }).slice(0, 5).join(', ')) + '</div></div><span style="font-size:20px;color:#9CA3AF">›</span></div>';
+          '<div class="muted" style="font-size:12.5px">' + p.items.length + ' businesses · ' + esc(p.items.map(function (x) { return isCity(p) || isGen(p) ? x.cat : x.town; }).filter(Boolean).filter(function (t, i, a) { return a.indexOf(t) === i; }).slice(0, 5).join(', ')) + '</div></div>' + (p.status === 'posted' ? '<button class="btn ghost sm" data-dboost="' + p.id + '" title="After posting checklist" style="margin-right:6px">🚀</button>' : '') + '<span style="font-size:20px;color:#9CA3AF">›</span></div>';
       }).join('') : '<p class="muted" style="padding:12px 0">No discovery posts yet.</p>') + '</div></div>';
     $$('[data-dm]').forEach(function (b) { b.onclick = function () { X.S.discMode = b.dataset.dm; listPage(); }; });
+    $$('[data-dboost]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var p = (X.S.disc || []).filter(function (q) { return q.id === b.dataset.dboost; })[0]; if (p) boost(p); }; });
     if ($('#dcNewGen')) $('#dcNewGen').onclick = function () { var p = blankGen(); p.caption = caption(p); X.S.discEdit = p; view(); setTimeout(function () { picker(X.S.discEdit); }, 50); };
     if ($('#dcCity')) {
       var syncC = function () { var n = 0; partsOf('city:' + $('#dcCity').value.toLowerCase()).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNewCity').textContent = '✨ Start Part ' + roman(n + 1); };
@@ -278,7 +281,7 @@
     var p = X.S.discEdit, posted = p.status === 'posted';
     $('#ttl').textContent = head(p);
     $('#view').innerHTML = '<div class="wrap">' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn ghost" id="deBack">‹ All posts</button><button class="btn primary" id="deSave">💾 Save</button><button class="btn gold" id="deZip">⬇️ Download slides</button>' + (navigator.canShare ? '<button class="btn ghost" id="deShare">📲 Save to phone</button>' : '') + (posted ? '<button class="btn ghost" id="deTell">🎉 Tell the businesses</button>' : '<button class="btn ghost" id="dePost">✅ Mark as posted</button>') + (p.id ? '<button class="btn ghost" id="deDel" style="color:#B42318">🗑</button>' : '') + '</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn ghost" id="deBack">‹ All posts</button><button class="btn primary" id="deSave">💾 Save</button><button class="btn gold" id="deZip">⬇️ Download slides</button>' + (navigator.canShare ? '<button class="btn ghost" id="deShare">📲 Save to phone</button>' : '') + (posted ? '<button class="btn ghost" id="deTell">🎉 Tell the businesses</button><button class="btn primary" id="deBoost">🚀 After posting</button>' : '<button class="btn ghost" id="dePost">✅ Mark as posted</button>') + (p.id ? '<button class="btn ghost" id="deDel" style="color:#B42318">🗑</button>' : '') + '</div>' +
       (posted ? '<div class="note" style="margin-bottom:12px">✅ Posted ' + esc(fmt(p.postedAt)) + (p.postUrl ? ' · <a href="' + esc(p.postUrl) + '" target="_blank" rel="noopener">View on Instagram</a>' : '') + ' — each business’s timeline in Business directory shows it. <button class="btn link" id="deUnpost" style="font-size:13px">Undo</button></div>' : '') +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>🎯 Cover</b><div class="row" style="gap:12px;align-items:flex-start;margin-top:8px;flex-wrap:wrap"><div data-th="-1" data-open="-1" style="width:150px;cursor:pointer;background:#EEE;border-radius:8px;aspect-ratio:4/5"></div><div style="flex:1;min-width:200px" class="stack">' +
       (isCity(p) || isGen(p) ? '<div><label for="deL1">Title <span class="muted" style="font-weight:400">— write anything you like</span></label><input id="deL1" value="' + esc(p.l1) + '" maxlength="90" placeholder="' + (isGen(p) ? 'Nigerian Businesses You Should Know' : 'Nigerian Businesses in ' + esc(p.city)) + '"><input id="deL2" type="hidden" value=""></div>'
@@ -311,6 +314,7 @@
     if ($('#deShare')) $('#deShare').onclick = function () { read(); shareAll(p, this); };
     if ($('#dePost')) $('#dePost').onclick = function () { read(); postSheet(p); };
     if ($('#deTell')) $('#deTell').onclick = function () { tellSheet(p); };
+    if ($('#deBoost')) $('#deBoost').onclick = function () { boost(p); };
     if ($('#deUnpost')) $('#deUnpost').onclick = async function () { try { X.S.disc = (await X.api('disc-unpost', { id: p.id })).items; p.status = 'draft'; editor(); } catch (e) { X.toast(e.message); } };
     if ($('#deDel')) $('#deDel').onclick = async function () { if (!confirm('Delete this discovery post?')) return; try { X.S.disc = (await X.api('disc-del', { id: p.id })).items; X.S.discEdit = null; view(); } catch (e) { X.toast(e.message); } };
     paintThumbs(p);
@@ -419,10 +423,14 @@
     $('#psOk', s).onclick = async function () {
       this.disabled = true;
       if (!(await save(p))) { this.disabled = false; return; }
-      try { X.S.disc = (await X.api('disc-posted', { id: p.id, url: $('#psU', s).value.trim() })).items; X.S.discEdit = JSON.parse(JSON.stringify(X.S.disc.filter(function (q) { return q.id === p.id; })[0])); s.remove(); X.toast('Marked as posted 🎉'); editor(); tellSheet(X.S.discEdit); }
+      try { X.S.disc = (await X.api('disc-posted', { id: p.id, url: $('#psU', s).value.trim() })).items; X.S.discEdit = JSON.parse(JSON.stringify(X.S.disc.filter(function (q) { return q.id === p.id; })[0])); s.remove(); X.toast('Marked as posted 🎉'); editor(); boost(X.S.discEdit); }
       catch (e) { X.toast(e.message); this.disabled = false; }
     };
   }
+  // 🚀 After posting checklist for this part (falls back to Tell the businesses if HQBoost isn't loaded)
+  function boostInfo(p) { return { key: 'disc:' + p.id, kind: 'disc', title: head(p), url: p.postUrl || '', postedAt: p.postedAt, where: isCity(p) ? p.city : '', what: isCity(p) || isGen(p) ? 'business' : String(p.cat || 'business').toLowerCase().replace(/ies$/, 'y').replace(/s$/, ''),
+    biz: p.items.map(function (x) { var b = (dir().filter(function (d) { return d.slug === x.slug; })[0]); return { name: b ? b.name : '', handle: x.handle }; }) }; }
+  function boost(p) { if (window.HQBoost) window.HQBoost.open(boostInfo(p)); else tellSheet(p); }
   function tellSheet(p) {
     var D = {}; dir().forEach(function (b) { D[b.slug] = b; });
     var ttl = head(p);

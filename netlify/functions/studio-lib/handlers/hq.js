@@ -371,6 +371,13 @@ exports.handler = handler(async (ctx) => {
       if (body.set) { const r = await em.saveImageSettings(body.set); await core.audit(who.email, 'hq_image_model', r); }
       return await em.imageSettings();
     }
+    case 'boost-list': case 'boost-save': {
+      // 🚀 After posting checklist + 24-hour numbers (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const boost = require('../boost');
+      if (body.action === 'boost-save') return { item: await boost.save(body.item) };
+      return { items: await boost.list() };
+    }
     case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': case 'disc-club': {
       // 📣 Business discovery posts (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');

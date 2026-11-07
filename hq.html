@@ -266,6 +266,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <script src="/hq-carousel.js"></script>
 <script src="/hq-tplcarousel.js"></script>
 <script src="/hq-discovery.js"></script>
+<script src="/hq-boost.js"></script>
 <script src="/hq-videoad.js"></script>
 <script src="/hq-videomake.js"></script>
 <script>
@@ -349,6 +350,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQTpl) window.HQTpl.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQDisc) window.HQDisc.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
+  if (window.HQBoost) window.HQBoost.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQVad) window.HQVad.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (S.today && h && h !== S.view) go(h); });
   $$('.side-nav [data-nav]').forEach(function (b) { b.onclick = function () { go(b.dataset.nav); }; });
@@ -395,7 +397,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   function markPosted(c) {
     var s = sheet('<h2>Mark as posted</h2><p class="muted" style="margin:4px 0 12px">' + esc(c.title) + '</p><div class="stack"><div><label for="pl">Link to the post <span class="muted" style="font-weight:400">(optional)</span></label><input id="pl" placeholder="https://www.instagram.com/p/…" value="' + esc(c.postLink || '') + '"></div><div class="row"><button class="btn primary" id="plS">✅ Mark as posted</button><button class="btn ghost" id="plX">Cancel</button></div></div>');
     $('#plX', s).onclick = function () { s.remove(); };
-    $('#plS', s).onclick = async function () { s.remove(); await quickSave({ id: c.id, status: 'posted', postLink: $('#pl', s).value.trim() }, 'Marked as posted 🎉'); };
+    $('#plS', s).onclick = async function () { var link = $('#pl', s).value.trim(); s.remove(); await quickSave({ id: c.id, status: 'posted', postLink: link }, 'Marked as posted 🎉'); boostCard(byId(c.id) || c, link); };
+  }
+  // 🚀 After posting checklist for a Content Hub card
+  function boostCard(c, link) {
+    if (!window.HQBoost || !c) return;
+    window.HQBoost.open({ key: 'hub:' + c.id, kind: 'hub', title: c.title || 'Post', url: link || c.postLink || '', postedAt: c.postedAt || new Date().toISOString(),
+      onUrl: function (u) { if (u !== (c.postLink || '')) quickSave({ id: c.id, postLink: u }, 'Link saved'); } });
   }
   function planSheet(c, day) {
     var s = sheet('<h2>Plan this post</h2><p class="muted" style="margin:4px 0 12px">' + esc(c.title) + '</p><div class="f2"><div><label for="pd">Date</label><input type="date" id="pd" value="' + esc(c.planDate || day || today()) + '"></div><div><label for="pt">Time <span class="muted" style="font-weight:400">(optional)</span></label><input type="time" id="pt" value="' + esc(c.planTime || '') + '"></div></div><div class="row" style="margin-top:12px"><button class="btn primary" id="pS">📅 Schedule</button><button class="btn ghost" id="pX">Cancel</button></div>');
@@ -590,16 +598,19 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var wk = posted.filter(function (c) { return (c.postedAt || '').slice(0, 10) >= ws; }), mo = posted.filter(function (c) { return (c.postedAt || '').slice(0, 7) === ms; });
     var byType = {}; mo.forEach(function (c) { byType[c.type] = (byType[c.type] || 0) + 1; });
     var groups = {}; posted.forEach(function (c) { var k = (c.postedAt || '').slice(0, 7); (groups[k] = groups[k] || []).push(c); });
-    $('#view').innerHTML = '<div class="wrap"><div class="stats">' +
+    $('#view').innerHTML = '<div class="wrap">' + (window.HQBoost ? '<div id="bestPosts"></div>' : '') + '<div class="stats">' +
       '<div class="card"><b>' + wk.length + '</b><span>posted this week</span></div><div class="card"><b>' + mo.length + '</b><span>posted this month</span></div>' +
       '<div class="card"><b>' + posted.length + '</b><span>posted in total</span></div>' +
       '<div class="card"><span style="display:block;margin-bottom:4px">This month by type</span>' + (Object.keys(byType).length ? Object.keys(byType).map(function (k) { return '<span class="t ' + k + '" style="margin:2px 4px 0 0">' + TYPE[k] + ' ' + byType[k] + '</span>'; }).join('') : '<span>—</span>') + '</div></div>' +
       (posted.length ? Object.keys(groups).map(function (k) {
         return '<div class="h2">' + esc(new Date(k + '-15T12:00:00Z').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })) + '</div><div class="card" style="padding:2px 14px">' + groups[k].map(function (c) {
-          return '<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line)"><span class="date" style="min-width:96px">' + esc(new Date(c.postedAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + '</span><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><a href="#" data-op="' + c.id + '" style="color:var(--navy);font-weight:600;flex:1;min-width:150px">' + esc(c.title) + '</a>' + (c.postLink ? '<a href="' + esc(c.postLink) + '" target="_blank" rel="noopener" class="btn small ghost">View post ↗</a>' : '') + '</div>';
+          return '<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line)"><span class="date" style="min-width:96px">' + esc(new Date(c.postedAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })) + '</span><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><a href="#" data-op="' + c.id + '" style="color:var(--navy);font-weight:600;flex:1;min-width:150px">' + esc(c.title) + '</a>' + (c.postLink ? '<a href="' + esc(c.postLink) + '" target="_blank" rel="noopener" class="btn small ghost">View post ↗</a>' : '') + (window.HQBoost ? '<button class="btn small ghost" data-cboost="' + c.id + '" title="After posting checklist">🚀</button>' : '') + '</div>';
         }).join('') + '</div>';
       }).join('') : '<div class="card"><p class="muted">When you mark a post as posted, it shows here with its date and link.</p></div>') + '</div>';
     $$('[data-op]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); editCard(byId(a.dataset.op)); }; });
+    $$('[data-cboost]').forEach(function (b) { b.onclick = function () { boostCard(byId(b.dataset.cboost)); }; });
+    if (window.HQBoost) window.HQBoost.load(true).then(function () { var el = $('#bestPosts'); if (!el) return; el.innerHTML = window.HQBoost.bestHtml();
+      window.HQBoost.bind(el, function (key) { var id = key.split(':')[1]; if (key.indexOf('hub:') === 0 && byId(id)) { var c = byId(id); return { key: key, kind: 'hub', title: c.title, url: c.postLink || '', postedAt: c.postedAt }; } return null; }); });
   }
 
   // ── paste from ChatGPT ──
