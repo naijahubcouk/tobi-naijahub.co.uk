@@ -148,6 +148,7 @@ async function callModel(messages, maxTokens, settings, opts) {
     key = env('STUDIO_OPENROUTER_API_KEY') || env('OPENROUTER_API_KEY');
   }
   if (!key) throw new HttpError(500, 'ai_not_configured', 'AI is not configured yet.');
+  if (provider === 'openrouter' && opts && opts.model) model = opts.model;   // a specific model for one job (e.g. X search)
 
   const body = { model, messages, max_tokens: maxTokens, temperature: opts && typeof opts.temperature === 'number' ? opts.temperature : opts && opts.json ? 0.2 : 0.85 };
   if (opts && opts.json) body.response_format = { type: 'json_object' };
