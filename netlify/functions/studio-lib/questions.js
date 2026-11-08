@@ -62,12 +62,12 @@ function tidy(list) {
 async function search(o, who) {
   o = o || {};
   const topic = TOPICS[o.topic] ? o.topic : '', src = SOURCES[o.src] ? o.src : 'all', when = WHEN[o.when] ? o.when : 'month';
-  const q = cleanText(o.q || '', 200);
-  if (!q && !topic) throw new HttpError(400, 'missing', 'Type what to look for, or pick a topic.');
+  const q = cleanText(o.q || '', 200), place = o.place && /^https?:\/\//.test(String(o.place.url || '')) ? { name: cleanText(o.place.name, 100), kind: String(o.place.kind || ''), url: String(o.place.url).slice(0, 300) } : null;
+  if (!q && !topic && !place) throw new HttpError(400, 'missing', 'Type what to look for, or pick a topic.');
   if (who) await core.rateLimit('hq-qs', who, 60, 60 * 60 * 1000, 'That’s a lot of searches this hour — try again a bit later.');
   const settings = await core.getSettings();
-  const about = (q ? q : '') + (topic ? (q ? ' — ' : '') + TOPICS[topic][1] : '');
-  const doms = SOURCES[src][1];
+  const about = (q ? q : '') + (topic ? (q ? ' — ' : '') + TOPICS[topic][1] : '') || 'life in the UK — any subject';
+  const doms = place && place.kind !== 'x' ? [place.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')] : SOURCES[src][1];
   const now = Date.now(), cutoff = now - DAYS[when] * 864e5, cutIso = new Date(cutoff).toISOString().slice(0, 10), today = new Date(now).toISOString().slice(0, 10);
   const monthYear = new Date(now).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const sys = `You help Auntie Tobi, a helper app for Nigerians living in the UK, find the real QUESTIONS Nigerians (and other Africans) in the UK are asking online — on social media, forums and Q&A sites. Search results are attached.
@@ -86,16 +86,16 @@ Return ONLY JSON: {"groups":[{"question":"the question in plain words, max 120 c
   };
   // 🐦 tweets — X's own search (through Grok on OpenRouter), limited to the chosen dates
   const tweets = async () => {
-    const out = await gen.callModel([{ role: 'system', content: sys }, { role: 'user', content: head + '\nONLY ON: X (Twitter) — tweets and replies. Each url must be the tweet link (x.com/…/status/…).' }],
+    const out = await gen.callModel([{ role: 'system', content: sys }, { role: 'user', content: head + '\nONLY ON: X (Twitter) — tweets and replies' + (place && place.kind === 'x' ? ' using or from ' + place.name : '') + '. Each url must be the tweet link (x.com/…/status/…).' }],
       3000, settings, { json: true, raw: true, timeoutMs: o.timeoutMs || 24000, model: process.env.QS_X_MODEL || 'x-ai/grok-4-fast', plugins: [{ id: 'web', max_results: 20, x_search: { from_date: cutIso, to_date: today } }] });
     track(out); return parse(out.text);
   };
-  const jobs = src === 'tweets' ? [tweets()] : src === 'all' ? [web(), tweets()] : [web()];
+  const jobs = place ? [place.kind === 'x' ? tweets() : web()] : src === 'tweets' ? [tweets()] : src === 'all' ? [web(), tweets()] : [web()];
   const got = await Promise.allSettled(jobs);
   const parts = got.filter(r => r.status === 'fulfilled' && r.value && Array.isArray(r.value.groups)).map(r => r.value.groups);
   if (!parts.length) { got.forEach(r => { if (r.status === 'rejected') console.log('[qs]', r.reason && r.reason.message); }); throw new HttpError(502, 'ai_error', 'The search didn’t work just now — please try again.'); }
   const j = { groups: [].concat.apply([], parts) };
-  const tweetsFailed = src !== 'all' ? false : got[1].status === 'rejected';
+  const tweetsFailed = src !== 'all' || place ? false : got[1].status === 'rejected';
   // keep only posts from the chosen time; posts with no date are kept apart (shown only if you ask)
   let old = 0;
   const dated = [], undated = [];
@@ -106,6 +106,7 @@ Return ONLY JSON: {"groups":[{"question":"the question in plain words, max 120 c
     else if (nod.length) undated.push(Object.assign({}, g, { items: nod }));
   }
   dated.sort((a, b) => (b.count - a.count) || (b.newest - a.newest));
+  await tally(dated);
   return { groups: dated.slice(0, 15), undated: undated.slice(0, 12), old, since: pretty(cutoff), tweetsFailed, q, topic, src, when };
 }
 
@@ -200,6 +201,84 @@ async function save(g, on) {
 }
 
 // 🗓️ Monday round-up: a search per topic (a few per run, so it fits in a scheduled run), merged into "Top questions this week"
+// ───────────── 📍 Where they ask — the places where Nigerians in the UK ask questions ─────────────
+//   qs/where { items: { key: { key, name, kind, url, n, ai, topics: {topic: n}, last, recent: [{quote, url, date}] } }, discAt }
+//   Grows by itself from every search (free) and from a monthly look for new places (a few pence).
+const KINDS = { reddit: '🟠 Reddit', facebook: '🔵 Facebook', x: '🐦 X (tweets)', nairaland: '🟢 Nairaland', tiktok: '🎵 TikTok', youtube: '▶️ YouTube', instagram: '📸 Instagram', forum: '💬 Forums & Q&A', other: '🌐 Other' };
+function placeOf(url) {
+  let u; try { u = new URL(url); } catch (_) { return null; }
+  const h = u.hostname.replace(/^(www|m|old|mobile|web)\./, ''), parts = u.pathname.split('/').filter(Boolean);
+  if (/reddit\.com$/.test(h) && parts[0] === 'r' && parts[1]) return { key: 'reddit:' + parts[1].toLowerCase(), name: 'r/' + parts[1], kind: 'reddit', url: 'https://www.reddit.com/r/' + parts[1] + '/' };
+  if (/facebook\.com$/.test(h) && parts[0] === 'groups' && parts[1]) return { key: 'facebook:' + parts[1].toLowerCase(), name: decodeURIComponent(parts[1]).replace(/[-_.]+/g, ' ') + ' (Facebook group)', kind: 'facebook', url: 'https://www.facebook.com/groups/' + parts[1] + '/' };
+  if (/(^|\.)(x|twitter)\.com$/.test(h) && parts[1] === 'status') return { key: 'x:tweets', name: 'Tweets on X', kind: 'x', url: 'https://x.com/search?q=Nigerians%20in%20UK&f=live' };   // single tweets: one “Tweets” place, with the latest ones
+  if (/(^|\.)(x|twitter)\.com$/.test(h) && parts[0] && !/^(i|search|hashtag|home)$/.test(parts[0])) return { key: 'x:' + parts[0].toLowerCase(), name: '@' + parts[0], kind: 'x', url: 'https://x.com/' + parts[0] };
+  if (/(^|\.)(x|twitter)\.com$/.test(h) && parts[0] === 'hashtag' && parts[1]) return { key: 'x:#' + parts[1].toLowerCase(), name: '#' + parts[1], kind: 'x', url: 'https://x.com/hashtag/' + parts[1] };
+  if (/nairaland\.com$/.test(h)) return { key: 'nairaland', name: 'Nairaland', kind: 'nairaland', url: 'https://www.nairaland.com/' };
+  if (/tiktok\.com$/.test(h) && /^@/.test(parts[0] || '')) return { key: 'tiktok:' + parts[0].toLowerCase(), name: parts[0] + ' (TikTok)', kind: 'tiktok', url: 'https://www.tiktok.com/' + parts[0] };
+  if (/youtube\.com$/.test(h) && /^@/.test(parts[0] || '')) return { key: 'youtube:' + parts[0].toLowerCase(), name: parts[0] + ' (YouTube)', kind: 'youtube', url: 'https://www.youtube.com/' + parts[0] };
+  if (/instagram\.com$/.test(h) && parts[0] && !/^(p|reel|reels|explore|stories)$/.test(parts[0])) return { key: 'instagram:' + parts[0].toLowerCase(), name: '@' + parts[0] + ' (Instagram)', kind: 'instagram', url: 'https://www.instagram.com/' + parts[0] + '/' };
+  if (/(quora\.com|mumsnet\.com|thestudentroom\.co\.uk|moneysavingexpert\.com|expatforum\.com|immigrationboards\.com|ukimmigration\.com)$/.test(h)) { const n = { 'quora.com': 'Quora', 'mumsnet.com': 'Mumsnet', 'thestudentroom.co.uk': 'The Student Room', 'moneysavingexpert.com': 'MoneySavingExpert forum', 'expatforum.com': 'Expat Forum', 'immigrationboards.com': 'Immigration Boards', 'ukimmigration.com': 'UK Immigration forum' }[h.replace(/^.*?(quora\.com|mumsnet\.com|thestudentroom\.co\.uk|moneysavingexpert\.com|expatforum\.com|immigrationboards\.com|ukimmigration\.com)$/, '$1')]; return { key: 'forum:' + h, name: n || h, kind: 'forum', url: 'https://' + h + '/' }; }
+  return null;
+}
+// add what a search found (only posts in the chosen time — so "last seen" is real)
+async function tally(groups) {
+  const hits = [];
+  for (const g of groups || []) for (const x of g.items || []) { const p = placeOf(x.url); if (p) hits.push({ p, topic: g.topic, x }); }
+  if (!hits.length) return;
+  await cas('qs/where', cur => {
+    cur = cur || { items: {} };
+    for (const h of hits) {
+      const r = cur.items[h.p.key] || Object.assign({}, h.p, { n: 0, ai: 0, topics: {}, last: '', recent: [] });
+      r.n++; r.topics[h.topic] = (r.topics[h.topic] || 0) + 1;
+      const t = h.x.t || Date.now(); if (!r.last || t > Date.parse(r.last)) r.last = new Date(t).toISOString();
+      if (!r.recent.some(y => y.url === h.x.url)) { r.recent.unshift({ quote: h.x.quote, url: h.x.url, date: h.x.date }); r.recent = r.recent.slice(0, h.p.key === 'x:tweets' ? 6 : 3); }
+      cur.items[h.p.key] = r;
+    }
+    const keys = Object.keys(cur.items); if (keys.length > 400) keys.sort((a, b) => cur.items[a].n - cur.items[b].n).slice(0, keys.length - 400).forEach(k => delete cur.items[k]);
+    return cur;
+  }).catch(e => console.log('[qs-where]', e.message));
+}
+// 🔭 look for places (all subjects) — the web and X
+async function discover() {
+  const settings = await core.getSettings(), today = new Date().toISOString().slice(0, 10), from = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+  const sys = 'You help Auntie Tobi (a helper app for Nigerians in the UK) map the ACTIVE public online places where Nigerians living in the UK ask questions (about life, visas, jobs, housing, money, school, health, business, food): subreddits, public Facebook groups, X accounts and hashtags, Nairaland, TikTok/YouTube/Instagram creators whose comments are full of questions, forums and Q&A sites. Search results are attached. From those results ONLY — never invent a place or link. Reply with JSON only: {"places":[{"name":"","kind":"reddit | facebook | x | nairaland | tiktok | youtube | instagram | forum | other","url":"","activity":"high | medium | low","topics":["life","visa","jobs","housing","money","kids","health","business","food"],"why":"one line: who is there and what they ask"}]} — up to 15, busiest first.';
+  const run = async (user, opts) => { const out = await gen.callModel([{ role: 'system', content: sys }, { role: 'user', content: user }], 2400, settings, Object.assign({ json: true, raw: true, timeoutMs: 24000 }, opts)); gen.addGlobal(core.monthKey(), { id: 'qs', tool: 'qs', cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {}); const j = parse(out.text); return (j && Array.isArray(j.places)) ? j.places : []; };
+  const got = await Promise.allSettled([
+    run('Where do Nigerians living in the UK ask questions online? Communities, groups, subreddits, forums, creators — ' + new Date().getUTCFullYear(), { plugins: [{ id: 'web', engine: 'exa', max_results: 20 }] }),
+    run('Which X (Twitter) accounts and hashtags do Nigerians in the UK use to ask questions about life in the UK? Look at tweets since ' + from + '. Each url must be an x.com account or hashtag link.', { model: process.env.QS_X_MODEL || 'x-ai/grok-4-fast', plugins: [{ id: 'web', max_results: 20, x_search: { from_date: from, to_date: today } }] }),
+  ]);
+  const list = [].concat.apply([], got.filter(r => r.status === 'fulfilled').map(r => r.value));
+  let added = 0;
+  await cas('qs/where', cur => {
+    cur = cur || { items: {} }; added = 0;
+    for (const x of list) {
+      const url = String(x.url || ''); if (!/^https?:\/\/\S+$/i.test(url)) continue;
+      const p = placeOf(url) || { key: 'other:' + url.toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''), name: cleanText(x.name, 100), kind: KINDS[x.kind] ? x.kind : 'other', url: url.slice(0, 300) };
+      if (p.kind === 'nairaland' || p.kind === 'forum' || p.kind === 'facebook' || p.key.indexOf('other:') === 0) p.name = cleanText(x.name, 100) || p.name;
+      const r = cur.items[p.key] || Object.assign({}, p, { n: 0, ai: 0, topics: {}, last: '', recent: [] });
+      if (!cur.items[p.key]) added++;
+      if (p.kind === 'facebook' && cleanText(x.name, 100)) r.name = /facebook/i.test(x.name) ? cleanText(x.name, 100) : cleanText(x.name, 100) + ' (Facebook group)';
+      r.ai = { high: 8, medium: 4, low: 1 }[x.activity] || 2; r.why = cleanText(x.why, 200) || r.why || '';
+      (Array.isArray(x.topics) ? x.topics : []).forEach(t => { if (TOPICS[t]) r.topics[t] = (r.topics[t] || 0) + 1; });
+      cur.items[p.key] = r;
+    }
+    cur.discAt = core.nowIso();
+    return cur;
+  });
+  return { found: list.length, added, tweetsFailed: got[1].status === 'rejected' };
+}
+async function where(fresh, who) {
+  if (fresh) { if (who) await core.rateLimit('hq-qs', who, 60, 60 * 60 * 1000, 'Try again a bit later.'); await discover(); }
+  const st = (await getJson('qs/where').catch(() => null)) || { items: {} };
+  const now = Date.now();
+  const list = Object.values(st.items).map(r => {
+    const recentBoost = r.last && now - Date.parse(r.last) < 30 * 864e5 ? 3 : 0, score = r.n + r.ai + recentBoost;
+    const topics = Object.keys(r.topics || {}).sort((a, b) => r.topics[b] - r.topics[a]).slice(0, 3);
+    return Object.assign({}, r, { score, busy: score >= 10 ? 'high' : score >= 4 ? 'medium' : 'low', topics });
+  }).sort((a, b) => b.score - a.score);
+  return { places: list, kinds: KINDS, discAt: st.discAt || '' };
+}
+
 const ROUND = ['life', 'business', 'visa', 'housing', 'jobs', 'money', 'kids', 'health', 'food'];
 function weekKey() { const d = new Date(); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day); return d.toISOString().slice(0, 10); }
 async function weekly() { return (await getJson('qs/weekly').catch(() => null)) || null; }
@@ -207,6 +286,9 @@ async function workWeekly(per) {
   const wk = weekKey();
   let st = (await getJson('qs/weekly').catch(() => null)) || {};
   if (st.week !== wk) st = { week: wk, done: [], groups: [], at: '' };
+  // once a month, the first run looks for new places instead of a topic
+  const w = (await getJson('qs/where').catch(() => null)) || {};
+  if (!w.discAt || Date.now() - Date.parse(w.discAt) > 28 * 864e5) { try { const d = await discover(); return { week: wk, discovered: d }; } catch (e) { console.log('[qs-where]', e.message); } }
   const todo = ROUND.filter(t => !st.done.includes(t)).slice(0, per || 3);
   for (const t of todo) {
     try { const r = await search({ topic: t, when: 'week', timeoutMs: 24000 }); st.groups = st.groups.concat(r.groups.slice(0, 6)); }
@@ -219,4 +301,4 @@ async function workWeekly(per) {
   return { week: wk, ran: todo, left: ROUND.length - st.done.length, groups: st.groups.length };
 }
 
-module.exports = { answers, places, TOPICS, SOURCES, search, draft, idea, saved, save, weekly, workWeekly };
+module.exports = { where, discover, tally, placeOf, answers, places, TOPICS, SOURCES, search, draft, idea, saved, save, weekly, workWeekly };

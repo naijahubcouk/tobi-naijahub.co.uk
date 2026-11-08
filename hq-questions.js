@@ -39,6 +39,7 @@
     var body = '';
     if (tab === 'search') body =
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="gap:8px;flex-wrap:wrap"><input id="qsQ" placeholder="🔎 What are people asking about? e.g. driving licence, renting, starting a catering business" value="' + esc(F.q) + '" style="flex:1;min-width:240px"><button class="btn primary" id="qsGo">Search</button><button class="btn ghost" id="qsPl" title="The busiest places where Nigerians in the UK ask about this">📍 Best places to answer</button></div>' +
+      (F.place ? '<div class="note" style="margin-top:10px;font-size:13.5px">📍 Searching only <b>' + esc(F.place.name) + '</b> <button class="btn ghost sm" id="qsPlace0">Search everywhere again</button></div>' : '') +
       '<div style="margin-top:10px"><div class="muted" style="font-size:12.5px;margin-bottom:4px">Topic</div><div class="chipbar">' + TOPICS.map(function (t) { return '<button class="chip" data-qt="' + t[0] + '" aria-pressed="' + (F.topic === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
       '<div style="margin-top:8px"><div class="muted" style="font-size:12.5px;margin-bottom:4px">Where</div><div class="chipbar">' + SRC.map(function (t) { return '<button class="chip" data-qw="' + t[0] + '" aria-pressed="' + (F.src === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
       '<div class="row" style="gap:8px;margin-top:8px;align-items:center"><span class="muted" style="font-size:12.5px">When</span><select id="qsWhen" style="width:auto"><option value="week"' + (F.when === 'week' ? ' selected' : '') + '>Past week</option><option value="month"' + (F.when === 'month' ? ' selected' : '') + '>Past month</option><option value="year"' + (F.when === 'year' ? ' selected' : '') + '>Past year</option></select></div>' +
@@ -51,16 +52,34 @@
         : '') + '</div>';
     if (tab === 'week') body = '<div class="card" style="padding:12px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><b>🗓️ Top questions this week</b><div class="muted" style="font-size:12.5px">Built every Monday morning — one search per topic.' + (W && W.at ? ' Last updated ' + esc(new Date(W.at).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + (W.done && W.done.length < 9 ? ' · ' + W.done.length + ' of 9 topics so far' : '') : '') + '</div></div><button class="btn ghost sm" id="qsRun">↻ Run the next topic now</button></div></div>' +
       (lists.week.length ? lists.week.map(function (g, i) { return groupCard(g, i, 'week'); }).join('') : '<div class="card muted" style="padding:16px">Nothing yet — the first round-up runs on Monday morning. Or tap “Run the next topic now”.</div>');
+    if (tab === 'where') {
+      var Wh = X.S.qsWhere;
+      if (!Wh) { body = '<div class="card muted" style="padding:16px">Loading…</div>'; X.api('qs-where', {}).then(function (r) { X.S.qsWhere = r; view(); }, function (e) { X.toast(e.message); }); }
+      else {
+        var BUSY = { high: ['🔥 Very busy', '#B42318'], medium: ['👍 Active', '#057A44'], low: ['💤 Quiet', '#6B7280'] }, ago = function (d) { if (!d) return ''; var n = Math.round((Date.now() - Date.parse(d)) / 864e5); return n <= 0 ? 'today' : n === 1 ? 'yesterday' : n < 30 ? n + ' days ago' : new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); };
+        var byKind = {}; Wh.places.forEach(function (x, i) { x._i = i; (byKind[x.kind] = byKind[x.kind] || []).push(x); });
+        body = '<div class="card" style="padding:12px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><b>📍 Where Nigerians in the UK ask questions</b><div class="muted" style="font-size:12.5px">Grows by itself from every search, plus a look for new places once a month' + (Wh.discAt ? ' (last ' + esc(new Date(Wh.discAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + ')' : '') + '. Public places only.</div></div><button class="btn ghost sm" id="qsFind">↻ Find more places now</button></div></div>' +
+          (Wh.places.length ? Object.keys(Wh.kinds).filter(function (k) { return byKind[k]; }).map(function (k) {
+            return '<div class="card" style="padding:12px 16px;margin-bottom:12px"><b style="font-size:16px">' + esc(Wh.kinds[k]) + '</b> <span class="muted" style="font-size:12.5px">· ' + byKind[k].length + ' place' + (byKind[k].length === 1 ? '' : 's') + '</span>' + byKind[k].slice(0, 12).map(function (x) {
+              var b = BUSY[x.busy];
+              return '<div style="padding:8px 0;border-top:1px solid #F0ECE2;margin-top:6px"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px"><div style="min-width:0"><a href="' + esc(x.url) + '" target="_blank" rel="noopener"><b>' + esc(x.name) + '</b></a> <span class="ak" style="background:' + b[1] + '">' + b[0] + '</span>' +
+                '<div class="muted" style="font-size:12.5px">' + (x.topics.length ? x.topics.map(function (t) { return esc(TL[t] || t); }).join(' · ') : '') + (x.last ? (x.topics.length ? ' · ' : '') + 'last question seen ' + esc(ago(x.last)) : '') + (x.n ? ' · ' + x.n + ' question' + (x.n === 1 ? '' : 's') + ' found' : '') + '</div>' + (x.why ? '<div style="font-size:13px;color:#374151">' + esc(x.why) + '</div>' : '') + '</div>' +
+                '<button class="btn ghost sm" data-qwp="' + x._i + '" style="flex:none">🔎 Search this place</button></div>' +
+                (x.recent && x.recent.length ? '<div style="margin-top:4px">' + x.recent.map(function (r) { return '<div style="font-size:13px;padding:2px 0">' + ICON(x.kind === 'x' ? 'x.com' : '') + ' <span style="color:#374151">“' + esc(r.quote) + '”</span> <span class="muted" style="font-size:12px">' + esc(r.date || '') + '</span> <a href="' + esc(r.url) + '" target="_blank" rel="noopener" style="font-size:12.5px">Open ↗</a></div>'; }).join('') + '</div>' : '') + '</div>';
+            }).join('') + '</div>';
+          }).join('') : '<div class="card muted" style="padding:16px">No places yet — tap “Find more places now”, or run a few searches.</div>');
+      }
+    }
     if (tab === 'saved') body = lists.saved.length ? lists.saved.map(function (g, i) { return groupCard(g, i, 'saved'); }).join('') : '<div class="card muted" style="padding:16px">Tap ☆ Save on a question to keep it here.</div>';
     $('#view').innerHTML = '<div class="wrap"><p class="muted" style="margin:0 0 10px">What Nigerians in the UK are asking online — ideas for posts, articles and app features. Nothing is ever posted for you.</p>' +
-      '<div class="chipbar" style="margin-bottom:12px">' + [['search', '🔎 Search'], ['week', '🗓️ This week' + (lists.week.length ? ' (' + lists.week.length + ')' : '')], ['saved', '⭐ Saved' + (lists.saved.length ? ' (' + lists.saved.length + ')' : '')]].map(function (t) { return '<button class="chip" data-qtab="' + t[0] + '" aria-pressed="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>' + body + '</div>';
+      '<div class="chipbar" style="margin-bottom:12px">' + [['search', '🔎 Search'], ['where', '📍 Where they ask'], ['week', '🗓️ This week' + (lists.week.length ? ' (' + lists.week.length + ')' : '')], ['saved', '⭐ Saved' + (lists.saved.length ? ' (' + lists.saved.length + ')' : '')]].map(function (t) { return '<button class="chip" data-qtab="' + t[0] + '" aria-pressed="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>' + body + '</div>';
     $$('[data-qtab]').forEach(function (b) { b.onclick = function () { X.S.qsTab = b.dataset.qtab; view(); }; });
     var keepF = function () { if ($('#qsQ')) { F.q = $('#qsQ').value; F.when = $('#qsWhen').value; } X.S.qsF = F; };
     $$('[data-qt]').forEach(function (b) { b.onclick = function () { keepF(); F.topic = b.dataset.qt; view(); }; });
-    $$('[data-qw]').forEach(function (b) { b.onclick = function () { keepF(); F.src = b.dataset.qw; view(); }; });
+    $$('[data-qw]').forEach(function (b) { b.onclick = function () { keepF(); F.src = b.dataset.qw; F.place = null; view(); }; });
     if ($('#qsGo')) {
       var go = async function () {
-        keepF(); var btn = $('#qsGo'); if (!F.q.trim() && !F.topic) { X.toast('Type what to look for, or pick a topic'); return; }
+        keepF(); var btn = $('#qsGo'); if (!F.q.trim() && !F.topic && !F.place) { X.toast('Type what to look for, or pick a topic'); return; }
         btn.disabled = true; btn.textContent = 'Searching…'; $('#qsRes').innerHTML = '<div class="card muted" style="padding:16px">🔎 Looking across ' + esc((SRC.filter(function (s) { return s[0] === F.src; })[0] || [])[1] || 'the web') + '… (about 20 seconds)</div>';
         try { X.S.qsRes = await X.api('qs-search', F); } catch (e) { X.toast(e.message); X.S.qsRes = null; }
         view();
@@ -70,6 +89,14 @@
     if ($('#qsPl')) $('#qsPl').onclick = async function () { keepF(); if (!F.q.trim() && !F.topic) { X.toast('Type a subject or pick a topic first'); return; } var b = this; b.disabled = true; b.textContent = 'Looking… (about 20 seconds)'; try { X.S.qsPlaces = await X.api('qs-places', { q: F.q, topic: F.topic }); } catch (e) { X.toast(e.message); } view(); };
     if ($('#qsPlX')) $('#qsPlX').onclick = function () { X.S.qsPlaces = null; view(); };
     $$('[data-qsa]').forEach(function (b) { b.onclick = async function () { var g = pick(b.dataset.qsa); b.disabled = true; b.textContent = 'Searching GOV.UK, NHS…'; try { g.pages = (await X.api('qs-answers', { question: g.question })).pages; view(); } catch (e) { X.toast(e.message); b.disabled = false; b.textContent = '📚 Find the answer'; } }; });
+    if ($('#qsFind')) $('#qsFind').onclick = async function () { this.disabled = true; this.textContent = 'Looking for places… (about 20 seconds)'; try { X.S.qsWhere = await X.api('qs-where', { fresh: true }); } catch (e) { X.toast(e.message); } view(); };
+    $$('[data-qwp]').forEach(function (b) { b.onclick = async function () {
+      var x = X.S.qsWhere.places[+b.dataset.qwp]; F.place = { name: x.name, kind: x.kind, url: x.url }; X.S.qsF = F; X.S.qsTab = 'search'; X.S.qsRes = null; view();
+      $('#qsRes').innerHTML = '<div class="card muted" style="padding:16px">🔎 Looking for recent questions on ' + esc(x.name) + '… (about 20 seconds)</div>';
+      try { X.S.qsRes = await X.api('qs-search', F); } catch (e) { X.toast(e.message); }
+      view();
+    }; });
+    if ($('#qsPlace0')) $('#qsPlace0').onclick = function () { F.place = null; X.S.qsF = F; view(); };
     if ($('#qsUnd')) $('#qsUnd').onclick = function () { X.S.qsUnd = !X.S.qsUnd; view(); };
     if ($('#qsRun')) $('#qsRun').onclick = async function () { this.disabled = true; this.textContent = 'Searching… (about 20 seconds)'; try { var r = await X.api('qs-weekly-run', {}); X.S.qsWeek = r.weekly; X.S.qsSaved = r.saved; } catch (e) { X.toast(e.message); } view(); };
     var pick = function (k) { var a = k.split(':'); return lists[a[0]][+a[1]]; };

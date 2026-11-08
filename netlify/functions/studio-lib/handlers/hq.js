@@ -339,11 +339,12 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'market-ai') return await require('../marketai').fill(body.images, body.text, who.email);
       return await require('./admin').marketAction(body.action, body, ctx, who.email);
     }
-    case 'qs-search': case 'qs-answers': case 'qs-places': case 'qs-draft': case 'qs-idea': case 'qs-saved': case 'qs-save': case 'qs-weekly': case 'qs-weekly-run': {
+    case 'qs-search': case 'qs-where': case 'qs-answers': case 'qs-places': case 'qs-draft': case 'qs-idea': case 'qs-saved': case 'qs-save': case 'qs-weekly': case 'qs-weekly-run': {
       // 💬 Community questions — admin only
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const qs = require('../questions');
-      if (body.action === 'qs-search') return await qs.search({ q: body.q, topic: body.topic, src: body.src, when: body.when }, who.email);
+      if (body.action === 'qs-search') return await qs.search({ q: body.q, topic: body.topic, src: body.src, when: body.when, place: body.place }, who.email);
+      if (body.action === 'qs-where') return await qs.where(!!body.fresh, who.email);
       if (body.action === 'qs-draft') return await qs.draft(body.question, body.quote, who.email, body.pages);
       if (body.action === 'qs-answers') return await qs.answers(body.question, who.email);
       if (body.action === 'qs-places') return await qs.places({ q: body.q, topic: body.topic, fresh: !!body.fresh }, who.email);
