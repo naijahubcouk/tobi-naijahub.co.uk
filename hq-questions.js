@@ -30,7 +30,7 @@
     var tab = X.S.qsTab || 'search';
     if (!X.S.qsBoot) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading…</p></div>'; try { var b = await X.api('qs-weekly'); X.S.qsSaved = b.saved; X.S.qsWeek = b.weekly; X.S.qsBoot = 1; } catch (e) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(e.message) + '</div></div>'; return; } }
     var R = X.S.qsRes, W = X.S.qsWeek, F = X.S.qsF || { q: '', topic: '', src: 'all', when: 'month' };
-    var lists = { res: R ? R.groups : [], week: W ? W.groups : [], saved: X.S.qsSaved || [] };
+    var lists = { und: R && R.undated ? R.undated : [], res: R ? R.groups : [], week: W ? W.groups : [], saved: X.S.qsSaved || [] };
     X.S.qsLists = lists;
     var body = '';
     if (tab === 'search') body =
@@ -39,7 +39,10 @@
       '<div style="margin-top:8px"><div class="muted" style="font-size:12.5px;margin-bottom:4px">Where</div><div class="chipbar">' + SRC.map(function (t) { return '<button class="chip" data-qw="' + t[0] + '" aria-pressed="' + (F.src === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
       '<div class="row" style="gap:8px;margin-top:8px;align-items:center"><span class="muted" style="font-size:12.5px">When</span><select id="qsWhen" style="width:auto"><option value="week"' + (F.when === 'week' ? ' selected' : '') + '>Past week</option><option value="month"' + (F.when === 'month' ? ' selected' : '') + '>Past month</option><option value="year"' + (F.when === 'year' ? ' selected' : '') + '>Past year</option></select></div>' +
       '<p class="muted" style="font-size:12px;margin:8px 0 0">Finds <b>public</b> posts only — private Facebook/WhatsApp groups can’t be searched. Each search costs a few pence.</p></div>' +
-      '<div id="qsRes">' + (R ? (R.groups.length ? '<div class="muted" style="font-size:13px;margin-bottom:6px">' + R.groups.length + ' question' + (R.groups.length === 1 ? '' : 's') + ' found</div>' + R.groups.map(function (g, i) { return groupCard(g, i, 'res'); }).join('') : '<div class="card muted" style="padding:16px">No questions found — try other words, another topic or “Past year”.</div>') : '') + '</div>';
+      '<div id="qsRes">' + (R ? '<div class="muted" style="font-size:13px;margin-bottom:6px">' + R.groups.length + ' question' + (R.groups.length === 1 ? '' : 's') + ' from posts since <b>' + esc(R.since || '') + '</b>' + (R.old ? ' · ' + R.old + ' older post' + (R.old === 1 ? '' : 's') + ' left out' : '') + '</div>' +
+        (R.groups.length ? R.groups.map(function (g, i) { return groupCard(g, i, 'res'); }).join('') : '<div class="card muted" style="padding:16px">No dated questions from this time found — try other words, another place, or a longer time.</div>') +
+        ((R.undated || []).length ? (X.S.qsUnd ? '<div class="muted" style="font-size:13px;margin:12px 0 6px">❔ <b>Date not shown</b> on these posts — they may be older. <button class="btn ghost sm" id="qsUnd">Hide them</button></div>' + R.undated.map(function (g, i) { return groupCard(g, i, 'und'); }).join('') : '<div style="margin-top:10px"><button class="btn ghost sm" id="qsUnd">❔ Also show ' + R.undated.length + ' question' + (R.undated.length === 1 ? '' : 's') + ' where the post has no date</button></div>') : '')
+        : '') + '</div>';
     if (tab === 'week') body = '<div class="card" style="padding:12px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><b>🗓️ Top questions this week</b><div class="muted" style="font-size:12.5px">Built every Monday morning — one search per topic.' + (W && W.at ? ' Last updated ' + esc(new Date(W.at).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + (W.done && W.done.length < 9 ? ' · ' + W.done.length + ' of 9 topics so far' : '') : '') + '</div></div><button class="btn ghost sm" id="qsRun">↻ Run the next topic now</button></div></div>' +
       (lists.week.length ? lists.week.map(function (g, i) { return groupCard(g, i, 'week'); }).join('') : '<div class="card muted" style="padding:16px">Nothing yet — the first round-up runs on Monday morning. Or tap “Run the next topic now”.</div>');
     if (tab === 'saved') body = lists.saved.length ? lists.saved.map(function (g, i) { return groupCard(g, i, 'saved'); }).join('') : '<div class="card muted" style="padding:16px">Tap ☆ Save on a question to keep it here.</div>';
@@ -58,6 +61,7 @@
       };
       $('#qsGo').onclick = go; $('#qsQ').onkeydown = function (e) { if (e.key === 'Enter') go(); };
     }
+    if ($('#qsUnd')) $('#qsUnd').onclick = function () { X.S.qsUnd = !X.S.qsUnd; view(); };
     if ($('#qsRun')) $('#qsRun').onclick = async function () { this.disabled = true; this.textContent = 'Searching… (about 20 seconds)'; try { var r = await X.api('qs-weekly-run', {}); X.S.qsWeek = r.weekly; X.S.qsSaved = r.saved; } catch (e) { X.toast(e.message); } view(); };
     var pick = function (k) { var a = k.split(':'); return lists[a[0]][+a[1]]; };
     $$('[data-qsv]').forEach(function (b) { b.onclick = async function () { var g = pick(b.dataset.qsv), on = !(X.S.qsSaved || []).some(function (x) { return x.question.toLowerCase() === g.question.toLowerCase(); }); try { X.S.qsSaved = (await X.api('qs-save', { group: g, on: on })).items; X.toast(on ? '⭐ Saved' : 'Removed from saved'); view(); } catch (e) { X.toast(e.message); } }; });

@@ -35,6 +35,18 @@ const SOURCES = {
   forums: ['Mumsnet & UK forums', ['mumsnet.com', 'thestudentroom.co.uk', 'moneysavingexpert.com', 'expatforum.com', 'ukimmigration.com', 'immigrationboards.com']],
 };
 const WHEN = { week: 'the past week', month: 'the past month', year: 'the past year' };
+const DAYS = { week: 9, month: 33, year: 370 };   // a little slack
+// a post's date → ms (accepts 2026-11-03, 3 Nov 2026, Nov 3, 2026…); NaN if unknown
+const MON = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+function when2ms(d) {
+  d = String(d || '').trim(); if (!d) return NaN;
+  let m = d.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  m = d.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3})[a-z]*\.?,?\s+(\d{4})/); if (m && MON[m[2].toLowerCase()] !== undefined) return Date.UTC(+m[3], MON[m[2].toLowerCase()], +m[1]);
+  m = d.match(/([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/); if (m && MON[m[1].toLowerCase()] !== undefined) return Date.UTC(+m[3], MON[m[1].toLowerCase()], +m[2]);
+  m = d.match(/^([A-Za-z]{3})[a-z]*\s+(\d{4})$/); if (m && MON[m[1].toLowerCase()] !== undefined) return Date.UTC(+m[2], MON[m[1].toLowerCase()], 15);
+  return NaN;
+}
+const pretty = t => new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 const parse = t => { try { return JSON.parse(String(t || '').replace(/^```(?:json)?\s*|\s*```$/g, '').trim()); } catch (_) { return null; } };
 const gid = () => 'q' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const siteOf = u => { try { return new URL(u).hostname.replace(/^www\.|^m\.|^old\./, ''); } catch (_) { return ''; } };
@@ -56,19 +68,32 @@ async function search(o, who) {
   const settings = await core.getSettings();
   const about = (q ? q : '') + (topic ? (q ? ' — ' : '') + TOPICS[topic][1] : '');
   const doms = SOURCES[src][1];
+  const now = Date.now(), cutoff = now - DAYS[when] * 864e5, cutIso = new Date(cutoff).toISOString().slice(0, 10), today = new Date(now).toISOString().slice(0, 10);
+  const monthYear = new Date(now).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const out = await gen.callModel([
     { role: 'system', content:
 `You help Auntie Tobi, a helper app for Nigerians living in the UK, find the real QUESTIONS Nigerians (and other Africans) in the UK are asking online — on social media, forums and Q&A sites. Web search results are attached.
-From those results ONLY, find questions people asked (posts, threads, comments) — not articles answering them, not adverts. Prefer questions from ${WHEN[when]} and from people in or moving to the UK.
+Today is ${today}. From those results ONLY, find questions people asked (posts, threads, comments) — not articles answering them, not adverts — from people in or moving to the UK.
+ONLY include posts made on or after ${cutIso} (${WHEN[when]}). Skip anything older. Give each post's date as YYYY-MM-DD, taken from the result (its published date, or a date shown on the post). If a result shows no date, set "date" to "" — never guess a date.
 Group questions that ask the same thing. Copy each person's words (shortened if long) — never invent a question, quote, link or date. Every url must be a real result link.
 Topics: ${Object.keys(TOPICS).join(', ')}.
-Return ONLY JSON: {"groups":[{"question":"the question in plain words, max 120 chars","topic":"one topic key","count":number_of_places_seen,"items":[{"quote":"what they wrote","url":"link to the post or thread","date":"e.g. 3 Nov 2026 or \\"\\""}]}]} — up to 12 groups, most asked first.` },
-    { role: 'user', content: `LOOK FOR: questions Nigerians in the UK are asking about ${about}` + (doms ? `\nONLY ON: ${doms.join(', ')}` : '\nANYWHERE: social media (Reddit, Nairaland, Quora, Facebook, X, TikTok, YouTube, Instagram), forums (Mumsnet, The Student Room, MoneySavingExpert) and Q&A sites') },
-  ], 3000, settings, { json: true, raw: true, timeoutMs: o.timeoutMs || 24000, plugins: [Object.assign({ id: 'web', engine: 'exa', max_results: 15 }, doms ? { include_domains: doms } : {})] });
+Return ONLY JSON: {"groups":[{"question":"the question in plain words, max 120 chars","topic":"one topic key","count":number_of_places_seen,"items":[{"quote":"what they wrote","url":"link to the post or thread","date":"YYYY-MM-DD or \\"\\""}]}]} — up to 12 groups, most asked first.` },
+    { role: 'user', content: `${about} — questions asked by Nigerians in the UK, ${when === 'year' ? new Date(now).getUTCFullYear() : monthYear}\nLOOK FOR: recent questions (since ${cutIso}) Nigerians in the UK are asking about ${about}` + (doms ? `\nONLY ON: ${doms.join(', ')}` : '\nANYWHERE: social media (Reddit, Nairaland, Quora, Facebook, X, TikTok, YouTube, Instagram), forums (Mumsnet, The Student Room, MoneySavingExpert) and Q&A sites') },
+  ], 3000, settings, { json: true, raw: true, timeoutMs: o.timeoutMs || 24000, plugins: [Object.assign({ id: 'web', engine: 'exa', max_results: 20 }, doms ? { include_domains: doms } : {})] });
   gen.addGlobal(core.monthKey(), { id: 'qs', tool: 'qs', cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
   const j = parse(out.text);
   if (!j) throw new HttpError(502, 'ai_error', 'The search didn’t work just now — please try again.');
-  return { groups: tidy(j.groups).slice(0, 12), q, topic, src, when };
+  // keep only posts from the chosen time; posts with no date are kept apart (shown only if you ask)
+  let old = 0;
+  const dated = [], undated = [];
+  for (const g of tidy(j.groups)) {
+    const keep = [], nod = [];
+    for (const x of g.items) { const t = when2ms(x.date); if (isNaN(t)) { x.date = ''; nod.push(x); } else if (t < cutoff || t > now + 2 * 864e5) old++; else { x.date = pretty(t); x.t = t; keep.push(x); } }
+    if (keep.length) dated.push(Object.assign({}, g, { items: keep, count: Math.max(keep.length, Math.min(g.count, keep.length + nod.length)), newest: Math.max.apply(null, keep.map(x => x.t)) }));
+    else if (nod.length) undated.push(Object.assign({}, g, { items: nod }));
+  }
+  dated.sort((a, b) => (b.count - a.count) || (b.newest - a.newest));
+  return { groups: dated.slice(0, 12), undated: undated.slice(0, 12), old, since: pretty(cutoff), q, topic, src, when };
 }
 
 // ✍️ a reply in Auntie Tobi's voice (to copy — never posted for you)
