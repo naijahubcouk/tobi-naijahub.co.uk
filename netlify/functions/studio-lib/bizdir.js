@@ -19,7 +19,7 @@ try { seed = require('../dir-seed.json'); } catch (_) { seed = []; }
 const KEY = 'dir/list';
 const OURS = /^(favour adentan|auntie tobi)$/i;           // listings we created = unclaimed
 // Featured businesses (Business Club) also show every way to reach them, the full description and their photos
-const FEATURED_EXTRA = ['email', 'phone', 'website', 'fb', 'tt', 'long', 'gallery', 'addr'];
+const FEATURED_EXTRA = ['carImg', 'email', 'phone', 'website', 'fb', 'tt', 'long', 'gallery', 'addr'];
 const PUBLIC = ['name', 'slug', 'cat', 'loc', 'desc', 'ig', 'wa', 'featured', 'verified', 'img', 'lines', 'shop', 'book', 'label', 'text'];
 const COMPARE = ['name', 'cat', 'loc', 'desc', 'ig', 'wa', 'phone', 'email', 'website', 'featured', 'verified', 'claimed'];
 const FIELD_NAMES = { name: 'name', cat: 'category', loc: 'town', desc: 'description', ig: 'Instagram', wa: 'WhatsApp', phone: 'phone', email: 'email', website: 'website', featured: 'Featured', verified: 'Verified', claimed: 'claimed' };
@@ -30,7 +30,8 @@ const IMG_UPDATES = {
   abbystoreltd: { from: 'https://d2rl3fject3tj8.cloudfront.net/47a0f73f-f9ba-4c98-8683-5834c3eb574a-1787256240805', to: '/biz-img/abbystoreltd.jpg' },
 };
 // One-off changes to the saved directory, each done once (Seun can change them back in HQ afterwards)
-const ONCE = [{ id: 'refeature-funmis-2026-11', slug: 'funmis-treasure', set: { featured: true } }];   // she stays Featured; only the app carousel leaves her out
+const ONCE = [{ id: 'refeature-funmis-2026-11', slug: 'funmis-treasure', set: { featured: true } },   // she stays Featured; only the app carousel leaves her out
+  { id: 'xander-flyer-2026-11', slug: 'xander-afritrade-ltd', set: { carImg: 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png' } }];   // their flyer in the Featured carousel   // she stays Featured; only the app carousel leaves her out
 async function runOnce(rec) {
   if (!rec || !Array.isArray(rec.items)) return rec;
   const done = (await getJson('dir/once').catch(() => null)) || {};
@@ -116,6 +117,7 @@ function normalise(b) {
   if (typeof b.appNow === 'boolean') out.appNow = b.appNow; else if (b.appNow) out.appNow = true;                // Seun chose to show it in the app before that
   if (fbUrl(b.fb)) out.fb = fbUrl(b.fb);
   if (ttUrl(b.tt)) out.tt = ttUrl(b.tt);
+  if (/^(https:\/\/|\/)/.test(String(b.carImg || ''))) out.carImg = str(b.carImg, 400);   // 🎠 picture used only in the Featured carousel (e.g. their flyer)
   if (b.short) out.short = str(b.short, 200);
   if (b.long) out.long = String(b.long).replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 4000);   // full description (website "detailed description")
   if (Array.isArray(b.gallery) && b.gallery.length) out.gallery = b.gallery.map(u => str(u, 300)).filter(u => /^https:\/\//.test(u)).slice(0, 6);                    // one-line description (website "description")
@@ -210,7 +212,7 @@ async function previewImport(csvText) {
 }
 // Website fields win; app-only extras (photos for featured cards, booking buttons…), HQ notes, hidden and Seun's claimed tick are kept.
 function mergeOne(o, n) {
-  const keep = {}; for (const k of ['img', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden', 'short', 'tags', 'lat', 'lng', 'gallery']) if (o[k] !== undefined) keep[k] = o[k];
+  const keep = {}; for (const k of ['img', 'carImg', 'lines', 'shop', 'book', 'label', 'text', 'notes', 'claimedSet', 'hidden', 'short', 'tags', 'lat', 'lng', 'gallery']) if (o[k] !== undefined) keep[k] = o[k];
   const m = normalise(Object.assign({}, o, n, keep, { wa: n.wa || o.wa, ig: n.ig || o.ig, fb: n.fb || o.fb, tt: n.tt || o.tt, loc: n.loc && n.loc !== 'UK' ? n.loc : (o.loc || 'UK') }));
   if (o.siteHidden && n.status !== 'pending') { m.hidden = false; delete m.siteHidden; }   // hidden by the website sync, back on the website now
   for (const k of ['ownerEmail', 'ownerName', 'via', 'listedMailAt', 'ownerEdAt', 'imgFrom']) if (o[k] !== undefined) m[k] = o[k];

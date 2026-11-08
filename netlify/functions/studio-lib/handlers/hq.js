@@ -285,6 +285,9 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'dir-apply') { const stats = await bizdir.applyImport(String(body.csv || ''), !!body.hideGone, who.email); await core.audit(who.email, 'hq_dir_import', stats); return { stats, items: await bizdir.all(), info: await bizdir.info() }; }
       if (body.action === 'dir-save') {
         const raw = Object.assign({}, body.item || {}); const data = raw.imgData; delete raw.imgData;
+        const car = raw.carData; delete raw.carData;   // 🎠 picture just for the Featured carousel (e.g. their flyer)
+        if (car) { const slug = raw.origSlug || raw.slug || bizdir.slugify(raw.name); raw.carImg = await require('../bizimg').put(slug + '~car', car, 'upload'); }
+        else if (raw.carImg === '') { const slug = raw.origSlug || raw.slug; if (slug) await require('../bizimg').remove(slug + '~car'); }
         if (data) { const slug = raw.origSlug || raw.slug || bizdir.slugify(raw.name); raw.slug = raw.slug || slug; raw.img = await require('../bizimg').put(slug, data, raw.imgSrc === 'card' ? 'card' : 'upload'); }
         delete raw.imgSrc;
         // 📸 gallery (up to 6 photos, shown on Featured business pages): keep the ones still listed, add new uploads, delete removed ones
