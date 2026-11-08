@@ -339,6 +339,17 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'market-ai') return await require('../marketai').fill(body.images, body.text, who.email);
       return await require('./admin').marketAction(body.action, body, ctx, who.email);
     }
+    case 'qs-search': case 'qs-draft': case 'qs-idea': case 'qs-saved': case 'qs-save': case 'qs-weekly': case 'qs-weekly-run': {
+      // 💬 Community questions — admin only
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const qs = require('../questions');
+      if (body.action === 'qs-search') return await qs.search({ q: body.q, topic: body.topic, src: body.src, when: body.when }, who.email);
+      if (body.action === 'qs-draft') return await qs.draft(body.question, body.quote, who.email);
+      if (body.action === 'qs-idea') return await qs.idea(body.group, who.email);
+      if (body.action === 'qs-save') return { items: await qs.save(body.group, body.on !== false) };
+      if (body.action === 'qs-weekly-run') { await core.rateLimit('hq-qs', who.email, 60, 60 * 60 * 1000, 'Try again a bit later.'); await qs.workWeekly(1); }
+      return { saved: await qs.saved(), weekly: await qs.weekly() };
+    }
     case 'hq-fill': case 'hq-write': {   // ✨ fill a listing from a website / Instagram / screenshots, ✍️ rewrite its descriptions (admin only, like the directory)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
       const ab = require('../addbiz');
