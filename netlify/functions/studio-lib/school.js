@@ -424,7 +424,7 @@ const AWARD_HINT = /award|merit|certificate|star of the week|house point|commend
 // School codes parents don't need: "AP 2 - Silver Award" → "Silver Award", "KS3 Drama: Year 8: 8D/Dr1" → "Drama".
 function tidyAward(t) {
   return String(t || '').replace(/\bAP\s*\d+\s*[-–—:]?\s*/gi, '').replace(/\bKS\s*\d\b\s*[-–—:]?\s*/gi, '').replace(/\b(Year|Yr|Y)\s*\d{1,2}\b\s*[-–—:]?\s*/gi, '')
-    .replace(/\b\d{1,2}[A-Z]{1,2}\/[A-Za-z]{1,4}\d*\b/g, '').replace(/\s*:\s*/g, ' ').replace(/\s*[·|]\s*$/g, '').replace(/^\s*[-–—:·]\s*/, '').replace(/\s{2,}/g, ' ').trim();
+    .replace(/\b\d{1,2}[A-Z]{1,2}\/[A-Za-z]{1,4}\d*\b/g, '').replace(/\s*:\s*/g, ' ').replace(/[\s,;:·|\-–—]+$/g, '').replace(/^\s*[-–—:·]\s*/, '').replace(/\s{2,}/g, ' ').trim();
 }
 const tidyW = w => Object.assign({}, w, { level: tidyAward(w.level) || 'Award', what: tidyAward(w.what) });
 function cleanAwards(list, childIds, mail, okKids) {
@@ -673,8 +673,8 @@ async function digestFor(fam, me, kind, today) {
   const todo = board.actions.filter(a => vis(a) && !a.done && (!a.due || a.due <= horizon)).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'));
   const dates = board.dates.filter(d => vis(d) && d.date >= today && d.date <= horizon).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   const dueSoon = todo.filter(a => a.due);
-  const weekAgo = ukDay(Date.parse(today) - 7 * DAYMS);
-  const wins = kind === 'sunday' ? (board.awards || []).filter(w => vis(w) && w.date > weekAgo && w.date <= today).map(tidyW).sort((a, b) => a.date.localeCompare(b.date)) : [];
+  const monday = ukDay(Date.parse(today + 'T12:00:00Z') - ((new Date(today + 'T12:00:00Z').getUTCDay() + 6) % 7) * DAYMS);   // this week, Monday to Sunday
+  const wins = kind === 'sunday' ? (board.awards || []).filter(w => vis(w) && w.date >= monday && w.date <= today).map(tidyW).sort((a, b) => a.date.localeCompare(b.date)) : [];
   if (kind === 'morning' && !dueSoon.length && !dates.filter(d => d.date <= ukDay(Date.parse(today) + DAYMS)).length) return null;   // nothing for today or tomorrow → no email
   if (kind === 'sunday' && !todo.length && !dates.length && !wins.length) return null;
   const row = (t, sub, color) => `<tr><td style="padding:8px 0;border-top:1px solid #F0EBE0"><div style="font-weight:700;font-size:15px">${t}</div>${sub ? `<div style="font-size:13px;color:${color || '#5b6475'}">${sub}</div>` : ''}</td></tr>`;

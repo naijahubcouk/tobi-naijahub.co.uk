@@ -192,8 +192,9 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-co
     bindAwards(s, id, s);
   }
   function awardsWeekCard() {
-    var wk = new Date(ms(TODAY()) - 7 * 864e5).toLocaleDateString('en-CA');
-    var recent = ((S.boot.board.awards) || []).filter(function (w) { return w.date > wk; });
+    // this week only — starts fresh every Monday
+    var t = TODAY(), d = new Date(t + 'T12:00:00Z'), mon = new Date(d.getTime() - ((d.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10);
+    var recent = ((S.boot.board.awards) || []).filter(function (w) { return w.date >= mon && w.date <= t; });
     if (!recent.length) return '';
     var per = kids().map(function (c) { var l = recent.filter(function (w) { return forKid(w, c.id); }); return l.length ? { c: c, l: l } : null; }).filter(Boolean);
     return '<div class="card" style="background:var(--navy);color:#fff;border:0"><h2 style="color:#fff">🎉 Well done this week!</h2>' + per.map(function (p) {
