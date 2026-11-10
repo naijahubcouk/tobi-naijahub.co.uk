@@ -38,6 +38,10 @@ exports.handler = async (event) => {
     } else inject = 'window.__CARD_MISSING=true;';
     // shared card links carry no picture in the WhatsApp / social preview — just the link and its words
     out = out.replace(/<meta property="og:image"[^>]*>\n?/g, '').replace(/<link rel="icon"[^>]*>\n?/g, '');
+    // …and no picture at all: Instagram/WhatsApp otherwise grab the first picture on the page (Auntie Tobi's face in the header).
+    // The header picture is added back by the page itself once it opens, so the card looks the same.
+    out = out.replace(/<img src="\/tobi-face-128\.png" alt="Auntie Tobi">/g, '<span data-tobi-logo></span>')
+      .replace('</body>', '<script>document.querySelectorAll("[data-tobi-logo]").forEach(function(s){var i=new Image();i.src="/tobi-face-128.png";i.alt="Auntie Tobi";s.replaceWith(i);});</script>\n</body>');
     out = out.replace('<script>\n(function () {', `<script>${inject}</script>\n<script>\n(function () {`);
     return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': card ? 'public, max-age=300' : 'no-store' }, body: out };
   } catch (e) {
