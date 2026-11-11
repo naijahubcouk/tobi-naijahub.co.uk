@@ -8821,7 +8821,7 @@ function tobiFeaturedEventsHtml(list) {
     var when = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) + (e.eventTime ? ' · ' + e.eventTime : '');
     var open = 'openBlogSheet(\'' + url.replace(/'/g, "\\'") + '\', \'\', \'\')';
     return '<div class="tobi-feat-event" style="background:#fff;border:2px solid #FFB81C;border-radius:16px;overflow:hidden;margin:10px 0;box-shadow:0 2px 10px rgba(15,30,54,.08);cursor:pointer" onclick="' + esc(open) + '">' +
-      (e.imgId ? '<img src="/.netlify/functions/app-content?img=' + encodeURIComponent(e.imgId) + '" alt="" loading="lazy" style="width:100%;max-height:220px;object-fit:cover;display:block">' : '') +
+      (e.imgId ? '<img src="/.netlify/functions/app-content?img=' + encodeURIComponent(e.imgId) + '" alt="" loading="lazy" style="width:100%;height:auto;display:block;background:#F6F3EC">' : '') +
       '<div style="padding:12px 14px"><div style="display:inline-block;background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;letter-spacing:.3px">⭐ FEATURED EVENT</div>' +
       '<div style="font-size:17px;font-weight:800;color:#0F1E36;margin-top:6px;line-height:1.25">' + esc((t.emoji ? t.emoji + ' ' : '🎉 ') + t.title) + '</div>' +
       '<div style="font-size:13.5px;color:#374151;margin-top:4px">📅 ' + esc(when) + '</div>' + (e.location ? '<div style="font-size:13.5px;color:#374151">📍 ' + esc(e.location) + '</div>' : '') +

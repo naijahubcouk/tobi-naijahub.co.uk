@@ -166,11 +166,11 @@ async function remove(id) {
 
 // What the public app sees: live posts only; updates past their "show until" day and events that have
 // already happened are left out automatically (UK days).
-// one-off: the Summit event becomes a Featured event (Seun can switch it off in HQ afterwards)
+// one-off: only the African Summit event is Featured (any other "Summit" event is unticked). Seun can change it in HQ afterwards.
 async function onceFeature() {
-  if (await getJson('app/once-summit').catch(() => null)) return;
-  await cas(KEY, cur => { if (!cur || !cur.items) return undefined; let n = 0; for (const p of Object.values(cur.items)) if (p.kind === 'event' && /summit/i.test(p.title) && p.status === 'live') { p.featured = true; n++; } return n ? cur : undefined; }).catch(() => {});
-  await core.setJson('app/once-summit', { at: core.nowIso() }).catch(() => {});
+  if (await getJson('app/once-african-summit').catch(() => null)) return;
+  await cas(KEY, cur => { if (!cur || !cur.items) return undefined; let n = 0; for (const p of Object.values(cur.items)) if (p.kind === 'event' && /summit/i.test(p.title)) { const on = /african/i.test(p.title) && p.status === 'live'; if (!!p.featured !== on) { p.featured = on; n++; } } return n ? cur : undefined; }).catch(() => {});
+  await core.setJson('app/once-african-summit', { at: core.nowIso() }).catch(() => {});
 }
 async function publicFeed() {
   await onceFeature();
