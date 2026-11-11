@@ -339,6 +339,16 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'market-ai') return await require('../marketai').fill(body.images, body.text, who.email);
       return await require('./admin').marketAction(body.action, body, ctx, who.email);
     }
+    case 'tx-piece': case 'tx-make': case 'tx-list': case 'tx-save': case 'tx-delete': {
+      // 🎙️ Transcribe a video — admin only
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const tx = require('../transcribe');
+      if (body.action === 'tx-piece') return await tx.piece(body.audio, body.prev, body.lang, who.email);
+      if (body.action === 'tx-make') return await tx.make(body.kind, body.text, who.email);
+      if (body.action === 'tx-save') return await tx.save(body.item || {});
+      if (body.action === 'tx-delete') return await tx.remove(String(body.id || ''));
+      return { items: await tx.list() };
+    }
     case 'hq-fill': case 'hq-write': {   // ✨ fill a listing from a website / Instagram / screenshots, ✍️ rewrite its descriptions (admin only, like the directory)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
       const ab = require('../addbiz');
