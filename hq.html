@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F1E36">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; media-src 'self' blob: https://*.fal.media https://fal.media https://storage.googleapis.com; connect-src 'self' https://*.fal.media https://fal.media https://storage.googleapis.com; form-action 'self'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; media-src 'self' blob: https://*.fal.media https://fal.media https://storage.googleapis.com; connect-src 'self' https://*.fal.media https://fal.media https://storage.googleapis.com https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co; form-action 'self'; base-uri 'none'">
 <title>Auntie Tobi HQ — Content Hub</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/hq-icon-32.png?v=1">
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/hq-icon-16.png?v=1">
@@ -269,7 +269,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <script src="/hq-tplcarousel.js"></script>
 <script src="/hq-discovery.js?v=20261107"></script>
 <script src="/hq-market.js?v=20261107"></script>
-<script src="/hq-transcribe.js?v=20261111b"></script>
+<script src="/hq-transcribe.js?v=20261111c"></script>
 <script src="/hq-boost.js"></script>
 <script src="/hq-videoad.js"></script>
 <script src="/hq-videomake.js"></script>
@@ -2441,11 +2441,12 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var v = IG.vid, X = window.HQTx;
     var engs = '<div class="chipbar" id="igEng" style="margin-top:8px">' + [['free', '🆓 Free — on this device'], ['ai', '🎯 Accurate — AI (≈1–2p a minute)']].map(function (o) { return '<button class="chip" data-v="' + o[0] + '" aria-pressed="' + (IG.eng === o[0]) + '"' + (IG.vbusy ? ' disabled' : '') + '>' + o[1] + '</button>'; }).join('') + '</div>';
     if (IG.vbusy) box.innerHTML = '<div class="igdrop" style="cursor:default"><b>🎧 ' + esc(v ? v.name : 'Video') + '</b><span id="igVProg">Getting ready…</span></div>';
-    else if (v) box.innerHTML = '<div class="card" style="padding:10px 12px"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:14px">🎬 ' + esc(v.name) + (v.secs ? ' <span class="muted" style="font-weight:500">· ' + X.fmtSecs(v.secs) + '</span>' : '') + '</b><div class="row" style="gap:6px"><label class="btn small ghost" style="margin:0">Change<input type="file" accept="video/*" id="igVFile" hidden></label><button class="btn small ghost danger" id="igVRm">Remove</button></div></div>' +
-      '<label style="font-size:12.5px;margin-top:8px" for="igVT">What’s said in the video <span class="muted" style="font-weight:500">— you can fix any words, then tap 🔄 New ideas</span></label><textarea id="igVT" rows="4" style="font-size:14px" placeholder="No speech found — the comments will use the picture and caption.">' + esc(v.text) + '</textarea></div>' + engs;
+    else if (v) box.innerHTML = '<div class="card" style="padding:10px 12px">' + (v.err ? '<div class="note" style="margin-bottom:8px">⚠️ ' + esc(v.err) + (IG.vfile ? ' <button class="btn small primary" id="igVAi" style="margin-left:6px">🎯 Listen with Accurate</button>' : '') + '</div>' : '') + '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:14px">🎬 ' + esc(v.name) + (v.secs ? ' <span class="muted" style="font-weight:500">· ' + X.fmtSecs(v.secs) + '</span>' : '') + '</b><div class="row" style="gap:6px"><label class="btn small ghost" style="margin:0">Change<input type="file" accept="video/*" id="igVFile" hidden></label><button class="btn small ghost danger" id="igVRm">Remove</button></div></div>' +
+      '<label style="font-size:12.5px;margin-top:8px" for="igVT">What’s said in the video <span class="muted" style="font-weight:500">— you can fix any words, then tap 🔄 New ideas</span></label><textarea id="igVT" rows="4" style="font-size:14px" placeholder="' + (v.err ? 'The words will appear here once it’s listened to.' : 'No speech found — the comments will use the picture and caption.') + '">' + esc(v.text) + '</textarea></div>' + engs;
     else box.innerHTML = '<label class="igdrop"><b>🎬 Upload a video</b><span>A saved Reel or screen recording. Auntie Tobi takes a picture from it, listens to what’s said, then writes the comment ideas.</span><input type="file" accept="video/*" id="igVFile" hidden></label>' + engs;
     var f = $('#igVFile'); if (f) f.onchange = function () { var file = this.files && this.files[0]; this.value = ''; if (file) takeVid(file); };
-    var rm = $('#igVRm'); if (rm) rm.onclick = function () { IG.vid = null; drawVid(); };
+    var rm = $('#igVRm'); if (rm) rm.onclick = function () { IG.vid = null; IG.vfile = null; drawVid(); };
+    var ai = $('#igVAi'); if (ai) ai.onclick = function () { IG.eng = 'ai'; try { localStorage.setItem('hq-igc', JSON.stringify({ style: IG.style, goal: IG.goal, eng: IG.eng })); } catch (e) {} takeVid(IG.vfile); };
     var t = $('#igVT'); if (t) t.oninput = function () { IG.vid.text = t.value; };
     $$('#igEng .chip').forEach(function (b) { b.onclick = function () { IG.eng = b.dataset.v; try { localStorage.setItem('hq-igc', JSON.stringify({ style: IG.style, goal: IG.goal, eng: IG.eng })); } catch (e) {} drawVid(); }; });
   }
@@ -2454,7 +2455,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (!X) { toast('Please refresh HQ and try again'); return; }
     if (!/^video\//.test(file.type) && !/\.(mp4|mov|m4v|webm)$/i.test(file.name)) { toast('Please choose a video'); return; }
     if (IG.vbusy) return;
-    IG.vid = { name: file.name, secs: 0, text: '' }; IG.vbusy = true; IG.cur = null; drawOut(); drawVid();
+    IG.vfile = file; IG.vid = { name: file.name, secs: 0, text: '', err: '' }; IG.vbusy = true; IG.cur = null; drawOut(); drawVid();
     var prog = function (m) { var el = $('#igVProg'); if (el) el.textContent = m; };
     var ok = false;
     try {
@@ -2463,7 +2464,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       var r = await X.listen(file, IG.eng, prog, function (secs, p) { return confirm('Send the sound of this ' + X.fmtSecs(secs) + ' video to the audio AI? About ' + p + '.'); });
       if (r) { IG.vid.text = r.text; IG.vid.secs = r.secs; ok = true; if (!r.text) toast('No speech found — using the picture and caption'); }
       else IG.vid = null;
-    } catch (x) { toast(x.message || 'Couldn’t read the sound in that video — try another (MP4 works best)'); IG.vid.text = ''; ok = !!IG.shot; }
+    } catch (x) { IG.vid.text = ''; IG.vid.err = (x && x.message) || 'Couldn’t read the sound in that video — try another (MP4 works best).'; ok = false; }
     IG.vbusy = false; drawVid();
     if (ok && (IG.shot || (IG.vid && IG.vid.text) || IG.context.trim().length >= 15)) igGenerate(false);
   }

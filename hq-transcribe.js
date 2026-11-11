@@ -53,10 +53,10 @@
           "  const r = await asr(audio, Object.assign({ chunk_length_s: 30, stride_length_s: 5, task: 'transcribe' }, lang === 'en' ? { language: 'english' } : {}));\n" +
           "  self.postMessage({ type: 'done', text: (r && r.text) || '' });\n" +
           "} catch (err) { self.postMessage({ type: 'error', message: String(err && err.message || err) }); } };";
-        worker = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })), { type: 'module' });
+        try { worker = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })), { type: 'module' }); } catch (e) { console.warn('free transcribe worker:', e); worker = null; return no(new Error('The free listener can’t run in this browser — try 🎯 Accurate instead.')); }
       }
-      worker.onmessage = function (e) { var m = e.data; if (m.type === 'load') onProg('Downloading the free tool (first time only)… ' + Math.round(m.pct) + '%'); else if (m.type === 'run') onProg('Listening on this device… (a 1-minute video takes about 20–60 seconds)'); else if (m.type === 'done') ok(m.text.trim()); else if (m.type === 'error') no(new Error('The free tool couldn’t run on this device (' + m.message + '). Try 🎯 Accurate instead.')); };
-      worker.onerror = function (e) { no(new Error('The free tool couldn’t start on this device. Try 🎯 Accurate instead.')); worker = null; };
+      worker.onmessage = function (e) { var m = e.data; if (m.type === 'load') onProg('Downloading the free tool (first time only)… ' + Math.round(m.pct) + '%'); else if (m.type === 'run') onProg('Listening on this device… (a 1-minute video takes about 20–60 seconds)'); else if (m.type === 'done') ok(m.text.trim()); else if (m.type === 'error') { console.warn('free transcribe:', m.message); no(new Error('The free listener couldn’t run on this device — try 🎯 Accurate instead.')); } };
+      worker.onerror = function (e) { console.warn('free transcribe start:', e && e.message); no(new Error('The free listener couldn’t start on this device — try 🎯 Accurate instead.')); worker = null; };
       worker.postMessage({ audio: audio, model: model, lang: lang });
     });
   }
