@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Marketplace — Auntie Tobi</title>
 <script>/* On a computer, open the laptop-format Marketplace (unless they chose Phone view) */try{if(window.innerWidth>=980&&localStorage.getItem('tobi_view')!=='phone')location.replace('/?lap=mkt');}catch(e){}</script>
-<link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;padding-bottom:60px}
@@ -72,11 +71,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pc-gallery .pc-img{flex:0 0 100%;scroll-snap-align:start}
 .pc-count{position:absolute;top:8px;right:8px;background:rgba(15,30,54,0.75);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;pointer-events:none}
 </style>
+<template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
 
 <div class="app-header">
-  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt="Auntie Tobi"></div>
   <div class="app-header-text">
     <div class="app-header-title">Auntie Tobi</div>
     <div class="app-header-sub">Marketplace</div>
@@ -364,5 +364,6 @@ function tobi_imgZoom(src) {
 </script>
 
 <script src="/desk.js" data-lap="/?lap=mkt" defer></script>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

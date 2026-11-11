@@ -42,7 +42,7 @@ exports.handler = async (event) => {
         .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escA(desc)}">`)
         .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escA(desc)}">`)
         .replace(/<meta property="og:image:width"[^>]*>\n?/g, '').replace(/<meta property="og:image:height"[^>]*>\n?/g, '');
-      if (img) out = out.replace(/<meta property="og:image" content="[^"]*">/, `<meta property="og:image" content="${escA(img)}">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:image" content="${escA(img)}">`);
+      if (img) out = out.replace('</head>', `<meta property="og:image" content="${escA(img)}">\n<meta name="twitter:image" content="${escA(img)}">\n</head>`).replace('<meta name="twitter:card" content="summary">', '<meta name="twitter:card" content="summary_large_image">');
     }
     return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' }, body: out };
   } catch (e) {

@@ -7,7 +7,6 @@
 <meta name="description" content="Add your event to Auntie Tobi for free. Paste your event link or upload your flyer and Auntie Tobi writes it up, image included — reviewed before it goes live for Nigerians across the UK.">
 <meta property="og:title" content="Add your event to Auntie Tobi 🎉">
 <meta property="og:description" content="Free event listings for the Nigerian community in the UK. Paste your event link or upload your flyer and we’ll do the rest.">
-<link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;min-height:100vh;padding-bottom:60px;line-height:1.5}
@@ -53,10 +52,11 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
 .done{text-align:center;padding:30px 18px}.done div{font-size:44px}.done h2{margin:8px 0}
 @media (max-width:420px){.two{grid-template-columns:1fr}.opt{font-size:12px}}
 </style>
+<template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
 <div class="app-header">
-  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt="Auntie Tobi"></div>
   <div class="app-header-text"><div class="app-header-title">Auntie Tobi</div><div class="app-header-sub">Add your event</div></div>
   <a href="/" class="back-btn">🏠 App</a>
 </div>
@@ -285,5 +285,6 @@ input:focus,textarea:focus{outline:2px solid #057A44;outline-offset:1px;border-c
 })();
 </script>
 <script src="/desk.js" defer></script>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

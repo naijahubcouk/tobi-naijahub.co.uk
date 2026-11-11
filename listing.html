@@ -6,7 +6,6 @@
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'none'; base-uri 'none'">
 <title>Listing writer — Auntie Tobi</title>
-<link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--navy:#0F1E36;--green:#057A44;--green-d:#04603a;--green-l:#E3F2EA;--gold:#FFB81C;--gold-l:#FFF1CF;--line:#E6E1D6;--muted:#6B7280;--danger:#B42318}
@@ -51,9 +50,10 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
 .hidden{display:none!important}
 @media (max-width:520px){.det{grid-template-columns:90px 1fr auto}}
 </style>
+<template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
-<div class="app-header"><img src="/tobi-face-128.png" alt=""><div><b>Listing writer</b><small>Auntie Tobi business directory</small></div></div>
+<div class="app-header"><img data-lsrc="/tobi-face-128.png" alt=""><div><b>Listing writer</b><small>Auntie Tobi business directory</small></div></div>
 <div class="wrap">
   <section class="card">
     <h2>Paste an Instagram bio</h2>
@@ -222,5 +222,6 @@ input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;bor
   renderHist();
 })();
 </script>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

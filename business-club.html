@@ -7,8 +7,6 @@
 <meta name="description" content="Auntie Tobi Business Club — £50/year. More exposure. More support. More opportunities to grow. A membership to help Nigerian businesses in the UK become more visible, stay organised and develop practical skills for business growth.">
 <meta property="og:title" content="Auntie Tobi Business Club 💚">
 <meta property="og:description" content="More exposure. More support. More opportunities to grow. A membership for Nigerian businesses in the UK — £50/year.">
-<meta property="og:image" content="https://www.auntietobi.co.uk/tobi-face-512.png">
-<link rel="icon" href="/tobi-face-128.png">
 <style>
 :root{--navy:#0F1E36;--navy2:#18294A;--green:#057A44;--green-l:#E8F5EE;--gold:#FFB81C;--gold-l:#FFF4D6;--ink:#0F1E36;--muted:#5B6474;--line:#E6E2D8;--bg:#F7F5EF;--card:#FFFFFF}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -193,11 +191,12 @@ footer a{color:rgba(255,255,255,.75)}
 }
 @media(min-width:768px){body{font-size:16px}.hero p.lead{font-size:17px}.sub{font-size:16.5px}.ben p,.step p,.acc .body,.faq details p{font-size:15px}.btn{font-size:16px}}
 </style>
+<template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
 
 <header class="hdr"><div class="wrap">
-  <img src="/tobi-face-128.png" alt="">
+  <img data-lsrc="/tobi-face-128.png" alt="">
   <b>Auntie Tobi Business Club</b>
   <nav><a href="/" class="hide-s">🏠 App</a><a href="/?action=links" class="hide-s">← Links</a><a href="#join" class="join">Join</a></nav>
 </div></header>
@@ -218,7 +217,7 @@ footer a{color:rgba(255,255,255,.75)}
     <div class="trust"><span>🔒 Secure payment by Stripe</span><span>📅 12 months’ membership</span><span>💬 Questions? We’re on WhatsApp</span></div>
   </div>
   <div class="mcard" aria-hidden="true">
-    <div class="top"><img src="/tobi-face-128.png" alt=""><b><small>Business Club</small>Auntie Tobi</b></div>
+    <div class="top"><img data-lsrc="/tobi-face-128.png" alt=""><b><small>Business Club</small>Auntie Tobi</b></div>
     <div class="biz">Your Business</div>
     <div class="meta"><span>Member · 12 months</span><span class="ver">✓ Verified</span></div>
   </div>
@@ -361,5 +360,6 @@ footer a{color:rgba(255,255,255,.75)}
   window.addEventListener('scroll', upd, { passive: true }); upd();
 })();
 </script>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

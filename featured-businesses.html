@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Featured Businesses — Auntie Tobi</title>
-<link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;padding-bottom:60px}
@@ -25,11 +24,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .cta-sub{font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:16px;line-height:1.65}
 .cta-btn{display:inline-block;background:#057A44;color:white;text-decoration:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:700}
 </style>
+<template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
 
 <div class="app-header">
-  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt="Auntie Tobi"></div>
   <div class="hdr-text">
     <div class="hdr-title">Auntie Tobi</div>
     <div class="hdr-sub">Featured Businesses</div>
@@ -89,5 +89,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

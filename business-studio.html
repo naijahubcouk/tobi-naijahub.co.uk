@@ -7,7 +7,6 @@
 <meta name="description" content="Auntie Tobi Business Studio — one place to plan, manage and grow your business. Your everyday workspace for customers, content, planning and business growth, with AI help when you need it. Start free.">
 <meta property="og:title" content="Auntie Tobi Business Studio 💚">
 <meta property="og:description" content="One place to plan, manage and grow your business. Customers, follow-ups, to-dos, content calendar, quotes and AI help. Start free.">
-<link rel="icon" href="/icons/studio-icon-48.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;scroll-padding-top:80px}
@@ -171,11 +170,12 @@ a{color:#057A44}
 @media (min-width:768px){.app-header-title{font-size:16px}.back-btn{font-size:12.5px}.h-badge{font-size:13.5px}.h-title{font-size:25px}.h-sub{font-size:17.5px}.q{font-size:15px}.cta-btn{font-size:16px}.h-note{font-size:14px}.ctitle{font-size:12.5px}.ch{font-size:20.5px}.body{font-size:16.5px}.cat-h{font-size:18px}.cat-ico{font-size:20px}.cat-b{font-size:16px}.chip{font-size:14.5px}.legend{font-size:14px}.step-n{font-size:16.5px}.step b{font-size:17px}.step span{font-size:16px}.ex-in{font-size:14px}.ex-out{font-size:16px}.ex-note{font-size:13.5px}.fx b{font-size:15.5px}.fx span{font-size:14px}.p-name{font-size:18.5px}.p-tag{font-size:12.5px}.p-price{font-size:29px}.p-price span{font-size:15px}.p-for{font-size:13.5px}.lbl-s{font-size:12px}.p-alt{font-size:14px}.p-credits{font-size:16px}.ticks li{font-size:15.5px}.tbl{font-size:14px}.tbl th{font-size:13.5px}.faq summary{font-size:16.5px}.faq summary::after{font-size:19.5px}.faq p{font-size:16px}.ne-1{font-size:19.5px}.ne-2{font-size:16px}.ne-3{font-size:15px}.cta-note{font-size:14.5px}.f6i span{font-size:22.5px}.f6i b{font-size:16.5px}.f6i p{font-size:15.5px}.rtag{font-size:11.5px}}
 @media (min-width:900px){.hero .h-title{font-size:38px}.hero .h-sub{font-size:18.5px}.hx-top b{font-size:15px}.hx-top span{font-size:13.5px}.hx-dash b{font-size:20.5px}.hx-dash span{font-size:12px}.hx-row{font-size:14px}.hx-btn{font-size:12.5px}.hx-out{font-size:15px}.hx-tags span{font-size:13px}.hx-note{font-size:12.5px}.ch{font-size:25px}}
 </style>
+<template data-icons><link rel="icon" href="/icons/studio-icon-48.png"></template>
 </head>
 <body>
 
 <div class="app-header">
-  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt="Auntie Tobi"></div>
   <div class="app-header-text"><div class="app-header-title">Auntie Tobi Business Studio</div></div>
   <div class="header-btns">
     <a href="/studio" class="back-btn">Sign in</a>
@@ -202,7 +202,7 @@ a{color:#057A44}
   <div class="h-note">Free to start · no card needed</div>
   <div class="hero-ex" aria-hidden="true">
     <div class="hx-card">
-      <div class="hx-top"><img src="/tobi-face-128.png" alt=""><b>Good morning! 💚</b><span>Here’s what needs your attention today.</span></div>
+      <div class="hx-top"><img data-lsrc="/tobi-face-128.png" alt=""><b>Good morning! 💚</b><span>Here’s what needs your attention today.</span></div>
       <div class="hx-dash"><div><b>3</b><span>Follow-ups due</span></div><div><b>5</b><span>Tasks today</span></div><div><b>2</b><span>Posts planned</span></div><div><b>4</b><span>New enquiries</span></div></div>
       <div class="hx-row">🔔 <b>Follow up Tolu</b> — 40th birthday cake <span class="hx-btn">Write message</span></div>
       <div class="hx-row">📋 <b>Buy packaging</b> for Saturday’s orders</div>
@@ -371,5 +371,6 @@ Perfect for birthdays, naming ceremonies and family gatherings.
 <p class="cta-note">Questions? <a href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%2C%20I%20have%20a%20question%20about%20Business%20Studio" target="_blank" rel="noopener" style="font-weight:700">Chat with us on WhatsApp</a></p>
 
 </div>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

@@ -19,18 +19,10 @@
   gtag('config', 'G-W04NZL044S');
 </script>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
 <meta name="theme-color" content="#057A44">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Auntie Tobi">
-<link rel="apple-touch-icon" href="/tobi-face-128.png">
-<meta property="og:image" content="">
-<meta property="og:image:width" content="0">
-<meta property="og:image:height" content="0">
 <meta name="description" content="Auntie Tobi — Your UK Guide for Nigerians in the UK 🇬🇧🇳🇬">
 <meta property="og:title" content="Auntie Tobi — Your UK Guide for Nigerians 🇬🇧🇳🇬">
 <meta property="og:description" content="Find Nigerian businesses, events & get UK life help — all in one place.">
@@ -1013,6 +1005,7 @@
 </style>
   <!-- OneSignal Push Notifications -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<template data-icons><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png"><link rel="apple-touch-icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
 <script>
@@ -1036,10 +1029,10 @@
 
 <div class="app">
   <div class="header">
-    <div class="logo"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
+    <div class="logo"><img data-lsrc="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
     <div class="header-text">
       <h1 style="font-size:22px;font-weight:800;margin:0 0 2px 0;color:white;">Auntie Tobi</h1>
-      <p style="margin:0;font-size:12px;color:white;">Your Trusted UK Guide for Nigerians <img src="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img src="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> </p>
+      <p style="margin:0;font-size:12px;color:white;">Your Trusted UK Guide for Nigerians <img data-lsrc="https://flagcdn.com/16x12/ng.png" alt="🇳🇬" style="vertical-align:middle;margin:0 1px;"> <img data-lsrc="https://flagcdn.com/16x12/gb.png" alt="🇬🇧" style="vertical-align:middle;margin:0 1px;"> </p>
     </div>
     
     <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
@@ -9599,7 +9592,7 @@ async function submitRequest() {
 }
 </script>
 <div id="install-banner">
-  <div class="banner-icon" style="background:white;padding:2px;"><img src="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
+  <div class="banner-icon" style="background:white;padding:2px;"><img data-lsrc="/tobi-face-128.png" alt="Tobi" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
   <div class="banner-text">
     <strong>Add Auntie Tobi to your phone 📲</strong>
     <span>Auntie Tobi — The AI Auntie for Nigerians in the UK! FREE!</span>
@@ -10132,7 +10125,7 @@ window.addEventListener('pageshow', function(e) {
     </div>
     <!-- Full Article Content -->
     <div id="blogSheetContent" style="display:none;flex:1;overflow-y:auto;">
-      <img id="blogSheetImage" src="" alt="" style="display:none;width:100%;max-height:200px;object-fit:cover;">
+      <img id="blogSheetImage" data-lsrc="" alt="" style="display:none;width:100%;max-height:200px;object-fit:cover;">
       <div id="blogSheetContentInner" style="padding:16px;font-size:14px;line-height:1.8;color:#333;font-family:inherit;"></div>
     </div>
     <!-- Footer -->
@@ -10284,5 +10277,6 @@ function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleD
 })();
 </script>
 <script src="/desk.js" defer></script>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

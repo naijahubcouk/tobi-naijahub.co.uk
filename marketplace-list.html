@@ -6,7 +6,6 @@
 <meta name="robots" content="noindex">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'none'; base-uri 'none'">
 <title>List your product — Auntie Tobi Marketplace</title>
-<link rel="icon" href="/tobi-face-128.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--navy:#0F1E36;--green:#057A44;--green-d:#04603a;--gold:#FFB81C;--line:#E6E1D6;--muted:#6B7280;--danger:#B42318}
@@ -56,10 +55,11 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
 .bzp-r:hover,.bzp-r:focus{border-color:#057A44}.bzp-r b{font-size:14.5px}.bzp-r span{font-size:12.5px;color:#6B7280}.bzp-empty{font-size:13px;color:#6B7280}
 </style>
 <style>@media (min-width:1100px){.app-header,.wrap{max-width:640px!important;zoom:1.1}}</style>
+<template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
 <div class="app-header">
-  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt="Auntie Tobi"></div>
   <div><div class="app-header-title">Auntie Tobi</div><div class="app-header-sub">Marketplace</div></div>
   <a href="/marketplace" class="back-btn">🛍️ Marketplace</a>
 </div>
@@ -228,5 +228,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-o
 })();
 </script>
 <script src="/desk.js" defer></script>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sponsor a Giveaway — Auntie Tobi</title>
-<meta property="og:image" content="">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;background:#f2f2f7;color:#0F1E36;line-height:1.7;}
@@ -199,5 +198,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f2f2f7;color:#0F
   <p class="small">Auntie Tobi reserves the right to review and approve giveaway sponsors and prizes before any campaign is confirmed. Submission of a sponsorship request does not guarantee acceptance.</p>
 
 </div>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>

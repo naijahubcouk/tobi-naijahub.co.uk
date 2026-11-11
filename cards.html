@@ -7,8 +7,6 @@
 <meta name="description" content="Make a beautiful personalised card in seconds — free. Birthday, Christmas, New Month, Valentine’s, Anniversary, Eid, Easter and more. Download it or send it on WhatsApp.">
 <meta property="og:title" content="A card for you 🎉💚">
 <meta property="og:description" content="Made with love on Auntie Tobi — make your own free card in seconds.">
-<meta property="og:image" content="https://auntietobi.co.uk/tobi-face-512.png">
-<link rel="icon" href="/tobi-face-128.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@700;800&family=Poppins:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -79,10 +77,11 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 @media (prefers-reduced-motion:reduce){.cover .gb{animation:none}}
 .recv h1{font-size:19px;line-height:1.3;margin-bottom:4px}
 </style>
+<template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
 <header class="app-header">
-  <div class="app-logo"><img src="/tobi-face-128.png" alt="Auntie Tobi"></div>
+  <div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt="Auntie Tobi"></div>
   <div class="app-header-text"><div class="app-header-title">🎉 Celebration Cards</div><div class="app-header-sub">Free · made with love on Auntie Tobi 💚</div></div>
   <a class="back-btn" href="/">← App</a>
 </header>
@@ -1309,5 +1308,6 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 })();
 </script>
 <script src="/desk.js" defer></script>
+<script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
 </html>
