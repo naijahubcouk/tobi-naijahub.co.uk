@@ -120,6 +120,7 @@ function clean(raw, prev) {
     eventTime: has('eventTime') ? cleanText(raw.eventTime, 60) : (p.eventTime || ''),
     location: has('location') ? cleanText(raw.location, 120) : (p.location || ''),
     status: has('status') ? (raw.status === 'hidden' ? 'hidden' : 'live') : (p.status || 'live'),
+    featured: kind === 'event' ? (has('featured') ? !!raw.featured : !!p.featured) : false,   // ⭐ shown on Home, Links and business pages
     imgId: has('imgId') ? (/^e[a-z0-9]{6,30}$/.test(String(raw.imgId)) ? String(raw.imgId) : '') : (p.imgId || ''),
   };
   if (!out.title) throw new HttpError(400, 'title_required', 'Please add a title.');
@@ -165,12 +166,19 @@ async function remove(id) {
 
 // What the public app sees: live posts only; updates past their "show until" day and events that have
 // already happened are left out automatically (UK days).
+// one-off: the Summit event becomes a Featured event (Seun can switch it off in HQ afterwards)
+async function onceFeature() {
+  if (await getJson('app/once-summit').catch(() => null)) return;
+  await cas(KEY, cur => { if (!cur || !cur.items) return undefined; let n = 0; for (const p of Object.values(cur.items)) if (p.kind === 'event' && /summit/i.test(p.title) && p.status === 'live') { p.featured = true; n++; } return n ? cur : undefined; }).catch(() => {});
+  await core.setJson('app/once-summit', { at: core.nowIso() }).catch(() => {});
+}
 async function publicFeed() {
+  await onceFeature();
   const today = core.dayKey();
   const all = (await list()).filter(p => p.status === 'live');
   const pick = p => ({ id: p.id, kind: p.kind, slug: p.slug, title: p.title, emoji: p.emoji, html: p.html, summary: p.summary,
     category: p.category, link: p.link, linkText: p.linkText, showUntil: p.showUntil, eventDate: p.eventDate,
-    eventTime: p.eventTime, location: p.location, imgId: p.imgId || '', publishedAt: p.publishedAt, updatedAt: p.updatedAt });
+    eventTime: p.eventTime, location: p.location, imgId: p.imgId || '', featured: !!p.featured, publishedAt: p.publishedAt, updatedAt: p.updatedAt });
   return {
     updates: all.filter(p => p.kind === 'update' && (!p.showUntil || p.showUntil >= today)).map(pick),
     articles: all.filter(p => p.kind === 'article').map(pick),

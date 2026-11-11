@@ -5185,6 +5185,7 @@ function showLinksPage() {
       <span style="color:rgba(255,255,255,0.8);">&#8250;</span>
     </a>
 
+    <div id="links-event"></div>
     <div id="links-feat"></div>
     <div id="links-mp-wrap" style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
       <div style="background:#0F1E36;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
@@ -5260,6 +5261,7 @@ function showLinksPage() {
 
   addTipMessage(html);
   mountFeaturedBiz('links-feat');
+  tobiMountFeaturedEvent('links-event');
   setTimeout(initLinksMarketplace, 100);
 
 
@@ -7036,6 +7038,7 @@ function handleDeepLink() {
         // open at the top of the business, not the bottom of the page
         [0, 120, 400, 900].forEach(function (t) { setTimeout(function () { if (typeof scrollToTop === 'function') scrollToTop(); }, t); });
         setTimeout(tobiFillBizMarketplace, 50);
+        if (!business.featured && typeof showFeaturedEventCard === 'function') showFeaturedEventCard();   // ⭐ the featured event too
         if (!business.featured && typeof showFeaturedBizCarousel === 'function') showFeaturedBizCarousel();   // ⭐ Featured businesses under every non-featured business
         // only business-related bubbles on a business page
         const _cat = business.cat || '', _town = ((business.loc || '').split(',')[0] || '').trim(), _q = v => String(v).replace(/\\/g, '').replace(/'/g, "\\'");
@@ -8810,6 +8813,33 @@ function tobiApplyHqFeed(f) {
     });
   }
 }
+// ⭐ Featured events (ticked in HQ → Publish to App) — a card on Home, Links and business pages (not on Featured businesses' pages)
+function tobiFeaturedEventsHtml(list) {
+  var esc = function (x) { return String(x || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  return list.slice(0, 2).map(function (e) {
+    var t = tobiSplitEmoji(e.title), d = new Date(e.eventDate + 'T12:00:00'), url = TOBI_APP_SITE + '/blog/' + e.slug;
+    var when = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) + (e.eventTime ? ' · ' + e.eventTime : '');
+    var open = 'openBlogSheet(\'' + url.replace(/'/g, "\\'") + '\', \'\', \'\')';
+    return '<div class="tobi-feat-event" style="background:#fff;border:2px solid #FFB81C;border-radius:16px;overflow:hidden;margin:10px 0;box-shadow:0 2px 10px rgba(15,30,54,.08);cursor:pointer" onclick="' + esc(open) + '">' +
+      (e.imgId ? '<img src="/.netlify/functions/app-content?img=' + encodeURIComponent(e.imgId) + '" alt="" loading="lazy" style="width:100%;max-height:220px;object-fit:cover;display:block">' : '') +
+      '<div style="padding:12px 14px"><div style="display:inline-block;background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;letter-spacing:.3px">⭐ FEATURED EVENT</div>' +
+      '<div style="font-size:17px;font-weight:800;color:#0F1E36;margin-top:6px;line-height:1.25">' + esc((t.emoji ? t.emoji + ' ' : '🎉 ') + t.title) + '</div>' +
+      '<div style="font-size:13.5px;color:#374151;margin-top:4px">📅 ' + esc(when) + '</div>' + (e.location ? '<div style="font-size:13.5px;color:#374151">📍 ' + esc(e.location) + '</div>' : '') +
+      (e.summary ? '<div style="font-size:13.5px;color:#4B5563;margin-top:6px">' + esc(e.summary.length > 140 ? e.summary.slice(0, 140) + '…' : e.summary) + '</div>' : '') +
+      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><span style="background:#057A44;color:#fff;border-radius:10px;padding:8px 14px;font-weight:700;font-size:14px">🎟️ View event</span>' +
+      (e.link ? '<a href="' + esc(e.link) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="background:#0F1E36;color:#fff;border-radius:10px;padding:8px 14px;font-weight:700;font-size:14px;text-decoration:none">' + esc(e.linkText || 'Get tickets') + '</a>' : '') + '</div></div></div>';
+  }).join('');
+}
+// fills a placeholder once the HQ feed has loaded (nothing shows if there's no featured event)
+function tobiMountFeaturedEvent(id) {
+  tobiHqFeed().then(function (f) {
+    var today = new Date().toISOString().slice(0, 10);
+    var list = (f.events || []).filter(function (e) { return e.featured && e.eventDate >= today; });
+    var el = document.getElementById(id); if (el && list.length) el.innerHTML = tobiFeaturedEventsHtml(list);
+  });
+}
+function showFeaturedEventCard() { var id = 'feat-ev-' + Date.now() + Math.floor(Math.random() * 1000); addTipMessage('<div id="' + id + '"></div>'); tobiMountFeaturedEvent(id); }
+window.tobiMountFeaturedEvent = tobiMountFeaturedEvent;
 function tobiHqItemBySlug(slug) {
   var f = window._hqFeed; if (!f || !slug) return null;
   var all = [].concat(f.articles || [], f.events || [], f.updates || []);
@@ -9219,6 +9249,7 @@ function resetToWelcome() {
       console.log('tipHtml built');
       addTipMessage(tipHtml);
       console.log('message added');
+      showFeaturedEventCard();
       showFeaturedBizCarousel();
       addTipMessage('<div data-club-card="1" style="background:linear-gradient(135deg,#057A44,#04603a);border-radius:12px;padding:14px 16px;color:white;">'
         + '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💚 Own a business? Join the Auntie Tobi Business Club</div>'

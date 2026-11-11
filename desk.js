@@ -133,11 +133,12 @@
     } else {
       // other businesses: Featured businesses underneath (same category first)
       var feat = mix(all.filter(function (x) { return x.featured && x.slug !== b.slug; }), 'lapbiz').sort(function (a, c) { return (c.cat === b.cat ? 1 : 0) - (a.cat === b.cat ? 1 : 0) || (c.img ? 1 : 0) - (a.img ? 1 : 0); }).slice(0, 6);
-      page.innerHTML = '<div class="wrap">' + back + '<div class="cols"><div><div class="card" style="padding:22px;overflow:hidden" id="lapBizBox">' + (inner || card(b)) + '</div>' +
+      page.innerHTML = '<div class="wrap">' + back + '<div class="cols"><div><div class="card" style="padding:22px;overflow:hidden" id="lapBizBox">' + (inner || card(b)) + '</div><div id="lapFeatEv" style="max-width:560px"></div>' +
         (feat.length ? '<h2 style="margin:26px 0 12px">⭐ Featured businesses</h2><div class="grid" style="grid-template-columns:repeat(2,1fr)">' + feat.map(card).join('') + '</div>' : '') + '</div>' +
         '<div class="rail"><div class="card cta"><b>🏪 Is this your business?</b><div style="font-size:14px;margin-top:6px;opacity:.9">Claim it free to update your photo, description and contacts — and get your own Business Studio.</div><a href="/claim/' + encodeURIComponent(b.slug) + '">Claim this business</a></div>' +
         '<div class="card"><h2>💚 Get Featured</h2><div class="sub" style="font-size:14px">Featured businesses show first, with photos and every way to reach them — and appear on other business pages like this one.</div><a href="/business-club" class="chip" style="display:inline-block;margin-top:10px;text-decoration:none">See the Business Club</a></div></div></div></div>';
       bindCards(page.querySelector('.cols > div'));
+      if (window.tobiMountFeaturedEvent) window.tobiMountFeaturedEvent('lapFeatEv');   // ⭐ featured event (not on Featured businesses' pages)
       page.querySelectorAll('.grid [data-biz]').forEach(function (el) { el.onclick = function () { showBizPage(el.getAttribute('data-biz')); }; });
     }
     document.getElementById('lapBack').onclick = function () { if (showBizPage._pushed) { showBizPage._pushed--; history.back(); } else { try { history.replaceState({}, '', '/'); } catch (e) {} go('biz'); } };
@@ -179,6 +180,7 @@
     page.innerHTML = '<div class="wrap"><div class="cols"><div>' +
       '<div class="bub"><img src="/tobi-face-128.png" alt=""><div><b>' + hi + '! 👋🏾 I’m Auntie Tobi.</b><br>Ask me anything about life in the UK — jobs, housing, visas, the NHS, schools — or find Nigerian businesses and events near you. So… wetin you need today? 😄</div></div>' +
       '<form class="ask" id="lapAsk"><input id="lapQ" placeholder="Ask Auntie Tobi anything… 😄" autocomplete="off"><button>Send</button></form>' +
+      '<div id="lapFeatEv" style="max-width:560px"></div>' +
       '<h2 style="margin-top:26px">Popular right now</h2><div class="tiles">' + TILES.map(function (t, i) { return '<button class="tile" data-t="' + i + '"><span>' + t[0] + '</span>' + t[1] + '</button>'; }).join('') + '</div>' +
       (feat.length ? '<h2 style="margin-top:26px">Featured businesses</h2><div class="grid">' + feat.slice(0, 6).map(card).join('') + '</div>' : '') + '</div>' +
       '<div class="rail"><div class="card"><h2>🎉 Upcoming events</h2><div id="lapEv"></div></div><div class="card"><h2>📰 Latest news</h2><div id="lapNw"></div></div>' +
@@ -188,6 +190,7 @@
     page.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { var a = TILES[+b.dataset.t][2]; if (typeof a === 'function') return inApp(a); if (a === 'biz' || a === 'mkt' || a === 'events' || a === 'news') return go(a); if (a.charAt(0) === '/') { location.href = a; return; } inApp(function () { quickAsk(a); }); }; });
     bindCards(page);
     rail();
+    if (window.tobiMountFeaturedEvent) window.tobiMountFeaturedEvent('lapFeatEv');   // ⭐ featured event
   }
   function rail() {
     var ev = [], nw = [], today = new Date(); today.setHours(0, 0, 0, 0);
