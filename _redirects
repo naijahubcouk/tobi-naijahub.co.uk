@@ -45,6 +45,7 @@
 /biz/:slug    /index.html    200
 
 # Dynamic blog deep links — catches all /blog/KEY automatically
+/blog/at-*    /.netlify/functions/blog-page?slug=at-:splat    200
 /blog/:key    /index.html    200
 
 /kb              /.netlify/functions/kb-index     200
