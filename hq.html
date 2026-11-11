@@ -269,7 +269,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <script src="/hq-tplcarousel.js"></script>
 <script src="/hq-discovery.js?v=20261107"></script>
 <script src="/hq-market.js?v=20261107"></script>
-<script src="/hq-transcribe.js?v=20261111"></script>
+<script src="/hq-transcribe.js?v=20261111b"></script>
 <script src="/hq-boost.js"></script>
 <script src="/hq-videoad.js"></script>
 <script src="/hq-videomake.js"></script>
@@ -2372,8 +2372,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   var IGK = { recommended: '⭐ Recommended', conversation: '💬 Conversation starter', standout: '✨ Standout' };
   var IGSTYLE = [['friendly', '😊 Friendly'], ['helpful', '💡 Helpful'], ['playful', '😄 Playful'], ['supportive', '💚 Supportive']];
   var IGGOAL = [['visits', 'Profile visits & followers'], ['conversation', 'Start a conversation'], ['relationships', 'Build business relationships']];
-  var IG = { shot: '', link: '', context: '', style: 'friendly', goal: 'visits', cur: null, busy: false, hist: 'all', more: false };
-  try { var igp = JSON.parse(localStorage.getItem('hq-igc') || '{}'); if (igp.style) IG.style = igp.style; if (igp.goal) IG.goal = igp.goal; } catch (e) {}
+  var IG = { shot: '', link: '', context: '', style: 'friendly', goal: 'visits', cur: null, busy: false, hist: 'all', more: false, vid: null, eng: 'free', vbusy: false };
+  try { var igp = JSON.parse(localStorage.getItem('hq-igc') || '{}'); if (igp.style) IG.style = igp.style; if (igp.goal) IG.goal = igp.goal; if (igp.eng) IG.eng = igp.eng; } catch (e) {}
   function igcToday() { return (S.igc || []).filter(function (e) { return e.posted && e.posted.day === today(); }).length; }
   function igUpsert(e) { var i = (S.igc || []).findIndex(function (x) { return x.id === e.id; }); if (i >= 0) S.igc[i] = e; else S.igc.unshift(e); }
   function igAgo(iso) {
@@ -2390,6 +2390,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="card igprog' + (n >= goal ? ' done' : '') + '"><b>' + n + '<span class="muted" style="font-size:16px">/' + goal + '</span></b><div style="flex:1"><div style="font-weight:700;font-size:14px;margin-bottom:5px">' + (n >= goal ? 'Daily target done — well done! 🎉' : 'Meaningful comments posted today') + '</div><div class="igbar"><i style="width:' + pct + '%"></i></div></div></div>' +
       '<div class="card stack" id="igForm">' +
         '<div><label>Screenshot of the post</label><div id="igShot"></div></div>' +
+        '<div><label>…or the video <span class="muted" style="font-weight:500">(save the Reel first — comment ideas are written as soon as it’s listened to)</span></label><div id="igVid"></div></div>' +
         '<div><label for="igLink">Instagram link <span class="muted" style="font-weight:500">(optional — saved with the history)</span></label><input id="igLink" type="url" inputmode="url" placeholder="https://www.instagram.com/p/…" value="' + esc(IG.link) + '"></div>' +
         '<div><label>Comment style</label><div class="chipbar" id="igStyle">' + IGSTYLE.map(function (o) { return '<button class="chip" data-v="' + o[0] + '" aria-pressed="' + (IG.style === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
         '<div><label>What should this comment achieve?</label><div class="chipbar" id="igGoal">' + IGGOAL.map(function (o) { return '<button class="chip" data-v="' + o[0] + '" aria-pressed="' + (IG.goal === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
@@ -2400,11 +2401,11 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div id="igOut"></div>' +
       '<h2 class="h2">History</h2><div id="igHist"></div>' +
     '</div>';
-    drawShot(); drawOut(); drawHist();
+    drawShot(); drawVid(); drawOut(); drawHist();
 
     $('#igLink').oninput = function () { IG.link = this.value.trim(); };
     $('#igCtx').oninput = function () { IG.context = this.value; };
-    var remember = function () { try { localStorage.setItem('hq-igc', JSON.stringify({ style: IG.style, goal: IG.goal })); } catch (e) {} };
+    var remember = function () { try { localStorage.setItem('hq-igc', JSON.stringify({ style: IG.style, goal: IG.goal, eng: IG.eng })); } catch (e) {} };
     $$('#igStyle .chip').forEach(function (b) { b.onclick = function () { IG.style = b.dataset.v; remember(); $$('#igStyle .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }; });
     $$('#igGoal .chip').forEach(function (b) { b.onclick = function () { IG.goal = b.dataset.v; remember(); $$('#igGoal .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }; });
     $('#igGo').onclick = function () { igGenerate(false); };
@@ -2434,10 +2435,44 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (f) { e.preventDefault(); takeShot(f); }
   });
 
+  // 🎬 a saved Reel → a still picture + the words said → comment ideas straight away
+  function drawVid() {
+    var box = $('#igVid'); if (!box) return;
+    var v = IG.vid, X = window.HQTx;
+    var engs = '<div class="chipbar" id="igEng" style="margin-top:8px">' + [['free', '🆓 Free — on this device'], ['ai', '🎯 Accurate — AI (≈1–2p a minute)']].map(function (o) { return '<button class="chip" data-v="' + o[0] + '" aria-pressed="' + (IG.eng === o[0]) + '"' + (IG.vbusy ? ' disabled' : '') + '>' + o[1] + '</button>'; }).join('') + '</div>';
+    if (IG.vbusy) box.innerHTML = '<div class="igdrop" style="cursor:default"><b>🎧 ' + esc(v ? v.name : 'Video') + '</b><span id="igVProg">Getting ready…</span></div>';
+    else if (v) box.innerHTML = '<div class="card" style="padding:10px 12px"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:14px">🎬 ' + esc(v.name) + (v.secs ? ' <span class="muted" style="font-weight:500">· ' + X.fmtSecs(v.secs) + '</span>' : '') + '</b><div class="row" style="gap:6px"><label class="btn small ghost" style="margin:0">Change<input type="file" accept="video/*" id="igVFile" hidden></label><button class="btn small ghost danger" id="igVRm">Remove</button></div></div>' +
+      '<label style="font-size:12.5px;margin-top:8px" for="igVT">What’s said in the video <span class="muted" style="font-weight:500">— you can fix any words, then tap 🔄 New ideas</span></label><textarea id="igVT" rows="4" style="font-size:14px" placeholder="No speech found — the comments will use the picture and caption.">' + esc(v.text) + '</textarea></div>' + engs;
+    else box.innerHTML = '<label class="igdrop"><b>🎬 Upload a video</b><span>A saved Reel or screen recording. Auntie Tobi takes a picture from it, listens to what’s said, then writes the comment ideas.</span><input type="file" accept="video/*" id="igVFile" hidden></label>' + engs;
+    var f = $('#igVFile'); if (f) f.onchange = function () { var file = this.files && this.files[0]; this.value = ''; if (file) takeVid(file); };
+    var rm = $('#igVRm'); if (rm) rm.onclick = function () { IG.vid = null; drawVid(); };
+    var t = $('#igVT'); if (t) t.oninput = function () { IG.vid.text = t.value; };
+    $$('#igEng .chip').forEach(function (b) { b.onclick = function () { IG.eng = b.dataset.v; try { localStorage.setItem('hq-igc', JSON.stringify({ style: IG.style, goal: IG.goal, eng: IG.eng })); } catch (e) {} drawVid(); }; });
+  }
+  async function takeVid(file) {
+    var X = window.HQTx;
+    if (!X) { toast('Please refresh HQ and try again'); return; }
+    if (!/^video\//.test(file.type) && !/\.(mp4|mov|m4v|webm)$/i.test(file.name)) { toast('Please choose a video'); return; }
+    if (IG.vbusy) return;
+    IG.vid = { name: file.name, secs: 0, text: '' }; IG.vbusy = true; IG.cur = null; drawOut(); drawVid();
+    var prog = function (m) { var el = $('#igVProg'); if (el) el.textContent = m; };
+    var ok = false;
+    try {
+      prog('Taking a picture from the video…');
+      var still = await X.frame(file, 1800); if (still) { IG.shot = still; drawShot(); }
+      var r = await X.listen(file, IG.eng, prog, function (secs, p) { return confirm('Send the sound of this ' + X.fmtSecs(secs) + ' video to the audio AI? About ' + p + '.'); });
+      if (r) { IG.vid.text = r.text; IG.vid.secs = r.secs; ok = true; if (!r.text) toast('No speech found — using the picture and caption'); }
+      else IG.vid = null;
+    } catch (x) { toast(x.message || 'Couldn’t read the sound in that video — try another (MP4 works best)'); IG.vid.text = ''; ok = !!IG.shot; }
+    IG.vbusy = false; drawVid();
+    if (ok && (IG.shot || (IG.vid && IG.vid.text) || IG.context.trim().length >= 15)) igGenerate(false);
+  }
+
   async function igGenerate(again) {
     if (IG.busy) return;
     var err = $('#igErr'); err.classList.add('hidden');
-    if (!IG.shot && IG.context.trim().length < 15) {
+    if (IG.vbusy) { err.textContent = 'Still listening to the video — the ideas will come as soon as it’s done.'; err.classList.remove('hidden'); return; }
+    if (!IG.shot && IG.context.trim().length < 15 && !(IG.vid && IG.vid.text.trim().length >= 15)) {
       err.textContent = IG.link ? 'Instagram doesn’t let us read post links — please add a screenshot of the post (or paste its caption).' : 'Add a screenshot of the post, or paste its caption.';
       err.classList.remove('hidden'); return;
     }
@@ -2446,7 +2481,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     btns.forEach(function (b) { b.disabled = true; }); $('#igGo').textContent = '✍️ Auntie Tobi is thinking…';
     try {
       var avoid = again && IG.cur ? IG.cur.comments.map(function (c) { return c.text; }) : [];
-      var r = await api('igc-gen', { image: IG.shot, link: IG.link, context: IG.context, style: IG.style, goal: IG.goal, avoid: avoid });
+      var r = await api('igc-gen', { image: IG.shot, link: IG.link, context: IG.context, transcript: IG.vid ? IG.vid.text : '', video: IG.vid ? IG.vid.name : '', style: IG.style, goal: IG.goal, avoid: avoid });
       IG.cur = r.entry; igUpsert(r.entry);
       $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10);
       drawOut(); drawHist();
@@ -2465,6 +2500,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     o.innerHTML = '<div class="stack">' +
       '<div class="row" style="justify-content:space-between"><div style="min-width:0"><div style="font-weight:700">' + esc(e.about || 'Comment ideas') + '</div>' + (e.account ? '<div class="muted" style="font-size:13px">' + esc(e.account) + '</div>' : '') + '</div>' +
         '<button class="btn small ghost" id="igAgain">🔄 New ideas</button></div>' +
+      (e.transcript ? '<details class="card" style="padding:10px 14px"><summary style="cursor:pointer;font-weight:700;font-size:14px">🎬 What’s said in the video' + (e.video ? ' <span class="muted" style="font-weight:500">· ' + esc(e.video) + '</span>' : '') + '</summary><p style="font-size:14px;white-space:pre-wrap;margin:8px 0 0">' + esc(e.transcript) + '</p></details>' : '') +
       (e.sensitive ? '<div class="note">💚 This looks like a serious post, so all three are kept sincere — no jokes.</div>' : '') +
       '<div class="igres">' + e.comments.map(function (c, i) {
         var done = posted && posted.i === i;
@@ -2492,7 +2528,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       igUpsert(r.entry); if (IG.cur && IG.cur.id === id) IG.cur = r.entry;
       var n = igcToday(), goal = S.igcTarget || 10;
       toast(i === null ? 'Un-marked' : n === goal ? 'That’s ' + goal + ' today — target done! 🎉' : 'Nice one — ' + n + '/' + goal + ' today');
-      if (i !== null) { IG.shot = ''; IG.link = ''; IG.context = ''; }
+      if (i !== null) { IG.shot = ''; IG.link = ''; IG.context = ''; IG.vid = null; }
       var keep = IG.cur; vIgc(); IG.cur = keep; drawOut();
       $('#nIgc').textContent = n + '/' + goal;
     } catch (x) { toast(x.message); }
@@ -2506,7 +2542,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     h.innerHTML = (all.length ? '<div class="chipbar" style="margin-bottom:10px">' + [['all', 'All'], ['posted', '✅ Posted'], ['open', 'Not posted']].map(function (o) { return '<button class="chip" data-hf="' + o[0] + '" aria-pressed="' + (IG.hist === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>' : '') +
       (shown.length ? '<div class="card ighist" style="padding:2px 14px">' + shown.map(function (e) {
         var p = e.posted;
-        return '<div class="ighrow"><div class="tx"><div style="font-weight:700">' + esc(e.about || 'Comment ideas') + (e.account ? ' <span class="muted" style="font-weight:500">' + esc(e.account) + '</span>' : '') + '</div>' +
+        return '<div class="ighrow"><div class="tx"><div style="font-weight:700">' + (e.transcript ? '🎬 ' : '') + esc(e.about || 'Comment ideas') + (e.account ? ' <span class="muted" style="font-weight:500">' + esc(e.account) + '</span>' : '') + '</div>' +
           '<div class="muted" style="font-size:12px">' + esc(igAgo(e.createdAt)) + (e.by && e.by !== S.me ? ' · ' + esc(who(e.by)) : '') + (e.link ? ' · <a href="' + esc(e.link) + '" target="_blank" rel="noopener">Open post ↗</a>' : '') + '</div>' +
           (p ? '<q>“' + esc(p.text) + '”</q><span class="ok">✅ Posted ' + esc(igAgo(p.at)) + (p.by && p.by !== S.me ? ' by ' + esc(who(p.by)) : '') + '</span>' : '<span class="no">Not posted yet</span>') + '</div>' +
           '<div class="row" style="gap:4px;flex:none"><button class="btn small ghost" data-ho="' + e.id + '">Open</button><button class="btn small ghost danger" data-hd="' + e.id + '" title="Delete" aria-label="Delete">🗑</button></div></div>';

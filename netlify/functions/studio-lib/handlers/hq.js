@@ -52,7 +52,7 @@ const CARDS = ['today', 'board', 'calendar', 'posted'];
 const ACTION_SECTIONS = {
   save: CARDS, 'save-many': CARDS, delete: CARDS, img: CARDS, bin: ['bin'], restore: ['bin'],
   'app-picture': ['app', 'subs', 'cars', 'vads'], 'app-img': ['app', 'subs', 'cars', 'vads'],
-  subs: ['subs'], 'team-save': [],
+  subs: ['subs'], 'team-save': [], 'tx-piece': ['igc'],
 };
 function sectionsOf(action) {
   if (ACTION_SECTIONS[action]) return ACTION_SECTIONS[action];
@@ -340,8 +340,8 @@ exports.handler = handler(async (ctx) => {
       return await require('./admin').marketAction(body.action, body, ctx, who.email);
     }
     case 'tx-piece': case 'tx-make': case 'tx-list': case 'tx-save': case 'tx-delete': {
-      // 🎙️ Transcribe a video — admin only
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      // 🎙️ Transcribe a video — admin only (tx-piece is also used by 💬 Comment Assistant for anyone who can open it)
+      if (!who.isAdmin && body.action !== 'tx-piece') throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const tx = require('../transcribe');
       if (body.action === 'tx-piece') return await tx.piece(body.audio, body.prev, body.lang, who.email);
       if (body.action === 'tx-make') return await tx.make(body.kind, body.text, who.email);

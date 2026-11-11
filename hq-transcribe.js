@@ -117,5 +117,25 @@
     $$('[data-txo]').forEach(function (b) { b.onclick = function () { var x = X.S.txList.filter(function (y) { return y.id === b.dataset.txo; })[0]; if (!x) return; T = { file: { name: x.name }, audio: null, secs: x.secs, text: x.text, tidy: x.tidy, out: x.tidy ? { tidy: x.tidy } : {}, busy: false, id: x.id, engine: x.engine }; view(); window.scrollTo(0, 0); }; });
     $$('[data-txd]').forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this saved transcript?')) return; try { X.S.txList = (await X.api('tx-delete', { id: b.dataset.txd })).items; view(); } catch (e) { X.toast(e.message); } }; });
   }
-  window.HQTx = { init: function (o) { X = o; }, view: function () { view(); } };
+  // a still picture from the video (about 1 second in) → JPEG data URL, or '' if it can't be read
+  function frame(file, max) {
+    return new Promise(function (ok) {
+      var v = document.createElement('video'), url = URL.createObjectURL(file), done = false;
+      var end = function (r) { if (done) return; done = true; URL.revokeObjectURL(url); ok(r || ''); };
+      v.muted = true; v.playsInline = true; v.preload = 'auto';
+      v.onloadedmetadata = function () { try { v.currentTime = Math.min(1, (v.duration || 2) / 3); } catch (e) { end(''); } };
+      v.onseeked = function () { try { var r = Math.min(1, (max || 1400) / Math.max(v.videoWidth, v.videoHeight)); if (!v.videoWidth) return end(''); var c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * r); c.height = Math.round(v.videoHeight * r); c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); end(c.toDataURL('image/jpeg', 0.85)); } catch (e) { end(''); } };
+      v.onerror = function () { end(''); }; setTimeout(function () { end(''); }, 8000);
+      v.src = url;
+    });
+  }
+  // used by 💬 Comment Assistant: decode + listen with the chosen engine
+  async function listen(file, eng, onProg, ask) {
+    onProg('Reading the sound…');
+    var audio = await decode(file), secs = audio.length / 16000;
+    if (eng === 'ai' && ask && !ask(secs, pence(secs))) return null;
+    var text = eng === 'ai' ? await aiRun(audio, X.S.txLang || 'en', onProg) : await freeRun(audio, MODELS[X.S.txQ || 'fast'][0], X.S.txLang || 'en', onProg);
+    return { text: text, secs: secs };
+  }
+  window.HQTx = { init: function (o) { X = o; }, view: function () { view(); }, frame: frame, listen: listen, fmtSecs: fmtSecs, pence: pence };
 })();
