@@ -8058,6 +8058,7 @@ function showEventsCard() {
           <div style="font-size:14px;color:#444;margin-bottom:8px;">🕐 ${e.time}</div>
           <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;align-items:center;gap:8px;">
             <a href="javascript:void(0)" data-blogurl="${encodeURIComponent(e.url)}" data-title="${safeTitle}" data-summary="${safeSummary}" class="blog-read-more" style="font-size:14px;color:#057A44;text-decoration:none;font-weight:700;flex:1;">🔗 Event Details</a>
+            ${isEnded ? '' : `<button data-t="${safeTitle}" data-d="${e.dateObj.getFullYear()}-${String(e.dateObj.getMonth()+1).padStart(2,'0')}-${String(e.dateObj.getDate()).padStart(2,'0')}" data-tm="${String(e.time||'').replace(/"/g,'&quot;')}" data-loc="${String(e.loc||'').replace(/"/g,'&quot;')}" onclick="if(window.MyPlan)MyPlan.saveEvent(this)" style="background:#E9F6EF;color:#057A44;border:1.5px solid #057A44;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">➕ Save</button>`}
             <button data-share-title="${safeTitle.substring(0,60)}" data-share-desc="${e.date}${e.loc ? ' • ' + e.loc : ''}" data-share-url="${shareUrl}" onclick="tobiShare(this.dataset.shareTitle,this.dataset.shareDesc,this.dataset.shareUrl)" style="background:#057A44;color:white;border:none;border-radius:50px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>
           </div>
         </div>
@@ -8820,6 +8821,7 @@ function tobiFeaturedEventsHtml(list) {
       '<div style="font-size:13.5px;color:#374151;margin-top:4px">📅 ' + esc(when) + '</div>' + (e.location ? '<div style="font-size:13.5px;color:#374151">📍 ' + esc(e.location) + '</div>' : '') +
       (e.summary ? '<div style="font-size:13.5px;color:#4B5563;margin-top:6px">' + esc(e.summary.length > 140 ? e.summary.slice(0, 140) + '…' : e.summary) + '</div>' : '') +
       '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><span style="background:#057A44;color:#fff;border-radius:10px;padding:8px 14px;font-weight:700;font-size:14px">🎟️ View event</span>' +
+      '<button data-t="' + esc(t.title) + '" data-d="' + esc(e.eventDate) + '" data-tm="' + esc(e.eventTime || '') + '" data-loc="' + esc(e.location || '') + '" onclick="event.stopPropagation();if(window.MyPlan)MyPlan.saveEvent(this)" style="background:#fff;color:#057A44;border:1.5px solid #057A44;border-radius:10px;padding:7px 12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">➕ Save to My Plan</button>' +
       (e.link ? '<a href="' + esc(e.link) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="background:#0F1E36;color:#fff;border-radius:10px;padding:8px 14px;font-weight:700;font-size:14px;text-decoration:none">' + esc(e.linkText || 'Get tickets') + '</a>' : '') + '</div></div></div>';
   }).join('');
 }
@@ -10279,7 +10281,7 @@ function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleD
   }, {passive:true});
 })();
 </script>
-<script src="/myplan.js?v=20261112b" defer></script>
+<script src="/myplan.js?v=20261112d" defer></script>
 <script src="/desk.js" defer></script>
 <script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>

@@ -183,6 +183,7 @@
   function tick(id) {
     var it = P.items.filter(function (x) { return x.id === id; })[0]; if (!it) return;
     var before = JSON.parse(JSON.stringify(it));
+    if (it.cel && it.d) { it.cel.sent = (it.cel.sent || []).concat([+it.d.slice(0, 4)]); it.last = it.d; it.d = next(it); toast('🎉 Done — Auntie Tobi will remind you again next year', function () { Object.assign(it, before); change(it); }); gt('cel_done'); change(it); return; }
     if (it.rep && it.d) { it.last = it.d; var n = next(it); while (n < today() && it.rep === 'd') { it.d = n; n = next(it); } it.d = n; it.ck = (it.ck || []).map(function (c) { return { t: c.t, x: false }; }); toast('✅ Done — next: ' + nice(it.d, true), function () { Object.assign(it, before); change(it); }); }
     else { it.done = !it.done; it.doneAt = it.done ? today() : ''; if (it.done) toast('✅ Done', function () { Object.assign(it, before); change(it); }); }
     gt('plan_tick'); change(it);
@@ -194,6 +195,7 @@
   function groups() {
     var t = today(), wk = addDays(t, 7), g = { over: [], today: [], week: [], later: [], none: [], done: [] };
     live().forEach(function (i) {
+      if (i.cel && !celSoon(i)) return;
       if (i.done) return g.done.push(i);
       if (!i.d) return g.none.push(i);
       if (i.d < t) g.over.push(i); else if (i.d === t) g.today.push(i); else if (i.d <= wk) g.week.push(i); else g.later.push(i);
@@ -205,6 +207,7 @@
   }
   function row(i, opts) {
     opts = opts || {}; var t = today(), late = i.d && i.d < t && !i.done;
+    if (i.cel) return '<div class="mp-it" data-open="' + i.id + '"><button class="mp-ck" data-tick="' + i.id + '" aria-label="Done"></button><div class="tx">' + celEmoji(i) + ' ' + esc(i.t) + (celNum(i) ? '<small>' + celNum(i) + '</small>' : '') + '</div><div class="r" style="color:#057A44;font-weight:700">' + countdown(i.d) + '</div></div>';
     var sub = [i.tm ? niceTime(i.tm) : '', i.ck && i.ck.length ? '☑️ ' + i.ck.filter(function (c) { return c.x; }).length + '/' + i.ck.length : '', i.note ? '📝' : ''].filter(Boolean).join(' · ');
     return '<div class="mp-it' + (i.done ? ' dn' : '') + '" data-open="' + i.id + '"><button class="mp-ck' + (i.done ? ' on' : '') + '" data-tick="' + i.id + '" aria-label="Done">' + (i.done ? '✓' : '') + '</button>' +
       '<div class="tx">' + esc(i.t) + (i.rep ? '<span class="mp-chip">🔁 ' + { d: 'daily', w: 'weekly', m: 'monthly', y: 'yearly' }[i.rep] + '</span>' : '') + (sub ? '<small>' + sub + '</small>' : '') + '</div>' +
@@ -227,8 +230,10 @@
     if (sl && today() >= sl.week && today() <= addDays(sl.week, 2)) html += '<div class="mp-new" style="background:#FFF4D6"><span style="font-size:22px">📰</span><div style="flex:1"><b style="color:#0F1E36">Auntie Tobi’s Sunday Update is here</b> — this week’s UK news, events and more. <a href="#" data-mp-sun style="color:#057A44;font-weight:800">Read it →</a></div></div>';
     if (has) {
       html += '<div class="mp-lbl">Your day</div>';
+      var cs = live().filter(function (i) { return i.cel && celSoon(i) && i.d !== today(); }).sort(function (a, b) { return a.d.localeCompare(b.d); });
       if (due.length) html += due.slice(0, 3).map(function (i) { return row(i); }).join('') + (due.length > 3 ? '<div class="mp-sub" style="margin-top:6px">+ ' + (due.length - 3) + ' more in My Plan</div>' : '');
-      else { var nx = g.week.concat(g.later)[0]; html += '<div class="mp-sub" style="font-size:14px;color:#0F1E36;margin-top:2px">Nothing due today 🎉' + (nx ? ' Next: <b>' + esc(nx.t) + '</b> · ' + nice(nx.d) : '') + '</div>'; }
+      else if (!cs.length) { var nx = g.week.concat(g.later).filter(function (i) { return !i.cel; })[0]; html += '<div class="mp-sub" style="font-size:14px;color:#0F1E36;margin-top:2px">Nothing due today 🎉' + (nx ? ' Next: <b>' + esc(nx.t) + '</b> · ' + nice(nx.d) : '') + '</div>'; }
+      html += cs.slice(0, 2).map(function (i) { return row(i); }).join('');
       html += '<div class="mp-row"><button class="mp-btn" data-mp-open>💚 Open My Plan</button><button class="mp-btn g" data-mp-add>＋ Add</button></div>';
     } else if (!hideNew) {
       html += '<div class="mp-new"><span style="font-size:22px">💚</span><div style="flex:1"><b>New: My Plan</b> — remember bills, birthdays and shopping in one place. <a href="#" data-mp-open style="color:#057A44;font-weight:800">Try it →</a></div><button class="x" data-mp-hide aria-label="Hide">✕</button></div>';
@@ -262,7 +267,8 @@
     var root = document.getElementById('mpRoot'); if (!root) return;
     var g = groups(), has = live().length > 0;
     var h = '<div class="mp-top"><b>💚 My Plan</b><span>Everything you need to remember, in one place</span></div>' +
-      '<div class="mp-tabs"><button class="on">📋 Plan</button><button data-soon="🎉 Celebration dates">🎉 Celebrations<span class="soon">coming soon</span></button><button data-soon="🛒 Shopping lists">🛒 Shopping<span class="soon">coming soon</span></button></div>';
+      '<div class="mp-tabs"><button data-tab="plan"' + (view.tab === 'plan' ? ' class="on"' : '') + '>📋 Plan</button><button data-tab="cel"' + (view.tab === 'cel' ? ' class="on"' : '') + '>🎉 Celebrations</button><button data-soon="🛒 Shopping lists">🛒 Shopping<span class="soon">coming soon</span></button></div>';
+    if (view.tab === 'cel') { root.innerHTML = h + celHtml(); bindCel(root); return; }
     if (has && !P.signedIn) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — it’s only on this phone. Save it to your free Auntie Tobi account.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
     if (P.signedIn && !P.rm && ls.get('tobi_myplan_rm_ask') !== 'no' && has) h += '<div class="mp-new" style="margin:0 0 10px"><span style="font-size:22px">☀️</span><div style="flex:1"><b style="color:#0F1E36">Want a morning email?</b> Only on days you have something due.<div class="mp-row" style="margin-top:8px"><button class="mp-btn" data-rm-yes>Yes — at 7am</button><button class="mp-btn g" data-rm-no>No thanks</button></div></div></div>';
     h += '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ Type it — e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
@@ -270,7 +276,7 @@
       h += '<div class="mp-card"><div class="mp-empty"><b>Your day is looking clear! 💚</b>Add something to get started — bills, appointments, things to renew. <br><span style="font-size:13px;color:#6B7280">Free — sign in with just your email, no password.</span></div>' +
         '<div class="mp-welcome"><button data-w="item"><span>📋</span><div>Add something to remember<small>“Dentist Friday 4pm”, “Pay rent every 1st”</small></div></button>' +
         '<button data-w="life"><span>🗂️</span><div>Add UK life dates<small>Passport, eVisa, MOT, car insurance, tax return…</small></div></button>' +
-        '<button data-w="cel" disabled><span>🎉</span><div>Add a birthday or anniversary<small>Coming soon</small></div></button>' +
+        '<button data-w="cel"><span>🎉</span><div>Add a birthday or anniversary<small>Auntie Tobi reminds you — and helps you make a card</small></div></button>' +
         '<button data-w="shop" disabled><span>🛒</span><div>Start a shopping list<small>Coming soon</small></div></button></div></div>';
     } else {
       var sec = function (label, list, red) { return list.length ? '<div class="mp-lbl' + (red ? ' red' : '') + '">' + label + '</div>' + list.map(function (i) { return row(i); }).join('') : ''; };
@@ -290,7 +296,8 @@
     q.oninput = function () { var p = parse(q.value); var bits = [p.d ? '📅 ' + nice(p.d, true) : '', p.tm ? '🕒 ' + niceTime(p.tm) : '', p.rep ? '🔁 ' + REP[p.rep].toLowerCase() : ''].filter(Boolean); hint.style.display = bits.length && p.t ? 'block' : 'none'; hint.innerHTML = '<b>' + esc(p.t) + '</b> · ' + bits.join(' · '); };
     $('#mpF', root).onsubmit = function (e) { e.preventDefault(); var v = q.value.trim(); if (!v) { q.focus(); return; } var p = parse(v); if (!p.t) p.t = v; add({ t: p.t, d: p.d, tm: p.tm, rep: p.rep, dom: p.dom }); q.value = ''; hint.style.display = 'none'; };
     root.querySelectorAll('[data-soon]').forEach(function (b) { b.onclick = function () { toast(b.dataset.soon + ' are coming soon 💚'); }; });
-    root.querySelectorAll('[data-w]').forEach(function (b) { b.onclick = function () { if (b.dataset.w === 'item') { q.focus(); } else if (b.dataset.w === 'life') lifeSheet(); }; });
+    root.querySelectorAll('[data-w]').forEach(function (b) { b.onclick = function () { if (b.dataset.w === 'item') { q.focus(); } else if (b.dataset.w === 'life') lifeSheet(); else if (b.dataset.w === 'cel') { view.tab = 'cel'; render(); celSheet(); } }; });
+    bindTabs(root);
     root.querySelectorAll('[data-mp-save]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); signIn(); }; });
     root.querySelectorAll('[data-mp-settings]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); }; });
     var dt = $('[data-done-toggle]', root); if (dt) dt.onclick = function () { view.showDone = !view.showDone; render(); };
@@ -305,6 +312,7 @@
   // ───── ✏️ one item ─────
   function edit(id) {
     var it = P.items.filter(function (x) { return x.id === id; })[0]; if (!it) return;
+    if (it.cel) return celSheet(it);
     var life = LIFE.filter(function (l) { return l.k === it.lk; })[0];
     var s = sheet('<h3>✏️ Edit</h3>' +
       '<label>What</label><input id="eT" maxlength="140" value="' + esc(it.t) + '">' +
@@ -326,6 +334,136 @@
     $('#eDel', s).onclick = function () { s.remove(); remove(id); };
     $('#eCal', s).onclick = function () { var v = vals(); if (!v.d) { $('#eErr', s).textContent = 'Add a date first.'; $('#eErr', s).style.display = 'block'; return; } calSheet(Object.assign({}, it, v)); };
     $('#eOk', s).onclick = function () { var v = vals(); if (!v.t) { $('#eErr', s).textContent = 'Add what you need to remember.'; $('#eErr', s).style.display = 'block'; return; } if (v.rep && v.d !== it.d) it.dom = fromIso(v.d).getDate(); Object.assign(it, v); s.remove(); change(it); toast('✅ Saved'); };
+  }
+
+  // ───── 🎉 Celebration dates ─────
+  var REL = [['mum', 'Mum'], ['dad', 'Dad'], ['husband', 'Husband'], ['wife', 'Wife'], ['partner', 'Partner'], ['son', 'Son'], ['daughter', 'Daughter'], ['sister', 'Sister'], ['brother', 'Brother'], ['grandma', 'Grandma'], ['grandpa', 'Grandpa'], ['friend', 'Friend'], ['colleague', 'Colleague'], ['pastor', 'Pastor'], ['couple', 'A couple'], ['family', 'Family'], ['other', 'Someone else']];
+  var KINDS = [['birthday', '🎂 Birthday'], ['wedding', '💍 Wedding anniversary'], ['other', '🎉 Something else']];
+  var SHE = ['mum', 'wife', 'daughter', 'sister', 'grandma'], HE = ['dad', 'husband', 'son', 'brother', 'grandpa'];
+  function bindTabs(root) { root.querySelectorAll('[data-tab]').forEach(function (b) { b.onclick = function () { view.tab = b.dataset.tab; gt('plan_tab', { tab: view.tab }); render(); }; }); }
+  function daysTo(d) { return Math.round((fromIso(d) - fromIso(today())) / 864e5); }
+  function countdown(d) { var n = daysTo(d); return n === 0 ? 'Today 🎉' : n === 1 ? 'Tomorrow' : n < 0 ? nice(d) : n < 60 ? n + ' days' : nice(d); }
+  function celLead(i) { return Math.max.apply(null, [0].concat((i.cel && i.cel.lead) || [3])); }
+  function celSoon(i) { var n = daysTo(i.d); return n >= 0 && n <= celLead(i); }
+  function celEmoji(i) { return i.cel.k === 'birthday' ? '🎂' : i.cel.k === 'wedding' || i.cel.k === 'anniversary' ? '💍' : '🎉'; }
+  function celAge(i) { return i.cel && i.cel.y ? +i.d.slice(0, 4) - i.cel.y : 0; }
+  function ordinal(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+  function celNum(i) { var a = celAge(i); if (!a) return ''; return i.cel.k === 'birthday' ? 'turning ' + a : ordinal(a) + ' anniversary'; }
+  function celTitle(c, label) { var n = c.n || ''; if (c.k === 'birthday') return n ? n + (/s$/i.test(n) ? '’' : '’s') + ' birthday' : 'Birthday'; if (c.k === 'wedding') return !n ? 'Our wedding anniversary' : /^(our|my)$/i.test(n) ? cap(n.toLowerCase()) + ' wedding anniversary' : n + (/s$/i.test(n) ? '’' : '’s') + ' wedding anniversary'; return (label || 'Celebration') + (n ? ' — ' + n : ''); }
+  function cardUrl(i) {
+    var occ = i.big ? i.big : i.cel.k === 'birthday' ? 'birthday' : i.cel.k === 'wedding' ? 'anniversary' : '';
+    var q = []; if (occ) q.push('o=' + occ); if (i.cel && i.cel.r && i.cel.r !== 'other') q.push('who=' + encodeURIComponent(i.cel.r)); if (i.cel && i.cel.n && !/^(our|my)\b/i.test(i.cel.n)) q.push('name=' + encodeURIComponent(i.cel.n)); if (celAge(i)) q.push('age=' + celAge(i));
+    q.push('from=plan'); return '/cards?' + q.join('&');
+  }
+  function cardBtn(i) { var r = i.cel && i.cel.r; return '💌 Make ' + (SHE.indexOf(r) >= 0 ? 'her a' : HE.indexOf(r) >= 0 ? 'him a' : r === 'couple' ? 'them a' : 'a') + ' card'; }
+  // 🇬🇧🇳🇬 big days (only if switched on) — worked out each year, never stored
+  function easter(y) { var a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), dy = ((h + l - 7 * m + 114) % 31) + 1; return iso(new Date(y, mo - 1, dy, 12)); }
+  function bigDays() {
+    var t = today(), y = new Date().getFullYear(), out = [];
+    [y, y + 1].forEach(function (yr) {
+      var j = new Date(yr, 5, 1, 12); j.setDate(1 + ((7 - j.getDay()) % 7) + 14);   // 3rd Sunday in June
+      [['newyear', '🎆', 'New Year’s Day', iso(new Date(yr, 0, 1, 12))], ['valentine', '💝', 'Valentine’s Day', iso(new Date(yr, 1, 14, 12))], ['mothers', '👩🏾', 'Mother’s Day (UK)', addDays(easter(yr), -21)], ['easter', '🐣', 'Easter Sunday', easter(yr)],
+        ['fathers', '👨🏾', 'Father’s Day', iso(j)], ['independence', '🇳🇬', 'Nigeria’s Independence Day', iso(new Date(yr, 9, 1, 12))], ['christmas', '🎄', 'Christmas Day', iso(new Date(yr, 11, 25, 12))]]
+        .forEach(function (x) { if (x[3] >= t && daysTo(x[3]) <= 366) out.push({ id: 'big-' + x[0] + x[3], big: x[0], e: x[1], t: x[2], d: x[3], cel: { k: 'other', lead: [7], r: '' } }); });
+    });
+    return out.sort(function (a, b) { return a.d.localeCompare(b.d); });
+  }
+  function celHtml() {
+    var mine = live().filter(function (i) { return i.cel; }).sort(function (a, b) { return a.d.localeCompare(b.d); });
+    var big = ls.get('tobi_myplan_big') === '1' ? bigDays() : [];
+    var soon = mine.filter(celSoon).concat(big.filter(function (b) { return daysTo(b.d) <= 7; }));
+    var h = '';
+    if (!P.signedIn && mine.length) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — save your dates so you never lose them.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
+    h += soon.map(function (i) {
+      var n = daysTo(i.d), when = n === 0 ? 'is today! 🎉' : n === 1 ? 'is tomorrow' : 'is in ' + n + ' days';
+      return '<div class="mp-top" style="background:#0F1E36;padding:15px"><b style="font-size:17px">' + (i.big ? i.e : celEmoji(i)) + ' ' + esc(i.t) + ' ' + when + '</b><span>' + nice(i.d, true) + (!i.big && celNum(i) ? ' · ' + celNum(i) : '') + '</span>' +
+        '<div class="mp-row"><a class="mp-btn y" href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">' + (i.big ? '💌 Make a card' : cardBtn(i)) + '</a>' + (i.big ? '' : '<button class="mp-btn n" style="border:1.5px solid #fff" data-tick="' + i.id + '">✅ Done</button>') + '</div></div>';
+    }).join('');
+    var list = mine.concat(big.filter(function (b) { return soon.indexOf(b) < 0; })).sort(function (a, b) { return a.d.localeCompare(b.d); });
+    if (!mine.length) h += '<div class="mp-card"><div class="mp-empty"><b>🎉 Never miss a birthday again</b>Add birthdays and anniversaries — Auntie Tobi reminds you in good time and helps you make a beautiful card to send on WhatsApp.</div></div>';
+    if (list.length) h += '<div class="mp-card"><div class="mp-lbl" style="margin-top:0">Coming up</div>' + list.map(function (i) {
+      var sent = !i.big && (i.cel.sent || []).indexOf(new Date().getFullYear()) >= 0;
+      return '<div class="mp-it" ' + (i.big ? '' : 'data-open="' + i.id + '"') + '><span style="width:38px;height:38px;border-radius:50%;background:#FFF1CF;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">' + (i.big ? i.e : celEmoji(i)) + '</span><div class="tx"><b style="font-weight:700">' + esc(i.t) + '</b><small>' + nice(i.d, true) + (i.big ? ' · big day' : '') + (sent ? ' · ✅ sent this year' : '') + '</small></div><div class="r" style="text-align:right"><b style="color:#057A44;display:block">' + countdown(i.d) + '</b>' + (i.big ? '' : celNum(i)) + '</div></div>';
+    }).join('') + '</div>';
+    h += '<div class="mp-row" style="margin-bottom:10px"><button class="mp-btn" data-cel-add>＋ Add a date</button><button class="mp-btn g" data-cel-paste>📋 Paste a list</button></div>';
+    h += '<label class="mp-card mp-cl" style="cursor:pointer;font-weight:600"><input type="checkbox" data-cel-big' + (ls.get('tobi_myplan_big') === '1' ? ' checked' : '') + '> Show big days — Mother’s Day, Father’s Day, Christmas, Independence Day…</label>';
+    return h;
+  }
+  function bindCel(root) {
+    bindTabs(root); bindRows(root);
+    root.querySelectorAll('[data-mp-save]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); signIn(); }; });
+    root.querySelectorAll('[data-card]').forEach(function (a) { a.onclick = function () { gt('cel_card', { big: /^big-/.test(a.dataset.card) ? 1 : 0 }); }; });
+    var ad = $('[data-cel-add]', root); if (ad) ad.onclick = function () { celSheet(); };
+    var ps = $('[data-cel-paste]', root); if (ps) ps.onclick = pasteSheet;
+    var bg = $('[data-cel-big]', root); if (bg) bg.onchange = function () { ls.set('tobi_myplan_big', bg.checked ? '1' : '0'); gt('cel_bigdays', { on: bg.checked ? 1 : 0 }); render(); };
+  }
+  function celSheet(it, pre) {
+    var c = (it && it.cel) || Object.assign({ n: '', r: 'friend', k: 'birthday', y: 0, lead: [3] }, pre || {});
+    var dd = it && it.d ? fromIso(it.d) : null, label = it && c.k === 'other' ? String(it.t).split(' — ')[0] : '';
+    var s = sheet('<h3>' + (it ? '✏️ Edit' : '🎉 Add a celebration') + '</h3>' +
+      '<label>What is it?</label><select id="cK">' + KINDS.map(function (k) { return '<option value="' + k[0] + '"' + (c.k === k[0] || (c.k === 'anniversary' && k[0] === 'wedding') ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select>' +
+      '<div id="cLw" style="display:none"><label>Name the occasion</label><input id="cL" maxlength="40" placeholder="e.g. Naming ceremony, Graduation, Remembering Dad" value="' + esc(label) + '"></div>' +
+      '<div class="mp-two"><div><label id="cNl">Whose birthday?</label><input id="cN" maxlength="60" placeholder="e.g. Mum, Tunde" value="' + esc(c.n) + '"></div><div><label>Who are they to you?</label><select id="cR">' + REL.map(function (r) { return '<option value="' + r[0] + '"' + (c.r === r[0] ? ' selected' : '') + '>' + r[1] + '</option>'; }).join('') + '</select></div></div>' +
+      '<label>Date</label><div class="mp-two"><select id="cD">' + Array.apply(null, Array(31)).map(function (_, n) { return '<option' + (dd && dd.getDate() === n + 1 ? ' selected' : '') + '>' + (n + 1) + '</option>'; }).join('') + '</select><select id="cM">' + MONTHS.map(function (m, n) { return '<option value="' + n + '"' + (dd && dd.getMonth() === n ? ' selected' : '') + '>' + cap(m) + '</option>'; }).join('') + '</select><input id="cY" inputmode="numeric" maxlength="4" placeholder="Year (optional)" value="' + (c.y || '') + '"></div>' +
+      '<div class="mp-sub" id="cYh"></div>' +
+      '<label>Remind me</label><div class="mp-row" style="margin-top:4px">' + [[0, 'On the day'], [1, '1 day before'], [3, '3 days before'], [7, '1 week before'], [14, '2 weeks before']].map(function (x) { return '<label class="mp-cl" style="margin:0 10px 0 0;font-weight:600;color:#0F1E36"><input type="checkbox" data-lead="' + x[0] + '"' + ((c.lead || []).indexOf(x[0]) >= 0 ? ' checked' : '') + '> ' + x[1] + '</label>'; }).join('') + '</div>' +
+      '<label>Notes (optional)</label><textarea id="cNo" maxlength="1000" placeholder="Gift ideas, dress size, favourite cake…">' + esc(it ? it.note : '') + '</textarea>' +
+      '<div class="mp-err" id="cErr"></div><div class="mp-row" style="justify-content:space-between;margin-top:16px">' + (it ? '<button class="mp-btn l" id="cDel">🗑️ Delete</button>' : '<span></span>') + '<span style="display:flex;gap:8px"><button class="mp-btn g" id="cX">Cancel</button><button class="mp-btn" id="cOk">Save</button></span></div>');
+    var kind = function () { var k = $('#cK', s).value; $('#cLw', s).style.display = k === 'other' ? 'block' : 'none'; $('#cNl', s).textContent = k === 'birthday' ? 'Whose birthday?' : k === 'wedding' ? 'Whose? (e.g. “Our”, “Mum & Dad”)' : 'Who is it for?'; $('#cYh', s).textContent = k === 'birthday' ? 'Add the year they were born to see their age.' : k === 'wedding' ? 'Add the wedding year to see how many years.' : ''; };
+    $('#cK', s).onchange = kind; kind();
+    $('#cX', s).onclick = function () { s.remove(); };
+    if (it) $('#cDel', s).onclick = function () { s.remove(); remove(it.id); };
+    $('#cOk', s).onclick = function () {
+      var k = $('#cK', s).value, n = $('#cN', s).value.trim(), lab = $('#cL', s).value.trim(), day = +$('#cD', s).value, mo = +$('#cM', s).value, y = +$('#cY', s).value || 0;
+      var err = function (m) { $('#cErr', s).textContent = m; $('#cErr', s).style.display = 'block'; };
+      if (k !== 'wedding' && !n && !(k === 'other' && lab)) return err('Add a name.');
+      if (day > new Date(2024, mo + 1, 0).getDate()) return err('That date doesn’t exist — check the day and month.');
+      if (y && (y < 1900 || y > new Date().getFullYear())) return err('Check the year (or leave it blank).');
+      var lead = [].map.call(s.querySelectorAll('[data-lead]:checked'), function (x) { return +x.dataset.lead; });
+      var cel = { n: n, r: $('#cR', s).value, k: k, y: y, lead: lead.length ? lead : [0], sent: (it && it.cel.sent) || [] };
+      var d = mkDate(day, mo, ''), t = celTitle(cel, lab);
+      if (it) { Object.assign(it, { t: t, d: d, rep: 'y', dom: day, cel: cel, note: $('#cNo', s).value }); s.remove(); change(it); toast('✅ Saved'); }
+      else { s.remove(); add({ t: t, d: d, rep: 'y', dom: day, cel: cel, note: $('#cNo', s).value }, true); toast('🎉 Added — ' + (daysTo(d) === 0 ? 'it’s today!' : daysTo(d) === 1 ? 'it’s tomorrow' : daysTo(d) + ' days to go')); gt('cel_add', { kind: k }); }
+      view.tab = 'cel'; if (window._currentPage !== 'myplan') open(); else render();
+    };
+  }
+  // 📋 "Mum 12 March", "Tunde 4/6/1990", "Our anniversary 21 Dec 2014"
+  var GUESS = [[/\b(mum|mummy|mom|mother|mama)\b/i, 'mum'], [/\b(dad|daddy|father|papa)\b/i, 'dad'], [/\b(grandma|nana|granny)\b/i, 'grandma'], [/\b(grandpa|grandad)\b/i, 'grandpa'], [/\b(husband|hubby)\b/i, 'husband'], [/\bwife\b/i, 'wife'], [/\b(sister|sis)\b/i, 'sister'], [/\b(brother|bro)\b/i, 'brother'], [/\bpastor\b/i, 'pastor']];
+  function parseCel(line) {
+    var raw = ' ' + String(line || '').replace(/\s+/g, ' ').trim() + ' '; if (raw.trim().length < 4) return null;
+    var y = 0, m;
+    if ((m = raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/))) { y = m[3].length === 4 ? +m[3] : 0; raw = raw.replace(m[0], m[1] + '/' + m[2]); }
+    if ((m = raw.match(/\b(19\d\d|20\d\d)\b/))) { y = y || +m[1]; raw = raw.replace(m[0], ' '); }
+    var p = parse(raw); if (!p.d || p.rep) return null;
+    var k = /anniversar|wedding/i.test(p.t) ? 'wedding' : 'birthday';
+    var n = p.t.replace(/[’']s\b/gi, '').replace(/\b(birthday|bday|b-day|wedding|anniversary)\b/gi, '').replace(/[-–:,]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (k === 'wedding' && /^(our|my)?$/i.test(n)) n = 'Our';
+    if (!n) return null;
+    var r = 'friend'; GUESS.forEach(function (g) { if (g[0].test(n)) r = g[1]; }); if (k === 'wedding' && /^our$/i.test(n)) r = 'partner';
+    var cel = { n: n.charAt(0).toUpperCase() + n.slice(1), r: r, k: k, y: y && y <= new Date().getFullYear() ? y : 0, lead: [3], sent: [] };
+    return { t: celTitle(cel), d: p.d, dom: fromIso(p.d).getDate(), cel: cel };
+  }
+  function pasteSheet() {
+    var s = sheet('<h3>📋 Paste a list</h3><div class="mp-sub" style="font-size:14px">One per line — e.g. <b>Mum 12 March</b>, <b>Tunde 4/6/1990</b>, <b>Our anniversary 21 Dec 2014</b>. You can paste from your notes or WhatsApp.</div><textarea id="pT" rows="7" style="margin-top:10px" placeholder="Mum 12 March&#10;Tunde 4 June 1990&#10;Our anniversary 21 December 2014"></textarea><div id="pPrev"></div><div class="mp-row" style="justify-content:flex-end;margin-top:12px"><button class="mp-btn g" id="pX">Cancel</button><button class="mp-btn" id="pOk" disabled>Add</button></div>');
+    var found = [];
+    $('#pT', s).oninput = function () {
+      found = this.value.split(/\n/).map(parseCel).filter(Boolean);
+      $('#pPrev', s).innerHTML = found.length ? '<div class="mp-lbl">Auntie Tobi found ' + found.length + '</div>' + found.map(function (f, n) { return '<label class="mp-cl"><input type="checkbox" data-pf="' + n + '" checked> ' + (f.cel.k === 'birthday' ? '🎂' : '💍') + ' ' + esc(f.t) + ' <span class="mp-sub" style="margin-left:auto">' + nice(f.d, true) + (f.cel.y ? ' · ' + f.cel.y : '') + '</span></label>'; }).join('') : '';
+      $('#pOk', s).disabled = !found.length; $('#pOk', s).textContent = found.length ? 'Add ' + found.length : 'Add';
+    };
+    $('#pX', s).onclick = function () { s.remove(); };
+    $('#pOk', s).onclick = function () { var n = 0; s.querySelectorAll('[data-pf]:checked').forEach(function (c) { var f = found[+c.dataset.pf]; add({ t: f.t, d: f.d, rep: 'y', dom: f.dom, cel: f.cel }, true); n++; }); s.remove(); view.tab = 'cel'; render(); toast('🎉 Added ' + n + ' date' + (n === 1 ? '' : 's')); gt('cel_paste', { n: n }); };
+    setTimeout(function () { $('#pT', s).focus(); }, 80);
+  }
+
+  // ───── ➕ Save to My Plan (events) ─────
+  function saveEvent(btn) {
+    var t = btn.getAttribute('data-t') || '', d = btn.getAttribute('data-d') || '', tm = parse('x ' + (btn.getAttribute('data-tm') || '')).tm, loc = btn.getAttribute('data-loc') || '';
+    if (!t || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+    var title = '🎉 ' + t.replace(/^\s*🎉\s*/, '');
+    if (live().some(function (i) { return i.t === title && i.d === d; })) { toast('✅ Already in My Plan'); return; }
+    add({ t: title, d: d, tm: tm, note: loc && loc !== 'UK' ? '📍 ' + loc : '', src: 'event' }, true);
+    btn.textContent = '✅ Saved'; btn.disabled = true; toast('🎉 Saved to My Plan — ' + nice(d, true)); gt('event_save');
   }
 
   // ───── 📅 add to phone calendar (the phone does the reminding — reliable, no notifications needed) ─────
@@ -515,6 +653,33 @@
     });
   }
 
+
+  // ───── 💬 chat: "➕ Add this to My Plan" under answers about MOT, passports, council tax… ─────
+  var CHAT = [[/\bMOT\b/, 'mot'], [/nigerian\s+passport|nigeria\s+high\s+commission/i, 'ngpass'], [/\bpassport\b/i, 'ukpass'], [/\be-?visa\b|\bBRP\b|visa\s+(expir|renew|extension)/i, 'evisa'], [/council\s+tax/i, 'ctax'], [/tv\s+licen[cs]e/i, 'tv'], [/self[\s-]assessment|tax\s+return/i, 'sa'], [/driving\s+licen[cs]e/i, 'licence'], [/car\s+insurance/i, 'carins'], [/car\s+tax|vehicle\s+tax|road\s+tax/i, 'cartax'], [/boiler\s+service/i, 'boiler'], [/home\s+insurance|contents\s+insurance/i, 'homeins']];
+  function chatKey(txt) { for (var i = 0; i < CHAT.length; i++) if (CHAT[i][0].test(txt)) return CHAT[i][1]; return ''; }
+  function hookChat() {
+    var orig = window.addMessage; if (typeof orig !== 'function' || orig._mp) return;
+    var wrapped = function (role) {
+      var div = orig.apply(this, arguments);
+      if (role === 'bot' && div && window._currentPage !== 'myplan') {
+        var users = document.querySelectorAll('#messages .msg.user'), q = users.length ? users[users.length - 1].textContent : '';
+        var key = chatKey(q); if (!key) return div;
+        var last = '', same = 0, tries = 0;
+        var t = setInterval(function () {   // wait until the answer has finished typing
+          var now = div.textContent || ''; same = now === last && now.length > 40 ? same + 1 : 0; last = now; tries++;
+          if (same < 2 && tries < 60) return; clearInterval(t);
+          if (!document.body.contains(div) || div.querySelector('[data-mp-chat]') || !chatKey(q + ' ' + now)) return;
+          var l = LIFE.filter(function (x) { return x.k === key; })[0]; if (!l) return;
+          addCss(); var b = document.createElement('button'); b.className = 'mp-btn g'; b.setAttribute('data-mp-chat', key); b.style.cssText = 'margin:8px 0 2px;font-size:13.5px;padding:8px 12px';
+          b.textContent = '➕ Add “' + l.t + '” to My Plan'; b.onclick = function () { gt('plan_chat_add', { kind: key }); lifeOne(l); };
+          div.appendChild(b);
+        }, 500);
+      }
+      return div;
+    };
+    wrapped._mp = 1; try { window.addMessage = wrapped; } catch (e) {}
+  }
+
   // ───── menu pill (phone) ─────
   function markPill() { var t = document.querySelector('.pill .mp-newtag'); if (t && ls.get(SEEN) === '1') t.remove(); }
   function addPill() {
@@ -525,7 +690,10 @@
     var home = pills.firstElementChild; if (home && home.nextSibling) pills.insertBefore(p, home.nextSibling); else pills.appendChild(p);
   }
 
-  window.MyPlan = { open: open, openSunday: openSunday, newsSheet: newsSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
-  function start() { addCss(); addPill(); hookNews(); fill(); boot(); if (/[?&]plan\b/.test(location.search) || location.pathname === '/my-plan') setTimeout(open, 900); else if (/[?&]sunday\b/.test(location.search)) setTimeout(function () { openSunday(); }, 900); else if (/[?&]news=1\b/.test(location.search)) setTimeout(newsSheet, 1200); }
+  window.MyPlan = { open: open, openSunday: openSunday, newsSheet: newsSheet, saveEvent: saveEvent, celSheet: celSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
+  function start() { addCss(); addPill(); hookNews(); hookChat(); fill(); boot(); var cq = (location.search.match(/[?&]cel=([^&]*)/) || [])[1];
+    if (cq) { var cp = decodeURIComponent(cq).split('|'); view.tab = 'cel'; setTimeout(function () { open(); celSheet(null, { n: cp[0] || '', k: cp[1] === 'anniversary' ? 'wedding' : 'birthday', r: cp[2] || 'friend', y: 0, lead: [3] }); }, 900); }
+    else if (/[?&]plan=cel\b/.test(location.search)) { view.tab = 'cel'; setTimeout(open, 900); }
+    else if (/[?&]plan\b/.test(location.search) || location.pathname === '/my-plan') setTimeout(open, 900); else if (/[?&]sunday\b/.test(location.search)) setTimeout(function () { openSunday(); }, 900); else if (/[?&]news=1\b/.test(location.search)) setTimeout(newsSheet, 1200); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

@@ -1260,7 +1260,23 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     }
     try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (typeof sv.sign === 'string') st.sign = sv.sign; } catch (e) {}
     var occM = {}; occOrder().forEach(function (o) { occM[o] = OCC[o].label; }); chips('occ', occM, 'occ'); var MNn = MONTHS[st.mn]; chips('nmg', { happy: 'Happy New Month', welcome: 'Welcome ' + MNn, hello: 'Hello ' + MNn }, 'nmg'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
+    // 💚 opened from My Plan (Celebration dates): who, name and age filled in
+    var QP = new URLSearchParams(location.search), FROMPLAN = QP.get('from') === 'plan';
+    if (QP.get('who') && OCC[st.occ].who.indexOf(QP.get('who')) >= 0) st.who = QP.get('who');
+    if (QP.get('name')) st.name = QP.get('name').slice(0, 30);
+    if (/^\d{1,3}$/.test(QP.get('age') || '') && OCC[st.occ].num) st.age = QP.get('age');
     setOcc(st.occ, false);
+    if (st.name) $('name').value = st.name; if (st.age) $('age').value = st.age;
+    // 🎂 after making a birthday / anniversary card: "Want a reminder next year?" → My Plan
+    window.tobiPlanNudge = function () {
+      if (FROMPLAN || document.getElementById('planNudge') || ['birthday', 'anniversary'].indexOf(st.occ) < 0) return;
+      var el = document.createElement('a'); el.id = 'planNudge';
+      el.href = '/?cel=' + encodeURIComponent([st.name || '', st.occ, st.who].join('|'));
+      el.style.cssText = 'display:flex;align-items:center;gap:10px;background:#E9F6EF;border:1.5px solid #057A44;border-radius:14px;padding:12px 14px;margin:12px 0;text-decoration:none;color:#0F1E36;font-size:14.5px;line-height:1.4';
+      el.innerHTML = '<span style="font-size:22px">' + (st.occ === 'birthday' ? '🎂' : '💍') + '</span><span style="flex:1"><b style="color:#057A44">Want a reminder next year?</b> Save ' + (st.name ? st.name.replace(/[<>&"]/g, '') + '’s ' : 'this ') + (st.occ === 'birthday' ? 'birthday' : 'anniversary') + ' in My Plan — free.</span><span style="color:#057A44;font-weight:800">›</span>';
+      el.onclick = function () { track('card_plan_nudge'); };
+      var at = $('dl') && $('dl').parentElement; if (at && at.parentElement) at.parentElement.insertBefore(el, at.nextSibling); else document.body.appendChild(el);
+    };
     document.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (b) pickDesign(b.dataset.d); });
     $('from').value = st.from;
     $('name').oninput = function () { st.name = this.value; render(); };
@@ -1295,9 +1311,9 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     cv.addEventListener('pointermove', function (e) { if (!drag) return; var r = cv.getBoundingClientRect(); if (tadj) { st.tx = Math.max(-.45, Math.min(.45, drag.tx + (e.clientX - drag.x) / r.width)); st.ty = Math.max(-.45, Math.min(.45, drag.ty + (e.clientY - drag.y) / r.height)); render(); return; } if (!adj) return; var s = 3.2 / r.width; st.px = Math.max(-.5, Math.min(.5, drag.px + (e.clientX - drag.x) * s)); st.py = Math.max(-.5, Math.min(.5, drag.py + (e.clientY - drag.y) * s)); render(); });
     ['pointerup', 'pointercancel'].forEach(function (ev) { cv.addEventListener(ev, function () { drag = null; }); });
     loadGifts();
-    $('dl').onclick = function () { download(); track('bday_download'); toast('Card saved ✅'); showGifts(); };
-    $('share').onclick = shareWa;
-    $('link').onclick = async function () { var b = this; b.disabled = true; var l = await cardLink(); b.disabled = false; copyText(l, 'Card link copied 🔗'); track('bday_link'); showGifts(); };
+    $('dl').onclick = function () { download(); track('bday_download'); toast('Card saved ✅'); showGifts(); window.tobiPlanNudge(); };
+    $('share').onclick = function () { shareWa(); setTimeout(window.tobiPlanNudge, 400); };
+    $('link').onclick = async function () { var b = this; b.disabled = true; var l = await cardLink(); b.disabled = false; copyText(l, 'Card link copied 🔗'); track('bday_link'); showGifts(); window.tobiPlanNudge(); };
     $('copy').onclick = function () { copyText(headFor(st) + (st.name ? ', ' + st.name : '') + '! ' + st.msg + (st.from ? '\n' + (st.sign ? st.sign + ', ' : '— ') + st.from : ''), 'Message copied 📋'); };
     suggest(true);
     if (window.__CARD_MISSING) setTimeout(function () { toast('That card link has expired — but you can make your own below 💚'); }, 600);

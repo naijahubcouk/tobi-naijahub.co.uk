@@ -28,7 +28,15 @@ function cleanItem(x) {
     done: !!x.done, doneAt: /^\d{4}-\d{2}-\d{2}$/.test(String(x.doneAt || '')) ? x.doneAt : '', last: /^\d{4}-\d{2}-\d{2}$/.test(String(x.last || '')) ? x.last : '',
     ck: (Array.isArray(x.ck) ? x.ck : []).slice(0, 25).map(c => ({ t: cleanText(c && c.t, 120), x: !!(c && c.x) })).filter(c => c.t),
     lk: cleanText(x.lk, 24), src: cleanText(x.src, 60), up: Math.max(0, Math.min(Date.now() + 60000, +x.up || 0)), del: !!x.del,
+    dom: Math.max(0, Math.min(31, +x.dom || 0)),
   };
+  // 🎉 a celebration date (birthday, anniversary…): repeats yearly
+  if (x.cel && typeof x.cel === 'object') {
+    const c = x.cel, yr = new Date().getFullYear();
+    it.cel = { n: cleanText(c.n, 60), r: cleanText(c.r, 20), k: ['birthday', 'anniversary', 'wedding', 'other'].includes(c.k) ? c.k : 'birthday', y: (+c.y >= 1900 && +c.y <= yr) ? +c.y : 0,
+      lead: (Array.isArray(c.lead) ? c.lead : [3]).map(Number).filter(n => [0, 1, 3, 7, 14].includes(n)).slice(0, 5), sent: (Array.isArray(c.sent) ? c.sent : []).map(Number).filter(n => n > 2000 && n < 2200).slice(-20) };
+    it.rep = it.d ? 'y' : '';
+  }
   if (!it.t && !it.del) return null;
   return it;
 }
@@ -207,11 +215,13 @@ async function morning(budgetMs, now) {
     if (Date.now() > stop) break;
     const u = await getJson('myplan/u/' + h).catch(() => null);
     if (!u || !u.rm || u.rmSent === L.day || u.rm > hh) continue;
-    const items = (u.items || []).filter(i => !i.del && !i.done && i.d && i.d <= L.day).sort((a, b) => (a.d + (a.tm || '')).localeCompare(b.d + (b.tm || '')));
+    const daysTo = d => Math.round((new Date(d + 'T12:00:00Z') - new Date(L.day + 'T12:00:00Z')) / 864e5);
+    // to-dos due today or overdue · 🎉 celebrations on the day or on a chosen "remind me" day before
+    const items = (u.items || []).filter(i => !i.del && !i.done && i.d && (i.cel ? (daysTo(i.d) === 0 || (i.cel.lead || []).includes(daysTo(i.d))) : i.d <= L.day)).sort((a, b) => (a.d + (a.tm || '')).localeCompare(b.d + (b.tm || '')));
     await cas('myplan/u/' + h, cur => { if (!cur) return undefined; cur.rmSent = L.day; return cur; });
     if (!items.length) continue;
     const t12 = tm => { const x = +tm.slice(0, 2); return (x % 12 || 12) + (tm.slice(3) !== '00' ? ':' + tm.slice(3) : '') + (x < 12 ? 'am' : 'pm'); };
-    const line = i => '- ' + i.t + (i.d < L.day ? ' (overdue)' : i.tm ? ' at ' + t12(i.tm) : '');
+    const line = i => { if (i.cel) { const n = daysTo(i.d); return '- 🎉 ' + i.t + (n === 0 ? ' — today!' : n === 1 ? ' — tomorrow' : ' — in ' + n + ' days') + ` (make a card: ${core.siteBase()}/?plan=cel)`; } return '- ' + i.t + (i.d < L.day ? ' (overdue)' : i.tm ? ' at ' + t12(i.tm) : ''); };
     const list = items.slice(0, 8).map(line).join('\n') + (items.length > 8 ? '\n- …and ' + (items.length - 8) + ' more' : '');
     const off = `${core.siteBase()}/.netlify/functions/my-plan?roff=${h}.${core.hmac('roff:' + h).slice(0, 20)}`;
     const vars = { name: u.name || '', name_comma: u.name ? ', ' + u.name : '', list, count: String(items.length), plan_link: `${core.siteBase()}/?plan=1`, off_link: off };
