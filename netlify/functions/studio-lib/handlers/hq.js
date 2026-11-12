@@ -339,6 +339,25 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'market-ai') return await require('../marketai').fill(body.images, body.text, who.email);
       return await require('./admin').marketAction(body.action, body, ctx, who.email);
     }
+    case 'sun-get': case 'sun-make': case 'sun-save': case 'sun-approve': case 'sun-test': case 'sun-preview': case 'sun-wa': case 'sun-options': {
+      // 📰 Sunday Update (admin only) — nothing is sent unless approved here
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can do this.');
+      const sunday = require('../sunday');
+      const week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : sunday.weekOf();
+      if (body.action === 'sun-make') { await sunday.make(week, !!body.force); await core.audit(who.email, 'hq_sunday_draft', { week }); }
+      if (body.action === 'sun-save') await sunday.save(week, body.issue || {}, who.email);
+      if (body.action === 'sun-approve') { await sunday.approve(week, !!body.on, who.email); await core.audit(who.email, body.on ? 'hq_sunday_approve' : 'hq_sunday_unapprove', { week }); }
+      if (body.action === 'sun-test') return sunday.sendTest(week, who.email);
+      if (body.action === 'sun-options') return sunday.options(week);
+      if (body.action === 'sun-preview' || body.action === 'sun-wa') {
+        const issue = await core.getJson('sunday/issue/' + week);
+        if (!issue) throw new HttpError(404, 'not_found', 'Make the draft first.');
+        if (body.action === 'sun-wa') return { text: sunday.whatsapp(issue) };
+        const h = sunday.subHash(who.email), ahead = await sunday.weekAhead(h, week);
+        return { html: sunday.render(issue, { name: ahead.name, town: ahead.town, ahead }).html };
+      }
+      return sunday.forHq(week);
+    }
     case 'myplan-stats': {
       // 💚 My Plan sign-ups — counts only, never anyone's plan (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');

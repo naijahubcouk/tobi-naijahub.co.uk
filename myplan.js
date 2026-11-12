@@ -18,7 +18,7 @@
   var P = (function () { try { return JSON.parse(ls.get(KEY) || '{}'); } catch (e) { return {}; } })();
   P.items = Array.isArray(P.items) ? P.items : [];
   var dirty = {}, syncT = null, syncing = false, view = { tab: 'plan', showDone: false };
-  function store() { ls.set(KEY, JSON.stringify({ items: P.items, signedIn: !!P.signedIn, email: P.email || '', name: P.name || '', town: P.town || '', news: !!P.news })); }
+  function store() { ls.set(KEY, JSON.stringify({ items: P.items, signedIn: !!P.signedIn, email: P.email || '', name: P.name || '', town: P.town || '', news: !!P.news, rm: P.rm || '', sun: P.sun || null })); }
   var live = function () { return P.items.filter(function (i) { return !i.del; }); };
 
   function api(action, body) {
@@ -40,10 +40,11 @@
   }
   function boot() {
     api('me').then(function (r) {
-      if (r.signedIn) { P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; var local = P.items; P.items = []; mergeIn(r.items); local.forEach(function (i) { var s = P.items.filter(function (x) { return x.id === i.id; })[0]; if (!s || (i.up || 0) > (s.up || 0)) { mergeIn([i]); dirty[i.id] = 1; } }); sync(); }
+      if (r.signedIn) { P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; var local = P.items; P.items = []; mergeIn(r.items); local.forEach(function (i) { var s = P.items.filter(function (x) { return x.id === i.id; })[0]; if (!s || (i.up || 0) > (s.up || 0)) { mergeIn([i]); dirty[i.id] = 1; } }); sync(); }
       else if (P.signedIn) { P.signedIn = false; }
       store(); refresh();
     }).catch(function () {});
+    api('sunday-latest').then(function (r) { P.sun = r.latest ? { latest: r.latest, past: r.past } : null; store(); refresh(); }).catch(function () {});
   }
 
   // ───── dates ─────
@@ -222,6 +223,8 @@
     h = h || '👋🏾 Welcome back!';
     if (name) h = /!/.test(h) ? h.replace('!', ', <span style="color:#057A44">' + name + '</span>!') : h + ', <span style="color:#057A44">' + name + '</span>';
     var html = '<div class="mp mp-card mp-today"><div class="mp-h">' + h + '</div><div class="mp-sub">📅 ' + dateLine + (s ? ' · ' + s : '') + '</div>';
+    var sl = P.sun && P.sun.latest;
+    if (sl && today() >= sl.week && today() <= addDays(sl.week, 2)) html += '<div class="mp-new" style="background:#FFF4D6"><span style="font-size:22px">📰</span><div style="flex:1"><b style="color:#0F1E36">Auntie Tobi’s Sunday Update is here</b> — this week’s UK news, events and more. <a href="#" data-mp-sun style="color:#057A44;font-weight:800">Read it →</a></div></div>';
     if (has) {
       html += '<div class="mp-lbl">Your day</div>';
       if (due.length) html += due.slice(0, 3).map(function (i) { return row(i); }).join('') + (due.length > 3 ? '<div class="mp-sub" style="margin-top:6px">+ ' + (due.length - 3) + ' more in My Plan</div>' : '');
@@ -236,6 +239,7 @@
     root.querySelectorAll('[data-mp-open]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); open(); }; });
     root.querySelectorAll('[data-mp-add]').forEach(function (b) { b.onclick = function () { open(); setTimeout(function () { var i = $('#mpQ'); if (i) i.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-hide]').forEach(function (b) { b.onclick = function () { ls.set(HIDE, '1'); gt('plan_hide_new'); fill(); }; });
+    root.querySelectorAll('[data-mp-sun]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openSunday(); }; });
     bindRows(root);
   }
   function fill() {
@@ -260,6 +264,7 @@
     var h = '<div class="mp-top"><b>💚 My Plan</b><span>Everything you need to remember, in one place</span></div>' +
       '<div class="mp-tabs"><button class="on">📋 Plan</button><button data-soon="🎉 Celebration dates">🎉 Celebrations<span class="soon">coming soon</span></button><button data-soon="🛒 Shopping lists">🛒 Shopping<span class="soon">coming soon</span></button></div>';
     if (has && !P.signedIn) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — it’s only on this phone. Save it to your free Auntie Tobi account.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
+    if (P.signedIn && !P.rm && ls.get('tobi_myplan_rm_ask') !== 'no' && has) h += '<div class="mp-new" style="margin:0 0 10px"><span style="font-size:22px">☀️</span><div style="flex:1"><b style="color:#0F1E36">Want a morning email?</b> Only on days you have something due.<div class="mp-row" style="margin-top:8px"><button class="mp-btn" data-rm-yes>Yes — at 7am</button><button class="mp-btn g" data-rm-no>No thanks</button></div></div></div>';
     h += '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ Type it — e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
     if (!has) {
       h += '<div class="mp-card"><div class="mp-empty"><b>Your day is looking clear! 💚</b>Add something to get started — bills, appointments, things to renew. <br><span style="font-size:13px;color:#6B7280">Free — sign in with just your email, no password.</span></div>' +
@@ -275,6 +280,9 @@
       if (g.done.length) h += '<div class="mp-card"><div class="mp-it" data-done-toggle style="border:0;padding:2px 0"><div class="tx" style="font-weight:700">✅ Done (' + g.done.length + ')</div><div class="r">' + (view.showDone ? 'Hide ▴' : 'Show ▾') + '</div></div>' + (view.showDone ? g.done.slice(0, 40).map(function (i) { return row(i, { noDate: true }); }).join('') : '') + '</div>';
       h += '<button class="mp-card" data-w="life" style="width:100%;text-align:left;cursor:pointer;font-family:inherit"><b style="font-size:14.5px">🗂️ Add UK life dates</b><div class="mp-sub">Passport, eVisa, MOT, car insurance, tax return…</div></button>';
     }
+    var sl2 = P.sun && P.sun.latest;
+    h += '<div class="mp-card" style="background:#FFFBF0;border-color:#FFE3A3"><b style="font-size:15px">📰 Auntie Tobi’s Sunday Update</b>' + (sl2 ? '<div class="mp-sub" style="font-size:13.5px;color:#0F1E36;margin-top:4px">' + esc(sl2.subject) + ' · ' + nice(sl2.week, true) + '</div>' : '<div class="mp-sub" style="font-size:13.5px">UK news, events and a business of the week — every Sunday.</div>') +
+      '<div class="mp-row">' + (sl2 ? '<button class="mp-btn" data-mp-sun>Read it</button>' : '') + (P.news ? '<span class="mp-sub" style="align-self:center">✅ You get it by email</span>' : '<button class="mp-btn ' + (sl2 ? 'g' : '') + '" data-mp-news>📧 Get it by email</button>') + '</div></div>';
     h += '<div style="text-align:center;font-size:12.5px;color:#6B7280;margin:6px 0 4px">' + (P.signedIn ? '💚 Saved to ' + esc(P.email) + ' · <a href="#" data-mp-settings style="color:#057A44;font-weight:700">Settings</a>' : '<a href="#" data-mp-save style="color:#057A44;font-weight:700">💚 Sign in to save your plan</a>') + '</div>';
     root.innerHTML = h;
     // add box with live preview of what Auntie Tobi understood
@@ -286,6 +294,10 @@
     root.querySelectorAll('[data-mp-save]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); signIn(); }; });
     root.querySelectorAll('[data-mp-settings]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); }; });
     var dt = $('[data-done-toggle]', root); if (dt) dt.onclick = function () { view.showDone = !view.showDone; render(); };
+    root.querySelectorAll('[data-mp-sun]').forEach(function (b) { b.onclick = function () { openSunday(); }; });
+    root.querySelectorAll('[data-mp-news]').forEach(function (b) { b.onclick = function () { newsSheet(); }; });
+    var ry = $('[data-rm-yes]', root); if (ry) ry.onclick = function () { api('prefs', { rm: '07' }).then(function (r) { P.rm = r.rm; store(); render(); toast('☀️ Morning emails on — 7am, only on days with something due'); gt('plan_morning_on'); }).catch(function (e) { toast(e.message); }); };
+    var rn = $('[data-rm-no]', root); if (rn) rn.onclick = function () { ls.set('tobi_myplan_rm_ask', 'no'); render(); };
     bindRows(root);
   }
   function refresh() { if (window._currentPage === 'myplan') render(); fill(); }
@@ -411,7 +423,7 @@
       var b = this, code = $('#sC', s).value.replace(/\D/g, ''); if (code.length !== 6) return err('#sErr2', 'Enter the 6-digit code.');
       if (b.disabled) return; b.disabled = true; b.textContent = 'Checking…';
       api('verify', { email: email, code: code, name: $('#sN', s).value.trim(), news: $('#sNews', s).checked, items: P.items }).then(function (r) {
-        P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; dirty = {}; mergeIn(r.items); store(); s.remove(); refresh();
+        P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; dirty = {}; mergeIn(r.items); store(); s.remove(); refresh();
         gt(r.isNew ? 'plan_signup' : 'plan_signin', { news: r.news ? 1 : 0 }); toast(r.isNew ? '💚 Your plan is saved — welcome!' : '💚 Welcome back' + (r.name ? ', ' + esc(r.name) : '') + '!');
       }).catch(function (e) { b.disabled = false; b.textContent = '💚 Save my plan'; err('#sErr2', e.message); });
     };
@@ -422,15 +434,85 @@
       '<label>First name</label><input id="pN" maxlength="40" value="' + esc(P.name || '') + '">' +
       '<label>Town or city</label><input id="pT" maxlength="60" value="' + esc(P.town || '') + '" placeholder="e.g. Birmingham">' +
       '<label class="mp-cl" style="font-weight:600;color:#0F1E36;margin-top:12px"><input type="checkbox" id="pNews"' + (P.news ? ' checked' : '') + '> 📰 Send me Auntie Tobi’s Sunday Update</label>' +
+      '<label>☀️ Morning email (only on days with something due)</label><select id="pRm">' + [['', 'Off'], ['06', '6am'], ['07', '7am'], ['08', '8am'], ['09', '9am'], ['10', '10am']].map(function (x) { return '<option value="' + x[0] + '"' + ((P.rm || '') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>' +
       '<div class="mp-err" id="pErr"></div><div class="mp-row" style="justify-content:flex-end"><button class="mp-btn g" id="pX">Close</button><button class="mp-btn" id="pOk">Save</button></div>' +
       '<div style="border-top:1px solid #e2dccc;margin-top:18px;padding-top:12px" class="mp-row"><button class="mp-btn g" id="pOut">Sign out</button><button class="mp-btn l" id="pDel">🗑️ Delete my plan and account</button></div>');
     $('#pX', s).onclick = function () { s.remove(); };
-    $('#pOk', s).onclick = function () { var b = this; b.disabled = true; api('prefs', { name: $('#pN', s).value.trim(), town: $('#pT', s).value.trim(), news: $('#pNews', s).checked }).then(function (r) { P.name = r.name; P.town = r.town; P.news = r.news; store(); s.remove(); refresh(); toast('✅ Saved'); }).catch(function (e) { b.disabled = false; $('#pErr', s).textContent = e.message; $('#pErr', s).style.display = 'block'; }); };
+    $('#pOk', s).onclick = function () { var b = this; b.disabled = true; api('prefs', { name: $('#pN', s).value.trim(), town: $('#pT', s).value.trim(), news: $('#pNews', s).checked, rm: $('#pRm', s).value }).then(function (r) { P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; store(); s.remove(); refresh(); toast('✅ Saved'); }).catch(function (e) { b.disabled = false; $('#pErr', s).textContent = e.message; $('#pErr', s).style.display = 'block'; }); };
     $('#pOut', s).onclick = function () { api('signout').catch(function () {}).then(function () { P = { items: [] }; dirty = {}; store(); s.remove(); refresh(); toast('Signed out — your plan is safe in your account'); }); };
     $('#pDel', s).onclick = function () {
       if (this.dataset.sure !== '1') { this.dataset.sure = '1'; this.textContent = 'Tap again to delete everything — this can’t be undone'; return; }
       api('delete').then(function () { P = { items: [] }; dirty = {}; store(); s.remove(); refresh(); toast('🗑️ Your plan and account are deleted'); }).catch(function (e) { toast(e.message); });
     };
+  }
+
+
+  // ───── 📰 Sunday Update in the app ─────
+  function openSunday(week) {
+    addCss(); window._currentPage = 'sunday'; window.__homeRender = false;
+    var msgs = document.getElementById('messages'); if (!msgs) return;
+    msgs.innerHTML = '<div class="msg bot" style="align-items:flex-start"><div style="flex:1;min-width:0" id="mpSun" class="mp"><div class="mp-card mp-sub">Loading…</div></div></div>';
+    try { if (typeof scrollToTop === 'function') scrollToTop(); } catch (e) {}
+    var show = function (i, past) { drawSunday(i, past); gt('sunday_read', { week: i.week }); };
+    if (!week && P.sun && P.sun.latest) show(P.sun.latest, P.sun.past);
+    (week ? api('sunday-issue', { week: week }).then(function (r) { show(r.issue, P.sun && P.sun.past); }) : api('sunday-latest').then(function (r) { if (!r.latest) { $('#mpSun').innerHTML = '<div class="mp-card mp-empty"><b>📰 The first Sunday Update is coming soon</b>UK news, events and a business of the week — every Sunday.<div class="mp-row" style="justify-content:center"><button class="mp-btn" data-mp-news>📧 Get it by email</button></div></div>'; bindNews($('#mpSun')); return; } P.sun = { latest: r.latest, past: r.past }; store(); show(r.latest, r.past); }))
+      .catch(function (e) { var el = $('#mpSun'); if (el && /Loading/.test(el.textContent)) el.innerHTML = '<div class="mp-card mp-sub">' + esc(e.message) + '</div>'; });
+  }
+  function drawSunday(i, past) {
+    var el = $('#mpSun'); if (!el) return;
+    var t = today(), end = addDays(t, 7), mine = live().filter(function (x) { return !x.done && x.d && x.d >= t && x.d < end; }).sort(function (a, b) { return (a.d + (a.tm || '')).localeCompare(b.d + (b.tm || '')); }).slice(0, 6);
+    var town = String(P.town || '').toLowerCase(), ev = (i.events || []).slice().sort(function (a, b) { return town ? (String(b.loc).toLowerCase().indexOf(town) >= 0) - (String(a.loc).toLowerCase().indexOf(town) >= 0) : 0; });
+    var sec = function (t2, body) { return '<div class="mp-card"><div class="mp-lbl" style="margin-top:0;color:#0F1E36;font-size:13px">' + t2 + '</div>' + body + '</div>'; };
+    var link = function (u, txt) { return u ? '<a href="' + esc(u) + '" style="color:#057A44;font-weight:700;text-decoration:none">' + txt + '</a>' : txt; };
+    var h = '<div class="mp-top" style="background:linear-gradient(135deg,#FFB81C,#E59A00);color:#0F1E36"><span style="opacity:.8">📰 Auntie Tobi’s Sunday Update · ' + nice(i.week, true) + '</span><b style="margin-top:4px">' + esc(i.subject) + '</b></div>';
+    h += '<div class="mp-card"><div class="mp-h" style="font-size:17px;color:#057A44">Happy Sunday' + (P.name ? ', ' + esc(P.name) : '') + '! 💚</div><div style="font-size:14.5px;line-height:1.6;margin-top:6px;white-space:pre-line">' + esc(String(i.intro || '').replace(/^Happy Sunday!?\s*/i, '')) + '</div></div>';
+    if (mine.length) h += '<div class="mp-card" style="background:#E9F6EF;border-color:#CDEBD9"><div class="mp-lbl" style="margin-top:0;color:#057A44">💚 Your week ahead</div>' + mine.map(function (x) { return row(x); }).join('') + '</div>';
+    if ((i.posts || []).length) h += sec('🇬🇧 This week’s UK updates', i.posts.map(function (p) { return '<div style="padding:9px 0;border-top:1px solid #f1ece0"><div style="font-weight:700;font-size:15px">' + esc(p.emoji || '📰') + ' ' + link(p.url, esc(p.title)) + '</div><div class="mp-sub" style="font-size:13.5px;color:#374151">' + esc(p.summary) + '</div></div>'; }).join(''));
+    if (ev.length) h += sec('🎉 Events coming up', ev.map(function (e) { return '<div style="padding:9px 0;border-top:1px solid #f1ece0"><b>' + link(e.url, esc(e.title)) + '</b><div class="mp-sub">📅 ' + (e.date ? nice(e.date, true) : '') + (e.time ? ' · ' + esc(e.time) : '') + (e.loc ? ' · 📍 ' + esc(e.loc) : '') + '</div>' + (e.date && e.date >= t ? '<button class="mp-btn g" style="margin-top:6px;padding:7px 11px;font-size:13px" data-save-ev="' + esc(e.title) + '|' + esc(e.date) + '">➕ Save to My Plan</button>' : '') + '</div>'; }).join(''));
+    if (i.biz) h += sec('⭐ Business of the week', (i.biz.img ? '<img src="' + esc(i.biz.img) + '" alt="" style="width:100%;border-radius:10px;margin-bottom:8px" onerror="this.remove()">' : '') + '<b style="font-size:16px">' + esc(i.biz.name) + '</b><div class="mp-sub">' + esc(i.biz.cat) + (i.biz.loc ? ' · 📍 ' + esc(i.biz.loc) : '') + '</div><div style="font-size:14px;margin-top:6px">' + esc(i.biz.desc) + '</div>' + (i.biz.slug ? '<div class="mp-row"><button class="mp-btn" data-biz="' + esc(i.biz.slug) + '">See ' + esc(i.biz.name) + '</button></div>' : ''));
+    if ((i.products || []).length) h += sec('🛍️ From the Marketplace', i.products.map(function (p) { return '<div style="padding:8px 0;border-top:1px solid #f1ece0"><b>' + link(p.url, esc(p.name)) + '</b>' + (p.price ? ' <span style="color:#057A44;font-weight:700">· ' + esc(p.price) + '</span>' : '') + '<div class="mp-sub">' + esc(p.business) + '</div></div>'; }).join(''));
+    if (i.tip) h += '<div class="mp-card" style="background:#FFF4D6;border-color:#FFE3A3"><div class="mp-lbl" style="margin-top:0;color:#7A5300">💡 Tip of the week</div><div style="font-size:14.5px;line-height:1.55;white-space:pre-line">' + esc(i.tip) + '</div></div>';
+    h += P.news ? '<div class="mp-sub" style="text-align:center;margin:4px 0 10px">✅ You get the Sunday Update by email</div>' : '<div class="mp-card" style="text-align:center"><b>📧 Get it by email every Sunday</b><div class="mp-row" style="justify-content:center"><button class="mp-btn" data-mp-news>Yes please</button></div></div>';
+    if (past && past.length > 1) h += '<div class="mp-card"><div class="mp-lbl" style="margin-top:0">📰 Past updates</div>' + past.filter(function (p) { return p.week !== i.week; }).slice(0, 10).map(function (p) { return '<div class="mp-it" data-past="' + esc(p.week) + '"><div class="tx">' + esc(p.subject) + '</div><div class="r">' + nice(p.week, true) + '</div></div>'; }).join('') + '</div>';
+    h += '<div class="mp-row" style="justify-content:center;margin-bottom:8px"><button class="mp-btn g" data-mp-plan>💚 Open My Plan</button></div>';
+    el.innerHTML = h;
+    bindRows(el); bindNews(el);
+    el.querySelectorAll('[data-past]').forEach(function (r) { r.onclick = function () { openSunday(r.dataset.past); }; });
+    el.querySelectorAll('[data-mp-plan]').forEach(function (b) { b.onclick = open; });
+    el.querySelectorAll('[data-biz]').forEach(function (b) { b.onclick = function () { if (typeof tobiOpenBiz === 'function') tobiOpenBiz(b.dataset.biz); else location.href = '/?biz=' + encodeURIComponent(b.dataset.biz); }; });
+    el.querySelectorAll('[data-save-ev]').forEach(function (b) { b.onclick = function () { var p = b.dataset.saveEv.split('|'); add({ t: '🎉 ' + p[0], d: p[1], src: 'event' }); b.textContent = '✅ Saved'; b.disabled = true; }; });
+  }
+  function bindNews(root) { root.querySelectorAll('[data-mp-news]').forEach(function (b) { b.onclick = function () { newsSheet(); }; }); }
+  // 📧 Sunday Update by email: one tap for My Plan users; email + code for everyone else
+  function newsSheet() {
+    if (P.signedIn) {
+      return api('prefs', { news: true }).then(function (r) { P.news = r.news; store(); refresh(); if (window._currentPage === 'sunday') openSunday(); toast('📰 Done — the Sunday Update will come to ' + esc(P.email)); gt('sunday_signup', { via: 'plan' }); }).catch(function (e) { toast(e.message); });
+    }
+    var s = sheet('<h3>📰 Auntie Tobi’s Sunday Update</h3><div class="mp-sub" style="font-size:14px">UK news that affects Nigerians, events coming up and a Nigerian business to support — in your inbox every Sunday morning. Free, and you can stop any time.</div>' +
+      '<div id="nA"><label>Email</label><input id="nE" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com"><div class="mp-err" id="nErr"></div><div class="mp-row" style="justify-content:flex-end"><button class="mp-btn g" id="nX">Not now</button><button class="mp-btn" id="nGo">Sign me up</button></div></div>' +
+      '<div id="nB" style="display:none"><label>Enter the 6-digit code we emailed you</label><input id="nC" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="font-size:22px;letter-spacing:6px;text-align:center"><div class="mp-sub">Can’t see it? Check your spam or junk folder.</div><div class="mp-err" id="nErr2"></div><div class="mp-row" style="justify-content:flex-end"><button class="mp-btn" id="nOk">Confirm</button></div></div>');
+    var email = '', err = function (id, m) { var e = $(id, s); e.textContent = m; e.style.display = 'block'; };
+    $('#nX', s).onclick = function () { s.remove(); };
+    $('#nGo', s).onclick = function () { var b = this; email = $('#nE', s).value.trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err('#nErr', 'Please enter your email address.'); b.disabled = true; api('news-code', { email: email }).then(function () { $('#nA', s).style.display = 'none'; $('#nB', s).style.display = 'block'; $('#nC', s).focus(); }).catch(function (e) { b.disabled = false; err('#nErr', e.message); }); };
+    $('#nC', s).oninput = function () { if (this.value.replace(/\D/g, '').length === 6) $('#nOk', s).click(); };
+    $('#nOk', s).onclick = function () { var b = this; if (b.disabled) return; b.disabled = true; api('news-verify', { email: email, code: $('#nC', s).value }).then(function () { s.remove(); P.news = true; ls.set('tobi_news_sub', '1'); store(); refresh(); toast('📰 You’re in! See you on Sunday 💚'); gt('sunday_signup', { via: 'news' }); }).catch(function (e) { b.disabled = false; err('#nErr2', e.message); }); };
+    setTimeout(function () { var e = $('#nE', s); if (e) e.focus(); }, 80);
+  }
+  function newsBox() {
+    if (P.news || ls.get('tobi_news_sub') === '1' || ls.get('tobi_news_box') === 'no') return;
+    var msgs = document.getElementById('messages'); if (!msgs || msgs.querySelector('[data-news-box]')) return;
+    addCss(); var d = document.createElement('div'); d.className = 'msg bot mp'; d.setAttribute('data-news-box', '1'); d.style.alignItems = 'flex-start';
+    d.innerHTML = '<div style="flex:1;min-width:0"><div class="mp-new" style="background:#FFF4D6;margin:0"><span style="font-size:22px">📰</span><div style="flex:1"><b style="color:#0F1E36">Get Auntie Tobi’s Sunday Update</b> — the week’s UK news, events and more, every Sunday. <a href="#" data-mp-news style="color:#057A44;font-weight:800">Sign up free →</a></div><button class="x" aria-label="Hide">✕</button></div></div>';
+    d.querySelector('.x').onclick = function () { ls.set('tobi_news_box', 'no'); d.remove(); };
+    bindNews(d);
+    var first = msgs.firstElementChild; if (first && first.nextSibling) msgs.insertBefore(d, first.nextSibling); else msgs.appendChild(d);
+  }
+  function hookNews() {
+    ['showNewsAndUpdates', 'showAllNews'].forEach(function (fn) {
+      var orig = window[fn]; if (typeof orig !== 'function' || orig._mp) return;
+      var wrapped = function () { var r = orig.apply(this, arguments); setTimeout(newsBox, 250); return r; };
+      wrapped._mp = 1; try { window[fn] = wrapped; } catch (e) {}
+    });
   }
 
   // ───── menu pill (phone) ─────
@@ -443,7 +525,7 @@
     var home = pills.firstElementChild; if (home && home.nextSibling) pills.insertBefore(p, home.nextSibling); else pills.appendChild(p);
   }
 
-  window.MyPlan = { open: open, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
-  function start() { addCss(); addPill(); fill(); boot(); if (/[?&]plan\b/.test(location.search) || location.pathname === '/my-plan') setTimeout(open, 900); }
+  window.MyPlan = { open: open, openSunday: openSunday, newsSheet: newsSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
+  function start() { addCss(); addPill(); hookNews(); fill(); boot(); if (/[?&]plan\b/.test(location.search) || location.pathname === '/my-plan') setTimeout(open, 900); else if (/[?&]sunday\b/.test(location.search)) setTimeout(function () { openSunday(); }, 900); else if (/[?&]news=1\b/.test(location.search)) setTimeout(newsSheet, 1200); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

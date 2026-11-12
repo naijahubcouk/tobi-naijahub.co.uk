@@ -26,6 +26,7 @@ async function record(evt) {
   const type = TYPES[evt && evt.type]; const d = (evt && evt.data) || {};
   if (!type || !d.email_id) return { ignored: true };
   const ref = await getJson('out/rid/' + d.email_id).catch(() => null);
+  if (ref && ref.sun) { await require('./sunday').recordEvent(ref.sun, ref.h, type, d.email_id); return { ok: true, type, sunday: ref.sun }; }   // 📰 Sunday Update
   if (!ref || !ref.slug) return { ignored: true };
   const at = evt.created_at || core.nowIso(), link = type === 'clicked' && d.click ? String(d.click.link || '').slice(0, 300) : '';
   await cas('out/ev/' + ref.slug, cur => {

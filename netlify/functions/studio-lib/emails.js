@@ -185,6 +185,18 @@ It expires in 10 minutes and can only be used once.
 Didn’t ask for this? Ignore this email — nobody can sign in without the code.
 
 {brand}`, ['code', 'brand'], ['code']),
+  'plan.morning': S('sys-plan', 'My Plan · morning email', 'Mornings, only on days someone has something due — and only if they switched morning emails on in My Plan', '☀️ Your plan for today',
+`Good morning{name_comma} ☀️
+
+Here’s what’s on your plan today:
+
+{list}
+
+[[💚 Open My Plan|{plan_link}]]
+
+Auntie Tobi 💚
+
+You get this because you switched on morning emails in My Plan. [Turn them off]({off_link})`, ['name', 'name_comma', 'list', 'count', 'plan_link', 'off_link'], ['list', 'off_link']),
   'credits.added': S('sys-acc', 'AI credits added', 'After someone buys AI credits', '{credits} AI credits added to your Business Studio',
 `Thank you! {credits} AI credits have been added to your Auntie Tobi Business Studio.
 
@@ -411,6 +423,7 @@ const GROUPS = [
   { id: 'sys-biz', name: 'Add your business', note: 'Emails to owners who add or manage their business. Sent from HQ → Add your business when you press send.' },
   { id: 'sys-club', name: 'Business Club', note: 'Sent straight after a Business Club payment.' },
   { id: 'sys-acc', name: 'Account & payments', note: 'Sign-in codes, credits and subscriptions. 🔒 Some words must stay (e.g. the code, the price, date and cancel link).' },
+  { id: 'sys-plan', name: 'My Plan (app)', note: 'Emails to people using My Plan in the app. The Sunday Update is written each week in HQ → 📰 Sunday Update.' },
   { id: 'sys-week', name: 'Weekly email', note: 'The Monday “Your week ahead” round-up.' },
   { id: 'sys-verify', name: 'Verification', note: 'Answers to “verify my business” requests.' },
   { id: 'sys-msg', name: 'Messages & ideas', note: 'When you reply to a member.' },

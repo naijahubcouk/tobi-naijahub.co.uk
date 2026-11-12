@@ -41,15 +41,15 @@ function merge(cur, incoming) {
 }
 
 const live = items => (items || []).filter(i => !i.del);
-function publicState(u) { return { signedIn: true, email: u.email, name: u.name || '', town: u.town || '', news: !!u.news, items: u.items || [] }; }
+function publicState(u) { return { signedIn: true, email: u.email, name: u.name || '', town: u.town || '', news: !!u.news, rm: u.rm || '', items: u.items || [] }; }
 
 async function touchIndex(h, u, signup) {
   const today = day();
   await cas('myplan/index', cur => {
     cur = cur || { u: {} };
     const was = cur.u[h], n = live(u.items).length;
-    if (!signup && was && was.last === today && was.n === n && was.news === !!u.news && was.town === (u.town || '')) return undefined;
-    cur.u[h] = { email: u.email, at: (was && was.at) || u.createdAt || core.nowIso(), last: today, n, news: !!u.news, town: u.town || '' };
+    if (!signup && was && was.last === today && was.n === n && was.news === !!u.news && was.town === (u.town || '') && (was.rm || '') === (u.rm || '')) return undefined;
+    cur.u[h] = { email: u.email, at: (was && was.at) || u.createdAt || core.nowIso(), last: today, n, news: !!u.news, town: u.town || '', rm: u.rm || '' };
     return cur;
   });
 }
@@ -140,6 +140,7 @@ async function prefs(ctx) {
     if (b.name !== undefined) cur.name = cleanText(b.name, 40);
     if (b.town !== undefined) cur.town = cleanText(b.town, 60);
     if (typeof b.news === 'boolean') cur.news = b.news;
+    if (b.rm !== undefined) cur.rm = ['06', '07', '08', '09', '10'].includes(b.rm) ? b.rm : '';
     u = cur; return cur;
   });
   await setNews(w.h, u.email, !!u.news, 'myplan');
@@ -178,4 +179,56 @@ async function stats() {
   };
 }
 
-module.exports = { requestCode, verify, me, save, prefs, signout, deleteAll, stats, merge, cleanItem, COOKIE };
+// ───── 📰 Sunday Update sign-up without a My Plan account (the News box) ─────
+async function newsCode(email, ip) {
+  email = core.requireEmail(email);
+  await core.rateLimit('news-code-ip', ip, 20, 60 * 60 * 1000, 'Too many codes — please try again in a little while.');
+  await core.rateLimit('news-code', email, 5, 60 * 60 * 1000, 'Too many codes for this email — please try again later.');
+  await core.issueOtp(email, 'myplan');
+  return { sent: true };
+}
+async function newsVerify(ctx) {
+  const email = core.requireEmail(ctx.body.email);
+  await core.rateLimit('myplan-verify', ctx.ip, 30, 60 * 60 * 1000, 'Too many tries — please wait a little and try again.');
+  if (!(await core.checkOtp(email, 'myplan', ctx.body.code))) throw new HttpError(400, 'bad_code', 'That code didn’t work — check it, or ask for a new one.');
+  await require('./sunday').subscribe(email, 'news');
+  await core.audit(email, 'news_subscribe', {}).catch(() => {});
+  return { subscribed: true };
+}
+
+// ───── ☀️ morning email: "what's on your plan today" (only on days with something due, only if they switched it on) ─────
+async function morning(budgetMs, now) {
+  const sunday = require('./sunday'), emails = require('./emails');
+  const L = sunday.london(now), hh = String(L.hour).padStart(2, '0'), stop = Date.now() + (budgetMs || 20000);
+  const idx = (await getJson('myplan/index').catch(() => null)) || { u: {} };
+  const due = Object.entries(idx.u).filter(([, v]) => v.rm && v.rm <= hh);
+  let sent = 0;
+  for (const [h] of due) {
+    if (Date.now() > stop) break;
+    const u = await getJson('myplan/u/' + h).catch(() => null);
+    if (!u || !u.rm || u.rmSent === L.day || u.rm > hh) continue;
+    const items = (u.items || []).filter(i => !i.del && !i.done && i.d && i.d <= L.day).sort((a, b) => (a.d + (a.tm || '')).localeCompare(b.d + (b.tm || '')));
+    await cas('myplan/u/' + h, cur => { if (!cur) return undefined; cur.rmSent = L.day; return cur; });
+    if (!items.length) continue;
+    const t12 = tm => { const x = +tm.slice(0, 2); return (x % 12 || 12) + (tm.slice(3) !== '00' ? ':' + tm.slice(3) : '') + (x < 12 ? 'am' : 'pm'); };
+    const line = i => '- ' + i.t + (i.d < L.day ? ' (overdue)' : i.tm ? ' at ' + t12(i.tm) : '');
+    const list = items.slice(0, 8).map(line).join('\n') + (items.length > 8 ? '\n- …and ' + (items.length - 8) + ' more' : '');
+    const off = `${core.siteBase()}/.netlify/functions/my-plan?roff=${h}.${core.hmac('roff:' + h).slice(0, 20)}`;
+    const vars = { name: u.name || '', name_comma: u.name ? ', ' + u.name : '', list, count: String(items.length), plan_link: `${core.siteBase()}/?plan=1`, off_link: off };
+    const text = `Good morning${vars.name_comma} ☀️\n\nHere’s what’s on your plan today:\n\n${list.replace(/^- /gm, '• ')}\n\nOpen My Plan: ${vars.plan_link}\n\nAuntie Tobi 💚\n\nYou get this because you switched on morning emails in My Plan. Turn them off: ${off}`;
+    const m = await emails.system('plan.morning', vars, { subject: '☀️ Your plan for today', text, html: '' });
+    const html = m.html || emails.renderWith({ subject: m.subject, body: `Good morning{name_comma} ☀️\n\nHere’s what’s on your plan today:\n\n{list}\n\n[[💚 Open My Plan|{plan_link}]]\n\nAuntie Tobi 💚` }, vars, 'You get this because you switched on morning emails in My Plan. [Turn them off](' + off + ')').html;
+    const ok = await core.sendEmail([u.email], m.subject, m.text || text, html, { 'List-Unsubscribe': `<${off}>` }).catch(() => false);
+    if (ok) sent++;
+  }
+  return { hour: hh, checked: due.length, sent };
+}
+async function remindOff(tok) {
+  const [h, sig] = String(tok || '').split('.');
+  if (!/^[a-f0-9]{32}$/.test(h || '') || sig !== core.hmac('roff:' + h).slice(0, 20)) return false;
+  let u; await cas('myplan/u/' + h, cur => { if (!cur) return undefined; cur.rm = ''; u = cur; return cur; });
+  if (u) await touchIndex(h, u, false).catch(() => {});
+  return true;
+}
+
+module.exports = { newsCode, newsVerify, morning, remindOff, requestCode, verify, me, save, prefs, signout, deleteAll, stats, merge, cleanItem, COOKIE };
