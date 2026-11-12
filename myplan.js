@@ -16,14 +16,19 @@
 
   // ───── state (kept on this phone too, so it opens instantly and works offline) ─────
   var P = (function () { try { return JSON.parse(ls.get(KEY) || '{}'); } catch (e) { return {}; } })();
-  P.items = Array.isArray(P.items) ? P.items : [];
-  var dirty = {}, syncT = null, syncing = false, view = { tab: 'plan', showDone: false };
-  function store() { ls.set(KEY, JSON.stringify({ items: P.items, signedIn: !!P.signedIn, email: P.email || '', name: P.name || '', town: P.town || '', news: !!P.news, rm: P.rm || '', sun: P.sun || null })); }
+  P.items = Array.isArray(P.items) ? P.items : []; P.lists = Array.isArray(P.lists) ? P.lists : [];
+  var dirtyL = {}, dirty = {}, syncT = null, syncing = false, view = { tab: 'plan', showDone: false };
+  function store() { ls.set(KEY, JSON.stringify({ items: P.items, lists: P.lists, signedIn: !!P.signedIn, email: P.email || '', name: P.name || '', town: P.town || '', news: !!P.news, rm: P.rm || '', sun: P.sun || null })); }
   var live = function () { return P.items.filter(function (i) { return !i.del; }); };
 
   function api(action, body) {
     return fetch(API, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify(Object.assign({ action: action }, body || {})) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.message || 'Something went wrong — please try again.'); e.code = j.error; e.status = r.status; throw e; } return j; }); });
+  }
+  function mergeLists(lists) {
+    var map = {}; (P.lists || []).forEach(function (l) { map[l.id] = l; });
+    (lists || []).forEach(function (l) { var o = map[l.id]; if (!o || (l.up || 0) >= (o.up || 0)) map[l.id] = l; });
+    P.lists = Object.keys(map).map(function (k) { return map[k]; });
   }
   function mergeIn(items) {
     var map = {}; P.items.forEach(function (i) { map[i.id] = i; });
@@ -33,14 +38,14 @@
   function change(it) { it.up = Date.now(); dirty[it.id] = 1; store(); if (P.signedIn) { clearTimeout(syncT); syncT = setTimeout(sync, 700); } refresh(); }
   function sync() {
     if (!P.signedIn || syncing) return;
-    var ids = Object.keys(dirty); if (!ids.length) return;
-    var send = P.items.filter(function (i) { return dirty[i.id]; }); dirty = {}; syncing = true;
-    api('save', { items: send }).then(function (r) { syncing = false; mergeIn(r.items); store(); if (Object.keys(dirty).length) sync(); })
-      .catch(function (e) { syncing = false; send.forEach(function (i) { dirty[i.id] = 1; }); if (e.status === 401) { P.signedIn = false; store(); refresh(); } else setTimeout(sync, 15000); });
+    if (!Object.keys(dirty).length && !Object.keys(dirtyL).length) return;
+    var send = P.items.filter(function (i) { return dirty[i.id]; }), sendL = (P.lists || []).filter(function (l) { return dirtyL[l.id]; }); dirty = {}; dirtyL = {}; syncing = true;
+    api('save', { items: send, lists: sendL }).then(function (r) { syncing = false; mergeIn(r.items); mergeLists(r.lists); store(); if (window._currentPage === 'myplan' && view.tab === 'shop' && !document.activeElement.matches('#shQ')) render(); if (Object.keys(dirty).length || Object.keys(dirtyL).length) sync(); })
+      .catch(function (e) { syncing = false; send.forEach(function (i) { dirty[i.id] = 1; }); sendL.forEach(function (l) { dirtyL[l.id] = 1; }); if (e.status === 401) { P.signedIn = false; store(); refresh(); } else setTimeout(sync, 15000); });
   }
   function boot() {
     api('me').then(function (r) {
-      if (r.signedIn) { P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; var local = P.items; P.items = []; mergeIn(r.items); local.forEach(function (i) { var s = P.items.filter(function (x) { return x.id === i.id; })[0]; if (!s || (i.up || 0) > (s.up || 0)) { mergeIn([i]); dirty[i.id] = 1; } }); sync(); }
+      if (r.signedIn) { P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; var local = P.items, localL = P.lists || []; P.items = []; P.lists = []; mergeIn(r.items); mergeLists(r.lists); local.forEach(function (i) { var s = P.items.filter(function (x) { return x.id === i.id; })[0]; if (!s || (i.up || 0) > (s.up || 0)) { mergeIn([i]); dirty[i.id] = 1; } }); localL.forEach(function (l) { var s = P.lists.filter(function (x) { return x.id === l.id; })[0]; if (!s || (l.up || 0) > (s.up || 0)) { mergeLists([l]); dirtyL[l.id] = 1; } }); sync(); }
       else if (P.signedIn) { P.signedIn = false; }
       store(); refresh();
     }).catch(function () {});
@@ -220,7 +225,7 @@
 
   // ───── 🏠 Today card on Home ─────
   function todayHtml(h, s) {
-    var g = groups(), due = g.over.concat(g.today), has = live().length > 0, hideNew = ls.get(HIDE) === '1';
+    var g = groups(), due = g.over.concat(g.today), has = live().length > 0 || liveLists().length > 0, hideNew = ls.get(HIDE) === '1';
     var name = P.name ? esc(P.name) : '';
     var d = new Date(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
     h = h || '👋🏾 Welcome back!';
@@ -234,6 +239,8 @@
       if (due.length) html += due.slice(0, 3).map(function (i) { return row(i); }).join('') + (due.length > 3 ? '<div class="mp-sub" style="margin-top:6px">+ ' + (due.length - 3) + ' more in My Plan</div>' : '');
       else if (!cs.length) { var nx = g.week.concat(g.later).filter(function (i) { return !i.cel; })[0]; html += '<div class="mp-sub" style="font-size:14px;color:#0F1E36;margin-top:2px">Nothing due today 🎉' + (nx ? ' Next: <b>' + esc(nx.t) + '</b> · ' + nice(nx.d) : '') + '</div>'; }
       html += cs.slice(0, 2).map(function (i) { return row(i); }).join('');
+      var sl0 = liveLists().slice().sort(function (a, b) { return (b.up || 0) - (a.up || 0); })[0], sleft = sl0 ? sl0.items.filter(function (i) { return !i.x; }).length : 0;
+      if (sleft) html += '<div class="mp-it" data-mp-shop><span style="width:24px;text-align:center;font-size:17px">🛒</span><div class="tx">' + esc(sl0.name) + '</div><div class="r">' + sleft + ' to buy</div></div>';
       html += '<div class="mp-row"><button class="mp-btn" data-mp-open>💚 Open My Plan</button><button class="mp-btn g" data-mp-add>＋ Add</button></div>';
     } else if (!hideNew) {
       html += '<div class="mp-new"><span style="font-size:22px">💚</span><div style="flex:1"><b>New: My Plan</b> — remember bills, birthdays and shopping in one place. <a href="#" data-mp-open style="color:#057A44;font-weight:800">Try it →</a></div><button class="x" data-mp-hide aria-label="Hide">✕</button></div>';
@@ -245,6 +252,7 @@
     root.querySelectorAll('[data-mp-add]').forEach(function (b) { b.onclick = function () { open(); setTimeout(function () { var i = $('#mpQ'); if (i) i.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-hide]').forEach(function (b) { b.onclick = function () { ls.set(HIDE, '1'); gt('plan_hide_new'); fill(); }; });
     root.querySelectorAll('[data-mp-sun]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openSunday(); }; });
+    root.querySelectorAll('[data-mp-shop]').forEach(function (b) { b.onclick = function () { view.tab = 'shop'; open(); }; });
     bindRows(root);
   }
   function fill() {
@@ -267,8 +275,9 @@
     var root = document.getElementById('mpRoot'); if (!root) return;
     var g = groups(), has = live().length > 0;
     var h = '<div class="mp-top"><b>💚 My Plan</b><span>Everything you need to remember, in one place</span></div>' +
-      '<div class="mp-tabs"><button data-tab="plan"' + (view.tab === 'plan' ? ' class="on"' : '') + '>📋 Plan</button><button data-tab="cel"' + (view.tab === 'cel' ? ' class="on"' : '') + '>🎉 Celebrations</button><button data-soon="🛒 Shopping lists">🛒 Shopping<span class="soon">coming soon</span></button></div>';
+      '<div class="mp-tabs"><button data-tab="plan"' + (view.tab === 'plan' ? ' class="on"' : '') + '>📋 Plan</button><button data-tab="cel"' + (view.tab === 'cel' ? ' class="on"' : '') + '>🎉 Celebrations</button><button data-tab="shop"' + (view.tab === 'shop' ? ' class="on"' : '') + '>🛒 Shopping</button></div>';
     if (view.tab === 'cel') { root.innerHTML = h + celHtml(); bindCel(root); return; }
+    if (view.tab === 'shop') { root.innerHTML = h + shopHtml(); bindShop(root); return; }
     if (has && !P.signedIn) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — it’s only on this phone. Save it to your free Auntie Tobi account.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
     if (P.signedIn && !P.rm && ls.get('tobi_myplan_rm_ask') !== 'no' && has) h += '<div class="mp-new" style="margin:0 0 10px"><span style="font-size:22px">☀️</span><div style="flex:1"><b style="color:#0F1E36">Want a morning email?</b> Only on days you have something due.<div class="mp-row" style="margin-top:8px"><button class="mp-btn" data-rm-yes>Yes — at 7am</button><button class="mp-btn g" data-rm-no>No thanks</button></div></div></div>';
     h += '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ Type it — e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
@@ -277,7 +286,7 @@
         '<div class="mp-welcome"><button data-w="item"><span>📋</span><div>Add something to remember<small>“Dentist Friday 4pm”, “Pay rent every 1st”</small></div></button>' +
         '<button data-w="life"><span>🗂️</span><div>Add UK life dates<small>Passport, eVisa, MOT, car insurance, tax return…</small></div></button>' +
         '<button data-w="cel"><span>🎉</span><div>Add a birthday or anniversary<small>Auntie Tobi reminds you — and helps you make a card</small></div></button>' +
-        '<button data-w="shop" disabled><span>🛒</span><div>Start a shopping list<small>Coming soon</small></div></button></div></div>';
+        '<button data-w="shop"><span>🛒</span><div>Start a shopping list<small>Naija groceries, weekly shop, party — ready to go</small></div></button></div></div>';
     } else {
       var sec = function (label, list, red) { return list.length ? '<div class="mp-lbl' + (red ? ' red' : '') + '">' + label + '</div>' + list.map(function (i) { return row(i); }).join('') : ''; };
       var body = sec('Overdue', g.over, true) + sec('Today', g.today) + sec('Next 7 days', g.week) + sec('Later', g.later) + sec('No date', g.none);
@@ -296,7 +305,7 @@
     q.oninput = function () { var p = parse(q.value); var bits = [p.d ? '📅 ' + nice(p.d, true) : '', p.tm ? '🕒 ' + niceTime(p.tm) : '', p.rep ? '🔁 ' + REP[p.rep].toLowerCase() : ''].filter(Boolean); hint.style.display = bits.length && p.t ? 'block' : 'none'; hint.innerHTML = '<b>' + esc(p.t) + '</b> · ' + bits.join(' · '); };
     $('#mpF', root).onsubmit = function (e) { e.preventDefault(); var v = q.value.trim(); if (!v) { q.focus(); return; } var p = parse(v); if (!p.t) p.t = v; add({ t: p.t, d: p.d, tm: p.tm, rep: p.rep, dom: p.dom }); q.value = ''; hint.style.display = 'none'; };
     root.querySelectorAll('[data-soon]').forEach(function (b) { b.onclick = function () { toast(b.dataset.soon + ' are coming soon 💚'); }; });
-    root.querySelectorAll('[data-w]').forEach(function (b) { b.onclick = function () { if (b.dataset.w === 'item') { q.focus(); } else if (b.dataset.w === 'life') lifeSheet(); else if (b.dataset.w === 'cel') { view.tab = 'cel'; render(); celSheet(); } }; });
+    root.querySelectorAll('[data-w]').forEach(function (b) { b.onclick = function () { if (b.dataset.w === 'item') { q.focus(); } else if (b.dataset.w === 'life') lifeSheet(); else if (b.dataset.w === 'cel') { view.tab = 'cel'; render(); celSheet(); } else if (b.dataset.w === 'shop') { view.tab = 'shop'; render(); } }; });
     bindTabs(root);
     root.querySelectorAll('[data-mp-save]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); signIn(); }; });
     root.querySelectorAll('[data-mp-settings]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); }; });
@@ -456,6 +465,121 @@
     setTimeout(function () { $('#pT', s).focus(); }, 80);
   }
 
+  // ───── 🛒 Shopping lists ─────
+  var CATS = ['🍠 African groceries', '🥬 Fruit & veg', '🍗 Meat & fish', '🥚 Dairy & eggs', '🍞 Bakery', '🥫 Food cupboard', '🥤 Drinks', '🧽 Household', '🧴 Personal care', '🎉 Party', '🏫 School', '📦 Other'];
+  var GUESSC = [
+    [/\b(yam|plantain|garri|gari|egusi|ogbono|palm oil|stockfish|crayfish|semovita|semolina|poundo|pounded yam|fufu|amala|elubo|iru|locust|uziza|ugu|bitter ?leaf|efo|ewedu|scotch bonnet|maggi|knorr|cameroon pepper|suya|kilishi|dried fish|ponmo|kpomo|honey beans|ofada|indomie|chin ?chin|plantain chips|zobo|malt|peppersoup|ehuru|ogiri|agbalumo|tiger ?nut|kola)\b/i, 0],
+    [/\b(apples?|bananas?|oranges?|tomato(es)?|onions?|peppers?|carrots?|potato(es)?|spinach|lettuce|cucumber|garlic|ginger|lemons?|limes?|grapes|berries|avocado|cabbage|okra|okro|veg|fruit)\b/i, 1],
+    [/\b(chicken|turkey|beef|goat|lamb|fish|prawns?|mackerel|tilapia|catfish|sardines?|sausages?|mince|meat|wings|drumsticks?)\b/i, 2],
+    [/\b(milk|eggs?|butter|cheese|yoghurt|yogurt|cream)\b/i, 3], [/\b(bread|rolls|buns|cake|croissants?|bagels?)\b/i, 4],
+    [/\b(rice|pasta|spaghetti|noodles|flour|sugar|salt|oil|beans|cereal|oats|tea|coffee|milo|tin|tinned|baked beans|tomato paste|stock|spices?|curry|thyme)\b/i, 5],
+    [/\b(water|juice|coke|fanta|sprite|lemonade|wine|beer|squash|drinks?)\b/i, 6],
+    [/\b(toilet roll|kitchen roll|washing|detergent|bleach|soap|bin bags?|foil|cling ?film|sponges?|fairy|dettol|cleaner|batteries|light ?bulbs?)\b/i, 7],
+    [/\b(shampoo|conditioner|toothpaste|toothbrush|deodorant|lotion|cream|shea|pads|tampons|nappies|diapers|wipes|razors?|hair)\b/i, 8],
+    [/\b(plates|cups|napkins|balloons|cutlery|trays?|party|candles)\b/i, 9], [/\b(uniform|school|pe kit|pencil|book ?bag|lunch ?box|stationery)\b/i, 10]];
+  function guessCat(n) { for (var i = 0; i < GUESSC.length; i++) if (GUESSC[i][0].test(n)) return CATS[GUESSC[i][1]]; return CATS[11]; }
+  var TPL = [
+    { k: 'naija', e: '🍠', name: 'Naija groceries', items: ['Yam', 'Plantain', 'Garri', 'Egusi', 'Palm oil', 'Honey beans', 'Rice', 'Stockfish', 'Crayfish', 'Scotch bonnet pepper', 'Tomatoes', 'Onions', 'Maggi / Knorr cubes', 'Semovita', 'Dried fish'] },
+    { k: 'weekly', e: '🧺', name: 'Weekly shop', items: ['Bread', 'Milk', 'Eggs', 'Butter', 'Chicken', 'Rice', 'Pasta', 'Onions', 'Tomatoes', 'Bananas', 'Apples', 'Cereal', 'Toilet roll', 'Washing-up liquid'] },
+    { k: 'party', e: '🎉', name: 'Party / Owambe', items: ['Rice (big bag)', 'Chicken', 'Turkey', 'Puff puff', 'Samosas & spring rolls', 'Chin chin', 'Malt', 'Soft drinks', 'Water', 'Ice', 'Foil trays', 'Plates & cups', 'Napkins', 'Cutlery'] },
+    { k: 'school', e: '🏫', name: 'School things', items: ['Uniform', 'School shoes', 'PE kit', 'Book bag', 'Water bottle', 'Lunchbox', 'Pencil case', 'Name labels'] },
+    { k: 'blank', e: '🛒', name: 'New list', items: [] }];
+  var gbp = function (n) { return '£' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, ''); };
+  var liveLists = function () { return (P.lists || []).filter(function (l) { return !l.del; }); };
+  function listChange(l) { l.up = Date.now(); dirtyL[l.id] = 1; store(); if (P.signedIn) { clearTimeout(syncT); syncT = setTimeout(sync, 700); } if (window._currentPage === 'myplan') render(); fill(); }
+  function newList(t) {
+    var l = { id: newId(), name: t.name, emoji: t.e, items: t.items.map(function (n) { return { id: newId(), n: n, q: '', c: guessCat(n), p: null, x: false }; }), up: Date.now() };
+    P.lists = (P.lists || []).concat([l]); view.list = l.id; listChange(l); gt('shop_new', { tpl: t.k });
+    if (!P.signedIn) setTimeout(askSave, 600);
+    return l;
+  }
+  // "4 plantain £3", "2kg rice", "Garri x2 £5.50"
+  function parseItem(v) {
+    var s = ' ' + v.replace(/\s+/g, ' ').trim() + ' ', p = null, q = '', m;
+    if ((m = s.match(/\s£\s?(\d+(?:\.\d{1,2})?)\s/))) { p = +m[1]; s = s.replace(m[0], ' '); }
+    if ((m = s.match(/^\s(\d+(?:\.\d+)?\s?(?:kg|g|l|ml|lb|bags?|packs?|tins?|bottles?|tubers?|pcs|x)?)\s/i))) { q = m[1].trim(); s = s.replace(m[0], ' '); }
+    else if ((m = s.match(/\s(?:x\s?(\d+)|(\d+(?:\.\d+)?\s?(?:kg|g|l|ml|lb|bags?|packs?|tins?|bottles?|tubers?)))\s*$/i))) { q = (m[1] || m[2]).trim(); s = s.replace(m[0], ' '); }
+    var n = s.trim(); return { n: n.charAt(0).toUpperCase() + n.slice(1), q: q, p: p };
+  }
+  function shopHtml() {
+    var lists = liveLists(), l = lists.filter(function (x) { return x.id === view.list; })[0] || lists[0];
+    if (l) view.list = l.id;
+    var h = '';
+    if (!P.signedIn && lists.length) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — save your lists so they’re on any phone.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
+    if (!l) return h + '<div class="mp-card"><div class="mp-empty"><b>🛒 Your shopping lists</b>Start with a ready-made list and change it however you like — or start from scratch.</div><div class="mp-welcome">' + TPL.map(function (t) { return '<button data-tpl="' + t.k + '"><span>' + t.e + '</span><div>' + (t.k === 'blank' ? 'Start a blank list' : esc(t.name)) + '<small>' + (t.items.length ? t.items.slice(0, 5).join(', ') + '…' : 'Add your own items') + '</small></div></button>'; }).join('') + '</div></div>';
+    h += '<div class="mp-row" style="margin:0 0 10px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px">' + lists.map(function (x) { return '<button class="mp-btn' + (x.id === l.id ? '' : ' g') + '" style="white-space:nowrap;padding:8px 12px" data-list="' + x.id + '">' + esc(x.emoji + ' ' + x.name) + '</button>'; }).join('') + '<button class="mp-btn g" style="padding:8px 12px" data-list-new aria-label="New list">＋</button></div>';
+    var left = l.items.filter(function (i) { return !i.x; }), got = l.items.filter(function (i) { return i.x; });
+    var est = l.items.reduce(function (a, i) { return a + (i.p || 0); }, 0), estLeft = left.reduce(function (a, i) { return a + (i.p || 0); }, 0);
+    h += '<div class="mp-card"><div style="display:flex;align-items:center;gap:8px"><b style="font-size:17px;flex:1">' + esc(l.emoji + ' ' + l.name) + '</b><span class="mp-sub">' + (l.items.length ? left.length + ' of ' + l.items.length + ' left' : '') + '</span><button class="mp-btn g" style="padding:6px 10px" data-list-menu aria-label="List options">⋯</button></div>' +
+      '<form class="mp-add" id="shF" style="margin:10px 0 4px"><input id="shQ" placeholder="Add an item — e.g. “4 plantain £3”" autocomplete="off" maxlength="80"><button class="mp-btn" aria-label="Add">＋</button></form>';
+    if (!l.items.length) h += '<div class="mp-sub" style="padding:8px 0">Nothing on this list yet — add your first item above.</div>';
+    var byCat = {}; left.forEach(function (i) { (byCat[i.c || CATS[11]] = byCat[i.c || CATS[11]] || []).push(i); });
+    var order = CATS.concat(Object.keys(byCat).filter(function (c) { return CATS.indexOf(c) < 0; }));
+    var irow = function (i) { return '<div class="mp-it' + (i.x ? ' dn' : '') + '" data-item="' + i.id + '"><button class="mp-ck' + (i.x ? ' on' : '') + '" data-buy="' + i.id + '" aria-label="Bought">' + (i.x ? '✓' : '') + '</button><div class="tx">' + esc(i.n) + '</div><div class="r">' + esc([i.q, i.p != null ? gbp(i.p) : ''].filter(Boolean).join(' · ')) + '</div></div>'; };
+    order.forEach(function (c) { if (byCat[c]) h += '<div class="mp-lbl">' + esc(c) + '</div>' + byCat[c].map(irow).join(''); });
+    if (got.length) h += '<div class="mp-lbl">✅ In the basket (' + got.length + ')</div>' + got.map(irow).join('');
+    if (est) h += '<div style="border-top:2px solid #f1ece0;margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-weight:800;font-size:15px"><span>Estimated total</span><span>' + gbp(est) + '</span></div>' + (got.length && estLeft !== est ? '<div class="mp-sub" style="display:flex;justify-content:space-between"><span>Still to buy</span><span>' + gbp(estLeft) + '</span></div>' : '') + '<div class="mp-sub" style="font-size:11.5px;margin-top:2px">Your own estimates — not shop prices.</div>';
+    h += '</div><div class="mp-row" style="margin-bottom:10px"><button class="mp-btn" style="background:#25D366" data-list-wa>📤 Send on WhatsApp</button>' + (got.length ? '<button class="mp-btn g" data-list-reset>🔄 Untick all</button>' : '') + '</div>';
+    return h;
+  }
+  function bindShop(root) {
+    bindTabs(root);
+    root.querySelectorAll('[data-mp-save]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); signIn(); }; });
+    root.querySelectorAll('[data-tpl]').forEach(function (b) { b.onclick = function () { var t = TPL.filter(function (x) { return x.k === b.dataset.tpl; })[0]; newList(t); toast(t.items.length ? '🛒 ' + t.name + ' ready — change anything you like' : '🛒 New list ready'); if (!t.items.length) setTimeout(function () { renameList(true); }, 300); }; });
+    var l = liveLists().filter(function (x) { return x.id === view.list; })[0]; if (!l) return;
+    root.querySelectorAll('[data-list]').forEach(function (b) { b.onclick = function () { view.list = b.dataset.list; render(); }; });
+    var nw = $('[data-list-new]', root); if (nw) nw.onclick = pickTemplate;
+    var f = $('#shF', root); if (f) f.onsubmit = function (e) { e.preventDefault(); var q = $('#shQ', root), v = q.value.trim(); if (!v) return q.focus(); v.split(/\s*[,\n]\s*(?=\D)/).forEach(function (part) { var it = parseItem(part); if (it.n) l.items.push({ id: newId(), n: it.n, q: it.q, c: guessCat(it.n), p: it.p, x: false }); }); listChange(l); gt('shop_add'); setTimeout(function () { var i = $('#shQ'); if (i) i.focus(); }, 50); };
+    root.querySelectorAll('[data-buy]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var i = l.items.filter(function (x) { return x.id === b.dataset.buy; })[0]; if (i) { i.x = !i.x; listChange(l); } }; });
+    root.querySelectorAll('[data-item]').forEach(function (r) { r.onclick = function () { itemSheet(l, r.dataset.item); }; });
+    var wa = $('[data-list-wa]', root); if (wa) wa.onclick = function () { sendWa(l); };
+    var rs = $('[data-list-reset]', root); if (rs) rs.onclick = function () { var before = JSON.parse(JSON.stringify(l.items)); l.items.forEach(function (i) { i.x = false; }); listChange(l); toast('🔄 Ready for next time', function () { l.items = before; listChange(l); }); };
+    var mn = $('[data-list-menu]', root); if (mn) mn.onclick = function () { listMenu(l); };
+  }
+  function pickTemplate() {
+    var s = sheet('<h3>🛒 New list</h3><div class="mp-welcome">' + TPL.map(function (t) { return '<button data-t="' + t.k + '"><span>' + t.e + '</span><div>' + (t.k === 'blank' ? 'Blank list' : esc(t.name)) + '<small>' + (t.items.length ? t.items.length + ' items to start with' : 'Add your own items') + '</small></div></button>'; }).join('') + '</div><div class="mp-row" style="justify-content:flex-end"><button class="mp-btn g" id="tX">Cancel</button></div>');
+    $('#tX', s).onclick = function () { s.remove(); };
+    s.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { var t = TPL.filter(function (x) { return x.k === b.dataset.t; })[0]; s.remove(); newList(t); if (!t.items.length) setTimeout(function () { renameList(true); }, 300); }; });
+  }
+  function renameList(fresh) {
+    var l = liveLists().filter(function (x) { return x.id === view.list; })[0]; if (!l) return;
+    var s = sheet('<h3>' + (fresh ? '🛒 Name your list' : '✏️ Rename list') + '</h3><div class="mp-two"><input id="rE" maxlength="4" value="' + esc(l.emoji) + '" style="flex:0 0 64px;text-align:center;font-size:20px"><input id="rN" maxlength="50" value="' + esc(fresh ? '' : l.name) + '" placeholder="e.g. Christmas shopping"></div><div class="mp-row" style="justify-content:flex-end"><button class="mp-btn g" id="rX">Cancel</button><button class="mp-btn" id="rOk">Save</button></div>');
+    $('#rX', s).onclick = function () { s.remove(); };
+    $('#rOk', s).onclick = function () { var n = $('#rN', s).value.trim(); if (n) l.name = n; l.emoji = $('#rE', s).value.trim() || '🛒'; s.remove(); listChange(l); };
+    setTimeout(function () { $('#rN', s).focus(); }, 80);
+  }
+  function listMenu(l) {
+    var s = sheet('<h3>' + esc(l.emoji + ' ' + l.name) + '</h3><div class="mp-welcome">' +
+      '<button data-m="rename"><span>✏️</span><div>Rename</div></button><button data-m="dup"><span>📄</span><div>Make a copy<small>Use it again with everything unticked</small></div></button>' +
+      '<button data-m="clear"><span>🧹</span><div>Remove what’s in the basket<small>Clear the ticked items</small></div></button><button data-m="del"><span>🗑️</span><div>Delete this list</div></button></div><div class="mp-row" style="justify-content:flex-end"><button class="mp-btn g" id="mX">Close</button></div>');
+    $('#mX', s).onclick = function () { s.remove(); };
+    s.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () {
+      var m = b.dataset.m; s.remove();
+      if (m === 'rename') return renameList();
+      if (m === 'dup') { var c = { id: newId(), name: l.name + ' (copy)', emoji: l.emoji, items: l.items.map(function (i) { return { id: newId(), n: i.n, q: i.q, c: i.c, p: i.p, x: false }; }), up: Date.now() }; P.lists.push(c); view.list = c.id; listChange(c); toast('📄 Copy made'); }
+      if (m === 'clear') { var before = l.items.slice(); l.items = l.items.filter(function (i) { return !i.x; }); listChange(l); toast('🧹 Cleared', function () { l.items = before; listChange(l); }); }
+      if (m === 'del') { l.del = true; view.list = ''; listChange(l); toast('🗑️ List deleted', function () { l.del = false; view.list = l.id; listChange(l); }); }
+    }; });
+  }
+  function itemSheet(l, id) {
+    var i = l.items.filter(function (x) { return x.id === id; })[0]; if (!i) return;
+    var s = sheet('<h3>✏️ ' + esc(i.n) + '</h3><label>Item</label><input id="iN" maxlength="80" value="' + esc(i.n) + '">' +
+      '<div class="mp-two"><div><label>How many / how much</label><input id="iQ" maxlength="24" value="' + esc(i.q) + '" placeholder="e.g. 4, 2kg, 1 bag"></div><div><label>Estimated price (£)</label><input id="iP" inputmode="decimal" maxlength="8" value="' + (i.p != null ? i.p : '') + '" placeholder="optional"></div></div>' +
+      '<label>Section</label><select id="iC">' + CATS.concat(CATS.indexOf(i.c) < 0 && i.c ? [i.c] : []).map(function (c) { return '<option' + (c === i.c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '<option value="__new">＋ New section…</option></select><input id="iCn" maxlength="30" placeholder="Name your section" style="display:none;margin-top:6px">' +
+      '<div class="mp-row" style="justify-content:space-between;margin-top:16px"><button class="mp-btn l" id="iDel">🗑️ Remove</button><span style="display:flex;gap:8px"><button class="mp-btn g" id="iX">Cancel</button><button class="mp-btn" id="iOk">Save</button></span></div>');
+    $('#iC', s).onchange = function () { $('#iCn', s).style.display = this.value === '__new' ? 'block' : 'none'; };
+    $('#iX', s).onclick = function () { s.remove(); };
+    $('#iDel', s).onclick = function () { var idx = l.items.indexOf(i); l.items.splice(idx, 1); s.remove(); listChange(l); toast('Removed', function () { l.items.splice(idx, 0, i); listChange(l); }); };
+    $('#iOk', s).onclick = function () { var c = $('#iC', s).value, p = $('#iP', s).value.replace(/[£,\s]/g, ''); i.n = $('#iN', s).value.trim() || i.n; i.q = $('#iQ', s).value.trim(); i.p = p !== '' && !isNaN(+p) ? +p : null; i.c = c === '__new' ? ($('#iCn', s).value.trim() || CATS[11]) : c; s.remove(); listChange(l); };
+  }
+  function sendWa(l) {
+    var left = l.items.filter(function (i) { return !i.x; }), byCat = {};
+    left.forEach(function (i) { (byCat[i.c || CATS[11]] = byCat[i.c || CATS[11]] || []).push(i); });
+    var txt = '🛒 *' + l.name + '*\n' + Object.keys(byCat).map(function (c) { return '\n' + c + '\n' + byCat[c].map(function (i) { return '• ' + i.n + (i.q ? ' (' + i.q + ')' : ''); }).join('\n'); }).join('\n') + '\n\nMade with My Plan on Auntie Tobi 💚 auntietobi.co.uk/my-plan';
+    if (!left.length) { toast('Everything is ticked off 🎉'); return; }
+    gt('shop_whatsapp'); window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+  }
+
   // ───── ➕ Save to My Plan (events) ─────
   function saveEvent(btn) {
     var t = btn.getAttribute('data-t') || '', d = btn.getAttribute('data-d') || '', tm = parse('x ' + (btn.getAttribute('data-tm') || '')).tm, loc = btn.getAttribute('data-loc') || '';
@@ -560,8 +684,8 @@
     $('#sOk', s).onclick = function () {
       var b = this, code = $('#sC', s).value.replace(/\D/g, ''); if (code.length !== 6) return err('#sErr2', 'Enter the 6-digit code.');
       if (b.disabled) return; b.disabled = true; b.textContent = 'Checking…';
-      api('verify', { email: email, code: code, name: $('#sN', s).value.trim(), news: $('#sNews', s).checked, items: P.items }).then(function (r) {
-        P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; dirty = {}; mergeIn(r.items); store(); s.remove(); refresh();
+      api('verify', { email: email, code: code, name: $('#sN', s).value.trim(), news: $('#sNews', s).checked, items: P.items, lists: P.lists }).then(function (r) {
+        P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; dirty = {}; dirtyL = {}; mergeIn(r.items); mergeLists(r.lists); store(); s.remove(); refresh();
         gt(r.isNew ? 'plan_signup' : 'plan_signin', { news: r.news ? 1 : 0 }); toast(r.isNew ? '💚 Your plan is saved — welcome!' : '💚 Welcome back' + (r.name ? ', ' + esc(r.name) : '') + '!');
       }).catch(function (e) { b.disabled = false; b.textContent = '💚 Save my plan'; err('#sErr2', e.message); });
     };
@@ -694,6 +818,7 @@
   function start() { addCss(); addPill(); hookNews(); hookChat(); fill(); boot(); var cq = (location.search.match(/[?&]cel=([^&]*)/) || [])[1];
     if (cq) { var cp = decodeURIComponent(cq).split('|'); view.tab = 'cel'; setTimeout(function () { open(); celSheet(null, { n: cp[0] || '', k: cp[1] === 'anniversary' ? 'wedding' : 'birthday', r: cp[2] || 'friend', y: 0, lead: [3] }); }, 900); }
     else if (/[?&]plan=cel\b/.test(location.search)) { view.tab = 'cel'; setTimeout(open, 900); }
+    else if (/[?&]plan=shop\b/.test(location.search)) { view.tab = 'shop'; setTimeout(open, 900); }
     else if (/[?&]plan\b/.test(location.search) || location.pathname === '/my-plan') setTimeout(open, 900); else if (/[?&]sunday\b/.test(location.search)) setTimeout(function () { openSunday(); }, 900); else if (/[?&]news=1\b/.test(location.search)) setTimeout(newsSheet, 1200); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

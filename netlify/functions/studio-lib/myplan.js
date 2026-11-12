@@ -41,6 +41,19 @@ function cleanItem(x) {
   return it;
 }
 
+// 🛒 a shopping list: { id, name, emoji, items: [{ id, n, q, c, p, x }], up, del }   p = estimated £ (optional), x = bought
+function cleanList(x) {
+  if (!x || !/^[a-z0-9]{6,24}$/.test(String(x.id || ''))) return null;
+  const l = { id: x.id, name: cleanText(x.name, 50) || 'Shopping list', emoji: cleanText(x.emoji, 8) || '🛒', up: Math.max(0, Math.min(Date.now() + 60000, +x.up || 0)), del: !!x.del,
+    items: (Array.isArray(x.items) ? x.items : []).slice(0, 300).map(i => i && /^[a-z0-9]{4,24}$/.test(String(i.id || '')) ? { id: i.id, n: cleanText(i.n, 80), q: cleanText(i.q, 24), c: cleanText(i.c, 30), p: (+i.p >= 0 && +i.p < 100000) ? Math.round(+i.p * 100) / 100 : null, x: !!i.x } : null).filter(i => i && i.n) };
+  return l;
+}
+function mergeLists(cur, incoming) {
+  const map = new Map((cur || []).map(l => [l.id, l]));
+  (incoming || []).slice(0, 60).forEach(raw => { const l = cleanList(raw); if (!l) return; const old = map.get(l.id); if (!old || l.up >= old.up) map.set(l.id, l); });
+  const cutoff = Date.now() - 60 * 24 * 60 * 60 * 1000;
+  return [...map.values()].filter(l => !(l.del && l.up < cutoff)).slice(-60);
+}
 function merge(cur, incoming) {
   const map = new Map((cur || []).map(i => [i.id, i]));
   (incoming || []).slice(0, 400).forEach(raw => { const it = cleanItem(raw); if (!it) return; const old = map.get(it.id); if (!old || it.up >= old.up) map.set(it.id, it); });
@@ -49,7 +62,7 @@ function merge(cur, incoming) {
 }
 
 const live = items => (items || []).filter(i => !i.del);
-function publicState(u) { return { signedIn: true, email: u.email, name: u.name || '', town: u.town || '', news: !!u.news, rm: u.rm || '', items: u.items || [] }; }
+function publicState(u) { return { signedIn: true, email: u.email, name: u.name || '', town: u.town || '', news: !!u.news, rm: u.rm || '', items: u.items || [], lists: u.lists || [] }; }
 
 async function touchIndex(h, u, signup) {
   const today = day();
@@ -94,6 +107,7 @@ async function verify(ctx) {
     if (b.town) cur.town = cleanText(b.town, 60);
     if (typeof b.news === 'boolean' && (isNew || b.news)) cur.news = b.news;
     cur.items = merge(cur.items, b.items);
+    if (Array.isArray(b.lists)) cur.lists = mergeLists(cur.lists, b.lists);
     u = cur; return cur;
   });
   await touchIndex(h, u, isNew);
@@ -134,10 +148,11 @@ async function save(ctx) {
   await cas('myplan/u/' + w.h, cur => {
     if (!cur) throw new HttpError(401, 'signed_out', 'Please sign in again.');
     cur.items = merge(cur.items, ctx.body.items);
+    if (Array.isArray(ctx.body.lists)) cur.lists = mergeLists(cur.lists, ctx.body.lists);
     cur.last = day(); u = cur; return cur;
   });
   await touchIndex(w.h, u, false).catch(() => {});
-  return { items: u.items };
+  return { items: u.items, lists: u.lists || [] };
 }
 
 async function prefs(ctx) {
