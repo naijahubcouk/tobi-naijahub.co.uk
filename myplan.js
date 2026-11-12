@@ -484,7 +484,6 @@
     { k: 'party', e: '🎉', name: 'Party / Owambe', items: ['Rice (big bag)', 'Chicken', 'Turkey', 'Puff puff', 'Samosas & spring rolls', 'Chin chin', 'Malt', 'Soft drinks', 'Water', 'Ice', 'Foil trays', 'Plates & cups', 'Napkins', 'Cutlery'] },
     { k: 'school', e: '🏫', name: 'School things', items: ['Uniform', 'School shoes', 'PE kit', 'Book bag', 'Water bottle', 'Lunchbox', 'Pencil case', 'Name labels'] },
     { k: 'blank', e: '🛒', name: 'New list', items: [] }];
-  var gbp = function (n) { return '£' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, ''); };
   var liveLists = function () { return (P.lists || []).filter(function (l) { return !l.del; }); };
   function listChange(l) { l.up = Date.now(); dirtyL[l.id] = 1; store(); if (P.signedIn) { clearTimeout(syncT); syncT = setTimeout(sync, 700); } if (window._currentPage === 'myplan') render(); fill(); }
   function newList(t) {
@@ -493,7 +492,7 @@
     if (!P.signedIn) setTimeout(askSave, 600);
     return l;
   }
-  // "4 plantain £3", "2kg rice", "Garri x2 £5.50"
+  // "4 plantain", "2kg rice", "Garri x2" (a £ amount typed by habit is just dropped)
   function parseItem(v) {
     var s = ' ' + v.replace(/\s+/g, ' ').trim() + ' ', p = null, q = '', m;
     if ((m = s.match(/\s£\s?(\d+(?:\.\d{1,2})?)\s/))) { p = +m[1]; s = s.replace(m[0], ' '); }
@@ -509,16 +508,16 @@
     if (!l) return h + '<div class="mp-card"><div class="mp-empty"><b>🛒 Your shopping lists</b>Start with a ready-made list and change it however you like — or start from scratch.</div><div class="mp-welcome">' + TPL.map(function (t) { return '<button data-tpl="' + t.k + '"><span>' + t.e + '</span><div>' + (t.k === 'blank' ? 'Start a blank list' : esc(t.name)) + '<small>' + (t.items.length ? t.items.slice(0, 5).join(', ') + '…' : 'Add your own items') + '</small></div></button>'; }).join('') + '</div></div>';
     h += '<div class="mp-row" style="margin:0 0 10px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px">' + lists.map(function (x) { return '<button class="mp-btn' + (x.id === l.id ? '' : ' g') + '" style="white-space:nowrap;padding:8px 12px" data-list="' + x.id + '">' + esc(x.emoji + ' ' + x.name) + '</button>'; }).join('') + '<button class="mp-btn g" style="padding:8px 12px" data-list-new aria-label="New list">＋</button></div>';
     var left = l.items.filter(function (i) { return !i.x; }), got = l.items.filter(function (i) { return i.x; });
-    var est = l.items.reduce(function (a, i) { return a + (i.p || 0); }, 0), estLeft = left.reduce(function (a, i) { return a + (i.p || 0); }, 0);
+
     h += '<div class="mp-card"><div style="display:flex;align-items:center;gap:8px"><b style="font-size:17px;flex:1">' + esc(l.emoji + ' ' + l.name) + '</b><span class="mp-sub">' + (l.items.length ? left.length + ' of ' + l.items.length + ' left' : '') + '</span><button class="mp-btn g" style="padding:6px 10px" data-list-menu aria-label="List options">⋯</button></div>' +
-      '<form class="mp-add" id="shF" style="margin:10px 0 4px"><input id="shQ" placeholder="Add an item — e.g. “4 plantain £3”" autocomplete="off" maxlength="80"><button class="mp-btn" aria-label="Add">＋</button></form>';
+      '<form class="mp-add" id="shF" style="margin:10px 0 4px"><input id="shQ" placeholder="Add an item — e.g. “4 plantain”" autocomplete="off" maxlength="80"><button class="mp-btn" aria-label="Add">＋</button></form>';
     if (!l.items.length) h += '<div class="mp-sub" style="padding:8px 0">Nothing on this list yet — add your first item above.</div>';
     var byCat = {}; left.forEach(function (i) { (byCat[i.c || CATS[11]] = byCat[i.c || CATS[11]] || []).push(i); });
     var order = CATS.concat(Object.keys(byCat).filter(function (c) { return CATS.indexOf(c) < 0; }));
-    var irow = function (i) { return '<div class="mp-it' + (i.x ? ' dn' : '') + '" data-item="' + i.id + '"><button class="mp-ck' + (i.x ? ' on' : '') + '" data-buy="' + i.id + '" aria-label="Bought">' + (i.x ? '✓' : '') + '</button><div class="tx">' + esc(i.n) + '</div><div class="r">' + esc([i.q, i.p != null ? gbp(i.p) : ''].filter(Boolean).join(' · ')) + '</div></div>'; };
+    var irow = function (i) { return '<div class="mp-it' + (i.x ? ' dn' : '') + '" data-item="' + i.id + '"><button class="mp-ck' + (i.x ? ' on' : '') + '" data-buy="' + i.id + '" aria-label="Bought">' + (i.x ? '✓' : '') + '</button><div class="tx">' + esc(i.n) + '</div><div class="r">' + esc(i.q || '') + '</div></div>'; };
     order.forEach(function (c) { if (byCat[c]) h += '<div class="mp-lbl">' + esc(c) + '</div>' + byCat[c].map(irow).join(''); });
     if (got.length) h += '<div class="mp-lbl">✅ In the basket (' + got.length + ')</div>' + got.map(irow).join('');
-    if (est) h += '<div style="border-top:2px solid #f1ece0;margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-weight:800;font-size:15px"><span>Estimated total</span><span>' + gbp(est) + '</span></div>' + (got.length && estLeft !== est ? '<div class="mp-sub" style="display:flex;justify-content:space-between"><span>Still to buy</span><span>' + gbp(estLeft) + '</span></div>' : '') + '<div class="mp-sub" style="font-size:11.5px;margin-top:2px">Your own estimates — not shop prices.</div>';
+
     h += '</div><div class="mp-row" style="margin-bottom:10px"><button class="mp-btn" style="background:#25D366" data-list-wa>📤 Send on WhatsApp</button>' + (got.length ? '<button class="mp-btn g" data-list-reset>🔄 Untick all</button>' : '') + '</div>';
     return h;
   }
@@ -529,7 +528,7 @@
     var l = liveLists().filter(function (x) { return x.id === view.list; })[0]; if (!l) return;
     root.querySelectorAll('[data-list]').forEach(function (b) { b.onclick = function () { view.list = b.dataset.list; render(); }; });
     var nw = $('[data-list-new]', root); if (nw) nw.onclick = pickTemplate;
-    var f = $('#shF', root); if (f) f.onsubmit = function (e) { e.preventDefault(); var q = $('#shQ', root), v = q.value.trim(); if (!v) return q.focus(); v.split(/\s*[,\n]\s*(?=\D)/).forEach(function (part) { var it = parseItem(part); if (it.n) l.items.push({ id: newId(), n: it.n, q: it.q, c: guessCat(it.n), p: it.p, x: false }); }); listChange(l); gt('shop_add'); setTimeout(function () { var i = $('#shQ'); if (i) i.focus(); }, 50); };
+    var f = $('#shF', root); if (f) f.onsubmit = function (e) { e.preventDefault(); var q = $('#shQ', root), v = q.value.trim(); if (!v) return q.focus(); v.split(/\s*[,\n]\s*(?=\D)/).forEach(function (part) { var it = parseItem(part); if (it.n) l.items.push({ id: newId(), n: it.n, q: it.q, c: guessCat(it.n), p: null, x: false }); }); listChange(l); gt('shop_add'); setTimeout(function () { var i = $('#shQ'); if (i) i.focus(); }, 50); };
     root.querySelectorAll('[data-buy]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var i = l.items.filter(function (x) { return x.id === b.dataset.buy; })[0]; if (i) { i.x = !i.x; listChange(l); } }; });
     root.querySelectorAll('[data-item]').forEach(function (r) { r.onclick = function () { itemSheet(l, r.dataset.item); }; });
     var wa = $('[data-list-wa]', root); if (wa) wa.onclick = function () { sendWa(l); };
@@ -556,7 +555,7 @@
     s.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () {
       var m = b.dataset.m; s.remove();
       if (m === 'rename') return renameList();
-      if (m === 'dup') { var c = { id: newId(), name: l.name + ' (copy)', emoji: l.emoji, items: l.items.map(function (i) { return { id: newId(), n: i.n, q: i.q, c: i.c, p: i.p, x: false }; }), up: Date.now() }; P.lists.push(c); view.list = c.id; listChange(c); toast('📄 Copy made'); }
+      if (m === 'dup') { var c = { id: newId(), name: l.name + ' (copy)', emoji: l.emoji, items: l.items.map(function (i) { return { id: newId(), n: i.n, q: i.q, c: i.c, p: null, x: false }; }), up: Date.now() }; P.lists.push(c); view.list = c.id; listChange(c); toast('📄 Copy made'); }
       if (m === 'clear') { var before = l.items.slice(); l.items = l.items.filter(function (i) { return !i.x; }); listChange(l); toast('🧹 Cleared', function () { l.items = before; listChange(l); }); }
       if (m === 'del') { l.del = true; view.list = ''; listChange(l); toast('🗑️ List deleted', function () { l.del = false; view.list = l.id; listChange(l); }); }
     }; });
@@ -564,13 +563,13 @@
   function itemSheet(l, id) {
     var i = l.items.filter(function (x) { return x.id === id; })[0]; if (!i) return;
     var s = sheet('<h3>✏️ ' + esc(i.n) + '</h3><label>Item</label><input id="iN" maxlength="80" value="' + esc(i.n) + '">' +
-      '<div class="mp-two"><div><label>How many / how much</label><input id="iQ" maxlength="24" value="' + esc(i.q) + '" placeholder="e.g. 4, 2kg, 1 bag"></div><div><label>Estimated price (£)</label><input id="iP" inputmode="decimal" maxlength="8" value="' + (i.p != null ? i.p : '') + '" placeholder="optional"></div></div>' +
+      '<label>How many / how much</label><input id="iQ" maxlength="24" value="' + esc(i.q) + '" placeholder="e.g. 4, 2kg, 1 bag">' +
       '<label>Section</label><select id="iC">' + CATS.concat(CATS.indexOf(i.c) < 0 && i.c ? [i.c] : []).map(function (c) { return '<option' + (c === i.c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '<option value="__new">＋ New section…</option></select><input id="iCn" maxlength="30" placeholder="Name your section" style="display:none;margin-top:6px">' +
       '<div class="mp-row" style="justify-content:space-between;margin-top:16px"><button class="mp-btn l" id="iDel">🗑️ Remove</button><span style="display:flex;gap:8px"><button class="mp-btn g" id="iX">Cancel</button><button class="mp-btn" id="iOk">Save</button></span></div>');
     $('#iC', s).onchange = function () { $('#iCn', s).style.display = this.value === '__new' ? 'block' : 'none'; };
     $('#iX', s).onclick = function () { s.remove(); };
     $('#iDel', s).onclick = function () { var idx = l.items.indexOf(i); l.items.splice(idx, 1); s.remove(); listChange(l); toast('Removed', function () { l.items.splice(idx, 0, i); listChange(l); }); };
-    $('#iOk', s).onclick = function () { var c = $('#iC', s).value, p = $('#iP', s).value.replace(/[£,\s]/g, ''); i.n = $('#iN', s).value.trim() || i.n; i.q = $('#iQ', s).value.trim(); i.p = p !== '' && !isNaN(+p) ? +p : null; i.c = c === '__new' ? ($('#iCn', s).value.trim() || CATS[11]) : c; s.remove(); listChange(l); };
+    $('#iOk', s).onclick = function () { var c = $('#iC', s).value; i.n = $('#iN', s).value.trim() || i.n; i.q = $('#iQ', s).value.trim(); i.p = null; i.c = c === '__new' ? ($('#iCn', s).value.trim() || CATS[11]) : c; s.remove(); listChange(l); };
   }
   function sendWa(l) {
     var left = l.items.filter(function (i) { return !i.x; }), byCat = {};
