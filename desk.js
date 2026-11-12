@@ -147,11 +147,12 @@
   // "View details" anywhere in the app opens the laptop business page while in laptop view
   var tobiOpenBiz0 = function (s) { window.history.pushState({}, '', '/?biz=' + s); handleDeepLink(); };
   if (isApp) { try { var orig = window.tobiOpenBiz; if (typeof orig === 'function') tobiOpenBiz0 = orig; window.tobiOpenBiz = function (s) { if (lapOn() && page) return showBizPage(s); return tobiOpenBiz0(s); }; } catch (e) {} }
-  var NAV = [['home', '🏠 Home'], ['biz', '🏢 Businesses'], ['mkt', '🛍️ Marketplace'], ['news', '📰 News & Updates'], ['events', '🎉 Events'], ['cards', '💌 Cards']];
+  var NAV = [['home', '🏠 Home'], ['plan', '💚 My Plan'], ['biz', '🏢 Businesses'], ['mkt', '🛍️ Marketplace'], ['news', '📰 News & Updates'], ['events', '🎉 Events'], ['cards', '💌 Cards']];
   function nav() { if (!top) return; top.querySelectorAll('nav button').forEach(function (b) { b.classList.toggle('on', b.dataset.n === cur || (cur === 'app' && b.dataset.n === top._last)); }); }
   function go(n) {
     top._last = n;
     if (n === 'home') return showHome();
+    if (n === 'plan') return inApp(function () { if (window.MyPlan) window.MyPlan.open(); });
     if (n === 'biz') return showBiz();
     if (n === 'mkt') return showMkt();
     if (n === 'news') return showNews();
@@ -180,6 +181,7 @@
     page.innerHTML = '<div class="wrap"><div class="cols"><div>' +
       '<div class="bub"><img src="/tobi-face-128.png" alt=""><div><b>' + hi + '! 👋🏾 I’m Auntie Tobi.</b><br>Ask me anything about life in the UK — jobs, housing, visas, the NHS, schools — or find Nigerian businesses and events near you. So… wetin you need today? 😄</div></div>' +
       '<form class="ask" id="lapAsk"><input id="lapQ" placeholder="Ask Auntie Tobi anything… 😄" autocomplete="off"><button>Send</button></form>' +
+      '<div id="lapPlan" style="max-width:640px;margin-top:16px"></div>' +
       '<div id="lapFeatEv" style="max-width:560px"></div>' +
       '<h2 style="margin-top:26px">Popular right now</h2><div class="tiles">' + TILES.map(function (t, i) { return '<button class="tile" data-t="' + i + '"><span>' + t[0] + '</span>' + t[1] + '</button>'; }).join('') + '</div>' +
       (feat.length ? '<h2 style="margin-top:26px">Featured businesses</h2><div class="grid">' + feat.slice(0, 6).map(card).join('') + '</div>' : '') + '</div>' +
@@ -191,6 +193,7 @@
     bindCards(page);
     rail();
     if (window.tobiMountFeaturedEvent) window.tobiMountFeaturedEvent('lapFeatEv');   // ⭐ featured event
+    if (window.MyPlan) window.MyPlan.mountToday('lapPlan', hi + '! 👋🏾', '');   // 💚 My Plan: your day
   }
   function rail() {
     var ev = [], nw = [], today = new Date(); today.setHours(0, 0, 0, 0);
@@ -360,5 +363,5 @@
     if (cur === 'bizd') go(showBizPage._prev || 'biz');
   });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(apply, 50); }); else setTimeout(apply, 50);
-  window.tobiDesk = { apply: apply, isLap: lapOn, go: function (n) { if (lapOn()) go(n); } };
+  window.tobiDesk = { apply: apply, isLap: lapOn, go: function (n) { if (lapOn()) go(n); }, inApp: function (n) { if (!lapOn() || !top) return; top._last = n; cur = 'app'; if (page) page.style.display = 'none'; nav(); } };
 })();

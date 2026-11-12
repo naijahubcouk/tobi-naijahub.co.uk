@@ -339,6 +339,11 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'market-ai') return await require('../marketai').fill(body.images, body.text, who.email);
       return await require('./admin').marketAction(body.action, body, ctx, who.email);
     }
+    case 'myplan-stats': {
+      // 💚 My Plan sign-ups — counts only, never anyone's plan (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
+      return require('../myplan').stats();
+    }
     case 'tx-piece': case 'tx-make': case 'tx-list': case 'tx-save': case 'tx-delete': {
       // 🎙️ Transcribe a video — admin only (tx-piece is also used by 💬 Comment Assistant for anyone who can open it)
       if (!who.isAdmin && body.action !== 'tx-piece') throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');

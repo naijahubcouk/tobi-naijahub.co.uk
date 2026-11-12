@@ -14,6 +14,9 @@
 /tip            /?action=tip            301
 /premium        /?action=premium        301
 
+# 💚 My Plan
+/my-plan        /?plan=1                302
+
 # Public "Add your event" page
 /add-event      /add-event.html         200
 # Public "Add your business" page (and claim links from outreach emails)

@@ -9222,7 +9222,10 @@ function resetToWelcome() {
         }
 
         const design = `<div style="border-left:3px solid #FFB81C;padding:10px 14px;background:#f8f8f8;border-radius:0 8px 8px 0;"><div style="font-size:15px;font-weight:500;color:#0F1E36;">${heading}</div><div style="font-size:12px;color:#555;margin-top:3px;">${subtitle}</div></div>`;
-        addTipMessage(design);
+        // 💚 My Plan: the greeting becomes the Today card (your day + "New: My Plan") once myplan.js is loaded
+        const qa = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        addTipMessage(`<div data-myplan-today="1" data-h="${qa(heading)}" data-s="${qa(subtitle)}">${design}</div>`);
+        if (window.MyPlan) window.MyPlan.fill();
       })();
       showDailyMotivation();
       liveNewsShownCount = 2;
@@ -10276,6 +10279,7 @@ function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleD
   }, {passive:true});
 })();
 </script>
+<script src="/myplan.js?v=20261112" defer></script>
 <script src="/desk.js" defer></script>
 <script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>

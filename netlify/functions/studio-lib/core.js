@@ -486,9 +486,9 @@ async function sendCodeEmail(email, code, purpose) {
     ? `${code} is your Business Studio admin code`
     : purpose === 'market' ? `${code} is your Auntie Tobi Marketplace code`
     : purpose === 'hq' ? `${code} is your Auntie Tobi HQ code`
-    : purpose === 'addbiz' ? `${code} is your Auntie Tobi code`
+    : purpose === 'addbiz' || purpose === 'myplan' ? `${code} is your Auntie Tobi code`
     : `${code} is your Auntie Tobi Business Studio code`;
-  const brand = purpose === 'market' ? 'Auntie Tobi Marketplace' : purpose === 'hq' ? 'Auntie Tobi HQ' : purpose === 'addbiz' ? 'Auntie Tobi' : 'Auntie Tobi Business Studio';
+  const brand = purpose === 'market' ? 'Auntie Tobi Marketplace' : purpose === 'hq' ? 'Auntie Tobi HQ' : purpose === 'addbiz' || purpose === 'myplan' ? 'Auntie Tobi' : 'Auntie Tobi Business Studio';
   const text = `Your one-time code is ${code}\n\nIt expires in 10 minutes. If you didn't ask for this, you can ignore this email — nobody can sign in without the code.\n\n${brand}`;
   const html = `<!doctype html><html><body style="margin:0;background:#FBF6EC;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0F1E36">
 <div style="max-width:440px;margin:0 auto;padding:32px 20px">
