@@ -529,7 +529,7 @@ exports.handler = handler(async (ctx) => {
       let note = null;
       if (body.action === 'find-img') return await finder.pictureFor(String(body.id || ''));
       if (body.action === 'find-more') note = { ran: await finder.more() };
-      if (body.action === 'find-quick') { await core.rateLimit('hq-findq', who.email, 40, 3600000, 'That’s a lot of quick adds — try again in an hour.'); note = { ran: [await finder.quickAdd(String(body.input || ''))] }; }
+      if (body.action === 'find-quick') { await core.rateLimit('hq-findq', who.email, 80, 3600000, 'That’s a lot of quick adds — try again in an hour.'); note = { ran: [await finder.quickAdd(String(body.input || ''))] }; }
       if (body.action === 'find-decide') { const c = await finder.decide(String(body.id || ''), String(body.decision || ''), body.edits || null, who.email); await core.audit(who.email, 'hq_find_' + body.decision, { name: c.name }); }
       if (body.action === 'find-csv') return await finder.exportCsv();
       if (body.action === 'find-uploaded') { const n = await finder.markUploaded(); await core.audit(who.email, 'hq_find_uploaded', { n }); }
