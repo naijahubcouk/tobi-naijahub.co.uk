@@ -28,7 +28,7 @@
   function draw() {
     var v = $('#view'), locked = I && (I.status === 'sending' || I.status === 'sent');
     var h = '<div class="wrap" style="max-width:860px">';
-    h += '<div class="card" style="padding:16px;margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px"><b style="font-size:17px">📰 Sunday ' + nice(D.week, true) + '</b><div class="muted" style="font-size:13.5px;margin-top:2px">' + D.subscribers + ' ' + (D.subscribers === 1 ? 'person has' : 'people have') + ' asked for the Sunday Update · goes out at 9am, only if you approve it</div></div>' + (I ? chip(I.status) : '') + '</div>';
+    h += '<div class="card" style="padding:16px;margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px"><b style="font-size:17px">📰 ' + nice(D.week, true) + '</b><div class="muted" style="font-size:13.5px;margin-top:2px">' + D.subscribers + ' ' + (D.subscribers === 1 ? 'person has' : 'people have') + ' asked for the Sunday Update · goes out at 9am, only if you approve it</div></div>' + (I ? chip(I.status) : '') + '</div>';
     if (!I) {
       h += '<div class="card" style="padding:22px;text-align:center"><div style="font-size:34px">📝</div><b>No draft for this Sunday yet</b><p class="muted" style="margin:6px 0 14px">It’s made for you automatically on Saturday morning from this week’s posts, events and businesses — or make it now.</p><button class="btn primary" id="suMake">✨ Make it now</button></div>';
     } else if (locked) {
