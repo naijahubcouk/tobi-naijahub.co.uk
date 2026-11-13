@@ -161,6 +161,7 @@
     '.mpT{border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 6px 18px rgba(15,30,54,.10);margin-bottom:10px;color:#0F1E36}' +
     '.mpT-top{background:linear-gradient(135deg,#057A44 0%,#0B5E3A 55%,#0F1E36 100%);color:#fff;padding:16px 18px 18px;position:relative;overflow:hidden}.mpT-top:after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,184,28,.22)}' +
     '.mpT-em{font-size:26px;line-height:1}.mpT-h{font-size:22px;font-weight:800;line-height:1.2;margin-top:6px;position:relative;z-index:1}.mpT-h span{color:#FFB81C}' +
+    '.mpT-msg{font-size:14.5px;line-height:1.45;margin-top:6px;opacity:.95;position:relative;z-index:1}.mpT-name{display:inline-block;margin-top:8px;margin-right:6px;background:#FFB81C;color:#0F1E36;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:800;text-decoration:none;position:relative;z-index:1}' +
     '.mpT-date{display:inline-block;margin-top:8px;background:rgba(255,255,255,.16);border-radius:20px;padding:5px 11px;font-size:13px;font-weight:600;position:relative;z-index:1}' +
     '.mpT-body{padding:14px 14px 16px}.mpT-lbl{font-size:11.5px;font-weight:800;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;margin:6px 4px 8px}' +
     '.mpT-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;background:#F6FAF7;margin-bottom:8px;font-size:15px;font-weight:600;cursor:pointer;flex-wrap:wrap}' +
@@ -243,6 +244,24 @@
   // ───── 🏠 Today card on Home ─────
   // ───── 🏠 Today card on Home — design A "Sunrise" ─────
   function greet() { var h = new Date().getHours(); return h < 12 ? ['☀️', 'Good morning'] : h < 17 ? ['🌤️', 'Good afternoon'] : ['🌙', 'Good evening']; }
+  // 💬 a warm, personal line under the greeting — changes with the day and what's on
+  function hello(dueN, cels, t) {
+    var d = new Date(), h = d.getHours(), wd = d.getDay(), doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+    var pick = function (a) { return a[doy % a.length]; };
+    var tday = cels.filter(function (i) { return i.d === t; })[0];
+    if (tday) return '🎉 A special day — don’t forget to make ' + esc(tday.t.replace(/[’']s .*$/, '')) + ' smile today!';
+    var near = cels.filter(function (i) { return daysTo(i.d) <= 3; })[0];
+    if (near) { var n = daysTo(near.d); return '🎂 ' + esc(near.t) + ' is ' + (n === 1 ? 'tomorrow' : 'in ' + n + ' days') + ' — I’ve got a card ready for you.'; }
+    if (dueN === 1) return '💚 Just one thing on your list today — you’ve got this.';
+    if (dueN > 1) return '💚 You’ve got ' + dueN + ' things today. One step at a time — I’m here to help.';
+    if (wd === 1 && h < 17) return pick(['💪🏾 New week, fresh start. Let’s make it a good one!', '☕ Monday again! Take it easy and go gently.']);
+    if (wd === 5) return pick(['🎉 Happy Friday! The weekend is almost here.', '🙌🏾 You made it to Friday — well done this week!']);
+    if (wd === 6) return pick(['😄 Happy Saturday! Owambe or rest today?', '🌿 Enjoy your Saturday — you deserve the break.']);
+    if (wd === 0) return h < 17 ? pick(['🙏🏾 Happy Sunday! Rest well and enjoy your people.', '🍲 Sunday vibes — hope there’s jollof somewhere near you!']) : '🌙 Rest well tonight — a fresh week starts tomorrow.';
+    if (h < 12) return pick(['😊 Hope you slept well. Nothing due today — enjoy it!', '☕ A calm start — nothing due today.', '🌞 Your day is clear. Make it a good one!']);
+    if (h < 17) return pick(['😊 Hope your day is going well.', '💚 Nothing due today — keep going, you’re doing well.', '🥤 Don’t forget to take a break and drink some water!']);
+    return pick(['🛋️ Time to relax — you’ve done well today.', '🌙 Hope today was kind to you. Rest well.', '💚 All done for today. Well done!']);
+  }
   function tile(i, cls, right) {
     var ico = i.lk ? (LIFE.filter(function (l) { return l.k === i.lk; })[0] || {}).e : '';
     var sub = [i.rep ? REP[i.rep] : '', i.tm && i.d !== today() ? nice(i.d) : ''].filter(Boolean).join(' · ');
@@ -251,7 +270,7 @@
   function todayHtml() {
     var g = groups(), t = today(), has = live().length > 0 || liveLists().length > 0, hideNew = ls.get(HIDE) === '1';
     var gr = greet(), d = new Date(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
-    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-em">' + gr[0] + '</div><div class="mpT-h">' + gr[1] + (P.name ? ', <span>' + esc(P.name) + '</span>' : '') + '!</div><div class="mpT-date">📅 ' + dateLine + '</div></div>';
+    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-em">' + gr[0] + '</div><div class="mpT-h">' + gr[1] + (P.name ? ', <span>' + esc(P.name) + '</span>' : '') + '!</div>' + (has ? '<div class="mpT-msg">' + hello(g.over.concat(g.today).filter(function (i) { return !i.cel; }).length, live().filter(function (i) { return i.cel && celSoon(i); }), t) + '</div>' : '<div class="mpT-msg">' + hello(0, [], t) + '</div>') + (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '') + '<div class="mpT-date">📅 ' + dateLine + '</div></div>';
     var body = '';
     var sl = P.sun && P.sun.latest;
     if (sl && t >= sl.week && t <= addDays(sl.week, 2)) body += '<div class="mpT-row mpT-news" data-mp-sun><span class="mpT-ic">📰</span><div class="mpT-t">Your Sunday Update is here<small>This week’s UK news, events and more</small></div><span class="mpT-r">Read ›</span></div>';
@@ -286,6 +305,7 @@
     root.querySelectorAll('[data-mp-open]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); open(); }; });
     root.querySelectorAll('[data-mp-add]').forEach(function (b) { b.onclick = function () { open(); setTimeout(function () { var i = $('#mpQ'); if (i) i.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-hide]').forEach(function (b) { b.onclick = function () { ls.set(HIDE, '1'); gt('plan_hide_new'); fill(); }; });
+    root.querySelectorAll('[data-mp-name]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); setTimeout(function () { var n = document.getElementById('pN'); if (n) n.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-sun]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openSunday(); }; });
     root.querySelectorAll('[data-mp-shop]').forEach(function (b) { b.onclick = function () { view.tab = 'shop'; open(); }; });
     bindRows(root);
