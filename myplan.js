@@ -166,17 +166,19 @@
     '.mpT-mo{display:block;width:100%;text-align:left;font-family:inherit;cursor:pointer;margin-top:12px;background:#057A44;border:0;border-radius:14px;color:#fff;padding:11px 13px;font-size:14px;font-style:italic;line-height:1.45}' +
     '.mpT-name{display:inline-block;margin-top:8px;background:#FFB81C;color:#0F1E36;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:800;text-decoration:none}' +
     '.mpT-body{padding:12px 16px 16px}.mpT-lbl{font-size:11.5px;font-weight:800;letter-spacing:.7px;color:#8A8F98;text-transform:uppercase;margin:10px 4px 8px}' +
-    '.mpT-days{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}.mpT-days::-webkit-scrollbar{display:none}' +
-    '.mpT-d{flex:0 0 47%;scroll-snap-align:start;border-radius:16px;padding:12px;border:1.5px solid #E5E1D6;background:#fff;display:flex;flex-direction:column;min-height:132px;cursor:pointer}' +
-    '.mpT-d .w{font-size:11px;font-weight:800;letter-spacing:.7px;color:#8A8F98;text-transform:uppercase}.mpT-d .n{font-size:13px;font-weight:700;color:#6B7280}' +
-    '.mpT-d .t{font-size:14.5px;font-weight:700;margin-top:8px;line-height:1.3;overflow-wrap:anywhere}.mpT-d small{display:block;font-size:12px;color:#6B7280;margin-top:3px}' +
+    '.mpT-days{display:flex;gap:7px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}.mpT-days::-webkit-scrollbar{display:none}' +
+    '.mpT-d{flex:0 0 41%;scroll-snap-align:start;border-radius:14px;padding:9px 10px 10px;border:1.5px solid #E5E1D6;background:#fff;display:flex;flex-direction:column;cursor:pointer;min-width:0}' +
+    '.mpT-d .w{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:800;letter-spacing:.6px;color:#8A8F98;text-transform:uppercase}.mpT-d .w i{font-style:normal;background:#057A44;color:#fff;border-radius:10px;padding:0 6px;font-size:10.5px;letter-spacing:0}' +
+    '.mpT-d .n{font-size:11.5px;font-weight:600;color:#9CA3AF;margin-top:1px}' +
+    '.mpT-d .t{font-size:13.5px;font-weight:700;margin-top:6px;line-height:1.25;overflow-wrap:anywhere}.mpT-d small{display:block;font-size:11.5px;color:#6B7280;margin-top:2px}' +
     '.mpT-d.td{border-color:#057A44;background:#F3FAF6}.mpT-d.td .w{color:#057A44}.mpT-d.gd{background:#FFF7E0;border-color:#FFD878}.mpT-d.gd .w{color:#8A5A00}.mpT-d.gd small{color:#8A5A00}' +
-    '.mpT-d.late{border-color:#F5B5B0;background:#FFF5F4}.mpT-d.late .w{color:#B42318}' +
-    '.mpT-tr{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin-top:8px;line-height:1.3}.mpT-tr span{flex:1;min-width:0;overflow-wrap:anywhere}.mpT-tr small{margin:0;color:#057A44;font-weight:800}' +
-    '.mpT-tk{width:20px;height:20px;border:2.5px solid #057A44;border-radius:6px;background:#fff;flex-shrink:0;cursor:pointer;padding:0}.mpT-tk:hover{background:#E3F2EA}' +
-    '.mpT-acts{display:flex;gap:6px;margin-top:auto;padding-top:10px;flex-wrap:wrap}.mpT-acts>*{border:0;border-radius:20px;padding:6px 10px;font-size:12.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none}.mpT-acts .c{background:#FFB81C;color:#0F1E36}.mpT-acts .d{background:#fff;color:#0F1E36;border:1.5px solid #FFD878}' +
-    '.mpT-dots{display:flex;gap:5px;justify-content:center;margin-top:10px}.mpT-dots i{width:6px;height:6px;border-radius:4px;background:#D9D4C7;transition:all .2s}.mpT-dots i.on{background:#057A44;width:16px}' +
-    '.mpT-shopr{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:#F6F5F1;font-size:14px;font-weight:700;cursor:pointer}.mpT-shopr b{margin-left:auto;font-size:12.5px;color:#8A5A00}' +
+    '.mpT-d.late{border-color:#F5B5B0;background:#FFF5F4}.mpT-d.late .w{color:#B42318}.mpT-d.late .w i{background:#B42318}' +
+    '.mpT-d.add{border-style:dashed;align-items:center;justify-content:center;text-align:center;color:#057A44;font-weight:800;font-size:13px;flex-basis:26%}.mpT-d.add b{font-size:22px;line-height:1}' +
+    '.mpT-tr{display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:700;margin-top:6px;line-height:1.25}.mpT-tr span{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.mpT-tr em{display:block;font-style:normal;font-size:11px;font-weight:800;color:#057A44}' +
+    '.mpT-tk{width:17px;height:17px;border:2px solid #057A44;border-radius:5px;background:#fff;flex-shrink:0;cursor:pointer;padding:0;margin-top:1px}.mpT-tk:hover{background:#E3F2EA}' +
+    '.mpT-sh{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:7px;font-size:12px;font-weight:800;color:#8A5A00;cursor:pointer}' +
+    '.mpT-acts{display:flex;gap:5px;margin-top:auto;padding-top:8px}.mpT-acts>*{border:0;border-radius:16px;padding:5px 9px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;white-space:nowrap}.mpT-acts .c{background:#FFB81C;color:#0F1E36}.mpT-acts .d{background:#fff;color:#0F1E36;border:1.5px solid #FFD878}' +
+    '.mpT-dots{display:flex;gap:5px;justify-content:center;margin-top:9px}.mpT-dots i{width:6px;height:6px;border-radius:4px;background:#D9D4C7;transition:all .2s}.mpT-dots i.on{background:#057A44;width:16px}' +
     '.mpT-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;background:#F6FAF7;margin-bottom:8px;font-size:15px;font-weight:600;cursor:pointer;flex-wrap:wrap}' +
     '.mpT-t{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.3}.mpT-t small{display:block;font-size:12.5px;font-weight:500;color:#6B7280;margin-top:2px}' +
     '.mpT-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;background:none;flex-shrink:0;border:0;padding:0;font-family:inherit}' +
@@ -277,14 +279,17 @@
     var sub = [i.rep ? REP[i.rep] : '', i.tm && i.d !== today() ? nice(i.d) : ''].filter(Boolean).join(' · ');
     return '<div class="mpT-row ' + (cls || '') + '" data-open="' + i.id + '"><button class="mpT-ic mpT-ck" data-tick="' + i.id + '" aria-label="Mark as done">' + (ico || '') + '</button><div class="mpT-t">' + esc(i.t) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div><span class="mpT-r">' + right + '</span></div>';
   }
-  function dayHead(iso) {
-    var dd = daysTo(iso), x = fromIso(iso), w = dd === 0 ? 'Today' : dd === 1 ? 'Tomorrow' : dd < 7 ? cap(DAYS[x.getDay()]) : cap(DAYS[x.getDay()]).slice(0, 3) + ' ' + x.getDate() + ' ' + cap(MONTHS[x.getMonth()]).slice(0, 3);
-    return '<div class="w">' + w + '</div><div class="n">' + cap(DAYS[x.getDay()]).slice(0, 3) + ' ' + x.getDate() + '</div>';
+  function dayHead(iso, count) {
+    var dd = daysTo(iso), x = fromIso(iso), dl = cap(DAYS[x.getDay()]).slice(0, 3) + ' ' + x.getDate();
+    var w = dd === 0 ? 'Today' : dd === 1 ? 'Tomorrow' : dl;
+    var n = dd < 2 ? dl + ' ' + cap(MONTHS[x.getMonth()]).slice(0, 3) : 'in ' + dd + ' days';
+    return '<div class="w">' + w + (count > 1 ? '<i>' + count + '</i>' : '') + '</div><div class="n">' + n + '</div>';
   }
-  function dTask(i, right) { return '<div class="mpT-tr" data-open="' + i.id + '"><button class="mpT-tk" data-tick="' + i.id + '" aria-label="Mark as done"></button><span>' + esc(i.t) + '</span>' + (right ? '<small>' + right + '</small>' : '') + '</div>'; }
+  function dTask(i) { return '<div class="mpT-tr" data-open="' + i.id + '"><button class="mpT-tk" data-tick="' + i.id + '" aria-label="Mark as done"></button><span>' + (i.tm ? '<em>' + niceTime(i.tm) + '</em>' : '') + esc(i.t) + '</span></div>'; }
+  function celShort(i, today_) { var n = i.cel && i.cel.n; if (n && i.cel.k === 'birthday') return today_ ? n + (/s$/i.test(n) ? '’' : '’s') + ' birthday' : n; if (i.cel && (i.cel.k === 'wedding' || i.cel.k === 'anniversary')) return /^(our|my)$/i.test(n || '') || !n ? 'Anniversary' : n; return i.t; }
   function dCel(i, today_) {
-    return '<div class="mpT-d gd" data-open="' + i.id + '">' + dayHead(i.d) + '<div class="t">' + celEmoji(i) + ' ' + (today_ ? 'It’s ' + esc(i.t) + ' today!' : esc(i.t)) + '</div>' + (celNum(i) ? '<small>' + cap(celNum(i)) + '</small>' : '') +
-      '<div class="mpT-acts"><a class="c" href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">' + cardBtn(i).replace(/ (her|him|them) a card$/, ' a card') + '</a>' + (today_ ? '<button class="d" data-tick="' + i.id + '">✓ Done</button>' : '') + '</div></div>';
+    return '<div class="mpT-d gd" data-open="' + i.id + '">' + dayHead(i.d) + '<div class="t">' + celEmoji(i) + ' ' + esc(celShort(i, today_)) + (today_ ? ' 🎉' : '') + '</div>' + (celNum(i) ? '<small>' + cap(celNum(i)) + '</small>' : '') +
+      '<div class="mpT-acts"><a class="c" href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">💌 Card</a>' + (today_ ? '<button class="d" data-tick="' + i.id + '">✓</button>' : '') + '</div></div>';
   }
   function todayHtml() {
     var g = groups(), t = today(), has = live().length > 0 || liveLists().length > 0, hideNew = ls.get(HIDE) === '1';
@@ -304,26 +309,28 @@
       var todays = cels.filter(function (i) { return i.d === t; }), soon = cels.filter(function (i) { return i.d !== t; });
       var over = g.over.filter(function (i) { return !i.cel; }), due = g.today.filter(function (i) { return !i.cel; });
       var cards = [];
+      var sl0 = liveLists().slice().sort(function (a, b) { return (b.up || 0) - (a.up || 0); })[0], sleft = sl0 ? sl0.items.filter(function (i) { return !i.x; }).length : 0;
+      var shop = sleft ? '<div class="mpT-sh" data-mp-shop>🛒 ' + sleft + ' to buy</div>' : '';
       // ⏰ overdue
-      if (over.length) cards.push('<div class="mpT-d late"><div class="w">Overdue</div><div class="n">' + over.length + ' to do</div>' + over.slice(0, 2).map(function (i) { return dTask(i, ''); }).join('') + '</div>');
+      if (over.length) cards.push('<div class="mpT-d late"><div class="w">Overdue' + (over.length > 1 ? '<i>' + over.length + '</i>' : '') + '</div><div class="n">Still to do</div>' + over.slice(0, 2).map(dTask).join('') + '</div>');
       // 🎂 birthday today
       todays.slice(0, 2).forEach(function (i) { cards.push(dCel(i, true)); });
-      // 📍 today
-      if (due.length) cards.push('<div class="mpT-d td">' + dayHead(t) + due.slice(0, 2).map(function (i) { return dTask(i, i.tm ? niceTime(i.tm) : ''); }).join('') + (due.length > 2 ? '<small>+ ' + (due.length - 2) + ' more</small>' : '') + '</div>');
-      else if (!todays.length) cards.push('<div class="mpT-d td" data-mp-open>' + dayHead(t) + '<div class="t">Nothing due 🎉</div><small>Enjoy your day</small></div>');
-      // 🗓️ coming up: celebrations + this week's tasks, one card per day
+      // 📍 today (shopping list folded in)
+      if (due.length) cards.push('<div class="mpT-d td">' + (todays.length ? '<div class="w">To do today' + (due.length > 1 ? '<i>' + due.length + '</i>' : '') + '</div><div class="n">Don’t forget</div>' : dayHead(t, due.length)) + due.slice(0, 2).map(dTask).join('') + (due.length > 2 ? '<small>+ ' + (due.length - 2) + ' more</small>' : '') + shop + '</div>');
+      else if (!todays.length) cards.push('<div class="mpT-d td" data-mp-open>' + dayHead(t) + '<div class="t">All clear 🎉</div><small>Nothing due</small>' + shop + '</div>');
+      else if (shop) cards.push('<div class="mpT-d td"><div class="w">Shopping</div><div class="n">' + esc(sl0.name) + '</div>' + shop + '</div>');
+      // 🗓️ coming up: one card per day (celebrations get their own)
       var next = soon.concat(g.week.filter(function (i) { return !i.cel; })).sort(function (a, b) { return (a.d + (a.tm || '99')).localeCompare(b.d + (b.tm || '99')); });
       if (!next.length) { var nl = g.later.filter(function (i) { return !i.cel; })[0]; if (nl) next = [nl]; }
       var byDay = [];
       next.forEach(function (i) { if (i.cel) return byDay.push({ cel: i }); var last = byDay[byDay.length - 1]; if (last && !last.cel && last.d === i.d) last.items.push(i); else byDay.push({ d: i.d, items: [i] }); });
       byDay.slice(0, 5).forEach(function (x) {
         if (x.cel) return cards.push(dCel(x.cel));
-        cards.push('<div class="mpT-d">' + dayHead(x.d) + x.items.slice(0, 2).map(function (i) { return dTask(i, i.tm ? niceTime(i.tm) : ''); }).join('') + (x.items.length > 2 ? '<small>+ ' + (x.items.length - 2) + ' more</small>' : '') + '</div>');
+        cards.push('<div class="mpT-d">' + dayHead(x.d, x.items.length) + x.items.slice(0, 2).map(dTask).join('') + (x.items.length > 2 ? '<small>+ ' + (x.items.length - 2) + ' more</small>' : '') + '</div>');
       });
+      cards.push('<div class="mpT-d add" data-mp-add><b>＋</b>Add</div>');
       body += '<div class="mpT-lbl">Your days</div><div class="mpT-days" data-mp-days>' + cards.join('') + '</div>' +
-        (cards.length > 2 ? '<div class="mpT-dots">' + cards.map(function (c, n) { return '<i' + (n === 0 ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' : '');
-      var sl0 = liveLists().slice().sort(function (a, b) { return (b.up || 0) - (a.up || 0); })[0], sleft = sl0 ? sl0.items.filter(function (i) { return !i.x; }).length : 0;
-      if (sleft) body += '<div class="mpT-shopr" data-mp-shop>🛒 ' + esc(sl0.name) + '<b>' + sleft + ' to buy</b></div>';
+        (cards.length > 3 ? '<div class="mpT-dots">' + cards.slice(0, -1).map(function (c, n) { return '<i' + (n === 0 ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' : '');
       body += '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Open My Plan</button><button class="mpT-b2" data-mp-add>＋ Add</button></div>';
     } else if (!hideNew) {
       body += '<div class="mpT-row mpT-shop"><span class="mpT-ic">💚</span><div class="mpT-t">New: My Plan<small>Remember bills, birthdays and shopping in one place</small></div><button class="mpT-x" data-mp-hide aria-label="Hide">✕</button></div>' +
@@ -338,7 +345,7 @@
     root.querySelectorAll('[data-mp-mo]').forEach(function (b) { b.onclick = function () { try { var m = window.showDailyMotivation('get'); if (window.showMotivationLanding) window.showMotivationLanding(m.text, '', '', ''); } catch (e) {} }; });
     root.querySelectorAll('[data-mp-name]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); setTimeout(function () { var n = document.getElementById('pN'); if (n) n.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-sun]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openSunday(); }; });
-    root.querySelectorAll('[data-mp-shop]').forEach(function (b) { b.onclick = function () { view.tab = 'shop'; open(); }; });
+    root.querySelectorAll('[data-mp-shop]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); view.tab = 'shop'; open(); }; });
     root.querySelectorAll('[data-mp-days]').forEach(function (sc) { var dots = sc.parentNode.querySelectorAll('.mpT-dots i'); if (!dots.length) return; sc.addEventListener('scroll', function () { var w = sc.firstChild ? sc.firstChild.offsetWidth + 8 : 1, k = Math.min(dots.length - 1, Math.round(sc.scrollLeft / w)); dots.forEach(function (d, n) { d.className = n === k ? 'on' : ''; }); }, { passive: true }); });
     bindRows(root);
     root.querySelectorAll('[data-card]').forEach(function (x) { x.onclick = function (e) { e.stopPropagation(); gt('cel_card', { from: 'home' }); }; });
