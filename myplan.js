@@ -159,7 +159,7 @@
     '.mp-empty{text-align:center;padding:18px 8px;color:#4B5563;font-size:14.5px;line-height:1.55}.mp-empty b{display:block;font-size:16px;color:#0F1E36;margin-bottom:4px}' +
     '.mp-welcome{display:grid;gap:8px;margin-top:12px}.mp-welcome button{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e2dccc;border-radius:14px;padding:14px;font-family:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer;color:#0F1E36}.mp-welcome button span{font-size:22px}.mp-welcome button small{display:block;font-weight:500;color:#6B7280;font-size:12.5px}.mp-welcome button:disabled{opacity:.55;cursor:default}' +
     '.mpT{border-radius:18px;overflow:hidden;background:#fff;border:1px solid #E8E3D6;box-shadow:0 2px 8px rgba(15,30,54,.05);margin-bottom:10px;color:#0F1E36}' +
-    '.mpT-top{padding:14px 14px 0}.mpT-bub{background:#EEF7F1;border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.45;color:#1F2937}.mpT-h{font-size:18px;font-weight:800;color:#0F1E36;margin-bottom:3px}' +
+    '.mpT-top{padding:14px 14px 0}.mpT-bub{background:#057A44;border-radius:16px;padding:13px 15px;font-size:15px;line-height:1.45;color:#fff}.mpT-h{font-size:19px;font-weight:800;color:#fff;margin-bottom:3px}' +
     '.mpT-mo{display:block;width:100%;text-align:left;font-family:inherit;cursor:pointer;margin-top:8px;background:#FBF8F0;border:0;border-left:3px solid #FFB81C;border-radius:8px;padding:9px 11px;font-size:14px;color:#4B4232;font-style:italic;line-height:1.45}' +
     '.mpT-name{display:inline-block;margin-top:8px;background:#FFB81C;color:#0F1E36;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:800;font-style:normal;text-decoration:none}' +
     '.mpT-date{font-size:13px;color:#6B7280;margin:9px 4px 0}.mpT-top:last-child{padding-bottom:14px}' +
@@ -248,10 +248,6 @@
   function hello(dueN, cels, t) {
     var d = new Date(), h = d.getHours(), wd = d.getDay(), doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
     var pick = function (a) { return a[doy % a.length]; };
-    var tday = cels.filter(function (i) { return i.d === t; })[0];
-    if (tday) return '🎉 A special day — don’t forget to make ' + esc(tday.t.replace(/[’']s .*$/, '')) + ' smile today!';
-    var near = cels.filter(function (i) { return daysTo(i.d) <= 3; })[0];
-    if (near) { var n = daysTo(near.d); return '🎂 ' + esc(near.t) + ' is ' + (n === 1 ? 'tomorrow' : 'in ' + n + ' days') + ' — I’ve got a card ready for you.'; }
     if (dueN === 1) return '💚 Just one thing on your list today — you’ve got this.';
     if (dueN > 1) return '💚 You’ve got ' + dueN + ' things today. One step at a time — I’m here to help.';
     if (wd === 1 && h < 17) return pick(['💪🏾 New week, fresh start. Let’s make it a good one!', '☕ Monday again! Take it easy and go gently.']);
@@ -272,7 +268,7 @@
     var gr = greet(), d = new Date(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
     var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
     var line = has ? hello(g.over.concat(g.today).filter(function (i) { return !i.cel; }).length, live().filter(function (i) { return i.cel && celSoon(i); }), t) : hello(0, [], t);
-    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-bub"><div class="mpT-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + '! ' + gr[0] + '</div>' + line +
+    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-bub"><div class="mpT-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + ' ' + gr[0] + '</div>' + line +
       (P.signedIn && !P.name ? '<br><a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '') + '</div>' +
       (mo ? '<button class="mpT-mo" data-mp-mo>' + esc(mo.emoji) + ' “' + esc(mo.text) + '”</button>' : '') +
       '<div class="mpT-date">📅 ' + dateLine + '</div></div>';
