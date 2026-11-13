@@ -244,6 +244,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       <button data-nav="igc">💬 Comment Assistant <span class="n" id="nIgc"></span></button>
       <button data-nav="disc" id="navDisc" class="hidden">📣 Discovery posts</button>
       <button data-nav="tx" id="navTx" class="hidden">🎙️ Transcribe a video</button>
+      <button data-nav="clean" id="navClean" class="hidden">🧽 Clean up a video</button>
       <button data-nav="mplan" id="navMplan" class="hidden">💚 My Plan users</button>
       <button data-nav="sun" id="navSun" class="hidden">📰 Sunday Update</button>
       <button data-nav="igu" id="navIgu" class="hidden">👥 Comment &amp; like usernames</button>
@@ -274,6 +275,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <script src="/hq-transcribe.js?v=20261111c"></script>
 <script src="/hq-myplan.js?v=20261112"></script>
 <script src="/hq-sunday.js?v=20261112"></script>
+<script src="/hq-clean.js?v=20261113"></script>
 <script src="/hq-boost.js"></script>
 <script src="/hq-videoad.js"></script>
 <script src="/hq-videomake.js"></script>
@@ -331,7 +333,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
-    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navAbiz').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#navImgm').classList.toggle('hidden', !S.isAdmin); $('#navIgu').classList.toggle('hidden', !S.isAdmin); $('#navDisc').classList.toggle('hidden', !S.isAdmin); $('#navMkt').classList.toggle('hidden', !S.isAdmin); $('#navTx').classList.toggle('hidden', !S.isAdmin); $('#navMplan').classList.toggle('hidden', !S.isAdmin); $('#navSun').classList.toggle('hidden', !S.isAdmin); if (S.isAdmin && window.HQMkt) window.HQMkt.count().then(function (n) { $('#nMkt').textContent = n || ''; }); $('#navDm').classList.toggle('hidden', !S.isAdmin); $('#navIga').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
+    $('#adminLink').classList.toggle('hidden', !S.isAdmin); $('#navDir').classList.toggle('hidden', !S.isAdmin); $('#navAbiz').classList.toggle('hidden', !S.isAdmin); $('#navFind').classList.toggle('hidden', !S.isAdmin); $('#navOut').classList.toggle('hidden', !S.isAdmin); $('#navMail').classList.toggle('hidden', !S.isAdmin); $('#navImgm').classList.toggle('hidden', !S.isAdmin); $('#navIgu').classList.toggle('hidden', !S.isAdmin); $('#navDisc').classList.toggle('hidden', !S.isAdmin); $('#navMkt').classList.toggle('hidden', !S.isAdmin); $('#navTx').classList.toggle('hidden', !S.isAdmin); $('#navMplan').classList.toggle('hidden', !S.isAdmin); $('#navSun').classList.toggle('hidden', !S.isAdmin); $('#navClean').classList.toggle('hidden', !S.isAdmin); if (S.isAdmin && window.HQMkt) window.HQMkt.count().then(function (n) { $('#nMkt').textContent = n || ''; }); $('#navDm').classList.toggle('hidden', !S.isAdmin); $('#navIga').classList.toggle('hidden', !S.isAdmin); $('#teamBtn').classList.toggle('hidden', !S.isAdmin);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -339,7 +341,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin' };
   function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
   function go(v) {
-    S.view = (['dir', 'abiz', 'find', 'out', 'mail', 'igu', 'dm', 'iga', 'disc', 'mkt', 'tx', 'mplan', 'sun', 'imgm'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
+    S.view = (['dir', 'abiz', 'find', 'out', 'mail', 'igu', 'dm', 'iga', 'disc', 'mkt', 'tx', 'mplan', 'sun', 'clean', 'imgm'].indexOf(v) >= 0 && S.isAdmin) || ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
     $$('.side-nav [data-nav]').forEach(function (b) { b.setAttribute('aria-current', b.dataset.nav === S.view ? 'page' : 'false'); });
     $('#side').classList.remove('open');
@@ -352,7 +354,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, sun: function () { window.HQSun.view(); }, clean: function () { window.HQClean.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
@@ -361,6 +363,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   if (window.HQTx) window.HQTx.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQPlan) window.HQPlan.init({ api: api, esc: esc });
   if (window.HQSun) window.HQSun.init({ api: api, sheet: sheet, toast: toast, esc: esc });
+  if (window.HQClean) window.HQClean.init({ esc: esc });
   if (window.HQMkt) window.HQMkt.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S, updateBadge: function (n) { var b = document.getElementById('nMkt'); if (b) b.textContent = n || ''; } });
   if (window.HQBoost) window.HQBoost.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S, go: function (v) { go(v); } });
   if (window.HQVad) window.HQVad.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
