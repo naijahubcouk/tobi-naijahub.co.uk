@@ -5496,6 +5496,7 @@ function showDailyMotivation() {
   // Pick message based on day of year so it rotates daily
   const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
   const msg = messages[dayOfYear % messages.length];
+  if (arguments[0] === 'get') return msg;   // 💚 used by the welcome card (myplan.js)
 
   const html = `<div onclick="showMotivationLanding('${msg.text.replace(/'/g,"\\'").replace(/"/g,'\\"')}','','','')" style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;cursor:pointer;">
     <div style="background:#0F1E36;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;">
@@ -9273,8 +9274,7 @@ function resetToWelcome() {
         addTipMessage(`<div data-myplan-today="1" data-h="${qa(heading)}" data-s="${qa(subtitle)}">${design}</div>`);
         if (window.MyPlan) window.MyPlan.fill();
       })();
-      showHomeShortcuts();   // 🏠 shortcuts row
-      showDailyMotivation();
+      showHomeShortcuts();   // 🏠 shortcuts row (daily motivation now sits inside the welcome card)
       liveNewsShownCount = 2;
       addTipMessage('<div data-news-card-placeholder="1"></div>');
       setTimeout(function(){ if (!document.querySelector('[data-news-card]')) showNewsCard(); }, 1500);
@@ -10316,7 +10316,7 @@ function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleD
   }, {passive:true});
 })();
 </script>
-<script src="/myplan.js?v=20261113d" defer></script>
+<script src="/myplan.js?v=20261113e" defer></script>
 <script src="/desk.js" defer></script>
 <script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>

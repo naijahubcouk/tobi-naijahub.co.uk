@@ -158,12 +158,12 @@
     '.mp-toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#0F1E36;color:#fff;border-radius:12px;padding:11px 14px;font-size:14px;z-index:9999;display:flex;gap:12px;align-items:center;max-width:92vw;box-shadow:0 6px 20px rgba(0,0,0,.25)}.mp-toast button{background:none;border:0;color:#FFB81C;font-weight:800;font-size:14px;cursor:pointer}' +
     '.mp-empty{text-align:center;padding:18px 8px;color:#4B5563;font-size:14.5px;line-height:1.55}.mp-empty b{display:block;font-size:16px;color:#0F1E36;margin-bottom:4px}' +
     '.mp-welcome{display:grid;gap:8px;margin-top:12px}.mp-welcome button{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e2dccc;border-radius:14px;padding:14px;font-family:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer;color:#0F1E36}.mp-welcome button span{font-size:22px}.mp-welcome button small{display:block;font-weight:500;color:#6B7280;font-size:12.5px}.mp-welcome button:disabled{opacity:.55;cursor:default}' +
-    '.mpT{border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 6px 18px rgba(15,30,54,.10);margin-bottom:10px;color:#0F1E36}' +
-    '.mpT-top{background:linear-gradient(135deg,#057A44 0%,#0B5E3A 55%,#0F1E36 100%);color:#fff;padding:16px 18px 18px;position:relative;overflow:hidden}.mpT-top:after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,184,28,.22)}' +
-    '.mpT-em{font-size:26px;line-height:1}.mpT-h{font-size:22px;font-weight:800;line-height:1.2;margin-top:6px;position:relative;z-index:1}.mpT-h span{color:#FFB81C}' +
-    '.mpT-msg{font-size:14.5px;line-height:1.45;margin-top:6px;opacity:.95;position:relative;z-index:1}.mpT-name{display:inline-block;margin-top:8px;margin-right:6px;background:#FFB81C;color:#0F1E36;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:800;text-decoration:none;position:relative;z-index:1}' +
-    '.mpT-date{display:inline-block;margin-top:8px;background:rgba(255,255,255,.16);border-radius:20px;padding:5px 11px;font-size:13px;font-weight:600;position:relative;z-index:1}' +
-    '.mpT-body{padding:14px 14px 16px}.mpT-lbl{font-size:11.5px;font-weight:800;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;margin:6px 4px 8px}' +
+    '.mpT{border-radius:18px;overflow:hidden;background:#fff;border:1px solid #E8E3D6;box-shadow:0 2px 8px rgba(15,30,54,.05);margin-bottom:10px;color:#0F1E36}' +
+    '.mpT-top{padding:14px 14px 0}.mpT-bub{background:#EEF7F1;border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.45;color:#1F2937}.mpT-h{font-size:18px;font-weight:800;color:#0F1E36;margin-bottom:3px}' +
+    '.mpT-mo{display:block;width:100%;text-align:left;font-family:inherit;cursor:pointer;margin-top:8px;background:#FBF8F0;border:0;border-left:3px solid #FFB81C;border-radius:8px;padding:9px 11px;font-size:14px;color:#4B4232;font-style:italic;line-height:1.45}' +
+    '.mpT-name{display:inline-block;margin-top:8px;background:#FFB81C;color:#0F1E36;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:800;font-style:normal;text-decoration:none}' +
+    '.mpT-date{font-size:13px;color:#6B7280;margin:9px 4px 0}.mpT-top:last-child{padding-bottom:14px}' +
+    '.mpT-body{padding:8px 14px 16px}.mpT-lbl{font-size:11.5px;font-weight:800;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;margin:6px 4px 8px}' +
     '.mpT-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;background:#F6FAF7;margin-bottom:8px;font-size:15px;font-weight:600;cursor:pointer;flex-wrap:wrap}' +
     '.mpT-t{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.3}.mpT-t small{display:block;font-size:12.5px;font-weight:500;color:#6B7280;margin-top:2px}' +
     '.mpT-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);flex-shrink:0;border:0;padding:0;font-family:inherit}' +
@@ -270,7 +270,12 @@
   function todayHtml() {
     var g = groups(), t = today(), has = live().length > 0 || liveLists().length > 0, hideNew = ls.get(HIDE) === '1';
     var gr = greet(), d = new Date(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
-    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-em">' + gr[0] + '</div><div class="mpT-h">' + gr[1] + (P.name ? ', <span>' + esc(P.name) + '</span>' : '') + '!</div>' + (has ? '<div class="mpT-msg">' + hello(g.over.concat(g.today).filter(function (i) { return !i.cel; }).length, live().filter(function (i) { return i.cel && celSoon(i); }), t) + '</div>' : '<div class="mpT-msg">' + hello(0, [], t) + '</div>') + (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '') + '<div class="mpT-date">📅 ' + dateLine + '</div></div>';
+    var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
+    var line = has ? hello(g.over.concat(g.today).filter(function (i) { return !i.cel; }).length, live().filter(function (i) { return i.cel && celSoon(i); }), t) : hello(0, [], t);
+    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-bub"><div class="mpT-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + '! ' + gr[0] + '</div>' + line +
+      (P.signedIn && !P.name ? '<br><a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '') + '</div>' +
+      (mo ? '<button class="mpT-mo" data-mp-mo>' + esc(mo.emoji) + ' “' + esc(mo.text) + '”</button>' : '') +
+      '<div class="mpT-date">📅 ' + dateLine + '</div></div>';
     var body = '';
     var sl = P.sun && P.sun.latest;
     if (sl && t >= sl.week && t <= addDays(sl.week, 2)) body += '<div class="mpT-row mpT-news" data-mp-sun><span class="mpT-ic">📰</span><div class="mpT-t">Your Sunday Update is here<small>This week’s UK news, events and more</small></div><span class="mpT-r">Read ›</span></div>';
@@ -305,6 +310,7 @@
     root.querySelectorAll('[data-mp-open]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); open(); }; });
     root.querySelectorAll('[data-mp-add]').forEach(function (b) { b.onclick = function () { open(); setTimeout(function () { var i = $('#mpQ'); if (i) i.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-hide]').forEach(function (b) { b.onclick = function () { ls.set(HIDE, '1'); gt('plan_hide_new'); fill(); }; });
+    root.querySelectorAll('[data-mp-mo]').forEach(function (b) { b.onclick = function () { try { var m = window.showDailyMotivation('get'); if (window.showMotivationLanding) window.showMotivationLanding(m.text, '', '', ''); } catch (e) {} }; });
     root.querySelectorAll('[data-mp-name]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); setTimeout(function () { var n = document.getElementById('pN'); if (n) n.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-sun]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openSunday(); }; });
     root.querySelectorAll('[data-mp-shop]').forEach(function (b) { b.onclick = function () { view.tab = 'shop'; open(); }; });
