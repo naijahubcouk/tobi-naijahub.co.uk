@@ -46,7 +46,7 @@ async function target(kind, id) {
 }
 const eventLink = p => p.slug ? `${core.siteBase()}/blog/${p.slug}` : core.siteBase();
 function vars(t, email) {
-  return { organiser_name: t.name || 'there', event_title: t.post.title || 'your event', event_link: eventLink(t.post), promo_link: PROMO, unsubscribe_link: email ? `${core.siteBase()}/eu/${token(email)}` : '' };
+  return { organiser_name: t.name || 'there', event_title: t.post.title || 'your event', event_link: eventLink(t.post), promo_link: PROMO, whatsapp_link: 'https://wa.me/447594674940', unsubscribe_link: email ? `${core.siteBase()}/eu/${token(email)}` : '' };
 }
 
 // The email filled in and ready to read / edit in HQ

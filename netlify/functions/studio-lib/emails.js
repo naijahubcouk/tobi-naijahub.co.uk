@@ -512,7 +512,7 @@ async function save(id, subject, body, who) {
   if (!d) throw new core.HttpError(404, 'not_found', 'Unknown email.');
   subject = core.cleanText(subject, 200); body = String(body || '').replace(/\r/g, '').trim().slice(0, 8000);
   if (!subject || body.length < 10) throw new core.HttpError(400, 'invalid', 'Add a subject and the email text.');
-  const bad = (subject + body).match(/\{([a-z_]+)\}/g); const unknown = (bad || []).map(x => x.slice(1, -1)).filter(v => !d.vars.includes(v) && v !== 'unsubscribe_link');
+  const bad = (subject + body).match(/\{([a-z_]+)\}/g); const unknown = (bad || []).map(x => x.slice(1, -1)).filter(v => !d.vars.includes(v) && v !== 'unsubscribe_link' && v !== 'whatsapp_link');   // {whatsapp_link} works in every email
   if (unknown.length) throw new core.HttpError(400, 'invalid', 'Unknown placeholder: {' + unknown[0] + '}. You can use: ' + d.vars.map(v => '{' + v + '}').join(' '));
   const missing = (d.must || []).filter(v => (subject + ' ' + body).indexOf('{' + v + '}') < 0);
   if (missing.length) throw new core.HttpError(400, 'locked', '🔒 This email must keep {' + missing.join('}, {') + '} — please put ' + (missing.length > 1 ? 'them' : 'it') + ' back.');
