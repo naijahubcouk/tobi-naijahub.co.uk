@@ -2014,9 +2014,36 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('[data-imu]').forEach(function (b) { b.onclick = async function () { read(); try { S.imgm = await api('img-settings', { set: { model: b.dataset.imu, quality: T.quality } }); toast('HQ now uses ' + imgName(S.imgm.model) + ' 🎨'); vImgm(); } catch (x) { toast(x.message); } }; });
     $$('[data-imz]').forEach(function (im) { im.onclick = function () { var s = sheet('<img src="' + im.src + '" style="width:100%;border-radius:10px;display:block"><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn primary" id="izX">Close</button></div>'); $('#izX', s).onclick = function () { s.remove(); }; }; });
   }
+  // 📋 organiser emails for the events you added (not public submissions) — admin only
+  async function orgsSheet() {
+    var s = sheet('<h3 style="margin:0 0 4px">📋 Organiser emails</h3><div class="muted" style="font-size:13.5px">Events you added in HQ. Only you can see this.</div><div id="ogB" style="margin-top:12px">Loading…</div>');
+    try {
+      var rows = (await api('app-orgs')).rows, today = new Date().toISOString().slice(0, 10);
+      var emails = []; rows.forEach(function (r) { [r.orgEmail].concat(r.found).forEach(function (e) { if (e && emails.indexOf(e) < 0) emails.push(e); }); });
+      var missing = rows.filter(function (r) { return !r.orgEmail && !r.found.length; });
+      $('#ogB', s).innerHTML =
+        '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px"><b>' + emails.length + ' email' + (emails.length === 1 ? '' : 's') + '</b><span class="muted">· ' + rows.length + ' events · ' + missing.length + ' with no email yet</span>' +
+        (emails.length ? '<button class="btn primary sm" id="ogCopy" style="margin-left:auto">📋 Copy all emails</button>' : '') + '</div>' +
+        '<div style="max-height:60vh;overflow:auto">' + rows.map(function (r) {
+          var em = r.orgEmail ? '<b>' + esc(r.orgEmail) + '</b>' : r.found.length ? esc(r.found.join(', ')) + ' <span class="muted">(from the description)</span>' : '<span style="color:var(--danger)">No email yet</span>';
+          return '<div style="padding:9px 0;border-bottom:1px solid var(--line,#eee)"><div style="font-weight:700">' + esc(r.title) + '</div>' +
+            '<div class="muted" style="font-size:12.5px">🗓 ' + esc(fmtLong(r.eventDate)) + (r.eventDate < today ? ' · past' : '') + (r.location ? ' · 📍 ' + esc(r.location) : '') + (r.status === 'hidden' ? ' · hidden' : '') + '</div>' +
+            '<div style="font-size:13.5px;margin-top:3px">📧 ' + em + ' <button class="btn ghost sm" data-ogedit="' + esc(r.id) + '" style="margin-left:6px">✏️ ' + (r.orgEmail ? 'Change' : 'Add email') + '</button>' +
+            (r.link ? ' <a href="' + esc(r.link) + '" target="_blank" rel="noopener" class="btn ghost sm">🔗 Event page</a>' : '') + '</div></div>';
+        }).join('') + '</div>' +
+        '<p class="muted" style="font-size:12.5px;margin-top:10px">Fine for emailing organisers about their own events. Don’t add them to the Sunday Update unless they say yes.</p>' +
+        '<div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn ghost" id="ogX">Close</button></div>';
+      $('#ogX', s).onclick = function () { s.remove(); };
+      if ($('#ogCopy', s)) $('#ogCopy', s).onclick = function () { try { navigator.clipboard.writeText(emails.join(', ')); toast('📋 ' + emails.length + ' emails copied'); } catch (e) { prompt('Copy these emails', emails.join(', ')); } };
+      $$('[data-ogedit]', s).forEach(function (b) { b.onclick = async function () {
+        var r = rows.filter(function (x) { return x.id === b.dataset.ogedit; })[0]; var e = prompt('Organiser email for “' + r.title + '”', r.orgEmail || r.found[0] || ''); if (e === null) return;
+        try { var res = await api('app-save', { item: { id: r.id, orgEmail: e.trim() } }); upsertApp(res.item); if (e.trim() && !res.item.orgEmail) return toast('That doesn’t look like an email'); s.remove(); toast('✅ Saved'); orgsSheet(); } catch (x) { toast(x.message); }
+      }; });
+    } catch (x) { $('#ogB', s).textContent = x.message; }
+  }
   function vApp() {
     $('#ttl').textContent = 'Publish to App';
-    $('#topRight').innerHTML = (S.isAdmin ? '<button class="btn ghost" id="apFacts">✅ Facts</button> <button class="btn ghost" id="apBday">🎉 Card art</button> ' : '') + '<button class="btn ghost" id="apPaste">📋 Paste</button>';
+    $('#topRight').innerHTML = (S.isAdmin ? '<button class="btn ghost" id="apOrgs">📋 Organiser emails</button> <button class="btn ghost" id="apFacts">✅ Facts</button> <button class="btn ghost" id="apBday">🎉 Card art</button> ' : '') + '<button class="btn ghost" id="apPaste">📋 Paste</button>';
     var all = S.app || [];
     var live = all.filter(function (p) { return appState(p) === 'live'; });
     var ended = all.filter(function (p) { return appState(p) === 'ended'; });
@@ -2044,6 +2071,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
     $('#apPaste').onclick = function () { appPasteSheet(); };
     if ($('#apBday')) $('#apBday').onclick = bdayArtSheet; if ($('#apFacts')) $('#apFacts').onclick = factsSheet;
+    if ($('#apOrgs')) $('#apOrgs').onclick = orgsSheet;
     $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : { kind: k }); }; });
     $('#apAi').onclick = function () { appAiSheet(); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
@@ -2297,6 +2325,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<button class="btn primary sm hidden" id="aeImgOk">👍 Use this image</button><button class="btn ghost sm" id="aeImgMake">✨ Create an image</button><button class="btn ghost sm hidden" id="aeImgHead">✏️ Edit headline</button>' +
       '<label class="btn ghost sm" style="margin:0">📷 Upload image<input type="file" id="aeImgFile" accept="image/jpeg,image/png,image/webp" hidden></label><button class="btn ghost sm hidden" id="aeImgNone">✖ No image</button></div></div></div>' +
       '<div data-for="event"><label for="aeL">Place</label><input id="aeL" placeholder="Venue, City" value="' + esc(p.location || '') + '"></div>' +
+      (S.isAdmin ? '<div data-for="event"><label for="aeOE">Organiser email <span class="muted" style="font-weight:400">(optional — only you see this in HQ, never shown in the app)</span></label><input type="email" id="aeOE" placeholder="organiser@example.com" value="' + esc(p.orgEmail || '') + '"></div>' : '') +
       '<label data-for="event" style="display:flex;gap:8px;align-items:center;font-weight:600;margin:4px 0"><input type="checkbox" id="aeFt" style="width:18px;height:18px"' + (p.featured ? ' checked' : '') + '> ⭐ Featured event — show it on Home, Links and business pages</label>' +
       '<div><label for="aeB"><span data-for="update article">Message</span><span data-for="event">About the event</span> <span class="muted" style="font-weight:400">— **bold**, • bullets, 1. steps, a short line ending in ? or : = heading, “Important:” / “Auntie Tobi reminder:” = box, columns with | = table, “💚 Auntie Tobi Says” = green box</span></label><textarea id="aeB" rows="11">' + esc(p.body || '') + '</textarea></div>' +
       '<div data-for="article"><label for="aeS">Short summary <span class="muted" style="font-weight:400">(shown in the list — leave blank to use the start of the message)</span></label><input id="aeS" maxlength="400" value="' + esc(p.summary || '') + '"></div>' +
@@ -2337,7 +2366,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     function vals() {
       var k = kind();
       return { kind: k, title: $('#aeT', s).value.trim(), body: $('#aeB', s).value, link: $('#aeLk', s).value.trim(), category: $('#aeC', s).value,
-        summary: $('#aeS', s).value.trim(), showUntil: $('#aeU', s).value, eventDate: $('#aeD', s).value, eventTime: $('#aeTm', s).value.trim(), location: $('#aeL', s).value.trim(), featured: k === 'event' && $('#aeFt', s).checked };
+        summary: $('#aeS', s).value.trim(), showUntil: $('#aeU', s).value, eventDate: $('#aeD', s).value, eventTime: $('#aeTm', s).value.trim(), location: $('#aeL', s).value.trim(), featured: k === 'event' && $('#aeFt', s).checked, orgEmail: $('#aeOE', s) ? $('#aeOE', s).value.trim() : undefined };
     }
     function paint() {
       var v = vals(), k = v.kind;

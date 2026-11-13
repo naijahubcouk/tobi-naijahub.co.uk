@@ -23,6 +23,8 @@ const isDay = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
 const newId = () => `a${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
 const multi = (s, n) => String(s || '').replace(/\r/g, '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, n);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cleanEmail = e => { e = String(e || '').trim().toLowerCase(); return /^[^\s@<>"',;]{1,64}@[a-z0-9.-]{1,180}\.[a-z]{2,24}$/.test(e) ? e : ''; };
+const EMAIL_RE = /[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,180}\.[a-z]{2,24}/gi;
 const cleanUrl = u => { u = String(u || '').trim(); return /^https?:\/\/[^\s"'<>]{3,500}$/i.test(u) ? u : ''; };
 
 // Plain text → safe HTML (articles, news, updates). Written to work with how Auntie Tobi articles are laid out:
@@ -121,6 +123,8 @@ function clean(raw, prev) {
     location: has('location') ? cleanText(raw.location, 120) : (p.location || ''),
     status: has('status') ? (raw.status === 'hidden' ? 'hidden' : 'live') : (p.status || 'live'),
     featured: kind === 'event' ? (has('featured') ? !!raw.featured : !!p.featured) : false,   // ⭐ shown on Home, Links and business pages
+    // 📧 organiser's email — HQ only, never in the public feed
+    orgEmail: kind === 'event' ? (has('orgEmail') ? cleanEmail(raw.orgEmail) : (p.orgEmail || '')) : '',
     imgId: has('imgId') ? (/^e[a-z0-9]{6,30}$/.test(String(raw.imgId)) ? String(raw.imgId) : '') : (p.imgId || ''),
   };
   if (!out.title) throw new HttpError(400, 'title_required', 'Please add a title.');
@@ -187,4 +191,13 @@ async function publicFeed() {
   };
 }
 
-module.exports = { KINDS, CATEGORIES, list, save, remove, publicFeed, toHtml };
+// 📋 organisers of the events added in HQ (not public submissions) — HQ admin only
+async function organisers(submittedAppIds) {
+  const skip = new Set(submittedAppIds || []);
+  return (await list()).filter(p => p.kind === 'event' && !skip.has(p.id)).sort((a, b) => String(b.eventDate).localeCompare(String(a.eventDate))).map(p => {
+    const found = [...new Set((String(p.body || '') + ' ' + String(p.link || '')).match(EMAIL_RE) || [])].map(e => e.toLowerCase()).filter(e => e !== p.orgEmail);
+    return { id: p.id, title: p.title, eventDate: p.eventDate, location: p.location || '', link: p.link || '', orgEmail: p.orgEmail || '', found: found.slice(0, 3), status: p.status };
+  });
+}
+
+module.exports = { KINDS, CATEGORIES, list, save, remove, publicFeed, toHtml, organisers };

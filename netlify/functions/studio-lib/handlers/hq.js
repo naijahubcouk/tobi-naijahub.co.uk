@@ -67,6 +67,9 @@ function sectionsOf(action) {
 function can(who, list) { return who.isAdmin || !who.sections || list.some(x => who.sections.includes(x)); }
 function mustAllow(who, list) { if (!can(who, list)) throw new HttpError(403, 'no_access', 'You don’t have access to this part of HQ — ask Auntie Tobi.'); }
 
+// 📧 organiser emails are for Auntie Tobi (admin) only
+const appFor = (who, list) => who.isAdmin ? list : list.map(p => { const c = { ...p }; delete c.orgEmail; return c; });
+
 exports.handler = handler(async (ctx) => {
   const { event, body } = ctx;
   if (event.httpMethod === 'GET') {
@@ -118,7 +121,7 @@ exports.handler = handler(async (ctx) => {
   { const need = sectionsOf(String(body.action || '')); if (need) mustAllow(who, need); }
   const has = list => can(who, list);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? await apppub.list() : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], tcars: has(['cars']) ? await tplcar.list() : [], vads: has(['vads']) ? await videoad.list() : [], abizNew: who.isAdmin ? await require('../addbiz').hqList().then(r => r.subs.filter(x => x.status === 'new').length + r.listed.length).catch(() => 0) : 0 };
+    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? appFor(who, await apppub.list()) : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], tcars: has(['cars']) ? await tplcar.list() : [], vads: has(['vads']) ? await videoad.list() : [], abizNew: who.isAdmin ? await require('../addbiz').hqList().then(r => r.subs.filter(x => x.status === 'new').length + r.listed.length).catch(() => 0) : 0 };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -132,9 +135,15 @@ exports.handler = handler(async (ctx) => {
     }
     case 'img': return { id: await hq.saveImage(body.dataUrl) };
     case 'app-save': {
-      const item = await apppub.save(body.item, who.email);
+      if (!who.isAdmin && body.item) delete body.item.orgEmail;
+      const item = appFor(who, [await apppub.save(body.item, who.email)])[0];
       await core.audit(who.email, 'hq_app_save', { id: item.id, kind: item.kind, status: item.status });
       return { item };
+    }
+    case 'app-orgs': {
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see organiser emails.');
+      const subs = await eventsub.list();
+      return { rows: await apppub.organisers(subs.map(x => x.appId).filter(Boolean)) };
     }
     case 'app-link': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI drafts this hour — please wait a little.');
@@ -254,7 +263,7 @@ exports.handler = handler(async (ctx) => {
     case 'sub-approve': {
       const post = await eventsub.approve(String(body.id || ''), body.item, who.email);
       await core.audit(who.email, 'hq_sub_approve', { id: body.id, post: post.id });
-      return { post, subs: await eventsub.list(), app: await apppub.list() };
+      return { post, subs: await eventsub.list(), app: appFor(who, await apppub.list()) };
     }
     case 'sub-decline': {
       await eventsub.decline(String(body.id || ''), who.email);
@@ -268,7 +277,7 @@ exports.handler = handler(async (ctx) => {
     case 'app-delete': {
       await apppub.remove(String(body.id || ''));
       await core.audit(who.email, 'hq_app_delete', { id: String(body.id || '') });
-      return { ok: true, app: await apppub.list() };
+      return { ok: true, app: appFor(who, await apppub.list()) };
     }
     case 'bday-art': case 'bday-art-make': case 'bday-art-del': {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the birthday card art.');
