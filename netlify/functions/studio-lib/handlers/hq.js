@@ -547,6 +547,10 @@ exports.handler = handler(async (ctx) => {
       }
       if (body.action === 'mail-preview' && emails.T[id] && emails.T[id].sys) {
         const SAMPLE = { name: 'Ada', until: '3 November 2027', studio_link: core.appUrl(), email: 'ada@example.com', marketplace_link: core.siteBase() + '/marketplace/list', code: '482913', brand: 'Auntie Tobi Business Studio', credits: 300, expires: '3 November 2027', plan: 'Business Studio Plus', credits_per_day: 50, price: '£50', date: '10 November 2026', period: 'year', cancel_link: core.appUrl() + '?cancel=1', keep_link: core.appUrl(), after_plan: 'the Free plan', number: '12345678', note: 'Your note appears here.', message: 'Thank you for your message! Here is my reply…', idea: 'Please add a stock list', reply: 'Great idea — it’s on our list.', status: 'Planned', listing: 'Party jollof tray', link: core.siteBase() + '/marketplace', how_to_update: 'Update it in your Business Studio.', outcome: 'We’re not able to list it at the moment.' };
+        if (emails.T[id].group === 'sys-ev') {   // 🎉 event organiser emails: sample event, no WhatsApp Channel link (for now)
+          const EV = { organiser_name: 'Bisi', event_title: 'Jollof Festival Manchester', event_link: core.siteBase() + '/blog/at-jollof-festival-manchester', promo_link: 'https://www.auntietobi.co.uk/event-promotion', unsubscribe_link: core.siteBase() + '/eu/sample' };
+          return Object.assign(emails.renderWith({ subject: String(body.subject || emails.T[id].subject), body: String(body.body || emails.T[id].body) }, EV, 'You’re receiving this because your event is listed on Auntie Tobi. Don’t want emails from Auntie Tobi? Unsubscribe: {unsubscribe_link}', { noChannel: true }), { business: 'a sample event' });
+        }
         return Object.assign(emails.renderWith({ subject: String(body.subject || emails.T[id].subject), body: String(body.body || emails.T[id].body) }, SAMPLE, ''), { business: 'sample details' });
       }
       if (body.action === 'mail-test' && emails.T[id] && emails.T[id].sys) {
