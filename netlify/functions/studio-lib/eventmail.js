@@ -67,7 +67,7 @@ async function send(kind, id, to, subject, body, by) {
   if (prev && !prev.skipped) throw new HttpError(400, 'already', 'Already emailed on ' + String(prev.at).slice(0, 10) + '.');
   subject = core.cleanText(subject, 200); body = String(body || '').replace(/\r/g, '').trim().slice(0, 8000);
   if (!subject || body.length < 10) throw new HttpError(400, 'invalid', 'Add a subject and the email text.');
-  const v = vars(t, to), msg = emails.renderWith({ subject, body }, v, FOOTER);
+  const v = vars(t, to), msg = emails.renderWith({ subject, body }, v, FOOTER, { noChannel: true });   // no WhatsApp Channel link in event emails (for now)
   const key = core.env('RESEND_API_KEY');
   let rid = '';
   if (!key) { if (core.env('STUDIO_EMAIL_MODE') !== 'log') throw new HttpError(500, 'email_not_configured', 'Email sending isn’t set up.'); console.log('[eventmail] (log)', to, msg.subject); rid = 'log'; }
