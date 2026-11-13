@@ -55,7 +55,7 @@ async function list() {
     if (e && e.items && e.items[0]) acts.push([e.items[0].at, e.items[0].type === 'clicked' ? '🔗 Clicked a link' : e.items[0].type === 'opened' ? '👁 Opened an email' : e.items[0].type === 'bounced' ? '⚠️ Email bounced' : '🚫 Marked as spam']);
     acts.sort((x, y) => String(y[0]).localeCompare(String(x[0])));
     rows.push({
-      slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, email: b.email || '', wa: b.wa || '', ig: b.ig || '', phone: b.phone || '', claimed: !!b.claimed, featured: !!b.featured, verified: !!b.verified, hidden: !!b.hidden, src: b.src, img: b.img || '', waitSite: require('./bizdir').waitingSite(b),
+      slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, email: b.email || '', wa: b.wa || '', ig: b.ig || '', phone: b.phone || '', claimed: !!b.claimed, featured: !!b.featured, verified: !!b.verified, hidden: !!b.hidden, src: b.src, img: b.img || '', waitSite: require('./bizdir').waitingSite(b), onSite: b.src === 'website' || !!b.uploadedAt,
       stage, studio: !!member, due: !!(r && stage !== 'joined' && invites.isDue(r, day)), followUpAt: (r && r.followUpAt) || '', checkBackAt: (r && r.checkBackAt) || '', nextAt: (r && r.nextAt) || '',
       last: acts[0] ? { at: acts[0][0], what: acts[0][1] } : null, opens: (e && e.opens) || 0, clicks: (e && e.clicks) || 0, lastClickAt: (e && e.lastClickAt) || '', lastOpenAt: (e && e.lastOpenAt) || '',
       emails: o && o.sent ? o.sent.filter(s => s.ch === 'email').length : 0,

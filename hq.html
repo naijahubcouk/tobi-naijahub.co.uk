@@ -998,19 +998,19 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       else if (f === 'hot') { if (C.hot.indexOf(r.slug) < 0) return false; }
       else if (f === 'all') { if (r.hidden) return false; }
       else if (r.stage !== f || (r.hidden && f !== 'unsub')) return false;
-      if (S.dirKind === 'claimed' && !r.claimed) return false; if (S.dirKind === 'unclaimed' && r.claimed) return false; if (S.dirKind === 'featured' && !r.featured) return false; if (S.dirKind === 'hq' && r.src !== 'hq') return false; if (S.dirKind === 'studio' && !r.studio) return false;
+      if (S.dirKind === 'claimed' && !r.claimed) return false; if (S.dirKind === 'unclaimed' && r.claimed) return false; if (S.dirKind === 'featured' && !r.featured) return false; if (S.dirKind === 'hq' && r.src !== 'hq') return false; if (S.dirKind === 'studio' && !r.studio) return false; if (S.dirKind === 'notsite' && r.onSite) return false; if (S.dirKind === 'onsite' && !r.onSite) return false;
       if (S.dirCat && r.cat !== S.dirCat) return false;
       if (S.dirTown && (r.loc || '').split(',')[0].trim() !== S.dirTown) return false;
-      if (S.dirHas === 'email' && !r.email) return false; if (S.dirHas === 'wa' && !r.wa) return false; if (S.dirHas === 'none' && (r.email || r.wa)) return false;
+      if (S.dirHas === 'email' && !r.email) return false; if (S.dirHas === 'wa' && !r.wa) return false; if (S.dirHas === 'none' && (r.email || r.wa)) return false; if (S.dirHas === 'noemail' && r.email) return false;
       return !q || (r.name + ' ' + r.cat + ' ' + r.loc + ' ' + r.ig + ' ' + r.email).toLowerCase().indexOf(q) >= 0;
     }).sort(function (a, b) { return f === 'hot' ? b.lastClickAt.localeCompare(a.lastClickAt) : ((b.last && b.last.at) || '').localeCompare((a.last && a.last.at) || '') || a.name.localeCompare(b.name); });
     $('#view').innerHTML = '<div class="wrap">' + head +
       '<div class="chipbar" id="dF" style="margin-bottom:8px;flex-wrap:wrap">' + Object.keys(F).map(function (k) { return '<button class="chip" data-f="' + k + '" aria-pressed="' + (k === f) + '">' + F[k] + '</button>'; }).join('') + '</div>' +
       '<input id="dQ" placeholder="🔎 Search name, category, town, Instagram or email" value="' + esc(S.dirQ) + '" style="margin-bottom:8px">' +
-      '<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px"><select id="dKind" style="flex:1;min-width:130px">' + opt('', 'Any listing', S.dirKind) + opt('claimed', '✅ Claimed', S.dirKind) + opt('unclaimed', '🕓 Unclaimed', S.dirKind) + opt('featured', '⭐ Featured', S.dirKind) + opt('studio', '🧰 Uses Business Studio', S.dirKind) + opt('hq', '➕ Added in HQ', S.dirKind) + '</select>' +
+      '<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px"><select id="dKind" style="flex:1;min-width:130px">' + opt('', 'Any listing', S.dirKind) + opt('claimed', '✅ Claimed', S.dirKind) + opt('unclaimed', '🕓 Unclaimed', S.dirKind) + opt('featured', '⭐ Featured', S.dirKind) + opt('studio', '🧰 Uses Business Studio', S.dirKind) + opt('hq', '➕ Added in HQ', S.dirKind) + opt('notsite', '🚫 Not on the website', S.dirKind) + opt('onsite', '🌐 On the website', S.dirKind) + '</select>' +
       '<select id="dCat" style="flex:1;min-width:130px">' + opt('', 'Any category', S.dirCat) + Object.keys(cats).sort().map(function (c) { return opt(c, c, S.dirCat); }).join('') + '</select>' +
       '<select id="dTown" style="flex:1;min-width:120px">' + opt('', 'Any town', S.dirTown) + Object.keys(towns).sort().map(function (t) { return opt(t, t + ' (' + towns[t] + ')', S.dirTown); }).join('') + '</select>' +
-      '<select id="dHas" style="flex:1;min-width:120px">' + opt('', 'Any contact', S.dirHas) + opt('email', '📧 Has email', S.dirHas) + opt('wa', '💬 Has WhatsApp', S.dirHas) + opt('none', 'No email or WhatsApp', S.dirHas) + '</select></div>' +
+      '<select id="dHas" style="flex:1;min-width:120px">' + opt('', 'Any contact', S.dirHas) + opt('email', '📧 Has email', S.dirHas) + opt('wa', '💬 Has WhatsApp', S.dirHas) + opt('noemail', '📭 No email', S.dirHas) + opt('none', 'No email or WhatsApp', S.dirHas) + '</select></div>' +
       '<div class="muted" style="font-size:12.5px;margin-bottom:4px">' + list.length + ' shown</div>' +
       '<div class="card" style="padding:4px 14px">' + (list.length ? list.slice(0, 400).map(function (r) {
         return '<div class="aprow" style="cursor:pointer" data-open="' + esc(r.slug) + '"><div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b>' + esc(r.name) + '</b>' + crmPill(r.stage) +
