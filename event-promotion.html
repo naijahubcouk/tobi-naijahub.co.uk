@@ -50,6 +50,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .send div{background:#f0faf5;border-radius:12px;padding:12px;font-size:14.5px;font-weight:600;display:flex;gap:8px;align-items:center}
 .cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#25D366;color:white;text-decoration:none;border-radius:12px;padding:16px;font-size:17px;font-weight:800;margin-bottom:10px}
 .cta.mail{background:#0F1E36}
+.cta.pay{background:#057A44;font-size:18px;padding:18px;margin-bottom:4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.two .cta{margin:0;font-size:16px;padding:14px}
+.addev{display:inline-block;margin-top:12px;background:#FFB81C;color:#0F1E36;text-decoration:none;font-weight:800;font-size:14.5px;border-radius:20px;padding:9px 16px}.addnote{font-size:12.5px;color:#6B7280;margin-top:5px}
 .cta-note{font-size:14px;color:#6B7280;text-align:center;line-height:1.6}
 
 .disc{font-size:13.5px;color:#6B7280;line-height:1.7;text-align:center;padding:4px 10px}
@@ -84,7 +87,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="inc"><div class="num">2</div><div><div class="inc-h">📱 Homepage feature</div><div class="inc-b">Featured on the Auntie Tobi app and website during the promotion period, with a direct link to view details or book tickets.</div></div></div>
   <div class="inc"><div class="num">3</div><div><div class="inc-h">📅 Upcoming Events feature</div><div class="inc-b">Included in our Upcoming Events section, so people find it while looking for things to do in the UK.</div></div></div>
   <div class="inc"><div class="num">4</div><div><div class="inc-h">🌐 Event listing <span class="free">FREE</span></div><div class="inc-b">Your event gets its own dedicated listing on Auntie Tobi, with:</div>
-    <ul><li>Event name and description</li><li>Date, time and location</li><li>Event flyer</li><li>Ticket or registration link</li><li>Organiser information</li></ul></div></div>
+    <ul><li>Event name and description</li><li>Date, time and location</li><li>Event flyer</li><li>Ticket or registration link</li><li>Organiser information</li></ul>
+    <a class="addev" href="/add-event">➕ Add your event</a><div class="addnote">If you haven’t added it yet</div></div></div>
 </div>
 
 <div class="one">
@@ -94,13 +98,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="card">
   <div class="ctitle">📩 Ready to promote your event?</div>
-  <div style="font-size:15.5px;line-height:1.6;margin-bottom:12px">Send us your:</div>
-  <div class="send">
-    <div>🖼️ Event flyer</div><div>📍 Date &amp; location</div><div>🎟️ Ticket or registration link</div><div>📸 Instagram handle</div>
-  </div>
-  <a class="cta" href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%20%F0%9F%91%8B%F0%9F%8F%BE%20I%E2%80%99d%20like%20to%20promote%20my%20event%20(%C2%A320%20Event%20Promotion).%0A%0AEvent%20name%3A%20%0ADate%20and%20location%3A%20%0ATicket%20link%3A%20%0AInstagram%3A%20%0A%0AI%E2%80%99ll%20send%20the%20flyer%20here%20too." target="_blank" rel="noopener">💬 Send on WhatsApp</a>
-  <a class="cta mail" href="mailto:info@auntietobi.co.uk?subject=Event%20Promotion%20(%C2%A320)&amp;body=Hi%20Auntie%20Tobi%2C%0A%0AI%E2%80%99d%20like%20to%20promote%20my%20event.%0A%0AEvent%20name%3A%20%0ADate%20and%20location%3A%20%0ATicket%20link%3A%20%0AInstagram%3A%20%0A%0A(Flyer%20attached)">📧 Send by email</a>
-  <div class="cta-note">We’ll reply with how to pay and when your promotion starts.</div>
+  <a class="cta pay" href="https://buy.stripe.com/6oU3cugDvcyHa280qp4Ni02" target="_blank" rel="noopener">💳 Pay £20 &amp; promote my event</a>
+  <div class="cta-note" style="margin:4px 0 14px">Secure payment by Stripe</div>
+  <div style="font-size:15px;line-height:1.6;text-align:center;margin-bottom:12px;color:#374151">For more questions, or after payment, chat with us or email us:</div>
+  <div class="two"><a class="cta" href="https://wa.me/447594674940?text=Hi%20Auntie%20Tobi%20%F0%9F%91%8B%F0%9F%8F%BE%20About%20the%20%C2%A320%20Event%20Promotion%3A%20" target="_blank" rel="noopener">💬 WhatsApp</a>
+  <a class="cta mail" href="mailto:info@auntietobi.co.uk?subject=Event%20Promotion%20(%C2%A320)">📧 Email us</a></div>
 </div>
 
 <div class="foot">💚 AUNTIE TOBI — YOUR UK GUIDE FOR NIGERIANS</div>
