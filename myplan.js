@@ -158,24 +158,24 @@
     '.mp-toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#0F1E36;color:#fff;border-radius:12px;padding:11px 14px;font-size:14px;z-index:9999;display:flex;gap:12px;align-items:center;max-width:92vw;box-shadow:0 6px 20px rgba(0,0,0,.25)}.mp-toast button{background:none;border:0;color:#FFB81C;font-weight:800;font-size:14px;cursor:pointer}' +
     '.mp-empty{text-align:center;padding:18px 8px;color:#4B5563;font-size:14.5px;line-height:1.55}.mp-empty b{display:block;font-size:16px;color:#0F1E36;margin-bottom:4px}' +
     '.mp-welcome{display:grid;gap:8px;margin-top:12px}.mp-welcome button{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e2dccc;border-radius:14px;padding:14px;font-family:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer;color:#0F1E36}.mp-welcome button span{font-size:22px}.mp-welcome button small{display:block;font-weight:500;color:#6B7280;font-size:12.5px}.mp-welcome button:disabled{opacity:.55;cursor:default}' +
-    '.mpT{border-radius:18px;overflow:hidden;background:#fff;border:1px solid #E8E3D6;box-shadow:0 2px 8px rgba(15,30,54,.05);margin-bottom:10px;color:#0F1E36}' +
-    '.mpT-top{padding:14px 14px 0}.mpT-bub{background:#057A44;border-radius:16px;padding:13px 15px;font-size:15px;line-height:1.45;color:#fff}.mpT-h{font-size:19px;font-weight:800;color:#fff;margin-bottom:3px}' +
-    '.mpT-mo{display:block;width:100%;text-align:left;font-family:inherit;cursor:pointer;margin-top:8px;background:#FBF8F0;border:0;border-left:3px solid #FFB81C;border-radius:8px;padding:9px 11px;font-size:14px;color:#4B4232;font-style:italic;line-height:1.45}' +
-    '.mpT-name{display:inline-block;margin-top:8px;background:#FFB81C;color:#0F1E36;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:800;font-style:normal;text-decoration:none}' +
-    '.mpT-date{font-size:13px;color:#6B7280;margin:9px 4px 0}.mpT-top:last-child{padding-bottom:14px}' +
-    '.mpT-body{padding:8px 14px 16px}.mpT-lbl{font-size:11.5px;font-weight:800;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;margin:6px 4px 8px}' +
+    '.mpT{border-radius:20px;overflow:hidden;background:#fff;border:1px solid #E8E3D6;box-shadow:0 2px 8px rgba(15,30,54,.05);margin-bottom:10px;color:#0F1E36}' +
+    '.mpT-top{background:linear-gradient(160deg,#057A44,#046236);color:#fff;padding:16px 16px 0}.mpT-h{font-size:21px;font-weight:800;line-height:1.2}.mpT-line{font-size:15px;line-height:1.4;margin-top:4px;opacity:.95}' +
+    '.mpT-date{font-size:13px;opacity:.85;margin-top:8px;padding-bottom:14px}' +
+    '.mpT-mo{display:block;width:100%;text-align:left;font-family:inherit;cursor:pointer;background:#FFB81C;border:0;color:#3D2C00;padding:11px 16px;font-size:14px;font-weight:600;font-style:italic;line-height:1.45}' +
+    '.mpT-name{display:inline-block;margin-top:8px;background:#FFB81C;color:#0F1E36;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:800;text-decoration:none}' +
+    '.mpT-body{padding:6px 14px 16px}.mpT-lbl{font-size:11.5px;font-weight:800;letter-spacing:.7px;color:#8A8F98;text-transform:uppercase;margin:10px 4px 8px}' +
     '.mpT-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;background:#F6FAF7;margin-bottom:8px;font-size:15px;font-weight:600;cursor:pointer;flex-wrap:wrap}' +
     '.mpT-t{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.3}.mpT-t small{display:block;font-size:12.5px;font-weight:500;color:#6B7280;margin-top:2px}' +
-    '.mpT-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);flex-shrink:0;border:0;padding:0;font-family:inherit}' +
-    '.mpT-ck{border:2.5px solid #057A44;box-shadow:none;cursor:pointer;font-size:16px}.mpT-ck:hover{background:#E3F2EA}' +
-    '.mpT-r{margin-left:auto;font-size:12.5px;font-weight:800;color:#057A44;background:#E3F2EA;border-radius:20px;padding:4px 10px;white-space:nowrap}' +
-    '.mpT-late .mpT-r{background:#FDE2E1;color:#B42318}.mpT-shop{background:#FFF8E6}.mpT-shop .mpT-r{background:#FFE7A8;color:#7A5300}.mpT-news{background:#EAF0FB}.mpT-news .mpT-r{background:#D6E2F8;color:#1D3D7A}' +
-    '.mpT-cel{background:#FFC93C;border:1.5px solid #F2B200}.mpT-cel .mpT-t small{color:#5A4300}.mpT-cel .mpT-ic{background:rgba(255,255,255,.75)}.mpT-cel .mpT-r{background:#fff;color:#7A5300}.mpT-cel .mpT-mc{background:#0F1E36;color:#fff}.mpT-cel .mpT-md{color:#0F1E36;border-color:#fff !important}' +
-    '.mpT-big{background:linear-gradient(135deg,#FFB81C,#FF8A3D);padding:14px;cursor:default}.mpT-big .mpT-t{font-size:16.5px;font-weight:800}.mpT-big .mpT-t small{color:#4a3500}.mpT-big .mpT-ic{background:rgba(255,255,255,.7)}' +
-    '.mpT-mini{width:100%;display:flex;gap:8px}.mpT-mini>*{flex:1;text-align:center;border-radius:10px;padding:10px 6px;font-size:13.5px;font-weight:800;text-decoration:none;font-family:inherit;cursor:pointer;border:0}' +
-    '.mpT-mc{background:#FFB81C;color:#0F1E36}.mpT-md{background:#fff;color:#9B1C4B;border:1.5px solid #FBCFE0 !important}.mpT-big .mpT-mc{background:#0F1E36;color:#fff}.mpT-big .mpT-md{color:#0F1E36;border-color:#fff !important}' +
+    '.mpT-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;background:none;flex-shrink:0;border:0;padding:0;font-family:inherit}' +
+    '.mpT-ck{border:2.5px solid #057A44;background:#fff;cursor:pointer;font-size:16px}.mpT-ck:hover{background:#E3F2EA}' +
+    '.mpT-r{margin-left:auto;font-size:12.5px;font-weight:800;color:#057A44;white-space:nowrap}' +
+    '.mpT-late .mpT-r{color:#B42318}.mpT-shop .mpT-r{color:#8A5A00}.mpT-news{background:#EAF0FB}.mpT-news .mpT-r{color:#1D3D7A}' +
+    '.mpT-cel{background:#FFF7E0;border:1.5px solid #FFD878}.mpT-cel .mpT-r{color:#8A5A00}' +
+    '.mpT-big{background:#FFF7E0;border:1.5px solid #FFB81C;padding:14px;cursor:default}.mpT-big .mpT-t{font-size:16.5px;font-weight:800}.mpT-big .mpT-t small{color:#8A5A00}' +
+    '.mpT-mini{width:100%;display:flex;gap:8px;margin-top:2px}.mpT-mini>*{flex:1;text-align:center;border-radius:10px;padding:10px 6px;font-size:13.5px;font-weight:800;text-decoration:none;font-family:inherit;cursor:pointer;border:0}' +
+    '.mpT-mc{background:#FFB81C;color:#0F1E36}.mpT-md{background:#fff;color:#0F1E36;border:1.5px solid #FFD878 !important}' +
     '.mpT-more{font-size:12.5px;color:#6B7280;margin:-2px 4px 8px}.mpT-x{background:none;border:0;font-size:18px;color:#6B7280;cursor:pointer;padding:0 4px}' +
-    '.mpT-btns{display:flex;gap:8px;margin-top:10px}.mpT-btns button{border:0;border-radius:12px;padding:13px 16px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}.mpT-b1{flex:1;background:#057A44;color:#fff}.mpT-b2{background:#FFB81C;color:#0F1E36}' +
+    '.mpT-btns{display:flex;gap:8px;margin-top:10px}.mpT-btns button{border:0;border-radius:12px;padding:13px 16px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}.mpT-b1{flex:1;background:#057A44;color:#fff}.mpT-b2{background:#FFF7E0;color:#8A5A00;border:1.5px solid #FFD878 !important}' +
     '.pill .mp-newtag{background:#FFB81C;color:#0F1E36;font-size:9.5px;font-weight:800;border-radius:6px;padding:1px 4px;margin-left:4px;vertical-align:1px}';
   function addCss() { if (document.getElementById('mpCss')) return; var st = document.createElement('style'); st.id = 'mpCss'; st.textContent = CSS; document.head.appendChild(st); }
 
@@ -258,6 +258,7 @@
     if (h < 17) return pick(['😊 Hope your day is going well.', '💚 Nothing due today — keep going, you’re doing well.', '🥤 Don’t forget to take a break and drink some water!']);
     return pick(['🛋️ Time to relax — you’ve done well today.', '🌙 Hope today was kind to you. Rest well.', '💚 All done for today. Well done!']);
   }
+  function longDate(iso) { var x = fromIso(iso); return cap(DAYS[x.getDay()]) + ' ' + x.getDate() + ' ' + cap(MONTHS[x.getMonth()]); }
   function tile(i, cls, right) {
     var ico = i.lk ? (LIFE.filter(function (l) { return l.k === i.lk; })[0] || {}).e : '';
     var sub = [i.rep ? REP[i.rep] : '', i.tm && i.d !== today() ? nice(i.d) : ''].filter(Boolean).join(' · ');
@@ -268,10 +269,10 @@
     var gr = greet(), d = new Date(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
     var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
     var line = has ? hello(g.over.concat(g.today).filter(function (i) { return !i.cel; }).length, live().filter(function (i) { return i.cel && celSoon(i); }), t) : hello(0, [], t);
-    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-bub"><div class="mpT-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + ' ' + gr[0] + '</div>' + line +
-      (P.signedIn && !P.name ? '<br><a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '') + '</div>' +
-      (mo ? '<button class="mpT-mo" data-mp-mo>' + esc(mo.emoji) + ' “' + esc(mo.text) + '”</button>' : '') +
-      '<div class="mpT-date">📅 ' + dateLine + '</div></div>';
+    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + ' ' + gr[0] + '</div><div class="mpT-line">' + line + '</div>' +
+      (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '') +
+      '<div class="mpT-date">📅 ' + dateLine + '</div></div>' +
+      (mo ? '<button class="mpT-mo" data-mp-mo>' + esc(mo.emoji) + ' “' + esc(mo.text) + '”</button>' : '');
     var body = '';
     var sl = P.sun && P.sun.latest;
     if (sl && t >= sl.week && t <= addDays(sl.week, 2)) body += '<div class="mpT-row mpT-news" data-mp-sun><span class="mpT-ic">📰</span><div class="mpT-t">Your Sunday Update is here<small>This week’s UK news, events and more</small></div><span class="mpT-r">Read ›</span></div>';
@@ -290,9 +291,9 @@
       var sl0 = liveLists().slice().sort(function (a, b) { return (b.up || 0) - (a.up || 0); })[0], sleft = sl0 ? sl0.items.filter(function (i) { return !i.x; }).length : 0;
       if (sleft) body += '<div class="mpT-row mpT-shop" data-mp-shop><span class="mpT-ic">🛒</span><div class="mpT-t">' + esc(sl0.name) + '</div><span class="mpT-r">' + sleft + ' to buy</span></div>';
       // 🎉 coming up (within each person's "remind me" time)
-      if (soon.length) body += '<div class="mpT-lbl">Upcoming celebrations</div>' + soon.slice(0, 3).map(function (i, n) {
+      if (soon.length) body += '<div class="mpT-lbl">Celebrations</div>' + soon.slice(0, 3).map(function (i, n) {
         var dd = daysTo(i.d);
-        return '<div class="mpT-row mpT-cel" data-open="' + i.id + '"><span class="mpT-ic">' + celEmoji(i) + '</span><div class="mpT-t">' + esc(i.t) + '<small>' + nice(i.d, true) + (celNum(i) ? ' · ' + celNum(i) : '') + '</small></div><span class="mpT-r">' + (dd === 1 ? 'tomorrow' : 'in ' + dd + ' days') + '</span>' +
+        return '<div class="mpT-row mpT-cel" data-open="' + i.id + '"><span class="mpT-ic">' + celEmoji(i) + '</span><div class="mpT-t">' + esc(i.t) + '<small>' + longDate(i.d) + (celNum(i) ? ' · ' + celNum(i) : '') + '</small></div><span class="mpT-r">' + (dd === 1 ? 'Tomorrow' : 'In ' + dd + ' days') + '</span>' +
           (n === 0 ? '<div class="mpT-mini"><a class="mpT-mc" href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">' + cardBtn(i) + '</a><button class="mpT-md" data-tick="' + i.id + '">✅ Done</button></div>' : '') + '</div>';
       }).join('');
       body += '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Open My Plan</button><button class="mpT-b2" data-mp-add>＋ Add</button></div>';
