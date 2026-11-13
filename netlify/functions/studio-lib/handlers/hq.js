@@ -446,6 +446,12 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'boost-save') return { item: await boost.save(body.item) };
       return { items: await boost.list() };
     }
+    case 'ss-get': case 'ss-connect': case 'ss-run': case 'ss-auto': case 'ss-disconnect': {
+      // 📬 School emails → School Tracker via the Gmail script (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (body.action === 'ss-run') await core.rateLimit('hq-ssrun', who.email, 60, 60 * 60 * 1000, 'That’s a lot of checks this hour — the script also checks every 10 minutes by itself.');
+      return await require('../schoolsync').act(body.action, body);
+    }
     case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': case 'disc-club': case 'disc-mkt': case 'disc-mktpic': {
       // 📣 Business discovery posts (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
