@@ -25,6 +25,7 @@ const BENEFITS = `1. **Featured in the app and on the website.** When people loo
 5. **Marketplace.** Your product or service listed for 12 months.
 6. **Business Growth Library.** Practical lessons, templates and tools to use at your own pace.`;
 
+const EV_VARS = ['organiser_name', 'event_title', 'event_link', 'promo_link'];
 const OUT_VARS = ['business_name', 'category', 'town', 'listing_link', 'claim_link', 'remove_link', 'studio_link', 'club_link', 'whatsapp_link', 'personal_line'];
 const T = {
   // ── Outreach: unclaimed (Auntie Tobi listed them) ──
@@ -411,6 +412,47 @@ Something new in your Business Studio: you can now update **{business_name}** on
 Sign in with this email address ({email}). We’ll send you a 6-digit code, no password needed.
 
 Auntie Tobi 💚`, BIZ_VARS),
+  // ── 🎉 Event organisers (sent from HQ when you tap Send) ──
+  'ev.approved': S('sys-ev', 'Your event is live (submitted events)', 'When you approve an event someone submitted — HQ → Event submissions', '🎉 Your event is live on Auntie Tobi!',
+`Hi {organiser_name},
+
+Good news! **{event_title}** is now live on the Auntie Tobi app and website 🎉
+
+👉 See your event: {event_link}
+
+Nigerians across the UK can now find your event, with its date, location, flyer and ticket link all in one place.
+
+**Want even more people to see it?**
+Our **Event Promotion is just £20**. It includes:
+
+- 🚀 Your event in a paid Instagram advertising campaign
+- 📱 A spot on the Auntie Tobi app and website homepage
+- 📅 A place in our Upcoming Events section
+
+👉 Read more: {promo_link}
+
+If you have any questions, just reply to this email.
+
+Wishing you a brilliant event! 💚
+Auntie Tobi
+Your UK Guide for Nigerians`, EV_VARS),
+  'ev.added': S('sys-ev', 'We’ve added your event (events you added)', 'Events you added yourself — HQ → Publish to App → 📋 Organiser emails', 'We’ve added {event_title} to Auntie Tobi 💚',
+`Hi there,
+
+We’ve added **{event_title}** to the Auntie Tobi app and website, so Nigerians across the UK can easily discover it 🇳🇬🇬🇧
+
+👉 See your event: {event_link}
+
+If any details need changing, just reply to this email and we’ll update it for you.
+
+**Want more people to see your event?**
+Our **Event Promotion is just £20**. It includes a paid Instagram advertising campaign, a spot on our app and website homepage, and a place in our Upcoming Events section.
+
+👉 Read more: {promo_link}
+
+All the best with your event! 💚
+Auntie Tobi
+Your UK Guide for Nigerians`, EV_VARS),
 });
 const FOOTER_OUT = 'You’re receiving this because {business_name} is listed in the Auntie Tobi business directory. Don’t want these emails? Unsubscribe: {unsubscribe_link}';
 const GROUPS = [
@@ -423,6 +465,7 @@ const GROUPS = [
   { id: 'sys-biz', name: 'Add your business', note: 'Emails to owners who add or manage their business. Sent from HQ → Add your business when you press send.' },
   { id: 'sys-club', name: 'Business Club', note: 'Sent straight after a Business Club payment.' },
   { id: 'sys-acc', name: 'Account & payments', note: 'Sign-in codes, credits and subscriptions. 🔒 Some words must stay (e.g. the code, the price, date and cancel link).' },
+  { id: 'sys-ev', name: 'Event organisers', note: 'Emails to event organisers about their event and the £20 Event Promotion. Nothing sends until you tap Send in HQ (Event submissions, or Publish to App → 📋 Organiser emails).' },
   { id: 'sys-plan', name: 'My Plan (app)', note: 'Emails to people using My Plan in the app. The Sunday Update is written each week in HQ → 📰 Sunday Update.' },
   { id: 'sys-week', name: 'Weekly email', note: 'The Monday “Your week ahead” round-up.' },
   { id: 'sys-verify', name: 'Verification', note: 'Answers to “verify my business” requests.' },

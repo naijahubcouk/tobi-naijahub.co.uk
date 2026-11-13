@@ -2014,6 +2014,40 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     $$('[data-imu]').forEach(function (b) { b.onclick = async function () { read(); try { S.imgm = await api('img-settings', { set: { model: b.dataset.imu, quality: T.quality } }); toast('HQ now uses ' + imgName(S.imgm.model) + ' 🎨'); vImgm(); } catch (x) { toast(x.message); } }; });
     $$('[data-imz]').forEach(function (im) { im.onclick = function () { var s = sheet('<img src="' + im.src + '" style="width:100%;border-radius:10px;display:block"><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn primary" id="izX">Close</button></div>'); $('#izX', s).onclick = function () { s.remove(); }; }; });
   }
+  // 📧 emails to event organisers (nothing sends until you tap Send)
+  async function evmLoad() { try { S.evm = await api('evm-status'); } catch (e) { S.evm = { items: {}, unsub: [] }; } return S.evm; }
+  function evmBadge(key, btn) {
+    var x = S.evm && S.evm.items[key]; if (!x) return btn;
+    if (x.skipped) return '<span class="muted" style="font-size:12.5px;align-self:center">Not emailed</span>' + btn;
+    var d = new Date(x.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    return '<span class="muted" style="font-size:12.5px;align-self:center">' + (x.ch === 'whatsapp' ? '💬 WhatsApp’d ' : '✅ Emailed ') + d + (x.ch !== 'whatsapp' ? ' · ' + (x.opens ? '👀 opened' : 'not opened yet') + (x.clicks ? ' · 🔗 clicked' : '') : '') + '</span>';
+  }
+  async function evmSheet(kind, id, done) {
+    var s = sheet('<h3 style="margin:0 0 4px">📧 Email the organiser</h3><div id="emB" class="muted">Getting the email ready…</div>');
+    try {
+      var p = await api('evm-preview', { kind: kind, id: id });
+      if (p.sent && !p.sent.skipped) { $('#emB', s).innerHTML = '<p>Already ' + (p.sent.ch === 'whatsapp' ? 'sent on WhatsApp' : 'emailed to <b>' + esc(p.sent.to) + '</b>') + ' on ' + esc(String(p.sent.at).slice(0, 10)) + '.</p><div class="row" style="justify-content:flex-end"><button class="btn ghost" id="emX">Close</button></div>'; $('#emX', s).onclick = function () { s.remove(); }; return; }
+      $('#emB', s).outerHTML = '<div class="muted" style="font-size:13.5px;margin-bottom:10px">' + esc(p.title) + ' · <i>' + esc(p.tplName) + '</i> — read it, change anything, then tap Send.</div>' +
+        (p.unsub ? '<div class="card" style="background:#FFF5F4;margin-bottom:10px">⛔ This organiser unsubscribed — they can’t be emailed.</div>' : '') +
+        '<label for="emTo">To</label><input id="emTo" type="email" value="' + esc(p.to || '') + '" placeholder="' + (p.phone ? 'No email — they gave a WhatsApp number' : 'organiser@example.com') + '">' +
+        '<label for="emS" style="margin-top:8px">Subject</label><input id="emS" value="' + esc(p.subject) + '">' +
+        '<label for="emBd" style="margin-top:8px">Email</label><textarea id="emBd" rows="16">' + esc(p.body) + '</textarea>' +
+        '<p class="muted" style="font-size:12.5px;margin-top:6px">An unsubscribe link is added at the bottom. Replies go to info@auntietobi.co.uk.</p>' +
+        '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px;flex-wrap:wrap">' + (kind === 's' ? '<button class="btn ghost" id="emSkip">Skip — don’t email</button>' : '<button class="btn ghost" id="emX">Cancel</button>') +
+        (p.whatsapp ? '<a class="btn ghost" id="emWa" href="' + esc(p.whatsapp) + '" target="_blank" rel="noopener">💬 Send on WhatsApp</a>' : '') +
+        '<button class="btn primary" id="emGo"' + (p.unsub ? ' disabled' : '') + '>📧 Send email</button></div>';
+      var fin = function (msg) { s.remove(); if (msg) toast(msg); evmLoad().then(function () { rerender(); if (done) done(); }); };
+      if ($('#emX', s)) $('#emX', s).onclick = function () { s.remove(); };
+      if ($('#emSkip', s)) $('#emSkip', s).onclick = async function () { try { await api('evm-skip', { kind: kind, id: id }); fin('OK — no email sent'); } catch (e) { toast(e.message); } };
+      if ($('#emWa', s)) $('#emWa', s).addEventListener('click', function () { setTimeout(async function () { if (confirm('Did you send it on WhatsApp? Tap OK to mark it as sent.')) { try { await api('evm-wa', { kind: kind, id: id }); fin('💬 Marked as sent on WhatsApp'); } catch (e) { toast(e.message); } } }, 800); });
+      $('#emGo', s).onclick = async function () {
+        var to = $('#emTo', s).value.trim(); if (!to) return toast('Add their email address first');
+        this.disabled = true; this.textContent = 'Sending…';
+        try { await api('evm-send', { kind: kind, id: id, to: to, subject: $('#emS', s).value, body: $('#emBd', s).value }); fin('📧 Sent to ' + to); }
+        catch (e) { toast(e.message); this.disabled = false; this.textContent = '📧 Send email'; }
+      };
+    } catch (e) { $('#emB', s).textContent = e.message; }
+  }
   // 📋 organiser emails for the events you added (not public submissions) — admin only
   async function orgsSheet() {
     var s = sheet('<h3 style="margin:0 0 4px">📋 Organiser emails</h3><div class="muted" style="font-size:13.5px">Events you added in HQ. Only you can see this.</div><div id="ogB" style="margin-top:12px">Loading…</div>');
@@ -2021,20 +2055,33 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       var rows = (await api('app-orgs')).rows, today = new Date().toISOString().slice(0, 10);
       var emails = []; rows.forEach(function (r) { [r.orgEmail].concat(r.found).forEach(function (e) { if (e && emails.indexOf(e) < 0) emails.push(e); }); });
       var missing = rows.filter(function (r) { return !r.orgEmail && !r.found.length; });
+      await evmLoad();
+      var todo = rows.filter(function (r) { return (r.orgEmail || r.found[0]) && !(S.evm.items['a:' + r.id] && !S.evm.items['a:' + r.id].skipped) && S.evm.unsub.indexOf(r.orgEmail || r.found[0]) < 0 && r.eventDate >= today; });
       $('#ogB', s).innerHTML =
         '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px"><b>' + emails.length + ' email' + (emails.length === 1 ? '' : 's') + '</b><span class="muted">· ' + rows.length + ' events · ' + missing.length + ' with no email yet</span>' +
-        (emails.length ? '<button class="btn primary sm" id="ogCopy" style="margin-left:auto">📋 Copy all emails</button>' : '') + '</div>' +
+        (emails.length ? '<button class="btn ghost sm" id="ogCopy" style="margin-left:auto">📋 Copy all emails</button>' : '') + (todo.length ? '<button class="btn primary sm" id="ogAll">📧 Email all not yet emailed (' + todo.length + ')</button>' : '') + '</div>' +
         '<div style="max-height:60vh;overflow:auto">' + rows.map(function (r) {
           var em = r.orgEmail ? '<b>' + esc(r.orgEmail) + '</b>' : r.found.length ? esc(r.found.join(', ')) + ' <span class="muted">(from the description)</span>' : '<span style="color:var(--danger)">No email yet</span>';
           return '<div style="padding:9px 0;border-bottom:1px solid var(--line,#eee)"><div style="font-weight:700">' + esc(r.title) + '</div>' +
             '<div class="muted" style="font-size:12.5px">🗓 ' + esc(fmtLong(r.eventDate)) + (r.eventDate < today ? ' · past' : '') + (r.location ? ' · 📍 ' + esc(r.location) : '') + (r.status === 'hidden' ? ' · hidden' : '') + '</div>' +
             '<div style="font-size:13.5px;margin-top:3px">📧 ' + em + ' <button class="btn ghost sm" data-ogedit="' + esc(r.id) + '" style="margin-left:6px">✏️ ' + (r.orgEmail ? 'Change' : 'Add email') + '</button>' +
-            (r.link ? ' <a href="' + esc(r.link) + '" target="_blank" rel="noopener" class="btn ghost sm">🔗 Event page</a>' : '') + '</div></div>';
+            (r.link ? ' <a href="' + esc(r.link) + '" target="_blank" rel="noopener" class="btn ghost sm">🔗 Event page</a>' : '') + '</div>' +
+            ((r.orgEmail || r.found[0]) ? '<div class="row" style="gap:6px;margin-top:5px;flex-wrap:wrap">' + evmBadge('a:' + r.id, '<button class="btn primary sm" data-ogsend="' + esc(r.id) + '">📧 Send “We’ve added your event”</button>') + '</div>' : '') + '</div>';
         }).join('') + '</div>' +
         '<p class="muted" style="font-size:12.5px;margin-top:10px">Fine for emailing organisers about their own events. Don’t add them to the Sunday Update unless they say yes.</p>' +
         '<div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn ghost" id="ogX">Close</button></div>';
       $('#ogX', s).onclick = function () { s.remove(); };
       if ($('#ogCopy', s)) $('#ogCopy', s).onclick = function () { try { navigator.clipboard.writeText(emails.join(', ')); toast('📋 ' + emails.length + ' emails copied'); } catch (e) { prompt('Copy these emails', emails.join(', ')); } };
+      $$('[data-ogsend]', s).forEach(function (b) { b.onclick = function () { s.remove(); evmSheet('a', b.dataset.ogsend, orgsSheet); }; });
+      if ($('#ogAll', s)) $('#ogAll', s).onclick = async function () {
+        if (!confirm('Send “We’ve added your event” to ' + todo.length + ' organiser' + (todo.length === 1 ? '' : 's') + ' of upcoming events? Each gets the email as it is in HQ → Emails, with their own event filled in.')) return;
+        var btn = this, ok = 0, bad = 0; btn.disabled = true;
+        for (var i = 0; i < todo.length; i++) {
+          btn.textContent = 'Sending ' + (i + 1) + ' of ' + todo.length + '…';
+          try { var p = await api('evm-preview', { kind: 'a', id: todo[i].id }); await api('evm-send', { kind: 'a', id: todo[i].id, to: p.to, subject: p.subject, body: p.body }); ok++; } catch (e) { bad++; }
+        }
+        s.remove(); toast('📧 Sent ' + ok + (bad ? ' · ' + bad + ' didn’t send' : '')); orgsSheet();
+      };
       $$('[data-ogedit]', s).forEach(function (b) { b.onclick = async function () {
         var r = rows.filter(function (x) { return x.id === b.dataset.ogedit; })[0]; var e = prompt('Organiser email for “' + r.title + '”', r.orgEmail || r.found[0] || ''); if (e === null) return;
         try { var res = await api('app-save', { item: { id: r.id, orgEmail: e.trim() } }); upsertApp(res.item); if (e.trim() && !res.item.orgEmail) return toast('That doesn’t look like an email'); s.remove(); toast('✅ Saved'); orgsSheet(); } catch (x) { toast(x.message); }
@@ -2277,17 +2324,19 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
           '<div style="font-size:13px;margin-top:8px;background:#F7F2E7;border-radius:8px;padding:6px 10px">👤 <b>' + esc(x.contactName) + '</b> · ' + contactLink(x.contact) + '<br><span class="muted">Sent ' + esc(new Date(x.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + ' · ' + (VIA[x.via] || '') + (x.reviewedBy ? ' · reviewed by ' + esc((S.names && S.names[x.reviewedBy]) || x.reviewedBy) : '') + '</span></div>' +
           '<div class="apact" style="margin-top:10px">' +
           (x.status === 'new' ? '<button class="btn primary sm" data-sappr="' + x.id + '">✅ Approve</button><button class="btn ghost sm" data-sedit="' + x.id + '">✏️ Edit, then approve</button><button class="btn ghost sm" data-sdecl="' + x.id + '">✖ Decline</button>' : '') +
-          (x.status === 'approved' ? '<span class="as live" style="align-self:center">● Live in the app</span>' + (x.appId && appById(x.appId) ? '<button class="btn ghost sm" data-sopen="' + x.appId + '">✏️ Edit in Publish to App</button>' : '') : '') +
+          (x.status === 'approved' ? '<span class="as live" style="align-self:center">● Live in the app</span>' + (x.appId && appById(x.appId) ? '<button class="btn ghost sm" data-sopen="' + x.appId + '">✏️ Edit in Publish to App</button>' : '') + evmBadge('s:' + x.id, '<button class="btn ghost sm" data-semail="' + x.id + '">📧 Email organiser</button>') : '') +
           (x.status === 'declined' ? '<button class="btn ghost sm" data-sedit="' + x.id + '">✏️ Edit, then approve</button><button class="btn ghost sm" data-sdel="' + x.id + '">🗑 Delete</button>' : '') +
           '</div></div></div>';
       }).join('') : '<div class="card"><p class="muted">' + (S.subTab === 'new' ? 'No new events to review. Share auntietobi.co.uk/add-event so people can send theirs.' : 'Nothing here yet.') + '</p></div>') + '</div>';
     $$('[data-stab]').forEach(function (b) { b.onclick = function () { S.subTab = b.dataset.stab; vSubs(); }; });
     $$('[data-zoom]').forEach(function (im) { im.onclick = function () { window.open(im.src, '_blank'); }; });
-    $$('[data-sappr]').forEach(function (b) { b.onclick = async function () { var x = subById(b.dataset.sappr); if (x.eventDate < today() && !confirm('This date has already passed. Approve anyway?')) return; b.disabled = true; try { var r = await api('sub-approve', { id: x.id }); S.subs = r.subs; S.app = r.app; toast('Approved — it’s in the app’s Events within a minute 🎉'); rerender(); } catch (e) { toast(e.message); b.disabled = false; } }; });
+    $$('[data-sappr]').forEach(function (b) { b.onclick = async function () { var x = subById(b.dataset.sappr); if (x.eventDate < today() && !confirm('This date has already passed. Approve anyway?')) return; b.disabled = true; try { var r = await api('sub-approve', { id: x.id }); S.subs = r.subs; S.app = r.app; toast('Approved — it’s in the app’s Events within a minute 🎉'); rerender(); evmSheet('s', x.id); } catch (e) { toast(e.message); b.disabled = false; } }; });
     $$('[data-sedit]').forEach(function (b) { b.onclick = function () { var x = subById(b.dataset.sedit); appEditor({ kind: 'event', title: x.title, body: x.body, eventDate: x.eventDate, eventTime: x.eventTime, location: x.location, link: x.link }, null, null, x); }; });
     $$('[data-sdecl]').forEach(function (b) { b.onclick = async function () { if (!confirm('Decline this event? It won’t go in the app. (They are not told automatically.)')) return; try { var r = await api('sub-decline', { id: b.dataset.sdecl }); S.subs = r.subs; toast('Declined'); rerender(); } catch (e) { toast(e.message); } }; });
     $$('[data-sdel]').forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this submission for good?')) return; try { var r = await api('sub-delete', { id: b.dataset.sdel }); S.subs = r.subs; toast('Deleted'); rerender(); } catch (e) { toast(e.message); } }; });
     $$('[data-sopen]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.sopen)); }; });
+    $$('[data-semail]').forEach(function (b) { b.onclick = function () { evmSheet('s', b.dataset.semail); }; });
+    if (!S.evm) evmLoad().then(function () { if (S.view === 'subs') vSubs(); });
   }
   function subById(id) { return (S.subs || []).filter(function (x) { return x.id === id; })[0]; }
   function appById(id) { return (S.app || []).filter(function (x) { return x.id === id; })[0]; }
@@ -2408,7 +2457,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
           if (img.data) { var ri = await api('app-img', { image: img.data }); img = { id: ri.imgId, data: '', from: img.from }; }
           item.imgId = img.id;
         }
-        if (sub) { var ra = await api('sub-approve', { id: sub.id, item: item }); S.subs = ra.subs; S.app = ra.app; s.remove(); toast('Approved — it’s in the app’s Events within a minute 🎉'); rerender(); return; }
+        if (sub) { var ra = await api('sub-approve', { id: sub.id, item: item }); S.subs = ra.subs; S.app = ra.app; s.remove(); toast('Approved — it’s in the app’s Events within a minute 🎉'); rerender(); evmSheet('s', sub.id); return; }
         var r = await api('app-save', { item: item }); upsertApp(r.item); s.remove();
         toast(isNew ? (status === 'hidden' ? 'Saved (hidden)' : 'Published — it’s in the app within a minute 🎉') : 'Saved');
         if (onDone) onDone(r.item);

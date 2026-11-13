@@ -17,6 +17,7 @@ exports.handler = core.handler(async (ctx) => {
     const items = await require('../bizdir').publicList();
     return { statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=60, s-maxage=60', 'X-Content-Type-Options': 'nosniff' }, body: JSON.stringify({ items, n: items.length }) };
   }
+  if (q.evunsub) return require('../eventmail').publicUnsub(q);   // 🎉 unsubscribe link in event organiser emails
   if (q.unsub || q.gone) return require('../outreach').publicPage(q);   // 📧 unsubscribe / remove-my-listing links in outreach emails
   if (q.bimg) return require('../bizimg').serve(q.bimg);   // 🖼 business pictures kept by Auntie Tobi
   const img = q.img;

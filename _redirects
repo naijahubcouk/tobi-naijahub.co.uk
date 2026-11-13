@@ -39,6 +39,7 @@
 # 📧 Outreach email links: unsubscribe, and "remove my listing"
 /hooks/directory/:key  /.netlify/functions/dir-hook?key=:key  200
 /u/:t         /.netlify/functions/app-content?unsub=:t   200
+/eu/:t        /.netlify/functions/app-content?evunsub=:t   200
 /remove/:t    /.netlify/functions/app-content?gone=:t    200
 
 # Business directory page

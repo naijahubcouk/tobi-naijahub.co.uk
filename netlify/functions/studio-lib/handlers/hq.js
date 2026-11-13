@@ -140,6 +140,19 @@ exports.handler = handler(async (ctx) => {
       await core.audit(who.email, 'hq_app_save', { id: item.id, kind: item.kind, status: item.status });
       return { item };
     }
+    case 'evm-preview': case 'evm-send': case 'evm-skip': case 'evm-wa': case 'evm-status': {
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can email event organisers.');
+      const em = require('../eventmail'), k = body.kind === 's' ? 's' : 'a', id = String(body.id || '');
+      const action = body.action;
+      if (action === 'evm-status') return em.status();
+      if (action === 'evm-preview') return em.preview(k, id);
+      if (action === 'evm-skip') return em.skip(k, id, who.email);
+      if (action === 'evm-wa') return em.markWa(k, id, who.email);
+      await core.rateLimit('evm-send', who.email, 120, 60 * 60 * 1000, 'That’s a lot of emails this hour — please wait a little.');
+      const r = await em.send(k, id, body.to, body.subject, body.body, who.email);
+      await core.audit(who.email, 'evm_send', { kind: k, id });
+      return r;
+    }
     case 'app-orgs': {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see organiser emails.');
       const subs = await eventsub.list();
