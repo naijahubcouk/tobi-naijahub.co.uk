@@ -1002,6 +1002,20 @@
 #more-sheet-overlay [style*="font-size:17px"],
 #messages .msg:not(.home-msg) [style*="font-size: 17px"],
 #more-sheet-overlay [style*="font-size: 17px"] { font-size:16px !important; }
+
+/* 🏠 calmer Home */
+.home-sc{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:2px 0 4px}
+.home-sc button{background:none;border:0;font-family:inherit;font-size:11.5px;font-weight:600;color:#374151;cursor:pointer;padding:0;line-height:1.3}
+.home-sc i{display:flex;width:48px;height:48px;margin:0 auto 5px;border-radius:50%;background:#fff;border:1px solid #E8E3D6;align-items:center;justify-content:center;font-size:21px;font-style:normal;transition:transform .15s}
+.home-sc button:active i{transform:scale(.94)}
+.home-sec-h{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 8px}.home-sec-h b{font-size:16px;color:#0F1E36}.home-sec-h a{font-size:13px;color:#057A44;font-weight:700;text-decoration:none}
+.home-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}.home-strip::-webkit-scrollbar{display:none}
+.home-cd{width:138px;flex-shrink:0;background:#fff;border:1px solid #E8E3D6;border-radius:14px;overflow:hidden;text-align:left;padding:0;font-family:inherit;cursor:pointer;text-decoration:none;color:#0F1E36;scroll-snap-align:start;display:block}
+.home-cd img,.home-cd .home-ph{width:100%;height:92px;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:30px;background:#EEF7F1}
+.home-cd b{display:block;font-size:13px;padding:8px 9px 0;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.home-cd small{display:block;font-size:11.5px;color:#6B7280;padding:2px 9px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-biz{background:#fff;border:1px solid #E8E3D6;border-radius:14px;overflow:hidden}
+.home-biz>button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 14px;font-family:inherit;cursor:pointer;color:#0F1E36;font-size:14px}.home-biz b{display:block}.home-biz small{color:#6B7280;font-size:12.5px}.home-biz .ar{color:#057A44;font-weight:800;font-size:18px}
+.home-biz>div{grid-template-columns:1fr;border-top:1px solid #F1EEE6}.home-biz>div a{padding:12px 16px;border-bottom:1px solid #F1EEE6;color:#057A44;font-weight:700;font-size:14px;text-decoration:none}.home-biz>div a:last-child{border:0}
 </style>
   <!-- OneSignal Push Notifications -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
@@ -5482,6 +5496,7 @@ function showDailyMotivation() {
   // Pick message based on day of year so it rotates daily
   const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
   const msg = messages[dayOfYear % messages.length];
+  if (arguments[0] === 'get') return msg;   // 🏠 the calmer Home shows it as one line in the Today card
 
   const html = `<div onclick="showMotivationLanding('${msg.text.replace(/'/g,"\\'").replace(/"/g,'\\"')}','','','')" style="background:white;border:1.5px solid #FFB81C;border-radius:8px;overflow:hidden;cursor:pointer;">
     <div style="background:#0F1E36;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;">
@@ -5972,6 +5987,38 @@ function showFeaturedBizCarousel(){
   var id = 'home-feat-' + Date.now();
   addTipMessage('<div id="'+id+'"></div>');
   mountFeaturedBiz(id);
+}
+
+
+// ───── 🏠 calmer Home (Nov 2026): shortcuts row, slim strips, one business tile ─────
+function homeEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function homeSecHead(title, linkText, onclick){ return '<div class="home-sec-h"><b>' + title + '</b>' + (linkText ? '<a href="javascript:void(0)" onclick="' + onclick + '">' + linkText + ' →</a>' : '') + '</div>'; }
+function showHomeShortcuts(){
+  var items = [['🏢','Businesses','showBusinesses(undefined,null,null,true,true)'],['🎉','Events','showEventsCard()'],['💌','Cards',"location.href='/cards'"],['🛍️','Market','showMarketplace()'],['💼','Jobs','showJobsHubCard()'],['📰','News','showNewsAndUpdates()']];
+  addTipMessage('<div class="home-sc">' + items.map(function(x){ return '<button type="button" onclick="' + x[2] + '"><i>' + x[0] + '</i>' + x[1] + '</button>'; }).join('') + '</div>');
+}
+function showHomeFeatStrip(){
+  var list = featuredBizList(); if (!list.length) return;
+  addTipMessage(homeSecHead('⭐ Featured businesses', 'See all', 'showFeaturedBusinesses()') + '<div class="home-strip">' + list.map(function(b){
+    return '<button type="button" class="home-cd" onclick="tobiOpenBiz(\'' + homeEsc(b.slug) + '\')">' + (b.img ? '<img src="' + homeEsc(b.img) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;home-ph&quot;>' + featEmoji(b) + '</span>\'">' : '<span class="home-ph">' + featEmoji(b) + '</span>') + '<b>' + homeEsc(b.name) + '</b><small>' + homeEsc((b.cat || '') + (b.loc ? ' · ' + String(b.loc).split(',')[0] : '')) + '</small></button>';
+  }).join('') + '</div>');
+}
+function showHomeMarketStrip(){
+  var id = 'home-mkt-' + Date.now(); addTipMessage('<div id="' + id + '"></div>');
+  function draw(){
+    var host = document.getElementById(id); if (!host) return;
+    var now = new Date(), list = (window.MARKETPLACE_PRODUCTS || (typeof MARKETPLACE_PRODUCTS !== 'undefined' ? MARKETPLACE_PRODUCTS : [])).filter(function(p){ return !p.expires || new Date(p.expires) > now; });
+    if (!list.length) { host.innerHTML = ''; return; }
+    host.innerHTML = homeSecHead('🛍️ Marketplace', 'See all', 'showMarketplace()') + '<div class="home-strip">' + list.slice(0, 12).map(function(p){
+      var link = (p.wa && !p.link) ? 'https://wa.me/' + String(p.wa).replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi, I saw ' + p.name + ' on Auntie Tobi and I\'d like to enquire') : (p.link || '/marketplace');
+      return '<a class="home-cd" href="' + homeEsc(link) + '" target="_blank" rel="noopener">' + (p.img ? '<img src="' + homeEsc(p.img) + '" alt="" loading="lazy" style="object-fit:contain;background:#f8f8f8">' : '<span class="home-ph">🛍️</span>') + '<b>' + homeEsc(p.name) + '</b><small>' + homeEsc(p.price || p.business || p.category || '') + '</small></a>';
+    }).join('') + '</div>';
+  }
+  draw(); if (!window._mpLive) window.addEventListener('tobi-mp-live', draw, { once: true });
+}
+function showHomeBizTile(){
+  addTipMessage('<div class="home-biz"><button type="button" onclick="var m=this.nextElementSibling;m.style.display=m.style.display===\'none\'?\'grid\':\'none\';this.querySelector(\'.ar\').textContent=m.style.display===\'none\'?\'›\':\'⌄\'"><span style="font-size:22px">💼</span><span style="flex:1;text-align:left"><b>Own a business?</b><small>Get listed · Business Club · Business Studio</small></span><span class="ar">›</span></button>'
+    + '<div style="display:none"><a href="/add-business">➕ Add your business — free</a><a href="/business-club">💚 Join the Business Club</a><a href="/business-studio">🚀 Business Studio — free tools</a><a href="https://auntietobi.co.uk/add-event" target="_blank">🎉 Add your event — free</a></div></div>');
 }
 
 // 🛍️ Marketplace bubble / category links: the laptop Marketplace page on a computer, otherwise the Marketplace page
@@ -9226,13 +9273,11 @@ function resetToWelcome() {
         const design = `<div style="border-left:3px solid #FFB81C;padding:10px 14px;background:#f8f8f8;border-radius:0 8px 8px 0;"><div style="font-size:15px;font-weight:500;color:#0F1E36;">${heading}</div><div style="font-size:12px;color:#555;margin-top:3px;">${subtitle}</div></div>`;
         // 💚 My Plan: the greeting becomes the Today card (your day + "New: My Plan") once myplan.js is loaded
         const qa = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        try { window.tobiHomeExtras = { q: showDailyMotivation('get'), tip: getTodaysTip() }; } catch (e) {}
         addTipMessage(`<div data-myplan-today="1" data-h="${qa(heading)}" data-s="${qa(subtitle)}">${design}</div>`);
         if (window.MyPlan) window.MyPlan.fill();
       })();
-      showDailyMotivation();
       liveNewsShownCount = 2;
-      addTipMessage('<div data-news-card-placeholder="1"></div>');
-      setTimeout(function(){ if (!document.querySelector('[data-news-card]')) showNewsCard(); }, 1500);
       // Show notification prompt to users who haven't subscribed
       setTimeout(function() {
         if (window._currentPage !== 'home') return;
@@ -9241,34 +9286,20 @@ function resetToWelcome() {
           showNotifPrompt();
         }
       }, 8000);
-      const tip = getTodaysTip();
-      console.log('tip:', tip);
-      const tipHtml = buildTipCard(tip, getRandomSuggestionStr());
-      console.log('tipHtml built');
-      addTipMessage(tipHtml);
-      console.log('message added');
+      // 🏠 calmer Home: shortcuts · this week · slim strips · one business tile
+      showHomeShortcuts();
       showFeaturedEventCard();
-      showFeaturedBizCarousel();
-      addTipMessage('<div data-club-card="1" style="background:linear-gradient(135deg,#057A44,#04603a);border-radius:12px;padding:14px 16px;color:white;">'
-        + '<div style="font-size:15px;font-weight:800;margin-bottom:4px;">💚 Own a business? Join the Auntie Tobi Business Club</div>'
-        + '<div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.9);margin-bottom:10px;">Get seen by more Nigerians in the UK — Spotlight, a paid Instagram group advert, Featured Business, Marketplace &amp; your own Business Studio.</div>'
-        + '<a href="/business-club" style="display:inline-block;background:#FFB81C;color:#0F1E36;text-decoration:none;font-size:13px;font-weight:800;padding:9px 16px;border-radius:20px;">Join the Business Club →</a>'
-        + '<div style="margin-top:10px;"><a href="/business-studio" style="color:white;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px;">Or try Business Studio free →</a></div></div>');
-      showSponsoredAd();
-      addTipMessage('<a href="/business-studio" data-studio-card="1" style="display:flex;align-items:center;gap:12px;background:#0F1E36;color:white;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:700;font-size:14px;">'
-        + '<span style="font-size:20px;">🚀</span><span style="flex:1;text-align:left;">Business Studio<span style="display:block;font-size:11px;color:rgba(255,255,255,0.8);font-weight:400;margin-top:1px;">Free tools to manage customers, plan content and grow your business</span></span><span style="color:rgba(255,255,255,0.7);">›</span></a>');
-      addTipMessage('<a href="https://auntietobi.co.uk/add-event" target="_blank" data-submit-event="1" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">'
-        + '<span style="font-size:20px;">🎉</span><span style="flex:1;text-align:left;">Submit Your Event<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Free listing — paste your event link or upload your flyer</span></span><span style="color:#ccc;">›</span></a>');
-      addTipMessage('<a href="/cards" data-bday-card="1" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#FDE9EC,#FFF6F2);color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #F4A6B8;font-weight:700;font-size:14px;">'
-        + '<span style="font-size:20px;">🎉</span><span style="flex:1;text-align:left;">Free Celebration Cards<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Birthday, Christmas, New Month & more — send it on WhatsApp</span></span><span style="color:#ccc;">›</span></a>');
+      showHomeFeatStrip();
+      showHomeMarketStrip();
+      showHomeBizTile();
       // Rotating first, then fixed quick action bubbles below
       const homeSuggStr = getRandomSuggestionStr();
       const homeSuggList = homeSuggStr.split('|').map(s => s.trim()).filter(Boolean);
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const installBtn = !isInstalled && deferredPrompt ? '<button class="suggestion-btn" onclick="if(deferredPrompt){deferredPrompt.prompt();}" style="background:#057A44;color:white;border-color:#057A44;">📲 Install Auntie Tobi</button>' : '';
-      const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="showJobsHubCard()">💼 Find Jobs</button><button class="suggestion-btn" onclick="showEventsCard()">🎉 Events</button><button class="suggestion-btn" onclick="showAllNews()">📰 News/Articles</button><button class="suggestion-btn" onclick="quickAsk(\'Find a Nigerian business near me\')">🏢 All Businesses</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="showMarketplace()">🛍️ Marketplace</button><button class="suggestion-btn" onclick="window.open(\'https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e\',\'_blank\',\'noopener\')" style="background:#25D366;color:white;border-color:#25D366;">📣 Follow Auntie Tobi on WhatsApp Channel</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
+      const homeFixed = '';   // 🏠 Jobs, Events, Business Club & Studio now live in the shortcuts row and the business tile
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
-      addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeRotating}${homeFixed}</div>`);
+      addTipMessage(`<div class="home-sec-h" style="margin:4px 2px 8px"><b>💬 Ask Auntie Tobi</b></div><div class="suggestions" style="margin-top:0;">${homeRotating}${installBtn}${homeFixed}</div>`);
 
       // Scroll to top so Daily Motivation shows first
       const m2 = document.getElementById('messages');
@@ -10281,7 +10312,7 @@ function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleD
   }, {passive:true});
 })();
 </script>
-<script src="/myplan.js?v=20261113a" defer></script>
+<script src="/myplan.js?v=20261113b" defer></script>
 <script src="/desk.js" defer></script>
 <script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
