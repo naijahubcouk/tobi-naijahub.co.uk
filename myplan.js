@@ -302,7 +302,7 @@
       body += '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Open My Plan</button><button class="mpT-b2" data-mp-add>＋ Add</button></div>';
     } else if (!hideNew) {
       body += '<div class="mpT-row mpT-shop"><span class="mpT-ic">💚</span><div class="mpT-t">New: My Plan<small>Remember bills, birthdays and shopping in one place</small></div><button class="mpT-x" data-mp-hide aria-label="Hide">✕</button></div>' +
-        '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Try My Plan</button></div>';
+        '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Try My Plan FREE</button></div>';
     }
     return html + (body ? '<div class="mpT-body">' + body + '</div>' : '') + '</div>';
   }
