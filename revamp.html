@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Instagram Revamp — Auntie Tobi</title>
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Your Instagram Revamp ✨">
+<meta property="og:description" content="Your page review and plan from Auntie Tobi.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F4F1EA;color:#0F1E36;line-height:1.55;padding-bottom:60px}
+.top{background:#0F1E36;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px}
+.top img{width:40px;height:40px;border-radius:50%;background:#057A44}
+.top b{display:block;font-size:16px}.top span{font-size:12px;opacity:.65}
+.wrap{max-width:720px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.hero{background:linear-gradient(150deg,#057A44,#0A5C38);color:#fff;border-radius:18px;padding:26px 20px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,184,28,.18)}
+.badge{display:inline-block;background:#FFB81C;color:#0F1E36;font-size:12.5px;font-weight:800;border-radius:20px;padding:4px 11px;margin-bottom:10px}
+.hero h1{font-size:27px;line-height:1.2}.hero p{opacity:.9;margin-top:6px;font-size:15px}
+.card{background:#fff;border-radius:16px;padding:18px;border:1px solid #E8E3D6}
+h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;margin-bottom:10px;display:flex;gap:8px;align-items:center}
+h2 i{font-style:normal;width:24px;height:24px;border-radius:50%;background:#057A44;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:0}
+.txt{white-space:pre-wrap;font-size:15.5px}
+.row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid #F0EDE5}.row:first-of-type{border-top:0}
+.s{flex-shrink:0;font-size:11.5px;font-weight:800;border-radius:10px;padding:3px 9px;margin-top:2px;min-width:64px;text-align:center}
+.good{background:#E3F2EA;color:#057A44}.fix{background:#FFF1CF;color:#7A5300}.missing{background:#FDE2E1;color:#B42318}.none{background:#F3F4F6;color:#6B7280}
+.row b{display:block;font-size:15px}.row small{color:#4B5563;font-size:14px}
+.bio{background:#F6FAF7;border:1px dashed #A7D7BC;border-radius:12px;padding:12px 14px;white-space:pre-wrap;font-size:15px;margin-top:8px;position:relative}
+.cp{position:absolute;top:8px;right:8px;border:1px solid #CDE8D9;background:#fff;border-radius:8px;font-size:12px;font-weight:700;padding:4px 8px;cursor:pointer;color:#057A44}
+.comp{padding:10px 0;border-top:1px solid #F0EDE5}.comp:first-of-type{border-top:0}.comp b{font-size:15px}.comp div{font-size:14.5px;color:#374151}.comp em{font-style:normal;color:#057A44;font-weight:700}
+.note{font-size:13.5px;color:#6B7280;text-align:center;line-height:1.6}
+.wa{display:block;text-align:center;background:#25D366;color:#fff;text-decoration:none;font-weight:800;border-radius:12px;padding:15px;font-size:16px}
+.stat{display:flex;gap:10px}.stat div{flex:1;background:#F6F4EE;border-radius:12px;padding:12px;text-align:center}.stat b{display:block;font-size:22px}.stat span{font-size:12.5px;color:#6B7280}
+@media print{.top,.wa,.cp{display:none}body{background:#fff}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="top"><img data-lsrc="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><span>Instagram Revamp</span></div></div>
+<div class="wrap" id="app"><div class="card"><p class="note">Loading your Revamp…</p></div></div>
+<script>
+(function () {
+  var r = new URLSearchParams(location.search).get('r') || '', app = document.getElementById('app');
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var nice = function (d) { return new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); };
+  fetch('/.netlify/functions/glowup?r=' + encodeURIComponent(r)).then(function (x) { return x.json().then(function (j) { if (!x.ok) throw new Error(j.message || 'Something went wrong.'); return j; }); }).then(function (d) {
+    var n = 0, sec = function (title, body) { n++; return '<div class="card"><h2><i>' + n + '</i>' + title + '</h2>' + body + '</div>'; }, P = d.plan || {};
+    var LAB = { good: 'Good', fix: 'Fix', missing: 'Missing' };
+    var h = '<div class="hero"><div class="badge">✨ Your Instagram Revamp</div><h1>' + esc(d.name) + '</h1><p>' + (d.handle ? '@' + esc(d.handle) + ' · ' : '') + 'Prepared by Auntie Tobi · ' + nice(d.date) + '</p></div>';
+    if (d.summary) h += sec('Your page in a nutshell', '<div class="txt">' + esc(d.summary) + '</div>');
+    if (d.audit.length) h += sec('Your page check', d.audit.map(function (a) { return '<div class="row"><span class="s ' + (a.s || 'none') + '">' + (LAB[a.s] || 'Check') + '</span><div><b>' + esc(a.name) + '</b><small>' + esc(a.note) + '</small></div></div>'; }).join(''));
+    if (d.bios.length) h += sec('Your new bio', '<div class="note" style="text-align:left">Pick one, change anything, and paste it into your Instagram bio.</div>' + d.bios.map(function (b, i) { return '<div class="bio"><button class="cp" data-cp="' + i + '">Copy</button>' + esc(b) + '</div>'; }).join(''));
+    if (d.comps.length) h += sec('What other accounts teach us', d.comps.map(function (c) { return '<div class="comp"><b>' + esc(c.h) + '</b><div>' + esc(c.works) + '</div>' + (c.copy ? '<div><em>Copy this:</em> ' + esc(c.copy) + '</div>' : '') + '</div>'; }).join(''));
+    if (P.hooks) h += sec('Your post and Reel hooks', '<div class="txt">' + esc(P.hooks) + '</div>');
+    if (P.reels) h += sec('Your Reel scripts', '<div class="txt">' + esc(P.reels) + '</div>');
+    if (P.plan30) h += sec('Your 30-day plan', '<div class="txt">' + esc(P.plan30) + '</div>');
+    if (P.journey) h += sec('Turning followers into sales', '<div class="txt">' + esc(P.journey) + '</div>');
+    h += sec('How to see it working', (d.followers ? '<div class="stat"><div><b>' + esc(d.followers) + '</b><span>followers when we started</span></div><div><b>30 days</b><span>until your check-in</span></div></div>' : '') +
+      '<div class="txt" style="margin-top:10px">Each week, check: how many people who don’t follow you saw your Reels, new followers, messages and orders. Keep what works, change what doesn’t.\n\nThese are goals to test, not guarantees — every page is different.</div>');
+    h += '<a class="wa" href="https://wa.me/447594674940?text=' + encodeURIComponent('Hi Auntie Tobi 👋🏾 I have a question about my Instagram Revamp (' + d.name + '): ') + '" target="_blank" rel="noopener">💬 Questions? Message Auntie Tobi</a>' +
+      '<p class="note">💚 Auntie Tobi — Your UK Guide for Nigerians · This report is just for you, please don’t share the link.</p>';
+    app.innerHTML = h;
+    [].forEach.call(document.querySelectorAll('[data-cp]'), function (b) { b.onclick = function () { try { navigator.clipboard.writeText(d.bios[+b.dataset.cp]); b.textContent = 'Copied ✓'; } catch (e) {} }; });
+  }).catch(function (x) { app.innerHTML = '<div class="card"><p class="note"><b style="display:block;font-size:18px;color:#0F1E36;margin-bottom:6px">Hmm…</b>' + esc(x.message) + '</p></div>'; });
+  document.querySelectorAll('img[data-lsrc]').forEach(function (i) { i.src = i.getAttribute('data-lsrc'); });
+})();
+</script>
+</body>
+</html>

@@ -87,14 +87,15 @@
       sec('3', '📝 Their form', formBox(c, formUrl)) +
       sec('4', '🔍 Page audit', auditBox(c)) +
       (c.pkg === 'starter' ? '' : sec('5', '👀 Competitors', compBox(c))) +
-      sec('6', '✨ Plan, report and send (steps 6–8)', '<p class="muted" style="font-size:13.5px">For now, build the plan in Business Studio and the report from the master template, then tick steps 6, 7 and 8 above. Ticking <b>8 Send</b> sets the 30-day check-in date. <i>Coming in Part 2: ✨ Draft buttons and the report page made here.</i></p>') +
+      sec('6', '✨ The plan', planBox(c)) +
+      sec('7', '📄 The report', reportBox(c)) +
       sec('9', '📈 30-day check-in', checkBox(c)) +
       sec('', '💬 Messages', msgBox(c)) +
       '<div style="text-align:right;margin-top:6px"><button class="btn ghost sm" id="guDel" style="color:#B42318">Delete client</button></div></div>';
     $$('[data-step]', main).forEach(function (b) { b.onclick = async function () { var k = b.dataset.step, on = !(cur.done || {})[k]; try { var r = await X.api('gu-step', { id: cur.id, n: k, on: on }); put(r.client); client(cur.id); } catch (e) { X.toast(e.message); } }; });
     if ($('#guPaid')) $('#guPaid').onclick = async function () { try { await save({ paidAt: todayIso() }); client(cur.id); } catch (e) { X.toast(e.message); } };
     $('#guDel').onclick = async function () { if (!confirm('Delete ' + c.name + ' and everything saved for them?')) return; try { await X.api('gu-del', { id: c.id }); D.clients = D.clients.filter(function (x) { return x.id !== c.id; }); $('#guBack').click(); } catch (e) { X.toast(e.message); } };
-    bindForm(c, formUrl); bindAudit(c); bindComp(c); bindCheck(c); bindMsgs(c, formUrl);
+    bindForm(c, formUrl); bindAudit(c); bindComp(c); bindPlan(c); bindReport(c); bindCheck(c); bindMsgs(c, formUrl);
   }
   function sec(k, title, body) { var on = k && (cur.done || {})[k]; return '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-weight:800;font-size:15.5px;margin-bottom:8px">' + title + (on ? ' ' + pill('Done', 'g') : '') + '</div>' + body + '</div>'; }
 
@@ -219,6 +220,48 @@
     };
   }
 
+  // ✨ step 6 — the plan pieces, drafted by Auntie Tobi from everything above
+  var PLAN = [['hooks', '💡 10 post and Reel hooks', 6], ['reels', '🎬 3 Reel scripts', 12], ['plan30', '📅 30-day plan', 14], ['journey', '💬 Sales journey (DM keyword and replies)', 9]];
+  function planParts(c) { return c.pkg === 'starter' ? PLAN.filter(function (x) { return x[0] === 'hooks'; }) : PLAN; }
+  function planBox(c) {
+    var P = c.plan || {};
+    return '<p class="muted" style="font-size:13px;margin-bottom:8px">Tap ✨ Draft and Auntie Tobi writes it from their answers, listing, audit and competitors. Change anything, then Save plan.' + (c.pkg === 'starter' ? ' (Starter: hooks only.)' : '') + '</p>' +
+      planParts(c).map(function (x) { return '<div style="margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px"><b style="font-size:14px">' + x[1] + '</b><button class="btn ghost sm" data-draft="' + x[0] + '">✨ ' + (P[x[0]] ? 'Draft again' : 'Draft') + '</button></div><textarea data-plan="' + x[0] + '" rows="' + (P[x[0]] ? x[2] : 3) + '" style="font-size:13.5px" placeholder="Tap ✨ Draft, or write it yourself">' + esc(P[x[0]] || '') + '</textarea></div>'; }).join('') +
+      '<div style="text-align:right"><button class="btn primary sm" id="plSave">Save plan</button></div>';
+  }
+  function bindPlan(c) {
+    $$('[data-draft]').forEach(function (b) { b.onclick = async function () {
+      var k = b.dataset.draft, ta = $('[data-plan="' + k + '"]');
+      if (ta.value.trim() && !confirm('Replace what’s in this box with a new draft?')) return;
+      b.disabled = true; b.textContent = '✨ Writing…';
+      try { var r = await X.api('gu-ai-plan', { id: c.id, kind: k }); ta.value = r.text; ta.rows = Math.min(18, Math.max(6, r.text.split('\n').length + 1)); X.toast('✨ Drafted — check it, then Save plan'); } catch (e) { X.toast(e.message); }
+      b.disabled = false; b.textContent = '✨ Draft again';
+    }; });
+    $('#plSave').onclick = async function () {
+      var plan = {}; $$('[data-plan]').forEach(function (t) { plan[t.dataset.plan] = t.value.trim(); });
+      try { var cl = await save({ plan: plan }); var full = planParts(cl).every(function (x) { return (cl.plan || {})[x[0]]; }); if (full && !(cl.done || {})[6]) { var r = await X.api('gu-step', { id: cl.id, n: 6, on: true }); put(r.client); } client(cur.id); } catch (e) { X.toast(e.message); }
+    };
+  }
+  // 📄 step 7 — the report page, made from everything saved here
+  function reportUrl(c) { return SITE + '/revamp?r=' + encodeURIComponent(c.reportToken); }
+  var QC = ['Name, handle and prices are right everywhere', 'No promised results — goals to test, not guarantees', 'Competitor lessons are ideas, not copied posts', 'The bios and plan read well out loud', 'Anything a real customer appears in has their OK'];
+  function reportBox(c) {
+    if (c.reportOn && c.reportToken) {
+      var u = reportUrl(c);
+      return '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><input readonly value="' + esc(u) + '" style="flex:1;min-width:220px;font-size:13px"><button class="btn ghost sm" id="rpCopy">📋 Copy link</button><a class="btn ghost sm" href="' + esc(u) + '" target="_blank" rel="noopener">👁 Open</a></div>' +
+        '<div style="font-size:13.5px;margin-top:8px">' + (c.opens ? '👀 Opened <b>' + c.opens + '</b> time' + (c.opens === 1 ? '' : 's') + ' · last ' + nice(c.openedAt) : '<span class="muted">Not opened yet</span>') + '</div>' +
+        '<p class="muted" style="font-size:12.5px;margin-top:6px">It always shows what’s saved here, so any change you save updates the report. Send it with message D, then tick 8 Send. <a href="#" id="rpOff">Take the report offline</a></p>';
+    }
+    return '<p class="muted" style="font-size:13px;margin-bottom:8px">The report is a private page made from the audit, bios, competitors and plan saved above. Tick the checks, then make it.</p>' +
+      QC.map(function (q, i) { return '<label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin:5px 0;cursor:pointer;font-weight:500"><input type="checkbox" data-qc="' + i + '" style="width:17px;height:17px"> ' + esc(q) + '</label>'; }).join('') +
+      '<div style="text-align:right;margin-top:8px"><button class="btn primary sm" id="rpGo" disabled>📄 Make the report page</button></div>';
+  }
+  function bindReport(c) {
+    var go = $('#rpGo');
+    if (go) { $$('[data-qc]').forEach(function (x) { x.onchange = function () { go.disabled = $$('[data-qc]').some(function (y) { return !y.checked; }); }; }); go.onclick = async function () { try { await save({ reportOn: true }); X.toast('📄 Report ready — copy the link or send message D'); client(cur.id); } catch (e) { X.toast(e.message); } }; }
+    var cp = $('#rpCopy'); if (cp) cp.onclick = function () { try { navigator.clipboard.writeText(reportUrl(c)); X.toast('📋 Report link copied'); } catch (e) { prompt('Copy the link', reportUrl(c)); } };
+    var off = $('#rpOff'); if (off) off.onclick = async function (e) { e.preventDefault(); if (!confirm('Take the report offline? The link stops working until you make it again.')) return; try { await save({ reportOn: false }); client(cur.id); } catch (x) { X.toast(x.message); } };
+  }
   function checkBox(c) {
     var a = c.after || {};
     return '<p class="muted" style="font-size:12.5px;margin-bottom:6px">Note their followers from Instagram when you start the audit, then again at 30 days.</p>' +
@@ -234,7 +277,7 @@
       ['A', 'Packages', 'Hi ' + nm + '! Thank you for asking about the Instagram Revamp ✨ We study your page and your competitors, then give you a ready-to-use plan to get more followers and enquiries.\n\n• Starter £' + D.pkgs.starter.price + ' — page review, bio fixes, 10 post and Reel ideas\n• Revamp £' + D.pkgs.glowup.price + ' — plus 5 competitors studied, 3 Reel scripts and a 30-day plan\n• Revamp + Done for you £' + D.pkgs.dfy.price + ' — plus 9 posts designed for you\n\nWhich one suits you? 💚'],
       ['B', 'Form link', 'Thank you, payment received! 💚 Please answer 5 quick questions so we can start: ' + formUrl + '\nIt takes about 2 minutes. Your Revamp starts as soon as it’s back.'],
       ['C', 'Start date', 'Got it, thank you! We’re starting on ' + (c.handle ? '@' + c.handle : 'your page') + ' now. You’ll have your Revamp by ' + due + ' ✨'],
-      ['D', 'Report ready', 'Your Instagram Revamp is ready ✨ [report link]\nStart with “Fix first” — those 3 changes make the biggest difference. I’ve sent a short voice note walking you through it. Any questions, just reply here.'],
+      ['D', 'Report ready', 'Your Instagram Revamp is ready ✨ ' + (c.reportOn && c.reportToken ? reportUrl(c) : '[report link]') + '\nStart with “Fix first” — those 3 changes make the biggest difference. I’ve sent a short voice note walking you through it. Any questions, just reply here.'],
       ['E', '30-day check-in', 'Hi ' + nm + ', it’s been 30 days since your Revamp! How’s it going? Have you noticed more views, messages or sales? Tell me what’s changed and what’s worked best for you 📈'],
       ['F', 'Testimonial', 'So glad it’s helping! 💚 Would you write one or two lines about your experience? And are you happy for us to share your before-and-after as an example?'],
     ];
