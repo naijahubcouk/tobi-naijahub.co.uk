@@ -26,7 +26,7 @@ exports.handler = core.handler(async (ctx) => {
       if (!b) throw new core.HttpError(404, 'not_found', 'We couldn’t find that listing.');
       const L = dir.publicListing(b); return { listing: { name: L.name, slug: L.slug, cat: L.cat || '', loc: L.loc || '', desc: String(L.desc || '').slice(0, 300), wa: L.wa || '', ig: L.ig || '', url: L.url } };
     }
-    const r = q.c ? await ig.get(q.c) : q.r ? await glowup.reportGet(q.r, q.hq === '1') : await glowup.formGet(q.t);   // 🆓 ?c= = a free Instagram check   // 📄 ?r= = the client's Revamp report
+    const r = q.c ? await ig.get(q.c, q.hq === '1') : q.r ? await glowup.reportGet(q.r, q.hq === '1') : await glowup.formGet(q.t);   // 🆓 ?c= = a free Instagram check   // 📄 ?r= = the client's Revamp report
     return { statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' }, body: JSON.stringify(r) };
   }
   if (body.action === 'check') return require('../igcheck').run(event, ip, body);           // 🆓 free Instagram check

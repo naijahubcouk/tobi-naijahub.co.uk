@@ -151,7 +151,7 @@ input:focus,textarea:focus{border-color:#057A44}
     var pc = d.total ? Math.round(d.score * 100 / d.total) : 0, col = pc >= 70 ? '#057A44' : pc >= 40 ? '#FFB81C' : '#E8590C';
     var link = SITE + '/instagram-check?c=' + encodeURIComponent(d.t);
     var say = pc >= 70 ? 'Your page is in good shape — a few changes will make it work even harder.' : pc >= 40 ? 'A good start — some simple changes could bring you a lot more ' + (d.goal ? d.goal.replace('More ', '') : 'customers') + '.' : 'There’s a big opportunity here — your page could be bringing you much more.';
-    var h = '<div class="hero"><div class="badge">🆓 Your free Instagram check</div><h1>' + esc(d.biz) + '</h1><p>' + (d.name ? 'Hi ' + esc(d.name) + '! ' : '') + 'Here’s what Auntie Tobi found.</p></div>' +
+    var h = '<div class="hero"><div class="badge">' + (d.byHq ? '💚 A free gift from Auntie Tobi' : '🆓 Your free Instagram check') + '</div><h1>' + esc(d.biz) + '</h1><p>' + (d.byHq ? 'Auntie Tobi checked your Instagram for you! Here’s what’s working, and 3 simple changes that could bring you more ' + esc(d.goal ? d.goal.replace('More ', '') : 'customers') + '.' : (d.name ? 'Hi ' + esc(d.name) + '! ' : '') + 'Here’s what Auntie Tobi found.') + '</p></div>' +
       '<div class="card"><div class="score"><div class="ring" style="background:conic-gradient(' + col + ' ' + pc + '%,#EEE9DD 0)"><i>' + d.score + '<small>of ' + d.total + '</small></i></div><p><b>' + d.score + ' of ' + d.total + ' checks looking good</b>' + esc(say) + '</p></div></div>';
     if (d.working.length) h += '<div class="card"><h2>💚 What’s working</h2>' + d.working.map(function (x) { return '<div class="li"><span>✅</span><div>' + esc(x) + '</div></div>'; }).join('') + '</div>';
     if (d.locked) {
@@ -171,7 +171,7 @@ input:focus,textarea:focus{border-color:#057A44}
         pk('Starter', 35, '3 days', 'Full page check, your top fixes, a new bio and 10 post ideas.') +
         pk('Revamp', 75, '5 days', 'Everything in Starter + 5 competitors studied, 3 Reel scripts, a 30-day plan and your sales journey.', true) +
         pk('Revamp + Done for you', 150, '7 days', 'Everything in Revamp + 9 posts designed for you and a 30-day check-in.') +
-        '<a class="go wa" style="text-decoration:none;text-align:center;margin-top:14px" target="_blank" rel="noopener" href="https://wa.me/' + WA + '?text=' + encodeURIComponent('Hi Auntie Tobi 👋🏾 I just did the free Instagram check for ' + d.biz + ' (' + d.score + '/' + d.total + '). Can we talk about my results? ' + link) + '">💬 Talk to Auntie Tobi about my results</a>' +
+        '<a class="go wa" style="text-decoration:none;text-align:center;margin-top:14px" target="_blank" rel="noopener" href="https://wa.me/' + WA + '?text=' + encodeURIComponent((d.byHq ? 'Hi Auntie Tobi 👋🏾 Thank you for checking my Instagram! This is ' + d.biz : 'Hi Auntie Tobi 👋🏾 I just did the free Instagram check for ' + d.biz) + ' (' + d.score + '/' + d.total + '). Can we talk about my results? ' + link) + '">💬 Talk to Auntie Tobi about my results</a>' +
         '<p class="note" style="margin-top:8px"><a href="/instagram-revamp" style="color:#057A44;font-weight:700">See everything in the Revamp →</a></p></div>';
     }
     if (!d.listed) h += '<div class="list"><b>📍 Get found on Auntie Tobi too</b><p>Add your business to the Auntie Tobi directory for free, so Nigerians across the UK can find you.</p><a href="/add-business?from=igcheck" target="_blank" rel="noopener">Add my business free →</a></div>';
@@ -192,7 +192,7 @@ input:focus,textarea:focus{border-color:#057A44}
   }
 
   var c = new URLSearchParams(location.search).get('c');
-  if (c) { app.innerHTML = '<div class="card wait"><div class="spin"></div><b>Loading your results…</b></div>'; get('?c=' + encodeURIComponent(c)).then(result).catch(function (e) { form(); var x = $('#err'); x.textContent = e.message; x.style.display = 'block'; }); }
+  if (c) { app.innerHTML = '<div class="card wait"><div class="spin"></div><b>Loading your results…</b></div>'; get('?c=' + encodeURIComponent(c) + (new URLSearchParams(location.search).get('hq') === '1' ? '&hq=1' : '')).then(result).catch(function (e) { form(); var x = $('#err'); x.textContent = e.message; x.style.display = 'block'; }); }
   else form();
   document.querySelectorAll('img[data-lsrc]').forEach(function (i) { i.src = i.getAttribute('data-lsrc'); });
   document.querySelectorAll('template[data-icons]').forEach(function (t) { document.head.appendChild(t.content.cloneNode(true)); });

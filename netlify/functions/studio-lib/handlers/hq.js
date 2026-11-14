@@ -380,7 +380,7 @@ exports.handler = handler(async (ctx) => {
       }
       return sunday.forHq(week);
     }
-    case 'gu-list': case 'gu-save': case 'gu-step': case 'gu-del': case 'gu-reopen': case 'gu-lib': case 'gu-libadd': case 'gu-listing': case 'gu-settings': case 'gu-ai-audit': case 'gu-ai-plan': case 'gu-ai-comps': case 'gu-ai-find': case 'gu-ai-checklist': case 'gu-checks': case 'gu-check-mark': case 'gu-check-del': case 'gu-check-convert': {
+    case 'gu-list': case 'gu-save': case 'gu-step': case 'gu-del': case 'gu-reopen': case 'gu-lib': case 'gu-libadd': case 'gu-listing': case 'gu-settings': case 'gu-ai-audit': case 'gu-ai-plan': case 'gu-ai-comps': case 'gu-ai-find': case 'gu-ai-checklist': case 'gu-checks': case 'gu-check-mark': case 'gu-check-del': case 'gu-check-convert': case 'gu-check-make': case 'gu-check-edit': case 'gu-check-email': {
       // ✨ Instagram Glow-Up clients (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
       const gu = require('../glowup');
@@ -390,7 +390,10 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'gu-reopen') return { client: await gu.reopenForm(body.id) };
       if (body.action === 'gu-lib') return { lib: await gu.lib() };
       if (body.action === 'gu-checks') return { checks: await require('../igcheck').list() };
-      if (body.action === 'gu-check-mark') return { check: await require('../igcheck').mark(body.id, { contacted: !!body.contacted }) };
+      if (body.action === 'gu-check-mark') { const f = {}; ['contacted', 'replied'].forEach(k => { if (k in body) f[k] = !!body[k]; }); if (body.sent) f.sent = body.sent; return { check: await require('../igcheck').mark(body.id, f) }; }
+      if (body.action === 'gu-check-make') return { check: await require('../igcheck').make(ctx.event, body, who.email) };
+      if (body.action === 'gu-check-edit') return { check: await require('../igcheck').edit(body.id, body) };
+      if (body.action === 'gu-check-email') return require('../igcheck').emailIt(body.id, body.subject, body.body, who.email);
       if (body.action === 'gu-check-del') return require('../igcheck').del(body.id);
       if (body.action === 'gu-check-convert') return { client: await require('../igcheck').convert(body.id, who.email) };
       if (body.action === 'gu-ai-checklist') return gu.aiChecklist(body.id);
