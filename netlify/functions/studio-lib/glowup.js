@@ -135,6 +135,14 @@ async function formSend(t, answers, ip) {
     c.form = { answers: a, at: core.nowIso() }; c.formOpen = false; c.done = c.done || {}; c.done['3'] = core.nowIso(); c.updatedAt = core.nowIso();
     return cur;
   });
+  // 📧 tell Auntie Tobi (best effort, never blocks the client)
+  try {
+    const to = core.adminEmails();
+    if (to.length) await core.sendEmail(to, `✨ Revamp form received — ${c0.name}`,
+      `${c0.name}${c0.handle ? ' (@' + c0.handle + ')' : ''} just sent their Instagram Revamp form.\n\n` +
+      QUESTIONS.map(([k, q]) => a[k] ? `${q}\n${a[k]}` : '').filter(Boolean).join('\n\n') +
+      `\n\nOpen it in HQ → Instagram Revamp: ${core.siteBase()}/hq`);
+  } catch (e) { console.error('[glowup] alert email failed', e && e.message); }
   return { ok: true };
 }
 module.exports = { list, save, step, del, reopenForm, lib, libAdd, formGet, formSend, PKGS, STEPS, AREAS, QUESTIONS };

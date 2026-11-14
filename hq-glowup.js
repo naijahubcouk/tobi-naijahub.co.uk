@@ -34,6 +34,7 @@
     $('#guNew').onclick = function () { details(null); };
     var main = $('#view'); main.innerHTML = '<div class="wrap"><p class="muted">Loading…</p></div>';
     try { await load(); } catch (e) { main.innerHTML = '<div class="wrap"><div class="err">' + esc(e.message) + '</div></div>'; return; }
+    if (PENDING) { var p = PENDING; PENDING = null; if (byId(p)) return client(p); }
     board();
   }
   function board() {
@@ -231,5 +232,15 @@
     };
   }
 
-  window.HQGlow = { init: function (o) { X = o; }, view: view };
+  // 🔔 for HQ Today: forms in and waiting for you, and check-ins due
+  async function todayBox() {
+    try { await load(); } catch (e) { return ''; }
+    var t = todayIso(), forms = D.clients.filter(function (c) { var d = c.done || {}; return d[3] && !d[4]; }), chk = D.clients.filter(function (c) { var d = c.done || {}; return c.checkin && c.checkin <= t && !d[9]; }), late = D.clients.filter(function (c) { var d = c.done || {}; return c.due && c.due < t && d[2] && !d[8]; });
+    if (!forms.length && !chk.length && !late.length) return '';
+    var line = function (c, why) { return '<a href="#" data-gu-open="' + esc(c.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(c.name) + '</b> <span class="muted">· ' + why + '</span></a>'; };
+    return '<div class="h2">✨ Instagram Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + '</div>';
+  }
+  var PENDING = null;
+  function open(id) { PENDING = id; }   // the next view() opens this client
+  window.HQGlow = { init: function (o) { X = o; }, view: view, todayBox: todayBox, open: open };
 })();
