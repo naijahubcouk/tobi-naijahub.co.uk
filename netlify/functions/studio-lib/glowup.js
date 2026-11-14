@@ -41,7 +41,9 @@ const day = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : '');
 const addDays = (d, n) => { const x = new Date((d || core.nowIso().slice(0, 10)) + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
 async function all() { return ((await getJson(KEY).catch(() => null)) || { items: {} }).items || {}; }
-async function list() { const it = await all(); return { clients: Object.values(it).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))), pkgs: PKGS, steps: STEPS, areas: AREAS, questions: QUESTIONS }; }
+async function settings() { return Object.assign({ email: true }, (await getJson('glowup/settings').catch(() => null)) || {}); }
+async function setSettings(raw) { const v = { email: !!(raw && raw.email) }; await core.setJson('glowup/settings', v); return v; }
+async function list() { const it = await all(); return { settings: await settings(), clients: Object.values(it).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))), pkgs: PKGS, steps: STEPS, areas: AREAS, questions: QUESTIONS }; }
 
 function cleanComp(c) { return { h: clean(c && c.h, 60).replace(/^@?/, '@').replace(/^@$/, ''), works: clean(c && c.works, 240), copy: clean(c && c.copy, 240) }; }
 // create or update a client (only the fields sent change)
@@ -137,7 +139,7 @@ async function formSend(t, answers, ip) {
   });
   // 📧 tell Auntie Tobi (best effort, never blocks the client)
   try {
-    const to = core.adminEmails();
+    const to = (await settings()).email ? core.adminEmails() : [];   // Auntie Tobi can switch these emails off in HQ
     if (to.length) await core.sendEmail(to, `✨ Revamp form received — ${c0.name}`,
       `${c0.name}${c0.handle ? ' (@' + c0.handle + ')' : ''} just sent their Instagram Revamp form.\n\n` +
       QUESTIONS.map(([k, q]) => a[k] ? `${q}\n${a[k]}` : '').filter(Boolean).join('\n\n') +
@@ -145,4 +147,4 @@ async function formSend(t, answers, ip) {
   } catch (e) { console.error('[glowup] alert email failed', e && e.message); }
   return { ok: true };
 }
-module.exports = { list, save, step, del, reopenForm, lib, libAdd, formGet, formSend, PKGS, STEPS, AREAS, QUESTIONS };
+module.exports = { settings, setSettings, list, save, step, del, reopenForm, lib, libAdd, formGet, formSend, PKGS, STEPS, AREAS, QUESTIONS };

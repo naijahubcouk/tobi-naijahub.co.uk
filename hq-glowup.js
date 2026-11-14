@@ -56,8 +56,10 @@
         var list = cs.filter(function (c) { return column(c) === k[0]; });
         return '<div><div style="font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#6B7280;margin:0 2px 8px">' + k[1] + ' (' + list.length + ')</div>' + list.map(card).join('') + '</div>';
       }).join('') + '</div>' : '<div class="card" style="padding:18px"><b>No clients yet</b><p class="muted" style="margin-top:6px">Tap <b>＋ New client</b> when someone asks about an Instagram Revamp. You’ll get their form link and ready-to-send messages.</p></div>') +
+      '<label style="display:flex;gap:8px;align-items:center;margin-top:16px;font-size:14px;cursor:pointer"><input type="checkbox" id="guMail"' + ((D.settings || {}).email !== false ? ' checked' : '') + ' style="width:18px;height:18px"> 📧 Email me when a client sends their Revamp form</label>' +
       (fin.length ? '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">✅ Finished (' + fin.length + ')</summary><div style="margin-top:8px">' + fin.map(card).join('') + '</div></details>' : '') + '</div>';
     $$('[data-gu]', main).forEach(function (el) { el.onclick = function () { client(el.dataset.gu); }; });
+    $('#guMail').onchange = async function () { var on = this.checked; try { D.settings = (await X.api('gu-settings', { settings: { email: on } })).settings; X.toast(on ? '📧 You’ll get an email when a form comes in' : 'No more form emails — they still show on HQ Today'); } catch (e) { X.toast(e.message); this.checked = !on; } };
   }
 
   // ── one client ──

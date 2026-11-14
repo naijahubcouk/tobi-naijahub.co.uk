@@ -380,7 +380,7 @@ exports.handler = handler(async (ctx) => {
       }
       return sunday.forHq(week);
     }
-    case 'gu-list': case 'gu-save': case 'gu-step': case 'gu-del': case 'gu-reopen': case 'gu-lib': case 'gu-libadd': case 'gu-listing': {
+    case 'gu-list': case 'gu-save': case 'gu-step': case 'gu-del': case 'gu-reopen': case 'gu-lib': case 'gu-libadd': case 'gu-listing': case 'gu-settings': {
       // ✨ Instagram Glow-Up clients (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
       const gu = require('../glowup');
@@ -389,6 +389,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'gu-del') return gu.del(body.id);
       if (body.action === 'gu-reopen') return { client: await gu.reopenForm(body.id) };
       if (body.action === 'gu-lib') return { lib: await gu.lib() };
+      if (body.action === 'gu-settings') return { settings: await gu.setSettings(body.settings) };
       if (body.action === 'gu-listing') {
         const slug = directory.slugFromLink(body.link), b = slug ? await directory.bySlug(ctx.event, slug) : null;
         if (!b) throw new HttpError(404, 'not_found', 'Couldn’t find that listing — it looks like auntietobi.co.uk/biz/their-business');
