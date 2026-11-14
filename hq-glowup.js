@@ -121,23 +121,77 @@
   function auditBox(c) {
     var a = c.audit || {}, S = { good: ['Good', '#057A44', '#fff'], fix: ['Fix', '#FFB81C', '#0F1E36'], missing: ['Missing', '#B42318', '#fff'] };
     var fix = D.areas.filter(function (x) { return (a[x[0]] || {}).s === 'missing'; }).concat(D.areas.filter(function (x) { return (a[x[0]] || {}).s === 'fix'; })).slice(0, 3);
-    return '<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13.5px">' + D.areas.map(function (x) {
+    return '<div style="background:#F3FAF6;border:1px dashed #A7D7BC;border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px;font-size:13.5px"><b>✨ Let Auntie Tobi do the audit</b><div class="muted" style="font-size:12.5px">Add up to 3 screenshots of their Instagram and any notes — she fills in everything below for you to check.</div></div><button class="btn primary sm" id="auAi">✨ Do the audit for me</button></div>' +
+      '<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13.5px">' + D.areas.map(function (x) {
       var v = a[x[0]] || {};
       return '<tr style="border-top:1px solid var(--line,#eee)"><td style="padding:7px 6px;min-width:130px"><b>' + esc(x[1]) + '</b><div class="muted" style="font-size:11.5px">' + esc(x[2]) + '</div></td><td style="padding:7px 6px;white-space:nowrap" data-area="' + x[0] + '">' +
         ['good', 'fix', 'missing'].map(function (s) { var on = v.s === s; return '<button type="button" data-s="' + s + '" data-on="' + (on ? '1' : '') + '" style="border:1.5px solid ' + (on ? S[s][1] : '#E5E1D6') + ';background:' + (on ? S[s][1] : '#fff') + ';color:' + (on ? S[s][2] : '#6B7280') + ';border-radius:8px;padding:4px 9px;font:inherit;font-size:12px;font-weight:700;margin-right:3px;cursor:pointer">' + S[s][0] + '</button>'; }).join('') +
         '</td><td style="padding:7px 6px;width:45%"><input data-note="' + x[0] + '" value="' + esc(v.note || '') + '" placeholder="One line on why" style="font-size:13px"></td></tr>';
     }).join('') + '</table></div>' +
-      '<label style="margin-top:10px;font-size:13px">Overall notes</label><textarea id="auNote" rows="2" style="font-size:13.5px">' + esc(c.auditNote || '') + '</textarea>' +
+      '<label style="margin-top:10px;font-size:13px">Overall notes</label><textarea id="auNote" rows="' + (c.auditNote && c.auditNote.length > 120 ? 6 : 2) + '" style="font-size:13.5px">' + esc(c.auditNote || '') + '</textarea>' +
+      '<div id="auBios">' + biosHtml(c.bios) + '</div>' +
       (fix.length ? '<div style="margin-top:8px;font-size:13.5px"><b>Fix first:</b> ' + fix.map(function (x) { return esc(x[1]); }).join(' · ') + '</div>' : '') +
       '<p class="muted" style="font-size:12.5px;margin-top:6px">📷 Save “before” screenshots of their bio, grid and highlights now, for the before-and-after.</p>' +
       '<div style="text-align:right;margin-top:6px"><button class="btn primary sm" id="auSave">Save audit</button></div>';
   }
+  function biosHtml(b) {
+    if (!b || !b.length) return '';
+    return '<div style="margin-top:10px"><div style="font-size:13px;font-weight:700">✍🏾 New bio ideas</div>' + b.map(function (x, i) { return '<div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px"><textarea data-bio="' + i + '" rows="3" style="flex:1;font-size:13.5px">' + esc(x) + '</textarea><button type="button" class="btn ghost sm" data-bioc="' + i + '">📋</button></div>'; }).join('') + '</div>';
+  }
+  function bindBios() { $$('[data-bioc]').forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText($('[data-bio="' + b.dataset.bioc + '"]').value); X.toast('📋 Bio copied'); } catch (e) {} }; }); }
+  function shrink(file) {
+    return new Promise(function (ok, bad) {
+      var fr = new FileReader(); fr.onerror = function () { bad(new Error('Couldn’t read that picture')); };
+      fr.onload = function () { var im = new Image(); im.onerror = function () { bad(new Error('That doesn’t look like a picture')); }; im.onload = function () { var k = Math.min(1, 1400 / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); ok(cv.toDataURL('image/jpeg', 0.82)); }; im.src = fr.result; };
+      fr.readAsDataURL(file);
+    });
+  }
+  function aiSheet(c) {
+    var shots = [];
+    var s = X.sheet('<h3 style="margin:0 0 4px">✨ Do the audit for me</h3><div class="muted" style="font-size:13px">Best: their profile (with the bio), their grid, and one more (highlights or a Reel). Notes help with what screenshots can’t show.</div>' +
+      '<label class="btn ghost" style="display:block;text-align:center;margin-top:10px;cursor:pointer">📷 Add screenshots (up to 3)<input type="file" id="aiF" accept="image/*" multiple hidden></label>' +
+      '<div id="aiTh" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"></div>' +
+      '<label style="margin-top:10px">Notes <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="aiN" rows="3" placeholder="e.g. posts about twice a month, no prices anywhere, owner never shown, replies slowly to DMs"></textarea>' +
+      '<div class="err" id="aiE" style="display:none;margin-top:8px"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="aiX">Cancel</button><button class="btn primary" id="aiGo">✨ Do the audit</button></div>');
+    var th = function () { $('#aiTh', s).innerHTML = shots.map(function (u, i) { return '<div style="position:relative"><img src="' + u + '" style="width:84px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #E5E1D6"><button type="button" data-rm="' + i + '" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#0F1E36;color:#fff;cursor:pointer">✕</button></div>'; }).join(''); $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { shots.splice(+b.dataset.rm, 1); th(); }; }); };
+    $('#aiF', s).onchange = async function () { var fs = [].slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && shots.length < 3; i++) { try { shots.push(await shrink(fs[i])); } catch (e) { X.toast(e.message); } } th(); };
+    $('#aiX', s).onclick = function () { s.remove(); };
+    $('#aiGo', s).onclick = async function () {
+      var b = this, err = $('#aiE', s); err.style.display = 'none';
+      if (!shots.length && !$('#aiN', s).value.trim()) { err.textContent = 'Add at least one screenshot or some notes.'; err.style.display = 'block'; return; }
+      b.disabled = true; b.textContent = '✨ Auntie Tobi is looking…';
+      try {
+        var r = await X.api('gu-ai-audit', { id: c.id, shots: shots, notes: $('#aiN', s).value });
+        s.remove(); fillAudit(r);
+      } catch (e) { err.textContent = e.message; err.style.display = 'block'; b.disabled = false; b.textContent = '✨ Do the audit'; }
+    };
+  }
+  // put Auntie Tobi's audit into the boxes (not saved until Save audit)
+  function fillAudit(r) {
+    var COL = { good: ['#057A44', '#fff'], fix: ['#FFB81C', '#0F1E36'], missing: ['#B42318', '#fff'] };
+    $$('[data-area]').forEach(function (td) {
+      var a = r.audit[td.dataset.area] || {};
+      $$('[data-s]', td).forEach(function (x) { var on = x.dataset.s === a.s; x.dataset.on = on ? '1' : ''; x.style.background = on ? COL[a.s][0] : '#fff'; x.style.color = on ? COL[a.s][1] : '#6B7280'; x.style.borderColor = on ? COL[a.s][0] : '#E5E1D6'; });
+      var n = $('[data-note="' + td.dataset.area + '"]'); if (n) n.value = a.note || '';
+    });
+    var note = $('#auNote'); note.value = (r.overall || '') + (r.fixFirst && r.fixFirst.length ? '\n\nFix first:\n' + r.fixFirst.map(function (f, i) { return (i + 1) + '. ' + f; }).join('\n') : ''); note.rows = 7;
+    $('#auBios').innerHTML = biosHtml(r.bios); bindBios();
+    var fb = $('#afB'); if (fb && r.followers && !fb.value) fb.value = r.followers;
+    $('#auNote').scrollIntoView({ block: 'center', behavior: 'smooth' });
+    X.toast('✨ Done — check it, change anything, then tap Save audit');
+  }
   function bindAudit(c) {
+    $('#auAi').onclick = function () { aiSheet(c); };
+    bindBios();
     var COL = { good: ['#057A44', '#fff'], fix: ['#FFB81C', '#0F1E36'], missing: ['#B42318', '#fff'] };
     $$('[data-area]').forEach(function (td) { td.onclick = function (e) { var b = e.target.closest('[data-s]'); if (!b) return; var was = b.dataset.on === '1'; $$('[data-s]', td).forEach(function (x) { x.dataset.on = ''; x.style.background = '#fff'; x.style.color = '#6B7280'; x.style.borderColor = '#E5E1D6'; }); if (!was) { var col = COL[b.dataset.s]; b.dataset.on = '1'; b.style.background = col[0]; b.style.color = col[1]; b.style.borderColor = col[0]; } }; });
     $('#auSave').onclick = async function () {
       var a = {}; $$('[data-area]').forEach(function (td) { var on = $('[data-on="1"]', td), note = $('[data-note="' + td.dataset.area + '"]').value.trim(); if (on || note) a[td.dataset.area] = { s: on ? on.dataset.s : '', note: note }; });
-      try { var cl = await save({ audit: a, auditNote: $('#auNote').value }); if (Object.keys(a).length >= 8 && !(cl.done || {})[4]) { var r = await X.api('gu-step', { id: cl.id, n: 4, on: true }); put(r.client); } client(cur.id); } catch (e) { X.toast(e.message); }
+      var bios = $$('[data-bio]').map(function (t) { return t.value.trim(); }).filter(Boolean), fb = $('#afB'), extra = { audit: a, auditNote: $('#auNote').value };
+      if (bios.length) extra.bios = bios;
+      if (fb && fb.value.trim() && !((cur.after || {}).before)) extra.after = Object.assign({}, cur.after || {}, { before: fb.value.trim() });
+      try { var cl = await save(extra); if (Object.keys(a).length >= 8 && !(cl.done || {})[4]) { var r = await X.api('gu-step', { id: cl.id, n: 4, on: true }); put(r.client); } client(cur.id); } catch (e) { X.toast(e.message); }
     };
   }
 
