@@ -314,8 +314,12 @@
     var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
     var line = has ? hello(g.over.concat(g.today).filter(function (i) { return !i.cel; }).length, live().filter(function (i) { return i.cel && celSoon(i); }), t) : hello(0, [], t);
     var bg = BGS[ls.get(BGK)] || BGS.white;
-    var html = '<div class="mp mpT" style="padding:14px;position:relative;background:' + bg[0] + ';border-color:' + bg[1] + '"><button class="mpX-pal" data-mp-pal aria-label="Change colour">🎨</button>' +
-      '<div class="mpX-pk" data-mp-pk hidden>' + Object.keys(BGS).map(function (k) { return '<button data-bg="' + k + '" aria-label="' + BGS[k][2] + '" title="' + BGS[k][2] + '" style="background:' + BGS[k][0] + ';border-color:' + (k === (ls.get(BGK) || 'white') ? '#057A44' : BGS[k][1]) + '">' + (k === (ls.get(BGK) || 'white') ? '✓' : '') + '</button>'; }).join('') + '</div>' +
+    var pal = '<button class="mpX-pal" data-mp-pal aria-label="Change colour">🎨</button>' +
+      '<div class="mpX-pk" data-mp-pk hidden>' + Object.keys(BGS).map(function (k) { return '<button data-bg="' + k + '" aria-label="' + BGS[k][2] + '" title="' + BGS[k][2] + '" style="background:' + BGS[k][0] + ';border-color:' + (k === (ls.get(BGK) || 'white') ? '#057A44' : BGS[k][1]) + '">' + (k === (ls.get(BGK) || 'white') ? '✓' : '') + '</button>'; }).join('') + '</div>';
+    // On the My Plan page the greeting stays on Home — the page shows a plain "My Plan" title instead (Nov 2026)
+    if (onPage) var html = '<div class="mpS-hd" style="position:relative;padding-right:44px"><h2>My Plan</h2><div>' + dateLine + '</div>' + pal.replace('top:10px', '') + '</div>' +
+      '<div class="mp mpT" style="padding:14px;margin-top:10px;background:' + bg[0] + ';border-color:' + bg[1] + '">';
+    else var html = '<div class="mp mpT" style="padding:14px;position:relative;background:' + bg[0] + ';border-color:' + bg[1] + '">' + pal +
       '<div class="mpX-hd"><div class="mpX-av' + (h >= 17 ? ' ev' : '') + '">' + (h < 17 ? gr[0] : '🌙') + '</div><div style="min-width:0"><div class="mpX-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + '</div><div class="mpX-dt">' + dateLine + '</div></div></div>' +
       (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '');
     var body = '';
@@ -338,14 +342,14 @@
       // 4 · Shopping
       if (sl0) tiles += '<div class="mpX-tl mpX-s" data-mp-shop><div class="l">Shopping</div><b>🛒 ' + esc(sl0.name) + '</b><small>' + (sleft ? sleft + ' to buy' : 'All bought ✓') + '</small></div>';
       else tiles += '<div class="mpX-tl mpX-s" data-mp-shop><div class="l">Shopping</div><b>🛒 Start a list</b><small>Naija groceries & more</small></div>';
-      body += '<div class="mpX-tiles">' + tiles + '</div>';
+      body += '<div class="mpX-tiles"' + (onPage ? ' style="margin-top:0"' : '') + '>' + tiles + '</div>';
     } else if (!hideNew && !onPage) {
       body += '<div class="mpT-row mpT-shop" style="margin-top:12px"><span class="mpT-ic">💚</span><div class="mpT-t">New: My Plan<small>Remember bills, birthdays and shopping in one place</small></div><button class="mpT-x" data-mp-hide aria-label="Hide">✕</button></div>' +
         '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Try My Plan FREE</button></div>';
     }
     var sl = P.sun && P.sun.latest;
     if (sl && t >= sl.week && t <= addDays(sl.week, 2)) body += '<div class="mpX-row" data-mp-sun>📰 Your Sunday Update is here<span>Read ›</span></div>';
-    if (mo) body += '<button class="mpX-q" data-mp-mo>“' + esc(mo.text) + '”</button>';
+    if (mo && !onPage) body += '<button class="mpX-q" data-mp-mo>“' + esc(mo.text) + '”</button>';
     return html + body + '</div>';
   }
   function bindToday(root) {
