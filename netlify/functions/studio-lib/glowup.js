@@ -34,7 +34,6 @@ const QUESTIONS = [   // short on purpose: name, Instagram, town and contact com
   ['products', 'Your top 3 products or services, with prices', 'long'],
   ['customers', 'Who are your best customers? (age, where they live, what they buy)', 'long'],
   ['film', 'Are you happy to film yourself for Reels?', 'choice', ['Yes', 'A little', 'No — faceless content please']],
-  ['now', 'Your numbers now: followers, and roughly how many enquiries a week', 'short'],
   ['share', 'Can we share your before-and-after as an example?', 'choice', ['Yes', 'No']],
 ]
 const clean = (v, n) => core.cleanText(String(v == null ? '' : v), n || 200);
@@ -76,7 +75,7 @@ async function save(raw, by) {
       const a = {}; QUESTIONS.forEach(([k, , type, opts]) => { const v = raw.answers[k]; if (v) a[k] = type === 'choice' ? (opts.indexOf(v) >= 0 ? v : '') : clean(v, type === 'long' ? 1200 : 300); });
       c.form = { answers: a, at: core.nowIso(), by: 'hq' }; c.done = c.done || {}; if (Object.keys(a).length) c.done['3'] = c.done['3'] || core.nowIso();
     }
-    if (has('after') && raw.after) c.after = { followers: clean(raw.after.followers, 20), views: clean(raw.after.views, 20), enquiries: clean(raw.after.enquiries, 20), at: core.nowIso() };
+    if (has('after') && raw.after) c.after = { before: clean(raw.after.before, 20), followers: clean(raw.after.followers, 20), views: clean(raw.after.views, 20), enquiries: clean(raw.after.enquiries, 20), at: core.nowIso() };
     if (!c.pkg) c.pkg = 'glowup';
     if (c.price == null) c.price = PKGS[c.pkg].price;
     if (c.paidAt && !c.done['2']) { c.done['1'] = c.done['1'] || core.nowIso(); c.done['2'] = core.nowIso(); }

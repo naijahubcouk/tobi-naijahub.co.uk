@@ -97,7 +97,7 @@
 
   function formBox(c, url) {
     var f = c.form, h = '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><input readonly value="' + esc(url) + '" style="flex:1;min-width:220px;font-size:13px"><button class="btn ghost sm" id="fCopy">📋 Copy link</button><a class="btn ghost sm" href="' + esc(url) + '" target="_blank" rel="noopener">👁 Open</a>' + (f ? '<button class="btn ghost sm" id="fRe">↩️ Let them edit it</button>' : '') + '<button class="btn ghost sm" id="fType">✏️ ' + (f ? 'Edit answers' : 'Type their answers') + '</button></div>';
-    if (!f) return h + '<p class="muted" style="font-size:13px;margin-top:8px">Send them this link (message B below) — 6 quick questions. Or ask on WhatsApp and tap ✏️ Type their answers. Step 3 ticks itself either way.</p>';
+    if (!f) return h + '<p class="muted" style="font-size:13px;margin-top:8px">Send them this link (message B below) — 5 quick questions. Or ask on WhatsApp and tap ✏️ Type their answers. Step 3 ticks itself either way.</p>';
     return h + '<div style="margin-top:10px;font-size:14px">' + D.questions.map(function (q, i) { var a = f.answers[q[0]]; return a ? '<div style="padding:7px 0;border-top:1px solid var(--line,#eee)"><div class="muted" style="font-size:12.5px">' + (i + 1) + '. ' + esc(q[1]) + '</div><div style="white-space:pre-wrap">' + esc(a) + '</div></div>' : ''; }).join('') + '<div class="muted" style="font-size:12px;margin-top:4px">Sent ' + nice(f.at) + '</div></div>';
   }
   function bindForm(c, url) {
@@ -163,22 +163,22 @@
   }
 
   function checkBox(c) {
-    var a = c.after || {}, now = c.form && c.form.answers.now;
-    return (now ? '<div style="font-size:13.5px;margin-bottom:8px"><span class="muted">Before (from their form):</span> ' + esc(now) + '</div>' : '') +
-      '<div class="row" style="gap:6px;flex-wrap:wrap"><div style="flex:1;min-width:110px"><label style="font-size:12.5px">Followers now</label><input id="afF" value="' + esc(a.followers || '') + '" inputmode="numeric"></div><div style="flex:1;min-width:110px"><label style="font-size:12.5px">Average Reel views</label><input id="afV" value="' + esc(a.views || '') + '" inputmode="numeric"></div><div style="flex:1;min-width:110px"><label style="font-size:12.5px">Enquiries a week</label><input id="afE" value="' + esc(a.enquiries || '') + '" inputmode="numeric"></div></div>' +
+    var a = c.after || {};
+    return '<p class="muted" style="font-size:12.5px;margin-bottom:6px">Note their followers from Instagram when you start the audit, then again at 30 days.</p>' +
+      '<div class="row" style="gap:6px;flex-wrap:wrap"><div style="flex:1;min-width:110px"><label style="font-size:12.5px">Followers before</label><input id="afB" value="' + esc(a.before || '') + '" inputmode="numeric"></div><div style="flex:1;min-width:110px"><label style="font-size:12.5px">Followers at 30 days</label><input id="afF" value="' + esc(a.followers || '') + '" inputmode="numeric"></div><div style="flex:1;min-width:110px"><label style="font-size:12.5px">Average Reel views</label><input id="afV" value="' + esc(a.views || '') + '" inputmode="numeric"></div><div style="flex:1;min-width:110px"><label style="font-size:12.5px">Enquiries a week</label><input id="afE" value="' + esc(a.enquiries || '') + '" inputmode="numeric"></div></div>' +
       '<div style="text-align:right;margin-top:8px"><button class="btn primary sm" id="afSave">Save numbers</button></div>';
   }
-  function bindCheck(c) { $('#afSave').onclick = async function () { try { var cl = await save({ after: { followers: $('#afF').value.trim(), views: $('#afV').value.trim(), enquiries: $('#afE').value.trim() } }); if (!(cl.done || {})[9]) { var r = await X.api('gu-step', { id: cl.id, n: 9, on: true }); put(r.client); } client(cur.id); } catch (e) { X.toast(e.message); } }; }
+  function bindCheck(c) { $('#afSave').onclick = async function () { try { var cl = await save({ after: { before: $('#afB').value.trim(), followers: $('#afF').value.trim(), views: $('#afV').value.trim(), enquiries: $('#afE').value.trim() } }); if ($('#afF').value.trim() && !(cl.done || {})[9]) { var r = await X.api('gu-step', { id: cl.id, n: 9, on: true }); put(r.client); } client(cur.id); } catch (e) { X.toast(e.message); } }; }
 
   // 💬 messages A–F, filled in for this client
   function msgs(c, formUrl) {
     var nm = (c.name || '').split(/\s+/)[0], due = c.due ? nice(c.due) : '[date]';
     return [
       ['A', 'Packages', 'Hi ' + nm + '! Thank you for asking about the Instagram Glow-Up ✨ We study your page and your competitors, then give you a ready-to-use plan to get more followers and enquiries.\n\n• Starter £' + D.pkgs.starter.price + ' — page review, bio fixes, 10 post and Reel ideas\n• Glow-Up £' + D.pkgs.glowup.price + ' — plus 5 competitors studied, 3 Reel scripts and a 30-day plan\n• Glow-Up + Done for you £' + D.pkgs.dfy.price + ' — plus 9 posts designed for you\n\nWhich one suits you? 💚'],
-      ['B', 'Form link', 'Thank you, payment received! 💚 Please answer 6 quick questions so we can start: ' + formUrl + '\nIt takes about 3 minutes. Your Glow-Up starts as soon as it’s back.'],
+      ['B', 'Form link', 'Thank you, payment received! 💚 Please answer 5 quick questions so we can start: ' + formUrl + '\nIt takes about 2 minutes. Your Glow-Up starts as soon as it’s back.'],
       ['C', 'Start date', 'Got it, thank you! We’re starting on ' + (c.handle ? '@' + c.handle : 'your page') + ' now. You’ll have your Glow-Up by ' + due + ' ✨'],
       ['D', 'Report ready', 'Your Instagram Glow-Up is ready ✨ [report link]\nStart with “Fix first” — those 3 changes make the biggest difference. I’ve sent a short voice note walking you through it. Any questions, just reply here.'],
-      ['E', '30-day check-in', 'Hi ' + nm + ', it’s been 30 days since your Glow-Up! How’s it going? Could you send me your followers, average Reel views and enquiries now, so we can see what’s changed? 📈'],
+      ['E', '30-day check-in', 'Hi ' + nm + ', it’s been 30 days since your Glow-Up! How’s it going? Have you noticed more views, messages or sales? Tell me what’s changed and what’s worked best for you 📈'],
       ['F', 'Testimonial', 'So glad it’s helping! 💚 Would you write one or two lines about your experience? And are you happy for us to share your before-and-after as an example?'],
     ];
   }

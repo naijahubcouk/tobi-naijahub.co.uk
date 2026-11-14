@@ -45,7 +45,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   fetch(API + '?t=' + encodeURIComponent(t)).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong.'); return j; }); }).then(function (d) {
     if (d.done) return msg('<b>Thank you! 💚</b>We already have your answers and we’re working on your page. If you want to change anything, just message Auntie Tobi.');
     var A = d.answers || {};
-    app.innerHTML = '<div class="hero"><div class="badge">✨ Instagram Glow-Up</div><h1>Hi ' + esc(d.name) + '! Let’s get your page glowing</h1><p>Just 6 quick questions (about 3 minutes). We already have your details from your Auntie Tobi listing.</p></div>' +
+    app.innerHTML = '<div class="hero"><div class="badge">✨ Instagram Glow-Up</div><h1>Hi ' + esc(d.name) + '! Let’s get your page glowing</h1><p>Just 5 quick questions (about 2 minutes). We already have your details from your Auntie Tobi listing.</p></div>' +
       '<form class="card" id="f" novalidate>' + d.questions.map(function (q, i) {
         var k = q[0], lab = '<label for="q_' + k + '">' + (i + 1) + '. ' + esc(q[1]) + '</label>';
         if (q[2] === 'choice') return '<div class="q">' + lab.replace('<label for="q_' + k + '">', '<label>') + '<div class="chips" data-k="' + k + '">' + q[3].map(function (o) { return '<button type="button" class="chip" data-v="' + esc(o) + '" aria-pressed="' + (A[k] === o) + '">' + esc(o) + '</button>'; }).join('') + '</div></div>';
