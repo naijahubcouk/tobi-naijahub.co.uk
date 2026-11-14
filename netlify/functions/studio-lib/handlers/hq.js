@@ -380,6 +380,15 @@ exports.handler = handler(async (ctx) => {
       }
       return sunday.forHq(week);
     }
+    case 'fl-get': case 'fl-add': case 'fl-del': case 'fl-target': {
+      // 📈 Instagram + WhatsApp Channel follower tracker (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
+      const fl = require('../followers');
+      if (body.action === 'fl-add') return fl.add(body.day, body.ig, body.ch);
+      if (body.action === 'fl-del') return fl.del(body.day);
+      if (body.action === 'fl-target') return fl.target(body.kind, body.n, body.by);
+      return fl.get();
+    }
     case 'myplan-stats': {
       // 💚 My Plan sign-ups — counts only, never anyone's plan (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
