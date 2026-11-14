@@ -1084,7 +1084,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     if (type === 'channels') {
       var on = p.channels && p.channels.length ? p.channels : ['instagram'];
       return '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-multi="channels">' +
-        CHANNELS.map(function (c) { return '<button type="button" class="chip" data-val="' + c[0] + '" aria-pressed="' + (on.indexOf(c[0]) > -1) + '">' + esc(c[1]) + '</button>'; }).join('') + '</div><div class="hint">Tick all that apply.</div></div>';
+        CHANNELS.filter(function (c) { return c[0] !== 'listing'; }).map(function (c) { return '<button type="button" class="chip" data-val="' + c[0] + '" aria-pressed="' + (on.indexOf(c[0]) > -1) + '">' + esc(c[1]) + '</button>'; }).join('') + '</div><div class="hint">Tick all that apply.</div></div>';
     }
     if (type === 'main') {
       return '<div><span class="f" style="display:block;font-weight:700;font-size:15.5px;margin-bottom:6px">' + esc(label) + '</span><div class="chips" data-single="mainChannel" id="mainChips"></div><div class="hint">Your posts’ calls to action will point here.</div></div>';
@@ -1200,6 +1200,10 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
                 '<div class="hint">We’ll read your website and draft your details — free, it doesn’t use your AI credits.</div>') + '</div>' +
             '<div class="err hidden" id="fbErr" role="alert"></div>' +
           '</div>' +
+          (L ? '' : '<div class="card stack" style="margin-top:12px;background:#F2FAF5;border-color:#CDE8D9"><div style="font-weight:800;font-size:17px">🇳🇬 Nigerian business owner in the UK?</div>' +
+            '<div style="font-size:15.5px;line-height:1.5">Add your business to Auntie Tobi for free, so Nigerians across the UK can find you in the app and on the website.</div>' +
+            '<a class="btn gold block" href="/add-business?from=studio" style="text-align:center;text-decoration:none">➕ Add my business to Auntie Tobi</a>' +
+            '<div class="hint" style="margin:0">Free · takes about 2 minutes · then come back here to carry on</div></div>') +
           '<button class="btn primary block" style="margin-top:16px" id="fbNext">' + (L || p._webRead ? 'Check my details →' : 'Continue') + '</button>' +
           (L || p._webRead ? '' : '<button class="btn link block" id="fbSkip" style="margin-top:6px">I’m not on Auntie Tobi and don’t have a website — I’ll type my details</button>') + '</main>';
         var err = $('#fbErr');
@@ -1270,7 +1274,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     function collect() {
       $$('[name]', app).forEach(function (el) { p[el.name] = el.name === 'ctas' ? el.value.split('\n') : el.value; });
       var tc = $('[data-single=tone] [aria-pressed=true]', app); if (tc) p.tone = tc.dataset.val;
-      var mc = $('[data-multi=channels]', app); if (mc) p.channels = $$('.chip[aria-pressed=true]', mc).map(function (c) { return c.dataset.val; });
+      var mc = $('[data-multi=channels]', app); if (mc) { var hadL = (p.channels || []).indexOf('listing') > -1; p.channels = $$('.chip[aria-pressed=true]', mc).map(function (c) { return c.dataset.val; }); if (hadL) p.channels.push('listing'); }   // the Auntie Tobi listing isn't a chip any more, but stays if linked
       var mn = $('#mainChips [aria-pressed=true]', app); if (mn) p.mainChannel = mn.dataset.val;
     }
     function drawMain() {
