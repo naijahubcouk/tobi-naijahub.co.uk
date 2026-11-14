@@ -394,6 +394,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'gu-ai-plan') return gu.aiPlan(body.id, body.kind);
       if (body.action === 'gu-ai-audit') return gu.aiAudit(body.id, body.shots, body.notes);
       if (body.action === 'gu-settings') return { settings: await gu.setSettings(body.settings) };
+      if (body.action === 'gu-listing' && body.q != null) return { results: await directory.search(ctx.event, String(body.q).slice(0, 80), 8) };
       if (body.action === 'gu-listing') {
         const slug = directory.slugFromLink(body.link), b = slug ? await directory.bySlug(ctx.event, slug) : null;
         if (!b) throw new HttpError(404, 'not_found', 'Couldn’t find that listing — it looks like auntietobi.co.uk/biz/their-business');

@@ -353,7 +353,7 @@
   function details(c) {
     var p = c || { pkg: 'glowup' }, opts = Object.keys(D.pkgs).map(function (k) { return '<option value="' + k + '"' + (p.pkg === k ? ' selected' : '') + '>' + esc(D.pkgs[k].name) + ' — ' + gbp(D.pkgs[k].price) + '</option>'; }).join('');
     var s = X.sheet('<h3 style="margin:0 0 8px">' + (c ? '✏️ ' + esc(c.name) : '＋ New Revamp client') + '</h3>' +
-      '<label>Their Auntie Tobi listing link</label><div class="row" style="gap:6px"><input id="dL" value="' + esc((p.listing || {}).url || '') + '" placeholder="auntietobi.co.uk/biz/their-business" style="flex:1"><button class="btn ghost" id="dLGo" type="button">Fill in</button></div><div class="muted" id="dLMsg" style="font-size:12.5px;margin-top:4px">Fills in the name, Instagram, WhatsApp, category and town for you.</div>' +
+      '<label>Find their Auntie Tobi listing</label><div style="position:relative"><div class="row" style="gap:6px"><input id="dL" value="' + esc((p.listing || {}).url || '') + '" placeholder="Type their business name, or paste their link" autocomplete="off" style="flex:1"><button class="btn ghost" id="dLGo" type="button">Fill in</button></div><div id="dLRes" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #E5E1D6;border-radius:10px;box-shadow:0 8px 24px rgba(15,30,54,.12);z-index:5;max-height:260px;overflow:auto"></div></div><div class="muted" id="dLMsg" style="font-size:12.5px;margin-top:4px">Fills in the name, Instagram, WhatsApp, category and town for you.</div>' +
       '<label>Business name</label><input id="dN" value="' + esc(p.name || '') + '" placeholder="e.g. Saamipeniel Fragrance">' +
       '<label>Instagram handle</label><input id="dH" value="' + esc(p.handle ? '@' + p.handle : '') + '" placeholder="@yourbusiness">' +
       '<div class="row" style="gap:8px"><div style="flex:2"><label>Package</label><select id="dP">' + opts + '</select></div><div style="flex:1"><label>Price (£)</label><input id="dPr" inputmode="numeric" value="' + esc(p.price != null ? p.price : D.pkgs[p.pkg || 'glowup'].price) + '"></div></div>' +
@@ -364,16 +364,35 @@
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn ghost" id="dX">Cancel</button><button class="btn primary" id="dGo">' + (c ? 'Save' : 'Add client') + '</button></div>');
     $('#dP', s).onchange = function () { $('#dPr', s).value = D.pkgs[this.value].price; };
     var listing = p.listing || null;
-    $('#dLGo', s).onclick = async function () {
-      var v = $('#dL', s).value.trim(), msg = $('#dLMsg', s); if (!v) return;
-      this.disabled = true; msg.textContent = 'Looking it up…';
+    var isLink = function (v) { return /\/biz\/|auntietobi\.co\.uk|^https?:/i.test(v); }, res = $('#dLRes', s), tmr = null, seq = 0;
+    var addUrl = SITE + '/add-business';
+    $('#dL', s).oninput = function () {
+      var v = this.value.trim(); clearTimeout(tmr);
+      if (v.length < 2 || isLink(v)) { res.style.display = 'none'; return; }
+      tmr = setTimeout(async function () {
+        var my = ++seq, r;
+        try { r = (await X.api('gu-listing', { q: v })).results || []; } catch (e) { return; }
+        if (my !== seq) return;
+        res.innerHTML = r.length ? r.map(function (b) { return '<button type="button" data-slug="' + esc(b.slug) + '" style="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #F0EDE5;background:#fff;padding:9px 12px;cursor:pointer;font:inherit"><b style="font-size:14px">' + esc(b.name) + '</b><div class="muted" style="font-size:12.5px">' + esc([b.cat, b.loc].filter(Boolean).join(' · ')) + '</div></button>'; }).join('')
+          : '<div style="padding:10px 12px;font-size:13.5px">Not on Auntie Tobi yet. <a href="#" id="dLAdd">📋 Copy the Add your business link</a> to send them.</div>';
+        res.style.display = 'block';
+        $$('[data-slug]', res).forEach(function (b) { b.onmousedown = function (e) { e.preventDefault(); res.style.display = 'none'; pick(b.dataset.slug); }; });
+        var ad = $('#dLAdd', res); if (ad) ad.onmousedown = function (e) { e.preventDefault(); try { navigator.clipboard.writeText(addUrl); X.toast('📋 Add your business link copied'); } catch (x) { prompt('Copy the link', addUrl); } };
+      }, 250);
+    };
+    $('#dL', s).onblur = function () { setTimeout(function () { res.style.display = 'none'; }, 150); };
+    $('#dL', s).onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); var f = $('[data-slug]', res); if (f && res.style.display !== 'none') { res.style.display = 'none'; pick(f.dataset.slug); } else $('#dLGo', s).click(); } };
+    $('#dLGo', s).onclick = function () { var v = $('#dL', s).value.trim(); if (!v) return; if (!isLink(v)) { var f = $('[data-slug]', res); if (f) { res.style.display = 'none'; return pick(f.dataset.slug); } } pick(v); };
+    async function pick(v) {
+      var msg = $('#dLMsg', s), go = $('#dLGo', s);
+      go.disabled = true; msg.textContent = 'Looking it up…';
       try {
-        var L = (await X.api('gu-listing', { link: v })).listing; listing = L;
+        var L = (await X.api('gu-listing', { link: v })).listing; listing = L; $('#dL', s).value = L.url;
         $('#dN', s).value = L.name; if (L.ig) $('#dH', s).value = '@' + String(L.ig).replace(/^@/, ''); if (L.wa || L.phone) $('#dW', s).value = L.wa || L.phone; if (L.cat && !$('#dC', s).value) $('#dC', s).value = L.cat.toLowerCase();
         msg.innerHTML = '✅ Found <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '');
       } catch (e) { msg.textContent = e.message; }
-      this.disabled = false;
-    };
+      go.disabled = false;
+    }
     $('#dX', s).onclick = function () { s.remove(); };
     $('#dGo', s).onclick = async function () {
       var f = { listing: listing, name: $('#dN', s).value.trim(), handle: $('#dH', s).value.trim(), pkg: $('#dP', s).value, price: $('#dPr', s).value, phone: $('#dW', s).value.trim(), cat: $('#dC', s).value.trim(), paidAt: $('#dPd', s).value, due: $('#dD', s).value, notes: $('#dNo', s).value };
