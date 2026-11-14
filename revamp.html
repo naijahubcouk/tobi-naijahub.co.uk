@@ -32,7 +32,19 @@ h2 i{font-style:normal;width:24px;height:24px;border-radius:50%;background:#057A
 .note{font-size:13.5px;color:#6B7280;text-align:center;line-height:1.6}
 .wa{display:block;text-align:center;background:#25D366;color:#fff;text-decoration:none;font-weight:800;border-radius:12px;padding:15px;font-size:16px}
 .stat{display:flex;gap:10px}.stat div{flex:1;background:#F6F4EE;border-radius:12px;padding:12px;text-align:center}.stat b{display:block;font-size:22px}.stat span{font-size:12.5px;color:#6B7280}
-@media print{.top,.wa,.cp{display:none}body{background:#fff}.card{break-inside:avoid}}
+.pbar{height:10px;border-radius:6px;background:#E8E3D6;overflow:hidden;margin:8px 0 4px}.pbar i{display:block;height:100%;background:linear-gradient(90deg,#057A44,#2FA36B);transition:width .3s}
+.pnum{display:flex;justify-content:space-between;font-size:13.5px;font-weight:700}.pnum span{color:#6B7280;font-weight:600}
+details.stg{border-top:1px solid #F0EDE5;padding:4px 0}details.stg:first-of-type{border-top:0}
+details.stg summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-weight:800;font-size:15.5px}
+details.stg summary::-webkit-details-marker{display:none}details.stg summary small{font-size:12.5px;font-weight:700;color:#6B7280;background:#F6F4EE;border-radius:10px;padding:2px 9px}
+details.stg summary small.all{background:#E3F2EA;color:#057A44}
+.it{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}.it:hover{background:#FAF8F3}
+.it .bx{flex-shrink:0;width:26px;height:26px;border-radius:8px;border:2px solid #A7D7BC;background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;margin-top:1px;transition:all .15s}
+.it.on .bx{background:#057A44;border-color:#057A44}.it.on b{text-decoration:line-through;color:#6B7280}
+.it b{display:block;font-size:15.5px;line-height:1.35}.it small{display:block;color:#4B5563;font-size:13.5px;margin-top:2px}
+.yay{background:#FFF6DC;border-radius:12px;padding:12px;text-align:center;font-weight:800;margin-top:8px}
+.hqbar{background:#FFB81C;color:#0F1E36;text-align:center;font-size:13px;font-weight:700;padding:7px}
+@media print{.top,.wa,.cp,.hqbar{display:none}details.stg{display:block}body{background:#fff}.card{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -40,13 +52,15 @@ h2 i{font-style:normal;width:24px;height:24px;border-radius:50%;background:#057A
 <div class="wrap" id="app"><div class="card"><p class="note">Loading your Revamp…</p></div></div>
 <script>
 (function () {
-  var r = new URLSearchParams(location.search).get('r') || '', app = document.getElementById('app');
+  var qs = new URLSearchParams(location.search), r = qs.get('r') || '', hq = qs.get('hq') === '1', app = document.getElementById('app');
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var nice = function (d) { return new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); };
-  fetch('/.netlify/functions/glowup?r=' + encodeURIComponent(r)).then(function (x) { return x.json().then(function (j) { if (!x.ok) throw new Error(j.message || 'Something went wrong.'); return j; }); }).then(function (d) {
+  fetch('/.netlify/functions/glowup?r=' + encodeURIComponent(r) + (hq ? '&hq=1' : '')).then(function (x) { return x.json().then(function (j) { if (!x.ok) throw new Error(j.message || 'Something went wrong.'); return j; }); }).then(function (d) {
     var n = 0, sec = function (title, body) { n++; return '<div class="card"><h2><i>' + n + '</i>' + title + '</h2>' + body + '</div>'; }, P = d.plan || {};
     var LAB = { good: 'Good', fix: 'Fix', missing: 'Missing' };
     var h = '<div class="hero"><div class="badge">✨ Your Instagram Revamp</div><h1>' + esc(d.name) + '</h1><p>' + (d.handle ? '@' + esc(d.handle) + ' · ' : '') + 'Prepared by Auntie Tobi · ' + nice(d.date) + '</p></div>';
+    var L = d.checklist || [], T = d.ticks || {};
+    if (L.length) h += '<div class="card" id="cl"><h2>✅ Your Revamp checklist</h2><p style="font-size:14.5px;color:#374151">Your step-by-step plan. Tick each step as you do it — your progress saves by itself, so come back to this page any time.</p><div id="clP"></div><div id="clS"></div></div>';
     if (d.summary) h += sec('Your page in a nutshell', '<div class="txt">' + esc(d.summary) + '</div>');
     if (d.audit.length) h += sec('Your page check', d.audit.map(function (a) { return '<div class="row"><span class="s ' + (a.s || 'none') + '">' + (LAB[a.s] || 'Check') + '</span><div><b>' + esc(a.name) + '</b><small>' + esc(a.note) + '</small></div></div>'; }).join(''));
     if (d.bios.length) h += sec('Your new bio', '<div class="note" style="text-align:left">Pick one, change anything, and paste it into your Instagram bio.</div>' + d.bios.map(function (b, i) { return '<div class="bio"><button class="cp" data-cp="' + i + '">Copy</button>' + esc(b) + '</div>'; }).join(''));
@@ -60,6 +74,34 @@ h2 i{font-style:normal;width:24px;height:24px;border-radius:50%;background:#057A
     h += '<a class="wa" href="https://wa.me/447594674940?text=' + encodeURIComponent('Hi Auntie Tobi 👋🏾 I have a question about my Instagram Revamp (' + d.name + '): ') + '" target="_blank" rel="noopener">💬 Questions? Message Auntie Tobi</a>' +
       '<p class="note">💚 Auntie Tobi — Your UK Guide for Nigerians · This report is just for you, please don’t share the link.</p>';
     app.innerHTML = h;
+    if (hq) document.body.insertAdjacentHTML('afterbegin', '<div class="hqbar">👀 You’re viewing as Auntie Tobi — opens aren’t counted. Ticks you make here save for the client.</div>');
+    if (L.length) {
+      var ST = d.stages || [], open1 = null, auto = '';
+      var paint = function () {
+        var n = L.filter(function (x) { return T[x.i]; }).length, pc = Math.round(n * 100 / L.length);
+        document.getElementById('clP').innerHTML = '<div class="pnum">' + n + ' of ' + L.length + ' done <span>' + pc + '%</span></div><div class="pbar"><i style="width:' + pc + '%"></i></div>' + (n === L.length ? '<div class="yay">🎉 You’ve done every step — amazing! Send Auntie Tobi your numbers.</div>' : '');
+        if (open1 === null) { var f = ST.filter(function (g) { return L.some(function (x) { return x.st === g[0] && !T[x.i]; }); })[0]; open1 = f ? f[0] : ''; }
+        document.getElementById('clS').innerHTML = ST.map(function (g) {
+          var it = L.filter(function (x) { return x.st === g[0]; }); if (!it.length) return '';
+          var dn = it.filter(function (x) { return T[x.i]; }).length, was = document.querySelector('details[data-st="' + g[0] + '"]'), op = g[0] === auto || (was ? was.open : g[0] === open1);
+          return '<details class="stg" data-st="' + g[0] + '"' + (op ? ' open' : '') + '><summary>' + esc(g[1]) + ' <small class="' + (dn === it.length ? 'all' : '') + '">' + (dn === it.length ? '✓ Done' : dn + '/' + it.length) + '</small></summary>' +
+            it.map(function (x) { return '<div class="it' + (T[x.i] ? ' on' : '') + '" data-i="' + x.i + '" role="checkbox" aria-checked="' + (T[x.i] ? 'true' : 'false') + '" tabindex="0"><span class="bx">' + (T[x.i] ? '✓' : '') + '</span><div><b>' + esc(x.t) + '</b>' + (x.how ? '<small>' + esc(x.how) + '</small>' : '') + '</div></div>'; }).join('') + '</details>';
+        }).join('');
+        [].forEach.call(document.querySelectorAll('[data-i]'), function (el) { el.onclick = function () { flip(el.dataset.i); }; el.onkeydown = function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(el.dataset.i); } }; });
+      };
+      var flip = function (i) {
+        var on = !T[i]; if (on) T[i] = 'now'; else delete T[i];
+        var me = L.filter(function (x) { return x.i === i; })[0], keys = ST.map(function (g) { return g[0]; }).filter(function (k) { return L.some(function (x) { return x.st === k; }); });
+        auto = '';
+        if (on && me && L.every(function (x) { return x.st !== me.st || T[x.i]; })) { auto = keys[keys.indexOf(me.st) + 1] || ''; var dd = document.querySelector('details[data-st="' + me.st + '"]'); if (dd && auto) dd.open = false; }
+        paint();
+        fetch('/.netlify/functions/glowup', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'tick', r: r, i: i, on: on }) })
+          .then(function (x) { return x.json().then(function (j) { if (!x.ok) throw new Error(j.message || 'Couldn’t save — please try again.'); return j; }); })
+          .then(function (j) { T = j.ticks || T; })
+          .catch(function (e) { if (on) delete T[i]; else T[i] = 'x'; paint(); document.getElementById('clP').insertAdjacentHTML('beforeend', '<p class="note" style="color:#B42318;margin-top:6px">' + esc(e.message) + '</p>'); });
+      };
+      paint();
+    }
     [].forEach.call(document.querySelectorAll('[data-cp]'), function (b) { b.onclick = function () { try { navigator.clipboard.writeText(d.bios[+b.dataset.cp]); b.textContent = 'Copied ✓'; } catch (e) {} }; });
   }).catch(function (x) { app.innerHTML = '<div class="card"><p class="note"><b style="display:block;font-size:18px;color:#0F1E36;margin-bottom:6px">Hmm…</b>' + esc(x.message) + '</p></div>'; });
   document.querySelectorAll('img[data-lsrc]').forEach(function (i) { i.src = i.getAttribute('data-lsrc'); });

@@ -47,7 +47,7 @@
     var card = function (c) {
       var d = c.done || {}, n = stepNow(c), late = c.due && !d[8] && c.due < t, col = column(c);
       var p = col === 'enq' ? pill('Not paid yet', 'y') : col === 'form' ? pill('Form sent', 'y') : col === 'work' ? pill('Step ' + n + ' · ' + D.steps[n - 1], late ? 'r' : 'b') : col === 'sent' ? pill('Check-in ' + nice(c.checkin), 'g') : col === 'check' ? pill(d[9] ? 'Ask for a review' : 'Check-in due', 'r') : pill('Finished', 'g');
-      return '<div class="card" data-gu="' + esc(c.id) + '" style="padding:10px 12px;margin-bottom:8px;cursor:pointer"><b style="display:block">' + esc(c.name) + '</b><div class="muted" style="font-size:12.5px">' + esc((D.pkgs[c.pkg] || {}).name || '') + (c.due && !d[8] ? ' · due ' + nice(c.due) : c.paidAt ? ' · paid ' + nice(c.paidAt) : '') + (late ? ' · <b style="color:#B42318">late</b>' : '') + '</div>' + p + '</div>';
+      return '<div class="card" data-gu="' + esc(c.id) + '" style="padding:10px 12px;margin-bottom:8px;cursor:pointer"><b style="display:block">' + esc(c.name) + '</b><div class="muted" style="font-size:12.5px">' + esc((D.pkgs[c.pkg] || {}).name || '') + (c.due && !d[8] ? ' · due ' + nice(c.due) : c.paidAt ? ' · paid ' + nice(c.paidAt) : '') + (late ? ' · <b style="color:#B42318">late</b>' : '') + (c.reportOn && (c.checklist || []).length ? ' · ✅ ' + clProgress(c).n + '/' + clProgress(c).of : '') + '</div>' + p + '</div>';
     };
     var fin = cs.filter(function (c) { return column(c) === 'done'; });
     main.innerHTML = '<div class="wrap">' +
@@ -88,6 +88,7 @@
       sec('4', '🔍 Page audit', auditBox(c)) +
       (c.pkg === 'starter' ? '' : sec('5', '👀 Competitors', compBox(c))) +
       sec('6', '✨ The plan', planBox(c)) +
+      sec('', '✅ The checklist', checklistBox(c)) +
       sec('7', '📄 The report', reportBox(c)) +
       sec('9', '📈 30-day check-in', checkBox(c)) +
       sec('', '💬 Messages', msgBox(c)) +
@@ -95,7 +96,7 @@
     $$('[data-step]', main).forEach(function (b) { b.onclick = async function () { var k = b.dataset.step, on = !(cur.done || {})[k]; try { var r = await X.api('gu-step', { id: cur.id, n: k, on: on }); put(r.client); client(cur.id); } catch (e) { X.toast(e.message); } }; });
     if ($('#guPaid')) $('#guPaid').onclick = async function () { try { await save({ paidAt: todayIso() }); client(cur.id); } catch (e) { X.toast(e.message); } };
     $('#guDel').onclick = async function () { if (!confirm('Delete ' + c.name + ' and everything saved for them?')) return; try { await X.api('gu-del', { id: c.id }); D.clients = D.clients.filter(function (x) { return x.id !== c.id; }); $('#guBack').click(); } catch (e) { X.toast(e.message); } };
-    bindForm(c, formUrl); bindAudit(c); bindComp(c); bindPlan(c); bindReport(c); bindCheck(c); bindMsgs(c, formUrl);
+    bindForm(c, formUrl); bindAudit(c); bindComp(c); bindPlan(c); bindChecklist(c); bindReport(c); bindCheck(c); bindMsgs(c, formUrl);
   }
   function sec(k, title, body) { var on = k && (cur.done || {})[k]; return '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-weight:800;font-size:15.5px;margin-bottom:8px">' + title + (on ? ' ' + pill('Done', 'g') : '') + '</div>' + body + '</div>'; }
 
@@ -293,6 +294,43 @@
       try { var cl = await save({ plan: plan }); var full = planParts(cl).every(function (x) { return (cl.plan || {})[x[0]]; }); if (full && !(cl.done || {})[6]) { var r = await X.api('gu-step', { id: cl.id, n: 6, on: true }); put(r.client); } client(cur.id); } catch (e) { X.toast(e.message); }
     };
   }
+  // ✅ the checklist — the client ticks it off on their progress page (the report link)
+  var STG = [['today', 'Today (about 30 minutes)'], ['week', 'This week'], ['w1', 'Week 1'], ['w2', 'Week 2'], ['w3', 'Week 3'], ['w4', 'Week 4'], ['day30', 'Day 30']];
+  function clText(list) { var out = []; STG.forEach(function (g) { var it = (list || []).filter(function (x) { return x.st === g[0]; }); if (!it.length) return; out.push(g[1].toUpperCase()); it.forEach(function (x) { out.push('- ' + x.t + (x.how ? ' | ' + x.how : '')); }); out.push(''); }); return out.join('\n').trim(); }
+  function clParse(txt) {
+    var st = '', out = [];
+    String(txt || '').split('\n').forEach(function (ln) {
+      var l = ln.trim(); if (!l) return;
+      var h = l.replace(/[:：]$/, '').toLowerCase(), g = STG.filter(function (x) { return h === x[1].toLowerCase() || h === x[0] || (x[0] === 'today' && h.indexOf('today') === 0) || (x[0] === 'week' && h === 'this week') || (/^w\d$/.test(x[0]) && h === 'week ' + x[0].slice(1)) || (x[0] === 'day30' && h.indexOf('day 30') === 0); })[0];
+      if (g) { st = g[0]; return; }
+      var m = l.replace(/^[-•*✓☐\d.)\s]+/, ''), k = m.indexOf(' | ');
+      if (st && m) out.push({ st: st, t: k >= 0 ? m.slice(0, k).trim() : m, how: k >= 0 ? m.slice(k + 3).trim() : '' });
+    });
+    return out;
+  }
+  function clProgress(c) { var L = c.checklist || [], T = c.ticks || {}, n = L.filter(function (x) { return T[x.i]; }).length; return { n: n, of: L.length }; }
+  function checklistBox(c) {
+    var L = c.checklist || [], T = c.ticks || {}, pr = clProgress(c);
+    var stat = L.length ? '<div style="background:#F6F4EE;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13.5px"><b>✅ ' + pr.n + ' of ' + pr.of + ' done</b>' + (c.lastTickAt ? ' · last ticked ' + nice(c.lastTickAt) : c.reportOn ? ' · <span class="muted">nothing ticked yet</span>' : ' · <span class="muted">they’ll tick these on their report page</span>') +
+      '<div style="height:7px;border-radius:4px;background:#E5E1D6;margin:7px 0 6px;overflow:hidden"><i style="display:block;height:100%;width:' + (pr.of ? Math.round(pr.n * 100 / pr.of) : 0) + '%;background:#057A44"></i></div>' +
+      '<div class="muted" style="font-size:12.5px">' + STG.map(function (g) { var it = L.filter(function (x) { return x.st === g[0]; }); return it.length ? g[1].replace(/ \(.*\)/, '') + ' ' + it.filter(function (x) { return T[x.i]; }).length + '/' + it.length : ''; }).filter(Boolean).join(' · ') + '</div>' +
+      (c.reportOn && c.reportToken ? '<div style="margin-top:6px"><a href="' + esc(reportUrl(c)) + '&hq=1" target="_blank" rel="noopener">👀 Open their progress page</a></div>' : '') + '</div>' : '';
+    return stat + '<p class="muted" style="font-size:13px;margin-bottom:8px">The step-by-step actions they tick off on their report page. Tap ✨ Draft after the plan is saved — it uses the audit, bios, competitors and plan. One action per line, written as <b>- Do this | how to do it</b>, under the headings TODAY, THIS WEEK, WEEK 1–4, DAY 30.' + (c.pkg === 'starter' ? ' (Starter: Today and This week only.)' : '') + '</p>' +
+      '<div class="row" style="justify-content:flex-end;margin-bottom:6px"><button class="btn ghost sm" id="clAi">' + (L.length ? '✨ Draft again' : '✨ Draft checklist') + '</button></div>' +
+      '<textarea id="clT" rows="' + Math.min(22, Math.max(8, L.length + 8)) + '" style="font-size:13.5px;line-height:1.5" placeholder="TODAY\n- Paste your new bio | Edit profile → Bio, then paste one of your new bios">' + esc(clText(L)) + '</textarea>' +
+      '<div class="row" style="justify-content:space-between;align-items:center;margin-top:8px"><span class="muted" id="clN" style="font-size:12.5px"></span><button class="btn primary sm" id="clSave">Save checklist</button></div>';
+  }
+  function bindChecklist(c) {
+    var ta = $('#clT'), cnt = function () { var n = clParse(ta.value).length; $('#clN').textContent = n ? n + ' actions' : ''; };
+    ta.oninput = cnt; cnt();
+    $('#clAi').onclick = async function () {
+      if (ta.value.trim() && !confirm('Replace the checklist with a new draft? Ticks on items that change will be lost.')) return;
+      var b = this; b.disabled = true; b.textContent = '✨ Writing…';
+      try { var r = await X.api('gu-ai-checklist', { id: c.id }); ta.value = clText(r.items); ta.rows = 22; cnt(); X.toast('✨ Drafted — check it, then Save checklist'); } catch (e) { X.toast(e.message); }
+      b.disabled = false; b.textContent = '✨ Draft again';
+    };
+    $('#clSave').onclick = async function () { var list = clParse(ta.value); if (ta.value.trim() && !list.length) return X.toast('Put actions under a heading like TODAY, each starting with -'); try { await save({ checklist: list }); client(cur.id); } catch (e) { X.toast(e.message); } };
+  }
   // 📄 step 7 — the report page, made from everything saved here
   function reportUrl(c) { return SITE + '/revamp?r=' + encodeURIComponent(c.reportToken); }
   var QC = ['Name, handle and prices are right everywhere', 'No promised results — goals to test, not guarantees', 'Competitor lessons are ideas, not copied posts', 'The bios and plan read well out loud', 'Anything a real customer appears in has their OK'];
@@ -331,6 +369,11 @@
       ['D', 'Report ready', 'Your Instagram Revamp is ready ✨ ' + (c.reportOn && c.reportToken ? reportUrl(c) : '[report link]') + '\nStart with “Fix first” — those 3 changes make the biggest difference. I’ve sent a short voice note walking you through it. Any questions, just reply here.'],
       ['E', '30-day check-in', 'Hi ' + nm + ', it’s been 30 days since your Revamp! How’s it going? Have you noticed more views, messages or sales? Tell me what’s changed and what’s worked best for you 📈'],
       ['F', 'Testimonial', 'So glad it’s helping! 💚 Would you write one or two lines about your experience? And are you happy for us to share your before-and-after as an example?'],
+      ['G', 'Nudge', (function () {
+        var T = c.ticks || {}, left = (c.checklist || []).filter(function (x) { return !T[x.i]; }), pr = clProgress(c), st = left.length ? left[0].st : '', g = STG.filter(function (x) { return x[0] === st; })[0];
+        var next = left.filter(function (x) { return x.st === st; }).slice(0, 3).map(function (x) { return '• ' + x.t; }).join('\n');
+        return 'Hi ' + nm + '! 💚 How’s your Revamp going? You’ve done ' + pr.n + ' of ' + pr.of + ' steps so far' + (pr.n ? ' — well done!' : '.') + (next ? '\n\nNext up' + (g ? ' (' + g[1].replace(/ \(.*\)/, '') + ')' : '') + ':\n' + next : '') + (c.reportOn && c.reportToken ? '\n\nTick them off here: ' + reportUrl(c) : '') + '\n\nAny questions, just message me ✨';
+      })()],
     ];
   }
   function msgBox(c) {
@@ -405,9 +448,10 @@
   async function todayBox() {
     try { await load(); } catch (e) { return ''; }
     var t = todayIso(), forms = D.clients.filter(function (c) { var d = c.done || {}; return d[3] && !d[4]; }), chk = D.clients.filter(function (c) { var d = c.done || {}; return c.checkin && c.checkin <= t && !d[9]; }), late = D.clients.filter(function (c) { var d = c.done || {}; return c.due && c.due < t && d[2] && !d[8]; });
-    if (!forms.length && !chk.length && !late.length) return '';
+    var wk = addDays(t, -7), quiet = D.clients.filter(function (c) { var d = c.done || {}, pr = clProgress(c); return c.reportOn && pr.of && pr.n < pr.of && !d[9] && String(c.lastTickAt || c.reportAt || '').slice(0, 10) < wk; });
+    if (!forms.length && !chk.length && !late.length && !quiet.length) return '';
     var line = function (c, why) { return '<a href="#" data-gu-open="' + esc(c.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(c.name) + '</b> <span class="muted">· ' + why + '</span></a>'; };
-    return '<div class="h2">✨ Instagram Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + '</div>';
+    return '<div class="h2">✨ Instagram Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + quiet.map(function (c) { var pr = clProgress(c); return line(c, '😴 no ticks for a week (' + pr.n + '/' + pr.of + ' done) — send nudge G'); }).join('') + '</div>';
   }
   var PENDING = null;
   function open(id) { PENDING = id; }   // the next view() opens this client
