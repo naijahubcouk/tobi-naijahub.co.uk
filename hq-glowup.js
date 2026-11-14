@@ -140,10 +140,11 @@
     return '<div style="margin-top:10px"><div style="font-size:13px;font-weight:700">✍🏾 New bio ideas</div>' + b.map(function (x, i) { return '<div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px"><textarea data-bio="' + i + '" rows="3" style="flex:1;font-size:13.5px">' + esc(x) + '</textarea><button type="button" class="btn ghost sm" data-bioc="' + i + '">📋</button></div>'; }).join('') + '</div>';
   }
   function bindBios() { $$('[data-bioc]').forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText($('[data-bio="' + b.dataset.bioc + '"]').value); X.toast('📋 Bio copied'); } catch (e) {} }; }); }
-  function shrink(file) {
+  function shrink(file, max, q) {
+    max = max || 1400; q = q || 0.82;
     return new Promise(function (ok, bad) {
       var fr = new FileReader(); fr.onerror = function () { bad(new Error('Couldn’t read that picture')); };
-      fr.onload = function () { var im = new Image(); im.onerror = function () { bad(new Error('That doesn’t look like a picture')); }; im.onload = function () { var k = Math.min(1, 1400 / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); ok(cv.toDataURL('image/jpeg', 0.82)); }; im.src = fr.result; };
+      fr.onload = function () { var im = new Image(); im.onerror = function () { bad(new Error('That doesn’t look like a picture')); }; im.onload = function () { var k = Math.min(1, max / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); ok(cv.toDataURL('image/jpeg', q)); }; im.src = fr.result; };
       fr.readAsDataURL(file);
     });
   }
@@ -198,8 +199,10 @@
 
   function compBox(c) {
     var rows = (c.comps || []).slice(); while (rows.length < 5) rows.push({ h: '', works: '', copy: '' });
-    return '<p class="muted" style="font-size:13px;margin-bottom:8px">2 they named, 2 direct competitors, 1 bigger brand. Write a principle to copy — never their words, pictures or videos.</p>' +
+    return '<div style="background:#F3FAF6;border:1px dashed #A7D7BC;border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px;font-size:13.5px"><b>✨ Let Auntie Tobi study them</b><div class="muted" style="font-size:12.5px">Not sure who to look at? Tap 🔍 for what to search. Then add a screenshot of each account’s profile — she fills in the rows below for you to check.</div></div><button class="btn ghost sm" id="cpFind">🔍 Help me find them</button><button class="btn primary sm" id="cpAi">✨ Study competitors for me</button></div>' +
+      '<p class="muted" style="font-size:13px;margin-bottom:8px">2 they named, 2 direct competitors, 1 bigger brand. Write a principle to copy — never their words, pictures or videos.</p>' +
       '<div id="cpRows">' + rows.map(compRow).join('') + '</div>' +
+      '<label style="font-size:12.5px;margin-top:6px;display:block">What most of them do <span class="muted" style="font-weight:400">(shows on the report)</span></label><textarea id="cpNote" rows="2" style="font-size:13.5px" placeholder="e.g. All 5 show prices and post the owner at least once a week.">' + esc(c.compNote || '') + '</textarea>' +
       '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm" id="cpAdd">＋ Add a row</button><button class="btn ghost sm" id="cpLib">📚 From the ' + esc(c.cat || 'category') + ' library</button><button class="btn ghost sm" id="cpToLib">💾 Save to library</button><span style="flex:1"></span><button class="btn primary sm" id="cpSave">Save competitors</button></div>';
   }
   function compRow(x) { return '<div class="row cp" style="gap:6px;margin-bottom:6px;flex-wrap:wrap"><input data-f="h" value="' + esc(x.h) + '" placeholder="@account" style="flex:1;min-width:120px;font-size:13px"><input data-f="works" value="' + esc(x.works) + '" placeholder="What works (1 line)" style="flex:2;min-width:180px;font-size:13px"><input data-f="copy" value="' + esc(x.copy) + '" placeholder="Copy this: …" style="flex:2;min-width:180px;font-size:13px"></div>'; }
@@ -207,7 +210,9 @@
   function bindComp(c) {
     if (!$('#cpRows')) return;
     $('#cpAdd').onclick = function () { $('#cpRows').insertAdjacentHTML('beforeend', compRow({ h: '', works: '', copy: '' })); };
-    $('#cpSave').onclick = async function () { try { var list = readComps(), cl = await save({ comps: list }); if (list.length >= 3 && !(cl.done || {})[5]) { var r = await X.api('gu-step', { id: cl.id, n: 5, on: true }); put(r.client); } client(cur.id); } catch (e) { X.toast(e.message); } };
+    $('#cpAi').onclick = function () { compSheet(c); };
+    $('#cpFind').onclick = function () { findSheet(c); };
+    $('#cpSave').onclick = async function () { try { var list = readComps(), cl = await save({ comps: list, compNote: $('#cpNote').value.trim() }); if (list.length >= 3 && !(cl.done || {})[5]) { var r = await X.api('gu-step', { id: cl.id, n: 5, on: true }); put(r.client); } client(cur.id); } catch (e) { X.toast(e.message); } };
     $('#cpToLib').onclick = async function () { if (!c.cat) return X.toast('Add a category in ✏️ Details first (e.g. perfume)'); try { var r = await X.api('gu-libadd', { cat: c.cat, comps: readComps() }); LIB = r.lib; X.toast('💾 Saved to the ' + c.cat + ' library'); } catch (e) { X.toast(e.message); } };
     $('#cpLib').onclick = async function () {
       if (!c.cat) return X.toast('Add a category in ✏️ Details first (e.g. perfume)');
@@ -223,6 +228,52 @@
   // ✨ step 6 — the plan pieces, drafted by Auntie Tobi from everything above
   var PLAN = [['hooks', '💡 10 post and Reel hooks', 6], ['reels', '🎬 3 Reel scripts', 12], ['plan30', '📅 30-day plan', 14], ['journey', '💬 Sales journey (DM keyword and replies)', 9]];
   function planParts(c) { return c.pkg === 'starter' ? PLAN.filter(function (x) { return x[0] === 'hooks'; }) : PLAN; }
+  // ✨ competitors from screenshots — fills the rows, not saved until Save competitors
+  function compSheet(c) {
+    var shots = [];
+    var s = X.sheet('<h3 style="margin:0 0 4px">✨ Study competitors for me</h3><div class="muted" style="font-size:13px">One screenshot per account — their profile with the bio and top of the grid. Up to 5.</div>' +
+      '<label class="btn ghost" style="display:block;text-align:center;margin-top:10px;cursor:pointer">📷 Add screenshots (up to 5)<input type="file" id="ciF" accept="image/*" multiple hidden></label>' +
+      '<div id="ciTh" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"></div>' +
+      '<label style="margin-top:10px">Notes <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="ciN" rows="2" placeholder="e.g. the 2nd one posts a Reel every day, the 3rd always shows prices"></textarea>' +
+      '<div class="err" id="ciE" style="display:none;margin-top:8px"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="ciX">Cancel</button><button class="btn primary" id="ciGo">✨ Study them</button></div>');
+    var th = function () { $('#ciTh', s).innerHTML = shots.map(function (u, i) { return '<div style="position:relative"><img src="' + u + '" style="width:72px;height:104px;object-fit:cover;border-radius:8px;border:1px solid #E5E1D6"><span style="position:absolute;bottom:4px;left:4px;background:#0F1E36;color:#fff;font-size:11px;font-weight:800;border-radius:6px;padding:1px 6px">' + (i + 1) + '</span><button type="button" data-rm="' + i + '" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#0F1E36;color:#fff;cursor:pointer">✕</button></div>'; }).join(''); $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { shots.splice(+b.dataset.rm, 1); th(); }; }); };
+    $('#ciF', s).onchange = async function () { var fs = [].slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && shots.length < 5; i++) { try { shots.push(await shrink(fs[i], 1000, 0.72)); } catch (e) { X.toast(e.message); } } th(); };
+    $('#ciX', s).onclick = function () { s.remove(); };
+    $('#ciGo', s).onclick = async function () {
+      var b = this, err = $('#ciE', s); err.style.display = 'none';
+      if (!shots.length) { err.textContent = 'Add at least one screenshot.'; err.style.display = 'block'; return; }
+      b.disabled = true; b.textContent = '✨ Auntie Tobi is looking…';
+      try {
+        var r = await X.api('gu-ai-comps', { id: c.id, shots: shots, notes: $('#ciN', s).value });
+        s.remove();
+        $$('#cpRows .cp').forEach(function (row) { if (!$('[data-f=h]', row).value && !$('[data-f=works]', row).value && !$('[data-f=copy]', row).value) row.remove(); });
+        r.comps.forEach(function (x) {
+          var same = x.h && $$('#cpRows .cp').filter(function (row) { return $('[data-f=h]', row).value.toLowerCase() === x.h.toLowerCase(); })[0];
+          if (same) { $('[data-f=works]', same).value = x.works; $('[data-f=copy]', same).value = x.copy; } else $('#cpRows').insertAdjacentHTML('beforeend', compRow(x));
+        });
+        if (r.patterns) $('#cpNote').value = r.patterns;
+        X.toast('✨ ' + r.comps.length + ' filled in — check them, then Save competitors');
+      } catch (e) { err.textContent = e.message; err.style.display = 'block'; b.disabled = false; b.textContent = '✨ Study them'; }
+    };
+  }
+  // 🔍 what to search on Instagram (+ accounts already in the library)
+  async function findSheet(c) {
+    var s = X.sheet('<h3 style="margin:0 0 4px">🔍 Help me find them</h3><div id="fdB" class="muted" style="font-size:13.5px;padding:14px 0">✨ Auntie Tobi is thinking…</div><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn ghost" id="fdX">Close</button></div>');
+    $('#fdX', s).onclick = function () { s.remove(); };
+    var chip = function (t) { return '<button type="button" class="btn ghost sm" data-cp-t="' + esc(t) + '" style="margin:0 6px 6px 0">' + esc(t) + '</button>'; };
+    try {
+      var r = await X.api('gu-ai-find', { id: c.id }), libs = [];
+      try { if (!LIB) LIB = (await X.api('gu-lib')).lib; libs = c.cat ? (LIB[c.cat] || []) : []; } catch (e) {}
+      $('#fdB', s).className = ''; $('#fdB', s).style.padding = '6px 0';
+      $('#fdB', s).innerHTML = '<p class="muted" style="font-size:12.5px;margin-bottom:8px">Tap one to copy it, then paste it into Instagram search. Pick 2 direct competitors, 2 similar small businesses doing well and 1 bigger brand.</p>' +
+        '<div style="font-size:13px;font-weight:700;margin-bottom:6px">Search for</div><div>' + r.searches.map(chip).join('') + '</div>' +
+        '<div style="font-size:13px;font-weight:700;margin:8px 0 6px">Hashtags</div><div>' + r.hashtags.map(chip).join('') + '</div>' +
+        (r.lookFor.length ? '<div style="font-size:13px;font-weight:700;margin:8px 0 4px">A good one to study</div><ul style="margin:0 0 0 18px;font-size:13.5px">' + r.lookFor.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+        (libs.length ? '<div style="font-size:13px;font-weight:700;margin:10px 0 6px">📚 Already in your ' + esc(c.cat) + ' library</div><div>' + libs.map(function (x) { return chip(x.h); }).join('') + '</div>' : '');
+      $$('[data-cp-t]', s).forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(b.dataset.cpT); X.toast('📋 Copied — paste it into Instagram search'); } catch (e) {} }; });
+    } catch (e) { $('#fdB', s).textContent = e.message; }
+  }
   function planBox(c) {
     var P = c.plan || {};
     return '<p class="muted" style="font-size:13px;margin-bottom:8px">Tap ✨ Draft and Auntie Tobi writes it from their answers, listing, audit and competitors. Change anything, then Save plan.' + (c.pkg === 'starter' ? ' (Starter: hooks only.)' : '') + '</p>' +

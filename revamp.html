@@ -50,7 +50,7 @@ h2 i{font-style:normal;width:24px;height:24px;border-radius:50%;background:#057A
     if (d.summary) h += sec('Your page in a nutshell', '<div class="txt">' + esc(d.summary) + '</div>');
     if (d.audit.length) h += sec('Your page check', d.audit.map(function (a) { return '<div class="row"><span class="s ' + (a.s || 'none') + '">' + (LAB[a.s] || 'Check') + '</span><div><b>' + esc(a.name) + '</b><small>' + esc(a.note) + '</small></div></div>'; }).join(''));
     if (d.bios.length) h += sec('Your new bio', '<div class="note" style="text-align:left">Pick one, change anything, and paste it into your Instagram bio.</div>' + d.bios.map(function (b, i) { return '<div class="bio"><button class="cp" data-cp="' + i + '">Copy</button>' + esc(b) + '</div>'; }).join(''));
-    if (d.comps.length) h += sec('What other accounts teach us', d.comps.map(function (c) { return '<div class="comp"><b>' + esc(c.h) + '</b><div>' + esc(c.works) + '</div>' + (c.copy ? '<div><em>Copy this:</em> ' + esc(c.copy) + '</div>' : '') + '</div>'; }).join(''));
+    if (d.comps.length) h += sec('What other accounts teach us', (d.compNote ? '<div class="txt" style="margin-bottom:8px">' + esc(d.compNote) + '</div>' : '') + d.comps.map(function (c) { return '<div class="comp"><b>' + esc(c.h) + '</b><div>' + esc(c.works) + '</div>' + (c.copy ? '<div><em>Copy this:</em> ' + esc(c.copy) + '</div>' : '') + '</div>'; }).join(''));
     if (P.hooks) h += sec('Your post and Reel hooks', '<div class="txt">' + esc(P.hooks) + '</div>');
     if (P.reels) h += sec('Your Reel scripts', '<div class="txt">' + esc(P.reels) + '</div>');
     if (P.plan30) h += sec('Your 30-day plan', '<div class="txt">' + esc(P.plan30) + '</div>');
