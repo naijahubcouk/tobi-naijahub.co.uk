@@ -1178,8 +1178,8 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   var AC = null, songStop = null, curSong = 'bday';
   function muted() { try { return localStorage.getItem('tobiMute') === '1'; } catch (e) { return false; } }
   // 🎵 3 sounds to choose from: music box (the occasion's tune), sparkle chimes, party drums
-  function songFor(occ, snd) { if (snd === 'chime') return 'chime'; if (snd === 'drum') return 'drum'; var s = (OCC[occ] || {}).song; return !s || s === 'chime' ? 'melody' : s; }
-  function paintSnd() { if (!$('snd')) return; var s = (OCC[st.occ] || {}).song; chips('snd', { tune: s === 'bday' ? '🎵 Happy Birthday' : s === 'xmas' ? '🎵 Christmas carol' : '🎵 Music box', chime: '🔔 Sparkle chimes', drum: '🥁 Party drums' }, 'snd'); }
+  function songFor(occ, snd) { if (['chime', 'drum', 'love', 'party', 'fan'].indexOf(snd) >= 0) return snd; var s = (OCC[occ] || {}).song; return !s || s === 'chime' ? 'melody' : s; }
+  function paintSnd() { if (!$('snd')) return; var s = (OCC[st.occ] || {}).song; chips('snd', { tune: s === 'bday' ? '🎵 Happy Birthday' : s === 'xmas' ? '🎵 Christmas carol' : '🎵 Music box', chime: '🔔 Sparkle chimes', drum: '🥁 Party drums', love: '💕 Love song', party: '🎈 Birthday party', fan: '🎊 Celebration' }, 'snd'); }
   function playDrums(out, t) {
     var bt = .2, noise = AC.createBuffer(1, AC.sampleRate * .3, AC.sampleRate), nd = noise.getChannelData(0); for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     var kick = function (at) { var o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(140, at); o.frequency.exponentialRampToValueAtTime(45, at + .18); g.gain.setValueAtTime(1, at); g.gain.exponentialRampToValueAtTime(.001, at + .25); o.connect(g); g.connect(out); o.start(at); o.stop(at + .26); };
@@ -1199,14 +1199,17 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
     var N = { D4: 293.66, E4: 329.63, 'F#4': 369.99, G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, C6: 1046.5 };
     var SONGS = { bday: [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2], ['G4', .75], ['G4', .25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2], ['F5', .75], ['F5', .25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 2.5]],
       xmas: [['D4', 1], ['G4', 1], ['G4', .5], ['A4', .5], ['G4', .5], ['F#4', .5], ['E4', 1], ['E4', 1], ['E4', 1], ['A4', 1], ['A4', .5], ['B4', .5], ['A4', .5], ['G4', .5], ['F#4', 1], ['D4', 1], ['D4', 1], ['B4', 1], ['B4', .5], ['C5', .5], ['B4', .5], ['A4', .5], ['G4', 1], ['E4', 1], ['D4', .5], ['D4', .5], ['E4', 1], ['A4', 1], ['F#4', 1], ['G4', 3]],
+      love: [['E5', 1], ['D5', .5], ['C5', .5], ['G4', 1.5], ['A4', .5], ['C5', 1], ['E5', 1], ['D5', 2], ['C5', 1], ['A4', .5], ['C5', .5], ['F5', 1.5], ['E5', .5], ['D5', 1], ['C5', 3]],
+      party: [['G4', .5], ['C5', .5], ['E5', .5], ['G5', 1], ['E5', .5], ['G5', 1], ['A5', .5], ['G5', .5], ['E5', .5], ['C5', 1], ['D5', .5], ['E5', .5], ['D5', .5], ['B4', .5], ['G4', 1], ['G4', .5], ['C5', .5], ['E5', .5], ['G5', 1], ['C6', .5], ['A5', .5], ['G5', 1], ['E5', .5], ['D5', .5], ['C5', 2]],
+      fan: [['C5', .34], ['C5', .33], ['C5', .33], ['G5', 1.5], ['E5', .5], ['G5', .5], ['C6', 2], ['A5', .5], ['G5', .5], ['E5', .5], ['G5', .5], ['C6', 2.5]],
       melody: [['C5', .5], ['E5', .5], ['G5', 1], ['E5', .5], ['G5', .5], ['A5', 1], ['G5', .5], ['E5', .5], ['C5', 1], ['D5', .5], ['E5', .5], ['D5', 1], ['C5', .5], ['E5', .5], ['G5', 1], ['A5', .5], ['G5', .5], ['E5', 1], ['D5', .5], ['E5', .5], ['C5', 2]],
       chime: [['C5', .5], ['E5', .5], ['G5', .5], ['C6', 1], ['G5', .5], ['C6', 2], ['E5', .5], ['G5', .5], ['C6', 2.5]] };
     if (curSong === 'drum') { var dOut = AC.createGain(); dOut.gain.value = .5; dOut.connect(AC.destination); playDrums(dOut, AC.currentTime + .08); songStop = function () { try { dOut.gain.setTargetAtTime(0, AC.currentTime, .05); } catch (e) {} }; return; }
     var tune = SONGS[curSong] || SONGS.bday;
-    var beat = curSong === 'xmas' ? .36 : curSong === 'chime' ? .3 : curSong === 'melody' ? .3 : .42, t = AC.currentTime + .1, out = AC.createGain(); out.gain.value = .22; out.connect(AC.destination);
+    var beat = { xmas: .36, chime: .3, melody: .3, love: .5, party: .24, fan: .3 }[curSong] || .42, t = AC.currentTime + .1, out = AC.createGain(); out.gain.value = curSong === 'fan' ? .14 : .22; if (curSong === 'fan') { var lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; out.connect(lp); lp.connect(AC.destination); } else out.connect(AC.destination);
     tune.forEach(function (n) {
       [1, 2].forEach(function (h) {
-        var o = AC.createOscillator(), g = AC.createGain(); o.type = h === 1 ? 'triangle' : 'sine'; o.frequency.value = N[n[0]] * h;
+        var o = AC.createOscillator(), g = AC.createGain(); o.type = h === 1 ? (curSong === 'love' ? 'sine' : curSong === 'fan' ? 'sawtooth' : 'triangle') : 'sine'; o.frequency.value = N[n[0]] * h;
         g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(h === 1 ? .9 : .25, t + .015); g.gain.exponentialRampToValueAtTime(.001, t + Math.max(.5, n[1] * beat * 1.6));
         o.connect(g); g.connect(out); o.start(t); o.stop(t + n[1] * beat * 1.7 + .05);
       });

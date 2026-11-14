@@ -211,7 +211,7 @@ async function cleanPhotos() {
 }
 // 🔗 short card links — /c/<id>: the card's words + design are kept for a year (the photo itself is still deleted after 60 days)
 const CARD_DAYS = 365;
-const CARD_KEYS = { snd: 6, ask: 1, o: 20, n: 30, a: 3, m: 320, f: 40, s: 30, d: 20, z: 6, w: 12, p: 24, ps: 1, pp: 6, mn: 2, yr: 4, g: 8, tp: 6, tx: 6, ty: 6, ts: 5, pz: 6, px: 6, py: 6 };
+const CARD_KEYS = { snd: 8, ask: 1, o: 20, n: 30, a: 3, m: 320, f: 40, s: 30, d: 20, z: 6, w: 12, p: 24, ps: 1, pp: 6, mn: 2, yr: 4, g: 8, tp: 6, tx: 6, ty: 6, ts: 5, pz: 6, px: 6, py: 6 };
 async function saveCard(card, ip) {
   if (!card || typeof card !== 'object') throw new HttpError(400, 'bad_card', 'That card couldn’t be saved.');
   const d = {};
