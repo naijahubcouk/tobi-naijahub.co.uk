@@ -35,10 +35,40 @@
     var main = $('#view'); main.innerHTML = '<div class="wrap"><p class="muted">Loading…</p></div>';
     try { await load(); } catch (e) { main.innerHTML = '<div class="wrap"><div class="err">' + esc(e.message) + '</div></div>'; return; }
     if (PENDING) { var p = PENDING; PENDING = null; if (byId(p)) return client(p); }
-    if (PENDING_CK) { var pk = PENDING_CK; PENDING_CK = null; board(); if (ckById(pk)) checkSheet(pk); return; }
+    if (PENDING_CK) { var pk = PENDING_CK; PENDING_CK = null; TAB = 'checks'; board(); if (pk !== '*' && ckById(pk)) checkSheet(pk); return; }
     board();
   }
-  function board() {
+  var TAB = 'clients', CKF = 'follow';
+  function board() { return TAB === 'checks' ? checksView() : clientsBoard(); }
+  function tabs() {
+    var n = (D.checks || []).filter(function (k) { return k.contact && !k.contacted && !k.clientId; }).length;
+    var t = function (k, l) { var on = TAB === k; return '<button data-tab="' + k + '" style="border:0;background:none;font:inherit;font-weight:800;font-size:15px;padding:10px 4px;margin-right:18px;cursor:pointer;color:' + (on ? '#057A44' : '#6B7280') + ';border-bottom:3px solid ' + (on ? '#057A44' : 'transparent') + '">' + l + '</button>'; };
+    return '<div style="border-bottom:1px solid #E5E1D6;margin-bottom:14px;display:flex">' + t('clients', '👥 Clients') + t('checks', '🆓 Free checks' + (n ? ' <span style="background:#B42318;color:#fff;border-radius:10px;font-size:11.5px;padding:1px 7px;margin-left:2px">' + n + '</span>' : '')) + '</div>';
+  }
+  function bindTabs(main) { $$('[data-tab]', main).forEach(function (b) { b.onclick = function () { TAB = b.dataset.tab; board(); }; }); }
+  function checksView() {
+    var main = $('#view'), L = D.checks || [], t = todayIso(), wk = addDays(t, -7), link = SITE + '/instagram-check';
+    var day = function (k) { return String(k.createdAt).slice(0, 10); };
+    var tile = function (n, l) { return '<div class="card" style="padding:12px;text-align:center;flex:1;min-width:110px"><div style="font-size:22px;font-weight:800">' + n + '</div><div class="muted" style="font-size:12.5px">' + l + '</div></div>'; };
+    var F = [['follow', 'Follow up', function (k) { return k.contact && !k.contacted && !k.clientId; }], ['all', 'All', function () { return true; }], ['contacted', 'Contacted', function (k) { return k.contacted && !k.clientId; }], ['locked', 'Didn’t unlock', function (k) { return !k.contact; }], ['client', 'Became clients', function (k) { return k.clientId; }]];
+    var f = F.filter(function (x) { return x[0] === CKF; })[0] || F[0], list = L.filter(f[2]);
+    var row = function (k) {
+      var pc = k.total ? k.score / k.total : 0, ct = k.contact;
+      return '<div class="card" data-ck="' + esc(k.id) + '" style="padding:11px 14px;margin-bottom:8px;cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap">' + pill(k.score + '/' + k.total, pc >= .7 ? 'g' : pc >= .4 ? 'y' : 'r') +
+        '<div style="flex:1;min-width:180px"><b>' + esc(k.biz) + '</b><div class="muted" style="font-size:12.5px">' + (ct ? '👤 ' + esc(ct.name) + ' · 📱 ' + esc(ct.wa) : 'Didn’t unlock — no contact details') + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + '</div></div>' +
+        '<div style="font-size:12.5px;text-align:right">' + (k.clientId ? '➡️ Now a client' : k.contacted ? '✓ Contacted ' + nice(k.contacted) : ct ? '<b style="color:#B42318">Follow up</b>' : '') + '<div class="muted">' + (k.listing ? '📍 Listed' : 'Not listed') + ' · ' + nice(k.createdAt) + '</div></div></div>';
+    };
+    main.innerHTML = '<div class="wrap">' + tabs() +
+      '<div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px;font-size:13.5px"><b>🔗 Your free check link</b><div class="muted">' + esc(link.replace(/^https?:\/\//, '')) + ' — share it in your bio, Stories and DMs</div></div><button class="btn ghost sm" id="ckCopy">📋 Copy link</button><a class="btn ghost sm" href="' + link + '" target="_blank" rel="noopener">👀 Open</a></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px">' + tile(L.filter(function (k) { return day(k) === t; }).length, 'today') + tile(L.filter(function (k) { return day(k) >= wk; }).length, 'last 7 days') + tile(L.length, 'all time') + tile(L.filter(function (k) { return k.contact; }).length, 'left their WhatsApp') + tile(L.filter(function (k) { return k.clientId; }).length, 'became clients') + '</div>' +
+      '<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:12px">' + F.map(function (x) { var n = L.filter(x[2]).length, on = x[0] === f[0]; return '<button class="btn sm ' + (on ? 'primary' : 'ghost') + '" data-ckf="' + x[0] + '">' + x[1] + ' (' + n + ')</button>'; }).join('') + '</div>' +
+      (list.length ? list.map(row).join('') : '<div class="card" style="padding:18px"><b>' + (L.length ? 'Nothing here' : 'No free checks yet') + '</b><p class="muted" style="margin-top:6px">' + (L.length ? 'Try another filter.' : 'When someone checks their page at ' + esc(link.replace(/^https?:\/\//, '')) + ' it shows here, with their score and results. Once they leave their WhatsApp you’ll get a ready-made follow-up message, and you can make them a Revamp client in one tap. Try a test check yourself!') + '</p></div>') + '</div>';
+    bindTabs(main);
+    $$('[data-ck]', main).forEach(function (el) { el.onclick = function () { checkSheet(el.dataset.ck); }; });
+    $$('[data-ckf]', main).forEach(function (b) { b.onclick = function () { CKF = b.dataset.ckf; checksView(); }; });
+    $('#ckCopy').onclick = function () { try { navigator.clipboard.writeText(link); X.toast('📋 Link copied'); } catch (e) { prompt('Copy the link', link); } };
+  }
+  function clientsBoard() {
     var main = $('#view'), t = todayIso(), cs = D.clients, mon = t.slice(0, 7);
     var active = cs.filter(function (c) { return !(c.done || {})[10]; });
     var dueWk = active.filter(function (c) { return c.due && !(c.done || {})[8] && c.due <= addDays(t, 7); });
@@ -51,9 +81,8 @@
       return '<div class="card" data-gu="' + esc(c.id) + '" style="padding:10px 12px;margin-bottom:8px;cursor:pointer"><b style="display:block">' + esc(c.name) + '</b><div class="muted" style="font-size:12.5px">' + esc((D.pkgs[c.pkg] || {}).name || '') + (c.due && !d[8] ? ' · due ' + nice(c.due) : c.paidAt ? ' · paid ' + nice(c.paidAt) : '') + (late ? ' · <b style="color:#B42318">late</b>' : '') + (c.reportOn && (c.checklist || []).length ? ' · ✅ ' + clProgress(c).n + '/' + clProgress(c).of : '') + '</div>' + p + '</div>';
     };
     var fin = cs.filter(function (c) { return column(c) === 'done'; });
-    main.innerHTML = '<div class="wrap">' +
+    main.innerHTML = '<div class="wrap">' + tabs() +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:14px">' + tile(active.length, 'active clients') + tile(dueWk.length, 'due this week') + tile(chk.length, 'check-ins due') + tile(gbp(money), 'paid this month') + '</div>' +
-      checksHtml() +
       (cs.length ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:start">' + COLS.map(function (k) {
         var list = cs.filter(function (c) { return column(c) === k[0]; });
         return '<div><div style="font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#6B7280;margin:0 2px 8px">' + k[1] + ' (' + list.length + ')</div>' + list.map(card).join('') + '</div>';
@@ -61,24 +90,12 @@
       '<label style="display:flex;gap:8px;align-items:center;margin-top:16px;font-size:14px;cursor:pointer"><input type="checkbox" id="guMail"' + ((D.settings || {}).email !== false ? ' checked' : '') + ' style="width:18px;height:18px"> 📧 Email me when a client sends their Revamp form</label>' +
       (fin.length ? '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">✅ Finished (' + fin.length + ')</summary><div style="margin-top:8px">' + fin.map(card).join('') + '</div></details>' : '') + '</div>';
     $$('[data-gu]', main).forEach(function (el) { el.onclick = function () { client(el.dataset.gu); }; });
-    $$('[data-ck]', main).forEach(function (el) { el.onclick = function () { checkSheet(el.dataset.ck); }; });
+    bindTabs(main);
     $('#guMail').onchange = async function () { var on = this.checked; try { D.settings = (await X.api('gu-settings', { settings: { email: on } })).settings; X.toast(on ? '📧 You’ll get an email when a form comes in' : 'No more form emails — they still show on HQ Today'); } catch (e) { X.toast(e.message); this.checked = !on; } };
   }
 
   // 🆓 free Instagram checks (from /instagram-check) — leads for the Revamp
   function ckById(id) { return (D.checks || []).filter(function (k) { return k.id === id; })[0]; }
-  function ckCard(k) {
-    var pc = k.total ? k.score / k.total : 0, ct = k.contact;
-    return '<div class="card" data-ck="' + esc(k.id) + '" style="padding:10px 12px;cursor:pointer;min-width:200px;flex:0 0 auto"><div class="row" style="justify-content:space-between;gap:8px;align-items:center"><b>' + esc(k.biz) + '</b>' + pill(k.score + '/' + k.total, pc >= .7 ? 'g' : pc >= .4 ? 'y' : 'r') + '</div>' +
-      '<div class="muted" style="font-size:12.5px;margin-top:2px">' + esc(ct ? ct.name : 'Didn’t unlock') + (k.goal ? ' · ' + esc(k.goal.replace('More ', '')) : '') + ' · ' + nice(k.createdAt) + '</div>' +
-      '<div style="font-size:12px;margin-top:4px">' + (k.clientId ? '➡️ Now a client' : k.contacted ? '✓ Contacted' : ct ? '<b style="color:#B42318">Follow up</b>' : '') + (k.listing ? ' · 📍 Listed' : ' · <span class="muted">Not listed</span>') + '</div></div>';
-  }
-  function checksHtml() {
-    var L = D.checks || []; if (!L.length) return '<p class="muted" style="font-size:13px;margin:-4px 0 14px">🆓 Free Instagram checks from <a href="' + SITE + '/instagram-check" target="_blank" rel="noopener">auntietobi.co.uk/instagram-check</a> will show here.</p>';
-    var open = L.filter(function (k) { return !k.clientId; }), wk = addDays(todayIso(), -30), mo = L.filter(function (k) { return String(k.createdAt).slice(0, 10) >= wk; }).length;
-    return '<div style="font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#6B7280;margin:0 2px 8px">🆓 Free checks (' + mo + ' in 30 days · ' + L.filter(function (k) { return k.contact; }).length + ' left their WhatsApp · ' + L.filter(function (k) { return k.clientId; }).length + ' became clients)</div>' +
-      '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px">' + (open.length ? open.slice(0, 30).map(ckCard).join('') : '<p class="muted" style="font-size:13px">All followed up 🎉</p>') + '</div>';
-  }
   function ckMsg(k) {
     var nm = k.contact ? k.contact.name.split(/\s+/)[0] : '', top = (k.improve || [])[0], good = (k.working || [])[0];
     return 'Hi ' + nm + '! 👋🏾 It’s Auntie Tobi. Thank you for doing the free Instagram check for ' + k.biz + '. You scored ' + k.score + ' of ' + k.total + (good ? ' — and I love that ' + good.charAt(0).toLowerCase() + good.slice(1).replace(/\.$/, '') : '') + ' 💚' +
@@ -499,12 +516,12 @@
     try { await load(); } catch (e) { return ''; }
     var t = todayIso(), forms = D.clients.filter(function (c) { var d = c.done || {}; return d[3] && !d[4]; }), chk = D.clients.filter(function (c) { var d = c.done || {}; return c.checkin && c.checkin <= t && !d[9]; }), late = D.clients.filter(function (c) { var d = c.done || {}; return c.due && c.due < t && d[2] && !d[8]; });
     var leads = (D.checks || []).filter(function (k) { return k.contact && !k.contacted && !k.clientId; }), wk = addDays(t, -7), quiet = D.clients.filter(function (c) { var d = c.done || {}, pr = clProgress(c); return c.reportOn && pr.of && pr.n < pr.of && !d[9] && String(c.lastTickAt || c.reportAt || '').slice(0, 10) < wk; });
-    if (!forms.length && !chk.length && !late.length && !quiet.length && !leads.length) return '';
+    var tdy = (D.checks || []).filter(function (k) { return String(k.createdAt).slice(0, 10) === t; }).length, ckLine = '<a href="#" data-ck-open="" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none">🆓 <b>Free Instagram checks:</b> <span class="muted">' + tdy + ' today · ' + leads.length + ' to follow up</span></a>';
     var line = function (c, why) { return '<a href="#" data-gu-open="' + esc(c.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(c.name) + '</b> <span class="muted">· ' + why + '</span></a>'; };
-    return '<div class="h2">✨ Instagram Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + leads.slice(0, 8).map(function (k) { return '<a href="#" data-ck-open="' + esc(k.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(k.biz) + '</b> <span class="muted">· 🆓 free check from ' + esc(k.contact.name) + ' (' + k.score + '/' + k.total + ') — follow up</span></a>'; }).join('') + quiet.map(function (c) { var pr = clProgress(c); return line(c, '😴 no ticks for a week (' + pr.n + '/' + pr.of + ' done) — send nudge G'); }).join('') + '</div>';
+    return '<div class="h2">✨ Instagram Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + ckLine + leads.slice(0, 8).map(function (k) { return '<a href="#" data-ck-open="' + esc(k.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(k.biz) + '</b> <span class="muted">· 🆓 free check from ' + esc(k.contact.name) + ' (' + k.score + '/' + k.total + ') — follow up</span></a>'; }).join('') + quiet.map(function (c) { var pr = clProgress(c); return line(c, '😴 no ticks for a week (' + pr.n + '/' + pr.of + ' done) — send nudge G'); }).join('') + '</div>';
   }
   var PENDING = null, PENDING_CK = null;
   function open(id) { PENDING = id; }   // the next view() opens this client
-  function openCheck(id) { PENDING_CK = id; }   // …or this free check
+  function openCheck(id) { PENDING_CK = id || '*'; }   // …or this free check
   window.HQGlow = { init: function (o) { X = o; }, view: view, todayBox: todayBox, open: open, openCheck: openCheck };
 })();
