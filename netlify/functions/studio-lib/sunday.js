@@ -109,6 +109,7 @@ async function save(week, raw, who) {
     if (Array.isArray(raw.events)) cur.events = raw.events.slice(0, 8).map(e => ({ id: cleanText(e.id, 40), title: cleanText(e.title, 160), date: /^\d{4}-\d{2}-\d{2}$/.test(String(e.date)) ? e.date : '', time: cleanText(e.time, 60), loc: cleanText(e.loc, 120), url: /^https?:\/\//.test(String(e.url)) ? String(e.url).slice(0, 400) : '' })).filter(e => e.title);
     if (raw.biz !== undefined) cur.biz = raw.biz && raw.biz.name ? { slug: cleanText(raw.biz.slug, 120), name: cleanText(raw.biz.name, 120), cat: cleanText(raw.biz.cat, 80), loc: cleanText(raw.biz.loc, 80), desc: multi(raw.biz.desc, 400), url: /^https?:\/\//.test(String(raw.biz.url)) ? String(raw.biz.url).slice(0, 400) : '', img: /^https?:\/\//.test(String(raw.biz.img)) ? String(raw.biz.img).slice(0, 500) : '' } : null;
     if (Array.isArray(raw.products)) cur.products = raw.products.slice(0, 4).map(p => ({ id: cleanText(p.id, 40), name: cleanText(p.name, 100), business: cleanText(p.business, 80), price: cleanText(p.price, 24), url: /^https?:\/\//.test(String(p.url)) ? String(p.url).slice(0, 400) : '', img: /^https?:\/\//.test(String(p.img)) ? String(p.img).slice(0, 500) : '' })).filter(p => p.name);
+    if (Array.isArray(raw.deals)) cur.deals = raw.deals.slice(0, 6).map(d => ({ title: cleanText(d && d.title, 120), biz: cleanText(d && d.biz, 80), detail: multi(d && d.detail, 300), code: cleanText(d && d.code, 30), until: /^\d{4}-\d{2}-\d{2}$/.test(String(d && d.until)) ? d.until : '', url: /^https?:\/\//.test(String(d && d.url)) ? String(d.url).slice(0, 400) : '' })).filter(d => d.title);   // 🏷️ deals & offers (added by hand in HQ)
     if (cur.status === 'approved') { cur.status = 'draft'; cur.approvedAt = ''; }   // any change after approving needs approving again
     cur.updatedAt = core.nowIso(); cur.editedBy = who || '';
     out = cur; return cur;
@@ -155,6 +156,7 @@ function render(issue, opts) {
   if ((issue.posts || []).length) h += H('This week’s UK updates', '🇬🇧') + issue.posts.map(p => `<div style="border-top:1px solid #EEE7D6;padding:12px 0"><div style="font-weight:bold;font-size:16px;margin-bottom:4px">${esc(p.emoji || '📰')} ${a(p.url, esc(p.title))}</div><div style="font-size:14.5px;color:#374151">${esc(p.summary)}</div>${p.url ? `<div style="margin-top:6px">${a(p.url, 'Read more →')}</div>` : ''}</div>`).join('');
   if (events.length) h += H('Events coming up', '🎉') + events.map(e => `<div style="border-top:1px solid #EEE7D6;padding:10px 0"><b>${a(e.url, esc(e.title))}</b><div style="font-size:14px;color:#4B5563">📅 ${e.date ? niceDate(e.date) : ''}${e.time ? ' · ' + esc(e.time) : ''}${e.loc ? ' · 📍 ' + esc(e.loc) : ''}</div></div>`).join('');
   if (issue.biz) { const b = issue.biz; h += H('Business of the week', '⭐') + `<div style="border:2px solid #FFB81C;border-radius:14px;padding:14px 16px">${b.img ? `<img src="${esc(b.img)}" alt="" width="520" style="width:100%;max-width:520px;border-radius:10px;margin-bottom:10px;display:block">` : ''}<b style="font-size:17px">${esc(b.name)}</b><div style="font-size:13.5px;color:#6B7280;margin:2px 0 8px">${esc(b.cat)}${b.loc ? ' · 📍 ' + esc(b.loc) : ''}</div><div style="font-size:14.5px">${esc(b.desc)}</div><div style="margin-top:10px">${a(b.url, 'See ' + esc(b.name) + ' on Auntie Tobi →')}</div></div>`; }
+  if ((issue.deals || []).length) h += H('Deals & offers', '🏷️') + issue.deals.map(d => `<div style="border-top:1px solid #EEE7D6;padding:12px 0"><b style="font-size:16px">${a(d.url, esc(d.title))}</b>${d.biz ? `<div style="font-size:13.5px;color:#6B7280">${esc(d.biz)}</div>` : ''}${d.detail ? `<div style="font-size:14.5px;margin-top:4px">${esc(d.detail)}</div>` : ''}${d.code || d.until ? `<div style="margin-top:6px;font-size:13.5px">${d.code ? `<span style="background:#FFF4D6;border:1px dashed #FFB81C;border-radius:6px;padding:2px 8px;font-weight:bold">Code: ${esc(d.code)}</span> ` : ''}${d.until ? `<span style="color:#B42318">Ends ${niceDate(d.until)}</span>` : ''}</div>` : ''}</div>`).join('');
   if ((issue.products || []).length) h += H('From the Marketplace', '🛍️') + issue.products.map(p => `<div style="border-top:1px solid #EEE7D6;padding:10px 0"><b>${a(p.url, esc(p.name))}</b>${p.price ? ` <span style="color:#057A44;font-weight:bold">· ${esc(p.price)}</span>` : ''}<div style="font-size:14px;color:#4B5563">${esc(p.business)}</div></div>`).join('');
   if (issue.tip) h += H('Tip of the week', '💡') + `<div style="background:#FFF4D6;border-radius:14px;padding:12px 16px">${para(issue.tip)}</div>`;
   h += `<p style="margin:24px 0 6px">See you next Sunday,<br><b>Auntie Tobi 💚</b></p><p style="margin:14px 0 0"><a href="https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e" style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;font-weight:bold;padding:11px 18px;border-radius:10px">📣 Follow Auntie Tobi on WhatsApp</a></p>`;
@@ -179,8 +181,9 @@ function whatsapp(issue) {
     ...((issue.posts || []).length ? ['', '🇬🇧 *This week’s UK updates*', ...issue.posts.map(p => `${p.emoji || '•'} ${p.title}\n${p.url}`)] : []),
     ...((issue.events || []).length ? ['', '🎉 *Events coming up*', ...issue.events.map(e => `• ${e.title} — ${e.date ? niceDate(e.date) : ''}${e.loc ? ', ' + e.loc : ''}`)] : []),
     ...(issue.biz ? ['', `⭐ *Business of the week:* ${issue.biz.name}`, issue.biz.url] : []),
+    ...((issue.deals || []).length ? ['', '🏷️ *Deals & offers*', ...issue.deals.map(d => `• ${d.title}${d.biz ? ' — ' + d.biz : ''}${d.code ? ' (code ' + d.code + ')' : ''}${d.url ? '\n' + d.url : ''}`)] : []),
     ...(issue.tip ? ['', '💡 *Tip of the week*', issue.tip] : []),
-    '', 'Get it by email every Sunday 👉 ' + SITE() + '/?news=1'].join('\n');
+    '', 'Get it by email every Sunday 👉 ' + SITE() + '/sunday-update'].join('\n');
 }
 
 // ───── sending ─────
@@ -303,7 +306,7 @@ async function issueFor(week) {
   if (!i || i.status !== 'sent') throw new HttpError(404, 'not_found', 'That update isn’t available.');
   return { issue: publicIssue(i) };
 }
-const publicIssue = i => i && ({ week: i.week, subject: i.subject, intro: i.intro, tip: i.tip, posts: i.posts || [], events: i.events || [], biz: i.biz || null, products: i.products || [] });
+const publicIssue = i => i && ({ week: i.week, subject: i.subject, intro: i.intro, tip: i.tip, posts: i.posts || [], events: i.events || [], biz: i.biz || null, deals: i.deals || [], products: i.products || [] });
 
 // ───── HQ ─────
 async function forHq(week) {
