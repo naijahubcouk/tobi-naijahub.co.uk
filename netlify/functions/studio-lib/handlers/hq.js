@@ -380,6 +380,18 @@ exports.handler = handler(async (ctx) => {
       }
       return sunday.forHq(week);
     }
+    case 'gu-list': case 'gu-save': case 'gu-step': case 'gu-del': case 'gu-reopen': case 'gu-lib': case 'gu-libadd': {
+      // ✨ Instagram Glow-Up clients (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
+      const gu = require('../glowup');
+      if (body.action === 'gu-save') return { client: await gu.save(body.client, who.email) };
+      if (body.action === 'gu-step') return { client: await gu.step(body.id, body.n, !!body.on) };
+      if (body.action === 'gu-del') return gu.del(body.id);
+      if (body.action === 'gu-reopen') return { client: await gu.reopenForm(body.id) };
+      if (body.action === 'gu-lib') return { lib: await gu.lib() };
+      if (body.action === 'gu-libadd') return { lib: await gu.libAdd(body.cat, body.comps) };
+      return gu.list();
+    }
     case 'fl-get': case 'fl-add': case 'fl-del': case 'fl-target': {
       // 📈 Instagram + WhatsApp Channel follower tracker (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');

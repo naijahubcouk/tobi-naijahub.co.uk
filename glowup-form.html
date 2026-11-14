@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Instagram Glow-Up — Auntie Tobi</title>
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Your Instagram Glow-Up ✨">
+<meta property="og:description" content="A few questions so Auntie Tobi can start on your page.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;min-height:100vh;padding-bottom:60px;line-height:1.5}
+.app-header{background:#0F1E36;padding:14px 18px;display:flex;align-items:center;gap:12px;max-width:560px;margin:0 auto}
+.app-logo{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#057A44}.app-logo img{width:100%;height:100%;object-fit:cover}
+.app-header-title{font-size:16px;font-weight:700;color:#fff}.app-header-sub{font-size:12px;color:rgba(255,255,255,.6)}
+.wrap{max-width:560px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.hero{background:#0F1E36;border-radius:14px;padding:22px 18px;color:#fff}
+.badge{display:inline-block;background:rgba(255,184,28,.25);color:#FFB81C;font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:10px}
+.hero h1{font-size:23px;line-height:1.25;margin-bottom:6px}.hero p{font-size:15px;color:rgba(255,255,255,.85)}
+.card{background:#fff;border-radius:14px;padding:18px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.q{margin-bottom:18px}.q:last-child{margin-bottom:0}
+label{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
+label small{display:block;font-weight:500;color:#6B7280;font-size:13px}
+input,textarea{width:100%;border:1.5px solid #E0DDD5;border-radius:10px;padding:12px;font:inherit;font-size:15.5px;background:#fff;color:#0F1E36}
+textarea{min-height:92px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:#057A44}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid #E0DDD5;background:#fff;border-radius:20px;padding:9px 14px;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;color:#0F1E36}
+.chip[aria-pressed=true]{border-color:#057A44;background:#E3F2EA;color:#04613A}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:16px;font:inherit;font-size:17px;font-weight:800;background:#057A44;color:#fff;cursor:pointer}
+.btn:disabled{opacity:.6}
+.err{background:#FDECEA;color:#B42318;border-radius:10px;padding:12px;font-size:14.5px;display:none}
+.ok{text-align:center;padding:30px 18px}.ok b{display:block;font-size:22px;margin-bottom:8px}
+.muted{color:#6B7280;font-size:13.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app-header"><div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt=""></div><div><div class="app-header-title">Auntie Tobi</div><div class="app-header-sub">Instagram Glow-Up</div></div></div>
+<div class="wrap" id="app"><div class="card"><p class="muted">Loading…</p></div></div>
+<script>
+(function () {
+  var t = new URLSearchParams(location.search).get('t') || '', app = document.getElementById('app'), API = '/.netlify/functions/glowup';
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  function msg(h) { app.innerHTML = '<div class="card ok">' + h + '</div>'; }
+  fetch(API + '?t=' + encodeURIComponent(t)).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong.'); return j; }); }).then(function (d) {
+    if (d.done) return msg('<b>Thank you! 💚</b>We already have your answers and we’re working on your page. If you want to change anything, just message Auntie Tobi.');
+    var A = d.answers || {};
+    app.innerHTML = '<div class="hero"><div class="badge">✨ Instagram Glow-Up</div><h1>Hi ' + esc(d.name) + '! Let’s get your page glowing</h1><p>Answer these 12 quick questions (about 10 minutes). The more you tell us, the better your plan.</p></div>' +
+      '<form class="card" id="f" novalidate>' + d.questions.map(function (q, i) {
+        var k = q[0], lab = '<label for="q_' + k + '">' + (i + 1) + '. ' + esc(q[1]) + '</label>';
+        if (q[2] === 'choice') return '<div class="q">' + lab.replace('<label for="q_' + k + '">', '<label>') + '<div class="chips" data-k="' + k + '">' + q[3].map(function (o) { return '<button type="button" class="chip" data-v="' + esc(o) + '" aria-pressed="' + (A[k] === o) + '">' + esc(o) + '</button>'; }).join('') + '</div></div>';
+        if (q[2] === 'long') return '<div class="q">' + lab + '<textarea id="q_' + k + '" name="' + k + '" maxlength="1200">' + esc(A[k] || '') + '</textarea></div>';
+        return '<div class="q">' + lab + '<input id="q_' + k + '" name="' + k + '" maxlength="300" value="' + esc(A[k] || (k === 'business' ? d.name + (d.handle ? ' — @' + d.handle : '') : '')) + '"></div>';
+      }).join('') + '<div class="err" id="err" role="alert"></div><button class="btn" id="go" style="margin-top:16px">Send my answers ✨</button></form>' +
+      '<p class="muted">Only Auntie Tobi sees your answers.</p>';
+    [].forEach.call(document.querySelectorAll('.chips'), function (box) { box.onclick = function (e) { var b = e.target.closest('.chip'); if (!b) return; [].forEach.call(box.children, function (x) { x.setAttribute('aria-pressed', x === b); }); }; });
+    document.getElementById('f').onsubmit = function (e) {
+      e.preventDefault(); var err = document.getElementById('err'), go = document.getElementById('go'), ans = {};
+      [].forEach.call(document.querySelectorAll('#f [name]'), function (el) { ans[el.name] = el.value.trim(); });
+      [].forEach.call(document.querySelectorAll('.chips'), function (box) { var on = box.querySelector('[aria-pressed=true]'); ans[box.dataset.k] = on ? on.dataset.v : ''; });
+      if (!ans.business || !ans.products) { err.textContent = 'Please fill in your business name and what you sell.'; err.style.display = 'block'; return; }
+      go.disabled = true; go.textContent = 'Sending…'; err.style.display = 'none';
+      fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'form', t: t, answers: ans }) })
+        .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong — please try again.'); return j; }); })
+        .then(function () { window.scrollTo(0, 0); msg('<b>Thank you! 💚</b>Auntie Tobi has your answers and is starting on your page. You’ll get your Glow-Up on WhatsApp.'); })
+        .catch(function (x) { err.textContent = x.message; err.style.display = 'block'; go.disabled = false; go.textContent = 'Send my answers ✨'; });
+    };
+  }).catch(function (x) { msg('<b>Hmm…</b>' + esc(x.message)); });
+  document.querySelectorAll('img[data-lsrc]').forEach(function (i) { i.src = i.getAttribute('data-lsrc'); });
+})();
+</script>
+</body>
+</html>
