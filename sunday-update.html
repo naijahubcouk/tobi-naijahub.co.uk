@@ -55,10 +55,7 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
     <div id="s2" hidden><p style="font-size:15px">We’ve sent a 6-digit code to <b id="em2"></b>. Type it here:</p><div class="sub" style="margin-top:8px"><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"><button class="btn" id="ver">Confirm</button></div><p class="small"><a href="#" id="back">Use a different email</a></p></div>
     <div class="err" id="err"></div>
   </div>
-  <div class="card"><h2>What’s inside</h2><div class="ins"><div><i>🇬🇧</i>UK updates</div><div><i>🎉</i>Events</div><div><i>⭐</i>Business of the week</div><div><i>🛍️</i>Marketplace</div><div><i>💡</i>Tip of the week</div></div></div>
-  <div class="card issue" id="issue"><p class="small">Loading this week’s update…</p></div>
-  <div class="card past" id="past" hidden></div>
-  <div class="acts"><a class="wa" id="share" href="#" target="_blank" rel="noopener">💬 Share on WhatsApp</a><a class="ch" href="https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e" target="_blank" rel="noopener">📣 Follow Auntie Tobi on WhatsApp</a><a class="app" href="/">💚 Open the Auntie Tobi app</a></div>
+  <div class="card issue" id="issue" hidden></div>
   <p class="foot">💚 Auntie Tobi — Your UK Guide for Nigerians · <a href="/articles">Articles</a></p>
 </div>
 <script>
@@ -107,23 +104,10 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
     if (i.tip) h += '<div class="sec">💡 Tip of the week</div><div class="tip">' + para(i.tip) + '</div>';
     h += '<p style="margin-top:20px">See you next Sunday,<br><b>Auntie Tobi 💚</b></p>';
     $('issue').innerHTML = h;
-    var link = SITE + '/sunday-update?w=' + i.week;
-    $('share').href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent('📰 Auntie Tobi’s Sunday Update — ' + (i.subject || longDate(i.week)) + '\n' + link + '\n\nGet it free every Sunday 💚');
     document.title = (i.subject ? i.subject + ' · ' : '') + 'Auntie Tobi’s Sunday Update';
   }
-  function pastList(past, cur) {
-    if (!past || past.length < 2) return;
-    $('past').hidden = false;
-    $('past').innerHTML = '<h2>📚 Past Sunday Updates</h2>' + past.map(function (p) { return '<a href="/sunday-update?w=' + esc(p.week) + '"' + (p.week === cur ? ' class="on"' : '') + '><b style="font-weight:inherit">' + esc(p.subject || 'Sunday Update') + '</b><span>' + longDate(p.week) + '</span></a>'; }).join('');
-  }
   var w = new URLSearchParams(location.search).get('w');
-  post({ action: 'sunday-latest' }).then(function (r) {
-    if (!r.latest) { $('issue').innerHTML = '<div class="sec" style="margin-top:0">📰 The first Sunday Update is coming soon</div><p>Sign up above and it’ll land in your inbox on Sunday morning.</p>'; $('share').href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent('📰 Auntie Tobi’s Sunday Update — free every Sunday: ' + SITE + '/sunday-update'); return; }
-    var cur = w && /^\d{4}-\d{2}-\d{2}$/.test(w) ? w : r.latest.week;
-    pastList(r.past, cur);
-    if (cur === r.latest.week) return draw(r.latest);
-    return post({ action: 'sunday-issue', week: cur }).then(function (x) { draw(x.issue); });
-  }).catch(function (e) { $('issue').innerHTML = '<p class="small">' + esc(e.message) + '</p>'; });
+  if (w && /^\d{4}-\d{2}-\d{2}$/.test(w)) post({ action: 'sunday-issue', week: w }).then(function (x) { $('issue').hidden = false; draw(x.issue); }).catch(function () {});   // opened from “Read online” — the plain page is just the sign-up
   document.querySelectorAll('img[data-lsrc]').forEach(function (i) { i.src = i.getAttribute('data-lsrc'); });
 })();
 </script>
