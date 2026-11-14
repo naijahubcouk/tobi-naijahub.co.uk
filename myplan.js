@@ -574,8 +574,8 @@
         var m = i.d.slice(0, 7); if (m !== lastM) { lastM = m; h += '<div class="mpC-mh" id="celm-' + m + '">' + cap(MONTHS[+m.slice(5) - 1]).toUpperCase() + (m.slice(0, 4) !== String(yr) ? ' ' + m.slice(0, 4) : '') + '</div>'; }
         var n = daysTo(i.d), when = n === 0 ? 'Today 🎉' : n === 1 ? 'Tomorrow' : n + ' days';
         if (i.big) { h += '<div class="mpC-row"><div class="av" style="background:#FFB81C;color:#0F1E36">' + i.e + '</div><div style="flex:1;min-width:0"><b>' + esc(i.t) + '</b><small>' + nice(i.d, true) + '</small></div><div class="rt"><b>' + when + '</b><a href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">💌 Card</a></div></div>'; return; }
-        var g = GRP[relGroup(i.cel.r)], rd = rdOf(i), done = ['card', 'msg', 'cake', 'gift', 'call'].filter(function (q) { return rd[q]; }).length, sent = (i.cel.sent || []).indexOf(yr) >= 0 && n > 300;
-        h += '<div class="mpC-row" data-ready="' + i.id + '"><div class="av" style="background:' + g[1] + '">' + esc(initial(i)) + '</div><div style="flex:1;min-width:0"><b>' + esc(celShort(i)) + (relLabel(i.cel.r) && relLabel(i.cel.r).toLowerCase() !== String(i.cel.n || '').toLowerCase() ? ' <span class="tg" style="background:' + g[2] + ';color:' + g[1] + '">' + esc(relLabel(i.cel.r)) + '</span>' : '') + '</b><small>' + nice(i.d, true) + (celNum(i) ? ' · ' + celNum(i) : '') + (done && n <= 30 ? ' · ✅ ' + done + '/5 ready' : '') + '</small></div><div class="rt"><b' + (n <= 7 ? ' style="color:#C2185B"' : '') + '>' + when + '</b>' + (sent ? '<small>💛 celebrated</small>' : '') + '</div></div>';
+        var g = GRP[relGroup(i.cel.r)], rd = rdOf(i), done = ['card', 'msg', 'gift', 'call'].filter(function (q) { return rd[q]; }).length, sent = (i.cel.sent || []).indexOf(yr) >= 0 && n > 300;
+        h += '<div class="mpC-row" data-ready="' + i.id + '"><div class="av" style="background:' + g[1] + '">' + esc(initial(i)) + '</div><div style="flex:1;min-width:0"><b>' + esc(celShort(i)) + (relLabel(i.cel.r) && relLabel(i.cel.r).toLowerCase() !== String(i.cel.n || '').toLowerCase() ? ' <span class="tg" style="background:' + g[2] + ';color:' + g[1] + '">' + esc(relLabel(i.cel.r)) + '</span>' : '') + '</b><small>' + nice(i.d, true) + (celNum(i) ? ' · ' + celNum(i) : '') + (done && n <= 30 ? ' · ✅ ' + done + '/4 ready' : '') + '</small></div><div class="rt"><b' + (n <= 7 ? ' style="color:#C2185B"' : '') + '>' + when + '</b>' + (sent ? '<small>💛 celebrated</small>' : '') + '</div></div>';
       });
       var cel = mine.filter(function (i) { return (i.cel.sent || []).indexOf(yr) >= 0; }).length;
       if (cel) h += '<div class="mpC-stat"><b>💛 ' + cel + '</b><div>' + (cel === 1 ? 'person' : 'people') + ' celebrated this year — keep it going!</div></div>';
@@ -615,36 +615,24 @@
     var bg = $('[data-cel-big]', root); if (bg) bg.onchange = function () { ls.set('tobi_myplan_big', bg.checked ? '1' : '0'); gt('cel_bigdays', { on: bg.checked ? 1 : 0 }); render(); };
     if (live().some(function (i) { return i.cel && daysTo(i.d) === 0; })) confetti();
   }
-  // 🎁 Get ready — a little checklist for each celebration (ticks reset each year)
+  // 🎁 Get ready — a little checklist for each celebration (ticks reset each year): card, message, gift, call
   var LANGS = ['English', 'Pidgin', 'Yoruba', 'Igbo', 'Hausa'];
-  function bizFor(re) {
-    var all = []; try { all = typeof window.getLiveDirectory === 'function' ? window.getLiveDirectory() : []; } catch (e) {}
-    var town = String(P.town || '').toLowerCase().split(',')[0].trim();
-    var m = all.filter(function (b) { return b && b.slug && b.name && re.test((b.cat || '') + ' ' + b.name + ' ' + (b.desc || '')); });
-    m.sort(function (a, b) { var ta = town && String(a.loc || '').toLowerCase().indexOf(town) >= 0 ? 0 : 1, tb = town && String(b.loc || '').toLowerCase().indexOf(town) >= 0 ? 0 : 1; return ta - tb || (b.featured ? 1 : 0) - (a.featured ? 1 : 0); });
-    return m.slice(0, 6);
-  }
   function readySheet(id, go) {
     var i = P.items.filter(function (x) { return x.id === id; })[0]; if (!i || !i.cel) return;
     var rd = rdOf(i), n = daysTo(i.d), g = GRP[relGroup(i.cel.r)], lang = ls.get('tobi_cel_lang') || 'English';
-    var cakes = bizFor(/cake|baker|bakery|pastr|dessert|treat/i), gifts = bizFor(/gift|hamper|flower|florist|balloon|souvenir/i);
-    var biz = function (list) { return list.length ? '<div class="mpC-biz">' + list.map(function (b) { return '<a href="/biz/' + encodeURIComponent(b.slug) + '" target="_blank" rel="noopener" data-bizt>' + esc(b.name) + '<small>' + esc((b.loc || '').split(',')[0]) + '</small></a>'; }).join('') + '</div>' : '<div class="mp-sub" style="margin-top:6px">No Nigerian businesses for this near you yet — <a href="#" data-biz-all style="color:#057A44;font-weight:700">see all businesses</a>.</div>'; };
     var row = function (k, t, sub, extra) { return '<div class="mpC-ck' + (rd[k] ? ' on' : '') + '"><button class="bx" data-rk="' + k + '" aria-label="Done">' + (rd[k] ? '✓' : '') + '</button><div style="flex:1;min-width:0"><b>' + t + '</b><small>' + sub + '</small>' + (extra || '') + '</div></div>'; };
     var s = sheet('<div class="mpC-hero" style="padding:14px;margin:-4px 0 12px"><div class="who" style="margin-top:0"><div class="av">' + esc(initial(i)) + '</div><div style="min-width:0"><b>' + esc(heroTitle(i)) + '</b><span>' + (n === 0 ? 'Today! 🎉' : n === 1 ? 'Tomorrow' : 'In ' + n + ' days') + ' · ' + nice(i.d, true) + '</span></div></div></div>' +
       '<div style="font-weight:800;margin-bottom:8px">🎁 Get ready <span class="mp-sub" style="font-weight:600" id="rdN"></span></div>' +
       row('card', '💌 Make a card', 'With music — send it on WhatsApp', '<a class="mp-btn y" style="margin-top:7px;display:inline-block;padding:6px 11px" href="' + cardUrl(i) + '" data-rcard>' + cardBtn(i) + '</a>') +
       row('msg', '💬 Send a birthday message', 'Auntie Tobi writes it for you', '<div class="mpC-lng">' + LANGS.map(function (l) { return '<button data-lang="' + l + '"' + (l === lang ? ' class="on"' : '') + '>' + l + '</button>'; }).join('') + '</div><div id="rdMsg" class="mpC-msg" hidden></div><div class="mp-row" style="margin-top:7px"><button class="mp-btn" style="padding:7px 12px" id="rdW">✨ Write my message</button></div>') +
-      row('cake', '🎂 Order a cake', 'Nigerian bakers on Auntie Tobi', biz(cakes)) +
-      row('gift', '🎁 Get a gift', 'Tell Auntie Tobi what ' + (him(i) === 'them' ? 'they like' : (him(i) === 'her' ? 'she likes' : 'he likes')), '<input id="rdLk" maxlength="200" placeholder="e.g. Arsenal fan, loves perfume, cooking" value="' + esc(i.cel.likes || '') + '" style="margin-top:7px"><div class="mp-row" style="margin-top:7px"><button class="mp-btn g" style="padding:7px 12px" id="rdG">✨ Gift ideas</button></div><div id="rdGi" class="mpC-msg" hidden></div>' + (gifts.length ? '<div class="mp-sub" style="margin-top:8px;font-weight:700">Gifts & hampers from Nigerian businesses</div>' + biz(gifts) : '')) +
+      row('gift', '🎁 Get a gift', 'Tell Auntie Tobi what ' + (him(i) === 'them' ? 'they like' : (him(i) === 'her' ? 'she likes' : 'he likes')), '<input id="rdLk" maxlength="200" placeholder="e.g. Arsenal fan, loves perfume, cooking" value="' + esc(i.cel.likes || '') + '" style="margin-top:7px"><div class="mp-row" style="margin-top:7px"><button class="mp-btn g" style="padding:7px 12px" id="rdG">✨ Gift ideas</button></div><div id="rdGi" class="mpC-msg" hidden></div>') +
       row('call', '📞 Call on the day', rd.call ? 'Added to your plan for 9am on the day' : 'Add a reminder to your plan for 9am on the day') +
       '<div class="mp-row" style="justify-content:space-between;margin-top:14px"><button class="mp-btn g" id="rdE">✏️ Edit details</button><button class="mp-btn" id="rdX">Close</button></div>');
-    var count = function () { var r = rdOf(i); $('#rdN', s).textContent = '· ' + ['card', 'msg', 'cake', 'gift', 'call'].filter(function (q) { return r[q]; }).length + ' of 5 done'; };
+    var count = function () { var r = rdOf(i); $('#rdN', s).textContent = '· ' + ['card', 'msg', 'gift', 'call'].filter(function (q) { return r[q]; }).length + ' of 4 done'; };
     var tickRow = function (k, v) { setRd(i, k, v); var r = rdOf(i), el = $('[data-rk="' + k + '"]', s); el.textContent = r[k] ? '✓' : ''; el.parentNode.classList.toggle('on', !!r[k]); count(); };
     count();
     s.querySelectorAll('[data-rk]').forEach(function (b) { b.onclick = function () { var k = b.dataset.rk; if (k === 'call') return callIt(!rdOf(i).call); tickRow(k); }; });
     $('[data-rcard]', s).onclick = function () { tickRow('card', true); gt('cel_card', { from: 'ready' }); };
-    s.querySelectorAll('[data-bizt]').forEach(function (a) { a.onclick = function () { var k = a.closest('.mpC-ck').querySelector('[data-rk]').dataset.rk; tickRow(k, true); gt('cel_biz', { k: k }); }; });
-    s.querySelectorAll('[data-biz-all]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); s.remove(); try { window.showBusinesses(0, null, null, true); } catch (x) { location.href = '/'; } }; });
     // 💬 the message
     var last = '';
     s.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { lang = b.dataset.lang; ls.set('tobi_cel_lang', lang); s.querySelectorAll('[data-lang]').forEach(function (x) { x.classList.toggle('on', x === b); }); if (last) write(); }; });
