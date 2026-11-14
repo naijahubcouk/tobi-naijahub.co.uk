@@ -168,6 +168,13 @@
     '.mpX-g{background:#057A44;color:#fff}.mpX-y{background:#FFB81C;color:#0F1E36}.mpX-b{background:#EEF4FF;color:#1D3D7A}.mpX-s{background:#F6F4EE;color:#0F1E36}.mpX-r{background:#FDECEA;color:#B42318}' +
     '.mpX-q{display:block;width:100%;margin-top:11px;font-size:13.5px;color:#6B7280;font-style:italic;text-align:center;background:none;border:0;font-family:inherit;cursor:pointer;line-height:1.45}' +
     '.mpX-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#EAF0FB;font-size:14px;font-weight:700;cursor:pointer}.mpX-row span{margin-left:auto;color:#1D3D7A;font-size:13px}' +
+    '.mpSh-seg{display:flex;background:#EEE9DD;border-radius:12px;padding:3px;margin:0 0 12px}.mpSh-seg button{flex:1;border:0;background:none;font-family:inherit;font-size:14px;font-weight:800;padding:9px 0;border-radius:10px;color:#4B5563;cursor:pointer}.mpSh-seg button.on{background:#fff;color:#057A44;box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
+    '.mpSh-top{display:flex;gap:8px;align-items:center}.mpSh-cat{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin:14px 2px 7px}' +
+    '.mpSh-chips{display:flex;flex-wrap:wrap;gap:7px}.mpSh-chips button{font-family:inherit;font-size:14px;font-weight:600;color:#0F1E36;background:#fff;border:1.5px solid #E2DDD0;border-radius:18px;padding:7px 12px;cursor:pointer}.mpSh-chips button:before{content:"+ ";color:#057A44;font-weight:800}' +
+    '.mpSh-chips button.on{background:#057A44;border-color:#057A44;color:#fff}.mpSh-chips button.on:before{content:"✓ ";color:#fff}.mpSh-chips button.ed:before{content:""}.mpSh-chips button.ed:after{content:"✕";display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;margin-left:6px;border-radius:50%;background:#FDE2E1;color:#B42318;font-size:11px}' +
+    '.mpSh-new{display:block;width:100%;margin:8px 0 2px;font-family:inherit;font-size:14px;font-weight:700;color:#057A44;background:#E3F2EA;border:1.5px solid #CDE8D9;border-radius:12px;padding:10px;cursor:pointer;text-align:left}' +
+    '.mpSh-bar{position:sticky;bottom:78px;z-index:6;display:flex;justify-content:space-between;align-items:center;width:100%;border:0;font-family:inherit;background:#0F1E36;color:#fff;border-radius:14px;padding:12px 14px;font-size:14.5px;font-weight:800;cursor:pointer;box-shadow:0 8px 20px rgba(15,30,54,.25)}.mpSh-bar em{font-style:normal;background:#FFB81C;color:#0F1E36;border-radius:10px;padding:5px 10px;font-size:13px}' +
+    '.mpSh-sug{background:#FFF6DC;border:1px solid #FFE3A3;border-radius:14px;padding:10px 12px;margin-bottom:10px}.mpSh-sug b{display:block;font-size:13.5px;margin-bottom:7px}' +
     '.mpS-hd{padding:4px 2px 2px}.mpS-hd h2{font-size:24px;margin:0;color:#0F1E36}.mpS-hd div{font-size:13px;color:#6B7280}' +
     '.mpS .mp-lbl{margin:14px 2px 6px;font-size:13px;color:#0F1E36;text-transform:none;letter-spacing:0}.mpS .mp-lbl.red{color:#B42318}' +
     '.mpS .mpS-list .mp-it{background:#fff;border:1px solid #EEEBE3;border-radius:12px;padding:11px 12px;margin-bottom:6px}.mpS .mpS-list .mp-it .r{color:#057A44;font-weight:700}.mpS .mpS-list .mp-it .r.red{color:#B42318}' +
@@ -596,14 +603,39 @@
     [/\b(toilet roll|kitchen roll|washing|detergent|bleach|soap|bin bags?|foil|cling ?film|sponges?|fairy|dettol|cleaner|batteries|light ?bulbs?)\b/i, 7],
     [/\b(shampoo|conditioner|toothpaste|toothbrush|deodorant|lotion|cream|shea|pads|tampons|nappies|diapers|wipes|razors?|hair)\b/i, 8],
     [/\b(plates|cups|napkins|balloons|cutlery|trays?|party|candles)\b/i, 9], [/\b(uniform|school|pe kit|pencil|book ?bag|lunch ?box|stationery)\b/i, 10]];
-  function guessCat(n) { for (var i = 0; i < GUESSC.length; i++) if (GUESSC[i][0].test(n)) return CATS[GUESSC[i][1]]; return CATS[11]; }
+  function guessCat(n) { for (var i = 0; i < GUESSC.length; i++) if (GUESSC[i][0].test(n)) return CATS[GUESSC[i][1]]; return CATS[CATS.length - 1]; }
   var TPL = [
     { k: 'naija', e: '🍠', name: 'Naija groceries', items: ['Yam', 'Plantain', 'Garri', 'Egusi', 'Palm oil', 'Honey beans', 'Rice', 'Stockfish', 'Crayfish', 'Scotch bonnet pepper', 'Tomatoes', 'Onions', 'Maggi / Knorr cubes', 'Semovita', 'Dried fish'] },
     { k: 'weekly', e: '🧺', name: 'Weekly shop', items: ['Bread', 'Milk', 'Eggs', 'Butter', 'Chicken', 'Rice', 'Pasta', 'Onions', 'Tomatoes', 'Bananas', 'Apples', 'Cereal', 'Toilet roll', 'Washing-up liquid'] },
     { k: 'party', e: '🎉', name: 'Party / Owambe', items: ['Rice (big bag)', 'Chicken', 'Turkey', 'Puff puff', 'Samosas & spring rolls', 'Chin chin', 'Malt', 'Soft drinks', 'Water', 'Ice', 'Foil trays', 'Plates & cups', 'Napkins', 'Cutlery'] },
     { k: 'school', e: '🏫', name: 'School things', items: ['Uniform', 'School shoes', 'PE kit', 'Book bag', 'Water bottle', 'Lunchbox', 'Pencil case', 'Name labels'] },
     { k: 'blank', e: '🛒', name: 'New list', items: [] }];
-  var liveLists = function () { return (P.lists || []).filter(function (l) { return !l.del; }); };
+  var liveLists = function () { return (P.lists || []).filter(function (l) { return !l.del && !l.main; }); };
+  // 📋 My items — the main list of everything they usually buy. They pick from it into "To buy", and add or remove items any time.
+  var MAIN = [
+    ['🍠 African groceries', 'Yam, Plantain, Garri (white), Garri (yellow), Egusi, Ogbono, Palm oil, Honey beans, Black-eyed beans, Ofada rice, Semovita, Poundo yam, Elubo (yam flour), Fufu flour, Stockfish, Crayfish, Dried fish, Ponmo, Locust beans (iru), Uziza, Bitter leaf, Ugu, Efo (spinach), Scotch bonnet pepper, Tatashe (red pepper), Cameroon pepper, Suya spice, Maggi / Knorr cubes, Indomie, Chin chin, Plantain chips, Malt drink, Zobo leaves, Kola nut'],
+    ['🥬 Fruit & veg', 'Onions, Tomatoes, Peppers, Garlic, Ginger, Spring onions, Carrots, Potatoes, Sweet potatoes, Spinach, Cabbage, Lettuce, Cucumber, Okra, Green beans, Sweetcorn, Avocados, Bananas, Apples, Oranges, Grapes, Lemons, Pineapple, Watermelon, Mangoes'],
+    ['🍗 Meat & fish', 'Chicken (whole), Chicken thighs, Chicken wings, Turkey wings, Beef, Goat meat, Lamb, Minced beef, Sausages, Bacon, Fish (fresh), Mackerel, Tilapia, Catfish, Prawns, Sardines (tin), Corned beef'],
+    ['🥚 Dairy & eggs', 'Eggs, Milk, Butter, Cheese, Yoghurt, Cream, Evaporated milk (Peak), Powdered milk'],
+    ['🍞 Bakery', 'Bread, Agege bread, Rolls, Wraps, Pitta bread, Cake'],
+    ['🥫 Food cupboard', 'Rice, Basmati rice, Spaghetti, Pasta, Noodles, Flour, Sugar, Salt, Vegetable oil, Olive oil, Tomato paste, Tinned tomatoes, Baked beans, Cornflakes, Oats, Custard powder, Milo, Tea bags, Coffee, Honey, Jam, Peanut butter, Mayonnaise, Ketchup, Curry powder, Thyme, Black pepper, Stock cubes'],
+    ['🥤 Drinks', 'Water, Fizzy drinks, Fruit juice, Squash, Malt, Ribena, Lucozade'],
+    ['🧽 Household', 'Toilet roll, Kitchen roll, Washing-up liquid, Washing powder, Fabric softener, Bleach, Kitchen cleaner, Bin bags, Foil, Cling film, Sponges, Dishwasher tablets, Light bulbs, Batteries'],
+    ['🧴 Personal care', 'Shampoo, Conditioner, Hair cream, Body lotion, Shea butter, Shower gel, Soap, Toothpaste, Toothbrushes, Deodorant, Sanitary pads, Razors, Cotton buds'],
+    ['👶 Baby & kids', 'Nappies, Baby wipes, Baby food, Formula milk, Kids’ snacks, Lunchbox snacks'],
+    ['🍿 Snacks', 'Crisps, Biscuits, Chocolate, Popcorn, Peanuts, Puff puff mix']];
+  CATS.splice(CATS.length - 1, 0, '👶 Baby & kids', '🍿 Snacks');
+  function mainList(make) {
+    var m = (P.lists || []).filter(function (l) { return l.main && !l.del; })[0];
+    if (!m && make) {
+      m = { id: 'mainlist', main: true, name: 'My items', emoji: '📋', up: Date.now(), items: [] };
+      MAIN.forEach(function (g) { g[1].split(/\s*,\s*/).forEach(function (n) { m.items.push({ id: newId(), n: n, q: '', c: g[0], p: null, x: false, k: 0 }); }); });
+      P.lists = (P.lists || []).filter(function (l) { return l.id !== 'mainlist'; }).concat([m]);
+      dirtyL[m.id] = 1; store(); if (P.signedIn) { clearTimeout(syncT); syncT = setTimeout(sync, 700); }   // quiet — no re-render while drawing
+    }
+    return m;
+  }
+  var same = function (a, b) { return String(a).trim().toLowerCase() === String(b).trim().toLowerCase(); };
   function listChange(l) { l.up = Date.now(); dirtyL[l.id] = 1; store(); if (P.signedIn) { clearTimeout(syncT); syncT = setTimeout(sync, 700); } if (window._currentPage === 'myplan') render(); fill(); }
   function newList(t) {
     var l = { id: newId(), name: t.name, emoji: t.e, items: t.items.map(function (n) { return { id: newId(), n: n, q: '', c: guessCat(n), p: null, x: false }; }), up: Date.now() };
@@ -619,38 +651,96 @@
     else if ((m = s.match(/\s(?:x\s?(\d+)|(\d+(?:\.\d+)?\s?(?:kg|g|l|ml|lb|bags?|packs?|tins?|bottles?|tubers?)))\s*$/i))) { q = (m[1] || m[2]).trim(); s = s.replace(m[0], ' '); }
     var n = s.trim(); return { n: n.charAt(0).toUpperCase() + n.slice(1), q: q, p: p };
   }
+  // ── 🛒 Shopping: two parts — 🛒 To buy (this shop) and 📋 My items (the main list they pick from) ──
+  function target() { var lists = liveLists(); return lists.filter(function (x) { return x.id === view.list; })[0] || lists[0] || null; }
+  function onList(l, n) { return l ? l.items.filter(function (i) { return !i.x && same(i.n, n); })[0] : null; }
   function shopHtml() {
-    var lists = liveLists(), l = lists.filter(function (x) { return x.id === view.list; })[0] || lists[0];
+    var lists = liveLists(), l = target(), m = mainList(false);
     if (l) view.list = l.id;
+    if (!view.shop) view.shop = lists.length ? 'buy' : 'main';
+    var left = l ? l.items.filter(function (i) { return !i.x; }) : [], got = l ? l.items.filter(function (i) { return i.x; }) : [];
     var h = '';
-    if (!P.signedIn && lists.length) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — save your lists so they’re on any phone.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
-    if (!l) return h + '<div class="mp-card"><div class="mp-empty"><b>🛒 Your shopping lists</b>Start with a ready-made list and change it however you like — or start from scratch.</div><div class="mp-welcome">' + TPL.map(function (t) { return '<button data-tpl="' + t.k + '"><span>' + t.e + '</span><div>' + (t.k === 'blank' ? 'Start a blank list' : esc(t.name)) + '<small>' + (t.items.length ? t.items.slice(0, 5).join(', ') + '…' : 'Add your own items') + '</small></div></button>'; }).join('') + '</div></div>';
+    if (!P.signedIn && (lists.length || m)) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — save your lists so they’re on any phone.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
+    h += '<div class="mpSh-seg"><button data-shv="buy"' + (view.shop === 'buy' ? ' class="on"' : '') + '>🛒 To buy' + (left.length ? ' (' + left.length + ')' : '') + '</button><button data-shv="main"' + (view.shop === 'main' ? ' class="on"' : '') + '>📋 My items</button></div>';
+    if (view.shop === 'main') return h + mainHtml(l);
+    if (!l) return h + '<div class="mp-card"><div class="mp-empty"><b>🛒 Nothing to buy yet</b>Pick what you need from <b>📋 My items</b> — or start a ready-made list.</div><button class="mp-btn" data-shv="main" style="width:100%;margin-bottom:10px">📋 Pick from My items</button><div class="mp-welcome">' + TPL.map(function (t) { return '<button data-tpl="' + t.k + '"><span>' + t.e + '</span><div>' + (t.k === 'blank' ? 'Start a blank list' : esc(t.name)) + '<small>' + (t.items.length ? t.items.slice(0, 5).join(', ') + '…' : 'Add your own items') + '</small></div></button>'; }).join('') + '</div></div>';
     h += '<div class="mp-row" style="margin:0 0 10px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px">' + lists.map(function (x) { return '<button class="mp-btn' + (x.id === l.id ? '' : ' g') + '" style="white-space:nowrap;padding:8px 12px" data-list="' + x.id + '">' + esc(x.emoji + ' ' + x.name) + '</button>'; }).join('') + '<button class="mp-btn g" style="padding:8px 12px" data-list-new aria-label="New list">＋</button></div>';
-    var left = l.items.filter(function (i) { return !i.x; }), got = l.items.filter(function (i) { return i.x; });
-
+    // 💡 things they usually buy that aren't on this list
+    if (m) { var sug = m.items.filter(function (i) { return (i.k || 0) >= 2 && !onList(l, i.n); }).sort(function (a, b) { return (b.k || 0) - (a.k || 0); }).slice(0, 6);
+      if (sug.length) h += '<div class="mpSh-sug"><b>💡 You usually buy these too</b><div class="mpSh-chips">' + sug.map(function (i) { return '<button data-pick="' + i.id + '">' + esc(i.n) + '</button>'; }).join('') + '</div></div>'; }
     h += '<div class="mp-card"><div style="display:flex;align-items:center;gap:8px"><b style="font-size:17px;flex:1">' + esc(l.emoji + ' ' + l.name) + '</b><span class="mp-sub">' + (l.items.length ? left.length + ' of ' + l.items.length + ' left' : '') + '</span><button class="mp-btn g" style="padding:6px 10px" data-list-menu aria-label="List options">⋯</button></div>' +
       '<form class="mp-add" id="shF" style="margin:10px 0 4px"><input id="shQ" placeholder="Add an item — e.g. “4 plantain”" autocomplete="off" maxlength="80"><button class="mp-btn" aria-label="Add">＋</button></form>';
-    if (!l.items.length) h += '<div class="mp-sub" style="padding:8px 0">Nothing on this list yet — add your first item above.</div>';
-    var byCat = {}; left.forEach(function (i) { (byCat[i.c || CATS[11]] = byCat[i.c || CATS[11]] || []).push(i); });
+    if (!l.items.length) h += '<div class="mp-sub" style="padding:8px 0">Nothing on this list yet — pick from <a href="#" data-shv="main" style="color:#057A44;font-weight:700">📋 My items</a> or type above.</div>';
+    var byCat = {}; left.forEach(function (i) { (byCat[i.c || CATS[CATS.length - 1]] = byCat[i.c || CATS[CATS.length - 1]] || []).push(i); });
     var order = CATS.concat(Object.keys(byCat).filter(function (c) { return CATS.indexOf(c) < 0; }));
     var irow = function (i) { return '<div class="mp-it' + (i.x ? ' dn' : '') + '" data-item="' + i.id + '"><button class="mp-ck' + (i.x ? ' on' : '') + '" data-buy="' + i.id + '" aria-label="Bought">' + (i.x ? '✓' : '') + '</button><div class="tx">' + esc(i.n) + '</div><div class="r">' + esc(i.q || '') + '</div></div>'; };
     order.forEach(function (c) { if (byCat[c]) h += '<div class="mp-lbl">' + esc(c) + '</div>' + byCat[c].map(irow).join(''); });
     if (got.length) h += '<div class="mp-lbl">✅ In the basket (' + got.length + ')</div>' + got.map(irow).join('');
-
-    h += '</div><div class="mp-row" style="margin-bottom:10px"><button class="mp-btn" style="background:#25D366" data-list-wa>📤 Send on WhatsApp</button>' + (got.length ? '<button class="mp-btn g" data-list-reset>🔄 Untick all</button>' : '') + '</div>';
+    h += '</div>' + (got.length ? '<button class="mp-btn" style="width:100%;margin-bottom:8px" data-list-done>✅ Done shopping — clear what I bought</button>' : '') +
+      '<div class="mp-row" style="margin-bottom:10px"><button class="mp-btn" style="background:#25D366" data-list-wa>📤 Send on WhatsApp</button>' + (got.length ? '<button class="mp-btn g" data-list-reset>🔄 Untick all</button>' : '') + '</div>';
     return h;
+  }
+  function mainHtml(l) {
+    var m = mainList(true), q = (view.mq || '').trim(), ql = q.toLowerCase(), ed = !!view.medit;
+    var list = m.items.filter(function (i) { return !ql || i.n.toLowerCase().indexOf(ql) >= 0; });
+    var exact = q && m.items.some(function (i) { return same(i.n, q); });
+    var n = l ? l.items.filter(function (i) { return !i.x; }).length : 0;
+    var h = '<div class="mpSh-top"><form class="mp-add" id="mlF" style="flex:1;margin:0"><input id="mlQ" value="' + esc(view.mq || '') + '" placeholder="🔍 Find or add an item…" autocomplete="off" maxlength="80"><button class="mp-btn" aria-label="Add">＋</button></form></div>' +
+      '<div class="mp-sub" style="margin:8px 2px 4px;display:flex;gap:10px;align-items:flex-start"><span style="flex:1">' + (ed ? 'Tap ✕ to remove an item from your main list. Add new ones with ＋.' : 'Tap an item to add it to <b>' + esc(l ? l.emoji + ' ' + l.name : '🛒 To buy') + '</b>. Tap again to take it off.' + (liveLists().length > 1 ? ' <a href="#" data-mtarget style="color:#057A44;font-weight:700">Change list</a>' : '')) + '</span><button class="mp-btn ' + (ed ? '' : 'g') + '" data-medit style="padding:6px 11px;white-space:nowrap;font-size:13px">' + (ed ? '✓ Done' : '✏️ Edit') + '</button></div>';
+    if (q && !exact) h += '<button class="mpSh-new" data-madd>＋ Add “' + esc(q) + '” to My items</button>';
+    var byCat = {}; list.forEach(function (i) { (byCat[i.c || CATS[CATS.length - 1]] = byCat[i.c || CATS[CATS.length - 1]] || []).push(i); });
+    var order = CATS.concat(Object.keys(byCat).filter(function (c) { return CATS.indexOf(c) < 0; }));
+    order.forEach(function (c) { if (!byCat[c]) return;
+      h += '<div class="mpSh-cat">' + esc(c) + '<span>' + byCat[c].length + '</span></div><div class="mpSh-chips">' + byCat[c].map(function (i) { var on = !ed && onList(l, i.n);
+        return '<button class="' + (on ? 'on' : '') + (ed ? ' ed' : '') + '" data-' + (ed ? 'mdel' : 'pick') + '="' + i.id + '">' + esc(i.n) + '</button>'; }).join('') + '</div>'; });
+    if (!list.length && !q) h += '<div class="mp-sub" style="padding:10px 2px">Your main list is empty — add the things you usually buy with ＋.</div>';
+    if (!ed && !q) h += '<button class="mpSh-new" data-mreset style="margin-top:14px;background:none;border-style:dashed;color:#6B7280">↺ Add back Auntie Tobi’s starter items</button>';
+    h += '<div style="height:64px"></div>' + (n && !ed ? '<button class="mpSh-bar" data-shv="buy">🛒 ' + n + ' item' + (n === 1 ? '' : 's') + ' to buy<em>See list →</em></button>' : '');
+    return h;
+  }
+  // tap an item in My items → on/off the shopping list (makes a "To buy" list the first time)
+  function pick(id) {
+    var m = mainList(true), it = m.items.filter(function (x) { return x.id === id; })[0]; if (!it) return;
+    var l = target();
+    if (!l) { l = { id: newId(), name: 'To buy', emoji: '🛒', items: [], up: Date.now() }; P.lists = (P.lists || []).concat([l]); view.list = l.id; }   // no sign-in pop-up while they're picking — the 'Not saved yet' banner is enough
+    var have = onList(l, it.n);
+    if (have) l.items.splice(l.items.indexOf(have), 1);
+    else { l.items.push({ id: newId(), n: it.n, q: '', c: it.c || guessCat(it.n), p: null, x: false }); it.k = (it.k || 0) + 1; listChange(m); }
+    listChange(l); gt(have ? 'shop_unpick' : 'shop_pick');
   }
   function bindShop(root) {
     bindTabs(root);
     root.querySelectorAll('[data-mp-save]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); signIn(); }; });
+    root.querySelectorAll('[data-shv]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); view.shop = b.dataset.shv; view.medit = false; render(); try { var r = document.getElementById('messages'); if (r) r.scrollTop = 0; } catch (x) {} }; });
     root.querySelectorAll('[data-tpl]').forEach(function (b) { b.onclick = function () { var t = TPL.filter(function (x) { return x.k === b.dataset.tpl; })[0]; newList(t); toast(t.items.length ? '🛒 ' + t.name + ' ready — change anything you like' : '🛒 New list ready'); if (!t.items.length) setTimeout(function () { renameList(true); }, 300); }; });
-    var l = liveLists().filter(function (x) { return x.id === view.list; })[0]; if (!l) return;
+    root.querySelectorAll('[data-pick]').forEach(function (b) { b.onclick = function () { pick(b.dataset.pick); }; });
+    // 📋 My items
+    var mf = $('#mlF', root);
+    if (mf) {
+      var mq = $('#mlQ', root), tm = null;
+      mq.oninput = function () { clearTimeout(tm); var v = mq.value; tm = setTimeout(function () { view.mq = v; render(); var i = $('#mlQ'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 250); };
+      var addIt = function () { var v = mq.value.trim(); if (!v) return mq.focus(); var m = mainList(true); var p = parseItem(v); if (!p.n) return;
+        if (m.items.some(function (i) { return same(i.n, p.n); })) { toast('“' + p.n + '” is already in My items'); return; }
+        var c = guessCat(p.n); m.items.push({ id: newId(), n: p.n, q: '', c: c, p: null, x: false, k: 0 }); view.mq = ''; listChange(m); toast('✓ “' + p.n + '” added to ' + c); gt('shop_main_add'); };
+      mf.onsubmit = function (e) { e.preventDefault(); addIt(); };
+      var ma = $('[data-madd]', root); if (ma) ma.onclick = addIt;
+    }
+    var me = $('[data-medit]', root); if (me) me.onclick = function () { view.medit = !view.medit; render(); };
+    root.querySelectorAll('[data-mdel]').forEach(function (b) { b.onclick = function () { var m = mainList(true), idx = -1; m.items.forEach(function (x, k) { if (x.id === b.dataset.mdel) idx = k; }); if (idx < 0) return; var it = m.items.splice(idx, 1)[0]; listChange(m); toast('Removed “' + it.n + '”', function () { m.items.splice(idx, 0, it); listChange(m); }); }; });
+    var mr = $('[data-mreset]', root); if (mr) mr.onclick = function () { var m = mainList(true), n = 0; MAIN.forEach(function (g) { g[1].split(/\s*,\s*/).forEach(function (x) { if (!m.items.some(function (i) { return same(i.n, x); })) { m.items.push({ id: newId(), n: x, q: '', c: g[0], p: null, x: false, k: 0 }); n++; } }); }); if (n) { listChange(m); toast('↺ Added back ' + n + ' items'); } else toast('You already have all the starter items 👍'); };
+    var mt = $('[data-mtarget]', root); if (mt) mt.onclick = function (e) { e.preventDefault(); var s = sheet('<h3>Add items to which list?</h3><div class="mp-welcome">' + liveLists().map(function (x) { return '<button data-tl="' + x.id + '"><span>' + esc(x.emoji) + '</span><div>' + esc(x.name) + '<small>' + x.items.filter(function (i) { return !i.x; }).length + ' to buy</small></div></button>'; }).join('') + '</div>'); s.querySelectorAll('[data-tl]').forEach(function (b) { b.onclick = function () { view.list = b.dataset.tl; s.remove(); render(); }; }); };
+    // 🛒 To buy
+    var l = target(); if (!l) return;
     root.querySelectorAll('[data-list]').forEach(function (b) { b.onclick = function () { view.list = b.dataset.list; render(); }; });
     var nw = $('[data-list-new]', root); if (nw) nw.onclick = pickTemplate;
-    var f = $('#shF', root); if (f) f.onsubmit = function (e) { e.preventDefault(); var q = $('#shQ', root), v = q.value.trim(); if (!v) return q.focus(); v.split(/\s*[,\n]\s*(?=\D)/).forEach(function (part) { var it = parseItem(part); if (it.n) l.items.push({ id: newId(), n: it.n, q: it.q, c: guessCat(it.n), p: null, x: false }); }); listChange(l); gt('shop_add'); setTimeout(function () { var i = $('#shQ'); if (i) i.focus(); }, 50); };
+    var f = $('#shF', root); if (f) f.onsubmit = function (e) { e.preventDefault(); var q = $('#shQ', root), v = q.value.trim(); if (!v) return q.focus(); var m = mainList(true), grew = false;
+      v.split(/\s*[,\n]\s*(?=\D)/).forEach(function (part) { var it = parseItem(part); if (!it.n) return; var c = guessCat(it.n); l.items.push({ id: newId(), n: it.n, q: it.q, c: c, p: null, x: false });
+        var mi = m.items.filter(function (i) { return same(i.n, it.n); })[0]; if (mi) mi.k = (mi.k || 0) + 1; else m.items.push({ id: newId(), n: it.n, q: '', c: c, p: null, x: false, k: 1 }); grew = true; });   // typed items join My items too
+      if (grew) listChange(m); listChange(l); gt('shop_add'); setTimeout(function () { var i = $('#shQ'); if (i) i.focus(); }, 50); };
     root.querySelectorAll('[data-buy]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var i = l.items.filter(function (x) { return x.id === b.dataset.buy; })[0]; if (i) { i.x = !i.x; listChange(l); } }; });
     root.querySelectorAll('[data-item]').forEach(function (r) { r.onclick = function () { itemSheet(l, r.dataset.item); }; });
     var wa = $('[data-list-wa]', root); if (wa) wa.onclick = function () { sendWa(l); };
+    var dn = $('[data-list-done]', root); if (dn) dn.onclick = function () { var before = l.items.slice(); l.items = l.items.filter(function (i) { return !i.x; }); listChange(l); toast('✅ Nice one! Cleared what you bought', function () { l.items = before; listChange(l); }); gt('shop_done'); };
     var rs = $('[data-list-reset]', root); if (rs) rs.onclick = function () { var before = JSON.parse(JSON.stringify(l.items)); l.items.forEach(function (i) { i.x = false; }); listChange(l); toast('🔄 Ready for next time', function () { l.items = before; listChange(l); }); };
     var mn = $('[data-list-menu]', root); if (mn) mn.onclick = function () { listMenu(l); };
   }
@@ -688,11 +778,11 @@
     $('#iC', s).onchange = function () { $('#iCn', s).style.display = this.value === '__new' ? 'block' : 'none'; };
     $('#iX', s).onclick = function () { s.remove(); };
     $('#iDel', s).onclick = function () { var idx = l.items.indexOf(i); l.items.splice(idx, 1); s.remove(); listChange(l); toast('Removed', function () { l.items.splice(idx, 0, i); listChange(l); }); };
-    $('#iOk', s).onclick = function () { var c = $('#iC', s).value; i.n = $('#iN', s).value.trim() || i.n; i.q = $('#iQ', s).value.trim(); i.p = null; i.c = c === '__new' ? ($('#iCn', s).value.trim() || CATS[11]) : c; s.remove(); listChange(l); };
+    $('#iOk', s).onclick = function () { var c = $('#iC', s).value; i.n = $('#iN', s).value.trim() || i.n; i.q = $('#iQ', s).value.trim(); i.p = null; i.c = c === '__new' ? ($('#iCn', s).value.trim() || CATS[CATS.length - 1]) : c; s.remove(); listChange(l); };
   }
   function sendWa(l) {
     var left = l.items.filter(function (i) { return !i.x; }), byCat = {};
-    left.forEach(function (i) { (byCat[i.c || CATS[11]] = byCat[i.c || CATS[11]] || []).push(i); });
+    left.forEach(function (i) { (byCat[i.c || CATS[CATS.length - 1]] = byCat[i.c || CATS[CATS.length - 1]] || []).push(i); });
     var txt = '🛒 *' + l.name + '*\n' + Object.keys(byCat).map(function (c) { return '\n' + c + '\n' + byCat[c].map(function (i) { return '• ' + i.n + (i.q ? ' (' + i.q + ')' : ''); }).join('\n'); }).join('\n') + '\n\nMade with My Plan on Auntie Tobi 💚 auntietobi.co.uk/my-plan';
     if (!left.length) { toast('Everything is ticked off 🎉'); return; }
     gt('shop_whatsapp'); window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(txt), '_blank', 'noopener');

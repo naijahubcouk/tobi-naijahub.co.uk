@@ -44,8 +44,8 @@ function cleanItem(x) {
 // 🛒 a shopping list: { id, name, emoji, items: [{ id, n, q, c, p, x }], up, del }   p = estimated £ (optional), x = bought
 function cleanList(x) {
   if (!x || !/^[a-z0-9]{6,24}$/.test(String(x.id || ''))) return null;
-  const l = { id: x.id, name: cleanText(x.name, 50) || 'Shopping list', emoji: cleanText(x.emoji, 8) || '🛒', up: Math.max(0, Math.min(Date.now() + 60000, +x.up || 0)), del: !!x.del,
-    items: (Array.isArray(x.items) ? x.items : []).slice(0, 300).map(i => i && /^[a-z0-9]{4,24}$/.test(String(i.id || '')) ? { id: i.id, n: cleanText(i.n, 80), q: cleanText(i.q, 24), c: cleanText(i.c, 30), p: (+i.p >= 0 && +i.p < 100000) ? Math.round(+i.p * 100) / 100 : null, x: !!i.x } : null).filter(i => i && i.n) };
+  const l = { id: x.id, name: cleanText(x.name, 50) || 'Shopping list', emoji: cleanText(x.emoji, 8) || '🛒', up: Math.max(0, Math.min(Date.now() + 60000, +x.up || 0)), del: !!x.del, main: !!x.main,   // main = 📋 My items (everything they usually buy)
+    items: (Array.isArray(x.items) ? x.items : []).slice(0, 300).map(i => i && /^[a-z0-9]{4,24}$/.test(String(i.id || '')) ? { id: i.id, n: cleanText(i.n, 80), q: cleanText(i.q, 24), c: cleanText(i.c, 30), p: (+i.p >= 0 && +i.p < 100000) ? Math.round(+i.p * 100) / 100 : null, x: !!i.x, k: Math.max(0, Math.min(9999, parseInt(i.k, 10) || 0)) } : null).filter(i => i && i.n) };
   return l;
 }
 function mergeLists(cur, incoming) {
