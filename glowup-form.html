@@ -62,7 +62,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       go.disabled = true; go.textContent = 'Sending…'; err.style.display = 'none';
       fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'form', t: t, answers: ans }) })
         .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong — please try again.'); return j; }); })
-        .then(function () { window.scrollTo(0, 0); msg('<b>Thank you! 💚</b>Auntie Tobi has your answers and is starting on your page. You’ll get your Revamp on WhatsApp.'); })
+        .then(function () { window.scrollTo(0, 0); msg('<b>Thank you! 💚</b>Auntie Tobi has your answers and is starting on your page. You’ll get your Revamp updates on WhatsApp.'); })
         .catch(function (x) { err.textContent = x.message; err.style.display = 'block'; go.disabled = false; go.textContent = 'Send my answers ✨'; });
     };
   }).catch(function (x) { msg('<b>Hmm…</b>' + esc(x.message)); });
