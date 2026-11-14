@@ -308,7 +308,7 @@
   }
   // 🎨 the Good morning box colour — each person picks their own (saved on this phone)
   var BGK = 'tobi_myplan_bg', BGS = { white: ['#FFFFFF', '#E8E3D6', 'White'], green: ['#E8F5EE', '#CDE8D9', 'Light green'], cream: ['#FFF7E3', '#F3E2B3', 'Light cream'], blue: ['#EAF1FC', '#D3E0F5', 'Light blue'] };
-  function todayHtml() {
+  function todayHtml(onPage) {
     var g = groups(), t = today(), has = live().length > 0 || liveLists().length > 0, hideNew = ls.get(HIDE) === '1';
     var gr = greet(), d = new Date(), h = d.getHours(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
     var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
@@ -339,7 +339,7 @@
       if (sl0) tiles += '<div class="mpX-tl mpX-s" data-mp-shop><div class="l">Shopping</div><b>🛒 ' + esc(sl0.name) + '</b><small>' + (sleft ? sleft + ' to buy' : 'All bought ✓') + '</small></div>';
       else tiles += '<div class="mpX-tl mpX-s" data-mp-shop><div class="l">Shopping</div><b>🛒 Start a list</b><small>Naija groceries & more</small></div>';
       body += '<div class="mpX-tiles">' + tiles + '</div>';
-    } else if (!hideNew) {
+    } else if (!hideNew && !onPage) {
       body += '<div class="mpT-row mpT-shop" style="margin-top:12px"><span class="mpT-ic">💚</span><div class="mpT-t">New: My Plan<small>Remember bills, birthdays and shopping in one place</small></div><button class="mpT-x" data-mp-hide aria-label="Hide">✕</button></div>' +
         '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Try My Plan FREE</button></div>';
     }
@@ -352,7 +352,7 @@
     root.querySelectorAll('[data-mp-open]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); open(); }; });
     root.querySelectorAll('[data-mp-add]').forEach(function (b) { b.onclick = function () { open(); setTimeout(function () { var i = $('#mpQ'); if (i) i.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-pal]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var pk = b.parentNode.querySelector('[data-mp-pk]'); pk.hidden = !pk.hidden; }; });
-    root.querySelectorAll('[data-bg]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); ls.set(BGK, b.dataset.bg); gt('plan_bg', { bg: b.dataset.bg }); fill(); }; });
+    root.querySelectorAll('[data-bg]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); ls.set(BGK, b.dataset.bg); gt('plan_bg', { bg: b.dataset.bg }); refresh(); }; });
     root.querySelectorAll('[data-mp-hide]').forEach(function (b) { b.onclick = function () { ls.set(HIDE, '1'); gt('plan_hide_new'); fill(); }; });
     root.querySelectorAll('[data-mp-mo]').forEach(function (b) { b.onclick = function () { try { var m = window.showDailyMotivation('get'); if (window.showMotivationLanding) window.showMotivationLanding(m.text, '', '', ''); } catch (e) {} }; });
     root.querySelectorAll('[data-mp-name]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); setTimeout(function () { var n = document.getElementById('pN'); if (n) n.focus(); }, 150); }; });
@@ -363,9 +363,16 @@
     bindRows(root);
     root.querySelectorAll('[data-card]').forEach(function (x) { x.onclick = function (e) { e.stopPropagation(); gt('cel_card', { from: 'home' }); }; });
   }
+  // 🏠 Home keeps its own greeting + the daily motivation — everything My Plan lives on the My Plan page (Nov 2026)
+  function homeHtml(el) {
+    var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
+    var hd = el.getAttribute('data-h') || '', sb = el.getAttribute('data-s') || '';
+    return '<div style="border-left:3px solid #FFB81C;padding:10px 14px;background:#f8f8f8;border-radius:0 8px 8px 0;"><div style="font-size:15px;font-weight:500;color:#0F1E36;">' + esc(hd) + '</div>' + (sb ? '<div style="font-size:12px;color:#555;margin-top:3px;">' + esc(sb) + '</div>' : '') + '</div>' +
+      (mo ? '<button class="mpX-q" data-mp-mo>“' + esc(mo.text) + '”</button>' : '');
+  }
   function fill() {
     addCss();
-    document.querySelectorAll('[data-myplan-today]').forEach(function (el) { el.innerHTML = todayHtml(); bindToday(el); });
+    document.querySelectorAll('[data-myplan-today]').forEach(function (el) { el.innerHTML = homeHtml(el); bindToday(el); });
   }
 
   // ───── 💚 My Plan screen ─────
@@ -389,11 +396,7 @@
     root.classList.add('mpS');
     if (view.tab === 'cel') { root.innerHTML = h + '<div style="height:10px"></div>' + celHtml() + nav; bindCel(root); bindTabs(root); gear(); return; }
     if (view.tab === 'shop') { root.innerHTML = h + '<div style="height:10px"></div>' + shopHtml() + nav; bindShop(root); bindTabs(root); gear(); return; }
-    if (has) {
-      var wk = g.week.length;
-      h += '<div class="mpX-tiles" style="margin:10px 0 12px"><div class="mpX-tl mpX-g" style="min-height:78px;cursor:default"><div class="l">Today</div><b>' + (g.today.length ? g.today.length + ' to do' : 'All clear 🎉') + '</b>' + (g.over.length ? '<small style="color:#FFE1DC">⚠️ ' + g.over.length + ' overdue</small>' : '') + '</div>' +
-        '<div class="mpX-tl mpX-y" style="min-height:78px;cursor:default"><div class="l">This week</div><b>' + (wk ? wk + (wk === 1 ? ' thing' : ' things') : 'Nothing yet') + '</b></div></div>';
-    } else h += '<div style="height:10px"></div>';
+    h = '<div data-mp-top style="margin:2px 0 12px">' + todayHtml(true) + '</div>';   // 💚 your day: greeting, Today · Celebration · Next up · Shopping, motivation
     if (has && !P.signedIn) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — it’s only on this phone. Save it to your free Auntie Tobi account.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
     if (P.signedIn && !P.rm && ls.get('tobi_myplan_rm_ask') !== 'no' && has) h += '<div class="mp-new" style="margin:0 0 10px"><span style="font-size:22px">☀️</span><div style="flex:1"><b style="color:#0F1E36">Want a morning email?</b> Only on days you have something due.<div class="mp-row" style="margin-top:8px"><button class="mp-btn" data-rm-yes>Yes — at 7am</button><button class="mp-btn g" data-rm-no>No thanks</button></div></div></div>';
     h += '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ Type it — e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
@@ -415,6 +418,7 @@
       '<div class="mp-row">' + (sl2 ? '<button class="mp-btn" data-mp-sun>Read it</button>' : '') + (P.news ? '<span class="mp-sub" style="align-self:center">✅ You get it by email</span>' : '<button class="mp-btn ' + (sl2 ? 'g' : '') + '" data-mp-news>📧 Get it by email</button>') + '</div></div>';
     h += '<div style="text-align:center;font-size:12.5px;color:#6B7280;margin:6px 0 4px">' + (P.signedIn ? '💚 Saved to ' + esc(P.email) + ' · <a href="#" data-mp-settings style="color:#057A44;font-weight:700">Settings</a>' : '<a href="#" data-mp-save style="color:#057A44;font-weight:700">💚 Sign in to save your plan</a>') + '</div>';
     root.innerHTML = h + nav; gear();
+    var top = $('[data-mp-top]', root); if (top) { bindToday(top); top.querySelectorAll('[data-mp-open]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); var f = $('#mpF', root); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }; }); }
     // add box with live preview of what Auntie Tobi understood
     var q = $('#mpQ', root), hint = $('#mpHint', root);
     q.oninput = function () { var p = parse(q.value); var bits = [p.d ? '📅 ' + nice(p.d, true) : '', p.tm ? '🕒 ' + niceTime(p.tm) : '', p.rep ? '🔁 ' + REP[p.rep].toLowerCase() : ''].filter(Boolean); hint.style.display = bits.length && p.t ? 'block' : 'none'; hint.innerHTML = '<b>' + esc(p.t) + '</b> · ' + bits.join(' · '); };
