@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your Instagram Glow-Up — Auntie Tobi</title>
+<title>Your Instagram Revamp — Auntie Tobi</title>
 <meta name="robots" content="noindex">
-<meta property="og:title" content="Your Instagram Glow-Up ✨">
+<meta property="og:title" content="Your Instagram Revamp ✨">
 <meta property="og:description" content="A few questions so Auntie Tobi can start on your page.">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -35,7 +35,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 </style>
 </head>
 <body>
-<div class="app-header"><div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt=""></div><div><div class="app-header-title">Auntie Tobi</div><div class="app-header-sub">Instagram Glow-Up</div></div></div>
+<div class="app-header"><div class="app-logo"><img data-lsrc="/tobi-face-128.png" alt=""></div><div><div class="app-header-title">Auntie Tobi</div><div class="app-header-sub">Instagram Revamp</div></div></div>
 <div class="wrap" id="app"><div class="card"><p class="muted">Loading…</p></div></div>
 <script>
 (function () {
@@ -45,7 +45,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   fetch(API + '?t=' + encodeURIComponent(t)).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong.'); return j; }); }).then(function (d) {
     if (d.done) return msg('<b>Thank you! 💚</b>We already have your answers and we’re working on your page. If you want to change anything, just message Auntie Tobi.');
     var A = d.answers || {};
-    app.innerHTML = '<div class="hero"><div class="badge">✨ Instagram Glow-Up</div><h1>Hi ' + esc(d.name) + '! Let’s get your page glowing</h1><p>Just 5 quick questions (about 2 minutes). We already have your details from your Auntie Tobi listing.</p></div>' +
+    app.innerHTML = '<div class="hero"><div class="badge">✨ Instagram Revamp</div><h1>Hi ' + esc(d.name) + '! Let’s revamp your page</h1><p>Just 5 quick questions (about 2 minutes). We already have your details from your Auntie Tobi listing.</p></div>' +
       '<form class="card" id="f" novalidate>' + d.questions.map(function (q, i) {
         var k = q[0], lab = '<label for="q_' + k + '">' + (i + 1) + '. ' + esc(q[1]) + '</label>';
         if (q[2] === 'choice') return '<div class="q">' + lab.replace('<label for="q_' + k + '">', '<label>') + '<div class="chips" data-k="' + k + '">' + q[3].map(function (o) { return '<button type="button" class="chip" data-v="' + esc(o) + '" aria-pressed="' + (A[k] === o) + '">' + esc(o) + '</button>'; }).join('') + '</div></div>';
@@ -62,7 +62,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       go.disabled = true; go.textContent = 'Sending…'; err.style.display = 'none';
       fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'form', t: t, answers: ans }) })
         .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong — please try again.'); return j; }); })
-        .then(function () { window.scrollTo(0, 0); msg('<b>Thank you! 💚</b>Auntie Tobi has your answers and is starting on your page. You’ll get your Glow-Up on WhatsApp.'); })
+        .then(function () { window.scrollTo(0, 0); msg('<b>Thank you! 💚</b>Auntie Tobi has your answers and is starting on your page. You’ll get your Revamp on WhatsApp.'); })
         .catch(function (x) { err.textContent = x.message; err.style.display = 'block'; go.disabled = false; go.textContent = 'Send my answers ✨'; });
     };
   }).catch(function (x) { msg('<b>Hmm…</b>' + esc(x.message)); });

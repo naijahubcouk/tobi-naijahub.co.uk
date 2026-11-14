@@ -1,6 +1,6 @@
 'use strict';
 /*
- * ✨ Instagram Glow-Up — the client's intake form (public, by private link: /glowup-form?t=<token>)
+ * ✨ Instagram Revamp — the client's intake form (public, by private link: /glowup-form?t=<token>)
  *   GET  ?t=<token>                      → { name, handle, questions, done, answers }
  *   POST { action: 'form', t, answers }  → { ok }
  */

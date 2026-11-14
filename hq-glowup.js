@@ -1,5 +1,5 @@
 /*
- * ✨ HQ → Instagram Glow-Up (admin only): the paid page-revamp service, client by client, through the 10 steps.
+ * ✨ HQ → Instagram Revamp (admin only): the paid page-revamp service, client by client, through the 10 steps.
  *   Part 1: clients board, the 10 steps, the client's form link, page audit, competitors (+ a library by category),
  *   check-in numbers and ready-to-send WhatsApp messages A–F.
  */
@@ -29,7 +29,7 @@
 
   async function load() { D = await X.api('gu-list'); }
   async function view() {
-    $('#ttl').textContent = 'Instagram Glow-Up';
+    $('#ttl').textContent = 'Instagram Revamp';
     $('#topRight').innerHTML = '<button class="btn primary" id="guNew">＋ New client</button>';
     $('#guNew').onclick = function () { details(null); };
     var main = $('#view'); main.innerHTML = '<div class="wrap"><p class="muted">Loading…</p></div>';
@@ -54,7 +54,7 @@
       (cs.length ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:start">' + COLS.map(function (k) {
         var list = cs.filter(function (c) { return column(c) === k[0]; });
         return '<div><div style="font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#6B7280;margin:0 2px 8px">' + k[1] + ' (' + list.length + ')</div>' + list.map(card).join('') + '</div>';
-      }).join('') + '</div>' : '<div class="card" style="padding:18px"><b>No clients yet</b><p class="muted" style="margin-top:6px">Tap <b>＋ New client</b> when someone asks about a Glow-Up. You’ll get their form link and ready-to-send messages.</p></div>') +
+      }).join('') + '</div>' : '<div class="card" style="padding:18px"><b>No clients yet</b><p class="muted" style="margin-top:6px">Tap <b>＋ New client</b> when someone asks about an Instagram Revamp. You’ll get their form link and ready-to-send messages.</p></div>') +
       (fin.length ? '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">✅ Finished (' + fin.length + ')</summary><div style="margin-top:8px">' + fin.map(card).join('') + '</div></details>' : '') + '</div>';
     $$('[data-gu]', main).forEach(function (el) { el.onclick = function () { client(el.dataset.gu); }; });
   }
@@ -70,7 +70,7 @@
     var c = cur, d = c.done || {}, n = stepNow(c), main = $('#view');
     $('#ttl').textContent = c.name;
     $('#topRight').innerHTML = '<button class="btn ghost" id="guBack">← All clients</button> <button class="btn ghost" id="guEdit">✏️ Details</button>';
-    $('#guBack').onclick = function () { $('#ttl').textContent = 'Instagram Glow-Up'; $('#topRight').innerHTML = '<button class="btn primary" id="guNew">＋ New client</button>'; $('#guNew').onclick = function () { details(null); }; board(); };
+    $('#guBack').onclick = function () { $('#ttl').textContent = 'Instagram Revamp'; $('#topRight').innerHTML = '<button class="btn primary" id="guNew">＋ New client</button>'; $('#guNew').onclick = function () { details(null); }; board(); };
     $('#guEdit').onclick = function () { details(c); };
     var bar = '<div style="display:flex;gap:4px;margin:4px 0 14px">' + D.steps.map(function (s, i) {
       var k = i + 1, on = !!d[k], now = k === n;
@@ -174,11 +174,11 @@
   function msgs(c, formUrl) {
     var nm = (c.name || '').split(/\s+/)[0], due = c.due ? nice(c.due) : '[date]';
     return [
-      ['A', 'Packages', 'Hi ' + nm + '! Thank you for asking about the Instagram Glow-Up ✨ We study your page and your competitors, then give you a ready-to-use plan to get more followers and enquiries.\n\n• Starter £' + D.pkgs.starter.price + ' — page review, bio fixes, 10 post and Reel ideas\n• Glow-Up £' + D.pkgs.glowup.price + ' — plus 5 competitors studied, 3 Reel scripts and a 30-day plan\n• Glow-Up + Done for you £' + D.pkgs.dfy.price + ' — plus 9 posts designed for you\n\nWhich one suits you? 💚'],
-      ['B', 'Form link', 'Thank you, payment received! 💚 Please answer 5 quick questions so we can start: ' + formUrl + '\nIt takes about 2 minutes. Your Glow-Up starts as soon as it’s back.'],
-      ['C', 'Start date', 'Got it, thank you! We’re starting on ' + (c.handle ? '@' + c.handle : 'your page') + ' now. You’ll have your Glow-Up by ' + due + ' ✨'],
-      ['D', 'Report ready', 'Your Instagram Glow-Up is ready ✨ [report link]\nStart with “Fix first” — those 3 changes make the biggest difference. I’ve sent a short voice note walking you through it. Any questions, just reply here.'],
-      ['E', '30-day check-in', 'Hi ' + nm + ', it’s been 30 days since your Glow-Up! How’s it going? Have you noticed more views, messages or sales? Tell me what’s changed and what’s worked best for you 📈'],
+      ['A', 'Packages', 'Hi ' + nm + '! Thank you for asking about the Instagram Revamp ✨ We study your page and your competitors, then give you a ready-to-use plan to get more followers and enquiries.\n\n• Starter £' + D.pkgs.starter.price + ' — page review, bio fixes, 10 post and Reel ideas\n• Revamp £' + D.pkgs.glowup.price + ' — plus 5 competitors studied, 3 Reel scripts and a 30-day plan\n• Revamp + Done for you £' + D.pkgs.dfy.price + ' — plus 9 posts designed for you\n\nWhich one suits you? 💚'],
+      ['B', 'Form link', 'Thank you, payment received! 💚 Please answer 5 quick questions so we can start: ' + formUrl + '\nIt takes about 2 minutes. Your Revamp starts as soon as it’s back.'],
+      ['C', 'Start date', 'Got it, thank you! We’re starting on ' + (c.handle ? '@' + c.handle : 'your page') + ' now. You’ll have your Revamp by ' + due + ' ✨'],
+      ['D', 'Report ready', 'Your Instagram Revamp is ready ✨ [report link]\nStart with “Fix first” — those 3 changes make the biggest difference. I’ve sent a short voice note walking you through it. Any questions, just reply here.'],
+      ['E', '30-day check-in', 'Hi ' + nm + ', it’s been 30 days since your Revamp! How’s it going? Have you noticed more views, messages or sales? Tell me what’s changed and what’s worked best for you 📈'],
       ['F', 'Testimonial', 'So glad it’s helping! 💚 Would you write one or two lines about your experience? And are you happy for us to share your before-and-after as an example?'],
     ];
   }
@@ -201,7 +201,7 @@
   // ✏️ new client / details
   function details(c) {
     var p = c || { pkg: 'glowup' }, opts = Object.keys(D.pkgs).map(function (k) { return '<option value="' + k + '"' + (p.pkg === k ? ' selected' : '') + '>' + esc(D.pkgs[k].name) + ' — ' + gbp(D.pkgs[k].price) + '</option>'; }).join('');
-    var s = X.sheet('<h3 style="margin:0 0 8px">' + (c ? '✏️ ' + esc(c.name) : '＋ New Glow-Up client') + '</h3>' +
+    var s = X.sheet('<h3 style="margin:0 0 8px">' + (c ? '✏️ ' + esc(c.name) : '＋ New Revamp client') + '</h3>' +
       '<label>Their Auntie Tobi listing link</label><div class="row" style="gap:6px"><input id="dL" value="' + esc((p.listing || {}).url || '') + '" placeholder="auntietobi.co.uk/biz/their-business" style="flex:1"><button class="btn ghost" id="dLGo" type="button">Fill in</button></div><div class="muted" id="dLMsg" style="font-size:12.5px;margin-top:4px">Fills in the name, Instagram, WhatsApp, category and town for you.</div>' +
       '<label>Business name</label><input id="dN" value="' + esc(p.name || '') + '" placeholder="e.g. Saamipeniel Fragrance">' +
       '<label>Instagram handle</label><input id="dH" value="' + esc(p.handle ? '@' + p.handle : '') + '" placeholder="@yourbusiness">' +
@@ -209,7 +209,7 @@
       '<div class="row" style="gap:8px"><div style="flex:1"><label>WhatsApp number</label><input id="dW" value="' + esc(p.phone || '') + '" placeholder="07…"></div><div style="flex:1"><label>Category</label><input id="dC" value="' + esc(p.cat || '') + '" placeholder="e.g. perfume, catering, hair"></div></div>' +
       '<div class="row" style="gap:8px"><div style="flex:1"><label>Paid on</label><input id="dPd" type="date" value="' + esc(p.paidAt || '') + '"></div><div style="flex:1"><label>Due</label><input id="dD" type="date" value="' + esc(p.due || '') + '"></div></div>' +
       '<label>Notes</label><textarea id="dNo" rows="3">' + esc(p.notes || '') + '</textarea>' +
-      '<p class="muted" style="font-size:12.5px;margin-top:6px">The due date fills itself from the paid date (Starter 3 days, Glow-Up 5, Done for you 7).</p>' +
+      '<p class="muted" style="font-size:12.5px;margin-top:6px">The due date fills itself from the paid date (Starter 3 days, Revamp 5, Done for you 7).</p>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn ghost" id="dX">Cancel</button><button class="btn primary" id="dGo">' + (c ? 'Save' : 'Add client') + '</button></div>');
     $('#dP', s).onchange = function () { $('#dPr', s).value = D.pkgs[this.value].price; };
     var listing = p.listing || null;

@@ -1,4 +1,4 @@
-// ✨ Instagram Glow-Up client form — /.netlify/functions/glowup (public, by private link)
+// ✨ Instagram Revamp client form — /.netlify/functions/glowup (public, by private link)
 import * as netlifyBlobs from '@netlify/blobs';
 import v2 from './studio-lib/v2.js';
 import mod from './studio-lib/handlers/glowup.js';

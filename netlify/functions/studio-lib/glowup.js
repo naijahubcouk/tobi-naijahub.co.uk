@@ -1,6 +1,6 @@
 'use strict';
 /*
- * ✨ Instagram Glow-Up — the paid page-revamp service, run from Auntie Tobi HQ (admin only).
+ * ✨ Instagram Revamp — the paid page-revamp service, run from Auntie Tobi HQ (admin only).
  *   glowup/clients  { items: { <id>: client } }
  *   glowup/lib      { cats: { <category>: [ { h, works, copy, at } ] } }   competitor notes reused between clients
  *   client = { id, name, handle, pkg, price, phone, email, cat, paidAt, due, token, done: { '1': iso … '10': iso },
@@ -13,7 +13,7 @@ const core = require('./core');
 const { HttpError, cas, getJson } = core;
 const KEY = 'glowup/clients', LIB = 'glowup/lib';
 
-const PKGS = { starter: { name: 'Starter', price: 35, days: 3 }, glowup: { name: 'Glow-Up', price: 75, days: 5 }, dfy: { name: 'Glow-Up + Done for you', price: 150, days: 7 } };
+const PKGS = { starter: { name: 'Starter', price: 35, days: 3 }, glowup: { name: 'Revamp', price: 75, days: 5 }, dfy: { name: 'Revamp + Done for you', price: 150, days: 7 } };
 const STEPS = ['Enquiry', 'Paid', 'Form', 'Audit', 'Competitors', 'Plan', 'Report', 'Send', 'Check-in', 'Review'];
 const AREAS = [
   ['photo', 'Profile photo', 'Clear logo or face, readable at small size'],
