@@ -317,6 +317,7 @@
     var pal = '<button class="mpX-pal" data-mp-pal aria-label="Change colour">🎨</button>' +
       '<div class="mpX-pk" data-mp-pk hidden>' + Object.keys(BGS).map(function (k) { return '<button data-bg="' + k + '" aria-label="' + BGS[k][2] + '" title="' + BGS[k][2] + '" style="background:' + BGS[k][0] + ';border-color:' + (k === (ls.get(BGK) || 'white') ? '#057A44' : BGS[k][1]) + '">' + (k === (ls.get(BGK) || 'white') ? '✓' : '') + '</button>'; }).join('') + '</div>';
     // On the My Plan page the greeting stays on Home — the page shows a plain "My Plan" title instead (Nov 2026)
+    if (onPage && !has) return '<div class="mpS-hd" style="position:relative;padding-right:44px"><h2>My Plan</h2><div>' + dateLine + '</div>' + pal + '</div>';   // new here: just the title — the welcome card below explains
     if (onPage) var html = '<div class="mpS-hd" style="position:relative;padding-right:44px"><h2>My Plan</h2><div>' + dateLine + '</div>' + pal.replace('top:10px', '') + '</div>' +
       '<div class="mp mpT" style="padding:14px;margin-top:10px;background:' + bg[0] + ';border-color:' + bg[1] + '">';
     else var html = '<div class="mp mpT" style="padding:14px;position:relative;background:' + bg[0] + ';border-color:' + bg[1] + '">' + pal +
