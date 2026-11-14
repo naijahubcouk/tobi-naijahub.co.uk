@@ -29,20 +29,14 @@ const AREAS = [
   ['journey', 'Sales journey', 'From a Reel to a paid order: steps, dead ends'],
   ['numbers', 'Numbers', 'Followers, posts in 30 days, average views, best post'],
 ];
-const QUESTIONS = [
-  ['business', 'Business name and Instagram handle', 'short'],
-  ['products', 'What do you sell? List your top 3 products or services with prices', 'long'],
-  ['where', 'Where are you based, and where do you deliver or work?', 'short'],
-  ['customers', 'Who are your best customers? (age, where they live, what they buy)', 'long'],
+const QUESTIONS = [   // short on purpose: name, Instagram, town and contact come from their Auntie Tobi listing
   ['goal', 'What’s your main goal?', 'choice', ['More followers', 'More enquiries', 'More sales']],
-  ['order', 'How do customers order today? (DM, WhatsApp, website, in person)', 'short'],
-  ['rivals', 'Name 2–3 Instagram accounts you admire or compete with', 'short'],
-  ['tried', 'What have you tried on Instagram that worked, and what didn’t?', 'long'],
-  ['film', 'How often can you post, and are you happy to film yourself?', 'short'],
+  ['products', 'Your top 3 products or services, with prices', 'long'],
+  ['customers', 'Who are your best customers? (age, where they live, what they buy)', 'long'],
+  ['film', 'Are you happy to film yourself for Reels?', 'choice', ['Yes', 'A little', 'No — faceless content please']],
   ['now', 'Your numbers now: followers, and roughly how many enquiries a week', 'short'],
-  ['avoid', 'Anything we must avoid? (topics, words, showing your face)', 'short'],
-  ['share', 'Can we use your before-and-after as an example?', 'choice', ['Yes', 'No']],
-];
+  ['share', 'Can we share your before-and-after as an example?', 'choice', ['Yes', 'No']],
+]
 const clean = (v, n) => core.cleanText(String(v == null ? '' : v), n || 200);
 const day = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : '');
 const addDays = (d, n) => { const x = new Date((d || core.nowIso().slice(0, 10)) + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
@@ -77,6 +71,11 @@ async function save(raw, by) {
       AREAS.forEach(([k]) => { const a = raw.audit[k]; if (a && (a.s || a.note)) c.audit[k] = { s: ['good', 'fix', 'missing'].indexOf(a.s) >= 0 ? a.s : '', note: clean(a.note, 240) }; });
     }
     if (has('comps') && Array.isArray(raw.comps)) c.comps = raw.comps.slice(0, 8).map(cleanComp).filter(x => x.h || x.works);
+    if (has('listing') && raw.listing) { const L = raw.listing; c.listing = L.slug ? { slug: clean(L.slug, 80), url: clean(L.url, 200), loc: clean(L.loc, 80), desc: clean(L.desc, 600), website: clean(L.website, 200) } : null; }
+    if (has('answers') && raw.answers && typeof raw.answers === 'object') {   // answers typed in by Auntie Tobi (asked on WhatsApp)
+      const a = {}; QUESTIONS.forEach(([k, , type, opts]) => { const v = raw.answers[k]; if (v) a[k] = type === 'choice' ? (opts.indexOf(v) >= 0 ? v : '') : clean(v, type === 'long' ? 1200 : 300); });
+      c.form = { answers: a, at: core.nowIso(), by: 'hq' }; c.done = c.done || {}; if (Object.keys(a).length) c.done['3'] = c.done['3'] || core.nowIso();
+    }
     if (has('after') && raw.after) c.after = { followers: clean(raw.after.followers, 20), views: clean(raw.after.views, 20), enquiries: clean(raw.after.enquiries, 20), at: core.nowIso() };
     if (!c.pkg) c.pkg = 'glowup';
     if (c.price == null) c.price = PKGS[c.pkg].price;
@@ -130,7 +129,7 @@ async function formSend(t, answers, ip) {
   const c0 = await byToken(t); if (!c0) throw new HttpError(404, 'not_found', 'This link isn’t valid. Please message Auntie Tobi.');
   const a = {};
   QUESTIONS.forEach(([k, , type, opts]) => { const v = answers && answers[k]; if (v == null) return; a[k] = type === 'choice' ? (opts.indexOf(v) >= 0 ? v : '') : clean(v, type === 'long' ? 1200 : 300); });
-  if (!a.business || !a.products) throw new HttpError(400, 'missing', 'Please fill in your business name and what you sell.');
+  if (!a.products) throw new HttpError(400, 'missing', 'Please tell us your top products or services.');
   await cas(KEY, cur => {
     const c = cur && cur.items && cur.items[c0.id]; if (!c) return undefined;
     if (c.form && c.form.at && !c.formOpen) throw new HttpError(400, 'done', 'Thank you — we already have your answers. Message Auntie Tobi to change anything.');

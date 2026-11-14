@@ -78,7 +78,7 @@
     }).join('') + '</div>';
     var formUrl = SITE + '/glowup-form?t=' + encodeURIComponent(c.token);
     var head = '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><b style="font-size:17px">' + esc(c.name) + '</b>' + (c.handle ? ' · <a href="https://www.instagram.com/' + esc(c.handle) + '/" target="_blank" rel="noopener">@' + esc(c.handle) + '</a>' : '') +
-      '<div class="muted" style="font-size:13px;margin-top:2px">' + esc((D.pkgs[c.pkg] || {}).name) + ' · ' + gbp(c.price) + (c.paidAt ? ' · paid ' + nice(c.paidAt) : ' · <b style="color:#B42318">not paid yet</b>') + (c.due ? ' · due ' + nice(c.due) : '') + (c.checkin ? ' · check-in ' + nice(c.checkin) : '') + (c.cat ? ' · ' + esc(c.cat) : '') + '</div></div>' +
+      '<div class="muted" style="font-size:13px;margin-top:2px">' + esc((D.pkgs[c.pkg] || {}).name) + ' · ' + gbp(c.price) + (c.paidAt ? ' · paid ' + nice(c.paidAt) : ' · <b style="color:#B42318">not paid yet</b>') + (c.due ? ' · due ' + nice(c.due) : '') + (c.checkin ? ' · check-in ' + nice(c.checkin) : '') + (c.cat ? ' · ' + esc(c.cat) : '') + '</div>' + (c.listing ? '<div style="font-size:13px;margin-top:4px">🏢 <a href="' + esc(c.listing.url) + '" target="_blank" rel="noopener">Auntie Tobi listing</a>' + (c.listing.loc ? ' · ' + esc(c.listing.loc) : '') + (c.listing.website ? ' · <a href="' + esc(/^https?:/.test(c.listing.website) ? c.listing.website : 'https://' + c.listing.website) + '" target="_blank" rel="noopener">website</a>' : '') + '</div>' + (c.listing.desc ? '<div class="muted" style="font-size:12.5px;margin-top:3px">' + esc(c.listing.desc.slice(0, 220)) + (c.listing.desc.length > 220 ? '…' : '') + '</div>' : '') : '') + '</div>' +
       (!c.paidAt ? '<button class="btn primary sm" id="guPaid">💷 Mark as paid today</button>' : '') + '</div>' + (c.notes ? '<div style="font-size:13.5px;margin-top:8px;white-space:pre-wrap">' + esc(c.notes) + '</div>' : '') + '</div>';
     main.innerHTML = '<div class="wrap">' + bar + head +
       sec('3', '📝 Their form', formBox(c, formUrl)) +
@@ -96,12 +96,22 @@
   function sec(k, title, body) { var on = k && (cur.done || {})[k]; return '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-weight:800;font-size:15.5px;margin-bottom:8px">' + title + (on ? ' ' + pill('Done', 'g') : '') + '</div>' + body + '</div>'; }
 
   function formBox(c, url) {
-    var f = c.form, h = '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><input readonly value="' + esc(url) + '" style="flex:1;min-width:220px;font-size:13px"><button class="btn ghost sm" id="fCopy">📋 Copy link</button><a class="btn ghost sm" href="' + esc(url) + '" target="_blank" rel="noopener">👁 Open</a>' + (f ? '<button class="btn ghost sm" id="fRe">↩️ Let them edit it</button>' : '') + '</div>';
-    if (!f) return h + '<p class="muted" style="font-size:13px;margin-top:8px">Send them this link (message B below). Their answers appear here and step 3 ticks itself.</p>';
+    var f = c.form, h = '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><input readonly value="' + esc(url) + '" style="flex:1;min-width:220px;font-size:13px"><button class="btn ghost sm" id="fCopy">📋 Copy link</button><a class="btn ghost sm" href="' + esc(url) + '" target="_blank" rel="noopener">👁 Open</a>' + (f ? '<button class="btn ghost sm" id="fRe">↩️ Let them edit it</button>' : '') + '<button class="btn ghost sm" id="fType">✏️ ' + (f ? 'Edit answers' : 'Type their answers') + '</button></div>';
+    if (!f) return h + '<p class="muted" style="font-size:13px;margin-top:8px">Send them this link (message B below) — 6 quick questions. Or ask on WhatsApp and tap ✏️ Type their answers. Step 3 ticks itself either way.</p>';
     return h + '<div style="margin-top:10px;font-size:14px">' + D.questions.map(function (q, i) { var a = f.answers[q[0]]; return a ? '<div style="padding:7px 0;border-top:1px solid var(--line,#eee)"><div class="muted" style="font-size:12.5px">' + (i + 1) + '. ' + esc(q[1]) + '</div><div style="white-space:pre-wrap">' + esc(a) + '</div></div>' : ''; }).join('') + '<div class="muted" style="font-size:12px;margin-top:4px">Sent ' + nice(f.at) + '</div></div>';
   }
   function bindForm(c, url) {
     var cp = $('#fCopy'); if (cp) cp.onclick = function () { try { navigator.clipboard.writeText(url); X.toast('📋 Link copied'); } catch (e) { prompt('Copy the link', url); } };
+    $('#fType').onclick = function () {
+      var A = (c.form && c.form.answers) || {};
+      var s = X.sheet('<h3 style="margin:0 0 8px">✏️ ' + esc(c.name) + '’s answers</h3>' + D.questions.map(function (q, i) {
+        var k = q[0], lab = '<label for="ta_' + k + '">' + (i + 1) + '. ' + esc(q[1]) + '</label>';
+        if (q[2] === 'choice') return lab + '<select id="ta_' + k + '"><option value=""></option>' + q[3].map(function (o) { return '<option' + (A[k] === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
+        return lab + (q[2] === 'long' ? '<textarea id="ta_' + k + '" rows="3">' + esc(A[k] || '') + '</textarea>' : '<input id="ta_' + k + '" value="' + esc(A[k] || '') + '">');
+      }).join('') + '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="taX">Cancel</button><button class="btn primary" id="taGo">Save answers</button></div>');
+      $('#taX', s).onclick = function () { s.remove(); };
+      $('#taGo', s).onclick = async function () { var a = {}; D.questions.forEach(function (q) { a[q[0]] = $('#ta_' + q[0], s).value.trim(); }); try { await save({ answers: a }); s.remove(); client(cur.id); } catch (e) { X.toast(e.message); } };
+    };
     var re = $('#fRe'); if (re) re.onclick = async function () { try { var r = await X.api('gu-reopen', { id: c.id }); put(r.client); X.toast('They can edit their answers again'); } catch (e) { X.toast(e.message); } };
   }
 
@@ -165,7 +175,7 @@
     var nm = (c.name || '').split(/\s+/)[0], due = c.due ? nice(c.due) : '[date]';
     return [
       ['A', 'Packages', 'Hi ' + nm + '! Thank you for asking about the Instagram Glow-Up ✨ We study your page and your competitors, then give you a ready-to-use plan to get more followers and enquiries.\n\n• Starter £' + D.pkgs.starter.price + ' — page review, bio fixes, 10 post and Reel ideas\n• Glow-Up £' + D.pkgs.glowup.price + ' — plus 5 competitors studied, 3 Reel scripts and a 30-day plan\n• Glow-Up + Done for you £' + D.pkgs.dfy.price + ' — plus 9 posts designed for you\n\nWhich one suits you? 💚'],
-      ['B', 'Form link', 'Thank you, payment received! 💚 Please fill in this short form so we can start: ' + formUrl + '\nIt takes about 10 minutes. Your Glow-Up starts as soon as it’s back.'],
+      ['B', 'Form link', 'Thank you, payment received! 💚 Please answer 6 quick questions so we can start: ' + formUrl + '\nIt takes about 3 minutes. Your Glow-Up starts as soon as it’s back.'],
       ['C', 'Start date', 'Got it, thank you! We’re starting on ' + (c.handle ? '@' + c.handle : 'your page') + ' now. You’ll have your Glow-Up by ' + due + ' ✨'],
       ['D', 'Report ready', 'Your Instagram Glow-Up is ready ✨ [report link]\nStart with “Fix first” — those 3 changes make the biggest difference. I’ve sent a short voice note walking you through it. Any questions, just reply here.'],
       ['E', '30-day check-in', 'Hi ' + nm + ', it’s been 30 days since your Glow-Up! How’s it going? Could you send me your followers, average Reel views and enquiries now, so we can see what’s changed? 📈'],
@@ -192,6 +202,7 @@
   function details(c) {
     var p = c || { pkg: 'glowup' }, opts = Object.keys(D.pkgs).map(function (k) { return '<option value="' + k + '"' + (p.pkg === k ? ' selected' : '') + '>' + esc(D.pkgs[k].name) + ' — ' + gbp(D.pkgs[k].price) + '</option>'; }).join('');
     var s = X.sheet('<h3 style="margin:0 0 8px">' + (c ? '✏️ ' + esc(c.name) : '＋ New Glow-Up client') + '</h3>' +
+      '<label>Their Auntie Tobi listing link</label><div class="row" style="gap:6px"><input id="dL" value="' + esc((p.listing || {}).url || '') + '" placeholder="auntietobi.co.uk/biz/their-business" style="flex:1"><button class="btn ghost" id="dLGo" type="button">Fill in</button></div><div class="muted" id="dLMsg" style="font-size:12.5px;margin-top:4px">Fills in the name, Instagram, WhatsApp, category and town for you.</div>' +
       '<label>Business name</label><input id="dN" value="' + esc(p.name || '') + '" placeholder="e.g. Saamipeniel Fragrance">' +
       '<label>Instagram handle</label><input id="dH" value="' + esc(p.handle ? '@' + p.handle : '') + '" placeholder="@yourbusiness">' +
       '<div class="row" style="gap:8px"><div style="flex:2"><label>Package</label><select id="dP">' + opts + '</select></div><div style="flex:1"><label>Price (£)</label><input id="dPr" inputmode="numeric" value="' + esc(p.price != null ? p.price : D.pkgs[p.pkg || 'glowup'].price) + '"></div></div>' +
@@ -201,9 +212,20 @@
       '<p class="muted" style="font-size:12.5px;margin-top:6px">The due date fills itself from the paid date (Starter 3 days, Glow-Up 5, Done for you 7).</p>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn ghost" id="dX">Cancel</button><button class="btn primary" id="dGo">' + (c ? 'Save' : 'Add client') + '</button></div>');
     $('#dP', s).onchange = function () { $('#dPr', s).value = D.pkgs[this.value].price; };
+    var listing = p.listing || null;
+    $('#dLGo', s).onclick = async function () {
+      var v = $('#dL', s).value.trim(), msg = $('#dLMsg', s); if (!v) return;
+      this.disabled = true; msg.textContent = 'Looking it up…';
+      try {
+        var L = (await X.api('gu-listing', { link: v })).listing; listing = L;
+        $('#dN', s).value = L.name; if (L.ig) $('#dH', s).value = '@' + String(L.ig).replace(/^@/, ''); if (L.wa || L.phone) $('#dW', s).value = L.wa || L.phone; if (L.cat && !$('#dC', s).value) $('#dC', s).value = L.cat.toLowerCase();
+        msg.innerHTML = '✅ Found <b>' + esc(L.name) + '</b>' + (L.loc ? ' · ' + esc(L.loc) : '');
+      } catch (e) { msg.textContent = e.message; }
+      this.disabled = false;
+    };
     $('#dX', s).onclick = function () { s.remove(); };
     $('#dGo', s).onclick = async function () {
-      var f = { name: $('#dN', s).value.trim(), handle: $('#dH', s).value.trim(), pkg: $('#dP', s).value, price: $('#dPr', s).value, phone: $('#dW', s).value.trim(), cat: $('#dC', s).value.trim(), paidAt: $('#dPd', s).value, due: $('#dD', s).value, notes: $('#dNo', s).value };
+      var f = { listing: listing, name: $('#dN', s).value.trim(), handle: $('#dH', s).value.trim(), pkg: $('#dP', s).value, price: $('#dPr', s).value, phone: $('#dW', s).value.trim(), cat: $('#dC', s).value.trim(), paidAt: $('#dPd', s).value, due: $('#dD', s).value, notes: $('#dNo', s).value };
       if (c) f.id = c.id;
       try { var r = await X.api('gu-save', { client: f }); put(r.client); s.remove(); client(r.client.id); } catch (e) { X.toast(e.message); }
     };

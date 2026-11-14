@@ -45,12 +45,12 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   fetch(API + '?t=' + encodeURIComponent(t)).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong.'); return j; }); }).then(function (d) {
     if (d.done) return msg('<b>Thank you! 💚</b>We already have your answers and we’re working on your page. If you want to change anything, just message Auntie Tobi.');
     var A = d.answers || {};
-    app.innerHTML = '<div class="hero"><div class="badge">✨ Instagram Glow-Up</div><h1>Hi ' + esc(d.name) + '! Let’s get your page glowing</h1><p>Answer these 12 quick questions (about 10 minutes). The more you tell us, the better your plan.</p></div>' +
+    app.innerHTML = '<div class="hero"><div class="badge">✨ Instagram Glow-Up</div><h1>Hi ' + esc(d.name) + '! Let’s get your page glowing</h1><p>Just 6 quick questions (about 3 minutes). We already have your details from your Auntie Tobi listing.</p></div>' +
       '<form class="card" id="f" novalidate>' + d.questions.map(function (q, i) {
         var k = q[0], lab = '<label for="q_' + k + '">' + (i + 1) + '. ' + esc(q[1]) + '</label>';
         if (q[2] === 'choice') return '<div class="q">' + lab.replace('<label for="q_' + k + '">', '<label>') + '<div class="chips" data-k="' + k + '">' + q[3].map(function (o) { return '<button type="button" class="chip" data-v="' + esc(o) + '" aria-pressed="' + (A[k] === o) + '">' + esc(o) + '</button>'; }).join('') + '</div></div>';
         if (q[2] === 'long') return '<div class="q">' + lab + '<textarea id="q_' + k + '" name="' + k + '" maxlength="1200">' + esc(A[k] || '') + '</textarea></div>';
-        return '<div class="q">' + lab + '<input id="q_' + k + '" name="' + k + '" maxlength="300" value="' + esc(A[k] || (k === 'business' ? d.name + (d.handle ? ' — @' + d.handle : '') : '')) + '"></div>';
+        return '<div class="q">' + lab + '<input id="q_' + k + '" name="' + k + '" maxlength="300" value="' + esc(A[k] || '') + '"></div>';
       }).join('') + '<div class="err" id="err" role="alert"></div><button class="btn" id="go" style="margin-top:16px">Send my answers ✨</button></form>' +
       '<p class="muted">Only Auntie Tobi sees your answers.</p>';
     [].forEach.call(document.querySelectorAll('.chips'), function (box) { box.onclick = function (e) { var b = e.target.closest('.chip'); if (!b) return; [].forEach.call(box.children, function (x) { x.setAttribute('aria-pressed', x === b); }); }; });
@@ -58,7 +58,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       e.preventDefault(); var err = document.getElementById('err'), go = document.getElementById('go'), ans = {};
       [].forEach.call(document.querySelectorAll('#f [name]'), function (el) { ans[el.name] = el.value.trim(); });
       [].forEach.call(document.querySelectorAll('.chips'), function (box) { var on = box.querySelector('[aria-pressed=true]'); ans[box.dataset.k] = on ? on.dataset.v : ''; });
-      if (!ans.business || !ans.products) { err.textContent = 'Please fill in your business name and what you sell.'; err.style.display = 'block'; return; }
+      if (!ans.products) { err.textContent = 'Please tell us your top products or services.'; err.style.display = 'block'; return; }
       go.disabled = true; go.textContent = 'Sending…'; err.style.display = 'none';
       fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify({ action: 'form', t: t, answers: ans }) })
         .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || 'Something went wrong — please try again.'); return j; }); })
