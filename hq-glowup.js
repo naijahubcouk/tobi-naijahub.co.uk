@@ -58,12 +58,12 @@
     var main = $('#view'), L = D.checks || [], t = todayIso(), wk = addDays(t, -7), link = SITE + '/instagram-check';
     var day = function (k) { return String(k.createdAt).slice(0, 10); };
     var tile = function (n, l) { return '<div class="card" style="padding:12px;text-align:center;flex:1;min-width:110px"><div style="font-size:22px;font-weight:800">' + n + '</div><div class="muted" style="font-size:12.5px">' + l + '</div></div>'; };
-    var F = [['follow', 'Follow up', ckTodo], ['mine', 'Made by me', function (k) { return k.byHq; }], ['all', 'All', function () { return true; }], ['contacted', 'Contacted', function (k) { return (k.contacted || k.sentAt) && !k.clientId; }], ['locked', 'Didn’t unlock', function (k) { return !k.contact && !k.byHq; }], ['client', 'Became clients', function (k) { return k.clientId; }]];
+    var F = [['follow', 'Follow up', ckTodo], ['mine', 'Made by me', function (k) { return k.byHq; }], ['all', 'All', function () { return true; }], ['contacted', 'Contacted', function (k) { return (k.contacted || k.sentAt) && !k.clientId; }], ['locked', 'No contact details', function (k) { return !k.contact && !k.byHq && !(k.listing && k.listing.wa); }], ['client', 'Became clients', function (k) { return k.clientId; }]];
     var f = F.filter(function (x) { return x[0] === CKF; })[0] || F[0], list = L.filter(f[2]);
     var row = function (k) {
       var ct = k.contact;
       return '<div class="card" data-ck="' + esc(k.id) + '" style="padding:11px 14px;margin-bottom:8px;cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap">' + ckPill(k) +
-        '<div style="flex:1;min-width:180px"><b>' + esc(k.biz) + '</b><div class="muted" style="font-size:12.5px">' + (k.byHq ? '✍🏾 Made by you' + (k.to && k.to.ig ? ' · @' + esc(k.to.ig) : '') : ct ? '👤 ' + esc(ct.name) + ' · 📱 ' + esc(ct.wa) : 'Didn’t unlock — no contact details') + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + '</div></div>' +
+        '<div style="flex:1;min-width:180px"><b>' + esc(k.biz) + '</b><div class="muted" style="font-size:12.5px">' + (k.byHq ? '✍🏾 Made by you' + (k.to && k.to.ig ? ' · @' + esc(k.to.ig) : '') : ct ? '👤 ' + esc(ct.name) + ' · 📱 ' + esc(ct.wa) : k.listing && k.listing.wa ? '📍 On Auntie Tobi · 📱 ' + esc(k.listing.wa) : 'No contact details') + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + '</div></div>' +
         '<div style="font-size:12.5px;text-align:right">' + (k.clientId ? '➡️ Now a client' : k.byHq ? ckState(k) : k.contacted ? '✓ Contacted ' + nice(k.contacted) : ct ? '<b style="color:#B42318">Follow up</b>' : '') + '<div class="muted">' + (k.listing ? '📍 Listed' : 'Not listed') + ' · ' + nice(k.createdAt) + '</div></div></div>';
     };
     main.innerHTML = '<div class="wrap">' + tabs() +
@@ -106,8 +106,8 @@
   // 🆓 free Instagram checks (from /instagram-check) — leads for the Revamp
   function ckById(id) { return (D.checks || []).filter(function (k) { return k.id === id; })[0]; }
   function ckMsg(k) {
-    var nm = k.contact ? k.contact.name.split(/\s+/)[0] : '', top = (k.improve || [])[0], good = ((k.working || [])[0] || {}).t || '';
-    return 'Hi ' + nm + '! 👋🏾 It’s Auntie Tobi. Thank you for doing the free Instagram check for ' + k.biz + '. You scored ' + ckSc(k) + '/100' + (good ? ' — and I love that ' + good.charAt(0).toLowerCase() + good.slice(1).replace(/\.$/, '') : '') + ' 💚' +
+    var nm = k.contact && k.contact.name ? ' ' + k.contact.name.split(/\s+/)[0] : '', top = (k.improve || [])[0], good = ((k.working || [])[0] || {}).t || '';
+    return 'Hi' + nm + '! 👋🏾 It’s Auntie Tobi. Thank you for doing the free Instagram check for ' + k.biz + '. You scored ' + ckSc(k) + '/100' + (good ? ' — and I love that ' + good.charAt(0).toLowerCase() + good.slice(1).replace(/\.$/, '') : '') + ' 💚' +
       (top ? '\n\nYour biggest win: ' + top.fix : '') +
       '\n\nIf you’d like, I can do the full Instagram Revamp for you — a new bio, a study of your competitors, Reel scripts and a 30-day plan with a step-by-step checklist.\n• Starter £35\n• Revamp £75\n• Revamp + Done for you £150' +
       (k.listing ? '' : '\n\nAlso — you’re not on Auntie Tobi yet! Add your business free so Nigerians across the UK can find you: ' + SITE + '/add-business') +
@@ -224,7 +224,7 @@
   function checkSheet(id) {
     var k = ckById(id); if (!k) return;
     if (k.byHq) return mineSheet(k);
-    var ct = k.contact, ph = ct ? String(ct.wa).replace(/\D/g, '').replace(/^0/, '44') : '';
+    var ct = k.contact || (k.listing && k.listing.wa ? { name: '', wa: k.listing.wa } : null), ph = ct ? String(ct.wa).replace(/\D/g, '').replace(/^0/, '44') : '';
     var s = X.sheet('<h3 style="margin:0 0 2px">🆓 ' + esc(k.biz) + ' ' + ckPill(k) + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.sells ? '<br>Sells: ' + esc(k.sells) : '') + '</div>' +
       '<div style="background:#F6F4EE;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13.5px">' + (ct ? '👤 <b>' + esc(ct.name) + '</b> · 📱 ' + esc(ct.wa) + (ct.email ? ' · 📧 ' + esc(ct.email) : '') : '<span class="muted">They saw their score but didn’t unlock their fixes, so there are no contact details.</span>') +
       '<div style="margin-top:4px">' + (k.listing ? '📍 <a href="' + esc(k.listing.url) + '" target="_blank" rel="noopener">' + esc(k.listing.name) + '</a> on Auntie Tobi' : '📍 Not on Auntie Tobi yet') + '</div></div>' +

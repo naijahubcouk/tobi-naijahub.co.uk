@@ -53,7 +53,7 @@ const asWorking = w => (w || []).map(x => typeof x === 'string' ? { t: x, why: '
 
 // what the person sees (fixes only once unlocked)
 function view(c) {
-  const open = !!c.contact || !!c.byHq, sc = scoreOf(c.audit);   // checks Auntie Tobi made for someone are already open
+  const open = true, sc = scoreOf(c.audit);   // Nov 2026: results show straight away — no details asked (the unlock step is kept but not used)
   return { t: c.token, biz: c.biz, goal: c.goal, score: sc.score, band: sc.band, tone: sc.tone, groups: sc.groups, unseen: sc.unseen,
     working: asWorking(c.working), listed: !!c.listing, listing: c.listing ? { name: c.listing.name, url: c.listing.url } : null, byHq: !!c.byHq,
     locked: !open, nFix: (c.improve || []).length, improve: open ? c.improve : [], bio: open ? c.bio || '' : '', breakdown: open ? breakdown(c.audit) : [],
@@ -88,6 +88,10 @@ async function run(event, ip, raw) {
   await core.rateLimit('igcheck-all', 'all', 80, 24 * 60 * 60 * 1000, 'So many people are checking their pages today! Please try again tomorrow, or message Auntie Tobi.');
   const c = Object.assign({ id: crypto.randomBytes(6).toString('hex'), token: crypto.randomBytes(12).toString('base64url'), biz, sells, goal, listing, contact: null, createdAt: core.nowIso() }, await analyse(shots, { biz, sells, goal, listing }));
   await saveNew(c);
+  try {   // 📧 tell Auntie Tobi (same on/off switch as the Revamp form emails)
+    const to = (await require('./glowup').settings()).email ? core.adminEmails() : [];
+    if (to.length) { const sc = scoreOf(c.audit); await core.sendEmail(to, `🆓 New free Instagram check — ${c.biz} (${sc.score}/100)`, `Someone just checked their Instagram.\n\nBusiness: ${c.biz}\nScore: ${sc.score}/100 (${sc.band})\nGoal: ${c.goal || '—'}\nOn Auntie Tobi: ${c.listing ? 'yes — ' + c.listing.url : 'not yet'}\n\nSee it in HQ → Instagram Revamp → Free checks: ${core.siteBase()}/hq`); }
+  } catch (e) { console.error('[igcheck] alert email failed', e && e.message); }
   return view(c);
 }
 
