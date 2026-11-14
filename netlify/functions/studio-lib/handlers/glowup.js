@@ -4,6 +4,8 @@
  *   GET  ?t=<token>                      → { name, handle, questions, done, answers }
  *   GET  ?r=<report token>               → the client's Revamp report (counts an open)
  *   POST { action: 'form', t, answers }  → { ok }
+ *   GET  ?c=<check token> / ?find=<name>   free Instagram check result / find your listing
+ *   POST { action: 'check', shots, biz, sells, goal, listing } · { action: 'unlock', t, name, wa, email, ok }
  *   POST { action: 'tick', r, i, on }    → { ok, ticks }   checklist ticks on the report page
  */
 const core = require('../core');
@@ -13,10 +15,17 @@ exports.handler = core.handler(async (ctx) => {
   const { event, body, ip } = ctx;
   if (event.httpMethod === 'GET') {
     const q = event.queryStringParameters || {};
-    const r = q.r ? await glowup.reportGet(q.r, q.hq === '1') : await glowup.formGet(q.t);   // 📄 ?r= = the client's Revamp report
+    const ig = require('../igcheck');
+    if (q.find != null) {   // 🔍 find your Auntie Tobi listing (public listings only)
+      await core.rateLimit('igcheck-find', ip || 'x', 120, 60 * 60 * 1000, 'Please try again in a little while.');
+      return { results: await require('../directory').search(event, String(q.find).slice(0, 80), 6) };
+    }
+    const r = q.c ? await ig.get(q.c) : q.r ? await glowup.reportGet(q.r, q.hq === '1') : await glowup.formGet(q.t);   // 🆓 ?c= = a free Instagram check   // 📄 ?r= = the client's Revamp report
     return { statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' }, body: JSON.stringify(r) };
   }
+  if (body.action === 'check') return require('../igcheck').run(event, ip, body);           // 🆓 free Instagram check
+  if (body.action === 'unlock') return require('../igcheck').unlock(body.t, body, ip);
   if (body.action === 'tick') return glowup.tick(body.r, body.i, !!body.on);   // ✅ the client ticks their checklist
   if (body.action === 'form') return glowup.formSend(body.t, body.answers, ip);
   throw new core.HttpError(400, 'unknown_action', 'Unknown action.');
-}, { allowGet: true, maxBody: 64 * 1024 });
+}, { allowGet: true, maxBody: 3 * 1024 * 1024 });

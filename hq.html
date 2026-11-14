@@ -277,7 +277,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 <script src="/hq-transcribe.js?v=20261111c"></script>
 <script src="/hq-myplan.js?v=20261112"></script>
 <script src="/hq-followers.js?v=20261114"></script>
-<script src="/hq-glowup.js?v=20261114h"></script>
+<script src="/hq-glowup.js?v=20261114i"></script>
 <script src="/hq-sunday.js?v=20261112"></script>
 <script src="/hq-boost.js"></script>
 <script src="/hq-schoolmail.js?v=20261113"></script>
@@ -457,7 +457,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (soon.length ? '<div class="h2">Coming up</div><div class="card" style="padding:4px 14px">' + soon.map(function (c) { return '<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="date" style="min-width:110px">' + esc(fmtDay(c.planDate)) + (c.planTime ? ' ' + esc(c.planTime) : '') + '</span><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><a href="#" data-op="' + c.id + '" style="color:var(--navy);font-weight:600;flex:1;min-width:150px">' + esc(c.title) + '</a></div>'; }).join('') + '</div>' : '') +
       (!S.items.length ? '<div class="card" style="margin-top:18px;background:var(--gold-l);border-color:#F2D58A"><b>Start here</b><p class="muted" style="margin:4px 0 10px">Copy a reply from ChatGPT with your content ideas and paste it in — HQ splits it into cards you can keep, plan and track.</p><button class="btn gold" id="startPaste">📋 Paste from ChatGPT</button></div>' : '') + '</div>';
     bindToday();
-    if (S.isAdmin && window.HQGlow) window.HQGlow.todayBox().then(function (h) { var el = $('#todayRevamp'); if (!el || !h) return; el.innerHTML = h; $$('[data-gu-open]', el).forEach(function (a) { a.onclick = function (e) { e.preventDefault(); window.HQGlow.open(a.dataset.guOpen); go('glow'); }; }); });
+    if (S.isAdmin && window.HQGlow) window.HQGlow.todayBox().then(function (h) { var el = $('#todayRevamp'); if (!el || !h) return; el.innerHTML = h; $$('[data-gu-open]', el).forEach(function (a) { a.onclick = function (e) { e.preventDefault(); window.HQGlow.open(a.dataset.guOpen); go('glow'); }; }); $$('[data-ck-open]', el).forEach(function (a) { a.onclick = function (e) { e.preventDefault(); window.HQGlow.openCheck(a.dataset.ckOpen); go('glow'); }; }); });
     var pn = $('#planNow'); if (pn) pn.onclick = function () { pickSheet(today()); };
     var sp = $('#startPaste'); if (sp) sp.onclick = function () { pasteSheet(); };
     $$('[data-op]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); editCard(byId(a.dataset.op)); }; });

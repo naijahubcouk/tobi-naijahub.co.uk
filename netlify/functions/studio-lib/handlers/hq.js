@@ -380,7 +380,7 @@ exports.handler = handler(async (ctx) => {
       }
       return sunday.forHq(week);
     }
-    case 'gu-list': case 'gu-save': case 'gu-step': case 'gu-del': case 'gu-reopen': case 'gu-lib': case 'gu-libadd': case 'gu-listing': case 'gu-settings': case 'gu-ai-audit': case 'gu-ai-plan': case 'gu-ai-comps': case 'gu-ai-find': case 'gu-ai-checklist': {
+    case 'gu-list': case 'gu-save': case 'gu-step': case 'gu-del': case 'gu-reopen': case 'gu-lib': case 'gu-libadd': case 'gu-listing': case 'gu-settings': case 'gu-ai-audit': case 'gu-ai-plan': case 'gu-ai-comps': case 'gu-ai-find': case 'gu-ai-checklist': case 'gu-checks': case 'gu-check-mark': case 'gu-check-del': case 'gu-check-convert': {
       // ✨ Instagram Glow-Up clients (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
       const gu = require('../glowup');
@@ -389,6 +389,10 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'gu-del') return gu.del(body.id);
       if (body.action === 'gu-reopen') return { client: await gu.reopenForm(body.id) };
       if (body.action === 'gu-lib') return { lib: await gu.lib() };
+      if (body.action === 'gu-checks') return { checks: await require('../igcheck').list() };
+      if (body.action === 'gu-check-mark') return { check: await require('../igcheck').mark(body.id, { contacted: !!body.contacted }) };
+      if (body.action === 'gu-check-del') return require('../igcheck').del(body.id);
+      if (body.action === 'gu-check-convert') return { client: await require('../igcheck').convert(body.id, who.email) };
       if (body.action === 'gu-ai-checklist') return gu.aiChecklist(body.id);
       if (body.action === 'gu-ai-comps') return gu.aiComps(body.id, body.shots, body.notes);
       if (body.action === 'gu-ai-find') return gu.aiFind(body.id);
