@@ -59,6 +59,21 @@ input:focus,textarea:focus{border-color:#057A44}
 .add{background:#0F1E36;color:#fff;border-radius:14px;padding:14px 16px;margin-top:12px}.add b{display:block;font-size:15.5px}.add span{display:block;font-size:13.5px;opacity:.85;margin:3px 0 10px}.add a{display:inline-block;background:#FFB81C;color:#0F1E36;font-weight:800;text-decoration:none;border-radius:10px;padding:9px 14px;font-size:14.5px}
 .skip{display:block;margin:12px auto 0;border:0;background:none;color:#057A44;font:inherit;font-weight:700;font-size:14.5px;cursor:pointer;text-decoration:underline}
 .picked button+button{margin-left:6px}
+.band{display:inline-block;color:#fff;font-weight:800;font-size:13px;border-radius:20px;padding:3px 11px}
+.bars{margin-top:16px;display:grid;gap:10px}.bl{display:flex;justify-content:space-between;font-size:14px;font-weight:600}.bl b{font-size:14.5px}.bl small{font-size:12px;color:#6B7280;font-weight:600}
+.bt{height:9px;border-radius:5px;background:#EEE9DD;overflow:hidden;margin-top:4px}.bt i{display:block;height:100%;border-radius:5px}
+details.how{margin-top:14px;font-size:13.5px;color:#4B5563}details.how summary{cursor:pointer;color:#057A44;font-weight:700}details.how p{margin-top:6px;line-height:1.6}
+.fx{padding:14px 0;border-top:1px solid #F0EDE5}.fx:first-of-type{border-top:0}.fh b{font-size:16px;line-height:1.35}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0 8px}.tags span{font-size:12px;font-weight:700;background:#F3F0E8;border-radius:12px;padding:2px 9px;color:#374151}.tags span.big{background:#FFE9D9;color:#B8430D}
+.fx p{font-size:14.5px;color:#374151;margin-top:5px}.fx em{font-style:normal;font-weight:800;color:#0F1E36}.fx ol{margin:4px 0 0 20px;font-size:14.5px;color:#374151}.fx li{margin:2px 0}
+.ex{background:#F6FAF7;border:1px dashed #A7D7BC;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:14.5px;white-space:pre-wrap}.ex small{display:block;font-size:11.5px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.biob{background:#F6FAF7;border:1px dashed #A7D7BC;border-radius:12px;padding:14px;white-space:pre-wrap;font-size:15.5px}
+.cpb{margin-top:8px;border:1.5px solid #057A44;background:#fff;color:#057A44;font:inherit;font-weight:800;font-size:14px;border-radius:10px;padding:8px 14px;cursor:pointer}
+.bdg{padding:6px 0 10px}.bdh{display:flex;justify-content:space-between;font-weight:800;font-size:14.5px;padding:6px 0;border-bottom:2px solid #F0EDE5}
+.bdr{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #F6F3EC;align-items:flex-start}.bdr b{display:block;font-size:14.5px}.bdr small{display:block;font-size:13.5px;color:#4B5563}
+.st{flex-shrink:0;font-size:11.5px;font-weight:800;border-radius:10px;padding:3px 8px;min-width:92px;text-align:center;margin-top:1px}.st.good{background:#E3F2EA;color:#057A44}.st.fix{background:#FFF1CF;color:#7A5300}.st.missing{background:#FDE2E1;color:#B42318}.st.none{background:#F3F4F6;color:#6B7280}
+.adds{display:grid;gap:8px;margin:12px 0 4px}.adds div{background:#F6F4EE;border-radius:10px;padding:10px 12px;font-size:14px}.adds b{display:block;font-size:13.5px;margin-bottom:2px}
+.ring i{font-size:30px}.ring i small{font-size:10.5px}
 .hidden{display:none!important}
 </style>
 <template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
@@ -148,30 +163,44 @@ input:focus,textarea:focus{border-color:#057A44}
 
   // ── 2. the results ──
   function result(d) {
-    var pc = d.total ? Math.round(d.score * 100 / d.total) : 0, col = pc >= 70 ? '#057A44' : pc >= 40 ? '#FFB81C' : '#E8590C';
+    var TONE = { great: '#057A44', good: '#2FA36B', mid: '#E9A100', low: '#D9480F' }, col = TONE[d.tone] || '#057A44', goalW = d.goal ? d.goal.replace('More ', '') : 'customers';
     var link = SITE + '/instagram-check?c=' + encodeURIComponent(d.t);
-    var say = pc >= 70 ? 'Your page is in good shape — a few changes will make it work even harder.' : pc >= 40 ? 'A good start — some simple changes could bring you a lot more ' + (d.goal ? d.goal.replace('More ', '') : 'customers') + '.' : 'There’s a big opportunity here — your page could be bringing you much more.';
-    var h = '<div class="hero"><div class="badge">' + (d.byHq ? '💚 A free gift from Auntie Tobi' : '🆓 Your free Instagram check') + '</div><h1>' + esc(d.biz) + '</h1><p>' + (d.byHq ? 'Auntie Tobi checked your Instagram for you! Here’s what’s working, and 3 simple changes that could bring you more ' + esc(d.goal ? d.goal.replace('More ', '') : 'customers') + '.' : (d.name ? 'Hi ' + esc(d.name) + '! ' : '') + 'Here’s what Auntie Tobi found.') + '</p></div>' +
-      '<div class="card"><div class="score"><div class="ring" style="background:conic-gradient(' + col + ' ' + pc + '%,#EEE9DD 0)"><i>' + d.score + '<small>of ' + d.total + '</small></i></div><p><b>' + d.score + ' of ' + d.total + ' checks looking good</b>' + esc(say) + '</p></div></div>';
-    if (d.working.length) h += '<div class="card"><h2>💚 What’s working</h2>' + d.working.map(function (x) { return '<div class="li"><span>✅</span><div>' + esc(x) + '</div></div>'; }).join('') + '</div>';
+    var say = { great: 'Your page is working hard for you — a few tweaks will make it even better.', good: 'A good page — some simple changes could bring you a lot more ' + goalW + '.', mid: 'You’re getting there — a few clear changes could make a real difference.', low: 'There’s a big opportunity here — your page could be bringing you much more.' }[d.tone] || '';
+    var h = '<div class="hero"><div class="badge">' + (d.byHq ? '💚 A free gift from Auntie Tobi' : '🆓 Your free Instagram check') + '</div><h1>' + esc(d.biz) + '</h1><p>' + (d.byHq ? 'Auntie Tobi checked your Instagram for you! Here’s your score, what’s working, and the changes that could bring you more ' + esc(goalW) + '.' : (d.name ? 'Hi ' + esc(d.name) + '! ' : '') + 'Here’s what Auntie Tobi found.') + '</p></div>' +
+      '<div class="card"><div class="score"><div class="ring" style="background:conic-gradient(' + col + ' ' + d.score + '%,#EEE9DD 0)"><i>' + d.score + '<small>out of 100</small></i></div><div><span class="band" style="background:' + col + '">' + esc(d.band) + '</span><p style="margin-top:6px">' + esc(say) + '</p></div></div>' +
+      '<div class="bars">' + d.groups.map(function (g) { var pc = g.got == null ? 0 : Math.round(g.got * 100 / g.max), c = g.got == null ? '#CFC8B8' : pc >= 80 ? TONE.great : pc >= 60 ? TONE.good : pc >= 40 ? TONE.mid : TONE.low;
+        return '<div class="bar"><div class="bl"><span>' + esc(g.name) + '</span><b>' + (g.got == null ? '<small>couldn’t see</small>' : g.got + '<small>/' + g.max + '</small>') + '</b></div><div class="bt"><i style="width:' + pc + '%;background:' + c + '"></i></div></div>'; }).join('') + '</div>' +
+      '<details class="how"><summary>How is my score worked out?</summary><p>Auntie Tobi checks 12 things across 5 areas. Each counts for points: good gets them all, “needs fixing” gets half, missing gets none.' + (d.unseen ? ' ' + d.unseen + ' thing' + (d.unseen > 1 ? 's' : '') + ' couldn’t be seen in your screenshot, so they don’t count against you.' : '') + ' <span style="display:block;margin-top:6px"><b>80–100</b> Great · <b>60–79</b> Good · <b>40–59</b> Getting there · <b>0–39</b> Needs work</span></p></details></div>';
+    if (d.working.length) h += '<div class="card"><h2>💚 What’s working</h2>' + d.working.map(function (x) { return '<div class="li"><span>✅</span><div><b style="display:inline;font-size:15px">' + esc(x.t) + '</b>' + (x.why ? '<div style="font-size:14px;color:#4B5563">' + esc(x.why) + '</div>' : '') + '</div></div>'; }).join('') + '</div>';
     if (d.locked) {
-      h += '<div class="card lock"><h2>🔧 ' + (d.nFix || 3) + ' things to improve + your quick win</h2>' +
-        '<div class="blur" aria-hidden="true"><div class="fix"><b>1. Your bio could be doing more</b><div>Say what you sell and how to order in the first line so new visitors…</div></div><div class="fix"><b>2. Add highlights for your prices</b><div>People want to know the price before they message…</div></div></div>' +
-        '<p style="font-size:15px;margin:6px 0 12px"><b>Unlock your fixes</b> — tell Auntie Tobi where to send them.</p>' +
+      h += '<div class="card lock"><h2>🔓 Unlock your full results</h2><p style="font-size:14.5px;margin-bottom:8px">Your top ' + (d.nFix || 3) + ' fixes with step-by-step how-tos, a new bio written for you, your full breakdown and a quick win for today.</p>' +
+        '<div class="blur" aria-hidden="true"><div class="fix"><b>1. Say what you sell in your name field</b><div>Say what you sell and how to order in the first line so new visitors…</div></div><div class="fix"><b>2. Add highlights for your prices</b><div>People want to know the price before they message…</div></div></div>' +
+        '<p style="font-size:15px;margin:6px 0 12px"><b>Tell Auntie Tobi where to send them</b> — it’s free.</p>' +
         '<label>Your first name</label><input id="un" autocomplete="given-name">' +
         '<label>WhatsApp number</label><input id="uw" inputmode="tel" placeholder="07…" autocomplete="tel" value="' + esc(YOURS && YOURS.wa ? String(YOURS.wa).replace(/^44/, '0') : '') + '">' +
         '<label>Email <small>(optional)</small></label><input id="ue" inputmode="email" autocomplete="email">' +
         '<label class="tick"><input type="checkbox" id="uok"> Auntie Tobi can message me about my results and the Instagram Revamp.</label>' +
-        '<div class="err" id="err"></div><button class="go" id="ugo">🔓 Show my fixes</button></div>';
+        '<div class="err" id="err"></div><button class="go" id="ugo">🔓 Show my full results</button></div>';
     } else {
       if (d.overall) h += '<div class="card"><h2>👀 The big picture</h2><p style="font-size:15px">' + esc(d.overall) + '</p></div>';
-      if (d.improve.length) h += '<div class="card"><h2>🔧 What to improve</h2>' + d.improve.map(function (x, i) { return '<div class="fix"><b>' + (i + 1) + '. ' + esc(x.area || 'Your page') + '</b>' + (x.why ? '<div>' + esc(x.why) + '</div>' : '') + '<div><em>Do this:</em> ' + esc(x.fix) + '</div></div>'; }).join('') + '</div>';
+      if (d.improve.length) h += '<div class="card"><h2>🔧 Your top ' + d.improve.length + ' fixes</h2>' + d.improve.map(function (x, i) {
+        return '<div class="fx"><div class="fh"><b>' + (i + 1) + '. ' + esc(x.fix) + '</b></div>' +
+          '<div class="tags">' + (x.area ? '<span>' + esc(x.area) + '</span>' : '') + (x.impact ? '<span class="' + (x.impact === 'big' ? 'big' : '') + '">' + (x.impact === 'big' ? '🔥 Big difference' : '👍 Good difference') + '</span>' : '') + (x.mins ? '<span>⏱ ' + (x.mins >= 60 ? Math.round(x.mins / 60) + ' hr' : x.mins + ' mins') + '</span>' : '') + '</div>' +
+          (x.saw ? '<p><em>What we saw:</em> ' + esc(x.saw) + '</p>' : '') + (x.why ? '<p><em>Why it matters:</em> ' + esc(x.why) + '</p>' : '') +
+          (x.steps && x.steps.length ? '<p><em>How to do it:</em></p><ol>' + x.steps.map(function (y) { return '<li>' + esc(y) + '</li>'; }).join('') + '</ol>' : '') +
+          (x.example ? '<div class="ex"><small>Example for you</small>' + esc(x.example) + '</div>' : '') + '</div>'; }).join('') + '</div>';
+      if (d.bio) h += '<div class="card"><h2>✍🏾 A new bio for you</h2><div class="biob">' + esc(d.bio) + '</div><button type="button" class="cpb" id="cpBio">📋 Copy bio</button><p class="note" style="text-align:left;margin-top:8px">Change anything you like, then paste it in Edit profile → Bio.</p></div>';
       if (d.quickWin) h += '<div class="quick"><b>⚡ Your quick win for today</b>' + esc(d.quickWin) + '</div>';
-      h += '<div class="card"><h2>✨ Want Auntie Tobi to do the rest?</h2><p style="font-size:15px">This free check looks at your profile. The <b>Instagram Revamp</b> goes much further: your full page audit, a new bio, a study of your competitors, Reel scripts, a 30-day plan and a step-by-step checklist you tick off as you grow.</p>' +
+      if (d.breakdown.length) { var GN = {}; d.groups.forEach(function (g) { GN[g.k] = g; }); var LAB = { good: '✅ Good', fix: '🔧 Fix', missing: '❌ Missing' };
+        h += '<div class="card"><h2>📋 Your full breakdown</h2>' + d.groups.map(function (g) { var it = d.breakdown.filter(function (x) { return x.g === g.k; });
+          return '<div class="bdg"><div class="bdh">' + esc(g.name) + ' <b>' + (g.got == null ? '—' : g.got + '/' + g.max) + '</b></div>' + it.map(function (x) { return '<div class="bdr"><span class="st ' + (x.s || 'none') + '">' + (LAB[x.s] || '👀 Couldn’t see') + '</span><div><b>' + esc(x.name) + '</b>' + (x.note ? '<small>' + esc(x.note) + '</small>' : '') + '</div></div>'; }).join('') + '</div>'; }).join('') + '</div>'; }
+      var GA = {"first": "Your bio and name come first in the Revamp — 2 new bios written for your business.", "buy": "The Revamp maps your sales journey: a DM keyword, a ready-to-send reply and the highlights to set up.", "content": "The Revamp gives you 3 Reel scripts and a 30-day content plan, post by post.", "trust": "The Revamp shows you how to bring real people and reviews into your page, with post ideas to match.", "active": "The Revamp’s 30-day plan and checklist keep you posting — 3 times a week, ticked off as you go."}, weak = d.groups.filter(function (g) { return g.got != null && g.got / g.max < 0.7; }).sort(function (a, b) { return a.got / a.max - b.got / b.max; }).slice(0, 3);
+      h += '<div class="card"><h2>✨ Want Auntie Tobi to do the rest?</h2><p style="font-size:16px;font-weight:700;line-height:1.45">Your score shows what needs fixing — the Instagram Revamp fixes it for you, with everything written for your business and a step-by-step checklist to grow.</p>' +
+        (weak.length ? '<div class="adds">' + weak.map(function (g) { return '<div><b>' + esc(g.name) + ' ' + g.got + '/' + g.max + '</b>' + esc(GA[g.k] || '') + '</div>'; }).join('') + '</div>' : '') +
         pk('Starter', 35, '3 days', 'Full page check, your top fixes, a new bio and 10 post ideas.') +
         pk('Revamp', 75, '5 days', 'Everything in Starter + 5 competitors studied, 3 Reel scripts, a 30-day plan and your sales journey.', true) +
         pk('Revamp + Done for you', 150, '7 days', 'Everything in Revamp + 9 posts designed for you and a 30-day check-in.') +
-        '<a class="go wa" style="text-decoration:none;text-align:center;margin-top:14px" target="_blank" rel="noopener" href="https://wa.me/' + WA + '?text=' + encodeURIComponent((d.byHq ? 'Hi Auntie Tobi 👋🏾 Thank you for checking my Instagram! This is ' + d.biz : 'Hi Auntie Tobi 👋🏾 I just did the free Instagram check for ' + d.biz) + ' (' + d.score + '/' + d.total + '). Can we talk about my results? ' + link) + '">💬 Talk to Auntie Tobi about my results</a>' +
+        '<a class="go wa" style="text-decoration:none;text-align:center;margin-top:14px" target="_blank" rel="noopener" href="https://wa.me/' + WA + '?text=' + encodeURIComponent((d.byHq ? 'Hi Auntie Tobi 👋🏾 Thank you for checking my Instagram! This is ' + d.biz : 'Hi Auntie Tobi 👋🏾 I just did the free Instagram check for ' + d.biz) + ' (' + d.score + '/100). Can we talk about my results? ' + link) + '">💬 Talk to Auntie Tobi about my results</a>' +
         '<p class="note" style="margin-top:8px"><a href="/instagram-revamp" style="color:#057A44;font-weight:700">See everything in the Revamp →</a></p></div>';
     }
     if (!d.listed) h += '<div class="list"><b>📍 Get found on Auntie Tobi too</b><p>Add your business to the Auntie Tobi directory for free, so Nigerians across the UK can find you.</p><a href="/add-business?from=igcheck" target="_blank" rel="noopener">Add my business free →</a></div>';
@@ -179,12 +208,13 @@ input:focus,textarea:focus{border-color:#057A44}
       '<p class="note">These are suggestions to test, not guarantees — every page is different.<br><a href="/instagram-check" style="color:#057A44">Check another page</a></p>';
     app.innerHTML = h;
     $('#cpy').onclick = function () { try { navigator.clipboard.writeText(link); this.textContent = 'Copied ✓'; } catch (e) {} };
+    if ($('#cpBio')) $('#cpBio').onclick = function () { try { navigator.clipboard.writeText(d.bio); this.textContent = 'Copied ✓'; } catch (e) {} };
     if (d.locked) $('#ugo').onclick = function () {
       var b = this, e = $('#err'); e.style.display = 'none';
       if (!$('#uok').checked) { e.textContent = 'Please tick the box so Auntie Tobi can send you your results.'; e.style.display = 'block'; return; }
       b.disabled = true; b.textContent = 'Unlocking…';
       post({ action: 'unlock', t: d.t, name: $('#un').value, wa: $('#uw').value, email: $('#ue').value, ok: true }).then(function (r) { result(r); var f = document.querySelector('.fix'); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); })
-        .catch(function (x) { e.textContent = x.message; e.style.display = 'block'; b.disabled = false; b.textContent = '🔓 Show my fixes'; });
+        .catch(function (x) { e.textContent = x.message; e.style.display = 'block'; b.disabled = false; b.textContent = '🔓 Show my full results'; });
     };
   }
   function pk(name, price, days, what, star) {

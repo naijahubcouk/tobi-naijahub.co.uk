@@ -39,6 +39,8 @@
     board();
   }
   var TAB = 'clients', CKF = 'follow';
+  function ckSc(k) { return (k.sc && k.sc.score) || 0; }
+  function ckPill(k) { var t = (k.sc || {}).tone; return pill(ckSc(k) + '/100', t === 'great' || t === 'good' ? 'g' : t === 'mid' ? 'y' : 'r'); }
   function ckDays(iso) { return iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 864e5) : 0; }
   function ckTodo(k) {   // a free check that needs Auntie Tobi
     if (k.clientId) return false;
@@ -59,8 +61,8 @@
     var F = [['follow', 'Follow up', ckTodo], ['mine', 'Made by me', function (k) { return k.byHq; }], ['all', 'All', function () { return true; }], ['contacted', 'Contacted', function (k) { return (k.contacted || k.sentAt) && !k.clientId; }], ['locked', 'Didn’t unlock', function (k) { return !k.contact && !k.byHq; }], ['client', 'Became clients', function (k) { return k.clientId; }]];
     var f = F.filter(function (x) { return x[0] === CKF; })[0] || F[0], list = L.filter(f[2]);
     var row = function (k) {
-      var pc = k.total ? k.score / k.total : 0, ct = k.contact;
-      return '<div class="card" data-ck="' + esc(k.id) + '" style="padding:11px 14px;margin-bottom:8px;cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap">' + pill(k.score + '/' + k.total, pc >= .7 ? 'g' : pc >= .4 ? 'y' : 'r') +
+      var ct = k.contact;
+      return '<div class="card" data-ck="' + esc(k.id) + '" style="padding:11px 14px;margin-bottom:8px;cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap">' + ckPill(k) +
         '<div style="flex:1;min-width:180px"><b>' + esc(k.biz) + '</b><div class="muted" style="font-size:12.5px">' + (k.byHq ? '✍🏾 Made by you' + (k.to && k.to.ig ? ' · @' + esc(k.to.ig) : '') : ct ? '👤 ' + esc(ct.name) + ' · 📱 ' + esc(ct.wa) : 'Didn’t unlock — no contact details') + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + '</div></div>' +
         '<div style="font-size:12.5px;text-align:right">' + (k.clientId ? '➡️ Now a client' : k.byHq ? ckState(k) : k.contacted ? '✓ Contacted ' + nice(k.contacted) : ct ? '<b style="color:#B42318">Follow up</b>' : '') + '<div class="muted">' + (k.listing ? '📍 Listed' : 'Not listed') + ' · ' + nice(k.createdAt) + '</div></div></div>';
     };
@@ -104,8 +106,8 @@
   // 🆓 free Instagram checks (from /instagram-check) — leads for the Revamp
   function ckById(id) { return (D.checks || []).filter(function (k) { return k.id === id; })[0]; }
   function ckMsg(k) {
-    var nm = k.contact ? k.contact.name.split(/\s+/)[0] : '', top = (k.improve || [])[0], good = (k.working || [])[0];
-    return 'Hi ' + nm + '! 👋🏾 It’s Auntie Tobi. Thank you for doing the free Instagram check for ' + k.biz + '. You scored ' + k.score + ' of ' + k.total + (good ? ' — and I love that ' + good.charAt(0).toLowerCase() + good.slice(1).replace(/\.$/, '') : '') + ' 💚' +
+    var nm = k.contact ? k.contact.name.split(/\s+/)[0] : '', top = (k.improve || [])[0], good = ((k.working || [])[0] || {}).t || '';
+    return 'Hi ' + nm + '! 👋🏾 It’s Auntie Tobi. Thank you for doing the free Instagram check for ' + k.biz + '. You scored ' + ckSc(k) + '/100' + (good ? ' — and I love that ' + good.charAt(0).toLowerCase() + good.slice(1).replace(/\.$/, '') : '') + ' 💚' +
       (top ? '\n\nYour biggest win: ' + top.fix : '') +
       '\n\nIf you’d like, I can do the full Instagram Revamp for you — a new bio, a study of your competitors, Reel scripts and a 30-day plan with a step-by-step checklist.\n• Starter £35\n• Revamp £75\n• Revamp + Done for you £150' +
       (k.listing ? '' : '\n\nAlso — you’re not on Auntie Tobi yet! Add your business free so Nigerians across the UK can find you: ' + SITE + '/add-business') +
@@ -122,7 +124,7 @@
     var nm = k.to && k.to.name ? ' ' + k.to.name.split(/\s+/)[0] : '', goal = k.goal ? k.goal.replace('More ', '') : 'customers';
     if (follow) return 'Hi' + nm + '! 👋🏾 Did you get a chance to look at the free Instagram check I made for ' + k.biz + '? ' + ckLink(k) +
       '\n\nIf you’d like, I can do the full Instagram Revamp for you — a new bio, a study of your competitors, Reel scripts and a 30-day plan with a step-by-step checklist.\n• Starter £35\n• Revamp £75\n• Revamp + Done for you £150\n\nWould you like me to tell you more? 😊';
-    return 'Hi' + nm + '! 👋🏾 It’s Auntie Tobi. I had a look at ' + k.biz + '’s Instagram and made you a free page check 💚\n\n' + k.score + ' of ' + k.total + ' things are already looking good — and I found 3 simple changes that could bring you more ' + goal + '.\n\nHere it is: ' + ckLink(k) +
+    return 'Hi' + nm + '! 👋🏾 It’s Auntie Tobi. I had a look at ' + k.biz + '’s Instagram and made you a free page check 💚\n\nYour page scored ' + ckSc(k) + '/100 — and I found 3 simple changes that could bring you more ' + goal + ', with step-by-step how-tos and a new bio written for you.\n\nHere it is: ' + ckLink(k) +
       (k.listing ? '' : '\n\nP.S. You’re not on Auntie Tobi yet — add your business free (it takes 2 mins) so Nigerians across the UK can find you: ' + SITE + '/add-business') + '\n\nNo cost at all — just a little gift from Auntie Tobi 😊';
   }
   function makeSheet() {
@@ -166,12 +168,15 @@
     var to = k.to || {}, imp = (k.improve || []).slice(); while (imp.length < 3) imp.push({ area: '', why: '', fix: '' });
     var follow = !!(k.sentAt && !k.replied), canMail = !!(k.listing && to.email);
     var ta = function (id, v, rows) { return '<textarea id="' + id + '" rows="' + (rows || 2) + '" style="font-size:13.5px">' + esc(v || '') + '</textarea>'; };
-    var s = X.sheet('<h3 style="margin:0 0 2px">✍🏾 ' + esc(k.biz) + ' ' + pill(k.score + ' of ' + k.total, 'b') + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + ' · wants ' + esc((k.goal || 'more sales').toLowerCase()) + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.listing ? ' · 📍 <a href="' + esc(k.listing.url) + '" target="_blank" rel="noopener">on Auntie Tobi</a>' : ' · not on Auntie Tobi') + '</div>' +
+    var s = X.sheet('<h3 style="margin:0 0 2px">✍🏾 ' + esc(k.biz) + ' ' + ckPill(k) + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + ' · wants ' + esc((k.goal || 'more sales').toLowerCase()) + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.listing ? ' · 📍 <a href="' + esc(k.listing.url) + '" target="_blank" rel="noopener">on Auntie Tobi</a>' : ' · not on Auntie Tobi') + '</div>' +
       '<div style="background:#F6F4EE;border-radius:10px;padding:9px 12px;margin-top:10px;font-size:13.5px">' + (k.clientId ? '➡️ Now a client' : ckState(k)) + (k.sentVia && k.sentVia.length ? ' · sent by ' + esc(k.sentVia.join(', ')) : '') + '</div>' +
       '<div style="font-weight:800;margin-top:12px">✏️ Their results <span class="muted" style="font-weight:500;font-size:12.5px">— change anything before you send</span></div>' +
       '<label>The big picture</label>' + ta('eO', k.overall, 3) +
-      '<label>💚 What’s working <span class="muted" style="font-weight:400">(one per line)</span></label>' + ta('eW', (k.working || []).join('\n'), 3) +
-      '<label>🔧 The 3 fixes</label>' + imp.slice(0, 3).map(function (x, i) { return '<div style="border:1px solid #EEE9DD;border-radius:10px;padding:8px;margin-bottom:6px"><input data-ia="' + i + '" value="' + esc(x.area) + '" placeholder="Area, e.g. Bio" style="font-size:13px;margin-bottom:5px"><textarea data-iw="' + i + '" rows="2" placeholder="Why it matters" style="font-size:13px;margin-bottom:5px">' + esc(x.why) + '</textarea><textarea data-if="' + i + '" rows="2" placeholder="What to do" style="font-size:13px">' + esc(x.fix) + '</textarea></div>'; }).join('') +
+      '<label>💚 What’s working <span class="muted" style="font-weight:400">(one per line: what’s working | why it helps)</span></label>' + ta('eW', (k.working || []).map(function (x) { return x.why ? x.t + ' | ' + x.why : x.t; }).join('\n'), 4) +
+      '<label>🔧 The 3 fixes</label>' + imp.slice(0, 3).map(function (x, i) { var f = function (k, ph, v, r) { return '<textarea data-i' + k + '="' + i + '" rows="' + (r || 2) + '" placeholder="' + ph + '" style="font-size:13px;margin-bottom:5px">' + esc(v || '') + '</textarea>'; };
+        return '<div style="border:1px solid #EEE9DD;border-radius:10px;padding:8px;margin-bottom:6px"><div class="row" style="gap:6px;margin-bottom:5px"><input data-ia="' + i + '" value="' + esc(x.area) + '" placeholder="Area, e.g. Bio" style="font-size:13px;flex:1"><select data-ip="' + i + '" style="font-size:13px;width:auto"><option value="big"' + (x.impact === 'big' ? ' selected' : '') + '>🔥 Big</option><option value="medium"' + (x.impact !== 'big' ? ' selected' : '') + '>👍 Good</option></select><input data-im="' + i + '" value="' + (x.mins || '') + '" placeholder="mins" style="font-size:13px;width:70px"></div>' +
+          f('f', 'The fix, one sentence', x.fix) + f('s', 'What you saw', x.saw) + f('w', 'Why it matters', x.why) + f('t', 'How to do it — one step per line', (x.steps || []).join('\n'), 3) + f('e', 'Example for them', x.example) + '</div>'; }).join('') +
+      '<label>✍🏾 Suggested bio</label>' + ta('eB', k.bio, 3) +
       '<label>⚡ Quick win</label>' + ta('eQ', k.quickWin, 2) +
       '<div style="text-align:right;margin-top:6px"><button class="btn ghost sm" id="eS">💾 Save changes</button> <a class="btn ghost sm" href="' + ckLink(k) + '&hq=1" target="_blank" rel="noopener">👀 Preview their page</a></div>' +
       '<div style="font-weight:800;margin-top:14px">📤 Send it</div>' +
@@ -182,8 +187,9 @@
       (k.sentAt ? '<button class="btn ghost sm" id="sR">' + (k.replied ? '↩️ Not replied' : '✓ They replied') + '</button>' : '') +
       (k.clientId ? '<button class="btn primary sm" id="ckOpen">➡️ Open client</button>' : '<button class="btn primary sm" id="ckGo">➡️ Make them a client</button>') + '</div>');
     var fields = function () {
-      var im = [0, 1, 2].map(function (i) { return { area: $('[data-ia="' + i + '"]', s).value, why: $('[data-iw="' + i + '"]', s).value, fix: $('[data-if="' + i + '"]', s).value }; });
-      return { id: k.id, overall: $('#eO', s).value, quickWin: $('#eQ', s).value, working: $('#eW', s).value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean), improve: im, to: { name: $('#tN', s).value, wa: $('#tW', s).value, ig: $('#tI', s).value } };
+      var v = function (k, i) { var el = $('[data-i' + k + '="' + i + '"]', s); return el ? el.value : ''; };
+      var im = [0, 1, 2].map(function (i) { return { area: v('a', i), fix: v('f', i), saw: v('s', i), why: v('w', i), steps: v('t', i).split('\n').map(function (x) { return x.trim(); }).filter(Boolean), example: v('e', i), impact: v('p', i), mins: v('m', i) }; });
+      return { id: k.id, overall: $('#eO', s).value, quickWin: $('#eQ', s).value, bio: $('#eB', s).value, working: $('#eW', s).value.split('\n').map(function (x) { var p = x.split(' | '); return { t: p[0].trim(), why: (p.slice(1).join(' | ') || '').trim() }; }).filter(function (x) { return x.t; }), improve: im, to: { name: $('#tN', s).value, wa: $('#tW', s).value, ig: $('#tI', s).value } };
     };
     var saveIt = async function (quiet) { var r = await X.api('gu-check-edit', fields()); Object.assign(k, r.check); if (!quiet) X.toast('💾 Saved'); };
     var sent = async function (via) { try { var r = await X.api('gu-check-mark', { id: k.id, sent: via }); Object.assign(k, r.check); board(); } catch (e) { X.toast(e.message); } };
@@ -219,10 +225,10 @@
     var k = ckById(id); if (!k) return;
     if (k.byHq) return mineSheet(k);
     var ct = k.contact, ph = ct ? String(ct.wa).replace(/\D/g, '').replace(/^0/, '44') : '';
-    var s = X.sheet('<h3 style="margin:0 0 2px">🆓 ' + esc(k.biz) + ' ' + pill(k.score + ' of ' + k.total, 'b') + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.sells ? '<br>Sells: ' + esc(k.sells) : '') + '</div>' +
+    var s = X.sheet('<h3 style="margin:0 0 2px">🆓 ' + esc(k.biz) + ' ' + ckPill(k) + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.sells ? '<br>Sells: ' + esc(k.sells) : '') + '</div>' +
       '<div style="background:#F6F4EE;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13.5px">' + (ct ? '👤 <b>' + esc(ct.name) + '</b> · 📱 ' + esc(ct.wa) + (ct.email ? ' · 📧 ' + esc(ct.email) : '') : '<span class="muted">They saw their score but didn’t unlock their fixes, so there are no contact details.</span>') +
       '<div style="margin-top:4px">' + (k.listing ? '📍 <a href="' + esc(k.listing.url) + '" target="_blank" rel="noopener">' + esc(k.listing.name) + '</a> on Auntie Tobi' : '📍 Not on Auntie Tobi yet') + '</div></div>' +
-      ((k.working || []).length ? '<div style="font-weight:700;font-size:13.5px;margin-top:10px">💚 Working</div><ul style="margin:2px 0 0 18px;font-size:13.5px">' + k.working.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+      ((k.working || []).length ? '<div style="font-weight:700;font-size:13.5px;margin-top:10px">💚 Working</div><ul style="margin:2px 0 0 18px;font-size:13.5px">' + k.working.map(function (x) { return '<li>' + esc(x.t || x) + '</li>'; }).join('') + '</ul>' : '') +
       ((k.improve || []).length ? '<div style="font-weight:700;font-size:13.5px;margin-top:8px">🔧 To improve</div><ol style="margin:2px 0 0 18px;font-size:13.5px">' + k.improve.map(function (x) { return '<li><b>' + esc(x.area) + '</b> — ' + esc(x.fix) + '</li>'; }).join('') + '</ol>' : '') +
       (k.quickWin ? '<div style="font-size:13.5px;margin-top:8px">⚡ <b>Quick win:</b> ' + esc(k.quickWin) + '</div>' : '') +
       (ct ? '<label style="margin-top:12px">💬 Follow-up message</label><textarea id="ckT" rows="8" style="font-size:13.5px">' + esc(ckMsg(k)) + '</textarea>' : '') +
@@ -630,7 +636,7 @@
     var leads = (D.checks || []).filter(ckTodo), wk = addDays(t, -7), quiet = D.clients.filter(function (c) { var d = c.done || {}, pr = clProgress(c); return c.reportOn && pr.of && pr.n < pr.of && !d[9] && String(c.lastTickAt || c.reportAt || '').slice(0, 10) < wk; });
     var tdy = (D.checks || []).filter(function (k) { return String(k.createdAt).slice(0, 10) === t; }).length, ckLine = '<a href="#" data-ck-open="" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none">🆓 <b>Free Instagram checks:</b> <span class="muted">' + tdy + ' today · ' + leads.length + ' to follow up</span></a>';
     var line = function (c, why) { return '<a href="#" data-gu-open="' + esc(c.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(c.name) + '</b> <span class="muted">· ' + why + '</span></a>'; };
-    return '<div class="h2">✨ Instagram Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + ckLine + leads.slice(0, 8).map(function (k) { return '<a href="#" data-ck-open="' + esc(k.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(k.biz) + '</b> <span class="muted">· ' + (k.byHq ? (k.sentAt ? '✍🏾 your check ' + (k.opens ? 'was opened' : 'was sent') + ' ' + ckDays(k.sentAt) + ' days ago, no reply — send a follow-up' : '✍🏾 your check is ready — send it') : '🆓 free check from ' + esc(k.contact.name) + ' (' + k.score + '/' + k.total + ') — follow up') + '</span></a>'; }).join('') + quiet.map(function (c) { var pr = clProgress(c); return line(c, '😴 no ticks for a week (' + pr.n + '/' + pr.of + ' done) — send nudge G'); }).join('') + '</div>';
+    return '<div class="h2">✨ Instagram Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + ckLine + leads.slice(0, 8).map(function (k) { return '<a href="#" data-ck-open="' + esc(k.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(k.biz) + '</b> <span class="muted">· ' + (k.byHq ? (k.sentAt ? '✍🏾 your check ' + (k.opens ? 'was opened' : 'was sent') + ' ' + ckDays(k.sentAt) + ' days ago, no reply — send a follow-up' : '✍🏾 your check is ready — send it') : '🆓 free check from ' + esc(k.contact.name) + ' (' + ckSc(k) + '/100) — follow up') + '</span></a>'; }).join('') + quiet.map(function (c) { var pr = clProgress(c); return line(c, '😴 no ticks for a week (' + pr.n + '/' + pr.of + ' done) — send nudge G'); }).join('') + '</div>';
   }
   var PENDING = null, PENDING_CK = null;
   function open(id) { PENDING = id; }   // the next view() opens this client
