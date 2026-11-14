@@ -55,6 +55,10 @@ input:focus,textarea:focus{border-color:#057A44}
 .list{background:#0F1E36;color:#fff;border-radius:16px;padding:16px 18px}.list b{display:block;font-size:16px;margin-bottom:4px}.list p{font-size:14px;opacity:.85}.list a{display:inline-block;margin-top:10px;background:#FFB81C;color:#0F1E36;font-weight:800;text-decoration:none;border-radius:10px;padding:9px 14px;font-size:14.5px}
 .tick{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:14px;font-weight:500;cursor:pointer}.tick input{width:20px;height:20px;flex-shrink:0;margin-top:1px;accent-color:#057A44}
 .save{display:flex;gap:8px;align-items:center;background:#F6F4EE;border-radius:12px;padding:10px 12px;font-size:13.5px}.save span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4B5563}.save button{border:0;background:#0F1E36;color:#fff;font:inherit;font-weight:700;font-size:13px;border-radius:8px;padding:7px 10px;cursor:pointer}
+.stp{display:flex;align-items:center;gap:10px;font-weight:800;font-size:16.5px;margin-bottom:10px}.stp i{font-style:normal;width:28px;height:28px;border-radius:50%;background:#057A44;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.add{background:#0F1E36;color:#fff;border-radius:14px;padding:14px 16px;margin-top:12px}.add b{display:block;font-size:15.5px}.add span{display:block;font-size:13.5px;opacity:.85;margin:3px 0 10px}.add a{display:inline-block;background:#FFB81C;color:#0F1E36;font-weight:800;text-decoration:none;border-radius:10px;padding:9px 14px;font-size:14.5px}
+.skip{display:block;margin:12px auto 0;border:0;background:none;color:#057A44;font:inherit;font-weight:700;font-size:14.5px;cursor:pointer;text-decoration:underline}
+.picked button+button{margin-left:6px}
 .hidden{display:none!important}
 </style>
 <template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
@@ -65,7 +69,7 @@ input:focus,textarea:focus{border-color:#057A44}
 <script>
 (function () {
   var API = '/.netlify/functions/glowup', app = document.getElementById('app');
-  var GOALS = ['More followers', 'More enquiries', 'More sales'], WA = '447594674940', SITE = location.origin;
+  var GOALS = ['More followers', 'More enquiries', 'More sales'], WA = '447594674940', SITE = location.origin, YOURS = null;
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var $ = function (q) { return document.querySelector(q); };
   var post = function (b) { return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: JSON.stringify(b) }).then(function (x) { return x.json().then(function (j) { if (!x.ok) throw new Error(j.message || 'Something went wrong — please try again.'); return j; }); }); };
@@ -77,39 +81,56 @@ input:focus,textarea:focus{border-color:#057A44}
     var shots = [], goal = '', listing = null;
     app.innerHTML = '<div class="hero"><div class="badge">🆓 Free Instagram check</div><h1>Is your Instagram <span>bringing you customers?</span></h1><p>Send Auntie Tobi a screenshot of your business page. In about a minute you’ll see what’s working, what to improve, and one quick win for today.</p></div>' +
       '<div class="card">' +
-      '<label>📸 Screenshot of your Instagram profile</label><div class="shot" id="sh">📷 Add your screenshot<small>Your profile with your bio and the top of your posts. You can add a 2nd one (like your highlights or a post).</small></div><input type="file" id="shF" accept="image/*" multiple hidden><div class="thumbs" id="th"></div>' +
-      '<label>Your business name</label><input id="biz" placeholder="e.g. Kemi’s Kitchen" autocomplete="organization">' +
-      '<label>What do you sell? <small>(optional)</small></label><input id="sells" placeholder="e.g. jollof trays and small chops for parties">' +
-      '<label>What do you want most from Instagram?</label><div class="chips" id="goal">' + GOALS.map(function (g) { return '<button type="button" data-g="' + g + '">' + g + '</button>'; }).join('') + '</div>' +
-      '<label>Your Auntie Tobi listing <small>(optional)</small></label><div class="find" id="fnd"><input id="lq" placeholder="Type your business name" autocomplete="off"><div class="res" id="res"></div></div><div id="lpk"></div>' +
-      '<div class="hint" id="lh">Helps Auntie Tobi know your town and what you do. Not listed yet? <a href="/add-business?from=igcheck" target="_blank" rel="noopener">Add your business free →</a></div>' +
+      '<div class="stp"><i>1</i>Is your business on Auntie Tobi?</div>' +
+      '<div id="s1"><div class="find" id="fnd"><input id="lq" placeholder="Type your business name" autocomplete="off"><div class="res" id="res"></div></div>' +
+      '<p class="hint">We’ll fill in your details for you.</p>' +
+      '<div class="add"><b>Your business isn’t listed yet?</b><span>Add it free — it takes 2 mins. Nigerians across the UK can then find you on Auntie Tobi.</span><a href="/add-business?from=igcheck" target="_blank" rel="noopener">➕ Add my business free</a></div>' +
+      '<button type="button" class="skip" id="skip">Or carry on without it →</button></div>' +
+      '<div id="lpk"></div>' +
+      '<div id="man" class="hidden"><label>Your business name</label><input id="biz" placeholder="e.g. Kemi’s Kitchen" autocomplete="organization">' +
+      '<label>What do you sell?</label><input id="sells" placeholder="e.g. jollof trays and small chops for parties"></div>' +
+      '<div class="stp" style="margin-top:22px"><i>2</i>A screenshot of your Instagram</div>' +
+      '<div class="shot" id="sh">📷 Add your screenshot<small>Your profile with your bio and the top of your posts. You can add a 2nd one (like your highlights or a post).</small></div><input type="file" id="shF" accept="image/*" multiple hidden><div class="thumbs" id="th"></div>' +
+      '<div class="stp" style="margin-top:22px"><i>3</i>What do you want most from Instagram?</div><div class="chips" id="goal">' + GOALS.map(function (g) { return '<button type="button" data-g="' + g + '">' + g + '</button>'; }).join('') + '</div>' +
       '<div class="err" id="err"></div><button class="go" id="go">✨ Check my page — free</button>' +
       '<p class="note" style="margin-top:10px">Your screenshot is only used for your check — we don’t keep it.</p></div>';
     var th = function () { $('#th').innerHTML = shots.map(function (u, i) { return '<div><img src="' + u + '" alt=""><button type="button" data-rm="' + i + '" aria-label="Remove">✕</button></div>'; }).join(''); $('#sh').firstChild.textContent = shots.length ? (shots.length < 2 ? '📷 Add a 2nd screenshot (optional)' : '✓ 2 screenshots added') : '📷 Add your screenshot'; [].forEach.call(document.querySelectorAll('[data-rm]'), function (b) { b.onclick = function () { shots.splice(+b.dataset.rm, 1); th(); }; }); };
     $('#sh').onclick = function () { if (shots.length < 2) $('#shF').click(); };
     $('#shF').onchange = async function () { var fs = [].slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && shots.length < 2; i++) { try { shots.push(await shrink(fs[i])); } catch (e) { showErr(e.message); } } th(); };
     [].forEach.call(document.querySelectorAll('[data-g]'), function (b) { b.onclick = function () { goal = b.dataset.g; [].forEach.call(document.querySelectorAll('[data-g]'), function (x) { x.classList.toggle('on', x === b); }); }; });
-    // find their listing
+    // step 1 — find their listing, or carry on without it
     var tmr = null, seq = 0, res = $('#res');
-    var pick = function (b) { listing = b; $('#fnd').classList.add('hidden'); $('#lh').classList.add('hidden'); res.style.display = 'none';
-      $('#lpk').innerHTML = '<div class="picked">✅ <b>' + esc(b.name) + '</b><button type="button" id="lx">Change</button></div>';
-      if (!$('#biz').value.trim()) $('#biz').value = b.name;
-      $('#lx').onclick = function () { listing = null; $('#lpk').innerHTML = ''; $('#fnd').classList.remove('hidden'); $('#lh').classList.remove('hidden'); $('#lq').value = ''; $('#lq').focus(); }; };
+    var reset = function () { listing = null; $('#lpk').innerHTML = ''; $('#s1').classList.remove('hidden'); $('#man').classList.add('hidden'); $('#lq').value = ''; $('#lq').focus(); };
+    var pick = function (b) {
+      res.style.display = 'none'; $('#lq').value = b.name;
+      get('?listing=' + encodeURIComponent(b.slug)).then(function (j) {
+        var L = j.listing; listing = L; YOURS = L;
+        $('#s1').classList.add('hidden');
+        $('#biz').value = L.name; $('#sells').value = L.desc || L.cat || '';
+        $('#lpk').innerHTML = '<div class="picked">✅ <div style="flex:1"><b>' + esc(L.name) + '</b><div style="font-size:13px;color:#374151">' + esc([L.cat, L.loc].filter(Boolean).join(' · ')) + '</div></div><button type="button" id="led">Edit</button><button type="button" id="lx">Not me</button></div>';
+        $('#led').onclick = function () { $('#man').classList.toggle('hidden'); };
+        $('#lx').onclick = reset;
+      }).catch(function (e) { showErr(e.message); });
+    };
     $('#lq').oninput = function () {
       var v = this.value.trim(); clearTimeout(tmr); if (v.length < 2) { res.style.display = 'none'; return; }
       tmr = setTimeout(function () { var my = ++seq; get('?find=' + encodeURIComponent(v)).then(function (j) { if (my !== seq) return; var r = j.results || [];
         res.innerHTML = r.length ? r.map(function (b, i) { return '<button type="button" data-k="' + i + '"><b>' + esc(b.name) + '</b><div>' + esc([b.cat, b.loc].filter(Boolean).join(' · ')) + '</div></button>'; }).join('')
-          : '<div style="padding:11px 13px;font-size:14px">Not on Auntie Tobi yet? <a href="/add-business?from=igcheck" target="_blank" rel="noopener" style="color:#057A44;font-weight:700">Add your business free →</a></div>';
+          : '<div style="padding:11px 13px;font-size:14px">We can’t find it. <a href="/add-business?from=igcheck" target="_blank" rel="noopener" style="color:#057A44;font-weight:700">Add it free — 2 mins →</a></div>';
         res.style.display = 'block';
         [].forEach.call(res.querySelectorAll('[data-k]'), function (b) { b.onmousedown = function (e) { e.preventDefault(); pick(r[+b.dataset.k]); }; });
       }).catch(function () {}); }, 250);
     };
     $('#lq').onblur = function () { setTimeout(function () { res.style.display = 'none'; }, 150); };
+    $('#skip').onclick = function () { $('#s1').classList.add('hidden'); $('#man').classList.remove('hidden');
+      $('#lpk').innerHTML = '<div class="picked" style="background:#F6F4EE">📝 <b style="flex:1;font-weight:600">Tell us about your business</b><button type="button" id="lx">Search again</button></div>'; $('#lx').onclick = reset;
+      var q = $('#lq').value.trim(); if (q && !$('#biz').value) $('#biz').value = q; $('#biz').focus(); };
     var showErr = function (m) { var e = $('#err'); e.textContent = m; e.style.display = 'block'; };
     $('#go').onclick = function () {
       $('#err').style.display = 'none';
+      if (!listing && !$('#s1').classList.contains('hidden')) return showErr('Find your business above, or tap “Carry on without it”.');
       if (!shots.length) return showErr('Please add a screenshot of your Instagram profile.');
-      var biz = $('#biz').value.trim(); if (!biz) return showErr('Please add your business name.');
+      var biz = $('#biz').value.trim(); if (!biz) { $('#man').classList.remove('hidden'); return showErr('Please add your business name.'); }
       if (!goal) return showErr('Please pick what you want most from Instagram.');
       var body = { action: 'check', shots: shots, biz: biz, sells: $('#sells').value.trim(), goal: goal, listing: listing ? listing.slug : '' };
       waiting();
@@ -138,7 +159,7 @@ input:focus,textarea:focus{border-color:#057A44}
         '<div class="blur" aria-hidden="true"><div class="fix"><b>1. Your bio could be doing more</b><div>Say what you sell and how to order in the first line so new visitors…</div></div><div class="fix"><b>2. Add highlights for your prices</b><div>People want to know the price before they message…</div></div></div>' +
         '<p style="font-size:15px;margin:6px 0 12px"><b>Unlock your fixes</b> — tell Auntie Tobi where to send them.</p>' +
         '<label>Your first name</label><input id="un" autocomplete="given-name">' +
-        '<label>WhatsApp number</label><input id="uw" inputmode="tel" placeholder="07…" autocomplete="tel">' +
+        '<label>WhatsApp number</label><input id="uw" inputmode="tel" placeholder="07…" autocomplete="tel" value="' + esc(YOURS && YOURS.wa ? String(YOURS.wa).replace(/^44/, '0') : '') + '">' +
         '<label>Email <small>(optional)</small></label><input id="ue" inputmode="email" autocomplete="email">' +
         '<label class="tick"><input type="checkbox" id="uok"> Auntie Tobi can message me about my results and the Instagram Revamp.</label>' +
         '<div class="err" id="err"></div><button class="go" id="ugo">🔓 Show my fixes</button></div>';
