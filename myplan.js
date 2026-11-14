@@ -308,7 +308,7 @@
   }
   // 🎨 the Good morning box colour — each person picks their own (saved on this phone)
   var BGK = 'tobi_myplan_bg', BGS = { white: ['#FFFFFF', '#E8E3D6', 'White'], green: ['#E8F5EE', '#CDE8D9', 'Light green'], cream: ['#FFF7E3', '#F3E2B3', 'Light cream'], blue: ['#EAF1FC', '#D3E0F5', 'Light blue'] };
-  function todayHtml(onPage) {
+  function todayHtml(onPage, homeOnly) {
     var g = groups(), t = today(), has = live().length > 0 || liveLists().length > 0, hideNew = ls.get(HIDE) === '1';
     var gr = greet(), d = new Date(), h = d.getHours(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
     var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
@@ -323,7 +323,8 @@
       '<div class="mpX-hd"><div class="mpX-av' + (h >= 17 ? ' ev' : '') + '">' + (h < 17 ? gr[0] : '🌙') + '</div><div style="min-width:0"><div class="mpX-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + '</div><div class="mpX-dt">' + dateLine + '</div></div></div>' +
       (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '');
     var body = '';
-    if (has) {
+    if (homeOnly) { /* 🏠 Home: just the greeting + motivation (Nov 2026) */ }
+    else if (has) {
       var over = g.over.filter(function (i) { return !i.cel; }), due = g.today.filter(function (i) { return !i.cel; });
       var cel = live().filter(function (i) { return i.cel && !i.done && daysTo(i.d) >= 0; }).sort(function (a, b) { return a.d.localeCompare(b.d); })[0];
       var nx = g.week.concat(g.later).filter(function (i) { return !i.cel; })[0];
@@ -348,7 +349,7 @@
         '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Try My Plan FREE</button></div>';
     }
     var sl = P.sun && P.sun.latest;
-    if (sl && t >= sl.week && t <= addDays(sl.week, 2)) body += '<div class="mpX-row" data-mp-sun>📰 Your Sunday Update is here<span>Read ›</span></div>';
+    if (!homeOnly && sl && t >= sl.week && t <= addDays(sl.week, 2)) body += '<div class="mpX-row" data-mp-sun>📰 Your Sunday Update is here<span>Read ›</span></div>';
     if (mo && !onPage) body += '<button class="mpX-q" data-mp-mo>“' + esc(mo.text) + '”</button>';
     return html + body + '</div>';
   }
@@ -367,16 +368,10 @@
     bindRows(root);
     root.querySelectorAll('[data-card]').forEach(function (x) { x.onclick = function (e) { e.stopPropagation(); gt('cel_card', { from: 'home' }); }; });
   }
-  // 🏠 Home keeps its own greeting + the daily motivation — everything My Plan lives on the My Plan page (Nov 2026)
-  function homeHtml(el) {
-    var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
-    var hd = el.getAttribute('data-h') || '', sb = el.getAttribute('data-s') || '';
-    return '<div style="border-left:3px solid #FFB81C;padding:10px 14px;background:#f8f8f8;border-radius:0 8px 8px 0;"><div style="font-size:15px;font-weight:500;color:#0F1E36;">' + esc(hd) + '</div>' + (sb ? '<div style="font-size:12px;color:#555;margin-top:3px;">' + esc(sb) + '</div>' : '') + '</div>' +
-      (mo ? '<button class="mpX-q" data-mp-mo>“' + esc(mo.text) + '”</button>' : '');
-  }
+  // 🏠 Home shows only the personal greeting + motivation — the tiles live on the My Plan page (Nov 2026)
   function fill() {
     addCss();
-    document.querySelectorAll('[data-myplan-today]').forEach(function (el) { el.innerHTML = homeHtml(el); bindToday(el); });
+    document.querySelectorAll('[data-myplan-today]').forEach(function (el) { el.innerHTML = todayHtml(false, true); bindToday(el); });
   }
 
   // ───── 💚 My Plan screen ─────
