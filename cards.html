@@ -158,6 +158,8 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       <div id="adjBox" class="hidden"><div class="adjhint">✋ Drag the photo on the card to move it, and slide to zoom. Tap <b>Done</b> when it looks right.</div>
         <label for="pz">Zoom</label><input type="range" id="pz" min="100" max="300" value="100" style="padding:0">
         <button type="button" class="btn dl" id="pDone" style="margin-top:8px">✅ Done</button></div>
+      <div class="tlabel" style="margin-top:14px">🎵 Sound when they open it</div><div class="chips" id="snd"></div>
+      <p class="muted" style="font-size:12px;margin:6px 0 2px">Tap a sound to hear it. It plays when they open your card link.</p>
       <div class="btns"><button class="btn wa" id="share">💬 Send on WhatsApp</button><button class="btn dl" id="dl">⬇️ Download</button></div>
       <div class="btns"><button class="btn ghost" id="link">🔗 Copy card link</button><button class="btn ghost" id="copy">📋 Copy message</button></div>
     </div>
@@ -982,7 +984,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
 
   // ── state ──
   var NB = nowBits(), Q0 = new URLSearchParams(location.search).get('o');
-  var st = { tp: '', tx: 0, ty: 0, ts: 1, nmg: 'happy', occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'story', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
+  var st = { snd: 'tune', tp: '', tx: 0, ty: 0, ts: 1, nmg: 'happy', occ: OCC[Q0] ? Q0 : 'birthday', mn: NB.mn, yr: NB.yr, who: 'friend', style: 'heartfelt', design: 'pinkballoons', size: 'story', name: '', age: '', msg: '', from: '', sign: 'With love', ps: 'm', pp: 'center', photoImg: null, photoData: '', photoId: '', pz: 1, px: 0, py: 0 }, lastPick = -1, designPicked = false;
   var ALIAS = { wife: 'partner', husband: 'partner', daughter: 'child', son: 'child', grandma: 'mum', grandpa: 'dad' };
   function fits(m) { return !m.w || m.w === st.who || m.w === ALIAS[st.who]; }
   function pool() { return MSG.filter(function (m) { return (m.o || 'birthday') === st.occ && m.s === st.style && fits(m); }).sort(function (a, b) { return (b.w === st.who) - (a.w === st.who) || (!!b.w - !!a.w); }); }
@@ -1009,6 +1011,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       var b = e.target.closest('[data-v]'); if (!b) return; st[key] = b.dataset.v; [].forEach.call(el.children, function (x) { x.setAttribute('aria-pressed', x === b); });
       if (key === 'who' && !designPicked && st.occ === 'birthday' && SUGGEST[st.who]) pickDesign(SUGGEST[st.who], true);
       if (key === 'occ') { setOcc(st.occ); return; }
+      if (key === 'snd') { curSong = songFor(st.occ, st.snd); playSong(true); return; }
       if (key === 'tp') { st.tx = 0; st.ty = 0; }
       if (key === 'who' || key === 'style') suggest(true); else render(); save();
     };
@@ -1018,7 +1021,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2400); }
   function whoMap() { var m = {}; OCC[st.occ].who.forEach(function (k) { m[k] = WHO[k]; }); return m; }
   function setOcc(o, keep) {
-    st.occ = o; var oc = OCC[o]; $('nmgBox').classList.toggle('hidden', o !== 'newmonth'); st.yr = o === 'independence' ? NB.indYr : NB.yr;
+    st.occ = o; if (typeof paintSnd === 'function') setTimeout(paintSnd, 0); var oc = OCC[o]; $('nmgBox').classList.toggle('hidden', o !== 'newmonth'); st.yr = o === 'independence' ? NB.indYr : NB.yr;
     if (oc.who.indexOf(st.who) < 0) st.who = oc.who[0];
     chips('who', whoMap(), 'who');
     $('numBox').classList.toggle('hidden', !oc.num); $('numL').innerHTML = (oc.num || 'Age') + ' <small>(optional)</small>'; $('age').placeholder = o === 'anniversary' ? 'e.g. 10' : 'e.g. 40'; if (!oc.num) { st.age = ''; $('age').value = ''; }
@@ -1061,6 +1064,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   async function cardLink() {
     var o = { o: st.occ, n: st.ask ? '' : st.name, a: st.age, m: st.msg, f: st.from, s: st.sign, d: st.design, z: st.size, w: st.who };
     if (st.ask) o.ask = 1;
+    o.snd = st.snd || 'tune';
     if (st.tp) o.tp = st.tp; if (st.tx || st.ty) { o.tx = Math.round(st.tx * 1000) / 1000; o.ty = Math.round(st.ty * 1000) / 1000; } if (st.ts !== 1) o.ts = st.ts;
     if (st.occ === 'newmonth') { o.mn = st.mn; if (st.nmg !== 'happy') o.g = st.nmg; } if (st.occ === 'newyear') o.yr = st.yr; if (st.occ === 'independence') o.yr = nowBits().indYr;
     if (st.photoData) { try { o.p = await photoId(); o.pz = Math.round(st.pz * 100) / 100; o.px = Math.round(st.px * 1000) / 1000; o.py = Math.round(st.py * 1000) / 1000; o.ps = st.ps; o.pp = st.pp; } catch (e) { toast(e.message); } }
@@ -1173,15 +1177,33 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   // 🎵 a music-box "Happy Birthday" (the tune is public domain) — made in the browser, no sound files
   var AC = null, songStop = null, curSong = 'bday';
   function muted() { try { return localStorage.getItem('tobiMute') === '1'; } catch (e) { return false; } }
-  function playSong() {
-    stopSong(); if (muted()) return;
+  // 🎵 3 sounds to choose from: music box (the occasion's tune), sparkle chimes, party drums
+  function songFor(occ, snd) { if (snd === 'chime') return 'chime'; if (snd === 'drum') return 'drum'; var s = (OCC[occ] || {}).song; return !s || s === 'chime' ? 'melody' : s; }
+  function paintSnd() { if (!$('snd')) return; var s = (OCC[st.occ] || {}).song; chips('snd', { tune: s === 'bday' ? '🎵 Happy Birthday' : s === 'xmas' ? '🎵 Christmas carol' : '🎵 Music box', chime: '🔔 Sparkle chimes', drum: '🥁 Party drums' }, 'snd'); }
+  function playDrums(out, t) {
+    var bt = .2, noise = AC.createBuffer(1, AC.sampleRate * .3, AC.sampleRate), nd = noise.getChannelData(0); for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    var kick = function (at) { var o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(140, at); o.frequency.exponentialRampToValueAtTime(45, at + .18); g.gain.setValueAtTime(1, at); g.gain.exponentialRampToValueAtTime(.001, at + .25); o.connect(g); g.connect(out); o.start(at); o.stop(at + .26); };
+    var hit = function (at, f, len, vol) { var b = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain(); b.buffer = noise; fl.type = 'highpass'; fl.frequency.value = f; g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(.001, at + len); b.connect(fl); fl.connect(g); g.connect(out); b.start(at); b.stop(at + len + .02); };
+    var talk = function (at, f1, f2) { var o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f1, at); o.frequency.exponentialRampToValueAtTime(f2, at + .14); g.gain.setValueAtTime(.7, at); g.gain.exponentialRampToValueAtTime(.001, at + .22); o.connect(g); g.connect(out); o.start(at); o.stop(at + .24); };
+    for (var bar = 0; bar < 4; bar++) {
+      var b0 = t + bar * 16 * bt / 2;
+      [0, 3, 6, 10, 12].forEach(function (k) { kick(b0 + k * bt / 2); });                       // afro kick
+      [4, 12].forEach(function (k) { hit(b0 + k * bt / 2, 1200, .16, .55); });                 // clap
+      for (var k = 0; k < 16; k++) hit(b0 + k * bt / 2, 7000, .04, k % 2 ? .18 : .32);          // shaker
+      if (bar % 2) { talk(b0 + 8 * bt / 2, 320, 210); talk(b0 + 11 * bt / 2, 260, 380); talk(b0 + 14 * bt / 2, 300, 200); }   // talking drum
+    }
+  }
+  function playSong(force) {
+    stopSong(); if (muted() && !force) return;
     try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { return; }
-    var N = { D4: 293.66, E4: 329.63, 'F#4': 369.99, G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, C6: 1046.5 };
+    var N = { D4: 293.66, E4: 329.63, 'F#4': 369.99, G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, C6: 1046.5 };
     var SONGS = { bday: [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2], ['G4', .75], ['G4', .25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2], ['F5', .75], ['F5', .25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 2.5]],
       xmas: [['D4', 1], ['G4', 1], ['G4', .5], ['A4', .5], ['G4', .5], ['F#4', .5], ['E4', 1], ['E4', 1], ['E4', 1], ['A4', 1], ['A4', .5], ['B4', .5], ['A4', .5], ['G4', .5], ['F#4', 1], ['D4', 1], ['D4', 1], ['B4', 1], ['B4', .5], ['C5', .5], ['B4', .5], ['A4', .5], ['G4', 1], ['E4', 1], ['D4', .5], ['D4', .5], ['E4', 1], ['A4', 1], ['F#4', 1], ['G4', 3]],
+      melody: [['C5', .5], ['E5', .5], ['G5', 1], ['E5', .5], ['G5', .5], ['A5', 1], ['G5', .5], ['E5', .5], ['C5', 1], ['D5', .5], ['E5', .5], ['D5', 1], ['C5', .5], ['E5', .5], ['G5', 1], ['A5', .5], ['G5', .5], ['E5', 1], ['D5', .5], ['E5', .5], ['C5', 2]],
       chime: [['C5', .5], ['E5', .5], ['G5', .5], ['C6', 1], ['G5', .5], ['C6', 2], ['E5', .5], ['G5', .5], ['C6', 2.5]] };
+    if (curSong === 'drum') { var dOut = AC.createGain(); dOut.gain.value = .5; dOut.connect(AC.destination); playDrums(dOut, AC.currentTime + .08); songStop = function () { try { dOut.gain.setTargetAtTime(0, AC.currentTime, .05); } catch (e) {} }; return; }
     var tune = SONGS[curSong] || SONGS.bday;
-    var beat = curSong === 'xmas' ? .36 : curSong === 'chime' ? .3 : .42, t = AC.currentTime + .1, out = AC.createGain(); out.gain.value = .22; out.connect(AC.destination);
+    var beat = curSong === 'xmas' ? .36 : curSong === 'chime' ? .3 : curSong === 'melody' ? .3 : .42, t = AC.currentTime + .1, out = AC.createGain(); out.gain.value = .22; out.connect(AC.destination);
     tune.forEach(function (n) {
       [1, 2].forEach(function (h) {
         var o = AC.createOscillator(), g = AC.createGain(); o.type = h === 1 ? 'triangle' : 'sine'; o.frequency.value = N[n[0]] * h;
@@ -1216,7 +1238,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
   function start() {
     if (got && (got.m || got.n)) {
       $('maker').classList.add('hidden'); $('recv').classList.remove('hidden');
-      var ro = OCC[got.o] ? got.o : 'birthday', OC = OCC[ro]; curFx = OC.fx || FX; curCols = OC.cols || null; curSong = OC.song || 'chime';
+      var ro = OCC[got.o] ? got.o : 'birthday', OC = OCC[ro]; curFx = OC.fx || FX; curCols = OC.cols || null; curSong = got.snd ? songFor(ro, got.snd) : (OC.song || 'chime');
       var rs = { tp: got.tp, tx: +got.tx || 0, ty: +got.ty || 0, ts: +got.ts || 1, occ: ro, mn: got.mn, yr: got.yr, nmg: got.g === 'welcome' || got.g === 'hello' ? got.g : 'happy', name: cut(got.n, 30), age: String(got.a || '').slice(0, 3), msg: cut(got.m, 320), from: cut(got.f, 40), sign: got.s == null ? 'With love' : cut(got.s, 30), ps: got.ps, pp: got.pp, design: (P[got.d] || D[got.d]) ? got.d : 'floral', size: got.z === 'story' ? 'story' : 'square', who: WHO[got.w] ? got.w : 'friend', pz: +got.pz || 1, px: +got.px || 0, py: +got.py || 0 };
       $('recvTitle').textContent = OC.label.split(' ')[0] + ' ' + headFor(rs) + (rs.name ? ', ' + rs.name : '') + '!';
       $('recvFrom').textContent = (rs.from ? rs.from : 'Someone') + ' made you a ' + OC.noun + ' 💚';
@@ -1259,7 +1281,7 @@ input:focus,textarea:focus{outline:none;border-color:#057A44}
       return;
     }
     try { var sv = JSON.parse(localStorage.getItem('tobiBday') || '{}'); if (sv.from) st.from = sv.from; if (typeof sv.sign === 'string') st.sign = sv.sign; } catch (e) {}
-    var occM = {}; occOrder().forEach(function (o) { occM[o] = OCC[o].label; }); chips('occ', occM, 'occ'); var MNn = MONTHS[st.mn]; chips('nmg', { happy: 'Happy New Month', welcome: 'Welcome ' + MNn, hello: 'Hello ' + MNn }, 'nmg'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size');
+    var occM = {}; occOrder().forEach(function (o) { occM[o] = OCC[o].label; }); chips('occ', occM, 'occ'); var MNn = MONTHS[st.mn]; chips('nmg', { happy: 'Happy New Month', welcome: 'Welcome ' + MNn, hello: 'Hello ' + MNn }, 'nmg'); chips('style', STYLES, 'style'); chips('size', SIZES, 'size'); paintSnd();
     // 💚 opened from My Plan (Celebration dates): who, name and age filled in
     var QP = new URLSearchParams(location.search), FROMPLAN = QP.get('from') === 'plan';
     if (QP.get('who') && OCC[st.occ].who.indexOf(QP.get('who')) >= 0) st.who = QP.get('who');
