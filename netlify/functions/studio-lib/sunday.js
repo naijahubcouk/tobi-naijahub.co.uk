@@ -146,7 +146,7 @@ function render(issue, opts) {
   const H = (t, e) => `<h2 style="font-size:18px;margin:26px 0 10px;color:#0F1E36">${e} ${t}</h2>`;
   const a = (u, t) => u ? `<a href="${esc(u)}" style="color:#057A44;font-weight:bold;text-decoration:none">${t}</a>` : t;
   const para = s => esc(s).split(/\n{2,}/).map(p => `<p style="margin:0 0 12px">${p.replace(/\n/g, '<br>')}</p>`).join('');
-  let h = `<p style="margin:0 0 6px;font-size:13px;color:#6B7280">📰 Auntie Tobi’s Sunday Update · ${longDate(issue.week)}</p>` +
+  let h = `<p style="margin:0 0 6px;font-size:13px;color:#6B7280">📰 Auntie Tobi’s Sunday Update · ${longDate(issue.week)} · <a href="${SITE()}/sunday-update?w=${esc(issue.week)}" style="color:#057A44">Read online</a></p>` +
     `<h1 style="font-size:24px;margin:0 0 14px;color:#057A44;font-family:Georgia,serif">${name ? 'Happy Sunday, ' + name + '! 💚' : 'Happy Sunday! 💚'}</h1>` + para(String(issue.intro || '').replace(/^Happy Sunday!?\s*/i, ''));
   if (opts.ahead && opts.ahead.items && opts.ahead.items.length) {
     h += `<div style="background:#E9F6EF;border-radius:14px;padding:14px 16px;margin:18px 0"><b style="font-size:16px">💚 Your week ahead</b><ul style="margin:8px 0 6px;padding-left:20px">` +

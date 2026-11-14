@@ -219,7 +219,7 @@ async function newsVerify(ctx) {
   const email = core.requireEmail(ctx.body.email);
   await core.rateLimit('myplan-verify', ctx.ip, 30, 60 * 60 * 1000, 'Too many tries — please wait a little and try again.');
   if (!(await core.checkOtp(email, 'myplan', ctx.body.code))) throw new HttpError(400, 'bad_code', 'That code didn’t work — check it, or ask for a new one.');
-  await require('./sunday').subscribe(email, 'news');
+  await require('./sunday').subscribe(email, ctx.body.src === 'web' ? 'web' : 'news');   // web = the /sunday-update page
   await core.audit(email, 'news_subscribe', {}).catch(() => {});
   return { subscribed: true };
 }

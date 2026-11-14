@@ -222,7 +222,7 @@ function home(articles, cat) {
   return page({
     title, desc, canonical: `${SITE}/articles${cat ? '?c=' + encodeURIComponent(cat) : ''}`,
     main: `<section class="hero"><div class="wrap"><div class="eyebrow">Auntie Tobi Articles</div><h1>${cat ? esc(cat) : 'News, guides and stories for Nigerians in the UK'}</h1><p>${esc(desc)}</p></div></section>
-<main class="wrap"><nav class="cats">${chips}</nav>${body}${CTA}</main>`,
+<main class="wrap"><nav class="cats">${chips}</nav><a href="/sunday-update" style="display:flex;align-items:center;gap:12px;background:#FFF4D6;border:1.5px solid #FFB81C;border-radius:14px;padding:12px 14px;margin:6px 0 14px;text-decoration:none;color:#0F1E36"><span style="font-size:24px">📰</span><span style="flex:1"><b style="display:block">Auntie Tobi’s Sunday Update</b><span style="font-size:13.5px;color:#4B5563">This week’s UK news, events and a business to support — free every Sunday</span></span><b style="color:#057A44">→</b></a>${body}${CTA}</main>`,
   });
 }
 
