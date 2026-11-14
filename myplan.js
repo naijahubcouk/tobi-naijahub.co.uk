@@ -158,6 +158,18 @@
     '.mp-toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#0F1E36;color:#fff;border-radius:12px;padding:11px 14px;font-size:14px;z-index:9999;display:flex;gap:12px;align-items:center;max-width:92vw;box-shadow:0 6px 20px rgba(0,0,0,.25)}.mp-toast button{background:none;border:0;color:#FFB81C;font-weight:800;font-size:14px;cursor:pointer}' +
     '.mp-empty{text-align:center;padding:18px 8px;color:#4B5563;font-size:14.5px;line-height:1.55}.mp-empty b{display:block;font-size:16px;color:#0F1E36;margin-bottom:4px}' +
     '.mp-welcome{display:grid;gap:8px;margin-top:12px}.mp-welcome button{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e2dccc;border-radius:14px;padding:14px;font-family:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer;color:#0F1E36}.mp-welcome button span{font-size:22px}.mp-welcome button small{display:block;font-weight:500;color:#6B7280;font-size:12.5px}.mp-welcome button:disabled{opacity:.55;cursor:default}' +
+    '.mpX-hd{display:flex;align-items:center;gap:11px}.mpX-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;background:#FFF1C2}.mpX-av.ev{background:#0F1E36}.mpX-h{font-size:19px;font-weight:800;line-height:1.2}.mpX-dt{font-size:12.5px;color:#6B7280;margin-top:1px}' +
+    '.mpX-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.mpX-tl{border-radius:16px;padding:12px;min-height:96px;display:flex;flex-direction:column;cursor:pointer;min-width:0;text-align:left;border:0;font-family:inherit}' +
+    '.mpX-tl .l{font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.8}.mpX-tl b{font-size:15px;margin-top:6px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}.mpX-tl small{font-size:12px;margin-top:auto;padding-top:6px;font-weight:700;opacity:.85}' +
+    '.mpX-tl small a{color:inherit;text-decoration:none;background:rgba(255,255,255,.6);border-radius:12px;padding:2px 7px;margin-left:4px}' +
+    '.mpX-g{background:#057A44;color:#fff}.mpX-y{background:#FFB81C;color:#0F1E36}.mpX-b{background:#EEF4FF;color:#1D3D7A}.mpX-s{background:#F6F4EE;color:#0F1E36}.mpX-r{background:#FDECEA;color:#B42318}' +
+    '.mpX-q{display:block;width:100%;margin-top:11px;font-size:13.5px;color:#6B7280;font-style:italic;text-align:center;background:none;border:0;font-family:inherit;cursor:pointer;line-height:1.45}' +
+    '.mpX-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#EAF0FB;font-size:14px;font-weight:700;cursor:pointer}.mpX-row span{margin-left:auto;color:#1D3D7A;font-size:13px}' +
+    '.mpS-hd{padding:4px 2px 2px}.mpS-hd h2{font-size:24px;margin:0;color:#0F1E36}.mpS-hd div{font-size:13px;color:#6B7280}' +
+    '.mpS .mp-lbl{margin:14px 2px 6px;font-size:13px;color:#0F1E36;text-transform:none;letter-spacing:0}.mpS .mp-lbl.red{color:#B42318}' +
+    '.mpS .mpS-list .mp-it{background:#fff;border:1px solid #EEEBE3;border-radius:12px;padding:11px 12px;margin-bottom:6px}.mpS .mpS-list .mp-it .r{color:#057A44;font-weight:700}.mpS .mpS-list .mp-it .r.red{color:#B42318}' +
+    '.mpS-nav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid #E5E1D6;border-radius:16px;padding:6px 0 7px;margin-top:12px;box-shadow:0 -4px 14px rgba(15,30,54,.06)}' +
+    '.mpS-nav button{border:0;background:none;font-family:inherit;font-size:11px;font-weight:700;color:#9CA3AF;cursor:pointer;padding:2px 0}.mpS-nav button i{display:block;font-style:normal;font-size:19px;line-height:1.3}.mpS-nav button.on{color:#057A44}' +
     '.mpT{border-radius:20px;overflow:hidden;background:#fff;border:1px solid #E8E3D6;box-shadow:0 2px 8px rgba(15,30,54,.05);margin-bottom:10px;color:#0F1E36}' +
     '.mpT-top{padding:16px 16px 0}.mpT-hr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.mpT-h{font-size:22px;font-weight:800;line-height:1.15}.mpT-h span{color:#057A44}' +
     '.mpT-date{font-size:12.5px;color:#6B7280;font-weight:600;margin-top:3px}.mpT-sun{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}' +
@@ -296,47 +308,37 @@
     var gr = greet(), d = new Date(), h = d.getHours(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
     var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
     var line = has ? hello(g.over.concat(g.today).filter(function (i) { return !i.cel; }).length, live().filter(function (i) { return i.cel && celSoon(i); }), t) : hello(0, [], t);
-    var html = '<div class="mp mpT"><div class="mpT-top"><div class="mpT-hr"><div><div class="mpT-h">' + gr[1] + (P.name ? ', <span>' + esc(P.name) + '</span>' : '') + '</div><div class="mpT-date">' + dateLine + '</div></div>' +
-      '<div class="mpT-sun ' + (h < 12 ? 'am' : h < 17 ? 'pm' : 'ev') + '">' + (h >= 17 ? '🌙' : '') + '</div></div>' +
-      '<div class="mpT-line">' + line + '</div>' +
-      (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '') +
-      (mo ? '<button class="mpT-mo" data-mp-mo>' + esc(mo.emoji) + ' “' + esc(mo.text) + '”</button>' : '') + '</div>';
+    var html = '<div class="mp mpT" style="padding:14px"><div class="mpX-hd"><div class="mpX-av' + (h >= 17 ? ' ev' : '') + '">' + (h < 17 ? gr[0] : '🌙') + '</div><div style="min-width:0"><div class="mpX-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + '</div><div class="mpX-dt">' + dateLine + '</div></div></div>' +
+      (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '');
     var body = '';
-    var sl = P.sun && P.sun.latest;
-    if (sl && t >= sl.week && t <= addDays(sl.week, 2)) body += '<div class="mpT-row mpT-news" data-mp-sun><span class="mpT-ic">📰</span><div class="mpT-t">Your Sunday Update is here<small>This week’s UK news, events and more</small></div><span class="mpT-r">Read ›</span></div>';
     if (has) {
-      var cels = live().filter(function (i) { return i.cel && celSoon(i); }).sort(function (a, b) { return a.d.localeCompare(b.d); });
-      var todays = cels.filter(function (i) { return i.d === t; }), soon = cels.filter(function (i) { return i.d !== t; });
       var over = g.over.filter(function (i) { return !i.cel; }), due = g.today.filter(function (i) { return !i.cel; });
-      var cards = [];
+      var cel = live().filter(function (i) { return i.cel && !i.done && daysTo(i.d) >= 0; }).sort(function (a, b) { return a.d.localeCompare(b.d); })[0];
+      var nx = g.week.concat(g.later).filter(function (i) { return !i.cel; })[0];
       var sl0 = liveLists().slice().sort(function (a, b) { return (b.up || 0) - (a.up || 0); })[0], sleft = sl0 ? sl0.items.filter(function (i) { return !i.x; }).length : 0;
-      var shop = sleft ? '<div class="mpT-sh" data-mp-shop>🛒 ' + sleft + ' to buy</div>' : '';
-      // ⏰ overdue
-      if (over.length) cards.push('<div class="mpT-d late"><div class="w">Overdue' + (over.length > 1 ? '<i>' + over.length + '</i>' : '') + '</div><div class="n">Still to do</div>' + over.slice(0, 2).map(dTask).join('') + '</div>');
-      // 🎂 birthday today
-      todays.slice(0, 2).forEach(function (i) { cards.push(dCel(i, true)); });
-      // 📍 today (shopping list folded in)
-      if (due.length) cards.push('<div class="mpT-d td">' + (todays.length ? '<div class="w">To do today' + (due.length > 1 ? '<i>' + due.length + '</i>' : '') + '</div><div class="n">Don’t forget</div>' : dayHead(t, due.length)) + due.slice(0, 2).map(dTask).join('') + (due.length > 2 ? '<small>+ ' + (due.length - 2) + ' more</small>' : '') + shop + '</div>');
-      else if (!todays.length) cards.push('<div class="mpT-d td" data-mp-open>' + dayHead(t) + '<div class="t">All clear 🎉</div><small>Nothing due</small>' + shop + '</div>');
-      else if (shop) cards.push('<div class="mpT-d td"><div class="w">Shopping</div><div class="n">' + esc(sl0.name) + '</div>' + shop + '</div>');
-      // 🗓️ coming up: one card per day (celebrations get their own)
-      var next = soon.concat(g.week.filter(function (i) { return !i.cel; })).sort(function (a, b) { return (a.d + (a.tm || '99')).localeCompare(b.d + (b.tm || '99')); });
-      if (!next.length) { var nl = g.later.filter(function (i) { return !i.cel; })[0]; if (nl) next = [nl]; }
-      var byDay = [];
-      next.forEach(function (i) { if (i.cel) return byDay.push({ cel: i }); var last = byDay[byDay.length - 1]; if (last && !last.cel && last.d === i.d) last.items.push(i); else byDay.push({ d: i.d, items: [i] }); });
-      byDay.slice(0, 5).forEach(function (x) {
-        if (x.cel) return cards.push(dCel(x.cel));
-        cards.push('<div class="mpT-d">' + dayHead(x.d, x.items.length) + x.items.slice(0, 2).map(dTask).join('') + (x.items.length > 2 ? '<small>+ ' + (x.items.length - 2) + ' more</small>' : '') + '</div>');
-      });
-      cards.push('<div class="mpT-d add" data-mp-add><b>＋</b>Add</div>');
-      body += '<div class="mpT-lbl">Your days</div><div class="mpT-days" data-mp-days>' + cards.join('') + '</div>' +
-        (cards.length > 3 ? '<div class="mpT-dots">' + cards.slice(0, -1).map(function (c, n) { return '<i' + (n === 0 ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' : '');
-      body += '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Open My Plan</button><button class="mpT-b2" data-mp-add>＋ Add</button></div>';
+      var tiles = '';
+      // 1 · Today
+      if (over.length) tiles += '<div class="mpX-tl mpX-r" data-mp-open><div class="l">Overdue</div><b>⚠️ ' + esc(over[0].t) + '</b><small>' + (over.length > 1 ? over.length + ' things to catch up' : 'Tap to sort it') + '</small></div>';
+      else if (due.length) tiles += '<div class="mpX-tl mpX-g" data-mp-open><div class="l">Today</div><b>' + esc(due[0].t) + '</b><small>' + (due[0].tm ? niceTime(due[0].tm) + (due.length > 1 ? ' · ' : '') : '') + (due.length > 1 ? '+ ' + (due.length - 1) + ' more' : due[0].tm ? '' : 'Due today') + '</small></div>';
+      else tiles += '<div class="mpX-tl mpX-g" data-mp-open><div class="l">Today</div><b>All clear 🎉</b><small>Nothing due</small></div>';
+      // 2 · Celebration
+      if (cel) { var dd = daysTo(cel.d); tiles += '<div class="mpX-tl mpX-y" data-mp-cel><div class="l">' + (dd === 0 ? 'Celebrate today!' : 'Celebration') + '</div><b>' + celEmoji(cel) + ' ' + esc(celShort(cel, dd === 0)) + '</b><small>' + (dd === 0 ? 'Today 🎉' : countdown(cel.d)) + (dd <= celLead(cel) ? '<a href="' + cardUrl(cel) + '" data-card="' + esc(cel.id) + '">💌 Card</a>' : '') + '</small></div>'; }
+      else tiles += '<div class="mpX-tl mpX-y" data-mp-cel data-new="1"><div class="l">Celebrations</div><b>🎂 Add a birthday</b><small>＋ Never forget a day</small></div>';
+      // 3 · Next up
+      if (nx) tiles += '<div class="mpX-tl mpX-b" data-open="' + nx.id + '"><div class="l">Next up</div><b>' + esc(nx.t) + '</b><small>' + (daysTo(nx.d) === 1 ? 'Tomorrow' : daysTo(nx.d) < 7 ? cap(DAYS[fromIso(nx.d).getDay()]).slice(0, 3) : nice(nx.d)) + (nx.tm ? ' · ' + niceTime(nx.tm) : '') + '</small></div>';
+      else tiles += '<div class="mpX-tl mpX-b" data-mp-add><div class="l">Next up</div><b>Nothing coming up</b><small>＋ Add something</small></div>';
+      // 4 · Shopping
+      if (sl0) tiles += '<div class="mpX-tl mpX-s" data-mp-shop><div class="l">Shopping</div><b>🛒 ' + esc(sl0.name) + '</b><small>' + (sleft ? sleft + ' to buy' : 'All bought ✓') + '</small></div>';
+      else tiles += '<div class="mpX-tl mpX-s" data-mp-shop><div class="l">Shopping</div><b>🛒 Start a list</b><small>Naija groceries & more</small></div>';
+      body += '<div class="mpX-tiles">' + tiles + '</div>';
     } else if (!hideNew) {
-      body += '<div class="mpT-row mpT-shop"><span class="mpT-ic">💚</span><div class="mpT-t">New: My Plan<small>Remember bills, birthdays and shopping in one place</small></div><button class="mpT-x" data-mp-hide aria-label="Hide">✕</button></div>' +
+      body += '<div class="mpT-row mpT-shop" style="margin-top:12px"><span class="mpT-ic">💚</span><div class="mpT-t">New: My Plan<small>Remember bills, birthdays and shopping in one place</small></div><button class="mpT-x" data-mp-hide aria-label="Hide">✕</button></div>' +
         '<div class="mpT-btns"><button class="mpT-b1" data-mp-open>💚 Try My Plan FREE</button></div>';
     }
-    return html + (body ? '<div class="mpT-body">' + body + '</div>' : '<div style="height:16px"></div>') + '</div>';
+    var sl = P.sun && P.sun.latest;
+    if (sl && t >= sl.week && t <= addDays(sl.week, 2)) body += '<div class="mpX-row" data-mp-sun>📰 Your Sunday Update is here<span>Read ›</span></div>';
+    if (mo) body += '<button class="mpX-q" data-mp-mo>“' + esc(mo.text) + '”</button>';
+    return html + body + '</div>';
   }
   function bindToday(root) {
     root.querySelectorAll('[data-mp-open]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); open(); }; });
@@ -346,6 +348,7 @@
     root.querySelectorAll('[data-mp-name]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); setTimeout(function () { var n = document.getElementById('pN'); if (n) n.focus(); }, 150); }; });
     root.querySelectorAll('[data-mp-sun]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openSunday(); }; });
     root.querySelectorAll('[data-mp-shop]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); view.tab = 'shop'; open(); }; });
+    root.querySelectorAll('[data-mp-cel]').forEach(function (b) { b.onclick = function (e) { if (e.target.closest('[data-card]')) return; view.tab = 'cel'; open(); if (b.dataset.new) setTimeout(function () { celSheet(); }, 200); }; });
     root.querySelectorAll('[data-mp-days]').forEach(function (sc) { var dots = sc.parentNode.querySelectorAll('.mpT-dots i'); if (!dots.length) return; sc.addEventListener('scroll', function () { var w = sc.firstChild ? sc.firstChild.offsetWidth + 8 : 1, k = Math.min(dots.length - 1, Math.round(sc.scrollLeft / w)); dots.forEach(function (d, n) { d.className = n === k ? 'on' : ''; }); }, { passive: true }); });
     bindRows(root);
     root.querySelectorAll('[data-card]').forEach(function (x) { x.onclick = function (e) { e.stopPropagation(); gt('cel_card', { from: 'home' }); }; });
@@ -369,10 +372,18 @@
   function render() {
     var root = document.getElementById('mpRoot'); if (!root) return;
     var g = groups(), has = live().length > 0;
-    var h = '<div class="mp-top"><b>💚 My Plan</b><span>Everything you need to remember, in one place</span></div>' +
-      '<div class="mp-tabs"><button data-tab="plan"' + (view.tab === 'plan' ? ' class="on"' : '') + '>📋 Plan</button><button data-tab="cel"' + (view.tab === 'cel' ? ' class="on"' : '') + '>🎉 Celebrations</button><button data-tab="shop"' + (view.tab === 'shop' ? ' class="on"' : '') + '>🛒 Shopping</button></div>';
-    if (view.tab === 'cel') { root.innerHTML = h + celHtml(); bindCel(root); return; }
-    if (view.tab === 'shop') { root.innerHTML = h + shopHtml(); bindShop(root); return; }
+    var dN = new Date(), TT = { plan: 'My Plan', cel: 'Celebrations', shop: 'Shopping' };
+    var h = '<div class="mpS-hd"><h2>' + (TT[view.tab] || 'My Plan') + '</h2><div>' + cap(DAYS[dN.getDay()]) + ' ' + dN.getDate() + ' ' + cap(MONTHS[dN.getMonth()]) + '</div></div>';
+    var nav = '<div class="mpS-nav">' + [['plan', '📋', 'Plan'], ['cel', '🎉', 'Celebrate'], ['shop', '🛒', 'Shopping']].map(function (x) { return '<button data-tab="' + x[0] + '"' + (view.tab === x[0] ? ' class="on"' : '') + '><i>' + x[1] + '</i>' + x[2] + '</button>'; }).join('') + '<button data-mp-gear><i>⚙️</i>Settings</button></div>';
+    var gear = function () { root.querySelectorAll('[data-mp-gear]').forEach(function (b) { b.onclick = function () { if (P.signedIn) settings(); else signIn(); }; }); };
+    root.classList.add('mpS');
+    if (view.tab === 'cel') { root.innerHTML = h + '<div style="height:10px"></div>' + celHtml() + nav; bindCel(root); bindTabs(root); gear(); return; }
+    if (view.tab === 'shop') { root.innerHTML = h + '<div style="height:10px"></div>' + shopHtml() + nav; bindShop(root); bindTabs(root); gear(); return; }
+    if (has) {
+      var wk = g.week.length;
+      h += '<div class="mpX-tiles" style="margin:10px 0 12px"><div class="mpX-tl mpX-g" style="min-height:78px;cursor:default"><div class="l">Today</div><b>' + (g.today.length ? g.today.length + ' to do' : 'All clear 🎉') + '</b>' + (g.over.length ? '<small style="color:#FFE1DC">⚠️ ' + g.over.length + ' overdue</small>' : '') + '</div>' +
+        '<div class="mpX-tl mpX-y" style="min-height:78px;cursor:default"><div class="l">This week</div><b>' + (wk ? wk + (wk === 1 ? ' thing' : ' things') : 'Nothing yet') + '</b></div></div>';
+    } else h += '<div style="height:10px"></div>';
     if (has && !P.signedIn) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — it’s only on this phone. Save it to your free Auntie Tobi account.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
     if (P.signedIn && !P.rm && ls.get('tobi_myplan_rm_ask') !== 'no' && has) h += '<div class="mp-new" style="margin:0 0 10px"><span style="font-size:22px">☀️</span><div style="flex:1"><b style="color:#0F1E36">Want a morning email?</b> Only on days you have something due.<div class="mp-row" style="margin-top:8px"><button class="mp-btn" data-rm-yes>Yes — at 7am</button><button class="mp-btn g" data-rm-no>No thanks</button></div></div></div>';
     h += '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ Type it — e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
@@ -384,9 +395,8 @@
         '<button data-w="shop"><span>🛒</span><div>Start a shopping list<small>Naija groceries, weekly shop, party — ready to go</small></div></button></div></div>';
     } else {
       var sec = function (label, list, red) { return list.length ? '<div class="mp-lbl' + (red ? ' red' : '') + '">' + label + '</div>' + list.map(function (i) { return row(i); }).join('') : ''; };
-      var body = sec('Overdue', g.over, true) + sec('Today', g.today) + sec('Next 7 days', g.week) + sec('Later', g.later) + sec('No date', g.none);
-      if (!g.over.length && !g.today.length) body = '<div class="mp-sub" style="font-size:14px;color:#0F1E36;padding:4px 0 2px">Nothing due today 🎉</div>' + body;
-      h += '<div class="mp-card">' + body + '</div>';
+      var body = sec('Overdue', g.over, true) + sec('Today', g.today) + sec('Coming up', g.week) + sec('Later', g.later) + sec('No date', g.none);
+      h += '<div class="mpS-list">' + body + '</div>';
       if (g.done.length) h += '<div class="mp-card"><div class="mp-it" data-done-toggle style="border:0;padding:2px 0"><div class="tx" style="font-weight:700">✅ Done (' + g.done.length + ')</div><div class="r">' + (view.showDone ? 'Hide ▴' : 'Show ▾') + '</div></div>' + (view.showDone ? g.done.slice(0, 40).map(function (i) { return row(i, { noDate: true }); }).join('') : '') + '</div>';
       h += '<button class="mp-card" data-w="life" style="width:100%;text-align:left;cursor:pointer;font-family:inherit"><b style="font-size:14.5px">🗂️ Add UK life dates</b><div class="mp-sub">Passport, eVisa, MOT, car insurance, tax return…</div></button>';
     }
@@ -394,7 +404,7 @@
     h += '<div class="mp-card" style="background:#FFFBF0;border-color:#FFE3A3"><b style="font-size:15px">📰 Auntie Tobi’s Sunday Update</b>' + (sl2 ? '<div class="mp-sub" style="font-size:13.5px;color:#0F1E36;margin-top:4px">' + esc(sl2.subject) + ' · ' + nice(sl2.week, true) + '</div>' : '<div class="mp-sub" style="font-size:13.5px">UK news, events and a business of the week — every Sunday.</div>') +
       '<div class="mp-row">' + (sl2 ? '<button class="mp-btn" data-mp-sun>Read it</button>' : '') + (P.news ? '<span class="mp-sub" style="align-self:center">✅ You get it by email</span>' : '<button class="mp-btn ' + (sl2 ? 'g' : '') + '" data-mp-news>📧 Get it by email</button>') + '</div></div>';
     h += '<div style="text-align:center;font-size:12.5px;color:#6B7280;margin:6px 0 4px">' + (P.signedIn ? '💚 Saved to ' + esc(P.email) + ' · <a href="#" data-mp-settings style="color:#057A44;font-weight:700">Settings</a>' : '<a href="#" data-mp-save style="color:#057A44;font-weight:700">💚 Sign in to save your plan</a>') + '</div>';
-    root.innerHTML = h;
+    root.innerHTML = h + nav; gear();
     // add box with live preview of what Auntie Tobi understood
     var q = $('#mpQ', root), hint = $('#mpHint', root);
     q.oninput = function () { var p = parse(q.value); var bits = [p.d ? '📅 ' + nice(p.d, true) : '', p.tm ? '🕒 ' + niceTime(p.tm) : '', p.rep ? '🔁 ' + REP[p.rep].toLowerCase() : ''].filter(Boolean); hint.style.display = bits.length && p.t ? 'block' : 'none'; hint.innerHTML = '<b>' + esc(p.t) + '</b> · ' + bits.join(' · '); };
