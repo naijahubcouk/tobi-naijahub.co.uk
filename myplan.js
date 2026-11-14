@@ -45,7 +45,7 @@
   }
   function boot() {
     api('me').then(function (r) {
-      if (r.signedIn) { P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; var local = P.items, localL = P.lists || []; P.items = []; P.lists = []; mergeIn(r.items); mergeLists(r.lists); local.forEach(function (i) { var s = P.items.filter(function (x) { return x.id === i.id; })[0]; if (!s || (i.up || 0) > (s.up || 0)) { mergeIn([i]); dirty[i.id] = 1; } }); localL.forEach(function (l) { var s = P.lists.filter(function (x) { return x.id === l.id; })[0]; if (!s || (l.up || 0) > (s.up || 0)) { mergeLists([l]); dirtyL[l.id] = 1; } }); sync(); }
+      if (r.signedIn) { P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; P.inbox = r.inbox || []; P.bcode = r.bcode || ''; var local = P.items, localL = P.lists || []; P.items = []; P.lists = []; mergeIn(r.items); mergeLists(r.lists); local.forEach(function (i) { var s = P.items.filter(function (x) { return x.id === i.id; })[0]; if (!s || (i.up || 0) > (s.up || 0)) { mergeIn([i]); dirty[i.id] = 1; } }); localL.forEach(function (l) { var s = P.lists.filter(function (x) { return x.id === l.id; })[0]; if (!s || (l.up || 0) > (s.up || 0)) { mergeLists([l]); dirtyL[l.id] = 1; } }); sync(); }
       else if (P.signedIn) { P.signedIn = false; }
       store(); refresh();
     }).catch(function () {});
@@ -168,6 +168,25 @@
     '.mpX-g{background:#057A44;color:#fff}.mpX-y{background:#FFB81C;color:#0F1E36}.mpX-b{background:#EEF4FF;color:#1D3D7A}.mpX-s{background:#F6F4EE;color:#0F1E36}.mpX-r{background:#FDECEA;color:#B42318}' +
     '.mpX-q{display:block;width:100%;margin-top:11px;font-size:13.5px;color:#6B7280;font-style:italic;text-align:center;background:none;border:0;font-family:inherit;cursor:pointer;line-height:1.45}' +
     '.mpX-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#EAF0FB;font-size:14px;font-weight:700;cursor:pointer}.mpX-row span{margin-left:auto;color:#1D3D7A;font-size:13px}' +
+    '.mpCf{position:fixed;top:-40px;font-size:24px;pointer-events:none;animation:mpFall linear forwards;z-index:99999}@keyframes mpFall{to{transform:translateY(110vh) rotate(540deg)}}' +
+    '.mpC-hero{border-radius:20px;padding:16px;color:#fff;background:linear-gradient(135deg,#7B2FF7 0%,#F107A3 55%,#FF8A3D 100%);position:relative;overflow:hidden;margin-bottom:12px}.mpC-hero:before{content:"🎈";position:absolute;right:12px;top:6px;font-size:36px}' +
+    '.mpC-hero small{font-size:11px;font-weight:800;letter-spacing:.6px;opacity:.9}.mpC-hero .who{display:flex;gap:12px;align-items:center;margin-top:8px;padding-right:40px}.mpC-hero .av{width:52px;height:52px;border-radius:50%;background:#fff;color:#C2185B;font-weight:900;font-size:22px;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.6);flex-shrink:0}' +
+    '.mpC-hero b{font-size:19px;display:block;line-height:1.25}.mpC-hero span{font-size:13px;opacity:.92}.mpC-hero .cd{display:flex;gap:8px;margin-top:12px}.mpC-hero .cd>*{flex:1;background:rgba(255,255,255,.18);border:0;border-radius:12px;padding:7px;text-align:center;color:#fff;font-family:inherit;cursor:pointer}.mpC-hero .cd b{font-size:22px}.mpC-hero .cd i{font-style:normal;display:block;font-size:10.5px;font-weight:800;opacity:.9}' +
+    '.mpC-hero .btns{display:flex;gap:7px;margin-top:12px}.mpC-hero .btns>*{flex:1;text-align:center;background:#fff;color:#C2185B;font-weight:800;font-size:13px;border-radius:10px;padding:9px 4px;border:0;font-family:inherit;cursor:pointer;text-decoration:none}.mpC-hero .btns .o{background:rgba(255,255,255,.22);color:#fff}' +
+    '.mpC-today{border-radius:20px;padding:18px 16px;text-align:center;margin-bottom:12px;background:radial-gradient(circle at 20% 20%,#FFE07A,transparent 40%),radial-gradient(circle at 80% 30%,#FF9EC7,transparent 40%),linear-gradient(135deg,#FFF3C4,#FFD6E8)}.mpC-today .cf{font-size:22px;letter-spacing:6px}.mpC-today b{font-size:20px;display:block;margin-top:4px;color:#0F1E36}.mpC-today p{font-size:13.5px;color:#4B5563;margin-top:3px}' +
+    '.mpC-btns{display:flex;gap:8px;margin-top:12px}.mpC-btns>*{flex:1;border:0;border-radius:12px;padding:10px;font-family:inherit;font-weight:800;font-size:14px;color:#fff;text-decoration:none;cursor:pointer;text-align:center}.mpC-btns .pk{background:#C2185B}.mpC-btns .wa{background:#25D366}' +
+    '.mpC-mon{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px}.mpC-mon button{flex-shrink:0;width:56px;border-radius:12px;background:#fff;border:1px solid #ECE7DC;padding:7px 0;text-align:center;font-size:12.5px;font-weight:800;font-family:inherit;color:#0F1E36;cursor:pointer}.mpC-mon button i{font-style:normal;display:block;height:12px;font-size:12px;line-height:12px;color:#C2185B;letter-spacing:1px}.mpC-mon button.nil{color:#9CA3AF}' +
+    '.mpC-fil{display:flex;gap:6px;overflow-x:auto;margin-bottom:6px;padding-bottom:2px}.mpC-fil button{flex-shrink:0;font-family:inherit;font-size:12.5px;font-weight:700;border-radius:14px;padding:6px 11px;background:#fff;border:1px solid #E2DDD0;color:#0F1E36;cursor:pointer}.mpC-fil button.on{background:#057A44;color:#fff;border-color:#057A44}' +
+    '.mpC-mh{font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.5px;margin:14px 2px 6px;scroll-margin-top:12px}' +
+    '.mpC-row{display:flex;gap:11px;align-items:center;background:#fff;border:1px solid #ECE7DC;border-radius:14px;padding:10px 12px;margin-bottom:7px;cursor:pointer}.mpC-row .av{width:42px;height:42px;border-radius:50%;color:#fff;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}' +
+    '.mpC-row b{font-size:14.5px;display:block}.mpC-row small{font-size:12px;color:#6B7280;display:block;margin-top:1px}.mpC-row .rt{text-align:right;flex-shrink:0}.mpC-row .rt b{font-size:14px;color:#057A44}.mpC-row .rt a{font-size:12px;font-weight:800;color:#C2185B;text-decoration:none}' +
+    '.mpC-row .tg{display:inline-block;font-size:10.5px;font-weight:800;border-radius:8px;padding:1px 6px;margin-left:4px;vertical-align:1px}' +
+    '.mpC-stat{background:#FFF6DC;border:1px solid #FFE3A3;border-radius:14px;padding:10px 12px;font-size:13.5px;display:flex;gap:10px;align-items:center;margin:10px 0}.mpC-stat b{font-size:20px;white-space:nowrap}' +
+    '.mpC-inv{background:#0F1E36;color:#fff;border-radius:16px;padding:14px;margin-top:12px}.mpC-inv b{font-size:15.5px;display:block}.mpC-inv p{font-size:13px;opacity:.85;margin-top:3px}.mpC-inv button{margin:10px 8px 0 0;border:0;background:#25D366;color:#fff;font-family:inherit;font-weight:800;font-size:13.5px;border-radius:10px;padding:9px 12px;cursor:pointer}.mpC-inv button.o{background:rgba(255,255,255,.15)}' +
+    '.mpC-ck{display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid #ECE7DC;border-radius:13px;padding:11px 12px;margin-bottom:8px}.mpC-ck .bx{width:26px;height:26px;border-radius:8px;border:2px solid #A7D7BC;background:#fff;color:#fff;font-weight:900;flex-shrink:0;cursor:pointer;margin-top:1px}.mpC-ck.on .bx{background:#057A44;border-color:#057A44}.mpC-ck b{display:block;font-size:14.5px}.mpC-ck small{display:block;font-size:12.5px;color:#6B7280}.mpC-ck.on>div>b{color:#057A44}' +
+    '.mpC-lng{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.mpC-lng button{font-family:inherit;font-size:12px;font-weight:700;border-radius:12px;padding:4px 10px;background:#fff;border:1px solid #CDE8D9;color:#0F1E36;cursor:pointer}.mpC-lng button.on{background:#057A44;color:#fff;border-color:#057A44}' +
+    '.mpC-msg{margin-top:8px;background:#F6FAF7;border:1px dashed #A7D7BC;border-radius:12px;padding:10px;font-size:14px;white-space:pre-wrap}.mpC-msg textarea{width:100%;border:0;background:transparent;font:inherit;font-size:14px;resize:vertical;outline:none}' +
+    '.mpC-biz{display:flex;gap:7px;overflow-x:auto;margin-top:8px;padding-bottom:2px}.mpC-biz a{flex-shrink:0;max-width:170px;background:#FFF6DC;border:1px solid #FFE3A3;border-radius:12px;padding:8px 10px;font-size:13px;font-weight:800;color:#0F1E36;text-decoration:none}.mpC-biz a small{display:block;font-weight:600;color:#6B7280;font-size:11.5px}' +
     '.mpSh-seg{display:flex;background:#EEE9DD;border-radius:12px;padding:3px;margin:0 0 12px}.mpSh-seg button{flex:1;border:0;background:none;font-family:inherit;font-size:14px;font-weight:800;padding:9px 0;border-radius:10px;color:#4B5563;cursor:pointer}.mpSh-seg button.on{background:#fff;color:#057A44;box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
     '.mpSh-top{display:flex;gap:8px;align-items:center}.mpSh-cat{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin:14px 2px 7px}' +
     '.mpSh-chips{display:flex;flex-wrap:wrap;gap:7px}.mpSh-chips button{font-family:inherit;font-size:14px;font-weight:600;color:#0F1E36;background:#fff;border:1.5px solid #E2DDD0;border-radius:18px;padding:7px 12px;cursor:pointer}.mpSh-chips button:before{content:"+ ";color:#057A44;font-weight:800}' +
@@ -331,7 +350,10 @@
       '<div class="mpX-hd"><div class="mpX-av' + (h >= 17 ? ' ev' : '') + '">' + (h < 17 ? gr[0] : '🌙') + '</div><div style="min-width:0"><div class="mpX-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + '</div><div class="mpX-dt">' + dateLine + '</div></div></div>' +
       (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '');
     var body = '';
-    if (homeOnly) { /* 🏠 Home: just the greeting + motivation (Nov 2026) */ }
+    if (homeOnly) {   /* 🏠 Home: just the greeting + motivation (Nov 2026) — plus confetti when it's someone's day */
+      var tc = live().filter(function (i) { return i.cel && daysTo(i.d) === 0; })[0];
+      if (tc) { body += '<div class="mpX-row" data-mp-cel style="background:#FFE9F2;color:#C2185B">🎉 It’s ' + esc(celShort(tc, true)) + ' today!<span>Celebrate ›</span></div>'; setTimeout(function () { if (window._currentPage === 'home' || !window._currentPage) confetti(); }, 600); }
+    }
     else if (has) {
       var over = g.over.filter(function (i) { return !i.cel; }), due = g.today.filter(function (i) { return !i.cel; });
       var cel = live().filter(function (i) { return i.cel && !i.done && daysTo(i.d) >= 0; }).sort(function (a, b) { return a.d.localeCompare(b.d); })[0];
@@ -503,34 +525,158 @@
     });
     return out.sort(function (a, b) { return a.d.localeCompare(b.d); });
   }
+  // ── 🎉 Celebrations: countdown hero, months, people, "get ready" checklist, confetti on the day, friends add their birthday ──
+  var FAM = ['mum', 'dad', 'son', 'daughter', 'sister', 'brother', 'grandma', 'grandpa'], PART = ['husband', 'wife', 'partner'];
+  function relGroup(r) { return FAM.indexOf(r) >= 0 ? 'family' : PART.indexOf(r) >= 0 ? 'partner' : r === 'colleague' ? 'work' : 'friends'; }
+  var GRP = { family: ['👨‍👩‍👧 Family', '#057A44', '#E3F2EA'], partner: ['💑 Partner', '#C2185B', '#FCE4EC'], friends: ['👯 Friends', '#7B2FF7', '#EFE5FD'], work: ['💼 Work', '#0F766E', '#DDF3F0'] };
+  function relLabel(r) { var x = REL.filter(function (q) { return q[0] === r; })[0]; return x ? x[1] : ''; }
+  function initial(i) { var n = (i.cel && i.cel.n) || i.t || '?'; return /^(our|my)$/i.test(n) ? '💍' : n.trim().charAt(0).toUpperCase(); }
+  function heroTitle(i) { var n = i.cel.n || '', a = celAge(i); if (i.cel.k === 'birthday') return n ? (a ? n + ' turns ' + a : n + (/s$/i.test(n) ? '’' : '’s') + ' birthday') : 'Birthday'; if (i.cel.k === 'wedding' || i.cel.k === 'anniversary') return a ? (/^(our|my)$/i.test(n) || !n ? 'Our ' : n + ' — ') + ordinal(a) + ' anniversary' : celShort(i); return i.t; }
+  function him(i) { var r = i.cel && i.cel.r; return SHE.indexOf(r) >= 0 ? 'her' : HE.indexOf(r) >= 0 ? 'him' : 'them'; }
+  function rdOf(i) { var y = +i.d.slice(0, 4), r = i.cel.rd; return r && r.y === y ? r : { y: y }; }
+  function setRd(i, k, v) { var r = rdOf(i); r[k] = v === undefined ? !r[k] : v; i.cel.rd = r; change(i); }
+  function untilParts(d) { var ms = fromIso(d).setHours(0, 0, 0, 0) - Date.now(); if (ms < 0) ms = 0; return [Math.floor(ms / 864e5), Math.floor(ms % 864e5 / 36e5)]; }
+  var CF_KEY = 'tobi_cf_day';
+  function confetti(force) {
+    if (!force && ls.get(CF_KEY) === today()) return; ls.set(CF_KEY, today());
+    var e = ['🎉', '🎂', '🎈', '✨', '💛', '🥳', '🎊'];
+    for (var i = 0; i < 28; i++) { var d = document.createElement('div'); d.className = 'mpCf'; d.textContent = e[i % e.length]; d.style.left = Math.random() * 100 + 'vw'; d.style.animationDuration = (2.2 + Math.random() * 1.8) + 's'; d.style.animationDelay = Math.random() * .7 + 's'; document.body.appendChild(d); setTimeout(function (x) { x.remove(); }.bind(null, d), 5000); }
+  }
   function celHtml() {
     var mine = live().filter(function (i) { return i.cel; }).sort(function (a, b) { return a.d.localeCompare(b.d); });
-    var big = ls.get('tobi_myplan_big') === '1' ? bigDays() : [];
-    var soon = mine.filter(celSoon).concat(big.filter(function (b) { return daysTo(b.d) <= 7; }));
+    var big = ls.get('tobi_myplan_big') === '1' ? bigDays() : [], yr = new Date().getFullYear();
     var h = '';
     if (!P.signedIn && mine.length) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — save your dates so you never lose them.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
-    h += soon.map(function (i) {
-      var n = daysTo(i.d), when = n === 0 ? 'is today! 🎉' : n === 1 ? 'is tomorrow' : 'is in ' + n + ' days';
-      return '<div class="mp-top" style="background:#0F1E36;padding:15px"><b style="font-size:17px">' + (i.big ? i.e : celEmoji(i)) + ' ' + esc(i.t) + ' ' + when + '</b><span>' + nice(i.d, true) + (!i.big && celNum(i) ? ' · ' + celNum(i) : '') + '</span>' +
-        '<div class="mp-row"><a class="mp-btn y" href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">' + (i.big ? '💌 Make a card' : cardBtn(i)) + '</a>' + (i.big ? '' : '<button class="mp-btn n" style="border:1.5px solid #fff" data-tick="' + i.id + '">✅ Done</button>') + '</div></div>';
-    }).join('');
-    var list = mine.concat(big.filter(function (b) { return soon.indexOf(b) < 0; })).sort(function (a, b) { return a.d.localeCompare(b.d); });
-    if (!mine.length) h += '<div class="mp-card"><div class="mp-empty"><b>🎉 Never miss a birthday again</b>Add birthdays and anniversaries — Auntie Tobi reminds you in good time and helps you make a beautiful card to send on WhatsApp.</div></div>';
-    if (list.length) h += '<div class="mp-card"><div class="mp-lbl" style="margin-top:0">Coming up</div>' + list.map(function (i) {
-      var sent = !i.big && (i.cel.sent || []).indexOf(new Date().getFullYear()) >= 0;
-      return '<div class="mp-it" ' + (i.big ? '' : 'data-open="' + i.id + '"') + '><span style="width:38px;height:38px;border-radius:50%;background:#FFF1CF;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">' + (i.big ? i.e : celEmoji(i)) + '</span><div class="tx"><b style="font-weight:700">' + esc(i.t) + '</b><small>' + nice(i.d, true) + (i.big ? ' · big day' : '') + (sent ? ' · ✅ sent this year' : '') + '</small></div><div class="r" style="text-align:right"><b style="color:#057A44;display:block">' + countdown(i.d) + '</b>' + (i.big ? '' : celNum(i)) + '</div></div>';
-    }).join('') + '</div>';
-    h += '<div class="mp-row" style="margin-bottom:10px"><button class="mp-btn" data-cel-add>＋ Add a date</button><button class="mp-btn g" data-cel-paste>📋 Paste a list</button></div>';
+    // 🥳 on the day
+    var tdy = mine.filter(function (i) { return daysTo(i.d) === 0; });
+    h += tdy.map(function (i) { return '<div class="mpC-today"><div class="cf">🎉🎂🎈🎉</div><b>It’s ' + esc(celShort(i, true)) + ' today!</b><p>' + (celNum(i) ? cap(celNum(i)) + ' · ' : '') + 'Don’t forget to celebrate ' + him(i) + ' 💛</p><div class="mpC-btns"><a class="pk" href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">💌 Send a card</a><button class="wa" data-ready="' + i.id + '" data-go="msg">💬 Send a message</button></div></div>'; }).join('');
+    // ⏳ the next one
+    var nx = mine.filter(function (i) { return daysTo(i.d) > 0; })[0];
+    if (nx) { var g = GRP[relGroup(nx.cel.r)];
+      h += '<div class="mpC-hero"><small>NEXT CELEBRATION</small><div class="who"><div class="av">' + esc(initial(nx)) + '</div><div style="min-width:0"><b>' + esc(heroTitle(nx)) + '</b><span>' + celEmoji(nx) + ' ' + esc(relLabel(nx.cel.r) || g[0].slice(3)) + ' · ' + nice(nx.d, true) + '</span></div></div>' +
+        '<div class="cd"><div><b>' + daysTo(nx.d) + '</b><i>' + (daysTo(nx.d) === 1 ? 'DAY TO GO' : 'DAYS TO GO') + '</i></div><div><b>' + cap(DAYS[fromIso(nx.d).getDay()]).slice(0, 3) + '</b><i>' + fromIso(nx.d).getDate() + ' ' + cap(MONTHS[fromIso(nx.d).getMonth()]).slice(0, 3).toUpperCase() + '</i></div><button data-ready="' + nx.id + '"><b>🎁</b><i>GET READY</i></button></div>' +
+        '<div class="btns"><a href="' + cardUrl(nx) + '" data-card="' + esc(nx.id) + '">💌 Card</a><button data-ready="' + nx.id + '" data-go="msg">💬 Message</button><button class="o" data-ready="' + nx.id + '" data-go="gift">🎁 Gift ideas</button></div></div>'; }
+    if (!mine.length) h += '<div class="mp-card"><div class="mp-empty"><b>🎉 Never miss a birthday again</b>Add birthdays and anniversaries — Auntie Tobi counts down, writes a birthday message for you and helps you make a card to send on WhatsApp.</div></div>';
+    // 📥 added by friends
+    var inbox = P.inbox || [];
+    if (inbox.length) h += '<div class="mp-card"><div class="mp-lbl" style="margin-top:0">📥 Added by friends <span style="color:#057A44">· ' + inbox.length + ' new</span></div>' + inbox.map(function (x) { var mo = +x.d.slice(0, 2), dd = +x.d.slice(3);
+      return '<div class="mpC-row" style="border:0;padding:6px 0"><div class="av" style="background:#7B2FF7">' + esc(x.n.charAt(0).toUpperCase()) + '</div><div style="flex:1;min-width:0"><b>' + esc(x.n) + '</b><small>' + dd + ' ' + cap(MONTHS[mo - 1]) + (x.y ? ' · born ' + x.y : '') + '</small></div><button class="mp-btn" style="padding:6px 11px" data-inb-add="' + x.id + '">＋ Add</button><button class="mp-btn g" style="padding:6px 9px" data-inb-x="' + x.id + '" aria-label="Dismiss">✕</button></div>'; }).join('') + '</div>';
+    if (mine.length) {
+      // 🗓️ months strip (next 12 months)
+      var all = mine.concat(big).sort(function (a, b) { return a.d.localeCompare(b.d); }), d0 = new Date(), months = [];
+      for (var k = 0; k < 12; k++) { var dm = new Date(d0.getFullYear(), d0.getMonth() + k, 1, 12), key = dm.getFullYear() + '-' + pad(dm.getMonth() + 1); months.push([key, cap(MONTHS[dm.getMonth()]).slice(0, 3), all.filter(function (i) { return i.d.slice(0, 7) === key; }).length]); }
+      h += '<div class="mpC-mon">' + months.map(function (m) { return '<button data-mon="' + m[0] + '"' + (m[2] ? '' : ' class="nil"') + '>' + m[1] + '<i>' + (m[2] ? Array(Math.min(m[2], 4) + 1).join('•') : '') + '</i></button>'; }).join('') + '</div>';
+      // filters
+      var F = view.celF || 'all', cnt = function (gk) { return mine.filter(function (i) { return relGroup(i.cel.r) === gk; }).length; };
+      h += '<div class="mpC-fil"><button data-celf="all"' + (F === 'all' ? ' class="on"' : '') + '>All ' + mine.length + '</button>' + Object.keys(GRP).filter(cnt).map(function (gk) { return '<button data-celf="' + gk + '"' + (F === gk ? ' class="on"' : '') + '>' + GRP[gk][0] + ' ' + cnt(gk) + '</button>'; }).join('') + '</div>';
+      var shown = all.filter(function (i) { return i.big ? F === 'all' : F === 'all' || relGroup(i.cel.r) === F; }), lastM = '';
+      shown.forEach(function (i) {
+        var m = i.d.slice(0, 7); if (m !== lastM) { lastM = m; h += '<div class="mpC-mh" id="celm-' + m + '">' + cap(MONTHS[+m.slice(5) - 1]).toUpperCase() + (m.slice(0, 4) !== String(yr) ? ' ' + m.slice(0, 4) : '') + '</div>'; }
+        var n = daysTo(i.d), when = n === 0 ? 'Today 🎉' : n === 1 ? 'Tomorrow' : n + ' days';
+        if (i.big) { h += '<div class="mpC-row"><div class="av" style="background:#FFB81C;color:#0F1E36">' + i.e + '</div><div style="flex:1;min-width:0"><b>' + esc(i.t) + '</b><small>' + nice(i.d, true) + '</small></div><div class="rt"><b>' + when + '</b><a href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">💌 Card</a></div></div>'; return; }
+        var g = GRP[relGroup(i.cel.r)], rd = rdOf(i), done = ['card', 'msg', 'cake', 'gift', 'call'].filter(function (q) { return rd[q]; }).length, sent = (i.cel.sent || []).indexOf(yr) >= 0 && n > 300;
+        h += '<div class="mpC-row" data-ready="' + i.id + '"><div class="av" style="background:' + g[1] + '">' + esc(initial(i)) + '</div><div style="flex:1;min-width:0"><b>' + esc(celShort(i)) + (relLabel(i.cel.r) && relLabel(i.cel.r).toLowerCase() !== String(i.cel.n || '').toLowerCase() ? ' <span class="tg" style="background:' + g[2] + ';color:' + g[1] + '">' + esc(relLabel(i.cel.r)) + '</span>' : '') + '</b><small>' + nice(i.d, true) + (celNum(i) ? ' · ' + celNum(i) : '') + (done && n <= 30 ? ' · ✅ ' + done + '/5 ready' : '') + '</small></div><div class="rt"><b' + (n <= 7 ? ' style="color:#C2185B"' : '') + '>' + when + '</b>' + (sent ? '<small>💛 celebrated</small>' : '') + '</div></div>';
+      });
+      var cel = mine.filter(function (i) { return (i.cel.sent || []).indexOf(yr) >= 0; }).length;
+      if (cel) h += '<div class="mpC-stat"><b>💛 ' + cel + '</b><div>' + (cel === 1 ? 'person' : 'people') + ' celebrated this year — keep it going!</div></div>';
+    }
+    // 🎂 friends add their own birthday
+    h += '<div class="mpC-inv"><b>🎂 Never miss a friend’s birthday</b><p>Send your link — friends add their own birthday to your list in 10 seconds.</p><button data-bday-link>💬 Share my link on WhatsApp</button>' + (P.signedIn ? '<button class="o" data-bday-copy>📋 Copy link</button>' : '') + '</div>';
+    h += '<div class="mp-row" style="margin:12px 0 10px"><button class="mp-btn" data-cel-add>＋ Add a date</button><button class="mp-btn g" data-cel-paste>📋 Paste a list</button></div>';
     h += '<label class="mp-card mp-cl" style="cursor:pointer;font-weight:600"><input type="checkbox" data-cel-big' + (ls.get('tobi_myplan_big') === '1' ? ' checked' : '') + '> Show big days — Mother’s Day, Father’s Day, Christmas, Independence Day…</label>';
     return h;
   }
+  function bdayShare(copyOnly) {
+    if (!P.signedIn) { toast('Sign in first so friends’ birthdays come to your list 💚'); return signIn(); }
+    api('bday-link').then(function (r) {
+      P.bcode = r.code;
+      if (copyOnly) { try { navigator.clipboard.writeText(r.url); toast('📋 Link copied'); } catch (e) { prompt('Copy your link', r.url); } return; }
+      var txt = 'Hi! 🎂 I don’t want to miss your birthday this year — please add it to my list (takes 10 seconds): ' + r.url;
+      gt('cel_bday_share'); window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+    }).catch(function (e) { toast(e.message); });
+  }
   function bindCel(root) {
-    bindTabs(root); bindRows(root);
+    bindTabs(root);
     root.querySelectorAll('[data-mp-save]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); signIn(); }; });
-    root.querySelectorAll('[data-card]').forEach(function (a) { a.onclick = function () { gt('cel_card', { big: /^big-/.test(a.dataset.card) ? 1 : 0 }); }; });
+    root.querySelectorAll('[data-card]').forEach(function (a) { a.onclick = function (e) { e.stopPropagation(); gt('cel_card', { big: /^big-/.test(a.dataset.card) ? 1 : 0 }); var it = P.items.filter(function (x) { return x.id === a.dataset.card; })[0]; if (it && it.cel) setRd(it, 'card', true); }; });
+    root.querySelectorAll('[data-ready]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); readySheet(b.dataset.ready, b.dataset.go); }; });
+    root.querySelectorAll('[data-mon]').forEach(function (b) { b.onclick = function () { var el = document.getElementById('celm-' + b.dataset.mon); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else toast('Nothing in ' + b.textContent.replace(/•/g, '') + ' yet'); }; });
+    root.querySelectorAll('[data-celf]').forEach(function (b) { b.onclick = function () { view.celF = b.dataset.celf; render(); }; });
+    root.querySelectorAll('[data-inb-add]').forEach(function (b) { b.onclick = function () {
+      var x = (P.inbox || []).filter(function (q) { return q.id === b.dataset.inbAdd; })[0]; if (!x) return;
+      var mo = +x.d.slice(0, 2), dd = +x.d.slice(3), d = mkDate(dd, mo - 1, '');
+      add({ t: x.n + (/s$/i.test(x.n) ? '’' : '’s') + ' birthday', d: d, rep: 'y', dom: dd, cel: { n: x.n, r: 'friend', k: 'birthday', y: x.y || 0, lead: [3], sent: [] } }, true);
+      api('inbox-done', { id: x.id }).then(function (r) { P.inbox = r.inbox || []; render(); }).catch(function () {}); P.inbox = P.inbox.filter(function (q) { return q !== x; }); render(); toast('🎂 ' + x.n + ' added'); gt('cel_inbox_add'); }; });
+    root.querySelectorAll('[data-inb-x]').forEach(function (b) { b.onclick = function () { var id = b.dataset.inbX; P.inbox = (P.inbox || []).filter(function (q) { return q.id !== id; }); render(); api('inbox-done', { id: id }).catch(function () {}); }; });
+    var bl = $('[data-bday-link]', root); if (bl) bl.onclick = function () { bdayShare(false); };
+    var bc = $('[data-bday-copy]', root); if (bc) bc.onclick = function () { bdayShare(true); };
     var ad = $('[data-cel-add]', root); if (ad) ad.onclick = function () { celSheet(); };
     var ps = $('[data-cel-paste]', root); if (ps) ps.onclick = pasteSheet;
     var bg = $('[data-cel-big]', root); if (bg) bg.onchange = function () { ls.set('tobi_myplan_big', bg.checked ? '1' : '0'); gt('cel_bigdays', { on: bg.checked ? 1 : 0 }); render(); };
+    if (live().some(function (i) { return i.cel && daysTo(i.d) === 0; })) confetti();
+  }
+  // 🎁 Get ready — a little checklist for each celebration (ticks reset each year)
+  var LANGS = ['English', 'Pidgin', 'Yoruba', 'Igbo', 'Hausa'];
+  function bizFor(re) {
+    var all = []; try { all = typeof window.getLiveDirectory === 'function' ? window.getLiveDirectory() : []; } catch (e) {}
+    var town = String(P.town || '').toLowerCase().split(',')[0].trim();
+    var m = all.filter(function (b) { return b && b.slug && b.name && re.test((b.cat || '') + ' ' + b.name + ' ' + (b.desc || '')); });
+    m.sort(function (a, b) { var ta = town && String(a.loc || '').toLowerCase().indexOf(town) >= 0 ? 0 : 1, tb = town && String(b.loc || '').toLowerCase().indexOf(town) >= 0 ? 0 : 1; return ta - tb || (b.featured ? 1 : 0) - (a.featured ? 1 : 0); });
+    return m.slice(0, 6);
+  }
+  function readySheet(id, go) {
+    var i = P.items.filter(function (x) { return x.id === id; })[0]; if (!i || !i.cel) return;
+    var rd = rdOf(i), n = daysTo(i.d), g = GRP[relGroup(i.cel.r)], lang = ls.get('tobi_cel_lang') || 'English';
+    var cakes = bizFor(/cake|baker|bakery|pastr|dessert|treat/i), gifts = bizFor(/gift|hamper|flower|florist|balloon|souvenir/i);
+    var biz = function (list) { return list.length ? '<div class="mpC-biz">' + list.map(function (b) { return '<a href="/biz/' + encodeURIComponent(b.slug) + '" target="_blank" rel="noopener" data-bizt>' + esc(b.name) + '<small>' + esc((b.loc || '').split(',')[0]) + '</small></a>'; }).join('') + '</div>' : '<div class="mp-sub" style="margin-top:6px">No Nigerian businesses for this near you yet — <a href="#" data-biz-all style="color:#057A44;font-weight:700">see all businesses</a>.</div>'; };
+    var row = function (k, t, sub, extra) { return '<div class="mpC-ck' + (rd[k] ? ' on' : '') + '"><button class="bx" data-rk="' + k + '" aria-label="Done">' + (rd[k] ? '✓' : '') + '</button><div style="flex:1;min-width:0"><b>' + t + '</b><small>' + sub + '</small>' + (extra || '') + '</div></div>'; };
+    var s = sheet('<div class="mpC-hero" style="padding:14px;margin:-4px 0 12px"><div class="who" style="margin-top:0"><div class="av">' + esc(initial(i)) + '</div><div style="min-width:0"><b>' + esc(heroTitle(i)) + '</b><span>' + (n === 0 ? 'Today! 🎉' : n === 1 ? 'Tomorrow' : 'In ' + n + ' days') + ' · ' + nice(i.d, true) + '</span></div></div></div>' +
+      '<div style="font-weight:800;margin-bottom:8px">🎁 Get ready <span class="mp-sub" style="font-weight:600" id="rdN"></span></div>' +
+      row('card', '💌 Make a card', 'With music — send it on WhatsApp', '<a class="mp-btn y" style="margin-top:7px;display:inline-block;padding:6px 11px" href="' + cardUrl(i) + '" data-rcard>' + cardBtn(i) + '</a>') +
+      row('msg', '💬 Send a birthday message', 'Auntie Tobi writes it for you', '<div class="mpC-lng">' + LANGS.map(function (l) { return '<button data-lang="' + l + '"' + (l === lang ? ' class="on"' : '') + '>' + l + '</button>'; }).join('') + '</div><div id="rdMsg" class="mpC-msg" hidden></div><div class="mp-row" style="margin-top:7px"><button class="mp-btn" style="padding:7px 12px" id="rdW">✨ Write my message</button></div>') +
+      row('cake', '🎂 Order a cake', 'Nigerian bakers on Auntie Tobi', biz(cakes)) +
+      row('gift', '🎁 Get a gift', 'Tell Auntie Tobi what ' + (him(i) === 'them' ? 'they like' : (him(i) === 'her' ? 'she likes' : 'he likes')), '<input id="rdLk" maxlength="200" placeholder="e.g. Arsenal fan, loves perfume, cooking" value="' + esc(i.cel.likes || '') + '" style="margin-top:7px"><div class="mp-row" style="margin-top:7px"><button class="mp-btn g" style="padding:7px 12px" id="rdG">✨ Gift ideas</button></div><div id="rdGi" class="mpC-msg" hidden></div>' + (gifts.length ? '<div class="mp-sub" style="margin-top:8px;font-weight:700">Gifts & hampers from Nigerian businesses</div>' + biz(gifts) : '')) +
+      row('call', '📞 Call on the day', rd.call ? 'Added to your plan for 9am on the day' : 'Add a reminder to your plan for 9am on the day') +
+      '<div class="mp-row" style="justify-content:space-between;margin-top:14px"><button class="mp-btn g" id="rdE">✏️ Edit details</button><button class="mp-btn" id="rdX">Close</button></div>');
+    var count = function () { var r = rdOf(i); $('#rdN', s).textContent = '· ' + ['card', 'msg', 'cake', 'gift', 'call'].filter(function (q) { return r[q]; }).length + ' of 5 done'; };
+    var tickRow = function (k, v) { setRd(i, k, v); var r = rdOf(i), el = $('[data-rk="' + k + '"]', s); el.textContent = r[k] ? '✓' : ''; el.parentNode.classList.toggle('on', !!r[k]); count(); };
+    count();
+    s.querySelectorAll('[data-rk]').forEach(function (b) { b.onclick = function () { var k = b.dataset.rk; if (k === 'call') return callIt(!rdOf(i).call); tickRow(k); }; });
+    $('[data-rcard]', s).onclick = function () { tickRow('card', true); gt('cel_card', { from: 'ready' }); };
+    s.querySelectorAll('[data-bizt]').forEach(function (a) { a.onclick = function () { var k = a.closest('.mpC-ck').querySelector('[data-rk]').dataset.rk; tickRow(k, true); gt('cel_biz', { k: k }); }; });
+    s.querySelectorAll('[data-biz-all]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); s.remove(); try { window.showBusinesses(0, null, null, true); } catch (x) { location.href = '/'; } }; });
+    // 💬 the message
+    var last = '';
+    s.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { lang = b.dataset.lang; ls.set('tobi_cel_lang', lang); s.querySelectorAll('[data-lang]').forEach(function (x) { x.classList.toggle('on', x === b); }); if (last) write(); }; });
+    var write = function () {
+      var w = $('#rdW', s), box = $('#rdMsg', s); w.disabled = true; w.textContent = '✨ Writing…';
+      api('cel-ai', { kind: 'msg', lang: lang, name: /^(our|my)$/i.test(i.cel.n || '') ? '' : i.cel.n, rel: i.cel.r, k: i.cel.k === 'anniversary' ? 'wedding' : i.cel.k, age: celAge(i), likes: i.cel.likes, from: P.name || '', prev: last })
+        .then(function (r) { last = r.text; box.hidden = false; box.innerHTML = '<textarea id="rdT" rows="5">' + esc(r.text) + '</textarea><div class="mp-row" style="margin-top:7px"><button class="mp-btn" style="background:#25D366;padding:7px 12px" id="rdWa">💬 Send on WhatsApp</button><button class="mp-btn g" style="padding:7px 12px" id="rdC">📋 Copy</button></div>';
+          w.disabled = false; w.textContent = '✨ Write another';
+          $('#rdWa', s).onclick = function () { window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent($('#rdT', s).value), '_blank', 'noopener'); tickRow('msg', true); gt('cel_msg_wa', { lang: lang }); };
+          $('#rdC', s).onclick = function () { try { navigator.clipboard.writeText($('#rdT', s).value); toast('📋 Copied'); } catch (e) {} tickRow('msg', true); }; gt('cel_msg_write', { lang: lang }); })
+        .catch(function (e) { toast(e.message); w.disabled = false; w.textContent = '✨ Write my message'; });
+    };
+    $('#rdW', s).onclick = write;
+    // 🎁 gift ideas
+    $('#rdLk', s).onchange = function () { i.cel.likes = this.value.trim(); change(i); };
+    $('#rdG', s).onclick = function () {
+      var b = this; i.cel.likes = $('#rdLk', s).value.trim(); change(i); b.disabled = true; b.textContent = '✨ Thinking…';
+      api('cel-ai', { kind: 'gift', name: i.cel.n, rel: i.cel.r, k: i.cel.k, age: celAge(i), likes: i.cel.likes })
+        .then(function (r) { var gi = $('#rdGi', s); gi.hidden = false; gi.textContent = r.text; b.disabled = false; b.textContent = '✨ More ideas'; gt('cel_gift_ideas'); })
+        .catch(function (e) { toast(e.message); b.disabled = false; b.textContent = '✨ Gift ideas'; });
+    };
+    // 📞 call on the day → a 9am item in their plan
+    var callIt = function (on) {
+      var ex = live().filter(function (x) { return x.lk === 'call-' + i.id && x.d === i.d; })[0];
+      if (on && !ex) add({ t: '📞 Call ' + (i.cel.n && !/^(our|my)$/i.test(i.cel.n) ? i.cel.n : 'them') + ' — ' + (i.cel.k === 'birthday' ? 'happy birthday! 🎂' : 'happy anniversary! 💍'), d: i.d, tm: '09:00', lk: 'call-' + i.id }, true);
+      if (!on && ex) remove(ex.id);
+      tickRow('call', on); var sm = $('[data-rk="call"]', s).parentNode.querySelector('small'); sm.textContent = on ? 'Added to your plan for 9am on the day' : 'Add a reminder to your plan for 9am on the day';
+    };
+    $('#rdE', s).onclick = function () { s.remove(); celSheet(i); };
+    $('#rdX', s).onclick = function () { s.remove(); };
+    if (go === 'msg') setTimeout(function () { var el = $('#rdW', s); el.scrollIntoView({ block: 'center' }); write(); }, 150);
+    if (go === 'gift') setTimeout(function () { var el = $('#rdLk', s); el.scrollIntoView({ block: 'center' }); el.focus(); }, 150);
   }
   function celSheet(it, pre) {
     var c = (it && it.cel) || Object.assign({ n: '', r: 'friend', k: 'birthday', y: 0, lead: [3] }, pre || {});
@@ -555,7 +701,7 @@
       if (day > new Date(2024, mo + 1, 0).getDate()) return err('That date doesn’t exist — check the day and month.');
       if (y && (y < 1900 || y > new Date().getFullYear())) return err('Check the year (or leave it blank).');
       var lead = [].map.call(s.querySelectorAll('[data-lead]:checked'), function (x) { return +x.dataset.lead; });
-      var cel = { n: n, r: $('#cR', s).value, k: k, y: y, lead: lead.length ? lead : [0], sent: (it && it.cel.sent) || [] };
+      var cel = { n: n, r: $('#cR', s).value, k: k, y: y, lead: lead.length ? lead : [0], sent: (it && it.cel.sent) || [], likes: (it && it.cel.likes) || '', rd: it && it.cel.rd };
       var d = mkDate(day, mo, ''), t = celTitle(cel, lab);
       if (it) { Object.assign(it, { t: t, d: d, rep: 'y', dom: day, cel: cel, note: $('#cNo', s).value }); s.remove(); change(it); toast('✅ Saved'); }
       else { s.remove(); add({ t: t, d: d, rep: 'y', dom: day, cel: cel, note: $('#cNo', s).value }, true); toast('🎉 Added — ' + (daysTo(d) === 0 ? 'it’s today!' : daysTo(d) === 1 ? 'it’s tomorrow' : daysTo(d) + ' days to go')); gt('cel_add', { kind: k }); }
@@ -893,7 +1039,7 @@
       var b = this, code = $('#sC', s).value.replace(/\D/g, ''); if (code.length !== 6) return err('#sErr2', 'Enter the 6-digit code.');
       if (b.disabled) return; b.disabled = true; b.textContent = 'Checking…';
       api('verify', { email: email, code: code, name: $('#sN', s).value.trim(), news: $('#sNews', s).checked, items: P.items, lists: P.lists }).then(function (r) {
-        P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; dirty = {}; dirtyL = {}; mergeIn(r.items); mergeLists(r.lists); store(); s.remove(); refresh();
+        P.signedIn = true; P.email = r.email; P.name = r.name; P.town = r.town; P.news = r.news; P.rm = r.rm || ''; P.inbox = r.inbox || []; P.bcode = r.bcode || ''; dirty = {}; dirtyL = {}; mergeIn(r.items); mergeLists(r.lists); store(); s.remove(); refresh();
         gt(r.isNew ? 'plan_signup' : 'plan_signin', { news: r.news ? 1 : 0 }); toast(r.isNew ? '💚 Your plan is saved — welcome!' : '💚 Welcome back' + (r.name ? ', ' + esc(r.name) : '') + '!');
       }).catch(function (e) { b.disabled = false; b.textContent = '💚 Save my plan'; err('#sErr2', e.message); });
     };
