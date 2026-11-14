@@ -158,6 +158,9 @@
     '.mp-toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#0F1E36;color:#fff;border-radius:12px;padding:11px 14px;font-size:14px;z-index:9999;display:flex;gap:12px;align-items:center;max-width:92vw;box-shadow:0 6px 20px rgba(0,0,0,.25)}.mp-toast button{background:none;border:0;color:#FFB81C;font-weight:800;font-size:14px;cursor:pointer}' +
     '.mp-empty{text-align:center;padding:18px 8px;color:#4B5563;font-size:14.5px;line-height:1.55}.mp-empty b{display:block;font-size:16px;color:#0F1E36;margin-bottom:4px}' +
     '.mp-welcome{display:grid;gap:8px;margin-top:12px}.mp-welcome button{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e2dccc;border-radius:14px;padding:14px;font-family:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer;color:#0F1E36}.mp-welcome button span{font-size:22px}.mp-welcome button small{display:block;font-weight:500;color:#6B7280;font-size:12.5px}.mp-welcome button:disabled{opacity:.55;cursor:default}' +
+    '.mpX-pal{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(15,30,54,.1);background:rgba(255,255,255,.7);font-size:15px;cursor:pointer;padding:0;z-index:2}' +
+    '.mpX-pk{position:absolute;top:46px;right:10px;z-index:3;display:flex;gap:8px;background:#fff;border-radius:22px;padding:7px 9px;box-shadow:0 6px 18px rgba(15,30,54,.18)}.mpX-pk[hidden]{display:none}.mpX-pk button{width:30px;height:30px;border-radius:50%;border:2.5px solid;cursor:pointer;padding:0;font-size:14px;font-weight:900;color:#057A44}' +
+    '.mpX-hd{padding-right:36px}' +
     '.mpX-hd{display:flex;align-items:center;gap:11px}.mpX-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;background:#FFF1C2}.mpX-av.ev{background:#0F1E36}.mpX-h{font-size:19px;font-weight:800;line-height:1.2}.mpX-dt{font-size:12.5px;color:#6B7280;margin-top:1px}' +
     '.mpX-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.mpX-tl{border-radius:16px;padding:12px;min-height:96px;display:flex;flex-direction:column;cursor:pointer;min-width:0;text-align:left;border:0;font-family:inherit}' +
     '.mpX-tl .l{font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.8}.mpX-tl b{font-size:15px;margin-top:6px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}.mpX-tl small{font-size:12px;margin-top:auto;padding-top:6px;font-weight:700;opacity:.85}' +
@@ -303,12 +306,17 @@
     return '<div class="mpT-d gd" data-open="' + i.id + '">' + dayHead(i.d) + '<div class="t">' + celEmoji(i) + ' ' + esc(celShort(i, today_)) + (today_ ? ' 🎉' : '') + '</div>' + (celNum(i) ? '<small>' + cap(celNum(i)) + '</small>' : '') +
       '<div class="mpT-acts"><a class="c" href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">💌 Card</a>' + (today_ ? '<button class="d" data-tick="' + i.id + '">✓</button>' : '') + '</div></div>';
   }
+  // 🎨 the Good morning box colour — each person picks their own (saved on this phone)
+  var BGK = 'tobi_myplan_bg', BGS = { white: ['#FFFFFF', '#E8E3D6', 'White'], green: ['#E8F5EE', '#CDE8D9', 'Light green'], cream: ['#FFF7E3', '#F3E2B3', 'Light cream'], blue: ['#EAF1FC', '#D3E0F5', 'Light blue'] };
   function todayHtml() {
     var g = groups(), t = today(), has = live().length > 0 || liveLists().length > 0, hideNew = ls.get(HIDE) === '1';
     var gr = greet(), d = new Date(), h = d.getHours(), dateLine = cap(DAYS[d.getDay()]) + ' ' + d.getDate() + ' ' + cap(MONTHS[d.getMonth()]);
     var mo = null; try { mo = window.showDailyMotivation ? window.showDailyMotivation('get') : null; } catch (e) {}
     var line = has ? hello(g.over.concat(g.today).filter(function (i) { return !i.cel; }).length, live().filter(function (i) { return i.cel && celSoon(i); }), t) : hello(0, [], t);
-    var html = '<div class="mp mpT" style="padding:14px"><div class="mpX-hd"><div class="mpX-av' + (h >= 17 ? ' ev' : '') + '">' + (h < 17 ? gr[0] : '🌙') + '</div><div style="min-width:0"><div class="mpX-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + '</div><div class="mpX-dt">' + dateLine + '</div></div></div>' +
+    var bg = BGS[ls.get(BGK)] || BGS.white;
+    var html = '<div class="mp mpT" style="padding:14px;position:relative;background:' + bg[0] + ';border-color:' + bg[1] + '"><button class="mpX-pal" data-mp-pal aria-label="Change colour">🎨</button>' +
+      '<div class="mpX-pk" data-mp-pk hidden>' + Object.keys(BGS).map(function (k) { return '<button data-bg="' + k + '" aria-label="' + BGS[k][2] + '" title="' + BGS[k][2] + '" style="background:' + BGS[k][0] + ';border-color:' + (k === (ls.get(BGK) || 'white') ? '#057A44' : BGS[k][1]) + '">' + (k === (ls.get(BGK) || 'white') ? '✓' : '') + '</button>'; }).join('') + '</div>' +
+      '<div class="mpX-hd"><div class="mpX-av' + (h >= 17 ? ' ev' : '') + '">' + (h < 17 ? gr[0] : '🌙') + '</div><div style="min-width:0"><div class="mpX-h">' + gr[1] + (P.name ? ', ' + esc(P.name) : '') + '</div><div class="mpX-dt">' + dateLine + '</div></div></div>' +
       (P.signedIn && !P.name ? '<a href="#" class="mpT-name" data-mp-name>👋🏾 What should I call you?</a>' : '');
     var body = '';
     if (has) {
@@ -343,6 +351,8 @@
   function bindToday(root) {
     root.querySelectorAll('[data-mp-open]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); open(); }; });
     root.querySelectorAll('[data-mp-add]').forEach(function (b) { b.onclick = function () { open(); setTimeout(function () { var i = $('#mpQ'); if (i) i.focus(); }, 150); }; });
+    root.querySelectorAll('[data-mp-pal]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var pk = b.parentNode.querySelector('[data-mp-pk]'); pk.hidden = !pk.hidden; }; });
+    root.querySelectorAll('[data-bg]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); ls.set(BGK, b.dataset.bg); gt('plan_bg', { bg: b.dataset.bg }); fill(); }; });
     root.querySelectorAll('[data-mp-hide]').forEach(function (b) { b.onclick = function () { ls.set(HIDE, '1'); gt('plan_hide_new'); fill(); }; });
     root.querySelectorAll('[data-mp-mo]').forEach(function (b) { b.onclick = function () { try { var m = window.showDailyMotivation('get'); if (window.showMotivationLanding) window.showMotivationLanding(m.text, '', '', ''); } catch (e) {} }; });
     root.querySelectorAll('[data-mp-name]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); setTimeout(function () { var n = document.getElementById('pN'); if (n) n.focus(); }, 150); }; });
