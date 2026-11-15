@@ -117,7 +117,7 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
     su.querySelector('h2').textContent = '💌 Get the Sunday Update every week';
         var p = document.createElement('p'); p.style.cssText = 'font-size:14.5px;margin:-4px 0 10px;color:#374151'; p.textContent = 'Enjoyed this? Get UK news for Nigerians, events, a business to support, deals and offers and a tip of the week, free in your inbox every Sunday morning.'; su.querySelector('h2').after(p);
   };
-  if (w && /^\d{4}-\d{2}-\d{2}$/.test(w)) post({ action: 'sunday-issue', week: w }).then(function (x) { webVersion(x.issue); }).catch(function () {});
+  if (w && /^\d{4}-\d{2}-\d{2}$/.test(w)) post({ action: 'sunday-issue', week: w, k: qs.get('k') || '' }).then(function (x) { webVersion(x.issue); }).catch(function (e) { var is = $('issue'); is.hidden = false; is.innerHTML = '<p style="font-size:15px"><b>📰 ' + esc(e.message) + '</b></p><p class="small">Sign up below and you’ll get the next one on Sunday morning.</p>'; is.parentNode.insertBefore($('signup'), is.nextSibling); document.querySelector('.hero').hidden = true; });
   else if (latest) post({ action: 'sunday-latest' }).then(function (x) { webVersion(x.latest); }).catch(function () {});
   document.querySelectorAll('img[data-lsrc]').forEach(function (i) { i.src = i.getAttribute('data-lsrc'); });
 })();

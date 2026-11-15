@@ -16,7 +16,7 @@ const app = core.handler(async (ctx) => {
     case 'news-code': return mp.newsCode(ctx.body.email, ctx.ip);
     case 'news-verify': return mp.newsVerify(ctx);
     case 'sunday-latest': return require('../sunday').latest();
-    case 'sunday-issue': return require('../sunday').issueFor(ctx.body.week);
+    case 'sunday-issue': return require('../sunday').issueFor(ctx.body.week, ctx.body.k);
     case 'me': return mp.me(ctx);
     case 'cel-ai': return mp.celAi(ctx);          // ✨ birthday message / gift ideas
     case 'bday-link': return mp.bdayLink(ctx);    // 🎂 my "add your birthday" link

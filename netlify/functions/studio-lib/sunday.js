@@ -31,6 +31,9 @@ const addDays = (s, n) => { const t = new Date(s + 'T12:00:00Z'); t.setUTCDate(t
 // the Sunday this issue is for: today if it's Sunday, otherwise the coming Sunday
 function weekOf(d) { const L = london(d); return L.dow === 0 ? L.day : addDays(L.day, 7 - L.dow); }
 const niceDate = s => { const t = new Date(s + 'T12:00:00Z'); return t.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }); };
+const webKey = w => core.hmac('sunday-web:' + w).slice(0, 16);
+const webUrl = w => `${SITE()}/sunday-update?w=${w}&k=${webKey(w)}`;   // 📰 the web version — works for drafts too (tests), so the key stops people guessing unsent weeks
+const emailSubject = w => '📰 Auntie Tobi’s Sunday Update · ' + new Date(w + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
 const longDate = s => new Date(s + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 const subHash = email => core.hmac('myplan:' + email).slice(0, 32);   // same id as My Plan, so "Your week ahead" can be added
@@ -147,7 +150,7 @@ function render(issue, opts) {
   const H = (t, e) => `<h2 style="font-size:18px;margin:26px 0 10px;color:#0F1E36">${e} ${t}</h2>`;
   const a = (u, t) => u ? `<a href="${esc(u)}" style="color:#057A44;font-weight:bold;text-decoration:none">${t}</a>` : t;
   const para = s => esc(s).split(/\n{2,}/).map(p => `<p style="margin:0 0 12px">${p.replace(/\n/g, '<br>')}</p>`).join('');
-  let h = `<p style="margin:0 0 6px;font-size:13px;color:#6B7280">📰 Auntie Tobi’s Sunday Update · ${longDate(issue.week)} · <a href="${SITE()}/sunday-update?w=${esc(issue.week)}" style="color:#057A44">Read online</a></p>` +
+  let h = `<p style="margin:0 0 6px;font-size:13px;color:#6B7280">📰 Auntie Tobi’s Sunday Update · ${longDate(issue.week)} · <a href="${webUrl(issue.week)}" style="color:#057A44">Read online</a></p>` +
     `<h1 style="font-size:24px;margin:0 0 14px;color:#057A44;font-family:Georgia,serif">${name ? 'Happy Sunday, ' + name + '! 💚' : 'Happy Sunday! 💚'}</h1>` + para(String(issue.intro || '').replace(/^Happy Sunday!?\s*/i, ''));
   if (opts.ahead && opts.ahead.items && opts.ahead.items.length) {
     h += `<div style="background:#E9F6EF;border-radius:14px;padding:14px 16px;margin:18px 0"><b style="font-size:16px">💚 Your week ahead</b><ul style="margin:8px 0 6px;padding-left:20px">` +
@@ -173,7 +176,7 @@ function render(issue, opts) {
     ...((issue.products || []).length ? ['', '🛍️ FROM THE MARKETPLACE', ...issue.products.map(p => `- ${p.name}${p.price ? ' · ' + p.price : ''} (${p.business}) ${p.url}`)] : []),
     ...(issue.tip ? ['', '💡 TIP OF THE WEEK', issue.tip] : []),
     '', 'See you next Sunday,', 'Auntie Tobi 💚', '', opts.unsub ? 'Unsubscribe: ' + opts.unsub : ''].join('\n');
-  return { subject: issue.subject, html, text };
+  return { subject: emailSubject(issue.week), html, text };   // the email subject is always the newsletter’s name + date; the headline goes inside
 }
 // 📣 for the WhatsApp Channel
 function whatsapp(issue) {
@@ -300,10 +303,11 @@ async function latest() {
   const i = await getJson('sunday/issue/' + idx[0].week);
   return { latest: publicIssue(i), past: idx.slice(0, 20).map(x => ({ week: x.week, subject: x.subject })) };
 }
-async function issueFor(week) {
+async function issueFor(week, k) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(week))) throw new HttpError(400, 'bad_week', 'Not found.');
   const i = await getJson('sunday/issue/' + week).catch(() => null);
-  if (!i || i.status !== 'sent') throw new HttpError(404, 'not_found', 'That update isn’t available.');
+  const ok = i && (i.status === 'sent' || (k && String(k) === webKey(week)));   // drafts only with the key (from a test email or HQ)
+  if (!ok) throw new HttpError(404, 'not_found', 'That update isn’t available yet.');
   return { issue: publicIssue(i) };
 }
 const publicIssue = i => i && ({ week: i.week, subject: i.subject, intro: i.intro, tip: i.tip, posts: i.posts || [], events: i.events || [], biz: i.biz || null, deals: i.deals || [], products: i.products || [] });
@@ -313,8 +317,8 @@ async function forHq(week) {
   week = week || weekOf();
   const issue = await getJson('sunday/issue/' + week).catch(() => null);
   const idx = ((await getJson('sunday/index').catch(() => null)) || { items: [] }).items;
-  const past = await Promise.all(idx.filter(x => x.status === 'sent').slice(0, 8).map(async x => Object.assign({}, x, await stats(x.week))));
-  return { week, issue, subscribers: Object.keys(await subs()).length, past, stats: issue && issue.status === 'sent' ? await stats(week) : null };
+  const past = await Promise.all(idx.filter(x => x.status === 'sent').slice(0, 8).map(async x => Object.assign({}, x, { webUrl: webUrl(x.week) }, await stats(x.week))));
+  return { week, webUrl: webUrl(week), emailSubject: emailSubject(week), issue, subscribers: Object.keys(await subs()).length, past, stats: issue && issue.status === 'sent' ? await stats(week) : null };
 }
 
 module.exports = { weekOf, london, options, make, save, approve, render, whatsapp, sendTest, tick, recordEvent, stats, subscribe, unsubscribe, checkUnsub, unsubUrl, subHash, latest, issueFor, forHq, weekAhead };
