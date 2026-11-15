@@ -21,24 +21,24 @@ a{color:#057A44}
 .hero{background:linear-gradient(150deg,#057A44,#0A5C38);color:#fff;border-radius:20px;padding:26px 20px;position:relative;overflow:hidden}
 .hero:after{content:"";position:absolute;right:-50px;top:-50px;width:170px;height:170px;border-radius:50%;background:rgba(255,184,28,.18)}
 .badge{display:inline-block;background:#FFB81C;color:#0F1E36;font-size:12.5px;font-weight:800;border-radius:20px;padding:4px 11px;margin-bottom:10px}
-.hero h1{font-family:Georgia,serif;font-size:29px;line-height:1.15}.hero p{opacity:.92;margin-top:8px;font-size:15.5px}
+.hero h1{font-family:Georgia,serif;font-size:33px;line-height:1.15}.hero p{opacity:.95;margin-top:10px;font-size:18px;line-height:1.5}
 .card{background:#fff;border-radius:16px;padding:18px;border:1px solid #E8E3D6}
-h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;margin-bottom:10px}
-.sub{display:flex;gap:8px}.sub input{flex:1;font:inherit;font-size:16px;border:1.5px solid #E2DDD0;border-radius:12px;padding:12px 13px;outline:none;min-width:0}.sub input:focus{border-color:#057A44}
-.btn{border:0;background:#057A44;color:#fff;font:inherit;font-weight:800;font-size:15px;border-radius:12px;padding:12px 16px;cursor:pointer;white-space:nowrap}.btn:disabled{opacity:.6}
-.small{font-size:13px;color:#6B7280;margin-top:8px}
+h2{font-size:15px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;margin-bottom:10px}
+.sub{display:flex;gap:8px}.sub input{flex:1;font:inherit;font-size:17px;border:1.5px solid #E2DDD0;border-radius:12px;padding:12px 13px;outline:none;min-width:0}.sub input:focus{border-color:#057A44}
+.btn{border:0;background:#057A44;color:#fff;font:inherit;font-weight:800;font-size:17px;border-radius:12px;padding:13px 18px;cursor:pointer;white-space:nowrap}.btn:disabled{opacity:.6}
+.small{font-size:15px;color:#6B7280;margin-top:8px}
 .err{display:none;background:#FDE2E1;color:#B42318;border-radius:10px;padding:9px 12px;font-size:14px;margin-top:10px}
 .ok{background:#E3F2EA;border-radius:12px;padding:14px;font-size:15px;text-align:center}.ok b{display:block;font-size:18px;margin-bottom:2px}
 .ins{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.ins div{background:#F6F4EE;border-radius:12px;padding:10px 6px;text-align:center;font-size:12px;font-weight:700;line-height:1.3}.ins i{font-style:normal;font-size:22px;display:block;margin-bottom:3px}
 @media(max-width:480px){.ins{grid-template-columns:repeat(3,1fr)}}
-.issue h3{font-family:Georgia,serif;font-size:24px;color:#057A44;line-height:1.2;margin:4px 0 10px}
-.when{font-size:13px;color:#6B7280}
-.issue p{margin-bottom:10px;font-size:15.5px}
-.sec{font-size:17px;font-weight:800;margin:22px 0 8px}
-.it{border-top:1px solid #EEE7D6;padding:11px 0}.it b{font-size:15.5px}.it div{font-size:14.5px;color:#374151}.it .m{font-size:13.5px;color:#4B5563}
+.issue h3{font-family:Georgia,serif;font-size:28px;color:#057A44;line-height:1.2;margin:4px 0 10px}
+.when{font-size:15px;color:#6B7280}
+.issue p{margin-bottom:12px;font-size:18px}
+.sec{font-size:20px;font-weight:800;margin:22px 0 8px}
+.it{border-top:1px solid #EEE7D6;padding:11px 0}.it b{font-size:18px}.it div{font-size:17px;color:#374151}.it .m{font-size:15.5px;color:#4B5563}
 .it a{font-weight:700;text-decoration:none}
 .biz{border:2px solid #FFB81C;border-radius:14px;padding:14px}.biz img{width:100%;border-radius:10px;margin-bottom:10px;display:block;max-height:280px;object-fit:cover}
-.tip{background:#FFF4D6;border-radius:14px;padding:12px 16px}
+.tip{background:#FFF4D6;border-radius:14px;padding:14px 18px;font-size:17px}
 .past a{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid #F0EDE5;text-decoration:none;color:#0F1E36;font-size:15px}.past a:first-of-type{border-top:0}.past a span{color:#6B7280;font-size:13px;white-space:nowrap}.past a.on{color:#057A44;font-weight:800}
 .acts{display:grid;gap:8px}.acts a{display:block;text-align:center;text-decoration:none;font-weight:800;border-radius:12px;padding:13px;font-size:15px}
 .wa{background:#25D366;color:#fff}.ch{background:#0F1E36;color:#fff}.app{background:#fff;color:#057A44;border:1.5px solid #057A44}
@@ -52,7 +52,7 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
   <div class="card" id="signup"><h2>💌 Get it every Sunday</h2>
     <div id="s1"><div class="sub"><input id="em" type="email" inputmode="email" autocomplete="email" placeholder="Your email address"><button class="btn" id="go">Sign me up</button></div>
     <p class="small">Free. No password. Unsubscribe in one tap from any email.</p></div>
-    <div id="s2" hidden><p style="font-size:15px">We’ve sent a 6-digit code to <b id="em2"></b>. Type it here:</p><div class="sub" style="margin-top:8px"><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"><button class="btn" id="ver">Confirm</button></div><p class="small"><a href="#" id="back">Use a different email</a></p></div>
+    <div id="s2" hidden><p style="font-size:17px">We’ve sent a 6-digit code to <b id="em2"></b>. Type it here:</p><div class="sub" style="margin-top:8px"><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"><button class="btn" id="ver">Confirm</button></div><p class="small"><a href="#" id="back">Use a different email</a></p></div>
     <div class="err" id="err"></div>
   </div>
   <div class="card issue" id="issue" hidden></div>
@@ -99,7 +99,7 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
     var h = '<div class="when">📰 Sunday Update · ' + longDate(i.week) + '</div><h3>' + esc(i.subject || 'Happy Sunday! 💚') + '</h3>' + para(String(i.intro || ''));
     if ((i.posts || []).length) h += '<div class="sec">🇬🇧 This week’s UK updates</div>' + i.posts.map(function (p) { return '<div class="it"><b>' + esc(p.emoji || '📰') + ' ' + a(p.url, esc(p.title)) + '</b><div>' + esc(p.summary || '') + '</div>' + (safe(p.url) ? '<div style="margin-top:5px">' + a(p.url, 'Read more →') + '</div>' : '') + '</div>'; }).join(''); + '<div style="text-align:center;margin:12px 0 4px"><a href="/articles" style="display:inline-block;background:#057A44;color:#fff;font-weight:800;text-decoration:none;border-radius:12px;padding:11px 22px;font-size:15px">📰 Read all UK updates</a></div>';
     if ((i.events || []).length) h += '<div class="sec">🎉 Events coming up</div>' + i.events.map(function (e) { return '<div class="it"><b>' + a(e.url, esc(e.title)) + '</b><div class="m">📅 ' + (e.date ? niceDate(e.date) : '') + (e.time ? ' · ' + esc(e.time) : '') + (e.loc ? ' · 📍 ' + esc(e.loc) : '') + '</div></div>'; }).join('');
-    if (i.biz) { var b = i.biz; h += '<div class="sec">⭐ Business of the week</div><div class="biz">' + (safe(b.img) ? '<img src="' + esc(b.img) + '" alt="" loading="lazy">' : '') + '<b style="font-size:17px">' + esc(b.name) + '</b><div class="m" style="margin:2px 0 8px">' + esc(b.cat || '') + (b.loc ? ' · 📍 ' + esc(b.loc) : '') + '</div><div style="font-size:14.5px">' + esc(b.desc || '') + '</div>' + (safe(b.url) ? '<div style="margin-top:10px">' + a(b.url, 'See ' + esc(b.name) + ' on Auntie Tobi →') + '</div>' : '') + '</div>'; }
+    if (i.biz) { var b = i.biz; h += '<div class="sec">⭐ Business of the week</div><div class="biz">' + (safe(b.img) ? '<img src="' + esc(b.img) + '" alt="" loading="lazy">' : '') + '<b style="font-size:20px">' + esc(b.name) + '</b><div class="m" style="margin:2px 0 8px">' + esc(b.cat || '') + (b.loc ? ' · 📍 ' + esc(b.loc) : '') + '</div><div style="font-size:17px">' + esc(b.desc || '') + '</div>' + (safe(b.url) ? '<div style="margin-top:10px">' + a(b.url, 'See ' + esc(b.name) + ' on Auntie Tobi →') + '</div>' : '') + '</div>'; }
     if ((i.deals || []).length) h += '<div class="sec">🏷️ Deals & offers</div>' + i.deals.map(function (d) { return '<div class="it"><b>' + a(d.url, esc(d.title)) + '</b>' + (d.biz ? '<div class="m">' + esc(d.biz) + '</div>' : '') + (d.detail ? '<div>' + esc(d.detail) + '</div>' : '') + (d.code || d.until ? '<div class="m" style="margin-top:5px">' + (d.code ? '<span style="background:#FFF4D6;border:1px dashed #FFB81C;border-radius:6px;padding:2px 8px;font-weight:800;color:#0F1E36">Code: ' + esc(d.code) + '</span> ' : '') + (d.until ? '<span style="color:#B42318">Ends ' + niceDate(d.until) + '</span>' : '') + '</div>' : '') + '</div>'; }).join('');
     if ((i.products || []).length) h += '<div class="sec">🛍️ From the Marketplace</div>' + i.products.map(function (p) { return '<div class="it"><b>' + a(p.url, esc(p.name)) + '</b>' + (p.price ? ' <span style="color:#057A44;font-weight:800">· ' + esc(p.price) + '</span>' : '') + '<div class="m">' + esc(p.business || '') + '</div></div>'; }).join('');
     if (i.tip) h += '<div class="sec">💡 Tip of the week</div><div class="tip">' + para(i.tip) + '</div>';
@@ -115,7 +115,7 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
     hero.hidden = true; is.hidden = false; draw(iss);
     is.parentNode.insertBefore(su, is.nextSibling);   // subscribe box moves to the bottom
     su.querySelector('h2').textContent = '💌 Get the Sunday Update every week';
-        var p = document.createElement('p'); p.style.cssText = 'font-size:14.5px;margin:-4px 0 10px;color:#374151'; p.textContent = 'Enjoyed this? Get useful UK updates for Nigerians, upcoming events, Nigerian-owned businesses worth discovering, money-saving deals and a practical tip of the week, delivered FREE to your inbox every Sunday morning! 🇳🇬🇬🇧'; su.querySelector('h2').after(p);
+        var p = document.createElement('p'); p.style.cssText = 'font-size:17px;margin:-4px 0 12px;color:#374151;line-height:1.5'; p.textContent = 'Enjoyed this? Get useful UK updates for Nigerians, upcoming events, Nigerian-owned businesses worth discovering, money-saving deals and a practical tip of the week, delivered FREE to your inbox every Sunday morning! 🇳🇬🇬🇧'; su.querySelector('h2').after(p);
   };
   if (w && /^\d{4}-\d{2}-\d{2}$/.test(w)) post({ action: 'sunday-issue', week: w, k: qs.get('k') || '' }).then(function (x) { webVersion(x.issue); }).catch(function (e) { var is = $('issue'); is.hidden = false; is.innerHTML = '<p style="font-size:15px"><b>📰 ' + esc(e.message) + '</b></p><p class="small">Sign up below and you’ll get the next one on Sunday morning.</p>'; is.parentNode.insertBefore($('signup'), is.nextSibling); document.querySelector('.hero').hidden = true; });
   else if (latest) post({ action: 'sunday-latest' }).then(function (x) { webVersion(x.latest); }).catch(function () {});
