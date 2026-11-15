@@ -34,6 +34,7 @@ const niceDate = s => { const t = new Date(s + 'T12:00:00Z'); return t.toLocaleD
 const webKey = w => core.hmac('sunday-web:' + w).slice(0, 16);
 const webUrl = w => `${SITE()}/sunday-update?w=${w}&k=${webKey(w)}`;   // 📰 the web version — works for drafts too (tests), so the key stops people guessing unsent weeks
 const emailSubject = w => '📰 Auntie Tobi’s Sunday Update · ' + new Date(w + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+const prodLinks = i => { if (i && Array.isArray(i.products)) i.products.forEach(p => { if (p && p.id && /\/marketplace\/?$/.test(p.url || '')) p.url = p.url.replace(/\/?$/, '') + '?item=' + encodeURIComponent(p.id); }); return i; };   // 🛍️ open the exact product, not just the Marketplace
 const longDate = s => new Date(s + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 const subHash = email => core.hmac('myplan:' + email).slice(0, 32);   // same id as My Plan, so "Your week ahead" can be added
@@ -53,7 +54,7 @@ async function options(week) {
   const bizes = dir.map(b => ({ slug: b.slug, name: b.name, cat: b.cat || '', loc: String(b.loc || '').split(',')[0], desc: cleanText(b.desc, 260), url: `${SITE()}/?biz=${b.slug}`, img: b.img || '' }));
   const t = core.dayKey();
   const prods = (await market.all()).filter(r => r.live && !r.hidden && !(r.live.endsAt && r.live.endsAt < t))
-    .map(r => ({ id: r.id, name: cleanText(r.live.name, 100), business: cleanText(r.live.business, 80), price: cleanText(r.live.price, 24), url: `${SITE()}/marketplace`, img: (r.live.imgs && r.live.imgs[0]) ? `${SITE()}/.netlify/functions/studio-market?img=${r.live.imgs[0]}` : '' }));
+    .map(r => ({ id: r.id, name: cleanText(r.live.name, 100), business: cleanText(r.live.business, 80), price: cleanText(r.live.price, 24), url: `${SITE()}/marketplace?item=${encodeURIComponent(r.id)}`, img: (r.live.imgs && r.live.imgs[0]) ? `${SITE()}/.netlify/functions/studio-market?img=${r.live.imgs[0]}` : '' }));
   return { posts, events, bizes, prods };
 }
 
@@ -144,6 +145,7 @@ async function weekAhead(h, week) {
 
 // ───── the email ─────
 function render(issue, opts) {
+  prodLinks(issue);
   opts = opts || {};
   const name = opts.name ? esc(opts.name) : '', town = String(opts.town || '').toLowerCase();
   const events = (issue.events || []).slice().sort((a, b) => (town ? (String(b.loc).toLowerCase().includes(town) ? 1 : 0) - (String(a.loc).toLowerCase().includes(town) ? 1 : 0) : 0));
@@ -181,6 +183,7 @@ function render(issue, opts) {
 }
 // 📣 for the WhatsApp Channel
 function whatsapp(issue) {
+  prodLinks(issue);
   return [`📰 *Auntie Tobi’s Sunday Update* — ${longDate(issue.week)}`, '', String(issue.intro || '').split(/\n/)[0],
     ...((issue.posts || []).length ? ['', '🇬🇧 *This week’s UK updates*', ...issue.posts.map(p => `${p.emoji || '•'} ${p.title}\n${p.url}`)] : []),
     ...((issue.events || []).length ? ['', '🎉 *Events coming up*', ...issue.events.map(e => `• ${e.title} — ${e.date ? niceDate(e.date) : ''}${e.loc ? ', ' + e.loc : ''}`)] : []),
@@ -311,7 +314,7 @@ async function issueFor(week, k) {
   if (!ok) throw new HttpError(404, 'not_found', 'That update isn’t available yet.');
   return { issue: publicIssue(i) };
 }
-const publicIssue = i => i && ({ week: i.week, subject: i.subject, intro: i.intro, tip: i.tip, posts: i.posts || [], events: i.events || [], biz: i.biz || null, deals: i.deals || [], products: i.products || [] });
+const publicIssue = i => (prodLinks(i), i) && ({ week: i.week, subject: i.subject, intro: i.intro, tip: i.tip, posts: i.posts || [], events: i.events || [], biz: i.biz || null, deals: i.deals || [], products: i.products || [] });
 
 // ───── HQ ─────
 async function forHq(week) {

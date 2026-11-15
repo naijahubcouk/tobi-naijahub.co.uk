@@ -319,11 +319,20 @@ function renderGrid(cat) {
   var now = new Date();
   var live = PRODUCTS.filter(function(p){ return !p.expires || new Date(p.expires) > now; });
   var active = live.filter(function(p){ return p.pinned; }).concat(shuffle(live.filter(function(p){ return !p.pinned; })));
+  // 🛍️ ?item=<id> (e.g. from the Sunday Update) — that product first, highlighted
+  var want = new URLSearchParams(location.search).get('item');
+  var hit = want ? active.filter(function(p){ return String(p.id) === want; })[0] : null;
+  if (hit) active = [hit].concat(active.filter(function(p){ return p !== hit; }));
   var filtered = cat === 'All' ? active : active.filter(function(p){ return p.category === cat; });
   if (!filtered.length) {
     grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No products in this category yet — check back soon!</div>';
   } else {
     grid.innerHTML = filtered.map(buildCard).join('');
+    if (hit && filtered[0] === hit && grid.firstElementChild) {
+      var c = grid.firstElementChild; c.style.boxShadow = '0 0 0 3px #FFB81C'; c.style.position = 'relative';
+      c.insertAdjacentHTML('afterbegin', '<div style="position:absolute;top:8px;left:8px;z-index:3;white-space:nowrap;background:#FFB81C;color:#0F1E36;font-size:12px;font-weight:800;border-radius:20px;padding:3px 10px;box-shadow:0 2px 6px rgba(0,0,0,.15)">⭐ Featured</div>');
+      if (!window._mkScrolled) { window._mkScrolled = 1; setTimeout(function(){ c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }
+    }
   }
 }
 
