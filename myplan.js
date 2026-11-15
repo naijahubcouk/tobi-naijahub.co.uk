@@ -197,6 +197,7 @@
     '.mpS-hd{padding:4px 2px 2px}.mpS-hd h2{font-size:24px;margin:0;color:#0F1E36}.mpS-hd div{font-size:13px;color:#6B7280}' +
     '.mpS .mp-lbl{margin:14px 2px 6px;font-size:13px;color:#0F1E36;text-transform:none;letter-spacing:0}.mpS .mp-lbl.red{color:#B42318}' +
     '.mpS .mpS-list .mp-it{background:#fff;border:1px solid #EEEBE3;border-radius:12px;padding:11px 12px;margin-bottom:6px}.mpS .mpS-list .mp-it .r{color:#057A44;font-weight:700}.mpS .mpS-list .mp-it .r.red{color:#B42318}' +
+    'body.mp-nochat .input-area{display:none!important}body.mp-nochat .mpS-nav{bottom:8px;margin-bottom:6px}' +
     '.mpS-nav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid #E5E1D6;border-radius:16px;padding:6px 0 7px;margin-top:12px;box-shadow:0 -4px 14px rgba(15,30,54,.06)}' +
     '.mpS-nav button{border:0;background:none;font-family:inherit;font-size:11px;font-weight:700;color:#9CA3AF;cursor:pointer;padding:2px 0}.mpS-nav button i{display:block;font-style:normal;font-size:19px;line-height:1.3}.mpS-nav button.on{color:#057A44}' +
     '.mpT{border-radius:20px;overflow:hidden;background:#fff;border:1px solid #E8E3D6;box-shadow:0 2px 8px rgba(15,30,54,.05);margin-bottom:10px;color:#0F1E36}' +
@@ -413,7 +414,17 @@
     var msgs = document.getElementById('messages'); if (!msgs) return;
     msgs.innerHTML = '<div class="msg bot" style="align-items:flex-start"><div style="flex:1;min-width:0" id="mpRoot" class="mp"></div></div>';
     try { if (typeof scrollToTop === 'function') scrollToTop(); else msgs.scrollTop = 0; } catch (e) {}
-    gt('plan_open'); render();
+    chatOff(true); gt('plan_open'); render();
+  }
+  // My Plan has its own bottom bar (Plan · Celebrate · Shopping · Settings), so the "Ask Auntie Tobi" chat box hides here and comes back on any other page
+  var chatObs = null;
+  function chatOff(on) {
+    document.body.classList.toggle('mp-nochat', !!on);
+    if (on && !chatObs && window.MutationObserver) {
+      var msgs = document.getElementById('messages');
+      chatObs = new MutationObserver(function () { if (!document.getElementById('mpRoot')) { chatObs.disconnect(); chatObs = null; chatOff(false); } });
+      if (msgs) chatObs.observe(msgs, { childList: true });
+    }
   }
   function render() {
     var root = document.getElementById('mpRoot'); if (!root) return;
