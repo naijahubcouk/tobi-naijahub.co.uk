@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Auntie Tobi’s Sunday Update · Free weekly newsletter</title>
-<meta name="description" content="UK news that affects Nigerians, events coming up, a Nigerian business to support and a tip of the week — free in your inbox every Sunday morning.">
+<meta name="description" content="Useful UK updates for Nigerians, upcoming events, Nigerian-owned businesses worth discovering, money-saving deals and a practical tip of the week, free every Sunday morning.">
 <meta property="og:title" content="📰 Auntie Tobi’s Sunday Update">
 <meta property="og:description" content="UK news for Nigerians, events, a business of the week and a tip — free every Sunday morning.">
 <meta property="og:type" content="website">
@@ -48,7 +48,7 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
 <body>
 <div class="top"><img data-lsrc="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><span>Sunday Update</span></div><a href="/">🏠 App</a></div>
 <div class="wrap">
-  <div class="hero"><div class="badge">📰 Free every Sunday</div><h1>Auntie Tobi’s Sunday Update</h1><p>UK news that affects Nigerians, events coming up, a Nigerian business to support, deals and offers, and a tip of the week, in your inbox every Sunday morning.</p></div>
+  <div class="hero"><div class="badge">📰 Free every Sunday</div><h1>Auntie Tobi’s Sunday Update</h1><p>Get useful UK updates for Nigerians, upcoming events, Nigerian-owned businesses worth discovering, money-saving deals and a practical tip of the week, delivered FREE to your inbox every Sunday morning! 🇳🇬🇬🇧</p></div>
   <div class="card" id="signup"><h2>💌 Get it every Sunday</h2>
     <div id="s1"><div class="sub"><input id="em" type="email" inputmode="email" autocomplete="email" placeholder="Your email address"><button class="btn" id="go">Sign me up</button></div>
     <p class="small">Free. No password. Unsubscribe in one tap from any email.</p></div>
@@ -115,7 +115,7 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
     hero.hidden = true; is.hidden = false; draw(iss);
     is.parentNode.insertBefore(su, is.nextSibling);   // subscribe box moves to the bottom
     su.querySelector('h2').textContent = '💌 Get the Sunday Update every week';
-        var p = document.createElement('p'); p.style.cssText = 'font-size:14.5px;margin:-4px 0 10px;color:#374151'; p.textContent = 'Enjoyed this? Get UK news for Nigerians, events, a business to support, deals and offers and a tip of the week, free in your inbox every Sunday morning.'; su.querySelector('h2').after(p);
+        var p = document.createElement('p'); p.style.cssText = 'font-size:14.5px;margin:-4px 0 10px;color:#374151'; p.textContent = 'Enjoyed this? Get useful UK updates for Nigerians, upcoming events, Nigerian-owned businesses worth discovering, money-saving deals and a practical tip of the week, delivered FREE to your inbox every Sunday morning! 🇳🇬🇬🇧'; su.querySelector('h2').after(p);
   };
   if (w && /^\d{4}-\d{2}-\d{2}$/.test(w)) post({ action: 'sunday-issue', week: w, k: qs.get('k') || '' }).then(function (x) { webVersion(x.issue); }).catch(function (e) { var is = $('issue'); is.hidden = false; is.innerHTML = '<p style="font-size:15px"><b>📰 ' + esc(e.message) + '</b></p><p class="small">Sign up below and you’ll get the next one on Sunday morning.</p>'; is.parentNode.insertBefore($('signup'), is.nextSibling); document.querySelector('.hero').hidden = true; });
   else if (latest) post({ action: 'sunday-latest' }).then(function (x) { webVersion(x.latest); }).catch(function () {});
