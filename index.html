@@ -5264,6 +5264,8 @@ function showLinksPage() {
       <a href="https://wa.me/447594674940" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#057A44;color:white;text-decoration:none;padding:11px;border-radius:10px;font-weight:800;font-size:13px;">💬 Chat With Us on WhatsApp</a>
     </div>
 
+    ${sundayCardHtml()}
+
   </div>`;
 
   addTipMessage(html);
@@ -6015,6 +6017,23 @@ function showHomeBizTile(){
 }
 
 // ───── 🏠 Home shortcuts row: Businesses · Events · Cards · Market · News ─────
+// 📰 Sunday Update sign-up card (bottom of Home and Links) — uses the same email-code sign-up as My Plan
+function sundayCardHtml(){
+  var sub = false; try { sub = localStorage.getItem('tobi_news_sub') === '1'; } catch (e) {}
+  return '<div data-sunday-card="1" style="background:linear-gradient(150deg,#057A44,#0A5C38);color:#fff;border-radius:16px;padding:16px;margin:4px 0;">'
+    + '<div style="display:inline-block;background:#FFB81C;color:#0F1E36;font-size:11.5px;font-weight:800;border-radius:20px;padding:3px 10px;margin-bottom:8px;">📰 Free every Sunday</div>'
+    + '<div style="font-size:18px;font-weight:800;line-height:1.25;">Auntie Tobi’s Sunday Update</div>'
+    + '<div style="font-size:13.5px;opacity:.92;margin:6px 0 12px;line-height:1.5;">Useful UK updates for Nigerians, upcoming events, Nigerian-owned businesses, money-saving deals and a tip of the week, delivered FREE to your inbox every Sunday morning! 🇳🇬🇬🇧</div>'
+    + (sub
+      ? '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><span style="font-size:13.5px;font-weight:700;">✓ You’re subscribed</span><a href="/sunday-update?latest" target="_blank" rel="noopener" style="background:#fff;color:#057A44;font-weight:800;font-size:13.5px;text-decoration:none;border-radius:10px;padding:8px 13px;">Read the latest →</a></div>'
+      : '<button type="button" onclick="sundaySignup()" style="width:100%;border:0;background:#fff;color:#057A44;font-family:inherit;font-weight:800;font-size:15px;border-radius:12px;padding:12px;cursor:pointer;">💌 Subscribe free</button>')
+    + '</div>';
+}
+function sundaySignup(){
+  try { if (typeof gtag !== 'undefined') gtag('event', 'sunday_card_click', { page: window._currentPage || 'home' }); } catch (e) {}
+  if (window.MyPlan && typeof window.MyPlan.newsSheet === 'function') return window.MyPlan.newsSheet();
+  window.open('/sunday-update', '_blank', 'noopener');
+}
 function showHomeShortcuts(){
   var items = [['🏢','Businesses','showBusinesses(undefined,null,null,true,true)'],['🎉','Events','showEventsCard()'],['💌','Cards',"location.href='/cards'"],['🛍️','Market','showMarketplace()'],['📰','News','showNewsAndUpdates()']];
   addTipMessage('<div class="home-sc">' + items.map(function(x){ return '<button type="button" onclick="' + x[2] + '"><i>' + x[0] + '</i>' + x[1] + '</button>'; }).join('') + '</div>');
@@ -9304,6 +9323,7 @@ function resetToWelcome() {
       const homeFixed = '<button class="suggestion-btn" onclick="window.location.href=\'/business-club\'" style="background:#057A44;color:white;border-color:#057A44;">💚 Join the Business Club</button><button class="suggestion-btn" onclick="window.location.href=\'/business-studio\'" style="background:#0F1E36;color:white;border-color:#0F1E36;">🚀 Business Studio</button><button class="suggestion-btn" onclick="window.location.href=\'/add-business\'" style="background:#FFF4D6;color:#0F1E36;border-color:#FFB81C;">➕ Add your business</button><button class="suggestion-btn" onclick="window.open(\'https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e\',\'_blank\',\'noopener\')" style="background:#25D366;color:white;border-color:#25D366;">📣 Follow Auntie Tobi on WhatsApp Channel</button><button class="suggestion-btn" onclick="showFAQCard()">❓ FAQ about Auntie Tobi</button><button class=\"suggestion-btn\" onclick=\"showLinksPage()\" style=\"background:#e8f5ee;color:#057A44;border-color:#b8e0cb;\">&#128279; Links</button>' + installBtn;
       const homeRotating = homeSuggList.map(s => `<button class="suggestion-btn" onclick="quickAsk('${s.replace(/'/g, "\'")}')">${s}</button>`).join('');
       addTipMessage(`<div class="suggestions" style="margin-top:4px;">${homeFixed}</div>`);   // 🏠 question bubbles removed from Home
+      addTipMessage(sundayCardHtml());   // 📰 Sunday Update sign-up — at the bottom of Home
 
       // Scroll to top so Daily Motivation shows first
       const m2 = document.getElementById('messages');
@@ -10316,7 +10336,7 @@ function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleD
   }, {passive:true});
 })();
 </script>
-<script src="/myplan.js?v=20261115m" defer></script>
+<script src="/myplan.js?v=20261115o" defer></script>
 <script src="/desk.js" defer></script>
 <script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>
