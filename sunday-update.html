@@ -107,8 +107,18 @@ h2{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;m
     $('issue').innerHTML = h;
     document.title = (i.subject ? i.subject + ' · ' : '') + 'Auntie Tobi’s Sunday Update';
   }
-  var w = new URLSearchParams(location.search).get('w');
-  if (w && /^\d{4}-\d{2}-\d{2}$/.test(w)) post({ action: 'sunday-issue', week: w }).then(function (x) { $('issue').hidden = false; draw(x.issue); }).catch(function () {});   // opened from “Read online” — the plain page is just the sign-up
+  // 📰 Web version: /sunday-update?w=2026-11-15 (or ?latest) — the issue first, then “subscribe” at the bottom. The plain page is just the sign-up.
+  var qs = new URLSearchParams(location.search), w = qs.get('w'), latest = qs.has('latest');
+  var webVersion = function (iss) {
+    if (!iss) return;
+    var hero = document.querySelector('.hero'), su = $('signup'), is = $('issue');
+    hero.hidden = true; is.hidden = false; draw(iss);
+    is.parentNode.insertBefore(su, is.nextSibling);   // subscribe box moves to the bottom
+    su.querySelector('h2').textContent = '💌 Get the Sunday Update every week';
+        var p = document.createElement('p'); p.style.cssText = 'font-size:14.5px;margin:-4px 0 10px;color:#374151'; p.textContent = 'Enjoyed this? Get UK news for Nigerians, events, a business to support, deals and offers and a tip of the week, free in your inbox every Sunday morning.'; su.querySelector('h2').after(p);
+  };
+  if (w && /^\d{4}-\d{2}-\d{2}$/.test(w)) post({ action: 'sunday-issue', week: w }).then(function (x) { webVersion(x.issue); }).catch(function () {});
+  else if (latest) post({ action: 'sunday-latest' }).then(function (x) { webVersion(x.latest); }).catch(function () {});
   document.querySelectorAll('img[data-lsrc]').forEach(function (i) { i.src = i.getAttribute('data-lsrc'); });
 })();
 </script>

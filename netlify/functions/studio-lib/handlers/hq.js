@@ -369,7 +369,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'sun-make') { await sunday.make(week, !!body.force); await core.audit(who.email, 'hq_sunday_draft', { week }); }
       if (body.action === 'sun-save') await sunday.save(week, body.issue || {}, who.email);
       if (body.action === 'sun-approve') { await sunday.approve(week, !!body.on, who.email); await core.audit(who.email, body.on ? 'hq_sunday_approve' : 'hq_sunday_unapprove', { week }); }
-      if (body.action === 'sun-test') return sunday.sendTest(week, who.email);
+      if (body.action === 'sun-test') { const to = core.normalizeEmail(body.to || '') || who.email; if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) throw new HttpError(400, 'bad_email', 'That email doesn’t look right.'); return sunday.sendTest(week, to); }   // 📧 test to any address Auntie Tobi types (defaults to her HQ email)
       if (body.action === 'sun-options') return sunday.options(week);
       if (body.action === 'sun-preview' || body.action === 'sun-wa') {
         const issue = await core.getJson('sunday/issue/' + week);
