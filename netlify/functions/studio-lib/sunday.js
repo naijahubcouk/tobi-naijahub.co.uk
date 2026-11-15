@@ -113,6 +113,7 @@ async function save(week, raw, who) {
     if (Array.isArray(raw.events)) cur.events = raw.events.slice(0, 8).map(e => ({ id: cleanText(e.id, 40), title: cleanText(e.title, 160), date: /^\d{4}-\d{2}-\d{2}$/.test(String(e.date)) ? e.date : '', time: cleanText(e.time, 60), loc: cleanText(e.loc, 120), url: /^https?:\/\//.test(String(e.url)) ? String(e.url).slice(0, 400) : '' })).filter(e => e.title);
     if (raw.biz !== undefined) cur.biz = raw.biz && raw.biz.name ? { slug: cleanText(raw.biz.slug, 120), name: cleanText(raw.biz.name, 120), cat: cleanText(raw.biz.cat, 80), loc: cleanText(raw.biz.loc, 80), desc: multi(raw.biz.desc, 400), url: /^https?:\/\//.test(String(raw.biz.url)) ? String(raw.biz.url).slice(0, 400) : '', img: /^https?:\/\//.test(String(raw.biz.img)) ? String(raw.biz.img).slice(0, 500) : '' } : null;
     if (Array.isArray(raw.products)) cur.products = raw.products.slice(0, 4).map(p => ({ id: cleanText(p.id, 40), name: cleanText(p.name, 100), business: cleanText(p.business, 80), price: cleanText(p.price, 24), url: /^https?:\/\//.test(String(p.url)) ? String(p.url).slice(0, 400) : '', img: /^https?:\/\//.test(String(p.img)) ? String(p.img).slice(0, 500) : '' })).filter(p => p.name);
+    if (Array.isArray(raw.extras)) cur.extras = raw.extras.slice(0, 6).map(x => ({ title: cleanText(x && x.title, 80), items: (Array.isArray(x && x.items) ? x.items : []).slice(0, 8).map(t => ({ title: cleanText(t && t.title, 140), text: multi(t && t.text, 600), url: /^https?:\/\//.test(String(t && t.url)) ? String(t.url).slice(0, 400) : '', btn: cleanText(t && t.btn, 30), img: /^https:\/\//.test(String(t && t.img)) ? String(t.img).slice(0, 400) : '' })).filter(t => t.title) })).filter(x => x.title && x.items.length);   // ＋ Auntie Tobi's own sections (shown at the end)
     if (Array.isArray(raw.deals)) cur.deals = raw.deals.slice(0, 6).map(d => ({ title: cleanText(d && d.title, 120), biz: cleanText(d && d.biz, 80), detail: multi(d && d.detail, 300), code: cleanText(d && d.code, 30), until: /^\d{4}-\d{2}-\d{2}$/.test(String(d && d.until)) ? d.until : '', url: /^https?:\/\//.test(String(d && d.url)) ? String(d.url).slice(0, 400) : '' })).filter(d => d.title);   // 🏷️ deals & offers (added by hand in HQ)
     if (cur.status === 'approved') { cur.status = 'draft'; cur.approvedAt = ''; }   // any change after approving needs approving again
     cur.updatedAt = core.nowIso(); cur.editedBy = who || '';
@@ -165,6 +166,7 @@ function render(issue, opts) {
   if ((issue.deals || []).length) h += H('Deals & offers', '🏷️') + issue.deals.map(d => `<div style="border:2px dashed #FFB81C;border-radius:14px;padding:14px 16px;margin-bottom:10px"><b style="font-size:16px">${a(d.url, esc(d.title))}</b>${d.biz ? `<div style="font-size:13.5px;color:#6B7280">${esc(d.biz)}</div>` : ''}${d.detail ? `<div style="font-size:14.5px;margin-top:4px">${esc(d.detail)}</div>` : ''}${d.code || d.until ? `<div style="margin-top:6px;font-size:13.5px">${d.code ? `<span style="background:#FFF4D6;border:1px dashed #FFB81C;border-radius:6px;padding:2px 8px;font-weight:bold">Code: ${esc(d.code)}</span> ` : ''}${d.until ? `<span style="color:#B42318">Ends ${niceDate(d.until)}</span>` : ''}</div>` : ''}</div>`).join('');
   if ((issue.products || []).length) h += H('From the Marketplace', '🛍️') + issue.products.map(p => `<div style="border:2px solid #FFB81C;border-radius:14px;padding:14px 16px;margin-bottom:10px"><b>${a(p.url, esc(p.name))}</b>${p.price ? ` <span style="color:#057A44;font-weight:bold">· ${esc(p.price)}</span>` : ''}<div style="font-size:14px;color:#4B5563">${esc(p.business)}</div></div>`).join('');
   if (issue.tip) h += H('Tip of the week', '💡') + `<div style="background:#FFF4D6;border-radius:14px;padding:12px 16px">${para(issue.tip)}</div>`;
+  (issue.extras || []).forEach(x => { h += H(esc(x.title), '') + x.items.map(t => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px;background:#ffffff;border:1px solid #0F1E36;border-radius:12px"><tr><td style="padding:16px">${t.img ? `<img src="${esc(t.img)}" alt="" width="500" style="width:100%;max-width:500px;border-radius:10px;display:block;margin-bottom:10px">` : ''}<div style="font-size:18px;font-weight:bold;line-height:1.35;color:#0F1E36">${esc(t.title)}</div>${t.text ? `<div style="font-size:16px;line-height:1.65;color:#374151;margin:8px 0 ${t.url ? 12 : 0}px">${para(t.text)}</div>` : ''}${t.url ? `${t.text ? '' : '<div style="height:12px"></div>'}<a href="${esc(t.url)}" style="display:inline-block;background:#057A44;color:#ffffff;font-weight:bold;font-size:15px;text-decoration:none;border-radius:10px;padding:9px 16px">${esc(t.btn || 'Find out more')} →</a>` : ''}</td></tr></table>`).join(''); });
   h += `<p style="margin:24px 0 6px">See you next Sunday,<br><b>Auntie Tobi 💚</b></p><p style="margin:14px 0 0"><a href="https://whatsapp.com/channel/0029VbE21JgE50Un7MSnm50e" style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;font-weight:bold;padding:11px 18px;border-radius:10px">📣 Follow Auntie Tobi on WhatsApp</a></p>`;
   const foot = opts.unsub ? `You’re getting this because you asked for Auntie Tobi’s Sunday Update. <a href="${esc(opts.unsub)}" style="color:#6B7280">Unsubscribe</a>` : 'Preview — the real email has an unsubscribe link here.';
   const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(issue.subject)}</title></head><body style="margin:0;background:#F4F1EA"><div style="max-width:600px;margin:0 auto;padding:24px 14px;font-family:Arial,Helvetica,sans-serif;color:#0F1E36">` +
@@ -178,6 +180,7 @@ function render(issue, opts) {
     ...(issue.biz ? ['', '⭐ BUSINESS OF THE WEEK', `${issue.biz.name} — ${issue.biz.desc} ${issue.biz.url}`] : []),
     ...((issue.products || []).length ? ['', '🛍️ FROM THE MARKETPLACE', ...issue.products.map(p => `- ${p.name}${p.price ? ' · ' + p.price : ''} (${p.business}) ${p.url}`)] : []),
     ...(issue.tip ? ['', '💡 TIP OF THE WEEK', issue.tip] : []),
+    ...[].concat(...(issue.extras || []).map(x => ['', String(x.title).toUpperCase(), ...x.items.map(t => `- ${t.title}${t.text ? ': ' + t.text : ''}${t.url ? ' ' + t.url : ''}`)])),
     '', 'See you next Sunday,', 'Auntie Tobi 💚', '', opts.unsub ? 'Unsubscribe: ' + opts.unsub : ''].join('\n');
   return { subject: emailSubject(issue.week), html, text };   // the email subject is always the newsletter’s name + date; the headline goes inside
 }
@@ -190,6 +193,7 @@ function whatsapp(issue) {
     ...(issue.biz ? ['', `⭐ *Business of the week:* ${issue.biz.name}`, issue.biz.url] : []),
     ...((issue.deals || []).length ? ['', '🏷️ *Deals & offers*', ...issue.deals.map(d => `• ${d.title}${d.biz ? ' — ' + d.biz : ''}${d.code ? ' (code ' + d.code + ')' : ''}${d.url ? '\n' + d.url : ''}`)] : []),
     ...(issue.tip ? ['', '💡 *Tip of the week*', issue.tip] : []),
+    ...[].concat(...(issue.extras || []).map(x => ['', `*${x.title}*`, ...x.items.map(t => `• ${t.title}${t.url ? '\n' + t.url : ''}`)])),
     '', 'Get it by email every Sunday 👉 ' + SITE() + '/sunday-update'].join('\n');
 }
 
@@ -314,7 +318,7 @@ async function issueFor(week, k) {
   if (!ok) throw new HttpError(404, 'not_found', 'That update isn’t available yet.');
   return { issue: publicIssue(i) };
 }
-const publicIssue = i => (prodLinks(i), i) && ({ week: i.week, subject: i.subject, intro: i.intro, tip: i.tip, posts: i.posts || [], events: i.events || [], biz: i.biz || null, deals: i.deals || [], products: i.products || [] });
+const publicIssue = i => (prodLinks(i), i) && ({ week: i.week, subject: i.subject, intro: i.intro, tip: i.tip, posts: i.posts || [], events: i.events || [], biz: i.biz || null, deals: i.deals || [], products: i.products || [], extras: i.extras || [] });
 
 // ───── HQ ─────
 async function forHq(week) {
