@@ -43,12 +43,22 @@ function doPost(e) {
       for (let r = 1; r < data.length; r++) { const s = String(data[r][iSlug]); if (s in want) want[s] = String(data[r][iStatus] || ''); }
       return out({ ok: true, status: want });
     }
+    if (b.action === 'stamp') {   // fills EMPTY Created At / Updated At on the rows HQ added — nothing else is touched
+      const iC = head.indexOf('Created At'), iU = head.indexOf('Updated At'), want = {}, now = new Date().toISOString(); let n = 0;
+      (b.slugs || []).forEach(s => { want[s] = 1; });
+      for (let r = 1; r < data.length; r++) {
+        if (!want[String(data[r][iSlug])]) continue;
+        [iC, iU].forEach(c => { if (c > -1 && !data[r][c]) { sh.getRange(r + 1, c + 1).setNumberFormat('@').setValue(now); n++; } });
+      }
+      return out({ ok: true, stamped: n });
+    }
     if (b.action === 'add') {
       const slugs = {}, names = {}; for (let r = 1; r < data.length; r++) { slugs[String(data[r][iSlug])] = 1; names[norm(data[r][iName])] = 1; }
       const added = [], skipped = [];
       (b.rows || []).forEach(row => {
         if (slugs[row.Slug] || names[norm(row.Name)]) { skipped.push(row.Slug); return; }
         sh.appendRow(head.map(h => row[h] != null ? row[h] : ''));
+        ['Created At', 'Updated At'].forEach(h => { const c = head.indexOf(h); if (c > -1 && row[h]) sh.getRange(sh.getLastRow(), c + 1).setNumberFormat('@').setValue(row[h]); });
         slugs[row.Slug] = 1; names[norm(row.Name)] = 1; added.push(row.Slug);
       });
       return out({ ok: true, added: added, skipped: skipped });
@@ -109,6 +119,9 @@ async function sync(who) {
     }
     const wait = onSheet(all);
     if (wait.length) {
+      // fill the blank Created At / Updated At on rows HQ added earlier (needs the latest script; harmless otherwise)
+      try { await call(c.url, { action: 'stamp', slugs: wait.map(b => b.slug) }); if (c.oldScript) await cas(KEY, cur => Object.assign(cur || {}, { oldScript: false })); }
+      catch (e) { if (/unknown action/.test(e.message)) await cas(KEY, cur => Object.assign(cur || {}, { oldScript: true })); }
       const st = (await call(c.url, { action: 'status', slugs: wait.map(b => b.slug) })).status || {};
       const pub = wait.filter(b => /^PUBLISHED$/i.test(String(st[b.slug] || '').trim())).map(b => b.slug);
       if (pub.length) { await bizdir.markUploaded(pub, core.nowIso()); live = pub.length;
@@ -124,7 +137,7 @@ async function sync(who) {
 
 async function status() {
   const c = await cfg(), all = await bizdir.all();
-  return { connected: !!c.url, url: c.url ? c.url.replace(/\/exec.*$/, '/exec') : '', connectedAt: c.connectedAt || '', lastSync: c.lastSync || '', lastError: c.lastError || '',
+  return { connected: !!c.url, url: c.url ? c.url.replace(/\/exec.*$/, '/exec') : '', connectedAt: c.connectedAt || '', lastSync: c.lastSync || '', lastError: c.lastError || '', oldScript: !!c.oldScript,
     waiting: toSend(all).length, pending: onSheet(all).map(b => ({ slug: b.slug, name: b.name, at: b.sheetAt })), script: script() };
 }
 async function connect(url, who) {
