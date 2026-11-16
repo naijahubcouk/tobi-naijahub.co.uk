@@ -124,6 +124,7 @@ function normalise(b) {
   if (Array.isArray(b.tags) && b.tags.length) out.tags = b.tags.map(t => str(t, 40)).filter(Boolean).slice(0, 10);
   if (isFinite(+b.lat) && isFinite(+b.lng) && b.lat !== '' && b.lat != null && +b.lat !== 0) { out.lat = +b.lat; out.lng = +b.lng; }
   if (b.uploadedAt) out.uploadedAt = str(b.uploadedAt, 40);   // HQ-added business already put in a website CSV
+  if (b.sheetAt) out.sheetAt = str(b.sheetAt, 40);         // 🌐 sent to the website's Google Sheet as PENDING (waiting for review there)
   // ➕ added / claimed by the owner (app "Add your business" or Business Studio) — private, never in the public list
   if (b.imgFrom && /^https:\/\//.test(String(b.imgFrom))) out.imgFrom = str(b.imgFrom, 600);   // the website photo our copy (img) came from
   if (b.ownerEmail) out.ownerEmail = str(b.ownerEmail, 120).toLowerCase();
@@ -150,7 +151,7 @@ function protectOwner(o, m) {
 function waitingSite(b) { return b.src === 'hq' && !b.uploadedAt && !b.appNow && (!!b.awaitSite || /Found by the Business Finder/.test(b.notes || '')); }
 // ── public list for the app and the chat (no emails, no admin details) ──
 async function publicList() {
-  return (await all()).filter(b => !b.hidden && b.status !== 'pending' && !waitingSite(b)).map(b => {
+  return (await all()).filter(b => !b.hidden && b.status !== 'pending').map(b => {
     const o = {}; for (const k of PUBLIC.concat(b.featured ? FEATURED_EXTRA : [])) if (b[k] !== undefined && b[k] !== '' && b[k] !== false && !(Array.isArray(b[k]) && !b[k].length)) o[k] = b[k];
     if (b.imgFrom) { o.img = b.imgFrom; o.imgCopy = b.img; }   // the website's own photo first; Auntie Tobi's copy if it doesn't load
     return o;
@@ -269,6 +270,12 @@ async function markUploaded(slugs, at) {
   await cas(KEY, cur => { if (!cur || !Array.isArray(cur.items)) return undefined; cur.items = cur.items.map(b => set.has(b.slug) ? Object.assign({}, b, { uploadedAt: at }) : b); return cur; });
   forget();
 }
+// 🌐 sent to the website's Google Sheet (websheet.js)
+async function markSheet(slugs, at) {
+  const set = new Set(slugs);
+  await cas(KEY, cur => { if (!cur || !Array.isArray(cur.items)) return undefined; cur.items = cur.items.map(b => set.has(b.slug) ? Object.assign({}, b, { sheetAt: at }) : b); return cur; });
+  forget();
+}
 async function info() { const rec = await getJson(KEY).catch(() => null); return { saved: !!(rec && rec.items), at: rec && rec.at || '', lastImport: rec && rec.lastImport || '' }; }
 
-module.exports = { protectOwner, OWNER_FIELDS, nameKey, townFrom, waNumber, igHandle, waitingSite, fbUrl, ttUrl, markUploaded, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
+module.exports = { protectOwner, OWNER_FIELDS, nameKey, townFrom, waNumber, igHandle, waitingSite, fbUrl, ttUrl, markUploaded, markSheet, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };

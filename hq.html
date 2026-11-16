@@ -1519,11 +1519,12 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
   }
   // 🔎 Business Finder — weekly search for Nigerian businesses in the UK; approve → app + website CSV
   var FIND_TABS = { 'new': 'To review', approved: 'Approved', skipped: 'Skipped', uploaded: 'On the website' };
-  function findAgo(iso) { if (!iso) return 'not yet'; var m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+  function findAgo(iso) { if (!iso) return 'not yet'; var m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
   function vFind() {
     $('#ttl').textContent = 'Business Finder';
-    $('#topRight').innerHTML = '<button class="btn ghost" id="fQuick">⚡ Quick add</button> <button class="btn primary" id="fCsv">⬇️ Website CSV</button>';
+    $('#topRight').innerHTML = '<button class="btn ghost" id="fQuick">⚡ Quick add</button> <button class="btn ghost" id="fCsv" title="Backup: download a file for the website">⬇️ Website CSV</button>';
     $('#fQuick').onclick = findQuick; $('#fCsv').onclick = findCsv;
+    if (!S.web && !S.webLoading) { S.webLoading = 1; api('web-status').then(function (r) { S.web = r; S.webLoading = 0; if (S.view === 'find') vFind(); }, function () { S.webLoading = 0; }); }
     if (!S.find) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading the Finder…</p></div>'; api('find-list').then(function (r) { S.find = r.finder; if (S.view === 'find') vFind(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
     var F = S.find, tab = S.findTab || 'new', items = F.items || [];
     var n = function (st) { return items.filter(function (x) { return x.status === st; }).length; };
@@ -1535,10 +1536,10 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       '<div class="muted" style="font-size:13px">' + n('new') + ' waiting · ' + F.queue + ' searches left this week · last search ' + esc(findAgo(F.lastRun)) + '</div></div>' +
       '<div style="height:10px;background:#EEF0F3;border-radius:6px;margin:10px 0 12px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#057A44"></div></div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn ghost" id="fMore">▶️ Find more now</button><span class="muted" style="font-size:12.5px">Searches also run by themselves every Monday morning. Each search costs about 1p.</span></div>' +
-      (F.toUpload ? '<div class="note" style="margin-top:12px">⬇️ <b>' + F.toUpload + '</b> approved business' + (F.toUpload === 1 ? ' is' : 'es are') + ' waiting for the website (hidden from the app until then) — tap <b>Website CSV</b> to download them, upload them to the website, then mark them uploaded.</div>' : '') + '</div>' +
+      webStrip(F) + '</div>' +
       '<div class="chipbar" id="fTabs" style="margin-bottom:8px">' + Object.keys(FIND_TABS).map(function (k) { return '<button class="chip" data-t="' + k + '" aria-pressed="' + (k === tab) + '">' + FIND_TABS[k] + ' (' + n(k) + ')</button>'; }).join('') + '</div>' +
       (list.length ? list.slice(0, 200).map(findCard).join('') : '<div class="card"><p class="muted" style="padding:6px 0">' + (tab === 'new' ? 'Nothing waiting. Tap <b>▶️ Find more now</b> or <b>⚡ Quick add</b>.' : 'Nothing here yet.') + '</p></div>') + '</div>';
-    $$('#fTabs [data-t]').forEach(function (b) { b.onclick = function () { S.findTab = b.dataset.t; vFind(); }; });
+    $$('#fTabs [data-t]').forEach(function (b) { b.onclick = function () { S.findTab = b.dataset.t; vFind(); }; }); wireWeb();
     $('#fMore').onclick = async function () {
       this.disabled = true; this.textContent = '🔎 Searching… (up to 30s)';
       try { var r = await api('find-more'); S.find = r.finder; var got = (r.ran || []).reduce(function (a, x) { return a + (x.added || 0); }, 0); toast(r.ran && r.ran.length ? (got ? '🆕 ' + got + ' new to review' : 'No new businesses in that search — try again') + ' · ' + r.ran[0].query : 'Nothing left to search'); vFind(); }
@@ -1571,7 +1572,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     if (decision === 'approve') edits = Object.assign({}, edits || {}, { fallbackImg: bizCard(Object.assign({}, c, edits || {})) });
     var btnTxt = btn && btn.textContent; if (btn && decision === 'approve') btn.textContent = '✍️ Writing the listing…';
     if (edits && (edits.imgData || edits.imgNone)) delete S.findPics[c.id];
-    try { var r = await api('find-decide', { id: c.id, decision: decision, edits: edits }); S.find = r.finder; S.dir = null; toast(decision === 'approve' ? '✅ ' + c.name + ' approved — it shows in the app once it’s on the website' : decision === 'edit' ? 'Saved' : 'Skipped'); vFind(); return true; }
+    try { var r = await api('find-decide', { id: c.id, decision: decision, edits: edits }); S.find = r.finder; S.dir = null; if (decision === 'approve') S.web = null; toast(decision === 'approve' ? '✅ ' + c.name + ' approved — it’s in the app now' : decision === 'edit' ? 'Saved' : 'Skipped'); vFind(); return true; }
     catch (x) { if (btn) { btn.disabled = false; btn.textContent = btnTxt; } toast(x.message); return false; }
   }
   function findEdit(c) {
@@ -1629,6 +1630,55 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       running = false; ta.disabled = false; okBtn.disabled = false; okBtn.textContent = '👀 See To review'; $('#fqX', s).textContent = 'Close';
       $('#fqN', s).innerHTML = '<b>Done' + (stop && i < list.length ? ' (stopped)' : '') + ':</b> ' + added + ' added to To review · ' + there + ' already there' + (failed ? ' · ' + failed + ' not found' : '');
       okBtn.onclick = function () { S.findTab = 'new'; s.remove(); vFind(); };
+    };
+  }
+  // 🌐 Website sync — approved businesses go to the website's Google Sheet as PENDING; HQ notices when they're published
+  function webStrip(F) {
+    var W = S.web;
+    if (!W) return '';
+    var box = function (inner) { return '<div style="margin-top:12px;border:1.5px solid #CFE3D8;background:#F3FAF6;border-radius:12px;padding:10px 12px;font-size:13.5px">' + inner + '</div>'; };
+    if (!W.connected) return box('🌐 <b>Send approved businesses to the website by themselves</b><div class="muted" style="font-size:13px;margin:2px 0 8px">They arrive as <b>Pending</b> so you can check them before they go live. One-time setup, about 5 minutes.</div><button class="btn primary" id="wSet">Set it up</button>' +
+      (F.toUpload ? '<div class="muted" style="font-size:12.5px;margin-top:8px">Until then: ' + F.toUpload + ' waiting — use <b>⬇️ Website CSV</b>.</div>' : ''));
+    var p = W.pending || [];
+    return box('<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div>🌐 <b>Website sync is on</b> <span class="muted" style="font-size:12.5px">· checked ' + esc(findAgo(W.lastSync)) + '</span></div><div class="row" style="gap:6px"><button class="btn ghost" id="wNow">🔄 Sync now</button><button class="btn ghost" id="wSet">⚙️</button></div></div>' +
+      '<div style="margin-top:6px">' + (W.waiting ? '📤 <b>' + W.waiting + '</b> about to go to the website · ' : '') + '⏳ <b>' + p.length + '</b> pending on the website' + (p.length ? ' — open your directory, check them and tap <b>Publish</b>' : '') + '</div>' +
+      (p.length ? '<div class="muted" style="font-size:12.5px;margin-top:4px">' + p.slice(0, 12).map(function (x) { return esc(x.name); }).join(', ') + (p.length > 12 ? ' and ' + (p.length - 12) + ' more' : '') + '</div>' : '') +
+      (W.lastError ? '<div class="err" style="margin-top:8px">⚠️ ' + esc(W.lastError) + '</div>' : '') +
+      '<div class="muted" style="font-size:12px;margin-top:6px">The website picks up new rows every 2 hours. Once you publish one, HQ marks it “On the website” and its “You’re listed” email waits for you to send.</div>');
+  }
+  function wireWeb() {
+    if ($('#wSet')) $('#wSet').onclick = webSetup;
+    if ($('#wNow')) $('#wNow').onclick = async function () {
+      this.disabled = true; this.textContent = '🔄 Syncing…';
+      try { var r = await api('web-sync'); S.web = r; var y = r.synced || {}; toast((y.sent ? '📤 ' + y.sent + ' sent as Pending' : 'Nothing new to send') + (y.live ? ' · ✅ ' + y.live + ' now on the website' : '') + (y.skipped ? ' · ' + y.skipped + ' already there' : '')); S.find = null; vFind(); }
+      catch (x) { S.web = null; toast(x.message); vFind(); }
+    };
+  }
+  function webSetup() {
+    var W = S.web || {};
+    var s = sheet('<h2>🌐 Website sync</h2><p class="muted" style="margin:4px 0 12px">Approved businesses go into your <b>Auntie Tobi - Listings</b> Google Sheet as <b>Pending</b>. Your directory website picks them up from there, and you publish them when you’re happy. HQ only ever <b>adds</b> new rows — it never changes or deletes yours.</p>' +
+      '<ol style="margin:0 0 12px 18px;padding:0;font-size:14px;line-height:1.65">' +
+      '<li>Open the <b>Auntie Tobi - Listings</b> Google Sheet.</li>' +
+      '<li>Click <b>Extensions → Apps Script</b>.</li>' +
+      '<li>Delete what’s there, then paste the code below (tap <b>Copy code</b>) and click 💾 <b>Save</b>.</li>' +
+      '<li>Click <b>Deploy → New deployment</b>. Click ⚙️ next to “Select type” and choose <b>Web app</b>.</li>' +
+      '<li>Set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>, then click <b>Deploy</b>. Google asks you to allow access — click through and allow it (if it says “Google hasn’t verified this app”, click <b>Advanced → Go to … (unsafe)</b>; it’s your own script).</li>' +
+      '<li>Copy the <b>Web app URL</b> and paste it below.</li></ol>' +
+      '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:13.5px">The code</b><button class="btn ghost" id="wsCp">📋 Copy code</button></div>' +
+      '<textarea id="wsCode" readonly style="width:100%;height:110px;font:12px/1.4 ui-monospace,Menlo,monospace;border:1px solid #E2DDD0;border-radius:10px;padding:8px;background:#FAFAF7">' + esc(W.script || '') + '</textarea>' +
+      '<label style="display:block;font-weight:700;font-size:13.5px;margin:12px 0 6px">Web app URL</label><input id="wsUrl" placeholder="https://script.google.com/macros/s/…/exec" value="' + esc(W.url || '') + '" style="width:100%">' +
+      '<div class="err" id="wsErr" style="display:none;margin-top:8px"></div>' +
+      '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:14px">' + (W.connected ? '<button class="btn ghost" id="wsOff">Turn off</button>' : '<span></span>') + '<div class="row" style="gap:8px"><button class="btn ghost" id="wsX">Close</button><button class="btn primary" id="wsGo">' + (W.connected ? 'Save' : 'Connect') + '</button></div></div>');
+    var e = $('#wsErr', s), fail = function (m) { e.textContent = m; e.style.display = 'block'; };
+    $('#wsX', s).onclick = function () { s.remove(); };
+    $('#wsCp', s).onclick = function () { copy($('#wsCode', s).value, 'Code copied — paste it in Apps Script'); };
+    if ($('#wsOff', s)) $('#wsOff', s).onclick = async function () { if (!confirm('Stop sending businesses to the website?')) return; try { S.web = await api('web-off'); s.remove(); toast('Website sync turned off'); vFind(); } catch (x) { fail(x.message); } };
+    $('#wsGo', s).onclick = async function () {
+      var u = $('#wsUrl', s).value.trim(); e.style.display = 'none';
+      if (!/^https:\/\/script\.google/.test(u)) { fail('Paste the Web app URL — it starts with https://script.google.com/'); return; }
+      this.disabled = true; this.textContent = 'Checking…';
+      try { S.web = await api('web-connect', { url: u }); s.remove(); toast('✅ Connected to your Google Sheet (' + ((S.web.joined && S.web.joined.rows) || 0) + ' listings found)'); vFind(); }
+      catch (x) { this.disabled = false; this.textContent = 'Connect'; fail(x.message); }
     };
   }
   async function findCsv() {
@@ -1930,7 +1980,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (a.listed.length ? '<div class="card" style="margin-bottom:12px;border:2px solid var(--gold)"><b>🆕 New business series — email 1 “You’re listed” (' + a.listed.length + ')</b><div class="muted" style="font-size:13px;margin:2px 0 8px">These are now on the website. Sending email 1 starts their <b>New business</b> series: <b>Club invite</b> 2 days later and <b>Club benefits</b> on day 5 (both wait in 📧 Outreach for you to tap Send). Nothing is sent until you press send.</div>' +
         a.listed.map(function (b) { return '<div style="font-size:14px;padding:3px 0">• <b>' + esc(b.name) + '</b> — ' + esc(b.ownerName || '') + ' ' + esc(b.email) + ' <span class="muted" style="font-size:12px">' + (b.via === 'website' ? '· 🌐 signed up on the website' : '· 📱 added in the app') + '</span> <button class="btn ghost sm" data-abpv="biz.listed" data-slug="' + esc(b.slug) + '" style="padding:2px 8px;font-size:12px">👀</button></div>'; }).join('') +
         '<div class="apact" style="margin-top:10px"><button class="btn ghost sm" data-abpv="biz.listed" data-slug="' + esc(a.listed[0].slug) + '">👀 Preview the email</button><button class="btn primary sm" id="abSendListed">📧 Send email 1 & start series' + (a.listed.length > 1 ? ' (' + a.listed.length + ')' : '') + '</button></div></div>' : '') +
-      (a.waitingCsv.length ? '<div class="card" style="margin-bottom:12px"><b>⏳ In the app, waiting for your Website CSV (' + a.waitingCsv.length + ')</b><div class="muted" style="font-size:13px;margin-top:2px">' + a.waitingCsv.map(function (b) { return esc(b.name); }).join(', ') + '</div><div class="muted" style="font-size:13px;margin-top:6px">Download the CSV in 🔎 Business Finder, upload it to your directory website, then tap “Mark as uploaded”.</div></div>' : '') +
+      (a.waitingCsv.length ? '<div class="card" style="margin-bottom:12px"><b>⏳ In the app, on its way to the website (' + a.waitingCsv.length + ')</b><div class="muted" style="font-size:13px;margin-top:2px">' + a.waitingCsv.map(function (b) { return esc(b.name); }).join(', ') + '</div><div class="muted" style="font-size:13px;margin-top:6px">With 🌐 Website sync on (in 🔎 Business Finder) these go to your directory as Pending by themselves — publish them there. Without it, use the Website CSV.</div></div>' : '') +
       (a.ownerEdits.length ? '<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer"><b>✏️ Changes to copy to the website (' + a.ownerEdits.length + ')</b> <span class="muted" style="font-size:13px">— live in the app already</span></summary>' +
         a.ownerEdits.map(function (b) { return '<div style="font-size:13.5px;margin-top:10px"><b>' + esc(b.name) + '</b> <a href="https://directory.auntietobi.co.uk/' + esc(b.slug) + '" target="_blank" rel="noopener">website ↗</a>' + Object.keys(b.values).map(function (k) { return '<div class="muted">• ' + esc({ desc: 'Description', long: 'Detailed description', wa: 'WhatsApp', img: 'Photo', ig: 'Instagram', loc: 'Town', addr: 'Address', cat: 'Category', fb: 'Facebook', tt: 'TikTok', email: 'Email', phone: 'Phone', website: 'Website' }[k] || k) + ': ' + (k === 'img' ? '<a href="' + esc(b.values[k]) + '" target="_blank" rel="noopener">new photo</a>' : esc(String(b.values[k]).slice(0, 200)) + (String(b.values[k]).length > 200 ? '…' : '') + ' <button type="button" class="btn ghost sm" data-cpy="' + esc(String(b.values[k])) + '" style="padding:1px 8px;font-size:12px">📋 Copy</button>') + '</div>'; }).join('') + '</div>'; }).join('') +
         '<div class="muted" style="font-size:12.5px;margin-top:10px">Each one disappears from here by itself once the website shows the same thing.</div></details>' : '') +

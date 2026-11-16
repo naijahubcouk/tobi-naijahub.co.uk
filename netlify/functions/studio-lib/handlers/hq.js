@@ -446,6 +446,7 @@ exports.handler = handler(async (ctx) => {
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const ab = require('../addbiz');
       if (body.action === 'abiz-review') await ab.review(String(body.id || ''), body.decision === 'approve' ? 'approve' : 'decline', body.edits || null, who.email);
+      if (body.action === 'abiz-review' && body.decision === 'approve') await require('../websheet').soon(who.email);   // 🌐 on to the website as PENDING
       if (body.action === 'abiz-delete') await ab.removeSub(String(body.id || ''));
       if (body.action === 'abiz-listed') { const r = await ab.sendListed(Array.isArray(body.slugs) ? body.slugs : null, who.email); await core.audit(who.email, 'hq_addbiz_listed', r); return Object.assign(await ab.hqList(), { sentNow: r.sent }); }
       if (body.action === 'abiz-preview') return { mail: await ab.previewEmail(String(body.id || ''), String(body.slug || '')) };
@@ -618,6 +619,16 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
       return await emails.list();
     }
+    case 'web-status': case 'web-connect': case 'web-off': case 'web-sync': {
+      // 🌐 Website sync — approved businesses go to the website's Google Sheet as PENDING (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const ws = require('../websheet');
+      let note = null;
+      if (body.action === 'web-connect') { note = { joined: await ws.connect(String(body.url || ''), who.email) }; await core.audit(who.email, 'hq_websheet_connect', {}); }
+      if (body.action === 'web-off') await ws.disconnect();
+      if (body.action === 'web-sync') { await core.rateLimit('hq-websync', who.email, 60, 3600000, 'That’s a lot of syncs — try again in a little while.'); note = { synced: await ws.sync(who.email) }; }
+      return Object.assign(await ws.status(), note || {});
+    }
     case 'find-img': case 'find-list': case 'find-more': case 'find-quick': case 'find-decide': case 'find-csv': case 'find-uploaded': {
       // 🔎 Business Finder (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use the Business Finder.');
@@ -626,7 +637,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'find-img') return await finder.pictureFor(String(body.id || ''));
       if (body.action === 'find-more') note = { ran: await finder.more() };
       if (body.action === 'find-quick') { await core.rateLimit('hq-findq', who.email, 80, 3600000, 'That’s a lot of quick adds — try again in an hour.'); note = { ran: [await finder.quickAdd(String(body.input || ''))] }; }
-      if (body.action === 'find-decide') { const c = await finder.decide(String(body.id || ''), String(body.decision || ''), body.edits || null, who.email); await core.audit(who.email, 'hq_find_' + body.decision, { name: c.name }); }
+      if (body.action === 'find-decide') { const c = await finder.decide(String(body.id || ''), String(body.decision || ''), body.edits || null, who.email); await core.audit(who.email, 'hq_find_' + body.decision, { name: c.name }); if (body.decision === 'approve') await require('../websheet').soon(who.email); }
       if (body.action === 'find-csv') return await finder.exportCsv();
       if (body.action === 'find-uploaded') { const n = await finder.markUploaded(); await core.audit(who.email, 'hq_find_uploaded', { n }); }
       return Object.assign({ finder: await finder.summary() }, note || {});
