@@ -88,6 +88,7 @@ function row(b) {
     Status: 'PENDING', 'Is Featured': 'No', 'Exempt From Automation': 'No', 'Admin Note': 'Added by Auntie Tobi HQ ' + core.nowIso().slice(0, 10),
     'SEO Title': b.name, 'SEO Description': short, 'SEO Keywords': tags, 'Focus Keyword': String(b.name || '').toLowerCase(), 'OG Title': b.name, 'OG Description': short,
     'Twitter Title': b.name, 'Twitter Description': short, 'Twitter Card': 'summary_large_image', 'Schema Type': 'LocalBusiness',
+    'Created At': new Date().toISOString(), 'Updated At': new Date().toISOString(),   // the website's own rows always have these
   };
 }
 // approved in HQ and not on the website yet
