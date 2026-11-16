@@ -323,6 +323,10 @@ exports.handler = handler(async (ctx) => {
           raw.gallery = keep.concat(added);
         }
         delete raw.galleryAdd;
+        // ⭐ Featured / Verified ticked in HQ stick (the website sync won't undo them)
+        { const old = (await bizdir.all()).find(x => x.slug === (raw.origSlug || raw.slug));
+          if (old && typeof raw.featured === 'boolean' && raw.featured !== !!old.featured) raw.featSet = raw.featured;
+          if (old && typeof raw.verified === 'boolean' && raw.verified !== !!old.verified) raw.verSet = raw.verified; }
         // ✏️ changed a listing that's on the directory website → keep your words (the website sync won't overwrite them) and list them under “Changes to copy to the website”
         { const old = (await bizdir.all()).find(x => x.slug === (raw.origSlug || raw.slug));
           if (old && (old.src === 'website' || old.uploadedAt)) {
@@ -618,6 +622,17 @@ exports.handler = handler(async (ctx) => {
       }
       if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
       return await emails.list();
+    }
+    case 'spot-list': case 'spot-set': case 'spot-order': {
+      // ⭐ Spotlight — Featured / Verified / Home & Links carousel (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change this.');
+      const bizdir = require('../bizdir');
+      if (body.action === 'spot-set') { const p = body.set || {}, ok = {}; for (const k of ['featured', 'verified', 'home', 'pin']) if (typeof p[k] === 'boolean') ok[k] = p[k];
+        await bizdir.spotSet(String(body.slug || ''), ok, who.email); await core.audit(who.email, 'hq_spotlight', Object.assign({ slug: body.slug }, ok)); }
+      if (body.action === 'spot-order') await bizdir.spotOrder((Array.isArray(body.slugs) ? body.slugs : []).map(String).slice(0, 100));
+      const items = (await bizdir.all()).filter(b => b.status !== 'pending').map(b => ({ slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, img: b.img || '', carImg: b.carImg || '', desc: String(b.short || b.desc || '').slice(0, 140), lines: b.lines,
+        featured: !!b.featured, verified: !!b.verified, home: !b.carOff, rank: b.carRank || 0, hidden: !!b.hidden, mine: typeof b.featSet === 'boolean' || typeof b.verSet === 'boolean' }));
+      return { items };
     }
     case 'web-status': case 'web-connect': case 'web-off': case 'web-sync': {
       // 🌐 Website sync — approved businesses go to the website's Google Sheet as PENDING (admin only)

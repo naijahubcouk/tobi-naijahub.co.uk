@@ -19,7 +19,7 @@ try { seed = require('../dir-seed.json'); } catch (_) { seed = []; }
 const KEY = 'dir/list';
 const OURS = /^(favour adentan|auntie tobi)$/i;           // listings we created = unclaimed
 // Featured businesses (Business Club) also show every way to reach them, the full description and their photos
-const FEATURED_EXTRA = ['carImg', 'email', 'phone', 'website', 'fb', 'tt', 'long', 'gallery', 'addr'];
+const FEATURED_EXTRA = ['carOff', 'carRank', 'carImg', 'email', 'phone', 'website', 'fb', 'tt', 'long', 'gallery', 'addr'];
 const PUBLIC = ['name', 'slug', 'cat', 'loc', 'desc', 'ig', 'wa', 'featured', 'verified', 'img', 'lines', 'shop', 'book', 'label', 'text'];
 const COMPARE = ['name', 'cat', 'loc', 'desc', 'ig', 'wa', 'phone', 'email', 'website', 'featured', 'verified', 'claimed'];
 const FIELD_NAMES = { name: 'name', cat: 'category', loc: 'town', desc: 'description', ig: 'Instagram', wa: 'WhatsApp', phone: 'phone', email: 'email', website: 'website', featured: 'Featured', verified: 'Verified', claimed: 'claimed' };
@@ -31,13 +31,15 @@ const IMG_UPDATES = {
 };
 // One-off changes to the saved directory, each done once (Seun can change them back in HQ afterwards)
 const ONCE = [{ id: 'refeature-funmis-2026-11', slug: 'funmis-treasure', set: { featured: true } },   // she stays Featured; only the app carousel leaves her out
+  { id: 'car-off-funmis-2026-11', slug: 'funmis-treasure', set: { carOff: true } },   // these two were left out of the carousel in the app code — now a Spotlight switch
+  { id: 'car-off-tombell-2026-11', slug: 'tombell-education-consultancy-ltd', set: { carOff: true } },
   { id: 'xander-flyer-2026-11', slug: 'xander-afritrade-ltd', set: { carImg: 'https://naijabiz.b-cdn.net/uploads/ChatGPT%20Image%20Sep%2020%2C%202026%2C%2006_55_54%20PM.png' } }];   // their flyer in the Featured carousel   // she stays Featured; only the app carousel leaves her out
 async function runOnce(rec) {
   if (!rec || !Array.isArray(rec.items)) return rec;
   const done = (await getJson('dir/once').catch(() => null)) || {};
   const todo = ONCE.filter(o => !done[o.id]);
   if (!todo.length) return rec;
-  await cas(KEY, cur => { if (!cur || !Array.isArray(cur.items)) return undefined; cur.items = cur.items.map(b => { const o = todo.find(t => t.slug === b.slug); return o ? Object.assign({}, b, o.set) : b; }); return cur; });
+  await cas(KEY, cur => { if (!cur || !Array.isArray(cur.items)) return undefined; cur.items = cur.items.map(b => todo.filter(t => t.slug === b.slug).reduce((x, t) => Object.assign({}, x, t.set), b)); return cur; });
   for (const o of todo) done[o.id] = core.nowIso();
   await core.setJson('dir/once', done);
   return getJson(KEY).catch(() => rec);
@@ -118,6 +120,11 @@ function normalise(b) {
   if (fbUrl(b.fb)) out.fb = fbUrl(b.fb);
   if (ttUrl(b.tt)) out.tt = ttUrl(b.tt);
   if (/^(https:\/\/|\/)/.test(String(b.carImg || ''))) out.carImg = str(b.carImg, 400);   // 🎠 picture used only in the Featured carousel (e.g. their flyer)
+  // ⭐ Spotlight (HQ): Auntie Tobi's own Featured / Verified ticks win over the website sync; carousel choices are app-only
+  if (typeof b.featSet === 'boolean') { out.featSet = b.featSet; out.featured = b.featSet; }
+  if (typeof b.verSet === 'boolean') { out.verSet = b.verSet; out.verified = b.verSet; }
+  if (b.carOff) out.carOff = true;                                     // Featured, but left out of the Home & Links carousel
+  if (b.carRank != null && b.carRank !== '' && isFinite(+b.carRank) && +b.carRank > 0) out.carRank = +b.carRank;   // 📌 pinned to the front of the carousel, in this order
   if (b.short) out.short = str(b.short, 200);
   if (b.long) out.long = String(b.long).replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 4000);   // full description (website "detailed description")
   if (Array.isArray(b.gallery) && b.gallery.length) out.gallery = b.gallery.map(u => str(u, 300)).filter(u => /^https:\/\//.test(u)).slice(0, 6);                    // one-line description (website "description")
@@ -264,6 +271,31 @@ async function remove(slug, who) {
   });
   forget();
 }
+// ⭐ Spotlight: change one business's Featured / Verified / carousel switches (they stick through the website sync)
+async function spotSet(slug, p, who) {
+  let hit = null;
+  await cas(KEY, cur => {
+    if (!cur || !Array.isArray(cur.items)) return undefined;
+    cur.items = cur.items.map(b => {
+      if (b.slug !== slug) return b;
+      const n = Object.assign({}, b);
+      if (typeof p.featured === 'boolean') { n.featSet = p.featured; if (!p.featured) delete n.carRank; }
+      if (typeof p.verified === 'boolean') n.verSet = p.verified;
+      if (typeof p.home === 'boolean') { if (p.home) delete n.carOff; else { n.carOff = true; delete n.carRank; } }
+      if (typeof p.pin === 'boolean') { if (p.pin) n.carRank = 1 + cur.items.reduce((m, x) => Math.max(m, x.carRank || 0), 0); else delete n.carRank; }
+      hit = normalise(n); hit.updatedAt = core.nowIso(); return Object.assign({}, b, hit, n.carRank ? {} : { carRank: undefined }, n.carOff ? {} : { carOff: undefined });
+    });
+    cur.at = core.nowIso(); cur.by = who; return cur;
+  });
+  if (!hit) throw new HttpError(404, 'not_found', 'That business isn’t in the directory.');
+  forget(); return hit;
+}
+// 📌 the order of the pinned carousel businesses
+async function spotOrder(slugs) {
+  const pos = new Map(slugs.map((s, i) => [s, i + 1]));
+  await cas(KEY, cur => { if (!cur || !Array.isArray(cur.items)) return undefined; cur.items = cur.items.map(b => b.carRank && pos.has(b.slug) ? Object.assign({}, b, { carRank: pos.get(b.slug) }) : b); return cur; });
+  forget();
+}
 // HQ-added businesses that have gone into a website CSV (so they're not exported twice)
 async function markUploaded(slugs, at) {
   const set = new Set(slugs);
@@ -278,4 +310,4 @@ async function markSheet(slugs, at) {
 }
 async function info() { const rec = await getJson(KEY).catch(() => null); return { saved: !!(rec && rec.items), at: rec && rec.at || '', lastImport: rec && rec.lastImport || '' }; }
 
-module.exports = { protectOwner, OWNER_FIELDS, nameKey, townFrom, waNumber, igHandle, waitingSite, fbUrl, ttUrl, markUploaded, markSheet, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
+module.exports = { protectOwner, OWNER_FIELDS, nameKey, townFrom, waNumber, igHandle, waitingSite, fbUrl, ttUrl, markUploaded, markSheet, spotSet, spotOrder, all, publicList, previewImport, applyImport, save, remove, info, parseCsv, fromCsvRow, normalise, slugify, forget };
