@@ -813,7 +813,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     if (a.plan === 'free') return 'Free plan';
     return a.readOnly ? 'Read-only' : '';
   }
-  function canUpgrade() { var a = S.boot.access; return S.boot.billing.enabled && !a.addonLive && a.plan !== 'plus'; }
+  function canUpgrade() { var a = S.boot.access; if (a.membershipActive) return false; /* Business Club members aren’t asked to join anything */ return S.boot.billing.enabled && !a.addonLive && a.plan !== 'plus'; }
 
   // Advanced tools on the Free plan: what you get with the Business Club or Plus.
   // AI credit top-ups: one-off packs, used after the daily allowance. Credits last 12 months.
@@ -825,7 +825,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
     var packs = S.boot.credits.packs, a = S.boot.access || {}, l = S.boot.limits || {};
     // Nudge towards Plus when it's better value: not on Plus/Pro yet and Plus is for sale.
     var plusOn = !!((S.boot.billing && S.boot.billing.plans) || {}).plus;
-    var showPlus = plusOn && !a.addonLive && !a.powerActive;
+    var showPlus = plusOn && !a.addonLive && !a.powerActive && !a.membershipActive;
     var spent = ((S.boot.usage || {}).creditsSpentYear) || 0;
     var cheapest = packs.reduce(function (m, p) { return Math.min(m, p.pence / p.credits); }, 99);
     var plusPerGen = l.power ? 5000 / (l.power * 365) : 0;
@@ -4884,7 +4884,7 @@ input[type=color]{width:64px;height:40px;padding:2px;border:1.5px solid var(--li
       html += '<div class="card stack" style="border-color:var(--danger)"><b>' + TIER_NAME[tier] + ' is paused</b><div class="err">Your last payment didn’t go through. Update your card to get your ' + tierLimit(tier) + ' daily AI credits back.' + (a.membershipActive ? ' Your Business Club membership is not affected.' : '') + '</div>' +
         '<button class="btn primary block" id="manage">Update payment details</button></div>';
     } else if (S.boot.billing.enabled) {
-      html += '<div class="card stack">' + (a.membershipActive ? '<p class="sub" style="margin:0">You have ' + l.standard + ' a day with Business Club. Add Plus for ' + l.power + ' a day.</p>' : '') + planChoices() + '</div>';
+      if (!a.membershipActive) html += '<div class="card stack">' + planChoices() + '</div>';   // Club members aren’t shown plans to join
     } else if (!m.isClub) {
       html += '<div class="note">Business Studio Plus isn’t available right now.</div>';
     }
