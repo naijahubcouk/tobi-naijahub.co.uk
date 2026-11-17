@@ -234,7 +234,28 @@
     '.mpT-more{font-size:12.5px;color:#6B7280;margin:-2px 4px 8px}.mpT-x{background:none;border:0;font-size:18px;color:#6B7280;cursor:pointer;padding:0 4px}' +
     '.mpT-btns{display:flex;gap:8px;margin-top:10px}.mpT-btns button{border:0;border-radius:12px;padding:13px 16px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}.mpT-b1{flex:1;background:#057A44;color:#fff}.mpT-b2{background:#F6F5F1;color:#0F1E36}' +
     '.pill .mp-newtag{background:#FFB81C;color:#0F1E36;font-size:9.5px;font-weight:800;border-radius:6px;padding:1px 4px;margin-left:4px;vertical-align:1px}';
-  function addCss() { if (document.getElementById('mpCss')) return; var st = document.createElement('style'); st.id = 'mpCss'; st.textContent = CSS; document.head.appendChild(st); }
+  // ───── 💚 Look B "Warm Naija" (Nov 2026): green & gold banner, count cards, colour stripes ─────
+  var CSSB = 'body.mp-nochat #messages{background:#FBF6EC}' +
+    '.mpB-hd{position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,#0B5E36,#057A44 60%,#0E8F52);color:#fff;padding:16px 16px 18px}' +
+    '.mpB-hd:after{content:"";position:absolute;inset:0;opacity:.13;pointer-events:none;background-image:radial-gradient(circle at 12px 12px,#FFB81C 4px,transparent 5px),radial-gradient(circle at 36px 36px,#fff 3px,transparent 4px);background-size:48px 48px}' +
+    '.mpB-hd>*{position:relative;z-index:1}.mpB-hd small{display:block;font-size:12px;font-weight:800;letter-spacing:.8px;color:#FFD873;text-transform:uppercase}' +
+    '.mpB-hd h1{font-family:Georgia,"Times New Roman",serif;font-size:27px;line-height:1.15;margin:3px 0 0;color:#fff;font-weight:700}.mpB-hd p{font-size:14px;opacity:.92;margin:4px 0 0}' +
+    '.mpB-hd.cards{padding-bottom:50px}' +
+    '.mpB-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:-38px 10px 4px;position:relative;z-index:2}' +
+    '.mpB-c{background:#fff;border:0;border-radius:16px;padding:10px 11px;box-shadow:0 4px 14px rgba(15,30,54,.10);font-family:inherit;text-align:left;cursor:pointer;font-size:11.5px;color:#6B7280;font-weight:700;min-width:0}' +
+    '.mpB-c b{display:block;font-size:22px;color:#0F1E36;margin-top:2px;line-height:1.1}.mpB-c em{font-style:normal;float:right;font-size:17px}' +
+    '.mpB .mp-add{margin:14px 0 12px}.mpB .mp-add input{border:1.5px solid #EDE3CC;border-radius:16px;background:#fff}.mpB .mp-add .mp-btn{background:#FFB81C;color:#0F1E36;border-radius:50%;width:46px;height:46px;padding:0;font-size:22px;font-weight:800;flex-shrink:0;justify-content:center}' +
+    '.mpB .mp-lbl{font-size:16px;font-weight:800;color:#0F1E36;text-transform:none;letter-spacing:0;margin:16px 2px 8px}.mpB .mp-lbl.red{color:#B42318}' +
+    '.mpB .mpS-list .mp-it{background:#fff;border:0;border-left:5px solid #057A44;border-radius:14px;padding:12px 12px;margin-bottom:8px;font-weight:700;box-shadow:0 1px 3px rgba(15,30,54,.05)}' +
+    '.mpB .mpS-list .mp-it .tx small{font-weight:500}.mpB .mpS-list .mp-it .r{color:#057A44;font-weight:800}' +
+    '.mpB .mp-it.k-pay{border-left-color:#FFB81C}.mpB .mp-it.k-pay .mp-ck{border-color:#E5A100}.mpB .mp-it.k-pay .mp-ck.on{background:#E5A100}' +
+    '.mpB .mp-it.k-cel{border-left-color:#C2185B}.mpB .mp-it.k-cel .mp-ck{border-color:#C2185B}.mpB .mp-it.k-cel .r{color:#C2185B!important}' +
+    '.mpB .mp-it.k-late{border-left-color:#B42318}.mpB .mp-it.k-late .mp-ck{border-color:#B42318}.mpB .mp-it.k-late .r{color:#B42318!important}' +
+    '.mpB .mp-it.dn{opacity:.6}.mpB .mp-it.dn .r{display:none}' +
+    '.mpB-cel{display:flex;align-items:center;gap:11px;width:100%;border:0;font-family:inherit;text-align:left;cursor:pointer;margin:6px 0 4px;border-radius:16px;padding:12px 14px;background:linear-gradient(120deg,#7B2FF7,#F107A3 60%,#FF8A3D);color:#fff}' +
+    '.mpB-cel .e{font-size:28px}.mpB-cel b{display:block;font-size:15.5px}.mpB-cel small{font-size:12.5px;opacity:.92}.mpB-cel i{margin-left:auto;background:#fff;color:#C2185B;font-style:normal;font-weight:800;font-size:12.5px;border-radius:12px;padding:7px 11px;white-space:nowrap}' +
+    '.mpB .mp-card{border-radius:16px;border-color:#EDE3CC}.mpB .mp-warn{border-radius:14px}';
+  function addCss() { if (document.getElementById('mpCss')) return; var st = document.createElement('style'); st.id = 'mpCss'; st.textContent = CSS + CSSB; document.head.appendChild(st); }
 
   // ───── small UI helpers ─────
   function toast(msg, undo) {
@@ -287,12 +308,15 @@
   }
   function row(i, opts) {
     opts = opts || {}; var t = today(), late = i.d && i.d < t && !i.done;
-    if (i.cel) return '<div class="mp-it" data-open="' + i.id + '"><button class="mp-ck" data-tick="' + i.id + '" aria-label="Done"></button><div class="tx">' + celEmoji(i) + ' ' + esc(i.t) + (celNum(i) ? '<small>' + celNum(i) + '</small>' : '') + '</div><div class="r" style="color:#057A44;font-weight:700">' + countdown(i.d) + '</div></div>';
+    if (i.cel) return '<div class="mp-it k-cel" data-open="' + i.id + '"><button class="mp-ck" data-tick="' + i.id + '" aria-label="Done"></button><div class="tx">' + celEmoji(i) + ' ' + esc(i.t) + (celNum(i) ? '<small>' + celNum(i) + '</small>' : '') + '</div><div class="r" style="color:#057A44;font-weight:700">' + countdown(i.d) + '</div></div>';
     var sub = [i.tm ? niceTime(i.tm) : '', i.ck && i.ck.length ? '☑️ ' + i.ck.filter(function (c) { return c.x; }).length + '/' + i.ck.length : '', i.note ? '📝' : ''].filter(Boolean).join(' · ');
-    return '<div class="mp-it' + (i.done ? ' dn' : '') + '" data-open="' + i.id + '"><button class="mp-ck' + (i.done ? ' on' : '') + '" data-tick="' + i.id + '" aria-label="Done">' + (i.done ? '✓' : '') + '</button>' +
+    return '<div class="mp-it' + (i.done ? ' dn' : '') + ' k-' + kindOf(i) + '" data-open="' + i.id + '"><button class="mp-ck' + (i.done ? ' on' : '') + '" data-tick="' + i.id + '" aria-label="Done">' + (i.done ? '✓' : '') + '</button>' +
       '<div class="tx">' + esc(i.t) + (i.rep ? '<span class="mp-chip">🔁 ' + { d: 'daily', w: 'weekly', m: 'monthly', y: 'yearly' }[i.rep] + '</span>' : '') + (sub ? '<small>' + sub + '</small>' : '') + '</div>' +
-      (opts.noDate ? '' : '<div class="r' + (late ? ' red' : '') + '">' + (i.done ? '' : esc(i.d ? (i.d === t && i.tm ? niceTime(i.tm) : nice(i.d)) : '')) + '</div>') + '</div>';
+      (opts.noDate ? '' : '<div class="r' + (late ? ' red' : '') + '">' + (i.done ? '' : esc(i.d ? (i.d === t ? (i.tm ? niceTime(i.tm) : '') : nice(i.d)) : '')) + '</div>') + '</div>';
   }
+  // 🎨 colour stripe by type (Look B): gold = bills & renewals, red = overdue, green = everything else
+  var PAYRX = /\b(pay|paid|bill|bills|tax|rent|mortgage|council|licen[cs]e|renew|insurance|mot|subscription|direct debit|fee|fees|loan|invoice)\b/i;
+  function kindOf(i) { if (i.cel) return 'cel'; if (i.d && i.d < today() && !i.done) return 'late'; if (i.lk || PAYRX.test(i.t || '')) return 'pay'; return 'task'; }
   function bindRows(root) {
     root.querySelectorAll('[data-tick]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); tick(b.dataset.tick); }; });
     root.querySelectorAll('[data-open]').forEach(function (r) { r.onclick = function () { edit(r.dataset.open); }; });
@@ -429,17 +453,30 @@
   function render() {
     var root = document.getElementById('mpRoot'); if (!root) return;
     var g = groups(), has = live().length > 0;
-    var dN = new Date(), TT = { plan: 'My Plan', cel: 'Celebrations', shop: 'Shopping' };
-    var h = '<div class="mpS-hd"><h2>' + (TT[view.tab] || 'My Plan') + '</h2><div>' + cap(DAYS[dN.getDay()]) + ' ' + dN.getDate() + ' ' + cap(MONTHS[dN.getMonth()]) + '</div></div>';
+    var dN = new Date(), t = today(), dateLong = cap(DAYS[dN.getDay()]) + ' ' + dN.getDate() + ' ' + cap(MONTHS[dN.getMonth()]);
+    // 💚 Look B banner: date in gold, big title, one friendly summary line
+    var banner = function (title, line, cards) { return '<div class="mpB-hd' + (cards ? ' cards' : '') + '"><small>' + dateLong + '</small><h1>' + title + '</h1>' + (line ? '<p>' + line + '</p>' : '') + '</div>'; };
+    var nextCel = live().filter(function (i) { return i.cel && !i.done && daysTo(i.d) >= 0; }).sort(function (a, b) { return a.d.localeCompare(b.d); })[0];
+    var h;
+    if (view.tab === 'cel') h = banner('Celebrations', nextCel ? '' : 'Never miss a birthday again 🎂');   // the pink card below already shows who's next
+    else if (view.tab === 'shop') { var tl = target(), left = tl ? tl.items.filter(function (i) { return !i.x; }).length : 0; h = banner('Shopping', left ? '🛒 ' + left + ' thing' + (left === 1 ? '' : 's') + ' to buy' : 'Tap what you need — it goes on your list 🛒'); }
+    root.classList.add('mpB');
     var nav = '<div class="mpS-nav">' + [['plan', '📋', 'Plan'], ['cel', '🎉', 'Celebrate'], ['shop', '🛒', 'Shopping']].map(function (x) { return '<button data-tab="' + x[0] + '"' + (view.tab === x[0] ? ' class="on"' : '') + '><i>' + x[1] + '</i>' + x[2] + '</button>'; }).join('') + '<button data-mp-gear><i>⚙️</i>Settings</button></div>';
     var gear = function () { root.querySelectorAll('[data-mp-gear]').forEach(function (b) { b.onclick = function () { if (P.signedIn) settings(); else signIn(); }; }); };
     root.classList.add('mpS');
     if (view.tab === 'cel') { root.innerHTML = h + '<div style="height:10px"></div>' + celHtml() + nav; bindCel(root); bindTabs(root); gear(); return; }
     if (view.tab === 'shop') { root.innerHTML = h + '<div style="height:10px"></div>' + shopHtml() + nav; bindShop(root); bindTabs(root); gear(); return; }
-    h = '<div data-mp-top style="margin:2px 0 12px">' + todayHtml(true) + '</div>';   // 💚 your day: greeting, Today · Celebration · Next up · Shopping, motivation
+    // 💚 Look B: banner + 3 count cards (Today · This week · Birthdays)
+    var isTask = function (i) { return !i.cel; };
+    var doneToday = live().filter(function (i) { return !i.cel && ((i.done && i.doneAt === t) || (i.rep && i.last === t && !i.done)); });
+    var dueNow = g.over.concat(g.today).filter(isTask), totalToday = dueNow.length + doneToday.length;
+    var weekN = g.today.concat(g.week).filter(isTask).length;
+    var celN = live().filter(function (i) { return i.cel && !i.done && daysTo(i.d) >= 0 && daysTo(i.d) <= 30; }).length;
+    var line = !has ? 'Bills, birthdays and shopping in one place 💚' : totalToday ? totalToday + ' thing' + (totalToday === 1 ? '' : 's') + ' today' + (doneToday.length ? ' · ' + doneToday.length + ' done 💪' : '') + (g.over.filter(isTask).length ? ' · ⚠️ ' + g.over.filter(isTask).length + ' overdue' : '') : 'Nothing due today 🎉';
+    h = banner('My Plan', line, has);
+    if (has) h += '<div class="mpB-cards"><button class="mpB-c" data-go="today">Today<em>✅</em><b>' + doneToday.length + '/' + totalToday + '</b></button><button class="mpB-c" data-go="week">This week<em>📅</em><b>' + weekN + '</b></button><button class="mpB-c" data-go="cel">Birthdays<em>🎂</em><b>' + celN + '</b></button></div>';
     if (has && !P.signedIn) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — it’s only on this phone. Save it to your free Auntie Tobi account.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
-    if (P.signedIn && !P.rm && ls.get('tobi_myplan_rm_ask') !== 'no' && has) h += '<div class="mp-new" style="margin:0 0 10px"><span style="font-size:22px">☀️</span><div style="flex:1"><b style="color:#0F1E36">Want a morning email?</b> Only on days you have something due.<div class="mp-row" style="margin-top:8px"><button class="mp-btn" data-rm-yes>Yes — at 7am</button><button class="mp-btn g" data-rm-no>No thanks</button></div></div></div>';
-    h += '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ Type it — e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
+    h += '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
     if (!has) {
       h += '<div class="mp-card"><div class="mp-empty"><b>Your day is looking clear! 💚</b>Add something to get started — bills, appointments, things to renew. <br><span style="font-size:13px;color:#6B7280">Free — sign in with just your email, no password.</span></div>' +
         '<div class="mp-welcome"><button data-w="item"><span>📋</span><div>Add something to remember<small>“Dentist Friday 4pm”, “Pay rent every 1st”</small></div></button>' +
@@ -447,8 +484,14 @@
         '<button data-w="cel"><span>🎉</span><div>Add a birthday or anniversary<small>Auntie Tobi reminds you — and helps you make a card</small></div></button>' +
         '<button data-w="shop"><span>🛒</span><div>Start a shopping list<small>Naija groceries, weekly shop, party — ready to go</small></div></button></div></div>';
     } else {
-      var sec = function (label, list, red) { return list.length ? '<div class="mp-lbl' + (red ? ' red' : '') + '">' + label + '</div>' + list.map(function (i) { return row(i); }).join('') : ''; };
-      var body = sec('Overdue', g.over, true) + sec('Today', g.today) + sec('Coming up', g.week) + sec('Later', g.later) + sec('No date', g.none);
+      var sec = function (label, list, red, id) { return list.length ? '<div class="mp-lbl' + (red ? ' red' : '') + '"' + (id ? ' id="' + id + '"' : '') + '>' + label + '</div>' + list.map(function (i) { return row(i); }).join('') : ''; };
+      var notBan = function (i) { return !(nextCel && i.id === nextCel.id); };   // the next celebration has its own banner
+      var doneIds = doneToday.map(function (i) { return i.id; });
+      var todayRows = g.today.filter(notBan).concat(doneToday.filter(function (i) { return i.done; }));   // ticked today stays here, crossed out
+      var celBan = nextCel && daysTo(nextCel.d) <= 30 ? '<button class="mpB-cel" data-ready="' + nextCel.id + '"><span class="e">' + celEmoji(nextCel) + '</span><div><b>' + esc(celShort(nextCel, daysTo(nextCel.d) === 0)) + ' · ' + esc(daysTo(nextCel.d) === 0 ? 'today! 🎉' : daysTo(nextCel.d) === 1 ? 'tomorrow' : 'in ' + daysTo(nextCel.d) + ' days') + '</b><small>' + esc(longDate(nextCel.d)) + (celNum(nextCel) ? ' · ' + esc(cap(celNum(nextCel))) : '') + '</small></div><i>Get ready</i></button>' : '';
+      var body = sec('⚠️ Overdue', g.over.filter(notBan), true) + (todayRows.length ? sec('Today', todayRows, false, 'mpToday') : '<div class="mp-lbl" id="mpToday">Today</div><div class="mp-sub" style="margin:0 2px 6px">Nothing due today — enjoy 🎉</div>') + celBan +
+        '<span id="mpWeek"></span>' + sec('Coming up', g.week.filter(notBan)) + sec('Later', g.later.filter(notBan)) + sec('No date', g.none);
+      g.done = g.done.filter(function (i) { return doneIds.indexOf(i.id) < 0; });
       h += '<div class="mpS-list">' + body + '</div>';
       if (g.done.length) h += '<div class="mp-card"><div class="mp-it" data-done-toggle style="border:0;padding:2px 0"><div class="tx" style="font-weight:700">✅ Done (' + g.done.length + ')</div><div class="r">' + (view.showDone ? 'Hide ▴' : 'Show ▾') + '</div></div>' + (view.showDone ? g.done.slice(0, 40).map(function (i) { return row(i, { noDate: true }); }).join('') : '') + '</div>';
       h += '<button class="mp-card" data-w="life" style="width:100%;text-align:left;cursor:pointer;font-family:inherit"><b style="font-size:14.5px">🗂️ Add UK life dates</b><div class="mp-sub">Passport, eVisa, MOT, car insurance, tax return…</div></button>';
@@ -458,7 +501,8 @@
       '<div class="mp-row">' + (sl2 ? '<button class="mp-btn" data-mp-sun>Read it</button>' : '') + (P.news ? '<span class="mp-sub" style="align-self:center">✅ You get it by email</span>' : '<button class="mp-btn ' + (sl2 ? 'g' : '') + '" data-mp-news>📧 Get it by email</button>') + '</div></div>';
     h += '<div style="text-align:center;font-size:12.5px;color:#6B7280;margin:6px 0 4px">' + (P.signedIn ? '💚 Saved to ' + esc(P.email) + ' · <a href="#" data-mp-settings style="color:#057A44;font-weight:700">Settings</a>' : '<a href="#" data-mp-save style="color:#057A44;font-weight:700">💚 Sign in to save your plan</a>') + '</div>';
     root.innerHTML = h + nav; gear();
-    var top = $('[data-mp-top]', root); if (top) { bindToday(top); top.querySelectorAll('[data-mp-open]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); var f = $('#mpF', root); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }; }); }
+    root.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { var k = b.dataset.go; if (k === 'cel') { view.tab = 'cel'; render(); try { scrollToTop(); } catch (e) {} return; } var el = $(k === 'today' ? '#mpToday' : '#mpWeek', root); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
+    root.querySelectorAll('[data-ready]').forEach(function (b) { b.onclick = function () { gt('cel_ready', { from: 'plan' }); readySheet(b.dataset.ready); }; });
     // add box with live preview of what Auntie Tobi understood
     var q = $('#mpQ', root), hint = $('#mpHint', root);
     q.oninput = function () { var p = parse(q.value); var bits = [p.d ? '📅 ' + nice(p.d, true) : '', p.tm ? '🕒 ' + niceTime(p.tm) : '', p.rep ? '🔁 ' + REP[p.rep].toLowerCase() : ''].filter(Boolean); hint.style.display = bits.length && p.t ? 'block' : 'none'; hint.innerHTML = '<b>' + esc(p.t) + '</b> · ' + bits.join(' · '); };
