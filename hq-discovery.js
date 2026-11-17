@@ -9,7 +9,7 @@
  * one business per category so each gets its moment; the slide shows their category instead of the town.
  * 🛍️ Marketplace posts: one slide per Marketplace product (photo, product name, price — on or off — and @handle), an editable
  *    last slide (“Shop these and more on the Auntie Tobi Marketplace”), one product per business, not featured before first.
- * “Part” can be switched off on every kind of post. Download as a ZIP, or every slide as its own photo.
+ * “Part” can be Part I, Part 1 or switched off on every kind of post. Download as a ZIP, or every slide as its own photo.
  * Marking a post as posted adds "📣 Featured in …" to each business's timeline in the Business directory.
  *
  * HQ calls HQDisc.init({ api, sheet, toast, esc, S }) once, then HQDisc.view() for the #disc page.
@@ -25,6 +25,10 @@
   function rnd(seed) { var x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); }
   // Part numbers as Roman numerals: 1 → I, 2 → II, 4 → IV
   function roman(n) { n = Math.max(1, Math.min(99, n | 0)); var r = '', v = [[90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]; v.forEach(function (x) { while (n >= x[0]) { r += x[1]; n -= x[0]; } }); return r; }
+  // 'Part I' (Roman, the default) or 'Part 1' (a number) — chosen per post; the last choice is used for new posts
+  var PSK = 'hq_disc_pstyle';
+  function lastNum() { try { return localStorage.getItem(PSK) === 'num'; } catch (e) { return false; } }
+  function pt(p, n) { return (p ? !!p.pnum : lastNum()) ? String(n != null ? n : p.part) : roman(n != null ? n : p.part); }
   function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
   function title(s) { return String(s || '').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
   function town(b) { var t = String(b.loc || '').split(',')[0].trim(); return t && t !== 'UK' ? t : ''; }
@@ -49,7 +53,7 @@
   function isMkt(p) { return p && p.kind === 'market'; }
   function isGen(p) { return p && p.kind === 'general'; }
   // "Title – Part II", or just "Title" when Part is switched off
-  function head(p) { return [p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }).join(' ') + (p.noPart ? '' : ' – Part ' + roman(p.part)); }
+  function head(p) { return [p.l1, p.l2].filter(function (t) { return String(t || '').trim(); }).join(' ') + (p.noPart ? '' : ' – Part ' + pt(p)); }
   function line(p, it) { var c = String(it.cat || '').trim(), t = String(it.town || '').trim(), w = p.line || 'both'; return w === 'cat' ? c : w === 'town' ? (t ? '📍 ' + t : '') : [c, t ? '📍 ' + t : ''].filter(Boolean).join(' · '); }
   function partsOf(key) { return (X.S.disc || []).filter(function (p) { return keyOf(p) === key; }); }
   function isCity(p) { return p && p.kind === 'city'; }
@@ -120,7 +124,7 @@
   }
   function blankMkt(cat) {
     var max = 0; partsOf('market:' + String(cat || 'all').toLowerCase()).forEach(function (p) { max = Math.max(max, p.part); });
-    return { kind: 'market', cat: cat || '', city: '', part: max + 1, noPart: false, l1: cat ? 'Marketplace Finds: ' + cat : 'Marketplace Finds from Nigerian Businesses', l2: '', showPrice: true,
+    return { kind: 'market', cat: cat || '', city: '', part: max + 1, pnum: lastNum(), noPart: false, l1: cat ? 'Marketplace Finds: ' + cat : 'Marketplace Finds from Nigerian Businesses', l2: '', showPrice: true,
       end: { on: true, t1: 'Shop these and more', t2: 'on the Auntie Tobi Marketplace', t3: 'auntietobi.co.uk/marketplace' }, endImg: '', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
   }
   function hasEnd(p) { return isMkt(p) && p.end && p.end.on !== false; }
@@ -129,7 +133,7 @@
   function itemOf(b) { return { slug: b.slug, name: b.name, handle: b.ig, town: town(b), cat: catOf(b), img: '', pos: { x: 0, y: 0, z: 1 } }; }
   function blankGen() {
     var max = 0; partsOf('general').forEach(function (p) { max = Math.max(max, p.part); });
-    return { kind: 'general', city: '', cat: '', part: max + 1, noPart: false, line: 'both', l1: 'Nigerian Businesses You Should Know', l2: '', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
+    return { kind: 'general', city: '', cat: '', part: max + 1, pnum: lastNum(), noPart: false, line: 'both', l1: 'Nigerian Businesses You Should Know', l2: '', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
   }
   // ✨ for adverts: Business Club members first (claimed, with a photo), not already in this post, up to 10
   function fillClub(p) {
@@ -151,11 +155,11 @@
   function prevCount(it, exceptId) { if (it.pid) return mktUsed(it.pid, exceptId); return (X.S.disc || []).filter(function (q) { return q.id !== exceptId && q.items.some(function (x) { return it.slug ? x.slug === it.slug : String(x.handle).toLowerCase() === String(it.handle || '').toLowerCase(); }); }); }
   function blankCity(city) {
     var max = 0; partsOf('city:' + city.toLowerCase()).forEach(function (p) { max = Math.max(max, p.part); });
-    return { kind: 'city', city: city, cat: '', part: max + 1, l1: 'Nigerian Businesses in ' + city, l2: '', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
+    return { kind: 'city', city: city, cat: '', part: max + 1, pnum: lastNum(), l1: 'Nigerian Businesses in ' + city, l2: '', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
   }
   function blank(cat) {
     var max = 0; partsOf(cat).forEach(function (p) { max = Math.max(max, p.part); });
-    return { cat: cat, part: max + 1, l1: 'Nigerian ' + title(cat), l2: 'in the UK', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
+    return { cat: cat, part: max + 1, pnum: lastNum(), l1: 'Nigerian ' + title(cat), l2: 'in the UK', coverImg: '', coverPos: { x: 0, y: 0, z: 1 }, items: [], caption: '', status: 'draft' };
   }
 
   // ── pictures ──
@@ -334,19 +338,19 @@
     $$('[data-dm]').forEach(function (b) { b.onclick = function () { X.S.discMode = b.dataset.dm; listPage(); }; });
     if (X.S.discMode === 'mkt' && !X.S.discMkt) loadMkt().then(listPage, function (e) { X.toast(e.message); });
     if ($('#dcMkt')) {
-      var syncM = function () { var n = 0; partsOf('market:' + ($('#dcMkt').value || 'all').toLowerCase()).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNewMkt').textContent = '✨ Start Part ' + roman(n + 1); };
+      var syncM = function () { var n = 0; partsOf('market:' + ($('#dcMkt').value || 'all').toLowerCase()).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNewMkt').textContent = '✨ Start Part ' + pt(null, n + 1); };
       $('#dcMkt').onchange = syncM; syncM();
       $('#dcNewMkt').onclick = function () { var p = blankMkt($('#dcMkt').value), n = autoPickMkt(p); p.caption = caption(p); X.S.discEdit = p; X.toast(n ? 'Picked ' + n + ' products, one per business — change anything you like' : 'No Marketplace products with photos yet'); view(); };
     }
     $$('[data-dboost]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var p = (X.S.disc || []).filter(function (q) { return q.id === b.dataset.dboost; })[0]; if (p) boost(p); }; });
     if ($('#dcNewGen')) $('#dcNewGen').onclick = function () { var p = blankGen(); p.caption = caption(p); X.S.discEdit = p; view(); setTimeout(function () { picker(X.S.discEdit); }, 50); };
     if ($('#dcCity')) {
-      var syncC = function () { var n = 0; partsOf('city:' + $('#dcCity').value.toLowerCase()).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNewCity').textContent = '✨ Start Part ' + roman(n + 1); };
+      var syncC = function () { var n = 0; partsOf('city:' + $('#dcCity').value.toLowerCase()).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNewCity').textContent = '✨ Start Part ' + pt(null, n + 1); };
       $('#dcCity').onchange = syncC; syncC();
       $('#dcNewCity').onclick = function () { var c = $('#dcCity').value; if (!c) return; var p = blankCity(c), n = autoPick(p); p.caption = caption(p); X.S.discEdit = p; X.toast(n ? 'Picked ' + n + ' businesses, one per category — change anything you like' : 'No new businesses with Instagram in ' + c + ' — add some by hand'); view(); };
     }
     if (!$('#dcCat')) { $$('[data-dp]').forEach(function (r) { r.onclick = function () { var p = (X.S.disc || []).filter(function (q) { return q.id === r.dataset.dp; })[0]; if (p) { X.S.discEdit = JSON.parse(JSON.stringify(p)); view(); } }; }); return; }
-    var sync = function () { var c = $('#dcCat').value, n = 0; partsOf(c).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNew').textContent = '✨ Start Part ' + roman(n + 1); };
+    var sync = function () { var c = $('#dcCat').value, n = 0; partsOf(c).forEach(function (p) { n = Math.max(n, p.part); }); $('#dcNew').textContent = '✨ Start Part ' + pt(null, n + 1); };
     if ($('#dcCat')) { $('#dcCat').onchange = sync; sync(); }
     $('#dcNew').onclick = function () { var c = $('#dcCat').value; if (!c) return; var p = blank(c), n = autoPick(p); p.caption = caption(p); X.S.discEdit = p; X.toast(n ? 'Picked ' + n + ' businesses — change anything you like' : 'No new businesses with Instagram in this category — add some by hand'); view(); };
     $$('[data-dp]').forEach(function (r) { r.onclick = function () { var p = (X.S.disc || []).filter(function (q) { return q.id === r.dataset.dp; })[0]; if (p) { X.S.discEdit = JSON.parse(JSON.stringify(p)); view(); } }; });
@@ -373,7 +377,7 @@
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>🎯 Cover</b><div class="row" style="gap:12px;align-items:flex-start;margin-top:8px;flex-wrap:wrap"><div data-th="-1" data-open="-1" style="width:150px;cursor:pointer;background:#EEE;border-radius:8px;aspect-ratio:4/5"></div><div style="flex:1;min-width:200px" class="stack">' +
       (isCity(p) || isGen(p) || isMkt(p) ? '<div><label for="deL1">Title <span class="muted" style="font-weight:400">— write anything you like</span></label><input id="deL1" value="' + esc(p.l1) + '" maxlength="90" placeholder="' + (isMkt(p) ? 'Marketplace Finds' : isGen(p) ? 'Nigerian Businesses You Should Know' : 'Nigerian Businesses in ' + esc(p.city)) + '"><input id="deL2" type="hidden" value=""></div>'
         : '<div><label>Title</label><input id="deL1" value="' + esc(p.l1) + '" placeholder="Nigerian Caterers"><input id="deL2" value="' + esc(p.l2) + '" placeholder="in the UK" style="margin-top:6px"></div>') +
-      '<div class="row" style="gap:8px;align-items:center"><label style="margin:0">Part</label><input id="dePt" type="number" min="1" max="99" value="' + p.part + '" style="width:80px"><span class="muted" id="dePtR">= Part ' + roman(p.part) + '</span>' + '<label style="margin:0 0 0 8px;display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" id="deNoPart"' + (p.noPart ? ' checked' : '') + ' style="width:18px;height:18px"> No “Part” on this post</label></div>' +
+      '<div class="row" style="gap:8px;align-items:center"><label style="margin:0">Part</label><input id="dePt" type="number" min="1" max="99" value="' + p.part + '" style="width:80px"><select id="dePs" style="width:auto" aria-label="How Part shows">' + [['rom', 'Part ' + roman(p.part)], ['num', 'Part ' + p.part], ['none', 'No “Part”']].map(function (o) { var on = p.noPart ? o[0] === 'none' : (p.pnum ? o[0] === 'num' : o[0] === 'rom'); return '<option value="' + o[0] + '"' + (on ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
       (isMkt(p) ? '<label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" id="dePrice"' + (p.showPrice !== false ? ' checked' : '') + ' style="width:18px;height:18px"> Show prices on the slides</label>' : '') +
       (isGen(p) ? '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><label for="deLine" style="margin:0">Under each @handle</label><select id="deLine" style="width:auto">' + [['both', 'Category · 📍 Town'], ['cat', 'Category'], ['town', '📍 Town']].map(function (o) { return '<option value="' + o[0] + '"' + ((p.line || 'both') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '') +
       '<button class="btn ghost sm" data-open="-1">📷 Cover photo &amp; position</button></div></div></div>' +
@@ -387,10 +391,10 @@
           '<div><label for="deE1">Big line</label><input id="deE1" maxlength="60" value="' + esc(p.end.t1 || '') + '"></div><div><label for="deE2">Second line</label><input id="deE2" maxlength="70" value="' + esc(p.end.t2 || '') + '"></div><div><label for="deE3">Highlighted line <span class="muted" style="font-weight:400">— e.g. the web address</span></label><input id="deE3" maxlength="70" value="' + esc(p.end.t3 || '') + '"></div>' +
           '<div class="row" style="gap:6px;flex-wrap:wrap"><label class="btn ghost sm" style="margin:0">📷 ' + (p.endImg ? 'Change background photo' : 'Background photo (optional)') + '<input type="file" id="deEndF" accept="image/*" hidden></label>' + (p.endImg ? '<button class="btn ghost sm" id="deEndX">Use green background</button>' : '') + '</div></div></div>' : '') + '</div>' : '') +
       '<div class="card" style="padding:14px 16px"><div class="row" style="justify-content:space-between;align-items:center"><b>✍️ Caption</b><div class="row" style="gap:6px"><button class="btn ghost sm" id="deCapNew">↻ Rewrite from the list</button><button class="btn ghost sm" id="deCapCopy">📋 Copy</button></div></div><textarea id="deCap" rows="12" style="margin-top:8px;font-size:14px">' + esc(p.caption || caption(p)) + '</textarea><div class="muted" style="font-size:12px;margin-top:4px" id="deCapN"></div></div></div>';
-    var read = function () { p.l1 = $('#deL1').value; p.l2 = $('#deL2').value; p.part = Math.max(1, parseInt($('#dePt').value, 10) || 1); p.caption = $('#deCap').value; if ($('#deNoPart')) p.noPart = $('#deNoPart').checked; if ($('#deLine')) p.line = $('#deLine').value; if ($('#dePrice')) p.showPrice = $('#dePrice').checked; if ($('#deE1')) { p.end.t1 = $('#deE1').value; p.end.t2 = $('#deE2').value; p.end.t3 = $('#deE3').value; } };
+    var read = function () { p.l1 = $('#deL1').value; p.l2 = $('#deL2').value; p.part = Math.max(1, parseInt($('#dePt').value, 10) || 1); p.caption = $('#deCap').value; if ($('#dePs')) { var ps = $('#dePs').value; p.noPart = ps === 'none'; if (ps !== 'none') { p.pnum = ps === 'num'; try { localStorage.setItem(PSK, ps); } catch (e) {} } } if ($('#deLine')) p.line = $('#deLine').value; if ($('#dePrice')) p.showPrice = $('#dePrice').checked; if ($('#deE1')) { p.end.t1 = $('#deE1').value; p.end.t2 = $('#deE2').value; p.end.t3 = $('#deE3').value; } };
     var capN = function () { $('#deCapN').textContent = $('#deCap').value.length + ' / 2,200 characters'; }; $('#deCap').oninput = capN; capN();
     var auto = caption(p);   // the caption follows the title while you haven't changed it yourself
-    var tm; ['#deL1', '#deL2', '#dePt', '#deNoPart', '#deLine', '#dePrice', '#deE1', '#deE2', '#deE3'].forEach(function (id) { if ($(id)) $(id).oninput = $(id).onchange = function () { clearTimeout(tm); tm = setTimeout(function () { var was = $('#deCap').value === auto; read(); if ($('#dePtR')) $('#dePtR').textContent = '= Part ' + roman(p.part); $('#ttl').textContent = head(p); if (was) { auto = caption(p); $('#deCap').value = p.caption = auto; capN(); } paintThumbs(p); }, 300); }; });
+    var tm; ['#deL1', '#deL2', '#dePt', '#dePs', '#deLine', '#dePrice', '#deE1', '#deE2', '#deE3'].forEach(function (id) { if ($(id)) $(id).oninput = $(id).onchange = function () { clearTimeout(tm); tm = setTimeout(function () { var was = $('#deCap').value === auto; read(); if ($('#dePs')) { $('#dePs').options[0].text = 'Part ' + roman(p.part); $('#dePs').options[1].text = 'Part ' + p.part; } $('#ttl').textContent = head(p); if (was) { auto = caption(p); $('#deCap').value = p.caption = auto; capN(); } paintThumbs(p); }, 300); }; });
     if ($('#deLine')) $('#deLine').onchange = function () { var was = $('#deCap').value === auto; read(); if (was) p.caption = caption(p); editor(); };
     $('#deBack').onclick = function () { X.S.discEdit = null; view(); };
     if ($('#deEndOn')) $('#deEndOn').onchange = function () { read(); p.end.on = this.checked; editor(); };
