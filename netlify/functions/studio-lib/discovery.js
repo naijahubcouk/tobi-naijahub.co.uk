@@ -32,7 +32,7 @@ function clean(raw, prev) {
   const mkt = raw.kind === 'market', e = raw.end || {};
   return {
     id: prev.id || newId(), kind: raw.kind === 'city' || raw.kind === 'general' || mkt ? raw.kind : '', cat: cleanText(raw.cat, 60), city: raw.kind === 'city' ? cleanText(raw.city, 60) : '', part: Math.round(num(raw.part, 1, 99, 1)),
-    noPart: !!raw.noPart, pnum: !!raw.pnum, line: raw.kind === 'general' && /^(cat|town|both)$/.test(raw.line) ? raw.line : '',
+    noPart: !!raw.noPart, bare: !!raw.bare, pnum: !!raw.pnum, line: raw.kind === 'general' && /^(cat|town|both)$/.test(raw.line) ? raw.line : '',
     l1: cleanText(raw.l1, raw.kind === 'city' || raw.kind === 'general' || mkt ? 90 : 50), l2: cleanText(raw.l2, 50), coverImg: okId(raw.coverImg) ? raw.coverImg : '',
     coverPos: { x: num(raw.coverPos && raw.coverPos.x, -1, 1, 0), y: num(raw.coverPos && raw.coverPos.y, -1, 1, 0), z: num(raw.coverPos && raw.coverPos.z, 1, 3, 1) },
     showPrice: mkt ? raw.showPrice !== false : undefined,
@@ -117,7 +117,7 @@ async function posted(id, url, who) {
   let p = null;
   await cas(KEY, cur => { if (!cur) return undefined; const x = cur.items.find(q => q.id === id); if (!x) return undefined; x.status = 'posted'; x.postedAt = x.postedAt || core.nowIso(); x.postUrl = u.slice(0, 300); p = x; return cur; });
   if (!p) throw new HttpError(404, 'not_found', 'That post is no longer saved.');
-  const title = `${[p.l1, p.l2].filter(Boolean).join(' ')}${p.noPart ? '' : ` – Part ${p.pnum ? p.part : roman(p.part)}`}`;
+  const title = `${[p.l1, p.l2].filter(Boolean).join(' ')}${p.noPart ? '' : p.bare ? ` ${p.pnum ? p.part : roman(p.part)}` : ` – Part ${p.pnum ? p.part : roman(p.part)}`}`;
   const invites = require('./invites');
   for (const x of p.items) if (x.slug) await invites.act(x.slug, 'log', { text: `📣 Featured in the discovery post "${title}"${u ? ' — ' + u : ''}` }).catch(() => {});
   await core.audit(who, 'hq_disc_posted', { id, n: p.items.length });
