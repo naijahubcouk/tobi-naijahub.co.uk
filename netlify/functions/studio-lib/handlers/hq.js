@@ -59,12 +59,13 @@ function sectionsOf(action) {
   if (/^app-/.test(action)) return ['app'];
   if (/^sub-/.test(action)) return ['subs'];
   if (/^igc-/.test(action)) return ['igc'];
+  if (/^chat-/.test(action)) return ['chat'];
   if (/^car-/.test(action)) return ['cars'];
   if (/^tc-/.test(action)) return ['cars'];
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
-function can(who, list) { return who.isAdmin || !who.sections || list.some(x => who.sections.includes(x)); }
+function can(who, list) { return who.isAdmin || list.some(x => (who.sections || []).includes(x)); }
 function mustAllow(who, list) { if (!can(who, list)) throw new HttpError(403, 'no_access', 'You don’t have access to this part of HQ — ask Auntie Tobi.'); }
 
 // 📧 organiser emails are for Auntie Tobi (admin) only
@@ -293,7 +294,7 @@ exports.handler = handler(async (ctx) => {
       return { ok: true, app: appFor(who, await apppub.list()) };
     }
     case 'bday-art': case 'bday-art-make': case 'bday-art-del': {
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the birthday card art.');
+      if (!has(['mplan'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the birthday card art.');
       const bday = require('../bday');
       if (body.action === 'bday-art-make') { await core.rateLimit('hq-pic', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of images this hour — please wait a little.'); return { art: await bday.makeArt(String(body.key || ''), String(body.size || '')), designs: Object.keys(bday.ART), groups: bday.GROUPS }; }
       if (body.action === 'bday-art-del') return { art: await bday.removeArt(String(body.key || ''), String(body.size || '')), designs: Object.keys(bday.ART), groups: bday.GROUPS };
@@ -301,7 +302,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'dir-list': case 'dir-save': case 'dir-delete': case 'dir-preview': case 'dir-apply': {
       // 🏢 the business directory (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
+      if (!has(['dir'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
       const bizdir = require('../bizdir');
       if (body.action === 'dir-preview') return { preview: await bizdir.previewImport(String(body.csv || '')) };
       if (body.action === 'dir-apply') { const stats = await bizdir.applyImport(String(body.csv || ''), !!body.hideGone, who.email); await core.audit(who.email, 'hq_dir_import', stats); return { stats, items: await bizdir.all(), info: await bizdir.info() }; }
@@ -343,7 +344,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'dm-share': case 'dm-share-stop': case 'dm-today': case 'dm-all': case 'dm-add': case 'dm-act': case 'dm-pages': case 'dm-tpl': case 'dm-ideas': case 'dm-search': case 'dm-shots': case 'dm-detail': case 'dm-remove': {
       // 📨 DM Outreach — cold DMs sent by hand from your marketing pages, tracked here (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['dm'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const dm = require('../igdm');
       if (body.action === 'dm-share') { await dm.setShare(body); return await dm.today(); }
       if (body.action === 'dm-share-stop') { await dm.stopShare(); return await dm.today(); }
@@ -361,13 +362,13 @@ exports.handler = handler(async (ctx) => {
     }
     case 'market-list': case 'market-get': case 'market-img': case 'market-save': case 'market-delete': case 'market-allowance': case 'market-review': case 'market-ai': {
       // 🛍️ Marketplace (HQ), admin only — the same actions as Studio Admin, plus ✨ fill a product from photos + your words
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can manage the Marketplace.');
+      if (!has(['mkt'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can manage the Marketplace.');
       if (body.action === 'market-ai') return await require('../marketai').fill(body.images, body.text, who.email);
       return await require('./admin').marketAction(body.action, body, ctx, who.email);
     }
     case 'sun-get': case 'sun-make': case 'sun-save': case 'sun-approve': case 'sun-test': case 'sun-preview': case 'sun-wa': case 'sun-options': {
       // 📰 Sunday Update (admin only) — nothing is sent unless approved here
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can do this.');
+      if (!has(['sun'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can do this.');
       const sunday = require('../sunday');
       const week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : sunday.weekOf();
       if (body.action === 'sun-make') { await sunday.make(week, !!body.force); await core.audit(who.email, 'hq_sunday_draft', { week }); }
@@ -386,7 +387,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'gu-list': case 'gu-save': case 'gu-step': case 'gu-del': case 'gu-reopen': case 'gu-lib': case 'gu-libadd': case 'gu-listing': case 'gu-settings': case 'gu-ai-audit': case 'gu-ai-plan': case 'gu-ai-comps': case 'gu-ai-find': case 'gu-ai-checklist': case 'gu-checks': case 'gu-check-mark': case 'gu-check-del': case 'gu-check-convert': case 'gu-check-make': case 'gu-check-edit': case 'gu-check-email': {
       // ✨ Instagram Glow-Up clients (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
+      if (!has(['glow'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
       const gu = require('../glowup');
       if (body.action === 'gu-save') return { client: await gu.save(body.client, who.email) };
       if (body.action === 'gu-step') return { client: await gu.step(body.id, body.n, !!body.on) };
@@ -417,7 +418,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'fl-get': case 'fl-add': case 'fl-del': case 'fl-target': {
       // 📈 Instagram + WhatsApp Channel follower tracker (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
+      if (!has(['fol'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
       const fl = require('../followers');
       if (body.action === 'fl-add') return fl.add(body.day, body.ig, body.ch);
       if (body.action === 'fl-del') return fl.del(body.day);
@@ -426,12 +427,12 @@ exports.handler = handler(async (ctx) => {
     }
     case 'myplan-stats': {
       // 💚 My Plan sign-ups — counts only, never anyone's plan (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
+      if (!has(['mplan'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
       return require('../myplan').stats();
     }
     case 'tx-piece': case 'tx-make': case 'tx-list': case 'tx-save': case 'tx-delete': {
       // 🎙️ Transcribe a video — admin only (tx-piece is also used by 💬 Comment Assistant for anyone who can open it)
-      if (!who.isAdmin && body.action !== 'tx-piece') throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['tx']) && body.action !== 'tx-piece') throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const tx = require('../transcribe');
       if (body.action === 'tx-piece') return await tx.piece(body.audio, body.prev, body.lang, who.email);
       if (body.action === 'tx-make') return await tx.make(body.kind, body.text, who.email);
@@ -440,14 +441,14 @@ exports.handler = handler(async (ctx) => {
       return { items: await tx.list() };
     }
     case 'hq-fill': case 'hq-write': {   // ✨ fill a listing from a website / Instagram / screenshots, ✍️ rewrite its descriptions (admin only, like the directory)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
+      if (!has(['dir'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the directory.');
       const ab = require('../addbiz');
       if (body.action === 'hq-fill') return await ab.hqFill({ web: body.web, ig: body.ig, shots: body.shots, notes: body.notes, current: body.current, wantPic: !!body.wantPic }, who.email);
       return await ab.hqWrite(body.current, body.notes, who.email);
     }
     case 'abiz-list': case 'abiz-review': case 'abiz-delete': case 'abiz-listed': case 'abiz-preview': case 'abiz-announce': {
       // ➕ Add your business — owners' new listings, claims and name changes (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['abiz'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const ab = require('../addbiz');
       if (body.action === 'abiz-review') await ab.review(String(body.id || ''), body.decision === 'approve' ? 'approve' : 'decline', body.edits || null, who.email);
       if (body.action === 'abiz-review' && body.decision === 'approve') await require('../websheet').soon(who.email);   // 🌐 on to the website as PENDING
@@ -459,7 +460,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'photos-status': case 'photos-run': case 'photos-retry': case 'photos-check': {
       // 📷 copy the website's business photos to Auntie Tobi (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['dir'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const bp = require('../bizphotos');
       if (body.action === 'photos-retry') { await bp.retry(); return await bp.run(14000); }
       if (body.action === 'photos-run') return await bp.run(14000);
@@ -468,7 +469,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'dirhook-status': case 'dirsync-test': case 'dirsync-live': case 'dirsync-retry': case 'dirsync-dismiss': {
       // 🔄 live sync from the directory website (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['dir'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const ds = require('../dirsync');
       if (body.action === 'dirsync-test') return { read: await ds.testRead(body.url) };
       if (body.action === 'dirsync-live') await ds.setLive(!!body.on);
@@ -478,7 +479,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'img-settings': case 'img-compare': {
       // 🎨 which AI makes HQ's pictures, and a side-by-side test (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['imgm'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const em = require('../eventmedia');
       if (body.action === 'img-compare') { await core.rateLimit('hq-imgcmp', who.email, 30, 60 * 60 * 1000, 'That’s a lot of test images this hour — please wait a little.'); return { results: await em.compareImages(body.prompt, body.aspect, body.models, body.ref, body.quality) }; }
       if (body.set) { const r = await em.saveImageSettings(body.set); await core.audit(who.email, 'hq_image_model', r); }
@@ -486,20 +487,20 @@ exports.handler = handler(async (ctx) => {
     }
     case 'boost-list': case 'boost-save': {
       // 🚀 After posting checklist + 24-hour numbers (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['dir'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const boost = require('../boost');
       if (body.action === 'boost-save') return { item: await boost.save(body.item) };
       return { items: await boost.list() };
     }
     case 'ss-get': case 'ss-connect': case 'ss-run': case 'ss-auto': case 'ss-disconnect': {
       // 📬 School emails → School Tracker via the Gmail script (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['find'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       if (body.action === 'ss-run') await core.rateLimit('hq-ssrun', who.email, 60, 60 * 60 * 1000, 'That’s a lot of checks this hour — the script also checks every 10 minutes by itself.');
       return await require('../schoolsync').act(body.action, body);
     }
     case 'disc-list': case 'disc-save': case 'disc-del': case 'disc-img-put': case 'disc-img': case 'disc-dirpic': case 'disc-posted': case 'disc-unpost': case 'disc-club': case 'disc-mkt': case 'disc-mktpic': {
       // 📣 Business discovery posts (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['disc'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const disc = require('../discovery');
       if (body.action === 'disc-club') return { slugs: await disc.clubSlugs() };
       if (body.action === 'disc-mkt') return { items: await disc.mktList() };
@@ -515,7 +516,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'iga-all': case 'iga-rules': case 'iga-connect': case 'iga-disconnect': case 'iga-ice': {
       // ⚡ Auto-replies (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['iga'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const ig = require('../igauto');
       if (body.action === 'iga-connect') { const ts = String(Date.now()); return { url: ig.connectUrl(ts + '.' + core.hmac('igconnect:' + ts).slice(0, 32)) }; }
       if (body.action === 'iga-disconnect') { await ig.disconnect(String(body.id || '')); await core.audit(who.email, 'hq_iga_disconnect', { id: body.id }); }
@@ -525,7 +526,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'igu-status': case 'igu-text': case 'igu-img': case 'igu-post': {
       // 👥 Instagram usernames from a post's comments (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['igu'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const igu = require('../igusers');
       if (body.action === 'igu-status') return { connected: await igu.connected() };
       let r;
@@ -537,7 +538,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'crm-tpl': case 'crm-list': case 'crm-detail': case 'crm-act': case 'crm-email': case 'crm-settings': {
       // 🏢 Business directory tracking (admin only) — Club invites moved here from Business Studio Admin
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['dir'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const crm = require('../crm'), invites = require('../invites');
       const slug = String(body.slug || '');
       if (body.action === 'crm-detail') return await crm.detail(slug);
@@ -554,7 +555,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'out-overview': case 'out-settings': case 'out-send': case 'out-hand': case 'out-hand-done': case 'out-mark': case 'out-preview': {
       // 📧 business email journeys (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can send outreach emails.');
+      if (!has(['out'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can send outreach emails.');
       const out = require('../outreach');
       if (body.action === 'out-settings') { await out.saveSettings(body.settings || {}); await core.audit(who.email, 'hq_out_settings', body.settings || {}); }
       if (body.action === 'out-send') { const r = await out.sendBatch(25); await core.audit(who.email, 'hq_out_send', r); return r; }
@@ -566,7 +567,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'mail-list': case 'mail-save': case 'mail-restore': case 'mail-test': case 'mail-preview': case 'mail-add': case 'mail-remove': case 'mail-wel': case 'mail-wel-preview': case 'mail-wel-test': {
       // 📝 email templates (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the emails.');
+      if (!has(['mail'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the emails.');
       const emails = require('../emails');
       const id = String(body.id || '');
       if (body.action === 'mail-save') { const t = await emails.save(id, body.subject, body.body, who.email); await core.audit(who.email, 'hq_mail_save', { id }); return { item: t }; }
@@ -623,9 +624,21 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
       return await emails.list();
     }
+    case 'chat-state': case 'chat-get': case 'chat-send': case 'chat-del': case 'chat-rename': case 'chat-prompt': case 'chat-prompt-del': case 'chat-cap': {
+      // 💬 Ask Auntie — private assistant (anyone with the "Ask Auntie" page; each person sees only their own chats)
+      const ac = require('../askchat');
+      if (body.action === 'chat-send') { await core.rateLimit('hq-chat', who.email, 120, 60 * 60 * 1000, 'That’s a lot of messages this hour — please wait a little.'); return ac.send(who.email, body); }
+      if (body.action === 'chat-get') return { conv: await ac.get(who.email, body.id) };
+      if (body.action === 'chat-del') return ac.remove(who.email, body.id);
+      if (body.action === 'chat-rename') return ac.rename(who.email, body.id, body.title);
+      if (body.action === 'chat-prompt') return { prompts: await ac.savePrompt(who.email, body.prompt) };
+      if (body.action === 'chat-prompt-del') return { prompts: await ac.delPrompt(who.email, String(body.id || '')) };
+      if (body.action === 'chat-cap') { if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the limit.'); await ac.setCap(body.capUsd); }
+      return Object.assign(await ac.state(who.email), { isAdmin: who.isAdmin });
+    }
     case 'ideas-week': case 'ideas-make': case 'ideas-swap': case 'ideas-act': case 'ideas-cfg': {
       // ✨ Weekly ideas (admin only) — built on her weekly themes and this week's real content; nothing is posted
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['ideas'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const ideas = require('../ideas'), mon = ideas.monday(/^\d{4}-\d{2}-\d{2}$/.test(body.week || '') ? body.week : '');
       if (body.action === 'ideas-make' || body.action === 'ideas-swap') await core.rateLimit('hq-ideas', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of ideas this hour — please wait a little.');
       if (body.action === 'ideas-make') return ideas.makeDay(mon, String(body.day || ''), who.email);
@@ -641,7 +654,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'spot-list': case 'spot-set': case 'spot-order': {
       // ⭐ Spotlight — Featured / Verified / Home & Links carousel (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change this.');
+      if (!has(['spot'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change this.');
       const bizdir = require('../bizdir');
       if (body.action === 'spot-set') { const p = body.set || {}, ok = {}; for (const k of ['featured', 'verified', 'home', 'pin']) if (typeof p[k] === 'boolean') ok[k] = p[k];
         await bizdir.spotSet(String(body.slug || ''), ok, who.email); await core.audit(who.email, 'hq_spotlight', Object.assign({ slug: body.slug }, ok)); }
@@ -652,7 +665,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'web-status': case 'web-connect': case 'web-off': case 'web-sync': {
       // 🌐 Website sync — approved businesses go to the website's Google Sheet as PENDING (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      if (!has(['find'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       const ws = require('../websheet');
       let note = null;
       if (body.action === 'web-connect') { note = { joined: await ws.connect(String(body.url || ''), who.email) }; await core.audit(who.email, 'hq_websheet_connect', {}); }
@@ -662,7 +675,7 @@ exports.handler = handler(async (ctx) => {
     }
     case 'find-img': case 'find-list': case 'find-more': case 'find-quick': case 'find-decide': case 'find-csv': case 'find-uploaded': {
       // 🔎 Business Finder (admin only)
-      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use the Business Finder.');
+      if (!has(['find'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use the Business Finder.');
       const finder = require('../finder');
       let note = null;
       if (body.action === 'find-img') return await finder.pictureFor(String(body.id || ''));
@@ -693,4 +706,4 @@ exports.handler = handler(async (ctx) => {
     }
     default: throw new HttpError(400, 'unknown_action', 'Unknown action.');
   }
-}, { allowGet: true, maxBody: 2.5 * 1024 * 1024 });
+}, { allowGet: true, maxBody: 5.8 * 1024 * 1024 });   // (raised for Ask Auntie PDFs)

@@ -16,8 +16,9 @@ const { HttpError, cas, getJson, setJson, cleanText } = core;
 
 const KEY = 'hq/content';
 const TEAM_KEY = 'hq/team';   // { emails: [] } — people who can sign in to HQ only (not Admin)
-const DEFAULT_TEAM = ['hellofavouradentan@gmail.com'];
-const DEFAULT_NAMES = { 'hellofavouradentan@gmail.com': 'Favour' };
+const DEFAULT_TEAM = [];   // (Favour removed Nov 2026)
+const DEFAULT_NAMES = {};
+const REMOVED = ['hellofavouradentan@gmail.com'];   // taken off the team once (Nov 2026); Auntie Tobi can add anyone back in Team access
 const TYPES = ['post', 'reel', 'carousel', 'story', 'blog'];
 const TOPICS = ['discovery', 'uk-info', 'community', 'promo', 'event', 'motivation'];
 const STATUSES = ['idea', 'drafting', 'ready', 'scheduled', 'posted', 'archived'];
@@ -184,19 +185,23 @@ async function plannedToday() {
 
 // ── HQ team (sign in to HQ only) ──
 // Sections of HQ a team member can open. No entry (or 'all') = everything.
-const SECTIONS = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
-// Until the team is saved with per-person access, Favour sees Today, Board and Calendar only.
-const DEFAULT_ACCESS = { 'hellofavouradentan@gmail.com': ['today', 'board', 'calendar'] };
-function cleanAccess(v) { if (!Array.isArray(v)) return null; const out = SECTIONS.filter(x => v.includes(x)); return out.length && out.length < SECTIONS.length ? out : null; }
+// Every HQ page Auntie Tobi can give a team member. BASIC = the content pages; the rest used to be admin-only.
+const BASIC = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
+const SECTIONS = BASIC.concat(['chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga']);
+const DEFAULT_ACCESS = {};
+// always an explicit list now (older "everything" meant the BASIC pages)
+function cleanAccess(v) { if (!Array.isArray(v)) return null; const out = SECTIONS.filter(x => v.includes(x)); return out.length ? out : null; }
 async function teamFull() {
-  const t = await getJson(TEAM_KEY);
-  const base = t && Array.isArray(t.emails) ? { emails: t.emails, names: t.names || {} } : { emails: DEFAULT_TEAM.slice(), names: { ...DEFAULT_NAMES } };
+  let t = await getJson(TEAM_KEY);
+  // one-time removal (Nov 2026)
+  if (t && Array.isArray(t.emails) && !t.removed1) { t.emails = t.emails.filter(e => !REMOVED.includes(e)); REMOVED.forEach(e => { if (t.names) delete t.names[e]; if (t.access) delete t.access[e]; }); t.removed1 = true; await setJson(TEAM_KEY, t).catch(() => {}); }
+  const base = t && Array.isArray(t.emails) ? { emails: t.emails.filter(e => !(REMOVED.includes(e) && !t.removed1)), names: t.names || {} } : { emails: DEFAULT_TEAM.slice(), names: { ...DEFAULT_NAMES } };
   const src = t && t.access && typeof t.access === 'object' ? t.access : DEFAULT_ACCESS, access = {};
-  base.emails.forEach(e => { const a = cleanAccess(src[e]); if (a) access[e] = a; });
+  base.emails.forEach(e => { access[e] = cleanAccess(src[e]) || BASIC.slice(); });
   return { ...base, access };
 }
-// The sections one person may open (null = everything).
-async function sectionsFor(email) { return (await teamFull()).access[email] || null; }
+// The pages one person may open (always a list).
+async function sectionsFor(email) { return (await teamFull()).access[email] || BASIC.slice(); }
 async function team() { return (await teamFull()).emails; }
 // Display names: team names + "Auntie Tobi" for admins.
 async function names() { const t = await teamFull(); const out = { ...t.names }; for (const e of core.adminEmails()) out[e] = 'Auntie Tobi'; return out; }
@@ -209,8 +214,8 @@ async function setTeam(emails, nameMap, accessMap) {
   if (list.length > 20) throw new HttpError(400, 'invalid', 'Up to 20 people.');
   const ac = {}; const givenA = accessMap && typeof accessMap === 'object' ? accessMap : {};
   for (const [k, v] of Object.entries(givenA)) { const e = core.normalizeEmail(k); const a = cleanAccess(v); if (e && list.includes(e) && a) ac[e] = a; }
-  await setJson(TEAM_KEY, { emails: list, names: nm, access: ac, updatedAt: core.nowIso() });
+  await setJson(TEAM_KEY, { emails: list, names: nm, access: ac, removed1: true, updatedAt: core.nowIso() });
   return { emails: list, names: nm, access: ac };
 }
 
-module.exports = { SECTIONS, sectionsFor, team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };
+module.exports = { BASIC, SECTIONS, sectionsFor, team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };
