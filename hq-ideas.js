@@ -82,13 +82,14 @@
 
   function themes() {
     var c = W.cfg;
-    var s = X.sheet('<h2>⚙️ Your weekly themes</h2><p class="muted" style="margin:4px 0 12px">One series per line. Each day, ideas come from a few different series, taking turns so all of them get used. Ones starting with ✨ were added as suggestions — delete any you don’t want.</p>' +
+    var s = X.sheet('<h2>⚙️ Your weekly themes</h2><p class="muted" style="margin:4px 0 12px">One series per line. Each day, ideas come from a few different series, taking turns so all of them get used. Ones starting with ✨ were added as suggestions — delete any you don’t want. The last one each day promotes Auntie Tobi itself.</p>' +
       '<label style="display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:12px">Ideas per day <select id="idPer" style="width:auto">' + [1, 2, 3, 4, 5, 6].map(function (n) { return '<option' + (n === c.perDay ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
+      '<div style="margin-bottom:16px"><label style="font-weight:800">📣 About Auntie Tobi — what’s new</label><div class="muted" style="font-size:12.5px;margin:2px 0 6px">The facts used for posts promoting the app, My Plan, Business Club, Marketplace and new features. Add each new feature here (one per line) so the ideas can talk about it.</div><textarea id="idNews" rows="7" style="width:100%;font-size:13px">' + esc(c.news || '') + '</textarea></div>' +
       DAYS.map(function (k) { return '<div style="margin-bottom:14px"><label style="font-weight:800">' + DN[k] + '</label><input id="idT_' + k + '" value="' + esc(c.days[k].theme) + '" style="width:100%;margin:4px 0 6px" placeholder="Theme"><textarea id="idS_' + k + '" rows="6" style="width:100%;font-size:13.5px">' + esc(c.days[k].series.join('\n')) + '</textarea></div>'; }).join('') +
       '<div class="row" style="justify-content:flex-end;gap:8px"><button class="btn ghost" id="idX">Cancel</button><button class="btn primary" id="idSave">Save</button></div>');
     $('#idX', s).onclick = function () { s.remove(); };
     $('#idSave', s).onclick = async function () {
-      var cfg = { perDay: +$('#idPer', s).value, days: {} };
+      var cfg = { perDay: +$('#idPer', s).value, news: $('#idNews', s).value, days: {} };
       DAYS.forEach(function (k) { cfg.days[k] = { theme: $('#idT_' + k, s).value, series: $('#idS_' + k, s).value.split('\n') }; });
       this.disabled = true;
       try { W = await X.api('ideas-cfg', { week: week, cfg: cfg }); s.remove(); X.toast('Themes saved'); draw(); } catch (e) { this.disabled = false; X.toast(e.message); }
