@@ -276,6 +276,17 @@
     '.mpF .mp-add{margin:14px 0 6px}.mpF .mp-add input{border:1.5px solid #E5E7EB;border-radius:16px;background:#fff}.mpF .mp-add .mp-btn{border-radius:14px}' +
     '.mpF .mp-card{border-radius:18px;border-color:#ECEDF1}' +
     '.mpF-fabw{position:sticky;bottom:78px;z-index:6;display:flex;justify-content:flex-end;pointer-events:none;height:0;overflow:visible}' +
+    // 💙 design G (Nov 2026): navy summary card + rows with round icons, like the Celebrations page
+    '.mpG-hero{margin-top:10px;background:#0F1E36;color:#fff;border-radius:22px;padding:15px}.mpG-hero small{display:block;font-size:11px;font-weight:800;letter-spacing:.8px;color:#FFB81C}' +
+    '.mpG-hero h2{font-size:21px;margin:4px 0 0;color:#fff;font-weight:800;line-height:1.25}.mpG-hero p{font-size:13.5px;opacity:.78;margin:3px 0 0}' +
+    '.mpG-tiles{display:flex;gap:8px;margin-top:12px}.mpG-tiles button{flex:1;background:rgba(255,255,255,.10);border:0;border-radius:12px;padding:8px 4px;text-align:center;color:#fff;font-family:inherit;cursor:pointer}' +
+    '.mpG-tiles b{display:block;font-size:22px;color:#FFB81C;line-height:1.15}.mpG-tiles i{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.3px}' +
+    '.mpG-btns{display:flex;gap:7px;margin-top:12px}.mpG-btns button{flex:1;border:0;border-radius:10px;padding:10px 4px;font-family:inherit;font-weight:800;font-size:13px;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;white-space:nowrap}.mpG-btns .g{background:#FFB81C;color:#0F1E36}' +
+    '.mpG-av{display:none}.mpG .mpG-av{display:flex;width:40px;height:40px;border-radius:50%;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:#E6F2EC;order:-1}' +
+    '.mpG .mp-it.k-pay .mpG-av{background:#FFF1C9}.mpG .mp-it.k-late .mpG-av{background:#FDE7E5}.mpG .mp-it.k-cel .mpG-av{background:#0F1E36;color:#FFB81C;font-weight:900;font-size:16px}' +
+    '.mpG .mpS-list .mp-it{border:1px solid #ECEDF1;box-shadow:none;gap:11px}.mpG .mpS-list .mp-it .mp-ck{order:5;margin-left:4px;border-color:#D1D5DB}.mpG .mpS-list .mp-it .r{order:4;margin-left:auto}' +
+    '.mpG .mp-it.k-pay .mp-ck,.mpG .mp-it.k-cel .mp-ck{border-color:#D1D5DB}.mpG .mp-it.k-late .mp-ck{border-color:#B42318}.mpG .mp-ck.on{background:#057A44;border-color:#057A44}' +
+    '.mpG .mp-add .mp-btn{background:#FFB81C;color:#0F1E36}' +
     // 🎂 Celebrations card: navy & gold (Nov 2026), softer than the old bright pink
     '.mpC-hero{background:#0F1E36}.mpC-hero small{color:#FFB81C;opacity:1}.mpC-hero .av{background:#FFB81C;color:#0F1E36;border-color:rgba(255,255,255,.25)}' +
     '.mpC-hero .cd>*{background:rgba(255,255,255,.10)}.mpC-hero .cd b{color:#FFB81C}.mpC-hero .btns>*{background:rgba(255,255,255,.12);color:#fff}.mpC-hero .btns>*:first-child{background:#FFB81C;color:#0F1E36}.mpC-hero .btns .o{background:rgba(255,255,255,.12);color:#fff}' +
@@ -334,15 +345,20 @@
   }
   function row(i, opts) {
     opts = opts || {}; var t = today(), late = i.d && i.d < t && !i.done;
-    if (i.cel) return '<div class="mp-it k-cel" data-open="' + i.id + '"><button class="mp-ck" data-tick="' + i.id + '" aria-label="Done"></button><div class="tx">' + celEmoji(i) + ' ' + esc(i.t) + (celNum(i) ? '<small>' + celNum(i) + '</small>' : '') + '</div><div class="r" style="color:#057A44;font-weight:700">' + countdown(i.d) + '</div></div>';
+    if (i.cel) return '<div class="mp-it k-cel" data-open="' + i.id + '"><span class="mpG-av">' + esc(initial(i)) + '</span><button class="mp-ck" data-tick="' + i.id + '" aria-label="Done"></button><div class="tx">' + celEmoji(i) + ' ' + esc(i.t) + (celNum(i) ? '<small>' + celNum(i) + '</small>' : '') + '</div><div class="r" style="color:#057A44;font-weight:700">' + countdown(i.d) + '</div></div>';
     var sub = [i.tm && !(i.d === t && !i.done && !opts.noDate) ? niceTime(i.tm) : '', i.ck && i.ck.length ? '☑️ ' + i.ck.filter(function (c) { return c.x; }).length + '/' + i.ck.length : '', i.note ? '📝' : ''].filter(Boolean).join(' · ');
-    return '<div class="mp-it' + (i.done ? ' dn' : '') + ' k-' + kindOf(i) + '" data-open="' + i.id + '"><button class="mp-ck' + (i.done ? ' on' : '') + '" data-tick="' + i.id + '" aria-label="Done">' + (i.done ? '✓' : '') + '</button>' +
+    return '<div class="mp-it' + (i.done ? ' dn' : '') + ' k-' + kindOf(i) + '" data-open="' + i.id + '"><span class="mpG-av">' + rowIcon(i) + '</span><button class="mp-ck' + (i.done ? ' on' : '') + '" data-tick="' + i.id + '" aria-label="Done">' + (i.done ? '✓' : '') + '</button>' +
       '<div class="tx">' + esc(i.t) + (i.rep ? '<span class="mp-chip">🔁 ' + { d: 'daily', w: 'weekly', m: 'monthly', y: 'yearly' }[i.rep] + '</span>' : '') + (sub ? '<small>' + sub + '</small>' : '') + '</div>' +
       (opts.noDate ? '' : '<div class="r' + (late ? ' red' : '') + '">' + (i.done ? '' : esc(i.d ? (i.d === t ? (i.tm ? niceTime(i.tm) : '') : nice(i.d)) : '')) + '</div>') + '</div>';
   }
   // 🎨 colour stripe by type (Look B): gold = bills & renewals, red = overdue, green = everything else
   var PAYRX = /\b(pay|paid|bill|bills|tax|rent|mortgage|council|licen[cs]e|renew|insurance|mot|subscription|direct debit|fee|fees|loan|invoice)\b/i;
   function kindOf(i) { if (i.cel) return 'cel'; if (i.d && i.d < today() && !i.done) return 'late'; if (i.lk || PAYRX.test(i.t || '')) return 'pay'; return 'task'; }
+  // 💙 design G: a small round picture for each row, guessed from the words
+  var ICONS = [[/school|pick ?up|drop ?off|nursery/i, '🚸'], [/\b(gp|doctor|dentist|hospital|clinic|nhs|surgery|appointment|optician|pharmacy)\b/i, '🩺'], [/\b(call|phone|ring)\b/i, '📞'], [/\b(course|class|lesson|exam|study|training)\b/i, '📚'],
+    [/\b(shop|buy|groceries|market)\b/i, '🛒'], [/\b(parcel|post|return|amazon|delivery)\b/i, '📦'], [/\b(car|mot|driving|petrol)\b/i, '🚗'], [/\b(passport|visa|evisa|brp|licen[cs]e)\b/i, '🗂️'], [/\b(church|mosque|prayer)\b/i, '🙏'],
+    [/\b(gym|run|walk|workout)\b/i, '💪'], [/\b(clean|laundry|wash)\b/i, '🧺'], [/\b(cook|food|jollof|party)\b/i, '🍲']];
+  function rowIcon(i) { if (i.d && i.d < today() && !i.done) return '⚠️'; if (i.lk || PAYRX.test(i.t || '')) return '💷'; for (var k = 0; k < ICONS.length; k++) if (ICONS[k][0].test(i.t || '')) return ICONS[k][1]; return '📌'; }
   function bindRows(root) {
     root.querySelectorAll('[data-tick]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); tick(b.dataset.tick); }; });
     root.querySelectorAll('[data-open]').forEach(function (r) { r.onclick = function () { edit(r.dataset.open); }; });
@@ -486,37 +502,34 @@
     var h;
     if (view.tab === 'cel') h = banner('Celebrations');
     else if (view.tab === 'shop') h = banner('Shopping');
-    root.classList.remove('mpB'); root.classList.add('mpF');
+    root.classList.remove('mpB'); root.classList.add('mpF'); root.classList.add('mpG');
     var nav = '<div class="mpS-nav">' + [['plan', '📋', 'Plan'], ['cel', '🎉', 'Celebrate'], ['shop', '🛒', 'Shopping']].map(function (x) { return '<button data-tab="' + x[0] + '"' + (view.tab === x[0] ? ' class="on"' : '') + '><i>' + x[1] + '</i>' + x[2] + '</button>'; }).join('') + '<button data-mp-gear><i>⚙️</i>Settings</button></div>';
     var gear = function () { root.querySelectorAll('[data-mp-gear]').forEach(function (b) { b.onclick = function () { if (P.signedIn) settings(); else signIn(); }; }); };
     root.classList.add('mpS');
     if (view.tab === 'cel') { root.innerHTML = h + '<div style="height:10px"></div>' + celHtml() + nav; bindCel(root); bindTabs(root); gear(); return; }
     if (view.tab === 'shop') { root.innerHTML = h + '<div style="height:10px"></div>' + shopHtml() + nav; bindShop(root); bindTabs(root); gear(); return; }
-    // 🎯 design F: one "Do this next" card, then filter chips and a clean list
+    // 💙 design G: a navy summary card like the birthday card — today's progress, 3 gold numbers, quick buttons
     var isTask = function (i) { return !i.cel; };
     var doneToday = live().filter(function (i) { return !i.cel && ((i.done && i.doneAt === t) || (i.rep && i.last === t && !i.done)); });
     var base = function (i) { return i.cel ? 'cel' : (i.lk || PAYRX.test(i.t || '')) ? 'pay' : 'task'; };
-    var pool = g.over.concat(g.today).filter(function (i) { return !i.done; });
+    var F = 'all';
     var nowHM = ('0' + dN.getHours()).slice(-2) + ':' + ('0' + dN.getMinutes()).slice(-2);
-    // overdue first, then today's timed things still to come, then the rest of today
+    var pool = g.over.concat(g.today).filter(function (i) { return !i.done && isTask(i); });
     pool.sort(function (a, b) { var ra = a.d < t ? 0 : a.tm && a.tm >= nowHM ? 1 : a.tm ? 2 : 3, rb = b.d < t ? 0 : b.tm && b.tm >= nowHM ? 1 : b.tm ? 2 : 3; return ra - rb || (a.d + (a.tm || '99')).localeCompare(b.d + (b.tm || '99')); });
-    var fresh = pool.filter(function (i) { return view.later.indexOf(i.id) < 0; });
-    if (!fresh.length && pool.length) { view.later = []; fresh = pool; }
-    var fo = fresh[0];
+    var fo = null;   // (design F's focus card is gone; kept for the list code)
+    var totalToday = pool.length + doneToday.length, nx = pool[0];
+    var weekN = g.today.concat(g.week).filter(function (i) { return isTask(i) && !i.done; }).length;
+    var billN = g.over.concat(g.today, g.week).filter(function (i) { return !i.done && base(i) === 'pay'; }).length;
+    var lateN = g.over.filter(isTask).length;
     h = banner('My Plan');
     if (has) {
-      if (fo) {
-        var when = fo.cel ? (daysTo(fo.d) === 0 ? 'Today 🎉' : nice(fo.d, true)) : fo.d < t ? 'Was due ' + nice(fo.d, true) : 'Today' + (fo.tm ? ' at ' + niceTime(fo.tm) : '');
-        var more = pool.length - 1;
-        h += '<div class="mpF-focus"><small' + (fo.d < t ? ' class="red">⚠️ Overdue' : '>⏰ Do this next') + '</small><h2>' + (fo.cel ? celEmoji(fo) + ' ' : '') + esc(fo.t) + '</h2><p>' + esc(when) + (more > 0 ? ' · ' + more + ' more after this' : '') + '</p>' +
-          '<div class="mpF-row"><button class="mpF-done" data-fdone="' + fo.id + '">✓ Done</button>' + (pool.length > 1 ? '<button class="mpF-later" data-flater="' + fo.id + '">Later</button>' : '<button class="mpF-later" data-open-f="' + fo.id + '">Open</button>') + '</div></div>';
-      } else {
-        var nx = g.week.concat(g.later).filter(function (i) { return !i.done; })[0];
-        h += '<div class="mpF-focus clear"><small>🎉 All done for today</small><h2>Nothing left today</h2><p>' + (nx ? 'Next: ' + esc(nx.t) + ' · ' + esc(nice(nx.d, true)) : 'Enjoy your day 💚') + '</p></div>';
-      }
-      var F = view.f || 'all', chip = function (k, l) { return '<button data-fchip="' + k + '"' + (F === k ? ' class="on"' : '') + '>' + l + '</button>'; };
-      h += '<div class="mpF-chips">' + chip('all', 'All') + chip('task', '✅ Tasks') + chip('pay', '💷 Bills') + chip('cel', '🎂 Birthdays') + '</div>';
+      var head2 = pool.length ? pool.length + ' thing' + (pool.length === 1 ? '' : 's') + ' to do' : totalToday ? 'All done for today 🎉' : 'Nothing due today 🎉';
+      var line2 = [doneToday.length ? doneToday.length + ' done' : '', lateN ? '⚠️ ' + lateN + ' overdue' : '', nx ? 'next: ' + esc(nx.t) + (nx.d === t && nx.tm ? ' at ' + niceTime(nx.tm) : '') : (g.week.concat(g.later).filter(function (i) { return !i.done; })[0] ? 'next: ' + esc(g.week.concat(g.later).filter(function (i) { return !i.done; })[0].t) : '')].filter(Boolean).join(' · ');
+      h += '<div class="mpG-hero"><small>TODAY</small><h2>' + head2 + '</h2>' + (line2 ? '<p>' + line2 + '</p>' : '') +
+        '<div class="mpG-tiles"><button data-gjump="mpToday"><b>' + doneToday.length + '/' + totalToday + '</b><i>DONE TODAY</i></button><button data-gjump="mpWeek"><b>' + weekN + '</b><i>THIS WEEK</i></button><button data-gjump="mpBills"><b>' + billN + '</b><i>BILLS DUE</i></button></div>' +
+        '<div class="mpG-btns"><button class="g" data-fab>＋ Add</button><button data-gshop>🛒 Shopping</button><button data-w="life">🗂️ UK dates</button></div></div>';
     }
+
     if (has && !P.signedIn) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — it’s only on this phone. Save it to your free Auntie Tobi account.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
     var addBox = '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
     if (!has) h += addBox;
@@ -532,7 +545,7 @@
       var doneIds = doneToday.map(function (i) { return i.id; });
       var notFocus = function (i) { return !(fo && i.id === fo.id); };   // it's in the big card already
       var todayRows = g.today.filter(notFocus).concat(doneToday.filter(function (i) { return i.done; }));
-      var body = sec('Overdue', g.over.filter(notFocus), true) + sec('Today', todayRows, false, 'mpToday') + sec('This week', g.week) + sec('Later', g.later) + sec('No date', g.none);
+      var body = sec('Overdue', g.over.filter(notFocus), true) + sec('Today', todayRows, false, 'mpToday') + '<span id="mpWeek"></span>' + sec('This week', g.week) + sec('Later', g.later) + sec('No date', g.none);
       if (!body) body = '<div class="mp-sub" style="text-align:center;margin:14px 0">' + (F === 'all' ? 'Nothing else on your list 🎉' : 'Nothing here right now') + '</div>';
       g.done = g.done.filter(function (i) { return doneIds.indexOf(i.id) < 0; });
       h += '<div class="mpS-list">' + body + '</div>' + addBox;
@@ -543,7 +556,9 @@
     h += '<div class="mp-card" style="background:#FFFBF0;border-color:#FFE3A3"><b style="font-size:15px">📰 Auntie Tobi’s Sunday Update</b>' + (sl2 ? '<div class="mp-sub" style="font-size:13.5px;color:#0F1E36;margin-top:4px">' + esc(sl2.subject) + ' · ' + nice(sl2.week, true) + '</div>' : '<div class="mp-sub" style="font-size:13.5px">UK news, events and a business of the week — every Sunday.</div>') +
       '<div class="mp-row">' + (sl2 ? '<button class="mp-btn" data-mp-sun>Read it</button>' : '') + (P.news ? '<span class="mp-sub" style="align-self:center">✅ You get it by email</span>' : '<button class="mp-btn ' + (sl2 ? 'g' : '') + '" data-mp-news>📧 Get it by email</button>') + '</div></div>';
     h += '<div style="text-align:center;font-size:12.5px;color:#6B7280;margin:6px 0 4px">' + (P.signedIn ? '💚 Saved to ' + esc(P.email) + ' · <a href="#" data-mp-settings style="color:#057A44;font-weight:700">Settings</a>' : '<a href="#" data-mp-save style="color:#057A44;font-weight:700">💚 Sign in to save your plan</a>') + '</div>';
-    root.innerHTML = h + (has ? '<div class="mpF-fabw"><button class="mpF-fab" data-fab>＋ Add</button></div>' : '') + nav; gear();
+    root.innerHTML = h + nav; gear();
+    root.querySelectorAll('[data-gshop]').forEach(function (b) { b.onclick = function () { view.tab = 'shop'; render(); try { scrollToTop(); } catch (e) {} }; });
+    root.querySelectorAll('[data-gjump]').forEach(function (b) { b.onclick = function () { var el = $('#' + b.dataset.gjump, root) || (b.dataset.gjump === 'mpBills' && root.querySelector('.mp-it.k-pay')); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); else toast(b.dataset.gjump === 'mpBills' ? 'No bills due this week 🎉' : 'Nothing here right now'); }; });
     root.querySelectorAll('[data-fdone]').forEach(function (b) { b.onclick = function () { tick(b.dataset.fdone); }; });
     root.querySelectorAll('[data-flater]').forEach(function (b) { b.onclick = function () { view.later.push(b.dataset.flater); gt('plan_later'); render(); }; });
     root.querySelectorAll('[data-open-f]').forEach(function (b) { b.onclick = function () { edit(b.dataset.openF); }; });
