@@ -58,7 +58,7 @@
       '<aside class="calist"><button class="btn primary" id="caNew" style="width:100%">＋ New chat</button><button class="btn ghost" id="caSch" style="width:100%;margin-bottom:6px">⏰ Scheduled' + ((S.sched || []).length ? ' (' + S.sched.length + ')' : '') + '</button>' +
       (S.items.length ? S.items.map(function (x) { return '<div class="cali' + (c && c.id === x.id ? ' on' : '') + (x.unseen ? ' new' : '') + '" data-open="' + x.id + '"><span>' + esc(x.title) + '</span>' + (x.unseen ? '<i class="cadot"></i>' : '') + '<button class="link" data-del="' + x.id + '" title="Delete">✕</button></div>'; }).join('') : '<p class="muted" style="font-size:13px;margin:10px 4px">Your chats will be saved here.</p>') +
       '<div class="camoney">' + money() + '</div></aside>' +
-      '<section class="camain"><div class="cahead"><button class="btn ghost sm" id="caList">☰ Chats</button><b>' + esc(c ? c.title : 'New chat') + '</b>' + (c ? '<button class="link" id="caRen">rename</button>' : '') + '</div>' +
+      '<section class="camain"><div class="cahead"><button class="btn ghost sm" id="caList">☰ Chats</button><button class="btn ghost sm" id="caSch2">⏰ Scheduled</button><b>' + esc(c ? c.title : 'New chat') + '</b>' + (c ? '<button class="link" id="caRen">rename</button>' : '') + '</div>' +
       '<div class="camsgs" id="caMsgs">' + (msgs.length ? msgs.map(bubble).join('') :
         '<div class="caempty"><div style="font-size:40px">💚</div><h2>Ask Auntie anything</h2><p class="muted">Writing, ideas, replies, UK news and up-to-date info (it searches the web), photos and PDFs, and pictures. Your chats are private to you.</p>' +
         '<div class="castart">' + STARTERS.map(function (s, i) { return '<button data-st="' + i + '"><span>' + s[0] + '</span>' + esc(s[1]) + '</button>'; }).join('') + '</div></div>') +
@@ -94,6 +94,7 @@
     $('#caFile').onchange = function () { addFiles(this.files); };
     $('#caPr').onclick = promptSheet;
     $('#caSch').onclick = function () { schedSheet(); };
+    $('#caSch2').onclick = function () { S.showList = false; schedSheet(); };
     var cap = $('#caCap'); if (cap) cap.onclick = async function () { var v = prompt('Monthly limit for Ask Auntie, in US dollars ($13 ≈ £10)', (S.cfg && S.cfg.capUsd) || 13); if (!v) return; try { Object.assign(S, await X.api('chat-cap', { capUsd: Number(v) })); X.toast('Limit saved'); draw(); } catch (x) { X.toast(x.message); } };
     $$('[data-cp]').forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(S.conv.msgs[+b.dataset.cp].text || ''); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
     $$('[data-bd]').forEach(function (b) { b.onclick = async function () { var t = S.conv.msgs[+b.dataset.bd].text || ''; try { await X.api('save', { item: { title: (t.split('\n').find(function (l) { return l.trim(); }) || 'From Ask Auntie').replace(/[*#>_`]/g, '').trim().slice(0, 80), caption: t, notes: '💬 From Ask Auntie', status: 'idea' } }); X.toast('🗂️ On your Board as an idea'); } catch (x) { X.toast(x.message); } }; });
@@ -154,7 +155,7 @@
       '<div style="margin-top:16px"><b style="font-size:13.5px">Ready-made — tap to add</b><div id="scEx" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div></div>');
     var paint = function () {
       $('#scL', s).innerHTML = (S.sched || []).length ? S.sched.map(function (x) {
-        return '<div class="scrow"><div style="flex:1;min-width:0"><b>' + esc(x.name) + '</b>' + (x.paused ? ' <span class="pill">Paused</span>' : '') + '<div class="muted" style="font-size:12.5px">' + esc(when(x)) + ' · ' + (x.web ? '🌐 web search' : 'no web search') + ' · ' + esc(DEST[x.dest]) + '</div>' +
+        return '<div class="scrow"><div style="flex:1 1 260px;min-width:0"><b>' + esc(x.name) + '</b>' + (x.paused ? ' <span class="pill">Paused</span>' : '') + '<div class="muted" style="font-size:12.5px">' + esc(when(x)) + ' · ' + (x.web ? '🌐 web search' : 'no web search') + ' · ' + esc(DEST[x.dest]) + '</div>' +
           '<div class="muted" style="font-size:12px">' + (x.paused ? '' : 'Next: ' + esc(niceWhen(x.next))) + (x.lastRun ? ' · Last ran ' + esc(niceWhen(x.lastRun)) : '') + (x.lastError ? ' · <span style="color:#B42318">⚠️ ' + esc(x.lastError) + '</span>' : '') + '</div></div>' +
           '<div class="row" style="gap:4px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" data-run="' + x.id + '">▶️ Run now</button><button class="btn ghost sm" data-ed="' + x.id + '">Edit</button><button class="btn ghost sm" data-pz="' + x.id + '">' + (x.paused ? 'Resume' : 'Pause') + '</button><button class="btn ghost sm" data-dl="' + x.id + '">✕</button></div></div>';
       }).join('') : '<p class="muted" style="margin:0">Nothing scheduled yet — add one of the ready-made ones below, or make your own.</p>';
@@ -214,7 +215,7 @@
       '.calist{width:250px;flex-shrink:0;border-right:1px solid var(--line,#E7E2D5);padding:12px;overflow:auto;background:#FBFAF6;display:flex;flex-direction:column;gap:4px}' +
       '.cali{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:13.5px;color:#1F2937}.cali span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cali:hover{background:#F1EEE6}.cali.on{background:#0F1E36;color:#fff}.cali.new span{font-weight:800}.cadot{width:8px;height:8px;border-radius:50%;background:#FFB81C;flex-shrink:0;font-style:normal}.cali.on .link{color:#FFB81C}.cali .link{opacity:.6}' +
       '.camoney{margin-top:auto;font-size:12px;color:var(--muted,#6B7280);padding:10px 4px 0}' +
-      '.camain{flex:1;display:flex;flex-direction:column;min-width:0}.cahead{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line,#E7E2D5)}.cahead b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cahead #caList{display:none}' +
+      '.camain{flex:1;display:flex;flex-direction:column;min-width:0}.cahead{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line,#E7E2D5)}.cahead b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cahead #caList,.cahead #caSch2{display:none}' +
       '.camsgs{flex:1;overflow:auto;padding:18px 16px}.cam{display:flex;gap:10px;margin-bottom:16px;max-width:820px;margin-left:auto;margin-right:auto}.cam.u{flex-direction:column;align-items:flex-end}' +
       '.cam.u .cab{background:#0F1E36;color:#fff;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%}.cam.u .cab a{color:#FFB81C}.cam.a .cab{background:#fff;border:1px solid #ECEDF1;border-radius:4px 16px 16px 16px;padding:12px 15px}' +
       '.caav{width:32px;height:32px;border-radius:50%;background:#E6F2EC;display:flex;align-items:center;justify-content:center;flex-shrink:0}' +
@@ -230,7 +231,7 @@
       '.cachips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.cachips span{background:#fff;border:1px solid #E2DDD0;border-radius:10px;padding:3px 9px;font-size:12.5px}' +
       '.cadots i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#057A44;margin-right:3px;animation:cad 1s infinite}.cadots i:nth-child(2){animation-delay:.15s}.cadots i:nth-child(3){animation-delay:.3s}@keyframes cad{0%,100%{opacity:.25}50%{opacity:1}}' +
       '.prrow{display:flex;gap:8px;align-items:center;margin-bottom:6px}.prUse{flex:1;text-align:left;border:1px solid #ECEDF1;background:#fff;border-radius:10px;padding:8px 11px;font:inherit;cursor:pointer;min-height:0}.prUse span{display:block;font-size:12.5px;color:#6B7280}' +
-      '@media (max-width:820px){.calist{display:none;position:absolute;z-index:5;height:calc(100vh - 120px);width:80%;box-shadow:0 8px 30px rgba(0,0,0,.15)}.ca.showlist .calist{display:flex}.cahead #caList{display:inline-flex}.ca{position:relative}.castart{grid-template-columns:1fr}}</style>';
+      '@media (max-width:820px){.calist{display:none;position:absolute;z-index:5;height:calc(100vh - 120px);width:80%;box-shadow:0 8px 30px rgba(0,0,0,.15)}.ca.showlist .calist{display:flex}.cahead #caList,.cahead #caSch2{display:inline-flex}.ca{position:relative}.castart{grid-template-columns:1fr}}</style>';
   }
 
   window.HQChat = { init: function (x) { X = x; }, view: view };
