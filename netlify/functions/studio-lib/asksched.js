@@ -97,7 +97,10 @@ async function runOne(email, id) {
     await chat.mark(email, cid, title);
     const answer = res.conv.msgs[res.conv.msgs.length - 1].text || '';
     if (s.dest !== 'chat' && answer) {
-      await require('./hq').save({ title: `${s.name} — ${label}`.slice(0, 120), caption: answer, notes: `⏰ Scheduled in Ask Auntie · ${s.name}`, status: s.dest === 'calendar' ? 'scheduled' : 'idea', planDate: s.dest === 'calendar' ? L.day : '' }, email);
+      // each piece of content becomes its own card (or one card when it's a single answer)
+      const hq = require('./hq'), P = chat.pieces(answer), base = { notes: `⏰ Scheduled in Ask Auntie · ${s.name} · ${label}`, status: s.dest === 'calendar' ? 'scheduled' : 'idea', planDate: s.dest === 'calendar' ? L.day : '' };
+      const cards = P.pieces.length ? P.pieces.map(p => ({ title: p.title.slice(0, 120), caption: p.body, type: chat.guessType(p.title + ' ' + p.body.slice(0, 200)) })) : [{ title: `${s.name.replace(/^[^A-Za-z0-9]+/, '')} — ${label}`.slice(0, 120), caption: answer }];
+      for (const c of cards.slice(0, 15)) await hq.save(Object.assign({}, base, c), email);
     }
     res = { cid };
   } catch (e) { err = e.message || 'It didn’t run'; }

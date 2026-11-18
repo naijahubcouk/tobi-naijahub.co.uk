@@ -39,16 +39,45 @@
   }
   function money() { var sp = S.spend || { usd: 0 }, cap = (S.cfg && S.cfg.capUsd) || 13; return 'This month: $' + (sp.usd || 0).toFixed(2) + ' of $' + cap.toFixed(0) + (S.isAdmin ? ' <button class="link" id="caCap">change</button>' : ''); }
 
+  // ✂️ an answer with several pieces of content ([[PIECE: title]] … [[END]]) — same rules as the server
+  var PIECE_RX = /^\s*\[\[\s*PIECE\s*:?\s*(.*?)\s*\]\]\s*$/i, END_RX = /^\s*\[\[\s*END\s*\]\]\s*$/i;
+  function pieces(text) {
+    var o = { intro: [], pieces: [], outro: [] }, cur = null, done = false;
+    String(text || '').split('\n').forEach(function (line) {
+      var m = line.match(PIECE_RX);
+      if (m) { cur = { title: m[1].replace(/[*#_`]/g, '').trim() || 'Idea', body: [] }; o.pieces.push(cur); done = false; return; }
+      if (END_RX.test(line)) { done = true; cur = null; return; }
+      if (cur && !done) cur.body.push(line); else (o.pieces.length ? o.outro : o.intro).push(line);
+    });
+    return { intro: o.intro.join('\n').trim(), outro: o.outro.join('\n').trim(), pieces: o.pieces.map(function (p) { return { title: p.title, body: p.body.join('\n').trim() }; }) };
+  }
+  function plain(text) { var p = pieces(text); if (!p.pieces.length) return String(text || ''); return [p.intro].concat(p.pieces.map(function (x) { return '**' + x.title + '**\n' + x.body; }), [p.outro]).filter(Boolean).join('\n\n'); }
+  function guessType(t) { return /carousel|slides?/i.test(t) ? 'carousel' : /reel|video|tiktok/i.test(t) ? 'reel' : /story|stories/i.test(t) ? 'story' : /blog|article/i.test(t) ? 'blog' : 'post'; }
+  // which pieces were already sent (this browser only — just a reminder)
+  function sentGet() { try { return JSON.parse(localStorage.getItem('hqchat-sent') || '{}'); } catch (e) { return {}; } }
+  function sentKey(i, j) { return (S.conv && S.conv.id) + ':' + i + ':' + j; }
+  function sentMark(i, j, what) { var o = sentGet(); o[sentKey(i, j)] = what; try { localStorage.setItem('hqchat-sent', JSON.stringify(o)); } catch (e) {} }
+  function canBoard() { return X.allowed && X.allowed('board'); }
+  function pieceCards(m, i) {
+    var P = pieces(m.text), sent = sentGet(), bd = canBoard();
+    return (P.intro ? md(P.intro) : '') + '<div class="capcs">' + P.pieces.map(function (p, j) {
+      var st = sent[sentKey(i, j)];
+      return '<div class="capc"><div class="capct"><span class="capn">' + (j + 1) + '</span><b>' + esc(p.title) + '</b>' + (st ? '<span class="capok">✓ ' + esc(st) + '</span>' : '') + '</div><div class="capcb">' + md(p.body) + '</div>' +
+        '<div class="capca"><button class="btn ghost sm" data-pcp="' + i + ':' + j + '">📋 Copy</button>' + (bd ? '<button class="btn ghost sm" data-pbd="' + i + ':' + j + '">🗂️ Board</button><button class="btn ghost sm" data-pcl="' + i + ':' + j + '">📅 Calendar</button>' : '') + '</div></div>';
+    }).join('') + '</div>' + (P.outro ? md(P.outro) : '');
+  }
+
   function bubble(m, i) {
     if (m.role === 'user') return '<div class="cam u"><div class="cab">' + (m.text ? md(m.text) : '') +
       ((m.imgs || []).length ? '<div class="caimgs">' + m.imgs.map(function (id) { return '<img src="' + IMG(id) + '" alt="">'; }).join('') + '</div>' : '') +
       ((m.files || []).filter(function (f) { return f.kind !== 'image'; }).map(function (f) { return '<div class="cafile">📄 ' + esc(f.name) + '</div>'; }).join('')) +
       '</div><div class="caact"><button class="link" data-sp="' + i + '">⭐ Save as prompt</button></div></div>';
-    return '<div class="cam a"><div class="caav">💚</div><div style="flex:1;min-width:0"><div class="cab">' + md(m.text || '') +
+    var many = pieces(m.text).pieces.length > 0;
+    return '<div class="cam a"><div class="caav">💚</div><div style="flex:1;min-width:0"><div class="cab">' + (many ? pieceCards(m, i) : md(m.text || '')) +
       ((m.imgs || []).length ? '<div class="caimgs big">' + m.imgs.map(function (id) { return '<a href="' + IMG(id) + '" target="_blank" rel="noopener"><img src="' + IMG(id) + '" alt="Picture"></a>'; }).join('') + '</div>' : '') +
       ((m.sources || []).length ? '<div class="casrc"><b>🌐 Sources</b>' + m.sources.map(function (u) { var d = u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]; return '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(d) + '</a>'; }).join('') + '</div>' : '') + '</div>' +
-      '<div class="caact">' + (m.web ? '<span class="muted">🌐 searched the web · </span>' : '') + '<button class="link" data-cp="' + i + '">📋 Copy</button>' +
-      (X.allowed && X.allowed('board') && !(m.imgs || []).length ? '<button class="link" data-bd="' + i + '">🗂️ Send to Board</button>' : '') +
+      '<div class="caact">' + (m.web ? '<span class="muted">🌐 searched the web · </span>' : '') + '<button class="link" data-cp="' + i + '">📋 Copy' + (many ? ' all' : '') + '</button>' +
+      (canBoard() && !(m.imgs || []).length ? (many ? '<button class="link" data-bda="' + i + '">🗂️ Send all ' + pieces(m.text).pieces.length + ' to Board</button>' : '<button class="link" data-bd="' + i + '">🗂️ Send to Board</button>') : '') +
       ((m.imgs || []).length ? '<a class="link" href="' + IMG(m.imgs[0]) + '" download="auntie-tobi-picture.jpg">⬇️ Download</a>' : '') + '</div></div></div>';
   }
 
@@ -96,7 +125,20 @@
     $('#caSch').onclick = function () { schedSheet(); };
     $('#caSch2').onclick = function () { S.showList = false; schedSheet(); };
     var cap = $('#caCap'); if (cap) cap.onclick = async function () { var v = prompt('Monthly limit for Ask Auntie, in US dollars ($13 ≈ £10)', (S.cfg && S.cfg.capUsd) || 13); if (!v) return; try { Object.assign(S, await X.api('chat-cap', { capUsd: Number(v) })); X.toast('Limit saved'); draw(); } catch (x) { X.toast(x.message); } };
-    $$('[data-cp]').forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(S.conv.msgs[+b.dataset.cp].text || ''); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
+    $$('[data-cp]').forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(plain(S.conv.msgs[+b.dataset.cp].text || '')); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
+    function piece(v) { var a = v.split(':'); return { i: +a[0], j: +a[1], p: pieces(S.conv.msgs[+a[0]].text).pieces[+a[1]] }; }
+    function card(p, extra) { return Object.assign({ title: p.title.slice(0, 120), caption: p.body, type: guessType(p.title + ' ' + p.body.slice(0, 200)), notes: '💬 From Ask Auntie', status: 'idea' }, extra || {}); }
+    $$('[data-pcp]').forEach(function (b) { b.onclick = function () { var x = piece(b.dataset.pcp); try { navigator.clipboard.writeText(x.p.title + '\n\n' + x.p.body); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
+    $$('[data-pbd]').forEach(function (b) { b.onclick = async function () { var x = piece(b.dataset.pbd); b.disabled = true; try { await X.api('save', { item: card(x.p) }); sentMark(x.i, x.j, 'On Board'); X.toast('🗂️ On your Board as an idea'); draw(); } catch (e) { X.toast(e.message); b.disabled = false; } }; });
+    $$('[data-pcl]').forEach(function (b) { b.onclick = function () { var x = piece(b.dataset.pcl), d = new Date(), day = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      var sh = X.sheet('<h2>📅 Plan on the Calendar</h2><p class="muted" style="margin:4px 0 12px">' + esc(x.p.title) + '</p><label class="lbl">Which day?</label><input type="date" id="pcD" value="' + day + '" min="' + day + '"><div class="row" style="gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn ghost" id="pcX">Cancel</button><button class="btn primary" id="pcOk">📅 Plan it</button></div>');
+      $('#pcX', sh).onclick = function () { sh.remove(); };
+      $('#pcOk', sh).onclick = async function () { var v = $('#pcD', sh).value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return X.toast('Pick a day'); this.disabled = true; try { await X.api('save', { item: card(x.p, { status: 'scheduled', planDate: v }) }); sentMark(x.i, x.j, 'Planned ' + new Date(v + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })); sh.remove(); X.toast('📅 Planned on your Calendar'); draw(); } catch (e) { X.toast(e.message); this.disabled = false; } };
+    }; });
+    $$('[data-bda]').forEach(function (b) { b.onclick = async function () { var i = +b.dataset.bda, P = pieces(S.conv.msgs[i].text).pieces, sent = sentGet(), todo = P.map(function (p, j) { return j; }).filter(function (j) { return !sent[sentKey(i, j)]; });
+      if (!todo.length) return X.toast('All of these are already sent');
+      b.disabled = true; b.textContent = '🗂️ Sending…';
+      try { await X.api('save-many', { source: 'me', items: todo.map(function (j) { return card(P[j]); }) }); todo.forEach(function (j) { sentMark(i, j, 'On Board'); }); X.toast('🗂️ ' + todo.length + ' on your Board as ideas'); draw(); } catch (e) { X.toast(e.message); b.disabled = false; } }; });
     $$('[data-bd]').forEach(function (b) { b.onclick = async function () { var t = S.conv.msgs[+b.dataset.bd].text || ''; try { await X.api('save', { item: { title: (t.split('\n').find(function (l) { return l.trim(); }) || 'From Ask Auntie').replace(/[*#>_`]/g, '').trim().slice(0, 80), caption: t, notes: '💬 From Ask Auntie', status: 'idea' } }); X.toast('🗂️ On your Board as an idea'); } catch (x) { X.toast(x.message); } }; });
     $$('[data-sp]').forEach(function (b) { b.onclick = function () { promptSheet(S.conv.msgs[+b.dataset.sp].text || ''); }; });
     // paste a screenshot straight in
@@ -213,6 +255,7 @@
   function css() {
     return '<style>#view:has(.ca){padding:0}.ca{display:flex;height:calc(100vh - 64px);min-height:520px}' +
       '.calist{width:250px;flex-shrink:0;border-right:1px solid var(--line,#E7E2D5);padding:12px;overflow:auto;background:#FBFAF6;display:flex;flex-direction:column;gap:4px}' +
+      '.capcs{display:flex;flex-direction:column;gap:10px;margin:10px 0}.capc{border:1px solid #E7E2D5;border-radius:12px;padding:12px 14px;background:#FFFDF8}.capct{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}.capct b{flex:1;min-width:0}.capn{width:24px;height:24px;border-radius:50%;background:#0F1E36;color:#FFB81C;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}.capok{font-size:12px;font-weight:700;color:#057A44;background:#E6F4EC;border-radius:999px;padding:2px 8px}.capcb{font-size:14px}.capca{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed #E7E2D5}' +
       '.cali{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:13.5px;color:#1F2937}.cali span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cali:hover{background:#F1EEE6}.cali.on{background:#0F1E36;color:#fff}.cali.new span{font-weight:800}.cadot{width:8px;height:8px;border-radius:50%;background:#FFB81C;flex-shrink:0;font-style:normal}.cali.on .link{color:#FFB81C}.cali .link{opacity:.6}' +
       '.camoney{margin-top:auto;font-size:12px;color:var(--muted,#6B7280);padding:10px 4px 0}' +
       '.camain{flex:1;display:flex;flex-direction:column;min-width:0}.cahead{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line,#E7E2D5)}.cahead b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cahead #caList,.cahead #caSch2{display:none}' +
@@ -222,7 +265,7 @@
       '.cab p{margin:0 0 8px;line-height:1.55}.cab p:last-child{margin-bottom:0}.cab ul,.cab ol{margin:4px 0 8px 20px;padding:0;line-height:1.55}.cab h4{margin:10px 0 6px;font-size:15px}.cab code{background:#F3F4F6;border-radius:4px;padding:0 4px}' +
       '.caimgs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.caimgs img{width:90px;height:90px;object-fit:cover;border-radius:10px}.caimgs.big img{width:100%;max-width:420px;height:auto;border-radius:12px}' +
       '.cafile{font-size:12.5px;opacity:.85;margin-top:6px}.casrc{margin-top:10px;padding-top:8px;border-top:1px solid #F1F2F5;display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px;align-items:center}.casrc a{background:#F3F4F6;border-radius:10px;padding:2px 8px;color:#0F1E36;text-decoration:none}' +
-      '.caact{display:flex;gap:12px;font-size:12.5px;margin-top:5px;padding-left:2px;align-items:center}.caact .link{font-size:12.5px}' +
+      '.caact{display:flex;gap:4px 12px;font-size:12.5px;margin-top:5px;padding-left:2px;align-items:center;flex-wrap:wrap}.caact>*{white-space:nowrap}.caact .link{font-size:12.5px}' +
       '.caempty{text-align:center;max-width:620px;margin:6vh auto 0}.caempty h2{margin:6px 0}.castart{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;text-align:left}.castart button{border:1px solid #ECEDF1;background:#fff;border-radius:12px;padding:11px 12px;font:inherit;font-size:13.5px;cursor:pointer;display:flex;gap:8px;min-height:0}.castart span{font-size:18px}' +
       '.cacomp{border-top:1px solid var(--line,#E7E2D5);padding:10px 16px 12px;background:#FBFAF6}.cabar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}' +
       '.caseg{display:flex;border:1px solid #E2DDD0;border-radius:10px;overflow:hidden}.caseg button{border:0;background:#fff;padding:6px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;min-height:0}.caseg button.on{background:#0F1E36;color:#FFB81C}' +
