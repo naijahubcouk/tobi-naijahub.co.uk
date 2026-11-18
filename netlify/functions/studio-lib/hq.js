@@ -65,8 +65,8 @@ function clean(raw, prev) {
 async function load() { return (await getJson(KEY)) || { items: {} }; }
 function live(items) { return Object.values(items).filter(c => !c.deletedAt); }
 
-async function list() {
-  const s = await load();
+async function list(pre) {
+  const s = pre || await load();
   return live(s.items).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
 }
 
@@ -136,8 +136,8 @@ async function remove(ids, restore, by) {
 }
 
 // The Bin: deleted cards, newest first, with days left before they go for good.
-async function bin() {
-  const s = await load();
+async function bin(pre) {
+  const s = pre || await load();
   const now = Date.now();
   return Object.values(s.items).filter(c => c.deletedAt).map(c => ({ ...c, daysLeft: Math.max(0, Math.ceil((Date.parse(c.deletedAt) + TRASH_DAYS * core.DAY - now) / core.DAY)) }))
     .filter(c => c.daysLeft > 0).sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
@@ -179,10 +179,10 @@ async function getImage(id) { if (!/^i[a-z0-9]{6,30}$/.test(String(id || ''))) r
 
 // For the Admin Today list: posts planned for today that aren't posted yet.
 // ↪️ Kept Weekly ideas that weren't posted on their day move to today (and keep moving) until they're posted.
-async function carryOver() {
+async function carryOver(pre) {
   const day = core.dayKey(); let n = 0;
   const due = c => !c.deletedAt && /✨ Weekly ideas/.test(c.notes || '') && ['idea', 'drafting', 'ready', 'scheduled'].includes(c.status) && c.planDate && c.planDate < day;
-  const s0 = await load(); if (!live(s0.items).some(due)) return 0;
+  const s0 = pre || await load(); if (!live(s0.items).some(due)) return 0;
   await cas(KEY, cur => {
     if (!cur || !cur.items) return undefined;
     const items = { ...cur.items };
@@ -204,7 +204,14 @@ const SECTIONS = BASIC.concat(['chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'f
 const DEFAULT_ACCESS = {};
 // always an explicit list now (older "everything" meant the BASIC pages)
 function cleanAccess(v) { if (!Array.isArray(v)) return null; const out = SECTIONS.filter(x => v.includes(x)); return out.length ? out : null; }
+// the team list is read on every request (sign-in check + access) — keep it for a few seconds so one request reads it once
+let teamMemo = null;
 async function teamFull() {
+  if (teamMemo && teamMemo.until > Date.now()) return teamMemo.p;
+  const p = teamFullRead(); teamMemo = { p, until: Date.now() + 5000 }; p.catch(() => { teamMemo = null; });
+  return p;
+}
+async function teamFullRead() {
   let t = await getJson(TEAM_KEY);
   // one-time removal (Nov 2026)
   if (t && Array.isArray(t.emails) && !t.removed1) { t.emails = t.emails.filter(e => !REMOVED.includes(e)); REMOVED.forEach(e => { if (t.names) delete t.names[e]; if (t.access) delete t.access[e]; }); t.removed1 = true; await setJson(TEAM_KEY, t).catch(() => {}); }
@@ -217,7 +224,7 @@ async function teamFull() {
 async function sectionsFor(email) { return (await teamFull()).access[email] || BASIC.slice(); }
 async function team() { return (await teamFull()).emails; }
 // Display names: team names + "Auntie Tobi" for admins.
-async function names() { const t = await teamFull(); const out = { ...t.names }; for (const e of core.adminEmails()) out[e] = 'Auntie Tobi'; return out; }
+async function names(pre) { const t = pre || await teamFull(); const out = { ...t.names }; for (const e of core.adminEmails()) out[e] = 'Auntie Tobi'; return out; }
 async function setTeam(emails, nameMap, accessMap) {
   const raw = (Array.isArray(emails) ? emails : []).map(e => String(e || '').trim()).filter(Boolean);
   for (const e of raw) if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) || !core.normalizeEmail(e)) throw new HttpError(400, 'invalid', `“${e.slice(0, 80)}” doesn’t look like an email address.`);
@@ -227,8 +234,10 @@ async function setTeam(emails, nameMap, accessMap) {
   if (list.length > 20) throw new HttpError(400, 'invalid', 'Up to 20 people.');
   const ac = {}; const givenA = accessMap && typeof accessMap === 'object' ? accessMap : {};
   for (const [k, v] of Object.entries(givenA)) { const e = core.normalizeEmail(k); const a = cleanAccess(v); if (e && list.includes(e) && a) ac[e] = a; }
+  teamMemo = null;
   await setJson(TEAM_KEY, { emails: list, names: nm, access: ac, removed1: true, updatedAt: core.nowIso() });
+  teamMemo = null;
   return { emails: list, names: nm, access: ac };
 }
 
-module.exports = { carryOver, BASIC, SECTIONS, sectionsFor, team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };
+module.exports = { load, carryOver, BASIC, SECTIONS, sectionsFor, team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };

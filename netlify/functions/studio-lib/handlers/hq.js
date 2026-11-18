@@ -118,11 +118,27 @@ exports.handler = handler(async (ctx) => {
   }
 
   const who = await requireHq(ctx);
-  await core.rateLimit('hq', who.email, 1200, 60 * 60 * 1000);
+  // read-only opening calls check the hourly limit alongside the work; everything else checks first
+  const limited = core.rateLimit('hq', who.email, 1200, 60 * 60 * 1000);
+  if (['boot', 'hq-today'].includes(body.action)) { const [, out] = await Promise.all([limited, run()]); return out; }
+  await limited;
+  return run();
+  async function run() {
   { const need = sectionsOf(String(body.action || '')); if (need) mustAllow(who, need); }
   const has = list => can(who, list);
   switch (body.action) {
-    case 'boot': await hq.carryOver().catch(() => {}); return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? appFor(who, await apppub.list()) : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], tcars: has(['cars']) ? await tplcar.list() : [], vads: has(['vads']) ? await videoad.list() : [], abizNew: who.isAdmin ? await require('../addbiz').hqList().then(r => r.subs.filter(x => x.status === 'new').length + r.listed.length).catch(() => 0) : 0 };
+    case 'boot': {
+      // everything HQ needs to open, fetched at the same time (the Board is read once)
+      let st = await hq.load();
+      if (await hq.carryOver(st).catch(() => 0)) st = await hq.load();
+      const P = (ok, fn, d) => (ok ? Promise.resolve().then(fn).catch(e => { console.error('[hq boot]', e && e.message); return d; }) : Promise.resolve(d));
+      const [tf, app, subs, igc, cars, tcars, vads, abizNew] = await Promise.all([
+        hq.teamFull(), P(has(['app']), () => apppub.list(), []), P(has(['subs']), () => eventsub.list(), []), P(has(['igc']), () => igcomment.list(), []),
+        P(has(['cars']), () => carousel.list(), []), P(has(['cars']), () => tplcar.list(), []), P(has(['vads']), () => videoad.list(), []),
+        P(who.isAdmin, () => require('../addbiz').hqList().then(r => r.subs.filter(x => x.status === 'new').length + r.listed.length), 0),
+      ]);
+      return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(tf), team: who.isAdmin ? tf : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list(st) : [], bin: has(['bin']) ? await hq.bin(st) : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? appFor(who, app) : [], appCategories: apppub.CATEGORIES, subs, igc, igcTarget: igcomment.DAILY_TARGET, cars, tcars, vads, abizNew };
+    }
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -710,5 +726,6 @@ exports.handler = handler(async (ctx) => {
       return { team: t };
     }
     default: throw new HttpError(400, 'unknown_action', 'Unknown action.');
+  }
   }
 }, { allowGet: true, maxBody: 5.8 * 1024 * 1024 });   // (raised for Ask Auntie PDFs)

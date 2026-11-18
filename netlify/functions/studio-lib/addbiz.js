@@ -515,15 +515,16 @@ async function requestCode(email, ip) {
 
 // ───────────── HQ review ─────────────
 async function hqList() {
-  const items = await subs(), all = await bizdir.all(), bySlug = new Map(all.map(b => [b.slug, b]));
+  const [items, all] = await Promise.all([subs(), bizdir.all()]), bySlug = new Map(all.map(b => [b.slug, b]));
   const members = new Set();
-  for (const s of items) if (s.status === 'new') { const m = await core.getMember(s.email).catch(() => null); if (m) members.add(s.email); }
+  await Promise.all(items.filter(s => s.status === 'new').map(s => core.getMember(s.email).catch(() => null).then(m => { if (m) members.add(s.email); })));
+  const [signups, started, announce] = await Promise.all([siteSignupsOnce(all), seriesStarted(), announceInfo()]);
   return {
     subs: items.slice(0, 300).map(s => Object.assign({}, s, { biz: bySlug.get(s.slug) ? hqBiz(bySlug.get(s.slug)) : null, hasStudio: members.has(s.email) || s.status !== 'new' })),
-    listed: listedQueue(await siteSignupsOnce(all), await seriesStarted()).map(b => ({ slug: b.slug, name: b.name, email: b.ownerEmail, ownerName: b.ownerName || '', uploadedAt: b.uploadedAt, via: b.via })),
+    listed: listedQueue(signups, started).map(b => ({ slug: b.slug, name: b.name, email: b.ownerEmail, ownerName: b.ownerName || '', uploadedAt: b.uploadedAt, via: b.via })),
     waitingCsv: all.filter(b => b.via && b.status === 'published' && !b.hidden && b.src === 'hq' && !b.uploadedAt).map(b => ({ slug: b.slug, name: b.name })),
     ownerEdits: all.filter(b => b.ownerEd && (b.src === 'website' || b.uploadedAt)).map(b => ({ slug: b.slug, name: b.name, at: b.ownerEdAt || '', fields: Object.keys(b.ownerEd), values: b.ownerEd })),
-    announce: await announceInfo(),
+    announce,
   };
 }
 function hqBiz(b) { const o = {}; for (const k of ['slug', 'name', 'cat', 'loc', 'addr', 'desc', 'long', 'phone', 'wa', 'email', 'contactEmail', 'ig', 'website', 'fb', 'tt', 'img', 'status', 'src', 'uploadedAt', 'listedMailAt', 'ownerEmail', 'ownerName', 'via']) if (b[k]) o[k] = b[k]; return o; }
