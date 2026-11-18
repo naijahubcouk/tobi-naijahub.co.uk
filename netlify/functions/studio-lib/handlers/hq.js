@@ -640,6 +640,19 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
       return await emails.list();
     }
+    case 'chat-series': case 'chat-series-start': case 'chat-series-step': case 'chat-series-brief': {
+      // 🎬 Content series — Auntie Tobi's 56 series, written from her master brief (only when asked; never posted)
+      const cs = require('../contentseries');
+      if (body.action === 'chat-series') return Object.assign(await cs.catalog(who.email), { brief: who.isAdmin ? await cs.brief() : undefined, isAdmin: who.isAdmin });
+      if (body.action === 'chat-series-brief') {
+        if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the brief.');
+        const b = body.reset ? await cs.resetBrief() : await cs.saveBrief(body.text, who.email);
+        await core.audit(who.email, 'hq_series_brief', { reset: !!body.reset }); return { brief: b };
+      }
+      await core.rateLimit('hq-chat', who.email, 120, 60 * 60 * 1000, 'That’s a lot of messages this hour — please wait a little.');
+      if (body.action === 'chat-series-start') return cs.start(who.email, body.req);
+      return cs.step(who.email, body.id);
+    }
     case 'chat-state': case 'chat-get': case 'chat-send': case 'chat-del': case 'chat-rename': case 'chat-prompt': case 'chat-prompt-del': case 'chat-cap': case 'chat-sched-save': case 'chat-sched-del': case 'chat-sched-run': {
       // 💬 Ask Auntie — private assistant (anyone with the "Ask Auntie" page; each person sees only their own chats)
       const ac = require('../askchat');

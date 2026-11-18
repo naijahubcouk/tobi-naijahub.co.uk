@@ -39,6 +39,88 @@
   }
   function money() { var sp = S.spend || { usd: 0 }, cap = (S.cfg && S.cfg.capUsd) || 13; return 'This month: $' + (sp.usd || 0).toFixed(2) + ' of $' + cap.toFixed(0) + (S.isAdmin ? ' <button class="link" id="caCap">change</button>' : ''); }
 
+  // 🎬 Content series — a pack is written step by step (3 steps a post) while you watch
+  var PART_LABEL = { a: 'ideas, hooks and research', b: 'the full content', c: 'caption, comments and quality check' };
+  function packInfo(c) {
+    var sr = c && c.series; if (!sr) return null;
+    var total = sr.posts.length * 3, done = sr.done ? total : sr.next.k * 3 + ['a', 'b', 'c'].indexOf(sr.next.part);
+    return { total: total, done: done, sr: sr };
+  }
+  function packBanner() {
+    var c = S.conv, pi = packInfo(c); if (!pi || pi.sr.done) return '';
+    var b = S.build && S.build.cid === c.id ? S.build : null, nx = pi.sr.next, pct = Math.round(pi.done / pi.total * 100);
+    var bar = '<div class="pkbar"><i style="width:' + pct + '%"></i></div>';
+    if (b && !b.error) return '<div class="pkban"><span class="cadots"><i></i><i></i><i></i></span> <b>Writing post ' + (nx.k + 1) + ' of ' + pi.sr.posts.length + '</b> — ' + PART_LABEL[nx.part] + (nx.part === 'a' && pi.sr.web ? ' (searching the web)' : '') + '…' + bar + '<div class="muted" style="font-size:12px">Keep this page open. Each post takes about a minute.</div></div>';
+    return '<div class="pkban warn">' + (b && b.error ? '⚠️ ' + esc(b.error) + '<br>' : '⏸️ This pack isn’t finished — ' + pi.done + ' of ' + pi.total + ' steps done.') + bar + '<button class="btn primary sm" id="pkGo" style="margin-top:8px">▶️ ' + (b && b.error ? 'Try again' : 'Continue writing') + '</button></div>';
+  }
+  async function runPack(cid) {
+    if (S.build && S.build.cid === cid && !S.build.error) return;
+    S.build = { cid: cid }; draw();
+    try {
+      for (var guard = 0; guard < 40; guard++) {
+        var r = await X.api('chat-series-step', { id: cid });
+        if (r.items) S.items = r.items; if (r.spend) S.spend = r.spend;
+        if (S.conv && S.conv.id === cid) S.conv = r.conv;
+        if (r.done) { S.build = null; draw(); X.toast('🎬 Your content is ready'); return; }
+        draw();
+      }
+    } catch (x) { S.build = { cid: cid, error: x.message || 'Something went wrong' }; draw(); }
+  }
+  async function seriesSheet() {
+    var cat; try { cat = await X.api('chat-series'); } catch (x) { return X.toast(x.message); }
+    S.seriesCat = cat;
+    var nx = cat.allNext || 1, to = Math.min(56, nx + 6);
+    var s = X.sheet('<h2>🎬 Content series</h2><p class="muted" style="margin:4px 0 12px">Pick a series and Ask Auntie writes the full pack from your brief — ideas, hooks, the content, caption, comments, WhatsApp version, sources and a quality score. Only when you ask. Nothing is posted.</p>' +
+      '<div class="serq"><button data-sq="today"><b>☀️ Create today’s content</b><span>3 posts: Value, Discovery and Connection</span></button><button data-sq="all"><b>📚 All 56 series</b><span>' + (nx > 1 ? 'Continue: series ' + nx + '–' + to : 'Series 1–7 first, then Continue') + '</span></button></div>' +
+      (nx > 1 ? '<div style="text-align:right;margin:-4px 0 8px"><button class="link" id="serRestart" style="font-size:12.5px">Start All 56 again from series 1</button></div>' : '') +
+      '<input id="serF" placeholder="🔎 Search — e.g. jobs, food, 28" style="margin-bottom:10px">' +
+      '<div id="serL"></div>' +
+      '<div class="row" style="gap:8px;justify-content:space-between;margin-top:12px">' + (cat.isAdmin ? '<button class="btn ghost" id="serBr">✏️ Edit brief</button>' : '<span></span>') + '<button class="btn ghost" id="serX">Close</button></div>');
+    function list(q) {
+      q = String(q || '').toLowerCase().trim();
+      $('#serL', s).innerHTML = cat.pillars.map(function (pl) {
+        var rows = cat.series.filter(function (x) { return x.pillar === pl.id && (!q || (x.n + ' ' + x.name + ' ' + x.desc).toLowerCase().indexOf(q) >= 0 || String(x.n) === q.replace(/^0/, '')); });
+        return rows.length ? '<div class="serh">' + esc(pl.name) + '</div>' + rows.map(function (x) { return '<button class="serow" data-sn="' + x.n + '"><span class="sern">' + (x.n < 10 ? '0' : '') + x.n + '</span><span><b>' + esc(x.name) + '</b><small>' + esc(x.desc) + '</small></span></button>'; }).join('') : '';
+      }).join('') || '<p class="muted">No series match that.</p>';
+      $$('[data-sn]', s).forEach(function (b) { b.onclick = function () { s.remove(); seriesForm(+b.dataset.sn); }; });
+    }
+    list(''); $('#serF', s).oninput = function () { list(this.value); };
+    $('#serX', s).onclick = function () { s.remove(); };
+    $$('[data-sq]', s).forEach(function (b) { b.onclick = function () { s.remove(); seriesForm(b.dataset.sq); }; });
+    var rs = $('#serRestart', s); if (rs) rs.onclick = function () { s.remove(); seriesForm('all', 1); };
+    var br = $('#serBr', s); if (br) br.onclick = function () { s.remove(); briefSheet(cat.brief); };
+  }
+  function seriesForm(what, from) {
+    var cat = S.seriesCat, one = typeof what === 'number', x = one ? cat.series.filter(function (y) { return y.n === what; })[0] : null;
+    var head = one ? '🎬 ' + (x.n < 10 ? '0' : '') + x.n + '. ' + esc(x.name) : what === 'today' ? '☀️ Today’s content' : '📚 All 56 series — ' + (from || cat.allNext || 1) + ' to ' + Math.min(56, (from || cat.allNext || 1) + 6);
+    var sub = one ? esc(x.desc) : what === 'today' ? 'Three fresh posts — one Value, one Discovery, one Connection. Ask Auntie picks the best series for each.' : 'One full pack for each of the next 7 series. Then tap Continue for the next 7.';
+    var opt = function (arr, lab) { return arr.map(function (v) { return '<option value="' + v + '">' + (lab[v] || v) + '</option>'; }).join(''); };
+    var FL = { auto: 'Auto (best for the idea)', reel: 'Reel', carousel: 'Carousel', 'static': 'Static post', story: 'Stories', blog: 'Blog' }, TL = { auto: 'Auto', relatable: 'Relatable', emotional: 'Emotional', educational: 'Educational', funny: 'Funny', storytelling: 'Storytelling', professional: 'Professional' };
+    var e = X.sheet('<h2>' + head + '</h2><p class="muted" style="margin:4px 0 12px">' + sub + '</p>' +
+      (one ? '<label class="lbl">Number of posts</label><select id="sfN">' + [1, 2, 3, 4, 5].map(function (n) { return '<option>' + n + '</option>'; }).join('') + '</select>' : '') +
+      '<label class="lbl">Topic or focus <span class="muted">(optional)</span></label><input id="sfT" placeholder="Leave blank and Ask Auntie picks the strongest">' +
+      '<label class="lbl">UK city or audience <span class="muted">(optional)</span></label><input id="sfC" placeholder="e.g. Manchester, new arrivals, parents">' +
+      '<div class="row" style="gap:10px"><div style="flex:1"><label class="lbl">Format</label><select id="sfFo">' + opt(cat.formats, FL) + '</select></div><div style="flex:1"><label class="lbl">Tone</label><select id="sfTo">' + opt(cat.tones, TL) + '</select></div></div>' +
+      '<label class="lbl">Special instructions <span class="muted">(optional)</span></label><textarea id="sfS" rows="2"></textarea>' +
+      '<label class="row" style="gap:8px;margin-top:10px;align-items:center;font-weight:600"><input type="checkbox" id="sfW"' + (one ? (x.web ? ' checked' : '') : ' checked') + ' style="width:auto"> 🌐 Search the web for current facts</label>' +
+      '<p class="muted" style="font-size:12.5px;margin-top:8px">Each post is written in 3 steps (about a minute) and costs roughly 2–5p. Keep the page open while it writes.</p>' +
+      '<div class="row" style="gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="sfX">Cancel</button><button class="btn primary" id="sfGo">✨ Create</button></div>');
+    $('#sfX', e).onclick = function () { e.remove(); };
+    $('#sfGo', e).onclick = async function () {
+      var req = { mode: one ? 'one' : what, n: one ? x.n : undefined, posts: one ? +$('#sfN', e).value : undefined, from: from, topic: $('#sfT', e).value, city: $('#sfC', e).value, format: $('#sfFo', e).value, tone: $('#sfTo', e).value, notes: $('#sfS', e).value, web: $('#sfW', e).checked };
+      this.disabled = true;
+      try { var r = await X.api('chat-series-start', { req: req }); S.items = r.items; S.conv = r.conv; S.showList = false; e.remove(); runPack(r.conv.id); } catch (x2) { X.toast(x2.message); this.disabled = false; }
+    };
+  }
+  function briefSheet(b) {
+    var e = X.sheet('<h2>✏️ Your content brief</h2><p class="muted" style="margin:4px 0 10px">Ask Auntie follows this for every Content series pack. Update it when something changes (for example Business Club features or prices).' + (b && b.at ? ' Last changed ' + esc(new Date(b.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + '.' : '') + '</p>' +
+      '<textarea id="brT" rows="18" style="font-size:13px">' + esc(b ? b.text : '') + '</textarea>' +
+      '<div class="row" style="gap:8px;justify-content:space-between;margin-top:12px"><button class="link" id="brR">Go back to the original brief</button><span><button class="btn ghost" id="brX">Cancel</button> <button class="btn primary" id="brS">Save</button></span></div>');
+    $('#brX', e).onclick = function () { e.remove(); };
+    $('#brS', e).onclick = async function () { try { await X.api('chat-series-brief', { text: $('#brT', e).value }); e.remove(); X.toast('Brief saved'); } catch (x) { X.toast(x.message); } };
+    $('#brR', e).onclick = async function () { if (!confirm('Go back to the original brief? Your changes will be lost.')) return; try { await X.api('chat-series-brief', { reset: true }); e.remove(); X.toast('Back to the original brief'); } catch (x) { X.toast(x.message); } };
+  }
+
   // ✂️ an answer with several pieces of content ([[PIECE: title]] … [[END]]) — same rules as the server
   var PIECE_RX = /^\s*\[\[\s*PIECE\s*:?\s*(.*?)\s*\]\]\s*$/i, END_RX = /^\s*\[\[\s*END\s*\]\]\s*$/i;
   function pieces(text) {
@@ -59,11 +141,11 @@
   function sentMark(i, j, what) { var o = sentGet(); o[sentKey(i, j)] = what; try { localStorage.setItem('hqchat-sent', JSON.stringify(o)); } catch (e) {} }
   function canBoard() { return X.allowed && X.allowed('board'); }
   function pieceCards(m, i) {
-    var P = pieces(m.text), sent = sentGet(), bd = canBoard();
+    var P = pieces(m.text), sent = sentGet(), bd = canBoard(), sr = m.series && S.conv && S.conv.series, wip = sr && !sr.done ? sr.next.k : 99;
     return (P.intro ? md(P.intro) : '') + '<div class="capcs">' + P.pieces.map(function (p, j) {
       var st = sent[sentKey(i, j)];
       return '<div class="capc"><div class="capct"><span class="capn">' + (j + 1) + '</span><b>' + esc(p.title) + '</b>' + (st ? '<span class="capok">✓ ' + esc(st) + '</span>' : '') + '</div><div class="capcb">' + md(p.body) + '</div>' +
-        '<div class="capca"><button class="btn ghost sm" data-pcp="' + i + ':' + j + '">📋 Copy</button>' + (bd ? '<button class="btn ghost sm" data-pbd="' + i + ':' + j + '">🗂️ Board</button><button class="btn ghost sm" data-pcl="' + i + ':' + j + '">📅 Calendar</button>' : '') + '</div></div>';
+        (j >= wip ? '<div class="muted" style="font-size:12.5px;margin-top:8px">✍️ Still writing this post…</div>' : '<div class="capca"><button class="btn ghost sm" data-pcp="' + i + ':' + j + '">📋 Copy</button>' + (bd ? '<button class="btn ghost sm" data-pbd="' + i + ':' + j + '">🗂️ Board</button><button class="btn ghost sm" data-pcl="' + i + ':' + j + '">📅 Calendar</button>' : '') + '</div>') + '</div>';
     }).join('') + '</div>' + (P.outro ? md(P.outro) : '');
   }
 
@@ -72,25 +154,27 @@
       ((m.imgs || []).length ? '<div class="caimgs">' + m.imgs.map(function (id) { return '<img src="' + IMG(id) + '" alt="">'; }).join('') + '</div>' : '') +
       ((m.files || []).filter(function (f) { return f.kind !== 'image'; }).map(function (f) { return '<div class="cafile">📄 ' + esc(f.name) + '</div>'; }).join('')) +
       '</div><div class="caact"><button class="link" data-sp="' + i + '">⭐ Save as prompt</button></div></div>';
-    var many = pieces(m.text).pieces.length > 0;
+    var many = pieces(m.text).pieces.length > 0, wipPack = m.series && S.conv && S.conv.series && !S.conv.series.done;
+    if (m.series && !m.text) return '';
     return '<div class="cam a"><div class="caav">💚</div><div style="flex:1;min-width:0"><div class="cab">' + (many ? pieceCards(m, i) : md(m.text || '')) +
       ((m.imgs || []).length ? '<div class="caimgs big">' + m.imgs.map(function (id) { return '<a href="' + IMG(id) + '" target="_blank" rel="noopener"><img src="' + IMG(id) + '" alt="Picture"></a>'; }).join('') + '</div>' : '') +
       ((m.sources || []).length ? '<div class="casrc"><b>🌐 Sources</b>' + m.sources.map(function (u) { var d = u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]; return '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(d) + '</a>'; }).join('') + '</div>' : '') + '</div>' +
       '<div class="caact">' + (m.web ? '<span class="muted">🌐 searched the web · </span>' : '') + '<button class="link" data-cp="' + i + '">📋 Copy' + (many ? ' all' : '') + '</button>' +
-      (canBoard() && !(m.imgs || []).length ? (many ? '<button class="link" data-bda="' + i + '">🗂️ Send all ' + pieces(m.text).pieces.length + ' to Board</button>' : '<button class="link" data-bd="' + i + '">🗂️ Send to Board</button>') : '') +
+      (canBoard() && !(m.imgs || []).length && !wipPack ? (many ? '<button class="link" data-bda="' + i + '">🗂️ Send all ' + pieces(m.text).pieces.length + ' to Board</button>' : '<button class="link" data-bd="' + i + '">🗂️ Send to Board</button>') : '') +
       ((m.imgs || []).length ? '<a class="link" href="' + IMG(m.imgs[0]) + '" download="auntie-tobi-picture.jpg">⬇️ Download</a>' : '') + '</div></div></div>';
   }
 
   function draw() {
     var c = S.conv, msgs = (c && c.msgs) || [];
     var h = css() + '<div class="ca' + (S.showList ? ' showlist' : '') + '">' +
-      '<aside class="calist"><button class="btn primary" id="caNew" style="width:100%">＋ New chat</button><button class="btn ghost" id="caSch" style="width:100%;margin-bottom:6px">⏰ Scheduled' + ((S.sched || []).length ? ' (' + S.sched.length + ')' : '') + '</button>' +
+      '<aside class="calist"><button class="btn primary" id="caNew" style="width:100%">＋ New chat</button><button class="btn ghost" id="caSer" style="width:100%">🎬 Content series</button><button class="btn ghost" id="caSch" style="width:100%;margin-bottom:6px">⏰ Scheduled' + ((S.sched || []).length ? ' (' + S.sched.length + ')' : '') + '</button>' +
       (S.items.length ? S.items.map(function (x) { return '<div class="cali' + (c && c.id === x.id ? ' on' : '') + (x.unseen ? ' new' : '') + '" data-open="' + x.id + '"><span>' + esc(x.title) + '</span>' + (x.unseen ? '<i class="cadot"></i>' : '') + '<button class="link" data-del="' + x.id + '" title="Delete">✕</button></div>'; }).join('') : '<p class="muted" style="font-size:13px;margin:10px 4px">Your chats will be saved here.</p>') +
       '<div class="camoney">' + money() + '</div></aside>' +
-      '<section class="camain"><div class="cahead"><button class="btn ghost sm" id="caList">☰ Chats</button><button class="btn ghost sm" id="caSch2">⏰ Scheduled</button><b>' + esc(c ? c.title : 'New chat') + '</b>' + (c ? '<button class="link" id="caRen">rename</button>' : '') + '</div>' +
+      '<section class="camain"><div class="cahead"><button class="btn ghost sm" id="caList">☰ Chats</button><button class="btn ghost sm" id="caSer2">🎬 Series</button><button class="btn ghost sm" id="caSch2">⏰ Scheduled</button><b>' + esc(c ? c.title : 'New chat') + '</b>' + (c ? '<button class="link" id="caRen">rename</button>' : '') + '</div>' +
       '<div class="camsgs" id="caMsgs">' + (msgs.length ? msgs.map(bubble).join('') :
         '<div class="caempty"><div style="font-size:40px">💚</div><h2>Ask Auntie anything</h2><p class="muted">Writing, ideas, replies, UK news and up-to-date info (it searches the web), photos and PDFs, and pictures. Your chats are private to you.</p>' +
         '<div class="castart">' + STARTERS.map(function (s, i) { return '<button data-st="' + i + '"><span>' + s[0] + '</span>' + esc(s[1]) + '</button>'; }).join('') + '</div></div>') +
+        packBanner() +
         (S.busy ? '<div class="cam a"><div class="caav">💚</div><div class="cab"><span class="cadots"><i></i><i></i><i></i></span> ' + (S.mode === 'image' ? 'Making your picture…' : S.busyWeb ? 'Searching the web…' : 'Thinking…') + '</div></div>' : '') + '</div>' +
       '<div class="cacomp">' +
         (S.files.length ? '<div class="cachips">' + S.files.map(function (f, i) { return '<span>' + (f.kind === 'image' ? '🖼️' : '📄') + ' ' + esc(f.name) + ' <button class="link" data-rf="' + i + '">✕</button></span>'; }).join('') + '</div>' : '') +
@@ -124,6 +208,9 @@
     $('#caPr').onclick = promptSheet;
     $('#caSch').onclick = function () { schedSheet(); };
     $('#caSch2').onclick = function () { S.showList = false; schedSheet(); };
+    $('#caSer').onclick = function () { seriesSheet(); };
+    $('#caSer2').onclick = function () { S.showList = false; seriesSheet(); };
+    var pk = $('#pkGo'); if (pk) pk.onclick = function () { runPack(S.conv.id); };
     var cap = $('#caCap'); if (cap) cap.onclick = async function () { var v = prompt('Monthly limit for Ask Auntie, in US dollars ($13 ≈ £10)', (S.cfg && S.cfg.capUsd) || 13); if (!v) return; try { Object.assign(S, await X.api('chat-cap', { capUsd: Number(v) })); X.toast('Limit saved'); draw(); } catch (x) { X.toast(x.message); } };
     $$('[data-cp]').forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(plain(S.conv.msgs[+b.dataset.cp].text || '')); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
     function piece(v) { var a = v.split(':'); return { i: +a[0], j: +a[1], p: pieces(S.conv.msgs[+a[0]].text).pieces[+a[1]] }; }
@@ -255,10 +342,14 @@
   function css() {
     return '<style>#view:has(.ca){padding:0}.ca{display:flex;height:calc(100vh - 64px);min-height:520px}' +
       '.calist{width:250px;flex-shrink:0;border-right:1px solid var(--line,#E7E2D5);padding:12px;overflow:auto;background:#FBFAF6;display:flex;flex-direction:column;gap:4px}' +
+      '.pkban{background:#FFF8E6;border:1px solid #F1D48A;border-radius:12px;padding:12px 14px;margin:8px 0 8px 44px;font-size:14px}.pkban.warn{background:#FFF4F0;border-color:#F3C7B6}.pkbar{height:6px;background:#EFE8D6;border-radius:9px;margin:8px 0;overflow:hidden}.pkbar i{display:block;height:100%;background:#057A44;border-radius:9px;transition:width .4s}' +
+      '.serq{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.serq button{text-align:left;border:1px solid #E7E2D5;background:#0F1E36;color:#fff;border-radius:12px;padding:12px;cursor:pointer;font:inherit}.serq button span{display:block;font-size:12.5px;color:#F5D58A;margin-top:3px}' +
+      '.serh{font-weight:800;font-size:13px;margin:12px 0 6px;color:#0F1E36}.serow{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:1px solid #ECEDF1;background:#fff;border-radius:10px;padding:9px 10px;margin-bottom:6px;cursor:pointer;font:inherit;color:inherit}.serow:hover{border-color:#057A44}.serow small{display:block;color:#6B7280;font-size:12px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.sern{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:#E6F4EC;color:#057A44;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}' +
+      '@media (max-width:600px){.serq{grid-template-columns:1fr}}' +
       '.capcs{display:flex;flex-direction:column;gap:10px;margin:10px 0}.capc{border:1px solid #E7E2D5;border-radius:12px;padding:12px 14px;background:#FFFDF8}.capct{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}.capct b{flex:1;min-width:0}.capn{width:24px;height:24px;border-radius:50%;background:#0F1E36;color:#FFB81C;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}.capok{font-size:12px;font-weight:700;color:#057A44;background:#E6F4EC;border-radius:999px;padding:2px 8px}.capcb{font-size:14px}.capca{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed #E7E2D5}' +
       '.cali{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:13.5px;color:#1F2937}.cali span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cali:hover{background:#F1EEE6}.cali.on{background:#0F1E36;color:#fff}.cali.new span{font-weight:800}.cadot{width:8px;height:8px;border-radius:50%;background:#FFB81C;flex-shrink:0;font-style:normal}.cali.on .link{color:#FFB81C}.cali .link{opacity:.6}' +
       '.camoney{margin-top:auto;font-size:12px;color:var(--muted,#6B7280);padding:10px 4px 0}' +
-      '.camain{flex:1;display:flex;flex-direction:column;min-width:0}.cahead{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line,#E7E2D5)}.cahead b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cahead #caList,.cahead #caSch2{display:none}' +
+      '.camain{flex:1;display:flex;flex-direction:column;min-width:0}.cahead{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line,#E7E2D5)}.cahead b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cahead #caList,.cahead #caSch2,.cahead #caSer2{display:none}' +
       '.camsgs{flex:1;overflow:auto;padding:18px 16px}.cam{display:flex;gap:10px;margin-bottom:16px;max-width:820px;margin-left:auto;margin-right:auto}.cam.u{flex-direction:column;align-items:flex-end}' +
       '.cam.u .cab{background:#0F1E36;color:#fff;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%}.cam.u .cab a{color:#FFB81C}.cam.a .cab{background:#fff;border:1px solid #ECEDF1;border-radius:4px 16px 16px 16px;padding:12px 15px}' +
       '.caav{width:32px;height:32px;border-radius:50%;background:#E6F2EC;display:flex;align-items:center;justify-content:center;flex-shrink:0}' +
@@ -274,7 +365,7 @@
       '.cachips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.cachips span{background:#fff;border:1px solid #E2DDD0;border-radius:10px;padding:3px 9px;font-size:12.5px}' +
       '.cadots i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#057A44;margin-right:3px;animation:cad 1s infinite}.cadots i:nth-child(2){animation-delay:.15s}.cadots i:nth-child(3){animation-delay:.3s}@keyframes cad{0%,100%{opacity:.25}50%{opacity:1}}' +
       '.prrow{display:flex;gap:8px;align-items:center;margin-bottom:6px}.prUse{flex:1;text-align:left;border:1px solid #ECEDF1;background:#fff;border-radius:10px;padding:8px 11px;font:inherit;cursor:pointer;min-height:0}.prUse span{display:block;font-size:12.5px;color:#6B7280}' +
-      '@media (max-width:820px){.calist{display:none;position:absolute;z-index:5;height:calc(100vh - 120px);width:80%;box-shadow:0 8px 30px rgba(0,0,0,.15)}.ca.showlist .calist{display:flex}.cahead #caList,.cahead #caSch2{display:inline-flex}.ca{position:relative}.castart{grid-template-columns:1fr}}</style>';
+      '@media (max-width:820px){.calist{display:none;position:absolute;z-index:5;height:calc(100vh - 120px);width:80%;box-shadow:0 8px 30px rgba(0,0,0,.15)}.ca.showlist .calist{display:flex}.cahead #caList,.cahead #caSch2,.cahead #caSer2{display:inline-flex}.ca{position:relative}.castart{grid-template-columns:1fr}}</style>';
   }
 
   window.HQChat = { init: function (x) { X = x; }, view: view };

@@ -170,4 +170,4 @@ function pieces(text) {
 function plain(text) { const p = pieces(text); if (!p.pieces.length) return String(text || ''); return [p.intro].concat(p.pieces.map(x => `**${x.title}**\n${x.body}`), [p.outro]).filter(Boolean).join('\n\n'); }
 function guessType(t) { return /carousel|slides?/i.test(t) ? 'carousel' : /reel|video|tiktok/i.test(t) ? 'reel' : /story|stories/i.test(t) ? 'story' : /blog|article/i.test(t) ? 'blog' : 'post'; }
 
-module.exports = { pieces, plain, guessType, mark, seen, unseenCount, state, list, get, remove, rename, send, prompts, savePrompt, delPrompt, setCap, spend, NEEDS_WEB };
+module.exports = { H, system, guardCap, addSpend, shortTitle, newId, pieces, plain, guessType, mark, seen, unseenCount, state, list, get, remove, rename, send, prompts, savePrompt, delPrompt, setCap, spend, NEEDS_WEB };
