@@ -271,11 +271,15 @@
     '.mpF .mpS-list .mp-it{background:#fff;border:0;border-radius:16px;padding:12px;margin-bottom:7px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.05)}' +
     '.mpF .mpS-list .mp-it .tx small{font-weight:500}.mpF .mpS-list .mp-it .r{color:#6B7280;font-weight:700;font-size:12.5px}.mpF .mpS-list .mp-it .r.red{color:#B42318}' +
     '.mpF .mp-ck{border-radius:50%!important;border:2.5px solid #057A44;width:22px;height:22px}.mpF .mp-ck.on{background:#057A44;color:#fff}' +
-    '.mpF .mp-it.k-pay .mp-ck{border-color:#E5A100}.mpF .mp-it.k-pay .mp-ck.on{background:#E5A100}.mpF .mp-it.k-cel .mp-ck{border-color:#C2185B}.mpF .mp-it.k-late .mp-ck{border-color:#B42318}' +
-    '.mpF .mp-it.k-cel .r{color:#C2185B!important}.mpF .mp-it.dn{opacity:.55}' +
+    '.mpF .mp-it.k-pay .mp-ck{border-color:#E5A100}.mpF .mp-it.k-pay .mp-ck.on{background:#E5A100}.mpF .mp-it.k-cel .mp-ck{border-color:#B7791F}.mpF .mp-it.k-late .mp-ck{border-color:#B42318}' +
+    '.mpF .mp-it.k-cel .r{color:#B7791F!important}.mpF .mp-it.dn{opacity:.55}' +
     '.mpF .mp-add{margin:14px 0 6px}.mpF .mp-add input{border:1.5px solid #E5E7EB;border-radius:16px;background:#fff}.mpF .mp-add .mp-btn{border-radius:14px}' +
     '.mpF .mp-card{border-radius:18px;border-color:#ECEDF1}' +
     '.mpF-fabw{position:sticky;bottom:78px;z-index:6;display:flex;justify-content:flex-end;pointer-events:none;height:0;overflow:visible}' +
+    // 🎂 Celebrations card: navy & gold (Nov 2026), softer than the old bright pink
+    '.mpC-hero{background:#0F1E36}.mpC-hero small{color:#FFB81C;opacity:1}.mpC-hero .av{background:#FFB81C;color:#0F1E36;border-color:rgba(255,255,255,.25)}' +
+    '.mpC-hero .cd>*{background:rgba(255,255,255,.10)}.mpC-hero .cd b{color:#FFB81C}.mpC-hero .btns>*{background:rgba(255,255,255,.12);color:#fff}.mpC-hero .btns>*:first-child{background:#FFB81C;color:#0F1E36}.mpC-hero .btns .o{background:rgba(255,255,255,.12);color:#fff}' +
+    '.mpC-row .rt a{color:#0F1E36}.mpC-btns .pk{background:#0F1E36}' +
     '.mpF-fab{pointer-events:auto;transform:translateY(-100%);height:50px;padding:0 20px;border:0;border-radius:25px;background:#057A44;color:#fff;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 6px 18px rgba(5,122,68,.35)}';
   function addCss() { if (document.getElementById('mpCss')) return; var st = document.createElement('style'); st.id = 'mpCss'; st.textContent = CSS + CSSB + CSSF; document.head.appendChild(st); }
 
@@ -629,7 +633,7 @@
   // ── 🎉 Celebrations: countdown hero, months, people, "get ready" checklist, confetti on the day, friends add their birthday ──
   var FAM = ['mum', 'dad', 'son', 'daughter', 'sister', 'brother', 'grandma', 'grandpa'], PART = ['husband', 'wife', 'partner'];
   function relGroup(r) { return FAM.indexOf(r) >= 0 ? 'family' : PART.indexOf(r) >= 0 ? 'partner' : r === 'colleague' ? 'work' : 'friends'; }
-  var GRP = { family: ['👨‍👩‍👧 Family', '#057A44', '#E3F2EA'], partner: ['💑 Partner', '#C2185B', '#FCE4EC'], friends: ['👯 Friends', '#7B2FF7', '#EFE5FD'], work: ['💼 Work', '#0F766E', '#DDF3F0'] };
+  var GRP = { family: ['👨‍👩‍👧 Family', '#057A44', '#E3F2EA'], partner: ['💑 Partner', '#A3456B', '#F8E8EE'], friends: ['👯 Friends', '#3B5B8F', '#E6ECF5'], work: ['💼 Work', '#0F766E', '#DDF3F0'] };
   function relLabel(r) { var x = REL.filter(function (q) { return q[0] === r; })[0]; return x ? x[1] : ''; }
   function initial(i) { var n = (i.cel && i.cel.n) || i.t || '?'; return /^(our|my)$/i.test(n) ? '💍' : n.trim().charAt(0).toUpperCase(); }
   function heroTitle(i) { var n = i.cel.n || '', a = celAge(i); if (i.cel.k === 'birthday') return n ? (a ? n + ' turns ' + a : n + (/s$/i.test(n) ? '’' : '’s') + ' birthday') : 'Birthday'; if (i.cel.k === 'wedding' || i.cel.k === 'anniversary') return a ? (/^(our|my)$/i.test(n) || !n ? 'Our ' : n + ' — ') + ordinal(a) + ' anniversary' : celShort(i); return i.t; }
@@ -661,7 +665,7 @@
     // 📥 added by friends
     var inbox = P.inbox || [];
     if (inbox.length) h += '<div class="mp-card"><div class="mp-lbl" style="margin-top:0">📥 Added by friends <span style="color:#057A44">· ' + inbox.length + ' new</span></div>' + inbox.map(function (x) { var mo = +x.d.slice(0, 2), dd = +x.d.slice(3);
-      return '<div class="mpC-row" style="border:0;padding:6px 0"><div class="av" style="background:#7B2FF7">' + esc(x.n.charAt(0).toUpperCase()) + '</div><div style="flex:1;min-width:0"><b>' + esc(x.n) + '</b><small>' + dd + ' ' + cap(MONTHS[mo - 1]) + (x.y ? ' · born ' + x.y : '') + '</small></div><button class="mp-btn" style="padding:6px 11px" data-inb-add="' + x.id + '">＋ Add</button><button class="mp-btn g" style="padding:6px 9px" data-inb-x="' + x.id + '" aria-label="Dismiss">✕</button></div>'; }).join('') + '</div>';
+      return '<div class="mpC-row" style="border:0;padding:6px 0"><div class="av" style="background:#3B5B8F">' + esc(x.n.charAt(0).toUpperCase()) + '</div><div style="flex:1;min-width:0"><b>' + esc(x.n) + '</b><small>' + dd + ' ' + cap(MONTHS[mo - 1]) + (x.y ? ' · born ' + x.y : '') + '</small></div><button class="mp-btn" style="padding:6px 11px" data-inb-add="' + x.id + '">＋ Add</button><button class="mp-btn g" style="padding:6px 9px" data-inb-x="' + x.id + '" aria-label="Dismiss">✕</button></div>'; }).join('') + '</div>';
     if (mine.length) {
       // 🗓️ months strip (next 12 months)
       var all = mine.concat(big).sort(function (a, b) { return a.d.localeCompare(b.d); }), d0 = new Date(), months = [];
@@ -676,7 +680,7 @@
         var n = daysTo(i.d), when = n === 0 ? 'Today 🎉' : n === 1 ? 'Tomorrow' : n + ' days';
         if (i.big) { h += '<div class="mpC-row"><div class="av" style="background:#FFB81C;color:#0F1E36">' + i.e + '</div><div style="flex:1;min-width:0"><b>' + esc(i.t) + '</b><small>' + nice(i.d, true) + '</small></div><div class="rt"><b>' + when + '</b><a href="' + cardUrl(i) + '" data-card="' + esc(i.id) + '">💌 Card</a></div></div>'; return; }
         var g = GRP[relGroup(i.cel.r)], rd = rdOf(i), done = ['card', 'msg', 'gift', 'call'].filter(function (q) { return rd[q]; }).length, sent = (i.cel.sent || []).indexOf(yr) >= 0 && n > 300;
-        h += '<div class="mpC-row" data-ready="' + i.id + '"><div class="av" style="background:' + g[1] + '">' + esc(initial(i)) + '</div><div style="flex:1;min-width:0"><b>' + esc(celShort(i)) + (relLabel(i.cel.r) && relLabel(i.cel.r).toLowerCase() !== String(i.cel.n || '').toLowerCase() ? ' <span class="tg" style="background:' + g[2] + ';color:' + g[1] + '">' + esc(relLabel(i.cel.r)) + '</span>' : '') + '</b><small>' + nice(i.d, true) + (celNum(i) ? ' · ' + celNum(i) : '') + (done && n <= 30 ? ' · ✅ ' + done + '/4 ready' : '') + '</small></div><div class="rt"><b' + (n <= 7 ? ' style="color:#C2185B"' : '') + '>' + when + '</b>' + (sent ? '<small>💛 celebrated</small>' : '') + '</div></div>';
+        h += '<div class="mpC-row" data-ready="' + i.id + '"><div class="av" style="background:' + g[1] + '">' + esc(initial(i)) + '</div><div style="flex:1;min-width:0"><b>' + esc(celShort(i)) + (relLabel(i.cel.r) && relLabel(i.cel.r).toLowerCase() !== String(i.cel.n || '').toLowerCase() ? ' <span class="tg" style="background:' + g[2] + ';color:' + g[1] + '">' + esc(relLabel(i.cel.r)) + '</span>' : '') + '</b><small>' + nice(i.d, true) + (celNum(i) ? ' · ' + celNum(i) : '') + (done && n <= 30 ? ' · ✅ ' + done + '/4 ready' : '') + '</small></div><div class="rt"><b' + (n <= 7 ? ' style="color:#B7791F"' : '') + '>' + when + '</b>' + (sent ? '<small>💛 celebrated</small>' : '') + '</div></div>';
       });
       var cel = mine.filter(function (i) { return (i.cel.sent || []).indexOf(yr) >= 0; }).length;
       if (cel) h += '<div class="mpC-stat"><b>💛 ' + cel + '</b><div>' + (cel === 1 ? 'person' : 'people') + ' celebrated this year — keep it going!</div></div>';
