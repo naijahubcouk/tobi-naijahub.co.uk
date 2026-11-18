@@ -17,7 +17,7 @@
   // ───── state (kept on this phone too, so it opens instantly and works offline) ─────
   var P = (function () { try { return JSON.parse(ls.get(KEY) || '{}'); } catch (e) { return {}; } })();
   P.items = Array.isArray(P.items) ? P.items : []; P.lists = Array.isArray(P.lists) ? P.lists : [];
-  var dirtyL = {}, dirty = {}, syncT = null, syncing = false, view = { tab: 'plan', showDone: false };
+  var dirtyL = {}, dirty = {}, syncT = null, syncing = false, view = { tab: 'plan', showDone: false, f: 'all', later: [] };
   function store() { ls.set(KEY, JSON.stringify({ items: P.items, lists: P.lists, signedIn: !!P.signedIn, email: P.email || '', name: P.name || '', town: P.town || '', news: !!P.news, rm: P.rm || '', sun: P.sun || null })); }
   var live = function () { return P.items.filter(function (i) { return !i.del; }); };
 
@@ -255,7 +255,29 @@
     '.mpB-cel{display:flex;align-items:center;gap:11px;width:100%;border:0;font-family:inherit;text-align:left;cursor:pointer;margin:6px 0 4px;border-radius:16px;padding:12px 14px;background:linear-gradient(120deg,#7B2FF7,#F107A3 60%,#FF8A3D);color:#fff}' +
     '.mpB-cel .e{font-size:28px}.mpB-cel b{display:block;font-size:15.5px}.mpB-cel small{font-size:12.5px;opacity:.92}.mpB-cel i{margin-left:auto;background:#fff;color:#C2185B;font-style:normal;font-weight:800;font-size:12.5px;border-radius:12px;padding:7px 11px;white-space:nowrap}' +
     '.mpB .mp-card{border-radius:16px;border-color:#EDE3CC}.mpB .mp-warn{border-radius:14px}';
-  function addCss() { if (document.getElementById('mpCss')) return; var st = document.createElement('style'); st.id = 'mpCss'; st.textContent = CSS + CSSB; document.head.appendChild(st); }
+  // ───── 🎯 Design F "Focus" (Nov 2026): one "Do this next" card, filter chips, a clean list, floating ＋ Add ─────
+  var CSSF = 'body.mp-nochat #messages{background:#F7F7F9}' +
+    '.mpF-hd{display:flex;justify-content:space-between;align-items:baseline;margin:2px 2px 0}.mpF-hd h1{font-size:25px;font-weight:800;color:#0F1E36;margin:0;letter-spacing:-.3px}.mpF-hd span{font-size:13px;color:#6B7280;font-weight:600}' +
+    '.mpF-focus{margin-top:12px;background:#0F1E36;color:#fff;border-radius:24px;padding:16px;position:relative;overflow:hidden}' +
+    '.mpF-focus:after{content:"";position:absolute;right:-34px;top:-34px;width:130px;height:130px;border-radius:50%;background:radial-gradient(#FFB81C 0 30%,transparent 31%),radial-gradient(rgba(255,184,28,.22) 0 60%,transparent 61%);pointer-events:none}' +
+    '.mpF-focus small{display:block;font-size:11px;font-weight:800;letter-spacing:.8px;color:#FFB81C;text-transform:uppercase}.mpF-focus small.red{color:#FF8A80}' +
+    '.mpF-focus h2{font-size:22px;line-height:1.25;margin:5px 0 0;max-width:76%;color:#fff;font-weight:800;word-wrap:break-word}.mpF-focus p{font-size:13.5px;opacity:.78;margin:4px 0 0}' +
+    '.mpF-row{display:flex;gap:8px;margin-top:14px;position:relative;z-index:1}.mpF-row button{flex:1;border:0;border-radius:12px;padding:11px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer}' +
+    '.mpF-done{background:#FFB81C;color:#0F1E36}.mpF-later{background:rgba(255,255,255,.13);color:#fff}' +
+    '.mpF-focus.clear{background:#057A44}.mpF-focus.clear small{color:#FFD873}' +
+    '.mpF-chips{display:flex;gap:7px;margin:14px 0 2px;overflow-x:auto;scrollbar-width:none}.mpF-chips::-webkit-scrollbar{display:none}' +
+    '.mpF-chips button{border:1px solid #E5E7EB;background:#fff;color:#0F1E36;border-radius:20px;padding:7px 12px;font-family:inherit;font-size:12.5px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0}.mpF-chips button.on{background:#057A44;border-color:#057A44;color:#fff}' +
+    '.mpF .mp-lbl{font-size:12px;font-weight:800;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;margin:16px 2px 7px}.mpF .mp-lbl.red{color:#B42318}' +
+    '.mpF .mpS-list .mp-it{background:#fff;border:0;border-radius:16px;padding:12px;margin-bottom:7px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.05)}' +
+    '.mpF .mpS-list .mp-it .tx small{font-weight:500}.mpF .mpS-list .mp-it .r{color:#6B7280;font-weight:700;font-size:12.5px}.mpF .mpS-list .mp-it .r.red{color:#B42318}' +
+    '.mpF .mp-ck{border-radius:50%!important;border:2.5px solid #057A44;width:22px;height:22px}.mpF .mp-ck.on{background:#057A44;color:#fff}' +
+    '.mpF .mp-it.k-pay .mp-ck{border-color:#E5A100}.mpF .mp-it.k-pay .mp-ck.on{background:#E5A100}.mpF .mp-it.k-cel .mp-ck{border-color:#C2185B}.mpF .mp-it.k-late .mp-ck{border-color:#B42318}' +
+    '.mpF .mp-it.k-cel .r{color:#C2185B!important}.mpF .mp-it.dn{opacity:.55}' +
+    '.mpF .mp-add{margin:14px 0 6px}.mpF .mp-add input{border:1.5px solid #E5E7EB;border-radius:16px;background:#fff}.mpF .mp-add .mp-btn{border-radius:14px}' +
+    '.mpF .mp-card{border-radius:18px;border-color:#ECEDF1}' +
+    '.mpF-fabw{position:sticky;bottom:78px;z-index:6;display:flex;justify-content:flex-end;pointer-events:none;height:0;overflow:visible}' +
+    '.mpF-fab{pointer-events:auto;transform:translateY(-100%);height:50px;padding:0 20px;border:0;border-radius:25px;background:#057A44;color:#fff;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 6px 18px rgba(5,122,68,.35)}';
+  function addCss() { if (document.getElementById('mpCss')) return; var st = document.createElement('style'); st.id = 'mpCss'; st.textContent = CSS + CSSB + CSSF; document.head.appendChild(st); }
 
   // ───── small UI helpers ─────
   function toast(msg, undo) {
@@ -309,7 +331,7 @@
   function row(i, opts) {
     opts = opts || {}; var t = today(), late = i.d && i.d < t && !i.done;
     if (i.cel) return '<div class="mp-it k-cel" data-open="' + i.id + '"><button class="mp-ck" data-tick="' + i.id + '" aria-label="Done"></button><div class="tx">' + celEmoji(i) + ' ' + esc(i.t) + (celNum(i) ? '<small>' + celNum(i) + '</small>' : '') + '</div><div class="r" style="color:#057A44;font-weight:700">' + countdown(i.d) + '</div></div>';
-    var sub = [i.tm ? niceTime(i.tm) : '', i.ck && i.ck.length ? '☑️ ' + i.ck.filter(function (c) { return c.x; }).length + '/' + i.ck.length : '', i.note ? '📝' : ''].filter(Boolean).join(' · ');
+    var sub = [i.tm && !(i.d === t && !i.done && !opts.noDate) ? niceTime(i.tm) : '', i.ck && i.ck.length ? '☑️ ' + i.ck.filter(function (c) { return c.x; }).length + '/' + i.ck.length : '', i.note ? '📝' : ''].filter(Boolean).join(' · ');
     return '<div class="mp-it' + (i.done ? ' dn' : '') + ' k-' + kindOf(i) + '" data-open="' + i.id + '"><button class="mp-ck' + (i.done ? ' on' : '') + '" data-tick="' + i.id + '" aria-label="Done">' + (i.done ? '✓' : '') + '</button>' +
       '<div class="tx">' + esc(i.t) + (i.rep ? '<span class="mp-chip">🔁 ' + { d: 'daily', w: 'weekly', m: 'monthly', y: 'yearly' }[i.rep] + '</span>' : '') + (sub ? '<small>' + sub + '</small>' : '') + '</div>' +
       (opts.noDate ? '' : '<div class="r' + (late ? ' red' : '') + '">' + (i.done ? '' : esc(i.d ? (i.d === t ? (i.tm ? niceTime(i.tm) : '') : nice(i.d)) : '')) + '</div>') + '</div>';
@@ -454,29 +476,46 @@
     var root = document.getElementById('mpRoot'); if (!root) return;
     var g = groups(), has = live().length > 0;
     var dN = new Date(), t = today(), dateLong = cap(DAYS[dN.getDay()]) + ' ' + dN.getDate() + ' ' + cap(MONTHS[dN.getMonth()]);
-    // 💚 Look B banner: date in gold, big title, one friendly summary line
-    var banner = function (title, line, cards) { return '<div class="mpB-hd' + (cards ? ' cards' : '') + '"><small>' + dateLong + '</small><h1>' + title + '</h1>' + (line ? '<p>' + line + '</p>' : '') + '</div>'; };
+    // 🎯 design F header: big title, short date on the right
+    var banner = function (title) { return '<div class="mpF-hd"><h1>' + title + '</h1><span>' + cap(DAYS[dN.getDay()]).slice(0, 3) + ' ' + dN.getDate() + ' ' + cap(MONTHS[dN.getMonth()]).slice(0, 3) + '</span></div>'; };
     var nextCel = live().filter(function (i) { return i.cel && !i.done && daysTo(i.d) >= 0; }).sort(function (a, b) { return a.d.localeCompare(b.d); })[0];
     var h;
-    if (view.tab === 'cel') h = banner('Celebrations', nextCel ? '' : 'Never miss a birthday again 🎂');   // the pink card below already shows who's next
-    else if (view.tab === 'shop') { var tl = target(), left = tl ? tl.items.filter(function (i) { return !i.x; }).length : 0; h = banner('Shopping', left ? '🛒 ' + left + ' thing' + (left === 1 ? '' : 's') + ' to buy' : 'Tap what you need — it goes on your list 🛒'); }
-    root.classList.add('mpB');
+    if (view.tab === 'cel') h = banner('Celebrations');
+    else if (view.tab === 'shop') h = banner('Shopping');
+    root.classList.remove('mpB'); root.classList.add('mpF');
     var nav = '<div class="mpS-nav">' + [['plan', '📋', 'Plan'], ['cel', '🎉', 'Celebrate'], ['shop', '🛒', 'Shopping']].map(function (x) { return '<button data-tab="' + x[0] + '"' + (view.tab === x[0] ? ' class="on"' : '') + '><i>' + x[1] + '</i>' + x[2] + '</button>'; }).join('') + '<button data-mp-gear><i>⚙️</i>Settings</button></div>';
     var gear = function () { root.querySelectorAll('[data-mp-gear]').forEach(function (b) { b.onclick = function () { if (P.signedIn) settings(); else signIn(); }; }); };
     root.classList.add('mpS');
     if (view.tab === 'cel') { root.innerHTML = h + '<div style="height:10px"></div>' + celHtml() + nav; bindCel(root); bindTabs(root); gear(); return; }
     if (view.tab === 'shop') { root.innerHTML = h + '<div style="height:10px"></div>' + shopHtml() + nav; bindShop(root); bindTabs(root); gear(); return; }
-    // 💚 Look B: banner + 3 count cards (Today · This week · Birthdays)
+    // 🎯 design F: one "Do this next" card, then filter chips and a clean list
     var isTask = function (i) { return !i.cel; };
     var doneToday = live().filter(function (i) { return !i.cel && ((i.done && i.doneAt === t) || (i.rep && i.last === t && !i.done)); });
-    var dueNow = g.over.concat(g.today).filter(isTask), totalToday = dueNow.length + doneToday.length;
-    var weekN = g.today.concat(g.week).filter(isTask).length;
-    var celN = live().filter(function (i) { return i.cel && !i.done && daysTo(i.d) >= 0 && daysTo(i.d) <= 30; }).length;
-    var line = !has ? 'Bills, birthdays and shopping in one place 💚' : totalToday ? totalToday + ' thing' + (totalToday === 1 ? '' : 's') + ' today' + (doneToday.length ? ' · ' + doneToday.length + ' done 💪' : '') + (g.over.filter(isTask).length ? ' · ⚠️ ' + g.over.filter(isTask).length + ' overdue' : '') : 'Nothing due today 🎉';
-    h = banner('My Plan', line, has);
-    if (has) h += '<div class="mpB-cards"><button class="mpB-c" data-go="today">Today<em>✅</em><b>' + doneToday.length + '/' + totalToday + '</b></button><button class="mpB-c" data-go="week">This week<em>📅</em><b>' + weekN + '</b></button><button class="mpB-c" data-go="cel">Birthdays<em>🎂</em><b>' + celN + '</b></button></div>';
+    var base = function (i) { return i.cel ? 'cel' : (i.lk || PAYRX.test(i.t || '')) ? 'pay' : 'task'; };
+    var pool = g.over.concat(g.today).filter(function (i) { return !i.done; });
+    var nowHM = ('0' + dN.getHours()).slice(-2) + ':' + ('0' + dN.getMinutes()).slice(-2);
+    // overdue first, then today's timed things still to come, then the rest of today
+    pool.sort(function (a, b) { var ra = a.d < t ? 0 : a.tm && a.tm >= nowHM ? 1 : a.tm ? 2 : 3, rb = b.d < t ? 0 : b.tm && b.tm >= nowHM ? 1 : b.tm ? 2 : 3; return ra - rb || (a.d + (a.tm || '99')).localeCompare(b.d + (b.tm || '99')); });
+    var fresh = pool.filter(function (i) { return view.later.indexOf(i.id) < 0; });
+    if (!fresh.length && pool.length) { view.later = []; fresh = pool; }
+    var fo = fresh[0];
+    h = banner('My Plan');
+    if (has) {
+      if (fo) {
+        var when = fo.cel ? (daysTo(fo.d) === 0 ? 'Today 🎉' : nice(fo.d, true)) : fo.d < t ? 'Was due ' + nice(fo.d, true) : 'Today' + (fo.tm ? ' at ' + niceTime(fo.tm) : '');
+        var more = pool.length - 1;
+        h += '<div class="mpF-focus"><small' + (fo.d < t ? ' class="red">⚠️ Overdue' : '>⏰ Do this next') + '</small><h2>' + (fo.cel ? celEmoji(fo) + ' ' : '') + esc(fo.t) + '</h2><p>' + esc(when) + (more > 0 ? ' · ' + more + ' more after this' : '') + '</p>' +
+          '<div class="mpF-row"><button class="mpF-done" data-fdone="' + fo.id + '">✓ Done</button>' + (pool.length > 1 ? '<button class="mpF-later" data-flater="' + fo.id + '">Later</button>' : '<button class="mpF-later" data-open-f="' + fo.id + '">Open</button>') + '</div></div>';
+      } else {
+        var nx = g.week.concat(g.later).filter(function (i) { return !i.done; })[0];
+        h += '<div class="mpF-focus clear"><small>🎉 All done for today</small><h2>Nothing left today</h2><p>' + (nx ? 'Next: ' + esc(nx.t) + ' · ' + esc(nice(nx.d, true)) : 'Enjoy your day 💚') + '</p></div>';
+      }
+      var F = view.f || 'all', chip = function (k, l) { return '<button data-fchip="' + k + '"' + (F === k ? ' class="on"' : '') + '>' + l + '</button>'; };
+      h += '<div class="mpF-chips">' + chip('all', 'All') + chip('task', '✅ Tasks') + chip('pay', '💷 Bills') + chip('cel', '🎂 Birthdays') + '</div>';
+    }
     if (has && !P.signedIn) h += '<div class="mp-warn"><span style="flex:1">⚠️ <b>Not saved yet</b> — it’s only on this phone. Save it to your free Auntie Tobi account.</span><button class="mp-btn" data-mp-save>💚 Save my plan</button></div>';
-    h += '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
+    var addBox = '<form class="mp-add" id="mpF"><input id="mpQ" placeholder="✏️ e.g. “Pay rent every 1st”" autocomplete="off" maxlength="140"><button class="mp-btn" aria-label="Add">＋</button></form><div class="mp-hint" id="mpHint"></div>';
+    if (!has) h += addBox;
     if (!has) {
       h += '<div class="mp-card"><div class="mp-empty"><b>Your day is looking clear! 💚</b>Add something to get started — bills, appointments, things to renew. <br><span style="font-size:13px;color:#6B7280">Free — sign in with just your email, no password.</span></div>' +
         '<div class="mp-welcome"><button data-w="item"><span>📋</span><div>Add something to remember<small>“Dentist Friday 4pm”, “Pay rent every 1st”</small></div></button>' +
@@ -484,15 +523,15 @@
         '<button data-w="cel"><span>🎉</span><div>Add a birthday or anniversary<small>Auntie Tobi reminds you — and helps you make a card</small></div></button>' +
         '<button data-w="shop"><span>🛒</span><div>Start a shopping list<small>Naija groceries, weekly shop, party — ready to go</small></div></button></div></div>';
     } else {
-      var sec = function (label, list, red, id) { return list.length ? '<div class="mp-lbl' + (red ? ' red' : '') + '"' + (id ? ' id="' + id + '"' : '') + '>' + label + '</div>' + list.map(function (i) { return row(i); }).join('') : ''; };
-      var notBan = function (i) { return !(nextCel && i.id === nextCel.id); };   // the next celebration has its own banner
+      var fk = function (i) { return F === 'all' || base(i) === F; };
+      var sec = function (label, list, red, id) { list = list.filter(fk); return list.length ? '<div class="mp-lbl' + (red ? ' red' : '') + '"' + (id ? ' id="' + id + '"' : '') + '>' + label + '</div>' + list.map(function (i) { return row(i); }).join('') : ''; };
       var doneIds = doneToday.map(function (i) { return i.id; });
-      var todayRows = g.today.filter(notBan).concat(doneToday.filter(function (i) { return i.done; }));   // ticked today stays here, crossed out
-      var celBan = nextCel && daysTo(nextCel.d) <= 30 ? '<button class="mpB-cel" data-ready="' + nextCel.id + '"><span class="e">' + celEmoji(nextCel) + '</span><div><b>' + esc(celShort(nextCel, daysTo(nextCel.d) === 0)) + ' · ' + esc(daysTo(nextCel.d) === 0 ? 'today! 🎉' : daysTo(nextCel.d) === 1 ? 'tomorrow' : 'in ' + daysTo(nextCel.d) + ' days') + '</b><small>' + esc(longDate(nextCel.d)) + (celNum(nextCel) ? ' · ' + esc(cap(celNum(nextCel))) : '') + '</small></div><i>Get ready</i></button>' : '';
-      var body = sec('⚠️ Overdue', g.over.filter(notBan), true) + (todayRows.length ? sec('Today', todayRows, false, 'mpToday') : '<div class="mp-lbl" id="mpToday">Today</div><div class="mp-sub" style="margin:0 2px 6px">Nothing due today — enjoy 🎉</div>') + celBan +
-        '<span id="mpWeek"></span>' + sec('Coming up', g.week.filter(notBan)) + sec('Later', g.later.filter(notBan)) + sec('No date', g.none);
+      var notFocus = function (i) { return !(fo && i.id === fo.id); };   // it's in the big card already
+      var todayRows = g.today.filter(notFocus).concat(doneToday.filter(function (i) { return i.done; }));
+      var body = sec('Overdue', g.over.filter(notFocus), true) + sec('Today', todayRows, false, 'mpToday') + sec('This week', g.week) + sec('Later', g.later) + sec('No date', g.none);
+      if (!body) body = '<div class="mp-sub" style="text-align:center;margin:14px 0">' + (F === 'all' ? 'Nothing else on your list 🎉' : 'Nothing here right now') + '</div>';
       g.done = g.done.filter(function (i) { return doneIds.indexOf(i.id) < 0; });
-      h += '<div class="mpS-list">' + body + '</div>';
+      h += '<div class="mpS-list">' + body + '</div>' + addBox;
       if (g.done.length) h += '<div class="mp-card"><div class="mp-it" data-done-toggle style="border:0;padding:2px 0"><div class="tx" style="font-weight:700">✅ Done (' + g.done.length + ')</div><div class="r">' + (view.showDone ? 'Hide ▴' : 'Show ▾') + '</div></div>' + (view.showDone ? g.done.slice(0, 40).map(function (i) { return row(i, { noDate: true }); }).join('') : '') + '</div>';
       h += '<button class="mp-card" data-w="life" style="width:100%;text-align:left;cursor:pointer;font-family:inherit"><b style="font-size:14.5px">🗂️ Add UK life dates</b><div class="mp-sub">Passport, eVisa, MOT, car insurance, tax return…</div></button>';
     }
@@ -500,7 +539,14 @@
     h += '<div class="mp-card" style="background:#FFFBF0;border-color:#FFE3A3"><b style="font-size:15px">📰 Auntie Tobi’s Sunday Update</b>' + (sl2 ? '<div class="mp-sub" style="font-size:13.5px;color:#0F1E36;margin-top:4px">' + esc(sl2.subject) + ' · ' + nice(sl2.week, true) + '</div>' : '<div class="mp-sub" style="font-size:13.5px">UK news, events and a business of the week — every Sunday.</div>') +
       '<div class="mp-row">' + (sl2 ? '<button class="mp-btn" data-mp-sun>Read it</button>' : '') + (P.news ? '<span class="mp-sub" style="align-self:center">✅ You get it by email</span>' : '<button class="mp-btn ' + (sl2 ? 'g' : '') + '" data-mp-news>📧 Get it by email</button>') + '</div></div>';
     h += '<div style="text-align:center;font-size:12.5px;color:#6B7280;margin:6px 0 4px">' + (P.signedIn ? '💚 Saved to ' + esc(P.email) + ' · <a href="#" data-mp-settings style="color:#057A44;font-weight:700">Settings</a>' : '<a href="#" data-mp-save style="color:#057A44;font-weight:700">💚 Sign in to save your plan</a>') + '</div>';
-    root.innerHTML = h + nav; gear();
+    root.innerHTML = h + (has ? '<div class="mpF-fabw"><button class="mpF-fab" data-fab>＋ Add</button></div>' : '') + nav; gear();
+    root.querySelectorAll('[data-fdone]').forEach(function (b) { b.onclick = function () { tick(b.dataset.fdone); }; });
+    root.querySelectorAll('[data-flater]').forEach(function (b) { b.onclick = function () { view.later.push(b.dataset.flater); gt('plan_later'); render(); }; });
+    root.querySelectorAll('[data-open-f]').forEach(function (b) { b.onclick = function () { edit(b.dataset.openF); }; });
+    root.querySelectorAll('[data-fchip]').forEach(function (b) { b.onclick = function () { view.f = b.dataset.fchip; render(); }; });
+    // the floating ＋ Add hides while the add box itself is on screen
+    (function () { var fw = $('.mpF-fabw', root), fm = $('#mpF', root); if (!fw || !fm || !window.IntersectionObserver) return; new IntersectionObserver(function (en) { fw.style.visibility = en[0].isIntersecting ? 'hidden' : ''; }).observe(fm); })();
+    root.querySelectorAll('[data-fab]').forEach(function (b) { b.onclick = function () { var f = $('#mpF', root), q2 = $('#mpQ', root); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); if (q2) setTimeout(function () { q2.focus(); }, 250); }; });
     root.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { var k = b.dataset.go; if (k === 'cel') { view.tab = 'cel'; render(); try { scrollToTop(); } catch (e) {} return; } var el = $(k === 'today' ? '#mpToday' : '#mpWeek', root); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
     root.querySelectorAll('[data-ready]').forEach(function (b) { b.onclick = function () { gt('cel_ready', { from: 'plan' }); readySheet(b.dataset.ready); }; });
     // add box with live preview of what Auntie Tobi understood
