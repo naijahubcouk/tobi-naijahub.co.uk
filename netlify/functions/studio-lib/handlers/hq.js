@@ -623,6 +623,17 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
       return await emails.list();
     }
+    case 'ideas-week': case 'ideas-make': case 'ideas-swap': case 'ideas-act': case 'ideas-cfg': {
+      // ✨ Weekly ideas (admin only) — built on her weekly themes and this week's real content; nothing is posted
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      const ideas = require('../ideas'), mon = ideas.monday(/^\d{4}-\d{2}-\d{2}$/.test(body.week || '') ? body.week : '');
+      if (body.action === 'ideas-make' || body.action === 'ideas-swap') await core.rateLimit('hq-ideas', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of ideas this hour — please wait a little.');
+      if (body.action === 'ideas-make') return ideas.makeDay(mon, String(body.day || ''), who.email);
+      if (body.action === 'ideas-swap') return ideas.swap(mon, String(body.day || ''), String(body.id || ''), who.email);
+      if (body.action === 'ideas-act') return ideas.act(mon, String(body.day || ''), String(body.id || ''), String(body.what || ''), who.email);
+      if (body.action === 'ideas-cfg') { await ideas.saveCfg(body.cfg, who.email); return ideas.week(mon); }
+      return ideas.week(mon);
+    }
     case 'hq-today': {
       // ✅ Today in HQ — everything waiting on Auntie Tobi, counted live (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
