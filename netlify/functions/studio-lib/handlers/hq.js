@@ -623,6 +623,11 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
       return await emails.list();
     }
+    case 'hq-today': {
+      // ✅ Today in HQ — everything waiting on Auntie Tobi, counted live (admin only)
+      if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
+      return require('../hqtoday').list();
+    }
     case 'spot-list': case 'spot-set': case 'spot-order': {
       // ⭐ Spotlight — Featured / Verified / Home & Links carousel (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change this.');

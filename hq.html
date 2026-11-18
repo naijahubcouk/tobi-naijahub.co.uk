@@ -453,7 +453,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
     var h = new Date().toLocaleString('en-GB', { hour: 'numeric', hour12: false, timeZone: 'Europe/London' });
     var hi = Number(h) < 12 ? 'Good morning' : Number(h) < 18 ? 'Good afternoon' : 'Good evening';
     $('#view').innerHTML = '<div class="wrap"><p class="muted">' + hi + (S.names[S.me] ? ', ' + esc(S.names[S.me]) : '') + ' 👋🏾</p>' +
-      '<div id="todayRevamp"></div><div class="stats">' +
+      '<div id="todayTodo"></div><div id="todayRevamp"></div><div class="stats">' +
         '<div class="card"><b>' + todays.length + '</b><span>📅 to post today</span></div>' +
         '<div class="card"><b>' + soon.length + '</b><span>planned next 7 days</span></div>' +
         '<div class="card"><b>' + cnt('ready') + '</b><span>✅ ready to plan</span></div>' +
@@ -465,10 +465,34 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
       (soon.length ? '<div class="h2">Coming up</div><div class="card" style="padding:4px 14px">' + soon.map(function (c) { return '<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="date" style="min-width:110px">' + esc(fmtDay(c.planDate)) + (c.planTime ? ' ' + esc(c.planTime) : '') + '</span><span class="t ' + c.type + '">' + TYPE[c.type] + '</span><a href="#" data-op="' + c.id + '" style="color:var(--navy);font-weight:600;flex:1;min-width:150px">' + esc(c.title) + '</a></div>'; }).join('') + '</div>' : '') +
       (!S.items.length ? '<div class="card" style="margin-top:18px;background:var(--gold-l);border-color:#F2D58A"><b>Start here</b><p class="muted" style="margin:4px 0 10px">Copy a reply from ChatGPT with your content ideas and paste it in — HQ splits it into cards you can keep, plan and track.</p><button class="btn gold" id="startPaste">📋 Paste from ChatGPT</button></div>' : '') + '</div>';
     bindToday();
+    if (S.isAdmin) todayTodo();
     if (S.isAdmin && window.HQGlow) window.HQGlow.todayBox().then(function (h) { var el = $('#todayRevamp'); if (!el || !h) return; el.innerHTML = h; $$('[data-gu-open]', el).forEach(function (a) { a.onclick = function (e) { e.preventDefault(); window.HQGlow.open(a.dataset.guOpen); go('glow'); }; }); $$('[data-ck-open]', el).forEach(function (a) { a.onclick = function (e) { e.preventDefault(); window.HQGlow.openCheck(a.dataset.ckOpen); go('glow'); }; }); });
     var pn = $('#planNow'); if (pn) pn.onclick = function () { pickSheet(today()); };
     var sp = $('#startPaste'); if (sp) sp.onclick = function () { pasteSheet(); };
     $$('[data-op]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); editCard(byId(a.dataset.op)); }; });
+  }
+  // ✅ Today in HQ: one checklist of everything waiting on you, from every part of HQ (counted live — done things disappear)
+  function todayTodo() {
+    var el = $('#todayTodo'); if (!el) return;
+    var paint = function (r) {
+      if (!$('#todayTodo')) return;
+      var it = (r && r.items) || [];
+      var row = function (x) {
+        var names = (x.names || []).slice(0, 4).join(', ') + ((x.names || []).length > 4 ? ' and ' + (x.names.length - 4) + ' more' : '');
+        return '<div class="tdi' + (x.warn ? ' warn' : '') + '"><span class="tdc">' + x.icon + '</span><div class="tdt"><b>' + (x.warn ? '' : '<span class="tdn">' + x.n + '</span> ') + esc(x.text) + '</b>' + (names ? '<small>' + esc(names) + '</small>' : '') + '</div><button class="btn ' + (x.warn ? 'primary' : 'ghost') + ' sm" data-tdgo="' + esc(x.nav) + '">' + esc(x.btn || 'Open') + ' →</button></div>';
+      };
+      $('#todayTodo').innerHTML = '<style>.tdbox{border:1.5px solid #CFE3D8;background:#F3FAF6;border-radius:14px;padding:12px 14px;margin-bottom:14px}.tdbox h3{margin:0 0 2px;font-size:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}' +
+        '.tdi{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid #DCEBE2}.tdi:first-of-type{border-top:0}.tdc{font-size:21px;width:28px;text-align:center;flex-shrink:0}.tdt{flex:1;min-width:0}.tdt b{font-size:14.5px;font-weight:700}.tdt small{display:block;color:var(--muted,#6B7280);font-size:12.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+        '.tdn{display:inline-block;min-width:22px;text-align:center;background:#057A44;color:#fff;border-radius:11px;padding:0 6px;font-size:13px;margin-right:2px}.tdi.warn .tdt b{color:#B42318}.tdi .btn{white-space:nowrap;flex-shrink:0}</style>' +
+        '<div class="tdbox"><h3><span>✅ Today in HQ</span><button class="btn ghost sm" id="tdRe" title="Check again">↻</button></h3>' +
+        (it.length ? '<p class="muted" style="margin:0 0 4px;font-size:13px">' + it.length + ' thing' + (it.length === 1 ? '' : 's') + ' waiting on you. Each one goes away once it’s done.</p>' + it.map(row).join('')
+          : '<p style="margin:6px 0 2px;font-size:14.5px">🎉 <b>All clear!</b> Nothing waiting on you in HQ right now.</p>') + '</div>';
+      $$('[data-tdgo]').forEach(function (b) { b.onclick = function () { go(b.dataset.tdgo); }; });
+      var re = $('#tdRe'); if (re) re.onclick = function () { S.hqToday = null; re.disabled = true; todayTodo(); };
+    };
+    if (S.hqToday && Date.now() - S.hqToday.t < 120000) return paint(S.hqToday.r);
+    if (!S.hqToday) el.innerHTML = '<div class="tdbox" style="border:1.5px solid #CFE3D8;background:#F3FAF6;border-radius:14px;padding:12px 14px;margin-bottom:14px"><b>✅ Today in HQ</b><p class="muted" style="margin:4px 0 0">Checking what’s waiting on you…</p></div>';
+    api('hq-today').then(function (r) { S.hqToday = { t: Date.now(), r: r }; paint(r); }, function () { el.innerHTML = ''; });
   }
   function todayCard(c) {
     var late = isLate(c);
