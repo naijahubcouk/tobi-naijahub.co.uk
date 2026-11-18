@@ -539,7 +539,7 @@ exports.handler = handler(async (ctx) => {
       let lessonsReady = [];
       try { lessonsReady = (await resources.adminDashboard()).readyToPublish || []; } catch (e) { console.error('[studio] todo lessons failed', e && e.message); }
       let inv = null;
-      try { inv = await invites.summary(ctx.event, { members, profiles, settings }); } catch (e) { console.error('[studio] todo invites failed', e && e.message); }
+      // Business Club invites are no longer on the admin Today list (removed Nov 2026)
       let postsToday = [];
       try { postsToday = await require('../hq').plannedToday(); } catch (e) { console.error('[studio] todo posts failed', e && e.message); }
       let unreadMessages = 0;
