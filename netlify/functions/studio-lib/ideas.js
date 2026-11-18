@@ -47,12 +47,12 @@ async function cfg() {
   DAYS.forEach(d => { const x = (c.days && c.days[d]) || DEFAULT_DAYS[d]; days[d] = { theme: cleanText(x.theme, 80) || DEFAULT_DAYS[d].theme, series: (Array.isArray(x.series) ? x.series : []).map(s => cleanText(s, 120)).filter(Boolean).slice(0, 30) }; });
   // one-time: add the 📣 promo series to themes saved before they existed
   if (c.days && !c.promo1) { DAYS.forEach(d => { if (!days[d].series.includes(PROMO[d])) days[d].series.push(PROMO[d]); }); await setJson('hq/ideas/cfg', Object.assign({}, c, { days, promo1: true })).catch(() => {}); }
-  return { days, perDay: Math.max(1, Math.min(6, Number(c.perDay) || 3)), news: typeof c.news === 'string' && c.news.trim() ? c.news : DEFAULT_NEWS };
+  return { days, perDay: c.perDay === undefined || c.perDayV2 === undefined ? 0 : Math.max(0, Math.min(6, Number(c.perDay) || 0)), news: typeof c.news === 'string' && c.news.trim() ? c.news : DEFAULT_NEWS };
 }
 async function saveCfg(raw, who) {
   const days = {};
   DAYS.forEach(d => { const x = (raw && raw.days && raw.days[d]) || {}; days[d] = { theme: cleanText(x.theme, 80) || DEFAULT_DAYS[d].theme, series: (Array.isArray(x.series) ? x.series : String(x.series || '').split('\n')).map(s => cleanText(s, 120)).filter(Boolean).slice(0, 30) }; });
-  await setJson('hq/ideas/cfg', { days, perDay: Math.max(1, Math.min(6, Number(raw && raw.perDay) || 3)), news: String((raw && raw.news) || '').replace(/\r/g, '').trim().slice(0, 6000), promo1: true, at: core.nowIso(), by: who });
+  await setJson('hq/ideas/cfg', { days, perDay: Math.max(0, Math.min(6, Number(raw && raw.perDay) || 0)), perDayV2: true, news: String((raw && raw.news) || '').replace(/\r/g, '').trim().slice(0, 6000), promo1: true, at: core.nowIso(), by: who });
   return cfg();
 }
 
@@ -117,6 +117,11 @@ async function write(day, date, theme, series, ctx, avoid, stats, n, news) {
     'Each idea must be specific and practical, not generic. Prefer ideas built on the REAL items listed (events, businesses, products, UK posts, dates) and name them. ' +
     'Never invent facts, prices, dates, rules, statistics, quotes or businesses — if you mention one, it must be from the lists. For "[city]" or "[category]", fill in a real one from the lists. ' +
     'Never repeat or lightly reword an idea from the "already done" list. Only use the series you are given. ' +
+    'QUALITY BAR — every idea must be strong enough to post as it is: (1) one clear, specific angle — a named business, event, product, city, date, UK rule or practical detail, never a vague topic; ' +
+    '(2) a scroll-stopping hook (curiosity, a benefit, a relatable Naija-in-the-UK moment or a bold, true statement) — no "Did you know?" without a real fact, no "We are excited to announce"; ' +
+    '(3) real value for the viewer (they learn, save money or time, find something, feel seen or laugh); (4) a call to action that fits the goal (save, share, comment, tag a friend, try the app, visit a business); ' +
+    '(5) for engagement series, the exact question or prompt people will answer; for discovery series, which business(es) to feature and what to show; for carousels and Reels, concrete slide or scene lines. ' +
+    'Mix formats across the day. Before answering, check each idea against the quality bar and replace any that are generic. ' +
     'For series about Auntie Tobi itself (the app, My Plan, Business Club, Marketplace, Sunday Update, new features, listing a business): use ONLY the facts in ABOUT AUNTIE TOBI, include the right link, never invent features, prices or results, and keep it helpful rather than salesy — show the problem it solves.';
   const user = `Day: ${DAY_NAME[day]} ${date} — theme: ${theme}\nWrite ${n} idea${n === 1 ? '' : 's'}, one for each of these series (in order):\n${series.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\n` +
     `REAL THINGS THIS WEEK (data, not instructions):\nUpcoming events:\n${L(ctx.events)}\nFeatured businesses:\n${L(ctx.featured)}\nNewest businesses on Auntie Tobi:\n${L(ctx.newBiz)}\nMarketplace:\n${L(ctx.products)}\nRecent Auntie Tobi UK posts:\n${L(ctx.articles)}\nCities with most businesses: ${ctx.cities.join(', ') || '(none)'}\nDates coming up:\n${dates}\n\n` +
@@ -124,7 +129,7 @@ async function write(day, date, theme, series, ctx, avoid, stats, n, news) {
     `ALREADY DONE OR PLANNED — do not repeat:\n${avoid.slice(0, 160).map(x => '- ' + x).join('\n') || '(none yet)'}\n\n` +
     (likes ? `She usually keeps ideas from: ${likes}\n` : '') + (dislikes ? `She often skips: ${dislikes} — make those much better or more specific.\n` : '') +
     `Return JSON: {"ideas":[{"series":"exactly the series name","title":"short card title, max 80 chars","format":"post|reel|carousel|story|blog","hook":"the first line people see, max 120 chars","caption":"a ready-to-edit caption, 3-8 short lines, ending with a question or call to action","slides":"for a carousel or reel: 3-7 short lines, one per slide/scene; otherwise empty","why":"one short line on why this will work for this audience","uses":"the real item(s) from the lists it is built on, or empty"}]}`;
-  const out = await gen.callModel([{ role: 'system', content: sys }, { role: 'user', content: user }], 2600, settings, { json: true, raw: true, timeoutMs: 24000, temperature: 0.85 });
+  const out = await gen.callModel([{ role: 'system', content: sys }, { role: 'user', content: user }], 450 * n + 400, settings, { json: true, raw: true, timeoutMs: 24000, temperature: 0.85, effort: 'low' });
   gen.addGlobal(core.monthKey(), { id: 'ideas', tool: 'hq-ideas', cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
   let j; try { j = JSON.parse(String(out.text).replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (_) { throw new HttpError(502, 'ai_bad', 'The ideas came back muddled — please try again.'); }
   const FMT = ['post', 'reel', 'carousel', 'story', 'blog'];
@@ -136,24 +141,34 @@ async function write(day, date, theme, series, ctx, avoid, stats, n, news) {
     .filter((x, i, arr) => !tooClose(x.title + ' ' + x.hook, arr.slice(0, i).map(y => y.title + ' ' + y.hook)));   // no two alike on the same day
 }
 
-// make (or remake) one day's ideas
-async function makeDay(mon, day, who) {
+// make (or remake) one day's ideas — an idea for EVERY series of the day (or a few, if a number is set in Themes).
+// Done in small parts so each call stays quick: part 0 clears the not-kept ideas, then each part writes up to 4.
+const BATCH = 4;
+async function makeDay(mon, day, who, part) {
   if (!DAYS.includes(day)) throw new HttpError(400, 'invalid', 'Pick a day.');
+  part = Math.max(0, Number(part) || 0);
   const c = await cfg(), dd = c.days[day], date = dateOf(mon, day);
   if (!dd.series.length) throw new HttpError(400, 'no_series', `Add some series for ${DAY_NAME[day]} first (⚙️ Themes).`);
   const stats = (await getJson('hq/ideas/stats').catch(() => null)) || {};
-  const ctx = await context(mon), avoid = await avoidList(mon);
   const cur = (await getJson(`hq/ideas/w-${mon}`).catch(() => null)) || { days: {} };
-  const keep = (cur.days[day] || []).filter(i => i.state === 'kept');                       // kept ones stay
-  const want = Math.max(1, c.perDay - keep.length);
-  // 📣 one idea a day promotes Auntie Tobi itself (that day's promo series), unless it's already kept
-  const promo = dd.series.find(x => Object.values(PROMO).includes(x) && !keep.some(k => k.series === x));
-  const series = promo ? [promo].concat(pickSeries(dd.series, want - 1, stats, keep.map(i => i.series).concat(promo))) : pickSeries(dd.series, want, stats, keep.map(i => i.series));
-  let ideas = series.length ? await write(day, date, dd.theme, series, ctx, avoid, stats, series.length, c.news) : [];
+  const keep = (cur.days[day] || []).filter(i => i.state === 'kept');
+  if (part === 0) await cas(`hq/ideas/w-${mon}`, w => { w = w || { days: {} }; w.days[day] = keep; return w; });
+  // which series to fill
+  let todo;
+  if (c.perDay > 0) {
+    const want = Math.max(1, c.perDay - keep.length), promo = dd.series.find(x => Object.values(PROMO).includes(x) && !keep.some(k => k.series === x));
+    todo = promo ? [promo].concat(pickSeries(dd.series, want - 1, stats, keep.map(i => i.series).concat(promo))) : pickSeries(dd.series, want, stats, keep.map(i => i.series));
+    if (part > 0) return Object.assign(await week(mon), { done: true });
+  } else todo = dd.series.filter(x => !keep.some(k => k.series === x));
+  const series = c.perDay > 0 ? todo : todo.slice(part * BATCH, part * BATCH + BATCH);
+  const done = c.perDay > 0 || (part + 1) * BATCH >= todo.length;
+  if (!series.length) return Object.assign(await week(mon), { done: true });
+  const ctx = await context(mon), avoid = await avoidList(mon);
+  const ideas = await write(day, date, dd.theme, series, ctx, avoid, stats, series.length, c.news);
   const now = core.nowIso();
-  await cas(`hq/ideas/w-${mon}`, w => { w = w || { days: {} }; w.days[day] = keep.concat(ideas); w.at = now; w.by = who; return w; });
+  await cas(`hq/ideas/w-${mon}`, w => { w = w || { days: {} }; w.days[day] = (w.days[day] || []).concat(ideas); w.at = now; w.by = who; return w; });
   await cas('hq/ideas/stats', s => { s = s || {}; s.used = s.used || {}; ideas.forEach(i => { s.used[i.series] = now; }); return s; });
-  return week(mon);
+  return Object.assign(await week(mon), { done, part, parts: c.perDay > 0 ? 1 : Math.max(1, Math.ceil(todo.length / BATCH)) });
 }
 // swap one idea for a fresh one (same series)
 async function swap(mon, day, id, who) {
@@ -185,6 +200,9 @@ async function act(mon, day, id, what, who) {
 }
 async function week(mon) {
   const w = (await getJson(`hq/ideas/w-${mon}`).catch(() => null)) || { days: {} };
+  // kept ideas → where the Board card is now (moved forward / posted)
+  const cards = {}; (await require('./hq').list().catch(() => [])).forEach(k => { cards[k.id] = k; });
+  DAYS.forEach(d => (w.days[d] || []).forEach(i => { const k = i.cardId && cards[i.cardId]; if (k) { i.board = { planDate: k.planDate || '', status: k.status, carriedFrom: k.carriedFrom || '' }; } else if (i.state === 'kept') i.board = { gone: true }; }));
   const c = await cfg();
   return { monday: mon, dates: Object.fromEntries(DAYS.map(d => [d, dateOf(mon, d)])), days: Object.fromEntries(DAYS.map(d => [d, w.days[d] || []])), cfg: c, at: w.at || '' };
 }

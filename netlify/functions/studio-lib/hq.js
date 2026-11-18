@@ -178,6 +178,19 @@ async function saveImage(dataUrl) {
 async function getImage(id) { if (!/^i[a-z0-9]{6,30}$/.test(String(id || ''))) return null; return getJson(`hq/img/${id}`); }
 
 // For the Admin Today list: posts planned for today that aren't posted yet.
+// ↪️ Kept Weekly ideas that weren't posted on their day move to today (and keep moving) until they're posted.
+async function carryOver() {
+  const day = core.dayKey(); let n = 0;
+  const due = c => !c.deletedAt && /✨ Weekly ideas/.test(c.notes || '') && ['idea', 'drafting', 'ready', 'scheduled'].includes(c.status) && c.planDate && c.planDate < day;
+  const s0 = await load(); if (!live(s0.items).some(due)) return 0;
+  await cas(KEY, cur => {
+    if (!cur || !cur.items) return undefined;
+    const items = { ...cur.items };
+    for (const [id, c] of Object.entries(items)) if (due(c)) { items[id] = { ...c, carriedFrom: c.carriedFrom || c.planDate, planDate: day, status: 'scheduled', updatedAt: core.nowIso() }; n++; }
+    return n ? { ...cur, items } : undefined;
+  });
+  return n;
+}
 async function plannedToday() {
   const day = core.dayKey();
   return live((await load()).items).filter(c => c.status === 'scheduled' && c.planDate === day).map(c => ({ id: c.id, title: c.title, time: c.planTime || '' }));
@@ -218,4 +231,4 @@ async function setTeam(emails, nameMap, accessMap) {
   return { emails: list, names: nm, access: ac };
 }
 
-module.exports = { BASIC, SECTIONS, sectionsFor, team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };
+module.exports = { carryOver, BASIC, SECTIONS, sectionsFor, team, teamFull, names, setTeam, bin, purge, TRASH_DAYS, list, save, saveMany, remove, saveImage, getImage, plannedToday, TYPES, TOPICS, STATUSES };

@@ -122,7 +122,7 @@ exports.handler = handler(async (ctx) => {
   { const need = sectionsOf(String(body.action || '')); if (need) mustAllow(who, need); }
   const has = list => can(who, list);
   switch (body.action) {
-    case 'boot': return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? appFor(who, await apppub.list()) : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], tcars: has(['cars']) ? await tplcar.list() : [], vads: has(['vads']) ? await videoad.list() : [], abizNew: who.isAdmin ? await require('../addbiz').hqList().then(r => r.subs.filter(x => x.status === 'new').length + r.listed.length).catch(() => 0) : 0 };
+    case 'boot': await hq.carryOver().catch(() => {}); return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(), team: who.isAdmin ? await hq.teamFull() : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list() : [], bin: has(['bin']) ? await hq.bin() : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? appFor(who, await apppub.list()) : [], appCategories: apppub.CATEGORIES, subs: has(['subs']) ? await eventsub.list() : [], igc: has(['igc']) ? await igcomment.list() : [], igcTarget: igcomment.DAILY_TARGET, cars: has(['cars']) ? await carousel.list() : [], tcars: has(['cars']) ? await tplcar.list() : [], vads: has(['vads']) ? await videoad.list() : [], abizNew: who.isAdmin ? await require('../addbiz').hqList().then(r => r.subs.filter(x => x.status === 'new').length + r.listed.length).catch(() => 0) : 0 };
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
     case 'delete': return { n: await hq.remove(body.ids || body.id, false, who.email) };
@@ -639,9 +639,10 @@ exports.handler = handler(async (ctx) => {
     case 'ideas-week': case 'ideas-make': case 'ideas-swap': case 'ideas-act': case 'ideas-cfg': {
       // ✨ Weekly ideas (admin only) — built on her weekly themes and this week's real content; nothing is posted
       if (!has(['ideas'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
+      await hq.carryOver().catch(() => {});
       const ideas = require('../ideas'), mon = ideas.monday(/^\d{4}-\d{2}-\d{2}$/.test(body.week || '') ? body.week : '');
       if (body.action === 'ideas-make' || body.action === 'ideas-swap') await core.rateLimit('hq-ideas', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of ideas this hour — please wait a little.');
-      if (body.action === 'ideas-make') return ideas.makeDay(mon, String(body.day || ''), who.email);
+      if (body.action === 'ideas-make') return ideas.makeDay(mon, String(body.day || ''), who.email, body.part);
       if (body.action === 'ideas-swap') return ideas.swap(mon, String(body.day || ''), String(body.id || ''), who.email);
       if (body.action === 'ideas-act') return ideas.act(mon, String(body.day || ''), String(body.id || ''), String(body.what || ''), who.email);
       if (body.action === 'ideas-cfg') { await ideas.saveCfg(body.cfg, who.email); return ideas.week(mon); }

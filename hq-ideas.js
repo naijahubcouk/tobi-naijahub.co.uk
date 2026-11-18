@@ -24,6 +24,13 @@
     draw();
   }
 
+  function keptLabel(it) {
+    var b = it.board || {};
+    if (b.gone) return '✓ Kept (removed from the Board)';
+    if (b.status === 'posted') return '✅ Posted';
+    if (b.carriedFrom && b.planDate) return '↪️ Not posted yet — moved to ' + (b.planDate === new Date().toISOString().slice(0, 10) ? 'today' : nice(b.planDate)) + ' on your Board';
+    return '✓ On your Board and Calendar · ' + esc(nice(b.planDate || W.dates[day]));
+  }
   function card(it) {
     var kept = it.state === 'kept', cap = it.caption || '';
     return '<div class="idc' + (kept ? ' kept' : '') + '">' +
@@ -34,7 +41,7 @@
       (cap ? '<div class="idcap">' + esc(cap) + '</div>' : '') +
       (it.why ? '<div class="idwhy">💡 ' + esc(it.why) + '</div>' : '') +
       (it.uses ? '<div class="idwhy">📌 Built on: ' + esc(it.uses) + '</div>' : '') +
-      '<div class="idbtns">' + (kept ? '<span class="idok">✓ On your Board and Calendar · ' + esc(nice(W.dates[day])) + '</span><button class="btn ghost sm" data-copy="' + it.id + '">📋 Copy caption</button>'
+      '<div class="idbtns">' + (kept ? '<span class="idok">' + keptLabel(it) + '</span><button class="btn ghost sm" data-copy="' + it.id + '">📋 Copy caption</button>'
         : '<button class="btn primary sm" data-keep="' + it.id + '">✅ Keep</button><button class="btn ghost sm" data-swap="' + it.id + '">🔄 Swap</button><button class="btn ghost sm" data-copy="' + it.id + '">📋 Copy caption</button><button class="btn ghost sm" data-skip="' + it.id + '" title="Not for me">✕</button>') + '</div></div>';
   }
 
@@ -44,13 +51,13 @@
     var wkLabel = week === thisMon ? 'This week' : week === shift(thisMon, 7) ? 'Next week' : week === shift(thisMon, -7) ? 'Last week' : 'Week of ' + nice(week);
     var total = DAYS.reduce(function (a, k) { return a + (W.days[k] || []).length; }, 0);
     var h = '<div class="wrap" style="max-width:920px">' + css() +
-      '<p class="muted" style="margin:0 0 12px">Fresh post ideas for each day, built on your weekly themes and on what’s really happening on Auntie Tobi this week. They never repeat what you’ve posted or planned. <b>✅ Keep</b> puts one on your Board and Calendar — nothing is posted for you.</p>' +
+      '<p class="muted" style="margin:0 0 12px">Fresh post ideas for each day, built on your weekly themes and on what’s really happening on Auntie Tobi this week. They never repeat what you’ve posted or planned. <b>✅ Keep</b> puts one on your Board and Calendar; if it isn’t posted on its day it moves to the next day until you mark it posted. Nothing is posted for you.</p>' +
       '<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div class="row" style="gap:6px;align-items:center"><button class="btn ghost sm" id="idPrev">‹</button><b style="font-size:15px">' + wkLabel + ' · ' + nice(week) + ' – ' + nice(shift(week, 6)) + '</b><button class="btn ghost sm" id="idNext">›</button></div>' +
       '<button class="btn ' + (total ? 'ghost' : 'primary') + '" id="idAll">✨ ' + (total ? 'Fill the empty days' : 'Make ideas for the whole week') + '</button></div>' +
       '<div class="idtabs">' + DAYS.map(function (k) { var n = (W.days[k] || []).length, kn = (W.days[k] || []).filter(function (i) { return i.state === 'kept'; }).length; return '<button data-day="' + k + '" class="' + (k === day ? 'on' : '') + '">' + DN[k].slice(0, 3) + '<small>' + nice(W.dates[k]).split(' ')[0] + '</small>' + (n ? '<i>' + (kn ? kn + '✓' : n) + '</i>' : '') + '</button>'; }).join('') + '</div>' +
       '<div class="idday"><div><b style="font-size:17px">' + DN[day] + ' — ' + esc(d.theme) + '</b><div class="muted" style="font-size:12.5px;margin-top:3px">' + esc(d.series.join(' · ')) + '</div></div>' +
       '<button class="btn ' + (list.length ? 'ghost' : 'primary') + '" id="idMake">' + (list.length ? '↻ New ideas for ' + DN[day] : '✨ Make ideas for ' + DN[day]) + '</button></div>' +
-      (list.length ? list.map(card).join('') : '<div class="card" style="text-align:center;padding:26px"><div style="font-size:34px">💡</div><b>No ideas for ' + DN[day] + ' yet</b><p class="muted" style="margin:4px 0 0">Tap “Make ideas” — you’ll get ' + W.cfg.perDay + ', each from a different series.</p></div>') +
+      (list.length ? list.map(card).join('') : '<div class="card" style="text-align:center;padding:26px"><div style="font-size:34px">💡</div><b>No ideas for ' + DN[day] + ' yet</b><p class="muted" style="margin:4px 0 0">Tap “Make ideas” — you’ll get ' + (W.cfg.perDay ? W.cfg.perDay + ', each from a different series' : 'one strong idea for each of ' + DN[day] + '’s ' + d.series.length + ' series') + '.</p></div>') +
       (list.length ? '<p class="muted" style="font-size:12.5px;margin-top:6px">↻ New ideas keeps the ones you’ve kept and replaces the rest.</p>' : '') + '</div>';
     $('#view').innerHTML = h;
 
@@ -75,7 +82,13 @@
     busy = true; btn.disabled = true;
     for (var i = 0; i < days.length; i++) {
       btn.textContent = '✨ Thinking up ' + DN[days[i]] + '’s ideas…' + (days.length > 1 ? ' (' + (i + 1) + '/' + days.length + ')' : '');
-      try { W = await X.api('ideas-make', { week: week, day: days[i] }); } catch (e) { X.toast(DN[days[i]] + ': ' + e.message); }
+      // a day is made in parts (a few series at a time) so nothing times out
+      for (var part = 0; part < 12; part++) {
+        try { W = await X.api('ideas-make', { week: week, day: days[i], part: part }); } catch (e) { X.toast(DN[days[i]] + ': ' + e.message); break; }
+        if (W.done) break;
+        btn.textContent = '✨ ' + DN[days[i]] + ': ' + (W.days[days[i]] || []).length + ' ideas so far…' + (days.length > 1 ? ' (' + (i + 1) + '/' + days.length + ')' : '');
+        if (days[i] === day && $('#view .idc') === null) { /* keep the button text */ }
+      }
     }
     busy = false; if (days.length === 1) day = days[0]; draw();
   }
@@ -83,7 +96,7 @@
   function themes() {
     var c = W.cfg;
     var s = X.sheet('<h2>⚙️ Your weekly themes</h2><p class="muted" style="margin:4px 0 12px">One series per line. Each day, ideas come from a few different series, taking turns so all of them get used. Ones starting with ✨ were added as suggestions — delete any you don’t want. The last one each day promotes Auntie Tobi itself.</p>' +
-      '<label style="display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:12px">Ideas per day <select id="idPer" style="width:auto">' + [1, 2, 3, 4, 5, 6].map(function (n) { return '<option' + (n === c.perDay ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
+      '<label style="display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:12px">Ideas per day <select id="idPer" style="width:auto">' + [[0, 'One for every series (recommended)'], [1, '1'], [2, '2'], [3, '3'], [4, '4'], [5, '5'], [6, '6']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === (c.perDay || 0) ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
       '<div style="margin-bottom:16px"><label style="font-weight:800">📣 About Auntie Tobi — what’s new</label><div class="muted" style="font-size:12.5px;margin:2px 0 6px">The facts used for posts promoting the app, My Plan, Business Club, Marketplace and new features. Add each new feature here (one per line) so the ideas can talk about it.</div><textarea id="idNews" rows="7" style="width:100%;font-size:13px">' + esc(c.news || '') + '</textarea></div>' +
       DAYS.map(function (k) { return '<div style="margin-bottom:14px"><label style="font-weight:800">' + DN[k] + '</label><input id="idT_' + k + '" value="' + esc(c.days[k].theme) + '" style="width:100%;margin:4px 0 6px" placeholder="Theme"><textarea id="idS_' + k + '" rows="6" style="width:100%;font-size:13.5px">' + esc(c.days[k].series.join('\n')) + '</textarea></div>'; }).join('') +
       '<div class="row" style="justify-content:flex-end;gap:8px"><button class="btn ghost" id="idX">Cancel</button><button class="btn primary" id="idSave">Save</button></div>');
