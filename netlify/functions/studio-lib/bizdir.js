@@ -160,7 +160,8 @@ function waitingSite(b) { return b.src === 'hq' && !b.uploadedAt && !b.appNow &&
 async function publicList() {
   return (await all()).filter(b => !b.hidden && b.status !== 'pending').map(b => {
     const o = {}; for (const k of PUBLIC.concat(b.featured ? FEATURED_EXTRA : [])) if (b[k] !== undefined && b[k] !== '' && b[k] !== false && !(Array.isArray(b[k]) && !b[k].length)) o[k] = b[k];
-    if (b.imgFrom) { o.img = b.imgFrom; o.imgCopy = b.img; }   // the website's own photo first; Auntie Tobi's copy if it doesn't load
+    if (b.imgFrom) { o.img = b.imgFrom; o.imgCopy = b.img; }
+    if (!b.claimed && !b.ownerEmail && !b.featured) o.claimable = true;   // 🔑 nobody owns this listing yet — the app shows “Claim this business”   // the website's own photo first; Auntie Tobi's copy if it doesn't load
     return o;
   });
 }
