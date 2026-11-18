@@ -74,7 +74,7 @@ From those results ONLY, list real businesses that:
 - operate in the UK, and
 - appear Nigerian or African owned or focused (Nigerian/African food, fashion, beauty, events, culture, names, or they say so).
 Skip directories, listing sites, articles, job ads, marketplaces, and anything outside the UK. Never invent a business, link or detail — every field must come from the results (leave it "" if not there).
-Return ONLY JSON: {"businesses":[{"name":"","website":"their own website or main social profile URL","instagram":"handle or URL or \\"\\"","facebook":"their Facebook page URL or \\"\\"","tiktok":"their TikTok @handle or URL or \\"\\"","town":"UK town/city","category":"exactly one of the CATEGORIES","description":"1–2 plain sentences: what they offer (no hype)","why":"short reason you think they are Nigerian/African","confidence":0.0}]}
+Return ONLY JSON: {"businesses":[{"name":"","website":"their own website or main social profile URL","instagram":"handle or URL or \\"\\"","facebook":"their Facebook page URL or \\"\\"","tiktok":"their TikTok @handle or URL or \\"\\"","email":"their business email if shown in the results, or \\"\\"","town":"UK town/city","category":"exactly one of the CATEGORIES","description":"1–2 plain sentences: what they offer (no hype)","why":"short reason you think they are Nigerian/African","confidence":0.0}]}
 CATEGORIES: ${JSON.stringify(CATS)}` },
   { role: 'user', content: `SEARCH: ${query}` }];
 }
@@ -98,8 +98,12 @@ async function runOne(query) {
   const sites = await Promise.all(fresh.map(c => readSite(c.website)));
   const now = core.nowIso();
   const items = fresh.map((c, i) => Object.assign(c, { id: 'f' + Date.now().toString(36) + i, siteText: sites[i].siteText || '', imgUrl: sites[i].imgUrl || '', email: sites[i].email || '', wa: sites[i].wa || '', phone: sites[i].phone || '', ig: c.ig || sites[i].ig || '', fb: c.fb || sites[i].fb || '', tt: c.tt || sites[i].tt || '', query, foundAt: now, status: 'new' }));
-  await cas('finder/state', cur => { cur = cur || { items: [], queue: [], cursor: 0, week: '' }; cur.items = items.concat(cur.items).slice(0, 600); cur.lastRun = now; return cur; });
-  return { query, found: list.length, added: items.length };
+  // 📧 only businesses with an email go on the list (from their website, or the search results)
+  const okMail = m => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(m || '') && !/example|sentry|wixpress|domain\.|noreply|no-reply/i.test(m);
+  items.forEach((c, i) => { if (!c.email && okMail(list.find(x => core.cleanText(x.name, 120) === c.name)?.email)) c.email = String(list.find(x => core.cleanText(x.name, 120) === c.name).email).trim().toLowerCase(); });
+  const withMail = items.filter(c => okMail(c.email));
+  await cas('finder/state', cur => { cur = cur || { items: [], queue: [], cursor: 0, week: '' }; cur.items = withMail.concat(cur.items).slice(0, 600); cur.lastRun = now; return cur; });
+  return { query, found: list.length, added: withMail.length, noEmail: items.length - withMail.length };
 }
 
 // The week's searches: rotate through categories × cities so every week looks somewhere new.
@@ -174,6 +178,7 @@ async function decide(id, decision, edits, who) {
       if (!c.imgUrl && again.imgUrl) c.imgUrl = again.imgUrl;
     }
     if (!c.name || !c.cat) throw new HttpError(400, 'invalid', 'Add a name and a category first.');
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(c.email || '')) throw new HttpError(400, 'no_email', 'Add their email first — only businesses with an email are added.');
     const dir = await bizdir.all(), taken = new Set(dir.map(b => b.slug));
     let slug = bizdir.slugify(c.name), n = 2; while (taken.has(slug)) slug = bizdir.slugify(c.name) + '-' + n++;
     // picture: your upload → their website picture → the Auntie Tobi card made in HQ
