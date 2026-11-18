@@ -51,6 +51,16 @@ async function remove(email, id) {
   await cas(`hq/chat/${h}/list`, l => { l = l || { items: [] }; l.items = l.items.filter(x => x.id !== cid); return l; });
   return { items: await list(email) };
 }
+async function mark(email, id, title) {
+  const h = H(email), cid = String(id || '').replace(/[^a-z0-9]/g, '');
+  await cas(`hq/chat/${h}/c-${cid}`, c => { if (!c) return undefined; c.title = title; c.sched = true; c.unseen = true; return c; });
+  await cas(`hq/chat/${h}/list`, l => { l = l || { items: [] }; l.items = l.items.map(x => (x.id === cid ? Object.assign({}, x, { title, sched: true, unseen: true }) : x)); return l; });
+}
+async function seen(email, id) {
+  const h = H(email), cid = String(id || '').replace(/[^a-z0-9]/g, '');
+  await cas(`hq/chat/${h}/list`, l => { if (!l || !l.items.some(x => x.id === cid && x.unseen)) return undefined; l.items = l.items.map(x => (x.id === cid ? Object.assign({}, x, { unseen: false }) : x)); return l; });
+}
+async function unseenCount(email) { return (await list(email)).filter(x => x.unseen).length; }
 async function rename(email, id, title) {
   const h = H(email), cid = String(id || '').replace(/[^a-z0-9]/g, ''), t = cleanText(title, 80) || 'Chat';
   await cas(`hq/chat/${h}/c-${cid}`, c => { if (!c) return undefined; c.title = t; return c; });
@@ -141,6 +151,6 @@ async function send(email, body) {
   return { conv, items: await list(email), spend: await spend() };
 }
 
-async function state(email) { const [items, p, c, s] = await Promise.all([list(email), prompts(email), cfg(), spend()]); return { items, prompts: p, cfg: c, spend: s }; }
+async function state(email) { const [items, p, c, s, sch] = await Promise.all([list(email), prompts(email), cfg(), spend(), require('./asksched').list(email)]); return { items, prompts: p, cfg: c, spend: s, sched: sch, examples: require('./asksched').EXAMPLES }; }
 
-module.exports = { state, list, get, remove, rename, send, prompts, savePrompt, delPrompt, setCap, spend, NEEDS_WEB };
+module.exports = { mark, seen, unseenCount, state, list, get, remove, rename, send, prompts, savePrompt, delPrompt, setCap, spend, NEEDS_WEB };

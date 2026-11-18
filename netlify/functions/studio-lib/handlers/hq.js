@@ -624,11 +624,15 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'mail-test') { await core.rateLimit('hq-mailtest', who.email, 20, 3600000, 'That’s a lot of test emails — try again in an hour.'); return await require('../outreach').sendTest(id, who.email, String(body.slug || ''), body.subject && body.body ? { subject: String(body.subject), body: String(body.body) } : null); }
       return await emails.list();
     }
-    case 'chat-state': case 'chat-get': case 'chat-send': case 'chat-del': case 'chat-rename': case 'chat-prompt': case 'chat-prompt-del': case 'chat-cap': {
+    case 'chat-state': case 'chat-get': case 'chat-send': case 'chat-del': case 'chat-rename': case 'chat-prompt': case 'chat-prompt-del': case 'chat-cap': case 'chat-sched-save': case 'chat-sched-del': case 'chat-sched-run': {
       // 💬 Ask Auntie — private assistant (anyone with the "Ask Auntie" page; each person sees only their own chats)
       const ac = require('../askchat');
       if (body.action === 'chat-send') { await core.rateLimit('hq-chat', who.email, 120, 60 * 60 * 1000, 'That’s a lot of messages this hour — please wait a little.'); return ac.send(who.email, body); }
-      if (body.action === 'chat-get') return { conv: await ac.get(who.email, body.id) };
+      if (body.action === 'chat-get') { const conv = await ac.get(who.email, body.id); await ac.seen(who.email, body.id); return { conv, items: await ac.list(who.email) }; }
+      const sc = require('../asksched');
+      if (body.action === 'chat-sched-save') { await sc.save(who.email, body.sched || {}); }
+      if (body.action === 'chat-sched-del') { await sc.remove(who.email, String(body.id || '')); }
+      if (body.action === 'chat-sched-run') { await core.rateLimit('hq-chat', who.email, 120, 60 * 60 * 1000, 'That’s a lot of messages this hour — please wait a little.'); const r = await sc.runOne(who.email, String(body.id || '')); return Object.assign(await ac.state(who.email), { isAdmin: who.isAdmin, conv: await ac.get(who.email, r.cid) }); }
       if (body.action === 'chat-del') return ac.remove(who.email, body.id);
       if (body.action === 'chat-rename') return ac.rename(who.email, body.id, body.title);
       if (body.action === 'chat-prompt') return { prompts: await ac.savePrompt(who.email, body.prompt) };
@@ -651,7 +655,7 @@ exports.handler = handler(async (ctx) => {
     case 'hq-today': {
       // ✅ Today in HQ — everything waiting on Auntie Tobi, counted live (admin only)
       if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
-      return require('../hqtoday').list();
+      return require('../hqtoday').list(who.email);
     }
     case 'spot-list': case 'spot-set': case 'spot-order': {
       // ⭐ Spotlight — Featured / Verified / Home & Links carousel (admin only)

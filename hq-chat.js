@@ -55,8 +55,8 @@
   function draw() {
     var c = S.conv, msgs = (c && c.msgs) || [];
     var h = css() + '<div class="ca' + (S.showList ? ' showlist' : '') + '">' +
-      '<aside class="calist"><button class="btn primary" id="caNew" style="width:100%">＋ New chat</button>' +
-      (S.items.length ? S.items.map(function (x) { return '<div class="cali' + (c && c.id === x.id ? ' on' : '') + '" data-open="' + x.id + '"><span>' + esc(x.title) + '</span><button class="link" data-del="' + x.id + '" title="Delete">✕</button></div>'; }).join('') : '<p class="muted" style="font-size:13px;margin:10px 4px">Your chats will be saved here.</p>') +
+      '<aside class="calist"><button class="btn primary" id="caNew" style="width:100%">＋ New chat</button><button class="btn ghost" id="caSch" style="width:100%;margin-bottom:6px">⏰ Scheduled' + ((S.sched || []).length ? ' (' + S.sched.length + ')' : '') + '</button>' +
+      (S.items.length ? S.items.map(function (x) { return '<div class="cali' + (c && c.id === x.id ? ' on' : '') + (x.unseen ? ' new' : '') + '" data-open="' + x.id + '"><span>' + esc(x.title) + '</span>' + (x.unseen ? '<i class="cadot"></i>' : '') + '<button class="link" data-del="' + x.id + '" title="Delete">✕</button></div>'; }).join('') : '<p class="muted" style="font-size:13px;margin:10px 4px">Your chats will be saved here.</p>') +
       '<div class="camoney">' + money() + '</div></aside>' +
       '<section class="camain"><div class="cahead"><button class="btn ghost sm" id="caList">☰ Chats</button><b>' + esc(c ? c.title : 'New chat') + '</b>' + (c ? '<button class="link" id="caRen">rename</button>' : '') + '</div>' +
       '<div class="camsgs" id="caMsgs">' + (msgs.length ? msgs.map(bubble).join('') :
@@ -83,7 +83,7 @@
     $('#caGo').onclick = send;
     $('#caNew').onclick = function () { S.conv = null; S.files = []; S.showList = false; draw(); $('#caIn').focus(); };
     $('#caList').onclick = function () { S.showList = !S.showList; draw(); };
-    $$('[data-open]').forEach(function (el) { el.onclick = async function (e) { if (e.target.dataset.del) return; try { S.conv = (await X.api('chat-get', { id: el.dataset.open })).conv; S.showList = false; draw(); } catch (x) { X.toast(x.message); } }; });
+    $$('[data-open]').forEach(function (el) { el.onclick = async function (e) { if (e.target.dataset.del) return; try { var g = await X.api('chat-get', { id: el.dataset.open }); S.conv = g.conv; if (g.items) S.items = g.items; S.showList = false; draw(); } catch (x) { X.toast(x.message); } }; });
     $$('[data-del]').forEach(function (b) { b.onclick = async function (e) { e.stopPropagation(); if (!confirm('Delete this chat?')) return; try { var r = await X.api('chat-del', { id: b.dataset.del }); S.items = r.items; if (S.conv && S.conv.id === b.dataset.del) S.conv = null; draw(); } catch (x) { X.toast(x.message); } }; });
     var ren = $('#caRen'); if (ren) ren.onclick = async function () { var t = prompt('Name this chat', S.conv.title); if (!t) return; try { var r = await X.api('chat-rename', { id: S.conv.id, title: t }); S.items = r.items; S.conv.title = t; draw(); } catch (x) { X.toast(x.message); } };
     $$('[data-mode]').forEach(function (b) { b.onclick = function () { S.mode = b.dataset.mode; var v = $('#caIn').value; draw(); $('#caIn').value = v; }; });
@@ -93,6 +93,7 @@
     $$('[data-rf]').forEach(function (b) { b.onclick = function () { S.files.splice(+b.dataset.rf, 1); var v = $('#caIn').value; draw(); $('#caIn').value = v; }; });
     $('#caFile').onchange = function () { addFiles(this.files); };
     $('#caPr').onclick = promptSheet;
+    $('#caSch').onclick = function () { schedSheet(); };
     var cap = $('#caCap'); if (cap) cap.onclick = async function () { var v = prompt('Monthly limit for Ask Auntie, in US dollars ($13 ≈ £10)', (S.cfg && S.cfg.capUsd) || 13); if (!v) return; try { Object.assign(S, await X.api('chat-cap', { capUsd: Number(v) })); X.toast('Limit saved'); draw(); } catch (x) { X.toast(x.message); } };
     $$('[data-cp]').forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(S.conv.msgs[+b.dataset.cp].text || ''); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
     $$('[data-bd]').forEach(function (b) { b.onclick = async function () { var t = S.conv.msgs[+b.dataset.bd].text || ''; try { await X.api('save', { item: { title: (t.split('\n').find(function (l) { return l.trim(); }) || 'From Ask Auntie').replace(/[*#>_`]/g, '').trim().slice(0, 80), caption: t, notes: '💬 From Ask Auntie', status: 'idea' } }); X.toast('🗂️ On your Board as an idea'); } catch (x) { X.toast(x.message); } }; });
@@ -140,6 +141,60 @@
     S.busy = false; draw();
   }
 
+  // ⏰ scheduled prompts
+  var DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], DEST = { chat: 'Ask Auntie only', board: '+ Board as an idea', calendar: '+ planned on the Calendar that day' };
+  function when(x) {
+    var t = x.time; var h = +t.slice(0, 2), m = t.slice(3), tt = (h % 12 || 12) + (m !== '00' ? ':' + m : '') + (h < 12 ? 'am' : 'pm');
+    return (x.freq === 'daily' ? 'Every day' : x.freq === 'monthly' ? 'Every month on the ' + x.dom + (x.dom === 1 || x.dom === 21 ? 'st' : x.dom === 2 || x.dom === 22 ? 'nd' : x.dom === 3 || x.dom === 23 ? 'rd' : 'th') : 'Every ' + x.days.slice().sort().map(function (d) { return DN[d]; }).join(', ')) + ' at ' + tt;
+  }
+  function niceWhen(iso) { if (!iso) return ''; var d = new Date(iso); return d.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Europe/London' }); }
+  function schedSheet() {
+    var s = X.sheet('<h2>⏰ Scheduled prompts</h2><p class="muted" style="margin:4px 0 12px">Ask Auntie runs these by itself at the time you choose (UK time) and saves the answer as a new chat, marked with a gold dot. It can also put it on your Board or Calendar. Nothing is ever posted or emailed.</p><div id="scL"></div>' +
+      '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn primary" id="scNew">＋ New scheduled prompt</button><button class="btn ghost" id="scX">Close</button></div>' +
+      '<div style="margin-top:16px"><b style="font-size:13.5px">Ready-made — tap to add</b><div id="scEx" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div></div>');
+    var paint = function () {
+      $('#scL', s).innerHTML = (S.sched || []).length ? S.sched.map(function (x) {
+        return '<div class="scrow"><div style="flex:1;min-width:0"><b>' + esc(x.name) + '</b>' + (x.paused ? ' <span class="pill">Paused</span>' : '') + '<div class="muted" style="font-size:12.5px">' + esc(when(x)) + ' · ' + (x.web ? '🌐 web search' : 'no web search') + ' · ' + esc(DEST[x.dest]) + '</div>' +
+          '<div class="muted" style="font-size:12px">' + (x.paused ? '' : 'Next: ' + esc(niceWhen(x.next))) + (x.lastRun ? ' · Last ran ' + esc(niceWhen(x.lastRun)) : '') + (x.lastError ? ' · <span style="color:#B42318">⚠️ ' + esc(x.lastError) + '</span>' : '') + '</div></div>' +
+          '<div class="row" style="gap:4px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" data-run="' + x.id + '">▶️ Run now</button><button class="btn ghost sm" data-ed="' + x.id + '">Edit</button><button class="btn ghost sm" data-pz="' + x.id + '">' + (x.paused ? 'Resume' : 'Pause') + '</button><button class="btn ghost sm" data-dl="' + x.id + '">✕</button></div></div>';
+      }).join('') : '<p class="muted" style="margin:0">Nothing scheduled yet — add one of the ready-made ones below, or make your own.</p>';
+      $('#scEx', s).innerHTML = (S.examples || []).filter(function (e) { return !(S.sched || []).some(function (x) { return x.name === e.name; }); }).map(function (e, i) { return '<button class="scex" data-ex="' + i + '"><b>' + esc(e.name) + '</b><span>' + esc(when(e)) + ' · ' + esc(DEST[e.dest]) + '</span></button>'; }).join('') || '<p class="muted" style="margin:0;font-size:13px">All added ✓</p>';
+      $$('[data-ex]', s).forEach(function (b) { b.onclick = function () { var e = (S.examples || []).filter(function (e) { return !(S.sched || []).some(function (x) { return x.name === e.name; }); })[+b.dataset.ex]; edit(e); }; });
+      $$('[data-ed]', s).forEach(function (b) { b.onclick = function () { edit(S.sched.filter(function (x) { return x.id === b.dataset.ed; })[0]); }; });
+      $$('[data-pz]', s).forEach(function (b) { b.onclick = function () { var x = S.sched.filter(function (y) { return y.id === b.dataset.pz; })[0]; save(Object.assign({}, x, { paused: !x.paused })); }; });
+      $$('[data-dl]', s).forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this scheduled prompt?')) return; try { Object.assign(S, await X.api('chat-sched-del', { id: b.dataset.dl })); paint(); draw(); } catch (x) { X.toast(x.message); } }; });
+      $$('[data-run]', s).forEach(function (b) { b.onclick = async function () { b.disabled = true; b.textContent = '▶️ Running…'; try { var r = await X.api('chat-sched-run', { id: b.dataset.run }); Object.assign(S, r); S.conv = r.conv; s.remove(); X.toast('⏰ Done — here’s the result'); draw(); } catch (x) { X.toast(x.message); b.disabled = false; b.textContent = '▶️ Run now'; } }; });
+    };
+    var save = async function (o) { try { Object.assign(S, await X.api('chat-sched-save', { sched: o })); paint(); draw(); return true; } catch (x) { X.toast(x.message); return false; } };
+    var edit = function (x) {
+      x = x || { freq: 'weekly', days: [1], time: '08:00', web: true, dest: 'chat', dom: 1 };
+      var e = X.sheet('<h2>' + (x.id ? 'Edit' : 'New') + ' scheduled prompt</h2>' +
+        '<label style="font-weight:700">Name</label><input id="seN" value="' + esc(x.name || '') + '" placeholder="e.g. Sunday UK updates" style="width:100%;margin:4px 0 10px">' +
+        '<label style="font-weight:700">What should Ask Auntie do?</label>' + ((S.prompts || []).length ? '<select id="seP" style="width:100%;margin:4px 0"><option value="">— or use a saved prompt —</option>' + S.prompts.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '</select>' : '') +
+        '<textarea id="seT" rows="6" style="width:100%;margin:4px 0 10px">' + esc(x.prompt || '') + '</textarea>' +
+        '<div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><select id="seF" style="width:auto"><option value="daily"' + (x.freq === 'daily' ? ' selected' : '') + '>Every day</option><option value="weekly"' + (x.freq === 'weekly' ? ' selected' : '') + '>On chosen days</option><option value="monthly"' + (x.freq === 'monthly' ? ' selected' : '') + '>Once a month</option></select>' +
+        '<span id="seDays">' + [1, 2, 3, 4, 5, 6, 0].map(function (d) { return '<label class="chk" style="font-size:13.5px"><input type="checkbox" value="' + d + '"' + ((x.days || []).indexOf(d) >= 0 ? ' checked' : '') + '> ' + DN[d] + '</label>'; }).join(' ') + '</span>' +
+        '<span id="seDom">on day <select id="seD" style="width:auto">' + Array.from({ length: 28 }, function (_, i) { return '<option' + (x.dom === i + 1 ? ' selected' : '') + '>' + (i + 1) + '</option>'; }).join('') + '</select></span>' +
+        'at <input id="seTm" type="time" value="' + esc(x.time || '08:00') + '" style="width:auto"> <span class="muted" style="font-size:12.5px">UK time</span></div>' +
+        '<label class="chk" style="margin:12px 0 6px;font-size:14px"><input type="checkbox" id="seW"' + (x.web ? ' checked' : '') + '> 🌐 Search the web (for news and anything current — about 2p a run)</label>' +
+        '<div style="font-weight:700;margin-top:6px">Where should the answer go?</div>' + Object.keys(DEST).map(function (k) { return '<label class="chk" style="font-size:14px;display:block;margin:4px 0"><input type="radio" name="seDst" value="' + k + '"' + (x.dest === k ? ' checked' : '') + '> ' + (k === 'chat' ? 'A new chat in Ask Auntie' : 'A new chat in Ask Auntie ' + DEST[k]) + '</label>'; }).join('') +
+        '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" id="seX">Cancel</button><button class="btn primary" id="seS">Save</button></div>');
+      var vis = function () { var f = $('#seF', e).value; $('#seDays', e).style.display = f === 'weekly' ? '' : 'none'; $('#seDom', e).style.display = f === 'monthly' ? '' : 'none'; };
+      $('#seF', e).onchange = vis; vis();
+      var sp = $('#seP', e); if (sp) sp.onchange = function () { var p = S.prompts.filter(function (q) { return q.id === sp.value; })[0]; if (p) { $('#seT', e).value = p.text; if (!$('#seN', e).value) $('#seN', e).value = p.name; } };
+      $('#seX', e).onclick = function () { e.remove(); };
+      $('#seS', e).onclick = async function () {
+        var o = { id: x.id, name: $('#seN', e).value, prompt: $('#seT', e).value, freq: $('#seF', e).value, days: $$('#seDays input', e).filter(function (i) { return i.checked; }).map(function (i) { return +i.value; }), dom: +$('#seD', e).value, time: $('#seTm', e).value, web: $('#seW', e).checked, dest: (e.querySelector('[name=seDst]:checked') || {}).value || 'chat', paused: x.paused };
+        if (await save(o)) { e.remove(); X.toast('⏰ Scheduled'); }
+      };
+    };
+    $('#scNew', s).onclick = function () { edit(); };
+    $('#scX', s).onclick = function () { s.remove(); };
+    paint();
+  }
+  // (styles for the sheet)
+  (function () { var st = document.createElement('style'); st.textContent = '.scrow{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid #ECEDF1;border-radius:12px;padding:10px 12px;margin-bottom:8px;flex-wrap:wrap}.scex{text-align:left;border:1px dashed #CFE3D8;background:#F3FAF6;border-radius:10px;padding:8px 11px;font:inherit;cursor:pointer;min-height:0}.scex span{display:block;font-size:12.5px;color:#6B7280}'; document.head.appendChild(st); })();
+
   function promptSheet(prefill) {
     var s = X.sheet('<h2>⭐ Saved prompts</h2><p class="muted" style="margin:4px 0 12px">Save the things you ask often (your caption style, a customer reply, a weekly news round-up). Tap one to use it.</p><div id="prL"></div>' +
       '<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><b>＋ New prompt</b><input id="prN" placeholder="Name, e.g. My caption style" style="width:100%;margin:6px 0"><textarea id="prT" rows="4" style="width:100%" placeholder="The prompt…">' + esc(typeof prefill === 'string' ? prefill : '') + '</textarea>' +
@@ -157,7 +212,7 @@
   function css() {
     return '<style>#view:has(.ca){padding:0}.ca{display:flex;height:calc(100vh - 64px);min-height:520px}' +
       '.calist{width:250px;flex-shrink:0;border-right:1px solid var(--line,#E7E2D5);padding:12px;overflow:auto;background:#FBFAF6;display:flex;flex-direction:column;gap:4px}' +
-      '.cali{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:13.5px}.cali span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cali:hover{background:#F1EEE6}.cali.on{background:#0F1E36;color:#fff}.cali.on .link{color:#FFB81C}.cali .link{opacity:.6}' +
+      '.cali{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:13.5px;color:#1F2937}.cali span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cali:hover{background:#F1EEE6}.cali.on{background:#0F1E36;color:#fff}.cali.new span{font-weight:800}.cadot{width:8px;height:8px;border-radius:50%;background:#FFB81C;flex-shrink:0;font-style:normal}.cali.on .link{color:#FFB81C}.cali .link{opacity:.6}' +
       '.camoney{margin-top:auto;font-size:12px;color:var(--muted,#6B7280);padding:10px 4px 0}' +
       '.camain{flex:1;display:flex;flex-direction:column;min-width:0}.cahead{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line,#E7E2D5)}.cahead b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cahead #caList{display:none}' +
       '.camsgs{flex:1;overflow:auto;padding:18px 16px}.cam{display:flex;gap:10px;margin-bottom:16px;max-width:820px;margin-left:auto;margin-right:auto}.cam.u{flex-direction:column;align-items:flex-end}' +

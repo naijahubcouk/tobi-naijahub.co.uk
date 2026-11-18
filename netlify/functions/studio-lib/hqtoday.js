@@ -10,7 +10,7 @@ const { getJson } = core;
 const safe = async (fn, dflt) => { try { return await fn(); } catch (e) { console.error('[hqtoday]', e && e.message); return dflt; } };
 const days = iso => (iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 864e5) : 0);
 
-async function list() {
+async function list(email) {
   const out = [];
   const add = (o) => { if (o && o.n > 0) out.push(o); };
 
@@ -65,6 +65,9 @@ async function list() {
       else if (st !== 'approved') add({ key: 'sunday', icon: '📰', n: 1, text: 'This Sunday’s Update is a draft — check it and approve it', nav: 'sun', btn: 'Open' });
     }
   }
+
+  // ⏰ scheduled Ask Auntie results waiting to be read
+  if (email) { const n = await safe(() => require('./askchat').unseenCount(email), 0); add({ key: 'sched', icon: '⏰', n, text: 'scheduled Ask Auntie result' + (n === 1 ? '' : 's') + ' ready to read', nav: 'chat', btn: 'Read' }); }
 
   return { items: out, at: core.nowIso() };
 }
