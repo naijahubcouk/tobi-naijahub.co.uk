@@ -140,7 +140,39 @@
   function sentKey(i, j) { return (S.conv && S.conv.id) + ':' + i + ':' + j; }
   function sentMark(i, j, what) { var o = sentGet(); o[sentKey(i, j)] = what; try { localStorage.setItem('hqchat-sent', JSON.stringify(o)); } catch (e) {} }
   function canBoard() { return X.allowed && X.allowed('board'); }
+  // 🎬 a Content series pack: one post at a time, each post in tabs
+  var TABS = [['ideas', '💡 Ideas & hooks'], ['content', '📝 Content'], ['caption', '✍️ Caption'], ['engage', '💬 Engagement'], ['sources', '✅ Sources & score']];
+  function splitC(t) { // sections 6–12 → caption / engagement / sources
+    var o = { caption: [], engage: [], sources: [] }, cur = 'caption';
+    String(t || '').split('\n').forEach(function (l) {
+      var h = l.match(/^\s*(?:#{1,6}\s*|\*\*)?\s*(6|7|8|9|10|11|12)[.)]\s/);
+      if (h) { var n = +h[1]; cur = n === 6 ? 'caption' : n <= 10 ? 'engage' : 'sources'; }
+      o[cur].push(l);
+    });
+    return { caption: o.caption.join('\n').trim(), engage: o.engage.join('\n').trim(), sources: o.sources.join('\n').trim() };
+  }
+  function postTabs(p) { var c = splitC(p.c); return { ideas: p.a || '', content: p.b || '', caption: c.caption, engage: c.engage, sources: c.sources }; }
+  // what goes on the Board / gets copied: the content and caption first, then the rest
+  function postText(p) { var t = postTabs(p); return [t.content, t.caption, t.engage, t.sources, t.ideas].filter(Boolean).join('\n\n'); }
+  function seriesView(m, i) {
+    var sr = S.conv.series, posts = sr.posts, sent = sentGet(), bd = canBoard();
+    S.pg = S.pg || {}; S.tb = S.tb || {};
+    var shown = posts.filter(function (p) { return p.a; }).length; if (!shown) return '';
+    var k = Math.min(S.pg[S.conv.id] || 0, shown - 1), p = posts[k], tabs = postTabs(p), tab = S.tb[S.conv.id] || 'content';
+    var wip = !sr.done && sr.next && sr.next.k === k;
+    var intro = sr.mode === 'today' ? 'Today’s content 💚' : sr.mode === 'all' ? 'Series ' + sr.from + '–' + sr.to + ' of 56 💚' : 'Your content 💚';
+    var nav = posts.length > 1 ? '<div class="pgnav"><button class="pgb" data-pg="' + (k - 1) + '"' + (k ? '' : ' disabled') + '>◀</button>' + posts.map(function (q, j) { var st = sent[sentKey(i, j)]; return '<button class="pgn' + (j === k ? ' on' : '') + (st ? ' ok' : '') + '" data-pg="' + j + '"' + (q.a ? '' : ' disabled') + ' title="' + esc(q.title || '') + '">' + (st ? '✓' : j + 1) + '</button>'; }).join('') + '<button class="pgb" data-pg="' + (k + 1) + '"' + (k + 1 < shown ? '' : ' disabled') + '>▶</button><span class="muted pgof">Post ' + (k + 1) + ' of ' + posts.length + '</span></div>' : '';
+    var body = tabs[tab] ? md(tabs[tab]) : '<p class="muted">' + (wip ? '✍️ Still writing this part…' : 'Nothing in this part.') + '</p>';
+    var st = sent[sentKey(i, k)];
+    return '<p style="margin:0 0 8px">' + intro + '</p>' + nav +
+      '<div class="capc"><div class="capct"><span class="capn">' + (k + 1) + '</span><b>' + esc(p.title || 'Post ' + (k + 1)) + '</b>' + (st ? '<span class="capok">✓ ' + esc(st) + '</span>' : '') + '</div>' +
+      '<div class="pgtabs">' + TABS.map(function (t) { return '<button class="pgt' + (t[0] === tab ? ' on' : '') + '" data-tb="' + t[0] + '"' + (tabs[t[0]] ? '' : ' style="opacity:.45"') + '>' + t[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="capcb">' + body + '</div>' +
+      '<div class="capca">' + (tabs[tab] ? '<button class="btn ghost sm" data-tcp="' + tab + '">📋 Copy this tab</button>' : '') +
+      (wip ? '<span class="muted" style="font-size:12.5px;align-self:center">✍️ Still writing this post…</span>' : '<button class="btn ghost sm" data-pcp="' + i + ':' + k + '">📋 Copy whole post</button>' + (bd ? '<button class="btn ghost sm" data-pbd="' + i + ':' + k + '">🗂️ Board</button><button class="btn ghost sm" data-pcl="' + i + ':' + k + '">📅 Calendar</button>' : '')) + '</div></div>';
+  }
   function pieceCards(m, i) {
+    if (m.series && S.conv && S.conv.series && S.conv.series.posts) return seriesView(m, i);
     var P = pieces(m.text), sent = sentGet(), bd = canBoard(), sr = m.series && S.conv && S.conv.series, wip = sr && !sr.done ? sr.next.k : 99;
     return (P.intro ? md(P.intro) : '') + '<div class="capcs">' + P.pieces.map(function (p, j) {
       var st = sent[sentKey(i, j)];
@@ -185,7 +217,7 @@
         '<div class="carow"><textarea id="caIn" rows="1" placeholder="' + (S.mode === 'image' ? 'Describe the picture…' : 'Message Ask Auntie…') + '"></textarea><button class="btn primary" id="caGo"' + (S.busy ? ' disabled' : '') + '>➤</button></div>' +
         '<div class="muted" style="font-size:11.5px;margin-top:5px">Enter to send · Shift+Enter for a new line · 🌐 Auto searches the web for news and current questions</div></div></section></div>';
     $('#view').innerHTML = h;
-    var mb = $('#caMsgs'); mb.scrollTop = mb.scrollHeight;
+    var mb = $('#caMsgs'); if (S.keep) { var kp = $('.pgnav') || $('.capc'); S.keep = false; if (kp) mb.scrollTop += kp.getBoundingClientRect().top - mb.getBoundingClientRect().top - 12; } else mb.scrollTop = mb.scrollHeight;
     bind();
   }
 
@@ -213,7 +245,10 @@
     var pk = $('#pkGo'); if (pk) pk.onclick = function () { runPack(S.conv.id); };
     var cap = $('#caCap'); if (cap) cap.onclick = async function () { var v = prompt('Monthly limit for Ask Auntie, in US dollars ($13 ≈ £10)', (S.cfg && S.cfg.capUsd) || 13); if (!v) return; try { Object.assign(S, await X.api('chat-cap', { capUsd: Number(v) })); X.toast('Limit saved'); draw(); } catch (x) { X.toast(x.message); } };
     $$('[data-cp]').forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(plain(S.conv.msgs[+b.dataset.cp].text || '')); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
-    function piece(v) { var a = v.split(':'); return { i: +a[0], j: +a[1], p: pieces(S.conv.msgs[+a[0]].text).pieces[+a[1]] }; }
+    function piece(v) { var a = v.split(':'), m = S.conv.msgs[+a[0]], sp = m.series && S.conv.series && S.conv.series.posts[+a[1]]; return { i: +a[0], j: +a[1], p: sp ? { title: sp.title || 'Post', body: postText(sp) } : pieces(m.text).pieces[+a[1]] }; }
+    $$('[data-pg]').forEach(function (b) { b.onclick = function () { S.pg[S.conv.id] = +b.dataset.pg; S.keep = true; draw(); }; });
+    $$('[data-tb]').forEach(function (b) { b.onclick = function () { S.tb[S.conv.id] = b.dataset.tb; S.keep = true; draw(); }; });
+    $$('[data-tcp]').forEach(function (b) { b.onclick = function () { var sr = S.conv.series, k = Math.min(S.pg[S.conv.id] || 0, sr.posts.length - 1); try { navigator.clipboard.writeText(plain(postTabs(sr.posts[k])[b.dataset.tcp])); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
     function card(p, extra) { return Object.assign({ title: p.title.slice(0, 120), caption: p.body, type: guessType(p.title + ' ' + p.body.slice(0, 200)), notes: '💬 From Ask Auntie', status: 'idea' }, extra || {}); }
     $$('[data-pcp]').forEach(function (b) { b.onclick = function () { var x = piece(b.dataset.pcp); try { navigator.clipboard.writeText(x.p.title + '\n\n' + x.p.body); X.toast('Copied'); } catch (e) { X.toast('Couldn’t copy'); } }; });
     $$('[data-pbd]').forEach(function (b) { b.onclick = async function () { var x = piece(b.dataset.pbd); b.disabled = true; try { await X.api('save', { item: card(x.p) }); sentMark(x.i, x.j, 'On Board'); X.toast('🗂️ On your Board as an idea'); draw(); } catch (e) { X.toast(e.message); b.disabled = false; } }; });
@@ -222,7 +257,7 @@
       $('#pcX', sh).onclick = function () { sh.remove(); };
       $('#pcOk', sh).onclick = async function () { var v = $('#pcD', sh).value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return X.toast('Pick a day'); this.disabled = true; try { await X.api('save', { item: card(x.p, { status: 'scheduled', planDate: v }) }); sentMark(x.i, x.j, 'Planned ' + new Date(v + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })); sh.remove(); X.toast('📅 Planned on your Calendar'); draw(); } catch (e) { X.toast(e.message); this.disabled = false; } };
     }; });
-    $$('[data-bda]').forEach(function (b) { b.onclick = async function () { var i = +b.dataset.bda, P = pieces(S.conv.msgs[i].text).pieces, sent = sentGet(), todo = P.map(function (p, j) { return j; }).filter(function (j) { return !sent[sentKey(i, j)]; });
+    $$('[data-bda]').forEach(function (b) { b.onclick = async function () { var i = +b.dataset.bda, P = S.conv.msgs[i].series && S.conv.series ? S.conv.series.posts.map(function (q) { return { title: q.title || 'Post', body: postText(q) }; }) : pieces(S.conv.msgs[i].text).pieces, sent = sentGet(), todo = P.map(function (p, j) { return j; }).filter(function (j) { return !sent[sentKey(i, j)]; });
       if (!todo.length) return X.toast('All of these are already sent');
       b.disabled = true; b.textContent = '🗂️ Sending…';
       try { await X.api('save-many', { source: 'me', items: todo.map(function (j) { return card(P[j]); }) }); todo.forEach(function (j) { sentMark(i, j, 'On Board'); }); X.toast('🗂️ ' + todo.length + ' on your Board as ideas'); draw(); } catch (e) { X.toast(e.message); b.disabled = false; } }; });
@@ -346,6 +381,8 @@
       '.serq{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.serq button{text-align:left;border:1px solid #E7E2D5;background:#0F1E36;color:#fff;border-radius:12px;padding:12px;cursor:pointer;font:inherit}.serq button span{display:block;font-size:12.5px;color:#F5D58A;margin-top:3px}' +
       '.serh{font-weight:800;font-size:13px;margin:12px 0 6px;color:#0F1E36}.serow{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:1px solid #ECEDF1;background:#fff;border-radius:10px;padding:9px 10px;margin-bottom:6px;cursor:pointer;font:inherit;color:inherit}.serow:hover{border-color:#057A44}.serow small{display:block;color:#6B7280;font-size:12px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.sern{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:#E6F4EC;color:#057A44;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}' +
       '@media (max-width:600px){.serq{grid-template-columns:1fr}}' +
+      '.pgnav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px}.pgb,.pgn{min-width:34px;height:34px;border-radius:10px;border:1px solid #E7E2D5;background:#fff;font:inherit;font-weight:700;cursor:pointer;color:#0F1E36}.pgn.on{background:#0F1E36;color:#FFB81C;border-color:#0F1E36}.pgn.ok:not(.on){background:#E6F4EC;color:#057A44;border-color:#BFE3CE}.pgb:disabled,.pgn:disabled{opacity:.35;cursor:default}.pgof{font-size:12.5px;margin-left:4px}' +
+      '.pgtabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}.pgt{flex-shrink:0;border:1px solid #E7E2D5;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;color:#0F1E36;white-space:nowrap}.pgt.on{background:#057A44;color:#fff;border-color:#057A44}' +
       '.capcs{display:flex;flex-direction:column;gap:10px;margin:10px 0}.capc{border:1px solid #E7E2D5;border-radius:12px;padding:12px 14px;background:#FFFDF8}.capct{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}.capct b{flex:1;min-width:0}.capn{width:24px;height:24px;border-radius:50%;background:#0F1E36;color:#FFB81C;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}.capok{font-size:12px;font-weight:700;color:#057A44;background:#E6F4EC;border-radius:999px;padding:2px 8px}.capcb{font-size:14px}.capca{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed #E7E2D5}' +
       '.cali{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:13.5px;color:#1F2937}.cali span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cali:hover{background:#F1EEE6}.cali.on{background:#0F1E36;color:#fff}.cali.new span{font-weight:800}.cadot{width:8px;height:8px;border-radius:50%;background:#FFB81C;flex-shrink:0;font-style:normal}.cali.on .link{color:#FFB81C}.cali .link{opacity:.6}' +
       '.camoney{margin-top:auto;font-size:12px;color:var(--muted,#6B7280);padding:10px 4px 0}' +
