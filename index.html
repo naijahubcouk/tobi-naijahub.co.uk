@@ -5710,8 +5710,8 @@ function buildProductCard(p, compact) {
 // Blue verified tick shown next to verified business names.
 // Tap (or hover on desktop) shows "Verified registered business".
 // ✅ Verified by Auntie Tobi: what was checked, and when (set in HQ → Spotlight)
-var TOBI_VCHK = { ch: 'Registered with Companies House', council: 'Registered with the council', trading: 'Trading now', contact: 'Contact confirmed' };
-function tobiTrustLines(b) { var v = (b && b.vchk) || {}; return ['ch', 'council', 'trading', 'contact'].filter(function (k) { return v[k]; }).map(function (k) { return TOBI_VCHK[k]; }); }
+var TOBI_VCHK = { ch: 'Registered with Companies House', sole: 'Sole trader', council: 'Registered with the council', trading: 'Trading now', contact: 'Contact confirmed' };
+function tobiTrustLines(b) { var v = (b && b.vchk) || {}; return ['ch', 'sole', 'council', 'trading', 'contact'].filter(function (k) { return v[k]; }).map(function (k) { return TOBI_VCHK[k]; }); }
 function tobiCheckedWhen(b) { if (!b || !/^\d{4}-\d{2}/.test(b.vAt || '')) return ''; var m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(b.vAt.slice(5, 7)) - 1]; return 'Checked ' + m + ' ' + b.vAt.slice(0, 4); }
 // the navy trust strip on a Verified business's page
 function tobiTrust(b, round) {

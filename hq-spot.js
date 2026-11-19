@@ -21,7 +21,7 @@
     return '<button class="spsw' + (on ? ' on' : '') + '" data-k="' + k + '" data-s="' + esc(b.slug) + '" aria-pressed="' + on + '"' + (off ? ' disabled title="' + esc(off) + '"' : '') + '>' + label + '</button>';
   }
   // ✅ what was checked for a Verified business — shown in the navy trust strip on its page in the app
-  var VCHK = [['ch', 'Registered with Companies House', 'limited companies'], ['council', 'Registered with the council', 'food businesses'], ['trading', 'Trading now', 'recent posts, sales or replies'], ['contact', 'Contact confirmed', 'phone, WhatsApp or email answered']];
+  var VCHK = [['ch', 'Registered with Companies House', 'limited companies — status Active on Companies House'], ['sole', 'Sole trader', 'the owner runs it as a sole trader (not on Companies House)'], ['council', 'Registered with the council', 'food businesses'], ['trading', 'Trading now', 'recent posts, sales or replies'], ['contact', 'Contact confirmed', 'phone, WhatsApp or email answered']];
   function when(d) { return d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }) : ''; }
   function checksLine(b) {
     if (!b.verified) return '';
@@ -36,6 +36,9 @@
       VCHK.map(function (c) { return '<label class="row" style="gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid #EEE;cursor:pointer"><input type="checkbox" data-c="' + c[0] + '"' + (v[c[0]] ? ' checked' : '') + ' style="width:20px;height:20px;margin-top:2px"><span><b>' + esc(c[1]) + '</b><br><span class="muted" style="font-size:12.5px">' + esc(c[2]) + '</span></span></label>'; }).join('') +
       '<label class="lbl" style="margin-top:10px">Date you checked</label><input type="date" id="vcD" value="' + esc(b.vAt || today) + '" max="' + today + '">' +
       '<div class="row" style="gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn ghost" id="vcX">Cancel</button><button class="btn primary" id="vcS">Save</button></div>');
+    // a business is either on Companies House or a sole trader, not both
+    var one = function (a, b) { var x = sh.querySelector('[data-c="' + a + '"]'); x.onchange = function () { if (x.checked) sh.querySelector('[data-c="' + b + '"]').checked = false; }; };
+    one('ch', 'sole'); one('sole', 'ch');
     sh.querySelector('#vcX').onclick = function () { sh.remove(); };
     sh.querySelector('#vcS').onclick = async function () {
       var set = { vchk: {}, vAt: sh.querySelector('#vcD').value || '' };

@@ -20,7 +20,7 @@ const KEY = 'dir/list';
 const OURS = /^(favour adentan|auntie tobi)$/i;           // listings we created = unclaimed
 // Featured businesses (Business Club) also show every way to reach them, the full description and their photos
 const FEATURED_EXTRA = ['carOff', 'carRank', 'carImg', 'email', 'phone', 'website', 'fb', 'tt', 'long', 'gallery', 'addr'];
-const VCHK = ['ch', 'council', 'trading', 'contact'];   // Companies House · council (food) · trading now · contact confirmed
+const VCHK = ['ch', 'sole', 'council', 'trading', 'contact'];   // Companies House · sole trader · council (food) · trading now · contact confirmed
 const PUBLIC = ['name', 'slug', 'cat', 'loc', 'desc', 'ig', 'wa', 'featured', 'verified', 'img', 'lines', 'shop', 'book', 'label', 'text'];
 const COMPARE = ['name', 'cat', 'loc', 'desc', 'ig', 'wa', 'phone', 'email', 'website', 'featured', 'verified', 'claimed'];
 const FIELD_NAMES = { name: 'name', cat: 'category', loc: 'town', desc: 'description', ig: 'Instagram', wa: 'WhatsApp', phone: 'phone', email: 'email', website: 'website', featured: 'Featured', verified: 'Verified', claimed: 'claimed' };

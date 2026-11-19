@@ -691,7 +691,7 @@ exports.handler = handler(async (ctx) => {
       if (!has(['spot'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change this.');
       const bizdir = require('../bizdir');
       if (body.action === 'spot-set') { const p = body.set || {}, ok = {}; for (const k of ['featured', 'verified', 'home', 'pin']) if (typeof p[k] === 'boolean') ok[k] = p[k];
-        if (p.vchk && typeof p.vchk === 'object') ok.vchk = { ch: p.vchk.ch === true, council: p.vchk.council === true, trading: p.vchk.trading === true, contact: p.vchk.contact === true };
+        if (p.vchk && typeof p.vchk === 'object') ok.vchk = { ch: p.vchk.ch === true, sole: p.vchk.sole === true && p.vchk.ch !== true, council: p.vchk.council === true, trading: p.vchk.trading === true, contact: p.vchk.contact === true };
         if (p.vAt !== undefined) ok.vAt = /^\d{4}-\d{2}-\d{2}$/.test(String(p.vAt)) ? String(p.vAt) : '';
         await bizdir.spotSet(String(body.slug || ''), ok, who.email); await core.audit(who.email, 'hq_spotlight', Object.assign({ slug: body.slug }, ok)); }
       if (body.action === 'spot-order') await bizdir.spotOrder((Array.isArray(body.slugs) ? body.slugs : []).map(String).slice(0, 100));
