@@ -138,6 +138,8 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 }
 .lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}.sctag{font-size:13px}.note{background:var(--gold-l);border-radius:10px;padding:8px 12px;font-size:13.5px}
 .binrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.binrow:last-child{border-bottom:0}
+/* 📭 no email */
+.noem{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 /* 🎉 Add event */
 .evpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.evpick button{border:1.5px solid #E7E2D5;background:#fff;border-radius:12px;padding:12px 8px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;color:var(--navy,#0F1E36)}.evpick button span{display:block;font-size:24px;margin-bottom:4px}.evpick button[aria-pressed=true]{border-color:#057A44;background:#E6F4EC;color:#057A44}
 .evthumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.evthumbs span{position:relative}.evthumbs img{width:76px;height:96px;object-fit:cover;border-radius:8px;border:1px solid #E7E2D5}.evthumbs button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#0F1E36;color:#fff;font-size:11px;cursor:pointer}
@@ -1046,10 +1048,10 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     var C = S.crm, info = S.dir.info || {}, rows = C.rows;
     S.dirF = S.dirF || 'today'; S.dirQ = S.dirQ || ''; S.dirKind = S.dirKind || ''; S.dirCat = S.dirCat || ''; S.dirTown = S.dirTown || ''; S.dirHas = S.dirHas || '';
     var due = rows.filter(function (r) { return r.due && !r.hidden; }), hot = C.hot.map(function (sl) { return rows.filter(function (r) { return r.slug === sl; })[0]; }).filter(Boolean);
-    var m = C.month;
+    var m = C.month, noEm = rows.filter(function (r) { return !r.hidden && !r.email; });
     var stat = function (n, l) { return '<div style="background:#F6F4EE;border-radius:10px;padding:8px 12px;min-width:84px"><div style="font-size:19px;font-weight:800">' + n + '</div><div class="muted" style="font-size:12px">' + l + '</div></div>'; };
     var head = '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div style="font-weight:800;margin-bottom:8px">📅 Today</div>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap">' + stat(due.length, 'follow-ups due') + stat(hot.length, '🔥 clicked recently') + stat(C.newToday + ' / ' + C.perDay, 'new WhatsApp invites') + stat(C.counts.interested, 'interested') + '</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap">' + (noEm.length ? '<button id="dNoEm" style="all:unset;cursor:pointer;background:#FDECEC;border:1.5px solid #F5B5B5;border-radius:10px;padding:8px 12px;min-width:84px"><div style="font-size:19px;font-weight:800;color:#9B1C1C">' + noEm.length + '</div><div style="font-size:12px;color:#9B1C1C;font-weight:700">📭 without email</div></button>' : '') + stat(due.length, 'follow-ups due') + stat(hot.length, '🔥 clicked recently') + stat(C.newToday + ' / ' + C.perDay, 'new WhatsApp invites') + stat(C.counts.interested, 'interested') + '</div>' +
       (hot.length ? '<div style="margin-top:10px;font-size:13.5px"><b>🔥 Engaging with your emails:</b> ' + hot.slice(0, 6).map(function (r) { return '<a href="javascript:void(0)" data-open="' + esc(r.slug) + '" style="color:#057A44;font-weight:700">' + esc(r.name) + '</a>'; }).join(' · ') + '</div>' : '') +
       '<div style="font-weight:800;margin:14px 0 8px">This month</div><div class="row" style="gap:8px;flex-wrap:wrap">' + stat(m.contacted, 'contacted') + stat(m.opened, 'opened an email') + stat(m.clicked, 'clicked a link') + stat(m.replied, 'replied') + stat(m.joined, 'joined') + stat('£' + m.money, 'from joins') + '</div>' +
       photoLine() + (info.saved ? '<div class="muted" style="font-size:12px;margin-top:10px">' + (info.lastImport ? 'Last website import: ' + esc(crmDate(info.lastImport)) : '') + '</div>' : '<div class="note" style="margin-top:10px">Tap <b>📥 Import</b> and choose your latest directory CSV to bring in emails, phones and claimed / unclaimed.</div>') + '</div>';
@@ -1079,14 +1081,39 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       '<div class="muted" style="font-size:12.5px;margin-bottom:4px">' + list.length + ' shown</div>' +
       '<div class="card" style="padding:4px 14px">' + (list.length ? list.slice(0, 400).map(function (r) {
         return '<div class="aprow" style="cursor:pointer" data-open="' + esc(r.slug) + '"><div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><b>' + esc(r.name) + '</b>' + crmPill(r.stage) +
-          (r.due ? dirPill('📅 Due', '#B45309') : '') + (r.claimed ? dirPill('Claimed', '#057A44') : dirPill('Unclaimed', '#FFE7A3', '#6B4A00')) + (r.featured ? dirPill('⭐', '#0F1E36') : '') + (r.studio ? dirPill('🧰 Studio', '#1D4ED8') : '') + (r.waitSite ? dirPill('⏳ Not in app yet', '#EEF0F3', '#6B7280') : '') + '</div>' +
+          (r.due ? dirPill('📅 Due', '#B45309') : '') + (!r.email ? dirPill('📭 No email', '#FDECEC', '#9B1C1C') : '') + (r.claimed ? dirPill('Claimed', '#057A44') : dirPill('Unclaimed', '#FFE7A3', '#6B4A00')) + (r.featured ? dirPill('⭐', '#0F1E36') : '') + (r.studio ? dirPill('🧰 Studio', '#1D4ED8') : '') + (r.waitSite ? dirPill('⏳ Not in app yet', '#EEF0F3', '#6B7280') : '') + '</div>' +
           '<div class="muted" style="font-size:12.5px;margin-top:2px">' + (r.last ? esc(r.last.what).slice(0, 90) + ' · ' + esc(crmAgo(r.last.at)) : esc(r.cat || '—') + ' · ' + esc((r.loc || 'UK').split(',')[0])) +
-          (r.opens || r.clicks ? ' · 👁 ' + r.opens + (r.clicks ? ' · 🔗 ' + r.clicks : '') : '') + (r.followUpAt ? ' · 📅 ' + esc(crmDate(r.followUpAt)) : r.checkBackAt && r.stage === 'notnow' ? ' · ⏸ back ' + esc(crmDate(r.checkBackAt)) : '') + '</div></div><div class="apact" style="align-items:center">' + (!r.claimed ? '<button class="btn ghost sm" data-claimcopy="' + esc(r.slug) + '" title="Copy this business’s claim link">🔗 Claim link</button>' : '') + '›</div></div>';
+          (r.opens || r.clicks ? ' · 👁 ' + r.opens + (r.clicks ? ' · 🔗 ' + r.clicks : '') : '') + (r.followUpAt ? ' · 📅 ' + esc(crmDate(r.followUpAt)) : r.checkBackAt && r.stage === 'notnow' ? ' · ⏸ back ' + esc(crmDate(r.checkBackAt)) : '') + '</div>' + (!r.email ? '<div class="noem">' + '<button class="btn ghost sm" data-addem="' + esc(r.slug) + '">➕ Add email</button>' + (r.wa ? '<a class="btn ghost sm" target="_blank" rel="noopener" data-askem href="https://wa.me/' + esc(String(r.wa).replace(/\D/g, '')) + '?text=' + encodeURIComponent(askEmailMsg(r)) + '">💬 Ask on WhatsApp</a>' : '') + (r.ig ? '<button class="btn ghost sm" data-askig="' + esc(r.slug) + '">📸 Ask on Instagram</button>' : '') + (!r.wa && !r.ig ? '<span class="muted" style="font-size:12.5px;align-self:center">No WhatsApp or Instagram either</span>' : '') + '</div>' : '') + '</div><div class="apact" style="align-items:center">' + (!r.claimed ? '<button class="btn ghost sm" data-claimcopy="' + esc(r.slug) + '" title="Copy this business’s claim link">🔗 Claim link</button>' : '') + '›</div></div>';
       }).join('') : '<p class="muted" style="padding:14px 0">' + (f === 'today' ? 'Nothing due today 🎉' : 'No businesses here.') + '</p>') + '</div></div>';
     $('#dQ').oninput = function () { S.dirQ = this.value; var pos = this.selectionStart; vDir(); var el = $('#dQ'); el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} };
     $$('#dF [data-f]').forEach(function (b) { b.onclick = function () { S.dirF = b.dataset.f; vDir(); }; });
     [['#dKind', 'dirKind'], ['#dCat', 'dirCat'], ['#dTown', 'dirTown'], ['#dHas', 'dirHas']].forEach(function (x) { $(x[0]).onchange = function () { S[x[1]] = this.value; vDir(); }; });
     $$('[data-open]').forEach(function (el) { el.onclick = function (e) { if (e.target.closest('a[href^="http"]')) return; crmOpen(el.dataset.open); }; });
+    // 📭 businesses without an email: show them, add one, or ask for it
+    if ($('#dNoEm')) $('#dNoEm').onclick = function () { S.dirF = 'all'; S.dirHas = 'noemail'; vDir(); var q = $('#dF'); if (q && q.scrollIntoView) q.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    $$('[data-askem]').forEach(function (a) { a.onclick = function (e) { e.stopPropagation(); }; });
+    $$('[data-askig]').forEach(function (b) { b.onclick = function (e) {
+      e.stopPropagation(); var r = rows.filter(function (x) { return x.slug === b.dataset.askig; })[0]; if (!r) return;
+      var go = function () { window.open('https://www.instagram.com/' + encodeURIComponent(String(r.ig).replace(/^@/, '')) + '/', '_blank', 'noopener'); };
+      try { navigator.clipboard.writeText(askEmailMsg(r)).then(function () { toast('📋 Message copied — paste it in their Instagram DMs'); go(); }, function () { prompt('Copy this message:', askEmailMsg(r)); go(); }); } catch (x) { prompt('Copy this message:', askEmailMsg(r)); go(); }
+    }; });
+    $$('[data-addem]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); addEmailSheet(b.dataset.addem); }; });
+  }
+  function askEmailMsg(r) { return 'Hi, it’s Auntie Tobi 💚 ' + r.name + ' is listed on the Auntie Tobi app. What’s the best email for your business? We’ll use it to send you updates about your listing.'; }
+  function addEmailSheet(slug) {
+    var r = (S.crm.rows || []).filter(function (x) { return x.slug === slug; })[0], b = ((S.dir && S.dir.items) || []).filter(function (x) { return x.slug === slug; })[0];
+    if (!r || !b) return toast('Couldn’t find that business — refresh and try again');
+    var s = sheet('<h2>➕ Add email</h2><p class="muted" style="margin:4px 0 10px">' + esc(r.name) + '</p><label for="aeM">Business email</label><input id="aeM" type="email" inputmode="email" autocomplete="off" placeholder="name@business.co.uk"><div class="err hidden" id="aeMe"></div><div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="aeMx">Cancel</button><button class="btn primary" id="aeMs">Save</button></div>');
+    var i = $('#aeM', s); i.focus();
+    $('#aeMx', s).onclick = function () { s.remove(); };
+    var save = async function () {
+      var v = i.value.trim().toLowerCase(), er = $('#aeMe', s);
+      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) { er.textContent = 'That doesn’t look like an email.'; er.classList.remove('hidden'); return; }
+      $('#aeMs', s).disabled = true;
+      try { S.dir = await api('dir-save', { item: Object.assign({}, b, { origSlug: b.slug, email: v }) }); r.email = v; s.remove(); toast('📧 Email saved'); vDir(); }
+      catch (x) { er.textContent = x.message; er.classList.remove('hidden'); $('#aeMs', s).disabled = false; }
+    };
+    $('#aeMs', s).onclick = save; i.onkeydown = function (e) { if (e.key === 'Enter') save(); };
   }
   // 🔗 claim links: auntietobi.co.uk/claim/<slug>
   function claimUrl(slug) { return 'https://www.auntietobi.co.uk/claim/' + encodeURIComponent(slug); }
