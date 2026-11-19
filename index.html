@@ -5711,21 +5711,22 @@ function buildProductCard(p, compact) {
 // Tap (or hover on desktop) shows "Verified registered business".
 // ✅ Verified by Auntie Tobi: what was checked, and when (set in HQ → Spotlight)
 var TOBI_VCHK = { ch: 'Registered with Companies House', sole: 'Sole trader', council: 'Registered with the council', trading: 'Trading now', contact: 'Contact confirmed' };
-function tobiTrustLines(b) { var v = (b && b.vchk) || {}; return ['ch', 'sole', 'council', 'trading', 'contact'].filter(function (k) { return v[k]; }).map(function (k) { return TOBI_VCHK[k]; }); }
+function tobiTrustLines(b) { var v = (b && b.vchk) || {}; return ['ch', 'council', 'trading', 'contact'].filter(function (k) { return v[k]; }).map(function (k) { return TOBI_VCHK[k]; }); }
 function tobiCheckedWhen(b) { if (!b || !/^\d{4}-\d{2}/.test(b.vAt || '')) return ''; var m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(b.vAt.slice(5, 7)) - 1]; return 'Checked ' + m + ' ' + b.vAt.slice(0, 4); }
 // the navy trust strip on a Verified business's page
 function tobiTrust(b, round) {
   if (!b || !b.verified) return '';
   var E = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
-  var lines = tobiTrustLines(b), when = tobiCheckedWhen(b);
+  var lines = tobiTrustLines(b), when = tobiCheckedWhen(b), sole = !!(b.vchk && b.vchk.sole);   // "Sole trader" is how they're set up, not a check — shown without a tick
   return '<div style="background:#0F1E36;color:#fff;padding:11px 16px;font-size:12.5px;line-height:1.6;border-radius:' + (round || '0 0 12px 12px') + '">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="color:#FFB81C;font-size:13px">✓ Verified by Auntie Tobi</b>' + (when ? '<span style="color:#C9D1DE;font-size:12px">' + E(when) + '</span>' : '') + '</div>'
+    + (sole ? '<div style="color:#C9D1DE;margin-top:3px">Sole trader</div>' : '')
     + (lines.length ? '<div style="color:#E5E7EB;margin-top:4px;display:flex;flex-wrap:wrap;gap:2px 12px">' + lines.map(function (l) { return '<span style="white-space:nowrap">✓ ' + E(l) + '</span>'; }).join('') + '</div>' : '')
     + '</div>';
 }
 function tobiTick(size, b) {
   size = size || 16;
-  var vt = b ? tobiTrustLines(b).concat(tobiCheckedWhen(b) ? [tobiCheckedWhen(b)] : []).join(' · ') : '';
+  var vt = b ? (b.vchk && b.vchk.sole ? 'Sole trader. ' : '') + tobiTrustLines(b).concat(tobiCheckedWhen(b) ? [tobiCheckedWhen(b)] : []).join(' · ') : '';
   return '<span class="tobi-tick" role="button" tabindex="0" aria-label="Verified by Auntie Tobi"' + (vt ? ' data-vt="' + vt.replace(/"/g, '&quot;') + '"' : '') + ' onclick="tobiTickTap(event,this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){tobiTickTap(event,this)}" onmouseenter="if(tobiCanHover())tobiTickShow(this)" onmouseleave="if(tobiCanHover())tobiTickHide()" style="display:inline-flex;vertical-align:-3px;margin-left:4px;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent;">'
     + '<svg aria-hidden="true" style="width:' + size + 'px;height:' + size + 'px;flex-shrink:0;" viewBox="0 0 24 24"><path fill="#FFB81C" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.6-5.8"/></svg>'
     + '</span>';

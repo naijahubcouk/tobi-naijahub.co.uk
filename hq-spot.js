@@ -21,7 +21,7 @@
     return '<button class="spsw' + (on ? ' on' : '') + '" data-k="' + k + '" data-s="' + esc(b.slug) + '" aria-pressed="' + on + '"' + (off ? ' disabled title="' + esc(off) + '"' : '') + '>' + label + '</button>';
   }
   // ✅ what was checked for a Verified business — shown in the navy trust strip on its page in the app
-  var VCHK = [['ch', 'Registered with Companies House', 'limited companies — status Active on Companies House'], ['sole', 'Sole trader', 'the owner runs it as a sole trader (not on Companies House)'], ['council', 'Registered with the council', 'food businesses'], ['trading', 'Trading now', 'recent posts, sales or replies'], ['contact', 'Contact confirmed', 'phone, WhatsApp or email answered']];
+  var VCHK = [['ch', 'Registered with Companies House', 'limited companies — status Active on Companies House'], ['sole', 'Sole trader', 'the owner says they run it as a sole trader — shown in the app as information, without a tick'], ['council', 'Registered with the council', 'food businesses'], ['trading', 'Trading now', 'recent posts, sales or replies'], ['contact', 'Contact confirmed', 'phone, WhatsApp or email answered']];
   function when(d) { return d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }) : ''; }
   function checksLine(b) {
     if (!b.verified) return '';
