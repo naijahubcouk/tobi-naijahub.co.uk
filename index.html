@@ -2480,7 +2480,7 @@ function formatResponse(text) {
           const safeName = b.name.replace(/['"]/g, '');
           const shareMsg = 'Check out ' + safeName + ' on Auntie Tobi \uD83D\uDC9A Find Nigerian businesses near you';
 
-          const verifiedHeader = b.verified
+          const verifiedHeader = b.featured
             ? '<div style="background:#FFB81C;padding:5px 14px;display:flex;align-items:center;gap:6px;"><span style="font-size:11px;font-weight:800;color:#0F1E36;">' + (b.featured ? '\u2B50 Featured Business' : '\u2705 Verified Business') + '</span></div>'
             : '';
 
@@ -2498,7 +2498,7 @@ function formatResponse(text) {
             + verifiedHeader
             + '<div style="padding:14px;">'
             + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:8px;">'
-            + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\'' + b.slug + '\')" style="color:inherit;text-decoration:none;pointer-events:auto;cursor:pointer">' + b.name + '</a>' + (b.verified ? tobiTick(16) : '') + '</div>'
+            + '<div style="font-size:15px;font-weight:700;color:#0F1E36;line-height:1.3;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\'' + b.slug + '\')" style="color:inherit;text-decoration:none;pointer-events:auto;cursor:pointer">' + b.name + '</a>' + (b.verified ? tobiTick(16, b) : '') + '</div>'
             + '<span onclick="quickAsk(\'Show me all ' + (b.cat||'').replace(/'/g,"\\'") + ' businesses\')" style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;cursor:pointer;margin-top:2px;">' + cat + '</span>'
             + '</div>'
             + (b.desc ? '<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:8px;">' + b.desc + '</div>' : '')
@@ -2853,7 +2853,7 @@ function removeTyping() {
 function tobiShowBizCard(slug) {
   var b = getLiveDirectory().find(function (x) { return x.slug === slug; });
   if (!b) { showBusinesses(undefined, null, null, true); return; }
-  addTipMessage(formatResponse('<<<BIZ_JSON:' + JSON.stringify([{ slug: b.slug, name: b.name, cat: b.cat || b.category || '', loc: b.loc || 'UK', desc: b.desc || '', verified: b.verified || false, featured: b.featured || false, wa: b.wa || '', phone: b.phone || '' }]) + '>>>'));
+  addTipMessage(formatResponse('<<<BIZ_JSON:' + JSON.stringify([{ slug: b.slug, name: b.name, cat: b.cat || b.category || '', loc: b.loc || 'UK', desc: b.desc || '', verified: b.verified || false, vchk: b.vchk, vAt: b.vAt, featured: b.featured || false, wa: b.wa || '', phone: b.phone || '' }]) + '>>>'));
   setTimeout(function () { var m = document.getElementById('messages'); if (m && m.lastElementChild) m.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 }
 
@@ -2982,7 +2982,7 @@ let _searchTimer = null;
 
       const fakeText = '<<<BIZ_JSON:' + JSON.stringify(bizResults.map(b => ({
         slug: b.slug, name: b.name, cat: b.cat||'', loc: b.loc||'UK',
-        desc: b.desc || '', verified: b.verified||false, wa: b.wa||'', phone: b.phone||''
+        desc: b.desc || '', verified: b.verified||false, vchk: b.vchk, vAt: b.vAt, wa: b.wa||'', phone: b.phone||''
       }))) + '>>>';
 
       // Save context for "show more" button
@@ -5709,10 +5709,25 @@ function buildProductCard(p, compact) {
 
 // Blue verified tick shown next to verified business names.
 // Tap (or hover on desktop) shows "Verified registered business".
-function tobiTick(size) {
+// ✅ Verified by Auntie Tobi: what was checked, and when (set in HQ → Spotlight)
+var TOBI_VCHK = { ch: 'Registered with Companies House', council: 'Registered with the council', trading: 'Trading now', contact: 'Contact confirmed' };
+function tobiTrustLines(b) { var v = (b && b.vchk) || {}; return ['ch', 'council', 'trading', 'contact'].filter(function (k) { return v[k]; }).map(function (k) { return TOBI_VCHK[k]; }); }
+function tobiCheckedWhen(b) { if (!b || !/^\d{4}-\d{2}/.test(b.vAt || '')) return ''; var m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(b.vAt.slice(5, 7)) - 1]; return 'Checked ' + m + ' ' + b.vAt.slice(0, 4); }
+// the navy trust strip on a Verified business's page
+function tobiTrust(b, round) {
+  if (!b || !b.verified) return '';
+  var E = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  var lines = tobiTrustLines(b), when = tobiCheckedWhen(b);
+  return '<div style="background:#0F1E36;color:#fff;padding:11px 16px;font-size:12.5px;line-height:1.6;border-radius:' + (round || '0 0 12px 12px') + '">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="color:#FFB81C;font-size:13px">✓ Verified by Auntie Tobi</b>' + (when ? '<span style="color:#C9D1DE;font-size:12px">' + E(when) + '</span>' : '') + '</div>'
+    + (lines.length ? '<div style="color:#E5E7EB;margin-top:4px;display:flex;flex-wrap:wrap;gap:2px 12px">' + lines.map(function (l) { return '<span style="white-space:nowrap">✓ ' + E(l) + '</span>'; }).join('') + '</div>' : '')
+    + '</div>';
+}
+function tobiTick(size, b) {
   size = size || 16;
-  return '<span class="tobi-tick" role="button" tabindex="0" aria-label="Verified registered business" onclick="tobiTickTap(event,this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){tobiTickTap(event,this)}" onmouseenter="if(tobiCanHover())tobiTickShow(this)" onmouseleave="if(tobiCanHover())tobiTickHide()" style="display:inline-flex;vertical-align:-3px;margin-left:4px;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent;">'
-    + '<svg aria-hidden="true" style="width:' + size + 'px;height:' + size + 'px;flex-shrink:0;" viewBox="0 0 24 24"><path fill="#1D9BF0" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.6-5.8"/></svg>'
+  var vt = b ? tobiTrustLines(b).concat(tobiCheckedWhen(b) ? [tobiCheckedWhen(b)] : []).join(' · ') : '';
+  return '<span class="tobi-tick" role="button" tabindex="0" aria-label="Verified by Auntie Tobi"' + (vt ? ' data-vt="' + vt.replace(/"/g, '&quot;') + '"' : '') + ' onclick="tobiTickTap(event,this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){tobiTickTap(event,this)}" onmouseenter="if(tobiCanHover())tobiTickShow(this)" onmouseleave="if(tobiCanHover())tobiTickHide()" style="display:inline-flex;vertical-align:-3px;margin-left:4px;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent;">'
+    + '<svg aria-hidden="true" style="width:' + size + 'px;height:' + size + 'px;flex-shrink:0;" viewBox="0 0 24 24"><path fill="#FFB81C" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.6-5.8"/></svg>'
     + '</span>';
 }
 function tobiCanHover() { return !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches); }
@@ -5723,11 +5738,13 @@ function tobiTickShow(el) {
     tip = document.createElement('div');
     tip.id = 'tobiTickTip';
     tip.setAttribute('role', 'status');
-    tip.style.cssText = 'position:fixed;z-index:99999;background:#0F1E36;color:#fff;font-size:12px;font-weight:600;padding:7px 11px;border-radius:8px;white-space:nowrap;display:flex;align-items:center;gap:5px;pointer-events:none;opacity:0;transition:opacity .15s;font-family:inherit;';
-    tip.innerHTML = '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24"><path fill="#1D9BF0" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/></svg>Verified registered business'
+    tip.style.cssText = 'position:fixed;z-index:99999;background:#0F1E36;color:#fff;font-size:12px;font-weight:600;padding:7px 11px;border-radius:8px;max-width:260px;display:flex;align-items:flex-start;gap:6px;pointer-events:none;opacity:0;transition:opacity .15s;font-family:inherit;line-height:1.4;';
+    tip.innerHTML = '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24"><path fill="#FFB81C" d="M12 1.5l2.6 1.9 3.2-.1 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.1z"/></svg><span id="tobiTickTxt"></span>'
       + '<span style="position:absolute;top:100%;left:50%;margin-left:-6px;border:6px solid transparent;border-top-color:#0F1E36;"></span>';
     document.body.appendChild(tip);
   }
+  var vt = el.getAttribute('data-vt') || '';
+  document.getElementById('tobiTickTxt').innerHTML = 'Verified by Auntie Tobi' + (vt ? '<br><span style="font-weight:500;color:#C9D1DE;font-size:11.5px">' + vt.replace(/</g, '&lt;') + '</span>' : '');
   var r = el.getBoundingClientRect();
   tip.style.opacity = '0';
   tip.style.left = '0px'; tip.style.top = '0px';
@@ -5769,7 +5786,7 @@ function buildFeaturedCard(b, compact) {
     + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;">⭐ Featured Business</div>'
     + '<div style="padding:20px 12px 12px;">'
     + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:4px;">'
-    + '<div style="font-size:14px;font-weight:700;color:#0F1E36;line-height:1.3;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\'' + b.slug + '\')" style="color:inherit;text-decoration:none;pointer-events:auto;cursor:pointer">' + b.name + '</a>' + (b.verified ? tobiTick(15) : '') + '</div>'
+    + '<div style="font-size:14px;font-weight:700;color:#0F1E36;line-height:1.3;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\'' + b.slug + '\')" style="color:inherit;text-decoration:none;pointer-events:auto;cursor:pointer">' + b.name + '</a>' + (b.verified ? tobiTick(15, b) : '') + '</div>'
     + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + (b.cat||'Business') + '</span>'
     + '</div>'
     + verHtml
@@ -5796,7 +5813,7 @@ function showFeaturedCarousel() {
       + '<div style="position:absolute;top:-11px;left:12px;background:#FFB81C;color:#0F1E36;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap;pointer-events:none;">⭐ Featured Business</div>'
       + '<div style="padding:20px 14px 14px;pointer-events:none;">'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">'
-      + '<div style="font-size:16px;font-weight:700;color:#0F1E36;line-height:1.3;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\'' + b.slug + '\')" style="color:inherit;text-decoration:none;pointer-events:auto;cursor:pointer">' + b.name + '</a>' + (b.verified ? tobiTick(17) : '') + '</div>'
+      + '<div style="font-size:16px;font-weight:700;color:#0F1E36;line-height:1.3;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\'' + b.slug + '\')" style="color:inherit;text-decoration:none;pointer-events:auto;cursor:pointer">' + b.name + '</a>' + (b.verified ? tobiTick(17, b) : '') + '</div>'
       + '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:10px;white-space:nowrap;flex-shrink:0;">' + (b.cat||'Business') + '</span>'
       + '</div>' + verHtml
       + '<p style="font-size:13px;color:#444;line-height:1.6;margin-bottom:8px;">' + (b.desc || '') + '</p>'
@@ -5947,7 +5964,7 @@ function featSlide(b){
   var lines = (b.lines && b.lines.length) ? b.lines : [ b.desc || '' ];
   var btnCss = 'margin-top:auto;display:block;background:#057A44;color:white;border-radius:10px;padding:11px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;';
   var body = '<div style="padding:12px 14px 14px;display:flex;flex-direction:column;flex:1;">'
-    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="font-size:15px;font-weight:800;color:#0F1E36;line-height:1.3;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\''+featEsc(b.slug)+'\')" style="color:inherit;text-decoration:none;cursor:pointer">'+featEsc(b.name)+'</a></div>'+(b.verified && typeof tobiTick==='function' ? tobiTick(15) : '')+'</div>'
+    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="font-size:15px;font-weight:800;color:#0F1E36;line-height:1.3;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\''+featEsc(b.slug)+'\')" style="color:inherit;text-decoration:none;cursor:pointer">'+featEsc(b.name)+'</a></div>'+(b.verified && typeof tobiTick==='function' ? tobiTick(15, b) : '')+'</div>'
     + '<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px;min-height:36px;">'+lines.map(function(l){return '<div style="font-size:12px;color:#555;line-height:1.45;">'+featEsc(l)+'</div>';}).join('')+'</div>'
     + '<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+featEsc((b.loc||'').split(',')[0])+'</div>'
     // first stop is always the business's own page in the app
@@ -7022,16 +7039,16 @@ function tobiBizPage(b) {
   var dirUrl = 'https://directory.auntietobi.co.uk/' + encodeURIComponent(b.slug);
   var shareUrl = 'https://auntietobi.co.uk/biz/' + b.slug, safeName = String(b.name).replace(/['"\\]/g, '');
   var shareBtn = '<button onclick="tobiShare(\'' + safeName + '\',\'Check out ' + safeName + ' on Auntie Tobi 💚\',\'' + shareUrl + '\')" style="flex:1;padding:10px 8px;background:none;color:#057A44;border:1.5px solid #057A44;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Share</button>';
-  var badge = b.featured || b.verified ? '<div style="position:absolute;top:-12px;left:14px;background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:3px 11px;border-radius:10px;z-index:1">' + (b.featured ? '⭐ Featured Business' : '✅ Verified Business') + '</div>' : '';
+  var badge = b.featured ? '<div style="position:absolute;top:-12px;left:14px;background:#FFB81C;color:#0F1E36;font-size:11px;font-weight:800;padding:3px 11px;border-radius:10px;z-index:1">⭐ Featured Business</div>' : '';
   var head = '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">'
-    + '<div style="font-size:' + (b.featured ? 18 : 15) + 'px;font-weight:800;color:#0F1E36;line-height:1.3">' + E(b.name) + (b.verified && typeof tobiTick === 'function' ? tobiTick(16) : '') + '</div>'
+    + '<div style="font-size:' + (b.featured ? 18 : 15) + 'px;font-weight:800;color:#0F1E36;line-height:1.3">' + E(b.name) + (b.verified && typeof tobiTick === 'function' ? tobiTick(16, b) : '') + '</div>'
     + (cat ? '<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0">' + E(cat) + '</span>' : '') + '</div>'
     + '<div style="font-size:12.5px;color:#6B7280;margin-bottom:10px">📍 ' + E(b.featured && b.addr ? b.addr : loc) + '</div>';
   if (!b.featured) {
     var wa = b.wa ? '<a href="https://wa.me/' + String(b.wa).replace(/\D/g, '') + '?text=' + encodeURIComponent('Hi, I found ' + b.name + ' on Auntie Tobi 💚') + '" target="_blank" rel="noopener" style="flex:1;padding:10px 8px;background:#25D366;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">💬 WhatsApp</a>' : '';
-    return '<div style="background:white;border:' + (b.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:14px;padding:16px;margin:' + (badge ? '12px' : '0') + ' 0 8px;position:relative">' + badge + head
+    return '<div style="background:white;border:' + (b.verified ? '2px' : '1.5px') + ' solid #FFB81C;border-radius:14px;margin:' + (badge ? '12px' : '0') + ' 0 8px;position:relative;overflow:visible"><div style="padding:16px">' + badge + head
       + (b.desc ? '<div style="font-size:14px;color:#444;line-height:1.6;margin-bottom:12px;white-space:pre-line">' + E(b.desc) + '</div>' : '')
-      + '<div style="display:flex;gap:6px;flex-wrap:wrap"><a href="' + dirUrl + '" target="_blank" rel="noopener" style="flex:1;padding:10px 8px;background:#057A44;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">View Details</a>' + wa + shareBtn + '</div></div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap"><a href="' + dirUrl + '" target="_blank" rel="noopener" style="flex:1;padding:10px 8px;background:#057A44;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">View Details</a>' + wa + shareBtn + '</div></div>' + tobiTrust(b) + '</div>'
       // 🔑 nobody owns this listing yet: invite the owner to claim it (opens the claim page with this business picked)
       + (b.claimable ? '<div style="background:#F3FAF6;border:1.5px solid #CFE3D8;border-radius:14px;padding:14px;margin:4px 0 8px"><div style="display:flex;gap:10px;align-items:flex-start"><div style="font-size:26px;line-height:1">🏪</div><div style="flex:1"><div style="font-weight:800;color:#0F1E36;font-size:15px">Own ' + E(b.name) + '?</div><div style="font-size:13.5px;color:#4B5563;margin-top:3px;line-height:1.5">Claim this page free — update your details and add photos.</div></div></div><a href="/claim/' + encodeURIComponent(b.slug) + '" onclick="try{gtag(\'event\',\'biz_claim_tap\',{slug:\'' + E(b.slug) + '\'})}catch(e){}" style="display:block;margin-top:11px;text-align:center;background:#057A44;color:#fff;font-weight:800;font-size:14px;border-radius:10px;padding:11px;text-decoration:none">🔑 Claim this business</a><a href="https://wa.me/447594674940?text=' + encodeURIComponent('Hi Auntie Tobi, I have a question about claiming my business on Auntie Tobi') + '" target="_blank" rel="noopener" style="display:block;margin-top:9px;text-align:center;font-size:13px;color:#4B5563;text-decoration:none">Have questions? <b style="color:#128C4A">💬 Chat with Auntie Tobi on WhatsApp</b></a></div>' : '');
   }
@@ -7063,7 +7080,7 @@ function tobiBizPage(b) {
     + '<div class="bizmp" data-slug="' + E(b.slug) + '" data-name="' + E(b.name) + '"></div>'
     + (photos.length ? '<div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px">Photos</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">' + photos.map(function (u) { return '<img src="' + E(u) + '" alt="" loading="lazy" onclick="tobi_imgZoom(this.src)" onerror="this.style.display=\'none\'" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;cursor:zoom-in;display:block">'; }).join('') + '</div>' : '')
     + '<div style="display:flex;gap:6px;flex-wrap:wrap"><a href="' + dirUrl + '" target="_blank" rel="noopener" style="flex:2;padding:11px 8px;background:#057A44;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;text-align:center">See more on the directory →</a>' + shareBtn + '</div>'
-    + '</div></div>';
+    + '</div>' + tobiTrust(b, '0 0 14px 14px') + '</div>';
 }
 // 🛍️ A Featured business's Marketplace products, shown on its page (filled in once the live Marketplace has loaded)
 function tobiFillBizMarketplace() {
@@ -8651,7 +8668,7 @@ function tobiBizFind(q) {
     var wa = (b.verified && b.wa && typeof tobiWaUrl === 'function') ? '<a href="' + E(tobiWaUrl(b)) + '" target="_blank" rel="noopener" style="background:#25D366;color:#fff;font-weight:700;font-size:12px;padding:6px 10px;border-radius:8px;text-decoration:none;text-align:center;white-space:nowrap;">💬 WhatsApp</a>' : '';
     return '<div style="display:flex;gap:10px;align-items:center;border:1px solid #EEE7D6;border-radius:12px;padding:8px;margin-top:8px;background:#fff;">'
       + '<div onclick="tobiOpenBiz(\'' + E(b.slug) + '\')" style="cursor:pointer;width:52px;height:52px;border-radius:10px;background:#E3F2EA;color:#057A44;font:700 22px Georgia,serif;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;">' + pic + '</div>'
-      + '<div onclick="tobiOpenBiz(\'' + E(b.slug) + '\')" style="cursor:pointer;flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;color:#0F1E36;">' + E(b.name) + (b.verified && typeof tobiTick === 'function' ? tobiTick(14) : '') + '</div><div style="font-size:13px;color:#6B7280;">' + E([cat, town].filter(Boolean).join(' · ')) + '</div></div>'
+      + '<div onclick="tobiOpenBiz(\'' + E(b.slug) + '\')" style="cursor:pointer;flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;color:#0F1E36;">' + E(b.name) + (b.verified && typeof tobiTick === 'function' ? tobiTick(14, b) : '') + '</div><div style="font-size:13px;color:#6B7280;">' + E([cat, town].filter(Boolean).join(' · ')) + '</div></div>'
       + '<div style="display:flex;flex-direction:column;gap:5px;flex:none;"><button onclick="tobiOpenBiz(\'' + E(b.slug) + '\')" style="background:#057A44;color:#fff;border:0;font-weight:700;font-size:13px;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;">View</button>' + wa + '</div></div>';
   }).join('') + (hits.length > shown.length ? '<div style="font-size:13px;color:#6B7280;margin-top:8px;">Showing 8 of ' + hits.length + ' — type more to narrow it down.</div>' : '') + add;
 }
@@ -8762,7 +8779,7 @@ function showBusinesses(startIndex, filterCat, locationFilter, showAll, featured
     var dd=b.desc?'<div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px;">'+b.desc+'</div>':'';
     addTipMessage('<div style="background:white;border:1.5px solid #FFB81C;border-radius:12px;padding:14px;position:relative;'+(b.verified?'padding-top:18px;':'')+'">'
       +vb+'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;">'
-      +'<div style="font-size:15px;font-weight:700;color:#0F1E36;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\''+b.slug+'\')" style="color:inherit;text-decoration:none;cursor:pointer">'+b.name+'</a>'+(b.verified?tobiTick(16):'')+'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#0F1E36;"><a href="javascript:void(0)" onclick="tobiOpenBiz(\''+b.slug+'\')" style="color:inherit;text-decoration:none;cursor:pointer">'+b.name+'</a>'+(b.verified?tobiTick(16, b):'')+'</div>'
       +(cat?'<span style="background:#057A44;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;">'+cat+'</span>':'')
       +'</div>'+vl+dd
       +'<div style="font-size:12px;color:#9CA3AF;margin-bottom:12px;">📍 '+(b.loc||'UK').split(',')[0]+'</div>'

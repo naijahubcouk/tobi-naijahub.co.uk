@@ -691,10 +691,12 @@ exports.handler = handler(async (ctx) => {
       if (!has(['spot'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change this.');
       const bizdir = require('../bizdir');
       if (body.action === 'spot-set') { const p = body.set || {}, ok = {}; for (const k of ['featured', 'verified', 'home', 'pin']) if (typeof p[k] === 'boolean') ok[k] = p[k];
+        if (p.vchk && typeof p.vchk === 'object') ok.vchk = { ch: p.vchk.ch === true, council: p.vchk.council === true, trading: p.vchk.trading === true, contact: p.vchk.contact === true };
+        if (p.vAt !== undefined) ok.vAt = /^\d{4}-\d{2}-\d{2}$/.test(String(p.vAt)) ? String(p.vAt) : '';
         await bizdir.spotSet(String(body.slug || ''), ok, who.email); await core.audit(who.email, 'hq_spotlight', Object.assign({ slug: body.slug }, ok)); }
       if (body.action === 'spot-order') await bizdir.spotOrder((Array.isArray(body.slugs) ? body.slugs : []).map(String).slice(0, 100));
       const items = (await bizdir.all()).filter(b => b.status !== 'pending').map(b => ({ slug: b.slug, name: b.name, cat: b.cat, loc: b.loc, img: b.img || '', carImg: b.carImg || '', desc: String(b.short || b.desc || '').slice(0, 140), lines: b.lines,
-        featured: !!b.featured, verified: !!b.verified, home: !b.carOff, rank: b.carRank || 0, hidden: !!b.hidden, mine: typeof b.featSet === 'boolean' || typeof b.verSet === 'boolean' }));
+        featured: !!b.featured, verified: !!b.verified, vchk: b.vchk || {}, vAt: b.vAt || '', home: !b.carOff, rank: b.carRank || 0, hidden: !!b.hidden, mine: typeof b.featSet === 'boolean' || typeof b.verSet === 'boolean' }));
       return { items };
     }
     case 'web-status': case 'web-connect': case 'web-off': case 'web-sync': {

@@ -20,6 +20,7 @@ const KEY = 'dir/list';
 const OURS = /^(favour adentan|auntie tobi)$/i;           // listings we created = unclaimed
 // Featured businesses (Business Club) also show every way to reach them, the full description and their photos
 const FEATURED_EXTRA = ['carOff', 'carRank', 'carImg', 'email', 'phone', 'website', 'fb', 'tt', 'long', 'gallery', 'addr'];
+const VCHK = ['ch', 'council', 'trading', 'contact'];   // Companies House · council (food) · trading now · contact confirmed
 const PUBLIC = ['name', 'slug', 'cat', 'loc', 'desc', 'ig', 'wa', 'featured', 'verified', 'img', 'lines', 'shop', 'book', 'label', 'text'];
 const COMPARE = ['name', 'cat', 'loc', 'desc', 'ig', 'wa', 'phone', 'email', 'website', 'featured', 'verified', 'claimed'];
 const FIELD_NAMES = { name: 'name', cat: 'category', loc: 'town', desc: 'description', ig: 'Instagram', wa: 'WhatsApp', phone: 'phone', email: 'email', website: 'website', featured: 'Featured', verified: 'Verified', claimed: 'claimed' };
@@ -123,6 +124,9 @@ function normalise(b) {
   // ⭐ Spotlight (HQ): Auntie Tobi's own Featured / Verified ticks win over the website sync; carousel choices are app-only
   if (typeof b.featSet === 'boolean') { out.featSet = b.featSet; out.featured = b.featSet; }
   if (typeof b.verSet === 'boolean') { out.verSet = b.verSet; out.verified = b.verSet; }
+  // ✅ what Auntie Tobi checked for a Verified business, and when (shown in the trust strip on the business page)
+  if (b.vchk && typeof b.vchk === 'object') { const v = {}; for (const k of VCHK) if (b.vchk[k] === true) v[k] = true; if (Object.keys(v).length) out.vchk = v; }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(b.vAt || ''))) out.vAt = b.vAt;
   if (b.carOff) out.carOff = true;                                     // Featured, but left out of the Home & Links carousel
   if (b.carRank != null && b.carRank !== '' && isFinite(+b.carRank) && +b.carRank > 0) out.carRank = +b.carRank;   // 📌 pinned to the front of the carousel, in this order
   if (b.short) out.short = str(b.short, 200);
@@ -159,7 +163,7 @@ function waitingSite(b) { return b.src === 'hq' && !b.uploadedAt && !b.appNow &&
 // ── public list for the app and the chat (no emails, no admin details) ──
 async function publicList() {
   return (await all()).filter(b => !b.hidden && b.status !== 'pending').map(b => {
-    const o = {}; for (const k of PUBLIC.concat(b.featured ? FEATURED_EXTRA : [])) if (b[k] !== undefined && b[k] !== '' && b[k] !== false && !(Array.isArray(b[k]) && !b[k].length)) o[k] = b[k];
+    const o = {}; for (const k of PUBLIC.concat(b.featured ? FEATURED_EXTRA : [], b.verified ? ['vchk', 'vAt'] : [])) if (b[k] !== undefined && b[k] !== '' && b[k] !== false && !(Array.isArray(b[k]) && !b[k].length)) o[k] = b[k];
     if (b.imgFrom) { o.img = b.imgFrom; o.imgCopy = b.img; }
     if (!b.claimed && !b.ownerEmail && !b.featured) o.claimable = true;   // 🔑 nobody owns this listing yet — the app shows “Claim this business”   // the website's own photo first; Auntie Tobi's copy if it doesn't load
     return o;
@@ -282,9 +286,11 @@ async function spotSet(slug, p, who) {
       const n = Object.assign({}, b);
       if (typeof p.featured === 'boolean') { n.featSet = p.featured; if (!p.featured) delete n.carRank; }
       if (typeof p.verified === 'boolean') n.verSet = p.verified;
+      if (p.vchk && typeof p.vchk === 'object') n.vchk = p.vchk;
+      if (p.vAt !== undefined) { if (p.vAt) n.vAt = p.vAt; else delete n.vAt; }
       if (typeof p.home === 'boolean') { if (p.home) delete n.carOff; else { n.carOff = true; delete n.carRank; } }
       if (typeof p.pin === 'boolean') { if (p.pin) n.carRank = 1 + cur.items.reduce((m, x) => Math.max(m, x.carRank || 0), 0); else delete n.carRank; }
-      hit = normalise(n); hit.updatedAt = core.nowIso(); return Object.assign({}, b, hit, n.carRank ? {} : { carRank: undefined }, n.carOff ? {} : { carOff: undefined });
+      hit = normalise(n); hit.updatedAt = core.nowIso(); return Object.assign({}, b, hit, n.carRank ? {} : { carRank: undefined }, n.carOff ? {} : { carOff: undefined }, hit.vchk ? {} : { vchk: undefined }, hit.vAt ? {} : { vAt: undefined });
     });
     cur.at = core.nowIso(); cur.by = who; return cur;
   });
