@@ -138,6 +138,13 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 }
 .lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}.sctag{font-size:13px}.note{background:var(--gold-l);border-radius:10px;padding:8px 12px;font-size:13.5px}
 .binrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.binrow:last-child{border-bottom:0}
+/* 🎉 Add event */
+.evpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.evpick button{border:1.5px solid #E7E2D5;background:#fff;border-radius:12px;padding:12px 8px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;color:var(--navy,#0F1E36)}.evpick button span{display:block;font-size:24px;margin-bottom:4px}.evpick button[aria-pressed=true]{border-color:#057A44;background:#E6F4EC;color:#057A44}
+.evthumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.evthumbs span{position:relative}.evthumbs img{width:76px;height:96px;object-fit:cover;border-radius:8px;border:1px solid #E7E2D5}.evthumbs button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#0F1E36;color:#fff;font-size:11px;cursor:pointer}
+.evc{display:flex;gap:12px;border:1px solid #E7E2D5;border-radius:12px;padding:12px;margin-bottom:10px;background:#fff}.evc.ok{border-color:#BFE3CE;background:#F3FAF6}.evc.bad{display:block;border-color:#F3C7B6;background:#FFF4F0}.evc.dim{display:block;padding:8px 12px;background:#FAF8F3}
+.evimg{width:84px;height:106px;flex-shrink:0;border-radius:8px;background:#0F1E36;display:flex;align-items:center;justify-content:center;overflow:hidden}.evimg img{width:100%;height:100%;object-fit:cover}.evimg .muted{color:#C9D1DE}
+.evt{font-weight:800;font-size:15px;line-height:1.3}.evm{font-size:13px;color:#4B5563;margin:4px 0}.evw{font-size:12.5px;background:#FFF4D6;color:#7A5300;border-radius:8px;padding:6px 9px;margin:6px 0;line-height:1.5}.evok{font-size:13px;font-weight:700;color:#057A44;margin-top:6px}.evb{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+@media (max-width:600px){.evpick{grid-template-columns:1fr}.evpick button{display:flex;align-items:center;gap:10px;text-align:left}.evpick button span{margin:0}}
 /* Publish to App */
 .aprow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.aprow:last-child{border-bottom:0}
 .apact{display:flex;gap:6px;flex-wrap:wrap}.btn.sm{min-height:32px;padding:5px 10px;font-size:13px}
@@ -230,6 +237,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     <div class="side-actions">
       <button class="btn gold" id="pasteBtn">📋 Paste from ChatGPT</button>
       <button class="btn ghost" id="addBtn" style="background:transparent;color:var(--cream);border-color:var(--navy-3)">＋ Quick add</button>
+      <button class="btn ghost hidden" id="evBtn" style="background:transparent;color:var(--cream);border-color:var(--navy-3)">🎉 Add event</button>
       <button class="btn ghost hidden" id="ssBtn" style="background:transparent;color:var(--cream);border-color:var(--navy-3)">📬 School emails</button>
     </div>
     <div class="side-nav">
@@ -349,7 +357,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     S.items = r.items; S.bin = r.bin || []; S.trashDays = r.trashDays || 30; S.today = r.today; S.month = r.today.slice(0, 7); S.me = r.me; S.isAdmin = !!r.isAdmin; S.team = r.team || { emails: [], names: {} }; S.names = r.names || {}; S.app = r.app || []; S.appCats = r.appCategories || []; S.subs = r.subs || []; S.abizNew = r.abizNew || 0; S.igc = r.igc || []; S.igcTarget = r.igcTarget || 10; S.cars = r.cars || []; S.tcars = r.tcars || []; S.vads = r.vads || []; S.sections = r.sections || null;
     $$('.side-nav [data-nav]').forEach(function (b) { b.classList.toggle('hidden', !allowed(b.dataset.nav)); });
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads', 'tcars', 'disc', 'tx', 'fol', 'glow', 'igu', 'dm', 'iga'].some(allowed)); });
-    var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk);
+    var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk); $('#evBtn').classList.toggle('hidden', !allowed('app'));
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); if (allowed('mkt') && window.HQMkt) window.HQMkt.count().then(function (n) { $('#nMkt').textContent = n || ''; }); $('#teamBtn').classList.toggle('hidden', !S.isAdmin); $('#ssBtn').classList.toggle('hidden', !S.isAdmin || !window.HQSchoolMail); if (S.isAdmin && window.HQSchoolMail) window.HQSchoolMail.badge();
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
@@ -404,6 +412,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
   document.addEventListener('click', function (e) { var sd = $('#side'); if (sd.classList.contains('open') && !sd.contains(e.target)) sd.classList.remove('open'); });
   $('#pasteBtn').onclick = function () { $('#side').classList.remove('open'); pasteSheet(); };
   $('#addBtn').onclick = function () { $('#side').classList.remove('open'); editCard(null); };
+  $('#evBtn').onclick = function () { $('#side').classList.remove('open'); addEventSheet(); };
 
   // ── card ──
   function cardHtml(c, opts) {
@@ -459,7 +468,8 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
 
   // ── Today ──
   function vToday() {
-    $('#ttl').textContent = 'Today'; $('#topRight').innerHTML = '';
+    $('#ttl').textContent = 'Today'; $('#topRight').innerHTML = allowed('app') ? '<button class="btn ghost" id="tdEv">🎉 Add event</button>' : '';
+    if ($('#tdEv')) $('#tdEv').onclick = function () { addEventSheet(); };
     var t = today(), ws = weekStart(t);
     var todays = S.items.filter(function (c) { return c.status === 'scheduled' && c.planDate === t; }).sort(function (a, b) { return (a.planTime || '99').localeCompare(b.planTime || '99'); });
     var missed = S.items.filter(isLate).sort(function (a, b) { return a.planDate.localeCompare(b.planDate); });
@@ -2223,7 +2233,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     var block = function (title, list, empty) { return '<div class="h2">' + title + ' <span class="muted" style="font-size:15px">(' + list.length + ')</span></div><div class="card" style="padding:4px 14px">' + (list.length ? list.map(row).join('') : '<p class="muted" style="padding:10px 0">' + empty + '</p>') + '</div>'; };
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="note" style="margin-bottom:12px">Anything you publish here shows in the Auntie Tobi app within about a minute — no GitHub needed. Updates disappear after their “show until” date, and events disappear once they’ve happened. No notification is sent.</div>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn primary" data-anew="update">＋ Update</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button><button class="btn primary" data-anew="event">＋ Event</button></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn primary" id="apEv">🎉 Add event</button><button class="btn primary" data-anew="update">＋ Update</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button><button class="btn primary" data-anew="event">＋ Event</button></div>' +
       block('Live in the app', live, 'Nothing published yet. Tap ＋ Update, or 📋 Paste something from ChatGPT.') +
       (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
     $('#apPaste').onclick = function () { appPasteSheet(); };
@@ -2231,6 +2241,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     if ($('#apOrgs')) $('#apOrgs').onclick = orgsSheet;
     $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : { kind: k }); }; });
     $('#apAi').onclick = function () { appAiSheet(); };
+    $('#apEv').onclick = function () { addEventSheet(); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
     // ✨ Rewrite: turns a published article into a new draft in Auntie Tobi's style — nothing changes until you check it and save
     $$('[data-arew]').forEach(function (b) { b.onclick = async function () {
@@ -2305,6 +2316,114 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       return d2;
     }
     return (await api('app-ai', { notes: a.notes, kind: a.kind, category: a.category, rewrite: !!a.rewrite })).draft;
+  }
+  // ── 🎉 Add event: links, flyers or details in (several at once) → AI reads each → one review list → Publish / Edit / Skip ──
+  function evNorm(t) { return String(t || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2 && ['the', 'and', 'for', 'with', 'night', 'party', 'event', '2026', '2027'].indexOf(w) < 0; }); }
+  function evSame(a, b) { // same event? same link, or same date and most title words shared
+    if (a.link && b.link && a.link.replace(/[?#].*$/, '') === b.link.replace(/[?#].*$/, '')) return true;
+    if (!a.eventDate || a.eventDate !== b.eventDate) return false;
+    var x = evNorm(a.title), y = evNorm(b.title); if (!x.length || !y.length) return false;
+    var hit = x.filter(function (w) { return y.indexOf(w) >= 0; }).length; return hit / Math.min(x.length, y.length) >= 0.6;
+  }
+  function addEventSheet() {
+    var flyers = [];
+    var s = sheet('<h2>🎉 Add event</h2><p class="muted" style="margin:4px 0 12px">Give Auntie Tobi a link, a flyer or the details — <b>several at once is fine</b>. She reads each one and you check them all on one screen. Nothing goes live until you tap Publish.</p>' +
+      '<div class="evpick"><button data-ev="link" aria-pressed="true"><span>🔗</span>Paste event links</button><button data-ev="flyer" aria-pressed="false"><span>🖼️</span>Upload flyers</button><button data-ev="text" aria-pressed="false"><span>✍️</span>Type the details</button></div>' +
+      '<div data-evp="link"><label for="evU">Event links <span class="muted" style="font-weight:400">— one per line (Eventbrite, ticket pages, websites)</span></label><textarea id="evU" rows="5" placeholder="https://www.eventbrite.co.uk/e/…&#10;https://…"></textarea></div>' +
+      '<div data-evp="flyer" class="hidden"><label class="btn ghost" style="margin:0">📷 Choose flyers or screenshots<input type="file" id="evF" accept="image/jpeg,image/png,image/webp" multiple hidden></label><p class="muted" style="font-size:13px;margin:6px 0 0">Tip: screenshot an Instagram post and upload it here.</p><div id="evFl" class="evthumbs"></div></div>' +
+      '<div data-evp="text" class="hidden"><label for="evN">The details <span class="muted" style="font-weight:400">— title, date, time, place, link (one event)</span></label><textarea id="evN" rows="7"></textarea></div>' +
+      '<div class="err hidden" id="evErr"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="evX">Cancel</button><button class="btn primary" id="evGo">✨ Read my events</button></div>');
+    var mode = 'link';
+    $$('[data-ev]', s).forEach(function (b) { b.onclick = function () { mode = b.dataset.ev; $$('[data-ev]', s).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); $$('[data-evp]', s).forEach(function (x) { x.classList.toggle('hidden', x.dataset.evp !== mode); }); }; });
+    function thumbs() { $('#evFl', s).innerHTML = flyers.map(function (f, i) { return '<span><img src="' + f + '" alt=""><button data-fx="' + i + '" aria-label="Remove">✕</button></span>'; }).join(''); $$('[data-fx]', s).forEach(function (b) { b.onclick = function () { flyers.splice(+b.dataset.fx, 1); thumbs(); }; }); }
+    $('#evF', s).onchange = async function () { var fs = [].slice.call(this.files || []).slice(0, 12 - flyers.length); for (var i = 0; i < fs.length; i++) { try { flyers.push(await imgShrink(fs[i])); } catch (x) { toast(x.message); } } this.value = ''; thumbs(); };
+    $('#evX', s).onclick = function () { s.remove(); };
+    $('#evGo', s).onclick = function () {
+      var err = $('#evErr', s), jobs = [];
+      flyers.forEach(function (f) { jobs.push({ kind: 'event', flyer: f, notes: '', label: 'a flyer' }); });
+      $('#evU', s).value.split(/\s+/).map(function (u) { return u.trim(); }).filter(function (u) { return /^(https?:\/\/)?[\w-]+(\.[\w-]+)+\S*$/i.test(u); }).slice(0, 12).forEach(function (u) { if (!/^https?:/i.test(u)) u = 'https://' + u; jobs.push({ kind: 'event', url: u, notes: '', label: u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40) }); });
+      var n = $('#evN', s).value.trim(); if (n.length >= 15) jobs.push({ kind: 'event', notes: n, label: 'your details' });
+      if (!jobs.length) { err.textContent = 'Add a link, a flyer or the details first.'; err.classList.remove('hidden'); return; }
+      s.remove(); evRead(jobs);
+    };
+  }
+  async function evRead(jobs) {
+    var drafts = [];
+    var s = sheet('<h2>✨ Reading your events…</h2><p class="muted" id="evP" style="margin:6px 0"></p><div class="pkbar" style="height:6px;background:#EFE8D6;border-radius:9px;overflow:hidden"><i id="evPb" style="display:block;height:100%;width:0;background:#057A44;transition:width .4s"></i></div><p class="muted" style="font-size:12.5px;margin-top:8px">About 15–20 seconds each. Keep this page open.</p>');
+    for (var i = 0; i < jobs.length; i++) {
+      $('#evP', s).textContent = 'Reading ' + (i + 1) + ' of ' + jobs.length + ' — ' + jobs[i].label;
+      $('#evPb', s).style.width = Math.round(i / jobs.length * 100) + '%';
+      try { var d = await aiDraft(jobs[i]); d.kind = 'event'; drafts.push({ d: d, img: d._img ? { data: d._img, from: d._imgFrom } : null, st: 'new', src: jobs[i] }); }
+      catch (x) { drafts.push({ err: x.message, src: jobs[i], st: 'error' }); }
+    }
+    s.remove(); evReview(drafts);
+  }
+  function evReview(drafts) {
+    var s = sheet('<h2>🎉 Check your events</h2><p class="muted" style="margin:4px 0 10px">Check each one, then Publish. ✏️ Edit opens the full form.</p><div id="evL"></div><div class="row" style="justify-content:space-between;gap:8px;margin-top:12px"><button class="btn ghost" id="evMore">＋ Add more</button><span><button class="btn ghost" id="evDone">Done</button> <button class="btn primary" id="evAll">✅ Publish all ready</button></span></div>');
+    var t = today();
+    function warns(x, i) {
+      var d = x.d, w = [];
+      if (!d.eventDate) w.push('No date found — tap ✏️ Edit to add it');
+      else if (d.eventDate < t) w.push('This date has already passed');
+      if (!d.eventTime) w.push('No time');
+      if (!d.location) w.push('No place');
+      var dup = (S.app || []).filter(function (p) { return p.kind === 'event' && evSame(d, p); })[0];
+      if (dup) w.push('Looks like an event you already have: “' + dup.title + '”');
+      var twin = drafts.filter(function (y, j) { return j < i && y.d && y.st !== 'skip' && evSame(d, y.d); })[0];
+      if (twin) w.push('Same as another one in this list');
+      return { list: w, block: !d.eventDate || d.eventDate < t };
+    }
+    function card(x, i) {
+      if (x.st === 'error') return '<div class="evc bad"><b>Couldn’t read ' + esc(x.src.label) + '</b><div class="muted" style="font-size:13px">' + esc(x.err) + '</div><div class="evb"><button class="btn ghost sm" data-ea="retry" data-i="' + i + '">🔄 Try again</button><button class="btn ghost sm" data-ea="skip" data-i="' + i + '">Skip</button></div></div>';
+      if (x.st === 'skip') return '<div class="evc dim"><span class="muted">Skipped — ' + esc(x.d.title || 'event') + '</span> <button class="link" data-ea="undo" data-i="' + i + '">Undo</button></div>';
+      var d = x.d, W = warns(x, i), src = x.img ? x.img.data : '';
+      return '<div class="evc' + (x.st === 'done' ? ' ok' : '') + '"><div class="evimg">' + (src ? '<img src="' + src + '" alt="">' : '<span class="muted" style="font-size:12px">' + (x.making ? '🎨 Creating…' : 'No image') + '</span>') + '</div>' +
+        '<div style="flex:1;min-width:0"><div class="evt">' + esc(d.title || 'Untitled event') + '</div>' +
+        '<div class="evm">📅 ' + esc(fmtLong(d.eventDate) || 'No date') + (d.eventTime ? ' · ' + esc(d.eventTime) : '') + (d.location ? '<br>📍 ' + esc(d.location) : '') + (d.link ? '<br>🔗 ' + esc(String(d.link).replace(/^https?:\/\/(www\.)?/, '').slice(0, 48)) : '') + '</div>' +
+        (x.img && x.img.from === 'ai' && x.st !== 'done' ? '<div class="muted" style="font-size:12.5px">Image created by AI — happy with it? <button class="link" data-ea="img" data-i="' + i + '">🔄 Make another</button></div>' : '') +
+        (W.list.length && x.st !== 'done' ? '<div class="evw">' + W.list.map(function (w) { return '⚠️ ' + esc(w); }).join('<br>') + '</div>' : '') +
+        (x.st === 'done' ? '<div class="evok">✅ Published — in the app within a minute</div>' :
+          '<div class="evb"><button class="btn primary sm" data-ea="pub" data-i="' + i + '"' + (W.block || x.making ? ' disabled' : '') + '>✅ Publish</button><button class="btn ghost sm" data-ea="edit" data-i="' + i + '">✏️ Edit</button><button class="btn ghost sm" data-ea="skip" data-i="' + i + '">Skip</button></div>') +
+        '</div></div>';
+    }
+    function draw() {
+      $('#evL', s).innerHTML = drafts.map(card).join('') || '<p class="muted">Nothing here.</p>';
+      var ready = drafts.filter(function (x, i) { return x.st === 'new' && !x.making && !warns(x, i).block && !warns(x, i).list.some(function (w) { return /already have|another one/.test(w); }); }).length;
+      $('#evAll', s).textContent = '✅ Publish all ready' + (ready ? ' (' + ready + ')' : ''); $('#evAll', s).disabled = !ready;
+      $$('[data-ea]', s).forEach(function (b) { b.onclick = function () { act(b.dataset.ea, +b.dataset.i, b); }; });
+    }
+    async function makeImg(x) {
+      x.making = true; draw();
+      try { var r = await api('app-picture', { kind: 'event', title: x.d.title, eventDate: x.d.eventDate || '', location: x.d.location || '', body: String(x.d.body || '').slice(0, 400) }); x.img = { data: await imgShrink(r.image), from: 'ai' }; } catch (e) { toast(e.message); }
+      x.making = false; draw();
+    }
+    async function publish(x) {
+      var item = { kind: 'event', status: 'live', title: x.d.title, body: x.d.body || '', link: x.d.link || '', eventDate: x.d.eventDate, eventTime: x.d.eventTime || '', location: x.d.location || '', summary: x.d.summary || '' };
+      if (x.img && x.img.data) { var ri = await api('app-img', { image: x.img.data }); item.imgId = ri.imgId; }
+      var r = await api('app-save', { item: item }); upsertApp(r.item); x.st = 'done'; x.saved = r.item;
+    }
+    async function act(a, i, b) {
+      var x = drafts[i];
+      if (a === 'skip') { x.st = 'skip'; return draw(); }
+      if (a === 'undo') { x.st = 'new'; return draw(); }
+      if (a === 'img') return makeImg(x);
+      if (a === 'retry') { b.disabled = true; b.textContent = 'Reading…'; try { var d = await aiDraft(x.src); d.kind = 'event'; drafts[i] = { d: d, img: d._img ? { data: d._img, from: d._imgFrom } : null, st: 'new', src: x.src }; if (!drafts[i].img && d.title) makeImg(drafts[i]); } catch (e) { toast(e.message); } return draw(); }
+      if (a === 'edit') { var d0 = Object.assign({}, x.d, x.img ? { _img: x.img.data, _imgFrom: x.img.from === 'ai' ? 'own' : x.img.from } : {}); s.style.display = 'none';
+        appEditor(d0, function () { x.st = 'done'; s.style.display = ''; draw(); }, null);
+        var watch = setInterval(function () { if (!document.querySelector('#aeP')) { clearInterval(watch); s.style.display = ''; draw(); } }, 400); return; }
+      if (a === 'pub') { b.disabled = true; b.textContent = 'Publishing…'; try { await publish(x); toast('🎉 Published'); } catch (e) { toast(e.message); } return draw(); }
+    }
+    $('#evAll', s).onclick = async function () {
+      var btn = this; btn.disabled = true;
+      for (var i = 0; i < drafts.length; i++) { var x = drafts[i], w = x.d ? warns(x, i) : null; if (x.st !== 'new' || x.making || w.block || w.list.some(function (m) { return /already have|another one/.test(m); })) continue; btn.textContent = 'Publishing ' + (x.d.title || '').slice(0, 24) + '…'; try { await publish(x); } catch (e) { toast(e.message); } draw(); }
+      toast('🎉 Done'); draw();
+    };
+    $('#evDone', s).onclick = function () { s.remove(); if (S.view === 'app') rerender(); };
+    $('#evMore', s).onclick = function () { s.remove(); addEventSheet(); };
+    draw();
+    // drafts with no picture: create one each, one after another
+    (async function () { for (var i = 0; i < drafts.length; i++) { var x = drafts[i]; if (x.d && !x.img && x.d.title && x.st === 'new') await makeImg(x); } })();
   }
   // Shrinks a File or data URL to a JPEG (max 1600px, under ~1.5MB).
   // 📰 Blog header image: the AI photo + the headline in red / yellow / green brush-stroke bands (drawn here, so it's always spelled right)
