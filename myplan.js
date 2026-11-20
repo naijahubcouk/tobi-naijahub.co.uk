@@ -118,8 +118,9 @@
 
   // ───── 🗂️ UK life dates (the person sets the date — Auntie Tobi never guesses deadlines) ─────
   var LIFE = [
-    { k: 'ukpass', e: '🛂', t: 'UK passport expires', ask: 'When does it expire?', lead: 90, ck: ['Check the expiry date on your passport', 'Get a digital photo (or a code from a photo shop)', 'Renew online'], link: ['Renew your passport — GOV.UK', 'https://www.gov.uk/renew-adult-passport'], note: 'Start early, especially before you travel.' },
-    { k: 'ngpass', e: '🇳🇬', t: 'Nigerian passport expires', ask: 'When does it expire?', lead: 180, ck: ['Check the requirements', 'Book your appointment', 'Gather your documents and payment'], link: ['Nigeria High Commission London — e-passport', 'https://nigeriahc.org.uk/requirements-for-e-passport'], note: 'Renewal can take a while — start early.' },
+    { k: 'ngpass', e: '🇳🇬', t: 'Nigerian passport expires', ask: 'When does it expire?', lead: 180, ck: ['Check the expiry date on your passport', 'Apply on the NIS passport portal', 'Pay and book your appointment', 'Track your application'], link: ['How to renew Nigerian passport', 'https://passport.immigration.gov.ng/'], note: 'Renewal can take a while — start early.' },
+    // older plans: 'passport' items now point to the Nigerian passport (not shown in the list any more)
+    { k: 'ukpass', hide: true, e: '🇳🇬', t: 'Passport expires', ask: 'When does it expire?', lead: 180, ck: ['Check the expiry date on your passport', 'Apply on the NIS passport portal'], link: ['How to renew Nigerian passport', 'https://passport.immigration.gov.ng/'], note: 'Renewal can take a while — start early.' },
     { k: 'evisa', e: '📄', t: 'Visa / eVisa expires', ask: 'When does your permission end?', lead: 90, ck: ['Check your eVisa and expiry date', 'Check what you need for your next application', 'Get advice if you’re unsure'], link: ['View your eVisa — GOV.UK', 'https://www.gov.uk/view-prove-immigration-status'], note: 'Check the rules for your visa on GOV.UK or with an adviser.' },
     { k: 'licence', e: '🪪', t: 'Driving licence photocard expires', ask: 'Expiry date on your photocard (4b)', lead: 60, ck: ['Check date 4b on your photocard', 'Renew online'], link: ['Renew your driving licence — GOV.UK', 'https://www.gov.uk/renew-driving-licence'] },
     { k: 'mot', e: '🚗', t: 'MOT due', ask: 'When does your MOT run out?', lead: 28, ck: ['Book an MOT test', 'Check your MOT history'], link: ['Getting an MOT — GOV.UK', 'https://www.gov.uk/getting-an-mot'], note: 'You can usually get your MOT up to a month (minus a day) early and keep the same renewal date.' },
@@ -1089,7 +1090,7 @@
   // ───── 🗂️ UK life dates ─────
   function lifeSheet() {
     var s = sheet('<h3>🗂️ UK life dates</h3><div class="mp-sub" style="font-size:14px">Pick one, add your date, and Auntie Tobi reminds you in good time — with what you’ll need and the official link.</div>' +
-      '<div class="mp-life">' + LIFE.map(function (l, n) { return '<button data-l="' + n + '"><span>' + l.e + '</span>' + esc(l.t) + '</button>'; }).join('') + '</div>' +
+      '<div class="mp-life">' + LIFE.map(function (l, n) { return l.hide ? '' : '<button data-l="' + n + '"><span>' + l.e + '</span>' + esc(l.t) + '</button>'; }).join('') + '</div>' +
       '<div class="mp-row" style="justify-content:flex-end"><button class="mp-btn g" id="lX">Close</button></div>');
     $('#lX', s).onclick = function () { s.remove(); };
     s.querySelectorAll('[data-l]').forEach(function (b) { b.onclick = function () { var l = LIFE[+b.dataset.l]; s.remove(); if (l.school) { window.open('https://schooltracker.auntietobi.co.uk', '_blank', 'noopener'); return; } lifeOne(l); }; });
@@ -1244,7 +1245,7 @@
 
 
   // ───── 💬 chat: "➕ Add this to My Plan" under answers about MOT, passports, council tax… ─────
-  var CHAT = [[/\bMOT\b/, 'mot'], [/nigerian\s+passport|nigeria\s+high\s+commission/i, 'ngpass'], [/\bpassport\b/i, 'ukpass'], [/\be-?visa\b|\bBRP\b|visa\s+(expir|renew|extension)/i, 'evisa'], [/council\s+tax/i, 'ctax'], [/tv\s+licen[cs]e/i, 'tv'], [/self[\s-]assessment|tax\s+return/i, 'sa'], [/driving\s+licen[cs]e/i, 'licence'], [/car\s+insurance/i, 'carins'], [/car\s+tax|vehicle\s+tax|road\s+tax/i, 'cartax'], [/boiler\s+service/i, 'boiler'], [/home\s+insurance|contents\s+insurance/i, 'homeins']];
+  var CHAT = [[/\bMOT\b/, 'mot'], [/nigerian\s+passport|nigeria\s+high\s+commission|\bpassport\b/i, 'ngpass'], [/\be-?visa\b|\bBRP\b|visa\s+(expir|renew|extension)/i, 'evisa'], [/council\s+tax/i, 'ctax'], [/tv\s+licen[cs]e/i, 'tv'], [/self[\s-]assessment|tax\s+return/i, 'sa'], [/driving\s+licen[cs]e/i, 'licence'], [/car\s+insurance/i, 'carins'], [/car\s+tax|vehicle\s+tax|road\s+tax/i, 'cartax'], [/boiler\s+service/i, 'boiler'], [/home\s+insurance|contents\s+insurance/i, 'homeins']];
   function chatKey(txt) { for (var i = 0; i < CHAT.length; i++) if (CHAT[i][0].test(txt)) return CHAT[i][1]; return ''; }
   function hookChat() {
     var orig = window.addMessage; if (typeof orig !== 'function' || orig._mp) return;
