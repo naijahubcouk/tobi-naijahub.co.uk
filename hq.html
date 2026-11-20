@@ -138,6 +138,9 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 }
 .lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}.sctag{font-size:13px}.note{background:var(--gold-l);border-radius:10px;padding:8px 12px;font-size:13.5px}
 .binrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.binrow:last-child{border-bottom:0}
+/* 🎉 Events page */
+.evrow{align-items:center}.evdate{width:54px;flex-shrink:0;text-align:center;background:#0F1E36;color:#fff;border-radius:10px;padding:6px 0;line-height:1.1}.evdate b{display:block;font-size:20px}.evdate span{display:block;font-size:12px;color:#FFB81C;font-weight:700}.evdate small{display:block;font-size:10.5px;color:#C9D1DE}
+@media (max-width:600px){.evrow{flex-wrap:wrap}.evrow .apact{width:100%}}
 /* 📭 no email */
 .noem{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 /* 🎉 Add event */
@@ -151,7 +154,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 .aprow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.aprow:last-child{border-bottom:0}
 .apact{display:flex;gap:6px;flex-wrap:wrap}.btn.sm{min-height:32px;padding:5px 10px;font-size:13px}
 .ak{color:#fff;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;white-space:nowrap}.as{white-space:nowrap}
-.as{font-size:12px;font-weight:700}.as.live{color:var(--green-d)}.as.ended{color:var(--muted)}.as.hidden{color:#9B6B00}
+.as{font-size:12px;font-weight:700}.as.live{color:var(--green-d)}.as.ended{color:var(--muted)}.as.hidden{color:#9B6B00}.as.hid{color:#9B6B00}
 .apgrid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:start}
 .appv{background:#f0f2f5;border-radius:12px;padding:10px;position:sticky;top:0}
 .apcard{background:#fff;border-radius:12px;overflow:hidden;border:.5px solid #e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
@@ -250,7 +253,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       <button data-nav="calendar">📅 Calendar</button>
       <button data-nav="posted">📲 Posted</button>
       <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
-      <button data-nav="subs">📥 Event submissions <span class="n gold" id="nSubs"></span></button>
+      <button data-nav="subs">🎉 Events <span class="n gold" id="nSubs"></span></button>
       <button data-nav="dir" id="navDir">🏢 Business directory</button>
       <button data-nav="abiz" id="navAbiz">➕ Add your business <span class="n gold" id="nAbiz"></span></button>
       <button data-nav="mkt" id="navMkt">🛍️ Marketplace <span class="n gold" id="nMkt"></span></button>
@@ -367,9 +370,9 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
   var BASIC = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
   var EXTRA = ['chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga'];
   var SECTIONS = BASIC.concat(EXTRA);
-  var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '📥 Event submissions', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin',
+  var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '🎉 Events (submissions)', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin',
     chat: '💬 Ask Auntie', ideas: '✨ Weekly ideas', dir: '🏢 Business directory', abiz: '➕ Add your business', mkt: '🛍️ Marketplace', spot: '⭐ Spotlight', find: '🔎 Business Finder', out: '📧 Outreach', mail: '📝 Emails', imgm: '🎨 Image model', disc: '📣 Discovery posts', tx: '🎙️ Transcribe a video', mplan: '💚 My Plan users', fol: '📈 Followers tracker', glow: '✨ Instagram Revamp', sun: '📰 Sunday Update', igu: '👥 Comment & like usernames', dm: '📨 DM Outreach', iga: '⚡ Auto-replies' };
-  function allowed(v) { if (v === 'tcars') v = 'cars'; return !S.sections || S.sections.indexOf(v) >= 0; }
+  function allowed(v) { if (v === 'tcars') v = 'cars'; var ok = function (x) { return !S.sections || S.sections.indexOf(x) >= 0; }; return v === 'subs' ? ok('subs') || ok('app') : ok(v); }   // 🎉 Events page = submissions + live events
   function go(v) {
     S.view = ((SECTIONS.indexOf(v) >= 0 || v === 'tcars') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');
     try { history.replaceState(null, '', '#' + S.view); } catch (e) {}
@@ -377,14 +380,14 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     $('#side').classList.remove('open');
     var n = S.items.filter(function (c) { return c.status === 'idea'; }).length; $('#nIdeas').textContent = n || '';
     $('#nBin').textContent = (S.bin || []).length || '';
-    $('#nApp').textContent = (S.app || []).filter(function (p) { return appState(p) === 'live'; }).length || '';
+    $('#nApp').textContent = (S.app || []).filter(function (p) { return p.kind !== 'event' && appState(p) === 'live'; }).length || '';
     $('#nSubs').textContent = subsNew().length || '';
     $('#nAbiz').textContent = abizCount() || '';
     $('#nIgc').textContent = igcToday() + '/' + (S.igcTarget || 10);
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vSubs, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vEvents, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
@@ -2238,7 +2241,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
   function vApp() {
     $('#ttl').textContent = 'Publish to App';
     $('#topRight').innerHTML = (S.isAdmin ? '<button class="btn ghost" id="apOrgs">📋 Organiser emails</button> <button class="btn ghost" id="apFacts">✅ Facts</button> <button class="btn ghost" id="apBday">🎉 Card art</button> ' : '') + '<button class="btn ghost" id="apPaste">📋 Paste</button>';
-    var all = S.app || [];
+    var all = (S.app || []).filter(function (p) { return p.kind !== 'event'; });   // events live on the 🎉 Events page
     var live = all.filter(function (p) { return appState(p) === 'live'; });
     var ended = all.filter(function (p) { return appState(p) === 'ended'; });
     var hidden = all.filter(function (p) { return appState(p) === 'hidden'; });
@@ -2260,7 +2263,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     var block = function (title, list, empty) { return '<div class="h2">' + title + ' <span class="muted" style="font-size:15px">(' + list.length + ')</span></div><div class="card" style="padding:4px 14px">' + (list.length ? list.map(row).join('') : '<p class="muted" style="padding:10px 0">' + empty + '</p>') + '</div>'; };
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="note" style="margin-bottom:12px">Anything you publish here shows in the Auntie Tobi app within about a minute — no GitHub needed. Updates disappear after their “show until” date, and events disappear once they’ve happened. No notification is sent.</div>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn primary" id="apEv">🎉 Add event</button><button class="btn primary" data-anew="update">＋ Update</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button><button class="btn primary" data-anew="event">＋ Event</button></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn ghost" id="apEv">🎉 Events are on the Events page →</button><button class="btn primary" data-anew="update">＋ Update</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button><button class="btn primary" data-anew="event">＋ Event</button></div>' +
       block('Live in the app', live, 'Nothing published yet. Tap ＋ Update, or 📋 Paste something from ChatGPT.') +
       (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
     $('#apPaste').onclick = function () { appPasteSheet(); };
@@ -2268,7 +2271,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     if ($('#apOrgs')) $('#apOrgs').onclick = orgsSheet;
     $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : { kind: k }); }; });
     $('#apAi').onclick = function () { appAiSheet(); };
-    $('#apEv').onclick = function () { addEventSheet(); };
+    $('#apEv').onclick = function () { go('subs'); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
     // ✨ Rewrite: turns a published article into a new draft in Auntie Tobi's style — nothing changes until you check it and save
     $$('[data-arew]').forEach(function (b) { b.onclick = async function () {
@@ -2446,7 +2449,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       for (var i = 0; i < drafts.length; i++) { var x = drafts[i], w = x.d ? warns(x, i) : null; if (x.st !== 'new' || x.making || w.block || w.list.some(function (m) { return /already have|another one/.test(m); })) continue; btn.textContent = 'Publishing ' + (x.d.title || '').slice(0, 24) + '…'; try { await publish(x); } catch (e) { toast(e.message); } draw(); }
       toast('🎉 Done'); draw();
     };
-    $('#evDone', s).onclick = function () { s.remove(); if (S.view === 'app') rerender(); };
+    $('#evDone', s).onclick = function () { s.remove(); if (S.view === 'app' || S.view === 'subs') rerender(); };
     $('#evMore', s).onclick = function () { s.remove(); addEventSheet(); };
     draw();
     // drafts with no picture: create one each, one after another
@@ -2557,34 +2560,84 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     if (d.replace(/\D/g, '').length >= 10) { var w = d.replace(/^\+/, '').replace(/^0/, '44'); return esc(c) + ' · <a href="https://wa.me/' + esc(w) + '" target="_blank" rel="noopener">WhatsApp</a>'; }
     return esc(c);
   }
-  function vSubs() {
-    $('#ttl').textContent = 'Event submissions';
-    $('#topRight').innerHTML = '<a class="btn ghost" href="/add-event" target="_blank" rel="noopener">Open the public page ↗</a>';
-    S.subTab = S.subTab || 'new';
-    var all = S.subs || [];
-    var tabs = { new: '📥 To review', approved: '✅ Approved', declined: '✖ Declined' };
-    var list = all.filter(function (x) { return x.status === S.subTab; });
+  // ── 🎉 Events: everything about events in one place — Add event, people's submissions, live, past & hidden ──
+  function vEvents() {
+    var ok = function (x) { return !S.sections || S.sections.indexOf(x) >= 0; }, canSub = ok('subs'), canApp = ok('app');
+    $('#ttl').textContent = 'Events';
+    $('#topRight').innerHTML = (S.isAdmin ? '<button class="btn ghost" id="evOrgs">📋 Organiser emails</button> ' : '') + '<a class="btn ghost" href="/add-event" target="_blank" rel="noopener">Public page ↗</a>' + (canApp ? ' <button class="btn primary" id="evAdd">🎉 Add event</button>' : '');
+    var t = today(), evs = (S.app || []).filter(function (p) { return p.kind === 'event'; }), subs = S.subs || [];
+    var live = evs.filter(function (p) { return appState(p) === 'live'; }).sort(function (a, b) { return (a.eventDate || '9').localeCompare(b.eventDate || '9'); });
+    var past = evs.filter(function (p) { return appState(p) !== 'live'; }).sort(function (a, b) { return (b.eventDate || '').localeCompare(a.eventDate || ''); });
+    var waiting = subs.filter(function (x) { return x.status === 'new'; }), declined = subs.filter(function (x) { return x.status === 'declined'; });
+    var tabs = [];
+    if (canSub) tabs.push(['wait', '📥 Waiting (' + waiting.length + ')']);
+    if (canApp) tabs.push(['live', '● Live (' + live.length + ')'], ['past', 'Past & hidden (' + (past.length + (canSub ? declined.length : 0)) + ')']);
+    if (!S.evTab || !tabs.some(function (x) { return x[0] === S.evTab; })) S.evTab = canSub && waiting.length ? 'wait' : tabs[canSub && canApp ? 1 : 0][0];
+    var bySub = {}; subs.forEach(function (x) { if (x.appId) bySub[x.appId] = x; });
+    var wk = addDays(t, 7);
+    var evRow = function (p) {
+      var st = appState(p), sb = bySub[p.id], d = p.eventDate ? new Date(p.eventDate + 'T12:00:00Z') : null;
+      return '<div class="aprow evrow"><div class="evdate">' + (d ? '<b>' + d.getUTCDate() + '</b><span>' + d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }) + '</span><small>' + d.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }) + '</small>' : '<span>No date</span>') + '</div>' +
+        '<div style="flex:1;min-width:0"><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">' + (p.featured ? '<span class="ak" style="background:#FFB81C;color:#0F1E36">⭐ Featured</span>' : '') + (st !== 'live' ? '<span class="as ' + (st === 'hidden' ? 'hid' : st) + '">' + ({ ended: 'Ended', hidden: '🙈 Hidden' })[st] + '</span>' : '') + (p.eventDate && p.eventDate >= t && p.eventDate <= wk && st === 'live' ? '<span class="ak" style="background:#057A44">This week</span>' : '') + '</div>' +
+        '<div style="font-weight:800;margin-top:2px">' + esc(p.title) + '</div>' +
+        '<div class="muted" style="font-size:12.5px">' + (p.eventTime ? '🕒 ' + esc(p.eventTime) + ' · ' : '') + (p.location ? '📍 ' + esc(p.location) : '') + '</div>' +
+        '<div class="muted" style="font-size:12px;margin-top:2px">' + (sb ? '📥 Sent by ' + esc(sb.contactName || 'someone') : '🎉 Added by ' + esc((S.names && S.names[p.by]) || 'HQ')) + '</div></div>' +
+        '<div class="apact"><button class="btn ghost sm" data-aedit="' + p.id + '">✏️ Edit</button>' +
+        (st === 'live' ? '<button class="btn ghost sm" data-efeat="' + p.id + '">' + (p.featured ? '☆ Unfeature' : '⭐ Feature') + '</button>' : '') +
+        '<button class="btn ghost sm" data-acopy="' + p.id + '">🔗 Link</button>' +
+        '<button class="btn ghost sm" data-ahide="' + p.id + '">' + (p.status === 'hidden' ? '👁 Show' : '🙈 Hide') + '</button>' +
+        (st !== 'live' ? '<button class="btn ghost sm" data-ereuse="' + p.id + '" title="Make a new event from this one">♻️ Reuse</button>' : '') +
+        '<button class="btn ghost sm" data-adel="' + p.id + '" title="Delete">🗑</button></div></div>';
+    };
+    var body = '';
+    if (S.evTab === 'wait') body = subsHtml(waiting, 'new');
+    else if (S.evTab === 'live') {
+      S.evWeek = !!S.evWeek;
+      var list = S.evWeek ? live.filter(function (p) { return p.eventDate && p.eventDate <= wk; }) : live;
+      body = '<div class="chipbar" style="margin-bottom:10px"><button class="chip" data-ewk="0" aria-pressed="' + !S.evWeek + '">All upcoming (' + live.length + ')</button><button class="chip" data-ewk="1" aria-pressed="' + S.evWeek + '">This week (' + live.filter(function (p) { return p.eventDate && p.eventDate <= wk; }).length + ')</button></div>' +
+        '<div class="card" style="padding:4px 14px">' + (list.length ? list.map(evRow).join('') : '<p class="muted" style="padding:12px 0">' + (S.evWeek ? 'No events this week.' : 'No live events. Tap 🎉 Add event.') + '</p>') + '</div>';
+    } else {
+      body = '<div class="h2" style="margin-top:0">Ended & hidden <span class="muted" style="font-size:15px">(' + past.length + ')</span></div><div class="card" style="padding:4px 14px">' + (past.length ? past.map(evRow).join('') : '<p class="muted" style="padding:12px 0">Nothing here.</p>') + '</div>' +
+        (canSub ? '<div class="h2">Declined submissions <span class="muted" style="font-size:15px">(' + declined.length + ')</span></div>' + subsHtml(declined, 'declined') : '');
+    }
+    $('#view').innerHTML = '<div class="wrap"><div class="note" style="margin-bottom:12px">Every event in one place: what people sent you, what’s live in the app, and what’s ended. Events leave the app by themselves after their date.</div>' +
+      '<div class="chipbar evtabs" style="margin-bottom:12px">' + tabs.map(function (x) { return '<button class="chip" data-etab="' + x[0] + '" aria-pressed="' + (S.evTab === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' + body + '</div>';
+    $$('[data-etab]').forEach(function (b) { b.onclick = function () { S.evTab = b.dataset.etab; vEvents(); }; });
+    $$('[data-ewk]').forEach(function (b) { b.onclick = function () { S.evWeek = b.dataset.ewk === '1'; vEvents(); }; });
+    if ($('#evAdd')) $('#evAdd').onclick = function () { addEventSheet(); };
+    if ($('#evOrgs')) $('#evOrgs').onclick = orgsSheet;
+    $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
+    $$('[data-acopy]').forEach(function (b) { b.onclick = function () { var u = appLink(appById(b.dataset.acopy)); (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { toast('Link copied — paste it anywhere'); }, function () { prompt('Copy this link:', u); }); }; });
+    $$('[data-ahide]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.ahide); try { var r = await api('app-save', { item: { id: p.id, status: p.status === 'hidden' ? 'live' : 'hidden' } }); upsertApp(r.item); toast(r.item.status === 'hidden' ? 'Hidden from the app' : 'Showing in the app again'); rerender(); } catch (x) { toast(x.message); } }; });
+    $$('[data-efeat]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.efeat); try { var r = await api('app-save', { item: { id: p.id, featured: !p.featured } }); upsertApp(r.item); toast(r.item.featured ? '⭐ Featured — shows on Home, Links and business pages' : 'No longer featured'); rerender(); } catch (x) { toast(x.message); } }; });
+    $$('[data-ereuse]').forEach(function (b) { b.onclick = function () { var p = appById(b.dataset.ereuse); appEditor({ kind: 'event', title: p.title, body: p.body, location: p.location, eventTime: p.eventTime, link: p.link, featured: false }); toast('Pick the new date, then publish'); }; });
+    $$('[data-adel]').forEach(function (b) { b.onclick = async function () { var p = appById(b.dataset.adel); if (!confirm('Delete “' + p.title + '” for good? It will disappear from the app.')) return; try { var r = await api('app-delete', { id: p.id }); S.app = r.app; toast('Deleted'); rerender(); } catch (x) { toast(x.message); } }; });
+    bindSubs();
+    if (canSub && !S.evm) evmLoad().then(function () { if (S.view === 'subs') vEvents(); });
+  }
+  // 📥 people's event submissions (shown on the 🎉 Events page)
+  function subsHtml(list, status) {
     var VIA = { link: '🔗 from their event link', flyer: '🖼️ from a flyer', notes: '✨ from pasted details', manual: '✍️ written by them' };
-    $('#view').innerHTML = '<div class="wrap">' +
-      '<div class="note" style="margin-bottom:12px">People add events at <b>auntietobi.co.uk/add-event</b> (no sign-in). Nothing goes in the app until you approve it. Approved events show in Events with their flyer and disappear after the date.</div>' +
-      '<div class="chipbar" style="margin-bottom:12px">' + Object.keys(tabs).map(function (k) { var n = all.filter(function (x) { return x.status === k; }).length; return '<button class="chip" data-stab="' + k + '" aria-pressed="' + (S.subTab === k) + '">' + tabs[k] + ' (' + n + ')</button>'; }).join('') + '</div>' +
-      (list.length ? list.map(function (x) {
+    var card = function (x) {
         var past = x.eventDate && x.eventDate < today();
         return '<div class="card subc">' +
           (x.imgId ? '<img class="subimg" src="/.netlify/functions/studio-hq?subimg=' + esc(x.imgId) + '" alt="Flyer" data-zoom>' : '<div class="subimg none">No flyer</div>') +
           '<div style="flex:1;min-width:0">' +
           '<div style="font-weight:800;font-size:16px">' + esc(x.title) + '</div>' +
           '<div class="muted" style="font-size:13.5px;margin:2px 0 6px">🗓 ' + esc(fmtLong(x.eventDate)) + (x.eventTime ? ' · ' + esc(x.eventTime) : '') + (past ? ' <b style="color:var(--danger)">· date has passed</b>' : '') + '<br>📍 ' + esc(x.location) + '</div>' +
+          (function () { var dup = x.status !== 'approved' && (S.app || []).filter(function (p) { return p.kind === 'event' && evSame(x, p); })[0]; return dup ? '<div class="evw">⚠️ Looks like an event already in the app: “' + esc(dup.title) + '”</div>' : ''; })() +
           (x.body ? '<details><summary style="cursor:pointer;font-size:13.5px;font-weight:700;color:var(--green-d)">Read the write-up</summary><div class="aptx" style="margin-top:6px">' + appHtml(x.body) + '</div></details>' : '<div class="muted" style="font-size:13px">No write-up</div>') +
           (x.link ? '<div style="font-size:13px;margin-top:6px">🔗 <a href="' + esc(x.link) + '" target="_blank" rel="noopener">' + esc(x.link.replace(/^https?:\/\//, '').slice(0, 60)) + '</a></div>' : '') +
           '<div style="font-size:13px;margin-top:8px;background:#F7F2E7;border-radius:8px;padding:6px 10px">👤 <b>' + esc(x.contactName) + '</b> · ' + contactLink(x.contact) + '<br><span class="muted">Sent ' + esc(new Date(x.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + ' · ' + (VIA[x.via] || '') + (x.reviewedBy ? ' · reviewed by ' + esc((S.names && S.names[x.reviewedBy]) || x.reviewedBy) : '') + '</span></div>' +
           '<div class="apact" style="margin-top:10px">' +
           (x.status === 'new' ? '<button class="btn primary sm" data-sappr="' + x.id + '">✅ Approve</button><button class="btn ghost sm" data-sedit="' + x.id + '">✏️ Edit, then approve</button><button class="btn ghost sm" data-sdecl="' + x.id + '">✖ Decline</button>' : '') +
-          (x.status === 'approved' ? '<span class="as live" style="align-self:center">● Live in the app</span>' + (x.appId && appById(x.appId) ? '<button class="btn ghost sm" data-sopen="' + x.appId + '">✏️ Edit in Publish to App</button>' : '') + evmBadge('s:' + x.id, '<button class="btn ghost sm" data-semail="' + x.id + '">📧 Email organiser</button>') : '') +
+          (x.status === 'approved' ? '<span class="as live" style="align-self:center">● Live in the app</span>' + (x.appId && appById(x.appId) ? '<button class="btn ghost sm" data-sopen="' + x.appId + '">✏️ Edit</button>' : '') + evmBadge('s:' + x.id, '<button class="btn ghost sm" data-semail="' + x.id + '">📧 Email organiser</button>') : '') +
           (x.status === 'declined' ? '<button class="btn ghost sm" data-sedit="' + x.id + '">✏️ Edit, then approve</button><button class="btn ghost sm" data-sdel="' + x.id + '">🗑 Delete</button>' : '') +
           '</div></div></div>';
-      }).join('') : '<div class="card"><p class="muted">' + (S.subTab === 'new' ? 'No new events to review. Share auntietobi.co.uk/add-event so people can send theirs.' : 'Nothing here yet.') + '</p></div>') + '</div>';
-    $$('[data-stab]').forEach(function (b) { b.onclick = function () { S.subTab = b.dataset.stab; vSubs(); }; });
+      };
+    return list.length ? list.map(card).join('') : '<div class="card"><p class="muted">' + (status === 'new' ? 'No new events to review. Share auntietobi.co.uk/add-event so people can send theirs.' : 'Nothing here yet.') + '</p></div>';
+  }
+  function bindSubs() {
     $$('[data-zoom]').forEach(function (im) { im.onclick = function () { window.open(im.src, '_blank'); }; });
     $$('[data-sappr]').forEach(function (b) { b.onclick = async function () { var x = subById(b.dataset.sappr); if (x.eventDate < today() && !confirm('This date has already passed. Approve anyway?')) return; b.disabled = true; try { var r = await api('sub-approve', { id: x.id }); S.subs = r.subs; S.app = r.app; toast('Approved — it’s in the app’s Events within a minute 🎉'); rerender(); evmSheet('s', x.id); } catch (e) { toast(e.message); b.disabled = false; } }; });
     $$('[data-sedit]').forEach(function (b) { b.onclick = function () { var x = subById(b.dataset.sedit); appEditor({ kind: 'event', title: x.title, body: x.body, eventDate: x.eventDate, eventTime: x.eventTime, location: x.location, link: x.link }, null, null, x); }; });
@@ -2592,8 +2645,8 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     $$('[data-sdel]').forEach(function (b) { b.onclick = async function () { if (!confirm('Delete this submission for good?')) return; try { var r = await api('sub-delete', { id: b.dataset.sdel }); S.subs = r.subs; toast('Deleted'); rerender(); } catch (e) { toast(e.message); } }; });
     $$('[data-sopen]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.sopen)); }; });
     $$('[data-semail]').forEach(function (b) { b.onclick = function () { evmSheet('s', b.dataset.semail); }; });
-    if (!S.evm) evmLoad().then(function () { if (S.view === 'subs') vSubs(); });
   }
+  function vSubs() { vEvents(); }
   function subById(id) { return (S.subs || []).filter(function (x) { return x.id === id; })[0]; }
   function appById(id) { return (S.app || []).filter(function (x) { return x.id === id; })[0]; }
   function appPasteSheet() {
