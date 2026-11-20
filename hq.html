@@ -2264,7 +2264,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     var block = function (title, list, empty) { return '<div class="h2">' + title + ' <span class="muted" style="font-size:15px">(' + list.length + ')</span></div><div class="card" style="padding:4px 14px">' + (list.length ? list.map(row).join('') : '<p class="muted" style="padding:10px 0">' + empty + '</p>') + '</div>'; };
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="note" style="margin-bottom:12px">Anything you publish here shows in the Auntie Tobi app within about a minute — no GitHub needed. ⏰ Important Deadlines leave the News list after their deadline date. Events are on the 🎉 Events page. No notification is sent.</div>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn ghost" id="apEv">🎉 Events are on the Events page →</button><button class="btn primary" data-anew="deadline">＋ Deadline</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn ghost" id="apEv">🎉 Events are on the Events page →</button><button class="btn primary" data-anew="deadline">＋ Deadline</button><button class="btn gold" id="apBulkDl">⏰ Bulk deadlines</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button></div>' +
       block('Live in the app', live, 'Nothing published yet. Tap ＋ Update, or 📋 Paste something from ChatGPT.') +
       (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
     $('#apPaste').onclick = function () { appPasteSheet(); };
@@ -2273,6 +2273,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : k === 'deadline' ? { kind: 'article', category: 'Important Deadlines' } : { kind: k }); }; });
     $('#apAi').onclick = function () { appAiSheet(); };
     $('#apEv').onclick = function () { go('subs'); };
+    $('#apBulkDl').onclick = function () { bulkDlSheet(); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
     // ✨ Rewrite: turns a published article into a new draft in Auntie Tobi's style — nothing changes until you check it and save
     $$('[data-arew]').forEach(function (b) { b.onclick = async function () {
@@ -2348,6 +2349,109 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       return d2;
     }
     return (await api('app-ai', { notes: a.notes, kind: a.kind, category: a.category, rewrite: !!a.rewrite })).draft;
+  }
+  // ── ⏰ Bulk deadlines: links, topics or a numbered list in → AI writes an Important Deadlines article for each → one review list ──
+  var DLCAT = 'Important Deadlines';
+  function dlSplit(text) {
+    var lines = String(text || '').replace(/\r/g, '').split('\n'), jobs = [], rest = [];
+    lines.forEach(function (l) { var t = l.trim(); if (/^(https?:\/\/|www\.)\S+$/i.test(t)) jobs.push({ kind: 'deadline', url: /^https?:/i.test(t) ? t : 'https://' + t, notes: '', label: t.replace(/^https?:\/\/(www\.)?/, '').slice(0, 60) }); else rest.push(l); });
+    var starts = []; rest.forEach(function (l, i) { if (/^\s*\d{1,2}[.)]\s+\S/.test(l)) starts.push(i); });
+    if (starts.length >= 2) {   // a numbered list (e.g. from ChatGPT): each number = one deadline with everything under it
+      starts.forEach(function (st, k) { var ch = rest.slice(st, k + 1 < starts.length ? starts[k + 1] : rest.length), title = ch[0].trim().replace(/^\d{1,2}[.)]\s+/, '').replace(/\*\*/g, '');
+        var link = (ch.join(' ').match(/https?:\/\/\S+/) || [''])[0];
+        jobs.push({ kind: 'deadline', notes: 'IMPORTANT DEADLINE: ' + ch.join('\n').trim(), url: '', label: title.slice(0, 70), hint: link }); });
+    } else rest.forEach(function (l) { var t = l.trim().replace(/^[-•*]\s*/, ''); if (t.length >= 4) jobs.push({ kind: 'deadline', notes: 'IMPORTANT DEADLINE TOPIC: ' + t + '\nFind the official UK details (exact date, who it affects, what to do) and write it up.', url: '', label: t.slice(0, 70) }); });
+    return jobs.slice(0, 15);
+  }
+  function bulkDlSheet() {
+    var s = sheet('<h2>⏰ Bulk deadlines</h2><p class="muted" style="margin:4px 0 10px">Paste official links, short topics (one per line), or a numbered list from ChatGPT. Auntie Tobi checks the official sites and writes an <b>Important Deadlines</b> article for each. You check them all on one screen — nothing goes live until you tap Publish.</p>' +
+      '<textarea id="bdT" rows="10" placeholder="https://www.gov.uk/self-assessment-tax-returns/deadlines&#10;Winter Fuel Payment claim deadline&#10;Council tax reduction application&#10;…or paste a numbered list"></textarea>' +
+      '<div id="bdFound" style="margin-top:10px"></div><div class="err hidden" id="bdErr"></div>' +
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="bdX">Cancel</button><button class="btn primary" id="bdGo">Find the deadlines</button></div>');
+    var jobs = null;
+    $('#bdX', s).onclick = function () { s.remove(); };
+    $('#bdT', s).oninput = function () { jobs = null; $('#bdFound', s).innerHTML = ''; $('#bdGo', s).textContent = 'Find the deadlines'; };
+    $('#bdGo', s).onclick = function () {
+      var err = $('#bdErr', s); err.classList.add('hidden');
+      if (!jobs) {
+        jobs = dlSplit($('#bdT', s).value);
+        if (!jobs.length) { jobs = null; err.textContent = 'Paste a link, a topic or a list first.'; err.classList.remove('hidden'); return; }
+        $('#bdFound', s).innerHTML = '<div class="lbl">Found ' + jobs.length + ' deadline' + (jobs.length === 1 ? '' : 's') + ' — untick any you don’t want</div>' + jobs.map(function (j, i) { return '<label class="row" style="gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-weight:600"><input type="checkbox" data-bj="' + i + '" checked style="width:18px;height:18px"> ' + (j.url ? '🔗 ' : '⏰ ') + esc(j.label) + '</label>'; }).join('') +
+          '<p class="muted" style="font-size:12.5px;margin-top:6px">About 15–20 seconds each. Keep this page open.</p>';
+        $('#bdGo', s).textContent = '✨ Write them'; return;
+      }
+      var pick = jobs.filter(function (j, i) { var c = $('[data-bj="' + i + '"]', s); return c && c.checked; });
+      if (!pick.length) { err.textContent = 'Tick at least one.'; err.classList.remove('hidden'); return; }
+      s.remove(); dlRead(pick);
+    };
+  }
+  async function dlRead(jobs) {
+    var drafts = [];
+    var s = sheet('<h2>✨ Writing your deadlines…</h2><p class="muted" id="dlP" style="margin:6px 0"></p><div style="height:6px;background:#EFE8D6;border-radius:9px;overflow:hidden"><i id="dlPb" style="display:block;height:100%;width:0;background:#057A44;transition:width .4s"></i></div><p class="muted" style="font-size:12.5px;margin-top:8px">Checking GOV.UK and other official sites for each one. Keep this page open.</p>');
+    for (var i = 0; i < jobs.length; i++) {
+      $('#dlP', s).textContent = 'Writing ' + (i + 1) + ' of ' + jobs.length + ' — ' + jobs[i].label;
+      $('#dlPb', s).style.width = Math.round(i / jobs.length * 100) + '%';
+      try { var d = await aiDraft(jobs[i]); d.kind = 'article'; d.category = DLCAT; if (!d.link && jobs[i].hint) d.link = jobs[i].hint; drafts.push({ d: d, img: d._img ? { data: d._img, from: d._imgFrom } : null, st: 'new', src: jobs[i] }); }
+      catch (x) { drafts.push({ err: x.message, src: jobs[i], st: 'error' }); }
+    }
+    s.remove(); dlReview(drafts);
+  }
+  function dlSame(a, b) { if (!a.deadline || a.deadline !== b.deadline) return false; var x = evNorm(a.title), y = evNorm(b.title); if (!x.length || !y.length) return false; return x.filter(function (w) { return y.indexOf(w) >= 0; }).length / Math.min(x.length, y.length) >= 0.5; }
+  function dlReview(drafts) {
+    var pics = false;
+    var s = sheet('<h2>⏰ Check your deadlines</h2><p class="muted" style="margin:4px 0 8px">Check each one, then Publish. ✏️ Edit opens the full form.</p>' +
+      '<label class="row" style="gap:8px;align-items:center;font-weight:600;margin-bottom:10px"><input type="checkbox" id="dlPics" style="width:18px;height:18px"> 🎨 Create a picture for each one when I publish <span class="muted" style="font-weight:400">(about 20 seconds each)</span></label>' +
+      '<div id="dlL"></div><div class="row" style="justify-content:space-between;gap:8px;margin-top:12px"><button class="btn ghost" id="dlMore">＋ Add more</button><span><button class="btn ghost" id="dlDone">Done</button> <button class="btn primary" id="dlAll">✅ Publish all ready</button></span></div>');
+    var t = today();
+    $('#dlPics', s).onchange = function () { pics = this.checked; };
+    function warns(x, i) {
+      var d = x.d, w = [];
+      if (!d.deadline) w.push('No deadline date found — tap ✏️ Edit to add it');
+      else if (d.deadline < t) w.push('This deadline has already passed');
+      var dup = (S.app || []).filter(function (p) { return p.kind === 'article' && p.category === DLCAT && dlSame(d, p); })[0];
+      if (dup) w.push('Looks like a deadline you already have: “' + dup.title + '”');
+      var twin = drafts.filter(function (y, j) { return j < i && y.d && y.st !== 'skip' && dlSame(d, y.d); })[0];
+      if (twin) w.push('Same as another one in this list');
+      return { list: w, block: !d.deadline || d.deadline < t, dup: !!(dup || twin) };
+    }
+    function card(x, i) {
+      if (x.st === 'error') return '<div class="evc bad"><b>Couldn’t write “' + esc(x.src.label) + '”</b><div class="muted" style="font-size:13px">' + esc(x.err) + '</div><div class="evb"><button class="btn ghost sm" data-da="retry" data-i="' + i + '">🔄 Try again</button><button class="btn ghost sm" data-da="skip" data-i="' + i + '">Skip</button></div></div>';
+      if (x.st === 'skip') return '<div class="evc dim"><span class="muted">Skipped — ' + esc(x.d.title || 'deadline') + '</span> <button class="link" data-da="undo" data-i="' + i + '">Undo</button></div>';
+      var d = x.d, W = warns(x, i);
+      return '<div class="evc' + (x.st === 'done' ? ' ok' : '') + '" style="display:block"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">' + (d.deadline ? '<span style="background:#FEE2E2;color:#991B1B;font-size:12.5px;font-weight:800;padding:3px 10px;border-radius:999px">⏰ Deadline: ' + esc(fmtLong(d.deadline)) + '</span>' : '') + '</div>' +
+        '<div class="evt" style="margin-top:6px">' + esc(d.title || 'Untitled') + '</div><div class="evm">' + esc(d.summary || '') + (d.link ? '<br>🔗 ' + esc(String(d.link).replace(/^https?:\/\/(www\.)?/, '').slice(0, 60)) : '') + '</div>' +
+        '<details><summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--green-d)">Read the article</summary><div class="aptx" style="margin-top:6px">' + appHtml(d.body || '') + '</div></details>' +
+        (W.list.length && x.st !== 'done' ? '<div class="evw">' + W.list.map(function (w) { return '⚠️ ' + esc(w); }).join('<br>') + '</div>' : '') +
+        (x.st === 'done' ? '<div class="evok">✅ Published — in the app within a minute</div>' : x.busy ? '<div class="muted" style="margin-top:8px;font-size:13px">' + esc(x.busy) + '</div>' :
+          '<div class="evb"><button class="btn primary sm" data-da="pub" data-i="' + i + '"' + (W.block ? ' disabled' : '') + '>✅ Publish</button><button class="btn ghost sm" data-da="edit" data-i="' + i + '">✏️ Edit</button><button class="btn ghost sm" data-da="skip" data-i="' + i + '">Skip</button></div>') + '</div>';
+    }
+    function ready(x, i) { if (x.st !== 'new' || !x.d) return false; var w = warns(x, i); return !w.block && !w.dup; }
+    function draw() {
+      $('#dlL', s).innerHTML = drafts.map(card).join('') || '<p class="muted">Nothing here.</p>';
+      var n = drafts.filter(ready).length; $('#dlAll', s).textContent = '✅ Publish all ready' + (n ? ' (' + n + ')' : ''); $('#dlAll', s).disabled = !n;
+      $$('[data-da]', s).forEach(function (b) { b.onclick = function () { act(b.dataset.da, +b.dataset.i, b); }; });
+    }
+    async function publish(x) {
+      var d = x.d, item = { kind: 'article', category: DLCAT, status: 'live', title: d.title, body: d.body || '', summary: d.summary || '', link: d.link || '', deadline: d.deadline };
+      if (!x.img && pics) { x.busy = '🎨 Creating the picture…'; draw(); try { var r = await api('app-picture', { kind: 'article', style: 'blog', title: d.title, body: (d.summary || d.body || '').slice(0, 400) }); x.img = { data: await blogArt(r.image, blogLines(d.title)), from: 'ai' }; } catch (e) { toast(e.message); } }
+      x.busy = '📤 Publishing…'; draw();
+      try { if (x.img && x.img.data) { var ri = await api('app-img', { image: x.img.data }); item.imgId = ri.imgId; } var r2 = await api('app-save', { item: item }); upsertApp(r2.item); x.st = 'done'; }
+      finally { x.busy = ''; }
+    }
+    async function act(a, i, b) {
+      var x = drafts[i];
+      if (a === 'skip') { x.st = 'skip'; return draw(); }
+      if (a === 'undo') { x.st = 'new'; return draw(); }
+      if (a === 'retry') { b.disabled = true; b.textContent = 'Writing…'; try { var d = await aiDraft(x.src); d.kind = 'article'; d.category = DLCAT; drafts[i] = { d: d, img: d._img ? { data: d._img, from: d._imgFrom } : null, st: 'new', src: x.src }; } catch (e) { toast(e.message); } return draw(); }
+      if (a === 'edit') { var d0 = Object.assign({}, x.d, x.img ? { _img: x.img.data, _imgFrom: 'own' } : {}); s.style.display = 'none';
+        appEditor(d0, function () { x.st = 'done'; s.style.display = ''; draw(); }, null);
+        var watch = setInterval(function () { if (!document.querySelector('#aeP')) { clearInterval(watch); s.style.display = ''; draw(); } }, 400); return; }
+      if (a === 'pub') { try { await publish(x); toast('⏰ Published'); } catch (e) { toast(e.message); } return draw(); }
+    }
+    $('#dlAll', s).onclick = async function () { this.disabled = true; for (var i = 0; i < drafts.length; i++) { if (!ready(drafts[i], i)) continue; try { await publish(drafts[i]); } catch (e) { toast(e.message); } draw(); } toast('⏰ Done'); draw(); };
+    $('#dlDone', s).onclick = function () { s.remove(); if (S.view === 'app') rerender(); };
+    $('#dlMore', s).onclick = function () { s.remove(); bulkDlSheet(); };
+    draw();
   }
   // ── 🎉 Add event: links, flyers or details in (several at once) → AI reads each → one review list → Publish / Edit / Skip ──
   function evNorm(t) { return String(t || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2 && ['the', 'and', 'for', 'with', 'night', 'party', 'event', '2026', '2027'].indexOf(w) < 0; }); }
