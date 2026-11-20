@@ -1070,7 +1070,7 @@
     <div class="pill" onclick="resetToWelcome()">🏠 Home</div>
     <div class="pill" onclick="showBusinesses(undefined,null,null,true,true)">🏢 Businesses</div>
     <div class="pill" onclick="window.open('https://auntietobi.co.uk/marketplace','_blank')">🛍️ Marketplace</div>
-    <div class="pill" onclick="showNewsAndUpdates()">📰 News & Updates</div>
+    <div class="pill" onclick="showNewsAndUpdates()">📰 News</div>
     <div class="pill" onclick="showEventsCard()">🎉 Events</div>
     <div class="pill" onclick="showMoreSheet()" style="background:#0F1E36;color:white;border-color:#0F1E36;">More ›</div>
   </div>
@@ -3633,8 +3633,8 @@ function sendJobQuery(query) {
 
 
 
-const _allNewsCategoryColors = { 'Breaking':'#DC2626','News':'#057A44','Events':'#7C3AED','Money':'#854D0E','Housing':'#1D4ED8','Lifestyle':'#BE185D','Business':'#4338CA','Did You Know':'#C2410C','Travel':'#9333EA','Family':'#0F766E','Health':'#BE123C','Education':'#4D7C0F','Food':'#9A3412','Food & Lifestyle':'#9A3412','Immigration':'#0E7490','Jobs':'#7C2D12','Culture':'#9333EA','Community':'#0C4A6E','Tips':'#C2410C' };
-const _allNewsCategoryEmojis = {'News':'📰','Events':'🎉','Money':'💷','Housing':'🏠','Lifestyle':'💡','Business':'💼','Did You Know':'🤔','Travel':'✈️','Family':'👨‍👩‍👧','Health':'🏥','Education':'🎓','Food':'🍲','Food & Lifestyle':'🍲','Immigration':'🛂','Jobs':'💼','Culture':'🎭','Community':'👥','Tips':'💡','Breaking':'🚨'};
+const _allNewsCategoryColors = { 'Breaking':'#DC2626','News':'#057A44','Important Deadlines':'#B91C1C','Events':'#7C3AED','Money':'#854D0E','Housing':'#1D4ED8','Lifestyle':'#BE185D','Business':'#4338CA','Did You Know':'#C2410C','Travel':'#9333EA','Family':'#0F766E','Health':'#BE123C','Education':'#4D7C0F','Food':'#9A3412','Food & Lifestyle':'#9A3412','Immigration':'#0E7490','Jobs':'#7C2D12','Culture':'#9333EA','Community':'#0C4A6E','Tips':'#C2410C' };
+const _allNewsCategoryEmojis = {'News':'📰','Important Deadlines':'⏰','Events':'🎉','Money':'💷','Housing':'🏠','Lifestyle':'💡','Business':'💼','Did You Know':'🤔','Travel':'✈️','Family':'👨‍👩‍👧','Health':'🏥','Education':'🎓','Food':'🍲','Food & Lifestyle':'🍲','Immigration':'🛂','Jobs':'💼','Culture':'🎭','Community':'👥','Tips':'💡','Breaking':'🚨'};
 
 window._renderAllNewsBatch = function(from) {
   const news = window._allNewsData || [];
@@ -3657,6 +3657,7 @@ window._renderAllNewsBatch = function(from) {
           ${isEvents ? categoryBadge : ''}
           ${item.date ? `<span style="font-size:12px;color:#9CA3AF;">${isEvents ? '📅 ' : ''}${item.date}</span>` : ''}
         </div>
+        ${item.deadline ? `<div style="display:inline-block;background:#FEE2E2;color:#991B1B;font-size:12.5px;font-weight:800;padding:3px 10px;border-radius:999px;margin-bottom:6px;">⏰ Deadline: ${new Date(item.deadline + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</div>` : ''}
         ${item.imgId ? `<img src="/.netlify/functions/app-content?img=${encodeURIComponent(item.imgId)}" alt="" loading="lazy" style="float:right;width:84px;height:84px;object-fit:cover;border-radius:8px;margin:0 0 6px 10px;background:#f0f2f5;">` : ''}
         <div style="font-size:17px;font-weight:700;color:#0F1E36;line-height:1.35;margin-bottom:6px;">${item.emoji} ${item.title}</div>
         <div style="font-size:14px;color:#444;line-height:1.6;margin-bottom:8px;">${item.summary}</div>
@@ -3889,7 +3890,8 @@ function showMoreSheet() {
 }
 
 
-function showNewsAndUpdates(activeTab) {
+function showNewsAndUpdates(activeTab) { showAllNews(); }   // the Updates tab was removed (Nov 2026) — updates are now ⏰ Important Deadlines articles
+function showNewsAndUpdatesOld(activeTab) {
   var tab = activeTab || 'news';
   window._currentPage = 'news-updates';
   var messages = document.getElementById('messages');
@@ -7196,6 +7198,8 @@ function handleDeepLink() {
         .then(function(updates){
           window._tobiUpdates = tobiMergeUpdates(updates);
           var match = window._tobiUpdates.find(function(u){ return u.slug === slug; });
+          var moved = !match && (window._hqFeed && window._hqFeed.articles || []).find(function(a){ return a.slug === slug; });
+          if (moved) { location.replace(TOBI_APP_SITE + '/blog/' + moved.slug); return; }
           if (match && match.message) {
             resolveAndShow(match.message);
           } else if (match && match.title) {
@@ -8858,7 +8862,7 @@ function tobiHqFeed() {
   return _tobiHqFeedPromise;
 }
 function tobiSplitEmoji(t) {
-  var m = /^((?:[☀-➿⬀-⯿️‍]|[\uD83C-\uDBFF][\uDC00-\uDFFF])+)\s*/.exec(String(t || ''));
+  var m = /^((?:[⌀-⏿☀-➿⬀-⯿️‍]|[\uD83C-\uDBFF][\uDC00-\uDFFF])+)\s*/.exec(String(t || ''));
   return m ? { emoji: m[1], title: String(t).slice(m[0].length) } : { emoji: '', title: String(t || '') };
 }
 function tobiShortDate(iso) {
@@ -8877,11 +8881,12 @@ function tobiApplyHqFeed(f) {
     return { id: u.id, title: u.title, message: u.html, type: 'update', sourceUrl: u.link || null, date: u.publishedAt, slug: u.slug, _hq: true };
   });
   window._tobiUpdates = tobiMergeUpdates((window._tobiUpdates || []).filter(function (u) { return !u._hq; }));
-  window._hqArticles = (f.articles || []).map(function (a) {
+  var _today = new Date(); _today = _today.getFullYear() + '-' + String(_today.getMonth() + 1).padStart(2, '0') + '-' + String(_today.getDate()).padStart(2, '0');
+  window._hqArticles = (f.articles || []).filter(function (a) { return !(a.deadline && a.deadline < _today); }).map(function (a) {
     var t = tobiSplitEmoji(a.title);
     var url = TOBI_APP_SITE + '/blog/' + a.slug;
     return { emoji: t.emoji || (typeof _allNewsCategoryEmojis !== 'undefined' && _allNewsCategoryEmojis[a.category]) || '📰', title: t.title, summary: a.summary,
-      url: url, appUrl: url, slug: a.slug, label: a.category || 'News', date: tobiShortDate(a.publishedAt), pubDate: a.publishedAt, imgId: a.imgId || '', _hq: true };
+      url: url, appUrl: url, slug: a.slug, label: a.category || 'News', date: tobiShortDate(a.publishedAt), pubDate: a.publishedAt, imgId: a.imgId || '', deadline: a.deadline || '', _hq: true };
   });
   if (typeof ALL_EVENTS !== 'undefined') {
     for (var i = ALL_EVENTS.length - 1; i >= 0; i--) if (ALL_EVENTS[i]._hq) ALL_EVENTS.splice(i, 1);
@@ -9165,8 +9170,8 @@ function tobiShowFilteredNews(title, list) {
 }
 
 function showNewsByCategory(label) {
-  const list = tobiNewsPosts().filter(p => p.label === label).sort((a,b) => b._time - a._time);
-  tobiShowFilteredNews('📂 ' + label, list);
+  const list = tobiNewsPosts().filter(p => p.label === label).sort((a,b) => label === 'Important Deadlines' && (a.deadline || b.deadline) ? String(a.deadline || '9').localeCompare(String(b.deadline || '9')) : b._time - a._time);
+  tobiShowFilteredNews((label === 'Important Deadlines' ? '⏰ ' : '📂 ') + label, list);
 }
 
 function showNewsByMonth(ym) {

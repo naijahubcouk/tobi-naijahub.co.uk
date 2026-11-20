@@ -10,7 +10,7 @@ const { HttpError } = core;
 const gen = require('./generate');
 const apppub = require('./apppub');
 
-const KINDS = ['update', 'news', 'article', 'event'];
+const KINDS = ['update', 'news', 'article', 'event', 'deadline'];
 const isDay = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
 
 // Removes tracking bits (utm_*, fbclid, gclid…) from a link.
@@ -28,6 +28,7 @@ const STYLE = {
   update: 'a short, urgent community update (about 80–150 words): what is happening, who it affects, what to do.',
   news: 'a news explainer (about 700–1,100 words) in simple English, following the ARTICLE LAYOUT (6–8 numbered sections): what happened or is changing, when, who it affects, what it means for Nigerians in the UK, and what to do now.',
   article: 'a detailed, helpful guide article (about 1,000–1,500 words) in simple English, following the ARTICLE LAYOUT.',
+  deadline: 'an "Important Deadline" post (about 250–500 words) in simple English: what the deadline is, the exact date, who it affects, what happens if you miss it, and the steps to take now — with the official link.',
   event: 'an event write-up (about 120–250 words): what it is, what is on, who it is for and how to book.',
 };
 const LONG = { article: true, news: true };
@@ -123,9 +124,9 @@ async function write(notes, kind, category, opts) {
   const today = core.dayKey();
   const factsRec = await core.getJson('app/facts').catch(() => null);
   const msgs = prompt(notes, kind, category, today, (factsRec && factsRec.text) || '', !!opts.rewrite);
-  const maxTok = LONG[kind] ? (kind === 'article' ? 6000 : 4500) : 1400;
+  const maxTok = LONG[kind] ? (kind === 'article' ? 6000 : 4500) : kind === 'deadline' ? 2500 : 1400;
   let out;
-  if (LONG[kind]) {
+  if (LONG[kind] || kind === 'deadline') {
     // live check of official UK sites first; if the search is down, write without it (the no-guessing rules still apply)
     try { out = await gen.callModel(msgs, maxTok, settings, { json: true, raw: true, plugins: [{ id: 'web', engine: 'exa', max_results: 5, include_domains: TRUSTED_SITES }] }); }
     catch (e) { console.log('[appai] official-site check failed, writing without it:', e.message); }
@@ -143,15 +144,16 @@ async function write(notes, kind, category, opts) {
 
   const until = isDay(j.relevantUntil) && j.relevantUntil >= today ? j.relevantUntil : '';
   const draft = {
-    kind: kind === 'news' ? 'article' : kind,
+    kind: kind === 'news' || kind === 'deadline' ? 'article' : kind,
     title: core.cleanText(j.title, 160),
     summary: core.cleanText(j.summary, 400),
     body: body.slice(0, 20000),
-    category: kind === 'news' ? 'News' : (category || (apppub.CATEGORIES.includes(j.category) ? j.category : 'News')),
+    category: kind === 'news' ? 'News' : kind === 'deadline' ? apppub.DEADLINES : (category || (apppub.CATEGORIES.includes(j.category) ? j.category : 'News')),
     link: cleanLink(j.link),
     eventDate: kind === 'event' && isDay(j.eventDate) ? j.eventDate : '',
     eventTime: kind === 'event' ? core.cleanText(j.eventTime, 60) : '',
     location: kind === 'event' ? core.cleanText(j.location, 120) : '',
+    deadline: kind === 'deadline' ? until : '',
     // An update stays up until the day after the thing it's about
     showUntil: kind === 'update' && until ? new Date(Date.parse(until + 'T12:00:00Z') + 864e5).toISOString().slice(0, 10) : '',
   };

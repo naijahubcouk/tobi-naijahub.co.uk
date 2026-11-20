@@ -862,6 +862,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     if (p.status === 'hidden') return 'hidden';
     if (p.kind === 'update' && p.showUntil && p.showUntil < today()) return 'ended';
     if (p.kind === 'event' && p.eventDate && p.eventDate < today()) return 'ended';
+    if (p.kind === 'article' && p.deadline && p.deadline < today()) return 'ended';
     return 'live';
   }
   function upsertApp(p) { var i = (S.app || []).findIndex(function (x) { return x.id === p.id; }); if (i >= 0) S.app[i] = p; else S.app.unshift(p); }
@@ -2248,7 +2249,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     var row = function (p) {
       var st = appState(p);
       var when = p.kind === 'event' ? (p.featured ? '⭐ Featured · ' : '') + '🗓 ' + fmtLong(p.eventDate) + (p.eventTime ? ' · ' + esc(p.eventTime) : '') :
-                 p.kind === 'update' ? (p.showUntil ? 'Shows until ' + fmtLong(p.showUntil) : 'No end date') : esc(p.category || 'News');
+                 p.kind === 'update' ? (p.showUntil ? 'Shows until ' + fmtLong(p.showUntil) : 'No end date') : p.deadline ? '⏰ ' + esc(p.category) + ' · deadline ' + fmtLong(p.deadline) : esc(p.category || 'News');
       return '<div class="aprow"><div style="flex:1;min-width:0">' +
         '<div class="row" style="gap:6px;flex-wrap:wrap"><span class="ak" style="background:' + KIND_COLOR[p.kind] + '">' + KIND[p.kind] + '</span>' +
         '<span class="as ' + st + '">' + ({ live: '● Live', ended: 'Ended', hidden: 'Hidden' })[st] + '</span><span class="muted" style="font-size:12.5px">' + when + '</span></div>' +
@@ -2262,14 +2263,14 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     };
     var block = function (title, list, empty) { return '<div class="h2">' + title + ' <span class="muted" style="font-size:15px">(' + list.length + ')</span></div><div class="card" style="padding:4px 14px">' + (list.length ? list.map(row).join('') : '<p class="muted" style="padding:10px 0">' + empty + '</p>') + '</div>'; };
     $('#view').innerHTML = '<div class="wrap">' +
-      '<div class="note" style="margin-bottom:12px">Anything you publish here shows in the Auntie Tobi app within about a minute — no GitHub needed. Updates disappear after their “show until” date, and events disappear once they’ve happened. No notification is sent.</div>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn ghost" id="apEv">🎉 Events are on the Events page →</button><button class="btn primary" data-anew="update">＋ Update</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button><button class="btn primary" data-anew="event">＋ Event</button></div>' +
+      '<div class="note" style="margin-bottom:12px">Anything you publish here shows in the Auntie Tobi app within about a minute — no GitHub needed. ⏰ Important Deadlines leave the News list after their deadline date. Events are on the 🎉 Events page. No notification is sent.</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" id="apAi">✨ Write with AI</button><button class="btn ghost" id="apEv">🎉 Events are on the Events page →</button><button class="btn primary" data-anew="deadline">＋ Deadline</button><button class="btn primary" data-anew="news">＋ News</button><button class="btn primary" data-anew="article">＋ Article</button></div>' +
       block('Live in the app', live, 'Nothing published yet. Tap ＋ Update, or 📋 Paste something from ChatGPT.') +
       (ended.length ? block('Ended', ended, '') : '') + (hidden.length ? block('Hidden', hidden, '') : '') + '</div>';
     $('#apPaste').onclick = function () { appPasteSheet(); };
     if ($('#apBday')) $('#apBday').onclick = bdayArtSheet; if ($('#apFacts')) $('#apFacts').onclick = factsSheet;
     if ($('#apOrgs')) $('#apOrgs').onclick = orgsSheet;
-    $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : { kind: k }); }; });
+    $$('[data-anew]').forEach(function (b) { b.onclick = function () { var k = b.dataset.anew; appEditor(k === 'news' ? { kind: 'article', category: 'News' } : k === 'deadline' ? { kind: 'article', category: 'Important Deadlines' } : { kind: k }); }; });
     $('#apAi').onclick = function () { appAiSheet(); };
     $('#apEv').onclick = function () { go('subs'); };
     $$('[data-aedit]').forEach(function (b) { b.onclick = function () { appEditor(appById(b.dataset.aedit)); }; });
@@ -2290,10 +2291,10 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
   }
 
   // ── ✨ Write with AI: notes in, a draft out (opens in the editor to check — never publishes by itself) ──
-  var AI_KIND = { update: '📢 Update', news: '📰 News', article: '📝 Article', event: '🎉 Event' };
+  var AI_KIND = { deadline: '⏰ Deadline', news: '📰 News', article: '📝 Article', event: '🎉 Event' };
   function appAiSheet(prefill) {
     prefill = prefill || {};
-    var k0 = prefill.kind || 'update';
+    var k0 = prefill.kind && AI_KIND[prefill.kind] ? prefill.kind : 'news';
     var s = sheet('<h2>✨ Write with AI</h2><p class="muted" style="margin:4px 0 10px">Paste the information — rough notes are fine. AI writes it in Auntie Tobi’s warm, simple English. For <b>articles and news</b> it also checks GOV.UK, NHS and Citizens Advice for extra detail and lists the sources — it never guesses fees or rules. You’ll check it before anything goes in the app.</p>' +
       '<div class="lbl">What is it?</div><div class="chipbar" id="aiK">' + Object.keys(AI_KIND).map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (k === k0) + '">' + AI_KIND[k] + '</button>'; }).join('') + '</div>' +
       '<div id="aiCatBox" style="margin-top:10px"><label for="aiCat">Article category</label><select id="aiCat"><option value="">✨ Let AI choose</option>' + (S.appCats || []).map(function (c) { return '<option' + (c === prefill.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
@@ -2303,12 +2304,13 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       '<div style="margin-top:10px"><label for="aiN">The information <span class="muted" id="aiNopt" style="font-weight:400"></span></label><textarea id="aiN" rows="9" placeholder="Paste the details here — title, date, time, place, what it is, the official link…">' + esc(prefill.notes || '') + '</textarea></div>' +
       '<div class="err hidden" id="aiErr"></div>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="aiX">Cancel</button><button class="btn primary" id="aiGo">✨ Write it for me</button></div>');
-    function kind() { var b = $('#aiK [aria-pressed=true]', s); return b ? b.dataset.k : 'update'; }
+    function kind() { var b = $('#aiK [aria-pressed=true]', s); return b ? b.dataset.k : 'news'; }
     var flyer = prefill.flyer || '';
     function showFlyer() { var i = $('#aiFi', s); i.src = flyer || ''; i.style.display = flyer ? '' : 'none'; $('#aiFx', s).classList.toggle('hidden', !flyer); }
     function paint() { $('#aiCatBox', s).classList.toggle('hidden', kind() !== 'article'); var k = kind(), ev = k === 'event';
       $('#aiLinkBox', s).classList.toggle('hidden', k === 'update'); $('#aiFBox', s).classList.toggle('hidden', !ev);
       $('#aiUl', s).textContent = ev ? 'Event link' : 'Link to the source'; $('#aiUh', s).textContent = ev ? '(Eventbrite, website…)' : '(gov.uk, council, news story…)';
+      if (k === 'deadline') { $('#aiUl', s).textContent = 'Link to the official page'; $('#aiUh', s).textContent = '(gov.uk, council, HMRC…)'; }
       $('#aiLh', s).textContent = ev ? 'Give a link or a flyer and AI does the rest — notes below are optional. No image? HQ will create one and ask if you’re happy with it.' : 'Give a link and AI reads the page and writes it up — notes below are optional. It uses the page’s picture, or creates one and asks if you’re happy with it.';
       $('#aiNopt', s).textContent = k === 'update' ? '' : ev ? '(optional if you gave a link or flyer)' : '(optional if you gave a link)'; }
     showFlyer();
@@ -2669,15 +2671,16 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     return p;
   }
   function appEditor(p, onDone, ai, sub) {
-    p = Object.assign({ kind: 'update', category: 'News' }, p || {});
+    p = Object.assign({ kind: 'article', category: 'News' }, p || {});
     var isNew = !p.id;
     var cats = S.appCats || ['News'];
     var s = sheet('<h2>' + (sub ? 'Check, then approve' : isNew ? 'Publish to App' : 'Edit app post') + '</h2>' + (sub ? '<p class="muted" style="margin:4px 0 0;font-size:13.5px">Sent by ' + esc(sub.contactName) + '. Change anything you like, including the image.</p>' : '') +
       (ai ? '<div class="note" style="margin:8px 0">✨ Written by AI — please check every fact, date and link before publishing. <button class="btn link" id="aeAgain" style="font-size:13.5px">Try again</button> · <button class="btn link" id="aeNotes" style="font-size:13.5px">Edit my notes</button></div>' : '') +
-      '<div class="chipbar" style="margin:10px 0" id="aeK">' + ['update', 'article', 'event'].map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (p.kind === k) + '"' + (isNew && !sub ? '' : ' disabled') + '>' + KIND[k] + '</button>'; }).join('') + '</div>' +
+      '<div class="chipbar" style="margin:10px 0" id="aeK">' + (p.kind === 'update' ? ['update', 'article', 'event'] : ['article', 'event']).map(function (k) { return '<button class="chip" data-k="' + k + '" aria-pressed="' + (p.kind === k) + '"' + (isNew && !sub ? '' : ' disabled') + '>' + KIND[k] + '</button>'; }).join('') + '</div>' +
       '<div class="apgrid"><div class="stack">' +
       '<div><label for="aeT">Title</label><input id="aeT" maxlength="160" value="' + esc(p.title || '') + '"></div>' +
       '<div data-for="article"><label for="aeC">Category</label><select id="aeC">' + cats.map(function (c) { return '<option' + (c === p.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
+      '<div data-for="article" id="aeDLb"><label for="aeDL">⏰ Deadline date <span class="muted" style="font-weight:400">(shows on the card; it leaves the News list after this day)</span></label><input type="date" id="aeDL" value="' + esc(p.deadline || '') + '"></div>' +
       '<div data-for="event" class="f2"><div><label for="aeD">Event date</label><input type="date" id="aeD" value="' + esc(p.eventDate || '') + '"></div><div><label for="aeTm">Time</label><input id="aeTm" placeholder="6pm – 11pm" value="' + esc(p.eventTime || '') + '"></div></div>' +
       '<div data-for="event article"><label><span data-for="event">Event image</span><span data-for="article">Image <span class="muted" style="font-weight:400">(shows at the top of the post and in the News list)</span></span></label><div class="aeimg"><div class="aepic" id="aePic"></div><div class="aeibtn"><div class="muted" id="aeImgNote" style="font-size:13px"></div>' +
       '<button class="btn primary sm hidden" id="aeImgOk">👍 Use this image</button><button class="btn ghost sm" id="aeImgMake">✨ Create an image</button><button class="btn ghost sm hidden" id="aeImgHead">✏️ Edit headline</button>' +
@@ -2724,11 +2727,12 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     function vals() {
       var k = kind();
       return { kind: k, title: $('#aeT', s).value.trim(), body: $('#aeB', s).value, link: $('#aeLk', s).value.trim(), category: $('#aeC', s).value,
-        summary: $('#aeS', s).value.trim(), showUntil: $('#aeU', s).value, eventDate: $('#aeD', s).value, eventTime: $('#aeTm', s).value.trim(), location: $('#aeL', s).value.trim(), featured: k === 'event' && $('#aeFt', s).checked, orgEmail: $('#aeOE', s) ? $('#aeOE', s).value.trim() : undefined };
+        summary: $('#aeS', s).value.trim(), showUntil: $('#aeU', s).value, deadline: k === 'article' && $('#aeC', s).value === 'Important Deadlines' ? $('#aeDL', s).value : '', eventDate: $('#aeD', s).value, eventTime: $('#aeTm', s).value.trim(), location: $('#aeL', s).value.trim(), featured: k === 'event' && $('#aeFt', s).checked, orgEmail: $('#aeOE', s) ? $('#aeOE', s).value.trim() : undefined };
     }
     function paint() {
       var v = vals(), k = v.kind;
       $$('[data-for]', s).forEach(function (el) { el.classList.toggle('hidden', el.dataset.for.split(' ').indexOf(k) < 0); });
+      $('#aeDLb', s).classList.toggle('hidden', !(k === 'article' && v.category === 'Important Deadlines'));
       var label = k === 'article' ? '📰 ' + esc(v.category).toUpperCase() : KIND[k];
       var meta = k === 'event' ? '<div class="apm">📅 ' + esc(fmtLong(v.eventDate) || 'Pick a date') + (v.eventTime ? ' · ' + esc(v.eventTime) : '') + (v.location ? '<br>📍 ' + esc(v.location) : '') + '</div>' : '';
       if (!painting) { painting = true; try { paintImg(); } finally { painting = false; } }

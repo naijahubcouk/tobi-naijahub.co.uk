@@ -17,7 +17,8 @@ const { HttpError, cas, getJson, cleanText } = core;
 const KEY = 'hq/app-posts';
 const KINDS = ['update', 'article', 'event'];
 // Article categories — must match the blog's own categories exactly (never invent new ones).
-const CATEGORIES = ['News', 'Money', 'Housing', 'Lifestyle', 'Business', 'Did You Know', 'Travel', 'Family', 'Health', 'Education', 'Food', 'Jobs'];
+const DEADLINES = 'Important Deadlines';   // ⏰ articles with a deadline date: listed soonest first, off the list once it has passed
+const CATEGORIES = ['News', DEADLINES, 'Money', 'Housing', 'Lifestyle', 'Business', 'Did You Know', 'Travel', 'Family', 'Health', 'Education', 'Food', 'Jobs'];
 const MAX_ITEMS = 500;
 const isDay = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
 const newId = () => `a${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
@@ -125,6 +126,7 @@ function clean(raw, prev) {
     featured: kind === 'event' ? (has('featured') ? !!raw.featured : !!p.featured) : false,   // ⭐ shown on Home, Links and business pages
     // 📧 organiser's email — HQ only, never in the public feed
     orgEmail: kind === 'event' ? (has('orgEmail') ? cleanEmail(raw.orgEmail) : (p.orgEmail || '')) : '',
+    deadline: kind === 'article' && (has('category') ? raw.category : p.category) === DEADLINES ? (has('deadline') ? (isDay(raw.deadline) ? raw.deadline : '') : (p.deadline || '')) : '',
     imgId: has('imgId') ? (/^e[a-z0-9]{6,30}$/.test(String(raw.imgId)) ? String(raw.imgId) : '') : (p.imgId || ''),
   };
   if (!out.title) throw new HttpError(400, 'title_required', 'Please add a title.');
@@ -137,7 +139,7 @@ function clean(raw, prev) {
 
 async function load() { return (await getJson(KEY)) || { items: {} }; }
 function sorted(items) { return Object.values(items).sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt))); }
-async function list() { return sorted((await load()).items); }
+async function list() { await onceDeadlines(); return sorted((await load()).items); }
 
 async function save(raw, by) {
   let saved;
@@ -176,13 +178,28 @@ async function onceFeature() {
   await cas(KEY, cur => { if (!cur || !cur.items) return undefined; let n = 0; for (const p of Object.values(cur.items)) if (p.kind === 'event' && /summit/i.test(p.title)) { const on = /african/i.test(p.title) && p.status === 'live'; if (!!p.featured !== on) { p.featured = on; n++; } } return n ? cur : undefined; }).catch(() => {});
   await core.setJson('app/once-african-summit', { at: core.nowIso() }).catch(() => {});
 }
+// one-off (Nov 2026): the app no longer has an Updates tab — live updates become ⏰ Important Deadlines articles
+// (their "show until" date becomes the deadline; same slug, so old links keep working)
+async function onceDeadlines() {
+  if (await getJson('app/once-updates-to-deadlines').catch(() => null)) return;
+  const today = core.dayKey();
+  await cas(KEY, cur => {
+    if (!cur || !cur.items) return undefined; let n = 0;
+    for (const p of Object.values(cur.items)) {
+      if (p.kind !== 'update' || p.status !== 'live' || (p.showUntil && p.showUntil < today)) continue;
+      p.kind = 'article'; p.category = DEADLINES; p.deadline = p.showUntil || ''; p.movedFromUpdate = true; n++;
+    }
+    return n ? cur : undefined;
+  }).catch(() => {});
+  await core.setJson('app/once-updates-to-deadlines', { at: core.nowIso() }).catch(() => {});
+}
 async function publicFeed() {
   await onceFeature();
   const today = core.dayKey();
   const all = (await list()).filter(p => p.status === 'live');
   const pick = p => ({ id: p.id, kind: p.kind, slug: p.slug, title: p.title, emoji: p.emoji, html: p.html, summary: p.summary,
     category: p.category, link: p.link, linkText: p.linkText, showUntil: p.showUntil, eventDate: p.eventDate,
-    eventTime: p.eventTime, location: p.location, imgId: p.imgId || '', featured: !!p.featured, publishedAt: p.publishedAt, updatedAt: p.updatedAt });
+    eventTime: p.eventTime, location: p.location, deadline: p.deadline || '', imgId: p.imgId || '', featured: !!p.featured, publishedAt: p.publishedAt, updatedAt: p.updatedAt });
   return {
     updates: all.filter(p => p.kind === 'update' && (!p.showUntil || p.showUntil >= today)).map(pick),
     articles: all.filter(p => p.kind === 'article').map(pick),
@@ -200,4 +217,4 @@ async function organisers(submittedAppIds) {
   });
 }
 
-module.exports = { KINDS, CATEGORIES, list, save, remove, publicFeed, toHtml, organisers };
+module.exports = { KINDS, CATEGORIES, DEADLINES, list, save, remove, publicFeed, toHtml, organisers };
