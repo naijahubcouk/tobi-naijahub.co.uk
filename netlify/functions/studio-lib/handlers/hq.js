@@ -62,6 +62,7 @@ function sectionsOf(action) {
   if (/^chat-/.test(action)) return ['chat'];
   if (/^car-/.test(action)) return ['cars'];
   if (/^tc-/.test(action)) return ['cars'];
+  if (/^sc-/.test(action)) return ['cars'];   // 🎨 Style Match carousels
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
@@ -286,6 +287,17 @@ exports.handler = handler(async (ctx) => {
       if (body.url) { const page = await require('../eventmedia').readLink(body.url, true); notes = page.notes + (notes ? `\n\nExtra notes:\n${notes.slice(0, 2000)}` : ''); }
       return { draft: await tplcar.write(notes, { count: body.count, end: body.end !== false }) };
     }
+    case 'sc-styles': return { styles: await require('../stylecar').styles() };
+    case 'sc-analyze': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
+      return require('../stylecar').analyze(body.images);
+    }
+    case 'sc-write': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
+      return require('../stylecar').write(body);
+    }
+    case 'sc-style-save': return require('../stylecar').saveStyle(body, who.email);
+    case 'sc-style-del': return { styles: await require('../stylecar').delStyle(String(body.id || '')) };
     case 'tc-save': return { item: await tplcar.save(body.item, who.email) };
     case 'tc-delete': { await tplcar.remove(String(body.id || '')); return { ok: true }; }
     case 'igc-delete': { await igcomment.remove(body.id); return { ok: true }; }
