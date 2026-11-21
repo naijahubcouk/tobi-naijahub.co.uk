@@ -23,7 +23,7 @@
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function esc(s) { return X.esc(s); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', bgs: {}, out: null }; return QV; }
+  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, bgs: {}, out: null }; return QV; }
   function bank() { return BANKS[QV.bank]; }
   function fill(s) { return String(s || '').replace(/\{n\}/g, QV.qs.length || QV.n); }
   function loadBank(k) { if (BANKQ[k]) return Promise.resolve(BANKQ[k]); return fetch(BANKS[k].file).then(function (r) { return r.json(); }).then(function (j) { BANKQ[k] = j.filter(function (q) { return q.t === 'm' && !q.g && q.o && q.o.length === 4 && q.o.every(function (o) { return o.length <= 46; }) && q.q.length <= 120; }); return BANKQ[k]; }); }
@@ -60,7 +60,7 @@
   function draw() {
     var v = $('#view'), b = bank(), cr = ST && ST.credits;
     var est = QV.qs.reduce(function (a, q) { return a + q.q.length + (QV.readOpts ? q.opts.join(', ').length + 12 : 0) + q.opts[q.ans].length + 16; }, 60);
-    v.innerHTML = '<div id="qvRoot" style="max-width:1020px"><style>#qvRoot .card{margin-bottom:12px}#qvRoot label{display:block}</style>' +
+    v.innerHTML = '<div id="qvRoot" style="max-width:1020px"><style>#qvRoot .card{margin-bottom:12px}#qvRoot label{display:block}#qvRoot input[type=checkbox]{width:auto;flex:none;margin:0}</style>' +
       '<div class="card"><div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">' +
       '<div><label>Quiz</label><select id="qvBank">' + Object.keys(BANKS).map(function (k) { return '<option value="' + k + '"' + (k === QV.bank ? ' selected' : '') + '>' + BANKS[k].name + '</option>'; }).join('') + '</select></div>' +
       '<div><label>Questions</label><select id="qvN">' + [5, 8, 10].map(function (n) { return '<option' + (n === QV.n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div>' +
@@ -80,7 +80,10 @@
 
       '<div class="card"><b>2 · Words and voice</b><div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">' +
       '<div style="flex:1;min-width:220px"><label>Title line 1</label><input id="qvH1" value="' + esc(QV.h1) + '"></div><div style="flex:1;min-width:220px"><label>Title line 2</label><input id="qvH2" value="' + esc(QV.h2) + '"></div></div>' +
-      '<label>Ending</label><input id="qvOut" value="' + esc(QV.outro) + '"><div class="muted" style="font-size:12.5px">The ending also shows “Practise free: ' + esc(b.link) + '”.</div>' +
+      '<label>Ending</label><input id="qvOut" value="' + esc(QV.outro) + '">' +
+      '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvApp"' + (QV.appOn ? ' checked' : '') + '> 📱 Add an Auntie Tobi App box at the end</label>' +
+      '<div id="qvAppBox"' + (QV.appOn ? '' : ' hidden') + '><input id="qvAppT" value="' + esc(QV.appT) + '" style="margin-top:8px"><div class="muted" style="font-size:12.5px">Shown in a green box with <b>' + esc(b.link) + '</b> under it.</div>' +
+      (ST && ST.ready ? '<label style="display:flex;gap:8px;align-items:center;margin:6px 0 0"><input type="checkbox" id="qvSayApp"' + (QV.sayApp ? ' checked' : '') + '> 🎙️ The voice says it too</label>' : '') + '</div></div>' +
       '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px">' +
       (ST && ST.ready ? '<label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvVo"' + (QV.voiceOn ? ' checked' : '') + '> 🎙️ AI voice reads the quiz (ElevenLabs)</label>' +
         '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><select id="qvVoice" style="flex:1;min-width:220px">' + (ST.voices || []).map(function (x) { return '<option value="' + x.id + '"' + (x.id === QV.voice ? ' selected' : '') + '>' + esc(x.name) + (x.accent ? ' — ' + esc(x.accent) : '') + (x.gender ? ', ' + esc(x.gender) : '') + '</option>'; }).join('') + '</select>' +
@@ -106,8 +109,10 @@
     $$('[data-gen]').forEach(function (b) { b.onclick = function () { genBg(+b.dataset.gen, !!QV.bgs[QV.qs[+b.dataset.gen].id]); }; });
     $$('[data-up]').forEach(function (inp) { inp.onchange = function () { var f = inp.files && inp.files[0]; if (f) upBg(+inp.dataset.up, f); }; });
     $('#qvAll').onclick = makeAllBgs;
-    var keep = function () { QV.h1 = $('#qvH1').value; QV.h2 = $('#qvH2').value; QV.outro = $('#qvOut').value; };
-    ['#qvH1', '#qvH2', '#qvOut'].forEach(function (s) { $(s).oninput = keep; });
+    var keep = function () { QV.h1 = $('#qvH1').value; QV.h2 = $('#qvH2').value; QV.outro = $('#qvOut').value; QV.appT = $('#qvAppT').value; };
+    ['#qvH1', '#qvH2', '#qvOut', '#qvAppT'].forEach(function (s) { $(s).oninput = keep; });
+    $('#qvApp').onchange = function () { QV.appOn = this.checked; $('#qvAppBox').hidden = !this.checked; };
+    if ($('#qvSayApp')) $('#qvSayApp').onchange = function () { QV.sayApp = this.checked; };
     if ($('#qvVo')) { $('#qvVo').onchange = function () { QV.voiceOn = this.checked; }; $('#qvVoice').onchange = function () { QV.voice = this.value; }; $('#qvModel').onchange = function () { QV.model = this.value; draw(); }; $('#qvOpts').onchange = function () { QV.readOpts = this.checked; draw(); }; $('#qvHear').onclick = hear; }
     if ($('#qvSet2')) $('#qvSet2').onclick = setupSheet;
     $('#qvGo').onclick = function () { keep(); make().catch(function (e) { prog(''); X.toast(e.message || 'Something went wrong.'); }); };
@@ -159,7 +164,9 @@
       if (QV.readOpts) L.push({ k: 'o' + i, t: q.opts.slice(0, 3).join('? ') + '? Or ' + q.opts[3] + '?' });
       L.push({ k: 'a' + i, t: 'The answer is: ' + q.opts[q.ans] + '.' });
     });
-    L.push({ k: 'outro', t: QV.outro.replace(/[\u{1F300}-\u{1FAFF}☀-➿👇]/gu, '').trim() || 'Great job! Share your score in the comments!' });
+    var bye = QV.outro.replace(/[\u{1F300}-\u{1FAFF}☀-➿👇]/gu, '').trim() || 'Great job! Share your score in the comments!';
+    if (QV.appOn && QV.sayApp && QV.appT.trim()) bye += ' ' + QV.appT.trim().replace(/\bFREE\b/g, 'free').replace(/[.!]?$/, '.');
+    L.push({ k: 'outro', t: bye });
     return L;
   }
   async function getVoices() {
@@ -269,8 +276,16 @@
     } else {
       var a3 = ease(lt / 0.5); cx.save(); cx.globalAlpha = a3; cx.font = '800 76px Poppins, Arial, sans-serif';
       var ow = wrapWords(cx, QV.outro.split(/\s+/), 900); ow.forEach(function (ln, li) { shadowText(cx, ln.join(' '), W / 2, 820 + li * 92); });
-      var yy = 820 + ow.length * 92 + 70; rr(cx, W / 2 - 430, yy, 860, 150, 28); cx.fillStyle = 'rgba(5,122,68,0.92)'; cx.fill();
-      cx.fillStyle = '#fff'; cx.font = '700 44px Poppins, Arial, sans-serif'; cx.fillText('Practise free on Auntie Tobi', W / 2, yy + 62); cx.font = '800 46px Poppins, Arial, sans-serif'; cx.fillStyle = '#FFE08A'; cx.fillText(bank().link, W / 2, yy + 120); cx.restore();
+      var yy = 820 + ow.length * 92 + 70, at = (QV.appT || '').trim();
+      if (QV.appOn && at) {
+        var pop = ease((lt - 0.5) / 0.4), sc = 0.9 + 0.1 * pop; cx.globalAlpha = a3 * Math.max(0, Math.min(1, pop));
+        cx.font = '800 50px Poppins, Arial, sans-serif'; var al = wrapWords(cx, at.replace(/Auntie Tobi/g, 'Auntie\u00A0Tobi').split(/ +/), 780), bh2 = 70 + al.length * 62 + 66;
+        cx.save(); cx.translate(W / 2, yy + bh2 / 2); cx.scale(sc, sc); cx.translate(-W / 2, -(yy + bh2 / 2));
+        rr(cx, W / 2 - 440, yy, 880, bh2, 30); cx.fillStyle = 'rgba(5,122,68,0.95)'; cx.fill(); cx.lineWidth = 4; cx.strokeStyle = 'rgba(255,255,255,0.9)'; cx.stroke();
+        cx.fillStyle = '#fff'; al.forEach(function (ln, li) { cx.fillText(ln.join(' '), W / 2, yy + 78 + li * 62); });
+        cx.font = '800 44px Poppins, Arial, sans-serif'; cx.fillStyle = '#FFE08A'; cx.fillText('📱 ' + bank().link, W / 2, yy + 70 + al.length * 62 + 30); cx.restore();
+      }
+      cx.restore();
     }
     // handle
     cx.save(); cx.textAlign = 'center'; cx.font = '700 36px Poppins, Arial, sans-serif'; cx.fillStyle = 'rgba(255,255,255,0.92)'; shadowText(cx, '@auntietobi_uk', W / 2, H - 70); cx.restore();
