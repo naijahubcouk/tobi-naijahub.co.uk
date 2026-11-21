@@ -59,7 +59,7 @@
     if (!loading) {
       // the checked bank + any fixes made in HQ (🇬🇧🚗 Question review). Only ✅ verified questions are used.
       var fix = fetch('/.netlify/functions/app-content?drq=1').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
-      loading = Promise.all([fetch('/drive-q.json?v=20261122b').then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); }), fix]).then(function (x) {
+      loading = Promise.all([fetch('/drive-q.json?v=20261122c').then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); }), fix]).then(function (x) {
         var over = (x[1] && x[1].fix) || {};
         ALL = x[0].map(function (q) { var o = over[q.id]; return o ? Object.assign({}, q, o) : q; });
         Q = ALL.filter(function (q) { return !q.st || q.st === 'v'; });
@@ -247,7 +247,7 @@
       '<button class="lu-big w" id="dtLic"><i>🇳🇬</i><span><b>Driving here on a Nigerian licence</b><small>How long you can use it and what to do next</small></span></button>' +
       (window.MyPlan && window.MyPlan.driveTest ? '<button class="lu-big w" id="dtPlan"><i>💚</i><span><b>' + (d.date ? 'Change your test date' : 'Add your theory test to My Plan') + '</b><small>Countdown, reminders and a checklist</small></span></button>' : '') +
       '<button class="lu-big w" id="dtShare"><i>📤</i><span><b>Share with a friend</b><small>auntietobi.co.uk/driving-theory-test</small></span></button>' +
-      '<div class="lu-note">Practice questions written independently by Auntie Tobi from <a href="' + GOV.hc + '" target="_blank" rel="noopener">The Highway Code</a>, <i>Know your traffic signs</i> and NHS first-aid guidance. They are not official DVSA questions. Road sign pictures are drawn by Auntie Tobi to the official shapes and colours. Always check the latest rules on GOV.UK.</div>';
+      '<div class="lu-note">Practice questions written independently by Auntie Tobi from <a href="' + GOV.hc + '" target="_blank" rel="noopener">The Highway Code</a>, <i>Know your traffic signs</i> and NHS first-aid guidance. They are not official DVSA questions. Road sign images: Crown copyright, Department for Transport, used under the Open Government Licence. Always check the latest rules on GOV.UK.</div>';
     $('#dtBack', r).onclick = leave;
     $('#dtMock', r).onclick = function () { if (live && !confirm('Start a new mock test? Your unfinished one will be lost.')) return; go('intro'); };
     if ($('#dtResume', r)) $('#dtResume', r).onclick = resumeMock;
@@ -337,7 +337,13 @@
   }
 
   // ───── one question (mock and practice) ─────
-  function signHtml(q) { return q.g && SIGN[q.g] ? '<div class="dt-sign">' + SIGN[q.g]() + '</div>' : ''; }
+  // 🛑 official road sign pictures (Department for Transport, Crown copyright, Open Government Licence) — /signs/
+  var OFFSIGN = {"ahead":"606-ahead.jpg","clearway":"642.jpg","giveway":"602.jpg","i_hospital":"827.2.jpg","i_oneway":"652.jpg","i_parking":"801.jpg","keepleft":"610.jpg","minirbt":"611.1.jpg","noentry":"616.jpg","noright":"612.jpg","nouturn":"614.jpg","nsl":"671.jpg","sl20":"670V20.jpg","sl30":"670V30.jpg","sl50":"670V50.jpg","stop":"601.1.jpg","turnleft":"609.jpg","w_bendr":"512.jpg","w_cattle":"548.jpg","w_cross":"504.1.jpg","w_cycle":"950.jpg","w_danger":"562.jpg","w_dblbend":"513.jpg","w_deer":"551.jpg","w_horse":"550.1.jpg","w_hump":"528.jpg","w_kids":"545.jpg","w_lcbar":"770.jpg","w_lcnobar":"771.jpg","w_lights":"543.jpg","w_narrow":"516.jpg","w_ped":"544.1.jpg","w_rbt":"510.jpg","w_slip":"557.jpg","w_steep":"523.1.jpg","w_tjunc":"505.1.jpg","w_twoway":"521.jpg","w_works":"7001.jpg","x2901":"2901.jpg","x509.1":"509.1.jpg","x517":"517.jpg","x520":"520.jpg","x529":"529.jpg","x529.1":"529.1.jpg","x544":"544.jpg","x544.2":"544.2.jpg","x554":"554.jpg","x554.2":"554.2.jpg","x555":"555.jpg","x556":"556.jpg","x557.1":"557.1.jpg","x558":"558.jpg","x559":"559.jpg","x581":"581.jpg","x584":"584.jpg","x615":"615.jpg","x617":"617.jpg","x619":"619.jpg","x622.1A":"622.1A.jpg","x629":"629.jpg","x629.2A":"629.2A.jpg","x632":"632.jpg","x672":"672.jpg","x674":"674.jpg","x7009":"7009.jpg","x811":"811.jpg","x821":"821.jpg","x951":"951.jpg","x953":"953.jpg","x955":"955.jpg"};
+  function signMarkup(k, px) {
+    if (OFFSIGN[k]) return '<img src="/signs/' + OFFSIGN[k] + '?v=2" alt="Road sign" loading="lazy" style="width:' + (px || 150) + 'px;height:' + (px || 150) + 'px;object-fit:contain">';
+    return SIGN[k] ? SIGN[k]().replace(/width="\d+" height="\d+"/, px ? 'width="' + px + '" height="' + px + '"' : '$&') : '';
+  }
+  function signHtml(q) { var m = q.g ? signMarkup(q.g) : ''; return m ? '<div class="dt-sign">' + m + '</div>' : ''; }
   function optsHtml(it, pick, shown) {
     var q = it.q, cb = q.t === '2';
     return '<div class="lx-ins">' + (cb ? 'Mark TWO answers.' : 'Mark ONE answer.') + '</div><div class="lx-q">' + esc(q.q.replace(/ Select TWO answers\.$/, '')) + '</div>' + signHtml(q) +
@@ -384,6 +390,7 @@
       '<li>Some questions ask you to <b>mark TWO answers</b>.</li>' +
       '<li>You can change your answers until you submit. A review screen shows any unanswered or flagged questions.</li>' +
       '<li>When the time runs out, your answers are submitted automatically. No answers or hints are shown until the end.</li></ul>' +
+      '<div style="font-size:12.5px;color:#52606D;margin-top:8px">Road sign images: Crown copyright, Department for Transport.</div>' +
       '<div class="lu-x" style="margin-top:12px">ℹ️ This is a <b>multiple-choice practice simulation</b>. The real test includes 3 questions about a short video, and a separate hazard perception part. Neither is included here, so your result is not an overall theory test result.</div></div>' +
       '<div class="lx-panel"><div class="lx-num"><span>Sample question (not marked)</span></div>' + optsHtml(sample, pick, false).replace(/data-o=/g, 'data-so=') +
       (pick.length ? '<div class="lu-fb ' + (isRight(sample.q, pick, sample.opts) ? 'ok' : 'no') + '"><b>' + (isRight(sample.q, pick, sample.opts) ? '✅ That’s right.' : '❌ The answer is: ' + esc(sample.q.o[0])) + '</b> ' + esc(sample.q.e) + ' In the mock test, you won’t see this until the end.</div>' : '') + '</div>' +
@@ -498,11 +505,11 @@
       '<div class="lx-tabs"><button data-t="all" aria-pressed="' + (S.tab !== 'wrong') + '">All (' + n + ')</button><button data-t="wrong" aria-pressed="' + (S.tab === 'wrong') + '">Incorrect (' + wrong.length + ')</button></div>' +
       (list.length ? list.map(function (x) {
         var ok = isRight(x.q, x.pick, x.opts), num = S.items.indexOf(x) + 1, you = x.pick.length ? pickedText(x, x.pick) : 'No answer';
-        return '<div class="lx-rv"><div class="h"><i class="' + (ok ? 'ok' : 'no') + '">' + (ok ? '✓' : '✗') + '</i><div style="flex:1;min-width:0"><b>' + num + '. ' + esc(x.q.q) + '</b>' + (x.q.g && SIGN[x.q.g] ? '<div style="width:84px;margin-top:4px">' + SIGN[x.q.g]().replace(/width="\d+" height="\d+"/, 'width="80" height="80"') + '</div>' : '') +
+        return '<div class="lx-rv"><div class="h"><i class="' + (ok ? 'ok' : 'no') + '">' + (ok ? '✓' : '✗') + '</i><div style="flex:1;min-width:0"><b>' + num + '. ' + esc(x.q.q) + '</b>' + (x.q.g ? '<div style="width:84px;margin-top:4px">' + signMarkup(x.q.g, 80) + '</div>' : '') +
           '<div class="y' + (ok ? ' ok' : '') + '">Your answer: ' + esc(you) + '</div>' + (ok ? '' : '<div class="a">Correct answer: ' + esc(rightText(x.q)) + '</div>') +
           '<div class="e">' + esc(x.q.e) + (x.q.x ? ' 📍 ' + esc(x.q.x) : '') + '</div><span class="c">' + TOP[x.q.c - 1][2] + ' ' + esc(topName(x.q.c)) + '</span> ' + hcLink(x.q) + '</div></div></div>';
       }).join('') : '<div style="color:#52606D;padding:8px 0">No incorrect answers — well done!</div>') + '</div>' +
-      '<div class="lu-disc">' + esc(DISCLAIMER) + '</div></div>';
+      '<div class="lu-disc">' + esc(DISCLAIMER) + ' Road sign images: Crown copyright, Department for Transport.</div></div>';
     $$('[data-t]', r).forEach(function (b) { b.onclick = function () { S.tab = b.dataset.t; draw(); var l = $('#lxList'); if (l) l.scrollIntoView(); }; });
     $('#lxRv', r).onclick = function () { var l = $('#lxList'); if (l) l.scrollIntoView({ behavior: 'smooth' }); };
     if ($('#lxWt', r)) $('#lxWt', r).onclick = function () { startPrac(+study[0], 10, 'now'); };
@@ -557,7 +564,7 @@
 
   function summary() { var d = load(), last = d.mocks[d.mocks.length - 1], pr = raw(PRAC), lv = liveMock(); return { live: !!lv, liveN: lv ? Object.keys(lv.ans || {}).length : 0, prac: pr ? { at: (pr.at || 0) + 1, n: pr.ids.length } : null, best: d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), mocks: d.mocks.length, last: last ? last.s : null, answered: d.n, weak: Object.keys(d.wrong).length, date: d.date }; }
   function setDate(iso) { var d = load(); d.date = iso || ''; save(d); }
-  window.DriveTest = { sync: function () { return syncIn(); }, resume: function () { open('resume'); }, results: function () { open('hist'); }, open: open, summary: summary, setDate: setDate, sign: function (k) { return SIGN[k] ? SIGN[k]() : ''; }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
+  window.DriveTest = { sync: function () { return syncIn(); }, resume: function () { open('resume'); }, results: function () { open('hist'); }, open: open, summary: summary, setDate: setDate, sign: function (k) { return signMarkup(k); }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
 
   // 🔗 auntietobi.co.uk/driving-theory-test (→ /?drive=1), /mock, /signs, /before
   var m = location.search.match(/[?&]drive(?:=([a-z]+))?/i);
