@@ -1413,17 +1413,33 @@
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') Object.keys(TS.t).forEach(function (k) { if (TS.t[k]) tsSend(k, true); }); });
   // 📚 My tests card on the plan
   function testsCard() {
-    var row = function (ico, name, u, total, pass, k) {
-      if (!u) return '';
-      var bits = [u.mocks ? 'Latest mock: <b>' + u.last + '/' + total + '</b> ' + (u.last >= pass ? '✅' : '') + (u.mocks > 1 ? ' · best ' + u.best + '/' + total : '') : 'No mock test yet', u.answered ? u.answered + ' answered' : '', u.weak ? u.weak + ' to retry' : ''].filter(Boolean).join(' · ');
-      var cont = u.live ? '⏱ Continue your mock test' : u.prac ? '▶️ Continue practice (' + u.prac.at + ' of ' + u.prac.n + ')' : '';
-      return '<div class="mp-it" style="display:block;border-top:1px solid #F0EDE5;padding:10px 0"><b style="font-size:15px">' + ico + ' ' + name + '</b><div class="mp-sub" style="margin-top:2px">' + bits + '</div>' +
-        '<div class="mp-row" style="margin-top:8px;flex-wrap:wrap">' + (cont ? '<button class="mp-btn" data-tst="' + k + ':resume">' + cont + '</button>' : '') + '<button class="mp-btn' + (cont ? ' g' : '') + '" data-tst="' + k + ':open">' + (u.mocks || u.answered ? 'Open' : 'Start practising') + '</button>' + (u.mocks ? '<button class="mp-btn g" data-tst="' + k + ':results">📈 My results</button>' : '') + '</div></div>';
+    var started = function (u) { return u && (u.mocks || u.answered || u.live || u.prac); };
+    var tile = function (k, ico, name, u, total, pass, grad) {
+      if (!started(u)) return '';
+      var last = u.mocks ? u.last : null, ok = last != null && last >= pass, pc = last != null ? Math.round(last / total * 100) : 0, passPc = Math.round(pass / total * 100);
+      var cont = u.live ? ['⏱', 'Continue your mock test', (u.liveN || 0) + ' of ' + total + ' answered'] : u.prac ? ['▶️', 'Continue your practice', 'Question ' + u.prac.at + ' of ' + u.prac.n] : null;
+      return '<div class="mpT2-t">' +
+        '<div class="mpT2-hd" style="background:' + grad + '"><span class="mpT2-ic">' + ico + '</span><div style="flex:1;min-width:0"><b>' + name + '</b><small>' + (u.mocks ? u.mocks + ' mock test' + (u.mocks === 1 ? '' : 's') + ' taken' : u.live ? 'Mock test in progress' : 'Practice in progress') + '</small></div>' +
+        (last != null ? '<div class="mpT2-sc"><b>' + last + '<i>/' + total + '</i></b><span class="' + (ok ? 'ok' : 'no') + '">' + (ok ? 'PASS' : 'Not yet') + '</span></div>' : '') + '</div>' +
+        '<div class="mpT2-bd">' +
+        (last != null ? '<div class="mpT2-bar"><span style="width:' + pc + '%;background:' + (ok ? '#1FA463' : '#F2A93B') + '"></span><em style="left:' + passPc + '%"></em></div><div class="mpT2-cap"><span>Latest mock ' + pc + '%</span><span>Pass mark ' + pass + '/' + total + '</span></div>' : '') +
+        (u.answered || u.mocks ? '<div class="mpT2-st"><div><b>' + (u.answered || 0) + '</b><small>answered</small></div><div><b>' + (u.mocks ? u.best + '/' + total : '–') + '</b><small>best mock</small></div><div' + (u.weak ? ' class="w"' : '') + '><b>' + (u.weak || 0) + '</b><small>to retry</small></div></div>' : '') +
+        (cont ? '<button class="mpT2-go" data-tst="' + k + ':resume"><span>' + cont[0] + '</span><span style="flex:1;text-align:left"><b>' + cont[1] + '</b><small>' + cont[2] + '</small></span><span>›</span></button>' : '') +
+        '<div class="mpT2-ac"><button class="' + (cont ? '' : 'p') + '" data-tst="' + k + ':open">' + (cont ? 'Open test' : '📚 Practise now') + '</button>' + (u.mocks ? '<button data-tst="' + k + ':results">📈 My results</button>' : '') + '</div></div></div>';
     };
     var lu = window.LifeUK && window.LifeUK.summary ? window.LifeUK.summary() : null, dr = window.DriveTest && window.DriveTest.summary ? window.DriveTest.summary() : null;
-    if (!lu && !dr) return '';
-    return '<div class="mp-card"><b style="font-size:15px">📚 My tests</b><div class="mp-sub">Practice tests with your progress saved' + (P.signedIn ? ' to your account — on any phone.' : ' on this phone. Sign in to keep it everywhere.') + '</div>' +
-      row('🇬🇧', 'Life in the UK Test', lu, 24, 18, 'lu') + row('🚗', 'Driving Theory Test', dr, 50, 43, 'dr') + '</div>';
+    var body = tile('lu', '🇬🇧', 'Life in the UK Test', lu, 24, 18, 'linear-gradient(135deg,#0F1E36,#1D3D7A)') + tile('dr', '🚗', 'Driving Theory Test', dr, 50, 43, 'linear-gradient(135deg,#0F1E36,#057A44)');
+    if (!body) return '';   // only tests they've started
+    return '<style>.mpT2{margin:0 0 12px}.mpT2-h{display:flex;align-items:baseline;justify-content:space-between;margin:4px 2px 8px}.mpT2-h b{font-size:16px;color:#0F1E36}.mpT2-h small{font-size:12px;color:#6B7280}' +
+      '.mpT2-t{background:#fff;border:1px solid #ECE8DE;border-radius:18px;overflow:hidden;margin-bottom:10px;box-shadow:0 1px 3px rgba(15,30,54,.06)}' +
+      '.mpT2-hd{display:flex;align-items:center;gap:10px;padding:14px;color:#fff}.mpT2-ic{font-size:26px;line-height:1}.mpT2-hd b{display:block;font-size:16.5px}.mpT2-hd small{display:block;font-size:12.5px;opacity:.85;margin-top:2px}' +
+      '.mpT2-sc{text-align:center}.mpT2-sc b{display:block;font-size:24px;line-height:1}.mpT2-sc b i{font-style:normal;font-size:13px;opacity:.8}.mpT2-sc span{display:inline-block;margin-top:5px;font-size:11px;font-weight:800;border-radius:20px;padding:2px 8px}.mpT2-sc span.ok{background:#1FA463}.mpT2-sc span.no{background:rgba(255,255,255,.22)}' +
+      '.mpT2-bd{padding:12px 14px 14px}.mpT2-bar{position:relative;height:8px;border-radius:8px;background:#EEF0F3}.mpT2-bar span{display:block;height:100%;border-radius:8px}.mpT2-bar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:#0F1E36;border-radius:2px}' +
+      '.mpT2-cap{display:flex;justify-content:space-between;font-size:12px;color:#6B7280;margin-top:5px}' +
+      '.mpT2-st{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.mpT2-st div{background:#F7F7F9;border-radius:12px;padding:8px 4px;text-align:center}.mpT2-st b{display:block;font-size:17px;color:#0F1E36}.mpT2-st small{font-size:11.5px;color:#6B7280}.mpT2-st .w{background:#FFF6DE}.mpT2-st .w b{color:#7A5300}' +
+      '.mpT2-go{display:flex;align-items:center;gap:10px;width:100%;margin-top:12px;border:0;border-radius:14px;padding:12px 14px;background:#1FA463;color:#fff;font-family:inherit;cursor:pointer;font-size:15px}.mpT2-go b{display:block;font-size:15px}.mpT2-go small{display:block;font-size:12.5px;opacity:.9}.mpT2-go span:last-child{font-size:22px}' +
+      '.mpT2-ac{display:flex;gap:8px;margin-top:10px}.mpT2-ac button{flex:1;border:1.5px solid #E3E0D7;background:#fff;color:#0F1E36;border-radius:12px;padding:10px 8px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer}.mpT2-ac button.p{background:#057A44;border-color:#057A44;color:#fff}</style>' +
+      '<div class="mpT2"><div class="mpT2-h"><b>📚 My tests</b><small>' + (P.signedIn ? '💚 Saved to your account' : '💾 Saved on this phone') + '</small></div>' + body + '</div>';
   }
   var testsPulled = false;
   function bindTests(root) {
