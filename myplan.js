@@ -469,6 +469,7 @@
     root.querySelectorAll('[data-mp-shop]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); view.tab = 'shop'; open(); }; });
     root.querySelectorAll('[data-mp-cel]').forEach(function (b) { b.onclick = function (e) { if (e.target.closest('[data-card]')) return; view.tab = 'cel'; open(); if (b.dataset.new) setTimeout(function () { celSheet(); }, 200); }; });
     root.querySelectorAll('[data-mp-days]').forEach(function (sc) { var dots = sc.parentNode.querySelectorAll('.mpT-dots i'); if (!dots.length) return; sc.addEventListener('scroll', function () { var w = sc.firstChild ? sc.firstChild.offsetWidth + 8 : 1, k = Math.min(dots.length - 1, Math.round(sc.scrollLeft / w)); dots.forEach(function (d, n) { d.className = n === k ? 'on' : ''; }); }, { passive: true }); });
+    bindTests(root);
     bindRows(root);
     root.querySelectorAll('[data-card]').forEach(function (x) { x.onclick = function (e) { e.stopPropagation(); gt('cel_card', { from: 'home' }); }; });
   }
@@ -559,6 +560,7 @@
       if (g.done.length) h += '<div class="mp-card"><div class="mp-it" data-done-toggle style="border:0;padding:2px 0"><div class="tx" style="font-weight:700">✅ Done (' + g.done.length + ')</div><div class="r">' + (view.showDone ? 'Hide ▴' : 'Show ▾') + '</div></div>' + (view.showDone ? g.done.slice(0, 40).map(function (i) { return row(i, { noDate: true }); }).join('') : '') + '</div>';
       h += '<button class="mp-card" data-w="life" style="width:100%;text-align:left;cursor:pointer;font-family:inherit"><b style="font-size:14.5px">🗂️ Add UK life dates</b><div class="mp-sub">Passport, eVisa, MOT, car insurance, tax return…</div></button>';
     }
+    h += testsCard();
     var sl2 = P.sun && P.sun.latest;
     h += '<div class="mp-card" style="background:#FFFBF0;border-color:#FFE3A3"><b style="font-size:15px">📰 Auntie Tobi’s Sunday Update</b>' + (sl2 ? '<div class="mp-sub" style="font-size:13.5px;color:#0F1E36;margin-top:4px">' + esc(sl2.subject) + ' · ' + nice(sl2.week, true) + '</div>' : '<div class="mp-sub" style="font-size:13.5px">UK news, events and a business of the week — every Sunday.</div>') +
       '<div class="mp-row">' + (sl2 ? '<button class="mp-btn" data-mp-sun>Read it</button>' : '') + (P.news ? '<span class="mp-sub" style="align-self:center">✅ You get it by email</span>' : '<button class="mp-btn ' + (sl2 ? 'g' : '') + '" data-mp-news>📧 Get it by email</button>') + '</div></div>';
@@ -586,6 +588,7 @@
     root.querySelectorAll('[data-mp-settings]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); settings(); }; });
     var dt = $('[data-done-toggle]', root); if (dt) dt.onclick = function () { view.showDone = !view.showDone; render(); };
     root.querySelectorAll('[data-mp-sun]').forEach(function (b) { b.onclick = function () { openSunday(); }; });
+    bindTests(root);
     root.querySelectorAll('[data-mp-news]').forEach(function (b) { b.onclick = function () { newsSheet(); }; });
     var ry = $('[data-rm-yes]', root); if (ry) ry.onclick = function () { api('prefs', { rm: '07' }).then(function (r) { P.rm = r.rm; store(); render(); toast('☀️ Morning emails on — 7am, only on days with something due'); gt('plan_morning_on'); }).catch(function (e) { toast(e.message); }); };
     var rn = $('[data-rm-no]', root); if (rn) rn.onclick = function () { ls.set('tobi_myplan_rm_ask', 'no'); render(); };
@@ -1385,6 +1388,50 @@
     p.innerHTML = '💚 My Plan' + (ls.get(SEEN) === '1' || Date.now() > new Date('2026-12-01').getTime() ? '' : '<span class="mp-newtag">NEW</span>');
     p.onclick = function () { gt('plan_pill'); open(); };
     var home = pills.firstElementChild; if (home && home.nextSibling) pills.insertBefore(p, home.nextSibling); else pills.appendChild(p);
+  }
+
+  // 📚 practice tests (Life in the UK, Driving Theory) save their progress to the same account
+  var TS = { got: null, who: '', t: {}, fn: {} };
+  function tsAll() {
+    if (!P.signedIn) return Promise.resolve(null);
+    if (!TS.got || TS.who !== P.email) { TS.who = P.email; TS.got = api('tests-get').then(function (r) { return r.tests || {}; }).catch(function (e) { TS.got = null; if (e.status === 401) { P.signedIn = false; store(); } return null; }); }
+    return TS.got;
+  }
+  function tsSend(k, keep) {
+    var fn = TS.fn[k]; if (!fn || !P.signedIn) return; clearTimeout(TS.t[k]); TS.t[k] = null;
+    var body = JSON.stringify({ action: 'tests-save', k: k, doc: fn() });
+    if (keep) { try { fetch(API, { method: 'POST', credentials: 'same-origin', keepalive: true, headers: { 'Content-Type': 'application/json', 'X-Studio': '1' }, body: body }); } catch (e) {} return; }
+    api('tests-save', { k: k, doc: fn() }).then(function (r) { if (TS.got) TS.got.then(function (all) { if (all) all[k] = r.doc; }); }).catch(function () {});
+  }
+  window.TestSync = {
+    signedIn: function () { return !!P.signedIn; },
+    pull: function (k) { return tsAll().then(function (all) { return all ? all[k] || null : null; }); },
+    push: function (k, fn) { TS.fn[k] = fn; if (!P.signedIn) return; clearTimeout(TS.t[k]); TS.t[k] = setTimeout(function () { tsSend(k); }, 1500); },
+    signIn: function () { signIn(); }, openPlan: function () { open(); },
+  };
+  window.addEventListener('pagehide', function () { Object.keys(TS.t).forEach(function (k) { if (TS.t[k]) tsSend(k, true); }); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') Object.keys(TS.t).forEach(function (k) { if (TS.t[k]) tsSend(k, true); }); });
+  // 📚 My tests card on the plan
+  function testsCard() {
+    var row = function (ico, name, u, total, pass, k) {
+      if (!u) return '';
+      var bits = [u.mocks ? 'Latest mock: <b>' + u.last + '/' + total + '</b> ' + (u.last >= pass ? '✅' : '') + (u.mocks > 1 ? ' · best ' + u.best + '/' + total : '') : 'No mock test yet', u.answered ? u.answered + ' answered' : '', u.weak ? u.weak + ' to retry' : ''].filter(Boolean).join(' · ');
+      var cont = u.live ? '⏱ Continue your mock test' : u.prac ? '▶️ Continue practice (' + u.prac.at + ' of ' + u.prac.n + ')' : '';
+      return '<div class="mp-it" style="display:block;border-top:1px solid #F0EDE5;padding:10px 0"><b style="font-size:15px">' + ico + ' ' + name + '</b><div class="mp-sub" style="margin-top:2px">' + bits + '</div>' +
+        '<div class="mp-row" style="margin-top:8px;flex-wrap:wrap">' + (cont ? '<button class="mp-btn" data-tst="' + k + ':resume">' + cont + '</button>' : '') + '<button class="mp-btn' + (cont ? ' g' : '') + '" data-tst="' + k + ':open">' + (u.mocks || u.answered ? 'Open' : 'Start practising') + '</button>' + (u.mocks ? '<button class="mp-btn g" data-tst="' + k + ':results">📈 My results</button>' : '') + '</div></div>';
+    };
+    var lu = window.LifeUK && window.LifeUK.summary ? window.LifeUK.summary() : null, dr = window.DriveTest && window.DriveTest.summary ? window.DriveTest.summary() : null;
+    if (!lu && !dr) return '';
+    return '<div class="mp-card"><b style="font-size:15px">📚 My tests</b><div class="mp-sub">Practice tests with your progress saved' + (P.signedIn ? ' to your account — on any phone.' : ' on this phone. Sign in to keep it everywhere.') + '</div>' +
+      row('🇬🇧', 'Life in the UK Test', lu, 24, 18, 'lu') + row('🚗', 'Driving Theory Test', dr, 50, 43, 'dr') + '</div>';
+  }
+  var testsPulled = false;
+  function bindTests(root) {
+    if (P.signedIn && !testsPulled && (window.LifeUK || window.DriveTest)) {   // bring in progress made on another phone, then refresh the card
+      testsPulled = true;
+      Promise.all([window.LifeUK && window.LifeUK.sync ? window.LifeUK.sync() : 0, window.DriveTest && window.DriveTest.sync ? window.DriveTest.sync() : 0]).then(function () { if (window._currentPage === 'myplan' && view.tab === 'plan') render(); });
+    }
+    root.querySelectorAll('[data-tst]').forEach(function (b) { b.onclick = function () { var x = b.dataset.tst.split(':'), T = x[0] === 'lu' ? window.LifeUK : window.DriveTest; if (!T) return; gt('plan_tests', { t: x[0], a: x[1] }); if (x[1] === 'resume') T.resume(); else if (x[1] === 'results') T.results(); else T.open(); }; });
   }
 
   window.MyPlan = { driveTest: function () { drOne(LIFE.filter(function (x) { return x.k === 'drvth'; })[0]); }, lifeTest: function () { luOne(LIFE.filter(function (x) { return x.k === 'lituk'; })[0]); }, open: open, openSunday: openSunday, newsSheet: newsSheet, saveEvent: saveEvent, celSheet: celSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };

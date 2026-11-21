@@ -187,10 +187,37 @@ async function deleteAll(ctx) {
   const w = await who(ctx);
   const old = await getJson('myplan/u/' + w.h).catch(() => null); if (old && old.bcode) await del('myplan/bday/' + old.bcode).catch(() => {});   // their birthday link stops working
   await del('myplan/u/' + w.h).catch(() => {});
+  await del('myplan/tests/' + w.h).catch(() => {});
   await cas('myplan/index', cur => { if (!cur || !cur.u[w.h]) return undefined; delete cur.u[w.h]; return cur; });
   await setNews(w.h, w.email, false);
   await core.audit(w.email, 'myplan_deleted', {}).catch(() => {});
   return signout(ctx);
+}
+
+// 📚 Practice tests (🇬🇧 Life in the UK, 🚗 Driving Theory): progress, unfinished tests and results history, so they follow you to any phone
+const TESTS = ['lituk', 'drive'];
+function mergeTest(a, b) {   // a = saved, b = incoming; the newer one wins, but results and "seen" are added together
+  if (!a) return b; if (!b) return a;
+  const newer = (b.up || 0) >= (a.up || 0) ? b : a, older = newer === a ? b : a;
+  const out = JSON.parse(JSON.stringify(newer)); out.d = out.d || {};
+  const od = older.d || {}, key = m => String(m.id || (m.at + '|' + m.s));
+  const ms = {}; [].concat(od.mocks || [], out.d.mocks || []).forEach(m => { if (m && typeof m === 'object') ms[key(m)] = Object.assign(ms[key(m)] || {}, m); });
+  out.d.mocks = Object.values(ms).sort((x, y) => (x.id || 0) - (y.id || 0) || String(x.at).localeCompare(String(y.at))).slice(-60);
+  out.d.seen = Object.assign({}, od.seen || {}, out.d.seen || {});
+  return out;
+}
+async function testsGet(ctx) {
+  const w = await who(ctx);
+  return { tests: (await getJson('myplan/tests/' + w.h).catch(() => null)) || {} };
+}
+async function testsSave(ctx) {
+  const w = await who(ctx), k = ctx.body.k, doc = ctx.body.doc;
+  if (!TESTS.includes(k) || !doc || typeof doc !== 'object') throw new HttpError(400, 'invalid', 'Nothing to save.');
+  if (JSON.stringify(doc).length > 400000) throw new HttpError(413, 'too_large', 'Too much to save.');
+  await core.rateLimit('myplan-tests', w.h, 900, 60 * 60 * 1000, 'Lots of saves — give it a minute.');
+  let out;
+  await cas('myplan/tests/' + w.h, cur => { cur = cur || {}; cur[k] = mergeTest(cur[k], doc); out = cur[k]; return cur; });
+  return { doc: out };
 }
 
 // 📊 HQ: counts only — never anyone's items
@@ -322,4 +349,4 @@ async function inboxDone(ctx) {
   return { inbox: u.inbox };
 }
 
-module.exports = { celAi, bdayLink, bdayWho, bdayAdd, inboxDone, newsCode, newsVerify, morning, remindOff, requestCode, verify, me, save, prefs, signout, deleteAll, stats, merge, cleanItem, COOKIE };
+module.exports = { testsGet, testsSave, mergeTest, celAi, bdayLink, bdayWho, bdayAdd, inboxDone, newsCode, newsVerify, morning, remindOff, requestCode, verify, me, save, prefs, signout, deleteAll, stats, merge, cleanItem, COOKIE };

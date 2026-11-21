@@ -47,7 +47,8 @@
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function gt(e, p) { try { if (typeof gtag === 'function') gtag('event', e, Object.assign({ event_category: 'drive' }, p || {})); } catch (x) {} }
   function load() { var z = { mocks: [], prac: [], seen: {}, wrong: {}, n: 0, ok: 0, date: '', last: [] }; try { var d = JSON.parse(localStorage.getItem(KEY) || '{}'); Object.keys(z).forEach(function (k) { if (d[k] != null) z[k] = d[k]; }); } catch (e) {} return z; }
-  function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+  function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} touch(); }
+  var SYNC = 'drive';
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function niceDate(iso) { if (!iso) return ''; return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }); }
@@ -141,7 +142,7 @@
     if (!obs && window.MutationObserver) { obs = new MutationObserver(function () { if (!document.getElementById('dtRoot')) { obs.disconnect(); obs = null; stopTimer(); if (!document.getElementById('luRoot')) document.body.classList.remove('lu-nochat', 'lu-examon'); } }); obs.observe(msgs, { childList: true }); }
     gt('drive_open'); S = { v: view || 'home' };
     root().innerHTML = '<div class="lu-card" style="text-align:center;color:#6B7280">Loading questions…</div>';
-    getQ().then(function () { draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="dtRe">Try again</button></div></div>'; $('#dtRe').onclick = function () { open(view); }; });
+    getQ().then(syncIn).then(function () { if (S.v === 'resume') resumeAny(); else draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="dtRe">Try again</button></div></div>'; $('#dtRe').onclick = function () { open(view); }; });
   }
   function addCss() {
     if (document.getElementById('dtCss')) return; var st = document.createElement('style'); st.id = 'dtCss';
@@ -154,8 +155,77 @@
   function leave() { stopTimer(); document.body.classList.remove('lu-nochat', 'lu-examon'); if (typeof resetToWelcome === 'function') resetToWelcome(); }
   function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
   function top() { var r = document.getElementById('messages'); try { if (r) r.scrollTop = 0; window.scrollTo(0, 0); } catch (e) {} }
-  function draw() { stopTimer(); var r = root(); if (!r) return; document.body.classList.toggle('lu-examon', /^(intro|mock|review|result|pq)$/.test(S.v)); ({ home: home, setup: setup, pq: pracQ, intro: intro, mock: mockQ, review: mockReview, result: result, before: before, hazard: hazard, licence: licence })[S.v](r); }
+  function draw() { stopTimer(); var r = root(); if (!r) return; document.body.classList.toggle('lu-examon', /^(intro|mock|review|result|pq)$/.test(S.v)); ({ hist: hist, home: home, setup: setup, pq: pracQ, intro: intro, mock: mockQ, review: mockReview, result: result, before: before, hazard: hazard, licence: licence })[S.v](r); }
   function go(v, extra) { S = Object.assign({ v: v }, extra || {}); draw(); top(); }
+
+
+  // ───── 💾 saved progress: kept on this phone, and in your My Plan account when you're signed in (any phone) ─────
+  var PRAC = KEY + '_prac', UP = KEY + '_up';
+  function raw(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+  function rawSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function docNow() { return { up: +(raw(UP) || 0), d: load(), live: raw(LIVE), prac: raw(PRAC) }; }
+  function touch() { rawSet(UP, Date.now()); if (window.TestSync) window.TestSync.push(SYNC, docNow); }
+  function mergeDoc(a, b) {   // newer wins; results and "seen" are added together
+    if (!a) return b; if (!b) return a;
+    var nw = (b.up || 0) >= (a.up || 0) ? b : a, ol = nw === a ? b : a, out = JSON.parse(JSON.stringify(nw)); out.d = out.d || {};
+    var od = ol.d || {}, key = function (m) { return String(m.id || (m.at + '|' + m.s)); }, ms = {};
+    [].concat(od.mocks || [], out.d.mocks || []).forEach(function (m) { if (m) ms[key(m)] = Object.assign(ms[key(m)] || {}, m); });
+    out.d.mocks = Object.keys(ms).map(function (k) { return ms[k]; }).sort(function (x, y) { return (x.id || 0) - (y.id || 0); }).slice(-60);
+    out.d.seen = Object.assign({}, od.seen || {}, out.d.seen || {});
+    return out;
+  }
+  function syncIn() {
+    var TS = window.TestSync; if (!TS || !TS.signedIn()) return Promise.resolve();
+    return Promise.race([TS.pull(SYNC), new Promise(function (r) { setTimeout(function () { r(undefined); }, 2500); })]).then(function (srv) {
+      if (srv === undefined) return;
+      var loc = docNow(), m = mergeDoc(srv, loc);
+      if (!m) return;
+      try { localStorage.setItem(KEY, JSON.stringify(m.d || {})); } catch (e) {}
+      rawSet(LIVE, m.live || null); rawSet(PRAC, m.prac || null); rawSet(UP, m.up || 0);
+      if (!srv || (loc.up || 0) > (srv.up || 0) || (m.d.mocks || []).length > ((srv.d || {}).mocks || []).length) TS.push(SYNC, docNow);
+    }).catch(function () {});
+  }
+  // unfinished practice set
+  function savePrac() { rawSet(PRAC, { mode: S.mode, n: S.n, fb: S.fb, ids: S.qs.map(function (it) { return it.q.id; }), ord: S.qs.map(function (it) { return it.opts.map(function (o) { return o.i; }); }), ans: S.ans, done: S.done, at: S.at, t0: S.t0 }); touch(); }
+  function clearPrac() { if (raw(PRAC)) { rawSet(PRAC, null); touch(); } }
+  function rebuild(id, ord) { var q = byId(id); if (!q) return null; var base = optsOf(q), o = (ord || []).map(function (i) { return base.filter(function (x) { return x.i === i; })[0]; }).filter(Boolean); return { q: q, opts: o.length === base.length ? o : base }; }
+  function resumePrac() {
+    var p = raw(PRAC); if (!p) return draw();
+    var qs = p.ids.map(function (id, n) { return rebuild(id, p.ord[n]); }).filter(Boolean);
+    if (!qs.length) { clearPrac(); return go('home'); }
+    go('pq', { kind: 'prac', mode: p.mode, n: p.n, fb: p.fb, qs: qs, ans: p.ans || {}, done: p.done || {}, at: Math.min(p.at || 0, qs.length - 1), t0: p.t0 || Date.now() });
+  }
+  function resumeAny() { if (liveMock()) resumeMock(); else if (raw(PRAC)) resumePrac(); else go('home'); }
+  // 📈 my results: every mock, and the full review of the recent ones
+  function hist(r) {
+    var d = load(), ms = d.mocks.slice().reverse();
+    r.innerHTML = '<button class="lu-back" id="hB">← Back</button><div class="lu-h" style="margin-top:0">📈 My results · ' + ms.length + ' mock ' + (ms.length === 1 ? 'test' : 'tests') + '</div>' +
+      (ms.length ? '<div class="lu-card">' + ms.map(function (m, n) {
+        var ok = m.s >= PASS;
+        return '<button class="lu-ch" data-h="' + n + '" style="margin:0 0 8px"' + (m.rv ? '' : ' disabled') + '><i>' + (ok ? '✅' : '❌') + '</i><span style="flex:1"><b>' + m.s + '/' + MOCK_N + ' · ' + Math.round(m.s / MOCK_N * 100) + '% · ' + (ok ? 'PASS' : 'FAIL') + '</b><small>' + esc(niceDate(m.at)) + (m.rv ? ' · tap to review' : '') + '</small></span></button>';
+      }).join('') + '</div>' : '<div class="lu-card" style="text-align:center;color:#6B7280">No mock tests yet.</div>') +
+      '<div class="lu-note">' + (window.TestSync && window.TestSync.signedIn() ? '💚 Saved to your My Plan account — you’ll see these on any phone you sign in on.' : '💾 Saved on this phone. Sign in to My Plan to keep them on any phone.') + '</div>';
+    $('#hB', r).onclick = function () { go('home'); };
+    $$('[data-h]', r).forEach(function (b) { b.onclick = function () {
+      var m = ms[+b.dataset.h]; if (!m || !m.rv) return;
+      var items = m.rv.map(function (x) { var it = rebuild(x[0], x[1]); return it ? { q: it.q, opts: it.opts, pick: x[2] || [] } : null; }).filter(Boolean);
+      go('result', { kind: 'mock', items: items, score: items.filter(function (x) { return isRight(x.q, x.pick, x.opts); }).length, tab: 'all', hist: true });
+    }; });
+  }
+  function syncCard(top) {
+    var TS = window.TestSync, d = load(), pr = raw(PRAC), out = '';
+    if (top) return pr ?  '<button class="lu-big y" id="tsPrac"><i>▶️</i><span><b>Continue your practice</b><small>Question ' + ((pr.at || 0) + 1) + ' of ' + pr.ids.length + ' · ' + Object.keys(pr.ans || {}).length + ' answered</small></span></button>' : '';
+    if (d.mocks.length) out += '<button class="lu-big w" id="tsHist"><i>📈</i><span><b>My results</b><small>' + d.mocks.length + ' mock ' + (d.mocks.length === 1 ? 'test' : 'tests') + ' · tap one to see every answer</small></span></button>';
+    if (TS) out += TS.signedIn() ? '<div class="lu-note" style="margin-top:0">💚 Your progress is saved to your My Plan account. <a href="#" id="tsPlan" style="color:#057A44;font-weight:700">Open My Plan</a></div>'
+      : '<div class="lu-card" style="border-color:#BFE3CF;background:#F1FAF5"><b style="font-size:15px">💾 Keep your progress on any phone</b><div style="font-size:13.5px;color:#4B5563;margin-top:3px">Your progress is saved on this phone. Sign in to My Plan (free, no password) to keep it everywhere and pick up where you left off.</div><div class="lu-row"><button class="lu-btn" id="tsIn">💚 Sign in to My Plan</button></div></div>';
+    return out;
+  }
+  function bindSync(r) {
+    if ($('#tsPrac', r)) $('#tsPrac', r).onclick = function () { if (liveMock() && !confirm('You also have an unfinished mock test. Continue the practice instead?')) return; resumePrac(); };
+    if ($('#tsHist', r)) $('#tsHist', r).onclick = function () { go('hist'); };
+    if ($('#tsPlan', r)) $('#tsPlan', r).onclick = function (e) { e.preventDefault(); window.TestSync.openPlan(); };
+    if ($('#tsIn', r)) $('#tsIn', r).onclick = function () { window.TestSync.signIn(); };
+  }
 
   // ───── 🏠 home ─────
   function home(r) {
@@ -166,11 +236,12 @@
       '<div class="lu-disc">ℹ️ ' + esc(DISCLAIMER) + '</div>' +
       (d.date && dl >= 0 ? '<div class="lu-card" style="border-color:#F2D58A;background:#FFFBEF"><b style="font-size:16px">📅 Your theory test: ' + esc(niceDate(d.date)) + '</b><div style="font-size:14px;color:#7A5300;margin-top:3px">' + (dl === 0 ? 'It’s today — good luck! Bring your photocard licence.' : dl === 1 ? 'Tomorrow! Have your photocard licence ready.' : dl + ' days to go') + '</div></div>' : '') +
       (live ? '<button class="lu-big y" id="dtResume"><i>⏱</i><span><b>Resume your mock test</b><small>' + mmss(Math.max(0, Math.round((live.end - Date.now()) / 1000))) + ' left · ' + Object.keys(live.ans).length + ' of ' + MOCK_N + ' answered</small></span></button>' : '') +
+      syncCard(true) +
       '<button class="lu-big" id="dtMock"><i>🎯</i><span><b>Driving Theory — Mock Exam</b><small>Multiple-choice practice simulation · 50 questions · 57 minutes · pass mark 43</small></span></button>' +
       '<button class="lu-big w" id="dtPrac"><i>📚</i><span><b>Practice</b><small>5, 10, 20 or 50 questions · 14 topics, mixed, road signs, wrong or unanswered</small></span></button>' +
       '<button class="lu-big w" id="dtSigns"><i>🛑</i><span><b>Road signs</b><small>' + nSigns + ' signs with pictures</small></span></button>' +
       (weak ? '<button class="lu-big y" id="dtWeak"><i>💪</i><span><b>Retry incorrect questions · ' + weak + '</b><small>Get them right to clear them</small></span></button>' : '') +
-      progressCard(d, best, acc) +
+      syncCard(false) + progressCard(d, best, acc) +
       '<button class="lu-big w" id="dtHaz"><i>🎬</i><span><b>Hazard Perception Test</b><small>How part 2 works and is scored · practice clips not available yet</small></span></button>' +
       '<button class="lu-big w" id="dtBefore"><i>📋</i><span><b>Before your test</b><small>Cost, what to bring, pass marks — checked on GOV.UK</small></span></button>' +
       '<button class="lu-big w" id="dtLic"><i>🇳🇬</i><span><b>Driving here on a Nigerian licence</b><small>How long you can use it and what to do next</small></span></button>' +
@@ -180,6 +251,7 @@
     $('#dtBack', r).onclick = leave;
     $('#dtMock', r).onclick = function () { if (live && !confirm('Start a new mock test? Your unfinished one will be lost.')) return; go('intro'); };
     if ($('#dtResume', r)) $('#dtResume', r).onclick = resumeMock;
+    bindSync(r);
     $('#dtSigns', r).onclick = function () { go('setup', { mode: 'signs', n: 10, fb: 'now' }); };
     $('#dtPrac', r).onclick = function () { go('setup', { mode: 0, n: 10, fb: 'now' }); };
     if ($('#dtWeak', r)) $('#dtWeak', r).onclick = function () { go('setup', { mode: 'weak', n: weak <= 5 ? 5 : 10, fb: 'now' }); };
@@ -248,13 +320,14 @@
       (S.fb === 'now' && !shown ? '<button class="lx-b p" id="lxC"' + (pick.length === need(q) ? '' : ' disabled') + '>Check answer</button>' : '<button class="lx-b p" id="lxN"' + (S.fb === 'end' && pick.length !== need(q) ? ' disabled' : '') + '>' + (last ? 'Finish' : 'Next question →') + '</button>') + '</div>' +
       '<div class="lx-links"><button class="q" id="lxX">Stop practice</button><span></span></div></div>';
     bindPick(r, it, !shown);
-    if ($('#lxC', r)) $('#lxC', r).onclick = function () { S.done[S.at] = 1; record(it, S.ans[S.at]); draw(); };
-    if ($('#lxN', r)) $('#lxN', r).onclick = function () { if (last) finishPrac(); else { S.at++; draw(); top(); } };
+    if ($('#lxC', r)) $('#lxC', r).onclick = function () { S.done[S.at] = 1; record(it, S.ans[S.at]); savePrac(); draw(); };
+    if ($('#lxN', r)) $('#lxN', r).onclick = function () { if (last) finishPrac(); else { S.at++; savePrac(); draw(); top(); } };
     if (!$('#lxP', r).disabled) $('#lxP', r).onclick = function () { S.at--; draw(); top(); };
-    $('#lxX', r).onclick = function () { if (!Object.keys(S.ans).length || confirm('Stop this practice set?')) { if (S.fb === 'now' && Object.keys(S.done).length) finishPrac(); else go('home'); } };
+    $('#lxX', r).onclick = function () { if (Object.keys(S.ans).length) { savePrac(); X_toast('💾 Saved — tap “Continue your practice” to carry on'); } else clearPrac(); go('home'); };
   }
   function record(it, pick) { var d = load(), ok = isRight(it.q, pick, it.opts); mark(d, it.q, ok); save(d); return ok; }
   function finishPrac() {
+    clearPrac();
     var idx = S.qs.map(function (x, i) { return i; }).filter(function (i) { return S.fb === 'end' ? true : S.done[i]; });
     if (S.fb === 'end') idx.forEach(function (i) { record(S.qs[i], S.ans[i]); });
     var items = idx.map(function (i) { return { q: S.qs[i].q, opts: S.qs[i].opts, pick: S.ans[i] || [] }; });
@@ -287,7 +360,7 @@
         var i = +b.dataset.o, pick = (S.ans[S.at] || []).slice();
         if (it.q.t === '2') { var k = pick.indexOf(i); if (k >= 0) pick.splice(k, 1); else if (pick.length < 2) pick.push(i); else { pick.shift(); pick.push(i); } } else pick = [i];
         if (pick.length) S.ans[S.at] = pick; else delete S.ans[S.at];
-        if (S.v === 'mock') saveLive();
+        if (S.v === 'mock') saveLive(); else if (S.v === 'pq') savePrac();
         draw();
       };
     });
@@ -295,6 +368,7 @@
   function isRight(q, pick, opts) { var want = opts.filter(function (o) { return o.ok; }).map(function (o) { return o.i; }).sort().join(','); return (pick || []).slice().sort().join(',') === want; }
   function need(q) { return q.t === '2' ? 2 : 1; }
   function mark(d, q, ok) { d.n++; if (ok) d.ok++; d.seen[q.id] = 1; if (ok) { if (d.wrong[q.id]) { d.wrong[q.id]--; if (d.wrong[q.id] <= 0) delete d.wrong[q.id]; } } else d.wrong[q.id] = (d.wrong[q.id] || 0) + 1; }
+  function X_toast(t) { try { if (typeof showToast === 'function') return showToast(t); } catch (e) {} var el = document.createElement('div'); el.textContent = t; el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0F1E36;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:99999;max-width:90%;text-align:center'; document.body.appendChild(el); setTimeout(function () { el.remove(); }, 2600); }
   function mmss(s) { return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
   function pickedText(it, pick) { return (pick || []).map(function (i) { var o = it.opts.filter(function (x) { return x.i === i; })[0]; return o ? o.tx : ''; }).join(' and '); }
 
@@ -339,8 +413,8 @@
     S = { v: 'mock', qs: pickMock().map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, flag: {}, at: 0, end: Date.now() + MOCK_MIN * 60000, t0: Date.now() };
     saveLive(); gt('drive_mock_start'); draw(); top();
   }
-  function saveLive() { try { localStorage.setItem(LIVE, JSON.stringify({ ids: S.qs.map(function (it) { return it.q.id; }), ord: S.qs.map(function (it) { return it.opts.map(function (o) { return o.i; }); }), ans: S.ans, flag: S.flag, at: S.at, end: S.end, t0: S.t0 })); } catch (e) {} }
-  function clearLive() { try { localStorage.removeItem(LIVE); } catch (e) {} }
+  function saveLive() { try { localStorage.setItem(LIVE, JSON.stringify({ ids: S.qs.map(function (it) { return it.q.id; }), ord: S.qs.map(function (it) { return it.opts.map(function (o) { return o.i; }); }), ans: S.ans, flag: S.flag, at: S.at, end: S.end, t0: S.t0 })); } catch (e) {} touch(); }
+  function clearLive() { try { localStorage.removeItem(LIVE); } catch (e) {} touch(); }
   function liveMock() { try { var l = JSON.parse(localStorage.getItem(LIVE) || 'null'); if (!l || !l.ids || l.end < Date.now() - 60000) { if (l) clearLive(); return null; } return l; } catch (e) { return null; } }
   function byId(id) { for (var i = 0; i < ALL.length; i++) if (ALL[i].id === id) return ALL[i]; return null; }
   function resumeMock() {
@@ -397,7 +471,7 @@
       mark(d, it.q, ok); if (ok) score++; byT[it.q.c] = byT[it.q.c] || [0, 0]; byT[it.q.c][1]++; if (ok) byT[it.q.c][0]++;
       return { q: it.q, opts: it.opts, pick: pick };
     });
-    d.mocks.push({ at: today(), s: score, t: byT }); if (d.mocks.length > 50) d.mocks = d.mocks.slice(-50);
+    d.mocks.push({ id: Date.now(), at: today(), s: score, t: byT, rv: items.map(function (x) { return [x.q.id, x.opts.map(function (o) { return o.i; }), x.pick]; }) }); if (d.mocks.length > 50) d.mocks = d.mocks.slice(-50); d.mocks.forEach(function (m, i) { if (i < d.mocks.length - 20) delete m.rv; });
     d.last = S.qs.map(function (it) { return it.q.id; });
     save(d); clearLive(); gt('drive_mock_done', { value: score });
     go('result', { kind: 'mock', items: items, score: score, timeUp: !!timeUp, used: Math.min(MOCK_MIN, Math.round((Date.now() - S.t0) / 60000)), tab: 'all' });
@@ -434,7 +508,7 @@
     if ($('#lxWt', r)) $('#lxWt', r).onclick = function () { startPrac(+study[0], 10, 'now'); };
     if ($('#lxRi', r)) $('#lxRi', r).onclick = function () { startPrac(wrong.map(function (w) { return w.q.id; }), wrong.length, 'now'); };
     $('#lxA', r).onclick = function () { if (mock) go('intro'); else startPrac(S.mode, S.n, S.fb); };
-    $('#lxH', r).onclick = function () { go('home'); };
+    $('#lxH', r).onclick = function () { go(S.hist ? 'hist' : 'home'); };
   }
 
   // ───── info cards (GOV.UK) ─────
@@ -481,9 +555,9 @@
     gt('drive_licence');
   }
 
-  function summary() { var d = load(), last = d.mocks[d.mocks.length - 1]; return { mocks: d.mocks.length, last: last ? last.s : null, answered: d.n, weak: Object.keys(d.wrong).length, date: d.date }; }
+  function summary() { var d = load(), last = d.mocks[d.mocks.length - 1], pr = raw(PRAC), lv = liveMock(); return { live: !!lv, liveN: lv ? Object.keys(lv.ans || {}).length : 0, prac: pr ? { at: (pr.at || 0) + 1, n: pr.ids.length } : null, best: d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), mocks: d.mocks.length, last: last ? last.s : null, answered: d.n, weak: Object.keys(d.wrong).length, date: d.date }; }
   function setDate(iso) { var d = load(); d.date = iso || ''; save(d); }
-  window.DriveTest = { open: open, summary: summary, setDate: setDate, sign: function (k) { return SIGN[k] ? SIGN[k]() : ''; }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
+  window.DriveTest = { sync: function () { return syncIn(); }, resume: function () { open('resume'); }, results: function () { open('hist'); }, open: open, summary: summary, setDate: setDate, sign: function (k) { return SIGN[k] ? SIGN[k]() : ''; }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
 
   // 🔗 auntietobi.co.uk/driving-theory-test (→ /?drive=1), /mock, /signs, /before
   var m = location.search.match(/[?&]drive(?:=([a-z]+))?/i);
