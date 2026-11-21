@@ -23,7 +23,7 @@
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function esc(s) { return X.esc(s); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, bgs: {}, out: null }; return QV; }
+  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, igOn: true, ig: '@auntietobi_uk', appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, bgs: {}, out: null }; return QV; }
   function bank() { return BANKS[QV.bank]; }
   function fill(s) { return String(s || '').replace(/\{n\}/g, QV.qs.length || QV.n); }
   function loadBank(k) { if (BANKQ[k]) return Promise.resolve(BANKQ[k]); return fetch(BANKS[k].file).then(function (r) { return r.json(); }).then(function (j) { BANKQ[k] = j.filter(function (q) { return q.t === 'm' && !q.g && q.o && q.o.length === 4 && q.o.every(function (o) { return o.length <= 46; }) && q.q.length <= 120; }); return BANKQ[k]; }); }
@@ -81,6 +81,8 @@
       '<div class="card"><b>2 · Words and voice</b><div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">' +
       '<div style="flex:1;min-width:220px"><label>Title line 1</label><input id="qvH1" value="' + esc(QV.h1) + '"></div><div style="flex:1;min-width:220px"><label>Title line 2</label><input id="qvH2" value="' + esc(QV.h2) + '"></div></div>' +
       '<label>Ending</label><input id="qvOut" value="' + esc(QV.outro) + '">' +
+      '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvIg"' + (QV.igOn ? ' checked' : '') + '> 📸 Show the Instagram handle at the bottom</label>' +
+      '<div id="qvIgBox"' + (QV.igOn ? '' : ' hidden') + '><input id="qvIgT" value="' + esc(QV.ig) + '" style="margin-top:8px;max-width:320px"></div></div>' +
       '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvApp"' + (QV.appOn ? ' checked' : '') + '> 📱 Add an Auntie Tobi App box at the end</label>' +
       '<div id="qvAppBox"' + (QV.appOn ? '' : ' hidden') + '><input id="qvAppT" value="' + esc(QV.appT) + '" style="margin-top:8px"><div class="muted" style="font-size:12.5px">Shown in a green box with <b>' + esc(b.link) + '</b> under it.</div>' +
       (ST && ST.ready ? '<label style="display:flex;gap:8px;align-items:center;margin:6px 0 0"><input type="checkbox" id="qvSayApp"' + (QV.sayApp ? ' checked' : '') + '> 🎙️ The voice says it too</label>' : '') + '</div></div>' +
@@ -109,8 +111,9 @@
     $$('[data-gen]').forEach(function (b) { b.onclick = function () { genBg(+b.dataset.gen, !!QV.bgs[QV.qs[+b.dataset.gen].id]); }; });
     $$('[data-up]').forEach(function (inp) { inp.onchange = function () { var f = inp.files && inp.files[0]; if (f) upBg(+inp.dataset.up, f); }; });
     $('#qvAll').onclick = makeAllBgs;
-    var keep = function () { QV.h1 = $('#qvH1').value; QV.h2 = $('#qvH2').value; QV.outro = $('#qvOut').value; QV.appT = $('#qvAppT').value; };
-    ['#qvH1', '#qvH2', '#qvOut', '#qvAppT'].forEach(function (s) { $(s).oninput = keep; });
+    var keep = function () { QV.h1 = $('#qvH1').value; QV.h2 = $('#qvH2').value; QV.outro = $('#qvOut').value; QV.appT = $('#qvAppT').value; var g = $('#qvIgT').value.trim().replace(/^@*/, ''); QV.ig = g ? '@' + g : ''; };
+    ['#qvH1', '#qvH2', '#qvOut', '#qvAppT', '#qvIgT'].forEach(function (s) { $(s).oninput = keep; });
+    $('#qvIg').onchange = function () { QV.igOn = this.checked; $('#qvIgBox').hidden = !this.checked; };
     $('#qvApp').onchange = function () { QV.appOn = this.checked; $('#qvAppBox').hidden = !this.checked; };
     if ($('#qvSayApp')) $('#qvSayApp').onchange = function () { QV.sayApp = this.checked; };
     if ($('#qvVo')) { $('#qvVo').onchange = function () { QV.voiceOn = this.checked; }; $('#qvVoice').onchange = function () { QV.voice = this.value; }; $('#qvModel').onchange = function () { QV.model = this.value; draw(); }; $('#qvOpts').onchange = function () { QV.readOpts = this.checked; draw(); }; $('#qvHear').onclick = hear; }
@@ -288,7 +291,7 @@
       cx.restore();
     }
     // handle
-    cx.save(); cx.textAlign = 'center'; cx.font = '700 36px Poppins, Arial, sans-serif'; cx.fillStyle = 'rgba(255,255,255,0.92)'; shadowText(cx, '@auntietobi_uk', W / 2, H - 70); cx.restore();
+    if (QV.igOn && QV.ig) { cx.save(); cx.textAlign = 'center'; cx.font = '700 36px Poppins, Arial, sans-serif'; cx.fillStyle = 'rgba(255,255,255,0.92)'; shadowText(cx, QV.ig, W / 2, H - 70); cx.restore(); }
   }
   async function images() {
     var bgs = {};
