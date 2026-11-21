@@ -121,6 +121,9 @@
     { k: 'ngpass', e: '🇳🇬', t: 'Nigerian passport expires', ask: 'When does it expire?', lead: 180, ck: ['Check the expiry date on your passport', 'Apply on the NIS passport portal', 'Pay and book your appointment', 'Track your application'], link: ['How to renew Nigerian passport', 'https://passport.immigration.gov.ng/'], note: 'Renewal can take a while — start early.' },
     // older plans: 'passport' items now point to the Nigerian passport (not shown in the list any more)
     { k: 'ukpass', hide: true, e: '🇳🇬', t: 'Passport expires', ask: 'When does it expire?', lead: 180, ck: ['Check the expiry date on your passport', 'Apply on the NIS passport portal'], link: ['How to renew Nigerian passport', 'https://passport.immigration.gov.ng/'], note: 'Renewal can take a while — start early.' },
+    { k: 'lituk', e: '🇬🇧', t: 'Life in the UK test', ask: 'When is your test?', lead: 28, lituk: true,
+      ck: ['Book on the official GOV.UK booking service (at least 3 days before)', 'Check the name on your booking matches your ID exactly', 'Take mock tests — aim for 18 or more out of 24', 'Re-read your weak chapters in the handbook', 'On the day: bring the same original ID you booked with'],
+      link: ['Life in the UK Test — GOV.UK', 'https://www.gov.uk/life-in-the-uk-test'], note: '24 questions in 45 minutes. You need 18 right (75%) to pass. It costs £50.' },
     { k: 'evisa', e: '📄', t: 'Visa / eVisa expires', ask: 'When does your permission end?', lead: 90, ck: ['Check your eVisa and expiry date', 'Check what you need for your next application', 'Get advice if you’re unsure'], link: ['View your eVisa — GOV.UK', 'https://www.gov.uk/view-prove-immigration-status'], note: 'Check the rules for your visa on GOV.UK or with an adviser.' },
     { k: 'licence', e: '🪪', t: 'Driving licence photocard expires', ask: 'Expiry date on your photocard (4b)', lead: 60, ck: ['Check date 4b on your photocard', 'Renew online'], link: ['Renew your driving licence — GOV.UK', 'https://www.gov.uk/renew-driving-licence'] },
     { k: 'mot', e: '🚗', t: 'MOT due', ask: 'When does your MOT run out?', lead: 28, ck: ['Book an MOT test', 'Check your MOT history'], link: ['Getting an MOT — GOV.UK', 'https://www.gov.uk/getting-an-mot'], note: 'You can usually get your MOT up to a month (minus a day) early and keep the same renewal date.' },
@@ -600,6 +603,7 @@
       '<div class="mp-two" style="margin-top:6px"><input id="eCn" placeholder="＋ Add a step" maxlength="120"></div>' +
       '<label>Notes</label><textarea id="eN" maxlength="1000">' + esc(it.note) + '</textarea>' +
       (life && life.link ? '<a class="mp-link" href="' + life.link[1] + '" target="_blank" rel="noopener">🔗 ' + esc(life.link[0]) + '</a>' : '') + (life && life.note ? '<div class="mp-sub" style="margin-top:6px">💡 ' + esc(life.note) + '</div>' : '') +
+      (life && life.lituk ? luCard() : '') +
       '<div class="mp-row"><button class="mp-btn g" id="eCal">📅 Add to phone calendar</button></div>' +
       '<div class="mp-err" id="eErr"></div><div class="mp-row" style="justify-content:space-between;margin-top:16px"><button class="mp-btn l" id="eDel">🗑️ Delete</button><span style="display:flex;gap:8px"><button class="mp-btn g" id="eX">Cancel</button><button class="mp-btn" id="eOk">Save</button></span></div>');
     var ck = (it.ck || []).map(function (c) { return { t: c.t, x: c.x }; });
@@ -610,6 +614,8 @@
     var vals = function () { var c = $('#eCn', s).value.trim(); if (c) ck.push({ t: c, x: false }); return { t: $('#eT', s).value.trim(), d: $('#eD', s).value, tm: $('#eD', s).value ? $('#eTm', s).value : '', rep: $('#eD', s).value ? $('#eR', s).value : '', note: $('#eN', s).value, ck: ck }; };
     $('#eX', s).onclick = function () { s.remove(); };
     $('#eDel', s).onclick = function () { s.remove(); remove(id); };
+    if ($('#luGo', s)) $('#luGo', s).onclick = function () { s.remove(); window.LifeUK.open(); };
+    if ($('#luMk', s)) $('#luMk', s).onclick = function () { s.remove(); window.LifeUK.mock(); };
     $('#eCal', s).onclick = function () { var v = vals(); if (!v.d) { $('#eErr', s).textContent = 'Add a date first.'; $('#eErr', s).style.display = 'block'; return; } calSheet(Object.assign({}, it, v)); };
     $('#eOk', s).onclick = function () { var v = vals(); if (!v.t) { $('#eErr', s).textContent = 'Add what you need to remember.'; $('#eErr', s).style.display = 'block'; return; } if (v.rep && v.d !== it.d) it.dom = fromIso(v.d).getDate(); Object.assign(it, v); s.remove(); change(it); toast('✅ Saved'); };
   }
@@ -1097,7 +1103,50 @@
     s.querySelectorAll('[data-l]').forEach(function (b) { b.onclick = function () { var l = LIFE[+b.dataset.l]; s.remove(); if (l.school) { window.open('https://schooltracker.auntietobi.co.uk', '_blank', 'noopener'); return; } lifeOne(l); }; });
   }
   var LEADS = [[0, 'On the day'], [7, '1 week before'], [14, '2 weeks before'], [28, '4 weeks before'], [60, '2 months before'], [90, '3 months before'], [180, '6 months before']];
+  // 🇬🇧 Life in the UK test: progress from the practice page (kept on this phone)
+  function luCard() {
+    if (!window.LifeUK) return '';
+    var u = window.LifeUK.summary();
+    return '<div class="mp-new" style="display:block;margin-top:10px"><b>🇬🇧 Your practice</b><div style="margin-top:3px">' +
+      (u.mocks ? 'Last mock test: <b>' + u.last + '/24</b> ' + (u.last >= 18 ? '✅ pass' : '— you need 18') + ' · ' : '') + u.answered + ' questions answered' + (u.weak ? ' · ' + u.weak + ' weak spots' : '') + '</div>' +
+      '<div class="mp-row" style="margin-top:8px"><button class="mp-btn" id="luGo">📚 Practise now</button><button class="mp-btn g" id="luMk">🎯 Mock test</button></div></div>';
+  }
+  function luOne(l) {
+    var s = sheet('<h3>🇬🇧 Life in the UK test</h3><div class="mp-sub" style="font-size:13.5px">💡 ' + esc(l.note) + '</div>' +
+      '<label>' + esc(l.ask) + '</label><input type="date" id="lD">' +
+      '<label class="mp-cl" style="font-weight:600;color:#0F1E36"><input type="checkbox" id="lNb"> I haven’t booked it yet</label>' +
+      '<label class="mp-cl" style="font-weight:600;color:#0F1E36"><input type="checkbox" id="lDy" checked> 📚 Remind me to practise every day</label>' +
+      '<div class="mp-sub" style="margin-top:6px">Auntie Tobi will remind you 4 weeks, 1 week and 1 day before, with a checklist.</div>' +
+      '<div class="mp-lbl">Checklist</div>' + l.ck.map(function (c) { return '<div class="mp-cl">☑️ ' + esc(c) + '</div>'; }).join('') +
+      '<a class="mp-link" href="https://www.gov.uk/life-in-the-uk-test/book-test" target="_blank" rel="noopener">🔗 Book the Life in the UK Test — GOV.UK</a>' +
+      '<div class="mp-err" id="lErr"></div><div class="mp-row" style="justify-content:flex-end;margin-top:16px"><button class="mp-btn g" id="lX">Cancel</button><button class="mp-btn" id="lOk">＋ Add to My Plan</button></div>');
+    var nb = $('#lNb', s), dd = $('#lD', s);
+    nb.onchange = function () { dd.disabled = nb.checked; if (nb.checked) dd.value = ''; };
+    $('#lX', s).onclick = function () { s.remove(); };
+    $('#lOk', s).onclick = function () {
+      var d = dd.value, t = today();
+      if (!d && !nb.checked) { $('#lErr', s).textContent = 'Add your test date, or tick “I haven’t booked it yet”.'; $('#lErr', s).style.display = 'block'; return; }
+      if (d && d < t) { $('#lErr', s).textContent = 'That date has passed — check your booking.'; $('#lErr', s).style.display = 'block'; return; }
+      // replace any earlier, unfinished test items so there’s only one plan
+      P.items.forEach(function (x) { if (x.lk === 'lituk' && !x.done && !x.del && !(x.rep === 'd' && $('#lDy', s).checked)) { x.del = true; change(x); } });
+      var ck = l.ck.map(function (c) { return { t: c, x: false }; });
+      if (d) {
+        var dt = fromIso(d), label = dt.getDate() + ' ' + cap(MONTHS[dt.getMonth()]).slice(0, 3) + ' ' + dt.getFullYear();
+        add({ t: '🇬🇧 Life in the UK test — ' + label, d: d, lk: 'lituk', ck: ck, note: 'Bring the same original ID you booked with. 24 questions, 45 minutes, pass is 18.' }, true);
+        [[28, 'in 4 weeks — take a mock test'], [7, 'in 1 week — check your ID and booking'], [1, 'tomorrow — have your original ID ready']].forEach(function (r) { var w = addDays(d, -r[0]); if (w >= t) add({ t: '🇬🇧 Life in the UK test ' + r[1], d: w, lk: 'lituk' }, true); });
+        if (window.LifeUK) window.LifeUK.setDate(d);
+      } else {
+        add({ t: '🇬🇧 Book your Life in the UK test', d: t, lk: 'lituk', ck: [{ t: 'Book on the official GOV.UK booking service — £50', x: false }, { t: 'Use the exact name on your ID', x: false }, { t: 'Add the date here when it’s booked', x: false }], note: 'Book: https://www.gov.uk/life-in-the-uk-test/book-test' }, true);
+        if (window.LifeUK) window.LifeUK.setDate('');
+      }
+      var hasDaily = P.items.some(function (x) { return x.lk === 'lituk' && x.rep === 'd' && !x.del; });
+      if ($('#lDy', s).checked && !hasDaily) add({ t: '📚 Practise Life in the UK questions', d: t, rep: 'd', lk: 'lituk', note: 'Open the Life in the UK Test page and do 10 questions or a mock test.' }, true);
+      s.remove(); gt('plan_lituk', { booked: d ? 1 : 0 });
+      toast(d ? '✅ Added — your test is ' + nice(d, true) : '✅ Added — book your test, then add the date');
+    };
+  }
   function lifeOne(l) {
+    if (l.lituk) return luOne(l);
     var lead = LEADS.reduce(function (a, x) { return Math.abs(x[0] - l.lead) < Math.abs(a[0] - l.lead) ? x : a; })[0];
     var s = sheet('<h3>' + l.e + ' ' + esc(l.t) + '</h3>' + (l.note ? '<div class="mp-sub" style="font-size:13.5px">💡 ' + esc(l.note) + '</div>' : '') +
       '<label>' + esc(l.ask) + '</label><input type="date" id="lD">' +
@@ -1281,7 +1330,7 @@
     var home = pills.firstElementChild; if (home && home.nextSibling) pills.insertBefore(p, home.nextSibling); else pills.appendChild(p);
   }
 
-  window.MyPlan = { open: open, openSunday: openSunday, newsSheet: newsSheet, saveEvent: saveEvent, celSheet: celSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
+  window.MyPlan = { lifeTest: function () { luOne(LIFE.filter(function (x) { return x.k === 'lituk'; })[0]); }, open: open, openSunday: openSunday, newsSheet: newsSheet, saveEvent: saveEvent, celSheet: celSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
   function start() { addCss(); addPill(); hookNews(); hookChat(); fill(); boot(); var cq = (location.search.match(/[?&]cel=([^&]*)/) || [])[1];
     if (cq) { var cp = decodeURIComponent(cq).split('|'); view.tab = 'cel'; setTimeout(function () { open(); celSheet(null, { n: cp[0] || '', k: cp[1] === 'anniversary' ? 'wedding' : 'birthday', r: cp[2] || 'friend', y: 0, lead: [3] }); }, 900); }
     else if (/[?&]plan=cel\b/.test(location.search)) { view.tab = 'cel'; setTimeout(open, 900); }
