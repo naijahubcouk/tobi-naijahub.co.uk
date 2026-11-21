@@ -128,19 +128,34 @@
       (k.listing ? '' : '\n\nP.S. You’re not on Auntie Tobi yet — add your business free (it takes 2 mins) so Nigerians across the UK can find you: ' + SITE + '/add-business') + '\n\nNo cost at all — just a little gift from Auntie Tobi 😊';
   }
   function makeSheet() {
-    var shots = [], listing = null;
-    var s = X.sheet('<h3 style="margin:0 0 4px">＋ Check a page for someone</h3><div class="muted" style="font-size:13px">Auntie Tobi checks their Instagram, you look it over, then send them their link.</div>' +
+    var shots = [], listing = null, prof = null, readSeq = 0;
+    var s = X.sheet('<h3 style="margin:0 0 4px">＋ Check a page for someone</h3><div class="muted" style="font-size:13px">Add a screenshot of their profile first — Auntie Tobi fills in the details, reads their website, then checks the page and the bio in detail.</div>' +
+      '<label style="margin-top:10px">Screenshots of their Instagram <span class="muted" style="font-weight:400">(the top of their profile, with the bio)</span></label><label class="btn ghost" style="display:block;text-align:center;cursor:pointer;margin-top:0">📷 Add screenshots (up to 2)<input type="file" id="mkF" accept="image/*" multiple hidden></label><div id="mkT" style="display:flex;gap:8px;margin-top:8px"></div><div id="mkRS" style="display:none;margin-top:8px;font-size:13px;background:#F3FAF6;border:1px solid #CFE3D8;border-radius:10px;padding:8px 10px"></div>' +
       '<label style="margin-top:10px">Find them on Auntie Tobi <span class="muted" style="font-weight:400">(optional)</span></label><div style="position:relative"><input id="mkL" placeholder="Type their business name" autocomplete="off"><div id="mkR" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #E5E1D6;border-radius:10px;box-shadow:0 8px 24px rgba(15,30,54,.12);z-index:5;max-height:240px;overflow:auto"></div></div><div class="muted" id="mkLM" style="font-size:12.5px;margin-top:4px">Fills in their details for you.</div>' +
       '<div class="row" style="gap:8px"><div style="flex:1"><label>Business name</label><input id="mkB"></div><div style="flex:1"><label>Instagram</label><input id="mkI" placeholder="@theirbusiness"></div></div>' +
       '<div class="row" style="gap:8px"><div style="flex:1"><label>Their first name <span class="muted" style="font-weight:400">(optional)</span></label><input id="mkN"></div><div style="flex:1"><label>WhatsApp <span class="muted" style="font-weight:400">(optional)</span></label><input id="mkW" placeholder="07…"></div></div>' +
       '<label>What they sell</label><input id="mkS" placeholder="e.g. party trays and small chops">' +
+      '<label>Their bio <span class="muted" style="font-weight:400">(as it is on Instagram)</span></label><textarea id="mkBio" rows="3" placeholder="Filled in from the screenshot"></textarea>' +
+      '<label>Link in bio / website</label><input id="mkU" placeholder="e.g. toluskitchen.co.uk or linktr.ee/toluskitchen">' +
       '<label>Their goal</label><select id="mkG"><option>More sales</option><option>More enquiries</option><option>More followers</option></select>' +
-      '<label>Screenshots of their Instagram</label><label class="btn ghost" style="display:block;text-align:center;cursor:pointer;margin-top:0">📷 Add screenshots (up to 2)<input type="file" id="mkF" accept="image/*" multiple hidden></label><div id="mkT" style="display:flex;gap:8px;margin-top:8px"></div>' +
       '<label>Notes <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="mkNo" rows="2" placeholder="e.g. posts about once a month, no prices anywhere"></textarea>' +
       '<div class="err" id="mkE" style="display:none;margin-top:8px"></div>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="mkX">Cancel</button><button class="btn primary" id="mkGo">✨ Do the check</button></div>');
     var th = function () { $('#mkT', s).innerHTML = shots.map(function (u, i) { return '<div style="position:relative"><img src="' + u + '" style="width:72px;height:104px;object-fit:cover;border-radius:8px;border:1px solid #E5E1D6"><button type="button" data-rm="' + i + '" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#0F1E36;color:#fff;cursor:pointer">✕</button></div>'; }).join(''); $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { shots.splice(+b.dataset.rm, 1); th(); }; }); };
-    $('#mkF', s).onchange = async function () { var fs = [].slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && shots.length < 2; i++) { try { shots.push(await shrink(fs[i])); } catch (e) { X.toast(e.message); } } th(); };
+    // 📸 read the screenshot and fill in the form (never overwrites what you typed)
+    var put2 = function (id, v) { var el = $(id, s); if (el && v && !el.value.trim()) el.value = v; };
+    var readIt = async function () {
+      if (!shots.length) return; var my = ++readSeq, rs = $('#mkRS', s);
+      rs.style.display = 'block'; rs.innerHTML = '✨ Reading their profile…';
+      try {
+        var p = (await X.api('gu-check-read', { shots: shots })).profile; if (my !== readSeq) return; prof = p;
+        put2('#mkB', p.displayName); put2('#mkI', p.handle ? '@' + p.handle : ''); put2('#mkS', p.sells); put2('#mkBio', p.bio); put2('#mkU', p.link);
+        var bits = [p.followers ? '<b>' + esc(p.followers) + '</b> followers' : '', p.posts ? '<b>' + esc(p.posts) + '</b> posts' : '', p.following ? esc(p.following) + ' following' : ''].filter(Boolean).join(' · ');
+        rs.innerHTML = '✅ <b>Read from the screenshot</b> — check the details below.' + (bits ? '<div style="margin-top:4px">' + bits + '</div>' : '') +
+          '<div class="muted" style="margin-top:3px">' + [p.category ? 'Category: ' + esc(p.category) : '', p.highlights.length ? 'Highlights: ' + esc(p.highlights.join(', ')) : 'No highlights', p.buttons.length ? 'Buttons: ' + esc(p.buttons.join(', ')) : '', p.photo ? 'Photo: ' + esc(p.photo) : ''].filter(Boolean).join(' · ') + '</div>';
+      } catch (e) { if (my === readSeq) rs.innerHTML = '⚠️ ' + esc(e.message); }
+    };
+    $('#mkF', s).onchange = async function () { var fs = [].slice.call(this.files || []); this.value = ''; for (var i = 0; i < fs.length && shots.length < 2; i++) { try { shots.push(await shrink(fs[i])); } catch (e) { X.toast(e.message); } } th(); readIt(); };
     var res = $('#mkR', s), tmr = null, seq = 0;
     $('#mkL', s).oninput = function () {
       var v = this.value.trim(); clearTimeout(tmr); if (v.length < 2) { res.style.display = 'none'; return; }
@@ -157,12 +172,44 @@
       var b = this, err = $('#mkE', s); err.style.display = 'none';
       if (!shots.length) { err.textContent = 'Add a screenshot of their Instagram profile.'; err.style.display = 'block'; return; }
       if (!$('#mkB', s).value.trim()) { err.textContent = 'Add their business name.'; err.style.display = 'block'; return; }
-      b.disabled = true; b.textContent = '✨ Auntie Tobi is looking…';
+      b.disabled = true; b.textContent = $('#mkU', s).value.trim() ? '✨ Checking the page and their website…' : '✨ Auntie Tobi is looking…';
       try {
-        var r = await X.api('gu-check-make', { shots: shots, listing: listing ? listing.slug : '', biz: $('#mkB', s).value, ig: $('#mkI', s).value, name: $('#mkN', s).value, wa: $('#mkW', s).value, sells: $('#mkS', s).value, goal: $('#mkG', s).value, notes: $('#mkNo', s).value });
+        var pf = Object.assign({}, prof || {}, { displayName: $('#mkB', s).value, handle: $('#mkI', s).value.replace(/^@/, ''), bio: $('#mkBio', s).value, link: $('#mkU', s).value, sells: $('#mkS', s).value });
+        var r = await X.api('gu-check-make', { profile: pf, website: $('#mkU', s).value, shots: shots, listing: listing ? listing.slug : '', biz: $('#mkB', s).value, ig: $('#mkI', s).value, name: $('#mkN', s).value, wa: $('#mkW', s).value, sells: $('#mkS', s).value, goal: $('#mkG', s).value, notes: $('#mkNo', s).value });
         D.checks = [r.check].concat(D.checks || []); s.remove(); TAB = 'checks'; CKF = 'mine'; board(); mineSheet(r.check);
       } catch (e) { err.textContent = e.message; err.style.display = 'block'; b.disabled = false; b.textContent = '✨ Do the check'; }
     };
+  }
+  // 🔎 the detailed bio & website check (HQ view)
+  function bioHtml(k) {
+    var b = k.bioCheck, p = k.profile, w = k.site;
+    if (!b && !p) return '';
+    var ST = { good: ['✅', '#057A44', '#E3F2EA'], fix: ['🛠️', '#7A5300', '#FFF1CF'], missing: ['❌', '#B42318', '#FDE2E1'] };
+    var box = function (inner) { return '<div style="border:1px solid #EEE9DD;border-radius:12px;padding:10px 12px;margin-top:8px;background:#fff">' + inner + '</div>'; };
+    var h = '<div style="font-weight:800;margin-top:14px">🔎 Bio &amp; website check' + (b && b.score ? ' <span style="display:inline-block;font-size:12px;font-weight:800;border-radius:10px;padding:2px 8px;background:#E7EFFD;color:#1D3D7A">' + b.score + '/100</span>' : '') + '</div>';
+    if (p) h += box('<div style="font-size:13px"><b>' + esc(p.displayName || k.biz) + '</b>' + (p.handle ? ' · @' + esc(p.handle) : '') + (p.category ? ' · ' + esc(p.category) : '') +
+      '<div class="muted">' + [p.posts ? esc(p.posts) + ' posts' : '', p.followers ? esc(p.followers) + ' followers' : '', p.following ? esc(p.following) + ' following' : ''].filter(Boolean).join(' · ') + '</div>' +
+      (p.bio ? '<div style="white-space:pre-wrap;margin-top:6px;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(p.bio) + '</div>' : '') +
+      (p.link ? '<div style="margin-top:4px">🔗 ' + esc(p.link) + (p.extraLinks ? ' ' + esc(p.extraLinks) : '') + '</div>' : '') +
+      (p.highlights && p.highlights.length ? '<div class="muted" style="margin-top:3px">Highlights: ' + esc(p.highlights.join(', ')) + '</div>' : '') + '</div>');
+    if (!b) return h + '<div class="muted" style="font-size:12.5px;margin-top:6px">The detailed bio check didn’t finish this time — the page check below still worked.</div>';
+    if (b.summary) h += '<div style="font-size:13.5px;margin-top:8px">' + esc(b.summary) + '</div>';
+    h += box(b.items.map(function (it) { var c = ST[it.s] || ['•', '#3F4A5C', '#F3F5F7'];
+      return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #F3F0E8;font-size:13px"><span style="flex:none;width:118px;font-weight:700">' + c[0] + ' ' + esc(it.label) + '</span><div style="flex:1"><div>' + esc(it.saw) + '</div>' + (it.fix ? '<div style="color:' + c[1] + ';margin-top:2px"><b>Fix:</b> ' + esc(it.fix) + '</div>' : '') + '</div></div>'; }).join(''));
+    if (b.nameLine) h += box('<div style="font-size:13px"><b>🏷️ Better name line</b></div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><div style="flex:1;font-size:13.5px;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(b.nameLine) + '</div><button class="btn ghost sm" data-cpb="' + esc(b.nameLine) + '">📋</button></div>');
+    if (b.bios.length) h += box('<div style="font-size:13px"><b>✍🏾 3 new bios</b> <span class="muted">(max 150 characters)</span></div>' + b.bios.map(function (x) {
+      return '<div style="margin-top:8px"><div class="muted" style="font-size:12px;font-weight:700">' + esc(x.angle) + ' · ' + Array.from(x.text).length + ' characters</div><div style="white-space:pre-wrap;font-size:13.5px;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(x.text) + '</div>' +
+        '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn ghost sm" data-cpb="' + esc(x.text) + '">📋 Copy</button><button class="btn ghost sm" data-usebio="' + esc(x.text) + '">Use in their results</button></div></div>'; }).join(''));
+    if (b.highlights.length) h += box('<div style="font-size:13px"><b>⭕ Highlights to have</b></div>' + b.highlights.map(function (x) { return '<div style="font-size:13px;margin-top:4px"><b>' + esc(x.name) + '</b> — ' + esc(x.what) + '</div>'; }).join(''));
+    var ws = b.website || {};
+    h += box('<div style="font-size:13px"><b>🌐 Their website</b> ' + (w ? (w.ok ? '<a href="' + esc(w.finalUrl) + '" target="_blank" rel="noopener">' + esc(String(w.finalUrl).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + ' ↗</a> <span class="muted">· opened in ' + (Math.round(w.ms / 100) / 10) + 's' + (w.linkPage ? ' · via a link page with ' + (w.links || []).length + ' links' : '') + '</span>' : '<span style="color:#B42318">· couldn’t open ' + esc(w.url) + '</span>') : '<span class="muted">· no link in their bio</span>') + '</div>' +
+      (w && w.ok ? '<div class="muted" style="font-size:12.5px;margin-top:3px">' + [w.prices && w.prices.length ? 'Prices: ' + esc(w.prices.slice(0, 5).join(', ')) : 'No prices found', w.booking ? 'Online booking ✓' : '', w.shop ? 'Online shop ✓' : '', w.email ? '📧 ' + esc(w.email) : '', w.phone ? '📞 ' + esc(w.phone) : '', w.whatsapp ? '💬 WhatsApp' : ''].filter(Boolean).join(' · ') + '</div>' : '') +
+      (ws.summary ? '<div style="font-size:13px;margin-top:6px">' + esc(ws.summary) + '</div>' : '') +
+      (ws.good && ws.good.length ? '<div style="font-size:13px;margin-top:6px"><b style="color:#057A44">Working:</b><br>' + ws.good.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
+      (ws.gaps && ws.gaps.length ? '<div style="font-size:13px;margin-top:6px"><b style="color:#7A5300">To fix:</b><br>' + ws.gaps.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
+      (ws.mismatches && ws.mismatches.length ? '<div style="font-size:13px;margin-top:6px"><b style="color:#B42318">Doesn’t match Instagram:</b><br>' + ws.mismatches.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
+      (b.linkTip ? '<div style="font-size:13px;margin-top:6px">🔗 <b>Link tip:</b> ' + esc(b.linkTip) + '</div>' : ''));
+    return h;
   }
   function mineSheet(k) {
     var to = k.to || {}, imp = (k.improve || []).slice(); while (imp.length < 3) imp.push({ area: '', why: '', fix: '' });
@@ -170,6 +217,7 @@
     var ta = function (id, v, rows) { return '<textarea id="' + id + '" rows="' + (rows || 2) + '" style="font-size:13.5px">' + esc(v || '') + '</textarea>'; };
     var s = X.sheet('<h3 style="margin:0 0 2px">✍🏾 ' + esc(k.biz) + ' ' + ckPill(k) + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + ' · wants ' + esc((k.goal || 'more sales').toLowerCase()) + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.listing ? ' · 📍 <a href="' + esc(k.listing.url) + '" target="_blank" rel="noopener">on Auntie Tobi</a>' : ' · not on Auntie Tobi') + '</div>' +
       '<div style="background:#F6F4EE;border-radius:10px;padding:9px 12px;margin-top:10px;font-size:13.5px">' + (k.clientId ? '➡️ Now a client' : ckState(k)) + (k.sentVia && k.sentVia.length ? ' · sent by ' + esc(k.sentVia.join(', ')) : '') + '</div>' +
+      bioHtml(k) +
       '<div style="font-weight:800;margin-top:12px">✏️ Their results <span class="muted" style="font-weight:500;font-size:12.5px">— change anything before you send</span></div>' +
       '<label>The big picture</label>' + ta('eO', k.overall, 3) +
       '<label>💚 What’s working <span class="muted" style="font-weight:400">(one per line: what’s working | why it helps)</span></label>' + ta('eW', (k.working || []).map(function (x) { return x.why ? x.t + ' | ' + x.why : x.t; }).join('\n'), 4) +
@@ -194,6 +242,8 @@
     var saveIt = async function (quiet) { var r = await X.api('gu-check-edit', fields()); Object.assign(k, r.check); if (!quiet) X.toast('💾 Saved'); };
     var sent = async function (via) { try { var r = await X.api('gu-check-mark', { id: k.id, sent: via }); Object.assign(k, r.check); board(); } catch (e) { X.toast(e.message); } };
     $('#eS', s).onclick = function () { saveIt().catch(function (e) { X.toast(e.message); }); };
+    $$('[data-cpb]', s).forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(b.dataset.cpb); X.toast('📋 Copied'); } catch (e) {} }; });
+    $$('[data-usebio]', s).forEach(function (b) { b.onclick = function () { $('#eB', s).value = b.dataset.usebio; X.toast('✍🏾 Set as their suggested bio — tap Save changes'); }; });
     var sw = $('#mSw', s); if (sw) sw.onclick = function (e) { e.preventDefault(); follow = !follow; $('#ckT', s).value = mineMsg(Object.assign({}, k, { to: { name: $('#tN', s).value } }), follow); this.textContent = follow ? 'use the first message' : 'use the follow-up'; };
     $('#sW', s).onclick = async function () {
       var ph = String($('#tW', s).value).replace(/\D/g, '').replace(/^0/, '44'); if (ph.length < 10) return X.toast('Add their WhatsApp number first');
