@@ -1012,9 +1012,10 @@
 .home-biz>button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 14px;font-family:inherit;cursor:pointer;color:#0F1E36;font-size:14px}.home-biz b{display:block}.home-biz small{color:#6B7280;font-size:12.5px}.home-biz .ar{color:#057A44;font-weight:800;font-size:18px}
 .home-biz>div{grid-template-columns:1fr;border-top:1px solid #F1EEE6}.home-biz>div a{padding:12px 16px;border-bottom:1px solid #F1EEE6;color:#057A44;font-weight:700;font-size:14px;text-decoration:none}.home-biz>div a:last-child{border:0}
 /* 🏠 Home shortcuts row */
-.home-sc{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:2px 0 4px}
-.home-sc button{background:none;border:0;font-family:inherit;font-size:12px;font-weight:600;color:#374151;cursor:pointer;padding:0;line-height:1.3}
-.home-sc i{display:flex;width:46px;height:46px;margin:0 auto 5px;border-radius:50%;background:#fff;border:1px solid #E8E3D6;align-items:center;justify-content:center;font-size:22px;font-style:normal;transition:transform .15s}
+.home-sc{display:flex;align-items:flex-start;gap:6px;margin:2px -4px 4px;padding:0 4px 4px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.home-sc::-webkit-scrollbar{display:none}
+.home-sc button{flex:0 0 70px;scroll-snap-align:start;background:none;border:0;font-family:inherit;font-size:12px;font-weight:600;color:#374151;cursor:pointer;padding:0;line-height:1.3}
+.home-sc i{display:flex;width:50px;height:50px;margin:0 auto 5px;border-radius:50%;background:#fff;border:1px solid #E8E3D6;align-items:center;justify-content:center;font-size:22px;font-style:normal;transition:transform .15s}
 .home-sc button:active i{transform:scale(.94)}
 </style>
   <!-- OneSignal Push Notifications -->
@@ -6061,7 +6062,7 @@ function sundaySignup(){
   window.open('/sunday-update', '_blank', 'noopener');
 }
 function showHomeShortcuts(){
-  var items = [['🏢','Businesses','showBusinesses(undefined,null,null,true,true)'],['🎉','Events','showEventsCard()'],['💌','Cards',"location.href='/cards'"],['🛍️','Market','showMarketplace()'],['📰','News','showNewsAndUpdates()'],['🇬🇧','UK Test','window.LifeUK?LifeUK.open():quickAsk(\'Help me prepare for my Life in UK test\')']];
+  var items = [['🏢','Businesses','showBusinesses(undefined,null,null,true,true)'],['🎉','Events','showEventsCard()'],['💌','Cards',"location.href='/cards'"],['🛍️','Market','showMarketplace()'],['📰','News','showNewsAndUpdates()'],['🇬🇧','Life in UK Test','window.LifeUK?LifeUK.open():quickAsk(\'Help me prepare for my Life in UK test\')']];
   addTipMessage('<div class="home-sc">' + items.map(function(x){ return '<button type="button" onclick="' + x[2] + '"><i>' + x[0] + '</i>' + x[1] + '</button>'; }).join('') + '</div>');
 }
 
