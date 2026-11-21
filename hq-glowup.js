@@ -185,31 +185,34 @@
     var b = k.bioCheck, p = k.profile, w = k.site;
     if (!b && !p) return '';
     var ST = { good: ['✅', '#057A44', '#E3F2EA'], fix: ['🛠️', '#7A5300', '#FFF1CF'], missing: ['❌', '#B42318', '#FDE2E1'] };
-    var box = function (inner) { return '<div style="border:1px solid #EEE9DD;border-radius:12px;padding:10px 12px;margin-top:8px;background:#fff">' + inner + '</div>'; };
-    var h = '<div style="font-weight:800;margin-top:14px">🔎 Bio &amp; website check' + (b && b.score ? ' <span style="display:inline-block;font-size:12px;font-weight:800;border-radius:10px;padding:2px 8px;background:#E7EFFD;color:#1D3D7A">' + b.score + '/100</span>' : '') + '</div>';
-    if (p) h += box('<div style="font-size:13px"><b>' + esc(p.displayName || k.biz) + '</b>' + (p.handle ? ' · @' + esc(p.handle) : '') + (p.category ? ' · ' + esc(p.category) : '') +
+    var box = function (inner) { return '<div style="border:1px solid #EEE9DD;border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff">' + inner + '</div>'; };
+    var h = '<div style="font-weight:800;margin-top:14px;font-size:18px">🔎 Bio &amp; website check' + (b && b.score ? ' <span style="display:inline-block;font-weight:800;border-radius:10px;padding:2px 8px;background:#E7EFFD;color:#1D3D7A">' + b.score + '/100</span>' : '') + '</div>';
+    if (p) h += box('<div style=""><b>' + esc(p.displayName || k.biz) + '</b>' + (p.handle ? ' · @' + esc(p.handle) : '') + (p.category ? ' · ' + esc(p.category) : '') +
       '<div class="muted">' + [p.posts ? esc(p.posts) + ' posts' : '', p.followers ? esc(p.followers) + ' followers' : '', p.following ? esc(p.following) + ' following' : ''].filter(Boolean).join(' · ') + '</div>' +
       (p.bio ? '<div style="white-space:pre-wrap;margin-top:6px;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(p.bio) + '</div>' : '') +
       (p.link ? '<div style="margin-top:4px">🔗 ' + esc(p.link) + (p.extraLinks ? ' ' + esc(p.extraLinks) : '') + '</div>' : '') +
+      ((p.topics && p.topics.length) || (p.bioHashtags && p.bioHashtags.length) ? '<div style="margin-top:6px;color:#B42318;font-weight:700">⚠️ Takes people away: ' + esc((p.topics || []).concat(p.bioHashtags || []).join(', ')) + '</div>' : '') +
       (p.highlights && p.highlights.length ? '<div class="muted" style="margin-top:3px">Highlights: ' + esc(p.highlights.join(', ')) + '</div>' : '') + '</div>');
-    if (!b) return h + '<div class="muted" style="font-size:12.5px;margin-top:6px">The detailed bio check didn’t finish this time — the page check below still worked.</div>';
-    if (b.summary) h += '<div style="font-size:13.5px;margin-top:8px">' + esc(b.summary) + '</div>';
-    h += box(b.items.map(function (it) { var c = ST[it.s] || ['•', '#3F4A5C', '#F3F5F7'];
-      return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #F3F0E8;font-size:13px"><span style="flex:none;width:118px;font-weight:700">' + c[0] + ' ' + esc(it.label) + '</span><div style="flex:1"><div>' + esc(it.saw) + '</div>' + (it.fix ? '<div style="color:' + c[1] + ';margin-top:2px"><b>Fix:</b> ' + esc(it.fix) + '</div>' : '') + '</div></div>'; }).join(''));
-    if (b.nameLine) h += box('<div style="font-size:13px"><b>🏷️ Better name line</b></div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><div style="flex:1;font-size:13.5px;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(b.nameLine) + '</div><button class="btn ghost sm" data-cpb="' + esc(b.nameLine) + '">📋</button></div>');
-    if (b.bios.length) h += box('<div style="font-size:13px"><b>✍🏾 3 new bios</b> <span class="muted">(max 150 characters)</span></div>' + b.bios.map(function (x) {
-      return '<div style="margin-top:8px"><div class="muted" style="font-size:12px;font-weight:700">' + esc(x.angle) + ' · ' + Array.from(x.text).length + ' characters</div><div style="white-space:pre-wrap;font-size:13.5px;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(x.text) + '</div>' +
+    if (!b) return '<div style="font-size:15.5px;line-height:1.5">' + h + '</div>' + '<div class="muted" style="margin-top:6px">The detailed bio check didn’t finish this time — the page check below still worked.</div>';
+    if (b.summary) h += '<div style="margin-top:8px">' + esc(b.summary) + '</div>';
+    var bad = b.items.filter(function (it) { return it.s === 'fix' || it.s === 'missing'; }), good = b.items.filter(function (it) { return it.s === 'good'; });
+    h += box(bad.map(function (it) { var c = ST[it.s];
+      return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #F3F0E8"><span style="flex:none;width:150px;font-weight:800">' + c[0] + ' ' + esc(it.label) + '</span><div style="flex:1"><div>' + esc(it.saw) + '</div>' + (it.fix ? '<div style="color:' + c[1] + ';margin-top:3px;font-weight:600">→ ' + esc(it.fix) + '</div>' : '') + '</div></div>'; }).join('') +
+      (good.length ? '<div style="padding-top:8px;color:#057A44;font-weight:700">✅ Good: ' + good.map(function (it) { return esc(it.label); }).join(', ') + '</div>' : ''));
+    if (b.nameLine) h += box('<div style=""><b>🏷️ Better name line</b></div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><div style="flex:1;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(b.nameLine) + '</div><button class="btn ghost sm" data-cpb="' + esc(b.nameLine) + '">📋</button></div>');
+    if (b.bios.length) h += box('<div style=""><b>✍🏾 3 new bios</b> <span class="muted">(max 150 characters)</span></div>' + b.bios.map(function (x) {
+      return '<div style="margin-top:8px"><div class="muted" style="font-weight:700">' + esc(x.angle) + ' · ' + Array.from(x.text).length + ' characters</div><div style="white-space:pre-wrap;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(x.text) + '</div>' +
         '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn ghost sm" data-cpb="' + esc(x.text) + '">📋 Copy</button><button class="btn ghost sm" data-usebio="' + esc(x.text) + '">Use in their results</button></div></div>'; }).join(''));
-    if (b.highlights.length) h += box('<div style="font-size:13px"><b>⭕ Highlights to have</b></div>' + b.highlights.map(function (x) { return '<div style="font-size:13px;margin-top:4px"><b>' + esc(x.name) + '</b> — ' + esc(x.what) + '</div>'; }).join(''));
+    if (b.highlights.length) h += box('<div style=""><b>⭕ Highlights to have</b></div>' + b.highlights.map(function (x) { return '<div style="margin-top:4px"><b>' + esc(x.name) + '</b> — ' + esc(x.what) + '</div>'; }).join(''));
     var ws = b.website || {};
-    h += box('<div style="font-size:13px"><b>🌐 Their website</b> ' + (w ? (w.ok ? '<a href="' + esc(w.finalUrl) + '" target="_blank" rel="noopener">' + esc(String(w.finalUrl).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + ' ↗</a> <span class="muted">· opened in ' + (Math.round(w.ms / 100) / 10) + 's' + (w.linkPage ? ' · via a link page with ' + (w.links || []).length + ' links' : '') + '</span>' : '<span style="color:#B42318">· couldn’t open ' + esc(w.url) + '</span>') : '<span class="muted">· no link in their bio</span>') + '</div>' +
-      (w && w.ok ? '<div class="muted" style="font-size:12.5px;margin-top:3px">' + [w.prices && w.prices.length ? 'Prices: ' + esc(w.prices.slice(0, 5).join(', ')) : 'No prices found', w.booking ? 'Online booking ✓' : '', w.shop ? 'Online shop ✓' : '', w.email ? '📧 ' + esc(w.email) : '', w.phone ? '📞 ' + esc(w.phone) : '', w.whatsapp ? '💬 WhatsApp' : ''].filter(Boolean).join(' · ') + '</div>' : '') +
-      (ws.summary ? '<div style="font-size:13px;margin-top:6px">' + esc(ws.summary) + '</div>' : '') +
-      (ws.good && ws.good.length ? '<div style="font-size:13px;margin-top:6px"><b style="color:#057A44">Working:</b><br>' + ws.good.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
-      (ws.gaps && ws.gaps.length ? '<div style="font-size:13px;margin-top:6px"><b style="color:#7A5300">To fix:</b><br>' + ws.gaps.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
-      (ws.mismatches && ws.mismatches.length ? '<div style="font-size:13px;margin-top:6px"><b style="color:#B42318">Doesn’t match Instagram:</b><br>' + ws.mismatches.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
-      (b.linkTip ? '<div style="font-size:13px;margin-top:6px">🔗 <b>Link tip:</b> ' + esc(b.linkTip) + '</div>' : ''));
-    return h;
+    h += box('<div style=""><b>🌐 Their website</b> ' + (w ? (w.ok ? '<a href="' + esc(w.finalUrl) + '" target="_blank" rel="noopener">' + esc(String(w.finalUrl).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + ' ↗</a> <span class="muted">· opened in ' + (Math.round(w.ms / 100) / 10) + 's' + (w.linkPage ? ' · via a link page with ' + (w.links || []).length + ' links' : '') + '</span>' : '<span style="color:#B42318">· couldn’t open ' + esc(w.url) + '</span>') : '<span class="muted">· no link in their bio</span>') + '</div>' +
+      (w && w.ok ? '<div class="muted" style="margin-top:3px">' + [w.prices && w.prices.length ? 'Prices: ' + esc(w.prices.slice(0, 5).join(', ')) : 'No prices found', w.booking ? 'Online booking ✓' : '', w.shop ? 'Online shop ✓' : '', w.email ? '📧 ' + esc(w.email) : '', w.phone ? '📞 ' + esc(w.phone) : '', w.whatsapp ? '💬 WhatsApp' : ''].filter(Boolean).join(' · ') + '</div>' : '') +
+      (ws.summary ? '<div style="margin-top:6px">' + esc(ws.summary) + '</div>' : '') +
+      (ws.good && ws.good.length ? '<div style="margin-top:6px"><b style="color:#057A44">Working:</b><br>' + ws.good.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
+      (ws.gaps && ws.gaps.length ? '<div style="margin-top:6px"><b style="color:#7A5300">To fix:</b><br>' + ws.gaps.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
+      (ws.mismatches && ws.mismatches.length ? '<div style="margin-top:6px"><b style="color:#B42318">Doesn’t match Instagram:</b><br>' + ws.mismatches.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
+      (b.linkTip ? '<div style="margin-top:6px">🔗 <b>Link tip:</b> ' + esc(b.linkTip) + '</div>' : ''));
+    return '<div style="font-size:15.5px;line-height:1.5">' + h + '</div>';
   }
   function mineSheet(k) {
     var to = k.to || {}, imp = (k.improve || []).slice(); while (imp.length < 3) imp.push({ area: '', why: '', fix: '' });
