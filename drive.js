@@ -59,7 +59,7 @@
     if (!loading) {
       // the checked bank + any fixes made in HQ (🇬🇧🚗 Question review). Only ✅ verified questions are used.
       var fix = fetch('/.netlify/functions/app-content?drq=1').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
-      loading = Promise.all([fetch('/drive-q.json?v=20261122a').then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); }), fix]).then(function (x) {
+      loading = Promise.all([fetch('/drive-q.json?v=20261122b').then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); }), fix]).then(function (x) {
         var over = (x[1] && x[1].fix) || {};
         ALL = x[0].map(function (q) { var o = over[q.id]; return o ? Object.assign({}, q, o) : q; });
         Q = ALL.filter(function (q) { return !q.st || q.st === 'v'; });

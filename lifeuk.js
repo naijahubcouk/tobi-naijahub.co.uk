@@ -45,7 +45,7 @@
     if (Q) return Promise.resolve(Q);
     if (!loading) {
       var fix = fetch('/.netlify/functions/app-content?luq=1').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
-      loading = Promise.all([fetch('/lifeuk-q.json?v=20261122a').then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); }), fix]).then(function (x) {
+      loading = Promise.all([fetch('/lifeuk-q.json?v=20261122b').then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); }), fix]).then(function (x) {
         var over = (x[1] && x[1].fix) || {};
         ALL = x[0].map(function (q) { var o = over[q.id]; return o ? Object.assign({}, q, o) : q; });
         Q = ALL.filter(function (q) { return !q.s || q.s === 'v'; });   // ✅ only verified questions are used
