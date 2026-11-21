@@ -64,6 +64,7 @@ function sectionsOf(action) {
   if (/^car-/.test(action)) return ['cars'];
   if (/^tc-/.test(action)) return ['cars'];
   if (/^sc-/.test(action)) return ['cars'];   // 🎨 Style Match carousels
+  if (/^qv-/.test(action)) return ['cars'];   // 🎬 Quiz videos
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
@@ -288,6 +289,17 @@ exports.handler = handler(async (ctx) => {
       if (body.url) { const page = await require('../eventmedia').readLink(body.url, true); notes = page.notes + (notes ? `\n\nExtra notes:\n${notes.slice(0, 2000)}` : ''); }
       return { draft: await tplcar.write(notes, { count: body.count, end: body.end !== false }) };
     }
+    case 'qv-status': return require('../quizvideo').status();
+    case 'qv-speak': {
+      await core.rateLimit('hq-qvspeak', who.email, 400, 60 * 60 * 1000, 'That’s a lot of voice lines this hour — please wait a little.');
+      return require('../quizvideo').speak(body);
+    }
+    case 'qv-bg': {
+      await core.rateLimit('hq-qvbg', who.email, 60, 60 * 60 * 1000, 'That’s a lot of pictures this hour — please wait a little.');
+      return require('../quizvideo').background(body);
+    }
+    case 'qv-bg-set': return require('../quizvideo').setBackground(body);
+    case 'qv-bg-saved': return { saved: await require('../quizvideo').savedBackgrounds(body.bank, body.ids) };
     case 'sc-styles': return { styles: await require('../stylecar').styles() };
     case 'sc-analyze': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
