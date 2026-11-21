@@ -510,22 +510,59 @@ exports.handler = handler(async (ctx) => {
           weekMembers: progs.filter(p => p.stories.due || p.reposts.due).length, monthMembers: progs.filter(p => p.discovery.due).length, targets };
       }
       const since = growth.addDays(day, -30);
+      // Real data so boxes tick themselves: HQ directory listings, live Marketplace listings, HQ Club check-ups sent.
+      const months = []; { const d0 = new Date(`${month}-15T12:00:00Z`); for (let i = 0; i < 13; i++) { const d1 = new Date(d0); d1.setUTCMonth(d0.getUTCMonth() - i); months.push(d1.toISOString().slice(0, 7)); } }
+      const [biz, mk, ccs] = await Promise.all([
+        require('../bizdir').all().catch(() => []),
+        market.all().catch(() => []),
+        Promise.all(months.map(mo => getJson(`hq/clubcheck/m/${mo}`).catch(() => null))),
+      ]);
+      const bySlug = {}; for (const b of biz) if (b && b.slug) bySlug[b.slug] = b;
+      const liveMk = new Set(mk.filter(r => r && r.owner && market.status(r) === 'live').map(r => r.owner));
       const rows = await mapLimit(members, 8, async m => {
         const [b, p, usage, prog] = await Promise.all([benefits.getYear(m.email, m), getJson(`profiles/${enc(m.email)}`), getJson(gen.monthUsageKey(m.email, month)), growth.getProgress(m.email)]);
         const y = b.year || benefits.emptyYear();
         const posts30 = Object.entries(prog.entries || {}).filter(([d]) => d >= since).reduce((a, [, e]) => a + (e.posts || 0), 0);
         const daysLeft = Math.round((Date.parse(`${m.membershipExpiresAt}T12:00:00Z`) - Date.parse(`${day}T12:00:00Z`)) / 86400000);
+        const listing = p && p.listingSlug ? bySlug[p.listingSlug] : null;
+        const startMonth = growth.addDays(m.membershipExpiresAt, -365).slice(0, 7);
+        const yearMonths = months.filter(mo => mo >= startMonth && mo <= month);
+        const checkups = yearMonths.filter(mo => { const st = ccs[months.indexOf(mo)]; const r = st && st.items && st.items[m.email]; return r && ['sent', 'replied', 'help'].includes(r.status); }).length;
+        const extra = { featured: !!(listing && listing.featured), marketplace: liveMk.has(m.email), verified: !!(listing && listing.verified), checkups, checkupsOf: yearMonths.length };
+        const [wel, sent] = await Promise.all([getJson(`msg/wel/${enc(m.email)}`).catch(() => null), getJson(`benefits-summary/${enc(m.email)}`).catch(() => null)]);
+        const start = [
+          { key: 'welcome', label: 'Welcome series', ok: !!(wel && wel.sent && Object.keys(wel.sent).length), todo: 'Welcome series not sent' },
+          { key: 'profile', label: 'Studio profile', ok: !!(p && p.businessName), todo: 'Business Studio profile not set up' },
+          { key: 'listing', label: 'Listing linked', ok: !!listing, todo: 'Listing not linked yet' },
+        ];
+        const name1 = (m.name || '').split(' ')[0];
         return {
+          start, auto: extra, summarySent: sent && sent.year === m.membershipExpiresAt ? sent.at : '', summary: daysLeft <= 30 ? benefits.yearSummary(y, { name: name1, business: (p && p.businessName) || (listing && listing.name) || '', expires: m.membershipExpiresAt }, extra) : '',
+          whatsapp: (() => { const w = String((p && p.whatsapp) || '').replace(/\D/g, ''); return w.length >= 10 ? (w.startsWith('0') ? '44' + w.slice(1) : w) : ''; })(),
           email: m.email, name: m.name || '', business: (p && p.businessName) || '', expires: m.membershipExpiresAt, daysLeft,
           spotlight: y.spotlight.status, spotlightDate: y.spotlight.date, groupad: (y.groupad || {}).status || 'none', groupadDate: (y.groupad || {}).date || '', featured: y.featured.done, marketplace: y.marketplace.done, badge: y.badge,
           stories: y.stories.length, reposts: y.reposts.length, discovery: y.discovery.length, collabs: (y.collabs || []).length, lastShared: benefits.lastShared(y),
-          prog: benefits.progress(y, targets, day), board: benefits.board(y, targets, day, daysLeft),
+          prog: benefits.progress(y, targets, day), board: benefits.board(y, targets, day, daysLeft, false, extra),
           checkup: y.checkup.done, checkupDate: y.checkup.date, priorities: y.checkup.priorities.length, prioritiesDone: (y.prioritiesDone || []).length,
           verify: y.verify && y.verify.status === 'pending' ? { number: y.verify.number, at: y.verify.at } : null,
           generationsMonth: usage ? usage.used || 0 : 0, posts30,
         };
       });
       return { rows, today: day, targets, weekStart: benefits.weekStart(day) };
+    }
+
+    case 'benefits-summary-email': {
+      const email = requireEmail(body.email);
+      const m = await core.getMember(email);
+      if (!m) throw new HttpError(404, 'not_found', 'Member not found.');
+      const text = cleanText(body.text, 4000);
+      if (!text) throw new HttpError(400, 'invalid', 'The message is empty.');
+      const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const html = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#1F2937;max-width:560px">' + text.split(/\n{2,}/).map(x => '<p>' + esc(x).replace(/\n/g, '<br>') + '</p>').join('') + '</div>';
+      await core.sendEmail(email, 'Your Business Club year with Auntie Tobi 💚', text, html);
+      await cas(`benefits-summary/${enc(email)}`, () => ({ at: core.nowIso(), year: m.membershipExpiresAt, by: actor }));
+      await core.audit(actor, 'benefits_summary_email', { email });
+      return { ok: true };
     }
 
     // ── Daily to-do list ──
@@ -561,7 +598,19 @@ exports.handler = handler(async (ctx) => {
         if (!(em in igs)) igs[em] = await igOf(ctx.event, em, profiles[em] || await getJson(`profiles/${enc(em)}`));
         it.ig = igs[em] || { handle: '', source: 'none', email: em };
       }
-      return { ...view, defs: await todo.getDefs() };
+      // Business Club benefits: who has a one-off benefit owed now, and renewal summaries waiting to go.
+      const club2 = { due: 0, summaries: 0 };
+      try {
+        const targets = await benefits.getTargets(), day = core.dayKey();
+        await mapLimit(club, 8, async m => {
+          const daysLeft = Math.round((Date.parse(`${m.membershipExpiresAt}T12:00:00Z`) - Date.parse(`${day}T12:00:00Z`)) / 86400000);
+          const y = (await benefits.getYear(m.email, m)).year;
+          const b = benefits.board(y, targets, day, daysLeft);
+          if (b.items.some(i => i.state === 'due' && ['spotlight', 'groupad', 'collabs', 'checkup'].includes(i.key))) club2.due++;
+          if (daysLeft <= 30) { const s2 = await getJson(`benefits-summary/${enc(m.email)}`).catch(() => null); if (!(s2 && s2.year === m.membershipExpiresAt)) club2.summaries++; }
+        });
+      } catch (e) { console.error('[studio] todo benefits failed', e && e.message); }
+      return { ...view, club: club2, defs: await todo.getDefs() };
     }
     case 'todo-mark': {
       const how = String(body.how || '');

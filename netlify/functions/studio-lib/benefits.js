@@ -190,30 +190,42 @@ function progress(y, t, day) {
 const BOARD = [
   ['spotlight', '📣', 'Spotlight'], ['groupad', '🚀', 'Group advert'], ['collabs', '🤝', 'Collab'], ['discovery', '💚', 'Discovery'], ['featured', '⭐', 'Featured'],
   ['marketplace', '🛍️', 'Marketplace'], ['verified', '✅', 'Verified'], ['stories', '📲', 'Story reposts'], ['reposts', '🖼️', 'Post/Reel reposts'],
-  ['checkup', '📊', 'Check-Up'],
+  ['checkup', '📊', 'Check-Up'], ['checkups', '💚', 'Monthly check-ups'],
 ];
-function board(y, t, day, daysLeft, forMember) {
+/*
+ * extra (admin only, from real data): { featured, marketplace, verified, checkups: n, checkupsOf: n }
+ * Featured / Marketplace / Verified tick themselves when the listing shows it; a tick by hand still counts.
+ * Spotlight is owed from halfway through the year, the group advert from 3 months before the end.
+ */
+function board(y, t, day, daysLeft, forMember, extra) {
   y = { ...emptyYear(), ...(y || {}) };
-  const late = Number.isFinite(daysLeft) && daysLeft <= 60;
+  const x = extra || null;
+  const has = Number.isFinite(daysLeft);
+  const late = has && daysLeft <= 60;
+  const dueFrom = { spotlight: 182, groupad: 90 };
   const p = t ? progress(y, t, day) : null;
   const yearCount = k => (y[k] || []).length;
-  const items = BOARD.map(([key, icon, label]) => {
+  const items = BOARD.filter(([key]) => key !== 'checkups' || x).map(([key, icon, label]) => {
     let state = 'todo', text = '';
     if (key === 'spotlight' || key === 'groupad') {
       const s = y[key] || {};
       if (s.status === 'done') { state = 'done'; text = s.date ? 'Done ' + s.date : 'Done'; }
       else if (s.status === 'scheduled') { state = 'part'; text = s.date ? 'Booked ' + s.date : 'Booked'; }
-      else { state = late ? 'due' : 'todo'; text = 'Not yet'; }
+      else { const owed = has && daysLeft <= dueFrom[key]; state = owed ? 'due' : 'todo'; text = owed ? 'Due now' : 'Not yet'; }
+    } else if (key === 'checkups') {
+      const n = x.checkups || 0, of = x.checkupsOf || 0;
+      state = of && n >= of ? 'done' : n ? 'part' : (of ? 'due' : 'todo'); text = n + '/12 sent';
     } else if (key === 'collabs') {
       const n = yearCount('collabs'), tg = t ? t.collabsYear : 0;
       if (forMember) { state = n ? 'done' : 'todo'; text = n ? n + ' this year' : 'Not yet'; }
       else { state = n >= tg ? 'done' : n ? 'part' : (late ? 'due' : 'todo'); text = n + '/' + tg + ' this year'; }
     } else if (key === 'featured' || key === 'marketplace') {
-      const done = !!(y[key] && y[key].done);
-      state = done ? 'done' : 'due'; text = done ? 'Live' : 'Set up';
+      const done = !!(y[key] && y[key].done), auto = !done && !!(x && x[key]);
+      state = done || auto ? 'done' : 'due'; text = auto ? 'Live (auto)' : done ? 'Live' : 'Set up';
     } else if (key === 'verified') {
       if (y.badge === 'yes') { state = 'done'; text = 'Verified'; }
       else if (y.badge === 'not_eligible') { state = 'na'; text = 'Not eligible'; }
+      else if (x && x.verified) { state = 'done'; text = 'Verified (auto)'; }
       else if (y.verify && y.verify.status === 'pending') { state = forMember ? 'part' : 'due'; text = 'Request waiting'; }
       else { state = 'todo'; text = forMember ? 'Not yet' : 'Not requested'; }
     } else if (key === 'checkup') {
@@ -240,6 +252,30 @@ function feed(y) {
   return out.sort((a, b) => (b.at || '').localeCompare(a.at || '') || (b.loggedAt || '').localeCompare(a.loggedAt || ''));
 }
 
+// The end-of-year message for renewal: built from what was logged, no AI. Plain text, ready to copy/send.
+function yearSummary(y, who, extra) {
+  y = { ...emptyYear(), ...(y || {}) }; who = who || {}; const x = extra || {};
+  const nice = v => validDate(v) ? new Date(v + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : v;
+  const n = k => (y[k] || []).length, pl = (c, w, ws) => c + ' ' + (c === 1 ? w : (ws || w + 's'));
+  const lines = [];
+  if (y.spotlight.status === 'done') lines.push('📣 Your Business Spotlight' + (y.spotlight.date ? ' (' + nice(y.spotlight.date) + ')' : ''));
+  if ((y.groupad || {}).status === 'done') lines.push('🚀 Your paid group advert');
+  if (n('collabs')) lines.push('🤝 ' + pl(n('collabs'), 'collab'));
+  if (n('discovery')) lines.push('💚 ' + pl(n('discovery'), 'discovery feature'));
+  if (n('stories')) lines.push('📲 ' + pl(n('stories'), 'Story repost'));
+  if (n('reposts')) lines.push('🖼️ ' + pl(n('reposts'), 'Post/Reel repost'));
+  if (y.featured.done || x.featured) lines.push('⭐ A Featured spot on the Auntie Tobi App');
+  if (y.marketplace.done || x.marketplace) lines.push('🛍️ Your Marketplace listing');
+  if (y.badge === 'yes' || x.verified) lines.push('✅ Your Verified Business tick');
+  if (y.checkup.done) lines.push('📊 Your Business Check-Up');
+  if (x.checkups) lines.push('💬 ' + pl(x.checkups, 'monthly check-up'));
+  const hi = who.name ? 'Hi ' + who.name + ' 💚' : 'Hello 💚';
+  const biz = who.business ? who.business : 'your business';
+  return [hi, '', 'Your Business Club year is nearly up' + (who.expires ? ' (it renews on ' + nice(who.expires) + ')' : '') + ', so here is what we did together for ' + biz + ' this year:', '',
+    ...(lines.length ? lines.map(l => '• ' + l) : ['• (nothing logged yet)']), '',
+    'Thank you for being part of the Club. I would love to keep cheering you on for another year — just reply if you have any questions about renewing.', '', 'Auntie Tobi'].join('\n');
+}
+
 // What the member sees (no admin notes).
 function forMember(yearKey, y) {
   if (!y) return null;
@@ -257,4 +293,4 @@ function forMember(yearKey, y) {
   };
 }
 
-module.exports = { board, BOARD, getYear, update, log, unlog, setPriorityDone, requestVerify, forMember, lastShared, yearKeyOf, emptyYear, LOG_KINDS, LABELS, DEFAULT_TARGETS, getTargets, saveTargets, progress, feed, weekStart };
+module.exports = { board, BOARD, getYear, update, log, unlog, setPriorityDone, requestVerify, forMember, lastShared, yearKeyOf, emptyYear, LOG_KINDS, LABELS, DEFAULT_TARGETS, getTargets, saveTargets, progress, feed, weekStart, yearSummary };

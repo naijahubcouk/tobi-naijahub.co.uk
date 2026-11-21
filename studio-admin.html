@@ -710,6 +710,31 @@ main.wide{max-width:1480px}
     var pct = b.of ? Math.round(b.done / b.of * 100) : 0, late = daysLeft <= 60 && b.done < b.of;
     return '<div class="bbar"><div style="width:' + pct + '%;background:' + (late ? 'var(--danger)' : 'var(--green)') + '"></div></div><div class="muted" style="font-size:13.5px">' + b.done + ' of ' + b.of + ' delivered</div>';
   }
+  // Getting started: a small to-do line only while something is missing.
+  function benStart(x) {
+    var miss = (x.start || []).filter(function (s) { return !s.ok; });
+    if (!miss.length) return '';
+    return '<div style="margin-top:6px;font-size:13px;line-height:1.5"><b>Getting started:</b> ' + miss.map(function (s) { return '<span class="pill p-warn" style="font-size:12.5px;margin:2px 2px 0 0">' + esc(s.todo) + '</span>'; }).join('') + '</div>';
+  }
+  // The renewal message: copy, WhatsApp or email — nothing goes out until tapped.
+  function benSummary(email) {
+    var x = (S.benRows || []).filter(function (r) { return r.email === email; })[0]; if (!x) return;
+    var s = sheet('<h2 style="margin:0">📨 Year summary · ' + esc(x.business || x.name || x.email) + '</h2>' +
+      '<div class="muted">Membership ends ' + esc(d(x.expires)) + ' (' + x.daysLeft + ' days). Built from everything you logged — change anything before sending.' + (x.summarySent ? ' <b>Emailed ' + esc(d(x.summarySent.slice(0, 10))) + '.</b>' : '') + '</div>' +
+      '<textarea id="smT" rows="14" style="font-size:15px">' + esc(x.summary) + '</textarea>' +
+      '<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn ghost" id="smC">📋 Copy</button>' +
+      (x.whatsapp ? '<button class="btn ghost" id="smW">💬 WhatsApp</button>' : '') +
+      '<button class="btn primary" id="smE">✉️ Email it</button><button class="btn ghost" id="smX" style="margin-left:auto">Close</button></div>');
+    var txt = function () { return $('#smT', s).value; };
+    $('#smX', s).onclick = function () { s.remove(); };
+    $('#smC', s).onclick = function () { navigator.clipboard.writeText(txt()).then(function () { toast('Copied'); }, function () { toast('Copy failed — select the text'); }); };
+    var w = $('#smW', s); if (w) w.onclick = function () { window.open('https://wa.me/' + x.whatsapp + '?text=' + encodeURIComponent(txt()), '_blank', 'noopener'); };
+    $('#smE', s).onclick = async function () {
+      if (!confirm('Email this summary to ' + x.email + ' now?')) return;
+      var b = this; b.disabled = true;
+      try { await api('benefits-summary-email', { email: x.email, text: txt() }); toast('Emailed to ' + x.email); s.remove(); vBenefits(); } catch (e2) { toast(e2.message); b.disabled = false; }
+    };
+  }
   function benCsv(rows) {
     var head = ['Business', 'Email', 'Membership ends', 'Days left', 'Delivered'].concat(rows.length ? rows[0].board.items.map(function (i) { return i.label; }) : []).concat(['Last shared']);
     var q = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
@@ -741,7 +766,9 @@ main.wide{max-width:1480px}
       verify: function (x) { return !!x.verify; },
       checkup: function (x) { return st(x, 'checkup') !== 'done'; },
       featured: function (x) { return st(x, 'featured') !== 'done'; },
-      market: function (x) { return st(x, 'marketplace') !== 'done'; }
+      market: function (x) { return st(x, 'marketplace') !== 'done'; },
+      start: function (x) { return (x.start || []).some(function (s) { return !s.ok; }); },
+      summary: function (x) { return !!x.summary && !x.summarySent; }
     };
     var list = rows.filter(F[filter] || F.all);
     if (filter === 'longest') list.sort(function (a, b) { return (a.lastShared || '0').localeCompare(b.lastShared || '0') || a.daysLeft - b.daysLeft; });
@@ -761,17 +788,18 @@ main.wide{max-width:1480px}
       '<button class="btn small ghost" id="bCsv">⬇️ Download (CSV)</button></div>' +
       (summary ? '<div class="note" style="margin-bottom:12px">' + summary + '</div>' : '') +
       '<div class="grid">' + stat(rows.length, 'Active members') + stat(avg + '%', 'Benefits delivered (average)') + stat(wk, 'Owed Story or Post/Reel reposts this week') + stat(mo, 'Owed discovery this month') +
-        stat(count('ending'), 'Ending in 60 days, still owed') + stat(count('verify'), 'Verification requests') + '</div>' +
+        stat(count('ending'), 'Ending in 60 days, still owed') + stat(count('verify'), 'Verification requests') + stat(count('start'), 'Still getting started') + stat(count('summary'), 'Year summaries ready') + '</div>' +
       '<details class="card" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">🎯 Targets per member: ' + t.storiesWeek + ' Story &amp; ' + t.repostsWeek + ' Post/Reel reposts a week · ' + t.discoveryMonth + ' discovery a month · ' + t.collabsYear + ' collabs &amp; ' + t.spotlightYear + ' Spotlight &amp; ' + (t.groupadYear == null ? 1 : t.groupadYear) + ' paid group advert a year <span class="muted" style="font-weight:400">— change</span></summary>' +
         '<div class="row" style="margin-top:10px;align-items:flex-end">' + TG.map(function (f) { return '<div style="width:150px"><label for="tg_' + f[0] + '">' + f[1] + '</label><input type="number" min="0" max="50" id="tg_' + f[0] + '" value="' + t[f[0]] + '"></div>'; }).join('') + '<button class="btn primary small" id="tgSave">Save targets</button></div></details>' +
       '<div class="row" style="margin:14px 0 6px;gap:6px">' + [['board', '📋 Board'], ['todo', '✅ This week’s to-do']].map(function (b) { return '<button class="btn ' + (tab === b[0] ? 'primary' : 'ghost') + '" data-btab="' + b[0] + '">' + b[1] + '</button>'; }).join('') + '</div>';
     if (tab === 'todo') html += benTodoHtml(rows);
-    else html += '<div class="row" style="margin:8px 0 10px">' + [['all', 'All'], ['verify', '🏛️ Verification requests'], ['week', 'Owed this week'], ['month', 'Owed this month'], ['spotlight', '📣 Spotlight not done'], ['groupad', '🚀 Group advert not done'], ['collabs', '🤝 Collabs not met'], ['featured', '⭐ Featured to set up'], ['market', '🛍️ Marketplace to set up'], ['checkup', '📊 Check-Up not done'], ['ending', 'Ends ≤ 60 days, still owed'], ['longest', 'Longest since shared']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
+    else html += '<div class="row" style="margin:8px 0 10px">' + [['all', 'All'], ['start', '🌱 Getting started'], ['summary', '📨 Year summary ready'], ['verify', '🏛️ Verification requests'], ['week', 'Owed this week'], ['month', 'Owed this month'], ['spotlight', '📣 Spotlight not done'], ['groupad', '🚀 Group advert not done'], ['collabs', '🤝 Collabs not met'], ['featured', '⭐ Featured to set up'], ['market', '🛍️ Marketplace to set up'], ['checkup', '📊 Check-Up not done'], ['ending', 'Ends ≤ 60 days, still owed'], ['longest', 'Longest since shared']].map(function (f) { return '<button class="btn small ' + (f[0] === filter ? 'primary' : 'ghost') + '" data-bf="' + f[0] + '">' + f[1] + (f[0] === 'all' || f[0] === 'longest' ? '' : ' (' + count(f[0]) + ')') + '</button>'; }).join('') + '</div>' +
       '<div class="muted" style="font-size:14px;margin-bottom:6px">🟢 delivered · 🟡 started · 🔴 owed now · ⚪ still to do this year — <b>tap any box to log it</b></div>' +
       '<div class="tw"><table class="btable"><thead><tr><th>Member</th>' + heads.map(function (h) { return '<th class="bh"><span>' + h.icon + '</span>' + esc(h.label) + '</th>'; }).join('') + '<th>Last shared</th><th></th></tr></thead><tbody>' +
       (list.length ? list.map(function (x) {
         return '<tr><td class="bmem"><b>' + esc(x.business || x.name || x.email) + '</b><div class="muted" style="font-size:13.5px">' + esc(x.email) + '</div>' + benBar(x.board, x.daysLeft) +
-          '<div class="muted" style="font-size:13.5px' + (x.daysLeft <= 60 ? ';color:var(--danger);font-weight:700' : '') + '">Ends ' + esc(d(x.expires)) + ' · ' + x.daysLeft + ' days</div>' + (x.verify ? '<span class="pill p-pending" style="font-size:12.5px">🏛️ Verify request</span>' : '') + '</td>' +
+          '<div class="muted" style="font-size:13.5px' + (x.daysLeft <= 60 ? ';color:var(--danger);font-weight:700' : '') + '">Ends ' + esc(d(x.expires)) + ' · ' + x.daysLeft + ' days</div>' + (x.verify ? '<span class="pill p-pending" style="font-size:12.5px">🏛️ Verify request</span>' : '') + benStart(x) +
+          (x.summary ? '<button class="btn small" style="margin-top:6px;background:#FEF3C7;border-color:#F59E0B;color:#92400E" data-bsum="' + esc(x.email) + '">📨 Year summary ' + (x.summarySent ? 'sent ✓' : 'ready') + '</button>' : '') + '</td>' +
           x.board.items.map(function (it) { return '<td class="bc">' + benCell(x.email, it) + '</td>'; }).join('') +
           '<td>' + (x.lastShared ? esc(d(x.lastShared)) : '<span class="pill p-warn">Never</span>') + '<div class="muted" style="font-size:13px">' + x.generationsMonth + ' AI · ' + x.posts30 + ' posts (30d)</div></td>' +
           '<td><button class="btn small primary" data-ben="' + esc(x.email) + '">Open</button></td></tr>';
@@ -780,6 +808,7 @@ main.wide{max-width:1480px}
     $$('[data-btab]').forEach(function (b) { b.onclick = function () { S.benTab = b.dataset.btab; vBenefits(); }; });
     $$('[data-bf]').forEach(function (b) { b.onclick = function () { vBenefits(b.dataset.bf); }; });
     $$('[data-ben]').forEach(function (b) { b.onclick = function () { editBenefits(b.dataset.ben, function () { vBenefits(); }); }; });
+    $$('[data-bsum]').forEach(function (b) { b.onclick = function () { benSummary(b.dataset.bsum); }; });
     $$('[data-cell]').forEach(function (b) { b.onclick = function () { benQuick(b.dataset.e, b.dataset.cell); }; });
     $$('[data-tdone]').forEach(function (b) { b.onclick = async function () { b.disabled = true; try { await api('benefits-log', { email: b.dataset.e, kind: b.dataset.tdone, notify: true }); toast(BEN_LOG[b.dataset.tdone] + ' logged — member told'); vBenefits(); } catch (x) { toast(x.message); b.disabled = false; } }; });
     $('#bCsv').onclick = function () { benCsv(rows); };
@@ -816,6 +845,7 @@ main.wide{max-width:1480px}
   // Tap a box: log or update just that one benefit.
   async function benQuick(email, key) {
     if (key === 'verified' || key === 'checkup') { editBenefits(email, function () { vBenefits(); }); return; }
+    if (key === 'checkups') { toast('Monthly check-ups tick themselves when you send them from HQ → 💚 Club check-ups'); return; }
     var x = (S.benRows || []).filter(function (r) { return r.email === email; })[0] || { email: email };
     var who = esc(x.business || x.name || email), it = x.board ? x.board.items.filter(function (i) { return i.key === key; })[0] : null;
     var head = '<h2 style="margin:0">' + BEN_ICO[key] + ' ' + esc(it ? it.label : key) + '</h2><div class="muted">' + who + (it ? ' · now: <b>' + esc(it.text) + '</b>' : '') + '</div>';
@@ -839,7 +869,8 @@ main.wide{max-width:1480px}
       $('#qGo', s).onclick = async function () { this.disabled = true;
         try { await api('benefits-update', { email: email, patch: (function () { var p = { notify: $('#qT', s).checked }; p[key] = { status: $('#qS', s).value, date: $('#qD', s).value, link: $('#qL', s).value }; return p; })() }); done(key === 'groupad' ? 'Group advert saved' : 'Spotlight saved'); } catch (e) { toast(e.message); this.disabled = false; } };
     } else {  // featured / marketplace
-      var live = it && it.state === 'done';
+      var live = it && it.state === 'done' && !/\(auto\)/.test(it.text);
+      if (it && /\(auto\)/.test(it.text)) head += '<div class="note" style="margin:0">✓ Already live — ticked from ' + (key === 'featured' ? 'their Auntie Tobi listing' : 'their live Marketplace listing') + '. Tick below only to record a date.</div>';
       s = sheet(head + '<label style="font-weight:600;display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qOn" style="width:20px;height:20px"' + (live ? ' checked' : '') + '> ' + (key === 'featured' ? 'Featured Business is live' : 'Marketplace listing is live') + '</label>' + tell +
         '<div class="row"><button class="btn primary" id="qGo">Save</button><button class="btn ghost" id="qMore">Open all their benefits</button><button class="btn ghost" id="qX">Cancel</button></div>');
       $('#qGo', s).onclick = async function () { if ($('#qOn', s).checked === !!live) { s.remove(); return; } this.disabled = true; var p = { notify: $('#qT', s).checked }; p[key] = { done: $('#qOn', s).checked };
@@ -1275,6 +1306,8 @@ main.wide{max-width:1480px}
     var hidden = r.overdue.length + r.todayItems.length - shOver.length - shToday.length;
     app.innerHTML = '<main><div class="row" style="justify-content:space-between;align-items:baseline"><h1 style="margin:0">Today · ' + esc(tdDay(r.today)) + '</h1><span class="muted">' + r.counts.done + ' of ' + total + ' done</span></div>' +
       '<div class="tdbar"><span style="width:' + (total ? Math.round(r.counts.done / total * 100) : 0) + '%"></span></div>' +
+      (r.club && (r.club.due || r.club.summaries) ? '<button class="card" id="tdClub" style="display:block;width:100%;text-align:left;margin:12px 0 0;cursor:pointer;border-color:#F59E0B;background:#FFFBEB">💚 <b>Business Club:</b> ' +
+        [r.club.due ? r.club.due + ' member' + (r.club.due === 1 ? ' has' : 's have') + ' benefits due' : '', r.club.summaries ? r.club.summaries + ' year summar' + (r.club.summaries === 1 ? 'y' : 'ies') + ' ready' : ''].filter(Boolean).join(' · ') + ' <span class="muted">→ Open benefits</span></button>' : '') +
       (shOver.length ? '<h2 style="color:var(--danger)">⚠️ Overdue (' + r.overdue.length + ')</h2><div class="card td-list">' + shOver.map(function (i) { return tdRow(i, 'overdue'); }).join('') + '</div>' : '') +
       (shToday.length || !hidden ? '<h2>✅ To do today (' + r.todayItems.length + ')</h2><div class="card td-list">' + (shToday.length ? shToday.map(function (i) { return tdRow(i, 'today'); }).join('') : '<p class="muted" style="margin:6px 0">All done for today 🎉</p>') + '</div>' : '') +
       (hidden ? '<div style="text-align:center;margin-top:10px"><button class="btn ghost" id="tdAll">See all (' + hidden + ' more) →</button></div>' : S.tdAll && (r.overdue.length + r.todayItems.length) > TD_MAX ? '<div style="text-align:center;margin-top:10px"><button class="btn ghost" id="tdFewer">Show fewer</button></div>' : '') +
@@ -1287,6 +1320,7 @@ main.wide{max-width:1480px}
       '<p class="muted" style="margin-top:14px">Anything not ticked by the end of the day stays at the top as <b>Overdue</b> until you mark it done or skip it. Share tasks show the 5 members who’ve waited longest; the rest come up as you tick these off.</p></main>';
     var refresh = function () { vToday(); };
     var ta = $('#tdAll'); if (ta) ta.onclick = function () { S.tdAll = true; vToday(); };
+    var tc = $('#tdClub'); if (tc) tc.onclick = function () { go('benefits'); };
     var tf = $('#tdFewer'); if (tf) tf.onclick = function () { S.tdAll = false; vToday(); };
     $$('[data-tdone]').forEach(function (b) { b.onclick = async function () { var row = b.closest('.td'); try { await api('todo-mark', { key: b.dataset.tdone, how: row.classList.contains('td-done') ? 'undo' : 'done' }); refresh(); } catch (x) { toast(x.message); } }; });
     $$('[data-tskip]').forEach(function (b) { b.onclick = async function () { try { await api('todo-mark', { key: b.dataset.tskip, how: 'skip' }); toast('Skipped'); refresh(); } catch (x) { toast(x.message); } }; });
