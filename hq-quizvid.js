@@ -13,7 +13,7 @@
   var BANKS = {
     lifeuk: { name: 'Life in the UK Test', file: '/lifeuk-q.json?v=20261122a', link: 'auntietobi.co.uk/life-in-uk-test', h1: 'QUIZ: Life in the UK Test', h2: 'Can you get {n}/{n}?', say: 'Life in the UK test quiz. Can you get {n} out of {n}?',
       groups: [[0, 'All chapters, mixed'], [1, '1. Values and principles'], [2, '2. What is the UK?'], [3, '3. History'], [4, '4. Modern society'], [5, '5. Government and law']] },
-    drive: { name: 'Driving Theory Test', file: '/drive-q.json?v=20261121a', link: 'auntietobi.co.uk/driving-theory-test', h1: 'QUIZ: UK Driving Theory', h2: 'Can you get {n}/{n}?', say: 'UK driving theory test quiz. Can you get {n} out of {n}?',
+    drive: { name: 'Driving Theory Test', file: '/drive-q.json?v=20261122a', link: 'auntietobi.co.uk/driving-theory-test', h1: 'QUIZ: UK Driving Theory', h2: 'Can you get {n}/{n}?', say: 'UK driving theory test quiz. Can you get {n} out of {n}?',
       groups: [[0, 'All topics, mixed'], [1, 'Alertness'], [2, 'Attitude'], [3, 'Safety and your vehicle'], [4, 'Safety margins'], [5, 'Hazard awareness'], [6, 'Vulnerable road users'], [7, 'Other types of vehicle'], [8, 'Vehicle handling'], [9, 'Motorway rules'], [10, 'Rules of the road'], [12, 'Essential documents'], [13, 'Incidents and emergencies'], [14, 'Vehicle loading']] },
   };
   var STOP = ' the a an of in to is are was were what which who when where why how do does did can you your for on at by with from and or not be as this that these those it its into than then their there they he she his her we our us uk british britain england about after before during most many much one two three four five more some any must should may might will would could shall has have had been being called known name ';
@@ -26,7 +26,7 @@
   function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, igOn: true, ig: '@auntietobi_uk', appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, bgs: {}, out: null }; return QV; }
   function bank() { return BANKS[QV.bank]; }
   function fill(s) { return String(s || '').replace(/\{n\}/g, QV.qs.length || QV.n); }
-  function loadBank(k) { if (BANKQ[k]) return Promise.resolve(BANKQ[k]); return fetch(BANKS[k].file).then(function (r) { return r.json(); }).then(function (j) { BANKQ[k] = j.filter(function (q) { return (!q.s || q.s === 'v') && q.t === 'm' && !q.g && q.o && q.o.length === 4 && q.o.every(function (o) { return o.length <= 46; }) && q.q.length <= 120; }); return BANKQ[k]; }); }
+  function loadBank(k) { if (BANKQ[k]) return Promise.resolve(BANKQ[k]); return fetch(BANKS[k].file).then(function (r) { return r.json(); }).then(function (j) { BANKQ[k] = j.filter(function (q) { var st = k === 'drive' ? q.st : q.s; return (!st || st === 'v') && q.t === 'm' && !q.g && q.o && q.o.length === 4 && q.o.every(function (o) { return o.length <= 46; }) && q.q.length <= 120; }); return BANKQ[k]; }); }
   function keyWord(q) {
     var w = q.replace(/[“”"?.,!:;()]/g, '').split(/\s+/).filter(function (x) { return x.length > 2 && STOP.indexOf(' ' + x.toLowerCase() + ' ') < 0; });
     w.sort(function (a, b) { return b.length - a.length; }); return w[0] || '';

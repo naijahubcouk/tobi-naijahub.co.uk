@@ -7,7 +7,8 @@
  */
 (function () {
   'use strict';
-  var KEY = 'tobi_drive', CHECKED = '21 November 2026', MOCK_N = 50, MOCK_MIN = 57, PASS = 43;
+  var KEY = 'tobi_drive', LIVE = 'tobi_drive_live', CHECKED = '21 November 2026', MOCK_N = 50, MOCK_MIN = 57, PASS = 43;
+  var DISCLAIMER = 'Practise for the UK Driving Theory Test with exam-style questions based on current road safety guidance and The Highway Code. This is an independent preparation tool and is not affiliated with or endorsed by the DVSA.';
   var TOP = [
     [1, 'Alertness', '👀'], [2, 'Attitude', '🤝'], [3, 'Safety and your vehicle', '🔧'], [4, 'Safety margins', '📏'],
     [5, 'Hazard awareness', '⚠️'], [6, 'Vulnerable road users', '🚸'], [7, 'Other types of vehicle', '🚌'], [8, 'Vehicle handling', '🛞'],
@@ -30,6 +31,7 @@
     law: ['Annex 4: The road user and the law', 'annex-4-the-road-user-and-the-law'], pen: ['Annex 5: Penalties', 'annex-5-penalties'],
     maint: ['Annex 6: Vehicle maintenance, safety and security', 'annex-6-vehicle-maintenance-safety-and-security'],
     aid: ['Annex 7: First aid on the road', 'annex-7-first-aid-on-the-road'], new: ['Annex 8: Safety code for new drivers', 'annex-8-safety-code-for-new-drivers'],
+    nhs: ['NHS: How to do CPR', 'https://www.nhs.uk/conditions/first-aid/cpr/'],
   };
   var GOV = {
     book: 'https://www.gov.uk/book-theory-test', guide: 'https://www.gov.uk/theory-test', take: 'https://www.gov.uk/theory-test/what-to-take',
@@ -38,13 +40,13 @@
     practice: 'https://www.gov.uk/take-practice-theory-test', prov: 'https://www.gov.uk/apply-first-provisional-driving-licence',
     nongb: 'https://www.gov.uk/exchange-foreign-driving-licence', hc: 'https://www.gov.uk/guidance/the-highway-code',
   };
-  var Q = null, loading = null, S = { v: 'home' };
+  var Q = null, ALL = null, loading = null, S = { v: 'home' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function gt(e, p) { try { if (typeof gtag === 'function') gtag('event', e, Object.assign({ event_category: 'drive' }, p || {})); } catch (x) {} }
-  function load() { try { var d = JSON.parse(localStorage.getItem(KEY) || '{}'); return { mocks: d.mocks || [], seen: d.seen || {}, wrong: d.wrong || {}, n: d.n || 0, ok: d.ok || 0, date: d.date || '' }; } catch (e) { return { mocks: [], seen: {}, wrong: {}, n: 0, ok: 0, date: '' }; } }
+  function load() { var z = { mocks: [], prac: [], seen: {}, wrong: {}, n: 0, ok: 0, date: '', last: [] }; try { var d = JSON.parse(localStorage.getItem(KEY) || '{}'); Object.keys(z).forEach(function (k) { if (d[k] != null) z[k] = d[k]; }); } catch (e) {} return z; }
   function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
@@ -53,7 +55,17 @@
   function topName(c) { return (TOP[c - 1] || [])[1] || ''; }
   function getQ() {
     if (Q) return Promise.resolve(Q);
-    if (!loading) loading = fetch('/drive-q.json?v=20261121a').then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); }).then(function (j) { Q = j; return Q; });
+    if (!loading) {
+      // the checked bank + any fixes made in HQ (🇬🇧🚗 Question review). Only ✅ verified questions are used.
+      var fix = fetch('/.netlify/functions/app-content?drq=1').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
+      loading = Promise.all([fetch('/drive-q.json?v=20261122a').then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); }), fix]).then(function (x) {
+        var over = (x[1] && x[1].fix) || {};
+        ALL = x[0].map(function (q) { var o = over[q.id]; return o ? Object.assign({}, q, o) : q; });
+        Q = ALL.filter(function (q) { return !q.st || q.st === 'v'; });
+        return Q;
+      });
+      loading.catch(function () { loading = null; });
+    }
     return loading;
   }
   function optsOf(q) {
@@ -126,192 +138,303 @@
     msgs.innerHTML = '<div class="msg bot" style="align-items:flex-start"><div style="flex:1;min-width:0" id="dtRoot" class="lu"></div></div>';
     try { if (typeof scrollToTop === 'function') scrollToTop(); else msgs.scrollTop = 0; } catch (e) {}
     document.body.classList.add('lu-nochat');
-    if (!obs && window.MutationObserver) { obs = new MutationObserver(function () { if (!document.getElementById('dtRoot')) { obs.disconnect(); obs = null; stopTimer(); if (!document.getElementById('luRoot')) document.body.classList.remove('lu-nochat'); } }); obs.observe(msgs, { childList: true }); }
+    if (!obs && window.MutationObserver) { obs = new MutationObserver(function () { if (!document.getElementById('dtRoot')) { obs.disconnect(); obs = null; stopTimer(); if (!document.getElementById('luRoot')) document.body.classList.remove('lu-nochat', 'lu-examon'); } }); obs.observe(msgs, { childList: true }); }
     gt('drive_open'); S = { v: view || 'home' };
     root().innerHTML = '<div class="lu-card" style="text-align:center;color:#6B7280">Loading questions…</div>';
-    getQ().then(function () { draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="dtRe">Try again</button></div></div>'; $('#dtRe').onclick = function () { loading = null; open(view); }; });
+    getQ().then(function () { draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="dtRe">Try again</button></div></div>'; $('#dtRe').onclick = function () { open(view); }; });
   }
   function addCss() {
     if (document.getElementById('dtCss')) return; var st = document.createElement('style'); st.id = 'dtCss';
     st.textContent = '.dt-top{background:linear-gradient(135deg,#0F1E36,#057A44)!important}.dt-flag{border:1.5px solid #E3E0D7;background:#fff;border-radius:10px;padding:6px 10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;color:#0F1E36}.dt-flag.on{background:#FFF1CF;border-color:#F2C14E;color:#7A5300}' +
       '.dt-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:10px 0}.dt-grid button{border:1.5px solid #E3E0D7;background:#fff;border-radius:9px;padding:8px 0;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;color:#0F1E36;position:relative}.dt-grid button.a{background:#E7EFFD;border-color:#9DB6E6}.dt-grid button.f::after{content:"🚩";position:absolute;top:-8px;right:-5px;font-size:11px}' +
-      '.dt-hc{display:inline-block;margin-top:6px;font-size:13px;color:#057A44;font-weight:700;text-decoration:none}';
+      '.dt-hc{display:inline-block;margin-top:6px;font-size:13px;color:#057A44;font-weight:700;text-decoration:none}.dt-sign{display:flex;justify-content:center;margin:0 0 14px}.dt-sign svg{width:150px;height:auto;max-width:60%}';
     document.head.appendChild(st);
   }
   function root() { return document.getElementById('dtRoot'); }
-  function leave() { stopTimer(); document.body.classList.remove('lu-nochat'); if (typeof resetToWelcome === 'function') resetToWelcome(); }
+  function leave() { stopTimer(); document.body.classList.remove('lu-nochat', 'lu-examon'); if (typeof resetToWelcome === 'function') resetToWelcome(); }
   function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
   function top() { var r = document.getElementById('messages'); try { if (r) r.scrollTop = 0; window.scrollTo(0, 0); } catch (e) {} }
-  function draw() { stopTimer(); var r = root(); if (!r) return; ({ home: home, topics: topics, prac: pracQ, mock: mockQ, review: mockReview, mockEnd: mockEnd, before: before, hazard: hazard, licence: licence })[S.v](r); }
-  function go(v) { S = { v: v }; draw(); top(); }
+  function draw() { stopTimer(); var r = root(); if (!r) return; document.body.classList.toggle('lu-examon', /^(intro|mock|review|result|pq)$/.test(S.v)); ({ home: home, setup: setup, pq: pracQ, intro: intro, mock: mockQ, review: mockReview, result: result, before: before, hazard: hazard, licence: licence })[S.v](r); }
+  function go(v, extra) { S = Object.assign({ v: v }, extra || {}); draw(); top(); }
 
   // ───── 🏠 home ─────
   function home(r) {
-    var d = load(), best = d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), weak = Object.keys(d.wrong).length, last = d.mocks[d.mocks.length - 1];
-    var dl = d.date ? daysTo(d.date) : null, nSigns = Q.filter(function (q) { return q.g; }).length;
+    var d = load(), best = d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), weak = Q.filter(function (q) { return d.wrong[q.id]; }).length, last = d.mocks[d.mocks.length - 1];
+    var dl = d.date ? daysTo(d.date) : null, nSigns = Q.filter(function (q) { return q.g; }).length, live = liveMock(), acc = d.n ? Math.round(d.ok / d.n * 100) : 0;
     r.innerHTML = '<button class="lu-back" id="dtBack">← Home</button>' +
-      '<div class="lu-top dt-top"><b>🚗 Driving Theory Test</b><span>' + Q.length + ' practice questions from the Highway Code, with road sign pictures. Marked straight away — free.</span></div>' +
+      '<div class="lu-top dt-top"><b>🚗 Driving Theory Test</b><span>' + Q.length + ' exam-style practice questions based on The Highway Code, with road sign pictures. Marked straight away — free.</span></div>' +
+      '<div class="lu-disc">ℹ️ ' + esc(DISCLAIMER) + '</div>' +
       (d.date && dl >= 0 ? '<div class="lu-card" style="border-color:#F2D58A;background:#FFFBEF"><b style="font-size:16px">📅 Your theory test: ' + esc(niceDate(d.date)) + '</b><div style="font-size:14px;color:#7A5300;margin-top:3px">' + (dl === 0 ? 'It’s today — good luck! Bring your photocard licence.' : dl === 1 ? 'Tomorrow! Have your photocard licence ready.' : dl + ' days to go') + '</div></div>' : '') +
-      '<div class="lu-stats"><div class="lu-stat"><b>' + d.mocks.length + '</b><small>Mock tests</small></div><div class="lu-stat"><b>' + (d.mocks.length ? best + '/50' : '–') + '</b><small>Best score</small></div><div class="lu-stat"><b>' + d.n + '</b><small>Answered</small></div></div>' +
-      (last ? '<div class="lu-note" style="margin-top:0">Last mock: <b>' + last.s + '/50</b> — ' + (last.s >= PASS ? '✅ a pass' : '❌ not a pass yet (you need ' + PASS + ')') + '</div>' : '') +
-      '<button class="lu-big" id="dtMock"><i>🎯</i><span><b>Mock test</b><small>50 questions · 57 minutes · pass is 43, like the real test</small></span></button>' +
+      (live ? '<button class="lu-big y" id="dtResume"><i>⏱</i><span><b>Resume your mock test</b><small>' + mmss(Math.max(0, Math.round((live.end - Date.now()) / 1000))) + ' left · ' + Object.keys(live.ans).length + ' of ' + MOCK_N + ' answered</small></span></button>' : '') +
+      '<button class="lu-big" id="dtMock"><i>🎯</i><span><b>Driving Theory — Mock Exam</b><small>Multiple-choice practice simulation · 50 questions · 57 minutes · pass mark 43</small></span></button>' +
+      '<button class="lu-big w" id="dtPrac"><i>📚</i><span><b>Practice</b><small>5, 10, 20 or 50 questions · 14 topics, mixed, road signs, wrong or unanswered</small></span></button>' +
       '<button class="lu-big w" id="dtSigns"><i>🛑</i><span><b>Road signs</b><small>' + nSigns + ' signs with pictures</small></span></button>' +
-      '<button class="lu-big w" id="dtPrac"><i>📚</i><span><b>Practise by topic</b><small>14 official topics, with the reason and the Highway Code rule</small></span></button>' +
-      (weak ? '<button class="lu-big y" id="dtWeak"><i>💪</i><span><b>My weak spots · ' + weak + '</b><small>Questions you got wrong — get them right to clear them</small></span></button>' : '') +
-      '<button class="lu-big w" id="dtHaz"><i>🎬</i><span><b>Hazard perception</b><small>How the second part works and how to score well</small></span></button>' +
+      (weak ? '<button class="lu-big y" id="dtWeak"><i>💪</i><span><b>Retry incorrect questions · ' + weak + '</b><small>Get them right to clear them</small></span></button>' : '') +
+      progressCard(d, best, acc) +
+      '<button class="lu-big w" id="dtHaz"><i>🎬</i><span><b>Hazard Perception Test</b><small>How part 2 works and is scored · practice clips not available yet</small></span></button>' +
       '<button class="lu-big w" id="dtBefore"><i>📋</i><span><b>Before your test</b><small>Cost, what to bring, pass marks — checked on GOV.UK</small></span></button>' +
       '<button class="lu-big w" id="dtLic"><i>🇳🇬</i><span><b>Driving here on a Nigerian licence</b><small>How long you can use it and what to do next</small></span></button>' +
       (window.MyPlan && window.MyPlan.driveTest ? '<button class="lu-big w" id="dtPlan"><i>💚</i><span><b>' + (d.date ? 'Change your test date' : 'Add your theory test to My Plan') + '</b><small>Countdown, reminders and a checklist</small></span></button>' : '') +
       '<button class="lu-big w" id="dtShare"><i>📤</i><span><b>Share with a friend</b><small>auntietobi.co.uk/driving-theory-test</small></span></button>' +
-      '<div class="lu-note">Practice questions written by Auntie Tobi from <a href="' + GOV.hc + '" target="_blank" rel="noopener">The Highway Code</a> and <i>Know your traffic signs</i>. They are not the real test questions. Always check the latest rules on GOV.UK.</div>';
-    $('#dtBack', r).onclick = leave; $('#dtMock', r).onclick = startMock;
-    $('#dtSigns', r).onclick = function () { startPrac('signs'); }; $('#dtPrac', r).onclick = function () { go('topics'); };
-    if ($('#dtWeak', r)) $('#dtWeak', r).onclick = function () { startPrac('weak'); };
+      '<div class="lu-note">Practice questions written independently by Auntie Tobi from <a href="' + GOV.hc + '" target="_blank" rel="noopener">The Highway Code</a>, <i>Know your traffic signs</i> and NHS first-aid guidance. They are not official DVSA questions. Road sign pictures are drawn by Auntie Tobi to the official shapes and colours. Always check the latest rules on GOV.UK.</div>';
+    $('#dtBack', r).onclick = leave;
+    $('#dtMock', r).onclick = function () { if (live && !confirm('Start a new mock test? Your unfinished one will be lost.')) return; go('intro'); };
+    if ($('#dtResume', r)) $('#dtResume', r).onclick = resumeMock;
+    $('#dtSigns', r).onclick = function () { go('setup', { mode: 'signs', n: 10, fb: 'now' }); };
+    $('#dtPrac', r).onclick = function () { go('setup', { mode: 0, n: 10, fb: 'now' }); };
+    if ($('#dtWeak', r)) $('#dtWeak', r).onclick = function () { go('setup', { mode: 'weak', n: weak <= 5 ? 5 : 10, fb: 'now' }); };
     $('#dtHaz', r).onclick = function () { go('hazard'); }; $('#dtBefore', r).onclick = function () { go('before'); }; $('#dtLic', r).onclick = function () { go('licence'); };
     if ($('#dtPlan', r)) $('#dtPlan', r).onclick = function () { window.MyPlan.driveTest(); };
     $('#dtShare', r).onclick = function () {
-      var url = 'https://auntietobi.co.uk/driving-theory-test', text = 'Practise for the UK driving theory test free on Auntie Tobi 🚗 — 400 Highway Code questions, road signs and 57-minute mock tests:';
+      var url = 'https://auntietobi.co.uk/driving-theory-test', text = 'Practise for the UK driving theory test free on Auntie Tobi 🚗 — exam-style questions based on The Highway Code, road signs and 57-minute mock tests:';
       gt('drive_share'); if (navigator.share) { navigator.share({ title: 'Driving theory test practice', text: text, url: url }).catch(function () {}); return; }
       window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank', 'noopener');
     };
   }
-
-  // ───── 📚 topics ─────
-  function topics(r) {
-    var d = load();
-    r.innerHTML = '<button class="lu-back" id="dtB">← Back</button><div class="lu-h" style="margin-top:0">Practise by topic</div>' +
-      '<button class="lu-ch" data-c="0"><i>🔀</i><span style="flex:1"><b>All topics, mixed</b><small>' + Q.length + ' questions</small></span></button>' +
-      TOP.map(function (t) {
-        var qs = Q.filter(function (q) { return q.c === t[0]; }), seen = qs.filter(function (q) { return d.seen[q.id]; }).length, pc = Math.round(seen / qs.length * 100);
-        return '<button class="lu-ch" data-c="' + t[0] + '"><i>' + t[2] + '</i><span style="flex:1"><b>' + esc(t[1]) + '</b><small>' + qs.length + ' questions · ' + seen + ' done</small><div class="lu-bar"><span style="width:' + pc + '%"></span></div></span></button>';
-      }).join('') + '<div class="lu-note">These are the 14 topics the real theory test covers.</div>';
-    $('#dtB', r).onclick = function () { go('home'); };
-    $$('[data-c]', r).forEach(function (b) { b.onclick = function () { startPrac(+b.dataset.c); }; });
+  function progressCard(d, best, acc) {
+    if (!d.mocks.length && !d.n) return '';
+    var ms = d.mocks.slice(-12), last = d.mocks[d.mocks.length - 1];
+    return '<div class="lu-card"><b style="font-size:16px">📈 Your progress</b>' +
+      '<div class="lu-stats" style="margin:10px 0 0"><div class="lu-stat"><b>' + d.mocks.length + '</b><small>Mock tests</small></div><div class="lu-stat"><b>' + (d.mocks.length ? best + '/50' : '–') + '</b><small>Best score</small></div><div class="lu-stat"><b>' + (d.n ? acc + '%' : '–') + '</b><small>Right in practice</small></div></div>' +
+      (ms.length ? '<div class="lu-prog" aria-label="Mock test scores">' + ms.map(function (m) { return '<span class="' + (m.s >= PASS ? 'ok' : '') + '" style="height:' + Math.max(6, Math.round(m.s / MOCK_N * 100)) + '%"></span>'; }).join('') + '<em style="bottom:' + (PASS / MOCK_N * 100) + '%"><b>Pass 43</b></em></div>' +
+        '<div style="font-size:13px;color:#6B7280">Latest multiple-choice mock: <b>' + last.s + '/50</b> (' + Math.round(last.s / MOCK_N * 100) + '%) — ' + (last.s >= PASS ? 'PASS' : 'not a pass yet') + '</div>' : '<div style="font-size:13px;color:#6B7280;margin-top:8px">' + d.n + ' practice answers so far. Try a mock test to see your score.</div>') + '</div>';
   }
 
-  // ───── practice ─────
-  function pool(mode) {
+  // ───── 📚 practice set-up ─────
+  function setup(r) {
+    var d = load(), wrongN = Q.filter(function (q) { return d.wrong[q.id]; }).length, newN = Q.filter(function (q) { return !d.seen[q.id]; }).length, signN = Q.filter(function (q) { return q.g; }).length;
+    var opt = function (mode, ico, title, sub) { return '<button class="lu-pick" data-m="' + mode + '" aria-pressed="' + (String(S.mode) === String(mode)) + '"><i>' + ico + '</i><span style="flex:1"><b>' + title + '</b><small>' + sub + '</small></span></button>'; };
+    r.innerHTML = '<button class="lu-back" id="dtB">← Back</button><div class="lu-h" style="margin-top:0">1 · What to practise</div>' +
+      opt(0, '🔀', 'All topics, mixed', Q.length + ' questions') +
+      opt('new', '🆕', 'Questions I haven’t answered', newN + ' left') +
+      (wrongN ? opt('weak', '💪', 'My incorrect questions', wrongN + ' to retry') : '') +
+      opt('signs', '🛑', 'Road signs', signN + ' signs') +
+      TOP.map(function (t) { var qs = Q.filter(function (q) { return q.c === t[0]; }), seen = qs.filter(function (q) { return d.seen[q.id]; }).length; return opt(t[0], t[2], esc(t[1]), qs.length + ' questions · ' + seen + ' done'); }).join('') +
+      '<div class="lu-h">2 · How many questions</div><div class="lu-seg">' + [5, 10, 20, 50].map(function (n) { return '<button data-n="' + n + '" aria-pressed="' + (S.n === n) + '">' + n + '</button>'; }).join('') + '</div>' +
+      '<div class="lu-h">3 · When to see the answers</div><div class="lu-seg"><button data-f="now" aria-pressed="' + (S.fb === 'now') + '">After each question</button><button data-f="end" aria-pressed="' + (S.fb === 'end') + '">At the end</button></div>' +
+      '<div class="lu-row" style="margin-top:14px"><button class="lu-btn" id="dtGo">Start practice →</button></div>' +
+      '<div class="lu-note">These are the 14 topics the real theory test covers. Each answer shows the Highway Code rule behind it.</div>';
+    $('#dtB', r).onclick = function () { go('home'); };
+    $$('[data-m]', r).forEach(function (b) { b.onclick = function () { var m = b.dataset.m; S.mode = /^\d+$/.test(m) ? +m : m; draw(); }; });
+    $$('[data-n]', r).forEach(function (b) { b.onclick = function () { S.n = +b.dataset.n; draw(); }; });
+    $$('[data-f]', r).forEach(function (b) { b.onclick = function () { S.fb = b.dataset.f; draw(); }; });
+    $('#dtGo', r).onclick = function () { startPrac(S.mode, S.n, S.fb); };
+  }
+  function pracPool(mode) {
     var d = load();
     if (mode === 'weak') return Q.filter(function (q) { return d.wrong[q.id]; });
+    if (mode === 'new') return Q.filter(function (q) { return !d.seen[q.id]; });
     if (mode === 'signs') return Q.filter(function (q) { return q.g; });
+    if (Array.isArray(mode)) return Q.filter(function (q) { return mode.indexOf(q.id) >= 0; });
     return Q.filter(function (q) { return !mode || q.c === mode; });
   }
-  function nextPrac() {
-    var d = load(), p = pool(S.mode); if (!p.length) return null;
-    var fresh = p.filter(function (q) { return !d.seen[q.id] && S.done.indexOf(q.id) < 0; });
-    var src = fresh.length ? fresh : p.filter(function (q) { return S.done.indexOf(q.id) < 0; });
-    if (!src.length) { S.done = []; src = p; }
-    return src[Math.floor(Math.random() * src.length)];
+  // one question per fact: same correct answer in the same topic is treated as the same fact
+  function noTwins(list) { var seen = {}; return list.filter(function (q) { var k = q.c + '|' + rightText(q).toLowerCase() + '|' + (q.g || ''); if (seen[k]) return false; seen[k] = 1; return true; }); }
+  function startPrac(mode, n, fb) {
+    var d = load(), p = pracPool(mode);
+    if (!p.length) return alert(mode === 'new' ? 'You’ve answered every question — try a mock test!' : 'No questions here yet.');
+    var fresh = shuffle(p.filter(function (q) { return !d.seen[q.id]; })), old = shuffle(p.filter(function (q) { return d.seen[q.id]; }));
+    var qs = noTwins(fresh.concat(old)).slice(0, n || 10);
+    gt('drive_practise', { label: String(mode), value: qs.length });
+    go('pq', { mode: mode, n: n, fb: fb, qs: qs.map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, done: {}, at: 0, t0: Date.now() });
   }
-  function startPrac(mode) { S = { v: 'prac', mode: mode, done: [], n: 0, ok: 0 }; S.q = nextPrac(); S.opts = S.q ? optsOf(S.q) : []; S.pick = []; S.shown = false; gt('drive_practise', { label: String(mode) }); draw(); top(); }
+  function modeName(m) { return Array.isArray(m) ? 'Incorrect questions' : m === 'weak' ? 'My incorrect questions' : m === 'new' ? 'Not yet answered' : m === 'signs' ? 'Road signs' : m ? topName(m) : 'All topics'; }
   function pracQ(r) {
-    var q = S.q, title = S.mode === 'weak' ? '💪 Weak spots' : S.mode === 'signs' ? '🛑 Road signs' : S.mode ? TOP[S.mode - 1][2] + ' ' + TOP[S.mode - 1][1] : '🔀 All topics';
-    if (!q) { r.innerHTML = '<button class="lu-back" id="dtB">← Back</button><div class="lu-card" style="text-align:center"><b style="font-size:18px">🎉 All cleared!</b><div style="margin-top:6px;color:#6B7280">No weak spots left. Try a mock test.</div></div>'; $('#dtB', r).onclick = function () { go('home'); }; return; }
-    r.innerHTML = '<button class="lu-back" id="dtB">← Back</button><div class="lu-qh"><span>' + esc(title) + '</span><span>' + S.ok + ' / ' + S.n + ' right</span></div>' + qHtml(q, true) +
-      (S.shown ? fbHtml(q) + '<button class="lu-btn" id="dtN">Next question →</button>' : (q.t === '2' ? '<button class="lu-btn" id="dtC"' + (S.pick.length === 2 ? '' : ' disabled') + '>Check my answer</button>' : ''));
-    $('#dtB', r).onclick = function () { go(S.mode === 'weak' || S.mode === 'signs' ? 'home' : 'topics'); };
-    bindOpts(r, markPrac);
-    if ($('#dtN', r)) $('#dtN', r).onclick = function () { S.done.push(q.id); S.q = nextPrac(); S.opts = S.q ? optsOf(S.q) : []; S.pick = []; S.shown = false; draw(); top(); };
+    var it = S.qs[S.at], q = it.q, pick = S.ans[S.at] || [], shown = S.fb === 'now' && S.done[S.at], last = S.at === S.qs.length - 1;
+    var okN = Object.keys(S.done).filter(function (k) { return isRight(S.qs[k].q, S.ans[k], S.qs[k].opts); }).length;
+    r.innerHTML = '<div class="lx"><div class="lx-bar"><b>Practice · ' + esc(modeName(S.mode)) + '</b>' + (S.fb === 'now' ? '<span class="lx-time">' + okN + ' / ' + Object.keys(S.done).length + ' right</span>' : '') + '</div>' +
+      '<div class="lx-panel"><div class="lx-num"><span>Question ' + (S.at + 1) + ' of ' + S.qs.length + '</span></div>' + optsHtml(it, pick, shown) + (shown ? fbHtml(it, pick) : '') + '</div>' +
+      '<div class="lx-nav"><button class="lx-b" id="lxP"' + (S.at && S.fb === 'end' ? '' : ' disabled') + '>← Previous</button><span></span>' +
+      (S.fb === 'now' && !shown ? '<button class="lx-b p" id="lxC"' + (pick.length === need(q) ? '' : ' disabled') + '>Check answer</button>' : '<button class="lx-b p" id="lxN"' + (S.fb === 'end' && pick.length !== need(q) ? ' disabled' : '') + '>' + (last ? 'Finish' : 'Next question →') + '</button>') + '</div>' +
+      '<div class="lx-links"><button class="q" id="lxX">Stop practice</button><span></span></div></div>';
+    bindPick(r, it, !shown);
+    if ($('#lxC', r)) $('#lxC', r).onclick = function () { S.done[S.at] = 1; record(it, S.ans[S.at]); draw(); };
+    if ($('#lxN', r)) $('#lxN', r).onclick = function () { if (last) finishPrac(); else { S.at++; draw(); top(); } };
+    if (!$('#lxP', r).disabled) $('#lxP', r).onclick = function () { S.at--; draw(); top(); };
+    $('#lxX', r).onclick = function () { if (!Object.keys(S.ans).length || confirm('Stop this practice set?')) { if (S.fb === 'now' && Object.keys(S.done).length) finishPrac(); else go('home'); } };
   }
-  function isRight(q, pick, opts) { var want = opts.filter(function (o) { return o.ok; }).map(function (o) { return o.i; }).sort().join(','); return pick.slice().sort().join(',') === want; }
-  function mark(d, q, ok) { d.n++; if (ok) d.ok++; d.seen[q.id] = 1; if (ok) { if (d.wrong[q.id]) { d.wrong[q.id]--; if (d.wrong[q.id] <= 0) delete d.wrong[q.id]; } } else d.wrong[q.id] = (d.wrong[q.id] || 0) + 1; }
-  function markPrac() { var q = S.q, ok = isRight(q, S.pick, S.opts), d = load(); S.shown = true; S.n++; if (ok) S.ok++; mark(d, q, ok); save(d); draw(); }
+  function record(it, pick) { var d = load(), ok = isRight(it.q, pick, it.opts); mark(d, it.q, ok); save(d); return ok; }
+  function finishPrac() {
+    var idx = S.qs.map(function (x, i) { return i; }).filter(function (i) { return S.fb === 'end' ? true : S.done[i]; });
+    if (S.fb === 'end') idx.forEach(function (i) { record(S.qs[i], S.ans[i]); });
+    var items = idx.map(function (i) { return { q: S.qs[i].q, opts: S.qs[i].opts, pick: S.ans[i] || [] }; });
+    var score = items.filter(function (x) { return isRight(x.q, x.pick, x.opts); }).length;
+    var d = load(); d.prac.push({ at: today(), n: items.length, ok: score, m: String(S.mode) }); if (d.prac.length > 100) d.prac = d.prac.slice(-100); save(d);
+    go('result', { kind: 'prac', mode: S.mode, n: S.n, fb: S.fb, items: items, score: score, tab: 'all', used: Math.round((Date.now() - S.t0) / 60000) });
+  }
 
-  function qHtml(q, practice) {
-    var lab = ['A', 'B', 'C', 'D'], ask = q.t === 't' ? 'Is this statement TRUE or FALSE?' : q.t === '2' ? 'Choose TWO answers' : '';
-    return '<div class="lu-card"><span class="lu-tag">' + TOP[q.c - 1][2] + ' ' + esc(topName(q.c)) + '</span>' + (q.g && SIGN[q.g] ? SIGN[q.g]() : '') +
-      (ask ? '<div style="font-size:13px;font-weight:800;color:#7A5300;margin-bottom:4px">' + ask + '</div>' : '') +
-      '<div class="lu-q">' + esc(q.t === 't' ? '“' + q.q + '”' : q.q) + '</div>' +
-      S.opts.map(function (o, n) {
-        var cls = '';
-        if (practice && S.shown) { if (o.ok) cls = 'ok'; else if (S.pick.indexOf(o.i) >= 0) cls = 'no'; } else if (S.pick.indexOf(o.i) >= 0) cls = 'sel';
-        return '<button class="lu-o ' + cls + '" data-o="' + o.i + '"' + (practice && S.shown ? ' disabled' : '') + '><span class="k">' + (q.t === 't' ? (o.i ? '✗' : '✓') : lab[n]) + '</span><span>' + esc(o.tx) + '</span></button>';
-      }).join('') + '</div>';
+  // ───── one question (mock and practice) ─────
+  function signHtml(q) { return q.g && SIGN[q.g] ? '<div class="dt-sign">' + SIGN[q.g]() + '</div>' : ''; }
+  function optsHtml(it, pick, shown) {
+    var q = it.q, cb = q.t === '2';
+    return '<div class="lx-ins">' + (cb ? 'Mark TWO answers.' : 'Mark ONE answer.') + '</div><div class="lx-q">' + esc(q.q.replace(/ Select TWO answers\.$/, '')) + '</div>' + signHtml(q) +
+      it.opts.map(function (o) {
+        var on = pick.indexOf(o.i) >= 0, cls = 'lx-o' + (cb ? ' cb' : '') + (on ? ' sel' : ''), mk = '';
+        if (shown) { if (o.ok) mk = ' <b style="color:#126B40">✓ Correct answer</b>'; else if (on) mk = ' <b style="color:#B42318">✗ Your answer</b>'; }
+        return '<button class="' + cls + '" data-o="' + o.i + '" role="' + (cb ? 'checkbox' : 'radio') + '" aria-checked="' + on + '"' + (shown ? ' disabled' : '') + '><span class="r"></span><span>' + esc(o.tx) + mk + '</span></button>';
+      }).join('');
   }
-  function hcLink(q) { var s = SEC[q.s]; return s ? '<a class="dt-hc" href="' + HC + s[1] + '" target="_blank" rel="noopener">📘 Highway Code: ' + esc(s[0]) + ' ↗</a>' : ''; }
-  function fbHtml(q) {
-    var ok = isRight(q, S.pick, S.opts);
-    return '<div class="lu-fb ' + (ok ? 'ok' : 'no') + '"><b>' + (ok ? '✅ Correct!' : '❌ Not quite — the answer is: ' + esc(rightText(q))) + '</b><div style="margin-top:4px">' + esc(q.e) + '</div>' +
+  function hcLink(q) { var s = SEC[q.s]; if (!s) return ''; var url = /^https?:/.test(s[1]) ? s[1] : HC + s[1]; return '<a class="dt-hc" href="' + url + '" target="_blank" rel="noopener">📘 ' + (/^https?:/.test(s[1]) ? '' : 'Highway Code: ') + esc(s[0]) + ' ↗</a>'; }
+  function fbHtml(it, pick) {
+    var q = it.q, ok = isRight(q, pick, it.opts);
+    return '<div class="lu-fb ' + (ok ? 'ok' : 'no') + '" style="margin-top:10px"><b>' + (ok ? '✅ Correct' : '❌ Incorrect. The answer is: ' + esc(rightText(q))) + '</b><div style="margin-top:4px">' + esc(q.e) + '</div>' +
       (q.x ? '<span class="lu-x">📍 ' + esc(q.x) + '</span>' : '') + hcLink(q) + '</div>';
   }
-  function bindOpts(r, done) {
-    var q = S.q;
+  function bindPick(r, it, live) {
+    if (!live) return;
     $$('[data-o]', r).forEach(function (b) {
       b.onclick = function () {
-        var i = +b.dataset.o;
-        if (q.t === '2') { var k = S.pick.indexOf(i); if (k >= 0) S.pick.splice(k, 1); else if (S.pick.length < 2) S.pick.push(i); else { S.pick.shift(); S.pick.push(i); } if (S.v === 'mock') S.ans[S.at] = S.pick.slice(); draw(); return; }
-        S.pick = [i]; if (S.v === 'mock') { S.ans[S.at] = S.pick.slice(); draw(); return; } done();
+        var i = +b.dataset.o, pick = (S.ans[S.at] || []).slice();
+        if (it.q.t === '2') { var k = pick.indexOf(i); if (k >= 0) pick.splice(k, 1); else if (pick.length < 2) pick.push(i); else { pick.shift(); pick.push(i); } } else pick = [i];
+        if (pick.length) S.ans[S.at] = pick; else delete S.ans[S.at];
+        if (S.v === 'mock') saveLive();
+        draw();
       };
     });
-    var c = $('#dtC', r); if (c) c.onclick = done;
   }
+  function isRight(q, pick, opts) { var want = opts.filter(function (o) { return o.ok; }).map(function (o) { return o.i; }).sort().join(','); return (pick || []).slice().sort().join(',') === want; }
+  function need(q) { return q.t === '2' ? 2 : 1; }
+  function mark(d, q, ok) { d.n++; if (ok) d.ok++; d.seen[q.id] = 1; if (ok) { if (d.wrong[q.id]) { d.wrong[q.id]--; if (d.wrong[q.id] <= 0) delete d.wrong[q.id]; } } else d.wrong[q.id] = (d.wrong[q.id] || 0) + 1; }
+  function mmss(s) { return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+  function pickedText(it, pick) { return (pick || []).map(function (i) { var o = it.opts.filter(function (x) { return x.i === i; })[0]; return o ? o.tx : ''; }).join(' and '); }
 
-  // ───── 🎯 mock test: 50 questions, 57 minutes, flag and review like the real test ─────
-  function startMock() {
-    // spread across all 14 topics roughly in proportion, then shuffle
-    var by = {}; Q.forEach(function (q) { (by[q.c] = by[q.c] || []).push(q); });
-    var pick = []; Object.keys(by).forEach(function (c) { var n = Math.max(2, Math.round(by[c].length / Q.length * MOCK_N)); pick = pick.concat(shuffle(by[c]).slice(0, n)); });
-    pick = shuffle(pick).slice(0, MOCK_N); if (pick.length < MOCK_N) pick = pick.concat(shuffle(Q.filter(function (q) { return pick.indexOf(q) < 0; })).slice(0, MOCK_N - pick.length));
-    S = { v: 'mock', qs: pick.map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, flag: {}, at: 0, end: Date.now() + MOCK_MIN * 60000 };
-    gt('drive_mock_start'); draw(); top();
+  // ───── 🎯 mock test: tutorial first, then 50 questions in 57 minutes ─────
+  function intro(r) {
+    var sample = { q: { id: 0, c: 4, t: 'm', q: 'You are driving in heavy rain. What should you do?', o: ['Increase the distance between you and the vehicle in front', 'Drive closer to the vehicle in front', 'Brake sharply whenever you approach a bend', 'Switch on your hazard warning lights'], e: 'Wet roads increase stopping distances, so leave a much greater gap.' } };
+    if (!S.sOpts) S.sOpts = optsOf(sample.q); sample.opts = S.sOpts;
+    var pick = S.sPick || [];
+    r.innerHTML = '<div class="lx"><div class="lx-bar"><b>Driving Theory — Mock Exam</b><span class="lx-time">57:00</span></div>' +
+      '<div class="lx-panel"><b style="font-size:18px">Before you start</b><ul style="margin:8px 0 0;padding-left:20px;line-height:1.7;font-size:15px">' +
+      '<li><b>50 questions</b> in <b>57 minutes</b>. The pass mark is <b>43</b>.</li>' +
+      '<li>One question at a time. Use <b>Previous</b> and <b>Next</b>, and <b>⚑ Flag</b> any you want to come back to.</li>' +
+      '<li>Some questions ask you to <b>mark TWO answers</b>.</li>' +
+      '<li>You can change your answers until you submit. A review screen shows any unanswered or flagged questions.</li>' +
+      '<li>When the time runs out, your answers are submitted automatically. No answers or hints are shown until the end.</li></ul>' +
+      '<div class="lu-x" style="margin-top:12px">ℹ️ This is a <b>multiple-choice practice simulation</b>. The real test includes 3 questions about a short video, and a separate hazard perception part. Neither is included here, so your result is not an overall theory test result.</div></div>' +
+      '<div class="lx-panel"><div class="lx-num"><span>Sample question (not marked)</span></div>' + optsHtml(sample, pick, false).replace(/data-o=/g, 'data-so=') +
+      (pick.length ? '<div class="lu-fb ' + (isRight(sample.q, pick, sample.opts) ? 'ok' : 'no') + '"><b>' + (isRight(sample.q, pick, sample.opts) ? '✅ That’s right.' : '❌ The answer is: ' + esc(sample.q.o[0])) + '</b> ' + esc(sample.q.e) + ' In the mock test, you won’t see this until the end.</div>' : '') + '</div>' +
+      '<div class="lx-nav" style="grid-template-columns:1fr 1fr"><button class="lx-b" id="dtBk">← Back</button><button class="lx-b p" id="dtStart">Start the test</button></div></div>';
+    $$('[data-so]', r).forEach(function (b) { b.onclick = function () { S.sPick = [+b.dataset.so]; draw(); }; });
+    $('#dtBk', r).onclick = function () { go('home'); };
+    $('#dtStart', r).onclick = startMock;
   }
-  function answered() { return Object.keys(S.ans).filter(function (k) { return S.ans[k] && S.ans[k].length; }).length; }
+  // 50 questions spread across the 14 topics in proportion to the bank, no repeats, no two on the same fact, none from your last mock where possible
+  function pickMock() {
+    var d = load(), lastIds = d.last || [], tot = Q.length, quota = {}, rem = [];
+    TOP.forEach(function (t) { var n = Q.filter(function (q) { return q.c === t[0]; }).length, x = n / tot * MOCK_N; quota[t[0]] = Math.max(n ? 1 : 0, Math.floor(x)); rem.push([t[0], x - Math.floor(x)]); });
+    var sum = function () { return Object.keys(quota).reduce(function (a, k) { return a + quota[k]; }, 0); };
+    rem.sort(function (a, b) { return b[1] - a[1]; }); var ri = 0;
+    while (sum() < MOCK_N) { quota[rem[ri % rem.length][0]]++; ri++; }
+    while (sum() > MOCK_N) { var big = Object.keys(quota).sort(function (a, b) { return quota[b] - quota[a]; })[0]; quota[big]--; }
+    var out = [];
+    TOP.forEach(function (t) {
+      var p = Q.filter(function (q) { return q.c === t[0]; });
+      var a = shuffle(p.filter(function (q) { return lastIds.indexOf(q.id) < 0; })), b = shuffle(p.filter(function (q) { return lastIds.indexOf(q.id) >= 0; }));
+      out = out.concat(noTwins(a.concat(b)).slice(0, quota[t[0]]));
+    });
+    if (out.length < MOCK_N) out = out.concat(shuffle(Q.filter(function (q) { return out.indexOf(q) < 0; })).slice(0, MOCK_N - out.length));
+    return shuffle(out);
+  }
+  function startMock() {
+    S = { v: 'mock', qs: pickMock().map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, flag: {}, at: 0, end: Date.now() + MOCK_MIN * 60000, t0: Date.now() };
+    saveLive(); gt('drive_mock_start'); draw(); top();
+  }
+  function saveLive() { try { localStorage.setItem(LIVE, JSON.stringify({ ids: S.qs.map(function (it) { return it.q.id; }), ord: S.qs.map(function (it) { return it.opts.map(function (o) { return o.i; }); }), ans: S.ans, flag: S.flag, at: S.at, end: S.end, t0: S.t0 })); } catch (e) {} }
+  function clearLive() { try { localStorage.removeItem(LIVE); } catch (e) {} }
+  function liveMock() { try { var l = JSON.parse(localStorage.getItem(LIVE) || 'null'); if (!l || !l.ids || l.end < Date.now() - 60000) { if (l) clearLive(); return null; } return l; } catch (e) { return null; } }
+  function byId(id) { for (var i = 0; i < ALL.length; i++) if (ALL[i].id === id) return ALL[i]; return null; }
+  function resumeMock() {
+    var l = liveMock(); if (!l) return draw();
+    var qs = l.ids.map(function (id, n) { var q = byId(id); if (!q) return null; var base = optsOf(q), ord = l.ord[n] || []; var o = ord.map(function (i) { return base.filter(function (x) { return x.i === i; })[0]; }).filter(Boolean); return { q: q, opts: o.length === base.length ? o : base }; });
+    if (qs.some(function (x) { return !x; })) { clearLive(); return go('intro'); }
+    S = { v: 'mock', qs: qs, ans: l.ans || {}, flag: l.flag || {}, at: l.at || 0, end: l.end, t0: l.t0 || Date.now() };
+    draw(); top();
+  }
+  function answered() { return Object.keys(S.ans).filter(function (k) { return S.ans[k] && S.ans[k].length === need(S.qs[k].q); }).length; }
+  function examBar() { return '<div class="lx-bar"><b>Driving Theory — Mock Exam</b><span class="lx-time" id="dtT"></span></div>'; }
   function mockQ(r) {
-    var it = S.qs[S.at]; S.q = it.q; S.opts = it.opts; S.pick = (S.ans[S.at] || []).slice();
-    var last = S.at === S.qs.length - 1;
-    r.innerHTML = '<div class="lu-qh"><span>Question ' + (S.at + 1) + ' of ' + MOCK_N + ' · ' + answered() + ' answered</span><span class="lu-timer" id="dtT"></span></div>' + qHtml(it.q, false) +
-      '<div class="lu-row" style="margin-top:0"><button class="dt-flag' + (S.flag[S.at] ? ' on' : '') + '" id="dtF">🚩 ' + (S.flag[S.at] ? 'Flagged' : 'Flag to come back') + '</button><span style="flex:1"></span><button class="dt-flag" id="dtR">Review all</button></div>' +
-      '<div class="lu-row"><button class="lu-btn g" id="dtP"' + (S.at ? '' : ' disabled') + '>← Back</button><button class="lu-btn" id="dtN">' + (last ? 'Review and finish' : 'Next →') + '</button></div>' +
-      '<div class="lu-row" style="margin-top:12px"><button class="lu-btn g" id="dtQ" style="border-color:#E3E0D7;color:#6B7280">Stop test</button></div>';
-    bindOpts(r, function () {});
-    $('#dtF', r).onclick = function () { S.flag[S.at] = !S.flag[S.at]; draw(); };
-    $('#dtR', r).onclick = function () { S.v = 'review'; draw(); top(); };
-    $('#dtP', r).onclick = function () { S.at--; draw(); top(); };
-    $('#dtN', r).onclick = function () { if (last) { S.v = 'review'; draw(); top(); } else { S.at++; draw(); top(); } };
-    $('#dtQ', r).onclick = function () { if (confirm('Stop this mock test? Your answers won’t be saved.')) go('home'); };
-    tick(); timer = setInterval(tick, 1000);
+    var it = S.qs[S.at], pick = S.ans[S.at] || [], last = S.at === S.qs.length - 1, fl = !!S.flag[S.at];
+    r.innerHTML = '<div class="lx">' + examBar() +
+      '<div class="lx-panel"><div class="lx-num"><span>Question ' + (S.at + 1) + ' of ' + S.qs.length + '</span>' + (fl ? '<span class="lx-flagged">⚑ Flagged for review</span>' : '') + '</div>' + optsHtml(it, pick, false) + '</div>' +
+      '<div class="lx-nav"><button class="lx-b" id="lxP"' + (S.at ? '' : ' disabled') + '>← Previous</button><button class="lx-b f' + (fl ? ' on' : '') + '" id="lxF">⚑ ' + (fl ? 'Unflag' : 'Flag') + '</button><button class="lx-b p" id="lxN">' + (last ? 'Review →' : 'Next →') + '</button></div>' +
+      '<div class="lx-links"><button class="q" id="lxX">Exit test</button><button id="lxR">Review answers (' + answered() + '/' + S.qs.length + ')</button></div></div>';
+    bindPick(r, it, true);
+    $('#lxP', r).onclick = function () { if (S.at) { S.at--; saveLive(); draw(); top(); } };
+    $('#lxN', r).onclick = function () { if (last) { S.v = 'review'; draw(); top(); } else { S.at++; saveLive(); draw(); top(); } };
+    $('#lxF', r).onclick = function () { if (S.flag[S.at]) delete S.flag[S.at]; else S.flag[S.at] = 1; saveLive(); draw(); };
+    $('#lxR', r).onclick = function () { S.v = 'review'; draw(); top(); };
+    $('#lxX', r).onclick = function () { if (confirm('Exit the mock test? Your answers will not be marked.')) { clearLive(); go('home'); } };
+    startTick();
   }
   function mockReview(r) {
-    var un = S.qs.length - answered(), fl = Object.keys(S.flag).filter(function (k) { return S.flag[k]; }).length;
-    r.innerHTML = '<div class="lu-qh"><span>Review your answers</span><span class="lu-timer" id="dtT"></span></div><div class="lu-card"><div style="font-size:15px">' + answered() + ' of ' + MOCK_N + ' answered' + (un ? ' · <b style="color:#B42318">' + un + ' not answered</b>' : '') + (fl ? ' · 🚩 ' + fl + ' flagged' : '') + '</div>' +
-      '<div class="dt-grid">' + S.qs.map(function (x, n) { return '<button data-j="' + n + '" class="' + ((S.ans[n] || []).length ? 'a' : '') + (S.flag[n] ? ' f' : '') + '">' + (n + 1) + '</button>'; }).join('') + '</div>' +
-      '<div class="lu-note" style="margin:0">Tap a number to go back to it. Blue = answered.</div></div>' +
-      '<button class="lu-btn" id="dtEnd">Finish test</button><div class="lu-row"><button class="lu-btn g" id="dtBk">← Back to questions</button></div>';
-    $$('[data-j]', r).forEach(function (b) { b.onclick = function () { S.at = +b.dataset.j; S.v = 'mock'; draw(); top(); }; });
-    $('#dtBk', r).onclick = function () { S.v = 'mock'; draw(); top(); };
-    $('#dtEnd', r).onclick = function () { if (un && !confirm(un + ' question' + (un === 1 ? ' is' : 's are') + ' not answered. Finish anyway?')) return; finishMock(false); };
-    tick(); timer = setInterval(tick, 1000);
+    var a = answered(), un = S.qs.length - a, fl = Object.keys(S.flag).length;
+    r.innerHTML = '<div class="lx">' + examBar() +
+      '<div class="lx-panel"><b style="font-size:18px">Review your answers</b><div style="font-size:14.5px;color:#52606D;margin-top:4px">' + a + ' answered · ' + un + ' unanswered · ' + fl + ' flagged. Tap a number to go back to that question.</div>' +
+      '<div class="lx-grid">' + S.qs.map(function (it, n) { var done = S.ans[n] && S.ans[n].length === need(it.q); return '<button class="lx-cell' + (done ? ' a' : '') + (S.flag[n] ? ' f' : '') + '" data-g="' + n + '">' + (n + 1) + '</button>'; }).join('') + '</div>' +
+      '<div class="lx-key"><span><i style="background:#EEF9F3;border-color:#1FA463"></i>Answered</span><span><i></i>Unanswered</span><span>⚑ Flagged</span></div>' +
+      '<div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' + (un ? '<button class="lx-b" id="lxU">Go to first unanswered</button>' : '') + (fl ? '<button class="lx-b" id="lxFl">Go to first flagged</button>' : '') + '</div></div>' +
+      (un ? '<div class="lu-note" style="color:#A15C00;margin:0 2px 10px">⚠️ You have ' + un + ' unanswered question' + (un === 1 ? '' : 's') + '. Unanswered questions are marked wrong.</div>' : '') +
+      '<div class="lx-nav" style="grid-template-columns:1fr 1fr"><button class="lx-b" id="lxBk">← Back to questions</button><button class="lx-b p" id="lxS">Submit test</button></div></div>';
+    var goQ = function (n) { S.v = 'mock'; S.at = n; saveLive(); draw(); top(); };
+    $$('[data-g]', r).forEach(function (b) { b.onclick = function () { goQ(+b.dataset.g); }; });
+    if ($('#lxU', r)) $('#lxU', r).onclick = function () { for (var n = 0; n < S.qs.length; n++) if (!(S.ans[n] && S.ans[n].length === need(S.qs[n].q))) return goQ(n); };
+    if ($('#lxFl', r)) $('#lxFl', r).onclick = function () { goQ(+Object.keys(S.flag).sort(function (a, b) { return a - b; })[0]); };
+    $('#lxBk', r).onclick = function () { goQ(Math.min(S.at, S.qs.length - 1)); };
+    $('#lxS', r).onclick = function () { if (confirm(un ? 'You have ' + un + ' unanswered question' + (un === 1 ? '' : 's') + '. Submit your test now?' : 'Submit your test now? You can’t change your answers after this.')) finishMock(false); };
+    startTick();
   }
+  function startTick() { tick(); timer = setInterval(tick, 1000); }
   function tick() {
     var t = document.getElementById('dtT'); if (!t) return stopTimer();
     var left = Math.max(0, Math.round((S.end - Date.now()) / 1000));
-    t.textContent = '⏱ ' + Math.floor(left / 60) + ':' + ('0' + left % 60).slice(-2); t.classList.toggle('low', left <= 300);
+    t.textContent = '⏱ ' + mmss(left) + ' left'; t.classList.toggle('low', left <= 300);
     if (!left) { stopTimer(); finishMock(true); }
   }
   function finishMock(timeUp) {
-    var d = load(), score = 0, wrong = [];
-    S.qs.forEach(function (it, n) {
-      var pick = S.ans[n] || [], ok = !!pick.length && isRight(it.q, pick, it.opts);
-      mark(d, it.q, ok); if (ok) score++;
-      else wrong.push({ q: it.q, you: pick.map(function (i) { var o = it.opts.filter(function (x) { return x.i === i; })[0]; return o ? o.tx : ''; }).join(' and ') });
+    var d = load(), score = 0, byT = {};
+    var items = S.qs.map(function (it, n) {
+      var pick = S.ans[n] || [], ok = isRight(it.q, pick, it.opts);
+      mark(d, it.q, ok); if (ok) score++; byT[it.q.c] = byT[it.q.c] || [0, 0]; byT[it.q.c][1]++; if (ok) byT[it.q.c][0]++;
+      return { q: it.q, opts: it.opts, pick: pick };
     });
-    d.mocks.push({ at: today(), s: score }); if (d.mocks.length > 50) d.mocks = d.mocks.slice(-50); save(d); gt('drive_mock_done', { value: score });
-    S = { v: 'mockEnd', score: score, wrong: wrong, timeUp: !!timeUp, used: Math.round((MOCK_MIN * 60000 - Math.max(0, S.end - Date.now())) / 60000) };
-    draw(); top();
+    d.mocks.push({ at: today(), s: score, t: byT }); if (d.mocks.length > 50) d.mocks = d.mocks.slice(-50);
+    d.last = S.qs.map(function (it) { return it.q.id; });
+    save(d); clearLive(); gt('drive_mock_done', { value: score });
+    go('result', { kind: 'mock', items: items, score: score, timeUp: !!timeUp, used: Math.min(MOCK_MIN, Math.round((Date.now() - S.t0) / 60000)), tab: 'all' });
   }
-  function mockEnd(r) {
-    var pass = S.score >= PASS, by = {};
-    S.wrong.forEach(function (w) { by[w.q.c] = (by[w.q.c] || 0) + 1; });
-    var study = Object.keys(by).sort(function (a, b) { return by[b] - by[a]; });
-    r.innerHTML = '<div class="lu-card lu-res">' + (S.timeUp ? '<div style="font-weight:800;color:#B42318;margin-bottom:6px">⏱ Time’s up</div>' : '') + '<b>' + S.score + '/50</b><div style="color:#6B7280;margin-top:4px">' + Math.round(S.score / 50 * 100) + '% · ' + S.used + ' minutes</div>' +
-      '<span class="p ' + (pass ? 'ok' : 'no') + '">' + (pass ? '✅ Pass — well done!' : '❌ Not a pass yet — you need ' + PASS) + '</span>' +
-      '<div class="lu-note" style="margin:10px 0 0">In the real test you must also pass hazard perception (44 out of 75).</div></div>' +
-      (study.length ? '<div class="lu-card"><b style="font-size:16px">📚 Topics to practise</b>' + study.map(function (c) { return '<div class="lu-li"><i>' + TOP[c - 1][2] + '</i><span style="flex:1">' + esc(topName(+c)) + '</span><b>' + by[c] + ' wrong</b></div>'; }).join('') + '</div>' : '') +
-      (S.wrong.length ? '<div class="lu-card"><b style="font-size:16px">❌ Your ' + S.wrong.length + ' wrong answer' + (S.wrong.length === 1 ? '' : 's') + '</b>' + S.wrong.map(function (w) {
-        return '<div class="lu-wr">' + (w.q.g && SIGN[w.q.g] ? '<div style="width:90px">' + SIGN[w.q.g]().replace(/width="\d+" height="\d+"/, 'width="80" height="80"') + '</div>' : '') + '<b>' + esc(w.q.q) + '</b><div class="y">You: ' + esc(w.you || 'no answer') + '</div><div class="a">✓ ' + esc(rightText(w.q)) + '</div><small>' + esc(w.q.e) + '</small></div>';
-      }).join('') + '<div class="lu-note" style="margin:8px 0 0">These are now in 💪 My weak spots.</div></div>' : '') +
-      '<div class="lu-row"><button class="lu-btn" id="dtA">🎯 Another mock test</button></div><div class="lu-row"><button class="lu-btn g" id="dtH">Done</button></div>';
-    $('#dtA', r).onclick = startMock; $('#dtH', r).onclick = function () { go('home'); };
+
+  // ───── ✅ results ─────
+  function result(r) {
+    var n = S.items.length, pc = n ? Math.round(S.score / n * 100) : 0, mock = S.kind === 'mock', pass = S.score >= PASS;
+    var wrong = S.items.filter(function (x) { return !isRight(x.q, x.pick, x.opts); }), byT = {};
+    wrong.forEach(function (w) { byT[w.q.c] = (byT[w.q.c] || 0) + 1; });
+    var study = Object.keys(byT).sort(function (a, b) { return byT[b] - byT[a]; });
+    var list = S.tab === 'wrong' ? wrong : S.items;
+    r.innerHTML = '<div class="lx"><div class="lx-bar"><b>' + (mock ? 'Multiple-Choice Mock Test Result' : 'Practice result') + '</b></div>' +
+      '<div class="lx-panel lx-res">' + (S.timeUp ? '<div style="font-weight:800;color:#B42318;margin-bottom:6px">Time is up — your test was submitted automatically.</div>' : '') +
+      '<div class="sc">' + S.score + '/' + n + '</div><div class="pc">' + pc + '% correct</div>' +
+      (mock ? '<div class="pf ' + (pass ? 'ok' : 'no') + '">' + (pass ? 'PASS' : 'FAIL') + '</div><div style="font-size:14px;color:#52606D;margin-top:8px">' + (pass ? 'You reached the multiple-choice pass mark of 43.' : 'The multiple-choice pass mark is 43. You needed ' + (PASS - S.score) + ' more.') + '</div>' : '') +
+      '<div class="meta"><span>✓ ' + S.score + ' correct</span><span>✗ ' + (n - S.score) + ' incorrect</span>' + (S.used != null ? '<span>⏱ ' + Math.max(1, S.used) + ' min</span>' : '') + '</div>' +
+      (mock ? '<div class="lu-x" style="text-align:left;margin-top:12px">This is a multiple-choice result only — not an overall theory test pass. The real test also has 3 video questions and a hazard perception part (pass mark 44 out of 75), which are not included here.</div>' : '') + '</div>' +
+      (study.length ? '<div class="lx-panel"><b style="font-size:16px">📚 Topics to practise</b>' + study.map(function (c) { return '<div class="lu-li"><i>' + TOP[c - 1][2] + '</i><span style="flex:1">' + esc(topName(+c)) + '</span><b>' + byT[c] + ' wrong</b></div>'; }).join('') + '</div>' : '') +
+      '<div class="lx-panel" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="lx-b" id="lxRv">Review my answers</button>' +
+      (study.length ? '<button class="lx-b" id="lxWt">Practise weak topics</button>' : '') + (wrong.length ? '<button class="lx-b" id="lxRi">Retry incorrect questions</button>' : '') +
+      '<button class="lx-b p" id="lxA">' + (mock ? 'Take another mock test' : 'Practise again') + '</button><button class="lx-b" id="lxH">Done</button></div>' +
+      '<div class="lx-panel" id="lxList"><b style="font-size:16px">Review ' + (mock ? 'all ' + n + ' questions' : 'your answers') + '</b>' +
+      '<div class="lx-tabs"><button data-t="all" aria-pressed="' + (S.tab !== 'wrong') + '">All (' + n + ')</button><button data-t="wrong" aria-pressed="' + (S.tab === 'wrong') + '">Incorrect (' + wrong.length + ')</button></div>' +
+      (list.length ? list.map(function (x) {
+        var ok = isRight(x.q, x.pick, x.opts), num = S.items.indexOf(x) + 1, you = x.pick.length ? pickedText(x, x.pick) : 'No answer';
+        return '<div class="lx-rv"><div class="h"><i class="' + (ok ? 'ok' : 'no') + '">' + (ok ? '✓' : '✗') + '</i><div style="flex:1;min-width:0"><b>' + num + '. ' + esc(x.q.q) + '</b>' + (x.q.g && SIGN[x.q.g] ? '<div style="width:84px;margin-top:4px">' + SIGN[x.q.g]().replace(/width="\d+" height="\d+"/, 'width="80" height="80"') + '</div>' : '') +
+          '<div class="y' + (ok ? ' ok' : '') + '">Your answer: ' + esc(you) + '</div>' + (ok ? '' : '<div class="a">Correct answer: ' + esc(rightText(x.q)) + '</div>') +
+          '<div class="e">' + esc(x.q.e) + (x.q.x ? ' 📍 ' + esc(x.q.x) : '') + '</div><span class="c">' + TOP[x.q.c - 1][2] + ' ' + esc(topName(x.q.c)) + '</span> ' + hcLink(x.q) + '</div></div></div>';
+      }).join('') : '<div style="color:#52606D;padding:8px 0">No incorrect answers — well done!</div>') + '</div>' +
+      '<div class="lu-disc">' + esc(DISCLAIMER) + '</div></div>';
+    $$('[data-t]', r).forEach(function (b) { b.onclick = function () { S.tab = b.dataset.t; draw(); var l = $('#lxList'); if (l) l.scrollIntoView(); }; });
+    $('#lxRv', r).onclick = function () { var l = $('#lxList'); if (l) l.scrollIntoView({ behavior: 'smooth' }); };
+    if ($('#lxWt', r)) $('#lxWt', r).onclick = function () { startPrac(+study[0], 10, 'now'); };
+    if ($('#lxRi', r)) $('#lxRi', r).onclick = function () { startPrac(wrong.map(function (w) { return w.q.id; }), wrong.length, 'now'); };
+    $('#lxA', r).onclick = function () { if (mock) go('intro'); else startPrac(S.mode, S.n, S.fb); };
+    $('#lxH', r).onclick = function () { go('home'); };
   }
 
   // ───── info cards (GOV.UK) ─────
@@ -343,7 +466,7 @@
       L('⏯️', 'You only get <b>one go</b> at each clip — you can’t review or change your answers.', GOV.hp) +
       L('🎯', 'Pass mark: <b>44 out of 75</b>.', GOV.pass) +
       L('💡', '<b>Tip:</b> watch for clues early — a car edging out of a side road, a pedestrian near the kerb, brake lights ahead, a ball near the road. Click when it starts to become a problem, and click again a moment later to be safe.', '') +
-      '<div class="lu-note" style="margin:8px 0 0">We can’t show the official clips here. Practise them with the free official DVSA practice test and apps.</div>',
+      '<div class="lu-x" style="margin-top:10px">🚧 <b>Hazard perception practice is not available in Auntie Tobi yet.</b> A fair practice test needs real road video clips with checked scoring windows, and we don’t have suitable clips yet — so we won’t give you made-up scores. Use the free official DVSA practice test for now.</div>',
       '<a class="lu-btn" style="display:block;text-align:center;text-decoration:none" href="' + GOV.rev + '" target="_blank" rel="noopener">Official practice and apps ↗</a>');
     gt('drive_hazard');
   }
@@ -360,12 +483,12 @@
 
   function summary() { var d = load(), last = d.mocks[d.mocks.length - 1]; return { mocks: d.mocks.length, last: last ? last.s : null, answered: d.n, weak: Object.keys(d.wrong).length, date: d.date }; }
   function setDate(iso) { var d = load(); d.date = iso || ''; save(d); }
-  window.DriveTest = { open: open, summary: summary, setDate: setDate, sign: function (k) { return SIGN[k] ? SIGN[k]() : ''; }, mock: function () { open(); getQ().then(startMock); } };
+  window.DriveTest = { open: open, summary: summary, setDate: setDate, sign: function (k) { return SIGN[k] ? SIGN[k]() : ''; }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
 
   // 🔗 auntietobi.co.uk/driving-theory-test (→ /?drive=1), /mock, /signs, /before
   var m = location.search.match(/[?&]drive(?:=([a-z]+))?/i);
   if (m || location.pathname.replace(/\/$/, '') === '/driving-theory-test') {
-    var go2 = function () { var k = m && m[1]; if (k === 'mock') window.DriveTest.mock(); else if (k === 'signs') { open(); getQ().then(function () { startPrac('signs'); }); } else open(k === 'before' ? 'before' : 'home'); gt('drive_link', { label: k || 'home' }); };
+    var go2 = function () { var k = m && m[1]; if (k === 'mock') window.DriveTest.mock(); else if (k === 'signs') { open(); getQ().then(function () { startPrac('signs', 10, 'now'); }); } else open(k === 'before' ? 'before' : 'home'); gt('drive_link', { label: k || 'home' }); };
     if (document.readyState === 'complete') setTimeout(go2, 900); else window.addEventListener('load', function () { setTimeout(go2, 900); });
   }
 })();

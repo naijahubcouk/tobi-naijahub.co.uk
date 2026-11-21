@@ -290,8 +290,8 @@ exports.handler = handler(async (ctx) => {
       if (body.url) { const page = await require('../eventmedia').readLink(body.url, true); notes = page.notes + (notes ? `\n\nExtra notes:\n${notes.slice(0, 2000)}` : ''); }
       return { draft: await tplcar.write(notes, { count: body.count, end: body.end !== false }) };
     }
-    case 'lq-fixes': return { fix: await require('../lifeukq').fixes() };
-    case 'lq-set': return require('../lifeukq').setFix(body.id, body.reset ? null : body.patch, who.email);
+    case 'lq-fixes': return { fix: await require('../lifeukq').fixes(body.bank) };
+    case 'lq-set': return require('../lifeukq').setFix(body.id, body.reset ? null : body.patch, who.email, body.bank);
     case 'qv-status': return require('../quizvideo').status();
     case 'qv-speak': {
       await core.rateLimit('hq-qvspeak', who.email, 400, 60 * 60 * 1000, 'That’s a lot of voice lines this hour — please wait a little.');
