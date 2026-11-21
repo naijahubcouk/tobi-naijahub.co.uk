@@ -17,6 +17,11 @@
 # 💚 My Plan
 /my-plan        /?plan=1                302
 
+# 🇬🇧 Life in the UK Test practice
+/life-in-uk-test        /?lifeuk=1        302
+/life-in-uk-test/mock   /?lifeuk=mock     302
+/life-in-uk-test/before /?lifeuk=before   302
+
 # Public "Add your event" page
 /add-event      /add-event.html         200
 # Public "Add your business" page (and claim links from outreach emails)

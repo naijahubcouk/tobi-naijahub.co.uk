@@ -1012,9 +1012,9 @@
 .home-biz>button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 14px;font-family:inherit;cursor:pointer;color:#0F1E36;font-size:14px}.home-biz b{display:block}.home-biz small{color:#6B7280;font-size:12.5px}.home-biz .ar{color:#057A44;font-weight:800;font-size:18px}
 .home-biz>div{grid-template-columns:1fr;border-top:1px solid #F1EEE6}.home-biz>div a{padding:12px 16px;border-bottom:1px solid #F1EEE6;color:#057A44;font-weight:700;font-size:14px;text-decoration:none}.home-biz>div a:last-child{border:0}
 /* 🏠 Home shortcuts row */
-.home-sc{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:2px 0 4px}
+.home-sc{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin:2px 0 4px}
 .home-sc button{background:none;border:0;font-family:inherit;font-size:12px;font-weight:600;color:#374151;cursor:pointer;padding:0;line-height:1.3}
-.home-sc i{display:flex;width:50px;height:50px;margin:0 auto 5px;border-radius:50%;background:#fff;border:1px solid #E8E3D6;align-items:center;justify-content:center;font-size:22px;font-style:normal;transition:transform .15s}
+.home-sc i{display:flex;width:46px;height:46px;margin:0 auto 5px;border-radius:50%;background:#fff;border:1px solid #E8E3D6;align-items:center;justify-content:center;font-size:22px;font-style:normal;transition:transform .15s}
 .home-sc button:active i{transform:scale(.94)}
 </style>
   <!-- OneSignal Push Notifications -->
@@ -4435,7 +4435,7 @@ function showFAQCard(suppressBubbles) {
             </div>
             <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
               <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🚗 Driving & UK Test</div>
-              <div style="font-size:11px;color:#555;line-height:1.8;">Theory Test practice &nbsp;|&nbsp; UK driving rules &nbsp;|&nbsp; Life in UK Test prep</div>
+              <div style="font-size:11px;color:#555;line-height:1.8;">Theory Test practice &nbsp;|&nbsp; UK driving rules &nbsp;|&nbsp; <a href="/life-in-uk-test" onclick="if(window.LifeUK){event.preventDefault();window.LifeUK.open();}" style="color:#057A44;font-weight:700">Life in UK Test practice</a></div>
             </div>
             <div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;">
               <div style="font-size:11px;font-weight:700;color:#0F1E36;margin-bottom:3px;">🏢 Businesses & 🎉 Events</div>
@@ -4988,7 +4988,7 @@ function showAboutTobi() {
           <div style="width:42px;height:42px;border-radius:10px;background:#f0faf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px;">🚗</div>
           <div>
             <div style="font-size:16px;font-weight:700;color:#0F1E36;margin-bottom:3px;">Prepare for UK Tests</div>
-            <div style="font-size:15px;color:#4B5563;line-height:1.55;">Practice for your UK Driving Theory Test and the Life in the UK Test with easy revision tools.</div>
+            <div style="font-size:15px;color:#4B5563;line-height:1.55;">Practice for your UK Driving Theory Test and the <a href="/life-in-uk-test" onclick="if(window.LifeUK){event.preventDefault();window.LifeUK.open();}" style="color:#057A44;font-weight:700">Life in the UK Test</a> — 500+ free questions and mock tests.</div>
           </div>
         </div>
 
@@ -5368,7 +5368,7 @@ function showWelcomeCard() {
           🏥 NHS, GP & healthcare<br>
           💼 Jobs, CV & career support<br>
           🛂 Visa & immigration guidance<br>
-          🚗 Driving & Life in UK test preparation<br>
+          🚗 Driving & <a href="/life-in-uk-test" onclick="if(window.LifeUK){event.preventDefault();window.LifeUK.open();}" style="color:#057A44;font-weight:700">Life in UK test</a> preparation<br>
           🎉 Events & Nigerian businesses<br>
           🔍 Anything you need help with in the UK
         </div>
@@ -6061,7 +6061,7 @@ function sundaySignup(){
   window.open('/sunday-update', '_blank', 'noopener');
 }
 function showHomeShortcuts(){
-  var items = [['🏢','Businesses','showBusinesses(undefined,null,null,true,true)'],['🎉','Events','showEventsCard()'],['💌','Cards',"location.href='/cards'"],['🛍️','Market','showMarketplace()'],['📰','News','showNewsAndUpdates()']];
+  var items = [['🏢','Businesses','showBusinesses(undefined,null,null,true,true)'],['🎉','Events','showEventsCard()'],['💌','Cards',"location.href='/cards'"],['🛍️','Market','showMarketplace()'],['📰','News','showNewsAndUpdates()'],['🇬🇧','UK Test','window.LifeUK?LifeUK.open():quickAsk(\'Help me prepare for my Life in UK test\')']];
   addTipMessage('<div class="home-sc">' + items.map(function(x){ return '<button type="button" onclick="' + x[2] + '"><i>' + x[0] + '</i>' + x[1] + '</button>'; }).join('') + '</div>');
 }
 
@@ -6318,7 +6318,7 @@ const TIPS = [
   { category: 'Immigration', emoji: '🛂', tip: 'Indefinite Leave to Remain (ILR) allows you to live and work in the UK permanently. You can usually apply after 5 years on a qualifying visa.', b1: 'How do I apply for ILR?', b2: 'What are the requirements for ILR?', b3: 'How long does ILR take?' },
   { category: 'Immigration', emoji: '🛂', tip: 'You must renew your visa before it expires or you will be in breach of your conditions. Set a reminder 3–6 months before your visa expiry date.', b1: 'How do I renew my UK visa?', b2: 'What happens if my visa expires?', b3: 'How do I apply for a visa extension?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have a biometric residence permit (BRP) always keep it safe. Report it immediately if it is lost or stolen through the gov.uk website.', b1: 'What is a BRP card?', b2: 'How do I replace a lost BRP?', b3: 'How do I check my immigration status?' },
-  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare thoroughly using the official handbook — practising regularly makes a big difference.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
+  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare using the official handbook — and practise free with mock tests at auntietobi.co.uk/life-in-uk-test.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
   { category: 'Immigration', emoji: '🛂', tip: 'British citizenship gives you a British passport, the right to vote and freedom from immigration controls. You can usually apply 12 months after getting ILR.', b1: 'How do I apply for British citizenship?', b2: 'What are the requirements for citizenship?', b3: 'What does British citizenship mean?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you are unsure about your immigration status always seek advice from a regulated immigration adviser. Check they are registered with the OISC before paying.', b1: 'How do I find a registered immigration adviser?', b2: 'What is the OISC?', b3: 'How do I check my immigration status?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have been refused a visa you have the right to appeal or seek an administrative review in some cases. Act quickly as deadlines are strict.', b1: 'How do I appeal a visa refusal?', b2: 'What are my rights if my visa is refused?', b3: 'Find a Nigerian solicitor near me' },
@@ -6378,7 +6378,7 @@ const TIPS = [
   { category: 'Immigration', emoji: '🛂', tip: 'Indefinite Leave to Remain (ILR) allows you to live and work in the UK permanently. You can usually apply after 5 years on a qualifying visa.', b1: 'How do I apply for ILR?', b2: 'What are the requirements for ILR?', b3: 'How long does ILR take?' },
   { category: 'Immigration', emoji: '🛂', tip: 'You must renew your visa before it expires or you will be in breach of your conditions. Set a reminder 3–6 months before your visa expiry date.', b1: 'How do I renew my UK visa?', b2: 'What happens if my visa expires?', b3: 'How do I apply for a visa extension?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have a biometric residence permit (BRP) always keep it safe. Report it immediately if it is lost or stolen through the gov.uk website.', b1: 'What is a BRP card?', b2: 'How do I replace a lost BRP?', b3: 'How do I check my immigration status?' },
-  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare thoroughly using the official handbook — practising regularly makes a big difference.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
+  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare using the official handbook — and practise free with mock tests at auntietobi.co.uk/life-in-uk-test.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
   { category: 'Immigration', emoji: '🛂', tip: 'British citizenship gives you a British passport, the right to vote and freedom from immigration controls. You can usually apply 12 months after getting ILR.', b1: 'How do I apply for British citizenship?', b2: 'What are the requirements for citizenship?', b3: 'What does British citizenship mean?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you are unsure about your immigration status always seek advice from a regulated immigration adviser. Check they are registered with the OISC before paying.', b1: 'How do I find a registered immigration adviser?', b2: 'What is the OISC?', b3: 'How do I check my immigration status?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have been refused a visa you have the right to appeal or seek an administrative review in some cases. Act quickly as deadlines are strict.', b1: 'How do I appeal a visa refusal?', b2: 'What are my rights if my visa is refused?', b3: 'Find a Nigerian solicitor near me' },
@@ -6438,7 +6438,7 @@ const TIPS = [
   { category: 'Immigration', emoji: '🛂', tip: 'Indefinite Leave to Remain (ILR) allows you to live and work in the UK permanently. You can usually apply after 5 years on a qualifying visa.', b1: 'How do I apply for ILR?', b2: 'What are the requirements for ILR?', b3: 'How long does ILR take?' },
   { category: 'Immigration', emoji: '🛂', tip: 'You must renew your visa before it expires or you will be in breach of your conditions. Set a reminder 3–6 months before your visa expiry date.', b1: 'How do I renew my UK visa?', b2: 'What happens if my visa expires?', b3: 'How do I apply for a visa extension?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have a biometric residence permit (BRP) always keep it safe. Report it immediately if it is lost or stolen through the gov.uk website.', b1: 'What is a BRP card?', b2: 'How do I replace a lost BRP?', b3: 'How do I check my immigration status?' },
-  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare thoroughly using the official handbook — practising regularly makes a big difference.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
+  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare using the official handbook — and practise free with mock tests at auntietobi.co.uk/life-in-uk-test.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
   { category: 'Immigration', emoji: '🛂', tip: 'British citizenship gives you a British passport, the right to vote and freedom from immigration controls. You can usually apply 12 months after getting ILR.', b1: 'How do I apply for British citizenship?', b2: 'What are the requirements for citizenship?', b3: 'What does British citizenship mean?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you are unsure about your immigration status always seek advice from a regulated immigration adviser. Check they are registered with the OISC before paying.', b1: 'How do I find a registered immigration adviser?', b2: 'What is the OISC?', b3: 'How do I check my immigration status?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have been refused a visa you have the right to appeal or seek an administrative review in some cases. Act quickly as deadlines are strict.', b1: 'How do I appeal a visa refusal?', b2: 'What are my rights if my visa is refused?', b3: 'Find a Nigerian solicitor near me' },
@@ -6498,7 +6498,7 @@ const TIPS = [
   { category: 'Immigration', emoji: '🛂', tip: 'Indefinite Leave to Remain (ILR) allows you to live and work in the UK permanently. You can usually apply after 5 years on a qualifying visa.', b1: 'How do I apply for ILR?', b2: 'What are the requirements for ILR?', b3: 'How long does ILR take?' },
   { category: 'Immigration', emoji: '🛂', tip: 'You must renew your visa before it expires or you will be in breach of your conditions. Set a reminder 3–6 months before your visa expiry date.', b1: 'How do I renew my UK visa?', b2: 'What happens if my visa expires?', b3: 'How do I apply for a visa extension?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have a biometric residence permit (BRP) always keep it safe. Report it immediately if it is lost or stolen through the gov.uk website.', b1: 'What is a BRP card?', b2: 'How do I replace a lost BRP?', b3: 'How do I check my immigration status?' },
-  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare thoroughly using the official handbook — practising regularly makes a big difference.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
+  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare using the official handbook — and practise free with mock tests at auntietobi.co.uk/life-in-uk-test.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
   { category: 'Immigration', emoji: '🛂', tip: 'British citizenship gives you a British passport, the right to vote and freedom from immigration controls. You can usually apply 12 months after getting ILR.', b1: 'How do I apply for British citizenship?', b2: 'What are the requirements for citizenship?', b3: 'What does British citizenship mean?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you are unsure about your immigration status always seek advice from a regulated immigration adviser. Check they are registered with the OISC before paying.', b1: 'How do I find a registered immigration adviser?', b2: 'What is the OISC?', b3: 'How do I check my immigration status?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have been refused a visa you have the right to appeal or seek an administrative review in some cases. Act quickly as deadlines are strict.', b1: 'How do I appeal a visa refusal?', b2: 'What are my rights if my visa is refused?', b3: 'Find a Nigerian solicitor near me' },
@@ -6558,7 +6558,7 @@ const TIPS = [
   { category: 'Immigration', emoji: '🛂', tip: 'Indefinite Leave to Remain (ILR) allows you to live and work in the UK permanently. You can usually apply after 5 years on a qualifying visa.', b1: 'How do I apply for ILR?', b2: 'What are the requirements for ILR?', b3: 'How long does ILR take?' },
   { category: 'Immigration', emoji: '🛂', tip: 'You must renew your visa before it expires or you will be in breach of your conditions. Set a reminder 3–6 months before your visa expiry date.', b1: 'How do I renew my UK visa?', b2: 'What happens if my visa expires?', b3: 'How do I apply for a visa extension?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have a biometric residence permit (BRP) always keep it safe. Report it immediately if it is lost or stolen through the gov.uk website.', b1: 'What is a BRP card?', b2: 'How do I replace a lost BRP?', b3: 'How do I check my immigration status?' },
-  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare thoroughly using the official handbook — practising regularly makes a big difference.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
+  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare using the official handbook — and practise free with mock tests at auntietobi.co.uk/life-in-uk-test.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
   { category: 'Immigration', emoji: '🛂', tip: 'British citizenship gives you a British passport, the right to vote and freedom from immigration controls. You can usually apply 12 months after getting ILR.', b1: 'How do I apply for British citizenship?', b2: 'What are the requirements for citizenship?', b3: 'What does British citizenship mean?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you are unsure about your immigration status always seek advice from a regulated immigration adviser. Check they are registered with the OISC before paying.', b1: 'How do I find a registered immigration adviser?', b2: 'What is the OISC?', b3: 'How do I check my immigration status?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have been refused a visa you have the right to appeal or seek an administrative review in some cases. Act quickly as deadlines are strict.', b1: 'How do I appeal a visa refusal?', b2: 'What are my rights if my visa is refused?', b3: 'Find a Nigerian solicitor near me' },
@@ -6618,7 +6618,7 @@ const TIPS = [
   { category: 'Immigration', emoji: '🛂', tip: 'Indefinite Leave to Remain (ILR) allows you to live and work in the UK permanently. You can usually apply after 5 years on a qualifying visa.', b1: 'How do I apply for ILR?', b2: 'What are the requirements for ILR?', b3: 'How long does ILR take?' },
   { category: 'Immigration', emoji: '🛂', tip: 'You must renew your visa before it expires or you will be in breach of your conditions. Set a reminder 3–6 months before your visa expiry date.', b1: 'How do I renew my UK visa?', b2: 'What happens if my visa expires?', b3: 'How do I apply for a visa extension?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have a biometric residence permit (BRP) always keep it safe. Report it immediately if it is lost or stolen through the gov.uk website.', b1: 'What is a BRP card?', b2: 'How do I replace a lost BRP?', b3: 'How do I check my immigration status?' },
-  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare thoroughly using the official handbook — practising regularly makes a big difference.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
+  { category: 'Immigration', emoji: '🛂', tip: 'The Life in the UK Test is required for ILR and British citizenship. Prepare using the official handbook — and practise free with mock tests at auntietobi.co.uk/life-in-uk-test.', b1: 'How do I prepare for the Life in the UK test?', b2: 'What is the Life in the UK test?', b3: 'Practice Life in the UK test questions' },
   { category: 'Immigration', emoji: '🛂', tip: 'British citizenship gives you a British passport, the right to vote and freedom from immigration controls. You can usually apply 12 months after getting ILR.', b1: 'How do I apply for British citizenship?', b2: 'What are the requirements for citizenship?', b3: 'What does British citizenship mean?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you are unsure about your immigration status always seek advice from a regulated immigration adviser. Check they are registered with the OISC before paying.', b1: 'How do I find a registered immigration adviser?', b2: 'What is the OISC?', b3: 'How do I check my immigration status?' },
   { category: 'Immigration', emoji: '🛂', tip: 'If you have been refused a visa you have the right to appeal or seek an administrative review in some cases. Act quickly as deadlines are strict.', b1: 'How do I appeal a visa refusal?', b2: 'What are my rights if my visa is refused?', b3: 'Find a Nigerian solicitor near me' },
@@ -10368,7 +10368,7 @@ function tobiOpenBiz(slug){window.history.pushState({},'','/?biz='+slug);handleD
 })();
 </script>
 <script src="/myplan.js?v=20261121b" defer></script>
-<script src="/lifeuk.js?v=20261121a" defer></script>
+<script src="/lifeuk.js?v=20261121b" defer></script>
 <script src="/desk.js" defer></script>
 <script>/* pictures + icons are added after the page opens, so shared links show just the words (no Auntie Tobi face) */(function(){document.querySelectorAll("img[data-lsrc]").forEach(function(i){i.src=i.getAttribute("data-lsrc");});document.querySelectorAll("template[data-icons]").forEach(function(t){document.head.appendChild(t.content.cloneNode(true));});})();</script>
 </body>

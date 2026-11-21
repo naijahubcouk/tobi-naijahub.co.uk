@@ -106,6 +106,7 @@
       (weak ? '<button class="lu-big y" id="luWeak"><i>💪</i><span><b>My weak spots · ' + weak + '</b><small>Questions you got wrong — get them right to clear them</small></span></button>' : '') +
       '<button class="lu-big w" id="luBefore"><i>📋</i><span><b>Before your test</b><small>Cost, booking, ID and the day — checked on GOV.UK</small></span></button>' +
       (window.MyPlan && window.MyPlan.lifeTest ? '<button class="lu-big w" id="luPlan"><i>💚</i><span><b>' + (d.date ? 'Change your test date' : 'Add your test date to My Plan') + '</b><small>Countdown, reminders and a checklist</small></span></button>' : '') +
+      '<button class="lu-big w" id="luShare"><i>📤</i><span><b>Share with a friend</b><small>auntietobi.co.uk/life-in-uk-test</small></span></button>' +
       '<div class="lu-note">Practice questions written by Auntie Tobi from the official handbook, <i>Life in the United Kingdom: A Guide for New Residents</i>. They are not the real test questions. Always check the latest rules on <a href="' + GOV.main + '" target="_blank" rel="noopener">GOV.UK</a>.</div>';
     $('#luBack', r).onclick = leave;
     $('#luMock', r).onclick = startMock;
@@ -113,6 +114,12 @@
     if ($('#luWeak', r)) $('#luWeak', r).onclick = function () { startPrac('weak'); };
     $('#luBefore', r).onclick = function () { S = { v: 'before' }; draw(); top(); };
     if ($('#luPlan', r)) $('#luPlan', r).onclick = function () { window.MyPlan.lifeTest(); };
+    $('#luShare', r).onclick = function () {
+      var url = 'https://auntietobi.co.uk/life-in-uk-test', text = 'Practise for the Life in the UK Test free on Auntie Tobi 🇬🇧 — 500+ questions from the official handbook and 45-minute mock tests:';
+      gt('lifeuk_share');
+      if (navigator.share) { navigator.share({ title: 'Life in the UK Test practice', text: text, url: url }).catch(function () {}); return; }
+      window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank', 'noopener');
+    };
   }
 
   // ───── 📚 chapters ─────
@@ -281,4 +288,10 @@
   function setDate(iso) { var d = load(); d.date = iso || ''; save(d); }
 
   window.LifeUK = { open: open, summary: summary, setDate: setDate, mock: function () { open(); getQ().then(startMock); } };
+  // 🔗 links: auntietobi.co.uk/life-in-uk-test (→ /?lifeuk=1), /life-in-uk-test/mock, /life-in-uk-test/before
+  var m = location.search.match(/[?&]lifeuk(?:=([a-z]+))?/i);
+  if (m || location.pathname.replace(/\/$/, '') === '/life-in-uk-test') {
+    var go = function () { if (m && m[1] === 'mock') window.LifeUK.mock(); else open(m && m[1] === 'before' ? 'before' : 'home'); gt('lifeuk_link', { label: (m && m[1]) || 'home' }); };
+    if (document.readyState === 'complete') setTimeout(go, 900); else window.addEventListener('load', function () { setTimeout(go, 900); });
+  }
 })();
