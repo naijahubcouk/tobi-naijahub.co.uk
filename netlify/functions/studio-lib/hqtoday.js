@@ -64,6 +64,10 @@ async function list(email) {
     }
   }
 
+  // 💚 Club check-ups prepared this month, not sent yet
+  const cc = await safe(() => require('./clubcheck').readyCount(), 0);
+  add({ key: 'club', icon: '💚', n: cc, text: 'Club check-up' + (cc === 1 ? '' : 's') + ' ready — check and send', nav: 'club', btn: 'Open' });
+
   // ⏰ scheduled Ask Auntie results waiting to be read
   if (email) { const n = unseen; add({ key: 'sched', icon: '⏰', n, text: 'scheduled Ask Auntie result' + (n === 1 ? '' : 's') + ' ready to read', nav: 'chat', btn: 'Read' }); }
 

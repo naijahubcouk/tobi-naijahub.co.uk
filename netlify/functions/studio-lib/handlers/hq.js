@@ -60,6 +60,7 @@ function sectionsOf(action) {
   if (/^sub-/.test(action)) return ['subs'];
   if (/^igc-/.test(action)) return ['igc'];
   if (/^chat-/.test(action)) return ['chat'];
+  if (/^cc-/.test(action)) return ['club'];   // 💚 Club check-ups
   if (/^car-/.test(action)) return ['cars'];
   if (/^tc-/.test(action)) return ['cars'];
   if (/^sc-/.test(action)) return ['cars'];   // 🎨 Style Match carousels
@@ -665,6 +666,14 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'chat-series-start') return cs.start(who.email, body.req);
       return cs.step(who.email, body.id);
     }
+    case 'cc-list': return require('../clubcheck').list(body.month);
+    case 'cc-prep': return require('../clubcheck').prepare(body.month, 15000, body.email || '', !!body.force);
+    case 'cc-update': return { row: await require('../clubcheck').update(body.month, body.email, body.patch || {}, who.email) };
+    case 'cc-email': {
+      await core.rateLimit('hq-cc-mail', who.email, 200, 60 * 60 * 1000, 'That’s a lot of emails this hour — please wait a little.');
+      const row = await require('../clubcheck').sendEmail(body.month, body.email, who.email); await core.audit(who.email, 'hq_clubcheck_email', { to: body.email }); return { row };
+    }
+    case 'cc-themes': return { themes: await require('../clubcheck').saveThemes(body.themes) };
     case 'chat-state': case 'chat-get': case 'chat-send': case 'chat-del': case 'chat-rename': case 'chat-prompt': case 'chat-prompt-del': case 'chat-cap': case 'chat-sched-save': case 'chat-sched-del': case 'chat-sched-run': {
       // 💬 Ask Auntie — private assistant (anyone with the "Ask Auntie" page; each person sees only their own chats)
       const ac = require('../askchat');

@@ -254,6 +254,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       <button data-nav="posted">📲 Posted</button>
       <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
       <button data-nav="subs">🎉 Events <span class="n gold" id="nSubs"></span></button>
+      <button data-nav="club" id="navClub">💚 Club check-ups <span class="n gold" id="nClub"></span></button>
       <button data-nav="dir" id="navDir">🏢 Business directory</button>
       <button data-nav="abiz" id="navAbiz">➕ Add your business <span class="n gold" id="nAbiz"></span></button>
       <button data-nav="mkt" id="navMkt">🛍️ Marketplace <span class="n gold" id="nMkt"></span></button>
@@ -293,6 +294,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
 <script src="/hq-carousel.js"></script>
 <script src="/hq-tplcarousel.js"></script>
 <script src="/hq-stylecar.js?v=20261120a"></script>
+<script src="/hq-club.js?v=20261121a"></script>
 <script src="/hq-discovery.js?v=20261117c"></script>
 <script src="/hq-market.js?v=20261107"></script>
 <script src="/hq-transcribe.js?v=20261111c"></script>
@@ -370,9 +372,9 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     go(location.hash.slice(1) || 'today');
   }
   var BASIC = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
-  var EXTRA = ['chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga'];
+  var EXTRA = ['club', 'chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga'];
   var SECTIONS = BASIC.concat(EXTRA);
-  var SECTION_NAMES = { today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '🎉 Events (submissions)', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin',
+  var SECTION_NAMES = { club: '💚 Club check-ups', today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '🎉 Events (submissions)', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin',
     chat: '💬 Ask Auntie', ideas: '✨ Weekly ideas', dir: '🏢 Business directory', abiz: '➕ Add your business', mkt: '🛍️ Marketplace', spot: '⭐ Spotlight', find: '🔎 Business Finder', out: '📧 Outreach', mail: '📝 Emails', imgm: '🎨 Image model', disc: '📣 Discovery posts', tx: '🎙️ Transcribe a video', mplan: '💚 My Plan users', fol: '📈 Followers tracker', glow: '✨ Instagram Revamp', sun: '📰 Sunday Update', igu: '👥 Comment & like usernames', dm: '📨 DM Outreach', iga: '⚡ Auto-replies' };
   function allowed(v) { if (v === 'tcars' || v === 'scars') v = 'cars'; var ok = function (x) { return !S.sections || S.sections.indexOf(x) >= 0; }; return v === 'subs' ? ok('subs') || ok('app') : ok(v); }   // 🎉 Events page = submissions + live events
   function go(v) {
@@ -389,11 +391,12 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vEvents, scars: function () { window.HQStyle.view(); }, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vEvents, club: function () { window.HQClub.view(); }, scars: function () { window.HQStyle.view(); }, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQTpl) window.HQTpl.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
+  if (window.HQClub) window.HQClub.init({ api: api, sheet: sheet, toast: toast, esc: esc });
   if (window.HQStyle) window.HQStyle.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S, go: go });
   if (window.HQDisc) window.HQDisc.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQTx) window.HQTx.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });

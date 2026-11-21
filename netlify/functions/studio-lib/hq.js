@@ -200,7 +200,7 @@ async function plannedToday() {
 // Sections of HQ a team member can open. No entry (or 'all') = everything.
 // Every HQ page Auntie Tobi can give a team member. BASIC = the content pages; the rest used to be admin-only.
 const BASIC = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
-const SECTIONS = BASIC.concat(['chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga']);
+const SECTIONS = BASIC.concat(['club', 'chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga']);
 const DEFAULT_ACCESS = {};
 // always an explicit list now (older "everything" meant the BASIC pages)
 function cleanAccess(v) { if (!Array.isArray(v)) return null; const out = SECTIONS.filter(x => v.includes(x)); return out.length ? out : null; }
