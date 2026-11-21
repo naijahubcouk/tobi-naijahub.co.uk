@@ -293,7 +293,7 @@ exports.handler=async function(event){
     if(!businessContext&&/\b(here are|here's|here is|i found|check out these|take a look at)\b[^.!?]{0,80}\b(food|businesses|business|places|spots|caterers?|restaurants?|shops?|stores?|vendors?|listings?|kitchens?|bukkas?|chefs?)\b/i.test(reply)){
       var dir2=await getDirectory(), sr2=searchBusinessesByIntent(contextQuery(),6,dir2,userCity,0);
       if(sr2.results.length>0&&getIntentGroup(contextQuery())){businessContext=formatBusinessContext(sr2.results,sr2.scope,sr2.city);}
-      else if(getIntentGroup(contextQuery())){reply='Tell me a bit more — what you fancy (jollof, suya, a caterer, African groceries…) and your town — and I’ll show you Nigerian businesses near you 💚';}
+      else if(getIntentGroup(contextQuery())){reply='Tell me a bit more — what you fancy (jollof, suya, a caterer, Nigerian groceries…) and your town — and I’ll show you Nigerian businesses near you 💚';}
 
     }
     if(businessContext){reply=reply.replace(/\[SHOW_BIZ_CARDS\]/,'').replace(/IF YOU CANT FIND.*?SEARCH\)/gi,'').trim();reply=reply+'\n'+businessContext.trim();}

@@ -173,7 +173,7 @@ async function searchPages(query) {
   query = core.cleanText(query, 120);
   if (query.length < 3) throw new HttpError(400, 'invalid', 'Type what to look for, e.g. “Nigerian hairstylist Manchester”.');
   const settings = await core.getSettings(), gen = require('./generate');
-  const out = await gen.callModel([{ role: 'system', content: 'From the web search results ONLY, list public Instagram accounts (instagram.com/<username>) that look like Nigerian or African people, creators, communities or small businesses in the UK. Never invent a username. Return ONLY JSON: {"accounts":[{"username":"","why":"short reason"}]}' },
+  const out = await gen.callModel([{ role: 'system', content: 'From the web search results ONLY, list public Instagram accounts (instagram.com/<username>) that look like Nigerian people, creators, communities or small businesses in the UK. Never invent a username. Return ONLY JSON: {"accounts":[{"username":"","why":"short reason"}]}' },
     { role: 'user', content: 'site:instagram.com ' + query + ' UK Nigerian' }], 1200, settings, { json: true, raw: true, timeoutMs: 22000, plugins: [{ id: 'web', engine: 'exa', max_results: 10, include_domains: ['instagram.com'] }] });
   gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
   let list = [];

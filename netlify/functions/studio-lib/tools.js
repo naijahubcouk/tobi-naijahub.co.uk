@@ -57,7 +57,7 @@ const QUICK_ANGLES = {
   attract: ['a quick tip', 'a common mistake to avoid', 'myth-busting', 'a question customers always ask', 'behind the scenes', 'how to choose the right provider', 'seasonal advice', 'meet the owner', 'local and community'],
 };
 const INDUSTRY_NOTE = 'Tailor every line to this specific type of business (see Industry and Products): use its real customer moments, buying triggers and everyday words — for example a caterer talks about events, party trays and booking dates; a makeup artist about bridal looks, trials and glam; a photographer about shoots and memories. Never use generic filler such as "Looking for quality products?".';
-const KEYWORDS_LINE = 'KEYWORDS: a keyword line for Instagram search — 5–8 short search phrases people would type (product + UK location + Nigerian/African where relevant), separated by · ';
+const KEYWORDS_LINE = 'KEYWORDS: a keyword line for Instagram search — 5–8 short search phrases people would type (product + UK location + Nigerian where relevant), separated by · ';
 const SEP = 'Separate every section with a line containing only ---, and start each section with its label in capitals followed by a colon.';
 
 function quickPrompt(i, extra) {
@@ -362,7 +362,7 @@ Use real, relevant hashtags of mixed sizes (no banned, spammy or irrelevant tags
 ${SEP}
 NICHE HASHTAGS: ${i.platform === 'Instagram' ? '8–10' : '4–5'} hashtags specific to the product or service
 LOCAL HASHTAGS: 4–6 hashtags for the business's UK location and nearby areas
-COMMUNITY HASHTAGS: 3–5 Nigerian / African diaspora community hashtags that genuinely fit
+COMMUNITY HASHTAGS: 3–5 Nigerian community hashtags that genuinely fit
 ${KEYWORDS_LINE}
 ALT TEXT: a one-sentence image description for accessibility and search`,
   },
@@ -660,7 +660,7 @@ HOW TO TRACK: 3 simple numbers to record in Business Studio → Track and what "
     name: 'Collaboration ideas', cat: 'growth', blurb: 'Find complementary business opportunities',
     hello: 'Who could you team up with? I’ll suggest partnerships that bring you new customers — and the first message to send.',
     maxTokens: 1100,
-    fields: [choice('kind', 'Who with?', ['any', 'other Nigerian / African businesses', 'complementary local businesses', 'event vendors', 'creators and influencers'], 'any')],
+    fields: [choice('kind', 'Who with?', ['any', 'other Nigerian businesses', 'complementary local businesses', 'event vendors', 'creators and influencers'], 'any')],
     prompt: i => `${INDUSTRY_NOTE}
 Suggest 5 collaboration ideas for this business (partners: ${i.kind}). Describe partner TYPES — never name real businesses or people.
 For each idea write exactly:

@@ -847,7 +847,8 @@
   }
 
   // ───── 🛒 Shopping lists ─────
-  var CATS = ['🍠 African groceries', '🥬 Fruit & veg', '🍗 Meat & fish', '🥚 Dairy & eggs', '🍞 Bakery', '🥫 Food cupboard', '🥤 Drinks', '🧽 Household', '🧴 Personal care', '🎉 Party', '🏫 School', '📦 Other'];
+  var OLDC = '🍠 African groceries';   // renamed Nov 2026 — saved items still use the old name
+  var CATS = ['🍠 Nigerian groceries', '🥬 Fruit & veg', '🍗 Meat & fish', '🥚 Dairy & eggs', '🍞 Bakery', '🥫 Food cupboard', '🥤 Drinks', '🧽 Household', '🧴 Personal care', '🎉 Party', '🏫 School', '📦 Other'];
   var GUESSC = [
     [/\b(yam|plantain|garri|gari|egusi|ogbono|palm oil|stockfish|crayfish|semovita|semolina|poundo|pounded yam|fufu|amala|elubo|iru|locust|uziza|ugu|bitter ?leaf|efo|ewedu|scotch bonnet|maggi|knorr|cameroon pepper|suya|kilishi|dried fish|ponmo|kpomo|honey beans|ofada|indomie|chin ?chin|plantain chips|zobo|malt|peppersoup|ehuru|ogiri|agbalumo|tiger ?nut|kola)\b/i, 0],
     [/\b(apples?|bananas?|oranges?|tomato(es)?|onions?|peppers?|carrots?|potato(es)?|spinach|lettuce|cucumber|garlic|ginger|lemons?|limes?|grapes|berries|avocado|cabbage|okra|okro|veg|fruit)\b/i, 1],
@@ -868,7 +869,7 @@
   var liveLists = function () { return (P.lists || []).filter(function (l) { return !l.del && !l.main; }); };
   // 📋 My items — the main list of everything they usually buy. They pick from it into "To buy", and add or remove items any time.
   var MAIN = [
-    ['🍠 African groceries', 'Yam, Plantain, Garri (white), Garri (yellow), Egusi, Ogbono, Palm oil, Honey beans, Black-eyed beans, Ofada rice, Semovita, Poundo yam, Elubo (yam flour), Fufu flour, Stockfish, Crayfish, Dried fish, Ponmo, Locust beans (iru), Uziza, Bitter leaf, Ugu, Efo (spinach), Scotch bonnet pepper, Tatashe (red pepper), Cameroon pepper, Suya spice, Maggi / Knorr cubes, Indomie, Chin chin, Plantain chips, Malt drink, Zobo leaves, Kola nut'],
+    ['🍠 Nigerian groceries', 'Yam, Plantain, Garri (white), Garri (yellow), Egusi, Ogbono, Palm oil, Honey beans, Black-eyed beans, Ofada rice, Semovita, Poundo yam, Elubo (yam flour), Fufu flour, Stockfish, Crayfish, Dried fish, Ponmo, Locust beans (iru), Uziza, Bitter leaf, Ugu, Efo (spinach), Scotch bonnet pepper, Tatashe (red pepper), Cameroon pepper, Suya spice, Maggi / Knorr cubes, Indomie, Chin chin, Plantain chips, Malt drink, Zobo leaves, Kola nut'],
     ['🥬 Fruit & veg', 'Onions, Tomatoes, Peppers, Garlic, Ginger, Spring onions, Carrots, Potatoes, Sweet potatoes, Spinach, Cabbage, Lettuce, Cucumber, Okra, Green beans, Sweetcorn, Avocados, Bananas, Apples, Oranges, Grapes, Lemons, Pineapple, Watermelon, Mangoes'],
     ['🍗 Meat & fish', 'Chicken (whole), Chicken thighs, Chicken wings, Turkey wings, Beef, Goat meat, Lamb, Minced beef, Sausages, Bacon, Fish (fresh), Mackerel, Tilapia, Catfish, Prawns, Sardines (tin), Corned beef'],
     ['🥚 Dairy & eggs', 'Eggs, Milk, Butter, Cheese, Yoghurt, Cream, Evaporated milk (Peak), Powdered milk'],
@@ -926,7 +927,7 @@
     h += '<div class="mp-card"><div style="display:flex;align-items:center;gap:8px"><b style="font-size:17px;flex:1">' + esc(l.emoji + ' ' + l.name) + '</b><span class="mp-sub">' + (l.items.length ? left.length + ' of ' + l.items.length + ' left' : '') + '</span><button class="mp-btn g" style="padding:6px 10px" data-list-menu aria-label="List options">⋯</button></div>' +
       '<form class="mp-add" id="shF" style="margin:10px 0 4px"><input id="shQ" placeholder="Add an item — e.g. “4 plantain”" autocomplete="off" maxlength="80"><button class="mp-btn" aria-label="Add">＋</button></form>';
     if (!l.items.length) h += '<div class="mp-sub" style="padding:8px 0">Nothing on this list yet — pick from <a href="#" data-shv="main" style="color:#057A44;font-weight:700">📋 My items</a> or type above.</div>';
-    var byCat = {}; left.forEach(function (i) { (byCat[i.c || CATS[CATS.length - 1]] = byCat[i.c || CATS[CATS.length - 1]] || []).push(i); });
+    var byCat = {}; left.forEach(function (i) { (byCat[(i.c === OLDC ? CATS[0] : i.c) || CATS[CATS.length - 1]] = byCat[(i.c === OLDC ? CATS[0] : i.c) || CATS[CATS.length - 1]] || []).push(i); });
     var order = CATS.concat(Object.keys(byCat).filter(function (c) { return CATS.indexOf(c) < 0; }));
     var irow = function (i) { return '<div class="mp-it' + (i.x ? ' dn' : '') + '" data-item="' + i.id + '"><button class="mp-ck' + (i.x ? ' on' : '') + '" data-buy="' + i.id + '" aria-label="Bought">' + (i.x ? '✓' : '') + '</button><div class="tx">' + esc(i.n) + '</div><div class="r">' + esc(i.q || '') + '</div></div>'; };
     order.forEach(function (c) { if (byCat[c]) h += '<div class="mp-lbl">' + esc(c) + '</div>' + byCat[c].map(irow).join(''); });
@@ -943,7 +944,7 @@
     var h = '<div class="mpSh-top"><form class="mp-add" id="mlF" style="flex:1;margin:0"><input id="mlQ" value="' + esc(view.mq || '') + '" placeholder="🔍 Find or add an item…" autocomplete="off" maxlength="80"><button class="mp-btn" aria-label="Add">＋</button></form></div>' +
       '<div class="mp-sub" style="margin:8px 2px 4px;display:flex;gap:10px;align-items:flex-start"><span style="flex:1">' + (ed ? 'Tap ✕ to remove an item from your main list. Add new ones with ＋.' : 'Tap an item to add it to <b>' + esc(l ? l.emoji + ' ' + l.name : '🛒 To buy') + '</b>. Tap again to take it off.' + (liveLists().length > 1 ? ' <a href="#" data-mtarget style="color:#057A44;font-weight:700">Change list</a>' : '')) + '</span><button class="mp-btn ' + (ed ? '' : 'g') + '" data-medit style="padding:6px 11px;white-space:nowrap;font-size:13px">' + (ed ? '✓ Done' : '✏️ Edit') + '</button></div>';
     if (q && !exact) h += '<button class="mpSh-new" data-madd>＋ Add “' + esc(q) + '” to My items</button>';
-    var byCat = {}; list.forEach(function (i) { (byCat[i.c || CATS[CATS.length - 1]] = byCat[i.c || CATS[CATS.length - 1]] || []).push(i); });
+    var byCat = {}; list.forEach(function (i) { (byCat[(i.c === OLDC ? CATS[0] : i.c) || CATS[CATS.length - 1]] = byCat[(i.c === OLDC ? CATS[0] : i.c) || CATS[CATS.length - 1]] || []).push(i); });
     var order = CATS.concat(Object.keys(byCat).filter(function (c) { return CATS.indexOf(c) < 0; }));
     order.forEach(function (c) { if (!byCat[c]) return;
       h += '<div class="mpSh-cat">' + esc(c) + '<span>' + byCat[c].length + '</span></div><div class="mpSh-chips">' + byCat[c].map(function (i) { var on = !ed && onList(l, i.n);
@@ -1028,7 +1029,7 @@
     var i = l.items.filter(function (x) { return x.id === id; })[0]; if (!i) return;
     var s = sheet('<h3>✏️ ' + esc(i.n) + '</h3><label>Item</label><input id="iN" maxlength="80" value="' + esc(i.n) + '">' +
       '<label>How many / how much</label><input id="iQ" maxlength="24" value="' + esc(i.q) + '" placeholder="e.g. 4, 2kg, 1 bag">' +
-      '<label>Section</label><select id="iC">' + CATS.concat(CATS.indexOf(i.c) < 0 && i.c ? [i.c] : []).map(function (c) { return '<option' + (c === i.c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '<option value="__new">＋ New section…</option></select><input id="iCn" maxlength="30" placeholder="Name your section" style="display:none;margin-top:6px">' +
+      '<label>Section</label><select id="iC">' + (i.c === OLDC ? (i.c = CATS[0], '') : '') + CATS.concat(CATS.indexOf(i.c) < 0 && i.c ? [i.c] : []).map(function (c) { return '<option' + (c === i.c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '<option value="__new">＋ New section…</option></select><input id="iCn" maxlength="30" placeholder="Name your section" style="display:none;margin-top:6px">' +
       '<div class="mp-row" style="justify-content:space-between;margin-top:16px"><button class="mp-btn l" id="iDel">🗑️ Remove</button><span style="display:flex;gap:8px"><button class="mp-btn g" id="iX">Cancel</button><button class="mp-btn" id="iOk">Save</button></span></div>');
     $('#iC', s).onchange = function () { $('#iCn', s).style.display = this.value === '__new' ? 'block' : 'none'; };
     $('#iX', s).onclick = function () { s.remove(); };
@@ -1037,7 +1038,7 @@
   }
   function sendWa(l) {
     var left = l.items.filter(function (i) { return !i.x; }), byCat = {};
-    left.forEach(function (i) { (byCat[i.c || CATS[CATS.length - 1]] = byCat[i.c || CATS[CATS.length - 1]] || []).push(i); });
+    left.forEach(function (i) { (byCat[(i.c === OLDC ? CATS[0] : i.c) || CATS[CATS.length - 1]] = byCat[(i.c === OLDC ? CATS[0] : i.c) || CATS[CATS.length - 1]] || []).push(i); });
     var txt = '🛒 *' + l.name + '*\n' + Object.keys(byCat).map(function (c) { return '\n' + c + '\n' + byCat[c].map(function (i) { return '• ' + i.n + (i.q ? ' (' + i.q + ')' : ''); }).join('\n'); }).join('\n') + '\n\nMade with My Plan on Auntie Tobi 💚 auntietobi.co.uk/my-plan';
     if (!left.length) { toast('Everything is ticked off 🎉'); return; }
     gt('shop_whatsapp'); window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(txt), '_blank', 'noopener');

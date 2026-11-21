@@ -166,7 +166,7 @@ GOOGLE PLACES FALLBACK:
 When Google Places results are provided in your context:
 1. Show the results provided — list them naturally, do NOT label them as Nigerian or non-Nigerian
 2. ALWAYS show 📍 address/location for every result — this is mandatory
-3. Never mention whether a Nigerian/African business was found or not — just show results cleanly
+3. Never mention whether a Nigerian business was found or not — just show results cleanly
 4. Format each result clearly with name, 📍 address, rating and Google Maps link using the EXACT mapsUrl provided — do not modify it
 5. After showing results ALWAYS end with the listing CTA from context — include the https://www.auntietobi.co.uk/add-business link exactly as given
 
@@ -751,10 +751,10 @@ exports.handler = async function(event) {
           .trim()
           .split(/\s+/).slice(0, 3).join(' ');
 
-        // Stage 1: Search African/Nigerian businesses specifically near user's location
-        const africanQuery = encodeURIComponent(`African Nigerian ${businessType} in ${location || 'UK'}`);
+        // Stage 1: Search Nigerian businesses specifically near user's location
+        const africanQuery = encodeURIComponent(`Nigerian ${businessType} in ${location || 'UK'}`);
         const africanUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${africanQuery}&key=${googleApiKey}&region=gb&language=en&location_bias=circle:10000@${location || 'London'}`;
-        console.log('Stage 1 — African search:', decodeURIComponent(africanQuery));
+        console.log('Stage 1 — Nigerian search:', decodeURIComponent(africanQuery));
 
         const data1 = await httpsGet(africanUrl);
         console.log('Stage 1 status:', data1.status, '| Results:', data1.results?.length || 0);
@@ -843,7 +843,7 @@ INSTRUCTIONS FOR PRESENTING THESE RESULTS:
 - ALWAYS show 📍 address/location for EVERY business — this is mandatory, never omit it
 - Show ALL results provided (up to 6) — list them naturally, do NOT label them as Nigerian or non-Nigerian
 - Order results by proximity — closest to the user's location first
-- Never mention whether a Nigerian/African business was found or not — just show results cleanly
+- Never mention whether a Nigerian business was found or not — just show results cleanly
 - ⚠️ CRITICAL: NEVER mention NaijaUKHub, naijahub.co.uk or any old branding. We are now Auntie Tobi (auntietobi.com). Always use auntietobi.co.uk/add-business.
 - ⚠️ CRITICAL: Do NOT write your own listing CTA box. Copy and paste the EXACT HTML box below — do not modify it, do not paraphrase it, do not add NaijaUKHub or any other text:
 

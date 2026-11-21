@@ -22,8 +22,8 @@ const CACHE_DURATION = 60 * 60 * 1000;
 const ALLOWLIST = [
   // Nigerian specific
   'nigerian', 'nigeria',
-  // African/diaspora
-  'african community', 'black british', 'afro-caribbean', 'african diaspora',
+  // community
+  'black british', 'nigerian diaspora',
   'windrush', 'black community',
   // Immigration & visas
   'immigration', 'visa', 'ukvi', 'home office', 'asylum',
@@ -106,20 +106,18 @@ exports.handler = async function(event) {
       };
     }
 
-    // Strict Nigerian/African UK focused queries only
+    // Strict Nigerian UK focused queries only
     const queries = [
       'Nigerian+UK',
       'Nigeria+Britain',
       'Nigerian+immigrant',
       'Black+British+community',
-      'African+UK+community',
       'UK+visa+Nigeria',
       'immigration+UK',
       'cost+of+living+UK',
       'NHS+UK',
       'UK+housing+rent',
       'Black+community+Britain',
-      'African+diaspora+UK',
       'UK+benefits+2026',
       'UK+employment+rights',
       'Nigeria+diaspora'
