@@ -122,7 +122,7 @@
     if (window.LifeUK && window.LifeUK.css) window.LifeUK.css(); addCss();
     try { if (typeof clearExamState === 'function') clearExamState(); } catch (e) {}
     var msgs = document.getElementById('messages'); if (!msgs) return;
-    window._currentPage = 'drive'; window.__homeRender = false;
+    window._currentPage = 'drive'; window.__homeRender = false; try { if (window.tobiDesk && window.tobiDesk.inApp) window.tobiDesk.inApp('drive'); } catch (e) {}
     msgs.innerHTML = '<div class="msg bot" style="align-items:flex-start"><div style="flex:1;min-width:0" id="dtRoot" class="lu"></div></div>';
     try { if (typeof scrollToTop === 'function') scrollToTop(); else msgs.scrollTop = 0; } catch (e) {}
     document.body.classList.add('lu-nochat');
