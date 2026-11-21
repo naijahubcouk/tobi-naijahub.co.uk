@@ -99,4 +99,38 @@ async function savedBackgrounds(bank, ids) {
   return out;
 }
 
-module.exports = { status, speak, background, setBackground, savedBackgrounds };
+
+// 💾 Saved quizzes — the whole set-up (questions, words, voice, pictures) so you can come back to it and remake the video.
+// The MP4 itself isn't stored (too big); remaking is quick and free because the voice lines and pictures are already saved.
+const LIST = 'hq/qv/saved-list';
+function cleanSave(d) {
+  d = d && typeof d === 'object' ? d : {};
+  const str = (v, n) => String(v == null ? '' : v).slice(0, n);
+  const qs = (Array.isArray(d.qs) ? d.qs : []).slice(0, 15).map(q => ({ id: parseInt(q.id, 10) || 0, q: str(q.q, 300), opts: (Array.isArray(q.opts) ? q.opts : []).slice(0, 4).map(o => str(o, 120)), ans: Math.max(0, Math.min(3, parseInt(q.ans, 10) || 0)), hl: str(q.hl, 40), e: str(q.e, 400) })).filter(q => q.id && q.opts.length === 4);
+  const bgs = {}; Object.keys(d.bgs || {}).slice(0, 40).forEach(k => { const v = String(d.bgs[k]); if (/^i[a-z0-9]{6,30}$/.test(v)) bgs[parseInt(k, 10)] = v; });
+  return { bank: BANKS[d.bank] ? d.bank : 'lifeuk', n: qs.length, grp: parseInt(d.grp, 10) || 0, qs, bgs,
+    voiceOn: !!d.voiceOn, voice: /^[A-Za-z0-9]{10,40}$/.test(d.voice || '') ? d.voice : '', model: d.model === 'natural' ? 'natural' : 'flash', readOpts: d.readOpts !== false,
+    h1: str(d.h1, 120), h2: str(d.h2, 120), outro: str(d.outro, 200), appOn: !!d.appOn, appT: str(d.appT, 120), sayApp: !!d.sayApp, igOn: !!d.igOn, ig: str(d.ig, 40) };
+}
+async function save(raw, email) {
+  const data = cleanSave(raw.data); if (!data.qs.length) throw new HttpError(400, 'invalid', 'Add some questions first.');
+  const id = /^q[a-z0-9]{6,20}$/.test(String(raw.id || '')) ? raw.id : 'q' + crypto.randomBytes(6).toString('hex');
+  const name = String(raw.name || '').replace(/\s+/g, ' ').trim().slice(0, 80) || (data.h1 || 'Quiz video');
+  const at = core.nowIso();
+  await setJson(`hq/qv/saved/${id}`, { id, name, at, by: email || '', data });
+  await core.cas(LIST, cur => { const l = ((cur && cur.items) || []).filter(x => x.id !== id); l.unshift({ id, name, at, bank: data.bank, n: data.qs.length, by: email || '' }); return { items: l.slice(0, 200) }; });
+  return { id, name, at };
+}
+async function list() { const l = await getJson(LIST).catch(() => null); return (l && l.items) || []; }
+async function load(id) {
+  if (!/^q[a-z0-9]{6,20}$/.test(String(id || ''))) throw new HttpError(400, 'invalid', 'Which quiz?');
+  const s = await getJson(`hq/qv/saved/${id}`); if (!s) throw new HttpError(404, 'not_found', 'That saved quiz has gone.'); return s;
+}
+async function remove(id) {
+  if (!/^q[a-z0-9]{6,20}$/.test(String(id || ''))) throw new HttpError(400, 'invalid', 'Which quiz?');
+  await core.del(`hq/qv/saved/${id}`).catch(() => {});
+  await core.cas(LIST, cur => ({ items: ((cur && cur.items) || []).filter(x => x.id !== id) }));
+  return { ok: true };
+}
+
+module.exports = { status, speak, background, setBackground, savedBackgrounds, save, list, load, remove };

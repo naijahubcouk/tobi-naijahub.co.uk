@@ -299,6 +299,10 @@ exports.handler = handler(async (ctx) => {
       return require('../quizvideo').background(body);
     }
     case 'qv-bg-set': return require('../quizvideo').setBackground(body);
+    case 'qv-save': return require('../quizvideo').save(body, who.email);
+    case 'qv-list': return { items: await require('../quizvideo').list() };
+    case 'qv-load': return require('../quizvideo').load(body.id);
+    case 'qv-del': return require('../quizvideo').remove(body.id);
     case 'qv-bg-saved': return { saved: await require('../quizvideo').savedBackgrounds(body.bank, body.ids) };
     case 'sc-styles': return { styles: await require('../stylecar').styles() };
     case 'sc-analyze': {
