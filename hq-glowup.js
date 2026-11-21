@@ -180,39 +180,66 @@
       } catch (e) { err.textContent = e.message; err.style.display = 'block'; b.disabled = false; b.textContent = '✨ Do the check'; }
     };
   }
-  // 🔎 the detailed bio & website check (HQ view)
+  // 🔎 the detailed bio & website check (HQ) — every part can be changed, and any section removed, before sending
   function bioHtml(k) {
     var b = k.bioCheck, p = k.profile, w = k.site;
     if (!b && !p) return '';
-    var ST = { good: ['✅', '#057A44', '#E3F2EA'], fix: ['🛠️', '#7A5300', '#FFF1CF'], missing: ['❌', '#B42318', '#FDE2E1'] };
-    var box = function (inner) { return '<div style="border:1px solid #EEE9DD;border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff">' + inner + '</div>'; };
-    var h = '<div style="font-weight:800;margin-top:14px;font-size:18px">🔎 Bio &amp; website check' + (b && b.score ? ' <span style="display:inline-block;font-weight:800;border-radius:10px;padding:2px 8px;background:#E7EFFD;color:#1D3D7A">' + b.score + '/100</span>' : '') + '</div>';
-    if (p) h += box('<div style=""><b>' + esc(p.displayName || k.biz) + '</b>' + (p.handle ? ' · @' + esc(p.handle) : '') + (p.category ? ' · ' + esc(p.category) : '') +
+    var IN = 'font-size:15px;padding:7px 9px';
+    var sec = function (key, title, inner, add) { return '<div class="bsec" data-sec="' + key + '" style="border:1px solid #EEE9DD;border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><b style="flex:1">' + title + '</b>' + (add ? '<button type="button" class="btn ghost sm" data-badd="' + key + '">＋ Add</button>' : '') + '<button type="button" class="btn ghost sm" data-bdel="1" style="color:#B42318">🗑 Remove section</button></div>' + inner + '</div>'; };
+    var x = function () { return '<button type="button" data-brow="1" title="Remove" style="flex:none;border:0;background:#F6F4EE;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:15px">✕</button>'; };
+    var h = '<div style="font-size:15.5px;line-height:1.5"><div style="font-weight:800;margin-top:14px;font-size:18px">🔎 Bio &amp; website check' + (b && b.score ? ' <span style="display:inline-block;font-size:13px;font-weight:800;border-radius:10px;padding:2px 8px;background:#E7EFFD;color:#1D3D7A">' + b.score + '/100</span>' : '') +
+      (b ? ' <span class="muted" style="font-weight:500;font-size:13.5px">— change anything, ✕ a line or 🗑 a whole section, then 💾 Save changes</span>' : '') + '</div>';
+    if (p) h += '<div style="border:1px solid #EEE9DD;border-radius:12px;padding:12px 14px;margin-top:10px;background:#FBFAF6"><b>' + esc(p.displayName || k.biz) + '</b>' + (p.handle ? ' · @' + esc(p.handle) : '') + (p.category ? ' · ' + esc(p.category) : '') +
       '<div class="muted">' + [p.posts ? esc(p.posts) + ' posts' : '', p.followers ? esc(p.followers) + ' followers' : '', p.following ? esc(p.following) + ' following' : ''].filter(Boolean).join(' · ') + '</div>' +
-      (p.bio ? '<div style="white-space:pre-wrap;margin-top:6px;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(p.bio) + '</div>' : '') +
-      (p.link ? '<div style="margin-top:4px">🔗 ' + esc(p.link) + (p.extraLinks ? ' ' + esc(p.extraLinks) : '') + '</div>' : '') +
+      (p.bio ? '<div style="white-space:pre-wrap;margin-top:6px">' + esc(p.bio) + '</div>' : '') + (p.link ? '<div style="margin-top:4px">🔗 ' + esc(p.link) + (p.extraLinks ? ' ' + esc(p.extraLinks) : '') + '</div>' : '') +
       ((p.topics && p.topics.length) || (p.bioHashtags && p.bioHashtags.length) ? '<div style="margin-top:6px;color:#B42318;font-weight:700">⚠️ Takes people away: ' + esc((p.topics || []).concat(p.bioHashtags || []).join(', ')) + '</div>' : '') +
-      (p.highlights && p.highlights.length ? '<div class="muted" style="margin-top:3px">Highlights: ' + esc(p.highlights.join(', ')) + '</div>' : '') + '</div>');
-    if (!b) return '<div style="font-size:15.5px;line-height:1.5">' + h + '</div>' + '<div class="muted" style="margin-top:6px">The detailed bio check didn’t finish this time — the page check below still worked.</div>';
-    if (b.summary) h += '<div style="margin-top:8px">' + esc(b.summary) + '</div>';
-    var bad = b.items.filter(function (it) { return it.s === 'fix' || it.s === 'missing'; }), good = b.items.filter(function (it) { return it.s === 'good'; });
-    h += box(bad.map(function (it) { var c = ST[it.s];
-      return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #F3F0E8"><span style="flex:none;width:150px;font-weight:800">' + c[0] + ' ' + esc(it.label) + '</span><div style="flex:1"><div>' + esc(it.saw) + '</div>' + (it.fix ? '<div style="color:' + c[1] + ';margin-top:3px;font-weight:600">→ ' + esc(it.fix) + '</div>' : '') + '</div></div>'; }).join('') +
-      (good.length ? '<div style="padding-top:8px;color:#057A44;font-weight:700">✅ Good: ' + good.map(function (it) { return esc(it.label); }).join(', ') + '</div>' : ''));
-    if (b.nameLine) h += box('<div style=""><b>🏷️ Better name line</b></div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><div style="flex:1;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(b.nameLine) + '</div><button class="btn ghost sm" data-cpb="' + esc(b.nameLine) + '">📋</button></div>');
-    if (b.bios.length) h += box('<div style=""><b>✍🏾 3 new bios</b> <span class="muted">(max 150 characters)</span></div>' + b.bios.map(function (x) {
-      return '<div style="margin-top:8px"><div class="muted" style="font-weight:700">' + esc(x.angle) + ' · ' + Array.from(x.text).length + ' characters</div><div style="white-space:pre-wrap;background:#F6F4EE;border-radius:8px;padding:6px 9px">' + esc(x.text) + '</div>' +
-        '<div style="margin-top:4px;display:flex;gap:6px"><button class="btn ghost sm" data-cpb="' + esc(x.text) + '">📋 Copy</button><button class="btn ghost sm" data-usebio="' + esc(x.text) + '">Use in their results</button></div></div>'; }).join(''));
-    if (b.highlights.length) h += box('<div style=""><b>⭕ Highlights to have</b></div>' + b.highlights.map(function (x) { return '<div style="margin-top:4px"><b>' + esc(x.name) + '</b> — ' + esc(x.what) + '</div>'; }).join(''));
-    var ws = b.website || {};
-    h += box('<div style=""><b>🌐 Their website</b> ' + (w ? (w.ok ? '<a href="' + esc(w.finalUrl) + '" target="_blank" rel="noopener">' + esc(String(w.finalUrl).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + ' ↗</a> <span class="muted">· opened in ' + (Math.round(w.ms / 100) / 10) + 's' + (w.linkPage ? ' · via a link page with ' + (w.links || []).length + ' links' : '') + '</span>' : '<span style="color:#B42318">· couldn’t open ' + esc(w.url) + '</span>') : '<span class="muted">· no link in their bio</span>') + '</div>' +
-      (w && w.ok ? '<div class="muted" style="margin-top:3px">' + [w.prices && w.prices.length ? 'Prices: ' + esc(w.prices.slice(0, 5).join(', ')) : 'No prices found', w.booking ? 'Online booking ✓' : '', w.shop ? 'Online shop ✓' : '', w.email ? '📧 ' + esc(w.email) : '', w.phone ? '📞 ' + esc(w.phone) : '', w.whatsapp ? '💬 WhatsApp' : ''].filter(Boolean).join(' · ') + '</div>' : '') +
-      (ws.summary ? '<div style="margin-top:6px">' + esc(ws.summary) + '</div>' : '') +
-      (ws.good && ws.good.length ? '<div style="margin-top:6px"><b style="color:#057A44">Working:</b><br>' + ws.good.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
-      (ws.gaps && ws.gaps.length ? '<div style="margin-top:6px"><b style="color:#7A5300">To fix:</b><br>' + ws.gaps.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
-      (ws.mismatches && ws.mismatches.length ? '<div style="margin-top:6px"><b style="color:#B42318">Doesn’t match Instagram:</b><br>' + ws.mismatches.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</div>' : '') +
-      (b.linkTip ? '<div style="margin-top:6px">🔗 <b>Link tip:</b> ' + esc(b.linkTip) + '</div>' : ''));
-    return '<div style="font-size:15.5px;line-height:1.5">' + h + '</div>';
+      (p.highlights && p.highlights.length ? '<div class="muted" style="margin-top:3px">Highlights: ' + esc(p.highlights.join(', ')) + '</div>' : '') + '</div>';
+    if (!b) return h + '<div class="muted" style="margin-top:6px">The detailed bio check didn’t finish this time — the page check below still worked.</div></div>';
+    if (b.summary) h += sec('summary', '💡 In short', '<textarea id="bSum" rows="2" style="' + IN + '">' + esc(b.summary) + '</textarea>');
+    var ST = [['good', '✅'], ['fix', '💡'], ['missing', '❌']];
+    var order = b.items.filter(function (it) { return it.s !== 'good'; }).concat(b.items.filter(function (it) { return it.s === 'good'; }));
+    if (order.length) h += sec('items', '📋 Line by line', order.map(function (it) {
+      return '<div class="bitem" data-k="' + esc(it.k) + '" style="display:flex;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #F3F0E8"><div style="flex:none;width:150px"><b>' + esc(it.label) + '</b><select data-f="s" style="margin-top:4px;font-size:14px;padding:4px 6px">' + ST.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === it.s ? ' selected' : '') + '>' + o[1] + ' ' + (o[0] === 'fix' ? 'Suggestion' : o[0] === 'good' ? 'Good' : 'Missing') + '</option>'; }).join('') + '</select></div>' +
+        '<div style="flex:1"><input data-f="saw" value="' + esc(it.saw) + '" placeholder="What’s there now" style="' + IN + '"><input data-f="fix" value="' + esc(it.fix) + '" placeholder="Suggestion (empty if good)" style="' + IN + ';margin-top:4px;font-weight:600"></div>' + x() + '</div>'; }).join(''));
+    h += sec('name', '🏷️ Name line idea', '<div style="display:flex;gap:6px"><input id="bName" value="' + esc(b.nameLine || '') + '" style="' + IN + '"><button type="button" class="btn ghost sm" data-cpf="bName">📋</button></div>');
+    if (b.bios.length) h += sec('bios', '✍🏾 Bio ideas <span class="muted" style="font-weight:500">(max 150 characters)</span>', b.bios.map(function (x2) {
+      return '<div class="bbio" style="margin-top:8px"><div style="display:flex;gap:6px"><input data-f="angle" value="' + esc(x2.angle) + '" style="' + IN + ';font-weight:700">' + x() + '</div><textarea data-f="text" rows="4" style="' + IN + ';margin-top:4px">' + esc(x2.text) + '</textarea>' +
+        '<div style="display:flex;gap:6px;align-items:center;margin-top:4px"><span class="muted bcnt" style="flex:1;font-size:13px">' + Array.from(x2.text).length + ' characters</span><button type="button" class="btn ghost sm" data-cpbio="1">📋 Copy</button><button type="button" class="btn ghost sm" data-usebio="1">Use in their results</button></div></div>'; }).join(''));
+    var hlRow = function (x2) { return '<div class="bhl" style="display:flex;gap:6px;margin-top:6px"><input data-f="name" value="' + esc(x2.name) + '" placeholder="Name" style="' + IN + ';width:150px;flex:none;font-weight:700"><input data-f="what" value="' + esc(x2.what) + '" placeholder="What goes in it" style="' + IN + '">' + x() + '</div>'; };
+    h += sec('highlights', '⭕ Highlight ideas', '<div class="blist">' + b.highlights.map(hlRow).join('') + '</div>', true);
+    var ws = b.website || {}, pts = ws.points || [];
+    var wpRow = function (t) { return '<div class="bwp" style="display:flex;gap:6px;margin-top:6px"><input data-f="t" value="' + esc(t) + '" style="' + IN + '">' + x() + '</div>'; };
+    h += sec('website', '🌐 Website ' + (w ? (w.ok ? '<a href="' + esc(w.finalUrl) + '" target="_blank" rel="noopener" style="font-weight:500">' + esc(String(w.finalUrl).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')) + ' ↗</a>' : '<span style="color:#B42318;font-weight:500">couldn’t open ' + esc(w.url) + '</span>') : '<span class="muted" style="font-weight:500">no link in bio</span>'),
+      '<div class="blist">' + pts.map(wpRow).join('') + '</div><input id="bTip" value="' + esc(b.linkTip || '') + '" placeholder="🔗 Link idea (optional)" style="' + IN + ';margin-top:8px">', true);
+    S_ROWS = { highlights: hlRow({ name: '', what: '' }), website: wpRow('') };
+    return h + '</div>';
+  }
+  var S_ROWS = {};
+  function bindBio(s) {
+    s.addEventListener('click', function (e) {
+      var t = e.target.closest('button'); if (!t || !s.contains(t)) return;
+      if (t.dataset.bdel) { var sc = t.closest('.bsec'); if (confirm('Remove this whole section from their results?')) sc.remove(); }
+      else if (t.dataset.brow) t.parentElement.closest('.bitem,.bbio,.bhl,.bwp').remove();
+      else if (t.dataset.badd) { var l = t.closest('.bsec').querySelector('.blist'); l.insertAdjacentHTML('beforeend', S_ROWS[t.dataset.badd]); var ins = l.lastElementChild.querySelector('input'); if (ins) ins.focus(); }
+      else if (t.dataset.cpf) { try { navigator.clipboard.writeText($('#' + t.dataset.cpf, s).value); X.toast('📋 Copied'); } catch (e2) {} }
+      else if (t.dataset.cpbio) { try { navigator.clipboard.writeText(t.closest('.bbio').querySelector('[data-f=text]').value); X.toast('📋 Copied'); } catch (e2) {} }
+      else if (t.dataset.usebio) { $('#eB', s).value = t.closest('.bbio').querySelector('[data-f=text]').value; X.toast('✍🏾 Set as their suggested bio — tap Save changes'); }
+    });
+    s.addEventListener('input', function (e) { var b = e.target.closest('.bbio'); if (b && e.target.dataset.f === 'text') b.querySelector('.bcnt').textContent = Array.from(e.target.value).length + ' characters' + (Array.from(e.target.value).length > 150 ? ' — too long for Instagram' : ''); });
+  }
+  function readBio(s, k) {
+    if (!k.bioCheck) return undefined;
+    var has = function (key) { return !!$('[data-sec="' + key + '"]', s); }, v = function (el, f) { var x = el.querySelector('[data-f="' + f + '"]'); return x ? x.value.trim() : ''; };
+    return {
+      summary: has('summary') ? $('#bSum', s).value.trim() : '',
+      items: has('items') ? $$('.bitem', s).map(function (el) { return { k: el.dataset.k, s: v(el, 's'), saw: v(el, 'saw'), fix: v(el, 'fix') }; }) : [],
+      nameLine: has('name') ? $('#bName', s).value.trim() : '',
+      bios: has('bios') ? $$('.bbio', s).map(function (el) { return { angle: v(el, 'angle'), text: el.querySelector('[data-f=text]').value }; }).filter(function (x) { return x.text.trim(); }) : [],
+      highlights: has('highlights') ? $$('.bhl', s).map(function (el) { return { name: v(el, 'name'), what: v(el, 'what') }; }).filter(function (x) { return x.name; }) : [],
+      website: { s: (k.bioCheck.website || {}).s || '', points: has('website') ? $$('.bwp', s).map(function (el) { return v(el, 't'); }).filter(Boolean) : [] },
+      linkTip: has('website') ? $('#bTip', s).value.trim() : '',
+    };
   }
   function mineSheet(k) {
     var to = k.to || {}, imp = (k.improve || []).slice(); while (imp.length < 3) imp.push({ area: '', why: '', fix: '' });
@@ -240,13 +267,12 @@
     var fields = function () {
       var v = function (k, i) { var el = $('[data-i' + k + '="' + i + '"]', s); return el ? el.value : ''; };
       var im = [0, 1, 2].map(function (i) { return { area: v('a', i), fix: v('f', i), saw: v('s', i), why: v('w', i), steps: v('t', i).split('\n').map(function (x) { return x.trim(); }).filter(Boolean), example: v('e', i), impact: v('p', i), mins: v('m', i) }; });
-      return { id: k.id, overall: $('#eO', s).value, quickWin: $('#eQ', s).value, bio: $('#eB', s).value, working: $('#eW', s).value.split('\n').map(function (x) { var p = x.split(' | '); return { t: p[0].trim(), why: (p.slice(1).join(' | ') || '').trim() }; }).filter(function (x) { return x.t; }), improve: im, to: { name: $('#tN', s).value, wa: $('#tW', s).value, ig: $('#tI', s).value } };
+      return { id: k.id, overall: $('#eO', s).value, quickWin: $('#eQ', s).value, bio: $('#eB', s).value, working: $('#eW', s).value.split('\n').map(function (x) { var p = x.split(' | '); return { t: p[0].trim(), why: (p.slice(1).join(' | ') || '').trim() }; }).filter(function (x) { return x.t; }), improve: im, bioCheck: readBio(s, k), to: { name: $('#tN', s).value, wa: $('#tW', s).value, ig: $('#tI', s).value } };
     };
     var saveIt = async function (quiet) { var r = await X.api('gu-check-edit', fields()); Object.assign(k, r.check); if (!quiet) X.toast('💾 Saved'); };
     var sent = async function (via) { try { var r = await X.api('gu-check-mark', { id: k.id, sent: via }); Object.assign(k, r.check); board(); } catch (e) { X.toast(e.message); } };
     $('#eS', s).onclick = function () { saveIt().catch(function (e) { X.toast(e.message); }); };
-    $$('[data-cpb]', s).forEach(function (b) { b.onclick = function () { try { navigator.clipboard.writeText(b.dataset.cpb); X.toast('📋 Copied'); } catch (e) {} }; });
-    $$('[data-usebio]', s).forEach(function (b) { b.onclick = function () { $('#eB', s).value = b.dataset.usebio; X.toast('✍🏾 Set as their suggested bio — tap Save changes'); }; });
+    bindBio(s);
     var sw = $('#mSw', s); if (sw) sw.onclick = function (e) { e.preventDefault(); follow = !follow; $('#ckT', s).value = mineMsg(Object.assign({}, k, { to: { name: $('#tN', s).value } }), follow); this.textContent = follow ? 'use the first message' : 'use the follow-up'; };
     $('#sW', s).onclick = async function () {
       var ph = String($('#tW', s).value).replace(/\D/g, '').replace(/^0/, '44'); if (ph.length < 10) return X.toast('Add their WhatsApp number first');
