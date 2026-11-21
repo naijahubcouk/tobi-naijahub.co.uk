@@ -124,6 +124,9 @@
     { k: 'lituk', e: '🇬🇧', t: 'Life in the UK test', ask: 'When is your test?', lead: 28, lituk: true,
       ck: ['Book on the official GOV.UK booking service (at least 3 days before)', 'Check the name on your booking matches your ID exactly', 'Take mock tests — aim for 18 or more out of 24', 'Re-read your weak chapters in the handbook', 'On the day: bring the same original ID you booked with'],
       link: ['Life in the UK Test — GOV.UK', 'https://www.gov.uk/life-in-the-uk-test'], note: '24 questions in 45 minutes. You need 18 right (75%) to pass. It costs £50.' },
+    { k: 'drvth', e: '🚗', t: 'Driving theory test', ask: 'When is your theory test?', lead: 28, drvth: true,
+      ck: ['Have your provisional driving licence', 'Book on GOV.UK (£23)', 'Take mock tests — aim for 43 or more out of 50', 'Practise hazard perception clips', 'On the day: bring your UK photocard driving licence'],
+      link: ['Book your theory test — GOV.UK', 'https://www.gov.uk/book-theory-test'], note: '50 questions in 57 minutes (pass 43), then hazard perception (pass 44 out of 75). It costs £23.' },
     { k: 'evisa', e: '📄', t: 'Visa / eVisa expires', ask: 'When does your permission end?', lead: 90, ck: ['Check your eVisa and expiry date', 'Check what you need for your next application', 'Get advice if you’re unsure'], link: ['View your eVisa — GOV.UK', 'https://www.gov.uk/view-prove-immigration-status'], note: 'Check the rules for your visa on GOV.UK or with an adviser.' },
     { k: 'licence', e: '🪪', t: 'Driving licence photocard expires', ask: 'Expiry date on your photocard (4b)', lead: 60, ck: ['Check date 4b on your photocard', 'Renew online'], link: ['Renew your driving licence — GOV.UK', 'https://www.gov.uk/renew-driving-licence'] },
     { k: 'mot', e: '🚗', t: 'MOT due', ask: 'When does your MOT run out?', lead: 28, ck: ['Book an MOT test', 'Check your MOT history'], link: ['Getting an MOT — GOV.UK', 'https://www.gov.uk/getting-an-mot'], note: 'You can usually get your MOT up to a month (minus a day) early and keep the same renewal date.' },
@@ -603,7 +606,7 @@
       '<div class="mp-two" style="margin-top:6px"><input id="eCn" placeholder="＋ Add a step" maxlength="120"></div>' +
       '<label>Notes</label><textarea id="eN" maxlength="1000">' + esc(it.note) + '</textarea>' +
       (life && life.link ? '<a class="mp-link" href="' + life.link[1] + '" target="_blank" rel="noopener">🔗 ' + esc(life.link[0]) + '</a>' : '') + (life && life.note ? '<div class="mp-sub" style="margin-top:6px">💡 ' + esc(life.note) + '</div>' : '') +
-      (life && life.lituk ? luCard() : '') +
+      (life && life.lituk ? luCard() : '') + (life && life.drvth ? drCard() : '') +
       '<div class="mp-row"><button class="mp-btn g" id="eCal">📅 Add to phone calendar</button></div>' +
       '<div class="mp-err" id="eErr"></div><div class="mp-row" style="justify-content:space-between;margin-top:16px"><button class="mp-btn l" id="eDel">🗑️ Delete</button><span style="display:flex;gap:8px"><button class="mp-btn g" id="eX">Cancel</button><button class="mp-btn" id="eOk">Save</button></span></div>');
     var ck = (it.ck || []).map(function (c) { return { t: c.t, x: c.x }; });
@@ -614,6 +617,8 @@
     var vals = function () { var c = $('#eCn', s).value.trim(); if (c) ck.push({ t: c, x: false }); return { t: $('#eT', s).value.trim(), d: $('#eD', s).value, tm: $('#eD', s).value ? $('#eTm', s).value : '', rep: $('#eD', s).value ? $('#eR', s).value : '', note: $('#eN', s).value, ck: ck }; };
     $('#eX', s).onclick = function () { s.remove(); };
     $('#eDel', s).onclick = function () { s.remove(); remove(id); };
+    if ($('#drGo', s)) $('#drGo', s).onclick = function () { s.remove(); window.DriveTest.open(); };
+    if ($('#drMk', s)) $('#drMk', s).onclick = function () { s.remove(); window.DriveTest.mock(); };
     if ($('#luGo', s)) $('#luGo', s).onclick = function () { s.remove(); window.LifeUK.open(); };
     if ($('#luMk', s)) $('#luMk', s).onclick = function () { s.remove(); window.LifeUK.mock(); };
     $('#eCal', s).onclick = function () { var v = vals(); if (!v.d) { $('#eErr', s).textContent = 'Add a date first.'; $('#eErr', s).style.display = 'block'; return; } calSheet(Object.assign({}, it, v)); };
@@ -1145,7 +1150,59 @@
       toast(d ? '✅ Added — your test is ' + nice(d, true) : '✅ Added — book your test, then add the date');
     };
   }
+  // 🚗 Driving theory test: progress card + add sheet (booked / not booked / passed)
+  function drCard() {
+    if (!window.DriveTest) return '';
+    var u = window.DriveTest.summary();
+    return '<div class="mp-new" style="display:block;margin-top:10px"><b>🚗 Your practice</b><div style="margin-top:3px">' +
+      (u.mocks ? 'Last mock test: <b>' + u.last + '/50</b> ' + (u.last >= 43 ? '✅ pass' : '— you need 43') + ' · ' : '') + u.answered + ' questions answered' + (u.weak ? ' · ' + u.weak + ' weak spots' : '') + '</div>' +
+      '<div class="mp-row" style="margin-top:8px"><button class="mp-btn" id="drGo">📚 Practise now</button><button class="mp-btn g" id="drMk">🎯 Mock test</button></div></div>';
+  }
+  function drOne(l) {
+    var s = sheet('<h3>🚗 Driving theory test</h3><div class="mp-sub" style="font-size:13.5px">💡 ' + esc(l.note) + '</div>' +
+      '<label>Where are you?</label><select id="dW"><option value="b">I’ve booked my test</option><option value="n">I haven’t booked yet</option><option value="p">I’ve passed my theory test</option></select>' +
+      '<label id="dLb">When is your theory test?</label><input type="date" id="dD">' +
+      '<label class="mp-cl" style="font-weight:600;color:#0F1E36" id="dDyL"><input type="checkbox" id="dDy" checked> 📚 Remind me to practise every day</label>' +
+      '<div class="mp-sub" id="dInfo" style="margin-top:6px">Auntie Tobi will remind you 4 weeks, 1 week and 1 day before, with a checklist.</div>' +
+      '<a class="mp-link" href="https://www.gov.uk/book-theory-test" target="_blank" rel="noopener">🔗 Book your theory test — GOV.UK</a>' +
+      '<div class="mp-err" id="dErr"></div><div class="mp-row" style="justify-content:flex-end;margin-top:16px"><button class="mp-btn g" id="dX">Cancel</button><button class="mp-btn" id="dOk">＋ Add to My Plan</button></div>');
+    var w = $('#dW', s), dd = $('#dD', s);
+    var sync = function () {
+      var v = w.value; dd.style.display = v === 'n' ? 'none' : ''; $('#dLb', s).style.display = v === 'n' ? 'none' : '';
+      $('#dLb', s).textContent = v === 'p' ? 'When did you pass?' : 'When is your theory test?'; $('#dDyL', s).style.display = v === 'p' ? 'none' : '';
+      $('#dInfo', s).textContent = v === 'p' ? 'Your pass certificate lasts 2 years. Auntie Tobi will remind you to book your practical test, and 3 months before the certificate runs out.' : v === 'n' ? 'Auntie Tobi will add “Book your theory test” for today, with a checklist.' : 'Auntie Tobi will remind you 4 weeks, 1 week and 1 day before, with a checklist.';
+    };
+    w.onchange = sync; sync();
+    $('#dX', s).onclick = function () { s.remove(); };
+    $('#dOk', s).onclick = function () {
+      var v = w.value, d = dd.value, t = today(), daily = v !== 'p' && $('#dDy', s).checked;
+      var err = function (m) { $('#dErr', s).textContent = m; $('#dErr', s).style.display = 'block'; };
+      if (v !== 'n' && !d) return err(v === 'p' ? 'Add the date you passed.' : 'Add your test date.');
+      if (v === 'b' && d < t) return err('That date has passed — check your booking.');
+      if (v === 'p' && d > t) return err('That date is in the future.');
+      P.items.forEach(function (x) { if (x.lk === 'drvth' && !x.done && !x.del && !(x.rep === 'd' && daily)) { x.del = true; change(x); } });
+      var label = function (iso) { var dt = fromIso(iso); return dt.getDate() + ' ' + cap(MONTHS[dt.getMonth()]).slice(0, 3) + ' ' + dt.getFullYear(); };
+      if (v === 'b') {
+        add({ t: '🚗 Driving theory test — ' + label(d), d: d, lk: 'drvth', ck: l.ck.map(function (c) { return { t: c, x: false }; }), note: 'Bring your UK photocard driving licence. 50 questions (pass 43), then hazard perception (pass 44 of 75).' }, true);
+        [[28, 'in 4 weeks — take a mock test'], [7, 'in 1 week — practise hazard perception'], [1, 'tomorrow — have your photocard licence ready']].forEach(function (r) { var x = addDays(d, -r[0]); if (x >= t) add({ t: '🚗 Theory test ' + r[1], d: x, lk: 'drvth' }, true); });
+        if (window.DriveTest) window.DriveTest.setDate(d);
+      } else if (v === 'n') {
+        add({ t: '🚗 Book your driving theory test', d: t, lk: 'drvth', ck: [{ t: 'Get a provisional driving licence first', x: false }, { t: 'Book on GOV.UK — £23', x: false }, { t: 'Add the date here when it’s booked', x: false }], note: 'Book: https://www.gov.uk/book-theory-test' }, true);
+        if (window.DriveTest) window.DriveTest.setDate('');
+      } else {
+        var exp = addMonths(d, 24);
+        add({ t: '🚗 Book your practical driving test', d: t, lk: 'drvth', ck: [{ t: 'Book on GOV.UK', x: false }, { t: 'Book lessons with an approved instructor', x: false }], note: 'Book: https://www.gov.uk/book-driving-test' }, true);
+        add({ t: '⚠️ Theory test certificate runs out — ' + label(exp), d: exp, lk: 'drvth', note: 'Pass your practical test before this date, or you’ll need to take the theory test again.' }, true);
+        var warn = addDays(exp, -90); if (warn >= t) add({ t: '🚗 Theory certificate runs out in 3 months — pass your practical test', d: warn, lk: 'drvth' }, true);
+        if (window.DriveTest) window.DriveTest.setDate('');
+      }
+      if (daily && !P.items.some(function (x) { return x.lk === 'drvth' && x.rep === 'd' && !x.del; })) add({ t: '📚 Practise driving theory questions', d: t, rep: 'd', lk: 'drvth', note: 'Open the Driving Theory page and do 10 questions, the road signs or a mock test.' }, true);
+      s.remove(); gt('plan_drvth', { kind: v });
+      toast(v === 'b' ? '✅ Added — your test is ' + nice(d, true) : v === 'n' ? '✅ Added — book your test, then add the date' : '✅ Added — well done on passing! 🎉');
+    };
+  }
   function lifeOne(l) {
+    if (l.drvth) return drOne(l);
     if (l.lituk) return luOne(l);
     var lead = LEADS.reduce(function (a, x) { return Math.abs(x[0] - l.lead) < Math.abs(a[0] - l.lead) ? x : a; })[0];
     var s = sheet('<h3>' + l.e + ' ' + esc(l.t) + '</h3>' + (l.note ? '<div class="mp-sub" style="font-size:13.5px">💡 ' + esc(l.note) + '</div>' : '') +
@@ -1330,7 +1387,7 @@
     var home = pills.firstElementChild; if (home && home.nextSibling) pills.insertBefore(p, home.nextSibling); else pills.appendChild(p);
   }
 
-  window.MyPlan = { lifeTest: function () { luOne(LIFE.filter(function (x) { return x.k === 'lituk'; })[0]); }, open: open, openSunday: openSunday, newsSheet: newsSheet, saveEvent: saveEvent, celSheet: celSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
+  window.MyPlan = { driveTest: function () { drOne(LIFE.filter(function (x) { return x.k === 'drvth'; })[0]); }, lifeTest: function () { luOne(LIFE.filter(function (x) { return x.k === 'lituk'; })[0]); }, open: open, openSunday: openSunday, newsSheet: newsSheet, saveEvent: saveEvent, celSheet: celSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
   function start() { addCss(); addPill(); hookNews(); hookChat(); fill(); boot(); var cq = (location.search.match(/[?&]cel=([^&]*)/) || [])[1];
     if (cq) { var cp = decodeURIComponent(cq).split('|'); view.tab = 'cel'; setTimeout(function () { open(); celSheet(null, { n: cp[0] || '', k: cp[1] === 'anniversary' ? 'wedding' : 'birthday', r: cp[2] || 'friend', y: 0, lead: [3] }); }, 900); }
     else if (/[?&]plan=cel\b/.test(location.search)) { view.tab = 'cel'; setTimeout(open, 900); }

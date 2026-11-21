@@ -287,7 +287,7 @@
   function summary() { var d = load(), last = d.mocks[d.mocks.length - 1]; return { mocks: d.mocks.length, last: last ? last.s : null, best: d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), answered: d.n, weak: Object.keys(d.wrong).length, date: d.date }; }
   function setDate(iso) { var d = load(); d.date = iso || ''; save(d); }
 
-  window.LifeUK = { open: open, summary: summary, setDate: setDate, mock: function () { open(); getQ().then(startMock); } };
+  window.LifeUK = { css: addCss, open: open, summary: summary, setDate: setDate, mock: function () { open(); getQ().then(startMock); } };
   // 🔗 links: auntietobi.co.uk/life-in-uk-test (→ /?lifeuk=1), /life-in-uk-test/mock, /life-in-uk-test/before
   var m = location.search.match(/[?&]lifeuk(?:=([a-z]+))?/i);
   if (m || location.pathname.replace(/\/$/, '') === '/life-in-uk-test') {

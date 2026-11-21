@@ -22,6 +22,12 @@
 /life-in-uk-test/mock   /?lifeuk=mock     302
 /life-in-uk-test/before /?lifeuk=before   302
 
+# 🚗 Driving Theory Test practice
+/driving-theory-test         /?drive=1        302
+/driving-theory-test/mock    /?drive=mock     302
+/driving-theory-test/signs   /?drive=signs    302
+/driving-theory-test/before  /?drive=before   302
+
 # Public "Add your event" page
 /add-event      /add-event.html         200
 # Public "Add your business" page (and claim links from outreach emails)
