@@ -5249,6 +5249,18 @@ function showLinksPage() {
       <span style="color:#ccc;">&#8250;</span>
     </a>
 
+    <a href="/driving-theory-test" onclick="if(window.DriveTest){event.preventDefault();window.DriveTest.open();}" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+      <span style="font-size:20px;">🚗</span>
+      <span style="flex:1;text-align:left;">Driving Theory Test<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">400 free questions, road signs and 57-minute mock tests</span></span>
+      <span style="color:#ccc;">&#8250;</span>
+    </a>
+
+    <a href="/life-in-uk-test" onclick="if(window.LifeUK){event.preventDefault();window.LifeUK.open();}" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+      <span style="font-size:20px;">🇬🇧</span>
+      <span style="flex:1;text-align:left;">Life in the UK Test<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">500+ free questions from the official handbook and mock tests</span></span>
+      <span style="color:#ccc;">&#8250;</span>
+    </a>
+
     <a href="javascript:void(0)" onclick="showAllNews();setTimeout(()=>addBackToLinksBtn(),300);" style="display:flex;align-items:center;gap:12px;background:white;color:#0F1E36;text-decoration:none;padding:14px 16px;border-radius:12px;border:1.5px solid #ebebeb;font-weight:700;font-size:14px;">
       <span style="font-size:20px;">&#128240;</span>
       <span style="flex:1;text-align:left;">News &amp; Articles<span style="display:block;font-size:11px;color:#9CA3AF;font-weight:400;margin-top:1px;">Latest UK news for Nigerians</span></span>
@@ -6066,7 +6078,7 @@ function sundaySignup(){
   window.open('/sunday-update', '_blank', 'noopener');
 }
 function showHomeShortcuts(){
-  var items = [['🏢','Businesses','showBusinesses(undefined,null,null,true,true)'],['🎉','Events','showEventsCard()'],['💌','Cards',"location.href='/cards'"],['🛍️','Market','showMarketplace()'],['📰','News','showNewsAndUpdates()'],['🚗','Driving Theory','window.DriveTest?DriveTest.open():quickAsk(\'Help me prepare for my UK driving theory test\')'],['🇬🇧','Life in UK Test','window.LifeUK?LifeUK.open():quickAsk(\'Help me prepare for my Life in UK test\')']];
+  var items = [['🏢','Businesses','showBusinesses(undefined,null,null,true,true)'],['🎉','Events','showEventsCard()'],['💌','Cards',"location.href='/cards'"],['🛍️','Market','showMarketplace()'],['📰','News','showNewsAndUpdates()'],['🚗','Driving Theory Test','window.DriveTest?DriveTest.open():quickAsk(\'Help me prepare for my UK driving theory test\')'],['🇬🇧','Life in UK Test','window.LifeUK?LifeUK.open():quickAsk(\'Help me prepare for my Life in UK test\')']];
   addTipMessage('<div class="home-sc">' + items.map(function(x){ return '<button type="button" onclick="' + x[2] + '"><i>' + x[0] + '</i>' + x[1] + '</button>'; }).join('') + '</div>');
 }
 
