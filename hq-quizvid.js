@@ -17,13 +17,13 @@
       groups: [[0, 'All topics, mixed'], [1, 'Alertness'], [2, 'Attitude'], [3, 'Safety and your vehicle'], [4, 'Safety margins'], [5, 'Hazard awareness'], [6, 'Vulnerable road users'], [7, 'Other types of vehicle'], [8, 'Vehicle handling'], [9, 'Motorway rules'], [10, 'Rules of the road'], [12, 'Essential documents'], [13, 'Incidents and emergencies'], [14, 'Vehicle loading']] },
   };
   var STOP = ' the a an of in to is are was were what which who when where why how do does did can you your for on at by with from and or not be as this that these those it its into than then their there they he she his her we our us uk british britain england about after before during most many much one two three four five more some any must should may might will would could shall has have had been being called known name ';
-  var KEEP = function () {}, QV = null, BANKQ = {}, IMG = {}, ST = null;
+  var OWN = null, OWNNAME = '', VOC = {}, KEEP = function () {}, QV = null, BANKQ = {}, IMG = {}, ST = null;
 
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function esc(s) { return X.esc(s); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, igOn: true, ig: '@auntietobi_uk', appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, bgs: {}, out: null }; return QV; }
+  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, igOn: true, ig: '@auntietobi_uk', appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, music: 'upbeat', musicVol: 30, voiceVol: 100, duck: true, bgs: {}, out: null }; return QV; }
   function bank() { return BANKS[QV.bank]; }
   function fill(s) { return String(s || '').replace(/\{n\}/g, QV.qs.length || QV.n); }
   function loadBank(k) { if (BANKQ[k]) return Promise.resolve(BANKQ[k]); return fetch(BANKS[k].file).then(function (r) { return r.json(); }).then(function (j) { BANKQ[k] = j.filter(function (q) { var st = k === 'drive' ? q.st : q.s; return (!st || st === 'v') && q.t === 'm' && !q.g && q.o && q.o.length === 4 && q.o.every(function (o) { return o.length <= 46; }) && q.q.length <= 120; }); return BANKQ[k]; }); }
@@ -60,7 +60,7 @@
     $('#qvSet').onclick = setupSheet; $('#qvMine').onclick = mine; $('#qvSave').onclick = saveSheet;
     $('#qvNewQ').onclick = function () { if (!confirm('Start a new quiz? Anything you haven’t saved here will be cleared.')) return; var keepV = { voice: QV.voice, model: QV.model }; QV = null; state(); QV.voice = keepV.voice; QV.model = keepV.model; view(); };
   }
-  function snapshot() { KEEP(); var d = {}; ['bank', 'grp', 'qs', 'bgs', 'voiceOn', 'voice', 'model', 'readOpts', 'h1', 'h2', 'outro', 'appOn', 'appT', 'sayApp', 'igOn', 'ig'].forEach(function (k) { d[k] = QV[k]; }); return d; }
+  function snapshot() { KEEP(); var d = {}; ['bank', 'grp', 'qs', 'bgs', 'voiceOn', 'voice', 'model', 'readOpts', 'h1', 'h2', 'outro', 'appOn', 'appT', 'sayApp', 'music', 'musicVol', 'voiceVol', 'duck', 'igOn', 'ig'].forEach(function (k) { d[k] = QV[k]; }); return d; }
   function doSave(name, asNew) {
     return X.api('qv-save', { id: asNew ? '' : QV.savedId, name: name, data: snapshot() }).then(function (r) { QV.savedId = r.id; QV.savedName = r.name; head(); X.toast('💾 Saved — find it in 📂 My quizzes'); });
   }
@@ -137,9 +137,20 @@
         : '<div>🎙️ <b>AI voice isn’t set up yet.</b> <span class="muted">The video will have ticks and a ding — you can add music in Instagram.</span> <button class="btn link" id="qvSet2">How to set it up</button></div>') +
       '</div></div>' +
 
-      '<div class="card"><b>3 · Make the video</b><div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn primary" id="qvGo">🎬 Make the video</button><button class="btn ghost" id="qvPrev">👀 Preview first frame</button></div>' +
+      '<div class="card"><b>3 · Background sound</b><div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center">' +
+      '<select id="qvMus" style="flex:1;min-width:220px">' + MUSIC.map(function (m) { return '<option value="' + m[0] + '"' + (m[0] === QV.music ? ' selected' : '') + '>' + m[1] + '</option>'; }).join('') + '</select>' +
+      '<button class="btn ghost sm" id="qvMusHear">▶️ Hear it</button>' +
+      '<label class="btn ghost sm" style="margin:0;cursor:pointer">🎵 Upload my music<input type="file" accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/ogg,.mp3,.m4a,.wav" id="qvMusUp" hidden></label></div>' +
+      (QV.music === 'own' ? '<div class="muted" style="font-size:12.5px;margin-top:6px">' + (OWN ? '🎵 Using <b>' + esc(OWNNAME) + '</b> — it loops to fit the video.' : '⚠️ Upload your music file again (music files aren’t kept in saved quizzes).') + ' Only use music you have the right to use, such as the YouTube Audio Library or Pixabay Music.</div>' : '<div class="muted" style="font-size:12.5px;margin-top:6px">The built-in tracks are made by HQ, so they’re free to use and won’t get your video muted. Don’t use chart songs.</div>') +
+      '<div class="row" style="gap:14px;flex-wrap:wrap;margin-top:10px">' +
+      '<label style="margin:0;flex:1;min-width:200px">🎵 Music volume <b id="qvMusV">' + QV.musicVol + '%</b><input type="range" id="qvMusVol" min="0" max="100" step="5" value="' + QV.musicVol + '" style="width:100%"' + (QV.music === 'none' ? ' disabled' : '') + '></label>' +
+      '<label style="margin:0;flex:1;min-width:200px">🎙️ Voice volume <b id="qvVoV">' + QV.voiceVol + '%</b><input type="range" id="qvVoVol" min="0" max="100" step="5" value="' + QV.voiceVol + '" style="width:100%"></label></div>' +
+      '<label style="display:flex;gap:8px;align-items:center;margin:8px 0 0"><input type="checkbox" id="qvDuck"' + (QV.duck ? ' checked' : '') + '> Make the music quieter while the voice speaks</label>' +
+      '<div class="muted" style="font-size:12.5px;margin-top:4px">The music fades in at the start and out at the end. The ticks and the ding stay clear.</div></div>' +
+
+      '<div class="card"><b>4 · Preview and make the video</b><div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn ghost" id="qvPrev">👀 Watch preview</button><button class="btn primary" id="qvGo">🎬 Make the video</button></div>' +
       '<div id="qvProg" class="muted" style="margin-top:8px"></div><div id="qvOutBox" style="margin-top:10px"></div>' +
-      '<div class="muted" style="font-size:12.5px;margin-top:8px">1080×1920 MP4, ready for Reels, Stories and TikTok. Best in Chrome or Edge on a laptop. Tip: add a trending sound in Instagram — keep it quiet under the voice.</div></div></div>';
+      '<div class="muted" style="font-size:12.5px;margin-top:8px">1080×1920 MP4, ready for Reels, Stories and TikTok. Watch the preview first to check the timing and sound — then make the video, watch it again, and download it if you’re happy. Best in Chrome or Edge on a laptop.</div></div></div>';
     bind();
     if (QV.out) showOut();
   }
@@ -161,7 +172,13 @@
     if ($('#qvVo')) { $('#qvVo').onchange = function () { QV.voiceOn = this.checked; }; $('#qvVoice').onchange = function () { QV.voice = this.value; }; $('#qvModel').onchange = function () { QV.model = this.value; draw(); }; $('#qvOpts').onchange = function () { QV.readOpts = this.checked; draw(); }; $('#qvHear').onclick = hear; }
     if ($('#qvSet2')) $('#qvSet2').onclick = setupSheet;
     $('#qvGo').onclick = function () { keep(); make().catch(function (e) { prog(''); X.toast(e.message || 'Something went wrong.'); }); };
-    $('#qvPrev').onclick = function () { keep(); preview().catch(function (e) { X.toast(e.message); }); };
+    $('#qvPrev').onclick = function () { keep(); livePreview().catch(function (e) { prog(''); X.toast(e.message || 'The preview didn’t start.'); }); };
+    $('#qvMus').onchange = function () { stopHear(); QV.music = this.value; draw(); };
+    $('#qvMusHear').onclick = function () { hearMusic().catch(function (e) { X.toast(e.message); }); };
+    $('#qvMusUp').onchange = function () { var f = this.files && this.files[0]; if (!f) return; if (f.size > 15e6) return X.toast('That music file is too big — please use one under 15 MB.'); f.arrayBuffer().then(function (b) { return ac().decodeAudioData(b); }).then(function (buf) { OWN = buf; OWNNAME = f.name; QV.music = 'own'; draw(); X.toast('🎵 Music added'); }).catch(function () { X.toast('That file didn’t play — try an MP3.'); }); };
+    $('#qvMusVol').oninput = function () { QV.musicVol = +this.value; $('#qvMusV').textContent = this.value + '%'; if (HEAR && HEAR.g) HEAR.g.gain.value = musicGain(); };
+    $('#qvVoVol').oninput = function () { QV.voiceVol = +this.value; $('#qvVoV').textContent = this.value + '%'; };
+    $('#qvDuck').onchange = function () { QV.duck = this.checked; };
   }
   function prog(t) { var p = $('#qvProg'); if (p) p.textContent = t; }
 
@@ -218,7 +235,8 @@
     var out = {}, L = lines(), stop = null;
     for (var i = 0; i < L.length; i++) {
       prog('🎙️ Voice ' + (i + 1) + ' of ' + L.length + '…');
-      try { var r = await X.api('qv-speak', { text: L[i].t, voice: QV.voice, model: QV.model }); out[L[i].k] = await ac().decodeAudioData(b64ToBuf(r.dataUrl)); }
+      var ck = QV.voice + '|' + QV.model + '|' + L[i].t; if (VOC[ck]) { out[L[i].k] = VOC[ck]; continue; }
+      try { var r = await X.api('qv-speak', { text: L[i].t, voice: QV.voice, model: QV.model }); out[L[i].k] = VOC[ck] = await ac().decodeAudioData(b64ToBuf(r.dataUrl)); }
       catch (e) { stop = e; break; }
     }
     if (stop) { X.toast((stop.message || 'The voice stopped') + ' — making the video without the voice.'); return null; }
@@ -247,12 +265,103 @@
   async function mixAudio(P, vo) {
     var SR = 48000, ctx = new OfflineAudioContext(2, Math.ceil(P.total * SR), SR);
     P.cues.forEach(function (c) {
-      if (c.k && vo && vo[c.k]) { var s = ctx.createBufferSource(); s.buffer = vo[c.k]; var g = ctx.createGain(); g.gain.value = 1; s.connect(g); g.connect(ctx.destination); s.start(c.at); return; }
+      if (c.k && vo && vo[c.k]) { var s = ctx.createBufferSource(); s.buffer = vo[c.k]; var g = ctx.createGain(); g.gain.value = QV.voiceVol / 100; s.connect(g); g.connect(ctx.destination); s.start(c.at); return; }
       if (c.tick) { var o = ctx.createOscillator(), g2 = ctx.createGain(); o.type = 'square'; o.frequency.value = 1400; g2.gain.setValueAtTime(0.0001, c.at); g2.gain.exponentialRampToValueAtTime(0.18, c.at + 0.005); g2.gain.exponentialRampToValueAtTime(0.0001, c.at + 0.06); o.connect(g2); g2.connect(ctx.destination); o.start(c.at); o.stop(c.at + 0.08); }
       if (c.ding) { [880, 1320, 1760].forEach(function (f, n) { var o3 = ctx.createOscillator(), g3 = ctx.createGain(); o3.type = 'sine'; o3.frequency.value = f; g3.gain.setValueAtTime(0.0001, c.at); g3.gain.exponentialRampToValueAtTime(0.28 / (n + 1), c.at + 0.01); g3.gain.exponentialRampToValueAtTime(0.0001, c.at + 0.9); o3.connect(g3); g3.connect(ctx.destination); o3.start(c.at); o3.stop(c.at + 1); }); }
     });
+    addMusic(ctx, P, vo);
     return ctx.startRendering();
   }
+
+  // ───── 🎵 background music: made here (free to use) or your own file ─────
+  var MUSIC = [['upbeat', '🎉 Upbeat quiz (built-in)'], ['calm', '🌿 Calm (built-in)'], ['suspense', '⏳ Suspense (built-in)'], ['own', '🎵 My own music'], ['none', '🔇 No music']];
+  function musicGain() { return QV.musicVol / 100 * 0.6; }
+  function mf(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  var NOISE = null;
+  function noise(ctx) { if (NOISE && NOISE.sampleRate === ctx.sampleRate) return NOISE; var n = Math.round(ctx.sampleRate * 0.08), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; NOISE = b; return b; }
+  function note(ctx, out, type, freq, at, len, vol, att, filt) {
+    var o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + (att || 0.01)); g.gain.setTargetAtTime(0.0001, at + Math.max(att || 0.01, len * 0.6), len / 3);
+    if (filt) { var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = filt; o.connect(f); f.connect(g); } else o.connect(g);
+    g.connect(out); o.start(at); o.stop(at + len + 0.4);
+  }
+  function kick(ctx, out, at, vol) { var o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(130, at); o.frequency.exponentialRampToValueAtTime(42, at + 0.12); g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.28); o.connect(g); g.connect(out); o.start(at); o.stop(at + 0.3); }
+  function hat(ctx, out, at, vol) { var s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noise(ctx); f.type = 'highpass'; f.frequency.value = 7000; g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.05); s.connect(f); f.connect(g); g.connect(out); s.start(at); s.stop(at + 0.07); }
+  // write the chosen built-in track into out, from 0 to dur seconds
+  function track(ctx, out, kind, dur) {
+    var C = kind === 'suspense' ? [[45, 57, 60, 64], [41, 57, 60, 65], [43, 55, 59, 62], [40, 56, 59, 64]] : [[48, 60, 64, 67], [43, 59, 62, 67], [45, 60, 64, 69], [41, 60, 65, 69]];
+    var bpm = kind === 'upbeat' ? 118 : kind === 'calm' ? 76 : 100, bt = 60 / bpm, bar = bt * 4;
+    for (var b = 0; b * bar < dur; b++) {
+      var t0 = b * bar, ch = C[b % 4];
+      if (kind === 'upbeat') {
+        for (var k = 0; k < 4; k++) { var t = t0 + k * bt; if (t >= dur) break; kick(ctx, out, t, 0.55); hat(ctx, out, t + bt / 2, 0.12); }
+        [0, 1.5, 2].forEach(function (x) { if (t0 + x * bt < dur) note(ctx, out, 'triangle', mf(ch[0]), t0 + x * bt, bt * 0.9, 0.32, 0.01); });
+        [0.5, 1.5, 2.5, 3.5].forEach(function (x) { var at = t0 + x * bt; if (at < dur) ch.slice(1).forEach(function (m) { note(ctx, out, 'square', mf(m), at, 0.16, 0.035, 0.005, 2200); }); });
+        if (b % 2 === 1) [ch[3] + 12, ch[2] + 12, ch[1] + 12, ch[2] + 12].forEach(function (m, i) { var at = t0 + i * bt; if (at < dur) note(ctx, out, 'sine', mf(m), at, bt * 0.8, 0.05, 0.01); });
+      } else if (kind === 'calm') {
+        ch.slice(1).forEach(function (m) { [0, 3].forEach(function (dt) { var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = mf(m); o.detune.value = dt; g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(0.045, t0 + 0.8); g.gain.setValueAtTime(0.045, t0 + bar - 0.5); g.gain.linearRampToValueAtTime(0.0001, t0 + bar + 0.4); o.connect(g); g.connect(out); o.start(t0); o.stop(t0 + bar + 0.5); }); });
+        note(ctx, out, 'sine', mf(ch[0]), t0, bar * 0.9, 0.18, 0.2);
+        [1, 2, 3, 2, 1, 2, 3, 2].forEach(function (ix, i) { var at = t0 + i * bt / 2; if (at < dur) note(ctx, out, 'triangle', mf(ch[ix] + 12), at, 0.5, 0.035, 0.01); });
+      } else {
+        for (var e = 0; e < 8; e++) { var at2 = t0 + e * bt / 2; if (at2 >= dur) break; note(ctx, out, 'sawtooth', mf(ch[0]), at2, bt * 0.4, 0.09, 0.005, 420); }
+        [0, 2].forEach(function (x) { if (t0 + x * bt < dur) kick(ctx, out, t0 + x * bt, 0.35); });
+        var o2 = ctx.createOscillator(), g2 = ctx.createGain(); o2.type = 'sine'; o2.frequency.value = mf(ch[3] + 12); g2.gain.setValueAtTime(0.0001, t0); g2.gain.linearRampToValueAtTime(0.025, t0 + bar * 0.5); g2.gain.linearRampToValueAtTime(0.0001, t0 + bar); o2.connect(g2); g2.connect(out); o2.start(t0); o2.stop(t0 + bar + 0.1);
+      }
+    }
+  }
+  // the music bus: fades in, fades out, and dips while the voice speaks
+  function addMusic(ctx, P, vo) {
+    if (QV.music === 'none' || !QV.musicVol || (QV.music === 'own' && !OWN)) return;
+    var dur = P.total, vol = musicGain(), bus = ctx.createGain(); bus.connect(ctx.destination);
+    var pts = [[0, 0.0001], [1.5, vol]];
+    if (QV.duck && vo) {
+      var iv = []; P.cues.forEach(function (c) { if (c.k && vo[c.k]) iv.push([Math.max(0, c.at - 0.2), c.at + vo[c.k].duration + 0.25]); });
+      iv.sort(function (a, b) { return a[0] - b[0]; }); var m = [];
+      iv.forEach(function (x) { if (m.length && x[0] <= m[m.length - 1][1] + 0.4) m[m.length - 1][1] = Math.max(m[m.length - 1][1], x[1]); else m.push(x.slice()); });
+      m.forEach(function (x) { if (x[0] > 1.5) pts.push([x[0], vol]); pts.push([x[0] + 0.15, vol * 0.3]); pts.push([x[1], vol * 0.3]); pts.push([x[1] + 0.3, vol]); });
+    }
+    pts.push([Math.max(1.6, dur - 2), vol]); pts.push([dur, 0.0001]);
+    pts.sort(function (a, b) { return a[0] - b[0]; });
+    bus.gain.setValueAtTime(0.0001, 0); pts.forEach(function (p) { bus.gain.linearRampToValueAtTime(p[1], Math.min(dur, p[0])); });
+    if (QV.music === 'own') { var s = ctx.createBufferSource(); s.buffer = OWN; s.loop = true; s.connect(bus); s.start(0); s.stop(dur); }
+    else track(ctx, bus, QV.music, dur);
+  }
+  var HEAR = null;
+  function stopHear() { if (HEAR) { try { HEAR.s.stop(); } catch (e) {} HEAR = null; var b = $('#qvMusHear'); if (b) b.textContent = '▶️ Hear it'; } }
+  async function hearMusic() {
+    if (HEAR) return stopHear();
+    if (QV.music === 'none') return X.toast('No music chosen.');
+    if (QV.music === 'own' && !OWN) return X.toast('Upload your music first.');
+    var SR = 44100, len = 10, off = new OfflineAudioContext(2, SR * len, SR), bus = off.createGain(); bus.connect(off.destination);
+    if (QV.music === 'own') { var so = off.createBufferSource(); so.buffer = OWN; so.connect(bus); so.start(0); } else track(off, bus, QV.music, len);
+    bus.gain.setValueAtTime(1, 0); bus.gain.setValueAtTime(1, len - 1); bus.gain.linearRampToValueAtTime(0.0001, len);
+    var buf = await off.startRendering(), a = ac(); if (a.state === 'suspended') await a.resume();
+    var s = a.createBufferSource(), g = a.createGain(); s.buffer = buf; g.gain.value = musicGain(); s.connect(g); g.connect(a.destination); s.start();
+    HEAR = { s: s, g: g }; s.onended = function () { if (HEAR && HEAR.s === s) stopHear(); }; $('#qvMusHear').textContent = '⏹ Stop';
+  }
+
+  // ───── 👀 live preview: plays the whole quiz here, with sound, before making the MP4 ─────
+  async function livePreview() {
+    stopHear();
+    var bgs = await images(); try { await document.fonts.load('900 70px "Playfair Display"'); await document.fonts.load('800 60px Poppins'); } catch (e) {}
+    var vo = QV.voiceOn && ST && ST.ready && QV.voice ? await getVoices() : null;
+    var P = plan(vo); prog('Mixing the sound…'); var audio = await mixAudio(P, vo); prog('');
+    var sh = X.sheet('<h3 style="margin:0 0 8px">👀 Preview</h3><canvas id="pvC" width="' + W + '" height="' + H + '" style="width:100%;max-width:300px;display:block;margin:0 auto;border-radius:12px;background:#000"></canvas>' +
+      '<input type="range" id="pvSeek" min="0" max="' + Math.round(P.total * 10) + '" value="0" style="width:100%;max-width:300px;display:block;margin:10px auto 0">' +
+      '<div class="row" style="gap:8px;justify-content:center;margin-top:8px"><button class="btn primary" id="pvPlay">▶️ Play</button><button class="btn ghost" id="pvClose">Close</button><span class="muted" id="pvT" style="font-variant-numeric:tabular-nums">0:00 / ' + mm(P.total) + '</span></div>' +
+      '<div class="muted" style="font-size:12.5px;text-align:center;margin-top:6px">' + (vo ? 'The voice lines are saved, so making the video now won’t use more credits.' : '') + '</div>');
+    var cv = $('#pvC', sh), cx = cv.getContext('2d'), a = ac(), src = null, startAt = 0, pos = 0, raf = 0, playing = false;
+    var paint = function (t) { frame(cx, Math.min(t, P.total - 0.01), P, bgs); $('#pvT', sh).textContent = mm(t) + ' / ' + mm(P.total); $('#pvSeek', sh).value = Math.round(t * 10); };
+    var stop = function () { if (src) { try { src.stop(); } catch (e) {} src = null; } cancelAnimationFrame(raf); if (playing) pos = Math.min(P.total, a.currentTime - startAt); playing = false; $('#pvPlay', sh).textContent = '▶️ Play'; };
+    var loop = function () { var t = a.currentTime - startAt; if (t >= P.total) { stop(); pos = 0; paint(P.total - 0.01); return; } paint(t); raf = requestAnimationFrame(loop); };
+    var play = async function () { if (a.state === 'suspended') await a.resume(); src = a.createBufferSource(); src.buffer = audio; src.connect(a.destination); startAt = a.currentTime - pos; src.start(0, pos); playing = true; $('#pvPlay', sh).textContent = '⏸ Pause'; loop(); };
+    $('#pvPlay', sh).onclick = function () { if (playing) stop(); else play(); };
+    $('#pvSeek', sh).oninput = function () { var was = playing; stop(); pos = this.value / 10; paint(pos); if (was) play(); };
+    var close = function () { stop(); sh.remove(); };
+    $('#pvClose', sh).onclick = close; sh.addEventListener('click', function (e) { if (e.target === sh) stop(); });
+    paint(0);
+  }
+  function mm(t) { t = Math.max(0, Math.floor(t)); return Math.floor(t / 60) + ':' + ('0' + t % 60).slice(-2); }
 
   // ───── drawing one frame ─────
   function cover(cx, im, z, px, py) {
@@ -339,13 +448,6 @@
     var bgs = {};
     for (var i = 0; i < QV.qs.length; i++) { var id = QV.bgs[QV.qs[i].id]; if (id) { try { bgs[QV.qs[i].id] = await loadImg(imgSrc(id)); } catch (e) { /* gradient instead */ } } }
     return bgs;
-  }
-  async function preview() {
-    var bgs = await images(), P = plan(null), c = document.createElement('canvas'); c.width = W; c.height = H;
-    try { await document.fonts.load('900 70px "Playfair Display"'); await document.fonts.load('800 60px Poppins'); } catch (e) {}
-    var p1 = P.parts[1]; frame(c.getContext('2d'), p1.s + p1.revAt + 0.5, P, bgs);
-    var s = X.sheet('<h3 style="margin:0 0 8px">👀 Preview — question 1 with the answer showing</h3><img src="' + c.toDataURL('image/jpeg', 0.85) + '" style="width:100%;max-width:360px;display:block;margin:0 auto;border-radius:12px">');
-    return s;
   }
 
   // ───── 🎬 make the MP4 ─────

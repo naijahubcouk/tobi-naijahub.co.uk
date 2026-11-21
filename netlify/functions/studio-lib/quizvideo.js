@@ -110,7 +110,8 @@ function cleanSave(d) {
   const bgs = {}; Object.keys(d.bgs || {}).slice(0, 40).forEach(k => { const v = String(d.bgs[k]); if (/^i[a-z0-9]{6,30}$/.test(v)) bgs[parseInt(k, 10)] = v; });
   return { bank: BANKS[d.bank] ? d.bank : 'lifeuk', n: qs.length, grp: parseInt(d.grp, 10) || 0, qs, bgs,
     voiceOn: !!d.voiceOn, voice: /^[A-Za-z0-9]{10,40}$/.test(d.voice || '') ? d.voice : '', model: d.model === 'natural' ? 'natural' : 'flash', readOpts: d.readOpts !== false,
-    h1: str(d.h1, 120), h2: str(d.h2, 120), outro: str(d.outro, 200), appOn: !!d.appOn, appT: str(d.appT, 120), sayApp: !!d.sayApp, igOn: !!d.igOn, ig: str(d.ig, 40) };
+    h1: str(d.h1, 120), h2: str(d.h2, 120), outro: str(d.outro, 200), appOn: !!d.appOn, appT: str(d.appT, 120), sayApp: !!d.sayApp, igOn: !!d.igOn, ig: str(d.ig, 40),
+    music: ['upbeat', 'calm', 'suspense', 'own', 'none'].includes(d.music) ? d.music : 'upbeat', musicVol: Math.max(0, Math.min(100, parseInt(d.musicVol, 10) || 0)), voiceVol: Math.max(0, Math.min(100, d.voiceVol == null ? 100 : parseInt(d.voiceVol, 10) || 0)), duck: d.duck !== false };
 }
 async function save(raw, email) {
   const data = cleanSave(raw.data); if (!data.qs.length) throw new HttpError(400, 'invalid', 'Add some questions first.');
