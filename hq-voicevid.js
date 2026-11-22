@@ -19,7 +19,7 @@
   function ac() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return AC; }
   function imgSrc(id) { return '/.netlify/functions/studio-hq?img=' + encodeURIComponent(id); }
   function mm(t) { t = Math.max(0, Math.floor(t)); return Math.floor(t / 60) + ':' + ('0' + t % 60).slice(-2); }
-  function prog(t) { var p = $('#vvProg'); if (p) p.textContent = t || ''; }
+  function prog(t) { var p = $('#vvProg'); if (p) p.textContent = t || ''; var m = $('#vvAudMsg'); if (m) { m.style.color = ''; m.textContent = t || ''; } }
   function b64ToBuf(d) { var b = atob(String(d).split(',')[1] || ''), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u.buffer; }
   function state() { if (!V) V = { name: '', topic: '', secs: 35, voice: '', model: 'flash', speed: 1, scenes: [], cap: { on: true, style: 'yellow', y: 0.72, size: 76 }, music: 'calm', musicVol: 20, voiceVol: 100, kb: true, dim: 0.15, caption: '', savedId: '', savedName: '', out: null, audio: null }; return V; }
   var TLOOK = { outline: '⚪ White text, black outline', whitebox: '⬜ White box, black text', blackbox: '⬛ Black box, white text', yellow: '🟡 Yellow text, black outline', green: '🟩 Green box, white text' };
@@ -198,16 +198,15 @@
   async function fromAudio(file, engine, lang, pasted) {
     if (file.size > 400e6) throw new Error('That file is too big — please use one under 400 MB.');
     prog('🎧 Reading the sound…');
-    var buf; try { buf = await ac().decodeAudioData(await file.arrayBuffer()); } catch (e) { throw new Error('Couldn’t read the sound in that file — try an MP3, M4A or WAV.'); }
+    var buf; try { var raw = await file.arrayBuffer(); buf = await Promise.race([ac().decodeAudioData(raw), new Promise(function (ok, no) { setTimeout(function () { no(new Error('slow')); }, 90000); })]); } catch (e) { throw new Error('Couldn’t read the sound in that file — try an MP3, M4A or WAV.'); }
     if (buf.duration > 305) throw new Error('That audio is ' + mm(buf.duration) + ' long — please use up to 5 minutes (trim it first).');
     if (buf.duration < 1) throw new Error('That audio is too short.');
     var x = await to16k(buf), words, kept = null;
     pasted = String(pasted || '').replace(/\r/g, '').trim();
     var mine = pasted ? pasted.split(/\s+/).filter(Boolean) : null;
-    if (mine && engine !== 'free') {   // 🎯 ElevenLabs matches your words to the audio
-      kept = await keepAudio(file, x); prog('📝 Matching your words to the audio with ElevenLabs…');
-      var al = (await X.api('vv-align', { id: kept.id, text: pasted })).words || [];
-      words = al.length === mine.length ? mine.map(function (w, i) { return [w, al[i][1], al[i][2]]; }) : alignText(mine, al);
+    if (mine && engine !== 'free') {   // 🎯 ElevenLabs hears the timing of every word (a minute at a time), then your words are lined up with it
+      var heard = await listenEleven(x, lang); prog('📝 Lining your words up with the audio…');
+      words = alignText(mine, heard);
     } else if (mine) { words = alignText(mine, await listenFree(x)); }   // 🆓 listen for free, then line your words up with what was heard
     else words = engine === 'free' ? await listenFree(x) : await listenEleven(x, lang);
     if (!words.length) throw new Error('No speech found in that audio.');
@@ -357,7 +356,7 @@
         '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><label class="btn ghost" style="margin:0;cursor:pointer">🎧 Choose audio<input type="file" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.opus,.aac" id="vvAud" hidden></label><span class="muted" id="vvAudN" style="font-size:13px"></span>' +
         '<select id="vvEng"><option value="eleven">🎯 ElevenLabs (most accurate)</option><option value="free">🆓 Free, on this computer (slower)</option></select><select id="vvLang"><option value="en">English, Pidgin and Nigerian words</option><option value="auto">Any language</option></select>' +
         '</div>' +
-        '<label style="margin-top:10px">📝 Paste what’s said <span class="muted" style="font-weight:400">(optional — your exact words are used; HQ only works out the timing. Put each sentence on its own line to use your lines as the scenes.)</span></label><textarea id="vvPaste" rows="4" placeholder="e.g. Moving to the UK this year?&#10;Here are three things Auntie Tobi wants you to know…"></textarea><button class="btn primary" id="vvListen" disabled style="margin-top:8px">🎧 Write down the words</button></div>') +
+        '<label style="margin-top:10px">📝 Paste what’s said <span class="muted" style="font-weight:400">(optional — your exact words are used; HQ only works out the timing. Put each sentence on its own line to use your lines as the scenes.)</span></label><textarea id="vvPaste" rows="4" placeholder="e.g. Moving to the UK this year?&#10;Here are three things Auntie Tobi wants you to know…"></textarea><div class="row" style="gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap"><button class="btn primary" id="vvListen" disabled>🎧 Write down the words</button><span id="vvAudMsg" class="muted" style="font-size:13px"></span></div></div>') +
       '<div class="muted" id="vvProg" style="margin-top:8px"></div></div>' +
       (V.scenes.length ? (
         // 2 · voice (or your own audio)
@@ -444,11 +443,11 @@
     if ($('#vvAud')) {
       var AF = null;
       var lbl = function () { $('#vvListen').textContent = $('#vvPaste').value.trim() ? '📝 Match my words to the audio' : '🎧 Write down the words'; };
-      $('#vvAud').onchange = function () { AF = this.files && this.files[0]; $('#vvAudN').textContent = AF ? '✅ ' + AF.name : ''; $('#vvListen').disabled = !AF; };
+      $('#vvAud').onchange = function () { AF = this.files && this.files[0]; $('#vvAudN').textContent = AF ? '✅ ' + AF.name : ''; $('#vvListen').disabled = !AF; $('#vvAudMsg').textContent = ''; };
       $('#vvPaste').oninput = lbl;
       $('#vvListen').onclick = function () {
-        if (!AF) return; var b = this, eng = $('#vvEng').value, lang = $('#vvLang').value; b.disabled = true;
-        var pasted = $('#vvPaste').value; fromAudio(AF, eng, lang, pasted).then(function () { draw(); X.toast('🎧 ' + V.scenes.length + ' scenes from your audio' + (pasted.trim() ? ' with your words' : ' — fix any misheard words') + ', then ✨ Suggest pictures'); }).catch(function (e) { prog(''); b.disabled = false; X.toast(e.message); });
+        if (!AF) { $('#vvAudMsg').textContent = '⬆️ Choose your audio first.'; return; } var b = this, eng = $('#vvEng').value, lang = $('#vvLang').value; b.disabled = true; prog('🎧 Starting…');
+        var pasted = $('#vvPaste').value; fromAudio(AF, eng, lang, pasted).then(function () { draw(); X.toast('🎧 ' + V.scenes.length + ' scenes from your audio' + (pasted.trim() ? ' with your words' : ' — fix any misheard words') + ', then ✨ Suggest pictures'); }).catch(function (e) { prog(''); b.disabled = false; var m = $('#vvAudMsg'); if (m) { m.style.color = '#B42318'; m.textContent = '⚠️ ' + (e && e.message || 'Something went wrong.') + ' Please try again.'; } X.toast(e && e.message || 'Something went wrong.'); });
       };
     }
     if (!V.scenes.length) return;
