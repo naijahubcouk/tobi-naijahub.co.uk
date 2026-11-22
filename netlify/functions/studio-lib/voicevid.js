@@ -57,7 +57,7 @@ async function speak(b) {
     const j = await r.json().catch(() => null), why = JSON.stringify((j && j.detail) || j || {}).slice(0, 300);
     console.error('[voicevid] tts', r.status, why);
     if (/quota|credit|limit/i.test(why)) throw new HttpError(402, 'no_credits', 'Your ElevenLabs credits have run out for this month.');
-    if (r.status === 401) throw new HttpError(401, 'voice_key', 'ElevenLabs didn’t accept the key — check it in Netlify.');
+    if (r.status === 401 || r.status === 403) throw new HttpError(400, 'voice_key', /permission/i.test(why) ? 'Your ElevenLabs key isn’t allowed to do this yet — in ElevenLabs open your API key settings and turn on “Text to Speech”, then try again.' : 'ElevenLabs didn’t accept the key — check it in Netlify.');
     throw new HttpError(502, 'voice_error', 'The voice didn’t come back — please try again.');
   }
   const j = await r.json().catch(() => null);
@@ -85,7 +85,7 @@ async function stt(b) {
     const j = await r.json().catch(() => null), why = JSON.stringify((j && j.detail) || j || {}).slice(0, 300);
     console.error('[voicevid] stt', r.status, why);
     if (/quota|credit|limit|exceed/i.test(why)) throw new HttpError(402, 'no_credits', 'Your ElevenLabs speech-to-text allowance has run out — use 🆓 Free instead.');
-    if (r.status === 401) throw new HttpError(401, 'voice_key', 'ElevenLabs didn’t accept the key — check it in Netlify.');
+    if (r.status === 401 || r.status === 403) throw new HttpError(400, 'voice_key', /permission/i.test(why) ? 'Your ElevenLabs key isn’t allowed to do this yet — in ElevenLabs open your API key settings and turn on “Speech to Text”, then try again.' : 'ElevenLabs didn’t accept the key — check it in Netlify.');
     throw new HttpError(502, 'stt_error', 'ElevenLabs couldn’t write down the words — please try again.');
   }
   const j = await r.json();

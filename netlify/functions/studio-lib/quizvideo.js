@@ -54,7 +54,7 @@ async function speak(raw) {
     const j = await r.json().catch(() => null), why = JSON.stringify((j && j.detail) || j || {}).slice(0, 300);
     console.error('[quizvideo] tts', r.status, why);
     if (r.status === 401 && /quota|credit|limit/i.test(why)) throw new HttpError(402, 'no_credits', 'Your ElevenLabs credits have run out for this month — the video will be made without the voice.');
-    if (r.status === 401) throw new HttpError(401, 'voice_key', 'ElevenLabs didn’t accept the key — check it in Netlify.');
+    if (r.status === 401 || r.status === 403) throw new HttpError(400, 'voice_key', /permission/i.test(why) ? 'Your ElevenLabs key isn’t allowed to do this yet — in ElevenLabs open your API key settings and turn on “Text to Speech”, then try again.' : 'ElevenLabs didn’t accept the key — check it in Netlify.');
     if (/quota|credit/i.test(why)) throw new HttpError(402, 'no_credits', 'Your ElevenLabs credits have run out for this month — the video will be made without the voice.');
     throw new HttpError(502, 'voice_error', 'The voice didn’t come back — please try again.');
   }
