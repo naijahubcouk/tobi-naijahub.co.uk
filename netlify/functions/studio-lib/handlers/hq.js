@@ -87,6 +87,12 @@ exports.handler = handler(async (ctx) => {
     const q = event.queryStringParameters || {};
     if (q.vfinal || q.vaudio) mustAllow(whoG, ['vads']);
     else if (q.subimg) mustAllow(whoG, ['app', 'subs', 'cars', 'vads']);
+    if (q.vva) {   // 🎧 a piece of an uploaded voiceover audio file
+      mustAllow(whoG, ['cars']); const vv = require('../voicevid');
+      const rec = await vv.audGet(q.vva, q.part || '0'), info = await vv.audInfo(q.vva);
+      if (!rec || !info) throw new HttpError(404, 'not_found', 'Not found.');
+      return { statusCode: 200, headers: { 'Content-Type': 'application/octet-stream', 'X-Parts': String(info.parts), 'Cache-Control': 'private, max-age=86400' }, body: rec.b64, isBase64Encoded: true };
+    }
     if (q.fin || q.fint) {   // ✅ a finished video piece / its cover picture
       mustAllow(whoG, ['cars']); const fin = require('../finished');
       const rec = q.fint ? await fin.getThumb(q.fint) : await fin.getPart(q.fin, q.part || '0');
@@ -341,6 +347,16 @@ exports.handler = handler(async (ctx) => {
     case 'fin-posted': return require('../finished').posted(body.id, !!body.on);
     case 'fin-rename': return require('../finished').rename(body.id, body.name, body.caption);
     case 'fin-del': return require('../finished').remove(body.id);
+    case 'vv-stt': {
+      await core.rateLimit('hq-vvstt', who.email, 300, 60 * 60 * 1000, 'That\u2019s a lot of audio this hour — please wait a little.');
+      return require('../voicevid').stt(body);
+    }
+    case 'vv-wants': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
+      return require('../voicevid').wants(body);
+    }
+    case 'vv-aud-start': return require('../voicevid').audStart(body);
+    case 'vv-aud-part': return require('../voicevid').audPart(body.id, Number(body.idx), body.b64);
     case 'vv-save': return require('../voicevid').save(body, who.email);
     case 'vv-list': { const vv = require('../voicevid'); return { items: await vv.list(), prefs: await vv.prefs() }; }
     case 'vv-load': return require('../voicevid').load(body.id);

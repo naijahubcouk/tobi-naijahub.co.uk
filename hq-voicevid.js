@@ -21,7 +21,7 @@
   function mm(t) { t = Math.max(0, Math.floor(t)); return Math.floor(t / 60) + ':' + ('0' + t % 60).slice(-2); }
   function prog(t) { var p = $('#vvProg'); if (p) p.textContent = t || ''; }
   function b64ToBuf(d) { var b = atob(String(d).split(',')[1] || ''), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u.buffer; }
-  function state() { if (!V) V = { name: '', topic: '', secs: 35, voice: '', model: 'flash', speed: 1, scenes: [], cap: { on: true, style: 'yellow', y: 0.72, size: 76 }, music: 'calm', musicVol: 20, voiceVol: 100, kb: true, dim: 0.15, caption: '', savedId: '', savedName: '', out: null }; return V; }
+  function state() { if (!V) V = { name: '', topic: '', secs: 35, voice: '', model: 'flash', speed: 1, scenes: [], cap: { on: true, style: 'yellow', y: 0.72, size: 76 }, music: 'calm', musicVol: 20, voiceVol: 100, kb: true, dim: 0.15, caption: '', savedId: '', savedName: '', out: null, audio: null }; return V; }
   var TLOOK = { outline: '⚪ White text, black outline', whitebox: '⬜ White box, black text', blackbox: '⬛ Black box, white text', yellow: '🟡 Yellow text, black outline', green: '🟩 Green box, white text' };
   var TFONT = { heavy: ['Heavy bold', function (z) { return '900 ' + z + 'px Montserrat, "Inter Tight", Arial, sans-serif'; }], serif: ['Elegant serif', function (z) { return '900 ' + z + 'px "Playfair Display", Georgia, serif'; }], script: ['Brush script', function (z) { return '400 ' + z + 'px "Kaushan Script", cursive'; }], sans: ['Plain', function (z) { return '700 ' + z + 'px Inter, Arial, sans-serif'; }] };
   var TANIM = { pop: 'Pop in', fade: 'Fade in', slide: 'Slide up', none: 'Just there' };
@@ -46,6 +46,7 @@
 
   // ───── timing: each scene lasts as long as its line takes to say, plus a pause ─────
   function timeline() {
+    if (V.audio) return audioTimeline();
     var t = 0, out = [];
     V.scenes.forEach(function (sc) {
       var L = lineOf(sc), words = sc.t.trim() ? sc.t.trim().split(/\s+/) : [], dur, wt;
@@ -57,6 +58,130 @@
     return { parts: out, total: Math.max(0.5, t) };
   }
   function total() { return timeline().total; }
+  // 🎧 own audio: scenes follow the real timings of the words; video time 0 = the trimmed start of the audio
+  function audioTimeline() {
+    var A = V.audio, s0 = A.trimS || 0, end = (A.trimE || A.dur) - s0, out = [];
+    V.scenes.forEach(function (sc, i) {
+      var a = Math.max(0, (sc.a0 || 0) - s0), nx = V.scenes[i + 1], b = nx ? Math.max(0, (nx.a0 || 0) - s0) : end;
+      if (i === 0) a = 0; a = Math.min(a, end); b = Math.min(Math.max(b, a), end);
+      var words = (sc.words || []).map(function (w) { return [w[0], w[1] - s0 - a - LEAD, w[2] - s0 - a - LEAD]; });
+      out.push({ s: a, d: b - a, words: words, L: null });
+    });
+    return { parts: out, total: Math.max(0.5, end) };
+  }
+  // words for a scene after its text is edited: same count → keep each word's timing; otherwise spread evenly over the scene
+  function retime(sc) {
+    var ws = sc.t.trim() ? sc.t.trim().split(/\s+/) : [], old = sc.words || [];
+    if (ws.length === old.length) { sc.words = ws.map(function (w, i) { return [w, old[i][1], old[i][2]]; }); return; }
+    var a = old.length ? old[0][1] : sc.a0, b = old.length ? old[old.length - 1][2] : (sc.a1 || sc.a0 + 1), per = (b - a) / Math.max(1, ws.length);
+    sc.words = ws.map(function (w, i) { return [w, a + i * per, a + (i + 1) * per]; });
+  }
+  function scenesFromWords(words) {
+    var out = [], cur = null;
+    words.forEach(function (w, i) {
+      var prev = words[i - 1], gap = prev ? w[1] - prev[2] : 0;
+      if (!cur || /[.!?]["”’)]*$/.test(prev ? prev[0] : '') || gap > 0.7 || cur.words.length >= 14) { cur = Object.assign(sc0(''), { a0: w[1], words: [] }); out.push(cur); }
+      cur.words.push(w);
+    });
+    var res = []; out.forEach(function (c) { var len = c.words[c.words.length - 1][2] - c.words[0][1]; if (res.length && len < 1.2 && res[res.length - 1].words.length < 18) res[res.length - 1].words = res[res.length - 1].words.concat(c.words); else res.push(c); });
+    res.forEach(function (c, i) { c.t = c.words.map(function (w) { return w[0]; }).join(' '); c.a1 = res[i + 1] ? res[i + 1].a0 : c.words[c.words.length - 1][2] + 0.5; });
+    if (res.length) res[0].a0 = Math.min(res[0].a0, 0);
+    return res;
+  }
+
+  // ───── 🎧 your own audio → words with timings ─────
+  var WK = null, TF = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5';
+  function wav16(samples) {
+    var n = samples.length, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), w = function (o, t) { for (var i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 16000, true); v.setUint32(28, 32000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+    for (var i = 0; i < n; i++) { var x = Math.max(-1, Math.min(1, samples[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7FFF, true); }
+    return b;
+  }
+  function abToB64(buf) { var u = new Uint8Array(buf), s = ''; for (var k = 0; k < u.length; k += 0x8000) s += String.fromCharCode.apply(null, u.subarray(k, k + 0x8000)); return btoa(s); }
+  async function to16k(buf) { var n = Math.ceil(buf.duration * 16000), o = new OfflineAudioContext(1, n, 16000), s = o.createBufferSource(); s.buffer = buf; s.connect(o.destination); s.start(); return (await o.startRendering()).getChannelData(0); }
+  // cut into ~55-second pieces, each ending at the quietest moment near the boundary (so words aren't cut in half)
+  function pieces(x) {
+    var SR = 16000, out = [], at = 0;
+    while (at < x.length) {
+      var want = at + 55 * SR; if (want >= x.length) { out.push([at, x.length]); break; }
+      var best = want, bestE = Infinity, win = 800;
+      for (var c = want - 5 * SR; c < want; c += 400) { var e = 0; for (var k = c; k < c + win; k++) e += x[k] * x[k]; if (e < bestE) { bestE = e; best = c + win / 2; } }
+      out.push([at, best]); at = best;
+    }
+    return out;
+  }
+  async function listenEleven(x, lang) {
+    var ps = pieces(x), words = [];
+    for (var i = 0; i < ps.length; i++) {
+      prog('🎧 Writing down the words with ElevenLabs… part ' + (i + 1) + ' of ' + ps.length);
+      var r = await X.api('vv-stt', { b64: abToB64(wav16(x.subarray(ps[i][0], ps[i][1]))), offset: ps[i][0] / 16000, lang: lang });
+      words = words.concat(r.words || []);
+    }
+    return words;
+  }
+  function listenFree(x) {
+    return new Promise(function (ok, no) {
+      if (!WK) {
+        var code = "import { pipeline, env } from '" + TF + "';\n env.allowLocalModels = false; let asr = null;\n" +
+          "self.onmessage = async (e) => { try {\n" +
+          "  if (!asr) asr = await pipeline('automatic-speech-recognition', 'onnx-community/whisper-base', { dtype: 'q8', progress_callback: (p) => { if (p.status === 'progress') self.postMessage({ type: 'load', pct: p.progress || 0 }); } });\n" +
+          "  self.postMessage({ type: 'run' });\n" +
+          "  const r = await asr(e.data.audio, { chunk_length_s: 30, stride_length_s: 5, task: 'transcribe', language: 'english', return_timestamps: true });\n" +
+          "  self.postMessage({ type: 'done', chunks: (r && r.chunks) || [], text: (r && r.text) || '' });\n" +
+          "} catch (err) { self.postMessage({ type: 'error', message: String(err && err.message || err) }); } };";
+        try { WK = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })), { type: 'module' }); } catch (e) { WK = null; return no(new Error('The free listener can’t run in this browser — try ElevenLabs instead.')); }
+      }
+      WK.onmessage = function (e) {
+        var m = e.data;
+        if (m.type === 'load') prog('🆓 Downloading the free listener (first time only)… ' + Math.round(m.pct) + '%');
+        else if (m.type === 'run') prog('🆓 Listening on this computer… (a 1-minute clip takes about 20–60 seconds)');
+        else if (m.type === 'error') no(new Error('The free listener stopped: ' + m.message));
+        else if (m.type === 'done') {   // phrase timings → spread each phrase's words across its time
+          var words = []; (m.chunks || []).forEach(function (c) { var ws = String(c.text || '').trim().split(/\s+/).filter(Boolean), a = (c.timestamp || [])[0] || 0, b = (c.timestamp || [])[1]; if (b == null) b = a + ws.length * 0.35; var per = (b - a) / Math.max(1, ws.length); ws.forEach(function (w, i) { words.push([w, a + i * per, a + (i + 1) * per]); }); });
+          ok(words);
+        }
+      };
+      WK.onerror = function () { WK = null; no(new Error('The free listener couldn’t start on this computer — try ElevenLabs instead.')); };
+      WK.postMessage({ audio: x });
+    });
+  }
+  // keep the audio file in HQ (in pieces) so the draft reopens with its sound
+  async function keepAudio(file, x16) {
+    var blob = file.size <= 50e6 ? file : new Blob([wav16(x16)], { type: 'audio/wav' }), PART = 1400000, n = Math.ceil(blob.size / PART);
+    var r = await X.api('vv-aud-start', { parts: n, mime: blob.type || 'audio/mpeg', name: file.name });
+    for (var i = 0; i < n; i++) {
+      prog('💾 Keeping your audio in HQ… ' + Math.round(i / n * 100) + '%');
+      var piece = await new Promise(function (ok, bad) { var fr = new FileReader(); fr.onload = function () { ok(String(fr.result).split(',')[1] || ''); }; fr.onerror = bad; fr.readAsDataURL(blob.slice(i * PART, (i + 1) * PART)); });
+      await X.api('vv-aud-part', { id: r.id, idx: i, b64: piece });
+    }
+    return { id: r.id, parts: n };
+  }
+  var AUDBUF = {};
+  async function audioBuf() {
+    if (!V.audio) return null; if (AUDBUF[V.audio.id]) return AUDBUF[V.audio.id];
+    prog('🎧 Loading your audio…'); var bufs = [];
+    for (var i = 0; i < (V.audio.parts || 1); i++) { var r = await fetch('/.netlify/functions/studio-hq?vva=' + V.audio.id + '&part=' + i, { credentials: 'same-origin' }); if (!r.ok) throw new Error('Your audio didn’t load — please try again.'); bufs.push(await r.arrayBuffer()); }
+    var all = await new Blob(bufs).arrayBuffer(); AUDBUF[V.audio.id] = await ac().decodeAudioData(all); prog('');
+    return AUDBUF[V.audio.id];
+  }
+  async function fromAudio(file, engine, lang) {
+    if (file.size > 400e6) throw new Error('That file is too big — please use one under 400 MB.');
+    prog('🎧 Reading the sound…');
+    var buf; try { buf = await ac().decodeAudioData(await file.arrayBuffer()); } catch (e) { throw new Error('Couldn’t read the sound in that file — try an MP3, M4A or WAV.'); }
+    if (buf.duration > 305) throw new Error('That audio is ' + mm(buf.duration) + ' long — please use up to 5 minutes (trim it first).');
+    if (buf.duration < 1) throw new Error('That audio is too short.');
+    var x = await to16k(buf), words = engine === 'free' ? await listenFree(x) : await listenEleven(x, lang);
+    if (!words.length) throw new Error('No speech found in that audio.');
+    var kept = await keepAudio(file, x);
+    AUDBUF[kept.id] = buf;
+    V.audio = { id: kept.id, parts: kept.parts, name: file.name, dur: buf.duration, trimS: 0, trimE: buf.duration, vol: 100 };
+    V.scenes = scenesFromWords(words); V.music = 'none'; prog('');
+  }
+  async function suggestPictures() {
+    var r = await X.api('vv-wants', { lines: V.scenes.map(function (s) { return s.t; }) });
+    (r.wants || []).forEach(function (w, i) { if (V.scenes[i] && w) V.scenes[i].want = w; });
+  }
+
 
   // ───── media ─────
   function srcOf(sc) { return sc._vid || sc._clipUrl || (sc.img ? imgSrc(sc.img) : ''); }
@@ -181,16 +306,24 @@
     $('#view').innerHTML = '<div id="vvRoot" style="max-width:1060px"><style>#vvRoot .card{margin-bottom:12px}#vvRoot label{display:block}#vvRoot input[type=checkbox]{width:auto;margin:0}.vv-sc{display:flex;gap:12px;align-items:flex-start;border-top:1px solid #EEE9DD;padding:12px 0}.vv-sc:first-child{border-top:0}.vv-th{flex:none;width:108px;height:192px;border-radius:10px;background:#111}.vv-sc textarea{min-height:44px}.vv-pill{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:#F1EEE6;color:#6B7280}.vv-pill.ok{background:#E7F6EE;color:#057A44}.vv-th{cursor:zoom-in}.vv-ts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;padding:6px 8px;background:#FAFAF7;border:1px solid #EEE9DD;border-radius:10px;font-size:12.5px;color:#6B7280}.vv-ts select,.vv-ts input{width:auto;padding:3px 6px;font-size:12.5px}.vv-ts label{display:flex!important;gap:4px;align-items:center;margin:0}.vv-ts input[type=range]{width:90px}.vv-ts input[type=checkbox]{width:auto}</style>' +
       // 1 · script
       '<div class="card"><b>1 · Script</b>' +
-      (V.scenes.length ? '<div class="muted" style="font-size:13px;margin-top:4px">Each line is a scene. Edit the words in the scenes below — only the lines you change are voiced again.</div>' :
+      (V.scenes.length ? '<div class="muted" style="font-size:13px;margin-top:4px">' + (V.audio ? 'Each scene follows your audio. Fix any misheard word in the scenes below — the timing stays.' : 'Each line is a scene. Edit the words in the scenes below — only the lines you change are voiced again.') + '</div>' :
         '<div class="muted" style="font-size:13px;margin:4px 0 8px">Paste or type your script — each sentence (or each line) becomes a scene. Or let the AI write a first draft.</div>' +
         '<textarea id="vvScript" rows="7" placeholder="e.g. Moving to the UK? Here are three things nobody tells you about council tax…"></textarea>' +
         '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn primary" id="vvSplit">➡️ Use this script</button></div>' +
         '<div style="margin-top:14px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><b>✨ Write it for me</b><div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><input id="vvTopic" placeholder="Topic, e.g. 3 things to know before renting your first flat in the UK" value="' + esc(V.topic) + '" style="flex:1;min-width:260px">' +
         '<select id="vvSecs">' + [20, 30, 45, 60].map(function (n) { return '<option value="' + n + '"' + (n === V.secs ? ' selected' : '') + '>about ' + n + ' seconds</option>'; }).join('') + '</select><button class="btn ghost" id="vvWrite">✨ Write it</button></div>' +
-        '<div class="muted" style="font-size:12.5px;margin-top:4px">Anything that needs checking (prices, dates, rules) comes back in [square brackets] for you to fill in.</div></div>') +
+        '<div class="muted" style="font-size:12.5px;margin-top:4px">Anything that needs checking (prices, dates, rules) comes back in [square brackets] for you to fill in.</div></div>' +
+        '<div style="margin-top:14px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><b>🎧 Use my own audio</b><div class="muted" style="font-size:12.5px;margin-top:2px">A voice note, recording, podcast clip or interview (MP3, M4A, WAV or a video) up to 5 minutes. HQ writes down every word with its timing, splits it into scenes and puts the captions on.</div>' +
+        '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><label class="btn ghost" style="margin:0;cursor:pointer">🎧 Choose audio<input type="file" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.opus,.aac" id="vvAud" hidden></label><span class="muted" id="vvAudN" style="font-size:13px"></span>' +
+        '<select id="vvEng"><option value="eleven">🎯 ElevenLabs (most accurate)</option><option value="free">🆓 Free, on this computer (slower)</option></select><select id="vvLang"><option value="en">English, Pidgin and Nigerian words</option><option value="auto">Any language</option></select>' +
+        '<button class="btn primary" id="vvListen" disabled>🎧 Write down the words</button></div></div>') +
       '<div class="muted" id="vvProg" style="margin-top:8px"></div></div>' +
       (V.scenes.length ? (
-        // 2 · voice
+        // 2 · voice (or your own audio)
+        (V.audio ? '<div class="card"><b>2 · Your audio</b><div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px;align-items:flex-end"><div style="flex:1;min-width:200px">🎧 <b>' + esc(V.audio.name) + '</b> <span class="muted">· ' + mm(V.audio.dur) + '</span></div>' +
+          '<label style="margin:0">Start at (seconds)<input type="number" step="0.1" min="0" max="' + V.audio.dur.toFixed(1) + '" value="' + (+V.audio.trimS).toFixed(1) + '" id="vvTrS" style="width:100px"></label><label style="margin:0">End at (seconds)<input type="number" step="0.1" min="0" max="' + V.audio.dur.toFixed(1) + '" value="' + (+V.audio.trimE).toFixed(1) + '" id="vvTrE" style="width:100px"></label>' +
+          '<label style="margin:0;min-width:180px">🔊 Audio volume <b id="vvAVv">' + V.audio.vol + '%</b><input type="range" id="vvAVol" min="0" max="150" step="5" value="' + V.audio.vol + '" style="width:100%"></label></div>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:6px">The video runs from ' + mm(V.audio.trimS) + ' to ' + mm(V.audio.trimE) + ' of your audio (' + (V.audio.trimE - V.audio.trimS).toFixed(1) + ' seconds). Scenes outside it are left out.</div></div>' :
         '<div class="card"><b>2 · Voice</b>' + (ST && ST.ready ?
           '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center"><select id="vvVoice" style="flex:1;min-width:240px">' + (ST.voices || []).map(function (x) { return '<option value="' + x.id + '"' + (x.id === V.voice ? ' selected' : '') + '>' + esc(x.name) + (x.accent ? ' · ' + esc(x.accent) : '') + (x.gender ? ' · ' + esc(x.gender) : '') + '</option>'; }).join('') + '</select>' +
           '<button class="btn ghost sm" id="vvHear">▶️ Hear it</button><button class="btn ghost sm" id="vvDef" title="Use this voice first every time">⭐ Make default</button>' +
@@ -198,10 +331,10 @@
           '<select id="vvSpeed">' + [[0.9, 'Slower'], [1, 'Normal speed'], [1.1, 'A bit faster']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === V.speed ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
           '<div class="muted" style="font-size:12.5px;margin-top:6px">' + (PREFS && PREFS.voice === V.voice ? '⭐ Your default voice. ' : '') + 'This script: about <b>' + chars.toLocaleString() + '</b> characters' + (V.model === 'flash' ? ' (Flash uses about half a credit per character)' : '') + '. Lines already made are free.' + (cr ? ' You have <b>' + cr.left.toLocaleString() + '</b> credits left this month.' : '') + '</div>' +
           '<div class="row" style="gap:8px;margin-top:10px;align-items:center"><button class="btn primary" id="vvVo">🎙️ ' + (missing ? 'Make the voice (' + missing + ' line' + (missing === 1 ? '' : 's') + ')' : 'Voice ready ✅') + '</button><label style="margin:0;min-width:200px">🎙️ Voice volume <b id="vvVoV">' + V.voiceVol + '%</b><input type="range" id="vvVoVol" min="0" max="100" step="5" value="' + V.voiceVol + '" style="width:100%"></label></div>'
-          : '<div style="margin-top:6px">🎙️ <b>The AI voice isn’t set up yet.</b> <span class="muted">Add your ElevenLabs key in Netlify (see ⚙️ Voice in 🎬 Quiz videos). You can still make the video with captions.</span></div>') + '</div>' +
+          : '<div style="margin-top:6px">🎙️ <b>The AI voice isn’t set up yet.</b> <span class="muted">Add your ElevenLabs key in Netlify (see ⚙️ Voice in 🎬 Quiz videos). You can still make the video with captions.</span></div>') + '</div>') +
         // 3 · scenes
         '<div class="card"><b>3 · Scenes · ' + V.scenes.length + ' · ' + TL.total.toFixed(1) + ' seconds</b><div style="margin-top:6px">' + V.scenes.map(function (sc, i) { return sceneHtml(sc, i, TL.parts[i]); }).join('') + '</div>' +
-        '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn ghost" id="vvAdd">➕ Add a scene</button><button class="btn ghost" id="vvAllPics">✨ Make all missing pictures</button>' +
+        '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn ghost" id="vvAdd">➕ Add a scene</button><button class="btn ghost" id="vvWants">✨ Suggest pictures</button><button class="btn ghost" id="vvAllPics">✨ Make all missing pictures</button>' +
         '<label style="display:flex;gap:6px;align-items:center;margin:0 0 0 auto"><input type="checkbox" id="vvKb"' + (V.kb ? ' checked' : '') + '> Slow zoom on pictures</label><label style="margin:0">Darken <b id="vvDimV">' + Math.round(V.dim * 100) + '%</b><input type="range" id="vvDim" min="0" max="50" step="5" value="' + Math.round(V.dim * 100) + '"></label></div></div>' +
         // 4 · captions
         '<div class="card"><b>4 · Captions</b><div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="vvCapOn"' + (V.cap.on ? ' checked' : '') + '> Show captions (words light up as they’re said)</label>' +
@@ -220,15 +353,15 @@
   function sceneHtml(sc, i, p) {
     var media = sc.media === 'color' ? '🎨 Colour' : isVideo(sc) ? (sc._vid ? '🎬 ' + esc(sc._vname || 'Your video') : '🎥 AI clip') : sc.img ? '🖼️ Picture' : sc.clip ? '🎥 AI clip' : '⚠️ No background yet';
     return '<div class="vv-sc"><canvas class="vv-th" width="216" height="384" data-th="' + i + '"></canvas><div style="flex:1;min-width:0">' +
-      '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>Scene ' + (i + 1) + '</b><span class="vv-pill' + (lineOf(sc) ? ' ok' : '') + '">' + (lineOf(sc) ? '🎙️ ' + p.d.toFixed(1) + 's' : '≈ ' + p.d.toFixed(1) + 's · not voiced yet') + '</span><span class="muted" style="font-size:12.5px">' + media + '</span><span style="flex:1"></span>' +
-      (i < V.scenes.length - 1 ? '<button class="btn ghost sm" data-join="' + i + '" title="Join with the next scene">🔗</button>' : '') + '<button class="btn ghost sm" data-mv="' + i + ':-1" title="Move up">⬆️</button><button class="btn ghost sm" data-mv="' + i + ':1" title="Move down">⬇️</button><button class="btn ghost sm" data-del="' + i + '" title="Delete">🗑️</button></div>' +
+      '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>Scene ' + (i + 1) + '</b>' + (V.audio ? '<span class="vv-pill ok">🎧 ' + mm(sc.a0 || 0) + ' · ' + p.d.toFixed(1) + 's</span>' : '<span class="vv-pill' + (lineOf(sc) ? ' ok' : '') + '">' + (lineOf(sc) ? '🎙️ ' + p.d.toFixed(1) + 's' : '≈ ' + p.d.toFixed(1) + 's · not voiced yet') + '</span>') + '<span class="muted" style="font-size:12.5px">' + media + '</span><span style="flex:1"></span>' +
+      (V.audio && (sc.words || []).length > 3 ? '<button class="btn ghost sm" data-split="' + i + '" title="Split this scene in two">✂️</button>' : '') + (i < V.scenes.length - 1 ? '<button class="btn ghost sm" data-join="' + i + '" title="Join with the next scene">🔗</button>' : '') + (V.audio ? '' : '<button class="btn ghost sm" data-mv="' + i + ':-1" title="Move up">⬆️</button><button class="btn ghost sm" data-mv="' + i + ':1" title="Move down">⬇️</button>') + '<button class="btn ghost sm" data-del="' + i + '" title="Delete">🗑️</button></div>' +
       '<textarea data-t="' + i + '" rows="2" style="margin-top:6px">' + esc(sc.t) + '</textarea>' +
       '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center">' +
       '<label class="btn ghost sm" style="margin:0;cursor:pointer">📷 My photo or video<input type="file" accept="image/*,video/*" data-up="' + i + '" hidden></label>' +
       '<button class="btn ghost sm" data-pic="' + i + '">✨ ' + (sc.img ? 'New picture' : 'Make picture') + '</button>' +
       (sc.img ? '<button class="btn ghost sm" data-clip="' + i + '">🎥 Turn into AI clip</button>' : '') +
       '<label class="btn ghost sm" style="margin:0;display:flex;gap:4px;align-items:center">🎨<input type="color" value="' + (sc.color || '#0F1E36') + '" data-col="' + i + '" style="width:30px;height:22px;padding:0;border:0"></label>' +
-      '<label style="margin:0;font-size:12.5px">Pause after <input type="number" step="0.1" min="0" max="3" value="' + sc.gap + '" data-gap="' + i + '" style="width:60px;padding:3px 6px"> s</label></div>' +
+      (V.audio ? '' : '<label style="margin:0;font-size:12.5px">Pause after <input type="number" step="0.1" min="0" max="3" value="' + sc.gap + '" data-gap="' + i + '" style="width:60px;padding:3px 6px"> s</label>') + '</div>' +
       '<div class="row" style="gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap"><button class="btn ghost sm" data-who="' + i + '">👥 Who’s in it?</button>' + (window.HQChars ? window.HQChars.chips(sc.chars) : '') + '</div>' +
       '<input data-want="' + i + '" value="' + esc(sc.want || '') + '" placeholder="Describe the picture for ✨ Make picture" style="margin-top:6px;font-size:13px">' +
       '<input data-title="' + i + '" value="' + esc(sc.title || '') + '" placeholder="Big title on this scene (optional), e.g. 3 THINGS NOBODY TELLS YOU" style="margin-top:6px;font-size:13px">' + tsHtml(sc, i) + '</div></div>';
@@ -267,7 +400,23 @@
       var b = this; b.disabled = true; prog('✨ Writing your script… (about 15 seconds)');
       X.api('vv-script', { topic: tp, secs: V.secs }).then(function (r) { V.scenes = r.lines.map(function (x) { return sc0(x.t, x.want); }); V.caption = r.caption || ''; if (!V.name) V.name = r.name || ''; prog(''); draw(); X.toast('✨ Script written — read it through and change anything'); }).catch(function (e) { prog(''); b.disabled = false; X.toast(e.message); });
     };
+    if ($('#vvAud')) {
+      var AF = null;
+      $('#vvAud').onchange = function () { AF = this.files && this.files[0]; $('#vvAudN').textContent = AF ? '✅ ' + AF.name : ''; $('#vvListen').disabled = !AF; };
+      $('#vvListen').onclick = function () {
+        if (!AF) return; var b = this, eng = $('#vvEng').value, lang = $('#vvLang').value; b.disabled = true;
+        fromAudio(AF, eng, lang).then(function () { draw(); X.toast('🎧 ' + V.scenes.length + ' scenes from your audio — fix any misheard words, then ✨ Suggest pictures'); }).catch(function (e) { prog(''); b.disabled = false; X.toast(e.message); });
+      };
+    }
     if (!V.scenes.length) return;
+    if ($('#vvTrS')) {
+      var trim = function () { var a = Math.max(0, Math.min(V.audio.dur - 1, +$('#vvTrS').value || 0)), b = Math.max(a + 1, Math.min(V.audio.dur, +$('#vvTrE').value || V.audio.dur)); V.audio.trimS = a; V.audio.trimE = b; draw(); };
+      $('#vvTrS').onchange = trim; $('#vvTrE').onchange = trim;
+      $('#vvAVol').oninput = function () { V.audio.vol = +this.value; $('#vvAVv').textContent = this.value + '%'; };
+    }
+    $('#vvWants').onclick = function () { var b = this; b.disabled = true; prog('✨ Choosing a picture for each scene…'); suggestPictures().then(function () { prog(''); draw(); X.toast('✨ Picture ideas added — check them, then ✨ Make all missing pictures'); }).catch(function (e) { prog(''); b.disabled = false; X.toast(e.message); }); };
+    $$('[data-split]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.split, sc = V.scenes[i], ws = sc.words, k = Math.ceil(ws.length / 2); for (var j = Math.ceil(ws.length / 3); j < Math.floor(ws.length * 2 / 3); j++) if (/[,;:.!?]$/.test(ws[j - 1][0])) { k = j; break; } var b = Object.assign(sc0(''), clone({ media: sc.media, color: sc.color, want: sc.want, ts: sc.ts, chars: sc.chars || [] }), { words: ws.slice(k), a0: ws[k][1], a1: sc.a1 }); sc.words = ws.slice(0, k); sc.a1 = b.a0; sc.t = sc.words.map(function (w) { return w[0]; }).join(' '); b.t = b.words.map(function (w) { return w[0]; }).join(' '); V.scenes.splice(i + 1, 0, b); draw(); }; });
+
     if ($('#vvVoice')) {
       $('#vvVoice').onchange = function () { V.voice = this.value; draw(); };
       $('#vvModel').onchange = function () { V.model = this.value; draw(); };
@@ -291,7 +440,7 @@
     $('#vvCap').oninput = function () { V.caption = this.value; };
     $('#vvPrev').onclick = function () { livePreview().catch(function (e) { prog(''); X.toast(e.message); }); };
     $('#vvGo').onclick = function () { make().catch(function (e) { prog(''); var g = $('#vvGo'); if (g) g.disabled = false; X.toast(e.message || 'Something went wrong.'); }); };
-    $$('[data-t]').forEach(function (el) { el.onchange = function () { V.scenes[+el.dataset.t].t = el.value.trim(); draw(); }; });
+    $$('[data-t]').forEach(function (el) { el.onchange = function () { var sc = V.scenes[+el.dataset.t]; sc.t = el.value.trim(); if (V.audio) retime(sc); draw(); }; });
     $$('[data-gap]').forEach(function (el) { el.onchange = function () { V.scenes[+el.dataset.gap].gap = Math.max(0, Math.min(3, +el.value || 0)); draw(); }; });
     $$('[data-who]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.who; if (!window.HQChars) return; window.HQChars.pick(V.scenes[i].chars, function (ids) { V.scenes[i].chars = ids; draw(); if (ids.length) X.toast('👥 Tap ✨ ' + (V.scenes[i].img ? 'New picture' : 'Make picture') + ' to make this scene’s picture with them'); }); }; });
     $$('[data-want]').forEach(function (el) { el.oninput = function () { V.scenes[+el.dataset.want].want = el.value; }; });
@@ -303,7 +452,7 @@
     $$('[data-up]').forEach(function (el) { el.onchange = function () { var f = el.files && el.files[0]; if (f) upMedia(+el.dataset.up, f); }; });
     $$('[data-pic]').forEach(function (el) { el.onclick = function () { pic(+el.dataset.pic).then(re).catch(function (e) { X.toast(e.message); }); }; });
     $$('[data-clip]').forEach(function (el) { el.onclick = function () { aiClip(+el.dataset.clip).catch(function (e) { prog(''); X.toast(e.message); }); }; });
-    $$('[data-join]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.join, a = V.scenes[i], b = V.scenes[i + 1]; a.t = (a.t + ' ' + b.t).trim(); a.gap = b.gap; if (!a.title) a.title = b.title; V.scenes.splice(i + 1, 1); draw(); }; });
+    $$('[data-join]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.join, a = V.scenes[i], b = V.scenes[i + 1]; a.t = (a.t + ' ' + b.t).trim(); a.gap = b.gap; if (V.audio) { a.words = (a.words || []).concat(b.words || []); a.a1 = b.a1; } if (!a.title) a.title = b.title; V.scenes.splice(i + 1, 1); draw(); }; });
     $$('[data-mv]').forEach(function (el) { el.onclick = function () { var p = el.dataset.mv.split(':'), i = +p[0], j = i + (+p[1]); if (j < 0 || j >= V.scenes.length) return; var t = V.scenes[i]; V.scenes[i] = V.scenes[j]; V.scenes[j] = t; draw(); }; });
     $$('[data-del]').forEach(function (el) { el.onclick = function () { if (!confirm('Delete scene ' + (+el.dataset.del + 1) + '?')) return; V.scenes.splice(+el.dataset.del, 1); draw(); }; });
   }
@@ -389,6 +538,10 @@
   // ───── sound: voice lines + music that dips under the voice ─────
   async function mix(TL) {
     var SR = 48000, dur = TL.total, ctx = new OfflineAudioContext(2, Math.ceil(dur * SR), SR), vv = V.voiceVol / 100, spans = [];
+    if (V.audio) {
+      var AB = await audioBuf(), src = ctx.createBufferSource(), ag = ctx.createGain(); src.buffer = AB; ag.gain.value = (V.audio.vol == null ? 100 : V.audio.vol) / 100; src.connect(ag); ag.connect(ctx.destination); src.start(0, V.audio.trimS || 0, dur);
+      TL.parts.forEach(function (p) { if (p.words.length) spans.push([p.s + LEAD + p.words[0][1], p.s + LEAD + p.words[p.words.length - 1][2]]); });
+    }
     TL.parts.forEach(function (p) { if (p.L) { var s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = p.L.buf; g.gain.value = vv; s.connect(g); g.connect(ctx.destination); s.start(p.s + LEAD); spans.push([p.s + LEAD, p.s + LEAD + p.L.buf.duration]); } });
     var m = V.music, vol = V.musicVol / 100 * 0.6;
     if (m !== 'none' && vol > 0 && !(m === 'own' && !OWN)) {
@@ -403,7 +556,7 @@
     return ctx.startRendering();
   }
   async function ready() {
-    if (ST && ST.ready && V.voice && V.scenes.some(function (s) { return s.t.trim() && !lineOf(s); })) {
+    if (!V.audio && ST && ST.ready && V.voice && V.scenes.some(function (s) { return s.t.trim() && !lineOf(s); })) {
       if (confirm('Make the voice first? (Lines you’ve already made are free.)')) await voiceAll(true);
     }
     prog('Loading the pictures and videos…'); var M = await loadAll(), TL = timeline();
@@ -487,7 +640,7 @@
   }
 
   // ───── 💾 save / open ─────
-  function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, scenes: V.scenes.map(function (s) { return { t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, ts: s.ts, img: s.img, clip: s.clip, chars: s.chars }; }) }); return d; }
+  function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, audio: V.audio, scenes: V.scenes.map(function (s) { return { a0: s.a0, a1: s.a1, words: s.words, t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, ts: s.ts, img: s.img, clip: s.clip, chars: s.chars }; }) }); return d; }
   function doSave(name, asNew, quiet) { var d = snap(), j = JSON.stringify(d); return X.api('vv-save', { id: asNew ? '' : V.savedId, name: name, data: d }).then(function (r) { V.savedId = r.id; V.savedName = r.name; V.name = r.name; V._last = j; if (F()) F().lastDraft('vv', r.id); if ($('#vvRoot')) $('#ttl').textContent = 'Voiceover Video · ' + r.name; if (!quiet) X.toast('💾 Saved — find it in 📂 My videos'); }); }
   // 💾 auto-save: a few seconds after any change, while this page is open
   var asvBusy = false;

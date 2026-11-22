@@ -67,6 +67,59 @@ async function speak(b) {
   return { dataUrl, words, cached: false };
 }
 
+// 🎧 your own audio → words with timings (ElevenLabs speech-to-text), one ~1-minute piece at a time
+async function stt(b) {
+  const k = qv.key(); if (!k) throw new HttpError(400, 'no_voice_key', 'ElevenLabs isn’t set up yet — use 🆓 Free instead, or add your ElevenLabs key in Netlify.');
+  const b64 = String(b.b64 || ''); if (!/^[A-Za-z0-9+/=]+$/.test(b64) || b64.length > 4500000) throw new HttpError(400, 'invalid', 'That piece of audio is too big.');
+  const offset = num(b.offset, 0, 3600, 0);
+  const fd = new FormData();
+  fd.append('model_id', process.env.ELEVENLABS_STT_MODEL || 'scribe_v2');
+  fd.append('timestamps_granularity', 'word'); fd.append('tag_audio_events', 'false');
+  if (b.lang === 'en') fd.append('language_code', 'eng');
+  fd.append('file', new Blob([Buffer.from(b64, 'base64')], { type: 'audio/wav' }), 'piece.wav');
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 25000);
+  let r;
+  try { r = await fetch('https://api.elevenlabs.io/v1/speech-to-text', { method: 'POST', headers: { 'xi-api-key': k }, body: fd, signal: ctrl.signal }); }
+  catch (e) { throw new HttpError(504, 'stt_timeout', 'ElevenLabs took too long — please try again.'); } finally { clearTimeout(t); }
+  if (!r.ok) {
+    const j = await r.json().catch(() => null), why = JSON.stringify((j && j.detail) || j || {}).slice(0, 300);
+    console.error('[voicevid] stt', r.status, why);
+    if (/quota|credit|limit|exceed/i.test(why)) throw new HttpError(402, 'no_credits', 'Your ElevenLabs speech-to-text allowance has run out — use 🆓 Free instead.');
+    if (r.status === 401) throw new HttpError(401, 'voice_key', 'ElevenLabs didn’t accept the key — check it in Netlify.');
+    throw new HttpError(502, 'stt_error', 'ElevenLabs couldn’t write down the words — please try again.');
+  }
+  const j = await r.json();
+  const words = (j.words || []).filter(w => w && w.type === 'word' && w.start != null && String(w.text || '').trim()).map(w => [String(w.text).trim(), Math.round((w.start + offset) * 1000) / 1000, Math.round(((w.end != null ? w.end : w.start) + offset) * 1000) / 1000]);
+  return { words, text: str(j.text, 20000) };
+}
+// ✨ a background picture idea for each scene, from what's said
+async function wants(b) {
+  const lines = (Array.isArray(b.lines) ? b.lines : []).slice(0, 40).map(x => str(x, 300));
+  if (!lines.length) throw new HttpError(400, 'invalid', 'No scenes yet.');
+  const settings = await core.getSettings();
+  const out = await gen.callModel([
+    { role: 'system', content: 'You pick background pictures for short vertical videos for Auntie Tobi (@auntietobi_uk), a UK guide for Nigerians living in the UK. Answer with JSON only.' },
+    { role: 'user', content: `Here is what is said in each scene of the video, in order:\n${lines.map((l, i) => `${i + 1}. ${l}`).join('\n')}\n\nFor each scene, describe one photorealistic background picture (one sentence) that fits what's being said, set in the UK where it fits, showing Nigerian/Black British people where people appear. No text in the pictures. Vary the shots (close-ups, wide shots, places, hands, objects) so the video doesn't look repetitive.\nReturn ONLY JSON: {"wants":["picture for scene 1", …]}` },
+  ], 1500, settings, { json: true, raw: true, timeoutMs: 26000 });
+  gen.addGlobal(core.monthKey(), { cost: 0, inTok: out.inTok, outTok: out.outTok, costUsd: out.costUsd }, settings).catch(() => {});
+  let j; try { j = JSON.parse(String(out.text).replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (_) { throw new HttpError(502, 'ai_error', 'That came back garbled — please try again.'); }
+  return { wants: (Array.isArray(j.wants) ? j.wants : []).slice(0, lines.length).map(x => str(x, 400)) };
+}
+// 🎧 the uploaded audio file itself, kept in pieces so a saved video reopens with its sound
+async function audStart(b) {
+  const parts = parseInt(b.parts, 10); if (!(parts > 0 && parts <= 40)) throw new HttpError(400, 'too_big', 'That audio file is too big to keep — please use one under 50 MB.');
+  const id = 'a' + crypto.randomBytes(6).toString('hex');
+  await setJson(`hq/vv/aud/${id}`, { parts, mime: /^audio\/[a-z0-9.+-]{2,30}$|^video\/[a-z0-9.+-]{2,30}$/i.test(String(b.mime || '')) ? b.mime : 'audio/mpeg', name: str(b.name, 120), at: core.nowIso() });
+  return { id };
+}
+async function audPart(id, idx, b64) {
+  if (!/^a[a-f0-9]{12}$/.test(String(id)) || !(idx >= 0 && idx < 40)) throw new HttpError(400, 'bad_part', 'Bad file part.');
+  if (!/^[A-Za-z0-9+/=]+$/.test(String(b64 || '')) || b64.length > 2000000) throw new HttpError(400, 'bad_part', 'Bad file part.');
+  await setJson(`hq/vv/aud/${id}/${idx}`, { b64 }); return { ok: true };
+}
+async function audGet(id, idx) { if (!/^a[a-f0-9]{12}$/.test(String(id)) || !/^\d{1,2}$/.test(String(idx))) return null; return getJson(`hq/vv/aud/${id}/${idx}`).catch(() => null); }
+async function audInfo(id) { if (!/^a[a-f0-9]{12}$/.test(String(id))) return null; return getJson(`hq/vv/aud/${id}`).catch(() => null); }
+
 // 💾 saved voiceover videos
 const LIST = 'hq/vv/saved', PREFS = 'hq/vv/prefs';
 function clean(v) {
@@ -78,6 +131,7 @@ function clean(v) {
     o.ts = { size: num(t.size, 50, 170, 92), y: num(t.y, 0.06, 0.9, 0.18), look: ['outline', 'whitebox', 'blackbox', 'yellow', 'green'].includes(t.look) ? t.look : 'outline', font: ['heavy', 'serif', 'script', 'sans'].includes(t.font) ? t.font : 'heavy', anim: ['pop', 'fade', 'slide', 'none'].includes(t.anim) ? t.anim : 'pop', caps: t.caps !== false };
     if (/^i[a-z0-9]{6,30}$/.test(String(s.img || ''))) o.img = s.img;
     if (/^https:\/\/[a-z0-9.-]*fal\.media\//i.test(String(s.clip || ''))) o.clip = str(s.clip, 500);
+    if (Number.isFinite(Number(s.a0))) { o.a0 = num(s.a0, 0, 3600, 0); o.a1 = num(s.a1, 0, 3600, o.a0 + 1); o.words = (Array.isArray(s.words) ? s.words : []).slice(0, 300).map(w => Array.isArray(w) ? [str(w[0], 60), num(w[1], 0, 3600, 0), num(w[2], 0, 3600, 0)] : null).filter(Boolean); }   // 🎧 own-audio timing
     const chars = (Array.isArray(s.chars) ? s.chars : []).filter(x => /^c[a-f0-9]{12}$/.test(String(x))).slice(0, 3); if (chars.length) o.chars = chars;   // 👥 who's in it
     return o;
   });
@@ -86,6 +140,7 @@ function clean(v) {
     name: str(v.name, 80), topic: str(v.topic, 1500), voice: okVoice(v.voice) ? v.voice : '', model: v.model === 'natural' ? 'natural' : 'flash', speed: num(v.speed, 0.8, 1.2, 1),
     scenes, cap: { on: c.on !== false, style: ['yellow', 'white', 'box', 'green'].includes(c.style) ? c.style : 'yellow', y: num(c.y, 0.15, 0.9, 0.72), size: num(c.size, 50, 110, 76) },
     music: ['upbeat', 'calm', 'suspense', 'own', 'none'].includes(v.music) ? v.music : 'calm', musicVol: num(v.musicVol, 0, 100, 20), voiceVol: num(v.voiceVol, 0, 100, 100),
+    audio: v.audio && /^a[a-f0-9]{12}$/.test(String(v.audio.id || '')) ? { id: v.audio.id, name: str(v.audio.name, 120), dur: num(v.audio.dur, 0, 3600, 0), trimS: num(v.audio.trimS, 0, 3600, 0), trimE: num(v.audio.trimE, 0, 3600, 0), vol: num(v.audio.vol, 0, 150, 100), parts: num(v.audio.parts, 1, 40, 1) } : null,
     kb: v.kb !== false, dim: num(v.dim, 0, 0.6, 0.15), caption: str(v.caption, 2200),
   };
 }
@@ -111,4 +166,4 @@ async function remove(id) {
 async function prefs() { const p = await getJson(PREFS).catch(() => null); return { voice: (p && p.voice) || '' }; }
 async function setVoice(voice) { if (!okVoice(voice)) throw new HttpError(400, 'invalid', 'Which voice?'); await setJson(PREFS, { voice, at: core.nowIso() }); return { voice }; }
 
-module.exports = { script, speak, save, list, load, remove, prefs, setVoice, wordsFrom };
+module.exports = { stt, wants, audStart, audPart, audGet, audInfo, script, speak, save, list, load, remove, prefs, setVoice, wordsFrom };
