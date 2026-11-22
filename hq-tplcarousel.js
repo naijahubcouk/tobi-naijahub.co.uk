@@ -251,7 +251,7 @@
     }
     if (isPurple(car)) {
       var Pp = pur(car), ep = eff(car, sl);
-      return { ink: Pp.ink, sub: '#3A3A44', acc: Pp.acc, accInk: '#FFFFFF', hl: Pp.acc, card: rgbaH(Pp.acc, 0.06), line: rgbaH(Pp.acc, 0.45), head: purpleHead, body: function (z, w) { return purpleBody(z, w); }, caps: true, k: 1.15 * ep.hs, bk: ep.bs, lh: 1.02, align: 'left', x0: 96 };
+      return { ink: Pp.ink, sub: Pp.sub, acc: Pp.acc, accInk: hexLum(Pp.acc) > 0.6 ? '#111111' : '#FFFFFF', hl: Pp.hl, card: rgbaH(Pp.acc, 0.06), line: rgbaH(Pp.acc, 0.45), head: purpleHead, body: function (z, w) { return purpleBody(z, w); }, caps: true, k: 1.15 * ep.hs, bk: ep.bs, lh: 1.02, align: 'left', x0: 96 };
     }
     var e = eff(car, sl), st = e.st;
     return { ink: INK, sub: BODY, acc: GREEN, accInk: '#FFFFFF', hl: GREEN, card: '#F2F7F4', line: 'rgba(5,122,68,0.45)',
@@ -292,7 +292,7 @@
       var ab0 = a._afterBg; a._afterBg = function (c) { if (ab0) ab0(c); cutLayer(c, car, i); };
       window.HQStyle.draw(ctx, a, i, n, sp, sp.bg.type === 'image' && sp.bg.img ? lookImg(sp.bg.img) : null);
     } else if (isPurple(car)) {
-      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H); if (pur(car).pattern) purplePattern(ctx, i);
+      var P0 = pur(car); ctx.fillStyle = P0.bg; ctx.fillRect(0, 0, W, H); if (P0.pattern) purplePattern(ctx, i, P0.line);
       if (pic && pic.mode === 'bg') picDraw(ctx, pic, 0, 0, W, H, 0); else if (pic) { var pb2 = picBox(pic); picDraw(ctx, pic, pb2.x, pb2.y, pb2.w, pb2.h, 28); }
       cutLayer(ctx, car, i);
     } else {
@@ -358,8 +358,18 @@
   }
   // ── 💜 Bold Purple Pro look + 🧍 cut-out people (background removed) that can spill into the next slide ──
   function isPurple(car) { return !!(car.look && car.look.kind === 'purple'); }
-  var PURPLE = { acc: '#4B14A6', ink: '#111111', num: 'auto', btn: 'FOLLOW FOR MORE', handle: '@auntietobi_uk', icons: true, pattern: true };
-  function pur(car) { return Object.assign({}, PURPLE, (car.look && car.look.purple) || {}); }
+  var PURPLE = { acc: '#4B14A6', ink: '#111111', num: 'auto', btn: 'FOLLOW FOR MORE', handle: '@auntietobi_uk', icons: true, pattern: true, brand: 'Auntie Tobi', brandOn: true, vpos: 'top', hpos: 'auto' };
+  // colour sets — '' colours follow the accent
+  var PPAL = { purple: { n: '💜 Purple', acc: '#4B14A6', ink: '#111111', bg: '#FFFFFF', sub: '#3A3A44', line: '#281E50' }, green: { n: '💚 Auntie Tobi Green', acc: '#057A44', ink: '#111111', bg: '#FFFFFF', sub: '#33383F', line: '#0E3B23' },
+    navy: { n: 'Navy & Gold', acc: '#0F1E36', ink: '#0F1E36', bg: '#FFFBF0', sub: '#3F4A5C', line: '#0F1E36', hl: '#D99A0B', numBg: '#FFB81C', numInk: '#0F1E36', btnBg: '#FFB81C', btnInk: '#0F1E36', wave: '#D99A0B' },
+    red: { n: 'Red', acc: '#D7263D', ink: '#111111', bg: '#FFFFFF', sub: '#3A3A44', line: '#5A1020' }, mono: { n: 'Black & White', acc: '#111111', ink: '#111111', bg: '#FFFFFF', sub: '#3A3A44', line: '#111111' } };
+  function pur(car) {
+    var P = Object.assign({}, PURPLE, (car.look && car.look.purple) || {});
+    ['bg', 'sub', 'line'].forEach(function (k) { if (!P[k]) P[k] = { bg: '#FFFFFF', sub: '#3A3A44', line: '#281E50' }[k]; });
+    ['hl', 'numBg', 'btnBg', 'wave'].forEach(function (k) { if (!P[k]) P[k] = P.acc; });
+    ['numInk', 'btnInk'].forEach(function (k) { if (!P[k]) P[k] = hexLum(k === 'numInk' ? P.numBg : P.btnBg) > 0.6 ? '#111111' : '#FFFFFF'; });
+    return P;
+  }
   function boxPic(sl) { return sl && sl.pic && sl.pic.img && sl.pic.mode !== 'cut' ? sl.pic : null; }
   function cutPic(sl) { return sl && sl.pic && sl.pic.img && sl.pic.mode === 'cut' ? sl.pic : null; }
   function cutGeom(p, im) {
@@ -393,10 +403,10 @@
   }
   function hash2(a, b) { var h = (Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
   // faint line network — drawn in carousel-wide coordinates so it runs on seamlessly from slide to slide
-  function purplePattern(ctx, i) {
+  function purplePattern(ctx, i, col) {
     var G = 190, x0 = i * W, c0 = Math.floor((x0 - G) / G), c1 = Math.ceil((x0 + W + G) / G), r1 = Math.ceil(H / G) + 1;
     var pt = function (c, r) { return [c * G + (hash2(c, r) - 0.5) * G * 0.8 - x0, r * G + (hash2(r + 91, c + 17) - 0.5) * G * 0.8]; };
-    ctx.save(); ctx.strokeStyle = 'rgba(40,30,80,0.075)'; ctx.fillStyle = 'rgba(40,30,80,0.12)'; ctx.lineWidth = 2;
+    ctx.save(); ctx.strokeStyle = rgbaH(col || '#281E50', 0.075); ctx.fillStyle = rgbaH(col || '#281E50', 0.12); ctx.lineWidth = 2;
     for (var c = c0; c <= c1; c++) for (var r = -1; r <= r1; r++) {
       var p = pt(c, r), nb = [[c + 1, r], [c, r + 1]]; if (hash2(c * 7, r * 3) > 0.45) nb.push([c + 1, r + 1]); if (hash2(c * 5 + 1, r * 11) > 0.6) nb.push([c - 1, r + 1]);
       nb.forEach(function (q) { var b = pt(q[0], q[1]); ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); });
@@ -408,9 +418,9 @@
     ctx.save();
     for (var k = 0; k < 18; k++) {
       ctx.beginPath(); for (var x = -20; x <= W + 20; x += 12) { var y = H * 0.74 + k * 7 + Math.sin(x / W * Math.PI * 2.2 + k * 0.22) * 70 + Math.sin(x / W * Math.PI * 5 + k * 0.5) * 16; if (x === -20) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
-      ctx.strokeStyle = rgbaH(P.acc, 0.10 + 0.04 * (k % 5)); ctx.lineWidth = 2.2; ctx.stroke();
+      ctx.strokeStyle = rgbaH(P.wave, 0.10 + 0.04 * (k % 5)); ctx.lineWidth = 2.2; ctx.stroke();
     }
-    var g = ctx.createLinearGradient(W * 0.4, H, W, H * 0.85); g.addColorStop(0, P.acc); g.addColorStop(1, rgbaH(P.acc, 0.75));
+    var g = ctx.createLinearGradient(W * 0.4, H, W, H * 0.85); g.addColorStop(0, P.wave); g.addColorStop(1, rgbaH(P.wave, 0.75));
     ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(W * 0.38, H); ctx.lineTo(W, H * 0.86); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
@@ -419,42 +429,63 @@
   function drawPurple(ctx, car, i) {
     var sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, P = pur(car), e = eff(car, sl), bp = boxPic(sl), cs = cutSide(car, i);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
-    if (P.pattern) purplePattern(ctx, i);
+    ctx.fillStyle = P.bg; ctx.fillRect(0, 0, W, H);
+    if (P.pattern) purplePattern(ctx, i, P.line);
     var top = 100, bot = H - 100;
     if (bp && bp.mode === 'bg') picDraw(ctx, bp, 0, 0, W, H, 0); else if (bp) { var pb = picBox(bp); picDraw(ctx, bp, pb.x, pb.y, pb.w, pb.h, 28); top = pb.top; bot = pb.bot; }
     if (sl.kind === 'end') purpleWaves(ctx, P);
     cutLayer(ctx, car, i);
-    var right = cs.left && !cs.right, narrow = cs.left || cs.right, M = 96, cw = narrow ? W * 0.5 : W - M * 2, x0 = right ? W - M - cw : M, al = right ? 'right' : 'left';
-    var sub = '#3A3A44', y = top + 10;
+    // where the words sit: up/down and side to side (carousel setting, or this slide's own)
+    var vp = sl.vpos || P.vpos || 'top', hp = sl.hpos || P.hpos || 'auto';
+    var side = hp === 'auto' ? (cs.left && !cs.right ? 'right' : 'left') : hp, narrow = cs.left || cs.right, M = 96;
+    var cw = narrow ? W * 0.5 : W - M * 2, x0 = side === 'right' ? W - M - cw : side === 'center' ? (W - cw) / 2 : M, al = side;
+    var bx = function (w) { return side === 'right' ? x0 + cw - w : side === 'center' ? x0 + (cw - w) / 2 : x0; };   // left edge of a box w wide
+    var place = function (h, reserveBot) { var room = bot - (reserveBot || 0) - top - 10; return top + 10 + (vp === 'middle' ? Math.max(0, (room - h) / 2) : vp === 'bottom' ? Math.max(0, room - h) : 0); };
+    var brandH = P.brandOn && P.brand && sl.kind === 'cover' ? 70 : 0;
     if (sl.kind === 'cover') {
-      var hf = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.62, 175 * e.hs, 50, 1.02, true); rtDraw(ctx, hf, purpleHead, x0, y, cw, al, P.ink, P.acc); y += hf.h + 40;
-      if (sl.body) { var bf = rtFit(ctx, sl.body, purpleBody, cw, 200, 38 * e.bs, 22, 1.35, false); rtDraw(ctx, bf, purpleBody, x0, y, cw, al, sub, P.acc); y += bf.h + 36; }
-      if (car.handle !== false && P.handle) { ctx.font = purpleBody(27, 700); var t = P.handle, tw = ctx.measureText(t).width, pw = tw + 56, px = right ? x0 + cw - pw : x0; ctx.strokeStyle = P.acc; ctx.lineWidth = 3; rrect(ctx, px, y, pw, 54, 27); ctx.stroke(); ctx.fillStyle = P.acc; ctx.textAlign = 'left'; ctx.fillText(t, px + 28, y + 36); }
-      ctx.font = purpleBody(30, 800); ctx.textAlign = 'left'; var bt = 'Auntie Tobi', bw = ctx.measureText(bt).width, bx = right ? W - M - bw - 46 : M;
-      ctx.fillStyle = P.acc; rrect(ctx, bx, H - 128, 34, 34, 8); ctx.fill(); ctx.fillStyle = P.ink; ctx.fillText(bt, bx + 46, H - 101);
+      var hf = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.62, 175 * e.hs, 50, 1.02, true);
+      var bf = sl.body ? rtFit(ctx, sl.body, purpleBody, cw, 200, 38 * e.bs, 22, 1.35, false) : null, hasH = car.handle !== false && P.handle;
+      var blk = hf.h + (bf ? 40 + bf.h : 0) + (hasH ? 40 + 54 : 0), y = place(blk, vp === 'bottom' ? 0 : brandH);
+      rtDraw(ctx, hf, purpleHead, x0, y, cw, al, P.ink, P.hl); y += hf.h;
+      if (bf) { y += 40; rtDraw(ctx, bf, purpleBody, x0, y, cw, al, P.sub, P.hl); y += bf.h; }
+      if (hasH) { y += 40; ctx.font = purpleBody(27, 700); var t = P.handle, pw = ctx.measureText(t).width + 56, px = bx(pw); ctx.strokeStyle = P.acc; ctx.lineWidth = 3; rrect(ctx, px, y, pw, 54, 27); ctx.stroke(); ctx.fillStyle = P.acc; ctx.textAlign = 'left'; ctx.fillText(t, px + 28, y + 36); }
+      if (brandH) {   // the brand name (top when the words sit at the bottom)
+        ctx.font = purpleBody(30, 800); ctx.textAlign = 'left'; var bt = P.brand, bw = ctx.measureText(bt).width + 46, bxx = bx(bw), by = vp === 'bottom' ? 96 : H - 128;
+        ctx.fillStyle = P.acc; rrect(ctx, bxx, by, 34, 34, 8); ctx.fill(); ctx.fillStyle = P.ink; ctx.fillText(bt, bxx + 46, by + 27);
+      }
     } else if (sl.kind === 'end') {
-      var hf2 = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.4, 130 * e.hs, 44, 1.02, true); rtDraw(ctx, hf2, purpleHead, x0, y, cw, al, P.acc, P.ink); y += hf2.h + 30;
-      if (sl.body) { var bf2 = rtFit(ctx, sl.body, function (z) { return purpleBody(z, 800); }, cw, 140, 32 * e.bs, 20, 1.3, true); rtDraw(ctx, bf2, function (z) { return purpleBody(z, 800); }, x0, y, cw, al, P.ink, P.acc); y += bf2.h + 70; }
-      // the tilted button
+      var hf2 = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.4, 130 * e.hs, 44, 1.02, true), bfn = function (z) { return purpleBody(z, 800); };
+      var bf2 = sl.body ? rtFit(ctx, sl.body, bfn, cw, 140, 32 * e.bs, 20, 1.3, true) : null;
       var words = String(P.btn || '').toUpperCase().split(/\s+/).filter(Boolean), l1 = words.slice(0, Math.ceil(words.length / 2)).join(' '), l2 = words.slice(Math.ceil(words.length / 2)).join(' ');
-      ctx.font = purpleHead(64); var bw2 = Math.max(ctx.measureText(l1).width, ctx.measureText(l2).width) + 70, bh = l2 ? 170 : 104, bcx = right ? x0 + cw - bw2 / 2 - 10 : x0 + bw2 / 2 + 10, bcy = Math.min(y + bh / 2, H * 0.72);
-      ctx.save(); ctx.translate(bcx, bcy); ctx.rotate(-0.09);
-      ctx.strokeStyle = P.acc; ctx.lineWidth = 4; rrect(ctx, -bw2 / 2 + 12, -bh / 2 + 12, bw2, bh, 14); ctx.stroke();
-      ctx.fillStyle = P.acc; rrect(ctx, -bw2 / 2, -bh / 2, bw2, bh, 14); ctx.fill();
-      ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center'; ctx.fillText(l1, 0, l2 ? -8 : 24); if (l2) ctx.fillText(l2, 0, 62); ctx.restore();
+      ctx.font = purpleHead(64); var bw2 = Math.max(ctx.measureText(l1).width, ctx.measureText(l2).width) + 70, bh = l1 ? (l2 ? 170 : 104) : 0;
+      var blk2 = hf2.h + (bf2 ? 30 + bf2.h : 0) + (bh ? 70 + bh : 0), y2 = place(blk2, P.icons ? 90 : 0);
+      rtDraw(ctx, hf2, purpleHead, x0, y2, cw, al, P.acc, P.ink); y2 += hf2.h;
+      if (bf2) { y2 += 30; rtDraw(ctx, bf2, bfn, x0, y2, cw, al, P.ink, P.hl); y2 += bf2.h; }
+      if (bh) {   // the tilted button
+        y2 += 70; var bcx = bx(bw2 + 20) + bw2 / 2 + 10, bcy = y2 + bh / 2;
+        ctx.save(); ctx.translate(bcx, bcy); ctx.rotate(-0.09);
+        ctx.strokeStyle = P.btnBg; ctx.lineWidth = 4; rrect(ctx, -bw2 / 2 + 12, -bh / 2 + 12, bw2, bh, 14); ctx.stroke();
+        ctx.fillStyle = P.btnBg; rrect(ctx, -bw2 / 2, -bh / 2, bw2, bh, 14); ctx.fill();
+        ctx.font = purpleHead(64); ctx.fillStyle = P.btnInk; ctx.textAlign = 'center'; ctx.fillText(l1, 0, l2 ? -8 : 24); if (l2) ctx.fillText(l2, 0, 62); ctx.restore();
+      }
       if (P.icons) {   // a small row of social dots + the handle
-        var gy = H - 120, gx = right ? W - M : M, ic = ['f', '◎', '♪', '▶', '𝕏'], step = 46;
-        ctx.font = purpleBody(26, 700); var ht = car.handle !== false ? P.handle : '', hw = ctx.measureText(ht).width, rowW = ic.length * step + (ht ? 14 + hw : 0), sx = right ? gx - rowW : gx;
-        ic.forEach(function (g, k) { var cx = sx + k * step + 18; ctx.fillStyle = P.acc; ctx.beginPath(); ctx.arc(cx, gy, 18, 0, 7); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.font = '700 20px Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(g, cx, gy + 7); });
+        var gy = H - 120, ic = ['f', '◎', '♪', '▶', '𝕏'], step = 46;
+        ctx.font = purpleBody(26, 700); var ht = car.handle !== false ? P.handle : '', hw = ctx.measureText(ht).width, rowW = ic.length * step + (ht ? 14 + hw : 0), sx = bx(rowW);
+        ic.forEach(function (g, k) { var cx = sx + k * step + 18; ctx.fillStyle = P.acc; ctx.beginPath(); ctx.arc(cx, gy, 18, 0, 7); ctx.fill(); ctx.fillStyle = hexLum(P.acc) > 0.6 ? '#111111' : '#FFFFFF'; ctx.font = '700 20px Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(g, cx, gy + 7); });
         if (ht) { ctx.font = purpleBody(26, 700); ctx.fillStyle = P.ink; ctx.textAlign = 'left'; ctx.fillText(ht, sx + ic.length * step + 14, gy + 9); }
       }
     } else {
-      var dn = e.num ? 150 : 0, hf3 = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.42, 128 * e.hs, 40, 1.02, true); rtDraw(ctx, hf3, purpleHead, x0, y, cw, al, P.ink, P.acc); y += hf3.h + 34;
-      if (sl.body) { var bf3 = rtFit(ctx, sl.body, purpleBody, cw * (narrow ? 1 : 0.8), Math.max(60, bot - y - dn - 40), 33 * e.bs, 18, 1.42, false); rtDraw(ctx, bf3, purpleBody, right ? x0 + cw - cw * (narrow ? 1 : 0.8) : x0, y, cw * (narrow ? 1 : 0.8), al, sub, P.acc); }
+      var dn = e.num ? 150 : 0, bwid = narrow || side === 'center' ? cw : cw * 0.8;
+      var hf3 = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.42, 128 * e.hs, 40, 1.02, true);
+      var bf3 = sl.body ? rtFit(ctx, sl.body, purpleBody, bwid, Math.max(60, (bot - top) - hf3.h - dn - 90), 33 * e.bs, 18, 1.42, false) : null;
+      // top: number circle stays at the bottom · middle: it follows the words · bottom: words sit just above it
+      var follow = vp === 'middle', blk3 = hf3.h + (bf3 ? 34 + bf3.h : 0) + (follow && dn ? 40 + dn : 0), y3 = place(blk3, !follow && dn ? dn + 40 : 0);
+      rtDraw(ctx, hf3, purpleHead, x0, y3, cw, al, P.ink, P.hl); y3 += hf3.h;
+      if (bf3) { y3 += 34; rtDraw(ctx, bf3, purpleBody, bx(bwid), y3, bwid, al, P.sub, P.hl); y3 += bf3.h; }
       if (e.num) {
-        var nr = P.num === 'auto' ? right : P.num === 'right', ncx = nr ? W - M - 75 : M + 75, ncy = bot - 75;
-        ctx.fillStyle = P.acc; ctx.beginPath(); ctx.arc(ncx, ncy, 75, 0, 7); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.font = '800 66px Poppins, Arial'; ctx.textAlign = 'center'; ctx.fillText(pad(tipNumber(car, i)), ncx, ncy + 23);
+        var ns = P.num === 'auto' ? side : P.num, ncx = ns === 'right' ? W - M - 75 : ns === 'center' ? W / 2 : M + 75, ncy = follow ? y3 + 40 + 75 : bot - 75;
+        if (P.num === 'auto' && side !== 'center') ncx = side === 'right' ? x0 + cw - 75 : x0 + 75;
+        ctx.fillStyle = P.numBg; ctx.beginPath(); ctx.arc(ncx, ncy, 75, 0, 7); ctx.fill(); ctx.fillStyle = P.numInk; ctx.font = '800 66px Poppins, Arial'; ctx.textAlign = 'center'; ctx.fillText(pad(tipNumber(car, i)), ncx, ncy + 23);
       }
     }
     ctx.restore();
@@ -779,6 +810,8 @@
         '<details class="sopts" data-i="' + i + '"' + (openOpts[i] ? ' open' : '') + ' style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">⚙️ Slide options <span class="muted" style="font-weight:400">— ' + esc(optSummary(sl)) + '</span></summary>' +
           '<div class="f2" style="margin-top:6px"><div><label>Text style</label><select data-f="style"><option value="">Same as carousel</option>' + Object.keys(STYLES).map(function (k) { return '<option value="' + k + '"' + (sl.style === k ? ' selected' : '') + '>' + STYLES[k].name + '</option>'; }).join('') + '</select></div>' +
           '<div><label>Gold brush</label><select data-f="brush"><option value="">Same as carousel</option><option value="on"' + (sl.brush === 'on' ? ' selected' : '') + '>On</option><option value="off"' + (sl.brush === 'off' ? ' selected' : '') + '>Off</option></select></div></div>' +
+          (isPurple(car) ? '<div class="f2"><div><label>Words up / down</label><select data-f="vpos"><option value="">Same as carousel</option>' + [['top', 'Top'], ['middle', 'Middle'], ['bottom', 'Bottom']].map(function (o) { return '<option value="' + o[0] + '"' + (sl.vpos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
+            '<div><label>Words side to side</label><select data-f="hpos"><option value="">Same as carousel</option>' + [['auto', 'Away from the person'], ['left', 'Left'], ['center', 'Centre'], ['right', 'Right']].map(function (o) { return '<option value="' + o[0] + '"' + (sl.hpos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>' : '') +
           (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div><div></div></div>' : '') +
           '<div class="f2"><div><label>Heading size <span class="muted" data-pv="hs">' + pct(sl.hs) + '</span></label><input type="range" data-f="hs" min="50" max="160" step="5" value="' + Math.round((sl.hs || 1) * 100) + '"></div>' +
           '<div><label>Body text size <span class="muted" data-pv="bs">' + pct(sl.bs) + '</span></label><input type="range" data-f="bs" min="50" max="160" step="5" value="' + Math.round((sl.bs || 1) * 100) + '"></div></div>' +
@@ -832,19 +865,19 @@
     }
     function lookName() { return isSpec(car) ? car.look.name : isPurple(car) ? 'Bold Purple Pro' : 'Auntie Tobi White'; }
     function renderLook() {
-      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : 'white', box = $('#teLook'), opn = Array.prototype.map.call(box.querySelectorAll('.lsec'), function (d) { return d.open; });
+      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : 'white', box = $('#teLook'), opn = {}; Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'); if (t) opn[t.textContent.slice(0, 8)] = d.open; });
       box.innerHTML = '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>🎨 Look</b><span class="muted" style="font-size:13px">— now: <b>' + X.esc(lookName()) + '</b></span></div>' +
         '<div class="chipbar" style="margin-top:8px">' + LOOKS.map(function (l) { return '<button class="chip" data-look="' + l.id + '" aria-pressed="' + (curId === l.id) + '"><i class="lsw" style="background:' + sw(l) + '"></i>' + l.name + '</button>'; }).join('') +
         '<button class="chip" id="teMy">⭐ My styles</button><label class="chip" style="cursor:pointer;margin:0">🎨 Match a style…<input type="file" id="teRef" accept="image/jpeg,image/png,image/webp" multiple hidden></label>' + (isSpec(car) ? '<button class="chip" id="teSaveLook">💾 Save this look</button>' : '') + '</div>' +
         '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : isPurple(car) ? purplePanel() : whitePanel()) + swipePanel() +
         '<div class="muted" style="font-size:12.5px;margin-top:8px">Put highlighted words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div>';
-      Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d, k) { if (opn[k] !== undefined) d.open = opn[k]; });
+      Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'), k = t ? t.textContent.slice(0, 8) : ''; if (opn[k] !== undefined) d.open = opn[k]; });
       bindLook();
     }
     function lookChanged(full) { mark(); if (full) renderLook(); fontsReady().then(function () { paint(); paintThumbs(); }); paint(); paintThumbs(); }
     function bindLook() {
       var box = $('#teLook'), q = function (s) { return box.querySelector(s); }, qa = function (s) { return Array.prototype.slice.call(box.querySelectorAll(s)); };
-      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); }; });
+      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); paintSlides(); setSel(Math.min(sel, car.slides.length - 1)); }; });
       q('#teMy').onclick = mySheet;
       qa('[data-swp]').forEach(function (b) { b.onclick = function () { var o = swipeOf(car), k = b.dataset.swp; car.swipeMode = o.mode; car.swipeStyle = o.style; car.swipePos = o.pos; car['swipe' + k.charAt(0).toUpperCase() + k.slice(1)] = b.dataset.v; if (k === 'mode') car.swipe = b.dataset.v !== 'off'; lookChanged(true); }; });
       q('#teRef').onchange = async function () {
@@ -1023,23 +1056,33 @@
     function usePic(i, id, msg) { if (cutPic(car.slides[i])) return idToData(id).then(function (du) { return cutFrom(i, du, id, msg); }).catch(function (e) { msg(''); X.toast(e.message || 'Couldn’t remove the background.'); }); setPic(i, id); }
     // 💜 Bold Purple Pro look settings
     function purplePanel() {
-      var P = pur(car), seg = function (v, l) { return '<button data-ppnum="' + v + '" aria-pressed="' + (P.num === v) + '">' + l + '</button>'; };
+      var P = pur(car), sg = function (k, opts) { return '<div class="scseg">' + opts.map(function (o) { return '<button data-ppseg="' + k + '" data-v="' + o[0] + '" aria-pressed="' + (P[k] === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
+      var col = function (k, l) { return '<label class="sccol"><input type="color" data-ppcol="' + k + '" value="' + P[k] + '"><span>' + l + '</span></label>'; };
       return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number circles (01, 02…)</label>' +
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show the handle</label>' +
+        '<label class="chk"><input type="checkbox" data-ppchk="brandOn"' + (P.brandOn ? ' checked' : '') + '> Name on the cover</label>' +
         '<label class="chk"><input type="checkbox" data-ppchk="pattern"' + (P.pattern ? ' checked' : '') + '> Line pattern</label><label class="chk"><input type="checkbox" data-ppchk="icons"' + (P.icons ? ' checked' : '') + '> Social row on the last slide</label></div>' +
-        '<div class="sccols" style="margin-top:6px"><label class="sccol"><input type="color" data-ppcol="acc" value="' + P.acc + '"><span>Purple (accent)</span></label><label class="sccol"><input type="color" data-ppcol="ink" value="' + P.ink + '"><span>Headline</span></label></div>' +
-        '<div class="lbl">Number circle sits</div><div class="scseg">' + seg('auto', 'Under the words') + seg('left', '⬅ Left') + seg('right', 'Right ➡') + '</div>' +
-        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Handle</div><input data-pptxt="handle" value="' + X.esc(P.handle) + '"></div><div><div class="lbl">Button on the last slide</div><input data-pptxt="btn" value="' + X.esc(P.btn) + '"></div></div>' +
+        '<details class="lsec" open style="margin-top:8px"><summary>🎨 Colours</summary>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin:6px 0"><span class="muted" style="font-size:12.5px;align-self:center">Quick swap:</span>' + Object.keys(PPAL).map(function (k) { return '<button class="btn ghost sm" data-pppal="' + k + '"><i class="lsw" style="background:' + PPAL[k].acc + '"></i>' + PPAL[k].n + '</button>'; }).join('') + '</div>' +
+          '<div class="sccols">' + col('bg', 'Background') + col('line', 'Pattern lines') + col('ink', 'Headline') + col('hl', 'Highlighted words') + col('sub', 'Small text') + col('acc', 'Accent (handle, name, icons, last-slide heading)') +
+          col('numBg', 'Number circle') + col('numInk', 'Number') + col('btnBg', 'Button') + col('btnInk', 'Button text') + col('wave', 'Waves (last slide)') + '</div></details>' +
+        '<details class="lsec" open><summary>📐 Where the words sit</summary><div class="lbl">Up / down</div>' + sg('vpos', [['top', '⬆ Top'], ['middle', '↕ Middle'], ['bottom', '⬇ Bottom']]) +
+          '<div class="lbl">Side to side</div>' + sg('hpos', [['auto', 'Auto (away from the person)'], ['left', '⬅ Left'], ['center', '↔ Centre'], ['right', 'Right ➡']]) +
+          '<div class="lbl">Number circle</div>' + sg('num', [['auto', 'With the words'], ['left', '⬅ Left'], ['center', 'Centre'], ['right', 'Right ➡']]) +
+          '<div class="muted" style="font-size:12.5px;margin-top:4px">One slide different? Open ⚙️ Slide options on that slide.</div></details>' +
+        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Name on the cover</div><input data-pptxt="brand" value="' + X.esc(P.brand) + '"></div><div><div class="lbl">Handle</div><input data-pptxt="handle" value="' + X.esc(P.handle) + '"></div></div>' +
+        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Button on the last slide</div><input data-pptxt="btn" value="' + X.esc(P.btn) + '"></div><div></div></div>' +
         '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div>' +
         '<div><div class="lbl">Body text size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div>' +
         '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm" id="tePlan">📋 Arrange slides like the sample</button></div>' +
         '<div class="muted" style="font-size:12.5px;margin-top:6px">🧍 Add a person to any slide: open 🖼️ Picture on the slide → <b>🧍 Upload a person</b> (the background is removed for you), then tick <b>Spill into the next slide</b> so they carry on across the swipe.</div>';
     }
     function bindPurple(q, qa) {
-      var P = car.look.purple = pur(car), re = function (full) { lookChanged(full); };
+      var P = car.look.purple = Object.assign({}, PURPLE, car.look.purple || {}), re = function (full) { car.look.purple = P; lookChanged(full); };
       qa('[data-ppcol]').forEach(function (x) { x.oninput = function () { P[x.dataset.ppcol] = x.value.toUpperCase(); re(); }; });
       qa('[data-ppchk]').forEach(function (x) { x.onchange = function () { P[x.dataset.ppchk] = x.checked; re(); }; });
-      qa('[data-ppnum]').forEach(function (b) { b.onclick = function () { P.num = b.dataset.ppnum; re(true); }; });
+      qa('[data-ppseg]').forEach(function (b) { b.onclick = function () { P[b.dataset.ppseg] = b.dataset.v; re(true); }; });
+      qa('[data-pppal]').forEach(function (b) { b.onclick = function () { var c = PPAL[b.dataset.pppal]; ['acc', 'ink', 'bg', 'sub', 'line', 'hl', 'numBg', 'numInk', 'btnBg', 'btnInk', 'wave'].forEach(function (k) { P[k] = c[k] || ''; }); re(true); }; });
       qa('[data-pptxt]').forEach(function (x) { x.oninput = function () { P[x.dataset.pptxt] = x.value.slice(0, 40); re(); }; });
       q('#tePlan').onclick = function () {
         var S = car.slides, cover = S.filter(function (s) { return s.kind === 'cover'; })[0], end = S.filter(function (s) { return s.kind === 'end'; })[0];

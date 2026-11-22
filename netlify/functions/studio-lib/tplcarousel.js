@@ -36,6 +36,8 @@ function cleanSlide(x) {
     bs: scale(x.bs, 0.5, 1.6),
     brush: ['on', 'off'].includes(x.brush) ? x.brush : '',
     num: ['on', 'off'].includes(x.num) ? x.num : '',
+    ...(['top', 'middle', 'bottom'].includes(x.vpos) ? { vpos: x.vpos } : {}),
+    ...(['auto', 'left', 'center', 'right'].includes(x.hpos) ? { hpos: x.hpos } : {}),
     ...(cleanPic(x.pic) ? { pic: cleanPic(x.pic) } : {}),
     ...(cleanDeco(x.deco).length ? { deco: cleanDeco(x.deco) } : {}),
   };
@@ -60,8 +62,11 @@ function cleanDeco(list) {
 function cleanLook(l) {
   if (l && typeof l === 'object' && l.kind === 'purple') {   // 💜 Bold Purple Pro
     const P = l.purple && typeof l.purple === 'object' ? l.purple : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d;
-    return { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: { acc: hex(P.acc, '#4B14A6'), ink: hex(P.ink, '#111111'), num: ['auto', 'left', 'right'].includes(P.num) ? P.num : 'auto',
-      btn: cleanText(P.btn, 40) || 'FOLLOW FOR MORE', handle: cleanText(P.handle, 40) || '@auntietobi_uk', icons: P.icons !== false, pattern: P.pattern !== false } };
+    const opt = {}; ['bg', 'sub', 'line', 'hl', 'numBg', 'numInk', 'btnBg', 'btnInk', 'wave'].forEach(k => { opt[k] = hex(P[k], ''); });   // '' = follows the accent
+    return { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: { acc: hex(P.acc, '#4B14A6'), ink: hex(P.ink, '#111111'), ...opt, num: ['auto', 'left', 'center', 'right'].includes(P.num) ? P.num : 'auto',
+      btn: cleanText(P.btn, 40), handle: cleanText(P.handle, 40), icons: P.icons !== false, pattern: P.pattern !== false,
+      brand: typeof P.brand === 'string' ? cleanText(P.brand, 40) : 'Auntie Tobi', brandOn: P.brandOn !== false,
+      vpos: ['top', 'middle', 'bottom'].includes(P.vpos) ? P.vpos : 'top', hpos: ['auto', 'left', 'center', 'right'].includes(P.hpos) ? P.hpos : 'auto' } };
   }
   if (!l || typeof l !== 'object' || l.kind !== 'spec') return null;
   return { kind: 'spec', name: cleanText(l.name, 40) || 'My look', styleId: String(l.styleId || '').slice(0, 40), spec: require('./stylecar').cleanSpec(l.spec) };
