@@ -19,6 +19,9 @@ exports.handler = core.handler(async (ctx) => {
   }
   if (q.luq) return require('../lifeukq').publicFix('lifeuk');   // 🇬🇧 HQ fixes to Life in the UK questions
   if (q.drq) return require('../lifeukq').publicFix('drive');   // 🚗 HQ fixes to Driving Theory questions
+  if (q.vq) { const qa = require('../quizapp'); return q.vq === 'list' ? qa.publicList(q.bank === 'drive' ? 'drive' : q.bank === 'lifeuk' ? 'lifeuk' : '') : qa.publicPack(q.vq); }   // 📺 video quizzes
+  if (q.vqi) return require('../quizapp').serveImg(q.vqi);
+  if (q.vqa) return require('../quizapp').serveAudio(q.vqa);
   if (q.evunsub) return require('../eventmail').publicUnsub(q);   // 🎉 unsubscribe link in event organiser emails
   if (q.unsub || q.gone) return require('../outreach').publicPage(q);   // 📧 unsubscribe / remove-my-listing links in outreach emails
   if (q.bimg) return require('../bizimg').serve(q.bimg);   // 🖼 business pictures kept by Auntie Tobi

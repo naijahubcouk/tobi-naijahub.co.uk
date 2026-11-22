@@ -327,6 +327,9 @@ exports.handler = handler(async (ctx) => {
     case 'qv-list': return { items: await require('../quizvideo').list() };
     case 'qv-load': return require('../quizvideo').load(body.id);
     case 'qv-del': return require('../quizvideo').remove(body.id);
+    case 'qv-app-pub': return require('../quizapp').publish(body.id, body.lines);   // 📺 show a saved quiz in the app
+    case 'qv-app-unpub': return require('../quizapp').unpublish(body.id);
+    case 'qv-app-ids': return { ids: await require('../quizapp').publishedIds() };
     case 'qv-bg-saved': return { saved: await require('../quizvideo').savedBackgrounds(body.bank, body.ids) };
     case 'sc-styles': return { styles: await require('../stylecar').styles() };
     case 'sc-analyze': {

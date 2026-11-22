@@ -238,7 +238,7 @@
       (live ? '<button class="lu-big y" id="dtResume"><i>⏱</i><span><b>Resume your mock test</b><small>' + mmss(Math.max(0, Math.round((live.end - Date.now()) / 1000))) + ' left · ' + Object.keys(live.ans).length + ' of ' + MOCK_N + ' answered</small></span></button>' : '') +
       syncCard(true) +
       '<button class="lu-big" id="dtMock"><i>🎯</i><span><b>Driving Theory — Mock Exam</b><small>Multiple-choice practice simulation · 50 questions · 57 minutes · pass mark 43</small></span></button>' +
-      '<button class="lu-big w" id="dtPrac"><i>📚</i><span><b>Practice</b><small>5, 10, 20 or 50 questions · 14 topics, mixed, road signs, wrong or unanswered</small></span></button>' +
+      '<button class="lu-big w" id="dtPrac"><i>📚</i><span><b>Practice</b><small>5, 10, 20 or 50 questions · 14 topics, mixed, road signs, wrong or unanswered</small></span></button>' + '<div id="vqBox"></div>' +
       '<button class="lu-big w" id="dtSigns"><i>🛑</i><span><b>Road signs</b><small>' + nSigns + ' signs with pictures</small></span></button>' +
       (weak ? '<button class="lu-big y" id="dtWeak"><i>💪</i><span><b>Retry incorrect questions · ' + weak + '</b><small>Get them right to clear them</small></span></button>' : '') +
       syncCard(false) + progressCard(d, best, acc) +
@@ -254,6 +254,7 @@
     bindSync(r);
     $('#dtSigns', r).onclick = function () { go('setup', { mode: 'signs', n: 10, fb: 'now' }); };
     $('#dtPrac', r).onclick = function () { go('setup', { mode: 0, n: 10, fb: 'now' }); };
+    vqCard(r, 'drive', 'Driving Theory Test');
     if ($('#dtWeak', r)) $('#dtWeak', r).onclick = function () { go('setup', { mode: 'weak', n: weak <= 5 ? 5 : 10, fb: 'now' }); };
     $('#dtHaz', r).onclick = function () { go('hazard'); }; $('#dtBefore', r).onclick = function () { go('before'); }; $('#dtLic', r).onclick = function () { go('licence'); };
     if ($('#dtPlan', r)) $('#dtPlan', r).onclick = function () { window.MyPlan.driveTest(); };
@@ -325,6 +326,17 @@
     if (!$('#lxP', r).disabled) $('#lxP', r).onclick = function () { S.at--; draw(); top(); };
     $('#lxX', r).onclick = function () { if (Object.keys(S.ans).length) { savePrac(); X_toast('💾 Saved — tap “Continue your practice” to carry on'); } else clearPrac(); go('home'); };
   }
+  // 📺 video quizzes published from HQ — played in the app, answers count like practice
+  function vqCard(r, bank, name) {
+    var box = $('#vqBox', r); if (!box || !window.QuizPlay) return;
+    window.QuizPlay.count(bank).then(function (n) {
+      if (!n || !document.body.contains(box)) return;
+      box.innerHTML = '<button class="lu-big w" id="vqGo"><i>📺</i><span><b>Video quizzes · ' + n + '</b><small>Watch, listen to Auntie Tobi and tap your answer</small></span></button>';
+      $('#vqGo', box).onclick = function () { window.QuizPlay.browse(bank, { bank: bank, name: name, answer: vqAnswer, done: vqDone, practice: function () { go('setup', { mode: 0, n: 10, fb: 'now' }); } }); };
+    });
+  }
+  function vqAnswer(id, ok) { if (!byId(id)) return; var d = load(); mark(d, { id: id }, ok); save(d); }
+  function vqDone(n, ok) { var d = load(); d.prac.push({ at: today(), n: n, ok: ok, m: 'video' }); if (d.prac.length > 100) d.prac = d.prac.slice(-100); save(d); var r = root(); if (r && S.v === 'home') draw(); }
   function record(it, pick) { var d = load(), ok = isRight(it.q, pick, it.opts); mark(d, it.q, ok); save(d); return ok; }
   function finishPrac() {
     clearPrac();

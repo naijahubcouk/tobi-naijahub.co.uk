@@ -129,6 +129,7 @@ async function load(id) {
 }
 async function remove(id) {
   if (!/^q[a-z0-9]{6,20}$/.test(String(id || ''))) throw new HttpError(400, 'invalid', 'Which quiz?');
+  await require('./quizapp').unpublish(id).catch(() => {});   // a deleted quiz leaves the app too
   await core.del(`hq/qv/saved/${id}`).catch(() => {});
   await core.cas(LIST, cur => ({ items: ((cur && cur.items) || []).filter(x => x.id !== id) }));
   return { ok: true };

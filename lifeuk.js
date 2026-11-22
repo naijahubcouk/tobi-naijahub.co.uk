@@ -216,7 +216,7 @@
       (live ? '<button class="lu-big y" id="luResume"><i>⏱</i><span><b>Resume your mock exam</b><small>' + mmss(Math.max(0, Math.round((live.end - Date.now()) / 1000))) + ' left · ' + Object.keys(live.ans).length + ' of ' + MOCK_N + ' answered</small></span></button>' : '') +
       syncCard(true) +
       '<button class="lu-big" id="luMock"><i>🎯</i><span><b>Life in the UK — Mock Exam</b><small>24 questions · 45 minutes · pass mark 75% (18 correct)</small></span></button>' +
-      '<button class="lu-big w" id="luPrac"><i>📚</i><span><b>Practice</b><small>5, 8, 10 or 24 questions · by chapter or mixed · answers now or at the end</small></span></button>' +
+      '<button class="lu-big w" id="luPrac"><i>📚</i><span><b>Practice</b><small>5, 8, 10 or 24 questions · by chapter or mixed · answers now or at the end</small></span></button>' + '<div id="vqBox"></div>' +
       (weak ? '<button class="lu-big y" id="luWeak"><i>💪</i><span><b>Retake my wrong answers · ' + weak + '</b><small>Get them right to clear them</small></span></button>' : '') +
       syncCard(false) + progressCard(d, best, acc) +
       '<button class="lu-big w" id="luBefore"><i>📋</i><span><b>Before your test</b><small>Cost, booking, ID and the day — checked on GOV.UK</small></span></button>' +
@@ -228,6 +228,7 @@
     if ($('#luResume', r)) $('#luResume', r).onclick = resumeMock;
     bindSync(r);
     $('#luPrac', r).onclick = function () { go('setup', { mode: 0, n: 10, fb: 'now' }); };
+    vqCard(r, 'lifeuk', 'Life in the UK Test');
     if ($('#luWeak', r)) $('#luWeak', r).onclick = function () { go('setup', { mode: 'weak', n: Math.min(10, weak) <= 5 ? 5 : 10, fb: 'now' }); };
     $('#luBefore', r).onclick = function () { go('before'); };
     if ($('#luPlan', r)) $('#luPlan', r).onclick = function () { window.MyPlan.lifeTest(); };
@@ -301,6 +302,17 @@
     if (!$('#lxP', r).disabled) $('#lxP', r).onclick = function () { S.at--; draw(); top(); };
     $('#lxX', r).onclick = function () { if (Object.keys(S.ans).length) { savePrac(); X_toast('💾 Saved — tap “Continue your practice” to carry on'); } else clearPrac(); go('home'); };
   }
+  // 📺 video quizzes published from HQ — played in the app, answers count like practice
+  function vqCard(r, bank, name) {
+    var box = $('#vqBox', r); if (!box || !window.QuizPlay) return;
+    window.QuizPlay.count(bank).then(function (n) {
+      if (!n || !document.body.contains(box)) return;
+      box.innerHTML = '<button class="lu-big w" id="vqGo"><i>📺</i><span><b>Video quizzes · ' + n + '</b><small>Watch, listen to Auntie Tobi and tap your answer</small></span></button>';
+      $('#vqGo', box).onclick = function () { window.QuizPlay.browse(bank, { bank: bank, name: name, answer: vqAnswer, done: vqDone, practice: function () { go('setup', { mode: 0, n: 10, fb: 'now' }); } }); };
+    });
+  }
+  function vqAnswer(id, ok) { if (!byId(id)) return; var d = load(); d.n++; if (ok) d.ok++; d.seen[id] = 1; if (ok) { if (d.wrong[id]) { d.wrong[id]--; if (d.wrong[id] <= 0) delete d.wrong[id]; } } else d.wrong[id] = (d.wrong[id] || 0) + 1; save(d); }
+  function vqDone(n, ok) { var d = load(); d.prac.push({ at: today(), n: n, ok: ok, m: 'video' }); if (d.prac.length > 100) d.prac = d.prac.slice(-100); save(d); var r = root(); if (r && S.v === 'home') draw(); }
   function record(it, pick) {
     var d = load(), ok = isRight(it.q, pick, it.opts), id = it.q.id;
     d.n++; if (ok) d.ok++; d.seen[id] = 1;

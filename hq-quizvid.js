@@ -44,7 +44,7 @@
   // ───── page ─────
   function view() {
     state();
-    head();
+    head(); loadPub().then(head);
     var v = $('#view');
     v.innerHTML = '<div class="card" style="max-width:980px"><div class="muted">Loading…</div></div>';
     Promise.all([loadBank(QV.bank), ST ? Promise.resolve(ST) : X.api('qv-status').then(function (r) { ST = r; return r; }).catch(function () { ST = { ready: false }; return ST; })]).then(function (r) {
@@ -56,13 +56,39 @@
   }
   function head() {
     $('#ttl').textContent = QV.savedName ? 'Quiz videos · ' + QV.savedName : 'Quiz videos';
-    $('#topRight').innerHTML = '<button class="btn ghost" id="qvNewQ">➕ New</button> <button class="btn ghost" id="qvMine">📂 My quizzes</button> <button class="btn primary" id="qvSave">💾 Save</button> <button class="btn ghost" id="qvSet">⚙️ Voice</button>';
+    $('#topRight').innerHTML = '<button class="btn ghost" id="qvNewQ">➕ New</button> <button class="btn ghost" id="qvMine">📂 My quizzes</button> <button class="btn primary" id="qvSave">💾 Save</button> <button class="btn ghost" id="qvSet">⚙️ Voice</button> <button class="btn ' + (QV.savedId && PUB[QV.savedId] ? 'primary' : 'ghost') + '" id="qvApp">' + (QV.savedId && PUB[QV.savedId] ? '✅ In the app' : '📺 Show in the app') + '</button>';
+    $('#qvApp').onclick = appSheet;
     $('#qvSet').onclick = setupSheet; $('#qvMine').onclick = mine; $('#qvSave').onclick = saveSheet;
     $('#qvNewQ').onclick = function () { if (!confirm('Start a new quiz? Anything you haven’t saved here will be cleared.')) return; var keepV = { voice: QV.voice, model: QV.model }; QV = null; state(); QV.voice = keepV.voice; QV.model = keepV.model; view(); };
   }
   function snapshot() { KEEP(); var d = {}; ['bank', 'grp', 'qs', 'bgs', 'voiceOn', 'voice', 'model', 'readOpts', 'h1', 'h2', 'outro', 'appOn', 'appT', 'sayApp', 'music', 'musicVol', 'voiceVol', 'duck', 'igOn', 'ig'].forEach(function (k) { d[k] = QV[k]; }); return d; }
   function doSave(name, asNew) {
-    return X.api('qv-save', { id: asNew ? '' : QV.savedId, name: name, data: snapshot() }).then(function (r) { QV.savedId = r.id; QV.savedName = r.name; head(); X.toast('💾 Saved — find it in 📂 My quizzes'); });
+    return X.api('qv-save', { id: asNew ? '' : QV.savedId, name: name, data: snapshot() }).then(function (r) {
+      QV.savedId = r.id; QV.savedName = r.name; head();
+      if (PUB[r.id]) { X.toast('💾 Saved — updating the app version…'); publish().catch(function (e) { X.toast(e.message); }); } else X.toast('💾 Saved — find it in 📂 My quizzes');
+    });
+  }
+  // ───── 📺 show a saved quiz in the app (Life in the UK / Driving Theory → 📺 Video quizzes) ─────
+  var PUB = {}, PUBLOADED = false;
+  function loadPub() { if (PUBLOADED) return Promise.resolve(); return X.api('qv-app-ids').then(function (r) { PUB = {}; (r.ids || []).forEach(function (id) { PUB[id] = 1; }); PUBLOADED = true; }).catch(function () {}); }
+  async function publish() {
+    var L = {};
+    if (QV.voiceOn && QV.voice) { var vo = await getVoices(); prog(''); if (vo) lines().forEach(function (x) { L[x.k] = x.t; }); }
+    var r = await X.api('qv-app-pub', { id: QV.savedId, lines: L }); PUB[QV.savedId] = 1; head();
+    X.toast('📺 It’s in the app' + (r.voiceLines ? ' with Auntie Tobi’s voice' : '') + ' — Life in the UK / Driving Theory → 📺 Video quizzes');
+    return r;
+  }
+  function appSheet() {
+    KEEP();
+    if (!QV.savedId) { X.toast('💾 Save the quiz first, then you can show it in the app.'); saveSheet(); return; }
+    var on = !!PUB[QV.savedId], where = QV.bank === 'drive' ? 'Driving Theory Test' : 'Life in the UK Test';
+    var s = X.sheet('<h3 style="margin:0 0 8px">📺 ' + (on ? 'This quiz is in the app' : 'Show this quiz in the app') + '</h3>' +
+      '<div style="font-size:14px;line-height:1.5">In the app: <b>' + where + ' → 📺 Video quizzes</b>. It plays like your video — same pictures, ' + (QV.voiceOn ? 'voice, ' : '') + 'music and questions — but waits for people to tap their answer, then shows the right one and why. Their answers count towards their progress.</div>' +
+      '<div class="muted" style="font-size:12.5px;margin-top:8px">Nothing new is made: it uses the pictures and voice lines already saved for this video.' + (QV.music === 'own' ? ' Your own music isn’t used in the app — it plays the upbeat built-in track instead.' : '') + (QV.qs.some(function (q) { return !QV.bgs[q.id]; }) ? ' ⚠️ Some questions have no picture yet — they show a green background.' : '') + '</div>' +
+      '<div class="row" style="gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn primary" id="qvAP">' + (on ? '🔄 Update the app version' : '📣 Show in the app') + '</button>' + (on ? '<button class="btn ghost" id="qvAU">Remove from the app</button>' : '') + '<button class="btn ghost" id="qvAX">Close</button></div><div class="muted" id="qvAPg" style="margin-top:8px"></div>');
+    $('#qvAX', s).onclick = function () { s.remove(); };
+    $('#qvAP', s).onclick = function () { var b = this; b.disabled = true; $('#qvAPg', s).textContent = 'Getting the voice lines and pictures ready…'; publish().then(function () { s.remove(); }).catch(function (e) { b.disabled = false; $('#qvAPg', s).textContent = ''; X.toast(e.message); }); };
+    if ($('#qvAU', s)) $('#qvAU', s).onclick = function () { if (!confirm('Remove this quiz from the app?')) return; X.api('qv-app-unpub', { id: QV.savedId }).then(function () { delete PUB[QV.savedId]; head(); s.remove(); X.toast('Removed from the app'); }).catch(function (e) { X.toast(e.message); }); };
   }
   function saveSheet() {
     KEEP();
@@ -80,12 +106,12 @@
       if (!items.length) { box.innerHTML = 'Nothing saved yet. Tap 💾 Save on a quiz to keep it here.'; return; }
       box.classList.remove('muted');
       box.innerHTML = items.map(function (it) {
-        return '<div class="row" style="gap:8px;padding:8px 0;border-top:1px solid #EEE9DD;flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>' + esc(it.name) + '</b>' + (it.id === QV.savedId ? ' <span class="muted">(open now)</span>' : '') +
+        return '<div class="row" style="gap:8px;padding:8px 0;border-top:1px solid #EEE9DD;flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>' + esc(it.name) + '</b>' + (it.id === QV.savedId ? ' <span class="muted">(open now)</span>' : '') + (PUB[it.id] ? ' <span style="font-size:12px;background:#E7F6EE;color:#057A44;border-radius:999px;padding:1px 8px;font-weight:700">📺 In the app</span>' : '') +
           '<div class="muted" style="font-size:12.5px">' + (BANKS[it.bank] ? BANKS[it.bank].name : '') + ' · ' + it.n + ' questions · saved ' + new Date(it.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</div></div>' +
           '<button class="btn primary sm" data-open="' + it.id + '">Open</button><button class="btn ghost sm" data-del="' + it.id + '" title="Delete">🗑️</button></div>';
       }).join('');
       $$('[data-open]', s).forEach(function (b) { b.onclick = function () { openSaved(b.dataset.open).then(function () { s.remove(); }); }; });
-      $$('[data-del]', s).forEach(function (b) { b.onclick = function () { var it = items.filter(function (x) { return x.id === b.dataset.del; })[0]; if (!confirm('Delete “' + it.name + '”? This can’t be undone.')) return; X.api('qv-del', { id: it.id }).then(function () { if (QV.savedId === it.id) { QV.savedId = ''; QV.savedName = ''; head(); } items = items.filter(function (x) { return x.id !== it.id; }); paint(items); X.toast('🗑️ Deleted'); }).catch(function (e) { X.toast(e.message); }); }; });
+      $$('[data-del]', s).forEach(function (b) { b.onclick = function () { var it = items.filter(function (x) { return x.id === b.dataset.del; })[0]; if (!confirm('Delete “' + it.name + '”? This can’t be undone.')) return; X.api('qv-del', { id: it.id }).then(function () { delete PUB[it.id]; if (QV.savedId === it.id) { QV.savedId = ''; QV.savedName = ''; head(); } items = items.filter(function (x) { return x.id !== it.id; }); paint(items); X.toast('🗑️ Deleted'); }).catch(function (e) { X.toast(e.message); }); }; });
     };
     X.api('qv-list').then(function (r) { paint(r.items || []); }).catch(function (e) { var b = $('#qvML', s); if (b) b.textContent = e.message; });
   }
