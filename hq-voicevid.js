@@ -25,7 +25,8 @@
   var TLOOK = { outline: '⚪ White text, black outline', whitebox: '⬜ White box, black text', blackbox: '⬛ Black box, white text', yellow: '🟡 Yellow text, black outline', green: '🟩 Green box, white text' };
   var TFONT = { heavy: ['Heavy bold', function (z) { return '900 ' + z + 'px Montserrat, "Inter Tight", Arial, sans-serif'; }], serif: ['Elegant serif', function (z) { return '900 ' + z + 'px "Playfair Display", Georgia, serif'; }], script: ['Brush script', function (z) { return '400 ' + z + 'px "Kaushan Script", cursive'; }], sans: ['Plain', function (z) { return '700 ' + z + 'px Inter, Arial, sans-serif'; }] };
   var TANIM = { pop: 'Pop in', fade: 'Fade in', slide: 'Slide up', none: 'Just there' };
-  function TS() { return { size: 92, y: 0.18, look: 'outline', font: 'heavy', anim: 'pop', caps: true }; }
+  function TS() { return { size: 92, y: 0.18, x: 0.5, look: 'outline', font: 'heavy', anim: 'pop', caps: true }; }
+  function VT() { return Object.assign(TS(), { on: false, t: '', from: 1, to: 0, mode: 'replace', y: 0.12 }); }
   function sc0(t, want) { return { t: t || '', gap: 0.35, media: 'photo', color: '#0F1E36', want: want || '', title: '', ts: TS() }; }
   function voiceName() { var v = (ST && ST.voices || []).filter(function (x) { return x.id === V.voice; })[0]; return v ? v.name : ''; }
 
@@ -254,23 +255,24 @@
   }
   function outlined(cx, t, x, y, lw) { cx.lineJoin = 'round'; cx.lineWidth = lw; cx.strokeStyle = 'rgba(0,0,0,0.85)'; cx.strokeText(t, x, y); cx.fillText(t, x, y); }
   // the big title: size, position, look (incl. white box + black text), font and how it appears — set per scene
-  function title(cx, sc, lt) {
-    var t = (sc.title || '').trim(); if (!t) return; var ts = Object.assign(TS(), sc.ts || {}), z = ts.size, F = (TFONT[ts.font] || TFONT.heavy)[1];
+  function title(cx, sc, lt) { drawTitle(cx, sc.title, sc.ts, lt); }
+  function drawTitle(cx, txt, tsIn, lt) {
+    var t = String(txt || '').trim(); if (!t) return; var ts = Object.assign(TS(), tsIn || {}), z = ts.size, F = (TFONT[ts.font] || TFONT.heavy)[1];
     var a = 1, s = 1, dy = 0;
     if (ts.anim === 'pop') { a = ease(lt / 0.25); s = 0.7 + 0.3 * ease(lt / 0.35); } else if (ts.anim === 'fade') a = ease(lt / 0.45); else if (ts.anim === 'slide') { a = ease(lt / 0.3); dy = (1 - ease(lt / 0.4)) * 80; }
     cx.save(); cx.globalAlpha = a; cx.font = F(z); cx.textAlign = 'center'; cx.textBaseline = 'alphabetic';
-    var box = ts.look === 'whitebox' || ts.look === 'blackbox' || ts.look === 'green', maxW = box ? 860 : 950;
+    var box = ts.look === 'whitebox' || ts.look === 'blackbox' || ts.look === 'green', xc = (ts.x == null ? 0.5 : ts.x) * W, room = Math.max(260, 2 * Math.min(xc, W - xc) - 40), maxW = Math.min(box ? 860 : 950, room - (box ? z * 0.9 : 0));
     var lines = wrap(cx, (ts.caps ? t.toUpperCase() : t).split(/\s+/), maxW), lh = z * 1.12, yc = ts.y * H + dy, top = yc - lines.length * lh / 2;
-    cx.translate(W / 2, yc); cx.scale(s, s); cx.translate(-W / 2, -yc);
+    cx.translate(xc, yc); cx.scale(s, s); cx.translate(-xc, -yc);
     if (box) {
       var bw = Math.max.apply(null, lines.map(function (ln) { return cx.measureText(ln.join(' ')).width; })) + z * 0.9, bh = lines.length * lh + z * 0.55;
-      cx.save(); cx.shadowColor = 'rgba(0,0,0,0.35)'; cx.shadowBlur = 24; cx.shadowOffsetY = 6; rr(cx, W / 2 - bw / 2, top - z * 0.28, bw, bh, Math.min(36, z * 0.35));
+      cx.save(); cx.shadowColor = 'rgba(0,0,0,0.35)'; cx.shadowBlur = 24; cx.shadowOffsetY = 6; rr(cx, xc - bw / 2, top - z * 0.28, bw, bh, Math.min(36, z * 0.35));
       cx.fillStyle = ts.look === 'whitebox' ? '#FFFFFF' : ts.look === 'blackbox' ? 'rgba(12,14,18,0.92)' : 'rgba(5,122,68,0.96)'; cx.fill(); cx.restore();
       cx.fillStyle = ts.look === 'whitebox' ? '#111111' : '#FFFFFF';
-      lines.forEach(function (ln, i) { cx.fillText(ln.join(' '), W / 2, top + i * lh + z * 0.92); });
+      lines.forEach(function (ln, i) { cx.fillText(ln.join(' '), xc, top + i * lh + z * 0.92); });
     } else {
       cx.fillStyle = ts.look === 'yellow' ? '#FFD23F' : '#FFFFFF';
-      lines.forEach(function (ln, i) { outlined(cx, ln.join(' '), W / 2, top + i * lh + z * 0.92, Math.max(6, z * 0.15)); });
+      lines.forEach(function (ln, i) { outlined(cx, ln.join(' '), xc, top + i * lh + z * 0.92, Math.max(6, z * 0.15)); });
     }
     cx.restore();
   }
@@ -309,6 +311,8 @@
     cx.fillStyle = '#000'; cx.fillRect(0, 0, W, H);
     bgDraw(cx, sc, M[a.i], a.lt, a.p.d, live, a.i);
     if (a.i > 0 && a.lt < 0.25) { cx.save(); cx.globalAlpha = 1 - a.lt / 0.25; var pv = V.scenes[a.i - 1]; bgDraw(cx, pv, M[a.i - 1], TL.parts[a.i - 1].d, TL.parts[a.i - 1].d, live, a.i - 1); cx.restore(); }
+    var vt = V.vt, n = a.i + 1, inRange = vt && vt.on && (vt.t || '').trim() && n >= (vt.from || 1) && (!vt.to || n <= vt.to), own = (sc.title || '').trim();
+    if (inRange && !(own && vt.mode === 'replace')) { var first = TL.parts[(vt.from || 1) - 1]; drawTitle(cx, vt.t, vt, T - (first ? first.s : 0)); }   // 📌 stays put for the whole video
     title(cx, sc, a.lt); captions(cx, a.p, a.lt);
   }
 
@@ -376,6 +380,7 @@
         '<div class="card"><b>3 · Scenes · ' + V.scenes.length + ' · ' + TL.total.toFixed(1) + ' seconds</b><div style="margin-top:6px">' + V.scenes.map(function (sc, i) { return sceneHtml(sc, i, TL.parts[i]); }).join('') + '</div>' +
         '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn ghost" id="vvAdd">➕ Add a scene</button><button class="btn ghost" id="vvWants">✨ Suggest pictures</button><button class="btn ghost" id="vvAllPics">✨ Make all missing pictures</button>' +
         '<label style="display:flex;gap:6px;align-items:center;margin:0 0 0 auto"><input type="checkbox" id="vvKb"' + (V.kb ? ' checked' : '') + '> Slow zoom on pictures</label><label style="margin:0">Darken <b id="vvDimV">' + Math.round(V.dim * 100) + '%</b><input type="range" id="vvDim" min="0" max="50" step="5" value="' + Math.round(V.dim * 100) + '"></label></div></div>' +
+        vtHtml() +
         // 4 · captions
         '<div class="card"><b>4 · Captions</b><div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="vvCapOn"' + (V.cap.on ? ' checked' : '') + '> Show captions (words light up as they’re said)</label>' +
         '<select id="vvCapSt">' + Object.keys(CAPS).map(function (k) { return '<option value="' + k + '"' + (k === V.cap.style ? ' selected' : '') + '>' + CAPS[k] + '</option>'; }).join('') + '</select>' +
@@ -406,10 +411,50 @@
       '<input data-want="' + i + '" value="' + esc(sc.want || '') + '" placeholder="Describe the picture for ✨ Make picture" style="margin-top:6px;font-size:13px">' +
       '<input data-title="' + i + '" value="' + esc(sc.title || '') + '" placeholder="Big title on this scene (optional), e.g. 3 THINGS NOBODY TELLS YOU" style="margin-top:6px;font-size:13px">' + tsHtml(sc, i) + '</div></div>';
   }
+  // 📌 one title for the whole video — stays in the same place from start to finish
+  function vtHtml() {
+    var vt = V.vt = Object.assign(VT(), V.vt || {}), opt = function (o, v) { return Object.keys(o).map(function (k) { return '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + (Array.isArray(o[k]) ? o[k][0] : o[k]) + '</option>'; }).join(''); };
+    var n = V.scenes.length, firstTitle = V.scenes.filter(function (s) { return (s.title || '').trim(); })[0];
+    var sOpt = function (v, all) { var h = all ? '<option value="0"' + (!v ? ' selected' : '') + '>the end</option>' : ''; for (var k = 1; k <= n; k++) h += '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>scene ' + k + '</option>'; return h; };
+    return '<div class="card"><b>📌 Title for the whole video</b> <span class="muted" style="font-size:13px">— stays in the same place all the way through (not repeated scene by scene)</span>' +
+      '<div class="row" style="gap:14px;margin-top:10px;align-items:flex-start;flex-wrap:wrap"><div style="flex:none;text-align:center"><canvas id="vtPv" width="270" height="480" style="width:162px;height:288px;border-radius:12px;background:#111;cursor:grab;touch-action:none"></canvas><div class="muted" style="font-size:11.5px;margin-top:4px">✋ Drag the title to move it</div></div>' +
+      '<div style="flex:1;min-width:260px"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="vtOn"' + (vt.on ? ' checked' : '') + '> Show a title for the whole video</label>' +
+      '<textarea id="vtT" rows="2" style="margin-top:6px" placeholder="e.g. 3 THINGS NOBODY TELLS YOU ABOUT RENTING">' + esc(vt.t) + '</textarea>' +
+      '<div class="vv-ts" style="margin-top:8px"><select data-vt="look">' + opt(TLOOK, vt.look) + '</select><select data-vt="font">' + opt(TFONT, vt.font) + '</select><label>Size <input type="range" min="50" max="170" value="' + vt.size + '" data-vt="size"></label>' +
+      '<label>Up / down <input type="range" min="6" max="94" value="' + Math.round(vt.y * 100) + '" data-vt="y"></label><label>Left / right <input type="range" min="15" max="85" value="' + Math.round(vt.x * 100) + '" data-vt="x"></label>' +
+      '<select data-vt="anim">' + opt(TANIM, vt.anim) + '</select><label><input type="checkbox" data-vt="caps"' + (vt.caps ? ' checked' : '') + '> CAPS</label></div>' +
+      '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;font-size:13px"><span>Quick place:</span>' + [['Top', 0.1, 0.5], ['Middle', 0.45, 0.5], ['Bottom', 0.86, 0.5], ['Top left', 0.08, 0.3], ['Top right', 0.08, 0.7]].map(function (q) { return '<button class="btn ghost sm" data-vtq="' + q[1] + ':' + q[2] + '">' + q[0] + '</button>'; }).join('') + '</div>' +
+      '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;font-size:13px">Show from <select data-vt="from">' + sOpt(vt.from) + '</select> to <select data-vt="to">' + sOpt(vt.to, true) + '</select>' +
+      '<span style="margin-left:8px">If a scene has its own title:</span><select data-vt="mode"><option value="replace"' + (vt.mode === 'replace' ? ' selected' : '') + '>show the scene’s title instead</option><option value="both"' + (vt.mode === 'both' ? ' selected' : '') + '>show both</option></select></div>' +
+      (firstTitle ? '<button class="btn ghost sm" id="vtFrom" style="margin-top:8px">📌 Use scene titles as the title for the whole video</button>' : '') + '</div></div></div>';
+  }
+  var vtT = null;
+  function vtPreview() {
+    clearTimeout(vtT); vtT = setTimeout(async function () {
+      var c = $('#vtPv'); if (!c) return; var M = await loadAll(), TL = timeline(), vt = V.vt, i = Math.max(0, Math.min(V.scenes.length - 1, (vt.from || 1) - 1)), p = TL.parts[i]; if (!p) return;
+      var cx = c.getContext('2d'); cx.setTransform(270 / W, 0, 0, 480 / H, 0, 0); var t = p.s + Math.min(p.d - 0.05, 2);
+      var keep = vt.anim; vt.anim = 'none'; frame(cx, t, M, TL, true); vt.anim = keep;
+      if (!vt.on || !(vt.t || '').trim()) { cx.setTransform(1, 0, 0, 1, 0, 0); cx.fillStyle = 'rgba(255,255,255,.7)'; cx.font = '600 14px Inter, Arial'; cx.textAlign = 'center'; cx.fillText('Turn the title on to see it here', 135, 240); }
+    }, 120);
+  }
+  function vtBind() {
+    var vt = V.vt; if (!$('#vtOn')) return;
+    $('#vtOn').onchange = function () { vt.on = this.checked; vtPreview(); thumbs(); };
+    $('#vtT').oninput = function () { vt.t = this.value; if (vt.t.trim() && !vt.on) { vt.on = true; $('#vtOn').checked = true; } vtPreview(); thumbs(); };
+    $$('[data-vt]').forEach(function (el) { var k = el.dataset.vt, ev = el.type === 'range' ? 'oninput' : 'onchange'; el[ev] = function () { vt[k] = k === 'caps' ? el.checked : k === 'size' || k === 'from' || k === 'to' ? +el.value : k === 'y' || k === 'x' ? el.value / 100 : el.value; vtPreview(); thumbs(); }; });
+    $$('[data-vtq]').forEach(function (b) { b.onclick = function () { var q = b.dataset.vtq.split(':'); vt.y = +q[0]; vt.x = +q[1]; $('[data-vt="y"]').value = Math.round(vt.y * 100); $('[data-vt="x"]').value = Math.round(vt.x * 100); vtPreview(); thumbs(); }; });
+    if ($('#vtFrom')) $('#vtFrom').onclick = function () { var f = V.scenes.filter(function (s) { return (s.title || '').trim(); })[0], tt = f.title.trim(); Object.assign(vt, Object.assign({}, TS(), f.ts || {}), { on: true, t: tt, from: 1, to: 0, mode: 'replace' }); var same = 0; V.scenes.forEach(function (s) { if ((s.title || '').trim() === tt) { s.title = ''; same++; } }); draw(); X.toast('📌 “' + tt + '” is now the title for the whole video' + (same > 1 ? ' (taken off ' + same + ' scenes)' : '')); };
+    // ✋ drag on the preview to place it
+    var c = $('#vtPv'), drag = false, move = function (e) { var r = c.getBoundingClientRect(); vt.x = Math.max(0.15, Math.min(0.85, (e.clientX - r.left) / r.width)); vt.y = Math.max(0.06, Math.min(0.94, (e.clientY - r.top) / r.height)); $('[data-vt="y"]').value = Math.round(vt.y * 100); $('[data-vt="x"]').value = Math.round(vt.x * 100); if (!vt.on && (vt.t || '').trim()) { vt.on = true; $('#vtOn').checked = true; } vtPreview(); };
+    c.onpointerdown = function (e) { drag = true; try { c.setPointerCapture(e.pointerId); } catch (x) {} c.style.cursor = 'grabbing'; move(e); };
+    c.onpointermove = function (e) { if (drag) move(e); };
+    c.onpointerup = c.onpointercancel = function () { if (drag) { drag = false; c.style.cursor = 'grab'; thumbs(); } };
+    vtPreview();
+  }
   function tsHtml(sc, i) {
     var ts = sc.ts = Object.assign(TS(), sc.ts || {}), opt = function (o, v) { return Object.keys(o).map(function (k) { return '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + (Array.isArray(o[k]) ? o[k][0] : o[k]) + '</option>'; }).join(''); };
     return '<div class="vv-ts"' + ((sc.title || '').trim() ? '' : ' hidden') + ' data-tsbox="' + i + '"><span>Title:</span><select data-ts="' + i + ':look">' + opt(TLOOK, ts.look) + '</select><select data-ts="' + i + ':font">' + opt(TFONT, ts.font) + '</select>' +
-      '<label>Size <input type="range" min="50" max="170" value="' + ts.size + '" data-ts="' + i + ':size"></label><label>Up / down <input type="range" min="6" max="90" value="' + Math.round(ts.y * 100) + '" data-ts="' + i + ':y"></label>' +
+      '<label>Size <input type="range" min="50" max="170" value="' + ts.size + '" data-ts="' + i + ':size"></label><label>Up / down <input type="range" min="6" max="90" value="' + Math.round(ts.y * 100) + '" data-ts="' + i + ':y"></label><label>Left / right <input type="range" min="15" max="85" value="' + Math.round((ts.x == null ? 0.5 : ts.x) * 100) + '" data-ts="' + i + ':x"></label>' +
       '<select data-ts="' + i + ':anim">' + opt(TANIM, ts.anim) + '</select><label><input type="checkbox" data-ts="' + i + ':caps"' + (ts.caps ? ' checked' : '') + '> CAPS</label>' +
       '<button class="btn ghost sm" data-tsall="' + i + '" title="Use this size, look, font and position on every scene’s title">📋 Apply to all scenes</button></div>';
   }
@@ -487,7 +532,8 @@
     $$('[data-who]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.who; if (!window.HQChars) return; window.HQChars.pick(V.scenes[i].chars, function (ids) { V.scenes[i].chars = ids; draw(); if (ids.length) X.toast('👥 Tap ✨ ' + (V.scenes[i].img ? 'New picture' : 'Make picture') + ' to make this scene’s picture with them'); }); }; });
     $$('[data-want]').forEach(function (el) { el.oninput = function () { V.scenes[+el.dataset.want].want = el.value; }; });
     $$('[data-title]').forEach(function (el) { el.oninput = function () { var i = +el.dataset.title; V.scenes[i].title = el.value; var b = $('[data-tsbox="' + i + '"]'); if (b) b.hidden = !el.value.trim(); thumbs(i); }; });
-    $$('[data-ts]').forEach(function (el) { var ev = el.type === 'range' ? 'oninput' : 'onchange'; el[ev] = function () { var p = el.dataset.ts.split(':'), sc = V.scenes[+p[0]], k = p[1]; sc.ts = Object.assign(TS(), sc.ts || {}); sc.ts[k] = k === 'caps' ? el.checked : k === 'size' ? +el.value : k === 'y' ? el.value / 100 : el.value; thumbs(+p[0]); }; });
+    $$('[data-ts]').forEach(function (el) { var ev = el.type === 'range' ? 'oninput' : 'onchange'; el[ev] = function () { var p = el.dataset.ts.split(':'), sc = V.scenes[+p[0]], k = p[1]; sc.ts = Object.assign(TS(), sc.ts || {}); sc.ts[k] = k === 'caps' ? el.checked : k === 'size' ? +el.value : k === 'y' || k === 'x' ? el.value / 100 : el.value; thumbs(+p[0]); }; });
+    vtBind();
     $$('[data-tsall]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.tsall, src = Object.assign(TS(), V.scenes[i].ts || {}); V.scenes.forEach(function (s) { s.ts = clone(src); }); draw(); X.toast('📋 Title style applied to all ' + V.scenes.length + ' scenes'); }; });
     $$('[data-th]').forEach(function (el) { el.onclick = function () { viewer(+el.dataset.th); }; });
     $$('[data-col]').forEach(function (el) { el.oninput = function () { var sc = V.scenes[+el.dataset.col]; sc.color = el.value; sc.media = 'color'; thumbs(+el.dataset.col); }; el.onchange = re; });
@@ -682,7 +728,7 @@
   }
 
   // ───── 💾 save / open ─────
-  function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, audio: V.audio, scenes: V.scenes.map(function (s) { return { a0: s.a0, a1: s.a1, words: s.words, t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, ts: s.ts, img: s.img, clip: s.clip, chars: s.chars }; }) }); return d; }
+  function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, audio: V.audio, vt: V.vt, scenes: V.scenes.map(function (s) { return { a0: s.a0, a1: s.a1, words: s.words, t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, ts: s.ts, img: s.img, clip: s.clip, chars: s.chars }; }) }); return d; }
   function doSave(name, asNew, quiet) { var d = snap(), j = JSON.stringify(d); return X.api('vv-save', { id: asNew ? '' : V.savedId, name: name, data: d }).then(function (r) { V.savedId = r.id; V.savedName = r.name; V.name = r.name; V._last = j; if (F()) F().lastDraft('vv', r.id); if ($('#vvRoot')) $('#ttl').textContent = 'Voiceover Video · ' + r.name; if (!quiet) X.toast('💾 Saved — find it in 📂 My videos'); }); }
   // 💾 auto-save: a few seconds after any change, while this page is open
   var asvBusy = false;

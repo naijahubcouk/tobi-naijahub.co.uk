@@ -150,7 +150,7 @@ function clean(v) {
     s = s && typeof s === 'object' ? s : {};
     const o = { t: str(s.t, 300), gap: num(s.gap, 0, 3, 0.35), media: ['photo', 'video', 'color'].includes(s.media) ? s.media : 'photo', color: hex(s.color, '#0F1E36'), want: str(s.want, 400), title: str(s.title, 120) };
     const t = s.ts && typeof s.ts === 'object' ? s.ts : {};
-    o.ts = { size: num(t.size, 50, 170, 92), y: num(t.y, 0.06, 0.9, 0.18), look: ['outline', 'whitebox', 'blackbox', 'yellow', 'green'].includes(t.look) ? t.look : 'outline', font: ['heavy', 'serif', 'script', 'sans'].includes(t.font) ? t.font : 'heavy', anim: ['pop', 'fade', 'slide', 'none'].includes(t.anim) ? t.anim : 'pop', caps: t.caps !== false };
+    o.ts = { size: num(t.size, 50, 170, 92), y: num(t.y, 0.06, 0.9, 0.18), x: num(t.x, 0.15, 0.85, 0.5), look: ['outline', 'whitebox', 'blackbox', 'yellow', 'green'].includes(t.look) ? t.look : 'outline', font: ['heavy', 'serif', 'script', 'sans'].includes(t.font) ? t.font : 'heavy', anim: ['pop', 'fade', 'slide', 'none'].includes(t.anim) ? t.anim : 'pop', caps: t.caps !== false };
     if (/^i[a-z0-9]{6,30}$/.test(String(s.img || ''))) o.img = s.img;
     if (/^https:\/\/[a-z0-9.-]*fal\.media\//i.test(String(s.clip || ''))) o.clip = str(s.clip, 500);
     if (Number.isFinite(Number(s.a0))) { o.a0 = num(s.a0, 0, 3600, 0); o.a1 = num(s.a1, 0, 3600, o.a0 + 1); o.words = (Array.isArray(s.words) ? s.words : []).slice(0, 300).map(w => Array.isArray(w) ? [str(w[0], 60), num(w[1], 0, 3600, 0), num(w[2], 0, 3600, 0)] : null).filter(Boolean); }   // 🎧 own-audio timing
@@ -163,6 +163,7 @@ function clean(v) {
     scenes, cap: { on: c.on !== false, style: ['yellow', 'white', 'box', 'green'].includes(c.style) ? c.style : 'yellow', y: num(c.y, 0.15, 0.9, 0.72), size: num(c.size, 50, 110, 76) },
     music: ['upbeat', 'calm', 'suspense', 'own', 'none'].includes(v.music) ? v.music : 'calm', musicVol: num(v.musicVol, 0, 100, 20), voiceVol: num(v.voiceVol, 0, 100, 100),
     audio: v.audio && /^a[a-f0-9]{12}$/.test(String(v.audio.id || '')) ? { id: v.audio.id, name: str(v.audio.name, 120), dur: num(v.audio.dur, 0, 3600, 0), trimS: num(v.audio.trimS, 0, 3600, 0), trimE: num(v.audio.trimE, 0, 3600, 0), vol: num(v.audio.vol, 0, 150, 100), parts: num(v.audio.parts, 1, 40, 1) } : null,
+    vt: (t => (t && typeof t === 'object' ? { on: !!t.on, t: str(t.t, 160), size: num(t.size, 50, 170, 92), y: num(t.y, 0.06, 0.94, 0.12), x: num(t.x, 0.15, 0.85, 0.5), look: ['outline', 'whitebox', 'blackbox', 'yellow', 'green'].includes(t.look) ? t.look : 'outline', font: ['heavy', 'serif', 'script', 'sans'].includes(t.font) ? t.font : 'heavy', anim: ['pop', 'fade', 'slide', 'none'].includes(t.anim) ? t.anim : 'pop', caps: t.caps !== false, from: Math.round(num(t.from, 1, 40, 1)), to: Math.round(num(t.to, 0, 40, 0)), mode: t.mode === 'both' ? 'both' : 'replace' } : null))(v.vt),
     kb: v.kb !== false, dim: num(v.dim, 0, 0.6, 0.15), caption: str(v.caption, 2200),
   };
 }
