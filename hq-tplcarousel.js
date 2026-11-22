@@ -343,8 +343,48 @@
     ctx.restore();
     return { over: over, shrunk: false };
   }
-  function draw(ctx, car, i) {
+  // 👉 the Swipe sign — one setting for every look: cover only / every slide but the last / off
+  function swipeOf(car) {
+    var m = car.swipeMode || (isSpec(car) ? (car.look.spec.swipe ? 'all' : 'off') : (car.swipe !== false ? 'cover' : 'off'));
+    return { mode: m, style: car.swipeStyle || 'text', pos: car.swipePos || 'br' };
+  }
+  function drawSwipe(ctx, car, i) {
+    var o = swipeOf(car), n = car.slides.length, sl = car.slides[i] || {};
+    if (o.mode === 'off' || n < 2 || i >= n - 1 || (o.mode === 'cover' && i !== 0)) return;
+    var spec = isSpec(car), sp = spec ? car.look.spec : null, photo = spec && sp.bg.type === 'image' && sp.bg.img && (sp.bg.where === 'all' || i === 0);
+    var pbg = sl.pic && sl.pic.img && sl.pic.mode === 'bg' && (sl.pic.fade || 0) < 0.5;
+    var acc = spec ? sp.accent : GREEN, quiet = spec ? sp.sub : GREY, onImg = photo || pbg;
+    var font = spec ? (window.HQStyle.FONTS[sp.font.body] || window.HQStyle.FONTS.dmsans).b : FB;
+    var edge = spec ? (sp.frame.on ? sp.frame.inset + sp.frame.width : 0) + 64 : 112;
+    // keep clear of the handle when it sits in the same corner
+    var hp = spec ? sp.handle.pos : (car.handle !== false && sl.kind !== 'cover' && sl.kind !== 'end' ? 'bottom-center' : 'none');
+    var clash = (o.pos === 'br' && hp === 'bottom-right') || (o.pos === 'bc' && hp === 'bottom-center');
+    var base = (spec ? H - edge + 4 : H - 84) - (clash ? 62 : 0);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textBaseline = 'alphabetic';
+    var txt = 'Swipe', fz = 32, arrowW = 46, gap = 12;
+    if (o.style === 'arrow') {
+      var d = 86, cx = o.pos === 'bc' ? W / 2 : W - edge - d / 2 + (o.pos === 'mr' ? 24 : 0), cy = o.pos === 'mr' ? H / 2 : base - d * 0.36;
+      ctx.fillStyle = onImg ? 'rgba(255,255,255,0.92)' : acc; ctx.beginPath(); ctx.arc(cx, cy, d / 2, 0, 7); ctx.fill();
+      ctx.strokeStyle = onImg ? '#111111' : (hexLum(acc) > 0.6 ? '#111111' : '#FFFFFF'); ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(cx - 17, cy); ctx.lineTo(cx + 15, cy); ctx.moveTo(cx + 2, cy - 14); ctx.lineTo(cx + 16, cy); ctx.lineTo(cx + 2, cy + 14); ctx.stroke();
+      ctx.restore(); return;
+    }
+    ctx.font = '700 ' + fz + 'px ' + font; var tw = ctx.measureText(txt).width, bw = tw + gap + arrowW;
+    var pill = o.style === 'pill', padX = pill ? 30 : 0, h = pill ? 70 : fz, totW = bw + padX * 2;
+    var x = o.pos === 'bc' ? (W - totW) / 2 : W - edge - totW + (o.pos === 'mr' && pill ? 34 : 0), yMid = o.pos === 'mr' ? H / 2 : base - (pill ? h / 2 - 10 : fz * 0.36);
+    var ink = pill ? (onImg ? '#111111' : (hexLum(acc) > 0.6 ? '#111111' : '#FFFFFF')) : (onImg ? '#FFFFFF' : spec ? acc : quiet);
+    if (pill) { ctx.fillStyle = onImg ? 'rgba(255,255,255,0.92)' : acc; rrect(ctx, x, yMid - h / 2, totW, h, h / 2); ctx.fill(); }
+    ctx.fillStyle = ink; ctx.strokeStyle = ink; ctx.textAlign = 'left'; ctx.fillText(txt, x + padX, yMid + fz * 0.36);
+    var ax = x + padX + tw + gap; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(ax, yMid); ctx.lineTo(ax + arrowW - 4, yMid); ctx.moveTo(ax + arrowW - 16, yMid - 12); ctx.lineTo(ax + arrowW - 3, yMid); ctx.lineTo(ax + arrowW - 16, yMid + 12); ctx.stroke();
+    ctx.restore();
+  }
+  function draw(ctx, car0, i) {
+    // the looks' own swipe text is switched off — drawSwipe draws the one the user chose
+    var car = Object.assign({}, car0, { swipe: false });
+    if (isSpec(car0)) car.look = Object.assign({}, car0.look, { spec: Object.assign({}, car0.look.spec, { swipe: false }) });
     var sl0 = car.slides[i], r = sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
+    drawSwipe(ctx, car0, i);
     if (sl && sl.deco && sl.deco.length) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); sl.deco.forEach(function (d) { drawDeco(ctx, d); }); ctx.restore(); }
     return r;
   }
@@ -631,7 +671,6 @@
     function whitePanel() {
       return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the tips (01, 02…)</label>' +
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
-        '<label class="chk"><input type="checkbox" id="teS"' + (car.swipe !== false ? ' checked' : '') + '> “Swipe →” on the cover</label>' +
         '<label class="chk"><input type="checkbox" id="teB"' + (car.brush !== false ? ' checked' : '') + '> Gold brush stroke</label></div>' +
         '<div class="lbl">Text style</div><div class="chipbar" id="teSt">' + Object.keys(STYLES).map(function (k) { return '<button class="chip" data-v="' + k + '" aria-pressed="' + ((car.style || 'classic') === k) + '">' + STYLES[k].name + '</button>'; }).join('') + '</div>' +
         '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div>' +
@@ -657,7 +696,7 @@
           chk('card.on', 'Text inside a box') + (sp.card.on ? '<div class="sccols">' + col('card.color', 'Box colour') + '</div>' + rng('card.opacity', 'Box see-through', 0.1, 1, 0.05) : '') + '</details>' +
         '<details class="lsec"><summary>✨ Shapes &amp; frame</summary><div class="lbl">Background shapes</div>' + seg('shapes', [['none', 'None'], ['circles', 'Circles'], ['dots', 'Dots'], ['corner', 'Corner'], ['blob', 'Blobs'], ['lines', 'Lines']]) +
           chk('frame.on', 'Frame round the slide') + (sp.frame.on ? '<div class="sccols">' + col('frame.color', 'Frame colour') + '</div><div class="f2">' + rng('frame.width', 'Thickness', 2, 40, 1) + rng('frame.radius', 'Rounded corners', 0, 60, 2) + '</div>' + rng('frame.inset', 'Gap from the edge', 0, 80, 2) : '') +
-          '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:6px">' + chk('pageNo', 'Slide numbers (2/7)') + chk('swipe', '“Swipe →”') + '</div></details>' +
+          '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:6px">' + chk('pageNo', 'Slide numbers (2/7)') + '</div></details>' +
         '<details class="lsec"><summary>@ Handle</summary><input id="teHandle" value="' + X.esc(sp.handle.text) + '">' + seg('handle.pos', [['top-left', '↖'], ['top-right', '↗'], ['bottom-left', '↙'], ['bottom-center', '↓'], ['bottom-right', '↘'], ['none', 'Hide']]) + '</details>';
     }
     var PALS = { green: { n: '💚 Green', bg: ['#057A44', '#03532E'], ink: '#FFFFFF', sub: '#E6F4EC', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36' }, navy: { n: 'Navy', bg: ['#0F1E36', '#1F3560'], ink: '#FFFFFF', sub: '#C9D1DE', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36' },
@@ -665,13 +704,21 @@
       cream: { n: 'Cream', bg: ['#F7F1E6', '#EFE4D0'], ink: '#2B2118', sub: '#5C4F42', accent: '#C2652A', hl: '#C2652A', hlInk: '#FFFFFF' } };
     function getP(o, p) { return p.split('.').reduce(function (a, k) { return a && a[k]; }, o); }
     function setP(o, p, v) { var a = p.split('.'), t = o; for (var k = 0; k < a.length - 1; k++) t = t[a[k]] = t[a[k]] || {}; t[a[a.length - 1]] = v; }
+    function swipePanel() {
+      var o = swipeOf(car), g = function (k, opts) { return '<div class="scseg">' + opts.map(function (x) { return '<button data-swp="' + k + '" data-v="' + x[0] + '" aria-pressed="' + (o[k] === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>'; };
+      return '<details class="lsec" id="teSwipe"' + (isSpec(car) ? '' : ' style="margin-top:10px"') + '><summary>👉 Swipe sign <span class="muted" style="font-weight:400">— ' + ({ cover: 'cover only', all: 'every slide but the last', off: 'off' })[o.mode] + '</span></summary>' +
+        '<div class="lbl">Show it on</div>' + g('mode', [['cover', 'Cover only'], ['all', 'Every slide except the last'], ['off', 'Off']]) +
+        (o.mode === 'off' ? '' : '<div class="lbl">Style</div>' + g('style', [['text', 'Swipe →'], ['pill', '(Swipe →) pill'], ['arrow', '➜ Arrow only']]) +
+          '<div class="lbl">Where</div>' + g('pos', [['br', '↘ Bottom right'], ['bc', '↓ Bottom centre'], ['mr', '→ Middle right edge']])) +
+        '<div class="muted" style="font-size:12.5px;margin-top:4px">Never shows on the last slide.</div></details>';
+    }
     function lookName() { return isSpec(car) ? car.look.name : 'Auntie Tobi White'; }
     function renderLook() {
       var curId = isSpec(car) ? (car.look.id || '') : 'white', box = $('#teLook'), opn = Array.prototype.map.call(box.querySelectorAll('.lsec'), function (d) { return d.open; });
       box.innerHTML = '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>🎨 Look</b><span class="muted" style="font-size:13px">— now: <b>' + X.esc(lookName()) + '</b></span></div>' +
         '<div class="chipbar" style="margin-top:8px">' + LOOKS.map(function (l) { return '<button class="chip" data-look="' + l.id + '" aria-pressed="' + (curId === l.id) + '"><i class="lsw" style="background:' + sw(l) + '"></i>' + l.name + '</button>'; }).join('') +
         '<button class="chip" id="teMy">⭐ My styles</button><label class="chip" style="cursor:pointer;margin:0">🎨 Match a style…<input type="file" id="teRef" accept="image/jpeg,image/png,image/webp" multiple hidden></label>' + (isSpec(car) ? '<button class="chip" id="teSaveLook">💾 Save this look</button>' : '') + '</div>' +
-        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : whitePanel()) +
+        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : whitePanel()) + swipePanel() +
         '<div class="muted" style="font-size:12.5px;margin-top:8px">Put highlighted words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div>';
       Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d, k) { if (opn[k] !== undefined) d.open = opn[k]; });
       bindLook();
@@ -681,10 +728,13 @@
       var box = $('#teLook'), q = function (s) { return box.querySelector(s); }, qa = function (s) { return Array.prototype.slice.call(box.querySelectorAll(s)); };
       qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; car.look = l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); }; });
       q('#teMy').onclick = mySheet;
+      qa('[data-swp]').forEach(function (b) { b.onclick = function () { var o = swipeOf(car), k = b.dataset.swp; car.swipeMode = o.mode; car.swipeStyle = o.style; car.swipePos = o.pos; car['swipe' + k.charAt(0).toUpperCase() + k.slice(1)] = b.dataset.v; if (k === 'mode') car.swipe = b.dataset.v !== 'off'; lookChanged(true); }; });
       q('#teRef').onchange = async function () {
         var fs = [].slice.call(this.files || []).slice(0, 3), imgs = [], m = q('#teLookMsg'); if (!fs.length) return;
         m.textContent = '🔍 Reading the style… (about 15 seconds)';
-        try { for (var k = 0; k < fs.length; k++) imgs.push(await shrinkPic(fs[k], 1100)); var r = await X.api('sc-analyze', { images: imgs }); r.spec.bg.where = 'cover'; car.look = { kind: 'spec', id: '', name: r.name, styleId: '', spec: r.spec }; lookChanged(true); X.toast('🎨 Style read: ' + r.name + ' — adjust anything below'); }
+        try { for (var k = 0; k < fs.length; k++) imgs.push(await shrinkPic(fs[k], 1100)); var r = await X.api('sc-analyze', { images: imgs }); r.spec.bg.where = 'cover'; car.look = { kind: 'spec', id: '', name: r.name, styleId: '', spec: r.spec };
+          var nCopied = 0; try { nCopied = await copyPhotos(r, imgs); } catch (_) {}
+          lookChanged(true); if (nCopied) { paintSlides(); setSel(0); paintThumbs(); } X.toast('🎨 Style read: ' + r.name + (nCopied ? ' — its photo is on ' + (nCopied > 1 ? nCopied + ' slides' : 'the cover') + ' (replace it before posting)' : ' — adjust anything below')); }
         catch (e) { m.textContent = ''; X.toast(e.message); }
       };
       if (q('#teSaveLook')) q('#teSaveLook').onclick = function () {
@@ -694,7 +744,6 @@
       if (!isSpec(car)) {
         q('#teN').onchange = function () { car.numbers = this.checked; lookChanged(); };
         q('#teH').onchange = function () { car.handle = this.checked; lookChanged(); };
-        q('#teS').onchange = function () { car.swipe = this.checked; lookChanged(); };
         q('#teB').onchange = function () { car.brush = this.checked; lookChanged(); };
         qa('#teSt [data-v]').forEach(function (b) { b.onclick = function () { car.style = b.dataset.v; qa('#teSt [data-v]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); lookChanged(); }; });
         var sizeUi = function () { q('#teHs').value = Math.round((car.hs || 1) * 100); q('#teBs').value = Math.round((car.bs || 1) * 100); q('#teHsV').textContent = pct(car.hs); q('#teBsV').textContent = pct(car.bs); };
@@ -771,7 +820,7 @@
       var sld = function (k, lbl, min, max, val, unit) { return '<div><label>' + lbl + ' <span class="muted" data-ppv="' + k + '">' + val + unit + '</span></label><input type="range" data-p="' + k + '" min="' + min + '" max="' + max + '" step="1" value="' + val + '"></div>'; };
       return '<details class="spic" data-i="' + i + '"' + (openPic[i] ? ' open' : '') + ' style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:14px">🖼️ Picture <span class="muted" style="font-weight:400">— ' + sum + '</span></summary>' +
         (p ? '<div class="row" style="gap:10px;margin-top:8px;align-items:flex-start"><img src="' + picSrc(p.img) + '" alt="" style="width:64px;height:80px;object-fit:cover;border-radius:8px;flex:none"><div style="flex:1;min-width:0">' +
-          '<label>How it sits</label><select data-p="mode"><option value="bg"' + (p.mode === 'bg' ? ' selected' : '') + '>Full background (behind the text)</option><option value="top"' + (p.mode === 'top' ? ' selected' : '') + '>Photo box at the top</option><option value="bottom"' + (p.mode === 'bottom' ? ' selected' : '') + '>Photo box at the bottom</option></select></div></div>' +
+          (p.copied ? '<div style="font-size:12.5px;background:#FFF6DB;border:1px solid #F1D48A;border-radius:8px;padding:5px 8px;margin-bottom:6px">📋 Copied from the style — replace before posting</div>' : '') + '<label>How it sits</label><select data-p="mode"><option value="bg"' + (p.mode === 'bg' ? ' selected' : '') + '>Full background (behind the text)</option><option value="top"' + (p.mode === 'top' ? ' selected' : '') + '>Photo box at the top</option><option value="bottom"' + (p.mode === 'bottom' ? ' selected' : '') + '>Photo box at the bottom</option></select></div></div>' +
           '<div class="f2" style="margin-top:6px">' + sld('fade', 'Transparency', 0, 90, Math.round((p.fade || 0) * 100), '%') + (p.mode === 'bg' ? '<div></div>' : sld('size', 'Photo box size', 20, 60, Math.round((p.size || 0.3) * 100), '%')) + '</div>' +
           '<div class="f2">' + sld('z', 'Zoom', 100, 250, Math.round((p.z || 1) * 100), '%') + sld('fx', 'Left / right', 0, 100, Math.round((p.fx == null ? 0.5 : p.fx) * 100), '') + '</div>' +
           '<div class="f2">' + sld('fy', 'Up / down', 0, 100, Math.round((p.fy == null ? 0.5 : p.fy) * 100), '') + '<div></div></div>' +
@@ -780,7 +829,23 @@
         '<button class="btn ghost sm" data-pmk>✨ Make picture</button>' + (window.HQChars ? '<button class="btn ghost sm" data-pch>👥 Use a character</button>' : '') + '</div>' +
         '<div class="row hidden" data-pmkrow style="gap:6px;margin-top:6px"><input data-pwant placeholder="Describe the picture, e.g. a Nigerian family unpacking boxes in a bright London flat" style="flex:1"><button class="btn primary sm" data-pgo>✨ Make it</button></div><div class="muted" data-pmsg style="font-size:12.5px;margin-top:4px"></div></details>';
     }
-    function setPic(i, img) { var sl = car.slides[i], old = sl.pic || {}; sl.pic = Object.assign({ mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }, old.img ? old : {}, { img: img }); openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); }
+    // 📋 Match a style: crop the photo out of each screenshot and put it on the slides, ready to replace
+    function cropRef(du, box, max) { return new Promise(function (ok, bad) { var im = new Image(); im.onload = function () {
+      var sx = box[0] * im.width, sy = box[1] * im.height, sw2 = Math.max(8, box[2] * im.width), sh = Math.max(8, box[3] * im.height), k = Math.min(1, max / Math.max(sw2, sh)), c = document.createElement('canvas');
+      c.width = Math.round(sw2 * k); c.height = Math.round(sh * k); c.getContext('2d').drawImage(im, sx, sy, sw2, sh, 0, 0, c.width, c.height); ok({ url: c.toDataURL('image/jpeg', 0.88), ar: im.height / im.width }); }; im.onerror = bad; im.src = du; }); }
+    async function copyPhotos(r, imgs) {
+      var ph = (r.photos || []).filter(function (p) { return imgs[p.slide]; }); if (!ph.length) return 0;
+      var each = imgs.length > 1 && ph.length === imgs.length, plan = each ? ph.slice(0, car.slides.length) : [ph[0]], n = 0;
+      if (ph.some(function (p) { return p.where === 'bg'; }) && car.look.spec.bg.type === 'image' && !car.look.spec.bg.img) car.look.spec.bg.type = 'solid';
+      for (var k = 0; k < plan.length; k++) {
+        var p = plan[k], sl = car.slides[k]; if (sl.pic && sl.pic.img && !sl.pic.copied) continue;   // never replace a picture the user chose
+        var c = await cropRef(imgs[p.slide], p.box, 1400), up = await X.api('img', { dataUrl: c.url });
+        sl.pic = { img: up.id, mode: p.where, fade: p.fade || 0, size: p.where === 'bg' ? 0.3 : clamp(Math.round(p.box[3] * c.ar / 1.25 * 100) / 100, 0.2, 0.6), z: 1, fx: 0.5, fy: 0.5, copied: true };
+        openPic[k] = true; n++;
+      }
+      return n;
+    }
+    function setPic(i, img) { var sl = car.slides[i], old = sl.pic || {}; sl.pic = Object.assign({ mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }, old.img ? old : {}, { img: img }); delete sl.pic.copied; openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); }
     function shrinkPic(file, max) { return new Promise(function (ok, bad) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var k = Math.min(1, (max || 1600) / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.88)); }; im.onerror = function () { bad(new Error('That photo didn’t open.')); }; im.src = u; }); }
     function bindPic(el, i) {
       var d = el.querySelector('.spic'); if (!d) return; d.addEventListener('toggle', function () { openPic[i] = d.open; });
@@ -846,7 +911,7 @@
     function paintPosted() { $('#tePosted').textContent = car.status === 'posted' ? '↩ Mark as not posted' : '✅ Mark as posted'; }
     $('#tePosted').onclick = async function () { car.status = car.status === 'posted' ? 'draft' : 'posted'; paintPosted(); await save(); };
     async function save() {
-      var payload = { id: car.id, title: car.title, slides: car.slides, numbers: car.numbers, handle: car.handle, swipe: car.swipe, brush: car.brush, style: car.style || 'classic', hs: car.hs || 1, bs: car.bs || 1, caption: car.caption, hashtags: car.hashtags, status: car.status, look: car.look || null };
+      var payload = { id: car.id, title: car.title, slides: car.slides, numbers: car.numbers, handle: car.handle, swipe: car.swipe, swipeMode: car.swipeMode, swipeStyle: car.swipeStyle, swipePos: car.swipePos, brush: car.brush, style: car.style || 'classic', hs: car.hs || 1, bs: car.bs || 1, caption: car.caption, hashtags: car.hashtags, status: car.status, look: car.look || null };
       try {
         var r = await X.api('tc-save', { item: payload });
         car.id = r.item.id; car.updatedAt = r.item.updatedAt; car.postedAt = r.item.postedAt;

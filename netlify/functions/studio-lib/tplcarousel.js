@@ -44,7 +44,7 @@ function cleanSlide(x) {
 function cleanPic(p) {
   if (!p || typeof p !== 'object' || !/^i[a-z0-9]{6,30}$/.test(String(p.img || ''))) return null;
   const n = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
-  return { img: p.img, mode: ['bg', 'top', 'bottom'].includes(p.mode) ? p.mode : 'bg', fade: n(p.fade, 0, 0.9, 0.7), size: n(p.size, 0.2, 0.6, 0.3), z: n(p.z, 1, 2.5, 1), fx: n(p.fx, 0, 1, 0.5), fy: n(p.fy, 0, 1, 0.5) };
+  return { img: p.img, mode: ['bg', 'top', 'bottom'].includes(p.mode) ? p.mode : 'bg', fade: n(p.fade, 0, 0.9, 0.7), size: n(p.size, 0.2, 0.6, 0.3), z: n(p.z, 1, 2.5, 1), fx: n(p.fx, 0, 1, 0.5), fy: n(p.fy, 0, 1, 0.5), ...(p.copied === true ? { copied: true } : {}) };
 }
 // ✨ decorations on a slide: arrows, stickers, shapes, emoji — position/size/turn/colour
 const DECOS = ['arrow-curly', 'arrow-straight', 'arrow-loop', 'arrow-down', 'swipe', 'brush', 'scribble', 'ring', 'sparkle', 'star', 'heart', 'tick', 'cross', 'badge', 'bubble', 'quote', 'tape', 'dots', 'blob', 'emoji'];
@@ -66,6 +66,10 @@ function clean(raw, prev) {
     numbers: raw.numbers !== false,
     handle: raw.handle !== false,
     swipe: raw.swipe !== false,
+    // 👉 Swipe sign: on the cover / every slide but the last / off · plain text, pill or arrow · where it sits
+    ...(['cover', 'all', 'off'].includes(raw.swipeMode) ? { swipeMode: raw.swipeMode } : {}),
+    swipeStyle: ['text', 'pill', 'arrow'].includes(raw.swipeStyle) ? raw.swipeStyle : 'text',
+    swipePos: ['br', 'bc', 'mr'].includes(raw.swipePos) ? raw.swipePos : 'br',
     brush: raw.brush !== false,
     style: STYLES.includes(raw.style) ? raw.style : 'classic',
     hs: scale(raw.hs, 0.6, 1.4),
