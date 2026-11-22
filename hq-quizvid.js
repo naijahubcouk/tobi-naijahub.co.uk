@@ -508,7 +508,7 @@
         cx.save(); cx.translate(W / 2, yy + bh2 / 2); cx.scale(sc, sc); cx.translate(-W / 2, -(yy + bh2 / 2));
         rr(cx, W / 2 - 440, yy, 880, bh2, 30); cx.fillStyle = 'rgba(5,122,68,0.95)'; cx.fill(); cx.lineWidth = 4; cx.strokeStyle = 'rgba(255,255,255,0.9)'; cx.stroke();
         cx.fillStyle = '#fff'; al.forEach(function (ln, li) { cx.fillText(ln.join(' '), W / 2, yy + 78 + li * 62); });
-        cx.font = '800 44px Poppins, Arial, sans-serif'; cx.fillStyle = '#FFE08A'; cx.fillText('📱 ' + bank().link, W / 2, yy + 70 + al.length * 62 + 30); cx.restore();
+        var lk = '📱 ' + bank().link, lf = 44; cx.font = '800 ' + lf + 'px Poppins, Arial, sans-serif'; while (cx.measureText(lk).width > 800 && lf > 26) { lf -= 2; cx.font = '800 ' + lf + 'px Poppins, Arial, sans-serif'; } cx.fillStyle = '#FFE08A'; cx.fillText(lk, W / 2, yy + 70 + al.length * 62 + 30);   // long links shrink to stay inside the box cx.restore();
       }
       cx.restore();
     }
