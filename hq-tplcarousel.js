@@ -733,8 +733,8 @@
         var fs = [].slice.call(this.files || []).slice(0, 3), imgs = [], m = q('#teLookMsg'); if (!fs.length) return;
         m.textContent = '🔍 Reading the style… (about 15 seconds)';
         try { for (var k = 0; k < fs.length; k++) imgs.push(await shrinkPic(fs[k], 1100)); var r = await X.api('sc-analyze', { images: imgs }); r.spec.bg.where = 'cover'; car.look = { kind: 'spec', id: '', name: r.name, styleId: '', spec: r.spec };
-          var nCopied = 0; try { nCopied = await copyPhotos(r, imgs); } catch (_) {}
-          lookChanged(true); if (nCopied) { paintSlides(); setSel(0); paintThumbs(); } X.toast('🎨 Style read: ' + r.name + (nCopied ? ' — its photo is on ' + (nCopied > 1 ? nCopied + ' slides' : 'the cover') + ' (replace it before posting)' : ' — adjust anything below')); }
+          m.textContent = '📋 Copying the photo…'; var cp = { n: 0, msg: '' }; try { cp = await copyPhotos(r, imgs); } catch (e) { cp = { n: 0, msg: '⚠️ Couldn’t copy the photo: ' + (e.message || 'try again') }; }
+          var nCopied = cp.n; lookChanged(true); if (nCopied) { paintSlides(); setSel(0); paintThumbs(); } var m2 = $('#teLookMsg'); if (m2) m2.textContent = cp.msg; X.toast('🎨 Style read: ' + r.name + (nCopied ? ' — its photo is on ' + (nCopied > 1 ? nCopied + ' slides' : 'the cover') + ' (replace it before posting)' : ' — adjust anything below')); }
         catch (e) { m.textContent = ''; X.toast(e.message); }
       };
       if (q('#teSaveLook')) q('#teSaveLook').onclick = function () {
@@ -831,19 +831,31 @@
     }
     // 📋 Match a style: crop the photo out of each screenshot and put it on the slides, ready to replace
     function cropRef(du, box, max) { return new Promise(function (ok, bad) { var im = new Image(); im.onload = function () {
-      var sx = box[0] * im.width, sy = box[1] * im.height, sw2 = Math.max(8, box[2] * im.width), sh = Math.max(8, box[3] * im.height), k = Math.min(1, max / Math.max(sw2, sh)), c = document.createElement('canvas');
-      c.width = Math.round(sw2 * k); c.height = Math.round(sh * k); c.getContext('2d').drawImage(im, sx, sy, sw2, sh, 0, 0, c.width, c.height); ok({ url: c.toDataURL('image/jpeg', 0.88), ar: im.height / im.width }); }; im.onerror = bad; im.src = du; }); }
+      var W0 = im.width, H0 = im.height, b = (box || [0, 0, 1, 1]).slice(), mx = Math.max(b[0] + b[2], b[1] + b[3]);
+      // the AI may give 0-1 fractions, percentages or pixels
+      if (mx > 1.5 && mx <= 100.5 && Math.max(W0, H0) > 150) b = b.map(function (v) { return v / 100; });
+      else if (mx > 1.5) b = [b[0] / W0, b[1] / H0, b[2] / W0, b[3] / H0];
+      // some models send [x1, y1, x2, y2]
+      if (b[0] + b[2] > 1.05 && b[2] > b[0]) b[2] = b[2] - b[0]; if (b[1] + b[3] > 1.05 && b[3] > b[1]) b[3] = b[3] - b[1];
+      b = b.map(function (v) { return clamp(v, 0, 1); }); b[2] = Math.min(b[2], 1 - b[0]); b[3] = Math.min(b[3], 1 - b[1]);
+      if (b[2] < 0.15 || b[3] < 0.08) b = [0, 0, 1, 1];
+      var sx = b[0] * W0, sy = b[1] * H0, sw2 = Math.max(8, b[2] * W0), sh = Math.max(8, b[3] * H0), k = Math.min(1, max / Math.max(sw2, sh)), c = document.createElement('canvas');
+      c.width = Math.round(sw2 * k); c.height = Math.round(sh * k); c.getContext('2d').drawImage(im, sx, sy, sw2, sh, 0, 0, c.width, c.height); ok({ url: c.toDataURL('image/jpeg', 0.88), ar: im.height / im.width, h: b[3] }); }; im.onerror = function () { bad(new Error('Couldn’t open the screenshot')); }; im.src = du; }); }
     async function copyPhotos(r, imgs) {
-      var ph = (r.photos || []).filter(function (p) { return imgs[p.slide]; }); if (!ph.length) return 0;
-      var each = imgs.length > 1 && ph.length === imgs.length, plan = each ? ph.slice(0, car.slides.length) : [ph[0]], n = 0;
+      var ph = (r.photos || []).filter(function (p) { return imgs[p.slide]; });
+      if (!ph.length && r.bgPhoto) ph = [{ slide: 0, where: 'bg', box: null, fade: 0.35 }];   // a photo background but no box → use the whole screenshot
+      if (!ph.length) return { n: 0, msg: 'No photo found in the screenshot, so only the colours, fonts and layout were copied.' };
+      var each = imgs.length > 1 && ph.length === imgs.length, plan = each ? ph.slice(0, car.slides.length) : [ph[0]], n = 0, kept = 0;
       if (ph.some(function (p) { return p.where === 'bg'; }) && car.look.spec.bg.type === 'image' && !car.look.spec.bg.img) car.look.spec.bg.type = 'solid';
       for (var k = 0; k < plan.length; k++) {
-        var p = plan[k], sl = car.slides[k]; if (sl.pic && sl.pic.img && !sl.pic.copied) continue;   // never replace a picture the user chose
+        var p = plan[k], sl = car.slides[k]; if (sl.pic && sl.pic.img && !sl.pic.copied) { kept++; continue; }   // never replace a picture the user chose
         var c = await cropRef(imgs[p.slide], p.box, 1400), up = await X.api('img', { dataUrl: c.url });
-        sl.pic = { img: up.id, mode: p.where, fade: p.fade || 0, size: p.where === 'bg' ? 0.3 : clamp(Math.round(p.box[3] * c.ar / 1.25 * 100) / 100, 0.2, 0.6), z: 1, fx: 0.5, fy: 0.5, copied: true };
+        sl.pic = { img: up.id, mode: p.where, fade: p.fade || 0, size: p.where === 'bg' ? 0.3 : clamp(Math.round(c.h * c.ar / 1.25 * 100) / 100, 0.2, 0.6), z: 1, fx: 0.5, fy: 0.5, copied: true };
         openPic[k] = true; n++;
       }
-      return n;
+      var where = n > 1 ? n + ' slides' : 'the cover';
+      return { n: n, msg: n ? '📋 The style’s photo is now on ' + where + ' — open 🖼️ Picture on the slide to replace it before posting.' + (kept ? ' (' + kept + ' slide' + (kept > 1 ? 's' : '') + ' kept your own picture.)' : '')
+        : '📋 Found a photo, but ' + (plan.length > 1 ? 'those slides already have' : 'your cover already has') + ' your own picture, so I kept yours. Remove it (🖼️ Picture → ✕ Remove) and match again to use the style’s photo.' };
     }
     function setPic(i, img) { var sl = car.slides[i], old = sl.pic || {}; sl.pic = Object.assign({ mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }, old.img ? old : {}, { img: img }); delete sl.pic.copied; openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); }
     function shrinkPic(file, max) { return new Promise(function (ok, bad) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var k = Math.min(1, (max || 1600) / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.88)); }; im.onerror = function () { bad(new Error('That photo didn’t open.')); }; im.src = u; }); }
