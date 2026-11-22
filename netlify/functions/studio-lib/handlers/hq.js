@@ -65,7 +65,8 @@ function sectionsOf(action) {
   if (/^tc-/.test(action)) return ['cars'];
   if (/^sc-/.test(action)) return ['cars'];   // 🎨 Style Match carousels
   if (/^lq-/.test(action)) return ['app'];   // 🇬🇧 Life in the UK question review
-  if (/^qv-/.test(action)) return ['cars'];   // 🎬 Quiz videos
+  if (/^qv-/.test(action)) return ['cars'];
+  if (/^rx-/.test(action)) return ['cars'];   // 🎞️ Video Remix   // 🎬 Quiz videos
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
@@ -292,6 +293,18 @@ exports.handler = handler(async (ctx) => {
     }
     case 'lq-fixes': return { fix: await require('../lifeukq').fixes(body.bank) };
     case 'lq-set': return require('../lifeukq').setFix(body.id, body.reset ? null : body.patch, who.email, body.bank);
+    case 'rx-analyse': case 'rx-write': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
+      return body.action === 'rx-analyse' ? require('../remix').analyse(body) : require('../remix').write(body);
+    }
+    case 'rx-pic': {
+      await core.rateLimit('hq-rxpic', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of pictures this hour — please wait a little.');
+      return require('../remix').picture(body);
+    }
+    case 'rx-save': return require('../remix').save(body, who.email);
+    case 'rx-list': return { items: await require('../remix').list() };
+    case 'rx-load': return require('../remix').load(body.id);
+    case 'rx-del': return require('../remix').remove(body.id);
     case 'qv-status': return require('../quizvideo').status();
     case 'qv-speak': {
       await core.rateLimit('hq-qvspeak', who.email, 400, 60 * 60 * 1000, 'That’s a lot of voice lines this hour — please wait a little.');

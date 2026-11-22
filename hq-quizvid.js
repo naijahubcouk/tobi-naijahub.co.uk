@@ -528,5 +528,5 @@
   }
 
   function init(x) { X = x; }
-  window.HQQuizVid = { init: init, view: view };
+  window.HQQuizVid = { init: init, view: view, music: { track: track } };   // the built-in music is shared with 🎞️ Video Remix
 })();
