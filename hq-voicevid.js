@@ -164,18 +164,58 @@
     var all = await new Blob(bufs).arrayBuffer(); AUDBUF[V.audio.id] = await ac().decodeAudioData(all); prog('');
     return AUDBUF[V.audio.id];
   }
-  async function fromAudio(file, engine, lang) {
+  // 📝 pasted words + what was heard → each pasted word gets a time (best match, gaps filled in between)
+  function norm(w) { return String(w).toLowerCase().replace(/[^a-z0-9\u00C0-\u024F']/g, ''); }
+  function alignText(mine, heard) {
+    var n = mine.length, m = heard.length, A = mine.map(norm), B = heard.map(function (h) { return norm(h[0]); });
+    if (!m) { return mine.map(function (w, i) { return [w, i * 0.4, i * 0.4 + 0.35]; }); }
+    var D = [], P = [];
+    for (var i = 0; i <= n; i++) { D.push(new Float32Array(m + 1)); P.push(new Uint8Array(m + 1)); }
+    for (i = 1; i <= n; i++) { D[i][0] = i; P[i][0] = 1; } for (var j = 1; j <= m; j++) { D[0][j] = j; P[0][j] = 2; }
+    for (i = 1; i <= n; i++) for (j = 1; j <= m; j++) {
+      var sub = D[i - 1][j - 1] + (A[i - 1] === B[j - 1] ? 0 : (A[i - 1][0] && A[i - 1][0] === B[j - 1][0] ? 0.6 : 1)), up = D[i - 1][j] + 1, lf = D[i][j - 1] + 1;
+      if (sub <= up && sub <= lf) { D[i][j] = sub; P[i][j] = 0; } else if (up <= lf) { D[i][j] = up; P[i][j] = 1; } else { D[i][j] = lf; P[i][j] = 2; }
+    }
+    var map = new Array(n).fill(-1); i = n; j = m;
+    while (i > 0 || j > 0) { var d = P[i][j]; if (i > 0 && j > 0 && d === 0) { map[i - 1] = j - 1; i--; j--; } else if (i > 0 && (j === 0 || d === 1)) i--; else j--; }
+    var out = mine.map(function (w, k) { return map[k] >= 0 ? [w, heard[map[k]][1], heard[map[k]][2]] : [w, null, null]; });
+    for (var k = 0; k < n; k++) if (out[k][1] == null) {   // not heard clearly: share the time between its neighbours
+      var a = k - 1; while (a >= 0 && out[a][1] == null) a--; var b2 = k + 1; while (b2 < n && out[b2][1] == null) b2++;
+      var t0 = a >= 0 ? out[a][2] : 0, t1 = b2 < n ? out[b2][1] : t0 + (b2 - a) * 0.35, per = Math.max(0.05, (t1 - t0) / (b2 - a));
+      for (var q = a + 1; q < b2; q++) out[q] = [out[q][0], t0 + (q - a - 1) * per, t0 + (q - a) * per];
+      k = b2 - 1;
+    }
+    return out;
+  }
+  // your own lines as the scenes
+  function scenesFromLines(lines, words) {
+    var res = [], k = 0;
+    lines.forEach(function (ln) { var n = ln.split(/\s+/).filter(Boolean).length; var ws = words.slice(k, k + n); k += n; if (!ws.length) return; res.push(Object.assign(sc0(ws.map(function (w) { return w[0]; }).join(' ')), { a0: ws[0][1], words: ws })); });
+    res.forEach(function (c, i) { c.a1 = res[i + 1] ? res[i + 1].a0 : c.words[c.words.length - 1][2] + 0.5; });
+    if (res.length) res[0].a0 = Math.min(res[0].a0, 0);
+    return res;
+  }
+  async function fromAudio(file, engine, lang, pasted) {
     if (file.size > 400e6) throw new Error('That file is too big — please use one under 400 MB.');
     prog('🎧 Reading the sound…');
     var buf; try { buf = await ac().decodeAudioData(await file.arrayBuffer()); } catch (e) { throw new Error('Couldn’t read the sound in that file — try an MP3, M4A or WAV.'); }
     if (buf.duration > 305) throw new Error('That audio is ' + mm(buf.duration) + ' long — please use up to 5 minutes (trim it first).');
     if (buf.duration < 1) throw new Error('That audio is too short.');
-    var x = await to16k(buf), words = engine === 'free' ? await listenFree(x) : await listenEleven(x, lang);
+    var x = await to16k(buf), words, kept = null;
+    pasted = String(pasted || '').replace(/\r/g, '').trim();
+    var mine = pasted ? pasted.split(/\s+/).filter(Boolean) : null;
+    if (mine && engine !== 'free') {   // 🎯 ElevenLabs matches your words to the audio
+      kept = await keepAudio(file, x); prog('📝 Matching your words to the audio with ElevenLabs…');
+      var al = (await X.api('vv-align', { id: kept.id, text: pasted })).words || [];
+      words = al.length === mine.length ? mine.map(function (w, i) { return [w, al[i][1], al[i][2]]; }) : alignText(mine, al);
+    } else if (mine) { words = alignText(mine, await listenFree(x)); }   // 🆓 listen for free, then line your words up with what was heard
+    else words = engine === 'free' ? await listenFree(x) : await listenEleven(x, lang);
     if (!words.length) throw new Error('No speech found in that audio.');
-    var kept = await keepAudio(file, x);
+    if (!kept) kept = await keepAudio(file, x);
     AUDBUF[kept.id] = buf;
     V.audio = { id: kept.id, parts: kept.parts, name: file.name, dur: buf.duration, trimS: 0, trimE: buf.duration, vol: 100 };
-    V.scenes = scenesFromWords(words); V.music = 'none'; prog('');
+    var lines = pasted ? pasted.split(/\n+/).map(function (l) { return l.trim(); }).filter(Boolean) : [];
+    V.scenes = lines.length >= 2 ? scenesFromLines(lines, words) : scenesFromWords(words); V.music = 'none'; prog('');
   }
   async function suggestPictures() {
     var r = await X.api('vv-wants', { lines: V.scenes.map(function (s) { return s.t; }) });
@@ -316,7 +356,8 @@
         '<div style="margin-top:14px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><b>🎧 Use my own audio</b><div class="muted" style="font-size:12.5px;margin-top:2px">A voice note, recording, podcast clip or interview (MP3, M4A, WAV or a video) up to 5 minutes. HQ writes down every word with its timing, splits it into scenes and puts the captions on.</div>' +
         '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><label class="btn ghost" style="margin:0;cursor:pointer">🎧 Choose audio<input type="file" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.opus,.aac" id="vvAud" hidden></label><span class="muted" id="vvAudN" style="font-size:13px"></span>' +
         '<select id="vvEng"><option value="eleven">🎯 ElevenLabs (most accurate)</option><option value="free">🆓 Free, on this computer (slower)</option></select><select id="vvLang"><option value="en">English, Pidgin and Nigerian words</option><option value="auto">Any language</option></select>' +
-        '<button class="btn primary" id="vvListen" disabled>🎧 Write down the words</button></div></div>') +
+        '</div>' +
+        '<label style="margin-top:10px">📝 Paste what’s said <span class="muted" style="font-weight:400">(optional — your exact words are used; HQ only works out the timing. Put each sentence on its own line to use your lines as the scenes.)</span></label><textarea id="vvPaste" rows="4" placeholder="e.g. Moving to the UK this year?&#10;Here are three things Auntie Tobi wants you to know…"></textarea><button class="btn primary" id="vvListen" disabled style="margin-top:8px">🎧 Write down the words</button></div>') +
       '<div class="muted" id="vvProg" style="margin-top:8px"></div></div>' +
       (V.scenes.length ? (
         // 2 · voice (or your own audio)
@@ -402,10 +443,12 @@
     };
     if ($('#vvAud')) {
       var AF = null;
+      var lbl = function () { $('#vvListen').textContent = $('#vvPaste').value.trim() ? '📝 Match my words to the audio' : '🎧 Write down the words'; };
       $('#vvAud').onchange = function () { AF = this.files && this.files[0]; $('#vvAudN').textContent = AF ? '✅ ' + AF.name : ''; $('#vvListen').disabled = !AF; };
+      $('#vvPaste').oninput = lbl;
       $('#vvListen').onclick = function () {
         if (!AF) return; var b = this, eng = $('#vvEng').value, lang = $('#vvLang').value; b.disabled = true;
-        fromAudio(AF, eng, lang).then(function () { draw(); X.toast('🎧 ' + V.scenes.length + ' scenes from your audio — fix any misheard words, then ✨ Suggest pictures'); }).catch(function (e) { prog(''); b.disabled = false; X.toast(e.message); });
+        var pasted = $('#vvPaste').value; fromAudio(AF, eng, lang, pasted).then(function () { draw(); X.toast('🎧 ' + V.scenes.length + ' scenes from your audio' + (pasted.trim() ? ' with your words' : ' — fix any misheard words') + ', then ✨ Suggest pictures'); }).catch(function (e) { prog(''); b.disabled = false; X.toast(e.message); });
       };
     }
     if (!V.scenes.length) return;

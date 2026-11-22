@@ -92,6 +92,28 @@ async function stt(b) {
   const words = (j.words || []).filter(w => w && w.type === 'word' && w.start != null && String(w.text || '').trim()).map(w => [String(w.text).trim(), Math.round((w.start + offset) * 1000) / 1000, Math.round(((w.end != null ? w.end : w.start) + offset) * 1000) / 1000]);
   return { words, text: str(j.text, 20000) };
 }
+// 📝 you pasted the words: ElevenLabs works out when each one is said (forced alignment) — on the audio already kept in HQ
+async function align(b) {
+  const k = qv.key(); if (!k) throw new HttpError(400, 'no_voice_key', 'ElevenLabs isn’t set up yet — use 🆓 Free instead.');
+  const text = str(b.text, 20000).trim(); if (text.length < 2) throw new HttpError(400, 'invalid', 'Paste the words first.');
+  const info = await audInfo(b.id); if (!info) throw new HttpError(404, 'not_found', 'The audio wasn’t found — please upload it again.');
+  const bufs = []; for (let i = 0; i < info.parts; i++) { const rec = await audGet(b.id, i); if (!rec) throw new HttpError(404, 'not_found', 'Part of the audio is missing — please upload it again.'); bufs.push(Buffer.from(rec.b64, 'base64')); }
+  const fd = new FormData();
+  fd.append('file', new Blob([Buffer.concat(bufs)], { type: info.mime || 'audio/mpeg' }), info.name || 'audio');
+  fd.append('text', text);
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 25000);
+  let r;
+  try { r = await fetch('https://api.elevenlabs.io/v1/forced-alignment', { method: 'POST', headers: { 'xi-api-key': k }, body: fd, signal: ctrl.signal }); }
+  catch (e) { throw new HttpError(504, 'stt_timeout', 'ElevenLabs took too long — try a shorter clip or 🆓 Free.'); } finally { clearTimeout(t); }
+  if (!r.ok) {
+    const j = await r.json().catch(() => null), why = JSON.stringify((j && j.detail) || j || {}).slice(0, 300);
+    console.error('[voicevid] align', r.status, why);
+    if (/quota|credit|limit|exceed/i.test(why)) throw new HttpError(402, 'no_credits', 'Your ElevenLabs allowance has run out — use 🆓 Free instead.');
+    throw new HttpError(502, 'stt_error', 'ElevenLabs couldn’t match the words to the audio — check the text is what’s said, or use 🆓 Free.');
+  }
+  const j = await r.json();
+  return { words: (j.words || []).filter(w => w && String(w.text || '').trim() && w.start != null).map(w => [String(w.text).trim(), Math.round(w.start * 1000) / 1000, Math.round((w.end != null ? w.end : w.start) * 1000) / 1000]) };
+}
 // ✨ a background picture idea for each scene, from what's said
 async function wants(b) {
   const lines = (Array.isArray(b.lines) ? b.lines : []).slice(0, 40).map(x => str(x, 300));
@@ -166,4 +188,4 @@ async function remove(id) {
 async function prefs() { const p = await getJson(PREFS).catch(() => null); return { voice: (p && p.voice) || '' }; }
 async function setVoice(voice) { if (!okVoice(voice)) throw new HttpError(400, 'invalid', 'Which voice?'); await setJson(PREFS, { voice, at: core.nowIso() }); return { voice }; }
 
-module.exports = { stt, wants, audStart, audPart, audGet, audInfo, script, speak, save, list, load, remove, prefs, setVoice, wordsFrom };
+module.exports = { align, stt, wants, audStart, audPart, audGet, audInfo, script, speak, save, list, load, remove, prefs, setVoice, wordsFrom };

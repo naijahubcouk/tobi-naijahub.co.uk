@@ -351,6 +351,10 @@ exports.handler = handler(async (ctx) => {
       await core.rateLimit('hq-vvstt', who.email, 300, 60 * 60 * 1000, 'That\u2019s a lot of audio this hour — please wait a little.');
       return require('../voicevid').stt(body);
     }
+    case 'vv-align': {
+      await core.rateLimit('hq-vvstt', who.email, 300, 60 * 60 * 1000, 'That\u2019s a lot of audio this hour — please wait a little.');
+      return require('../voicevid').align(body);
+    }
     case 'vv-wants': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
       return require('../voicevid').wants(body);
