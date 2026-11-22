@@ -647,6 +647,14 @@
   }
   function slug(s) { return String(s || 'carousel').toLowerCase().replace(/\*\*/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'carousel'; }
   function download(blob, name) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+  // ⬇️ every slide as its own picture: phones get the Save/Share sheet (→ Photos), computers get one file per slide
+  async function slideFiles(car) {
+    await fontsReady(); var out = [], base = slug(car.title);
+    for (var i = 0; i < car.slides.length; i++) out.push(new File([await pngOf(car, i)], base + '-slide-' + pad(i + 1) + '.png', { type: 'image/png' }));
+    return out;
+  }
+  function phoneShare(files) { try { return !!(navigator.canShare && window.matchMedia('(pointer: coarse)').matches && navigator.canShare({ files: files })); } catch (e) { return false; } }
+  async function downloadEach(files) { for (var i = 0; i < files.length; i++) { download(files[i], files[i].name); await new Promise(function (ok) { setTimeout(ok, 450); }); } }
   async function exportZip(car) {
     await fontsReady(); var zip = new JSZip();
     for (var i = 0; i < car.slides.length; i++) zip.file(pad(i + 1) + '-slide.png', await pngOf(car, i));
@@ -769,7 +777,8 @@
       '<div class="note hidden" id="teShrunk" style="margin-top:8px">Some text on this slide was made a little smaller so it fits inside the frame.</div>' +
       '<div class="carthumbs" id="teThumbs"></div>' +
       '<div class="card" style="margin-top:10px"><div style="font-weight:800;margin-bottom:6px">⬇️ Download</div>' +
-      '<button class="btn primary" id="teDl" style="width:100%">🖼️ All slides as images (.zip)</button><button class="btn ghost" id="teOne" style="width:100%;margin-top:8px">⬇️ Just this slide (PNG)</button>' +
+      '<button class="btn primary" id="teAll" style="width:100%">⬇️ All slides as separate pictures</button><div class="muted" id="teAllMsg" style="font-size:12px;margin-top:4px"></div>' +
+      '<button class="btn ghost" id="teOne" style="width:100%;margin-top:8px">⬇️ Just this slide (PNG)</button><button class="btn ghost" id="teDl" style="width:100%;margin-top:8px">🗜️ All slides as one .zip</button>' +
       '<p class="muted" style="font-size:12.5px;margin-top:8px">1080×1350 — Instagram’s portrait size. On Instagram: New post → pick the images in order (01, 02…) → paste the caption.</p>' +
       '<button class="btn ghost" id="teAnim" style="width:100%;margin-top:8px">🎬 Send to Animated Carousels</button>' +
       '<button class="btn ghost sm" id="tePosted" style="margin-top:4px"></button></div></div></div>';
@@ -1233,7 +1242,22 @@
       if (bad.length && !confirm('Slide ' + bad.join(', ') + (bad.length > 1 ? ' have' : ' has') + ' too much text to fit. Download anyway?')) return;
       b.disabled = true; b.textContent = 'Preparing…';
       try { if (dirty) await save(); await exportZip(car); X.toast('Downloaded ✅ — check your Downloads'); } catch (x) { X.toast('Couldn’t make the download — please try again'); }
-      b.disabled = false; b.textContent = '🖼️ All slides as images (.zip)';
+      b.disabled = false; b.textContent = '🗜️ All slides as one .zip';
+    };
+    var ready = null;   // pictures made, waiting for a tap to open the phone's Save sheet
+    $('#teAll').onclick = async function () {
+      var b = this, m = $('#teAllMsg'), lab = '⬇️ All slides as separate pictures';
+      if (ready) { var fs = ready; ready = null; b.textContent = lab; try { await navigator.share({ files: fs }); m.textContent = '✅ Tap “Save Images” to put them in Photos.'; } catch (e) { if (e && e.name !== 'AbortError') { await downloadEach(fs); m.textContent = '✅ Downloaded.'; } } return; }
+      var bad = overList(); if (bad.length && !confirm('Slide ' + bad.join(', ') + (bad.length > 1 ? ' have' : ' has') + ' too much text to fit. Download anyway?')) return;
+      b.disabled = true; b.textContent = 'Preparing…'; m.textContent = '';
+      try {
+        if (dirty) await save(); var files = await slideFiles(car);
+        if (phoneShare(files)) {
+          try { await navigator.share({ files: files }); m.textContent = '✅ Tap “Save Images” to put them in Photos.'; }
+          catch (e) { if (e && e.name === 'NotAllowedError') { ready = files; b.disabled = false; b.textContent = '📲 Tap to save ' + files.length + ' pictures'; return; } if (e && e.name !== 'AbortError') await downloadEach(files); }
+        } else { await downloadEach(files); m.textContent = '✅ ' + files.length + ' pictures saved to Downloads. If only one arrived, click “Allow” when the browser asks about multiple downloads, then press again.'; }
+      } catch (x) { X.toast('Couldn’t make the pictures — please try again'); }
+      b.disabled = false; b.textContent = lab;
     };
     $('#teOne').onclick = async function () {
       try { await fontsReady(); download(await pngOf(car, sel), slug(car.title) + '-' + pad(sel + 1) + '.png'); } catch (x) { X.toast('Couldn’t save the image — please try again'); }
