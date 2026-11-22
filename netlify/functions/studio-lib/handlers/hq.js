@@ -66,7 +66,8 @@ function sectionsOf(action) {
   if (/^sc-/.test(action)) return ['cars'];   // 🎨 Style Match carousels
   if (/^lq-/.test(action)) return ['app'];   // 🇬🇧 Life in the UK question review
   if (/^qv-/.test(action)) return ['cars'];
-  if (/^rx-/.test(action)) return ['cars'];   // 🎞️ Video Remix   // 🎬 Quiz videos
+  if (/^rx-/.test(action)) return ['cars'];
+  if (/^vv-/.test(action)) return ['cars'];   // 🎙️ Voiceover Video   // 🎞️ Video Remix   // 🎬 Quiz videos
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
@@ -309,6 +310,19 @@ exports.handler = handler(async (ctx) => {
       await core.rateLimit('hq-rxpic', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of pictures this hour — please wait a little.');
       return require('../remix').picture(body);
     }
+    case 'vv-script': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
+      return require('../voicevid').script(body);
+    }
+    case 'vv-speak': {
+      await core.rateLimit('hq-vvspeak', who.email, 400, 60 * 60 * 1000, 'That\u2019s a lot of voice lines this hour — please wait a little.');
+      return require('../voicevid').speak(body);
+    }
+    case 'vv-save': return require('../voicevid').save(body, who.email);
+    case 'vv-list': { const vv = require('../voicevid'); return { items: await vv.list(), prefs: await vv.prefs() }; }
+    case 'vv-load': return require('../voicevid').load(body.id);
+    case 'vv-del': return require('../voicevid').remove(body.id);
+    case 'vv-voice': return require('../voicevid').setVoice(body.voice);
     case 'rx-save': return require('../remix').save(body, who.email);
     case 'rx-list': return { items: await require('../remix').list() };
     case 'rx-load': return require('../remix').load(body.id);

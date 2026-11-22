@@ -135,4 +135,4 @@ async function remove(id) {
   return { ok: true };
 }
 
-module.exports = { status, speak, background, setBackground, savedBackgrounds, save, list, load, remove };
+module.exports = { el, MODELS, status, speak, background, setBackground, savedBackgrounds, save, list, load, remove };

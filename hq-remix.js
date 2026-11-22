@@ -246,13 +246,14 @@
       }).join('') + '<button class="btn ghost sm" data-ladd="' + i + '" style="margin-top:6px">➕ Add text</button></div></div>';
   }
   function L2(k) { var p = k.split(':'); return R.tpl.scenes[+p[0]].layers[+p[1]]; }
-  var thT = null;
+  var thT = null, thAll = false, thSet = {};
   function thumbs(only) {
-    clearTimeout(thT);
+    clearTimeout(thT); if (only == null) thAll = true; else thSet[only] = 1;
     thT = setTimeout(async function () {
+      var all = thAll, set = thSet; thAll = false; thSet = {};
       var M = await loadAll(), s = 0;
       R.tpl.scenes.forEach(function (sc, i) {
-        var c = $('[data-th="' + i + '"]'); if (c && (only == null || only === i)) { var cx = c.getContext('2d'); cx.setTransform(270 / W, 0, 0, 480 / H, 0, 0); var mid = Math.min(sc.d - 0.05, Math.max(0.6, sc.layers.reduce(function (a, l) { return Math.max(a, l.at + (l.a === 'word' ? l.t.split(/\s+/).length * 0.16 : 0.5)); }, 0))); if (M[i] && M[i].v) { try { M[i].v.currentTime = Math.min(M[i].v.duration - 0.1, 0.5); } catch (e) {} } frame(cx, s + mid, M, true); }
+        var c = $('[data-th="' + i + '"]'); if (c && (all || set[i])) { var cx = c.getContext('2d'); cx.setTransform(270 / W, 0, 0, 480 / H, 0, 0); var mid = Math.min(sc.d - 0.05, Math.max(0.6, sc.layers.reduce(function (a, l) { return Math.max(a, l.at + (l.a === 'word' ? l.t.split(/\s+/).length * 0.16 : 0.5)); }, 0))); if (M[i] && M[i].v) { try { M[i].v.currentTime = Math.min(M[i].v.duration - 0.1, 0.5); } catch (e) {} } frame(cx, s + mid, M, true); }
         s += sc.d;
       });
     }, 120);
