@@ -114,15 +114,16 @@ async function write(b) {
 // 🖼️ one background picture for a scene (HQ's chosen image model), saved in HQ
 async function picture(b) {
   const want = str(b.want, 500).trim(); if (want.length < 3) throw new HttpError(400, 'too_short', 'Describe the picture first.');
-  const prompt = `A beautiful, photorealistic vertical (9:16) photo for a social media video: ${want}. Natural light, rich colours, real-looking people and places, shot on a modern phone or camera. Leave calm space in the middle and top for text. ABSOLUTELY NO text, letters, signs with writing, logos or watermarks.`;
+  const ar = ['4:5', '1:1', '9:16'].includes(b.aspect) ? b.aspect : '9:16';
+  const prompt = `A beautiful, photorealistic ${ar === '9:16' ? 'vertical (9:16)' : ar === '4:5' ? 'portrait (4:5)' : 'square'} photo for a social media ${ar === '9:16' ? 'video' : 'post'}: ${want}. Natural light, rich colours, real-looking people and places, shot on a modern phone or camera. Leave calm space in the middle and top for text. ABSOLUTELY NO text, letters, signs with writing, logos or watermarks.`;
   // 👥 picked characters: their reference photos go with the prompt so they look the same in every scene
   const ch = await require('./characters').refs(b.chars);
   if (ch.refs.length) {
     const legend = 'Reference photos, in order:\n' + ch.labels.map((l, i) => `${i + 1}. ${l}`).join('\n');
-    const url = await require('./eventmedia').generateImage(`${legend}\n\nShow ${ch.names.join(' and ')} in this scene. Keep every person EXACTLY as in their reference photo — same face, skin tone, hair, build, age and outfit (unless the scene says otherwise). Only the setting, pose and camera angle change.\n\n${prompt}`, '9:16', ch.refs);
+    const url = await require('./eventmedia').generateImage(`${legend}\n\nShow ${ch.names.join(' and ')} in this scene. Keep every person EXACTLY as in their reference photo — same face, skin tone, hair, build, age and outfit (unless the scene says otherwise). Only the setting, pose and camera angle change.\n\n${prompt}`, ar, ch.refs);
     return { img: await require('./hq').saveImage(url) };
   }
-  const url = await require('./eventmedia').generateImage(prompt, '9:16');
+  const url = await require('./eventmedia').generateImage(prompt, ar);
   return { img: await require('./hq').saveImage(url) };
 }
 

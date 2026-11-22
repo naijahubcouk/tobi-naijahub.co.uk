@@ -36,7 +36,14 @@ function cleanSlide(x) {
     bs: scale(x.bs, 0.5, 1.6),
     brush: ['on', 'off'].includes(x.brush) ? x.brush : '',
     num: ['on', 'off'].includes(x.num) ? x.num : '',
+    ...(cleanPic(x.pic) ? { pic: cleanPic(x.pic) } : {}),
   };
+}
+// 🖼️ a picture on the slide: full background or a photo box (top/bottom), with transparency, zoom and position
+function cleanPic(p) {
+  if (!p || typeof p !== 'object' || !/^i[a-z0-9]{6,30}$/.test(String(p.img || ''))) return null;
+  const n = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
+  return { img: p.img, mode: ['bg', 'top', 'bottom'].includes(p.mode) ? p.mode : 'bg', fade: n(p.fade, 0, 0.9, 0.7), size: n(p.size, 0.2, 0.6, 0.3), z: n(p.z, 1, 2.5, 1), fx: n(p.fx, 0, 1, 0.5), fy: n(p.fy, 0, 1, 0.5) };
 }
 function clean(raw, prev) {
   raw = raw && typeof raw === 'object' ? raw : {};

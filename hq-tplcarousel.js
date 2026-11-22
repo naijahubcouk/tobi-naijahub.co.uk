@@ -167,7 +167,30 @@
   }
 
   // ── one slide ──
-  var L = 112, R = W - 112, CW = R - L, TOP = 120, BOT = H - 150;
+  var L = 112, R = W - 112, CW = R - L, TOP = 120, BOT = H - 150, TOP0 = TOP, BOT0 = BOT;
+  // ── 🖼️ pictures on slides: full background (faded) or a photo box at the top / bottom ──
+  // slide.pic = { img, mode: 'bg'|'top'|'bottom', fade 0–0.9 (transparency), size 0.25–0.6 (photo box height), z 1–2.5, fx/fy 0–1 (which part shows) }
+  var PIC = {}, picWaiters = [];
+  function picSrc(id) { return '/.netlify/functions/studio-hq?img=' + encodeURIComponent(id); }
+  function picImg(id) {
+    if (!id) return null; var p = PIC[id];
+    if (!p) { p = PIC[id] = { im: new Image(), ok: false }; p.im.onload = function () { p.ok = true; picWaiters.slice().forEach(function (f) { try { f(); } catch (e) {} }); }; p.im.src = picSrc(id); }
+    return p.ok ? p.im : null;
+  }
+  function loadPics(car) { return Promise.all(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); })); }
+  function picDraw(ctx, pic, x, y, w, h, radius) {
+    var im = picImg(pic.img); if (!im) return;
+    var z = clamp(Number(pic.z) || 1, 1, 2.5), s = Math.max(w / im.naturalWidth, h / im.naturalHeight) * z, dw = im.naturalWidth * s, dh = im.naturalHeight * s;
+    var fx = pic.fx == null ? 0.5 : pic.fx, fy = pic.fy == null ? 0.5 : pic.fy, dx = x - (dw - w) * fx, dy = y - (dh - h) * fy;
+    ctx.save(); ctx.beginPath();
+    if (radius) { ctx.moveTo(x + radius, y); ctx.arcTo(x + w, y, x + w, y + h, radius); ctx.arcTo(x + w, y + h, x, y + h, radius); ctx.arcTo(x, y + h, x, y, radius); ctx.arcTo(x, y, x + w, y, radius); ctx.closePath(); } else ctx.rect(x, y, w, h);
+    ctx.clip(); ctx.globalAlpha = 1 - clamp(Number(pic.fade) || 0, 0, 0.9); ctx.drawImage(im, dx, dy, dw, dh); ctx.restore();
+  }
+  function picBox(pic) {   // where a photo box goes, and the space left for the text
+    var bh = Math.round(H * clamp(Number(pic.size) || 0.3, 0.2, 0.6)), bx = L - 40, bw = CW + 80;
+    if (pic.mode === 'top') return { x: bx, y: 74, w: bw, h: bh, top: 74 + bh + 44, bot: BOT };
+    return { x: bx, y: H - 118 - bh, w: bw, h: bh, top: TOP, bot: H - 118 - bh - 40 };
+  }
   function tipNumber(car, i) { var n = 0; for (var k = 0; k <= i; k++) if (car.slides[k].kind === 'tip') n++; return n; }
   function draw(ctx, car, i) {
     var sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, over = false, shrunk = false;
@@ -175,12 +198,15 @@
     var align = sl.align === 'left' ? 'left' : 'center';
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
+    var pic = sl.pic && sl.pic.img ? sl.pic : null, TOP = TOP0, BOT = BOT0;
+    if (pic && pic.mode === 'bg') picDraw(ctx, pic, 0, 0, W, H, 0);
+    else if (pic) { var pb = picBox(pic); picDraw(ctx, pic, pb.x, pb.y, pb.w, pb.h, 28); TOP = pb.top; BOT = pb.bot; }
     ctx.strokeStyle = FRAME; ctx.lineWidth = 6; ctx.strokeRect(37, 37, W - 74, H - 74);
     ctx.textAlign = 'left';
     var availH = BOT - TOP, blockH, y, hr, br, maxS;
     if (sl.kind === 'tip') {
-      var num = e.num ? pad(tipNumber(car, i)) : '', numSize = Math.round(180 * clamp(e.hs, 0.6, 1.3));
-      var bodyMax = sl.body ? 380 : 0;
+      var num = e.num ? pad(tipNumber(car, i)) : '', numSize = Math.round(180 * clamp(e.hs, 0.6, 1.3) * (pic && pic.mode !== 'bg' ? 0.7 : 1));
+      var bodyMax = sl.body ? (pic && pic.mode !== 'bg' ? 260 : 380) : 0;
       maxS = 118 * st.k * e.hs;
       hr = fitHeading(ctx, st, sl.heading, CW, availH - (num ? numSize + 20 : 0) - (bodyMax ? bodyMax + 34 : 0) - dh - 44, maxS, 40);
       br = sl.body ? fitBody(ctx, sl.body, CW, bodyMax, 500, 46 * e.bs) : null;
@@ -216,9 +242,10 @@
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
     return Promise.all(['900 100px "Inter Tight"', '500 40px Inter', '700 30px Inter', '400 100px Anton', '800 100px Poppins', '900 100px "Playfair Display"', 'italic 900 100px "Playfair Display"', '400 100px "Archivo Black"', '700 100px Caveat'].map(function (f) { return document.fonts.load(f).catch(function () {}); }));
   }
-  function pngOf(car, i) {
+  async function pngOf(car, i) {
+    await loadPics(car);
     var c = document.createElement('canvas'); c.width = W; c.height = H; draw(c.getContext('2d'), car, i);
-    return new Promise(function (ok) { c.toBlob(function (b) { ok(b); }, 'image/png'); });
+    return await new Promise(function (ok) { c.toBlob(function (b) { ok(b); }, 'image/png'); });
   }
   function slug(s) { return String(s || 'carousel').toLowerCase().replace(/\*\*/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'carousel'; }
   function download(blob, name) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
@@ -274,7 +301,7 @@
       var big = document.createElement('canvas'); big.width = W; big.height = H; var bx = big.getContext('2d');
       Array.prototype.forEach.call(document.querySelectorAll('[data-tthumb]'), function (cv) {
         var c = list().filter(function (x) { return x.id === cv.dataset.tthumb; })[0]; if (!c) return;
-        draw(bx, c, 0); cv.getContext('2d').drawImage(big, 0, 0, 216, 270);
+        loadPics({ slides: c.slides.slice(0, 1) }).then(function () { draw(bx, c, 0); cv.getContext('2d').drawImage(big, 0, 0, 216, 270); });
       });
     });
   }
@@ -405,14 +432,55 @@
           (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div><div></div></div>' : '') +
           '<div class="f2"><div><label>Heading size <span class="muted" data-pv="hs">' + pct(sl.hs) + '</span></label><input type="range" data-f="hs" min="50" max="160" step="5" value="' + Math.round((sl.hs || 1) * 100) + '"></div>' +
           '<div><label>Body text size <span class="muted" data-pv="bs">' + pct(sl.bs) + '</span></label><input type="range" data-f="bs" min="50" max="160" step="5" value="' + Math.round((sl.bs || 1) * 100) + '"></div></div>' +
-          '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details></div>';
+          '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + '</div>';
     }
+    var openPic = {};
+    function picHtml(sl, i) {
+      var p = sl.pic && sl.pic.img ? sl.pic : null, sum = p ? (p.mode === 'bg' ? 'full background' : 'photo box at the ' + p.mode) + ' · ' + Math.round((p.fade || 0) * 100) + '% see-through' : 'none';
+      var sld = function (k, lbl, min, max, val, unit) { return '<div><label>' + lbl + ' <span class="muted" data-ppv="' + k + '">' + val + unit + '</span></label><input type="range" data-p="' + k + '" min="' + min + '" max="' + max + '" step="1" value="' + val + '"></div>'; };
+      return '<details class="spic" data-i="' + i + '"' + (openPic[i] ? ' open' : '') + ' style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:14px">🖼️ Picture <span class="muted" style="font-weight:400">— ' + sum + '</span></summary>' +
+        (p ? '<div class="row" style="gap:10px;margin-top:8px;align-items:flex-start"><img src="' + picSrc(p.img) + '" alt="" style="width:64px;height:80px;object-fit:cover;border-radius:8px;flex:none"><div style="flex:1;min-width:0">' +
+          '<label>How it sits</label><select data-p="mode"><option value="bg"' + (p.mode === 'bg' ? ' selected' : '') + '>Full background (behind the text)</option><option value="top"' + (p.mode === 'top' ? ' selected' : '') + '>Photo box at the top</option><option value="bottom"' + (p.mode === 'bottom' ? ' selected' : '') + '>Photo box at the bottom</option></select></div></div>' +
+          '<div class="f2" style="margin-top:6px">' + sld('fade', 'Transparency', 0, 90, Math.round((p.fade || 0) * 100), '%') + (p.mode === 'bg' ? '<div></div>' : sld('size', 'Photo box size', 20, 60, Math.round((p.size || 0.3) * 100), '%')) + '</div>' +
+          '<div class="f2">' + sld('z', 'Zoom', 100, 250, Math.round((p.z || 1) * 100), '%') + sld('fx', 'Left / right', 0, 100, Math.round((p.fx == null ? 0.5 : p.fx) * 100), '') + '</div>' +
+          '<div class="f2">' + sld('fy', 'Up / down', 0, 100, Math.round((p.fy == null ? 0.5 : p.fy) * 100), '') + '<div></div></div>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn ghost sm" data-pall="set">📋 These settings on all slides</button><button class="btn ghost sm" data-pall="pic">📋 This picture on all slides</button><button class="btn ghost sm" data-pdel style="color:#B42318">✕ Remove picture</button></div>' : '<div class="muted" style="font-size:12.5px;margin:6px 0">Add a photo behind the text (faded) or in a box at the top or bottom.</div>') +
+        '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="btn ghost sm" style="margin:0;cursor:pointer">📷 ' + (p ? 'Change photo' : 'Upload photo') + '<input type="file" accept="image/*" data-pup hidden></label>' +
+        '<button class="btn ghost sm" data-pmk>✨ Make picture</button>' + (window.HQChars ? '<button class="btn ghost sm" data-pch>👥 Use a character</button>' : '') + '</div>' +
+        '<div class="row hidden" data-pmkrow style="gap:6px;margin-top:6px"><input data-pwant placeholder="Describe the picture, e.g. a Nigerian family unpacking boxes in a bright London flat" style="flex:1"><button class="btn primary sm" data-pgo>✨ Make it</button></div><div class="muted" data-pmsg style="font-size:12.5px;margin-top:4px"></div></details>';
+    }
+    function setPic(i, img) { var sl = car.slides[i], old = sl.pic || {}; sl.pic = Object.assign({ mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }, old.img ? old : {}, { img: img }); openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); }
+    function shrinkPic(file) { return new Promise(function (ok, bad) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var k = Math.min(1, 1600 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.88)); }; im.onerror = function () { bad(new Error('That photo didn’t open.')); }; im.src = u; }); }
+    function bindPic(el, i) {
+      var d = el.querySelector('.spic'); if (!d) return; d.addEventListener('toggle', function () { openPic[i] = d.open; });
+      var msg = function (t) { var m = el.querySelector('[data-pmsg]'); if (m) m.textContent = t || ''; };
+      el.querySelector('[data-pup]').onchange = function () { var f = this.files && this.files[0]; if (!f) return; msg('Adding the photo…'); shrinkPic(f).then(function (du) { return X.api('img', { dataUrl: du }); }).then(function (r) { setPic(i, r.id); X.toast('🖼️ Photo added'); }).catch(function (e) { msg(''); X.toast(e.message || 'Couldn’t use that photo.'); }); };
+      el.querySelector('[data-pmk]').onclick = function () { el.querySelector('[data-pmkrow]').classList.remove('hidden'); var w = el.querySelector('[data-pwant]'); if (!w.value) w.value = String(car.slides[i].heading || '').replace(/\*\*/g, ''); w.focus(); };
+      el.querySelector('[data-pgo]').onclick = function () { var w = el.querySelector('[data-pwant]').value.trim(), b = this; if (w.length < 3) return X.toast('Describe the picture first'); b.disabled = true; msg('✨ Making the picture… (about 20 seconds)'); X.api('rx-pic', { want: w, aspect: '4:5' }).then(function (r) { setPic(i, r.img); X.toast('✨ Picture added'); }).catch(function (e) { b.disabled = false; msg(''); X.toast(e.message); }); };
+      if (el.querySelector('[data-pch]')) el.querySelector('[data-pch]').onclick = function () { window.HQChars.load().then(function (items) { if (!items.length) return X.toast('No characters yet — make one in 👥 Characters'); window.HQChars.pick([], function (ids) { var c = items.filter(function (x) { return x.id === ids[0]; })[0]; if (c) setPic(i, c.img); }); }); };
+      Array.prototype.forEach.call(el.querySelectorAll('[data-p]'), function (f) {
+        f.addEventListener(f.tagName === 'SELECT' ? 'change' : 'input', function () {
+          var p = car.slides[i].pic, k = f.dataset.p; if (!p) return;
+          if (k === 'mode') { p.mode = f.value; if (p.mode === 'bg' && p.fade < 0.3) p.fade = 0.7; if (p.mode !== 'bg' && p.fade >= 0.6) p.fade = 0; mark(); paintSlides(); setSel(i); paintThumbs(); return; }
+          p[k] = Number(f.value) / 100; var pv = el.querySelector('[data-ppv="' + k + '"]'); if (pv) pv.textContent = f.value + (k === 'fade' || k === 'size' || k === 'z' ? '%' : '');
+          var sm = el.querySelector('.spic summary .muted'); if (sm && k === 'fade') sm.textContent = '— ' + (p.mode === 'bg' ? 'full background' : 'photo box at the ' + p.mode) + ' · ' + f.value + '% see-through';
+          mark(); paint(); paintThumbs();
+        });
+      });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-pall]'), function (b) { b.onclick = function () {
+        var src = car.slides[i].pic, n = 0; if (!src) return;
+        car.slides.forEach(function (s2, k) { if (k === i) return; if (b.dataset.pall === 'pic') { s2.pic = JSON.parse(JSON.stringify(src)); n++; } else if (s2.pic && s2.pic.img) { s2.pic = Object.assign({}, JSON.parse(JSON.stringify(src)), { img: s2.pic.img }); n++; } });
+        mark(); paintSlides(); setSel(i); paintThumbs(); X.toast(n ? (b.dataset.pall === 'pic' ? '📋 This picture is now on all ' + car.slides.length + ' slides' : '📋 Settings copied to ' + n + ' slide' + (n === 1 ? '' : 's') + ' with a picture') : 'No other slides have a picture yet — use “This picture on all slides”');
+      }; });
+      if (el.querySelector('[data-pdel]')) el.querySelector('[data-pdel]').onclick = function () { delete car.slides[i].pic; mark(); paintSlides(); setSel(i); paintThumbs(); };
+    }
+    picWaiters.length = 0; picWaiters.push(function () { paint(); paintThumbs(); });
     function paintSlides() {
       $('#teSlides').innerHTML = car.slides.map(slideHtml).join('');
       Array.prototype.forEach.call(ov.querySelectorAll('.cslide'), function (el) {
         var i = +el.dataset.i;
         el.addEventListener('focusin', function () { if (sel !== i) setSel(i); });
-        el.addEventListener('click', function (e) { if (!e.target.closest('button') && sel !== i) setSel(i); });
+        el.addEventListener('click', function (e) { if (!e.target.closest('button') && !e.target.closest('label') && sel !== i) setSel(i); });
         Array.prototype.forEach.call(el.querySelectorAll('[data-f]'), function (f) {
           f.addEventListener(f.tagName === 'SELECT' ? 'change' : 'input', function () {
             var k = f.dataset.f, sl = car.slides[i];
@@ -426,6 +494,7 @@
         el.querySelector('[data-mv="-1"]').onclick = function () { if (i > 0) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i - 1, 0, a); sel = i - 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
         el.querySelector('[data-mv="1"]').onclick = function () { if (i < car.slides.length - 1) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i + 1, 0, a); sel = i + 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
         var det = el.querySelector('.sopts'); det.addEventListener('toggle', function () { openOpts[i] = det.open; });
+        bindPic(el, i);
         el.querySelector('[data-reset]').onclick = function () { var sl = car.slides[i]; delete sl.style; delete sl.hs; delete sl.bs; delete sl.brush; delete sl.num; mark(); paintSlides(); setSel(i); paintThumbs(); };
         el.querySelector('[data-dup]').onclick = function () { if (car.slides.length >= 10) return X.toast('Instagram allows up to 10 slides'); car.slides.splice(i + 1, 0, JSON.parse(JSON.stringify(car.slides[i]))); mark(); paintSlides(); setSel(i + 1); paintThumbs(); };
         el.querySelector('[data-del]').onclick = function () { if (car.slides.length <= 1) return; if (!confirm('Delete slide ' + (i + 1) + '?')) return; car.slides.splice(i, 1); mark(); paintSlides(); setSel(Math.min(i, car.slides.length - 1)); paintThumbs(); };
