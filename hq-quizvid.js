@@ -137,6 +137,9 @@
       var d = r.data || {}, v = QV.voice; QV = null; state();
       Object.keys(d).forEach(function (k) { QV[k] = d[k]; }); QV.n = (d.qs || []).length || 10; if (!QV.voice) QV.voice = v;
       QV.savedId = r.id; QV.savedName = r.name; QV.out = null; if (F()) F().lastDraft('qv', r.id); if (!QV.cTitle) { QV.cTitle = bank().cover; QV.cSub = fill('{n} questions · Can you get {n}/{n}?'); }
+      // older quizzes could keep the other test's heading/name — put this test's in
+      var wrong = function (t) { return QV.bank === 'drive' ? /life\s*in\s*(the\s*)?uk/i.test(String(t || '')) : /driv/i.test(String(t || '')); };
+      if (wrong(QV.h1)) QV.h1 = bank().h1; if (wrong(QV.cTitle)) QV.cTitle = bank().cover; if (wrong(QV.savedName)) QV.savedName = String(QV.savedName).replace(/QUIZ:\s*UK Driving Theory|UK Driving Theory( Quiz)?|QUIZ:\s*Life in the UK Test|Life in the UK Test( Quiz)?/i, bank().cover);
       if (ST && !ST.ready) QV.voiceOn = false;
       head(); return loadBank(QV.bank).then(function () { draw(); refreshBgs(); QV._last = JSON.stringify(snapshot()); X.toast('📂 Opened “' + r.name + '”'); });
     }).catch(function (e) { X.toast(e.message); throw e; });

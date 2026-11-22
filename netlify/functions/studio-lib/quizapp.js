@@ -57,14 +57,25 @@ async function publishedIds() { const l = await getJson(LIST).catch(() => null);
 
 // ── public (the app) ──
 const J = (o, age) => ({ statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': `public, max-age=${age}, s-maxage=${age}`, 'X-Content-Type-Options': 'nosniff' }, body: JSON.stringify(o) });
+// the name shown in the app — never the other test's name (older quizzes kept a heading from the other test)
+function appName(x) {
+  const n = String(x.title || x.name || '').trim(), dflt = x.bank === 'drive' ? 'UK Driving Theory Quiz' : 'Life in the UK Test Quiz';
+  if (!n || (x.bank === 'drive' && /life\s*in\s*(the\s*)?uk/i.test(n)) || (x.bank !== 'drive' && /driv/i.test(n))) return dflt + (/\b0*\d{1,3}\s*$/.test(n) ? ' · ' + n.match(/(\d{1,3})\s*$/)[1] : '');
+  return n;
+}
 async function publicList(bank) {
   const l = await getJson(LIST).catch(() => null);
-  const items = ((l && l.items) || []).filter(x => !bank || x.bank === bank).map(x => ({ id: x.id, name: x.title || x.name, bank: x.bank, n: x.n, at: x.at, voice: !!x.voice }));
+  const items = ((l && l.items) || []).filter(x => !bank || x.bank === bank).map(x => ({ id: x.id, name: appName(x), bank: x.bank, n: x.n, at: x.at, voice: !!x.voice }));
   return J({ items }, 60);
 }
 async function publicPack(id) {
   if (!okId(id)) throw new HttpError(400, 'invalid', 'Which quiz?');
   const p = await getJson(PACK(id)).catch(() => null); if (!p) throw new HttpError(404, 'not_found', 'That quiz isn’t available any more.');
+  // older quizzes could carry the other test's heading — show (and say) the right one
+  const wrong = t => p.bank === 'drive' ? /life\s*in\s*(the\s*)?uk/i.test(String(t || '')) : /driv/i.test(String(t || ''));
+  if (wrong(p.h1)) { p.h1 = p.bank === 'drive' ? 'QUIZ: UK Driving Theory' : 'QUIZ: Life in the UK Test'; if (p.vo) delete p.vo.intro; }
+  if (wrong(p.cTitle)) p.cTitle = p.bank === 'drive' ? 'UK Driving Theory Quiz' : 'Life in the UK Test Quiz';
+  if (wrong(p.name)) p.name = appName({ bank: p.bank, name: p.name });
   return J(p, 60);
 }
 function bin(dataUrl, age) {
