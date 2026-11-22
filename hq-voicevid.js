@@ -149,12 +149,18 @@
   }
 
   // ───── page ─────
+  function openById(id) {
+    return X.api('vv-load', { id: id }).then(function (r) { V = null; state(); Object.assign(V, r.data || {}); V.scenes = (V.scenes || []).map(function (x) { var o = Object.assign(sc0(), x); o.ts = Object.assign(TS(), x.ts || {}); return o; }); V.savedId = r.id; V.savedName = r.name; V.out = null; V._last = JSON.stringify(snap()); if (F()) F().lastDraft('vv', r.id); view(); return r; });
+  }
+  function F() { return window.HQFinished; }
   function view() {
+    var want = F() ? F().takeOpen('vv') : ''; if (!want && !V && F()) want = F().lastDraft('vv');
+    if (want && (!V || V.savedId !== want)) { V = V || null; openById(want).then(function (r) { X.toast('📂 Opened “' + r.name + '”'); }).catch(function () { if (F()) F().lastDraft('vv', ''); V = null; view(); }); if (!V) { $('#ttl').textContent = 'Voiceover Video'; $('#view').innerHTML = '<div class="card"><div class="muted">Opening your video…</div></div>'; } return; }
     state();
     $('#ttl').textContent = V.savedName ? 'Voiceover Video · ' + V.savedName : 'Voiceover Video';
     $('#topRight').innerHTML = '<button class="btn ghost" id="vvNewB">➕ New</button> <button class="btn ghost" id="vvMine">📂 My videos</button> <button class="btn primary" id="vvSave">💾 Save</button>';
     $('#vvMine').onclick = mine; $('#vvSave').onclick = saveSheet;
-    $('#vvNewB').onclick = function () { if (!confirm('Start a new video? Anything you haven’t saved will be cleared.')) return; var keep = { voice: V.voice, model: V.model }; V = null; state(); V.voice = keep.voice; V.model = keep.model; view(); };
+    $('#vvNewB').onclick = function () { if (!confirm('Start a new video? Anything you haven’t saved will be cleared.')) return; var keep = { voice: V.voice, model: V.model }; V = null; state(); V.voice = keep.voice; V.model = keep.model; if (F()) F().lastDraft('vv', ''); view(); };
     $('#view').innerHTML = '<div class="card" style="max-width:1000px"><div class="muted">Loading…</div></div>';
     var need = [];
     if (!ST) need.push(X.api('qv-status').then(function (r) { ST = r; }).catch(function () { ST = { ready: false }; }));
@@ -442,7 +448,7 @@
     for (var f = 0; f < N; f++) {
       if (failed) throw failed;
       var t = f / FPS, x = at(t, TL); if (M[x.i] && M[x.i].v) await seekV(M[x.i].v, x.lt);
-      frame(cx, t, M, TL, false);
+      frame(cx, t, M, TL, false); if (f === Math.min(N - 1, 20) && F()) V._thumb = F().thumb(cv);
       var vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
       venc.encode(vf, { keyFrame: f % (FPS * 2) === 0 }); vf.close();
       if (f % 15 === 0) { prog('🎬 Making the video… ' + Math.round(f / N * 100) + '%'); await new Promise(function (ok) { setTimeout(ok, 0); }); }
@@ -461,18 +467,35 @@
     mux.finalize();
     V.out = { blob: new Blob([mux.target.buffer], { type: 'video/mp4' }), secs: Math.round(dur), sound: aok };
     prog(''); $('#vvGo').disabled = false; showOut();
-    if (V.savedId) doSave(V.savedName).catch(function () {});
+    try { if (!V.savedId) await doSave(V.name || (V.scenes[0].t || 'Voiceover video').slice(0, 50), false, true); else await doSave(V.savedName, false, true); } catch (e) {}
+    keepFinished();
+  }
+  function keepFinished() {
+    var o = V.out; if (!o || !F()) return; var el = $('#vvKeep'); if (el) el.textContent = '✅ Keeping it in Finished videos… 0%';
+    F().keep({ tool: 'vv', name: V.savedName || V.name || 'Voiceover video', draftId: V.savedId, secs: o.secs, caption: V.caption }, o.blob, V._thumb, function (p) { var e = $('#vvKeep'); if (e) e.textContent = '✅ Keeping it in Finished videos… ' + p + '%'; })
+      .then(function () { o.kept = true; var e = $('#vvKeep'); if (e) e.innerHTML = '✅ Kept in <b>📂 My videos → ✅ Finished</b> — play or download it any time.'; })
+      .catch(function (e) { var x = $('#vvKeep'); if (x) x.innerHTML = '⚠️ Couldn’t keep it in HQ (' + esc(e.message) + ') — download it now. <button class="btn link" id="vvKeepR">Try again</button>'; var b = $('#vvKeepR'); if (b) b.onclick = keepFinished; });
   }
   function showOut() {
     var o = V.out, box = $('#vvOut'); if (!o || !box) return; var url = URL.createObjectURL(o.blob);
     box.innerHTML = '<div class="row" style="gap:14px;align-items:flex-start;flex-wrap:wrap"><video src="' + url + '" controls playsinline style="width:240px;border-radius:12px;background:#000"></video><div style="flex:1;min-width:220px"><b>✅ Your video is ready</b> <span class="muted">(' + o.secs + ' seconds' + (o.sound ? '' : ', no sound in this browser') + ')</span>' +
-      '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><a class="btn primary" download="voiceover-' + Date.now() + '.mp4" href="' + url + '">⬇️ Download MP4</a><button class="btn ghost" id="vvCopy">📋 Copy caption</button></div><div class="muted" style="font-size:12.5px;margin-top:8px">Check any [square brackets] were filled in before you post.</div></div></div>';
+      '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><a class="btn primary" download="voiceover-' + Date.now() + '.mp4" href="' + url + '">⬇️ Download MP4</a><button class="btn ghost" id="vvCopy">📋 Copy caption</button></div><div class="muted" style="font-size:12.5px;margin-top:8px">Check any [square brackets] were filled in before you post.</div><div id="vvKeep" class="muted" style="font-size:12.5px;margin-top:6px">' + (o.kept ? '✅ Kept in <b>📂 My videos → ✅ Finished</b>.' : '') + '</div></div></div>';
     $('#vvCopy').onclick = function () { try { navigator.clipboard.writeText($('#vvCap').value); X.toast('📋 Caption copied'); } catch (e) {} };
   }
 
   // ───── 💾 save / open ─────
   function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, scenes: V.scenes.map(function (s) { return { t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, ts: s.ts, img: s.img, clip: s.clip }; }) }); return d; }
-  function doSave(name, asNew) { return X.api('vv-save', { id: asNew ? '' : V.savedId, name: name, data: snap() }).then(function (r) { V.savedId = r.id; V.savedName = r.name; V.name = r.name; $('#ttl').textContent = 'Voiceover Video · ' + r.name; X.toast('💾 Saved — find it in 📂 My videos'); }); }
+  function doSave(name, asNew, quiet) { var d = snap(), j = JSON.stringify(d); return X.api('vv-save', { id: asNew ? '' : V.savedId, name: name, data: d }).then(function (r) { V.savedId = r.id; V.savedName = r.name; V.name = r.name; V._last = j; if (F()) F().lastDraft('vv', r.id); if ($('#vvRoot')) $('#ttl').textContent = 'Voiceover Video · ' + r.name; if (!quiet) X.toast('💾 Saved — find it in 📂 My videos'); }); }
+  // 💾 auto-save: a few seconds after any change, while this page is open
+  var asvBusy = false;
+  setInterval(function () {
+    if (!V || !V.scenes.length || asvBusy || !$('#vvRoot') || !F()) return;
+    KEEPV(); var j = JSON.stringify(snap()); if (j === V._last) return;
+    if (V._pend !== j) { V._pend = j; return; }   // wait until it's been still for one tick
+    asvBusy = true; F().saveNote('saving');
+    doSave(V.savedName || V.name || (V.scenes[0].t || 'Voiceover video').slice(0, 50), false, true).then(function () { F().saveNote('saved'); }).catch(function () { F().saveNote('error'); }).then(function () { asvBusy = false; });
+  }, 2500);
+  function KEEPV() { var c = $('#vvCap'); if (c) V.caption = c.value; }
   function saveSheet() {
     if (!V.scenes.length) return X.toast('Add your script first.');
     var vids = V.scenes.filter(function (s) { return s._vid; }).length;
@@ -483,15 +506,17 @@
     $('#vvSOk', s).onclick = function () { go(false); }; if ($('#vvSNew', s)) $('#vvSNew', s).onclick = function () { go(true); }; $('#vvSX', s).onclick = function () { s.remove(); };
   }
   function mine() {
-    var s = X.sheet('<h3 style="margin:0 0 8px">📂 My voiceover videos</h3><div id="vvML" class="muted">Loading…</div>');
+    var s = X.sheet('<h3 style="margin:0 0 8px">📂 My voiceover videos</h3>'), host = null;
+    if (F()) F().tabs(s, 'vv', function (el) { el.innerHTML = '<div id="vvML" class="muted">Loading…</div>'; X.api('vv-list').then(function (r) { items = r.items || []; paint(); }).catch(function (e) { var b = $('#vvML', s); if (b) b.textContent = e.message; }); });
+    else s.querySelector('.sheet').insertAdjacentHTML('beforeend', '<div id="vvML" class="muted">Loading…</div>');
     var items = [];
     var paint = function () {
       var box = $('#vvML', s); if (!box) return; if (!items.length) { box.textContent = 'Nothing saved yet.'; return; } box.classList.remove('muted');
       box.innerHTML = items.map(function (it) { return '<div class="row" style="gap:8px;padding:8px 0;border-top:1px solid #EEE9DD;flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>' + esc(it.name) + '</b><div class="muted" style="font-size:12.5px">' + it.n + ' scenes · saved ' + new Date(it.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</div></div><button class="btn primary sm" data-op="' + it.id + '">Open</button><button class="btn ghost sm" data-dl="' + it.id + '">🗑️</button></div>'; }).join('');
-      $$('[data-op]', s).forEach(function (b) { b.onclick = function () { X.api('vv-load', { id: b.dataset.op }).then(function (r) { V = null; state(); Object.assign(V, r.data || {}); V.scenes = (V.scenes || []).map(function (x) { var o = Object.assign(sc0(), x); o.ts = Object.assign(TS(), x.ts || {}); return o; }); V.savedId = r.id; V.savedName = r.name; V.out = null; s.remove(); view(); X.toast('📂 Opened “' + r.name + '”'); }).catch(function (e) { X.toast(e.message); }); }; });
+      $$('[data-op]', s).forEach(function (b) { b.onclick = function () { openById(b.dataset.op).then(function (r) { s.remove(); X.toast('📂 Opened “' + r.name + '”'); }).catch(function (e) { X.toast(e.message); }); }; });
       $$('[data-dl]', s).forEach(function (b) { b.onclick = function () { if (!confirm('Delete this saved video? This can’t be undone.')) return; X.api('vv-del', { id: b.dataset.dl }).then(function () { if (V.savedId === b.dataset.dl) { V.savedId = ''; V.savedName = ''; } items = items.filter(function (x) { return x.id !== b.dataset.dl; }); paint(); }).catch(function (e) { X.toast(e.message); }); }; });
     };
-    X.api('vv-list').then(function (r) { items = r.items || []; paint(); }).catch(function (e) { var b = $('#vvML', s); if (b) b.textContent = e.message; });
+    if (!F()) X.api('vv-list').then(function (r) { items = r.items || []; paint(); }).catch(function (e) { var b = $('#vvML', s); if (b) b.textContent = e.message; });
   }
 
   function init(x) { X = x; }

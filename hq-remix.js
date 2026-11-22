@@ -148,12 +148,16 @@
 
   // ───── page ─────
   function state() { if (!R) R = { tpl: null, step: 'start', musicVol: 30, music: '', topic: '', out: null, savedId: '', savedName: '', ref: null }; return R; }
+  function F() { return window.HQFinished; }
+  function openById(id) { return X.api('rx-load', { id: id }).then(function (r) { R = null; state(); R.tpl = r.tpl; R.music = r.tpl.base.music; R.savedId = r.id; R.savedName = r.name; R.out = null; R._last = JSON.stringify(slimTpl()); if (F()) F().lastDraft('rx', r.id); view(); return r; }); }
   function view() {
+    var want = F() ? F().takeOpen('rx') : ''; if (!want && !R && F()) want = F().lastDraft('rx');
+    if (want && (!R || R.savedId !== want)) { openById(want).then(function (r) { X.toast('📂 Opened “' + r.name + '”'); }).catch(function () { if (F()) F().lastDraft('rx', ''); R = null; view(); }); if (!R) { $('#ttl').textContent = 'Video Remix'; $('#view').innerHTML = '<div class="card"><div class="muted">Opening your remix…</div></div>'; } return; }
     state();
     $('#ttl').textContent = R.savedName ? 'Video Remix · ' + R.savedName : 'Video Remix';
     $('#topRight').innerHTML = '<button class="btn ghost" id="rxMine">📂 My remixes</button>' + (R.tpl ? ' <button class="btn ghost" id="rxNew">➕ New</button> <button class="btn primary" id="rxSave">💾 Save</button>' : '');
     $('#rxMine').onclick = mine;
-    if ($('#rxNew')) $('#rxNew').onclick = function () { if (!confirm('Start a new remix? Anything you haven’t saved will be cleared.')) return; R = null; view(); };
+    if ($('#rxNew')) $('#rxNew').onclick = function () { if (!confirm('Start a new remix? Anything you haven’t saved will be cleared.')) return; R = null; if (F()) F().lastDraft('rx', ''); view(); };
     if ($('#rxSave')) $('#rxSave').onclick = saveSheet;
     if (!R.tpl) return start(); edit();
   }
@@ -395,7 +399,7 @@
     for (var f = 0; f < N; f++) {
       if (failed) throw failed;
       var t = f / FPS, at = sceneAt(t); if (M[at.i] && M[at.i].v) await seekV(M[at.i].v, at.lt);
-      frame(cx, t, M, false);
+      frame(cx, t, M, false); if (f === Math.min(N - 1, 20) && F()) R._thumb = F().thumb(cv);
       var vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
       venc.encode(vf, { keyFrame: f % (FPS * 2) === 0 }); vf.close();
       if (f % 15 === 0) { prog('🎬 Making the video… ' + Math.round(f / N * 100) + '%'); await new Promise(function (ok) { setTimeout(ok, 0); }); }
@@ -414,18 +418,34 @@
     mux.finalize();
     R.out = { blob: new Blob([mux.target.buffer], { type: 'video/mp4' }), secs: Math.round(dur), sound: aok };
     prog(''); $('#rxGo').disabled = false; showOut();
-    if (R.savedId) doSave(R.savedName).catch(function () {});
+    try { await doSave(R.savedName || R.tpl.name, false, true); } catch (e) {}
+    keepFinished();
+  }
+  function keepFinished() {
+    var o = R.out; if (!o || !F()) return; var el = $('#rxKeep'); if (el) el.textContent = '✅ Keeping it in Finished videos… 0%';
+    F().keep({ tool: 'rx', name: R.savedName || R.tpl.name, draftId: R.savedId, secs: o.secs, caption: R.tpl.caption }, o.blob, R._thumb, function (p) { var e = $('#rxKeep'); if (e) e.textContent = '✅ Keeping it in Finished videos… ' + p + '%'; })
+      .then(function () { o.kept = true; var e = $('#rxKeep'); if (e) e.innerHTML = '✅ Kept in <b>📂 My remixes → ✅ Finished</b> — play or download it any time.'; })
+      .catch(function (e) { var x = $('#rxKeep'); if (x) x.innerHTML = '⚠️ Couldn’t keep it in HQ (' + esc(e.message) + ') — download it now. <button class="btn link" id="rxKeepR">Try again</button>'; var b = $('#rxKeepR'); if (b) b.onclick = keepFinished; });
   }
   function showOut() {
     var o = R.out, box = $('#rxOut'); if (!o || !box) return; var url = URL.createObjectURL(o.blob);
     box.innerHTML = '<div class="row" style="gap:14px;align-items:flex-start;flex-wrap:wrap"><video src="' + url + '" controls playsinline style="width:240px;border-radius:12px;background:#000"></video><div style="flex:1;min-width:220px"><b>✅ Your video is ready</b> <span class="muted">(' + o.secs + ' seconds' + (o.sound ? '' : ', no sound in this browser') + ')</span>' +
-      '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><a class="btn primary" download="remix-' + Date.now() + '.mp4" href="' + url + '">⬇️ Download MP4</a><button class="btn ghost" id="rxCopy">📋 Copy caption</button></div><div class="muted" style="font-size:12.5px;margin-top:8px">Check any [square brackets] were filled in before you post.</div></div></div>';
+      '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><a class="btn primary" download="remix-' + Date.now() + '.mp4" href="' + url + '">⬇️ Download MP4</a><button class="btn ghost" id="rxCopy">📋 Copy caption</button></div><div class="muted" style="font-size:12.5px;margin-top:8px">Check any [square brackets] were filled in before you post.</div><div id="rxKeep" class="muted" style="font-size:12.5px;margin-top:6px">' + (o.kept ? '✅ Kept in <b>📂 My remixes → ✅ Finished</b>.' : '') + '</div></div></div>';
     $('#rxCopy').onclick = function () { try { navigator.clipboard.writeText($('#rxCap').value); X.toast('📋 Caption copied'); } catch (e) {} };
   }
 
   // ───── 💾 save / open ─────
   function slimTpl() { var t = clone(R.tpl); t.base.music = R.music === 'own' ? t.base.music : R.music; t.scenes.forEach(function (s) { delete s._vid; delete s._vname; delete s._clipUrl; delete s._img; }); return t; }
-  function doSave(name, asNew) { return X.api('rx-save', { id: asNew ? '' : R.savedId, name: name, tpl: slimTpl() }).then(function (r) { R.savedId = r.id; R.savedName = r.name; view(); X.toast('💾 Saved — find it in 📂 My remixes'); }); }
+  function doSave(name, asNew, quiet) { var t = slimTpl(), j = JSON.stringify(t); return X.api('rx-save', { id: asNew ? '' : R.savedId, name: name, tpl: t }).then(function (r) { R.savedId = r.id; R.savedName = r.name; R._last = j; if (F()) F().lastDraft('rx', r.id); if (quiet) { if ($('#rxRoot')) $('#ttl').textContent = 'Video Remix · ' + r.name; } else { view(); X.toast('💾 Saved — find it in 📂 My remixes'); } }); }
+  // 💾 auto-save a few seconds after any change
+  var asvBusy = false;
+  setInterval(function () {
+    if (!R || !R.tpl || asvBusy || !$('#rxScenes') || !F()) return;
+    var j = JSON.stringify(slimTpl()); if (j === R._last) return;
+    if (R._pend !== j) { R._pend = j; return; }
+    asvBusy = true; F().saveNote('saving');
+    doSave(R.savedName || R.tpl.name, false, true).then(function () { F().saveNote('saved'); }).catch(function () { F().saveNote('error'); }).then(function () { asvBusy = false; });
+  }, 2500);
   function saveSheet() {
     var vids = R.tpl.scenes.filter(function (s) { return s._vid; }).length;
     var s = X.sheet('<h3 style="margin:0 0 8px">💾 Save this remix</h3><label>Name</label><input id="rxSN" value="' + esc(R.savedName || R.tpl.name) + '">' +
@@ -435,15 +455,17 @@
     $('#rxSOk', s).onclick = function () { go(false); }; if ($('#rxSNew', s)) $('#rxSNew', s).onclick = function () { go(true); }; $('#rxSX', s).onclick = function () { s.remove(); };
   }
   function mine() {
-    var s = X.sheet('<h3 style="margin:0 0 8px">📂 My remixes</h3><div id="rxML" class="muted">Loading…</div>');
+    var items = [], s = X.sheet('<h3 style="margin:0 0 8px">📂 My remixes</h3>');
+    var load = function () { X.api('rx-list').then(function (r) { items = r.items || []; paint(items); }).catch(function (e) { var b = $('#rxML', s); if (b) b.textContent = e.message; }); };
+    if (F()) F().tabs(s, 'rx', function (el) { el.innerHTML = '<div id="rxML" class="muted">Loading…</div>'; load(); });
+    else { s.querySelector('.sheet').insertAdjacentHTML('beforeend', '<div id="rxML" class="muted">Loading…</div>'); setTimeout(load, 0); }
     var paint = function (items) {
       var box = $('#rxML', s); if (!box) return;
       if (!items.length) { box.textContent = 'Nothing saved yet.'; return; } box.classList.remove('muted');
       box.innerHTML = items.map(function (it) { return '<div class="row" style="gap:8px;padding:8px 0;border-top:1px solid #EEE9DD;flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>' + esc(it.name) + '</b><div class="muted" style="font-size:12.5px">' + it.n + ' scenes · saved ' + new Date(it.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</div></div><button class="btn primary sm" data-op="' + it.id + '">Open</button><button class="btn ghost sm" data-dl="' + it.id + '">🗑️</button></div>'; }).join('');
-      $$('[data-op]', s).forEach(function (b) { b.onclick = function () { X.api('rx-load', { id: b.dataset.op }).then(function (r) { state(); R.tpl = r.tpl; R.music = r.tpl.base.music; R.savedId = r.id; R.savedName = r.name; R.out = null; s.remove(); view(); }).catch(function (e) { X.toast(e.message); }); }; });
+      $$('[data-op]', s).forEach(function (b) { b.onclick = function () { openById(b.dataset.op).then(function () { s.remove(); }).catch(function (e) { X.toast(e.message); }); }; });
       $$('[data-dl]', s).forEach(function (b) { b.onclick = function () { if (!confirm('Delete this saved remix? This can’t be undone.')) return; X.api('rx-del', { id: b.dataset.dl }).then(function () { if (R.savedId === b.dataset.dl) { R.savedId = ''; R.savedName = ''; } paint(items = items.filter(function (x) { return x.id !== b.dataset.dl; })); }).catch(function (e) { X.toast(e.message); }); }; });
     };
-    var items = []; X.api('rx-list').then(function (r) { items = r.items || []; paint(items); }).catch(function (e) { var b = $('#rxML', s); if (b) b.textContent = e.message; });
   }
 
   function init(x) { X = x; }

@@ -67,7 +67,8 @@ function sectionsOf(action) {
   if (/^lq-/.test(action)) return ['app'];   // 🇬🇧 Life in the UK question review
   if (/^qv-/.test(action)) return ['cars'];
   if (/^rx-/.test(action)) return ['cars'];
-  if (/^vv-/.test(action)) return ['cars'];   // 🎙️ Voiceover Video   // 🎞️ Video Remix   // 🎬 Quiz videos
+  if (/^vv-/.test(action)) return ['cars'];
+  if (/^fin-/.test(action)) return ['cars'];   // ✅ Finished videos   // 🎙️ Voiceover Video   // 🎞️ Video Remix   // 🎬 Quiz videos
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
@@ -85,6 +86,13 @@ exports.handler = handler(async (ctx) => {
     const q = event.queryStringParameters || {};
     if (q.vfinal || q.vaudio) mustAllow(whoG, ['vads']);
     else if (q.subimg) mustAllow(whoG, ['app', 'subs', 'cars', 'vads']);
+    if (q.fin || q.fint) {   // ✅ a finished video piece / its cover picture
+      mustAllow(whoG, ['cars']); const fin = require('../finished');
+      const rec = q.fint ? await fin.getThumb(q.fint) : await fin.getPart(q.fin, q.part || '0');
+      if (!rec) throw new HttpError(404, 'not_found', 'Not found.');
+      if (q.fint) { const m = /^data:([^;]+);base64,(.*)$/.exec(rec.dataUrl); return { statusCode: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'private, max-age=86400' }, body: m[2], isBase64Encoded: true }; }
+      return { statusCode: 200, headers: { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'private, max-age=86400' }, body: rec.b64, isBase64Encoded: true };
+    }
     if (q.vfinal) {
       const part = await videoai.getFinalPart(q.vfinal, q.part || '0');
       if (!part) throw new HttpError(404, 'not_found', 'Not found.');
@@ -318,6 +326,13 @@ exports.handler = handler(async (ctx) => {
       await core.rateLimit('hq-vvspeak', who.email, 400, 60 * 60 * 1000, 'That\u2019s a lot of voice lines this hour — please wait a little.');
       return require('../voicevid').speak(body);
     }
+    case 'fin-start': return require('../finished').start(body, who.email);
+    case 'fin-part': return require('../finished').part(body.id, Number(body.idx), body.b64);
+    case 'fin-done': return require('../finished').done(body.id);
+    case 'fin-list': return require('../finished').list();
+    case 'fin-posted': return require('../finished').posted(body.id, !!body.on);
+    case 'fin-rename': return require('../finished').rename(body.id, body.name, body.caption);
+    case 'fin-del': return require('../finished').remove(body.id);
     case 'vv-save': return require('../voicevid').save(body, who.email);
     case 'vv-list': { const vv = require('../voicevid'); return { items: await vv.list(), prefs: await vv.prefs() }; }
     case 'vv-load': return require('../voicevid').load(body.id);
