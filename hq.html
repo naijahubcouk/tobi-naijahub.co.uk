@@ -2052,7 +2052,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     };
   }
   // 🎨 Image model — which AI makes HQ's pictures, with a side-by-side test (same prompt, cost of each)
-  var IMG_MODELS = [['google/gemini-2.5-flash-image', 'Nano Banana (current default)', '~$0.039'], ['openai/gpt-image-2', 'GPT Image 2', '~$0.006–0.014'], ['openai/gpt-image-2.6-flare', 'GPT Image 2.6 Flare (fast)', 'by tokens'], ['openai/gpt-image-2.6-sunburst', 'GPT Image 2.6 Sunburst (detail)', 'by tokens'], ['bytedance-seed/seedream-5-0-flash', 'Seedream 5.0 Flash', '~$0.018']];
+  var IMG_MODELS = [['openai/gpt-image-2', 'GPT Image 2 (default · best value)', '~$0.006–0.014'], ['google/gemini-2.5-flash-image', 'Nano Banana', '~$0.039'], ['openai/gpt-image-2.6-flare', 'GPT Image 2.6 Flare (fast)', 'by tokens'], ['openai/gpt-image-2.6-sunburst', 'GPT Image 2.6 Sunburst (detail)', 'by tokens'], ['bytedance-seed/seedream-5-0-flash', 'Seedream 5.0 Flash', '~$0.018']];
   function imgName(m) { var x = IMG_MODELS.filter(function (y) { return y[0] === m; })[0]; return x ? x[1] : m; }
   // ── ➕ Add your business: owners' new businesses, claims and name changes (admin only) ──
   function cap(t) { return String(t || '').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
@@ -2174,7 +2174,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
   function vImgm() {
     $('#ttl').textContent = 'Image model'; $('#topRight').innerHTML = '';
     if (!S.imgm) { $('#view').innerHTML = '<div class="wrap"><p class="muted">Loading…</p></div>'; api('img-settings').then(function (r) { S.imgm = r; if (S.view === 'imgm') vImgm(); }, function (x) { $('#view').innerHTML = '<div class="wrap"><div class="err">' + esc(x.message) + '</div></div>'; }); return; }
-    var M = S.imgm, T = S.imgT || { prompt: '', aspect: '16:9', models: ['google/gemini-2.5-flash-image', 'openai/gpt-image-2', 'openai/gpt-image-2.6-flare'], quality: 'medium' }, R = S.imgR;
+    var M = S.imgm, T = S.imgT || { prompt: '', aspect: '16:9', models: ['openai/gpt-image-2', 'google/gemini-2.5-flash-image', 'bytedance-seed/seedream-5-0-flash'], quality: 'medium' }, R = S.imgR;
     S.imgT = T;
     $('#view').innerHTML = '<div class="wrap">' +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><b>🎨 In use now:</b> ' + esc(imgName(M.model)) + (/^google\/|^openai\/gpt-5/.test(M.model) ? '' : ' · quality <b>' + esc(M.quality) + '</b>') + '<p class="muted" style="font-size:13px;margin:6px 0 0">Used for ✨ Create an image, blog images, event posters, birthday card art and storyboards. If the chosen model ever fails, HQ automatically tries Nano Banana so you’re never stuck.</p></div>' +

@@ -14,7 +14,7 @@ const gen = require('./generate');
 const UA = 'Mozilla/5.0 (compatible; AuntieTobiBot/1.0; +https://auntietobi.co.uk)';
 const PAGE_MAX = 2 * 1024 * 1024;
 const IMG_MAX = 3.5 * 1024 * 1024;
-const IMAGE_MODEL = () => env('STUDIO_IMAGE_MODEL', 'google/gemini-2.5-flash-image');
+const IMAGE_MODEL = () => env('STUDIO_IMAGE_MODEL', 'openai/gpt-image-2');
 
 // ── Safe fetching (public URLs only — never internal addresses) ──
 function privateIp(ip) {
@@ -236,10 +236,17 @@ Do NOT include: photos of real people, faces of performers, logos, brand names, 
 
 // ── Making an image: the model is chosen in HQ (🎨 Image model) — Nano Banana unless changed.
 // Older "chat" image models (Gemini / GPT-5 image) use chat completions; the dedicated image models (GPT Image, Seedream,
-// FLUX…) use OpenRouter's Image API. If the chosen model fails, Nano Banana is tried once so HQ never gets stuck.
-const DEFAULT_IMAGE_MODEL = 'google/gemini-2.5-flash-image';
+// FLUX…) use OpenRouter's Image API. If the chosen model fails, GPT Image 2 (the default — cheap and good) is tried once so HQ never gets stuck.
+const DEFAULT_IMAGE_MODEL = 'openai/gpt-image-2';
+const SWITCHED = '2026-11-22T14:00:00Z';   // Nano Banana was the old default — a choice saved before this date moves to GPT Image 2
 const isChatImageModel = m => /^google\/gemini|^openai\/gpt-5/.test(m);
-async function imageSettings() { const r = (await core.getJson('hq/imagemodel').catch(() => null)) || {}; return { model: r.model || IMAGE_MODEL(), quality: r.quality || 'medium' }; }
+async function imageSettings() {
+  const r = (await core.getJson('hq/imagemodel').catch(() => null)) || {};
+  const old = r.model === 'google/gemini-2.5-flash-image' && !(r.at && r.at > SWITCHED);
+  let model = !r.model || old ? IMAGE_MODEL() : r.model;
+  if (model === 'google/gemini-2.5-flash-image' && !(r.at && r.at > SWITCHED)) model = DEFAULT_IMAGE_MODEL;   // an old Netlify setting pointing at Nano Banana
+  return { model, quality: old ? 'medium' : r.quality || 'medium' };
+}
 async function saveImageSettings(raw) {
   const model = String(raw.model || '').trim(), quality = ['low', 'medium', 'high', 'auto'].includes(raw.quality) ? raw.quality : 'medium';
   if (!/^[a-z0-9-]+\/[a-z0-9._:-]+$/i.test(model)) throw new HttpError(400, 'invalid', 'Choose an image model.');
@@ -286,7 +293,7 @@ async function generateImage(prompt, aspect, refs) {
   try { return (await imageCall(st.model, prompt, aspect, refs, st.quality)).url; }
   catch (e) {
     if (st.model === DEFAULT_IMAGE_MODEL) throw e;
-    console.error('[eventmedia] falling back to Nano Banana after', st.model, e.message);
+    console.error('[eventmedia] falling back to GPT Image 2 after', st.model, e.message);
     return (await imageCall(DEFAULT_IMAGE_MODEL, prompt, aspect, refs)).url;
   }
 }
