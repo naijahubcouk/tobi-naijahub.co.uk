@@ -1,5 +1,7 @@
 /*
- * Auntie Tobi HQ — 📝 Template Carousel.
+ * Auntie Tobi HQ — 🎠 Carousel Studio (was 📝 Template Carousel + 🎨 Style Match).
+ * Looks: "Auntie Tobi White" (the bold headline template below) or any Style Match look (ready-made, read from
+ * screenshots, or ⭐ My styles) — drawn by HQStyle.draw. Every slide can also have a 🖼️ picture and ✨ decorations.
  * The white "bold headline" template: thin green frame, big black capitals with **green** words,
  * and an optional gold brush stroke, in 5 text styles with size controls (whole carousel or per slide). AI (or a quick paste) makes every slide at once,
  * then each slide can be edited with a live preview and downloaded as 1080×1350 PNGs (ZIP).
@@ -177,7 +179,10 @@
     if (!p) { p = PIC[id] = { im: new Image(), ok: false }; p.im.onload = function () { p.ok = true; picWaiters.slice().forEach(function (f) { try { f(); } catch (e) {} }); }; p.im.src = picSrc(id); }
     return p.ok ? p.im : null;
   }
-  function loadPics(car) { return Promise.all(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); })); }
+  function loadPics(car) {
+    var lk = car.look && car.look.kind === 'spec' && car.look.spec && car.look.spec.bg && car.look.spec.bg.type === 'image' ? car.look.spec.bg.img : '';
+    var bgp = lk ? new Promise(function (ok) { if (lookImg(lk)) return ok(); var q = LIMG[lk]; q.im.addEventListener('load', ok, { once: true }); q.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }) : Promise.resolve();
+    return Promise.all([bgp].concat(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); }))); }
   function picDraw(ctx, pic, x, y, w, h, radius) {
     var im = picImg(pic.img); if (!im) return;
     var z = clamp(Number(pic.z) || 1, 1, 2.5), s = Math.max(w / im.naturalWidth, h / im.naturalHeight) * z, dw = im.naturalWidth * s, dh = im.naturalHeight * s;
@@ -191,8 +196,87 @@
     if (pic.mode === 'top') return { x: bx, y: 74, w: bw, h: bh, top: 74 + bh + 44, bot: BOT };
     return { x: bx, y: H - 118 - bh, w: bw, h: bh, top: TOP, bot: H - 118 - bh - 40 };
   }
-  function tipNumber(car, i) { var n = 0; for (var k = 0; k <= i; k++) if (car.slides[k].kind === 'tip') n++; return n; }
+  // ── 🎠 Carousel Studio: looks other than Auntie Tobi White are drawn by the Style Match painter (HQStyle.draw) ──
+  function baseSpec(o) {
+    var b = { bg: { type: 'solid', c1: '#FFFFFF', c2: '#F3F5F7', angle: 160, img: '', dim: 0.35, where: 'cover' }, ink: '#111111', sub: '#3F4A5C', accent: '#057A44', hl: '#FFD25E', hlInk: '#111111',
+      font: { head: 'inter', body: 'dmsans', caps: false, size: 1, bodySize: 1 }, align: 'left', vpos: 'middle', hlStyle: 'color', frame: { on: false, width: 10, color: '#057A44', inset: 36, radius: 0 },
+      card: { on: false, color: '#FFFFFF', opacity: 0.12 }, shapes: 'none', numbers: 'badge', pageNo: true, swipe: true, handle: { text: '@auntietobi_uk', pos: 'bottom-left' }, cover: { size: 1.25, vpos: 'middle' } };
+    var m = function (t, s) { Object.keys(s).forEach(function (k) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k])) { t[k] = t[k] || {}; m(t[k], s[k]); } else t[k] = s[k]; }); return t; };
+    return m(b, o || {});
+  }
+  var LOOKS = [
+    { id: 'white', name: 'Auntie Tobi White', sw: ['#FFFFFF', '#057A44'] },
+    { id: 'green', name: 'Auntie Tobi Green', spec: baseSpec({ bg: { type: 'gradient', c1: '#057A44', c2: '#03532E' }, ink: '#FFFFFF', sub: '#E6F4EC', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36', font: { head: 'poppins' }, hlStyle: 'bar', shapes: 'circles' }) },
+    { id: 'yellow', name: 'Bold Yellow', spec: baseSpec({ bg: { c1: '#FFC928' }, ink: '#111111', sub: '#2B2B2B', accent: '#111111', hl: '#FFFFFF', hlInk: '#111111', font: { head: 'archivo', caps: true }, hlStyle: 'bar', frame: { on: true, color: '#111111', width: 8, inset: 30, radius: 18 }, numbers: 'pill', shapes: 'dots' }) },
+    { id: 'cream', name: 'Soft Cream', spec: baseSpec({ bg: { c1: '#F7F1E6' }, ink: '#2B2118', sub: '#5C4F42', accent: '#C2652A', hl: '#C2652A', font: { head: 'playfair', body: 'dmsans' }, hlStyle: 'color', align: 'center', shapes: 'blob', numbers: 'big' }) },
+    { id: 'night', name: 'Dark Night', spec: baseSpec({ bg: { type: 'gradient', c1: '#0F1E36', c2: '#050B16', angle: 200 }, ink: '#FFFFFF', sub: '#C9D1DE', accent: '#3DDC6E', hl: '#3DDC6E', hlInk: '#0F1E36', font: { head: 'anton', caps: true }, hlStyle: 'color', shapes: 'lines', numbers: 'badge' }) },
+    { id: 'naija', name: 'Naija Green & White', spec: baseSpec({ bg: { c1: '#FFFFFF' }, ink: '#0E3B23', sub: '#33483C', accent: '#008751', hl: '#008751', hlInk: '#FFFFFF', font: { head: 'poppins' }, hlStyle: 'bar', frame: { on: true, color: '#008751', width: 22, inset: 0, radius: 0 }, shapes: 'corner', numbers: 'badge', align: 'center' }) }
+  ];
+  var LIMG = {};
+  function lookImg(id) {
+    if (!id) return null; var p = LIMG[id];
+    if (!p) { p = LIMG[id] = { im: new Image(), ok: false }; p.im.onload = function () { p.ok = true; picWaiters.slice().forEach(function (f) { try { f(); } catch (e) {} }); }; p.im.src = '/.netlify/functions/app-content?img=' + encodeURIComponent(id); }
+    return p.ok ? p.im : null;
+  }
+  function isSpec(car) { return !!(car.look && car.look.kind === 'spec' && car.look.spec && window.HQStyle); }
+  function drawSpec(ctx, car, i) {
+    var sp = car.look.spec, sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, pic = sl.pic && sl.pic.img ? sl.pic : null;
+    var a = { kind: sl.kind === 'tip' ? 'point' : sl.kind, title: sl.heading, body: sl.body, size: sl.hs || 1, _num: tipNumber(car, i) };
+    if (pic && pic.mode === 'bg') a._afterBg = function (c) { picDraw(c, pic, 0, 0, W, H, 0); };
+    else if (pic) { var pb = picBox(pic); a._afterBg = function (c) { picDraw(c, pic, pb.x, pb.y, pb.w, pb.h, 28); }; a._top = pb.top; a._bot = pb.bot; }
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    window.HQStyle.draw(ctx, a, i, car.slides.length, sp, sp.bg.type === 'image' && sp.bg.img ? lookImg(sp.bg.img) : null);
+    ctx.restore();
+    return { over: false, shrunk: false };
+  }
   function draw(ctx, car, i) {
+    var r = isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = car.slides[i];
+    if (sl && sl.deco && sl.deco.length) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); sl.deco.forEach(function (d) { drawDeco(ctx, d); }); ctx.restore(); }
+    return r;
+  }
+
+  // ── ✨ decorations: arrows, stickers, shapes, emoji (x/y = centre, 0–1; s = size; r = turn in degrees) ──
+  var DECO = {
+    'arrow-curly': '↪️ Curly arrow', 'arrow-straight': '➡️ Straight arrow', 'arrow-loop': '➰ Loop arrow', 'arrow-down': '⤵️ Down arrow', swipe: '👉 Swipe sign',
+    brush: '🖌️ Brush stroke', scribble: '〰️ Scribble underline', ring: '⭕ Hand-drawn circle', sparkle: '✨ Sparkle', star: '⭐ Star', heart: '❤️ Heart', tick: '✅ Tick', cross: '❌ Cross',
+    badge: '🏷️ Badge (TIP, NEW…)', bubble: '💬 Speech bubble', quote: '❝ Quote marks', tape: '📎 Tape', dots: '⠿ Dots', blob: '🫧 Soft blob', emoji: '😀 Any emoji'
+  };
+  function hexLum(h) { h = String(h || '#000').replace('#', ''); var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; }
+  function head(ctx, x, y, ang, sz) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - sz * Math.cos(ang - 0.5), y - sz * Math.sin(ang - 0.5)); ctx.moveTo(x, y); ctx.lineTo(x - sz * Math.cos(ang + 0.5), y - sz * Math.sin(ang + 0.5)); ctx.stroke(); }
+  function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function star(ctx, pts, ro, ri) { ctx.beginPath(); for (var k = 0; k < pts * 2; k++) { var rad = k % 2 ? ri : ro, a = -Math.PI / 2 + k * Math.PI / pts; ctx[k ? 'lineTo' : 'moveTo'](Math.cos(a) * rad, Math.sin(a) * rad); } ctx.closePath(); }
+  function drawDeco(ctx, d) {
+    var c = d.c || '#057A44', S = 200 * (d.s || 1);
+    ctx.save(); ctx.translate(d.x * W, d.y * H); ctx.rotate((d.r || 0) * Math.PI / 180); if (d.flip) ctx.scale(-1, 1);
+    ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(4, S * 0.06);
+    var t = d.t;
+    if (t === 'arrow-curly') { ctx.beginPath(); ctx.moveTo(-S * 0.5, S * 0.25); ctx.bezierCurveTo(-S * 0.35, -S * 0.35, S * 0.15, -S * 0.4, S * 0.45, -S * 0.05); ctx.stroke(); head(ctx, S * 0.45, -S * 0.05, 0.75, S * 0.2); }
+    else if (t === 'arrow-straight') { ctx.beginPath(); ctx.moveTo(-S * 0.5, 0); ctx.lineTo(S * 0.48, 0); ctx.stroke(); head(ctx, S * 0.5, 0, 0, S * 0.22); }
+    else if (t === 'arrow-loop') { ctx.beginPath(); ctx.moveTo(-S * 0.55, S * 0.2); ctx.bezierCurveTo(-S * 0.2, S * 0.2, -S * 0.05, -S * 0.35, -S * 0.25, -S * 0.3); ctx.bezierCurveTo(-S * 0.45, -S * 0.25, -S * 0.2, S * 0.25, S * 0.1, S * 0.1); ctx.quadraticCurveTo(S * 0.3, 0, S * 0.5, -S * 0.1); ctx.stroke(); head(ctx, S * 0.5, -S * 0.1, -0.45, S * 0.2); }
+    else if (t === 'arrow-down') { ctx.beginPath(); ctx.moveTo(-S * 0.35, -S * 0.45); ctx.bezierCurveTo(S * 0.35, -S * 0.4, S * 0.35, S * 0.1, S * 0.05, S * 0.45); ctx.stroke(); head(ctx, S * 0.05, S * 0.45, 2.1, S * 0.2); }
+    else if (t === 'swipe') { var tx = d.txt || 'Swipe'; ctx.font = '800 ' + Math.round(S * 0.22) + 'px Poppins, Arial'; var tw = ctx.measureText(tx).width, w = tw + S * 0.55, h = S * 0.38; rrect(ctx, -w / 2, -h / 2, w, h, h / 2); ctx.fill(); ctx.fillStyle = hexLum(c) > 0.6 ? '#111' : '#fff'; ctx.strokeStyle = ctx.fillStyle; ctx.textBaseline = 'middle'; ctx.fillText(tx, -w / 2 + S * 0.14, 2); ctx.lineWidth = Math.max(3, S * 0.035); ctx.beginPath(); ctx.moveTo(w / 2 - S * 0.33, 0); ctx.lineTo(w / 2 - S * 0.12, 0); ctx.stroke(); head(ctx, w / 2 - S * 0.12, 0, 0, S * 0.09); }
+    else if (t === 'brush') { ctx.globalAlpha = 0.92; ctx.beginPath(); ctx.moveTo(-S * 0.6, -S * 0.05); ctx.quadraticCurveTo(0, -S * 0.14, S * 0.62, -S * 0.08); ctx.lineTo(S * 0.58, S * 0.06); ctx.quadraticCurveTo(0, S * 0.12, -S * 0.58, S * 0.08); ctx.closePath(); ctx.fill(); }
+    else if (t === 'scribble') { ctx.beginPath(); for (var k = 0; k <= 10; k++) { var xx = -S * 0.6 + k * S * 0.12, yy = (k % 2 ? -1 : 1) * S * 0.05; ctx[k ? 'lineTo' : 'moveTo'](xx, yy); } ctx.stroke(); }
+    else if (t === 'ring') { ctx.beginPath(); ctx.ellipse(0, 0, S * 0.6, S * 0.32, -0.05, 0.2, Math.PI * 2 + 0.1); ctx.stroke(); ctx.globalAlpha = 0.6; ctx.lineWidth *= 0.6; ctx.beginPath(); ctx.ellipse(S * 0.02, -S * 0.02, S * 0.62, S * 0.3, 0.04, 0, Math.PI * 1.2); ctx.stroke(); }
+    else if (t === 'sparkle') { [[0, 0, 1], [S * 0.38, -S * 0.3, 0.45], [-S * 0.34, S * 0.32, 0.35]].forEach(function (q) { ctx.save(); ctx.translate(q[0], q[1]); star(ctx, 4, S * 0.3 * q[2], S * 0.07 * q[2]); ctx.fill(); ctx.restore(); }); }
+    else if (t === 'star') { star(ctx, 5, S * 0.4, S * 0.17); ctx.fill(); }
+    else if (t === 'heart') { var hs = S * 0.4; ctx.beginPath(); ctx.moveTo(0, hs * 0.9); ctx.bezierCurveTo(-hs * 1.4, -hs * 0.1, -hs * 0.6, -hs * 1.1, 0, -hs * 0.35); ctx.bezierCurveTo(hs * 0.6, -hs * 1.1, hs * 1.4, -hs * 0.1, 0, hs * 0.9); ctx.fill(); }
+    else if (t === 'tick' || t === 'cross') { ctx.beginPath(); ctx.arc(0, 0, S * 0.36, 0, 7); ctx.fill(); ctx.strokeStyle = hexLum(c) > 0.6 ? '#111' : '#fff'; ctx.lineWidth = S * 0.07; ctx.beginPath(); if (t === 'tick') { ctx.moveTo(-S * 0.16, 0); ctx.lineTo(-S * 0.03, S * 0.13); ctx.lineTo(S * 0.18, -S * 0.12); } else { ctx.moveTo(-S * 0.13, -S * 0.13); ctx.lineTo(S * 0.13, S * 0.13); ctx.moveTo(S * 0.13, -S * 0.13); ctx.lineTo(-S * 0.13, S * 0.13); } ctx.stroke(); }
+    else if (t === 'badge' || t === 'bubble') {
+      var bt = d.txt || (t === 'badge' ? 'TIP' : 'Did you know?'); ctx.font = '800 ' + Math.round(S * (t === 'badge' ? 0.24 : 0.2)) + 'px Poppins, Arial'; var bw = ctx.measureText(bt).width + S * 0.36, bh = S * (t === 'badge' ? 0.4 : 0.42);
+      rrect(ctx, -bw / 2, -bh / 2, bw, bh, t === 'badge' ? bh / 2 : S * 0.1); ctx.fill();
+      if (t === 'bubble') { ctx.beginPath(); ctx.moveTo(-bw * 0.25, bh / 2 - 2); ctx.lineTo(-bw * 0.32, bh / 2 + S * 0.16); ctx.lineTo(-bw * 0.08, bh / 2 - 2); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle = hexLum(c) > 0.6 ? '#111' : '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(bt, 0, 2);
+    }
+    else if (t === 'quote') { ctx.font = '900 ' + Math.round(S * 0.9) + 'px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('“', 0, S * 0.2); }
+    else if (t === 'tape') { ctx.globalAlpha = 0.55; ctx.fillRect(-S * 0.4, -S * 0.1, S * 0.8, S * 0.2); }
+    else if (t === 'dots') { for (var r2 = 0; r2 < 4; r2++) for (var c2 = 0; c2 < 4; c2++) { ctx.beginPath(); ctx.arc(-S * 0.3 + c2 * S * 0.2, -S * 0.3 + r2 * S * 0.2, S * 0.035, 0, 7); ctx.fill(); } }
+    else if (t === 'blob') { ctx.globalAlpha = 0.22; ctx.beginPath(); ctx.moveTo(S * 0.5, 0); ctx.bezierCurveTo(S * 0.5, S * 0.4, S * 0.1, S * 0.5, -S * 0.2, S * 0.4); ctx.bezierCurveTo(-S * 0.6, S * 0.3, -S * 0.55, -S * 0.3, -S * 0.15, -S * 0.42); ctx.bezierCurveTo(S * 0.2, -S * 0.55, S * 0.5, -S * 0.35, S * 0.5, 0); ctx.fill(); }
+    else if (t === 'emoji') { ctx.font = Math.round(S * 0.7) + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(d.txt || '🔥', 0, 0); }
+    ctx.restore();
+  }
+  function tipNumber(car, i) { var n = 0; for (var k = 0; k <= i; k++) if (car.slides[k].kind === 'tip') n++; return n; }
+  function drawWhite(ctx, car, i) {
     var sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, over = false, shrunk = false;
     var e = eff(car, sl), st = e.st, dh = decoH(e.brush);
     var align = sl.align === 'left' ? 'left' : 'center';
@@ -240,7 +324,7 @@
 
   function fontsReady() {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
-    return Promise.all(['900 100px "Inter Tight"', '500 40px Inter', '700 30px Inter', '400 100px Anton', '800 100px Poppins', '900 100px "Playfair Display"', 'italic 900 100px "Playfair Display"', '400 100px "Archivo Black"', '700 100px Caveat'].map(function (f) { return document.fonts.load(f).catch(function () {}); }));
+    return Promise.all(['900 100px "Inter Tight"', '500 40px Inter', '700 30px Inter', '400 100px Anton', '800 100px Poppins', '900 100px "Playfair Display"', 'italic 900 100px "Playfair Display"', '400 100px "Archivo Black"', '700 100px Caveat', '700 60px "DM Sans"', '500 30px "DM Sans"', '400 30px "DM Sans"', '700 60px Fraunces', '600 30px "DM Sans"'].map(function (f) { return document.fonts.load(f).catch(function () {}); }));
   }
   async function pngOf(car, i) {
     await loadPics(car);
@@ -275,11 +359,11 @@
 
   function view() {
     var esc = X.esc;
-    document.getElementById('ttl').textContent = 'Template Carousel';
+    document.getElementById('ttl').textContent = 'Carousel Studio';
     document.getElementById('topRight').innerHTML = '<button class="btn primary" id="tcNew">＋ New carousel</button>';
     var items = list();
     document.getElementById('view').innerHTML = '<div class="wrap">' +
-      '<div class="note" style="margin-bottom:12px">Make carousels in the Auntie Tobi bold headline template: white page, green frame, big capitals with green words, and an optional gold brush stroke. AI (or a quick paste) makes all the slides at once — then edit any slide and download them as images.</div>' +
+      '<div class="note" style="margin-bottom:12px">🎠 <b>Carousel Studio</b> — AI (or a quick paste) writes all the slides at once. Then pick a look (Auntie Tobi White, Green, Bold Yellow… or 🎨 match a style from screenshots), add 🖼️ pictures and ✨ decorations like arrows and stickers, and download the slides as images.</div>' +
       (items.length ? '<div class="cargrid">' + items.map(function (c) {
         return '<div class="card carcard" data-topen="' + c.id + '"><canvas class="carthumb" width="216" height="270" data-tthumb="' + c.id + '"></canvas>' +
           '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15.5px;line-height:1.3">' + esc(c.title) + '</div>' +
@@ -301,7 +385,7 @@
       var big = document.createElement('canvas'); big.width = W; big.height = H; var bx = big.getContext('2d');
       Array.prototype.forEach.call(document.querySelectorAll('[data-tthumb]'), function (cv) {
         var c = list().filter(function (x) { return x.id === cv.dataset.tthumb; })[0]; if (!c) return;
-        loadPics({ slides: c.slides.slice(0, 1) }).then(function () { draw(bx, c, 0); cv.getContext('2d').drawImage(big, 0, 0, 216, 270); });
+        loadPics({ slides: c.slides.slice(0, 1), look: c.look }).then(function () { draw(bx, c, 0); cv.getContext('2d').drawImage(big, 0, 0, 216, 270); });
       });
     });
   }
@@ -362,14 +446,7 @@
     ov.innerHTML = '<div class="carbar"><button class="btn ghost sm" id="teX">← Back</button><input id="teTitle" class="cartitle" maxlength="140"><span class="muted" id="teSaved" style="font-size:13px"></span>' +
       '<button class="btn ghost sm" id="teSave">💾 Save</button></div>' +
       '<div class="carbody"><div class="carleft">' +
-      '<div class="card"><div class="row" style="gap:16px;flex-wrap:wrap"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the tips (01, 02…)</label>' +
-        '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
-        '<label class="chk"><input type="checkbox" id="teS"' + (car.swipe !== false ? ' checked' : '') + '> “Swipe →” on the cover</label>' +
-        '<label class="chk"><input type="checkbox" id="teB"' + (car.brush !== false ? ' checked' : '') + '> Gold brush stroke</label></div>' +
-        '<div class="lbl">Text style</div><div class="chipbar" id="teSt">' + Object.keys(STYLES).map(function (k) { return '<button class="chip" data-v="' + k + '" aria-pressed="' + ((car.style || 'classic') === k) + '">' + STYLES[k].name + '</button>'; }).join('') + '</div>' +
-        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div>' +
-        '<div><div class="lbl">Body text size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div>' +
-        '<div class="muted" style="font-size:12.5px;margin-top:8px">Put green words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div></div>' +
+      '<div class="card" id="teLook"></div>' +
       '<div id="teSlides"></div><button class="btn ghost" id="teAdd" style="width:100%;margin-top:8px">＋ Add a slide</button>' +
       '<div class="card" style="margin-top:12px"><div class="lbl" style="margin-top:0">Caption</div><textarea id="teCap" rows="6"></textarea><div class="lbl">Hashtags</div><textarea id="teTags" rows="2"></textarea><button class="btn ghost sm" id="teCopy" style="margin-top:8px">📋 Copy caption &amp; hashtags</button></div>' +
       '</div><div class="carright"><div class="carstage"><canvas id="teCv" width="1080" height="1350"></canvas></div>' +
@@ -380,6 +457,7 @@
       '<div class="card" style="margin-top:10px"><div style="font-weight:800;margin-bottom:6px">⬇️ Download</div>' +
       '<button class="btn primary" id="teDl" style="width:100%">🖼️ All slides as images (.zip)</button><button class="btn ghost" id="teOne" style="width:100%;margin-top:8px">⬇️ Just this slide (PNG)</button>' +
       '<p class="muted" style="font-size:12.5px;margin-top:8px">1080×1350 — Instagram’s portrait size. On Instagram: New post → pick the images in order (01, 02…) → paste the caption.</p>' +
+      '<button class="btn ghost" id="teAnim" style="width:100%;margin-top:8px">🎬 Send to Animated Carousels</button>' +
       '<button class="btn ghost sm" id="tePosted" style="margin-top:4px"></button></div></div></div>';
     document.body.appendChild(ov); document.body.style.overflow = 'hidden';
     var $ = function (q) { return ov.querySelector(q); }, cv = $('#teCv'), ctx = cv.getContext('2d');
@@ -432,8 +510,147 @@
           (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div><div></div></div>' : '') +
           '<div class="f2"><div><label>Heading size <span class="muted" data-pv="hs">' + pct(sl.hs) + '</span></label><input type="range" data-f="hs" min="50" max="160" step="5" value="' + Math.round((sl.hs || 1) * 100) + '"></div>' +
           '<div><label>Body text size <span class="muted" data-pv="bs">' + pct(sl.bs) + '</span></label><input type="range" data-f="bs" min="50" max="160" step="5" value="' + Math.round((sl.bs || 1) * 100) + '"></div></div>' +
-          '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + '</div>';
+          '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + decoHtml(sl, i) + '</div>';
     }
+    // ── 🎨 the look of the whole carousel ──
+    function sw(l) { var s = l.spec; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
+    function whitePanel() {
+      return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the tips (01, 02…)</label>' +
+        '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
+        '<label class="chk"><input type="checkbox" id="teS"' + (car.swipe !== false ? ' checked' : '') + '> “Swipe →” on the cover</label>' +
+        '<label class="chk"><input type="checkbox" id="teB"' + (car.brush !== false ? ' checked' : '') + '> Gold brush stroke</label></div>' +
+        '<div class="lbl">Text style</div><div class="chipbar" id="teSt">' + Object.keys(STYLES).map(function (k) { return '<button class="chip" data-v="' + k + '" aria-pressed="' + ((car.style || 'classic') === k) + '">' + STYLES[k].name + '</button>'; }).join('') + '</div>' +
+        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div>' +
+        '<div><div class="lbl">Body text size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div>';
+    }
+    function specPanel() {
+      var sp = car.look.spec, F = (window.HQStyle && window.HQStyle.FONTS) || {};
+      var seg = function (key, opts) { var v = getP(sp, key); return '<div class="scseg">' + opts.map(function (o) { return '<button data-sseg="' + key + '" data-v="' + o[0] + '" aria-pressed="' + (String(v) === String(o[0])) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
+      var col = function (key, label) { return '<label class="sccol"><input type="color" data-scol="' + key + '" value="' + getP(sp, key) + '"><span>' + label + '</span></label>'; };
+      var rng = function (key, label, min, max, step) { return '<div><div class="lbl">' + label + '</div><input type="range" data-srng="' + key + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + getP(sp, key) + '"></div>'; };
+      var chk = function (key, label) { return '<label class="chk"><input type="checkbox" data-schk="' + key + '"' + (getP(sp, key) ? ' checked' : '') + '> ' + label + '</label>'; };
+      var fopt = function (key) { return '<select data-ssel="' + key + '">' + Object.keys(F).map(function (k) { return '<option value="' + k + '"' + (getP(sp, key) === k ? ' selected' : '') + '>' + F[k].name + '</option>'; }).join('') + '</select>'; };
+      return '<details class="lsec" open><summary>🎨 Colours</summary><div class="sccols">' + col('bg.c1', 'Background') + (sp.bg.type === 'gradient' ? col('bg.c2', 'Background 2') : '') + col('ink', 'Headline') + col('sub', 'Small text') + col('accent', 'Accent') + col('hl', 'Highlight') + col('hlInk', 'Text on highlight') + '</div>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><span class="muted" style="font-size:12.5px;align-self:center">Quick swap:</span>' + Object.keys(PALS).map(function (k) { return '<button class="btn ghost sm" data-spal="' + k + '">' + PALS[k].n + '</button>'; }).join('') + '</div></details>' +
+        '<details class="lsec"><summary>🖼️ Background</summary>' + seg('bg.type', [['solid', 'Plain'], ['gradient', 'Gradient'], ['image', 'Photo']]) +
+          (sp.bg.type === 'gradient' ? rng('bg.angle', 'Gradient direction', 0, 360, 5) : '') +
+          (sp.bg.type === 'image' ? '<div class="row" style="gap:6px;margin-top:8px"><label class="btn ghost sm" style="margin:0;cursor:pointer">📷 ' + (sp.bg.img ? 'Change photo' : 'Upload photo') + '<input type="file" accept="image/*" id="teBgUp" hidden></label></div><div class="lbl">Photo on</div>' + seg('bg.where', [['cover', 'Cover only'], ['all', 'Every slide']]) + rng('bg.dim', 'Darken the photo', 0, 0.85, 0.05) : '') + '</details>' +
+        '<details class="lsec"><summary>🔤 Text</summary><div class="f2"><div><div class="lbl">Headline font</div>' + fopt('font.head') + '</div><div><div class="lbl">Small text font</div>' + fopt('font.body') + '</div></div>' +
+          '<div class="f2">' + rng('font.size', 'Headline size', 0.6, 1.6, 0.05) + rng('font.bodySize', 'Small text size', 0.6, 1.6, 0.05) + '</div><div class="f2">' + rng('cover.size', 'Cover headline size', 0.7, 1.8, 0.05) + '<div></div></div>' + chk('font.caps', 'ALL CAPITALS headlines') +
+          '<div class="lbl">Highlighted words (**stars**)</div>' + seg('hlStyle', [['color', 'Colour'], ['bar', 'Block'], ['brush', 'Brush'], ['underline', 'Underline'], ['none', 'None']]) + '</details>' +
+        '<details class="lsec"><summary>📐 Layout</summary><div class="lbl">Line up</div>' + seg('align', [['left', '⬅ Left'], ['center', '↔ Centre']]) + '<div class="lbl">Where the text sits</div>' + seg('vpos', [['top', 'Top'], ['middle', 'Middle'], ['bottom', 'Bottom']]) +
+          '<div class="lbl">Cover text sits</div>' + seg('cover.vpos', [['top', 'Top'], ['middle', 'Middle'], ['bottom', 'Bottom']]) + '<div class="lbl">Tip numbers</div>' + seg('numbers', [['badge', '① Circle'], ['pill', 'TIP 01'], ['big', 'Big faded'], ['none', 'None']]) +
+          chk('card.on', 'Text inside a box') + (sp.card.on ? '<div class="sccols">' + col('card.color', 'Box colour') + '</div>' + rng('card.opacity', 'Box see-through', 0.1, 1, 0.05) : '') + '</details>' +
+        '<details class="lsec"><summary>✨ Shapes &amp; frame</summary><div class="lbl">Background shapes</div>' + seg('shapes', [['none', 'None'], ['circles', 'Circles'], ['dots', 'Dots'], ['corner', 'Corner'], ['blob', 'Blobs'], ['lines', 'Lines']]) +
+          chk('frame.on', 'Frame round the slide') + (sp.frame.on ? '<div class="sccols">' + col('frame.color', 'Frame colour') + '</div><div class="f2">' + rng('frame.width', 'Thickness', 2, 40, 1) + rng('frame.radius', 'Rounded corners', 0, 60, 2) + '</div>' + rng('frame.inset', 'Gap from the edge', 0, 80, 2) : '') +
+          '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:6px">' + chk('pageNo', 'Slide numbers (2/7)') + chk('swipe', '“Swipe →”') + '</div></details>' +
+        '<details class="lsec"><summary>@ Handle</summary><input id="teHandle" value="' + X.esc(sp.handle.text) + '">' + seg('handle.pos', [['top-left', '↖'], ['top-right', '↗'], ['bottom-left', '↙'], ['bottom-center', '↓'], ['bottom-right', '↘'], ['none', 'Hide']]) + '</details>';
+    }
+    var PALS = { green: { n: '💚 Green', bg: ['#057A44', '#03532E'], ink: '#FFFFFF', sub: '#E6F4EC', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36' }, navy: { n: 'Navy', bg: ['#0F1E36', '#1F3560'], ink: '#FFFFFF', sub: '#C9D1DE', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36' },
+      gold: { n: 'Gold', bg: ['#FFB81C', '#F08C00'], ink: '#0F1E36', sub: '#1F2937', accent: '#057A44', hl: '#FFFFFF', hlInk: '#0F1E36' }, white: { n: 'White', bg: ['#FFFFFF', '#F3F5F7'], ink: '#111111', sub: '#3F4A5C', accent: '#057A44', hl: '#FFD25E', hlInk: '#111111' },
+      cream: { n: 'Cream', bg: ['#F7F1E6', '#EFE4D0'], ink: '#2B2118', sub: '#5C4F42', accent: '#C2652A', hl: '#C2652A', hlInk: '#FFFFFF' } };
+    function getP(o, p) { return p.split('.').reduce(function (a, k) { return a && a[k]; }, o); }
+    function setP(o, p, v) { var a = p.split('.'), t = o; for (var k = 0; k < a.length - 1; k++) t = t[a[k]] = t[a[k]] || {}; t[a[a.length - 1]] = v; }
+    function lookName() { return isSpec(car) ? car.look.name : 'Auntie Tobi White'; }
+    function renderLook() {
+      var curId = isSpec(car) ? (car.look.id || '') : 'white', box = $('#teLook'), opn = Array.prototype.map.call(box.querySelectorAll('.lsec'), function (d) { return d.open; });
+      box.innerHTML = '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>🎨 Look</b><span class="muted" style="font-size:13px">— now: <b>' + X.esc(lookName()) + '</b></span></div>' +
+        '<div class="chipbar" style="margin-top:8px">' + LOOKS.map(function (l) { return '<button class="chip" data-look="' + l.id + '" aria-pressed="' + (curId === l.id) + '"><i class="lsw" style="background:' + sw(l) + '"></i>' + l.name + '</button>'; }).join('') +
+        '<button class="chip" id="teMy">⭐ My styles</button><label class="chip" style="cursor:pointer;margin:0">🎨 Match a style…<input type="file" id="teRef" accept="image/jpeg,image/png,image/webp" multiple hidden></label>' + (isSpec(car) ? '<button class="chip" id="teSaveLook">💾 Save this look</button>' : '') + '</div>' +
+        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : whitePanel()) +
+        '<div class="muted" style="font-size:12.5px;margin-top:8px">Put highlighted words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div>';
+      Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d, k) { if (opn[k] !== undefined) d.open = opn[k]; });
+      bindLook();
+    }
+    function lookChanged(full) { mark(); if (full) renderLook(); fontsReady().then(function () { paint(); paintThumbs(); }); paint(); paintThumbs(); }
+    function bindLook() {
+      var box = $('#teLook'), q = function (s) { return box.querySelector(s); }, qa = function (s) { return Array.prototype.slice.call(box.querySelectorAll(s)); };
+      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; car.look = l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); }; });
+      q('#teMy').onclick = mySheet;
+      q('#teRef').onchange = async function () {
+        var fs = [].slice.call(this.files || []).slice(0, 3), imgs = [], m = q('#teLookMsg'); if (!fs.length) return;
+        m.textContent = '🔍 Reading the style… (about 15 seconds)';
+        try { for (var k = 0; k < fs.length; k++) imgs.push(await shrinkPic(fs[k], 1100)); var r = await X.api('sc-analyze', { images: imgs }); r.spec.bg.where = 'cover'; car.look = { kind: 'spec', id: '', name: r.name, styleId: '', spec: r.spec }; lookChanged(true); X.toast('🎨 Style read: ' + r.name + ' — adjust anything below'); }
+        catch (e) { m.textContent = ''; X.toast(e.message); }
+      };
+      if (q('#teSaveLook')) q('#teSaveLook').onclick = function () {
+        var nm = prompt('Name this look', car.look.name || 'My look'); if (!nm) return;
+        X.api('sc-style-save', { id: car.look.styleId || '', name: nm, spec: car.look.spec }).then(function (r) { car.look.styleId = r.style.id; car.look.name = r.style.name; car.look.id = ''; STY = r.styles; mark(); renderLook(); X.toast('💾 Saved to ⭐ My styles'); }).catch(function (e) { X.toast(e.message); });
+      };
+      if (!isSpec(car)) {
+        q('#teN').onchange = function () { car.numbers = this.checked; lookChanged(); };
+        q('#teH').onchange = function () { car.handle = this.checked; lookChanged(); };
+        q('#teS').onchange = function () { car.swipe = this.checked; lookChanged(); };
+        q('#teB').onchange = function () { car.brush = this.checked; lookChanged(); };
+        qa('#teSt [data-v]').forEach(function (b) { b.onclick = function () { car.style = b.dataset.v; qa('#teSt [data-v]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); lookChanged(); }; });
+        var sizeUi = function () { q('#teHs').value = Math.round((car.hs || 1) * 100); q('#teBs').value = Math.round((car.bs || 1) * 100); q('#teHsV').textContent = pct(car.hs); q('#teBsV').textContent = pct(car.bs); };
+        q('#teHs').oninput = function () { car.hs = Number(this.value) / 100; sizeUi(); lookChanged(); };
+        q('#teBs').oninput = function () { car.bs = Number(this.value) / 100; sizeUi(); lookChanged(); };
+        sizeUi(); return;
+      }
+      var sp = car.look.spec;
+      qa('[data-scol]').forEach(function (i) { i.oninput = function () { setP(sp, i.dataset.scol, i.value.toUpperCase()); car.look.id = ''; lookChanged(); }; });
+      qa('[data-srng]').forEach(function (i) { i.oninput = function () { setP(sp, i.dataset.srng, Number(i.value)); car.look.id = ''; lookChanged(); }; });
+      qa('[data-ssel]').forEach(function (i) { i.onchange = function () { setP(sp, i.dataset.ssel, i.value); car.look.id = ''; lookChanged(); }; });
+      qa('[data-schk]').forEach(function (i) { i.onchange = function () { setP(sp, i.dataset.schk, i.checked); car.look.id = ''; lookChanged(true); }; });
+      qa('[data-sseg]').forEach(function (b) { b.onclick = function () { setP(sp, b.dataset.sseg, b.dataset.v); car.look.id = ''; lookChanged(true); }; });
+      qa('[data-spal]').forEach(function (b) { b.onclick = function () { var p = PALS[b.dataset.spal]; sp.bg.c1 = p.bg[0]; sp.bg.c2 = p.bg[1]; ['ink', 'sub', 'accent', 'hl', 'hlInk'].forEach(function (k) { sp[k] = p[k]; }); if (sp.frame.on) sp.frame.color = p.accent; car.look.id = ''; lookChanged(true); }; });
+      if (q('#teHandle')) q('#teHandle').oninput = function () { sp.handle.text = this.value; lookChanged(); };
+      if (q('#teBgUp')) q('#teBgUp').onchange = function () { var f = this.files && this.files[0]; if (!f) return; q('#teLookMsg').textContent = 'Adding the photo…'; shrinkPic(f, 1600).then(function (d) { return X.api('app-img', { image: d }); }).then(function (r) { sp.bg.img = r.imgId; q('#teLookMsg').textContent = ''; lookChanged(true); }).catch(function (e) { q('#teLookMsg').textContent = ''; X.toast(e.message); }); };
+    }
+    var STY = null;
+    function mySheet() {
+      var s = X.sheet('<h2>⭐ My styles</h2><p class="muted" style="margin:4px 0 10px">Looks you saved (including from 🎨 Style Match). Your words stay — only the look changes.</p><div id="msL" class="muted">Loading…</div><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="msX">Close</button></div>');
+      s.querySelector('#msX').onclick = function () { s.remove(); };
+      var paintL = function () {
+        var b = s.querySelector('#msL'); if (!STY.length) { b.textContent = 'No saved looks yet — pick a look, change it, then 💾 Save this look.'; return; } b.classList.remove('muted');
+        b.innerHTML = STY.map(function (x) { return '<div class="row" style="gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)"><i class="lsw" style="width:40px;height:40px;background:' + sw(x) + '"></i><b style="flex:1">' + X.esc(x.name) + '</b><button class="btn primary sm" data-use="' + x.id + '">Use</button><button class="btn ghost sm" data-del="' + x.id + '">🗑</button></div>'; }).join('');
+        Array.prototype.forEach.call(b.querySelectorAll('[data-use]'), function (u) { u.onclick = function () { var x = STY.filter(function (y) { return y.id === u.dataset.use; })[0]; car.look = { kind: 'spec', id: '', name: x.name, styleId: x.id, spec: JSON.parse(JSON.stringify(x.spec)) }; s.remove(); lookChanged(true); }; });
+        Array.prototype.forEach.call(b.querySelectorAll('[data-del]'), function (u) { u.onclick = function () { if (!confirm('Delete this saved look?')) return; X.api('sc-style-del', { id: u.dataset.del }).then(function (r) { STY = r.styles; paintL(); }).catch(function (e) { X.toast(e.message); }); }; });
+      };
+      (STY ? Promise.resolve() : X.api('sc-styles').then(function (r) { STY = r.styles || []; })).then(paintL).catch(function (e) { s.querySelector('#msL').textContent = e.message; });
+    }
+
+    // ── ✨ decorations on a slide ──
+    var openDeco = {};
+    function decoHtml(sl, i) {
+      var ds = sl.deco || [], arrows = /^arrow|^swipe/;
+      return '<details class="sdeco" data-i="' + i + '"' + (openDeco[i] ? ' open' : '') + ' style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:14px">✨ Decorations <span class="muted" style="font-weight:400">— ' + (ds.length ? ds.length + ' on this slide' : 'arrows, stickers, emoji…') + '</span></summary>' +
+        '<div class="row" style="gap:6px;margin-top:8px"><select data-dadd style="flex:1">' + Object.keys(DECO).map(function (k) { return '<option value="' + k + '">' + DECO[k] + '</option>'; }).join('') + '</select><button class="btn primary sm" data-dgo>＋ Add</button></div>' +
+        ds.map(function (d, k) {
+          var txt = d.t === 'badge' || d.t === 'bubble' || d.t === 'emoji' || d.t === 'swipe';
+          return '<div class="dk"><div class="row" style="gap:6px;align-items:center"><b style="flex:1;font-size:13px">' + DECO[d.t] + '</b><input type="color" data-dc="' + k + '" value="' + (d.c || '#057A44') + '" title="Colour">' + (arrows.test(d.t) ? '<button class="btn ghost sm" data-dflip="' + k + '" title="Flip">⇋</button>' : '') + '<button class="btn ghost sm" data-dall="' + k + '" title="Put on every slide">📋 All slides</button><button class="btn ghost sm" data-ddel="' + k + '" title="Remove" style="color:#B42318">✕</button></div>' +
+            (txt ? '<input data-dt="' + k + '" value="' + X.esc(d.txt || '') + '" placeholder="' + (d.t === 'emoji' ? 'Paste an emoji, e.g. 🔥' : 'Text, e.g. TIP or NEW') + '" maxlength="24" style="margin-top:4px">' : '') +
+            '<div class="f2" style="margin-top:4px"><div><div class="lbl" style="margin:0">Size</div><input type="range" data-ds="' + k + '" min="20" max="400" value="' + Math.round((d.s || 1) * 100) + '"></div><div><div class="lbl" style="margin:0">Turn</div><input type="range" data-dr="' + k + '" min="-180" max="180" value="' + Math.round(d.r || 0) + '"></div></div></div>';
+        }).join('') + (ds.length ? '<div class="muted" style="font-size:12.5px;margin-top:6px">✋ Drag them on the big preview to move them.</div>' : '') + '</details>';
+    }
+    function decoColour() { return isSpec(car) ? car.look.spec.accent : '#057A44'; }
+    function bindDeco(el, i) {
+      var d = el.querySelector('.sdeco'); if (!d) return; d.addEventListener('toggle', function () { openDeco[i] = d.open; });
+      var sl = car.slides[i], re = function () { mark(); paintSlides(); setSel(i); paintThumbs(); }, live = function () { mark(); paint(); paintThumbs(); };
+      el.querySelector('[data-dgo]').onclick = function () {
+        var t = el.querySelector('[data-dadd]').value; sl.deco = sl.deco || []; if (sl.deco.length >= 12) return X.toast('Up to 12 decorations on a slide');
+        var n = sl.deco.length, SPOT = { 'arrow-curly': [0.24, 0.8], 'arrow-straight': [0.5, 0.82], 'arrow-loop': [0.3, 0.8], 'arrow-down': [0.8, 0.2], badge: [0.22, 0.12], bubble: [0.7, 0.13], emoji: [0.83, 0.16], sparkle: [0.84, 0.8], star: [0.85, 0.13], heart: [0.15, 0.85], tick: [0.85, 0.85], cross: [0.85, 0.85], quote: [0.18, 0.14], tape: [0.5, 0.06], dots: [0.85, 0.12], blob: [0.85, 0.85], ring: [0.5, 0.5], brush: [0.5, 0.75], scribble: [0.5, 0.75] }, sp0 = SPOT[t] || [0.5, 0.5], dflt = { t: t, x: sp0[0] + (n > 3 ? ((n % 3) - 1) * 0.05 : 0), y: sp0[1], s: /^arrow/.test(t) ? 0.9 : t === 'emoji' ? 0.8 : t === 'blob' ? 2.2 : t === 'brush' ? 1.6 : 1, r: 0, c: t === 'tape' ? '#E8D9A8' : t === 'brush' ? '#E0A21B' : decoColour() };
+        if (t === 'badge') dflt.txt = 'TIP'; if (t === 'bubble') dflt.txt = 'Did you know?'; if (t === 'emoji') dflt.txt = '🔥'; if (t === 'swipe') { dflt.txt = 'Swipe'; dflt.x = 0.72; dflt.y = 0.88; }
+        sl.deco.push(dflt); openDeco[i] = true; re(); X.toast('✨ Added — drag it on the preview to move it');
+      };
+      Array.prototype.forEach.call(el.querySelectorAll('[data-dc]'), function (f) { f.oninput = function () { sl.deco[+f.dataset.dc].c = f.value; live(); }; });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-ds]'), function (f) { f.oninput = function () { sl.deco[+f.dataset.ds].s = Number(f.value) / 100; live(); }; });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-dr]'), function (f) { f.oninput = function () { sl.deco[+f.dataset.dr].r = Number(f.value); live(); }; });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-dt]'), function (f) { f.oninput = function () { sl.deco[+f.dataset.dt].txt = f.value; live(); }; });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-dflip]'), function (b) { b.onclick = function () { var o = sl.deco[+b.dataset.dflip]; o.flip = !o.flip; live(); }; });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-ddel]'), function (b) { b.onclick = function () { sl.deco.splice(+b.dataset.ddel, 1); re(); }; });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-dall]'), function (b) { b.onclick = function () { var o = sl.deco[+b.dataset.dall], n = 0; car.slides.forEach(function (s2, k) { if (k === i) return; s2.deco = (s2.deco || []).filter(function (x) { return !(x.t === o.t && Math.abs(x.x - o.x) < 0.02 && Math.abs(x.y - o.y) < 0.02); }); if (s2.deco.length < 12) { s2.deco.push(JSON.parse(JSON.stringify(o))); n++; } }); re(); X.toast('📋 Put on ' + n + ' other slide' + (n === 1 ? '' : 's')); }; });
+    }
+    // ✋ drag decorations on the big preview
+    (function () {
+      var drag = null, at = function (e) { var r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }; };
+      var hit = function (p) { var ds = car.slides[sel].deco || []; for (var k = ds.length - 1; k >= 0; k--) { var d = ds[k], rad = 0.11 * (d.s || 1) + 0.03; if (Math.abs(p.x - d.x) < rad && Math.abs(p.y - d.y) * (H / W) < rad) return k; } return -1; };
+      cv.addEventListener('pointerdown', function (e) { var p = at(e), k = hit(p); if (k < 0) return; var d = car.slides[sel].deco[k]; drag = { k: k, dx: p.x - d.x, dy: p.y - d.y }; try { cv.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); });
+      cv.addEventListener('pointermove', function (e) { var p = at(e); if (!drag) { cv.style.cursor = hit(p) >= 0 ? 'move' : ''; return; } var d = car.slides[sel].deco[drag.k]; d.x = clamp(p.x - drag.dx, 0, 1); d.y = clamp(p.y - drag.dy, 0, 1); paint(); });
+      var end = function () { if (drag) { drag = null; mark(); paintThumbs(); } };
+      cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+    })();
     var openPic = {};
     function picHtml(sl, i) {
       var p = sl.pic && sl.pic.img ? sl.pic : null, sum = p ? (p.mode === 'bg' ? 'full background' : 'photo box at the ' + p.mode) + ' · ' + Math.round((p.fade || 0) * 100) + '% see-through' : 'none';
@@ -450,7 +667,7 @@
         '<div class="row hidden" data-pmkrow style="gap:6px;margin-top:6px"><input data-pwant placeholder="Describe the picture, e.g. a Nigerian family unpacking boxes in a bright London flat" style="flex:1"><button class="btn primary sm" data-pgo>✨ Make it</button></div><div class="muted" data-pmsg style="font-size:12.5px;margin-top:4px"></div></details>';
     }
     function setPic(i, img) { var sl = car.slides[i], old = sl.pic || {}; sl.pic = Object.assign({ mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }, old.img ? old : {}, { img: img }); openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); }
-    function shrinkPic(file) { return new Promise(function (ok, bad) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var k = Math.min(1, 1600 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.88)); }; im.onerror = function () { bad(new Error('That photo didn’t open.')); }; im.src = u; }); }
+    function shrinkPic(file, max) { return new Promise(function (ok, bad) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var k = Math.min(1, (max || 1600) / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.88)); }; im.onerror = function () { bad(new Error('That photo didn’t open.')); }; im.src = u; }); }
     function bindPic(el, i) {
       var d = el.querySelector('.spic'); if (!d) return; d.addEventListener('toggle', function () { openPic[i] = d.open; });
       var msg = function (t) { var m = el.querySelector('[data-pmsg]'); if (m) m.textContent = t || ''; };
@@ -494,23 +711,12 @@
         el.querySelector('[data-mv="-1"]').onclick = function () { if (i > 0) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i - 1, 0, a); sel = i - 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
         el.querySelector('[data-mv="1"]').onclick = function () { if (i < car.slides.length - 1) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i + 1, 0, a); sel = i + 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
         var det = el.querySelector('.sopts'); det.addEventListener('toggle', function () { openOpts[i] = det.open; });
-        bindPic(el, i);
+        bindPic(el, i); bindDeco(el, i);
         el.querySelector('[data-reset]').onclick = function () { var sl = car.slides[i]; delete sl.style; delete sl.hs; delete sl.bs; delete sl.brush; delete sl.num; mark(); paintSlides(); setSel(i); paintThumbs(); };
         el.querySelector('[data-dup]').onclick = function () { if (car.slides.length >= 10) return X.toast('Instagram allows up to 10 slides'); car.slides.splice(i + 1, 0, JSON.parse(JSON.stringify(car.slides[i]))); mark(); paintSlides(); setSel(i + 1); paintThumbs(); };
         el.querySelector('[data-del]').onclick = function () { if (car.slides.length <= 1) return; if (!confirm('Delete slide ' + (i + 1) + '?')) return; car.slides.splice(i, 1); mark(); paintSlides(); setSel(Math.min(i, car.slides.length - 1)); paintThumbs(); };
       });
     }
-    $('#teN').onchange = function () { car.numbers = this.checked; mark(); paint(); paintThumbs(); };
-    $('#teH').onchange = function () { car.handle = this.checked; mark(); paint(); paintThumbs(); };
-    $('#teS').onchange = function () { car.swipe = this.checked; mark(); paint(); paintThumbs(); };
-    $('#teB').onchange = function () { car.brush = this.checked; mark(); paint(); paintThumbs(); };
-    Array.prototype.forEach.call(ov.querySelectorAll('#teSt [data-v]'), function (b) {
-      b.onclick = function () { car.style = b.dataset.v; Array.prototype.forEach.call(ov.querySelectorAll('#teSt [data-v]'), function (x) { x.setAttribute('aria-pressed', x === b); }); mark(); paint(); paintThumbs(); };
-    });
-    function sizeUi() { $('#teHs').value = Math.round((car.hs || 1) * 100); $('#teBs').value = Math.round((car.bs || 1) * 100); $('#teHsV').textContent = pct(car.hs); $('#teBsV').textContent = pct(car.bs); }
-    $('#teHs').oninput = function () { car.hs = Number(this.value) / 100; sizeUi(); mark(); paint(); paintThumbs(); };
-    $('#teBs').oninput = function () { car.bs = Number(this.value) / 100; sizeUi(); mark(); paint(); paintThumbs(); };
-    sizeUi();
     $('#teTitle').oninput = function () { car.title = this.value; mark(); };
     $('#teCap').oninput = function () { car.caption = this.value; mark(); };
     $('#teTags').oninput = function () { car.hashtags = this.value; mark(); };
@@ -526,7 +732,7 @@
     function paintPosted() { $('#tePosted').textContent = car.status === 'posted' ? '↩ Mark as not posted' : '✅ Mark as posted'; }
     $('#tePosted').onclick = async function () { car.status = car.status === 'posted' ? 'draft' : 'posted'; paintPosted(); await save(); };
     async function save() {
-      var payload = { id: car.id, title: car.title, slides: car.slides, numbers: car.numbers, handle: car.handle, swipe: car.swipe, brush: car.brush, style: car.style || 'classic', hs: car.hs || 1, bs: car.bs || 1, caption: car.caption, hashtags: car.hashtags, status: car.status };
+      var payload = { id: car.id, title: car.title, slides: car.slides, numbers: car.numbers, handle: car.handle, swipe: car.swipe, brush: car.brush, style: car.style || 'classic', hs: car.hs || 1, bs: car.bs || 1, caption: car.caption, hashtags: car.hashtags, status: car.status, look: car.look || null };
       try {
         var r = await X.api('tc-save', { item: payload });
         car.id = r.item.id; car.updatedAt = r.item.updatedAt; car.postedAt = r.item.postedAt;
@@ -535,6 +741,13 @@
       } catch (x) { X.toast(x.message); return false; }
     }
     $('#teSave').onclick = save;
+    $('#teAnim').onclick = async function () {
+      var c1 = isSpec(car) ? car.look.spec.bg.c1 : '#FFFFFF', h = c1.replace('#', ''), rr2 = parseInt(h.slice(0, 2), 16), gg = parseInt(h.slice(2, 4), 16), bb = parseInt(h.slice(4, 6), 16), l = (0.299 * rr2 + 0.587 * gg + 0.114 * bb) / 255;
+      var theme = l > 0.8 ? (rr2 > bb + 10 ? 'cream' : 'white') : (gg > rr2 + 20 && gg > bb) ? 'green' : (rr2 > 200 && gg > 120 && bb < 90) ? 'gold' : 'navy';
+      var item = { title: String(car.slides[0].heading || car.title || '').replace(/\*\*/g, '').slice(0, 120), theme: theme, anim: 'pop', handle: '@auntietobi_uk', caption: (car.caption || '') + (car.hashtags ? '\n\n' + car.hashtags : ''),
+        slides: car.slides.map(function (x) { return { layout: x.kind === 'cover' ? 'cover' : x.kind === 'end' ? 'cta' : 'points', title: x.heading, text: x.body || '' }; }) };
+      try { await X.api('car-save', { item: item }); X.toast('🎬 Added to Animated Carousels'); } catch (e) { X.toast(e.message); }
+    };
     function overList() { var c = document.createElement('canvas'); c.width = W; c.height = H; var cx = c.getContext('2d'); return car.slides.map(function (s, i) { return draw(cx, car, i).over ? i + 1 : 0; }).filter(Boolean); }
     $('#teDl').onclick = async function () {
       var b = this, bad = overList();
@@ -546,11 +759,13 @@
     $('#teOne').onclick = async function () {
       try { await fontsReady(); download(await pngOf(car, sel), slug(car.title) + '-' + pad(sel + 1) + '.png'); } catch (x) { X.toast('Couldn’t save the image — please try again'); }
     };
-    $('#teX').onclick = function () {
-      if (dirty && !confirm('You have unsaved changes. Leave without saving?')) return;
+    $('#teX').onclick = async function () {
+      if (dirty) { $('#teSaved').textContent = 'Saving…'; if (!(await save()) && !confirm('Your last changes couldn’t be saved. Leave anyway?')) return; }
       ov.remove(); document.body.style.overflow = ''; view();
     };
-    paintSlides(); paintPosted(); setSel(0); paintThumbs();
+    renderLook(); paintSlides(); paintPosted(); setSel(0); paintThumbs();
+    // 💾 auto-save a few seconds after a change
+    var saving = false, asv = setInterval(function () { if (!document.body.contains(ov)) return clearInterval(asv); if (dirty && !saving) { saving = true; save().then(function () { saving = false; }); } }, 4000);
     if (dirty) { mark(); save(); }
     fontsReady().then(function () { paint(); paintThumbs(); });
   }

@@ -90,6 +90,7 @@
     else if (sp.shapes === 'blob') { ctx.fillStyle = rgba(ac, 0.14); ctx.beginPath(); ctx.ellipse(W - 140, H - 220, 340, 260, -0.5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(120, 160, 220, 160, 0.6, 0, 7); ctx.fill(); }
     else if (sp.shapes === 'lines') { ctx.strokeStyle = rgba(ac, 0.22); ctx.lineWidth = 6; for (var k = 0; k < 6; k++) { ctx.beginPath(); ctx.moveTo(W - 380 + k * 70, 0); ctx.lineTo(W, 380 - k * 70); ctx.stroke(); } }
     ctx.restore();
+    if (sl._afterBg) sl._afterBg(ctx);   // 🎠 Carousel Studio: a slide's own picture goes here
     // frame
     if (sp.frame.on) { ctx.save(); ctx.strokeStyle = sp.frame.color; ctx.lineWidth = sp.frame.width; var fi = sp.frame.inset + sp.frame.width / 2; rr(ctx, fi, fi, W - fi * 2, H - fi * 2, sp.frame.radius); ctx.stroke(); ctx.restore(); }
     // text block
@@ -98,8 +99,8 @@
     var hs = Math.round((isCover ? 84 : isEnd ? 76 : 70) * k), bs = Math.round(38 * sp.font.bodySize * (sl.size || 1));
     var headFont = function (px) { return F.w + ' ' + px + 'px ' + F.f; }, bodyFont = function (px) { return FB.bw + ' ' + px + 'px ' + FB.b; };
     var tt = tokens(sl.title, sp.font.caps), bt = tokens(sl.body, false), tl, bl, numH = 0, num = 0, total, gap;
-    if (sl.kind === 'point') { num = slides().slice(0, i + 1).filter(function (x) { return x.kind === 'point'; }).length; numH = sp.numbers === 'badge' ? 120 : sp.numbers === 'pill' ? 90 : 0; }
-    var limit = H - pad * 2 - 170;
+    if (sl.kind === 'point') { num = sl._num != null ? sl._num : slides().slice(0, i + 1).filter(function (x) { return x.kind === 'point'; }).length; numH = sp.numbers === 'badge' ? 120 : sp.numbers === 'pill' ? 90 : 0; }
+    var limit = sl._bot != null ? sl._bot - sl._top - 40 : H - pad * 2 - 170;
     for (var tries = 0; tries < 30; tries++) {   // shrink until it fits
       ctx.font = headFont(hs); tl = wrap(ctx, tt, maxW - (sp.card.on ? 80 : 0));
       ctx.font = bodyFont(bs); bl = sl.body ? wrap(ctx, bt, maxW - (sp.card.on ? 80 : 0)) : [];
@@ -107,10 +108,10 @@
       total = numH + tl.length * hs * F.lh + gap + bl.length * bs * 1.38;
       if (total <= limit) break; hs = Math.round(hs * 0.93); bs = Math.max(26, Math.round(bs * 0.96));
     }
-    var vpos = isCover ? sp.cover.vpos : sp.vpos, top = pad + 70, y0 = vpos === 'top' ? top : vpos === 'bottom' ? H - pad - 90 - total : (H - total) / 2;
+    var vpos = isCover ? sp.cover.vpos : sp.vpos, top = pad + 70, y0 = sl._bot != null ? sl._top + Math.max(0, (sl._bot - sl._top - total) / 2) : vpos === 'top' ? top : vpos === 'bottom' ? H - pad - 90 - total : (H - total) / 2;
     var center = sp.align === 'center', x0 = center ? W / 2 : pad + (sp.card.on ? 40 : 0);
     if (sp.card.on) { ctx.save(); ctx.fillStyle = rgba(sp.card.color, sp.card.opacity); rr(ctx, pad - 0, y0 - 50, maxW, total + 100, 28); ctx.fill(); ctx.restore(); }
-    if (sp.numbers === 'big' && num) { ctx.save(); ctx.font = F.w + ' ' + 420 + 'px ' + F.f; ctx.fillStyle = rgba(ac, 0.14); ctx.textAlign = center ? 'center' : 'left'; ctx.fillText(String(num).padStart(2, '0'), center ? W / 2 : pad - 20, y0 + 300); ctx.restore(); }
+    if (sp.numbers === 'big' && num && sl._bot == null) { ctx.save(); ctx.font = F.w + ' ' + 420 + 'px ' + F.f; ctx.fillStyle = rgba(ac, 0.14); ctx.textAlign = center ? 'center' : 'left'; ctx.fillText(String(num).padStart(2, '0'), center ? W / 2 : pad - 20, y0 + 300); ctx.restore(); }
     var y = y0;
     if (numH && num) {
       ctx.save();

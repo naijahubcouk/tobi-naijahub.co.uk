@@ -37,6 +37,7 @@ function cleanSlide(x) {
     brush: ['on', 'off'].includes(x.brush) ? x.brush : '',
     num: ['on', 'off'].includes(x.num) ? x.num : '',
     ...(cleanPic(x.pic) ? { pic: cleanPic(x.pic) } : {}),
+    ...(cleanDeco(x.deco).length ? { deco: cleanDeco(x.deco) } : {}),
   };
 }
 // 🖼️ a picture on the slide: full background or a photo box (top/bottom), with transparency, zoom and position
@@ -44,6 +45,16 @@ function cleanPic(p) {
   if (!p || typeof p !== 'object' || !/^i[a-z0-9]{6,30}$/.test(String(p.img || ''))) return null;
   const n = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
   return { img: p.img, mode: ['bg', 'top', 'bottom'].includes(p.mode) ? p.mode : 'bg', fade: n(p.fade, 0, 0.9, 0.7), size: n(p.size, 0.2, 0.6, 0.3), z: n(p.z, 1, 2.5, 1), fx: n(p.fx, 0, 1, 0.5), fy: n(p.fy, 0, 1, 0.5) };
+}
+// ✨ decorations on a slide: arrows, stickers, shapes, emoji — position/size/turn/colour
+const DECOS = ['arrow-curly', 'arrow-straight', 'arrow-loop', 'arrow-down', 'swipe', 'brush', 'scribble', 'ring', 'sparkle', 'star', 'heart', 'tick', 'cross', 'badge', 'bubble', 'quote', 'tape', 'dots', 'blob', 'emoji'];
+function cleanDeco(list) {
+  const n = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
+  return (Array.isArray(list) ? list : []).slice(0, 12).filter(d => d && DECOS.includes(d.t)).map(d => ({ t: d.t, x: n(d.x, 0, 1, 0.5), y: n(d.y, 0, 1, 0.5), s: n(d.s, 0.2, 4, 1), r: n(d.r, -180, 180, 0), c: /^#[0-9a-f]{6}$/i.test(String(d.c || '')) ? d.c : '#057A44', ...(d.txt ? { txt: String(d.txt).slice(0, 24) } : {}), ...(d.flip ? { flip: true } : {}) }));
+}
+function cleanLook(l) {
+  if (!l || typeof l !== 'object' || l.kind !== 'spec') return null;
+  return { kind: 'spec', name: cleanText(l.name, 40) || 'My look', styleId: String(l.styleId || '').slice(0, 40), spec: require('./stylecar').cleanSpec(l.spec) };
 }
 function clean(raw, prev) {
   raw = raw && typeof raw === 'object' ? raw : {};
@@ -59,6 +70,7 @@ function clean(raw, prev) {
     style: STYLES.includes(raw.style) ? raw.style : 'classic',
     hs: scale(raw.hs, 0.6, 1.4),
     bs: scale(raw.bs, 0.6, 1.4),
+    look: cleanLook(raw.look),   // null = 📝 Auntie Tobi White (the bold headline template)
     caption: multi(raw.caption, 2200),
     hashtags: multi(raw.hashtags, 600),
     status: raw.status === 'posted' ? 'posted' : 'draft',

@@ -164,6 +164,7 @@ aside{width:var(--side);flex:none;background:var(--navy);color:var(--cream);disp
 .apl{margin-top:8px;font-size:13px;color:#057A44;font-weight:700}
 .aeimg{display:flex;gap:12px;align-items:flex-start}.aepic{width:110px;height:138px;border-radius:10px;border:1px solid var(--line);background:#F7F2E7;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}.aepic.wide{width:150px;height:150px}.aepic img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}.aeibtn{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .carx{position:fixed;inset:0;z-index:60;background:var(--cream);display:flex;flex-direction:column}
+.lsw{display:inline-block;width:18px;height:18px;border-radius:5px;border:1px solid var(--line);vertical-align:-4px;margin-right:6px;font-style:normal}.lsec{border-top:1px solid var(--line);padding:8px 0}.lsec summary{cursor:pointer;font-weight:700;font-size:14px}.dk{border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:6px;background:#FCFBF7}.dk input[type=color]{width:34px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px}
 .carbar{display:flex;gap:10px;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
 .cartitle{flex:1;font-weight:800;font-size:16px;border:1px solid transparent;background:transparent}.cartitle:focus{border-color:var(--line);background:#fff}
 .carbody{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:16px;padding:16px;overflow:hidden}
@@ -275,8 +276,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       <button data-nav="igu" id="navIgu">👥 Comment &amp; like usernames</button>
       <button data-nav="dm" id="navDm">📨 DM Outreach</button>
       <button data-nav="iga" id="navIga">⚡ Auto-replies</button>
-      <button data-nav="tcars">📝 Template Carousel <span class="n" id="nTcars"></span></button>
-      <button data-nav="scars">🎨 Style Match</button>
+      <button data-nav="tcars">🎠 Carousel Studio <span class="n" id="nTcars"></span></button>
       <button data-nav="qvid">🎬 Quiz videos</button>
       <button data-nav="rmx">🎞️ Video Remix</button>
       <button data-nav="vvid">🎙️ Voiceover Video</button>
@@ -298,8 +298,8 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
 
 <script src="/hq-split.js"></script>
 <script src="/hq-carousel.js"></script>
-<script src="/hq-tplcarousel.js?v=20261122p"></script>
-<script src="/hq-stylecar.js?v=20261120a"></script>
+<script src="/hq-tplcarousel.js?v=20261122q"></script>
+<script src="/hq-stylecar.js?v=20261122q"></script>
 <script src="/hq-quizvid.js?v=20261122j"></script>
 <script src="/hq-remix.js?v=20261122e"></script>
 <script src="/hq-tidy.js?v=20261122a"></script>
@@ -406,7 +406,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     if (window.HQTidy) window.HQTidy.sync(S.view);
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vEvents, club: function () { window.HQClub.view(); }, scars: function () { window.HQStyle.view(); }, qvid: function () { window.HQQuizVid.view(); }, rmx: function () { window.HQRemix.view(); }, vvid: function () { window.HQVoice.view(); }, fin: function () { window.HQFinished.view(); }, chars: function () { window.HQChars.view(); }, luq: function () { window.HQLuq.view(); }, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vEvents, club: function () { window.HQClub.view(); }, scars: function () { S.view = 'tcars'; location.hash = '#tcars'; window.HQTpl.view(); }, qvid: function () { window.HQQuizVid.view(); }, rmx: function () { window.HQRemix.view(); }, vvid: function () { window.HQVoice.view(); }, fin: function () { window.HQFinished.view(); }, chars: function () { window.HQChars.view(); }, luq: function () { window.HQLuq.view(); }, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
