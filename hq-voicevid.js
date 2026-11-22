@@ -164,6 +164,7 @@
     $('#view').innerHTML = '<div class="card" style="max-width:1000px"><div class="muted">Loading…</div></div>';
     var need = [];
     if (!ST) need.push(X.api('qv-status').then(function (r) { ST = r; }).catch(function () { ST = { ready: false }; }));
+    if (window.HQChars) need.push(window.HQChars.load().catch(function () {}));
     if (!PREFS) need.push(X.api('vv-list').then(function (r) { PREFS = r.prefs || {}; }).catch(function () { PREFS = {}; }));
     Promise.all(need).then(function () { pickVoice(); draw(); });
   }
@@ -228,6 +229,7 @@
       (sc.img ? '<button class="btn ghost sm" data-clip="' + i + '">🎥 Turn into AI clip</button>' : '') +
       '<label class="btn ghost sm" style="margin:0;display:flex;gap:4px;align-items:center">🎨<input type="color" value="' + (sc.color || '#0F1E36') + '" data-col="' + i + '" style="width:30px;height:22px;padding:0;border:0"></label>' +
       '<label style="margin:0;font-size:12.5px">Pause after <input type="number" step="0.1" min="0" max="3" value="' + sc.gap + '" data-gap="' + i + '" style="width:60px;padding:3px 6px"> s</label></div>' +
+      '<div class="row" style="gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap"><button class="btn ghost sm" data-who="' + i + '">👥 Who’s in it?</button>' + (window.HQChars ? window.HQChars.chips(sc.chars) : '') + '</div>' +
       '<input data-want="' + i + '" value="' + esc(sc.want || '') + '" placeholder="Describe the picture for ✨ Make picture" style="margin-top:6px;font-size:13px">' +
       '<input data-title="' + i + '" value="' + esc(sc.title || '') + '" placeholder="Big title on this scene (optional), e.g. 3 THINGS NOBODY TELLS YOU" style="margin-top:6px;font-size:13px">' + tsHtml(sc, i) + '</div></div>';
   }
@@ -291,6 +293,7 @@
     $('#vvGo').onclick = function () { make().catch(function (e) { prog(''); var g = $('#vvGo'); if (g) g.disabled = false; X.toast(e.message || 'Something went wrong.'); }); };
     $$('[data-t]').forEach(function (el) { el.onchange = function () { V.scenes[+el.dataset.t].t = el.value.trim(); draw(); }; });
     $$('[data-gap]').forEach(function (el) { el.onchange = function () { V.scenes[+el.dataset.gap].gap = Math.max(0, Math.min(3, +el.value || 0)); draw(); }; });
+    $$('[data-who]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.who; if (!window.HQChars) return; window.HQChars.pick(V.scenes[i].chars, function (ids) { V.scenes[i].chars = ids; draw(); if (ids.length) X.toast('👥 Tap ✨ ' + (V.scenes[i].img ? 'New picture' : 'Make picture') + ' to make this scene’s picture with them'); }); }; });
     $$('[data-want]').forEach(function (el) { el.oninput = function () { V.scenes[+el.dataset.want].want = el.value; }; });
     $$('[data-title]').forEach(function (el) { el.oninput = function () { var i = +el.dataset.title; V.scenes[i].title = el.value; var b = $('[data-tsbox="' + i + '"]'); if (b) b.hidden = !el.value.trim(); thumbs(i); }; });
     $$('[data-ts]').forEach(function (el) { var ev = el.type === 'range' ? 'oninput' : 'onchange'; el[ev] = function () { var p = el.dataset.ts.split(':'), sc = V.scenes[+p[0]], k = p[1]; sc.ts = Object.assign(TS(), sc.ts || {}); sc.ts[k] = k === 'caps' ? el.checked : k === 'size' ? +el.value : k === 'y' ? el.value / 100 : el.value; thumbs(+p[0]); }; });
@@ -315,7 +318,7 @@
   function pic(i) {
     var sc = V.scenes[i], want = (sc.want || '').trim() || sc.t; if (!want.trim()) return Promise.reject(new Error('Describe the picture first.'));
     prog('✨ Making the picture for scene ' + (i + 1) + '…');
-    return X.api('rx-pic', { want: want }).then(function (r) { sc.img = r.img; delete sc._vid; delete sc.clip; delete sc._clipUrl; sc.media = 'photo'; prog(''); }).catch(function (e) { prog(''); throw e; });
+    return X.api('rx-pic', { want: want, chars: sc.chars || [] }).then(function (r) { sc.img = r.img; delete sc._vid; delete sc.clip; delete sc._clipUrl; sc.media = 'photo'; prog(''); }).catch(function (e) { prog(''); throw e; });
   }
   async function allPics() {
     var todo = V.scenes.map(function (s, i) { return i; }).filter(function (i) { var s = V.scenes[i]; return s.media !== 'color' && !s.img && !s._vid && !s.clip; });
@@ -484,7 +487,7 @@
   }
 
   // ───── 💾 save / open ─────
-  function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, scenes: V.scenes.map(function (s) { return { t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, ts: s.ts, img: s.img, clip: s.clip }; }) }); return d; }
+  function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, scenes: V.scenes.map(function (s) { return { t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, ts: s.ts, img: s.img, clip: s.clip, chars: s.chars }; }) }); return d; }
   function doSave(name, asNew, quiet) { var d = snap(), j = JSON.stringify(d); return X.api('vv-save', { id: asNew ? '' : V.savedId, name: name, data: d }).then(function (r) { V.savedId = r.id; V.savedName = r.name; V.name = r.name; V._last = j; if (F()) F().lastDraft('vv', r.id); if ($('#vvRoot')) $('#ttl').textContent = 'Voiceover Video · ' + r.name; if (!quiet) X.toast('💾 Saved — find it in 📂 My videos'); }); }
   // 💾 auto-save: a few seconds after any change, while this page is open
   var asvBusy = false;

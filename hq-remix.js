@@ -159,7 +159,9 @@
     $('#rxMine').onclick = mine;
     if ($('#rxNew')) $('#rxNew').onclick = function () { if (!confirm('Start a new remix? Anything you haven’t saved will be cleared.')) return; R = null; if (F()) F().lastDraft('rx', ''); view(); };
     if ($('#rxSave')) $('#rxSave').onclick = saveSheet;
-    if (!R.tpl) return start(); edit();
+    if (!R.tpl) return start();
+    if (window.HQChars) window.HQChars.load().then(function () { if (R && R.tpl && $('#rxScenes')) edit(); }).catch(function () {});
+    edit();
   }
   function start() {
     $('#view').innerHTML = '<div id="rxRoot" style="max-width:1020px"><style>#rxRoot .card{margin-bottom:12px}#rxRoot label{display:block}.rx-ps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:8px}.rx-p{border:1.5px solid #ECE8DE;border-radius:14px;padding:12px;background:#fff;text-align:left;cursor:pointer;font-family:inherit}.rx-p:hover{border-color:#057A44}.rx-p b{display:block;font-size:15px;margin:4px 0 2px}.rx-p small{color:#6B7280;font-size:12.5px;line-height:1.4;display:block}.rx-drop{border:2px dashed #C9D2DC;border-radius:16px;padding:22px;text-align:center;background:#FAFBFC;cursor:pointer}</style>' +
@@ -239,6 +241,7 @@
       (sc.img || sc._img ? '<button class="btn ghost sm" data-clip="' + i + '">🎥 Turn picture into AI clip</button>' : '') +
       '<label class="btn ghost sm" style="margin:0;display:flex;gap:4px;align-items:center">🎨<input type="color" value="' + (sc.color || '#E6DFD3') + '" data-col="' + i + '" style="width:30px;height:22px;padding:0;border:0"></label>' +
       (sc.media !== 'color' ? '<button class="btn ghost sm" data-plain="' + i + '">Use plain colour</button>' : '') + '</div>' +
+      '<div class="row" style="gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap"><button class="btn ghost sm" data-who="' + i + '">👥 Who’s in it?</button>' + (window.HQChars ? window.HQChars.chips(sc.chars) : '') + '</div>' +
       '<input data-want="' + i + '" value="' + esc(sc.want || '') + '" placeholder="Describe the picture for ✨ Make picture" style="margin-top:6px;font-size:13px">' +
       sc.layers.map(function (l, k) {
         return '<div class="rx-ly"><textarea data-lt="' + i + ':' + k + '" rows="1">' + esc(l.t) + '</textarea><button class="btn ghost sm" data-ldel="' + i + ':' + k + '" title="Remove text">✕</button>' +
@@ -282,6 +285,7 @@
     $$('[data-mv]').forEach(function (el) { el.onclick = function () { var p = el.dataset.mv.split(':'), i = +p[0], j = i + (+p[1]); if (j < 0 || j >= T.scenes.length) return; var t = T.scenes[i]; T.scenes[i] = T.scenes[j]; T.scenes[j] = t; re(); }; });
     $$('[data-dup]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.dup, s = clone(T.scenes[i]); s._vid = T.scenes[i]._vid; s._clipUrl = T.scenes[i]._clipUrl; s._img = T.scenes[i]._img; T.scenes.splice(i + 1, 0, s); re(); }; });
     $$('[data-del]').forEach(function (el) { el.onclick = function () { if (T.scenes.length < 2) return X.toast('A video needs at least one scene.'); if (confirm('Delete scene ' + (+el.dataset.del + 1) + '?')) { T.scenes.splice(+el.dataset.del, 1); re(); } }; });
+    $$('[data-who]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.who; if (!window.HQChars) return; window.HQChars.pick(R.tpl.scenes[i].chars, function (ids) { R.tpl.scenes[i].chars = ids; edit(); if (ids.length) X.toast('👥 Tap ✨ ' + (R.tpl.scenes[i].img ? 'New picture' : 'Make picture') + ' to make this scene’s picture with them'); }); }; });
     $$('[data-want]').forEach(function (el) { el.oninput = function () { T.scenes[+el.dataset.want].want = el.value; }; });
     $$('[data-col]').forEach(function (el) { el.oninput = function () { var sc = T.scenes[+el.dataset.col]; sc.color = el.value; sc.media = 'color'; thumbs(+el.dataset.col); }; el.onchange = re; });
     $$('[data-plain]').forEach(function (el) { el.onclick = function () { T.scenes[+el.dataset.plain].media = 'color'; re(); }; });
@@ -315,7 +319,7 @@
   function pic(i) {
     var sc = R.tpl.scenes[i]; if (!(sc.want || '').trim()) return Promise.reject(new Error('Describe the picture first (the box under the buttons).'));
     prog('✨ Making the picture for scene ' + (i + 1) + '…');
-    return X.api('rx-pic', { want: sc.want }).then(function (r) { sc.img = r.img; delete sc._vid; delete sc.clip; delete sc._clipUrl; sc.media = 'photo'; prog(''); }).catch(function (e) { prog(''); throw e; });
+    return X.api('rx-pic', { want: sc.want, chars: sc.chars || [] }).then(function (r) { sc.img = r.img; delete sc._vid; delete sc.clip; delete sc._clipUrl; sc.media = 'photo'; prog(''); }).catch(function (e) { prog(''); throw e; });
   }
   async function allPics() {
     var todo = R.tpl.scenes.map(function (s, i) { return i; }).filter(function (i) { var s = R.tpl.scenes[i]; return s.media !== 'color' && !s.img && !s._vid && !s.clip && (s.want || '').trim(); });

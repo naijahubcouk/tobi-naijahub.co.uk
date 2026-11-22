@@ -78,6 +78,7 @@ function clean(v) {
     o.ts = { size: num(t.size, 50, 170, 92), y: num(t.y, 0.06, 0.9, 0.18), look: ['outline', 'whitebox', 'blackbox', 'yellow', 'green'].includes(t.look) ? t.look : 'outline', font: ['heavy', 'serif', 'script', 'sans'].includes(t.font) ? t.font : 'heavy', anim: ['pop', 'fade', 'slide', 'none'].includes(t.anim) ? t.anim : 'pop', caps: t.caps !== false };
     if (/^i[a-z0-9]{6,30}$/.test(String(s.img || ''))) o.img = s.img;
     if (/^https:\/\/[a-z0-9.-]*fal\.media\//i.test(String(s.clip || ''))) o.clip = str(s.clip, 500);
+    const chars = (Array.isArray(s.chars) ? s.chars : []).filter(x => /^c[a-f0-9]{12}$/.test(String(x))).slice(0, 3); if (chars.length) o.chars = chars;   // 👥 who's in it
     return o;
   });
   const c = v.cap && typeof v.cap === 'object' ? v.cap : {};

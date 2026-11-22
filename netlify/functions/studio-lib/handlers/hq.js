@@ -68,7 +68,8 @@ function sectionsOf(action) {
   if (/^qv-/.test(action)) return ['cars'];
   if (/^rx-/.test(action)) return ['cars'];
   if (/^vv-/.test(action)) return ['cars'];
-  if (/^fin-/.test(action)) return ['cars'];   // ✅ Finished videos   // 🎙️ Voiceover Video   // 🎞️ Video Remix   // 🎬 Quiz videos
+  if (/^fin-/.test(action)) return ['cars'];
+  if (/^ch-/.test(action)) return ['cars', 'vads'];   // 👥 Characters   // ✅ Finished videos   // 🎙️ Voiceover Video   // 🎞️ Video Remix   // 🎬 Quiz videos
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
@@ -326,6 +327,13 @@ exports.handler = handler(async (ctx) => {
       await core.rateLimit('hq-vvspeak', who.email, 400, 60 * 60 * 1000, 'That\u2019s a lot of voice lines this hour — please wait a little.');
       return require('../voicevid').speak(body);
     }
+    case 'ch-list': return require('../characters').list();
+    case 'ch-photo': {
+      await core.rateLimit('hq-rxpic', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of pictures this hour — please wait a little.');
+      return require('../characters').photo(body);
+    }
+    case 'ch-save': return require('../characters').save(body, who.email);
+    case 'ch-del': return require('../characters').remove(body.id);
     case 'fin-start': return require('../finished').start(body, who.email);
     case 'fin-part': return require('../finished').part(body.id, Number(body.idx), body.b64);
     case 'fin-done': return require('../finished').done(body.id);

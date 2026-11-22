@@ -41,6 +41,7 @@ function cleanScene(s) {
   };
   if (/^i[a-z0-9]{6,30}$/.test(String(s.img || ''))) out.img = s.img;   // a saved picture
   if (/^https:\/\/[a-z0-9.-]*fal\.media\//i.test(String(s.clip || ''))) out.clip = str(s.clip, 500);   // an AI clip
+  const chars = (Array.isArray(s.chars) ? s.chars : []).filter(x => /^c[a-f0-9]{12}$/.test(String(x))).slice(0, 3); if (chars.length) out.chars = chars;   // 👥 who's in it
   return out;
 }
 function cleanTpl(t) {
@@ -114,6 +115,13 @@ async function write(b) {
 async function picture(b) {
   const want = str(b.want, 500).trim(); if (want.length < 3) throw new HttpError(400, 'too_short', 'Describe the picture first.');
   const prompt = `A beautiful, photorealistic vertical (9:16) photo for a social media video: ${want}. Natural light, rich colours, real-looking people and places, shot on a modern phone or camera. Leave calm space in the middle and top for text. ABSOLUTELY NO text, letters, signs with writing, logos or watermarks.`;
+  // 👥 picked characters: their reference photos go with the prompt so they look the same in every scene
+  const ch = await require('./characters').refs(b.chars);
+  if (ch.refs.length) {
+    const legend = 'Reference photos, in order:\n' + ch.labels.map((l, i) => `${i + 1}. ${l}`).join('\n');
+    const url = await require('./eventmedia').generateImage(`${legend}\n\nShow ${ch.names.join(' and ')} in this scene. Keep every person EXACTLY as in their reference photo — same face, skin tone, hair, build, age and outfit (unless the scene says otherwise). Only the setting, pose and camera angle change.\n\n${prompt}`, '9:16', ch.refs);
+    return { img: await require('./hq').saveImage(url) };
+  }
   const url = await require('./eventmedia').generateImage(prompt, '9:16');
   return { img: await require('./hq').saveImage(url) };
 }
