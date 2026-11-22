@@ -22,7 +22,11 @@
   function prog(t) { var p = $('#vvProg'); if (p) p.textContent = t || ''; }
   function b64ToBuf(d) { var b = atob(String(d).split(',')[1] || ''), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u.buffer; }
   function state() { if (!V) V = { name: '', topic: '', secs: 35, voice: '', model: 'flash', speed: 1, scenes: [], cap: { on: true, style: 'yellow', y: 0.72, size: 76 }, music: 'calm', musicVol: 20, voiceVol: 100, kb: true, dim: 0.15, caption: '', savedId: '', savedName: '', out: null }; return V; }
-  function sc0(t, want) { return { t: t || '', gap: 0.35, media: 'photo', color: '#0F1E36', want: want || '', title: '' }; }
+  var TLOOK = { outline: '⚪ White text, black outline', whitebox: '⬜ White box, black text', blackbox: '⬛ Black box, white text', yellow: '🟡 Yellow text, black outline', green: '🟩 Green box, white text' };
+  var TFONT = { heavy: ['Heavy bold', function (z) { return '900 ' + z + 'px Montserrat, "Inter Tight", Arial, sans-serif'; }], serif: ['Elegant serif', function (z) { return '900 ' + z + 'px "Playfair Display", Georgia, serif'; }], script: ['Brush script', function (z) { return '400 ' + z + 'px "Kaushan Script", cursive'; }], sans: ['Plain', function (z) { return '700 ' + z + 'px Inter, Arial, sans-serif'; }] };
+  var TANIM = { pop: 'Pop in', fade: 'Fade in', slide: 'Slide up', none: 'Just there' };
+  function TS() { return { size: 92, y: 0.18, look: 'outline', font: 'heavy', anim: 'pop', caps: true }; }
+  function sc0(t, want) { return { t: t || '', gap: 0.35, media: 'photo', color: '#0F1E36', want: want || '', title: '', ts: TS() }; }
   function voiceName() { var v = (ST && ST.voices || []).filter(function (x) { return x.id === V.voice; })[0]; return v ? v.name : ''; }
 
   // ───── voice lines (cached here and on the server) ─────
@@ -85,12 +89,26 @@
     if (V.dim && sc.media !== 'color') { cx.fillStyle = 'rgba(0,0,0,' + V.dim + ')'; cx.fillRect(0, 0, W, H); }
   }
   function outlined(cx, t, x, y, lw) { cx.lineJoin = 'round'; cx.lineWidth = lw; cx.strokeStyle = 'rgba(0,0,0,0.85)'; cx.strokeText(t, x, y); cx.fillText(t, x, y); }
+  // the big title: size, position, look (incl. white box + black text), font and how it appears — set per scene
   function title(cx, sc, lt) {
-    var t = (sc.title || '').trim(); if (!t) return; var a = ease(lt / 0.3), s = 0.7 + 0.3 * ease(lt / 0.35);
-    cx.save(); cx.globalAlpha = a; cx.font = '900 92px Montserrat, "Inter Tight", Arial, sans-serif'; cx.textAlign = 'center'; cx.fillStyle = '#fff';
-    var lines = wrap(cx, t.toUpperCase().split(/\s+/), 940), y0 = H * 0.18;
-    cx.translate(W / 2, y0); cx.scale(s, s); cx.translate(-W / 2, -y0);
-    lines.forEach(function (ln, i) { outlined(cx, ln.join(' '), W / 2, y0 + i * 100, 14); }); cx.restore();
+    var t = (sc.title || '').trim(); if (!t) return; var ts = Object.assign(TS(), sc.ts || {}), z = ts.size, F = (TFONT[ts.font] || TFONT.heavy)[1];
+    var a = 1, s = 1, dy = 0;
+    if (ts.anim === 'pop') { a = ease(lt / 0.25); s = 0.7 + 0.3 * ease(lt / 0.35); } else if (ts.anim === 'fade') a = ease(lt / 0.45); else if (ts.anim === 'slide') { a = ease(lt / 0.3); dy = (1 - ease(lt / 0.4)) * 80; }
+    cx.save(); cx.globalAlpha = a; cx.font = F(z); cx.textAlign = 'center'; cx.textBaseline = 'alphabetic';
+    var box = ts.look === 'whitebox' || ts.look === 'blackbox' || ts.look === 'green', maxW = box ? 860 : 950;
+    var lines = wrap(cx, (ts.caps ? t.toUpperCase() : t).split(/\s+/), maxW), lh = z * 1.12, yc = ts.y * H + dy, top = yc - lines.length * lh / 2;
+    cx.translate(W / 2, yc); cx.scale(s, s); cx.translate(-W / 2, -yc);
+    if (box) {
+      var bw = Math.max.apply(null, lines.map(function (ln) { return cx.measureText(ln.join(' ')).width; })) + z * 0.9, bh = lines.length * lh + z * 0.55;
+      cx.save(); cx.shadowColor = 'rgba(0,0,0,0.35)'; cx.shadowBlur = 24; cx.shadowOffsetY = 6; rr(cx, W / 2 - bw / 2, top - z * 0.28, bw, bh, Math.min(36, z * 0.35));
+      cx.fillStyle = ts.look === 'whitebox' ? '#FFFFFF' : ts.look === 'blackbox' ? 'rgba(12,14,18,0.92)' : 'rgba(5,122,68,0.96)'; cx.fill(); cx.restore();
+      cx.fillStyle = ts.look === 'whitebox' ? '#111111' : '#FFFFFF';
+      lines.forEach(function (ln, i) { cx.fillText(ln.join(' '), W / 2, top + i * lh + z * 0.92); });
+    } else {
+      cx.fillStyle = ts.look === 'yellow' ? '#FFD23F' : '#FFFFFF';
+      lines.forEach(function (ln, i) { outlined(cx, ln.join(' '), W / 2, top + i * lh + z * 0.92, Math.max(6, z * 0.15)); });
+    }
+    cx.restore();
   }
   // captions: up to ~4 words at a time, the word being said lights up
   function chunks(words) { var out = [], cur = [], len = 0; words.forEach(function (w, i) { if (cur.length && (cur.length >= 4 || len + w[0].length > 22)) { out.push(cur); cur = []; len = 0; } cur.push(i); len += w[0].length + 1; if (/[.!?,:;]$/.test(w[0]) && cur.length >= 2) { out.push(cur); cur = []; len = 0; } }); if (cur.length) { if (cur.length === 1 && out.length && out[out.length - 1].length <= 4) out[out.length - 1] = out[out.length - 1].concat(cur); else out.push(cur); } return out; }
@@ -153,7 +171,7 @@
   function draw() {
     var cr = ST && ST.credits, chars = V.scenes.reduce(function (a, s) { return a + s.t.length; }, 0), TL = timeline();
     var missing = V.scenes.filter(function (s) { return s.t.trim() && !lineOf(s); }).length;
-    $('#view').innerHTML = '<div id="vvRoot" style="max-width:1060px"><style>#vvRoot .card{margin-bottom:12px}#vvRoot label{display:block}#vvRoot input[type=checkbox]{width:auto;margin:0}.vv-sc{display:flex;gap:12px;align-items:flex-start;border-top:1px solid #EEE9DD;padding:12px 0}.vv-sc:first-child{border-top:0}.vv-th{flex:none;width:108px;height:192px;border-radius:10px;background:#111}.vv-sc textarea{min-height:44px}.vv-pill{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:#F1EEE6;color:#6B7280}.vv-pill.ok{background:#E7F6EE;color:#057A44}</style>' +
+    $('#view').innerHTML = '<div id="vvRoot" style="max-width:1060px"><style>#vvRoot .card{margin-bottom:12px}#vvRoot label{display:block}#vvRoot input[type=checkbox]{width:auto;margin:0}.vv-sc{display:flex;gap:12px;align-items:flex-start;border-top:1px solid #EEE9DD;padding:12px 0}.vv-sc:first-child{border-top:0}.vv-th{flex:none;width:108px;height:192px;border-radius:10px;background:#111}.vv-sc textarea{min-height:44px}.vv-pill{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:#F1EEE6;color:#6B7280}.vv-pill.ok{background:#E7F6EE;color:#057A44}.vv-th{cursor:zoom-in}.vv-ts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;padding:6px 8px;background:#FAFAF7;border:1px solid #EEE9DD;border-radius:10px;font-size:12.5px;color:#6B7280}.vv-ts select,.vv-ts input{width:auto;padding:3px 6px;font-size:12.5px}.vv-ts label{display:flex!important;gap:4px;align-items:center;margin:0}.vv-ts input[type=range]{width:90px}.vv-ts input[type=checkbox]{width:auto}</style>' +
       // 1 · script
       '<div class="card"><b>1 · Script</b>' +
       (V.scenes.length ? '<div class="muted" style="font-size:13px;margin-top:4px">Each line is a scene. Edit the words in the scenes below — only the lines you change are voiced again.</div>' :
@@ -205,7 +223,14 @@
       '<label class="btn ghost sm" style="margin:0;display:flex;gap:4px;align-items:center">🎨<input type="color" value="' + (sc.color || '#0F1E36') + '" data-col="' + i + '" style="width:30px;height:22px;padding:0;border:0"></label>' +
       '<label style="margin:0;font-size:12.5px">Pause after <input type="number" step="0.1" min="0" max="3" value="' + sc.gap + '" data-gap="' + i + '" style="width:60px;padding:3px 6px"> s</label></div>' +
       '<input data-want="' + i + '" value="' + esc(sc.want || '') + '" placeholder="Describe the picture for ✨ Make picture" style="margin-top:6px;font-size:13px">' +
-      '<input data-title="' + i + '" value="' + esc(sc.title || '') + '" placeholder="Big title on this scene (optional), e.g. 3 THINGS NOBODY TELLS YOU" style="margin-top:6px;font-size:13px"></div></div>';
+      '<input data-title="' + i + '" value="' + esc(sc.title || '') + '" placeholder="Big title on this scene (optional), e.g. 3 THINGS NOBODY TELLS YOU" style="margin-top:6px;font-size:13px">' + tsHtml(sc, i) + '</div></div>';
+  }
+  function tsHtml(sc, i) {
+    var ts = sc.ts = Object.assign(TS(), sc.ts || {}), opt = function (o, v) { return Object.keys(o).map(function (k) { return '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + (Array.isArray(o[k]) ? o[k][0] : o[k]) + '</option>'; }).join(''); };
+    return '<div class="vv-ts"' + ((sc.title || '').trim() ? '' : ' hidden') + ' data-tsbox="' + i + '"><span>Title:</span><select data-ts="' + i + ':look">' + opt(TLOOK, ts.look) + '</select><select data-ts="' + i + ':font">' + opt(TFONT, ts.font) + '</select>' +
+      '<label>Size <input type="range" min="50" max="170" value="' + ts.size + '" data-ts="' + i + ':size"></label><label>Up / down <input type="range" min="6" max="90" value="' + Math.round(ts.y * 100) + '" data-ts="' + i + ':y"></label>' +
+      '<select data-ts="' + i + ':anim">' + opt(TANIM, ts.anim) + '</select><label><input type="checkbox" data-ts="' + i + ':caps"' + (ts.caps ? ' checked' : '') + '> CAPS</label>' +
+      '<button class="btn ghost sm" data-tsall="' + i + '" title="Use this size, look, font and position on every scene’s title">📋 Apply to all scenes</button></div>';
   }
   var thT = null, thAll = false, thSet = {};
   function thumbs(only) {
@@ -261,7 +286,10 @@
     $$('[data-t]').forEach(function (el) { el.onchange = function () { V.scenes[+el.dataset.t].t = el.value.trim(); draw(); }; });
     $$('[data-gap]').forEach(function (el) { el.onchange = function () { V.scenes[+el.dataset.gap].gap = Math.max(0, Math.min(3, +el.value || 0)); draw(); }; });
     $$('[data-want]').forEach(function (el) { el.oninput = function () { V.scenes[+el.dataset.want].want = el.value; }; });
-    $$('[data-title]').forEach(function (el) { el.oninput = function () { V.scenes[+el.dataset.title].title = el.value; thumbs(+el.dataset.title); }; });
+    $$('[data-title]').forEach(function (el) { el.oninput = function () { var i = +el.dataset.title; V.scenes[i].title = el.value; var b = $('[data-tsbox="' + i + '"]'); if (b) b.hidden = !el.value.trim(); thumbs(i); }; });
+    $$('[data-ts]').forEach(function (el) { var ev = el.type === 'range' ? 'oninput' : 'onchange'; el[ev] = function () { var p = el.dataset.ts.split(':'), sc = V.scenes[+p[0]], k = p[1]; sc.ts = Object.assign(TS(), sc.ts || {}); sc.ts[k] = k === 'caps' ? el.checked : k === 'size' ? +el.value : k === 'y' ? el.value / 100 : el.value; thumbs(+p[0]); }; });
+    $$('[data-tsall]').forEach(function (el) { el.onclick = function () { var i = +el.dataset.tsall, src = Object.assign(TS(), V.scenes[i].ts || {}); V.scenes.forEach(function (s) { s.ts = clone(src); }); draw(); X.toast('📋 Title style applied to all ' + V.scenes.length + ' scenes'); }; });
+    $$('[data-th]').forEach(function (el) { el.onclick = function () { viewer(+el.dataset.th); }; });
     $$('[data-col]').forEach(function (el) { el.oninput = function () { var sc = V.scenes[+el.dataset.col]; sc.color = el.value; sc.media = 'color'; thumbs(+el.dataset.col); }; el.onchange = re; });
     $$('[data-up]').forEach(function (el) { el.onchange = function () { var f = el.files && el.files[0]; if (f) upMedia(+el.dataset.up, f); }; });
     $$('[data-pic]').forEach(function (el) { el.onclick = function () { pic(+el.dataset.pic).then(re).catch(function (e) { X.toast(e.message); }); }; });
@@ -309,6 +337,44 @@
       if (st.status === 'ERROR') throw new Error('The AI clip failed: ' + (st.error || 'please try again'));
     }
     throw new Error('The AI clip is taking too long — try again later.');
+  }
+
+  // ───── 🔍 view a scene's picture big ─────
+  function viewer(i) {
+    var mode = 'scene', sh = X.sheet('<div id="vwB"></div>');
+    var paint = async function () {
+      var sc = V.scenes[i], box = $('#vwB', sh); if (!sc || !box) return;
+      var hasMedia = sc.media !== 'color' && (srcOf(sc) || sc.clip);
+      box.innerHTML = '<div class="row" style="gap:8px;align-items:center;margin-bottom:8px"><b style="flex:1">Scene ' + (i + 1) + ' of ' + V.scenes.length + '</b><button class="btn ghost sm" id="vwP"' + (i ? '' : ' disabled') + '>◀</button><button class="btn ghost sm" id="vwN"' + (i < V.scenes.length - 1 ? '' : ' disabled') + '>▶</button><button class="btn ghost sm" id="vwX">✕</button></div>' +
+        '<div class="row" style="gap:6px;margin-bottom:8px"><button class="btn sm ' + (mode === 'scene' ? 'primary' : 'ghost') + '" id="vwS">🎬 As in the video</button><button class="btn sm ' + (mode === 'pic' ? 'primary' : 'ghost') + '" id="vwI">🖼️ Picture only</button></div>' +
+        '<div id="vwM" style="display:flex;justify-content:center;background:#111;border-radius:12px;min-height:200px"></div><div class="muted" style="font-size:13px;margin-top:8px">“' + esc(sc.t) + '”</div>' +
+        '<div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><button class="btn ghost sm" id="vwPic">✨ ' + (sc.img ? 'New picture' : 'Make picture') + '</button><label class="btn ghost sm" style="margin:0;cursor:pointer">📷 My photo or video<input type="file" accept="image/*,video/*" id="vwUp" hidden></label>' + (sc.img ? '<button class="btn ghost sm" id="vwClip">🎥 Turn into AI clip</button>' : '') + '</div><div class="muted" id="vwProg" style="margin-top:6px"></div>';
+      var m = $('#vwM', box), hgt = 'max-height:68vh;max-width:100%;border-radius:12px';
+      if (mode === 'pic' && hasMedia) {
+        if (sc.clip && !sc._clipUrl) { try { await clipLocal(sc); } catch (e) { X.toast(e.message); } }
+        if (isVideo(sc)) m.innerHTML = '<video src="' + srcOf(sc) + '" autoplay muted loop playsinline controls style="' + hgt + '"></video>';
+        else m.innerHTML = '<img src="' + srcOf(sc) + '" alt="" style="' + hgt + '">';
+      } else {
+        if (mode === 'pic') m.innerHTML = '<div style="color:#fff;padding:40px;text-align:center">' + (sc.media === 'color' ? '🎨 This scene uses a plain colour.' : '⚠️ No picture yet — make one below.') + '</div>';
+        else {
+          var c = document.createElement('canvas'); c.width = 540; c.height = 960; c.style.cssText = 'height:68vh;max-width:100%;border-radius:12px;aspect-ratio:9/16'; m.appendChild(c);
+          var M = await loadAll(), TL = timeline(), p = TL.parts[i], cx = c.getContext('2d'); cx.setTransform(0.5, 0, 0, 0.5, 0, 0);
+          var mid = p.words.length ? LEAD + p.words[Math.min(p.words.length - 1, Math.floor(p.words.length / 2))][1] + 0.05 : p.d / 2;
+          frame(cx, p.s + Math.min(p.d - 0.05, Math.max(0.6, mid)), M, TL, true);
+        }
+      }
+      $('#vwX', box).onclick = function () { sh.remove(); };
+      $('#vwP', box).onclick = function () { if (i > 0) { i--; paint(); } };
+      $('#vwN', box).onclick = function () { if (i < V.scenes.length - 1) { i++; paint(); } };
+      $('#vwS', box).onclick = function () { mode = 'scene'; paint(); };
+      $('#vwI', box).onclick = function () { mode = 'pic'; paint(); };
+      var after = function () { draw(); paint(); };
+      $('#vwPic', box).onclick = function () { $('#vwProg', box).textContent = '✨ Making the picture…'; pic(i).then(after).catch(function (e) { $('#vwProg', box).textContent = ''; X.toast(e.message); }); };
+      $('#vwUp', box).onchange = function () { var f = this.files && this.files[0]; if (f) { upMedia(i, f); setTimeout(paint, 1500); } };
+      if ($('#vwClip', box)) $('#vwClip', box).onclick = function () { aiClip(i).then(after).catch(function (e) { X.toast(e.message); }); };
+    };
+    sh.querySelector('.sheet').style.maxWidth = '560px';
+    paint();
   }
 
   // ───── sound: voice lines + music that dips under the voice ─────
@@ -405,7 +471,7 @@
   }
 
   // ───── 💾 save / open ─────
-  function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, scenes: V.scenes.map(function (s) { return { t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, img: s.img, clip: s.clip }; }) }); return d; }
+  function snap() { var d = clone({ name: V.name, topic: V.topic, voice: V.voice, model: V.model, speed: V.speed, cap: V.cap, music: V.music, musicVol: V.musicVol, voiceVol: V.voiceVol, kb: V.kb, dim: V.dim, caption: V.caption, scenes: V.scenes.map(function (s) { return { t: s.t, gap: s.gap, media: s.media === 'video' && !s.clip ? 'photo' : s.media, color: s.color, want: s.want, title: s.title, ts: s.ts, img: s.img, clip: s.clip }; }) }); return d; }
   function doSave(name, asNew) { return X.api('vv-save', { id: asNew ? '' : V.savedId, name: name, data: snap() }).then(function (r) { V.savedId = r.id; V.savedName = r.name; V.name = r.name; $('#ttl').textContent = 'Voiceover Video · ' + r.name; X.toast('💾 Saved — find it in 📂 My videos'); }); }
   function saveSheet() {
     if (!V.scenes.length) return X.toast('Add your script first.');
@@ -422,7 +488,7 @@
     var paint = function () {
       var box = $('#vvML', s); if (!box) return; if (!items.length) { box.textContent = 'Nothing saved yet.'; return; } box.classList.remove('muted');
       box.innerHTML = items.map(function (it) { return '<div class="row" style="gap:8px;padding:8px 0;border-top:1px solid #EEE9DD;flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>' + esc(it.name) + '</b><div class="muted" style="font-size:12.5px">' + it.n + ' scenes · saved ' + new Date(it.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</div></div><button class="btn primary sm" data-op="' + it.id + '">Open</button><button class="btn ghost sm" data-dl="' + it.id + '">🗑️</button></div>'; }).join('');
-      $$('[data-op]', s).forEach(function (b) { b.onclick = function () { X.api('vv-load', { id: b.dataset.op }).then(function (r) { V = null; state(); Object.assign(V, r.data || {}); V.scenes = (V.scenes || []).map(function (x) { return Object.assign(sc0(), x); }); V.savedId = r.id; V.savedName = r.name; V.out = null; s.remove(); view(); X.toast('📂 Opened “' + r.name + '”'); }).catch(function (e) { X.toast(e.message); }); }; });
+      $$('[data-op]', s).forEach(function (b) { b.onclick = function () { X.api('vv-load', { id: b.dataset.op }).then(function (r) { V = null; state(); Object.assign(V, r.data || {}); V.scenes = (V.scenes || []).map(function (x) { var o = Object.assign(sc0(), x); o.ts = Object.assign(TS(), x.ts || {}); return o; }); V.savedId = r.id; V.savedName = r.name; V.out = null; s.remove(); view(); X.toast('📂 Opened “' + r.name + '”'); }).catch(function (e) { X.toast(e.message); }); }; });
       $$('[data-dl]', s).forEach(function (b) { b.onclick = function () { if (!confirm('Delete this saved video? This can’t be undone.')) return; X.api('vv-del', { id: b.dataset.dl }).then(function () { if (V.savedId === b.dataset.dl) { V.savedId = ''; V.savedName = ''; } items = items.filter(function (x) { return x.id !== b.dataset.dl; }); paint(); }).catch(function (e) { X.toast(e.message); }); }; });
     };
     X.api('vv-list').then(function (r) { items = r.items || []; paint(); }).catch(function (e) { var b = $('#vvML', s); if (b) b.textContent = e.message; });

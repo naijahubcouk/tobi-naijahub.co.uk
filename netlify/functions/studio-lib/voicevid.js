@@ -74,6 +74,8 @@ function clean(v) {
   const scenes = (Array.isArray(v.scenes) ? v.scenes : []).slice(0, 40).map(s => {
     s = s && typeof s === 'object' ? s : {};
     const o = { t: str(s.t, 300), gap: num(s.gap, 0, 3, 0.35), media: ['photo', 'video', 'color'].includes(s.media) ? s.media : 'photo', color: hex(s.color, '#0F1E36'), want: str(s.want, 400), title: str(s.title, 120) };
+    const t = s.ts && typeof s.ts === 'object' ? s.ts : {};
+    o.ts = { size: num(t.size, 50, 170, 92), y: num(t.y, 0.06, 0.9, 0.18), look: ['outline', 'whitebox', 'blackbox', 'yellow', 'green'].includes(t.look) ? t.look : 'outline', font: ['heavy', 'serif', 'script', 'sans'].includes(t.font) ? t.font : 'heavy', anim: ['pop', 'fade', 'slide', 'none'].includes(t.anim) ? t.anim : 'pop', caps: t.caps !== false };
     if (/^i[a-z0-9]{6,30}$/.test(String(s.img || ''))) o.img = s.img;
     if (/^https:\/\/[a-z0-9.-]*fal\.media\//i.test(String(s.clip || ''))) o.clip = str(s.clip, 500);
     return o;
