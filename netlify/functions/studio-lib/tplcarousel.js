@@ -38,6 +38,7 @@ function cleanSlide(x) {
     num: ['on', 'off'].includes(x.num) ? x.num : '',
     ...(['top', 'middle', 'bottom'].includes(x.vpos) ? { vpos: x.vpos } : {}),
     ...(['auto', 'left', 'center', 'right'].includes(x.hpos) ? { hpos: x.hpos } : {}),
+    ...(NPOS.includes(x.npos) ? { npos: x.npos } : {}),
     ...(cleanPic(x.pic) ? { pic: cleanPic(x.pic) } : {}),
     ...(cleanDeco(x.deco).length ? { deco: cleanDeco(x.deco) } : {}),
   };
@@ -49,7 +50,8 @@ function cleanPic(p) {
   if (p.mode === 'cut') {   // 🧍 a cut-out person (background removed) — side, size, flip, spill into the next slide
     const bb = Array.isArray(p.bb) && p.bb.length === 4 && p.bb.every(v => Number.isFinite(Number(v))) ? p.bb.map(v => Math.max(0, Math.min(1, Number(v)))) : [0, 0, 1, 1];
     return { img: p.img, mode: 'cut', side: ['left', 'center', 'right'].includes(p.side) ? p.side : 'right', size: n(p.size, 0.3, 1.3, 0.85), fade: n(p.fade, 0, 0.9, 0), fx: n(p.fx, 0, 1, 0.5), fy: n(p.fy, 0, 1, 0.5),
-      flip: p.flip === true, spill: p.spill === true, bb, ...(/^i[a-z0-9]{6,30}$/.test(String(p.orig || '')) ? { orig: p.orig } : {}) };
+      flip: p.flip === true, spill: p.spill === true, bb,
+      ...(Number.isFinite(Number(p.px)) && Number.isFinite(Number(p.py)) && p.px !== null && p.py !== null ? { px: n(p.px, -0.5, 1.5, 0.5), py: n(p.py, 0.3, 1.5, 0.95) } : {}), ...(/^i[a-z0-9]{6,30}$/.test(String(p.orig || '')) ? { orig: p.orig } : {}) };
   }
   return { img: p.img, mode: ['bg', 'top', 'bottom'].includes(p.mode) ? p.mode : 'bg', fade: n(p.fade, 0, 0.9, 0.7), size: n(p.size, 0.2, 0.6, 0.3), z: n(p.z, 1, 2.5, 1), fx: n(p.fx, 0, 1, 0.5), fy: n(p.fy, 0, 1, 0.5), ...(p.copied === true ? { copied: true } : {}) };
 }
@@ -59,11 +61,12 @@ function cleanDeco(list) {
   const n = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
   return (Array.isArray(list) ? list : []).slice(0, 12).filter(d => d && DECOS.includes(d.t)).map(d => ({ t: d.t, x: n(d.x, 0, 1, 0.5), y: n(d.y, 0, 1, 0.5), s: n(d.s, 0.2, 4, 1), r: n(d.r, -180, 180, 0), c: /^#[0-9a-f]{6}$/i.test(String(d.c || '')) ? d.c : '#057A44', ...(d.txt ? { txt: String(d.txt).slice(0, 24) } : {}), ...(d.flip ? { flip: true } : {}) }));
 }
+const NPOS = ['auto', 'tl', 'tc', 'tr', 'bl', 'bc', 'br', 'left', 'center', 'right'];   // 💜 where the number circle sits
 function cleanLook(l) {
   if (l && typeof l === 'object' && l.kind === 'purple') {   // 💜 Bold Purple Pro
     const P = l.purple && typeof l.purple === 'object' ? l.purple : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d;
     const opt = {}; ['bg', 'sub', 'line', 'hl', 'numBg', 'numInk', 'btnBg', 'btnInk', 'wave'].forEach(k => { opt[k] = hex(P[k], ''); });   // '' = follows the accent
-    return { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: { acc: hex(P.acc, '#4B14A6'), ink: hex(P.ink, '#111111'), ...opt, num: ['auto', 'left', 'center', 'right'].includes(P.num) ? P.num : 'auto',
+    return { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: { acc: hex(P.acc, '#4B14A6'), ink: hex(P.ink, '#111111'), ...opt, num: NPOS.includes(P.num) ? P.num : 'auto',
       btn: cleanText(P.btn, 40), handle: cleanText(P.handle, 40), icons: P.icons !== false, pattern: P.pattern !== false,
       brand: typeof P.brand === 'string' ? cleanText(P.brand, 40) : 'Auntie Tobi', brandOn: P.brandOn !== false,
       vpos: ['top', 'middle', 'bottom'].includes(P.vpos) ? P.vpos : 'top', hpos: ['auto', 'left', 'center', 'right'].includes(P.hpos) ? P.hpos : 'auto' } };

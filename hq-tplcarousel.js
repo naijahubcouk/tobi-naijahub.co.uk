@@ -378,6 +378,7 @@
     if (p.spill) cx = side === 'left' ? 0 : W;   // stands on the edge → carries on into the next (or previous) slide
     cx += ((p.fx == null ? 0.5 : p.fx) - 0.5) * W * 0.6;
     var bottom = H * (0.72 + (p.fy == null ? 0.5 : p.fy) * 0.5);
+    if (p.px != null && p.py != null) { cx = p.px * W; bottom = p.py * H; }   // ✋ dragged to a spot
     return { sx: im.naturalWidth * bb[0], sy: im.naturalHeight * bb[1], sw: sw, sh: sh, x: cx - w / 2, y: bottom - h, w: w, h: h };
   }
   function cutDraw(ctx, p, dx) {
@@ -387,18 +388,26 @@
     else ctx.drawImage(im, g.sx, g.sy, g.sw, g.sh, g.x + dx, g.y, g.w, g.h);
     ctx.restore();
   }
+  // does a person cross into the next slide (right edge) / previous slide (left edge)?
+  function cutEdge(p) {
+    if (!p) return { r: false, l: false };
+    if (p.px == null || p.py == null) return { r: !!(p.spill && p.side !== 'left'), l: !!(p.spill && p.side === 'left') };
+    var im = picImg(p.img); if (!im) return { r: p.px > 0.9, l: p.px < 0.1 };
+    var g = cutGeom(p, im); return { r: g.x + g.w > W + 4, l: g.x < -4 };
+  }
   function cutLayer(ctx, car, i) {
     var prev = cutPic(car.slides[i - 1]), next = cutPic(car.slides[i + 1]), own = cutPic(car.slides[i]);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (prev && prev.spill && prev.side !== 'left') cutDraw(ctx, prev, -W);
-    if (next && next.spill && next.side === 'left') cutDraw(ctx, next, W);
+    if (prev && cutEdge(prev).r) cutDraw(ctx, prev, -W);
+    if (next && cutEdge(next).l) cutDraw(ctx, next, W);
     if (own) cutDraw(ctx, own, 0);
     ctx.restore();
   }
   // which side the words go: away from the person on this slide
   function cutSide(car, i) {
     var own = cutPic(car.slides[i]), prev = cutPic(car.slides[i - 1]), next = cutPic(car.slides[i + 1]);
-    var L = (own && own.side === 'left') || (prev && prev.spill && prev.side !== 'left'), R = (own && own.side !== 'left') || (next && next.spill && next.side === 'left');
+    var oL = own && (own.px != null && own.py != null ? own.px < 0.5 : own.side === 'left');
+    var L = oL || (prev && cutEdge(prev).r), R = (own && !oL) || (next && cutEdge(next).l);
     return { left: !!L, right: !!R };
   }
   function hash2(a, b) { var h = (Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
@@ -479,12 +488,14 @@
       var hf3 = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.42, 128 * e.hs, 40, 1.02, true);
       var bf3 = sl.body ? rtFit(ctx, sl.body, purpleBody, bwid, Math.max(60, (bot - top) - hf3.h - dn - 90), 33 * e.bs, 18, 1.42, false) : null;
       // top: number circle stays at the bottom · middle: it follows the words · bottom: words sit just above it
-      var follow = vp === 'middle', blk3 = hf3.h + (bf3 ? 34 + bf3.h : 0) + (follow && dn ? 40 + dn : 0), y3 = place(blk3, !follow && dn ? dn + 40 : 0);
+      var np = sl.npos || P.num; np = { left: 'bl', center: 'bc', right: 'br' }[np] || np;   // old saves: left/centre/right = along the bottom
+      var nTop = dn && /^t/.test(np), nY0 = top + 75; if (nTop) top += dn + 30;
+      var follow = np === 'auto' && vp === 'middle', blk3 = hf3.h + (bf3 ? 34 + bf3.h : 0) + (follow && dn ? 40 + dn : 0), y3 = place(blk3, !follow && !nTop && dn ? dn + 40 : 0);
       rtDraw(ctx, hf3, purpleHead, x0, y3, cw, al, P.ink, P.hl); y3 += hf3.h;
       if (bf3) { y3 += 34; rtDraw(ctx, bf3, purpleBody, bx(bwid), y3, bwid, al, P.sub, P.hl); y3 += bf3.h; }
       if (e.num) {
-        var ns = P.num === 'auto' ? side : P.num, ncx = ns === 'right' ? W - M - 75 : ns === 'center' ? W / 2 : M + 75, ncy = follow ? y3 + 40 + 75 : bot - 75;
-        if (P.num === 'auto' && side !== 'center') ncx = side === 'right' ? x0 + cw - 75 : x0 + 75;
+        var ncx = /r$/.test(np) ? W - M - 75 : /c$/.test(np) ? W / 2 : M + 75, ncy = nTop ? nY0 : follow ? y3 + 40 + 75 : bot - 75;
+        if (np === 'auto') ncx = side === 'right' ? x0 + cw - 75 : side === 'center' ? W / 2 : x0 + 75;
         ctx.fillStyle = P.numBg; ctx.beginPath(); ctx.arc(ncx, ncy, 75, 0, 7); ctx.fill(); ctx.fillStyle = P.numInk; ctx.font = '800 66px Poppins, Arial'; ctx.textAlign = 'center'; ctx.fillText(pad(tipNumber(car, i)), ncx, ncy + 23);
       }
     }
@@ -812,7 +823,8 @@
           '<div><label>Gold brush</label><select data-f="brush"><option value="">Same as carousel</option><option value="on"' + (sl.brush === 'on' ? ' selected' : '') + '>On</option><option value="off"' + (sl.brush === 'off' ? ' selected' : '') + '>Off</option></select></div></div>' +
           (isPurple(car) ? '<div class="f2"><div><label>Words up / down</label><select data-f="vpos"><option value="">Same as carousel</option>' + [['top', 'Top'], ['middle', 'Middle'], ['bottom', 'Bottom']].map(function (o) { return '<option value="' + o[0] + '"' + (sl.vpos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
             '<div><label>Words side to side</label><select data-f="hpos"><option value="">Same as carousel</option>' + [['auto', 'Away from the person'], ['left', 'Left'], ['center', 'Centre'], ['right', 'Right']].map(function (o) { return '<option value="' + o[0] + '"' + (sl.hpos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>' : '') +
-          (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div><div></div></div>' : '') +
+          (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div>' +
+            (isPurple(car) ? '<div><label>Number circle sits</label><select data-f="npos"><option value="">Same as carousel</option>' + NPOS.map(function (o) { return '<option value="' + o[0] + '"' + (sl.npos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
           '<div class="f2"><div><label>Heading size <span class="muted" data-pv="hs">' + pct(sl.hs) + '</span></label><input type="range" data-f="hs" min="50" max="160" step="5" value="' + Math.round((sl.hs || 1) * 100) + '"></div>' +
           '<div><label>Body text size <span class="muted" data-pv="bs">' + pct(sl.bs) + '</span></label><input type="range" data-f="bs" min="50" max="160" step="5" value="' + Math.round((sl.bs || 1) * 100) + '"></div></div>' +
           '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + decoHtml(sl, i) + '</div>';
@@ -957,14 +969,48 @@
       Array.prototype.forEach.call(el.querySelectorAll('[data-ddel]'), function (b) { b.onclick = function () { sl.deco.splice(+b.dataset.ddel, 1); re(); }; });
       Array.prototype.forEach.call(el.querySelectorAll('[data-dall]'), function (b) { b.onclick = function () { var o = sl.deco[+b.dataset.dall], n = 0; car.slides.forEach(function (s2, k) { if (k === i) return; s2.deco = (s2.deco || []).filter(function (x) { return !(x.t === o.t && Math.abs(x.x - o.x) < 0.02 && Math.abs(x.y - o.y) < 0.02); }); if (s2.deco.length < 12) { s2.deco.push(JSON.parse(JSON.stringify(o))); n++; } }); re(); X.toast('📋 Put on ' + n + ' other slide' + (n === 1 ? '' : 's')); }; });
     }
-    // ✋ drag decorations on the big preview
+    // ✋ drag on the big preview: decorations first, then a cut-out person (corner dot resizes), then a photo (pans inside its frame)
+    var hov = null;
+    function personBox(k, dx) { var p = cutPic(car.slides[k]), im = p && picImg(p.img); if (!im) return null; var g = cutGeom(p, im); return { k: k, p: p, x: g.x + dx, y: g.y, w: g.w, h: g.h, dx: dx }; }
+    function personsHere() { var out = [], own = personBox(sel, 0), pv = cutPic(car.slides[sel - 1]), nx = cutPic(car.slides[sel + 1]);
+      if (nx && cutEdge(nx).l) out.push(personBox(sel + 1, W)); if (pv && cutEdge(pv).r) out.push(personBox(sel - 1, -W)); if (own) out.push(own); return out.filter(Boolean); }
+    function overlay() {   // preview only: outline + resize dot on the person under the pointer
+      if (!hov) return; var b = hov; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(17,17,17,.55)'; ctx.setLineDash([14, 10]); ctx.lineWidth = 3; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.setLineDash([]);
+      ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#111111'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(Math.min(W - 26, b.x + b.w), Math.max(26, b.y), 22, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+    var paint0 = paint; paint = function () { paint0(); overlay(); };
     (function () {
       var drag = null, at = function (e) { var r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }; };
       var hit = function (p) { var ds = car.slides[sel].deco || []; for (var k = ds.length - 1; k >= 0; k--) { var d = ds[k], rad = 0.11 * (d.s || 1) + 0.03; if (Math.abs(p.x - d.x) < rad && Math.abs(p.y - d.y) * (H / W) < rad) return k; } return -1; };
-      cv.addEventListener('pointerdown', function (e) { var p = at(e), k = hit(p); if (k < 0) return; var d = car.slides[sel].deco[k]; drag = { k: k, dx: p.x - d.x, dy: p.y - d.y }; try { cv.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); });
-      cv.addEventListener('pointermove', function (e) { var p = at(e); if (!drag) { cv.style.cursor = hit(p) >= 0 ? 'move' : ''; return; } var d = car.slides[sel].deco[drag.k]; d.x = clamp(p.x - drag.dx, 0, 1); d.y = clamp(p.y - drag.dy, 0, 1); paint(); });
-      var end = function () { if (drag) { drag = null; mark(); paintThumbs(); } };
+      var hitPerson = function (p) { var X0 = p.x * W, Y0 = p.y * H, ps = personsHere();
+        for (var k = ps.length - 1; k >= 0; k--) { var b = ps[k], hx = Math.min(W - 26, b.x + b.w), hy = Math.max(26, b.y);
+          if (Math.hypot(X0 - hx, Y0 - hy) < 40) return { b: b, resize: true };
+          if (X0 > b.x + b.w * 0.12 && X0 < b.x + b.w * 0.88 && Y0 > b.y && Y0 < b.y + b.h) return { b: b, resize: false }; }
+        return null; };
+      var hitPhoto = function (p) { var pc = boxPic(car.slides[sel]); if (!pc || !picImg(pc.img)) return null; if (pc.mode === 'bg') return pc; var bx = picBox(pc), X0 = p.x * W, Y0 = p.y * H; return X0 > bx.x && X0 < bx.x + bx.w && Y0 > bx.y && Y0 < bx.y + bx.h ? pc : null; };
+      var sync = function (k) { var el = ov.querySelector('.cslide[data-i="' + k + '"]'), pc = car.slides[k].pic; if (!el || !pc) return; ['size', 'fx', 'fy'].forEach(function (f) { var inp = el.querySelector('[data-p="' + f + '"]'), pv = el.querySelector('[data-ppv="' + f + '"]'); if (inp && pc[f] != null) { inp.value = Math.round(pc[f] * 100); if (pv) pv.textContent = inp.value + (f === 'size' ? '%' : ''); } }); };
+      cv.addEventListener('pointerdown', function (e) {
+        var p = at(e), k = hit(p), hp, ph;
+        if (k >= 0) { var d = car.slides[sel].deco[k]; drag = { t: 'deco', k: k, dx: p.x - d.x, dy: p.y - d.y }; }
+        else if ((hp = hitPerson(p))) { var b = hp.b, pc = b.p, g = cutGeom(pc, picImg(pc.img)); if (pc.px == null || pc.py == null) { pc.px = (g.x + g.w / 2) / W; pc.py = (g.y + g.h) / H; pc.spill = false; }
+          drag = { t: hp.resize ? 'size' : 'person', k: b.k, dx: b.dx, ox: p.x * W - (pc.px * W + b.dx), oy: p.y * H - pc.py * H, s0: pc.size, y0: p.y * H, feet: pc.py * H }; }
+        else if ((ph = hitPhoto(p))) { var im = picImg(ph.img), bb = ph.mode === 'bg' ? { w: W, h: H } : picBox(ph), sc = Math.max(bb.w / im.naturalWidth, bb.h / im.naturalHeight) * clamp(Number(ph.z) || 1, 1, 2.5);
+          drag = { t: 'photo', ph: ph, x0: p.x * W, y0: p.y * H, fx: ph.fx == null ? 0.5 : ph.fx, fy: ph.fy == null ? 0.5 : ph.fy, ex: Math.max(1, im.naturalWidth * sc - bb.w), ey: Math.max(1, im.naturalHeight * sc - bb.h) }; }
+        if (!drag) return; try { cv.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault();
+      });
+      cv.addEventListener('pointermove', function (e) {
+        var p = at(e);
+        if (!drag) { var hp = hit(p) >= 0 ? null : hitPerson(p), was = hov; hov = hp ? hp.b : null; cv.style.cursor = hit(p) >= 0 ? 'move' : hp ? (hp.resize ? 'nwse-resize' : 'grab') : hitPhoto(p) ? 'grab' : ''; if (was !== hov && (was || hov)) paint(); return; }
+        if (drag.t === 'deco') { var d = car.slides[sel].deco[drag.k]; d.x = clamp(p.x - drag.dx, 0, 1); d.y = clamp(p.y - drag.dy, 0, 1); }
+        else if (drag.t === 'person') { var pc = car.slides[drag.k].pic; pc.px = clamp((p.x * W - drag.ox - drag.dx) / W, -0.45, 1.45); pc.py = clamp((p.y * H - drag.oy) / H, 0.3, 1.5); hov = personBox(sel, 0) && drag.k === sel ? personBox(sel, 0) : personBox(drag.k, drag.dx); cv.style.cursor = 'grabbing'; }
+        else if (drag.t === 'size') { var pc2 = car.slides[drag.k].pic; pc2.size = clamp(drag.s0 * (drag.feet - p.y * H) / Math.max(40, drag.feet - drag.y0), 0.3, 1.3); hov = personBox(drag.k, drag.dx); }
+        else if (drag.t === 'photo') { drag.ph.fx = clamp(drag.fx - (p.x * W - drag.x0) / drag.ex, 0, 1); drag.ph.fy = clamp(drag.fy - (p.y * H - drag.y0) / drag.ey, 0, 1); cv.style.cursor = 'grabbing'; }
+        paint();
+      });
+      var end = function () { if (!drag) return; var k = drag.k == null ? sel : drag.k; drag = null; mark(); sync(k); paintThumbs(); paint(); };
       cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+      cv.addEventListener('pointerleave', function () { if (!drag && hov) { hov = null; paint(); } });
+      cv.style.touchAction = 'none';
     })();
     var openPic = {};
     function picHtml(sl, i) {
@@ -1018,7 +1064,8 @@
         '<div class="row" style="gap:10px;margin-top:8px;align-items:flex-start"><img src="' + picSrc(p.img) + '" alt="" style="width:64px;height:80px;object-fit:contain;border-radius:8px;flex:none;background:repeating-conic-gradient(#EEE 0 25%,#FFF 0 50%) 0 0/14px 14px"><div style="flex:1;min-width:0">' +
           '<label>Stands on the</label><div class="scseg">' + seg('left', '⬅ Left') + seg('center', 'Centre') + seg('right', 'Right ➡') + '</div>' +
           '<label class="chk" style="margin-top:6px"><input type="checkbox" data-pcspill' + (p.spill ? ' checked' : '') + '> Spill into the ' + (sd === 'left' ? 'previous' : 'next') + ' slide (carries on when people swipe)</label>' +
-          '<label class="chk"><input type="checkbox" data-pcflip' + (p.flip ? ' checked' : '') + '> ↔ Flip (face the other way)</label></div></div>' +
+          '<label class="chk"><input type="checkbox" data-pcflip' + (p.flip ? ' checked' : '') + '> ↔ Flip (face the other way)</label>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:4px">✋ Or drag the person on the big preview — the corner dot resizes. Drag them over the edge to carry on into the next slide.</div></div></div>' +
         '<div class="f2" style="margin-top:6px">' + sld('size', 'Size', 30, 130, Math.round((p.size || 0.85) * 100), '%') + sld('fade', 'Transparency', 0, 90, Math.round((p.fade || 0) * 100), '%') + '</div>' +
         '<div class="f2">' + sld('fx', 'Left / right', 0, 100, Math.round((p.fx == null ? 0.5 : p.fx) * 100), '') + sld('fy', 'Up / down', 0, 100, Math.round((p.fy == null ? 0.5 : p.fy) * 100), '') + '</div>' +
         '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="btn ghost sm" style="margin:0;cursor:pointer">🧍 Change person<input type="file" accept="image/*" data-pcup hidden></label>' +
@@ -1047,16 +1094,19 @@
       var cu = el.querySelector('[data-pcup]'); if (cu) cu.onchange = function () { var f = this.files && this.files[0]; if (!f) return; msg('Getting the photo ready…'); shrinkPic(f, 1400).then(function (du) { return cutFrom(i, du, '', msg); }).catch(fail); };
       var cb = el.querySelector('[data-pcut]'); if (cb) cb.onclick = function () { var id = car.slides[i].pic.img; cb.disabled = true; idToData(id).then(function (du) { return cutFrom(i, du, id, msg); }).catch(function (e) { cb.disabled = false; fail(e); }); };
       var redraw = function () { mark(); paintSlides(); setSel(i); paintThumbs(); };
-      Array.prototype.forEach.call(el.querySelectorAll('[data-pcside]'), function (b) { b.onclick = function () { car.slides[i].pic.side = b.dataset.pcside; redraw(); }; });
-      var sp = el.querySelector('[data-pcspill]'); if (sp) sp.onchange = function () { car.slides[i].pic.spill = this.checked; redraw(); };
+      var free = function () { var p = car.slides[i].pic; delete p.px; delete p.py; };
+      Array.prototype.forEach.call(el.querySelectorAll('[data-pcside]'), function (b) { b.onclick = function () { free(); car.slides[i].pic.side = b.dataset.pcside; redraw(); }; });
+      var sp = el.querySelector('[data-pcspill]'); if (sp) sp.onchange = function () { free(); car.slides[i].pic.spill = this.checked; redraw(); };
+      Array.prototype.forEach.call(el.querySelectorAll('[data-p="fx"],[data-p="fy"]'), function (f) { if (cutPic(car.slides[i])) f.addEventListener('input', free); });
       var fl = el.querySelector('[data-pcflip]'); if (fl) fl.onchange = function () { car.slides[i].pic.flip = this.checked; redraw(); };
       var og = el.querySelector('[data-porig]'); if (og) og.onclick = function () { var o = car.slides[i].pic.orig; car.slides[i].pic = { img: o, mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }; redraw(); };
     }
     // a new picture: in cut-out mode it gets its background removed too
     function usePic(i, id, msg) { if (cutPic(car.slides[i])) return idToData(id).then(function (du) { return cutFrom(i, du, id, msg); }).catch(function (e) { msg(''); X.toast(e.message || 'Couldn’t remove the background.'); }); setPic(i, id); }
     // 💜 Bold Purple Pro look settings
+    var NPOS = [['auto', 'With the words'], ['tl', '↖ Top left'], ['tc', '⬆ Top middle'], ['tr', '↗ Top right'], ['bl', '↙ Bottom left'], ['bc', '⬇ Bottom middle'], ['br', '↘ Bottom right']];
     function purplePanel() {
-      var P = pur(car), sg = function (k, opts) { return '<div class="scseg">' + opts.map(function (o) { return '<button data-ppseg="' + k + '" data-v="' + o[0] + '" aria-pressed="' + (P[k] === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
+      var P = pur(car), sg = function (k, opts) { var cur = k === 'num' ? ({ left: 'bl', center: 'bc', right: 'br' }[P.num] || P.num) : P[k]; return '<div class="scseg">' + opts.map(function (o) { return '<button data-ppseg="' + k + '" data-v="' + o[0] + '" aria-pressed="' + (cur === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
       var col = function (k, l) { return '<label class="sccol"><input type="color" data-ppcol="' + k + '" value="' + P[k] + '"><span>' + l + '</span></label>'; };
       return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number circles (01, 02…)</label>' +
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show the handle</label>' +
@@ -1068,7 +1118,7 @@
           col('numBg', 'Number circle') + col('numInk', 'Number') + col('btnBg', 'Button') + col('btnInk', 'Button text') + col('wave', 'Waves (last slide)') + '</div></details>' +
         '<details class="lsec" open><summary>📐 Where the words sit</summary><div class="lbl">Up / down</div>' + sg('vpos', [['top', '⬆ Top'], ['middle', '↕ Middle'], ['bottom', '⬇ Bottom']]) +
           '<div class="lbl">Side to side</div>' + sg('hpos', [['auto', 'Auto (away from the person)'], ['left', '⬅ Left'], ['center', '↔ Centre'], ['right', 'Right ➡']]) +
-          '<div class="lbl">Number circle</div>' + sg('num', [['auto', 'With the words'], ['left', '⬅ Left'], ['center', 'Centre'], ['right', 'Right ➡']]) +
+          '<div class="lbl">Number circle</div>' + sg('num', NPOS) +
           '<div class="muted" style="font-size:12.5px;margin-top:4px">One slide different? Open ⚙️ Slide options on that slide.</div></details>' +
         '<div class="f2" style="margin-top:6px"><div><div class="lbl">Name on the cover</div><input data-pptxt="brand" value="' + X.esc(P.brand) + '"></div><div><div class="lbl">Handle</div><input data-pptxt="handle" value="' + X.esc(P.handle) + '"></div></div>' +
         '<div class="f2" style="margin-top:6px"><div><div class="lbl">Button on the last slide</div><input data-pptxt="btn" value="' + X.esc(P.btn) + '"></div><div></div></div>' +
