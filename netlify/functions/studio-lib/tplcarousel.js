@@ -44,6 +44,11 @@ function cleanSlide(x) {
 function cleanPic(p) {
   if (!p || typeof p !== 'object' || !/^i[a-z0-9]{6,30}$/.test(String(p.img || ''))) return null;
   const n = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
+  if (p.mode === 'cut') {   // 🧍 a cut-out person (background removed) — side, size, flip, spill into the next slide
+    const bb = Array.isArray(p.bb) && p.bb.length === 4 && p.bb.every(v => Number.isFinite(Number(v))) ? p.bb.map(v => Math.max(0, Math.min(1, Number(v)))) : [0, 0, 1, 1];
+    return { img: p.img, mode: 'cut', side: ['left', 'center', 'right'].includes(p.side) ? p.side : 'right', size: n(p.size, 0.3, 1.3, 0.85), fade: n(p.fade, 0, 0.9, 0), fx: n(p.fx, 0, 1, 0.5), fy: n(p.fy, 0, 1, 0.5),
+      flip: p.flip === true, spill: p.spill === true, bb, ...(/^i[a-z0-9]{6,30}$/.test(String(p.orig || '')) ? { orig: p.orig } : {}) };
+  }
   return { img: p.img, mode: ['bg', 'top', 'bottom'].includes(p.mode) ? p.mode : 'bg', fade: n(p.fade, 0, 0.9, 0.7), size: n(p.size, 0.2, 0.6, 0.3), z: n(p.z, 1, 2.5, 1), fx: n(p.fx, 0, 1, 0.5), fy: n(p.fy, 0, 1, 0.5), ...(p.copied === true ? { copied: true } : {}) };
 }
 // ✨ decorations on a slide: arrows, stickers, shapes, emoji — position/size/turn/colour
@@ -53,6 +58,11 @@ function cleanDeco(list) {
   return (Array.isArray(list) ? list : []).slice(0, 12).filter(d => d && DECOS.includes(d.t)).map(d => ({ t: d.t, x: n(d.x, 0, 1, 0.5), y: n(d.y, 0, 1, 0.5), s: n(d.s, 0.2, 4, 1), r: n(d.r, -180, 180, 0), c: /^#[0-9a-f]{6}$/i.test(String(d.c || '')) ? d.c : '#057A44', ...(d.txt ? { txt: String(d.txt).slice(0, 24) } : {}), ...(d.flip ? { flip: true } : {}) }));
 }
 function cleanLook(l) {
+  if (l && typeof l === 'object' && l.kind === 'purple') {   // 💜 Bold Purple Pro
+    const P = l.purple && typeof l.purple === 'object' ? l.purple : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d;
+    return { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: { acc: hex(P.acc, '#4B14A6'), ink: hex(P.ink, '#111111'), num: ['auto', 'left', 'right'].includes(P.num) ? P.num : 'auto',
+      btn: cleanText(P.btn, 40) || 'FOLLOW FOR MORE', handle: cleanText(P.handle, 40) || '@auntietobi_uk', icons: P.icons !== false, pattern: P.pattern !== false } };
+  }
   if (!l || typeof l !== 'object' || l.kind !== 'spec') return null;
   return { kind: 'spec', name: cleanText(l.name, 40) || 'My look', styleId: String(l.styleId || '').slice(0, 40), spec: require('./stylecar').cleanSpec(l.spec) };
 }

@@ -212,6 +212,7 @@
   }
   var LOOKS = [
     { id: 'white', name: 'Auntie Tobi White', sw: ['#FFFFFF', '#057A44'] },
+    { id: 'purple', name: '💜 Bold Purple Pro', purple: true },
     { id: 'green', name: 'Auntie Tobi Green', spec: baseSpec({ bg: { type: 'gradient', c1: '#057A44', c2: '#03532E' }, ink: '#FFFFFF', sub: '#E6F4EC', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36', font: { head: 'poppins' }, hlStyle: 'bar', shapes: 'circles' }) },
     { id: 'yellow', name: 'Bold Yellow', spec: baseSpec({ bg: { c1: '#FFC928' }, ink: '#111111', sub: '#2B2B2B', accent: '#111111', hl: '#FFFFFF', hlInk: '#111111', font: { head: 'archivo', caps: true }, hlStyle: 'bar', frame: { on: true, color: '#111111', width: 8, inset: 30, radius: 18 }, numbers: 'pill', shapes: 'dots' }) },
     { id: 'cream', name: 'Soft Cream', spec: baseSpec({ bg: { c1: '#F7F1E6' }, ink: '#2B2118', sub: '#5C4F42', accent: '#C2652A', hl: '#C2652A', font: { head: 'playfair', body: 'dmsans' }, hlStyle: 'color', align: 'center', shapes: 'blob', numbers: 'big' }) },
@@ -226,10 +227,11 @@
   }
   function isSpec(car) { return !!(car.look && car.look.kind === 'spec' && car.look.spec && window.HQStyle); }
   function drawSpec(ctx, car, i) {
-    var sp = car.look.spec, sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, pic = sl.pic && sl.pic.img ? sl.pic : null;
+    var sp = car.look.spec, sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, pic = boxPic(sl);
     var a = { kind: sl.kind === 'tip' ? 'point' : sl.kind, title: sl.heading, body: sl.body, size: sl.hs || 1, _num: tipNumber(car, i) };
     if (pic && pic.mode === 'bg') a._afterBg = function (c) { picDraw(c, pic, 0, 0, W, H, 0); };
     else if (pic) { var pb = picBox(pic); a._afterBg = function (c) { picDraw(c, pic, pb.x, pb.y, pb.w, pb.h, 28); }; a._top = pb.top; a._bot = pb.bot; }
+    var ab = a._afterBg; a._afterBg = function (c) { if (ab) ab(c); cutLayer(c, car, i); };
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     window.HQStyle.draw(ctx, a, i, car.slides.length, sp, sp.bg.type === 'image' && sp.bg.img ? lookImg(sp.bg.img) : null);
     ctx.restore();
@@ -246,6 +248,10 @@
       return { ink: sp.ink, sub: sp.sub, acc: sp.accent, accInk: hexLum(sp.accent) > 0.6 ? '#111111' : '#FFFFFF', hl: sp.hlStyle === 'none' ? sp.ink : sp.accent, card: dark ? 'rgba(255,255,255,0.10)' : rgbaH(sp.accent, 0.08), line: rgbaH(sp.accent, 0.5),
         head: function (z) { return hf.w + ' ' + Math.round(z) + 'px ' + hf.f; }, body: function (z, w) { return (w || bf.bw) + ' ' + Math.round(z) + 'px ' + bf.b; }, caps: sp.font.caps, k: k * (sl.hs || 1), bk: sp.font.bodySize * (sl.bs || 1), lh: hf.lh || 1.06,
         align: sp.align, x0: 112 + (sp.frame.on ? sp.frame.inset + sp.frame.width : 0) * 0.5 };
+    }
+    if (isPurple(car)) {
+      var Pp = pur(car), ep = eff(car, sl);
+      return { ink: Pp.ink, sub: '#3A3A44', acc: Pp.acc, accInk: '#FFFFFF', hl: Pp.acc, card: rgbaH(Pp.acc, 0.06), line: rgbaH(Pp.acc, 0.45), head: purpleHead, body: function (z, w) { return purpleBody(z, w); }, caps: true, k: 1.15 * ep.hs, bk: ep.bs, lh: 1.02, align: 'left', x0: 96 };
     }
     var e = eff(car, sl), st = e.st;
     return { ink: INK, sub: BODY, acc: GREEN, accInk: '#FFFFFF', hl: GREEN, card: '#F2F7F4', line: 'rgba(5,122,68,0.45)',
@@ -270,28 +276,35 @@
   }
   function rtDraw(ctx, f, font, x, y, maxW, align, ink, hl) {
     ctx.font = font(f.size); ctx.textAlign = 'left'; var sp = ctx.measureText(' ').width;
-    f.lines.forEach(function (ln, k) { var xx = align === 'center' ? x + (maxW - ln.w) / 2 : x, base = y + k * f.size * f.lh + f.size * 0.86; ln.t.forEach(function (t, ti) { ctx.fillStyle = t.hl ? hl : ink; ctx.fillText(t.w, xx, base); xx += t.ww + (ln.t[ti + 1] && ln.t[ti + 1].join ? 0 : sp); }); });
+    f.lines.forEach(function (ln, k) { var xx = align === 'center' ? x + (maxW - ln.w) / 2 : align === 'right' ? x + maxW - ln.w : x, base = y + k * f.size * f.lh + f.size * 0.86; ln.t.forEach(function (t, ti) { ctx.fillStyle = t.hl ? hl : ink; ctx.fillText(t.w, xx, base); xx += t.ww + (ln.t[ti + 1] && ln.t[ti + 1].join ? 0 : sp); }); });
   }
   function pill(ctx, text, x, y, font, bg, ink, padX, h) { ctx.font = font; var w = ctx.measureText(text).width + padX * 2; ctx.fillStyle = bg; rrect(ctx, x, y, w, h, h / 2); ctx.fill(); ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.fillText(text, x + padX, y + h * 0.68); return w; }
   function itemLines(t) { return String(t || '').split('\n').map(function (x) { return x.replace(/^\s*([-•*✓✔️]|\d+[.)])\s*/, '').trim(); }).filter(Boolean).slice(0, 8); }
 
   function drawLayout(ctx, car, i) {
-    var sl = car.slides[i], pic = sl.pic && sl.pic.img ? sl.pic : null, n = car.slides.length, P = pal(car, sl);
+    var sl = car.slides[i], pic = boxPic(sl), n = car.slides.length, P = pal(car, sl);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     // 1 · the look's background (and picture, frame, handle, page number)
     if (isSpec(car)) {
       var sp = car.look.spec, a = { kind: 'end', title: '', body: '' };
       if (pic && pic.mode === 'bg') a._afterBg = function (c) { picDraw(c, pic, 0, 0, W, H, 0); };
       else if (pic) { var pb0 = picBox(pic); a._afterBg = function (c) { picDraw(c, pic, pb0.x, pb0.y, pb0.w, pb0.h, 28); }; }
+      var ab0 = a._afterBg; a._afterBg = function (c) { if (ab0) ab0(c); cutLayer(c, car, i); };
       window.HQStyle.draw(ctx, a, i, n, sp, sp.bg.type === 'image' && sp.bg.img ? lookImg(sp.bg.img) : null);
+    } else if (isPurple(car)) {
+      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H); if (pur(car).pattern) purplePattern(ctx, i);
+      if (pic && pic.mode === 'bg') picDraw(ctx, pic, 0, 0, W, H, 0); else if (pic) { var pb2 = picBox(pic); picDraw(ctx, pic, pb2.x, pb2.y, pb2.w, pb2.h, 28); }
+      cutLayer(ctx, car, i);
     } else {
       ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
       if (pic && pic.mode === 'bg') picDraw(ctx, pic, 0, 0, W, H, 0); else if (pic) { var pb1 = picBox(pic); picDraw(ctx, pic, pb1.x, pb1.y, pb1.w, pb1.h, 28); }
+      cutLayer(ctx, car, i);
       ctx.strokeStyle = FRAME; ctx.lineWidth = 6; ctx.strokeRect(37, 37, W - 74, H - 74);
       if (car.handle !== false) { setB(ctx, 30, 700); ctx.fillStyle = GREEN; ctx.textAlign = 'left'; var hd = '@auntietobi_uk', hw = ctx.measureText(hd).width; ctx.fillText(hd, (W - hw) / 2, H - 84); }
     }
     // 2 · the space for the words
     var x0 = 112, cw = W - 224, top = 150, bot = H - 150;
+    if (isPurple(car)) { var cs0 = cutSide(car, i); if (cs0.left || cs0.right) { cw = W * 0.56; x0 = cs0.left && !cs0.right ? W - 96 - cw : 96; } }
     if (pic && pic.mode !== 'bg') { var pb = picBox(pic); top = Math.max(top - 30, pb.top); bot = Math.min(bot, pb.bot); }
     var avail = bot - top, ctr = P.align === 'center', k = sl.kind, over = false;
     ctx.textBaseline = 'alphabetic';
@@ -343,6 +356,110 @@
     ctx.restore();
     return { over: over, shrunk: false };
   }
+  // ── 💜 Bold Purple Pro look + 🧍 cut-out people (background removed) that can spill into the next slide ──
+  function isPurple(car) { return !!(car.look && car.look.kind === 'purple'); }
+  var PURPLE = { acc: '#4B14A6', ink: '#111111', num: 'auto', btn: 'FOLLOW FOR MORE', handle: '@auntietobi_uk', icons: true, pattern: true };
+  function pur(car) { return Object.assign({}, PURPLE, (car.look && car.look.purple) || {}); }
+  function boxPic(sl) { return sl && sl.pic && sl.pic.img && sl.pic.mode !== 'cut' ? sl.pic : null; }
+  function cutPic(sl) { return sl && sl.pic && sl.pic.img && sl.pic.mode === 'cut' ? sl.pic : null; }
+  function cutGeom(p, im) {
+    var bb = p.bb || [0, 0, 1, 1], sw = Math.max(4, im.naturalWidth * bb[2]), sh = Math.max(4, im.naturalHeight * bb[3]), h = H * clamp(Number(p.size) || 0.85, 0.3, 1.3), w = h * sw / sh;
+    var side = p.side || 'right', cx = side === 'left' ? W * 0.25 : side === 'center' ? W * 0.5 : W * 0.76;
+    if (p.spill) cx = side === 'left' ? 0 : W;   // stands on the edge → carries on into the next (or previous) slide
+    cx += ((p.fx == null ? 0.5 : p.fx) - 0.5) * W * 0.6;
+    var bottom = H * (0.72 + (p.fy == null ? 0.5 : p.fy) * 0.5);
+    return { sx: im.naturalWidth * bb[0], sy: im.naturalHeight * bb[1], sw: sw, sh: sh, x: cx - w / 2, y: bottom - h, w: w, h: h };
+  }
+  function cutDraw(ctx, p, dx) {
+    var im = picImg(p.img); if (!im) return;
+    var g = cutGeom(p, im); ctx.save(); ctx.globalAlpha = 1 - clamp(Number(p.fade) || 0, 0, 0.9);
+    if (p.flip) { ctx.translate(g.x + dx + g.w / 2, 0); ctx.scale(-1, 1); ctx.drawImage(im, g.sx, g.sy, g.sw, g.sh, -g.w / 2, g.y, g.w, g.h); }
+    else ctx.drawImage(im, g.sx, g.sy, g.sw, g.sh, g.x + dx, g.y, g.w, g.h);
+    ctx.restore();
+  }
+  function cutLayer(ctx, car, i) {
+    var prev = cutPic(car.slides[i - 1]), next = cutPic(car.slides[i + 1]), own = cutPic(car.slides[i]);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (prev && prev.spill && prev.side !== 'left') cutDraw(ctx, prev, -W);
+    if (next && next.spill && next.side === 'left') cutDraw(ctx, next, W);
+    if (own) cutDraw(ctx, own, 0);
+    ctx.restore();
+  }
+  // which side the words go: away from the person on this slide
+  function cutSide(car, i) {
+    var own = cutPic(car.slides[i]), prev = cutPic(car.slides[i - 1]), next = cutPic(car.slides[i + 1]);
+    var L = (own && own.side === 'left') || (prev && prev.spill && prev.side !== 'left'), R = (own && own.side !== 'left') || (next && next.spill && next.side === 'left');
+    return { left: !!L, right: !!R };
+  }
+  function hash2(a, b) { var h = (Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
+  // faint line network — drawn in carousel-wide coordinates so it runs on seamlessly from slide to slide
+  function purplePattern(ctx, i) {
+    var G = 190, x0 = i * W, c0 = Math.floor((x0 - G) / G), c1 = Math.ceil((x0 + W + G) / G), r1 = Math.ceil(H / G) + 1;
+    var pt = function (c, r) { return [c * G + (hash2(c, r) - 0.5) * G * 0.8 - x0, r * G + (hash2(r + 91, c + 17) - 0.5) * G * 0.8]; };
+    ctx.save(); ctx.strokeStyle = 'rgba(40,30,80,0.075)'; ctx.fillStyle = 'rgba(40,30,80,0.12)'; ctx.lineWidth = 2;
+    for (var c = c0; c <= c1; c++) for (var r = -1; r <= r1; r++) {
+      var p = pt(c, r), nb = [[c + 1, r], [c, r + 1]]; if (hash2(c * 7, r * 3) > 0.45) nb.push([c + 1, r + 1]); if (hash2(c * 5 + 1, r * 11) > 0.6) nb.push([c - 1, r + 1]);
+      nb.forEach(function (q) { var b = pt(q[0], q[1]); ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); });
+      ctx.beginPath(); ctx.arc(p[0], p[1], 3.5, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function purpleWaves(ctx, P) {
+    ctx.save();
+    for (var k = 0; k < 18; k++) {
+      ctx.beginPath(); for (var x = -20; x <= W + 20; x += 12) { var y = H * 0.74 + k * 7 + Math.sin(x / W * Math.PI * 2.2 + k * 0.22) * 70 + Math.sin(x / W * Math.PI * 5 + k * 0.5) * 16; if (x === -20) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+      ctx.strokeStyle = rgbaH(P.acc, 0.10 + 0.04 * (k % 5)); ctx.lineWidth = 2.2; ctx.stroke();
+    }
+    var g = ctx.createLinearGradient(W * 0.4, H, W, H * 0.85); g.addColorStop(0, P.acc); g.addColorStop(1, rgbaH(P.acc, 0.75));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(W * 0.38, H); ctx.lineTo(W, H * 0.86); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function purpleHead(z) { return '400 ' + Math.round(z) + 'px Anton, "Inter Tight", Arial, sans-serif'; }
+  function purpleBody(z, w) { return (w || 500) + ' ' + Math.round(z) + 'px "DM Sans", Inter, Arial, sans-serif'; }
+  function drawPurple(ctx, car, i) {
+    var sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, P = pur(car), e = eff(car, sl), bp = boxPic(sl), cs = cutSide(car, i);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
+    if (P.pattern) purplePattern(ctx, i);
+    var top = 100, bot = H - 100;
+    if (bp && bp.mode === 'bg') picDraw(ctx, bp, 0, 0, W, H, 0); else if (bp) { var pb = picBox(bp); picDraw(ctx, bp, pb.x, pb.y, pb.w, pb.h, 28); top = pb.top; bot = pb.bot; }
+    if (sl.kind === 'end') purpleWaves(ctx, P);
+    cutLayer(ctx, car, i);
+    var right = cs.left && !cs.right, narrow = cs.left || cs.right, M = 96, cw = narrow ? W * 0.5 : W - M * 2, x0 = right ? W - M - cw : M, al = right ? 'right' : 'left';
+    var sub = '#3A3A44', y = top + 10;
+    if (sl.kind === 'cover') {
+      var hf = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.62, 175 * e.hs, 50, 1.02, true); rtDraw(ctx, hf, purpleHead, x0, y, cw, al, P.ink, P.acc); y += hf.h + 40;
+      if (sl.body) { var bf = rtFit(ctx, sl.body, purpleBody, cw, 200, 38 * e.bs, 22, 1.35, false); rtDraw(ctx, bf, purpleBody, x0, y, cw, al, sub, P.acc); y += bf.h + 36; }
+      if (car.handle !== false && P.handle) { ctx.font = purpleBody(27, 700); var t = P.handle, tw = ctx.measureText(t).width, pw = tw + 56, px = right ? x0 + cw - pw : x0; ctx.strokeStyle = P.acc; ctx.lineWidth = 3; rrect(ctx, px, y, pw, 54, 27); ctx.stroke(); ctx.fillStyle = P.acc; ctx.textAlign = 'left'; ctx.fillText(t, px + 28, y + 36); }
+      ctx.font = purpleBody(30, 800); ctx.textAlign = 'left'; var bt = 'Auntie Tobi', bw = ctx.measureText(bt).width, bx = right ? W - M - bw - 46 : M;
+      ctx.fillStyle = P.acc; rrect(ctx, bx, H - 128, 34, 34, 8); ctx.fill(); ctx.fillStyle = P.ink; ctx.fillText(bt, bx + 46, H - 101);
+    } else if (sl.kind === 'end') {
+      var hf2 = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.4, 130 * e.hs, 44, 1.02, true); rtDraw(ctx, hf2, purpleHead, x0, y, cw, al, P.acc, P.ink); y += hf2.h + 30;
+      if (sl.body) { var bf2 = rtFit(ctx, sl.body, function (z) { return purpleBody(z, 800); }, cw, 140, 32 * e.bs, 20, 1.3, true); rtDraw(ctx, bf2, function (z) { return purpleBody(z, 800); }, x0, y, cw, al, P.ink, P.acc); y += bf2.h + 70; }
+      // the tilted button
+      var words = String(P.btn || '').toUpperCase().split(/\s+/).filter(Boolean), l1 = words.slice(0, Math.ceil(words.length / 2)).join(' '), l2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+      ctx.font = purpleHead(64); var bw2 = Math.max(ctx.measureText(l1).width, ctx.measureText(l2).width) + 70, bh = l2 ? 170 : 104, bcx = right ? x0 + cw - bw2 / 2 - 10 : x0 + bw2 / 2 + 10, bcy = Math.min(y + bh / 2, H * 0.72);
+      ctx.save(); ctx.translate(bcx, bcy); ctx.rotate(-0.09);
+      ctx.strokeStyle = P.acc; ctx.lineWidth = 4; rrect(ctx, -bw2 / 2 + 12, -bh / 2 + 12, bw2, bh, 14); ctx.stroke();
+      ctx.fillStyle = P.acc; rrect(ctx, -bw2 / 2, -bh / 2, bw2, bh, 14); ctx.fill();
+      ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center'; ctx.fillText(l1, 0, l2 ? -8 : 24); if (l2) ctx.fillText(l2, 0, 62); ctx.restore();
+      if (P.icons) {   // a small row of social dots + the handle
+        var gy = H - 120, gx = right ? W - M : M, ic = ['f', '◎', '♪', '▶', '𝕏'], step = 46;
+        ctx.font = purpleBody(26, 700); var ht = car.handle !== false ? P.handle : '', hw = ctx.measureText(ht).width, rowW = ic.length * step + (ht ? 14 + hw : 0), sx = right ? gx - rowW : gx;
+        ic.forEach(function (g, k) { var cx = sx + k * step + 18; ctx.fillStyle = P.acc; ctx.beginPath(); ctx.arc(cx, gy, 18, 0, 7); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.font = '700 20px Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(g, cx, gy + 7); });
+        if (ht) { ctx.font = purpleBody(26, 700); ctx.fillStyle = P.ink; ctx.textAlign = 'left'; ctx.fillText(ht, sx + ic.length * step + 14, gy + 9); }
+      }
+    } else {
+      var dn = e.num ? 150 : 0, hf3 = rtFit(ctx, sl.heading, purpleHead, cw, (bot - top) * 0.42, 128 * e.hs, 40, 1.02, true); rtDraw(ctx, hf3, purpleHead, x0, y, cw, al, P.ink, P.acc); y += hf3.h + 34;
+      if (sl.body) { var bf3 = rtFit(ctx, sl.body, purpleBody, cw * (narrow ? 1 : 0.8), Math.max(60, bot - y - dn - 40), 33 * e.bs, 18, 1.42, false); rtDraw(ctx, bf3, purpleBody, right ? x0 + cw - cw * (narrow ? 1 : 0.8) : x0, y, cw * (narrow ? 1 : 0.8), al, sub, P.acc); }
+      if (e.num) {
+        var nr = P.num === 'auto' ? right : P.num === 'right', ncx = nr ? W - M - 75 : M + 75, ncy = bot - 75;
+        ctx.fillStyle = P.acc; ctx.beginPath(); ctx.arc(ncx, ncy, 75, 0, 7); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.font = '800 66px Poppins, Arial'; ctx.textAlign = 'center'; ctx.fillText(pad(tipNumber(car, i)), ncx, ncy + 23);
+      }
+    }
+    ctx.restore();
+    return { over: false, shrunk: false };
+  }
   // 👉 the Swipe sign — one setting for every look: cover only / every slide but the last / off
   function swipeOf(car) {
     var m = car.swipeMode || (isSpec(car) ? (car.look.spec.swipe ? 'all' : 'off') : (car.swipe !== false ? 'cover' : 'off'));
@@ -353,11 +470,11 @@
     if (o.mode === 'off' || n < 2 || i >= n - 1 || (o.mode === 'cover' && i !== 0)) return;
     var spec = isSpec(car), sp = spec ? car.look.spec : null, photo = spec && sp.bg.type === 'image' && sp.bg.img && (sp.bg.where === 'all' || i === 0);
     var pbg = sl.pic && sl.pic.img && sl.pic.mode === 'bg' && (sl.pic.fade || 0) < 0.5;
-    var acc = spec ? sp.accent : GREEN, quiet = spec ? sp.sub : GREY, onImg = photo || pbg;
+    var acc = spec ? sp.accent : isPurple(car) ? pur(car).acc : GREEN, quiet = spec ? sp.sub : isPurple(car) ? pur(car).acc : GREY, onImg = photo || pbg;
     var font = spec ? (window.HQStyle.FONTS[sp.font.body] || window.HQStyle.FONTS.dmsans).b : FB;
     var edge = spec ? (sp.frame.on ? sp.frame.inset + sp.frame.width : 0) + 64 : 112;
     // keep clear of the handle when it sits in the same corner
-    var hp = spec ? sp.handle.pos : (car.handle !== false && sl.kind !== 'cover' && sl.kind !== 'end' ? 'bottom-center' : 'none');
+    var hp = spec ? sp.handle.pos : isPurple(car) ? 'none' : (car.handle !== false && sl.kind !== 'cover' && sl.kind !== 'end' ? 'bottom-center' : 'none');
     var clash = (o.pos === 'br' && hp === 'bottom-right') || (o.pos === 'bc' && hp === 'bottom-center');
     var base = (spec ? H - edge + 4 : H - 84) - (clash ? 62 : 0);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textBaseline = 'alphabetic';
@@ -383,7 +500,7 @@
     // the looks' own swipe text is switched off — drawSwipe draws the one the user chose
     var car = Object.assign({}, car0, { swipe: false });
     if (isSpec(car0)) car.look = Object.assign({}, car0.look, { spec: Object.assign({}, car0.look.spec, { swipe: false }) });
-    var sl0 = car.slides[i], r = sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
+    var sl0 = car.slides[i], r = sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isPurple(car) ? drawPurple(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
     drawSwipe(ctx, car0, i);
     if (sl && sl.deco && sl.deco.length) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); sl.deco.forEach(function (d) { drawDeco(ctx, d); }); ctx.restore(); }
     return r;
@@ -436,9 +553,10 @@
     var align = sl.align === 'left' ? 'left' : 'center';
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
-    var pic = sl.pic && sl.pic.img ? sl.pic : null, TOP = TOP0, BOT = BOT0;
+    var pic = boxPic(sl), TOP = TOP0, BOT = BOT0;
     if (pic && pic.mode === 'bg') picDraw(ctx, pic, 0, 0, W, H, 0);
     else if (pic) { var pb = picBox(pic); picDraw(ctx, pic, pb.x, pb.y, pb.w, pb.h, 28); TOP = pb.top; BOT = pb.bot; }
+    cutLayer(ctx, car, i);
     ctx.strokeStyle = FRAME; ctx.lineWidth = 6; ctx.strokeRect(37, 37, W - 74, H - 74);
     ctx.textAlign = 'left';
     var availH = BOT - TOP, blockH, y, hr, br, maxS;
@@ -667,7 +785,7 @@
           '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + decoHtml(sl, i) + '</div>';
     }
     // ── 🎨 the look of the whole carousel ──
-    function sw(l) { var s = l.spec; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
+    function sw(l) { var s = l.spec; if (l.purple) return 'linear-gradient(135deg,#fff 0 55%,#4B14A6 55%)'; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
     function whitePanel() {
       return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the tips (01, 02…)</label>' +
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
@@ -712,13 +830,13 @@
           '<div class="lbl">Where</div>' + g('pos', [['br', '↘ Bottom right'], ['bc', '↓ Bottom centre'], ['mr', '→ Middle right edge']])) +
         '<div class="muted" style="font-size:12.5px;margin-top:4px">Never shows on the last slide.</div></details>';
     }
-    function lookName() { return isSpec(car) ? car.look.name : 'Auntie Tobi White'; }
+    function lookName() { return isSpec(car) ? car.look.name : isPurple(car) ? 'Bold Purple Pro' : 'Auntie Tobi White'; }
     function renderLook() {
-      var curId = isSpec(car) ? (car.look.id || '') : 'white', box = $('#teLook'), opn = Array.prototype.map.call(box.querySelectorAll('.lsec'), function (d) { return d.open; });
+      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : 'white', box = $('#teLook'), opn = Array.prototype.map.call(box.querySelectorAll('.lsec'), function (d) { return d.open; });
       box.innerHTML = '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>🎨 Look</b><span class="muted" style="font-size:13px">— now: <b>' + X.esc(lookName()) + '</b></span></div>' +
         '<div class="chipbar" style="margin-top:8px">' + LOOKS.map(function (l) { return '<button class="chip" data-look="' + l.id + '" aria-pressed="' + (curId === l.id) + '"><i class="lsw" style="background:' + sw(l) + '"></i>' + l.name + '</button>'; }).join('') +
         '<button class="chip" id="teMy">⭐ My styles</button><label class="chip" style="cursor:pointer;margin:0">🎨 Match a style…<input type="file" id="teRef" accept="image/jpeg,image/png,image/webp" multiple hidden></label>' + (isSpec(car) ? '<button class="chip" id="teSaveLook">💾 Save this look</button>' : '') + '</div>' +
-        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : whitePanel()) + swipePanel() +
+        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : isPurple(car) ? purplePanel() : whitePanel()) + swipePanel() +
         '<div class="muted" style="font-size:12.5px;margin-top:8px">Put highlighted words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div>';
       Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d, k) { if (opn[k] !== undefined) d.open = opn[k]; });
       bindLook();
@@ -726,7 +844,7 @@
     function lookChanged(full) { mark(); if (full) renderLook(); fontsReady().then(function () { paint(); paintThumbs(); }); paint(); paintThumbs(); }
     function bindLook() {
       var box = $('#teLook'), q = function (s) { return box.querySelector(s); }, qa = function (s) { return Array.prototype.slice.call(box.querySelectorAll(s)); };
-      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; car.look = l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); }; });
+      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); }; });
       q('#teMy').onclick = mySheet;
       qa('[data-swp]').forEach(function (b) { b.onclick = function () { var o = swipeOf(car), k = b.dataset.swp; car.swipeMode = o.mode; car.swipeStyle = o.style; car.swipePos = o.pos; car['swipe' + k.charAt(0).toUpperCase() + k.slice(1)] = b.dataset.v; if (k === 'mode') car.swipe = b.dataset.v !== 'off'; lookChanged(true); }; });
       q('#teRef').onchange = async function () {
@@ -744,7 +862,8 @@
       if (!isSpec(car)) {
         q('#teN').onchange = function () { car.numbers = this.checked; lookChanged(); };
         q('#teH').onchange = function () { car.handle = this.checked; lookChanged(); };
-        q('#teB').onchange = function () { car.brush = this.checked; lookChanged(); };
+        if (q('#teB')) q('#teB').onchange = function () { car.brush = this.checked; lookChanged(); };
+        if (isPurple(car)) bindPurple(q, qa);
         qa('#teSt [data-v]').forEach(function (b) { b.onclick = function () { car.style = b.dataset.v; qa('#teSt [data-v]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); lookChanged(); }; });
         var sizeUi = function () { q('#teHs').value = Math.round((car.hs || 1) * 100); q('#teBs').value = Math.round((car.bs || 1) * 100); q('#teHsV').textContent = pct(car.hs); q('#teBsV').textContent = pct(car.bs); };
         q('#teHs').oninput = function () { car.hs = Number(this.value) / 100; sizeUi(); lookChanged(); };
@@ -787,7 +906,7 @@
             '<div class="f2" style="margin-top:4px"><div><div class="lbl" style="margin:0">Size</div><input type="range" data-ds="' + k + '" min="20" max="400" value="' + Math.round((d.s || 1) * 100) + '"></div><div><div class="lbl" style="margin:0">Turn</div><input type="range" data-dr="' + k + '" min="-180" max="180" value="' + Math.round(d.r || 0) + '"></div></div></div>';
         }).join('') + (ds.length ? '<div class="muted" style="font-size:12.5px;margin-top:6px">✋ Drag them on the big preview to move them.</div>' : '') + '</details>';
     }
-    function decoColour() { return isSpec(car) ? car.look.spec.accent : '#057A44'; }
+    function decoColour() { return isSpec(car) ? car.look.spec.accent : isPurple(car) ? pur(car).acc : '#057A44'; }
     function bindDeco(el, i) {
       var d = el.querySelector('.sdeco'); if (!d) return; d.addEventListener('toggle', function () { openDeco[i] = d.open; });
       var sl = car.slides[i], re = function () { mark(); paintSlides(); setSel(i); paintThumbs(); }, live = function () { mark(); paint(); paintThumbs(); };
@@ -818,6 +937,7 @@
     function picHtml(sl, i) {
       var p = sl.pic && sl.pic.img ? sl.pic : null, sum = p ? (p.mode === 'bg' ? 'full background' : 'photo box at the ' + p.mode) + ' · ' + Math.round((p.fade || 0) * 100) + '% see-through' : 'none';
       var sld = function (k, lbl, min, max, val, unit) { return '<div><label>' + lbl + ' <span class="muted" data-ppv="' + k + '">' + val + unit + '</span></label><input type="range" data-p="' + k + '" min="' + min + '" max="' + max + '" step="1" value="' + val + '"></div>'; };
+      if (p && p.mode === 'cut') return cutHtml(sl, i, sld);
       return '<details class="spic" data-i="' + i + '"' + (openPic[i] ? ' open' : '') + ' style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:14px">🖼️ Picture <span class="muted" style="font-weight:400">— ' + sum + '</span></summary>' +
         (p ? '<div class="row" style="gap:10px;margin-top:8px;align-items:flex-start"><img src="' + picSrc(p.img) + '" alt="" style="width:64px;height:80px;object-fit:cover;border-radius:8px;flex:none"><div style="flex:1;min-width:0">' +
           (p.copied ? '<div style="font-size:12.5px;background:#FFF6DB;border:1px solid #F1D48A;border-radius:8px;padding:5px 8px;margin-bottom:6px">📋 Copied from the style — replace before posting</div>' : '') + '<label>How it sits</label><select data-p="mode"><option value="bg"' + (p.mode === 'bg' ? ' selected' : '') + '>Full background (behind the text)</option><option value="top"' + (p.mode === 'top' ? ' selected' : '') + '>Photo box at the top</option><option value="bottom"' + (p.mode === 'bottom' ? ' selected' : '') + '>Photo box at the bottom</option></select></div></div>' +
@@ -826,7 +946,8 @@
           '<div class="f2">' + sld('fy', 'Up / down', 0, 100, Math.round((p.fy == null ? 0.5 : p.fy) * 100), '') + '<div></div></div>' +
           '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn ghost sm" data-pall="set">📋 These settings on all slides</button><button class="btn ghost sm" data-pall="pic">📋 This picture on all slides</button><button class="btn ghost sm" data-pdel style="color:#B42318">✕ Remove picture</button></div>' : '<div class="muted" style="font-size:12.5px;margin:6px 0">Add a photo behind the text (faded) or in a box at the top or bottom.</div>') +
         '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="btn ghost sm" style="margin:0;cursor:pointer">📷 ' + (p ? 'Change photo' : 'Upload photo') + '<input type="file" accept="image/*" data-pup hidden></label>' +
-        '<button class="btn ghost sm" data-pmk>✨ Make picture</button>' + (window.HQChars ? '<button class="btn ghost sm" data-pch>👥 Use a character</button>' : '') + '</div>' +
+        '<button class="btn ghost sm" data-pmk>✨ Make picture</button>' + (window.HQChars ? '<button class="btn ghost sm" data-pch>👥 Use a character</button>' : '') +
+        (p ? '<button class="btn ghost sm" data-pcut>✂️ Cut out the person</button>' : '<label class="btn ghost sm" style="margin:0;cursor:pointer">🧍 Upload a person<input type="file" accept="image/*" data-pcup hidden></label>') + '</div>' +
         '<div class="row hidden" data-pmkrow style="gap:6px;margin-top:6px"><input data-pwant placeholder="Describe the picture, e.g. a Nigerian family unpacking boxes in a bright London flat" style="flex:1"><button class="btn primary sm" data-pgo>✨ Make it</button></div><div class="muted" data-pmsg style="font-size:12.5px;margin-top:4px"></div></details>';
     }
     // 📋 Match a style: crop the photo out of each screenshot and put it on the slides, ready to replace
@@ -857,15 +978,89 @@
       return { n: n, msg: n ? '📋 The style’s photo is now on ' + where + ' — open 🖼️ Picture on the slide to replace it before posting.' + (kept ? ' (' + kept + ' slide' + (kept > 1 ? 's' : '') + ' kept your own picture.)' : '')
         : '📋 Found a photo, but ' + (plan.length > 1 ? 'those slides already have' : 'your cover already has') + ' your own picture, so I kept yours. Remove it (🖼️ Picture → ✕ Remove) and match again to use the style’s photo.' };
     }
-    function setPic(i, img) { var sl = car.slides[i], old = sl.pic || {}; sl.pic = Object.assign({ mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }, old.img ? old : {}, { img: img }); delete sl.pic.copied; openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); }
+    // ── 🧍 cut-out person (background removed by fal.ai) ──
+    function cutHtml(sl, i, sld) {
+      var p = sl.pic, sd = p.side || 'right', seg = function (v, l) { return '<button data-pcside="' + v + '" aria-pressed="' + (sd === v) + '">' + l + '</button>'; };
+      return '<details class="spic" data-i="' + i + '"' + (openPic[i] ? ' open' : '') + ' style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:14px">🖼️ Picture <span class="muted" style="font-weight:400">— 🧍 cut-out person on the ' + (sd === 'center' ? 'centre' : sd) + (p.spill ? ' · spills over' : '') + '</span></summary>' +
+        '<div class="row" style="gap:10px;margin-top:8px;align-items:flex-start"><img src="' + picSrc(p.img) + '" alt="" style="width:64px;height:80px;object-fit:contain;border-radius:8px;flex:none;background:repeating-conic-gradient(#EEE 0 25%,#FFF 0 50%) 0 0/14px 14px"><div style="flex:1;min-width:0">' +
+          '<label>Stands on the</label><div class="scseg">' + seg('left', '⬅ Left') + seg('center', 'Centre') + seg('right', 'Right ➡') + '</div>' +
+          '<label class="chk" style="margin-top:6px"><input type="checkbox" data-pcspill' + (p.spill ? ' checked' : '') + '> Spill into the ' + (sd === 'left' ? 'previous' : 'next') + ' slide (carries on when people swipe)</label>' +
+          '<label class="chk"><input type="checkbox" data-pcflip' + (p.flip ? ' checked' : '') + '> ↔ Flip (face the other way)</label></div></div>' +
+        '<div class="f2" style="margin-top:6px">' + sld('size', 'Size', 30, 130, Math.round((p.size || 0.85) * 100), '%') + sld('fade', 'Transparency', 0, 90, Math.round((p.fade || 0) * 100), '%') + '</div>' +
+        '<div class="f2">' + sld('fx', 'Left / right', 0, 100, Math.round((p.fx == null ? 0.5 : p.fx) * 100), '') + sld('fy', 'Up / down', 0, 100, Math.round((p.fy == null ? 0.5 : p.fy) * 100), '') + '</div>' +
+        '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="btn ghost sm" style="margin:0;cursor:pointer">🧍 Change person<input type="file" accept="image/*" data-pcup hidden></label>' +
+          '<button class="btn ghost sm" data-pmk>✨ Make picture</button>' + (window.HQChars ? '<button class="btn ghost sm" data-pch>👥 Use a character</button>' : '') +
+          (p.orig ? '<button class="btn ghost sm" data-porig>↩ Back to the full photo</button>' : '') + '<button class="btn ghost sm" data-pdel style="color:#B42318">✕ Remove picture</button></div>' +
+        '<div class="row hidden" data-pmkrow style="gap:6px;margin-top:6px"><input data-pwant placeholder="Describe the person, e.g. a smiling Nigerian man in a purple suit, full body, plain background" style="flex:1"><button class="btn primary sm" data-pgo>✨ Make it</button></div><div class="muted" data-pmsg style="font-size:12.5px;margin-top:4px"></div></details>';
+    }
+    function alphaBox(id) { return new Promise(function (ok) { var im = new Image(); im.onload = function () {
+      var k = Math.min(1, 400 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.width * k)); c.height = Math.max(1, Math.round(im.height * k));
+      var g = c.getContext('2d'); g.drawImage(im, 0, 0, c.width, c.height); var d = g.getImageData(0, 0, c.width, c.height).data, x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+      for (var y = 0; y < c.height; y++) for (var x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      ok(x1 < 0 ? [0, 0, 1, 1] : [x0 / c.width, y0 / c.height, (x1 - x0 + 1) / c.width, (y1 - y0 + 1) / c.height]); }; im.onerror = function () { ok([0, 0, 1, 1]); }; im.src = picSrc(id); }); }
+    function idToData(id) { return fetch(picSrc(id)).then(function (r) { if (!r.ok) throw new Error('Couldn’t open that picture.'); return r.blob(); }).then(function (b) { return shrinkPic(b, 1400); }); }
+    async function cutFrom(i, dataUrl, orig, msg) {
+      msg('✂️ Removing the background… (about 10–30 seconds)');
+      var r = await X.api('tc-cut', { dataUrl: dataUrl }), out = '';
+      for (var t = 0; t < 45 && !out; t++) { await new Promise(function (ok) { setTimeout(ok, t ? 2500 : 1500); }); var c = await X.api('tc-cut-check', { job: r.job }); if (c.img) out = c.img; }
+      if (!out) throw new Error('Removing the background took too long — please try again.');
+      var bb = await alphaBox(out), sl = car.slides[i], old = cutPic(sl);
+      sl.pic = Object.assign({ mode: 'cut', side: i % 2 ? 'left' : 'right', size: 0.85, fade: 0, fx: 0.5, fy: 0.5, flip: false, spill: false }, old ? { side: old.side, size: old.size, fx: old.fx, fy: old.fy, flip: old.flip, spill: old.spill, fade: old.fade } : {}, { img: out, bb: bb });
+      if (orig) sl.pic.orig = orig; else if (old && old.orig) sl.pic.orig = old.orig;
+      openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); X.toast('🧍 Background removed');
+    }
+    function bindCut(el, i, msg) {
+      var fail = function (e) { msg(''); X.toast((e && e.message) || 'Couldn’t remove the background.'); };
+      var cu = el.querySelector('[data-pcup]'); if (cu) cu.onchange = function () { var f = this.files && this.files[0]; if (!f) return; msg('Getting the photo ready…'); shrinkPic(f, 1400).then(function (du) { return cutFrom(i, du, '', msg); }).catch(fail); };
+      var cb = el.querySelector('[data-pcut]'); if (cb) cb.onclick = function () { var id = car.slides[i].pic.img; cb.disabled = true; idToData(id).then(function (du) { return cutFrom(i, du, id, msg); }).catch(function (e) { cb.disabled = false; fail(e); }); };
+      var redraw = function () { mark(); paintSlides(); setSel(i); paintThumbs(); };
+      Array.prototype.forEach.call(el.querySelectorAll('[data-pcside]'), function (b) { b.onclick = function () { car.slides[i].pic.side = b.dataset.pcside; redraw(); }; });
+      var sp = el.querySelector('[data-pcspill]'); if (sp) sp.onchange = function () { car.slides[i].pic.spill = this.checked; redraw(); };
+      var fl = el.querySelector('[data-pcflip]'); if (fl) fl.onchange = function () { car.slides[i].pic.flip = this.checked; redraw(); };
+      var og = el.querySelector('[data-porig]'); if (og) og.onclick = function () { var o = car.slides[i].pic.orig; car.slides[i].pic = { img: o, mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }; redraw(); };
+    }
+    // a new picture: in cut-out mode it gets its background removed too
+    function usePic(i, id, msg) { if (cutPic(car.slides[i])) return idToData(id).then(function (du) { return cutFrom(i, du, id, msg); }).catch(function (e) { msg(''); X.toast(e.message || 'Couldn’t remove the background.'); }); setPic(i, id); }
+    // 💜 Bold Purple Pro look settings
+    function purplePanel() {
+      var P = pur(car), seg = function (v, l) { return '<button data-ppnum="' + v + '" aria-pressed="' + (P.num === v) + '">' + l + '</button>'; };
+      return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number circles (01, 02…)</label>' +
+        '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show the handle</label>' +
+        '<label class="chk"><input type="checkbox" data-ppchk="pattern"' + (P.pattern ? ' checked' : '') + '> Line pattern</label><label class="chk"><input type="checkbox" data-ppchk="icons"' + (P.icons ? ' checked' : '') + '> Social row on the last slide</label></div>' +
+        '<div class="sccols" style="margin-top:6px"><label class="sccol"><input type="color" data-ppcol="acc" value="' + P.acc + '"><span>Purple (accent)</span></label><label class="sccol"><input type="color" data-ppcol="ink" value="' + P.ink + '"><span>Headline</span></label></div>' +
+        '<div class="lbl">Number circle sits</div><div class="scseg">' + seg('auto', 'Under the words') + seg('left', '⬅ Left') + seg('right', 'Right ➡') + '</div>' +
+        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Handle</div><input data-pptxt="handle" value="' + X.esc(P.handle) + '"></div><div><div class="lbl">Button on the last slide</div><input data-pptxt="btn" value="' + X.esc(P.btn) + '"></div></div>' +
+        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div>' +
+        '<div><div class="lbl">Body text size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div>' +
+        '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm" id="tePlan">📋 Arrange slides like the sample</button></div>' +
+        '<div class="muted" style="font-size:12.5px;margin-top:6px">🧍 Add a person to any slide: open 🖼️ Picture on the slide → <b>🧍 Upload a person</b> (the background is removed for you), then tick <b>Spill into the next slide</b> so they carry on across the swipe.</div>';
+    }
+    function bindPurple(q, qa) {
+      var P = car.look.purple = pur(car), re = function (full) { lookChanged(full); };
+      qa('[data-ppcol]').forEach(function (x) { x.oninput = function () { P[x.dataset.ppcol] = x.value.toUpperCase(); re(); }; });
+      qa('[data-ppchk]').forEach(function (x) { x.onchange = function () { P[x.dataset.ppchk] = x.checked; re(); }; });
+      qa('[data-ppnum]').forEach(function (b) { b.onclick = function () { P.num = b.dataset.ppnum; re(true); }; });
+      qa('[data-pptxt]').forEach(function (x) { x.oninput = function () { P[x.dataset.pptxt] = x.value.slice(0, 40); re(); }; });
+      q('#tePlan').onclick = function () {
+        var S = car.slides, cover = S.filter(function (s) { return s.kind === 'cover'; })[0], end = S.filter(function (s) { return s.kind === 'end'; })[0];
+        var tips = S.filter(function (s) { return s.kind === 'tip' && s.num !== 'off'; }).slice(0, 6);
+        if (!confirm('Arrange the slides like the sample?\n\nCover → "Here are the reasons" → your numbered tips → a question → last slide. Your words and pictures are kept' + (tips.length ? '' : ' (example tips are added)') + '.')) return;
+        if (!tips.length) tips = [['Saves you **time**', 'Explain the first reason in one or two short sentences.'], ['Builds **trust**', 'Explain the second reason here.'], ['Saves you **money**', 'Explain the third reason here.'], ['Less **stress**', 'Explain the fourth reason here.'], ['Better **results**', 'Explain the fifth reason here.']].map(function (t) { return { kind: 'tip', heading: t[0], body: t[1] }; });
+        var nb = [cover || { kind: 'cover', heading: 'Why you need **this**', body: '' }, { kind: 'stat', heading: String(tips.length), body: 'Here are the **reasons**' }].concat(tips,
+          [{ kind: 'tip', num: 'off', heading: 'Does this **sound like you?**', body: 'Tell Auntie Tobi in the comments 👇🏾' }, end || { kind: 'end', heading: 'Ready to **start?**', body: 'Follow for more **UK tips**' }]);
+        car.slides = nb.slice(0, 10); mark(); paintSlides(); setSel(0); paintThumbs(); renderLook(); X.toast('📋 Slides arranged like the sample');
+      };
+    }
+    function setPic(i, img) { var sl = car.slides[i], old = sl.pic || {}; sl.pic = Object.assign({ mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }, old.img && old.mode !== 'cut' ? old : {}, { img: img }); delete sl.pic.copied; openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); }
     function shrinkPic(file, max) { return new Promise(function (ok, bad) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var k = Math.min(1, (max || 1600) / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.88)); }; im.onerror = function () { bad(new Error('That photo didn’t open.')); }; im.src = u; }); }
     function bindPic(el, i) {
       var d = el.querySelector('.spic'); if (!d) return; d.addEventListener('toggle', function () { openPic[i] = d.open; });
       var msg = function (t) { var m = el.querySelector('[data-pmsg]'); if (m) m.textContent = t || ''; };
-      el.querySelector('[data-pup]').onchange = function () { var f = this.files && this.files[0]; if (!f) return; msg('Adding the photo…'); shrinkPic(f).then(function (du) { return X.api('img', { dataUrl: du }); }).then(function (r) { setPic(i, r.id); X.toast('🖼️ Photo added'); }).catch(function (e) { msg(''); X.toast(e.message || 'Couldn’t use that photo.'); }); };
+      bindCut(el, i, msg);
+      if (el.querySelector('[data-pup]')) el.querySelector('[data-pup]').onchange = function () { var f = this.files && this.files[0]; if (!f) return; msg('Adding the photo…'); shrinkPic(f).then(function (du) { return X.api('img', { dataUrl: du }); }).then(function (r) { setPic(i, r.id); X.toast('🖼️ Photo added'); }).catch(function (e) { msg(''); X.toast(e.message || 'Couldn’t use that photo.'); }); };
       el.querySelector('[data-pmk]').onclick = function () { el.querySelector('[data-pmkrow]').classList.remove('hidden'); var w = el.querySelector('[data-pwant]'); if (!w.value) w.value = String(car.slides[i].heading || '').replace(/\*\*/g, ''); w.focus(); };
-      el.querySelector('[data-pgo]').onclick = function () { var w = el.querySelector('[data-pwant]').value.trim(), b = this; if (w.length < 3) return X.toast('Describe the picture first'); b.disabled = true; msg('✨ Making the picture… (about 20 seconds)'); X.api('rx-pic', { want: w, aspect: '4:5' }).then(function (r) { setPic(i, r.img); X.toast('✨ Picture added'); }).catch(function (e) { b.disabled = false; msg(''); X.toast(e.message); }); };
-      if (el.querySelector('[data-pch]')) el.querySelector('[data-pch]').onclick = function () { window.HQChars.load().then(function (items) { if (!items.length) return X.toast('No characters yet — make one in 👥 Characters'); window.HQChars.pick([], function (ids) { var c = items.filter(function (x) { return x.id === ids[0]; })[0]; if (c) setPic(i, c.img); }); }); };
+      el.querySelector('[data-pgo]').onclick = function () { var w = el.querySelector('[data-pwant]').value.trim(), b = this; if (w.length < 3) return X.toast('Describe the picture first'); b.disabled = true; msg('✨ Making the picture… (about 20 seconds)'); X.api('rx-pic', { want: w, aspect: '4:5' }).then(function (r) { usePic(i, r.img, msg); X.toast('✨ Picture added'); }).catch(function (e) { b.disabled = false; msg(''); X.toast(e.message); }); };
+      if (el.querySelector('[data-pch]')) el.querySelector('[data-pch]').onclick = function () { window.HQChars.load().then(function (items) { if (!items.length) return X.toast('No characters yet — make one in 👥 Characters'); window.HQChars.pick([], function (ids) { var c = items.filter(function (x) { return x.id === ids[0]; })[0]; if (c) usePic(i, c.img, msg); }); }); };
       Array.prototype.forEach.call(el.querySelectorAll('[data-p]'), function (f) {
         f.addEventListener(f.tagName === 'SELECT' ? 'change' : 'input', function () {
           var p = car.slides[i].pic, k = f.dataset.p; if (!p) return;

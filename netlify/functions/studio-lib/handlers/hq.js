@@ -389,6 +389,11 @@ exports.handler = handler(async (ctx) => {
     case 'qv-app-ids': return { ids: await require('../quizapp').publishedIds() };
     case 'qv-bg-saved': return { saved: await require('../quizvideo').savedBackgrounds(body.bank, body.ids) };
     case 'sc-styles': return { styles: await require('../stylecar').styles() };
+    case 'tc-cut': {   // ✂️ remove a photo's background (fal.ai BiRefNet)
+      await core.rateLimit('hq-cut', who.email, 120, 60 * 60 * 1000, 'That\u2019s a lot of cut-outs this hour — please wait a little.');
+      return require('../cutout').start(body.dataUrl);
+    }
+    case 'tc-cut-check': return require('../cutout').check(body.job);
     case 'sc-analyze': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
       return require('../stylecar').analyze(body.images);

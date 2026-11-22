@@ -230,4 +230,4 @@ async function saveFinalPart(fid, idx, b64) {
 async function getFinalPart(fid, idx) { return /^f[a-z0-9]{8,30}$/.test(String(fid)) && /^\d{1,2}$/.test(String(idx)) ? getJson(`hq/vfinal/${fid}/${idx}`) : null; }
 async function deleteFinal(fid, parts) { if (!/^f[a-z0-9]{8,30}$/.test(String(fid))) return; for (let i = 0; i < Math.min(80, Number(parts) || 0); i++) await core.del(`hq/vfinal/${fid}/${i}`).catch(() => {}); }
 
-module.exports = { savedVoices, saveVoice, deleteVoice, settings, DRAMA_MODEL, claudeConfig, addCost, submitLipsync, submitSfx, saveFinalPart, getFinalPart, deleteFinal, saveAudio, getAudio, publicSettings, saveSettings, submitClip, submitMusic, status, tts, spent, TIERS, VOICES, clipLength };
+module.exports = { falFetch, savedVoices, saveVoice, deleteVoice, settings, DRAMA_MODEL, claudeConfig, addCost, submitLipsync, submitSfx, saveFinalPart, getFinalPart, deleteFinal, saveAudio, getAudio, publicSettings, saveSettings, submitClip, submitMusic, status, tts, spent, TIERS, VOICES, clipLength };
