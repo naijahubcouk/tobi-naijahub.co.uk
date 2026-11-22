@@ -161,7 +161,7 @@
     function intro() {
       at = -1; sc(); bg(P.cImg || (P.qs[0] || {}).img); $('#qpH1', el).style.visibility = $('#qpH2', el).style.visibility = P.cTitle ? 'hidden' : '';
       body().innerHTML = '<div class="qp-mid">' + (P.cTitle ? '<div class="qp-cov">' + esc(P.cTitle) + '</div>' + (P.cSub ? '<div><span class="qp-cs">' + esc(P.cSub) + '</span></div>' : '') : '<div class="qp-big">Ready?</div><div class="qp-sub">' + P.qs.length + ' questions · tap your answer</div>') + '<button type="button" class="qp-btn" id="qpGo" style="margin-top:4cqh">▶️ Start</button>' +
-        '<div class="qp-hint">' + (Object.keys(P.vo || {}).length ? '🔊 Turn your sound up — Auntie Tobi reads the questions' : '🔊 Sound on for music') + '</div></div>';
+        '</div>';
       $('#qpGo', el).onclick = function () { this.disabled = true; this.textContent = 'Loading…'; startAudio().then(function () { gt('video_quiz_start', { label: P.name }); say('intro').then(function (d) { return d ? wait(250) : 0; }).then(function () { if (alive) ask(0); }); }); };
     }
     // sound can only start after a tap (phones) — load the voice lines and music now
@@ -210,7 +210,7 @@
       var pc = P.qs.length ? Math.round(score / P.qs.length * 100) : 0, msg = pc === 100 ? 'Perfect score! 🏆' : pc >= 75 ? 'Brilliant — well done! 🎉' : pc >= 50 ? 'Good effort — keep going! 💪🏾' : 'Keep practising — you’ll get there! 💚';
       body().innerHTML = '<div class="qp-mid"><div class="qp-big">' + score + ' / ' + P.qs.length + '</div><div class="qp-sub">' + msg + '</div>' +
         '<div style="margin-top:4cqh"><button type="button" class="qp-btn g" id="qpPr">📚 Practise more questions</button><button type="button" class="qp-btn w" id="qpMore">📺 More video quizzes</button><button type="button" class="qp-btn w" id="qpAg">🔁 Play again</button></div></div>';
-      say('outro');
+      // no spoken outro in the app — the video's outro asks for comments and points to the app we're already in
       $('#qpPr', el).onclick = function () { close(); var l = document.querySelector('.qp-list'); if (l) { l.remove(); document.body.style.overflow = ''; } if (hooks.practice) hooks.practice(); };
       $('#qpMore', el).onclick = function () { close(); if (!document.querySelector('.qp-list') && hooks.bank) browse(hooks.bank, hooks); };
       $('#qpAg', el).onclick = function () { stopVoice(); score = 0; answered = 0; reported = false; ask(0); };
