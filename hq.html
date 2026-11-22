@@ -299,6 +299,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
 <script src="/hq-stylecar.js?v=20261120a"></script>
 <script src="/hq-quizvid.js?v=20261122f"></script>
 <script src="/hq-remix.js?v=20261122b"></script>
+<script src="/hq-tidy.js?v=20261122a"></script>
 <script src="/hq-luq.js?v=20261122b"></script>
 <script src="/hq-club.js?v=20261121a"></script>
 <script src="/hq-discovery.js?v=20261117c"></script>
@@ -374,6 +375,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     $$('.side-nav .side-sec').forEach(function (h) { h.classList.toggle('hidden', !['igc', 'cars', 'vads', 'tcars', 'scars', 'qvid', 'rmx', 'disc', 'tx', 'fol', 'glow', 'igu', 'dm', 'iga'].some(allowed)); });
     var cardsOk = ['today', 'board', 'calendar', 'posted'].some(allowed); $('#pasteBtn').classList.toggle('hidden', !cardsOk); $('#addBtn').classList.toggle('hidden', !cardsOk); $('#evBtn').classList.toggle('hidden', !allowed('app'));
     $('#adminLink').classList.toggle('hidden', !S.isAdmin); if (allowed('mkt') && window.HQMkt) window.HQMkt.count().then(function (n) { $('#nMkt').textContent = n || ''; }); $('#teamBtn').classList.toggle('hidden', !S.isAdmin); $('#ssBtn').classList.toggle('hidden', !S.isAdmin || !window.HQSchoolMail); if (S.isAdmin && window.HQSchoolMail) window.HQSchoolMail.badge();
+    if (window.HQTidy) window.HQTidy.apply(r.tucked || []);
     $('#signin').classList.add('hidden'); $('#app').classList.remove('hidden');
     go(location.hash.slice(1) || 'today');
   }
@@ -397,6 +399,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     $('#nVads').textContent = (S.vads || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
+    if (window.HQTidy) window.HQTidy.sync(S.view);
     ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vEvents, club: function () { window.HQClub.view(); }, scars: function () { window.HQStyle.view(); }, qvid: function () { window.HQQuizVid.view(); }, rmx: function () { window.HQRemix.view(); }, luq: function () { window.HQLuq.view(); }, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
@@ -404,6 +407,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
   if (window.HQTpl) window.HQTpl.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQClub) window.HQClub.init({ api: api, sheet: sheet, toast: toast, esc: esc });
   if (window.HQLuq) window.HQLuq.init({ api: api, sheet: sheet, toast: toast, esc: esc });
+  if (window.HQTidy) window.HQTidy.init({ api: api, toast: toast });
   if (window.HQRemix) window.HQRemix.init({ api: api, sheet: sheet, toast: toast, esc: esc });
   if (window.HQQuizVid) window.HQQuizVid.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S, go: go });
   if (window.HQStyle) window.HQStyle.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S, go: go });

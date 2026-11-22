@@ -70,6 +70,7 @@ function sectionsOf(action) {
   if (/^(va|vm|md)-/.test(action)) return ['vads'];
   return null; // boot, purge (admin-only) etc. are checked where they run
 }
+const navKey = email => 'hq/nav/' + core.sha256(String(email || '').toLowerCase()).slice(0, 24);
 function can(who, list) { return who.isAdmin || list.some(x => (who.sections || []).includes(x)); }
 function mustAllow(who, list) { if (!can(who, list)) throw new HttpError(403, 'no_access', 'You don’t have access to this part of HQ — ask Auntie Tobi.'); }
 
@@ -142,7 +143,14 @@ exports.handler = handler(async (ctx) => {
         P(has(['cars']), () => carousel.list(), []), P(has(['cars']), () => tplcar.list(), []), P(has(['vads']), () => videoad.list(), []),
         P(who.isAdmin, () => require('../addbiz').hqList().then(r => r.subs.filter(x => x.status === 'new').length + r.listed.length), 0),
       ]);
-      return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(tf), team: who.isAdmin ? tf : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list(st) : [], bin: has(['bin']) ? await hq.bin(st) : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? appFor(who, app) : [], appCategories: apppub.CATEGORIES, subs, igc, igcTarget: igcomment.DAILY_TARGET, cars, tcars, vads, abizNew };
+      const nav = await core.getJson(navKey(who.email)).catch(() => null);
+      return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(tf), team: who.isAdmin ? tf : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list(st) : [], bin: has(['bin']) ? await hq.bin(st) : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? appFor(who, app) : [], appCategories: apppub.CATEGORIES, subs, igc, igcTarget: igcomment.DAILY_TARGET, cars, tcars, vads, abizNew, tucked: nav && Array.isArray(nav.tucked) ? nav.tucked : [] };
+    }
+    // 🧰 More tools folder: which sidebar tools this person has tucked away (their own, follows them across devices)
+    case 'nav-save': {
+      const tucked = (Array.isArray(body.tucked) ? body.tucked : []).map(x => String(x)).filter(x => /^[a-z]{2,8}$/.test(x) && x !== 'today').slice(0, 60);
+      await core.setJson(navKey(who.email), { tucked, at: core.nowIso() });
+      return { tucked };
     }
     case 'save': return { item: await hq.save(body.item, who.email) };
     case 'save-many': return { items: await hq.saveMany(body.items, body.source, who.email) };
