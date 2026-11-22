@@ -14,7 +14,13 @@
   var GREEN = '#057A44', FRAME = '#0A8A4C', INK = '#111111', BODY = '#33383F', GOLD = '#E0A21B', GREY = '#8A9099';
   var FH = "'Inter Tight', 'Inter', 'Helvetica Neue', Arial, sans-serif";
   var FB = "'Inter', 'Helvetica Neue', Arial, sans-serif";
-  var KINDS = { cover: '🎯 Cover', tip: '📌 Tip / point', end: '💚 Save & share' };
+  var KINDS = { cover: '🎯 Cover', tip: '📌 Tip / point', quote: '💬 Quote', check: '✅ Checklist', stat: '🔢 Big number', myth: '❌✅ Myth vs fact', question: '❓ Question', steps: '1️⃣ Steps', end: '💚 Save & share' };
+  // what the two boxes mean for each kind of slide
+  var LBL = { cover: ['Heading', 'Small text under it (optional)'], tip: ['Heading', 'Body text'], end: ['Heading', 'Small text under it (optional)'], quote: ['The quote', 'Who said it (optional)'], check: ['Title', 'The items — one per line'],
+    stat: ['The big number — e.g. £1,500 or 3 in 5', 'What the number means'], myth: ['❌ The myth', '✅ The fact'], question: ['The question', 'Answer options — one per line (optional; leave empty for “Tell us in the comments”)'], steps: ['Title', 'The steps — one per line'] };
+  var EXAMPLE = { quote: ['Hard work in the UK pays — **but rest is not a crime.**', 'Auntie Tobi'], check: ['Before you **move house**', 'Tell the council\nRedirect your post\nUpdate your GP\nTell DVLA your new address'],
+    stat: ['£1,500', 'is how much the average family loses a year by not checking their **council tax band**'], myth: ['You must have a **credit card** to build credit in the UK', 'Paying phone, rent and bills on time also builds your credit score'],
+    question: ['Which would you choose for **Jollof**?', 'Basmati rice\nLong grain rice\nParboiled rice'], steps: ['How to register with a **GP**', 'Find a GP near you on the NHS website\nFill in the GMS1 form\nTake ID and proof of address\nBook your first check-up'] };
   var X = null;
 
   function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
@@ -229,8 +235,116 @@
     ctx.restore();
     return { over: false, shrunk: false };
   }
+  // ── Stage 2 layouts: 💬 quote · ✅ checklist · 🔢 big number · ❌✅ myth vs fact · ❓ question · 1-2-3 steps ──
+  // They work in every look: the look gives the background, colours and fonts; the layout places the words.
+  var NEWK = { quote: 1, check: 1, stat: 1, myth: 1, question: 1, steps: 1 };
+  function rgbaH(h, a) { h = String(h || '#000000').replace('#', ''); return 'rgba(' + parseInt(h.slice(0, 2), 16) + ',' + parseInt(h.slice(2, 4), 16) + ',' + parseInt(h.slice(4, 6), 16) + ',' + a + ')'; }
+  function pal(car, sl) {
+    if (isSpec(car)) {
+      var sp = car.look.spec, F = window.HQStyle.FONTS, hf = F[sp.font.head] || F.inter, bf = F[sp.font.body] || F.dmsans, k = (hf.k || 1) * sp.font.size;
+      var dark = hexLum(sp.bg.c1) < 0.5 || sp.bg.type === 'image';
+      return { ink: sp.ink, sub: sp.sub, acc: sp.accent, accInk: hexLum(sp.accent) > 0.6 ? '#111111' : '#FFFFFF', hl: sp.hlStyle === 'none' ? sp.ink : sp.accent, card: dark ? 'rgba(255,255,255,0.10)' : rgbaH(sp.accent, 0.08), line: rgbaH(sp.accent, 0.5),
+        head: function (z) { return hf.w + ' ' + Math.round(z) + 'px ' + hf.f; }, body: function (z, w) { return (w || bf.bw) + ' ' + Math.round(z) + 'px ' + bf.b; }, caps: sp.font.caps, k: k * (sl.hs || 1), bk: sp.font.bodySize * (sl.bs || 1), lh: hf.lh || 1.06,
+        align: sp.align, x0: 112 + (sp.frame.on ? sp.frame.inset + sp.frame.width : 0) * 0.5 };
+    }
+    var e = eff(car, sl), st = e.st;
+    return { ink: INK, sub: BODY, acc: GREEN, accInk: '#FFFFFF', hl: GREEN, card: '#F2F7F4', line: 'rgba(5,122,68,0.45)',
+      head: function (z) { return st.w + ' ' + Math.round(z) + 'px ' + st.f; }, body: function (z, w) { return (w || 500) + ' ' + Math.round(z) + 'px ' + FB; }, caps: st.caps, k: st.k * e.hs, bk: e.bs, lh: st.lh || 1.02, align: sl.align === 'left' ? 'left' : 'center', x0: L };
+  }
+  // words with **highlights**, wrapped; returns lines of [{w, hl, ww}]
+  function rtWrap(ctx, text, maxW, caps) {
+    var toks = []; String(text || '').split('\n').forEach(function (para, pi) {
+      if (pi) toks.push({ br: true });
+      var endSp = true;
+      para.split(/(\*\*[^*]+\*\*)/).forEach(function (p) { if (!p) return; var hl = /^\*\*[^*]+\*\*$/.test(p); if (hl) p = p.slice(2, -2); if (caps) p = p.toUpperCase(); var glue = !endSp && !/^\s/.test(p) && toks.length && !toks[toks.length - 1].br; endSp = /\s$/.test(p); p.split(/\s+/).forEach(function (w, wi) { if (w) toks.push({ w: w, hl: hl, join: wi === 0 && glue }); }); });
+    });
+    var lines = [], line = [], lw = 0, sp = ctx.measureText(' ').width;
+    toks.forEach(function (t) { if (t.br) { lines.push({ t: line, w: lw }); line = []; lw = 0; return; } var w = ctx.measureText(t.w).width; if (line.length && lw + sp + w > maxW) { lines.push({ t: line, w: lw }); line = []; lw = 0; } if (t.join && line.length) { line.push({ w: t.w, hl: t.hl, ww: w, join: true }); lw += w; return; } line.push({ w: t.w, hl: t.hl, ww: w }); lw += (line.length > 1 ? sp : 0) + w; });
+    if (line.length) lines.push({ t: line, w: lw });
+    return lines;
+  }
+  // fit text into a box (shrinks until it fits); returns { size, lines, h }
+  function rtFit(ctx, text, font, maxW, maxH, start, min, lh, caps) {
+    var z = start, lines; for (; z > min; z -= 2) { ctx.font = font(z); lines = rtWrap(ctx, text, maxW, caps); if (lines.length * z * lh <= maxH) break; }
+    ctx.font = font(z); lines = rtWrap(ctx, text, maxW, caps); return { size: z, lines: lines, h: lines.length * z * lh, lh: lh };
+  }
+  function rtDraw(ctx, f, font, x, y, maxW, align, ink, hl) {
+    ctx.font = font(f.size); ctx.textAlign = 'left'; var sp = ctx.measureText(' ').width;
+    f.lines.forEach(function (ln, k) { var xx = align === 'center' ? x + (maxW - ln.w) / 2 : x, base = y + k * f.size * f.lh + f.size * 0.86; ln.t.forEach(function (t, ti) { ctx.fillStyle = t.hl ? hl : ink; ctx.fillText(t.w, xx, base); xx += t.ww + (ln.t[ti + 1] && ln.t[ti + 1].join ? 0 : sp); }); });
+  }
+  function pill(ctx, text, x, y, font, bg, ink, padX, h) { ctx.font = font; var w = ctx.measureText(text).width + padX * 2; ctx.fillStyle = bg; rrect(ctx, x, y, w, h, h / 2); ctx.fill(); ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.fillText(text, x + padX, y + h * 0.68); return w; }
+  function itemLines(t) { return String(t || '').split('\n').map(function (x) { return x.replace(/^\s*([-•*✓✔️]|\d+[.)])\s*/, '').trim(); }).filter(Boolean).slice(0, 8); }
+
+  function drawLayout(ctx, car, i) {
+    var sl = car.slides[i], pic = sl.pic && sl.pic.img ? sl.pic : null, n = car.slides.length, P = pal(car, sl);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // 1 · the look's background (and picture, frame, handle, page number)
+    if (isSpec(car)) {
+      var sp = car.look.spec, a = { kind: 'end', title: '', body: '' };
+      if (pic && pic.mode === 'bg') a._afterBg = function (c) { picDraw(c, pic, 0, 0, W, H, 0); };
+      else if (pic) { var pb0 = picBox(pic); a._afterBg = function (c) { picDraw(c, pic, pb0.x, pb0.y, pb0.w, pb0.h, 28); }; }
+      window.HQStyle.draw(ctx, a, i, n, sp, sp.bg.type === 'image' && sp.bg.img ? lookImg(sp.bg.img) : null);
+    } else {
+      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
+      if (pic && pic.mode === 'bg') picDraw(ctx, pic, 0, 0, W, H, 0); else if (pic) { var pb1 = picBox(pic); picDraw(ctx, pic, pb1.x, pb1.y, pb1.w, pb1.h, 28); }
+      ctx.strokeStyle = FRAME; ctx.lineWidth = 6; ctx.strokeRect(37, 37, W - 74, H - 74);
+      if (car.handle !== false) { setB(ctx, 30, 700); ctx.fillStyle = GREEN; ctx.textAlign = 'left'; var hd = '@auntietobi_uk', hw = ctx.measureText(hd).width; ctx.fillText(hd, (W - hw) / 2, H - 84); }
+    }
+    // 2 · the space for the words
+    var x0 = 112, cw = W - 224, top = 150, bot = H - 150;
+    if (pic && pic.mode !== 'bg') { var pb = picBox(pic); top = Math.max(top - 30, pb.top); bot = Math.min(bot, pb.bot); }
+    var avail = bot - top, ctr = P.align === 'center', k = sl.kind, over = false;
+    ctx.textBaseline = 'alphabetic';
+    if (k === 'quote') {
+      var qz = Math.round(260 * Math.min(1.2, P.k)), qf = rtFit(ctx, sl.heading, P.head, cw, avail - qz * 0.55 - (sl.body ? 110 : 0), 92 * P.k, 34, P.lh + 0.1, false);
+      var who = String(sl.body || '').trim(), blockH = qz * 0.55 + qf.h + (who ? 110 : 0), y = top + Math.max(0, (avail - blockH) / 2);
+      ctx.font = '900 ' + qz + 'px Georgia, serif'; ctx.fillStyle = P.acc; ctx.textAlign = ctr ? 'center' : 'left'; ctx.fillText('“', ctr ? W / 2 : x0 - 10, y + qz * 0.72);
+      y += qz * 0.55; rtDraw(ctx, qf, P.head, x0, y, cw, ctr ? 'center' : 'left', P.ink, P.hl); y += qf.h;
+      if (who) { ctx.fillStyle = P.acc; var lx = ctr ? W / 2 - 40 : x0; ctx.fillRect(lx, y + 34, 80, 6); ctx.font = P.body(38 * P.bk, 700); ctx.fillStyle = P.sub; ctx.textAlign = ctr ? 'center' : 'left'; ctx.fillText('— ' + who.replace(/^[—–-]\s*/, ''), ctr ? W / 2 : x0, y + 96); }
+    } else if (k === 'stat') {
+      var big = String(sl.heading || '').replace(/\*\*/g, ''), bz = 340 * Math.min(1.3, P.k); ctx.font = P.head(bz); while (ctx.measureText(big).width > cw && bz > 90) { bz -= 8; ctx.font = P.head(bz); }
+      var bf = rtFit(ctx, sl.body, function (z) { return P.body(z, 600); }, cw, avail - bz - 60, 52 * P.bk, 26, 1.35, false), bh = bz * 0.9 + 50 + bf.h, y2 = top + Math.max(0, (avail - bh) / 2);
+      ctx.font = P.head(bz); ctx.fillStyle = P.acc; ctx.textAlign = ctr ? 'center' : 'left'; ctx.fillText(big, ctr ? W / 2 : x0, y2 + bz * 0.82);
+      rtDraw(ctx, bf, function (z) { return P.body(z, 600); }, x0, y2 + bz * 0.9 + 50, cw, ctr ? 'center' : 'left', P.ink, P.acc);
+    } else if (k === 'check' || k === 'steps') {
+      var items = itemLines(sl.body), hf = rtFit(ctx, sl.heading, P.head, cw, Math.min(avail * 0.35, 320), 96 * P.k, 34, P.lh, P.caps), gapH = 50;
+      var room = avail - hf.h - gapH, iz = Math.min(46 * P.bk, room / Math.max(1, items.length) / 1.9), dot = Math.max(44, iz * 1.6), ix = x0 + dot + 28, iw = cw - dot - 28;
+      var fits = items.map(function () { return null; }), total;
+      for (var tries = 0; tries < 20; tries++) { total = 0; fits = items.map(function (t) { ctx.font = P.body(iz, 600); var f = { size: iz, lines: rtWrap(ctx, t, iw, false), lh: 1.3 }; f.h = Math.max(dot, f.lines.length * iz * 1.3); total += f.h + 26; return f; }); if (total <= room || iz < 24) break; iz -= 2; dot = Math.max(40, iz * 1.6); ix = x0 + dot + 28; iw = cw - dot - 28; }
+      over = total > room + 2;
+      var y3 = top + Math.max(0, (avail - hf.h - gapH - total) / 2);
+      rtDraw(ctx, hf, P.head, x0, y3, cw, ctr && k !== 'steps' && k !== 'check' ? 'center' : 'left', P.ink, P.hl); y3 += hf.h + gapH;
+      var firstC = null;
+      fits.forEach(function (f, j) {
+        var cy = y3 + dot / 2;
+        if (k === 'steps' && j < fits.length - 1) { ctx.strokeStyle = P.line; ctx.lineWidth = 5; ctx.setLineDash([2, 12]); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x0 + dot / 2, cy + dot / 2 + 6); ctx.lineTo(x0 + dot / 2, cy + f.h + 26 - 6); ctx.stroke(); ctx.setLineDash([]); }
+        ctx.fillStyle = P.acc; ctx.beginPath(); ctx.arc(x0 + dot / 2, cy, dot / 2, 0, 7); ctx.fill(); ctx.fillStyle = P.accInk; ctx.strokeStyle = P.accInk;
+        if (k === 'steps') { ctx.font = '800 ' + Math.round(dot * 0.5) + 'px Poppins, Arial'; ctx.textAlign = 'center'; ctx.fillText(String(j + 1), x0 + dot / 2, cy + dot * 0.18); }
+        else { ctx.lineWidth = dot * 0.11; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(x0 + dot * 0.3, cy + dot * 0.02); ctx.lineTo(x0 + dot * 0.45, cy + dot * 0.17); ctx.lineTo(x0 + dot * 0.72, cy - dot * 0.15); ctx.stroke(); }
+        var ty = y3 + Math.max(0, (dot - f.lines.length * f.size * 1.3) / 2); rtDraw(ctx, f, function (z) { return P.body(z, 600); }, ix, ty, iw, 'left', P.ink, P.acc);
+        y3 += f.h + 26;
+      });
+    } else if (k === 'myth') {
+      var half = (avail - 40) / 2, lab = '800 30px Poppins, Arial';
+      var box = function (y, label, col, text, ink) {
+        ctx.fillStyle = rgbaH(col, 0.12); rrect(ctx, x0 - 20, y, cw + 40, half, 28); ctx.fill(); ctx.fillStyle = col; ctx.fillRect(x0 - 20, y + 24, 8, half - 48);
+        pill(ctx, label, x0 + 10, y + 30, lab, col, '#FFFFFF', 22, 56);
+        var f = rtFit(ctx, text, P.head, cw - 40, half - 140, 70 * P.k, 28, P.lh + 0.04, false); rtDraw(ctx, f, P.head, x0 + 10, y + 110 + Math.max(0, (half - 140 - f.h) / 2), cw - 40, 'left', ink, col);
+      };
+      box(top, '❌ MYTH', '#D8343A', sl.heading, P.ink); box(top + half + 40, '✅ FACT', '#0E9F57', sl.body || 'Write the fact here', P.ink);
+    } else if (k === 'question') {
+      var opts = itemLines(sl.body), qr = 74, oz = 40 * P.bk, oh = oz * 2.1, optsH = opts.length ? opts.length * (oh + 18) : 70;
+      var qf2 = rtFit(ctx, sl.heading, P.head, cw, avail - qr * 2 - 60 - optsH - 40, 96 * P.k, 34, P.lh, P.caps), tot = qr * 2 + 40 + qf2.h + 50 + optsH, y4 = top + Math.max(0, (avail - tot) / 2);
+      ctx.fillStyle = P.acc; ctx.beginPath(); ctx.arc(W / 2, y4 + qr, qr, 0, 7); ctx.fill(); ctx.fillStyle = P.accInk; ctx.font = '900 ' + Math.round(qr * 1.3) + 'px Poppins, Arial'; ctx.textAlign = 'center'; ctx.fillText('?', W / 2, y4 + qr * 1.45);
+      y4 += qr * 2 + 40; rtDraw(ctx, qf2, P.head, x0, y4, cw, 'center', P.ink, P.hl); y4 += qf2.h + 50;
+      if (opts.length) opts.forEach(function (o, j) { var L2 = String.fromCharCode(65 + j); ctx.strokeStyle = P.acc; ctx.lineWidth = 4; rrect(ctx, x0 + 40, y4, cw - 80, oh, oh / 2); ctx.stroke(); ctx.fillStyle = P.acc; ctx.beginPath(); ctx.arc(x0 + 40 + oh / 2, y4 + oh / 2, oh * 0.36, 0, 7); ctx.fill(); ctx.fillStyle = P.accInk; ctx.font = '800 ' + Math.round(oz * 0.9) + 'px Poppins, Arial'; ctx.textAlign = 'center'; ctx.fillText(L2, x0 + 40 + oh / 2, y4 + oh * 0.63); ctx.textAlign = 'left'; ctx.fillStyle = P.ink; ctx.font = P.body(oz, 600); var tt = o; while (ctx.measureText(tt).width > cw - 80 - oh - 40 && tt.length > 4) tt = tt.slice(0, -2); if (tt !== o) tt += '…'; ctx.fillText(tt, x0 + 40 + oh + 10, y4 + oh * 0.64); y4 += oh + 18; });
+      else { ctx.font = P.body(38 * P.bk, 700); ctx.fillStyle = P.sub; ctx.textAlign = 'center'; ctx.fillText('Tell us in the comments 👇🏾', W / 2, y4 + 40); }
+    }
+    ctx.restore();
+    return { over: over, shrunk: false };
+  }
   function draw(ctx, car, i) {
-    var r = isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = car.slides[i];
+    var sl0 = car.slides[i], r = sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
     if (sl && sl.deco && sl.deco.length) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); sl.deco.forEach(function (d) { drawDeco(ctx, d); }); ctx.restore(); }
     return r;
   }
@@ -502,8 +616,8 @@
         '<select data-f="kind" style="width:auto;flex:1;min-width:140px">' + kinds + '</select>' +
         '<select data-f="align" style="width:auto"><option value="center"' + (sl.align !== 'left' ? ' selected' : '') + '>Centre</option><option value="left"' + (sl.align === 'left' ? ' selected' : '') + '>Left</option></select>' +
         '<span class="cbtns"><button class="btn link" data-mv="-1" title="Move up">▲</button><button class="btn link" data-mv="1" title="Move down">▼</button><button class="btn link" data-dup title="Duplicate">⧉</button><button class="btn link" data-del title="Delete" style="color:#B42318">✕</button></span></div>' +
-        '<label>Heading</label><textarea data-f="heading" rows="2" maxlength="160">' + esc(sl.heading) + '</textarea>' +
-        '<label>' + (sl.kind === 'tip' ? 'Body text' : 'Small text under it <span class="muted" style="font-weight:400">(optional)</span>') + '</label><textarea data-f="body" rows="3" maxlength="400">' + esc(sl.body) + '</textarea>' +
+        '<label>' + (LBL[sl.kind] || LBL.tip)[0] + '</label><textarea data-f="heading" rows="2" maxlength="240">' + esc(sl.heading) + '</textarea>' +
+        '<label>' + (LBL[sl.kind] || LBL.tip)[1] + '</label><textarea data-f="body" rows="' + (/check|steps|question/.test(sl.kind) ? 5 : 3) + '" maxlength="600">' + esc(sl.body) + '</textarea>' +
         '<details class="sopts" data-i="' + i + '"' + (openOpts[i] ? ' open' : '') + ' style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">⚙️ Slide options <span class="muted" style="font-weight:400">— ' + esc(optSummary(sl)) + '</span></summary>' +
           '<div class="f2" style="margin-top:6px"><div><label>Text style</label><select data-f="style"><option value="">Same as carousel</option>' + Object.keys(STYLES).map(function (k) { return '<option value="' + k + '"' + (sl.style === k ? ' selected' : '') + '>' + STYLES[k].name + '</option>'; }).join('') + '</select></div>' +
           '<div><label>Gold brush</label><select data-f="brush"><option value="">Same as carousel</option><option value="on"' + (sl.brush === 'on' ? ' selected' : '') + '>On</option><option value="off"' + (sl.brush === 'off' ? ' selected' : '') + '>Off</option></select></div></div>' +
@@ -704,7 +818,7 @@
             if (k === 'hs' || k === 'bs') { sl[k] = Number(f.value) / 100; var pv = el.querySelector('[data-pv="' + k + '"]'); if (pv) pv.textContent = pct(sl[k]); }
             else sl[k] = f.value;
             if (/^(style|brush|num|hs|bs)$/.test(k)) { var sm = el.querySelector('.sopts summary .muted'); if (sm) sm.textContent = '— ' + optSummary(sl); }
-            if (k === 'kind') { sl.align = sl.kind === 'tip' ? 'left' : 'center'; if (sl.kind === 'end' && !sl.heading) Object.assign(sl, endSlide()); paintSlides(); setSel(i); }
+            if (k === 'kind') { sl.align = sl.kind === 'tip' ? 'left' : 'center'; if (sl.kind === 'end' && !sl.heading) Object.assign(sl, endSlide()); if (EXAMPLE[sl.kind] && (!sl.body || confirm('Fill this slide with an example to show how a ' + KINDS[sl.kind].replace(/^\S+\s/, '') + ' slide works? (Your words on this slide will be replaced.)'))) { sl.heading = EXAMPLE[sl.kind][0]; sl.body = EXAMPLE[sl.kind][1]; } paintSlides(); setSel(i); }
             mark(); paint(); paintThumbs();
           });
         });
