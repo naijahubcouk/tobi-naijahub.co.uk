@@ -11,9 +11,9 @@
   'use strict';
   var W = 1080, H = 1920, FPS = 30, X = null;
   var BANKS = {
-    lifeuk: { name: 'Life in the UK Test', file: '/lifeuk-q.json?v=20261122b', link: 'auntietobi.co.uk/life-in-uk-test', h1: 'QUIZ: Life in the UK Test', h2: 'Can you get {n}/{n}?', say: 'Life in the UK test quiz. Can you get {n} out of {n}?',
+    lifeuk: { name: 'Life in the UK Test', file: '/lifeuk-q.json?v=20261122b', link: 'auntietobi.co.uk/life-in-uk-test', h1: 'QUIZ: Life in the UK Test', h2: 'Can you get {n}/{n}?', cover: 'Life in the UK Test Quiz', say: 'Life in the UK test quiz. Can you get {n} out of {n}?',
       groups: [[0, 'All chapters, mixed'], [1, '1. Values and principles'], [2, '2. What is the UK?'], [3, '3. History'], [4, '4. Modern society'], [5, '5. Government and law']] },
-    drive: { name: 'Driving Theory Test', file: '/drive-q.json?v=20261122c', link: 'auntietobi.co.uk/driving-theory-test', h1: 'QUIZ: UK Driving Theory', h2: 'Can you get {n}/{n}?', say: 'UK driving theory test quiz. Can you get {n} out of {n}?',
+    drive: { name: 'Driving Theory Test', file: '/drive-q.json?v=20261122c', link: 'auntietobi.co.uk/driving-theory-test', h1: 'QUIZ: UK Driving Theory', h2: 'Can you get {n}/{n}?', cover: 'UK Driving Theory Quiz', say: 'UK driving theory test quiz. Can you get {n} out of {n}?',
       groups: [[0, 'All topics, mixed'], [1, 'Alertness'], [2, 'Attitude'], [3, 'Safety and your vehicle'], [4, 'Safety margins'], [5, 'Hazard awareness'], [6, 'Vulnerable road users'], [7, 'Other types of vehicle'], [8, 'Vehicle handling'], [9, 'Motorway rules'], [10, 'Rules of the road'], [12, 'Essential documents'], [13, 'Incidents and emergencies'], [14, 'Vehicle loading']] },
   };
   var STOP = ' the a an of in to is are was were what which who when where why how do does did can you your for on at by with from and or not be as this that these those it its into than then their there they he she his her we our us uk british britain england about after before during most many much one two three four five more some any must should may might will would could shall has have had been being called known name ';
@@ -23,7 +23,7 @@
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function esc(s) { return X.esc(s); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, igOn: true, ig: '@auntietobi_uk', appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, music: 'upbeat', musicVol: 30, voiceVol: 100, duck: true, bgs: {}, out: null }; return QV; }
+  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, igOn: true, ig: '@auntietobi_uk', appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, music: 'upbeat', musicVol: 30, voiceVol: 100, duck: true, bgs: {}, out: null, cTitle: '', cSub: '', cBg: 0 }; return QV; }
   function bank() { return BANKS[QV.bank]; }
   function fill(s) { return String(s || '').replace(/\{n\}/g, QV.qs.length || QV.n); }
   function loadBank(k) { if (BANKQ[k]) return Promise.resolve(BANKQ[k]); return fetch(BANKS[k].file).then(function (r) { return r.json(); }).then(function (j) { BANKQ[k] = j.filter(function (q) { var st = k === 'drive' ? q.st : q.s; return (!st || st === 'v') && q.t === 'm' && !q.g && q.o && q.o.length === 4 && q.o.every(function (o) { return o.length <= 46; }) && q.q.length <= 120; }); return BANKQ[k]; }); }
@@ -61,7 +61,7 @@
     $('#qvSet').onclick = setupSheet; $('#qvMine').onclick = mine; $('#qvSave').onclick = saveSheet;
     $('#qvNewQ').onclick = function () { if (!confirm('Start a new quiz? Anything you haven’t saved here will be cleared.')) return; var keepV = { voice: QV.voice, model: QV.model }; QV = null; state(); QV.voice = keepV.voice; QV.model = keepV.model; view(); };
   }
-  function snapshot() { KEEP(); var d = {}; ['bank', 'grp', 'qs', 'bgs', 'voiceOn', 'voice', 'model', 'readOpts', 'h1', 'h2', 'outro', 'appOn', 'appT', 'sayApp', 'music', 'musicVol', 'voiceVol', 'duck', 'igOn', 'ig'].forEach(function (k) { d[k] = QV[k]; }); return d; }
+  function snapshot() { KEEP(); var d = {}; ['bank', 'grp', 'qs', 'bgs', 'voiceOn', 'voice', 'model', 'readOpts', 'h1', 'h2', 'outro', 'appOn', 'appT', 'sayApp', 'music', 'musicVol', 'voiceVol', 'duck', 'igOn', 'ig', 'cTitle', 'cSub', 'cBg'].forEach(function (k) { d[k] = QV[k]; }); return d; }
   function doSave(name, asNew) {
     return X.api('qv-save', { id: asNew ? '' : QV.savedId, name: name, data: snapshot() }).then(function (r) {
       QV.savedId = r.id; QV.savedName = r.name; head();
@@ -119,12 +119,12 @@
     return X.api('qv-load', { id: id }).then(function (r) {
       var d = r.data || {}, v = QV.voice; QV = null; state();
       Object.keys(d).forEach(function (k) { QV[k] = d[k]; }); QV.n = (d.qs || []).length || 10; if (!QV.voice) QV.voice = v;
-      QV.savedId = r.id; QV.savedName = r.name; QV.out = null;
+      QV.savedId = r.id; QV.savedName = r.name; QV.out = null; if (!QV.cTitle) { QV.cTitle = bank().cover; QV.cSub = fill('{n} questions · Can you get {n}/{n}?'); }
       if (ST && !ST.ready) QV.voiceOn = false;
       head(); return loadBank(QV.bank).then(function () { draw(); refreshBgs(); X.toast('📂 Opened “' + r.name + '”'); });
     }).catch(function (e) { X.toast(e.message); throw e; });
   }
-  function newSet(all) { QV.qs = []; QV.out = null; var f = pick(all); QV.qs = f.slice(0, QV.n).map(makeQ); QV.h1 = bank().h1; QV.h2 = fill(bank().h2); }
+  function newSet(all) { QV.qs = []; QV.out = null; var f = pick(all); QV.qs = f.slice(0, QV.n).map(makeQ); QV.h1 = bank().h1; QV.h2 = fill(bank().h2); QV.cTitle = bank().cover; QV.cSub = fill('{n} questions · Can you get {n}/{n}?'); QV.cBg = 0; }
   function draw() {
     var v = $('#view'), b = bank(), cr = ST && ST.credits;
     var est = QV.qs.reduce(function (a, q) { return a + q.q.length + (QV.readOpts ? q.opts.join(', ').length + 12 : 0) + q.opts[q.ans].length + 16; }, 60);
@@ -146,8 +146,14 @@
           '<label class="btn ghost sm" style="margin:0;cursor:pointer">📷 My photo<input type="file" accept="image/jpeg,image/png,image/webp" data-up="' + i + '" hidden></label></div></div></div>';
       }).join('') + '</div><div class="row" style="gap:8px;margin-top:10px"><button class="btn primary" id="qvAll">✨ Make all missing pictures</button><span class="muted" id="qvBgMsg" style="font-size:12.5px">Pictures are saved per question and reused in later videos for free.</span></div></div>' +
 
+      '<div class="card"><b>🖼️ Cover</b> <span class="muted" style="font-size:13px">— the opening of the video and its Instagram cover. The title sits in the middle so it stays readable in your profile grid.</span>' +
+      '<div class="row" style="gap:14px;margin-top:10px;align-items:flex-start;flex-wrap:wrap"><canvas id="qvCov" width="270" height="480" style="width:135px;height:240px;border-radius:10px;background:#0F1E36;flex:none"></canvas><div style="flex:1;min-width:240px">' +
+      '<label>Cover title</label><input id="qvCT" value="' + esc(QV.cTitle) + '" maxlength="80"><label style="margin-top:8px">Small line under it <span class="muted">(optional)</span></label><input id="qvCS" value="' + esc(QV.cSub) + '" maxlength="100">' +
+      '<label style="margin-top:8px">Cover picture</label><select id="qvCB">' + QV.qs.map(function (q, i) { return '<option value="' + q.id + '"' + ((QV.cBg ? QV.cBg === q.id : i === 0) ? ' selected' : '') + '>Question ' + (i + 1) + '’s picture' + (QV.bgs[q.id] ? '' : ' (not made yet)') + '</option>'; }).join('') + '</select>' +
+      '<div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost sm" id="qvCDl">⬇️ Download cover image</button></div></div></div></div>' +
+
       '<div class="card"><b>2 · Words and voice</b><div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">' +
-      '<div style="flex:1;min-width:220px"><label>Title line 1</label><input id="qvH1" value="' + esc(QV.h1) + '"></div><div style="flex:1;min-width:220px"><label>Title line 2</label><input id="qvH2" value="' + esc(QV.h2) + '"></div></div>' +
+      '<div style="flex:1;min-width:220px"><label>Title at the top during the questions · line 1</label><input id="qvH1" value="' + esc(QV.h1) + '"></div><div style="flex:1;min-width:220px"><label>Line 2</label><input id="qvH2" value="' + esc(QV.h2) + '"></div></div>' +
       '<label>Ending</label><input id="qvOut" value="' + esc(QV.outro) + '">' +
       '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvIg"' + (QV.igOn ? ' checked' : '') + '> 📸 Show the Instagram handle at the bottom</label>' +
       '<div id="qvIgBox"' + (QV.igOn ? '' : ' hidden') + '><input id="qvIgT" value="' + esc(QV.ig) + '" style="margin-top:8px;max-width:320px"></div></div>' +
@@ -190,8 +196,12 @@
     $$('[data-gen]').forEach(function (b) { b.onclick = function () { genBg(+b.dataset.gen, !!QV.bgs[QV.qs[+b.dataset.gen].id]); }; });
     $$('[data-up]').forEach(function (inp) { inp.onchange = function () { var f = inp.files && inp.files[0]; if (f) upBg(+inp.dataset.up, f); }; });
     $('#qvAll').onclick = makeAllBgs;
-    var keep = KEEP = function () { QV.h1 = $('#qvH1').value; QV.h2 = $('#qvH2').value; QV.outro = $('#qvOut').value; QV.appT = $('#qvAppT').value; var g = $('#qvIgT').value.trim().replace(/^@*/, ''); QV.ig = g ? '@' + g : ''; };
+    var keep = KEEP = function () { QV.cTitle = $('#qvCT').value; QV.cSub = $('#qvCS').value; QV.h1 = $('#qvH1').value; QV.h2 = $('#qvH2').value; QV.outro = $('#qvOut').value; QV.appT = $('#qvAppT').value; var g = $('#qvIgT').value.trim().replace(/^@*/, ''); QV.ig = g ? '@' + g : ''; };
     ['#qvH1', '#qvH2', '#qvOut', '#qvAppT', '#qvIgT'].forEach(function (s) { $(s).oninput = keep; });
+    ['#qvCT', '#qvCS'].forEach(function (s) { $(s).oninput = function () { keep(); coverThumb(); }; });
+    $('#qvCB').onchange = function () { QV.cBg = +this.value; coverThumb(); };
+    $('#qvCDl').onclick = function () { coverPng().catch(function (e) { X.toast(e.message || 'Couldn’t make the cover.'); }); };
+    coverThumb();
     $('#qvIg').onchange = function () { QV.igOn = this.checked; $('#qvIgBox').hidden = !this.checked; };
     $('#qvApp').onchange = function () { QV.appOn = this.checked; $('#qvAppBox').hidden = !this.checked; };
     if ($('#qvSayApp')) $('#qvSayApp').onchange = function () { QV.sayApp = this.checked; };
@@ -273,7 +283,7 @@
   // every part has a start (s) and length (d); the voice lines decide the timing when there is a voice
   function plan(vo) {
     var len = function (k, min) { return vo && vo[k] ? vo[k].duration : min; }, t = 0, P = { parts: [], total: 0, cues: [] };
-    var intro = Math.max(2.6, len('intro', 0) + 0.5); P.parts.push({ k: 'intro', s: 0, d: intro, qi: 0 }); if (vo && vo.intro) P.cues.push({ k: 'intro', at: 0.25 }); t = intro;
+    var intro = Math.max(3, len('intro', 0) + 0.6); P.parts.push({ k: 'intro', s: 0, d: intro, qi: 0 }); if (vo && vo.intro) P.cues.push({ k: 'intro', at: 0.25 }); t = intro;
     QV.qs.forEach(function (q, i) {
       var p = { k: 'q', qi: i, s: t }, x = 0.35;
       p.qAt = x; if (vo && vo['q' + i]) P.cues.push({ k: 'q' + i, at: t + x });
@@ -398,11 +408,45 @@
   function wrapWords(cx, words, maxW) { var lines = [[]], w = 0, sp = cx.measureText(' ').width; words.forEach(function (wd) { var ww = cx.measureText(wd).width; if (w + ww > maxW && lines[lines.length - 1].length) { lines.push([]); w = 0; } lines[lines.length - 1].push(wd); w += ww + sp; }); return lines; }
   function ease(x) { x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); }
   function shadowText(cx, t, x, y) { cx.save(); cx.lineJoin = 'round'; cx.lineWidth = 10; cx.strokeStyle = 'rgba(0,0,0,0.75)'; cx.strokeText(t, x, y); cx.restore(); cx.fillText(t, x, y); }
+  // 🖼️ the cover: title in the middle, on the chosen picture
+  function coverBgId() { return QV.cBg && QV.qs.some(function (q) { return q.id === QV.cBg; }) ? QV.cBg : (QV.qs[0] || {}).id; }
+  function drawCover(cx, a) {
+    var t = (QV.cTitle || '').trim(), sub = (QV.cSub || '').trim(); a = a == null ? 1 : a; if (!t && !sub) return;
+    cx.save(); cx.globalAlpha = a; cx.textAlign = 'center';
+    var words = t.split(/\s+/).filter(Boolean), fs = 124; cx.font = '900 ' + fs + 'px "Playfair Display", Georgia, serif';
+    var lines = wrapWords(cx, words, 900);
+    while ((lines.length > 4 || lines.some(function (l) { return cx.measureText(l.join(' ')).width > 960; })) && fs > 64) { fs -= 6; cx.font = '900 ' + fs + 'px "Playfair Display", Georgia, serif'; lines = wrapWords(cx, words, 900); }
+    // even lines: avoid one word left on its own at the end
+    if (lines.length > 1 && lines[lines.length - 1].length === 1) [820, 760, 700, 640].some(function (mw) { var l2 = wrapWords(cx, words, mw); if (l2.length <= lines.length + 1 && l2[l2.length - 1].length > 1 && l2.length <= 4) { lines = l2; return true; } return false; });
+    if (!t) lines = [];
+    var lh = fs * 1.12, subH = sub ? 130 : 0, blockH = lines.length * lh + subH, top = H / 2 - blockH / 2, y0 = top + fs * 0.85;
+    var g = cx.createLinearGradient(0, top - 160, 0, top + blockH + 160); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.3, 'rgba(0,0,0,0.42)'); g.addColorStop(0.7, 'rgba(0,0,0,0.42)'); g.addColorStop(1, 'rgba(0,0,0,0)'); cx.fillStyle = g; cx.fillRect(0, top - 160, W, blockH + 320);
+    cx.fillStyle = '#fff'; lines.forEach(function (ln, i) { shadowText(cx, ln.join(' '), W / 2, y0 + i * lh); });
+    if (sub) { var sfs = 48; cx.font = '700 ' + sfs + 'px Poppins, Arial, sans-serif'; while (cx.measureText(sub).width > 900 && sfs > 30) { sfs -= 2; cx.font = '700 ' + sfs + 'px Poppins, Arial, sans-serif'; } var sw = cx.measureText(sub).width + 70, sy = top + lines.length * lh + 34; rr(cx, W / 2 - sw / 2, sy, sw, sfs + 40, (sfs + 40) / 2); cx.fillStyle = '#FFB81C'; cx.fill(); cx.fillStyle = '#0F1E36'; cx.fillText(sub, W / 2, sy + sfs + 8); }
+    cx.restore();
+  }
+  async function coverCanvas(w, h) {
+    var c = document.createElement('canvas'); c.width = w; c.height = h; var cx = c.getContext('2d'); cx.scale(w / W, h / H);
+    var id = coverBgId(), im = null; if (QV.bgs[id]) { try { im = await loadImg(imgSrc(QV.bgs[id])); } catch (e) {} }
+    try { await Promise.all(['900 60px "Playfair Display"', '700 50px Poppins'].map(function (f) { return document.fonts.load(f); })); } catch (e) {}
+    if (im) cover(cx, im, 1.04); else { var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0F1E36'); g.addColorStop(1, '#057A44'); cx.fillStyle = g; cx.fillRect(0, 0, W, H); }
+    cx.fillStyle = 'rgba(0,0,0,0.18)'; cx.fillRect(0, 0, W, H);
+    drawCover(cx, 1);
+    if (QV.igOn && QV.ig) { cx.save(); cx.textAlign = 'center'; cx.font = '700 36px Poppins, Arial, sans-serif'; cx.fillStyle = 'rgba(255,255,255,0.92)'; shadowText(cx, QV.ig, W / 2, H - 70); cx.restore(); }
+    return c;
+  }
+  var covT = null;
+  function coverThumb() { clearTimeout(covT); covT = setTimeout(function () { if (!$('#qvCov')) return; coverCanvas(270, 480).then(function (c) { var t = $('#qvCov'); if (t) { var x = t.getContext('2d'); x.clearRect(0, 0, 270, 480); x.drawImage(c, 0, 0); } }); }, 150); }
+  async function coverPng() {
+    KEEP(); var c = await coverCanvas(W, H), b = await new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.92); });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'quiz-cover-' + Date.now() + '.jpg'; document.body.appendChild(a); a.click(); a.remove();
+    X.toast('⬇️ Cover saved — use it as the cover when you post');
+  }
   function frame(cx, T, P, bgs) {
     var pi = 0; while (pi < P.parts.length - 1 && T >= P.parts[pi + 1].s) pi++;
     var p = P.parts[pi], lt = T - p.s;
     var drawBg = function (part, alpha) {
-      var im = bgs[QV.qs[part.qi].id]; cx.save(); cx.globalAlpha = alpha;
+      var im = (part.k === 'intro' && bgs[coverBgId()]) || bgs[QV.qs[part.qi].id]; cx.save(); cx.globalAlpha = alpha;
       if (im) { var f = Math.min(1, (T - part.s) / part.d), mv = part.qi % 2; cover(cx, im, 1.04 + 0.08 * (mv ? 1 - f : f), 0, 0); }
       else { var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0F1E36'); g.addColorStop(1, '#057A44'); cx.fillStyle = g; cx.fillRect(0, 0, W, H); }
       cx.restore();
@@ -413,10 +457,11 @@
     // gentle shading so white text stays readable
     var sh = cx.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, 'rgba(0,0,0,0.55)'); sh.addColorStop(0.32, 'rgba(0,0,0,0.18)'); sh.addColorStop(0.7, 'rgba(0,0,0,0.12)'); sh.addColorStop(1, 'rgba(0,0,0,0.5)'); cx.fillStyle = sh; cx.fillRect(0, 0, W, H);
     // header
-    cx.textAlign = 'center'; cx.fillStyle = '#fff'; cx.font = '800 64px Poppins, Arial, sans-serif';
-    shadowText(cx, QV.h1, W / 2, 140); cx.font = '800 58px Poppins, Arial, sans-serif'; shadowText(cx, QV.h2, W / 2, 220);
+    if (p.k !== 'intro') { cx.textAlign = 'center'; cx.fillStyle = '#fff'; cx.font = '800 64px Poppins, Arial, sans-serif';
+    shadowText(cx, QV.h1, W / 2, 140); cx.font = '800 58px Poppins, Arial, sans-serif'; shadowText(cx, QV.h2, W / 2, 220); }
     if (p.k === 'intro') {
-      var a = ease(lt / 0.6); cx.save(); cx.globalAlpha = a; cx.font = '900 96px "Playfair Display", Georgia, serif'; shadowText(cx, 'Ready?', W / 2, 860); cx.font = '600 52px Poppins, Arial, sans-serif'; shadowText(cx, QV.qs.length + ' questions · 3 seconds each', W / 2, 960); cx.restore();
+      // 🖼️ the cover is on screen from the very first frame (Instagram uses it as the cover), and fades out at the end of the intro
+      cx.fillStyle = 'rgba(0,0,0,0.18)'; cx.fillRect(0, 0, W, H); drawCover(cx, 1 - ease((lt - (p.d - 0.35)) / 0.35));
     } else if (p.k === 'q') {
       var q = QV.qs[p.qi];
       // question number chip

@@ -38,11 +38,11 @@ async function publish(id, lines) {
   }
   const pack = {
     id, name: s.name, bank: d.bank, at: core.nowIso(),
-    h1: d.h1, h2: d.h2, outro: d.outro, music: d.music === 'own' ? 'upbeat' : d.music, musicVol: d.musicVol, voiceVol: d.voiceVol, duck: d.duck !== false,
+    h1: d.h1, h2: d.h2, outro: d.outro, cTitle: d.cTitle || '', cSub: d.cSub || '', cImg: (d.bgs || {})[d.cBg && d.qs.some(q => q.id === d.cBg) ? d.cBg : d.qs[0].id] || '', music: d.music === 'own' ? 'upbeat' : d.music, musicVol: d.musicVol, voiceVol: d.voiceVol, duck: d.duck !== false,
     qs: d.qs.map(q => ({ id: q.id, q: q.q, opts: q.opts, ans: q.ans, hl: q.hl, e: q.e, img: (d.bgs || {})[q.id] || '' })), vo,
   };
   await setJson(PACK(id), pack);
-  await core.cas(LIST, cur => { const l = ((cur && cur.items) || []).filter(x => x.id !== id); l.unshift({ id, name: s.name, bank: d.bank, n: pack.qs.length, at: pack.at, voice: Object.keys(vo).length > 0 }); return { items: l.slice(0, 100) }; });
+  await core.cas(LIST, cur => { const l = ((cur && cur.items) || []).filter(x => x.id !== id); l.unshift({ id, name: s.name, title: pack.cTitle, bank: d.bank, n: pack.qs.length, at: pack.at, voice: Object.keys(vo).length > 0 }); return { items: l.slice(0, 100) }; });
   await rebuildAssets();
   return { ok: true, voiceLines: Object.keys(vo).length };
 }
@@ -59,7 +59,7 @@ async function publishedIds() { const l = await getJson(LIST).catch(() => null);
 const J = (o, age) => ({ statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': `public, max-age=${age}, s-maxage=${age}`, 'X-Content-Type-Options': 'nosniff' }, body: JSON.stringify(o) });
 async function publicList(bank) {
   const l = await getJson(LIST).catch(() => null);
-  const items = ((l && l.items) || []).filter(x => !bank || x.bank === bank).map(x => ({ id: x.id, name: x.name, bank: x.bank, n: x.n, at: x.at, voice: !!x.voice }));
+  const items = ((l && l.items) || []).filter(x => !bank || x.bank === bank).map(x => ({ id: x.id, name: x.title || x.name, bank: x.bank, n: x.n, at: x.at, voice: !!x.voice }));
   return J({ items }, 60);
 }
 async function publicPack(id) {
