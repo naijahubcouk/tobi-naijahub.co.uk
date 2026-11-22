@@ -323,7 +323,7 @@
   async function aiClip(i) {
     var sc = R.tpl.scenes[i];
     if (!ST) ST = await X.api('vm-settings').then(function (r) { return r.settings; }).catch(function () { return null; });
-    var tier = ST && ST.tiers ? ST.tiers.filter(function (t) { return t.id === 'budget'; })[0] : null, price = tier && tier.gbpPerSec ? '£' + (tier.gbpPerSec * 5).toFixed(2) : 'about £2';
+    var tier = ST && ST.tiers ? ST.tiers.filter(function (t) { return t.id === 'budget'; })[0] : null, price = tier && tier.gbpPerSec ? '£' + (tier.gbpPerSec * 5).toFixed(2) : 'about 30p';
     if (!confirm('Turn this picture into a 5-second AI video clip? It costs ' + price + ' and takes a few minutes.')) return;
     prog('🎥 Sending the picture…');
     var blob = await fetch(srcOf(sc)).then(function (r) { return r.blob(); });
